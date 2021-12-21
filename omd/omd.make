@@ -38,8 +38,9 @@ PACKAGE_WORK_DIR := $(BUILD_BASE_DIR)/package_work
 # /opt/omd/versions/[version]/bin/python.
 INTERMEDIATE_INSTALL_BASE := $(BUILD_BASE_DIR)/intermediate_install
 # Results of intermediate install will be stored in package specific archives
-# that are stored in this directory
-PACKAGE_CACHE_BASE := $(BUILD_BASE_DIR)/package_cache
+# that are stored in the global cache directory.
+XDG_CACHE_HOME     ?= $(HOME)/.cache
+PACKAGE_CACHE_BASE := $(XDG_CACHE_HOME)/checkmk/packages
 
 CMK_VERSION        := $(VERSION)
 OMD_SERIAL         := 38
@@ -75,6 +76,10 @@ NEXUS_BUILD_CACHE_URL ?=
 # done using the CI system
 NEXUS_USERNAME ?=
 NEXUS_PASSWORD ?=
+
+define log_time
+	@echo "+++ [$(shell date +%s)] Build step '$1': $2" | tee --append omd_build_times.log
+endef
 
 define cache_pkg_name
 $1_$2_$(BRANCH_VERSION)_$(DISTRO_NAME)_$(DISTRO_VERSION).tar.gz

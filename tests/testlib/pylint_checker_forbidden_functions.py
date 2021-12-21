@@ -5,6 +5,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from typing import FrozenSet, List
+
 import astroid  # type: ignore[import]
 from pylint.checkers import BaseChecker  # type: ignore[import]
 from pylint.interfaces import IAstroidChecker  # type: ignore[import]
@@ -13,18 +15,19 @@ from pylint.interfaces import IAstroidChecker  # type: ignore[import]
 def register(linter) -> None:
     linter.register_checker(CollectionsNamedTupleChecker(linter))
     linter.register_checker(TypingNamedTupleChecker(linter))
+    linter.register_checker(SixEnsureStrBinChecker(linter))
 
 
 class ForbiddenFunctionChecker(BaseChecker):
     __implements__ = IAstroidChecker
     name = "forbidden-function"
-    target_function = ""
+    target_functions: FrozenSet[str] = frozenset([])
     target_lib = ""
 
     def __init__(self, linter) -> None:
         super().__init__(linter)
         self.was_imported = False
-        self.function_name = self.target_function
+        self.function_names: List[str] = []
         self.library_name = self.target_lib
 
     def visit_import(self, node: astroid.node_classes.Import) -> None:
@@ -35,18 +38,21 @@ class ForbiddenFunctionChecker(BaseChecker):
     def visit_importfrom(self, node: astroid.node_classes.ImportFrom) -> None:
         if node.modname == self.target_lib or node.modname.endswith("." + self.target_lib):
             for fct, alias in node.names:
-                if fct == self.target_function:
+                if fct in self.target_functions:
                     self.was_imported = True
-                    self.function_name = alias or self.target_function
+                    if alias:
+                        self.function_names.append(alias)
+                    else:
+                        self.function_names.append(fct)
 
     def _called_with_library(self, value: astroid.NodeNG) -> bool:
         if not isinstance(value, astroid.node_classes.Attribute):
             return False
         if isinstance(value.expr, astroid.node_classes.Name):
-            return value.attrname == self.target_function and value.expr.name == self.library_name
+            return value.attrname in self.target_functions and value.expr.name == self.library_name
         if isinstance(value.expr, astroid.node_classes.Attribute):
             return (
-                value.attrname == self.target_function
+                value.attrname in self.target_functions
                 and value.expr.as_string() == self.library_name
             )
         return False
@@ -54,12 +60,13 @@ class ForbiddenFunctionChecker(BaseChecker):
     def _called_directly(self, value: astroid.NodeNG) -> bool:
         return (
             isinstance(value, astroid.node_classes.Name)
-            and value.name == self.function_name
+            and value.name in self.function_names
             and self.was_imported
         )
 
     def visit_module(self, node: astroid.scoped_nodes.Module) -> None:
         self.was_imported = False
+        self.function_names.clear()
 
     def _visit_call(self, node: astroid.NodeNG) -> bool:
         if not isinstance(node, astroid.node_classes.Call):
@@ -69,12 +76,15 @@ class ForbiddenFunctionChecker(BaseChecker):
     def visit_call(self, node: astroid.node_classes.Call) -> None:
         if self._visit_call(node):
             self.add_message(self.name, node=node)
+        for arg in node.args:
+            if self._called_with_library(arg) or self._called_directly(arg):
+                self.add_message(self.name, node=arg)
 
 
 class TypingNamedTupleChecker(ForbiddenFunctionChecker):
     name = "typing-namedtuple-call"
     target_lib = "typing"
-    target_function = "NamedTuple"
+    target_functions = frozenset(["NamedTuple"])
     msgs = {
         "E9010": (
             "Called typing.NamedTuple",
@@ -87,11 +97,24 @@ class TypingNamedTupleChecker(ForbiddenFunctionChecker):
 class CollectionsNamedTupleChecker(ForbiddenFunctionChecker):
     name = "collections-namedtuple-call"
     target_lib = "collections"
-    target_function = "namedtuple"
+    target_functions = frozenset(["namedtuple"])
     msgs = {
         "E8910": (
             "Called collections.namedtuple",
             "collections-namedtuple-call",
             "NamedTuples should be declared using inheritance",
         ),
+    }
+
+
+class SixEnsureStrBinChecker(ForbiddenFunctionChecker):
+    name = "six-ensure-str-bin-call"
+    target_lib = "six"
+    target_functions = frozenset(["ensure_str", "ensure_binary"])
+    msgs = {
+        "E9110": (
+            "Called six.ensure_str or six.ensure_binary",
+            "six-ensure-str-bin-call",
+            "six.ensure_str and six.ensure_binary should not be used",
+        )
     }

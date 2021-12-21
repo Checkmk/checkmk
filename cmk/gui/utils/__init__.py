@@ -17,6 +17,7 @@ from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional, Tuple, Union
 
 import cmk.utils.paths
+import cmk.utils.regex
 
 from cmk.gui.log import logger
 
@@ -47,22 +48,50 @@ def key_num_split(a: str) -> Tuple[Union[int, str], ...]:
     return num_split(a)
 
 
-def is_allowed_url(url: str) -> bool:
-    """Checks whether or not the given URL is a URL it is allowed to redirect the user to"""
-    # Also prevent using of "javascript:" URLs which could used to inject code
-    parsed = urllib.parse.urlparse(url)
+def is_allowed_url(
+    url: str, cross_domain: bool = False, schemes: Optional[list[str]] = None
+) -> bool:
+    """Check if url is allowed
 
-    # Don't allow the user to set a URL scheme
-    if parsed.scheme != "":
+    >>> is_allowed_url("http://checkmk.com/")
+    False
+    >>> is_allowed_url("http://checkmk.com/", cross_domain=True, schemes=["http", "https"])
+    True
+    >>> is_allowed_url("/checkmk/", cross_domain=True, schemes=["http", "https"])
+    True
+    >>> is_allowed_url("//checkmk.com/", cross_domain=True)
+    True
+    >>> is_allowed_url("/foobar")
+    True
+    >>> is_allowed_url("//user:password@domain/", cross_domain=True)
+    True
+    >>> is_allowed_url("javascript:alert(1)")
+    False
+    >>> is_allowed_url("javascript:alert(1)", cross_domain=True, schemes=["javascript"])
+    True
+    >>> is_allowed_url('someXSSAttempt?"><script>alert(1)</script>')
+    False
+    """
+
+    try:
+        parsed = urllib.parse.urlparse(url)
+    except ValueError:
         return False
 
-    # Don't allow the user to set a network location
-    if parsed.netloc != "":
+    if not cross_domain and parsed.netloc != "":
         return False
 
-    # Don't allow bad characters in path
-    if not re.match(r"[/a-zA-Z0-9_\.-]*$", parsed.path):
+    if schemes is None and parsed.scheme != "":
         return False
+    if schemes is not None and parsed.scheme and parsed.scheme not in schemes:
+        return False
+
+    urlchar_regex = cmk.utils.regex.regex(cmk.utils.regex.URL_CHAR_REGEX)
+    for part in parsed:
+        if not part:
+            continue
+        if not urlchar_regex.match(part):
+            return False
 
     return True
 
@@ -129,14 +158,15 @@ def gen_id() -> str:
 
 
 # This may not be moved to g, because this needs to be request independent
-_failed_plugins: Dict[str, List[Tuple[str, Exception]]] = {}
+# TODO: Move to cmk.gui.modules once load_web_plugins is dropped
+_failed_plugins: Dict[str, List[Tuple[str, BaseException]]] = {}
 
 
 # Load all files below share/check_mk/web/plugins/WHAT into a specified context
 # (global variables). Also honors the local-hierarchy for OMD
 # TODO: This is kept for pre 1.6.0i1 plugins
 def load_web_plugins(forwhat: str, globalvars: Dict) -> None:
-    _failed_plugins[forwhat] = []
+    _failed_plugins.setdefault(forwhat, [])
 
     for plugins_path in [
         Path(cmk.utils.paths.web_dir, "plugins", forwhat),
@@ -162,7 +192,11 @@ def load_web_plugins(forwhat: str, globalvars: Dict) -> None:
                 _failed_plugins[forwhat].append((str(file_path), e))
 
 
-def get_failed_plugins() -> List[Tuple[str, Exception]]:
+def add_failed_plugin(main_module_name: str, plugin_name: str, e: BaseException) -> None:
+    _failed_plugins.setdefault(main_module_name, []).append((plugin_name, e))
+
+
+def get_failed_plugins() -> List[Tuple[str, BaseException]]:
     return list(itertools.chain(*list(_failed_plugins.values())))
 
 

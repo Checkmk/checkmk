@@ -38,7 +38,6 @@ EXISTING_HOST_NAME = fields.HostField(
 MONITORED_HOST = fields.HostField(
     description="The hostname or IP address itself.",
     example="example.com",
-    should_exist=True,
     should_be_monitored=True,
     required=True,
 )
@@ -161,6 +160,14 @@ class UpdateHost(BaseSchema):
         example=["tag_foobar"],
         missing=list,
         required=False,
+    )
+
+
+class LinkHostUUID(BaseSchema):
+    uuid = fields.UUID(
+        required=True,
+        example="34e4c967-1591-4883-8cdf-0e335b09618d",
+        description="A valid UUID.",
     )
 
 
@@ -1802,7 +1809,6 @@ class BulkDeleteHost(BaseSchema):
 
 
 class BulkDeleteFolder(BaseSchema):
-    # TODO: addition of etag field
     entries = fields.List(
         EXISTING_FOLDER,
         required=True,

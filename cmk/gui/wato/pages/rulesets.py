@@ -51,12 +51,13 @@ from cmk.gui.page_menu import (
     PageMenuSearch,
     PageMenuTopic,
 )
-from cmk.gui.plugins.wato import (
+from cmk.gui.plugins.wato.utils import (
     add_change,
     ConfigHostname,
     DictHostTagCondition,
     flash,
     HostTagCondition,
+    LabelCondition,
     make_action_link,
     make_confirm_link,
     make_diff_text,
@@ -66,7 +67,6 @@ from cmk.gui.plugins.wato import (
     search_form,
     WatoMode,
 )
-from cmk.gui.plugins.wato.utils import LabelCondition
 from cmk.gui.plugins.wato.utils.main_menu import main_module_registry
 from cmk.gui.sites import wato_slave_sites
 from cmk.gui.table import table_element
@@ -374,6 +374,42 @@ class ModeRuleSearch(ABCRulesetMode):
                 default_value=self._search_options.get("fulltext", ""),
             )
         super().page()
+
+    def action(self):
+        forms.remove_unused_vars("search_p_rule", _is_var_to_delete)
+        return redirect(makeuri(request, []))
+
+
+def _is_var_to_delete(form_prefix: str, varname: str, value: str) -> bool:
+    """
+    Example for hosttags:
+    'search_p_rule_hosttags_USE':'on'
+
+    We have to keep auxtags, if not 'ignored':
+    'search_p_rule_hosttags_auxtag_ip-v4': 'ignore'/'is'/'is not'
+
+    and tags with an own tagvalue variable, if not 'ignored':
+    'search_p_rule_hosttags_tag_address_family' : 'ignore'/'is'/'is not'
+    'search_p_rule_hosttags_tagvalue_address_family' : 'ip-v4-only'
+    """
+    if "_auxtag_" in varname and value != "ignore":
+        return False
+
+    if "_hosttags_tag_" in varname and value != "ignore":
+        tagvalue_varname = "%s_hosttags_tagvalue_%s" % (
+            form_prefix,
+            varname.split("_hosttags_tag_")[1],
+        )
+        if html.request.var(tagvalue_varname):
+            return False
+
+    if "_hosttags_tagvalue_" in varname:
+        tag_varname = "%s_hosttags_tag_%s" % (form_prefix, varname.split("_hosttags_tagvalue_")[1])
+        tag_value = html.request.var(tag_varname)
+        if tag_value and tag_value != "ignore":
+            return False
+
+    return True
 
 
 def _page_menu_entries_predefined_searches(group: Optional[str]) -> Iterable[PageMenuEntry]:
@@ -840,7 +876,7 @@ class ModeEditRuleset(WatoMode):
     def _page_menu_entries_rules(self) -> Iterable[PageMenuEntry]:
         yield PageMenuEntry(
             title=_("Add rule"),
-            icon_name={"icon": "rulesets", "emblem": "add"},
+            icon_name="new",
             item=make_form_submit_link(form_name="new_rule", button_name="_new_dflt_rule"),
             is_shortcut=True,
             is_suggested=True,
@@ -849,7 +885,7 @@ class ModeEditRuleset(WatoMode):
         if not self._folder.is_root():
             yield PageMenuEntry(
                 title=_("Add rule in folder %s") % self._folder.title(),
-                icon_name={"icon": "rulesets", "emblem": "add"},
+                icon_name={"icon": "folder_blue", "emblem": "rulesets"},
                 item=make_form_submit_link(form_name="new_rule", button_name="_new_rule"),
                 is_shortcut=True,
                 is_suggested=True,
@@ -863,7 +899,7 @@ class ModeEditRuleset(WatoMode):
 
             yield PageMenuEntry(
                 title=title,
-                icon_name={"icon": "rulesets", "emblem": "add"},
+                icon_name={"icon": "services_blue", "emblem": "rulesets"},
                 item=make_form_submit_link(form_name="new_rule", button_name="_new_host_rule"),
                 is_shortcut=True,
                 is_suggested=True,
@@ -1161,7 +1197,7 @@ class ModeEditRuleset(WatoMode):
         # Value
         table.cell(_("Value"))
         try:
-            value_html = self._valuespec.value_to_text(value)
+            value_html = self._valuespec.value_to_html(value)
         except Exception as e:
             try:
                 reason = str(e)
@@ -1189,7 +1225,7 @@ class ModeEditRuleset(WatoMode):
     def _rule_conditions(self, rule):
         self._predefined_condition_info(rule)
         html.write_text(
-            VSExplicitConditions(rulespec=self._rulespec).value_to_text(rule.get_rule_conditions())
+            VSExplicitConditions(rulespec=self._rulespec).value_to_html(rule.get_rule_conditions())
         )
 
     def _predefined_condition_info(self, rule):
@@ -1266,8 +1302,8 @@ class ModeRuleSearchForm(WatoMode):
         )
         return menu
 
-    def page(self) -> None:
-        html.begin_form("rule_search", method="GET")
+    def page(self):
+        html.begin_form("rule_search", method="POST")
         html.hidden_field("mode", self.back_mode, add_var=True)
 
         valuespec = self._valuespec()
@@ -2211,7 +2247,7 @@ class VSExplicitConditions(Transform):
         if value.startswith("!"):
             raise MKUserError(varprefix, _('It\'s not allowed to use a leading "!" here.'))
 
-    def value_to_text(self, value: RuleConditions) -> HTML:
+    def value_to_html(self, value: RuleConditions) -> HTML:
         with output_funnel.plugged():
             html.open_ul(class_="conditions")
             renderer = RuleConditionRenderer()

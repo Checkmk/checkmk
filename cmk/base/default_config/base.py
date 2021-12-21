@@ -9,7 +9,7 @@ from typing import List as _List
 from typing import Literal as _Literal
 from typing import Optional as _Optional
 
-from cmk.utils.type_defs import Ruleset, TagsOfHosts
+from cmk.utils.type_defs import Ruleset, TagConfigSpec, TagsOfHosts, TimeperiodSpecs
 
 # This file contains the defaults settings for almost all configuration
 # variables that can be overridden in main.mk. Some configuration
@@ -138,7 +138,7 @@ nagios_illegal_chars = "`;~!$%^&*|'\"<>?,="
 cmc_illegal_chars = ";\t"  # Tab is an illegal character for CMC and semicolon breaks metric system
 
 # Data to be defined in main.mk
-tag_config: _Dict[str, _List] = {
+tag_config: TagConfigSpec = {
     "aux_tags": [],
     "tag_groups": [],
 }
@@ -206,7 +206,7 @@ define_contactgroups: _Optional[_Dict[str, str]] = None
 contactgroup_members: _Dict = {}
 contacts: _Dict = {}
 # needed for WATO
-timeperiods: _Dict = {}
+timeperiods: TimeperiodSpecs = {}
 clusters: _Dict = {}
 clustered_services: _List = []
 # new in 1.1.4
@@ -286,4 +286,4 @@ legacy_checks: _List = []
 logwatch_rules: _List = []
 
 config_storage_format: _Literal["standard", "raw", "pickle"] = "pickle"  # new in 2.1.
-microcore_config_format: _Literal["binary", "protobuf"] = "binary"  # new in 2.1.
+microcore_config_format: _Literal["binary", "protobuf"] = "protobuf"  # new in 2.1.

@@ -11,13 +11,13 @@ A host tag group is a collection of different host tags, with each host receivin
 tag from the group.
 
 You can find an introduction to hosts including host tags and host tag groups in the
-[Checkmk guide](hhttps://docs.checkmk.com/latest/en/wato_hosts.html).
+[Checkmk guide](https://docs.checkmk.com/latest/en/wato_hosts.html).
 """
 
 import json
 from typing import Any, Dict
 
-from cmk.utils.tags import BuiltinTagConfig, TagGroup
+from cmk.utils.tags import BuiltinTagConfig, TagGroup, TaggroupSpec
 
 import cmk.gui.watolib as watolib
 from cmk.gui import fields
@@ -79,7 +79,7 @@ HOST_TAG_GROUP_NAME = {
 def create_host_tag_group(params):
     """Create a host tag group"""
     host_tag_group_details = params["body"]
-    save_tag_group(TagGroup(host_tag_group_details))
+    save_tag_group(TagGroup.from_config(host_tag_group_details))
     return _serve_host_tag_group(_retrieve_group(host_tag_group_details["id"]).get_dict_format())
 
 
@@ -129,7 +129,7 @@ def list_host_tag_groups(params):
     method="put",
     etag="both",
     path_params=[HOST_TAG_GROUP_NAME],
-    additional_status_codes=[405],
+    additional_status_codes=[401, 405],
     request_schema=request_schemas.UpdateHostTagGroup,
     response_schema=response_schemas.ConcreteHostTagGroup,
 )
@@ -148,9 +148,10 @@ def update_host_tag_group(params):
     updated_details = {x: body[x] for x in body if x != "repair"}
     tag_group = _retrieve_group(ident)
     group_details = tag_group.get_dict_format()
-    group_details.update(updated_details)
+    # This is an incremental update of the TaggroupSpec
+    group_details.update(updated_details)  # type: ignore[typeddict-item]
     try:
-        edit_tag_group(ident, TagGroup(group_details), allow_repair=body["repair"])
+        edit_tag_group(ident, TagGroup.from_config(group_details), allow_repair=body["repair"])
     except RepairError:
         return problem(
             401,
@@ -213,11 +214,11 @@ def _retrieve_group(ident: str) -> TagGroup:
     return tag_group
 
 
-def _serve_host_tag_group(tag_details: Dict[str, Any]) -> Response:
+def _serve_host_tag_group(tag_details: TaggroupSpec) -> Response:
     response = Response()
-    response.set_data(json.dumps(serialize_host_tag_group(tag_details)))
+    response.set_data(json.dumps(serialize_host_tag_group(dict(tag_details))))
     response.set_content_type("application/json")
-    response.headers.add("ETag", constructors.etag_of_dict(tag_details).to_header())
+    response.headers.add("ETag", constructors.etag_of_dict(dict(tag_details)).to_header())
     return response
 
 

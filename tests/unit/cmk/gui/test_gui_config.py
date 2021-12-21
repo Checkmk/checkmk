@@ -254,6 +254,7 @@ def test_registered_permission_sections():
 
     if not cmk_version.is_raw_edition():
         expected_sections += [
+            ("agent_registration", (50, "Agent registration", False)),
             ("custom_graph", (50, "Custom graphs", True)),
             ("forecast_graph", (50, "Forecast graphs", True)),
             ("graph_collection", (50, "Graph collections", True)),
@@ -272,7 +273,6 @@ def test_registered_permission_sections():
         assert section.do_sort == do_sort
 
 
-@pytest.mark.non_resilient
 def test_registered_permissions():
     load_dynamic_permissions()
 
@@ -302,6 +302,7 @@ def test_registered_permissions():
         "dashboard.checkmk_host",
         "general.acknowledge_werks",
         "general.act",
+        "general.agent_pairing",
         "general.change_password",
         "general.configure_sidebar",
         "general.csv_export",
@@ -311,6 +312,7 @@ def test_registered_permissions():
         "general.force_pagetype_topic",
         "general.publish_pagetype_topic",
         "general.publish_to_foreign_groups_pagetype_topic",
+        "general.publish_to_groups_pagetype_topic",
         "general.see_user_pagetype_topic",
         "general.delete_foreign_bookmark_list",
         "general.delete_foreign_custom_snapin",
@@ -335,18 +337,21 @@ def test_registered_permissions():
         "general.ignore_hard_limit",
         "general.ignore_soft_limit",
         "general.logout",
-        "general.notify",
+        "general.message",
         "general.painter_options",
         "general.parent_child_topology",
-        "general.post_csr_rest_api",
         "general.publish_bookmark_list",
         "general.publish_to_foreign_groups_bookmark_list",
+        "general.publish_to_groups_bookmark_list",
         "general.publish_custom_snapin",
         "general.publish_to_foreign_groups_custom_snapin",
+        "general.publish_to_groups_custom_snapin",
         "general.publish_dashboards",
         "general.publish_dashboards_to_foreign_groups",
+        "general.publish_dashboards_to_groups",
         "general.publish_views",
         "general.publish_views_to_foreign_groups",
+        "general.publish_views_to_groups",
         "general.see_all",
         "general.see_availability",
         "general.see_crash_reports",
@@ -358,6 +363,7 @@ def test_registered_permissions():
         "general.see_user_custom_snapin",
         "general.see_user_dashboards",
         "general.see_user_views",
+        "general.server_side_requests",
         "general.use",
         "general.view_option_columns",
         "general.view_option_refresh",
@@ -706,6 +712,7 @@ def test_registered_permissions():
 
     if not cmk_version.is_raw_edition():
         expected_permissions += [
+            "agent_registration.edit",
             "dashboard.problems",
             "dashboard.site",
             "dashboard.ntop_alerts",
@@ -765,14 +772,19 @@ def test_registered_permissions():
             "general.force_graph_tuning",
             "general.publish_graph_collection",
             "general.publish_to_foreign_groups_graph_collection",
+            "general.publish_to_groups_graph_collection",
             "general.publish_graph_tuning",
             "general.publish_to_foreign_groups_graph_tuning",
+            "general.publish_to_groups_graph_tuning",
             "general.publish_reports",
             "general.publish_reports_to_foreign_groups",
+            "general.publish_reports_to_groups",
             "general.publish_sla_configuration",
             "general.publish_to_foreign_groups_sla_configuration",
+            "general.publish_to_groups_sla_configuration",
             "general.publish_stored_report",
             "general.publish_to_foreign_groups_forecast_graph",
+            "general.publish_to_groups_forecast_graph",
             "general.see_user_custom_graph",
             "general.see_user_forecast_graph",
             "general.see_user_graph_collection",
@@ -789,6 +801,7 @@ def test_registered_permissions():
             "general.instant_reports",
             "general.publish_custom_graph",
             "general.publish_to_foreign_groups_custom_graph",
+            "general.publish_to_groups_custom_graph",
             "icons_and_actions.deployment_status",
             "icons_and_actions.ntop_host",
         ]
@@ -1109,7 +1122,9 @@ def test_default_tags():
     assert sorted(dict(config.tags.get_tag_group_choices()).keys()) == sorted(groups.keys())
 
     for tag_group in config.tags.tag_groups:
-        assert sorted(tag_group.get_tag_ids()) == sorted(groups[tag_group.id])
+        assert sorted(tag_group.get_tag_ids(), key=lambda s: s or "") == sorted(
+            groups[tag_group.id]
+        )
 
 
 @pytest.mark.usefixtures("load_config")

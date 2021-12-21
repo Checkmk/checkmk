@@ -12,6 +12,7 @@ from typing import Union
 
 import cmk.utils.paths
 from cmk.utils.tags import TagGroup
+from cmk.utils.version import is_raw_edition
 
 from cmk.snmplib.type_defs import SNMPBackendEnum  # pylint: disable=cmk-module-layer-violation
 
@@ -19,8 +20,9 @@ import cmk.gui.plugins.userdb.utils as userdb_utils
 from cmk.gui.exceptions import MKConfigError, MKUserError
 from cmk.gui.globals import config, request, user
 from cmk.gui.i18n import _
-from cmk.gui.plugins.views.icons import icon_and_action_registry
-from cmk.gui.plugins.wato import (
+from cmk.gui.plugins.views.icons.utils import icon_and_action_registry
+from cmk.gui.plugins.wato.omd_configuration import ConfigVariableGroupSiteManagement
+from cmk.gui.plugins.wato.utils import (
     BinaryHostRulespec,
     BinaryServiceRulespec,
     config_variable_group_registry,
@@ -29,9 +31,11 @@ from cmk.gui.plugins.wato import (
     ConfigDomainCore,
     ConfigDomainGUI,
     ConfigDomainOMD,
+    ConfigHostname,
     ConfigVariable,
     ConfigVariableGroup,
     ContactGroupSelection,
+    get_section_information,
     HostGroupSelection,
     HostnameTranslation,
     HostRulespec,
@@ -41,6 +45,8 @@ from cmk.gui.plugins.wato import (
     rulespec_group_registry,
     rulespec_registry,
     RulespecGroup,
+    RulespecGroupDiscoveryCheckParameters,
+    RulespecGroupMonitoringConfiguration,
     RulespecSubGroup,
     ServiceDescriptionTranslation,
     ServiceGroupSelection,
@@ -50,13 +56,6 @@ from cmk.gui.plugins.wato import (
     TimeperiodSelection,
     UserIconOrAction,
     valuespec_check_plugin_selection,
-)
-from cmk.gui.plugins.wato.omd_configuration import ConfigVariableGroupSiteManagement
-from cmk.gui.plugins.wato.utils import (
-    ConfigHostname,
-    get_section_information,
-    RulespecGroupDiscoveryCheckParameters,
-    RulespecGroupMonitoringConfiguration,
 )
 from cmk.gui.utils.theme import theme_choices
 from cmk.gui.utils.urls import makeuri_contextless
@@ -215,8 +214,7 @@ class ConfigVariableLogLevels(ConfigVariable):
         )
 
     def _web_log_level_elements(self):
-        elements = []
-        for level_id, title, help_text in [
+        loggers = [
             (
                 "cmk.web",
                 _("Web"),
@@ -258,7 +256,22 @@ class ConfigVariableLogLevels(ConfigVariable):
                 ),
             ),
             ("cmk.web.slow-views", _("Slow views"), _slow_view_logging_help()),
-        ]:
+        ]
+
+        if not is_raw_edition():
+            loggers.append(
+                (
+                    "cmk.web.agent_registration",
+                    _("Agent registration"),
+                    _(
+                        "Log the agent registration process of incoming requests"
+                        " by the Checkmk agent controller registration command."
+                    ),
+                ),
+            )
+
+        elements = []
+        for level_id, title, help_text in loggers:
             elements.append(
                 (
                     level_id,
@@ -866,7 +879,7 @@ class ConfigVariableVirtualHostTrees(ConfigVariable):
         by_topic: Dict[str, List[TagGroup]] = {}
         for tag_group in config.tags.tag_groups:
             choices.append((tag_group.id, tag_group.title))
-            by_topic.setdefault(tag_group.topic, []).append(tag_group)
+            by_topic.setdefault(tag_group.topic or _("Tags"), []).append(tag_group)
 
         # Now search for checkbox-only-topics
         for topic, tag_groups in by_topic.items():
@@ -1496,7 +1509,7 @@ def _service_tag_rules_tag_group_choices():
                 tag_group.id,
                 tag_group.title,
                 DropdownChoice(
-                    choices=tag_group.get_tag_choices(),
+                    choices=list(tag_group.get_tag_choices()),
                 ),
             )
         )
@@ -4688,7 +4701,7 @@ def _valuespec_extra_host_conf_icon_image():
                 "You can assign icons to hosts for the status GUI. "
                 "Put your images into <tt>%s</tt>. "
             )
-            % (cmk.utils.paths.omd_root + "/local/share/check_mk/web/htdocs/images/icons"),
+            % str(cmk.utils.paths.omd_root / "local/share/check_mk/web/htdocs/images/icons"),
             with_emblem=False,
         ),
         forth=lambda v: v and (v.endswith(".png") and v[:-4]) or v if v is not None else "",
@@ -4712,7 +4725,7 @@ def _valuespec_extra_service_conf_icon_image():
                 "You can assign icons to services for the status GUI. "
                 "Put your images into <tt>%s</tt>. "
             )
-            % (cmk.utils.paths.omd_root + "/local/share/check_mk/web/htdocs/images/icons"),
+            % str(cmk.utils.paths.omd_root / "local/share/check_mk/web/htdocs/images/icons"),
             with_emblem=False,
         ),
         forth=lambda v: v and (v.endswith(".png") and v[:-4]) or v if v is not None else "",
@@ -4835,7 +4848,7 @@ class RulespecGroupAgent(RulespecGroup):
 
     @property
     def title(self):
-        return _("Access to Agents")
+        return _("Access to agents")
 
     @property
     def help(self):
@@ -5316,17 +5329,38 @@ rulespec_registry.register(
 )
 
 
-def _valuespec_agent_encryption():
+def _encryption_secret(title) -> _Tuple[str, PasswordSpec]:
+    return ("passphrase", PasswordSpec(title=title, pwlen=16, allow_empty=False))
+
+
+def _realtime_encryption() -> _Tuple[str, DropdownChoice]:
+    return (
+        "use_realtime",
+        DropdownChoice(
+            title=_("Encryption for Realtime Updates"),
+            help=_("Choose if realtime updates are sent/expected encrypted"),
+            default_value="enforce",
+            choices=[
+                ("enforce", _("Enforce (drop unencrypted data)")),
+                ("allow", _("Enable  (accept encrypted and unencrypted data)")),
+                ("disable", _("Disable (drop encrypted data)")),
+            ],
+        ),
+    )
+
+
+def _valuespec_agent_encryption_no_tls() -> Dictionary:
     return Dictionary(
+        title=_("Allow non-TLS connections"),
         elements=[
-            ("passphrase", PasswordSpec(title=_("Encryption secret"), pwlen=16, allow_empty=False)),
+            _encryption_secret(_("Encryption secret")),
             (
                 "use_regular",
                 DropdownChoice(
-                    title=_("Encryption for Agent"),
+                    title=_("Use the following setting for non-TLS connections"),
                     help=_(
-                        "Choose if the agent agents encrypt packages. This controls whether "
-                        "baked agents encrypt their output and whether check_mk expects "
+                        "Choose if the agent sends encrypted packages. This controls whether "
+                        "baked agents encrypt their output and whether Checkmk expects "
                         "encrypted output. "
                         "Please note: If you opt to enforce encryption, "
                         "agents that don't support encryption will not work any more. "
@@ -5336,27 +5370,14 @@ def _valuespec_agent_encryption():
                     default_value="disable",
                     choices=[
                         ("enforce", _("Enforce (drop unencrypted data)")),
-                        ("allow", _("Enable  (accept encrypted and unencrypted data)")),
+                        ("allow", _("Enable (accept encrypted and unencrypted data)")),
                         ("disable", _("Disable (drop encrypted data)")),
                     ],
                 ),
             ),
-            (
-                "use_realtime",
-                DropdownChoice(
-                    title=_("Encryption for Realtime Updates"),
-                    help=_("Choose if realtime updates are sent/expected encrypted"),
-                    default_value="enforce",
-                    choices=[
-                        ("enforce", _("Enforce (drop unencrypted data)")),
-                        ("allow", _("Enable  (accept encrypted and unencrypted data)")),
-                        ("disable", _("Disable (drop encrypted data)")),
-                    ],
-                ),
-            ),
+            _realtime_encryption(),
         ],
         optional_keys=[],
-        title=_("Encryption (Linux, Windows)"),
         help=_("Control encryption of data sent from agents to Checkmk.")
         + "<br>"
         + _(
@@ -5365,6 +5386,39 @@ def _valuespec_agent_encryption():
             "<i>enforce</i>, Checkmk will expect encrypted data from all matching hosts. "
             "Please keep this in mind when configuring this ruleset."
         ),
+    )
+
+
+def _valuespec_agent_encryption():
+    tls_alt_name_title = _("Use TLS encryption (Linux)")
+    return Alternative(
+        title=_("Encryption (Linux, Windows)"),
+        help=_("Control encryption of data sent from agents to Checkmk.")
+        + "<br>"
+        + _(
+            "<b>Note</b>: On the agent side, TLS is currently only supported on systemd based Linux machines. "
+            "However, when setting the Encryption settings to '%s', Checkmk will expect encrypted data from all matching hosts. "
+            "Please keep this in mind when configuring this ruleset."
+        )
+        % tls_alt_name_title,
+        elements=[
+            Dictionary(
+                title=tls_alt_name_title,
+                elements=[
+                    _realtime_encryption(),
+                    _encryption_secret(_("Encryption secret for Realtime Updates")),
+                ],
+                help=_("Control encryption of data sent from agents to Checkmk.")
+                + "<br>"
+                + _(
+                    "<b>Note</b>: On the agent side, this encryption is only supported by the Linux "
+                    "agent and the Windows agent. However, when setting the Encryption settings to "
+                    "<i>enforce</i>, Checkmk will expect encrypted data from all matching hosts. "
+                    "Please keep this in mind when configuring this ruleset."
+                ),
+            ),
+            _valuespec_agent_encryption_no_tls(),
+        ],
     )
 
 
@@ -5549,8 +5603,33 @@ def _valuespec_check_mk_exit_status():
                         default_value=1,
                     ),
                 ),
+                (
+                    "legacy_pull_mode",
+                    MonitoringState(
+                        title=_("State in case of available but not enabled TLS"),
+                        help=_(
+                            "New agent installations that support TLS will refuse to send any data "
+                            "without TLS. However, if you upgrade an existing installation, the "
+                            "old transport mode (with optional encryption) will continue to work, "
+                            "to ease migration."
+                        )
+                        + "<br>"
+                        + _(
+                            "It is recommended to enable TLS as soon as possible by running the "
+                            "`register` command of the `cmk-agent-ctl` utility on the monitored "
+                            "host."
+                        )
+                        + "<br>"
+                        + _(
+                            "However, if that is not feasable, you can configure the legacy mode "
+                            "(which may or <b>may not</b> include encryption) to be OK using this "
+                            "setting. Note that this option may become ineffective in a future "
+                            "Checkmk version."
+                        ),
+                        default_value=1,
+                    ),
+                ),
             ],
-            optional_keys=["individual", "restricted_address_mismatch"],
         ),
         forth=transform_exit_code_spec,
         title=_("Status of the Checkmk services"),

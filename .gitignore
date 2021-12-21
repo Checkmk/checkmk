@@ -14,10 +14,9 @@
 .mypy_cache/
 .cargo
 .ropeproject
+.hypothesis
 .syntastic
 .testmondata
-.venv-2.7
-.venv-3.8
 .venv.lock
 .venv/
 *.cookie
@@ -59,7 +58,7 @@ config.status
 config.sub
 configure
 depcomp
-marcv/dist/*
+agent-receiver/dist/*
 agents/linux/*
 doc/plugin-api/build/
 doc/plugin-api/source/apidoc/
@@ -68,8 +67,8 @@ GRTAGS
 GTAGS
 htmlcov/
 install-sh
-marcv/marcv.egg-info
-marcv/pyproject.toml
+agent-receiver/agent_receiver.egg-info
+agent-receiver/pyproject.toml
 missing
 mk-livestatus-*.tar.gz
 node_modules/
@@ -81,6 +80,7 @@ stamp-h1
 tags
 tests/web/data/*
 tests/var/*
+tests/.hypothesis/
 web/htdocs/js/*_min.js.map
 /results
 /buildscripts/infrastructure/build-nodes/scripts/defines.make

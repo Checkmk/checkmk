@@ -15,6 +15,9 @@ from cmk.base.check_legacy_includes.df import *  # pylint: disable=wildcard-impo
 from cmk.base.check_legacy_includes.size_trend import size_trend
 from cmk.base.plugins.agent_based.utils.df import df_discovery, DfBlock
 
+factory_settings["filesystem_default_levels"] = FILESYSTEM_DEFAULT_LEVELS
+
+
 inventory_df_rules = []
 inventory_df_exclude_fs = ["tmpfs", "nfs", "smbfs", "cifs", "iso9660"]
 
@@ -67,7 +70,9 @@ class ItemAndGrouping(NamedTuple):
 
 
 def _get_item_behaviour_for_block_devices(params) -> ItemBehaviour:
-    if params.get("mountpoint_for_block_devices") == "uuid_as_mountpoint":
+    # The first one comes from WATO ruleset the second one is set during discovery
+    # which is kind of normalized name.
+    if params.get("mountpoint_for_block_devices") in ["uuid_as_mountpoint", "uuid"]:
         return ItemBehaviour.uuid
     return ItemBehaviour.volume_name
 
@@ -150,6 +155,7 @@ def inventory_df(parsed):
 
     df_blocks, _df_inodes = parsed
     df_blocks = _handle_block_devices(df_blocks, mountpoint_for_block_devices)
+
     filtered_blocks = _filter_df_blocks(df_blocks, inventory_options)
 
     mplist = [

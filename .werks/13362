@@ -1,0 +1,20 @@
+Title: Adjustments to service discovery page
+Class: feature
+Compatible: compat
+Component: multisite
+Date: 1637052624
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.1.0i1
+
+UI adjustments to service discovery page:
+<ul>
+<li>Make the tables for each section foldable
+<li>Remove icons from table headers
+<li>Swap the order of services and labels sections
+<li>Bring the "Fix all" button into line with all other buttons and rename to "Apply changes"
+<li>Remove message "Discovered no service yet." when creating a new host
+<li>Remove the rows section and show the row entries for each table separately in brackets after the title
+<li>No longer display the "Full scan finished..." message after a sucessfull scan
+</ul>

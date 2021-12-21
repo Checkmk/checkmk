@@ -7,7 +7,7 @@
 import copy
 import os
 import types
-from typing import Any, Callable, NamedTuple
+from typing import Callable, NamedTuple
 
 import mock
 import pytest
@@ -332,11 +332,15 @@ def assertDiscoveryResultsEqual(check, actual, expected):
     for enta, ente in zip(actual.entries, expected.entries):
         item_a, default_params_a = enta
         if isinstance(default_params_a, str):
-            default_params_a = eval(default_params_a, check.context, check.context)
+            default_params_a = eval(  # pylint:disable=eval-used
+                default_params_a, check.context, check.context
+            )
 
         item_e, default_params_e = ente
         if isinstance(default_params_e, str):
-            default_params_e = eval(default_params_e, check.context, check.context)
+            default_params_e = eval(  # pylint:disable=eval-used
+                default_params_e, check.context, check.context
+            )
 
         assert item_a == item_e, "items differ: %r != %r" % (item_a, item_e)
         assert default_params_a == default_params_e, "default parameters differ: %r != %r" % (

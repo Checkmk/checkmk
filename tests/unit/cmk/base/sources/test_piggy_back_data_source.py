@@ -31,5 +31,5 @@ def test_attribute_defaults(monkeypatch: MonkeyPatch, ipaddress: HostAddress, mo
     assert source.hostname == hostname
     assert source.ipaddress == ipaddress
     assert source.description.startswith("Process piggyback data from")
-    assert source.summarize(result.OK(AgentHostSections()), mode=mode) == (0, "")
+    assert not source.summarize(result.OK(AgentHostSections()), mode=mode)
     assert source.id == "piggyback"

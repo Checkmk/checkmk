@@ -16,11 +16,11 @@ import time
 import urllib.parse
 from contextlib import suppress
 from pathlib import Path
-from typing import Union
+from typing import List, Mapping, MutableMapping, Optional
 
 import pytest
-from six import ensure_str
 
+from tests.testlib.openapi_session import CMKOpenApiSession
 from tests.testlib.utils import (
     cmc_path,
     cme_path,
@@ -31,6 +31,8 @@ from tests.testlib.utils import (
 from tests.testlib.version import CMKVersion
 from tests.testlib.web_session import CMKWebSession
 
+import livestatus
+
 logger = logging.getLogger(__name__)
 
 PYTHON_VERSION_MAJOR, PYTHON_VERSION_MINOR = sys.version_info.major, sys.version_info.minor
@@ -39,14 +41,15 @@ PYTHON_VERSION_MAJOR, PYTHON_VERSION_MINOR = sys.version_info.major, sys.version
 class Site:
     def __init__(
         self,
-        site_id,
-        reuse=True,
-        version=CMKVersion.DEFAULT,
-        edition=CMKVersion.CEE,
-        branch="master",
-        update_from_git=False,
-        install_test_python_modules=True,
-    ):
+        site_id: str,
+        reuse: bool = True,
+        version: str = CMKVersion.DEFAULT,
+        edition: str = CMKVersion.CEE,
+        branch: str = "master",
+        update_from_git: bool = False,
+        install_test_python_modules: bool = True,
+        admin_password: str = "cmk",
+    ) -> None:
         assert site_id
         self.id = site_id
         self.root = "/omd/sites/%s" % self.id
@@ -59,25 +62,29 @@ class Site:
 
         self.http_proto = "http"
         self.http_address = "127.0.0.1"
-        self._apache_port = None  # internal cache for the port
+        self._apache_port: Optional[int] = None  # internal cache for the port
 
-        self._livestatus_port = None
+        self._livestatus_port: Optional[int] = None
+        self.admin_password = admin_password
+
+        self.openapi = CMKOpenApiSession(
+            host=self.http_address,
+            port=self.apache_port if self.exists() else 80,
+            user="automation" if self.exists() else "cmkadmin",
+            password=self.get_automation_secret() if self.exists() else self.admin_password,
+            site=self.id,
+        )
 
     @property
-    def apache_port(self):
+    def apache_port(self) -> int:
         if self._apache_port is None:
             self._apache_port = int(self.get_config("APACHE_TCP_PORT"))
         return self._apache_port
 
     @property
-    def internal_url(self):
+    def internal_url(self) -> str:
         """This gives the address-port combination where the site-Apache process listens."""
-        return "%s://%s:%s/%s/check_mk/" % (
-            self.http_proto,
-            self.http_address,
-            self.apache_port,
-            self.id,
-        )
+        return f"{self.http_proto}://{self.http_address}:{self.apache_port}/{self.id}/check_mk/"
 
     # Previous versions of integration/composition tests needed this distinction. This is no
     # longer the case and can be safely removed once all tests switch to either one of url
@@ -85,15 +92,13 @@ class Site:
     url = internal_url
 
     @property
-    def livestatus_port(self):
+    def livestatus_port(self) -> int:
         if self._livestatus_port is None:
             raise Exception("Livestatus TCP not opened yet")
         return self._livestatus_port
 
     @property
-    def live(self):
-        import livestatus  # pylint: disable=import-outside-toplevel,import-outside-toplevel
-
+    def live(self) -> livestatus.SingleSiteConnection:
         # Note: If the site comes from a SiteFactory instance, the TCP connection
         # is insecure, i.e. no TLS.
         live = (
@@ -106,7 +111,7 @@ class Site:
         live.set_timeout(2)
         return live
 
-    def url_for_path(self, path):
+    def url_for_path(self, path: str) -> str:
         """
         Computes a full URL inkl. http://... from a URL starting with the path.
         In case no path component is in URL, prepend "/[site]/check_mk" to the path.
@@ -116,15 +121,13 @@ class Site:
 
         if "/" not in urllib.parse.urlparse(path).path:
             path = "/%s/check_mk/%s" % (self.id, path)
-        return "%s://%s:%d%s" % (self.http_proto, self.http_address, self.apache_port, path)
+        return f"{self.http_proto}://{self.http_address}:{self.apache_port}{path}"
 
-    def wait_for_core_reloaded(self, after):
+    def wait_for_core_reloaded(self, after) -> None:
         # Activating changes can involve an asynchronous(!) monitoring
         # core restart/reload, so e.g. querying a Livestatus table immediately
         # might not reflect the changes yet. Ask the core for a successful reload.
         def config_reloaded():
-            import livestatus  # pylint: disable=import-outside-toplevel,import-outside-toplevel
-
             try:
                 new_t = self.live.query_value("GET status\nColumns: program_start\n")
             except livestatus.MKLivestatusException:
@@ -141,7 +144,7 @@ class Site:
 
         assert config_reloaded()
 
-    def restart_core(self):
+    def restart_core(self) -> None:
         # Remember the time for the core reload check and wait a second because the program_start
         # is reported as integer and wait_for_core_reloaded() compares with ">".
         before_restart = time.time()
@@ -149,46 +152,47 @@ class Site:
         self.omd("restart", "core")
         self.wait_for_core_reloaded(before_restart)
 
-    def send_host_check_result(self, hostname, state, output, expected_state=None):
+    def send_host_check_result(
+        self, hostname: str, state: int, output: str, expected_state: Optional[int] = None
+    ) -> None:
         if expected_state is None:
             expected_state = state
         last_check_before = self._last_host_check(hostname)
         command_timestamp = self._command_timestamp(last_check_before)
         self.live.command(
-            "[%d] PROCESS_HOST_CHECK_RESULT;%s;%d;%s" % (command_timestamp, hostname, state, output)
+            f"[{command_timestamp:.0f}] PROCESS_HOST_CHECK_RESULT;{hostname};{state};{output}"
         )
         self._wait_for_next_host_check(
             hostname, last_check_before, command_timestamp, expected_state
         )
 
     def send_service_check_result(
-        self, hostname, service_description, state, output, expected_state=None
-    ):
+        self,
+        hostname: str,
+        service_description: str,
+        state: int,
+        output: str,
+        expected_state: Optional[int] = None,
+    ) -> None:
         if expected_state is None:
             expected_state = state
         last_check_before = self._last_service_check(hostname, service_description)
         command_timestamp = self._command_timestamp(last_check_before)
         self.live.command(
-            "[%d] PROCESS_SERVICE_CHECK_RESULT;%s;%s;%d;%s"
-            % (command_timestamp, hostname, service_description, state, output)
+            f"[{command_timestamp:.0f}] PROCESS_SERVICE_CHECK_RESULT;{hostname};{service_description};{state};{output}"
         )
         self._wait_for_next_service_check(
             hostname, service_description, last_check_before, command_timestamp, expected_state
         )
 
-    def schedule_check(self, hostname, service_description, expected_state):
+    def schedule_check(self, hostname: str, service_description: str, expected_state: int) -> None:
         logger.debug("%s;%s schedule check", hostname, service_description)
         last_check_before = self._last_service_check(hostname, service_description)
         logger.debug("%s;%s last check before %r", hostname, service_description, last_check_before)
 
         command_timestamp = self._command_timestamp(last_check_before)
 
-        command = "[%d] SCHEDULE_FORCED_SVC_CHECK;%s;%s;%d" % (
-            command_timestamp,
-            hostname,
-            service_description,
-            command_timestamp,
-        )
+        command = f"[{command_timestamp:.0f}] SCHEDULE_FORCED_SVC_CHECK;{hostname};{service_description};{command_timestamp:.0f}"
 
         logger.debug("%s;%s: %r", hostname, service_description, command)
         self.live.command(command)
@@ -197,7 +201,7 @@ class Site:
             hostname, service_description, last_check_before, command_timestamp, expected_state
         )
 
-    def _command_timestamp(self, last_check_before):
+    def _command_timestamp(self, last_check_before: float) -> float:
         # Ensure the next check result is not in same second as the previous check
         timestamp = time.time()
         while int(last_check_before) == int(timestamp):
@@ -206,19 +210,18 @@ class Site:
         return timestamp
 
     def _wait_for_next_host_check(
-        self, hostname, last_check_before, command_timestamp, expected_state
-    ):
+        self, hostname: str, last_check_before: float, command_timestamp: float, expected_state: int
+    ) -> None:
         wait_timeout = 20
         last_check, state, plugin_output = self.live.query_row(
             "GET hosts\n"
             "Columns: last_check state plugin_output\n"
-            "Filter: host_name = %s\n"
-            "WaitObject: %s\n"
-            "WaitTimeout: %d\n"
-            "WaitCondition: last_check > %d\n"
-            "WaitCondition: state = %d\n"
+            f"Filter: host_name = {hostname}\n"
+            f"WaitObject: {hostname}\n"
+            f"WaitTimeout: {wait_timeout*1000:d}\n"
+            f"WaitCondition: last_check > {last_check_before:.0f}\n"
+            f"WaitCondition: state = {expected_state}\n"
             "WaitTrigger: check\n"
-            % (hostname, hostname, wait_timeout * 1000, last_check_before, expected_state)
         )
         self._verify_next_check_output(
             command_timestamp,
@@ -231,29 +234,25 @@ class Site:
         )
 
     def _wait_for_next_service_check(
-        self, hostname, service_description, last_check_before, command_timestamp, expected_state
-    ):
+        self,
+        hostname: str,
+        service_description: str,
+        last_check_before: float,
+        command_timestamp: float,
+        expected_state: int,
+    ) -> None:
         wait_timeout = 20
         last_check, state, plugin_output = self.live.query_row(
             "GET services\n"
             "Columns: last_check state plugin_output\n"
-            "Filter: host_name = %s\n"
-            "Filter: description = %s\n"
-            "WaitObject: %s;%s\n"
-            "WaitTimeout: %d\n"
-            "WaitCondition: last_check > %d\n"
-            "WaitCondition: state = %d\n"
+            f"Filter: host_name = {hostname}\n"
+            f"Filter: description = {service_description}\n"
+            f"WaitObject: {hostname};{service_description}\n"
+            f"WaitTimeout: {wait_timeout*1000:d}\n"
+            f"WaitCondition: last_check > {last_check_before:.0f}\n"
+            f"WaitCondition: state = {expected_state}\n"
             "WaitCondition: has_been_checked = 1\n"
             "WaitTrigger: check\n"
-            % (
-                hostname,
-                service_description,
-                hostname,
-                service_description,
-                wait_timeout * 1000,
-                last_check_before,
-                expected_state,
-            )
         )
         self._verify_next_check_output(
             command_timestamp,
@@ -267,46 +266,44 @@ class Site:
 
     def _verify_next_check_output(
         self,
-        command_timestamp,
-        last_check,
-        last_check_before,
-        state,
-        expected_state,
-        plugin_output,
-        wait_timeout,
-    ):
+        command_timestamp: float,
+        last_check: float,
+        last_check_before: float,
+        state: int,
+        expected_state: int,
+        plugin_output: str,
+        wait_timeout: int,
+    ) -> None:
         logger.debug("processing check result took %0.2f seconds", time.time() - command_timestamp)
         assert last_check > last_check_before, (
-            "Check result not processed within %d seconds (last check before reschedule: %d, "
-            "scheduled at: %d, last check: %d)"
-            % (wait_timeout, last_check_before, command_timestamp, last_check)
+            f"Check result not processed within {wait_timeout} seconds "
+            f"(last check before reschedule: {last_check_before:.0f}, "
+            f"scheduled at: {command_timestamp:.0f}, last check: {last_check:.0f})"
         )
-        assert state == expected_state, "Expected %d state, got %d state, output %s" % (
-            expected_state,
-            state,
-            plugin_output,
-        )
+        assert (
+            state == expected_state
+        ), f"Expected {expected_state} state, got {state} state, output {plugin_output}"
 
-    def _last_host_check(self, hostname):
+    def _last_host_check(self, hostname: str) -> float:
         return self.live.query_value(
-            "GET hosts\n" "Columns: last_check\n" "Filter: host_name = %s\n" % (hostname)
+            f"GET hosts\nColumns: last_check\nFilter: host_name = {hostname}\n"
         )
 
-    def _last_service_check(self, hostname, service_description):
+    def _last_service_check(self, hostname: str, service_description: str) -> float:
         return self.live.query_value(
             "GET services\n"
             "Columns: last_check\n"
-            "Filter: host_name = %s\n"
-            "Filter: service_description = %s\n" % (hostname, service_description)
+            f"Filter: host_name = {hostname}\n"
+            f"Filter: service_description = {service_description}\n"
         )
 
-    def get_host_state(self, hostname):
-        return self.live.query_value("GET hosts\nColumns: state\nFilter: host_name = %s" % hostname)
+    def get_host_state(self, hostname: str) -> int:
+        return self.live.query_value(f"GET hosts\nColumns: state\nFilter: host_name = {hostname}")
 
-    def _is_running_as_site_user(self):
+    def _is_running_as_site_user(self) -> bool:
         return pwd.getpwuid(os.getuid()).pw_name == self.id
 
-    def execute(self, cmd, *args, **kwargs):
+    def execute(self, cmd: List[str], *args, **kwargs) -> subprocess.Popen:
         assert isinstance(cmd, list), "The command must be given as list"
 
         kwargs.setdefault("encoding", "utf-8")
@@ -343,18 +340,18 @@ class Site:
             logger.debug("> %s", line)
         return p.returncode
 
-    def path(self, rel_path):
+    def path(self, rel_path: str) -> str:
         return os.path.join(self.root, rel_path)
 
-    def read_file(self, rel_path):
+    def read_file(self, rel_path: str) -> str:
         if not self._is_running_as_site_user():
             p = self.execute(["cat", self.path(rel_path)], stdout=subprocess.PIPE)
             if p.wait() != 0:
                 raise Exception("Failed to read file %s. Exit-Code: %d" % (rel_path, p.wait()))
-            return p.stdout.read()
+            return p.stdout.read() if p.stdout is not None else ""
         return open(self.path(rel_path)).read()
 
-    def delete_file(self, rel_path, missing_ok=False):
+    def delete_file(self, rel_path: str, missing_ok: bool = False) -> None:
         if not self._is_running_as_site_user():
             p = self.execute(["rm", "-f", self.path(rel_path)])
             if p.wait() != 0:
@@ -362,7 +359,7 @@ class Site:
         else:
             Path(self.path(rel_path)).unlink(missing_ok=missing_ok)
 
-    def delete_dir(self, rel_path):
+    def delete_dir(self, rel_path: str) -> None:
         if not self._is_running_as_site_user():
             p = self.execute(["rm", "-rf", self.path(rel_path)])
             if p.wait() != 0:
@@ -372,15 +369,15 @@ class Site:
         else:
             shutil.rmtree(self.path(rel_path))
 
-    # TODO: Rename to write_text_file?
-    def write_file(self, rel_path, content):
+    def write_text_file(self, rel_path: str, content: str) -> None:
         if not self._is_running_as_site_user():
             p = self.execute(
                 ["tee", self.path(rel_path)], stdin=subprocess.PIPE, stdout=open(os.devnull, "w")
             )
             # ? content seems to have the type str
-            p.communicate(ensure_str(content))
-            p.stdin.close()
+            p.communicate(content)
+            if p.stdin is not None:
+                p.stdin.close()
             if p.wait() != 0:
                 raise Exception("Failed to write file %s. Exit-Code: %d" % (rel_path, p.wait()))
         else:
@@ -389,7 +386,7 @@ class Site:
             with file_path.open("w", encoding="utf-8") as f:
                 f.write(content)
 
-    def write_binary_file(self, rel_path, content):
+    def write_binary_file(self, rel_path: str, content: bytes) -> None:
         if not self._is_running_as_site_user():
             p = self.execute(
                 ["tee", self.path(rel_path)],
@@ -398,7 +395,8 @@ class Site:
                 encoding=None,
             )
             p.communicate(content)
-            p.stdin.close()
+            if p.stdin is not None:
+                p.stdin.close()
             if p.wait() != 0:
                 raise Exception("Failed to write file %s. Exit-Code: %d" % (rel_path, p.wait()))
         else:
@@ -407,7 +405,7 @@ class Site:
             with file_path.open("wb") as f:
                 f.write(content)
 
-    def create_rel_symlink(self, link_rel_target, rel_link_name):
+    def create_rel_symlink(self, link_rel_target: str, rel_link_name: str) -> None:
         if not self._is_running_as_site_user():
             p = self.execute(
                 ["ln", "-s", link_rel_target, rel_link_name],
@@ -421,30 +419,30 @@ class Site:
                     % (rel_link_name, link_rel_target, p.wait())
                 )
         else:
-            return os.symlink(link_rel_target, os.path.join(self.root, rel_link_name))
+            os.symlink(link_rel_target, os.path.join(self.root, rel_link_name))
 
-    def resolve_path(self, rel_path: Union[str, Path]) -> Path:
+    def resolve_path(self, rel_path: Path) -> Path:
         if not self._is_running_as_site_user():
-            p = self.execute(["readlink", "-e", self.path(rel_path)], stdout=subprocess.PIPE)
+            p = self.execute(["readlink", "-e", self.path(str(rel_path))], stdout=subprocess.PIPE)
             if p.wait() != 0:
-                raise Exception(
-                    "Failed to read symlink at %s. Exit-Code: %d" % (rel_path, p.wait())
-                )
+                raise Exception(f"Failed to read symlink at {rel_path}. Exit-Code: {p.wait()}")
+            if p.stdout is None:
+                raise Exception(f"Failed to read symlink at {rel_path}. No stdout.")
             return Path(p.stdout.read().strip())
-        return self.path(rel_path).resolve()
+        return Path(self.path(str(rel_path))).resolve()
 
-    def file_exists(self, rel_path):
+    def file_exists(self, rel_path: str) -> bool:
         if not self._is_running_as_site_user():
             p = self.execute(["test", "-e", self.path(rel_path)], stdout=subprocess.PIPE)
             return p.wait() == 0
 
         return os.path.exists(self.path(rel_path))
 
-    def makedirs(self, rel_path):
+    def makedirs(self, rel_path: str) -> bool:
         p = self.execute(["mkdir", "-p", self.path(rel_path)])
         return p.wait() == 0
 
-    def cleanup_if_wrong_version(self):
+    def cleanup_if_wrong_version(self) -> None:
         if not self.exists():
             return
 
@@ -454,10 +452,10 @@ class Site:
         # Now cleanup!
         self.rm()
 
-    def current_version_directory(self):
+    def current_version_directory(self) -> str:
         return os.path.split(os.readlink("/omd/sites/%s/version" % self.id))[-1]
 
-    def create(self):
+    def create(self) -> None:
         if not self.version.is_installed():
             raise Exception(
                 "Version %s not installed. "
@@ -477,7 +475,7 @@ class Site:
                     self.version.version_directory(),
                     "create",
                     "--admin-password",
-                    "cmk",
+                    self.admin_password,
                     "--apache-reload",
                     self.id,
                 ]
@@ -510,14 +508,19 @@ class Site:
 
         self.makedirs(self.result_dir())
 
-    def _ensure_sample_config_is_present(self):
+        self.openapi.port = self.apache_port
+        self.openapi.set_authentication_header(
+            user="automation", password=self.get_automation_secret()
+        )
+
+    def _ensure_sample_config_is_present(self) -> None:
         if missing_files := self._missing_but_required_wato_files():
             raise Exception(
                 "Sample config was not created by post create hook "
                 "01_create-sample-config.py (Missing files: %s)" % missing_files
             )
 
-    def _missing_but_required_wato_files(self):
+    def _missing_but_required_wato_files(self) -> List[str]:
         required_files = [
             "etc/check_mk/conf.d/wato/rules.mk",
             "etc/check_mk/multisite.d/wato/tags.mk",
@@ -532,7 +535,7 @@ class Site:
                 missing.append(f)
         return missing
 
-    def _update_with_f12_files(self):
+    def _update_with_f12_files(self) -> None:
         paths = [
             cmk_path() + "/omd/packages/omd",
             cmk_path() + "/livestatus",
@@ -591,26 +594,26 @@ class Site:
                 print('Executing .f12 in "%s" DONE' % path)
                 sys.stdout.flush()
 
-    def _update_cmk_core_config(self):
+    def _update_cmk_core_config(self) -> None:
         logger.info("Updating core configuration...")
         p = self.execute(["cmk", "-U"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         assert p.wait() == 0, "Failed to execute 'cmk -U': %s" % p.communicate()[0]
 
-    def _set_number_of_helpers(self):
+    def _set_number_of_helpers(self) -> None:
         self.makedirs("etc/check_mk/conf.d")
-        self.write_file("etc/check_mk/conf.d/cmc-helpers.mk", "cmc_cmk_helpers = 5\n")
+        self.write_text_file("etc/check_mk/conf.d/cmc-helpers.mk", "cmc_cmk_helpers = 5\n")
 
-    def _enabled_liveproxyd_debug_logging(self):
+    def _enabled_liveproxyd_debug_logging(self) -> None:
         self.makedirs("etc/check_mk/liveproxyd.d")
         # 15 = verbose
         # 10 = debug
-        self.write_file(
+        self.write_text_file(
             "etc/check_mk/liveproxyd.d/logging.mk", "liveproxyd_log_levels = {'cmk.liveproxyd': 15}"
         )
 
-    def _enable_mkeventd_debug_logging(self):
+    def _enable_mkeventd_debug_logging(self) -> None:
         self.makedirs("etc/check_mk/mkeventd.d")
-        self.write_file(
+        self.write_text_file(
             "etc/check_mk/mkeventd.d/logging.mk",
             "log_level = %r\n"
             % {
@@ -623,13 +626,13 @@ class Site:
             },
         )
 
-    def _enable_cmc_core_dumps(self):
+    def _enable_cmc_core_dumps(self) -> None:
         self.makedirs("etc/check_mk/conf.d")
-        self.write_file("etc/check_mk/conf.d/cmc-core-dumps.mk", "cmc_dump_core = True\n")
+        self.write_text_file("etc/check_mk/conf.d/cmc-core-dumps.mk", "cmc_dump_core = True\n")
 
-    def _enable_cmc_debug_logging(self):
+    def _enable_cmc_debug_logging(self) -> None:
         self.makedirs("etc/check_mk/conf.d")
-        self.write_file(
+        self.write_text_file(
             "etc/check_mk/conf.d/cmc-debug-logging.mk",
             "cmc_log_levels = %r\n"
             % {
@@ -646,16 +649,16 @@ class Site:
             },
         )
 
-    def _disable_cmc_log_rotation(self):
+    def _disable_cmc_log_rotation(self) -> None:
         self.makedirs("etc/check_mk/conf.d")
-        self.write_file(
+        self.write_text_file(
             "etc/check_mk/conf.d/cmc-log-rotation.mk",
             "cmc_log_rotation_method = 4\ncmc_log_limit = 1073741824\n",
         )
 
-    def _enable_gui_debug_logging(self):
+    def _enable_gui_debug_logging(self) -> None:
         self.makedirs("etc/check_mk/multisite.d")
-        self.write_file(
+        self.write_text_file(
             "etc/check_mk/multisite.d/logging.mk",
             "log_levels = %r\n"
             % {
@@ -668,8 +671,8 @@ class Site:
             },
         )
 
-    def _tune_nagios(self):
-        self.write_file(
+    def _tune_nagios(self) -> None:
+        self.write_text_file(
             "etc/nagios/nagios.d/zzz-test-tuning.cfg",
             # We need to observe these entries with WatchLog for our tests
             "log_passive_checks=1\n"
@@ -683,7 +686,7 @@ class Site:
             "log_rotation_method=n\n",
         )
 
-    def _install_test_python_modules(self):
+    def _install_test_python_modules(self) -> None:
         venv = virtualenv_path()
         bin_dir = venv / "bin"
         self._copy_python_modules_from(
@@ -707,7 +710,7 @@ class Site:
                 == 0
             )
 
-    def _copy_python_modules_from(self, packages_dir):
+    def _copy_python_modules_from(self, packages_dir: Path) -> None:
         enforce_override = ["backports"]
 
         for file_name in os.listdir(str(packages_dir)):
@@ -726,17 +729,22 @@ class Site:
                 == 0
             )
 
-    def rm(self, site_id=None):
-        if site_id is None:
-            site_id = self.id
-
+    def rm(self, site_id: Optional[str] = None) -> None:
         # TODO: LM: Temporarily disabled until "omd rm" issue is fixed.
         # assert subprocess.Popen(["/usr/bin/sudo", "/usr/bin/omd",
         subprocess.Popen(
-            ["/usr/bin/sudo", "/usr/bin/omd", "-f", "rm", "--apache-reload", "--kill", site_id]
+            [
+                "/usr/bin/sudo",
+                "/usr/bin/omd",
+                "-f",
+                "rm",
+                "--apache-reload",
+                "--kill",
+                site_id or self.id,
+            ]
         ).wait()
 
-    def start(self):
+    def start(self) -> None:
         if not self.is_running():
             assert self.omd("start") == 0
             # print("= BEGIN PROCESSES AFTER START ==============================")
@@ -762,7 +770,7 @@ class Site:
             self.path("tmp")
         ), "The site does not have a tmpfs mounted! We require this for good performing tests"
 
-    def stop(self):
+    def stop(self) -> None:
         if self.is_stopped():
             return  # Nothing to do
 
@@ -787,20 +795,20 @@ class Site:
             sys.stdout.flush()
             time.sleep(0.2)
 
-    def exists(self):
+    def exists(self) -> bool:
         return os.path.exists("/omd/sites/%s" % self.id)
 
-    def ensure_running(self):
+    def ensure_running(self) -> None:
         if not self.is_running():
             pytest.exit("Site was not running completely while it should. Enforcing stop.")
 
-    def is_running(self):
+    def is_running(self) -> bool:
         return (
             self.execute(["/usr/bin/omd", "status", "--bare"], stdout=open(os.devnull, "w")).wait()
             == 0
         )
 
-    def is_stopped(self):
+    def is_stopped(self) -> bool:
         # 0 -> fully running
         # 1 -> fully stopped
         # 2 -> partially running
@@ -809,7 +817,7 @@ class Site:
             == 1
         )
 
-    def set_config(self, key, val, with_restart=False):
+    def set_config(self, key: str, val: str, with_restart: bool = False) -> None:
         if self.get_config(key) == val:
             logger.info("omd config: %s is already at %r", key, val)
             return
@@ -825,10 +833,10 @@ class Site:
             self.start()
             logger.debug("Started site")
 
-    def set_core(self, core):
+    def set_core(self, core: str) -> None:
         self.set_config("CORE", core, with_restart=True)
 
-    def get_config(self, key):
+    def get_config(self, key: str) -> str:
         p = self.execute(
             ["omd", "config", "show", key], stdout=subprocess.PIPE, stderr=subprocess.PIPE
         )
@@ -840,7 +848,7 @@ class Site:
 
     # These things are needed to make the site basically being setup. So this
     # is checked during site initialization instead of a dedicated test.
-    def verify_cmk(self):
+    def verify_cmk(self) -> None:
         p = self.execute(
             ["cmk", "--help"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, close_fds=True
         )
@@ -853,7 +861,7 @@ class Site:
         stdout = p.communicate()[0]
         assert p.returncode == 0, "Failed to execute 'cmk -U': %s" % stdout
 
-    def prepare_for_tests(self):
+    def prepare_for_tests(self) -> None:
         self.verify_cmk()
 
         web = CMKWebSession(self)
@@ -863,7 +871,7 @@ class Site:
 
     # Add some test configuration that is not test specific. These settings are set only to have a
     # bit more complex Checkmk config.
-    def _add_wato_test_config(self, web):
+    def _add_wato_test_config(self, web: CMKWebSession) -> None:
         # This entry is interesting because it is a check specific setting. These
         # settings are only registered during check loading. In case one tries to
         # load the config without loading the checks in advance, this leads into an
@@ -884,7 +892,7 @@ class Site:
             },
         )
 
-    def open_livestatus_tcp(self, encrypted):
+    def open_livestatus_tcp(self, encrypted: bool) -> None:
         """This opens a currently free TCP port and remembers it in the object for later use
         Not free of races, but should be sufficient."""
         start_again = False
@@ -904,7 +912,7 @@ class Site:
 
         logger.info("After livestatus port lock")
 
-    def _gather_livestatus_port(self):
+    def _gather_livestatus_port(self) -> None:
         if self.reuse and self.exists():
             port = int(self.get_config("LIVESTATUS_TCP_PORT"))
         else:
@@ -912,7 +920,7 @@ class Site:
 
         self._livestatus_port = port
 
-    def get_free_port_from(self, port):
+    def get_free_port_from(self, port: int) -> int:
         used_ports = set([])
         for cfg_path in glob.glob("/omd/sites/*/etc/omd/site.conf"):
             for line in open(cfg_path):
@@ -926,7 +934,7 @@ class Site:
         logger.debug("Livestatus ports already in use: %r, using port: %d", used_ports, port)
         return port
 
-    def save_results(self):
+    def save_results(self) -> None:
         if not _is_dockerized():
             logger.info("Not dockerized: not copying results")
             return
@@ -957,38 +965,72 @@ class Site:
                 ignore=shutil.ignore_patterns(".*"),
             )
 
-    def result_dir(self):
+    def result_dir(self) -> str:
         return os.path.join(os.environ.get("RESULT_PATH", self.path("results")), self.id)
 
+    def get_automation_secret(self):
+        secret_path = "var/check_mk/web/automation/automation.secret"
+        secret = self.read_file(secret_path).strip()
 
-def _is_dockerized():
+        if secret == "":
+            raise Exception("Failed to read secret from %s" % secret_path)
+
+        return secret
+
+    def activate_changes_and_wait_for_core_reload(
+        self, allow_foreign_changes: bool = False, remote_site: Optional["Site"] = None
+    ):
+        self.ensure_running()
+        site = remote_site or self
+
+        logger.debug("Getting old program start")
+        old_t = site.live.query_value("GET status\nColumns: program_start\n")
+
+        logger.debug("Read replication changes of site")
+        base_dir = site.path("var/check_mk/wato")
+        for site_changes_path in glob.glob(base_dir + "/replication_*"):
+            logger.debug("Replication changes of site: %r", site_changes_path)
+            if os.path.exists(site_changes_path):
+                logger.debug(site.read_file(base_dir + "/" + os.path.basename(site_changes_path)))
+
+        changed = self.openapi.activate_changes_and_wait_for_completion(
+            sites=[site.id], force_foreign_changes=allow_foreign_changes
+        )
+        if changed:
+            logger.info("Waiting for core reloads of: %s", site.id)
+            site.wait_for_core_reloaded(old_t)
+
+        self.ensure_running()
+
+
+def _is_dockerized() -> bool:
     return Path("/.dockerenv").exists()
 
 
 class SiteFactory:
     def __init__(
         self,
-        version,
-        edition,
-        branch,
-        update_from_git=False,
-        install_test_python_modules=True,
-        prefix=None,
-    ):
+        version: str,
+        edition: str,
+        branch: str,
+        update_from_git: bool = False,
+        install_test_python_modules: bool = True,
+        prefix: Optional[str] = None,
+    ) -> None:
         self._base_ident = prefix or "s_%s_" % branch[:6]
         self._version = version
         self._edition = edition
         self._branch = branch
-        self._sites = {}
+        self._sites: MutableMapping[str, Site] = {}
         self._index = 1
         self._update_from_git = update_from_git
         self._install_test_python_modules = install_test_python_modules
 
     @property
-    def sites(self):
+    def sites(self) -> Mapping[str, Site]:
         return self._sites
 
-    def get_site(self, name):
+    def get_site(self, name: str) -> Site:
         if "%s%s" % (self._base_ident, name) in self._sites:
             return self._sites["%s%s" % (self._base_ident, name)]
         # For convenience, allow to retreive site by name or full ident
@@ -996,7 +1038,7 @@ class SiteFactory:
             return self._sites[name]
         return self._new_site(name)
 
-    def get_existing_site(self, name):
+    def get_existing_site(self, name: str) -> Site:
         if "%s%s" % (self._base_ident, name) in self._sites:
             return self._sites["%s%s" % (self._base_ident, name)]
         # For convenience, allow to retreive site by name or full ident
@@ -1004,7 +1046,7 @@ class SiteFactory:
             return self._sites[name]
         return self._site_obj(name)
 
-    def remove_site(self, name):
+    def remove_site(self, name: str) -> None:
         if "%s%s" % (self._base_ident, name) in self._sites:
             site_id = "%s%s" % (self._base_ident, name)
         elif name in self._sites:
@@ -1016,12 +1058,12 @@ class SiteFactory:
         self._sites[site_id].rm()
         del self._sites[site_id]
 
-    def _get_ident(self):
+    def _get_ident(self) -> str:
         new_ident = self._base_ident + str(self._index)
         self._index += 1
         return new_ident
 
-    def _site_obj(self, name):
+    def _site_obj(self, name: str) -> Site:
         site_id = "%s%s" % (self._base_ident, name)
         return Site(
             site_id=site_id,
@@ -1033,7 +1075,7 @@ class SiteFactory:
             install_test_python_modules=self._install_test_python_modules,
         )
 
-    def _new_site(self, name):
+    def _new_site(self, name: str) -> Site:
         site = self._site_obj(name)
 
         site.create()
@@ -1043,23 +1085,25 @@ class SiteFactory:
         site.start()
         site.prepare_for_tests()
         # There seem to be still some changes that want to be activated
-        CMKWebSession(site).activate_changes()
+        site.activate_changes_and_wait_for_core_reload()
         logger.debug("Created site %s", site.id)
         return site
 
-    def save_results(self):
+    def save_results(self) -> None:
         logger.info("Saving results")
         for _site_id, site in sorted(self._sites.items(), key=lambda x: x[0]):
             logger.info("Saving results of site %s", site.id)
             site.save_results()
 
-    def cleanup(self):
+    def cleanup(self) -> None:
         logger.info("Removing sites")
         for site_id in list(self._sites.keys()):
             self.remove_site(site_id)
 
 
-def get_site_factory(prefix, update_from_git, install_test_python_modules):
+def get_site_factory(
+    prefix: str, update_from_git: bool, install_test_python_modules: bool
+) -> SiteFactory:
     version = os.environ.get("VERSION", CMKVersion.DAILY)
     edition = os.environ.get("EDITION", CMKVersion.CEE)
     branch = os.environ.get("BRANCH")

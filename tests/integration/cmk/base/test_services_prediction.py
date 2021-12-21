@@ -11,6 +11,9 @@ from datetime import datetime
 
 import pytest
 
+from tests.testlib import create_linux_test_host, on_time, repo_path
+from tests.testlib.site import Site
+
 import cmk.utils.prediction
 from cmk.utils import version as cmk_version
 from cmk.utils.exceptions import MKGeneralException
@@ -18,16 +21,11 @@ from cmk.utils.type_defs import HostName
 
 from cmk.base import prediction
 
-from tests.testlib import (  # noqa: F401 # pylint: disable=unused-import # isort: skip
-    create_linux_test_host,
-    on_time,
-    repo_path,
-    web,
-)
-
 
 @pytest.fixture(name="cfg_setup", scope="module")
-def cfg_setup_fixture(request, web, site):  # noqa: F811 # pylint: disable=redefined-outer-name
+def cfg_setup_fixture(
+    request, web, site: Site
+):  # noqa: F811 # pylint: disable=redefined-outer-name
     hostname = "test-prediction"
 
     # Enforce use of the pre-created RRD file from the git. The restart of the core
@@ -38,16 +36,16 @@ def cfg_setup_fixture(request, web, site):  # noqa: F811 # pylint: disable=redef
             open("%s/tests/integration/cmk/base/test-files/CPU_load.rrd" % repo_path(), "rb").read()
         )
 
-    site.write_file(
+    site.write_text_file(
         "var/check_mk/rrd/test-prediction/CPU_load.info",
         open("%s/tests/integration/cmk/base/test-files/CPU_load.info" % repo_path()).read(),
     )
 
     site.restart_core()
 
-    create_linux_test_host(request, web, site, "test-prediction")
+    create_linux_test_host(request, site, "test-prediction")
 
-    site.write_file(
+    site.write_text_file(
         "etc/check_mk/conf.d/linux_test_host_%s_cpu_load.mk" % hostname,
         """
 globals().setdefault('custom_checks', [])
@@ -58,7 +56,7 @@ custom_checks = [
 """,
     )
 
-    web.activate_changes()
+    site.activate_changes_and_wait_for_core_reload()
 
     yield
 

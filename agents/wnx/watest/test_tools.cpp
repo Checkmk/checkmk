@@ -147,7 +147,6 @@ std::filesystem::path MakePathToCapTestFiles(const std::wstring& root) {
 }
 
 void SafeCleanTempDir() {
-    namespace fs = std::filesystem;
     auto temp_dir = cma::cfg::GetTempDir();
     auto really_temp_dir = temp_dir.find(L"\\tmp", 0) != std::wstring::npos;
     if (!really_temp_dir) return;
@@ -267,7 +266,6 @@ std::vector<std::string> ReadFileAsTable(const std::string& Name) {
 }
 
 std::filesystem::path MakeTempFolderInTempPath(std::wstring_view folder_name) {
-    namespace fs = std::filesystem;
     // Find Temporary Folder
     fs::path temp_folder{GetTempDir()};
     std::error_code ec;
@@ -278,6 +276,22 @@ std::filesystem::path MakeTempFolderInTempPath(std::wstring_view folder_name) {
     }
 
     return temp_folder / folder_name;
+}
+
+TempFolder::TempFolder(std::wstring_view folder_name)
+    : folder_name_{MakeTempFolderInTempPath(folder_name)} {
+    std::error_code ec;
+    if (!fs::create_directory(folder_name_, ec)) {
+        XLOG::l("failed to create directory {}", folder_name_);
+        abort();  // failure in test
+    }
+}
+
+TempFolder::~TempFolder() {
+    std::error_code ec;
+    if (!folder_name_.empty() && fs::exists(folder_name_, ec)) {
+        fs::remove_all(folder_name_, ec);
+    }
 }
 
 std::wstring GenerateRandomFileName() noexcept {

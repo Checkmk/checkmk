@@ -17,7 +17,7 @@ import cmk.utils.rulesets.ruleset_matcher as ruleset_matcher
 import cmk.utils.tags
 import cmk.utils.version as cmk_version
 from cmk.utils.exceptions import MKException, MKGeneralException
-from cmk.utils.type_defs import DiscoveryResult, TagID
+from cmk.utils.type_defs import DiscoveryResult, TagConfigSpec, TagID
 
 import cmk.gui.bi as bi
 import cmk.gui.userdb as userdb
@@ -29,7 +29,7 @@ from cmk.gui.globals import config
 from cmk.gui.groups import load_host_group_information, load_service_group_information
 from cmk.gui.i18n import _
 from cmk.gui.plugins.userdb.htpasswd import hash_password
-from cmk.gui.plugins.webapi import (
+from cmk.gui.plugins.webapi.utils import (
     add_configuration_hash,
     api_call_collection_registry,
     APICallCollection,
@@ -666,7 +666,9 @@ class APICallRules(APICallCollection):
 
     def _get(self, request):
         # ? type of request argument in both _get and _set functions is unclear
-        ruleset_name = ensure_str(request["ruleset_name"])
+        ruleset_name = ensure_str(  # pylint: disable= six-ensure-str-bin-call
+            request["ruleset_name"]
+        )
         ruleset_dict = self._get_ruleset_configuration(ruleset_name)
         response = {"ruleset": ruleset_dict}
         add_configuration_hash(response, ruleset_dict)
@@ -675,7 +677,9 @@ class APICallRules(APICallCollection):
     def _set(self, request):
         # Py2: This encoding here should be kept Otherwise and unicode encoded text will be written
         # into the configuration file with unknown side effects
-        ruleset_name = ensure_str(request["ruleset_name"])
+        ruleset_name = ensure_str(  # pylint: disable= six-ensure-str-bin-call
+            request["ruleset_name"]
+        )
 
         # Future validation, currently the rule API actions are admin only, so the check is pointless
         # may_edit_ruleset(ruleset_name)
@@ -812,10 +816,9 @@ class APICallHosttags(APICallCollection):
         }
 
     def _get(self, request):
-        hosttags_config = cmk.utils.tags.TagConfig()
-        hosttags_config.parse_config(TagConfigFile().load_for_reading())
+        hosttags_config = cmk.utils.tags.TagConfig.from_config(TagConfigFile().load_for_reading())
 
-        hosttags_dict = hosttags_config.get_dict_format()
+        hosttags_dict: Dict[str, Any] = dict(hosttags_config.get_dict_format())
 
         # The configuration hash is computed for the configurable hosttags
         add_configuration_hash(hosttags_dict, hosttags_dict)  # Looks strange, but is OK
@@ -823,21 +826,21 @@ class APICallHosttags(APICallCollection):
         hosttags_dict["builtin"] = self._get_builtin_tags_configuration()
         return hosttags_dict
 
-    def _get_builtin_tags_configuration(self):
+    def _get_builtin_tags_configuration(self) -> TagConfigSpec:
         return cmk.utils.tags.BuiltinTagConfig().get_dict_format()
 
     def _set(self, request):
         tag_config_file = TagConfigFile()
-        hosttags_config = cmk.utils.tags.TagConfig()
-        hosttags_config.parse_config(tag_config_file.load_for_modification())
+        hosttags_config = cmk.utils.tags.TagConfig.from_config(
+            tag_config_file.load_for_modification()
+        )
 
         hosttags_dict = hosttags_config.get_dict_format()
         if "configuration_hash" in request:
             validate_config_hash(request["configuration_hash"], hosttags_dict)
             del request["configuration_hash"]
 
-        changed_hosttags_config = cmk.utils.tags.TagConfig()
-        changed_hosttags_config.parse_config(request)
+        changed_hosttags_config = cmk.utils.tags.TagConfig.from_config(request)
         changed_hosttags_config.validate_config()
 
         self._verify_no_used_tags_missing(changed_hosttags_config)
@@ -1146,9 +1149,9 @@ class APICallOther(APICallCollection):
             new = 0
             old = 0
             for entry in try_result.check_table:
-                if entry[0] == "new":
+                if entry.check_source == "new":
                     new += 1
-                elif entry[0] == "old":
+                elif entry.check_source == "old":
                     old += 1
 
             result = DiscoveryResult(self_new=new, self_kept=old, self_total=new + old)

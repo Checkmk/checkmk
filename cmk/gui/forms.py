@@ -254,3 +254,37 @@ def end() -> None:
     html.tr(html.render_td("", colspan=2), class_=["bottom"])
     html.close_tbody()
     html.close_table()
+
+
+def remove_unused_vars(
+    form_prefix: str,
+    is_var_to_delete: Callable[[str, str, str], bool] = lambda prefix, varname, value: True,
+) -> None:
+    """Delete all variables for a form with prefix "form_prefix" that are not
+    activated by a "varname_USE" entry.
+
+    * simple example:
+
+      'search_p_fulltext_USE':'on'
+      'search_p_fulltext':'my search text'
+
+    * is_var_to_delete: determines variables to keep
+    """
+    checkboxes, variables = set(), {}
+    for varname, value in html.request.itervars(form_prefix):
+        if varname.endswith("_USE"):
+            checkboxes.add(varname)
+            continue
+        variables[varname] = value
+
+    active_prefixes = {
+        active_checkbox.rsplit("_USE")[0]
+        for active_checkbox in checkboxes
+        if html.get_checkbox(active_checkbox)
+    }
+
+    for varname, value in variables.items():
+        if not any(varname.startswith(p) for p in active_prefixes) or is_var_to_delete(
+            form_prefix, varname, value
+        ):
+            html.request.del_var(varname)

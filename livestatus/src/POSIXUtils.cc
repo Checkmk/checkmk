@@ -123,7 +123,15 @@ void setThreadName(std::string name) {
     //
     // Mac OS X: must be set from within the thread (can't specify thread ID)
     // int pthread_setname_np(const char *);
-    pthread_setname_np(pthread_self(), name.substr(0, 15).c_str());
+    //
+    // HACK: We have yet another complication on Linux: Both
+    // pthread_setname_np(...) and prctl(PR_SET_NAME, ...) seem to reuse the
+    // kernel field for the "filename of the executable", i.e. the "Name" field
+    // in /proc/<pid>/status resp. the "tcomm" field in /proc/<pid>/stat. This
+    // confuses ps and pstree, so we don't set this for the main thread. :-/
+    if (name != "main") {
+        pthread_setname_np(pthread_self(), name.substr(0, 15).c_str());
+    }
 
     // ... and here invisible to ps/pstree/..., but in its full glory:
     thread_name = move(name);

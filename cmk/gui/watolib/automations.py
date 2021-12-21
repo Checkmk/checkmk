@@ -25,7 +25,7 @@ import cmk.utils.store as store
 import cmk.utils.version as cmk_version
 from cmk.utils.log import VERBOSE
 from cmk.utils.type_defs import UserId
-from cmk.utils.werks import parse_check_mk_version
+from cmk.utils.version import is_daily_build_of_master, major_version_parts, parse_check_mk_version
 
 from cmk.automations.results import result_type_registry, SerializedResult
 
@@ -291,16 +291,18 @@ def _do_remote_automation_serialized(
     if not secret:
         raise MKAutomationException(_("You are not logged into the remote site."))
 
-    url = (
-        base_url
-        + "automation.py?"
-        + urlencode_vars(
-            [("command", command), ("secret", secret), ("debug", config.debug and "1" or "")]
-        )
+    url = base_url + "automation.py?" + urlencode_vars([("command", command)])
+
+    post_data = dict(vars_)
+    post_data.update(
+        {
+            "secret": secret,
+            "debug": "1" if config.debug else "",
+        }
     )
 
     response = get_url(
-        url, site.get("insecure", False), data=dict(vars_), files=files, timeout=timeout
+        url, site.get("insecure", False), data=post_data, files=files, timeout=timeout
     )
 
     auto_logger.debug("RESPONSE: %r", response)
@@ -738,14 +740,11 @@ def compatible_with_central_site(
         return False
 
     # Daily builds of the master branch (format: YYYY.MM.DD) are always treated to be compatbile
-    if (
-        re.match(r"\d{4}.\d{2}.\d{2}$", central_version) is not None
-        or re.match(r"\d{4}.\d{2}.\d{2}$", remote_version) is not None
-    ):
+    if is_daily_build_of_master(central_version) or is_daily_build_of_master(remote_version):
         return True
 
-    central_parts = _major_version_parts(central_version)
-    remote_parts = _major_version_parts(remote_version)
+    central_parts = major_version_parts(central_version)
+    remote_parts = major_version_parts(remote_version)
 
     # Same major version is allowed
     if central_parts == remote_parts:
@@ -805,11 +804,3 @@ def compatible_with_central_site(
 
     # Everything else is incompatible
     return False
-
-
-def _major_version_parts(version: str) -> Tuple[int, int, int]:
-    match = re.match(r"(\d+).(\d+).(\d+)", version)
-    if not match or len(match.groups()) != 3:
-        raise ValueError(_("Unable to parse version: %r") % version)
-    groups = match.groups()
-    return int(groups[0]), int(groups[1]), int(groups[2])

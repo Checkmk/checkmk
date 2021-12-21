@@ -1,16 +1,15 @@
+use anyhow::{Context, Result as AnyhowResult};
 use openssl::hash::MessageDigest;
 use openssl::nid::Nid;
 use openssl::pkey::PKey;
 use openssl::rsa::Rsa;
 use openssl::ssl::{SslConnector, SslMethod, SslVerifyMode};
 use openssl::x509::{X509Name, X509Req};
-use reqwest;
 use reqwest::blocking::{Client, ClientBuilder};
-use reqwest::{Certificate, Identity};
-use std::error::Error;
+use reqwest::Certificate;
 use std::net::TcpStream;
 
-pub fn make_csr(cn: &str) -> Result<(String, String), Box<dyn Error>> {
+pub fn make_csr(cn: &str) -> AnyhowResult<(String, String)> {
     // https://github.com/sfackler/rust-openssl/blob/master/openssl/examples/mk_certs.rs
     let rsa = Rsa::generate(2048)?;
     let key_pair = PKey::from_rsa(rsa)?;
@@ -20,9 +19,9 @@ pub fn make_csr(cn: &str) -> Result<(String, String), Box<dyn Error>> {
     let name = name.build();
 
     let mut crt_builder = X509Req::builder()?;
-    crt_builder.set_version(2).unwrap();
-    crt_builder.set_subject_name(&name).unwrap();
-    crt_builder.set_pubkey(&key_pair).unwrap();
+    crt_builder.set_version(2)?;
+    crt_builder.set_subject_name(&name)?;
+    crt_builder.set_pubkey(&key_pair)?;
     crt_builder.sign(&key_pair, MessageDigest::sha256())?;
 
     Ok((
@@ -31,22 +30,13 @@ pub fn make_csr(cn: &str) -> Result<(String, String), Box<dyn Error>> {
     ))
 }
 
-pub fn client(
-    client_chain: Option<Vec<u8>>,
-    root_cert: Option<Vec<u8>>,
-) -> Result<Client, Box<dyn Error>> {
+pub fn client(root_cert: Option<&str>) -> AnyhowResult<Client> {
     let client_builder = ClientBuilder::new();
 
-    let client_builder = if let Some(chain) = client_chain {
-        client_builder.identity(Identity::from_pem(&chain)?)
-    } else {
-        client_builder
-    };
-
     let client_builder = if let Some(cert) = root_cert {
-        client_builder.add_root_certificate(Certificate::from_pem(&cert)?)
+        client_builder.add_root_certificate(Certificate::from_pem(cert.as_bytes())?)
     } else {
-        client_builder
+        client_builder.danger_accept_invalid_certs(true)
     };
 
     Ok(client_builder
@@ -54,22 +44,37 @@ pub fn client(
         .build()?)
 }
 
-pub fn fetch_root_cert(address: &str) -> Result<String, Box<dyn Error>> {
-    let tcp_stream = TcpStream::connect(address).unwrap();
+pub fn fetch_server_cert_pem(address: &str) -> AnyhowResult<String> {
+    let tcp_stream = TcpStream::connect(address)?;
     let mut ssl_connector_builder = SslConnector::builder(SslMethod::tls())?;
     ssl_connector_builder.set_verify(SslVerifyMode::NONE);
     let mut ssl_stream = ssl_connector_builder.build().connect("dummy", tcp_stream)?;
 
-    let root_cert = ssl_stream
+    let server_cert = ssl_stream
         .ssl()
         .peer_cert_chain()
-        .unwrap()
+        .context("Failed fetching peer cert chain")?
         .iter()
-        .last()
-        .unwrap()
+        .next()
+        .context("Failed unpacking peer cert chain")?
         .to_pem()?;
 
     ssl_stream.shutdown()?;
 
-    Ok(String::from_utf8(root_cert)?)
+    Ok(String::from_utf8(server_cert)?)
+}
+
+pub fn parse_pem(cert: &str) -> AnyhowResult<x509_parser::pem::Pem> {
+    x509_parser::pem::Pem::iter_from_buffer(cert.as_bytes())
+        .next()
+        .context("Input data does not contain a PEM block")?
+        .context("PEM data invalid")
+}
+
+pub fn join_common_names(x509_name: &x509_parser::x509::X509Name) -> String {
+    x509_name
+        .iter_common_name()
+        .map(|cn| cn.as_str().unwrap_or("[unknown]"))
+        .collect::<Vec<&str>>()
+        .join(", ")
 }

@@ -26,7 +26,7 @@ import cmk.gui.watolib as watolib
 from cmk.gui.exceptions import MKGeneralException
 from cmk.gui.globals import request
 from cmk.gui.i18n import _
-from cmk.gui.plugins.wato import (
+from cmk.gui.plugins.wato.utils import (
     ac_test_registry,
     ACResult,
     ACResultCRIT,
@@ -155,8 +155,8 @@ class ACTestLivestatusUsage(ACTest):
         return _("Livestatus usage")
 
     def help(self) -> str:
-        # xgettext: no-python-format
         return _(
+            # xgettext: no-python-format
             "<p>Livestatus is used by several components, for example the GUI, to gather "
             "information about the monitored objects from the monitoring core. It is "
             "very important for the overall performance of the monitoring system that "
@@ -426,6 +426,52 @@ class ACTestOldDefaultCredentials(ACTest):
             )
         else:
             yield ACResultOK(_("Found <tt>omdadmin</tt> using custom password."))
+
+
+@ac_test_registry.register
+class ACTestMknotifydCommunicationEncrypted(ACTest):
+    def category(self) -> str:
+        return ACTestCategories.security
+
+    def title(self) -> str:
+        return _("Encrypt notification daemon communication")
+
+    def help(self) -> str:
+        return _(
+            "Since version 2.1 it is possible to encrypt the communication of the notification "
+            "daemon with TLS. After an upgrade of an existing site incoming connections will still "
+            "use plain text communication and outgoing connections will try to use TLS and fall "
+            "back to plain text communication if the remote site does not support TLS. It is "
+            "recommended to enforce TLS encryption as soon as all sites support it."
+        )
+
+    def is_relevant(self) -> bool:
+        return True
+
+    def execute(self) -> Iterator[ACResult]:
+        only_encrypted = True
+        config = self._get_effective_global_setting("notification_spooler_config")
+
+        if (incoming := config.get("incoming", {})) and incoming.get("encryption") == "unencrypted":
+            only_encrypted = False
+            yield ACResultCRIT(
+                _("Incoming connections on port %s communicate via plain text")
+                % incoming["listen_port"]
+            )
+
+        for outgoing in config["outgoing"]:
+            socket = f"{outgoing['address']}:{outgoing['port']}"
+            if outgoing["encryption"] == "upgradable":
+                only_encrypted = False
+                yield ACResultWARN(
+                    _("Encryption for %s is only used if it is enabled on the remote site") % socket
+                )
+            if outgoing["encryption"] == "unencrypted":
+                only_encrypted = False
+                yield ACResultCRIT(_("Plain text communication is enabled for %s") % socket)
+
+        if only_encrypted:
+            yield ACResultOK("Encrypted communication is enabled for all configured connections")
 
 
 @ac_test_registry.register
@@ -784,6 +830,7 @@ class ACTestCheckMKFetcherUsage(ACTest):
 
     def help(self) -> str:
         return _(
+            # xgettext: no-python-format
             "<p>The Checkmk Microcore uses Checkmk fetcher processes to obtain data about "
             "the Checkmk and Checkmk Discovery services of the hosts monitored "
             "with Checkmk. There should always be enough fetcher processes to handle "

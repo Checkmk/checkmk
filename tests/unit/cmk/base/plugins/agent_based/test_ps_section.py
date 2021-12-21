@@ -106,6 +106,13 @@ WSOPREKPFS01,85,126562500,csrss.exe,1176,744,8,468750,44486656,569344
         splitter("""
 /usr/sbin/xinetd -pidfile /var/run/xinetd.pid -stayalive -inetd_compat -inetd_ipv6
 """),
+        # windows agent with newline in description
+        splitter("""
+(\\NT AUTHORITY\\SYSTEM,46640,10680,0,600,5212,27924179,58500375,370,11,12)	svchost.exe
+(\\NT AUTHORITY\\NETWORK SERVICE,36792,10040,0,676,5588,492183155,189541215,380,8,50)	=====> PowerShell Integrated Console v2021.2.2 <=====\n' -LogLevel 'Normal' -FeatureFlags @()
+(\\KLAPPRECHNER\\ab\\taskdubeotsot,2148080660,99092,0,6952,78,2858125000,645468750,551,22,15535)	\\eu.es.com\\path\\to\\Script\\script.exe\n -Port 39999\n -EntityInfoSendPeriodMs 5000\n -TypeInfoSendPeriodMs 2000\n -Environment myenv\n -DeadThresholdMs 60000\n -UpdatePeriodMs 1000
+(\\NT AUTHORITY\\LOCAL SERVICE,56100,18796,0,764,56632,1422261117,618855967,454,13,4300)	svchost.exe
+""", "\t"),
     ]
 
 
@@ -194,6 +201,24 @@ result_parse = [
         (None,), "/usr/sbin/xinetd", "-pidfile", "/var/run/xinetd.pid", "-stayalive",
         "-inetd_compat", "-inetd_ipv6"
     ]]),
+    (1, [
+        [
+            ("\\NT AUTHORITY\\SYSTEM", 46640, 10680, "0", "600", "5212", "27924179", "58500375",
+             "370", "11", "12"), "svchost.exe"
+        ],
+        [
+            ("\\NT AUTHORITY\\NETWORK SERVICE", 36792, 10040, "0", "676", "5588", "492183155",
+             "189541215", "380", "8", "50"), "=====> PowerShell Integrated Console v2021.2.2 <===== ' -LogLevel 'Normal' -FeatureFlags @()"
+        ],
+        [
+            ("\\KLAPPRECHNER\\ab\\taskdubeotsot", 2148080660, 99092, "0", "6952", "78", "2858125000",
+             "645468750", "551", "22", "15535"), "\\eu.es.com\\path\\to\\Script\\script.exe  -Port 39999  -EntityInfoSendPeriodMs 5000  -TypeInfoSendPeriodMs 2000  -Environment myenv  -DeadThresholdMs 60000  -UpdatePeriodMs 1000",
+        ],
+        [
+            ("\\NT AUTHORITY\\LOCAL SERVICE", 56100, 18796, "0", "764", "56632", "1422261117",
+             "618855967", "454", "13", "4300"), "svchost.exe"
+        ],
+    ]),
 ]
 
 
@@ -207,6 +232,7 @@ input_ids = [
     "windows agent(wmic_info, cmk<1.2.5)",
     "Second Generation user info only",
     "First Generation process only",
+    "windows agent with newline in description",
 ]
 
 

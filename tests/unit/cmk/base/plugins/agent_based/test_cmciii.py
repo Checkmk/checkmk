@@ -881,12 +881,12 @@ def _generictest_cmciii():
     [
         (
             "cmciii",
-            None,
+            {},
             [
-                Service(item="CMC-IOModul"),
-                Service(item="CMC-PU"),
-                Service(item="CMC-Rauchmelder"),
-                Service(item="CMC-Temperatur"),
+                Service(item="CMC-IOModul", parameters={"_item_key": "CMC-IOModul"}),
+                Service(item="CMC-PU", parameters={"_item_key": "CMC-PU"}),
+                Service(item="CMC-Rauchmelder", parameters={"_item_key": "CMC-Rauchmelder"}),
+                Service(item="CMC-Temperatur", parameters={"_item_key": "CMC-Temperatur"}),
             ],
         ),
         ("cmciii_psm_current", {}, []),
@@ -995,7 +995,7 @@ def test_genericdataset_cmciii_discovery(plugin, params, expected):
     [
         (
             "cmciii",
-            None,
+            {},
             [
                 ("CMC-IOModul", [Result(state=State.OK, summary="Status: OK")]),
                 ("CMC-PU", [Result(state=State.OK, summary="Status: OK")]),
@@ -1311,15 +1311,15 @@ def _generictest_cmciii_input_regression():
     [
         (
             "cmciii",
-            None,
+            {},
             [
-                Service(item="CMCIII-IO1"),
-                Service(item="CMCIII-IO2"),
-                Service(item="CMCIII-LEAK"),
-                Service(item="CMCIII-PU"),
-                Service(item="CMCIII-back"),
-                Service(item="CMCIII-front"),
-                Service(item="Doors"),
+                Service(item="CMCIII-IO1", parameters={"_item_key": "CMCIII-IO1"}),
+                Service(item="CMCIII-IO2", parameters={"_item_key": "CMCIII-IO2"}),
+                Service(item="CMCIII-LEAK", parameters={"_item_key": "CMCIII-LEAK"}),
+                Service(item="CMCIII-PU", parameters={"_item_key": "CMCIII-PU"}),
+                Service(item="CMCIII-back", parameters={"_item_key": "CMCIII-back"}),
+                Service(item="CMCIII-front", parameters={"_item_key": "CMCIII-front"}),
+                Service(item="Doors", parameters={"_item_key": "Doors"}),
             ],
         ),
         ("cmciii_psm_current", {}, []),
@@ -1364,7 +1364,7 @@ def test_genericdataset_cmciii_input_regression_discovery(plugin, params, expect
     [
         (
             "cmciii",
-            None,
+            {},
             [
                 ("CMCIII-IO1", [Result(state=State.OK, summary="Status: OK")]),
                 ("CMCIII-IO2", [Result(state=State.OK, summary="Status: OK")]),

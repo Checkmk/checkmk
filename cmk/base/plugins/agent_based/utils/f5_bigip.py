@@ -20,7 +20,7 @@ False
 True
 """
 
-from typing import Dict, Literal, TypedDict, Union
+from typing import Dict, Literal, TypedDict
 
 from ..agent_based_api.v1 import all_of, contains, matches, not_matches
 
@@ -48,11 +48,11 @@ F5_BIGIP_CLUSTER_CHECK_DEFAULT_PARAMETERS = {
     "type": "active_standby",
 }
 
-AllStates = Union[Literal[0], Literal[1], Literal[2], Literal[3], Literal[4]]
+AllStates = Literal[0, 1, 2, 3, 4]
 
 
 class _F5BigipClusterStatusVSResultRequired(TypedDict, total=False):
-    type: Union[Literal["active_standby"], Literal["active_active"]]
+    type: Literal["active_standby", "active_active"]
 
 
 class F5BigipClusterStatusVSResult(_F5BigipClusterStatusVSResultRequired):

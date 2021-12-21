@@ -1,0 +1,7 @@
+###ROOT###/var/log/agent-registration.log {
+	missingok
+	rotate 7
+	compress
+	delaycompress
+	notifempty
+}

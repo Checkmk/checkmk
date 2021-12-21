@@ -4,13 +4,19 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import json
+
 import pytest
 
-from cmk.automations.results import SetAutochecksResult, TryDiscoveryResult
+from cmk.automations.results import CheckPreviewEntry, SetAutochecksResult, TryDiscoveryResult
+
+from cmk.gui.watolib.services import Discovery
+
+from tests.unit.cmk.gui.conftest import WebTestAppForCMK
 
 mock_discovery_result = TryDiscoveryResult(
     check_table=[
-        (
+        CheckPreviewEntry(
             "old",
             "cpu.loads",
             "cpu_load",
@@ -28,7 +34,7 @@ mock_discovery_result = TryDiscoveryResult(
             {},
             ["heute"],
         ),
-        (
+        CheckPreviewEntry(
             "old",
             "cpu.threads",
             "threads",
@@ -45,7 +51,7 @@ mock_discovery_result = TryDiscoveryResult(
             {},
             ["heute"],
         ),
-        (
+        CheckPreviewEntry(
             "new",
             "df",
             "filesystem",
@@ -75,7 +81,7 @@ mock_discovery_result = TryDiscoveryResult(
             {},
             ["heute"],
         ),
-        (
+        CheckPreviewEntry(
             "new",
             "df",
             "filesystem",
@@ -105,7 +111,7 @@ mock_discovery_result = TryDiscoveryResult(
             {},
             ["heute"],
         ),
-        (
+        CheckPreviewEntry(
             "new",
             "df",
             "filesystem",
@@ -135,7 +141,7 @@ mock_discovery_result = TryDiscoveryResult(
             {},
             ["heute"],
         ),
-        (
+        CheckPreviewEntry(
             "new",
             "df",
             "filesystem",
@@ -165,7 +171,7 @@ mock_discovery_result = TryDiscoveryResult(
             {},
             ["heute"],
         ),
-        (
+        CheckPreviewEntry(
             "old",
             "df",
             "filesystem",
@@ -194,7 +200,7 @@ mock_discovery_result = TryDiscoveryResult(
             {},
             ["heute"],
         ),
-        (
+        CheckPreviewEntry(
             "new",
             "df",
             "filesystem",
@@ -224,7 +230,7 @@ mock_discovery_result = TryDiscoveryResult(
             {},
             ["heute"],
         ),
-        (
+        CheckPreviewEntry(
             "old",
             "kernel.performance",
             "kernel_performance",
@@ -244,7 +250,7 @@ mock_discovery_result = TryDiscoveryResult(
             {},
             ["heute"],
         ),
-        (
+        CheckPreviewEntry(
             "old",
             "kernel.util",
             "cpu_iowait",
@@ -263,7 +269,7 @@ mock_discovery_result = TryDiscoveryResult(
             {},
             ["heute"],
         ),
-        (
+        CheckPreviewEntry(
             "old",
             "lnx_thermal",
             "temperature",
@@ -277,7 +283,7 @@ mock_discovery_result = TryDiscoveryResult(
             {},
             ["heute"],
         ),
-        (
+        CheckPreviewEntry(
             "old",
             "lnx_thermal",
             "temperature",
@@ -291,7 +297,7 @@ mock_discovery_result = TryDiscoveryResult(
             {},
             ["heute"],
         ),
-        (
+        CheckPreviewEntry(
             "old",
             "lnx_thermal",
             "temperature",
@@ -305,7 +311,7 @@ mock_discovery_result = TryDiscoveryResult(
             {},
             ["heute"],
         ),
-        (
+        CheckPreviewEntry(
             "old",
             "lnx_thermal",
             "temperature",
@@ -319,7 +325,7 @@ mock_discovery_result = TryDiscoveryResult(
             {},
             ["heute"],
         ),
-        (
+        CheckPreviewEntry(
             "old",
             "lnx_thermal",
             "temperature",
@@ -333,7 +339,7 @@ mock_discovery_result = TryDiscoveryResult(
             {},
             ["heute"],
         ),
-        (
+        CheckPreviewEntry(
             "old",
             "lnx_thermal",
             "temperature",
@@ -347,7 +353,7 @@ mock_discovery_result = TryDiscoveryResult(
             {},
             ["heute"],
         ),
-        (
+        CheckPreviewEntry(
             "old",
             "lnx_thermal",
             "temperature",
@@ -361,7 +367,7 @@ mock_discovery_result = TryDiscoveryResult(
             {},
             ["heute"],
         ),
-        (
+        CheckPreviewEntry(
             "old",
             "lnx_thermal",
             "temperature",
@@ -375,7 +381,7 @@ mock_discovery_result = TryDiscoveryResult(
             {},
             ["heute"],
         ),
-        (
+        CheckPreviewEntry(
             "old",
             "lnx_thermal",
             "temperature",
@@ -389,7 +395,7 @@ mock_discovery_result = TryDiscoveryResult(
             {},
             ["heute"],
         ),
-        (
+        CheckPreviewEntry(
             "new",
             "mem.linux",
             "memory_linux",
@@ -459,7 +465,7 @@ mock_discovery_result = TryDiscoveryResult(
             {},
             ["heute"],
         ),
-        (
+        CheckPreviewEntry(
             "old",
             "mkeventd_status",
             None,
@@ -483,7 +489,7 @@ mock_discovery_result = TryDiscoveryResult(
             {},
             ["heute"],
         ),
-        (
+        CheckPreviewEntry(
             "old",
             "mkeventd_status",
             None,
@@ -507,7 +513,7 @@ mock_discovery_result = TryDiscoveryResult(
             {},
             ["heute"],
         ),
-        (
+        CheckPreviewEntry(
             "old",
             "mknotifyd",
             None,
@@ -524,7 +530,7 @@ mock_discovery_result = TryDiscoveryResult(
             {},
             ["heute"],
         ),
-        (
+        CheckPreviewEntry(
             "old",
             "mknotifyd",
             None,
@@ -541,7 +547,7 @@ mock_discovery_result = TryDiscoveryResult(
             {},
             ["heute"],
         ),
-        (
+        CheckPreviewEntry(
             "old",
             "mounts",
             "fs_mount_options",
@@ -555,7 +561,7 @@ mock_discovery_result = TryDiscoveryResult(
             {},
             ["heute"],
         ),
-        (
+        CheckPreviewEntry(
             "old",
             "mounts",
             "fs_mount_options",
@@ -569,7 +575,7 @@ mock_discovery_result = TryDiscoveryResult(
             {},
             ["heute"],
         ),
-        (
+        CheckPreviewEntry(
             "old",
             "mounts",
             "fs_mount_options",
@@ -592,7 +598,7 @@ mock_discovery_result = TryDiscoveryResult(
             {},
             ["heute"],
         ),
-        (
+        CheckPreviewEntry(
             "old",
             "omd_apache",
             None,
@@ -646,7 +652,7 @@ mock_discovery_result = TryDiscoveryResult(
             {},
             ["heute"],
         ),
-        (
+        CheckPreviewEntry(
             "old",
             "omd_apache",
             None,
@@ -700,7 +706,7 @@ mock_discovery_result = TryDiscoveryResult(
             {},
             ["heute"],
         ),
-        (
+        CheckPreviewEntry(
             "old",
             "systemd_units.services_summary",
             "systemd_services_summary",
@@ -714,7 +720,7 @@ mock_discovery_result = TryDiscoveryResult(
             {},
             ["heute"],
         ),
-        (
+        CheckPreviewEntry(
             "old",
             "tcp_conn_stats",
             "tcp_conn_stats",
@@ -740,7 +746,7 @@ mock_discovery_result = TryDiscoveryResult(
             {},
             ["heute"],
         ),
-        (
+        CheckPreviewEntry(
             "old",
             "uptime",
             "uptime",
@@ -754,7 +760,7 @@ mock_discovery_result = TryDiscoveryResult(
             {},
             ["heute"],
         ),
-        (
+        CheckPreviewEntry(
             "active",
             "cmk_inv",
             None,
@@ -781,8 +787,7 @@ mock_discovery_result = TryDiscoveryResult(
 @pytest.mark.usefixtures("inline_background_jobs")
 def test_openapi_discovery(
     monkeypatch: pytest.MonkeyPatch,
-    wsgi_app,
-    with_automation_user,
+    aut_user_auth_wsgi_app: WebTestAppForCMK,
     mock_livestatus,
 ) -> None:
     monkeypatch.setattr(
@@ -794,12 +799,9 @@ def test_openapi_discovery(
         lambda *args, **kwargs: SetAutochecksResult(),
     )
 
-    username, secret = with_automation_user
-    wsgi_app.set_authorization(("Bearer", username + " " + secret))
-
     base = "/NO_SITE/check_mk/api/1.0"
 
-    _resp = wsgi_app.call_method(
+    _resp = aut_user_auth_wsgi_app.call_method(
         "post",
         base + "/objects/host/example.com/actions/discover_services/invoke",
         params='{"mode": "foo"}',
@@ -807,7 +809,7 @@ def test_openapi_discovery(
         status=415,
     )
 
-    _resp = wsgi_app.call_method(
+    _resp = aut_user_auth_wsgi_app.call_method(
         "post",
         base + "/objects/host/example.com/actions/discover_services/invoke",
         params='{"mode": "foo"}',
@@ -816,7 +818,7 @@ def test_openapi_discovery(
         status=400,
     )
 
-    _resp = wsgi_app.call_method(
+    _resp = aut_user_auth_wsgi_app.call_method(
         "post",
         base + "/objects/host/example.com/actions/discover_services/invoke",
         params='{"mode": "refresh"}',
@@ -826,7 +828,7 @@ def test_openapi_discovery(
     )
 
     with mock_livestatus(expect_status_query=True):
-        wsgi_app.follow_link(
+        aut_user_auth_wsgi_app.follow_link(
             _resp,
             "cmk/service.move-ignored",
             json_data=_resp.json["members"]["df-/boot"],
@@ -835,10 +837,50 @@ def test_openapi_discovery(
         )
 
     with mock_livestatus(expect_status_query=True):
-        wsgi_app.follow_link(
+        aut_user_auth_wsgi_app.follow_link(
             _resp,
             "cmk/service.move-monitored",
             json_data=_resp.json["members"]["df-/boot"],
             headers={"Accept": "application/json"},
             status=204,
         )
+
+
+@pytest.mark.usefixtures("inline_background_jobs")
+def test_openapi_discover_single_service(
+    aut_user_auth_wsgi_app: WebTestAppForCMK,
+    mocker,
+) -> None:
+    base = "/NO_SITE/check_mk/api/1.0"
+
+    # create a host
+    aut_user_auth_wsgi_app.call_method(
+        "post",
+        base + "/domain-types/host_config/collections/all",
+        params=json.dumps(
+            {
+                "folder": "/",
+                "host_name": "example.com",
+                "attributes": {},
+            }
+        ),
+        status=200,
+        headers={"Accept": "application/json"},
+        content_type="application/json",
+    )
+
+    discovery_spy = mocker.spy(Discovery, "__init__")
+    mocker.patch("cmk.gui.watolib.services.execute_discovery_job")
+
+    # we want to test this call:
+    aut_user_auth_wsgi_app.call_method(
+        "put",
+        base + "/objects/host/example.com/actions/update_discovery_phase/invoke",
+        params='{"check_type": "systemd_units_services_summary", "service_item": "Summary", "target_phase": "monitored"}',
+        headers={"Accept": "application/json"},
+        content_type="application/json",
+        status=204,
+    )
+
+    # 'monitored' is the external name for the target_phase, internally 'old' is used.
+    assert discovery_spy.call_args.kwargs["api_request"]["update_target"] == "old"

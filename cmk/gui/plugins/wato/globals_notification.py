@@ -11,7 +11,7 @@
 import cmk.utils.paths
 
 from cmk.gui.i18n import _
-from cmk.gui.plugins.wato import (
+from cmk.gui.plugins.wato.utils import (
     config_variable_group_registry,
     config_variable_registry,
     ConfigDomainCore,

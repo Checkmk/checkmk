@@ -240,6 +240,7 @@ def get_config_files(directory, config_file_arg=None):
 
 
 def iter_config_lines(files, debug=False):
+    no_cfg_content_yielded = True
     for file_ in files:
         try:
             with open(file_, "rb") as fid:
@@ -248,12 +249,17 @@ def iter_config_lines(files, debug=False):
                     for line in decoded:
                         if not is_comment(line) and not is_empty(line):
                             yield line.rstrip()
+                            no_cfg_content_yielded = False
                 except UnicodeDecodeError:
                     msg = "Error reading file %r (please use utf-8 encoding!)\n" % file_
                     sys.stdout.write(CONFIG_ERROR_PREFIX + msg)
         except IOError:
-            if debug:
-                raise
+            pass
+
+    if debug and no_cfg_content_yielded:
+        # We need at least one config file *with* content in one of the places:
+        # logwatch.d or MK_CONFDIR
+        raise IOError("Did not find any content in config files: %s" % ", ".join(files))
 
 
 def consume_cluster_definition(config_lines):
@@ -363,6 +369,9 @@ class State(object):  # pylint: disable=useless-object-inheritance
         {'file': b'/var/log/messages', 'offset': 7767698, 'inode': 32455445}
         """
         LOGGER.debug("Reading state file: %r", self.filename)
+
+        if not os.path.exists(self.filename):
+            return self
 
         with open(self.filename) as stat_fh:
             for line in stat_fh:
@@ -777,12 +786,12 @@ class Options(object):  # pylint: disable=useless-object-inheritance
             elif key in ("maxtime",):
                 self.values[key] = float(value)
             elif key == "overflow":
-                if value not in Options.MAP_OVERFLOW.keys():
+                if value not in Options.MAP_OVERFLOW:
                     raise ValueError(
                         "Invalid overflow: %r (choose from %r)"
                         % (
                             value,
-                            Options.MAP_OVERFLOW.keys(),  # pylint: disable=dict-keys-not-iterating
+                            Options.MAP_OVERFLOW.keys(),
                         )
                     )
                 self.values["overflow"] = value
@@ -790,13 +799,13 @@ class Options(object):  # pylint: disable=useless-object-inheritance
                 flags = (re.IGNORECASE if key.startswith("i") else 0) | re.UNICODE
                 self.values["regex"] = re.compile(value, flags)
             elif key in ("nocontext", "fromstart"):
-                if value.lower() not in Options.MAP_BOOL.keys():
+                if value.lower() not in Options.MAP_BOOL:
                     raise ValueError(
                         "Invalid %s: %r (choose from %r)"
                         % (
                             key,
                             value,
-                            Options.MAP_BOOL.keys(),  # pylint: disable=dict-keys-not-iterating
+                            Options.MAP_BOOL.keys(),
                         )
                     )
                 self.values[key] = Options.MAP_BOOL[value.lower()]
@@ -1053,7 +1062,7 @@ def write_output(header, lines, options):
     lines = _filter_maxoutputsize(lines, options.maxoutputsize)
 
     sys.stdout.write(header)
-    sys.stdout.writelines(lines)
+    sys.stdout.writelines(map(ensure_str, lines))
 
 
 def main(argv=None):

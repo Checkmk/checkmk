@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # This will install Rust + Cargo as described here:
-# https://forge.rust-lang.org/infra/other-installation-methods.html#standalone-installers
+# https://www.rust-lang.org/tools/install
 
 set -e -o pipefail
 
@@ -13,17 +13,21 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
 # provide common functions
 . "${SCRIPT_DIR}/build_lib.sh"
 
-RUST_VERSION="1.55.0"
-DIR_NAME="rust-${RUST_VERSION}-x86_64-unknown-linux-gnu"
-ARCHIVE_NAME="${DIR_NAME}.tar.gz"
+DEFAULT_TOOLCHAIN="stable-x86_64-unknown-linux-gnu"
+DIR_NAME="rust"
 TARGET_DIR=/opt
 
+CARGO_HOME="$TARGET_DIR/$DIR_NAME/cargo"
+export CARGO_HOME
+RUSTUP_HOME="$TARGET_DIR/$DIR_NAME/rustup"
+export RUSTUP_HOME
+
 # Increase this to enforce a recreation of the build cache
-BUILD_ID=1
+BUILD_ID=3
 
 build_package() {
-    WORK_DIR=`mktemp -d`
-    echo "TMP:" $WORK_DIR
+    WORK_DIR=$(mktemp -d)
+    echo "TMP:" "$WORK_DIR"
 
     if [[ ! "$WORK_DIR" || ! -d "$WORK_DIR" ]]; then
       echo "Could not create temp dir"
@@ -37,14 +41,12 @@ build_package() {
 
     cd "$WORK_DIR"
 
-    # Get the sources from nexus or upstream
-    mirrored_download "${ARCHIVE_NAME}" "https://static.rust-lang.org/dist/${ARCHIVE_NAME}"
-
-    tar xf "${ARCHIVE_NAME}"
-    cd "${DIR_NAME}"
-    ./install.sh --destdir="$TARGET_DIR" --prefix="${DIR_NAME}"
+    mirrored_download "rustup-init.sh" "https://sh.rustup.rs"
+    chmod +x rustup-init.sh
+    ./rustup-init.sh -y --no-modify-path --default-toolchain "$DEFAULT_TOOLCHAIN"
+    # saves space
+    rm -rf "$RUSTUP_HOME/toolchains/$DEFAULT_TOOLCHAIN/share/doc/"
 }
 
 cached_build "${TARGET_DIR}" "${DIR_NAME}" "${BUILD_ID}" "${DISTRO}" "${BRANCH_VERSION}"
-ln -sf "${TARGET_DIR}/${DIR_NAME}/bin/"* /usr/bin/
-
+ln -sf "${CARGO_HOME}/bin/"* /usr/bin/

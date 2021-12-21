@@ -12,14 +12,14 @@ import pytest
 
 from cmk.utils import version
 
+from tests.unit.cmk.gui.conftest import WebTestAppForCMK
+
 managedtest = pytest.mark.skipif(not version.is_managed_edition(), reason="see #7213")
 
 
 @managedtest
 @pytest.mark.parametrize("group_type", ["host", "contact", "service"])
-def test_openapi_groups(group_type, wsgi_app, with_automation_user):
-    username, secret = with_automation_user
-    wsgi_app.set_authorization(("Bearer", username + " " + secret))
+def test_openapi_groups(group_type, aut_user_auth_wsgi_app: WebTestAppForCMK):
 
     name = _random_string(10)
     alias = _random_string(10)
@@ -27,7 +27,7 @@ def test_openapi_groups(group_type, wsgi_app, with_automation_user):
     group = {"name": name, "alias": alias, "customer": "provider"}
 
     base = "/NO_SITE/check_mk/api/1.0"
-    resp = wsgi_app.call_method(
+    resp = aut_user_auth_wsgi_app.call_method(
         "post",
         base + f"/domain-types/{group_type}_group_config/collections/all",
         params=json.dumps(group),
@@ -36,14 +36,14 @@ def test_openapi_groups(group_type, wsgi_app, with_automation_user):
         content_type="application/json",
     )
 
-    _ = wsgi_app.call_method(
+    _ = aut_user_auth_wsgi_app.call_method(
         "get",
         base + f"/domain-types/{group_type}_group_config/collections/all",
         status=200,
         headers={"Accept": "application/json"},
     )
 
-    resp = wsgi_app.follow_link(
+    resp = aut_user_auth_wsgi_app.follow_link(
         resp,
         "self",
         status=200,
@@ -52,7 +52,7 @@ def test_openapi_groups(group_type, wsgi_app, with_automation_user):
 
     update_group = {"alias": f"{alias} update"}
 
-    wsgi_app.follow_link(
+    aut_user_auth_wsgi_app.follow_link(
         resp,
         ".../update",
         params=json.dumps(update_group),
@@ -61,7 +61,7 @@ def test_openapi_groups(group_type, wsgi_app, with_automation_user):
         content_type="application/json",
     )
 
-    resp = wsgi_app.follow_link(
+    resp = aut_user_auth_wsgi_app.follow_link(
         resp,
         ".../update",
         params=json.dumps(update_group),
@@ -70,7 +70,7 @@ def test_openapi_groups(group_type, wsgi_app, with_automation_user):
         content_type="application/json",
     )
 
-    wsgi_app.follow_link(
+    aut_user_auth_wsgi_app.follow_link(
         resp,
         ".../delete",
         status=204,
@@ -81,9 +81,10 @@ def test_openapi_groups(group_type, wsgi_app, with_automation_user):
 
 @managedtest
 @pytest.mark.parametrize("group_type", ["host", "service", "contact"])
-def test_openapi_bulk_groups(group_type, wsgi_app, with_automation_user):
-    username, secret = with_automation_user
-    wsgi_app.set_authorization(("Bearer", username + " " + secret))
+def test_openapi_bulk_groups(
+    group_type,
+    aut_user_auth_wsgi_app: WebTestAppForCMK,
+):
 
     groups = [
         {"name": _random_string(10), "alias": _random_string(10), "customer": "provider"}
@@ -91,7 +92,7 @@ def test_openapi_bulk_groups(group_type, wsgi_app, with_automation_user):
     ]
 
     base = "/NO_SITE/check_mk/api/1.0"
-    resp = wsgi_app.call_method(
+    resp = aut_user_auth_wsgi_app.call_method(
         "post",
         base + "/domain-types/%s_group_config/actions/bulk-create/invoke" % (group_type,),
         params=json.dumps({"entries": groups}),
@@ -101,7 +102,7 @@ def test_openapi_bulk_groups(group_type, wsgi_app, with_automation_user):
     )
     assert len(resp.json["value"]) == 2
 
-    resp = wsgi_app.call_method(
+    resp = aut_user_auth_wsgi_app.call_method(
         "get",
         base + f"/objects/{group_type}_group_config/{groups[0]['name']}",
         status=200,
@@ -109,7 +110,7 @@ def test_openapi_bulk_groups(group_type, wsgi_app, with_automation_user):
     )
     assert resp.json_body["extensions"]["customer"] == "provider"
 
-    _resp = wsgi_app.call_method(
+    _resp = aut_user_auth_wsgi_app.call_method(
         "post",
         base + "/domain-types/%s_group_config/actions/bulk-create/invoke" % (group_type,),
         params=json.dumps({"entries": groups}),
@@ -126,7 +127,7 @@ def test_openapi_bulk_groups(group_type, wsgi_app, with_automation_user):
         for group in groups
     ]
 
-    _resp = wsgi_app.call_method(
+    _resp = aut_user_auth_wsgi_app.call_method(
         "put",
         base + "/domain-types/%s_group_config/actions/bulk-update/invoke" % (group_type,),
         params=json.dumps({"entries": update_groups}),
@@ -135,7 +136,7 @@ def test_openapi_bulk_groups(group_type, wsgi_app, with_automation_user):
         content_type="application/json",
     )
 
-    resp = wsgi_app.call_method(
+    resp = aut_user_auth_wsgi_app.call_method(
         "get",
         base + f"/objects/{group_type}_group_config/{groups[0]['name']}",
         status=200,
@@ -153,7 +154,7 @@ def test_openapi_bulk_groups(group_type, wsgi_app, with_automation_user):
         for group in groups
     ]
 
-    _resp = wsgi_app.call_method(
+    _resp = aut_user_auth_wsgi_app.call_method(
         "put",
         base + "/domain-types/%s_group_config/actions/bulk-update/invoke" % (group_type,),
         params=json.dumps({"entries": partial_update_groups}),
@@ -162,7 +163,7 @@ def test_openapi_bulk_groups(group_type, wsgi_app, with_automation_user):
         content_type="application/json",
     )
 
-    resp = wsgi_app.call_method(
+    resp = aut_user_auth_wsgi_app.call_method(
         "get",
         base + f"/objects/{group_type}_group_config/{groups[0]['name']}",
         headers={"Accept": "application/json"},
@@ -170,7 +171,7 @@ def test_openapi_bulk_groups(group_type, wsgi_app, with_automation_user):
     )
     assert resp.json_body["extensions"]["customer"] == "global"
 
-    _resp = wsgi_app.call_method(
+    _resp = aut_user_auth_wsgi_app.call_method(
         "post",
         base + "/domain-types/%s_group_config/actions/bulk-delete/invoke" % (group_type,),
         params=json.dumps({"entries": [f"{group['name']}" for group in groups]}),
@@ -182,9 +183,10 @@ def test_openapi_bulk_groups(group_type, wsgi_app, with_automation_user):
 
 @managedtest
 @pytest.mark.parametrize("group_type", ["host", "contact", "service"])
-def test_openapi_groups_with_customer(group_type, wsgi_app, with_automation_user):
-    username, secret = with_automation_user
-    wsgi_app.set_authorization(("Bearer", username + " " + secret))
+def test_openapi_groups_with_customer(
+    group_type,
+    aut_user_auth_wsgi_app: WebTestAppForCMK,
+):
 
     name = _random_string(10)
     alias = _random_string(10)
@@ -192,7 +194,7 @@ def test_openapi_groups_with_customer(group_type, wsgi_app, with_automation_user
     group = {"name": name, "alias": alias, "customer": "global"}
 
     base = "/NO_SITE/check_mk/api/1.0"
-    _resp = wsgi_app.call_method(
+    _resp = aut_user_auth_wsgi_app.call_method(
         "post",
         base + "/domain-types/%s_group_config/collections/all" % (group_type,),
         params=json.dumps(group),
@@ -201,7 +203,7 @@ def test_openapi_groups_with_customer(group_type, wsgi_app, with_automation_user
         content_type="application/json",
     )
 
-    resp = wsgi_app.call_method(
+    resp = aut_user_auth_wsgi_app.call_method(
         "get",
         base + f"/objects/{group_type}_group_config/{name}",
         headers={"Accept": "application/json"},
@@ -209,7 +211,7 @@ def test_openapi_groups_with_customer(group_type, wsgi_app, with_automation_user
     )
     assert resp.json_body["extensions"]["customer"] == "global"
 
-    resp = wsgi_app.call_method(
+    resp = aut_user_auth_wsgi_app.call_method(
         "put",
         base + f"/objects/{group_type}_group_config/{name}",
         headers={"If-Match": resp.headers["ETag"], "Accept": "application/json"},
@@ -223,7 +225,7 @@ def test_openapi_groups_with_customer(group_type, wsgi_app, with_automation_user
     )
     assert resp.json_body["extensions"]["customer"] == "global"
 
-    resp = wsgi_app.call_method(
+    resp = aut_user_auth_wsgi_app.call_method(
         "put",
         base + f"/objects/{group_type}_group_config/{name}",
         headers={"If-Match": resp.headers["ETag"], "Accept": "application/json"},

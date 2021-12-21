@@ -33,7 +33,7 @@ from cmk.gui.page_menu import (
     PageMenuSearch,
     PageMenuTopic,
 )
-from cmk.gui.plugins.wato import (
+from cmk.gui.plugins.wato.utils import (
     make_action_link,
     make_confirm_link,
     mode_registry,
@@ -383,16 +383,20 @@ class ModeTimeperiodImportICal(WatoMode):
         return ModeTimeperiods
 
     def title(self):
+        if html.request.var("upload"):
+            return _("Add time period")
         return _("Import iCalendar File to create a time period")
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
-        return make_simple_form_page_menu(
-            _("iCalendar"),
-            breadcrumb,
-            form_name="import_ical",
-            button_name="_save",
-            save_title=_("Import"),
-        )
+        if not html.request.var("upload"):
+            return make_simple_form_page_menu(
+                _("iCalendar"),
+                breadcrumb,
+                form_name="import_ical",
+                button_name="upload",
+                save_title=_("Import"),
+            )
+        return ModeEditTimeperiod().page_menu(breadcrumb)
 
     def _vs_ical(self):
         return Dictionary(
@@ -456,54 +460,6 @@ class ModeTimeperiodImportICal(WatoMode):
 
         if not content.startswith("END:VCALENDAR"):
             raise MKUserError(varprefix, _("The file does not seem to be a valid iCalendar file."))
-
-    def action(self) -> ActionResult:
-        if not transactions.check_transaction():
-            return None
-
-        vs_ical = self._vs_ical()
-        ical = vs_ical.from_html_vars("ical")
-        vs_ical.validate_value(ical, "ical")
-
-        filename, _ty, content = ical["file"]
-
-        try:
-            # TODO(ml): If we could open the file in text mode, we would not
-            #           need to `decode()` here.
-            data = self._parse_ical(content.decode("utf-8"), ical["horizon"])
-        except Exception as e:
-            if config.debug:
-                raise
-            raise MKUserError("ical_file", _("Failed to parse file: %s") % e)
-
-        get_vars = {
-            "timeperiod_p_alias": data.get("descr", data.get("name", filename)),
-        }
-
-        for day in defines.weekday_ids():
-            get_vars["%s_0_from" % day] = ""
-            get_vars["%s_0_until" % day] = ""
-
-        # Default to whole day
-        if not ical["times"]:
-            ical["times"] = [((0, 0), (24, 0))]
-
-        get_vars["timeperiod_p_exceptions_count"] = "%d" % len(data["events"])
-        for index, event in enumerate(data["events"]):
-            index += 1
-            get_vars["timeperiod_p_exceptions_%d_0" % index] = event["date"]
-            get_vars["timeperiod_p_exceptions_indexof_%d" % index] = "%d" % index
-
-            get_vars["timeperiod_p_exceptions_%d_1_count" % index] = "%d" % len(ical["times"])
-            for n, time_spec in enumerate(ical["times"]):
-                n += 1
-                start_time = ":".join("%02d" % x for x in time_spec[0])
-                end_time = ":".join("%02d" % x for x in time_spec[1])
-                get_vars["timeperiod_p_exceptions_%d_1_%d_from" % (index, n)] = start_time
-                get_vars["timeperiod_p_exceptions_%d_1_%d_until" % (index, n)] = end_time
-                get_vars["timeperiod_p_exceptions_%d_1_indexof_%d" % (index, n)] = "%d" % index
-
-        return redirect(mode_url("edit_timeperiod", **get_vars))
 
     # Returns a dictionary in the format:
     # {
@@ -629,7 +585,7 @@ class ModeTimeperiodImportICal(WatoMode):
         now = time.strptime(str(time.localtime().tm_year - 1), "%Y")
         last = time.struct_time((horizon + 1, *now[1:]))
         for event in ical["raw_events"]:
-            if "recurrence" in event and event["start"] < now:
+            if "recurrence" in event and time.struct_time(event["start"]) < now:
                 rule = event["recurrence"]
                 freq = rule["FREQ"]
                 cur = now
@@ -643,7 +599,13 @@ class ModeTimeperiodImportICal(WatoMode):
 
         return ical
 
-    def page(self):
+    def page(self) -> None:
+        if not html.request.var("upload"):
+            self._show_import_ical_page()
+        else:
+            self._show_add_timeperiod_page()
+
+    def _show_import_ical_page(self) -> None:
         html.p(
             _(
                 "This page can be used to generate a new timeperiod definition based "
@@ -658,6 +620,58 @@ class ModeTimeperiodImportICal(WatoMode):
         forms.end()
         html.hidden_fields()
         html.end_form()
+
+    def _show_add_timeperiod_page(self) -> None:
+        # If an ICalendar file is uploaded, we process the htmlvars here, to avoid
+        # "Request URI too long exceptions"
+        vs_ical = self._vs_ical()
+        ical = vs_ical.from_html_vars("ical")
+        vs_ical.validate_value(ical, "ical")
+
+        filename, _ty, content = ical["file"]
+
+        try:
+            # TODO(ml): If we could open the file in text mode, we would not
+            #           need to `decode()` here.
+            data = self._parse_ical(content.decode("utf-8"), ical["horizon"])
+        except Exception as e:
+            if config.debug:
+                raise
+            raise MKUserError("ical_file", _("Failed to parse file: %s") % e)
+
+        get_vars = {
+            "timeperiod_p_alias": data.get("descr", data.get("name", filename)),
+        }
+
+        for day in defines.weekday_ids():
+            get_vars["%s_0_from" % day] = ""
+            get_vars["%s_0_until" % day] = ""
+
+        # Default to whole day
+        if not ical["times"]:
+            ical["times"] = [((0, 0), (24, 0))]
+
+        get_vars["timeperiod_p_exceptions_count"] = "%d" % len(data["events"])
+        for index, event in enumerate(data["events"]):
+            index += 1
+            get_vars["timeperiod_p_exceptions_%d_0" % index] = event["date"]
+            get_vars["timeperiod_p_exceptions_indexof_%d" % index] = "%d" % index
+
+            get_vars["timeperiod_p_exceptions_%d_1_count" % index] = "%d" % len(ical["times"])
+            for n, time_spec in enumerate(ical["times"]):
+                n += 1
+                start_time = ":".join("%02d" % x for x in time_spec[0])
+                end_time = ":".join("%02d" % x for x in time_spec[1])
+                get_vars["timeperiod_p_exceptions_%d_1_%d_from" % (index, n)] = start_time
+                get_vars["timeperiod_p_exceptions_%d_1_%d_until" % (index, n)] = end_time
+                get_vars["timeperiod_p_exceptions_%d_1_indexof_%d" % (index, n)] = "%d" % index
+
+        for var, val in get_vars.items():
+            html.request.set_var(var, val)
+
+        html.request.set_var("mode", "edit_timeperiod")
+
+        ModeEditTimeperiod().page()
 
 
 @mode_registry.register
@@ -682,7 +696,6 @@ class ModeEditTimeperiod(WatoMode):
 
         if self._name in watolib.timeperiods.builtin_timeperiods():
             raise MKUserError("edit", _("Builtin timeperiods can not be modified"))
-
         if self._new:
             clone_name = request.var("clone")
             if request.var("mode") == "import_ical":
@@ -726,7 +739,6 @@ class ModeEditTimeperiod(WatoMode):
                 ),
                 allow_empty=False,
                 size=80,
-                validate=self._validate_id,
             )
         else:
             name_element = FixedValue(
@@ -744,7 +756,6 @@ class ModeEditTimeperiod(WatoMode):
                         help=_("An alias or description of the timeperiod"),
                         allow_empty=False,
                         size=80,
-                        validate=self._validate_alias,
                     ),
                 ),
                 ("weekdays", self._vs_weekdays()),
@@ -753,7 +764,12 @@ class ModeEditTimeperiod(WatoMode):
             ],
             render="form",
             optional_keys=False,
+            validate=self._validate_id_and_alias,
         )
+
+    def _validate_id_and_alias(self, value, varprefix):
+        self._validate_id(value["name"], "%s_p_name" % varprefix)
+        self._validate_alias(value["name"], value["alias"], "%s_p_alias" % varprefix)
 
     def _validate_id(self, value, varprefix):
         if value in self._timeperiods:
@@ -761,12 +777,11 @@ class ModeEditTimeperiod(WatoMode):
                 varprefix, _("This name is already being used by another timeperiod.")
             )
 
-    def _validate_alias(self, value, varprefix):
-        assert self._name is not None
-        unique, message = watolib.is_alias_used("timeperiods", self._name, value)
+    def _validate_alias(self, name, alias, varprefix):
+        unique, message = watolib.is_alias_used("timeperiods", name, alias)
         if not unique:
             assert message is not None
-            raise MKUserError("alias", message)
+            raise MKUserError(varprefix, message)
 
     def _vs_weekdays(self):
         return CascadingDropdown(

@@ -11,20 +11,30 @@ def upload(Map args) {
     // PORT: Port fo upload dest
     stage(args.NAME + ' upload package') {
         def FILE_BASE = get_file_base(args.FILE_PATH)
-        def ARCHIVE_BASE = get_archive_base(FILE_BASE) 
+        def ARCHIVE_BASE = get_archive_base(FILE_BASE)
         
         via_rsync(ARCHIVE_BASE, args.CMK_VERS, args.FILE_NAME, args.UPLOAD_DEST, args.PORT)
     }
 }
 
-def download_version_dir(DOWNLOAD_SOURCE, PORT, CMK_VERSION, DOWNLOAD_DEST) {
-    stage('Download from shared storage') {
+def download_deb(DOWNLOAD_SOURCE, PORT, CMK_VERSION, DOWNLOAD_DEST, EDITION, DISTRO) {
+    def FILE_PATTERN = "check-mk-${EDITION}-${CMK_VERSION}_0.${DISTRO}_amd64.deb"
+    download_version_dir(DOWNLOAD_SOURCE, PORT, CMK_VERSION, DOWNLOAD_DEST, FILE_PATTERN, DISTRO)
+}
+
+def download_source_tar(DOWNLOAD_SOURCE, PORT, CMK_VERSION, DOWNLOAD_DEST, EDITION) {
+    def FILE_PATTERN = "check-mk-${EDITION}-${CMK_VERSION}.*.tar.gz"
+    download_version_dir(DOWNLOAD_SOURCE, PORT, CMK_VERSION, DOWNLOAD_DEST, FILE_PATTERN, 'source tar')
+}
+
+def download_version_dir(DOWNLOAD_SOURCE, PORT, CMK_VERSION, DOWNLOAD_DEST, PATTERN = "*", INFO = 'all packages') {
+    stage("Download from shared storage (${INFO})") {
         withCredentials([file(credentialsId: 'Release_Key', variable: 'RELEASE_KEY')]) {
             sh("mkdir -p ${DOWNLOAD_DEST}")
             sh """
                 rsync --recursive --links --perms --times --verbose \
                     -e "ssh -o StrictHostKeyChecking=no -i ${RELEASE_KEY} -p ${PORT}" \
-                    ${DOWNLOAD_SOURCE}/${CMK_VERSION}/* \
+                    ${DOWNLOAD_SOURCE}/${CMK_VERSION}/${PATTERN} \
                     ${DOWNLOAD_DEST}/
             """
         }

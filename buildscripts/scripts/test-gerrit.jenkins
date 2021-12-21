@@ -43,7 +43,7 @@ timeout(time: 12, unit: 'HOURS') {
             }
             catch (e)
             {
-                sh("rm -r .venv")
+                sh("rm -rf .venv")
                 throw e
             }
     

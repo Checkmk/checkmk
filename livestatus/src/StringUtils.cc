@@ -171,10 +171,5 @@ std::string ipv4ToString(in_addr_t ipv4_address) {
     inet_ntop(AF_INET, &ia, addr_buf, sizeof(addr_buf));
     return addr_buf;
 }
-
-std::string portToString(in_port_t port) {
-    // NOLINTNEXTLINE(readability-isolate-declaration)
-    return std::to_string(ntohs(port));
-}
 #endif
 }  // namespace mk

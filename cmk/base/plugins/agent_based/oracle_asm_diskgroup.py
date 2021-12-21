@@ -3,7 +3,7 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from typing import Any, Dict, List, Mapping, Union
+from typing import Any, Dict, List, Mapping, NamedTuple, Optional
 
 from .agent_based_api.v1 import get_value_store, IgnoreResults, register, render, Result, Service
 from .agent_based_api.v1 import State as state
@@ -44,8 +44,52 @@ ASM_DISKGROUP_DEFAULT_LEVELS = {
 }
 
 
-def parse_oracle_asm_diskgroup(string_table: StringTable):
-    section: Dict[str, Dict[str, Union[str, List, None]]] = {}
+class Failgroup(NamedTuple):
+    fg_name: str
+    fg_voting_files: str
+    fg_type: str
+    fg_free_mb: int
+    fg_total_mb: int
+    fg_disks: int
+    fg_min_repair_time: int
+
+
+class Diskgroup(NamedTuple):
+    dgstate: str
+    dgtype: Optional[str]
+    total_mb: Optional[int]
+    free_mb: Optional[int]
+    req_mir_free_mb: int
+    offline_disks: int
+    voting_files: str
+    fail_groups: List[Failgroup]
+
+
+class Section(NamedTuple):
+    diskgroups: Mapping[str, Diskgroup]
+    found_deprecated_agent_output: bool = False
+
+
+def _is_deprecated_oracle_asm_plugin_from_1_2_6(repair_time: str, num_disks: str) -> bool:
+    """
+    >>> _is_deprecated_oracle_asm_plugin_from_1_2_6('N', 'DATAC1/')
+    True
+    >>> _is_deprecated_oracle_asm_plugin_from_1_2_6('', '2')
+    False
+    """
+    return not num_disks.isnumeric() or repair_time == "N"
+
+
+def _try_parse_int(value: Any) -> Optional[int]:
+    try:
+        return int(value)
+    except ValueError:
+        return None
+
+
+def parse_oracle_asm_diskgroup(string_table: StringTable) -> Section:
+    tmp_section: Dict[str, Diskgroup] = {}
+    found_deprecated_agent_output = False
 
     for line in string_table:
         # Filuregroups are usually REGULAR.
@@ -123,74 +167,77 @@ def parse_oracle_asm_diskgroup(string_table: StringTable):
                 fg_disks,
             ) = stripped_line
 
+            if _is_deprecated_oracle_asm_plugin_from_1_2_6(fg_min_repair_time, fg_disks):
+                # We run in here in case the deprecated plugin "mk_oracle_asm" from 1.2.6 is still
+                # executed on the server. Ignore this data but tell it later to the user
+                found_deprecated_agent_output = True
+
+                # We could also break here and stop parsing data, but we continue in order not to
+                # ignore data from newer agent plugin.
+                # And yes, the order should be deterministic but who knows... like this, we're safe.
+                continue
+
         else:
             continue
 
         dgname = dgname.rstrip("/")
-
         if len(stripped_line) != 12:
 
             # old format without fg data
-            section.setdefault(
+            tmp_section.setdefault(
                 dgname,
-                {
-                    "dgstate": dgstate,
-                    "dgtype": dgtype,
-                    "total_mb": total_mb,
-                    "free_mb": free_mb,
-                    "req_mir_free_mb": req_mir_free_mb,
-                    "offline_disks": offline_disks,
-                    "voting_files": voting_files,
-                },
+                Diskgroup(
+                    dgstate=dgstate,
+                    dgtype=dgtype,
+                    total_mb=int(total_mb),
+                    free_mb=int(free_mb),
+                    req_mir_free_mb=int(req_mir_free_mb),
+                    offline_disks=int(offline_disks),
+                    voting_files=voting_files,
+                    fail_groups=[],
+                ),
             )
 
         else:
 
-            if dgstate == "DISMOUNTED":
+            failgroups: List[Failgroup] = []
+            if dgstate == "MOUNTED":
+                this_failgroup = Failgroup(
+                    fg_name=fg_name,
+                    fg_voting_files=voting_files,
+                    fg_type=fg_type,
+                    fg_free_mb=int(free_mb),
+                    fg_total_mb=int(total_mb),
+                    fg_disks=int(fg_disks),
+                    fg_min_repair_time=int(fg_min_repair_time),
+                )
 
-                # we don't have any detail data for the fg
-                # => add dummy fg for format detection in check
-                this_failgroup = {}
+                if dgname in tmp_section:
 
-            else:
+                    # append entry to failgroups
+                    tmp = tmp_section[dgname].fail_groups
+                    failgroups = tmp
+                    failgroups.append(this_failgroup)
 
-                this_failgroup = {
-                    "fg_name": fg_name,
-                    "fg_voting_files": voting_files,
-                    "fg_type": fg_type,
-                    "fg_free_mb": int(free_mb),
-                    "fg_total_mb": int(total_mb),
-                    "fg_disks": int(fg_disks),
-                    "fg_min_repair_time": int(fg_min_repair_time),
-                }
+                else:
+                    failgroups.append(this_failgroup)
 
-            failgroups: List[Dict] = []
-
-            if dgname in section:
-
-                # append entry to failgroups
-                tmp = section[dgname]["failgroups"]
-                assert isinstance(tmp, list)
-                failgroups = tmp
-                failgroups.append(this_failgroup)
-
-            else:
-                failgroups.append(this_failgroup)
-
-            section.setdefault(
+            tmp_section.setdefault(
                 dgname,
-                {
-                    "dgstate": dgstate,
-                    "dgtype": dgtype,
-                    "total_mb": total_mb,
-                    "free_mb": free_mb,
-                    "req_mir_free_mb": req_mir_free_mb,
-                    "offline_disks": offline_disks,
-                    "voting_files": voting_files,
-                    "failgroups": failgroups,
-                },
+                Diskgroup(
+                    dgstate=dgstate,
+                    dgtype=dgtype,
+                    total_mb=_try_parse_int(total_mb),
+                    free_mb=_try_parse_int(free_mb),
+                    req_mir_free_mb=int(req_mir_free_mb),
+                    offline_disks=int(offline_disks),
+                    voting_files=voting_files,
+                    fail_groups=failgroups,
+                ),
             )
-    return section
+    return Section(
+        found_deprecated_agent_output=found_deprecated_agent_output, diskgroups={**tmp_section}
+    )
 
 
 register.agent_section(
@@ -199,31 +246,41 @@ register.agent_section(
 )
 
 
-def discovery_oracle_asm_diskgroup(section: Dict[str, Any]) -> DiscoveryResult:
-    for asm_diskgroup_name, attrs in section.items():
-        if attrs["dgstate"] in ["MOUNTED", "DISMOUNTED"]:
+def discovery_oracle_asm_diskgroup(section: Section) -> DiscoveryResult:
+    for asm_diskgroup_name, attrs in section.diskgroups.items():
+        if attrs.dgstate in ["MOUNTED", "DISMOUNTED"]:
             yield Service(item=asm_diskgroup_name)
 
 
 def check_oracle_asm_diskgroup(
-    item: str, params: Mapping[str, Any], section: Dict[str, Any]
+    item: str,
+    params: Mapping[str, Any],
+    section: Section,
 ) -> CheckResult:
-    if item not in section:
+    if item not in section.diskgroups:
         # In case of missing information we assume that the ASM-Instance is
         # checked at a later time.
         # This reduce false notifications for not running ASM-Instances
         yield IgnoreResults("Diskgroup %s not found" % item)
         return
 
-    data = section[item]
+    data = section.diskgroups[item]
 
-    dgstate = data["dgstate"]
-    dgtype = data["dgtype"]
+    if section.found_deprecated_agent_output:
+        yield Result(
+            state=state.WARN,
+            summary="The deprecated Oracle Agent Plugin 'mk_oracle_asm' from Checkmk Version 1.2.6 "
+            "is still executed on this host. The section 'oracle_asm_diskgroup' is now "
+            "generated by the plugin 'mk_oracle'. Please remove the deprecated Plugin",
+        )
+
+    dgstate = data.dgstate
+    dgtype = data.dgtype
     total_mb = 0
     free_mb = 0
-    req_mir_free_mb = data["req_mir_free_mb"]
-    offline_disks = data["offline_disks"]
-    voting_files = data["voting_files"]
+    req_mir_free_mb = data.req_mir_free_mb
+    offline_disks = data.offline_disks
+    voting_files = data.voting_files
 
     if dgstate == "DISMOUNTED":
         yield Result(state=state.CRIT, summary="Diskgroup dismounted")
@@ -231,11 +288,11 @@ def check_oracle_asm_diskgroup(
 
     add_text = ""
 
-    if "failgroups" in data:
+    if data.fail_groups:
 
         # => New agentformat!
 
-        fg_count = len(data["failgroups"])
+        fg_count = len(data.fail_groups)
 
         # dg_sizefactor depends on dg_type and fg_count
 
@@ -273,31 +330,31 @@ def check_oracle_asm_diskgroup(
         last_total = -1
 
         # check for some details against the failure groups
-        for fgitem in data["failgroups"]:
+        for fgitem in data.fail_groups:
 
             # count number of disks over all fgs
-            dg_disks += fgitem["fg_disks"]
+            dg_disks += fgitem.fg_disks
 
-            if fgitem["fg_voting_files"] == "Y":
+            if fgitem.fg_voting_files == "Y":
                 dg_votecount += 1
 
-            dg_min_repair = min(dg_min_repair, fgitem["fg_min_repair_time"])
+            dg_min_repair = min(dg_min_repair, fgitem.fg_min_repair_time)
 
             # this is the size without the dg_sizefactor
-            free_mb += fgitem["fg_free_mb"]
-            total_mb += fgitem["fg_total_mb"]
+            free_mb += fgitem.fg_free_mb
+            total_mb += fgitem.fg_total_mb
 
             # check uniform size of failure-groups. 5% difference is ok
             if last_total == -1:
-                last_total = fgitem["fg_total_mb"]
+                last_total = fgitem.fg_total_mb
 
             # ignore failure-groups with Voting-Files
             # => exadata use special failure-groups for Voting with different size
             # => Ignore QUORUM failure-groups. They cannot store regular data!
             elif (
-                fgitem["fg_type"] == "REGULAR"
-                and fgitem["fg_voting_files"] == "N"
-                and fgitem["fg_total_mb"] * 0.95 <= last_total >= fgitem["fg_total_mb"] * 1.05
+                fgitem.fg_type == "REGULAR"
+                and fgitem.fg_voting_files == "N"
+                and fgitem.fg_total_mb * 0.95 <= last_total >= fgitem.fg_total_mb * 1.05
             ):
                 fg_uniform_size = False
 
@@ -305,8 +362,11 @@ def check_oracle_asm_diskgroup(
 
         # work on old agentformat
 
-        total_mb = data["total_mb"]
-        free_mb = data["free_mb"]
+        # We're in state MOUNTED so we *should* have those values
+        if not (data.total_mb and data.free_mb):
+            raise ValueError("Expected values for Total and Free MB but received None.")
+        total_mb = data.total_mb
+        free_mb = data.free_mb
 
         # => some estimates with possible errors are expected. Use new agentformat for correct results
         if dgtype == "EXTERN":
@@ -331,13 +391,13 @@ def check_oracle_asm_diskgroup(
                 else:
                     dg_sizefactor = 3
 
-    total_mb = int(total_mb) // dg_sizefactor
-    free_space_mb = int(free_mb) // dg_sizefactor
+    total_mb = total_mb // dg_sizefactor
+    free_space_mb = free_mb // dg_sizefactor
 
     if params.get("req_mir_free"):
-        req_mir_free_mb = max(
-            int(req_mir_free_mb), 0
-        )  # required mirror free space could be negative!
+        # requirred mirror free space could be negative!
+        req_mir_free_mb = max(req_mir_free_mb, 0)
+
         add_text = ", required mirror free space used"
 
     result_list = list(
@@ -361,7 +421,7 @@ def check_oracle_asm_diskgroup(
     if dgtype is not None:
         infotext += "%s redundancy" % dgtype.lower()
 
-        if "failgroups" in data:
+        if data.fail_groups:
 
             # => New agentformat!
 
@@ -403,7 +463,6 @@ def check_oracle_asm_diskgroup(
 
     infotext += add_text
 
-    offline_disks = int(offline_disks)
     if offline_disks > 0:
         aggregated_state = state.CRIT
         infotext += ", %d Offline disks found(!!)" % offline_disks
@@ -412,7 +471,7 @@ def check_oracle_asm_diskgroup(
 
 
 def cluster_check_oracle_asm_diskgroup(
-    item: str, params: Mapping[str, Any], section: Mapping[str, Dict[str, Any]]
+    item: str, params: Mapping[str, Any], section: Mapping[str, Section]
 ) -> CheckResult:
 
     # only use data from 1. node in agent output

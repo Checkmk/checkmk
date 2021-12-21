@@ -50,8 +50,8 @@ public:
             if (is_authorized_for_hst(auth_user, hst)) {
                 entries.emplace_back(
                     hst->name(),
-                    static_cast<HostState>(hst->state()->_current_state),
-                    hst->state()->_has_been_checked);
+                    static_cast<HostState>(hst->state()->current_state_),
+                    hst->state()->has_been_checked_);
             }
         }
         return entries;

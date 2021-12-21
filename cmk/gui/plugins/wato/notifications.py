@@ -14,7 +14,7 @@ from cmk.utils.site import url_prefix
 import cmk.gui.mkeventd as mkeventd
 from cmk.gui.globals import request
 from cmk.gui.i18n import _
-from cmk.gui.plugins.wato import (
+from cmk.gui.plugins.wato.utils import (
     HTTPProxyReference,
     IndividualOrStoredPassword,
     notification_parameter_registry,
@@ -480,7 +480,7 @@ class NotificationParameterVictorOPS(NotificationParameter):
                 (
                     "webhook_url",
                     CascadingDropdown(
-                        title=_("VictorOPS REST Endpoint"),
+                        title=_("Splunk On-Call REST Endpoint"),
                         help=_(
                             "Learn how to setup a REST endpoint "
                             '<a href="https://help.victorops.com/knowledge-base/victorops-restendpoint-integration/" target="_blank">here</a>'
@@ -937,7 +937,7 @@ class NotificationParameterJIRA_ISSUES(NotificationParameter):
                     TextInput(
                         title=_("Set optional timeout for connections to JIRA"),
                         help=_("Here you can configure timeout settings."),
-                        default_value=10,
+                        default_value="10",
                     ),
                 ),
             ],
@@ -1009,7 +1009,7 @@ class NotificationParameterServiceNow(NotificationParameter):
                     TextInput(
                         title=_("Set optional timeout for connections to ServiceNow"),
                         help=_("Here you can configure timeout settings in seconds."),
-                        default_value=10,
+                        default_value="10",
                         size=3,
                     ),
                 ),

@@ -5,6 +5,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import hashlib
+from contextlib import nullcontext
+from enum import Enum
 from pathlib import Path
 
 import pytest
@@ -106,7 +108,7 @@ def test_timehelper_add(args, result):
 )
 def test_absolutedate_value_to_json_conversion(value, result):
     with on_time("2020-03-02", "UTC"):
-        assert vs.AbsoluteDate().value_to_text(value) == result
+        assert vs.AbsoluteDate().value_to_html(value) == result
         json_value = vs.AbsoluteDate().value_to_json(value)
         assert vs.AbsoluteDate().value_from_json(json_value) == value
 
@@ -120,7 +122,7 @@ def test_absolutedate_value_to_json_conversion(value, result):
 )
 def test_tuple_value_to_json_conversion(value, result):
     with on_time("2020-03-02", "UTC"):
-        assert vs.Tuple([vs.AbsoluteDate(), vs.AbsoluteDate()]).value_to_text(value) == result
+        assert vs.Tuple([vs.AbsoluteDate(), vs.AbsoluteDate()]).value_to_html(value) == result
         json_value = vs.Tuple([vs.AbsoluteDate(), vs.AbsoluteDate()]).value_to_json(value)
         assert vs.Tuple([vs.AbsoluteDate(), vs.AbsoluteDate()]).value_from_json(json_value) == value
 
@@ -135,7 +137,7 @@ def test_tuple_value_to_json_conversion(value, result):
     ],
 )
 def test_age_value_to_json_conversion(value, result):
-    assert vs.Age().value_to_text(value) == result
+    assert vs.Age().value_to_html(value) == result
     json_value = vs.Age().value_to_json(value)
     assert vs.Age().value_from_json(json_value) == value
 
@@ -152,7 +154,7 @@ def test_age_value_to_json_conversion(value, result):
     ],
 )
 def test_dropdownchoice_value_to_json_conversion(choices, value, result):
-    assert vs.DropdownChoice(choices).value_to_text(value) == result
+    assert vs.DropdownChoice(choices).value_to_html(value) == result
     json_value = vs.DropdownChoice(choices).value_to_json(value)
     assert vs.DropdownChoice(choices).value_from_json(json_value) == value
 
@@ -194,7 +196,7 @@ def test_dropdownchoice_validate_datatype(choices, deprecated_choices, value, is
         (3600 * 24 * 7 * 1.5, "Since a sesquiweek"),  # defaults are idents
     ],
 )
-def test_timerange_value_to_text_conversion(request_context, monkeypatch, value, result_title):
+def test_timerange_value_to_html_conversion(request_context, monkeypatch, value, result_title):
     monkeypatch.setattr(
         config,
         "graph_timeranges",
@@ -205,7 +207,7 @@ def test_timerange_value_to_text_conversion(request_context, monkeypatch, value,
         ],
     )
 
-    assert vs.Timerange().value_to_text(value) == result_title
+    assert vs.Timerange().value_to_html(value) == result_title
 
 
 def test_timerange_value_to_json_conversion(request_context):
@@ -219,7 +221,7 @@ def test_timerange_value_to_json_conversion(request_context):
                 choice_value = ("date", (1582671600.0, 1582844400.0))
                 title = "Date range, 2020-02-25, 2020-02-27"
 
-            assert vs.Timerange().value_to_text(choice_value) == title
+            assert vs.Timerange().value_to_html(choice_value) == title
             json_value = vs.Timerange().value_to_json(choice_value)
             assert vs.Timerange().value_from_json(json_value) == choice_value
 
@@ -442,3 +444,65 @@ def test_value_encrypter_encrypt():
 def test_value_encrypter_transparent():
     enc = vs.ValueEncrypter
     assert enc.decrypt(enc.encrypt("abc")) == "abc"
+
+
+class ValueType(Enum):
+    name = "name"
+    ipv4 = "ipv4"
+    ipv6 = "ipv6"
+    none = "none"
+
+
+@pytest.mark.parametrize(
+    "allow_host_name", (True, False), ids=["allow_host_name", "not allow_host_name"]
+)
+@pytest.mark.parametrize(
+    "allow_ipv4_address", (True, False), ids=["allow_ipv4_address", "not allow_ipv4_address"]
+)
+@pytest.mark.parametrize(
+    "allow_ipv6_address", (True, False), ids=["allow_ipv6_address", "not allow_ipv6_address"]
+)
+@pytest.mark.parametrize(
+    "value_type,value",
+    [
+        (ValueType.name, "xyz"),
+        (ValueType.name, "xyz001_d3"),
+        (ValueType.name, "abc-def-ghi"),
+        (ValueType.name, "asd.abc"),
+        (ValueType.name, "asd.abc."),
+        (ValueType.ipv4, "10.10.123.234"),
+        (ValueType.ipv4, "10.10.123.234"),
+        (ValueType.ipv6, "2001:db8:3333:4444:5555:6666:7777:8888"),
+        (ValueType.ipv6, "::1234:5678"),
+        (ValueType.none, "999.10.123.234"),
+        (ValueType.none, "::&a:5678"),
+        (ValueType.none, "/asd/eee"),
+        (ValueType.none, "e/d/f"),
+        (ValueType.none, "a/../e"),
+        (ValueType.none, "-ding"),
+        (ValueType.none, "dong-"),
+        (ValueType.none, "01234567"),
+        (ValueType.none, "012.345.67"),
+        (ValueType.none, ""),
+    ],
+)
+def test_host_address_validate_value(
+    value_type: ValueType,
+    value: str,
+    allow_host_name: bool,
+    allow_ipv4_address: bool,
+    allow_ipv6_address: bool,
+) -> None:
+    expected_valid = (
+        (value_type is ValueType.name and allow_host_name)
+        or (value_type is ValueType.ipv4 and allow_ipv4_address)
+        or (value_type is ValueType.ipv6 and allow_ipv6_address)
+    )
+    # mypy is wrong about the nullcontext object type :-(
+    with pytest.raises(MKUserError) if not expected_valid else nullcontext():  # type: ignore[attr-defined]
+        vs.HostAddress(
+            allow_host_name=allow_host_name,
+            allow_ipv4_address=allow_ipv4_address,
+            allow_ipv6_address=allow_ipv6_address,
+            allow_empty=False,
+        ).validate_value(value, "varprefix")

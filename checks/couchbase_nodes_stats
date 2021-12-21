@@ -43,7 +43,7 @@ check_info["couchbase_nodes_stats.cpu_util"] = {
     "has_perfdata": True,
 }
 
-factory_settings["memory_default_levels"] = {"levels": (150.0, 200.0)}
+factory_settings["memory_default_levels"] = MEMORY_DEFAULT_LEVELS
 
 
 @get_parsed_item_data

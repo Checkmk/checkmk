@@ -25,19 +25,18 @@
 #              import ...
 #
 
-import errno
-import os
+import importlib
 import sys
 from types import ModuleType
-from typing import Any, Dict, Iterator, List, Set
+from typing import Any, Dict, Iterator, List
 
 import cmk.utils.paths
 import cmk.utils.version as cmk_version
+from cmk.utils.plugin_loader import load_plugins_with_exceptions
 
 import cmk.gui.pages
 import cmk.gui.plugins.main_modules
 import cmk.gui.utils as utils
-from cmk.gui.hooks import request_memoize
 from cmk.gui.log import logger
 
 if not cmk_version.is_raw_edition():
@@ -52,9 +51,7 @@ pagehandlers: Dict[Any, Any] = {}
 # modules are loaded on application initialization. The module
 # function load_plugins() is called for all these modules to
 # initialize them.
-_legacy_modules: List[ModuleType] = []
-
-_plugins_loaded_for: Set[str] = set()
+_local_main_modules: List[ModuleType] = []
 
 
 def register_handlers(handlers: Dict) -> None:
@@ -68,12 +65,29 @@ def _imports() -> Iterator[str]:
             yield val.__name__
 
 
-def init_modules() -> None:
-    """Loads all modules needed into memory and performs global initializations for
-    each module, when it needs some. These initializations should be fast ones."""
-    global _legacy_modules
+def load_plugins() -> None:
+    """Loads and initializes main modules and plugins into the application
+    Only builtin main modules are already imported."""
+    _import_local_main_modules()
+    _import_main_module_plugins()
+    _call_load_plugins_hooks()
 
-    _legacy_modules = []
+
+def _import_local_main_modules() -> None:
+    """Imports all site local main modules
+
+    We essentially load the site local pages plugins (`local/share/check_mk/web/plugins/pages`)
+    which are expected to contain the actual imports of the main modules.
+
+    Please note that the builtin main modules are already loaded by the imports of
+    `cmk.gui.[|cee.|cme]plugins.main_modules` above.
+
+    Note: Once we have PEP 420 namespace support, we can deprecate this and leave it to the imports
+    above. Until then we'll have to live with it.
+    """
+    global _local_main_modules
+
+    _local_main_modules = []
 
     module_names_prev = set(_imports())
 
@@ -81,10 +95,52 @@ def init_modules() -> None:
     utils.load_web_plugins("pages", globals())
 
     # Save the modules loaded during the former steps in the modules list
-    _legacy_modules += [sys.modules[m] for m in set(_imports()).difference(module_names_prev)]
+    _local_main_modules += [sys.modules[m] for m in set(_imports()).difference(module_names_prev)]
 
 
-def call_load_plugins_hooks() -> None:
+def _import_main_module_plugins() -> None:
+    logger.debug("Importing main module plugins")
+
+    for module in _cmk_gui_top_level_modules() + _local_main_modules:
+        main_module_name = module.__name__.split(".")[-1]
+
+        for plugin_package_name in _plugin_package_names(main_module_name):
+            if not _is_plugin_namespace(plugin_package_name):
+                logger.debug("  Skip loading plugins from %s", plugin_package_name)
+                continue
+
+            logger.debug("  Importing plugins from %s", plugin_package_name)
+            for plugin_name, exc in load_plugins_with_exceptions(plugin_package_name):
+                logger.error(
+                    "  Error in %s plugin '%s'\n", main_module_name, plugin_name, exc_info=exc
+                )
+                utils.add_failed_plugin(main_module_name, plugin_name, exc)
+
+    logger.debug("Main module plugins imported")
+
+
+# Note: One day, when we have migrated all main module plugins to PEP 420 namespaces, we
+# have no cmk.gui.cee and cmk.gui.cme namespaces anymore and can remove them.
+def _plugin_package_names(main_module_name: str) -> Iterator[str]:
+    yield f"cmk.gui.plugins.{main_module_name}"
+
+    if not cmk_version.is_raw_edition():
+        yield f"cmk.gui.cee.plugins.{main_module_name}"
+
+    if cmk_version.is_managed_edition():
+        yield f"cmk.gui.cme.plugins.{main_module_name}"
+
+
+def _is_plugin_namespace(plugin_package_name: str) -> bool:
+    # TODO: We should know this somehow by declarations without need to try this out
+    try:
+        importlib.import_module(plugin_package_name)
+        return True
+    except ModuleNotFoundError:
+        return False
+
+
+def _call_load_plugins_hooks() -> None:
     """Call the load_plugins() function in all main modules
 
     Have a look at our Wiki: /books/concepts/page/how-cmkgui-is-organised
@@ -92,48 +148,30 @@ def call_load_plugins_hooks() -> None:
     Each main module has the option to declare a `load_plugins` hook function to realize it's own
     logic that should be executed when initializing the main module.
 
-    Up to now this is executed during request processing. Like this:
+    In previous versions this was executed with loaded configuration and localized during request
+    processing, which resulted in several problems. Now this is executed during application
+    initialization (at import time).
 
-    1. During the first request in an just initialized interpreter the `load_plugins()` is
-       called.
-    2. The main module is doing it's initialization logic.
-    3. Some of the main modules then remember that they have loaded all plugins with a
-       `loaded_with_language` variable.
-    4. On subsequent requests the `load_plugins()` is executed and most main modules
-       immaculately return without performing another action.
-    5. Once any "local plugin" file has been modified (changed mtime), the all main modules are
-       called with `load_plugins()` to perform their initialization again.
-
-    This is done to automatically load/reload plugins after e.g. an MKP installation.
-
-    Note: Might be better to trigger our application in case something is changed to do a restart
-          from an external source like the MKP manager. In the moment we move the local plugins
-          to regulary modules this will be required anyways.
+    1. During import of the application (e.g. web/app/index.wsgi) `init_modules` cares for the
+       import of all main modules
+    2. Then this function calls the function `load_plugins` hook of all main modules.
+    3. The main module is doing it's initialization logic.
     """
     logger.debug("Executing load_plugin hooks")
 
-    if _local_web_plugins_have_changed():
-        logger.debug("A local GUI plugin has changed. Enforcing execution of all hooks")
-        _plugins_loaded_for.clear()
-
-    for module in _cmk_gui_top_level_modules() + _legacy_modules:
+    for module in _cmk_gui_top_level_modules() + _local_main_modules:
         name = module.__name__
 
-        if name == "cmk.gui.config":
-            continue  # initial config is already loaded, nothing to do
+        if name == "cmk.gui.modules":
+            continue  # Do not call ourselfs
 
         if not hasattr(module, "load_plugins"):
             continue  # has no load_plugins hook, nothing to do
-
-        if name in _plugins_loaded_for:
-            continue  # already loaded, nothing to do
 
         logger.debug("Executing load_plugins hook for %s", name)
 
         # hasattr above ensures the function is available. Mypy does not understand this.
         module.load_plugins()  # type: ignore[attr-defined]
-
-        _plugins_loaded_for.add(name)
 
     # TODO: Clean this up once we drop support for the legacy plugins
     for path, page_func in pagehandlers.items():
@@ -158,37 +196,3 @@ def _cmk_gui_top_level_modules() -> List[ModuleType]:
             and len(name.split(".")) == 4
         )
     ]
-
-
-def _find_local_web_plugins() -> Iterator[str]:
-    basedir = str(cmk.utils.paths.local_web_dir) + "/plugins/"
-
-    try:
-        plugin_dirs = os.listdir(basedir)
-    except OSError as e:
-        if e.errno == errno.ENOENT:
-            return
-        raise
-
-    for plugins_dir in plugin_dirs:
-        dir_path = basedir + plugins_dir
-        yield dir_path  # Changes in the directory like deletion of files!
-        if os.path.isdir(dir_path):
-            for file_name in os.listdir(dir_path):
-                if file_name.endswith(".py") or file_name.endswith(".pyc"):
-                    yield dir_path + "/" + file_name
-
-
-_last_web_plugins_update = 0.0
-
-
-@request_memoize()
-def _local_web_plugins_have_changed() -> bool:
-    global _last_web_plugins_update
-
-    this_time = 0.0
-    for path in _find_local_web_plugins():
-        this_time = max(os.stat(path).st_mtime, this_time)
-    last_time = _last_web_plugins_update
-    _last_web_plugins_update = this_time
-    return this_time > last_time

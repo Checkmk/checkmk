@@ -196,7 +196,7 @@ class ABCGlobalSettingsMode(WatoMode):
                     value = default_value
 
                 try:
-                    to_text = valuespec.value_to_text(value)
+                    to_text = valuespec.value_to_html(value)
                     if isinstance(to_text, str):
                         to_text = escape_html_permissive(to_text)
                 except Exception:
@@ -318,7 +318,7 @@ class ABCEditGlobalSettingMode(WatoMode):
                 _("Changed global configuration variable %s to %s.")
                 % (
                     escaping.escape_attribute(self._varname),
-                    self._valuespec.value_to_text(new_value),
+                    self._valuespec.value_to_html(new_value),
                 )
             )
 
@@ -379,7 +379,7 @@ class ABCEditGlobalSettingMode(WatoMode):
             self._show_global_setting()
 
         forms.section(_("Factory setting"))
-        html.write_text(self._valuespec.value_to_text(defvalue))
+        html.write_text(self._valuespec.value_to_html(defvalue))
 
         forms.section(_("Current state"))
         if is_configured_globally:
@@ -396,7 +396,7 @@ class ABCEditGlobalSettingMode(WatoMode):
             elif curvalue == defvalue:
                 html.write_text(_("Your setting and factory settings are identical."))
             else:
-                html.write_text(self._valuespec.value_to_text(curvalue))
+                html.write_text(self._valuespec.value_to_html(curvalue))
 
         forms.end()
         html.hidden_fields()

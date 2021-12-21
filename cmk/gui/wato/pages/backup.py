@@ -15,7 +15,7 @@ import cmk.gui.watolib as watolib
 from cmk.gui.globals import request, user
 from cmk.gui.i18n import _
 from cmk.gui.pages import AjaxPage, page_registry
-from cmk.gui.plugins.wato import mode_registry, SiteBackupJobs, WatoMode
+from cmk.gui.plugins.wato.utils import mode_registry, SiteBackupJobs, WatoMode
 from cmk.gui.valuespec import Checkbox
 
 

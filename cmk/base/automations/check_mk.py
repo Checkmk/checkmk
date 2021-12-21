@@ -25,7 +25,7 @@ import cmk.utils.man_pages as man_pages
 from cmk.utils.check_utils import maincheckify
 from cmk.utils.diagnostics import deserialize_cl_parameters, DiagnosticsCLParameters
 from cmk.utils.encoding import ensure_str_with_fallback
-from cmk.utils.exceptions import MKBailOut, MKGeneralException, OnError
+from cmk.utils.exceptions import MKBailOut, MKGeneralException, MKSNMPError, OnError
 from cmk.utils.labels import DiscoveredHostLabelsStore
 from cmk.utils.macros import replace_macros_in_str
 from cmk.utils.parameters import TimespecificParameters
@@ -220,7 +220,9 @@ class AutomationTryDiscovery(Automation):
 
     def _execute_discovery(
         self, args: List[str]
-    ) -> Tuple[discovery.CheckPreviewTable, discovery.QualifiedDiscovery[HostLabel]]:
+    ) -> Tuple[
+        Sequence[automation_results.CheckPreviewEntry], discovery.QualifiedDiscovery[HostLabel]
+    ]:
 
         use_cached_snmp_data = False
         if args[0] == "@noscan":
@@ -505,33 +507,33 @@ class AutomationRenameHosts(Automation):
         actions = []
 
         # Temporarily stop processing of performance data
-        npcd_running = os.path.exists(omd_root + "/tmp/pnp4nagios/run/npcd.pid")
+        npcd_running = (omd_root / "tmp/pnp4nagios/run/npcd.pid").exists()
         if npcd_running:
             os.system("omd stop npcd >/dev/null 2>&1 </dev/null")
 
-        rrdcache_running = os.path.exists(omd_root + "/tmp/run/rrdcached.sock")
+        rrdcache_running = (omd_root / "tmp/run/rrdcached.sock").exists()
         if rrdcache_running:
             os.system("omd stop rrdcached >/dev/null 2>&1 </dev/null")
 
         try:
             # Fix pathnames in XML files
             self.rename_host_in_files(
-                os.path.join(omd_root, "var/pnp4nagios/perfdata", oldname, "*.xml"),
+                str(omd_root / "var/pnp4nagios/perfdata" / oldname / "*.xml"),
                 "/perfdata/%s/" % oldregex,
                 "/perfdata/%s/" % newname,
             )
 
             # RRD files
-            if self._rename_host_dir(omd_root + "/var/pnp4nagios/perfdata", oldname, newname):
+            if self._rename_host_dir(str(omd_root / "var/pnp4nagios/perfdata"), oldname, newname):
                 actions.append("rrd")
 
             # RRD files
-            if self._rename_host_dir(omd_root + "/var/check_mk/rrd", oldname, newname):
+            if self._rename_host_dir(str(omd_root / "var/check_mk/rrd"), oldname, newname):
                 actions.append("rrd")
 
             # entries of rrdcached journal
             if self.rename_host_in_files(
-                os.path.join(omd_root, "var/rrdcached/rrd.journal.*"),
+                str(omd_root / "var/rrdcached/rrd.journal.*"),
                 "/(perfdata|rrd)/%s/" % oldregex,
                 "/\\1/%s/" % newname,
                 extended_regex=True,
@@ -699,10 +701,9 @@ class AutomationAnalyseServices(Automation):
     # Determine the type of the check, and how the parameters are being
     # constructed
     # TODO: Refactor this huge function
-    # TODO: Klappt das mit automatischen verschatten von SNMP-Checks (bei dual Monitoring)
     def _get_service_info(
         self, config_cache: config.ConfigCache, host_config: config.HostConfig, servicedesc: str
-    ) -> Mapping[str, object]:
+    ) -> Mapping[str, Union[None, str, LegacyCheckParameters]]:
         hostname = host_config.hostname
 
         # We just consider types of checks that are managed via WATO.
@@ -725,7 +726,9 @@ class AutomationAnalyseServices(Automation):
                     "checkgroup": checkgroup_name,
                     "checktype": checktype,
                     "item": item,
-                    "parameters": params,
+                    "parameters": TimespecificParameters((params,)).preview(
+                        cmk.base.core.timeperiod_active
+                    ),
                 }
 
         # 2. Load all autochecks of the host in question and try to find
@@ -767,7 +770,7 @@ class AutomationAnalyseServices(Automation):
     @staticmethod
     def _get_service_info_from_autochecks(
         config_cache: config.ConfigCache, host_config: config.HostConfig, servicedesc: str
-    ) -> Optional[Mapping[str, object]]:
+    ) -> Optional[Mapping[str, Union[None, str, LegacyCheckParameters]]]:
         # TODO: There is a lot of duplicated logic with discovery.py/check_table.py. Clean this
         # whole function up.
         # NOTE: Iterating over the check table would make things easier. But we might end up with
@@ -799,12 +802,6 @@ class AutomationAnalyseServices(Automation):
                 # In this case we can run into the 'not found' case below.
                 continue
 
-            effective_parameters: LegacyCheckParameters = (
-                dict(service.parameters.preview(cmk.base.core.timeperiod_active))
-                if isinstance(service.parameters, TimespecificParameters)
-                else service.parameters
-            )
-
             return {
                 "origin": "auto",
                 "checktype": str(plugin.name),
@@ -817,7 +814,8 @@ class AutomationAnalyseServices(Automation):
                 # *Autocheck*Service (not a general Service) instance.
                 "inv_parameters": "not available in this view",
                 "factory_settings": plugin.check_default_parameters,
-                "parameters": effective_parameters,
+                # effective parameters:
+                "parameters": service.parameters.preview(cmk.base.core.timeperiod_active),
             }
 
         return None
@@ -1027,14 +1025,14 @@ class AutomationRestart(Automation):
 
     def _time_of_last_core_restart(self) -> float:
         if config.monitoring_core == "cmc":
-            pidfile_path = omd_root + "/tmp/run/cmc.pid"
+            pidfile_path = omd_root / "/tmp/run/cmc.pid"
         else:
-            pidfile_path = omd_root + "/tmp/lock/nagios.lock"
+            pidfile_path = omd_root / "/tmp/lock/nagios.lock"
 
-        if os.path.exists(pidfile_path):
-            return os.stat(pidfile_path).st_mtime
-
-        return 0.0
+        try:
+            return pidfile_path.stat().st_mtime
+        except FileNotFoundError:
+            return 0.0
 
 
 automations.register(AutomationRestart())
@@ -1284,6 +1282,10 @@ class AutomationDiagHost(Automation):
                 )
 
             if test.startswith("snmp"):
+                if config.simulation_mode:
+                    raise MKSNMPError(
+                        "Simulation mode enabled. Not trying to contact snmp datasource"
+                    )
                 return automation_results.DiagHostResult(
                     *self._execute_snmp(
                         test,
@@ -1566,7 +1568,7 @@ class AutomationActiveCheck(Automation):
 
     def _load_resource_file(self, macros: Dict[str, str]) -> None:
         try:
-            for line in open(omd_root + "/etc/nagios/resource.cfg"):
+            for line in (omd_root / "etc/nagios/resource.cfg").open():
                 line = line.strip()
                 if not line or line[0] == "#":
                     continue
@@ -1665,14 +1667,14 @@ class AutomationGetAgentOutput(Automation):
 
                     raw_data = source.fetch(Mode.CHECKING)
                     host_sections = source.parse(raw_data, selection=NO_SELECTION)
-                    source_state, source_output = source.summarize(
+                    source_results = source.summarize(
                         host_sections,
                         mode=Mode.CHECKING,
                     )
-                    if source_state != 0:
+                    if any(r.state != 0 for r in source_results):
                         # Optionally show errors of problematic data sources
                         success = False
-                        output += "[%s] %s\n" % (source.id, source_output)
+                        output += f"[{source.id}] {', '.join(r.summary for r in source_results)}\n"
                     assert raw_data.ok is not None
                     info += raw_data.ok
             else:

@@ -39,8 +39,8 @@ from cmk.gui.page_menu import (
     PageMenuTopic,
 )
 from cmk.gui.plugins.userdb.htpasswd import hash_password
-from cmk.gui.plugins.userdb.utils import cleanup_connection_id, get_connection, UserAttribute
-from cmk.gui.plugins.wato import (
+from cmk.gui.plugins.userdb.utils import get_connection, UserAttribute
+from cmk.gui.plugins.wato.utils import (
     flash,
     make_action_link,
     make_confirm_link,
@@ -87,6 +87,8 @@ class ModeUsers(WatoMode):
         return _("Users")
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+        # Remove the last breadcrumb entry here to avoid the breadcrumb "Users > Users"
+        del breadcrumb[-1]
         return PageMenu(
             dropdowns=[
                 PageMenuDropdown(
@@ -131,8 +133,8 @@ class ModeUsers(WatoMode):
                             entries=list(self._page_menu_entries_synchronized_users()),
                         ),
                         PageMenuTopic(
-                            title=_("Notify users"),
-                            entries=list(self._page_menu_entries_notify_users()),
+                            title=_("Message users"),
+                            entries=list(self._page_menu_entries_message_users()),
                         ),
                         make_checkbox_selection_topic(self.name()),
                     ],
@@ -167,12 +169,12 @@ class ModeUsers(WatoMode):
                     item=make_simple_link(self._job.detail_url()),
                 )
 
-    def _page_menu_entries_notify_users(self) -> Iterator[PageMenuEntry]:
-        if user.may("general.notify"):
+    def _page_menu_entries_message_users(self) -> Iterator[PageMenuEntry]:
+        if user.may("general.message"):
             yield PageMenuEntry(
-                title=_("Notify users"),
-                icon_name="notifications",
-                item=make_simple_link("notify.py"),
+                title=_("Message users"),
+                icon_name="message",
+                item=make_simple_link("message.py"),
             )
 
     def _page_menu_entries_related(self) -> Iterator[PageMenuEntry]:
@@ -341,7 +343,7 @@ class ModeUsers(WatoMode):
                 if uid != user.id:
                     html.checkbox("_c_user_%s" % base64.b64encode(uid.encode("utf-8")).decode())
 
-                user_connection_id = cleanup_connection_id(user_spec.get("connector"))
+                user_connection_id = user_spec.get("connector")
                 connection = get_connection(user_connection_id)
 
                 # Buttons
@@ -363,10 +365,10 @@ class ModeUsers(WatoMode):
                 )
                 html.icon_button(delete_url, _("Delete"), "delete")
 
-                notifications_url = watolib.folder_preserving_link(
-                    [("mode", "user_notifications"), ("user", uid)]
-                )
                 if rulebased_notifications_enabled():
+                    notifications_url = watolib.folder_preserving_link(
+                        [("mode", "user_notifications"), ("user", uid)]
+                    )
                     html.icon_button(
                         notifications_url,
                         _("Custom notification table of this user"),
@@ -486,7 +488,7 @@ class ModeUsers(WatoMode):
                     html.i(_("none"))
 
                 # table.cell(_("Sites"))
-                # html.write_text(vs_authorized_sites().value_to_text(user_spec.get("authorized_sites",
+                # html.write_text(vs_authorized_sites().value_to_html(user_spec.get("authorized_sites",
                 #                                                vs_authorized_sites().default_value())))
 
                 # notifications
@@ -523,7 +525,7 @@ class ModeUsers(WatoMode):
                 for name, attr in visible_custom_attrs:
                     vs = attr.valuespec()
                     table.cell(_u(vs.title()))
-                    html.write_text(vs.value_to_text(user_spec.get(name, vs.default_value())))
+                    html.write_text(vs.value_to_html(user_spec.get(name, vs.default_value())))
 
         html.hidden_fields()
         html.end_form()
@@ -883,7 +885,7 @@ class ModeEditUser(WatoMode):
         if not self._is_locked("authorized_sites"):
             vs_sites.render_input("authorized_sites", authorized_sites)
         else:
-            html.write_text(vs_sites.value_to_text(authorized_sites))
+            html.write_text(vs_sites.value_to_html(authorized_sites))
         html.help(vs_sites.help())
 
         custom_user_attr_topics = userdb_utils.get_user_attributes_by_topic()
@@ -1265,7 +1267,7 @@ class ModeEditUser(WatoMode):
             if not self._is_locked(name):
                 vs.render_input("ua_" + name, self._user.get(name, vs.default_value()))
             else:
-                html.write_text(vs.value_to_text(self._user.get(name, vs.default_value())))
+                html.write_text(vs.value_to_html(self._user.get(name, vs.default_value())))
                 # Render hidden to have the values kept after saving
                 html.open_div(style="display:none")
                 vs.render_input("ua_" + name, self._user.get(name, vs.default_value()))

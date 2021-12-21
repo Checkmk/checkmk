@@ -21,7 +21,7 @@ from typing import (
 
 import cmk.utils.debug
 import cmk.utils.version as cmk_version
-from cmk.utils.check_utils import ActiveCheckResult
+from cmk.utils.check_utils import ActiveCheckResult, ServiceCheckResult
 from cmk.utils.cpu_tracking import CPUTracker, Snapshot
 from cmk.utils.exceptions import MKTimeout, OnError
 from cmk.utils.log import console
@@ -36,7 +36,6 @@ from cmk.utils.type_defs import (
     HostName,
     MetricTuple,
     ParsedSectionName,
-    ServiceCheckResult,
     ServiceName,
     SourceType,
     state_markers,
@@ -68,13 +67,7 @@ from cmk.base.api.agent_based.type_defs import Parameters
 from cmk.base.check_utils import LegacyCheckParameters, Service
 
 from . import _cluster_modes, _submit_to_core
-from .utils import (
-    AggregatedResult,
-    CHECK_NOT_IMPLEMENTED,
-    cluster_received_no_data,
-    ITEM_NOT_FOUND,
-    RECEIVED_NO_DATA,
-)
+from .utils import AggregatedResult
 
 # .
 #   .--Checking------------------------------------------------------------.
@@ -195,13 +188,13 @@ def _execute_checkmk_checks(
                     ipaddress,
                     parsed_sections_broker=broker,
                 )
-            timed_results = ActiveCheckResult.from_subresults(
+            timed_results = [
                 *check_sources(
                     source_results=source_results,
                     mode=mode,
                     include_ok_results=True,
                 ),
-                check_parsing_errors(
+                *check_parsing_errors(
                     errors=broker.parsing_errors(),
                 ),
                 *_check_plugins_missing_data(
@@ -209,9 +202,9 @@ def _execute_checkmk_checks(
                     exit_spec,
                     bool(num_success),
                 ),
-            )
+            ]
         return ActiveCheckResult.from_subresults(
-            timed_results,
+            *timed_results,
             _timing_results(tracker, fetcher_messages),
         )
 
@@ -226,10 +219,10 @@ def _timing_results(
     for msg in fetcher_messages:
         total_times += msg.stats.duration
 
-    infotexts = ("execution time %.1f sec" % total_times.process.elapsed,)
+    infotext = "execution time %.1f sec" % total_times.process.elapsed
     if not config.check_mk_perfdata_with_times:
         return ActiveCheckResult(
-            0, infotexts, (), ("execution_time=%.3f" % total_times.process.elapsed,)
+            0, infotext, (), ("execution_time=%.3f" % total_times.process.elapsed,)
         )
 
     perfdata = [
@@ -259,7 +252,7 @@ def _timing_results(
     for phase, duration in summary.items():
         perfdata.append("cmk_time_%s=%.3f" % (phase, duration.idle))
 
-    return ActiveCheckResult(0, infotexts, (), perfdata)
+    return ActiveCheckResult(0, infotext, (), perfdata)
 
 
 def _check_plugins_missing_data(
@@ -271,9 +264,7 @@ def _check_plugins_missing_data(
         return
 
     if not some_success:
-        yield ActiveCheckResult(
-            exit_spec.get("empty_output", 2), ("Got no information from host",), (), ()
-        )
+        yield ActiveCheckResult(exit_spec.get("empty_output", 2), "Got no information from host")
         return
 
     # key is a legacy name, kept for compatibility.
@@ -293,13 +284,10 @@ def _check_plugins_missing_data(
     plugin_list = ", ".join(sorted(generic_plugins))
     yield ActiveCheckResult(
         missing_status,
-        (f"Missing monitoring data for plugins: {plugin_list}{state_markers[missing_status]}",),
-        (),
-        (),
+        f"Missing monitoring data for plugins: {plugin_list}",
     )
     yield from (
-        ActiveCheckResult(status, f"{plugin}{state_markers[status]}", (), ())
-        for plugin, status in sorted(specific_plugins)
+        ActiveCheckResult(status, str(plugin)) for plugin, status in sorted(specific_plugins)
     )
 
 
@@ -417,7 +405,7 @@ def _execute_check(
             show_perfdata=show_perfdata,
         )
     else:
-        console.verbose(f"{service.description:20} PEND - {submittable.result[1]}\n")
+        console.verbose(f"{service.description:20} PEND - {submittable.result.output}\n")
     return submittable.data_received
 
 
@@ -440,7 +428,7 @@ def get_aggregated_result(
         return AggregatedResult(
             submit=True,
             data_received=True,
-            result=CHECK_NOT_IMPLEMENTED,
+            result=ServiceCheckResult.check_not_implemented(),
             cache_info=None,
         )
 
@@ -499,7 +487,7 @@ def get_aggregated_result(
         return AggregatedResult(
             submit=False,
             data_received=True,
-            result=(0, msg, []),
+            result=ServiceCheckResult(output=msg),
             cache_info=None,
         )
     except MKTimeout:
@@ -508,7 +496,7 @@ def get_aggregated_result(
         if cmk.utils.debug.enabled():
             raise
         table = check_table.get_check_table(host_config.hostname, skip_autochecks=True)
-        result = (
+        result = ServiceCheckResult(
             3,
             cmk.base.crash_reporting.create_check_crash_dump(
                 host_name=host_config.hostname,
@@ -517,7 +505,6 @@ def get_aggregated_result(
                 plugin_kwargs={**item_kw, **params_kw, **section_kws},
                 is_manual=service.id() in table,
             ),
-            [],
         )
 
     return AggregatedResult(
@@ -592,7 +579,7 @@ def _get_monitoring_data_kwargs(
                 nodes,
                 sections,
             ),
-            cluster_received_no_data(nodes),
+            ServiceCheckResult.cluster_received_no_data(nodes),
         )
 
     return (
@@ -601,7 +588,7 @@ def _get_monitoring_data_kwargs(
             HostKey(host_config.hostname, ipaddress, source_type),
             sections,
         ),
-        RECEIVED_NO_DATA,
+        ServiceCheckResult.received_no_data(),
     )
 
 
@@ -653,7 +640,7 @@ def _aggregate_results(subresults: checking_classes.CheckResult) -> ServiceCheck
 
     # Empty list? Check returned nothing
     if not details:
-        return ITEM_NOT_FOUND
+        return ServiceCheckResult.item_not_found()
 
     if not summaries:
         count = len(details)
@@ -661,7 +648,7 @@ def _aggregate_results(subresults: checking_classes.CheckResult) -> ServiceCheck
             "Everything looks OK - %d detail%s available" % (count, "" if count == 1 else "s")
         )
     all_text = [", ".join(summaries)] + details
-    return int(status), "\n".join(all_text).strip(), perfdata
+    return ServiceCheckResult(int(status), "\n".join(all_text).strip(), perfdata)
 
 
 def _consume_and_dispatch_result_types(

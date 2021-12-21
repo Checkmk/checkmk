@@ -65,7 +65,6 @@ from cmk.gui.i18n import _
 from cmk.gui.plugins.userdb.utils import (
     add_internal_attributes,
     CheckCredentialsResult,
-    cleanup_connection_id,
     get_connection,
     get_user_attributes,
     load_cached_profile,
@@ -454,7 +453,10 @@ class LDAPUserConnector(UserConnector):
         self._logger.info("LDAP_BIND %s" % user_dn)
         try:
             # ? user_dn seems to have the type str
-            conn.simple_bind_s(ensure_str(user_dn), password_store.extract(password))
+            conn.simple_bind_s(
+                ensure_str(user_dn),  # pylint: disable= six-ensure-str-bin-call
+                password_store.extract(password),
+            )
             self._logger.info("  SUCCESS")
         except (ldap.INVALID_CREDENTIALS, ldap.INAPPROPRIATE_AUTH):
             raise
@@ -574,8 +576,8 @@ class LDAPUserConnector(UserConnector):
 
         lc = SimplePagedResultsControl(size=page_size, cookie="")
         # ? base and filt seem to have type str
-        base = ensure_str(base)
-        filt = ensure_str(filt)
+        base = ensure_str(base)  # pylint: disable= six-ensure-str-bin-call
+        filt = ensure_str(filt)  # pylint: disable= six-ensure-str-bin-call
 
         results = []
         while True:
@@ -636,8 +638,18 @@ class LDAPUserConnector(UserConnector):
                         new_obj = {}
                         for key, val in obj.items():
                             # Convert all keys to lower case!
-                            new_obj[ensure_str(key).lower()] = [ensure_str(i) for i in val]
-                        result.append((ensure_str(dn).lower(), new_obj))
+                            new_obj[
+                                ensure_str(key).lower()  # pylint: disable= six-ensure-str-bin-call
+                            ] = [
+                                ensure_str(i)  # pylint: disable= six-ensure-str-bin-call
+                                for i in val
+                            ]
+                        result.append(
+                            (
+                                ensure_str(dn).lower(),  # pylint: disable= six-ensure-str-bin-call
+                                new_obj,
+                            )
+                        )
                     success = True
                 except ldap.NO_SUCH_OBJECT as e:
                     raise MKLDAPException(
@@ -1100,17 +1112,27 @@ class LDAPUserConnector(UserConnector):
 
     # This function only validates credentials, no locked checking or similar
     def check_credentials(self, user_id, password: str) -> CheckCredentialsResult:
+        # Connect only to servers of connections, the user is configured for,
+        # to avoid connection errors for unrelated servers
+        user_connection_id = self._connection_id_of_user(user_id)
+        if user_connection_id is not None and user_connection_id != self.id():
+            return None
+
         self.connect()
 
-        # Did the user provide an suffix with his user_id? This might enforce
-        # LDAP connections to be choosen or skipped.
-        # self._user_enforces_this_connection can return either:
-        #   True:  This connection is enforced
-        #   False: Another connection is enforced
-        #   None:  No connection is enforced
-        enforce_this_connection = self._user_enforces_this_connection(user_id)
-        if enforce_this_connection is False:
-            return None  # Skip this connection, another one is enforced
+        enforce_this_connection = None
+        # Also honor users that are currently not known, e.g. when sync did not
+        # already happened
+        if user_connection_id is None:
+            # Did the user provide an suffix with his user_id? This might enforce
+            # LDAP connections to be choosen or skipped.
+            # self._user_enforces_this_connection can return either:
+            #   True:  This connection is enforced
+            #   False: Another connection is enforced
+            #   None:  No connection is enforced
+            enforce_this_connection = self._user_enforces_this_connection(user_id)
+            if enforce_this_connection is False:
+                return None  # Skip this connection, another one is enforced
         # Always use the stripped user ID for communication with the LDAP server
         user_id = self._strip_suffix(user_id)
 
@@ -1130,17 +1152,7 @@ class LDAPUserConnector(UserConnector):
         # authentication which should be rebound again after trying this.
         try:
             self._bind(user_dn, ("password", password))
-            if not self._has_suffix():
-                result = user_id
-            else:
-                # Does the user without suffix exist and is it related to this connection? Always
-                # use it in case it exists. If not, use the user with the suffix. A connection may
-                # have created users while the connection had no suffix and a suffix has been added
-                # to the connection later.
-                if self._connection_id_of_user(user_id) == self.id():
-                    result = user_id
-                else:
-                    result = self._add_suffix(user_id)
+            result = user_id if not self._has_suffix() else self._add_suffix(user_id)
         except (ldap.INVALID_CREDENTIALS, ldap.INAPPROPRIATE_AUTH) as e:
             self._logger.warning(
                 "Unable to authenticate user %s. Reason: %s", user_id, e.args[0].get("desc", e)
@@ -1212,16 +1224,15 @@ class LDAPUserConnector(UserConnector):
             else:
                 user = new_user_template(self.id())
                 mode_create = True
-
-            if cmk_version.is_managed_edition():
-                user["customer"] = self._config.get("customer", managed.default_customer_id())
+                if cmk_version.is_managed_edition():
+                    user["customer"] = self._config.get("customer", managed.default_customer_id())
 
             return mode_create, user
 
         # Remove users which are controlled by this connector but can not be found in
         # LDAP anymore
         for user_id, user in list(users.items()):
-            user_connection_id = cleanup_connection_id(user.get("connector"))
+            user_connection_id = user.get("connector")
             if (
                 user_connection_id == connection_id
                 and self._strip_suffix(user_id) not in ldap_users
@@ -1233,7 +1244,7 @@ class LDAPUserConnector(UserConnector):
         profiles_to_synchronize = {}
         for user_id, ldap_user in ldap_users.items():
             mode_create, user = load_user(user_id)
-            user_connection_id = cleanup_connection_id(user.get("connector"))
+            user_connection_id = user.get("connector")
 
             if self._create_users_only_on_login() and mode_create:
                 self._logger.info(
@@ -1253,7 +1264,7 @@ class LDAPUserConnector(UserConnector):
                 if self._has_suffix():
                     user_id = self._add_suffix(user_id)
                     mode_create, user = load_user(user_id)
-                    user_connection_id = cleanup_connection_id(user.get("connector"))
+                    user_connection_id = user.get("connector")
                     if user_connection_id != connection_id:
                         self._logger.info(
                             '  SKIP SYNC "%s" (name conflict after adding suffix '

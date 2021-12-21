@@ -23,8 +23,7 @@ from cmk.snmplib.type_defs import SNMPBackend, SNMPBackendEnum, SNMPHostConfig
 from cmk.snmplib.utils import evaluate_snmp_detection
 
 import cmk.base.api.agent_based.register as agent_based_register
-
-from cmk.base.api.agent_based.register.section_plugins_legacy.convert_scan_functions import (  # isort: skip
+from cmk.base.api.agent_based.register.section_plugins_legacy.convert_scan_functions import (
     create_detect_spec,
 )
 
@@ -156,7 +155,7 @@ class SNMPTestBackend(SNMPBackend):
     def get(self, oid, context_name=None):
         raise NotImplementedError("get")
 
-    def walk(self, oid, check_plugin_name=None, table_base_oid=None, context_name=None):
+    def walk(self, oid, section_name=None, table_base_oid=None, context_name=None):
         raise NotImplementedError("walk")
 
 

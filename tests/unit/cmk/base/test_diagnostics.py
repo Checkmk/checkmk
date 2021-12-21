@@ -200,6 +200,7 @@ def test_diagnostics_element_local_files_content(tmp_path, _collectors):
         "notifications",
         "pnp-templates",
         "web",
+        "gui",
     ]
     assert sorted(content["unpackaged"].keys()) == sorted(unpackaged_keys)
     for key in unpackaged_keys:
@@ -221,6 +222,7 @@ def test_diagnostics_element_local_files_content(tmp_path, _collectors):
         "notifications",
         "pnp-templates",
         "web",
+        "gui",
     ]
     assert sorted(content["parts"].keys()) == sorted(parts_keys)
     part_keys = [

@@ -44,7 +44,6 @@ if sys.stdout.isatty():
     def tty_colors(codes):
         return "\033[%sm" % (";".join([str(c) for c in codes]))
 
-
 else:
     tty_red = ""
     tty_green = ""

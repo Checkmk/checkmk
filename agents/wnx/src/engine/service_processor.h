@@ -320,17 +320,15 @@ private:
     std::vector<std::future<bool>> vf_;
 
     // called from the network callbacks in ExternalPort
-    std::optional<AnswerId> openAnswer(const std::string ip_addr) {
-        // race condition below
-        using namespace std::chrono;
+    std::optional<AnswerId> openAnswer(const std::string& ip_addr) {
+        using namespace std::chrono_literals;
         if (answer_.isAnswerInUse() &&
             !answer_.isAnswerOlder(60s))  // answer is in process
         {
             XLOG::l("Answer is in use and too young - to be fixed");
-            return {};  // #TODO make async here
+            return {};
         }
 
-        // answer may be reused
         answer_.dropAnswer();
         answer_.prepareAnswer(ip_addr);
         return answer_.getId();

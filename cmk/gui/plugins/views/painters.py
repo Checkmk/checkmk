@@ -26,11 +26,18 @@ from cmk.gui.hooks import request_memoize
 from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _
 from cmk.gui.plugins.metrics.utils import render_color_icon, TranslatedMetrics
-from cmk.gui.plugins.views import (
+from cmk.gui.plugins.views.graphs import cmk_time_graph_params, paint_time_graph_cmk
+from cmk.gui.plugins.views.icons.utils import (
+    get_icons,
+    IconEntry,
+    IconObjectType,
+    iconpainter_columns,
+    LegacyIconEntry,
+)
+from cmk.gui.plugins.views.utils import (
     Cell,
     format_plugin_output,
     get_label_sources,
-    get_labels,
     get_perfdata_nth_value,
     get_tag_groups,
     is_stale,
@@ -43,20 +50,10 @@ from cmk.gui.plugins.views import (
     painter_registry,
     PainterOption,
     render_cache_info,
-    render_labels,
     render_link_to_view,
-    render_tag_groups,
     replace_action_url_macros,
     transform_action_url,
     VisualLinkSpec,
-)
-from cmk.gui.plugins.views.graphs import cmk_time_graph_params, paint_time_graph_cmk
-from cmk.gui.plugins.views.icons import (
-    get_icons,
-    IconEntry,
-    IconObjectType,
-    iconpainter_columns,
-    LegacyIconEntry,
 )
 from cmk.gui.sites import get_site_config
 from cmk.gui.type_defs import ColumnName, Row, SorterName
@@ -76,7 +73,14 @@ from cmk.gui.valuespec import (
     Timerange,
     Transform,
 )
-from cmk.gui.view_utils import CellContent, CellSpec, CSSClass
+from cmk.gui.view_utils import (
+    CellContent,
+    CellSpec,
+    CSSClass,
+    get_labels,
+    render_labels,
+    render_tag_groups,
+)
 
 #   .--Painter Options-----------------------------------------------------.
 #   |                   ____       _       _                               |
@@ -995,6 +999,7 @@ def _paint_notification_postponement_reason(what: str, row: Row) -> CellSpec:
         "at least one parent is up, but no check is recent enough": _(
             "Last service check is not recent enough"
         ),
+        None: "",  # column is not available if the Nagios core is used
     }
 
     return (
@@ -5226,7 +5231,8 @@ class AbstractPainterSpecificMetric(Painter):
     @request_memoize()
     def _metric_choices(cls) -> List[Tuple[str, str]]:
         return sorted(
-            [(k, v.get("title", k)) for k, v in metrics.metric_info.items()], key=lambda x: x[1]
+            [(k, str(v.get("title", k))) for k, v in metrics.metric_info.items()],
+            key=lambda x: x[1],
         )
 
     def _render(self, row, cell, perf_data_entries, check_command):

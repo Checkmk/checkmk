@@ -7,7 +7,7 @@
 # NOTE: The rulesets in this file were deprecated in version 2.0.0p5
 
 from cmk.gui.i18n import _
-from cmk.gui.plugins.wato import (
+from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithoutItem,
     rulespec_registry,
     RulespecGroupCheckParametersApplications,

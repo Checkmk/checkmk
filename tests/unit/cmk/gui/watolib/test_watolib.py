@@ -66,6 +66,8 @@ def test_registered_automation_commands():
     if not cmk_version.is_raw_edition():
         expected_automation_commands += [
             "execute-dcd-command",
+            "get-agent-requests",
+            "update-agent-requests",
         ]
 
     registered = sorted(watolib.automation_command_registry.keys())

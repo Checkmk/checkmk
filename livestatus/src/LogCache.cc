@@ -8,6 +8,7 @@
 #include <filesystem>
 #include <sstream>
 #include <string>
+#include <system_error>
 #include <utility>
 
 #include "Logfile.h"
@@ -46,7 +47,9 @@ void LogCache::update() {
                 std::make_unique<Logfile>(logger(), this, entry.path(), false));
         }
     } catch (const std::filesystem::filesystem_error &e) {
-        Warning(logger()) << "updating log file index: " << e.what();
+        if (e.code() != std::errc::no_such_file_or_directory) {
+            Warning(logger()) << "updating log file index: " << e.what();
+        }
     }
 
     if (_logfiles.empty()) {

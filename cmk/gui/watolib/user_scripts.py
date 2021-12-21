@@ -41,7 +41,7 @@ def load_user_scripts(what):
 
     scripts = _load_user_scripts_from(not_dir)
     try:
-        local_dir = cmk.utils.paths.omd_root + "/local/share/check_mk/" + what
+        local_dir = f"{cmk.utils.paths.omd_root}/local/share/check_mk/{what}"
         scripts.update(_load_user_scripts_from(local_dir))
     except Exception:
         pass
@@ -53,7 +53,7 @@ def _load_user_scripts_from(adir):
     scripts = {}
     if os.path.exists(adir):
         for entry in os.listdir(adir):
-            entry = ensure_str(entry)
+            entry = ensure_str(entry)  # pylint: disable= six-ensure-str-bin-call
             if entry == ".f12":
                 continue
             path = adir + "/" + entry

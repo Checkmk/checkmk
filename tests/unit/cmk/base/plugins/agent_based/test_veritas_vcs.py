@@ -9,7 +9,6 @@ import pytest
 from cmk.base.plugins.agent_based import veritas_vcs
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service
 from cmk.base.plugins.agent_based.agent_based_api.v1 import State as state
-from cmk.base.plugins.agent_based.agent_based_api.v1 import type_defs
 from cmk.base.plugins.agent_based.veritas_vcs import Vcs
 
 STRING_TABLE = [
@@ -275,7 +274,7 @@ def test_discover_veritas_vcs_resource():
 
 
 @pytest.mark.parametrize(
-    "states, exp_res",
+    "states, expected_state",
     [
         (
             ["a"],
@@ -283,7 +282,7 @@ def test_discover_veritas_vcs_resource():
         ),
         (
             ["a", "b"],
-            "AGGREGATION: a, b",
+            "default",
         ),
         (
             ["a", "b", "RUNNING", "ONLINE", "UNKNOWN", "FAULTED", "x", "y"],
@@ -303,8 +302,8 @@ def test_discover_veritas_vcs_resource():
         ),
     ],
 )
-def test_veritas_vcs_boil_down_states_in_cluster(states, exp_res):
-    assert veritas_vcs.veritas_vcs_boil_down_states_in_cluster(states) == exp_res
+def test_veritas_vcs_boil_down_states_in_cluster(states, expected_state):
+    assert veritas_vcs.veritas_vcs_boil_down_states_in_cluster(states) == expected_state
 
 
 PARAMS = {
@@ -388,11 +387,11 @@ def test_cluster_check_veritas_vcs():
     ) == [
         Result(
             state=state.OK,
-            notice="[node1]: running",
+            summary="All nodes OK",
         ),
         Result(
             state=state.OK,
-            summary="All nodes OK",
+            notice="[node1]: running",
         ),
     ]
 
@@ -410,15 +409,11 @@ def test_cluster_check_veritas_vcs_system():
     ) == [
         Result(
             state=state.OK,
-            notice="[node1]: running",
-        ),
-        Result(
-            state=state.OK,
-            notice="[node2]: running",
-        ),
-        Result(
-            state=state.OK,
             summary="All nodes OK",
+        ),
+        Result(
+            state=state.OK,
+            notice="[node1]: running, [node2]: running",
         ),
         Result(
             state=state.OK,
@@ -440,16 +435,8 @@ def test_cluster_check_veritas_vcs_group():
         )
     ) == [
         Result(
-            state=state.OK,
-            notice="[node1]: online",
-        ),
-        Result(
             state=state.CRIT,
-            notice="[node2]: frozen",
-        ),
-        Result(
-            state=state.OK,
-            notice="[node2]: online",
+            notice="[node1]: online, [node2]: frozen, online",
         ),
         Result(
             state=state.OK,
@@ -475,17 +462,10 @@ def test_cluster_check_veritas_vcs_resource():
             },
         )
     ) == [
-        Result(
-            state=state.WARN,
-            summary="[node1]: offline",
-        ),
+        Result(state=state.OK, summary="All nodes OK"),
         Result(
             state=state.OK,
-            notice="[node2]: online",
-        ),
-        Result(
-            state=state.WARN,
-            summary="[node3]: offline",
+            notice="[node1]: offline, [node2]: online, [node3]: offline",
         ),
         Result(
             state=state.OK,
@@ -493,3 +473,110 @@ def test_cluster_check_veritas_vcs_resource():
         ),
     ]
     del SECTION["resource"]["lan_phantom"]
+
+
+@pytest.mark.parametrize(
+    "section, expected_check_result",
+    [
+        pytest.param(
+            {},
+            [],
+            id="No nodes/sections return no result",
+        ),
+        pytest.param(
+            {
+                "node1": {
+                    "stripes": [Vcs(attr="ClusState", value="RUNNING", cluster=None)],
+                },
+                "node2": {
+                    "stripes": [Vcs(attr="ClusState", value="RUNNING", cluster=None)],
+                },
+            },
+            [],
+            id="Item not in section returns no result",
+        ),
+        pytest.param(
+            {
+                "node1": {
+                    "minions": [Vcs(attr="ClusState", value="RUNNING", cluster=None)],
+                },
+                "node2": {
+                    "minions": [Vcs(attr="ClusState", value="RUNNING", cluster=None)],
+                },
+            },
+            [
+                Result(state=state.OK, summary="All nodes OK"),
+                Result(state=state.OK, notice="[node1]: running, [node2]: running"),
+            ],
+            id="State is OK when all nodes have state RUNNING",
+        ),
+        pytest.param(
+            {
+                "node1": {
+                    "minions": [Vcs(attr="ClusState", value="RUNNING", cluster=None)],
+                },
+                "node2": {
+                    "minions": [Vcs(attr="ClusState", value="OFFLINE", cluster=None)],
+                },
+            },
+            [
+                Result(state=state.OK, summary="All nodes OK"),
+                Result(state=state.OK, notice="[node1]: running, [node2]: offline"),
+            ],
+            id="State is WARN when at least one node has state RUNNING, and others are OFFLINE",
+        ),
+        pytest.param(
+            {
+                "node1": {
+                    "minions": [Vcs(attr="ClusState", value="OFFLINE", cluster=None)],
+                },
+                "node2": {
+                    "minions": [Vcs(attr="ClusState", value="OFFLINE", cluster=None)],
+                },
+            },
+            [
+                Result(state=state.WARN, summary="[node1]: offline, [node2]: offline"),
+            ],
+            id="State is WARN when all nodes are OFFLINE",
+        ),
+        pytest.param(
+            {
+                "node1": {
+                    "minions": [Vcs(attr="ClusState", value="FAULTED", cluster=None)],
+                },
+                "node2": {
+                    "minions": [Vcs(attr="ClusState", value="RUNNING", cluster=None)],
+                },
+            },
+            [
+                Result(state=state.CRIT, summary="[node1]: faulted, [node2]: running"),
+            ],
+            id="State is CRIT when at least one node has state FAULTED, and others are RUNNING",
+        ),
+        pytest.param(
+            {
+                "node1": {
+                    "minions": [Vcs(attr="ClusState", value="FAULTED", cluster=None)],
+                },
+                "node2": {
+                    "minions": [Vcs(attr="ClusState", value="OFFLINE", cluster=None)],
+                },
+            },
+            [
+                Result(state=state.CRIT, summary="[node1]: faulted, [node2]: offline"),
+            ],
+            id="State is CRIT when at least one node has state FAULTED, and others are OFFLINE",
+        ),
+    ],
+)
+def test_cluster_check_veritas_vcs_states(section, expected_check_result):
+    assert (
+        list(
+            veritas_vcs.cluster_check_veritas_vcs_subsection(
+                "minions",
+                PARAMS,
+                section,
+            )
+        )
+        == expected_check_result
+    )

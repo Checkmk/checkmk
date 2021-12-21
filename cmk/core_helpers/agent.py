@@ -19,6 +19,7 @@ from typing import (
     Mapping,
     MutableMapping,
     Optional,
+    Sequence,
     Tuple,
     Union,
 )
@@ -26,20 +27,11 @@ from typing import (
 import cmk.utils.agent_simulator as agent_simulator
 import cmk.utils.debug
 import cmk.utils.misc
+from cmk.utils.check_utils import ActiveCheckResult
 from cmk.utils.exceptions import MKGeneralException
-from cmk.utils.misc import normalize_ip_addresses
 from cmk.utils.translations import TranslationOptions
-from cmk.utils.type_defs import (
-    AgentRawData,
-    AgentTargetVersion,
-    ExitSpec,
-    HostName,
-    SectionName,
-    ServiceDetails,
-    ServiceState,
-    state_markers,
-)
-from cmk.utils.werks import parse_check_mk_version
+from cmk.utils.type_defs import AgentRawData, AgentTargetVersion, ExitSpec, HostName, SectionName
+from cmk.utils.version import parse_check_mk_version
 
 from ._base import Fetcher, Parser, Summarizer
 from ._markers import PiggybackMarker, SectionMarker
@@ -137,7 +129,7 @@ class AgentFetcher(Fetcher[AgentRawData]):
 AgentHostSections = HostSections[AgentRawDataSection]
 
 MutableSection = MutableMapping[SectionMarker, List[AgentRawData]]
-ImmutableSection = Mapping[SectionMarker, List[AgentRawData]]
+ImmutableSection = Mapping[SectionMarker, Sequence[AgentRawData]]
 
 
 class ParserState(abc.ABC):
@@ -540,8 +532,8 @@ class AgentParser(Parser[AgentRawData, AgentHostSections]):
 
         def decode_sections(
             sections: ImmutableSection,
-        ) -> MutableMapping[SectionName, AgentRawDataSection]:
-            out: MutableMapping[SectionName, AgentRawDataSection] = {}
+        ) -> MutableMapping[SectionName, List[AgentRawDataSection]]:
+            out: MutableMapping[SectionName, List[AgentRawDataSection]] = {}
             for header, content in sections.items():
                 out.setdefault(header.name, []).extend(header.parse_line(line) for line in content)
             return out
@@ -601,7 +593,7 @@ class AgentParser(Parser[AgentRawData, AgentHostSections]):
                 return now, until
             return None
 
-        self.section_store.update_and_mutate(
+        new_sections = self.section_store.update(
             sections,
             cache_info,
             lookup_persist,
@@ -609,7 +601,7 @@ class AgentParser(Parser[AgentRawData, AgentHostSections]):
             keep_outdated=self.keep_outdated,
         )
         return AgentHostSections(
-            sections,
+            new_sections,
             cache_info=cache_info,
             piggybacked_raw_data=piggybacked_raw_data,
         )
@@ -659,7 +651,7 @@ class AgentSummarizerDefault(AgentSummarizer):
         host_sections: AgentHostSections,
         *,
         mode: Mode,
-    ) -> Tuple[ServiceState, ServiceDetails]:
+    ) -> Sequence[ActiveCheckResult]:
         return self.summarize_check_mk_section(
             host_sections.sections.get(SectionName("check_mk")),
             mode=mode,
@@ -667,22 +659,22 @@ class AgentSummarizerDefault(AgentSummarizer):
 
     def summarize_check_mk_section(
         self,
-        cmk_section: Optional[AgentRawDataSection],
+        cmk_section: Optional[Sequence[AgentRawDataSection]],
         *,
         mode: Mode,
-    ) -> Tuple[ServiceState, ServiceDetails]:
+    ) -> Sequence[ActiveCheckResult]:
         agent_info = self._get_agent_info(cmk_section)
 
-        status: ServiceState = 0
-        output: List[ServiceDetails] = []
+        subresults = []
+
         if not self.is_cluster and agent_info["version"] is not None:
-            output.append("Version: %s" % agent_info["version"])
+            subresults.append(ActiveCheckResult(0, "Version: %s" % agent_info["version"]))
 
         if not self.is_cluster and agent_info["agentos"] is not None:
-            output.append("OS: %s" % agent_info["agentos"])
+            subresults.append(ActiveCheckResult(0, "OS: %s" % agent_info["agentos"]))
 
         if mode is Mode.CHECKING and cmk_section:
-            for sub_status, sub_output in (
+            subresults.extend(
                 r
                 for r in [
                     self._check_version(agent_info.get("version")),
@@ -693,17 +685,18 @@ class AgentSummarizerDefault(AgentSummarizer):
                     self._check_python_plugins(
                         agent_info.get("failedpythonplugins"), agent_info.get("failedpythonreason")
                     ),
+                    self._check_transport(
+                        agent_info.get("agentcontroller"), agent_info.get("legacypullmode")
+                    ),
                 ]
                 if r
-            ):
-                status = max(status, sub_status)
-                output.append(sub_output)
+            )
 
-        return status, ", ".join(output)
+        return subresults
 
     @staticmethod
     def _get_agent_info(
-        string_table: Optional[AgentRawDataSection],
+        string_table: Optional[Sequence[AgentRawDataSection]],
     ) -> Dict[str, Optional[str]]:
         section: Dict[str, Optional[str]] = {}
 
@@ -712,12 +705,11 @@ class AgentSummarizerDefault(AgentSummarizer):
             val = " ".join(line[1:])
             section[key] = f"{section.get(key) or ''} {val}".strip() if len(line) > 1 else None
 
-        return {"version": "unknown", "agentos": "unknown", **section}
+        return {"version": None, "agentos": None, **section}
 
-    def _check_version(
-        self, agent_version: Optional[str]
-    ) -> Optional[Tuple[ServiceState, ServiceDetails]]:
+    def _check_version(self, agent_version: Optional[str]) -> Optional[ActiveCheckResult]:
         expected_version = self.agent_target_version
+        wrong_version_state = self.exit_spec.get("wrong_version", 1)
 
         if (
             expected_version
@@ -742,18 +734,17 @@ class AgentSummarizerDefault(AgentSummarizer):
                     expected += " release %s" % spec["release"]
             else:
                 expected = "%s" % (expected_version,)
-            status = cast(int, self.exit_spec.get("wrong_version", 1))
-            return status, (
-                f"unexpected agent version {agent_version} "
-                f"(should be {expected}){state_markers[status]}"
+
+            return ActiveCheckResult(
+                wrong_version_state,
+                f"unexpected agent version {agent_version} (should be {expected})",
             )
 
         if self.agent_min_version and cast(int, agent_version) < self.agent_min_version:
             # TODO: This branch seems to be wrong. Or: In which case is agent_version numeric?
-            status = self.exit_spec.get("wrong_version", 1)
-            return status, (
-                f"old plugin version {agent_version} "
-                f"(should be at least {self.agent_min_version}){state_markers[status]}"
+            return ActiveCheckResult(
+                wrong_version_state,
+                f"old plugin version {agent_version} (should be at least {self.agent_min_version})",
             )
 
         return None
@@ -761,7 +752,7 @@ class AgentSummarizerDefault(AgentSummarizer):
     def _check_only_from(
         self,
         agent_only_from: Optional[str],
-    ) -> Optional[Tuple[ServiceState, ServiceDetails]]:
+    ) -> Optional[ActiveCheckResult]:
         if agent_only_from is None:
             return None
 
@@ -769,10 +760,10 @@ class AgentSummarizerDefault(AgentSummarizer):
         if config_only_from is None:
             return None
 
-        allowed_nets = set(normalize_ip_addresses(agent_only_from))
-        expected_nets = set(normalize_ip_addresses(config_only_from))
+        allowed_nets = set(cmk.utils.misc.normalize_ip_addresses(agent_only_from))
+        expected_nets = set(cmk.utils.misc.normalize_ip_addresses(config_only_from))
         if allowed_nets == expected_nets:
-            return 0, "Allowed IP ranges: %s%s" % (" ".join(allowed_nets), state_markers[0])
+            return ActiveCheckResult(0, f"Allowed IP ranges: {' '.join(allowed_nets)}")
 
         infotexts = []
         exceeding = allowed_nets - expected_nets
@@ -784,33 +775,33 @@ class AgentSummarizerDefault(AgentSummarizer):
             infotexts.append("missing: %s" % " ".join(sorted(missing)))
 
         mismatch_state = self.exit_spec.get("restricted_address_mismatch", 1)
-        assert isinstance(mismatch_state, int)
-        return mismatch_state, "Unexpected allowed IP ranges (%s)%s" % (
-            ", ".join(infotexts),
-            state_markers[mismatch_state],
+        return ActiveCheckResult(
+            mismatch_state, f"Unexpected allowed IP ranges ({', '.join(infotexts)})"
         )
 
     def _check_python_plugins(
         self,
         agent_failed_plugins: Optional[str],
         agent_fail_reason: Optional[str],
-    ) -> Optional[Tuple[ServiceState, ServiceDetails]]:
+    ) -> Optional[ActiveCheckResult]:
         if agent_failed_plugins is None:
             return None
 
-        return 1, f"Failed to execute python plugins: {agent_failed_plugins}" + (
-            f" ({agent_fail_reason})" if agent_fail_reason else ""
+        return ActiveCheckResult(
+            1,
+            f"Failed to execute python plugins: {agent_failed_plugins}"
+            + (f" ({agent_fail_reason})" if agent_fail_reason else ""),
         )
 
     def _check_agent_update(
         self,
         update_fail_reason: Optional[str],
         on_update_fail_action: Optional[str],
-    ) -> Optional[Tuple[ServiceState, ServiceDetails]]:
+    ) -> Optional[ActiveCheckResult]:
         if update_fail_reason is None or on_update_fail_action is None:
             return None
 
-        return 1, f"{update_fail_reason} {on_update_fail_action}"
+        return ActiveCheckResult(1, f"{update_fail_reason} {on_update_fail_action}")
 
     @staticmethod
     def _is_expected_agent_version(
@@ -859,3 +850,25 @@ class AgentSummarizerDefault(AgentSummarizer):
                 "Unable to check agent version (Agent: %s Expected: %s, Error: %s)"
                 % (agent_version, expected_version, e)
             )
+
+    def _check_transport(
+        self,
+        controller: Optional[str],
+        legacy_pull_mode: Optional[str],
+    ) -> Optional[ActiveCheckResult]:
+        if controller is None or controller == "":
+            return None
+
+        if not legacy_pull_mode or legacy_pull_mode == "no":
+            return None
+
+        return ActiveCheckResult(
+            self.exit_spec.get("legacy_pull_mode", 1),
+            "TLS is not activated on monitored host (see details)",
+            (
+                "The hosts agent supports TLS, but it is not being used.",
+                "We strongly recommend to enable TLS by registering the host to the site "
+                "(using the `cmk-agent-ctl register` command on the monitored host).",
+                "However you can configure missing TLS to be OK in the settings of this service.",
+            ),
+        )

@@ -24,7 +24,7 @@ from cmk.gui.page_menu import (
     PageMenuSearch,
     PageMenuTopic,
 )
-from cmk.gui.plugins.wato import (
+from cmk.gui.plugins.wato.utils import (
     add_change,
     make_confirm_link,
     mode_registry,

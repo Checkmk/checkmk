@@ -82,7 +82,6 @@ def _get_files_to_check(pylint_test_dir):
         # TODO: We should also test them...
         if (
             rel_path == "werk"
-            or rel_path.startswith("tests/")
             or rel_path.startswith("scripts/")
             or rel_path.startswith("agents/wnx/integration/")
         ):

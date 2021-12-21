@@ -9,7 +9,7 @@ from typing import List, Optional
 
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
-from cmk.gui.plugins.metrics import darken_color, lighten_color, parse_color
+from cmk.gui.plugins.metrics.utils import darken_color, lighten_color, parse_color
 
 
 def render_graph_pdf(
@@ -369,7 +369,7 @@ def render_graph_pdf(
 
         for curve in graph_artwork["curves"]:
             legend_top -= legend_lineskip
-            texts = [curve["title"]]
+            texts = [str(curve["title"])]
             for scalar, title in scalars:
                 texts.append(curve["scalars"][scalar][1])
             paint_legend_line(parse_color(curve["color"]), texts)

@@ -10,7 +10,7 @@ from typing import Any, Mapping
 import cmk.gui.mkeventd as mkeventd
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
-from cmk.gui.plugins.wato import (
+from cmk.gui.plugins.wato.utils import (
     HostRulespec,
     IndividualOrStoredPassword,
     PasswordFromStore,
@@ -391,7 +391,7 @@ def _valuespec_active_checks_icmp():
             (
                 "min_pings",
                 Integer(
-                    title=_("Number of positve responses required for OK state"),
+                    title=_("Number of positive responses required for OK state"),
                     help=_(
                         "When pinging multiple addresses, failure to ping one of the "
                         "provided addresses will lead to a Crit status of the service. "
@@ -1900,7 +1900,7 @@ def _valuespec_active_checks_smtp():
                                     size=5,
                                     minvalue=1,
                                     maxvalue=65535,
-                                    default_value="25",
+                                    default_value=25,
                                 ),
                                 forth=int,
                             ),

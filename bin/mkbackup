@@ -130,7 +130,7 @@ def stop_logging() -> None:
 
 def log(s: str) -> None:
     msg = "%s %s\n" % (time.strftime("%Y-%m-%d %H:%M:%S"), s)
-    sys.stdout.write(ensure_str(msg))
+    sys.stdout.write(msg)
     if is_cma():
         syslog.syslog(s)
 
@@ -761,7 +761,7 @@ def do_site_backup(opts, site=None, try_stop=True):
             backup_file.write(chunk)
 
     if p.returncode != 0:
-        err = ensure_str(p.stderr.read())
+        err = p.stderr.read().decode()
         if not compress_archives() and "Invalid option '--no-compression'" in err:
             err = (
                 "The Check_MK version of this site does not support uncompressed backups. "
@@ -918,9 +918,7 @@ class MKBackupStream:
             if key_id == digest:
                 return key
 
-        raise MKGeneralException(
-            "Failed to load the configured backup key: %s" % ensure_str(key_id)
-        )
+        raise MKGeneralException("Failed to load the configured backup key: %s" % key_id.decode())
 
     # TODO: The return type is a bit questionable...
     def _load_backup_keys(self) -> Dict[str, Dict[str, bytes]]:
@@ -1686,7 +1684,7 @@ def do_site_restore(opts, info, site=None):
         p.stdin.close()
 
     if p.wait() != 0:
-        log(ensure_str(p.stderr.read()))
+        log(ensure_str(p.stderr.read()))  # pylint: disable= six-ensure-str-bin-call
         raise MKGeneralException("Site restore failed")
 
     if not is_root():
@@ -1986,7 +1984,9 @@ def mode_jobs(opts: Dict[str, str]) -> None:
     sys.stdout.write(fmt % ("Job-ID", "Title"))
     sys.stdout.write("%s\n" % ("-" * 60))
     for job_id, job_cfg in sorted(g_config["jobs"].items(), key=lambda x_y: x_y[0]):
-        sys.stdout.write(ensure_str(fmt % (job_id, job_cfg["title"])))
+        sys.stdout.write(
+            ensure_str(fmt % (job_id, job_cfg["title"]))  # pylint: disable= six-ensure-str-bin-call
+        )
 
 
 def mode_targets(opts: Dict[str, str]) -> None:
@@ -1994,7 +1994,9 @@ def mode_targets(opts: Dict[str, str]) -> None:
     sys.stdout.write(fmt % ("Target-ID", "Title"))
     sys.stdout.write("%s\n" % ("-" * 60))
     for job_id, job_cfg in sorted(g_config["targets"].items(), key=lambda x_y1: x_y1[0]):
-        sys.stdout.write(ensure_str(fmt % (job_id, job_cfg["title"])))
+        sys.stdout.write(
+            ensure_str(fmt % (job_id, job_cfg["title"]))  # pylint: disable= six-ensure-str-bin-call
+        )
 
 
 def usage(error: Optional[str] = None) -> NoReturn:

@@ -12,6 +12,7 @@ from typing import List, Optional
 import cmk.utils.tty as tty
 from cmk.utils.exceptions import MKGeneralException, MKSNMPError, MKTimeout
 from cmk.utils.log import console
+from cmk.utils.type_defs import SectionName
 
 from cmk.snmplib.type_defs import OID, SNMPBackend, SNMPContextName, SNMPRawValue, SNMPRowInfo
 
@@ -90,7 +91,7 @@ class ClassicSNMPBackend(SNMPBackend):
     def walk(
         self,
         oid: str,
-        check_plugin_name: Optional[str] = None,
+        section_name: Optional[SectionName] = None,
         table_base_oid: Optional[str] = None,
         context_name: Optional[str] = None,
     ) -> SNMPRowInfo:

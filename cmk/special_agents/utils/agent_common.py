@@ -62,8 +62,8 @@ class SectionManager:
 
 class ConditionalPiggybackSection(SectionManager):
     """Exception-Safely open and close a piggyback section
-    In order to avoid clumsy conststructs it's possible to omend the piggyback sections by
-    letting @hostname be falsish
+    In order to avoid clumsy constructs it's possible to amend the piggyback sections by
+    letting @hostname be falsy
     >>> with ConditionalPiggybackSection("horst"):
     ...     print("foo: bar")
     <<<<horst>>>>

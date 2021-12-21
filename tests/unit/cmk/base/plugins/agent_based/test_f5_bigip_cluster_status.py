@@ -13,12 +13,13 @@ from cmk.base.plugins.agent_based.f5_bigip_cluster_status import (
     check_f5_bigip_cluster_status_v11_2,
     cluster_check_f5_bigip_cluster_status,
     cluster_check_f5_bigip_cluster_status_v11_2,
+)
+from cmk.base.plugins.agent_based.f5_bigip_cluster_status import (
+    F5_BIGIP_CLUSTER_CHECK_DEFAULT_PARAMETERS as def_params,
+)
+from cmk.base.plugins.agent_based.f5_bigip_cluster_status import (
     parse_f5_bigip_cluster_status,
     parse_f5_bigip_vcmpfailover,
-)
-
-from cmk.base.plugins.agent_based.f5_bigip_cluster_status import (  # isort: skip
-    F5_BIGIP_CLUSTER_CHECK_DEFAULT_PARAMETERS as def_params,
 )
 
 

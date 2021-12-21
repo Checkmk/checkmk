@@ -4,22 +4,24 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# type: ignore[list-item,import,assignment,misc,operator]  # TODO: see which are needed in this file
+
+from typing import Final
 
 
-def scan_cisco_ucs(oid):
+def scan_cisco_ucs(oid) -> bool:
     return (
         ".1.3.6.1.4.1.9.1.1682" in oid(".1.3.6.1.2.1.1.2.0")
         or ".1.3.6.1.4.1.9.1.1683" in oid(".1.3.6.1.2.1.1.2.0")
         or ".1.3.6.1.4.1.9.1.1684" in oid(".1.3.6.1.2.1.1.2.0")
         or ".1.3.6.1.4.1.9.1.1685" in oid(".1.3.6.1.2.1.1.2.0")
         or ".1.3.6.1.4.1.9.1.2178" in oid(".1.3.6.1.2.1.1.2.0")
+        or ".1.3.6.1.4.1.9.1.2424" in oid(".1.3.6.1.2.1.1.2.0")
         or ".1.3.6.1.4.1.9.1.2492" in oid(".1.3.6.1.2.1.1.2.0")
         or ".1.3.6.1.4.1.9.1.2493" in oid(".1.3.6.1.2.1.1.2.0")
     )
 
 
-map_operability = {
+map_operability: Final = {
     "0": (2, "unknown"),
     "1": (0, "operable"),
     "2": (2, "inoperable"),
@@ -52,7 +54,7 @@ map_operability = {
     "108": (1, "linkActivateBlocked"),
 }
 
-map_presence = {
+map_presence: Final = {
     "0": (1, "unknown"),
     "1": (0, "empty"),
     "10": (0, "equipped"),

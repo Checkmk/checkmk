@@ -22,6 +22,12 @@ from cmk.base.check_legacy_includes.hwg import *  # pylint: disable=wildcard-imp
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
+factory_settings["hwg_humidity_defaultlevels"] = HWG_HUMIDITY_DEFAULTLEVELS
+
+
+factory_settings["hwg_temp_defaultlevels"] = HWG_TEMP_DEFAULTLEVELS
+
+
 check_info["hwg_ste2"] = {
     "parse_function": parse_hwg,
     "check_function": check_hwg_temp,
@@ -43,6 +49,7 @@ check_info["hwg_ste2"] = {
     "group": "temperature",
     "default_levels_variable": "hwg_temp_defaultlevels",
 }
+
 
 check_info["hwg_ste2.humidity"] = {
     "check_function": check_hwg_humidity,

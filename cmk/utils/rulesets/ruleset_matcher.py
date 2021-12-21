@@ -1036,5 +1036,7 @@ def get_tag_to_group_map(tag_config: TagConfig) -> TagIDToTaggroupID:
 
     for tag_group in tag_config.tag_groups:
         for grouped_tag in tag_group.tags:
-            tag_id_to_tag_group_id_map[grouped_tag.id] = tag_group.id
+            # Do not care for the choices with a None value here. They are not relevant for this map
+            if grouped_tag.id is not None:
+                tag_id_to_tag_group_id_map[grouped_tag.id] = tag_group.id
     return tag_id_to_tag_group_id_map

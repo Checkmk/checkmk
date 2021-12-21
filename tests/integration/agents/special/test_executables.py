@@ -8,8 +8,10 @@ import os
 import subprocess
 from pathlib import Path
 
+from tests.testlib.site import Site
 
-def test_no_exeption(site):
+
+def test_no_exeption(site: Site):
     """
     The execution of a special agent should not lead to an exception
     if the agent is called without any arguments.

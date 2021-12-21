@@ -335,6 +335,9 @@ def inventory_ceph_df(mps):
     return df_discovery(host_extra_conf(host_name(), filesystem_groups), [x[0] for x in mps])
 
 
+factory_settings["filesystem_default_levels"] = FILESYSTEM_DEFAULT_LEVELS
+
+
 check_info["ceph_df"] = {
     "parse_function": parse_ceph_df,
     "inventory_function": inventory_ceph_df,

@@ -9,7 +9,7 @@ import abc
 import cmk.gui.sites as sites
 from cmk.gui.globals import html, request
 from cmk.gui.i18n import _
-from cmk.gui.plugins.sidebar import link, SidebarSnapin, snapin_registry
+from cmk.gui.plugins.sidebar.utils import link, SidebarSnapin, snapin_registry
 from cmk.gui.utils.urls import makeuri_contextless
 
 

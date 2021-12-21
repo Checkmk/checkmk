@@ -4,10 +4,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 r"""
-Send notification messages to VictorOPS
+Send notification messages to Splunk On-Call
 =======================================
 
-Create a JSON message to be sent to VictorOPS REST API
+Create a JSON message to be sent to Splunk On-Call REST API
 """
 from typing import Dict
 

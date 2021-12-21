@@ -17,18 +17,14 @@ from cmk.base.api.agent_based.register.section_plugins_legacy.convert_scan_funct
 )
 from cmk.base.api.agent_based.section_classes import SNMPTree
 from cmk.base.api.agent_based.type_defs import AgentSectionPlugin, SNMPSectionPlugin
-from cmk.base.check_legacy_includes.df_netapp import is_netapp_filer  # type: ignore[attr-defined]
-
-from cmk.base.check_legacy_includes.cisco_cpu_scan_functions import (  # type: ignore[attr-defined] # isort: skip
+from cmk.base.check_legacy_includes.cisco_cpu_scan_functions import (
     _has_table_2,
     _is_cisco,
     _is_cisco_nexus,
 )
-from cmk.base.check_legacy_includes.fsc import (  # type: ignore[attr-defined] # isort: skip
-    _is_fsc_or_windows,
-    is_fsc,
-)
-from cmk.base.check_legacy_includes.ucd_hr import _is_ucd  # type: ignore[attr-defined] # isort: skip
+from cmk.base.check_legacy_includes.df_netapp import is_netapp_filer  # type: ignore[attr-defined]
+from cmk.base.check_legacy_includes.fsc import _is_fsc_or_windows, is_fsc
+from cmk.base.check_legacy_includes.ucd_hr import _is_ucd
 
 pytestmark = pytest.mark.checks
 
@@ -299,7 +295,6 @@ def test_all_check_variables_present(fix_plugin_legacy):
         "checkpoint_vsx_default_levels",
         "cisco_asa_svc_default_levels",
         "cisco_cpu_default_levels",
-        "cisco_cpu_multiitem_default_levels",
         "cisco_fan_state_mapping",
         "cisco_ip_sla_default_levels",
         "cisco_mem_default_levels",
@@ -1248,7 +1243,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy):
         "cisco_asa_connections",
         "cisco_cpu",
         "cisco_cpu_memory",
-        "cisco_cpu_multiitem",
         "cisco_fan",
         "cisco_fantray",
         "cisco_fru_module_status",
@@ -1927,7 +1921,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy):
         "janitza_umg.temp",
         "jar_signature",
         "jenkins_instance",
-        "jenkins_jobs",
         "jenkins_queue",
         "jira_custom_svc",
         "jira_workflow",
@@ -2092,14 +2085,12 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy):
         "mongodb_instance",
         "mongodb_locks",
         "mongodb_mem",
-        "mongodb_replica",
         "mongodb_replica_set",
         "mongodb_replica_set.election",
         "mongodb_replication_info",
         "mounts",
         "moxa_iologik_register",
         "mq_queues",
-        "mrpe",
         "msexch_activesync",
         "msexch_autodiscovery",
         "msexch_availability",
@@ -2264,8 +2255,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy):
         "papouch_th2e_sensors",
         "papouch_th2e_sensors.dewpoint",
         "papouch_th2e_sensors.humidity",
-        "pdu_gude_8301",
-        "pdu_gude_8310",
         "perle_chassis",
         "perle_chassis.temp",
         "perle_chassis_slots",

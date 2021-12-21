@@ -12,29 +12,19 @@ import tempfile
 import time
 from contextlib import contextmanager
 from pathlib import Path
+from typing import Optional, TextIO
 
 import freezegun
 import pytest
+
+# the urllib3 ignore import annotation can be removed when urllib3 v2.0 is released
+#   see https://github.com/urllib3/urllib3/issues/1897
 import urllib3  # type: ignore[import]
-from _pytest.monkeypatch import MonkeyPatch
 
 from tests.testlib.compare_html import compare_html
-from tests.testlib.fixtures import ec, web  # noqa: F401 # pylint: disable=unused-import
-from tests.testlib.site import Site, SiteFactory  # noqa: F401 # pylint: disable=unused-import
-from tests.testlib.version import CMKVersion  # noqa: F401 # pylint: disable=unused-import
-
-from cmk.utils.type_defs import HostName
-
-from tests.testlib.web_session import (  # noqa: F401 # pylint: disable=unused-import # isort: skip
-    APIError,
-    CMKWebSession,
-)
-
-from tests.testlib.event_console import (  # noqa: F401 # pylint: disable=unused-import # isort: skip
-    CMKEventConsole,
-    CMKEventConsoleStatus,
-)
-from tests.testlib.utils import (  # noqa: F401 # pylint: disable=unused-import # isort: skip
+from tests.testlib.event_console import CMKEventConsole, CMKEventConsoleStatus
+from tests.testlib.site import Site, SiteFactory
+from tests.testlib.utils import (
     add_python_paths,
     cmc_path,
     cme_path,
@@ -49,6 +39,10 @@ from tests.testlib.utils import (  # noqa: F401 # pylint: disable=unused-import 
     site_id,
     virtualenv_path,
 )
+from tests.testlib.version import CMKVersion  # noqa: F401 # pylint: disable=unused-import
+from tests.testlib.web_session import APIError, CMKWebSession
+
+from cmk.utils.type_defs import HostName
 
 # Disable insecure requests warning message during SSL testing
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
@@ -107,7 +101,7 @@ def fake_version_and_paths():
     )
     monkeypatch.setattr("cmk.utils.paths.check_manpages_dir", "%s/checkman" % cmk_path())
     monkeypatch.setattr("cmk.utils.paths.web_dir", "%s/web" % cmk_path())
-    monkeypatch.setattr("cmk.utils.paths.omd_root", tmp_dir)
+    monkeypatch.setattr("cmk.utils.paths.omd_root", Path(tmp_dir))
     monkeypatch.setattr("cmk.utils.paths.tmp_dir", os.path.join(tmp_dir, "tmp/check_mk"))
     monkeypatch.setattr(
         "cmk.utils.paths.counters_dir", os.path.join(tmp_dir, "tmp/check_mk/counters")
@@ -205,7 +199,49 @@ def fake_version_and_paths():
         Path(tmp_dir, "var/check_mk/discovered_host_labels"),
     )
     monkeypatch.setattr("cmk.utils.paths.profile_dir", Path(cmk.utils.paths.var_dir, "web"))
-    monkeypatch.setattr("marcv.constants.LOG_FILE", Path(os.path.join(tmp_dir, "marcv.log")))
+    monkeypatch.setattr("agent_receiver.constants.LOG_FILE", Path(tmp_dir, "agent-receiver.log"))
+    monkeypatch.setattr(
+        "agent_receiver.constants.AGENT_OUTPUT_DIR",
+        Path(tmp_dir, "agent_output_dir"),
+    )
+    monkeypatch.setattr(
+        "agent_receiver.constants.REGISTRATION_REQUESTS",
+        Path(tmp_dir, "registration_request"),
+    )
+
+    # Agent registration paths
+    monkeypatch.setattr(
+        "cmk.utils.paths.received_outputs_dir",
+        Path(cmk.utils.paths.var_dir, "agent-receiver/received-outputs"),
+    )
+    monkeypatch.setattr(
+        "cmk.utils.paths.data_source_push_agent_dir",
+        Path(cmk.utils.paths.data_source_cache_dir, "push-agent"),
+    )
+    monkeypatch.setattr(
+        "cmk.utils.paths._r4r_base_dir",
+        Path(cmk.utils.paths.var_dir, "wato/requests-for-registration"),
+    )
+    monkeypatch.setattr(
+        "cmk.utils.paths.r4r_new_dir",
+        Path(cmk.utils.paths._r4r_base_dir, "NEW"),
+    )
+    monkeypatch.setattr(
+        "cmk.utils.paths.r4r_pending_dir",
+        Path(cmk.utils.paths._r4r_base_dir, "PENDING"),
+    )
+    monkeypatch.setattr(
+        "cmk.utils.paths.r4r_declined_dir",
+        Path(cmk.utils.paths._r4r_base_dir, "DECLINED"),
+    )
+    monkeypatch.setattr(
+        "cmk.utils.paths.r4r_ready_dir",
+        Path(cmk.utils.paths._r4r_base_dir, "READY"),
+    )
+    monkeypatch.setattr(
+        "cmk.utils.paths.r4r_discoverable_dir",
+        Path(cmk.utils.paths._r4r_base_dir, "DISCOVERABLE"),
+    )
 
 
 def import_module(pathname):
@@ -242,7 +278,12 @@ def wait_until(condition, timeout=1, interval=0.1):
     raise Exception("Timeout out waiting for %r to finish (Timeout: %d sec)" % (condition, timeout))
 
 
-def wait_until_liveproxyd_ready(site, site_ids):
+def wait_until_liveproxyd_ready(site: Site, site_ids):
+    def _config_available():
+        return site.file_exists("etc/check_mk/liveproxyd.mk")
+
+    wait_until(_config_available, timeout=60, interval=0.5)
+
     # First wait for the site sockets to appear
     def _all_sockets_opened():
         return all((site.file_exists("tmp/run/liveproxy/%s" % s) for s in site_ids))
@@ -262,18 +303,19 @@ def wait_until_liveproxyd_ready(site, site_ids):
 class WatchLog:
     """Small helper for integration tests: Watch a sites log file"""
 
-    def __init__(self, site, log_path, default_timeout=5):
+    def __init__(self, site: Site, log_path, default_timeout=5):
         self._site = site
         self._log_path = log_path
-        self._log = None
+        self._log: Optional[TextIO] = None
         self._default_timeout = default_timeout
 
     def __enter__(self):
         if not self._site.file_exists(self._log_path):
-            self._site.write_file(self._log_path, "")
+            self._site.write_text_file(self._log_path, "")
 
-        self._log = open(self._site.path(self._log_path), "r")
-        self._log.seek(0, 2)  # go to end of file
+        _log = open(self._site.path(self._log_path), "r")
+        _log.seek(0, 2)  # go to end of file
+        self._log = _log
         return self
 
     def __exit__(self, *exc_info):
@@ -319,10 +361,10 @@ class WatchLog:
         return False
 
 
-def create_linux_test_host(request, web_fixture, site, hostname):
+def create_linux_test_host(request, site: Site, hostname):
     def finalizer():
-        web_fixture.delete_host(hostname)
-        web_fixture.activate_changes()
+        site.openapi.delete_host(hostname)
+        site.activate_changes_and_wait_for_core_reload()
 
         for path in [
             "var/check_mk/agent_output/%s" % hostname,
@@ -343,16 +385,18 @@ def create_linux_test_host(request, web_fixture, site, hostname):
 
     request.addfinalizer(finalizer)
 
-    web_fixture.add_host(hostname, attributes={"ipaddress": "127.0.0.1"})
+    site.openapi.create_host(hostname, attributes={"ipaddress": "127.0.0.1"})
 
-    site.write_file(
+    site.write_text_file(
         "etc/check_mk/conf.d/linux_test_host_%s.mk" % hostname,
         "datasource_programs.append(('cat ~/var/check_mk/agent_output/<HOST>', [], ['%s']))\n"
         % hostname,
     )
 
     site.makedirs("var/check_mk/agent_output/")
-    site.write_file("var/check_mk/agent_output/%s" % hostname, get_standard_linux_agent_output())
+    site.write_text_file(
+        "var/check_mk/agent_output/%s" % hostname, get_standard_linux_agent_output()
+    )
 
 
 # .

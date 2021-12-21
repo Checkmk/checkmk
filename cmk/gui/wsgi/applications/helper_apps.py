@@ -3,8 +3,13 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from __future__ import annotations
 
 from pprint import pformat
+from typing import List, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from cmk.gui.wsgi.type_defs import StartResponse, WSGIApplication, WSGIEnvironment, WSGIResponse
 
 
 def dump_environ_app(environ, start_response):
@@ -12,35 +17,46 @@ def dump_environ_app(environ, start_response):
     return serve_string(dumped_env)(environ, start_response)
 
 
-def serve_string(_str):
-    def _server(environ, start_response):
+def serve_string(_str: str) -> WSGIApplication:
+    def _server(_environ: WSGIEnvironment, start_response: StartResponse) -> WSGIResponse:
         status = "200 OK"
-        response_headers = [("Content-Type", "text/plain"), ("Content-Length", str(len(_str)))]
+        encoding = "utf-8"
+        out_data = _str.encode(encoding)
+        response_headers = [
+            ("Content-Type", f"text/plain; charset={encoding}"),
+            ("Content-Length", str(len(out_data))),
+        ]
         start_response(status, response_headers)
 
-        return [_str]
+        return [out_data]
 
     return _server
 
 
-def test_formdata(environ, start_response):
+def test_formdata(environ: WSGIEnvironment, start_response: StartResponse) -> WSGIResponse:
     # show the environment:
-    output = [
-        "<pre>",
-        pformat(environ),
-        "</pre>",
-        '<form method="post">',
-        '<input type="text" name="test">',
-        '<input type="submit">',
-        "</form>",
+    output: List[bytes] = [
+        b"<pre>",
+        pformat(environ).encode("utf-8"),
+        b"</pre>",
+        b'<form method="post">',
+        b'<input type="text" name="test">',
+        b'<input type="submit">',
+        b"</form>",
     ]
 
     if environ["REQUEST_METHOD"] == "POST":
         # show form data as received by POST:
-        output.append("<h1>FORM DATA</h1>")
-        output.append(pformat(environ["wsgi.input"].read()))
+        output.append(b"<h1>FORM DATA</h1>")
+        output.append(pformat(environ["wsgi.input"].read()).encode("utf-8"))
 
     # send results
     output_len = sum(len(line) for line in output)
-    start_response("200 OK", [("Content-type", "text/html"), ("Content-Length", str(output_len))])
+    start_response(
+        "200 OK",
+        [
+            ("Content-type", "text/html; encoding=utf-8"),
+            ("Content-Length", str(output_len)),
+        ],
+    )
     return output

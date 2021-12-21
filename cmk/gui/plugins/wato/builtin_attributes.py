@@ -17,7 +17,7 @@ from cmk.gui.fields import validators
 from cmk.gui.globals import html, user
 from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _
-from cmk.gui.plugins.wato import (
+from cmk.gui.plugins.wato.utils import (
     ABCHostAttributeNagiosText,
     ABCHostAttributeValueSpec,
     ConfigHostname,
@@ -475,8 +475,7 @@ hooks.register_builtin("validate-host", validate_host_parents)
 @hooks.request_memoize()
 def _get_criticality_choices():
     """Returns the current configuration of the tag_group criticality"""
-    tags = cmk.utils.tags.TagConfig()
-    tags.parse_config(watolib.TagConfigFile().load_for_reading())
+    tags = cmk.utils.tags.TagConfig.from_config(watolib.TagConfigFile().load_for_reading())
     criticality_group = tags.get_tag_group("criticality")
     if not criticality_group:
         return []
@@ -1108,10 +1107,10 @@ class LockedByValuespec(Tuple):
             ),
         )
 
-    def value_to_text(self, value) -> ValueSpecText:
+    def value_to_html(self, value) -> ValueSpecText:
         if not value or not value[1] or not value[2]:
             return _("Not locked")
-        return super().value_to_text(value)
+        return super().value_to_html(value)
 
 
 @host_attribute_registry.register

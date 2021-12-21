@@ -10,6 +10,8 @@ Kubernetes API v1.15. Please take a look on the official website to see, if you 
 is supported: https://github.com/kubernetes-client/python
 """
 
+from __future__ import annotations
+
 import argparse
 import ast
 import contextlib

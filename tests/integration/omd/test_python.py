@@ -6,6 +6,7 @@
 
 # flake8: noqa
 
+import json
 import os
 import subprocess
 from typing import List
@@ -15,6 +16,7 @@ import pytest  # type: ignore[import]
 from pipfile import Pipfile  # type: ignore[import]
 
 from tests.testlib import repo_path
+from tests.testlib.site import Site
 
 
 def _get_import_names_from_dist_name(dist_name: str) -> List[str]:
@@ -43,53 +45,56 @@ def _get_import_names_from_pipfile() -> List[str]:
     return import_names
 
 
-def test_01_python_interpreter_exists(site):
+def test_01_python_interpreter_exists(site: Site):
     assert os.path.exists(site.root + "/bin/python3")
 
 
-def test_02_python_interpreter_path(site):
+def test_02_python_interpreter_path(site: Site):
     p = site.execute(["which", "python3"], stdout=subprocess.PIPE)
-    path = p.stdout.read().strip()
+    path = p.stdout.read().strip() if p.stdout else "<NO STDOUT>"
     assert path == "/omd/sites/%s/bin/python3" % site.id
 
 
-def test_03_python_interpreter_version(site):
+def test_03_python_interpreter_version(site: Site):
     p = site.execute(["python3", "-V"], stdout=subprocess.PIPE)
-    version = p.stdout.read()
-    assert version.startswith("Python 3.8.11")
+    version = p.stdout.read() if p.stdout else "<NO STDOUT>"
+    assert version.startswith("Python 3.9.8")
 
 
-def test_03_python_path(site):
-    p = site.execute(["python3", "-c", "import sys ; print(sys.path)"], stdout=subprocess.PIPE)
-    sys_path = eval(p.stdout.read())
+def test_03_python_path(site: Site):
+    p = site.execute(
+        ["python3", "-c", "import sys,json; json.dump(sys.path, sys.stdout)"],
+        stdout=subprocess.PIPE,
+    )
+    sys_path = json.loads(p.stdout.read()) if p.stdout else "<NO STDOUT>"
     assert sys_path[0] == ""
     assert site.root + "/local/lib/python3" in sys_path
     assert site.root + "/lib/python3" in sys_path
-    assert site.root + "/lib/python3.8" in sys_path
+    assert site.root + "/lib/python3.9" in sys_path
 
-    for p in sys_path:
-        if p != "" and not p.startswith(site.root):
-            raise Exception("Found non site path %s in sys.path" % p)
+    for path in sys_path:
+        if path != "" and not path.startswith(site.root):
+            raise Exception("Found non site path %s in sys.path" % path)
 
 
-def test_01_pip_exists(site):
+def test_01_pip_exists(site: Site):
     assert os.path.exists(site.root + "/bin/pip3")
 
 
-def test_02_pip_path(site):
+def test_02_pip_path(site: Site):
     p = site.execute(["which", "pip3"], stdout=subprocess.PIPE)
-    path = p.stdout.read().strip()
+    path = p.stdout.read().strip() if p.stdout else "<NO STDOUT>"
     assert path == "/omd/sites/%s/bin/pip3" % site.id
 
 
-def test_03_pip_interpreter_version(site):
+def test_03_pip_interpreter_version(site: Site):
     p = site.execute(["pip3", "-V"], stdout=subprocess.PIPE)
-    version = p.stdout.read()
-    assert version.startswith("pip 21.1.1")
+    version = p.stdout.read() if p.stdout else "<NO STDOUT>"
+    assert version.startswith("pip 21.2.4")
 
 
 @pytest.mark.parametrize("module_name", _get_import_names_from_pipfile())
-def test_python_modules(site, module_name):
+def test_python_modules(site: Site, module_name):
     # TODO: Clarify and remove skipping of obscure modules
     # Skip those modules for now, they throw:
     # >       found = self._search_paths(context.pattern, context.path)

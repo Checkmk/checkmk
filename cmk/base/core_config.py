@@ -21,7 +21,6 @@ from typing import (
     List,
     Optional,
     Sequence,
-    Set,
     Tuple,
     Union,
 )
@@ -35,8 +34,10 @@ from cmk.utils.log import console
 from cmk.utils.parameters import TimespecificParameters
 from cmk.utils.type_defs import (
     CheckPluginName,
+    ConfigurationWarnings,
     HostAddress,
     HostName,
+    HostsToUpdate,
     Labels,
     LabelSources,
     ServiceName,
@@ -59,12 +60,10 @@ from cmk.base.config import (
 )
 from cmk.base.nagios_utils import do_check_nagiosconfig
 
-ConfigurationWarnings = List[str]
 ObjectMacros = Dict[str, AnyStr]
 CoreCommandName = str
 CoreCommand = str
 CheckCommandArguments = Iterable[Union[int, float, str, Tuple[str, str, str]]]
-HostsToUpdate = Optional[Set[HostName]]
 
 
 class MonitoringCore(abc.ABC):
@@ -229,10 +228,10 @@ def autodetect_plugin(command_line: str) -> str:
     if command_line[0] in ["$", "/"]:
         return command_line
 
-    for directory in ["/local", ""]:
-        path = cmk.utils.paths.omd_root + directory + "/lib/nagios/plugins/"
-        if os.path.exists(path + plugin_name):
-            command_line = str(path + command_line)
+    for directory in ["local", ""]:
+        path = cmk.utils.paths.omd_root / directory / "lib/nagios/plugins/"
+        if (path / plugin_name).exists():
+            command_line = f"{path}{command_line}"
             break
 
     return command_line
@@ -382,6 +381,17 @@ def _create_core_config(
     config_cache = config.get_config_cache()
     with config_path.create(is_cmc=config.is_cmc()), _backup_objects_file(core):
         core.create_config(config_path, config_cache, hosts_to_update=hosts_to_update)
+        # TODO: Remove once we drop the binary config
+        # Purpose of code is to delete the old config file after format switching to have precisely
+        # one microcore config in core config directory.
+        if config.is_cmc():
+            try:
+                if config.get_microcore_config_format() == "protobuf":
+                    os.remove(cmk.utils.paths.var_dir + "/core/config")
+                else:
+                    os.remove(cmk.utils.paths.var_dir + "/core/config.pb")
+            except OSError as _:
+                pass
 
     cmk.utils.password_store.save(config.stored_passwords)
 

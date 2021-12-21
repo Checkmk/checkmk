@@ -164,6 +164,11 @@ class FormParser(html.parser.HTMLParser):
         self.current_form = None
         super().__init__()
 
+    # CPython screwed up the removal of the error() method from ParserBase,
+    # so we have to keep this until we use Python 3.10.
+    def error(self, message):
+        raise AssertionError(message)
+
     def handle_starttag(self, tag, attrs):
         attrs = dict(attrs)
 

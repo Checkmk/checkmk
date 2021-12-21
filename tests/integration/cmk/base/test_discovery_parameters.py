@@ -5,22 +5,19 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from tests.testlib import create_linux_test_host
-from tests.testlib.fixtures import web  # noqa: F401 # pylint: disable=unused-import
+from tests.testlib.site import Site
 
 from cmk.utils.type_defs import HostName
 
 import cmk.base.autochecks as autochecks
-import cmk.base.config as config
 
 
-def test_test_check_1_merged_rule(
-    request, site, web
-):  # noqa: F811 # pylint: disable=redefined-outer-name
+def test_test_check_1_merged_rule(request, site: Site, web):
 
     host_name = "disco-params-test-host"
 
-    create_linux_test_host(request, web, site, host_name)
-    site.write_file(f"var/check_mk/agent_output/{host_name}", "<<<test_check_1>>>\n1 2\n")
+    create_linux_test_host(request, site, host_name)
+    site.write_text_file(f"var/check_mk/agent_output/{host_name}", "<<<test_check_1>>>\n1 2\n")
 
     test_check_path = "local/lib/check_mk/base/plugins/agent_based/test_check_1.py"
 
@@ -32,7 +29,7 @@ def test_test_check_1_merged_rule(
 
     request.addfinalizer(cleanup)
 
-    site.write_file(
+    site.write_text_file(
         test_check_path,
         """
 import pprint
@@ -61,45 +58,45 @@ register.check_plugin(
 """,
     )
 
-    web.activate_changes()
+    site.activate_changes_and_wait_for_core_reload()
 
-    web.discover_services(host_name)
+    web.discover_services(host_name)  # Replace with RestAPI call, see CMK-9249
 
     # Verify that the discovery worked as expected
-    services = autochecks.parse_autochecks_services(HostName(host_name), config.service_description)
-    for service in services:
-        if str(service.check_plugin_name) == "test_check_1":
-            assert service.item == "Parameters({'default': 42})"
+    entries = autochecks.AutochecksStore(HostName(host_name)).read()
+    for entry in entries:
+        if str(entry.check_plugin_name) == "test_check_1":
+            assert entry.item == "Parameters({'default': 42})"
             break
     else:
         raise AssertionError('"test_check_1" not discovered')
 
     # And now overwrite the setting in the config
-    site.write_file(
+    site.write_text_file(
         "etc/check_mk/conf.d/test_check_1.mk",
         "discover_test_check_1 = [{'value': {'levels': (1, 2)}, 'condition': {}}]\n",
     )
 
     # rediscover with the setting in the config
     site.delete_file(f"var/check_mk/autochecks/{host_name}.mk")
-    web.discover_services(host_name)
-    services = autochecks.parse_autochecks_services(HostName(host_name), config.service_description)
-    for service in services:
-        if str(service.check_plugin_name) == "test_check_1":
-            assert service.item == "Parameters({'default': 42, 'levels': (1, 2)})"
+    web.discover_services(host_name)  # Replace with RestAPI call, see CMK-9249
+    entries = autochecks.AutochecksStore(HostName(host_name)).read()
+    for entry in entries:
+        if str(entry.check_plugin_name) == "test_check_1":
+            assert entry.item == "Parameters({'default': 42, 'levels': (1, 2)})"
             break
     else:
         raise AssertionError('"test_check_1" not discovered')
 
 
-def test_test_check_1_all_rule(
-    request, site, web
-):  # noqa: F811 # pylint: disable=redefined-outer-name
+def test_test_check_1_all_rule(request, site: Site, web):
 
     host_name = "disco-params-test-host"
 
-    create_linux_test_host(request, web, site, host_name)
-    site.write_file("var/check_mk/agent_output/disco-params-test-host", "<<<test_check_2>>>\n1 2\n")
+    create_linux_test_host(request, site, host_name)
+    site.write_text_file(
+        "var/check_mk/agent_output/disco-params-test-host", "<<<test_check_2>>>\n1 2\n"
+    )
 
     test_check_path = "local/lib/check_mk/base/plugins/agent_based/test_check_2.py"
 
@@ -111,7 +108,7 @@ def test_test_check_1_all_rule(
 
     request.addfinalizer(cleanup)
 
-    site.write_file(
+    site.write_text_file(
         test_check_path,
         """
 import pprint
@@ -140,33 +137,33 @@ register.check_plugin(
 """,
     )
 
-    web.activate_changes()
+    site.activate_changes_and_wait_for_core_reload()
 
-    web.discover_services(host_name)
+    web.discover_services(host_name)  # Replace with RestAPI call, see CMK-9249
 
     # Verify that the discovery worked as expected
-    services = autochecks.parse_autochecks_services(HostName(host_name), config.service_description)
+    entries = autochecks.AutochecksStore(HostName(host_name)).read()
 
-    for service in services:
-        if str(service.check_plugin_name) == "test_check_2":
-            assert service.item == "[Parameters({'default': 42})]"
+    for entry in entries:
+        if str(entry.check_plugin_name) == "test_check_2":
+            assert entry.item == "[Parameters({'default': 42})]"
             break
     else:
         raise AssertionError('"test_check_2" not discovered')
 
     # And now overwrite the setting in the config
-    site.write_file(
+    site.write_text_file(
         "etc/check_mk/conf.d/test_check_2.mk",
         "discover_test_check_2 = [{'value': {'levels': (1, 2)}, 'condition': {}}]\n",
     )
 
     # rediscover with the setting in the config
     site.delete_file(f"var/check_mk/autochecks/{host_name}.mk")
-    web.discover_services(host_name)
-    services = autochecks.parse_autochecks_services(HostName(host_name), config.service_description)
-    for service in services:
-        if str(service.check_plugin_name) == "test_check_2":
-            assert service.item == (
+    web.discover_services(host_name)  # Replace with RestAPI call, see CMK-9249
+    entries = autochecks.AutochecksStore(HostName(host_name)).read()
+    for entry in entries:
+        if str(entry.check_plugin_name) == "test_check_2":
+            assert entry.item == (
                 "[Parameters({'levels': (1, 2)})," " Parameters({'default': 42})]"
             )
             break

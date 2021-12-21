@@ -97,8 +97,7 @@ preamble_1() {
     # Optionally set a tempdir for all subsequent calls
     #export TMPDIR=
 
-    # The package name gets patched for baked agents to either
-    # "check-mk-agent" or the name set by the "name of agent packages" rule
+    # The service name gets patched for baked agents to "check-mk-agent"
     XINETD_SERVICE_NAME=check_mk
 
     # Provide information about the remote host. That helps when data
@@ -246,6 +245,14 @@ section_checkmk() {
     fi
 }
 
+section_checkmk_agent_plugins() {
+    printf "<<<checkmk_agent_plugins_lnx:sep(0)>>>\n"
+    printf "pluginsdir %s\n" "${PLUGINSDIR}"
+    printf "localdir %s\n" "${LOCALDIR}"
+    grep -r '^__version__' "${LOCALDIR}" "${PLUGINSDIR}"
+    grep -r '^CMK_VERSION' "${LOCALDIR}" "${PLUGINSDIR}"
+}
+
 section_checkmk_failed_plugin() {
     ${MK_RUN_SYNC_PARTS} || return
     echo "<<<check_mk>>>"
@@ -258,23 +265,21 @@ section_checkmk_failed_plugin() {
 
 section_df() {
     # Print out Partitions / Filesystems. (-P gives non-wrapped POSIXed output)
-    # Heads up: NFS-mounts are generally supressed to avoid agent hangs.
-    # If hard NFS mounts are configured or you have too large nfs retry/timeout
-    # settings, accessing those mounts from the agent would leave you with
-    # thousands of agent processes and, ultimately, a dead monitored system.
-    # These should generally be monitored on the NFS server, not on the clients.
+    # Note: BusyBox df does not support -x and -l as arguments
+    if ! inpath waitmax; then
+        return
+    fi
 
     echo '<<<df>>>'
-    # The exclusion list is getting a bit of a problem. -l should hide any remote FS but seems
-    # to be all but working.
-    excludefs="-x smbfs -x cifs -x iso9660 -x udf -x nfsv4 -x nfs -x mvfs -x zfs -x prl_fs"
-    df -PTlk $excludefs | sed 1d
+    waitmax -s 9 5 df -kPT
 
     # df inodes information
-    echo '<<<df>>>'
-    echo '[df_inodes_start]'
-    df -PTli $excludefs | sed 1d
-    echo '[df_inodes_end]'
+    if waitmax -s 9 5 df -i >/dev/null 2>&1; then
+        echo '<<<df>>>'
+        echo '[df_inodes_start]'
+        waitmax -s 9 5 df -PTi
+        echo '[df_inodes_end]'
+    fi
 }
 
 section_zfsget() {
@@ -1125,6 +1130,8 @@ run_plugins() {
 
 run_purely_synchronous_sections() {
     section_checkmk
+
+    section_checkmk_agent_plugins
 
     section_df
 

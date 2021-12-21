@@ -7,27 +7,19 @@
 
 import logging
 from contextlib import suppress
-from typing import Callable, Dict, Iterable, Mapping, NamedTuple, Optional, Sequence, Union
+from typing import Callable, Dict, Iterable, Mapping, NamedTuple, Optional, Sequence
 
-import cmk.utils.debug
-import cmk.utils.paths
-from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.parameters import TimespecificParameters
 from cmk.utils.type_defs import CheckPluginName, CheckVariables, HostName, Item, ServiceName
 
-from cmk.base.check_utils import (
-    AutocheckService,
-    deduplicate_autochecks,
-    LegacyCheckParameters,
-    Service,
-)
+from cmk.base.check_utils import AutocheckService, LegacyCheckParameters, Service
 from cmk.base.discovered_labels import ServiceLabel
 
 from .utils import AutocheckEntry, AutochecksStore
 
 ComputeCheckParameters = Callable[
     [HostName, CheckPluginName, Item, LegacyCheckParameters],
-    Union[LegacyCheckParameters, TimespecificParameters],
+    TimespecificParameters,
 ]
 GetCheckVariables = Callable[[], CheckVariables]
 GetServiceDescription = Callable[[HostName, CheckPluginName, Item], ServiceName]
@@ -64,7 +56,7 @@ class AutochecksManager:
         compute_check_parameters: ComputeCheckParameters,
         get_service_description: GetServiceDescription,
         get_effective_hostname: HostOfClusteredService,
-    ) -> Sequence[Service]:
+    ) -> Sequence[Service[TimespecificParameters]]:
         if hostname not in self._autochecks:
             self._autochecks[hostname] = list(
                 self._get_autochecks_of_uncached(
@@ -85,12 +77,9 @@ class AutochecksManager:
     ) -> Iterable[Service]:
         """Read automatically discovered checks of one host"""
         for autocheck_entry in self._read_raw_autochecks(hostname):
-            try:
-                service_name = get_service_description(
-                    hostname, autocheck_entry.check_plugin_name, autocheck_entry.item
-                )
-            except Exception:  # I dont't really know why this is ignored. Feels utterly wrong.
-                continue
+            service_name = get_service_description(
+                hostname, autocheck_entry.check_plugin_name, autocheck_entry.item
+            )
 
             yield Service(
                 check_plugin_name=autocheck_entry.check_plugin_name,
@@ -123,14 +112,11 @@ class AutochecksManager:
         # check parameters. The latter would involve ruleset matching which
         # in turn would require already computed labels.
         for autocheck_entry in self._read_raw_autochecks(hostname):
-            try:
-                hosts_labels[
-                    get_service_description(
-                        hostname, autocheck_entry.check_plugin_name, autocheck_entry.item
-                    )
-                ] = {n: ServiceLabel(n, v) for n, v in autocheck_entry.service_labels.items()}
-            except Exception:
-                continue  # ignore
+            hosts_labels[
+                get_service_description(
+                    hostname, autocheck_entry.check_plugin_name, autocheck_entry.item
+                )
+            ] = {n: ServiceLabel(n, v) for n, v in autocheck_entry.service_labels.items()}
 
         if (labels := hosts_labels.get(service_desc)) is not None:
             return labels
@@ -145,43 +131,17 @@ class AutochecksManager:
         return self._raw_autochecks_cache[hostname]
 
 
-def parse_autochecks_services(
-    hostname: HostName,
-    service_description: GetServiceDescription,
-) -> Sequence[AutocheckService]:
-    """Read autochecks, but do not compute final check parameters"""
-
-    try:
-        autocheck_entries = AutochecksStore(hostname).read()
-    except SyntaxError as e:
-        if cmk.utils.debug.enabled():
-            raise
-        raise MKGeneralException(f"Unable to parse autochecks of host {hostname}: {e}")
-
-    return [
-        service
-        for entry in autocheck_entries
-        if (service := parse_autocheck_service(hostname, entry, service_description)) is not None
-    ]
-
-
 def parse_autocheck_service(
     hostname: HostName,
     autocheck_entry: AutocheckEntry,
     service_description: GetServiceDescription,
 ) -> Optional[AutocheckService]:
-
-    try:
-        description = service_description(
-            hostname, autocheck_entry.check_plugin_name, autocheck_entry.item
-        )
-    except Exception:
-        return None  # ignore
-
     return AutocheckService(
         check_plugin_name=autocheck_entry.check_plugin_name,
         item=autocheck_entry.item,
-        description=description,
+        description=service_description(
+            hostname, autocheck_entry.check_plugin_name, autocheck_entry.item
+        ),
         parameters=autocheck_entry.parameters,
         service_labels={n: ServiceLabel(n, v) for n, v in autocheck_entry.service_labels.items()},
     )
@@ -208,12 +168,7 @@ def _consolidate_autochecks_of_real_hosts(
     existing_autochecks: Sequence[AutocheckEntry],
 ) -> Sequence[AutocheckEntry]:
     consolidated = {
-        discovered.id(): AutocheckEntry(
-            check_plugin_name=discovered.check_plugin_name,
-            item=discovered.item,
-            parameters=discovered.parameters,
-            service_labels={l.name: l.value for l in discovered.service_labels.values()},
-        )
+        discovered.id(): _entrify(discovered)
         for discovered, found_on_nodes in new_services_with_nodes
         if hostname in found_on_nodes
     }
@@ -241,16 +196,19 @@ def set_autochecks_of_cluster(
     for node in nodes:
         new_autochecks = [
             existing
-            for existing in parse_autochecks_services(node, service_description)
-            if hostname != host_of_clustered_service(node, existing.description)
+            for existing in AutochecksStore(node).read()
+            if hostname
+            != host_of_clustered_service(
+                node, service_description(node, existing.check_plugin_name, existing.item)
+            )
         ] + [
-            discovered
+            _entrify(discovered)
             for discovered, found_on_nodes in new_services_with_nodes
             if node in found_on_nodes
         ]
 
         # write new autochecks file for that host
-        _save_autochecks_services(node, deduplicate_autochecks(new_autochecks))
+        AutochecksStore(node).write(_deduplicate(new_autochecks))
 
     # Check whether or not the cluster host autocheck files are still existant.
     # Remove them. The autochecks are only stored in the nodes autochecks files
@@ -258,20 +216,29 @@ def set_autochecks_of_cluster(
     AutochecksStore(hostname).clear()
 
 
-def _save_autochecks_services(
-    hostname: HostName,
-    services: Sequence[AutocheckService],
-) -> None:
-    AutochecksStore(hostname).write(
-        [
-            AutocheckEntry(
-                check_plugin_name=s.check_plugin_name,
-                item=s.item,
-                parameters=s.parameters,
-                service_labels={l.name: l.value for l in s.service_labels.values()},
-            )
-            for s in services
-        ]
+def _deduplicate(autochecks: Sequence[AutocheckEntry]) -> Sequence[AutocheckEntry]:
+    """Cleanup duplicates
+
+    (in particular versions pre 1.6.0p8 may have introduced some in the autochecks file)
+
+    The first service is kept:
+
+    >>> _deduplicate([
+    ...    AutocheckService(CheckPluginName('a'), None, "description 1", None),
+    ...    AutocheckService(CheckPluginName('a'), None, "description 2", None),
+    ... ])[0].description
+    'description 1'
+
+    """
+    return list({(a.check_plugin_name, a.item): a for a in reversed(autochecks)}.values())
+
+
+def _entrify(service: AutocheckService) -> AutocheckEntry:
+    return AutocheckEntry(
+        check_plugin_name=service.check_plugin_name,
+        item=service.item,
+        parameters=service.parameters,
+        service_labels={l.name: l.value for l in service.service_labels.values()},
     )
 
 
@@ -281,16 +248,17 @@ def remove_autochecks_of_host(
     host_of_clustered_service: HostOfClusteredService,
     service_description: GetServiceDescription,
 ) -> int:
-    existing_services = parse_autochecks_services(hostname, service_description)
-    new_services = [
+    store = AutochecksStore(hostname)
+    existing_entries = store.read()
+    new_entries = [
         existing
-        for existing in existing_services
+        for existing in existing_entries
         if remove_hostname
         != host_of_clustered_service(
             hostname,
-            existing.description,
+            service_description(hostname, existing.check_plugin_name, existing.item),
         )
     ]
+    store.write(new_entries)
 
-    _save_autochecks_services(hostname, new_services)
-    return len(existing_services) - len(new_services)
+    return len(existing_entries) - len(new_entries)

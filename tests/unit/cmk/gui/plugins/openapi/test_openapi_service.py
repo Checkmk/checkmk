@@ -10,17 +10,15 @@ import pytest
 
 from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
 
+from tests.unit.cmk.gui.conftest import WebTestAppForCMK
 
-@pytest.mark.usefixtures("suppress_remote_automation_calls")
+
+@pytest.mark.usefixtures("suppress_remote_automation_calls", "with_host")
 def test_openapi_livestatus_service(
-    wsgi_app,
-    with_automation_user,
+    aut_user_auth_wsgi_app: WebTestAppForCMK,
     mock_livestatus,
-    with_host,
 ):
     live: MockLiveStatusConnection = mock_livestatus
-    username, secret = with_automation_user
-    wsgi_app.set_authorization(("Bearer", username + " " + secret))
 
     live.add_table(
         "services",
@@ -56,7 +54,7 @@ def test_openapi_livestatus_service(
     with live:
         base = "/NO_SITE/check_mk/api/1.0"
 
-        resp = wsgi_app.call_method(
+        resp = aut_user_auth_wsgi_app.call_method(
             "get",
             base + "/domain-types/service/collections/all",
             headers={"Accept": "application/json"},
@@ -73,7 +71,7 @@ def test_openapi_livestatus_service(
     )
 
     with live:
-        resp = wsgi_app.call_method(
+        resp = aut_user_auth_wsgi_app.call_method(
             "get",
             base
             + '/domain-types/service/collections/all?query={"op": "~", "left": "host_alias", "right": "heute"}',
@@ -90,7 +88,7 @@ def test_openapi_livestatus_service(
         ]
     )
     with live:
-        resp = wsgi_app.call_method(
+        resp = aut_user_auth_wsgi_app.call_method(
             "get",
             base + "/objects/host/example.com/collections/services",
             headers={"Accept": "application/json"},
@@ -99,16 +97,12 @@ def test_openapi_livestatus_service(
         assert len(resp.json["value"]) == 1
 
 
-@pytest.mark.usefixtures("suppress_remote_automation_calls")
+@pytest.mark.usefixtures("suppress_remote_automation_calls", "with_host")
 def test_openapi_livestatus_collection_link(
-    wsgi_app,
-    with_automation_user,
+    aut_user_auth_wsgi_app: WebTestAppForCMK,
     mock_livestatus,
-    with_host,
 ):
     live: MockLiveStatusConnection = mock_livestatus
-    username, secret = with_automation_user
-    wsgi_app.set_authorization(("Bearer", username + " " + secret))
 
     live.add_table(
         "services",
@@ -144,7 +138,7 @@ def test_openapi_livestatus_collection_link(
     with live:
         base = "/NO_SITE/check_mk/api/1.0"
 
-        resp = wsgi_app.call_method(
+        resp = aut_user_auth_wsgi_app.call_method(
             "get",
             base + "/domain-types/service/collections/all",
             headers={"Accept": "application/json"},
@@ -156,16 +150,12 @@ def test_openapi_livestatus_collection_link(
         )
 
 
-@pytest.mark.usefixtures("suppress_remote_automation_calls")
+@pytest.mark.usefixtures("suppress_remote_automation_calls", "with_host")
 def test_openapi_specific_service(
-    wsgi_app,
-    with_automation_user,
+    aut_user_auth_wsgi_app: WebTestAppForCMK,
     mock_livestatus,
-    with_host,
 ):
     live: MockLiveStatusConnection = mock_livestatus
-    username, secret = with_automation_user
-    wsgi_app.set_authorization(("Bearer", username + " " + secret))
 
     live.add_table(
         "services",
@@ -203,7 +193,7 @@ def test_openapi_specific_service(
     with live:
         base = "/NO_SITE/check_mk/api/1.0"
 
-        resp = wsgi_app.call_method(
+        resp = aut_user_auth_wsgi_app.call_method(
             "get",
             base + "/objects/host/heute/actions/show_service/invoke?service_description=Filesystem",
             headers={"Accept": "application/json"},
@@ -218,16 +208,12 @@ def test_openapi_specific_service(
         }
 
 
-@pytest.mark.usefixtures("suppress_remote_automation_calls")
+@pytest.mark.usefixtures("suppress_remote_automation_calls", "with_host")
 def test_openapi_service_with_slash_character(
-    wsgi_app,
-    with_automation_user,
+    aut_user_auth_wsgi_app: WebTestAppForCMK,
     mock_livestatus,
-    with_host,
 ):
     live: MockLiveStatusConnection = mock_livestatus
-    username, secret = with_automation_user
-    wsgi_app.set_authorization(("Bearer", username + " " + secret))
 
     live.add_table(
         "services",
@@ -266,7 +252,7 @@ def test_openapi_service_with_slash_character(
         base = "/NO_SITE/check_mk/api/1.0"
         service_description = urllib.parse.quote("Filesystem /böot", safe=" ").replace(" ", "+")
 
-        resp = wsgi_app.call_method(
+        resp = aut_user_auth_wsgi_app.call_method(
             "get",
             base
             + f"/objects/host/example.com/actions/show_service/invoke?service_description={service_description}",
@@ -282,16 +268,12 @@ def test_openapi_service_with_slash_character(
         }
 
 
-@pytest.mark.usefixtures("suppress_remote_automation_calls")
+@pytest.mark.usefixtures("suppress_remote_automation_calls", "with_host")
 def test_openapi_non_existing_service(
-    wsgi_app,
-    with_automation_user,
+    aut_user_auth_wsgi_app: WebTestAppForCMK,
     mock_livestatus,
-    with_host,
 ):
     live: MockLiveStatusConnection = mock_livestatus
-    username, secret = with_automation_user
-    wsgi_app.set_authorization(("Bearer", username + " " + secret))
 
     live.add_table(
         "services",
@@ -330,7 +312,7 @@ def test_openapi_non_existing_service(
     with live:
         base = "/NO_SITE/check_mk/api/1.0"
 
-        _ = wsgi_app.call_method(
+        _ = aut_user_auth_wsgi_app.call_method(
             "get",
             base + "/objects/host/heute/actions/show_service/invoke?service_description=CPU",
             headers={"Accept": "application/json"},

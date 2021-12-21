@@ -16,8 +16,7 @@ log.set_log_levels(load_gui_log_levels())
 import cmk.gui.modules as modules
 from cmk.gui.wsgi import make_app
 
-modules.init_modules()
-modules.call_load_plugins_hooks()
+modules.load_plugins()
 
 DEBUG = False
 

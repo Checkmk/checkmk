@@ -9,7 +9,7 @@ from typing import Tuple as TupleType
 from typing import Type, Union
 
 from cmk.gui.i18n import _
-from cmk.gui.plugins.wato import (
+from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithItem,
     rulespec_registry,
     RulespecGroupCheckParametersApplications,

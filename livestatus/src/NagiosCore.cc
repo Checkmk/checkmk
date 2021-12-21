@@ -5,8 +5,8 @@
 
 #include "NagiosCore.h"
 
-#include <cstdint>
 #include <cstdlib>
+#include <sstream>
 #include <utility>
 
 #include "Logger.h"
@@ -19,6 +19,7 @@ void NagiosPaths::dump(Logger *logger) const {
     Notice(logger) << "pnp path = '" << _pnp << "'";
     Notice(logger) << "inventory path = '" << _mk_inventory << "'";
     Notice(logger) << "structured status path = '" << _structured_status << "'";
+    Notice(logger) << "robotmk var path = '" << _robotmk_var_path << "'";
     Notice(logger) << "logwatch path = '" << _mk_logwatch << "'";
     Notice(logger) << "log file path = '" << _logfile << "'";
     Notice(logger) << "mkeventd socket path = '" << _mkeventd_socket << "'";
@@ -109,15 +110,16 @@ size_t NagiosCore::maxLinesPerLogFile() const {
 Command NagiosCore::find_command(const std::string &name) const {
     // Older Nagios headers are not const-correct... :-P
     if (command *cmd = ::find_command(const_cast<char *>(name.c_str()))) {
-        return {cmd->name, cmd->command_line};
+        return Command{._name = cmd->name, ._command_line = cmd->command_line};
     }
-    return {"", ""};
+    return Command{._name = "", ._command_line = ""};
 }
 
 std::vector<Command> NagiosCore::commands() const {
     std::vector<Command> commands;
     for (command *cmd = command_list; cmd != nullptr; cmd = cmd->next) {
-        commands.push_back({cmd->name, cmd->command_line});
+        commands.push_back(
+            Command{._name = cmd->name, ._command_line = cmd->command_line});
     }
     return commands;
 }
@@ -159,6 +161,10 @@ std::filesystem::path NagiosCore::mkInventoryPath() const {
 
 std::filesystem::path NagiosCore::structuredStatusPath() const {
     return _paths._structured_status;
+}
+
+std::filesystem::path NagiosCore::robotMkVarPath() const {
+    return _paths._robotmk_var_path;
 }
 
 std::filesystem::path NagiosCore::crashReportPath() const {
@@ -268,18 +274,18 @@ std::vector<DowntimeData> NagiosCore::downtimes_for_object(
     std::vector<DowntimeData> result;
     for (const auto &[id, dt] : _downtimes) {
         if (dt->_host == h && dt->_service == s) {
-            result.push_back({
-                dt->_id,
-                dt->_author_name,
-                dt->_comment,
-                false,
-                dt->_entry_time,
-                dt->_start_time,
-                dt->_end_time,
-                dt->_fixed != 0,
-                dt->_duration,
-                0,
-                dt->_type != 0,
+            result.push_back(DowntimeData{
+                ._id = dt->_id,
+                ._author = dt->_author,
+                ._comment = dt->_comment,
+                ._origin_is_rule = false,
+                ._entry_time = dt->_entry_time,
+                ._start_time = dt->_start_time,
+                ._end_time = dt->_end_time,
+                ._fixed = dt->_fixed,
+                ._duration = dt->_duration,
+                ._recurring = 0,
+                ._pending = dt->_type != 0,
             });
         }
     }
@@ -291,9 +297,11 @@ std::vector<CommentData> NagiosCore::comments_for_object(
     std::vector<CommentData> result;
     for (const auto &[id, co] : _comments) {
         if (co->_host == h && co->_service == s) {
-            result.push_back({co->_id, co->_author_name, co->_comment,
-                              static_cast<uint32_t>(co->_entry_type),
-                              co->_entry_time});
+            result.push_back(CommentData{._id = co->_id,
+                                         ._author = co->_author,
+                                         ._comment = co->_comment,
+                                         ._entry_type = co->_entry_type,
+                                         ._entry_time = co->_entry_time});
         }
     }
     return result;

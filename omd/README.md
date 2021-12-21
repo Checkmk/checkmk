@@ -63,7 +63,7 @@ the master branch.
 
 Clone from the Checkmk Git, then execute the following commands:
 
-```
+```bash
 cd omd
 make setup
 ../scripts/fake-windows-artifacts
@@ -123,7 +123,7 @@ parts from the build cache.
 
 ```
 cd omd
-make $PWD/build/stamps/protobuf-3.17.3-cache-pkg-process
+make $PWD/build/stamps/protobuf-3.18.1-cache-pkg-process
 ```
 
 ## Incremental package building
@@ -134,7 +134,22 @@ environment variables in the future.
 ## Measuring build times
 
 To improve build times it is first important to understand which parts of the
-build take how much time. To do this, you can use `remake` like this:
+build take how much time.
+
+During packaging there are entries written to stdout of the build job. They look
+like this:
+
+```
++++ [1638200385] Build step '/home/lm/git/checkmk/omd/build/stamps/openssl-1.1.1l-install': done
+```
+
+You could grep them from the log to get an idea which package takes how long to
+be built. These lines are also written to `omd/omd_build_times.log`.
+
+The log contains absolute time stamps. You may use the helper script
+`omd/show_build_times` to get the duration of each step calculated.
+
+An other option would be to use `remake` like this:
 
 ```
 cd omd

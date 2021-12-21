@@ -8,14 +8,14 @@ text representations optimized for human beings - with optional localization.
 The resulting strings are not ment to be parsed into values again later. They
 are just for optical output purposes."""
 
-# THIS IS STILL EXPERIMENTAL
-
+import abc
 import math
 import time
 from datetime import timedelta
-from typing import Optional, Tuple, Union
+from typing import Optional, Union
 
 from cmk.utils.i18n import _
+from cmk.utils.type_defs import Seconds
 
 # .
 #   .--Date/Time-----------------------------------------------------------.
@@ -26,6 +26,48 @@ from cmk.utils.i18n import _
 #   |          |____/ \__,_|\__\___/_/    |_| |_|_| |_| |_|\___|           |
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
+
+
+class Renderer(abc.ABC):
+    """base class for renderers"""
+
+
+class SecondsRenderer(Renderer):
+    @staticmethod
+    def get_tuple(value: Seconds) -> tuple[int, int, int, int]:
+        """return a (days, hours, minutes, seconds) tuple
+        >>> SecondsRenderer.get_tuple(1)
+        (0, 0, 0, 1)
+        >>> SecondsRenderer.get_tuple(90061)
+        (1, 1, 1, 1)
+        """
+        days, rest = divmod(value, 86400)
+        hours, rest = divmod(rest, 3600)
+        mins, secs = divmod(rest, 60)
+        return days, hours, mins, secs
+
+    @classmethod
+    def detailed_str(cls, value: Seconds) -> str:
+        """Convert seconds into a more readable string
+        >>> SecondsRenderer.detailed_str(1)
+        '1 seconds'
+        >>> SecondsRenderer.detailed_str(3600)
+        '1 hours'
+        """
+        days, hours, mins, secs = cls.get_tuple(value)
+
+        return " ".join(
+            [
+                "%d %s" % (val, label)
+                for val, label in [
+                    (days, _("days")),
+                    (hours, _("hours")),
+                    (mins, _("minutes")),
+                    (secs, _("seconds")),
+                ]
+                if val > 0
+            ]
+        )
 
 
 # NOTE: strftime's format *must* be of type str, both in Python 2 and 3.
@@ -111,10 +153,17 @@ def approx_age(secs: float) -> str:
 
 
 def scale_factor_prefix(
-    value: float, base: float, prefixes: Tuple[str, ...] = ("", "k", "M", "G", "T", "P")
-) -> Tuple[float, str]:
-    base = float(base)
+    value: float, base: float, prefixes: tuple[str, ...] = ("", "k", "M", "G", "T", "P")
+) -> tuple[float, str]:
+    """calculate the right scale factor and prefix
 
+    >>> scale_factor_prefix(1, 1024)
+    (1.0, '')
+    >>> scale_factor_prefix(1025, 1024)
+    (1024.0, 'k')
+    >>> scale_factor_prefix(5_000_000_000, 1000)
+    (1000000000.0, 'G')
+    """
     prefix = prefixes[-1]
     factor = base
     for unit_prefix in prefixes[:-1]:
@@ -129,8 +178,14 @@ def drop_dotzero(v: float, digits: int = 2) -> str:
     """Renders a number as a floating point number and drops useless
     zeroes at the end of the fraction
 
-    45.1 -> "45.1"
-    45.0 -> "45"
+    >>> drop_dotzero(45.1)
+    '45.1'
+    >>> drop_dotzero(45.0)
+    '45'
+    >>> drop_dotzero(45.111, 1)
+    '45.1'
+    >>> drop_dotzero(45.999, 1)
+    '46'
     """
     t = "%.*f" % (digits, v)
     if "." in t:
@@ -266,7 +321,7 @@ def physical_precision(v: float, precision: int, unit_symbol: str) -> str:
     return "%.*f %s%s" % (places_after_comma, scaled_value, scale_symbol, unit_symbol)
 
 
-def calculate_physical_precision(v: float, precision: int) -> Tuple[str, int, int]:
+def calculate_physical_precision(v: float, precision: int) -> tuple[str, int, int]:
     if v == 0:
         return "", precision - 1, 1
 
@@ -333,11 +388,11 @@ def fmt_nic_speed(speed: str) -> str:
 #   '----------------------------------------------------------------------'
 
 
-def _frexp10(x: float) -> Tuple[float, int]:
+def _frexp10(x: float) -> tuple[float, int]:
     return _frexpb(x, 10)
 
 
-def _frexpb(x: float, base: int) -> Tuple[float, int]:
+def _frexpb(x: float, base: int) -> tuple[float, int]:
     exp = int(math.log(x, base))
     mantissa = x / base ** exp
     if mantissa < 1:

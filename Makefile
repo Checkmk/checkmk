@@ -23,6 +23,7 @@ SCAN_BUILD         := scan-build-$(CLANG_VERSION)
 export DOXYGEN     := doxygen
 export IWYU_TOOL   := python3 $(realpath scripts/iwyu_tool.py)
 ARTIFACT_STORAGE   := https://artifacts.lan.tribe29.com
+# TODO: Prefixing the command with the environment variable breaks xargs usage below!
 PIPENV             := PIPENV_PYPI_MIRROR=$(PIPENV_PYPI_MIRROR)/simple scripts/run-pipenv
 BLACK              := scripts/run-black
 
@@ -210,6 +211,7 @@ $(DISTNAME).tar.gz: omd/packages/mk-livestatus/mk-livestatus-$(VERSION).tar.gz .
 		--exclude check_mk_agent.spec \
 		--exclude special/lib \
 		--exclude plugins/Makefile \
+		--exclude plugins/*.checksum \
 		cfg_examples \
 		plugins \
 		sap \
@@ -225,7 +227,7 @@ $(DISTNAME).tar.gz: omd/packages/mk-livestatus/mk-livestatus-$(VERSION).tar.gz .
 		linux \
 		windows/cfg_examples \
 		windows/check_mk_agent.msi \
-		windows/python-3.8.cab \
+		windows/python-3.cab \
 		windows/python-3.4.cab \
 		windows/check_mk.user.yml \
 		windows/CONTENTS \
@@ -395,23 +397,40 @@ clean:
 	       .werks/werks \
 	       ChangeLog
 
-mrproper:
-	git clean -d --force -x \
+EXCLUDE_PROPER= \
 	    --exclude="**/.vscode" \
 	    --exclude="**/.idea" \
 	    --exclude=".werks/.last" \
 	    --exclude=".werks/.my_ids"
 
-mrclean:
-	git clean -d --force -x \
-	    --exclude="**/.vscode" \
-	    --exclude="**/.idea"  \
-	    --exclude=".werks/.last" \
-	    --exclude=".werks/.my_ids" \
+EXCLUDE_CLEAN=$(EXCLUDE_PROPER) \
 	    --exclude=".venv" \
 	    --exclude=".venv.lock" \
+	    --exclude="node_modules" \
 	    --exclude="livestatus/src/doc/plantuml.jar" \
 	    --exclude="enterprise/core/src/doc/plantuml.jar"
+
+EXCLUDE_BUILD_CLEAN=$(EXCLUDE_CLEAN) \
+	    --exclude="omd/packages/openhardwaremonitor/OpenHardwareMonitorCLI.exe" \
+	    --exclude="omd/packages/openhardwaremonitor/OpenHardwareMonitorLib.dll" \
+	    --exclude="doc/plugin-api/build" \
+	    --exclude=".cargo" \
+	    --exclude="agents/cmk-agent-ctl/target" \
+	    --exclude="agents/plugins/*_2.py" \
+	    --exclude="agents/plugins/*.py.checksum"
+
+mrproper:
+	git clean -d --force -x $(EXCLUDE_PROPER)
+
+mrclean:
+	git clean -d --force -x $(EXCLUDE_CLEAN)
+
+# Used by our version build (buildscripts/scripts/build-cmk-version.jenkins)
+# for cleaning up while keeping some build artifacts between version builds.
+# This helps to speed up "make dist"
+buildclean:
+	git clean -d --force -x $(EXCLUDE_BUILD_CLEAN)
+
 
 setup:
 # librrd-dev is still needed by the python rrd package we build in our virtual environment
@@ -448,10 +467,10 @@ setup:
 	    shellcheck \
 	    direnv \
 	    python3-pip \
-	    python3.8-dev \
+	    python3.9-dev \
 	    python-setuptools \
 	    chrpath \
-	    enchant \
+	    enchant-2 \
 	    ksh \
 	    p7zip-full \
 	    zlib1g-dev
@@ -568,11 +587,11 @@ format-python-yapf:
 # Saw some mixed up lines on stdout after adding the --parallel option. Leaving it on
 # for the moment to get the performance boost this option brings.
 	if test -z "$$PYTHON_FILES"; then ./scripts/find-python-files; else echo "$$PYTHON_FILES"; fi | \
-	xargs -n 1500 $(PIPENV) run yapf --parallel --style .style.yapf --verbose -i
+	PIPENV_PYPI_MIRROR=$(PIPENV_PYPI_MIRROR)/simple xargs -n 1500 scripts/run-pipenv run yapf --parallel --style .style.yapf --verbose -i
 
 format-python-isort:
 	if test -z "$$PYTHON_FILES"; then ./scripts/find-python-files; else echo "$$PYTHON_FILES"; fi | \
-	xargs -n 1500 $(PIPENV) run isort --settings-path pyproject.toml
+	PIPENV_PYPI_MIRROR=$(PIPENV_PYPI_MIRROR)/simple xargs -n 1500 scripts/run-pipenv run isort --settings-path pyproject.toml
 
 format-python-black:
 	if test -z "$$PYTHON_FILES"; then ./scripts/find-python-files; else echo "$$PYTHON_FILES"; fi | \

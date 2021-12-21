@@ -30,7 +30,7 @@ TableComments::TableComments(MonitoringCore *mc) : Table(mc) {
     ColumnOffsets offsets{};
     addColumn(std::make_unique<StringColumn<Comment>>(
         "author", "The contact that entered the comment", offsets,
-        [](const Comment &r) { return r._author_name; }));
+        [](const Comment &r) { return r._author; }));
     addColumn(std::make_unique<StringColumn<Comment>>(
         "comment", "A comment text", offsets,
         [](const Comment &r) { return r._comment; }));

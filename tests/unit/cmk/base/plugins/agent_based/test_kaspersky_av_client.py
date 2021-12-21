@@ -28,7 +28,7 @@ def set_fixed_timezone():
         ),
         ([["Signatures", "01.01.1970", "00:00:00"]], 1, dict(signature_age=1)),
         ([["Signatures", "01.01.1970"]], 1, dict(signature_age=1)),
-        ([["Signatures", "Missing"]], 0, dict()),
+        ([["Signatures", "Missing"]], 0, {}),
     ],
 )
 def test_parse_kaspersky_av_client(string_table, now, expected_section):
@@ -73,7 +73,7 @@ def test_parse_kaspersky_av_client(string_table, now, expected_section):
             ],
         ),
         (
-            dict(),
+            {},
             [
                 Result(state=State.UNKNOWN, summary="Last update of signatures unkown"),
                 Result(state=State.UNKNOWN, summary="Last fullscan unkown"),

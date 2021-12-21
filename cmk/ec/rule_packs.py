@@ -16,12 +16,12 @@ import pprint
 from enum import Enum
 from pathlib import Path
 from typing import (
-    AbstractSet,
     Any,
     cast,
     Dict,
     Iterable,
     Iterator,
+    KeysView,
     List,
     Mapping,
     MutableMapping,
@@ -96,7 +96,7 @@ class MkpRulePackProxy(MutableMapping[str, Any]):  # pylint: disable=too-many-an
     def __len__(self) -> int:
         return len(self.keys())
 
-    def keys(self) -> AbstractSet[str]:
+    def keys(self) -> KeysView[str]:
         """List of keys of this rule pack"""
         if self.rule_pack is None:
             raise MkpRulePackBindingError("Proxy is not bound")

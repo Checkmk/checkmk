@@ -102,7 +102,12 @@ def test_package_parts():
                 "checkman", _("Checks' man pages"), str(cmk.utils.paths.local_check_manpages_dir)
             ),
             packaging.PackagePart("agents", _("Agents"), str(cmk.utils.paths.local_agents_dir)),
-            packaging.PackagePart("web", _("GUI extensions"), str(cmk.utils.paths.local_web_dir)),
+            packaging.PackagePart(
+                "gui", _("GUI extensions"), str(cmk.utils.paths.local_gui_plugins_dir)
+            ),
+            packaging.PackagePart(
+                "web", _("Legacy GUI extensions"), str(cmk.utils.paths.local_web_dir)
+            ),
             packaging.PackagePart(
                 "pnp-templates",
                 _("PNP4Nagios templates (deprecated)"),
@@ -177,6 +182,7 @@ def test_get_package_parts():
             "notifications",
             "pnp-templates",
             "web",
+            "gui",
         ]
     )
 
@@ -341,6 +347,7 @@ def test_unpackaged_files_none():
         "notifications": [],
         "pnp-templates": [],
         "web": [],
+        "gui": [],
     }
 
 
@@ -371,6 +378,7 @@ def test_unpackaged_files():
         "notifications": [],
         "pnp-templates": [],
         "web": [],
+        "gui": [],
     }
 
 

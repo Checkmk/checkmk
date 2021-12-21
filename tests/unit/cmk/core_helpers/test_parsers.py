@@ -11,6 +11,7 @@ import itertools
 import logging
 import time
 from collections import defaultdict
+from typing import Sequence
 
 import pytest
 
@@ -939,7 +940,7 @@ class TestSNMPPersistedSectionHandling:
             PersistedSections[SNMPRawDataSection]({}),
             logger=logger,
         )
-        _new: SNMPRawDataSection = [["new"]]  # For the type checker only
+        _new: Sequence[SNMPRawDataSection] = [["new"]]  # For the type checker only
         raw_data: SNMPRawData = {SectionName("fresh"): _new}
         parser = SNMPParser(
             HostName("testhost"),
@@ -965,7 +966,7 @@ class TestSNMPPersistedSectionHandling:
             ),
             logger=logger,
         )
-        _new: SNMPRawDataSection = [["new"]]  # For the type checker only
+        _new: Sequence[SNMPRawDataSection] = [["new"]]  # For the type checker only
         raw_data: SNMPRawData = {SectionName("fresh"): _new}
         parser = SNMPParser(
             HostName("testhost"),
@@ -998,7 +999,7 @@ class TestSNMPPersistedSectionHandling:
             ),
             logger=logger,
         )
-        _new: SNMPRawDataSection = [["new"]]  # For the type checker only
+        _new: Sequence[SNMPRawDataSection] = [["new"]]  # For the type checker only
         raw_data: SNMPRawData = {SectionName("section"): _new}
         parser = SNMPParser(
             HostName("testhost"),

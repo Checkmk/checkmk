@@ -11,10 +11,7 @@ import urllib.parse
 from contextlib import contextmanager
 from typing import Any, Dict, Iterator, List, Mapping, Optional, Tuple, TypeVar, Union
 
-import werkzeug.wrappers
-
-# NOTE: 'JSONMixin' is deprecated and will be removed in Werkzeug 2.1. 'Request' now includes the functionality directly.
-import werkzeug.wrappers.json  # type: ignore[import]
+import werkzeug
 from six import ensure_str
 from werkzeug.utils import get_content_type
 
@@ -139,7 +136,9 @@ class LegacyDeprecatedMixin:
         for name, values in self.values.lists():  # type: ignore[attr-defined]
             if name.startswith(prefix):
                 # Preserve previous behaviour
-                yield name, ensure_str(values[-1]) if values else None
+                yield name, ensure_str(  # pylint: disable= six-ensure-str-bin-call
+                    values[-1]
+                ) if values else None
 
     def var(self, name: str, default: Optional[str] = None) -> Optional[str]:
         # TODO: mypy does not know about the related mixin classes. This whole class can be cleaned
@@ -150,7 +149,7 @@ class LegacyDeprecatedMixin:
             return default
 
         # Preserve previous behaviour
-        return ensure_str(values[-1])
+        return ensure_str(values[-1])  # pylint: disable= six-ensure-str-bin-call
 
     def has_var(self, varname: str) -> bool:
         # TODO: mypy does not know about the related mixin classes. This whole class can be cleaned
@@ -177,7 +176,7 @@ class LegacyDeprecatedMixin:
         value = self.cookies.get(varname, default)  # type: ignore[attr-defined]
         if value is not None:
             # Why would we want to do that? test_http.py requires it though.
-            return ensure_str(value)
+            return ensure_str(value)  # pylint: disable= six-ensure-str-bin-call
         return None
 
     def get_request_header(self, key: str, default: Optional[str] = None) -> Optional[str]:
@@ -232,8 +231,7 @@ class Request(
     LegacyVarsMixin,
     LegacyUploadMixin,
     LegacyDeprecatedMixin,
-    werkzeug.wrappers.json.JSONMixin,
-    werkzeug.wrappers.Request,
+    werkzeug.Request,
 ):
     """Provides information about the users HTTP-request to the application
 
@@ -268,12 +266,12 @@ class Request(
         return 110
 
     @property
-    def remote_ip(self) -> str:
+    def remote_ip(self) -> Optional[str]:
         """Selects remote addr from the given list of ips in
         X-Forwarded-For. Picks first non-trusted ip address.
         """
         trusted_proxies: List[str] = ["127.0.0.1", "::1"]
-        remote_addr: str = self.remote_addr
+        remote_addr: Optional[str] = self.remote_addr
         forwarded_for = self.environ.get("HTTP_X_FORWARDED_FOR", "").split(",")
         if remote_addr in trusted_proxies:
             return next(
@@ -408,10 +406,14 @@ class Request(
         """
         # Filter the variables even if there are multiple copies of them (this is allowed).
         decoded_qs = [(key, value) for key, value in self.args.items(multi=True) if key != varname]
-        self.environ["QUERY_STRING"] = urllib.parse.urlencode(decoded_qs)
+        self.query_string = urllib.parse.urlencode(decoded_qs).encode("utf-8")
+        self.environ["QUERY_STRING"] = self.query_string
         # We remove the form entry. As this entity is never copied it will be modified within
-        # it's cache.
-        dict.pop(self.form, varname, None)
+        # its cache.
+        try:
+            dict.pop(self.form, varname)
+        except KeyError:
+            pass
         # We remove the __dict__ entries to allow @cached_property to reload them from
         # the environment. The rest of the request object stays the same.
         self.__dict__.pop("args", None)
@@ -432,18 +434,18 @@ class Request(
             exclude_vars = []
 
         if self.var("request_format") == "python":
+            python_request = self.var("request", "{}")
+            assert python_request is not None
             try:
-                python_request = self.var("request", "{}")
-                assert python_request is not None
                 request = ast.literal_eval(python_request)
             except (SyntaxError, ValueError) as e:
                 raise MKUserError(
                     "request", _("Failed to parse Python request: '%s': %s") % (python_request, e)
                 )
         else:
+            json_request = self.var("request", "{}")
+            assert json_request is not None
             try:
-                json_request = self.var("request", "{}")
-                assert json_request is not None
                 request = json.loads(json_request)
                 request["request_format"] = "json"
             except ValueError as e:  # Python3: json.JSONDecodeError
@@ -458,7 +460,7 @@ class Request(
         return request
 
 
-class Response(werkzeug.wrappers.Response):
+class Response(werkzeug.Response):
     # NOTE: Currently we rely on a *relative* Location header in redirects!
     autocorrect_location_header = False
 

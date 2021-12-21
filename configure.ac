@@ -7,6 +7,7 @@
 AC_PREREQ(2.61)
 AC_INIT([MK Livestatus], [2.1.0i1], [mk@mathias-kettner.de])
 AM_INIT_AUTOMAKE([-Wall -Wno-portability foreign subdir-objects])
+AM_EXTRA_RECURSIVE_TARGETS([all-packaging])
 AC_CONFIG_MACRO_DIR([m4])
 AC_CONFIG_SRCDIR([config.h.in])
 AC_CONFIG_HEADER([config.h])

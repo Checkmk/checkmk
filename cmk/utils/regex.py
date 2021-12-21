@@ -22,6 +22,14 @@ REGEX_GENERIC_IDENTIFIER = r"^[%s]+$" % REGEX_GENERIC_IDENTIFIER_CHARS
 # Start with a char, and no dots
 REGEX_ID = r"^[^\d\W][-\w]*$"
 
+# URL CHARS
+# See https://www.ietf.org/rfc/rfc3986.txt
+_URL_UNRESERVED_CHARS = re.escape("-.~")
+_URL_GEN_DELIMS = re.escape(":/?#[]@")
+_URL_SUB_DELIMS = re.escape("!$&()*+,;=")  # Leaving out "'"
+URL_CHAR_REGEX_CHARS = r"\w%" + _URL_UNRESERVED_CHARS + _URL_GEN_DELIMS + _URL_SUB_DELIMS
+URL_CHAR_REGEX = r"^[%s]+$" % URL_CHAR_REGEX_CHARS
+
 
 def regex(pattern: str, flags: int = 0) -> Pattern[str]:
     """Compile regex or look it up in already compiled regexes.

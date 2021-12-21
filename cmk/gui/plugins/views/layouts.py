@@ -12,7 +12,7 @@ import cmk.gui.utils as utils
 from cmk.gui.exceptions import MKGeneralException
 from cmk.gui.globals import config, html, theme, user
 from cmk.gui.i18n import _
-from cmk.gui.plugins.views import (
+from cmk.gui.plugins.views.utils import (
     EmptyCell,
     group_value,
     is_stale,

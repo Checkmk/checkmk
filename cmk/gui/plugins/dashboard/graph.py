@@ -5,9 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
-from itertools import chain
-from typing import Any, Dict, Iterable, Mapping
-from typing import Tuple as TupleType
+from typing import Any, Iterable, Mapping
 
 import livestatus
 
@@ -18,16 +16,12 @@ import cmk.gui.sites as sites
 from cmk.gui.exceptions import MKGeneralException, MKMissingDataError, MKUserError
 from cmk.gui.globals import html
 from cmk.gui.i18n import _
-from cmk.gui.metrics import (
-    get_graph_templates,
-    graph_info,
-    metric_info,
-    translated_metrics_from_row,
-)
-from cmk.gui.plugins.dashboard import Dashlet, dashlet_registry
+from cmk.gui.metrics import graph_info, metric_info
 from cmk.gui.plugins.dashboard.utils import (
     DashboardConfig,
     DashboardName,
+    Dashlet,
+    dashlet_registry,
     DashletConfig,
     DashletId,
     macro_mapping_from_context,
@@ -41,13 +35,12 @@ from cmk.gui.plugins.metrics.valuespecs import vs_graph_render_options
 from cmk.gui.plugins.visuals.utils import get_only_sites_from_context
 from cmk.gui.type_defs import Choices, GraphIdentifier, VisualContext
 from cmk.gui.valuespec import (
-    autocompleter_registry,
     Dictionary,
     DictionaryElements,
     DictionaryEntry,
-    DropdownChoice,
     DropdownChoiceValue,
     DropdownChoiceWithHostAndServiceHints,
+    Timerange,
     ValueSpec,
 )
 from cmk.gui.visuals import get_singlecontext_vars
@@ -55,10 +48,9 @@ from cmk.gui.visuals import get_singlecontext_vars
 
 def _metric_title_from_id(metric_or_graph_id: MetricName) -> str:
     metric_id = metric_or_graph_id.replace("METRIC_", "")
-    return metric_info.get(metric_id, {}).get("title", metric_id)
+    return str(metric_info.get(metric_id, {}).get("title", metric_id))
 
 
-@autocompleter_registry.register
 class AvailableGraphs(DropdownChoiceWithHostAndServiceHints):
     """Factory of a Dropdown menu from all graph templates"""
 
@@ -100,9 +92,11 @@ class AvailableGraphs(DropdownChoiceWithHostAndServiceHints):
                 (
                     (
                         graph_id,
-                        graph_detail.get(
-                            "title",
-                            graph_id,
+                        str(
+                            graph_detail.get(
+                                "title",
+                                graph_id,
+                            )
                         ),
                     )
                     for graph_id, graph_detail in graph_info.items()
@@ -121,84 +115,6 @@ class AvailableGraphs(DropdownChoiceWithHostAndServiceHints):
         return super().render_input(
             varprefix,
             self._MARKER_DEPRECATED_CHOICE if isinstance(value, int) else value,
-        )
-
-    @staticmethod
-    def _graph_template_title(graph_template: Mapping) -> str:
-        return graph_template.get("title") or _metric_title_from_id(graph_template["id"])
-
-    @classmethod
-    def _graph_choices_from_livestatus_row(
-        cls,
-        perf_data: str,
-        metrics: Iterable[MetricName],
-        check_cmd: str,
-    ) -> Iterable[TupleType[str, str]]:
-        yield from (
-            (
-                template["id"],
-                cls._graph_template_title(template),
-            )
-            for template in get_graph_templates(
-                translated_metrics_from_row(
-                    {
-                        "service_metrics": metrics,
-                        "service_perf_data": perf_data,
-                        "service_check_command": check_cmd,
-                    }
-                )
-            )
-        )
-
-    # This class in to use them Text autocompletion ajax handler. Valuespec is not used on html
-    @classmethod
-    def autocomplete_choices(cls, value: str, params: Dict) -> Choices:
-        """Return the matching list of dropdown choices
-        Called by the webservice with the current input field value and the
-        completions_params to get the list of choices"""
-        if not (params.get("host") or params.get("service")):
-            choices: Iterable[TupleType[str, str]] = (
-                (
-                    graph_id,
-                    graph_details.get(
-                        "title",
-                        graph_id,
-                    ),
-                )
-                for graph_id, graph_details in graph_info.items()
-            )
-
-        else:
-            query = "\n".join(
-                [
-                    "GET services",
-                    "Columns: perf_data metrics check_command",
-                ]
-                + [
-                    f"Filter: {filter_name} = {livestatus.lqencode(filter_value)}"
-                    for filter_name, filter_value in (
-                        ("host_name", params.get("host")),
-                        ("service_description", params.get("service")),
-                    )
-                    if filter_value
-                ]
-            )
-            with sites.set_limit(None):
-                choices = set(
-                    chain.from_iterable(
-                        cls._graph_choices_from_livestatus_row(
-                            perf_data,
-                            metrics,
-                            check_cmd,
-                        )
-                        for perf_data, metrics, check_cmd in sites.live().query(query)
-                    )
-                )
-
-        val_lower = value.lower()
-        return sorted(
-            (choice for choice in choices if val_lower in choice[1].lower()),
-            key=lambda tuple_id_title: tuple_id_title[1],
         )
 
 
@@ -261,7 +177,7 @@ class GraphDashlet(Dashlet):
 
         # New graphs which have been added via "add to visual" option don't have a timerange
         # configured. So we assume the default timerange here by default.
-        self._dashlet_spec.setdefault("timerange", "1")
+        self._dashlet_spec.setdefault("timerange", "25h")
 
         self._init_exception = None
         try:
@@ -304,6 +220,8 @@ class GraphDashlet(Dashlet):
             service = "_HOST_"
 
         site = get_only_sites_from_context(context) or self._resolve_site(host)
+        if isinstance(site, list):
+            site = "".join(site)
 
         # source changed from int (n'th graph) to the graph id in 2.0.0b6, but we cannot transform this, so we have to
         # handle this here
@@ -334,19 +252,11 @@ class GraphDashlet(Dashlet):
 
     @staticmethod
     def _vs_timerange() -> DictionaryEntry:
-        # TODO: Cleanup: switch to generic Timerange() valuespec!
         return (
             "timerange",
-            DropdownChoice(
+            Timerange(
                 title=_("Timerange"),
-                default_value="1",
-                choices=[
-                    ("0", _("4 Hours")),
-                    ("1", _("25 Hours")),
-                    ("2", _("One Week")),
-                    ("3", _("One Month")),
-                    ("4", _("One Year")),
-                ],
+                default_value="25h",
             ),
         )
 
@@ -386,7 +296,7 @@ function dashboard_render_graph(nr, graph_identification, graph_render_options, 
 
     var post_data = "spec=" + encodeURIComponent(JSON.stringify(graph_identification))
                   + "&render=" + encodeURIComponent(JSON.stringify(graph_render_options))
-                  + "&timerange=" + encodeURIComponent(timerange)
+                  + "&timerange=" + encodeURIComponent(JSON.stringify(timerange))
                   + "&width=" + c_w
                   + "&height=" + c_h
                   + "&id=" + nr;
@@ -424,11 +334,11 @@ function handle_dashboard_render_graph_response(handler_data, response_body)
         ):
             return ""
 
-        return "dashboard_render_graph(%d, %s, %s, '%s')" % (
+        return "dashboard_render_graph(%d, %s, %s, %s)" % (
             self._dashlet_id,
             json.dumps(self._dashlet_spec["_graph_identification"]),
             json.dumps(self._dashlet_spec["graph_render_options"]),
-            self._dashlet_spec["timerange"],
+            json.dumps(Timerange.compute_range(self._dashlet_spec["timerange"]).range),
         )
 
     def show(self):

@@ -372,14 +372,23 @@ class ExperimentalStorageLoader(ABCHostsStorageLoader[HostsData]):
             global_dict["all_hosts"].extend(all_hosts)
 
         cgs = data["contact_groups"]
-        if cg_hosts := cgs["hosts"]:
-            global_dict["host_contactgroups"].insert(0, cg_hosts)
-        if cg_services := cgs["services"]:
-            global_dict["service_contactgroups"].insert(0, cg_services)
-        if cg_folder_hosts := cgs["folder_hosts"]:
-            global_dict["host_contactgroups"].insert(0, cg_folder_hosts)
-        if cg_folder_services := cgs["folder_services"]:
-            global_dict["service_contactgroups"].insert(0, cg_folder_services)
+        for name, global_key in [
+            ("hosts", "host_contactgroups"),
+            ("services", "service_contactgroups"),
+        ]:
+            if new_cgs := cgs[name]:
+                global_dict[global_key].extend(new_cgs)
+
+        for name, global_key in [
+            ("folder_hosts", "host_contactgroups"),
+            ("folder_services", "service_contactgroups"),
+        ]:
+            if new_cgs := cgs[name]:
+                global_dict[global_key].extend(new_cgs)
+            new_cgs.extend(global_dict[global_key])
+            # Do not replace the list reference (in case some outer instance already uses it)
+            global_dict[global_key].clear()
+            global_dict[global_key].extend(new_cgs)
 
         # Dict based settings
         for key in [

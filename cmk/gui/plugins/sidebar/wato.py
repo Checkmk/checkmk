@@ -14,10 +14,10 @@ from cmk.gui.globals import config, html, user
 from cmk.gui.htmllib import foldable_container, HTML
 from cmk.gui.i18n import _, _l
 from cmk.gui.main_menu import mega_menu_registry
-from cmk.gui.plugins.sidebar import (
+from cmk.gui.plugins.sidebar import search
+from cmk.gui.plugins.sidebar.utils import (
     footnotelinks,
     make_topic_menu,
-    search,
     show_topic_menu,
     SidebarSnapin,
     snapin_registry,

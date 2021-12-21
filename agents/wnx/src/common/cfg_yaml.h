@@ -209,7 +209,7 @@ constexpr const char* const kWaitNetwork = "wait_network";  // int, seconds
 
 namespace values {
 // modules.table
-constexpr std::string_view kModulesNamePython = "python-3.8";  //
+constexpr std::string_view kModulesNamePython = "python-3";  //
 constexpr std::string_view kModulesCmdPython =
     ".venv\\Scripts\\python.exe {}";  //
 

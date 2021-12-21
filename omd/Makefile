@@ -22,7 +22,6 @@ PACKAGES := \
     openssl \
     redis \
     libgsf \
-    postgresql \
     perl-modules \
     Python \
     freetds \
@@ -72,6 +71,8 @@ endif
 
 BUILD_TARGET_VARS := $(call package_target_prefix,$(PACKAGES))
 INSTALL_TARGETS := $(foreach package,$(addsuffix _INSTALL,$(BUILD_TARGET_VARS)),$($(package)))
+INSTALL_LOG_TARGETS := $(foreach package,$(INSTALL_TARGETS),$(addsuffix -log,$(package)))
+CACHE_PKG_PROCESS_TARGETS := $(foreach package,$(addsuffix _CACHE_PKG_PROCESS,$(BUILD_TARGET_VARS)),$($(package)))
 
 PRE_INSTALL := $(BUILD_HELPER_DIR)/pre-install
 INSTALL := $(BUILD_HELPER_DIR)/install
@@ -92,20 +93,14 @@ $(BUILD_BASE_DIR)/build-helper-files.make:
 	    inc_path=$(REPO_PATH)/$$P/$$P.make; \
 	  fi ; \
 	  P_VAR=$$(echo $${P^^} | tr '-' '_' ); \
-	  egrep -h "$$P_VAR\s+:=\s+" $$inc_path >> $@ ; \
-	  egrep -h "$${P_VAR}_VERS\s+:=\s+" $$inc_path >> $@ ; \
-	  egrep -h "$${P_VAR}_DIR\s+:=\s+" $$inc_path >> $@ ; \
-	  egrep -h "$${P_VAR}_BUILD\s+:=\s+" $$inc_path >> $@ ; \
-	  egrep -h "$${P_VAR}_INSTALL\s+:=\s+" $$inc_path >> $@ ; \
-	  egrep -h "$${P_VAR}_INTERMEDIATE_INSTALL\s+:=\s+" $$inc_path >> $@ ; \
-	  egrep -h "$${P_VAR}_CACHE_PKG_PROCESS\s+:=\s+" $$inc_path >> $@ ; \
-	  if [ "$$P" == "rrdtool" ]; then \
-	    egrep -h "$${P_VAR}_BUILD_LIBRARY\s+:=\s+" $$inc_path >> $@ ; \
-	    egrep -h "$${P_VAR}_INSTALL_LIBRARY\s+:=\s+" $$inc_path >> $@ ; \
-	    egrep -h "$${P_VAR}_BUILD_BINDINGS\s+:=\s+" $$inc_path >> $@ ; \
-	    egrep -h "$${P_VAR}_INSTALL_BINDINGS\s+:=\s+" $$inc_path >> $@ ; \
-	  fi \
-	done
+	  egrep -h "^$$P_VAR\s+:=\s+" $$inc_path >> $@ ; \
+	  egrep -h "^$${P_VAR}_VERS\s+:=\s+" $$inc_path >> $@ ; \
+	  egrep -h "^$${P_VAR}_DIR\s+:=\s+" $$inc_path >> $@ ; \
+	  egrep -h "^$${P_VAR}_BUILD(_[A-Z]+)?\s+:=\s+" $$inc_path >> $@ ; \
+	  egrep -h "^$${P_VAR}_INSTALL(_[A-Z]+)?\s+:=\s+" $$inc_path >> $@ ; \
+	  egrep -h "^$${P_VAR}_INTERMEDIATE_INSTALL(_[A-Z]+)?\s+:=\s+" $$inc_path >> $@ ; \
+	  egrep -h "^$${P_VAR}_CACHE_PKG_PROCESS(_[A-Z]+)?\s+:=\s+" $$inc_path >> $@ ; \
+	done || true
 
 
 -include .config
@@ -135,9 +130,11 @@ install-clean:
 	rm -rf $(DESTDIR)
 	rm -rf $(BUILD_HELPER_DIR)/*-install
 
-# Prepare clean install environment
-$(PRE_INSTALL):
+$(BUILD_HELPER_DIR):
 	$(MKDIR) $(BUILD_HELPER_DIR)
+
+# Prepare clean install environment
+$(PRE_INSTALL): $(BUILD_HELPER_DIR)
 	$(MKDIR) $(DESTDIR)$(OMD_PHYSICAL_BASE)
 # The default physical base for OMD is /opt/omd. This may be changed by
 # the user locally, but the logical path for OMD is always /omd. We use
@@ -151,11 +148,15 @@ $(PRE_INSTALL):
 	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/share/diskspace
 	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/share/man/man1
 	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/skel
+	$(call log_time,$@,done)
 	touch $@
 
-$(INSTALL_TARGETS): $(PRE_INSTALL)
+$(INSTALL_TARGETS) $(CACHE_PKG_PROCESS_TARGETS): $(PRE_INSTALL)
 
-$(INSTALL): $(INSTALL_TARGETS)
+$(INSTALL_LOG_TARGETS): %-log: %
+	$(call log_time,$@,done)
+
+$(INSTALL): $(INSTALL_LOG_TARGETS)
 # Repair packages that install with silly modes (such as Nagios)
 	chmod -R o+Xr $(DESTDIR)$(OMD_ROOT)
 	$(TOUCH) $@
@@ -285,6 +286,7 @@ deb: debian/changelog debian/control
 	    --preserve-envvar="NEXUS_*" \
 	    --preserve-envvar="MAKE" \
 	    --preserve-envvar="PYTHON_ENABLE_OPTIMIZATIONS" \
+	    --prepend-path $$HOME/.cargo/bin \
 	    --prepend-path=/usr/local/bin \
 	    --set-envvar EDITION=$(EDITION) \
 	    --no-lintian \
@@ -305,7 +307,7 @@ $(APPLIANCE_INSTALL_CMA): $(PRE_INSTALL)
 # Please note: APPLIANCE_*_CMA are defined in omd/packages/appliance/appliance.make
 $(CMA_PACKAGE): $(APPLIANCE_INSTALL_CMA) install
 	# Create info file to mark minimal cma firmware version requirement
-	echo -e "MIN_VERSION=1.4.0\n" > $(DESTDIR)/opt/omd/versions/$(OMD_VERSION)/cma.info
+	echo -e "MIN_VERSION=1.4.17\n" > $(DESTDIR)/opt/omd/versions/$(OMD_VERSION)/cma.info
 
 	# Mark demo builds in cma.info file
 

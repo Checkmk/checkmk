@@ -13,6 +13,7 @@
 #include <iterator>
 #include <memory>
 #include <optional>
+#include <sstream>
 #include <unordered_map>
 #include <unordered_set>
 #include <utility>
@@ -20,6 +21,7 @@
 
 #include "AttributeBitmaskColumn.h"
 #include "AttributeListColumn.h"
+#include "BlobColumn.h"
 #include "Column.h"
 #include "CommentRenderer.h"
 #include "CustomAttributeMap.h"
@@ -140,6 +142,44 @@ void TableServices::addColumns(Table *table, const std::string &prefix,
                 r.check_command);
         }));
 #endif
+
+    table->addColumn(std::make_unique<BlobColumn<service>>(
+        prefix + "robotmk_last_log", "The file content of the Robotmk log",
+        offsets,
+        BlobFileReader<service>{
+            [mc]() { return mc->robotMkVarPath() / "html_logs"; },
+            [](const service &r) {
+                return std::filesystem::path{r.host_ptr->name} / r.description /
+                       "last_log.html";
+            }}));
+    table->addColumn(std::make_unique<BlobColumn<service>>(
+        prefix + "robotmk_last_log_gz",
+        "The gzipped file content of the Robotmk log", offsets,
+        BlobFileReader<service>{
+            [mc]() { return mc->robotMkVarPath() / "html_logs"; },
+            [](const service &r) {
+                return std::filesystem::path{r.host_ptr->name} / r.description /
+                       "last_log.html.gz";
+            }}));
+    table->addColumn(std::make_unique<BlobColumn<service>>(
+        prefix + "robotmk_last_error_log",
+        "The file content of the Robotmk error log", offsets,
+        BlobFileReader<service>{
+            [mc]() { return mc->robotMkVarPath() / "html_logs"; },
+            [](const service &r) {
+                return std::filesystem::path{r.host_ptr->name} / r.description /
+                       "last_error_log.html";
+            }}));
+    table->addColumn(std::make_unique<BlobColumn<service>>(
+        prefix + "robotmk_last_error_log_gz",
+        "The gzipped file content of the Robotmk error log", offsets,
+        BlobFileReader<service>{
+            [mc]() { return mc->robotMkVarPath() / "html_logs"; },
+            [](const service &r) {
+                return std::filesystem::path{r.host_ptr->name} / r.description /
+                       "last_error_log.html.gz";
+            }}));
+
     table->addColumn(std::make_unique<StringColumn<service>>(
         prefix + "event_handler", "Nagios command used as event handler",
         offsets, [](const service &r) {

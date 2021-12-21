@@ -3,6 +3,10 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from __future__ import annotations
+
+from typing import Any, Dict, Mapping, Tuple, TYPE_CHECKING
+
 from werkzeug.exceptions import HTTPException
 from werkzeug.middleware.proxy_fix import ProxyFix
 from werkzeug.routing import Map, Rule, Submount
@@ -10,20 +14,19 @@ from werkzeug.routing import Map, Rule, Submount
 from cmk.gui.wsgi.applications import CheckmkApp, CheckmkRESTAPI
 from cmk.gui.wsgi.applications.helper_apps import dump_environ_app, test_formdata
 
+if TYPE_CHECKING:
+    from cmk.gui.wsgi.type_defs import StartResponse, WSGIApplication, WSGIEnvironment, WSGIResponse
+
+
 WSGI_ENV_ARGS_NAME = "x-checkmk.args"
 
 
-def create_url_map(debug=False):
+def create_url_map(debug: bool = False) -> Map:
     """Instantiate all WSGI Apps and put them into the URL-Map."""
     debug_rules = [
-        Rule("/dump.py", endpoint=dump_environ_app),
-        Rule("/form.py", endpoint=test_formdata),
+        Rule("/dump.py", endpoint="debug-dump"),
+        Rule("/form.py", endpoint="debug-form"),
     ]
-
-    # Fix wsgi.url_scheme with werkzeug.middleware.proxy_fix.ProxyFix
-    # would be always http instead
-    cmk_app = ProxyFix(CheckmkApp(debug=debug))
-    api_app = ProxyFix(CheckmkRESTAPI(debug=debug).wsgi_app)
 
     return Map(
         [
@@ -33,10 +36,10 @@ def create_url_map(debug=False):
                     Submount(
                         "/check_mk",
                         [
-                            Rule("/", endpoint=cmk_app),
+                            Rule("/", endpoint="cmk"),
                             *(debug_rules if debug else []),
-                            Rule("/api/<string:version>/<path:path>", endpoint=api_app),
-                            Rule("/<string:script>", endpoint=cmk_app),
+                            Rule("/api/<string:version>/<path:path>", endpoint="rest-api"),
+                            Rule("/<string:script>", endpoint="cmk"),
                         ],
                     ),
                 ],
@@ -45,7 +48,7 @@ def create_url_map(debug=False):
     )
 
 
-def make_router(debug=False):
+def make_router(debug: bool = False) -> WSGIApplication:
     """Route the requests to the correct application.
 
     This router uses Werkzeug's URL-Map system to dispatch to the correct application. The
@@ -55,17 +58,28 @@ def make_router(debug=False):
     # We create the URL-map once and re-use it on every request.
     url_map = create_url_map(debug=debug)
 
-    def router(environ, start_response):
+    # Fix wsgi.url_scheme with werkzeug.middleware.proxy_fix.ProxyFix
+    # would be always http instead
+    cmk_app = ProxyFix(app=CheckmkApp(debug=debug).__call__)  # type: ignore[arg-type]
+    api_app = ProxyFix(app=CheckmkRESTAPI(debug=debug).wsgi_app)  # type: ignore[arg-type]
+
+    endpoints: Dict[str, WSGIApplication] = {
+        "cmk": cmk_app,
+        "rest-api": api_app,
+        "debug-dump": dump_environ_app,
+        "debug-form": test_formdata,
+    }
+
+    def router(environ: WSGIEnvironment, start_response: StartResponse) -> WSGIResponse:
         urls = url_map.bind_to_environ(environ)
         try:
-            endpoint, args = urls.match()
+            result: Tuple[str, Mapping[str, Any]] = urls.match(return_rule=False)
+            endpoint_name, args = result  # pylint: disable=unpacking-non-sequence
+            endpoint = endpoints[endpoint_name]
         except HTTPException as e:
             # HTTPExceptions are WSGI apps
             endpoint = e
-            args = ()
-
-        if endpoint is None:
-            raise Exception(endpoint, args, environ)
+            args = {}
 
         environ[WSGI_ENV_ARGS_NAME] = args
         return endpoint(environ, start_response)

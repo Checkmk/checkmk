@@ -9,19 +9,19 @@ import colorsys
 import random
 import re
 import shlex
-from collections import OrderedDict
 from itertools import chain
 from typing import (
     Any,
     Callable,
-    cast,
     Container,
     Dict,
     Iterable,
     Iterator,
     List,
+    Literal,
     Mapping,
     Optional,
+    OrderedDict,
     overload,
     Sequence,
     Set,
@@ -41,18 +41,19 @@ from cmk.utils.prediction import livestatus_lql, TimeSeries
 from cmk.utils.type_defs import HostName
 from cmk.utils.type_defs import MetricName as _MetricName
 from cmk.utils.type_defs import ServiceName
-from cmk.utils.werks import parse_check_mk_version
+from cmk.utils.version import parse_check_mk_version
 
 import cmk.gui.sites as sites
 from cmk.gui.exceptions import MKGeneralException, MKUserError
 from cmk.gui.globals import config, g, html
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
-from cmk.gui.plugins.views import data_source_registry, DataSourceLivestatus
-from cmk.gui.plugins.visuals.utils import get_livestatus_filter_headers, get_only_sites_from_context
+from cmk.gui.plugins.visuals.utils import livestatus_query_bare
 from cmk.gui.type_defs import (
     Choice,
     Choices,
+    MetricDefinition,
+    MetricExpression,
     Perfdata,
     PerfometerSpec,
     RenderableRecipe,
@@ -63,20 +64,52 @@ from cmk.gui.type_defs import (
     VisualContext,
 )
 from cmk.gui.utils.html import HTML
-from cmk.gui.valuespec import (
-    autocompleter_registry,
-    DropdownChoiceValue,
-    DropdownChoiceWithHostAndServiceHints,
-)
-from cmk.gui.visuals import collect_filters
+from cmk.gui.utils.speaklater import LazyString
+from cmk.gui.valuespec import DropdownChoiceValue, DropdownChoiceWithHostAndServiceHints
 
 LegacyPerfometer = Tuple[str, Any]
 Atom = TypeVar("Atom")
 TransformedAtom = TypeVar("TransformedAtom")
 StackElement = Union[Atom, TransformedAtom]
-GraphTemplate = Dict[str, Any]
+
+GraphPresentation = str  # TODO: Improve Literal["lines", "stacked", "sum", "average", "min", "max"]
+ScalarDefinition = Union[str, Tuple[str, Union[str, LazyString]]]
+GraphConsoldiationFunction = Literal["max", "min", "average"]
+
+
+GraphRangeSpec = Tuple[Union[int, str], Union[int, str]]
+GraphRange = Tuple[Optional[float], Optional[float]]
+
+
+class _GraphTemplateMandatory(TypedDict):
+    metrics: Sequence[MetricDefinition]
+
+
+class GraphTemplate(_GraphTemplateMandatory, total=False):
+    # The 'id' is not defined by the plugin, but derived from the graph_info key. But after the
+    # plugin loading we always have this field set. So we essentially want to have this:
+    # - In the plugins it is clear that the user should not define it
+    # - During runtime the field is always there and set
+    id: str
+    # All attributes here are optional
+    title: Union[str, LazyString]
+    scalars: Sequence[ScalarDefinition]
+    conflicting_metrics: Sequence[str]
+    optional_metrics: Sequence[str]
+    presentation: GraphPresentation
+    consolidation_function: GraphConsoldiationFunction
+    range: GraphRangeSpec
+    omit_zero_metrics: bool
+
+
 GraphRecipe = Dict[str, Any]
+GraphMetrics = Dict[str, Any]
 RRDData = Dict[Tuple[str, str, str, str, str, str], TimeSeries]
+
+
+class MetricUnitColor(TypedDict):
+    unit: str
+    color: str
 
 
 class CheckMetricEntry(TypedDict, total=False):
@@ -89,20 +122,20 @@ class CheckMetricEntry(TypedDict, total=False):
 class MetricInfo(TypedDict, total=False):
     # title, unit and color should be required, but metric_info.get(xxx, {}) is
     # used and is not compatible with requied keys
-    title: str
+    title: Union[str, LazyString]
     unit: str
     color: str
-    help: str
+    help: Union[str, LazyString]
     render: Callable[[Union[float, int]], str]
 
 
 class MetricInfoExtended(TypedDict, total=False):
     # this is identical to MetricInfo except unit, but one can not override the
     # type of a field so we have to copy everything from MetricInfo
-    title: str
+    title: Union[str, LazyString]
     unit: UnitInfo
     color: str
-    help: str
+    help: Union[str, LazyString]
     render: Callable[[Union[float, int]], str]
 
 
@@ -120,16 +153,18 @@ class TranslationInfo(TypedDict):
     auto_graph: bool
 
 
-class AutomaticDict(OrderedDict):
+class AutomaticDict(OrderedDict[str, GraphTemplate]):
     """Dictionary class with the ability of appending items like provided
     by a list."""
 
-    def __init__(self, list_identifier=None, start_index=None):
+    def __init__(
+        self, list_identifier: Optional[str] = None, start_index: Optional[int] = None
+    ) -> None:
         super().__init__(self)
         self._list_identifier = list_identifier or "item"
         self._item_index = start_index or 0
 
-    def append(self, item):
+    def append(self, item: GraphTemplate) -> None:
         self["%s_%i" % (self._list_identifier, self._item_index)] = item
         self._item_index += 1
 
@@ -141,7 +176,7 @@ check_metrics: Dict[str, Dict[str, CheckMetricEntry]] = {}
 perfometer_info: List[Union[LegacyPerfometer, PerfometerSpec]] = []
 # _AutomaticDict is used here to provide some list methods.
 # This is needed to maintain backwards-compatibility.
-graph_info: "OrderedDict[str, GraphTemplate]" = AutomaticDict("manual_graph_template")
+graph_info = AutomaticDict("manual_graph_template")
 
 # .
 #   .--Constants-----------------------------------------------------------.
@@ -224,7 +259,7 @@ scale_symbols = {
 _COLOR_WHEEL_SIZE = 48
 
 
-def indexed_color(idx, total):
+def indexed_color(idx: int, total: int) -> str:
     if idx < _COLOR_WHEEL_SIZE:
         # use colors from the color wheel if possible
         base_col = (idx % 4) + 1
@@ -450,7 +485,7 @@ def translate_metrics(perf_data: Perfdata, check_command: str) -> TranslatedMetr
             "scalar": normalized["scalar"],
             "scale": normalized["scale"],
             "auto_graph": normalized["auto_graph"],
-            "title": mi["title"],
+            "title": str(mi["title"]),
             "unit": mi["unit"],
             "color": mi["color"],
         }
@@ -463,7 +498,7 @@ def translate_metrics(perf_data: Perfdata, check_command: str) -> TranslatedMetr
     return translated_metrics
 
 
-def perf_data_string_from_metric_names(metric_names):
+def perf_data_string_from_metric_names(metric_names: List[_MetricName]) -> str:
     parts = []
     for var_name in metric_names:
         # Metrics with "," in their name are not allowed. They lead to problems with the RPN processing
@@ -530,7 +565,7 @@ def translated_metrics_from_row(row: Row) -> TranslatedMetrics:
 # TODO: Refactor evaluate and all helpers into single class
 
 
-def split_expression(expression: str) -> Tuple[str, Optional[str], Optional[str]]:
+def split_expression(expression: MetricExpression) -> Tuple[str, Optional[str], Optional[str]]:
     explicit_color = None
     if "#" in expression:
         expression, explicit_color = expression.rsplit("#", 1)  # drop appended color information
@@ -544,7 +579,7 @@ def split_expression(expression: str) -> Tuple[str, Optional[str], Optional[str]
 
 @overload
 def evaluate(
-    expression: str,
+    expression: MetricExpression,
     translated_metrics: TranslatedMetrics,
 ) -> Tuple[float, UnitInfo, str]:
     ...
@@ -569,7 +604,7 @@ def evaluate(
 # relevant when fetching RRD data and is used for selecting
 # the consolidation function MAX.
 def evaluate(
-    expression: Union[str, int, float],
+    expression: Union[MetricExpression, int, float],
     translated_metrics: TranslatedMetrics,
 ) -> Tuple[Optional[float], UnitInfo, str]:
     if isinstance(expression, (float, int)):
@@ -589,7 +624,7 @@ def evaluate(
 
 
 def _evaluate_rpn(
-    expression: str,
+    expression: MetricExpression,
     translated_metrics: TranslatedMetrics,
 ) -> Tuple[float, UnitInfo, str]:
     # stack of (value, unit, color)
@@ -734,8 +769,9 @@ ExpressionFunc = Callable[[ExpressionParams, RRDData], Sequence[TimeSeries]]
 
 
 class TimeSeriesExpressionRegistry(Registry[ExpressionFunc]):
-    def plugin_name(self, instance):
-        return instance._ident
+    def plugin_name(self, instance: ExpressionFunc) -> str:
+        # mypy does not know this attribute
+        return instance._ident  # type: ignore[attr-defined]
 
     def register_expression(self, ident: str) -> Callable[[ExpressionFunc], ExpressionFunc]:
         def wrap(plugin_func: ExpressionFunc) -> ExpressionFunc:
@@ -768,7 +804,9 @@ time_series_expression_registry = TimeSeriesExpressionRegistry()
 #   '----------------------------------------------------------------------'
 
 
-def get_graph_range(graph_template, translated_metrics):
+def get_graph_range(
+    graph_template: GraphTemplate, translated_metrics: TranslatedMetrics
+) -> GraphRange:
     if "range" not in graph_template:
         return None, None  # Compute range of displayed data points
 
@@ -781,7 +819,7 @@ def get_graph_range(graph_template, translated_metrics):
         return None, None
 
 
-def replace_expressions(text, translated_metrics):
+def replace_expressions(text: str, translated_metrics: TranslatedMetrics) -> str:
     """Replace expressions in strings like CPU Load - %(load1:max@count) CPU Cores"""
 
     def eval_to_string(match) -> str:
@@ -795,13 +833,15 @@ def replace_expressions(text, translated_metrics):
     return r.sub(eval_to_string, text)
 
 
-def get_graph_template_choices():
+def get_graph_template_choices() -> List[Tuple[str, str]]:
     # TODO: v.get("title", k): Use same algorithm as used in
     # GraphIdentificationTemplateBased._parse_template_metric()
-    return sorted([(k, v.get("title", k)) for k, v in graph_info.items()], key=lambda k_v: k_v[1])
+    return sorted(
+        [(k, str(v.get("title", k))) for k, v in graph_info.items()], key=lambda k_v: k_v[1]
+    )
 
 
-def get_graph_template(template_id):
+def get_graph_template(template_id: str) -> GraphTemplate:
     if template_id.startswith("METRIC_"):
         return generic_graph_template(template_id[7:])
     if template_id in graph_info:
@@ -812,6 +852,7 @@ def get_graph_template(template_id):
 def generic_graph_template(metric_name: str) -> GraphTemplate:
     return {
         "id": "METRIC_" + metric_name,
+        "title": metric_name,
         "metrics": [
             (metric_name, "area"),
         ],
@@ -859,14 +900,14 @@ def _metrics_used_by_graph(graph_template: GraphTemplate) -> Iterable[str]:
         yield from metrics_used_in_expression(metric_definition[0])
 
 
-def metrics_used_in_expression(metric_expression: str) -> Iterator[str]:
+def metrics_used_in_expression(metric_expression: MetricExpression) -> Iterator[str]:
     for part in split_expression(metric_expression)[0].split(","):
         metric_name = drop_metric_consolidation_advice(part)
         if metric_name not in rpn_operators:
             yield metric_name
 
 
-def drop_metric_consolidation_advice(expression: str) -> str:
+def drop_metric_consolidation_advice(expression: MetricExpression) -> str:
     if any(expression.endswith(cf) for cf in [".max", ".min", ".average"]):
         return expression.rsplit(".", 1)[0]
     return expression
@@ -875,11 +916,11 @@ def drop_metric_consolidation_advice(expression: str) -> str:
 def graph_template_for_metrics(
     graph_template: GraphTemplate,
     translated_metrics: TranslatedMetrics,
-) -> GraphTemplate:
+) -> Optional[GraphTemplate]:
     # Skip early on conflicting_metrics
     for var in graph_template.get("conflicting_metrics", []):
         if var in translated_metrics:
-            return {}
+            return None
 
     try:
         reduced_metrics = list(
@@ -890,17 +931,21 @@ def graph_template_for_metrics(
             )
         )
     except KeyError:
-        return {}
+        return None
 
     if reduced_metrics:
         reduced_graph_template = graph_template.copy()
         reduced_graph_template["metrics"] = reduced_metrics
         return reduced_graph_template
 
-    return {}
+    return None
 
 
-def _filter_renderable_graph_metrics(metric_definitions, translated_metrics, optional_metrics):
+def _filter_renderable_graph_metrics(
+    metric_definitions: Sequence[MetricDefinition],
+    translated_metrics: TranslatedMetrics,
+    optional_metrics: Sequence[str],
+) -> Iterator[MetricDefinition]:
     for metric_definition in metric_definitions:
         try:
             evaluate(metric_definition[0], translated_metrics)
@@ -929,7 +974,7 @@ def get_graph_data_from_livestatus(only_sites, host_name, service_description):
 
 
 def metric_title(metric_name: _MetricName) -> str:
-    return metric_info.get(metric_name, {}).get("title", metric_name.title())
+    return str(metric_info.get(metric_name, {}).get("title", metric_name.title()))
 
 
 def metric_recipe_and_unit(
@@ -954,7 +999,7 @@ def metric_recipe_and_unit(
 
 
 def horizontal_rules_from_thresholds(
-    thresholds: Iterable[Union[str, Tuple[str, str]]],
+    thresholds: Iterable[ScalarDefinition],
     translated_metrics: TranslatedMetrics,
 ):
     horizontal_rules = []
@@ -1242,19 +1287,18 @@ def reverse_translate_metric_name(canonical_name: str) -> List[Tuple[str, float]
     return [(canonical_name, 1.0)] + sorted(set(possible_translations))
 
 
-def find_metrics_of_query(
-    context: VisualContext,
-) -> Iterator[Tuple[ServiceName, str, Tuple[_MetricName, ...]]]:
-    datasource = cast(DataSourceLivestatus, data_source_registry["services"]())
-    filters = collect_filters(datasource.infos)
-    filterheaders = "".join(get_livestatus_filter_headers(context, filters))
-    selected_sites = get_only_sites_from_context(context)
+def metric_choices(check_command: str, perfvars: Tuple[_MetricName, ...]) -> Iterator[Choice]:
+    for perfvar in perfvars:
+        translated = perfvar_translation(perfvar, check_command)
+        name = translated["name"]
+        mi = metric_info.get(name, {})
+        yield name, str(mi.get("title", name.title()))
 
-    # optimization: avoid query with unconstrained result
-    if not filterheaders and not selected_sites:
-        return
-    #
-    # Also fetch host data with the *same* query. This saves one round trip. And head
+
+def metrics_of_query(
+    context: VisualContext,
+) -> Iterator[Choice]:
+    # Fetch host data with the *same* query. This saves one round trip. And head
     # host has at least one service
     columns = [
         "service_description",
@@ -1264,41 +1308,26 @@ def find_metrics_of_query(
         "host_check_command",
         "host_metrics",
     ]
-    host_check_command, host_metrics = None, None
-    with sites.only_sites(selected_sites):
-        for (
-            svc_desc,
-            check_command,
-            perf_data,
-            rrd_metrics,
-            host_check_command,
-            host_metrics,
-        ) in sites.live().query(
-            "GET services\n" + "Columns: %s\n" % " ".join(columns) + filterheaders
-        ):
-            parsed_perf_data, check_command = parse_perf_data(perf_data, check_command)
-            known_metrics = set([perf[0] for perf in parsed_perf_data] + rrd_metrics)
-            yield str(svc_desc), str(check_command), tuple(map(str, known_metrics))
 
-    if host_check_command:
-        yield "_HOST_", str(host_check_command), tuple(map(str, host_metrics))
+    row = {}
+    for row in livestatus_query_bare("service", context, columns):
+        parsed_perf_data, check_command = parse_perf_data(
+            row["service_perf_data"], row["service_check_command"]
+        )
+        known_metrics = set([perf[0] for perf in parsed_perf_data] + row["service_metrics"])
+        yield from metric_choices(str(check_command), tuple(map(str, known_metrics)))
+
+    if row.get("host_check_command"):
+        yield from metric_choices(
+            str(row["host_check_command"]), tuple(map(str, row["host_metrics"]))
+        )
 
 
-def metric_choices(check_command: str, perfvars: Tuple[str, ...]) -> Iterator[Choice]:
-    for perfvar in perfvars:
-        translated = perfvar_translation(perfvar, check_command)
-        name = translated["name"]
-        mi = metric_info.get(name, {})
-        yield name, mi.get("title", name.title())
+def registered_metrics() -> Iterator[Choice]:
+    for metric_id, metric_detail in metric_info.items():
+        yield metric_id, str(metric_detail["title"])
 
 
-def available_metrics(context: VisualContext) -> Iterator[Choice]:
-    options = set(find_metrics_of_query(context))
-    for _unused, check_command, metrics in options:
-        yield from metric_choices(check_command, metrics)
-
-
-@autocompleter_registry.register
 class MetricName(DropdownChoiceWithHostAndServiceHints):
     """Factory of a Dropdown menu from all known metric names"""
 
@@ -1314,18 +1343,22 @@ class MetricName(DropdownChoiceWithHostAndServiceHints):
             "hint_label": _("metric"),
             "choices": [(None, _("Select metric"))],
             "title": _("Metric"),
+            "regex": re.compile("^[a-zA-Z][a-zA-Z0-9_]*$"),
+            "regex_error": _(
+                "Metric names must only consist of letters, digits and "
+                "underscores and they must start with a letter."
+            ),
             **kwargs,
         }
         super().__init__(**kwargs_with_defaults)
-        self._regex: re.Pattern = re.compile("^[a-zA-Z][a-zA-Z0-9_]*$")
-        self._regex_error = _(
-            "Metric names must only consist of letters, digits and "
-            "underscores and they must start with a letter."
-        )
 
     def _validate_value(self, value: DropdownChoiceValue, varprefix: str) -> None:
         # ? DropdownChoiceValue is an alias for Any
-        if value is not None and not self._regex.match(ensure_str(value)):
+        if (
+            value is not None
+            and self._regex
+            and not self._regex.match(ensure_str(value))  # pylint: disable= six-ensure-str-bin-call
+        ):
             raise MKUserError(varprefix, self._regex_error)
 
     def _choices_from_value(self, value: DropdownChoiceValue) -> Choices:
@@ -1335,39 +1368,13 @@ class MetricName(DropdownChoiceWithHostAndServiceHints):
         return [
             next(
                 (
-                    (metric_id, metric_detail["title"])
+                    (metric_id, str(metric_detail["title"]))
                     for metric_id, metric_detail in metric_info.items()
                     if metric_id == value
                 ),
                 (value, value.title()),
             )
         ]
-
-    # This class in to use them Text autocompletion ajax handler. Valuespec is not used on html
-    @classmethod
-    def autocomplete_choices(cls, value: str, params: Dict) -> Choices:
-        host, service = params.get("host", ""), params.get("service", "")
-        if not any((host, service)):
-            all_registered_metrics = (
-                (metric_id, metric_detail["title"])
-                for metric_id, metric_detail in metric_info.items()
-            )
-            return keep_sorted_match(value, all_registered_metrics)
-
-        params["context"] = {"host": {"host": host}, "service": {"service": service}}
-        return autocomplete_metric_choices(value, params)
-
-
-def keep_sorted_match(input_value: str, choices: Iterable[Choice]) -> Choices:
-
-    return sorted(v for v in choices if input_value.lower() in v[1].lower())
-
-
-def autocomplete_metric_choices(input_value: str, params: Dict) -> Choices:
-    """Return the matching list of dropdown choices
-    Called by the webservice with the current field input_value and the completions_params to get the list of choices"""
-
-    return keep_sorted_match(input_value, set(available_metrics(params["context"])))
 
 
 # .

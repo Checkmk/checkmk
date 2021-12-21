@@ -126,6 +126,7 @@ class Interface:
     node: Optional[str] = None
     admin_status: Optional[str] = None
     total_octets: float = 0
+    extra_info: Optional[str] = None
 
     def __post_init__(self) -> None:
         self.finalize()
@@ -1042,6 +1043,9 @@ def check_single_interface(
         use_discovered_states=use_discovered_state_and_speed,
     )
 
+    if interface.extra_info:
+        yield Result(state=State.OK, summary=interface.extra_info)
+
     yield from _interface_mac(interface=interface)
 
     yield from _group_members(group_members=group_members)
@@ -1190,17 +1194,17 @@ def _interface_name(
         # of the service description anyway
         if (
             (item == interface.index or item.lstrip("0") == interface.index)
-            and (item == interface.alias or interface.alias == "")
-            and (item == interface.descr or interface.descr == "")
+            and interface.alias in (item, "")
+            and interface.descr in (item, "")
         ):  # description trivial
             info_interface = ""
         elif (
             item == "%s %s" % (interface.alias, interface.index) and interface.descr != ""
         ):  # non-unique Alias
             info_interface = "[%s/%s]" % (interface.alias, interface.descr)
-        elif item != interface.alias and interface.alias != "":  # alias useful
+        elif interface.alias not in (item, ""):  # alias useful
             info_interface = "[%s]" % interface.alias
-        elif item != interface.descr and interface.descr != "":  # description useful
+        elif interface.descr not in (item, ""):  # description useful
             info_interface = "[%s]" % interface.descr
         else:
             info_interface = "[%s]" % interface.index

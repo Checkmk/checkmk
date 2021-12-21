@@ -8,8 +8,7 @@ import time
 
 from cmk.gui.globals import html
 from cmk.gui.i18n import _
-
-from . import SidebarSnapin, snapin_registry
+from cmk.gui.plugins.sidebar.utils import SidebarSnapin, snapin_registry
 
 
 @snapin_registry.register

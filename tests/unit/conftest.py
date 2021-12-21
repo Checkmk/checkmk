@@ -19,23 +19,31 @@ from tests.testlib.debug_utils import cmk_debug_enabled
 
 import livestatus
 
+import cmk.utils.caching
 import cmk.utils.paths
 import cmk.utils.redis as redis
 import cmk.utils.store as store
 import cmk.utils.version as cmk_version
 from cmk.utils.site import omd_site
 
+import cmk.gui.dashboard
+
 # The openapi import below pulls a huge part of our GUI code indirectly into the process.  We need
 # to have the default permissions loaded before that to fix some implicit dependencies.
 # TODO: Extract the livestatus mock to some other place to reduce the dependencies here.
 import cmk.gui.default_permissions
+import cmk.gui.permissions
+import cmk.gui.views
 from cmk.gui.livestatus_utils.testing import mock_livestatus
+
+if is_enterprise_repo():
+    import cmk.cee.dcd.plugins.connectors.connectors_api.v1
 
 logger = logging.getLogger(__name__)
 
 
 @pytest.fixture(autouse=True)
-def fixture_umask(autouse=True):
+def fixture_umask():
     """Ensure the unit tests always use the same umask"""
     with cmk.utils.misc.umask(0o0007):
         yield
@@ -66,8 +74,8 @@ def patch_omd_site(monkeypatch):
     store.makedirs(cmk.utils.paths.var_dir + "/wato/php-api")
     store.makedirs(cmk.utils.paths.var_dir + "/wato/auth")
     store.makedirs(cmk.utils.paths.tmp_dir + "/wato/activation")
-    store.makedirs(cmk.utils.paths.omd_root + "/var/log")
-    store.makedirs(cmk.utils.paths.omd_root + "/tmp/check_mk")
+    store.makedirs(cmk.utils.paths.omd_root / "var/log")
+    store.makedirs(cmk.utils.paths.omd_root / "tmp/check_mk")
     store.makedirs(cmk.utils.paths.default_config_dir + "/conf.d/wato")
     store.makedirs(cmk.utils.paths.default_config_dir + "/multisite.d/wato")
     store.makedirs(cmk.utils.paths.default_config_dir + "/mkeventd.d/wato")
@@ -107,6 +115,25 @@ def cleanup_after_test():
 @pytest.fixture(scope="session")
 def site(request):
     pass
+
+
+def _clear_caches():
+    cmk.utils.caching.config_cache.clear()
+    cmk.utils.caching.runtime_cache.clear()
+
+    cmk_version.edition_short.cache_clear()
+
+
+@pytest.fixture(autouse=True, scope="module")
+def clear_caches_per_module():
+    """Ensures that module-scope fixtures are executed with clean caches."""
+    _clear_caches()
+
+
+@pytest.fixture(autouse=True)
+def clear_caches_per_function():
+    """Ensures that each test is executed with a non-polluted cache from a previous test."""
+    _clear_caches()
 
 
 # TODO: This fixes our unit tests when executing the tests while the local
@@ -289,28 +316,26 @@ def initialised_item_state():
         yield
 
 
-@pytest.fixture
-def registry_reset(request):
-    """Fixture to reset a Registry to its default entries.
+@pytest.fixture(autouse=True)
+def registry_reset():
+    """Fixture to reset registries to its default entries."""
+    registries = [
+        cmk.gui.dashboard.dashlet_registry,
+        cmk.gui.views.icon_and_action_registry,
+        cmk.gui.permissions.permission_registry,
+        cmk.gui.permissions.permission_section_registry,
+    ]
+    if is_enterprise_repo():
+        registries.append(
+            cmk.cee.dcd.plugins.connectors.connectors_api.v1.connector_config_registry
+        )
+        registries.append(cmk.cee.dcd.plugins.connectors.connectors_api.v1.connector_registry)
 
-    Tests using this fixture need a `registry_reset` marker with the registry to reset as argument.
-
-    >>> import pytest
-    >>> import cmk.gui.dashboard
-    >>> @pytest.mark.registry_reset(cmk.gui.dashboard.dashlet_registry)
-    ... def test_foo(reset_registry):
-    ...     pass
-
-    """
-    marker = request.node.get_closest_marker("registry_reset")
-    if marker is None:
-        raise TypeError("registry_reset fixture needs reset_registry maker")
-    registry = marker.args[0]
-
-    default_entries = list(registry)
+    defaults_per_registry = [(registry, list(registry)) for registry in registries]  # type: ignore[call-overload]
     try:
-        yield registry
+        yield
     finally:
-        for entry in list(registry):
-            if entry not in default_entries:
-                registry.unregister(entry)
+        for registry, defaults in defaults_per_registry:
+            for entry in list(registry):  # type: ignore[call-overload]
+                if entry not in defaults:
+                    registry.unregister(entry)  # type: ignore[attr-defined]

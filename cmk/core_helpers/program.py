@@ -151,10 +151,16 @@ class ProgramFetcher(AgentFetcher):
         if self._process.returncode == 127:
             exepath = self.cmdline.split()[0]  # for error message, hide options!
             # ? exepath is AnyStr
-            raise MKFetcherError("Program '%s' not found (exit code 127)" % ensure_str(exepath))
+            raise MKFetcherError(
+                "Program '%s' not found (exit code 127)"
+                % ensure_str(exepath)  # pylint: disable= six-ensure-str-bin-call
+            )
         if self._process.returncode:
             raise MKFetcherError(
                 "Agent exited with code %d: %s"
-                % (self._process.returncode, ensure_str(stderr).strip())
+                % (
+                    self._process.returncode,
+                    ensure_str(stderr).strip(),  # pylint: disable= six-ensure-str-bin-call
+                )
             )
         return stdout

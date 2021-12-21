@@ -8,14 +8,14 @@ from typing import Dict, List
 
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
-from cmk.gui.plugins.wato import (
+from cmk.gui.plugins.wato.check_parameters.utils import vs_filesystem
+from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithItem,
     HostRulespec,
     rulespec_registry,
     RulespecGroupCheckParametersDiscovery,
     RulespecGroupCheckParametersStorage,
 )
-from cmk.gui.plugins.wato.check_parameters.utils import vs_filesystem
 from cmk.gui.valuespec import (
     Dictionary,
     DropdownChoice,

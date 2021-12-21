@@ -10,7 +10,7 @@ from .agent_based_api.v1 import regex, register
 from .agent_based_api.v1.type_defs import StringTable
 from .utils.apt import NOTHING_PENDING_FOR_INSTALLATION
 
-_SEC_REGEX = regex("^[^\\(]*\\(.* (Debian-Security:|Ubuntu:[^/]*/[^-]*-security)")
+_SEC_REGEX = regex("^[^\\(]*\\(.* (Debian-Security:|Ubuntu[^/]*/[^/]*-\\bsecurity\\b)")
 
 
 class Section(NamedTuple):
@@ -48,6 +48,14 @@ def _data_is_valid(string_table: StringTable) -> bool:
     return action in ("Inst", "Remv") and version.startswith("[") and version.endswith("]")
 
 
+def _is_security_update(update: str) -> bool:
+    """Is the update a security update
+    >>> _is_security_update("Inst tzdata (2021e-0ubuntu0.16.04+esm1 UbuntuESM:16.04/xenial-infra-security [all])")
+    True
+    """
+    return bool(_SEC_REGEX.match(update))
+
+
 def parse_apt(string_table: StringTable) -> Optional[Section]:
     if not _data_is_valid(string_table):
         return None
@@ -62,7 +70,7 @@ def parse_apt(string_table: StringTable) -> Optional[Section]:
         _inst, packet, _version = line[0].split(None, 2)
         if line[0].startswith("Remv"):
             removals.append(packet)
-        elif _SEC_REGEX.match(line[0]):
+        elif _is_security_update(line[0]):
             sec_updates.append(packet)
         else:
             updates.append(packet)

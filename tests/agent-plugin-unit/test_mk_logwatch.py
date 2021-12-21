@@ -116,10 +116,18 @@ def test_iter_config_lines(mk_logwatch, tmpdir):
     os.mkdir(fake_config_path)
 
     fake_config_file = os.path.join(fake_config_path, "logwatch.cfg")
+    files = [fake_config_file]
+
+    # No config file at all available, raise in debug mode!
+    with pytest.raises(IOError):
+        list(mk_logwatch.iter_config_lines(files, debug=True))
+
+    # But it's ok without debug
+    list(mk_logwatch.iter_config_lines(files))
+
     with open(fake_config_file, "wb") as f:
         f.write(u"# this is a comment\nthis is a line   ".encode("utf-8"))
 
-    files = [fake_config_file]
     read = list(mk_logwatch.iter_config_lines(files))
 
     assert read == ['this is a line']
@@ -326,6 +334,11 @@ def test_get_status_filename(mk_logwatch, env_var, istty, statusfile, monkeypatc
 def test_state_load(mk_logwatch, tmpdir, state_data, state_dict):
     # setup for reading
     file_path = os.path.join(str(tmpdir), "logwatch.state.testcase")
+
+    # In case the file is not created yet, read should not raise
+    state = mk_logwatch.State(file_path).read()
+    assert state._data == {}
+
     with open(file_path, "wb") as f:
         f.write(state_data.encode("utf-8"))
 

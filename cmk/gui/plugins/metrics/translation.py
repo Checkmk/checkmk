@@ -6,8 +6,7 @@
 
 from typing import Dict
 
-from cmk.gui.plugins.metrics import check_metrics, KB, m, MB  # GB,; TB,
-from cmk.gui.plugins.metrics.utils import CheckMetricEntry
+from cmk.gui.plugins.metrics.utils import check_metrics, CheckMetricEntry, KB, m, MB
 
 # .
 #   .--Checks--------------------------------------------------------------.

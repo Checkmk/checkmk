@@ -27,7 +27,7 @@ from cmk.utils.type_defs import UserId
 from cmk.gui.exceptions import FinalizeRequest
 from cmk.gui.utils.speaklater import LazyString
 
-HTTPVariables = List[Tuple[str, Union[None, int, str]]]
+HTTPVariables = List[Tuple[str, Optional[Union[int, str]]]]
 LivestatusQuery = str
 PermissionName = str
 RoleName = str
@@ -232,11 +232,17 @@ class UnitInfo(_UnitInfoRequired, TypedDict, total=False):
     valuespec: Any  # TODO: better typing
 
 
-class TranslatedMetric(TypedDict):
+class _TranslatedMetricRequired(TypedDict):
+    scale: List[float]
+
+
+class TranslatedMetric(_TranslatedMetricRequired, total=False):
+    # All keys seem to be optional. At least in one situation there is a translation object
+    # constructed which only has the scale member (see
+    # CustomGraphPage._show_metric_type_combined_summary)
     orig_name: List[str]
     value: float
     scalar: Dict[str, float]
-    scale: List[float]
     auto_graph: bool
     title: str
     unit: UnitInfo
@@ -246,6 +252,11 @@ class TranslatedMetric(TypedDict):
 GraphIdentifier = Tuple[str, Any]
 RenderingExpression = Tuple[Any, ...]
 TranslatedMetrics = Dict[str, TranslatedMetric]
+MetricExpression = str
+LineType = str  # TODO: Literal["line", "area", "stack", "-line", "-area", "-stack"]
+MetricDefinition = Union[
+    Tuple[MetricExpression, LineType], Tuple[MetricExpression, LineType, Union[str, LazyString]]
+]
 PerfometerSpec = Dict[str, Any]
 PerfdataTuple = Tuple[
     str, float, str, Optional[float], Optional[float], Optional[float], Optional[float]

@@ -1441,50 +1441,6 @@ def test_http_proxies() -> None:
     assert config.http_proxies == {}
 
 
-@pytest.mark.parametrize(
-    "http_proxy,result",
-    [
-        ("bla", None),
-        (("no_proxy", None), ""),
-        (("environment", None), None),
-        (("global", "not_existing"), None),
-        (("global", "http_blub"), "http://blub:8080"),
-        (("global", "https_blub"), "https://blub:8181"),
-        (("global", "socks5_authed"), "socks5://us%3Aer:s%40crit@socks.proxy:443"),
-        (("url", "http://8.4.2.1:1337"), "http://8.4.2.1:1337"),
-    ],
-)
-def test_http_proxy(
-    http_proxy: Union[str, Tuple[str, Optional[str]]],
-    result: Optional[str],
-    monkeypatch: MonkeyPatch,
-) -> None:
-    monkeypatch.setattr(
-        config,
-        "http_proxies",
-        {
-            "http_blub": {
-                "ident": "blub",
-                "title": "HTTP blub",
-                "proxy_url": "http://blub:8080",
-            },
-            "https_blub": {
-                "ident": "blub",
-                "title": "HTTPS blub",
-                "proxy_url": "https://blub:8181",
-            },
-            "socks5_authed": {
-                "ident": "socks5",
-                "title": "HTTP socks5 authed",
-                "proxy_url": "socks5://us%3Aer:s%40crit@socks.proxy:443",
-            },
-        },
-    )
-
-    # config.get_hhtp_proxy only accepts Tuples, nonetheless it reacts to other types (return None)
-    assert config.get_http_proxy(http_proxy) == result  # type: ignore
-
-
 @pytest.fixture(name="service_list")
 def _service_list() -> List[Service]:
     return [

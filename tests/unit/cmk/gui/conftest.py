@@ -31,6 +31,7 @@ import cmk.gui.login as login
 import cmk.gui.watolib.activate_changes as activate_changes
 from cmk.gui import modules, watolib
 from cmk.gui.globals import config
+from cmk.gui.utils import get_failed_plugins
 from cmk.gui.utils.json import patch_json
 from cmk.gui.utils.script_helpers import application_and_request_context, session_wsgi_app
 from cmk.gui.watolib import hosts_and_folders, search
@@ -77,8 +78,8 @@ def monkeypatch(monkeypatch, request_context) -> Generator[MonkeyPatch, None, No
     The drawback here may be that we create some unnecessary application / request context objects
     for some tests. If you have an idea for a cleaner approach, let me know.
     """
-    yield monkeypatch
-    monkeypatch.undo()
+    with monkeypatch.context() as m:
+        yield m
 
 
 @pytest.fixture()
@@ -91,8 +92,9 @@ def load_config(request_context):
 
 @pytest.fixture(scope="session", autouse=True)
 def load_plugins():
-    modules.init_modules()
-    modules.call_load_plugins_hooks()
+    modules.load_plugins()
+    if errors := get_failed_plugins():
+        raise Exception(f"The following errors occured during plugin loading: {errors}")
 
 
 @pytest.fixture(name="patch_json", autouse=True)
@@ -279,7 +281,7 @@ class WebTestAppForCMK(webtest.TestApp):
         raise NotImplementedError("Format %s not implemented" % output_format)
 
     @contextmanager
-    def set_config(self, **kwargs: Dict[str, Any]) -> Iterator[None]:
+    def set_config(self, **kwargs: Any) -> Iterator[None]:
         """Patch the GUI config for the current test
 
         In normal tests, if you want to patch the GUI config, you can simply monkeypatch the

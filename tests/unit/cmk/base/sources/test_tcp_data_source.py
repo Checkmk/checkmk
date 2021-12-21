@@ -7,166 +7,13 @@
 import socket
 from pathlib import Path
 
-import pytest
-
 from tests.testlib.base import Scenario
 
 from cmk.utils.type_defs import HostName
 
-from cmk.core_helpers.agent import AgentSummarizerDefault
 from cmk.core_helpers.cache import MaxAge
 
 from cmk.base.sources.tcp import TCPSource
-
-
-@pytest.mark.parametrize(
-    "res,reported,rule",
-    [
-        (None, "127.0.0.1", None),
-        (None, None, "127.0.0.1"),
-        ((0, "Allowed IP ranges: 1.2.3.4"), "1.2.3.4", "1.2.3.4"),
-        (
-            (1, "Unexpected allowed IP ranges (exceeding: 1.2.4.6 1.2.5.6)(!)"),
-            "1.2.{3,4,5}.6",
-            "1.2.3.6",
-        ),
-        (
-            (1, "Unexpected allowed IP ranges (missing: 1.2.3.4 1.2.3.5)(!)"),
-            "1.2.3.6",
-            "1.2.3.{4,5,6}",
-        ),
-    ],
-)
-def test_tcpdatasource_only_from(monkeypatch, res, reported, rule):
-    # TODO(ml): Not only is this white box testing but all these instantiations
-    #           before the summarizer obscure the purpose of the test.  This is
-    #           way too complicated.  Test the `AgentSummarizerDefault` directly
-    #           in `tests.unit.cmk.core_helpers.test_summarizers` instead.
-    ts = Scenario().add_host("hostname")
-    ts.set_option("agent_config", {"only_from": [rule]} if rule else {})
-    config_cache = ts.apply(monkeypatch)
-
-    source = TCPSource(HostName("hostname"), "ipaddress")
-    monkeypatch.setattr(config_cache, "host_extra_conf", lambda host, ruleset: ruleset)
-
-    summarizer = AgentSummarizerDefault(
-        source.exit_spec,
-        is_cluster=source.host_config.is_cluster,
-        agent_min_version=0,
-        agent_target_version=source.host_config.agent_target_version,
-        only_from=source.host_config.only_from,
-    )
-    assert summarizer._check_only_from(reported) == res
-
-
-@pytest.mark.parametrize(
-    "restricted_address_mismatch_state, only_from, rule, res",
-    [
-        (
-            None,
-            "1.2.{3,4,5}.6",
-            "1.2.3.6",
-            (1, "Unexpected allowed IP ranges (exceeding: 1.2.4.6 1.2.5.6)(!)"),
-        ),
-        (
-            None,
-            "1.2.3.6",
-            "1.2.3.{4,5,6}",
-            (1, "Unexpected allowed IP ranges (missing: 1.2.3.4 1.2.3.5)(!)"),
-        ),
-        (
-            1,
-            "1.2.{3,4,5}.6",
-            "1.2.3.6",
-            (1, "Unexpected allowed IP ranges (exceeding: 1.2.4.6 1.2.5.6)(!)"),
-        ),
-        (
-            1,
-            "1.2.3.6",
-            "1.2.3.{4,5,6}",
-            (1, "Unexpected allowed IP ranges (missing: 1.2.3.4 1.2.3.5)(!)"),
-        ),
-        (
-            0,
-            "1.2.{3,4,5}.6",
-            "1.2.3.6",
-            (0, "Unexpected allowed IP ranges (exceeding: 1.2.4.6 1.2.5.6)"),
-        ),
-        (
-            0,
-            "1.2.3.6",
-            "1.2.3.{4,5,6}",
-            (0, "Unexpected allowed IP ranges (missing: 1.2.3.4 1.2.3.5)"),
-        ),
-        (
-            2,
-            "1.2.{3,4,5}.6",
-            "1.2.3.6",
-            (2, "Unexpected allowed IP ranges (exceeding: 1.2.4.6 1.2.5.6)(!!)"),
-        ),
-        (
-            2,
-            "1.2.3.6",
-            "1.2.3.{4,5,6}",
-            (2, "Unexpected allowed IP ranges (missing: 1.2.3.4 1.2.3.5)(!!)"),
-        ),
-        (
-            3,
-            "1.2.{3,4,5}.6",
-            "1.2.3.6",
-            (3, "Unexpected allowed IP ranges (exceeding: 1.2.4.6 1.2.5.6)(?)"),
-        ),
-        (
-            3,
-            "1.2.3.6",
-            "1.2.3.{4,5,6}",
-            (3, "Unexpected allowed IP ranges (missing: 1.2.3.4 1.2.3.5)(?)"),
-        ),
-    ],
-)
-def test_tcpdatasource_restricted_address_mismatch(
-    monkeypatch,
-    restricted_address_mismatch_state,
-    only_from,
-    rule,
-    res,
-):
-    # TODO(ml): Not only is this white box testing but all these instantiations
-    #           before the summarizer obscure the purpose of the test.  This is
-    #           way too complicated.  Test the `AgentSummarizerDefault` directly
-    #           in `tests.unit.cmk.core_helpers.test_summarizers` instead.
-    hostname = HostName("hostname")
-
-    ts = Scenario().add_host(hostname)
-    ts.set_option("agent_config", {"only_from": [(rule, [], [str(hostname)], {})]})
-
-    if restricted_address_mismatch_state is not None:
-        ts.set_ruleset(
-            "check_mk_exit_status",
-            [
-                (
-                    {
-                        "restricted_address_mismatch": restricted_address_mismatch_state,
-                    },
-                    [],
-                    [str(hostname)],
-                    {},
-                ),
-            ],
-        )
-
-    ts.apply(monkeypatch)
-    source = TCPSource(hostname, "ipaddress")
-
-    summarizer = AgentSummarizerDefault(
-        source.exit_spec,
-        is_cluster=source.host_config.is_cluster,
-        agent_min_version=0,
-        agent_target_version=source.host_config.agent_target_version,
-        only_from=source.host_config.only_from,
-    )
-
-    assert summarizer._check_only_from(only_from) == res
 
 
 def test_attribute_defaults(monkeypatch):
@@ -187,6 +34,7 @@ def test_attribute_defaults(monkeypatch):
         },
         "family": socket.AF_INET,
         "address": (ipaddress, 6556),
+        "host_name": str(hostname),
         "timeout": 5.0,
         "encryption_settings": {
             "use_realtime": "enforce",

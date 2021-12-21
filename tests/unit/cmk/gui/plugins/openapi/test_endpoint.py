@@ -1,8 +1,14 @@
-def test_openapi_accept_header_missing(wsgi_app, with_automation_user):
-    username, secret = with_automation_user
-    wsgi_app.set_authorization(("Bearer", username + " " + secret))
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
-    resp = wsgi_app.call_method(
+from tests.unit.cmk.gui.conftest import WebTestAppForCMK
+
+
+def test_openapi_accept_header_missing(aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
+    resp = aut_user_auth_wsgi_app.call_method(
         "get",
         "/NO_SITE/check_mk/api/1.0/domain-types/folder_config/collections/all",
         status=406,
@@ -14,11 +20,8 @@ def test_openapi_accept_header_missing(wsgi_app, with_automation_user):
     }
 
 
-def test_openapi_accept_header_matches(wsgi_app, with_automation_user):
-    username, secret = with_automation_user
-    wsgi_app.set_authorization(("Bearer", username + " " + secret))
-
-    resp = wsgi_app.call_method(
+def test_openapi_accept_header_matches(aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
+    resp = aut_user_auth_wsgi_app.call_method(
         "get",
         "/NO_SITE/check_mk/api/1.0/domain-types/folder_config/collections/all",
         {},  # params
@@ -28,11 +31,8 @@ def test_openapi_accept_header_matches(wsgi_app, with_automation_user):
     assert resp.json["value"] == []
 
 
-def test_openapi_accept_header_invalid(wsgi_app, with_automation_user):
-    username, secret = with_automation_user
-    wsgi_app.set_authorization(("Bearer", username + " " + secret))
-
-    resp = wsgi_app.call_method(
+def test_openapi_accept_header_invalid(aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
+    resp = aut_user_auth_wsgi_app.call_method(
         "get",
         "/NO_SITE/check_mk/api/1.0/domain-types/folder_config/collections/all",
         {},  # params

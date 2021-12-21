@@ -7,8 +7,8 @@
 import cmk.gui.inventory as inventory
 from cmk.gui.globals import user
 from cmk.gui.i18n import _
-from cmk.gui.plugins.views import url_to_visual
-from cmk.gui.plugins.views.icons import Icon, icon_and_action_registry
+from cmk.gui.plugins.views.icons.utils import Icon, icon_and_action_registry
+from cmk.gui.plugins.views.utils import url_to_visual
 from cmk.gui.type_defs import VisualLinkSpec
 
 

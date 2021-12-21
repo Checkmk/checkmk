@@ -9,8 +9,8 @@ import cmk.gui.visuals as visuals
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.globals import display_options, html, request
 from cmk.gui.i18n import _
-from cmk.gui.plugins.dashboard import dashlet_registry, IFrameDashlet
-from cmk.gui.plugins.views import PainterOptions
+from cmk.gui.plugins.dashboard.utils import dashlet_registry, IFrameDashlet
+from cmk.gui.plugins.views.utils import PainterOptions
 from cmk.gui.type_defs import ViewSpec
 from cmk.gui.utils.urls import makeuri, makeuri_contextless, requested_file_name, urlencode
 from cmk.gui.valuespec import DropdownChoice

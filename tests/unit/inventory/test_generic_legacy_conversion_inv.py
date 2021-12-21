@@ -9,7 +9,6 @@ import pytest
 
 from cmk.utils.type_defs import InventoryPluginName
 
-import cmk.base.api.agent_based.register as agent_based_register
 from cmk.base.api.agent_based.inventory_classes import Attributes
 
 pytestmark = pytest.mark.checks

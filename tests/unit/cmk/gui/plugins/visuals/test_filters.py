@@ -193,7 +193,7 @@ filter_tests = [
         request_vars=[("event_facility", "0")],
         expected_filters="Filter: event_facility = 0\n",
     ),
-    # Testing base class FilterNagiosFlag, FilterTristate
+    # Testing base class FilterNagiosFlag, FilterOption
     FilterTest(
         ident="event_host_in_downtime",
         request_vars=[
@@ -223,7 +223,7 @@ filter_tests = [
             "Filter: event_phase = ack\n" "Filter: event_phase = counting\n" "Or: 2\n"
         ),
     ),
-    # Testing base class FilterNagiosExpression, FilterTristate
+    # Testing base class FilterOption
     FilterTest(
         ident="has_performance_data",
         request_vars=[("is_has_performance_data", "0")],
@@ -280,7 +280,7 @@ filter_tests = [
         ],
         expected_filters="Filter: host_custom_variables ~~ BLA ^blubz\n",
     ),
-    # Testing base class FilterStarred, FilterTristate
+    # Testing base class FilterStarred, FilterOption
     FilterTest(
         ident="host_favorites",
         request_vars=[("is_host_favorites", "0")],
@@ -1107,24 +1107,17 @@ def test_filters_display_with_empty_request(request_context, live):
 
 
 def _set_expected_queries(filt_ident, live):
-    if filt_ident in ["hostgroups", "opthostgroup", "hostgroup"]:
+    if filt_ident in ["hostgroups"]:
         live.expect_query("GET hostgroups\nCache: reload\nColumns: name alias\n")
-        if filt_ident == "hostgroups":
-            live.expect_query("GET hostgroups\nCache: reload\nColumns: name alias\n")
         return
 
-    if filt_ident in ["servicegroups", "optservicegroup", "servicegroup"]:
+    if filt_ident in ["servicegroups"]:
         live.expect_query("GET servicegroups\nCache: reload\nColumns: name alias\n")
-        if filt_ident == "servicegroups":
-            live.expect_query("GET servicegroups\nCache: reload\nColumns: name alias\n")
         return
 
     if filt_ident in [
         "contactgroups",
         "optcontactgroup",
-        "opthost_contactgroup",
-        "optservice_contactgroup",
-        "optevent_effective_contactgroup",
     ]:
         live.expect_query("GET contactgroups\nCache: reload\nColumns: name alias\n")
         if filt_ident == "contactgroups":

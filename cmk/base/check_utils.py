@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Dict, Final, Generic, Mapping, Optional, Sequence, Tuple, TypeVar, Union
+from typing import Any, Dict, Final, Generic, Mapping, Optional, Tuple, TypeVar, Union
 
 from cmk.utils.parameters import TimespecificParameters
 from cmk.utils.type_defs import CheckPluginName, Item, LegacyCheckParameters
@@ -80,23 +80,3 @@ class AutocheckService(Service[LegacyCheckParameters]):
     ones.
     More importantly: an general 'Service' instance may not be dumped into the autochecks file.
     """
-
-
-_TService = TypeVar("_TService", bound=Service)
-
-
-def deduplicate_autochecks(autochecks: Sequence[_TService]) -> Sequence[_TService]:
-    """Cleanup duplicates
-
-    (in particular versions pre 1.6.0p8 may have introduced some in the autochecks file)
-
-    The first service is kept:
-
-    >>> deduplicate_autochecks([
-    ...    AutocheckService(CheckPluginName('a'), None, "desctiption 1", None),
-    ...    AutocheckService(CheckPluginName('a'), None, "description 2", None),
-    ... ])[0].description
-    'desctiption 1'
-
-    """
-    return list({a.id(): a for a in reversed(autochecks)}.values())

@@ -34,7 +34,7 @@ from cmk.gui.page_menu import (
     PageMenuSidePopup,
     PageMenuTopic,
 )
-from cmk.gui.plugins.wato import flash, make_confirm_link, mode_registry, redirect, WatoMode
+from cmk.gui.plugins.wato.utils import flash, make_confirm_link, mode_registry, redirect, WatoMode
 from cmk.gui.table import table_element
 from cmk.gui.type_defs import ActionResult, Choices
 from cmk.gui.userdb import UserSelection

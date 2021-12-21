@@ -613,7 +613,8 @@ void ServiceProcessor::mainThread(world::ExternalPort* ex_port) noexcept {
                     // called upon kicking in port, i.e. LATER. NOT NOW.
                     //
                     prepareAnswer(ip_addr, rt_device);
-                    XLOG::d.i("Generating answer number [{}]", answer_.num());
+                    XLOG::d.i("Generating answer with id [{}]",
+                              answer_.getId().time_since_epoch().count());
                     return generateAnswer(ip_addr);
                 });
             ON_OUT_OF_SCOPE({

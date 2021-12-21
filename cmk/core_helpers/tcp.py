@@ -7,12 +7,15 @@
 import copy
 import logging
 import socket
+import ssl
 from typing import Any, Final, List, Mapping, Optional, Tuple
 
 import cmk.utils.debug
+from cmk.utils import paths
+from cmk.utils.agent_registration import UUIDLinkManager
 from cmk.utils.encryption import decrypt_by_agent_protocol, TransportProtocol
 from cmk.utils.exceptions import MKFetcherError
-from cmk.utils.type_defs import AgentRawData, HostAddress
+from cmk.utils.type_defs import AgentRawData, HostAddress, HostName
 
 from ._base import verify_ipaddress
 from .agent import AgentFetcher, DefaultAgentFileCache
@@ -27,6 +30,7 @@ class TCPFetcher(AgentFetcher):
         family: socket.AddressFamily,
         address: Tuple[Optional[HostAddress], int],
         timeout: float,
+        host_name: HostName,
         encryption_settings: Mapping[str, str],
         use_only_cache: bool,
     ) -> None:
@@ -35,6 +39,7 @@ class TCPFetcher(AgentFetcher):
         # json has no builtin tuple, we have to convert
         self.address: Final[Tuple[Optional[HostAddress], int]] = (address[0], address[1])
         self.timeout: Final = timeout
+        self.host_name: Final = host_name
         self.encryption_settings: Final = encryption_settings
         self.use_only_cache: Final = use_only_cache
         self._opt_socket: Optional[socket.socket] = None
@@ -53,6 +58,7 @@ class TCPFetcher(AgentFetcher):
                     f"{type(self.file_cache).__name__}",
                     f"family={self.family!r}",
                     f"timeout={self.timeout!r}",
+                    f"host_name={self.host_name!r}",
                     f"encryption_settings={self.encryption_settings!r}",
                     f"use_only_cache={self.use_only_cache!r}",
                 )
@@ -64,9 +70,11 @@ class TCPFetcher(AgentFetcher):
     def _from_json(cls, serialized: Mapping[str, Any]) -> "TCPFetcher":
         serialized_ = copy.deepcopy(dict(serialized))
         address: Tuple[Optional[HostAddress], int] = serialized_.pop("address")
+        host_name = HostName(serialized_.pop("host_name"))
         return cls(
             DefaultAgentFileCache.from_json(serialized_.pop("file_cache")),
             address=address,
+            host_name=host_name,
             **serialized_,
         )
 
@@ -76,6 +84,7 @@ class TCPFetcher(AgentFetcher):
             "family": self.family,
             "address": self.address,
             "timeout": self.timeout,
+            "host_name": str(self.host_name),
             "encryption_settings": self.encryption_settings,
             "use_only_cache": self.use_only_cache,
         }
@@ -113,27 +122,73 @@ class TCPFetcher(AgentFetcher):
                 "Got no data: No usable cache file present at %s" % self.file_cache.base_path
             )
 
-        protocol = self._detect_transport_protocol()
+        agent_data, protocol = self._get_agent_data()
+        return self._validate_decrypted_data(self._decrypt(protocol, agent_data))
 
-        return self._validate_decrypted_data(self._decrypt(protocol, self._raw_data()))
-
-    def _detect_transport_protocol(self) -> TransportProtocol:
+    def _get_agent_data(self) -> Tuple[AgentRawData, TransportProtocol]:
         try:
             raw_protocol = self._socket.recv(2, socket.MSG_WAITALL)
         except socket.error as e:
             raise MKFetcherError(f"Communication failed: {e}") from e
 
+        protocol = self._detect_transport_protocol(raw_protocol)
+
+        self._validate_protocol(protocol)
+
+        if protocol is TransportProtocol.TLS:
+            with self._wrap_tls() as ssock:
+                agent_data = self._recvall(ssock)
+            return AgentRawData(agent_data[2:]), self._detect_transport_protocol(agent_data[:2])
+
+        return AgentRawData(self._recvall(self._socket, socket.MSG_WAITALL)), protocol
+
+    def _detect_transport_protocol(self, raw_protocol: bytes) -> TransportProtocol:
         try:
-            return TransportProtocol(raw_protocol)
+            protocol = TransportProtocol(raw_protocol)
+            self._logger.debug("Detected transport protocol: {protocol} ({raw_protocol!r})")
+            return protocol
         except ValueError:
             raise MKFetcherError(f"Unknown transport protocol: {raw_protocol!r}")
 
-    def _raw_data(self) -> AgentRawData:
-        self._logger.debug("Reading data from agent")
-        return AgentRawData(self._recvall(self._socket, socket.MSG_WAITALL))
+    def _validate_protocol(self, protocol: TransportProtocol) -> None:
+        if protocol is TransportProtocol.TLS:
+            return
 
-    @staticmethod
-    def _recvall(sock: socket.socket, flags: int = 0) -> bytes:
+        enc_setting = self.encryption_settings["use_regular"]
+        if enc_setting == "tls":
+            raise MKFetcherError("Refused: TLS not supported by agent")
+
+        if protocol is TransportProtocol.PLAIN:
+            if enc_setting in ("disable", "allow"):
+                return
+            raise MKFetcherError(
+                "Agent output is plaintext but encryption is enforced by configuration"
+            )
+
+        if enc_setting == "disable":
+            raise MKFetcherError(
+                "Agent output is encrypted but encryption is disabled by configuration"
+            )
+
+    def _wrap_tls(self) -> ssl.SSLSocket:
+        controller_uuid = UUIDLinkManager(
+            received_outputs_dir=paths.received_outputs_dir,
+            data_source_dir=paths.data_source_push_agent_dir,
+        ).get_uuid(self.host_name)
+
+        if controller_uuid is None:
+            raise MKFetcherError("Agent controller not registered")
+
+        self._logger.debug("Reading data from agent via TLS socket")
+        try:
+            ctx = ssl.create_default_context(cafile=paths.root_cert_file)
+            ctx.load_cert_chain(certfile=paths.site_cert_file)
+            return ctx.wrap_socket(self._socket, server_hostname=str(controller_uuid))
+        except ssl.SSLError as e:
+            raise MKFetcherError("Error establishing TLS connection") from e
+
+    def _recvall(self, sock: socket.socket, flags: int = 0) -> bytes:
+        self._logger.debug("Reading data from agent")
         buffer: List[bytes] = []
         try:
             while True:
@@ -153,38 +208,19 @@ class TCPFetcher(AgentFetcher):
             return output  # nothing to to, validation will fail
 
         if protocol is TransportProtocol.PLAIN:
-            self._logger.debug("Output is not encrypted")
-            if self.encryption_settings["use_regular"] == "enforce":
-                raise MKFetcherError(
-                    "Agent output is plaintext but encryption is enforced by configuration"
-                )
             return protocol.value + output  # bring back stolen bytes
 
-        self._logger.debug("Output is encrypted or invalid")
-        if self.encryption_settings["use_regular"] == "disable":
-            raise MKFetcherError(
-                "Agent output is either invalid or encrypted but encryption is disabled by configuration"
-            )
-
+        self._logger.debug("Try to decrypt output")
         try:
-            self._logger.debug("Try to decrypt output")
-            output = AgentRawData(
+            return AgentRawData(
                 decrypt_by_agent_protocol(
                     self.encryption_settings["passphrase"],
                     protocol,
                     output,
                 )
             )
-        except MKFetcherError:
-            raise
         except Exception as e:
-            if self.encryption_settings["use_regular"] == "enforce":
-                raise MKFetcherError("Failed to decrypt agent output: %s" % e)
-
-        # of course the package might indeed have been encrypted but
-        # in an incorrect format, but how would we find that out?
-        # In this case processing the output will fail
-        return output
+            raise MKFetcherError("Failed to decrypt agent output: %s" % e) from e
 
     def _validate_decrypted_data(self, output: AgentRawData) -> AgentRawData:
         if not output:  # may be caused by xinetd not allowing our address

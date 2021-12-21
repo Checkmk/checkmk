@@ -54,19 +54,33 @@ def _image_name(version):
     return "docker-tests/check-mk-%s-%s-%s" % (version.edition(), branch_name, version.version)
 
 
+def _package_name(version: testlib.CMKVersion) -> str:
+    return f"check-mk-{version.edition()}-{version.version}_0.buster_amd64.deb"
+
+
 def _prepare_build():
     assert subprocess.Popen(["make", "needed-packages"], cwd=build_path).wait() == 0
 
 
-def _prepare_packages(version: testlib.CMKVersion):
+def _prepare_package(version: testlib.CMKVersion):
     """On Jenkins copies a previously built package to the build path."""
     if "WORKSPACE" not in os.environ:
+        logger.info("Not executed on CI: Do not prepare a Checkmk .deb in %s", build_path)
         return
 
-    package_path = Path(os.environ["WORKSPACE"], "packages", version.version)
-    if package_path.exists():
-        for package in package_path.iterdir():
-            Path(build_path, package.name).write_bytes(package.read_bytes())
+    source_package_path = Path(
+        os.environ["WORKSPACE"], "packages", version.version, _package_name(version)
+    )
+    test_package_path = Path(build_path, _package_name(version))
+
+    logger.info("Executed on CI: Preparing package %s", test_package_path)
+
+    if test_package_path.exists():
+        logger.info("File already exists - Fine")
+        return
+
+    logger.info("Copying from %s", source_package_path)
+    test_package_path.write_bytes(source_package_path.read_bytes())
 
 
 def resolve_image_alias(alias):
@@ -85,7 +99,7 @@ def _build(request, client, version, prepare_package=True):
     _prepare_build()
 
     if prepare_package:
-        _prepare_packages(version)
+        _prepare_package(version)
 
     logger.info("Starting helper container for build secrets")
     secret_container = client.containers.run(
@@ -111,16 +125,26 @@ def _build(request, client, version, prepare_package=True):
             },
         )
     except docker.errors.BuildError as e:
-        logger.info("= Build log ==================")
+        logger.error("= Build log ==================")
         for entry in e.build_log:
             if "stream" in entry:
-                logger.info(entry["stream"])
+                logger.error(entry["stream"])
             elif "errorDetail" in entry:
                 continue  # Is already part of the exception message
             else:
-                logger.info("UNEXPECTED FORMAT: %r", entry)
-        logger.info("= Build log ==================")
+                logger.error("UNEXPECTED FORMAT: %r", entry)
+        logger.error("= Build log ==================")
         raise
+
+    logger.info("(Set pytest log level to DEBUG (--log-cli-level=DEBUG) to see the build log)")
+    for entry in build_logs:
+        if "stream" in entry:
+            logger.debug(entry["stream"].rstrip())
+        elif "aux" in entry:
+            logger.debug(entry["aux"])
+        else:
+            logger.debug("UNEXPECTED FORMAT: %r", entry)
+    logger.debug("= Build log ==================")
 
     # TODO: Enable this on CI system. Removing during development slows down testing
     # request.addfinalizer(lambda: client.images.remove(image.id, force=True))
@@ -215,7 +239,9 @@ def _start(request, client, version=None, is_update=False, **kwargs):
             assert "cmkadmin with password:" not in output
 
         assert "STARTING SITE" in output
-        assert _exec_run(c, ["omd", "status"], user=site_id)[0] == 0
+
+        exit_code, status_output = _exec_run(c, ["omd", "status"], user=site_id)
+        assert exit_code == 0, f"Status is {exit_code}. Output: {status_output}"
     finally:
         logger.debug("Log so far: %s", c.logs().decode("utf-8"))
 
@@ -321,12 +347,12 @@ def test_start_with_custom_command(request, client, version):
 
 # Test that the local deb package is used by making the build fail because of an empty file
 def test_build_using_local_deb(request, client, version):
-    package_name = f"check-mk-{version.edition()}-{version.version}_0.buster_amd64.deb"
-    package_path = Path(build_path, package_name)
+    package_path = Path(build_path, _package_name(version))
     package_path.write_bytes(b"")
     with pytest.raises(docker.errors.BuildError):
         _build(request, client, version, prepare_package=False)
     os.unlink(str(package_path))
+    _prepare_package(version)
 
 
 # Test that the deb package from the download server is used.
@@ -336,8 +362,7 @@ def test_build_using_package_from_download_server(request, client, version):
         version.edition() == "enterprise" and re.match(r"^\d\d\d\d\.\d\d\.\d\d$", version.version)
     ):
         pytest.skip("only enterprise daily packages are available on the download server")
-    package_name = f"check-mk-{version.edition()}-{version.version}_0.buster_amd64.deb"
-    package_path = Path(build_path, package_name)
+    package_path = Path(build_path, _package_name(version))
     # make sure no local package is used.
     if package_path.exists():
         os.unlink(str(package_path))

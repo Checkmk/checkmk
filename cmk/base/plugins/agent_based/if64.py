@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Dict, List, Mapping, Optional, Sequence
+from typing import Any, Dict, Mapping, Optional, Sequence
 
 from .agent_based_api.v1 import register, SNMPTree, type_defs
 from .utils import if64, interfaces
@@ -12,19 +12,17 @@ from .utils import if64, interfaces
 If64AdmSection = Sequence[str]
 
 
-def parse_if64adm(string_table: List[type_defs.StringTable]) -> If64AdmSection:
-    return [sub_table[0] for sub_table in string_table[0]]
+def parse_if64adm(string_table: type_defs.StringTable) -> If64AdmSection:
+    return [sub_table[0] for sub_table in string_table]
 
 
 register.snmp_section(
     name="if64",
     parse_function=if64.parse_if64,
-    fetch=[
-        SNMPTree(
-            base=if64.BASE_OID,
-            oids=if64.END_OIDS,
-        ),
-    ],
+    fetch=SNMPTree(
+        base=if64.BASE_OID,
+        oids=if64.END_OIDS,
+    ),
     detect=if64.HAS_ifHCInOctets,
     supersedes=["if", "statgrab_net"],
 )
@@ -35,12 +33,10 @@ register.snmp_section(
 register.snmp_section(
     name="if64adm",
     parse_function=parse_if64adm,
-    fetch=[
-        SNMPTree(
-            base=if64.BASE_OID,
-            oids=["2.2.1.7"],  # ifAdminStatus
-        ),
-    ],
+    fetch=SNMPTree(
+        base=if64.BASE_OID,
+        oids=["2.2.1.7"],  # ifAdminStatus
+    ),
     detect=if64.HAS_ifHCInOctets,
 )
 

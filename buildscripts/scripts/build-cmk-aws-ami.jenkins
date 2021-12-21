@@ -56,26 +56,27 @@ node (NODE) {
     }
 
     try {
-        def IMAGE
-        stage('Build AMI') {
-            dir('buildscripts/infrastructure/build-nodes') {
-                sh('cp ../../../defines.make scripts')  // we need it *within* the context :-P
-                def DOCKER_REGISTRY_NOHTTP = str_mod.strip_protocol_from_url(DOCKER_REGISTRY)
-                withCredentials([usernamePassword(credentialsId: 'nexus', usernameVariable: 'NEXUS_USERNAME', passwordVariable: 'NEXUS_PASSWORD')]) {
-                    docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
-                        def IMAGE_ALIAS_NAME = "IMAGE_UBUNTU_21_04"
-                        def RESOLVED_IMAGE_ID = sh(script: "../../docker_image_aliases/resolve.sh ${IMAGE_ALIAS_NAME}", returnStdout: true).replaceAll("[\r\n]+", "");
-                        println("Using IMAGE_ALIAS_NAME: ${IMAGE_ALIAS_NAME}=${RESOLVED_IMAGE_ID}");
+        dir('buildscripts/infrastructure/build-nodes') {
+            sh('cp ../../../defines.make scripts')  // we need it *within* the context :-P
+            def DOCKER_REGISTRY_NOHTTP = str_mod.strip_protocol_from_url(DOCKER_REGISTRY)
+            withCredentials([usernamePassword(credentialsId: 'nexus', usernameVariable: 'NEXUS_USERNAME', passwordVariable: 'NEXUS_PASSWORD')]) {
+                docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
+                    def IMAGE_ALIAS_NAME = "IMAGE_UBUNTU_21_04"
+                    def RESOLVED_IMAGE_ID = sh(script: "../../docker_image_aliases/resolve.sh ${IMAGE_ALIAS_NAME}", returnStdout: true).replaceAll("[\r\n]+", "");
+                    println("Using IMAGE_ALIAS_NAME: ${IMAGE_ALIAS_NAME}=${RESOLVED_IMAGE_ID}");
 
-                        upload.download_version_dir(INTERNAL_DEPLOY_DEST, INTERNAL_DEPLOY_PORT, CMK_VERS, PACKAGE_DIR)
+                    sh("rm -rf \"${PACKAGE_DIR}\"")
+                    upload.download_deb(INTERNAL_DEPLOY_DEST, INTERNAL_DEPLOY_PORT, CMK_VERS, PACKAGE_DIR, EDITION, "focal")
+
+                    stage('Build AMI')  {
                         sh("pwd")
                         sh("ls -l ${WORKSPACE}/buildscripts/infrastructure/build-nodes/aws")
                         sh("set")
                         def DOCKER_ARGS = (
-                            " --build-arg $IMAGE_ALIAS_NAME=$RESOLVED_IMAGE_ID" + 
-                            " --build-arg DOCKER_REGISTRY='$DOCKER_REGISTRY_NOHTTP'" + 
+                            " --build-arg $IMAGE_ALIAS_NAME=$RESOLVED_IMAGE_ID" +
+                            " --build-arg DOCKER_REGISTRY='$DOCKER_REGISTRY_NOHTTP'" +
                             " --build-arg NEXUS_ARCHIVES_URL='$NEXUS_ARCHIVES_URL'" +
-                            " --build-arg NEXUS_USERNAME='$NEXUS_USERNAME'" + 
+                            " --build-arg NEXUS_USERNAME='$NEXUS_USERNAME'" +
                             " --build-arg NEXUS_PASSWORD='$NEXUS_PASSWORD'" +
                             " --build-arg ARTIFACT_STORAGE='$ARTIFACT_STORAGE'" +
                             "  ${WORKSPACE}/buildscripts/infrastructure/build-nodes/aws/");

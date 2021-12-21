@@ -11,7 +11,6 @@ import pytest
 
 import cmk.utils.version as cmk_version
 
-import cmk.gui.plugins.visuals
 import cmk.gui.plugins.visuals.filters
 import cmk.gui.plugins.visuals.utils as utils
 import cmk.gui.views
@@ -21,24 +20,24 @@ from cmk.gui.globals import request
 
 def test_get_filter():
     f = visuals.get_filter("hostregex")
-    assert isinstance(f, cmk.gui.plugins.visuals.Filter)
+    assert isinstance(f, utils.Filter)
 
 
 def test_get_not_existing_filter():
     with pytest.raises(KeyError):
         visuals.get_filter("dingelig")
 
-
+# TODO: The Next two are really poor tests. Put something better
 def test_filters_allowed_for_info():
     allowed = dict(visuals.filters_allowed_for_info("host"))
-    assert isinstance(allowed["host"], cmk.gui.plugins.visuals.filters.FilterText)
+    assert isinstance(allowed["host"], cmk.gui.plugins.visuals.filters.AjaxDropdownFilter)
     assert "service" not in allowed
 
 
 def test_filters_allowed_for_infos():
     allowed = visuals.filters_allowed_for_infos(["host", "service"])
-    assert isinstance(allowed["host"], cmk.gui.plugins.visuals.filters.FilterText)
-    assert isinstance(allowed["service"], cmk.gui.plugins.visuals.filters.FilterText)
+    assert isinstance(allowed["host"], cmk.gui.plugins.visuals.filters.AjaxDropdownFilter)
+    assert isinstance(allowed["service"], cmk.gui.plugins.visuals.filters.AjaxDropdownFilter)
 
 
 def _expected_visual_types():
@@ -233,7 +232,7 @@ expected_filters: Dict[str, Dict[str, Any]] = {
     'comment_author': {
         'column': 'comment_author',
         'comment': None,
-        'filter_class': 'FilterText',
+        'filter_class': 'InputTextFilter',
         'htmlvars': ['comment_author', 'neg_comment_author'],
         'info': 'comment',
         'link_columns': ['comment_author'],
@@ -243,7 +242,7 @@ expected_filters: Dict[str, Dict[str, Any]] = {
     'comment_comment': {
         'column': 'comment_comment',
         'comment': None,
-        'filter_class': 'FilterText',
+        'filter_class': 'InputTextFilter',
         'htmlvars': ['comment_comment', 'neg_comment_comment'],
         'info': 'comment',
         'link_columns': ['comment_comment'],
@@ -366,7 +365,7 @@ expected_filters: Dict[str, Dict[str, Any]] = {
     'downtime_author': {
         'column': 'downtime_author',
         'comment': None,
-        'filter_class': 'FilterText',
+        'filter_class': 'InputTextFilter',
         'htmlvars': ['downtime_author'],
         'info': 'downtime',
         'link_columns': ['downtime_author'],
@@ -376,7 +375,7 @@ expected_filters: Dict[str, Dict[str, Any]] = {
     'downtime_comment': {
         'column': 'downtime_comment',
         'comment': None,
-        'filter_class': 'FilterText',
+        'filter_class': 'InputTextFilter',
         'htmlvars': ['downtime_comment'],
         'info': 'downtime',
         'link_columns': ['downtime_comment'],
@@ -399,7 +398,7 @@ expected_filters: Dict[str, Dict[str, Any]] = {
     'downtime_id': {
         'column': 'downtime_id',
         'comment': None,
-        'filter_class': 'FilterText',
+        'filter_class': 'InputTextFilter',
         'htmlvars': ['downtime_id'],
         'info': 'downtime',
         'link_columns': ['downtime_id'],
@@ -422,7 +421,7 @@ expected_filters: Dict[str, Dict[str, Any]] = {
     'event_application': {
         'column': 'event_application',
         'comment': None,
-        'filter_class': 'FilterText',
+        'filter_class': 'InputTextFilter',
         'htmlvars': ['event_application'],
         'info': 'event',
         'link_columns': ['event_application'],
@@ -432,7 +431,7 @@ expected_filters: Dict[str, Dict[str, Any]] = {
     'event_comment': {
         'column': 'event_comment',
         'comment': None,
-        'filter_class': 'FilterText',
+        'filter_class': 'InputTextFilter',
         'htmlvars': ['event_comment'],
         'info': 'event',
         'link_columns': ['event_comment'],
@@ -442,7 +441,7 @@ expected_filters: Dict[str, Dict[str, Any]] = {
     'event_contact': {
         'column': 'event_contact',
         'comment': None,
-        'filter_class': 'FilterText',
+        'filter_class': 'InputTextFilter',
         'htmlvars': ['event_contact'],
         'info': 'event',
         'link_columns': ['event_contact'],
@@ -483,7 +482,7 @@ expected_filters: Dict[str, Dict[str, Any]] = {
     'event_host': {
         'column': 'event_host',
         'comment': None,
-        'filter_class': 'FilterText',
+        'filter_class': 'InputTextFilter',
         'htmlvars': ['event_host'],
         'info': 'event',
         'link_columns': ['event_host'],
@@ -503,7 +502,7 @@ expected_filters: Dict[str, Dict[str, Any]] = {
     'event_host_regex': {
         'column': 'event_host',
         'comment': None,
-        'filter_class': 'FilterText',
+        'filter_class': 'InputTextFilter',
         'htmlvars': ['event_host'],
         'info': 'event',
         'link_columns': ['event_host'],
@@ -513,7 +512,7 @@ expected_filters: Dict[str, Dict[str, Any]] = {
     'event_id': {
         'column': 'event_id',
         'comment': None,
-        'filter_class': 'FilterText',
+        'filter_class': 'InputTextFilter',
         'htmlvars': ['event_id'],
         'info': 'event',
         'link_columns': ['event_id'],
@@ -523,7 +522,7 @@ expected_filters: Dict[str, Dict[str, Any]] = {
     'event_ipaddress': {
         'column': 'event_ipaddress',
         'comment': None,
-        'filter_class': 'FilterText',
+        'filter_class': 'InputTextFilter',
         'htmlvars': ['event_ipaddress'],
         'info': 'event',
         'link_columns': ['event_ipaddress'],
@@ -545,7 +544,7 @@ expected_filters: Dict[str, Dict[str, Any]] = {
     'event_owner': {
         'column': 'event_owner',
         'comment': None,
-        'filter_class': 'FilterText',
+        'filter_class': 'InputTextFilter',
         'htmlvars': ['event_owner'],
         'info': 'event',
         'link_columns': ['event_owner'],
@@ -579,7 +578,7 @@ expected_filters: Dict[str, Dict[str, Any]] = {
     'event_rule_id': {
         'column': 'event_rule_id',
         'comment': None,
-        'filter_class': 'FilterText',
+        'filter_class': 'InputTextFilter',
         'htmlvars': ['event_rule_id'],
         'info': 'event',
         'link_columns': ['event_rule_id'],
@@ -616,7 +615,7 @@ expected_filters: Dict[str, Dict[str, Any]] = {
     'event_text': {
         'column': 'event_text',
         'comment': None,
-        'filter_class': 'FilterText',
+        'filter_class': 'InputTextFilter',
         'htmlvars': ['event_text'],
         'info': 'event',
         'link_columns': ['event_text'],
@@ -636,7 +635,7 @@ expected_filters: Dict[str, Dict[str, Any]] = {
     'has_performance_data': {
         'column': None,
         'comment': None,
-        'filter_class': 'FilterNagiosExpression',
+        'filter_class': 'FilterOption',
         'htmlvars': ['is_has_performance_data'],
         'info': 'service',
         'link_columns': [],
@@ -646,7 +645,7 @@ expected_filters: Dict[str, Dict[str, Any]] = {
     'history_line': {
         'column': 'history_line',
         'comment': None,
-        'filter_class': 'FilterText',
+        'filter_class': 'InputTextFilter',
         'htmlvars': ['history_line'],
         'info': 'history',
         'link_columns': ['history_line'],
@@ -684,7 +683,7 @@ expected_filters: Dict[str, Dict[str, Any]] = {
     'history_who': {
         'column': 'history_who',
         'comment': None,
-        'filter_class': 'FilterText',
+        'filter_class': 'InputTextFilter',
         'htmlvars': ['history_who'],
         'info': 'history',
         'link_columns': ['history_who'],
@@ -694,7 +693,7 @@ expected_filters: Dict[str, Dict[str, Any]] = {
     'host': {
         'column': 'host_name',
         'comment': u'Exact match, used for linking',
-        'filter_class': 'FilterText',
+        'filter_class': 'InputTextFilter',
         'htmlvars': ['host', 'neg_host'],
         'info': 'host',
         'link_columns': ['host_name'],
@@ -754,7 +753,7 @@ expected_filters: Dict[str, Dict[str, Any]] = {
     'host_ctc': {
         'column': 'host_contacts',
         'comment': None,
-        'filter_class': 'FilterText',
+        'filter_class': 'InputTextFilter',
         'htmlvars': ['host_ctc'],
         'info': 'host',
         'link_columns': ['host_contacts'],
@@ -764,7 +763,7 @@ expected_filters: Dict[str, Dict[str, Any]] = {
     'host_ctc_regex': {
         'column': 'host_contacts',
         'comment': None,
-        'filter_class': 'FilterText',
+        'filter_class': 'InputTextFilter',
         'htmlvars': ['host_ctc_regex'],
         'info': 'host',
         'link_columns': ['host_contacts'],
@@ -888,7 +887,7 @@ expected_filters: Dict[str, Dict[str, Any]] = {
     'host_staleness': {
         'column': None,
         'comment': None,
-        'filter_class': 'FilterNagiosExpression',
+        'filter_class': 'FilterOption',
         'htmlvars': ['is_host_staleness'],
         'info': 'host',
         'link_columns': [],
@@ -898,7 +897,7 @@ expected_filters: Dict[str, Dict[str, Any]] = {
     'host_state_type': {
         'column': None,
         'comment': None,
-        'filter_class': 'FilterStateType',
+        'filter_class': 'FilterTristate',
         'htmlvars': ['is_host_state_type'],
         'info': 'host',
         'link_columns': [],
@@ -939,7 +938,7 @@ expected_filters: Dict[str, Dict[str, Any]] = {
     'hostgroupnameregex': {
         'column': 'hostgroup_name',
         'comment': u'Search field allowing regular expressions and partial matches on the names of hostgroups',
-        'filter_class': 'FilterText',
+        'filter_class': 'InputTextFilter',
         'htmlvars': ['hostgroup_regex'],
         'info': 'hostgroup',
         'link_columns': ['hostgroup_name'],
@@ -984,7 +983,7 @@ expected_filters: Dict[str, Dict[str, Any]] = {
     'hostnameoralias': {
         'column': ['host_alias', 'host_name'],
         'comment': u'Search field allowing regular expressions and partial matches',
-        'filter_class': 'FilterHostnameOrAlias',
+        'filter_class': 'InputTextFilter',
         'htmlvars': ['hostnameoralias'],
         'info': 'host',
         'link_columns': ['host_alias', 'host_name'],
@@ -994,7 +993,7 @@ expected_filters: Dict[str, Dict[str, Any]] = {
     'hostregex': {
         'column': 'host_name',
         'comment': u'Search field allowing regular expressions and partial matches',
-        'filter_class': 'FilterText',
+        'filter_class': 'InputTextFilter',
         'htmlvars': ['host_regex', 'neg_host_regex'],
         'info': 'host',
         'link_columns': ['host_name'],
@@ -1034,7 +1033,7 @@ expected_filters: Dict[str, Dict[str, Any]] = {
     'in_downtime': {
         'column': None,
         'comment': None,
-        'filter_class': 'FilterNagiosExpression',
+        'filter_class': 'FilterOption',
         'htmlvars': ['is_in_downtime'],
         'info': 'service',
         'link_columns': [],
@@ -3038,7 +3037,7 @@ expected_filters: Dict[str, Dict[str, Any]] = {
     'log_command_name_regex': {
         'column': 'log_command_name',
         'comment': None,
-        'filter_class': 'FilterText',
+        'filter_class': 'InputTextFilter',
         'htmlvars': ['log_command_name_regex', 'neg_log_command_name_regex'],
         'info': 'log',
         'link_columns': ['log_command_name'],
@@ -3048,7 +3047,7 @@ expected_filters: Dict[str, Dict[str, Any]] = {
     'log_contact_name': {
         'column': 'log_contact_name',
         'comment': u'Exact match, used for linking',
-        'filter_class': 'FilterText',
+        'filter_class': 'InputTextFilter',
         'htmlvars': ['log_contact_name'],
         'info': 'log',
         'link_columns': ['log_contact_name'],
@@ -3058,7 +3057,7 @@ expected_filters: Dict[str, Dict[str, Any]] = {
     'log_contact_name_regex': {
         'column': 'log_contact_name',
         'comment': None,
-        'filter_class': 'FilterText',
+        'filter_class': 'InputTextFilter',
         'htmlvars': ['log_contact_name_regex', 'neg_log_contact_name_regex'],
         'info': 'log',
         'link_columns': ['log_contact_name'],
@@ -3099,7 +3098,7 @@ expected_filters: Dict[str, Dict[str, Any]] = {
     'log_state_type': {
         'column': 'log_state_type',
         'comment': None,
-        'filter_class': 'FilterText',
+        'filter_class': 'InputTextFilter',
         'htmlvars': ['log_state_type'],
         'info': 'log',
         'link_columns': ['log_state_type'],
@@ -3109,7 +3108,7 @@ expected_filters: Dict[str, Dict[str, Any]] = {
     'log_type': {
         'column': 'log_type',
         'comment': None,
-        'filter_class': 'FilterText',
+        'filter_class': 'InputTextFilter',
         'htmlvars': ['log_type'],
         'info': 'log',
         'link_columns': ['log_type'],
@@ -3216,7 +3215,7 @@ expected_filters: Dict[str, Dict[str, Any]] = {
     'service_ctc': {
         'column': 'service_contacts',
         'comment': None,
-        'filter_class': 'FilterText',
+        'filter_class': 'InputTextFilter',
         'htmlvars': ['service_ctc'],
         'info': 'service',
         'link_columns': ['service_contacts'],
@@ -3226,7 +3225,7 @@ expected_filters: Dict[str, Dict[str, Any]] = {
     'service_ctc_regex': {
         'column': 'service_contacts',
         'comment': None,
-        'filter_class': 'FilterText',
+        'filter_class': 'InputTextFilter',
         'htmlvars': ['service_ctc_regex'],
         'info': 'service',
         'link_columns': ['service_contacts'],
@@ -3316,7 +3315,7 @@ expected_filters: Dict[str, Dict[str, Any]] = {
     'service_staleness': {
         'column': None,
         'comment': None,
-        'filter_class': 'FilterNagiosExpression',
+        'filter_class': 'FilterOption',
         'htmlvars': ['is_service_staleness'],
         'info': 'service',
         'link_columns': [],
@@ -3326,7 +3325,7 @@ expected_filters: Dict[str, Dict[str, Any]] = {
     'service_state_type': {
         'column': None,
         'comment': None,
-        'filter_class': 'FilterStateType',
+        'filter_class': 'FilterTristate',
         'htmlvars': ['is_service_state_type'],
         'info': 'service',
         'link_columns': [],
@@ -3345,7 +3344,7 @@ expected_filters: Dict[str, Dict[str, Any]] = {
     'servicegroupname': {
         'column': 'servicegroup_name',
         'comment': u'Exact match, used for linking',
-        'filter_class': 'FilterText',
+        'filter_class': 'InputTextFilter',
         'htmlvars': ['servicegroup_name'],
         'info': 'servicegroup',
         'link_columns': ['servicegroup_name'],
@@ -3355,7 +3354,7 @@ expected_filters: Dict[str, Dict[str, Any]] = {
     'servicegroupnameregex': {
         'column': 'servicegroup_name',
         'comment': u'Search field allowing regular expression and partial matches',
-        'filter_class': 'FilterText',
+        'filter_class': 'InputTextFilter',
         'htmlvars': ['servicegroup_regex', 'neg_servicegroup_regex'],
         'info': 'servicegroup',
         'link_columns': ['servicegroup_name'],

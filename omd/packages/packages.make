@@ -27,7 +27,7 @@ $(HUMAN_INSTALL_TARGETS): %-install:
 # TODO: Can we make this work as real dependency without submake?
 	$(MAKE) $($(addsuffix _INSTALL, $(call package_target_prefix,$*)))
 
-$(HUMAN_BUILD_TARGETS): %-build:
+$(HUMAN_BUILD_TARGETS): %-build: $(BUILD_HELPER_DIR)
 # TODO: Can we make this work as real dependency without submake?
 	$(MAKE) $($(addsuffix _BUILD, $(call package_target_prefix,$*)))
 
@@ -128,7 +128,6 @@ include \
     packages/perl-modules/perl-modules.make \
     packages/jmx4perl/jmx4perl.make \
     packages/libgsf/libgsf.make \
-    packages/postgresql/postgresql.make \
     packages/maintenance/maintenance.make \
     packages/mod_fcgid/mod_fcgid.make \
     packages/monitoring-plugins/monitoring-plugins.make \

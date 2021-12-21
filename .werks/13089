@@ -5,7 +5,7 @@ Component: cmc
 Date: 1634113670
 Edition: cee
 Knowledge: doc
-Level: 3
+Level: 1
 Version: 2.1.0i1
 
 Checkmk 1.6.0 introduced a small regression where log lines in cmc.log were

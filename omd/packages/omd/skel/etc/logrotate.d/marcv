@@ -1,8 +1,0 @@
-###ROOT###/var/log/marcv/*.log {
-	missingok
-	rotate 7
-	compress
-	delaycompress
-	notifempty
-	create 640 ###SITE### ###SITE###
-}

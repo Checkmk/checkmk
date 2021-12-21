@@ -129,7 +129,7 @@ def escape_text(text: EscapableEntity) -> str:
         href = a_href.group(1)
 
         parsed = urlparse(href)
-        if parsed.scheme != "" and parsed.scheme not in ["http", "https"]:
+        if parsed.scheme != "" and parsed.scheme not in ["http", "https", "mailto"]:
             continue  # Do not unescape links containing disallowed URLs
 
         target = a_href.group(2)

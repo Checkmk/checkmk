@@ -14,7 +14,8 @@ import cmk.gui.sites as sites
 from cmk.gui.globals import html, request
 from cmk.gui.i18n import _, _l, ungettext
 from cmk.gui.permissions import Permission, permission_registry
-from cmk.gui.plugins.views import (
+from cmk.gui.plugins.views.commands import PermissionSectionAction
+from cmk.gui.plugins.views.utils import (
     cmp_simple_number,
     Command,
     command_registry,
@@ -28,7 +29,6 @@ from cmk.gui.plugins.views import (
     Sorter,
     sorter_registry,
 )
-from cmk.gui.plugins.views.commands import PermissionSectionAction
 from cmk.gui.utils.urls import makeuri_contextless
 
 

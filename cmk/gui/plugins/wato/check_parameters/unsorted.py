@@ -5,13 +5,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.plugins.wato import (
+from cmk.gui.plugins.wato.active_checks import check_icmp_params
+from cmk.gui.plugins.wato.utils import (
     HostRulespec,
     rulespec_registry,
     RulespecGroupCheckParametersDiscovery,
     RulespecGroupCheckParametersNetworking,
 )
-from cmk.gui.plugins.wato.active_checks import check_icmp_params
 from cmk.gui.valuespec import (
     Alternative,
     Dictionary,

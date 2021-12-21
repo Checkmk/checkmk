@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.plugins.wato import (
+from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithItem,
     rulespec_registry,
     RulespecGroupCheckParametersStorage,
@@ -37,6 +37,18 @@ def _parameter_valuespec_brocade_sfp():
                         Float(title=_("Warning below"), unit=_("dBm")),
                         Float(title=_("Warning at"), unit=_("dBm")),
                         Float(title=_("Critical at"), unit=_("dBm")),
+                    ],
+                ),
+            ),
+            (
+                "voltage",
+                Tuple(
+                    title=_("Voltage level"),
+                    elements=[
+                        Float(title=_("Critical below"), unit=_("V")),
+                        Float(title=_("Warning below"), unit=_("V")),
+                        Float(title=_("Warning at"), unit=_("V")),
+                        Float(title=_("Critical at"), unit=_("V")),
                     ],
                 ),
             ),

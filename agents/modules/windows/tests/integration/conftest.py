@@ -15,10 +15,10 @@ import pytest  # type: ignore[import]
 
 
 def pytest_addoption(parser):
-    parser.addoption("--expected_version", action="store", default="3.8.7")
+    parser.addoption("--expected_version", action="store", default="3.9.8")
 
 
-tested_pythons = ["python-3.4.cab", "python-3.8.cab"]
+tested_pythons = ["python-3.4.cab", "python-3.cab"]
 # I know this is not a best method to reach artifacts, but in Windows not so many options.
 artifact_location = Path("..\\..\\..\\..\\..\\artefacts")
 
@@ -37,20 +37,20 @@ def expected_version(pytestconfig):
 @pytest.fixture(scope="session")
 def regression_data(expected_version):
     return {
-        "python-3.8.cab": b"".join([
-            b"home = C:\\ProgramData\\checkmk\\agent\\modules\\python-3.8\r\n",
+        "python-3.cab": b"".join([
+            b"home = C:\\ProgramData\\checkmk\\agent\\modules\\python-3\r\n",
             b"version_info = ",
             expected_version.encode(),
             b"\r\n",
             b"include-system-site-packages = false\r\n",
         ]),
-        "python-3.4.cab": b"home = C:\\ProgramData\\checkmk\\agent\\modules\\python-3.8\r\n"
+        "python-3.4.cab": b"home = C:\\ProgramData\\checkmk\\agent\\modules\\python-3\r\n"
                           b"version_info = 3.4.4\r\n"
                           b"include-system-site-packages = false\r\n"
     }
 
 
-client_module_root = b"C:\\ProgramData\\checkmk\\agent\\modules\\python-3.8"
+client_module_root = b"C:\\ProgramData\\checkmk\\agent\\modules\\python-3"
 
 
 @pytest.fixture(scope="session", autouse=True)

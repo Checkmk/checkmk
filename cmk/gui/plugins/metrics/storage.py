@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.plugins.metrics import graph_info, KB, MB, metric_info
+from cmk.gui.plugins.metrics.utils import graph_info, metric_info
 
 # .
 #   .--Metrics-------------------------------------------------------------.
@@ -1391,8 +1391,6 @@ graph_info["wasted_space_of_tables_and_indexes"] = {
         ("tablespace_wasted", "area"),
         ("indexspace_wasted", "stack"),
     ],
-    "legend_scale": MB,
-    "legend_precision": 2,
 }
 
 # diskstat checks
@@ -1421,7 +1419,6 @@ graph_info["disk_throughput"] = {
         ("disk_write_throughput:warn,-1,*", "Warning write"),
         ("disk_write_throughput:crit,-1,*", "Critical write"),
     ],
-    "legend_scale": MB,
 }
 
 graph_info["disk_io_operations"] = {
@@ -1446,7 +1443,6 @@ graph_info["average_request_size"] = {
         ("disk_average_read_request_size", "area"),
         ("disk_average_write_request_size", "-area"),
     ],
-    "legend_scale": KB,
 }
 
 graph_info["average_end_to_end_wait_time"] = {
@@ -1485,7 +1481,6 @@ graph_info["database_sizes"] = {
         "unused_size",
         "database_reclaimable",
     ],
-    "legend_scale": MB,
 }
 
 graph_info["number_of_shared_and_exclusive_locks"] = {
@@ -1494,7 +1489,6 @@ graph_info["number_of_shared_and_exclusive_locks"] = {
         ("shared_locks", "area"),
         ("exclusive_locks", "stack"),
     ],
-    "legend_precision": 0,
 }
 
 graph_info["tablespace_sizes"] = {

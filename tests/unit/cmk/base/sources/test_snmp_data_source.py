@@ -10,6 +10,7 @@ import pytest
 
 from tests.testlib.base import Scenario
 
+from cmk.utils.check_utils import ActiveCheckResult
 from cmk.utils.exceptions import MKIPAddressLookupError, OnError
 from cmk.utils.type_defs import CheckPluginName, HostName, ParsedSectionName, result, SourceType
 
@@ -157,11 +158,13 @@ class TestSNMPSummaryResult:
 
     @pytest.mark.usefixtures("scenario")
     def test_defaults(self, source, mode):
-        assert source.summarize(result.OK(AgentHostSections()), mode=mode) == (0, "Success")
+        assert source.summarize(result.OK(AgentHostSections()), mode=mode) == [
+            ActiveCheckResult(0, "Success")
+        ]
 
     @pytest.mark.usefixtures("scenario")
     def test_with_exception(self, source, mode):
-        assert source.summarize(result.Error(Exception()), mode=mode) == (3, "(?)")
+        assert source.summarize(result.Error(Exception()), mode=mode) == [ActiveCheckResult(3)]
 
 
 @pytest.fixture(name="check_plugin")

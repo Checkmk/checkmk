@@ -208,8 +208,6 @@ div#service_container {
   }
 
   h3 {
-    margin-top: 2 * $spacing;
-
     img {
       position: relative;
     }
@@ -219,22 +217,23 @@ div#service_container {
 div#fixall_container {
   background-color: $headline-color;
   border-radius: 2px;
+  overflow: hidden;
 
   img {
     float: left;
-    margin: 10px 0 0 10px;
+    margin: $spacing 0 0 $spacing;
   }
 
   ul {
     float: left;
     list-style: none;
-    margin: 15px 0 0 0;
-    padding-left: 10px;
+    margin: 15px 0 15px 0;
+    padding-left: $spacing;
   }
 
   li {
     display: inline-block;
-    padding: 0 10px;
+    padding: 0 $spacing;
     border-right: 1px solid $font-color;
   }
 
@@ -249,14 +248,6 @@ div#fixall_container {
   span.changed {
     color: $font-color-green;
     font-weight: $font-weight-bold;
-  }
-
-  input.button {
-    height: 25px;
-    padding: 5px 10px;
-    margin-left: 10px;
-    background-color: $success;
-    color: $font-color-black;
   }
 }
 

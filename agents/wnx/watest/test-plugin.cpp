@@ -130,17 +130,11 @@ void RemoveFolder(const std::filesystem::path& Path) {
 // we will use special method to insert artificial data in map
 void InsertEntry(PluginMap& pm, const std::string& name, int timeout,
                  bool async, int cache_age) {
-    namespace fs = std::filesystem;
-    fs::path p = name;
-    pm.emplace(std::make_pair(name, p));
+    pm.emplace(std::make_pair(name, fs::path{name}));
     auto it = pm.find(name);
-    if (async || cache_age) {
-        cma::cfg::PluginInfo e = {timeout, cache_age, 1};
-        it->second.applyConfigUnit(e, false);
-    } else {
-        cma::cfg::PluginInfo e = {timeout, 1};
-        it->second.applyConfigUnit(e, false);
-    }
+    cma::cfg::PluginInfo e{
+        timeout, async || cache_age ? cache_age : std::optional<int>{}, 1};
+    it->second.applyConfigUnit(e, false);
 }
 }  // namespace
 
@@ -329,35 +323,31 @@ TEST(PluginTest, ConfigFolders) {
 }
 
 namespace cfg {
-TEST(PluginTest, PluginInfoCheck) {
-    cma::cfg::PluginInfo e_empty;
-    EXPECT_EQ(e_empty.async(), false);
+TEST(PluginTest, PluginInfoEmpty) {
+    PluginInfo e_empty;
+    EXPECT_FALSE(e_empty.async());
     EXPECT_EQ(e_empty.timeout(), kDefaultPluginTimeout);
     EXPECT_EQ(e_empty.retry(), 0);
     EXPECT_FALSE(e_empty.defined());
     EXPECT_EQ(e_empty.cacheAge(), 0);
     EXPECT_TRUE(e_empty.user().empty());
     EXPECT_TRUE(e_empty.group().empty());
+}
 
-    cma::cfg::PluginInfo e(10, 2, 1);
+TEST(PluginTest, PluginInfoStandard) {
+    PluginInfo e(10, 2, 1);
     EXPECT_TRUE(e.defined());
-    EXPECT_EQ(e.async_, true);
-    EXPECT_EQ(e.timeout_, 10);
-    EXPECT_EQ(e.retry_, 1);
-    EXPECT_EQ(e.cache_age_, 2);
-
-    EXPECT_EQ(e.async(), true);
+    EXPECT_TRUE(e.async());
     EXPECT_EQ(e.timeout(), 10);
     EXPECT_EQ(e.retry(), 1);
     EXPECT_EQ(e.cacheAge(), 2);
-    EXPECT_TRUE(e_empty.user().empty());
-    EXPECT_TRUE(e_empty.group().empty());
+}
 
+TEST(PluginTest, PluginInfoExtend) {
+    PluginInfo e(10, 2, 1);
     e.extend("g", "u");
     EXPECT_EQ(e.user(), "u");
     EXPECT_EQ(e.group(), "g");
-    EXPECT_EQ(e.user_, "u");
-    EXPECT_EQ(e.group_, "g");
 }
 }  // namespace cfg
 
@@ -437,7 +427,7 @@ TEST(PluginTest, ApplyConfig) {
         pe.data_.resize(10);
         pe.failures_ = 5;
         EXPECT_EQ(pe.data().size(), 10);
-        cma::cfg::PluginInfo e = {10, 11};
+        cma::cfg::PluginInfo e{10, {}, 11};
         pe.applyConfigUnit(e, true);
         EXPECT_EQ(pe.failures(), 0);
         EXPECT_EQ(pe.async(), false);
@@ -507,44 +497,26 @@ static void RemoveFolderStructure(cma::PathVector Pv) {
     }
 }
 
-TEST(PluginTest, ExeUnitCtor) {
-    using namespace cma::cfg;
+TEST(PluginTest, ExeUnitSyncCtor) {
+    cma::cfg::Plugins::ExeUnit e("Plugin", 1, {}, 2, true);
+    EXPECT_EQ(e.async(), false);
+    EXPECT_EQ(e.retry(), 2);
+    EXPECT_EQ(e.timeout(), 1);
+    EXPECT_EQ(e.cacheAge(), 0);
+    EXPECT_EQ(e.run(), true);
+}
 
-    // valid
-    {
-        bool as = false;
-        int tout = 1;
-        int age = 0;
-        int retr = 2;
-        Plugins::ExeUnit e("Plugin", tout, retr, true);
-        EXPECT_EQ(e.async(), as);
-        EXPECT_EQ(e.retry(), retr);
-        EXPECT_EQ(e.timeout(), tout);
-        EXPECT_EQ(e.cacheAge(), age);
-        EXPECT_EQ(e.run(), true);
-    }
+TEST(PluginTest, ExeUnitAsyncCtor) {
+    cma::cfg::Plugins::ExeUnit e("Plugin", 1, 120, 2, true);
+    EXPECT_EQ(e.async(), true);
+    EXPECT_EQ(e.cacheAge(), 120);
+}
 
-    // valid async
-    {
-        bool as = true;
-        int tout = 1;
-        int age = 120;
-        int retr = 2;
-        Plugins::ExeUnit e("Plugin", tout, age, retr, true);
-        EXPECT_EQ(e.async(), as);
-        EXPECT_EQ(e.cacheAge(), age);
-    }
-
-    // valid async but low cache
-    {
-        bool as = true;
-        int tout = 1;
-        int age = cma::cfg::kMinimumCacheAge - 1;
-        int retr = 2;
-        Plugins::ExeUnit e("Plugin", tout, age, retr, true);
-        EXPECT_EQ(e.async(), as);
-        EXPECT_EQ(e.cacheAge(), cma::cfg::kMinimumCacheAge);
-    }
+TEST(PluginTest, ExeUnitAsyncCtorNotSoValid) {
+    cma::cfg::Plugins::ExeUnit e("Plugin", 1, cma::cfg::kMinimumCacheAge - 1, 2,
+                                 true);
+    EXPECT_EQ(e.async(), true);
+    EXPECT_EQ(e.cacheAge(), cma::cfg::kMinimumCacheAge);
 }
 
 TEST(PluginTest, HackPlugin) {
@@ -1248,9 +1220,8 @@ TEST(PluginTest, SyncStartSimulationFuture_Integration) {
     using namespace wtools;
     cma::OnStart(cma::AppType::test);
     std::vector<Plugins::ExeUnit> exe_units = {
-        //
-        {"*.cmd", false, 10, 0, 3, true},  //
-        {"*", true, 10, 0, 3, false},      //
+        {"*.cmd", 10, {}, 3, true},  //
+        {"*", 10, 0, 3, false},      //
     };
 
     fs::path temp_folder = cma::cfg::GetTempDir();
@@ -2452,22 +2423,13 @@ TEST(CmaMain, MiniBoxStartModeDeep) {
         EXPECT_TRUE(accu.size() < 200);  // 200 is from complicated plugin
     }
 }
-TEST(PluginTest, DebugInit) {
-    std::vector<cma::cfg::Plugins::ExeUnit> exe_units_valid_SYNC_local = {
-        //       Async  Timeout CacheAge              Retry  Run
-        // clang-format off
-    {"*.cmd", false, 10,     0, 3,     true},
-    {"*",     false, 10,     0, 3,     false},
-        // clang-format on
-    };
-    EXPECT_EQ(0, exe_units_valid_SYNC_local[0].cacheAge());
-    EXPECT_FALSE(exe_units_valid_SYNC_local[0].async());
-}
 
-static std::string MakeHeader(std::string_view left, std::string_view rght,
-                              std::string_view name) {
+namespace {
+std::string MakeHeader(std::string_view left, std::string_view rght,
+                       std::string_view name) {
     return std::string(left) + name.data() + rght.data();
 }
+}  // namespace
 
 TEST(PluginTest, HackingPiggyBack) {
     using namespace cma::section;

@@ -5,8 +5,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Mode for managing sites"""
 
-import binascii
-import contextlib
 import queue
 import socket
 import time
@@ -16,14 +14,9 @@ from typing import Dict, Iterable, Iterator, List, NamedTuple, Optional, overloa
 from typing import Tuple as _Tuple
 from typing import Type, Union
 
-from cryptography import x509
-from cryptography.hazmat.backends import default_backend
-from cryptography.hazmat.primitives import hashes
-from cryptography.x509.oid import ExtensionOID, NameOID
-from OpenSSL import crypto, SSL  # type: ignore[import]
-
 import cmk.utils.paths
 import cmk.utils.version as cmk_version
+from cmk.utils.encryption import CertificateDetails, fetch_certificate_details
 from cmk.utils.site import omd_site
 
 import cmk.gui.forms as forms
@@ -797,7 +790,7 @@ class ModeDistributedMonitoring(WatoMode):
     def _show_status_connection_config(self, table, site_id, site):
         table.cell(_("Status connection"))
         vs_connection = self._site_mgmt.connection_method_valuespec()
-        html.write_text(vs_connection.value_to_text(site["socket"]))
+        html.write_text(vs_connection.value_to_html(site["socket"]))
 
     def _show_status_connection_status(self, table, site_id, site):
         table.cell("")
@@ -1109,6 +1102,7 @@ class ModeEditSiteGlobals(ABCGlobalSettingsMode):
             "edit-configvar",
             msg,
             sites=[self._site_id],
+            domains=[config_variable.domain()],
             need_restart=config_variable.need_restart(),
         )
 
@@ -1194,30 +1188,10 @@ class ModeEditSiteGlobalSetting(ABCEditGlobalSettingMode):
 
     def _show_global_setting(self):
         forms.section(_("Global setting"))
-        html.write_text(self._valuespec.value_to_text(self._global_settings[self._varname]))
+        html.write_text(self._valuespec.value_to_html(self._global_settings[self._varname]))
 
     def _back_url(self) -> str:
         return ModeEditSiteGlobals.mode_url(site=self._site_id)
-
-
-class ChainVerifyResult(NamedTuple):
-    cert_pem: bytes
-    error_number: int
-    error_depth: int
-    error_message: str
-    is_valid: bool
-
-
-class CertificateDetails(NamedTuple):
-    issued_to: str
-    issued_by: str
-    valid_from: str
-    valid_till: str
-    signature_algorithm: str
-    digest_sha256: str
-    serial_number: int
-    is_ca: bool
-    verify_result: ChainVerifyResult
 
 
 @mode_registry.register
@@ -1395,96 +1369,11 @@ class ModeSiteLivestatusEncryption(WatoMode):
         return "state state0" if cert.verify_result.is_valid else "state state2"
 
     def _fetch_certificate_details(self) -> Iterable[CertificateDetails]:
-        """Creates a list of certificate details for the chain certs"""
-        verify_chain_results = self._fetch_certificate_chain_verify_results()
-        if not verify_chain_results:
-            raise MKGeneralException(_("Failed to fetch the certificate chain"))
-
-        def get_name(name_obj):
-            return name_obj.get_attributes_for_oid(NameOID.COMMON_NAME)[0].value
-
-        for result in verify_chain_results:
-            crypto_cert = x509.load_pem_x509_certificate(result.cert_pem, default_backend())
-            yield CertificateDetails(
-                issued_to=get_name(crypto_cert.subject),
-                issued_by=get_name(crypto_cert.issuer),
-                valid_from=str(crypto_cert.not_valid_before),
-                valid_till=str(crypto_cert.not_valid_after),
-                signature_algorithm=crypto_cert.signature_hash_algorithm.name,
-                digest_sha256=binascii.hexlify(crypto_cert.fingerprint(hashes.SHA256())).decode(),
-                serial_number=crypto_cert.serial_number,
-                is_ca=self._is_ca_certificate(crypto_cert),
-                verify_result=result,
-            )
-
-    @staticmethod
-    def _is_ca_certificate(crypto_cert: x509.Certificate) -> bool:
-        try:
-            key_usage = crypto_cert.extensions.get_extension_for_oid(ExtensionOID.KEY_USAGE)
-            use_key_for_signing = key_usage.value.key_cert_sign is True
-        except x509.extensions.ExtensionNotFound:
-            use_key_for_signing = False
-
-        try:
-            basic_constraints = crypto_cert.extensions.get_extension_for_oid(
-                ExtensionOID.BASIC_CONSTRAINTS
-            )
-            is_ca = basic_constraints.value.ca is True
-        except x509.extensions.ExtensionNotFound:
-            is_ca = False
-
-        return is_ca and use_key_for_signing
-
-    def _fetch_certificate_chain_verify_results(self) -> List[ChainVerifyResult]:
-        """Opens a SSL connection and performs a handshake to get the certificate chain"""
-
-        ctx = SSL.Context(SSL.SSLv23_METHOD)
-        # On this page we don't want to fail because of invalid certificates,
-        # but SSL.VERIFY_PEER must be set to trigger the verify_cb. This callback
-        # will then accept any certificate offered.
-        # ctx.set_verify(SSL.VERIFY_PEER, verify_cb)
-        ctx.load_verify_locations(cmk.utils.paths.trusted_ca_file)
-
+        user.need_permission("general.server_side_requests")
         family_spec, address_spec = self._site["socket"]
         address_family = socket.AF_INET if family_spec == "tcp" else socket.AF_INET6
-        with contextlib.closing(
-            SSL.Connection(ctx, socket.socket(address_family, socket.SOCK_STREAM))
-        ) as sock:
-
-            # pylint does not get the object type of sock right
-            sock.connect(address_spec["address"])
-            sock.do_handshake()
-            certificate_chain = sock.get_peer_cert_chain()
-
-            return self._verify_certificate_chain(sock, certificate_chain)
-
-    def _verify_certificate_chain(
-        self, connection: SSL.Connection, certificate_chain: List[crypto.X509]
-    ) -> List[ChainVerifyResult]:
-        verify_chain_results = []
-
-        # Used to record all certificates and verification results for later displaying
-        for cert in certificate_chain:
-            # This is mainly done to get the textual error message without accessing internals of the SSL modules
-            error_number, error_depth, error_message = 0, 0, ""
-            try:
-                x509_store = connection.get_context().get_cert_store()
-                x509_store_context = crypto.X509StoreContext(x509_store, cert)
-                x509_store_context.verify_certificate()
-            except crypto.X509StoreContextError as e:
-                error_number, error_depth, error_message = e.args[0]
-
-            verify_chain_results.append(
-                ChainVerifyResult(
-                    cert_pem=crypto.dump_certificate(crypto.FILETYPE_PEM, cert),
-                    error_number=error_number,
-                    error_depth=error_depth,
-                    error_message=error_message,
-                    is_valid=error_number == 0,
-                )
-            )
-
-        return verify_chain_results
+        address = address_spec["address"]
+        return fetch_certificate_details(cmk.utils.paths.trusted_ca_file, address_family, address)
 
 
 def _page_menu_dropdown_site_details(

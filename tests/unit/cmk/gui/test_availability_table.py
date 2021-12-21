@@ -1,6 +1,5 @@
 import pytest
 
-import cmk.gui.availability as availability
 from cmk.gui.availability import layout_availability_table
 
 

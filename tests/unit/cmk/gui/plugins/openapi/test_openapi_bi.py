@@ -6,13 +6,13 @@
 
 import json
 
+from tests.unit.cmk.gui.conftest import WebTestAppForCMK
 
-def test_openapi_get_bi_packs(wsgi_app, with_automation_user):
-    username, secret = with_automation_user
-    wsgi_app.set_authorization(("Bearer", username + " " + secret))
+
+def test_openapi_get_bi_packs(aut_user_auth_wsgi_app: WebTestAppForCMK):
     base = "/NO_SITE/check_mk/api/1.0"
 
-    response = wsgi_app.get(
+    response = aut_user_auth_wsgi_app.get(
         base + "/domain-types/bi_pack/collections/all",
         headers={"Accept": "application/json"},
     )
@@ -22,13 +22,11 @@ def test_openapi_get_bi_packs(wsgi_app, with_automation_user):
     assert packs["value"][0]["title"] == "Default Pack"
 
 
-def test_openapi_get_bi_pack(wsgi_app, with_automation_user):
-    username, secret = with_automation_user
-    wsgi_app.set_authorization(("Bearer", username + " " + secret))
+def test_openapi_get_bi_pack(aut_user_auth_wsgi_app: WebTestAppForCMK):
     base = "/NO_SITE/check_mk/api/1.0"
 
     pack_id = "default"
-    response = wsgi_app.get(
+    response = aut_user_auth_wsgi_app.get(
         base + "/objects/bi_pack/%s" % pack_id, headers={"Accept": "application/json"}, status=200
     )
     pack = json.loads(response.text)
@@ -37,13 +35,11 @@ def test_openapi_get_bi_pack(wsgi_app, with_automation_user):
     assert len(pack["members"]["aggregations"]["value"]) == 1
 
 
-def test_openapi_get_bi_aggregation(wsgi_app, with_automation_user):
-    username, secret = with_automation_user
-    wsgi_app.set_authorization(("Bearer", username + " " + secret))
+def test_openapi_get_bi_aggregation(aut_user_auth_wsgi_app: WebTestAppForCMK):
     base = "/NO_SITE/check_mk/api/1.0"
 
     aggr_id = "default_aggregation"
-    response = wsgi_app.get(
+    response = aut_user_auth_wsgi_app.get(
         base + "/objects/bi_aggregation/%s" % aggr_id,
         headers={"Accept": "application/json"},
         status=200,
@@ -62,13 +58,11 @@ def test_openapi_get_bi_aggregation(wsgi_app, with_automation_user):
     assert aggregation["id"] == aggr_id
 
 
-def test_openapi_get_bi_rule(wsgi_app, with_automation_user):
-    username, secret = with_automation_user
-    wsgi_app.set_authorization(("Bearer", username + " " + secret))
+def test_openapi_get_bi_rule(aut_user_auth_wsgi_app: WebTestAppForCMK):
     base = "/NO_SITE/check_mk/api/1.0"
 
     rule_id = "applications"
-    response = wsgi_app.get(
+    response = aut_user_auth_wsgi_app.get(
         base + "/objects/bi_rule/%s" % rule_id, headers={"Accept": "application/json"}, status=200
     )
     rule = json.loads(response.text)
@@ -85,13 +79,11 @@ def test_openapi_get_bi_rule(wsgi_app, with_automation_user):
     assert rule["id"] == rule_id
 
 
-def test_openapi_modify_bi_aggregation(wsgi_app, with_automation_user):
-    username, secret = with_automation_user
-    wsgi_app.set_authorization(("Bearer", username + " " + secret))
+def test_openapi_modify_bi_aggregation(aut_user_auth_wsgi_app: WebTestAppForCMK):
     base = "/NO_SITE/check_mk/api/1.0"
 
     aggr_id = "default_aggregation"
-    response = wsgi_app.get(
+    response = aut_user_auth_wsgi_app.get(
         base + "/objects/bi_aggregation/%s" % aggr_id,
         headers={"Accept": "application/json"},
         status=200,
@@ -103,7 +95,7 @@ def test_openapi_modify_bi_aggregation(wsgi_app, with_automation_user):
     # Modify and send back
     aggregation["computation_options"]["disabled"] = False
     aggregation["computation_options"]["escalate_downtimes_as_warn"] = True
-    wsgi_app.put(
+    aut_user_auth_wsgi_app.put(
         base + "/objects/bi_aggregation/%s" % aggr_id,
         content_type="application/json",
         params=json.dumps(aggregation),
@@ -112,7 +104,7 @@ def test_openapi_modify_bi_aggregation(wsgi_app, with_automation_user):
     )
 
     # Verify changed configuration
-    response = wsgi_app.get(
+    response = aut_user_auth_wsgi_app.get(
         base + "/objects/bi_aggregation/%s" % aggr_id,
         headers={"Accept": "application/json"},
         status=200,
@@ -122,20 +114,18 @@ def test_openapi_modify_bi_aggregation(wsgi_app, with_automation_user):
     assert aggregation["computation_options"]["escalate_downtimes_as_warn"]
 
 
-def test_openapi_modify_bi_rule(wsgi_app, with_automation_user):
-    username, secret = with_automation_user
-    wsgi_app.set_authorization(("Bearer", username + " " + secret))
+def test_openapi_modify_bi_rule(aut_user_auth_wsgi_app: WebTestAppForCMK):
     base = "/NO_SITE/check_mk/api/1.0"
 
     rule_id = "applications"
-    response = wsgi_app.get(
+    response = aut_user_auth_wsgi_app.get(
         base + "/objects/bi_rule/%s" % rule_id, headers={"Accept": "application/json"}, status=200
     )
     rule = json.loads(response.text)
     rule["params"]["arguments"].append("OTHERARGUMENT")
 
     # Modify and send back
-    wsgi_app.put(
+    aut_user_auth_wsgi_app.put(
         base + "/objects/bi_rule/%s" % rule_id,
         content_type="application/json",
         params=json.dumps(rule),
@@ -144,20 +134,18 @@ def test_openapi_modify_bi_rule(wsgi_app, with_automation_user):
     )
 
     # Verify changed configuration
-    response = wsgi_app.get(
+    response = aut_user_auth_wsgi_app.get(
         base + "/objects/bi_rule/%s" % rule_id, headers={"Accept": "application/json"}, status=200
     )
     rule = json.loads(response.text)
     assert "OTHERARGUMENT" in rule["params"]["arguments"]
 
 
-def test_openapi_clone_bi_aggregation(wsgi_app, with_automation_user):
-    username, secret = with_automation_user
-    wsgi_app.set_authorization(("Bearer", username + " " + secret))
+def test_openapi_clone_bi_aggregation(aut_user_auth_wsgi_app: WebTestAppForCMK):
     base = "/NO_SITE/check_mk/api/1.0"
 
     aggr_id = "default_aggregation"
-    response = wsgi_app.get(
+    response = aut_user_auth_wsgi_app.get(
         base + "/objects/bi_aggregation/%s" % aggr_id,
         headers={"Accept": "application/json"},
         status=200,
@@ -167,7 +155,7 @@ def test_openapi_clone_bi_aggregation(wsgi_app, with_automation_user):
     clone_id = "cloned_aggregation"
 
     # Check invalid POST request on existing id
-    wsgi_app.post(
+    aut_user_auth_wsgi_app.post(
         base + "/objects/bi_aggregation/%s" % aggr_id,
         content_type="application/json",
         headers={"Accept": "application/json"},
@@ -176,7 +164,7 @@ def test_openapi_clone_bi_aggregation(wsgi_app, with_automation_user):
     )
 
     # Check invalid PUT request on new id
-    wsgi_app.put(
+    aut_user_auth_wsgi_app.put(
         base + "/objects/bi_aggregation/%s" % clone_id,
         content_type="application/json",
         params=json.dumps(aggr),
@@ -185,7 +173,7 @@ def test_openapi_clone_bi_aggregation(wsgi_app, with_automation_user):
     )
 
     # Save config under different id
-    wsgi_app.post(
+    aut_user_auth_wsgi_app.post(
         base + "/objects/bi_aggregation/%s" % clone_id,
         content_type="application/json",
         params=json.dumps(aggr),
@@ -194,7 +182,7 @@ def test_openapi_clone_bi_aggregation(wsgi_app, with_automation_user):
     )
 
     # Verify cloned_rule configuration
-    response = wsgi_app.get(
+    response = aut_user_auth_wsgi_app.get(
         base + "/objects/bi_aggregation/%s" % clone_id,
         headers={"Accept": "application/json"},
         status=200,
@@ -203,20 +191,18 @@ def test_openapi_clone_bi_aggregation(wsgi_app, with_automation_user):
     assert cloned_aggr["id"] == clone_id
 
     # Verify changed pack size
-    response = wsgi_app.get(
+    response = aut_user_auth_wsgi_app.get(
         base + "/objects/bi_pack/default", headers={"Accept": "application/json"}, status=200
     )
     pack = json.loads(response.text)
     assert len(pack["members"]["aggregations"]["value"]) == 2
 
 
-def test_openapi_clone_bi_rule(wsgi_app, with_automation_user):
-    username, secret = with_automation_user
-    wsgi_app.set_authorization(("Bearer", username + " " + secret))
+def test_openapi_clone_bi_rule(aut_user_auth_wsgi_app: WebTestAppForCMK):
     base = "/NO_SITE/check_mk/api/1.0"
 
     rule_id = "applications"
-    response = wsgi_app.get(
+    response = aut_user_auth_wsgi_app.get(
         base + "/objects/bi_rule/%s" % rule_id, headers={"Accept": "application/json"}, status=200
     )
     rule = json.loads(response.text)
@@ -224,7 +210,7 @@ def test_openapi_clone_bi_rule(wsgi_app, with_automation_user):
     clone_id = "applications_clone"
 
     # Check invalid POST request on existing id
-    wsgi_app.post(
+    aut_user_auth_wsgi_app.post(
         base + "/objects/bi_rule/%s" % rule_id,
         content_type="application/json",
         params=json.dumps(rule),
@@ -233,7 +219,7 @@ def test_openapi_clone_bi_rule(wsgi_app, with_automation_user):
     )
 
     # Check invalid PUT request on new id
-    wsgi_app.put(
+    aut_user_auth_wsgi_app.put(
         base + "/objects/bi_rule/%s" % clone_id,
         content_type="application/json",
         params=json.dumps(rule),
@@ -242,7 +228,7 @@ def test_openapi_clone_bi_rule(wsgi_app, with_automation_user):
     )
 
     # Save config under different id
-    wsgi_app.post(
+    aut_user_auth_wsgi_app.post(
         base + "/objects/bi_rule/%s" % clone_id,
         content_type="application/json",
         params=json.dumps(rule),
@@ -251,27 +237,25 @@ def test_openapi_clone_bi_rule(wsgi_app, with_automation_user):
     )
 
     # Verify cloned_rule configuration
-    response = wsgi_app.get(
+    response = aut_user_auth_wsgi_app.get(
         base + "/objects/bi_rule/%s" % clone_id, headers={"Accept": "application/json"}, status=200
     )
     cloned_rule = json.loads(response.text)
     assert cloned_rule["id"] == clone_id
 
     # Verify changed pack size
-    response = wsgi_app.get(
+    response = aut_user_auth_wsgi_app.get(
         base + "/objects/bi_pack/default", headers={"Accept": "application/json"}, status=200
     )
     pack = json.loads(response.text)
     assert len(pack["members"]["rules"]["value"]) == 13
 
 
-def test_openapi_clone_bi_pack(wsgi_app, with_automation_user):
-    username, secret = with_automation_user
-    wsgi_app.set_authorization(("Bearer", username + " " + secret))
+def test_openapi_clone_bi_pack(aut_user_auth_wsgi_app: WebTestAppForCMK):
     base = "/NO_SITE/check_mk/api/1.0"
 
     pack_id = "default"
-    response = wsgi_app.get(
+    response = aut_user_auth_wsgi_app.get(
         base + "/objects/bi_pack/%s" % pack_id, headers={"Accept": "application/json"}, status=200
     )
     pack = json.loads(response.text)
@@ -281,7 +265,7 @@ def test_openapi_clone_bi_pack(wsgi_app, with_automation_user):
     new_data["title"] = "Test title"
 
     # Check invalid POST request on existing id
-    wsgi_app.post(
+    aut_user_auth_wsgi_app.post(
         base + "/objects/bi_pack/%s" % pack_id,
         content_type="application/json",
         params=json.dumps(new_data),
@@ -290,7 +274,7 @@ def test_openapi_clone_bi_pack(wsgi_app, with_automation_user):
     )
 
     # Check valid PUT request on existing id
-    wsgi_app.put(
+    aut_user_auth_wsgi_app.put(
         base + "/objects/bi_pack/%s" % pack_id,
         content_type="application/json",
         params=json.dumps(new_data),
@@ -299,7 +283,7 @@ def test_openapi_clone_bi_pack(wsgi_app, with_automation_user):
     )
 
     # Verify that rules/aggregations remain unchanged
-    response = wsgi_app.get(
+    response = aut_user_auth_wsgi_app.get(
         base + "/objects/bi_pack/%s" % pack_id, headers={"Accept": "application/json"}, status=200
     )
     pack = json.loads(response.text)
@@ -308,7 +292,7 @@ def test_openapi_clone_bi_pack(wsgi_app, with_automation_user):
     assert pack["title"] == "Test title"
 
     # Check invalid PUT request on new id
-    wsgi_app.put(
+    aut_user_auth_wsgi_app.put(
         base + "/objects/bi_pack/%s" % clone_id,
         content_type="application/json",
         params=json.dumps(new_data),
@@ -317,7 +301,7 @@ def test_openapi_clone_bi_pack(wsgi_app, with_automation_user):
     )
 
     # Save config under different id
-    wsgi_app.post(
+    aut_user_auth_wsgi_app.post(
         base + "/objects/bi_pack/%s" % clone_id,
         content_type="application/json",
         params=json.dumps(new_data),
@@ -326,7 +310,7 @@ def test_openapi_clone_bi_pack(wsgi_app, with_automation_user):
     )
 
     # Verify cloned_pack configuration
-    response = wsgi_app.get(
+    response = aut_user_auth_wsgi_app.get(
         base + "/objects/bi_pack/%s" % clone_id, headers={"Accept": "application/json"}, status=200
     )
     cloned_pack = json.loads(response.text)
@@ -338,9 +322,7 @@ def test_openapi_clone_bi_pack(wsgi_app, with_automation_user):
     assert cloned_pack["title"] == "Test title"
 
 
-def test_openapi_delete_pack(wsgi_app, with_automation_user):
-    username, secret = with_automation_user
-    wsgi_app.set_authorization(("Bearer", username + " " + secret))
+def test_openapi_delete_pack(aut_user_auth_wsgi_app: WebTestAppForCMK):
     base = "/NO_SITE/check_mk/api/1.0"
 
     pack_data = {
@@ -350,7 +332,7 @@ def test_openapi_delete_pack(wsgi_app, with_automation_user):
     }
 
     # Check invalid POST request on existing id
-    wsgi_app.post(
+    aut_user_auth_wsgi_app.post(
         base + "/objects/bi_pack/test_pack",
         content_type="application/json",
         params=json.dumps(pack_data),
@@ -359,30 +341,27 @@ def test_openapi_delete_pack(wsgi_app, with_automation_user):
     )
 
     # Verify creation
-    response = wsgi_app.get(
+    response = aut_user_auth_wsgi_app.get(
         base + "/objects/bi_pack/test_pack", headers={"Accept": "application/json"}, status=200
     )
     pack = json.loads(response.text)
     assert pack["title"] == "Test pack"
 
     # Delete pack
-    wsgi_app.delete(
+    aut_user_auth_wsgi_app.delete(
         base + "/objects/bi_pack/test_pack", headers={"Accept": "application/json"}, status=204
     )
 
     # Verify deletion
-    wsgi_app.get(
+    aut_user_auth_wsgi_app.get(
         base + "/objects/bi_pack/test_pack", headers={"Accept": "application/json"}, status=404
     )
 
 
-def test_openapi_delete_pack_forbidden(wsgi_app, with_automation_user):
-    username, secret = with_automation_user
-    wsgi_app.set_authorization(("Bearer", username + " " + secret))
+def test_openapi_delete_pack_forbidden(aut_user_auth_wsgi_app: WebTestAppForCMK):
     base = "/NO_SITE/check_mk/api/1.0"
-
     # Check invalid POST request on existing id
-    wsgi_app.delete(
+    aut_user_auth_wsgi_app.delete(
         base + "/objects/bi_pack/default",
         content_type="application/json",
         headers={"Accept": "application/json"},

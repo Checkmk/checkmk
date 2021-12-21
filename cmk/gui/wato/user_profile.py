@@ -619,7 +619,7 @@ def _show_custom_user_attr(user_spec: UserSpec, custom_attr) -> None:
                 vs.render_input("ua_" + name, value)
                 html.help(_u(vs.help()))
             else:
-                html.write_text(vs.value_to_text(value))
+                html.write_text(vs.value_to_html(value))
 
 
 @page_registry.register_page("wato_ajax_profile_repl")

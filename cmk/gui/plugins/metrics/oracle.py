@@ -13,7 +13,7 @@ from cmk.utils.oracle_constants import (
 )
 
 from cmk.gui.i18n import _
-from cmk.gui.plugins.metrics import graph_info, indexed_color, metric_info
+from cmk.gui.plugins.metrics.utils import graph_info, indexed_color, metric_info
 
 # .
 #   .--Metrics-------------------------------------------------------------.
@@ -260,10 +260,10 @@ def register_oracle_graphs():
     graph_info["oracle_iostat_total_bytes"] = {
         "title": _("ORACLE IOSTAT Total Bytes"),
         "metrics": [
-            "oracle_ios_f_total_s_rb",
-            "oracle_ios_f_total_s_wb",
-            "oracle_ios_f_total_l_rb",
-            "oracle_ios_f_total_l_wb",
+            ("oracle_ios_f_total_s_rb", "line"),
+            ("oracle_ios_f_total_s_wb", "-line"),
+            ("oracle_ios_f_total_l_rb", "line"),
+            ("oracle_ios_f_total_l_wb", "-line"),
         ],
     }
     graph_info["oracle_iostat_ios"] = {
@@ -274,10 +274,10 @@ def register_oracle_graphs():
     graph_info["oracle_iostat_total_ios"] = {
         "title": _("ORACLE IOSTAT Total IOs"),
         "metrics": [
-            "oracle_ios_f_total_s_r",
-            "oracle_ios_f_total_s_w",
-            "oracle_ios_f_total_l_r",
-            "oracle_ios_f_total_l_w",
+            ("oracle_ios_f_total_s_r", "line"),
+            ("oracle_ios_f_total_s_w", "-line"),
+            ("oracle_ios_f_total_l_r", "line"),
+            ("oracle_ios_f_total_l_w", "-line"),
         ],
     }
     graph_info["oracle_wait_class"] = {

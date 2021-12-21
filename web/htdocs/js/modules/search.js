@@ -244,7 +244,7 @@ function move_current_search_position(step, current_search) {
     if (current_search.current_search_position > result_list.length - 1)
         current_search.current_search_position = 0;
 
-    result_list.forEach((value, idx) => {
+    Array.from(result_list).forEach((value, idx) => {
         idx == current_search.current_search_position
             ? add_class(value.childNodes[0], "active")
             : remove_class(value.childNodes[0], "active");

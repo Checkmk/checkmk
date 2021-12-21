@@ -6,7 +6,7 @@ def NODE = ''
 def DOCKER_TAG_DEFAULT
 def USE_OMD_PACKAGE_CACHE_DEFAULT
 withFolderProperties{
-    if(JOB_BASE_NAME == 'nightly_build_containerized') {
+    if(JOB_BASE_NAME == 'build-cmk-packages') {
         DISTRO_LIST_DEFAULT = env.DISTRO_LIST
         USE_OMD_PACKAGE_CACHE_DEFAULT = true
     } else {
@@ -85,7 +85,7 @@ timeout(time: 12, unit: 'HOURS') {
     
                 // Clean up left overs from previous runs, but keep previously
                 // created virtual environments to save some time
-                sh("make mrclean")
+                sh("make buildclean")
     
                 // Load libraries
                 versioning = load 'buildscripts/scripts/lib/versioning.groovy'
@@ -121,7 +121,6 @@ timeout(time: 12, unit: 'HOURS') {
                 // previous runs
                 sh('rm -rf ${WORKSPACE}/agents/*')
                 sh('mkdir -p ${WORKSPACE}/agents')
-    
                 AGENT_LIST.each { AGENT ->
                     AGENT_BUILDS['build agent ' + AGENT] = {
                         if (AGENT == 'windows') {
@@ -339,7 +338,7 @@ def create_source_package(WORKSPACE, CMK_VERS) {
                 sh "touch ${WORKSPACE}/agents/cmk-update-agent"
                 sh "touch ${WORKSPACE}/agents/cmk-update-agent-32"
             }
-            sh "touch ${WORKSPACE}/agents/{check_mk_agent-64.exe,check_mk_agent.exe,check_mk_agent.msi,check_mk.user.yml,python-3.8.cab,python-3.4.cab}"
+            sh "touch ${WORKSPACE}/agents/{check_mk_agent-64.exe,check_mk_agent.exe,check_mk_agent.msi,check_mk.user.yml,python-3.cab,python-3.4.cab}"
         }
 
         dir("git") {
@@ -347,7 +346,7 @@ def create_source_package(WORKSPACE, CMK_VERS) {
                 sh "cp ${WORKSPACE}/agents/cmk-update-agent enterprise/agents/plugins/"
                 sh "cp ${WORKSPACE}/agents/cmk-update-agent-32 enterprise/agents/plugins/"
             }
-            sh "cp ${WORKSPACE}/agents/{check_mk_agent-64.exe,check_mk_agent.exe,check_mk_agent.msi,check_mk.user.yml,python-3.8.cab,python-3.4.cab} agents/windows"
+            sh "cp ${WORKSPACE}/agents/{check_mk_agent-64.exe,check_mk_agent.exe,check_mk_agent.msi,check_mk.user.yml,python-3.cab,python-3.4.cab} agents/windows"
             sh 'make dist || cat /root/.npm/_logs/*-debug.log'
         }
     }

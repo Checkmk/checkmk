@@ -118,6 +118,7 @@ from cmk.utils.certs import cert_dir
 from cmk.utils.exceptions import MKTerminate
 from cmk.utils.log import VERBOSE
 from cmk.utils.paths import mkbackup_lock_dir
+from cmk.utils.version import is_daily_build_of_master, major_version_parts
 
 Arguments = List[str]
 ConfigChangeCommands = List[Tuple[str, str]]
@@ -1292,8 +1293,8 @@ def initialize_site_ca(site: SiteContext) -> None:
     ca.initialize()
     if not ca.site_certificate_exists(site.name):
         ca.create_site_certificate(site.name)
-    if not ca.marcv_certificate_exists:
-        ca.create_marcv_certificate()
+    if not ca.agent_receiver_certificate_exists:
+        ca.create_agent_receiver_certificate()
 
 
 def config_change(version_info: VersionInfo, site: SiteContext, config_hooks: ConfigHooks) -> None:
@@ -2704,6 +2705,22 @@ def main_update(
                 bail_out("Aborted.")
         exec_other_omd(site, to_version, "update")
 
+    if (
+        not _is_version_update_allowed(
+            _omd_to_check_mk_version(from_version), _omd_to_check_mk_version(to_version)
+        )
+        and not global_opts.force
+    ):
+        bail_out(
+            f"ERROR: You are trying to update from {from_version} to {to_version} which is not "
+            "supported.\n\n"
+            "* Major downgrades are not supported\n"
+            "* Major version updates need to be done step by step.\n\n"
+            "If you are really sure about what you are doing, you can still do the "
+            "update with '-f'.\n"
+            "But you will be on your own from there."
+        )
+
     # This line is reached, if the version of the OMD binary (the target)
     # is different from the current version of the site.
     if not global_opts.force and not dialog_yesno(
@@ -2810,6 +2827,79 @@ def main_update(
     stop_logging()
 
 
+def _is_version_update_allowed(from_version: str, to_version: str) -> bool:
+    """Whether or not an "omd update" is allowed from one version to another
+    >>> c = _is_version_update_allowed
+
+    >>> c("1.6.0", "2.0.0")
+    True
+    >>> c("1.6.0", "2.1.0")
+    False
+    >>> c("2.0.0", "2.1.0")
+    True
+    >>> c("2.0.0", "2.2.0")
+    False
+    >>> c("2.0.0", "3.0.0")
+    True
+    >>> c("2.1.0", "3.0.0")
+    True
+    >>> c("2.1.0", "3.1.0")
+    False
+    >>> c("3.1.0", "2.1.0")
+    False
+
+    Nightly build of master branch is always compatible as we don't know which major version it
+    belongs to. It's also not that important to validate this case.
+
+    >>> c("2.0.0i1", "2021.12.13")
+    True
+    >>> c("2021.12.13", "2.0.0i1")
+    True
+    >>> c("2021.12.13", "2022.01.01")
+    True
+    >>> c("2022.01.01", "2021.12.13")
+    True
+
+    Nightly branch builds e.g. 2.0.0-2022.01.01 are treated as 2.0.0.
+
+    >>> c("2.0.0-2022.01.01", "2.0.0p3")
+    True
+    >>> c("2.0.0p3", "2.0.0-2022.01.01")
+    True
+    >>> c("2.0.0p3", "3.0.0-2022.01.01")
+    True
+    >>> c("2.0.0p3", "4.0.0-2022.01.01")
+    False
+    """
+
+    from_parts = major_version_parts(from_version)
+    to_parts = major_version_parts(to_version)
+
+    if is_daily_build_of_master(from_version) or is_daily_build_of_master(to_version):
+        return True  # Don't know to which major master daily builds belong to -> always allow
+
+    first_part_diff = abs(from_parts[0] - to_parts[0])
+    second_part_diff = abs(from_parts[1] - to_parts[1])
+
+    if from_parts[0] > to_parts[0]:
+        return False  # Do not allow downgrades from e.g. 2.x.x to 1.x.x
+    if first_part_diff == 0 and from_parts[0] > to_parts[0]:
+        return False  # Do not allow downgrades from e.g. 2.1.x to 2.0.x
+
+    # All downgrade cases we care about should be treated now
+
+    if first_part_diff > 1:
+        return False  # Do not allow upgrades from e.g. 2.x.x to 4.x.x
+
+    if to_parts[0] - from_parts[0] == 1 and to_parts[1] != 0:
+        return False  # Do not allow upgrades from e.g. 1.6.x to 2.1.x
+
+    if from_parts[0] == to_parts[0] and second_part_diff > 1:
+        return False  # Do not allow upgrades from e.g. 2.0.x to 2.2.x
+
+    return True
+
+
 def _update_cmk_core_config(site: SiteContext):
     if site.conf["CORE"] == "none":
         return  # No core config is needed in this case
@@ -2863,6 +2953,31 @@ def _get_edition(omd_version: str) -> str:
     if edition_short == "cme":
         return "managed"
     return "unknown"
+
+
+def _omd_to_check_mk_version(omd_version: str) -> str:
+    """
+    >>> f = _omd_to_check_mk_version
+    >>> f("2.0.0p3.cee")
+    '2.0.0p3'
+    >>> f("1.6.0p3.cee.demo")
+    '1.6.0p3'
+    >>> f("2.0.0p3.cee")
+    '2.0.0p3'
+    >>> f("2021.12.13.cee")
+    '2021.12.13'
+    """
+    parts = omd_version.split(".")
+
+    # Before we had the free edition, we had versions like ".cee.demo". Since we deal with old
+    # versions, we need to care about this.
+    if parts[-1] == "demo":
+        del parts[-1]
+
+    # Strip the edition suffix away
+    del parts[-1]
+
+    return ".".join(parts)
 
 
 def main_umount(

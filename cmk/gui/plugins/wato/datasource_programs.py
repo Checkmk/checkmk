@@ -14,16 +14,17 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
 from cmk.gui.mkeventd import service_levels, syslog_facilities, syslog_priorities
 from cmk.gui.plugins.metrics.utils import MetricName
-from cmk.gui.plugins.wato import (
+from cmk.gui.plugins.wato.utils import (
     HostRulespec,
+    HTTPProxyReference,
     IndividualOrStoredPassword,
     monitoring_macro_help,
+    PasswordFromStore,
     rulespec_group_registry,
     rulespec_registry,
     RulespecGroup,
     RulespecSubGroup,
 )
-from cmk.gui.plugins.wato.utils import PasswordFromStore
 from cmk.gui.valuespec import (
     Age,
     Alternative,
@@ -33,6 +34,7 @@ from cmk.gui.valuespec import (
     DropdownChoice,
     FixedValue,
     Float,
+    HostAddress,
     Hostname,
     HTTPUrl,
     ID,
@@ -41,6 +43,7 @@ from cmk.gui.valuespec import (
     ListOf,
     ListOfStrings,
     MonitoringState,
+    NetworkPort,
     Password,
     RegExp,
     TextInput,
@@ -750,35 +753,51 @@ def _valuespec_special_agents_kube():
     return Dictionary(
         elements=[
             (
-                "api-server-endpoint",
-                CascadingDropdown(
-                    choices=[
+                "kubernetes-api-server",
+                Dictionary(
+                    elements=[
                         (
-                            "hostname",
-                            _("Hostname"),
-                            Dictionary(elements=_kubernetes_connection_elements()),
+                            "endpoint",
+                            CascadingDropdown(
+                                choices=[
+                                    (
+                                        "hostname",
+                                        _("Hostname"),
+                                        _kube_connection_elements(),
+                                    ),
+                                    (
+                                        "ipaddress",
+                                        _("IP address"),
+                                        _kube_connection_elements(),
+                                    ),
+                                    (
+                                        "url_custom",
+                                        _("Custom URL"),
+                                        TextInput(
+                                            allow_empty=False,
+                                            size=80,
+                                        ),
+                                    ),
+                                ],
+                                orientation="horizontal",
+                                title=_("Server endpoint"),
+                                help=_(
+                                    'The URL that will be contacted for Kubernetes API calls. If the "Hostname" '
+                                    'or the "IP Address" options are selected, the DNS hostname or IP address and '
+                                    "a secure protocol (HTTPS) are used."
+                                ),
+                            ),
                         ),
                         (
-                            "ipaddress",
-                            _("IP address"),
-                            Dictionary(elements=_kubernetes_connection_elements()),
-                        ),
-                        (
-                            "url_custom",
-                            _("Custom URL"),
-                            TextInput(
+                            "token",
+                            IndividualOrStoredPassword(
+                                title=_("Token"),
                                 allow_empty=False,
-                                size=80,
                             ),
                         ),
                     ],
-                    orientation="horizontal",
-                    title=_("API server endpoint"),
-                    help=_(
-                        'The URL that will be contacted for Kubernetes API calls. If the "Hostname" '
-                        'or the "IP Address" options are selected, the DNS hostname or IP address and '
-                        "a secure protocol (HTTPS) are used."
-                    ),
+                    title=_("API server connection"),
+                    optional_keys=["token"],
                 ),
             ),
             (
@@ -813,6 +832,7 @@ def _valuespec_special_agents_kube():
                                     ("http", "HTTP"),
                                     ("https", "HTTPS"),
                                 ],
+                                default_value="https",
                                 help=_(
                                     "The option should match the configured protocol of the "
                                     "cluster agent."
@@ -831,20 +851,13 @@ def _valuespec_special_agents_kube():
                 ),
             ),
             (
-                "token",
-                IndividualOrStoredPassword(
-                    title=_("Token"),
-                    allow_empty=False,
-                ),
-            ),
-            (
-                "no-cert-check",
+                "verify-cert",
                 Alternative(
                     title=_("SSL certificate verification"),
                     elements=[
-                        FixedValue(False, title=_("Verify the certificate"), totext=""),
+                        FixedValue(True, title=_("Verify the certificate"), totext=""),
                         FixedValue(
-                            True, title=_("Ignore certificate errors (unsecure)"), totext=""
+                            False, title=_("Ignore certificate errors (unsecure)"), totext=""
                         ),
                     ],
                     default_value=False,
@@ -853,6 +866,47 @@ def _valuespec_special_agents_kube():
         ],
         optional_keys=[],
         title=_("Kubernetes 2.0"),
+    )
+
+
+def _kube_connection_elements():
+    return Dictionary(
+        elements=[
+            (
+                "port",
+                Integer(
+                    title=_("Port"),
+                    help=_("If no port is given, a default value of 6443 will be used."),
+                    default_value=6443,
+                ),
+            ),
+            (
+                "path-prefix",
+                TextInput(
+                    title=_("Custom path prefix"),
+                    help=_(
+                        "Specifies a URL path prefix, which is prepended to API calls "
+                        "to the Kubernetes API. This is a useful option for Rancher "
+                        "installations (more information can be found in the manual). "
+                        "If this option is not relevant for your installation, "
+                        "please leave it unchecked."
+                    ),
+                    allow_empty=False,
+                ),
+            ),
+            (
+                "protocol",
+                DropdownChoice(
+                    title=_("Protocol"),
+                    choices=[
+                        ("http", "HTTP"),
+                        ("https", "HTTPS"),
+                    ],
+                    default_value="https",
+                ),
+            ),
+        ],
+        optional_keys=["port", "path-prefix"],
     )
 
 
@@ -4771,6 +4825,10 @@ def _valuespec_special_agents_datadog() -> Dictionary:
                 ),
             ),
             (
+                "proxy",
+                HTTPProxyReference(),
+            ),
+            (
                 "monitors",
                 Dictionary(
                     title=_("Fetch monitors"),
@@ -4818,6 +4876,26 @@ def _valuespec_special_agents_datadog() -> Dictionary:
                         "special agent is executed."
                     ),
                     elements=[
+                        (
+                            "max_age",
+                            Age(
+                                title=_("Maximum age of fetched events (10 hours max.)"),
+                                help=_(
+                                    "During each run, the agent will fetch events which are at "
+                                    "maximum this old. The agent memorizes events already fetched "
+                                    "during the last run, s.t. no event will be sent to the event "
+                                    "console multiple times. Setting this value lower than the "
+                                    "check interval of the host will result in missing events. "
+                                    "Also note that the Datadog API allows for creating new events "
+                                    "which lie in the past. Such events will be missed by the "
+                                    "agent if their age exceeds the value specified here."
+                                ),
+                                minvalue=10,
+                                maxvalue=10 * 3600,
+                                default_value=600,
+                                display=["hours", "minutes", "seconds"],
+                            ),
+                        ),
                         (
                             "tags",
                             ListOfStrings(
@@ -4906,7 +4984,7 @@ def _valuespec_special_agents_datadog() -> Dictionary:
                 ),
             ),
         ],
-        optional_keys=["monitors", "events"],
+        optional_keys=["proxy", "monitors", "events"],
     )
 
 
@@ -5130,6 +5208,105 @@ rulespec_registry.register(
         group=RulespecGroupDatasourceProgramsApps,
         name="special_agents:jira",
         valuespec=_valuespec_special_agents_jira,
+    )
+)
+
+
+def _valuespec_special_agents_mqtt() -> Dictionary:
+    return Dictionary(
+        title=_("MQTT broker statistics"),
+        help=_(
+            "Connect to an MQTT broker to get statistics out of your instance. "
+            "The information is fetched from the <tt>$SYS</tt> topic of the broker. The "
+            "different brokers implement different topics as they are not standardized, "
+            "means that not every service available with every broker. "
+            "In multi-tentant, enterprise level cluster this agent may not be useful or "
+            "probably only when directly connecting to single nodes, because the "
+            "<tt>$SYS</tt> topic is node-specific."
+        ),
+        elements=[
+            (
+                "username",
+                TextInput(
+                    title=_("Username"),
+                    help=_("The username used for broker authentication."),
+                    size=32,
+                    allow_empty=False,
+                ),
+            ),
+            (
+                "password",
+                PasswordFromStore(
+                    title=_("Password of the user"),
+                    allow_empty=False,
+                ),
+            ),
+            (
+                "address",
+                HostAddress(
+                    title=_("Custom address"),
+                    help=_(
+                        "When set, this address is used for connecting to the MQTT "
+                        "broker. If not set, the special agent will use the primary "
+                        "address of the host to connect to the MQTT broker."
+                    ),
+                    size=32,
+                    allow_empty=False,
+                ),
+            ),
+            (
+                "port",
+                NetworkPort(
+                    title=_("Port"),
+                    default_value=1883,
+                    help=_("The port that is used for the api call."),
+                ),
+            ),
+            (
+                "client-id",
+                TextInput(
+                    title=_("Client ID"),
+                    help=_(
+                        "Unique client ID used for the broker. Will be randomly "
+                        "generated when not set."
+                    ),
+                    size=32,
+                    allow_empty=False,
+                ),
+            ),
+            (
+                "protocol",
+                DropdownChoice(
+                    title=_("Protocol"),
+                    choices=[
+                        ("MQTTv31", "MQTTv31"),
+                        ("MQTTv311", "MQTTv311"),
+                        ("MQTTv5", "MQTTv5"),
+                    ],
+                    default_value="MQTTv311",
+                ),
+            ),
+            (
+                "instance-id",
+                TextInput(
+                    title=_("Instance ID"),
+                    help=_("Unique ID used to identify the instance on the host within Checkmk."),
+                    size=32,
+                    allow_empty=False,
+                    default_value="broker",
+                ),
+            ),
+        ],
+        required_keys=[],
+    )
+
+
+rulespec_registry.register(
+    HostRulespec(
+        factory_default=watolib.Rulespec.FACTORY_DEFAULT_UNUSED,
+        group=RulespecGroupDatasourceProgramsApps,
+        name="special_agents:mqtt",
+        valuespec=_valuespec_special_agents_mqtt,
     )
 )
 

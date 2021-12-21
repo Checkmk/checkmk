@@ -7,13 +7,9 @@
 from datetime import datetime, timezone
 
 import pytest
+from kubernetes.client.models import V1Node, V1ObjectMeta  # type: ignore[import]
 
 from cmk.special_agents.agent_kubernetes import Node, NodeList
-
-from kubernetes.client.models import (  # type: ignore # pylint: disable=import-error # isort: skip
-    V1Node,
-    V1ObjectMeta,
-)
 
 
 def create_node(name, timestamp):

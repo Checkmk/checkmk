@@ -8,7 +8,7 @@ from typing import Any, Dict
 import pytest
 
 from cmk.base.api.agent_based.inventory_classes import Attributes, TableRow
-from cmk.base.plugins.agent_based import inv_checkmk
+from cmk.base.plugins.agent_based import inventory_checkmk_server as inv_checkmk
 
 SECTION_LIVESTATUS_STATUS = {
     "heute": {

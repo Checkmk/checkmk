@@ -10,7 +10,8 @@ from typing import List, Optional, TypedDict
 from cmk.gui.globals import html
 from cmk.gui.i18n import _
 from cmk.gui.pages import AjaxPage, page_registry
-from cmk.gui.plugins.metrics import artwork, metric_info, unit_info
+from cmk.gui.plugins.metrics import artwork
+from cmk.gui.plugins.metrics.utils import metric_info, unit_info
 from cmk.gui.valuespec import (
     CascadingDropdown,
     CascadingDropdownChoiceValue,

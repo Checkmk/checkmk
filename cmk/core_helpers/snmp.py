@@ -26,8 +26,9 @@ from typing import (
     Union,
 )
 
+from cmk.utils.check_utils import ActiveCheckResult
 from cmk.utils.exceptions import OnError
-from cmk.utils.type_defs import HostName, SectionName, ServiceDetails, ServiceState
+from cmk.utils.type_defs import HostName, SectionName
 
 import cmk.snmplib.snmp_table as snmp_table
 from cmk.snmplib.snmp_scan import gather_available_raw_section_names
@@ -361,7 +362,7 @@ class SNMPFetcher(Fetcher[SNMPRawData]):
                 ),
             )
 
-        fetched_data: MutableMapping[SectionName, SNMPRawDataSection] = {}
+        fetched_data: MutableMapping[SectionName, Sequence[SNMPRawDataSection]] = {}
         for section_name in self._sort_section_names(section_names):
             try:
                 _from, until, _section = persisted_sections[section_name]
@@ -442,14 +443,14 @@ class SNMPParser(Parser[SNMPRawData, SNMPHostSections]):
             return None
 
         cache_info: MutableMapping[SectionName, Tuple[int, int]] = {}
-        self.section_store.update_and_mutate(
+        new_sections = self.section_store.update(
             sections,
             cache_info,
             lookup_persist,
             now=now,
             keep_outdated=self.keep_outdated,
         )
-        return SNMPHostSections(sections, cache_info=cache_info)
+        return SNMPHostSections(new_sections, cache_info=cache_info)
 
 
 class SNMPSummarizer(Summarizer[SNMPHostSections]):
@@ -458,5 +459,5 @@ class SNMPSummarizer(Summarizer[SNMPHostSections]):
         host_sections: SNMPHostSections,
         *,
         mode: Mode,
-    ) -> Tuple[ServiceState, ServiceDetails]:
-        return 0, "Success"
+    ) -> Sequence[ActiveCheckResult]:
+        return [ActiveCheckResult(0, "Success")]

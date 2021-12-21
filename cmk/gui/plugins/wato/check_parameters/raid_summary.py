@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.plugins.wato import (
+from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithoutItem,
     rulespec_registry,
     RulespecGroupCheckParametersStorage,
@@ -27,6 +27,21 @@ def _parameter_valuespec_raid_summary():
                     default_value=True,
                 ),
             ),
+        ],
+        ignored_keys=[
+            "available",
+            "broken",
+            "notavailable",
+            "notsupported",
+            "present",
+            "readying",
+            "recovering",
+            "partbroken",
+            "spare",
+            "formatting",
+            "unformated",
+            "notexist",
+            "copying",
         ],
     )
 

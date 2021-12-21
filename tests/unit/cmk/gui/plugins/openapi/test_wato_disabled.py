@@ -8,20 +8,20 @@ import pytest
 
 from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
 
+from tests.unit.cmk.gui.conftest import WebTestAppForCMK
+
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
 def test_openapi_wato_disabled_blocks_query(
-    wsgi_app,
-    with_automation_user,
+    aut_user_auth_wsgi_app: WebTestAppForCMK,
     mock_livestatus,
 ):
     live: MockLiveStatusConnection = mock_livestatus
-    username, secret = with_automation_user
-    wsgi_app.set_authorization(("Bearer", username + " " + secret))
+
     base = "/NO_SITE/check_mk/api/1.0"
 
     # add a host, so we can query it
-    wsgi_app.call_method(
+    aut_user_auth_wsgi_app.call_method(
         "post",
         base + "/domain-types/host_config/collections/all",
         params='{"host_name": "neute", "folder": "/"}',
@@ -38,7 +38,7 @@ def test_openapi_wato_disabled_blocks_query(
     )
 
     # calls to setup endpoints work correctly
-    wsgi_app.call_method(
+    aut_user_auth_wsgi_app.call_method(
         "get",
         base + "/objects/host_config/neute",
         headers={"Accept": "application/json"},
@@ -46,9 +46,9 @@ def test_openapi_wato_disabled_blocks_query(
     )
 
     # disable wato
-    with wsgi_app.set_config(wato_enabled=False):
+    with aut_user_auth_wsgi_app.set_config(wato_enabled=False):
         # calls to setup endpoints are forbidden
-        wsgi_app.call_method(
+        aut_user_auth_wsgi_app.call_method(
             "get",
             base + "/objects/host_config/neute",
             headers={"Accept": "application/json"},
@@ -56,7 +56,7 @@ def test_openapi_wato_disabled_blocks_query(
         )
         with live:
             # calls to monitoring endpoints should be allowed
-            wsgi_app.call_method(
+            aut_user_auth_wsgi_app.call_method(
                 "get",
                 base + "/domain-types/service/collections/all",
                 headers={"Accept": "application/json"},

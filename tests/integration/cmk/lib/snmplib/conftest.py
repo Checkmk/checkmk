@@ -13,6 +13,7 @@ from typing import NamedTuple
 import pytest
 
 from tests.testlib import wait_until
+from tests.testlib.site import Site
 
 import cmk.utils.debug as debug
 import cmk.utils.log as log
@@ -42,7 +43,7 @@ def snmp_data_dir_fixture(request):
 
 
 @pytest.fixture(name="snmpsim", scope="module", autouse=True)
-def snmpsim_fixture(site, snmp_data_dir, tmp_path_factory):
+def snmpsim_fixture(site: Site, snmp_data_dir, tmp_path_factory):
     tmp_path = tmp_path_factory.getbasetemp()
     log.logger.setLevel(logging.DEBUG)
     debug.enable()
@@ -186,7 +187,7 @@ def backend_fixture(request, snmp_data_dir):
         is_snmpv2or3_without_bulkwalk_host=True,
         bulk_walk_size_of=10,
         timing={},
-        oid_range_limits=[],
+        oid_range_limits={},
         snmpv3_contexts=[],
         character_encoding=None,
         is_usewalk_host=backend is StoredWalkSNMPBackend,

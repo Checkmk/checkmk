@@ -10,6 +10,8 @@ from typing import Any, Dict, List, Literal, Optional, Tuple, Union
 
 from livestatus import SiteConfigurations
 
+from cmk.utils.type_defs import TagConfigSpec
+
 CustomLinkSpec = Tuple[str, bool, List[Tuple[str, str, Optional[str], str]]]
 
 # Links for everyone
@@ -482,11 +484,13 @@ class CREConfig:
     wato_host_tags: List = field(default_factory=list)
     wato_aux_tags: List = field(default_factory=list)
     # Tag configuration variable since 1.6
-    wato_tags: Dict[str, List] = field(
-        default_factory=lambda: {
-            "tag_groups": [],
-            "aux_tags": [],
-        }
+    wato_tags: TagConfigSpec = field(
+        default_factory=lambda: TagConfigSpec(
+            {
+                "tag_groups": [],
+                "aux_tags": [],
+            }
+        )
     )
 
     wato_enabled: bool = True

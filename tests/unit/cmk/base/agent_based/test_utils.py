@@ -6,7 +6,7 @@
 
 # pylint: disable=protected-access
 
-from typing import Any, Callable, Dict, Iterable, List
+from typing import Any, Callable, Dict, Iterable, Sequence
 
 import pytest
 
@@ -78,12 +78,12 @@ SECTION_FOUR = _test_section(
     supersedes={"one"},
 )
 
-NODE_1: AgentRawDataSection = [
+NODE_1: Sequence[AgentRawDataSection] = [
     ["node1", "data 1"],
     ["node1", "data 2"],
 ]
 
-NODE_2: AgentRawDataSection = [
+NODE_2: Sequence[AgentRawDataSection] = [
     ["node2", "data 1"],
     ["node2", "data 2"],
 ]
@@ -108,7 +108,7 @@ NODE_2: AgentRawDataSection = [
     ],
 )
 def test_get_section_kwargs(
-    required_sections: List[str], expected_result: Dict[str, Dict[str, str]]
+    required_sections: Sequence[str], expected_result: Dict[str, Dict[str, str]]
 ) -> None:
 
     node_sections = AgentHostSections(
@@ -180,7 +180,7 @@ def test_get_section_kwargs(
     ],
 )
 def test_get_section_cluster_kwargs(
-    required_sections: List[str], expected_result: Dict[str, Any]
+    required_sections: Sequence[str], expected_result: Dict[str, Any]
 ) -> None:
 
     node1_sections = AgentHostSections(
@@ -228,28 +228,27 @@ def test_get_section_cluster_kwargs(
 
 
 def test_check_parsing_errors_no_errors() -> None:
-    assert check_parsing_errors(()) == ActiveCheckResult(0, [], (), ())
+    assert not check_parsing_errors(())
 
 
 def test_check_parsing_errors_are_ok() -> None:
-    assert check_parsing_errors(("error - message",), error_state=0,) == ActiveCheckResult(
-        0,
-        ["error"],
-        ("error - message",),
-        (),
+    assert (
+        check_parsing_errors(
+            ("error - message",),
+            error_state=0,
+        )
+        == [ActiveCheckResult(0, "error", ("error - message",))]
     )
 
 
 def test_check_parsing_errors_with_errors_() -> None:
-    assert check_parsing_errors(("error - message",)) == ActiveCheckResult(
-        1,
-        ["error(!)"],
-        ("error - message",),
-        (),
-    )
-    assert check_parsing_errors(("error - message",), error_state=2,) == ActiveCheckResult(
-        2,
-        ["error(!!)"],
-        ("error - message",),
-        (),
+    assert check_parsing_errors(("error - message",)) == [
+        ActiveCheckResult(1, "error", ("error - message",))
+    ]
+    assert (
+        check_parsing_errors(
+            ("error - message",),
+            error_state=2,
+        )
+        == [ActiveCheckResult(2, "error", ("error - message",))]
     )

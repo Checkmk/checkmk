@@ -19,7 +19,11 @@ import cmk.utils.store as store
 
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
-from cmk.gui.plugins.userdb import CheckCredentialsResult, user_connector_registry, UserConnector
+from cmk.gui.plugins.userdb.utils import (
+    CheckCredentialsResult,
+    user_connector_registry,
+    UserConnector,
+)
 
 crypt_context = CryptContext(
     schemes=[
@@ -123,7 +127,10 @@ class HtpasswdUserConnector(UserConnector):
     # ? the exact type of user_id is unclear, str, maybe, based on the line "if user_id not in users" ?
     def _is_automation_user(self, user_id):
         return os.path.isfile(
-            cmk.utils.paths.var_dir + "/web/" + ensure_str(user_id) + "/automation.secret"
+            cmk.utils.paths.var_dir
+            + "/web/"
+            + ensure_str(user_id)  # pylint: disable= six-ensure-str-bin-call
+            + "/automation.secret"
         )
 
     # Validate hashes taken from the htpasswd file. For the moment this function

@@ -29,7 +29,7 @@ PYTHON_SAVE_DIR    := $(PYTHON_TMP_DIR)\to_save
 ROOT_CMK_PATH      := ..\..\..
 OMD_PACKAGES_DIR   := $(ROOT_CMK_PATH)\omd\packages\Python
 ARTEFACTS_DIR      := $(ROOT_CMK_PATH)\artefacts
-SRC_PIPFILE_DIR    := $(ROOT_CMK_PATH)\virtual-envs\windows\$(PY_VER)
+SRC_PIPFILE_DIR    := pipfiles\3
 
 # names
 OMD_PYTHON_NAME    := Python-$(PY_VER).$(PY_SUBVER)
@@ -46,7 +46,7 @@ SRC_PIPFILE        := $(SRC_PIPFILE_DIR)\Pipfile
 PYTHON_PIPFILE     := $(PYTHON_SAVE_DIR)\Pipfile
 PYTHON_PIPFILE_LOCK:= $(PYTHON_PIPFILE).lock
 
-ARTEFACT_MODULE    := $(ARTEFACTS_DIR)\$(PYTHON_MODULE_NAME)
+ARTEFACT_MODULE    := $(ARTEFACTS_DIR)\python-3.cab
 ARTEFACT_MODULE_344:= $(ARTEFACTS_DIR)\$(PYTHON_MODULE_NAME_344)
 PYTHON_MODULE      := $(PYTHON_TMP_DIR)\$(PYTHON_MODULE_NAME)
 PYTHON_MODULE_344  := $(PYTHON_TMP_DIR_344)\$(PYTHON_MODULE_NAME_344)
@@ -59,7 +59,7 @@ PYTHON_MODULE_344  := $(PYTHON_TMP_DIR_344)\$(PYTHON_MODULE_NAME_344)
 
 usage:
 	@powershell Write-Host "Define build parameters, for example:"
-	@powershell Write-Host "make build PY_VER=3.8 PY_SUVBER=11" -foreground Green 
+	@powershell Write-Host "make build PY_VER=3.9 PY_SUVBER=7" -foreground Green 
 	@powershell Write-Host "make python_344 PY_VER=3.4 PY_SUVBER=4" -foreground Green 
 
 python_version:

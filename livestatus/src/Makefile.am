@@ -20,10 +20,10 @@ ASIO_VERSION := asio-asio-1-18-2
 ASIO_INCLUDE := $(INCLUDES_DIR)/asio
 
 RRDTOOL_VERSION := rrdtool-1.7.2
-RRDTOOL_SRC_DIR := $(abs_top_srcdir)/omd/build/package_build/$(RRDTOOL_VERSION)/src
-RRDTOOL_BUILD_LOG := $(RRDTOOL_SRC_DIR)/build.log
-RRDTOOL_LD_FLAGS := -lrrd -L$(RRDTOOL_SRC_DIR)/.libs
-RRDTOOL_CPPFLAGS := -I$(RRDTOOL_SRC_DIR)
+RRDTOOL_PATH := $(abs_top_srcdir)/omd/build/intermediate_install/$(RRDTOOL_VERSION)
+RRDTOOL_BUILD_LOG := $(RRDTOOL_PATH)/build.log
+RRDTOOL_LD_FLAGS := -lrrd -L$(RRDTOOL_PATH)/lib
+RRDTOOL_CPPFLAGS := -I$(RRDTOOL_PATH)/include
 
 PACKAGE_GOOGLETEST := $(abs_top_srcdir)/omd/packages/googletest
 GOOGLETEST_VERSION := googletest-f3ef7e173f
@@ -110,7 +110,6 @@ liblivestatus_a_SOURCES = \
         DictFilter.cc \
         DoubleFilter.cc \
         DowntimeRenderer.cc \
-        DowntimeOrComment.cc \
         DynamicEventConsoleReplicationColumn.cc \
         DynamicFileColumn-impl.cc \
         EventConsoleConnection.cc \
@@ -189,6 +188,9 @@ liblivestatus_a_SOURCES = \
         strutil.cc
 $(liblivestatus_a_SOURCES): $(ASIO_INCLUDE) $(RRDTOOL_VERSION)
 
+# Called during packaging. Copied from Makefile.am "all-am" to exclude noinst* targets
+all-packaging-local: Makefile $(bin_PROGRAMS) $(pkglib_LIBRARIES) all-local
+
 $(ASIO_INCLUDE): $(ASIO_VERSION)
 	mkdir -p $(ASIO_INCLUDE)
 	rsync -a --delete --exclude=Makefile.am --exclude=.gitignore $(ASIO_VERSION)/asio/include/ $(ASIO_INCLUDE)
@@ -208,7 +210,7 @@ $(RRDTOOL_VERSION):
 # would totally hide any output of our own stuff, so we write it to a log file
 # in case something goes seriously wrong.
 	mkdir -p $$(dirname $(RRDTOOL_BUILD_LOG))
-	LANG=C make -j4 -C $$(dirname $$(dirname $$(dirname $$(dirname $(RRDTOOL_SRC_DIR))))) rrdtool-build-library >$(RRDTOOL_BUILD_LOG) 2>&1
+	LANG=C make -j4 -C $$(dirname $$(dirname $$(dirname $(RRDTOOL_PATH)))) rrdtool-build-library >$(RRDTOOL_BUILD_LOG) 2>&1
 	touch $@
 
 $(GOOGLETEST_INCLUDE): $(GOOGLETEST_VERSION)/Makefile

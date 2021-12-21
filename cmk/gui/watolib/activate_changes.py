@@ -26,10 +26,11 @@ import shutil
 import subprocess
 import time
 import traceback
+from dataclasses import asdict
 from itertools import filterfalse
 from logging import Logger
 from pathlib import Path
-from typing import Any, Callable, Dict, List, NamedTuple, Optional, Set, Tuple, Union
+from typing import Any, Callable, Dict, Iterable, List, NamedTuple, Optional, Set, Tuple, Union
 
 import psutil  # type: ignore[import]
 import werkzeug.urls
@@ -37,6 +38,7 @@ import werkzeug.urls
 from livestatus import SiteConfiguration, SiteId
 
 import cmk.utils
+import cmk.utils.agent_registration as agent_registration
 import cmk.utils.daemon as daemon
 import cmk.utils.license_usage.samples as license_usage_samples
 import cmk.utils.paths
@@ -64,8 +66,14 @@ from cmk.gui.globals import timeout_manager, user
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.plugins.userdb.utils import user_sync_default_config
-from cmk.gui.plugins.watolib import ABCConfigDomain
-from cmk.gui.plugins.watolib.utils import wato_fileheader
+from cmk.gui.plugins.watolib.utils import (
+    DomainRequest,
+    DomainRequests,
+    get_always_activate_domains,
+    get_config_domain,
+    SerializedSettings,
+    wato_fileheader,
+)
 from cmk.gui.sites import activation_sites, allsites
 from cmk.gui.sites import disconnect as sites_disconnect
 from cmk.gui.sites import get_site_config, is_single_local_site, site_is_local, SiteStatus
@@ -74,6 +82,7 @@ from cmk.gui.type_defs import ConfigDomainName, HTTPVariables
 from cmk.gui.utils.ntop import is_ntop_configured
 from cmk.gui.watolib.automation_commands import automation_command_registry, AutomationCommand
 from cmk.gui.watolib.changes import log_audit, SiteChanges
+from cmk.gui.watolib.config_domains import ConfigDomainOMD
 from cmk.gui.watolib.config_sync import extract_from_buffer, ReplicationPath, SnapshotCreator
 from cmk.gui.watolib.global_settings import save_site_global_settings
 from cmk.gui.watolib.wato_background_job import WatoBackgroundJob
@@ -222,7 +231,13 @@ def get_replication_paths() -> List[ReplicationPath]:
         ReplicationPath(
             "dir",
             "local",
-            os.path.relpath(cmk.utils.paths.omd_root + "/local", cmk.utils.paths.omd_root),
+            "local",
+            [],
+        ),
+        ReplicationPath(
+            "file",
+            "omd",
+            "etc/omd/sitespecific.mk",
             [],
         ),
     ]
@@ -1184,7 +1199,6 @@ class ActivationCleanupBackgroundJob(WatoBackgroundJob):
                 self._logger.info("Check activation: %s", activation_id)
                 delete = False
                 manager = ActivateChangesManager()
-                manager.load()
 
                 # Try to detect whether or not the activation is still in progress. In case the
                 # activation information can not be read, it is likely that the activation has
@@ -1565,7 +1579,6 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
 
         # Is this activation still in progress?
         manager = ActivateChangesManager()
-        manager.load()
 
         try:
             manager.load_activation(current_activation_id)
@@ -1770,17 +1783,18 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
         return configuration_warnings
 
     def _call_activate_changes_automation(self) -> ConfigWarnings:
-        domains = self._get_domains_needing_activation()
+        domain_requests = self._get_domains_needing_activation()
 
         if site_is_local(self._site_id):
-            return execute_activate_changes(domains)
+            return execute_activate_changes(domain_requests)
 
+        serialized_requests = list(asdict(x) for x in domain_requests)
         try:
             response = cmk.gui.watolib.automations.do_remote_automation(
                 get_site_config(self._site_id),
                 "activate-changes",
                 [
-                    ("domains", repr(domains)),
+                    ("domains", repr(serialized_requests)),
                     ("site_id", self._site_id),
                 ],
             )
@@ -1791,14 +1805,54 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
                 )
             raise
 
+        omd_ident = ConfigDomainOMD.ident()
+        if any(request.name == omd_ident for request in domain_requests):
+            response.setdefault(omd_ident, []).extend(self._get_omd_domain_background_job_result())
+
         return response
 
-    def _get_domains_needing_activation(self):
-        domains = set([])
+    def _get_omd_domain_background_job_result(self) -> List[str]:
+        """
+        OMD domain needs restart of the whole site so the apache connection gets lost.
+        A background job is started and we have to wait for the result
+        """
+        while True:
+            try:
+                raw_omd_response = cmk.gui.watolib.automations.do_remote_automation(
+                    get_site_config(self._site_id),
+                    "checkmk-remote-automation-get-status",
+                    [("request", repr("omd-config-change"))],
+                )
+
+                omd_response = cmk.gui.watolib.automations.CheckmkAutomationGetStatusResponse(
+                    *raw_omd_response
+                )
+                if not omd_response.job_status["is_active"]:
+                    return omd_response.job_status["loginfo"]["JobException"]
+            except MKUserError as e:
+                if not (
+                    e.message == "Site is not running" or e.message.startswith("HTTP Error - 502")
+                ):
+                    return [e.message]
+
+    def _get_domains_needing_activation(self) -> DomainRequests:
+        domain_settings: Dict[ConfigDomainName, List[SerializedSettings]] = {}
         for change in self._site_changes:
             if change["need_restart"]:
-                domains.update(change["domains"])
-        return sorted(list(domains))
+                for domain_name in change["domains"]:
+                    domain_settings.setdefault(domain_name, [])
+                    if (
+                        settings := get_config_domain(domain_name).get_domain_settings(change)
+                    ) is not None:
+                        domain_settings[domain_name].append(settings)
+
+        return sorted(
+            (
+                get_config_domain(domain_name).get_domain_request(settings_list)
+                for (domain_name, settings_list) in domain_settings.items()
+            ),
+            key=lambda x: x.name,
+        )
 
     def _confirm_activated_changes(self):
         site_changes = SiteChanges(SiteChanges.make_path(self._site_id))
@@ -1839,7 +1893,7 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
         self._status_text = status_text
 
         if phase != PHASE_INITIALIZED:
-            self._set_status_details(phase, status_details)
+            self._status_details = self._calc_status_details(phase, status_details)
 
         self._time_updated = time.time()
         if phase == PHASE_DONE:
@@ -1863,31 +1917,31 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
             },
         )
 
-    def _set_status_details(self, phase: Phase, status_details: Optional[str]) -> None:
+    def _calc_status_details(self, phase: Phase, status_details: Optional[str]) -> str:
         # As long as the site is in queue, there is no time started
         if phase == PHASE_QUEUED:
-            self._status_details = _("Queued for update")
+            value = _("Queued for update")
         elif self._time_started is not None:
-            self._status_details = _("Started at: %s.") % render.time_of_day(self._time_started)
+            value = _("Started at: %s.") % render.time_of_day(self._time_started)
         else:
-            self._status_details = _("Not started.")
+            value = _("Not started.")
 
         if phase == PHASE_DONE:
-            self._status_details += _(" Finished at: %s.") % render.time_of_day(self._time_ended)
+            value += _(" Finished at: %s.") % render.time_of_day(self._time_ended)
         elif phase != PHASE_QUEUED:
             assert isinstance(self._time_started, (int, float))
             estimated_time_left = self._expected_duration - (time.time() - self._time_started)
             if estimated_time_left < 0:
-                self._status_details += " " + _("Takes %.1f seconds longer than expected") % abs(
+                value += " " + _("Takes %.1f seconds longer than expected") % abs(
                     estimated_time_left
                 )
             else:
-                self._status_details += (
-                    " " + _("Approximately finishes in %.1f seconds") % estimated_time_left
-                )
+                value += " " + _("Approximately finishes in %.1f seconds") % estimated_time_left
 
         if status_details:
-            self._status_details += "<br>%s" % status_details
+            value += "<br>%s" % status_details
+
+        return value
 
     def _save_state(
         self, activation_id: ActivationId, site_id: SiteId, state: SiteActivationState
@@ -1912,16 +1966,30 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
         self._expected_duration = duration
 
 
-def execute_activate_changes(domains: List[ConfigDomainName]) -> ConfigWarnings:
-    activation_domains = set(domains).union(ABCConfigDomain.get_always_activate_domain_idents())
+def parse_serialized_domain_requests(
+    serialized_requests: Iterable[SerializedSettings],
+) -> DomainRequests:
+    return [DomainRequest(**x) for x in serialized_requests]
+
+
+def execute_activate_changes(domain_requests: DomainRequests) -> ConfigWarnings:
+    domain_names = [x.name for x in domain_requests]
+
+    all_domain_requests = [
+        domain.get_domain_request([])
+        for domain in get_always_activate_domains()
+        if domain.ident() not in domain_names
+    ]
+    all_domain_requests.extend(domain_requests)
+    all_domain_requests.sort(key=lambda x: x.name)
 
     results: ConfigWarnings = {}
-    for domain in sorted(activation_domains):
-        domain_class = ABCConfigDomain.get_class(domain)
-        warnings = domain_class().activate()
-        results[domain] = warnings or []
+    for domain_request in all_domain_requests:
+        warnings = get_config_domain(domain_request.name)().activate(domain_request.settings)
+        results[domain_request.name] = warnings or []
 
     _add_extensions_for_license_usage()
+    _update_links_for_agent_receiver()
 
     return results
 
@@ -1936,6 +2004,14 @@ def _add_extensions_for_license_usage():
             ntop=is_ntop_configured(),
         )
         store.save_bytes_to_file(extensions_filepath, extensions.serialize())
+
+
+def _update_links_for_agent_receiver() -> None:
+    uuid_link_manager = agent_registration.UUIDLinkManager(
+        received_outputs_dir=cmk.utils.paths.received_outputs_dir,
+        data_source_dir=cmk.utils.paths.data_source_push_agent_dir,
+    )
+    uuid_link_manager.update_links(cmk.gui.watolib.collect_all_hosts())
 
 
 def confirm_all_local_changes() -> None:
@@ -2587,7 +2663,6 @@ def activate_changes_wait(
         The activation-state when finished, if not yet finished it will return None
     """
     manager = ActivateChangesManager()
-    manager.load()
     manager.load_activation(activation_id)
     if manager.wait_for_completion(timeout=timeout):
         return manager.get_state()
@@ -2611,6 +2686,9 @@ def append_query_string(url: str, variables: HTTPVariables) -> str:
             >>> append_query_string("foo", [('c', ''), ('a', 1), ('b', '2'),])
             'foo?a=1&b=2&c='
 
+            >>> append_query_string("foo", [('c', None), ('a', None), ('b', None),])
+            'foo'
+
     Args:
         url:
             The url to append the query string to.
@@ -2622,8 +2700,10 @@ def append_query_string(url: str, variables: HTTPVariables) -> str:
 
     """
     if variables:
-        # Encoding would work even with byte-string keys, yet these are
-        # excluded via our type signature.
-        url += "?" + werkzeug.urls.url_encode(variables, sort=True)
+        _vars: List[Tuple[str, str]] = [
+            (key, str(value)) for key, value in variables if value is not None
+        ]
+        if _vars:
+            url += "?" + werkzeug.urls.url_encode(_vars, sort=True)
 
     return url

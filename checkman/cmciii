@@ -13,7 +13,10 @@ description:
  Otherwise the check is {UNKNOWN}.
 
 item:
- Name of the device
+ By default the name of the device is used. If the discovery option
+ "Use sensor description" from the ruleset "Rittal CMC III discovery"
+ is active, the number of the device followed by the name of the device
+ is used.
 
 discovery:
  One service is created for each state.

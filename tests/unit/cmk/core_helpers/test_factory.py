@@ -38,7 +38,7 @@ def fixture_snmp_config() -> SNMPHostConfig:
         is_snmpv2or3_without_bulkwalk_host=False,
         bulk_walk_size_of=0,
         timing={},
-        oid_range_limits=[],
+        oid_range_limits={},
         snmpv3_contexts=[],
         character_encoding=None,
         is_usewalk_host=False,

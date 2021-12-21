@@ -76,13 +76,35 @@ $(CHECK_MK_INSTALL): $(CHECK_MK_BUILD) $(PYTHON_CACHE_PKG_PROCESS)
 	# cmk needs to be a namespace package (CMK-3979)
 	rm \
 	    $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/__init__.py \
+	    $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/special_agents/__init__.py \
 	    $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/base/__init__.py \
 	    $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/base/check_legacy_includes/__init__.py \
 	    $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/base/plugins/__init__.py \
 	    $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/base/plugins/agent_based/__init__.py \
-	    $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/base/plugins/agent_based/utils/__init__.py
-	export LD_LIBRARY_PATH="$(PACKAGE_PYTHON_LD_LIBRARY_PATH)" ; \
-	    $(PACKAGE_PYTHON_EXECUTABLE) -m compileall $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk
+	    $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/base/plugins/agent_based/utils/__init__.py \
+	    $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/post_rename_site/__init__.py \
+    	    $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/post_rename_site/plugins/__init__.py \
+    	    $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/post_rename_site/plugins/actions/__init__.py \
+	    $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/gui/__init__.py \
+	    $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/gui/plugins/__init__.py \
+	    $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/gui/plugins/dashboard/__init__.py \
+	    $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/gui/plugins/config/__init__.py \
+	    $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/gui/plugins/cron/__init__.py \
+	    $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/gui/plugins/userdb/__init__.py \
+	    $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/gui/plugins/bi/__init__.py \
+	    $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/gui/plugins/webapi/__init__.py \
+	    $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/gui/plugins/watolib/__init__.py \
+	    $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/gui/plugins/openapi/__init__.py \
+	    $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/gui/plugins/openapi/endpoints/__init__.py \
+	    $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/gui/plugins/sidebar/__init__.py \
+	    $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/gui/plugins/views/__init__.py \
+	    $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/gui/plugins/views/icons/__init__.py \
+	    $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/gui/plugins/views/perfometers/__init__.py \
+	    $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/gui/plugins/visuals/__init__.py \
+	    $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/gui/plugins/metrics/__init__.py \
+	    $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/gui/plugins/wato/__init__.py \
+	    $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/gui/plugins/wato/check_parameters/__init__.py
+	$(PACKAGE_PYTHON_COMMAND) -m compileall $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk
 
 	# Provide the externally documented paths for Checkmk plugins
 	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/lib
@@ -92,6 +114,7 @@ $(CHECK_MK_INSTALL): $(CHECK_MK_BUILD) $(PYTHON_CACHE_PKG_PROCESS)
 	$(LN) -s python3/cmk $(DESTDIR)$(OMD_ROOT)/skel/local/lib/check_mk
 	# Create the plugin namespaces
 	$(MKDIR) -p $(DESTDIR)$(OMD_ROOT)/skel/local/lib/python3/cmk/base/plugins/agent_based
+	$(MKDIR) -p $(DESTDIR)$(OMD_ROOT)/skel/local/lib/python3/cmk/special_agents
 
 	# Install the diskspace cleanup plugin
 	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/share/diskspace
@@ -114,8 +137,8 @@ $(CHECK_MK_INSTALL): $(CHECK_MK_BUILD) $(PYTHON_CACHE_PKG_PROCESS)
 
 	# Install hooks
 	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/lib/omd/hooks
-	install -m 755 $(PACKAGE_DIR)/$(CHECK_MK)/MARCV $(DESTDIR)$(OMD_ROOT)/lib/omd/hooks/
-	install -m 755 $(PACKAGE_DIR)/$(CHECK_MK)/MARCV_PORT $(DESTDIR)$(OMD_ROOT)/lib/omd/hooks/
+	install -m 755 $(PACKAGE_DIR)/$(CHECK_MK)/AGENT_RECEIVER $(DESTDIR)$(OMD_ROOT)/lib/omd/hooks/
+	install -m 755 $(PACKAGE_DIR)/$(CHECK_MK)/AGENT_RECEIVER_PORT $(DESTDIR)$(OMD_ROOT)/lib/omd/hooks/
 	install -m 755 $(PACKAGE_DIR)/$(CHECK_MK)/MKEVENTD $(DESTDIR)$(OMD_ROOT)/lib/omd/hooks/
 	install -m 755 $(PACKAGE_DIR)/$(CHECK_MK)/MKEVENTD_SNMPTRAP $(DESTDIR)$(OMD_ROOT)/lib/omd/hooks/
 	install -m 755 $(PACKAGE_DIR)/$(CHECK_MK)/MKEVENTD_SYSLOG $(DESTDIR)$(OMD_ROOT)/lib/omd/hooks/

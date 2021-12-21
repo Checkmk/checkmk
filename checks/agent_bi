@@ -10,9 +10,12 @@ def agent_bi_arguments(params, hostname, ipaddress):
     # WATO <-> API
     #  aggr_groups / aggr_group_prefix <-> groups
     #  aggr_name_regex / aggr_name <-> names
+    # Note: In 1.6 aggr_name_regex never worked as regex, it always was an exact match
     for param_set in params:
         filter_ = param_set.get("filter", {})
         for replacement, name in (
+            ("groups", "aggr_groups"),  # 1.6 (deprecated)
+            ("names", "aggr_name_regex"),  # 1.6 (deprecated)
             ("groups", "aggr_group_prefix"),
             ("names", "aggr_name"),
         ):

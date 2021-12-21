@@ -174,7 +174,7 @@ def test_output_aggregator_single_file_servicename(mk_filestats, lazyfile, group
 
 
 class MockConfigParser(configparser.RawConfigParser):
-    def read(self, cfg_file):
+    def read(self, cfg_file):  # pylint:disable=arguments-differ
         pass
 
 
@@ -216,7 +216,7 @@ class TestConfigParsing:
         assert actual_results
         assert sorted([r[0] for r in actual_results]) == ["banana", "strawberry"]
 
-        for section, config_dict in [r for r in actual_results if r[0] == "banana"]:
+        for _section, config_dict in [r for r in actual_results if r[0] == "banana"]:
             assert len(config_dict.items()) == 4
             assert config_dict["input_patterns"] == "/home/banana/*"
             assert config_dict["output"] == "file_stats"
@@ -235,7 +235,7 @@ class TestConfigParsing:
                 ("type", "regex"),
             ]
 
-        for section, config_dict in [r for r in actual_results if r[0] == "strawberry"]:
+        for _section, config_dict in [r for r in actual_results if r[0] == "strawberry"]:
             assert len(config_dict.items()) == 3
             assert config_dict["input_patterns"] == "/var/log/*"
             assert config_dict["output"] == "file_stats"
@@ -339,7 +339,10 @@ def test_grouping_multiple_groups(
         )
     )
     expected_results_list = sorted(expected_result)
-    for results_idx, (section_name, files) in enumerate(results_list):
-        assert section_name == expected_results_list[results_idx][0]
+    for results_idx, (
+        section_name_arg,
+        files,
+    ) in enumerate(results_list):
+        assert section_name_arg == expected_results_list[results_idx][0]
         for files_idx, single_file in enumerate(files):
             assert single_file == expected_results_list[results_idx][1][files_idx]

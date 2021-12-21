@@ -27,7 +27,7 @@ class ArgsDict(TypedDict):
 def fixture_args() -> ArgsDict:
     # put in a function so the value_store is always fresh
     return {
-        "value_store": dict(),
+        "value_store": {},
         "value_store_key": "vskey",
         "resource": "resource_name",
         "levels": {

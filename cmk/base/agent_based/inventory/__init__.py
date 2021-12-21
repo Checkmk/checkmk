@@ -108,8 +108,9 @@ def _commandline_inventory_on_host(
         retentions_tracker=RetentionsTracker([]),
     )
 
-    for detail in check_parsing_errors(errors=inv_result.parsing_errors).details:
-        console.warning(detail)
+    for subresult in check_parsing_errors(errors=inv_result.parsing_errors):
+        for line in subresult.details:
+            console.warning(line)
 
     # TODO: inv_results.source_results is completely ignored here.
     # We should process the results to make errors visible on the console
@@ -175,18 +176,18 @@ def active_check_inventory(hostname: HostName, options: Dict[str, int]) -> Activ
 
     if inv_result.safe_to_write:
         old_tree = _save_inventory_tree(hostname, trees.inventory, retentions)
-        update_result = ActiveCheckResult(0, (), (), ())
+        update_result = ActiveCheckResult()
     else:
         old_tree, sources_state = None, 1
         update_result = ActiveCheckResult(
-            sources_state, (f"Cannot update tree{state_markers[sources_state]}",), (), ()
+            sources_state, f"Cannot update tree{state_markers[sources_state]}"
         )
 
     _run_inventory_export_hooks(host_config, trees.inventory)
 
     return ActiveCheckResult.from_subresults(
         update_result,
-        _check_inventory_tree(trees, old_tree, _inv_sw_missing, _inv_sw_changes, _inv_hw_changes),
+        *_check_inventory_tree(trees, old_tree, _inv_sw_missing, _inv_sw_changes, _inv_hw_changes),
         *check_sources(
             source_results=inv_result.source_results,
             mode=Mode.INVENTORY,
@@ -194,7 +195,7 @@ def active_check_inventory(hostname: HostName, options: Dict[str, int]) -> Activ
             # ruleset "Do hardware/software Inventory". These are handled by the "Check_MK" service
             override_non_ok_state=_inv_fail_status,
         ),
-        check_parsing_errors(
+        *check_parsing_errors(
             errors=inv_result.parsing_errors,
             error_state=_inv_fail_status,
         ),
@@ -207,31 +208,31 @@ def _check_inventory_tree(
     sw_missing: ServiceState,
     sw_changes: ServiceState,
     hw_changes: ServiceState,
-) -> ActiveCheckResult:
+) -> Sequence[ActiveCheckResult]:
     if trees.inventory.is_empty() and trees.status_data.is_empty():
-        return ActiveCheckResult(0, ("Found no data",), (), ())
+        return [ActiveCheckResult(0, "Found no data")]
 
-    status = 0
-    infotexts = [f"Found {trees.inventory.count_entries()} inventory entries"]
+    subresults = [
+        ActiveCheckResult(0, f"Found {trees.inventory.count_entries()} inventory entries")
+    ]
 
     swp_table = trees.inventory.get_table(["software", "packages"])
     if swp_table is not None and swp_table.is_empty() and sw_missing:
-        infotexts.append("software packages information is missing" + state_markers[sw_missing])
-        status = max(status, sw_missing)
+        subresults.append(ActiveCheckResult(sw_missing, "software packages information is missing"))
 
     if old_tree is not None:
         if not _tree_nodes_are_equal(old_tree, trees.inventory, "software"):
-            infotexts.append("software changes" + state_markers[sw_changes])
-            status = max(status, sw_changes)
+            subresults.append(ActiveCheckResult(sw_changes, "software changes"))
 
         if not _tree_nodes_are_equal(old_tree, trees.inventory, "hardware"):
-            infotexts.append("hardware changes" + state_markers[hw_changes])
-            status = max(status, hw_changes)
+            subresults.append(ActiveCheckResult(hw_changes, "hardware changes"))
 
     if not trees.status_data.is_empty():
-        infotexts.append(f"Found {trees.status_data.count_entries()} status entries")
+        subresults.append(
+            ActiveCheckResult(0, f"Found {trees.status_data.count_entries()} status entries")
+        )
 
-    return ActiveCheckResult(status, infotexts, (), ())
+    return subresults
 
 
 def _tree_nodes_are_equal(

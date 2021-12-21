@@ -11,18 +11,19 @@ from typing import List, Optional, Tuple, Union
 import cmk.utils.defines as defines
 
 import cmk.gui.inventory as inventory
+import cmk.gui.query_filters as query_filters
 import cmk.gui.utils as utils
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.globals import html
-from cmk.gui.i18n import _
-from cmk.gui.plugins.visuals import (
+from cmk.gui.i18n import _, _l
+from cmk.gui.plugins.visuals.utils import (
+    display_filter_radiobuttons,
     Filter,
     filter_registry,
-    FilterTristate,
+    FilterOption,
     visual_info_registry,
     VisualInfo,
 )
-from cmk.gui.plugins.visuals.utils import display_filter_radiobuttons
 from cmk.gui.type_defs import FilterHeader, FilterHTTPVariables, Rows, VisualContext
 from cmk.gui.valuespec import Age, DualListChoice, ValueSpec
 
@@ -494,68 +495,43 @@ class FilterInvFloat(Filter):
         return newrows
 
 
-class FilterInvBool(FilterTristate):
+class FilterInvBool(FilterOption):
     def __init__(self, *, ident: str, title: str, inv_path: str, is_show_more: bool = True) -> None:
         super().__init__(
             ident=ident,
             title=title,
             sort_index=800,
             info="host",
-            column=ident,
+            query_filter=query_filters.FilterTristate(
+                ident=ident,
+                filter_code=lambda x: "",  # No Livestatus filtering right now
+                filter_rows=query_filters.inside_inventory(inv_path),
+            ),
             is_show_more=is_show_more,
         )
-        self._invpath = inv_path
 
     def need_inventory(self, value) -> bool:
-        return self.tristate_value(value) != -1
-
-    def filter(self, value: FilterHTTPVariables) -> FilterHeader:
-        return ""  # No Livestatus filtering right now
-
-    def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
-        value = context.get(self.ident, {})
-        assert not isinstance(value, str)
-        tri = self.tristate_value(value)
-        if tri == -1:
-            return rows
-
-        wanted_value = tri == 1
-        newrows = []
-        for row in rows:
-            invdata = inventory.get_inventory_attribute(row["host_inventory"], self._invpath)
-            if wanted_value == invdata:
-                newrows.append(row)
-        return newrows
+        return self.query_filter.selection_value(value) != self.query_filter.ignore
 
 
 @filter_registry.register_instance
-class FilterHasInv(FilterTristate):
+class FilterHasInv(FilterOption):
     def __init__(self) -> None:
         super().__init__(
             ident="has_inv",
-            title=_("Has Inventory Data"),
+            title=_l("Has Inventory Data"),
             sort_index=801,
             info="host",
-            column="host_inventory",
+            query_filter=query_filters.FilterTristate(
+                ident="has_inv",
+                filter_code=lambda x: "",  # No Livestatus filtering right now
+                filter_rows=query_filters.has_inventory,
+            ),
             is_show_more=True,
         )
 
     def need_inventory(self, value) -> bool:
-        return self.tristate_value(value) != -1
-
-    def filter(self, value: FilterHTTPVariables) -> FilterHeader:
-        return ""  # No Livestatus filtering right now
-
-    def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
-        value = context.get(self.ident, {})
-        assert not isinstance(value, str)
-        tri = self.tristate_value(value)
-        if tri == -1:
-            return rows
-        if tri == 1:
-            return [row for row in rows if row["host_inventory"]]
-        # not
-        return [row for row in rows if not row["host_inventory"]]
+        return self.query_filter.selection_value(value) != self.query_filter.ignore
 
 
 @filter_registry.register_instance
@@ -564,7 +540,7 @@ class FilterInvHasSoftwarePackage(Filter):
         self._varprefix = "invswpac_host_"
         super().__init__(
             ident="invswpac",
-            title=_("Host has software package"),
+            title=_l("Host has software package"),
             sort_index=801,
             info="host",
             htmlvars=[

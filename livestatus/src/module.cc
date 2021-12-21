@@ -11,7 +11,6 @@
 // IWYU pragma: no_include <ext/alloc_traits.h>
 #include "config.h"
 
-#include <fcntl.h>
 #include <pthread.h>
 #include <sys/socket.h>
 #include <sys/stat.h>
@@ -23,6 +22,7 @@
 #include <cerrno>
 #include <chrono>
 #include <cstddef>
+#include <cstdint>
 #include <cstdlib>
 #include <cstring>
 #include <filesystem>
@@ -451,19 +451,11 @@ bool open_unix_socket() {
         }
     }
 
-    g_unix_socket = ::socket(PF_UNIX, SOCK_STREAM, 0);
+    g_unix_socket = ::socket(PF_UNIX, SOCK_STREAM | SOCK_CLOEXEC, 0);
     g_max_fd_ever = g_unix_socket;
     if (g_unix_socket < 0) {
         generic_error ge("cannot create UNIX socket");
         Critical(fl_logger_nagios) << ge;
-        return false;
-    }
-
-    // Imortant: close on exec -> check plugins must not inherit it!
-    if (::fcntl(g_unix_socket, F_SETFD, FD_CLOEXEC) == -1) {
-        generic_error ge("cannot set close-on-exec bit on socket");
-        Alert(fl_logger_nagios) << ge;
-        ::close(g_unix_socket);
         return false;
     }
 
@@ -541,14 +533,30 @@ int broker_comment(int event_type __attribute__((__unused__)), void *data) {
     unsigned long id = co->comment_id;
     switch (co->type) {
         case NEBTYPE_COMMENT_ADD:
-        case NEBTYPE_COMMENT_LOAD:
-            fl_comments[id] = std::make_unique<Comment>(
-                ::find_host(co->host_name),
+        case NEBTYPE_COMMENT_LOAD: {
+            auto *hst = ::find_host(co->host_name);
+            auto *svc =
                 co->service_description == nullptr
                     ? nullptr
-                    : ::find_service(co->host_name, co->service_description),
-                co);
+                    : ::find_service(co->host_name, co->service_description);
+            fl_comments[id] = std::make_unique<Comment>(Comment{
+                ._id = co->comment_id,
+                ._author = co->author_name,
+                ._comment = co->comment_data,
+                ._entry_type = static_cast<uint32_t>(co->entry_type),
+                ._entry_time =
+                    std::chrono::system_clock::from_time_t(co->entry_time),
+                ._type = co->comment_type,
+                ._is_service = co->service_description != nullptr,
+                ._host = hst,
+                ._service = svc,
+                ._expire_time =
+                    std::chrono::system_clock::from_time_t(co->expire_time),
+                ._persistent = co->persistent,
+                ._source = co->source,
+                ._expires = co->expires});
             break;
+        }
         case NEBTYPE_COMMENT_DELETE:
             if (fl_comments.erase(id) == 0) {
                 Informational(fl_logger_nagios)
@@ -568,14 +576,32 @@ int broker_downtime(int event_type __attribute__((__unused__)), void *data) {
     unsigned long id = dt->downtime_id;
     switch (dt->type) {
         case NEBTYPE_DOWNTIME_ADD:
-        case NEBTYPE_DOWNTIME_LOAD:
-            fl_downtimes[id] = std::make_unique<Downtime>(
-                ::find_host(dt->host_name),
+        case NEBTYPE_DOWNTIME_LOAD: {
+            auto *hst = ::find_host(dt->host_name);
+            auto *svc =
                 dt->service_description == nullptr
                     ? nullptr
-                    : ::find_service(dt->host_name, dt->service_description),
-                dt);
+                    : ::find_service(dt->host_name, dt->service_description);
+            fl_downtimes[id] = std::make_unique<Downtime>(Downtime{
+                ._id = dt->downtime_id,
+                ._author = dt->author_name,
+                ._comment = dt->comment_data,
+                ._origin_is_rule = false,
+                ._entry_time =
+                    std::chrono::system_clock::from_time_t(dt->entry_time),
+                ._start_time =
+                    std::chrono::system_clock::from_time_t(dt->start_time),
+                ._end_time =
+                    std::chrono::system_clock::from_time_t(dt->end_time),
+                ._fixed = dt->fixed != 0,
+                ._duration = std::chrono::seconds{dt->duration},
+                ._type = dt->downtime_type,
+                ._is_service = dt->service_description != nullptr,
+                ._host = hst,
+                ._service = svc,
+                ._triggered_by = dt->triggered_by});
             break;
+        }
         case NEBTYPE_DOWNTIME_DELETE:
             if (fl_downtimes.erase(id) == 0) {
                 Informational(fl_logger_nagios)
@@ -946,6 +972,9 @@ void livestatus_parse_arguments(Logger *logger, const char *args_orig) {
             } else if (left == "structured_status_path") {
                 fl_paths._structured_status =
                     check_path("Check_MK structured status directory", right);
+            } else if (left == "robotmk_var_path") {
+                fl_paths._robotmk_var_path =
+                    check_path("Check_MK robotmk var directory", right);
             } else if (left == "mk_logwatch_path") {
                 fl_paths._mk_logwatch =
                     check_path("Check_MK logwatch directory", right);

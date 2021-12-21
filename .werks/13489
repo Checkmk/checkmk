@@ -9,6 +9,6 @@ Level: 1
 Version: 2.1.0i1
 
 The metrics produced by the Windows memory check, <tt>mem_win</tt>,
-were missing levels and boundaries. They have beend added, s.t.
+were missing levels and boundaries. They have been added, s.t.
 the levels are now drawn into the graphs shown in the service
 output.

@@ -30,6 +30,12 @@ def expected_items() -> Dict[str, List[str]]:
 
     agents_items += [
         "download_agents",
+    ]
+
+    if not cmk_version.is_raw_edition():
+        agents_items.append("agent_registration")
+
+    agents_items += [
         "wato.py?group=vm_cloud_container&mode=rulesets",
         "wato.py?group=datasource_programs&mode=rulesets",
         "wato.py?group=agent&mode=rulesets",
@@ -82,7 +88,7 @@ def expected_items() -> Dict[str, List[str]]:
     if cmk_version.is_managed_edition():
         users_items.insert(0, "customer_management")
 
-    expected_items = {
+    expected_items_dict = {
         "agents": agents_items,
         "events": events_items,
         "general": [
@@ -112,9 +118,9 @@ def expected_items() -> Dict[str, List[str]]:
     }
 
     if not cmk_version.is_raw_edition():
-        expected_items.update({"custom": ["influxdb_connections"]})
+        expected_items_dict.update({"custom": ["influxdb_connections"]})
 
-    return expected_items
+    return expected_items_dict
 
 
 @pytest.mark.usefixtures("request_context", "with_admin_login")

@@ -14,7 +14,7 @@ BANDIT := $(PIPENV) run bandit
 FIND_INVALID_TEST_FILES := $(SCRIPTS)/find-invalid-autogen-files
 ADDITIONAL_MYPY_ARGS := $(JUNIT_XML)
 # TODO: Remove version duplication, see buildscripts/infrastructure/build-nodes/scripts/install-gnu-toolchain.sh
-GCC_TOOLCHAIN := /opt/gcc-11.1.0
+GCC_TOOLCHAIN := /opt/gcc-11.2.0
 
 # Since the unit tests (that are written for Python 3) are executed with Python
 # 2.6 and 2.7, we need to convert them, just like it is done for the agent
@@ -29,21 +29,22 @@ SHELL_FILES := \
 
 # Due to https://github.com/pypa/pypi-support/issues/978, we need to disable Plugin tests for py2.6
 # until we have a feasible solution or we drop the support for 2.6 completly.
-PYTHON_VERSIONS := 2.7 3.3 3.4 3.5 3.6 3.7 3.8
+PYTHON_VERSIONS := 2.7 3.3 3.4 3.5 3.6 3.7 3.8 3.9
 
 .PHONY: clean format-shell help prepare-node-modules prepare-protobuf-files prepare-playwright  bandit.ini \
 	$(foreach VERS,$(PYTHON_VERSIONS),test-agent-plugin-unit-py$(VERS)-docker) \
 	test-bandit test-composition test-composition-docker test-composition-docker-debug \
-	test-docker test-format-python test-format-python-docker test-format-shell \
+	test-docker test-docker-docker test-format-python test-format-python-docker test-format-shell \
 	test-format-js test-format-js-docker test-format-css test-format-css-docker \
-	test-gui-crawl test-gui-crawl-docker test-integration test-integration-docker \
-	test-integration-docker-debug test-mypy test-mypy-raw itest-mypy-docker \
-	test-packaging test-pipenv-deps test-pylint test-pylint-docker test-shellcheck \
+	test-gui-crawl test-gui-crawl-docker test-xss-crawl test-xss-crawl-docker \
+	test-integration test-integration-docker test-integration-docker-debug \
+	test-mypy test-mypy-raw itest-mypy-docker test-packaging test-pipenv-deps test-pylint test-pylint-docker \
 	test-unit test-unit-docker test-unit-resilience test-unit-resilience-docker test-unit-coverage-html \
-	test-unit-sh test-unit-sh-docker \
+	test-unit-sh test-unit-sh-docker test-shellcheck \
 	test-tidy-livestatus test-tidy-core test-tidy-docker test-iwyu-livestatus test-iwyu-core test-iwyu-docker \
 	test-unit-livestatus test-unit-core %-livestatus-docker %-core-docker \
-	test-cargo-check test-cargo-check-docker test-cargo-test test-cargo-test-docker
+	test-cargo-check test-cargo-check-docker test-cargo-test test-cargo-test-docker \
+	test-cargo-fmt test-cargo-fmt-docker test-cargo-clippy test-cargo-clippy-docker
 
 clean:
 	$(RM) -r .mypy_cache $(AGENT_PLUGIN_UNIT_TEST_FILES_PY2)
@@ -58,6 +59,7 @@ help:
 	@echo "test-composition-docker             - Run composition tests in container"
 	@echo "test-composition-docker-debug       - Run test container for manual debugging"
 	@echo "test-docker                         - Run docker tests"
+	@echo "test-docker-docker                  - Run docker tests in docker"
 	@echo "test-format-python                  - Run formatting tests"
 	@echo "test-format-python-docker           - Run formatting tests in docker"
 	@echo "test-format-shell                   - Run the shell formatting"
@@ -67,6 +69,8 @@ help:
 	@echo "test-format-css-docker              - Run the CSS formatting in docker"
 	@echo "test-gui-crawl                      - Run GUI crawl locally"
 	@echo "test-gui-crawl-docker               - Run GUI crawl in container"
+	@echo "test-xss-crawl                      - Run XSS crawl locally"
+	@echo "test-xss-crawl-docker               - Run XSS crawl in container"
 	@echo "test-integration                    - Run integration tests locally"
 	@echo "test-integration-docker             - Run integration tests in container"
 	@echo "test-integration-docker-debug       - Run test container for manual debugging"
@@ -82,8 +86,8 @@ help:
 	@echo "test-unit-resilience                - Run unit tests multiple times and in random order"
 	@echo "test-unit-resilience                - Run unit tests multiple times and in random order in docker"
 	@echo "test-unit-coverage-html             - Create HTML coverage report for unit tests"
-	@echo "test-unit-sh		           - Run shell unit tests"
-	@echo "test-unit-sh-docker	           - Run shell unit tests in docker"
+	@echo "test-unit-sh                        - Run shell unit tests"
+	@echo "test-unit-sh-docker                 - Run shell unit tests in docker"
 	@echo "test-tidy-livestatus                - Run clang tidy for livestatus"
 	@echo "test-tidy-core                      - Run clang tidy for core"
 	@echo "test-tidy-docker                    - Run clang tidy for core and livestatus in docker"
@@ -97,6 +101,10 @@ help:
 	@echo "test-cargo-check-docker             - Run 'cargo check' for all cargo projects in docker"
 	@echo "test-cargo-test                     - Run test cases of all cargo projects"
 	@echo "test-cargo-test-docker              - Run test cases of all cargo projects in docker"
+	@echo "test-cargo-fmt                      - Run rustfmt --check in all cargo projects"
+	@echo "test-cargo-fmt-docker               - Run rustfmt --check in all cargo projects in docker"
+	@echo "test-cargo-clippy                   - Run clippy in all cargo projects"
+	@echo "test-cargo-clippy-docker            - Run clippy in all cargo projects in docker"
 
 bandit.ini:
 	( echo -n -e "[bandit]\ntargets: "; \
@@ -162,9 +170,13 @@ test-composition-docker:
 test-composition: prepare-node-modules
 	$(PYTEST) -p no:cov -T composition $(realpath composition)
 
+test-docker-docker:
+	DOCKER_RUN_ADDOPTS="-v $$HOME/.docker/config.json:$$HOME/.docker/config.json -v $$HOME/.cmk-credentials:$$HOME/.cmk-credentials --network=host -e HOME -e WORKSPACE -e VERSION -e EDITION" \
+	    ../scripts/run-in-docker.sh make --quiet test-docker
+
 test-docker:
 	$(MAKE) -C ../docker test-lint-dockerfile test-lint-entrypoint
-	$(PYTEST) -T docker --log-cli-level=INFO docker
+	$(PYTEST) -x -T docker --log-cli-level=INFO docker
 
 test-format-python: test-format-python-isort test-format-python-black
 
@@ -215,6 +227,12 @@ test-gui-crawl: prepare-node-modules prepare-playwright
 
 test-gui-crawl-docker:
 	$(PIPENV) run scripts/run-dockerized.py "test-gui-crawl"
+
+test-xss-crawl: prepare-node-modules prepare-playwright
+	XSS_CRAWL=1 $(PYTEST) -T gui_crawl --log-cli-level=INFO $(realpath gui_crawl/test_gui_crawl.py)
+
+test-xss-crawl-docker:
+	$(PIPENV) run scripts/run-dockerized.py "test-xss-crawl"
 
 test-integration: prepare-node-modules
 	CI=true $(PIPENV) run scripts/run-integration-test.py $(realpath integration)
@@ -345,13 +363,25 @@ test-cargo-check:
 	$(SCRIPTS)/run-cargo-command-in-projects check
 
 test-cargo-check-docker:
-	../scripts/run-in-docker.sh make test-cargo-check
+	$(SCRIPTS)/run-in-docker.sh make test-cargo-check
 
 test-cargo-test:
 	$(SCRIPTS)/run-cargo-command-in-projects test
 
 test-cargo-test-docker:
-	../scripts/run-in-docker.sh make test-cargo-test
+	$(SCRIPTS)/run-in-docker.sh make test-cargo-test
+
+test-cargo-fmt:
+	$(SCRIPTS)/run-cargo-command-in-projects fmt -- --check
+
+test-cargo-fmt-docker:
+	$(SCRIPTS)/run-in-docker.sh make test-cargo-fmt
+
+test-cargo-clippy:
+	$(SCRIPTS)/run-cargo-command-in-projects clippy
+
+test-cargo-clippy-docker:
+	$(SCRIPTS)/run-in-docker.sh make test-cargo-clippy
 
 # Run `validate_changes` in live-mode i.e. not creating a JSON file
 # containing build steps to be executed by Jenkins but directly running

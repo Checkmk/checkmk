@@ -72,7 +72,7 @@ def inventory_dell_poweredge_mem(info):
 
 
 def check_dell_poweredge_mem(item, _no_params, info):
-    di = dict()
+    di = {}
     for status, location, size, di["Speed"], di["MFR"], di["P/N"], di["S/N"] in info:
 
         di["Size"] = str(int((saveint(size) / 1024.0) / 1024.0)) + "GB"
@@ -116,7 +116,7 @@ def inventory_dell_poweredge_netdev(info):
 
 
 def check_dell_poweredge_netdev(item, _no_params, info):
-    di = dict()
+    di = {}
     for status, connection_status, di["Product"], cur_mac, fqdd in info:
         if item == fqdd:
             di["MAC"] = "-".join(["%02X" % ord(c) for c in cur_mac]).strip()
@@ -172,7 +172,7 @@ def inventory_dell_poweredge_pci(info):
 
 
 def check_dell_poweredge_pci(item, _no_params, info):
-    di = dict()
+    di = {}
     for status, di["BusWidth"], di["MFR"], di["Desc."], fqdd in info:
 
         if item == fqdd:
@@ -212,7 +212,7 @@ def inventory_dell_poweredge_status(info):
 
 
 def check_dell_poweredge_status(item, _no_params, info):
-    di = dict()
+    di = {}
     (
         di["racURL"],
         di["Chassis"],

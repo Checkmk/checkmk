@@ -211,3 +211,48 @@ def test_cluster_check():
         ),
         Metric("age", 60.0),
     ] == yielded_results
+
+
+@pytest.mark.parametrize(
+    "string_table, section",
+    [
+        pytest.param(
+            [
+                [
+                    "MYDB",
+                    "COMPLETED",
+                    "2021-11-15_23:46:05",
+                    "2021-11-15_23:46:05",
+                    "DB_INCR",
+                    "1",
+                    "15045",
+                    "1014721683",
+                ],
+                [
+                    "MYDB",
+                    "COMPLETED",
+                    "2021-11-26_10:19:28",
+                    "2021-11-26_10:19:28",
+                    "DB_INCR",
+                    "1",
+                    "12",
+                    "1022591235",
+                ],
+            ],
+            {
+                "MYDB.DB_INCR_1": {
+                    "sid": "MYDB",
+                    "backuptype": "DB_INCR",
+                    "backuplevel": "1",
+                    "backupage": 12,
+                    "status": "COMPLETED",
+                    "backupscn": 1022591235,
+                    "used_incr_0": False,
+                },
+            },
+            id="Latest backup is written to section in case of multiple backups for the same item",
+        ),
+    ],
+)
+def test_parse_oracle_rman(string_table, section):
+    assert oracle_rman.parse_oracle_rman(string_table) == section

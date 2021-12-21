@@ -43,6 +43,7 @@ class TCPSource(AgentSource):
         )
         self.port: Optional[int] = None
         self.timeout: Optional[float] = None
+        self.host_name = hostname
 
     def _make_file_cache(self) -> DefaultAgentFileCache:
         return DefaultAgentFileCacheFactory(
@@ -57,6 +58,7 @@ class TCPSource(AgentSource):
             self._make_file_cache(),
             family=socket.AF_INET6 if self.host_config.is_ipv6_primary else socket.AF_INET,
             address=(self.ipaddress, self.port or self.host_config.agent_port),
+            host_name=self.host_name,
             timeout=self.timeout or self.host_config.tcp_connect_timeout,
             encryption_settings=self.host_config.agent_encryption,
             use_only_cache=self.use_only_cache,

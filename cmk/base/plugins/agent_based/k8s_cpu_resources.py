@@ -7,53 +7,31 @@ import json
 import time
 from typing import Dict
 
-from .agent_based_api.v1 import (
-    check_levels,
-    get_rate,
-    get_value_store,
-    register,
-    render,
-    Result,
-    Service,
-    State,
-)
+from .agent_based_api.v1 import check_levels, get_rate, get_value_store, register, render, Service
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 
 
 def parse_k8s(string_table: StringTable):
+    # TODO: create a model for this one:
     return json.loads(string_table[0][0])
 
 
 register.agent_section(
-    name="k8s_cpu_resources",
-    parse_function=parse_k8s,
-)
-
-register.agent_section(
     name="k8s_live_cpu_usage_total",
+    parsed_section_name="kube_cpu_utilization",
     parse_function=parse_k8s,
 )
 
 
-def discovery_kubernetes_cpu_resources(
-    section_k8s_cpu_resources, section_k8s_live_cpu_usage_total
-) -> DiscoveryResult:
-    if section_k8s_cpu_resources:
-        yield Service()
+def discovery_kubernetes_cpu_utilization(section) -> DiscoveryResult:
+    yield Service()
 
 
-def check_kubernetes_cpu_resources(
-    section_k8s_cpu_resources, section_k8s_live_cpu_usage_total
-) -> CheckResult:
-
+def check_kubernetes_cpu_utilization(section) -> CheckResult:
     # https://github.com/google/cadvisor/issues/2026
     # https://stackoverflow.com/questions/34923788/prometheus-convert-cpu-user-seconds-to-cpu-usage
-    if section_k8s_live_cpu_usage_total:
-        yield from _determine_pod_cpu_usage(section_k8s_live_cpu_usage_total)
-
-    # TODO: link usage to limit
-    yield Result(state=State.OK, summary=f"Limit: {section_k8s_cpu_resources['limit']}")
-    yield Result(state=State.OK, summary=f"Requests: {section_k8s_cpu_resources['requests']}")
+    if section:
+        yield from _determine_pod_cpu_usage(section)
 
 
 def _determine_pod_cpu_usage(containers: Dict[str, float]):
@@ -71,9 +49,8 @@ def _determine_pod_cpu_usage(containers: Dict[str, float]):
 
 
 register.check_plugin(
-    name="k8s_cpu_resources",
-    service_name="CPU Resources",
-    sections=["k8s_cpu_resources", "k8s_live_cpu_usage_total"],
-    discovery_function=discovery_kubernetes_cpu_resources,
-    check_function=check_kubernetes_cpu_resources,
+    name="kube_cpu_utilization",
+    service_name="CPU Utilization",
+    discovery_function=discovery_kubernetes_cpu_utilization,
+    check_function=check_kubernetes_cpu_utilization,
 )

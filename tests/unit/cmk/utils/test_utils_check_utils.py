@@ -62,8 +62,8 @@ def test_worst_service_state_empty():
 def test_active_check_result():
 
     assert ActiveCheckResult.from_subresults(
-        ActiveCheckResult(0, ("Ok",), ("We're good",), ("metric1",)),
-        ActiveCheckResult(2, ("Critical",), ("We're doomed",), ("metric2",)),
+        ActiveCheckResult(0, "Ok", ("We're good",), ("metric1",)),
+        ActiveCheckResult(2, "Critical", ("We're doomed",), ("metric2",)),
     ) == ActiveCheckResult(
-        2, ["Ok", "Critical"], ["We're good", "We're doomed"], ["metric1", "metric2"]
+        2, "Ok, Critical(!!)", ["We're good", "We're doomed(!!)"], ["metric1", "metric2"]
     )

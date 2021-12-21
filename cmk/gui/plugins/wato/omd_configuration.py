@@ -9,14 +9,16 @@ import subprocess
 import traceback
 from pathlib import Path
 from typing import Any, Dict
+from typing import Optional as _Optional
 
 import cmk.utils.paths
 import cmk.utils.store as store
 import cmk.utils.version as cmk_version
+from cmk.utils.type_defs import ConfigurationWarnings
 
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
-from cmk.gui.plugins.wato import (
+from cmk.gui.plugins.wato.utils import (
     ABCConfigDomain,
     add_replication_paths,
     config_domain_registry,
@@ -30,6 +32,7 @@ from cmk.gui.plugins.wato import (
     site_neutral_path,
     wato_fileheader,
 )
+from cmk.gui.plugins.watolib.utils import SerializedSettings
 from cmk.gui.type_defs import ConfigDomainName
 from cmk.gui.valuespec import (
     Age,
@@ -233,14 +236,14 @@ class ConfigVariableSiteNSCA(ConfigVariable):
 class ConfigDomainDiskspace(ABCConfigDomain):
     needs_sync = True
     needs_activation = False
-    diskspace_config = cmk.utils.paths.omd_root + "/etc/diskspace.conf"
+    diskspace_config = cmk.utils.paths.omd_root / "etc/diskspace.conf"
 
     @classmethod
     def ident(cls) -> ConfigDomainName:
         return "diskspace"
 
-    def activate(self):
-        pass
+    def activate(self, settings: _Optional[SerializedSettings] = None) -> ConfigurationWarnings:
+        return []
 
     def config_dir(self):
         return ""  # unused, we override load and save below
@@ -402,7 +405,7 @@ add_replication_paths(
         ReplicationPath(
             "file",
             "diskspace",
-            os.path.relpath(ConfigDomainDiskspace.diskspace_config, cmk.utils.paths.omd_root),
+            str(ConfigDomainDiskspace.diskspace_config.relative_to(cmk.utils.paths.omd_root)),
             [],
         ),
     ]
@@ -433,7 +436,7 @@ class ConfigDomainApache(ABCConfigDomain):
     def config_dir(self):
         return cmk.utils.paths.default_config_dir + "/apache.d/wato/"
 
-    def activate(self):
+    def activate(self, settings: _Optional[SerializedSettings] = None) -> ConfigurationWarnings:
         try:
             self._write_config_file()
 
@@ -559,7 +562,7 @@ class ConfigDomainRRDCached(ABCConfigDomain):
     def config_dir(self):
         return cmk.utils.paths.default_config_dir + "/rrdcached.d/wato/"
 
-    def activate(self):
+    def activate(self, settings: _Optional[SerializedSettings] = None) -> ConfigurationWarnings:
         try:
             self._write_config_file()
 

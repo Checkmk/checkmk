@@ -15,9 +15,7 @@ from itertools import chain, starmap
 from typing import (
     Any,
     Callable,
-    Container,
     Dict,
-    Iterable,
     Iterator,
     List,
     Literal,
@@ -63,12 +61,13 @@ from cmk.gui.permissions import declare_permission, permission_registry
 # Needed for legacy (pre 1.6) plugins
 from cmk.gui.plugins.visuals.utils import (  # noqa: F401 # pylint: disable=unused-import
     active_filter_flag,
+    collect_filters,
     Filter,
     filter_registry,
+    FilterOption,
     filters_allowed_for_info,
     filters_allowed_for_infos,
     FilterTime,
-    FilterTristate,
     get_livestatus_filter_headers,
     get_only_sites_from_context,
     visual_info_registry,
@@ -90,7 +89,7 @@ from cmk.gui.utils import unique_default_name_suggestion
 from cmk.gui.utils.flashed_messages import flash, get_flashed_messages
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.logged_in import save_user_file
-from cmk.gui.utils.roles import user_may
+from cmk.gui.utils.roles import is_user_with_publish_permissions, user_may
 from cmk.gui.utils.urls import (
     file_name_and_query_vars_from_url,
     make_confirm_link,
@@ -118,12 +117,6 @@ from cmk.gui.valuespec import (
     ValueSpec,
 )
 
-if not cmk_version.is_raw_edition():
-    import cmk.gui.cee.plugins.visuals  # pylint: disable=no-name-in-module
-
-if cmk_version.is_managed_edition():
-    import cmk.gui.cme.plugins.visuals  # pylint: disable=no-name-in-module
-
 T = TypeVar("T")
 #   .--Plugins-------------------------------------------------------------.
 #   |                   ____  _             _                              |
@@ -143,7 +136,37 @@ def load_plugins() -> None:
     """Plugin initialization hook (Called by cmk.gui.modules.call_load_plugins_hooks())"""
     global title_functions
     title_functions = []
+    _register_pre_21_plugin_api()
     utils.load_web_plugins("visuals", globals())
+
+
+def _register_pre_21_plugin_api() -> None:
+    """Register pre 2.1 "plugin API"
+
+    This was never an official API, but the names were used by builtin and also 3rd party plugins.
+
+    Our builtin plugin have been changed to directly import from the .utils module. We add these old
+    names to remain compatible with 3rd party plugins for now.
+
+    In the moment we define an official plugin API, we can drop this and require all plugins to
+    switch to the new API. Until then let's not bother the users with it.
+    """
+    # Needs to be a local import to not influence the regular plugin loading order
+    import cmk.gui.plugins.visuals as api_module
+    import cmk.gui.plugins.visuals.utils as plugin_utils
+
+    for name in (
+        "Filter",
+        "filter_registry",
+        "FilterOption",
+        "FilterTime",
+        "get_only_sites_from_context",
+        "visual_info_registry",
+        "visual_type_registry",
+        "VisualInfo",
+        "VisualType",
+    ):
+        api_module.__dict__[name] = plugin_utils.__dict__[name]
 
 
 # TODO: This has been obsoleted by pagetypes.py
@@ -159,7 +182,17 @@ def declare_visual_permissions(what, what_plural):
     declare_permission(
         "general.publish_" + what,
         _("Publish %s") % what_plural,
-        _("Make %s visible and usable for other users.") % what_plural,
+        _("Make %s visible and usable for all users.") % what_plural,
+        ["admin", "user"],
+    )
+
+    declare_permission(
+        "general.publish_" + what + "_to_groups",
+        _("Publish %s to allowed contact groups") % what_plural,
+        _(
+            "Make %s visible and usable for users of contact groups the publishing user is a member of."
+        )
+        % what_plural,
         ["admin", "user"],
     )
 
@@ -1178,14 +1211,26 @@ def page_edit_visual(
             ),
         ),
     ]
-    if user.may("general.publish_" + what):
-        with_foreign_groups = user.may("general.publish_" + what + "_to_foreign_groups")
+
+    if is_user_with_publish_permissions("visual", user.id, what):
         visibility_elements.append(
             (
                 "public",
                 pagetypes.PublishTo(
+                    publish_all=user.may("general.publish_" + what),
+                    publish_groups=user.may("general.publish_" + what + "_to_groups"),
                     type_title=visual_type.title,
-                    with_foreign_groups=with_foreign_groups,
+                    with_foreign_groups=user.may("general.publish_" + what + "_to_foreign_groups"),
+                ),
+            )
+        )
+    else:
+        visibility_elements.append(
+            (
+                "public",
+                pagetypes.vs_no_permission_to_publish(
+                    type_title=what[:-1],
+                    title=_("Make this %s available for other users") % what[:-1],
                 ),
             )
         )
@@ -1528,12 +1573,6 @@ def get_filter_headers(table, infos, context: VisualContext):
     return filter_headers, get_only_sites_from_context(context)
 
 
-def collect_filters(info_keys: Container[str]) -> Iterable[Filter]:
-    for filter_obj in filter_registry.values():
-        if filter_obj.info in info_keys and filter_obj.available():
-            yield filter_obj
-
-
 # .
 #   .--ValueSpecs----------------------------------------------------------.
 #   |        __     __    _            ____                                |
@@ -1824,6 +1863,15 @@ class VisualFilter(ValueSpec):
 
     def validate_value(self, value, varprefix):
         self._filter.validate_value(value)
+
+    def value_to_html(self, value):
+        raise NotImplementedError()
+
+    def value_to_json(self, value):
+        raise NotImplementedError()
+
+    def value_from_json(self, json_value):
+        raise NotImplementedError()
 
 
 def _single_info_selection_forth(restrictions: Sequence[str]) -> Tuple[str, Sequence[str]]:

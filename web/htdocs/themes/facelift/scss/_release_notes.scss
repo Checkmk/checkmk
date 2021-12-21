@@ -3,28 +3,6 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
-#release_version_switch {
-  a {
-    display: inline-block;
-    text-decoration: none;
-    background-color: $headline-color;
-
-    &.active {
-      background-color: $input-button-bg-color;
-    }
-
-    &:first-child {
-      padding: 6px 8px 6px 12px;
-      border-radius: 16px 0 0 16px;
-    }
-
-    &:last-child {
-      padding: 6px 12px 6px 8px;
-      border-radius: 0 16px 16px 0;
-    }
-  }
-}
-
 #release_title {
   display: flex;
 

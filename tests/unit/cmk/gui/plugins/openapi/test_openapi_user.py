@@ -21,16 +21,16 @@ from cmk.gui.plugins.openapi.endpoints.user_config import (
 from cmk.gui.plugins.openapi.endpoints.utils import complement_customer
 from cmk.gui.watolib.users import edit_users
 
+from tests.unit.cmk.gui.conftest import WebTestAppForCMK
+
 managedtest = pytest.mark.skipif(not version.is_managed_edition(), reason="see #7213")
 
 
 @managedtest
-def test_openapi_customer(wsgi_app, with_automation_user, monkeypatch):
+def test_openapi_customer(aut_user_auth_wsgi_app: WebTestAppForCMK, monkeypatch):
     monkeypatch.setattr(
         "cmk.gui.watolib.global_settings.rulebased_notifications_enabled", lambda: True
     )
-    username, secret = with_automation_user
-    wsgi_app.set_authorization(("Bearer", username + " " + secret))
 
     user_detail = {
         "username": "user",
@@ -40,7 +40,7 @@ def test_openapi_customer(wsgi_app, with_automation_user, monkeypatch):
 
     base = "/NO_SITE/check_mk/api/1.0"
     with freeze_time("2010-02-01 08:00:00"):
-        resp = wsgi_app.call_method(
+        resp = aut_user_auth_wsgi_app.call_method(
             "post",
             base + "/domain-types/user_config/collections/all",
             params=json.dumps(user_detail),
@@ -61,7 +61,7 @@ def test_openapi_customer(wsgi_app, with_automation_user, monkeypatch):
         "roles": [],
     }
 
-    resp = wsgi_app.call_method(
+    resp = aut_user_auth_wsgi_app.call_method(
         "put",
         base + "/objects/user_config/user",
         params=json.dumps({"customer": "provider"}),
@@ -73,12 +73,10 @@ def test_openapi_customer(wsgi_app, with_automation_user, monkeypatch):
 
 
 @managedtest
-def test_openapi_user_minimal_settings(wsgi_app, with_automation_user, monkeypatch):
+def test_openapi_user_minimal_settings(monkeypatch):
     monkeypatch.setattr(
         "cmk.gui.watolib.global_settings.rulebased_notifications_enabled", lambda: True
     )
-    username, secret = with_automation_user
-    wsgi_app.set_authorization(("Bearer", username + " " + secret))
 
     with freeze_time("2021-09-24 12:36:00"):
         edit_users(
@@ -128,7 +126,10 @@ def test_openapi_user_minimal_settings(wsgi_app, with_automation_user, monkeypat
 
 
 @managedtest
-def test_openapi_user_minimal_password_settings(wsgi_app, with_automation_user, monkeypatch):
+def test_openapi_user_minimal_password_settings(
+    aut_user_auth_wsgi_app: WebTestAppForCMK,
+    monkeypatch,
+):
     monkeypatch.setattr(
         "cmk.gui.watolib.global_settings.rulebased_notifications_enabled", lambda: True
     )
@@ -136,8 +137,6 @@ def test_openapi_user_minimal_password_settings(wsgi_app, with_automation_user, 
         "cmk.gui.plugins.userdb.htpasswd.hash_password",
         lambda x: "$5$rounds=535000$eUtToQgKz6n7Qyqk$hh5tq.snoP4J95gVoswOep4LbUxycNG1QF1HI7B4d8C",
     )
-    username, secret = with_automation_user
-    wsgi_app.set_authorization(("Bearer", username + " " + secret))
 
     user_detail = {
         "username": "user",
@@ -151,7 +150,7 @@ def test_openapi_user_minimal_password_settings(wsgi_app, with_automation_user, 
 
     base = "/NO_SITE/check_mk/api/1.0"
     with freeze_time("2010-02-01 08:00:00"):
-        resp = wsgi_app.call_method(
+        resp = aut_user_auth_wsgi_app.call_method(
             "post",
             base + "/domain-types/user_config/collections/all",
             params=json.dumps(user_detail),
@@ -187,7 +186,7 @@ def test_openapi_user_minimal_password_settings(wsgi_app, with_automation_user, 
         "idle_timeout": {"option": "disable"},
     }
     with freeze_time("2010-02-01 08:30:00"):
-        resp = wsgi_app.call_method(
+        resp = aut_user_auth_wsgi_app.call_method(
             "put",
             base + "/objects/user_config/user",
             params=json.dumps(edit_details),
@@ -218,7 +217,7 @@ def test_openapi_user_minimal_password_settings(wsgi_app, with_automation_user, 
 
 
 @managedtest
-def test_openapi_user_config(wsgi_app, with_automation_user, monkeypatch):
+def test_openapi_user_config(aut_user_auth_wsgi_app: WebTestAppForCMK, monkeypatch):
     monkeypatch.setattr(
         "cmk.gui.watolib.global_settings.rulebased_notifications_enabled", lambda: True
     )
@@ -226,8 +225,6 @@ def test_openapi_user_config(wsgi_app, with_automation_user, monkeypatch):
         "cmk.gui.plugins.userdb.htpasswd.hash_password",
         lambda x: "$5$rounds=535000$eUtToQgKz6n7Qyqk$hh5tq.snoP4J95gVoswOep4LbUxycNG1QF1HI7B4d8C",
     )
-    username, secret = with_automation_user
-    wsgi_app.set_authorization(("Bearer", username + " " + secret))
 
     name = _random_string(10)
     alias = "KPECYCq79E"
@@ -244,7 +241,7 @@ def test_openapi_user_config(wsgi_app, with_automation_user, monkeypatch):
 
     base = "/NO_SITE/check_mk/api/1.0"
     with freeze_time("2010-02-01 08:30:00"):
-        _resp = wsgi_app.call_method(
+        _resp = aut_user_auth_wsgi_app.call_method(
             "post",
             base + "/domain-types/user_config/collections/all",
             params=json.dumps(user_detail),
@@ -253,7 +250,7 @@ def test_openapi_user_config(wsgi_app, with_automation_user, monkeypatch):
             content_type="application/json",
         )
 
-    resp = wsgi_app.call_method(
+    resp = aut_user_auth_wsgi_app.call_method(
         "get",
         base + f"/objects/user_config/{name}",
         headers={"Accept": "application/json"},
@@ -278,7 +275,7 @@ def test_openapi_user_config(wsgi_app, with_automation_user, monkeypatch):
         "roles": [],
     }
 
-    collection_resp = wsgi_app.call_method(
+    collection_resp = aut_user_auth_wsgi_app.call_method(
         "get",
         base + "/domain-types/user_config/collections/all",
         headers={"Accept": "application/json"},
@@ -286,21 +283,21 @@ def test_openapi_user_config(wsgi_app, with_automation_user, monkeypatch):
     )
     assert len(collection_resp.json_body["value"]) == 2
 
-    _resp = wsgi_app.call_method(
+    _resp = aut_user_auth_wsgi_app.call_method(
         "delete",
         base + f"/objects/user_config/{name}",
         status=204,
         headers={"Accept": "application/json", "If-Match": resp.headers["Etag"]},
     )
 
-    _resp = wsgi_app.call_method(
+    _resp = aut_user_auth_wsgi_app.call_method(
         "get",
         base + f"/objects/user_config/{name}",
         headers={"Accept": "application/json"},
         status=404,
     )
 
-    resp = wsgi_app.call_method(
+    resp = aut_user_auth_wsgi_app.call_method(
         "get",
         base + "/domain-types/user_config/collections/all",
         headers={"Accept": "application/json"},
@@ -310,7 +307,7 @@ def test_openapi_user_config(wsgi_app, with_automation_user, monkeypatch):
 
 
 @managedtest
-def test_openapi_user_internal_with_notifications(wsgi_app, with_automation_user, monkeypatch):
+def test_openapi_user_internal_with_notifications(monkeypatch):
     monkeypatch.setattr(
         "cmk.gui.watolib.global_settings.rulebased_notifications_enabled", lambda: True
     )
@@ -318,8 +315,6 @@ def test_openapi_user_internal_with_notifications(wsgi_app, with_automation_user
         "cmk.gui.plugins.userdb.htpasswd.hash_password",
         lambda x: "$5$rounds=535000$eUtToQgKz6n7Qyqk$hh5tq.snoP4J95gVoswOep4LbUxycNG1QF1HI7B4d8C",
     )
-    username, secret = with_automation_user
-    wsgi_app.set_authorization(("Bearer", username + " " + secret))
 
     name = _random_string(10)
 
@@ -372,7 +367,7 @@ def test_openapi_user_internal_with_notifications(wsgi_app, with_automation_user
 
 
 @managedtest
-def test_openapi_user_edit_auth(wsgi_app, with_automation_user, monkeypatch):
+def test_openapi_user_edit_auth(aut_user_auth_wsgi_app: WebTestAppForCMK, monkeypatch):
     monkeypatch.setattr(
         "cmk.gui.watolib.global_settings.rulebased_notifications_enabled", lambda: True
     )
@@ -380,8 +375,6 @@ def test_openapi_user_edit_auth(wsgi_app, with_automation_user, monkeypatch):
         "cmk.gui.plugins.userdb.htpasswd.hash_password",
         lambda x: "$5$rounds=535000$eUtToQgKz6n7Qyqk$hh5tq.snoP4J95gVoswOep4LbUxycNG1QF1HI7B4d8C",
     )
-    username, secret = with_automation_user
-    wsgi_app.set_authorization(("Bearer", username + " " + secret))
 
     name = "foo"
     alias = "Foo Bar"
@@ -396,7 +389,7 @@ def test_openapi_user_edit_auth(wsgi_app, with_automation_user, monkeypatch):
 
     base = "/NO_SITE/check_mk/api/1.0"
     with freeze_time("2010-02-01 08:00:00"):
-        resp = wsgi_app.call_method(
+        resp = aut_user_auth_wsgi_app.call_method(
             "post",
             base + "/domain-types/user_config/collections/all",
             params=json.dumps(user_detail),
@@ -425,7 +418,7 @@ def test_openapi_user_edit_auth(wsgi_app, with_automation_user, monkeypatch):
     }
 
     with freeze_time("2010-02-01 08:30:00"):
-        resp = wsgi_app.call_method(
+        resp = aut_user_auth_wsgi_app.call_method(
             "put",
             base + "/objects/user_config/foo",
             params=json.dumps(edit_details),
@@ -455,7 +448,7 @@ def test_openapi_user_edit_auth(wsgi_app, with_automation_user, monkeypatch):
         },
     }
     with freeze_time("2010-02-01 09:00:00"):
-        resp = wsgi_app.call_method(
+        resp = aut_user_auth_wsgi_app.call_method(
             "put",
             base + "/objects/user_config/foo",
             params=json.dumps(remove_details),
@@ -478,7 +471,7 @@ def test_openapi_user_edit_auth(wsgi_app, with_automation_user, monkeypatch):
 
 
 @managedtest
-def test_openapi_user_internal_auth_handling(wsgi_app, with_automation_user, monkeypatch):
+def test_openapi_user_internal_auth_handling(monkeypatch):
     monkeypatch.setattr(
         "cmk.gui.watolib.global_settings.rulebased_notifications_enabled", lambda: True
     )
@@ -486,8 +479,6 @@ def test_openapi_user_internal_auth_handling(wsgi_app, with_automation_user, mon
         "cmk.gui.plugins.userdb.htpasswd.hash_password",
         lambda x: "$5$rounds=535000$eUtToQgKz6n7Qyqk$hh5tq.snoP4J95gVoswOep4LbUxycNG1QF1HI7B4d8C",
     )
-    username, secret = with_automation_user
-    wsgi_app.set_authorization(("Bearer", username + " " + secret))
 
     name = "foo"
 
@@ -601,13 +592,11 @@ def test_openapi_user_internal_auth_handling(wsgi_app, with_automation_user, mon
 
 
 @managedtest
-def test_openapi_managed_global_edition(wsgi_app, with_automation_user, monkeypatch):
+def test_openapi_managed_global_edition(aut_user_auth_wsgi_app: WebTestAppForCMK, monkeypatch):
     monkeypatch.setattr(
         "cmk.gui.watolib.global_settings.rulebased_notifications_enabled", lambda: True
     )
     monkeypatch.setattr("cmk.utils.version.is_managed_edition", lambda: True)
-    username, secret = with_automation_user
-    wsgi_app.set_authorization(("Bearer", username + " " + secret))
 
     user_detail = {
         "username": "user",
@@ -617,7 +606,7 @@ def test_openapi_managed_global_edition(wsgi_app, with_automation_user, monkeypa
 
     base = "/NO_SITE/check_mk/api/1.0"
     with freeze_time("2010-02-01 08:00:00"):
-        resp = wsgi_app.call_method(
+        resp = aut_user_auth_wsgi_app.call_method(
             "post",
             base + "/domain-types/user_config/collections/all",
             params=json.dumps(user_detail),
@@ -640,13 +629,11 @@ def test_openapi_managed_global_edition(wsgi_app, with_automation_user, monkeypa
 
 
 @managedtest
-def test_managed_global_internal(wsgi_app, with_automation_user, monkeypatch):
+def test_managed_global_internal(monkeypatch):
     # this test uses the internal mechanics of the user endpoint
     monkeypatch.setattr(
         "cmk.gui.watolib.global_settings.rulebased_notifications_enabled", lambda: True
     )
-    username, secret = with_automation_user
-    wsgi_app.set_authorization(("Bearer", username + " " + secret))
 
     edit_users(
         {
@@ -680,7 +667,7 @@ def test_managed_global_internal(wsgi_app, with_automation_user, monkeypatch):
 
 
 @managedtest
-def test_global_full_configuration(wsgi_app, with_automation_user, monkeypatch):
+def test_global_full_configuration(aut_user_auth_wsgi_app: WebTestAppForCMK, monkeypatch):
     # this test uses the internal mechanics of the user endpoint
     monkeypatch.setattr(
         "cmk.gui.watolib.global_settings.rulebased_notifications_enabled", lambda: True
@@ -689,9 +676,6 @@ def test_global_full_configuration(wsgi_app, with_automation_user, monkeypatch):
         "cmk.gui.plugins.userdb.htpasswd.hash_password",
         lambda x: "$5$rounds=535000$eUtToQgKz6n7Qyqk$hh5tq.snoP4J95gVoswOep4LbUxycNG1QF1HI7B4d8C",
     )
-
-    username, secret = with_automation_user
-    wsgi_app.set_authorization(("Bearer", username + " " + secret))
 
     user_detail = {
         "username": "cmkuser",
@@ -709,7 +693,7 @@ def test_global_full_configuration(wsgi_app, with_automation_user, monkeypatch):
 
     base = "/NO_SITE/check_mk/api/1.0"
     with freeze_time("2010-02-01 08:00:00"):
-        _resp = wsgi_app.call_method(
+        _resp = aut_user_auth_wsgi_app.call_method(
             "post",
             base + "/domain-types/user_config/collections/all",
             params=json.dumps(user_detail),
@@ -718,7 +702,7 @@ def test_global_full_configuration(wsgi_app, with_automation_user, monkeypatch):
             content_type="application/json",
         )
 
-    resp = wsgi_app.call_method(
+    resp = aut_user_auth_wsgi_app.call_method(
         "get",
         base + "/objects/user_config/cmkuser",
         headers={"Accept": "application/json"},
@@ -743,13 +727,12 @@ def test_global_full_configuration(wsgi_app, with_automation_user, monkeypatch):
     }
 
 
-def test_managed_idle_internal(wsgi_app, with_automation_user, monkeypatch):
+def test_managed_idle_internal(with_automation_user, monkeypatch):
     # this test uses the internal mechanics of the user endpoint
     monkeypatch.setattr(
         "cmk.gui.watolib.global_settings.rulebased_notifications_enabled", lambda: True
     )
-    username, secret = with_automation_user
-    wsgi_app.set_authorization(("Bearer", username + " " + secret))
+    username, _secret = with_automation_user
 
     edit_users(
         {
@@ -784,7 +767,7 @@ def test_managed_idle_internal(wsgi_app, with_automation_user, monkeypatch):
 
 
 @managedtest
-def test_openapi_user_update_contact_options(wsgi_app, with_automation_user, monkeypatch):
+def test_openapi_user_update_contact_options(aut_user_auth_wsgi_app: WebTestAppForCMK, monkeypatch):
     # this test uses the internal mechanics of the user endpoint
     monkeypatch.setattr(
         "cmk.gui.watolib.global_settings.rulebased_notifications_enabled", lambda: True
@@ -793,9 +776,6 @@ def test_openapi_user_update_contact_options(wsgi_app, with_automation_user, mon
         "cmk.gui.plugins.userdb.htpasswd.hash_password",
         lambda x: "$5$rounds=535000$eUtToQgKz6n7Qyqk$hh5tq.snoP4J95gVoswOep4LbUxycNG1QF1HI7B4d8C",
     )
-
-    username, secret = with_automation_user
-    wsgi_app.set_authorization(("Bearer", username + " " + secret))
 
     user_detail = {
         "username": "cmkuser",
@@ -812,7 +792,7 @@ def test_openapi_user_update_contact_options(wsgi_app, with_automation_user, mon
 
     base = "/NO_SITE/check_mk/api/1.0"
     with freeze_time("2010-02-01 08:00:00"):
-        resp = wsgi_app.call_method(
+        resp = aut_user_auth_wsgi_app.call_method(
             "post",
             base + "/domain-types/user_config/collections/all",
             params=json.dumps(user_detail),
@@ -821,7 +801,7 @@ def test_openapi_user_update_contact_options(wsgi_app, with_automation_user, mon
             content_type="application/json",
         )
 
-    _ = wsgi_app.call_method(
+    _ = aut_user_auth_wsgi_app.call_method(
         "put",
         base + "/objects/user_config/cmkuser",
         params=json.dumps({"contact_options": {"fallback_contact": True}}),
@@ -830,7 +810,7 @@ def test_openapi_user_update_contact_options(wsgi_app, with_automation_user, mon
         content_type="application/json",
     )
 
-    resp = wsgi_app.call_method(
+    resp = aut_user_auth_wsgi_app.call_method(
         "get",
         base + "/objects/user_config/cmkuser",
         headers={"Accept": "application/json"},
@@ -855,7 +835,7 @@ def test_openapi_user_update_contact_options(wsgi_app, with_automation_user, mon
 
 
 @managedtest
-def test_openapi_user_disable_notifications(wsgi_app, with_automation_user, monkeypatch):
+def test_openapi_user_disable_notifications(aut_user_auth_wsgi_app: WebTestAppForCMK, monkeypatch):
     # this test uses the internal mechanics of the user endpoint
     monkeypatch.setattr(
         "cmk.gui.watolib.global_settings.rulebased_notifications_enabled", lambda: True
@@ -864,9 +844,6 @@ def test_openapi_user_disable_notifications(wsgi_app, with_automation_user, monk
         "cmk.gui.plugins.userdb.htpasswd.hash_password",
         lambda x: "$5$rounds=535000$eUtToQgKz6n7Qyqk$hh5tq.snoP4J95gVoswOep4LbUxycNG1QF1HI7B4d8C",
     )
-
-    username, secret = with_automation_user
-    wsgi_app.set_authorization(("Bearer", username + " " + secret))
 
     user_detail = {
         "username": "cmkuser",
@@ -877,7 +854,7 @@ def test_openapi_user_disable_notifications(wsgi_app, with_automation_user, monk
 
     base = "/NO_SITE/check_mk/api/1.0"
     with freeze_time("2010-02-01 08:00:00"):
-        _resp = wsgi_app.call_method(
+        _resp = aut_user_auth_wsgi_app.call_method(
             "post",
             base + "/domain-types/user_config/collections/all",
             params=json.dumps(user_detail),
@@ -885,7 +862,7 @@ def test_openapi_user_disable_notifications(wsgi_app, with_automation_user, monk
             status=200,
             content_type="application/json",
         )
-    resp = wsgi_app.call_method(
+    resp = aut_user_auth_wsgi_app.call_method(
         "get",
         base + "/objects/user_config/cmkuser",
         headers={"Accept": "application/json"},
@@ -906,7 +883,7 @@ def test_openapi_user_disable_notifications(wsgi_app, with_automation_user, monk
         },
     }
 
-    resp = wsgi_app.call_method(
+    resp = aut_user_auth_wsgi_app.call_method(
         "put",
         base + "/objects/user_config/cmkuser",
         params=json.dumps({"disable_notifications": {"disable": False}}),

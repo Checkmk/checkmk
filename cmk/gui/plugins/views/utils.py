@@ -1357,7 +1357,11 @@ def make_linked_visual_url(
     if mobile and visual_type.show_url == "view.py":
         filename = "mobile_" + visual_type.show_url
 
-    required_vars = [(visual_type.ident_attr, name)]
+    # Include visual default context. This comes from the hard_filters. Linked
+    # view would have no _active flag. Thus prepend the default context
+    required_vars = [(visual_type.ident_attr, name)] + visuals.get_context_uri_vars(
+        visual.get("context", {}), visual.get("single_infos", [])
+    )
 
     # add context link to this visual. For reports we put in
     # the *complete* context, even the non-single one.
@@ -2274,7 +2278,11 @@ class Cell:
 
         painter = self.painter()
         result = painter.render(row, self)
-        if not isinstance(result, tuple) or len(result) != 2:
+        if (
+            not isinstance(result, tuple)
+            or len(result) != 2
+            or not isinstance(result[1], (str, HTML))
+        ):
             raise Exception(_("Painter %r returned invalid result: %r") % (painter.ident, result))
         return result
 

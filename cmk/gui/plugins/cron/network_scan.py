@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.gui.plugins.cron import register_job
+from cmk.gui.cron import register_job
 from cmk.gui.watolib.network_scan import execute_network_scan_job
 
 register_job(execute_network_scan_job)

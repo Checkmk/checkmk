@@ -12,8 +12,7 @@ from cmk.utils.exceptions import MKGeneralException
 
 @pytest.fixture(name="test_cfg")
 def fixture_test_cfg() -> tags.TagConfig:
-    cfg = tags.TagConfig()
-    cfg.parse_config(
+    cfg = tags.TagConfig.from_config(
         {
             "aux_tags": [
                 {
@@ -73,10 +72,33 @@ def test_tag_config() -> None:
 
 def test_iadd_tag_config(test_cfg: tags.TagConfig) -> None:
     cfg2 = tags.TagConfig()
-    cfg2.insert_tag_group(tags.TagGroup(("tgid3", "Topics/titlor", [("tgid3", "tagid3", [])])))
-    cfg2.insert_tag_group(tags.TagGroup(("tgid2", "BLAAA", [("tgid2", "tagid2", [])])))
-    cfg2.aux_tag_list.append(tags.AuxTag(("blub", "BLUB")))
-    cfg2.aux_tag_list.append(tags.AuxTag(("bla", "BLUB")))
+    cfg2.insert_tag_group(
+        tags.TagGroup.from_config(
+            {
+                "id": "tgid3",
+                "title": "titlor",
+                "topic": "Topics",
+                "tags": [
+                    {
+                        "id": "tgid3",
+                        "title": "tagid3",
+                        "aux_tags": [],
+                    }
+                ],
+            }
+        )
+    )
+    cfg2.insert_tag_group(
+        tags.TagGroup.from_config(
+            {
+                "id": "tgid2",
+                "title": "BLAAA",
+                "tags": [{"id": "tgid2", "title": "tagid2", "aux_tags": []}],
+            }
+        )
+    )
+    cfg2.aux_tag_list.append(tags.AuxTag.from_config({"id": "blub", "title": "BLUB"}))
+    cfg2.aux_tag_list.append(tags.AuxTag.from_config({"id": "bla", "title": "BLUB"}))
 
     test_cfg += cfg2
 
@@ -115,7 +137,7 @@ def test_tag_groups_by_topic(test_cfg: tags.TagConfig) -> None:
     assert sorted(actual_groups.keys()) == sorted(expected_groups.keys())
 
     for topic, tag_group_ids in expected_groups.items():
-        tg_ids = [tg.id for tg in actual_groups[topic]]
+        tg_ids = [tg.id for tg in actual_groups[topic] if tg.id is not None]
         assert sorted(tg_ids) == sorted(tag_group_ids)
 
 
@@ -235,45 +257,70 @@ def fixture_cfg() -> tags.TagConfig:
 
 
 def test_tag_config_insert_tag_group_twice(cfg: tags.TagConfig) -> None:
-    cfg.insert_tag_group(tags.TagGroup(("tgid2", "Topics/titlor", [("tgid2", "tagid2", [])])))
+    cfg.insert_tag_group(
+        tags.TagGroup.from_config(
+            {
+                "id": "tgid2",
+                "topic": "Topics",
+                "title": "titlor",
+                "tags": [{"id": "tgid2", "title": "tagid2", "aux_tags": []}],
+            }
+        )
+    )
     assert cfg.tag_groups[-1].id == "tgid2"
 
-    cfg.insert_tag_group(tags.TagGroup(("tgidX", "Topics/titlor", [("tgid2", "tagid2", [])])))
+    cfg.insert_tag_group(
+        tags.TagGroup.from_config(
+            {
+                "id": "tgidX",
+                "topic": "Topics",
+                "title": "titlor",
+                "tags": [{"id": "tgid2", "title": "tagid2", "aux_tags": []}],
+            }
+        )
+    )
     cfg.validate_config()
 
     with pytest.raises(MKGeneralException, match="is used twice"):
-        cfg.insert_tag_group(tags.TagGroup(("tgid2", "Topics/titlor", [("tgid3", "tagid3", [])])))
+        cfg.insert_tag_group(
+            tags.TagGroup.from_config(
+                {
+                    "id": "tgid2",
+                    "topic": "Topics",
+                    "title": "titlor",
+                    "tags": [{"id": "tgid3", "title": "tagid3", "aux_tags": []}],
+                }
+            )
+        )
         cfg.validate_config()
 
 
 def test_tag_config_insert_tag_group_missing_id(cfg: tags.TagConfig) -> None:
     with pytest.raises(MKGeneralException, match="Please specify"):
-        tg = tags.TagGroup()
-        tg.id = ""
+        tg = tags.TagGroup(group_id="", title="title", help=None, topic=None, tags=[])
         cfg.insert_tag_group(tg)
         cfg.validate_config()
 
 
 def test_tag_config_insert_tag_group_missing_title(cfg: tags.TagConfig) -> None:
     with pytest.raises(MKGeneralException, match="Please specify"):
-        tg = tags.TagGroup()
-        tg.id = "abc"
-        tg.title = ""
+        tg = tags.TagGroup(group_id="abc", title="", help=None, topic=None, tags=[])
         cfg.insert_tag_group(tg)
         cfg.validate_config()
 
 
 def test_tag_config_insert_tag_group_missing_multiple_tags_empty(cfg: tags.TagConfig) -> None:
     with pytest.raises(MKGeneralException, match="Only one tag may be empty"):
-        tg = tags.TagGroup(
-            (
-                "tgid3",
-                "Topics/titlor",
-                [
-                    (None, "tagid2", []),
-                    ("", "tagid3", []),
+        tg = tags.TagGroup.from_config(
+            {
+                "id": "tgid3",
+                "topic": "Topics",
+                "title": "titlor",
+                "tags": [
+                    {"id": None, "title": "tagid2", "aux_tags": []},
+                    {"id": "", "title": "tagid3", "aux_tags": []},
                 ],
-            )
+            }
         )
         cfg.insert_tag_group(tg)
         cfg.validate_config()
@@ -281,43 +328,46 @@ def test_tag_config_insert_tag_group_missing_multiple_tags_empty(cfg: tags.TagCo
 
 def test_tag_config_insert_tag_group_missing_tag_not_unique(cfg: tags.TagConfig) -> None:
     with pytest.raises(MKGeneralException, match="must be unique"):
-        tg = tags.TagGroup(
-            (
-                "tgid4",
-                "Topics/titlor",
-                [
-                    ("ding", "tagid2", []),
-                    ("ding", "tagid3", []),
+        tg = tags.TagGroup.from_config(
+            {
+                "id": "tgid4",
+                "topic": "Topics",
+                "title": "titlor",
+                "tags": [
+                    {"id": "ding", "title": "tagid2", "aux_tags": []},
+                    {"id": "ding", "title": "tagid3", "aux_tags": []},
                 ],
-            )
+            }
         )
         cfg.insert_tag_group(tg)
         cfg.validate_config()
 
 
 def test_tag_config_insert_tag_group_aux_tag_id_conflict(cfg: tags.TagConfig) -> None:
-    cfg.aux_tag_list.append(tags.AuxTag(("bla", "BLAAAA")))
-    tg = tags.TagGroup(
-        (
-            "tgid6",
-            "Topics/titlor",
-            [
-                ("bla", "tagid2", []),
+    cfg.aux_tag_list.append(tags.AuxTag.from_config({"id": "bla", "title": "BLAAAA"}))
+    tg = tags.TagGroup.from_config(
+        {
+            "id": "tgid6",
+            "topic": "Topics",
+            "title": "titlor",
+            "tags": [
+                {"id": "bla", "title": "tagid2", "aux_tags": []},
             ],
-        )
+        }
     )
     cfg.insert_tag_group(tg)
     cfg.validate_config()
 
     with pytest.raises(MKGeneralException, match="is used twice"):
-        tg = tags.TagGroup(
-            (
-                "bla",
-                "Topics/titlor",
-                [
-                    ("tagid2", "tagid2", []),
+        tg = tags.TagGroup.from_config(
+            {
+                "id": "bla",
+                "topic": "Topics",
+                "title": "titlor",
+                "tags": [
+                    {"id": "tagid2", "title": "tagid2", "aux_tags": []},
                 ],
-            )
+            }
         )
         cfg.insert_tag_group(tg)
         cfg.validate_config()
@@ -325,7 +375,9 @@ def test_tag_config_insert_tag_group_aux_tag_id_conflict(cfg: tags.TagConfig) ->
 
 def test_tag_config_insert_tag_group_no_tag(cfg: tags.TagConfig) -> None:
     with pytest.raises(MKGeneralException, match="at least one tag"):
-        tg = tags.TagGroup(("tgid7", "Topics/titlor", []))
+        tg = tags.TagGroup.from_config(
+            {"id": "tgid7", "topic": "Topics", "title": "titlor", "tags": []}
+        )
         cfg.insert_tag_group(tg)
         cfg.validate_config()
 
@@ -333,11 +385,26 @@ def test_tag_config_insert_tag_group_no_tag(cfg: tags.TagConfig) -> None:
 def test_tag_config_update_tag_group(test_cfg: tags.TagConfig) -> None:
     with pytest.raises(MKGeneralException, match="Unknown tag group"):
         test_cfg.update_tag_group(
-            tags.TagGroup(("tgid2", "Topics/titlor", [("tgid2", "tagid2", [])]))
+            tags.TagGroup.from_config(
+                {
+                    "id": "tgid2",
+                    "topic": "Topics",
+                    "title": "titlor",
+                    "tags": [{"id": "tgid2", "title": "tagid2", "aux_tags": []}],
+                }
+            )
         )
         test_cfg.validate_config()
 
-    test_cfg.update_tag_group(tags.TagGroup(("networking", "title", [("tgid2", "tagid2", [])])))
+    test_cfg.update_tag_group(
+        tags.TagGroup.from_config(
+            {
+                "id": "networking",
+                "title": "title",
+                "tags": [{"id": "tgid2", "title": "tagid2", "aux_tags": []}],
+            }
+        )
+    )
     assert test_cfg.tag_groups[1].title == "title"
     test_cfg.validate_config()
 

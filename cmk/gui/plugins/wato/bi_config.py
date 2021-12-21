@@ -61,7 +61,7 @@ from cmk.gui.page_menu import (
     PageMenuTopic,
 )
 from cmk.gui.permissions import Permission, permission_registry
-from cmk.gui.plugins.wato import (
+from cmk.gui.plugins.wato.utils import (
     ABCMainModule,
     add_change,
     ContactGroupSelection,
@@ -1312,7 +1312,6 @@ class ModeBIEditRule(ABCBIMode):
                                 state,
                                 TextInput(
                                     title=_("Message when rule result is %s") % name,
-                                    default_value=None,
                                     size=80,
                                 ),
                             )
@@ -1506,7 +1505,7 @@ class NodeVisualizationLayoutStyle(ValueSpec):
             "example.create_example(%s)" % (json.dumps(varprefix), json.dumps(value))
         )
 
-    def value_to_text(self, value) -> str:
+    def value_to_html(self, value) -> str:
         return ""
 
     def from_html_vars(self, varprefix):
@@ -1524,6 +1523,12 @@ class NodeVisualizationLayoutStyle(ValueSpec):
 
     def default_value(self):
         return {"type": "none", "style_config": {}}
+
+    def value_to_json(self, value):
+        raise NotImplementedError()
+
+    def value_from_json(self, json_value):
+        raise NotImplementedError()
 
 
 # .

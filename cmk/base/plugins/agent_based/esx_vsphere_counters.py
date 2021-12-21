@@ -138,31 +138,6 @@ _CTR_TO_IF_FIELDS = {
 
 
 def convert_esx_counters_if(section: Section) -> interfaces.Section:
-    r"""
-    >>> from pprint import pprint
-    >>> pprint(convert_esx_counters_if({
-    ... 'net.bandwidth': {'vmnic4': [(['10000000000'], 'bytes')]},
-    ... 'net.broadcastRx': {'vmnic4': [(['220', '196'], 'number')]},
-    ... 'net.broadcastTx': {'vmnic4': [(['0', '4'], 'number')]},
-    ... 'net.bytesRx': {'vmnic4': [(['19', '187'], 'kiloBytesPerSecond')]},
-    ... 'net.bytesTx': {'vmnic4': [(['33', '118'], 'kiloBytesPerSecond')]},
-    ... 'net.droppedRx': {'vmnic4': [(['0', '0'], 'number')]},
-    ... 'net.droppedTx': {'vmnic4': [(['0', '0'], 'number')]},
-    ... 'net.errorsRx': {'vmnic4': [(['0', '0'], 'number')]},
-    ... 'net.errorsTx': {'vmnic4': [(['0', '0'], 'number')]},
-    ... 'net.macaddress': {'vmnic4': [(['64:51:06:f0:c5:d0'], 'mac')]},
-    ... 'net.multicastRx': {'vmnic4': [(['157', '70'], 'number')]},
-    ... 'net.multicastTx': {'vmnic4': [(['0', '0'], 'number')]},
-    ... 'net.packetsRx': {'vmnic4': [(['952', '3922'], 'number')]},
-    ... 'net.packetsTx': {'vmnic4': [(['401', '1892'], 'number')]},
-    ... 'net.received': {'vmnic4': [(['19', '187'], 'kiloBytesPerSecond')]},
-    ... 'net.state': {'vmnic4': [(['1'], 'state')]},
-    ... 'net.transmitted': {'vmnic4': [(['33', '118'], 'kiloBytesPerSecond')]},
-    ... 'net.unknownProtos': {'vmnic4': [(['0', '0'], 'number')]},
-    ... 'net.usage': {'vmnic4': [(['53', '305'], 'kiloBytesPerSecond')]},
-    ... }))
-    [Interface(index='0', descr='vmnic4', alias='vmnic4', type='6', speed=10000000000, oper_status='1', in_octets=105472, in_ucast=2437, in_mcast=113, in_bcast=208, in_discards=0, in_errors=0, out_octets=76800, out_ucast=1146, out_mcast=0, out_bcast=2, out_discards=0, out_errors=0, out_qlen=0, phys_address='dQ\x06ðÅÐ', oper_status_name='up', speed_as_text='', group=None, node=None, admin_status=None, total_octets=182272)]
-    """
     rates: Dict[str, Dict[str, int]] = {}
     mac_addresses: Dict[str, str] = {}
 

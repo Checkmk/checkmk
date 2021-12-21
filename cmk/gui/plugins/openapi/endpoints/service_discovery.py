@@ -12,7 +12,9 @@ You can find an introduction to services including service discovery in the
 [Checkmk guide](https://docs.checkmk.com/latest/en/wato_services.html).
 """
 import json
-from typing import List
+from typing import List, Optional, Sequence
+
+from cmk.automations.results import CheckPreviewEntry
 
 from cmk.gui import fields, watolib
 from cmk.gui.fields.utils import BaseSchema
@@ -27,7 +29,6 @@ from cmk.gui.plugins.openapi.restful_objects.constructors import (
 from cmk.gui.plugins.openapi.restful_objects.parameters import HOST_NAME
 from cmk.gui.watolib.services import (
     checkbox_id,
-    CheckTable,
     Discovery,
     DiscoveryAction,
     DiscoveryOptions,
@@ -119,6 +120,7 @@ class UpdateDiscoveryPhase(BaseSchema):
         description="The value uniquely identifying the service on a given host.",
         example="/home",
         required=True,
+        allow_none=True,
     )
     target_phase = fields.String(
         description="The target phase of the service.",
@@ -155,7 +157,7 @@ def update_service_phase(params):
     check_type = body["check_type"]
     service_item = body["service_item"]
     _update_single_service_phase(
-        target_phase,
+        SERVICE_DISCOVERY_PHASES[target_phase],
         host,
         check_type,
         service_item,
@@ -167,7 +169,7 @@ def _update_single_service_phase(
     target_phase: str,
     host: watolib.CREHost,
     check_type: str,
-    service_item: str,
+    service_item: Optional[str],
 ) -> None:
     discovery = Discovery(
         host=host,
@@ -246,7 +248,7 @@ def execute(params):
 
 def _serve_services(
     host: watolib.CREHost,
-    discovered_services: CheckTable,
+    discovered_services: Sequence[CheckPreviewEntry],
     discovery_phases: List[str],
 ):
     response = Response()
@@ -274,40 +276,26 @@ def _lookup_phase_name(internal_phase_name: str) -> str:
 
 def serialize_service_discovery(
     host: watolib.CREHost,
-    discovered_services: CheckTable,
+    discovered_services: Sequence[CheckPreviewEntry],
     discovery_phases: List[str],
 ):
 
     members = {}
     host_name = host.name()
     for entry in discovered_services:
-        (
-            table_source,
-            check_type,
-            _checkgroup,
-            item,
-            _discovered_params,
-            _check_params,
-            descr,
-            _service_phase,
-            _output,
-            _perfdata,
-            _service_labels,
-            _found_on_nodes,
-        ) = entry
-        if _in_phase(table_source, discovery_phases):
-            service_phase = _lookup_phase_name(table_source)
-            members[f"{check_type}-{item}"] = object_property(
-                name=descr,
+        if _in_phase(entry.check_source, discovery_phases):
+            service_phase = _lookup_phase_name(entry.check_source)
+            members[f"{entry.check_plugin_name}-{entry.item}"] = object_property(
+                name=entry.description,
                 title=f"The service is currently {service_phase!r}",
                 value=service_phase,
                 prop_format="string",
                 linkable=False,
                 extensions={
                     "host_name": host_name,
-                    "check_plugin_name": check_type,
-                    "service_name": descr,
-                    "service_item": item,
+                    "check_plugin_name": entry.check_plugin_name,
+                    "service_name": entry.description,
+                    "service_item": entry.item,
                     "service_phase": service_phase,
                 },
                 base="",
@@ -317,8 +305,8 @@ def serialize_service_discovery(
                         href=update_service_phase.path.format(host_name=host_name),
                         body_params={
                             "target_phase": "monitored",
-                            "check_type": check_type,
-                            "service_item": item,
+                            "check_type": entry.check_plugin_name,
+                            "service_item": entry.item,
                         },
                         method="put",
                         title="Move the service to monitored",
@@ -328,8 +316,8 @@ def serialize_service_discovery(
                         href=update_service_phase.path.format(host_name=host_name),
                         body_params={
                             "target_phase": "undecided",
-                            "check_type": check_type,
-                            "service_item": item,
+                            "check_type": entry.check_plugin_name,
+                            "service_item": entry.item,
                         },
                         method="put",
                         title="Move the service to undecided",
@@ -339,8 +327,8 @@ def serialize_service_discovery(
                         href=update_service_phase.path.format(host_name=host_name),
                         body_params={
                             "target_phase": "ignored",
-                            "check_type": check_type,
-                            "service_item": item,
+                            "check_type": entry.check_plugin_name,
+                            "service_item": entry.item,
                         },
                         method="put",
                         title="Move the service to ignored",

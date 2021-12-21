@@ -19,7 +19,7 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.globals import config, html, request
 from cmk.gui.i18n import _
 from cmk.gui.page_menu import PageMenu, PageMenuDropdown, PageMenuEntry, PageMenuTopic
-from cmk.gui.plugins.wato import mode_registry, WatoMode
+from cmk.gui.plugins.wato.utils import mode_registry, WatoMode
 from cmk.gui.plugins.wato.utils.context_buttons import make_service_status_link
 from cmk.gui.utils.html import HTML
 from cmk.gui.valuespec import Tuple
@@ -227,7 +227,7 @@ class ModeObjectParameters(WatoMode):
                         _("Determined by discovery"),
                         None,
                         False,
-                        rulespec.valuespec._elements[2].value_to_text(serviceinfo["parameters"]),
+                        rulespec.valuespec._elements[2].value_to_html(serviceinfo["parameters"]),
                     )
 
                 else:
@@ -249,7 +249,7 @@ class ModeObjectParameters(WatoMode):
                 rulespec = rulespec_registry["static_checks:" + checkgroup]
                 itemspec = rulespec.item_spec
                 if itemspec:
-                    item_text = itemspec.value_to_text(serviceinfo["item"])
+                    item_text = itemspec.value_to_html(serviceinfo["item"])
                     assert rulespec.item_spec is not None
                     title = rulespec.item_spec.title()
                 else:
@@ -265,7 +265,7 @@ class ModeObjectParameters(WatoMode):
                 )
                 assert isinstance(rulespec.valuespec, Tuple)
                 html.write_text(
-                    rulespec.valuespec._elements[2].value_to_text(serviceinfo["parameters"])
+                    rulespec.valuespec._elements[2].value_to_html(serviceinfo["parameters"])
                 )
                 html.close_td()
                 html.close_tr()
@@ -472,7 +472,7 @@ class ModeObjectParameters(WatoMode):
 
         elif known_settings is not self._PARAMETERS_UNKNOWN:
             try:
-                html.write_text(valuespec.value_to_text(known_settings))
+                html.write_text(valuespec.value_to_html(known_settings))
             except Exception as e:
                 if config.debug:
                     raise
@@ -499,7 +499,7 @@ class ModeObjectParameters(WatoMode):
                 elif rulespec.factory_default is not watolib.Rulespec.NO_FACTORY_DEFAULT:
                     # If there is a factory default then show that one
                     setting = rulespec.factory_default
-                    html.write_text(valuespec.value_to_text(setting))
+                    html.write_text(valuespec.value_to_html(setting))
 
                 elif ruleset.match_type() in ("all", "list"):
                     # Rulesets that build lists are empty if no rule matches
@@ -507,15 +507,15 @@ class ModeObjectParameters(WatoMode):
 
                 else:
                     # Else we use the default value of the valuespec
-                    html.write_text(valuespec.value_to_text(valuespec.default_value()))
+                    html.write_text(valuespec.value_to_html(valuespec.default_value()))
 
             # We have a setting
             elif valuespec:
                 if ruleset.match_type() == "all":
                     for s in setting:
-                        html.write_text(valuespec.value_to_text(s))
+                        html.write_text(valuespec.value_to_html(s))
                 else:
-                    html.write_text(valuespec.value_to_text(setting))
+                    html.write_text(valuespec.value_to_html(setting))
 
             # Binary rule, no valuespec, outcome is True or False
             else:

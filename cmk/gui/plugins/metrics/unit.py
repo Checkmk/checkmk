@@ -4,12 +4,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import List, Tuple
+from typing import Iterable
 
 import cmk.utils.render
 
 from cmk.gui.i18n import _
-from cmk.gui.plugins.metrics import unit_info
+from cmk.gui.plugins.metrics.utils import unit_info
 from cmk.gui.valuespec import Age, Filesize, Float, Integer, Percentage
 
 # TODO Graphingsystem:
@@ -122,7 +122,7 @@ unit_info["bytes/s"] = {
 }
 
 
-def physical_precision_list(values, precision, unit_symbol) -> Tuple[str, List[str]]:
+def physical_precision_list(values, precision, unit_symbol) -> tuple[str, list[str]]:
     if not values:
         reference = 0
     else:
@@ -146,16 +146,16 @@ unit_info["bits/s"] = {
 }
 
 
-def bytes_human_readable_list(values, *args, **kwargs) -> Tuple[str, List[str]]:
+def bytes_human_readable_list(values: Iterable[float], *_args, **kwargs) -> tuple[str, list[str]]:
     if not values:
-        reference = 0
+        reference = 0.0
     else:
         reference = min([abs(v) for v in values])
 
     scale_factor, scale_prefix = cmk.utils.render.scale_factor_prefix(reference, 1024.0)
     precision = kwargs.get("precision", 2)
 
-    scaled_values = ["%.*f" % (precision, float(value) / scale_factor) for value in values]
+    scaled_values = ["%.*f" % (precision, value / scale_factor) for value in values]
 
     unit_txt = kwargs.get("unit", "B")
 

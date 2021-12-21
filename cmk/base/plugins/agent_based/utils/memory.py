@@ -11,6 +11,7 @@ from ..agent_based_api.v1 import State as state
 from ..agent_based_api.v1.type_defs import CheckResult
 
 _LevelsMode = Literal["abs_used", "abs_free", "perc_used", "perc_free"]
+MemoryLevels = Tuple[_LevelsMode, Tuple[Optional[float], Optional[float]]]
 
 SectionMem = Mapping[str, int]
 
@@ -130,7 +131,7 @@ def check_element(
     used: float,
     total: float,
     # levels: we can deal with anything, though
-    levels: Optional[Tuple[_LevelsMode, Tuple[Optional[float], Optional[float]]]] = None,
+    levels: Optional[MemoryLevels] = None,
     label_total: str = "",
     show_free: bool = False,
     metric_name: Optional[str] = None,

@@ -68,7 +68,7 @@ To set up the development environment do the following:
     Then change to the just created project directory.
 
     ```console
-    $ cd checkmk
+    cd checkmk
     ```
 
 2. Install development dependencies
@@ -278,7 +278,7 @@ content changes.
 [Zen of Python](https://www.python.org/dev/peps/pep-0020/).
 
 Checkmk is mostly written in Python. At the moment the most of the code base is
-using Python 3.8.
+using Python 3.9.
 
 Only rely on non-standard modules that are mentioned in the `Pipfile`.
 <!--- TODO: How to add new modules? -->
@@ -316,6 +316,7 @@ issue.
 
 ---
 **Known issues regarding 3to2 conversion**
+
 - `f-strings`: Currently 3to2  cannot convert `f-strings` into `python2`
   compatible syntax. So use `format()` instead.
 ---
@@ -504,7 +505,7 @@ in you virtualenv you can run it with `make format-python-isort`
 #### Manual black invocation: Single file
 
 ```console
-$ black [the_file.py]
+black [the_file.py]
 ```
 
 #### Manual isort invocation: Single file

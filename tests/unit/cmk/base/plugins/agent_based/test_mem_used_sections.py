@@ -64,5 +64,5 @@ def test_parse_openbsd_mem(string_table, expected_result):
     [([["MemTotal:", "23", "B"], ["MemFree:", "744076", "kB"], ["SwapFree:", "186505", "kB"]])],
 )
 def test_parse_openbsd_mem_error(string_table):
-    with pytest.raises(KeyError) as e:
-        result = parse_openbsd_mem(string_table)
+    with pytest.raises(KeyError):
+        parse_openbsd_mem(string_table)

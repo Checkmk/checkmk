@@ -2,7 +2,7 @@
 set -e
 
 # immediately require sodo rights (because I will go get a coffee)
-sudo --validate
+test "$USER" == "sp" || sudo --validate  # some people don't like that ;-)
 
 SITE=${SITE:-$(until [ $PWD == / ]; do if [ -e .site ]; then
     cat .site
@@ -14,27 +14,16 @@ ROOT=/omd/sites/$SITE
 echo "Updating compiled protobuf files..."
 make -C ../.. protobuf-files
 
-echo "Update site $SITE..."
+echo "TARGET: $ROOT/share/check_mk/checks"
+# NOTE: The -a flag is equivalent to -rlptgoD, but we do *not* want -t, as it
+# would screw up our include caching mechanism!
+sudo rsync -rlpgoD --delete-after ../../checks/ $ROOT/share/check_mk/checks/
 
-echo "Copy CRE files..."
-sudo rsync \
-    --exclude="*.pyc" \
-    --exclude="flycheck*" \
-    --exclude=cee \
-    --exclude=cee.py \
-    --exclude=cme.py \
-    -a * $ROOT/lib/python3/cmk/base/
+echo "TARGET: $ROOT/share/check_mk/inventory"
+sudo rsync -ar --delete-after ../../inventory/ $ROOT/share/check_mk/inventory/
 
-# Ensure cmk.base[.cee] is a namespace package
-sudo rm -f \
-    "$ROOT/lib/python3/cmk/base/__init__.py" \
-    "$ROOT/lib/python3/cmk/base/__init__.pyc" \
-    "$ROOT/lib/python3/cmk/base/plugins/__init__.py" \
-    "$ROOT/lib/python3/cmk/base/plugins/__init__.pyc" \
-    "$ROOT/lib/python3/cmk/base/plugins/agent_based/__init__.py" \
-    "$ROOT/lib/python3/cmk/base/plugins/agent_based/__init__.pyc" \
-    "$ROOT/lib/python3/cmk/base/plugins/agent_based/utils/__init__.py" \
-    "$ROOT/lib/python3/cmk/base/plugins/agent_based/utils/__init__.pyc"
+
+(cd .. ; bash .f12)
 
 # Also deploy all other directories of same type
 if [ ${ALL_EDITIONS:-1} != 0 ]; then
@@ -46,8 +35,4 @@ if [ ${ALL_EDITIONS:-1} != 0 ]; then
             )
         fi
     done
-fi
-
-if [ -z "$ONLY_COPY" ]; then
-    sudo $ROOT/bin/python3 -m compileall -qq $ROOT/lib/python3/cmk/base
 fi

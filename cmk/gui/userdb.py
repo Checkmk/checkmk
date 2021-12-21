@@ -29,7 +29,6 @@ import cmk.gui.gui_background_job as gui_background_job
 import cmk.gui.hooks as hooks
 import cmk.gui.i18n
 import cmk.gui.pages
-import cmk.gui.plugins.userdb
 import cmk.gui.utils as utils
 from cmk.gui.config import register_post_config_load_hook
 from cmk.gui.exceptions import MKAuthException, MKInternalError, MKUserError
@@ -50,6 +49,7 @@ from cmk.gui.plugins.userdb.utils import (
     save_cached_profile,
     user_attribute_registry,
     user_sync_config,
+    UserAttribute,
     UserConnector,
     UserSpec,
 )
@@ -57,7 +57,14 @@ from cmk.gui.sites import is_wato_slave_site
 from cmk.gui.utils.logged_in import LoggedInUser
 from cmk.gui.utils.roles import roles_of_user
 from cmk.gui.utils.urls import makeuri_contextless
-from cmk.gui.valuespec import DEF_VALUE, DropdownChoice, TextInput, ValueSpec, ValueSpecHelp
+from cmk.gui.valuespec import (
+    DEF_VALUE,
+    DropdownChoice,
+    TextInput,
+    ValueSpec,
+    ValueSpecHelp,
+    ValueSpecText,
+)
 
 auth_logger = logger.getChild("auth")
 
@@ -302,8 +309,8 @@ class UserSelection(DropdownChoice):
 
         return lambda: get_wato_users(none_value)
 
-    def value_to_text(self, value) -> str:
-        return str(super().value_to_text(value)).rsplit(" - ", 1)[-1]
+    def value_to_html(self, value) -> ValueSpecText:
+        return str(super().value_to_html(value)).rsplit(" - ", 1)[-1]
 
 
 def on_succeeded_login(username: UserId) -> str:
@@ -586,7 +593,7 @@ def _convert_start_url(value: str) -> str:
 #   +----------------------------------------------------------------------+
 
 
-class GenericUserAttribute(cmk.gui.plugins.userdb.UserAttribute):
+class GenericUserAttribute(UserAttribute):
     def __init__(
         self,
         user_editable: bool,
@@ -700,7 +707,7 @@ def load_users(lock: bool = False) -> Users:
     result = {}
     for uid, user in users.items():
         # Transform user IDs which were stored with a wrong type
-        uid = ensure_str(uid)
+        uid = ensure_str(uid)  # pylint: disable= six-ensure-str-bin-call
 
         profile = contacts.get(uid, {})
         profile.update(user)
@@ -708,7 +715,9 @@ def load_users(lock: bool = False) -> Users:
 
         # Convert non unicode mail addresses
         if "email" in profile:
-            profile["email"] = ensure_str(profile["email"])
+            profile["email"] = ensure_str(  # pylint: disable= six-ensure-str-bin-call
+                profile["email"]
+            )
 
     # This loop is only neccessary if someone has edited
     # contacts.mk manually. But we want to support that as
@@ -1482,7 +1491,7 @@ class UserProfileCleanupBackgroundJob(gui_background_job.GUIBackgroundJob):
 
         abandoned_profiles = sorted(profiles - users)
         if not abandoned_profiles:
-            self._logger.warning("Found no abandoned profile.")
+            self._logger.debug("Found no abandoned profile.")
             return
 
         self._logger.info("Found %d abandoned profiles", len(abandoned_profiles))

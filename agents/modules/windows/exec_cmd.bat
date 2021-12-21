@@ -4,13 +4,13 @@
 ::
 :: 'exec.cmd script PY_VER PY_SUBVER'
 ::
-:: Example: exec.cmd install_legacy.cmd 3.8 11
+:: Example: exec.cmd install_legacy.cmd 3.9 7
 :: Always return back to current dir
 :: *********************************************
 
 @echo off
 
-if "%3" == "" powershell Write-Host "Usage: exec_cmd cmd 3.8 11" -foreground red && exit /b 1
+if "%3" == "" powershell Write-Host "Usage: exec_cmd cmd 3.9 7" -foreground red && exit /b 1
 set PY_VER=%2
 set PY_SUBVER=%3
 
@@ -27,7 +27,7 @@ set cur_dir=%cd%
 :: Points to the doc to build, which may not be build and must be just set to empty file
 set chm_368=%cur_dir%\python\%PY_VER%\%p_full_name%\Doc\build\htmlhelp\python368.chm
 set chm_dir=%cur_dir%\python\%PY_VER%\%p_full_name%\Doc\build\htmlhelp
-set chm_file=%chm_dir%\python38%PY_SUBVER%.chm
+set chm_file=%chm_dir%\python39%PY_SUBVER%.chm
 
 :: msiexec doesn't understand relative paths, we have to normalize
 call :NORMALIZEPATH "%cur_dir%\..\..\..\omd\packages\Python\windows\python-3.4.4.msi"

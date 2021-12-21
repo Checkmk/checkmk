@@ -9,7 +9,7 @@ withFolderProperties{
 
 // Due to https://github.com/pypa/pypi-support/issues/978, we need to disable Plugin tests for py2.6
 // until we have a feasible solution or we drop the support for 2.6 completly.
-def PYTHON_VERSIONS = [ "2.7", "3.4", "3.5", "3.6", "3.7", "3.8" ]
+def PYTHON_VERSIONS = [ "2.7", "3.4", "3.5", "3.6", "3.7", "3.8", "3.9" ]
 
 timeout(time: 12, unit: 'HOURS') {
     node(NODE) {
@@ -20,9 +20,9 @@ timeout(time: 12, unit: 'HOURS') {
         versioning = load('buildscripts/scripts/lib/versioning.groovy')
         docker_util = load ('buildscripts/scripts/lib/docker_util.groovy')
     }
-    
+
     def DOCKER_BUILDS = [:]
-    
+
     try {
         node(NODE) {
             docker.withRegistry(DOCKER_REGISTRY, 'nexus') {

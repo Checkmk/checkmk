@@ -18,6 +18,7 @@ from typing import (
     Mapping,
     NamedTuple,
     NewType,
+    NoReturn,
     Optional,
     Sequence,
     Set,
@@ -25,6 +26,23 @@ from typing import (
     TypedDict,
     Union,
 )
+
+
+def assert_never(x: NoReturn) -> NoReturn:
+    """A helper function that allows exhaustiveness checking with mypy:
+
+    >>> from typing import Union
+    >>> def f(x: Union[str, int]) -> None:
+    ...     if isinstance(x, str):
+    ...         print("str")
+    ...     elif isinstance(x, int):
+    ...         print("int")
+    ...     else:
+    ...         assert_never(foo)
+    ...
+    """
+    raise AssertionError(f"Invalid value: {x!r}")
+
 
 HostName = str
 HostAddress = str
@@ -123,6 +141,38 @@ TagCondition = Union[Optional[TagID], TagConditionNE, TagConditionOR, TagConditi
 TaggroupIDToTagCondition = Mapping[TaggroupID, TagCondition]
 TagsOfHosts = Dict[HostName, TaggroupIDToTagID]
 
+
+class GroupedTagSpec(TypedDict):
+    id: Optional[TagID]
+    title: str
+    aux_tags: List[TagID]
+
+
+class _AuxTagSpecOpt(TypedDict, total=False):
+    topic: str
+
+
+class AuxTagSpec(_AuxTagSpecOpt):
+    id: TagID
+    title: str
+
+
+class _TaggroupSpecOpt(TypedDict, total=False):
+    topic: str
+    help: str
+
+
+class TaggroupSpec(_TaggroupSpecOpt):
+    id: TaggroupID
+    title: str
+    tags: List[GroupedTagSpec]
+
+
+class TagConfigSpec(TypedDict):
+    tag_groups: List[TaggroupSpec]
+    aux_tags: List[AuxTagSpec]
+
+
 CheckVariables = Dict[str, Any]
 Seconds = int
 Timestamp = int
@@ -145,9 +195,7 @@ MetricTuple = Tuple[
 
 ClusterMode = Literal["native", "failover", "worst", "best"]
 
-ServiceCheckResult = Tuple[ServiceState, ServiceDetails, List[MetricTuple]]
-
-LegacyCheckParameters = Union[None, Dict, Tuple, List, str]
+LegacyCheckParameters = Union[None, Mapping, Tuple, List, str]
 
 SetAutochecksTable = Dict[
     Tuple[str, Item], Tuple[ServiceName, LegacyCheckParameters, Labels, List[HostName]]
@@ -186,7 +234,8 @@ SNMPDetectBaseType = List[List[Tuple[str, str, bool]]]
 
 # TODO: TimeperiodSpec should really be a class or at least a NamedTuple! We
 # can easily transform back and forth for serialization.
-TimeperiodSpec = Dict[str, Union[str, List[Tuple[str, str]]]]
+TimeperiodSpec = Dict[str, Union[str, List[str], List[Tuple[str, str]]]]
+TimeperiodSpecs = Dict[TimeperiodName, TimeperiodSpec]
 
 
 class SourceType(enum.Enum):
@@ -247,6 +296,7 @@ class ExitSpec(TypedDict, total=False):
     missing_sections: int
     specific_missing_sections: List[Tuple[str, int]]
     restricted_address_mismatch: int
+    legacy_pull_mode: int
 
 
 class HostLabelValueDict(TypedDict):
@@ -255,19 +305,3 @@ class HostLabelValueDict(TypedDict):
 
 
 DiscoveredHostLabelsDict = Dict[str, HostLabelValueDict]
-
-CheckPreviewEntry = Tuple[
-    str,
-    CheckPluginNameStr,
-    Optional[RulesetName],
-    Item,
-    LegacyCheckParameters,
-    LegacyCheckParameters,
-    str,
-    Optional[int],
-    str,
-    List[MetricTuple],
-    Dict[str, str],
-    List[HostName],
-]
-CheckPreviewTable = Sequence[CheckPreviewEntry]

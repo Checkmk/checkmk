@@ -251,6 +251,8 @@ catalog_titles = {
     "agentless": "Networking checks without agent",
     "generic": "Generic check plugins",
     "unsorted": "Uncategorized",
+    "zertificon": "Zertificon",
+    "mqtt": "MQTT",
 }  # yapf: disable
 
 # TODO: Do we need a more generic place for this?
@@ -617,7 +619,7 @@ class ManPageRenderer:
             self._print_textbody(self._header["item"])
 
         self._print_subheader("Discovery")
-        self._print_textbody(self._header.get("inventory", "No discovery supported."))
+        self._print_textbody(self._header.get("discovery", "No discovery supported."))
         self._print_empty_line()
         self._flush()
 

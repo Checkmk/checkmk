@@ -6,11 +6,11 @@
 
 import pytest
 
-from cmk.gui.plugins.wato import config_variable_registry, ConfigDomainGUI
 from cmk.gui.plugins.wato.check_mk_configuration import (
     _transform_automatic_rediscover_parameters,
     ConfigVariableGroupUserInterface,
 )
+from cmk.gui.plugins.wato.utils import config_variable_registry, ConfigDomainGUI
 from cmk.gui.utils.theme import theme_choices
 from cmk.gui.valuespec import DropdownChoice
 
@@ -31,7 +31,7 @@ def test_ui_theme_default_value(request_context):
     default_setting = var.domain()().default_globals()[var.ident()]
     assert default_setting == "modern-dark"
 
-    assert var.valuespec().value_to_text(default_setting) == "Dark"
+    assert var.valuespec().value_to_html(default_setting) == "Dark"
 
 
 @pytest.mark.parametrize(

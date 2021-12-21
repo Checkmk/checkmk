@@ -11,7 +11,7 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.globals import config
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
-from cmk.gui.plugins.webapi import api_call_collection_registry, APICallCollection
+from cmk.gui.plugins.webapi.utils import api_call_collection_registry, APICallCollection
 from cmk.gui.watolib.bulk_discovery import (
     BulkDiscoveryBackgroundJob,
     DiscoveryHost,

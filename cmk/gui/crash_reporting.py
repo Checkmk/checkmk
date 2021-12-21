@@ -12,13 +12,14 @@ import pprint
 import tarfile
 import time
 import traceback
-from typing import Dict, Iterator, Mapping, Optional, Type
+from typing import Dict, Iterator, Mapping, Optional, Type, TypedDict
 
 import livestatus
 from livestatus import SiteId
 
 import cmk.utils.crash_reporting
 import cmk.utils.version as cmk_version
+from cmk.utils.crash_reporting import CrashInfo
 from cmk.utils.site import omd_site
 
 import cmk.gui.forms as forms
@@ -34,7 +35,7 @@ from cmk.gui.breadcrumb import (
 )
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.globals import config, html, request, response, transactions, user, user_errors
-from cmk.gui.htmllib import HTML
+from cmk.gui.htmllib import HTML, HTMLContent
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.main_menu import mega_menu_registry
@@ -58,7 +59,11 @@ from cmk.gui.utils.urls import (
 from cmk.gui.valuespec import Dictionary, EmailAddress, TextInput
 
 CrashReportStore = cmk.utils.crash_reporting.CrashReportStore
-CrashInfo = Dict
+
+
+class ReportSubmitDetails(TypedDict):
+    name: str
+    mail: str
 
 
 def handle_exception_as_gui_crash_report(
@@ -157,7 +162,7 @@ class ABCCrashReportPage(cmk.gui.pages.Page, abc.ABC):
         self._crash_id = request.get_unicode_input_mandatory("crash_id")
         self._site_id = request.get_unicode_input_mandatory("site")
 
-    def _get_crash_info(self, row):
+    def _get_crash_info(self, row) -> CrashInfo:
         return json.loads(row["crash_info"])
 
     def _get_crash_row(self):
@@ -193,7 +198,7 @@ class ABCCrashReportPage(cmk.gui.pages.Page, abc.ABC):
 
 @cmk.gui.pages.page_registry.register_page("crash")
 class PageCrash(ABCCrashReportPage):
-    def page(self):
+    def page(self) -> None:
         row = self._get_crash_row()
         crash_info = self._get_crash_info(row)
 
@@ -219,7 +224,7 @@ class PageCrash(ABCCrashReportPage):
         if request.has_var("_report") and transactions.check_transaction():
             details = self._handle_report_form(crash_info)
         else:
-            details = {}
+            details = ReportSubmitDetails(name="", mail="")
 
         if crash_info["crash_type"] == "gui":
             html.show_error("<b>%s:</b> %s" % (_("Internal error"), crash_info["exc_value"]))
@@ -302,8 +307,8 @@ class PageCrash(ABCCrashReportPage):
         renderer = self._crash_type_renderer(crash_info["crash_type"])
         yield from renderer.page_menu_entries_related_monitoring(crash_info, self._site_id)
 
-    def _handle_report_form(self, crash_info):
-        details = {}
+    def _handle_report_form(self, crash_info: CrashInfo) -> ReportSubmitDetails:
+        details: ReportSubmitDetails
         try:
             vs = self._vs_crash_report()
             details = vs.from_html_vars("_report")
@@ -311,11 +316,14 @@ class PageCrash(ABCCrashReportPage):
 
             # Make the resulting page execute the crash report post request
             url_encoded_params = urlencode_vars(
-                list(details.items())
-                + [
+                [
+                    ("name", details["name"]),
+                    ("mail", details["mail"]),
                     (
                         "crashdump",
-                        base64.b64encode(_pack_crash_report(self._get_serialized_crash_report())),
+                        base64.b64encode(
+                            _pack_crash_report(self._get_serialized_crash_report())
+                        ).decode("ascii"),
                     ),
                 ]
             )
@@ -398,7 +406,7 @@ class PageCrash(ABCCrashReportPage):
             render="form",
         )
 
-    def _warn_about_local_files(self, crash_info):
+    def _warn_about_local_files(self, crash_info: CrashInfo) -> None:
         if crash_info["crash_type"] == "check":
             files = []
             for filepath, _lineno, _func, _line in crash_info["exc_traceback"]:
@@ -421,7 +429,7 @@ class PageCrash(ABCCrashReportPage):
                 )
                 html.show_warning(warn_text)
 
-    def _show_report_form(self, crash_info, details):
+    def _show_report_form(self, crash_info: CrashInfo, details: ReportSubmitDetails) -> None:
         if crash_info["crash_type"] == "gui":
             self._add_gui_user_infos_to_details(details)
 
@@ -435,16 +443,16 @@ class PageCrash(ABCCrashReportPage):
         html.hidden_fields()
         html.end_form()
 
-    def _add_gui_user_infos_to_details(self, details):
+    def _add_gui_user_infos_to_details(self, details: ReportSubmitDetails) -> None:
         users = userdb.load_users()
         if user.id is None:
-            details.update({"name": None, "mail": None})
+            details.update({"name": "", "mail": ""})
             return
         user_spec = users.get(user.id, {})
-        details.setdefault("name", user_spec.get("alias"))
-        details.setdefault("mail", user_spec.get("mail"))
+        details.setdefault("name", user_spec.get("alias", ""))
+        details.setdefault("mail", user_spec.get("mail", ""))
 
-    def _show_crash_report(self, info):
+    def _show_crash_report(self, info: CrashInfo) -> None:
         html.h3(_("Crash Report"), class_="table")
         html.open_table(class_=["data", "crash_report"])
 
@@ -481,7 +489,7 @@ class PageCrash(ABCCrashReportPage):
     def _format_traceback(self, tb):
         return "".join(traceback.format_list(tb))
 
-    def _show_crash_report_details(self, crash_info, row):
+    def _show_crash_report_details(self, crash_info: CrashInfo, row):
         self._crash_type_renderer(crash_info["crash_type"]).show_details(crash_info, row)
 
     def _crash_type_renderer(self, crash_type):
@@ -503,7 +511,7 @@ class ABCReportRenderer(abc.ABC):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def show_details(self, crash_info, row):
+    def show_details(self, crash_info: CrashInfo, row):
         raise NotImplementedError()
 
 
@@ -527,7 +535,7 @@ class ReportRendererGeneric(ABCReportRenderer):
         # We don't want to produce anything here
         yield from ()
 
-    def show_details(self, crash_info, row):
+    def show_details(self, crash_info: CrashInfo, row) -> None:
         if not crash_info["details"]:
             return
 
@@ -551,11 +559,11 @@ class ReportRendererSection(ABCReportRenderer):
         # We don't want to produce anything here
         yield from ()
 
-    def show_details(self, crash_info, row):
+    def show_details(self, crash_info: CrashInfo, row) -> None:
         self._show_crashed_section_details(crash_info)
         self._show_section_content(row)
 
-    def _show_crashed_section_details(self, info):
+    def _show_crashed_section_details(self, info: CrashInfo) -> None:
         def format_bool(val):
             return {
                 True: _("Yes"),
@@ -573,7 +581,7 @@ class ReportRendererSection(ABCReportRenderer):
 
         html.close_table()
 
-    def _show_section_content(self, row):
+    def _show_section_content(self, row) -> None:
         _crash_row(_("Section Content"), repr(row.get("section_content")))
 
 
@@ -623,11 +631,11 @@ class ReportRendererCheck(ABCReportRenderer):
             item=make_simple_link(service_url),
         )
 
-    def show_details(self, crash_info, row):
+    def show_details(self, crash_info: CrashInfo, row) -> None:
         self._show_crashed_check_details(crash_info)
         self._show_agent_output(row)
 
-    def _show_crashed_check_details(self, info):
+    def _show_crashed_check_details(self, info: CrashInfo) -> None:
         def format_bool(val):
             return {
                 True: _("Yes"),
@@ -673,7 +681,7 @@ class ReportRendererGUI(ABCReportRenderer):
         return
         yield  # pylint: disable=unreachable
 
-    def show_details(self, crash_info, row):
+    def show_details(self, crash_info: CrashInfo, row) -> None:
         details = crash_info["details"]
 
         html.h3(_("Details"), class_="table")
@@ -697,7 +705,9 @@ class ReportRendererGUI(ABCReportRenderer):
         html.close_table()
 
 
-def _crash_row(title, infotext, odd=True, legend=False, pre=False):
+def _crash_row(
+    title: str, infotext: HTMLContent, odd: bool = True, legend: bool = False, pre: bool = False
+) -> None:
     trclass = "data odd0" if odd else "data even0"
     tdclass = "left legend" if legend else "left"
     html.open_tr(class_=trclass)

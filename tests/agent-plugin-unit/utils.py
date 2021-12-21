@@ -35,7 +35,7 @@ def import_module(modpath):
 
         return importlib.machinery.SourceFileLoader(modname, modpath).load_module()  # type: ignore[call-arg]  # pylint: disable=no-value-for-parameter,deprecated-method
 
-    import imp  # pylint: disable=import-outside-toplevel
+    import imp  # pylint: disable=import-outside-toplevel, deprecated-module
 
     try:
         return imp.load_source(modname, modpath)

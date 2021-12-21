@@ -3,12 +3,13 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from __future__ import annotations
 
 import functools
 import http.client as http_client
 import json
 import traceback
-from typing import Callable, Dict
+from typing import Callable, Dict, TYPE_CHECKING
 
 import livestatus
 
@@ -45,6 +46,9 @@ from cmk.gui.wsgi.applications.utils import (
     handle_unhandled_exception,
     plain_error,
 )
+
+if TYPE_CHECKING:
+    from cmk.gui.wsgi.type_defs import StartResponse, WSGIEnvironment, WSGIResponse
 
 # TODO
 #  * derive all exceptions from werkzeug's http exceptions.
@@ -188,7 +192,7 @@ class CheckmkApp:
     def __init__(self, debug=False):
         self.debug = debug
 
-    def __call__(self, environ, start_response):
+    def __call__(self, environ: WSGIEnvironment, start_response: StartResponse) -> WSGIResponse:
         req = http.Request(environ)
 
         output_format = get_output_format(
@@ -220,15 +224,18 @@ class CheckmkApp:
             theme.from_config(config.ui_theme)
             return self.wsgi_app(environ, start_response)
 
-    def wsgi_app(self, environ, start_response):
+    def wsgi_app(self, environ: WSGIEnvironment, start_response: StartResponse) -> WSGIResponse:
         """Is called by the WSGI server to serve the current page"""
         with cmk.utils.store.cleanup_locks(), sites.cleanup_connections():
             return _process_request(environ, start_response, debug=self.debug)
 
 
 def _process_request(
-    environ, start_response, debug=False
-) -> Response:  # pylint: disable=too-many-branches
+    environ: WSGIEnvironment,
+    start_response: StartResponse,
+    debug: bool = False,
+) -> WSGIResponse:  # pylint: disable=too-many-branches
+    resp: Response
     try:
         page_handler = get_and_wrap_page(requested_file_name(request))
         resp = page_handler()

@@ -129,6 +129,7 @@ REQUIRED_ARGUMENTS: Dict[str, List[str]] = {
         "APP_KEY",
         "ADDRESS",
     ],
+    "agent_mqtt": ["SERVER"],
 }
 
 

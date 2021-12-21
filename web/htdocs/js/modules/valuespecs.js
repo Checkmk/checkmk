@@ -2,6 +2,7 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
+import {set} from "lodash";
 import $ from "jquery";
 import * as utils from "utils";
 import * as popup_menu from "popup_menu";
@@ -815,15 +816,23 @@ function hostnames_autocompleter(css_class, container) {
     select2_vs_autocomplete(container, css_class, params);
 }
 
+function allgroups_autocompleter(css_class, container) {
+    let params = elem => ({
+        strict: elem.dataset.strict,
+        group_type: elem.id,
+    });
+    select2_vs_autocomplete(container, css_class, params);
+}
+
 function service_desc_autocompleter(css_class, container) {
     let params = elem => {
         let host_id = elem.id.endsWith("_service_hint")
             ? `${elem.id.slice(0, -13)}_hostname_hint`
             : "context_host_p_host";
-        let val_or_empty = obj => (obj ? obj.value : "");
+        let val_or_empty = obj => (obj ? {host: obj.value} : {});
 
         return {
-            host: val_or_empty(document.getElementById(host_id)),
+            context: val_or_empty(document.getElementById(host_id)),
             strict: elem.dataset.strict,
         };
     };
@@ -832,11 +841,18 @@ function service_desc_autocompleter(css_class, container) {
 }
 
 function autocompleter_with_host_service_hints(css_class, container) {
-    let params = elem => ({
-        host: document.getElementById(`${elem.id}_hostname_hint`).value,
-        service: document.getElementById(`${elem.id}_service_hint`).value,
-        strict: elem.dataset.strict,
-    });
+    let params = elem => {
+        let obj = {strict: elem.dataset.strict};
+        let hint = document.getElementById(`${elem.id}_hostname_hint`).value;
+        if (hint) {
+            set(obj, "context.host.host", hint);
+        }
+        hint = document.getElementById(`${elem.id}_service_hint`).value;
+        if (hint) {
+            set(obj, "context.service.service", hint);
+        }
+        return obj;
+    };
 
     select2_vs_autocomplete(container, css_class, params);
 }
@@ -847,7 +863,7 @@ export function initialize_autocompleters(container) {
     service_desc_autocompleter("monitored_service_description", container);
     autocompleter_with_host_service_hints("monitored_metrics", container);
     autocompleter_with_host_service_hints("available_graphs", container);
-    autocompleter_with_host_service_hints("metric_with_source", container);
+    allgroups_autocompleter("allgroups", container);
 }
 
 var vs_color_pickers = [];
@@ -926,4 +942,27 @@ export function update_unit_selector(selectbox, metric_prefix) {
     let metric_selector = $("#" + metric_prefix);
     change_unit_to_match_metric(metric_selector.val());
     metric_selector.on("change", event => change_unit_to_match_metric(event.target.value));
+}
+
+export function fetch_ca_from_server(varprefix) {
+    const address = document.querySelector(`input[name='${varprefix + "_address"}']`).value;
+    const port = document.querySelector(`input[name='${varprefix + "_port"}']`).value;
+
+    ajax.post_url(
+        "ajax_fetch_ca.py",
+        "address=" + encodeURIComponent(address) + "&port=" + encodeURIComponent(port),
+        (_data, ajax_response) => {
+            const response = JSON.parse(ajax_response);
+
+            const status = document.getElementById(varprefix + "_status");
+            const content = document.querySelector(`textarea[name='${varprefix}']`);
+            if (response.result_code !== 0) {
+                status.innerText = response.result;
+                content.value = "";
+            } else {
+                status.innerHTML = response.result.summary;
+                content.value = response.result.cert_pem;
+            }
+        }
+    );
 }

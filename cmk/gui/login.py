@@ -385,7 +385,7 @@ def _check_auth_web_server(req: Request) -> Optional[UserId]:
     user_id = req.remote_user
     if user_id is not None:
         set_auth_type("web_server")
-        return UserId(ensure_str(user_id))
+        return UserId(ensure_str(user_id))  # pylint: disable= six-ensure-str-bin-call
     return None
 
 
@@ -639,7 +639,7 @@ class LogoutPage(Page):
         session_id = _get_session_id_from_cookie(user.id, revalidate_cookie=True)
         userdb.on_logout(user.id, session_id)
 
-        if auth_type == "cookie":
+        if auth_type == "cookie":  # type: ignore[has-type]
             raise HTTPRedirect(url_prefix() + "check_mk/login.py")
 
         # Implement HTTP logout with cookie hack

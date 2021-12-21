@@ -30,7 +30,6 @@ import cmk.gui.crash_reporting as crash_reporting
 import cmk.gui.forms as forms
 import cmk.gui.i18n
 import cmk.gui.pages
-import cmk.gui.plugins.dashboard
 import cmk.gui.utils as utils
 import cmk.gui.visuals as visuals
 from cmk.gui.breadcrumb import (
@@ -51,6 +50,7 @@ from cmk.gui.globals import html, output_funnel, request, response, transactions
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.main_menu import mega_menu_registry
+from cmk.gui.node_visualization import get_topology_view_and_filters
 from cmk.gui.page_menu import (
     make_display_options_dropdown,
     make_javascript_link,
@@ -72,28 +72,6 @@ from cmk.gui.permissions import (
     permission_section_registry,
     PermissionSection,
 )
-from cmk.gui.plugins.visuals.utils import visual_info_registry, visual_type_registry, VisualType
-from cmk.gui.type_defs import InfoName, VisualContext
-from cmk.gui.utils.html import HTML, HTMLInput
-from cmk.gui.valuespec import (
-    Checkbox,
-    Dictionary,
-    DictionaryEntry,
-    DropdownChoice,
-    Transform,
-    ValueSpec,
-    ValueSpecValidateFunc,
-)
-from cmk.gui.views import ABCAjaxInitialFilters
-from cmk.gui.watolib.activate_changes import get_pending_changes_info
-
-if not cmk_version.is_raw_edition():
-    import cmk.gui.cee.plugins.dashboard  # pylint: disable=no-name-in-module
-
-if cmk_version.is_managed_edition():
-    import cmk.gui.cme.plugins.dashboard  # pylint: disable=no-name-in-module
-
-from cmk.gui.node_visualization import get_topology_view_and_filters
 
 # Can be used by plugins
 from cmk.gui.plugins.dashboard.utils import (  # noqa: F401 # pylint: disable=unused-import
@@ -119,13 +97,28 @@ from cmk.gui.plugins.dashboard.utils import (  # noqa: F401 # pylint: disable=un
     get_all_dashboards,
     get_permitted_dashboards,
     GROW,
+    IFrameDashlet,
     MAX,
     save_all_dashboards,
 )
 from cmk.gui.plugins.metrics.html_render import default_dashlet_graph_render_options
 from cmk.gui.plugins.views.utils import data_source_registry
+from cmk.gui.plugins.visuals.utils import visual_info_registry, visual_type_registry, VisualType
+from cmk.gui.type_defs import InfoName, VisualContext
+from cmk.gui.utils.html import HTML, HTMLInput
 from cmk.gui.utils.ntop import is_ntop_configured
 from cmk.gui.utils.urls import makeuri, makeuri_contextless, urlencode
+from cmk.gui.valuespec import (
+    Checkbox,
+    Dictionary,
+    DictionaryEntry,
+    DropdownChoice,
+    Transform,
+    ValueSpec,
+    ValueSpecValidateFunc,
+)
+from cmk.gui.views import ABCAjaxInitialFilters
+from cmk.gui.watolib.activate_changes import get_pending_changes_info
 
 loaded_with_language: Union[None, bool, str] = False
 
@@ -297,6 +290,8 @@ class PermissionSectionDashboard(PermissionSection):
 
 def load_plugins() -> None:
     """Plugin initialization hook (Called by cmk.gui.modules.call_load_plugins_hooks())"""
+    _register_pre_21_plugin_api()
+
     # Load plugins for dashboards. Currently these files
     # just may add custom dashboards by adding to builtin_dashboards.
     utils.load_web_plugins("dashboard", globals())
@@ -332,7 +327,35 @@ def load_plugins() -> None:
     declare_dynamic_permissions(lambda: visuals.declare_custom_permissions("dashboards"))
 
 
-class LegacyDashlet(cmk.gui.plugins.dashboard.IFrameDashlet):
+def _register_pre_21_plugin_api() -> None:
+    """Register pre 2.1 "plugin API"
+
+    This was never an official API, but the names were used by builtin and also 3rd party plugins.
+
+    Our builtin plugin have been changed to directly import from the .utils module. We add these old
+    names to remain compatible with 3rd party plugins for now.
+
+    In the moment we define an official plugin API, we can drop this and require all plugins to
+    switch to the new API. Until then let's not bother the users with it.
+    """
+    # Needs to be a local import to not influence the regular plugin loading order
+    import cmk.gui.plugins.dashboard as api_module
+    import cmk.gui.plugins.dashboard.utils as plugin_utils
+
+    for name in (
+        "ABCFigureDashlet",
+        "builtin_dashboards",
+        "Dashlet",
+        "dashlet_registry",
+        "dashlet_types",
+        "GROW",
+        "IFrameDashlet",
+        "MAX",
+    ):
+        api_module.__dict__[name] = plugin_utils.__dict__[name]
+
+
+class LegacyDashlet(IFrameDashlet):
     """Helper to be able to handle pre 1.6 dashlet_type declared dashlets"""
 
     _type_name: DashletTypeName = ""
@@ -1366,9 +1389,9 @@ def _dashboard_add_checkmk_dashlet_entries(name: DashboardName) -> Iterable[Page
     )
 
     yield PageMenuEntry(
-        title="User notifications",
+        title="User messages",
         icon_name="notifications",
-        item=_dashboard_add_non_view_dashlet_link(name, "notify_users"),
+        item=_dashboard_add_non_view_dashlet_link(name, "user_messages"),
     )
 
     yield PageMenuEntry(
@@ -1836,7 +1859,10 @@ def choose_view(name: DashboardName, title: str, create_dashlet_spec_func: Calla
         no_preselect=True,
     )
 
-    dashboard = get_permitted_dashboards()[name]
+    try:
+        dashboard = get_permitted_dashboards()[name]
+    except KeyError:
+        raise MKUserError("name", _("The requested dashboard does not exist."))
 
     breadcrumb = _dashlet_editor_breadcrumb(name, dashboard, title)
     html.header(title, breadcrumb=breadcrumb, page_menu=_choose_view_page_menu(breadcrumb))

@@ -5,12 +5,16 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from dataclasses import dataclass
-from typing import Dict, Generic, Literal, Optional, Sequence, Tuple, Type, TypeVar
+from typing import Dict, Generic, Iterator, Literal, Optional, Sequence, Tuple, Type, TypeVar
 
 from kubernetes import client  # type: ignore[import] # pylint: disable=import-error
 
 from cmk.special_agents.utils_kubernetes.schemata import api
-from cmk.special_agents.utils_kubernetes.transform import node_from_client, pod_from_client
+from cmk.special_agents.utils_kubernetes.transform import (
+    deployment_from_client,
+    node_from_client,
+    pod_from_client,
+)
 
 
 class CoreAPI:
@@ -30,6 +34,14 @@ class CoreAPI:
     def pods(self) -> Sequence[api.Pod]:
         return tuple(self._pods.values())
 
+    def query_namespaced_pods(
+        self, namespace: str, label_selector: str = ""
+    ) -> Iterator[client.V1Pod]:
+        for pod in self.connection.list_namespaced_pod(
+            namespace, label_selector=label_selector
+        ).items:
+            yield pod
+
     def _collect_objects(self):
         self._collect_pods()
 
@@ -40,6 +52,19 @@ class CoreAPI:
                 for pod in self.connection.list_pod_for_all_namespaces().items
             }
         )
+
+
+class AppsAPI:
+    """
+    Wrapper around ExternalV1APi;
+    """
+
+    def __init__(self, api_client: client.ApiClient) -> None:
+        self.connection = client.AppsV1Api(api_client)
+
+    def deployments(self) -> Iterator[client.V1Deployment]:
+        for deployment in self.connection.list_deployment_for_all_namespaces().items:
+            yield deployment
 
 
 T = TypeVar("T")
@@ -68,8 +93,14 @@ class RawAPI:
         response_type: Type[T],
         query_params: Optional[Dict[str, str]] = None,
     ) -> RawAPIResponse[T]:
+        # Found the auth_settings here:
+        # https://github.com/kubernetes-client/python/issues/528
         response, status_code, headers = self._api_client.call_api(
-            resource_path, method, response_type=str, query_params=query_params
+            resource_path,
+            method,
+            response_type=str,
+            query_params=query_params,
+            auth_settings=["BearerToken"],
         )
         return RawAPIResponse(response=response, status_code=status_code, headers=headers)
 
@@ -98,8 +129,8 @@ class RawAPI:
     def api_health(self) -> api.APIHealth:
         return api.APIHealth(ready=self._get_healthz("/readyz"), live=self._get_healthz("/livez"))
 
-    def get_kubelet_health(self, node_link) -> api.HealthZ:
-        return self._get_healthz(f"{node_link}/proxy/healthz")
+    def get_kubelet_health(self, node_name) -> api.HealthZ:
+        return self._get_healthz(f"/api/v1/nodes/{node_name}/proxy/healthz")
 
 
 class APIServer:
@@ -110,23 +141,43 @@ class APIServer:
 
     @classmethod
     def from_kubernetes(cls, api_client):
-        return cls(CoreAPI(api_client), RawAPI(api_client))
+        return cls(CoreAPI(api_client), RawAPI(api_client), AppsAPI(api_client))
 
     def __init__(
         self,
         core_api: CoreAPI,
         raw_api: RawAPI,
+        external_api: AppsAPI,
     ) -> None:
         self.core_api = core_api
+        self.apps_api = external_api
         self.raw_api = raw_api
+
+    def deployments(self) -> Sequence[api.Deployment]:
+        result = []
+        for raw_deployment in self.apps_api.deployments():
+            selector = raw_deployment.spec.selector
+            label_selector = ",".join(
+                [f"{key}={value}" for key, value in selector.match_labels.items()]
+            )
+            result.append(
+                deployment_from_client(
+                    raw_deployment,
+                    pod_uids=[
+                        pod.metadata.uid
+                        for pod in self.core_api.query_namespaced_pods(
+                            raw_deployment.metadata.namespace, label_selector
+                        )
+                    ],
+                )
+            )
+        return result
 
     def nodes(self) -> Sequence[api.Node]:
         result = []
         for raw_node in self.core_api.nodes():
             result.append(
-                node_from_client(
-                    raw_node, self.raw_api.get_kubelet_health(raw_node.metadata.self_link)
-                )
+                node_from_client(raw_node, self.raw_api.get_kubelet_health(raw_node.metadata.name))
             )
         return result
 

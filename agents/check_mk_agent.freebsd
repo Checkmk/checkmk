@@ -208,6 +208,14 @@ section_checkmk() {
     fi
 }
 
+section_checkmk_agent_plugins() {
+    printf "<<<checkmk_agent_plugins_lnx:sep(0)>>>\n"
+    printf "pluginsdir %s\n" "${PLUGINSDIR}"
+    printf "localdir %s\n" "${LOCALDIR}"
+    grep -r '^__version__' "${LOCALDIR}" "${PLUGINSDIR}"
+    grep -r '^CMK_VERSION' "${LOCALDIR}" "${PLUGINSDIR}"
+}
+
 section_checkmk_failed_plugin() {
     ${MK_RUN_SYNC_PARTS} || return
     echo "<<<check_mk>>>"
@@ -264,6 +272,8 @@ section_fileinfo() {
 run_purely_synchronous_sections() {
 
     section_checkmk
+
+    section_checkmk_agent_plugins
 
     osver="$(uname -r)"
     is_jailed="$(sysctl -n security.jail.jailed)"

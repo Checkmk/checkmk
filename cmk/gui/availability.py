@@ -7,6 +7,7 @@
 from __future__ import annotations
 
 import functools
+import itertools
 import os
 import time
 from typing import Any, Callable, Dict, Iterator, List, Literal, NamedTuple
@@ -21,6 +22,12 @@ import cmk.utils.defines as defines
 import cmk.utils.paths
 import cmk.utils.store as store
 import cmk.utils.version as cmk_version
+from cmk.utils.bi.bi_data_fetcher import (
+    BIHostSpec,
+    BIHostStatusInfoRow,
+    BIServiceWithFullState,
+    BIStatusInfo,
+)
 from cmk.utils.bi.bi_lib import NodeComputeResult, NodeResultBundle
 from cmk.utils.bi.bi_trees import BICompiledAggregation, BICompiledRule
 from cmk.utils.cpu_tracking import CPUTracker
@@ -29,9 +36,12 @@ from cmk.utils.type_defs import HostName, ServiceName
 
 import cmk.gui.sites as sites
 import cmk.gui.utils as utils
-from cmk.gui.globals import request
+from cmk.gui.bi import BIManager
+from cmk.gui.exceptions import MKUserError
+from cmk.gui.globals import request, user, user_errors
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
+from cmk.gui.plugins.views.utils import cmp_service_name_equiv
 from cmk.gui.type_defs import (
     FilterHeader,
     HTTPVariables,
@@ -131,14 +141,6 @@ AVTimelineStates = Dict[AVTimelineStateName, int]
 AVTimelineStatistics = Dict[AVTimelineStateName, _Tuple[int, int, int]]
 AVTimelineStyle = str
 
-from cmk.utils.bi.bi_data_fetcher import (
-    BIHostSpec,
-    BIHostStatusInfoRow,
-    BIServiceWithFullState,
-    BIStatusInfo,
-)
-
-from cmk.gui.bi import BIManager
 
 # Example for annotations:
 # {
@@ -877,6 +879,42 @@ def get_outage_statistic_options(avoptions: AVOptions) -> AVOutageStatistics:
     return aggrs, fixed_states
 
 
+def get_availability_options_from_request(what: AVObjectType) -> AVOptions:
+    avoptions = get_default_avoptions()
+
+    # Users of older versions might not have all keys set. The following
+    # trick will merge their options with our default options.
+    avoptions.update(user.load_file("avoptions", {}))
+
+    form_name = request.get_ascii_input("filled_in")
+    if form_name == "avoptions_display":
+        avoption_entries = get_av_display_options(what)
+    elif form_name == "avoptions_computation":
+        avoption_entries = get_av_computation_options()
+    else:
+        avoption_entries = []
+
+    if request.var("avoptions") == "set":
+        for name, _height, _show_in_reporting, vs in avoption_entries:
+            try:
+                avoptions[name] = vs.from_html_vars("avo_" + name)
+                vs.validate_value(avoptions[name], "avo_" + name)
+            except MKUserError as e:
+                user_errors.add(e)
+
+    range_vs = vs_rangespec()
+    try:
+        range_, range_title = range_vs.compute_range(avoptions["rangespec"])
+        avoptions["range"] = range_, range_title
+    except MKUserError as e:
+        user_errors.add(e)
+
+    if request.var("_unset_logrow_limit") == "1":
+        avoptions["logrow_limit"] = 0
+
+    return avoptions
+
+
 # .
 #   .--Computation---------------------------------------------------------.
 #   |      ____                            _        _   _                  |
@@ -1589,6 +1627,52 @@ def delete_annotation(
         del entries[found]
 
 
+def get_relevant_annotations(annotations, by_host, what, avoptions):
+    time_range: AVTimeRange = avoptions["range"][0]
+    from_time, until_time = time_range
+
+    annos_to_render = []
+    annos_rendered: Set[int] = set()
+
+    for site_host, avail_entries in by_host.items():
+        for service in avail_entries.keys():
+            for search_what in ["host", "service"]:
+                if what == "host" and search_what == "service":
+                    continue  # Service annotations are not relevant for host
+
+                if search_what == "host":
+                    site_host_svc = site_host[0], site_host[1], None
+                else:
+                    site_host_svc = site_host[0], site_host[1], service  # service can be None
+
+                for annotation in annotations.get(site_host_svc, []):
+                    if _annotation_affects_time_range(
+                        annotation["from"], annotation["until"], from_time, until_time
+                    ):
+                        if id(annotation) not in annos_rendered:
+                            annos_to_render.append((site_host_svc, annotation))
+                            annos_rendered.add(id(annotation))
+
+    return annos_to_render
+
+
+def get_annotation_date_render_function(annotations, avoptions):
+    timestamps = list(
+        itertools.chain.from_iterable(
+            [(a[1]["from"], a[1]["until"]) for a in annotations] + [avoptions["range"][0]]
+        )
+    )
+
+    multi_day = len({time.localtime(t)[:3] for t in timestamps}) > 1
+    if multi_day:
+        return cmk.utils.render.date_and_time
+    return cmk.utils.render.time_of_day
+
+
+def _annotation_affects_time_range(annotation_from, annotation_until, from_time, until_time):
+    return not (annotation_until < from_time or annotation_from > until_time)
+
+
 # .
 #   .--Layout--------------------------------------------------------------.
 #   |                  _                            _                      |
@@ -2224,6 +2308,30 @@ BITreeState = Any
 BITimelineEntry = Any
 
 
+def get_bi_availability(
+    avoptions: AVOptions, aggr_rows: Rows, timewarp: _Optional[AVTimeStamp]
+) -> _Tuple[List[TimelineContainer], AVRawData, bool]:
+    logrow_limit = avoptions["logrow_limit"]
+    if logrow_limit == 0:
+        livestatus_limit = None
+    else:
+        livestatus_limit = (len(aggr_rows) * logrow_limit) + 1
+
+    timeline_containers, fetched_rows = get_timeline_containers(
+        aggr_rows, avoptions, timewarp, livestatus_limit
+    )
+
+    has_reached_logrow_limit = bool(livestatus_limit and fetched_rows > livestatus_limit)
+
+    spans: List[AVSpan] = []
+    for timeline_container in timeline_containers:
+        spans.extend(timeline_container.timeline)
+
+    av_rawdata = spans_by_object(spans)
+
+    return timeline_containers, av_rawdata, has_reached_logrow_limit
+
+
 def get_bi_availability_rawdata(
     filterheaders: FilterHeader,
     only_sites: OnlySites,
@@ -2676,12 +2784,9 @@ def key_av_entry(
 ) -> _Tuple[
     _Tuple[Union[int, str], ...], int, _Tuple[Union[int, str], ...], _Tuple[Union[int, str], ...]
 ]:
-    # This local import currently needed
-    import cmk.gui.plugins.views as views
-
     return (
         utils.key_num_split(a["service"]),
-        views.cmp_service_name_equiv(a["service"]),
+        cmp_service_name_equiv(a["service"]),
         utils.key_num_split(a["host"]),
         utils.key_num_split(a["site"]),
     )

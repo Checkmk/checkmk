@@ -673,6 +673,13 @@ class Endpoint:
         return any(code in self._expected_status_codes for code in [201, 301, 302])
 
     @property
+    def ident(self):
+        """Provide an identity for the Endpoint
+
+        This can be used for keys in a dictionary, e.g. the ENDPOINT_REGISTRY."""
+        return f"{self.method}:{self.default_path}:{self.content_type}"
+
+    @property
     def default_path(self):
         replace = {}
         if self.path_params is not None:

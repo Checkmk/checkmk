@@ -71,9 +71,12 @@ then
         uname -m
         uname -r
     fi
-    if type lspci > /dev/null ; then
+
+    # Collect VGAs if they are present
+    vgas="$(lspci | grep VGA | cut -d" " -f 1)"
+    if [ -n "$vgas" ] ; then
         echo "<<<lnx_video:sep(58):persist($UNTIL)>>>"
-        lspci  -v -s  $(lspci | grep VGA | cut -d" " -f 1)
+        lspci -v -s "$vgas"
     fi
 
     # Some networking information

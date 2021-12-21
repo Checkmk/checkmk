@@ -9,7 +9,7 @@ import json
 import cmk.gui.sites as sites
 from cmk.gui.globals import html, request, response, theme
 from cmk.gui.i18n import _
-from cmk.gui.plugins.sidebar import SidebarSnapin, snapin_registry, snapin_width
+from cmk.gui.plugins.sidebar.utils import SidebarSnapin, snapin_registry, snapin_width
 
 
 @snapin_registry.register

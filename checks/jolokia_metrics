@@ -535,7 +535,7 @@ def discover_jolokia_metrics_uptime(info):
     """DEPRECATED.
 
     This service has been replaced by the
-    'jolokia_jvm_uptime' plugin in checkmk verison 1.7.0
+    'jolokia_jvm_uptime' plugin in checkmk version 2.0.0
     """
     parsed = jolokia_metrics_parse(info)
     for instance, data in parsed.items():
@@ -566,7 +566,7 @@ def inventory_jolokia_metrics_gc(info):
     """DEPRECATED.
 
     This service has been replaced by the
-    'jolokia_jvm_uptime' plugin in checkmk verison 1.7.0
+    'jolokia_jvm_uptime' plugin in checkmk version 2.0.0
     """
     inv = []
     parsed = jolokia_metrics_parse(info)

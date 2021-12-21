@@ -41,7 +41,7 @@ class TestDiscoveryMode:
 def test_time_limit_filter_iterates():
 
     with TimeLimitFilter(limit=42, grace=0) as limiter:
-        test_list = list(limiter(range(3)))
+        test_list = list(limiter(iter(range(3))))
     assert test_list == [0, 1, 2]
 
 

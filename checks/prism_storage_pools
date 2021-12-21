@@ -27,6 +27,9 @@ from cmk.base.check_legacy_includes.size_trend import *  # pylint: disable=wildc
 # foobar    2518694292480   38575532134515
 
 
+factory_settings["filesystem_default_levels"] = FILESYSTEM_DEFAULT_LEVELS
+
+
 def inventory_prism_storage_pools(parsed):
     for row in parsed:
         yield row["name"], {}

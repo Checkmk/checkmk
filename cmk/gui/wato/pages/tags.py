@@ -27,7 +27,7 @@ from cmk.gui.page_menu import (
     PageMenuEntry,
     PageMenuTopic,
 )
-from cmk.gui.plugins.wato import (
+from cmk.gui.plugins.wato.utils import (
     add_change,
     flash,
     make_action_link,
@@ -82,11 +82,13 @@ class ABCTagMode(WatoMode, abc.ABC):
     def _load_effective_config(self):
         self._builtin_config = cmk.utils.tags.BuiltinTagConfig()
 
-        self._tag_config = cmk.utils.tags.TagConfig()
-        self._tag_config.parse_config(self._tag_config_file.load_for_reading())
+        self._tag_config = cmk.utils.tags.TagConfig.from_config(
+            self._tag_config_file.load_for_reading()
+        )
 
-        self._effective_config = cmk.utils.tags.TagConfig()
-        self._effective_config.parse_config(self._tag_config.get_dict_format())
+        self._effective_config = cmk.utils.tags.TagConfig.from_config(
+            self._tag_config.get_dict_format()
+        )
         self._effective_config += self._builtin_config
 
     def _get_tags_using_aux_tag(
@@ -286,7 +288,7 @@ class ModeTags(ABCTagMode):
         return None
 
     def page(self):
-        if not self._tag_config.tag_groups + self._tag_config.get_aux_tags():
+        if not self._tag_config.tag_groups and not self._tag_config.get_aux_tags():
             MainMenu(
                 [
                     MenuItem(
@@ -417,7 +419,7 @@ class ModeTags(ABCTagMode):
                 table.cell(_("ID"), aux_tag.id)
 
                 table.cell(_("Title"), _u(aux_tag.title))
-                table.cell(_("Topic"), _u(aux_tag.topic) or _("Tags"))
+                table.cell(_("Topic"), _u(aux_tag.topic) if aux_tag.topic else _("Tags"))
                 table.cell(
                     _("Tags using this auxiliary tag"),
                     ", ".join(
@@ -497,7 +499,7 @@ class ABCEditTagMode(ABCTagMode, abc.ABC):
     def _get_topic_valuespec(self):
         return OptionalDropdownChoice(
             title=_("Topic") + "<sup>*</sup>",
-            choices=self._effective_config.get_topic_choices(),
+            choices=list(self._effective_config.get_topic_choices()),
             explicit=TextInput(),
             otherlabel=_("Create new topic"),
             default_value=None,
@@ -640,7 +642,7 @@ class ModeEditAuxtag(ABCEditTagMode):
         super().__init__()
 
         if self._new:
-            self._aux_tag = cmk.utils.tags.AuxTag()
+            self._aux_tag = cmk.utils.tags.AuxTag(tag_id="", title="", topic=None)
         else:
             self._aux_tag = self._tag_config.aux_tag_list.get_aux_tag(self._id)
 
@@ -668,11 +670,12 @@ class ModeEditAuxtag(ABCEditTagMode):
         aux_tag_spec = vs.from_html_vars("aux_tag")
         vs.validate_value(aux_tag_spec, "aux_tag")
 
-        self._aux_tag = cmk.utils.tags.AuxTag(aux_tag_spec)
+        self._aux_tag = cmk.utils.tags.AuxTag.from_config(aux_tag_spec)
         self._aux_tag.validate()
 
-        changed_hosttags_config = cmk.utils.tags.TagConfig()
-        changed_hosttags_config.parse_config(self._tag_config_file.load_for_reading())
+        changed_hosttags_config = cmk.utils.tags.TagConfig.from_config(
+            self._tag_config_file.load_for_reading()
+        )
 
         if self._new:
             changed_hosttags_config.aux_tag_list.append(self._aux_tag)
@@ -721,10 +724,18 @@ class ModeEditTagGroup(ABCEditTagMode):
         super().__init__()
 
         tg = self._tag_config.get_tag_group(self._id)
-        self._untainted_tag_group = cmk.utils.tags.TagGroup() if tg is None else tg
+        self._untainted_tag_group = (
+            cmk.utils.tags.TagGroup(group_id="", title="", topic=None, help=None, tags=[])
+            if tg is None
+            else tg
+        )
 
         tg = self._tag_config.get_tag_group(self._id)
-        self._tag_group = cmk.utils.tags.TagGroup() if tg is None else tg
+        self._tag_group = (
+            cmk.utils.tags.TagGroup(group_id="", title="", topic=None, help=None, tags=[])
+            if tg is None
+            else tg
+        )
 
     def _get_id(self):
         return request.var("edit", request.var("tag_id"))
@@ -748,9 +759,10 @@ class ModeEditTagGroup(ABCEditTagMode):
         vs.validate_value(tag_group_spec, "tag_group")
 
         # Create new object with existing host tags
-        changed_hosttags_config = cmk.utils.tags.TagConfig()
-        changed_hosttags_config.parse_config(self._tag_config_file.load_for_modification())
-        changed_tag_group = cmk.utils.tags.TagGroup(tag_group_spec)
+        changed_hosttags_config = cmk.utils.tags.TagConfig.from_config(
+            self._tag_config_file.load_for_modification()
+        )
+        changed_tag_group = cmk.utils.tags.TagGroup.from_config(tag_group_spec)
         self._tag_group = changed_tag_group
 
         if self._new:

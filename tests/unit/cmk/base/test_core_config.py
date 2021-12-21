@@ -26,8 +26,8 @@ from cmk.base.check_utils import Service
 from cmk.base.core_factory import create_core
 
 
-@pytest.fixture
-def config_path():
+@pytest.fixture(name="config_path")
+def fixture_config_path():
     ConfigPath.ROOT.mkdir(parents=True, exist_ok=True)
     try:
         yield ConfigPath.ROOT

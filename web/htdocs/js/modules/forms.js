@@ -245,6 +245,7 @@ export function confirm_dialog(optional_args, confirm_handler) {
                 container: "confirm_container",
                 popup: "confirm_popup",
                 content: "confirm_content",
+                htmlContainer: "confirm_content",
                 actions: "confirm_actions",
                 confirmButton: "hot",
             },

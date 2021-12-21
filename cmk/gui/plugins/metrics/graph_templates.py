@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Dict, Iterable, Iterator, List, Mapping, Optional, Sequence, Tuple
+from typing import Iterable, Iterator, List, Mapping, Optional, Sequence, Tuple
 
 from cmk.utils import pnp_cleanup
 
@@ -15,17 +15,24 @@ from cmk.gui.plugins.metrics.utils import (
     evaluate,
     get_graph_data_from_livestatus,
     get_graph_range,
+    get_graph_template,
     get_graph_templates,
+    GraphConsoldiationFunction,
+    GraphMetrics,
     GraphRecipe,
     GraphTemplate,
     horizontal_rules_from_thresholds,
+    MetricExpression,
     metrics_used_in_expression,
+    MetricUnitColor,
     replace_expressions,
     split_expression,
     stack_resolver,
+    StackElement,
     translated_metrics_from_row,
     TranslatedMetrics,
 )
+from cmk.gui.type_defs import MetricDefinition, Row
 
 RPNAtom = Tuple  # TODO: Improve this type
 
@@ -43,6 +50,16 @@ def matching_graph_templates(
         "graph_index"
     )  # can be None -> no restriction by index
     graph_id = graph_identification_info.get("graph_id")  # can be None -> no restriction by id
+
+    # Single metrics
+    if (
+        isinstance(graph_id, str)
+        and graph_id.startswith("METRIC_")
+        and graph_id[7:] in translated_metrics
+    ):
+        yield (0, get_graph_template(graph_id))
+        return
+
     yield from (
         (index, graph_template)
         for index, graph_template in enumerate(get_graph_templates(translated_metrics))
@@ -112,10 +129,12 @@ class GraphIdentificationTemplate(GraphIdentification):
 graph_identification_types.register(GraphIdentificationTemplate)
 
 
-def create_graph_recipe_from_template(graph_template, translated_metrics, row):
-    def _metrics(metric_definition):
-        return {
-            **metric_unit_color(metric_definition[0], translated_metrics),
+def create_graph_recipe_from_template(
+    graph_template: GraphTemplate, translated_metrics: TranslatedMetrics, row: Row
+) -> GraphRecipe:
+    def _metric(metric_definition: MetricDefinition) -> GraphMetrics:
+        unit_color = metric_unit_color(metric_definition[0], translated_metrics)
+        metric = {
             "title": metric_line_title(metric_definition, translated_metrics),
             "line_type": metric_definition[1],
             "expression": metric_expression_to_graph_recipe_expression(
@@ -125,15 +144,18 @@ def create_graph_recipe_from_template(graph_template, translated_metrics, row):
                 graph_template.get("consolidation_function", "max"),
             ),
         }
+        if unit_color:
+            metric.update(unit_color)
+        return metric
 
-    metrics = list(map(_metrics, graph_template["metrics"]))
+    metrics = list(map(_metric, graph_template["metrics"]))
     units = {m["unit"] for m in metrics}
     if len(units) > 1:
         raise MKGeneralException(
             _("Cannot create graph with metrics of " "different units '%s'") % ", ".join(units)
         )
 
-    title = replace_expressions(graph_template.get("title", ""), translated_metrics)
+    title = replace_expressions(str(graph_template.get("title", "")), translated_metrics)
     if not title:
         title = next((m["title"] for m in metrics if m["title"]), "")
 
@@ -151,14 +173,15 @@ def create_graph_recipe_from_template(graph_template, translated_metrics, row):
 
 
 def iter_rpn_expression(
-    expression: str, enforced_consolidation_function: Optional[str]
-) -> Iterator[Tuple[str, Optional[str]]]:
+    expression: MetricExpression,
+    enforced_consolidation_function: Optional[GraphConsoldiationFunction],
+) -> Iterator[Tuple[str, Optional[GraphConsoldiationFunction]]]:
     for part in expression.split(","):  # var names, operators
         if any(part.endswith(cf) for cf in [".max", ".min", ".average"]):
-            part, consolidation_function = part.rsplit(".", 1)
+            part, raw_consolidation_function = part.rsplit(".", 1)
             if (
                 enforced_consolidation_function is not None
-                and consolidation_function != enforced_consolidation_function
+                and raw_consolidation_function != enforced_consolidation_function
             ):
                 raise MKGeneralException(
                     _(
@@ -168,14 +191,28 @@ def iter_rpn_expression(
                     % (expression, enforced_consolidation_function)
                 )
 
+            # A bit verbose here, but we want to keep the Literal type. Find a better way, please.
+            consolidation_function: GraphConsoldiationFunction
+            if raw_consolidation_function == "max":
+                consolidation_function = "max"
+            elif raw_consolidation_function == "min":
+                consolidation_function = "min"
+            elif raw_consolidation_function == "average":
+                consolidation_function = "average"
+            else:
+                raise ValueError()
+
             yield part, consolidation_function
         else:
             yield part, enforced_consolidation_function
 
 
 def metric_expression_to_graph_recipe_expression(
-    expression, translated_metrics, lq_row, enforced_consolidation_function
-):
+    expression: MetricExpression,
+    translated_metrics: TranslatedMetrics,
+    lq_row: Row,
+    enforced_consolidation_function: Optional[GraphConsoldiationFunction],
+) -> StackElement:
     """Convert 'user,util,+,2,*' into this:
 
         ('operator',
@@ -227,25 +264,29 @@ def metric_expression_to_graph_recipe_expression(
     )
 
 
-def metric_line_title(metric_definition: Tuple, translated_metrics: Dict) -> str:
+def metric_line_title(
+    metric_definition: MetricDefinition, translated_metrics: TranslatedMetrics
+) -> str:
     if len(metric_definition) >= 3:
-        return metric_definition[2]
+        # mypy does not understand the variable length (Tuple index out of range)
+        metric_title = metric_definition[2]  # type: ignore[misc]
+        return str(metric_title)
 
     metric_name = next(metrics_used_in_expression(metric_definition[0]))
     return translated_metrics[metric_name]["title"]
 
 
 def metric_unit_color(
-    metric_expression: str,
+    metric_expression: MetricExpression,
     translated_metrics: TranslatedMetrics,
-    optional_metrics=None,
-) -> Dict[str, str]:
+    optional_metrics: Optional[Sequence[str]] = None,
+) -> Optional[MetricUnitColor]:
     try:
         _value, unit, color = evaluate(metric_expression, translated_metrics)
     except KeyError as err:  # because metric_name is not in translated_metrics
         metric_name = err.args[0]
         if optional_metrics and metric_name in optional_metrics:
-            return {}
+            return None
         raise MKGeneralException(
             _("Graph recipe '%s' uses undefined metric '%s', available are: %s")
             % (

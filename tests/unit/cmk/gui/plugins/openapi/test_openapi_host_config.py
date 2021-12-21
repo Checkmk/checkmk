@@ -15,20 +15,16 @@ from cmk.automations.results import DeleteHostsResult, RenameHostsResult
 from cmk.gui.type_defs import CustomAttr
 from cmk.gui.watolib.custom_attributes import save_custom_attrs_to_mk_file
 
+from tests.unit.cmk.gui.conftest import WebTestAppForCMK
+
 managedtest = pytest.mark.skipif(not version.is_managed_edition(), reason="see #7213")
 
 
 @pytest.mark.usefixtures("with_host")
-def test_openapi_cluster_host(
-    wsgi_app,
-    with_automation_user,
-):
-    username, secret = with_automation_user
-    wsgi_app.set_authorization(("Bearer", username + " " + secret))
-
+def test_openapi_cluster_host(aut_user_auth_wsgi_app: WebTestAppForCMK):
     base = "/NO_SITE/check_mk/api/1.0"
 
-    wsgi_app.call_method(
+    aut_user_auth_wsgi_app.call_method(
         "post",
         base + "/domain-types/host_config/collections/all",
         params='{"host_name": "foobar", "folder": "/"}',
@@ -37,7 +33,7 @@ def test_openapi_cluster_host(
         content_type="application/json; charset=utf-8",
     )
 
-    wsgi_app.call_method(
+    aut_user_auth_wsgi_app.call_method(
         "post",
         base + "/domain-types/host_config/collections/clusters",
         params='{"host_name": "bazfoo", "folder": "/", "nodes": ["foobar"]}',
@@ -46,21 +42,21 @@ def test_openapi_cluster_host(
         content_type='application/json; charset="utf-8"',
     )
 
-    wsgi_app.call_method(
+    aut_user_auth_wsgi_app.call_method(
         "get",
         base + "/objects/host_config/bazfoozle",
         status=404,
         headers={"Accept": "application/json"},
     )
 
-    resp = wsgi_app.call_method(
+    resp = aut_user_auth_wsgi_app.call_method(
         "get",
         base + "/objects/host_config/bazfoo",
         status=200,
         headers={"Accept": "application/json"},
     )
 
-    wsgi_app.call_method(
+    aut_user_auth_wsgi_app.call_method(
         "put",
         base + "/objects/host_config/bazfoo/properties/nodes",
         params='{"nodes": ["not_existing"]}',
@@ -69,7 +65,7 @@ def test_openapi_cluster_host(
         content_type="application/json",
     )
 
-    wsgi_app.call_method(
+    aut_user_auth_wsgi_app.call_method(
         "put",
         base + "/objects/host_config/bazfoo/properties/nodes",
         params='{"nodes": ["example.com", "bazfoo"]}',
@@ -78,7 +74,7 @@ def test_openapi_cluster_host(
         content_type="application/json",
     )
 
-    wsgi_app.call_method(
+    aut_user_auth_wsgi_app.call_method(
         "put",
         base + "/objects/host_config/bazfoo/properties/nodes",
         params='{"nodes": ["example.com"]}',
@@ -87,7 +83,7 @@ def test_openapi_cluster_host(
         content_type="application/json",
     )
 
-    resp = wsgi_app.call_method(
+    resp = aut_user_auth_wsgi_app.call_method(
         "get",
         base + "/objects/host_config/bazfoo",
         status=200,
@@ -98,16 +94,11 @@ def test_openapi_cluster_host(
 
 def test_openapi_hosts(
     monkeypatch: pytest.MonkeyPatch,
-    wsgi_app,
-    with_automation_user,
+    aut_user_auth_wsgi_app: WebTestAppForCMK,
 ):
-
-    username, secret = with_automation_user
-    wsgi_app.set_authorization(("Bearer", username + " " + secret))
-
     base = "/NO_SITE/check_mk/api/1.0"
 
-    resp = wsgi_app.call_method(
+    resp = aut_user_auth_wsgi_app.call_method(
         "post",
         base + "/domain-types/host_config/collections/all",
         params='{"host_name": "foobar", "folder": "/"}',
@@ -118,7 +109,7 @@ def test_openapi_hosts(
     assert isinstance(resp.json["extensions"]["attributes"]["meta_data"]["created_at"], str)
     assert isinstance(resp.json["extensions"]["attributes"]["meta_data"]["updated_at"], str)
 
-    resp = wsgi_app.follow_link(
+    resp = aut_user_auth_wsgi_app.follow_link(
         resp,
         "self",
         status=200,
@@ -132,7 +123,7 @@ def test_openapi_hosts(
             "community": "blah",
         },
     }
-    resp = wsgi_app.follow_link(
+    resp = aut_user_auth_wsgi_app.follow_link(
         resp,
         ".../update",
         status=200,
@@ -143,7 +134,7 @@ def test_openapi_hosts(
     got_attributes = resp.json["extensions"]["attributes"]
     assert list(attributes.items()) <= list(got_attributes.items())
 
-    resp = wsgi_app.follow_link(
+    resp = aut_user_auth_wsgi_app.follow_link(
         resp,
         ".../update",
         status=200,
@@ -153,7 +144,7 @@ def test_openapi_hosts(
     )
     assert resp.json["extensions"]["attributes"]["alias"] == "bar"
 
-    resp = wsgi_app.follow_link(
+    resp = aut_user_auth_wsgi_app.follow_link(
         resp,
         ".../update",
         status=200,
@@ -167,7 +158,7 @@ def test_openapi_hosts(
     assert "alias" not in resp.json["extensions"]["attributes"]
 
     # make sure changes are written to disk:
-    resp = wsgi_app.follow_link(
+    resp = aut_user_auth_wsgi_app.follow_link(
         resp,
         "self",
         status=200,
@@ -178,7 +169,7 @@ def test_openapi_hosts(
     )
 
     # also try to update with wrong attribute
-    wsgi_app.follow_link(
+    aut_user_auth_wsgi_app.follow_link(
         resp,
         ".../update",
         status=400,
@@ -191,7 +182,7 @@ def test_openapi_hosts(
         "cmk.gui.watolib.hosts_and_folders.delete_hosts",
         lambda *args, **kwargs: DeleteHostsResult(),
     )
-    wsgi_app.follow_link(
+    aut_user_auth_wsgi_app.follow_link(
         resp,
         ".../delete",
         status=204,
@@ -201,14 +192,11 @@ def test_openapi_hosts(
 
 
 def test_openapi_host_update_after_move(
-    wsgi_app,
-    with_automation_user,
+    aut_user_auth_wsgi_app: WebTestAppForCMK,
     with_host,
 ):
-    username, secret = with_automation_user
-    wsgi_app.set_authorization(("Bearer", username + " " + secret))
 
-    wsgi_app.post(
+    aut_user_auth_wsgi_app.post(
         "/NO_SITE/check_mk/api/1.0/domain-types/folder_config/collections/all",
         params='{"name": "new_folder", "title": "bar", "parent": "/"}',
         status=200,
@@ -218,7 +206,7 @@ def test_openapi_host_update_after_move(
         },
     )
 
-    heute = wsgi_app.call_method(
+    heute = aut_user_auth_wsgi_app.call_method(
         "get",
         "/NO_SITE/check_mk/api/1.0/objects/host_config/heute",
         headers={
@@ -226,7 +214,7 @@ def test_openapi_host_update_after_move(
         },
     )
 
-    wsgi_app.call_method(
+    aut_user_auth_wsgi_app.call_method(
         "post",
         "/NO_SITE/check_mk/api/1.0/objects/host_config/heute/actions/move/invoke",
         params='{"target_folder": "/new_folder"}',
@@ -238,7 +226,7 @@ def test_openapi_host_update_after_move(
         status=200,
     )
 
-    example = wsgi_app.call_method(
+    example = aut_user_auth_wsgi_app.call_method(
         "get",
         "/NO_SITE/check_mk/api/1.0/objects/host_config/example.com",
         headers={
@@ -246,7 +234,7 @@ def test_openapi_host_update_after_move(
         },
     )
 
-    moved_example = wsgi_app.call_method(
+    moved_example = aut_user_auth_wsgi_app.call_method(
         "post",
         "/NO_SITE/check_mk/api/1.0/objects/host_config/example.com/actions/move/invoke",
         params='{"target_folder": "/new_folder"}',
@@ -258,7 +246,7 @@ def test_openapi_host_update_after_move(
         status=200,
     )
 
-    moved_example_updated = wsgi_app.follow_link(
+    moved_example_updated = aut_user_auth_wsgi_app.follow_link(
         moved_example,
         ".../update",
         status=200,
@@ -270,7 +258,7 @@ def test_openapi_host_update_after_move(
         content_type="application/json",
     )
 
-    wsgi_app.follow_link(
+    aut_user_auth_wsgi_app.follow_link(
         moved_example_updated,
         ".../update",
         status=200,
@@ -285,20 +273,16 @@ def test_openapi_host_update_after_move(
 
 def test_openapi_bulk_hosts(
     monkeypatch: pytest.MonkeyPatch,
-    wsgi_app,
-    with_automation_user,
+    aut_user_auth_wsgi_app: WebTestAppForCMK,
 ):
     monkeypatch.setattr(
         "cmk.gui.watolib.hosts_and_folders.delete_hosts",
         lambda *args, **kwargs: DeleteHostsResult(),
     )
 
-    username, secret = with_automation_user
-    wsgi_app.set_authorization(("Bearer", username + " " + secret))
-
     base = "/NO_SITE/check_mk/api/1.0"
 
-    resp = wsgi_app.call_method(
+    resp = aut_user_auth_wsgi_app.call_method(
         "post",
         base + "/domain-types/host_config/actions/bulk-create/invoke",
         params=json.dumps(
@@ -326,7 +310,7 @@ def test_openapi_bulk_hosts(
     )
     assert len(resp.json["value"]) == 2
 
-    _resp = wsgi_app.call_method(
+    _resp = aut_user_auth_wsgi_app.call_method(
         "put",
         base + "/domain-types/host_config/actions/bulk-update/invoke",
         params=json.dumps(
@@ -348,7 +332,7 @@ def test_openapi_bulk_hosts(
     )
 
     # verify attribute ipaddress is set corretly
-    resp = wsgi_app.call_method(
+    resp = aut_user_auth_wsgi_app.call_method(
         "get",
         base + "/objects/host_config/foobar",
         status=200,
@@ -357,7 +341,7 @@ def test_openapi_bulk_hosts(
     assert resp.json["extensions"]["attributes"]["ipaddress"] == "192.168.1.1"
 
     # remove attribute ipaddress via bulk request
-    wsgi_app.call_method(
+    aut_user_auth_wsgi_app.call_method(
         "put",
         base + "/domain-types/host_config/actions/bulk-update/invoke",
         params=json.dumps(
@@ -371,7 +355,7 @@ def test_openapi_bulk_hosts(
     )
 
     # verify attribute ipaddress was removed correctly
-    resp = wsgi_app.call_method(
+    resp = aut_user_auth_wsgi_app.call_method(
         "get",
         base + "/objects/host_config/foobar",
         status=200,
@@ -380,7 +364,7 @@ def test_openapi_bulk_hosts(
     assert "ipaddress" not in resp.json["extensions"]["attributes"]
 
     # adding invalid attribute should fail
-    _resp = wsgi_app.call_method(
+    _resp = aut_user_auth_wsgi_app.call_method(
         "put",
         base + "/domain-types/host_config/actions/bulk-update/invoke",
         params=json.dumps(
@@ -393,7 +377,7 @@ def test_openapi_bulk_hosts(
         content_type="application/json",
     )
 
-    _resp = wsgi_app.call_method(
+    _resp = aut_user_auth_wsgi_app.call_method(
         "post",
         base + "/domain-types/host_config/actions/bulk-delete/invoke",
         params=json.dumps({"entries": ["foobar", "sample"]}),
@@ -404,13 +388,9 @@ def test_openapi_bulk_hosts(
 
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
-def test_openapi_bulk_simple(wsgi_app, with_automation_user):
-    username, secret = with_automation_user
-    wsgi_app.set_authorization(("Bearer", username + " " + secret))
-
+def test_openapi_bulk_simple(aut_user_auth_wsgi_app: WebTestAppForCMK):
     base = "/NO_SITE/check_mk/api/1.0"
-
-    wsgi_app.call_method(
+    aut_user_auth_wsgi_app.call_method(
         "post",
         base + "/domain-types/host_config/actions/bulk-create/invoke",
         params=json.dumps(
@@ -441,18 +421,15 @@ def _custom_host_attribute():
 
 
 def test_openapi_host_custom_attributes(
-    wsgi_app,
-    with_automation_user,
+    aut_user_auth_wsgi_app: WebTestAppForCMK,
     with_host,
     custom_host_attribute,
 ):
-    username, secret = with_automation_user
-    wsgi_app.set_authorization(("Bearer", username + " " + secret))
     base = "/NO_SITE/check_mk/api/1.0"
 
     # Known custom attribute
 
-    resp = wsgi_app.call_method(
+    resp = aut_user_auth_wsgi_app.call_method(
         "get",
         base + "/objects/host_config/example.com",
         status=200,
@@ -461,7 +438,7 @@ def test_openapi_host_custom_attributes(
         },
     )
 
-    wsgi_app.call_method(
+    aut_user_auth_wsgi_app.call_method(
         "put",
         base + "/objects/host_config/example.com",
         status=200,
@@ -475,7 +452,7 @@ def test_openapi_host_custom_attributes(
 
     # Unknown custom attribute
 
-    resp = wsgi_app.call_method(
+    resp = aut_user_auth_wsgi_app.call_method(
         "get",
         base + "/objects/host_config/example.com",
         status=200,
@@ -484,7 +461,7 @@ def test_openapi_host_custom_attributes(
         },
     )
 
-    wsgi_app.call_method(
+    aut_user_auth_wsgi_app.call_method(
         "put",
         base + "/objects/host_config/example.com",
         status=400,
@@ -498,16 +475,12 @@ def test_openapi_host_custom_attributes(
 
 
 def test_openapi_host_collection(
-    wsgi_app,
-    with_automation_user,
+    aut_user_auth_wsgi_app: WebTestAppForCMK,
     with_host,
 ):
-    username, secret = with_automation_user
-    wsgi_app.set_authorization(("Bearer", username + " " + secret))
-
     base = "/NO_SITE/check_mk/api/1.0"
 
-    resp = wsgi_app.call_method(
+    resp = aut_user_auth_wsgi_app.call_method(
         "get",
         base + "/domain-types/host_config/collections/all",
         status=200,
@@ -523,8 +496,7 @@ def test_openapi_host_collection(
 
 
 def test_openapi_host_rename(
-    wsgi_app,
-    with_automation_user,
+    aut_user_auth_wsgi_app: WebTestAppForCMK,
     monkeypatch: pytest.MonkeyPatch,
 ):
     monkeypatch.setattr("cmk.gui.watolib.activate_changes.get_pending_changes_info", lambda: [])
@@ -533,11 +505,9 @@ def test_openapi_host_rename(
         lambda *args, **kwargs: RenameHostsResult({}),
     )
 
-    username, secret = with_automation_user
-    wsgi_app.set_authorization(("Bearer", username + " " + secret))
     base = "/NO_SITE/check_mk/api/1.0"
 
-    wsgi_app.call_method(
+    aut_user_auth_wsgi_app.call_method(
         "post",
         base + "/domain-types/host_config/collections/all",
         params='{"host_name": "foobar", "folder": "/"}',
@@ -546,14 +516,14 @@ def test_openapi_host_rename(
         content_type="application/json",
     )
 
-    resp = wsgi_app.call_method(
+    resp = aut_user_auth_wsgi_app.call_method(
         "get",
         base + "/objects/host_config/foobar",
         status=200,
         headers={"Accept": "application/json"},
     )
 
-    _resp = wsgi_app.call_method(
+    _resp = aut_user_auth_wsgi_app.call_method(
         "put",
         base + "/objects/host_config/foobar/actions/rename/invoke",
         params='{"new_name": "foobaz"}',
@@ -562,7 +532,7 @@ def test_openapi_host_rename(
         headers={"Accept": "application/json", "If-Match": resp.headers["ETag"]},
     )
 
-    _resp = wsgi_app.call_method(
+    _resp = aut_user_auth_wsgi_app.call_method(
         "get",
         base + "/objects/host_config/foobaz",
         status=200,
@@ -572,17 +542,14 @@ def test_openapi_host_rename(
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
 def test_openapi_host_rename_error_on_not_existing_host(
-    wsgi_app,
-    with_automation_user,
+    aut_user_auth_wsgi_app: WebTestAppForCMK,
     monkeypatch,
 ):
     monkeypatch.setattr("cmk.gui.watolib.activate_changes.get_pending_changes_info", lambda: [])
-    username, secret = with_automation_user
-    wsgi_app.set_authorization(("Bearer", username + " " + secret))
 
     base = "/NO_SITE/check_mk/api/1.0"
 
-    wsgi_app.call_method(
+    aut_user_auth_wsgi_app.call_method(
         "post",
         base + "/domain-types/host_config/collections/all",
         params='{"host_name": "foobar", "folder": "/"}',
@@ -591,14 +558,14 @@ def test_openapi_host_rename_error_on_not_existing_host(
         content_type="application/json",
     )
 
-    resp = wsgi_app.call_method(
+    resp = aut_user_auth_wsgi_app.call_method(
         "get",
         base + "/objects/host_config/foobar",
         status=200,
         headers={"Accept": "application/json"},
     )
 
-    _resp = wsgi_app.call_method(
+    _resp = aut_user_auth_wsgi_app.call_method(
         "put",
         base + "/objects/host_config/fooba/actions/rename/invoke",
         params='{"new_name": "foobaz"}',
@@ -610,17 +577,14 @@ def test_openapi_host_rename_error_on_not_existing_host(
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
 def test_openapi_host_rename_on_invalid_hostname(
-    wsgi_app,
-    with_automation_user,
+    aut_user_auth_wsgi_app: WebTestAppForCMK,
     monkeypatch,
 ):
     monkeypatch.setattr("cmk.gui.watolib.activate_changes.get_pending_changes_info", lambda: [])
-    username, secret = with_automation_user
-    wsgi_app.set_authorization(("Bearer", username + " " + secret))
 
     base = "/NO_SITE/check_mk/api/1.0"
 
-    wsgi_app.call_method(
+    aut_user_auth_wsgi_app.call_method(
         "post",
         base + "/domain-types/host_config/collections/all",
         params='{"host_name": "foobar", "folder": "/"}',
@@ -629,14 +593,14 @@ def test_openapi_host_rename_on_invalid_hostname(
         content_type="application/json",
     )
 
-    resp = wsgi_app.call_method(
+    resp = aut_user_auth_wsgi_app.call_method(
         "get",
         base + "/objects/host_config/foobar",
         status=200,
         headers={"Accept": "application/json"},
     )
 
-    _resp = wsgi_app.call_method(
+    _resp = aut_user_auth_wsgi_app.call_method(
         "put",
         base + "/objects/host_config/foobar/actions/rename/invoke",
         params='{"new_name": "foobar"}',
@@ -648,15 +612,11 @@ def test_openapi_host_rename_on_invalid_hostname(
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
 def test_openapi_host_rename_with_pending_activate_changes(
-    wsgi_app,
-    with_automation_user,
+    aut_user_auth_wsgi_app: WebTestAppForCMK,
 ):
-    username, secret = with_automation_user
-    wsgi_app.set_authorization(("Bearer", username + " " + secret))
-
     base = "/NO_SITE/check_mk/api/1.0"
 
-    wsgi_app.call_method(
+    aut_user_auth_wsgi_app.call_method(
         "post",
         base + "/domain-types/host_config/collections/all",
         params='{"host_name": "foobar", "folder": "/"}',
@@ -665,14 +625,14 @@ def test_openapi_host_rename_with_pending_activate_changes(
         content_type="application/json",
     )
 
-    resp = wsgi_app.call_method(
+    resp = aut_user_auth_wsgi_app.call_method(
         "get",
         base + "/objects/host_config/foobar",
         status=200,
         headers={"Accept": "application/json"},
     )
 
-    _resp = wsgi_app.call_method(
+    _resp = aut_user_auth_wsgi_app.call_method(
         "put",
         base + "/objects/host_config/foobar/actions/rename/invoke",
         params='{"new_name": "foobaz"}',
@@ -683,16 +643,10 @@ def test_openapi_host_rename_with_pending_activate_changes(
 
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
-def test_openapi_host_move(
-    wsgi_app,
-    with_automation_user,
-):
-    username, secret = with_automation_user
-    wsgi_app.set_authorization(("Bearer", username + " " + secret))
-
+def test_openapi_host_move(aut_user_auth_wsgi_app: WebTestAppForCMK):
     base = "/NO_SITE/check_mk/api/1.0"
 
-    resp = wsgi_app.call_method(
+    resp = aut_user_auth_wsgi_app.call_method(
         "post",
         base + "/domain-types/host_config/collections/all",
         params='{"host_name": "foobar", "folder": "/"}',
@@ -701,7 +655,7 @@ def test_openapi_host_move(
         content_type="application/json",
     )
 
-    wsgi_app.call_method(
+    aut_user_auth_wsgi_app.call_method(
         "post",
         base + "/domain-types/folder_config/collections/all",
         params='{"name": "new_folder", "title": "foo", "parent": "/"}',
@@ -710,7 +664,7 @@ def test_openapi_host_move(
         headers={"Accept": "application/json"},
     )
 
-    _resp = wsgi_app.call_method(
+    _resp = aut_user_auth_wsgi_app.call_method(
         "post",
         base + "/objects/host_config/foobar/actions/move/invoke",
         params='{"target_folder": "/new_folder"}',
@@ -721,16 +675,10 @@ def test_openapi_host_move(
 
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
-def test_openapi_host_move_to_non_valid_folder(
-    wsgi_app,
-    with_automation_user,
-):
-    username, secret = with_automation_user
-    wsgi_app.set_authorization(("Bearer", username + " " + secret))
-
+def test_openapi_host_move_to_non_valid_folder(aut_user_auth_wsgi_app: WebTestAppForCMK):
     base = "/NO_SITE/check_mk/api/1.0"
 
-    resp = wsgi_app.call_method(
+    resp = aut_user_auth_wsgi_app.call_method(
         "post",
         base + "/domain-types/host_config/collections/all",
         params='{"host_name": "foobar", "folder": "/"}',
@@ -739,7 +687,7 @@ def test_openapi_host_move_to_non_valid_folder(
         content_type="application/json",
     )
 
-    wsgi_app.call_method(
+    aut_user_auth_wsgi_app.call_method(
         "post",
         base + "/domain-types/folder_config/collections/all",
         params='{"name": "new_folder", "title": "foo", "parent": "/"}',
@@ -748,7 +696,7 @@ def test_openapi_host_move_to_non_valid_folder(
         headers={"Accept": "application/json"},
     )
 
-    wsgi_app.call_method(
+    aut_user_auth_wsgi_app.call_method(
         "post",
         base + "/objects/host_config/foobar/actions/move/invoke",
         params='{"target_folder": "/"}',
@@ -759,16 +707,9 @@ def test_openapi_host_move_to_non_valid_folder(
 
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
-def test_openapi_host_move_of_non_existing_host(
-    wsgi_app,
-    with_automation_user,
-):
-    username, secret = with_automation_user
-    wsgi_app.set_authorization(("Bearer", username + " " + secret))
-
+def test_openapi_host_move_of_non_existing_host(aut_user_auth_wsgi_app: WebTestAppForCMK):
     base = "/NO_SITE/check_mk/api/1.0"
-
-    _resp = wsgi_app.call_method(
+    _resp = aut_user_auth_wsgi_app.call_method(
         "post",
         base + "/objects/host_config/foobaz/actions/move/invoke",
         params='{"target_folder": "/"}',
@@ -779,16 +720,10 @@ def test_openapi_host_move_of_non_existing_host(
 
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
-def test_openapi_host_update_invalid(
-    wsgi_app,
-    with_automation_user,
-):
-    username, secret = with_automation_user
-    wsgi_app.set_authorization(("Bearer", username + " " + secret))
-
+def test_openapi_host_update_invalid(aut_user_auth_wsgi_app: WebTestAppForCMK):
     base = "/NO_SITE/check_mk/api/1.0"
 
-    resp = wsgi_app.call_method(
+    resp = aut_user_auth_wsgi_app.call_method(
         "post",
         base + "/domain-types/host_config/collections/all",
         params='{"host_name": "example.com", "folder": "/"}',
@@ -797,7 +732,7 @@ def test_openapi_host_update_invalid(
         content_type="application/json",
     )
 
-    wsgi_app.follow_link(
+    aut_user_auth_wsgi_app.follow_link(
         resp,
         ".../update",
         status=400,
@@ -814,17 +749,11 @@ def test_openapi_host_update_invalid(
 
 
 @managedtest
-def test_openapi_create_host_with_contact_group(
-    wsgi_app,
-    with_automation_user,
-):
-    username, secret = with_automation_user
-    wsgi_app.set_authorization(("Bearer", username + " " + secret))
-
+def test_openapi_create_host_with_contact_group(aut_user_auth_wsgi_app: WebTestAppForCMK):
     base = "/NO_SITE/check_mk/api/1.0"
 
     group = {"name": "code_monkeys", "alias": "banana team", "customer": "global"}
-    _resp = wsgi_app.call_method(
+    _resp = aut_user_auth_wsgi_app.call_method(
         "post",
         base + "/domain-types/contact_group_config/collections/all",
         params=json.dumps(group),
@@ -847,7 +776,7 @@ def test_openapi_create_host_with_contact_group(
             },
         },
     }
-    wsgi_app.call_method(
+    aut_user_auth_wsgi_app.call_method(
         "post",
         base + "/domain-types/host_config/collections/all",
         params=json.dumps(json_data),

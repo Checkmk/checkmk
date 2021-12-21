@@ -9,7 +9,6 @@ import json
 from typing import List, Optional, Type
 
 import cmk.gui.forms as forms
-import cmk.gui.pages
 import cmk.gui.watolib as watolib
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.exceptions import MKAuthException, MKGeneralException, MKUserError
@@ -23,7 +22,14 @@ from cmk.gui.page_menu import (
     PageMenuTopic,
 )
 from cmk.gui.pages import AjaxPage, page_registry
-from cmk.gui.plugins.wato import flash, mode_registry, mode_url, redirect, WatoMode
+from cmk.gui.plugins.wato.utils import (
+    flash,
+    mode_registry,
+    mode_url,
+    redirect,
+    SNMPCredentials,
+    WatoMode,
+)
 from cmk.gui.type_defs import ActionResult
 from cmk.gui.valuespec import (
     Dictionary,
@@ -305,7 +311,7 @@ class ModeDiagHost(WatoMode):
                 ),
                 (
                     "snmp_v3_credentials",
-                    cmk.gui.plugins.wato.SNMPCredentials(
+                    SNMPCredentials(
                         default_value=None,
                         only_v3=True,
                     ),
@@ -414,7 +420,7 @@ class ModeAjaxDiagHost(AjaxPage):
             raise MKGeneralException(_("The test is missing."))
 
         # Execute a specific test
-        if _test not in dict(ModeDiagHost.diag_host_tests()).keys():
+        if _test not in dict(ModeDiagHost.diag_host_tests()):
             raise MKGeneralException(_("Invalid test."))
 
         # TODO: Use ModeDiagHost._vs_rules() for processing/validation?

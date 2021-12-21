@@ -159,27 +159,27 @@ def is_registered_section_plugin(section_name: SectionName) -> bool:
 
 
 def iter_all_agent_sections() -> Iterable[AgentSectionPlugin]:
-    return registered_agent_sections.values()  # pylint: disable=dict-values-not-iterating
+    return registered_agent_sections.values()
 
 
 def iter_all_check_plugins() -> Iterable[CheckPlugin]:
-    return registered_check_plugins.values()  # pylint: disable=dict-values-not-iterating
+    return registered_check_plugins.values()
 
 
 def iter_all_discovery_rulesets() -> Iterable[RuleSetName]:
-    return stored_rulesets.keys()  # pylint: disable=dict-keys-not-iterating
+    return stored_rulesets.keys()
 
 
 def iter_all_host_label_rulesets() -> Iterable[RuleSetName]:
-    return stored_rulesets.keys()  # pylint: disable=dict-keys-not-iterating
+    return stored_rulesets.keys()
 
 
 def iter_all_inventory_plugins() -> Iterable[InventoryPlugin]:
-    return registered_inventory_plugins.values()  # pylint: disable=dict-values-not-iterating
+    return registered_inventory_plugins.values()
 
 
 def iter_all_snmp_sections() -> Iterable[SNMPSectionPlugin]:
-    return registered_snmp_sections.values()  # pylint: disable=dict-values-not-iterating
+    return registered_snmp_sections.values()
 
 
 def len_snmp_sections() -> int:

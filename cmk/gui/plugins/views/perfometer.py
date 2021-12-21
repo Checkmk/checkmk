@@ -12,22 +12,20 @@ from cmk.gui.globals import config, html
 from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
-from cmk.gui.plugins.views import (
+from cmk.gui.plugins.views.graphs import cmk_graph_url
+from cmk.gui.plugins.views.perfometers.utils import perfometers, render_metricometer
+from cmk.gui.plugins.views.utils import (
     Cell,
     CellSpec,
     display_options,
     is_stale,
     Painter,
     painter_registry,
-    Perfdata,
-    PerfometerSpec,
     Row,
     Sorter,
     sorter_registry,
-    TranslatedMetrics,
 )
-from cmk.gui.plugins.views.graphs import cmk_graph_url
-from cmk.gui.plugins.views.perfometers import perfometers, render_metricometer
+from cmk.gui.type_defs import Perfdata, PerfometerSpec, TranslatedMetrics
 
 
 class Perfometer:
@@ -100,14 +98,14 @@ class Perfometer:
 
         return title, h
 
-    def sort_value(self) -> Tuple[Optional[int], Optional[int]]:
+    def sort_value(self) -> Tuple[Optional[int], Optional[float]]:
         """Calculates a value that is used for sorting perfometers
 
         - First sort by the perfometer group / id
         - Second by the sort value calculated based on the perfometer type and
           the actual data
         """
-        return self._get_sort_group(), self._get_sort_number()
+        return self._get_sort_group(), self._get_sort_value()
 
     def _get_sort_group(self) -> Optional[int]:
         """First sort by the optional performeter group or the perfometer id. The perfometer
@@ -137,7 +135,7 @@ class Perfometer:
         # can use the id() of the perfometer_definition here.
         return perfometer_definition.get("sort_group", id(perfometer_definition))
 
-    def _get_sort_number(self) -> Optional[int]:
+    def _get_sort_value(self) -> Optional[float]:
         """Calculate the sort value for this perfometer
         - The second sort criteria is a number that is calculated for each perfometer. The
           calculation of this number depends on the perfometer type:
@@ -147,10 +145,10 @@ class Perfometer:
           - TODO: Make it possible to define a custom "sort_by" formula like it's done in other
             places of the metric system. Something like this: "sort_by": "user,system,+,idle,+,nice,+"
         """
-        sort_number = self._get_metrics_sort_number()
+        sort_value = self._get_metrics_sort_value()
 
-        if sort_number is not None:
-            return sort_number
+        if sort_value is not None:
+            return sort_value
 
         # TODO: Remove this legacy handling one day
         if not self._has_legacy_perfometer():
@@ -159,7 +157,7 @@ class Perfometer:
         # TODO: Fallback to legacy perfometer number calculation
         return None
 
-    def _get_metrics_sort_number(self) -> Optional[int]:
+    def _get_metrics_sort_value(self) -> Optional[float]:
         perfometer_definition = self._get_perfometer_definition(self._translated_metrics)
         if not perfometer_definition:
             return None
@@ -167,7 +165,7 @@ class Perfometer:
         renderer = metrics.renderer_registry.get_renderer(
             perfometer_definition, self._translated_metrics
         )
-        return renderer.get_sort_number()
+        return renderer.get_sort_value()
 
     def _get_perfometer_definition(
         self, translated_metrics: TranslatedMetrics

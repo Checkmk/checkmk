@@ -385,8 +385,6 @@ check_info["apc_symmetra.temp"] = {
 #   |                         |_|                                          |
 #   '----------------------------------------------------------------------'
 
-factory_settings["apc_symmetra_elphase_default_levels"] = {"current": (1, 1)}
-
 
 def inventory_apc_symmetra_elphase(parsed):
     for phase in parsed.get("elphase", {}):

@@ -22,7 +22,7 @@ from cmk.gui.page_menu import (
     PageMenuTopic,
 )
 from cmk.gui.pages import AjaxPage, AjaxPageResult, page_registry
-from cmk.gui.plugins.wato import (
+from cmk.gui.plugins.wato.utils import (
     ABCMainModule,
     main_module_registry,
     MainModuleTopicMaintenance,

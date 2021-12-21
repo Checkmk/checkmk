@@ -6,7 +6,7 @@
 
 from cmk.gui.globals import html
 from cmk.gui.i18n import _
-from cmk.gui.plugins.sidebar import bulletlink, SidebarSnapin, snapin_registry
+from cmk.gui.plugins.sidebar.utils import bulletlink, SidebarSnapin, snapin_registry
 
 
 @snapin_registry.register

@@ -13,6 +13,33 @@ using namespace std::string_literals;
 using namespace std::chrono_literals;
 namespace fs = std::filesystem;
 
+namespace {
+// Internal description of assorted counter params.
+// Should be valid for all windows versions
+struct CounterParam {
+    const wchar_t* const description_;  // human form
+    const wchar_t* const name_;         // usually number
+    const uint32_t index_;              // the same as name
+    const uint32_t counters_count;
+    const uint32_t instances_min_;
+    const uint32_t instances_max_;
+};
+
+constexpr CounterParam kCpuCounter = {.description_ = L"Processor",
+                                      .name_ = L"238",
+                                      .index_ = 238,
+                                      .counters_count = 15,
+                                      .instances_min_ = 1,
+                                      .instances_max_ = 33};
+constexpr CounterParam kDiskCounter = {.description_ = L"Disk",
+                                       .name_ = L"234",
+                                       .index_ = 234,
+                                       .counters_count = 31,
+                                       .instances_min_ = 1,
+                                       .instances_max_ = 16};
+
+}  // namespace
+
 namespace cma::details {
 extern bool g_is_service;
 extern bool g_is_test;

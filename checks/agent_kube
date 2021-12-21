@@ -6,33 +6,34 @@
 
 
 def agent_kube_arguments(params, hostname, ipaddress):
-    args = ["--token", passwordstore_get_cmdline("%s", params["token"])]
+    args = []
 
-    if params.get("no-cert-check"):
-        args += ["--no-cert-check"]
+    api_server_params = params["kubernetes-api-server"]
+
+    if "token" in api_server_params:
+        args.extend(["--token", passwordstore_get_cmdline("%s", api_server_params["token"])])
 
     args.append("--api-server-endpoint")
-    configured_endpoint_name, configured_endpoint = params["api-server-endpoint"]
+    configured_endpoint_name, configured_endpoint = api_server_params["endpoint"]
     if configured_endpoint_name == "url_custom":
         args.append(configured_endpoint)
     else:
-        args.append(
-            "https://%s"
-            % {
-                "hostname": hostname,
-                "ipaddress": ipaddress,
-            }[configured_endpoint_name]
-        )
-
-        for arg_name, arg_value in configured_endpoint.items():
-            args.append(f"--{arg_name}")
-            args.append(str(arg_value))
+        protocol = configured_endpoint["protocol"]
+        address = {
+            "hostname": hostname,
+            "ipaddress": ipaddress,
+        }[configured_endpoint_name]
+        port = f":{configured_endpoint['port']}" if "port" in configured_endpoint else ""
+        args.append(f"{protocol}://{address}{port}")
 
     agent_options = params["cluster-agent"]
     args.append("--cluster-agent-endpoint")
     args.append(
         f'{agent_options["protocol"]}://{agent_options["node_ip"]}:{agent_options["connection_port"]}'
     )
+
+    if params.get("verify-cert"):
+        args.append("--verify-cert")
 
     return args
 

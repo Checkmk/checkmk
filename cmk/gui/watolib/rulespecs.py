@@ -1123,7 +1123,7 @@ class CheckTypeGroupSelection(ElementSelection):
         }
         return elements
 
-    def value_to_text(self, value) -> HTML:
+    def value_to_html(self, value) -> ValueSpecText:
         return html.render_tt(value)
 
 
@@ -1187,8 +1187,8 @@ class TimeperiodValuespec(ValueSpec):
             )
             return r
 
-    def value_to_text(self, value) -> ValueSpecText:
-        return self._get_used_valuespec(value).value_to_text(value)
+    def value_to_html(self, value) -> ValueSpecText:
+        return self._get_used_valuespec(value).value_to_html(value)
 
     def from_html_vars(self, varprefix):
         if request.var(self.tp_current_mode) == "1":

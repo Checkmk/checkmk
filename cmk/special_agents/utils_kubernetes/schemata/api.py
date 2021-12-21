@@ -14,23 +14,49 @@ except the python standard library or pydantic.
 """
 
 import enum
-from typing import Dict, List, Literal, NewType, Optional, Protocol, Sequence
+from typing import Dict, List, Literal, Mapping, NewType, Optional, Protocol, Sequence, Union
 
 from pydantic import BaseModel
+from pydantic.class_validators import validator
+from pydantic.fields import Field
 
-Labels = NewType("Labels", Dict[str, str])
+PodUID = NewType("PodUID", str)
+LabelName = NewType("LabelName", str)
+LabelValue = NewType("LabelValue", str)
+
+
+class Label(BaseModel):
+    name: LabelName
+    value: LabelValue
+
+
+Labels = Mapping[LabelName, Label]
+Timestamp = NewType("Timestamp", float)
+
+# This information is from the one-page API overview v1.22
+# Restart policy for all containers within the pod. Default to Always. More info:
+RestartPolicy = Literal["Always", "OnFailure", "Never"]
+
+# This information is from the one-page API overview v1.22
+# The Quality of Service (QOS) classification assigned to the pod based on resource requirements.
+QosClass = Literal["burstable", "besteffort", "guaranteed"]
+
+CreationTimestamp = NewType("CreationTimestamp", float)
+Namespace = NewType("Namespace", str)
+NodeName = NewType("NodeName", str)
+IpAddress = NewType("IpAddress", str)
 
 
 class MetaData(BaseModel):
     name: str
-    namespace: Optional[str] = None
-    creation_timestamp: Optional[float] = None
+    namespace: Optional[Namespace] = None
+    creation_timestamp: Optional[CreationTimestamp] = None
     labels: Optional[Labels] = None
     prefix = ""
     use_namespace = False
 
 
-class NodeStatus(BaseModel):
+class NodeConditions(BaseModel):
     NetworkUnavailable: Optional[bool] = None
     MemoryPressure: bool
     DiskPressure: bool
@@ -57,18 +83,62 @@ class APIHealth(BaseModel):
 
 
 class KubeletInfo(BaseModel):
-    """section: k8s_node_kubelet_v1"""
+    """section: kube_node_kubelet_v1"""
 
     version: str
     health: HealthZ
 
 
+class NodeInfo(BaseModel):
+    architecture: str
+    kernel_version: str
+    os_image: str
+
+
+class NodeStatus(BaseModel):
+    conditions: NodeConditions
+    node_info: NodeInfo
+
+
 class Node(BaseModel):
     metadata: MetaData
-    conditions: NodeStatus
+    status: NodeStatus
     control_plane: bool
     resources: Dict[str, NodeResources]
     kubelet_info: KubeletInfo
+
+
+class DeploymentReplicas(BaseModel):
+    updated: int
+    available: int
+    ready: int
+    unavailable: int
+
+
+class ConditionStatus(str, enum.Enum):
+    TRUE = "True"
+    FALSE = "False"
+    UNKNOWN = "Unknown"
+
+
+class DeploymentCondition(BaseModel):
+    type_: str
+    status: ConditionStatus
+    last_transition_time: float
+    reason: str
+    message: str
+
+
+class DeploymentStatus(BaseModel):
+    # https://v1-18.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.18/#deploymentstatus-v1-apps
+    replicas: DeploymentReplicas
+    conditions: Sequence[DeploymentCondition]
+
+
+class Deployment(BaseModel):
+    metadata: MetaData
+    status: DeploymentStatus
+    pods: Sequence[PodUID]
 
 
 class Resources(BaseModel):
@@ -89,38 +159,92 @@ class PodUsageResources(BaseModel):
     memory: Resources
 
 
-class PodInfo(BaseModel):
-    node: str
+class PodSpec(BaseModel):
+    node: Optional[NodeName] = None
     host_network: Optional[str] = None
     dns_policy: Optional[str] = None
-    host_ip: Optional[str] = None
-    pod_ip: str
-    qos_class: Literal["burstable", "besteffort", "guaranteed"]
+    restart_policy: RestartPolicy
 
 
-class ContainerState(str, enum.Enum):
-    # https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#container-states
-    RUNNING = "running"
-    WAITING = "waiting"
-    TERMINATED = "terminated"
+class ContainerRunningState(BaseModel):
+    type: str = Field("running", const=True)
+    start_time: int
+
+
+class ContainerWaitingState(BaseModel):
+    type: str = Field("waiting", const=True)
+    reason: str
+    detail: Optional[str]
+
+
+class ContainerTerminatedState(BaseModel):
+    type: str = Field("terminated", const=True)
+    exit_code: int
+    start_time: int
+    end_time: int
+    reason: Optional[str]
+    detail: Optional[str]
 
 
 class ContainerInfo(BaseModel):
+    id: Optional[str]  # id of non-ready container is None
+    name: str
     image: str
-    state: ContainerState
+    ready: bool
+    state: Union[ContainerTerminatedState, ContainerWaitingState, ContainerRunningState]
+    restart_count: int
+
+
+class StartTime(BaseModel):
+    """section: kube_start_time_v1"""
+
+    start_time: int
+
+
+class ConditionType(str, enum.Enum):
+    # https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#pod-conditions
+    PODSCHEDULED = "scheduled"
+    CONTAINERSREADY = "containersready"
+    INITIALIZED = "initialized"
+    READY = "ready"
+
+
+class PodCondition(BaseModel):
+    status: bool
+    type: Optional[ConditionType]
+    custom_type: Optional[str]
+    reason: Optional[str]
+    detail: Optional[str]
+    last_transition_time: Optional[int]
+
+    @validator("custom_type")
+    @classmethod
+    def verify_type(cls, v, values):
+        if "type" not in values and not v:
+            raise ValueError("either type or custom_type is required")
+        return v
+
+
+class PodStatus(BaseModel):
+    conditions: List[PodCondition]
+    phase: Phase
+    start_time: Optional[Timestamp]  # None if pod is faulty
+    host_ip: Optional[IpAddress] = None
+    pod_ip: Optional[IpAddress] = None
+    qos_class: QosClass
 
 
 class Pod(BaseModel):
-    uid: str
+    uid: PodUID
     metadata: MetaData
-    phase: Phase
-    info: PodInfo
+    status: PodStatus
+    spec: PodSpec
     resources: PodUsageResources
-    containers: List[ContainerInfo]
+    containers: Mapping[str, ContainerInfo]
 
 
 class ClusterInfo(BaseModel):
-    """section: k8s_cluster_details_v1"""
+    """section: kube_cluster_details_v1"""
 
     api_health: APIHealth
 
@@ -130,6 +254,9 @@ class API(Protocol):
         ...
 
     def pods(self) -> Sequence[Pod]:
+        ...
+
+    def deployments(self):
         ...
 
     def cluster_details(self) -> ClusterInfo:

@@ -854,9 +854,7 @@ def add_to_event_context(context: EventContext, prefix: str, param: object) -> N
                 # Compatibility for 1.5 pushover explicitly configured proxy URL format
                 if isinstance(value, str):
                     value = ("url", value)
-                value = config.get_http_proxy(value)
-                if value is None:
-                    continue
+                value = config.get_http_proxy(value).serialize()
             add_to_event_context(context, varname, value)
     elif isinstance(param, (str, int, float)):  # NOTE: bool is a subclass of int!
         context[prefix] = str(param)

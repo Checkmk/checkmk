@@ -9,7 +9,7 @@ import cmk.utils.paths
 
 from cmk.gui.i18n import _
 from cmk.gui.inventory import vs_element_inventory_visible_raw_path, vs_inventory_path_or_keys_help
-from cmk.gui.plugins.wato import (
+from cmk.gui.plugins.wato.utils import (
     HostRulespec,
     rulespec_group_registry,
     rulespec_registry,

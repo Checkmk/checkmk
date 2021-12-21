@@ -1564,6 +1564,10 @@ table.data.job_table td {
 
     &.ruleset > div {
       background: rgba(222, 67, 131, $tag-opacity);
+
+      span.tagify__tag-text {
+        color: $font-color-white;
+      }
     }
   }
 

@@ -6,7 +6,7 @@
 
 # pylint: disable=redefined-outer-name
 
-from typing import Dict, List, Literal, Mapping, NamedTuple, Sequence, Set, Tuple, Union
+from typing import Dict, List, Literal, Mapping, NamedTuple, Optional, Sequence, Set, Tuple, Union
 
 import pytest
 from _pytest.monkeypatch import MonkeyPatch
@@ -14,6 +14,7 @@ from _pytest.monkeypatch import MonkeyPatch
 from tests.testlib.base import Scenario
 from tests.testlib.debug_utils import cmk_debug_enabled
 
+from cmk.utils.check_utils import ActiveCheckResult
 from cmk.utils.exceptions import OnError
 from cmk.utils.labels import DiscoveredHostLabelsStore
 from cmk.utils.type_defs import (
@@ -100,7 +101,7 @@ def service_table() -> discovery.ServicesTable:
     return {
         (CheckPluginName("check_plugin_name"), "New Item 1"): (
             "new",
-            discovery.Service(
+            AutocheckService(
                 CheckPluginName("check_plugin_name"),
                 "New Item 1",
                 "Test Description New Item 1",
@@ -110,7 +111,7 @@ def service_table() -> discovery.ServicesTable:
         ),
         (CheckPluginName("check_plugin_name"), "New Item 2"): (
             "new",
-            discovery.Service(
+            AutocheckService(
                 CheckPluginName("check_plugin_name"),
                 "New Item 2",
                 "Test Description New Item 2",
@@ -120,7 +121,7 @@ def service_table() -> discovery.ServicesTable:
         ),
         (CheckPluginName("check_plugin_name"), "Vanished Item 1"): (
             "vanished",
-            discovery.Service(
+            AutocheckService(
                 CheckPluginName("check_plugin_name"),
                 "Vanished Item 1",
                 "Test Description Vanished Item 1",
@@ -130,7 +131,7 @@ def service_table() -> discovery.ServicesTable:
         ),
         (CheckPluginName("check_plugin_name"), "Vanished Item 2"): (
             "vanished",
-            discovery.Service(
+            AutocheckService(
                 CheckPluginName("check_plugin_name"),
                 "Vanished Item 2",
                 "Test Description Vanished Item 2",
@@ -145,7 +146,7 @@ def service_table() -> discovery.ServicesTable:
 def grouped_services() -> discovery.ServicesByTransition:
     return {
         "new": [
-            discovery.ServiceWithNodes(
+            autochecks.AutocheckServiceWithNodes(
                 AutocheckService(
                     CheckPluginName("check_plugin_name"),
                     "New Item 1",
@@ -154,7 +155,7 @@ def grouped_services() -> discovery.ServicesByTransition:
                 ),
                 [],
             ),
-            discovery.ServiceWithNodes(
+            autochecks.AutocheckServiceWithNodes(
                 AutocheckService(
                     CheckPluginName("check_plugin_name"),
                     "New Item 2",
@@ -165,7 +166,7 @@ def grouped_services() -> discovery.ServicesByTransition:
             ),
         ],
         "vanished": [
-            discovery.ServiceWithNodes(
+            autochecks.AutocheckServiceWithNodes(
                 AutocheckService(
                     CheckPluginName("check_plugin_name"),
                     "Vanished Item 1",
@@ -174,7 +175,7 @@ def grouped_services() -> discovery.ServicesByTransition:
                 ),
                 [],
             ),
-            discovery.ServiceWithNodes(
+            autochecks.AutocheckServiceWithNodes(
                 AutocheckService(
                     CheckPluginName("check_plugin_name"),
                     "Vanished Item 2",
@@ -414,7 +415,7 @@ def test__get_post_discovery_services(
             service_filters,
             result,
             mode,
-        )
+        ).values()
     ]
 
     count_new, count_kept, count_removed = result_counts
@@ -679,12 +680,7 @@ def test__check_service_table(
     rediscovery_parameters = parameters.get("inventory_rediscovery", {}).copy()
     discovery_mode = rediscovery_parameters.pop("mode", discovery.DiscoveryMode.FALLBACK)
     assert isinstance(discovery_mode, discovery.DiscoveryMode)  # for mypy
-    (
-        status,
-        infotexts,
-        long_infotexts,
-        perfdata,
-    ), need_rediscovery = discovery._check_service_lists(
+    results, need_rediscovery = discovery._check_service_lists(
         host_name=HostName("hostname"),
         services_by_transition=grouped_services,
         params=parameters,
@@ -692,22 +688,38 @@ def test__check_service_table(
         discovery_mode=discovery_mode,
     )
 
-    assert status == 1
-    assert sorted(infotexts) == sorted(
-        [
-            "2 unmonitored services (check_plugin_name:2)(!)",
-            "2 vanished services (check_plugin_name:2)",
-        ]
-    )
-    assert sorted(long_infotexts) == sorted(
-        [
-            "unmonitored: check_plugin_name: Test Description New Item 1",
-            "unmonitored: check_plugin_name: Test Description New Item 2",
-            "vanished: check_plugin_name: Test Description Vanished Item 1",
-            "vanished: check_plugin_name: Test Description Vanished Item 2",
-        ]
-    )
-    assert perfdata == []
+    assert results == [
+        ActiveCheckResult(
+            0,
+            "",
+            [
+                "unmonitored: check_plugin_name: Test Description New Item 1",
+            ],
+        ),
+        ActiveCheckResult(
+            0,
+            "",
+            [
+                "unmonitored: check_plugin_name: Test Description New Item 2",
+            ],
+        ),
+        ActiveCheckResult(1, "2 unmonitored services (check_plugin_name:2)"),
+        ActiveCheckResult(
+            0,
+            "",
+            [
+                "vanished: check_plugin_name: Test Description Vanished Item 1",
+            ],
+        ),
+        ActiveCheckResult(
+            0,
+            "",
+            [
+                "vanished: check_plugin_name: Test Description Vanished Item 2",
+            ],
+        ),
+        ActiveCheckResult(0, "2 vanished services (check_plugin_name:2)"),
+    ]
     assert need_rediscovery == result_need_rediscovery
 
 
@@ -894,13 +906,8 @@ def test_commandline_discovery(monkeypatch: MonkeyPatch) -> None:
             arg_only_new=False,
         )
 
-    services = autochecks.parse_autochecks_services(testhost, config.service_description)
-    found = {
-        (s.check_plugin_name, s.item): {
-            label.name: label.value for label in s.service_labels.values()
-        }
-        for s in services
-    }
+    entries = autochecks.AutochecksStore(testhost).read()
+    found = {(e.check_plugin_name, e.item): e.service_labels for e in entries}
     assert found == _expected_services
 
     store = DiscoveredHostLabelsStore(testhost)
@@ -1665,3 +1672,26 @@ def test_get_node_services(monkeypatch: MonkeyPatch) -> None:
         )
         for discovery_status, service in services.items()
     }
+
+
+def test_make_discovery_diff_empty():
+    assert discovery._make_diff((), (), (), ()) == "Nothing was changed."
+
+
+class _MockService(NamedTuple):
+    check_plugin_name: CheckPluginName
+    item: Optional[str]
+
+
+def test_make_discovery_diff():
+    assert discovery._make_diff(
+        (HostLabel("foo", "bar"),),
+        (HostLabel("gee", "boo"),),
+        (_MockService(CheckPluginName("norris"), "chuck"),),  # type: ignore[arg-type]
+        (_MockService(CheckPluginName("chan"), None),),  # type: ignore[arg-type]
+    ) == (
+        "Removed host label: 'foo:bar'.\n"
+        "Added host label: 'gee:boo'.\n"
+        "Removed service: Check plugin 'norris' / item 'chuck'.\n"
+        "Added service: Check plugin 'chan'."
+    )

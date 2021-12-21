@@ -8,60 +8,99 @@ import pytest
 
 from tests.testlib import on_time
 
-import cmk.base.plugins.agent_based.oracle_asm_diskgroup as oracle_asm_diskgroup
+import cmk.base.plugins.agent_based.oracle_asm_diskgroup as asm
 from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResults, Metric, Result, Service
 from cmk.base.plugins.agent_based.agent_based_api.v1 import State as state
 
 NOW_SIMULATED = 581792400, "UTC"
 
 ITEM = "DISK_GROUP"
-SECTION_OLD_MOUNTED = {
-    ITEM: {
-        "dgstate": "MOUNTED",
-        "dgtype": "NORMAL",
-        "free_mb": "4610314",
-        "offline_disks": "0",
-        "req_mir_free_mb": "63320",
-        "total_mb": "5242880",
-        "voting_files": "N",
+SECTION_OLD_MOUNTED = asm.Section(
+    diskgroups={
+        ITEM: asm.Diskgroup(
+            dgstate="MOUNTED",
+            dgtype="NORMAL",
+            free_mb=4610314,
+            offline_disks=0,
+            req_mir_free_mb=63320,
+            total_mb=5242880,
+            voting_files="N",
+            fail_groups=[],
+        )
     }
-}
-SECTION_UNKNOWN_ITEM = {"UNKNOWN": SECTION_OLD_MOUNTED[ITEM]}
+)
+SECTION_UNKNOWN_ITEM = asm.Section(diskgroups={"UNKNOWN": SECTION_OLD_MOUNTED.diskgroups[ITEM]})
 
-SECTION_OLD_DISMOUNTED = {
-    ITEM: {
-        "dgstate": "DISMOUNTED",
-        "dgtype": None,
-        "free_mb": "0",
-        "offline_disks": "0",
-        "req_mir_free_mb": "0",
-        "total_mb": "0",
-        "voting_files": "N",
+SECTION_OLD_DISMOUNTED = asm.Section(
+    diskgroups={
+        ITEM: asm.Diskgroup(
+            dgstate="DISMOUNTED",
+            dgtype=None,
+            free_mb=0,
+            offline_disks=0,
+            req_mir_free_mb=0,
+            total_mb=0,
+            voting_files="N",
+            fail_groups=[],
+        )
     }
-}
+)
 
-SECTION_WITH_FG = {
-    ITEM: {
-        "dgstate": "MOUNTED",
-        "dgtype": "EXTERN",
-        "failgroups": [
-            {
-                "fg_disks": 1,
-                "fg_free_mb": 489148,
-                "fg_min_repair_time": 8640000,
-                "fg_name": "DATA_0000",
-                "fg_total_mb": 614400,
-                "fg_type": "REGULAR",
-                "fg_voting_files": "N",
-            }
-        ],
-        "free_mb": "489148",
-        "offline_disks": "0",
-        "req_mir_free_mb": "0",
-        "total_mb": "614400",
-        "voting_files": "N",
+SECTION_DISMOUNTED = asm.Section(
+    diskgroups={
+        ITEM: asm.Diskgroup(
+            dgstate="DISMOUNTED",
+            dgtype=None,
+            total_mb=None,
+            free_mb=None,
+            req_mir_free_mb=0,
+            offline_disks=0,
+            voting_files="",
+            fail_groups=[],
+        )
     }
-}
+)
+
+SECTION_CLUTTERED_WITH_DEPREACTED_AGENT_OUTPUT = asm.Section(
+    found_deprecated_agent_output=True,
+    diskgroups={
+        ITEM: asm.Diskgroup(
+            dgstate="DISMOUNTED",
+            dgtype=None,
+            free_mb=0,
+            offline_disks=0,
+            req_mir_free_mb=0,
+            total_mb=0,
+            voting_files="N",
+            fail_groups=[],
+        )
+    },
+)
+
+SECTION_WITH_FG = asm.Section(
+    diskgroups={
+        ITEM: asm.Diskgroup(
+            dgstate="MOUNTED",
+            dgtype="EXTERN",
+            fail_groups=[
+                asm.Failgroup(
+                    fg_disks=1,
+                    fg_free_mb=489148,
+                    fg_min_repair_time=8640000,
+                    fg_name="DATA_0000",
+                    fg_total_mb=614400,
+                    fg_type="REGULAR",
+                    fg_voting_files="N",
+                )
+            ],
+            free_mb=489148,
+            offline_disks=0,
+            req_mir_free_mb=0,
+            total_mb=614400,
+            voting_files="N",
+        )
+    }
+)
 
 
 @pytest.fixture(name="value_store_patch")
@@ -69,14 +108,14 @@ def value_store_fixture(monkeypatch):
     value_store_patched = {
         "%s.delta" % ITEM: [2000000, 30000000],
     }
-    monkeypatch.setattr(oracle_asm_diskgroup, "get_value_store", lambda: value_store_patched)
+    monkeypatch.setattr(asm, "get_value_store", lambda: value_store_patched)
     yield value_store_patched
 
 
 @pytest.mark.parametrize(
     "string_table, expected",
     [
-        ([[]], {}),
+        ([[]], asm.Section({})),
         (
             [
                 [
@@ -95,7 +134,7 @@ def value_store_fixture(monkeypatch):
                     "%s/" % ITEM,
                 ]
             ],
-            {},
+            asm.Section(diskgroups={}),
         ),
         (
             [
@@ -142,24 +181,65 @@ def value_store_fixture(monkeypatch):
             ],
             SECTION_WITH_FG,
         ),
+        (
+            [["DISMOUNTED", "", "%s/" % ITEM, "0", "0", "0", "", "", "", "", "", "0", "", "1"]],
+            SECTION_DISMOUNTED,
+        ),
+        (
+            [
+                [
+                    "MOUNTED",
+                    "NORMAL",
+                    "N",
+                    "512",
+                    "512",
+                    "4096",
+                    "4194304",
+                    "5734400",
+                    "693184",
+                    "409600",
+                    "141792",
+                    "0",
+                    "N",
+                    "DATAC1/",
+                ]
+            ],
+            asm.Section({}, found_deprecated_agent_output=True),
+        ),
     ],
 )
 def test_parse(string_table, expected):
-    parsed_section = oracle_asm_diskgroup.parse_oracle_asm_diskgroup(string_table)
+    parsed_section = asm.parse_oracle_asm_diskgroup(string_table)
     assert parsed_section == expected
 
 
 @pytest.mark.parametrize(
     "section, expected",
     [
-        ({}, []),
-        ({ITEM: {"dgstate": "UNKNOW-DG-STATE"}}, []),
-        ({ITEM: {"dgstate": "MOUNTED"}}, [Service(item=ITEM)]),
-        ({ITEM: {"dgstate": "DISMOUNTED"}}, [Service(item=ITEM)]),
+        (asm.Section({}), []),
+        (
+            asm.Section(
+                {
+                    ITEM: asm.Diskgroup(
+                        dgstate="UNKNOWN-DG-STATE",
+                        dgtype=None,
+                        total_mb=0,
+                        free_mb=0,
+                        req_mir_free_mb=0,
+                        offline_disks=0,
+                        voting_files="foo",
+                        fail_groups=[],
+                    )
+                }
+            ),
+            [],
+        ),
+        (SECTION_OLD_MOUNTED, [Service(item=ITEM)]),
+        (SECTION_OLD_DISMOUNTED, [Service(item=ITEM)]),
     ],
 )
 def test_discovery(section, expected):
-    yielded_services = list(oracle_asm_diskgroup.discovery_oracle_asm_diskgroup(section))
+    yielded_services = list(asm.discovery_oracle_asm_diskgroup(section))
     assert yielded_services == expected
 
 
@@ -168,17 +248,33 @@ def test_discovery(section, expected):
     [
         (
             SECTION_UNKNOWN_ITEM,
-            oracle_asm_diskgroup.ASM_DISKGROUP_DEFAULT_LEVELS,
+            asm.ASM_DISKGROUP_DEFAULT_LEVELS,
             [(IgnoreResults("Diskgroup %s not found" % ITEM))],
         ),
         (
             SECTION_OLD_DISMOUNTED,
-            oracle_asm_diskgroup.ASM_DISKGROUP_DEFAULT_LEVELS,
+            asm.ASM_DISKGROUP_DEFAULT_LEVELS,
             [Result(state=state.CRIT, summary="Diskgroup dismounted")],
         ),
         (
+            SECTION_CLUTTERED_WITH_DEPREACTED_AGENT_OUTPUT,
+            asm.ASM_DISKGROUP_DEFAULT_LEVELS,
+            [
+                Result(
+                    state=state.WARN,
+                    summary="The deprecated Oracle Agent Plugin "
+                    "'mk_oracle_asm' from Checkmk Version 1.2.6 is "
+                    "still executed on this host. "
+                    "The section 'oracle_asm_diskgroup' is now "
+                    "generated by the plugin 'mk_oracle'. "
+                    "Please remove the deprecated Plugin",
+                ),
+                Result(state=state.CRIT, summary="Diskgroup dismounted"),
+            ],
+        ),
+        (
             SECTION_OLD_MOUNTED,
-            oracle_asm_diskgroup.ASM_DISKGROUP_DEFAULT_LEVELS,
+            asm.ASM_DISKGROUP_DEFAULT_LEVELS,
             [
                 Metric(
                     "fs_used",
@@ -215,7 +311,7 @@ def test_discovery(section, expected):
         ),
         (
             SECTION_WITH_FG,
-            oracle_asm_diskgroup.ASM_DISKGROUP_DEFAULT_LEVELS,
+            asm.ASM_DISKGROUP_DEFAULT_LEVELS,
             [
                 Metric(
                     "fs_used",
@@ -284,9 +380,8 @@ def test_discovery(section, expected):
 )
 def test_check(value_store_patch, section, params, expected):
     with on_time(*NOW_SIMULATED):
-        assert expected == list(
-            oracle_asm_diskgroup.check_oracle_asm_diskgroup(ITEM, params, section)
-        )
+
+        assert expected == list(asm.check_oracle_asm_diskgroup(ITEM, params, section))
 
 
 @pytest.mark.parametrize(
@@ -294,7 +389,7 @@ def test_check(value_store_patch, section, params, expected):
     [
         (
             {"node1": SECTION_OLD_MOUNTED, "node2": SECTION_WITH_FG},
-            oracle_asm_diskgroup.ASM_DISKGROUP_DEFAULT_LEVELS,
+            asm.ASM_DISKGROUP_DEFAULT_LEVELS,
             [
                 Metric(
                     "fs_used",
@@ -333,7 +428,5 @@ def test_check(value_store_patch, section, params, expected):
 )
 def test_cluster(value_store_patch, section, params, expected):
     with on_time(*NOW_SIMULATED):
-        yielded_results = list(
-            oracle_asm_diskgroup.cluster_check_oracle_asm_diskgroup(ITEM, params, section)
-        )
+        yielded_results = list(asm.cluster_check_oracle_asm_diskgroup(ITEM, params, section))
         assert yielded_results == expected

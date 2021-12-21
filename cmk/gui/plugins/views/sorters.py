@@ -11,8 +11,9 @@ from typing import List, Optional, Tuple, TYPE_CHECKING
 import cmk.gui.utils as utils
 from cmk.gui.globals import config
 from cmk.gui.i18n import _
-from cmk.gui.plugins.views import (
+from cmk.gui.plugins.views.utils import (
     cmp_custom_variable,
+    cmp_insensitive_string,
     cmp_ip_address,
     cmp_num_split,
     cmp_service_name_equiv,
@@ -22,16 +23,16 @@ from cmk.gui.plugins.views import (
     compare_ips,
     declare_1to1_sorter,
     declare_simple_sorter,
-    get_labels,
+    DerivedColumnsSorter,
     get_perfdata_nth_value,
     get_tag_groups,
     Sorter,
     sorter_registry,
 )
-from cmk.gui.plugins.views.utils import cmp_insensitive_string, DerivedColumnsSorter
 from cmk.gui.sites import get_site_config
 from cmk.gui.type_defs import Row
 from cmk.gui.valuespec import Dictionary, DropdownChoice, ValueSpec
+from cmk.gui.view_utils import get_labels
 
 if TYPE_CHECKING:
     from cmk.gui.views import View

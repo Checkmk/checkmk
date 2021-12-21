@@ -13,7 +13,7 @@ import os
 import re
 import subprocess
 from contextlib import nullcontext
-from typing import Callable, cast, ContextManager, Dict, List, Mapping
+from typing import Callable, cast, ContextManager, List, Mapping
 from typing import Optional as _Optional
 from typing import Tuple as _Tuple
 from typing import Type
@@ -93,9 +93,7 @@ from cmk.gui.valuespec import (  # noqa: F401 # pylint: disable=unused-import
     ABCPageListOfMultipleGetChoice,
     AjaxDropdownChoice,
     Alternative,
-    autocompleter_registry,
     CascadingDropdown,
-    Checkbox,
     Dictionary,
     DocumentationURL,
     DropdownChoice,
@@ -123,6 +121,7 @@ from cmk.gui.valuespec import (  # noqa: F401 # pylint: disable=unused-import
     Url,
     ValueSpec,
     ValueSpecHelp,
+    ValueSpecText,
 )
 from cmk.gui.watolib import (  # noqa: F401 # pylint: disable=unused-import
     ABCConfigDomain,
@@ -494,19 +493,18 @@ def HostnameTranslation(**kwargs):
     return Dictionary(
         title=title,
         help=help_txt,
-        elements=[
-            (
-                "drop_domain",
-                FixedValue(
-                    True,
-                    title=_("Convert FQHN"),
-                    totext=_(
-                        "Drop domain part (<tt>host123.foobar.de</tt> &#8594; <tt>host123</tt>)"
-                    ),
-                ),
-            ),
-        ]
-        + _translation_elements("host"),
+        elements=[_get_drop_domain_element()] + translation_elements("host"),
+    )
+
+
+def _get_drop_domain_element() -> _Tuple[str, ValueSpec]:
+    return (
+        "drop_domain",
+        FixedValue(
+            True,
+            title=_("Convert FQHN"),
+            totext=_("Drop domain part (<tt>host123.foobar.de</tt> → <tt>host123</tt>)"),
+        ),
     )
 
 
@@ -516,11 +514,11 @@ def ServiceDescriptionTranslation(**kwargs):
     return Dictionary(
         title=title,
         help=help_txt,
-        elements=_translation_elements("service"),
+        elements=translation_elements("service"),
     )
 
 
-def _translation_elements(what):
+def translation_elements(what: str) -> List[_Tuple[str, ValueSpec]]:
     if what == "host":
         singular = "hostname"
         plural = "hostnames"
@@ -784,7 +782,9 @@ def HTTPProxyReference():
                         "that these variables must be defined as a site-user in ~/etc/environment and that "
                         "this might affect other notification methods which also use the requests module."
                     ),
-                    totext=_("Use proxy settings from the process environment"),
+                    totext=_(
+                        "Use proxy settings from the process environment. This is the default."
+                    ),
                 ),
             ),
             (
@@ -792,10 +792,7 @@ def HTTPProxyReference():
                 _("Connect without proxy"),
                 FixedValue(
                     None,
-                    totext=_(
-                        "Connect directly to the destination instead of using a proxy. "
-                        "This is the default."
-                    ),
+                    totext=_("Connect directly to the destination instead of using a proxy."),
                 ),
             ),
             (
@@ -1362,7 +1359,6 @@ class _CheckTypeMgmtSelection(DualListChoice):
         ]
 
 
-@autocompleter_registry.register
 class ConfigHostname(AjaxDropdownChoice):
     """Hostname input with dropdown completion
 
@@ -1370,22 +1366,6 @@ class ConfigHostname(AjaxDropdownChoice):
     Fetching the choices from the current WATO config"""
 
     ident = "config_hostname"
-
-    @classmethod
-    def autocomplete_choices(cls, value: str, params: Dict) -> Choices:
-        """Return the matching list of dropdown choices
-        Called by the webservice with the current input field value and the completions_params to get the list of choices"""
-        all_hosts: Dict[str, watolib.CREHost] = watolib.Host.all()
-        match_pattern = re.compile(value, re.IGNORECASE)
-        match_list: Choices = []
-        for host_name, host_object in all_hosts.items():
-            if match_pattern.search(host_name) is not None and host_object.may("read"):
-                match_list.append((host_name, host_name))
-
-        if not any(x[0] == value for x in match_list):
-            match_list.insert(0, (value, value))  # User is allowed to enter anything they want
-
-        return match_list
 
 
 class ABCEventsMode(WatoMode, abc.ABC):
@@ -2353,6 +2333,7 @@ class HostTagCondition(ValueSpec):
                 tagvalue = tag_group.default_value
             else:
                 tagvalue = request.var(varprefix + "tagvalue_" + tag_group.id)
+            assert tagvalue is not None
 
             mode = request.var(varprefix + "tag_" + tag_group.id)
             if mode == "is":
@@ -2373,7 +2354,7 @@ class HostTagCondition(ValueSpec):
     def canonical_value(self):
         return []
 
-    def value_to_text(self, value) -> str:
+    def value_to_html(self, value: list[str]) -> ValueSpecText:
         return "|".join(value)
 
     def validate_datatype(self, value, varprefix):
@@ -2420,7 +2401,7 @@ class HostTagCondition(ValueSpec):
 
                 for tag_group in tag_groups_by_topic.get(topic_id, []):
                     html.open_tr()
-                    html.td("%s: &nbsp;" % _u(tag_group.title), class_="title")
+                    html.td("%s: &nbsp;" % _u(tag_group.title or ""), class_="title")
 
                     choices = tag_group.get_tag_choices()
                     default_tag, deflt = self._current_tag_setting(choices, tag_specs)
@@ -2496,6 +2477,12 @@ class HostTagCondition(ValueSpec):
             id_="%stag_sel_%s" % (varprefix, id_),
             style="display: none;" if not div_is_open else None,
         )
+
+    def value_to_json(self, value):
+        raise NotImplementedError()
+
+    def value_from_json(self, json_value):
+        raise NotImplementedError()
 
 
 class LabelCondition(Transform):
@@ -2693,11 +2680,9 @@ def get_hostnames_from_checkboxes(
 
     selected_host_names: List[str] = []
     for host_name, host in sorted(watolib.Folder.current().hosts().items()):
-        if (
-            not search_text
-            or _search_text_matches(host, search_text)
-            and ("_c_" + host_name) in selected
-        ):
+        if (not search_text or _search_text_matches(host, search_text)) and (
+            "_c_" + host_name
+        ) in selected:
             if filterfunc is None or filterfunc(host):
                 selected_host_names.append(host_name)
     return selected_host_names

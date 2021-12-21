@@ -443,12 +443,12 @@ def mode_dump_agent(hostname: HostName) -> None:
             mode = FetchMode.CHECKING
             raw_data = source.fetch(mode)
             host_sections = source.parse(raw_data, selection=NO_SELECTION)
-            source_state, source_output = source.summarize(host_sections, mode=mode)
-            if source_state != 0:
+            source_results = source.summarize(host_sections, mode=mode)
+            if any(r.state != 0 for r in source_results):
                 console.error(
                     "ERROR [%s]: %s\n",
                     source.id,
-                    source_output,
+                    ", ".join(r.summary for r in source_results),
                 )
                 has_errors = True
             if raw_data.is_ok():

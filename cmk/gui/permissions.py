@@ -156,7 +156,7 @@ def declare_permission_section(name, title, prio=50, do_sort=False):
 def declare_permission(name, title, description, defaults):
     # ? declare_permission seems to be used with the type of name argument being str
     if not isinstance(name, str):
-        name = ensure_str(name, encoding="ascii")
+        name = ensure_str(name, encoding="ascii")  # pylint: disable= six-ensure-str-bin-call
 
     section_name, permission_name = name.split(".", 1)
 

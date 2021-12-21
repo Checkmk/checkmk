@@ -8,22 +8,16 @@ import abc
 import logging
 from functools import partial
 from pathlib import Path
-from typing import final, Final, Generic, Optional, Tuple
+from typing import final, Final, Generic, Optional, Sequence
 
 import cmk.utils
 import cmk.utils.debug
 import cmk.utils.log  # TODO: Remove this!
 import cmk.utils.misc
 import cmk.utils.paths
+from cmk.utils.check_utils import ActiveCheckResult
 from cmk.utils.log import VERBOSE
-from cmk.utils.type_defs import (
-    HostAddress,
-    HostName,
-    result,
-    ServiceDetails,
-    ServiceState,
-    SourceType,
-)
+from cmk.utils.type_defs import HostAddress, HostName, result, SourceType
 
 from cmk.snmplib.type_defs import TRawData
 
@@ -131,7 +125,7 @@ class Source(Generic[TRawData, THostSections], abc.ABC):
         host_sections: result.Result[THostSections, Exception],
         *,
         mode: Mode,
-    ) -> Tuple[ServiceState, ServiceDetails]:
+    ) -> Sequence[ActiveCheckResult]:
         summarizer = self._make_summarizer()
         return host_sections.fold(
             ok=partial(summarizer.summarize_success, mode=mode),

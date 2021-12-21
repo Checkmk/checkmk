@@ -10,34 +10,34 @@ from typing import List, NamedTuple
 
 import pytest
 
-from tests.testlib import web  # noqa: F401 # pylint: disable=unused-import
+from tests.testlib.site import Site
 from tests.testlib.utils import get_standard_linux_agent_output
 
 
 @pytest.fixture(name="test_cfg", scope="module")
-def test_cfg_fixture(web, site):  # noqa: F811 # pylint: disable=redefined-outer-name
+def test_cfg_fixture(site: Site, web):
     print("Applying default config")
-    web.add_host(
+    site.openapi.create_host(
         "modes-test-host",
         attributes={
             "ipaddress": "127.0.0.1",
         },
     )
-    web.add_host(
+    site.openapi.create_host(
         "modes-test-host2",
         attributes={
             "ipaddress": "127.0.0.1",
             "tag_criticality": "test",
         },
     )
-    web.add_host(
+    site.openapi.create_host(
         "modes-test-host3",
         attributes={
             "ipaddress": "127.0.0.1",
             "tag_criticality": "test",
         },
     )
-    web.add_host(
+    site.openapi.create_host(
         "modes-test-host4",
         attributes={
             "ipaddress": "127.0.0.1",
@@ -45,22 +45,28 @@ def test_cfg_fixture(web, site):  # noqa: F811 # pylint: disable=redefined-outer
         },
     )
 
-    site.write_file(
+    site.write_text_file(
         "etc/check_mk/conf.d/modes-test-host.mk",
         "datasource_programs.append(('cat ~/var/check_mk/agent_output/<HOST>', [], ALL_HOSTS))\n",
     )
 
     site.makedirs("var/check_mk/agent_output/")
-    site.write_file("var/check_mk/agent_output/modes-test-host", get_standard_linux_agent_output())
-    site.write_file("var/check_mk/agent_output/modes-test-host2", get_standard_linux_agent_output())
-    site.write_file("var/check_mk/agent_output/modes-test-host3", get_standard_linux_agent_output())
+    site.write_text_file(
+        "var/check_mk/agent_output/modes-test-host", get_standard_linux_agent_output()
+    )
+    site.write_text_file(
+        "var/check_mk/agent_output/modes-test-host2", get_standard_linux_agent_output()
+    )
+    site.write_text_file(
+        "var/check_mk/agent_output/modes-test-host3", get_standard_linux_agent_output()
+    )
 
-    web.discover_services("modes-test-host")
-    web.discover_services("modes-test-host2")
-    web.discover_services("modes-test-host3")
+    web.discover_services("modes-test-host")  # Replace with RestAPI call, see CMK-9249
+    web.discover_services("modes-test-host2")  # Replace with RestAPI call, see CMK-9249
+    web.discover_services("modes-test-host3")  # Replace with RestAPI call, see CMK-9249
 
     try:
-        web.activate_changes()
+        site.activate_changes_and_wait_for_core_reload()
         yield None
     finally:
         #
@@ -72,12 +78,12 @@ def test_cfg_fixture(web, site):  # noqa: F811 # pylint: disable=redefined-outer
 
         site.delete_file("etc/check_mk/conf.d/modes-test-host.mk")
 
-        web.delete_host("modes-test-host")
-        web.delete_host("modes-test-host2")
-        web.delete_host("modes-test-host3")
-        web.delete_host("modes-test-host4")
+        site.openapi.delete_host("modes-test-host")
+        site.openapi.delete_host("modes-test-host2")
+        site.openapi.delete_host("modes-test-host3")
+        site.openapi.delete_host("modes-test-host4")
 
-        web.activate_changes()
+        site.activate_changes_and_wait_for_core_reload()
 
 
 class CommandOutput(NamedTuple):
@@ -91,7 +97,7 @@ def on_failure(p: CommandOutput) -> str:
 
 
 @pytest.fixture(name="execute")
-def execute_fixture(test_cfg, site):
+def execute_fixture(test_cfg, site: Site):
     def _execute(command, cwd=None):
         p = site.execute(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=cwd)
         stdout, stderr = p.communicate()
@@ -298,7 +304,7 @@ def test_paths(execute):
 #   '----------------------------------------------------------------------'
 
 
-def _create_cmk_backup(site, execute):
+def _create_cmk_backup(site: Site, execute):
     p = execute(["cmk", "--backup", "x.tgz"], cwd=site.root)
     assert p.returncode == 0, on_failure(p)
     assert p.stderr == ""
@@ -306,7 +312,7 @@ def _create_cmk_backup(site, execute):
     assert site.file_exists("x.tgz")
 
 
-def test_backup(request, site, execute):
+def test_backup(request, site: Site, execute):
     def cleanup():
         site.delete_file("x.tgz")
 
@@ -315,7 +321,7 @@ def test_backup(request, site, execute):
     _create_cmk_backup(site, execute)
 
 
-def test_restore(request, site, execute):
+def test_restore(request, site: Site, execute):
     # TODO: main.mk cannot be restored.
     def cleanup():
         if site.file_exists("etc/check_mk.sav"):
@@ -683,7 +689,7 @@ def test_check_verbose_perfdata(execute):
 
 
 def test_check_verbose_only_check(execute):
-    p = execute(["cmk", "-v", "--checks=lnx_thermal", "modes-test-host"])
+    p = execute(["cmk", "-v", "--plugins=lnx_thermal", "modes-test-host"])
     assert p.returncode == 0, on_failure(p)
     assert "Temperature Zone 0" in p.stdout
     assert "Interface 2" not in p.stdout

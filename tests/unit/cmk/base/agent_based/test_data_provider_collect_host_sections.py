@@ -418,10 +418,7 @@ def test_get_host_sections_cluster(monkeypatch, mocker):
     # Create a cluster
     host_config.nodes = list(hosts.keys())
 
-    sources = make_cluster_sources(
-        config_cache,
-        host_config,
-    )
+    sources = make_cluster_sources(config_cache, host_config)
 
     host_sections = _collect_host_sections(
         sources=sources,

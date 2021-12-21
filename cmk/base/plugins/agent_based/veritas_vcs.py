@@ -5,12 +5,21 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import functools
-from typing import Any, Generator, Iterable, List, Mapping, MutableMapping, NamedTuple, Optional
+from typing import (
+    Any,
+    Generator,
+    Iterable,
+    List,
+    Mapping,
+    MutableMapping,
+    NamedTuple,
+    Optional,
+    Sequence,
+)
 
 from .agent_based_api.v1 import register, Result, Service
 from .agent_based_api.v1 import State as state
 from .agent_based_api.v1 import type_defs
-from .agent_based_api.v1.clusterize import make_node_notice_results
 
 # <<<veritas_vcs>>>
 # ClusState        RUNNING
@@ -123,6 +132,13 @@ Section = MutableMapping[str, SubSection]
 ClusterSection = Mapping[str, Section]
 
 
+class ClusterNodeResults(NamedTuple):
+    node_name: str
+    node_state_text: str
+    node_frozen_state: state
+    node_summaries: Sequence[str]
+
+
 def parse_veritas_vcs(string_table: type_defs.StringTable) -> Optional[Section]:
     parsed: Section = {}
 
@@ -168,14 +184,32 @@ def discover_veritas_vcs_subsection(
         yield Service(item=item_name)
 
 
-def veritas_vcs_boil_down_states_in_cluster(states: Iterable[str]) -> str:
-    _stat = set(states)
-    if len(_stat) == 1:
-        return _stat.pop()
+def veritas_vcs_boil_down_states_in_cluster(states: Sequence[str]) -> str:
+    if len(states) == 1:
+        return states[0]
     for dominant in ("FAULTED", "UNKNOWN", "ONLINE", "RUNNING"):
-        if dominant in _stat:
+        if dominant in states:
             return dominant
-    return "AGGREGATION: %s" % ", ".join(sorted(_stat))
+    return "default"
+
+
+def _frozen_state_results(
+    list_vcs_tuples: Sequence[Vcs], state_mapping: Mapping[str, int]
+) -> Iterable[Result]:
+    frozen_states = (
+        vcs.attr.lower()
+        for vcs in list_vcs_tuples
+        if vcs.attr.endswith("Frozen") and vcs.value != "0"
+    )
+    yield from (
+        Result(state=state(state_mapping.get(s, state(3))), summary=s.replace("t", "temporarily "))
+        for s in frozen_states
+    )
+
+
+def _cluster_name(list_vcs_tuples: Sequence[Vcs]) -> Optional[str]:
+    # get last not None cluster name
+    return functools.reduce(lambda x, y: y if y.cluster else x, list_vcs_tuples).cluster
 
 
 def check_veritas_vcs_subsection(
@@ -187,31 +221,17 @@ def check_veritas_vcs_subsection(
     if list_vcs_tuples is None:
         return  # vanished
 
-    map_frozen = params["map_frozen"]
-    map_states = params["map_states"]
+    yield from (_frozen_state_results(list_vcs_tuples, params["map_frozen"]))
 
-    infotexts = []
-    for vcs in list_vcs_tuples:
-        if vcs.attr.endswith("State"):
-            infotexts.append(vcs.value.lower())
-
-        if vcs.attr.endswith("Frozen") and vcs.value != "0":
-            frozen_txt = vcs.attr.lower().replace("t", "temporarily ").lower()
-            yield Result(
-                state=state(map_frozen.get(vcs.attr.lower(), 3)),
-                summary=frozen_txt,
-            )
-
-    states = (vcs.value for vcs in list_vcs_tuples if vcs.attr.endswith("State"))
-    state_txt = veritas_vcs_boil_down_states_in_cluster(states)
-    state_int = map_states.get(state_txt, map_states["default"])
+    state_mapping = params["map_states"]
+    states = [vcs.value for vcs in list_vcs_tuples if vcs.attr.endswith("State")]
+    state_text = veritas_vcs_boil_down_states_in_cluster(states)
     yield Result(
-        state=state(state_int),
-        summary="%s" % ", ".join(infotexts),
+        state=state(state_mapping.get(state_text, state_mapping["default"])),
+        summary=", ".join(map(lambda s: s.lower(), states)),
     )
 
-    # get last not None cluster name
-    cluster_name = functools.reduce(lambda x, y: y if y.cluster else x, list_vcs_tuples).cluster
+    cluster_name = _cluster_name(list_vcs_tuples)
     if cluster_name is not None:
         yield Result(
             state=state.OK,
@@ -224,31 +244,66 @@ def cluster_check_veritas_vcs_subsection(
     params: Mapping[str, Any],
     subsections: Mapping[str, SubSection],
 ) -> type_defs.CheckResult:
-    last_cluster_result = None
 
-    worst_state = state.OK
-
+    cluster_name = None
+    node_results = []
     for node_name, node_subsec in subsections.items():
-        node_results = list(check_veritas_vcs_subsection(item, params, node_subsec))
-        if not node_results:
+        if not (item_subsection := node_subsec.get(item)):
             continue
 
-        if node_results[-1].summary.startswith("cluster: "):
-            last_cluster_result = node_results[-1]
-            node_results = node_results[:-1]
+        node_summaries = []
 
-        for result in make_node_notice_results(node_name, node_results):
-            yield result
-            worst_state = state.worst(worst_state, result.state)
+        node_frozen_state = state.OK
+        if frozen_results := list(_frozen_state_results(item_subsection, params["map_frozen"])):
+            node_frozen_state = state.worst(*(f.state for f in frozen_results))
+            node_summaries.extend([f.summary for f in frozen_results])
 
-    if worst_state is state.OK:
+        node_state_text = veritas_vcs_boil_down_states_in_cluster(
+            [vcs.value for vcs in item_subsection if vcs.attr.endswith("State")]
+        )
+        node_summaries.append(node_state_text.lower())
+
+        node_results.append(
+            ClusterNodeResults(
+                node_name=node_name,
+                node_state_text=node_state_text,
+                node_frozen_state=node_frozen_state,
+                node_summaries=node_summaries,
+            )
+        )
+
+        cluster_name = _cluster_name(item_subsection) or cluster_name
+
+    if not node_results:
+        return
+
+    state_mapping = params["map_states"]
+    cluster_state = state.worst(
+        state(
+            state_mapping.get(
+                veritas_vcs_boil_down_states_in_cluster([n.node_state_text for n in node_results]),
+                state_mapping["default"],
+            )
+        ),
+        *(n.node_frozen_state for n in node_results),
+    )
+
+    if cluster_state is state.OK:
         yield Result(
             state=state.OK,
             summary="All nodes OK",
         )
 
-    if last_cluster_result:
-        yield last_cluster_result
+    yield Result(
+        state=cluster_state,
+        notice=", ".join((f'[{n.node_name}]: {", ".join(n.node_summaries)}' for n in node_results)),
+    )
+
+    if cluster_name:
+        yield Result(
+            state=state.OK,
+            summary=f"cluster: {cluster_name}",
+        )
 
 
 #   .--cluster - main check -----------------------------------------------.

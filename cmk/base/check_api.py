@@ -109,6 +109,7 @@ import cmk.utils.render as render
 # with an underscore. These names will be skipped when loading into the
 # check context.
 from cmk.utils.exceptions import MKGeneralException
+from cmk.utils.http_proxy_config import HTTPProxyConfig
 from cmk.utils.regex import regex  # noqa: F401 # pylint: disable=unused-import
 from cmk.utils.rulesets.tuple_rulesets import (  # noqa: F401 # pylint: disable=unused-import # TODO: Only used by logwatch check. Can we clean this up?; These functions were used in some specific checks until 1.6. Don't add it to; the future check API. It's kept here for compatibility reasons for now.
     get_rule_options,
@@ -123,13 +124,7 @@ from cmk.utils.type_defs import (  # noqa: F401 # pylint: disable=unused-import
 from cmk.utils.type_defs import HostName, MetricName, RuleConditionsSpec
 from cmk.utils.type_defs import Ruleset as _Ruleset
 from cmk.utils.type_defs import SectionName as _SectionName
-from cmk.utils.type_defs import (
-    ServiceCheckResult,
-    ServiceDetails,
-    ServiceName,
-    ServiceState,
-    state_markers,
-)
+from cmk.utils.type_defs import ServiceDetails, ServiceName, ServiceState, state_markers
 
 from cmk.snmplib.type_defs import SpecialColumn as _SpecialColumn
 
@@ -147,7 +142,19 @@ from cmk.base.plugin_contexts import service_description
 
 Warn = Union[None, int, float]
 Crit = Union[None, int, float]
+_Bound = Union[None, int, float]
 Levels = Tuple  # Has length 2 or 4
+
+_MetricTuple = Tuple[
+    MetricName,
+    float,
+    Warn,
+    Crit,
+    _Bound,
+    _Bound,
+]
+
+ServiceCheckResult = Tuple[ServiceState, ServiceDetails, List[_MetricTuple]]
 
 # These 3 are no longer used, but we keep the names around, so old plugins won't crash.
 MGMT_ONLY = "mgmt_only"  # Use host address/credentials when it's a SNMP HOST
@@ -284,7 +291,7 @@ def is_ipv6_primary(hostname: HostName) -> bool:
 nagios_illegal_chars = _config.nagios_illegal_chars
 is_cmc = _config.is_cmc
 
-get_age_human_readable = lambda secs: "%s" % render.Age(secs)
+get_age_human_readable: Callable[[float], str] = lambda secs: "%s" % render.Age(secs)
 get_bytes_human_readable = render.fmt_bytes
 get_nic_speed_human_readable = render.fmt_nic_speed
 get_percent_human_readable = render.percent
@@ -574,12 +581,10 @@ def passwordstore_get_cmdline(fmt: str, pw: Union[Tuple, str]) -> Union[str, Tup
     return ("store", pw[1], fmt)
 
 
-def get_http_proxy(http_proxy: Tuple[str, str]) -> Optional[str]:
-    """Returns proxy URL to be used for HTTP requests
+def get_http_proxy(http_proxy: Tuple[str, str]) -> HTTPProxyConfig:
+    """Returns a proxy config object to be used for HTTP requests
 
-    Pass a value configured by the user using the HTTPProxyReference valuespec to this function
-    and you will get back ether a proxy URL, an empty string to enforce no proxy usage or None
-    to use the proxy configuration from the process environment.
+    Intended to receive a value configured by the user using the HTTPProxyReference valuespec.
     """
     return _config.get_http_proxy(http_proxy)
 

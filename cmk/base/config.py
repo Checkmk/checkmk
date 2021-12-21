@@ -42,8 +42,6 @@ from typing import (
     Union,
 )
 
-from six import ensure_str
-
 import cmk.utils
 import cmk.utils.check_utils
 import cmk.utils.cleanup
@@ -61,6 +59,7 @@ import cmk.utils.version as cmk_version
 from cmk.utils.caching import config_cache as _config_cache
 from cmk.utils.check_utils import maincheckify, section_name_of, unwrap_parameters
 from cmk.utils.exceptions import MKGeneralException, MKIPAddressLookupError, MKTerminate
+from cmk.utils.http_proxy_config import http_proxy_config_from_user_setting, HTTPProxyConfig
 from cmk.utils.labels import LabelManager
 from cmk.utils.log import console
 from cmk.utils.parameters import TimespecificParameters, TimespecificParameterSet
@@ -135,6 +134,15 @@ from cmk.base.default_config import *  # pylint: disable=wildcard-import,unused-
 
 # TODO: Prefix helper functions with "_".
 
+# Default values for retry and check intervals in minutes
+# Hosts. Check and retry intervals are same
+SMARTPING_CHECK_INTERVAL: Final = 0.1
+HOST_CHECK_INTERVAL: Final = 1.0
+# Services. Check and retry intervals may differ
+SERVICE_RETRY_INTERVAL: Final = 1.0
+SERVICE_CHECK_INTERVAL: Final = 1.0
+
+
 service_service_levels = []
 host_service_levels = []
 
@@ -161,7 +169,7 @@ DiscoveryCheckParameters = Dict
 
 class SpecialAgentConfiguration(NamedTuple):
     args: List[str]
-    # None makes the stdin of suprocess /dev/null
+    # None makes the stdin of subprocess /dev/null
     stdin: Optional[str]
 
 
@@ -173,7 +181,10 @@ SpecialAgentInfoFunction = Callable[
 ]
 HostCheckCommand = Union[None, str, Tuple[str, Union[int, str]]]
 PingLevels = Dict[str, Union[int, Tuple[float, float]]]
-ObjectAttributes = Dict  # TODO: Improve this. Have seen Dict[str, Union[str, unicode, int]]
+
+# TODO: Improve this, the config generation uses it in a totally chaotic way.
+ObjectAttributes = Dict[str, Any]
+
 GroupDefinitions = Dict[str, str]
 RecurringDowntime = Dict[str, Union[int, str]]
 CheckInfo = Dict  # TODO: improve this type
@@ -492,7 +503,7 @@ def _transform_plugin_names_from_160_to_170(global_dict: Dict[str, Any]) -> None
     # Now they don't, and we have to translate all variables that may use them:
     if "service_descriptions" in global_dict:
         global_dict["service_descriptions"] = {
-            maincheckify(k): v for k, v in global_dict["service_descriptions"].items()
+            maincheckify(k): str(v) for k, v in global_dict["service_descriptions"].items()
         }
     if "use_new_descriptions_for" in global_dict:
         global_dict["use_new_descriptions_for"] = [
@@ -1018,7 +1029,9 @@ def _get_old_cmciii_temp_description(item: Item) -> Tuple[bool, ServiceName]:
     return False, "%s %s.%s-Temperature" % (parts[1], parts[0], parts[2])
 
 
-_old_service_descriptions = {
+_old_service_descriptions: Mapping[
+    str, Union[ServiceName, Callable[[Item], Tuple[bool, ServiceName]]]
+] = {
     "aix_memory": "Memory used",
     # While using the old description, don't append the item, even when discovered
     # with the new check which creates an item.
@@ -1114,38 +1127,46 @@ def service_description(
             return "Unimplemented check %s / %s" % (check_plugin_name, item)
         return "Unimplemented check %s" % check_plugin_name
 
+    return get_final_service_description(
+        hostname,
+        _format_item_with_template(*_get_service_description_template_and_item(plugin, item)),
+    )
+
+
+def _get_service_description_template_and_item(plugin: CheckPlugin, item: Item) -> Tuple[str, Item]:
     plugin_name_str = str(plugin.name)
-    add_item = True
+
     # use user-supplied service description, if available
-    descr_format = service_descriptions.get(plugin_name_str)
-    if not descr_format:
-        old_descr = _old_service_descriptions.get(plugin_name_str)
-        # handle renaming for backward compatibility
-        if old_descr and plugin_name_str not in use_new_descriptions_for:
-            # Can be a function to generate the old description more flexible.
-            if callable(old_descr):
-                add_item, descr_format = old_descr(item)
-            else:
-                descr_format = old_descr
+    descr_format: Optional[ServiceName] = service_descriptions.get(plugin_name_str)
+    if descr_format:
+        return descr_format, item
 
-        else:
-            descr_format = plugin.service_name
-    # descr_format has type str? Exact type of service_descriptions seems unclear
-    descr_format = ensure_str(descr_format)
+    old_descr = _old_service_descriptions.get(plugin_name_str)
+    if old_descr is None or plugin_name_str in use_new_descriptions_for:
+        return plugin.service_name, item
 
-    if add_item and item is not None:
-        descr = descr_format % item if "%s" in descr_format else f"{descr_format} {item}"
-    else:
-        descr = descr_format
+    if isinstance(old_descr, str):
+        return old_descr, item
 
-    if "%s" in descr:
-        raise MKGeneralException(
-            "Found '%%s' in service description (Host: %s, Check plugin: %s, Item: %s). "
-            "Please try to rediscover the service to fix this issue."
-            % (hostname, plugin.name, item)
-        )
+    preserve_item, descr_format = old_descr(item)
+    return descr_format, item if preserve_item else None
 
-    return get_final_service_description(hostname, descr)
+
+def _format_item_with_template(template: str, item: Item):
+    """
+    >>> _format_item_with_template("Foo", None)
+    'Foo'
+    >>> _format_item_with_template("Foo %s", None)
+    'Foo <missing an item>'
+    >>> _format_item_with_template("Foo", "bar")
+    'Foo bar'
+    >>> _format_item_with_template("Foo %s", "bar")
+    'Foo bar'
+    """
+    try:
+        return template % ("<missing an item>" if item is None else item)
+    except TypeError:
+        return f"{template} {item or ''}".strip()
 
 
 def _old_active_http_check_service_description(params: Union[Dict, Tuple]) -> str:
@@ -1346,31 +1367,15 @@ def get_service_translations(hostname: HostName) -> cmk.utils.translations.Trans
     return translations_cache.setdefault(hostname, translations)
 
 
-def get_http_proxy(http_proxy: Tuple[str, str]) -> Optional[str]:
-    """Returns proxy URL to be used for HTTP requests
+def get_http_proxy(http_proxy: Tuple[str, str]) -> HTTPProxyConfig:
+    """Returns a proxy config object to be used for HTTP requests
 
-    Pass a value configured by the user using the HTTPProxyReference valuespec to this function
-    and you will get back ether a proxy URL, an empty string to enforce no proxy usage or None
-    to use the proxy configuration from the process environment.
+    Intended to receive a value configured by the user using the HTTPProxyReference valuespec.
     """
-    if not isinstance(http_proxy, tuple):
-        return None
-
-    proxy_type, value = http_proxy
-
-    if proxy_type == "environment":
-        return None
-
-    if proxy_type == "global":
-        return http_proxies.get(value, {}).get("proxy_url", None)
-
-    if proxy_type == "url":
-        return value
-
-    if proxy_type == "no_proxy":
-        return ""
-
-    return None
+    return http_proxy_config_from_user_setting(
+        http_proxy,
+        http_proxies,
+    )
 
 
 # .
@@ -1789,12 +1794,12 @@ def includes_of_plugin(check_file_path: str) -> CheckIncludes:
             return
 
         for key, val in zip(node.value.keys, node.value.values):
-            if not isinstance(key, ast.Str):
+            if not isinstance(key, ast.Constant):
                 continue
             if key.s == "includes":
                 if isinstance(val, ast.List):
                     for element in val.elts:
-                        if not isinstance(element, ast.Str):
+                        if not isinstance(element, ast.Constant):
                             raise MKGeneralException(
                                 "Includes must be a list of include file "
                                 "names, found '%s'" % type(element)
@@ -1808,7 +1813,7 @@ def includes_of_plugin(check_file_path: str) -> CheckIncludes:
     def _load_from_check_includes(node: ast.Assign) -> None:
         if isinstance(node.value, ast.List):
             for element in node.value.elts:
-                if not isinstance(element, ast.Str):
+                if not isinstance(element, ast.Constant):
                     raise MKGeneralException(
                         "Includes must be a list of include file "
                         "names, found '%s'" % type(element)
@@ -2618,9 +2623,12 @@ class HostConfig:
             ),
             bulk_walk_size_of=self._bulk_walk_size(),
             timing=self._snmp_timing(),
-            oid_range_limits=self._config_cache.host_extra_conf(
-                self.hostname, snmp_limit_oid_range
-            ),
+            oid_range_limits={
+                SectionName(name): rule
+                for name, rule in reversed(
+                    self._config_cache.host_extra_conf(self.hostname, snmp_limit_oid_range)
+                )
+            },
             snmpv3_contexts=self._config_cache.host_extra_conf(self.hostname, snmpv3_contexts),
             character_encoding=self._snmp_character_encoding(),
             is_usewalk_host=self.is_usewalk_host,
@@ -3158,9 +3166,12 @@ class HostConfig:
             ),
             bulk_walk_size_of=self._bulk_walk_size(),
             timing=self._snmp_timing(),
-            oid_range_limits=self._config_cache.host_extra_conf(
-                self.hostname, snmp_limit_oid_range
-            ),
+            oid_range_limits={
+                SectionName(name): rule
+                for name, rule in reversed(
+                    self._config_cache.host_extra_conf(self.hostname, snmp_limit_oid_range)
+                )
+            },
             snmpv3_contexts=self._config_cache.host_extra_conf(self.hostname, snmpv3_contexts),
             character_encoding=self._snmp_character_encoding(),
             is_usewalk_host=self.is_usewalk_host,
@@ -3214,9 +3225,10 @@ class HostConfig:
     ) -> ExitSpec:
         # Additional optional parameters which are not part of individual
         # or overall parameters
-        value = spec.get("restricted_address_mismatch")
-        if value is not None:
+        if (value := spec.get("restricted_address_mismatch")) is not None:
             merged_spec["restricted_address_mismatch"] = value
+        if (value := spec.get("legacy_pull_mode")) is not None:
+            merged_spec["legacy_pull_mode"] = value
         return merged_spec
 
     @property
@@ -3624,7 +3636,7 @@ class ConfigCache:
         self, hostname: HostName, description: ServiceName
     ) -> Dict[str, Any]:
         attrs = {
-            "check_interval": 1.0,  # 1 minute
+            "check_interval": SERVICE_CHECK_INTERVAL,
         }
         for key, ruleset in extra_service_conf.items():
             values = self.service_extra_conf(hostname, description, ruleset)
@@ -3810,7 +3822,9 @@ class ConfigCache:
         self._cache_match_object_host[hostname] = match_object
         return match_object
 
-    def get_autochecks_of(self, hostname: HostName) -> Sequence[cmk.base.check_utils.Service]:
+    def get_autochecks_of(
+        self, hostname: HostName
+    ) -> Sequence[cmk.base.check_utils.Service[TimespecificParameters]]:
         return self._autochecks_manager.get_autochecks_of(
             hostname,
             compute_check_parameters,

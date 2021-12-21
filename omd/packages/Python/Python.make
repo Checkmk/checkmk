@@ -4,7 +4,7 @@ include $(REPO_PATH)/defines.make
 PYTHON := Python
 PYTHON_DIR := Python-$(PYTHON_VERSION)
 # Increase this to enforce a recreation of the build cache
-PYTHON_BUILD_ID := 6
+PYTHON_BUILD_ID := 7
 
 PYTHON_UNPACK := $(BUILD_HELPER_DIR)/$(PYTHON_DIR)-unpack
 PYTHON_BUILD := $(BUILD_HELPER_DIR)/$(PYTHON_DIR)-build
@@ -65,7 +65,7 @@ $(PYTHON_CACHE_PKG_PROCESS): $(PYTHON_CACHE_PKG_PATH)
 	fi
 	$(TOUCH) $@
 
-$(PYTHON_COMPILE): $(PYTHON_UNPACK) $(OPENSSL_INTERMEDIATE_INSTALL)
+$(PYTHON_COMPILE): $(PYTHON_UNPACK) $(OPENSSL_CACHE_PKG_PROCESS)
 # The build with PGO/LTO enabled is mainly sequential, so a high build
 # parallelism doesn't really help. Therefore we use just -j2.
 #

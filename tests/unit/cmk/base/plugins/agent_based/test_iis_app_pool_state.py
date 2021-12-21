@@ -35,7 +35,7 @@ from cmk.base.plugins.agent_based.iis_app_pool_state import (
         ),
         (
             "app",
-            dict(),
+            {},
             DefaultCheckParameters,
             [
                 Result(state=State.UNKNOWN, summary="app is unknown"),
@@ -52,7 +52,7 @@ from cmk.base.plugins.agent_based.iis_app_pool_state import (
         (
             "app",
             dict(app=IisAppPoolState.Running),
-            dict(state_mapping=dict()),
+            dict(state_mapping={}),
             [
                 Result(state=State.CRIT, summary="State: Running"),
             ],
@@ -60,7 +60,7 @@ from cmk.base.plugins.agent_based.iis_app_pool_state import (
         (
             "app",
             dict(app=IisAppPoolState.Running),
-            dict(),
+            {},
             [
                 Result(state=State.CRIT, summary="State: Running"),
             ],

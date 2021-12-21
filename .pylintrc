@@ -77,8 +77,8 @@ disable=
     # probably want to use "include-naming-hint=yes" in the BASIC section.
     invalid-name,
     #---------------------------------------------------------------------------
-    # Enable these would improve readability, but currently there are quite a
-    # few places to fix.
+    # isort and pylint disagree about the order when some "normal" code is
+    # interspersed with imports.
     wrong-import-position,
     #---------------------------------------------------------------------------
     # Enabling this would be nice, but not crucial. At the moment, we have quite
@@ -116,7 +116,8 @@ disable=
     # them might be a good idea some day...
     fixme,
     #---------------------------------------------------------------------------
-    # The the warnings below will be fixed by black
+    # Black doesn't split long strings, we'll have to this by ourselves, see
+    # https://github.com/psf/black/issues/1331
     line-too-long,
     #---------------------------------------------------------------------------
     # We are light years away from enabling this...
@@ -135,56 +136,44 @@ disable=
     # https://github.com/PyCQA/pylint/issues/3162.
     no-member,
     #---------------------------------------------------------------------------
-    # This one got introduced with pylint 2.6.0
-    # TODO: Evaluate
+    # Lots of warning due to this, but we should really go through them one by
+    # one, this might drastically improve the usefulness of our backtraces.
     raise-missing-from,
     #---------------------------------------------------------------------------
-    # imports are handled by isort
+    # Only a handful of findings, this should be fixed.
     wrong-import-order,
     #---------------------------------------------------------------------------
-    # pylint 2.7.[012] has totally screwed this up... :-/
+    # pylint 2.7.[012] has totally screwed this up... :-/ Takes ages, too.
     duplicate-code,
     R0801,
     #---------------------------------------------------------------------------
-    # Emergency suppressions, must be removed SOON!
+    # werkzeug's LocalProxy uses slots, so this check doesn't really blend well
+    # with out cmk.gui.globals.
+    assigning-non-slot,
+    #---------------------------------------------------------------------------
+    # Lots of findings, but these should *really* be fixed!
     consider-using-with,
     #---------------------------------------------------------------------------
-    ## pylint 2.9.0 introduced these checker. Investigate.
-    consider-using-from-import,
-    consider-using-dict-items,
-    # pylint 2.9.0 introduced this checker which fails because of the
-    # definition in cmk/base/check_api.py. The test could not be disabled in
-    # the file for some reason and the code is OK. Last defense line: disable
-    # it globally.
-    invalid-all-format,
-    # TODO pylint 2.10.2 introduced checks. Check and remove them gradually
-    # too many occurances, requires a lot of mechanical change.
-    redundant-u-string-prefix,
-    unspecified-encoding,
-    # this provide some micro speedups if fixed
-    use-dict-literal,
-    use-list-literal,
-    # pylint 2.11 enabled checks
-    consider-using-f-string
-
-
-
-enable=
+    # Useful, but quite a few findings.
+    use-implicit-booleaness-not-comparison,
     #---------------------------------------------------------------------------
-    # The checks below are from --py3k, and they can sometimes be annoying.
-    # Nevertheless, they found quite a few bugs, so it makes sense to keep them
-    # enabled.
-    comprehension-escape,
-    dict-items-not-iterating,
-    dict-keys-not-iterating,
-    dict-values-not-iterating,
-    exception-escape,
-    exception-message-attribute,
-    filter-builtin-not-iterating,
-    isinstance-second-argument-not-valid-type,
-    map-builtin-not-iterating,
-    range-builtin-not-iterating,
-    zip-builtin-not-iterating,
+    # A stylistic thing only, many findings, but all fixes are mechanical.
+    consider-using-from-import,
+    #---------------------------------------------------------------------------
+    # A good idea in general, but each of the many findings has to be looked at:
+    # We often mutate a dictionary while iterating over it, which is :-P
+    consider-using-dict-items,
+    #---------------------------------------------------------------------------
+    # Purely mechanical & aesthetical, lots of findings.
+    redundant-u-string-prefix,
+    #---------------------------------------------------------------------------
+    # Fixing this is URGENT: There are potentially lots of encoding problems
+    # sleeping in our code when we are not explicit in open().
+    unspecified-encoding,
+    #---------------------------------------------------------------------------
+    # Tons of findings, we fix this incrementally, f-strings are much more
+    # performant than old-skool string splicing/formatting.
+    consider-using-f-string
 
 [IMPORTS]
 # This complies with PEP 8 and avoids code duplication in some cases.

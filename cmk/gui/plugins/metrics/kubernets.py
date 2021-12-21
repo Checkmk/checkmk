@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.plugins.metrics import graph_info, metric_info
+from cmk.gui.plugins.metrics.utils import graph_info, metric_info
 
 # .
 #   .--Metrics-------------------------------------------------------------.
@@ -96,6 +96,13 @@ metric_info["k8s_memory_request"] = {
     "color": "42/b",
 }
 
+
+metric_info["k8s_memory_requests"] = {
+    "title": _("Request"),
+    "unit": "bytes",
+    "color": "42/b",
+}
+
 metric_info["k8s_memory_limit"] = {
     "title": _("Limit"),
     "unit": "bytes",
@@ -125,6 +132,21 @@ metric_info["k8s_memory_usage"] = {
     "unit": "%",
     "color": "31/a",
 }
+
+
+metric_info["k8s_mem_used"] = {
+    "color": "#80ff40",
+    "title": _("Memory used"),
+    "unit": "bytes",
+}
+
+
+metric_info["k8s_mem_used_percent"] = {
+    "color": "#80ff40",
+    "title": _("Memory used %"),
+    "unit": "%",
+}
+
 
 metric_info["k8s_cpu_usage"] = {
     "title": _("CPU request"),
@@ -238,6 +260,18 @@ graph_info["k8s_resources.memory"] = {
     ],
     "optional_metrics": ["k8s_memory_capacity", "k8s_memory_allocatable", "k8s_memory_limit"],
 }
+
+
+graph_info["k8s_memory_usage"] = {
+    "title": _("Memory usage"),
+    "metrics": [
+        ("k8s_memory_requests", "line"),
+        ("k8s_memory_limit", "line"),
+        ("k8s_mem_used", "area"),
+    ],
+    "optional_metrics": ["k8s_memory_request", "k8s_memory_limit"],
+}
+
 
 graph_info["k8s_pod_container"] = {
     "title": _("Ready containers"),

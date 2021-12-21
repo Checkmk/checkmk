@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Passwords
 
-Passwords intended for authentification of certain checks can be stored in the Checkmk
+Passwords intended for authentication of certain checks can be stored in the Checkmk
 password store. You can use in a rule a password stored in the password store without knowing or
 entering the password.
 """

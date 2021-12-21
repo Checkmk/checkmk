@@ -15,8 +15,6 @@
 #include <string>
 #include <utility>
 
-using minutes_d = std::chrono::duration<double, std::ratio<60>>;
-
 namespace mk {
 #if __cplusplus > 201703L
 using days = std::chrono::days;

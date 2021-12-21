@@ -446,6 +446,7 @@ def scale_counter_reference(measure, factor, base):
     ],
 )
 def test_scale_counter(measure, factor, base):
-    assert 1e-15 > abs(
-        scale_counter(measure, factor, base) - scale_counter_reference(measure, factor, base)
+    assert (
+        abs(scale_counter(measure, factor, base) - scale_counter_reference(measure, factor, base))
+        < 1e-15
     )

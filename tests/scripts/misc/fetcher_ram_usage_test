@@ -38,18 +38,17 @@ def parse_arguments() -> argparse.Namespace:
         formatter_class=argparse.RawDescriptionHelpFormatter,
         description=textwrap.dedent(
             """\
-    To use 
-    \t1. copy fetcher_test to the $OMD_ROOT/bin 
+    To use
+    \t1. copy fetcher_test to the $OMD_ROOT/bin
     \t2. cd $OMD_ROOT/bin
     \t3. fetcher_ram_usage_test > /dev/null.
     NOTES:
     - Based on the bin/fetcher code.
-    - It is expected that host heute exists. 
+    - It is expected that host heute exists.
     - Last column shows average memory diff per 100 calls of fetcher. Normally you should have 0 here.
     """
         ),
     )
-
     return parser.parse_args()
 
 

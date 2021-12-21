@@ -35,9 +35,10 @@ from cmk.gui.page_menu import (
     PageMenuSearch,
     PageMenuTopic,
 )
-from cmk.gui.plugins.wato import (
+from cmk.gui.plugins.wato.utils import (
     ABCEventsMode,
     add_change,
+    ContactGroupSelection,
     flash,
     make_action_link,
     make_confirm_link,
@@ -357,7 +358,7 @@ class ABCNotificationsMode(ABCEventsMode):
                         title=title,
                         indent=False,
                     ):
-                        html.write_text(vs_match_conditions.value_to_text(rule))
+                        html.write_text(vs_match_conditions.value_to_html(rule))
                 else:
                     html.i(_("(no conditions)"))
 
@@ -870,16 +871,16 @@ class ModeNotifications(ABCNotificationsMode):
                     if contact.startswith("mailto:"):
                         contact = contact[7:]  # strip of fake-contact mailto:-prefix
                     table.cell(_("Recipient"), contact)
-                    table.cell(_("Plugin"), self._vs_notification_scripts().value_to_text(plugin))
+                    table.cell(_("Plugin"), self._vs_notification_scripts().value_to_html(plugin))
                     table.cell(_("Plugin parameters"), ", ".join(parameters))
                     table.cell(_("Bulking"))
                     if bulk:
                         html.write_text(_("Time horizon") + ": ")
-                        html.write_text(Age().value_to_text(bulk["interval"]))
+                        html.write_text(Age().value_to_html(bulk["interval"]))
                         html.write_text(", %s: %d" % (_("Maximum count"), bulk["count"]))
                         html.write_text(", %s " % (_("group by")))
                         html.write_text(
-                            self._vs_notification_bulkby().value_to_text(bulk["groupby"])
+                            self._vs_notification_bulkby().value_to_html(bulk["groupby"])
                         )
 
     def _vs_notification_scripts(self):
@@ -1234,7 +1235,7 @@ class ABCEditNotificationRuleMode(ABCNotificationsMode):
                 (
                     "contact_groups",
                     ListOf(
-                        cmk.gui.plugins.wato.ContactGroupSelection(),
+                        ContactGroupSelection(),
                         title=_("Members of contact groups"),
                         movable=False,
                     ),
@@ -1281,7 +1282,7 @@ class ABCEditNotificationRuleMode(ABCNotificationsMode):
                 (
                     "contact_match_groups",
                     ListOf(
-                        cmk.gui.plugins.wato.ContactGroupSelection(),
+                        ContactGroupSelection(),
                         title=_("Restrict by contact groups"),
                         help=_(
                             "Here you can <i>restrict</i> the list of contacts that has been "

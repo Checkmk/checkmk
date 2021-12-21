@@ -151,8 +151,8 @@ from cmk.gui.watolib.search import (
 )
 
 
-def _compiled_mibs_dir():
-    return cmk.utils.paths.omd_root + "/local/share/check_mk/compiled_mibs"
+def _compiled_mibs_dir() -> Path:
+    return cmk.utils.paths.omd_root / "local/share/check_mk/compiled_mibs"
 
 
 # .
@@ -1586,7 +1586,7 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
         yield PageMenuTopic(
             title=_("Setup"),
             entries=[
-                _page_menu_entry_settings(),
+                _page_menu_entry_settings(is_suggested=True),
                 _page_menu_entry_rulesets(),
                 _page_menu_entry_snmp_mibs(),
             ],
@@ -2431,7 +2431,7 @@ class ModeEventConsoleEditRulePack(ABCEventConsoleMode):
         if self._new:
             self._rule_packs = [self._rule_pack] + self._rule_packs
         else:
-            if self._type == ec.RulePackType.internal or self._type == ec.RulePackType.modified_mkp:
+            if self._type in (ec.RulePackType.internal, ec.RulePackType.modified_mkp):
                 self._rule_packs[self._edit_nr] = self._rule_pack
             else:
                 self._rule_packs[self._edit_nr].rule_pack = self._rule_pack
@@ -2969,6 +2969,8 @@ class ModeEventConsoleMIBs(ABCEventConsoleMode):
                                             [("mode", "mkeventd_upload_mibs")],
                                         )
                                     ),
+                                    is_shortcut=True,
+                                    is_suggested=True,
                                 ),
                             ],
                         ),
@@ -3042,13 +3044,12 @@ class ModeEventConsoleMIBs(ABCEventConsoleMode):
         # Also delete the compiled files
         compiled_mibs_dir = _compiled_mibs_dir()
         for f in [
-            compiled_mibs_dir + "/" + mib_name + ".py",
-            compiled_mibs_dir + "/" + mib_name + ".pyc",
-            compiled_mibs_dir + "/" + filename.rsplit(".", 1)[0].upper() + ".py",
-            compiled_mibs_dir + "/" + filename.rsplit(".", 1)[0].upper() + ".pyc",
+            compiled_mibs_dir / mib_name + ".py",
+            compiled_mibs_dir / mib_name + ".pyc",
+            compiled_mibs_dir / filename.rsplit(".", 1)[0].upper() + ".py",
+            compiled_mibs_dir / filename.rsplit(".", 1)[0].upper() + ".pyc",
         ]:
-            if os.path.exists(f):
-                os.remove(f)
+            f.unlink(missing_ok=True)
 
     def page(self):
         self._verify_ec_enabled()
@@ -3368,7 +3369,7 @@ def _page_menu_entries_related_ec(mode_name: str) -> Iterator[PageMenuEntry]:
         yield _page_menu_entry_status()
 
     if mode_name != "mkeventd_config" and user.may("mkeventd.config"):
-        yield _page_menu_entry_settings()
+        yield _page_menu_entry_settings(is_suggested=False)
 
     if mode_name != "mkeventd_mibs":
         yield _page_menu_entry_snmp_mibs()
@@ -3392,12 +3393,12 @@ def _page_menu_entry_status():
     )
 
 
-def _page_menu_entry_settings():
+def _page_menu_entry_settings(is_suggested):
     return PageMenuEntry(
         title=_("Settings"),
         icon_name="configuration",
-        is_shortcut=True,
-        is_suggested=True,
+        is_shortcut=is_suggested,
+        is_suggested=is_suggested,
         item=make_simple_link(makeuri_contextless(request, [("mode", "mkeventd_config")])),
     )
 

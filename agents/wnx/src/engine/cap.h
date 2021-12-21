@@ -68,8 +68,8 @@ enum class ProcMode { install, remove, list };
 using FileInfo = std::tuple<std::string, std::vector<char>, bool>;
 
 // Main API to install and uninstall plugins cap
-bool Process(const std::string &cap_name, ProcMode Mode,
-             std::vector<std::wstring> &FilesLeftOnDisk);
+bool Process(const std::string &cap_name, ProcMode mode,
+             std::vector<std::wstring> &files_left_on_disk);
 
 // Secondary API to decompress plugins cap
 bool ExtractAll(const std::string &cap_name, const std::filesystem::path &to);

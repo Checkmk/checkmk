@@ -31,7 +31,7 @@ currentBuild.description = '\nCleanup Checkmk docker images ['+PATTERN+'] from r
 def NODE_LIST = hostNames(BUILD_NODE)
 
 timeout(time: 12, unit: 'HOURS') {
-    node ('both') {
+    node ('linux') {
         docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
             def COMMON_IMAGE = docker.image('nexus3-cli')
             COMMON_IMAGE.pull()

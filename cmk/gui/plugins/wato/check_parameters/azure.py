@@ -4,17 +4,18 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import Optional
 from typing import Tuple as TupleType
-from typing import Union
 
 from cmk.gui.i18n import _
-from cmk.gui.plugins.wato import (
+from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithItem,
     CheckParameterRulespecWithoutItem,
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
 )
 from cmk.gui.valuespec import (
+    DEF_VALUE,
     Dictionary,
     DropdownChoice,
     Float,
@@ -364,8 +365,8 @@ rulespec_registry.register(
 
 def _azure_vms_summary_levels(
     title: str,
-    lower: Union[TupleType[None, None], TupleType[int, int]] = (None, None),
-    upper: Union[TupleType[None, None], TupleType[int, int]] = (None, None),
+    lower: Optional[TupleType[int, int]] = None,
+    upper: Optional[TupleType[int, int]] = None,
 ) -> Dictionary:
     return Dictionary(
         title=title,
@@ -375,8 +376,14 @@ def _azure_vms_summary_levels(
                 Tuple(
                     title=_("Lower levels"),
                     elements=[
-                        Integer(title=_("Warning below"), default_value=lower[0]),
-                        Integer(title=_("Critical below"), default_value=lower[1]),
+                        Integer(
+                            title=_("Warning below"),
+                            default_value=lower[0] if lower is not None else DEF_VALUE,
+                        ),
+                        Integer(
+                            title=_("Critical below"),
+                            default_value=lower[1] if lower is not None else DEF_VALUE,
+                        ),
                     ],
                 ),
             ),
@@ -385,8 +392,14 @@ def _azure_vms_summary_levels(
                 Tuple(
                     title=_("Upper levels"),
                     elements=[
-                        Integer(title=_("Warning at"), default_value=upper[0]),
-                        Integer(title=_("Critical at"), default_value=upper[1]),
+                        Integer(
+                            title=_("Warning at"),
+                            default_value=upper[0] if upper is not None else DEF_VALUE,
+                        ),
+                        Integer(
+                            title=_("Critical at"),
+                            default_value=upper[1] if upper is not None else DEF_VALUE,
+                        ),
                     ],
                 ),
             ),

@@ -23,6 +23,7 @@ import imaplib
 import logging
 import poplib
 import re
+import socket
 import sys
 import time
 from contextlib import suppress
@@ -179,14 +180,12 @@ class Mailbox:
             connection = (poplib.POP3_SSL if self._args.fetch_tls else poplib.POP3)(
                 self._args.fetch_server,
                 self._args.fetch_port,
-                timeout=self._args.connect_timeout,
             )
             verified_result(connection.user(self._args.fetch_username))
             verified_result(connection.pass_(self._args.fetch_password))
             self._connection = connection
 
         def _connect_imap() -> None:
-            # seems to not support timeout
             connection = (imaplib.IMAP4_SSL if self._args.fetch_tls else imaplib.IMAP4)(
                 self._args.fetch_server,
                 self._args.fetch_port,
@@ -197,6 +196,7 @@ class Mailbox:
 
         assert self._connection is None
         try:
+            socket.setdefaulttimeout(self._args.connect_timeout)
             (_connect_pop3 if self._args.fetch_protocol == "POP3" else _connect_imap)()
         except Exception as exc:
             raise ConnectError(
@@ -479,7 +479,6 @@ def _active_check_main_core(
         # Bug in mypy's typeshed.
         imaplib.Debug = args.verbose  # type: ignore[attr-defined]
 
-    logging.debug("args: %r", args.__dict__)
     logging.debug("use protocol for fetching: %r", args.fetch_protocol)
     try:
         return check_fn(args)

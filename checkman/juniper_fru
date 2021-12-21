@@ -9,9 +9,9 @@ description:
 
  The state of the service is given by the device itself:
 
- - present, ready, announce online, online OK
+ - ready, announce online, online: OK
 
- - diagnostic, standby: WARN
+ - present, diagnostic, standby: WARN
 
  - empty, announce offline, offline: CRIT
 

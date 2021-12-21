@@ -17,7 +17,7 @@ Due to HTTP escaping folders are represented with the tilde character (`~`) as t
 ### Host and Folder attributes
 
 Every host and folder can have "attributes" set, which determine the behavior of Checkmk. Each
-host inherits all attributes of it's folder and the folder's parent folders. So setting a SNMP
+host inherits all attributes of its folder and the folder's parent folders. So setting an SNMP
 community in a folder is equivalent to setting the same on all hosts in said folder.
 
 Some host endpoints allow one to view the "effective attributes", which is an aggregation of all
@@ -50,9 +50,6 @@ from cmk.gui.plugins.openapi.restful_objects import (
 )
 from cmk.gui.plugins.openapi.utils import problem, ProblemException
 from cmk.gui.watolib import CREFolder
-
-# TODO: Remove all hard-coded response creation in favour of a generic one
-# TODO: Implement formal description (GET endpoint) of move action
 
 PATH_FOLDER_FIELD = {
     "folder": fields.FolderField(

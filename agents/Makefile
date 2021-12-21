@@ -42,7 +42,7 @@ setversion:
 	-e 's/^__version__ = ".*/__version__ = "$(NEW_VERSION)"/' \
 	-e 's/^$$CMK_VERSION=".*/$$CMK_VERSION="$(NEW_VERSION)"/' \
 	-e 's/^$$CMK_VERSION = ".*/$$CMK_VERSION = "$(NEW_VERSION)"/' \
-	$(shell find plugins/ -maxdepth 1 -type f) ; \
+	$(shell find plugins/ -maxdepth 1 -type f ! -name \*_2.py ! -name \*.checksum) ; \
 	sed -i 's/say "Version: .*"/say "Version: $(NEW_VERSION)"/' check_mk_agent.openvms
 	sed -i 's/echo "Version: [0-9.a-z-]*"/echo "Version: $(NEW_VERSION)"/g' check_mk_agent.*
 	sed -i "s/^#define CMK_WIN_AGENT_VERSION .*/#define CMK_WIN_AGENT_VERSION \"$(NEW_VERSION)\"/" wnx/src/common/wnx_version.h

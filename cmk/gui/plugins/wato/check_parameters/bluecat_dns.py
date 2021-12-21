@@ -5,12 +5,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.plugins.wato import (
+from cmk.gui.plugins.wato.check_parameters.bluecat_ntp import bluecat_operstates
+from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithoutItem,
     rulespec_registry,
     RulespecGroupCheckParametersNetworking,
 )
-from cmk.gui.plugins.wato.check_parameters.bluecat_ntp import bluecat_operstates
 from cmk.gui.valuespec import Dictionary, ListChoice
 
 

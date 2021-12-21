@@ -19,9 +19,9 @@ def patch_json(json_module) -> Iterator[None]:
     # default json calls.
     def _default(self: json.JSONEncoder, obj: object) -> str:
         # ignore attr-defined: See hack below
-        return getattr(obj.__class__, "to_json", _default.default)(  # type: ignore[attr-defined]
-            obj
-        )
+        func = getattr(obj.__class__, "to_json", _default.default)  # type: ignore[attr-defined]
+        assert func is not None  # Hmmm...
+        return func(obj)
 
     # TODO: suppress mypy warnings for this monkey patch right now. See also:
     # https://github.com/python/mypy/issues/2087

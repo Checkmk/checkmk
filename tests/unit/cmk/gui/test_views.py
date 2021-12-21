@@ -46,10 +46,10 @@ def test_registered_painter_options():
         "num_columns",
     ]
 
-    names = cmk.gui.plugins.views.painter_option_registry.keys()
+    names = cmk.gui.plugins.views.utils.painter_option_registry.keys()
     assert sorted(expected) == sorted(names)
 
-    for cls in cmk.gui.plugins.views.painter_option_registry.values():
+    for cls in cmk.gui.plugins.views.utils.painter_option_registry.values():
         vs = cls().valuespec
         assert isinstance(vs, ValueSpec)
 
@@ -67,7 +67,7 @@ def test_registered_layouts():
         'tiled',
     ]
 
-    names = cmk.gui.plugins.views.layout_registry.keys()
+    names = cmk.gui.plugins.views.utils.layout_registry.keys()
     assert sorted(expected) == sorted(names)
 
 
@@ -114,7 +114,7 @@ def test_layout_properties():
     }
 
     for ident, spec in expected.items():
-        plugin = cmk.gui.plugins.views.layout_registry[ident]()
+        plugin = cmk.gui.plugins.views.utils.layout_registry[ident]()
         assert isinstance(plugin.title, str)
         assert spec["title"] == plugin.title
         assert spec["checkboxes"] == plugin.can_display_checkboxes
@@ -122,7 +122,7 @@ def test_layout_properties():
 
 
 def test_get_layout_choices():
-    choices = cmk.gui.plugins.views.layout_registry.get_choices()
+    choices = cmk.gui.plugins.views.utils.layout_registry.get_choices()
     assert sorted(choices) == sorted([
         ('matrix', u'Matrix'),
         ('boxed_graph', u'Balanced graph boxes'),
@@ -146,7 +146,7 @@ def test_registered_exporters():
         'python',
         'python-raw',
     ]
-    names = cmk.gui.plugins.views.exporter_registry.keys()
+    names = cmk.gui.plugins.views.utils.exporter_registry.keys()
     assert sorted(expected) == sorted(names)
 
 
@@ -284,7 +284,7 @@ def test_registered_commands():
         },
         })
 
-    names = cmk.gui.plugins.views.command_registry.keys()
+    names = cmk.gui.plugins.views.utils.command_registry.keys()
     assert sorted(expected.keys()) == sorted(names)
 
     for cmd_class in cmk.gui.plugins.views.utils.command_registry.values():
@@ -652,7 +652,7 @@ def test_registered_datasources():
         },
     }
 
-    names = cmk.gui.plugins.views.data_source_registry.keys()
+    names = cmk.gui.plugins.views.utils.data_source_registry.keys()
     assert sorted(expected.keys()) == sorted(names)
 
     for ds_class in cmk.gui.plugins.views.utils.data_source_registry.values():
@@ -2313,7 +2313,7 @@ def test_registered_sorters():
         },
     }
 
-    for sorter_class in cmk.gui.plugins.views.sorter_registry.values():
+    for sorter_class in cmk.gui.plugins.views.utils.sorter_registry.values():
         sorter = sorter_class()
         spec = expected[sorter.ident]
 
@@ -2410,7 +2410,7 @@ def test_get_needed_regular_columns(view):
     ])
 
 
-def test_get_needed_join_columns(view):
+def test_get_needed_join_columns(view, load_config):
     view_spec = copy.deepcopy(view.spec)
     view_spec["painters"].append(PainterSpec('service_description', None, None, u'CPU load'))
     view = cmk.gui.views.View(view.name, view_spec, view_spec.get("context", {}))
@@ -2702,8 +2702,8 @@ def test_registered_display_hints():
     '.networking.tunnels:*.peername',
     '.networking.tunnels:*.sourceip',
     '.networking.tunnels:*.tunnel_interface',
-    '.networking.wlan',
-    '.networking.wlan.controller',
+    '.networking.wlan.',
+    '.networking.wlan.controller.',
     '.networking.wlan.controller.accesspoints:',
     '.networking.wlan.controller.accesspoints:*.group',
     '.networking.wlan.controller.accesspoints:*.ip_addr',
@@ -2714,7 +2714,7 @@ def test_registered_display_hints():
     '.software.',
     '.software.applications.',
     '.software.applications.check_mk.',
-    '.software.applications.check_mk.agent_version',
+    '.software.applications.check_mk.cluster.',
     '.software.applications.check_mk.cluster.is_cluster',
     '.software.applications.check_mk.cluster.nodes:',
     '.software.applications.check_mk.num_hosts',
@@ -2746,6 +2746,8 @@ def test_registered_display_hints():
     '.software.applications.check_mk.sites:*.num_hosts',
     '.software.applications.check_mk.sites:*.num_services',
     '.software.applications.check_mk.sites:*.used_version',
+    '.software.applications.checkmk-agent.local_checks:',
+    '.software.applications.checkmk-agent.plugins:',
     '.software.applications.citrix.',
     '.software.applications.citrix.controller.',
     '.software.applications.citrix.controller.controller_version',
@@ -2840,6 +2842,7 @@ def test_registered_display_hints():
     '.software.applications.kubernetes.job_container:*.name',
     '.software.applications.kubernetes.job_container:*.image',
     '.software.applications.kubernetes.job_container:*.image_pull_policy',
+    '.software.applications.kubernetes.daemon_pod_containers:',
     '.software.applications.kubernetes.daemon_pod_containers:*.name',
     '.software.applications.kubernetes.daemon_pod_containers:*.image',
     '.software.applications.kubernetes.daemon_pod_containers:*.image_pull_policy',
@@ -2938,7 +2941,7 @@ def test_registered_display_hints():
     '.software.configuration.snmp_info.contact',
     '.software.configuration.snmp_info.location',
     '.software.configuration.snmp_info.name',
-    '.software.firmware',
+    '.software.firmware.',
     '.software.firmware.platform_level',
     '.software.firmware.vendor',
     '.software.firmware.version',
@@ -2967,11 +2970,11 @@ def test_registered_display_hints():
     '.software.packages:*.vendor',
     '.software.packages:*.version',]
 
-    assert sorted(expected) == sorted(cmk.gui.plugins.views.inventory_displayhints.keys())
+    assert sorted(expected) == sorted(cmk.gui.plugins.views.utils.inventory_displayhints.keys())
 
 
 def test_get_inventory_display_hint():
-    hint = cmk.gui.plugins.views.inventory_displayhints.get(".software.packages:*.summary")
+    hint = cmk.gui.plugins.views.utils.inventory_displayhints.get(".software.packages:*.summary")
     assert isinstance(hint, dict)
 
 

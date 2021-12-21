@@ -8,14 +8,28 @@
 # TODO: More feature related splitting up would be better
 
 import abc
-import time
 from itertools import chain
-from typing import Dict, Iterable, Iterator, List, Mapping, Optional, Set, Tuple, Type, Union
+from typing import (
+    Any,
+    Container,
+    Dict,
+    Iterable,
+    Iterator,
+    List,
+    Literal,
+    Mapping,
+    Optional,
+    Set,
+    Tuple,
+    Type,
+    Union,
+)
 
 from livestatus import SiteId
 
 import cmk.utils.plugin_registry
 
+import cmk.gui.query_filters as query_filters
 import cmk.gui.sites as sites
 from cmk.gui.exceptions import MKGeneralException, MKUserError
 from cmk.gui.globals import html, request, user_errors
@@ -341,7 +355,7 @@ def display_filter_radiobuttons(
     html.end_radio_group()
 
 
-class FilterTristate(Filter):
+class FilterOption(Filter):
     def __init__(
         self,
         *,
@@ -349,45 +363,34 @@ class FilterTristate(Filter):
         title: Union[str, LazyString],
         sort_index: int,
         info: str,
-        column: Optional[str],
-        deflt: int = -1,
+        query_filter: query_filters.FilterOption,
         is_show_more: bool = False,
     ):
-        self.column = column
-        self.varname = "is_" + ident
+        self.query_filter = query_filter
         super().__init__(
             ident=ident,
             title=title,
             sort_index=sort_index,
             info=info,
-            htmlvars=[self.varname],
+            htmlvars=self.query_filter.request_vars,
             link_columns=[],
             is_show_more=is_show_more,
         )
-        self.deflt = deflt
 
     def display(self, value: FilterHTTPVariables) -> None:
         display_filter_radiobuttons(
-            varname=self.varname,
-            options=[("1", _("yes")), ("0", _("no")), ("-1", _("(ignore)"))],
-            default=str(self.deflt),
+            varname=self.query_filter.request_vars[0],
+            options=self.query_filter.options,
+            default=str(self.query_filter.ignore),
             value=value,
         )
 
-    def tristate_value(self, value: FilterHTTPVariables) -> int:
-        try:
-            return int(value.get(self.varname, ""))
-        except ValueError:
-            return self.deflt
-
     def filter(self, value: FilterHTTPVariables) -> FilterHeader:
-        current = self.tristate_value(value)
-        if current == -1:  # ignore
-            return ""
-        return self.filter_code(current == 1)
+        return self.query_filter.filter(value)
 
-    def filter_code(self, positive) -> str:
-        raise NotImplementedError()
+    def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
+        """post-Livestatus filtering (e.g. for BI aggregations)"""
+        return self.query_filter.filter_table(context, rows)
 
 
 class FilterTime(Filter):
@@ -400,37 +403,23 @@ class FilterTime(Filter):
         title: Union[str, LazyString],
         sort_index: int,
         info: str,
-        column: Optional[str],
+        column: str,
         is_show_more: bool = False,
     ):
         self.column = column
-        self.ranges = [
-            (86400, _("days")),
-            (3600, _("hours")),
-            (60, _("min")),
-            (1, _("sec")),
-        ]
-        varnames = [
-            ident + "_from",
-            ident + "_from_range",
-            ident + "_until",
-            ident + "_until_range",
-        ]
+        self.query_filter = query_filters.FilterTime(ident=ident, column=column)
 
         super().__init__(
             ident=ident,
             title=title,
             sort_index=sort_index,
             info=info,
-            htmlvars=varnames,
+            htmlvars=self.query_filter.request_vars,
             link_columns=[column] if column is not None else [],
             is_show_more=is_show_more,
         )
 
     def display(self, value: FilterHTTPVariables):
-        choices: Choices = [(str(sec), title + " " + _("ago")) for sec, title in self.ranges]
-        choices += [("abs", _("Date (YYYY-MM-DD)")), ("unix", _("UNIX timestamp"))]
-
         html.open_table(class_="filtertime")
         for what, whatname in [("from", _("From")), ("until", _("Until"))]:
             varprefix = self.ident + "_" + what
@@ -440,48 +429,16 @@ class FilterTime(Filter):
             html.text_input(varprefix)
             html.close_td()
             html.open_td()
-            html.dropdown(varprefix + "_range", choices, deflt="3600")
+            html.dropdown(varprefix + "_range", query_filters.time_filter_options(), deflt="3600")
             html.close_td()
             html.close_tr()
         html.close_table()
 
     def filter(self, value: FilterHTTPVariables) -> FilterHeader:
-        fromsecs, untilsecs = self.get_time_range(value)
-        filtertext = ""
-        if fromsecs is not None:
-            filtertext += "Filter: %s >= %d\n" % (self.column, fromsecs)
-        if untilsecs is not None:
-            filtertext += "Filter: %s <= %d\n" % (self.column, untilsecs)
-        return filtertext
+        return self.query_filter.filter(value)
 
-    # Extract timerange user has selected from HTML variables
-    def get_time_range(self, value: FilterHTTPVariables):
-        return self._get_time_range_of(value, "from"), self._get_time_range_of(value, "until")
-
-    def _get_time_range_of(self, value: FilterHTTPVariables, what: str) -> Union[None, int, float]:
-        varprefix = self.ident + "_" + what
-
-        rangename = value.get(varprefix + "_range")
-        if rangename == "abs":
-            try:
-                return time.mktime(time.strptime(value[varprefix], "%Y-%m-%d"))
-            except Exception:
-                user_errors.add(
-                    MKUserError(varprefix, _("Please enter the date in the format YYYY-MM-DD."))
-                )
-                return None
-
-        if rangename == "unix":
-            return int(value[varprefix])
-        if rangename is None:
-            return None
-
-        try:
-            count = int(value[varprefix])
-            secs = count * int(rangename)
-            return int(time.time()) - secs
-        except Exception:
-            return None
+    def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
+        return self.query_filter.filter_table(context, rows)
 
 
 def filter_cre_choices():
@@ -615,3 +572,48 @@ def get_livestatus_filter_headers(
                 yield header
         except MKUserError as e:
             user_errors.add(e)
+
+
+def collect_filters(info_keys: Container[str]) -> Iterable[Filter]:
+    for filter_obj in filter_registry.values():
+        if filter_obj.info in info_keys and filter_obj.available():
+            yield filter_obj
+
+
+def livestatus_query_bare_string(
+    table: Literal["host", "service"],
+    context: VisualContext,
+    columns: Iterable[str],
+    cache: Optional[Literal["reload"]] = None,
+) -> str:
+    """Return for the service table filtered by context the given columns.
+    Optional cache reload. Return with site info in"""
+    infos = {"host": ["host"], "service": ["host", "service"]}.get(table, [])
+    filters = collect_filters(infos)
+    filterheaders = "".join(get_livestatus_filter_headers(context, filters))
+
+    # optimization: avoid query with unconstrained result
+    if not filterheaders and not get_only_sites_from_context(context):
+        return ""
+    query = ["GET %ss" % table, "Columns: %s" % " ".join(columns), filterheaders]
+    if cache:
+        query.insert(1, f"Cache: {cache}")
+
+    return "\n".join(query)
+
+
+def livestatus_query_bare(
+    table: Literal["host", "service"],
+    context: VisualContext,
+    columns: List[str],
+    cache: Optional[Literal["reload"]] = None,
+) -> List[Dict[str, Any]]:
+    """Return for the service table filtered by context the given columns.
+    Optional cache reload. Return with site info in"""
+    if query := livestatus_query_bare_string(table, context, columns, cache):
+        selected_sites = get_only_sites_from_context(context)
+        res_columns = ["site"] + columns
+        with sites.only_sites(selected_sites), sites.prepend_site():
+            return [dict(zip(res_columns, row)) for row in sites.live().query(query)]
+
+    return []

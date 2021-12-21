@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# type: ignore[list-item,import,assignment,misc,operator]  # TODO: see which are needed in this file
+
 # pylint: disable=consider-using-in
 
 # pylint: disable=no-else-continue
@@ -13,6 +13,17 @@
 
 import re
 import time
+from typing import (
+    Any,
+    Iterable,
+    Mapping,
+    MutableMapping,
+    MutableSequence,
+    Optional,
+    Sequence,
+    Tuple,
+    Union,
+)
 
 from cmk.base.check_api import (
     check_levels,
@@ -27,7 +38,7 @@ from cmk.base.check_api import (
 
 diskstat_inventory_mode = "rule"  # "summary", "single", "legacy"
 
-diskstat_default_levels = {
+diskstat_default_levels: Mapping[str, Any] = {
     #    "read" :    (10, 20),   # MB/sec
     #    "write" :   (20, 40),   # MB/sec
     #    "average" : 15,         # min
@@ -36,7 +47,7 @@ diskstat_default_levels = {
 }
 
 # Rule for controlling diskstat inventory more fine grained
-diskstat_inventory = []
+diskstat_inventory: Any = []
 
 # Example
 # diskstat_inventory = [
@@ -53,10 +64,12 @@ diskstat_diskless_pattern = re.compile("x?[shv]d[a-z]*[0-9]+")
 # IT. INSTEAD, MODIFY THE MIGRATED VERSION.
 # ==================================================================================================
 # ==================================================================================================
-def inventory_diskstat_generic(parsed):
+def inventory_diskstat_generic(
+    parsed: Sequence[Sequence[Any]],
+) -> Optional[Sequence[Tuple[str, Optional[str]]]]:
     # Skip over on empty data
     if not parsed:
-        return
+        return None
 
     # New style: use rule based configuration, defaulting to summary mode
     if diskstat_inventory_mode == "rule":
@@ -73,7 +86,7 @@ def inventory_diskstat_generic(parsed):
     else:
         modes = ["legacy"]
 
-    inventory = []
+    inventory: MutableSequence[Tuple[str, Optional[str]]] = []
     if "summary" in modes:
         inventory.append(("SUMMARY", "diskstat_default_levels"))
 
@@ -99,14 +112,20 @@ def inventory_diskstat_generic(parsed):
     return inventory
 
 
-def check_diskstat_line(this_time, item, params, line, mode="sectors"):
+def check_diskstat_line(
+    this_time: float,
+    item: str,
+    params: Mapping[str, Any],
+    line: Sequence[Any],
+    mode: str = "sectors",
+) -> Tuple[int, str, MutableSequence[Any],]:
     average_range = params.get("average")
     if average_range == 0:
         average_range = None  # disable averaging when 0 is set
 
-    perfdata = []
-    infos = []
-    status = 0
+    perfdata: MutableSequence[Any] = []
+    infos: MutableSequence[str] = []
+    status: int = 0
     node = line[0]
     if node is not None and node != "":
         infos.append("Node %s" % node)
@@ -124,7 +143,7 @@ def check_diskstat_line(this_time, item, params, line, mode="sectors"):
         else:
             warn, crit = None, None
 
-        per_sec = get_rate(countername, this_time, int(ctr))
+        per_sec = get_rate(countername, this_time, int(ctr))  # type:ignore
         if mode == "sectors":
             # compute IO rate in bytes/sec
             bytes_per_sec = per_sec * 512
@@ -163,8 +182,8 @@ def check_diskstat_line(this_time, item, params, line, mode="sectors"):
 
     # Process IOs when available
     ios_per_sec = None
-    if len(line) >= 6 and line[4] >= 0 and line[5] > 0:
-        reads, writes = map(int, line[4:6])
+    if len(line) >= 6 and line[4] >= 0 and line[5] > 0:  # type:ignore
+        reads, writes = map(int, line[4:6])  # type:ignore
         if "read_ios" in params:
             warn, crit = params["read_ios"]
             if reads >= crit:
@@ -193,8 +212,8 @@ def check_diskstat_line(this_time, item, params, line, mode="sectors"):
             perfdata.append(("ios", ios_per_sec))
 
     # Do Latency computation if this information is available:
-    if len(line) >= 7 and line[6] >= 0:
-        timems = int(line[6])
+    if len(line) >= 7 and line[6] >= 0:  # type:ignore
+        timems = int(line[6])  # type:ignore
         timems_per_sec = get_rate(countername + ".time", this_time, timems)
         if not ios_per_sec:
             latency = 0.0
@@ -226,7 +245,7 @@ def check_diskstat_line(this_time, item, params, line, mode="sectors"):
             else:
                 warn, crit = None, None
 
-            qlx = get_rate(countername, this_time, int(ctr))
+            qlx = get_rate(countername, this_time, int(ctr))  # type:ignore
             ql = qlx / 10000000.0
             infos.append(what.title() + " Queue: %.2f" % ql)
 
@@ -245,7 +264,21 @@ def check_diskstat_line(this_time, item, params, line, mode="sectors"):
     return (status, ", ".join(infos), perfdata)
 
 
-def check_diskstat_generic(item, params, this_time, info, mode="sectors"):
+def check_diskstat_generic(
+    item: str,
+    params: Mapping[str, Any],
+    this_time: float,
+    info: Sequence[Sequence[Any]],
+    mode: str = "sectors",
+) -> Union[
+    Tuple[int, str],
+    Tuple[int, str, Sequence[Tuple[str, str]]],
+    Tuple[
+        int,
+        str,
+        MutableSequence[Any],
+    ],
+]:
     # legacy version if item is "read" or "write"
     if item in ["read", "write"]:
         return _check_diskstat_old(item, params, this_time, info)
@@ -255,7 +288,7 @@ def check_diskstat_generic(item, params, this_time, info, mode="sectors"):
     # a disk appears more than once. This can for example happen in
     # Windows clusters - even if they are no Checkmk clusters.
 
-    summed_up = [0] * 13
+    summed_up: Sequence[int] = [0] * 13
     matching = 0
 
     has_multiple_nodes = len(set(line[0] for line in info)) > 1
@@ -272,13 +305,15 @@ def check_diskstat_generic(item, params, this_time, info, mode="sectors"):
 
     if matching == 0:
         return 3, "No matching disk found"
-    return check_diskstat_line(this_time, item, params, [None, ""] + summed_up, mode)
+    return check_diskstat_line(this_time, item, params, [None, ""] + summed_up, mode)  # type:ignore
 
 
 # This is the legacy version of diskstat as used in <= 1.1.10.
 # We keep it here for a while in order to be compatible with
 # old installations.
-def _check_diskstat_old(item, params, this_time, info):
+def _check_diskstat_old(
+    item: str, params: Any, this_time: float, info: Sequence[Sequence[Any]]
+) -> Union[Tuple[int, str], Tuple[int, str, Sequence[Tuple[str, str]]]]:
     # sum up over all devices
     if item == "read":
         index = 2  # sectors read
@@ -322,7 +357,9 @@ def _check_diskstat_old(item, params, this_time, info):
 # IT. INSTEAD, MODIFY THE MIGRATED VERSION.
 # ==================================================================================================
 # ==================================================================================================
-def diskstat_select_disk(disks, item):
+def diskstat_select_disk(
+    disks: Mapping[str, MutableMapping[str, Any]], item: str
+) -> Optional[MutableMapping[str, Any]]:
 
     # In summary mode we add up the throughput values, but
     # we average the other values for disks that have a throughput
@@ -333,7 +370,7 @@ def diskstat_select_disk(disks, item):
     # of the paths with the traffice of the device itself....
 
     if item == "SUMMARY":
-        summarized = {
+        summarized: MutableMapping[str, Any] = {
             "node": None,
             # We do not set these settings explictly because some
             # devices may not provide all of them.
@@ -413,7 +450,9 @@ def diskstat_select_disk(disks, item):
 # IT. INSTEAD, MODIFY THE MIGRATED VERSION.
 # ==================================================================================================
 # ==================================================================================================
-def check_diskstat_dict(item, params, disks):
+def check_diskstat_dict(
+    item: str, params: Mapping[str, Any], disks: Mapping[str, MutableMapping[str, Any]]
+) -> Iterable[Any]:
     # Take care of previously discovered services
     if item in ("read", "write"):
         yield 3, "Sorry, the new version of this check does not support one service for read and one for write anymore."
@@ -441,6 +480,7 @@ def check_diskstat_dict(item, params, disks):
             else:
                 avg_disk[key] = value
         disk = avg_disk
+
         prefix = "%s average: " % get_age_human_readable(averaging)
 
     # Utilization

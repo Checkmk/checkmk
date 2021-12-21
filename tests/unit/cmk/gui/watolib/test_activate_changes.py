@@ -43,6 +43,7 @@ def _expected_replication_paths():
         ),
         ReplicationPath("dir", "mkps", "var/check_mk/packages", []),
         ReplicationPath("dir", "local", "local", []),
+        ReplicationPath("file", "omd", "etc/omd/sitespecific.mk", []),
     ]
 
     if not cmk_version.is_raw_edition():

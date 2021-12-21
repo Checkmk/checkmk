@@ -48,15 +48,15 @@ import cmk.gui.bi as bi
 from cmk.gui.globals import config, html, request, response, user
 from cmk.gui.hooks import request_memoize
 from cmk.gui.i18n import _
-from cmk.gui.plugins.views import (
+from cmk.gui.plugins.views.graphs import cmk_graph_url
+from cmk.gui.plugins.views.icons.utils import Icon, icon_and_action_registry
+from cmk.gui.plugins.views.utils import (
     display_options,
     is_stale,
     paint_age,
     render_cache_info,
     url_to_visual,
 )
-from cmk.gui.plugins.views.graphs import cmk_graph_url
-from cmk.gui.plugins.views.icons import Icon, icon_and_action_registry
 from cmk.gui.type_defs import VisualLinkSpec
 from cmk.gui.utils.mobile import is_mobile
 from cmk.gui.utils.popups import MethodAjax

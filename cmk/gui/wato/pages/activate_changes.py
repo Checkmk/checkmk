@@ -18,7 +18,6 @@ import cmk.utils.render as render
 
 import cmk.gui.forms as forms
 import cmk.gui.watolib as watolib
-import cmk.gui.watolib.activate_changes
 import cmk.gui.watolib.changes
 import cmk.gui.watolib.read_only as read_only
 import cmk.gui.watolib.snapshots
@@ -39,12 +38,14 @@ from cmk.gui.page_menu import (
 from cmk.gui.pages import AjaxPage, page_registry
 from cmk.gui.plugins.wato.utils import mode_registry, sort_sites
 from cmk.gui.plugins.wato.utils.base_modes import WatoMode
+from cmk.gui.plugins.watolib.utils import DomainRequests
 from cmk.gui.sites import activation_sites
 from cmk.gui.table import init_rowselect, table_element
 from cmk.gui.type_defs import ActionResult
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.urls import makeactionuri, makeuri_contextless
 from cmk.gui.valuespec import Checkbox, Dictionary, DictionaryEntry, TextAreaUnicode
+from cmk.gui.watolib import activate_changes
 from cmk.gui.watolib.changes import ObjectRef, ObjectRefType
 from cmk.gui.watolib.search import build_index_background
 
@@ -201,8 +202,8 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
         )
 
         self._extract_snapshot(file_to_restore)
-        cmk.gui.watolib.activate_changes.execute_activate_changes(
-            [d.ident() for d in watolib.ABCConfigDomain.enabled_domains()]
+        activate_changes.execute_activate_changes(
+            [d.get_domain_request([]) for d in watolib.ABCConfigDomain.enabled_domains()]
         )
 
         for site_id in activation_sites():
@@ -480,10 +481,7 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
 
                 if not last_state:
                     html.write_text(_("Has never been activated"))
-                elif (
-                    need_action
-                    and last_state["_state"] == cmk.gui.watolib.activate_changes.STATE_SUCCESS
-                ):
+                elif need_action and last_state["_state"] == activate_changes.STATE_SUCCESS:
                     html.write_text(_("Activation needed"))
                 else:
                     html.javascript(
@@ -640,7 +638,9 @@ class ModeAjaxStartActivation(AjaxPage):
         manager = watolib.ActivateChangesManager()
         manager.load()
         # ? type of api_request is unclear
-        affected_sites_request = ensure_str(api_request.get("sites", "").strip())
+        affected_sites_request = ensure_str(  # pylint: disable= six-ensure-str-bin-call
+            api_request.get("sites", "").strip()
+        )
         if not affected_sites_request:
             affected_sites = manager.dirty_and_active_activation_sites()
         else:
@@ -665,7 +665,7 @@ class ModeAjaxStartActivation(AjaxPage):
 
         activation_id = manager.start(
             sites=affected_sites,
-            activate_until=ensure_str(activate_until),
+            activate_until=ensure_str(activate_until),  # pylint: disable= six-ensure-str-bin-call
             comment=comment,
             activate_foreign=activate_foreign,
         )
@@ -695,7 +695,7 @@ class ModeAjaxActivationState(AjaxPage):
 
 class ActivateChangesRequest(NamedTuple):
     site_id: str
-    domains: List[str]
+    domains: DomainRequests
 
 
 @watolib.automation_command_registry.register
@@ -705,16 +705,20 @@ class AutomationActivateChanges(watolib.AutomationCommand):
 
     def get_request(self):
         site_id = request.get_ascii_input_mandatory("site_id")
-        cmk.gui.watolib.activate_changes.verify_remote_site_config(site_id)
+        activate_changes.verify_remote_site_config(site_id)
 
         try:
-            domains = ast.literal_eval(request.get_ascii_input_mandatory("domains"))
+            serialized_domain_requests = ast.literal_eval(
+                request.get_ascii_input_mandatory("domains")
+            )
         except SyntaxError:
             raise watolib.MKAutomationException(
                 _("Invalid request: %r") % request.get_ascii_input_mandatory("domains")
             )
 
-        return ActivateChangesRequest(site_id=site_id, domains=domains)
+        return ActivateChangesRequest(site_id=site_id, domains=serialized_domain_requests)
 
     def execute(self, api_request):
-        return cmk.gui.watolib.activate_changes.execute_activate_changes(api_request.domains)
+        return activate_changes.execute_activate_changes(
+            activate_changes.parse_serialized_domain_requests(api_request.domains)
+        )

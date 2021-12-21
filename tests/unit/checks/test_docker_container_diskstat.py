@@ -6,13 +6,19 @@
 
 # yapf: disable
 import os
-from typing import Callable, Tuple
+from typing import Tuple
 
 import pytest
 
 from tests.testlib import Check
 
+from cmk.utils.type_defs import CheckPluginName, SectionName
+
 from cmk.base.check_api import MKCounterWrapped
+from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
+from cmk.base.plugins.agent_based.utils.df import FILESYSTEM_DEFAULT_LEVELS
+
+from tests.unit.conftest import FixRegister  # pylint: disable=ungrouped-imports
 
 from .checktestlib import assertDiscoveryResultsEqual, DiscoveryResult, mock_item_state
 
@@ -73,6 +79,49 @@ INFO_AGENT_INSIDE_CONTAINER = [
     ["[names]"],
     ["sda", "8:0"],
     ["sr0", "11:0"],
+]
+
+
+PLUGIN_OUTPUT_CGROUP_V2_0_SEC = [
+    [
+        "@docker_version_info",
+        '{"PluginVersion": "0.1", "DockerPyVersion": "4.1.0", "ApiVersion": "1.41"}',
+    ],
+    [
+        '{"io_service_bytes_recursive": [{"major": 259, "minor": 0, "op": "read", "value": 1389854720'
+        '}, {"major": 259, "minor": 0, "op": "write", "value": 0}, {"major": 253, "minor": 0, "op": "'
+        'read", "value": 1389854720}, {"major": 253, "minor": 0, "op": "write", "value": 5438197760},'
+        '{"major": 253, "minor": 1, "op": "read", "value": 1389854720}, {"major": 253, "minor": 1, "o'
+        'p": "write", "value": 5438197760}], "io_serviced_recursive": null, "io_queue_recursive": nul'
+        'l, "io_service_time_recursive": null, "io_wait_time_recursive": null, "io_merged_recursive":'
+        'null, "io_time_recursive": null, "sectors_recursive": null, "time": 1637748634.5162437, "nam'
+        'es": {"7:1": "loop1", "253:1": "dm-1", "259:0": "nvme0n1", "7:17": "loop17", "7:8": "loop8",'
+        '"7:15": "loop15", "7:6": "loop6", "7:13": "loop13", "7:4": "loop4", "7:11": "loop11", "7:2":'
+        '"loop2", "253:2": "dm-2", "7:0": "loop0", "253:0": "dm-0", "7:9": "loop9", "7:16": "loop16",'
+        '"7:7": "loop7", "8:0": "sda", "7:14": "loop14", "7:5": "loop5", "7:12": "loop12", "7:3": "lo'
+        'op3", "7:10": "loop10"}}'
+    ],
+]
+
+PLUGIN_OUTPUT_CGROUP_V2_272_SEC = [
+    [
+        "@docker_version_info",
+        '{"PluginVersion": "0.1", "DockerPyVersion": "4.1.0", "ApiVersion": "1.41"}',
+    ],
+    [
+        '{"io_service_bytes_recursive": [{"major": 259, "minor": 0, "op": "read", "value": 1583906816'
+        '}, {"major": 259, "minor": 0, "op": "write", "value": 0}, {"major": 253, "minor": 0, "op": "'
+        'read", "value": 1583906816}, {"major": 253, "minor": 0, "op": "write", "value": 8336506880},'
+        '{"major": 253, "minor": 1, "op": "read", "value": 1583906816}, {"major": 253, "minor": 1, "o'
+        'p": "write", "value": 8336506880}], "io_serviced_recursive": null, "io_queue_recursive": nul'
+        'l, "io_service_time_recursive": null, "io_wait_time_recursive": null, "io_merged_recursive":'
+        'null, "io_time_recursive": null, "sectors_recursive": null, "time": 1637748906.878384, "name'
+        's": {"7:1": "loop1", "253:1": "dm-1", "259:0": "nvme0n1", "7:17": "loop17", "7:8": "loop8", '
+        '"7:15": "loop15", "7:6": "loop6", "7:13": "loop13", "7:4": "loop4", "7:11": "loop11", "7:2":'
+        '"loop2", "253:2": "dm-2", "7:0": "loop0", "253:0": "dm-0", "7:9": "loop9", "7:16": "loop16",'
+        '"7:7": "loop7", "8:0": "sda", "7:14": "loop14", "7:5": "loop5", "7:12": "loop12", "7:3": "lo'
+        'op3", "7:10": "loop10"}}'
+    ],
 ]
 
 
@@ -204,3 +253,43 @@ def test_parse_docker_container_diskstat():
             'name': 'dm-2'
         }),
     }
+
+
+def test_docker_container_diskstat_plugin_cgroupv2(fix_register: FixRegister) -> None:
+    parse_function = fix_register.agent_sections[SectionName("docker_container_diskstat")].parse_function
+    plugin = fix_register.check_plugins[CheckPluginName("docker_container_diskstat")]
+
+    # discovery function
+    assert (
+        list(
+            plugin.discovery_function(
+                parse_function(PLUGIN_OUTPUT_CGROUP_V2_0_SEC)
+            )
+        )
+        == [Service(item='SUMMARY')]
+    )
+
+    # check functions
+    with pytest.raises(MKCounterWrapped):
+        # no rate metrics yet
+        _ = list(
+            plugin.check_function(
+                item="SUMMARY",
+                params=FILESYSTEM_DEFAULT_LEVELS,
+                section=parse_function(PLUGIN_OUTPUT_CGROUP_V2_0_SEC),
+            )
+        )
+    result = list(
+        plugin.check_function(
+            item="SUMMARY",
+            params=FILESYSTEM_DEFAULT_LEVELS,
+            section=parse_function(PLUGIN_OUTPUT_CGROUP_V2_272_SEC),
+        )
+    )
+
+    assert result == [
+        Result(state=State.OK, summary='Read: 2.04 MB/s'),
+        Metric('disk_read_throughput', 2137434.6930468315),
+        Result(state=State.OK, summary='Write: 20.30 MB/s'),
+        Metric('disk_write_throughput', 21282760.63304166),
+    ]

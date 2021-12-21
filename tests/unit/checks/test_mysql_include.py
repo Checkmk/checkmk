@@ -4,11 +4,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import os
 
 import pytest
 
-from cmk.base.check_legacy_includes.mysql import *
+from cmk.base.check_legacy_includes.mysql import mysql_parse_per_item
 
 pytestmark = pytest.mark.checks
 

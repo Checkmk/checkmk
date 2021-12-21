@@ -24,7 +24,7 @@ import cmk.gui.sites as sites
 from cmk.gui.exceptions import MKGeneralException
 from cmk.gui.globals import config
 from cmk.gui.hooks import request_memoize
-from cmk.gui.i18n import _
+from cmk.gui.i18n import _, _l
 from cmk.gui.permissions import permission_section_registry, PermissionSection
 from cmk.gui.valuespec import DropdownChoiceEntry, DropdownChoices
 
@@ -86,33 +86,33 @@ syslog_facilities: DropdownChoices = [
 ]
 
 phase_names = {
-    "counting": _("counting"),
-    "delayed": _("delayed"),
-    "open": _("open"),
-    "ack": _("acknowledged"),
-    "closed": _("closed"),
+    "counting": _l("counting"),
+    "delayed": _l("delayed"),
+    "open": _l("open"),
+    "ack": _l("acknowledged"),
+    "closed": _l("closed"),
 }
 
 action_whats = {
-    "ORPHANED": _("Event deleted in counting state because rule was deleted."),
-    "NOCOUNT": _("Event deleted in counting state because rule does not count anymore"),
-    "DELAYOVER": _(
+    "ORPHANED": _l("Event deleted in counting state because rule was deleted."),
+    "NOCOUNT": _l("Event deleted in counting state because rule does not count anymore"),
+    "DELAYOVER": _l(
         "Event opened because the delay time has elapsed before cancelling event arrived."
     ),
-    "EXPIRED": _("Event deleted because its livetime expired"),
-    "COUNTREACHED": _("Event deleted because required count had been reached"),
-    "COUNTFAILED": _("Event created by required count was not reached in time"),
-    "UPDATE": _("Event information updated by user"),
-    "NEW": _("New event created"),
-    "DELETE": _("Event deleted manually by user"),
-    "EMAIL": _("Email sent"),
-    "SCRIPT": _("Script executed"),
-    "CANCELLED": _("The event was cancelled because the corresponding OK message was received"),
-    "ARCHIVED": _(
+    "EXPIRED": _l("Event deleted because its livetime expired"),
+    "COUNTREACHED": _l("Event deleted because required count had been reached"),
+    "COUNTFAILED": _l("Event created by required count was not reached in time"),
+    "UPDATE": _l("Event information updated by user"),
+    "NEW": _l("New event created"),
+    "DELETE": _l("Event deleted manually by user"),
+    "EMAIL": _l("Email sent"),
+    "SCRIPT": _l("Script executed"),
+    "CANCELLED": _l("The event was cancelled because the corresponding OK message was received"),
+    "ARCHIVED": _l(
         "Event was archived because no rule matched and archiving is activated in global settings."
     ),
-    "AUTODELETE": _("Event was deleted automatically"),
-    "CHANGESTATE": _("State of event changed by user"),
+    "AUTODELETE": _l("Event was deleted automatically"),
+    "CHANGESTATE": _l("State of event changed by user"),
 }
 
 

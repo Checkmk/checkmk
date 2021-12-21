@@ -8,6 +8,7 @@ import pytest
 
 from tests.testlib.base import Scenario
 
+from cmk.utils.check_utils import ActiveCheckResult
 from cmk.utils.type_defs import HostName, result, SourceType
 
 from cmk.core_helpers.ipmi import IPMISummarizer
@@ -36,7 +37,9 @@ def test_attribute_defaults(mode, monkeypatch):
     assert source.ipaddress == ipaddress
     assert source.description == "Management board - IPMI"
     assert source.source_type is SourceType.MANAGEMENT
-    assert source.summarize(result.OK(AgentHostSections()), mode=mode) == (0, "Version: unknown")
+    assert source.summarize(result.OK(AgentHostSections()), mode=mode) == [
+        ActiveCheckResult(0, "Version: unknown")
+    ]
     assert source.id == "mgmt_ipmi"
 
 

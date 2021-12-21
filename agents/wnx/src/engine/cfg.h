@@ -6,6 +6,7 @@
 #pragma once
 
 #include <functional>
+#include <optional>
 #include <string>
 #include <string_view>
 
@@ -770,10 +771,6 @@ private:
     std::filesystem::path logfile_dir_;
     std::string logfile_as_string_;
     std::wstring logfile_as_wide_;
-#if defined(GTEST_INCLUDE_GTEST_GTEST_H_)
-    friend class AgentConfig;
-    FRIEND_TEST(AgentConfig, GlobalTest);
-#endif
 };  // namespace cma::cfg
 
 struct WinPerf : public Group {
@@ -904,23 +901,15 @@ class PluginInfo {
 public:
     PluginInfo() {}
 
-    // Async:
-    PluginInfo(int the_timeout, int age, int retry)
-        : async_(true)
+    PluginInfo(int the_timeout, std::optional<int> age, int retry)
+        : async_(age.has_value())
         , timeout_(the_timeout)
-        , cache_age_(age)
+        , cache_age_(age.has_value() ? *age : 0)
         , retry_(retry)
         , defined_(true) {
         // validation
     }
 
-    // Sync:
-    PluginInfo(int the_timeout, int retry)
-        : async_(false)
-        , timeout_(the_timeout)
-        , cache_age_(0)
-        , retry_(retry)
-        , defined_(true) {}
     bool async() const noexcept { return async_; }
     int timeout() const noexcept { return timeout_; }
     int cacheAge() const noexcept { return cache_age_; }
@@ -936,18 +925,7 @@ public:
     std::string group() const noexcept { return group_; }
 
 protected:
-    // used only during testing
-    void debugInit(bool async_value, int timeout_value, int cache_age,
-                   int retry) {
-        async_ = async_value;
-        timeout_ = timeout_value;
-        cache_age_ = cache_age;
-        retry_ = retry;
-        defined_ = true;
-    }
-
     bool defined_ = false;
-
     bool async_ = false;                   // from the config
     int timeout_ = kDefaultPluginTimeout;  // from the config, #TODO chrono
     int cache_age_ = 0;                    // from the config, #TODO chrono
@@ -955,11 +933,6 @@ protected:
 
     std::string user_;   // from the config
     std::string group_;  // from the config
-
-#if defined(GTEST_INCLUDE_GTEST_GTEST_H_)
-    friend class PluginTest;
-    FRIEND_TEST(PluginTest, PluginInfoCheck);
-#endif
 };
 
 template <typename T>
@@ -980,48 +953,23 @@ void ApplyValueIfScalar(const YAML::Node& entry, T& var,
 struct Plugins : public Group {
 public:
     // describes how should certain modules executed
-    struct ExeUnit : public cma::cfg::PluginInfo {
+    struct ExeUnit : public PluginInfo {
         ExeUnit() = default;
 
-        // deprecated
-        // Sync
-        ExeUnit(std::string_view pattern, int timeout, int retry, bool run)
-            : PluginInfo(timeout, retry)  //
-            , pattern_(pattern)           //
-            , run_(run) {}
-
-        // deprecated
-        // Async
-        ExeUnit(std::string_view pattern, int the_timeout, int age, int retry,
-                bool run_mode)
+        ExeUnit(std::string_view pattern, int the_timeout,
+                std::optional<int> age, int retry, bool run_mode)
             : PluginInfo(the_timeout, age, retry)  //
             , pattern_(pattern)                    //
             , run_(run_mode) {
             validateAndFix();
         }
 
-        // only for testing
+        // normally only for testing/simulation
         ExeUnit(std::string_view pattern, const std::string& entry)
             : pattern_(pattern)  //
         {
             source_text_ = entry;
             assign(YAML::Load(entry));
-        }
-
-        // Only For Testing Automation with Initializer Lists
-        ExeUnit(std::string_view pattern, bool async_mode, int the_timeout,
-                int age, int retry, bool run_mode)
-            : pattern_(pattern)  //
-            , run_(run_mode) {
-            debugInit(async_mode, the_timeout, age, retry);
-            // validation
-            if (!async_ && cache_age_ != 0) {
-                XLOG::d(
-                    "Plugin Entry {} has invalid config async: {} and cache_age: {}. Setting as async.",
-                    pattern_, async_, cache_age_);
-                async_ = true;
-            }
-            validateAndFix();
         }
 
         auto pattern() const noexcept { return pattern_; }

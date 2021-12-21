@@ -13,6 +13,12 @@ def agent_datadog_arguments(params, hostname, ipaddress):
         params["instance"]["api_host"],
     ]
 
+    if proxy_setting := params.get("proxy"):
+        args += [
+            "--proxy",
+            get_http_proxy(proxy_setting).serialize(),
+        ]
+
     sections = []
 
     if (monitors_config := params.get("monitors")) is not None:
@@ -33,6 +39,8 @@ def agent_datadog_arguments(params, hostname, ipaddress):
     if (events_config := params.get("events")) is not None:
         sections.append("events")
         args += [
+            "--event_max_age",
+            str(events_config["max_age"]),
             "--event_tags",
             *events_config.get(
                 "tags",

@@ -64,6 +64,8 @@ CmkEndpointName = Literal[
     "cmk/create_service",
     "cmk/create_cluster",
     "cmk/download",
+    "cmk/download_by_hash",
+    "cmk/download_by_host",
     "cmk/list",
     "cmk/move",
     "cmk/permalink",
@@ -95,7 +97,8 @@ CmkEndpointName = Literal[
     "cmk/service.move-undecided",
     "cmk/service.move-ignored",
     "cmk/service.bulk-acknowledge",
-]  # yapf: disable
+    "cmk/link_uuid",
+]
 
 RestfulEndpointName = Literal[
     "describedby",  # sic

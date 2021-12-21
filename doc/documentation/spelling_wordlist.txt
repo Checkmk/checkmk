@@ -5,6 +5,7 @@ backends
 backend
 cmk
 Livestatus
+Liveproxyd
 microcore
 Nagios
 parsers
@@ -13,3 +14,13 @@ summarizer
 tmpfs
 todo
 Vlissides
+ansible
+ramdisk
+apache
+crontab
+omd
+Makefile
+Makefiles
+Systemd
+preforking
+keepalive

@@ -181,6 +181,22 @@ inline void CheckYaml(YAML::Node table, const CheckYamlVector& vec) {
 constexpr std::string_view install_cab_to_test = "install_test.cab";
 constexpr std::string_view cab_to_test = "uncab_test.cab";
 
+/// \b creates temporary folder in temp and delete it on desctruction
+class TempFolder {
+public:
+    explicit TempFolder(std::string_view folder_name)
+        : TempFolder(wtools::ConvertToUTF16(folder_name)) {}
+    explicit TempFolder(std::wstring_view folder_name);
+    TempFolder(const TempFolder&) = delete;
+    TempFolder& operator=(const TempFolder&) = delete;
+    ~TempFolder();
+
+    std::filesystem::path path() const { return folder_name_; }
+
+private:
+    std::filesystem::path folder_name_;
+};
+
 std::filesystem::path MakeTempFolderInTempPath(std::wstring_view folder_name);
 std::wstring GenerateRandomFileName() noexcept;
 

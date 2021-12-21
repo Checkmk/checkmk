@@ -6,7 +6,17 @@
 """Provide methods to get an snmp table with or without caching
 """
 from pathlib import Path
-from typing import Callable, Iterable, Iterator, List, MutableMapping, Optional, Set, Tuple
+from typing import (
+    Callable,
+    Iterable,
+    Iterator,
+    List,
+    MutableMapping,
+    Optional,
+    Sequence,
+    Set,
+    Tuple,
+)
 
 import cmk.utils.debug
 import cmk.utils.store as store
@@ -144,7 +154,7 @@ def get_snmp_table(
     tree: BackendSNMPTree,
     walk_cache: MutableMapping[str, Tuple[bool, SNMPRowInfo]],
     backend: SNMPBackend,
-) -> SNMPTable:
+) -> Sequence[SNMPTable]:
 
     index_column = -1
     index_format: Optional[SpecialColumn] = None
@@ -221,7 +231,9 @@ def _make_index_rows(
     return index_rows
 
 
-def _make_table(columns: ResultColumnsUnsanitized, snmp_config: SNMPHostConfig) -> SNMPTable:
+def _make_table(
+    columns: ResultColumnsUnsanitized, snmp_config: SNMPHostConfig
+) -> Sequence[SNMPTable]:
     # Here we have to deal with a nasty problem: Some brain-dead devices
     # omit entries in some sub OIDs. This happens e.g. for CISCO 3650
     # in the interfaces MIB with 64 bit counters. So we need to look at
@@ -297,9 +309,7 @@ def _perform_snmpwalk(
     for context_name in backend.config.snmpv3_contexts_of(section_name):
         rows = backend.walk(
             oid=fetchoid,
-            # revert back to legacy "possilbly-empty-string"-Type
-            # TODO: pass Optional[SectionName] along!
-            check_plugin_name=str(section_name) if section_name else "",
+            section_name=section_name,
             table_base_oid=base_oid,
             context_name=context_name,
         )
@@ -400,7 +410,7 @@ def _are_ascending_oids(oid_list: List[OID]) -> bool:
     return True
 
 
-def _construct_snmp_table_of_rows(columns: ResultColumnsDecoded) -> SNMPTable:
+def _construct_snmp_table_of_rows(columns: ResultColumnsDecoded) -> Sequence[SNMPTable]:
     if not columns:
         return []
 

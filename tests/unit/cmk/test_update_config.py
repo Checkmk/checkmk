@@ -9,7 +9,7 @@ import argparse
 import io
 import sys
 from pathlib import Path
-from typing import Any
+from typing import Iterator
 
 import pytest
 from pytest_mock import MockerFixture
@@ -27,9 +27,14 @@ from cmk.gui.watolib.rulesets import Rule, Ruleset, RulesetCollection
 
 import cmk.update_config as update_config
 
+# This GUI specific fixture is also needed in this context
+from tests.unit.cmk.gui.conftest import (  # noqa: F401 # pylint: disable=unused-import,ungrouped-imports
+    load_plugins,
+)
+
 
 @pytest.fixture()
-def request_context():
+def request_context() -> Iterator[None]:
     with application_and_request_context():
         yield
 

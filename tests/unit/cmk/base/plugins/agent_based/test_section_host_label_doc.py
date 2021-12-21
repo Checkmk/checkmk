@@ -13,6 +13,8 @@ import itertools
 from typing import Final, List, Optional, Sequence, Set
 
 ALL_DOCUMENTED_BUILTIN_HOST_LABELS: Final = {
+    "cmk/container_image",
+    "cmk/container_name",
     "cmk/device_type",
     "cmk/docker_image",
     "cmk/docker_image_name",
@@ -21,6 +23,8 @@ ALL_DOCUMENTED_BUILTIN_HOST_LABELS: Final = {
     "cmk/docker_object:node",
     "cmk/kubernetes_object:endpoint",
     "cmk/kubernetes:yes",
+    "cmk/kubernetes/deployment",
+    "cmk/kubernetes/namespace",
     "cmk/os_family",
     "cmk/vsphere_object",
 }

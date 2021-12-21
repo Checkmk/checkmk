@@ -16,7 +16,7 @@ from typing import Any, Dict, Iterator, List, Union
 import cmk.utils.paths
 import cmk.utils.store as store
 import cmk.utils.werks
-from cmk.utils.version import __version__
+from cmk.utils.version import __version__, edition_title, Version
 
 import cmk.gui.pages
 import cmk.gui.utils as utils
@@ -40,7 +40,6 @@ from cmk.gui.page_menu import (
     PageMenuSidePopup,
     PageMenuTopic,
 )
-from cmk.gui.page_state import PageState
 from cmk.gui.table import table_element
 from cmk.gui.utils.escaping import escape_html, escape_html_permissive
 from cmk.gui.utils.flashed_messages import flash, get_flashed_messages
@@ -53,25 +52,10 @@ acknowledgement_path = cmk.utils.paths.var_dir + "/acknowledged_werks.mk"
 g_werks: Dict[int, Dict[str, Any]] = {}
 
 
-def _release_switch(major: bool) -> PageState:
-    patch_link = html.render_a(
-        _("Patch release"),
-        href=makeuri(request, [], remove_prefix=""),
-        class_="active" if not major else None,
-    )
-    major_link = html.render_a(
-        _("Major release"),
-        href=makeuri(request, [("major", 1)]),
-        class_="active" if major else None,
-    )
-    content = html.render_span(patch_link + major_link, id_="release_version_switch")
-    return PageState(text=content)
-
-
 @cmk.gui.pages.page_registry.register_page("version")
 class ModeReleaseNotesPage(cmk.gui.pages.Page):
     def _title(self) -> str:
-        return _("Welcome to Checkmk %s") % __version__
+        return _("Release Notes - %s %s") % (edition_title(), __version__)
 
     def page(self) -> cmk.gui.pages.PageResult:
         if request.get_integer_input_mandatory("major", 0):
@@ -83,7 +67,6 @@ class ModeReleaseNotesPage(cmk.gui.pages.Page):
         html.header(
             self._title(),
             breadcrumb=_release_notes_breadcrumb(),
-            page_state=_release_switch(major=True),
         )
 
         html.open_div(id_="release_title")
@@ -107,9 +90,8 @@ class ModeReleaseNotesPage(cmk.gui.pages.Page):
         html.close_div()
 
         html.open_div(id_="release_footer")
-        html.span(_("© 2020 tribe29 GmbH. All Rights Reserved."))
-        html.a(_("License aggreement"), href="https://checkmk.com/legal.html", target="_blank")
-        html.a(_("Imprint"), href="https://checkmk.com/impressum.html", target="_blank")
+        html.span(_("© %s tribe29 GmbH. All Rights Reserved.") % time.strftime("%Y"))
+        html.a(_("License agreement"), href="https://checkmk.com/legal.html", target="_blank")
         html.close_div()
 
     def _patch_page(self) -> None:
@@ -122,7 +104,6 @@ class ModeReleaseNotesPage(cmk.gui.pages.Page):
             self._title(),
             breadcrumb,
             _release_notes_page_menu(breadcrumb, werk_table_options),
-            page_state=_release_switch(major=False),
         )
 
         for message in get_flashed_messages():
@@ -165,14 +146,7 @@ def handle_acknowledgement():
 
 
 def _release_notes_breadcrumb() -> Breadcrumb:
-    breadcrumb = make_main_menu_breadcrumb(mega_menu_registry.menu_setup())
-
-    breadcrumb.append(
-        BreadcrumbItem(
-            title=_("Maintenance"),
-            url=None,
-        )
-    )
+    breadcrumb = make_main_menu_breadcrumb(mega_menu_registry["help_links"])
 
     breadcrumb.append(
         BreadcrumbItem(
@@ -512,7 +486,7 @@ def _werk_table_option_entries():
                     TextInput(label=_("to:"), size=12),
                 ],
             ),
-            ("", ""),
+            (Version(__version__).version_base, ""),
         ),
         (
             "grouping",
@@ -536,7 +510,7 @@ def _werk_table_option_entries():
                 unit=_("groups"),
                 minvalue=1,
             ),
-            20,
+            50,
         ),
     ]
 

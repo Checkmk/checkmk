@@ -1189,7 +1189,7 @@ class Targets(BackupEntityCollection):
 
                 target_class = target.type_class()
                 vs_target = target_class(target.type_params()).valuespec()
-                table.cell(_("Destination"), vs_target.value_to_text(target.type_params()))
+                table.cell(_("Destination"), vs_target.value_to_html(target.type_params()))
 
     def validate_target(self, value, varprefix):
         target = self.get(value)

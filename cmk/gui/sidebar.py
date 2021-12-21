@@ -13,13 +13,10 @@ from enum import Enum
 from typing import Any, Dict, List, Optional, Tuple, Type, TYPE_CHECKING, Union
 
 import cmk.utils.paths
-import cmk.utils.version as cmk_version
 
 import cmk.gui.i18n
 import cmk.gui.pages
 import cmk.gui.pagetypes as pagetypes
-import cmk.gui.plugins.sidebar
-import cmk.gui.plugins.sidebar.search
 import cmk.gui.sites as sites
 import cmk.gui.utils as utils
 from cmk.gui.breadcrumb import Breadcrumb, make_simple_page_breadcrumb
@@ -38,12 +35,6 @@ from cmk.gui.werks import may_acknowledge
 if TYPE_CHECKING:
     from cmk.gui.utils.html import HTML
 
-if not cmk_version.is_raw_edition():
-    import cmk.gui.cee.plugins.sidebar  # pylint: disable=no-name-in-module
-
-if cmk_version.is_managed_edition():
-    import cmk.gui.cme.plugins.sidebar  # pylint: disable=no-name-in-module
-
 # Helper functions to be used by snapins
 from cmk.gui.plugins.sidebar.main_menu import MainMenuRenderer
 
@@ -58,6 +49,7 @@ from cmk.gui.plugins.sidebar.utils import (  # noqa: F401 # pylint: disable=unus
     iconlink,
     link,
     render_link,
+    SidebarSnapin,
     simplelink,
     snapin_registry,
     snapin_site_choice,
@@ -71,8 +63,47 @@ sidebar_snapins: Dict[str, Dict] = {}
 
 def load_plugins() -> None:
     """Plugin initialization hook (Called by cmk.gui.modules.call_load_plugins_hooks())"""
+    _register_pre_21_plugin_api()
     utils.load_web_plugins("sidebar", globals())
     transform_old_dict_based_snapins()
+
+
+def _register_pre_21_plugin_api() -> None:
+    """Register pre 2.1 "plugin API"
+
+    This was never an official API, but the names were used by builtin and also 3rd party plugins.
+
+    Our builtin plugin have been changed to directly import from the .utils module. We add these old
+    names to remain compatible with 3rd party plugins for now.
+
+    In the moment we define an official plugin API, we can drop this and require all plugins to
+    switch to the new API. Until then let's not bother the users with it.
+    """
+    # Needs to be a local import to not influence the regular plugin loading order
+    import cmk.gui.plugins.sidebar as api_module
+    import cmk.gui.plugins.sidebar.utils as plugin_utils
+
+    for name in (
+        "begin_footnote_links",
+        "bulletlink",
+        "CustomizableSidebarSnapin",
+        "end_footnote_links",
+        "footnotelinks",
+        "heading",
+        "iconlink",
+        "link",
+        "make_topic_menu",
+        "PageHandlers",
+        "render_link",
+        "show_topic_menu",
+        "SidebarSnapin",
+        "simplelink",
+        "snapin_registry",
+        "snapin_site_choice",
+        "snapin_width",
+        "write_snapin_exception",
+    ):
+        api_module.__dict__[name] = plugin_utils.__dict__[name]
 
 
 # Pre Checkmk 1.5 the snapins were declared with dictionaries like this:
@@ -91,7 +122,7 @@ def transform_old_dict_based_snapins() -> None:
     for snapin_id, snapin in sidebar_snapins.items():
 
         @snapin_registry.register
-        class LegacySnapin(cmk.gui.plugins.sidebar.SidebarSnapin):
+        class LegacySnapin(SidebarSnapin):
             _type_name = snapin_id
             _spec = snapin
 
@@ -264,7 +295,7 @@ class UserSidebarSnapin:
 
     def __init__(
         self,
-        snapin_type: Type[cmk.gui.plugins.sidebar.SidebarSnapin],
+        snapin_type: Type[SidebarSnapin],
         visibility: SnapinVisibility = SnapinVisibility.OPEN,
     ) -> None:
         super().__init__()
@@ -512,7 +543,7 @@ class SidebarRenderer:
         html.close_div()
         return refresh_url
 
-    def _render_snapin_styles(self, snapin_instance: cmk.gui.plugins.sidebar.SidebarSnapin) -> None:
+    def _render_snapin_styles(self, snapin_instance: SidebarSnapin) -> None:
         styles = snapin_instance.styles()
         if styles:
             html.open_style()

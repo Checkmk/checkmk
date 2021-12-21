@@ -5,7 +5,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import abc
-import os
 from typing import Dict, Iterator, List, Optional, Tuple, Type
 
 import cmk.utils.paths
@@ -29,7 +28,13 @@ from cmk.gui.page_menu import (
     PageMenuSearch,
     PageMenuTopic,
 )
-from cmk.gui.plugins.wato import make_confirm_link, mode_registry, mode_url, redirect, WatoMode
+from cmk.gui.plugins.wato.utils import (
+    make_confirm_link,
+    mode_registry,
+    mode_url,
+    redirect,
+    WatoMode,
+)
 from cmk.gui.table import Table, table_element
 from cmk.gui.type_defs import ActionResult, PermissionName, UserId
 from cmk.gui.utils.urls import makeactionuri
@@ -574,8 +579,8 @@ class ModeEditContactgroup(ABCModeEditGroup):
         # for each map. When no maps can be found skip this problem silently.
         # This only works in OMD environments.
         maps = []
-        nagvis_maps_path = cmk.utils.paths.omd_root + "/etc/nagvis/maps"
-        for f in os.listdir(nagvis_maps_path):
-            if f[0] != "." and f.endswith(".cfg"):
-                maps.append((f[:-4], f[:-4]))
+        nagvis_maps_path = cmk.utils.paths.omd_root / "etc/nagvis/maps"
+        for f in nagvis_maps_path.iterdir():
+            if f.name[0] != "." and f.name.endswith(".cfg"):
+                maps.append((f.name[:-4], f.name[:-4]))
         return sorted(maps)

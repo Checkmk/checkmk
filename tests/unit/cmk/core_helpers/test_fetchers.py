@@ -167,7 +167,7 @@ class TestDefaultFileCache_and_SNMPFileCache:
         if isinstance(file_cache, DefaultAgentFileCache):
             return AgentRawData(b"<<<check_mk>>>\nagent raw data")
         assert isinstance(file_cache, SNMPFileCache)
-        table: SNMPTable = []
+        table: Sequence[SNMPTable] = []
         return {SectionName("X"): table}
 
     def test_write_and_read(self, file_cache, raw_data):
@@ -219,7 +219,7 @@ class TestIPMIFetcher:
             max_age=MaxAge.none(),
             disabled=True,
             use_outdated=True,
-            simulation=True,
+            simulation=False,
         )
 
     @pytest.fixture
@@ -481,7 +481,7 @@ class ABCTestSNMPFetcher(ABC):
                 is_snmpv2or3_without_bulkwalk_host=False,
                 bulk_walk_size_of=0,
                 timing={},
-                oid_range_limits=[],
+                oid_range_limits={},
                 snmpv3_contexts=[],
                 character_encoding=None,
                 is_usewalk_host=False,
@@ -508,7 +508,7 @@ class ABCTestSNMPFetcher(ABC):
                 is_snmpv2or3_without_bulkwalk_host=False,
                 bulk_walk_size_of=0,
                 timing={},
-                oid_range_limits=[],
+                oid_range_limits={},
                 snmpv3_contexts=[],
                 character_encoding=None,
                 is_usewalk_host=False,
@@ -537,7 +537,7 @@ class ABCTestSNMPFetcher(ABC):
                 is_snmpv2or3_without_bulkwalk_host=False,
                 bulk_walk_size_of=0,
                 timing={},
-                oid_range_limits=[],
+                oid_range_limits={},
                 snmpv3_contexts=[],
                 character_encoding=None,
                 is_usewalk_host=False,
@@ -817,6 +817,23 @@ class TestPushAgentFetcher:
         assert other.use_only_cache == fetcher.use_only_cache
 
 
+class _MockSock:
+    def __init__(self, data: bytes) -> None:
+        self.data = data
+        self._used = 0
+
+    def recv(self, count: int, *_flags: int) -> bytes:
+        use = self.data[self._used : self._used + count]
+        self._used += len(use)
+        return use
+
+    def __enter__(self, *_args) -> "_MockSock":
+        return self
+
+    def __exit__(self, *_args) -> None:
+        pass
+
+
 class TestTCPFetcher:
     @pytest.fixture
     def file_cache(self) -> DefaultAgentFileCache:
@@ -835,8 +852,9 @@ class TestTCPFetcher:
             file_cache,
             family=socket.AF_INET,
             address=("1.2.3.4", 6556),
+            host_name=HostName("irrelevant_for_this_test"),
             timeout=0.1,
-            encryption_settings={"encryption": "settings"},
+            encryption_settings={"use_regular": "allow"},
             use_only_cache=False,
         )
 
@@ -859,28 +877,100 @@ class TestTCPFetcher:
             file_cache,
             family=socket.AF_INET,
             address=("1.2.3.4", 0),
+            host_name=HostName("irrelevant_for_this_test"),
             timeout=0.0,
             encryption_settings=settings,
             use_only_cache=False,
         )
         assert fetcher._decrypt(TransportProtocol(output[:2]), AgentRawData(output[2:])) == output
 
-    def test_decrypt_plaintext_with_enforce_raises_MKFetcherError(
+    def test_validate_protocol_plaintext_with_enforce_raises(
         self, file_cache: DefaultAgentFileCache
     ) -> None:
         settings = {"use_regular": "enforce"}
-        output = b"<<<section:sep(0)>>>\nbody\n"
         fetcher = TCPFetcher(
             file_cache,
             family=socket.AF_INET,
             address=("1.2.3.4", 0),
+            host_name=HostName("irrelevant_for_this_test"),
             timeout=0.0,
             encryption_settings=settings,
             use_only_cache=False,
         )
 
         with pytest.raises(MKFetcherError):
-            fetcher._decrypt(TransportProtocol(output[:2]), AgentRawData(output[2:]))
+            fetcher._validate_protocol(TransportProtocol.PLAIN)
+
+    def test_validate_protocol_tls_allways_ok(self, file_cache: DefaultAgentFileCache) -> None:
+        for setting in ("tls", "enforce", "enable", "disable"):
+            TCPFetcher(
+                file_cache,
+                family=socket.AF_INET,
+                address=("1.2.3.4", 0),
+                host_name=HostName("irrelevant_for_this_test"),
+                timeout=0.0,
+                encryption_settings={"use_regular": setting},
+                use_only_cache=False,
+            )._validate_protocol(TransportProtocol.TLS)
+
+    def test_validate_protocol_encryption_with_disabled_raises(
+        self, file_cache: DefaultAgentFileCache
+    ) -> None:
+        settings = {"use_regular": "disable"}
+        fetcher = TCPFetcher(
+            file_cache,
+            family=socket.AF_INET,
+            address=("1.2.3.4", 0),
+            host_name=HostName("irrelevant_for_this_test"),
+            timeout=0.0,
+            encryption_settings=settings,
+            use_only_cache=False,
+        )
+        with pytest.raises(MKFetcherError):
+            fetcher._validate_protocol(TransportProtocol.PBKDF2)
+
+    def test_validate_protocol_tls_required(self, file_cache: DefaultAgentFileCache) -> None:
+        settings = {"use_regular": "tls"}
+        fetcher = TCPFetcher(
+            file_cache,
+            family=socket.AF_INET,
+            address=("1.2.3.4", 0),
+            host_name=HostName("irrelevant_for_this_test"),
+            timeout=0.0,
+            encryption_settings=settings,
+            use_only_cache=False,
+        )
+        for p in TransportProtocol:
+            if p is TransportProtocol.TLS:
+                continue
+            with pytest.raises(MKFetcherError, match="TLS"):
+                fetcher._validate_protocol(p)
+
+    def test_get_agent_data_without_tls(
+        self, monkeypatch: MonkeyPatch, fetcher: TCPFetcher
+    ) -> None:
+        mock_sock = _MockSock(b"<<<section:sep(0)>>>\nbody\n")
+        monkeypatch.setattr(fetcher, "_opt_socket", mock_sock)
+
+        agent_data, protocol = fetcher._get_agent_data()
+        assert agent_data == mock_sock.data[2:]
+        assert protocol == TransportProtocol.PLAIN
+
+    def test_get_agent_data_with_tls(self, monkeypatch: MonkeyPatch, fetcher: TCPFetcher) -> None:
+        mock_sock = _MockSock(b"16<<<section:sep(0)>>>\nbody\n")
+        monkeypatch.setattr(fetcher, "_opt_socket", mock_sock)
+        monkeypatch.setattr(fetcher, "_wrap_tls", lambda: mock_sock)
+
+        agent_data, protocol = fetcher._get_agent_data()
+        assert agent_data == mock_sock.data[4:]
+        assert protocol == TransportProtocol.PLAIN
+
+    def test_detect_transport_protocol(self, fetcher: TCPFetcher) -> None:
+        assert fetcher._detect_transport_protocol(b"02") == TransportProtocol.SHA256
+
+    def test_detect_transport_protocol_error(self, fetcher: TCPFetcher) -> None:
+        with pytest.raises(MKFetcherError, match="Unknown transport protocol: b'abc'"):
+            fetcher._detect_transport_protocol(b"abc")
 
 
 class TestFetcherCaching:
@@ -903,6 +993,7 @@ class TestFetcherCaching:
             family=socket.AF_INET,
             address=("1.2.3.4", 0),
             timeout=0.0,
+            host_name=HostName("irrelevant_for_this_test"),
             encryption_settings={},
             use_only_cache=False,
         )

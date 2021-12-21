@@ -9,4 +9,7 @@ CARGO_PROJECTS=$(find ${REPO_DIR} -path "*/.cargo/*" -prune -o -name Cargo.toml 
 
 for project in ${CARGO_PROJECTS}; do
     find ${project}/src -type f -name *.rs
+    find ${project}/tests -type f -name *.rs
+    find ${project} -type f -name Cargo.toml
+    find ${project} -type f -name Cargo.lock
 done

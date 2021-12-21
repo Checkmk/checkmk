@@ -267,7 +267,7 @@ modules:
     quick_reinstall: no                   # use %temp% as temporary storage for modules when Windows agent is updated
 
     table:
-        - name: 'python-3.8'              # this is name of the zip file and folder where  zip is installed to
+        - name: 'python-3'              # this is name of the zip file and folder where  zip is installed to
           exts: ['.checkmk.py', '.py' ]   # list of extensions to be used automatically
           exec: '.venv\Scripts\python.exe {}'   # command line, exe is relative to folder modules
     

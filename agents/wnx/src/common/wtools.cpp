@@ -1784,35 +1784,33 @@ HMODULE LoadWindowsLibrary(const std::wstring& dll_path) {
 
 /// Look into the registry in order to find out, which event logs are available
 std::vector<std::string> EnumerateAllRegistryKeys(const char* reg_path) {
-    // Open Key for enumerating
     HKEY key = nullptr;
-    DWORD r = ::RegOpenKeyExA(HKEY_LOCAL_MACHINE, reg_path, 0,
-                              KEY_ENUMERATE_SUB_KEYS, &key);  // NOLINT
+    auto r =
+        ::RegOpenKeyExW(HKEY_LOCAL_MACHINE, ConvertToUTF16(reg_path).c_str(), 0,
+                        KEY_ENUMERATE_SUB_KEYS, &key);  // NOLINT
     if (r != ERROR_SUCCESS) {
         XLOG::l(" Cannot open registry key '{}' error [{}]", reg_path,
-                GetLastError());
+                ::GetLastError());
         return {};
     }
-    ON_OUT_OF_SCOPE(RegCloseKey(key));
+    ON_OUT_OF_SCOPE(::RegCloseKey(key));
 
     std::vector<std::string> entries;
-
-    // Enumerate all sub keys
     constexpr int buf_len = 1024;
     for (DWORD i = 0; r == ERROR_SUCCESS || r == ERROR_MORE_DATA; ++i) {
-        char key_name[buf_len];
+        wchar_t key_name[buf_len];
         DWORD len = buf_len;
-        r = ::RegEnumKeyExA(key, i, key_name, &len, nullptr, nullptr, nullptr,
+        r = ::RegEnumKeyExW(key, i, key_name, &len, nullptr, nullptr, nullptr,
                             nullptr);
         if (r == ERROR_NO_MORE_ITEMS) {
             break;
         }
 
         if (r != ERROR_SUCCESS) {
-            XLOG::l("Failed to enum '{}' error [{}]", key_name, r);
+            XLOG::l("Failed to enum '{}' error [{}]", ToUtf8(key_name), r);
             break;
         }
-        entries.emplace_back(key_name);
+        entries.emplace_back(ToUtf8(key_name));
     };
     return entries;
 }
@@ -1832,9 +1830,8 @@ uint32_t GetRegistryValue(std::wstring_view path, std::wstring_view value_name,
             return buffer;
         }
     }
-    // failure here
-    XLOG::t.t(XLOG_FLINE + "Absent {}\\{} query [{}]", ToUtf8(path),
-              ToUtf8(value_name), ret);
+    XLOG::t(XLOG_FLINE + "Absent {}\\{} query [{}]", ToUtf8(path),
+            ToUtf8(value_name), ret);
     return dflt;
 }
 

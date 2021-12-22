@@ -283,7 +283,7 @@ def complete_raw_context(raw_context: EventContext, with_dump: bool) -> None:
         raw_context["WHAT"] = "SERVICE" if raw_context.get("SERVICEDESC") else "HOST"
 
         raw_context.setdefault("MONITORING_HOST", socket.gethostname())
-        raw_context.setdefault("OMD_ROOT", cmk.utils.paths.omd_root)
+        raw_context.setdefault("OMD_ROOT", str(cmk.utils.paths.omd_root))
         raw_context.setdefault("OMD_SITE", omd_site())
 
         # The Checkmk Micro Core sends the MICROTIME and no other time stamps. We add

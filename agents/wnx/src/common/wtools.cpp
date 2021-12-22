@@ -1695,10 +1695,11 @@ std::vector<std::string> EnumerateAllRegistryKeys(const char* reg_path) {
         }
 
         if (r != ERROR_SUCCESS) {
-            XLOG::l("Failed to enum '{}' error [{}]", ConvertToUtf8(key_name), r);
+            XLOG::l("Failed to enum '{}' error [{}]", ConvertToUTF8(key_name),
+                    r);
             break;
         }
-        entries.emplace_back(ConvertToUtf8(key_name));
+        entries.emplace_back(ConvertToUTF8(key_name));
     };
     return entries;
 }

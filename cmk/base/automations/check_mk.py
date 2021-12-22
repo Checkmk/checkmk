@@ -1025,9 +1025,9 @@ class AutomationRestart(Automation):
 
     def _time_of_last_core_restart(self) -> float:
         if config.monitoring_core == "cmc":
-            pidfile_path = omd_root / "/tmp/run/cmc.pid"
+            pidfile_path = omd_root / "tmp/run/cmc.pid"
         else:
-            pidfile_path = omd_root / "/tmp/lock/nagios.lock"
+            pidfile_path = omd_root / "tmp/lock/nagios.lock"
 
         try:
             return pidfile_path.stat().st_mtime

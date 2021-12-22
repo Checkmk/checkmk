@@ -41,7 +41,7 @@ def load_user_scripts(what):
 
     scripts = _load_user_scripts_from(not_dir)
     try:
-        local_dir = f"{cmk.utils.paths.omd_root}/local/share/check_mk/{what}"
+        local_dir = str(cmk.utils.paths.omd_root / "local/share/check_mk" / what)
         scripts.update(_load_user_scripts_from(local_dir))
     except Exception:
         pass

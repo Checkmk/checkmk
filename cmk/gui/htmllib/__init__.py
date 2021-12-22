@@ -1098,7 +1098,7 @@ class html(ABCHTMLGenerator):
     # c) load the minified javascript when not in debug mode
     def javascript_filename_for_browser(self, jsname: str) -> Optional[str]:
         filename_for_browser = None
-        rel_path = "/share/check_mk/web/htdocs/js"
+        rel_path = "share/check_mk/web/htdocs/js"
         if config.debug:
             min_parts = ["", "_min"]
         else:
@@ -1115,7 +1115,7 @@ class html(ABCHTMLGenerator):
         return filename_for_browser
 
     def _css_filename_for_browser(self, css: str) -> Optional[str]:
-        rel_path = f"/share/check_mk/web/htdocs/{css}.css"
+        rel_path = f"share/check_mk/web/htdocs/{css}.css"
         if (cmk.utils.paths.omd_root / rel_path).exists() or (
             cmk.utils.paths.omd_root / "local" / rel_path
         ).exists():

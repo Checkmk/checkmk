@@ -441,17 +441,6 @@ class FilterTime(Filter):
         return self.query_filter.filter_table(context, rows)
 
 
-def filter_cre_choices():
-    return sorted(
-        [
-            (sitename, get_site_config(sitename)["alias"])
-            for sitename, state in sites.states().items()
-            if state["state"] == "online"
-        ],
-        key=lambda a: a[1].lower(),
-    )
-
-
 def filter_cre_heading_info(value: FilterHTTPVariables) -> Optional[str]:
     current_value = value.get("site")
     return get_site_config(current_value)["alias"] if current_value else None

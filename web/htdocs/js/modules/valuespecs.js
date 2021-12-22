@@ -778,7 +778,7 @@ function select2_vs_autocomplete(container, css_class, params) {
     let field_element =
         ["hostname", "service", "metric", "graph"].find(el => css_class.includes(el)) || "item";
     $(container)
-        .find("." + css_class)
+        .find("select." + css_class)
         .each((i, elem) => {
             $(elem)
                 .select2({
@@ -858,6 +858,7 @@ function autocompleter_with_host_service_hints(css_class, container) {
 }
 
 export function initialize_autocompleters(container) {
+    single_autocompleter("sites", container);
     single_autocompleter("monitored_hostname", container);
     single_autocompleter("config_hostname", container);
     single_autocompleter("check_cmd", container);

@@ -12,7 +12,10 @@ from typing import Callable, List, Literal, Optional, Tuple, Union
 
 import livestatus
 
+import cmk.utils.version as cmk_version
+
 import cmk.gui.inventory as inventory
+import cmk.gui.sites as sites
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.globals import config, user, user_errors
 from cmk.gui.i18n import _
@@ -603,3 +606,25 @@ def discovery_state_options() -> List[Tuple[str, str]]:
 def discovery_state_filter_table(ident: str, context: VisualContext, rows: Rows) -> Rows:
     filter_options = context.get(ident, {})
     return [row for row in rows if filter_options.get("discovery_state_" + row["discovery_state"])]
+
+
+def cre_sites_options() -> Options:
+
+    return sorted(
+        [
+            (sitename, sites.get_site_config(sitename)["alias"])
+            for sitename, state in sites.states().items()
+            if state["state"] == "online"
+        ],
+        key=lambda a: a[1].lower(),
+    )
+
+
+def sites_options() -> Options:
+    if cmk_version.is_managed_edition():
+        from cmk.gui.cme.plugins.visuals.managed import (  # pylint: disable=no-name-in-module
+            filter_cme_choices,
+        )
+
+        return filter_cme_choices()
+    return cre_sites_options()

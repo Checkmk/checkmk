@@ -29,6 +29,7 @@ from cmk.gui.plugins.visuals.utils import (
     livestatus_query_bare,
     livestatus_query_bare_string,
 )
+from cmk.gui.query_filters import sites_options
 from cmk.gui.type_defs import Choices
 from cmk.gui.valuespec import autocompleter_registry
 
@@ -77,6 +78,23 @@ def config_hostname_autocompleter(value: str, params: Dict) -> Choices:
         match_list.insert(0, (value, value))  # User is allowed to enter anything they want
 
     return match_list
+
+
+@autocompleter_registry.register_expression("sites")
+def sites_autocompleter(value: str, params: Dict) -> Choices:
+    """Return the matching list of dropdown choices
+    Called by the webservice with the current input field value and the completions_params to get the list of choices"""
+
+    choices: Choices = sorted(
+        (v for v in sites_options() if value.lower() in v[1].lower()),
+        key=lambda a: a[1].lower(),
+    )
+
+    # This part should not exists as the optional(not enforce) would better be not having the filter at all
+    if not params.get("strict"):
+        empty_choice: Choices = [("", "")]
+        choices = empty_choice + choices
+    return choices
 
 
 @autocompleter_registry.register_expression("allgroups")

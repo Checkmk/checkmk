@@ -37,7 +37,6 @@ from cmk.gui.valuespec import DualListChoice, Labels
 
 if cmk_version.is_managed_edition():
     from cmk.gui.cme.plugins.visuals.managed import (  # pylint: disable=no-name-in-module
-        filter_cme_choices,
         filter_cme_heading_info,
     )
 
@@ -45,7 +44,6 @@ import cmk.gui.query_filters as query_filters
 from cmk.gui.plugins.visuals.utils import (
     display_filter_radiobuttons,
     Filter,
-    filter_cre_choices,
     filter_cre_heading_info,
     filter_registry,
     FilterOption,
@@ -1199,32 +1197,37 @@ class SiteFilter(Filter):
     def __init__(
         self,
         *,
-        ident: str,
         title: Union[str, LazyString],
         sort_index: int,
-        enforce: bool,
+        query_filter: query_filters.Filter,
         description: Union[None, str, LazyString] = None,
-        htmlvar: str = "site",
         is_show_more: bool = False,
     ) -> None:
+        self.query_filter = query_filter
+
         super().__init__(
-            ident=ident,
+            ident=self.query_filter.ident,
             title=title,
             sort_index=sort_index,
             info="host",
-            htmlvars=[htmlvar],
+            htmlvars=self.query_filter.request_vars,
             link_columns=[],
             description=description,
             is_show_more=is_show_more,
         )
-        self.enforce = enforce
-
-    @staticmethod
-    def _options() -> List[Tuple[str, str]]:
-        return filter_cme_choices() if cmk_version.is_managed_edition() else filter_cre_choices()
 
     def display(self, value: FilterHTTPVariables) -> None:
-        html.dropdown("site", ([] if self.enforce else [("", "")]) + self._options())
+        current_value = value.get(self.query_filter.request_vars[0], "")
+        choices = [(current_value, current_value)] if current_value else []
+
+        html.dropdown(
+            self.query_filter.request_vars[0],
+            choices,
+            current_value,
+            style="width: 250px;",
+            class_=["ajax-vals", "sites"],
+            data_strict="True" if self.query_filter.ident == "site" else "False",
+        )
 
     def heading_info(self, value: FilterHTTPVariables) -> Optional[str]:
         if cmk_version.is_managed_edition():
@@ -1237,21 +1240,22 @@ class SiteFilter(Filter):
 
 filter_registry.register(
     SiteFilter(
-        ident="siteopt",
         title=_l("Site"),
         sort_index=500,
+        query_filter=query_filters.Filter(
+            ident="siteopt",
+            request_vars=["site"],
+        ),
         description=_l("Optional selection of a site"),
-        enforce=False,
     )
 )
 
 filter_registry.register(
     SiteFilter(
-        ident="site",
         title=_l("Site (enforced)"),
         sort_index=501,
+        query_filter=query_filters.Filter(ident="site", request_vars=["site"]),
         description=_l("Selection of site is enforced, use this filter for joining"),
-        enforce=True,
         is_show_more=True,
     )
 )
@@ -1262,18 +1266,16 @@ class MultipleSitesFilter(SiteFilter):
         return [x for x in value.get(self.htmlvars[0], "").strip().split("|") if x]
 
     def display(self, value: FilterHTTPVariables):
-        sites_vs = DualListChoice(choices=self._options(), rows=4)
+        sites_vs = DualListChoice(choices=query_filters.sites_options(), rows=4)
         sites_vs.render_input(self.htmlvars[0], self.get_request_sites(value))
 
 
 filter_registry.register(
     MultipleSitesFilter(
-        ident="sites",
         title=_l("Multiple Sites"),
         sort_index=502,
+        query_filter=query_filters.Filter(ident="sites", request_vars=["sites"]),
         description=_l("Associative selection of multiple sites"),
-        enforce=False,
-        htmlvar="sites",
     )
 )
 

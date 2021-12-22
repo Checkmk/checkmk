@@ -3,6 +3,8 @@
 
 import pytest
 
+from cmk.utils.type_defs import UserId
+
 import cmk.gui.plugins.userdb.htpasswd as htpasswd
 
 
@@ -13,8 +15,8 @@ def fixture_test_config(tmp_path):
 
     htpwd.save(
         {
-            "non-unicode": "non-unicode",
-            "abcä": "bbbä",
+            UserId("non-unicode"): "non-unicode",
+            UserId("abcä"): "bbbä",
         }
     )
 
@@ -42,13 +44,13 @@ def test_save(tmp_path):
 
     htpwd.save(
         {
-            "non-unicode": "non-unicode",
-            "abcä": "bbbä",
+            UserId("non-unicode"): "non-unicode",
+            UserId("abcä"): "bbbä",
         }
     )
 
     loaded = htpwd.load()
     assert loaded == {
-        "non-unicode": "non-unicode",
-        "abcä": "bbbä",
+        UserId("non-unicode"): "non-unicode",
+        UserId("abcä"): "bbbä",
     }

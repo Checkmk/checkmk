@@ -315,8 +315,7 @@ def _get_builtin_roles() -> Roles:
 
 
 class UserConnector(abc.ABC):
-    def __init__(self, cfg):
-        super().__init__()
+    def __init__(self, cfg) -> None:
         self._config = cfg
 
     @classmethod

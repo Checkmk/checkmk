@@ -38,7 +38,7 @@ def is_enterprise_repo():
     return os.path.exists(cmc_path())
 
 
-def is_managed_repo():
+def is_managed_repo() -> bool:
     return os.path.exists(cme_path())
 
 

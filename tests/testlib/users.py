@@ -6,15 +6,17 @@
 
 import contextlib
 import shutil
+from typing import Iterator, Optional
 
 import cmk.utils.paths
+from cmk.utils.type_defs import UserId
 
 import cmk.gui.config as config
 from cmk.gui.utils import get_random_string
 from cmk.gui.watolib.users import delete_users, edit_users
 
 
-def _mk_user_obj(username, password, automation, role):
+def _mk_user_obj(username: str, password: str, automation: bool, role: str):
     # This dramatically improves the performance of the unit tests using this in fixtures
     precomputed_hashes = {
         "Ischbinwischtisch": "$5$rounds=535000$mn3ra3ny1cbHVGsW$5kiJmJcgQ6Iwd1R.i4.kGAQcMF.7zbCt0BOdRG8Mn.9",
@@ -44,7 +46,9 @@ def _mk_user_obj(username, password, automation, role):
 
 
 @contextlib.contextmanager
-def create_and_destroy_user(*, automation=False, role="user", username=None):
+def create_and_destroy_user(
+    *, automation: bool = False, role: str = "user", username: Optional[str] = None
+) -> Iterator[tuple[UserId, str]]:
     if username is None:
         username = "test123-" + get_random_string(size=5, from_ascii=ord("a"), to_ascii=ord("z"))
     password = "Ischbinwischtisch"
@@ -73,7 +77,7 @@ def create_and_destroy_user(*, automation=False, role="user", username=None):
         )
     )
 
-    yield username, password
+    yield UserId(username), password
 
     delete_users([username])
 

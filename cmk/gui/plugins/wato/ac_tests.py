@@ -414,7 +414,7 @@ class ACTestOldDefaultCredentials(ACTest):
     def execute(self) -> Iterator[ACResult]:
         if (
             cmk.gui.plugins.userdb.htpasswd.HtpasswdUserConnector({}).check_credentials(
-                "omdadmin", "omd"
+                UserId("omdadmin"), "omd"
             )
             == "omdadmin"
         ):

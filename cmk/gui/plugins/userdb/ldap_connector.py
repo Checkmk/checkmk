@@ -1216,7 +1216,7 @@ class LDAPUserConnector(UserConnector):
         # Remove users which are controlled by this connector but can not be found in
         # LDAP anymore
         for user_id, user in list(users.items()):
-            user_connection_id = self._connection_id_of_user(user_id)
+            user_connection_id = cleanup_connection_id(user.get('connector'))
             if user_connection_id == connection_id and self._strip_suffix(
                     user_id) not in ldap_users:
                 del users[user_id]  # remove the user
@@ -1226,7 +1226,7 @@ class LDAPUserConnector(UserConnector):
         profiles_to_synchronize = {}
         for user_id, ldap_user in ldap_users.items():
             mode_create, user = load_user(user_id)
-            user_connection_id = self._connection_id_of_user(user_id)
+            user_connection_id = cleanup_connection_id(user.get('connector'))
 
             if self._create_users_only_on_login() and mode_create:
                 self._logger.info('  SKIP SYNC "%s" (Only create user of "%s" connector on login)' %
@@ -1244,7 +1244,7 @@ class LDAPUserConnector(UserConnector):
                 if self._has_suffix():
                     user_id = self._add_suffix(user_id)
                     mode_create, user = load_user(user_id)
-                    user_connection_id = self._connection_id_of_user(user_id)
+                    user_connection_id = cleanup_connection_id(user.get('connector'))
                     if user_connection_id != connection_id:
                         self._logger.info('  SKIP SYNC "%s" (name conflict after adding suffix '
                                           'with user from "%s" connector)' %

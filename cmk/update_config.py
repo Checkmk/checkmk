@@ -100,6 +100,7 @@ REMOVED_CHECK_PLUGIN_MAP = {
     CheckPluginName("pdu_gude_8310"): CheckPluginName("pdu_gude"),
     CheckPluginName("lxc_container_cpu"): CheckPluginName("cpu_utilization_os"),
     CheckPluginName("docker_container_cpu"): CheckPluginName("cpu_utilization_os"),
+    CheckPluginName("docker_container_diskstat"): CheckPluginName("diskstat"),
 }
 
 # List[(old_config_name, new_config_name, replacement_dict{old: new})]

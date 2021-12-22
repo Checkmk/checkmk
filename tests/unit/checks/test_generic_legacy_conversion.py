@@ -1562,7 +1562,6 @@ def test_no_new_or_vanished_legacy_checks(config_check_info):
         'dmi_sysinfo',
         'dmraid.ldisks',
         'dmraid.pdisks',
-        'docker_container_diskstat',
         'docker_node_disk_usage',
         'docker_node_info',
         'docker_node_info.containers',

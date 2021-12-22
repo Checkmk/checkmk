@@ -11,12 +11,18 @@ from testlib import get_value_store_fixture
 from cmk.utils.type_defs import CheckPluginName, SectionName
 
 import cmk.base.api.agent_based.register as agent_based_register
-from cmk.base.check_api import MKCounterWrapped
-from cmk.base.plugins.agent_based import cpu_utilization_os
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State, Service
+from cmk.base.plugins.agent_based import diskstat
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    IgnoreResultsError,
+    Metric,
+    Result,
+    Service,
+    State,
+)
+from cmk.base.plugins.agent_based.agent_based_api.v1.render import iobandwidth
 
 # make value_store fixture available to tests in this file
-value_store_fixture = get_value_store_fixture(cpu_utilization_os)
+value_store_fixture = get_value_store_fixture(diskstat)
 
 # The following string tables are created by executing the following commands:
 #   fio --name wxyz --direct=1 --buffered=0 --size=512m --bs=4k --rw=read --ioengine=sync --numjobs=1
@@ -164,7 +170,7 @@ MK_DOCKER_DOCKER_CONTAINER_DISKSTAT_CGROUPV1_60 = [
     [
         [
             "docker_container_diskstat",
-            "docker_container_diskstat",
+            "diskstat",
             DOCKER_CONTAINER_DISKSTAT_CGROUPV1_0,
             DOCKER_CONTAINER_DISKSTAT_CGROUPV1_60,
             8947848.533333333,
@@ -174,7 +180,7 @@ MK_DOCKER_DOCKER_CONTAINER_DISKSTAT_CGROUPV1_60 = [
         ],
         [
             "docker_container_diskstat",
-            "docker_container_diskstat",
+            "diskstat",
             MK_DOCKER_DOCKER_CONTAINER_DISKSTAT_CGROUPV1_0,
             MK_DOCKER_DOCKER_CONTAINER_DISKSTAT_CGROUPV1_60,
             8720333.321099441,
@@ -202,20 +208,32 @@ def test_docker_container_diskstat(
     assert plugin
     section_0_seconds = agent_section.parse_function(string_table_0)
     section_60_seconds = agent_section.parse_function(string_table_10)
-    with pytest.raises(MKCounterWrapped):
+    with pytest.raises(IgnoreResultsError):
         # first run, no rate metrics yet:
-        _ = list(plugin.check_function(params={}, section=section_0_seconds, item="SUMMARY"))
+        _ = list(
+            plugin.check_function(
+                params={},
+                section_multipath=None,
+                section_diskstat=section_0_seconds,
+                item="SUMMARY",
+            ))
     # now we have a rate:
-    assert list(plugin.check_function(params={}, section=section_60_seconds, item="SUMMARY")) == [
-        Result(state=State.OK, summary=f"Read: {read_bytes/1024/1024:.2f} MB/s"),
-        Metric("disk_read_throughput", read_bytes),
-        Result(state=State.OK, summary=f"Write: {write_bytes/1024/1024:.2f} MB/s"),
-        Metric("disk_write_throughput", write_bytes),
-        Result(state=State.OK, summary=f"Read operations: {read_ops:.2f} 1/s"),
-        Metric("disk_read_ios", read_ops),
-        Result(state=State.OK, summary=f"Write operations: {write_ops:.2f} 1/s"),
-        Metric("disk_write_ios", write_ops),
-    ]
+    assert list(
+        plugin.check_function(
+            params={},
+            section_multipath=None,
+            section_diskstat=section_60_seconds,
+            item="SUMMARY",
+        )) == [
+            Result(state=State.OK, summary=f"Read: {iobandwidth(read_bytes)}"),
+            Metric("disk_read_throughput", read_bytes),
+            Result(state=State.OK, summary=f"Write: {iobandwidth(write_bytes)}"),
+            Metric("disk_write_throughput", write_bytes),
+            Result(state=State.OK, notice=f"Read operations: {read_ops:.2f}/s"),
+            Metric("disk_read_ios", read_ops),
+            Result(state=State.OK, notice=f"Write operations: {write_ops:.2f}/s"),
+            Metric("disk_write_ios", write_ops),
+        ]
 
 
 @pytest.mark.parametrize(
@@ -223,12 +241,12 @@ def test_docker_container_diskstat(
     [
         [
             "docker_container_diskstat",
-            "docker_container_diskstat",
+            "diskstat",
             DOCKER_CONTAINER_DISKSTAT_CGROUPV1_0,
         ],
         [
             "docker_container_diskstat",
-            "docker_container_diskstat",
+            "diskstat",
             MK_DOCKER_DOCKER_CONTAINER_DISKSTAT_CGROUPV1_0,
         ],
     ],
@@ -250,14 +268,11 @@ def test_docker_container_diskstat_discovery(
     value_store,
     expected_item,
 ) -> None:
-
-    mocker.patch("cmk.base.check_api_utils._hostname", "unittest")
-    mocker.patch(
-        "cmk.base.check_legacy_includes.diskstat.host_extra_conf",
-        lambda _0, _1: [discovery_mode],
-    )
     agent_section = agent_based_register.get_section_plugin(SectionName(section_name))
     plugin = agent_based_register.get_check_plugin(CheckPluginName(plugin_name))
     assert plugin
     section_0_seconds = agent_section.parse_function(string_table_0)
-    assert list(plugin.discovery_function(section_0_seconds)) == [Service(item=expected_item)]
+    assert list(
+        plugin.discovery_function([discovery_mode],
+                                  section_diskstat=section_0_seconds,
+                                  section_multipath=None)) == [Service(item=expected_item)]

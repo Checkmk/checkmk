@@ -438,43 +438,37 @@ filter_registry.register(
 )
 
 
-class FilterMultigroup(Filter):
+class DualListFilter(Filter):
     def __init__(
         self,
         *,
-        ident: str,
         title: Union[str, LazyString],
         sort_index: int,
-        group_type: str,
+        info: str,
         query_filter: query_filters.FilterMultiple,
+        options: Callable[[str], query_filters.Options],
         description: Union[None, str, LazyString] = None,
         is_show_more: bool = True,
     ):
         self.query_filter = query_filter
+        self._options = options
         super().__init__(
-            ident=ident,
+            ident=self.query_filter.ident,
             title=title,
             sort_index=sort_index,
-            info=group_type,
+            info=info,
             htmlvars=self.query_filter.request_vars,
             link_columns=[],
             description=description,
             is_show_more=is_show_more,
         )
-        self.group_type = group_type
-
-    def valuespec(self):
-        return DualListChoice(choices=self._options(self.group_type), rows=4, enlarge_active=True)
-
-    @staticmethod
-    def _options(group_type):
-        return sites.all_groups(group_type)
 
     def display(self, value: FilterHTTPVariables) -> None:
         html.open_div(class_="multigroup")
-        self.valuespec().render_input(
+        DualListChoice(choices=self._options(self.info), rows=4, enlarge_active=True).render_input(
             self.query_filter.request_vars[0], self.query_filter.selection(value)
         )
+
         if self.query_filter.negateable:
             checkbox_component(self.query_filter.request_vars[1], value, _("negate"))
         html.close_div()
@@ -484,28 +478,28 @@ class FilterMultigroup(Filter):
 
 
 filter_registry.register(
-    FilterMultigroup(
-        ident="hostgroups",
+    DualListFilter(
         title=_l("Several host groups"),
         sort_index=105,
         description=_l("Selection of multiple host groups"),
-        group_type="host",
+        info="host",
         query_filter=query_filters.FilterMultiple(
             ident="hostgroups", column="host_groups", op=">=", negateable=True
         ),
+        options=sites.all_groups,
     )
 )
 
 filter_registry.register(
-    FilterMultigroup(
-        ident="servicegroups",
+    DualListFilter(
         title=_l("Several service groups"),
         sort_index=205,
         description=_l("Selection of multiple service groups"),
-        group_type="service",
+        info="service",
         query_filter=query_filters.FilterMultiple(
             ident="servicegroups", column="service_groups", op=">=", negateable=True
         ),
+        options=sites.all_groups,
     )
 )
 

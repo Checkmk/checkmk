@@ -3692,15 +3692,13 @@ class PackageManagerDEB(PackageManager):
         self._execute_uninstall(["apt-get", "-y", "purge", package_name])
 
     def find_packages_of_path(self, path: str) -> List[str]:
-        real_path = os.path.realpath(path)
-
-        p = self._execute(["dpkg", "-S", real_path])
+        p = self._execute(["dpkg", "-S", path])
         output = p.communicate()[0]
         if p.wait() != 0:
             bail_out("Failed to find packages:\n%s" % output)
 
         for line in output.split("\n"):
-            if line.endswith(": %s" % real_path):
+            if line.endswith(": %s" % path):
                 return line.split(": ", 1)[0].split(", ")
 
         return []
@@ -3711,9 +3709,7 @@ class PackageManagerRPM(PackageManager):
         self._execute_uninstall(["rpm", "-e", package_name])
 
     def find_packages_of_path(self, path: str) -> List[str]:
-        real_path = os.path.realpath(path)
-
-        p = self._execute(["rpm", "-qf", real_path])
+        p = self._execute(["rpm", "-qf", path])
         output = p.communicate()[0]
 
         if p.wait() == 1 and "not owned" in output:

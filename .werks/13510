@@ -1,0 +1,13 @@
+Title: omd cleanup: Always use "/omd/versions"
+Class: fix
+Compatible: compat
+Component: rpm
+Date: 1640185228
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0i1
+
+The real path (canonical path, eliminating any symbolic links ) was used
+before, leading to unfound packages in special situations.

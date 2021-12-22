@@ -762,6 +762,7 @@ def load_users(lock: bool = False) -> Users:
                     "roles": roles_of_user(uid),
                     "password": password,
                     "locked": False,
+                    "connector": "htpasswd",
                 }
 
                 add_internal_attributes(new_user)
@@ -1124,6 +1125,7 @@ def create_cmk_automation_user() -> None:
         "pager": "",
         "notifications_enabled": False,
         "language": "en",
+        "connector": "htpasswd",
     }
     save_users(users)
 

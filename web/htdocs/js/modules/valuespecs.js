@@ -861,6 +861,8 @@ export function initialize_autocompleters(container) {
     single_autocompleter("monitored_hostname", container);
     single_autocompleter("config_hostname", container);
     single_autocompleter("check_cmd", container);
+    single_autocompleter("syslog_facilities", container);
+    single_autocompleter("service_levels", container);
     service_desc_autocompleter("monitored_service_description", container);
     autocompleter_with_host_service_hints("monitored_metrics", container);
     autocompleter_with_host_service_hints("available_graphs", container);

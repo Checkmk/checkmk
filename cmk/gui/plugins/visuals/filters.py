@@ -186,6 +186,9 @@ class AjaxDropdownFilter(DropdownFilter):
             "servicegroup_name": "allgroups",
             "host_check_command": "check_cmd",
             "service_check_command": "check_cmd",
+            "event_sl": "service_levels",
+            "event_sl_max": "service_levels",
+            "event_facility": "syslog_facilities",
         }.get(self.query_filter.column)
         if endpoint_tag is None:
             raise MKUserError(self.query_filter.request_vars[0], "Unregistered ajax endpoint")
@@ -3006,74 +3009,33 @@ filter_registry.register(
     )
 )
 
-
-class EventFilterDropdown(Filter):
-    def __init__(
-        self,
-        *,
-        ident: str,
-        title: Union[str, LazyString],
-        sort_index: int,
-        choices: Union[Choices, Callable[[], Choices]],
-        operator: str = "=",
-        column: str,
-    ) -> None:
-        super().__init__(
-            ident=ident,
-            title=title,
-            sort_index=sort_index,
-            info="event",
-            htmlvars=[ident],
-            link_columns=["event_" + column],
-        )
-        self._choices = choices
-        self._column = column
-        self._operator = operator
-
-    def display(self, value: FilterHTTPVariables) -> None:
-        if isinstance(self._choices, list):
-            choices = self._choices
-        else:
-            choices = self._choices()
-        empty_choices: Choices = [("", "")]
-        the_choices: Choices = [(str(n), t) for (n, t) in choices]
-        html.dropdown(self.ident, empty_choices + the_choices, deflt=value.get(self.ident, ""))
-
-    def filter(self, value: FilterHTTPVariables) -> FilterHeader:
-        if val := value.get(self.ident):
-            return "Filter: event_%s %s %s\n" % (self._column, self._operator, val)
-        return ""
-
-
 filter_registry.register(
-    EventFilterDropdown(
-        ident="event_facility",
+    AjaxDropdownFilter(
         title=_l("Syslog Facility"),
         sort_index=210,
-        choices=mkeventd.syslog_facilities,
-        column="facility",
+        info="event",
+        query_filter=query_filters.FilterText(ident="event_facility", op="="),
+        options=[],
     )
 )
 
 filter_registry.register(
-    EventFilterDropdown(
-        ident="event_sl",
+    AjaxDropdownFilter(
         title=_l("Service Level at least"),
         sort_index=211,
-        choices=mkeventd.service_levels,
-        operator=">=",
-        column="sl",
+        info="event",
+        query_filter=query_filters.FilterText(ident="event_sl", op=">="),
+        options=[],
     )
 )
 
 filter_registry.register(
-    EventFilterDropdown(
-        ident="event_sl_max",
+    AjaxDropdownFilter(
         title=_l("Service Level at most"),
         sort_index=211,
-        choices=mkeventd.service_levels,
-        operator="<=",
-        column="sl",
+        info="event",
+        query_filter=query_filters.FilterText(ident="event_sl_max", op="<=", column="event_sl"),
+        options=[],
     )
 )
 

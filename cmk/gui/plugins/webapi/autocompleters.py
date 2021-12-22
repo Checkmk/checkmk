@@ -10,6 +10,7 @@ from typing import Dict, Iterable, Mapping, Tuple
 
 from cmk.utils.type_defs import MetricName
 
+import cmk.gui.mkeventd as mkeventd
 import cmk.gui.sites as sites
 import cmk.gui.watolib as watolib
 from cmk.gui.exceptions import MKUserError
@@ -107,6 +108,24 @@ def check_command_autocompleter(value: str, params: Dict) -> Choices:
         for x in sites.live().query_column_unique("GET commands\nCache: reload\nColumns: name\n")
         if value.lower() in x.lower()
     ]
+    empty_choices: Choices = [("", "")]
+    return empty_choices + choices
+
+
+@autocompleter_registry.register_expression("service_levels")
+def service_levels_autocompleter(value: str, params: Dict) -> Choices:
+    """Return the matching list of dropdown choices
+    Called by the webservice with the current input field value and the completions_params to get the list of choices"""
+    choices: Choices = mkeventd.service_levels()
+    empty_choices: Choices = [("", "")]
+    return empty_choices + choices
+
+
+@autocompleter_registry.register_expression("syslog_facilities")
+def syslog_facilities_autocompleter(value: str, params: Dict) -> Choices:
+    """Return the matching list of dropdown choices
+    Called by the webservice with the current input field value and the completions_params to get the list of choices"""
+    choices: Choices = [(str(v), title) for v, title in mkeventd.syslog_facilities]
     empty_choices: Choices = [("", "")]
     return empty_choices + choices
 

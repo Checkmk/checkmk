@@ -26,7 +26,7 @@ from cmk.gui.globals import config
 from cmk.gui.hooks import request_memoize
 from cmk.gui.i18n import _, _l
 from cmk.gui.permissions import permission_section_registry, PermissionSection
-from cmk.gui.valuespec import DropdownChoiceEntry, DropdownChoices
+from cmk.gui.valuespec import DropdownChoiceEntry
 
 
 def _socket_path() -> Path:
@@ -57,7 +57,7 @@ syslog_priorities: List[DropdownChoiceEntry] = [
     (7, "debug"),
 ]
 
-syslog_facilities: DropdownChoices = [
+syslog_facilities: List[DropdownChoiceEntry] = [
     (0, "kern"),
     (1, "user"),
     (2, "mail"),

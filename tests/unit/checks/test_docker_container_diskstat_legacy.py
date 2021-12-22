@@ -145,17 +145,6 @@ def test_docker_container_diskstat_wrapped():
             check.run_check("SUMMARY", {}, parsed)
 
 
-@pytest.mark.parametrize("info, discovery_expected", [
-    (INFO_MISSING_COUNTERS, DiscoveryResult([("SUMMARY", {})])),
-])
-@pytest.mark.usefixtures("config_load_all_checks")
-def test_docker_container_diskstat_discovery(info, discovery_expected):
-    check = Check('docker_container_diskstat')
-    parsed = check.run_parse(info)
-    discovery_actual = DiscoveryResult(check.run_discovery(parsed))
-    assertDiscoveryResultsEqual(check, discovery_actual, discovery_expected)
-
-
 @pytest.mark.parametrize("info, expected_parsed", [
     pytest.param(CGROUP_V1, {
         'sda': (1637739081.5936825, {
@@ -175,11 +164,6 @@ def test_docker_container_diskstat_discovery(info, discovery_expected):
             },
             'name': 'sda'
         }),
-        'sr0': (1637739081.5936825, {
-            'bytes': {},
-            'ios': {},
-            'name': 'sr0'
-        }),
     },
                  id="cgroup v1"),
     pytest.param(CGROUP_V2, {
@@ -193,20 +177,10 @@ def test_docker_container_diskstat_discovery(info, discovery_expected):
             'ios': {},
             'name': 'dm-1'
         }),
-        'dm-2': (1637679467.388989, {
-            'bytes': {},
-            'ios': {},
-            'name': 'dm-2'
-        }),
         'nvme0n1': (1637679467.388989, {
             'bytes': {'read': 897024, 'write': 0},
             'ios': {},
             'name': 'nvme0n1'
-        }),
-        'sda': (1637679467.388989, {
-            'bytes': {},
-            'ios': {},
-            'name': 'sda'
         }),
     },
                  id="cgroup v2"),

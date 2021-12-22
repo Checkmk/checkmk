@@ -60,7 +60,13 @@ def _parse_docker_container_diskstat_plugin(info):
         if device:
             device["ios"][entry["op"]] = entry["value"]
 
-    return {"time": raw["time"], "devices": devices}
+    # only keep devices with counters
+    devices_with_counters = {}
+    for major_minor, diskstat_data in devices.items():
+        if diskstat_data["bytes"] or diskstat_data["ios"]:
+            devices_with_counters[major_minor] = diskstat_data
+
+    return {"time": raw["time"], "devices": devices_with_counters}
 
 
 def _parse_docker_container_diskstat_agent(info):

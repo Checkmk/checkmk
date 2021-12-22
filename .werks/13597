@@ -1,0 +1,12 @@
+Title: Windows agent supports Unicode symbols in logwatch section
+Knowledge: doc
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0p28
+Date: 1640181693
+
+

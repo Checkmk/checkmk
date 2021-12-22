@@ -5,6 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import ast
+import json
 import logging
 import typing as t
 import warnings
@@ -304,3 +305,16 @@ def test_dependencies_are_declared() -> None:
             ]
         )
     )
+
+
+def _get_lockfile_hash(lockfile_path) -> str:
+    lockfile = json.loads(lockfile_path.read_text())
+    if "_meta" in lockfile and hasattr(lockfile, "keys"):
+        return lockfile["_meta"].get("hash", {}).get("sha256")
+    return ""
+
+
+def test_pipfile_lock_up_to_date():
+    pipfile_hash = Pipfile.load(filename=repo_path() + "/Pipfile").hash
+    lockfile_hash = _get_lockfile_hash(Path(repo_path(), "Pipfile.lock"))
+    assert pipfile_hash == lockfile_hash

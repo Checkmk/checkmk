@@ -1992,7 +1992,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy):
         "k8s_storage_classes",
         "keepalived",
         "kemp_loadmaster_ha",
-        "kemp_loadmaster_realserver",
         "kemp_loadmaster_services",
         "kentix_amp_sensors",
         "kentix_amp_sensors.humidity",

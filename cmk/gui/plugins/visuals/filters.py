@@ -54,11 +54,7 @@ from cmk.gui.plugins.visuals.utils import (
 
 def checkbox_component(htmlvar: str, value: FilterHTTPVariables, label: str):
     html.open_nobr()
-    html.checkbox(
-        htmlvar,
-        bool(value.get(htmlvar)),
-        label=label,
-    )
+    html.checkbox(htmlvar, bool(value.get(htmlvar)), label=label)
     html.close_nobr()
 
 
@@ -715,31 +711,6 @@ filter_registry.register(
     )
 )
 
-
-@filter_registry.register_instance
-class FilterHostgroupVisibility(Filter):
-    def __init__(self):
-        super().__init__(
-            ident="hostgroupvisibility",
-            title=_l("Empty host group visibilitiy"),
-            sort_index=102,
-            info="hostgroup",
-            htmlvars=["hostgroupshowempty"],
-            link_columns=[],
-            description=_l("You can enable this checkbox to show empty host groups"),
-        )
-
-    def display(self, value: FilterHTTPVariables) -> None:
-        html.checkbox(
-            self.htmlvars[0], bool(value.get(self.htmlvars[0])), label="Show empty groups"
-        )
-
-    def filter(self, value: FilterHTTPVariables) -> FilterHeader:
-        if value.get(self.htmlvars[0]):
-            return ""
-        return "Filter: hostgroup_num_hosts > 0\n"
-
-
 filter_registry.register(
     RegExpFilter(
         title=_l("Service group (regex)"),
@@ -866,6 +837,20 @@ class FilterHostgroupProblems(CheckboxRowFilter):
 
         html.br()
         checkbox_row(self.host_problems, value, "Host states: ")
+
+
+filter_registry.register(
+    CheckboxRowFilter(
+        title=_l("Empty host group visibilitiy"),
+        sort_index=102,
+        info="hostgroup",
+        query_filter=query_filters.FilterMultipleOptions(
+            ident="hostgroupvisibility",
+            options=[("hostgroupshowempty", _("Show empty groups"))],
+            filter_lq=query_filters.empty_hostgroup_filter,
+        ),
+    )
+)
 
 
 filter_registry.register(

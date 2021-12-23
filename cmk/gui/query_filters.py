@@ -568,6 +568,12 @@ def hostgroup_problems_filter(value: FilterHTTPVariables) -> FilterHeader:
     return lq_logic("Filter:", headers, "Or")
 
 
+def empty_hostgroup_filter(value: FilterHTTPVariables) -> FilterHeader:
+    if any(value.values()):  # Selected to show empty
+        return ""
+    return "Filter: hostgroup_num_hosts > 0\n"
+
+
 def options_toggled_filter(column: str, value: FilterHTTPVariables) -> FilterHeader:
     "When VALUE keys are the options, return filterheaders that equal column to option."
     if all(value.values()):  # everything on, skip filter

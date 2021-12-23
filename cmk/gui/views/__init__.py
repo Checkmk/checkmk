@@ -2105,7 +2105,7 @@ def page_view():
         _patch_view_context(view_spec)
 
         datasource = data_source_registry[view_spec["datasource"]]()
-        context = visuals.active_context_from_request(datasource.infos) or view_spec["context"]
+        context = visuals.active_context_from_request(datasource.infos, view_spec["context"])
 
         view = View(view_name, view_spec, context)
         view.row_limit = get_limit()

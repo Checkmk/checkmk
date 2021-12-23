@@ -577,7 +577,7 @@ def draw_dashboard(name: DashboardName) -> None:
     board = _add_context_to_dashboard(board)
 
     # Like _dashboard_info_handler we assume that only host / service filters are relevant
-    board_context = visuals.active_context_from_request(["host", "service"]) or board["context"]
+    board_context = visuals.active_context_from_request(["host", "service"], board["context"])
     board["context"] = board_context
 
     title = visuals.visual_title("dashboard", board, board_context)
@@ -1576,7 +1576,7 @@ def ajax_dashlet() -> None:
         raise MKUserError("name", _("The requested dashboard does not exist."))
 
     board = _add_context_to_dashboard(board)
-    board_context = visuals.active_context_from_request(["host", "service"]) or board["context"]
+    board_context = visuals.active_context_from_request(["host", "service"], board["context"])
     board["context"] = board_context
 
     ident = request.get_integer_input_mandatory("id")

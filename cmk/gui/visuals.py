@@ -1730,17 +1730,20 @@ class VisualFilterListWithAddPopup(VisualFilterList):
         html.javascript("cmk.utils.add_simplebar_scrollbar(%s);" % json.dumps(filter_list_id))
 
 
-def active_context_from_request(infos: List[str]) -> VisualContext:
+def active_context_from_request(infos: List[str], context: VisualContext) -> VisualContext:
     vs_filterlist = VisualFilterListWithAddPopup(info_list=infos)
     if request.has_var("_active"):
         return vs_filterlist.from_html_vars("")
+
     # Test if filters are in url and rescostruct them. This is because we
     # contruct crosslinks manually without the filter menu.
+    # We must merge with the view context as many views have defaults, which
+    # are not included in the crosslink.
     if flag := active_filter_flag(set(vs_filterlist._filters.keys()), request.itervars()):
         with request.stashed_vars():
             request.set_var("_active", flag)
-            return vs_filterlist.from_html_vars("")
-    return {}
+            return get_merged_context(context, vs_filterlist.from_html_vars(""))
+    return context
 
 
 @page_registry.register_page("ajax_visual_filter_list_get_choice")

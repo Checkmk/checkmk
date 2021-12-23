@@ -186,7 +186,7 @@ PingLevels = Dict[str, Union[int, Tuple[float, float]]]
 ObjectAttributes = Dict[str, Any]
 
 GroupDefinitions = Dict[str, str]
-RecurringDowntime = Dict[str, Union[int, str]]
+RecurringDowntime = Dict[str, Union[int, str]]  # TODO(sk): TypedDict here
 CheckInfo = Dict  # TODO: improve this type
 IPMICredentials = Dict[str, str]
 ManagementCredentials = Union[SNMPCredentials, IPMICredentials]

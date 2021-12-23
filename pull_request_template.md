@@ -9,25 +9,24 @@ Please give a brief summary of the affected device, software or appliance.
 Keep in mind that we are experts in monitoring, but we cannot be experts on all supported devices.
 A little context will help us assess your proposed change.
 
+## Bug reports
+
+Please include:
+
++ Your operating system name and version
++ Any details about your local setup that might be helpful in troubleshooting
++ Detailed steps to reproduce the bug
++ An agent output or SNMP walk
++ The ID of a submitted crash report for reference (if applicable)
+
 ## Proposed changes
 
-Please give an overview of the issue.
-In particular:
+Sometimes it is hard for us to assess the quality of a fix.
+While it may work for you, it is our job to ensure that it works for everybody.
+These are some ways to help us:
 
 + What is the expected behavior?
 + What is the observed behavior?
 + If it's not obvious from the above: In what way does your patch change the current behavior?
++ Consider writing a unit test that would have failed without your fix.
 + Is this a new problem? What made you submit this PR (new firmware, new device, changed device behavior)?
-+ Is there anything special about your setup?
-
-## Repro, tests and sample data
-
-Sometimes it is hard for us to assess the quality of a fix.
-While it may work for you, it is our job to ensure that it works for everybody.
-These are some ways to help us (not all of them may be applicable):
-
-+ Can you describe a way to reproduce the problem?
-+ Consider writing a unit test that would have failed without your fix
-+ Can you share problematic agent output or (sections of) an SNMP walk?
-+ Can you submit a crash report and give the ID for reference?
-

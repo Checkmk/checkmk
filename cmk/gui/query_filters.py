@@ -543,10 +543,29 @@ def host_having_svc_problems_filter(value: FilterHTTPVariables) -> FilterHeader:
     conditions = [
         "host_num_services_%s > 0" % var
         for var in ["warn", "crit", "pending", "unknown"]
-        if bool(value.get("hosts_having_services_%s" % var)) is True
+        if value.get("hosts_having_services_%s" % var)
     ]
 
     return lq_logic("Filter:", conditions, "Or")
+
+
+def hostgroup_problems_filter(value: FilterHTTPVariables) -> FilterHeader:
+    headers = []
+    for svc_var in ["warn", "crit", "pending", "unknown"]:
+        if value.get("hostgroups_having_services_%s" % svc_var):
+            headers.append("num_services_%s > 0\n" % svc_var)
+
+    for host_var in ["down", "unreach", "pending"]:
+        if value.get("hostgroups_having_hosts_%s" % host_var):
+            headers.append("num_hosts_%s > 0\n" % host_var)
+
+    if value.get("hostgroups_show_unhandled_host"):
+        headers.append("num_hosts_unhandled_problems > 0\n")
+
+    if value.get("hostgroups_show_unhandled_svc"):
+        headers.append("num_services_unhandled_problems > 0\n")
+
+    return lq_logic("Filter:", headers, "Or")
 
 
 def options_toggled_filter(column: str, value: FilterHTTPVariables) -> FilterHeader:
@@ -577,12 +596,20 @@ def svc_state_options(prefix: str) -> List[Tuple[str, str]]:
     return svc_state_min_options(prefix + "st") + [(prefix + "stp", _("PEND"))]
 
 
-def host_having_svc_problems_options() -> List[Tuple[str, str]]:
+def svc_problems_options(prefix: str) -> List[Tuple[str, str]]:
     return [
-        ("hosts_having_services_warn", _("WARN")),
-        ("hosts_having_services_crit", _("CRIT")),
-        ("hosts_having_services_pending", _("PEND")),
-        ("hosts_having_services_unknown", _("UNKNOWN")),
+        (prefix + "warn", _("WARN")),
+        (prefix + "crit", _("CRIT")),
+        (prefix + "pending", _("PEND")),
+        (prefix + "unknown", _("UNKNOWN")),
+    ]
+
+
+def host_problems_options(prefix: str) -> Options:
+    return [
+        (prefix + "down", _("DOWN")),
+        (prefix + "unreach", _("UNREACH")),
+        (prefix + "pending", _("PEND")),
     ]
 
 

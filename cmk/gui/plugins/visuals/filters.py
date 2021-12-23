@@ -740,93 +740,6 @@ class FilterHostgroupVisibility(Filter):
         return "Filter: hostgroup_num_hosts > 0\n"
 
 
-@filter_registry.register_instance
-class FilterHostgroupProblems(Filter):
-    def __init__(self):
-        super().__init__(
-            ident="hostsgroups_having_problems",
-            title=_l("Host groups having certain problems"),
-            sort_index=103,
-            info="hostgroup",
-            htmlvars=[
-                "hostgroups_having_hosts_down",
-                "hostgroups_having_hosts_unreach",
-                "hostgroups_having_hosts_pending",
-                "hostgroups_show_unhandled_host",
-                "hostgroups_having_services_warn",
-                "hostgroups_having_services_crit",
-                "hostgroups_having_services_pending",
-                "hostgroups_having_services_unknown",
-                "hostgroups_show_unhandled_svc",
-            ],
-            link_columns=[],
-        )
-
-    def display(self, value: FilterHTTPVariables) -> None:
-        html.begin_checkbox_group()
-        html.write_text("Service states:" + " ")
-        for svc_var, svc_text in self._options("service"):
-            namevar = "hostgroups_having_services_%s" % svc_var
-            html.checkbox(namevar, bool(value.get(namevar, True)), label=svc_text)
-
-        html.br()
-        html.checkbox(
-            "hostgroups_show_unhandled_svc",
-            bool(value.get("hostgroups_show_unhandled_svc")),
-            label=_("Unhandled service problems"),
-        )
-
-        html.br()
-        html.write_text("Host states:" + " ")
-        for host_var, host_text in self._options("host"):
-            namevar = "hostgroups_having_hosts_%s" % host_var
-            html.checkbox(namevar, bool(value.get(namevar, True)), label=host_text)
-
-        html.checkbox(
-            "hostgroups_show_unhandled_host",
-            bool(value.get("hostgroups_show_unhandled_host")),
-            label=_("Unhandled host problems"),
-        )
-
-        html.end_checkbox_group()
-
-    @staticmethod
-    def _options(target: Literal["host", "service"]) -> List[Tuple[str, str]]:
-        if target == "host":
-            return [
-                ("down", _("DOWN")),
-                ("unreach", _("UNREACH")),
-                ("pending", _("PEND")),
-            ]
-
-        if target == "service":
-            return [
-                ("warn", _("WARN")),
-                ("crit", _("CRIT")),
-                ("pending", _("PEND")),
-                ("unknown", _("UNKNOWN")),
-            ]
-        raise ValueError
-
-    def filter(self, value: FilterHTTPVariables) -> FilterHeader:
-        headers = []
-        for svc_var in ["warn", "crit", "pending", "unknown"]:
-            if value.get("hostgroups_having_services_%s" % svc_var):
-                headers.append("num_services_%s > 0\n" % svc_var)
-
-        for host_var in ["down", "unreach", "pending"]:
-            if value.get("hostgroups_having_hosts_%s" % host_var):
-                headers.append("num_hosts_%s > 0\n" % host_var)
-
-        if value.get("hostgroups_show_unhandled_host"):
-            headers.append("num_hosts_unhandled_problems > 0\n")
-
-        if value.get("hostgroups_show_unhandled_svc"):
-            headers.append("num_services_unhandled_problems > 0\n")
-
-        return lq_logic("Filter:", headers, "Or")
-
-
 filter_registry.register(
     RegExpFilter(
         title=_l("Service group (regex)"),
@@ -885,9 +798,11 @@ filter_registry.register(
 
 
 def checkbox_row(
-    request_vars: List[str], options: List[Tuple[str, str]], value: FilterHTTPVariables
+    options: List[Tuple[str, str]], value: FilterHTTPVariables, title: Optional[str] = None
 ) -> None:
     html.begin_checkbox_group()
+    if title:
+        html.write_text(title)
     checkbox_default = not any(value.values())
     for var, text in options:
         html.checkbox(var, bool(value.get(var, checkbox_default)), label=text)
@@ -916,13 +831,41 @@ class CheckboxRowFilter(Filter):
         self.query_filter = query_filter
 
     def display(self, value: FilterHTTPVariables) -> None:
-        checkbox_row(self.query_filter.request_vars, self.query_filter.options, value)
+        checkbox_row(self.query_filter.options, value)
 
     def filter(self, value: FilterHTTPVariables) -> FilterHeader:
         return self.query_filter.filter(value)
 
     def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
         return self.query_filter.filter_table(context, rows)
+
+
+# TODO: I would be great to split this in two filters for host & service kind of problems
+@filter_registry.register_instance
+class FilterHostgroupProblems(CheckboxRowFilter):
+    def __init__(self):
+        self.host_problems = query_filters.host_problems_options("hostgroups_having_hosts_")
+        self.host_problems.append(("hostgroups_show_unhandled_host", _("Unhandled host problems")))
+
+        self.svc_problems = query_filters.svc_problems_options("hostgroups_having_services_")
+        self.svc_problems.append(("hostgroups_show_unhandled_svc", _("Unhandled service problems")))
+
+        super().__init__(
+            title=_l("Host groups having certain problems"),
+            sort_index=103,
+            info="hostgroup",
+            query_filter=query_filters.FilterMultipleOptions(
+                ident="hostsgroups_having_problems",
+                options=self.host_problems + self.svc_problems,
+                filter_lq=query_filters.hostgroup_problems_filter,
+            ),
+        )
+
+    def display(self, value: FilterHTTPVariables) -> None:
+        checkbox_row(self.svc_problems, value, "Service states: ")
+
+        html.br()
+        checkbox_row(self.host_problems, value, "Host states: ")
 
 
 filter_registry.register(
@@ -972,7 +915,7 @@ filter_registry.register(
         info="host",
         query_filter=query_filters.FilterMultipleOptions(
             ident="hosts_having_service_problems",
-            options=query_filters.host_having_svc_problems_options(),
+            options=query_filters.svc_problems_options("hosts_having_services_"),
             filter_lq=query_filters.host_having_svc_problems_filter,
         ),
     )

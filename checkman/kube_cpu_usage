@@ -1,0 +1,11 @@
+title: Kubernetes: Container CPU
+agents: kubernetes
+catalog: containerization/kubernetes
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the total cpu usage, request utilization and limit
+ utilization of the underlying containers
+
+discovery:
+ One service is created showing the total cpu usage.

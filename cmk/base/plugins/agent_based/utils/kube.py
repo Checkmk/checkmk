@@ -63,3 +63,7 @@ AggregatedRequest = Union[Literal[ExceptionalResource.unspecified], float]
 class Resources(BaseModel):
     request: AggregatedRequest
     limit: AggregatedLimit
+
+
+class Usage(BaseModel):
+    usage: float

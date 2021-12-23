@@ -81,6 +81,36 @@ metric_info["kube_node_container_count_total"] = {
     "color": "42/a",
 }
 
+metric_info["kube_cpu_usage"] = {
+    "title": _("Usage"),
+    "unit": "",
+    "color": "31/a",
+}
+
+metric_info["kube_cpu_request"] = {
+    "title": _("Request"),
+    "unit": "",
+    "color": "42/a",
+}
+
+metric_info["kube_cpu_limit"] = {
+    "title": _("Limit"),
+    "unit": "",
+    "color": "42/b",
+}
+
+metric_info["kube_cpu_request_utilization"] = {
+    "title": _("Request utilization"),
+    "unit": "%",
+    "color": "22/a",
+}
+
+metric_info["kube_cpu_limit_utilization"] = {
+    "title": _("Limit utilization"),
+    "unit": "%",
+    "color": "46/a",
+}
+
 #   .--Graphs--------------------------------------------------------------.
 #   |                    ____                 _                            |
 #   |                   / ___|_ __ __ _ _ __ | |__  ___                    |
@@ -124,4 +154,23 @@ graph_info["kube_node_container_count"] = {
         "kube_node_container_count_total:warn",
         "kube_node_container_count_total:crit",
     ],
+}
+
+graph_info["kube_cpu_usage"] = {
+    "title": _("CPU"),
+    "metrics": [
+        ("kube_cpu_request", "line"),
+        ("kube_cpu_limit", "line"),
+        ("kube_cpu_usage", "area"),
+    ],
+    "optional_metrics": ["kube_cpu_request", "kube_cpu_limit"],
+}
+
+graph_info["kube_cpu_utilization"] = {
+    "title": _("CPU Utilization"),
+    "metrics": [
+        ("kube_cpu_request_utilization", "line"),
+        ("kube_cpu_limit_utilization", "line"),
+    ],
+    "optional_metrics": ["kube_cpu_request_utilization", "kube_cpu_limit_utilization"],
 }

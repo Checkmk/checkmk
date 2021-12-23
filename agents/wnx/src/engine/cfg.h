@@ -7,6 +7,7 @@
 
 #include <functional>
 #include <optional>
+#include <ranges>
 #include <string>
 #include <string_view>
 
@@ -632,11 +633,13 @@ public:
         std::lock_guard lk(lock_);
 
         // most important is disabled
-        if (cma::tools::find(disabled_sections_, std::string(Name)))
+        if (std::ranges::find(disabled_sections_, std::string(Name)) !=
+            disabled_sections_.end())
             return false;
 
         if (!enabled_sections_.empty()) {
-            return cma::tools::find(enabled_sections_, std::string(Name));
+            return std::ranges::find(enabled_sections_, std::string(Name)) !=
+                   enabled_sections_.end();
         }
 
         // default: both entries are empty,  section is enabled
@@ -647,7 +650,8 @@ public:
         std::lock_guard lk(lock_);
 
         // most important is disabled
-        return cma::tools::find(disabled_sections_, Name);
+        return std::ranges::find(disabled_sections_, Name) !=
+               disabled_sections_.end();
     }
 
     bool isIpAddressAllowed(std::string_view Ip) const {

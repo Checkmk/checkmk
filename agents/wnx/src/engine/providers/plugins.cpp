@@ -199,8 +199,12 @@ void PluginsProvider::gatherAllData(std::string& out) {
     auto data_async = RunAsyncPlugins(pm_, last_count, true);
     last_count_ += last_count;
 
-    tools::AddString(out, data_sync);
-    tools::AddString(out, data_async);
+    if (!data_sync.empty()) {
+        out += data_sync.data();
+    }
+    if (!data_async.empty()) {
+        out += data_async.data();
+    }
 }
 
 void PluginsProvider::preStart() {

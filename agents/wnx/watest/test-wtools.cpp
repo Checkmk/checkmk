@@ -163,9 +163,12 @@ protected:
         }
 
         // check that we do not have own process
-        EXPECT_FALSE(cma::tools::find(
-            names, tgt::Is64bit() ? "watest64.exe"s : "watest32.exe"s));
-        EXPECT_TRUE(cma::tools::find(names, std::string("svchost.exe")));
+        EXPECT_TRUE(std::ranges::find(names, tgt::Is64bit()
+                                                 ? "watest64.exe"s
+                                                 : "watest32.exe"s) ==
+                    names.end());
+        EXPECT_TRUE(std::ranges::find(names, std::string("svchost.exe")) !=
+                    names.end());
     }
 
     void TearDown() override {}

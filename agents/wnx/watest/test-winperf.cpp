@@ -95,8 +95,10 @@ TEST(WinPerf, ValidateFabricConfig) {
                                                         counter.second);
         tools::StringLower(counter_low.first);
         tools::StringLower(counter_low.second);
-        auto found = cma::tools::find(base_counters, counter_low);
-        if (found) found_count++;
+        if (std::ranges::find(base_counters, counter_low) !=
+            base_counters.end()) {
+            found_count++;
+        }
     }
 
     EXPECT_EQ(found_count, 3) << "not correct counter list in the yml";

@@ -156,8 +156,10 @@ bool MergeStringSequence(YAML::Node target_group, YAML::Node source_group,
         auto source_array = GetArray<std::string>(source);
 
         for (const auto& source_entry : source_array) {
-            auto found = cma::tools::find(target_array, source_entry);
-            if (!found) target.push_back(source_entry);
+            if (std::ranges::find(target_array, source_entry) ==
+                target_array.end()) {
+                target.push_back(source_entry);
+            }
         }
 
     } catch (const std::exception& e) {
@@ -210,7 +212,7 @@ bool MergeMapSequence(YAML::Node target_group, YAML::Node source_group,
 
             if (source_key.empty()) continue;  // we skip empty(and bad!)
 
-            if (cma::tools::none_of(target_array, [&](const YAML::Node& Node) {
+            if (std::ranges::none_of(target_array, [&](const YAML::Node& Node) {
                     return source_key == GetVal(Node, key, std::string());
                 }))
                 target.push_back(source_entry);

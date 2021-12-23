@@ -393,29 +393,64 @@ class FilterOption(Filter):
         return self.query_filter.filter_table(context, rows)
 
 
+class FilterNumberRange(Filter):  # type is int
+    def __init__(
+        self,
+        *,
+        title: Union[str, LazyString],
+        sort_index: int,
+        info: Literal["host", "service", "event"],
+        query_filter: query_filters.FilterNumberRange,
+    ) -> None:
+        self.query_filter = query_filter
+        super().__init__(
+            ident=self.query_filter.ident,
+            title=title,
+            sort_index=sort_index,
+            info=info,
+            htmlvars=self.query_filter.request_vars,
+            link_columns=[],
+            is_show_more=True,
+        )
+
+    def display(self, value: FilterHTTPVariables) -> None:
+        html.write_text(_("From:") + "&nbsp;")
+        html.text_input(
+            self.htmlvars[0], default_value=value.get(self.htmlvars[0], ""), style="width: 80px;"
+        )
+        html.write_text(" &nbsp; " + _("To:") + "&nbsp;")
+        html.text_input(
+            self.htmlvars[1], default_value=value.get(self.htmlvars[1], ""), style="width: 80px;"
+        )
+
+    def filter(self, value: FilterHTTPVariables) -> FilterHeader:
+        return self.query_filter.filter(value)
+
+    def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
+        return self.query_filter.filter_table(context, rows)
+
+
 class FilterTime(Filter):
     """Filter for setting time ranges, e.g. on last_state_change and last_check"""
 
     def __init__(
         self,
         *,
-        ident: str,
         title: Union[str, LazyString],
         sort_index: int,
-        info: str,
-        column: str,
+        info: Literal["comment", "downtime", "event", "history", "host", "log", "service"],
+        query_filter: query_filters.FilterTime,
         is_show_more: bool = False,
     ):
-        self.column = column
-        self.query_filter = query_filters.FilterTime(ident=ident, column=column)
+        self.query_filter = query_filter
 
         super().__init__(
-            ident=ident,
+            ident=self.query_filter.ident,
             title=title,
             sort_index=sort_index,
             info=info,
             htmlvars=self.query_filter.request_vars,
-            link_columns=[column] if column is not None else [],
+            link_columns=[self.query_filter.column],
             is_show_more=is_show_more,
         )
 

@@ -46,6 +46,7 @@ from cmk.gui.plugins.visuals.utils import (
     Filter,
     filter_cre_heading_info,
     filter_registry,
+    FilterNumberRange,
     FilterOption,
     FilterTime,
     get_only_sites_from_context,
@@ -1208,121 +1209,83 @@ filter_registry.register(
 )
 
 
-# info: usually either "host" or "service"
-# column: a livestatus column of type int or float
-class FilterNumberRange(Filter):  # type is int
-    def __init__(
-        self, *, ident: str, title: Union[str, LazyString], sort_index: int, info: str, column: str
-    ) -> None:
-        self.column = column
-        varnames = [ident + "_from", ident + "_until"]
-        super().__init__(
-            ident=ident,
-            title=title,
-            sort_index=sort_index,
-            info=info,
-            htmlvars=varnames,
-            link_columns=[],
-            is_show_more=True,
-        )
-
-    def display(self, value: FilterHTTPVariables) -> None:
-        html.write_text(_("From:") + "&nbsp;")
-        html.text_input(
-            self.htmlvars[0], default_value=value.get(self.htmlvars[0], ""), style="width: 80px;"
-        )
-        html.write_text(" &nbsp; " + _("To:") + "&nbsp;")
-        html.text_input(
-            self.htmlvars[1], default_value=value.get(self.htmlvars[1], ""), style="width: 80px;"
-        )
-
-    def filter(self, value: FilterHTTPVariables) -> FilterHeader:
-        lql = ""
-        for i, op in [(0, ">="), (1, "<=")]:
-            try:
-                lql += "Filter: %s %s %d\n" % (self.column, op, int(value[self.htmlvars[i]]))
-            except Exception:
-                pass
-        return lql
-
-
 filter_registry.register(
     FilterNumberRange(
-        ident="host_notif_number",
         title=_l("Current Host Notification Number"),
         sort_index=232,
         info="host",
-        column="current_notification_number",
+        query_filter=query_filters.FilterNumberRange(
+            ident="host_notif_number", column="current_notification_number"
+        ),
     )
 )
 
 filter_registry.register(
     FilterNumberRange(
-        ident="svc_notif_number",
         title=_l("Current Service Notification Number"),
         sort_index=232,
         info="service",
-        column="current_notification_number",
+        query_filter=query_filters.FilterNumberRange(
+            ident="svc_notif_number", column="current_notification_number"
+        ),
     )
 )
 
 filter_registry.register(
     FilterNumberRange(
-        ident="host_num_services",
         title=_l("Number of Services of the Host"),
         sort_index=234,
         info="host",
-        column="num_services",
+        query_filter=query_filters.FilterNumberRange(
+            ident="host_num_services", column="num_services"
+        ),
     )
 )
 
 filter_registry.register(
     FilterTime(
-        ident="svc_last_state_change",
         title=_l("Last service state change"),
         sort_index=250,
         info="service",
-        column="service_last_state_change",
+        query_filter=query_filters.FilterTime(
+            ident="svc_last_state_change", column="service_last_state_change"
+        ),
     )
 )
 
 filter_registry.register(
     FilterTime(
-        ident="svc_last_check",
         title=_l("Last service check"),
         sort_index=251,
         info="service",
-        column="service_last_check",
+        query_filter=query_filters.FilterTime(ident="svc_last_check", column="service_last_check"),
     )
 )
 
 filter_registry.register(
     FilterTime(
-        ident="host_last_state_change",
         title=_l("Last host state change"),
         sort_index=250,
         info="host",
-        column="host_last_state_change",
+        query_filter=query_filters.FilterTime(ident="host_last_state_change"),
     )
 )
 
 filter_registry.register(
     FilterTime(
-        ident="host_last_check",
         title=_l("Last host check"),
         sort_index=251,
         info="host",
-        column="host_last_check",
+        query_filter=query_filters.FilterTime(ident="host_last_check"),
     )
 )
 
 filter_registry.register(
     FilterTime(
-        ident="comment_entry_time",
         title=_l("Time of comment"),
         sort_index=253,
         info="comment",
-        column="comment_entry_time",
+        query_filter=query_filters.FilterTime(ident="comment_entry_time"),
     )
 )
 
@@ -1354,11 +1317,10 @@ filter_registry.register(
 
 filter_registry.register(
     FilterTime(
-        ident="downtime_entry_time",
         title=_l("Time when downtime was created"),
         sort_index=253,
         info="downtime",
-        column="downtime_entry_time",
+        query_filter=query_filters.FilterTime(ident="downtime_entry_time"),
     )
 )
 
@@ -1373,11 +1335,10 @@ filter_registry.register(
 
 filter_registry.register(
     FilterTime(
-        ident="downtime_start_time",
         title=_l("Start of downtime"),
         sort_index=255,
         info="downtime",
-        column="downtime_start_time",
+        query_filter=query_filters.FilterTime(ident="downtime_start_time"),
     )
 )
 
@@ -1392,11 +1353,10 @@ filter_registry.register(
 
 filter_registry.register(
     FilterTime(
-        ident="logtime",
         title=_l("Time of log entry"),
         sort_index=252,
         info="log",
-        column="log_time",
+        query_filter=query_filters.FilterTime(ident="logtime", column="log_time"),
     )
 )
 
@@ -2660,46 +2620,14 @@ filter_nagios_flag_with_register(
     info="event",
 )
 
-
-@filter_registry.register_instance
-class FilterEventCount(Filter):
-    def __init__(self):
-        name = "event_count"
-        super().__init__(
-            ident="event_count",
-            title=_l("Message count"),
-            sort_index=205,
-            info="event",
-            htmlvars=[name + "_from", name + "_to"],
-            link_columns=[name],
-        )
-        self._name = name
-
-    def display(self, value: FilterHTTPVariables) -> None:
-        html.write_text("from: ")
-        html.text_input(
-            self._name + "_from",
-            default_value=value.get(self._name + "_from", ""),
-            size=8,
-            cssclass="number",
-        )
-        html.write_text(" to: ")
-        html.text_input(
-            self._name + "_to",
-            default_value=value.get(self._name + "_to", ""),
-            size=8,
-            cssclass="number",
-        )
-
-    def filter(self, value: FilterHTTPVariables) -> FilterHeader:
-        f = ""
-        if v_from := value.get(self._name + "_from"):
-            f += "Filter: event_count >= %d\n" % int(v_from)
-
-        if v_to := value.get(self._name + "_to"):
-            f += "Filter: event_count <= %d\n" % int(v_to)
-        return f
-
+filter_registry.register(
+    FilterNumberRange(
+        title=_l("Message count"),
+        sort_index=205,
+        info="event",
+        query_filter=query_filters.FilterNumberRange(ident="event_count"),
+    )
+)
 
 filter_registry.register(
     CheckboxRowFilter(
@@ -2755,31 +2683,30 @@ filter_registry.register(
 
 filter_registry.register(
     FilterTime(
-        ident="event_first",
         title=_l("First occurrence of event"),
         sort_index=220,
         info="event",
-        column="event_first",
+        query_filter=query_filters.FilterTime(ident="event_first"),
     )
 )
 
 filter_registry.register(
     FilterTime(
-        ident="event_last",
         title=_l("Last occurrance of event"),
         sort_index=221,
         info="event",
-        column="event_last",
+        query_filter=query_filters.FilterTime(ident="event_last"),
     )
 )
 
 filter_registry.register(
     FilterTime(
-        ident="history_time",
         title=_l("Time of entry in event history"),
         sort_index=222,
         info="history",
-        column="history_time",
+        query_filter=query_filters.FilterTime(
+            ident="history_time",
+        ),
     )
 )
 

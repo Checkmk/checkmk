@@ -8,7 +8,7 @@
 # then later be replaced using the new query helpers.
 
 import time
-from typing import Callable, List, Literal, Optional, Tuple, Union
+from typing import Callable, List, Literal, Optional, Tuple
 
 import livestatus
 
@@ -264,58 +264,60 @@ def time_filter_options() -> Options:
     return choices
 
 
-class FilterTime(Filter):
-    def __init__(
-        self,
-        *,
-        ident: str,
-        column: str,
-    ):
-        varnames = [
-            ident + "_from",
-            ident + "_from_range",
-            ident + "_until",
-            ident + "_until_range",
-        ]
+MaybeIntBounds = Tuple[Optional[int], Optional[int]]
 
-        super().__init__(ident=ident, request_vars=varnames)
-        self.column = column
+
+class FilterNumberRange(Filter):
+    def __init__(self, *, ident: str, column: Optional[str] = None):
+        super().__init__(ident=ident, request_vars=[ident + "_from", ident + "_until"])
+        self.column = column or ident
+
+    def extractor(self, value: FilterHTTPVariables) -> MaybeIntBounds:
+        return (
+            self.get_bound(self.ident + "_from", value),
+            self.get_bound(self.ident + "_until", value),
+        )
+
+    @staticmethod
+    def get_bound(var: str, value: FilterHTTPVariables) -> Optional[int]:
+        try:
+            return int(value.get(var, ""))
+        except ValueError:
+            return None
 
     def filter(self, value: FilterHTTPVariables) -> FilterHeader:
-        fromsecs, untilsecs = self.get_time_range(value)
         filtertext = ""
-        if fromsecs is not None:
-            filtertext += "Filter: %s >= %d\n" % (self.column, fromsecs)
-        if untilsecs is not None:
-            filtertext += "Filter: %s <= %d\n" % (self.column, untilsecs)
+        for op, bound in zip((">=", "<="), self.extractor(value)):
+            if bound is not None:
+                filtertext += "Filter: %s %s %d\n" % (self.column, op, bound)
         return filtertext
 
-    # Extract timerange user has selected from HTML variables
-    def get_time_range(
-        self, value: FilterHTTPVariables
-    ) -> Tuple[Union[None, int, float], Union[None, int, float]]:
-        return self._get_time_range_of(value, "from"), self._get_time_range_of(value, "until")
 
-    def _get_time_range_of(self, value: FilterHTTPVariables, what: str) -> Union[None, int, float]:
-        varprefix = self.ident + "_" + what
+class FilterTime(FilterNumberRange):
+    def __init__(self, *, ident: str, column: Optional[str] = None):
 
-        rangename = value.get(varprefix + "_range")
+        super().__init__(ident=ident, column=column)
+        self.request_vars.extend([var + "_range" for var in self.request_vars])
+
+    @staticmethod
+    def get_bound(var: str, value: FilterHTTPVariables) -> Optional[int]:
+        rangename = value.get(var + "_range")
         if rangename == "abs":
             try:
-                return time.mktime(time.strptime(value[varprefix], "%Y-%m-%d"))
+                return int(time.mktime(time.strptime(value[var], "%Y-%m-%d")))
             except Exception:
                 user_errors.add(
-                    MKUserError(varprefix, _("Please enter the date in the format YYYY-MM-DD."))
+                    MKUserError(var, _("Please enter the date in the format YYYY-MM-DD."))
                 )
                 return None
 
         if rangename == "unix":
-            return int(value[varprefix])
+            return int(value[var])
         if rangename is None:
             return None
 
         try:
-            count = int(value[varprefix])
+            count = int(value[var])
             secs = count * int(rangename)
             return int(time.time()) - secs
         except Exception:

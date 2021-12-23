@@ -184,7 +184,7 @@ filter_tests = [
     ),
     FilterTest(
         ident="event_count",
-        request_vars=[("event_count_from", "1"), ("event_count_to", "123")],
+        request_vars=[("event_count_from", "1"), ("event_count_until", "123")],
         expected_filters=("Filter: event_count >= 1\n" "Filter: event_count <= 123\n"),
     ),
     # Testing base class EventFilterDropdown

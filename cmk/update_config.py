@@ -50,6 +50,7 @@ from cmk.base.autochecks.migration import load_unmigrated_autocheck_entries
 import cmk.gui.config
 import cmk.gui.groups
 import cmk.gui.pagetypes as pagetypes
+import cmk.gui.query_filters as query_filters
 import cmk.gui.utils
 import cmk.gui.visuals as visuals
 import cmk.gui.watolib.groups
@@ -71,6 +72,7 @@ from cmk.gui.plugins.userdb.utils import (
     USER_SCHEME_SERIAL,
 )
 from cmk.gui.plugins.views.utils import get_all_views
+from cmk.gui.plugins.visuals.utils import filter_registry
 from cmk.gui.plugins.wato.utils import config_variable_registry
 from cmk.gui.plugins.watolib.utils import filter_unknown_settings
 from cmk.gui.sites import is_wato_slave_site
@@ -181,6 +183,7 @@ class UpdateConfig:
 
     def _steps(self) -> List[Tuple[Callable[[], None], str]]:
         return [
+            (self._migrate_range_filters, "Migrate Range filters"),
             (self._migrate_dashlets, "Migrate dashlets"),
             (self._update_global_settings, "Update global settings"),
             (self._rewrite_wato_tag_config, "Rewriting tags"),
@@ -734,6 +737,43 @@ class UpdateConfig:
                 page_type_cls.save_user_instances(user_id)
 
         return topic_created_for
+
+    def _migrate_range_filters(self):
+        range_filters = [
+            filter_ident
+            for filter_ident, filter_object in filter_registry.items()
+            if hasattr(filter_object, "query_filter")
+            and isinstance(filter_object.query_filter, query_filters.FilterNumberRange)  # type: ignore[attr-defined]
+        ]
+
+        self._migrate_visual_range_filter(range_filters, "views", get_all_views())
+        self._migrate_visual_range_filter(range_filters, "dashboards", get_all_dashboards())
+        # Reports
+        try:
+            import cmk.gui.cee.reporting as reporting
+
+            reporting.load_reports()
+            self._migrate_visual_range_filter(range_filters, "reports", reporting.reports)
+        except ImportError:
+            pass
+
+    def _migrate_visual_range_filter(
+        self, range_filters: List[str], visual_type: str, all_visuals: Dict
+    ):
+        modified_user_instances = set()
+        for (owner, _name), visual_spec in all_visuals.items():
+            for key, filter_vars in visual_spec.get("context", {}).items():
+                if key in range_filters:
+                    new_vars = {
+                        re.sub("_to$", "_until", request_var): value
+                        for request_var, value in filter_vars.items()
+                    }
+                    if filter_vars != new_vars:
+                        modified_user_instances.add(owner)
+                        visual_spec["context"][key] = new_vars
+
+        for owner in modified_user_instances:
+            visuals.save(visual_type, all_visuals, owner)
 
     def _migrate_all_visuals_topics(self, topics: Dict):
         topic_created_for: Set[UserId] = set()

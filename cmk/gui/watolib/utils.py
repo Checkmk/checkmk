@@ -8,6 +8,7 @@ import ast
 import base64
 import pprint
 import re
+from pathlib import Path
 from typing import Any, Callable, List, Tuple, TypedDict, Union
 
 import cmk.utils.paths
@@ -138,7 +139,8 @@ def try_bake_agents_for_hosts(hosts: List[HostName]) -> None:
             pass
 
 
-def site_neutral_path(path):
+def site_neutral_path(path: Union[str, Path]) -> str:
+    path = str(path)
     if path.startswith("/omd"):
         parts = path.split("/")
         parts[3] = "[SITE_ID]"

@@ -31,6 +31,7 @@ def _page_menu_entries_related(page_name: str) -> Iterator[PageMenuEntry]:
             title=_("Change password"),
             icon_name="topic_change_password",
             item=make_simple_link("user_change_pw.py"),
+            is_shortcut=True,
         )
 
     if page_name != "user_profile":
@@ -38,6 +39,7 @@ def _page_menu_entries_related(page_name: str) -> Iterator[PageMenuEntry]:
             title=_("Edit profile"),
             icon_name="topic_profile",
             item=make_simple_link("user_profile.py"),
+            is_shortcut=True,
         )
 
     if (
@@ -49,4 +51,5 @@ def _page_menu_entries_related(page_name: str) -> Iterator[PageMenuEntry]:
             title=_("Notification rules"),
             icon_name="topic_events",
             item=make_simple_link("wato.py?mode=user_notifications_p"),
+            is_shortcut=True,
         )

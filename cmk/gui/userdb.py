@@ -15,7 +15,19 @@ import traceback
 from contextlib import suppress
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
-from typing import Any, Callable, cast, Dict, Iterable, List, Literal, Optional, Tuple, Union
+from typing import (
+    Any,
+    Callable,
+    cast,
+    Dict,
+    Iterable,
+    List,
+    Literal,
+    Optional,
+    Tuple,
+    TypedDict,
+    Union,
+)
 
 from six import ensure_str
 
@@ -69,6 +81,16 @@ from cmk.gui.valuespec import (
 auth_logger = logger.getChild("auth")
 
 Users = Dict[UserId, UserSpec]  # TODO: Improve this type
+
+
+class WebAuthnCredential(TypedDict):
+    credential_id: str
+    registered_at: int
+    credential_data: bytes
+
+
+class TwoFactorCredentials(TypedDict):
+    webauthn_credentials: Dict[str, WebAuthnCredential]
 
 
 def load_plugins() -> None:
@@ -232,6 +254,24 @@ def need_to_change_pw(username: UserId) -> Union[bool, str]:
         if time.time() - last_pw_change > max_pw_age:
             return "expired"
     return False
+
+
+def load_two_factor_credentials(user_id: UserId, lock: bool = False) -> TwoFactorCredentials:
+    return load_custom_attr(
+        user_id,
+        "two_factor_credentials",
+        conv_func=ast.literal_eval,
+        default=TwoFactorCredentials(
+            {
+                "webauthn_credentials": {},
+            }
+        ),
+        lock=lock,
+    )
+
+
+def save_two_factor_credentials(user_id: UserId, credentials: TwoFactorCredentials) -> None:
+    save_custom_attr(user_id, "two_factor_credentials", repr(credentials))
 
 
 def load_user(user_id: UserId) -> UserSpec:
@@ -429,6 +469,8 @@ class SessionInfo:
     started_at: int
     last_activity: int
     flashes: List[str] = field(default_factory=list)
+    # We don't care about the specific object, because it's internal to the fido2 library
+    webauthn_action_state: object = None
 
     def to_json(self) -> Dict:
         return asdict(self)
@@ -781,6 +823,18 @@ def load_users(lock: bool = False) -> Users:
             if user_id in result:
                 result[user_id]["serial"] = utils.saveint(serial)
 
+    attributes: List[Tuple[str, Callable]] = [
+        ("num_failed_logins", utils.saveint),
+        ("last_pw_change", utils.saveint),
+        ("enforce_pw_change", lambda x: bool(utils.saveint(x))),
+        ("idle_timeout", _convert_idle_timeout),
+        ("session_info", _convert_session_info),
+        ("start_url", _convert_start_url),
+        ("ui_theme", lambda x: x),
+        ("two_factor_credentials", ast.literal_eval),
+        ("ui_sidebar_position", lambda x: None if x == "None" else x),
+    ]
+
     # Now read the user specific files
     directory = cmk.utils.paths.var_dir + "/web/"
     for uid in os.listdir(directory):
@@ -788,16 +842,7 @@ def load_users(lock: bool = False) -> Users:
 
             # read special values from own files
             if uid in result:
-                for attr, conv_func in [
-                    ("num_failed_logins", utils.saveint),
-                    ("last_pw_change", utils.saveint),
-                    ("enforce_pw_change", lambda x: bool(utils.saveint(x))),
-                    ("idle_timeout", _convert_idle_timeout),
-                    ("session_info", _convert_session_info),
-                    ("start_url", _convert_start_url),
-                    ("ui_theme", lambda x: x),
-                    ("ui_sidebar_position", lambda x: None if x == "None" else x),
-                ]:
+                for attr, conv_func in attributes:
                     val = load_custom_attr(uid, attr, conv_func)
                     if val is not None:
                         result[uid][attr] = val
@@ -950,6 +995,11 @@ def _save_user_profiles(updated_profiles: Users) -> None:
         else:
             remove_custom_attr(user_id, "start_url")
 
+        if user.get("two_factor_credentials") is not None:
+            save_two_factor_credentials(user_id, user["two_factor_credentials"])
+        else:
+            remove_custom_attr(user_id, "two_factor_credentials")
+
         # Is None on first load
         if user.get("ui_theme") is not None:
             save_custom_attr(user_id, "ui_theme", user["ui_theme"])
@@ -1069,6 +1119,7 @@ def _non_contact_keys() -> List[str]:
         "roles",
         "serial",
         "session_info",
+        "two_factor_credentials",
     ] + _get_multisite_custom_variable_names()
 
 

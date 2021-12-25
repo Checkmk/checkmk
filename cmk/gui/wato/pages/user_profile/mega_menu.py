@@ -80,6 +80,13 @@ def _user_menu_topics() -> List[TopicMenuTopic]:
             icon="topic_change_password",
         ),
         TopicMenuItem(
+            name="two_factor",
+            title=_("Two-factor authentication"),
+            url="user_two_factor_overview.py",
+            sort_index=30,
+            icon="topic_two_factor",
+        ),
+        TopicMenuItem(
             name="logout",
             title=_("Logout"),
             url="logout.py",

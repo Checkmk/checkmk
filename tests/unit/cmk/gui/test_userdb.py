@@ -715,3 +715,27 @@ def test_cleanup_user_profiles_keep_active_profile_old(user_id: UserId) -> None:
 
     userdb.UserProfileCleanupBackgroundJob()._do_cleanup()
     assert cmk.utils.paths.profile_dir.joinpath(user_id).exists()
+
+
+def test_load_two_factor_credentials_unset(user_id: UserId) -> None:
+    assert userdb.load_two_factor_credentials(user_id) == {
+        "webauthn_credentials": {},
+    }
+
+
+def test_save_two_factor_credentials(user_id: UserId) -> None:
+    credentials = userdb.TwoFactorCredentials(
+        {
+            "webauthn_credentials": {
+                "id": userdb.WebAuthnCredential(
+                    {
+                        "credential_id": "id",
+                        "registered_at": 1337,
+                        "credential_data": b"whatever",
+                    }
+                ),
+            },
+        }
+    )
+    userdb.save_two_factor_credentials(user_id, credentials)
+    assert userdb.load_two_factor_credentials(user_id) == credentials

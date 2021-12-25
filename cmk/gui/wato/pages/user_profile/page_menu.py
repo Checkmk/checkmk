@@ -34,6 +34,14 @@ def _page_menu_entries_related(page_name: str) -> Iterator[PageMenuEntry]:
             is_shortcut=True,
         )
 
+    if page_name != "user_two_factor_overview" and user.may("general.manage_2fa"):
+        yield PageMenuEntry(
+            title=_("Edit two-factor authentication"),
+            icon_name="topic_2fa",
+            item=make_simple_link("user_two_factor_overview.py"),
+            is_shortcut=True,
+        )
+
     if page_name != "user_profile":
         yield PageMenuEntry(
             title=_("Edit profile"),

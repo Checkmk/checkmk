@@ -58,7 +58,7 @@ class ABCUserProfilePage(Page):
         breadcrumb = make_simple_page_breadcrumb(mega_menu_registry.menu_user(), title)
         html.header(title, breadcrumb, self._page_menu(breadcrumb))
 
-        if request.has_var("_save") and transactions.check_transaction():
+        if transactions.check_transaction():
             try:
                 self._action()
             except MKUserError as e:

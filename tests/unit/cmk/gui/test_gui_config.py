@@ -304,6 +304,7 @@ def test_registered_permissions():
         "general.act",
         "general.agent_pairing",
         "general.change_password",
+        "general.manage_2fa",
         "general.configure_sidebar",
         "general.csv_export",
         "general.delete_foreign_pagetype_topic",

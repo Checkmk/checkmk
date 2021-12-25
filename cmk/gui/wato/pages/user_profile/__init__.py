@@ -10,4 +10,5 @@ from . import (  # noqa: F401 # pylint: disable=unused-import
     edit_profile,
     mega_menu,
     replicate,
+    two_factor,
 )

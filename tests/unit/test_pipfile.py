@@ -232,7 +232,6 @@ CEE_UNUSED_PACKAGES = [
     "defusedxml",
     "dnspython",
     "docutils",
-    "fido2",
     "gunicorn",
     "idna",
     "importlib_metadata",

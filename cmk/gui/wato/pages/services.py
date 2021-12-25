@@ -5,7 +5,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Modes for services and discovery"""
 
-import ast
 import json
 import pprint
 import traceback
@@ -260,8 +259,8 @@ class ModeAjaxServiceDiscovery(AjaxPage):
 
         # Reuse the discovery result already known to the GUI or fetch a new one?
         previous_discovery_result = (
-            DiscoveryResult(*ast.literal_eval(api_request["discovery_result"]))
-            if api_request.get("discovery_result")
+            DiscoveryResult.deserialize(raw)
+            if (raw := api_request.get("discovery_result"))
             else None
         )
 
@@ -314,7 +313,7 @@ class ModeAjaxServiceDiscovery(AjaxPage):
             "page_menu": self._get_page_menu(),
             "pending_changes_info": get_pending_changes_info(),
             "discovery_options": self._options._asdict(),
-            "discovery_result": repr(tuple(discovery_result)),
+            "discovery_result": discovery_result.serialize(),
         }
 
     def _get_page_menu(self) -> str:
@@ -869,11 +868,10 @@ class DiscoveryPageRenderer:
         if statename == "":
             statename = short_service_state_name(-1)
             stateclass = "state svcstate statep"
-            state = 0  # for tr class
+            table.row(css="data", state=0)
         else:
-            stateclass = "state svcstate state%s" % state
-
-        table.row(css="data", state=state)
+            stateclass = f"state svcstate state{entry.state}"
+            table.row(css="data", state=entry.state)
 
         self._show_bulk_checkbox(
             table,

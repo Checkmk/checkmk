@@ -5,6 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import ast
+import dataclasses
 import json
 import os
 import sys
@@ -94,6 +95,29 @@ class DiscoveryResult(NamedTuple):
     new_labels: dict
     vanished_labels: dict
     changed_labels: dict
+
+    def serialize(self) -> str:
+        return repr(
+            (
+                self.job_status,
+                self.check_table_created,
+                [dataclasses.astuple(cpe) for cpe in self.check_table],
+                self.host_labels,
+                self.new_labels,
+                self.vanished_labels,
+                self.changed_labels,
+            )
+        )
+
+    @classmethod
+    def deserialize(cls, raw: str) -> "DiscoveryResult":
+        job_status, check_table_created, raw_check_table, *rest = ast.literal_eval(raw)
+        return cls(
+            job_status,
+            check_table_created,
+            [CheckPreviewEntry(*cpe) for cpe in raw_check_table],
+            *rest,
+        )
 
 
 class DiscoveryOptions(NamedTuple):
@@ -527,8 +551,7 @@ def execute_discovery_job(api_request: StartDiscoveryRequest) -> DiscoveryResult
     if job.is_active() and api_request.options.action == DiscoveryAction.STOP:
         job.stop()
 
-    r = job.get_result(api_request)
-    return r
+    return job.get_result(api_request)
 
 
 def _add_missing_discovery_result_fields(discovery_result: DiscoveryResult) -> DiscoveryResult:

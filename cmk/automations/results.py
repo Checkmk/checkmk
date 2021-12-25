@@ -132,6 +132,14 @@ class TryDiscoveryResult(ABCAutomationResult):
     def to_pre_21(self) -> Mapping[str, Any]:
         return asdict(self)
 
+    def serialize(self) -> SerializedResult:
+        return SerializedResult(pformat(astuple(self)))
+
+    @classmethod
+    def deserialize(cls, serialized_result: SerializedResult) -> "TryDiscoveryResult":
+        raw_output, raw_check_table, *raw_rest = literal_eval(serialized_result)
+        return cls(raw_output, [CheckPreviewEntry(*cpe) for cpe in raw_check_table], *raw_rest)
+
     @staticmethod
     def automation_call() -> str:
         return "try-inventory"

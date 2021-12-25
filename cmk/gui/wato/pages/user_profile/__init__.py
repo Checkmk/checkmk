@@ -6,13 +6,8 @@
 """Page user can change several aspects of it's own profile"""
 
 import abc
-import json
 import time
-from typing import Iterator, List, Optional, Union
-
-from livestatus import SiteConfiguration, SiteId
-
-from cmk.utils.type_defs import UserId
+from typing import List, Optional
 
 import cmk.gui.forms as forms
 import cmk.gui.i18n
@@ -21,33 +16,24 @@ import cmk.gui.sites
 import cmk.gui.userdb as userdb
 import cmk.gui.watolib as watolib
 from cmk.gui.breadcrumb import make_simple_page_breadcrumb
-from cmk.gui.exceptions import FinalizeRequest, MKAuthException, MKGeneralException, MKUserError
+from cmk.gui.exceptions import FinalizeRequest, MKAuthException, MKUserError
 from cmk.gui.globals import config, html, request, response, theme, transactions, user, user_errors
 from cmk.gui.i18n import _, _l, _u
 from cmk.gui.main_menu import mega_menu_registry
-from cmk.gui.page_menu import (
-    make_simple_form_page_menu,
-    make_simple_link,
-    PageMenu,
-    PageMenuDropdown,
-    PageMenuEntry,
-    PageMenuTopic,
-)
+from cmk.gui.page_menu import make_simple_form_page_menu, PageMenu
 from cmk.gui.pages import AjaxPage, AjaxPageResult, Page, page_registry
 from cmk.gui.plugins.userdb.htpasswd import hash_password
 from cmk.gui.plugins.userdb.utils import get_user_attributes_by_topic, validate_start_url
 from cmk.gui.plugins.wato.utils.base_modes import redirect
-from cmk.gui.sites import get_site_config, sitenames
 from cmk.gui.type_defs import MegaMenu, TopicMenuItem, TopicMenuTopic, UserSpec
 from cmk.gui.utils.flashed_messages import flash, get_flashed_messages
 from cmk.gui.utils.language_cookie import set_language_cookie
 from cmk.gui.utils.theme import theme_choices
 from cmk.gui.utils.urls import makeuri_contextless, requested_file_name
+from cmk.gui.wato.pages.user_profile.async_replication import user_profile_async_replication_page
+from cmk.gui.wato.pages.user_profile.page_menu import page_menu_dropdown_user_related
 from cmk.gui.wato.pages.users import select_language
-from cmk.gui.watolib.activate_changes import ACTIVATION_TIME_PROFILE_SYNC
-from cmk.gui.watolib.changes import add_change
 from cmk.gui.watolib.global_settings import rulebased_notifications_enabled
-from cmk.gui.watolib.user_profile import push_user_profiles_to_site_transitional_wrapper
 
 
 def _get_current_theme_titel() -> str:
@@ -213,77 +199,6 @@ def _set_user_attribute(key: str, value: Optional[str]):
         userdb.remove_custom_attr(user_id, key)
     else:
         userdb.save_custom_attr(user_id, key, value)
-
-
-def user_profile_async_replication_page(back_url: str) -> None:
-    sites = list(user.authorized_login_sites().keys())
-    user_profile_async_replication_dialog(sites=sites, back_url=back_url)
-
-    html.footer()
-
-
-def user_profile_async_replication_dialog(sites: List[SiteId], back_url: str) -> None:
-    html.p(
-        _(
-            "In order to activate your changes available on all remote sites, your user profile needs "
-            "to be replicated to the remote sites. This is done on this page now. Each site "
-            "is being represented by a single image which is first shown gray and then fills "
-            "to green during synchronisation."
-        )
-    )
-
-    html.h3(_("Replication States"))
-    html.open_div(id_="profile_repl")
-    num_replsites = 0
-    for site_id in sites:
-        site = config.sites[site_id]
-        if "secret" not in site:
-            status_txt = _("Not logged in.")
-            start_sync = False
-            icon = "repl_locked"
-        else:
-            status_txt = _("Waiting for replication to start")
-            start_sync = True
-            icon = "repl_pending"
-
-        html.open_div(class_="site", id_="site-%s" % site_id)
-        html.div("", title=status_txt, class_=["icon", "repl_status", icon])
-        if start_sync:
-            changes_manager = watolib.ActivateChanges()
-            changes_manager.load()
-            estimated_duration = changes_manager.get_activation_time(
-                site_id, ACTIVATION_TIME_PROFILE_SYNC, 2.0
-            )
-            html.javascript(
-                "cmk.profile_replication.start(%s, %d, %s);"
-                % (
-                    json.dumps(site_id),
-                    int(estimated_duration * 1000.0),
-                    json.dumps(_("Replication in progress")),
-                )
-            )
-            num_replsites += 1
-        else:
-            _add_profile_replication_change(site_id, status_txt)
-        html.span(site.get("alias", site_id))
-
-        html.close_div()
-
-    html.javascript(
-        "cmk.profile_replication.prepare(%d, %s);\n" % (num_replsites, json.dumps(back_url))
-    )
-
-    html.close_div()
-
-
-def _add_profile_replication_change(site_id: SiteId, result: Union[bool, str]) -> None:
-    """Add pending change entry to make sync possible later for admins"""
-    add_change(
-        "edit-users",
-        _("Profile changed (sync failed: %s)") % result,
-        sites=[site_id],
-        need_restart=False,
-    )
 
 
 class ABCUserProfilePage(Page):
@@ -623,93 +538,3 @@ def _show_custom_user_attr(user_spec: UserSpec, custom_attr) -> None:
                 html.help(_u(vs.help()))
             else:
                 html.write_text(vs.value_to_html(value))
-
-
-@page_registry.register_page("wato_ajax_profile_repl")
-class ModeAjaxProfileReplication(AjaxPage):
-    """AJAX handler for asynchronous replication of user profiles (changed passwords)"""
-
-    def page(self):
-        ajax_request = self.webapi_request()
-
-        site_id_val = ajax_request.get("site")
-        if not site_id_val:
-            raise MKUserError(None, "The site_id is missing")
-        site_id = site_id_val
-        if site_id not in sitenames():
-            raise MKUserError(None, _("The requested site does not exist"))
-
-        status = (
-            cmk.gui.sites.states()
-            .get(site_id, cmk.gui.sites.SiteStatus({}))
-            .get("state", "unknown")
-        )
-        if status == "dead":
-            raise MKGeneralException(_("The site is marked as dead. Not trying to replicate."))
-
-        site = get_site_config(site_id)
-        assert user.id is not None
-        result = self._synchronize_profile(site_id, site, user.id)
-
-        if result is not True:
-            assert result is not False
-            _add_profile_replication_change(site_id, result)
-            raise MKGeneralException(result)
-
-        return _("Replication completed successfully.")
-
-    def _synchronize_profile(
-        self, site_id: SiteId, site: SiteConfiguration, user_id: UserId
-    ) -> Union[bool, str]:
-        users = userdb.load_users(lock=False)
-        if user_id not in users:
-            raise MKUserError(None, _("The requested user does not exist"))
-
-        start = time.time()
-        result = push_user_profiles_to_site_transitional_wrapper(site, {user_id: users[user_id]})
-
-        duration = time.time() - start
-        watolib.ActivateChanges().update_activation_time(
-            site_id, ACTIVATION_TIME_PROFILE_SYNC, duration
-        )
-        return result
-
-
-def page_menu_dropdown_user_related(page_name: str) -> PageMenuDropdown:
-    return PageMenuDropdown(
-        name="related",
-        title=_("Related"),
-        topics=[
-            PageMenuTopic(
-                title=_("User"),
-                entries=list(_page_menu_entries_related(page_name)),
-            ),
-        ],
-    )
-
-
-def _page_menu_entries_related(page_name: str) -> Iterator[PageMenuEntry]:
-    if page_name != "user_change_pw":
-        yield PageMenuEntry(
-            title=_("Change password"),
-            icon_name="topic_change_password",
-            item=make_simple_link("user_change_pw.py"),
-        )
-
-    if page_name != "user_profile":
-        yield PageMenuEntry(
-            title=_("Edit profile"),
-            icon_name="topic_profile",
-            item=make_simple_link("user_profile.py"),
-        )
-
-    if (
-        page_name != "user_notifications_p"
-        and rulebased_notifications_enabled()
-        and user.may("general.edit_notifications")
-    ):
-        yield PageMenuEntry(
-            title=_("Notification rules"),
-            icon_name="topic_events",
-            item=make_simple_link("wato.py?mode=user_notifications_p"),
-        )

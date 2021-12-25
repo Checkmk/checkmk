@@ -17,7 +17,6 @@ import cmk.gui.forms as forms
 import cmk.gui.permissions as permissions
 import cmk.gui.userdb as userdb
 import cmk.gui.view_utils
-import cmk.gui.wato.user_profile
 import cmk.gui.watolib as watolib
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.exceptions import MKUserError
@@ -71,6 +70,8 @@ from cmk.gui.valuespec import (
     Transform,
     Tuple,
 )
+from cmk.gui.wato.pages.user_profile.async_replication import user_profile_async_replication_dialog
+from cmk.gui.wato.pages.user_profile.page_menu import page_menu_dropdown_user_related
 from cmk.gui.wato.pages.users import ModeEditUser
 from cmk.gui.watolib.check_mk_automations import (
     notification_analyse,
@@ -946,7 +947,7 @@ class ABCUserNotificationsMode(ABCNotificationsMode):
 
     def page(self):
         if self._start_async_repl:
-            cmk.gui.wato.user_profile.user_profile_async_replication_dialog(
+            user_profile_async_replication_dialog(
                 sites=_get_notification_sync_sites(),
                 back_url=ModePersonalUserNotifications.mode_url(),
             )
@@ -1092,7 +1093,7 @@ class ModePersonalUserNotifications(ABCUserNotificationsMode):
                         )
                     ],
                 ),
-                cmk.gui.wato.user_profile.page_menu_dropdown_user_related("user_notifications_p"),
+                page_menu_dropdown_user_related("user_notifications_p"),
             ],
             breadcrumb=breadcrumb,
             inpage_search=PageMenuSearch(),
@@ -1637,7 +1638,7 @@ class ABCEditNotificationRuleMode(ABCNotificationsMode):
 
     def page(self):
         if self._start_async_repl:
-            cmk.gui.wato.user_profile.user_profile_async_replication_dialog(
+            user_profile_async_replication_dialog(
                 sites=_get_notification_sync_sites(),
                 back_url=ModePersonalUserNotifications.mode_url(),
             )

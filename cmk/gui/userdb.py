@@ -256,6 +256,20 @@ def need_to_change_pw(username: UserId) -> Union[bool, str]:
     return False
 
 
+def is_two_factor_login_enabled(user_id: UserId) -> bool:
+    """Whether or not 2FA is enabled for the given user"""
+    return bool(load_two_factor_credentials(user_id)["webauthn_credentials"])
+
+
+def is_two_factor_completed() -> bool:
+    """Whether or not the user has completed the 2FA challenge"""
+    return session.session_info.two_factor_completed
+
+
+def set_two_factor_completed() -> None:
+    session.session_info.two_factor_completed = True
+
+
 def load_two_factor_credentials(user_id: UserId, lock: bool = False) -> TwoFactorCredentials:
     return load_custom_attr(
         user_id,
@@ -469,6 +483,8 @@ class SessionInfo:
     started_at: int
     last_activity: int
     flashes: List[str] = field(default_factory=list)
+    # In case it is enabled: Was it already authenticated?
+    two_factor_completed: bool = False
     # We don't care about the specific object, because it's internal to the fido2 library
     webauthn_action_state: object = None
 

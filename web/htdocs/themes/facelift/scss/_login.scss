@@ -156,4 +156,33 @@ body.login {
   body.main .popup_menu div#login div#foot span {
     color: $font-color-dimmed;
   }
+
+  &.two_factor {
+    #webauthn_message {
+      position: absolute;
+      top: 83px;
+      right: 0;
+      left: 0;
+      padding: 4px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      border-radius: 0;
+      box-shadow: none;
+    }
+
+    #label_2fa {
+      position: absolute;
+      top: 70px;
+      left: 40px;
+    }
+
+    #label_pass {
+      top: 138px;
+    }
+
+    #input_pass {
+      top: 132px;
+    }
+  }
 }

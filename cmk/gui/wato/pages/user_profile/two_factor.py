@@ -12,15 +12,29 @@ from typing import Any
 
 from fido2 import cbor  # type: ignore[import]
 from fido2.client import ClientData  # type: ignore[import]
-from fido2.ctap2 import AttestationObject  # type: ignore[import]
-from fido2.ctap2 import AttestedCredentialData  # type: ignore[import]
+from fido2.ctap2 import (  # type: ignore[import]
+    AttestationObject,
+    AttestedCredentialData,
+    AuthenticatorData,
+)
 from fido2.server import Fido2Server  # type: ignore[import]
 from fido2.webauthn import PublicKeyCredentialRpEntity  # type: ignore[import]
 
 from cmk.gui import forms
+from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.crash_reporting import handle_exception_as_gui_crash_report
 from cmk.gui.exceptions import MKGeneralException
-from cmk.gui.globals import g, html, request, response, session, transactions, user
+from cmk.gui.globals import (
+    g,
+    html,
+    request,
+    response,
+    session,
+    theme,
+    transactions,
+    user,
+    user_errors,
+)
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.page_menu import (
@@ -33,8 +47,10 @@ from cmk.gui.page_menu import (
 from cmk.gui.pages import Page, page_registry
 from cmk.gui.table import table_element
 from cmk.gui.userdb import (
+    is_two_factor_login_enabled,
     load_two_factor_credentials,
     save_two_factor_credentials,
+    set_two_factor_completed,
     WebAuthnCredential,
 )
 from cmk.gui.utils.flashed_messages import flash
@@ -221,4 +237,123 @@ class UserWebAuthnRegisterComplete(CBORPage):
         save_two_factor_credentials(user.id, credentials)
 
         flash(_("Registration successful"))
+        return {"status": "OK"}
+
+
+@page_registry.register_page("user_login_two_factor")
+class UserLoginTwoFactor(Page):
+    def page(self) -> None:
+        assert user.id is not None
+
+        html.set_render_headfoot(False)
+        html.add_body_css_class("login")
+        html.add_body_css_class("two_factor")
+        html.header(_("Two-factor authentication"), Breadcrumb(), javascripts=[])
+
+        html.open_div(id_="login")
+
+        html.open_div(id_="login_window")
+
+        html.open_a(href="https://checkmk.com")
+        html.img(
+            src=theme.detect_icon_path(icon_name="logo", prefix="mk-"),
+            id_="logo",
+            class_="custom" if theme.has_custom_logo() else None,
+        )
+        html.close_a()
+
+        if not is_two_factor_login_enabled(user.id):
+            raise MKGeneralException(_("Two-factor authentication not enabled"))
+
+        html.begin_form(
+            "two_factor_login", method="POST", add_transid=False, action="user_login_two_factor.py"
+        )
+        html.prevent_password_auto_completion()
+        html.hidden_field("_origtarget", request.get_url_input("_origtarget", "index.py"))
+
+        html.label(
+            _("Two-factor authentication"),
+            for_="webauthn_message",
+            id_="label_2fa",
+            class_="legend",
+        )
+        html.div("", id_="webauthn_message")
+
+        html.label(
+            "%s:" % _("Backup code"),
+            id_="label_pass",
+            class_=["legend"],
+            for_="_backup_code",
+        )
+        html.br()
+        html.password_input("_backup_code", id_="input_pass", size=None)
+
+        if user_errors:
+            html.open_div(id_="login_error")
+            html.show_user_errors()
+            html.close_div()
+
+        html.javascript("cmk.webauthn.login()")
+
+        html.open_div(id_="button_text")
+        html.button("_login", _("Login"), cssclass="hot")
+        html.close_div()
+        html.close_div()
+
+        html.hidden_fields()
+        html.end_form()
+        html.close_div()
+        html.footer()
+
+
+@page_registry.register_page("user_webauthn_login_begin")
+class UserWebAuthnLoginBegin(CBORPage):
+    def page(self) -> CBORPageResult:
+        assert user.id is not None
+
+        if not is_two_factor_login_enabled(user.id):
+            raise MKGeneralException(_("Two-factor authentication not enabled"))
+
+        auth_data, state = make_fido2_server().authenticate_begin(
+            [
+                AttestedCredentialData.unpack_from(v["credential_data"])[0]
+                for v in load_two_factor_credentials(user.id)["webauthn_credentials"].values()
+            ],
+            user_verification="discouraged",
+        )
+
+        session.session_info.webauthn_action_state = state
+        logger.debug("Authentication data: %r", auth_data)
+        return auth_data
+
+
+@page_registry.register_page("user_webauthn_login_complete")
+class UserWebAuthnLoginComplete(CBORPage):
+    def page(self) -> CBORPageResult:
+        assert user.id is not None
+
+        if not is_two_factor_login_enabled(user.id):
+            raise MKGeneralException(_("Two-factor authentication not enabled"))
+
+        data: dict[str, object] = cbor.decode(request.get_data())
+        credential_id = data["credentialId"]
+        client_data = ClientData(data["clientDataJSON"])
+        auth_data = AuthenticatorData(data["authenticatorData"])
+        signature = data["signature"]
+        logger.debug("ClientData: %r", client_data)
+        logger.debug("AuthenticatorData: %r", auth_data)
+
+        make_fido2_server().authenticate_complete(
+            session.session_info.webauthn_action_state,
+            [
+                AttestedCredentialData.unpack_from(v["credential_data"])[0]
+                for v in load_two_factor_credentials(user.id)["webauthn_credentials"].values()
+            ],
+            credential_id,
+            client_data,
+            auth_data,
+            signature,
+        )
+        session.session_info.webauthn_action_state = None
+        set_two_factor_completed()
         return {"status": "OK"}

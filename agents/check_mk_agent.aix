@@ -26,6 +26,11 @@ inpath() {
     command -v "${1:?No command to test}" >/dev/null 2>&1
 }
 
+get_epoch() {
+    date +%s 2>/dev/null ||
+        perl -e 'print($^T."\n");'
+}
+
 get_file_mtime() {
     stat -c %Y "${1}" 2>/dev/null ||
         stat -f %m "${1}" 2>/dev/null ||
@@ -575,20 +580,22 @@ run_cached() {
         return
     fi
 
+    NOW=$(get_epoch)
+
     if [ ! -e "${MK_VARDIR}/cache" ]; then mkdir -p "${MK_VARDIR}/cache"; fi
     CACHEFILE="${MK_VARDIR}/cache/${NAME}.cache"
 
     USE_CACHEFILE=""
     # Check if file exists and is recent enough
     if [ -s "${CACHEFILE}" ]; then
-        AGE=$(/usr/bin/perl -e 'if (! -f $ARGV[0]){die "0000000"};$mtime=(stat($ARGV[0]))[9];print ($^T-$mtime);' ${CACHEFILE} )
+        AGE=$((NOW - $(get_file_mtime "${CACHEFILE}")))
         if (( AGE < MAXAGE )); then
             USE_CACHEFILE=1
         fi
 
         if ${MK_RUN_SYNC_PARTS}; then
             # get file time for cache
-            MTIME=$(/usr/bin/perl -e 'print((stat shift)[9])' ${CACHEFILE})
+            MTIME=$(get_file_mtime "${CACHEFILE}")
             CACHE_INFO="cached(${MTIME},${MAXAGE})"
             if [[ ${NAME} == local_* ]]; then
                 # prefix CACHE_INFO, but skip any headers and lines with existing CACHE_INFO
@@ -635,7 +642,7 @@ run_spooler() {
     (
         cd "${SPOOLDIR}" 2>/dev/null || return
 
-        now=$(date +%s)
+        now=$(get_epoch)
 
         for file in *; do
             [ "${file}" != "*" ] || return

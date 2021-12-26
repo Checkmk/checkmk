@@ -26,6 +26,11 @@ inpath() {
     command -v "${1:?No command to test}" >/dev/null 2>&1
 }
 
+get_epoch() {
+    date +%s 2>/dev/null ||
+        perl -e 'print($^T."\n");'
+}
+
 get_file_mtime() {
     stat -c %Y "${1}" 2>/dev/null ||
         stat -f %m "${1}" 2>/dev/null ||
@@ -408,7 +413,7 @@ section_multipath() {
 section_diskstat() {
     # Performancecounter Platten
     echo '<<<diskstat>>>'
-    date +%s
+    get_epoch
     egrep ' (x?[shv]d[a-z]*|cciss/c[0-9]+d[0-9]+|emcpower[a-z]+|dm-[0-9]+|VxVM.*|mmcblk.*|dasd[a-z]*) ' </proc/diskstats
     if inpath dmsetup; then
         echo '[dmsetup_info]'
@@ -423,7 +428,7 @@ section_diskstat() {
 section_kernel() {
     # Performancecounter Kernel
     echo '<<<kernel>>>'
-    date +%s
+    get_epoch
     cat /proc/vmstat /proc/stat
 }
 
@@ -693,7 +698,7 @@ section_mknotify() {
     if inpath omd; then
         run_cached "omd_status" 60 "echo <<<omd_status>>>; omd status --bare --auto || true"
         echo '<<<mknotifyd:sep(0)>>>'
-        date +%s
+        get_epoch
         for statefile in /omd/sites/*/var/log/mknotifyd.state; do
             if [ -e "${statefile}" ]; then
                 site=${statefile%/var/log*}
@@ -911,7 +916,7 @@ run_real_time_checks_for_remote() {
             # dd is used to concatenate the output of all commands to a single write/block => udp packet
             {
                 echo -n ${PROTOCOL}
-                date +%s | tr -d '\n'
+                get_epoch | tr -d '\n'
                 if [ "${ENCRYPTED_RT}" != "no" ]; then
                     export RTC_SECRET=${RTC_SECRET}
                     section_${SECTION} | openssl enc -aes-256-cbc -md md5 -pass env:RTC_SECRET -nosalt
@@ -959,7 +964,7 @@ run_cached() {
     if [ ! -d ${MK_VARDIR}/cache ]; then mkdir -p ${MK_VARDIR}/cache; fi
     CACHEFILE="${MK_VARDIR}/cache/${NAME}.cache"
 
-    local NOW=$(date +%s)
+    local NOW=$(get_epoch)
 
     # Check if the creation of the cache takes suspiciously long and return
     # nothing if the age (access time) of ${CACHEFILE}.new is twice the MAXAGE
@@ -1031,7 +1036,7 @@ run_spooler() {
     (
         cd "${SPOOLDIR}" 2>/dev/null || return
 
-        now=$(date +%s)
+        now=$(get_epoch)
 
         for file in *; do
             [ "${file}" != "*" ] || return

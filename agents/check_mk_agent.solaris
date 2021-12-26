@@ -26,6 +26,11 @@ inpath() {
     command -v "${1:?No command to test}" >/dev/null 2>&1
 }
 
+get_epoch() {
+    date +%s 2>/dev/null ||
+        perl -e 'print($^T."\n");'
+}
+
 get_file_mtime() {
     stat -c %Y "${1}" 2>/dev/null ||
         stat -f %m "${1}" 2>/dev/null ||
@@ -207,10 +212,6 @@ preamble_3() {
     elif [ -z "${PYTHON3}" ] && [ "$(${PYTHON2} -c 'pass' > /dev/null 2>&1; echo $?)" -eq 127 ]; then
         WRONG_PYTHON_COMMAND=true
     fi
-}
-
-file_age() {
-    /usr/bin/perl -e 'if (! -f $ARGV[0]){die "0000000"};$mtime=(stat($ARGV[0]))[9];print ($^T-$mtime);' "${1}"
 }
 
 # encryption not implemented
@@ -625,13 +626,17 @@ run_cached() {
         return
     fi
 
+    local NOW
+    NOW=$(get_epoch)
+
     if [ ! -d "${MK_VARDIR}"/cache ]; then mkdir -p "${MK_VARDIR}"/cache; fi
     CACHEFILE="${MK_VARDIR}/cache/${NAME}.cache"
 
     # Check if the creation of the cache takes suspiciously long and return
     # nothing if the age (access time) of ${CACHEFILE}.new is twice the MAXAGE
     if [ -e "${CACHEFILE}.new" ]; then
-        AGE=$(file_age "${CACHEFILE}.new")
+        # FIXME: it's supposed to be atime, not mtime
+        AGE=$((NOW - $(get_file_mtime "${CACHEFILE}.new")))
         if [ "${AGE}" -ge $((MAXAGE * 2)) ]; then
             fuser -k "${CACHEFILE}.new" >/dev/null 2>&1
             rm -f "${CACHEFILE}.new"
@@ -642,7 +647,7 @@ run_cached() {
     if [ -s "${CACHEFILE}" ]; then
         local MTIME
         MTIME=$(get_file_mtime "${CACHEFILE}")
-        AGE=$(file_age "${CACHEFILE}")
+        AGE=$((NOW - MTIME))
         if [ "${AGE}" -le "${MAXAGE}" ]; then local USE_CACHEFILE=1; fi
         if ${MK_RUN_SYNC_PARTS}; then
             # Output the file even if it is outdated.
@@ -694,7 +699,7 @@ run_spooler() {
     (
         cd "${SPOOLDIR}" 2>/dev/null || return
 
-        now=$(date +%s)
+        now=$(get_epoch)
 
         for file in *; do
             [ "${file}" != "*" ] || return

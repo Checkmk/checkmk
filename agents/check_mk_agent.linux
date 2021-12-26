@@ -26,6 +26,11 @@ inpath() {
     command -v "${1:?No command to test}" >/dev/null 2>&1
 }
 
+get_epoch() {
+    date +%s 2>/dev/null ||
+        perl -e 'print($^T."\n");'
+}
+
 get_file_mtime() {
     stat -c %Y "${1}" 2>/dev/null ||
         stat -f %m "${1}" 2>/dev/null ||
@@ -469,7 +474,7 @@ section_uptime() {
     if [ -z "${IS_DOCKERIZED}" ]; then
         cat /proc/uptime
     else
-        echo "$(($(date +%s) - $(stat -c %Z /dev/pts)))"
+        echo "$(($(get_epoch) - $(stat -c %Z /dev/pts)))"
     fi
 }
 
@@ -652,7 +657,7 @@ section_multipathing() {
 section_diskstat() {
     if [ -z "${IS_DOCKERIZED}" ]; then
         echo '<<<diskstat>>>'
-        date +%s
+        get_epoch
         grep -E ' (x?[shv]d[a-z]*[0-9]*|cciss/c[0-9]+d[0-9]+|emcpower[a-z]+|dm-[0-9]+|VxVM.*|mmcblk.*|dasd[a-z]*|bcache[0-9]+|nvme[0-9]+n[0-9]+) ' </proc/diskstats
         if inpath dmsetup; then
             echo '[dmsetup_info]'
@@ -665,7 +670,7 @@ section_diskstat() {
     else
         echo "<<<docker_container_diskstat${CGROUP_SECTION_SUFFIX}>>>"
         echo "[time]"
-        date +%s
+        get_epoch
         if [ -n "${IS_CGROUP_V2}" ]; then
             echo "[io.stat]"
             cat "/sys/fs/cgroup/io.stat"
@@ -696,7 +701,7 @@ section_chrony() {
 section_kernel() {
     if [ -z "${IS_DOCKERIZED}" ] && [ -z "${IS_LXC_CONTAINER}" ]; then
         echo '<<<kernel>>>'
-        date +%s
+        get_epoch
         cat /proc/vmstat /proc/stat
     fi
 }
@@ -968,7 +973,7 @@ section_omd() {
         ${MK_RUN_SYNC_PARTS} || return
 
         echo '<<<mknotifyd:sep(0)>>>'
-        date +%s
+        get_epoch
         for statefile in /omd/sites/*/var/log/mknotifyd.state; do
             if [ -e "${statefile}" ]; then
                 site=${statefile%/var/log*}
@@ -1373,11 +1378,11 @@ _rt_pidfile_is_mine() {
 }
 
 _rt_pidfile_is_alive() {
-    [ "$(("$(date +%s)" - "$(stat -c %X "${1}")"))" -le "${RTC_TIMEOUT}" ]
+    [ "$(("$(get_epoch)" - "$(stat -c %X "${1}")"))" -le "${RTC_TIMEOUT}" ]
 }
 
 _rt_timestamp() {
-    date +%s | tr -d '\n'
+    get_epoch | tr -d '\n'
 }
 
 _rt_sendudp() {
@@ -1527,7 +1532,7 @@ run_cached() {
     CACHEFILE="${MK_VARDIR}/cache/${NAME}.cache"
 
     local NOW
-    NOW=$(date +%s)
+    NOW=$(get_epoch)
 
     # Check if the creation of the cache takes suspiciously long and kill the
     # process if the age (access time) of ${CACHEFILE}.new is twice the MAXAGE.
@@ -1605,7 +1610,7 @@ run_spooler() {
     (
         cd "${SPOOLDIR}" 2>/dev/null || return
 
-        now=$(date +%s)
+        now=$(get_epoch)
 
         for file in *; do
             [ "${file}" != "*" ] || return

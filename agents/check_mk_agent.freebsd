@@ -39,6 +39,11 @@ inpath() {
     command -v "${1:?No command to test}" >/dev/null 2>&1
 }
 
+get_epoch() {
+    date +%s 2>/dev/null ||
+        perl -e 'print($^T."\n");'
+}
+
 get_file_mtime() {
     stat -c %Y "${1}" 2>/dev/null ||
         stat -f %m "${1}" 2>/dev/null ||
@@ -348,7 +353,7 @@ run_purely_synchronous_sections() {
 
     # Calculate the uptime in seconds since epoch compatible to /proc/uptime in linux
     echo '<<<uptime>>>'
-    up_seconds=$(( `date +%s` - `sysctl -n kern.boottime  | cut -f1 -d\, | awk '{print $4}'`))
+    up_seconds=$(($(get_epoch) - `sysctl -n kern.boottime  | cut -f1 -d\, | awk '{print $4}'`))
     idle_seconds=$(ps axw | grep idle | grep -v grep | awk '{print $4}' | cut -f1 -d\: )
     echo "${up_seconds} ${idle_seconds}"
 
@@ -373,7 +378,7 @@ run_purely_synchronous_sections() {
 
     # Performancecounter Kernel
     echo "<<<kernel>>>"
-    date +%s
+    get_epoch
     forks=`sysctl -n vm.stats.vm.v_forks`
     vforks=`sysctl -n vm.stats.vm.v_vforks`
     rforks=`sysctl -n vm.stats.vm.v_rforks`
@@ -385,7 +390,7 @@ run_purely_synchronous_sections() {
     # Network device statistics (Packets, Collisions, etc)
     # only the "Link/Num" interface has all counters.
     echo '<<<netctr>>>'
-    date +%s
+    get_epoch
     if [ "$(echo ${osver} | cut -f1 -d\. )" -gt "8" ]; then
         netstat -inb | egrep -v '(^Name|lo|plip)' | grep Link | awk '{print $1" "$8" "$5" "$6" "$7" 0 0 0 0 "$11" "$9" "$10" 0 0 0 0 0"}'
     else
@@ -518,7 +523,7 @@ run_cached() {
 
     # Check if the creation of the cache takes suspiciously long and return
     # nothing if the age (access time) of ${CACHEFILE}.new is twice the MAXAGE
-    local NOW=$(date +%s)
+    local NOW=$(get_epoch)
     if [ -e "${CACHEFILE}.new" ]; then
         local CF_ATIME=$(stat -f "%a" "${CACHEFILE}.new")
         if [ $((NOW - CF_ATIME)) -ge $((MAXAGE * 2)) ]; then
@@ -580,7 +585,7 @@ run_spooler() {
     (
         cd "${SPOOLDIR}" 2>/dev/null || return
 
-        now=$(date +%s)
+        now=$(get_epoch)
 
         for file in *; do
             [ "${file}" != "*" ] || return

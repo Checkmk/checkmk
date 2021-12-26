@@ -746,6 +746,28 @@ def test_save_two_factor_credentials(user_id: UserId) -> None:
     assert userdb.load_two_factor_credentials(user_id) == credentials
 
 
+def test_disable_two_factor_authentication(user_id: UserId) -> None:
+    credentials = userdb.TwoFactorCredentials(
+        {
+            "webauthn_credentials": {
+                "id": userdb.WebAuthnCredential(
+                    {
+                        "credential_id": "id",
+                        "registered_at": 1337,
+                        "credential_data": b"whatever",
+                    }
+                ),
+            },
+            "backup_codes": [],
+        }
+    )
+    userdb.save_two_factor_credentials(user_id, credentials)
+
+    assert userdb.is_two_factor_login_enabled(user_id) is True
+    userdb.disable_two_factor_authentication(user_id)
+    assert userdb.is_two_factor_login_enabled(user_id) is False
+
+
 def test_make_two_factor_backup_codes(user_id) -> None:
     display_codes, store_codes = userdb.make_two_factor_backup_codes()
     assert len(display_codes) == 10

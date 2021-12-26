@@ -425,6 +425,8 @@ class ModeUsers(WatoMode):
                     auth_method: Union[str, HTML] = _("Automation")
                 elif user_spec.get("password") or "password" in locked_attributes:
                     auth_method = _("Password")
+                    if _is_two_factor_enabled(user_spec):
+                        auth_method += " (+2FA)"
                 else:
                     auth_method = html.render_i(_("none"))
                 table.cell(_("Authentication"), auth_method)
@@ -663,8 +665,34 @@ class ModeEditUser(WatoMode):
                 ),
             )
 
+        if not self._is_new_user:
+            yield PageMenuEntry(
+                title=_("Disable two-factor authentication"),
+                icon_name="2fa",
+                item=make_simple_link(
+                    make_confirm_link(
+                        url=make_action_link(
+                            [
+                                ("mode", "edit_user"),
+                                ("user", self._user_id),
+                                ("_disable_two_factor", "1"),
+                            ]
+                        ),
+                        message=_(
+                            "Do you really want to disable the two-factor authentication of %s?"
+                        )
+                        % self._user_id,
+                    )
+                ),
+                is_enabled=_is_two_factor_enabled(self._user),
+            )
+
     def action(self) -> ActionResult:
         if not transactions.check_transaction():
+            return redirect(mode_url("users"))
+
+        if self._user_id is not None and request.has_var("_disable_two_factor"):
+            userdb.disable_two_factor_authentication(UserId(self._user_id))
             return redirect(mode_url("users"))
 
         if self._user_id is None:  # same as self._is_new_user
@@ -1308,3 +1336,7 @@ def select_language(user_spec: UserSpec) -> None:
             target="_blank",
         )
     )
+
+
+def _is_two_factor_enabled(user_spec: UserSpec) -> bool:
+    return user_spec.get("two_factor_credentials", {}).get("webauthn_credentials")

@@ -262,6 +262,12 @@ def is_two_factor_login_enabled(user_id: UserId) -> bool:
     return bool(load_two_factor_credentials(user_id)["webauthn_credentials"])
 
 
+def disable_two_factor_authentication(user_id: UserId) -> None:
+    credentials = load_two_factor_credentials(user_id, lock=True)
+    credentials["webauthn_credentials"].clear()
+    save_two_factor_credentials(user_id, credentials)
+
+
 def is_two_factor_completed() -> bool:
     """Whether or not the user has completed the 2FA challenge"""
     return session.session_info.two_factor_completed

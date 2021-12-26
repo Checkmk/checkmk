@@ -31,6 +31,12 @@ get_epoch() {
         perl -e 'print($^T."\n");'
 }
 
+get_file_atime() {
+    stat -c %X "${1}" 2>/dev/null ||
+        stat -f %a "${1}" 2>/dev/null ||
+        perl -e 'if (! -f $ARGV[0]){die "0000000"};$atime=(stat($ARGV[0]))[8];print $atime."\n";' "${1}"
+}
+
 get_file_mtime() {
     stat -c %Y "${1}" 2>/dev/null ||
         stat -f %m "${1}" 2>/dev/null ||
@@ -635,8 +641,7 @@ run_cached() {
     # Check if the creation of the cache takes suspiciously long and return
     # nothing if the age (access time) of ${CACHEFILE}.new is twice the MAXAGE
     if [ -e "${CACHEFILE}.new" ]; then
-        # FIXME: it's supposed to be atime, not mtime
-        AGE=$((NOW - $(get_file_mtime "${CACHEFILE}.new")))
+        AGE=$((NOW - $(get_file_atime "${CACHEFILE}.new")))
         if [ "${AGE}" -ge $((MAXAGE * 2)) ]; then
             fuser -k "${CACHEFILE}.new" >/dev/null 2>&1
             rm -f "${CACHEFILE}.new"

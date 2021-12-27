@@ -498,7 +498,6 @@ class FilterInvFloat(Filter):
 class FilterInvBool(FilterOption):
     def __init__(self, *, ident: str, title: str, inv_path: str, is_show_more: bool = True) -> None:
         super().__init__(
-            ident=ident,
             title=title,
             sort_index=800,
             info="host",
@@ -518,7 +517,6 @@ class FilterInvBool(FilterOption):
 class FilterHasInv(FilterOption):
     def __init__(self) -> None:
         super().__init__(
-            ident="has_inv",
             title=_l("Has Inventory Data"),
             sort_index=801,
             info="host",

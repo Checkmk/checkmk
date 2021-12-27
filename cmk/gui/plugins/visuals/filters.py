@@ -403,7 +403,6 @@ filter_registry.register(
 
 filter_registry.register(
     FilterOption(
-        ident="address_family",
         title=_l("Host address family (Primary)"),
         sort_index=103,
         info="host",
@@ -419,7 +418,6 @@ filter_registry.register(
 
 filter_registry.register(
     FilterOption(
-        ident="address_families",
         title=_l("Host address families"),
         sort_index=103,
         info="host",
@@ -913,7 +911,6 @@ def filter_state_type_with_register(
 ) -> None:
     filter_registry.register(
         FilterOption(
-            ident=ident,
             title=title,
             sort_index=sort_index,
             info=info,
@@ -944,7 +941,6 @@ filter_state_type_with_register(
 
 filter_registry.register(
     FilterOption(
-        ident="has_performance_data",
         title=_l("Has performance data"),
         sort_index=251,
         info="service",
@@ -958,7 +954,6 @@ filter_registry.register(
 
 filter_registry.register(
     FilterOption(
-        ident="in_downtime",
         title=_l("Host/service in downtime"),
         sort_index=232,
         info="service",
@@ -971,7 +966,6 @@ filter_registry.register(
 
 filter_registry.register(
     FilterOption(
-        ident="host_staleness",
         title=_l("Host is stale"),
         sort_index=232,
         info="host",
@@ -985,7 +979,6 @@ filter_registry.register(
 
 filter_registry.register(
     FilterOption(
-        ident="service_staleness",
         title=_l("Service is stale"),
         sort_index=232,
         info="service",
@@ -1007,7 +1000,6 @@ def filter_nagios_flag_with_register(
 ) -> None:
     filter_registry.register(
         FilterOption(
-            ident=ident,
             title=title,
             sort_index=sort_index,
             info=info,
@@ -1594,20 +1586,18 @@ class FilterLogState(Filter):
         return "".join(headers) + ("Or: %d\n" % len(headers))
 
 
-@filter_registry.register_instance
-class FilterLogNotificationPhase(FilterOption):
-    def __init__(self):
-        super().__init__(
+filter_registry.register(
+    FilterOption(
+        title=_l("Notification phase"),
+        sort_index=271,
+        info="log",
+        query_filter=query_filters.FilterTristate(
             ident="log_notification_phase",
-            title=_l("Notification phase"),
-            sort_index=271,
-            info="log",
-            query_filter=query_filters.FilterTristate(
-                ident="log_notification_phase",
-                filter_code=query_filters.log_notification_phase("log_command_name"),
-                options=query_filters.tri_state_log_notifications_options(),
-            ),
-        )
+            filter_code=query_filters.log_notification_phase("log_command_name"),
+            options=query_filters.tri_state_log_notifications_options(),
+        ),
+    )
+)
 
 
 def bi_aggr_service_used(on: bool, context: VisualContext, rows: Rows) -> Rows:
@@ -1619,21 +1609,19 @@ def bi_aggr_service_used(on: bool, context: VisualContext, rows: Rows) -> Rows:
     ]
 
 
-@filter_registry.register_instance
-class FilterAggrServiceUsed(FilterOption):
-    def __init__(self):
-        super().__init__(
+filter_registry.register(
+    FilterOption(
+        title=_l("Used in BI aggregate"),
+        sort_index=300,
+        info="service",
+        query_filter=query_filters.FilterTristate(
             ident="aggr_service_used",
-            title=_l("Used in BI aggregate"),
-            sort_index=300,
-            info="service",
-            query_filter=query_filters.FilterTristate(
-                ident="aggr_service_used",
-                filter_code=lambda x: "",
-                filter_rows=bi_aggr_service_used,
-            ),
-            is_show_more=True,
-        )
+            filter_code=lambda x: "",
+            filter_rows=bi_aggr_service_used,
+        ),
+        is_show_more=True,
+    )
+)
 
 
 filter_registry.register(
@@ -2093,17 +2081,11 @@ filter_registry.register(
 )
 
 
-class FilterStarred(FilterOption):
-    # TODO: Rename "what"
-    def __init__(
-        self,
-        *,
-        what: Literal["host", "service"],
-        title: Union[str, LazyString],
-        sort_index: int,
-    ) -> None:
-        super().__init__(
-            ident=what + "_favorites",
+def filter_starred_with_register(
+    *, what: Literal["host", "service"], title: Union[str, LazyString], sort_index: int
+) -> None:
+    filter_registry.register(
+        FilterOption(
             title=title,
             sort_index=sort_index,
             info=what,
@@ -2113,22 +2095,19 @@ class FilterStarred(FilterOption):
             ),
             is_show_more=True,
         )
-
-
-filter_registry.register(
-    FilterStarred(
-        what="host",
-        title=_l("Favorite Hosts"),
-        sort_index=501,
     )
+
+
+filter_starred_with_register(
+    what="host",
+    title=_l("Favorite Hosts"),
+    sort_index=501,
 )
 
-filter_registry.register(
-    FilterStarred(
-        what="service",
-        title=_l("Favorite Services"),
-        sort_index=501,
-    )
+filter_starred_with_register(
+    what="service",
+    title=_l("Favorite Services"),
+    sort_index=501,
 )
 
 filter_registry.register(

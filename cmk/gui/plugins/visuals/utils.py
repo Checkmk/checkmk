@@ -359,7 +359,6 @@ class FilterOption(Filter):
     def __init__(
         self,
         *,
-        ident: str,
         title: Union[str, LazyString],
         sort_index: int,
         info: str,
@@ -368,7 +367,7 @@ class FilterOption(Filter):
     ):
         self.query_filter = query_filter
         super().__init__(
-            ident=ident,
+            ident=self.query_filter.ident,
             title=title,
             sort_index=sort_index,
             info=info,

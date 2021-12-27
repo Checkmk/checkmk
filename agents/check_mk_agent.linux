@@ -1576,7 +1576,12 @@ run_cached() {
         # Cache file outdated and new job not yet running?
         if [ $((NOW - MTIME)) -gt "${MAXAGE}" ] && [ ! -e "${CACHEFILE}.new" ]; then
             # Start it. If the command fails the output is thrown away
-            echo "eval '${MK_DEFINE_LOG_SECTION_TIME}'; set -o noclobber; exec > \"${CACHEFILE}.new\" || exit 1 ; $* && mv \"${CACHEFILE}.new\" \"${CACHEFILE}\" || rm -f \"${CACHEFILE}\" \"${CACHEFILE}.new\"" | nohup /bin/bash >/dev/null 2>&1 &
+            cat <<HERE | nohup /bin/bash >/dev/null 2>&1 &
+eval '${MK_DEFINE_LOG_SECTION_TIME}'
+set -o noclobber
+exec > "${CACHEFILE}.new" || exit 1
+$* && mv "${CACHEFILE}.new" "${CACHEFILE}" || rm -f "${CACHEFILE}" "${CACHEFILE}.new"
+HERE
         fi
     fi
 

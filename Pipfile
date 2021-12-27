@@ -22,7 +22,7 @@ mock = "*"  # used in checktestlib in unit tests
 mocket = "*"    # used for mocking kubernetes python client
 pylint = "==2.12.2"  # used by test/Makefile's test-pylint target, we currently need to pin it, otherwise we get the alpha 3.0.0a4 version which causes issues (because of --pre due to black...)
 hypothesis = "*"    # used by unit tests
-mypy = "==0.910"  # used by test/static/Makefile's test-mypy target (TODO: remove pin CMK-9275)
+mypy = "*"  # used by test/static/Makefile's test-mypy target
 types-six = "*"  # used for type checking
 types-requests = "*"  # used for type checking
 types-PyYAML = "*"  # used for type checking

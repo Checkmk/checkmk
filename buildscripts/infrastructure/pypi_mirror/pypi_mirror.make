@@ -12,7 +12,7 @@ PIPENV_PYPI_MIRROR  := $(EXTERNAL_PYPI_MIRROR)
 requirements.txt: Pipfile.lock
 	@( \
 	    echo "Creating $@" ; \
-	    $(PIPENV) lock --pre --dev -r > $@; \
+	    $(PIPENV) lock --dev -r > $@; \
             sed -i "1s|-i.*|-i https://pypi.python.org/simple/|" $@ \
 	)
 

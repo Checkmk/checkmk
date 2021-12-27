@@ -268,9 +268,18 @@ MaybeIntBounds = Tuple[Optional[int], Optional[int]]
 
 
 class FilterNumberRange(Filter):
-    def __init__(self, *, ident: str, column: Optional[str] = None):
+    def __init__(
+        self,
+        *,
+        ident: str,
+        column: Optional[str] = None,
+        filter_livestatus: bool = True,
+        filter_row: Optional[Callable[[int, MaybeIntBounds], bool]] = None,
+    ):
         super().__init__(ident=ident, request_vars=[ident + "_from", ident + "_until"])
         self.column = column or ident
+        self.filter_livestatus = filter_livestatus
+        self.filter_row = filter_row
 
     def extractor(self, value: FilterHTTPVariables) -> MaybeIntBounds:
         return (
@@ -286,11 +295,38 @@ class FilterNumberRange(Filter):
             return None
 
     def filter(self, value: FilterHTTPVariables) -> FilterHeader:
+        if not self.filter_livestatus:
+            return ""
+
         filtertext = ""
         for op, bound in zip((">=", "<="), self.extractor(value)):
             if bound is not None:
                 filtertext += "Filter: %s %s %d\n" % (self.column, op, bound)
         return filtertext
+
+    def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
+        values = context.get(self.ident, {})
+        assert not isinstance(values, str)
+        from_value, to_value = self.extractor(values)
+
+        if (self.filter_row is None) or (from_value is None and to_value is None):
+            return rows
+
+        return [
+            row
+            for row in rows
+            if (value := row.get(self.column)) and self.filter_row(value, (from_value, to_value))
+        ]
+
+
+def filter_inv_table_id_range(value: int, bounds: MaybeIntBounds) -> bool:
+    from_value, to_value = bounds
+    if from_value and value < from_value:
+        return False
+
+    if to_value and value > to_value:
+        return False
+    return True
 
 
 class FilterTime(FilterNumberRange):

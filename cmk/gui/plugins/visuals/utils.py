@@ -13,6 +13,7 @@ from typing import (
     Any,
     Container,
     Dict,
+    get_args,
     Iterable,
     Iterator,
     List,
@@ -392,13 +393,37 @@ class FilterOption(Filter):
         return self.query_filter.filter_table(context, rows)
 
 
+RangedTables = Literal[
+    "host",
+    "service",
+    "event",
+    "invcmksites",
+    "invcmkversions",
+    "invdockercontainers",
+    "invdockerimages",
+    "invinterface",
+    "invorainstance",
+    "invorapga",
+    "invorasga",
+    "invoratablespace",
+    "invswpac",
+]
+
+
+def parse_ranged_tables_literal(s: str) -> RangedTables:
+    for lit in get_args(RangedTables):
+        if s == lit:
+            return lit
+    raise ValueError("Expected a RangedTables Literal")
+
+
 class FilterNumberRange(Filter):  # type is int
     def __init__(
         self,
         *,
         title: Union[str, LazyString],
         sort_index: int,
-        info: Literal["host", "service", "event"],
+        info: RangedTables,
         query_filter: query_filters.FilterNumberRange,
     ) -> None:
         self.query_filter = query_filter

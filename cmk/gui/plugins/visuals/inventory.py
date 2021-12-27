@@ -20,7 +20,9 @@ from cmk.gui.plugins.visuals.utils import (
     display_filter_radiobuttons,
     Filter,
     filter_registry,
+    FilterNumberRange,
     FilterOption,
+    RangedTables,
     visual_info_registry,
     VisualInfo,
 )
@@ -133,54 +135,20 @@ class FilterInvtableTimestampAsAge(Filter):
         return newrows
 
 
-class FilterInvtableIDRange(Filter):
+class FilterInvtableIDRange(FilterNumberRange):
     """Filter for choosing a range in which a certain integer lies"""
 
-    def __init__(self, *, inv_info: str, ident: str, title: str) -> None:
+    def __init__(self, *, inv_info: RangedTables, ident: str, title: str) -> None:
         super().__init__(
-            ident=ident,
             title=title,
             sort_index=800,
             info=inv_info,
-            htmlvars=[ident + "_from", ident + "_to"],
-            link_columns=[],
+            query_filter=query_filters.FilterNumberRange(
+                ident=ident,
+                filter_livestatus=False,
+                filter_row=query_filters.filter_inv_table_id_range,
+            ),
         )
-
-    def display(self, value: FilterHTTPVariables) -> None:
-        html.write_text(_("from:") + " ")
-        html.text_input(
-            self.ident + "_from",
-            default_value=value.get(self.ident + "_from", ""),
-            size=8,
-            cssclass="number",
-        )
-        html.write_text("&nbsp; %s: " % _("to"))
-        html.text_input(
-            self.ident + "_to",
-            default_value=value.get(self.ident + "_to", ""),
-            size=8,
-            cssclass="number",
-        )
-
-    def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
-        values = context.get(self.ident, {})
-        assert not isinstance(values, str)
-        from_value, to_value = (utils.saveint(values.get(v, 0)) for v in self.htmlvars)
-
-        if not from_value and not to_value:
-            return rows
-
-        newrows = []
-        for row in rows:
-            value = row.get(self.ident, None)
-            if value is not None:
-                if from_value and value < from_value:
-                    continue
-
-                if to_value and value > to_value:
-                    continue
-                newrows.append(row)
-        return newrows
 
 
 class FilterInvtableOperStatus(Filter):

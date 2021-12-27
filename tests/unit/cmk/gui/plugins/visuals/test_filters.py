@@ -912,7 +912,7 @@ filter_table_tests = [
         ident="invinterface_index",
         request_vars=[
             ("invinterface_index_from", "3"),
-            ("invinterface_index_to", "10"),
+            ("invinterface_index_until", "10"),
         ],
         rows=[
             {"invinterface_index": 1},

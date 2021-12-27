@@ -7,6 +7,7 @@
 # Here are livestatus filters isolated out of the visuals GUI logic. They shall
 # then later be replaced using the new query helpers.
 
+import re
 import time
 from typing import Callable, List, Literal, Optional, Tuple
 
@@ -19,7 +20,7 @@ import cmk.gui.sites as sites
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.globals import config, user, user_errors
 from cmk.gui.i18n import _
-from cmk.gui.type_defs import FilterHeader, FilterHTTPVariables, Rows, VisualContext
+from cmk.gui.type_defs import FilterHeader, FilterHTTPVariables, Row, Rows, VisualContext
 
 Options = List[Tuple[str, str]]
 
@@ -397,6 +398,61 @@ class FilterText(Filter):
             self.op,
             livestatus.lqencode(value[self.request_vars[0]]),
         )
+
+
+class FilterTableText(FilterText):
+    def __init__(self, *, ident: str, row_filter: Callable[[str, str], Callable[[Row], bool]]):
+        super().__init__(ident=ident, op="=")
+        self.link_columns = []
+        self.row_filter = row_filter
+
+    def filter(self, value: FilterHTTPVariables) -> FilterHeader:
+        return ""
+
+    def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
+        value = context.get(self.ident, {})
+        assert not isinstance(value, str)
+        column = self.column
+        filtertext = value.get(column, "").strip().lower()
+        if not filtertext:
+            return rows
+        keep = self.row_filter(filtertext, column)
+
+        return [row for row in rows if keep(row)]
+
+
+def re_ignorecase(text: str, varprefix: str) -> re.Pattern:
+    try:
+        return re.compile(text, re.IGNORECASE)
+    except re.error:
+        raise MKUserError(
+            varprefix,
+            _(
+                "Your search statement is not valid. You need to provide a regular "
+                "expression (regex). For example you need to use <tt>\\\\</tt> instead of <tt>\\</tt> "
+                "if you like to search for a single backslash."
+            ),
+        )
+
+
+def filter_by_column_textregex(filtertext: str, column: str) -> Callable[[Row], bool]:
+    regex = re_ignorecase(filtertext, column)
+    return lambda row: bool(regex.search(row.get(column, "")))
+
+
+def filter_by_host_inventory(invpath: str) -> Callable[[str, str], Callable[[Row], bool]]:
+    def row_filter(filtertext: str, column: str) -> Callable[[Row], bool]:
+        regex = re_ignorecase(filtertext, column)
+
+        def filt(row: Row):
+            invdata = inventory.get_inventory_attribute(row["host_inventory"], invpath)
+            if not isinstance(invdata, str):
+                invdata = ""
+            return bool(regex.search(invdata))
+
+        return filt
+
+    return row_filter
 
 
 class FilterCheckCommand(FilterText):

@@ -42,6 +42,7 @@ if cmk_version.is_managed_edition():
 
 import cmk.gui.query_filters as query_filters
 from cmk.gui.plugins.visuals.utils import (
+    checkbox_component,
     display_filter_radiobuttons,
     Filter,
     filter_cre_heading_info,
@@ -50,63 +51,8 @@ from cmk.gui.plugins.visuals.utils import (
     FilterOption,
     FilterTime,
     get_only_sites_from_context,
+    InputTextFilter,
 )
-
-
-def checkbox_component(htmlvar: str, value: FilterHTTPVariables, label: str):
-    html.open_nobr()
-    html.checkbox(htmlvar, bool(value.get(htmlvar)), label=label)
-    html.close_nobr()
-
-
-class InputTextFilter(Filter):
-    def __init__(
-        self,
-        *,
-        title: Union[str, LazyString],
-        sort_index: int,
-        info: str,
-        query_filter: query_filters.FilterText,
-        show_heading: bool = True,
-        description: Union[None, str, LazyString] = None,
-        is_show_more: bool = False,
-    ):
-        self.query_filter = query_filter
-
-        super().__init__(
-            ident=self.query_filter.ident,
-            title=title,
-            sort_index=sort_index,
-            info=info,
-            htmlvars=self.query_filter.request_vars,
-            link_columns=self.query_filter.link_columns,
-            description=description,
-            is_show_more=is_show_more,
-        )
-        self._show_heading = show_heading
-
-    def display(self, value: FilterHTTPVariables) -> None:
-        current_value = value.get(self.query_filter.request_vars[0], "")
-        html.text_input(
-            self.htmlvars[0], current_value, self.query_filter.negateable and "neg" or ""
-        )
-
-        if self.query_filter.negateable:
-            checkbox_component(self.query_filter.request_vars[1], value, _("negate"))
-
-    def request_vars_from_row(self, row: Row) -> Dict[str, str]:
-        return {self.htmlvars[0]: row[self.query_filter.column]}
-
-    def heading_info(self, value: FilterHTTPVariables) -> Optional[str]:
-        if self._show_heading:
-            return value.get(self.query_filter.request_vars[0])
-        return None
-
-    def filter(self, value: FilterHTTPVariables) -> FilterHeader:
-        return self.query_filter.filter(value)
-
-    def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
-        return self.query_filter.filter_table(context, rows)
 
 
 class RegExpFilter(InputTextFilter):

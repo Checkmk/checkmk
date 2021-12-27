@@ -22,50 +22,43 @@ from cmk.gui.plugins.visuals.utils import (
     filter_registry,
     FilterNumberRange,
     FilterOption,
+    InputTextFilter,
     RangedTables,
     visual_info_registry,
     VisualInfo,
 )
-from cmk.gui.type_defs import FilterHeader, FilterHTTPVariables, Rows, VisualContext
+from cmk.gui.type_defs import FilterHTTPVariables, Rows, VisualContext
 from cmk.gui.valuespec import Age, DualListChoice, ValueSpec
 
 
-class FilterInvtableText(Filter):
+class FilterInvtableText(InputTextFilter):
     def __init__(self, *, inv_info: str, ident: str, title: str) -> None:
         super().__init__(
-            ident=ident,
             title=title,
             sort_index=800,
             info=inv_info,
-            htmlvars=[ident],
-            link_columns=[],
+            query_filter=query_filters.FilterTableText(
+                ident=ident, row_filter=query_filters.filter_by_column_textregex
+            ),
+            show_heading=False,
         )
 
-    def display(self, value: FilterHTTPVariables) -> None:
-        htmlvar = self.htmlvars[0]
-        html.text_input(htmlvar, value.get(htmlvar, ""))
 
-    def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
-        value = context.get(self.ident, {})
-        assert not isinstance(value, str)
-        htmlvar = self.htmlvars[0]
-        filtertext = value.get(htmlvar, "").strip().lower()
-        if not filtertext:
-            return rows
+class FilterInvText(InputTextFilter):
+    def __init__(self, *, ident: str, title: str, inv_path: str, is_show_more: bool = True) -> None:
+        super().__init__(
+            title=title,
+            sort_index=800,
+            info="host",
+            query_filter=query_filters.FilterTableText(
+                ident=ident, row_filter=query_filters.filter_by_host_inventory(inv_path)
+            ),
+            show_heading=False,
+            is_show_more=is_show_more,
+        )
 
-        try:
-            regex = re.compile(filtertext, re.IGNORECASE)
-        except re.error:
-            raise MKUserError(
-                htmlvar,
-                _(
-                    "Your search statement is not valid. You need to provide a regular "
-                    "expression (regex). For example you need to use <tt>\\\\</tt> instead of <tt>\\</tt> "
-                    "if you like to search for a single backslash."
-                ),
-            )
-
-        return [row for row in rows if regex.search(row.get(htmlvar, ""))]
+    def need_inventory(self, value) -> bool:
+        return bool(value.get(self.htmlvars[0], "").strip().lower())
 
 
 class FilterInvtableTimestampAsAge(Filter):
@@ -335,59 +328,6 @@ class FilterInvtableVersion(Filter):
             new_rows.append(row)
 
         return new_rows
-
-
-class FilterInvText(Filter):
-    def __init__(self, *, ident: str, title: str, inv_path: str, is_show_more: bool = True) -> None:
-        super().__init__(
-            ident=ident,
-            title=title,
-            sort_index=800,
-            info="host",
-            htmlvars=[ident],
-            link_columns=[],
-            is_show_more=is_show_more,
-        )
-        self._invpath = inv_path
-
-    def filtertext(self, value: FilterHTTPVariables) -> FilterHeader:
-        "Returns the string to filter"
-        return value.get(self.htmlvars[0], "").strip().lower()
-
-    def need_inventory(self, value) -> bool:
-        return bool(self.filtertext(value))
-
-    def display(self, value: FilterHTTPVariables) -> None:
-        htmlvar = self.htmlvars[0]
-        html.text_input(htmlvar, value[htmlvar] if value else "")
-
-    def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
-        values = context.get(self.ident, {})
-        assert not isinstance(values, str)
-        filtertext = self.filtertext(values)
-        if not filtertext:
-            return rows
-
-        try:
-            regex = re.compile(filtertext, re.IGNORECASE)
-        except re.error:
-            raise MKUserError(
-                self.htmlvars[0],
-                _(
-                    "Your search statement is not valid. You need to provide a regular "
-                    "expression (regex). For example you need to use <tt>\\\\</tt> instead of <tt>\\</tt> "
-                    "if you like to search for a single backslash."
-                ),
-            )
-
-        newrows = []
-        for row in rows:
-            invdata = inventory.get_inventory_attribute(row["host_inventory"], self._invpath)
-            if not isinstance(invdata, str):
-                invdata = ""
-            if regex.search(invdata):
-                newrows.append(row)
-        return newrows
 
 
 class FilterInvFloat(Filter):

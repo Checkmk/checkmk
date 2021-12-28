@@ -3397,7 +3397,7 @@ class PainterHostgroupHosts(Painter):
         return "hostgroup_hosts"
 
     def title(self, cell: Cell) -> str:
-        return _("Hosts colored according to state (Host Group)")
+        return _("Hosts colored according to state (host group)")
 
     def short_title(self, cell: Cell) -> str:
         return _("Hosts")
@@ -3428,7 +3428,7 @@ class PainterHgNumServices(Painter):
         return "hg_num_services"
 
     def title(self, cell: Cell) -> str:
-        return _("Number of services (Host Group)")
+        return _("Number of services (host group)")
 
     def short_title(self, cell: Cell) -> str:
         return ""
@@ -3448,7 +3448,7 @@ class PainterHgNumServicesOk(Painter):
         return "hg_num_services_ok"
 
     def title(self, cell: Cell) -> str:
-        return _("Number of services in state OK (Host Group)")
+        return _("Number of services in state OK (host group)")
 
     def short_title(self, cell: Cell) -> str:
         return _("O")
@@ -3471,7 +3471,7 @@ class PainterHgNumServicesWarn(Painter):
         return "hg_num_services_warn"
 
     def title(self, cell: Cell) -> str:
-        return _("Number of services in state WARN (Host Group)")
+        return _("Number of services in state WARN (host group)")
 
     def short_title(self, cell: Cell) -> str:
         return _("W")
@@ -3494,7 +3494,7 @@ class PainterHgNumServicesCrit(Painter):
         return "hg_num_services_crit"
 
     def title(self, cell: Cell) -> str:
-        return _("Number of services in state CRIT (Host Group)")
+        return _("Number of services in state CRIT (host group)")
 
     def short_title(self, cell: Cell) -> str:
         return _("C")
@@ -3517,7 +3517,7 @@ class PainterHgNumServicesUnknown(Painter):
         return "hg_num_services_unknown"
 
     def title(self, cell: Cell) -> str:
-        return _("Number of services in state UNKNOWN (Host Group)")
+        return _("Number of services in state UNKNOWN (host group)")
 
     def short_title(self, cell: Cell) -> str:
         return _("U")
@@ -3540,7 +3540,7 @@ class PainterHgNumServicesPending(Painter):
         return "hg_num_services_pending"
 
     def title(self, cell: Cell) -> str:
-        return _("Number of services in state PENDING (Host Group)")
+        return _("Number of services in state PENDING (host group)")
 
     def short_title(self, cell: Cell) -> str:
         return _("P")
@@ -3563,7 +3563,7 @@ class PainterHgNumHostsUp(Painter):
         return "hg_num_hosts_up"
 
     def title(self, cell: Cell) -> str:
-        return _("Number of hosts in state UP (Host Group)")
+        return _("Number of hosts in state UP (host group)")
 
     def short_title(self, cell: Cell) -> str:
         return _("Up")
@@ -3586,7 +3586,7 @@ class PainterHgNumHostsDown(Painter):
         return "hg_num_hosts_down"
 
     def title(self, cell: Cell) -> str:
-        return _("Number of hosts in state DOWN (Host Group)")
+        return _("Number of hosts in state DOWN (host group)")
 
     def short_title(self, cell: Cell) -> str:
         return _("Dw")
@@ -3609,7 +3609,7 @@ class PainterHgNumHostsUnreach(Painter):
         return "hg_num_hosts_unreach"
 
     def title(self, cell: Cell) -> str:
-        return _("Number of hosts in state UNREACH (Host Group)")
+        return _("Number of hosts in state UNREACH (host group)")
 
     def short_title(self, cell: Cell) -> str:
         return _("Un")
@@ -3632,7 +3632,7 @@ class PainterHgNumHostsPending(Painter):
         return "hg_num_hosts_pending"
 
     def title(self, cell: Cell) -> str:
-        return _("Number of hosts in state PENDING (Host Group)")
+        return _("Number of hosts in state PENDING (host group)")
 
     def short_title(self, cell: Cell) -> str:
         return _("Pd")
@@ -3655,7 +3655,7 @@ class PainterHgName(Painter):
         return "hg_name"
 
     def title(self, cell: Cell) -> str:
-        return _("Hostgroup name")
+        return _("Host group name")
 
     def short_title(self, cell: Cell) -> str:
         return _("Name")
@@ -3675,7 +3675,7 @@ class PainterHgAlias(Painter):
         return "hg_alias"
 
     def title(self, cell: Cell) -> str:
-        return _("Hostgroup alias")
+        return _("Host group alias")
 
     def short_title(self, cell: Cell) -> str:
         return _("Alias")
@@ -3703,7 +3703,7 @@ class PainterSgServices(Painter):
         return "sg_services"
 
     def title(self, cell: Cell) -> str:
-        return _("Services colored according to state (Service Group)")
+        return _("Services colored according to state (service group)")
 
     def short_title(self, cell: Cell) -> str:
         return _("Services")
@@ -3723,7 +3723,7 @@ class PainterSgNumServices(Painter):
         return "sg_num_services"
 
     def title(self, cell: Cell) -> str:
-        return _("Number of services (Service Group)")
+        return _("Number of services (service group)")
 
     def short_title(self, cell: Cell) -> str:
         return ""
@@ -3743,7 +3743,7 @@ class PainterSgNumServicesOk(Painter):
         return "sg_num_services_ok"
 
     def title(self, cell: Cell) -> str:
-        return _("Number of services in state OK (Service Group)")
+        return _("Number of services in state OK (service group)")
 
     def short_title(self, cell: Cell) -> str:
         return _("O")
@@ -3763,7 +3763,7 @@ class PainterSgNumServicesWarn(Painter):
         return "sg_num_services_warn"
 
     def title(self, cell: Cell) -> str:
-        return _("Number of services in state WARN (Service Group)")
+        return _("Number of services in state WARN (service group)")
 
     def short_title(self, cell: Cell) -> str:
         return _("W")
@@ -3783,7 +3783,7 @@ class PainterSgNumServicesCrit(Painter):
         return "sg_num_services_crit"
 
     def title(self, cell: Cell) -> str:
-        return _("Number of services in state CRIT (Service Group)")
+        return _("Number of services in state CRIT (service group)")
 
     def short_title(self, cell: Cell) -> str:
         return _("C")
@@ -3803,7 +3803,7 @@ class PainterSgNumServicesUnknown(Painter):
         return "sg_num_services_unknown"
 
     def title(self, cell: Cell) -> str:
-        return _("Number of services in state UNKNOWN (Service Group)")
+        return _("Number of services in state UNKNOWN (service group)")
 
     def short_title(self, cell: Cell) -> str:
         return _("U")
@@ -3823,7 +3823,7 @@ class PainterSgNumServicesPending(Painter):
         return "sg_num_services_pending"
 
     def title(self, cell: Cell) -> str:
-        return _("Number of services in state PENDING (Service Group)")
+        return _("Number of services in state PENDING (service group)")
 
     def short_title(self, cell: Cell) -> str:
         return _("P")
@@ -3843,7 +3843,7 @@ class PainterSgName(Painter):
         return "sg_name"
 
     def title(self, cell: Cell) -> str:
-        return _("Servicegroup name")
+        return _("Service group name")
 
     def short_title(self, cell: Cell) -> str:
         return _("Name")
@@ -3863,7 +3863,7 @@ class PainterSgAlias(Painter):
         return "sg_alias"
 
     def title(self, cell: Cell) -> str:
-        return _("Servicegroup alias")
+        return _("Service group alias")
 
     def short_title(self, cell: Cell) -> str:
         return _("Alias")

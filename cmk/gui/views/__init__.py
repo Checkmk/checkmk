@@ -666,7 +666,7 @@ class View:
             self.spec["single_infos"], self.context
         )
 
-        # Special hack for the situation where hostgroup views link to host views: The host view uses
+        # Special hack for the situation where host group views link to host views: The host view uses
         # the datasource "hosts" which does not have the "hostgroup" info, but is configured to have a
         # single_info "hostgroup". To make this possible there exists a feature in
         # (ABCDataSource.link_filters, views._patch_view_context) which is a very specific hack. Have a
@@ -1632,9 +1632,9 @@ def format_view_title(name, view):
     elif "host" in infos:
         title_parts.append(_("Hosts"))
     elif "hostgroup" in infos:
-        title_parts.append(_("Hostgroups"))
+        title_parts.append(_("Host groups"))
     elif "servicegroup" in infos:
-        title_parts.append(_("Servicegroups"))
+        title_parts.append(_("Service groups"))
 
     title_parts.append("%s (%s)" % (_u(view["title"]), name))
 

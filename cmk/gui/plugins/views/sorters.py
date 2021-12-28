@@ -296,8 +296,8 @@ declare_simple_sorter("site", _("Site"), "site", cmp_simple_string)
 declare_simple_sorter(
     "stateage", _("Service state age"), "service_last_state_change", cmp_simple_number
 )
-declare_simple_sorter("servicegroup", _("Servicegroup"), "servicegroup_alias", cmp_simple_string)
-declare_simple_sorter("hostgroup", _("Hostgroup"), "hostgroup_alias", cmp_simple_string)
+declare_simple_sorter("servicegroup", _("Service group"), "servicegroup_alias", cmp_simple_string)
+declare_simple_sorter("hostgroup", _("Host group"), "hostgroup_alias", cmp_simple_string)
 
 # Alerts
 declare_1to1_sorter("alert_stats_crit", cmp_simple_number, reverse=True)
@@ -537,7 +537,7 @@ class SorterNumProblems(Sorter):
         )
 
 
-# Hostgroup
+# Host group
 declare_1to1_sorter("hg_num_services", cmp_simple_number)
 declare_1to1_sorter("hg_num_services_ok", cmp_simple_number)
 declare_1to1_sorter("hg_num_services_warn", cmp_simple_number)
@@ -551,7 +551,7 @@ declare_1to1_sorter("hg_num_hosts_pending", cmp_simple_number)
 declare_1to1_sorter("hg_name", cmp_simple_string)
 declare_1to1_sorter("hg_alias", cmp_simple_string)
 
-# Servicegroup
+# Service group
 declare_1to1_sorter("sg_num_services", cmp_simple_number)
 declare_1to1_sorter("sg_num_services_ok", cmp_simple_number)
 declare_1to1_sorter("sg_num_services_warn", cmp_simple_number)

@@ -382,7 +382,7 @@ permission_registry.register(
     Permission(
         section=PermissionSectionWATO,
         name="groups",
-        title=_l("Host & Service Groups"),
+        title=_l("Host & service groups"),
         description=_l("Access to the modules for managing host and service groups."),
         defaults=["admin"],
     )

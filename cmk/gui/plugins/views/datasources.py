@@ -45,7 +45,7 @@ class DataSourceHosts(DataSourceLivestatus):
     def link_filters(self):
         # When the single info "hostgroup" is used, use the "opthostgroup" filter
         # to handle the data provided by the single_spec value of the "hostgroup"
-        # info, which is in fact the name of the wanted hostgroup
+        # info, which is in fact the name of the wanted host group
         return {
             "hostgroup": "opthostgroup",
         }
@@ -108,7 +108,7 @@ class DataSourceServices(DataSourceLivestatus):
     def link_filters(self):
         # When the single info "hostgroup" is used, use the "opthostgroup" filter
         # to handle the data provided by the single_spec value of the "hostgroup"
-        # info, which is in fact the name of the wanted hostgroup
+        # info, which is in fact the name of the wanted host group
         return {
             "hostgroup": "opthostgroup",
             "servicegroup": "optservicegroup",
@@ -169,7 +169,7 @@ class DataSourceHostGroups(DataSourceLivestatus):
 
     @property
     def title(self):
-        return _("Hostgroups")
+        return _("Host groups")
 
     @property
     def infos(self):
@@ -194,7 +194,7 @@ class DataSourceMergedHostGroups(DataSourceLivestatus):
 
     @property
     def title(self):
-        return _("Hostgroups, merged")
+        return _("Host groups, merged")
 
     @property
     def table(self):
@@ -225,7 +225,7 @@ class DataSourceServiceGroups(DataSourceLivestatus):
 
     @property
     def title(self):
-        return _("Servicegroups")
+        return _("Service groups")
 
     @property
     def infos(self):
@@ -250,7 +250,7 @@ class DataSourceMergedServiceGroups(ABCDataSource):
 
     @property
     def title(self):
-        return _("Servicegroups, merged")
+        return _("Service groups, merged")
 
     @property
     def table(self):

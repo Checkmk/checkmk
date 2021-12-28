@@ -485,7 +485,7 @@ class FilterMultigroup(Filter):
 filter_registry.register(
     FilterMultigroup(
         ident="hostgroups",
-        title=_l("Several Host Groups"),
+        title=_l("Several host groups"),
         sort_index=105,
         description=_l("Selection of multiple host groups"),
         group_type="host",
@@ -498,7 +498,7 @@ filter_registry.register(
 filter_registry.register(
     FilterMultigroup(
         ident="servicegroups",
-        title=_l("Several Service Groups"),
+        title=_l("Several service groups"),
         sort_index=205,
         description=_l("Selection of multiple service groups"),
         group_type="service",
@@ -677,7 +677,7 @@ filter_registry.register(
 
 filter_registry.register(
     AjaxDropdownFilter(
-        title=_l("Host Group"),
+        title=_l("Host group"),
         sort_index=104,
         description=_l("Selection of the host group"),
         info="hostgroup",
@@ -692,7 +692,7 @@ filter_registry.register(
 
 filter_registry.register(
     AjaxDropdownFilter(
-        title=_l("Service Group"),
+        title=_l("Service group"),
         sort_index=104,
         description=_l("Selection of the service group"),
         info="servicegroup",
@@ -707,10 +707,10 @@ filter_registry.register(
 
 filter_registry.register(
     RegExpFilter(
-        title=_l("Hostgroup (Regex)"),
+        title=_l("Host group (Regex)"),
         sort_index=101,
         description=_l(
-            "Search field allowing regular expressions and partial matches on the names of hostgroups"
+            "Search field allowing regular expressions and partial matches on the names of host groups"
         ),
         info="hostgroup",
         query_filter=query_filters.FilterText(
@@ -728,12 +728,12 @@ class FilterHostgroupVisibility(Filter):
     def __init__(self):
         super().__init__(
             ident="hostgroupvisibility",
-            title=_l("Empty Hostgroup Visibilitiy"),
+            title=_l("Empty host group visibilitiy"),
             sort_index=102,
             info="hostgroup",
             htmlvars=["hostgroupshowempty"],
             link_columns=[],
-            description=_l("You can enable this checkbox to show empty hostgroups"),
+            description=_l("You can enable this checkbox to show empty host groups"),
         )
 
     def display(self, value: FilterHTTPVariables) -> None:
@@ -752,7 +752,7 @@ class FilterHostgroupProblems(Filter):
     def __init__(self):
         super().__init__(
             ident="hostsgroups_having_problems",
-            title=_l("Hostgroups having certain problems"),
+            title=_l("Host groups having certain problems"),
             sort_index=103,
             info="hostgroup",
             htmlvars=[
@@ -836,7 +836,7 @@ class FilterHostgroupProblems(Filter):
 
 filter_registry.register(
     RegExpFilter(
-        title=_l("Servicegroup (Regex)"),
+        title=_l("Service group (regex)"),
         sort_index=101,
         description=_l("Search field allowing regular expression and partial matches"),
         info="servicegroup",
@@ -852,7 +852,7 @@ filter_registry.register(
 
 filter_registry.register(
     InputTextFilter(
-        title=_l("Servicegroup (enforced)"),
+        title=_l("Service group (enforced)"),
         sort_index=101,
         description=_l("Exact match, used for linking"),
         info="servicegroup",

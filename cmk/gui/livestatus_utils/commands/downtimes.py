@@ -282,7 +282,7 @@ def schedule_servicegroup_service_downtime(
     user_id: str = "",
     comment: str = "",
 ):
-    """Schedules downtime for all hosts, which have services in a given servicegroup.
+    """Schedules downtime for all hosts, which have services in a given service group.
 
     Args:
         connection:
@@ -384,14 +384,14 @@ def schedule_hostgroup_host_downtime(
     user_id: str = "",
     comment: str = "",
 ):
-    """Schedules downtime for all hosts in a given hostgroup.
+    """Schedules downtime for all hosts in a given host group.
 
     Args:
         connection:
             A LiveStatus connection object.
 
         hostgroup_name:
-            The name of the hostgroup. A downtime will be scheduled for all hosts in this hostgroup.
+            The name of the host group. A downtime will be scheduled for all hosts in this host group.
 
         start_time:
             When the downtime shall begin.

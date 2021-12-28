@@ -35,9 +35,6 @@ from cmk.gui.werks import may_acknowledge
 if TYPE_CHECKING:
     from cmk.gui.utils.html import HTML
 
-# Helper functions to be used by snapins
-from cmk.gui.plugins.sidebar.main_menu import MainMenuRenderer
-
 # Kept for compatibility with legacy plugins
 # TODO: Drop once we don't support legacy snapins anymore
 from cmk.gui.plugins.sidebar.utils import (  # noqa: F401 # pylint: disable=unused-import
@@ -56,6 +53,8 @@ from cmk.gui.plugins.sidebar.utils import (  # noqa: F401 # pylint: disable=unus
     snapin_width,
     write_snapin_exception,
 )
+
+from .main_menu import MainMenuRenderer
 
 # TODO: Kept for pre 1.6 plugin compatibility
 sidebar_snapins: Dict[str, Dict] = {}

@@ -184,70 +184,44 @@ class FilterInvtableOperStatus(Filter):
         ]
 
 
-class FilterInvtableAdminStatus(Filter):
+class FilterInvtableAdminStatus(FilterOption):
     def __init__(self, *, inv_info: str, ident: str, title: str) -> None:
         super().__init__(
-            ident=ident,
             title=title,
             sort_index=800,
             info=inv_info,
-            htmlvars=[ident],
-            link_columns=[],
+            query_filter=query_filters.FilterSingleOption(
+                ident=ident,
+                options=[
+                    ("1", _("up")),
+                    ("2", _("down")),
+                    ("-1", _("(ignore)")),
+                ],
+                filter_code=lambda x: "",
+                filter_row=lambda selection, row: str(row.get("invinterface_admin_status", ""))
+                == selection,
+            ),
         )
 
-    def display(self, value: FilterHTTPVariables) -> None:
-        display_filter_radiobuttons(
-            varname=self.ident,
-            options=[
-                ("1", _("up")),
-                ("2", _("down")),
-                ("-1", _("(ignore)")),
-            ],
-            default="-1",
-            value=value,
-        )
 
-    def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
-        values = context.get(self.ident, {})
-        assert not isinstance(values, str)
-        current = values.get(self.ident, "-1")
-        if current == "-1":
-            return rows
-
-        return [row for row in rows if str(row["invinterface_admin_status"]) == current]
-
-
-class FilterInvtableAvailable(Filter):
+class FilterInvtableAvailable(FilterOption):
     def __init__(self, *, inv_info: str, ident: str, title: str) -> None:
         super().__init__(
-            ident=ident,
             title=title,
             sort_index=800,
             info=inv_info,
-            htmlvars=[ident],
-            link_columns=[],
+            query_filter=query_filters.FilterSingleOption(
+                ident=ident,
+                options=[
+                    ("no", _("used")),
+                    ("yes", _("free")),
+                    ("", _("(ignore)")),
+                ],
+                filter_code=lambda x: "",
+                filter_row=lambda selection, row: (selection == "yes")
+                == row.get("invinterface_available"),
+            ),
         )
-
-    def display(self, value: FilterHTTPVariables) -> None:
-        display_filter_radiobuttons(
-            varname=self.ident,
-            options=[
-                ("no", _("used")),
-                ("yes", _("free")),
-                ("", _("(ignore)")),
-            ],
-            default="",
-            value=value,
-        )
-
-    def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
-        value = context.get(self.ident, {})
-        current = value if isinstance(value, str) else value.get(self.ident, "")
-
-        if current not in ("no", "yes"):
-            return rows
-
-        return [row for row in rows if (current == "yes") == row.get("invinterface_available")]
 
 
 class FilterInvtableInterfaceType(Filter):
@@ -412,7 +386,7 @@ class FilterInvBool(FilterOption):
             query_filter=query_filters.FilterTristate(
                 ident=ident,
                 filter_code=lambda x: "",  # No Livestatus filtering right now
-                filter_rows=query_filters.inside_inventory(inv_path),
+                filter_row=query_filters.inside_inventory(inv_path),
             ),
             is_show_more=is_show_more,
         )
@@ -431,7 +405,7 @@ class FilterHasInv(FilterOption):
             query_filter=query_filters.FilterTristate(
                 ident="has_inv",
                 filter_code=lambda x: "",  # No Livestatus filtering right now
-                filter_rows=query_filters.has_inventory,
+                filter_row=query_filters.has_inventory,
             ),
             is_show_more=True,
         )

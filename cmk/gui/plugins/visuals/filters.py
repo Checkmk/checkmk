@@ -1546,13 +1546,9 @@ filter_registry.register(
 )
 
 
-def bi_aggr_service_used(on: bool, context: VisualContext, rows: Rows) -> Rows:
+def bi_aggr_service_used(on: bool, row: Row) -> bool:
     # should be in query_filters, but it creates a cyclical import at the moment
-    return [
-        row
-        for row in rows
-        if bi.is_part_of_aggregation(row["host_name"], row["service_description"]) is on
-    ]
+    return bi.is_part_of_aggregation(row["host_name"], row["service_description"]) is on
 
 
 filter_registry.register(
@@ -1563,7 +1559,7 @@ filter_registry.register(
         query_filter=query_filters.FilterTristate(
             ident="aggr_service_used",
             filter_code=lambda x: "",
-            filter_rows=bi_aggr_service_used,
+            filter_row=bi_aggr_service_used,
         ),
         is_show_more=True,
     )

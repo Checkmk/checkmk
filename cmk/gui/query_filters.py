@@ -102,15 +102,13 @@ class FilterSingleOption(Filter):
         ident: str,
         options: Options,
         filter_code: Callable[[str], FilterHeader],
-        filter_rows: Optional[Callable[[str, VisualContext, Rows], Rows]] = None,
+        filter_row: Optional[Callable[[str, Row], bool]] = None,
     ):
         super().__init__(ident=ident, request_vars=[ident])
         # TODO: options helps with data validation but conflicts with the Filter job
         self.options = options
         self.filter_code = filter_code
-        self.filter_rows: Callable[[str, VisualContext, Rows], Rows] = filter_rows or (
-            lambda _s, _ctx, rows: rows
-        )
+        self.filter_row = filter_row or (lambda _selection, _row: True)
         self.ignore = self.options[-1][0]
 
     def selection_value(self, value: FilterHTTPVariables) -> str:
@@ -130,7 +128,8 @@ class FilterSingleOption(Filter):
         selection = self.selection_value(value)
         if selection == self.ignore:
             return rows
-        return self.filter_rows(selection, context, rows)
+
+        return [row for row in rows if self.filter_row(selection, row)]
 
 
 class FilterTristate(FilterSingleOption):
@@ -139,16 +138,14 @@ class FilterTristate(FilterSingleOption):
         *,
         ident,
         filter_code: Callable[[bool], FilterHeader],
-        filter_rows: Optional[Callable[[bool, VisualContext, Rows], Rows]] = None,
+        filter_row: Optional[Callable[[bool, Row], bool]] = None,
         options=None,
     ):
         super().__init__(
             ident=ident,
             filter_code=lambda pick: filter_code(pick == "1"),
-            filter_rows=(
-                lambda pick, ctx, rows: filter_rows(pick == "1", ctx, rows)
-                if filter_rows is not None
-                else rows
+            filter_row=(
+                lambda pick, row: filter_row(pick == "1", row) if filter_row is not None else True
             ),
             options=options or default_tri_state_options(),
         )
@@ -240,21 +237,15 @@ def starred(what: Literal["host", "service"]) -> Callable[[bool], FilterHeader]:
 
 
 ## Filter tables
-def inside_inventory(invpath: str) -> Callable[[bool, VisualContext, Rows], Rows]:
-    def filter_rows(on: bool, context: VisualContext, rows: Rows) -> Rows:
-        return [
-            row
-            for row in rows
-            if inventory.get_inventory_attribute(row["host_inventory"], invpath) is on
-        ]
+def inside_inventory(invpath: str) -> Callable[[bool, Row], bool]:
+    def filter_rows(on: bool, row: Row) -> bool:
+        return inventory.get_inventory_attribute(row["host_inventory"], invpath) is on
 
     return filter_rows
 
 
-def has_inventory(on: bool, context: VisualContext, rows: Rows) -> Rows:
-    if on:
-        return [row for row in rows if row["host_inventory"]]
-    return [row for row in rows if not row["host_inventory"]]
+def has_inventory(on: bool, row: Row) -> bool:
+    return bool(row["host_inventory"]) is on
 
 
 ### Filter Time

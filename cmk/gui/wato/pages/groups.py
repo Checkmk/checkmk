@@ -256,7 +256,7 @@ class ABCModeEditGroup(WatoMode, metaclass=abc.ABCMeta):
                                           button_name="save")
 
     def page(self) -> None:
-        html.begin_form("group")
+        html.begin_form("group", method="POST")
         forms.header(_("Properties"))
         forms.section(_("Name"), simple=not self._new, is_required=True)
         html.help(

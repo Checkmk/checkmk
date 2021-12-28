@@ -20,6 +20,7 @@ from cmk.gui.i18n import _, _l
 from cmk.gui.plugins.visuals.utils import (
     CheckboxRowFilter,
     display_filter_radiobuttons,
+    DualListFilter,
     Filter,
     filter_registry,
     FilterNumberRange,
@@ -29,8 +30,8 @@ from cmk.gui.plugins.visuals.utils import (
     visual_info_registry,
     VisualInfo,
 )
-from cmk.gui.type_defs import FilterHTTPVariables, Rows, VisualContext
-from cmk.gui.valuespec import Age, DualListChoice, ValueSpec
+from cmk.gui.type_defs import FilterHeader, FilterHTTPVariables, Rows, VisualContext
+from cmk.gui.valuespec import Age, ValueSpec
 
 
 class FilterInvtableText(InputTextFilter):
@@ -206,47 +207,34 @@ class FilterInvtableAvailable(FilterOption):
         )
 
 
-class FilterInvtableInterfaceType(Filter):
+def port_types(info: str):
+    return [
+        (str(k), str(v))
+        for k, v in sorted(defines.interface_port_types().items(), key=lambda t: t[0])
+    ]
+
+
+class FilterInvtableInterfaceType(DualListFilter):
     def __init__(self, *, inv_info: str, ident: str, title: str) -> None:
         super().__init__(
-            ident=ident,
             title=title,
             sort_index=800,
             info=inv_info,
-            htmlvars=[ident],
-            link_columns=[],
+            query_filter=query_filters.FilterMultiple(ident=ident, op="="),
+            options=port_types,
         )
 
-    def valuespec(self) -> ValueSpec:
-        sorted_choices = [
-            (str(k), str(v))
-            for k, v in sorted(defines.interface_port_types().items(), key=lambda t: t[0])
-        ]
-        return DualListChoice(
-            choices=sorted_choices,
-            rows=4,
-            enlarge_active=True,
-            custom_order=True,
-        )
-
-    def selection(self, value: FilterHTTPVariables) -> List[str]:
-        current = value.get(self.ident, "").strip().split("|")
-        if current == [""]:
-            return []
-        return current
-
-    def display(self, value: FilterHTTPVariables) -> None:
-        html.open_div(class_="multigroup")
-        self.valuespec().render_input(self.ident, self.selection(value))
-        html.close_div()
+    def filter(self, value: FilterHTTPVariables) -> FilterHeader:
+        return ""
 
     def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
-        value = context.get(self.ident, {})
+        value = context.get(self.query_filter.ident, {})
         assert not isinstance(value, str)
-        current = self.selection(value)
-        if len(current) == 0:
+        selection = self.query_filter.selection(value)
+
+        if not selection:
             return rows  # No types selected, filter is unused
-        return [row for row in rows if str(row[self.ident]) in current]
+        return [row for row in rows if str(row[self.query_filter.column]) in selection]
 
 
 class FilterInvtableVersion(Filter):

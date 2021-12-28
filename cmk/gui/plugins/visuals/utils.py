@@ -11,6 +11,7 @@ import abc
 from itertools import chain
 from typing import (
     Any,
+    Callable,
     Container,
     Dict,
     get_args,
@@ -48,7 +49,7 @@ from cmk.gui.type_defs import (
     VisualContext,
 )
 from cmk.gui.utils.speaklater import LazyString
-from cmk.gui.valuespec import ValueSpec
+from cmk.gui.valuespec import DualListChoice, ValueSpec
 from cmk.gui.view_utils import get_labels
 
 
@@ -597,6 +598,45 @@ class CheckboxRowFilter(Filter):
 
     def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
         return self.query_filter.filter_table(context, rows)
+
+
+class DualListFilter(Filter):
+    def __init__(
+        self,
+        *,
+        title: Union[str, LazyString],
+        sort_index: int,
+        info: str,
+        query_filter: query_filters.FilterMultiple,
+        options: Callable[[str], query_filters.Options],
+        description: Union[None, str, LazyString] = None,
+        is_show_more: bool = True,
+    ):
+        self.query_filter = query_filter
+        self._options = options
+        super().__init__(
+            ident=self.query_filter.ident,
+            title=title,
+            sort_index=sort_index,
+            info=info,
+            htmlvars=self.query_filter.request_vars,
+            link_columns=[],
+            description=description,
+            is_show_more=is_show_more,
+        )
+
+    def display(self, value: FilterHTTPVariables) -> None:
+        html.open_div(class_="multigroup")
+        DualListChoice(choices=self._options(self.info), rows=4, enlarge_active=True).render_input(
+            self.query_filter.request_vars[0], self.query_filter.selection(value)
+        )
+
+        if self.query_filter.negateable:
+            checkbox_component(self.query_filter.request_vars[1], value, _("negate"))
+        html.close_div()
+
+    def filter(self, value: FilterHTTPVariables) -> FilterHeader:
+        return self.query_filter.filter(value)
 
 
 def filter_cre_heading_info(value: FilterHTTPVariables) -> Optional[str]:

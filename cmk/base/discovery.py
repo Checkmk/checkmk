@@ -1696,7 +1696,12 @@ def _merge_manual_services(
     # Similar for 'active_checks', but here we have parameters
     for plugin_name, entries in host_config.active_checks:
         for params in entries:
-            descr = config.active_check_service_description(hostname, plugin_name, params)
+            descr = config.active_check_service_description(
+                hostname,
+                host_config.alias,
+                plugin_name,
+                params,
+            )
             services[(CheckPluginName(plugin_name), descr)] = (
                 'active',
                 Service(

@@ -1104,8 +1104,12 @@ _old_active_check_service_descriptions = {
 }
 
 
-def active_check_service_description(hostname: HostName, active_check_name: ActiveCheckPluginName,
-                                     params: Dict) -> ServiceName:
+def active_check_service_description(
+    hostname: HostName,
+    hostalias: str,
+    active_check_name: ActiveCheckPluginName,
+    params: Dict,
+) -> ServiceName:
     if active_check_name not in active_check_info:
         return "Unimplemented check %s" % active_check_name
 
@@ -1116,7 +1120,7 @@ def active_check_service_description(hostname: HostName, active_check_name: Acti
         act_info = active_check_info[active_check_name]
         description = act_info["service_description"](params)
 
-    description = description.replace('$HOSTNAME$', hostname)
+    description = description.replace('$HOSTNAME$', hostname).replace('$HOSTALIAS$', hostalias)
 
     return get_final_service_description(hostname, description)
 

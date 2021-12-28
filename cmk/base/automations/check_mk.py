@@ -737,8 +737,12 @@ class AutomationAnalyseServices(Automation):
         # 4. Active checks
         for plugin_name, entries in host_config.active_checks:
             for active_check_params in entries:
-                description = config.active_check_service_description(hostname, plugin_name,
-                                                                      active_check_params)
+                description = config.active_check_service_description(
+                    hostname,
+                    host_config.alias,
+                    plugin_name,
+                    active_check_params,
+                )
                 if description == servicedesc:
                     return {
                         "origin": "active",
@@ -1411,7 +1415,12 @@ class AutomationActiveCheck(Automation):
         check_api_utils.set_hostname(hostname)
 
         for params in dict(host_config.active_checks).get(plugin, []):
-            description = config.active_check_service_description(hostname, plugin, params)
+            description = config.active_check_service_description(
+                hostname,
+                host_config.alias,
+                plugin,
+                params,
+            )
             if description != item:
                 continue
 
@@ -1618,8 +1627,12 @@ class AutomationGetServiceConfigurations(Automation):
         actchecks = []
         for plugin_name, entries in host_config.active_checks:
             for params in entries:
-                description = config.active_check_service_description(host_config.hostname,
-                                                                      plugin_name, params)
+                description = config.active_check_service_description(
+                    host_config.hostname,
+                    host_config.alias,
+                    plugin_name,
+                    params,
+                )
                 actchecks.append((plugin_name, description, params))
         return actchecks
 

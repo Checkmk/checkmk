@@ -396,7 +396,12 @@ def _create_nagios_servicedefs(cfg: NagiosConfig, config_cache: ConfigCache, hos
             check_api_utils.set_hostname(hostname)
 
             has_perfdata = act_info.get('has_perfdata', False)
-            description = config.active_check_service_description(hostname, acttype, params)
+            description = config.active_check_service_description(
+                hostname,
+                host_attrs["alias"],
+                acttype,
+                params,
+            )
 
             if not description:
                 core_config.warning(

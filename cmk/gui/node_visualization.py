@@ -199,7 +199,7 @@ class ParentChildTopologyPage(Page):
                 entries=[
                     PageMenuEntry(
                         title=_("Filter"),
-                        icon_name="filters",
+                        icon_name="filter",
                         item=PageMenuSidePopup(
                             cmk.gui.visuals.render_filter_form(
                                 info_list=["host", "service"],

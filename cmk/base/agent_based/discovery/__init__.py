@@ -1383,7 +1383,7 @@ def _active_check_preview_rows(
             for params in entries
             if (
                 descr := config.active_check_service_description(
-                    host_config.hostname, plugin_name, params
+                    host_config.hostname, host_config.alias, plugin_name, params
                 )
             )
         }.values()

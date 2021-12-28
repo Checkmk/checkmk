@@ -423,7 +423,9 @@ def _create_nagios_servicedefs(
             # Make hostname available as global variable in argument functions
             with plugin_contexts.current_host(hostname):
 
-                description = config.active_check_service_description(hostname, acttype, params)
+                description = config.active_check_service_description(
+                    hostname, host_attrs["alias"], acttype, params
+                )
 
                 if not description:
                     core_config.warning(

@@ -753,7 +753,7 @@ class AutomationAnalyseServices(Automation):
             for plugin_name, entries in host_config.active_checks:
                 for active_check_params in entries:
                     description = config.active_check_service_description(
-                        hostname, plugin_name, active_check_params
+                        hostname, host_config.alias, plugin_name, active_check_params
                     )
                     if description == servicedesc:
                         return {
@@ -1546,7 +1546,9 @@ class AutomationActiveCheck(Automation):
         # (used e.g. by check_http)
         with plugin_contexts.current_host(hostname):
             for params in dict(host_config.active_checks).get(plugin, []):
-                description = config.active_check_service_description(hostname, plugin, params)
+                description = config.active_check_service_description(
+                    hostname, host_config.alias, plugin, params
+                )
                 if description != item:
                     continue
 

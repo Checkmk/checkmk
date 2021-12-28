@@ -2885,7 +2885,7 @@ class ConfigVariableGroupEventConsoleGeneric(ConfigVariableGroupEventConsole):
 @config_variable_group_registry.register
 class ConfigVariableGroupEventConsoleLogging(ConfigVariableGroupEventConsole):
     def title(self):
-        return _("Event Console: Logging & Diagnose")
+        return _("Event Console: Logging & diagnose")
 
     def sort_index(self):
         return 19

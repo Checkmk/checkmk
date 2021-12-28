@@ -50,7 +50,7 @@ from cmk.gui.valuespec import (
 @config_variable_group_registry.register
 class ConfigVariableGroupSiteManagement(ConfigVariableGroup):
     def title(self):
-        return _("Site Management")
+        return _("Site management")
 
     def sort_index(self):
         return 30

@@ -108,7 +108,7 @@ from cmk.gui.watolib.groups import load_contact_group_information
 @config_variable_group_registry.register
 class ConfigVariableGroupUserInterface(ConfigVariableGroup):
     def title(self):
-        return _("User Interface")
+        return _("User interface")
 
     def sort_index(self):
         return 20
@@ -180,9 +180,9 @@ def _slow_view_logging_help():
         " detect slow views you have to set"
         "<ul>"
         "<li>the log level to <b>DEBUG</b> at"
-        " <b>Setup > General > Global settings > User Interface > Log levels > Slow views</b>,</li>"
+        " <b>Setup > General > Global settings > User interface > Log levels > Slow views</b>,</li>"
         "<li>a threshold (in seconds) at"
-        " <b>Setup > General > Global settings > User Interface > Threshold for slow views</b>.</li>"
+        " <b>Setup > General > Global settings > User interface > Threshold for slow views</b>.</li>"
         "</ul>"
         "The logging is disable by default. The default threshold is set to 60 seconds."
         " If enabled one log entry per view rendering that exceeeds the configured threshold"
@@ -1871,7 +1871,7 @@ class RestAPIETagLocking(ConfigVariable):
 @config_variable_group_registry.register
 class ConfigVariableGroupWATO(ConfigVariableGroup):
     def title(self):
-        return _("Administration Tool (WATO)")
+        return _("Setup")
 
     def sort_index(self):
         return 25
@@ -2198,7 +2198,7 @@ class ConfigVariableWATOIconCategories(ConfigVariable):
 
 
 # .
-#   .--User Management-----------------------------------------------------.
+#   .--User management-----------------------------------------------------.
 #   |          _   _                 __  __                 _              |
 #   |         | | | |___  ___ _ __  |  \/  | __ _ _ __ ___ | |_            |
 #   |         | | | / __|/ _ \ '__| | |\/| |/ _` | '_ ` _ \| __|           |
@@ -2213,7 +2213,7 @@ class ConfigVariableWATOIconCategories(ConfigVariable):
 @config_variable_group_registry.register
 class ConfigVariableGroupUserManagement(ConfigVariableGroup):
     def title(self):
-        return _("User Management")
+        return _("User management")
 
     def sort_index(self):
         return 40
@@ -4681,7 +4681,7 @@ rulespec_registry.register(
 )
 
 # .
-#   .--User Interface------------------------------------------------------.
+#   .--User interface------------------------------------------------------.
 #   |   _   _                 ___       _             __                   |
 #   |  | | | |___  ___ _ __  |_ _|_ __ | |_ ___ _ __ / _| __ _  ___ ___    |
 #   |  | | | / __|/ _ \ '__|  | || '_ \| __/ _ \ '__| |_ / _` |/ __/ _ \   |

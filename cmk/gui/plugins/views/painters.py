@@ -4583,20 +4583,20 @@ class PainterLogIcon(Painter):
 
         if log_type == "SERVICE ALERT":
             img = {0: "ok", 1: "warn", 2: "crit", 3: "unknown"}.get(row["log_state"])
-            title = _("Service Alert")
+            title = _("Service alert")
 
         elif log_type == "HOST ALERT":
             img = {0: "up", 1: "down", 2: "unreach"}.get(row["log_state"])
-            title = _("Host Alert")
+            title = _("Host alert")
 
         elif log_type.endswith("ALERT HANDLER STARTED"):
             img = "alert_handler_started"
-            title = _("Alert Handler Started")
+            title = _("Alert handler started")
 
         elif log_type.endswith("ALERT HANDLER STOPPED"):
             if log_state == 0:
                 img = "alert_handler_stopped"
-                title = _("Alert handler Stopped")
+                title = _("Alert handler stopped")
             else:
                 img = "alert_handler_failed"
                 title = _("Alert handler failed")

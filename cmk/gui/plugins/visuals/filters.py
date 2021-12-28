@@ -1593,7 +1593,7 @@ class FilterLogClass(Filter):
             (4, _l("Passive checks")),
             (5, _l("Commands")),
             (6, _l("States")),
-            (8, _l("Alert Handlers")),
+            (8, _l("Alert handlers")),
         ]
 
         super().__init__(

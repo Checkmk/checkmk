@@ -1103,7 +1103,7 @@ class LockedByValuespec(Tuple):
             title=_("Locked by"),
             help=_(
                 "The host is (partially) managed by an automatic data source like the "
-                "Dynamic Configuration."
+                "dynamic configuration."
             ),
         )
 

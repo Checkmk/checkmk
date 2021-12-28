@@ -1578,8 +1578,9 @@ run_cached() {
     if ${MK_RUN_ASYNC_PARTS}; then
         # Time to refresh cache file and new job not yet running?
         if [ $((NOW - MTIME)) -gt "${REFRESH_INTERVAL}" ] && [ ! -e "${CACHEFILE}.new" ]; then
+            THIS_SHELL="$(ps -o cmd= -p $$ | cut -d' ' -f1)"
             # Start it. If the command fails the output is thrown away
-            cat <<HERE | nohup /bin/bash >/dev/null 2>&1 &
+            cat <<HERE | nohup "${THIS_SHELL}" >/dev/null 2>&1 &
 eval '${MK_DEFINE_LOG_SECTION_TIME}'
 set -o noclobber
 exec > "${CACHEFILE}.new" || exit 1

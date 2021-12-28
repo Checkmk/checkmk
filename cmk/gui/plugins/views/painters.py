@@ -4392,8 +4392,9 @@ class PainterLogContactName(Painter):
         return ['log_contact_name']
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        target_view_name = ("mobile_contactnotifications"
-                            if html.is_mobile() else "contactnotifications")
+        is_mobile: bool = html.is_mobile()
+        target_view_name: str = ("mobile_contactnotifications"
+                                 if is_mobile else "contactnotifications")
         return (
             "nowrap",
             HTML(", ").join(
@@ -4405,7 +4406,7 @@ class PainterLogContactName(Painter):
                             ("view_name", target_view_name),
                             ("log_contact_name", contact),
                         ],
-                        filename="mobile_view.py" if html.is_mobile else "view.py",
+                        filename="mobile_view.py" if is_mobile else "view.py",
                     )) for contact in row["log_contact_name"].split(",")),
         )
 

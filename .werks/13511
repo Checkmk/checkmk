@@ -1,0 +1,12 @@
+Title: Fix link of painter 'Log: contact name'
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1640686287
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0p18
+
+If you used the column "Log: contact name" in views, the link of the shown
+entries in the view pointed to the mobile view.

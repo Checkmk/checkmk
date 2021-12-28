@@ -2442,7 +2442,7 @@ class ConfigVariableDefaultUserProfile(ConfigVariable):
                 (
                     "force_authuser",
                     Checkbox(
-                        title=_("Visibility of Hosts/Services"),
+                        title=_("Visibility of hosts/services"),
                         label=_("Only show hosts and services the user is a contact for"),
                         help=_("Specifiy the initial setting for an automatically created user."),
                         default_value=False,

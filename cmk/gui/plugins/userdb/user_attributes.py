@@ -36,7 +36,7 @@ class ForceAuthUserUserAttribute(UserAttribute):
 
     def valuespec(self):
         return Checkbox(
-            title=_("Visibility of Hosts/Services"),
+            title=_("Visibility of hosts/services"),
             label=_("Only show hosts and services the user is a contact for"),
             help=_(
                 "When this option is checked, then the status GUI will only "
@@ -61,7 +61,7 @@ class DisableNotificationsUserAttribute(UserAttribute):
     def valuespec(self):
         return Transform(
             Dictionary(
-                title=_("Disable Notifications"),
+                title=_("Disable notifications"),
                 help=_(
                     "When this option is active you will not get <b>any</b> "
                     "alerts or other notifications via email, SMS or similar. "

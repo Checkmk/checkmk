@@ -573,8 +573,11 @@ class UserProfile(ABCUserProfilePage):
         html.open_div(class_="wato")
         forms.header(_("Personal settings"))
 
-        forms.section(_("Name"), simple=True)
-        html.write_text(user_spec.get("alias", user.id))
+        forms.section(_("Username"), simple=True)
+        html.write_text(user_spec.get("user_id", user.id))
+
+        forms.section(_("Full name"), simple=True)
+        html.write_text(user_spec.get("alias", ""))
 
         select_language(user_spec)
 

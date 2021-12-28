@@ -1,0 +1,13 @@
+Title: Fix TypeError on audit log search
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1640703600
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0p18
+
+If changes of global settings were logged to the audit log and you tried to filter for any
+search term afterwards, the error "TypeError (expected string or bytes-like object)"
+occurred.

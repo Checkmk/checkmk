@@ -544,8 +544,12 @@ class ModeAuditLog(WatoMode):
                 return False
 
         if self._options["filter_regex"]:
+            # TODO str(entry.text) is needed, because
+            # ABCEditGlobalSettingMode.action() uses HTML() for add
+            # change. Remove this and handle compatibility one day...
             return any(
                 re.search(self._options["filter_regex"], val)
-                for val in [entry.user_id, entry.action, entry.text])
+                for val in [entry.user_id, entry.action,
+                            str(entry.text)])
 
         return True

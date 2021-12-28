@@ -6,6 +6,7 @@
 
 import re
 import time
+from functools import partial
 from typing import List, Optional, Tuple, Union
 
 import cmk.utils.defines as defines
@@ -17,6 +18,7 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.globals import html
 from cmk.gui.i18n import _, _l
 from cmk.gui.plugins.visuals.utils import (
+    CheckboxRowFilter,
     display_filter_radiobuttons,
     Filter,
     filter_registry,
@@ -144,44 +146,24 @@ class FilterInvtableIDRange(FilterNumberRange):
         )
 
 
-class FilterInvtableOperStatus(Filter):
+class FilterInvtableOperStatus(CheckboxRowFilter):
     def __init__(self, *, inv_info: str, ident: str, title: str) -> None:
         super().__init__(
-            ident=ident,
             title=title,
             sort_index=800,
             info=inv_info,
-            htmlvars=[ident + "_" + str(x) for x in defines.interface_oper_states()],
-            link_columns=[],
+            query_filter=query_filters.FilterMultipleOptions(
+                ident=ident,
+                options=[
+                    (ident + "_" + str(state), title)
+                    for state, title in defines.interface_oper_states().items()
+                    # needed because of silly types
+                    # skip artificial state 8 (degraded) and 9 (admin down)
+                    if isinstance(state, int) and state < 8
+                ],
+                filter_rows=partial(query_filters.if_oper_status_filter_table, ident),
+            ),
         )
-
-    def display(self, value: FilterHTTPVariables) -> None:
-        html.begin_checkbox_group()
-        for state, state_name in sorted(defines.interface_oper_states().items()):
-            if not isinstance(state, int):  # needed because of silly types
-                continue
-            if state >= 8:
-                continue  # skip artificial state 8 (degraded) and 9 (admin down)
-            varname = self.ident + "_" + str(state)
-            html.checkbox(varname, bool(value.get(varname, True)), label=state_name)
-            if state in (4, 7):
-                html.br()
-        html.end_checkbox_group()
-
-    def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
-        # We consider the filter active if not all checkboxes
-        # are either on (default) or off (unset)
-        values = context.get(self.ident, {})
-        assert not isinstance(values, str)
-        settings = {values.get(v, "") for v in self.htmlvars}
-        if len(settings) == 1:
-            return rows
-
-        return [
-            row
-            for row in rows
-            if values.get("%s_%d" % (self.ident, row["invinterface_oper_status"]), "")
-        ]
 
 
 class FilterInvtableAdminStatus(FilterOption):

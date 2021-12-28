@@ -43,6 +43,8 @@ if cmk_version.is_managed_edition():
 import cmk.gui.query_filters as query_filters
 from cmk.gui.plugins.visuals.utils import (
     checkbox_component,
+    checkbox_row,
+    CheckboxRowFilter,
     display_filter_radiobuttons,
     Filter,
     filter_cre_heading_info,
@@ -711,49 +713,6 @@ filter_registry.register(
         options=[],
     )
 )
-
-
-def checkbox_row(
-    options: List[Tuple[str, str]], value: FilterHTTPVariables, title: Optional[str] = None
-) -> None:
-    html.begin_checkbox_group()
-    if title:
-        html.write_text(title)
-    checkbox_default = not any(value.values())
-    for var, text in options:
-        html.checkbox(var, bool(value.get(var, checkbox_default)), label=text)
-    html.end_checkbox_group()
-
-
-class CheckboxRowFilter(Filter):
-    def __init__(
-        self,
-        *,
-        title: Union[str, LazyString],
-        sort_index: int,
-        info: str,
-        query_filter: query_filters.FilterMultipleOptions,
-        is_show_more: bool = False,
-    ) -> None:
-        super().__init__(
-            ident=query_filter.ident,
-            title=title,
-            sort_index=sort_index,
-            info=info,
-            htmlvars=query_filter.request_vars,
-            link_columns=[],
-            is_show_more=is_show_more,
-        )
-        self.query_filter = query_filter
-
-    def display(self, value: FilterHTTPVariables) -> None:
-        checkbox_row(self.query_filter.options, value)
-
-    def filter(self, value: FilterHTTPVariables) -> FilterHeader:
-        return self.query_filter.filter(value)
-
-    def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
-        return self.query_filter.filter_table(context, rows)
 
 
 # TODO: I would be great to split this in two filters for host & service kind of problems

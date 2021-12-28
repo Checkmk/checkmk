@@ -726,6 +726,20 @@ def discovery_state_filter_table(ident: str, context: VisualContext, rows: Rows)
     return [row for row in rows if filter_options.get("discovery_state_" + row["discovery_state"])]
 
 
+def if_oper_status_filter_table(ident: str, context: VisualContext, rows: Rows) -> Rows:
+
+    values = context.get(ident, {})
+    assert not isinstance(values, str)
+    # We consider the filter active if not all checkboxes
+    # are either on (default) or off (unset)
+    settings = set(values.values())
+
+    if len(settings) == 1 and len(values) > 1:
+        return rows
+
+    return [row for row in rows if values.get("%s_%d" % (ident, row["invinterface_oper_status"]))]
+
+
 def cre_sites_options() -> Options:
 
     return sorted(

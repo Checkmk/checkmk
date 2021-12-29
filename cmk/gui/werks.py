@@ -16,7 +16,7 @@ from typing import Any, Dict, Iterator, List, Union
 import cmk.utils.paths
 import cmk.utils.store as store
 import cmk.utils.werks
-from cmk.utils.version import __version__, Edition, edition, Version
+from cmk.utils.version import __version__, Edition, Version
 
 import cmk.gui.pages
 import cmk.gui.utils as utils
@@ -25,6 +25,7 @@ from cmk.gui.breadcrumb import (
     BreadcrumbItem,
     make_current_page_breadcrumb_item,
     make_main_menu_breadcrumb,
+    make_simple_page_breadcrumb,
 )
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.globals import html, output_funnel, request, theme, transactions, user
@@ -52,50 +53,76 @@ acknowledgement_path = cmk.utils.paths.var_dir + "/acknowledged_werks.mk"
 g_werks: Dict[int, Dict[str, Any]] = {}
 
 
-@cmk.gui.pages.page_registry.register_page("version")
-class ModeReleaseNotesPage(cmk.gui.pages.Page):
+@cmk.gui.pages.page_registry.register_page("info")
+class ModeAboutCheckmkPage(cmk.gui.pages.Page):
     def _title(self) -> str:
-        return _("Release Notes - %s %s") % (edition().title, __version__)
+        return _("About Checkmk")
 
     def page(self) -> cmk.gui.pages.PageResult:
-        if request.get_integer_input_mandatory("major", 0):
-            self._major_page()
-        else:
-            self._patch_page()
-
-    def _major_page(self) -> None:
+        breadcrumb = make_simple_page_breadcrumb(mega_menu_registry["help_links"], _("Info"))
         html.header(
             self._title(),
-            breadcrumb=_release_notes_breadcrumb(),
+            breadcrumb=breadcrumb,
         )
 
-        html.open_div(id_="release_title")
-        html.h1(escape_html(_("Everything")) + html.render_br() + escape_html(_("monitored")))
-        html.img(theme.url("images/tribe29.svg"))
+        html.open_div(id_="info_title")
+        html.h1(escape_html(_("Your monitoring machine")))
+        html.a(
+            html.render_img(theme.url("images/tribe29.svg")), "https://tribe29.com", target="_blank"
+        )
         html.close_div()
 
-        html.div(None, id_="release_underline")
+        html.div(None, id_="info_underline")
 
-        html.open_div(id_="release_content")
-        for icon, headline, subline in [
-            ("release_deploy", _("Deploy in minutes"), _("From 0 to Monitoring in <10min")),
-            ("release_scale", _("With unlimited scale"), _("Hundred thousands of hosts")),
-            ("release_automated", _("Highly automated"), _("Let Checkmk do the work for you")),
-        ]:
-            html.open_div(class_="container")
-            html.img(theme.url(f"images/{icon}.svg"))
-            html.div(headline)
-            html.div(subline)
-            html.close_div()
+        html.open_div(id_="info_intro_text")
+        html.span(_("Open. Effective. Awesome."))
+        html.span(
+            _(
+                "May we present? Monitoring as it's supposed to be: "
+                "incredibly quick to install, infinetely scalable, highly customizable and "
+                "designed for admins."
+            )
+        )
+        html.span(
+            _("Visit our %s to learn more about Checkmk and about the %s.")
+            % (
+                html.render_a(_("website"), "https://checkmk.com", target="_blank"),
+                html.render_a(
+                    _("latest version"),
+                    "https://checkmk.com/product/latest-version",
+                    target="_blank",
+                ),
+            )
+        )
         html.close_div()
 
-        html.open_div(id_="release_footer")
+        version_major_minor = re.sub(r".\d+$", "", Version(__version__).version_base)
+        if version_major_minor:
+            current_version_link = "https://checkmk.com/product/checkmk-%s" % version_major_minor
+        else:
+            current_version_link = "https://checkmk.com/product/latest-version"
+
+        html.open_div(id="info_image")
+        html.open_a(href=current_version_link, target="_blank")
+        html.img(theme.url("images/monitoring-machine.png"))
+        html.close_a()
+        html.close_div()
+
+        html.close_div()
+
+        html.open_div(id_="info_footer")
         html.span(_("© %s tribe29 GmbH. All Rights Reserved.") % time.strftime("%Y"))
         html.a(_("License agreement"), href="https://checkmk.com/legal.html", target="_blank")
         html.close_div()
 
-    def _patch_page(self) -> None:
-        breadcrumb = _release_notes_breadcrumb()
+
+@cmk.gui.pages.page_registry.register_page("change_log")
+class ModeChangeLogPage(cmk.gui.pages.Page):
+    def _title(self) -> str:
+        return _("Change log (Werks)")
+
+    def page(self) -> cmk.gui.pages.PageResult:
+        breadcrumb = make_simple_page_breadcrumb(mega_menu_registry["help_links"], self._title())
 
         load_werks()
         werk_table_options = _werk_table_options_from_request()
@@ -103,7 +130,7 @@ class ModeReleaseNotesPage(cmk.gui.pages.Page):
         html.header(
             self._title(),
             breadcrumb,
-            _release_notes_page_menu(breadcrumb, werk_table_options),
+            self._page_menu(breadcrumb, werk_table_options),
         )
 
         for message in get_flashed_messages():
@@ -116,6 +143,25 @@ class ModeReleaseNotesPage(cmk.gui.pages.Page):
         html.close_div()
 
         html.footer()
+
+    def _page_menu(self, breadcrumb: Breadcrumb, werk_table_options: Dict[str, Any]) -> PageMenu:
+        menu = PageMenu(
+            dropdowns=[
+                PageMenuDropdown(
+                    name="werks",
+                    title=_("Werks"),
+                    topics=[
+                        PageMenuTopic(
+                            title=_("Incompatible werks"),
+                            entries=list(_page_menu_entries_ack_all_werks()),
+                        ),
+                    ],
+                ),
+            ],
+            breadcrumb=breadcrumb,
+        )
+        _extend_display_dropdown(menu, werk_table_options)
+        return menu
 
 
 def handle_acknowledgement():
@@ -143,41 +189,6 @@ def handle_acknowledgement():
         flash(_("%d incompatible Werks have been acknowledged.") % num)
         load_werks()  # reload ack states after modification
         html.reload_whole_page()
-
-
-def _release_notes_breadcrumb() -> Breadcrumb:
-    breadcrumb = make_main_menu_breadcrumb(mega_menu_registry["help_links"])
-
-    breadcrumb.append(
-        BreadcrumbItem(
-            title=_("Release notes"),
-            url="version.py",
-        )
-    )
-
-    return breadcrumb
-
-
-def _release_notes_page_menu(
-    breadcrumb: Breadcrumb, werk_table_options: Dict[str, Any]
-) -> PageMenu:
-    menu = PageMenu(
-        dropdowns=[
-            PageMenuDropdown(
-                name="werks",
-                title=_("Werks"),
-                topics=[
-                    PageMenuTopic(
-                        title=_("Incompatible werks"),
-                        entries=list(_page_menu_entries_ack_all_werks()),
-                    ),
-                ],
-            ),
-        ],
-        breadcrumb=breadcrumb,
-    )
-    _extend_display_dropdown(menu, werk_table_options)
-    return menu
 
 
 def _page_menu_entries_ack_all_werks() -> Iterator[PageMenuEntry]:
@@ -257,7 +268,13 @@ def page_werk():
 
     title = ("%s %s - %s") % (_("Werk"), render_werk_id(werk, with_link=False), werk["title"])
 
-    breadcrumb = _release_notes_breadcrumb()
+    breadcrumb = make_main_menu_breadcrumb(mega_menu_registry["help_links"])
+    breadcrumb.append(
+        BreadcrumbItem(
+            title=_("Change log (Werks)"),
+            url="change_log.py",
+        )
+    )
     breadcrumb.append(make_current_page_breadcrumb_item(title))
     html.header(title, breadcrumb, _page_menu_werk(breadcrumb, werk))
 

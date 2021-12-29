@@ -3,7 +3,7 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
-#release_title {
+#info_title {
   display: flex;
 
   h1 {
@@ -18,48 +18,34 @@
   }
 }
 
-#release_underline {
+#info_underline {
   width: 50px;
   height: 4px;
   margin: 20px 0 0 5px;
   background-color: $success;
 }
 
-#release_content {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  margin-top: 100px;
+#info_intro_text {
+  margin: 2 * $spacing 0.5 * $spacing;
+  font-size: $font-size-page-title;
 
-  .container {
-    display: flex;
-    align-items: center;
-    flex-direction: column;
-    justify-content: center;
-    width: 300px;
-    height: 200px;
-    margin: $spacing;
-    background: $headline-color;
-    border-radius: $theme-border-radius;
-
-    img {
-      width: 65px;
-      height: 65px;
-      padding-bottom: 30px;
-    }
-
-    div:nth-last-child(2) {
-      font-size: 26px;
-    }
-
-    div:last-child {
-      font-size: 16px;
-      line-height: 24px;
-    }
+  span {
+    display: block;
   }
 }
 
-#release_footer {
+#info_image {
+  padding: 3 * $spacing 0;
+  margin: 0 auto 6 * $spacing;
+  text-align: center;
+
+  img {
+    width: 60%;
+    min-width: 900px;
+  }
+}
+
+#info_footer {
   position: fixed;
   bottom: 0;
   left: 0;

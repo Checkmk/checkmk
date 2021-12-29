@@ -181,16 +181,16 @@ def _help_menu_topics() -> List[TopicMenuTopic]:
             icon="about_checkmk",
             items=[
                 TopicMenuItem(
-                    name="release_notes",
-                    title=_("Release notes"),
-                    url="version.py?major=1",
+                    name="info",
+                    title=_("Info"),
+                    url="info.py",
                     sort_index=10,
                     icon="tribe29",
                 ),
                 TopicMenuItem(
                     name="change_log",
                     title=_("Change log (Werks)"),
-                    url="version.py",
+                    url="change_log.py",
                     sort_index=20,
                     icon="tribe29",
                 ),

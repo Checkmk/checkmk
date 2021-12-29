@@ -5,13 +5,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import re
-import time
 from functools import partial
 from typing import List, Optional, Tuple, Union
 
 import cmk.utils.defines as defines
 
-import cmk.gui.inventory as inventory
 import cmk.gui.query_filters as query_filters
 import cmk.gui.utils as utils
 from cmk.gui.exceptions import MKUserError
@@ -31,7 +29,7 @@ from cmk.gui.plugins.visuals.utils import (
     VisualInfo,
 )
 from cmk.gui.type_defs import FilterHeader, FilterHTTPVariables, Rows, VisualContext
-from cmk.gui.valuespec import Age, ValueSpec
+from cmk.gui.valuespec import ValueSpec
 
 
 class FilterInvtableText(InputTextFilter):
@@ -64,71 +62,22 @@ class FilterInvText(InputTextFilter):
         return bool(value.get(self.htmlvars[0], "").strip().lower())
 
 
-class FilterInvtableTimestampAsAge(Filter):
-    def __init__(self, *, inv_info: str, ident: str, title: str) -> None:
-        self._from_varprefix = ident + "_from"
-        self._to_varprefix = ident + "_to"
+class FilterInvtableTimestampAsAge(FilterNumberRange):
+    def __init__(self, *, inv_info: RangedTables, ident: str, title: str) -> None:
         super().__init__(
-            ident=ident,
             title=title,
             sort_index=800,
             info=inv_info,
-            htmlvars=[self._from_varprefix + "_days", self._to_varprefix + "_days"],
-            link_columns=[],
+            query_filter=query_filters.FilterNumberRange(
+                ident=ident,
+                filter_livestatus=False,
+                filter_row=query_filters.column_age_in_range,
+                request_var_suffix="_days",
+                bound_rescaling=3600 * 24,
+            ),
+            unit="days",
+            is_show_more=False,
         )
-
-    def display(self, value: FilterHTTPVariables) -> None:
-        html.open_table()
-
-        from_value, to_value = (self._days_to_seconds(value.get(v, "")) for v in self.htmlvars)
-        html.open_tr()
-        html.td("%s:" % _("from"), style="vertical-align: middle;")
-        html.open_td()
-        self._valuespec().render_input(self._from_varprefix, from_value)
-        html.close_td()
-        html.close_tr()
-
-        html.open_tr()
-        html.td("%s:" % _("to"), style="vertical-align: middle;")
-        html.open_td()
-        self._valuespec().render_input(self._to_varprefix, to_value)
-        html.close_td()
-        html.close_tr()
-
-        html.close_table()
-
-    def _valuespec(self) -> ValueSpec:
-        return Age(display=["days"])
-
-    @staticmethod
-    def _days_to_seconds(value: str) -> int:
-        try:
-            return int(value) * 3600 * 24
-        except ValueError:
-            return 0
-
-    def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
-
-        values = context.get(self.ident, {})
-        assert not isinstance(values, str)
-        from_value, to_value = (self._days_to_seconds(values.get(v, "")) for v in self.htmlvars)
-
-        if not from_value and not to_value:
-            return rows
-
-        now = time.time()
-        newrows = []
-        for row in rows:
-            value = row.get(self.ident, None)
-            if value is not None:
-                age = now - value
-                if from_value and age < from_value:
-                    continue
-
-                if to_value and age > to_value:
-                    continue
-                newrows.append(row)
-        return newrows
 
 
 class FilterInvtableIDRange(FilterNumberRange):
@@ -142,9 +91,66 @@ class FilterInvtableIDRange(FilterNumberRange):
             query_filter=query_filters.FilterNumberRange(
                 ident=ident,
                 filter_livestatus=False,
-                filter_row=query_filters.filter_inv_table_id_range,
+                filter_row=query_filters.column_value_in_range,
             ),
         )
+
+
+class FilterInvFloat(FilterNumberRange):
+    def __init__(
+        self,
+        *,
+        ident: str,
+        title: str,
+        inv_path: str,
+        unit: Optional[str],
+        scale: Optional[float],
+        is_show_more: bool = True,
+    ) -> None:
+        super().__init__(
+            title=title,
+            sort_index=800,
+            info="host",
+            query_filter=query_filters.FilterNumberRange(
+                ident=ident,
+                filter_livestatus=False,
+                filter_row=query_filters.filter_in_host_inventory_range(inv_path),
+                request_var_suffix="",
+                bound_rescaling=scale if scale is not None else 1.0,
+            ),
+            is_show_more=is_show_more,
+        )
+
+    def need_inventory(self, value: FilterHTTPVariables) -> bool:
+        return any(self.query_filter.extractor(value))
+
+
+class FilterInvtableVersion(Filter):
+    def __init__(self, *, inv_info: str, ident: str, title: str) -> None:
+        request_vars = [ident + "_from", ident + "_until"]
+        self.query_filter = query_filters.Filter(
+            ident=ident,
+            request_vars=request_vars,
+            filter_rows=partial(query_filters.version_in_range, ident, request_vars),
+        )
+        super().__init__(
+            ident=self.query_filter.ident,
+            title=title,
+            sort_index=800,
+            info=inv_info,
+            htmlvars=self.query_filter.request_vars,
+            link_columns=[],
+        )
+
+    def display(self, value: FilterHTTPVariables) -> None:
+        html.write_text(_("Min.&nbsp;Version:"))
+        html.text_input(self.htmlvars[0], default_value=value.get(self.htmlvars[0], ""), size=7)
+        html.write_text(" &nbsp; ")
+        html.write_text(_("Max.&nbsp;Version:"))
+        html.text_input(self.htmlvars[1], default_value=value.get(self.htmlvars[1], ""), size=7)
+
+    def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
+        return self.query_filter.filter_table(context, rows)
 
 
 class FilterInvtableOperStatus(CheckboxRowFilter):
@@ -235,116 +241,6 @@ class FilterInvtableInterfaceType(DualListFilter):
         if not selection:
             return rows  # No types selected, filter is unused
         return [row for row in rows if str(row[self.query_filter.column]) in selection]
-
-
-class FilterInvtableVersion(Filter):
-    def __init__(self, *, inv_info: str, ident: str, title: str) -> None:
-        super().__init__(
-            ident=ident,
-            title=title,
-            sort_index=800,
-            info=inv_info,
-            htmlvars=[ident + "_from", ident + "_to"],
-            link_columns=[],
-        )
-
-    def display(self, value: FilterHTTPVariables) -> None:
-        html.write_text(_("Min.&nbsp;Version:"))
-        html.text_input(self.htmlvars[0], default_value=value.get(self.htmlvars[0], ""), size=7)
-        html.write_text(" &nbsp; ")
-        html.write_text(_("Max.&nbsp;Version:"))
-        html.text_input(self.htmlvars[1], default_value=value.get(self.htmlvars[1], ""), size=7)
-
-    def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
-        values = context.get(self.ident, {})
-        assert not isinstance(values, str)
-        from_version, to_version = (values.get(v) for v in self.htmlvars)
-        if not from_version and not to_version:
-            return rows  # Filter not used
-
-        new_rows = []
-        for row in rows:
-            version = row.get(self.ident, "")
-            if from_version and utils.cmp_version(version, from_version) == -1:
-                continue
-            if to_version and utils.cmp_version(version, to_version) == 1:
-                continue
-            new_rows.append(row)
-
-        return new_rows
-
-
-class FilterInvFloat(Filter):
-    def __init__(
-        self,
-        *,
-        ident: str,
-        title: str,
-        inv_path: str,
-        unit: Optional[str],
-        scale: Optional[float],
-        is_show_more: bool = True,
-    ) -> None:
-        super().__init__(
-            ident=ident,
-            title=title,
-            sort_index=800,
-            info="host",
-            htmlvars=[ident + "_from", ident + "_to"],
-            link_columns=[],
-            is_show_more=is_show_more,
-        )
-        self._invpath = inv_path
-        self._unit = unit
-        self._scale = scale if scale is not None else 1.0
-
-    def display(self, value: FilterHTTPVariables) -> None:
-        html.write_text(_("From: "))
-        htmlvar = self.htmlvars[0]
-        current_value = value.get(htmlvar, "")
-        html.text_input(htmlvar, default_value=current_value, size=8, cssclass="number")
-        if self._unit:
-            html.write_text(" %s" % self._unit)
-
-        html.write_text("&nbsp;&nbsp;" + _("To: "))
-        htmlvar = self.htmlvars[1]
-        current_value = value.get(htmlvar, "")
-        html.text_input(htmlvar, default_value=current_value, size=8, cssclass="number")
-        if self._unit:
-            html.write_text(" %s" % self._unit)
-
-    def filter_configs(self, values: FilterHTTPVariables) -> List[Optional[float]]:
-        "Returns scaled lower and upper bounds"
-
-        def _scaled_bound(name) -> Optional[float]:
-            try:
-                return float(values.get(name, "")) * self._scale
-            except ValueError:
-                return None
-
-        return [_scaled_bound(name) for name in self.htmlvars[:2]]
-
-    def need_inventory(self, value) -> bool:
-        return any(self.filter_configs(value))
-
-    def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
-        values = context.get(self.ident, {})
-        assert not isinstance(values, str)
-        lower, upper = self.filter_configs(values)
-        if not any((lower, upper)):
-            return rows
-
-        newrows = []
-        for row in rows:
-            invdata = inventory.get_inventory_attribute(row["host_inventory"], self._invpath)
-            if not isinstance(invdata, (int, float)):
-                continue
-            if lower is not None and invdata < lower:
-                continue
-            if upper is not None and invdata > upper:
-                continue
-            newrows.append(row)
-        return newrows
 
 
 class FilterInvBool(FilterOption):

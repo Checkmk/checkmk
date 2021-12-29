@@ -426,8 +426,11 @@ class FilterNumberRange(Filter):  # type is int
         sort_index: int,
         info: RangedTables,
         query_filter: query_filters.FilterNumberRange,
+        unit: Union[str, LazyString] = "",
+        is_show_more: bool = True,
     ) -> None:
         self.query_filter = query_filter
+        self.unit = unit
         super().__init__(
             ident=self.query_filter.ident,
             title=title,
@@ -435,7 +438,7 @@ class FilterNumberRange(Filter):  # type is int
             info=info,
             htmlvars=self.query_filter.request_vars,
             link_columns=[],
-            is_show_more=True,
+            is_show_more=is_show_more,
         )
 
     def display(self, value: FilterHTTPVariables) -> None:
@@ -443,10 +446,15 @@ class FilterNumberRange(Filter):  # type is int
         html.text_input(
             self.htmlvars[0], default_value=value.get(self.htmlvars[0], ""), style="width: 80px;"
         )
+        if self.unit:
+            html.write_text(" %s " % self.unit)
+
         html.write_text(" &nbsp; " + _("To:") + "&nbsp;")
         html.text_input(
             self.htmlvars[1], default_value=value.get(self.htmlvars[1], ""), style="width: 80px;"
         )
+        if self.unit:
+            html.write_text(" %s " % self.unit)
 
     def filter(self, value: FilterHTTPVariables) -> FilterHeader:
         return self.query_filter.filter(value)

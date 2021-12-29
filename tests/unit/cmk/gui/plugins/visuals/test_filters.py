@@ -862,7 +862,7 @@ filter_table_tests = [
         ident="inv_hardware_cpu_bus_speed",
         request_vars=[
             ("inv_hardware_cpu_bus_speed_from", "10"),
-            ("inv_hardware_cpu_bus_speed_to", "20"),
+            ("inv_hardware_cpu_bus_speed_until", "20"),
         ],
         rows=[
             # Not real inventory structures, just input for our monkeypatched function
@@ -893,7 +893,7 @@ filter_table_tests = [
         ident="invswpac_package_version",
         request_vars=[
             ("invswpac_package_version_from", "1.0"),
-            ("invswpac_package_version_to", "3.0"),
+            ("invswpac_package_version_until", "3.0"),
         ],
         rows=[
             {"invswpac_package_version": "0.5"},
@@ -1037,7 +1037,7 @@ filter_table_tests = [
         ident="invinterface_last_change",
         request_vars=[
             ("invinterface_last_change_from_days", "1"),
-            ("invinterface_last_change_to_days", "5"),
+            ("invinterface_last_change_until_days", "5"),
         ],
         rows=[
             {"invinterface_last_change": 1523811000},

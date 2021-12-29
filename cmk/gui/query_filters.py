@@ -9,7 +9,7 @@
 
 import re
 import time
-from typing import Callable, List, Literal, Optional, Tuple
+from typing import Callable, List, Literal, Optional, Tuple, Union
 
 import livestatus
 
@@ -17,6 +17,7 @@ import cmk.utils.version as cmk_version
 
 import cmk.gui.inventory as inventory
 import cmk.gui.sites as sites
+import cmk.gui.utils as utils
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.globals import config, user, user_errors
 from cmk.gui.i18n import _
@@ -256,7 +257,7 @@ def time_filter_options() -> Options:
     return choices
 
 
-MaybeIntBounds = Tuple[Optional[int], Optional[int]]
+MaybeBounds = Tuple[Union[int, float, None], Union[int, float, None]]
 
 
 class FilterNumberRange(Filter):
@@ -266,23 +267,34 @@ class FilterNumberRange(Filter):
         ident: str,
         column: Optional[str] = None,
         filter_livestatus: bool = True,
-        filter_row: Optional[Callable[[int, MaybeIntBounds], bool]] = None,
+        filter_row: Optional[Callable[[Row, str, MaybeBounds], bool]] = None,
+        request_var_suffix: str = "",
+        bound_rescaling: Union[int, float] = 1,
     ):
-        super().__init__(ident=ident, request_vars=[ident + "_from", ident + "_until"])
+        super().__init__(
+            ident=ident,
+            request_vars=[
+                ident + "_from" + request_var_suffix,
+                ident + "_until" + request_var_suffix,
+            ],
+        )
         self.column = column or ident
         self.filter_livestatus = filter_livestatus
         self.filter_row = filter_row
+        self.request_var_suffix = request_var_suffix
+        self.bound_rescaling = bound_rescaling
 
-    def extractor(self, value: FilterHTTPVariables) -> MaybeIntBounds:
+    def extractor(self, value: FilterHTTPVariables) -> MaybeBounds:
         return (
-            self.get_bound(self.ident + "_from", value),
-            self.get_bound(self.ident + "_until", value),
+            self.get_bound(self.ident + "_from" + self.request_var_suffix, value),
+            self.get_bound(self.ident + "_until" + self.request_var_suffix, value),
         )
 
-    @staticmethod
-    def get_bound(var: str, value: FilterHTTPVariables) -> Optional[int]:
+    def get_bound(self, var: str, value: FilterHTTPVariables) -> Union[int, float, None]:
         try:
-            return int(value.get(var, ""))
+            if isinstance(self.bound_rescaling, int):
+                return int(value.get(var, "")) * self.bound_rescaling
+            return float(value.get(var, "")) * self.bound_rescaling
         except ValueError:
             return None
 
@@ -304,21 +316,51 @@ class FilterNumberRange(Filter):
         if (self.filter_row is None) or (from_value is None and to_value is None):
             return rows
 
-        return [
-            row
-            for row in rows
-            if (value := row.get(self.column)) and self.filter_row(value, (from_value, to_value))
-        ]
+        return [row for row in rows if self.filter_row(row, self.column, (from_value, to_value))]
 
 
-def filter_inv_table_id_range(value: int, bounds: MaybeIntBounds) -> bool:
+def value_in_range(value: Union[int, float], bounds: MaybeBounds) -> bool:
     from_value, to_value = bounds
+
     if from_value and value < from_value:
         return False
 
     if to_value and value > to_value:
         return False
     return True
+
+
+def column_value_in_range(row: Row, column: str, bounds: MaybeBounds) -> bool:
+    value = row.get(column)
+    if not isinstance(value, (int, float)):
+        return False
+    return value_in_range(value, bounds)
+
+
+def column_age_in_range(row: Row, column: str, bounds: MaybeBounds) -> bool:
+    value = row.get(column)
+    if not isinstance(value, (int, float)):
+        return False
+    return value_in_range(time.time() - value, bounds)
+
+
+def version_in_range(
+    ident: str, request_vars: List[str], context: VisualContext, rows: Rows
+) -> Rows:
+    values = context.get(ident, {})
+    assert not isinstance(values, str)
+    from_version, to_version = (values.get(v) for v in request_vars)
+
+    new_rows = []
+    for row in rows:
+        version = row.get(ident, "")
+        if from_version and utils.cmp_version(version, from_version) == -1:
+            continue
+        if to_version and utils.cmp_version(version, to_version) == 1:
+            continue
+        new_rows.append(row)
+
+    return new_rows
 
 
 class FilterTime(FilterNumberRange):
@@ -442,6 +484,18 @@ def filter_by_host_inventory(invpath: str) -> Callable[[str, str], Callable[[Row
             return bool(regex.search(invdata))
 
         return filt
+
+    return row_filter
+
+
+def filter_in_host_inventory_range(
+    invpath: str,
+) -> Callable[[Row, str, MaybeBounds], bool]:
+    def row_filter(row: Row, column: str, bounds: MaybeBounds) -> bool:
+        invdata = inventory.get_inventory_attribute(row["host_inventory"], invpath)
+        if not isinstance(invdata, (int, float)):
+            return False
+        return value_in_range(invdata, bounds)
 
     return row_filter
 

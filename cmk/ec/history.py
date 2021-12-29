@@ -485,8 +485,16 @@ def _get_files(history: History, logger: Logger, query: QueryGET) -> Iterable[An
     greptexts = [x[1] for x in grep_pairs]
     logger.debug("Texts for grep: %r", greptexts)
 
-    time_filters = [f for f in filters if f[0].split("_")[-1] == "time"]
-    logger.debug("Time filters: %r", time_filters)
+    time_filters = [
+        (operator_name, argument)
+        for column_name, operator_name, _predicate, argument in filters
+        if column_name.split("_")[-1] == "time"
+    ]
+    time_range = (
+        _greatest_lower_bound_for_filters(time_filters),
+        _least_upper_bound_for_filters(time_filters),
+    )
+    logger.debug("time range: %r", time_range)
 
     # We do not want to open all files. So our strategy is:
     # look for "time" filters and first apply the filter to
@@ -501,36 +509,62 @@ def _get_files(history: History, logger: Logger, query: QueryGET) -> Iterable[An
     # already be done by the GUI, so we don't do that twice. Skipping
     # this # will lead into some lines of a single file to be limited in
     # wrong order. But this should be better than before.
-    for ts, path in sorted(
-        (
-            (int(str(path.name)[:-4]), path)
-            for path in history._settings.paths.history_dir.value.glob("*.log")
-        ),
-        reverse=True,
-    ):
+    for path in sorted(history._settings.paths.history_dir.value.glob("*.log"), reverse=True):
         if limit is not None and limit <= 0:
+            logger.debug("query limit reached")
             break
-        first_entry, last_entry = _get_logfile_timespan(path)
-        for _column_name, _operator_name, predicate, _argument in time_filters:
-            if predicate(first_entry):
-                break
-            if predicate(last_entry):
-                break
+        if _intersects(time_range, _get_logfile_timespan(path)):
+            logger.debug("parsing history file %s", path)
+            new_entries = _parse_history_file(history, path, query, greptexts, limit, logger)
+            history_entries += new_entries
+            if limit is not None:
+                limit -= len(new_entries)
         else:
-            # If no filter matches but we *have* filters
-            # then we skip this file. It cannot contain
-            # any useful entry for us.
-            if len(time_filters):
-                if history._settings.options.debug:
-                    history._logger.info("Skipping logfile %s.log because of time filter" % ts)
-                continue  # skip this file
-
-        new_entries = _parse_history_file(history, path, query, greptexts, limit, history._logger)
-        history_entries += new_entries
-        if limit is not None:
-            limit -= len(new_entries)
-
+            logger.debug("skipping history file %s because of time filters", path)
     return history_entries
+
+
+def _greatest_lower_bound_for_filters(filters: Iterable[Tuple[str, float]]) -> Optional[float]:
+    result: Optional[float] = None
+    for operator, value in filters:
+        glb = _greatest_lower_bound_for_filter(operator, value)
+        if glb is not None:
+            result = glb if result is None else max(result, glb)
+    return result
+
+
+def _greatest_lower_bound_for_filter(operator: str, value: float) -> Optional[float]:
+    if operator in ("==", ">="):
+        return value
+    if operator == ">":
+        return value + 1
+    return None
+
+
+def _least_upper_bound_for_filters(filters: Iterable[Tuple[str, float]]) -> Optional[float]:
+    result: Optional[float] = None
+    for operator, value in filters:
+        lub = _least_upper_bound_for_filter(operator, value)
+        if lub is not None:
+            result = lub if result is None else min(result, lub)
+    return result
+
+
+def _least_upper_bound_for_filter(operator: str, value: float) -> Optional[float]:
+    if operator in ("==", "<="):
+        return value
+    if operator == "<":
+        return value - 1
+    return None
+
+
+def _intersects(
+    interval1: Tuple[Optional[float], Optional[float]],
+    interval2: Tuple[Optional[float], Optional[float]],
+) -> bool:
+    lo1, hi1 = interval1
+    lo2, hi2 = interval2
+    return (lo2 is None or hi1 is None or lo2 <= hi1) and (lo1 is None or hi2 is None or lo1 <= hi2)
 
 
 def _parse_history_file(
@@ -622,16 +656,16 @@ def _unsplit(s: Any) -> Any:
     return s
 
 
-def _get_logfile_timespan(path: Path) -> Tuple[float, float]:
+def _get_logfile_timespan(path: Path) -> Tuple[Optional[float], Optional[float]]:
     try:
         with path.open(encoding="utf-8") as f:
-            first_entry = float(f.readline().split("\t", 1)[0])
+            first_entry: Optional[float] = float(f.readline().split("\t", 1)[0])
     except Exception:
-        first_entry = 0.0
+        first_entry = None
     try:
-        last_entry = path.stat().st_mtime
+        last_entry: Optional[float] = path.stat().st_mtime
     except Exception:
-        last_entry = 0.0
+        last_entry = None
     return first_entry, last_entry
 
 

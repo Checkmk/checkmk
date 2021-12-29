@@ -137,9 +137,17 @@ msgstr " und %s '%s'"
 msgid " and the %s '%s'."
 msgstr " und %s '%s'."
 
+#, fuzzy, python-format
+msgid " for %d of %d recipients."
+msgstr "zu %d von %d Empfängern"
+
 #, python-format
 msgid " for a period of %s"
 msgstr " für eine Dauer von %s"
+
+#, fuzzy
+msgid " for all recipients."
+msgstr "zu %d von %d Empfängern"
 
 #, python-format
 msgid " for host %s"
@@ -2380,9 +2388,6 @@ msgstr "Instanz-Verbindung hinzufügen"
 msgid "API server endpoint"
 msgstr "API-Server-Endpunkt"
 
-msgid "APIs"
-msgstr "APIs"
-
 msgid "APT Updates"
 msgstr "APT-Updates"
 
@@ -3805,9 +3810,6 @@ msgstr "Admin Status (nur SNMP mit 64 bit Zählern)"
 msgid "Admin states to discover"
 msgstr "Admin Zustände, die erkannt werden sollen"
 
-msgid "Administration Tool (WATO)"
-msgstr "Konfigurations-GUI (WATO)"
-
 msgid "Administrative port states to discover"
 msgstr "Administrative Status, die erkannt werden sollen"
 
@@ -4318,18 +4320,6 @@ msgstr "Alarme"
 msgid "Alert"
 msgstr "Alarm"
 
-msgid "Alert Handler"
-msgstr "Alerthandler"
-
-msgid "Alert Handler Rules"
-msgstr "Alerthandlerregeln"
-
-msgid "Alert Handler Started"
-msgstr "Alerthandler gestartet"
-
-msgid "Alert Handlers"
-msgstr "Alerthandler"
-
 msgid "Alert Statistics"
 msgstr "Alarmstatistik"
 
@@ -4351,9 +4341,6 @@ msgstr "Alarmstatistik: Anzahl von WARN"
 msgid "Alert handler"
 msgstr "Alerthandler"
 
-msgid "Alert handler Stopped"
-msgstr "Alerthandler gestoppt"
-
 msgid "Alert handler are configured to handle all check execution."
 msgstr ""
 "Die Alert Handler sind so konfiguriert, dass sie alle Check-Ausführungen "
@@ -4373,6 +4360,18 @@ msgstr "Loglevel für Alerthandler"
 
 msgid "Alert handler rule"
 msgstr "Alerthandler-Regel"
+
+#, fuzzy
+msgid "Alert handler rules"
+msgstr "Alerthandler-Regel"
+
+#, fuzzy
+msgid "Alert handler started"
+msgstr "Alerthandler gestartet"
+
+#, fuzzy
+msgid "Alert handler stopped"
+msgstr "Alerthandler gestoppt"
 
 msgid "Alert handler with parameters"
 msgstr "Alert-Handler mit Parametern"
@@ -5863,9 +5862,6 @@ msgstr ""
 msgid "Automatically execute pairing"
 msgstr "Änderungen automatisch aktivieren"
 
-msgid "Automatically invalidate notification"
-msgstr "Alarm automatisch verwerfen"
-
 msgid "Automatically recreate the sensor data repository (SDR) cache"
 msgstr ""
 
@@ -6296,9 +6292,6 @@ msgstr "BOUND"
 msgid "Back"
 msgstr "Zurück"
 
-msgid "Back to previous page"
-msgstr "Zurück zur vorherigen Seite"
-
 msgid "Back to view"
 msgstr "Zurück zu Ansicht"
 
@@ -6528,6 +6521,10 @@ msgstr "Betriebszeit der Beamerlampe"
 
 msgid "Begin child reports on new page"
 msgstr "Eingebetteten Bericht auf neuer Seite anfangen"
+
+#, fuzzy
+msgid "Beginner's guide"
+msgstr "Anleitung für Anfänger: Ordner anlegen"
 
 msgid "Beginner's guide: Adding the first hosts"
 msgstr "Anleitung für Anfänger: Erste Hosts hinzufügen"
@@ -8227,7 +8224,8 @@ msgstr "Graphzeitbereich ändern auf: %s"
 msgid "Change infotext in check output"
 msgstr "Infotext in der Ausgabe des Checks ändern"
 
-msgid "Change log"
+#, fuzzy
+msgid "Change log (Werks)"
 msgstr "Änderungsprotokoll"
 
 msgid "Change password"
@@ -8561,6 +8559,14 @@ msgstr "Check Zeitraum für passive Checkmk Services"
 msgid "Check plugin"
 msgstr "Checkplugin"
 
+#, fuzzy
+msgid "Check plugin API introduction"
+msgstr "Ablaufzeit für Checkplugin"
+
+#, fuzzy
+msgid "Check plugin API reference"
+msgstr "Plugin-API-Referenz"
+
 msgid "Check plugin timeout"
 msgstr "Ablaufzeit für Checkplugin"
 
@@ -8880,8 +8886,9 @@ msgstr ""
 msgid "Checkmk with times performance data"
 msgstr "Checkmk mit Zeitleistungsdaten"
 
-msgid "Checkmk: Notification"
-msgstr "Checkmk: Alarm"
+#, fuzzy
+msgid "Checkmk: Message"
+msgstr "Checkmk Agent"
 
 msgid "Checkpoint Firewall Connections"
 msgstr "Verbindungen von Checkpoint Firewalls"
@@ -9832,6 +9839,10 @@ msgid ""
 msgstr ""
 "Die Kommunikation zwischen verschiedenen Komponenten von Check_MK (z.B. GUI "
 "und Check-Engine) wird in dieser Log-Stufe protokolliert."
+
+#, fuzzy
+msgid "Community forum"
+msgstr "Nur in Zeit zählen"
 
 msgid "Compare against discovered state"
 msgstr "Vergleiche gegen den Discovery-Zustand"
@@ -13753,6 +13764,10 @@ msgstr ""
 msgid "Determined by discovery"
 msgstr "Bei der Serviceerkennung festgelegt"
 
+#, fuzzy
+msgid "Developer resources"
+msgstr "Speicherresourcen"
+
 msgid "Deviation from calibration point"
 msgstr "Abweichung vom Kalibrationspunkt"
 
@@ -13957,9 +13972,6 @@ msgstr "Ausschalten"
 msgid "Disable (drop encrypted data)"
 msgstr "Deaktivieren (verschlüsselte Daten verwerfen)"
 
-msgid "Disable Notifications"
-msgstr "Alarme ausschalten"
-
 msgid "Disable SSL certificate validation"
 msgstr "SSL-Zertifikatsüberprüfung deaktivieren"
 
@@ -13994,6 +14006,10 @@ msgstr "Schalte Sperren aus"
 
 msgid "Disable monitored services"
 msgstr "Überwachte Services deaktivieren"
+
+#, fuzzy
+msgid "Disable notifications"
+msgstr "Alarme ausschalten"
 
 msgid "Disable password"
 msgstr "Deaktiviere Passwort"
@@ -14285,11 +14301,12 @@ msgstr "Anzeige"
 msgid "Display ESX Host power state on"
 msgstr "Service für ESX-Hostzustand anzeigen auf"
 
+#, fuzzy
+msgid "Display GUI messages sent to users."
+msgstr "Zeige Alarme der Weboberfläche, die an die Benutzer gesendet wurden"
+
 msgid "Display GUI notifications in case notification mechanism fails"
 msgstr "Zeige Warnung in der Weboberfläche, wenn Alarmierungen fehlschlagen"
-
-msgid "Display GUI notifications sent to users."
-msgstr "Zeige Alarme der Weboberfläche, die an die Benutzer gesendet wurden"
 
 msgid "Display Ntop engaged, past and flow alerts"
 msgstr "Zeige aktive, vergangene und Flow Warnungen aus Ntop an"
@@ -15586,11 +15603,12 @@ msgstr "Während dieser Zeit sind keine Monitoringdaten verfügbar"
 msgid "Dw"
 msgstr "Dw"
 
-msgid "Dynamic Configuration"
-msgstr "Dynamische Konfiguration"
-
 msgid "Dynamic Token Bucket"
 msgstr "Dynamischer Token Bucket"
+
+#, fuzzy
+msgid "Dynamic configuration"
+msgstr "Dynamische Konfiguration"
 
 msgid "Dynamic configuration logging"
 msgstr "Log der Dynamischen Konfiguration"
@@ -16335,9 +16353,6 @@ msgstr "Automatische Agentupdates aktivieren"
 msgid "Enable automatic host key acceptance"
 msgstr "Hostkeys automatisch akzeptieren"
 
-msgid "Enable automatic invalidation at"
-msgstr "Automatisch invalidieren um"
-
 msgid "Enable core dumps"
 msgstr "Speicherabzüge aktivieren"
 
@@ -17022,7 +17037,8 @@ msgstr "Event Console: Ereignisverlauf"
 msgid "Event Console: Generic"
 msgstr "Event Console: Allgemein"
 
-msgid "Event Console: Logging & Diagnose"
+#, fuzzy
+msgid "Event Console: Logging & diagnose"
 msgstr "Event Console: Logging & Diagnose"
 
 msgid "Event Console: SNMP traps"
@@ -17138,9 +17154,6 @@ msgstr "Jeden Tag"
 
 msgid "Every week on..."
 msgstr "Jede Woche am..."
-
-msgid "Everybody (Broadcast)"
-msgstr "Jeden (Rundruf)"
 
 msgid "Everything"
 msgstr "Alles"
@@ -17503,6 +17516,10 @@ msgstr "Ereignisse im Status <i>quittiert</i> ablaufen lassen"
 msgid "Expire events that are in the state <i>open</i>"
 msgstr "Ereignisse im Status <i>offen</i> ablaufen lassen"
 
+#, fuzzy
+msgid "Expire message"
+msgstr "Ablaufzeit"
+
 msgid "Expire time"
 msgstr "Ablaufzeit"
 
@@ -17624,9 +17641,6 @@ msgstr "Erweiterungspakete"
 
 msgid "Extensions in <tt>~/local/</tt> and MKPs"
 msgstr "Erweiterungen in <tt>~/local/</tt> und MKPs"
-
-msgid "External"
-msgstr "Extern"
 
 msgid "External ID (optional)"
 msgstr "Externe ID (optional)"
@@ -17934,8 +17948,8 @@ msgstr ""
 "Fehler beim Durchsuchen der Regel des Regelsatzes '%s' im Ordner '%s' (%r): "
 "%s"
 
-#, python-format
-msgid "Failed to send %s notifications to the following users:"
+#, fuzzy, python-format
+msgid "Failed to send %s messages to the following users:"
 msgstr "Konnte %s Alarme nicht an die folgenden Benutzer senden:"
 
 #, python-format
@@ -19065,9 +19079,6 @@ msgstr "Länge der Fortinet FortiSandbox Wartenschlange"
 msgid "Fortinet FortiSandbox Queue Length"
 msgstr "Länge der Fortinet FortiSandbox Wartenschlange"
 
-msgid "Forum"
-msgstr "Forum"
-
 msgid "Forward Messages to Event Console"
 msgstr "Leite Logwatch Ereignisse an Eventkonsole weiter"
 
@@ -19704,11 +19715,11 @@ msgstr "Graylog-Datenströme"
 msgid "Green"
 msgstr "Grün"
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
 "Greetings %s,\n"
 "\n"
-"%s sent you a notification:\n"
+"%s sent you a message:\n"
 "\n"
 "---\n"
 "%s\n"
@@ -21214,9 +21225,6 @@ msgstr "Host-Adresse"
 msgid "Host Address %s"
 msgstr "Host-Adresse %s"
 
-msgid "Host Alert"
-msgstr "Hostalarm"
-
 msgid "Host Check Command"
 msgstr "Kommando zum Check von Hosts"
 
@@ -21303,6 +21311,10 @@ msgstr "Hostadressen (zusätzlich)"
 
 msgid "Host administration"
 msgstr "Host-Verwaltung"
+
+#, fuzzy
+msgid "Host alert"
+msgstr "Hostalarm"
 
 msgid "Host alias"
 msgstr "Hostalias"
@@ -21964,9 +21976,6 @@ msgstr ""
 
 msgid "How to handle redirect"
 msgstr "Wie Umleitung behandeln"
-
-msgid "How to notify"
-msgstr "Art des Alarms"
 
 msgid ""
 "However, if that is not feasable, you can configure the legacy mode (which "
@@ -25118,7 +25127,8 @@ msgstr "Anmeldedaten sind ungültig."
 msgid "Invalid man page: Failed to get the title"
 msgstr "Ungültige Check-Manpage: Konnte Titel nicht auslesen"
 
-msgid "Invalid notitification method selected."
+#, fuzzy
+msgid "Invalid messaging method selected."
 msgstr "Sie haben eine ungültige Alarmierungsmethode ausgewählt."
 
 msgid "Invalid or no package type specified"
@@ -25439,10 +25449,11 @@ msgstr ""
 "aus dem Protokoll entnommen wird. Der letzte Laufzustand wird ignoriert, "
 "wenn keine Protokollinformationen gefunden werden."
 
+#, fuzzy
 msgid ""
 "It is possible to automatically delete messages when the configured time is "
 "reached. This makes it possible to inform users about a scheduled event but "
-"suppress the notification after the event has happened."
+"suppress the message after the event has happened."
 msgstr ""
 "Meldungen können nach Ablauf einer einstellbaren Ziet automatisch gelöscht "
 "werden. Das macht es möglich, Benutzer über ein geplantes Ereignis zu "
@@ -26170,6 +26181,10 @@ msgstr ""
 "com/knowledge-base/victorops-restendpoint-integration/\" target=\"_blank"
 "\">hier</a><br />Diese URL kann auch aus dem Passwortspeicher von Check_MK "
 "übernommen werden."
+
+#, fuzzy
+msgid "Learning Checkmk"
+msgstr "Latenzschwellwerte Checkmk"
 
 msgid "Leave layout mode"
 msgstr "Verlasse Layout Modus"
@@ -27132,15 +27147,6 @@ msgstr "Livestatus-Proxy-Daeamon"
 msgid "Livestatus"
 msgstr "Livestatus"
 
-msgid "Livestatus Proxy"
-msgstr "Livestatus-Proxy"
-
-msgid "Livestatus Proxy default connection parameters"
-msgstr "Livestatus-Proxy Standardverbindungseinstellungen"
-
-msgid "Livestatus Proxy logging"
-msgstr "Livestatus-Proxy Logging"
-
 msgid "Livestatus encryption"
 msgstr "Livestatus-Verschlüsselung"
 
@@ -27165,6 +27171,14 @@ msgstr "Livestatus Problem"
 
 msgid "Livestatus proxy"
 msgstr "Livestatus-Proxy"
+
+#, fuzzy
+msgid "Livestatus proxy default connection parameters"
+msgstr "Livestatus-Proxy Standardverbindungseinstellungen"
+
+#, fuzzy
+msgid "Livestatus proxy logging"
+msgstr "Livestatus-Proxy Logging"
 
 msgid "Livestatus usage"
 msgstr "Livestatusbenutzung"
@@ -29316,6 +29330,10 @@ msgstr "Meldungen mitteln"
 msgid "Message count"
 msgstr "Nachrichtenanzahl"
 
+#, fuzzy
+msgid "Message expiration"
+msgstr "Meldungen mitteln"
+
 msgid "Message for host alerts"
 msgstr "Nachricht für Hostvorfälle"
 
@@ -29328,6 +29346,9 @@ msgstr "Meldungstext"
 #, python-format
 msgid "Message when rule result is %s"
 msgstr "Meldung wenn Regel-Ergebnis %s ist"
+
+msgid "Messages"
+msgstr "Nachrichten"
 
 msgid "Messages are handled by logwatch."
 msgstr "Ereignisse werden mit Logwatch verarbeitet."
@@ -29366,6 +29387,10 @@ msgstr ""
 "Zustand an. Falls Nachrichten aufgrund der unten stehenden Regeln verworfen "
 "werden, nimmt der Service einen CRITICAL-Zustand für eine Check-Ausführung "
 "an."
+
+#, fuzzy
+msgid "Messaging methods"
+msgstr "Nachrichten"
 
 msgid "Meta usage"
 msgstr "Meta-Nutzung"
@@ -29969,9 +29994,6 @@ msgstr "Überwachte Services"
 msgid "Monitoring"
 msgstr "Monitoring"
 
-msgid "Monitoring Core"
-msgstr "Kern"
-
 msgid "Monitoring URL"
 msgstr "Monitoring URL"
 
@@ -30028,11 +30050,6 @@ msgstr "Monitoring-Status, falls der MTree-Status '%s' ist"
 #, python-format
 msgid "Monitoring state if VM state is %s"
 msgstr "Monitoringstatus, falls VM-Status '%s' ist"
-
-#, fuzzy
-msgid ""
-"Monitoring state if a container terminates unsuccessfully (exit code 1)."
-msgstr "Monitoring State wenn ein Service überhaupt nicht gefunden wird."
 
 msgid "Monitoring state if a monitored service is not found at all."
 msgstr "Monitoring State wenn ein Service überhaupt nicht gefunden wird."
@@ -31360,10 +31377,6 @@ msgstr "No-TXCredits Fehler"
 msgid "Node"
 msgstr "Node"
 
-#, fuzzy
-msgid "Node Containers"
-msgstr "# Container"
-
 msgid "Node Exporter"
 msgstr "Node Exporter"
 
@@ -31931,9 +31944,6 @@ msgstr ""
 
 msgid "Notify by: "
 msgstr "Alarm von: "
-
-msgid "Notify users"
-msgstr "Benutzer alarmieren"
 
 msgid "November"
 msgstr "November"
@@ -33129,9 +33139,6 @@ msgstr "Lokale Webseite dieser Instanz öffnen"
 
 msgid "Open this table for filtering / sorting"
 msgstr "Diese Tabelle zum Filtern/Sortieren öffnen"
-
-msgid "Open window in the user interface"
-msgstr "Fenster in der Bedienoberfläche öffnen"
 
 msgid "Open/close this element"
 msgstr "Dieses Element öffnen/schließen"
@@ -35150,11 +35157,12 @@ msgstr "Bitte wählen Sie einen Service"
 msgid "Please select at least one element"
 msgstr "Bitte wählen Sie mindestens ein Element aus"
 
+#, fuzzy
+msgid "Please select at least one messaging method."
+msgstr "Bitte wählen Sie mindestens eine Alarmierungsmethode."
+
 msgid "Please select at least one metric"
 msgstr "Bitte wählen Sie mindestens eine Metrik"
-
-msgid "Please select at least one notification method."
-msgstr "Bitte wählen Sie mindestens eine Alarmierungsmethode."
 
 msgid "Please select some hosts before doing bulk operations on hosts."
 msgstr ""
@@ -35399,9 +35407,6 @@ msgstr "Anschlussnummer oder -name"
 
 msgid "Plugin"
 msgstr "Plugin"
-
-msgid "Plugin API reference"
-msgstr "Plugin-API-Referenz"
 
 msgid "Plugin Arguments"
 msgstr "Plugin Argumente"
@@ -36401,6 +36406,10 @@ msgstr "REST-API-Dokumentation"
 msgid "REST API interactive GUI"
 msgstr "REST API interaktive Ansicht"
 
+#, fuzzy
+msgid "REST API introduction"
+msgstr "REST API interaktive Ansicht"
+
 msgid "REST API: Use HTTP ETags for optimistic locking"
 msgstr "REST API: Nutze ETags, um optimistisches Locking zu nutzen"
 
@@ -36794,6 +36803,10 @@ msgstr "Empfänger"
 
 msgid "Recipient Email address"
 msgstr "Empfänger E-Mailadresse"
+
+#, fuzzy, python-format
+msgid "Recipients: %s"
+msgstr "Empfänger"
 
 msgid "Reclaimable"
 msgstr "Zurückforderbarer Speicher"
@@ -38444,10 +38457,6 @@ msgstr "Obere Schwellwerte für Container im Status running"
 msgid "Running elsewhere"
 msgstr "Läuft anderweitig"
 
-#, fuzzy
-msgid "Running node containers"
-msgstr "Laufende Container"
-
 msgid "Running nodes by nodes type"
 msgstr "Laufende Nodes nach Nodes Typ"
 
@@ -39509,12 +39518,13 @@ msgstr "E-Mail senden"
 msgid "Send HTTP POST data"
 msgstr "HTTP POST Daten senden"
 
-msgid "Send an E-Mail"
-msgstr "E-Mail senden"
-
 #, fuzzy
 msgid "Send data for real-time checks"
 msgstr "Echtzeitchecks ausführen"
+
+#, fuzzy
+msgid "Send email"
+msgstr "E-Mail senden"
 
 msgid "Send events to local event console"
 msgstr "Sende Ereignisse an lokale Eventkonsole"
@@ -39529,6 +39539,14 @@ msgid "Send events to remote syslog host"
 msgstr "Ereignisse an entfernten syslog-Host senden"
 
 #, fuzzy
+msgid "Send message"
+msgstr "System Meldungen"
+
+#, fuzzy
+msgid "Send message to"
+msgstr "System Meldungen"
+
+#, fuzzy
 msgid "Send metrics to Graphite"
 msgstr "Metriken zu Graphite / InfluxDB senden"
 
@@ -39541,9 +39559,6 @@ msgstr "Monitoringalarm senden"
 
 msgid "Send notification"
 msgstr "Notifizierung versenden"
-
-msgid "Send notification to"
-msgstr "Alarm senden an"
 
 msgid "Send notifications to Event Console"
 msgstr "Alarme an Event Console senden"
@@ -39562,6 +39577,14 @@ msgstr "Sende viele PINGs auf einmal"
 
 msgid "Send to remote Event Console via syslog"
 msgstr "An entfernte Event Console über Syslog senden"
+
+#, fuzzy
+msgid "Send user message"
+msgstr "System Meldungen"
+
+#, fuzzy
+msgid "Send user messages"
+msgstr "System Meldungen"
 
 msgid "Send via Email"
 msgstr "Per E-Mail versenden"
@@ -39608,10 +39631,6 @@ msgstr "Sensoren"
 
 msgid "Sent"
 msgstr "Gesendet"
-
-#, fuzzy, python-format
-msgid "Sent notification to: %s"
-msgstr "<p>Alarm senden an: %s</p>"
 
 msgid "Sent vs Received Traffic Breakdown"
 msgstr "Vergleich versendeter und empfangener Traffic"
@@ -39662,9 +39681,6 @@ msgstr "Service"
 #, python-format
 msgid "Service %s"
 msgstr "Service %s"
-
-msgid "Service Alert"
-msgstr "Servicealert"
 
 msgid "Service Availability"
 msgstr "Serviceverfügbarkeit"
@@ -39756,6 +39772,10 @@ msgstr "Servicezeit"
 
 msgid "Service Type"
 msgstr "Servicetyp"
+
+#, fuzzy
+msgid "Service alert"
+msgstr "Servicealert"
 
 msgid "Service alternative display name"
 msgstr "Service: Alternativer Anzeigename"
@@ -40837,6 +40857,10 @@ msgstr "In Spalte anzeigen"
 msgid "Show in host tables"
 msgstr "In Host-Tabellen anzeigen"
 
+#, fuzzy
+msgid "Show in the dashboard element 'User messages'"
+msgstr "Alarm im Dashboard-Element 'Benutzeralarme' anzeigen"
+
 msgid "Show in user table"
 msgstr "In Benutzertabelle anzeigen"
 
@@ -40887,9 +40911,6 @@ msgstr "Mehr anzeigen"
 msgid "Show more / Show less"
 msgstr "Zeige mehr / Zeige weniger"
 
-msgid "Show notification in dashboard element 'User notifications'"
-msgstr "Alarm im Dashboard-Element 'Benutzeralarme' anzeigen"
-
 msgid "Show number of groups"
 msgstr "Anzahl der Gruppen anzeigen"
 
@@ -40922,6 +40943,10 @@ msgstr "Zeige Pin"
 
 msgid "Show plugin names"
 msgstr "Namen von Plugins anzeigen"
+
+#, fuzzy
+msgid "Show popup message"
+msgstr "Historische Meldungen"
 
 msgid "Show prediction for "
 msgstr "Vorhersage zeigen für"
@@ -41303,9 +41328,6 @@ msgstr ""
 "IDs stimmen nicht überein: Unsere ID ist '%s' - Sie haben aber '%s' "
 "verwendet."
 
-msgid "Site Management"
-msgstr "Instanzverwaltung"
-
 msgid "Site Status"
 msgstr "Instanzstatus"
 
@@ -41660,12 +41682,13 @@ msgstr ""
 "Hinweise: Diese Regel muss für den denjenigen Host konfiguriert werden, auf "
 "dem der Agent läuft - nicht für die Huckepack-Hosts."
 
+#, fuzzy
 msgid ""
 "Some builtin or own views may take longer time than expected. In order to "
 "detect slow views you have to set<ul><li>the log level to <b>DEBUG</b> at "
-"<b>Setup > General > Global settings > User Interface > Log levels > Slow "
+"<b>Setup > General > Global settings > User interface > Log levels > Slow "
 "views</b>,</li><li>a threshold (in seconds) at <b>Setup > General > Global "
-"settings > User Interface > Threshold for slow views</b>.</li></ul>The "
+"settings > User interface > Threshold for slow views</b>.</li></ul>The "
 "logging is disable by default. The default threshold is set to 60 seconds. "
 "If enabled one log entry per view rendering that exceeeds the configured "
 "threshold is logged to <b>var/log/web.log</b>."
@@ -42669,14 +42692,15 @@ msgstr "Sterne"
 msgid "Start"
 msgstr "Beginn"
 
-msgid "Start Livestatus Proxy"
-msgstr "Livestatus-Proxy starten"
-
 msgid "Start URL to display in main frame"
 msgstr "Start-URL für den Haupt-Frame"
 
 msgid "Start during system boot"
 msgstr "Mit dem Betriebssystem starten"
+
+#, fuzzy
+msgid "Start livestatus proxy"
+msgstr "Livestatus-Proxy starten"
 
 msgid "Start log from"
 msgstr "Zeige log seit"
@@ -44575,7 +44599,7 @@ msgid "Tenant ID / Directory ID"
 msgstr "Tenant-ID / Verzeichnis-ID"
 
 #, fuzzy
-msgid "Terminated node containers"
+msgid "Terminated containers"
 msgstr "Docker Node und Container"
 
 #, fuzzy
@@ -46618,9 +46642,10 @@ msgstr ""
 msgid "The host could not be found on any active site."
 msgstr "Der Host konnte auf keiner aktiven Site gefunden werden."
 
+#, fuzzy
 msgid ""
-"The host is (partially) managed by an automatic data source like the Dynamic "
-"Configuration."
+"The host is (partially) managed by an automatic data source like the dynamic "
+"configuration."
 msgstr ""
 "Der Host wird (teilweise) durch eine automatische Datenquelle, wie die "
 "dynamische Konfiguration, verwaltet."
@@ -47133,6 +47158,10 @@ msgstr ""
 "als Gerät) im letzten Check-Intervall. Der mögliche Bereich liegt zwischen 0 "
 "% und 100 %."
 
+#, fuzzy
+msgid "The message has successfully been sent..."
+msgstr "Der Alarm wurde versandt über<br>"
+
 msgid "The message text does not match the required pattern."
 msgstr "Nachrichtentext passt nicht auf das erwartete Muster."
 
@@ -47369,10 +47398,6 @@ msgid ""
 msgstr ""
 "Die Knotendetails können entweder auf dem abgefragten Host oder dem Graylog-"
 "Knoten angezeigt werden."
-
-#, fuzzy
-msgid "The notification has been sent via"
-msgstr "Der Alarm wurde versandt über<br>"
 
 msgid "The notification is being processed"
 msgstr "Der Alarm wird verarbeitet"
@@ -47838,6 +47863,14 @@ msgstr "Die angeforderte %s existiert nicht."
 #, python-format
 msgid "The requested %s does not exist"
 msgstr "Die angeforderte %s existiert nicht."
+
+#, fuzzy
+msgid "The requested BI aggregation does not exist."
+msgstr "Das angeforderte Regelpaket existiert nicht."
+
+#, fuzzy
+msgid "The requested BI rule does not exist."
+msgstr "Das angeforderte Regelpaket existiert nicht."
 
 msgid "The requested connection does not exist."
 msgstr "Diese Verbindung existiert nicht"
@@ -50177,6 +50210,10 @@ msgstr ""
 "Werte darstellen. Wenn Sie diese Option aktivieren, werden die Werte des "
 "Standardgraphen invertiert."
 
+#, fuzzy, python-format
+msgid "This message has been created at %s and is valid till %s."
+msgstr "Die Nachricht wurde %s erzeugt und ist gülitig bis %s."
+
 msgid ""
 "This might be needed to make the synchronization accept problems with SSL "
 "certificates when using an SSL secured connection."
@@ -50245,10 +50282,6 @@ msgstr ""
 
 msgid "This name will be used in the description of the service"
 msgstr "Dieser Name wird als Service-Beschreibung verwendet"
-
-#, python-format
-msgid "This notification has been created at %s and is valid till %s."
-msgstr "Die Nachricht wurde %s erzeugt und ist gülitig bis %s."
 
 msgid "This number of new checks is scheduled immediately"
 msgstr "Diese Anzahl von Checks wird sofort ausgeführt"
@@ -52389,18 +52422,18 @@ msgstr ""
 "Check_MK Micro Core geschrieben werden. Die Objekthistorie (Servicealarme, "
 "etc.) wird davon <b>nicht</b> beeinflusst."
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
 "This setting decides which types of messages to log into the log of the "
-"Dynamic Configuration Daemon (%s)."
+"dynamic configuration daemon (%s)."
 msgstr ""
 "Diese Einstellung entscheidet, welche Arten von Meldungen im Log des Dynamic "
 "Configuration Daemon (%s) protokolliert werden sollen."
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
 "This setting decides which types of messages to log into the log of the "
-"Livestatus Proxy (%s)."
+"livestatus proxy (%s)."
 msgstr ""
 "Diese Einstellung können Sie nutzen um zu steuern welche Logeinträge in das "
 "Livestatus-Proxy-Log (%s) geschrieben werden."
@@ -53659,6 +53692,10 @@ msgstr "Gesamtbandbreite (Summe aus Eingang und Ausgang)"
 msgid "Total cache usage"
 msgstr "Gesamte Cachenutzung"
 
+#, fuzzy
+msgid "Total containers"
+msgstr "Docker Node und Container"
+
 msgid "Total count"
 msgstr "Gesamtanzahl"
 
@@ -53707,10 +53744,6 @@ msgstr "Untere Schwellwerte für Gesamtanzahl der Nachrichten"
 
 msgid "Total message count upper levels"
 msgstr "Obere Schwellwerte für Gesamtanzahl der Nachrichten"
-
-#, fuzzy
-msgid "Total node containers"
-msgstr "Docker Node und Container"
 
 msgid "Total number of Sessions"
 msgstr "Gesamtzahl von Sitzungen"
@@ -56190,8 +56223,9 @@ msgstr ""
 "konfigurieren, die dann an verschiedenen Stellen verwendet werden können, um "
 "über diese HTTP-Proxies Verbindungen zu Diensten herzustellen."
 
+#, fuzzy
 msgid ""
-"Use this option to disable startup of the Livestatus Proxy Daemon. It can "
+"Use this option to disable startup of the livestatus proxy daemon. It can "
 "improve stability of the GUI if you have a large number of sites with "
 "connections that sometimes break down."
 msgstr ""
@@ -56349,17 +56383,19 @@ msgstr ""
 "oder Services als mehrzeilige Ausgabe produzieren. Sie sollten dies nur für "
 "die Objekte aktivieren, für die Sie es benötigen."
 
+#, fuzzy
 msgid ""
 "Use this setting to specify the parameters of sites connected using the "
-"Livestatus Proxy. These options are used by all connections that don't have "
+"livestatus proxy. These options are used by all connections that don't have "
 "custom settings set."
 msgstr ""
 "Konfigurieren Sie globale Verbindungseinstellungen des Livestatus-Proxy. "
 "Diese Optionen werden von allen Instanzen genutzt, die keine individuelle "
 "Einstellung haben."
 
+#, fuzzy
 msgid ""
-"Use this setting to tell the Dynamic Configuration to which Check_MK Web API "
+"Use this setting to tell the dynamic configuration to which Check_MK Web API "
 "to talk to for creating hosts and so on. This setting controls on which "
 "sites the objects will be created. In single site setups you can set this to "
 "\"local site\".In distributed setups you will have to configure the Web API "
@@ -56526,12 +56562,6 @@ msgstr "Benutzername für Weblogin"
 msgid "User ID for web login (if login required)"
 msgstr "Benutzerkennung für die Webanmeldung (falls erforderlich)"
 
-msgid "User Interface"
-msgstr "Benutzerschnittstelle"
-
-msgid "User Management"
-msgstr "Benutzer-Verwaltung"
-
 msgid "User Name"
 msgstr "Benutzername"
 
@@ -56544,10 +56574,6 @@ msgstr "Benutzer Base DN"
 msgid "User for login"
 msgstr "Benutzer für Login"
 
-#, fuzzy
-msgid "User guide"
-msgstr "Benutzer-Agent"
-
 msgid "User interface"
 msgstr "Benutzerschnittstelle"
 
@@ -56557,6 +56583,17 @@ msgstr "Einstellungen der Benutzeroberfläche"
 msgid "User interface theme"
 msgstr "Aussehen des User Interfaces"
 
+msgid "User management"
+msgstr "Benutzer-Verwaltung"
+
+#, fuzzy
+msgid "User manual"
+msgstr "Benutzername"
+
+#, fuzzy
+msgid "User messages"
+msgstr "System Meldungen"
+
 msgid "User name"
 msgstr "Benutzername"
 
@@ -56565,9 +56602,6 @@ msgstr "Benutzerkennung auf dem Speichersystem. Leserechte sind ausreichend."
 
 msgid "User notification"
 msgstr "Benutzeralarm"
-
-msgid "User notifications"
-msgstr "Nutzer Benachrichtigungen"
 
 msgid "User password"
 msgstr "Benutzerpasswort"
@@ -57134,6 +57168,9 @@ msgstr ""
 msgid "Vibrate only"
 msgstr "Nur vibrieren"
 
+msgid "Video tutorials"
+msgstr ""
+
 msgid "View"
 msgstr "Ansicht"
 
@@ -57229,7 +57266,8 @@ msgstr "Virtualisierung"
 msgid "Visibility"
 msgstr "Sichtbarkeit"
 
-msgid "Visibility of Hosts/Services"
+#, fuzzy
+msgid "Visibility of hosts/services"
 msgstr "Sichtbarkeit von Hosts/Services"
 
 msgid "Visible"
@@ -57391,6 +57429,10 @@ msgstr "Warten bis anderer Vorgang beendet ist"
 msgid "Waiting connections"
 msgstr "Wartende Verbindungen"
 
+#, fuzzy
+msgid "Waiting containers"
+msgstr "Wartende Verbindungen"
+
 msgid "Waiting for new master initialization"
 msgstr "Warte auf initialisierung des neuen Masters"
 
@@ -57399,10 +57441,6 @@ msgstr "Warte auf andere Switche online zu gehen"
 
 msgid "Waiting for replication to start"
 msgstr "Warte auf den Beginn der Replikation"
-
-#, fuzzy
-msgid "Waiting node containers"
-msgstr "Wartende Verbindungen"
 
 msgid "Warn"
 msgstr "Warn"
@@ -59525,8 +59563,9 @@ msgstr "Sie dürfen WATO nicht benutzen."
 msgid "You are not allowed to use passwords from the password store here."
 msgstr "Sie dürfen hier keine Passworte aus dem Passwortspeicher nutzen."
 
-msgid "You are not allowed to use the notification module."
-msgstr "Sie haben keine Berechtigung für das Alarmierungsmodul."
+#, fuzzy
+msgid "You are not allowed to use the message module."
+msgstr "Sie dürfen das Setup nicht verwenden."
 
 msgid "You are not allowed to use the setup."
 msgstr "Sie dürfen das Setup nicht verwenden."
@@ -60032,9 +60071,10 @@ msgstr ""
 "hoch. Kopieren Sie diese dazu in das Verzeichnis <tt>%s</tt>. Unterstützte "
 "Formate: %s"
 
+#, fuzzy
 msgid ""
-"You can send the notification to a list of multiple users, which can be "
-"choosen out of these predefined filters."
+"You can send the message to a list of multiple users, which can be chosen "
+"out of these predefined filters."
 msgstr ""
 "Sie können die Nachricht an eine Liste mehrere Benutzer senden, welche aus "
 "den folgenden vordefinierten Filter ausgewählt werden können."
@@ -60490,7 +60530,10 @@ msgstr ""
 msgid "You cannot query for time ranges that are before the horizon."
 msgstr "Sie können keine Zeitbereiche abfragen, die vor dem Horizont liegen."
 
-msgid "You cannot rename a host while you have pending changes."
+#, fuzzy, python-format
+msgid ""
+"You cannot rename a host while you have pending changes on the central site "
+"(%s) or the site the host is monitored on (%s)."
 msgstr ""
 "Sie können einen Host nicht umbenennen, solange noch Änderungen ausstehen."
 
@@ -61001,9 +61044,6 @@ msgid ""
 "monitoring server of the host the agent is installed on."
 msgstr ""
 
-msgid "YouTube"
-msgstr "YouTube"
-
 #, python-format
 msgid "Your %s element has been saved."
 msgstr "Ihr %s-Element wurde gespeichert."
@@ -61341,6 +61381,22 @@ msgstr "apt-get dist-upgrade"
 
 msgid "apt-get upgrade"
 msgstr "apt-get upgrade"
+
+#, fuzzy
+msgid "as a hint in the 'User' menu"
+msgstr "Hinweis im Menü \"Benutzer\" anzeigen"
+
+#, fuzzy
+msgid "as a popup message"
+msgstr "Nachrichten aufräumen"
+
+#, fuzzy
+msgid "as an email"
+msgstr "Einfache E-Mail"
+
+#, fuzzy
+msgid "at"
+msgstr "Daten"
 
 msgid "at least one packet every"
 msgstr "mindestens ein Paket pro"
@@ -62032,6 +62088,10 @@ msgstr "in ... Tagen"
 
 msgid "in notif. p."
 msgstr "in Alarmierungszeit"
+
+#, fuzzy
+msgid "in the dashboard element 'User messages'"
+msgstr "Alarm im Dashboard-Element 'Benutzeralarme' anzeigen"
 
 msgid "in the future!"
 msgstr "in der Zukunft!"
@@ -62930,10 +62990,6 @@ msgstr "mal die Standardabweichung unter der Prognose"
 msgid "to"
 msgstr "bis"
 
-#, python-format
-msgid "to %d of %d recipients"
-msgstr "zu %d von %d Empfängern"
-
 msgid "to port:"
 msgstr "zu Port:"
 
@@ -63130,6 +63186,118 @@ msgstr "z/OS"
 #, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. Alle Rechte vorbehalten."
+
+#~ msgid "Administration Tool (WATO)"
+#~ msgstr "Konfigurations-GUI (WATO)"
+
+#~ msgid "Alert Handler"
+#~ msgstr "Alerthandler"
+
+#~ msgid "Alert Handler Rules"
+#~ msgstr "Alerthandlerregeln"
+
+#~ msgid "Alert Handlers"
+#~ msgstr "Alerthandler"
+
+#, fuzzy
+#~| msgid "Automatically invalidate notification"
+#~ msgid "Automatically invalidate message"
+#~ msgstr "Alarm automatisch verwerfen"
+
+#~ msgid "Back to previous page"
+#~ msgstr "Zurück zur vorherigen Seite"
+
+#~ msgid "Enable automatic invalidation at"
+#~ msgstr "Automatisch invalidieren um"
+
+#~ msgid "Everybody (Broadcast)"
+#~ msgstr "Jeden (Rundruf)"
+
+#~ msgid "Livestatus Proxy"
+#~ msgstr "Livestatus-Proxy"
+
+#, fuzzy
+#~| msgid "Message text"
+#~ msgid "Message users"
+#~ msgstr "Meldungstext"
+
+#~ msgid "Monitoring Core"
+#~ msgstr "Kern"
+
+#~ msgid "Open window in the user interface"
+#~ msgstr "Fenster in der Bedienoberfläche öffnen"
+
+#~ msgid "Send an E-Mail"
+#~ msgstr "E-Mail senden"
+
+#, fuzzy, python-format
+#~| msgid "Delete messages"
+#~ msgid "Sent message to: %s"
+#~ msgstr "Nachrichten löschen"
+
+#~ msgid "Site Management"
+#~ msgstr "Instanzverwaltung"
+
+#~ msgid "User Interface"
+#~ msgstr "Benutzerschnittstelle"
+
+#~ msgid "User Management"
+#~ msgstr "Benutzer-Verwaltung"
+
+#, fuzzy
+#~| msgid "Monitoring state if a monitored service is not found at all."
+#~ msgid ""
+#~ "Monitoring state if a container terminates unsuccessfully (exit code 1)."
+#~ msgstr "Monitoring State wenn ein Service überhaupt nicht gefunden wird."
+
+#, fuzzy
+#~| msgid "# Containers"
+#~ msgid "Node Containers"
+#~ msgstr "# Container"
+
+#, fuzzy
+#~| msgid "Running containers"
+#~ msgid "Running node containers"
+#~ msgstr "Laufende Container"
+
+#~ msgid "APIs"
+#~ msgstr "APIs"
+
+#~ msgid "Checkmk: Notification"
+#~ msgstr "Checkmk: Alarm"
+
+#~ msgid "External"
+#~ msgstr "Extern"
+
+#~ msgid "Forum"
+#~ msgstr "Forum"
+
+#~ msgid "How to notify"
+#~ msgstr "Art des Alarms"
+
+#~ msgid "Notify users"
+#~ msgstr "Benutzer alarmieren"
+
+#~ msgid "Send notification to"
+#~ msgstr "Alarm senden an"
+
+#, fuzzy, python-format
+#~| msgid "<p>Sent notification to: %s</p>"
+#~ msgid "Sent notification to: %s"
+#~ msgstr "<p>Alarm senden an: %s</p>"
+
+#, fuzzy
+#~ msgid "User guide"
+#~ msgstr "Benutzer-Agent"
+
+#~ msgid "User notifications"
+#~ msgstr "Nutzer Benachrichtigungen"
+
+#~ msgid "You are not allowed to use the notification module."
+#~ msgstr "Sie haben keine Berechtigung für das Alarmierungsmodul."
+
+#~ msgid "YouTube"
+#~ msgstr "YouTube"
 
 #, fuzzy
 #~| msgid "By default the standard IMAP Port 143 is used."
@@ -64727,9 +64895,6 @@ msgstr "© %s tribe29 GmbH. Alle Rechte vorbehalten."
 
 #~ msgid "Message Rate"
 #~ msgstr "Meldungsrate"
-
-#~ msgid "Messages"
-#~ msgstr "Nachrichten"
 
 #~ msgid "Minimum single-request consumption"
 #~ msgstr "Minimaler Verbrauch einzelner Anfragen"
@@ -70292,9 +70457,6 @@ msgstr "© %s tribe29 GmbH. Alle Rechte vorbehalten."
 
 #~ msgid "User Properties"
 #~ msgstr "Benutzereigenschaften"
-
-#~ msgid "User management"
-#~ msgstr "Benutzer-Verwaltung"
 
 #~ msgid "User that performed action"
 #~ msgstr "Benutzer der Aktion ausführt"

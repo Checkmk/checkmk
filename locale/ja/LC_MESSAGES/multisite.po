@@ -137,8 +137,16 @@ msgid " and the %s '%s'."
 msgstr " および %s '%s'"
 
 #, python-format
+msgid " for %d of %d recipients."
+msgstr ""
+
+#, python-format
 msgid " for a period of %s"
 msgstr " %s の期間"
+
+#, fuzzy
+msgid " for all recipients."
+msgstr "すべての接続に使用"
 
 #, python-format
 msgid " for host %s"
@@ -2260,9 +2268,6 @@ msgstr "サイト接続を追加する"
 msgid "API server endpoint"
 msgstr "APIサーバーエンドポイント"
 
-msgid "APIs"
-msgstr "API"
-
 msgid "APT Updates"
 msgstr "APTアップデート"
 
@@ -3663,9 +3668,6 @@ msgstr ""
 msgid "Admin states to discover"
 msgstr "管理者は発見するように述べています"
 
-msgid "Administration Tool (WATO)"
-msgstr "管理ツール(WATO)"
-
 msgid "Administrative port states to discover"
 msgstr "検出する管理ポートの状態"
 
@@ -4154,18 +4156,6 @@ msgstr "アラーム"
 msgid "Alert"
 msgstr "アラート"
 
-msgid "Alert Handler"
-msgstr "アラートハンドラー"
-
-msgid "Alert Handler Rules"
-msgstr "アラートハンドラルール"
-
-msgid "Alert Handler Started"
-msgstr "アラートハンドラーが開始されました"
-
-msgid "Alert Handlers"
-msgstr "アラートハンドラー"
-
 msgid "Alert Statistics"
 msgstr "アラート統計"
 
@@ -4187,9 +4177,6 @@ msgstr "アラート統計:警告の数"
 msgid "Alert handler"
 msgstr "アラートハンドラ"
 
-msgid "Alert handler Stopped"
-msgstr "アラートハンドラーが停止しました"
-
 msgid "Alert handler are configured to handle all check execution."
 msgstr ""
 "アラートハンドラは、すべてのチェック実行を処理するように設定されています"
@@ -4208,6 +4195,18 @@ msgstr "アラートハンドラログレベル"
 
 msgid "Alert handler rule"
 msgstr "アラートハンドラールール"
+
+#, fuzzy
+msgid "Alert handler rules"
+msgstr "アラートハンドラールール"
+
+#, fuzzy
+msgid "Alert handler started"
+msgstr "アラートハンドラーが開始されました"
+
+#, fuzzy
+msgid "Alert handler stopped"
+msgstr "アラートハンドラーが停止しました"
 
 msgid "Alert handler with parameters"
 msgstr "パラメータ付きのアラートハンドラ"
@@ -5654,9 +5653,6 @@ msgstr ""
 msgid "Automatically execute pairing"
 msgstr "変更を自動的にアクティブ化する"
 
-msgid "Automatically invalidate notification"
-msgstr "通知を自動的に無効にする"
-
 msgid "Automatically recreate the sensor data repository (SDR) cache"
 msgstr ""
 
@@ -6081,9 +6077,6 @@ msgstr "バウンド"
 msgid "Back"
 msgstr "バック"
 
-msgid "Back to previous page"
-msgstr "前のページに戻る"
-
 msgid "Back to view"
 msgstr "表示に戻る"
 
@@ -6313,6 +6306,10 @@ msgstr "ビーマーランプの動作時間"
 
 msgid "Begin child reports on new page"
 msgstr "新しいページで子レポートを開始します"
+
+#, fuzzy
+msgid "Beginner's guide"
+msgstr "ビギナーズガイド: フォルダの作成"
 
 msgid "Beginner's guide: Adding the first hosts"
 msgstr "ビギナーガイド:最初のホストを追加"
@@ -7901,7 +7898,8 @@ msgstr "グラフの時間範囲を次のように変更します: %s"
 msgid "Change infotext in check output"
 msgstr "チェック出力の情報テキストを変更する"
 
-msgid "Change log"
+#, fuzzy
+msgid "Change log (Werks)"
 msgstr "ログの変更"
 
 msgid "Change password"
@@ -8235,6 +8233,14 @@ msgstr "パッシブCheckmkサービスのチェック期間"
 msgid "Check plugin"
 msgstr "プラグインを確認してください"
 
+#, fuzzy
+msgid "Check plugin API introduction"
+msgstr "プラグインのタイムアウトを確認する"
+
+#, fuzzy
+msgid "Check plugin API reference"
+msgstr "プラグインAPIリファレンス"
+
 msgid "Check plugin timeout"
 msgstr "プラグインのタイムアウトを確認する"
 
@@ -8536,8 +8542,9 @@ msgstr ""
 msgid "Checkmk with times performance data"
 msgstr "時間パフォーマンスデータを使用したCheckmk"
 
-msgid "Checkmk: Notification"
-msgstr "Checkmk: 通知"
+#, fuzzy
+msgid "Checkmk: Message"
+msgstr "Checkmkエージェント"
 
 msgid "Checkpoint Firewall Connections"
 msgstr "チェックポイントファイアウォール接続"
@@ -9457,6 +9464,10 @@ msgid ""
 msgstr ""
 "Checkmkのさまざまなコンポーネント(GUIやチェックエンジンなど)間の通信は、この"
 "ログレベルに記録されます。"
+
+#, fuzzy
+msgid "Community forum"
+msgstr "のみカウント"
 
 msgid "Compare against discovered state"
 msgstr "発見された状態と比較する"
@@ -13246,6 +13257,10 @@ msgstr ""
 msgid "Determined by discovery"
 msgstr "ディスカバリーによる決定"
 
+#, fuzzy
+msgid "Developer resources"
+msgstr "メモリリソース"
+
 msgid "Deviation from calibration point"
 msgstr "校正点からの偏差"
 
@@ -13436,9 +13451,6 @@ msgstr "無効にする"
 msgid "Disable (drop encrypted data)"
 msgstr "無効にする(暗号化されたデータを削除する)"
 
-msgid "Disable Notifications"
-msgstr "通知を無効にする"
-
 msgid "Disable SSL certificate validation"
 msgstr "SSL証明書の検証を無効にする"
 
@@ -13472,6 +13484,10 @@ msgstr "ロックを無効にする"
 
 msgid "Disable monitored services"
 msgstr "監視対象サービスを無効にする"
+
+#, fuzzy
+msgid "Disable notifications"
+msgstr "通知を無効にする"
 
 msgid "Disable password"
 msgstr "パスワードを無効にする"
@@ -13757,11 +13773,12 @@ msgstr "表示"
 msgid "Display ESX Host power state on"
 msgstr "ESXホストの電源状態をオンに表示"
 
+#, fuzzy
+msgid "Display GUI messages sent to users."
+msgstr "ユーザーに送信されたGUI通知を表示します。"
+
 msgid "Display GUI notifications in case notification mechanism fails"
 msgstr "通知メカニズムが失敗した場合にGUI通知を表示する"
-
-msgid "Display GUI notifications sent to users."
-msgstr "ユーザーに送信されたGUI通知を表示します。"
 
 msgid "Display Ntop engaged, past and flow alerts"
 msgstr "Ntopのエンゲージ、過去、フローのアラートを表示する"
@@ -15028,11 +15045,12 @@ msgstr "この期間中、監視データは利用できません"
 msgid "Dw"
 msgstr "Dw"
 
-msgid "Dynamic Configuration"
-msgstr "動的構成"
-
 msgid "Dynamic Token Bucket"
 msgstr "動的トークンバケット"
+
+#, fuzzy
+msgid "Dynamic configuration"
+msgstr "動的構成"
 
 msgid "Dynamic configuration logging"
 msgstr "動的構成ロギング"
@@ -15772,9 +15790,6 @@ msgstr "エージェントの自動更新を有効にする"
 msgid "Enable automatic host key acceptance"
 msgstr "自動ホストキー受け入れを有効にする"
 
-msgid "Enable automatic invalidation at"
-msgstr "で自動無効化を有効にする"
-
 msgid "Enable core dumps"
 msgstr "コアダンプを有効にする"
 
@@ -16435,7 +16450,8 @@ msgstr "イベントコンソール: イベント履歴"
 msgid "Event Console: Generic"
 msgstr "イベントコンソール: 汎用"
 
-msgid "Event Console: Logging & Diagnose"
+#, fuzzy
+msgid "Event Console: Logging & diagnose"
 msgstr "イベントコンソール:ログと診断"
 
 msgid "Event Console: SNMP traps"
@@ -16551,9 +16567,6 @@ msgstr "毎日"
 
 msgid "Every week on..."
 msgstr "毎週..."
-
-msgid "Everybody (Broadcast)"
-msgstr "みんな(ブロードキャスト)"
 
 msgid "Everything"
 msgstr "すべて"
@@ -16910,6 +16923,10 @@ msgstr "<i>確認済み</i> の状態にあるイベントを期限切れにし�
 msgid "Expire events that are in the state <i>open</i>"
 msgstr "<i>開いている</i>状態のイベントを期限切れにします"
 
+#, fuzzy
+msgid "Expire message"
+msgstr "有効期限"
+
 msgid "Expire time"
 msgstr "有効期限"
 
@@ -17029,9 +17046,6 @@ msgstr "拡張パッケージ"
 
 msgid "Extensions in <tt>~/local/</tt> and MKPs"
 msgstr "<tt>~/local/</tt>およびMKPの拡張機能"
-
-msgid "External"
-msgstr "外部"
 
 msgid "External ID (optional)"
 msgstr "外部ID(オプション)"
@@ -17331,8 +17345,8 @@ msgstr "値のレンダリングに失敗しました: %r"
 msgid "Failed to search rule of ruleset '%s' in folder '%s' (%r): %s"
 msgstr "ルールセット '%s' ルの検索に失敗しましたフォルダ内 '%s' (%r): %s"
 
-#, python-format
-msgid "Failed to send %s notifications to the following users:"
+#, fuzzy, python-format
+msgid "Failed to send %s messages to the following users:"
 msgstr "次のユーザーに%s通知を送信できませんでした:"
 
 #, python-format
@@ -18417,9 +18431,6 @@ msgstr ""
 msgid "Fortinet FortiSandbox Queue Length"
 msgstr "Fortinet FortiSandboxキューの長さ"
 
-msgid "Forum"
-msgstr "フォーラム"
-
 msgid "Forward Messages to Event Console"
 msgstr "メッセージをイベントコンソールに転送する"
 
@@ -19039,11 +19050,11 @@ msgstr "Graylogストリーム"
 msgid "Green"
 msgstr "緑"
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
 "Greetings %s,\n"
 "\n"
-"%s sent you a notification:\n"
+"%s sent you a message:\n"
 "\n"
 "---\n"
 "%s\n"
@@ -20426,9 +20437,6 @@ msgstr "ホストアドレス"
 msgid "Host Address %s"
 msgstr "ホストアドレス %s"
 
-msgid "Host Alert"
-msgstr "ホストアラート"
-
 msgid "Host Check Command"
 msgstr "ホストチェックコマンド"
 
@@ -20515,6 +20523,10 @@ msgstr "ホストアドレス(追加)"
 
 msgid "Host administration"
 msgstr "ホスト管理"
+
+#, fuzzy
+msgid "Host alert"
+msgstr "ホストアラート"
 
 msgid "Host alias"
 msgstr "ホストエイリアス"
@@ -21170,9 +21182,6 @@ msgstr ""
 
 msgid "How to handle redirect"
 msgstr "リダイレクトの処理方法"
-
-msgid "How to notify"
-msgstr "通知方法"
 
 msgid ""
 "However, if that is not feasable, you can configure the legacy mode (which "
@@ -24122,7 +24131,8 @@ msgstr "ログイン資格情報が無効です。"
 msgid "Invalid man page: Failed to get the title"
 msgstr "無効なマニュアルページ: タイトルの取得に失敗しました"
 
-msgid "Invalid notitification method selected."
+#, fuzzy
+msgid "Invalid messaging method selected."
 msgstr "無効な通知方法が選択されました。"
 
 msgid "Invalid or no package type specified"
@@ -24429,10 +24439,11 @@ msgstr ""
 "ブに最後の実行状態がないことも意味します。ログ情報が見つからない場合、最後の"
 "実行状態は無視されます。"
 
+#, fuzzy
 msgid ""
 "It is possible to automatically delete messages when the configured time is "
 "reached. This makes it possible to inform users about a scheduled event but "
-"suppress the notification after the event has happened."
+"suppress the message after the event has happened."
 msgstr ""
 "設定した時間に達すると、メッセージを自動的に削除することができます。これによ"
 "り、スケジュールされたイベントについてユーザーに通知できますが、イベント発生"
@@ -25140,6 +25151,10 @@ msgid ""
 "knowledge-base/victorops-restendpoint-integration/\" target=\"_blank\">here</"
 "a><br />This URL can also be collected from the Password Store from Checkmk."
 msgstr ""
+
+#, fuzzy
+msgid "Learning Checkmk"
+msgstr "Checkmkの遅延レベル"
 
 msgid "Leave layout mode"
 msgstr "レイアウトモードを終了します"
@@ -26080,15 +26095,6 @@ msgstr "Liveproxyデーモン"
 msgid "Livestatus"
 msgstr "Livestatus"
 
-msgid "Livestatus Proxy"
-msgstr "Livestatusプロキシ"
-
-msgid "Livestatus Proxy default connection parameters"
-msgstr "Livestatusプロキシのデフォルトの接続パラメータ"
-
-msgid "Livestatus Proxy logging"
-msgstr "Livestatusプロキシロギング"
-
 msgid "Livestatus encryption"
 msgstr "ライブステータス暗号化"
 
@@ -26113,6 +26119,14 @@ msgstr "ライブステータスの問題"
 
 msgid "Livestatus proxy"
 msgstr "ライブステータスプロキシ"
+
+#, fuzzy
+msgid "Livestatus proxy default connection parameters"
+msgstr "Livestatusプロキシのデフォルトの接続パラメータ"
+
+#, fuzzy
+msgid "Livestatus proxy logging"
+msgstr "Livestatusプロキシロギング"
 
 msgid "Livestatus usage"
 msgstr "Livestatusの使用状況"
@@ -28224,6 +28238,10 @@ msgstr "メッセージの平均化"
 msgid "Message count"
 msgstr "メッセージ数"
 
+#, fuzzy
+msgid "Message expiration"
+msgstr "メッセージの平均化"
+
 msgid "Message for host alerts"
 msgstr "ホストアラートのメッセージ"
 
@@ -28236,6 +28254,9 @@ msgstr "メッセージテキスト"
 #, python-format
 msgid "Message when rule result is %s"
 msgstr "ルール結果が%sの場合のメッセージ"
+
+msgid "Messages"
+msgstr "メッセージ"
 
 msgid "Messages are handled by logwatch."
 msgstr "メッセージはlogwatchによって処理されます"
@@ -28270,6 +28291,10 @@ msgstr ""
 "メッセージがスプールされると、チェックは警告状。態になります。以下のルールに"
 "よってメッセージがドロップされた場合、チェックはまもなくこの実行のクリティカ"
 "ル状態になります。"
+
+#, fuzzy
+msgid "Messaging methods"
+msgstr "メッセージ"
 
 msgid "Meta usage"
 msgstr "メタ使用法"
@@ -28870,9 +28895,6 @@ msgstr "監視対象サービス"
 msgid "Monitoring"
 msgstr "モニタリング"
 
-msgid "Monitoring Core"
-msgstr "モニタリングコア"
-
 msgid "Monitoring URL"
 msgstr "監視URL"
 
@@ -28928,11 +28950,6 @@ msgstr "MTreeの状態が '%s'の場合の状態の監視"
 #, python-format
 msgid "Monitoring state if VM state is %s"
 msgstr "VMの状態が %s の場合の監視状態"
-
-#, fuzzy
-msgid ""
-"Monitoring state if a container terminates unsuccessfully (exit code 1)."
-msgstr "監視対象サービスがまったく見つからない場合の監視状態。"
 
 msgid "Monitoring state if a monitored service is not found at all."
 msgstr "監視対象サービスがまったく見つからない場合の監視状態。"
@@ -30242,10 +30259,6 @@ msgstr "No-TxCreditsエラー"
 msgid "Node"
 msgstr "ノード"
 
-#, fuzzy
-msgid "Node Containers"
-msgstr "# コンテナ"
-
 msgid "Node Exporter"
 msgstr "ノードエクスポータ"
 
@@ -30781,9 +30794,6 @@ msgstr "プロファイルにメールアドレスを設定したすべてのユ
 
 msgid "Notify by: "
 msgstr "通知者: "
-
-msgid "Notify users"
-msgstr "ユーザーに通知する"
 
 msgid "November"
 msgstr "11月"
@@ -31949,9 +31959,6 @@ msgstr "このサイトのローカルWebユーザーインターフェイスを
 
 msgid "Open this table for filtering / sorting"
 msgstr ""
-
-msgid "Open window in the user interface"
-msgstr "ユーザーインターフェイスでウィンドウを開く"
 
 msgid "Open/close this element"
 msgstr "この要素を開く/閉じる"
@@ -33893,11 +33900,12 @@ msgstr "サービスを選択してください"
 msgid "Please select at least one element"
 msgstr "少なくとも1つの要素を選択してください"
 
+#, fuzzy
+msgid "Please select at least one messaging method."
+msgstr "通知方法を少なくとも1つ選択してください"
+
 msgid "Please select at least one metric"
 msgstr ""
-
-msgid "Please select at least one notification method."
-msgstr "通知方法を少なくとも1つ選択してください"
 
 msgid "Please select some hosts before doing bulk operations on hosts."
 msgstr "ホストで一括操作を行う前に、いくつかのホストを選択してください。"
@@ -34114,9 +34122,6 @@ msgstr "プラグのアイテム番号または名前"
 
 msgid "Plugin"
 msgstr "プラグイン"
-
-msgid "Plugin API reference"
-msgstr "プラグインAPIリファレンス"
 
 msgid "Plugin Arguments"
 msgstr "プラグインの引数"
@@ -35100,6 +35105,10 @@ msgstr "REST API ドキュメント"
 msgid "REST API interactive GUI"
 msgstr "RESTAPIインタラクティブGUI"
 
+#, fuzzy
+msgid "REST API introduction"
+msgstr "RESTAPIインタラクティブGUI"
+
 msgid "REST API: Use HTTP ETags for optimistic locking"
 msgstr "REST API: 楽観的ロックにHTTP Etags を使用する"
 
@@ -35486,6 +35495,10 @@ msgstr "受信者"
 
 msgid "Recipient Email address"
 msgstr "受信者のメールアドレス"
+
+#, fuzzy, python-format
+msgid "Recipients: %s"
+msgstr "受信者"
 
 msgid "Reclaimable"
 msgstr "再生可能"
@@ -37096,10 +37109,6 @@ msgstr "実行中のコンテナの上位レベル"
 msgid "Running elsewhere"
 msgstr "他の場所で実行"
 
-#, fuzzy
-msgid "Running node containers"
-msgstr "実行中のコンテナ"
-
 msgid "Running nodes by nodes type"
 msgstr "ノードタイプ別のノードの実行"
 
@@ -38135,11 +38144,12 @@ msgstr "メールを送る"
 msgid "Send HTTP POST data"
 msgstr "HTTP POSTデータを送信する"
 
-msgid "Send an E-Mail"
-msgstr "メールを送る"
-
 msgid "Send data for real-time checks"
 msgstr ""
+
+#, fuzzy
+msgid "Send email"
+msgstr "メールを送る"
 
 msgid "Send events to local event console"
 msgstr ""
@@ -38154,6 +38164,14 @@ msgid "Send events to remote syslog host"
 msgstr "リモートsyslogホストにイベントを送信する"
 
 #, fuzzy
+msgid "Send message"
+msgstr "システムメッセージ"
+
+#, fuzzy
+msgid "Send message to"
+msgstr "システムメッセージ"
+
+#, fuzzy
 msgid "Send metrics to Graphite"
 msgstr "メトリックをGraphite/InfluxDBに送信します"
 
@@ -38165,9 +38183,6 @@ msgstr "監視通知を送信する"
 
 msgid "Send notification"
 msgstr "通知を送信する"
-
-msgid "Send notification to"
-msgstr "に通知を送信する"
 
 msgid "Send notifications to Event Console"
 msgstr "イベントコンソールに通知を送信する"
@@ -38186,6 +38201,14 @@ msgstr "PINGを一度に送信します。"
 
 msgid "Send to remote Event Console via syslog"
 msgstr "syslog経由でリモートイベントコンソールに送信"
+
+#, fuzzy
+msgid "Send user message"
+msgstr "システムメッセージ"
+
+#, fuzzy
+msgid "Send user messages"
+msgstr "システムメッセージ"
 
 msgid "Send via Email"
 msgstr "メールで送信"
@@ -38231,10 +38254,6 @@ msgstr "センサー"
 
 msgid "Sent"
 msgstr "送信済み"
-
-#, fuzzy, python-format
-msgid "Sent notification to: %s"
-msgstr "<p>通知の送信先:%s </p>"
 
 msgid "Sent vs Received Traffic Breakdown"
 msgstr "送信済みトラフィックと受信済みトラフィックの内訳"
@@ -38285,9 +38304,6 @@ msgstr "サービス"
 #, python-format
 msgid "Service %s"
 msgstr "サービス %s"
-
-msgid "Service Alert"
-msgstr "サービスアラート"
 
 msgid "Service Availability"
 msgstr "サービスの可用性"
@@ -38379,6 +38395,10 @@ msgstr "サービス時間"
 
 msgid "Service Type"
 msgstr "サービスの種類"
+
+#, fuzzy
+msgid "Service alert"
+msgstr "サービスアラート"
 
 msgid "Service alternative display name"
 msgstr "サービス代替表示名"
@@ -39409,6 +39429,10 @@ msgstr "列に表示"
 msgid "Show in host tables"
 msgstr "ホストテーブルに表示"
 
+#, fuzzy
+msgid "Show in the dashboard element 'User messages'"
+msgstr "ダッシュボード要素\"ユーザー通知\"に通知を表示する"
+
 msgid "Show in user table"
 msgstr "ユーザーテーブルに表示"
 
@@ -39459,9 +39483,6 @@ msgstr "もっと見る"
 msgid "Show more / Show less"
 msgstr "もっと表示/少なく表示"
 
-msgid "Show notification in dashboard element 'User notifications'"
-msgstr "ダッシュボード要素\"ユーザー通知\"に通知を表示する"
-
 msgid "Show number of groups"
 msgstr "グループの数を表示する"
 
@@ -39494,6 +39515,10 @@ msgstr "ピンを表示"
 
 msgid "Show plugin names"
 msgstr "プラグイン名を表示する"
+
+#, fuzzy
+msgid "Show popup message"
+msgstr "歴史的なメッセージ"
 
 msgid "Show prediction for "
 msgstr "の予測を表示する "
@@ -39860,9 +39885,6 @@ msgstr ""
 "サイトIDの不一致。私たちのIDは '%s'ですが、あなたは私たちが '%s'であると言っ"
 "ています。"
 
-msgid "Site Management"
-msgstr "サイト管理"
-
 msgid "Site Status"
 msgstr "サイトのステータス"
 
@@ -40202,9 +40224,9 @@ msgstr ""
 msgid ""
 "Some builtin or own views may take longer time than expected. In order to "
 "detect slow views you have to set<ul><li>the log level to <b>DEBUG</b> at "
-"<b>Setup > General > Global settings > User Interface > Log levels > Slow "
+"<b>Setup > General > Global settings > User interface > Log levels > Slow "
 "views</b>,</li><li>a threshold (in seconds) at <b>Setup > General > Global "
-"settings > User Interface > Threshold for slow views</b>.</li></ul>The "
+"settings > User interface > Threshold for slow views</b>.</li></ul>The "
 "logging is disable by default. The default threshold is set to 60 seconds. "
 "If enabled one log entry per view rendering that exceeeds the configured "
 "threshold is logged to <b>var/log/web.log</b>."
@@ -41136,14 +41158,15 @@ msgstr "出演者"
 msgid "Start"
 msgstr "開始"
 
-msgid "Start Livestatus Proxy"
-msgstr "Livestatusプロキシを開始します"
-
 msgid "Start URL to display in main frame"
 msgstr "メインフレームに表示する開始URL"
 
 msgid "Start during system boot"
 msgstr "システム起動中に開始"
+
+#, fuzzy
+msgid "Start livestatus proxy"
+msgstr "Livestatusプロキシを開始します"
 
 msgid "Start log from"
 msgstr "からログを開始"
@@ -43015,7 +43038,7 @@ msgid "Tenant ID / Directory ID"
 msgstr "テナントID / ディレクトリID"
 
 #, fuzzy
-msgid "Terminated node containers"
+msgid "Terminated containers"
 msgstr "Dockerノードとコンテナー"
 
 #, fuzzy
@@ -44855,9 +44878,10 @@ msgstr ""
 msgid "The host could not be found on any active site."
 msgstr "ホストがアクティブなサイトで見つかりませんでした。"
 
+#, fuzzy
 msgid ""
-"The host is (partially) managed by an automatic data source like the Dynamic "
-"Configuration."
+"The host is (partially) managed by an automatic data source like the dynamic "
+"configuration."
 msgstr "ホストは(部分的に)動的構成などの自動データソースによって管理されます。"
 
 msgid "The host is currently in downtime"
@@ -45322,6 +45346,10 @@ msgid ""
 "interval. The possible range is from 0% to 100%"
 msgstr ""
 
+#, fuzzy
+msgid "The message has successfully been sent..."
+msgstr "通知はで送信されました経由<br>"
+
 msgid "The message text does not match the required pattern."
 msgstr "メッセージテキストが必要なパターンと一致しません。"
 
@@ -45545,10 +45573,6 @@ msgid ""
 "node."
 msgstr ""
 "ノードの詳細は、照会されたホストまたはGraylogノードのいずれかに表示できます。"
-
-#, fuzzy
-msgid "The notification has been sent via"
-msgstr "通知はで送信されました経由<br>"
 
 msgid "The notification is being processed"
 msgstr "通知は処理中です"
@@ -45962,6 +45986,14 @@ msgstr "要求された %s は存在しません"
 #, python-format
 msgid "The requested %s does not exist"
 msgstr "要求された %s は存在しません"
+
+#, fuzzy
+msgid "The requested BI aggregation does not exist."
+msgstr "要求されたルールパックは存在しません。"
+
+#, fuzzy
+msgid "The requested BI rule does not exist."
+msgstr "要求されたルールパックは存在しません。"
 
 msgid "The requested connection does not exist."
 msgstr "要求された接続は存在しません。"
@@ -48076,6 +48108,10 @@ msgstr ""
 "するグラフに役立つ場合があります。このオプションを有効にすると、前の上のデー"
 "タが軸の下に表示され、下のデータがその上に表示されます。"
 
+#, fuzzy, python-format
+msgid "This message has been created at %s and is valid till %s."
+msgstr "この通知は %s で作成され、%s まで有効です"
+
 msgid ""
 "This might be needed to make the synchronization accept problems with SSL "
 "certificates when using an SSL secured connection."
@@ -48135,10 +48171,6 @@ msgstr ""
 
 msgid "This name will be used in the description of the service"
 msgstr "この名前は、サービスの説明で使用されます"
-
-#, python-format
-msgid "This notification has been created at %s and is valid till %s."
-msgstr "この通知は %s で作成され、%s まで有効です"
 
 msgid "This number of new checks is scheduled immediately"
 msgstr "この数の新しいチェックはすぐにスケジュールされます"
@@ -50033,18 +50065,18 @@ msgstr ""
 "を決定します。オブジェクト履歴(サービスアラート、イベントなど)は、この設定の"
 "影響を<b>受けません</b>。"
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
 "This setting decides which types of messages to log into the log of the "
-"Dynamic Configuration Daemon (%s)."
+"dynamic configuration daemon (%s)."
 msgstr ""
 "この設定は、動的構成デーモン (%s)のログにログインするメッセージのタイプを決定"
 "します。"
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
 "This setting decides which types of messages to log into the log of the "
-"Livestatus Proxy (%s)."
+"livestatus proxy (%s)."
 msgstr ""
 "この設定は、Livestatusプロキシのログにログインするメッセージのタイプを決定し"
 "ます (%s)。"
@@ -51230,6 +51262,10 @@ msgstr "総帯域幅(入力と出力の合計)"
 msgid "Total cache usage"
 msgstr "キャッシュの合計使用量"
 
+#, fuzzy
+msgid "Total containers"
+msgstr "Dockerノードとコンテナー"
+
 msgid "Total count"
 msgstr "総数"
 
@@ -51278,10 +51314,6 @@ msgstr "合計メッセージ数の下位レベル"
 
 msgid "Total message count upper levels"
 msgstr "合計メッセージ数の上位レベル"
-
-#, fuzzy
-msgid "Total node containers"
-msgstr "Dockerノードとコンテナー"
 
 msgid "Total number of Sessions"
 msgstr "セッションの総数"
@@ -53690,7 +53722,7 @@ msgid ""
 msgstr ""
 
 msgid ""
-"Use this option to disable startup of the Livestatus Proxy Daemon. It can "
+"Use this option to disable startup of the livestatus proxy daemon. It can "
 "improve stability of the GUI if you have a large number of sites with "
 "connections that sometimes break down."
 msgstr ""
@@ -53825,17 +53857,19 @@ msgstr ""
 "ファイルシステムスペースの消費量が増える可能性があります。これは、必要なオブ"
 "ジェクトに対してのみ有効にする必要があります。"
 
+#, fuzzy
 msgid ""
 "Use this setting to specify the parameters of sites connected using the "
-"Livestatus Proxy. These options are used by all connections that don't have "
+"livestatus proxy. These options are used by all connections that don't have "
 "custom settings set."
 msgstr ""
 "この設定を使用して、Livestatusプロキシを使用して接続されているサイトのパラ"
 "メーターを指定します。これらのオプションは、カスタム設定が設定されていないす"
 "べての接続で使用されます。"
 
+#, fuzzy
 msgid ""
-"Use this setting to tell the Dynamic Configuration to which Check_MK Web API "
+"Use this setting to tell the dynamic configuration to which Check_MK Web API "
 "to talk to for creating hosts and so on. This setting controls on which "
 "sites the objects will be created. In single site setups you can set this to "
 "\"local site\".In distributed setups you will have to configure the Web API "
@@ -53995,12 +54029,6 @@ msgstr "Webログイン用のユーザーID"
 msgid "User ID for web login (if login required)"
 msgstr "WebログインのユーザーID(ログインが必要な場合)"
 
-msgid "User Interface"
-msgstr "ユーザーインターフェース"
-
-msgid "User Management"
-msgstr "ユーザー管理"
-
 msgid "User Name"
 msgstr "ユーザー名"
 
@@ -54013,9 +54041,6 @@ msgstr "ユーザーベースDN"
 msgid "User for login"
 msgstr "ログイン用のユーザー"
 
-msgid "User guide"
-msgstr ""
-
 msgid "User interface"
 msgstr "ユーザーインターフェース"
 
@@ -54025,6 +54050,18 @@ msgstr "ユーザーインターフェイスの設定"
 msgid "User interface theme"
 msgstr "ユーザーインターフェイスのテーマ"
 
+#, fuzzy
+msgid "User management"
+msgstr "ユーザー管理"
+
+#, fuzzy
+msgid "User manual"
+msgstr "ユーザー名"
+
+#, fuzzy
+msgid "User messages"
+msgstr "システムメッセージ"
+
 msgid "User name"
 msgstr "ユーザー名"
 
@@ -54032,9 +54069,6 @@ msgid "User name on the storage system. Read only permissions are sufficient."
 msgstr ""
 
 msgid "User notification"
-msgstr "ユーザー通知"
-
-msgid "User notifications"
 msgstr "ユーザー通知"
 
 msgid "User password"
@@ -54578,6 +54612,9 @@ msgstr ""
 msgid "Vibrate only"
 msgstr ""
 
+msgid "Video tutorials"
+msgstr ""
+
 msgid "View"
 msgstr "ビュー"
 
@@ -54670,7 +54707,8 @@ msgstr "仮想化"
 msgid "Visibility"
 msgstr "可視性"
 
-msgid "Visibility of Hosts/Services"
+#, fuzzy
+msgid "Visibility of hosts/services"
 msgstr "ホスト/サービスの可視性"
 
 msgid "Visible"
@@ -54832,6 +54870,10 @@ msgstr "もう一方が終了するまで待ちます"
 msgid "Waiting connections"
 msgstr "接続を待機しています"
 
+#, fuzzy
+msgid "Waiting containers"
+msgstr "接続を待機しています"
+
 msgid "Waiting for new master initialization"
 msgstr "新しいマスターの初期化を待っています"
 
@@ -54840,10 +54882,6 @@ msgstr "他のスイッチがオンラインになるのを待っています"
 
 msgid "Waiting for replication to start"
 msgstr "レプリケーションの開始を待機しています"
-
-#, fuzzy
-msgid "Waiting node containers"
-msgstr "接続を待機しています"
 
 msgid "Warn"
 msgstr "警告"
@@ -56797,8 +56835,9 @@ msgid "You are not allowed to use passwords from the password store here."
 msgstr ""
 "ここのパスワードストアからパスワードを使用することは許可されていません。"
 
-msgid "You are not allowed to use the notification module."
-msgstr "通知モジュールの使用は許可されていません。"
+#, fuzzy
+msgid "You are not allowed to use the message module."
+msgstr "セットアップの使用は許可されていません。"
 
 msgid "You are not allowed to use the setup."
 msgstr "セットアップの使用は許可されていません。"
@@ -57250,9 +57289,10 @@ msgstr ""
 "のイメージを監視サーバーのディレクトリ<tt>%s </tt>にコピーします。サポートさ"
 "れている形式:%s"
 
+#, fuzzy
 msgid ""
-"You can send the notification to a list of multiple users, which can be "
-"choosen out of these predefined filters."
+"You can send the message to a list of multiple users, which can be chosen "
+"out of these predefined filters."
 msgstr ""
 "複数のユーザーのリストに通知を送信できます。リストは、これらの事前定義された"
 "フィルターから選択できます。"
@@ -57642,7 +57682,10 @@ msgstr ""
 msgid "You cannot query for time ranges that are before the horizon."
 msgstr "期間より前の時間範囲をクエリすることはできません"
 
-msgid "You cannot rename a host while you have pending changes."
+#, fuzzy, python-format
+msgid ""
+"You cannot rename a host while you have pending changes on the central site "
+"(%s) or the site the host is monitored on (%s)."
 msgstr "保留中の変更がある間は、ホストの名前を変更することはできません。"
 
 msgid "You cannot save this rule."
@@ -58100,9 +58143,6 @@ msgid ""
 "monitoring server of the host the agent is installed on."
 msgstr ""
 
-msgid "YouTube"
-msgstr "YouTube"
-
 #, python-format
 msgid "Your %s element has been saved."
 msgstr "%s要素が保存されました。"
@@ -58422,6 +58462,22 @@ msgstr "apt-get dist-upgrade"
 
 msgid "apt-get upgrade"
 msgstr "apt-get アップグレード"
+
+#, fuzzy
+msgid "as a hint in the 'User' menu"
+msgstr "ユーザー' メニューにヒントを表示する"
+
+#, fuzzy
+msgid "as a popup message"
+msgstr "クリーンアップメッセージ"
+
+#, fuzzy
+msgid "as an email"
+msgstr "プレーンメール"
+
+#, fuzzy
+msgid "at"
+msgstr "データ"
 
 msgid "at least one packet every"
 msgstr "少なくとも1つのパケットごと"
@@ -59111,6 +59167,10 @@ msgstr "...日で"
 
 msgid "in notif. p."
 msgstr ""
+
+#, fuzzy
+msgid "in the dashboard element 'User messages'"
+msgstr "ダッシュボード要素\"ユーザー通知\"に通知を表示する"
 
 msgid "in the future!"
 msgstr "将来は！"
@@ -60002,10 +60062,6 @@ msgstr "予測値を下回る標準偏差の倍"
 msgid "to"
 msgstr "に"
 
-#, python-format
-msgid "to %d of %d recipients"
-msgstr ""
-
 msgid "to port:"
 msgstr "ポートへ:"
 
@@ -60201,6 +60257,111 @@ msgstr "z/OS"
 #, fuzzy, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. All Rights Reserved."
+
+#~ msgid "Administration Tool (WATO)"
+#~ msgstr "管理ツール(WATO)"
+
+#~ msgid "Alert Handler"
+#~ msgstr "アラートハンドラー"
+
+#~ msgid "Alert Handler Rules"
+#~ msgstr "アラートハンドラルール"
+
+#~ msgid "Alert Handlers"
+#~ msgstr "アラートハンドラー"
+
+#, fuzzy
+#~| msgid "Automatically invalidate notification"
+#~ msgid "Automatically invalidate message"
+#~ msgstr "通知を自動的に無効にする"
+
+#~ msgid "Back to previous page"
+#~ msgstr "前のページに戻る"
+
+#~ msgid "Enable automatic invalidation at"
+#~ msgstr "で自動無効化を有効にする"
+
+#~ msgid "Everybody (Broadcast)"
+#~ msgstr "みんな(ブロードキャスト)"
+
+#~ msgid "Livestatus Proxy"
+#~ msgstr "Livestatusプロキシ"
+
+#, fuzzy
+#~| msgid "Message text"
+#~ msgid "Message users"
+#~ msgstr "メッセージテキスト"
+
+#~ msgid "Monitoring Core"
+#~ msgstr "モニタリングコア"
+
+#~ msgid "Open window in the user interface"
+#~ msgstr "ユーザーインターフェイスでウィンドウを開く"
+
+#~ msgid "Send an E-Mail"
+#~ msgstr "メールを送る"
+
+#, fuzzy, python-format
+#~| msgid "Delete messages"
+#~ msgid "Sent message to: %s"
+#~ msgstr "メッセージを削除する"
+
+#~ msgid "Site Management"
+#~ msgstr "サイト管理"
+
+#~ msgid "User Interface"
+#~ msgstr "ユーザーインターフェース"
+
+#, fuzzy
+#~| msgid "Monitoring state if a monitored service is not found at all."
+#~ msgid ""
+#~ "Monitoring state if a container terminates unsuccessfully (exit code 1)."
+#~ msgstr "監視対象サービスがまったく見つからない場合の監視状態。"
+
+#, fuzzy
+#~| msgid "# Containers"
+#~ msgid "Node Containers"
+#~ msgstr "# コンテナ"
+
+#, fuzzy
+#~| msgid "Running containers"
+#~ msgid "Running node containers"
+#~ msgstr "実行中のコンテナ"
+
+#~ msgid "APIs"
+#~ msgstr "API"
+
+#~ msgid "Checkmk: Notification"
+#~ msgstr "Checkmk: 通知"
+
+#~ msgid "External"
+#~ msgstr "外部"
+
+#~ msgid "Forum"
+#~ msgstr "フォーラム"
+
+#~ msgid "How to notify"
+#~ msgstr "通知方法"
+
+#~ msgid "Notify users"
+#~ msgstr "ユーザーに通知する"
+
+#~ msgid "Send notification to"
+#~ msgstr "に通知を送信する"
+
+#, fuzzy, python-format
+#~| msgid "<p>Sent notification to: %s</p>"
+#~ msgid "Sent notification to: %s"
+#~ msgstr "<p>通知の送信先:%s </p>"
+
+#~ msgid "User notifications"
+#~ msgstr "ユーザー通知"
+
+#~ msgid "You are not allowed to use the notification module."
+#~ msgstr "通知モジュールの使用は許可されていません。"
+
+#~ msgid "YouTube"
+#~ msgstr "YouTube"
 
 #, fuzzy
 #~| msgid "By default the standard IMAP Port 143 is used."
@@ -61692,9 +61853,6 @@ msgstr "© 2020 tribe29 GmbH. All Rights Reserved."
 
 #~ msgid "Message Rate"
 #~ msgstr "メッセージレート"
-
-#~ msgid "Messages"
-#~ msgstr "メッセージ"
 
 #~ msgid "Minimum single-request consumption"
 #~ msgstr "単一リクエストの最小消費量"

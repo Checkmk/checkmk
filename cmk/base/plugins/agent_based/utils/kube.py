@@ -18,7 +18,7 @@ class Phase(str, enum.Enum):
     PENDING = "pending"
     SUCCEEDED = "succeeded"
     FAILED = "failed"
-    UNKNOWN = "unknown "
+    UNKNOWN = "unknown"
 
 
 class PodLifeCycle(BaseModel):

@@ -1533,6 +1533,9 @@ run_cached() {
     NAME="${1}"
     MAXAGE="${2}"
     shift 2
+    # ideally, these should be independent parameters:
+    TIMEOUT=$((MAXAGE * 2))
+    REFRESH_INTERVAL="${MAXAGE}"
 
     if ${DISABLE_CACHING:-false}; then
         # We need the re-splitting to be compatible with the caching case, so:
@@ -1547,9 +1550,9 @@ run_cached() {
     NOW="$(get_epoch)"
 
     # Check if the creation of the cache takes suspiciously long.
-    # Kill the process if the access time of ${CACHEFILE}.new is twice the MAXAGE.
+    # Kill the process if the cache file has not been accessed for more than TIMEOUT seconds.
     if [ -e "${CACHEFILE}.new" ]; then
-        if [ $((NOW - $(get_file_atime "${CACHEFILE}.new"))) -ge $((MAXAGE * 2)) ]; then
+        if [ $((NOW - $(get_file_atime "${CACHEFILE}.new"))) -ge "${TIMEOUT}" ]; then
             fuser -k -9 "${CACHEFILE}.new" >/dev/null 2>&1
             rm -f "${CACHEFILE}.new"
         fi
@@ -1573,8 +1576,8 @@ run_cached() {
     fi
 
     if ${MK_RUN_ASYNC_PARTS}; then
-        # Cache file outdated and new job not yet running?
-        if [ $((NOW - MTIME)) -gt "${MAXAGE}" ] && [ ! -e "${CACHEFILE}.new" ]; then
+        # Time to refresh cache file and new job not yet running?
+        if [ $((NOW - MTIME)) -gt "${REFRESH_INTERVAL}" ] && [ ! -e "${CACHEFILE}.new" ]; then
             # Start it. If the command fails the output is thrown away
             cat <<HERE | nohup /bin/bash >/dev/null 2>&1 &
 eval '${MK_DEFINE_LOG_SECTION_TIME}'
@@ -1585,7 +1588,7 @@ HERE
         fi
     fi
 
-    unset NAME MAXAGE CACHEFILE MTIME CACHE_INFO
+    unset NAME MAXAGE TIMEOUT REFRESH_INTERVAL CACHEFILE MTIME CACHE_INFO
 }
 
 # Make run_cached available for subshells (plugins, local checks, etc.)

@@ -250,6 +250,7 @@ CEE_UNUSED_PACKAGES = [
     "pymssql",
     "pyprof2calltree",
     "pyrsistent",
+    "pysmb",
     "requests-kerberos",
     "requests-toolbelt",
     "rsa",

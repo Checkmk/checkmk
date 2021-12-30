@@ -1446,38 +1446,29 @@ _non_comment_lines() {
     grep -Ev '^[[:space:]]*($|#)' "${1}"
 }
 
+_mrpe_get_interval() {
+    echo "${1}" | grep -Eo '^\([^)]*\)' | grep -Eo 'interval=[^:)]*' | cut -d= -f2
+}
+
 run_remote_plugins() {
     configfile="${1}"
     prefix="${2}"
     [ -f "${configfile}" ] || return
 
-    _non_comment_lines "${configfile}" | while read -r descr cmdline; do
-        interval=
-        # NOTE: Due to an escaping-related bug in some old bash versions
-        # (3.2.x), we have to use an intermediate variable for the pattern.
-        pattern='\(([^\)]*)\)[[:space:]](.*)'
-        if [[ ${cmdline} =~ ${pattern} ]]; then
-            parameters=${BASH_REMATCH[1]}
-            cmdline=${BASH_REMATCH[2]}
-
-            # split multiple parameter assignments
-            for par in $(echo "${parameters}" | tr ":" "\n"); do
-                # split each assignment
-                IFS='=' read -r key value <<<"${par}"
-                if [ "${key}" = "interval" ]; then
-                    interval=${value}
-                fi
-            done
-        fi
+    _non_comment_lines "${configfile}" | while read -r descr rest; do
+        interval="$(_mrpe_get_interval "${rest}")"
+        cmdline="${rest#(*) }"
 
         if [ -n "${prefix}" ]; then
             cmdline="${prefix}'${cmdline}'"
         fi
+
         if [ -z "${interval}" ]; then
             ${MK_RUN_SYNC_PARTS} && run_mrpe "${descr}" "${cmdline}"
         else
             run_cached "mrpe_${descr}" "${interval}" "run_mrpe '${descr}' '${cmdline}'"
         fi
+
     done
 }
 

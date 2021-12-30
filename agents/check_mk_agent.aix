@@ -749,17 +749,17 @@ run_remote_plugins() {
     # caching currently not supported
     ${MK_RUN_SYNC_PARTS} || return
 
+    [ -f "${MK_CONFDIR}/mrpe.cfg" ] || return
+
     # MK's Remote Plugin Executor
-    if [ -e "${MK_CONFDIR}/mrpe.cfg" ]; then
-        echo '<<<mrpe>>>'
-        grep -Ev '^[[:space:]]*($|#)' "${MK_CONFDIR}/mrpe.cfg" | \
-        while read descr cmdline; do
-            PLUGIN=${cmdline%% *}
-            OUTPUT=$(eval "${MK_DEFINE_LOG_SECTION_TIME}; _log_section_time ${cmdline}")
-            echo "(${PLUGIN##*/}) ${descr} $? ${OUTPUT}" | tr \\n \\1
-            echo
-        done
-    fi
+    echo '<<<mrpe>>>'
+    grep -Ev '^[[:space:]]*($|#)' "${MK_CONFDIR}/mrpe.cfg" | \
+    while read descr cmdline; do
+        PLUGIN=${cmdline%% *}
+        OUTPUT=$(eval "${MK_DEFINE_LOG_SECTION_TIME}; _log_section_time ${cmdline}")
+        echo "(${PLUGIN##*/}) ${descr} $? ${OUTPUT}" | tr \\n \\1
+        echo
+    done
 }
 
 run_purely_synchronous_sections() {

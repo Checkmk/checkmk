@@ -4425,7 +4425,8 @@ def cmk_sites_painters():
         ("invcmksites_num_hosts", None, None),
         ("invcmksites_num_services", None, None),
         ("invcmksites_check_helper_usage", None, None),
-        ("invcmksites_check_mk_helper_usage", None, None),
+        ("invcmksites_fetcher_helper_usage", None, None),
+        ("invcmksites_checker_helper_usage", None, None),
         ("invcmksites_livestatus_usage", None, None),
     ] + service_painters
 

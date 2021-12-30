@@ -1711,17 +1711,18 @@ run_plugins() {
 #
 
 run_mrpe() {
-    local descr=${1}
+    descr="${1}"
     shift
-    local cmdline=$*
 
-    echo '<<<mrpe>>>'
+    PLUGIN="${1%% *}"
+    OUTPUT="$(eval "${MK_DEFINE_LOG_SECTION_TIME}; _log_section_time $*")"
+    STATUS="$?"
 
-    PLUGIN=${cmdline%% *}
-    OUTPUT=$(eval "${MK_DEFINE_LOG_SECTION_TIME}; _log_section_time ${cmdline}")
-
-    printf "(%s) %s %s %s" "${PLUGIN##*/}" "${descr}" "$?" "${OUTPUT}" | tr \\n \\1
+    printf "<<<mrpe>>>\n"
+    printf "(%s) %s %s %s" "${PLUGIN##*/}" "${descr}" "${STATUS}" "${OUTPUT}" | tr \\n \\1
     printf "\n"
+
+    unset -v descr PLUGIN OUTPUT STATUS
 }
 
 export -f run_mrpe

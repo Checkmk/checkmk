@@ -37,6 +37,3 @@ indent_size = 2
 
 [{Makefile,*.make,*.am}]
 indent_style = tab
-
-[*.md]
-trim_trailing_whitespace = false

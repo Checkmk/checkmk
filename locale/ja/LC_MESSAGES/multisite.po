@@ -6013,9 +6013,6 @@ msgstr "1つのホストの影響を受けるBIアグリゲーション"
 msgid "BI Aggregations containing this %s"
 msgstr "この %s を含むBIアグリゲーション"
 
-msgid "BI Aggregations for Hosts by Hostgroups"
-msgstr "ホストグループによるホストのBI集計"
-
 msgid "BI Availability"
 msgstr "BI の可用性"
 
@@ -6039,6 +6036,10 @@ msgstr "BIアグリゲーショングループ"
 
 msgid "BI aggregation groups tree"
 msgstr "BI集約グループツリー"
+
+#, fuzzy
+msgid "BI aggregations for hosts by host groups"
+msgstr "ホストグループによるホストのBI集計"
 
 msgid "BI compilation"
 msgstr "BIコンパイル"
@@ -20452,15 +20453,6 @@ msgstr "ホストイベント"
 msgid "Host Graphs with Timerange Previews"
 msgstr "タイムレンジプレビュー付きのホストグラフ"
 
-msgid "Host Group"
-msgstr "ホストグループ"
-
-msgid "Host Group Name"
-msgstr "ホストグループ名"
-
-msgid "Host Groups"
-msgstr "ホストグループ"
-
 msgid "Host IPv4 address"
 msgstr "ホストIPv4アドレス"
 
@@ -20495,6 +20487,10 @@ msgstr "ホストシステム"
 
 msgid "Host Tags"
 msgstr "ホストタグ"
+
+#, fuzzy
+msgid "Host address"
+msgstr "ホストアドレス"
 
 msgid "Host address (IPv4)"
 msgstr "ホストアドレス(IPv4)"
@@ -20633,11 +20629,27 @@ msgstr "ホストグラフ"
 msgid "Host graphs"
 msgstr "ホストグラフ"
 
+#, fuzzy
+msgid "Host group"
+msgstr "ホストグループ"
+
+#, fuzzy
+msgid "Host group alias"
+msgstr "ホストグループエイリアス"
+
+#, fuzzy
+msgid "Host group name"
+msgstr "ホストグループ名"
+
 msgid "Host groups"
 msgstr "ホストグループ"
 
 msgid "Host groups the host is member of"
 msgstr "ホストがメンバーであるホストグループ"
+
+#, fuzzy
+msgid "Host groups, merged"
+msgstr "ホストグループ、統合"
 
 #, python-format
 msgid "Host has tag <b>%s</b>"
@@ -20832,6 +20844,10 @@ msgstr "ホスト統計"
 msgid "Host status"
 msgstr "ホストステータス"
 
+#, fuzzy
+msgid "Host tag"
+msgstr "ホストタグ:"
+
 msgid "Host tag:"
 msgstr "ホストタグ:"
 
@@ -20867,9 +20883,6 @@ msgstr "ホスト- とサービスのコメント"
 msgid "Host- or DNS name"
 msgstr "ホスト名またはDNS名"
 
-msgid "Host-/Servicegroups"
-msgstr "ホスト/サービスグループ"
-
 msgid "Host/Device temperature"
 msgstr "ホスト/デバイスの温度"
 
@@ -20878,6 +20891,10 @@ msgstr "ホスト/サービス"
 
 msgid "Host/Service state"
 msgstr "ホスト/サービスの状態"
+
+#, fuzzy
+msgid "Host/service groups"
+msgstr "ホスト/サービスグループ"
 
 msgid "Host:"
 msgstr "ホスト:"
@@ -20891,21 +20908,6 @@ msgstr "ホストアドレス"
 
 msgid "Hostalias"
 msgstr "Hostalias"
-
-msgid "Hostgroup"
-msgstr "ホストグループ"
-
-msgid "Hostgroup alias"
-msgstr "ホストグループエイリアス"
-
-msgid "Hostgroup name"
-msgstr "ホストグループ名"
-
-msgid "Hostgroups"
-msgstr "ホストグループ"
-
-msgid "Hostgroups, merged"
-msgstr "ホストグループ、統合"
 
 msgid "Hostname"
 msgstr "ホスト名"
@@ -21001,7 +21003,8 @@ msgstr ""
 "ループに一緒に属するホストを配置して、ステータスGUIにそれらを一緒にリストでき"
 "るようにすることです。"
 
-msgid "Hosts colored according to state (Host Group)"
+#, fuzzy
+msgid "Hosts colored according to state (host group)"
 msgstr "状態に応じて色分けされたホスト(ホストグループ)"
 
 msgid ""
@@ -23843,7 +23846,7 @@ msgstr "統合キー"
 #, fuzzy
 msgid ""
 "Interactive search field for direct access to monitoring instances (hosts, "
-"services, host- and servicegroups).<br>You can use the following filters: "
+"services, host and service groups).<br>You can use the following filters: "
 "<i>h:</i> Host,<br> <i>s:</i> Service, <i>hg:</i> Host group, <i>sg:</i> "
 "Service group,<br><i>ad:</i> Address, <i>al:</i> Alias, <i>tg:</i> Host tag, "
 "<i>hl:</i> Host label, <i>sl:</i> Service label"
@@ -31059,16 +31062,20 @@ msgstr "ホップ数"
 msgid "Number of hosts"
 msgstr "ホストの数"
 
-msgid "Number of hosts in state DOWN (Host Group)"
-msgstr ""
+#, fuzzy
+msgid "Number of hosts in state DOWN (host group)"
+msgstr "状態UPのホストの数(ホストグループ)"
 
-msgid "Number of hosts in state PENDING (Host Group)"
+#, fuzzy
+msgid "Number of hosts in state PENDING (host group)"
 msgstr "状態が保留中のホストの数(ホストグループ)"
 
-msgid "Number of hosts in state UNREACH (Host Group)"
+#, fuzzy
+msgid "Number of hosts in state UNREACH (host group)"
 msgstr "状態UNREACH(ホストグループ)のホストの数"
 
-msgid "Number of hosts in state UP (Host Group)"
+#, fuzzy
+msgid "Number of hosts in state UP (host group)"
 msgstr "状態UPのホストの数(ホストグループ)"
 
 msgid "Number of hosts to handle at once"
@@ -31215,55 +31222,67 @@ msgstr "レポートごとの送信パケット数"
 msgid "Number of services"
 msgstr "サービスの数"
 
-msgid "Number of services (Host Group)"
+#, fuzzy
+msgid "Number of services (host group)"
 msgstr "サービス数(ホストグループ)"
 
-msgid "Number of services (Service Group)"
+#, fuzzy
+msgid "Number of services (service group)"
 msgstr "サービス数(サービスグループ)"
 
 msgid "Number of services in state CRIT"
 msgstr "ステータスCRITのサービス数"
 
-msgid "Number of services in state CRIT (Host Group)"
+#, fuzzy
+msgid "Number of services in state CRIT (host group)"
 msgstr "CRIT状態のサービスの数(ホストグループ)"
 
-msgid "Number of services in state CRIT (Service Group)"
+#, fuzzy
+msgid "Number of services in state CRIT (service group)"
 msgstr "CRIT(サービスグループ)の状態のサービス数"
 
 msgid "Number of services in state OK"
 msgstr "OK状態のサービスの数"
 
-msgid "Number of services in state OK (Host Group)"
+#, fuzzy
+msgid "Number of services in state OK (host group)"
 msgstr "OK状態(ホストグループ)のサービスの数"
 
-msgid "Number of services in state OK (Service Group)"
+#, fuzzy
+msgid "Number of services in state OK (service group)"
 msgstr "OK状態のサービスの数(サービスグループ)"
 
 msgid "Number of services in state PENDING"
 msgstr "保留中のサービスの数"
 
-msgid "Number of services in state PENDING (Host Group)"
+#, fuzzy
+msgid "Number of services in state PENDING (host group)"
 msgstr "状態が保留中のサービスの数(ホストグループ)"
 
-msgid "Number of services in state PENDING (Service Group)"
+#, fuzzy
+msgid "Number of services in state PENDING (service group)"
 msgstr "状態が保留中のサービスの数(サービスグループ)"
 
 msgid "Number of services in state UNKNOWN"
 msgstr "状態不明のサービスの数"
 
-msgid "Number of services in state UNKNOWN (Host Group)"
+#, fuzzy
+msgid "Number of services in state UNKNOWN (host group)"
 msgstr "状態不明のサービスの数(ホストグループ)"
 
-msgid "Number of services in state UNKNOWN (Service Group)"
+#, fuzzy
+msgid "Number of services in state UNKNOWN (service group)"
 msgstr "状態不明(サービスグループ)のサービスの数"
 
 msgid "Number of services in state WARN"
 msgstr "警告状態のサービス数"
 
-msgid "Number of services in state WARN (Host Group)"
+#, fuzzy
+msgid "Number of services in state WARN (host group)"
 msgstr "状態WARN(ホストグループ)のサービスの数"
 
-msgid "Number of services in state WARN (Service Group)"
+#, fuzzy
+msgid "Number of services in state WARN (service group)"
 msgstr "警告状態(サービスグループ)のサービスの数"
 
 msgid "Number of shared and exclusive locks"
@@ -37817,7 +37836,7 @@ msgstr ""
 #, fuzzy
 msgid ""
 "Search with regular expressions for menu entries, \n"
-"hosts, services or host- and servicegroups.\n"
+"hosts, services or host and service groups.\n"
 "\n"
 "You can use the following filters:\n"
 "h: Host\n"
@@ -38329,15 +38348,6 @@ msgstr "サービスグラフ"
 msgid "Service Graphs with Timerange Previews"
 msgstr "タイムレンジプレビュー付きのサービスグラフ"
 
-msgid "Service Group"
-msgstr "サービスグループ"
-
-msgid "Service Group Name"
-msgstr "サービスグループ名"
-
-msgid "Service Groups"
-msgstr "サービスグループ"
-
 msgid "Service Labels"
 msgstr "サービスラベル"
 
@@ -38509,11 +38519,27 @@ msgstr "サービスが不明な状態になります"
 msgid "Service goes into warning state"
 msgstr "サービスが警告状態になります"
 
+#, fuzzy
+msgid "Service group"
+msgstr "サービスグループ"
+
+#, fuzzy
+msgid "Service group alias"
+msgstr "サービスグループエイリアス"
+
+#, fuzzy
+msgid "Service group name"
+msgstr "サービスグループ名"
+
 msgid "Service groups"
 msgstr "サービスグループ"
 
 msgid "Service groups the service is member of"
 msgstr "サービスがメンバーであるサービスグループ"
+
+#, fuzzy
+msgid "Service groups, merged"
+msgstr "統合されたサービスグループ"
 
 msgid "Service hover menu shown in BI visualization"
 msgstr "BIビジュアライゼーションに表示されるサービスホバーメニュー"
@@ -38667,21 +38693,6 @@ msgstr "サービス: "
 msgid "ServiceNow URL"
 msgstr "ServiceNow URL"
 
-msgid "Servicegroup"
-msgstr "サービスグループ"
-
-msgid "Servicegroup alias"
-msgstr "サービスグループエイリアス"
-
-msgid "Servicegroup name"
-msgstr "サービスグループ名"
-
-msgid "Servicegroups"
-msgstr "サービスグループ"
-
-msgid "Servicegroups, merged"
-msgstr "統合されたサービスグループ"
-
 msgid "Servicelevel"
 msgstr "サービスレベル"
 
@@ -38694,7 +38705,8 @@ msgstr "サービス(正規表現)"
 msgid "Services colored according to state"
 msgstr "ステートに応じて色分けされたサービス"
 
-msgid "Services colored according to state (Service Group)"
+#, fuzzy
+msgid "Services colored according to state (service group)"
 msgstr "状態に応じて色分けされたサービス(サービスグループ)"
 
 msgid "Services grouped by host groups"
@@ -60257,6 +60269,36 @@ msgstr "z/OS"
 #, fuzzy, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. All Rights Reserved."
+
+#~ msgid "Host Group"
+#~ msgstr "ホストグループ"
+
+#~ msgid "Host Group Name"
+#~ msgstr "ホストグループ名"
+
+#~ msgid "Host Groups"
+#~ msgstr "ホストグループ"
+
+#~ msgid "Hostgroup"
+#~ msgstr "ホストグループ"
+
+#~ msgid "Hostgroups"
+#~ msgstr "ホストグループ"
+
+#~ msgid "Service Group"
+#~ msgstr "サービスグループ"
+
+#~ msgid "Service Group Name"
+#~ msgstr "サービスグループ名"
+
+#~ msgid "Service Groups"
+#~ msgstr "サービスグループ"
+
+#~ msgid "Servicegroup"
+#~ msgstr "サービスグループ"
+
+#~ msgid "Servicegroups"
+#~ msgstr "サービスグループ"
 
 #~ msgid "Administration Tool (WATO)"
 #~ msgstr "管理ツール(WATO)"

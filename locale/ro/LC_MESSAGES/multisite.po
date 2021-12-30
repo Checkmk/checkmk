@@ -5908,9 +5908,6 @@ msgstr ""
 msgid "BI Aggregations containing this %s"
 msgstr ""
 
-msgid "BI Aggregations for Hosts by Hostgroups"
-msgstr ""
-
 msgid "BI Availability"
 msgstr ""
 
@@ -5939,6 +5936,10 @@ msgstr "Agregare noua"
 
 #, fuzzy
 msgid "BI aggregation groups tree"
+msgstr "Agregare noua"
+
+#, fuzzy
+msgid "BI aggregations for hosts by host groups"
 msgstr "Agregare noua"
 
 msgid "BI compilation"
@@ -20281,16 +20282,6 @@ msgstr ""
 msgid "Host Graphs with Timerange Previews"
 msgstr ""
 
-msgid "Host Group"
-msgstr ""
-
-#, fuzzy
-msgid "Host Group Name"
-msgstr "Numele Elementului"
-
-msgid "Host Groups"
-msgstr ""
-
 #, fuzzy
 msgid "Host IPv4 address"
 msgstr "Adresă"
@@ -20328,6 +20319,10 @@ msgstr ""
 
 msgid "Host Tags"
 msgstr ""
+
+#, fuzzy
+msgid "Host address"
+msgstr "Adresă"
 
 msgid "Host address (IPv4)"
 msgstr ""
@@ -20476,11 +20471,27 @@ msgid "Host graphs"
 msgstr "Grup nou"
 
 #, fuzzy
+msgid "Host group"
+msgstr "Grup nou"
+
+#, fuzzy
+msgid "Host group alias"
+msgstr "Grup nou"
+
+#, fuzzy
+msgid "Host group name"
+msgstr "Numele Elementului"
+
+#, fuzzy
 msgid "Host groups"
 msgstr "Grup nou"
 
 msgid "Host groups the host is member of"
 msgstr ""
+
+#, fuzzy
+msgid "Host groups, merged"
+msgstr "Grup nou"
 
 #, python-format
 msgid "Host has tag <b>%s</b>"
@@ -20689,6 +20700,10 @@ msgstr ""
 msgid "Host status"
 msgstr ""
 
+#, fuzzy
+msgid "Host tag"
+msgstr "Numele Elementului"
+
 msgid "Host tag:"
 msgstr ""
 
@@ -20725,9 +20740,6 @@ msgstr ""
 msgid "Host- or DNS name"
 msgstr "Numele Elementului"
 
-msgid "Host-/Servicegroups"
-msgstr ""
-
 msgid "Host/Device temperature"
 msgstr ""
 
@@ -20737,6 +20749,11 @@ msgstr "serviciu"
 
 msgid "Host/Service state"
 msgstr ""
+
+# georgem ##############
+#, fuzzy
+msgid "Host/service groups"
+msgstr "Grup nou"
 
 msgid "Host:"
 msgstr ""
@@ -20750,21 +20767,6 @@ msgid "Hostaddress"
 msgstr "Adresă"
 
 msgid "Hostalias"
-msgstr ""
-
-msgid "Hostgroup"
-msgstr ""
-
-msgid "Hostgroup alias"
-msgstr ""
-
-msgid "Hostgroup name"
-msgstr ""
-
-msgid "Hostgroups"
-msgstr ""
-
-msgid "Hostgroups, merged"
 msgstr ""
 
 msgid "Hostname"
@@ -20859,7 +20861,7 @@ msgid ""
 "get them listed together in the status GUI."
 msgstr ""
 
-msgid "Hosts colored according to state (Host Group)"
+msgid "Hosts colored according to state (host group)"
 msgstr ""
 
 msgid ""
@@ -23251,7 +23253,7 @@ msgstr ""
 
 msgid ""
 "Interactive search field for direct access to monitoring instances (hosts, "
-"services, host- and servicegroups).<br>You can use the following filters: "
+"services, host and service groups).<br>You can use the following filters: "
 "<i>h:</i> Host,<br> <i>s:</i> Service, <i>hg:</i> Host group, <i>sg:</i> "
 "Service group,<br><i>ad:</i> Address, <i>al:</i> Alias, <i>tg:</i> Host tag, "
 "<i>hl:</i> Host label, <i>sl:</i> Service label"
@@ -30835,17 +30837,21 @@ msgstr "Numele elementului pentru eveniment"
 msgid "Number of hosts"
 msgstr ""
 
-msgid "Number of hosts in state DOWN (Host Group)"
-msgstr ""
+#, fuzzy
+msgid "Number of hosts in state DOWN (host group)"
+msgstr "Grup nou"
 
-msgid "Number of hosts in state PENDING (Host Group)"
-msgstr ""
+#, fuzzy
+msgid "Number of hosts in state PENDING (host group)"
+msgstr "Grup nou"
 
-msgid "Number of hosts in state UNREACH (Host Group)"
-msgstr ""
+#, fuzzy
+msgid "Number of hosts in state UNREACH (host group)"
+msgstr "Grup nou"
 
-msgid "Number of hosts in state UP (Host Group)"
-msgstr ""
+#, fuzzy
+msgid "Number of hosts in state UP (host group)"
+msgstr "Grup nou"
 
 msgid "Number of hosts to handle at once"
 msgstr ""
@@ -31003,56 +31009,67 @@ msgid "Number of services"
 msgstr ""
 
 #, fuzzy
-msgid "Number of services (Host Group)"
+msgid "Number of services (host group)"
 msgstr "Grup nou"
 
-msgid "Number of services (Service Group)"
-msgstr ""
+#, fuzzy
+msgid "Number of services (service group)"
+msgstr "Grup nou"
 
 msgid "Number of services in state CRIT"
 msgstr ""
 
-msgid "Number of services in state CRIT (Host Group)"
-msgstr ""
+#, fuzzy
+msgid "Number of services in state CRIT (host group)"
+msgstr "Grup nou"
 
-msgid "Number of services in state CRIT (Service Group)"
-msgstr ""
+#, fuzzy
+msgid "Number of services in state CRIT (service group)"
+msgstr "Grup nou"
 
 msgid "Number of services in state OK"
 msgstr ""
 
-msgid "Number of services in state OK (Host Group)"
-msgstr ""
+#, fuzzy
+msgid "Number of services in state OK (host group)"
+msgstr "Grup nou"
 
-msgid "Number of services in state OK (Service Group)"
-msgstr ""
+#, fuzzy
+msgid "Number of services in state OK (service group)"
+msgstr "Grup nou"
 
 msgid "Number of services in state PENDING"
 msgstr ""
 
-msgid "Number of services in state PENDING (Host Group)"
-msgstr ""
+#, fuzzy
+msgid "Number of services in state PENDING (host group)"
+msgstr "Grup nou"
 
-msgid "Number of services in state PENDING (Service Group)"
-msgstr ""
+#, fuzzy
+msgid "Number of services in state PENDING (service group)"
+msgstr "Grup nou"
 
 msgid "Number of services in state UNKNOWN"
 msgstr ""
 
-msgid "Number of services in state UNKNOWN (Host Group)"
-msgstr ""
+#, fuzzy
+msgid "Number of services in state UNKNOWN (host group)"
+msgstr "Grup nou"
 
-msgid "Number of services in state UNKNOWN (Service Group)"
-msgstr ""
+#, fuzzy
+msgid "Number of services in state UNKNOWN (service group)"
+msgstr "Grup nou"
 
 msgid "Number of services in state WARN"
 msgstr ""
 
-msgid "Number of services in state WARN (Host Group)"
-msgstr ""
+#, fuzzy
+msgid "Number of services in state WARN (host group)"
+msgstr "Grup nou"
 
-msgid "Number of services in state WARN (Service Group)"
-msgstr ""
+#, fuzzy
+msgid "Number of services in state WARN (service group)"
+msgstr "Grup nou"
 
 msgid "Number of shared and exclusive locks"
 msgstr ""
@@ -37753,7 +37770,7 @@ msgstr ""
 
 msgid ""
 "Search with regular expressions for menu entries, \n"
-"hosts, services or host- and servicegroups.\n"
+"hosts, services or host and service groups.\n"
 "\n"
 "You can use the following filters:\n"
 "h: Host\n"
@@ -38270,15 +38287,6 @@ msgstr "Grup nou"
 msgid "Service Graphs with Timerange Previews"
 msgstr ""
 
-msgid "Service Group"
-msgstr ""
-
-msgid "Service Group Name"
-msgstr ""
-
-msgid "Service Groups"
-msgstr ""
-
 #, fuzzy
 msgid "Service Labels"
 msgstr "Numele Elementului"
@@ -38468,11 +38476,31 @@ msgstr ""
 
 # georgem ##############
 #, fuzzy
+msgid "Service group"
+msgstr "Grup nou"
+
+# georgem ##############
+#, fuzzy
+msgid "Service group alias"
+msgstr "Grup nou"
+
+# georgem ##############
+#, fuzzy
+msgid "Service group name"
+msgstr "Grup nou"
+
+# georgem ##############
+#, fuzzy
 msgid "Service groups"
 msgstr "Grup nou"
 
 msgid "Service groups the service is member of"
 msgstr ""
+
+# georgem ##############
+#, fuzzy
+msgid "Service groups, merged"
+msgstr "Grup nou"
 
 msgid "Service hover menu shown in BI visualization"
 msgstr ""
@@ -38644,21 +38672,6 @@ msgstr "serviciu"
 msgid "ServiceNow URL"
 msgstr "Numele Elementului"
 
-msgid "Servicegroup"
-msgstr ""
-
-msgid "Servicegroup alias"
-msgstr ""
-
-msgid "Servicegroup name"
-msgstr ""
-
-msgid "Servicegroups"
-msgstr ""
-
-msgid "Servicegroups, merged"
-msgstr ""
-
 msgid "Servicelevel"
 msgstr ""
 
@@ -38671,8 +38684,9 @@ msgstr ""
 msgid "Services colored according to state"
 msgstr ""
 
-msgid "Services colored according to state (Service Group)"
-msgstr ""
+#, fuzzy
+msgid "Services colored according to state (service group)"
+msgstr "Numele elementului pentru eveniment"
 
 msgid "Services grouped by host groups"
 msgstr ""
@@ -61279,10 +61293,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Selection of the host group"
 #~ msgstr "Eticheta de grup nou"
-
-#, fuzzy
-#~ msgid "Selection of the service group"
-#~ msgstr "Numele elementului pentru eveniment"
 
 #, fuzzy
 #~ msgid "Send custom notification"

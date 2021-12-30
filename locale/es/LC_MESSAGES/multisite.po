@@ -6268,9 +6268,6 @@ msgstr "Agregaciones de BI afectadas por un host"
 msgid "BI Aggregations containing this %s"
 msgstr "Agregaciones de BI que contienen este %s"
 
-msgid "BI Aggregations for Hosts by Hostgroups"
-msgstr "Agregaciones de BI para hosts por grupos de hosts"
-
 msgid "BI Availability"
 msgstr "Disponibilidad de BI"
 
@@ -6294,6 +6291,10 @@ msgstr "Grupos de agregación de BI"
 
 msgid "BI aggregation groups tree"
 msgstr "Árbol de grupos de agregación de BI"
+
+#, fuzzy
+msgid "BI aggregations for hosts by host groups"
+msgstr "Agregaciones de BI para hosts por grupos de hosts"
 
 msgid "BI compilation"
 msgstr "Compilación de BI"
@@ -21344,15 +21345,6 @@ msgstr "Eventos de acogida"
 msgid "Host Graphs with Timerange Previews"
 msgstr "Gráficos de host con previsiones de intervalo de tiempo"
 
-msgid "Host Group"
-msgstr "Grupo anfitrión"
-
-msgid "Host Group Name"
-msgstr "Nombre del grupo anfitrión"
-
-msgid "Host Groups"
-msgstr "Grupos de acogida"
-
 msgid "Host IPv4 address"
 msgstr "Dirección IPv4 del host"
 
@@ -21387,6 +21379,10 @@ msgstr "Sistemas de acogida"
 
 msgid "Host Tags"
 msgstr "Etiquetas del anfitrión"
+
+#, fuzzy
+msgid "Host address"
+msgstr "Dirección de correo electrónico"
 
 msgid "Host address (IPv4)"
 msgstr "Dirección de host (IPv4)"
@@ -21525,11 +21521,27 @@ msgstr "Gráfico del anfitrión"
 msgid "Host graphs"
 msgstr "Gráficos del anfitrión"
 
+#, fuzzy
+msgid "Host group"
+msgstr "Grupos de acogida"
+
+#, fuzzy
+msgid "Host group alias"
+msgstr "Alias del grupo de host"
+
+#, fuzzy
+msgid "Host group name"
+msgstr "Nombre del grupo anfitrión"
+
 msgid "Host groups"
 msgstr "Grupos de acogida"
 
 msgid "Host groups the host is member of"
 msgstr "Grupos de anfitriones a los que pertenece el anfitrión"
+
+#, fuzzy
+msgid "Host groups, merged"
+msgstr "Grupos de acogida, fusionados"
 
 #, python-format
 msgid "Host has tag <b>%s</b>"
@@ -21724,6 +21736,10 @@ msgstr "Estadísticas de los anfitriones"
 msgid "Host status"
 msgstr "Estado de los anfitriones"
 
+#, fuzzy
+msgid "Host tag"
+msgstr "Etiqueta de anfitrión:"
+
 msgid "Host tag:"
 msgstr "Etiqueta de anfitrión:"
 
@@ -21759,9 +21775,6 @@ msgstr "Comentarios del anfitrión y del servicio"
 msgid "Host- or DNS name"
 msgstr "Nombre de host o DNS"
 
-msgid "Host-/Servicegroups"
-msgstr "Grupos de servidores/anfitriones"
-
 msgid "Host/Device temperature"
 msgstr "Temperatura del host/dispositivo"
 
@@ -21770,6 +21783,10 @@ msgstr "Anfitrión/Servicio"
 
 msgid "Host/Service state"
 msgstr "Estado del host/servicio"
+
+#, fuzzy
+msgid "Host/service groups"
+msgstr "Grupos de servidores/anfitriones"
 
 msgid "Host:"
 msgstr "Anfitrión:"
@@ -21783,21 +21800,6 @@ msgstr "Dirección de correo electrónico"
 
 msgid "Hostalias"
 msgstr "Hostalias"
-
-msgid "Hostgroup"
-msgstr "Grupo de acogida"
-
-msgid "Hostgroup alias"
-msgstr "Alias del grupo de host"
-
-msgid "Hostgroup name"
-msgstr "Nombre del grupo anfitrión"
-
-msgid "Hostgroups"
-msgstr "Grupos de acogida"
-
-msgid "Hostgroups, merged"
-msgstr "Grupos de acogida, fusionados"
 
 msgid "Hostname"
 msgstr "Nombre de host"
@@ -21895,7 +21897,8 @@ msgstr ""
 "poner hosts que pertenecen juntos en un grupo de hosts para hacer posible "
 "que aparezcan juntos en la GUI de estado."
 
-msgid "Hosts colored according to state (Host Group)"
+#, fuzzy
+msgid "Hosts colored according to state (host group)"
 msgstr "Anfitriones coloreados según el estado (Grupo de Anfitriones)"
 
 msgid ""
@@ -24990,7 +24993,7 @@ msgstr "Clave de integración"
 #, fuzzy
 msgid ""
 "Interactive search field for direct access to monitoring instances (hosts, "
-"services, host- and servicegroups).<br>You can use the following filters: "
+"services, host and service groups).<br>You can use the following filters: "
 "<i>h:</i> Host,<br> <i>s:</i> Service, <i>hg:</i> Host group, <i>sg:</i> "
 "Service group,<br><i>ad:</i> Address, <i>al:</i> Alias, <i>tg:</i> Host tag, "
 "<i>hl:</i> Host label, <i>sl:</i> Service label"
@@ -32413,16 +32416,20 @@ msgstr "Número de saltos"
 msgid "Number of hosts"
 msgstr "Número de anfitriones"
 
-msgid "Number of hosts in state DOWN (Host Group)"
+#, fuzzy
+msgid "Number of hosts in state DOWN (host group)"
 msgstr "Número de hosts en estado ABAJO (Grupo de hosts)"
 
-msgid "Number of hosts in state PENDING (Host Group)"
+#, fuzzy
+msgid "Number of hosts in state PENDING (host group)"
 msgstr "Número de hosts en estado PENDIENTE (Grupo de hosts)"
 
-msgid "Number of hosts in state UNREACH (Host Group)"
+#, fuzzy
+msgid "Number of hosts in state UNREACH (host group)"
 msgstr "Número de anfitriones en el estado UNREACH (Grupo de anfitriones)"
 
-msgid "Number of hosts in state UP (Host Group)"
+#, fuzzy
+msgid "Number of hosts in state UP (host group)"
 msgstr "Número de hosts en estado UP (Grupo de hosts)"
 
 msgid "Number of hosts to handle at once"
@@ -32575,55 +32582,67 @@ msgstr "Número de paquetes enviados por informe"
 msgid "Number of services"
 msgstr "Número de servicios"
 
-msgid "Number of services (Host Group)"
+#, fuzzy
+msgid "Number of services (host group)"
 msgstr "Número de servicios (Grupo anfitrión)"
 
-msgid "Number of services (Service Group)"
+#, fuzzy
+msgid "Number of services (service group)"
 msgstr "Número de servicios (Grupo de Servicios)"
 
 msgid "Number of services in state CRIT"
 msgstr "Número de servicios en el estado CRIT"
 
-msgid "Number of services in state CRIT (Host Group)"
+#, fuzzy
+msgid "Number of services in state CRIT (host group)"
 msgstr "Número de servicios en el estado CRIT (Grupo de acogida)"
 
-msgid "Number of services in state CRIT (Service Group)"
+#, fuzzy
+msgid "Number of services in state CRIT (service group)"
 msgstr "Número de servicios en el CRIT estatal (grupo de servicios)"
 
 msgid "Number of services in state OK"
 msgstr "Número de servicios en el estado OK"
 
-msgid "Number of services in state OK (Host Group)"
+#, fuzzy
+msgid "Number of services in state OK (host group)"
 msgstr "Número de servicios en el estado OK (Grupo de acogida)"
 
-msgid "Number of services in state OK (Service Group)"
+#, fuzzy
+msgid "Number of services in state OK (service group)"
 msgstr "Número de servicios en el estado OK (Grupo de Servicios)"
 
 msgid "Number of services in state PENDING"
 msgstr "Número de servicios en el estado PENDIENTE"
 
-msgid "Number of services in state PENDING (Host Group)"
+#, fuzzy
+msgid "Number of services in state PENDING (host group)"
 msgstr "Número de servicios en estado PENDIENTE (Grupo anfitrión)"
 
-msgid "Number of services in state PENDING (Service Group)"
+#, fuzzy
+msgid "Number of services in state PENDING (service group)"
 msgstr "Número de servicios en el estado PENDIENTE (Grupo de Servicios)"
 
 msgid "Number of services in state UNKNOWN"
 msgstr "Número de servicios en el estado DESCONOCIDO"
 
-msgid "Number of services in state UNKNOWN (Host Group)"
+#, fuzzy
+msgid "Number of services in state UNKNOWN (host group)"
 msgstr "Número de servicios en estado UNKNOWN (Grupo anfitrión)"
 
-msgid "Number of services in state UNKNOWN (Service Group)"
+#, fuzzy
+msgid "Number of services in state UNKNOWN (service group)"
 msgstr "Número de servicios en el estado UNKNOWN (Grupo de Servicios)"
 
 msgid "Number of services in state WARN"
 msgstr "Número de servicios en el estado WARN"
 
-msgid "Number of services in state WARN (Host Group)"
+#, fuzzy
+msgid "Number of services in state WARN (host group)"
 msgstr "Número de servicios en el estado WARN (Grupo de acogida)"
 
-msgid "Number of services in state WARN (Service Group)"
+#, fuzzy
+msgid "Number of services in state WARN (service group)"
 msgstr "Número de servicios en el estado WARN (grupo de servicios)"
 
 msgid "Number of shared and exclusive locks"
@@ -39418,7 +39437,7 @@ msgstr "Buscar todo el subárbol por debajo del DN base"
 #, fuzzy
 msgid ""
 "Search with regular expressions for menu entries, \n"
-"hosts, services or host- and servicegroups.\n"
+"hosts, services or host and service groups.\n"
 "\n"
 "You can use the following filters:\n"
 "h: Host\n"
@@ -39962,15 +39981,6 @@ msgstr "Gráficos de servicio"
 msgid "Service Graphs with Timerange Previews"
 msgstr "Gráficos de servicio con previsiones de intervalo de tiempo"
 
-msgid "Service Group"
-msgstr "Grupo de servicios"
-
-msgid "Service Group Name"
-msgstr "Nombre del grupo de servicios"
-
-msgid "Service Groups"
-msgstr "Grupos de servicios"
-
 msgid "Service Labels"
 msgstr "Etiquetas de servicio"
 
@@ -40146,11 +40156,27 @@ msgstr "El servicio entra en estado desconocido"
 msgid "Service goes into warning state"
 msgstr "El servicio entra en estado de alerta"
 
+#, fuzzy
+msgid "Service group"
+msgstr "Grupos de servicios"
+
+#, fuzzy
+msgid "Service group alias"
+msgstr "Alias del grupo de servicio"
+
+#, fuzzy
+msgid "Service group name"
+msgstr "Nombre del grupo de servicios"
+
 msgid "Service groups"
 msgstr "Grupos de servicios"
 
 msgid "Service groups the service is member of"
 msgstr "Grupos de servicios a los que pertenece el servicio"
+
+#, fuzzy
+msgid "Service groups, merged"
+msgstr "Grupos de servicios, fusionados"
 
 msgid "Service hover menu shown in BI visualization"
 msgstr "El menú de servicio que se muestra en la visualización de BI"
@@ -40306,21 +40332,6 @@ msgstr "Servicio: "
 msgid "ServiceNow URL"
 msgstr "URL de ServiceNow"
 
-msgid "Servicegroup"
-msgstr "Grupo de servicios"
-
-msgid "Servicegroup alias"
-msgstr "Alias del grupo de servicio"
-
-msgid "Servicegroup name"
-msgstr "Nombre del grupo de servicios"
-
-msgid "Servicegroups"
-msgstr "Grupos de servicio"
-
-msgid "Servicegroups, merged"
-msgstr "Grupos de servicios, fusionados"
-
 msgid "Servicelevel"
 msgstr "Nivel de servicio"
 
@@ -40333,7 +40344,8 @@ msgstr "Servicios (expresiones regulares)"
 msgid "Services colored according to state"
 msgstr "Servicios coloreados según el estado"
 
-msgid "Services colored according to state (Service Group)"
+#, fuzzy
+msgid "Services colored according to state (service group)"
 msgstr "Servicios coloreados según el estado (Grupo de Servicios)"
 
 msgid "Services grouped by host groups"
@@ -63675,6 +63687,36 @@ msgstr "z/OS"
 #, fuzzy, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "2020 tribe29 GmbH. Todos los derechos reservados."
+
+#~ msgid "Host Group"
+#~ msgstr "Grupo anfitrión"
+
+#~ msgid "Host Group Name"
+#~ msgstr "Nombre del grupo anfitrión"
+
+#~ msgid "Host Groups"
+#~ msgstr "Grupos de acogida"
+
+#~ msgid "Hostgroup"
+#~ msgstr "Grupo de acogida"
+
+#~ msgid "Hostgroups"
+#~ msgstr "Grupos de acogida"
+
+#~ msgid "Service Group"
+#~ msgstr "Grupo de servicios"
+
+#~ msgid "Service Group Name"
+#~ msgstr "Nombre del grupo de servicios"
+
+#~ msgid "Service Groups"
+#~ msgstr "Grupos de servicios"
+
+#~ msgid "Servicegroup"
+#~ msgstr "Grupo de servicios"
+
+#~ msgid "Servicegroups"
+#~ msgstr "Grupos de servicio"
 
 #~ msgid "Administration Tool (WATO)"
 #~ msgstr "Herramienta de administración (WATO)"

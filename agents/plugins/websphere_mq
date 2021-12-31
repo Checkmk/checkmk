@@ -82,18 +82,18 @@ else
             # Muster: Anzahl eingehender Messages $a auf $t Max-Queues $b
             # wwi -------------------------
 
-            if [ "$a" == "" ] || [ "$a" == " " ]; then
+            if [ "$a" = "" ] || [ "$a" = " " ]; then
                a=" 0"
                t=" $t"
                c="CURDEPTH(0)LGETDATE()LGETTIME()"
             fi
 
-            if [ "$b" == "" ]|| [ "$b" == " " ]; then
+            if [ "$b" = "" ]|| [ "$b" = " " ]; then
                b=0
                c="CURDEPTH(0)LGETDATE()LGETTIME()"
             fi
 
-            if [ "$c" == "" ]|| [ "$c" == " " ]; then
+            if [ "$c" = "" ]|| [ "$c" = " " ]; then
                c="CURDEPTH(0)LGETDATE()LGETTIME()"
             fi
 
@@ -106,6 +106,6 @@ fi
 if type dspmq > /dev/null; then
     echo "<<<websphere_mq_instance:sep(41)>>>"
     dspmq -x
-    echo "MQv"$(dspmqver|grep -e Version -e ^Level -e Mode|awk -v FS=":" '{print $2","}'|tr -d ' '|tr -d '\n'|sed 's/,$/;/g')
+    echo "MQv$(dspmqver|grep -e Version -e ^Level -e Mode|awk -v FS=":" '{print $2","}'|tr -d ' '|tr -d '\n'|sed 's/,$/;/g')"
     dspmq -o all
 fi

@@ -35,8 +35,6 @@ import traceback
 import urllib.error
 import urllib.request
 
-from cmk.utils.exceptions import MKException
-
 
 def usage():
     sys.stderr.write(
@@ -57,10 +55,6 @@ OPTIONS:
   --debug                       Debug mode: let Python exceptions come through
 """
     )
-
-
-class RequestError(MKException):
-    pass
 
 
 def get_upnp_info(control, namespace, action, base_urls, opt_debug):
@@ -105,7 +99,7 @@ def get_upnp_info(control, namespace, action, base_urls, opt_debug):
                 sys.stdout.write("----------------------------\n")
                 sys.stdout.write(traceback.format_exc())
                 sys.stdout.write("============================\n")
-            raise RequestError("Error during UPNP call")
+            raise
 
     infos = handle.info()
     contents = handle.read().decode("utf-8")
@@ -126,7 +120,7 @@ def get_upnp_info(control, namespace, action, base_urls, opt_debug):
         "<u:%sResponse[^>]+>(.*)</u:%sResponse>" % (action, action), contents, re.M | re.S
     )
     if not match:
-        raise Exception("Response is not parsable")
+        raise ValueError("Response not parsable")
     response = match.group(1)
     matches = re.findall("<([^>]+)>([^<]+)<[^>]+>", response, re.M | re.S)
 

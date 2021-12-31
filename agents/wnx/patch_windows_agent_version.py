@@ -11,6 +11,7 @@
 import re
 import sys
 
+print(f"Windows agent version to be set to '{sys.argv[1]}' in file '{sys.argv[2]}'")
 content = ""
 with open(sys.argv[1], "r") as f:
     content = f.read()
@@ -19,3 +20,5 @@ with open(sys.argv[1], "w") as f:
     pattern = r'(^#define CMK_WIN_AGENT_VERSION )("[^"]*")'
     ret = re.sub(pattern, f'\\1"{sys.argv[2]}"', content)
     f.write(ret)
+
+print("Windows agent version has been set successfully")

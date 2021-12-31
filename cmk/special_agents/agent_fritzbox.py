@@ -31,12 +31,13 @@ import argparse
 import logging
 import pprint
 import re
-import socket
 import sys
 import traceback
-import urllib.error
-import urllib.request
-from typing import Final
+from typing import Final, Mapping
+
+import requests
+
+from cmk.special_agents.utils import vcrtrace
 
 _QUERIES: Final = (
     ("WANIPConn1", "urn:schemas-upnp-org:service:WANIPConnection:1", "GetStatusInfo"),
@@ -78,6 +79,7 @@ def parse_arguments(argv):
         action="store_true",
         help="debug mode: let Python exceptions come through",
     )
+    parser.add_argument("--vcrtrace", action=vcrtrace())
     parser.add_argument("-v", "--verbose", action="store_true", help="verbose mode")
     parser.add_argument(
         "-t",
@@ -103,63 +105,68 @@ def setup_logging(verbose: bool) -> None:
     )
 
 
-def get_upnp_info(control, namespace, action, base_urls):
-    headers = {
-        "User-agent": "Check_MK agent_fritzbox",
-        "Content-Type": "text/xml",
-        "SoapAction": namespace + "#" + action,
-    }
+class FritzConnection:
+    def __init__(self, host_address: str, timeout: int) -> None:
+        # Fritz!Box with firmware >= 6.0 use a new url.
+        # Try the newer one first and switch if needed
+        self._urlidx = 0
+        self._urls: Final = (
+            f"http://{host_address}:49000/upnp",
+            f"http://{host_address}:49000/igdupnp",
+        )
+        self._timeout = timeout
+        self._session = requests.Session()
+        self._session.headers.update(
+            {
+                "User-agent": "Check_MK agent_fritzbox",
+                "Content-Type": "text/xml",
+            }
+        )
+
+    def post(self, url: str, data: str, headers: Mapping[str, str]) -> requests.Response:
+        return self._session.post(
+            f"{self._urls[self._urlidx]}{url}", data=data, headers=headers, timeout=self._timeout
+        )
+
+    def toggle_base_url(self) -> None:
+        self._urlidx = 1 - self._urlidx
+
+
+def get_upnp_info(control: str, namespace: str, action: str, connection: FritzConnection):
 
     data = _SOAP_TEMPLATE % (action, namespace)
 
-    # Fritz!Box with firmware >= 6.0 use a new url. We try the newer one first and
-    # try the other one, when the first one did not succeed.
-    for base_url in base_urls[:]:
-        url = base_url + "/control/" + control
-        logging.debug("URL: %s", url)
-        logging.debug("SoapAction: %s", headers["SoapAction"])
+    for _retry in (0, 1):
         try:
-            req = urllib.request.Request(url, data.encode("utf-8"), headers)
-            handle = urllib.request.urlopen(req)
+            response = connection.post(
+                f"/control/{control}", data, {"SoapAction": namespace + "#" + action}
+            )
+            response.raise_for_status()
             break  # got a good response
-        except urllib.error.HTTPError as e:
-            if e.code == 500:
-                # Is the result when the old URL can not be found, continue in this
-                # case and revert the order of base urls in the hope that the other
+        except requests.exceptions.HTTPError:
+            if response.status_code == 500:
+                # old URL can not be found, select other base url in the hope that the other
                 # url gets a successful result to have only one try on future requests
-                # during an agent execution
-                base_urls.reverse()
-                continue
+                connection.toggle_base_url()
         except Exception:
             logging.debug(traceback.format_exc())
             raise
 
-    infos = handle.info()
-    contents = handle.read().decode("utf-8")
-
-    parts = infos["SERVER"].split("UPnP/1.0 ")[1].split(" ")
-    g_device = " ".join(parts[:-1])
-    g_version = parts[-1]
-
-    logging.debug("Server: %s", infos["SERVER"])
-    logging.debug("%r", contents)
+    device, version = response.headers["SERVER"].split("UPnP/1.0 ")[1].rsplit(" ", 1)
 
     # parse the response body
-    match = re.search(
-        "<u:%sResponse[^>]+>(.*)</u:%sResponse>" % (action, action), contents, re.M | re.S
-    )
-    if not match:
+    if (
+        match := re.search(
+            "<u:%sResponse[^>]+>(.*)</u:%sResponse>" % (action, action), response.text, re.M | re.S
+        )
+    ) is None:
         raise ValueError("Response not parsable")
-    response = match.group(1)
-    matches = re.findall("<([^>]+)>([^<]+)<[^>]+>", response, re.M | re.S)
 
-    attrs = {}
-    for key, val in matches:
-        attrs[key] = val
+    attrs = dict(re.findall("<([^>]+)>([^<]+)<[^>]+>", match.group(1), re.M | re.S))
 
     logging.debug("Parsed:\n%s", pprint.pformat(attrs))
 
-    return attrs, g_device, g_version
+    return attrs, device, version
 
 
 def main(sys_argv=None):
@@ -169,18 +176,14 @@ def main(sys_argv=None):
     args = parse_arguments(sys_argv)
     setup_logging(args.verbose)
 
-    socket.setdefaulttimeout(args.timeout)
-    base_urls = [
-        f"http://{args.host_address}:49000/upnp",
-        f"http://{args.host_address}:49000/igdupnp",
-    ]
+    connection = FritzConnection(args.host_address, args.timeout)
     g_device, g_version = "", ""
 
     try:
         status = {}
         for control, namespace, action in _QUERIES:
             try:
-                attrs, g_device, g_version = get_upnp_info(control, namespace, action, base_urls)
+                attrs, g_device, g_version = get_upnp_info(control, namespace, action, connection)
             except Exception:
                 if args.debug:
                     raise

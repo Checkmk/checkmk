@@ -25,8 +25,9 @@
 #
 # http://fritz.box:49000/igddslSCPD.xml
 # get_upnp_info('WANDSLLinkC1', 'urn:schemas-upnp-org:service:WANDSLLinkConfig:1', 'GetDSLLinkInfo')
+"""Checkmk special agent Fritz!Box"""
 
-import getopt
+import argparse
 import pprint
 import re
 import socket
@@ -36,25 +37,29 @@ import urllib.error
 import urllib.request
 
 
-def usage():
-    sys.stderr.write(
-        """Check_MK Fritz!Box Agent
+def parse_arguments(argv):
+    parser = argparse.ArgumentParser(description=__doc__)
 
-USAGE: agent_fritzbox [OPTIONS] HOST
-       agent_fritzbox -h
-
-ARGUMENTS:
-  HOST                          Host name or IP address of your Fritz!Box
-
-OPTIONS:
-  -h, --help                    Show this help message and exit
-  -t, --timeout SEC             Set the network timeout to <SEC> seconds.
-                                Default is 10 seconds. Note: the timeout is not
-                                applied to the whole check, instead it is used for
-                                each API query.
-  --debug                       Debug mode: let Python exceptions come through
-"""
+    parser.add_argument(
+        "--debug",
+        action="store_true",
+        help="debug mode: let Python exceptions come through",
     )
+    parser.add_argument(
+        "-t",
+        "--timeout",
+        metavar="SEC",
+        type=int,
+        default=10,
+        help="set the timeout for each query to <SEC> seconds (default: 10)",
+    )
+    parser.add_argument(
+        "host_address",
+        metavar="HOST",
+        help="host name or IP address of your Fritz!Box",
+    )
+
+    return parser.parse_args(argv)
 
 
 def get_upnp_info(control, namespace, action, base_urls, opt_debug):
@@ -138,39 +143,13 @@ def main(sys_argv=None):
     if sys_argv is None:
         sys_argv = sys.argv[1:]
 
-    short_options = "h:t:d"
-    long_options = ["help", "timeout=", "debug"]
+    args = parse_arguments(sys_argv)
 
-    host_address = None
-    opt_debug = False
-    opt_timeout = 10
-
-    try:
-        opts, args = getopt.getopt(sys_argv, short_options, long_options)
-    except getopt.GetoptError as err:
-        sys.stderr.write("%s\n" % err)
-        return 1
-
-    for o, a in opts:
-        if o in ["--debug"]:
-            opt_debug = True
-        elif o in ["-t", "--timeout"]:
-            opt_timeout = int(a)
-        elif o in ["-h", "--help"]:
-            usage()
-            sys.exit(0)
-
-    if len(args) == 1:
-        host_address = args[0]
-    elif not args:
-        sys.stderr.write("ERROR: No host given.\n")
-        return 1
-    else:
-        sys.stderr.write("ERROR: Please specify exactly one host.\n")
-        return 1
-
-    socket.setdefaulttimeout(opt_timeout)
-    base_urls = ["http://%s:49000/upnp" % host_address, "http://%s:49000/igdupnp" % host_address]
+    socket.setdefaulttimeout(args.timeout)
+    base_urls = [
+        f"http://{args.host_address}:49000/upnp",
+        f"http://{args.host_address}:49000/igdupnp",
+    ]
     g_device, g_version = "", ""
 
     try:
@@ -196,10 +175,10 @@ def main(sys_argv=None):
         ]:
             try:
                 attrs, g_device, g_version = get_upnp_info(
-                    _control, _namespace, _action, base_urls, opt_debug
+                    _control, _namespace, _action, base_urls, args.debug
                 )
             except Exception:
-                if opt_debug:
+                if args.debug:
                     raise
             else:
                 status.update(attrs)
@@ -211,9 +190,13 @@ def main(sys_argv=None):
             sys.stdout.write("%s %s\n" % pair)
 
     except Exception:
-        if opt_debug:
+        if args.debug:
             raise
         sys.stderr.write("Unhandled error: %s" % traceback.format_exc())
 
     sys.stdout.write("<<<check_mk>>>\n")
     sys.stdout.write("AgentOS: FRITZ!OS\n")
+
+
+if __name__ == "__main__":
+    main()

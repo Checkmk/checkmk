@@ -28,6 +28,7 @@
 """Checkmk special agent Fritz!Box"""
 
 import argparse
+import logging
 import pprint
 import re
 import socket
@@ -45,6 +46,7 @@ def parse_arguments(argv):
         action="store_true",
         help="debug mode: let Python exceptions come through",
     )
+    parser.add_argument("-v", "--verbose", action="store_true", help="verbose mode")
     parser.add_argument(
         "-t",
         "--timeout",
@@ -60,6 +62,13 @@ def parse_arguments(argv):
     )
 
     return parser.parse_args(argv)
+
+
+def setup_logging(verbose: bool) -> None:
+    logging.basicConfig(
+        level=logging.DEBUG if verbose else logging.ERROR,
+        format="%(levelname)s: %(message)s",
+    )
 
 
 def get_upnp_info(control, namespace, action, base_urls, opt_debug):
@@ -83,11 +92,9 @@ def get_upnp_info(control, namespace, action, base_urls, opt_debug):
     # try the other one, when the first one did not succeed.
     for base_url in base_urls[:]:
         url = base_url + "/control/" + control
+        logging.debug("URL: %s", url)
+        logging.debug("SoapAction: %s", headers["SoapAction"])
         try:
-            if opt_debug:
-                sys.stdout.write("============================\n")
-                sys.stdout.write("URL: %s\n" % url)
-                sys.stdout.write("SoapAction: %s\n" % headers["SoapAction"])
             req = urllib.request.Request(url, data.encode("utf-8"), headers)
             handle = urllib.request.urlopen(req)
             break  # got a good response
@@ -100,10 +107,7 @@ def get_upnp_info(control, namespace, action, base_urls, opt_debug):
                 base_urls.reverse()
                 continue
         except Exception:
-            if opt_debug:
-                sys.stdout.write("----------------------------\n")
-                sys.stdout.write(traceback.format_exc())
-                sys.stdout.write("============================\n")
+            logging.debug(traceback.format_exc())
             raise
 
     infos = handle.info()
@@ -113,12 +117,8 @@ def get_upnp_info(control, namespace, action, base_urls, opt_debug):
     g_device = " ".join(parts[:-1])
     g_version = parts[-1]
 
-    if opt_debug:
-        sys.stdout.write("----------------------------\n")
-        sys.stdout.write("Server: %s\n" % infos["SERVER"])
-        sys.stdout.write("----------------------------\n")
-        sys.stdout.write(contents + "\n")
-        sys.stdout.write("============================\n")
+    logging.debug("Server: %s", infos["SERVER"])
+    logging.debug("%r", contents)
 
     # parse the response body
     match = re.search(
@@ -133,8 +133,7 @@ def get_upnp_info(control, namespace, action, base_urls, opt_debug):
     for key, val in matches:
         attrs[key] = val
 
-    if opt_debug:
-        sys.stdout.write("Parsed: %s\n" % pprint.pformat(attrs))
+    logging.debug("Parsed:\n%s", pprint.pformat(attrs))
 
     return attrs, g_device, g_version
 
@@ -144,6 +143,7 @@ def main(sys_argv=None):
         sys_argv = sys.argv[1:]
 
     args = parse_arguments(sys_argv)
+    setup_logging(args.verbose)
 
     socket.setdefaulttimeout(args.timeout)
     base_urls = [
@@ -192,7 +192,7 @@ def main(sys_argv=None):
     except Exception:
         if args.debug:
             raise
-        sys.stderr.write("Unhandled error: %s" % traceback.format_exc())
+        logging.error("Unhandled error: %s", traceback.format_exc())
 
     sys.stdout.write("<<<check_mk>>>\n")
     sys.stdout.write("AgentOS: FRITZ!OS\n")

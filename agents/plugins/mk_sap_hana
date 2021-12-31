@@ -354,15 +354,8 @@ QUERY
 #   '----------------------------------------------------------------------'
 
 file_exists() {
-    local path="$1"
-
-    if [ -r "$path" ]; then
-        return 0
-    else
-        return 1
-    fi
+    [ -r "${1}" ]
 }
-
 
 get_alerts_last_check_file() {
     local sid="$1"
@@ -384,15 +377,17 @@ get_last_used_check_file() {
     local db_suffix="$2"
     local old_last_check_file
 
-    if $(file_exists "$alerts_last_check_file"); then
+    if file_exists "$alerts_last_check_file"; then
          echo "$alerts_last_check_file"
-    else
-        # check if the old alerts_last_check file without tenant info is present, hence script is running the first time since the version update
-        old_last_check_file=$(echo ${alerts_last_check_file} | sed -e "s/${db_suffix}\././")  # tenant and instance can be the same, hence replace only tenant followed with a dot
+         return
+    fi
 
-        if $(file_exists "$old_last_check_file"); then
-            echo "$old_last_check_file"
-        fi
+    # check if the old alerts_last_check file without tenant info is present,
+    # hence script is running the first time since the version update
+    old_last_check_file=$(echo "${alerts_last_check_file}" | sed -e "s/${db_suffix}\././")  # tenant and instance can be the same, hence replace only tenant followed with a dot
+
+    if file_exists "$old_last_check_file"; then
+        echo "$old_last_check_file"
     fi
 }
 

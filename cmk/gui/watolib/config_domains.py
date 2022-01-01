@@ -13,7 +13,7 @@ import subprocess
 import traceback
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Sequence, Set, Tuple
+from typing import Any, Dict, Iterable, List, Optional, Set, Tuple
 
 import cmk.utils.paths
 import cmk.utils.store as store
@@ -88,21 +88,23 @@ class ConfigDomainCore(ABCConfigDomain):
         return get_configuration(*self._get_global_config_var_names()).result
 
     @classmethod
-    def generate_hosts_to_update_settings(cls, hostnames: Sequence[HostName]) -> SerializedSettings:
+    def generate_hosts_to_update_settings(cls, hostnames: Iterable[HostName]) -> SerializedSettings:
         return {"hosts_to_update": hostnames}
+
+    @classmethod
+    def generate_domain_settings(cls, hostnames: Iterable[HostName]) -> SerializedSettings:
+        return {cls.ident(): cls.generate_hosts_to_update_settings(hostnames)}
 
     @classmethod
     def get_domain_request(cls, settings: List[SerializedSettings]) -> DomainRequest:
         # The incremental activate only works, if all changes use the hosts_to_update option
-        if not any(map(lambda x: len(x.get("hosts_to_update", [])) == 0, settings)):
-            return DomainRequest(cls.ident(), cls.generate_hosts_to_update_settings([]))
+        hosts_to_update: Set[HostName] = set()
+        for setting in settings:
+            if len(setting.get("hosts_to_update", [])) == 0:
+                return DomainRequest(cls.ident(), cls.generate_hosts_to_update_settings([]))
+            hosts_to_update.update(setting["hosts_to_update"])
 
-        return DomainRequest(
-            cls.ident(),
-            cls.generate_hosts_to_update_settings(
-                list({x.get("hosts_to_update", []) for x in settings})
-            ),
-        )
+        return DomainRequest(cls.ident(), cls.generate_hosts_to_update_settings(hosts_to_update))
 
 
 @config_domain_registry.register

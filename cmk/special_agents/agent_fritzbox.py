@@ -36,6 +36,38 @@ import sys
 import traceback
 import urllib.error
 import urllib.request
+from typing import Final
+
+_QUERIES: Final = (
+    ("WANIPConn1", "urn:schemas-upnp-org:service:WANIPConnection:1", "GetStatusInfo"),
+    (
+        "WANIPConn1",
+        "urn:schemas-upnp-org:service:WANIPConnection:1",
+        "GetExternalIPAddress",
+    ),
+    (
+        "WANCommonIFC1",
+        "urn:schemas-upnp-org:service:WANCommonInterfaceConfig:1",
+        "GetAddonInfos",
+    ),
+    (
+        "WANCommonIFC1",
+        "urn:schemas-upnp-org:service:WANCommonInterfaceConfig:1",
+        "GetCommonLinkProperties",
+    ),
+    ("WANDSLLinkC1", "urn:schemas-upnp-org:service:WANDSLLinkConfig:1", "GetDSLLinkInfo"),
+)
+
+_SOAP_TEMPLATE = """
+<?xml version='1.0' encoding='utf-8'?>
+  <s:Envelope
+   s:encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'
+   xmlns:s='http://schemas.xmlsoap.org/soap/envelope/'>
+    <s:Body>
+        <u:%s xmlns:u="%s" />
+    </s:Body>
+  </s:Envelope>
+"""
 
 
 def parse_arguments(argv):
@@ -71,22 +103,14 @@ def setup_logging(verbose: bool) -> None:
     )
 
 
-def get_upnp_info(control, namespace, action, base_urls, opt_debug):
+def get_upnp_info(control, namespace, action, base_urls):
     headers = {
         "User-agent": "Check_MK agent_fritzbox",
         "Content-Type": "text/xml",
         "SoapAction": namespace + "#" + action,
     }
 
-    data = """<?xml version='1.0' encoding='utf-8'?>
-    <s:Envelope s:encodingStyle='http://schemas.xmlsoap.org/soap/encoding/' xmlns:s='http://schemas.xmlsoap.org/soap/envelope/'>
-        <s:Body>
-            <u:%s xmlns:u="%s" />
-        </s:Body>
-    </s:Envelope>""" % (
-        action,
-        namespace,
-    )
+    data = _SOAP_TEMPLATE % (action, namespace)
 
     # Fritz!Box with firmware >= 6.0 use a new url. We try the newer one first and
     # try the other one, when the first one did not succeed.
@@ -154,29 +178,9 @@ def main(sys_argv=None):
 
     try:
         status = {}
-        for _control, _namespace, _action in [
-            ("WANIPConn1", "urn:schemas-upnp-org:service:WANIPConnection:1", "GetStatusInfo"),
-            (
-                "WANIPConn1",
-                "urn:schemas-upnp-org:service:WANIPConnection:1",
-                "GetExternalIPAddress",
-            ),
-            (
-                "WANCommonIFC1",
-                "urn:schemas-upnp-org:service:WANCommonInterfaceConfig:1",
-                "GetAddonInfos",
-            ),
-            (
-                "WANCommonIFC1",
-                "urn:schemas-upnp-org:service:WANCommonInterfaceConfig:1",
-                "GetCommonLinkProperties",
-            ),
-            ("WANDSLLinkC1", "urn:schemas-upnp-org:service:WANDSLLinkConfig:1", "GetDSLLinkInfo"),
-        ]:
+        for control, namespace, action in _QUERIES:
             try:
-                attrs, g_device, g_version = get_upnp_info(
-                    _control, _namespace, _action, base_urls, args.debug
-                )
+                attrs, g_device, g_version = get_upnp_info(control, namespace, action, base_urls)
             except Exception:
                 if args.debug:
                     raise

@@ -1,6 +1,7 @@
 import os
 import subprocess
 import re
+import time
 import pytest  # type: ignore
 
 
@@ -10,6 +11,9 @@ import pytest  # type: ignore
     ("cma"),
 ])
 def test_package_built(version_path, what):
+    if what == "rpm" and time.strftime("%Y.%m.%d", time.localtime()) in version_path:
+        pytest.skip("We don't build RPM during daily builds anymore")
+
     files = os.listdir(version_path)
     count = len([e for e in files if e.startswith("check-mk-") and e.endswith("." + what)])
     assert count > 0, "Found no %s package in %s" % (what.upper(), version_path)

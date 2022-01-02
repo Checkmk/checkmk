@@ -12380,23 +12380,6 @@ msgstr "サービスをアクティブ化するための許容期間を定義し
 msgid "Define a tolerating time period for deactivating services"
 msgstr "サービスをアクティブ化するための許容期間を定義します"
 
-#, fuzzy
-msgid "Define a tolerating time period for non-initialized condition."
-msgstr "サービスをアクティブ化するための許容期間を定義します"
-
-#, fuzzy
-msgid "Define a tolerating time period for non-ready condition."
-msgstr "サービスをリロードするための許容期間を定義します"
-
-#, fuzzy
-msgid "Define a tolerating time period for non-scheduled condition."
-msgstr "サービスをリロードするための許容期間を定義します"
-
-#, fuzzy
-msgid ""
-"Define a tolerating time period for pod's containers not in ready condition."
-msgstr "サービスをアクティブ化するための許容期間を定義します"
-
 msgid "Define a tolerating time period for reloading services"
 msgstr "サービスをリロードするための許容期間を定義します"
 
@@ -50832,6 +50815,19 @@ msgstr ""
 "次のインスタンスに進む前に、インスタンスへの接続が開くのを待つ時間。設定され"
 "ていない場合、ADOのデフォルト値が使用されます。"
 
+msgid "Time until alert, if pod not initialized"
+msgstr ""
+
+msgid "Time until alert, if pod not ready"
+msgstr ""
+
+msgid "Time until alert, if pod not scheduled"
+msgstr ""
+
+#, fuzzy
+msgid "Time until alert, if pod's containers not ready"
+msgstr "サービスをアクティブ化するための許容期間を定義します"
+
 msgid "Time until license expiration"
 msgstr "ライセンスの有効期限が切れるまでの時間"
 
@@ -60269,6 +60265,21 @@ msgstr "z/OS"
 #, fuzzy, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. All Rights Reserved."
+
+#, fuzzy
+#~| msgid "Define a tolerating time period for activating services"
+#~ msgid "Define a tolerating time period for non-initialized condition."
+#~ msgstr "サービスをアクティブ化するための許容期間を定義します"
+
+#, fuzzy
+#~| msgid "Define a tolerating time period for reloading services"
+#~ msgid "Define a tolerating time period for non-ready condition."
+#~ msgstr "サービスをリロードするための許容期間を定義します"
+
+#, fuzzy
+#~| msgid "Define a tolerating time period for reloading services"
+#~ msgid "Define a tolerating time period for non-scheduled condition."
+#~ msgstr "サービスをリロードするための許容期間を定義します"
 
 #~ msgid "Host Group"
 #~ msgstr "ホストグループ"

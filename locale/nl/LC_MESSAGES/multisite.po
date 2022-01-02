@@ -12831,23 +12831,6 @@ msgstr "Definieer een tolerante periode voor het activeren van diensten"
 msgid "Define a tolerating time period for deactivating services"
 msgstr "Definieer een tolerante periode voor het activeren van diensten"
 
-#, fuzzy
-msgid "Define a tolerating time period for non-initialized condition."
-msgstr "Definieer een tolerante periode voor het activeren van diensten"
-
-#, fuzzy
-msgid "Define a tolerating time period for non-ready condition."
-msgstr "Bepaal een tolerante periode voor herlaaddiensten"
-
-#, fuzzy
-msgid "Define a tolerating time period for non-scheduled condition."
-msgstr "Bepaal een tolerante periode voor herlaaddiensten"
-
-#, fuzzy
-msgid ""
-"Define a tolerating time period for pod's containers not in ready condition."
-msgstr "Definieer een tolerante periode voor het activeren van diensten"
-
 msgid "Define a tolerating time period for reloading services"
 msgstr "Bepaal een tolerante periode voor herlaaddiensten"
 
@@ -53212,6 +53195,19 @@ msgstr ""
 "met de volgende instantie wordt begonnen. Indien niet ingesteld, wordt de "
 "standaardwaarde van ADO gebruikt."
 
+msgid "Time until alert, if pod not initialized"
+msgstr ""
+
+msgid "Time until alert, if pod not ready"
+msgstr ""
+
+msgid "Time until alert, if pod not scheduled"
+msgstr ""
+
+#, fuzzy
+msgid "Time until alert, if pod's containers not ready"
+msgstr "Definieer een tolerante periode voor het activeren van diensten"
+
 msgid "Time until license expiration"
 msgstr "Tijd tot licentievervaldatum"
 
@@ -63167,6 +63163,21 @@ msgstr "z/OS"
 #, fuzzy, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. Alle rechten voorbehouden."
+
+#, fuzzy
+#~| msgid "Define a tolerating time period for activating services"
+#~ msgid "Define a tolerating time period for non-initialized condition."
+#~ msgstr "Definieer een tolerante periode voor het activeren van diensten"
+
+#, fuzzy
+#~| msgid "Define a tolerating time period for reloading services"
+#~ msgid "Define a tolerating time period for non-ready condition."
+#~ msgstr "Bepaal een tolerante periode voor herlaaddiensten"
+
+#, fuzzy
+#~| msgid "Define a tolerating time period for reloading services"
+#~ msgid "Define a tolerating time period for non-scheduled condition."
+#~ msgstr "Bepaal een tolerante periode voor herlaaddiensten"
 
 #~ msgid "Host Group"
 #~ msgstr "Gastheer-groep"

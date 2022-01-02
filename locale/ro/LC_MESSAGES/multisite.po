@@ -12263,19 +12263,6 @@ msgstr ""
 msgid "Define a tolerating time period for deactivating services"
 msgstr ""
 
-msgid "Define a tolerating time period for non-initialized condition."
-msgstr ""
-
-msgid "Define a tolerating time period for non-ready condition."
-msgstr ""
-
-msgid "Define a tolerating time period for non-scheduled condition."
-msgstr ""
-
-msgid ""
-"Define a tolerating time period for pod's containers not in ready condition."
-msgstr ""
-
 msgid "Define a tolerating time period for reloading services"
 msgstr ""
 
@@ -49405,6 +49392,18 @@ msgstr ""
 msgid ""
 "Time to wait for a connection to an instance to open before continuing with "
 "the next instance. If unset, the default value from ADO is used."
+msgstr ""
+
+msgid "Time until alert, if pod not initialized"
+msgstr ""
+
+msgid "Time until alert, if pod not ready"
+msgstr ""
+
+msgid "Time until alert, if pod not scheduled"
+msgstr ""
+
+msgid "Time until alert, if pod's containers not ready"
 msgstr ""
 
 msgid "Time until license expiration"

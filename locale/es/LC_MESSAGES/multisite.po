@@ -12929,27 +12929,6 @@ msgstr ""
 "Definir un periodo de tiempo de tolerancia para la activación de los "
 "servicios"
 
-#, fuzzy
-msgid "Define a tolerating time period for non-initialized condition."
-msgstr ""
-"Definir un periodo de tiempo de tolerancia para la activación de los "
-"servicios"
-
-#, fuzzy
-msgid "Define a tolerating time period for non-ready condition."
-msgstr "Definir un período de tiempo tolerante para los servicios de recarga"
-
-#, fuzzy
-msgid "Define a tolerating time period for non-scheduled condition."
-msgstr "Definir un período de tiempo tolerante para los servicios de recarga"
-
-#, fuzzy
-msgid ""
-"Define a tolerating time period for pod's containers not in ready condition."
-msgstr ""
-"Definir un periodo de tiempo de tolerancia para la activación de los "
-"servicios"
-
 msgid "Define a tolerating time period for reloading services"
 msgstr "Definir un período de tiempo tolerante para los servicios de recarga"
 
@@ -53663,6 +53642,21 @@ msgstr ""
 "continuar con la siguiente instancia. Si no se establece, se utiliza el "
 "valor por defecto de ADO."
 
+msgid "Time until alert, if pod not initialized"
+msgstr ""
+
+msgid "Time until alert, if pod not ready"
+msgstr ""
+
+msgid "Time until alert, if pod not scheduled"
+msgstr ""
+
+#, fuzzy
+msgid "Time until alert, if pod's containers not ready"
+msgstr ""
+"Definir un periodo de tiempo de tolerancia para la activación de los "
+"servicios"
+
 msgid "Time until license expiration"
 msgstr "Tiempo hasta la expiración de la licencia"
 
@@ -63687,6 +63681,25 @@ msgstr "z/OS"
 #, fuzzy, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "2020 tribe29 GmbH. Todos los derechos reservados."
+
+#, fuzzy
+#~| msgid "Define a tolerating time period for activating services"
+#~ msgid "Define a tolerating time period for non-initialized condition."
+#~ msgstr ""
+#~ "Definir un periodo de tiempo de tolerancia para la activación de los "
+#~ "servicios"
+
+#, fuzzy
+#~| msgid "Define a tolerating time period for reloading services"
+#~ msgid "Define a tolerating time period for non-ready condition."
+#~ msgstr ""
+#~ "Definir un período de tiempo tolerante para los servicios de recarga"
+
+#, fuzzy
+#~| msgid "Define a tolerating time period for reloading services"
+#~ msgid "Define a tolerating time period for non-scheduled condition."
+#~ msgstr ""
+#~ "Definir un período de tiempo tolerante para los servicios de recarga"
 
 #~ msgid "Host Group"
 #~ msgstr "Grupo anfitrión"

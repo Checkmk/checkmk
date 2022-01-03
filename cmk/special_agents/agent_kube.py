@@ -748,9 +748,11 @@ def make_api_client(arguments: argparse.Namespace) -> client.ApiClient:
         config.api_key["authorization"] = arguments.token
 
     if arguments.verify_cert:
-        config.verify_ssl = False
-    else:
         config.ssl_ca_cert = os.environ.get("REQUESTS_CA_BUNDLE")
+    else:
+        logging.info("Disabling SSL certificate verification")
+        urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+        config.verify_ssl = False
 
     return client.ApiClient(config)
 

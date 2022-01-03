@@ -72,7 +72,7 @@ class DropdownFilter(Filter):
         title: Union[str, LazyString],
         sort_index: int,
         info: str,
-        query_filter: query_filters.FilterText,
+        query_filter: query_filters.TextQuery,
         options: query_filters.Options,
         link_columns: Optional[List[ColumnName]] = None,
         description: Union[None, str, LazyString] = None,
@@ -159,7 +159,7 @@ filter_registry.register(
         title=_l("Hostname"),
         sort_index=100,
         info="host",
-        query_filter=query_filters.FilterText(
+        query_filter=query_filters.TextQuery(
             ident="hostregex",
             column="host_name",
             request_var="host_regex",
@@ -176,7 +176,7 @@ filter_registry.register(
         title=_l("Hostname (exact match)"),
         sort_index=101,
         info="host",
-        query_filter=query_filters.FilterText(
+        query_filter=query_filters.TextQuery(
             ident="host", column="host_name", op="=", negateable=True
         ),
         options=[],
@@ -190,7 +190,7 @@ filter_registry.register(
         title=_l("Hostalias"),
         sort_index=102,
         info="host",
-        query_filter=query_filters.FilterText(
+        query_filter=query_filters.TextQuery(
             ident="hostalias", column="host_alias", op="~~", negateable=True
         ),
         description=_l("Search field allowing regular expressions and partial matches"),
@@ -203,7 +203,7 @@ filter_registry.register(
         title=_l("Service"),
         sort_index=200,
         info="service",
-        query_filter=query_filters.FilterText(
+        query_filter=query_filters.TextQuery(
             ident="serviceregex",
             column="service_description",
             request_var="service_regex",
@@ -220,9 +220,7 @@ filter_registry.register(
         title=_l("Service (exact match)"),
         sort_index=201,
         info="service",
-        query_filter=query_filters.FilterText(
-            ident="service", column="service_description", op="="
-        ),
+        query_filter=query_filters.TextQuery(ident="service", column="service_description", op="="),
         options=[],
         description=_l("Exact match, used for linking"),
         is_show_more=True,
@@ -235,7 +233,7 @@ filter_registry.register(
         sort_index=202,
         description=_l("Alternative display name of the service, regex match"),
         info="service",
-        query_filter=query_filters.FilterText(
+        query_filter=query_filters.TextQuery(
             ident="service_display_name",
             op="~~",
         ),
@@ -248,7 +246,7 @@ filter_registry.register(
         title=_l("Summary (Plugin output)"),
         sort_index=202,
         info="service",
-        query_filter=query_filters.FilterText(
+        query_filter=query_filters.TextQuery(
             ident="output",
             column="service_plugin_output",
             request_var="service_output",
@@ -264,7 +262,7 @@ filter_registry.register(
         sort_index=102,
         info="host",
         description=_l("Search field allowing regular expressions and partial matches"),
-        query_filter=query_filters.FilterHostnameOrAlias(),
+        query_filter=query_filters.HostnameOrAliasQuery(),
     )
 )
 
@@ -275,7 +273,7 @@ class IPAddressFilter(Filter):
         *,
         title: Union[str, LazyString],
         sort_index: int,
-        query_filter: query_filters.FilterIPAddress,
+        query_filter: query_filters.IPAddressQuery,
         link_columns: List[str],
         is_show_more: bool = False,
     ):
@@ -317,7 +315,7 @@ filter_registry.register(
         title=_l("Host address (Primary)"),
         sort_index=102,
         link_columns=["host_address"],
-        query_filter=query_filters.FilterIPAddress(
+        query_filter=query_filters.IPAddressQuery(
             ident="host_address",
             what="primary",
         ),
@@ -330,7 +328,7 @@ filter_registry.register(
         title=_l("Host address (IPv4)"),
         sort_index=102,
         link_columns=[],
-        query_filter=query_filters.FilterIPAddress(
+        query_filter=query_filters.IPAddressQuery(
             ident="host_ipv4_address",
             what="ipv4",
         ),
@@ -342,7 +340,7 @@ filter_registry.register(
         title=_l("Host address (IPv6)"),
         sort_index=102,
         link_columns=[],
-        query_filter=query_filters.FilterIPAddress(
+        query_filter=query_filters.IPAddressQuery(
             ident="host_ipv6_address",
             what="ipv6",
         ),
@@ -354,7 +352,7 @@ filter_registry.register(
         title=_l("Host address family (Primary)"),
         sort_index=103,
         info="host",
-        query_filter=query_filters.FilterSingleOption(
+        query_filter=query_filters.SingleOptionQuery(
             ident="address_family",
             options=query_filters.ip_address_family_options(),
             filter_code=query_filters.address_family,
@@ -369,7 +367,7 @@ filter_registry.register(
         title=_l("Host address families"),
         sort_index=103,
         info="host",
-        query_filter=query_filters.FilterSingleOption(
+        query_filter=query_filters.SingleOptionQuery(
             ident="address_families",
             options=query_filters.ip_address_families_options(),
             filter_code=query_filters.address_families,
@@ -385,7 +383,7 @@ filter_registry.register(
         sort_index=105,
         description=_l("Selection of multiple host groups"),
         info="host",
-        query_filter=query_filters.FilterMultiple(
+        query_filter=query_filters.MultipleQuery(
             ident="hostgroups", column="host_groups", op=">=", negateable=True
         ),
         options=sites.all_groups,
@@ -398,7 +396,7 @@ filter_registry.register(
         sort_index=205,
         description=_l("Selection of multiple service groups"),
         info="service",
-        query_filter=query_filters.FilterMultiple(
+        query_filter=query_filters.MultipleQuery(
             ident="servicegroups", column="service_groups", op=">=", negateable=True
         ),
         options=sites.all_groups,
@@ -419,7 +417,7 @@ class FilterGroupCombo(AjaxDropdownFilter):
         title: Union[str, LazyString],
         sort_index: int,
         group_type: GroupType,
-        query_filter: query_filters.FilterText,
+        query_filter: query_filters.TextQuery,
         description: Union[None, str, LazyString] = None,
     ) -> None:
         self.query_filter = query_filter
@@ -465,7 +463,7 @@ filter_registry.register(
         title=_l("Host is in Group"),
         sort_index=104,
         description=_l("Optional selection of host group"),
-        query_filter=query_filters.FilterMultiple(
+        query_filter=query_filters.MultipleQuery(
             ident="opthostgroup",
             request_var="opthost_group",
             column="host_groups",
@@ -481,7 +479,7 @@ filter_registry.register(
         title=_l("Service is in Group"),
         sort_index=204,
         description=_l("Optional selection of service group"),
-        query_filter=query_filters.FilterMultiple(
+        query_filter=query_filters.MultipleQuery(
             ident="optservicegroup",
             request_var="optservice_group",
             column="service_groups",
@@ -497,7 +495,7 @@ filter_registry.register(
         title=_l("Host Contact Group"),
         sort_index=106,
         description=_l("Optional selection of host contact group"),
-        query_filter=query_filters.FilterMultiple(
+        query_filter=query_filters.MultipleQuery(
             ident="opthost_contactgroup",
             request_var="opthost_contact_group",
             column="host_contact_groups",
@@ -513,7 +511,7 @@ filter_registry.register(
         title=_l("Service Contact Group"),
         sort_index=206,
         description=_l("Optional selection of service contact group"),
-        query_filter=query_filters.FilterMultiple(
+        query_filter=query_filters.MultipleQuery(
             ident="optservice_contactgroup",
             request_var="optservice_contact_group",
             column="service_contact_groups",
@@ -529,7 +527,7 @@ filter_registry.register(
         title=_l("Host Contact"),
         sort_index=107,
         info="host",
-        query_filter=query_filters.FilterText(ident="host_ctc", column="host_contacts", op=">="),
+        query_filter=query_filters.TextQuery(ident="host_ctc", column="host_contacts", op=">="),
         is_show_more=True,
     )
 )
@@ -539,7 +537,7 @@ filter_registry.register(
         title=_l("Host Contact (Regex)"),
         sort_index=107,
         info="host",
-        query_filter=query_filters.FilterText(
+        query_filter=query_filters.TextQuery(
             ident="host_ctc_regex", column="host_contacts", op="~~"
         ),
         is_show_more=True,
@@ -551,7 +549,7 @@ filter_registry.register(
         title=_l("Service Contact"),
         sort_index=207,
         info="service",
-        query_filter=query_filters.FilterText(
+        query_filter=query_filters.TextQuery(
             ident="service_ctc", column="service_contacts", op=">="
         ),
         is_show_more=True,
@@ -563,7 +561,7 @@ filter_registry.register(
         title=_l("Service Contact (Regex)"),
         sort_index=207,
         info="service",
-        query_filter=query_filters.FilterText(
+        query_filter=query_filters.TextQuery(
             ident="service_ctc_regex",
             column="service_contacts",
             op="~~",
@@ -579,7 +577,7 @@ filter_registry.register(
         description=_l("Selection of the host group"),
         info="hostgroup",
         options=[],
-        query_filter=query_filters.FilterText(
+        query_filter=query_filters.TextQuery(
             ident="hostgroup",
             column="hostgroup_name",
             op="=",
@@ -594,7 +592,7 @@ filter_registry.register(
         description=_l("Selection of the service group"),
         info="servicegroup",
         options=[],
-        query_filter=query_filters.FilterText(
+        query_filter=query_filters.TextQuery(
             ident="servicegroup",
             column="servicegroup_name",
             op="=",
@@ -610,7 +608,7 @@ filter_registry.register(
             "Search field allowing regular expressions and partial matches on the names of host groups"
         ),
         info="hostgroup",
-        query_filter=query_filters.FilterText(
+        query_filter=query_filters.TextQuery(
             ident="hostgroupnameregex",
             column="hostgroup_name",
             request_var="hostgroup_regex",
@@ -625,7 +623,7 @@ filter_registry.register(
         sort_index=101,
         description=_l("Search field allowing regular expression and partial matches"),
         info="servicegroup",
-        query_filter=query_filters.FilterText(
+        query_filter=query_filters.TextQuery(
             ident="servicegroupnameregex",
             column="servicegroup_name",
             request_var="servicegroup_regex",
@@ -641,7 +639,7 @@ filter_registry.register(
         sort_index=101,
         description=_l("Exact match, used for linking"),
         info="servicegroup",
-        query_filter=query_filters.FilterText(
+        query_filter=query_filters.TextQuery(
             ident="servicegroupname",
             column="servicegroup_name",
             request_var="servicegroup_name",
@@ -656,7 +654,7 @@ filter_registry.register(
         title=_l("Host check command"),
         sort_index=110,
         info="host",
-        query_filter=query_filters.FilterCheckCommand(ident="host_check_command", op="~"),
+        query_filter=query_filters.CheckCommandQuery(ident="host_check_command", op="~"),
         options=[],
     )
 )
@@ -666,7 +664,7 @@ filter_registry.register(
         title=_l("Service check command"),
         sort_index=210,
         info="service",
-        query_filter=query_filters.FilterCheckCommand(
+        query_filter=query_filters.CheckCommandQuery(
             ident="check_command",
             op="~",
             column="service_check_command",
@@ -690,10 +688,10 @@ class FilterHostgroupProblems(CheckboxRowFilter):
             title=_l("Host groups having certain problems"),
             sort_index=103,
             info="hostgroup",
-            query_filter=query_filters.FilterMultipleOptions(
+            query_filter=query_filters.MultipleOptionsQuery(
                 ident="hostsgroups_having_problems",
                 options=self.host_problems + self.svc_problems,
-                filter_lq=query_filters.hostgroup_problems_filter,
+                livestatus_query=query_filters.hostgroup_problems_filter,
             ),
         )
 
@@ -709,10 +707,10 @@ filter_registry.register(
         title=_l("Empty host group visibilitiy"),
         sort_index=102,
         info="hostgroup",
-        query_filter=query_filters.FilterMultipleOptions(
+        query_filter=query_filters.MultipleOptionsQuery(
             ident="hostgroupvisibility",
             options=[("hostgroupshowempty", _("Show empty groups"))],
-            filter_lq=query_filters.empty_hostgroup_filter,
+            livestatus_query=query_filters.empty_hostgroup_filter,
         ),
     )
 )
@@ -723,10 +721,10 @@ filter_registry.register(
         title=_l("Service states"),
         sort_index=215,
         info="service",
-        query_filter=query_filters.FilterMultipleOptions(
+        query_filter=query_filters.MultipleOptionsQuery(
             ident="svcstate",
             options=query_filters.svc_state_options(""),
-            filter_lq=partial(query_filters.service_state_filter, ""),
+            livestatus_query=partial(query_filters.service_state_filter, ""),
         ),
     )
 )
@@ -737,10 +735,10 @@ filter_registry.register(
         sort_index=216,
         info="service",
         is_show_more=True,
-        query_filter=query_filters.FilterMultipleOptions(
+        query_filter=query_filters.MultipleOptionsQuery(
             ident="svchardstate",
             options=query_filters.svc_state_options("hd"),
-            filter_lq=partial(query_filters.service_state_filter, "hd"),
+            livestatus_query=partial(query_filters.service_state_filter, "hd"),
         ),
     )
 )
@@ -750,10 +748,10 @@ filter_registry.register(
         title=_l("Host states"),
         sort_index=115,
         info="host",
-        query_filter=query_filters.FilterMultipleOptions(
+        query_filter=query_filters.MultipleOptionsQuery(
             ident="hoststate",
             options=query_filters.host_state_options(),
-            filter_lq=query_filters.host_state_filter,
+            livestatus_query=query_filters.host_state_filter,
         ),
     )
 )
@@ -763,10 +761,10 @@ filter_registry.register(
         title=_l("Hosts having certain service problems"),
         sort_index=120,
         info="host",
-        query_filter=query_filters.FilterMultipleOptions(
+        query_filter=query_filters.MultipleOptionsQuery(
             ident="hosts_having_service_problems",
             options=query_filters.svc_problems_options("hosts_having_services_"),
-            filter_lq=query_filters.host_having_svc_problems_filter,
+            livestatus_query=query_filters.host_having_svc_problems_filter,
         ),
     )
 )
@@ -780,7 +778,7 @@ def filter_state_type_with_register(
             title=title,
             sort_index=sort_index,
             info=info,
-            query_filter=query_filters.FilterTristate(
+            query_filter=query_filters.TristateQuery(
                 ident=ident,
                 filter_code=query_filters.state_type,
                 options=query_filters.tri_state_type_options(),
@@ -810,7 +808,7 @@ filter_registry.register(
         title=_l("Has performance data"),
         sort_index=251,
         info="service",
-        query_filter=query_filters.FilterTristate(
+        query_filter=query_filters.TristateQuery(
             ident="has_performance_data", filter_code=query_filters.service_perfdata_toggle
         ),
         is_show_more=True,
@@ -823,7 +821,7 @@ filter_registry.register(
         title=_l("Host/service in downtime"),
         sort_index=232,
         info="service",
-        query_filter=query_filters.FilterTristate(
+        query_filter=query_filters.TristateQuery(
             ident="in_downtime", filter_code=query_filters.host_service_perfdata_toggle
         ),
     )
@@ -835,7 +833,7 @@ filter_registry.register(
         title=_l("Host is stale"),
         sort_index=232,
         info="host",
-        query_filter=query_filters.FilterTristate(
+        query_filter=query_filters.TristateQuery(
             ident="host_staleness", filter_code=query_filters.staleness("host")
         ),
         is_show_more=True,
@@ -848,7 +846,7 @@ filter_registry.register(
         title=_l("Service is stale"),
         sort_index=232,
         info="service",
-        query_filter=query_filters.FilterTristate(
+        query_filter=query_filters.TristateQuery(
             ident="service_staleness", filter_code=query_filters.staleness("service")
         ),
         is_show_more=True,
@@ -869,7 +867,7 @@ def filter_nagios_flag_with_register(
             title=title,
             sort_index=sort_index,
             info=info,
-            query_filter=query_filters.FilterTristate(
+            query_filter=query_filters.TristateQuery(
                 ident=ident, filter_code=query_filters.column_flag(ident)
             ),
             is_show_more=is_show_more,
@@ -986,7 +984,7 @@ class SiteFilter(Filter):
         *,
         title: Union[str, LazyString],
         sort_index: int,
-        query_filter: query_filters.Filter,
+        query_filter: query_filters.Query,
         description: Union[None, str, LazyString] = None,
         is_show_more: bool = False,
     ) -> None:
@@ -1029,7 +1027,7 @@ filter_registry.register(
     SiteFilter(
         title=_l("Site"),
         sort_index=500,
-        query_filter=query_filters.Filter(
+        query_filter=query_filters.Query(
             ident="siteopt",
             request_vars=["site"],
         ),
@@ -1041,7 +1039,7 @@ filter_registry.register(
     SiteFilter(
         title=_l("Site (enforced)"),
         sort_index=501,
-        query_filter=query_filters.Filter(ident="site", request_vars=["site"]),
+        query_filter=query_filters.Query(ident="site", request_vars=["site"]),
         description=_l("Selection of site is enforced, use this filter for joining"),
         is_show_more=True,
     )
@@ -1061,7 +1059,7 @@ filter_registry.register(
     MultipleSitesFilter(
         title=_l("Multiple Sites"),
         sort_index=502,
-        query_filter=query_filters.Filter(ident="sites", request_vars=["sites"]),
+        query_filter=query_filters.Query(ident="sites", request_vars=["sites"]),
         description=_l("Associative selection of multiple sites"),
     )
 )
@@ -1072,7 +1070,7 @@ filter_registry.register(
         title=_l("Current Host Notification Number"),
         sort_index=232,
         info="host",
-        query_filter=query_filters.FilterNumberRange(
+        query_filter=query_filters.NumberRangeQuery(
             ident="host_notif_number", column="current_notification_number"
         ),
     )
@@ -1083,7 +1081,7 @@ filter_registry.register(
         title=_l("Current Service Notification Number"),
         sort_index=232,
         info="service",
-        query_filter=query_filters.FilterNumberRange(
+        query_filter=query_filters.NumberRangeQuery(
             ident="svc_notif_number", column="current_notification_number"
         ),
     )
@@ -1094,7 +1092,7 @@ filter_registry.register(
         title=_l("Number of Services of the Host"),
         sort_index=234,
         info="host",
-        query_filter=query_filters.FilterNumberRange(
+        query_filter=query_filters.NumberRangeQuery(
             ident="host_num_services", column="num_services"
         ),
     )
@@ -1105,7 +1103,7 @@ filter_registry.register(
         title=_l("Last service state change"),
         sort_index=250,
         info="service",
-        query_filter=query_filters.FilterTime(
+        query_filter=query_filters.TimeQuery(
             ident="svc_last_state_change", column="service_last_state_change"
         ),
     )
@@ -1116,7 +1114,7 @@ filter_registry.register(
         title=_l("Last service check"),
         sort_index=251,
         info="service",
-        query_filter=query_filters.FilterTime(ident="svc_last_check", column="service_last_check"),
+        query_filter=query_filters.TimeQuery(ident="svc_last_check", column="service_last_check"),
     )
 )
 
@@ -1125,7 +1123,7 @@ filter_registry.register(
         title=_l("Last host state change"),
         sort_index=250,
         info="host",
-        query_filter=query_filters.FilterTime(ident="host_last_state_change"),
+        query_filter=query_filters.TimeQuery(ident="host_last_state_change"),
     )
 )
 
@@ -1134,7 +1132,7 @@ filter_registry.register(
         title=_l("Last host check"),
         sort_index=251,
         info="host",
-        query_filter=query_filters.FilterTime(ident="host_last_check"),
+        query_filter=query_filters.TimeQuery(ident="host_last_check"),
     )
 )
 
@@ -1143,7 +1141,7 @@ filter_registry.register(
         title=_l("Time of comment"),
         sort_index=253,
         info="comment",
-        query_filter=query_filters.FilterTime(ident="comment_entry_time"),
+        query_filter=query_filters.TimeQuery(ident="comment_entry_time"),
     )
 )
 
@@ -1152,7 +1150,7 @@ filter_registry.register(
         title=_l("Comment"),
         sort_index=258,
         info="comment",
-        query_filter=query_filters.FilterText(
+        query_filter=query_filters.TextQuery(
             ident="comment_comment",
             op="~~",
             negateable=True,
@@ -1165,7 +1163,7 @@ filter_registry.register(
         title=_l("Author comment"),
         sort_index=259,
         info="comment",
-        query_filter=query_filters.FilterText(
+        query_filter=query_filters.TextQuery(
             ident="comment_author",
             op="~~",
             negateable=True,
@@ -1178,7 +1176,7 @@ filter_registry.register(
         title=_l("Time when downtime was created"),
         sort_index=253,
         info="downtime",
-        query_filter=query_filters.FilterTime(ident="downtime_entry_time"),
+        query_filter=query_filters.TimeQuery(ident="downtime_entry_time"),
     )
 )
 
@@ -1187,7 +1185,7 @@ filter_registry.register(
         title=_l("Downtime comment"),
         sort_index=254,
         info="downtime",
-        query_filter=query_filters.FilterText(ident="downtime_comment", op="~"),
+        query_filter=query_filters.TextQuery(ident="downtime_comment", op="~"),
     )
 )
 
@@ -1196,7 +1194,7 @@ filter_registry.register(
         title=_l("Start of downtime"),
         sort_index=255,
         info="downtime",
-        query_filter=query_filters.FilterTime(ident="downtime_start_time"),
+        query_filter=query_filters.TimeQuery(ident="downtime_start_time"),
     )
 )
 
@@ -1205,7 +1203,7 @@ filter_registry.register(
         title=_l("Downtime author"),
         sort_index=256,
         info="downtime",
-        query_filter=query_filters.FilterText(ident="downtime_author", op="~"),
+        query_filter=query_filters.TextQuery(ident="downtime_author", op="~"),
     )
 )
 
@@ -1214,7 +1212,7 @@ filter_registry.register(
         title=_l("Time of log entry"),
         sort_index=252,
         info="log",
-        query_filter=query_filters.FilterTime(ident="logtime", column="log_time"),
+        query_filter=query_filters.TimeQuery(ident="logtime", column="log_time"),
     )
 )
 
@@ -1223,10 +1221,10 @@ filter_registry.register(
         title=_l("Logentry class"),
         sort_index=255,
         info="log",
-        query_filter=query_filters.FilterMultipleOptions(
+        query_filter=query_filters.MultipleOptionsQuery(
             ident="log_class",
             options=query_filters.log_class_options(),
-            filter_lq=query_filters.log_class_filter,
+            livestatus_query=query_filters.log_class_filter,
         ),
     )
 )
@@ -1237,7 +1235,7 @@ filter_registry.register(
         title=_l("Log: plugin output"),
         sort_index=202,
         info="log",
-        query_filter=query_filters.FilterText(
+        query_filter=query_filters.TextQuery(
             ident="log_plugin_output",
             op="~~",
         ),
@@ -1249,7 +1247,7 @@ filter_registry.register(
         title=_l("Log: message type"),
         sort_index=203,
         info="log",
-        query_filter=query_filters.FilterText(ident="log_type", op="~~"),
+        query_filter=query_filters.TextQuery(ident="log_type", op="~~"),
         show_heading=False,
     )
 )
@@ -1259,7 +1257,7 @@ filter_registry.register(
         title=_l('Log: state type (DEPRECATED: Use "state information")'),
         sort_index=204,
         info="log",
-        query_filter=query_filters.FilterText(ident="log_state_type", op="~~"),
+        query_filter=query_filters.TextQuery(ident="log_state_type", op="~~"),
     )
 )
 
@@ -1268,7 +1266,7 @@ filter_registry.register(
         title=_l("Log: state information"),
         sort_index=204,
         info="log",
-        query_filter=query_filters.FilterText(ident="log_state_info", op="~~"),
+        query_filter=query_filters.TextQuery(ident="log_state_info", op="~~"),
     )
 )
 
@@ -1291,7 +1289,7 @@ filter_registry.register(
         sort_index=260,
         description=_l("Exact match, used for linking"),
         info="log",
-        query_filter=query_filters.FilterText(ident="log_contact_name", op="~"),
+        query_filter=query_filters.TextQuery(ident="log_contact_name", op="~"),
     )
 )
 
@@ -1300,7 +1298,7 @@ filter_registry.register(
         title=_l("Log: contact name"),
         sort_index=261,
         info="log",
-        query_filter=query_filters.FilterText(
+        query_filter=query_filters.TextQuery(
             ident="log_contact_name_regex",
             column="log_contact_name",
             op="~~",
@@ -1314,7 +1312,7 @@ filter_registry.register(
         title=_l("Log: command"),
         sort_index=262,
         info="log",
-        query_filter=query_filters.FilterText(
+        query_filter=query_filters.TextQuery(
             ident="log_command_name_regex",
             column="log_command_name",
             op="~~",
@@ -1344,10 +1342,10 @@ class FilterLogState(CheckboxRowFilter):
             title=_l("Type of alerts of hosts and services"),
             sort_index=270,
             info="log",
-            query_filter=query_filters.FilterMultipleOptions(
+            query_filter=query_filters.MultipleOptionsQuery(
                 ident="log_state",
                 options=self.host_states + self.service_states,
-                filter_lq=query_filters.log_alerts_filter,
+                livestatus_query=query_filters.log_alerts_filter,
             ),
         )
 
@@ -1362,7 +1360,7 @@ filter_registry.register(
         title=_l("Notification phase"),
         sort_index=271,
         info="log",
-        query_filter=query_filters.FilterTristate(
+        query_filter=query_filters.TristateQuery(
             ident="log_notification_phase",
             filter_code=query_filters.log_notification_phase("log_command_name"),
             options=query_filters.tri_state_log_notifications_options(),
@@ -1381,7 +1379,7 @@ filter_registry.register(
         title=_l("Used in BI aggregate"),
         sort_index=300,
         info="service",
-        query_filter=query_filters.FilterTristate(
+        query_filter=query_filters.TristateQuery(
             ident="aggr_service_used",
             filter_code=lambda x: "",
             filter_row=bi_aggr_service_used,
@@ -1396,7 +1394,7 @@ filter_registry.register(
         title=_l("Downtime ID"),
         sort_index=301,
         info="downtime",
-        query_filter=query_filters.FilterText(ident="downtime_id", op="="),
+        query_filter=query_filters.TextQuery(ident="downtime_id", op="="),
     )
 )
 
@@ -1792,7 +1790,7 @@ def filter_starred_with_register(
             title=title,
             sort_index=sort_index,
             info=what,
-            query_filter=query_filters.FilterTristate(
+            query_filter=query_filters.TristateQuery(
                 ident=what + "_favorites",
                 filter_code=query_filters.starred(what),
             ),
@@ -1818,10 +1816,10 @@ filter_registry.register(
         title=_l("Discovery state"),
         sort_index=601,
         info="discovery",
-        query_filter=query_filters.FilterMultipleOptions(
+        query_filter=query_filters.MultipleOptionsQuery(
             ident="discovery_state",
             options=query_filters.discovery_state_options(),
-            filter_rows=partial(query_filters.discovery_state_filter_table, "discovery_state"),
+            rows_filter=partial(query_filters.discovery_state_filter_table, "discovery_state"),
         ),
     )
 )
@@ -2187,7 +2185,7 @@ filter_registry.register(
         title=_l("Event ID"),
         sort_index=200,
         info="event",
-        query_filter=query_filters.FilterText(ident="event_id", op="="),
+        query_filter=query_filters.TextQuery(ident="event_id", op="="),
     )
 )
 
@@ -2196,7 +2194,7 @@ filter_registry.register(
         title=_l("ID of rule"),
         sort_index=200,
         info="event",
-        query_filter=query_filters.FilterText(ident="event_rule_id", op="="),
+        query_filter=query_filters.TextQuery(ident="event_rule_id", op="="),
     )
 )
 
@@ -2205,7 +2203,7 @@ filter_registry.register(
         title=_l("Message/Text of event"),
         sort_index=201,
         info="event",
-        query_filter=query_filters.FilterText(ident="event_text", op="~~"),
+        query_filter=query_filters.TextQuery(ident="event_text", op="~~"),
     )
 )
 
@@ -2214,7 +2212,7 @@ filter_registry.register(
         title=_l("Application / Syslog-Tag"),
         sort_index=201,
         info="event",
-        query_filter=query_filters.FilterText(
+        query_filter=query_filters.TextQuery(
             ident="event_application",
             op="~~",
         ),
@@ -2226,7 +2224,7 @@ filter_registry.register(
         title=_l("Contact Person"),
         sort_index=201,
         info="event",
-        query_filter=query_filters.FilterText(ident="event_contact", op="~~"),
+        query_filter=query_filters.TextQuery(ident="event_contact", op="~~"),
     )
 )
 
@@ -2235,7 +2233,7 @@ filter_registry.register(
         title=_l("Comment to the event"),
         sort_index=201,
         info="event",
-        query_filter=query_filters.FilterText(ident="event_comment", op="~~"),
+        query_filter=query_filters.TextQuery(ident="event_comment", op="~~"),
     )
 )
 
@@ -2244,7 +2242,7 @@ filter_registry.register(
         title=_l("Hostname of original event"),
         sort_index=201,
         info="event",
-        query_filter=query_filters.FilterText(
+        query_filter=query_filters.TextQuery(
             ident="event_host_regex", op="~~", column="event_host"
         ),
     )
@@ -2255,7 +2253,7 @@ filter_registry.register(
         title=_l("Hostname of event, exact match"),
         sort_index=201,
         info="event",
-        query_filter=query_filters.FilterText(ident="event_host", op="="),
+        query_filter=query_filters.TextQuery(ident="event_host", op="="),
     )
 )
 
@@ -2264,7 +2262,7 @@ filter_registry.register(
         title=_l("Original IP Address of event"),
         sort_index=201,
         info="event",
-        query_filter=query_filters.FilterText(ident="event_ipaddress", op="~~"),
+        query_filter=query_filters.TextQuery(ident="event_ipaddress", op="~~"),
     )
 )
 
@@ -2273,7 +2271,7 @@ filter_registry.register(
         title=_l("Owner of event"),
         sort_index=201,
         info="event",
-        query_filter=query_filters.FilterText(ident="event_owner", op="~~"),
+        query_filter=query_filters.TextQuery(ident="event_owner", op="~~"),
     )
 )
 
@@ -2282,7 +2280,7 @@ filter_registry.register(
         title=_l("User that performed action"),
         sort_index=221,
         info="history",
-        query_filter=query_filters.FilterText(ident="history_who", op="~~"),
+        query_filter=query_filters.TextQuery(ident="history_who", op="~~"),
     )
 )
 
@@ -2291,7 +2289,7 @@ filter_registry.register(
         title=_l("Line number in history logfile"),
         sort_index=222,
         info="history",
-        query_filter=query_filters.FilterText(ident="history_line", op="="),
+        query_filter=query_filters.TextQuery(ident="history_line", op="="),
     )
 )
 
@@ -2307,7 +2305,7 @@ filter_registry.register(
         title=_l("Message count"),
         sort_index=205,
         info="event",
-        query_filter=query_filters.FilterNumberRange(ident="event_count"),
+        query_filter=query_filters.NumberRangeQuery(ident="event_count"),
     )
 )
 
@@ -2316,10 +2314,10 @@ filter_registry.register(
         title=_l("State classification"),
         sort_index=206,
         info="event",
-        query_filter=query_filters.FilterMultipleOptions(
+        query_filter=query_filters.MultipleOptionsQuery(
             ident="event_state",
             options=query_filters.svc_state_min_options("event_state_"),
-            filter_lq=partial(query_filters.options_toggled_filter, "event_state"),
+            livestatus_query=partial(query_filters.options_toggled_filter, "event_state"),
         ),
     )
 )
@@ -2329,10 +2327,10 @@ filter_registry.register(
         title=_l("Phase"),
         sort_index=207,
         info="event",
-        query_filter=query_filters.FilterMultipleOptions(
+        query_filter=query_filters.MultipleOptionsQuery(
             ident="event_phase",
             options=[("event_phase_" + var, title) for var, title in mkeventd.phase_names.items()],
-            filter_lq=partial(query_filters.options_toggled_filter, "event_phase"),
+            livestatus_query=partial(query_filters.options_toggled_filter, "event_phase"),
         ),
     )
 )
@@ -2342,10 +2340,10 @@ filter_registry.register(
         title=_l("Syslog Priority"),
         sort_index=209,
         info="event",
-        query_filter=query_filters.FilterMultipleOptions(
+        query_filter=query_filters.MultipleOptionsQuery(
             ident="event_priority",
             options=[("event_priority_%d" % e[0], e[1]) for e in mkeventd.syslog_priorities],
-            filter_lq=partial(query_filters.options_toggled_filter, "event_priority"),
+            livestatus_query=partial(query_filters.options_toggled_filter, "event_priority"),
         ),
     )
 )
@@ -2355,10 +2353,10 @@ filter_registry.register(
         title=_l("History action type"),
         sort_index=225,
         info="history",
-        query_filter=query_filters.FilterMultipleOptions(
+        query_filter=query_filters.MultipleOptionsQuery(
             ident="history_what",
             options=[("history_what_%s" % k, k) for k in mkeventd.action_whats],
-            filter_lq=partial(query_filters.options_toggled_filter, "history_what"),
+            livestatus_query=partial(query_filters.options_toggled_filter, "history_what"),
         ),
     )
 )
@@ -2368,7 +2366,7 @@ filter_registry.register(
         title=_l("First occurrence of event"),
         sort_index=220,
         info="event",
-        query_filter=query_filters.FilterTime(ident="event_first"),
+        query_filter=query_filters.TimeQuery(ident="event_first"),
     )
 )
 
@@ -2377,7 +2375,7 @@ filter_registry.register(
         title=_l("Last occurrance of event"),
         sort_index=221,
         info="event",
-        query_filter=query_filters.FilterTime(ident="event_last"),
+        query_filter=query_filters.TimeQuery(ident="event_last"),
     )
 )
 
@@ -2386,7 +2384,7 @@ filter_registry.register(
         title=_l("Time of entry in event history"),
         sort_index=222,
         info="history",
-        query_filter=query_filters.FilterTime(
+        query_filter=query_filters.TimeQuery(
             ident="history_time",
         ),
     )
@@ -2397,7 +2395,7 @@ filter_registry.register(
         title=_l("Syslog Facility"),
         sort_index=210,
         info="event",
-        query_filter=query_filters.FilterText(ident="event_facility", op="="),
+        query_filter=query_filters.TextQuery(ident="event_facility", op="="),
         options=[],
     )
 )
@@ -2407,7 +2405,7 @@ filter_registry.register(
         title=_l("Service Level at least"),
         sort_index=211,
         info="event",
-        query_filter=query_filters.FilterText(ident="event_sl", op=">="),
+        query_filter=query_filters.TextQuery(ident="event_sl", op=">="),
         options=[],
     )
 )
@@ -2417,7 +2415,7 @@ filter_registry.register(
         title=_l("Service Level at most"),
         sort_index=211,
         info="event",
-        query_filter=query_filters.FilterText(ident="event_sl_max", op="<=", column="event_sl"),
+        query_filter=query_filters.TextQuery(ident="event_sl_max", op="<=", column="event_sl"),
         options=[],
     )
 )
@@ -2430,7 +2428,7 @@ class FilterOptEventEffectiveContactgroup(FilterGroupCombo):
             title=_l("Contact group (effective)"),
             sort_index=212,
             group_type="event_effective_contact",
-            query_filter=query_filters.FilterOptEventEffectiveContactgroup(),
+            query_filter=query_filters.OptEventEffectiveContactgroupQuery(),
         )
 
     def request_vars_from_row(self, row: Row) -> Dict[str, str]:

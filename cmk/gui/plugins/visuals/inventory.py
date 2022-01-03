@@ -38,7 +38,7 @@ class FilterInvtableText(InputTextFilter):
             title=title,
             sort_index=800,
             info=inv_info,
-            query_filter=query_filters.FilterTableText(
+            query_filter=query_filters.TableTextQuery(
                 ident=ident, row_filter=query_filters.filter_by_column_textregex
             ),
             show_heading=False,
@@ -51,7 +51,7 @@ class FilterInvText(InputTextFilter):
             title=title,
             sort_index=800,
             info="host",
-            query_filter=query_filters.FilterTableText(
+            query_filter=query_filters.TableTextQuery(
                 ident=ident, row_filter=query_filters.filter_by_host_inventory(inv_path)
             ),
             show_heading=False,
@@ -68,7 +68,7 @@ class FilterInvtableTimestampAsAge(FilterNumberRange):
             title=title,
             sort_index=800,
             info=inv_info,
-            query_filter=query_filters.FilterNumberRange(
+            query_filter=query_filters.NumberRangeQuery(
                 ident=ident,
                 filter_livestatus=False,
                 filter_row=query_filters.column_age_in_range,
@@ -88,7 +88,7 @@ class FilterInvtableIDRange(FilterNumberRange):
             title=title,
             sort_index=800,
             info=inv_info,
-            query_filter=query_filters.FilterNumberRange(
+            query_filter=query_filters.NumberRangeQuery(
                 ident=ident,
                 filter_livestatus=False,
                 filter_row=query_filters.column_value_in_range,
@@ -111,7 +111,7 @@ class FilterInvFloat(FilterNumberRange):
             title=title,
             sort_index=800,
             info="host",
-            query_filter=query_filters.FilterNumberRange(
+            query_filter=query_filters.NumberRangeQuery(
                 ident=ident,
                 filter_livestatus=False,
                 filter_row=query_filters.filter_in_host_inventory_range(inv_path),
@@ -128,10 +128,10 @@ class FilterInvFloat(FilterNumberRange):
 class FilterInvtableVersion(Filter):
     def __init__(self, *, inv_info: str, ident: str, title: str) -> None:
         request_vars = [ident + "_from", ident + "_until"]
-        self.query_filter = query_filters.Filter(
+        self.query_filter = query_filters.Query(
             ident=ident,
             request_vars=request_vars,
-            filter_rows=partial(query_filters.version_in_range, ident, request_vars),
+            rows_filter=partial(query_filters.version_in_range, ident, request_vars),
         )
         super().__init__(
             ident=self.query_filter.ident,
@@ -159,7 +159,7 @@ class FilterInvtableOperStatus(CheckboxRowFilter):
             title=title,
             sort_index=800,
             info=inv_info,
-            query_filter=query_filters.FilterMultipleOptions(
+            query_filter=query_filters.MultipleOptionsQuery(
                 ident=ident,
                 options=[
                     (ident + "_" + str(state), title)
@@ -168,7 +168,7 @@ class FilterInvtableOperStatus(CheckboxRowFilter):
                     # skip artificial state 8 (degraded) and 9 (admin down)
                     if isinstance(state, int) and state < 8
                 ],
-                filter_rows=partial(query_filters.if_oper_status_filter_table, ident),
+                rows_filter=partial(query_filters.if_oper_status_filter_table, ident),
             ),
         )
 
@@ -179,7 +179,7 @@ class FilterInvtableAdminStatus(FilterOption):
             title=title,
             sort_index=800,
             info=inv_info,
-            query_filter=query_filters.FilterSingleOption(
+            query_filter=query_filters.SingleOptionQuery(
                 ident=ident,
                 options=[
                     ("1", _("up")),
@@ -199,7 +199,7 @@ class FilterInvtableAvailable(FilterOption):
             title=title,
             sort_index=800,
             info=inv_info,
-            query_filter=query_filters.FilterSingleOption(
+            query_filter=query_filters.SingleOptionQuery(
                 ident=ident,
                 options=[
                     ("no", _("used")),
@@ -226,7 +226,7 @@ class FilterInvtableInterfaceType(DualListFilter):
             title=title,
             sort_index=800,
             info=inv_info,
-            query_filter=query_filters.FilterMultiple(ident=ident, op="="),
+            query_filter=query_filters.MultipleQuery(ident=ident, op="="),
             options=port_types,
         )
 
@@ -249,7 +249,7 @@ class FilterInvBool(FilterOption):
             title=title,
             sort_index=800,
             info="host",
-            query_filter=query_filters.FilterTristate(
+            query_filter=query_filters.TristateQuery(
                 ident=ident,
                 filter_code=lambda x: "",  # No Livestatus filtering right now
                 filter_row=query_filters.inside_inventory(inv_path),
@@ -268,7 +268,7 @@ class FilterHasInv(FilterOption):
             title=_l("Has Inventory Data"),
             sort_index=801,
             info="host",
-            query_filter=query_filters.FilterTristate(
+            query_filter=query_filters.TristateQuery(
                 ident="has_inv",
                 filter_code=lambda x: "",  # No Livestatus filtering right now
                 filter_row=query_filters.has_inventory,

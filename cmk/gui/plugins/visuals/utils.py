@@ -364,7 +364,7 @@ class FilterOption(Filter):
         title: Union[str, LazyString],
         sort_index: int,
         info: str,
-        query_filter: query_filters.FilterSingleOption,
+        query_filter: query_filters.SingleOptionQuery,
         is_show_more: bool = False,
     ):
         self.query_filter = query_filter
@@ -425,7 +425,7 @@ class FilterNumberRange(Filter):  # type is int
         title: Union[str, LazyString],
         sort_index: int,
         info: RangedTables,
-        query_filter: query_filters.FilterNumberRange,
+        query_filter: query_filters.NumberRangeQuery,
         unit: Union[str, LazyString] = "",
         is_show_more: bool = True,
     ) -> None:
@@ -472,7 +472,7 @@ class FilterTime(Filter):
         title: Union[str, LazyString],
         sort_index: int,
         info: Literal["comment", "downtime", "event", "history", "host", "log", "service"],
-        query_filter: query_filters.FilterTime,
+        query_filter: query_filters.TimeQuery,
         is_show_more: bool = False,
     ):
         self.query_filter = query_filter
@@ -522,7 +522,7 @@ class InputTextFilter(Filter):
         title: Union[str, LazyString],
         sort_index: int,
         info: str,
-        query_filter: query_filters.FilterText,
+        query_filter: query_filters.TextQuery,
         show_heading: bool = True,
         description: Union[None, str, LazyString] = None,
         is_show_more: bool = False,
@@ -584,7 +584,7 @@ class CheckboxRowFilter(Filter):
         title: Union[str, LazyString],
         sort_index: int,
         info: str,
-        query_filter: query_filters.FilterMultipleOptions,
+        query_filter: query_filters.MultipleOptionsQuery,
         is_show_more: bool = False,
     ) -> None:
         super().__init__(
@@ -615,7 +615,7 @@ class DualListFilter(Filter):
         title: Union[str, LazyString],
         sort_index: int,
         info: str,
-        query_filter: query_filters.FilterMultiple,
+        query_filter: query_filters.MultipleQuery,
         options: Callable[[str], query_filters.Options],
         description: Union[None, str, LazyString] = None,
         is_show_more: bool = True,

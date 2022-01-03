@@ -34,7 +34,7 @@ def lq_logic(filter_condition: str, values: List[str], join: str) -> str:
     return conditions + connective
 
 
-class Filter:
+class Query:
     "This is the Null filter and default class as it does nothing."
 
     def __init__(
@@ -42,47 +42,47 @@ class Filter:
         *,
         ident: str,
         request_vars: List[str],
-        filter_lq: Optional[Callable[..., FilterHeader]] = None,
-        filter_rows: Optional[Callable[..., Rows]] = None,
+        livestatus_query: Optional[Callable[..., FilterHeader]] = None,
+        rows_filter: Optional[Callable[..., Rows]] = None,
     ):
         self.ident = ident
         self.request_vars = request_vars
-        self.filter_lq = filter_lq or (lambda x: "")
-        self.filter_rows = filter_rows or (lambda _ctx, rows: rows)
+        self.livestatus_query = livestatus_query or (lambda x: "")
+        self.rows_filter = rows_filter or (lambda _ctx, rows: rows)
 
     def filter(self, value: FilterHTTPVariables) -> FilterHeader:
-        return self.filter_lq(value)
+        return self.livestatus_query(value)
 
     def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
-        return self.filter_rows(context, rows)
+        return self.rows_filter(context, rows)
 
 
-class FilterMultipleOptions(Filter):
+class MultipleOptionsQuery(Query):
     def __init__(
         self,
         *,
         ident: str,
         options: Options,
-        filter_lq: Optional[Callable[[FilterHTTPVariables], FilterHeader]] = None,
-        filter_rows: Optional[Callable[..., Rows]] = None,
+        livestatus_query: Optional[Callable[[FilterHTTPVariables], FilterHeader]] = None,
+        rows_filter: Optional[Callable[..., Rows]] = None,
     ):
         # TODO: options helps with data validation but conflicts with the Filter job
         super().__init__(
             ident=ident,
             request_vars=[v[0] for v in options],
-            filter_lq=filter_lq,
-            filter_rows=filter_rows,
+            livestatus_query=livestatus_query,
+            rows_filter=rows_filter,
         )
         self.options = options
 
     def filter(self, value: FilterHTTPVariables) -> FilterHeader:
         if self.ident == "hostgroupvisibility":
             # jump directly because selection is empty filter
-            return self.filter_lq(value)
+            return self.livestatus_query(value)
 
         if all(value.values()):  # everything on, skip filter
             return ""
-        return self.filter_lq(value)
+        return self.livestatus_query(value)
 
 
 ### Tri State filter
@@ -106,7 +106,7 @@ def tri_state_log_notifications_options() -> Options:
     ]
 
 
-class FilterSingleOption(Filter):
+class SingleOptionQuery(Query):
     def __init__(
         self,
         *,
@@ -143,7 +143,7 @@ class FilterSingleOption(Filter):
         return [row for row in rows if self.filter_row(selection, row)]
 
 
-class FilterTristate(FilterSingleOption):
+class TristateQuery(SingleOptionQuery):
     def __init__(
         self,
         *,
@@ -249,10 +249,10 @@ def starred(what: Literal["host", "service"]) -> Callable[[bool], FilterHeader]:
 
 ## Filter tables
 def inside_inventory(invpath: str) -> Callable[[bool, Row], bool]:
-    def filter_rows(on: bool, row: Row) -> bool:
+    def keep_row(on: bool, row: Row) -> bool:
         return inventory.get_inventory_attribute(row["host_inventory"], invpath) is on
 
-    return filter_rows
+    return keep_row
 
 
 def has_inventory(on: bool, row: Row) -> bool:
@@ -270,7 +270,7 @@ def time_filter_options() -> Options:
 MaybeBounds = Tuple[Union[int, float, None], Union[int, float, None]]
 
 
-class FilterNumberRange(Filter):
+class NumberRangeQuery(Query):
     def __init__(
         self,
         *,
@@ -373,7 +373,7 @@ def version_in_range(
     return new_rows
 
 
-class FilterTime(FilterNumberRange):
+class TimeQuery(NumberRangeQuery):
     def __init__(self, *, ident: str, column: Optional[str] = None):
 
         super().__init__(ident=ident, column=column)
@@ -404,8 +404,7 @@ class FilterTime(FilterNumberRange):
             return None
 
 
-### TextFilter
-class FilterText(Filter):
+class TextQuery(Query):
     def __init__(
         self,
         *,
@@ -443,7 +442,7 @@ class FilterText(Filter):
         )
 
 
-class FilterTableText(FilterText):
+class TableTextQuery(TextQuery):
     def __init__(self, *, ident: str, row_filter: Callable[[str, str], Callable[[Row], bool]]):
         super().__init__(ident=ident, op="=")
         self.link_columns = []
@@ -510,7 +509,7 @@ def filter_in_host_inventory_range(
     return row_filter
 
 
-class FilterCheckCommand(FilterText):
+class CheckCommandQuery(TextQuery):
     def _filter(self, value: FilterHTTPVariables) -> FilterHeader:
         return "Filter: %s %s ^%s(!.*)?\n" % (
             self.column,
@@ -519,7 +518,7 @@ class FilterCheckCommand(FilterText):
         )
 
 
-class FilterHostnameOrAlias(FilterText):
+class HostnameOrAliasQuery(TextQuery):
     def __init__(self):
         super().__init__(ident="hostnameoralias", column="host_name", op="~~", negateable=False)
         self.link_columns = ["host_alias", "host_name"]
@@ -530,7 +529,7 @@ class FilterHostnameOrAlias(FilterText):
         return lq_logic("Filter:", [f"host_name {self.op} {host}", f"alias {self.op} {host}"], "Or")
 
 
-class FilterOptEventEffectiveContactgroup(FilterText):
+class OptEventEffectiveContactgroupQuery(TextQuery):
     def __init__(self):
         super().__init__(
             ident="optevent_effective_contactgroup",
@@ -561,8 +560,7 @@ class FilterOptEventEffectiveContactgroup(FilterText):
         )
 
 
-### IPAddress
-class FilterIPAddress(Filter):
+class IPAddressQuery(Query):
     def __init__(self, *, ident: str, what: str):
         request_vars = [ident, ident + "_prefix"]
         super().__init__(ident=ident, request_vars=request_vars)
@@ -627,8 +625,7 @@ def ip_address_families_options() -> Options:
     ]
 
 
-### Multipick
-class FilterMultiple(FilterText):
+class MultipleQuery(TextQuery):
     def selection(self, value: FilterHTTPVariables) -> List[str]:
         if folders := value.get(self.request_vars[0], "").strip():
             return folders.split("|")
@@ -642,7 +639,7 @@ class FilterMultiple(FilterText):
         return lq_logic(f"Filter: {self.column} {negate}{self.op}", self.selection(value), joiner)
 
 
-class TagsQuery(Filter):
+class TagsQuery(Query):
     def __init__(
         self,
         *,

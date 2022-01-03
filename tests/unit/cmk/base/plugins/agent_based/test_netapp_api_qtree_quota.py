@@ -13,13 +13,13 @@ from cmk.utils.type_defs import CheckPluginName, SectionName
 import cmk.base.plugins.agent_based.netapp_api_qtree_quota as qtree_quota
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult
-from cmk.base.plugins.agent_based.netapp_api_qtree_quota import Qtree
+from cmk.base.plugins.agent_based.netapp_api_qtree_quota import get_item_names, Qtree
 
 from tests.unit.conftest import FixRegister
 
 
 @pytest.fixture(name="value_store_patch")
-def value_store_fixture(monkeypatch):
+def value_store_fixture(monkeypatch) -> None:
     value_store_patched = {
         "QUOTA-10.user.delta": [0, 0],
     }
@@ -41,7 +41,24 @@ def value_store_fixture(monkeypatch):
             ],
             {
                 "QUOTA-10": Qtree(
-                    quota_type="tree", disk_limit="5", disk_used="0", files_used="", file_limit=""
+                    quota="QUOTA-10",
+                    quota_users="",
+                    quota_type="tree",
+                    volume="quota_common_10",
+                    disk_limit="5",
+                    disk_used="0",
+                    files_used="",
+                    file_limit="",
+                ),
+                "quota_common_10/QUOTA-10": Qtree(
+                    quota="QUOTA-10",
+                    quota_users="",
+                    quota_type="tree",
+                    volume="quota_common_10",
+                    disk_limit="5",
+                    disk_used="0",
+                    files_used="",
+                    file_limit="",
                 ),
             },
             id="qtree_without_quota_users",
@@ -59,7 +76,24 @@ def value_store_fixture(monkeypatch):
             ],
             {
                 "QUOTA-10.user": Qtree(
-                    quota_type="tree", disk_limit="6", disk_used="0", files_used="", file_limit=""
+                    quota="QUOTA-10",
+                    quota_users="user",
+                    quota_type="tree",
+                    volume="quota_common_10",
+                    disk_limit="6",
+                    disk_used="0",
+                    files_used="",
+                    file_limit="",
+                ),
+                "quota_common_10/QUOTA-10.user": Qtree(
+                    quota="QUOTA-10",
+                    quota_users="user",
+                    quota_type="tree",
+                    volume="quota_common_10",
+                    disk_limit="6",
+                    disk_used="0",
+                    files_used="",
+                    file_limit="",
                 ),
             },
             id="qtree_with_quota_users",
@@ -77,27 +111,97 @@ def test_parse_netapp_api_qtree_quota(
 
 
 @pytest.mark.parametrize(
-    "parsed, expected_discovery",
+    "parsed, params, expected_discovery",
     [
         pytest.param(
             {
                 "QUOTA-10.user": Qtree(
-                    quota_type="tree", disk_limit="6", disk_used="0", files_used="", file_limit=""
+                    quota="QUOTA-10",
+                    quota_users="user",
+                    quota_type="tree",
+                    volume="quota_common_10",
+                    disk_limit="6",
+                    disk_used="0",
+                    files_used="",
+                    file_limit="",
+                ),
+                "quota_common_10/QUOTA-10.user": Qtree(
+                    quota="QUOTA-10",
+                    quota_users="user",
+                    quota_type="tree",
+                    volume="quota_common_10",
+                    disk_limit="6",
+                    disk_used="0",
+                    files_used="",
+                    file_limit="",
                 ),
             },
+            {"exclude_volume": False},
+            [Service(item="quota_common_10/QUOTA-10.user")],
+            id="qtree_with_volume",
+        ),
+        pytest.param(
+            {
+                "QUOTA-10.user": Qtree(
+                    quota="QUOTA-10",
+                    quota_users="user",
+                    quota_type="tree",
+                    volume="quota_common_10",
+                    disk_limit="6",
+                    disk_used="0",
+                    files_used="",
+                    file_limit="",
+                ),
+                "quota_common_10/QUOTA-10.user": Qtree(
+                    quota="QUOTA-10",
+                    quota_users="user",
+                    quota_type="tree",
+                    volume="quota_common_10",
+                    disk_limit="6",
+                    disk_used="0",
+                    files_used="",
+                    file_limit="",
+                ),
+            },
+            {"exclude_volume": True},
             [Service(item="QUOTA-10.user")],
-            id="qtree",
+            id="qtree_without_volume",
         ),
     ],
 )
 def test_inventory_netapp_api_qtree_quota(
     fix_register: FixRegister,
     parsed: Mapping[str, Qtree],
+    params: Mapping[str, bool],
     expected_discovery: Sequence[Service],
 ) -> None:
     check_plugin = fix_register.check_plugins[CheckPluginName("netapp_api_qtree_quota")]
-    result = list(check_plugin.discovery_function(parsed))
+    result = list(check_plugin.discovery_function(params, parsed))
     assert result == expected_discovery
+
+
+@pytest.mark.parametrize(
+    "qtree, expected_result",
+    [
+        pytest.param(
+            Qtree(
+                quota="QUOTA-10",
+                quota_users="user",
+                quota_type="tree",
+                volume="quota_common_10",
+                disk_limit="6",
+                disk_used="0",
+                files_used="",
+                file_limit="",
+            ),
+            ("QUOTA-10.user", "quota_common_10/QUOTA-10.user"),
+            id="qtree_items",
+        )
+    ],
+)
+def test_get_item_names(qtree: Qtree, expected_result):
+    result = get_item_names(qtree)
+    assert result == expected_result
 
 
 @pytest.mark.parametrize(
@@ -106,7 +210,14 @@ def test_inventory_netapp_api_qtree_quota(
         pytest.param(
             {
                 "QUOTA-10.user": Qtree(
-                    quota_type="tree", disk_limit="6", disk_used="0", files_used="", file_limit=""
+                    quota="QUOTA-10",
+                    quota_users="user",
+                    quota_type="tree",
+                    volume="quota_common_10",
+                    disk_limit="6",
+                    disk_used="0",
+                    files_used="",
+                    file_limit="",
                 ),
             },
             "QUOTA-10.user",
@@ -127,7 +238,14 @@ def test_inventory_netapp_api_qtree_quota(
         pytest.param(
             {
                 "QUOTA-10.user": Qtree(
-                    quota_type="tree", disk_limit="", disk_used="0", files_used="", file_limit=""
+                    quota="QUOTA-10",
+                    quota_users="user",
+                    quota_type="tree",
+                    volume="quota_common_10",
+                    disk_limit="",
+                    disk_used="0",
+                    files_used="",
+                    file_limit="",
                 ),
             },
             "QUOTA-10.user",
@@ -139,7 +257,10 @@ def test_inventory_netapp_api_qtree_quota(
         pytest.param(
             {
                 "QUOTA-10.user": Qtree(
+                    quota="QUOTA-10",
+                    quota_users="user",
                     quota_type="tree",
+                    volume="quota_common_10",
                     disk_limit="6",
                     disk_used="0",
                     files_used="99",
@@ -162,6 +283,23 @@ def test_inventory_netapp_api_qtree_quota(
                 Result(state=State.OK, summary="Inodes used: 99, Inodes available: 1 (1.00%)"),
             ],
             id="qtree_with_inodes",
+        ),
+        pytest.param(
+            {
+                "QUOTA-10.user": Qtree(
+                    quota="QUOTA-10",
+                    quota_users="user",
+                    quota_type="tree",
+                    volume="quota_common_10",
+                    disk_limit="6",
+                    disk_used="0",
+                    files_used="99",
+                    file_limit="100",
+                ),
+            },
+            "QUOTA-10",
+            [],
+            id="qtree_not_exists",
         ),
     ],
 )

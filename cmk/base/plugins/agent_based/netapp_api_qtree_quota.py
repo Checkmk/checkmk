@@ -19,7 +19,10 @@ from .utils import df, netapp_api
 
 
 class Qtree(NamedTuple):
+    quota: str
+    quota_users: str
     quota_type: str
+    volume: str
     disk_limit: str
     disk_used: str
     files_used: str
@@ -36,7 +39,10 @@ def iter_netapp_api_qtree_quota(
         string_table, custom_keys=["quota", "quota-users"]
     ).items():
         qtree = Qtree(
+            quota=instance.get("quota", ""),
+            quota_users=instance.get("quota-users", ""),
             quota_type=instance.get("quota-type", ""),
+            volume=instance.get("volume", ""),
             disk_limit=instance.get("disk-limit", ""),
             disk_used=instance.get("disk-used", ""),
             files_used=instance.get("files-used", ""),
@@ -44,15 +50,32 @@ def iter_netapp_api_qtree_quota(
         )
         yield item, qtree
 
+        # item name is configurable, so we add data under both names to the parsed section
+        # to make the check function easier
+        if qtree.volume:
+            yield f"{qtree.volume}/{item}", qtree
+
 
 def parse_netapp_api_qtree_quota(string_table: StringTable) -> Section:
     return dict(iter_netapp_api_qtree_quota(string_table))
 
 
-def discover_netapp_api_qtree_quota(section: Section) -> DiscoveryResult:
-    for item, qtree in section.items():
+def get_item_names(qtree: Qtree):
+    short_name = ".".join([n for n in [qtree.quota, qtree.quota_users] if n])
+    long_name = f"{qtree.volume}/{short_name}" if qtree.volume else short_name
+    return short_name, long_name
+
+
+def discover_netapp_api_qtree_quota(params: Mapping[str, Any], section: Section) -> DiscoveryResult:
+    exclude_volume = params.get("exclude_volume", False)
+    for name, qtree in section.items():
         if qtree.quota_type == "tree" and qtree.disk_limit.isdigit():
-            yield Service(item=item)
+            short_name, long_name = get_item_names(qtree)
+
+            if (exclude_volume and name == short_name) or (
+                not exclude_volume and name == long_name
+            ):
+                yield Service(item=name)
 
 
 def check_netapp_api_qtree_quota(
@@ -94,6 +117,8 @@ register.check_plugin(
     name="netapp_api_qtree_quota",
     service_name="Qtree %s",
     discovery_function=discover_netapp_api_qtree_quota,
+    discovery_ruleset_name="discovery_qtree",
+    discovery_default_parameters={"exclude_volume": False},
     check_function=check_netapp_api_qtree_quota,
     check_ruleset_name="filesystem",
     check_default_parameters=df.FILESYSTEM_DEFAULT_LEVELS,

@@ -9,11 +9,13 @@
 
 # Disable unused variable error (needed to keep track of version)
 # shellcheck disable=SC2034
-CMK_VERSION="2.1.0i1"
+CMK_VERSION="2.0.0p17"
 
 #SuSE-release is deprecated and was removed with SLE 15. os-release should be used for the new versions.
 
 RELEASEFILE="/etc/SuSE-release"
+STATEFILE="/var/lib/check_mk_agent/zypper.state"
+SPOOLFILE="/var/lib/check_mk_agent/spool/90000_mk_zypper"
 
 if [ -f "/etc/os-release" ]
     then
@@ -21,27 +23,44 @@ if [ -f "/etc/os-release" ]
 fi
 
 if type zypper > /dev/null ; then
-    echo '<<<zypper:sep(124)>>>'
+    LASTUPDATE=$(grep -v '^#' /var/log/zypp/history | tail -1 | awk 'BEGIN {FS="|"};{print $1}' | xargs -i date -d "{}" +%s)
+    NOW=$(date +%s)
+
+    if [ -f $STATEFILE ]
+    then
+        STATE=$(cat $STATEFILE)
+		
+        if (( $LASTUPDATE < $STATE && $NOW-$STATE < 86400 ))
+        then
+			# it has been less than 24 hours AND there has been no system update since last time we checked
+            exit
+        fi
+    fi
+	
+    echo '<<<zypper:sep(124)>>>' > "$SPOOLFILE"
+
     if egrep -q 'VERSION = 10|VERSION_ID="10' < $RELEASEFILE
     then
         ZYPPER='waitmax 50 zypper --no-gpg-checks --non-interactive --terse'
         REFRESH=`$ZYPPER refresh 2>&1`
         if  [ "$REFRESH" ]
         then
-	    echo "ERROR: $REFRESH"
+            echo "ERROR: $REFRESH" >> "$SPOOLFILE"
         else
             { $ZYPPER pchk || [ $? = 100 -o $? = 101 ] && $ZYPPER lu ; } \
-    	      | egrep '(patches needed|\|)' | egrep -v '^(#|Repository |Catalog )'
+              | egrep '(patches needed|\|)' | egrep -v '^(#|Repository |Catalog )' >> "$SPOOLFILE"
         fi
     else
         ZYPPER='waitmax 50 zypper --no-gpg-checks --non-interactive --quiet'
         REFRESH=`$ZYPPER refresh 2>&1`
         if  [ "$REFRESH" ]
         then
-            echo "ERROR: $REFRESH"
+            echo "ERROR: $REFRESH" >> "$SPOOLFILE"
         else
             { { $ZYPPER pchk || [ $? = 100 -o $? = 101 ] && $ZYPPER lp ; } ; $ZYPPER ll ; } \
-    	      | egrep '(patches needed|\|)' | egrep -v '^(#|Repository)'
+              | egrep '(patches needed|\|)' | egrep -v '^(#|Repository)' >> "$SPOOLFILE"
         fi
     fi
+
+	date +%s > "$STATEFILE"
 fi

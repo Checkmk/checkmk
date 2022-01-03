@@ -229,9 +229,9 @@ def autodetect_plugin(command_line: str) -> str:
         return command_line
 
     for directory in ["local", ""]:
-        path = cmk.utils.paths.omd_root / directory / "lib/nagios/plugins/"
+        path = cmk.utils.paths.omd_root / directory / "lib/nagios/plugins"
         if (path / plugin_name).exists():
-            command_line = f"{path}{command_line}"
+            command_line = f"{path}/{command_line}"
             break
 
     return command_line

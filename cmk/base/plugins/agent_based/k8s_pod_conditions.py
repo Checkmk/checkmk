@@ -92,14 +92,14 @@ def check(params: Mapping[str, Any], section: PodConditions) -> CheckResult:
     for name in LOGICAL_ORDER:
         cond_service_text = ADDITIONAL_SERVICE_TEXT[name]
         cond = section_dict[name]
-        if cond is None:
-            yield Result(state=State.OK, summary=cond_service_text.not_passed)
-            continue
-        if cond["status"] is True:
-            yield Result(state=State.OK, summary=cond_service_text.passed)
-            continue
-        time_diff = curr_timestamp - cond["last_transition_time"]
-        summary_prefix = f"{cond_service_text.not_passed} ({cond['reason']}: {cond['detail']})"
+        if cond is not None:
+            time_diff = curr_timestamp - cond["last_transition_time"]  # keep the last-seen one
+            if cond["status"] is True:
+                yield Result(state=State.OK, summary=cond_service_text.passed)
+                continue
+            summary_prefix = f"{cond_service_text.not_passed} ({cond['reason']}: {cond['detail']})"
+        else:
+            summary_prefix = cond_service_text.not_passed
         for result in check_levels(
             time_diff, levels_upper=get_levels_for(params, name), render_func=render.timespan
         ):

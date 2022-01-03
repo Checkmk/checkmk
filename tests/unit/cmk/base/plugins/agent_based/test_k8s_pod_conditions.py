@@ -9,6 +9,7 @@
 import json
 
 import pytest
+from pydantic import ValidationError
 
 from cmk.base.plugins.agent_based import k8s_pod_conditions
 from cmk.base.plugins.agent_based.agent_based_api.v1 import render, State
@@ -28,12 +29,12 @@ REASON = "MuchReason"
 DETAIL = "wow detail many detailed"
 
 
-def ready():
+def ready(time_diff_minutes=0):
     return {
         "status": True,
         "reason": None,
         "detail": None,
-        "last_transition_time": TIMESTAMP,
+        "last_transition_time": TIMESTAMP - time_diff_minutes * MINUTE,
     }
 
 
@@ -121,16 +122,16 @@ def string_table_element(
     state_ready,
 ):
     return {
-        "initialized": ready()
+        "initialized": ready(state_initialized)
         if status_initialized
         else (not_ready(state_initialized) if status_initialized is False else None),
-        "scheduled": ready()
+        "scheduled": ready(state_scheduled)
         if status_scheduled
         else (not_ready(state_scheduled) if status_scheduled is False else None),
-        "containersready": ready()
+        "containersready": ready(state_containersready)
         if status_containersready
         else (not_ready(state_containersready) if status_containersready is False else None),
-        "ready": ready()
+        "ready": ready(state_ready)
         if status_ready
         else (not_ready(state_ready) if status_ready is False else None),
     }
@@ -219,6 +220,16 @@ def test_parse_multi(
     assert section.scheduled == expected_scheduled
     assert section.containersready == expected_containersready
     assert section.ready == expected_ready
+
+
+@pytest.mark.parametrize("state", [CRIT])
+@pytest.mark.parametrize(
+    "status_initialized, status_scheduled, status_containersready, status_ready",
+    [(None, None, None, None)],
+)
+def test_parse_fails_when_all_conditions_empty(string_table):
+    with pytest.raises(ValidationError):
+        k8s_pod_conditions.parse(string_table)
 
 
 def test_discovery_returns_an_iterable(string_table):
@@ -367,19 +378,19 @@ def test_check_results_state_multi_when_status_false(
         expected_state_ready,
     """,
     [
-        (None, True, None, None, State.OK, State.OK, State.OK, State.OK),
-        (True, True, None, None, State.OK, State.OK, State.OK, State.OK),
-        (None, False, None, None, State.OK, State.CRIT, State.OK, State.OK),
-        (False, True, None, None, State.CRIT, State.OK, State.OK, State.OK),
-        (False, False, None, None, State.CRIT, State.CRIT, State.OK, State.OK),
+        (None, True, None, None, State.CRIT, State.OK, State.CRIT, State.CRIT),
+        (True, True, None, None, State.OK, State.OK, State.CRIT, State.CRIT),
+        (None, False, None, None, State.CRIT, State.CRIT, State.CRIT, State.CRIT),
+        (False, True, None, None, State.CRIT, State.OK, State.CRIT, State.CRIT),
+        (False, False, None, None, State.CRIT, State.CRIT, State.CRIT, State.CRIT),
         (False, False, False, False, State.CRIT, State.CRIT, State.CRIT, State.CRIT),
     ],
     ids=[
-        "all_ok",
-        "all_ok",
-        "unscheduled_crit",
-        "scheduled_ok_uninitialized_crit",
-        "unscheduled_crit_uninitialized_crit",
+        "scheduled_ok_others_empty",
+        "scheduled_ok_initialized_ok_others_empty",
+        "unscheduled_crit_others_empty",
+        "scheduled_ok_uninitialized_crit_others_empty",
+        "unscheduled_crit_uninitialized_crit_others_empty",
         "all_crit",
     ],
 )

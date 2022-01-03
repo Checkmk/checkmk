@@ -122,29 +122,28 @@ void somefoo_about_video()
 #endif
 
 
-
-//#include <string>
 namespace xlog {
     inline size_t ConvertChar2Wchar(wchar_t * output, size_t len,
                                     const char *input) {
-        if (input == nullptr || len <= 0) return 0;
+        if (input == nullptr || len <= 0) {
+            return 0;
+        }
         ::swprintf_s(output, len, L"%S", input);
-
         return ::wcslen(output);
     }
 
     inline size_t ConvertWchar2Char(char *output, size_t len,
                                     const wchar_t *input) {
-        if (input == nullptr) return 0;
+        if (input == nullptr) {
+            return 0;
+        }
 
         ::sprintf_s(output, len, "%ls", input);
-
         return ::strlen(output);
     }
 
     inline size_t ConvertInt2Char(char *output, size_t len, int value) {
         ::sprintf_s(output, len, "%d", value);
-
         return ::strlen(output);
     }
 
@@ -234,7 +233,6 @@ namespace xlog {
 
     template <typename T>
     using WorkString = std::basic_string<T>;
-    // implementation
     constexpr std::wstring_view kDefaultPrefix{L"***: "};
     constexpr std::string_view kDefaultLogFileName{"default.log"};
     constexpr std::string_view kDefaultFile{""};
@@ -353,25 +351,18 @@ namespace xlog {
     template <typename T>
     class TextInfo {
     public:
-        // COPY CREATE
         explicit TextInfo(const T *value) { setText(value); }
         explicit TextInfo(const std::basic_string<T> &value) : text_{value} {}
-
         explicit TextInfo(const TextInfo &rhs) { setText(rhs.text_); }
-
         TextInfo &operator=(const TextInfo &rhs) {
             setText(rhs.text_);
             return *this;
         }
-
         TextInfo(TextInfo &&rhs) noexcept { text_ = std::move(rhs.text_); }
-
         TextInfo &operator=(TextInfo &&rhs) noexcept {
             text_ = std::move(rhs.text_);
             return *this;
         }
-
-        // DTOR
         ~TextInfo() {}
 
         // EXTENDED API
@@ -383,10 +374,9 @@ namespace xlog {
         }
 
         // LogName is syslog source name.
-        //
         const TextInfo &syslog(std::basic_string_view<T> log_name,
-                               xlog::LogEvents log_event,
-                               int code = xlog::LogCodes::kIamLazy) const {
+                               LogEvents log_event,
+                               int code = LogCodes::kIamLazy) const {
             if constexpr (sizeof(T) == 2) {
                 // have to convert
                 auto output_buf = std::make_unique<char[]>(len() + 1);
@@ -628,8 +618,6 @@ namespace xlog {
         LogParam log_param;
         auto _ = internal_dout(log_param, format_string,
                                std::forward<Args>(args)...);
-#else
-    // return TextInfo<T>((const T*)nullptr);
 #endif
     }
 
@@ -642,8 +630,6 @@ namespace xlog {
             internal_dout(log_param, format_string,
                           std::forward<Args>(args)...);
         }
-#else
-    // return TextInfo<T>((const T*)nullptr);
 #endif
     }
     template <typename T, typename... Args>
@@ -651,8 +637,6 @@ namespace xlog {
 #if defined(XLOG_VERBOSE)
         LogParam log_param;
         internal_dout(log_param, format_string, std::forward<Args>(args)...);
-#else
-    // TextInfo<T>((const T*)nullptr);
 #endif
     }
 #pragma warning(push)

@@ -31,9 +31,9 @@ using ByteVector = std::vector<unsigned char>;
 
 namespace cma::tools {
 
-inline void sleep(int Milliseconds) noexcept {
+inline void sleep(int milliseconds) noexcept {
     std::this_thread::sleep_until(std::chrono::steady_clock::now() +
-                                  std::chrono::milliseconds(Milliseconds));
+                                  std::chrono::milliseconds(milliseconds));
 }
 
 template <typename T, typename B>
@@ -256,11 +256,15 @@ public:
     // ctor
     WithEnv(const std::basic_string<T>& name, const std::basic_string<T>& value)
         : name_(name) {
-        if (!name_.empty()) SetEnv(name, value);
+        if (!name_.empty()) {
+            SetEnv(name, value);
+        }
     }
 
     ~WithEnv() {
-        if (!name_.empty()) SetEnv(name_, {});
+        if (!name_.empty()) {
+            SetEnv(name_, {});
+        }
     }
 
     // no copy - environment variable are persistent globals
@@ -273,7 +277,9 @@ public:
         rhs.name_.clear();
     }
     WithEnv& operator=(WithEnv&& rhs) {
-        if (!name_.empty()) SetEnv(name_, {});
+        if (!name_.empty()) {
+            SetEnv(name_, {});
+        }
         name_ = rhs.name_;
         rhs.name_.clear();
     }
@@ -340,8 +346,7 @@ inline std::vector<std::string_view> ToView(
     return s_view;
 }
 
-// string splitter
-// max_count == 0 means inifinite parsing
+/// max_count == 0 means inifinite parsing
 inline std::vector<std::string> SplitString(const std::string& str,
                                             const std::string& delimiter,
                                             size_t max_count = 0) noexcept {
@@ -535,18 +540,17 @@ namespace fmt {
 
 // formatter extender for variable count of parameters
 template <typename... Args>
-auto formatv(const std::string Format, const Args&... args) {
+auto formatv(const std::string format_string, const Args&... args) {
     std::string buffer;
     try {
-        auto x = std::make_tuple(Format, args...);
+        auto x = std::make_tuple(format_string, args...);
         auto print_message = [&buffer](const auto&... args) {
-            // return formatted value
             buffer = fmt::format(args...);
         };
         std::apply(print_message, x);
     } catch (const std::exception&) {
-        // XLOG::l.crit("Invalid string to format \"{}\"", std::get<0>(x));
-        xlog::l("Invalid string/parameters to format '%s'", Format.c_str());
+        xlog::l("Invalid string/parameters to format '%s'",
+                format_string.c_str());
     }
     return buffer;
 }

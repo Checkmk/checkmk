@@ -3,13 +3,11 @@
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
 
-// Assorted process management routines
 #pragma once
 
 #include <Windows.h>
 #include <shlobj.h>
 
-#include <fstream>
 #include <string>
 #include <string_view>
 #include <tuple>
@@ -49,11 +47,10 @@ inline bool RunCommandAndWait(const std::wstring& command,
 }
 
 inline bool RunCommandAndWait(const std::wstring& command) {
-    std::wstring path{L""};
-    return RunCommandAndWait(command, path);
+    return RunCommandAndWait(command, L"");
 }
 
-inline bool RunDetachedCommand(const std::string& Command) {
+inline bool RunDetachedCommand(const std::string& command) {
     STARTUPINFOA si{0};
     memset(&si, 0, sizeof(si));
     si.cb = sizeof(STARTUPINFO);
@@ -64,7 +61,7 @@ inline bool RunDetachedCommand(const std::string& Command) {
     // CREATE_NEW_CONSOLE
 
     if (::CreateProcessA(nullptr,  // stupid windows want null here
-                         const_cast<char*>(Command.c_str()),  // win32!
+                         const_cast<char*>(command.c_str()),  // win32!
                          nullptr,  // security attribute
                          nullptr,  // thread attribute
                          FALSE,    // no handle inheritance
@@ -126,19 +123,19 @@ inline uint32_t RunStdCommand(
 // returns [ProcId, JobHandle, ProcessHandle]
 inline std::tuple<DWORD, HANDLE, HANDLE> RunStdCommandAsJob(
     const std::wstring& Command,  // full command with arguments
-    BOOL InheritHandle = FALSE,   // not optimal, but default
-    HANDLE Stdio = 0,             // when we want to catch output
-    HANDLE Stderr = 0,            // same
-    DWORD CreationFlags = 0,      // never checked this
-    DWORD StartFlags = 0) noexcept {
+    BOOL inherit_handle = FALSE,  // not optimal, but default
+    HANDLE stdio_handle = 0,      // when we want to catch output
+    HANDLE stderr_handle = 0,     // same
+    DWORD creation_flags = 0,     // never checked this
+    DWORD start_flags = 0) noexcept {
     // windows "boiler plate"
     STARTUPINFOW si{0};
     memset(&si, 0, sizeof(si));
     si.cb = sizeof(STARTUPINFO);
-    si.dwFlags = StartFlags;
-    si.hStdOutput = Stdio;
-    si.hStdError = Stderr;
-    if (InheritHandle)
+    si.dwFlags = start_flags;
+    si.hStdOutput = stdio_handle;
+    si.hStdError = stderr_handle;
+    if (inherit_handle)
         si.dwFlags = STARTF_USESTDHANDLES;  // switch to the handles in si
     PROCESS_INFORMATION pi{0};
     memset(&pi, 0, sizeof(pi));
@@ -150,12 +147,12 @@ inline std::tuple<DWORD, HANDLE, HANDLE> RunStdCommandAsJob(
 
     if (!::CreateProcessW(NULL,  // stupid windows want null here
                           const_cast<wchar_t*>(Command.c_str()),  // win32!
-                          nullptr,        // security attribute
-                          nullptr,        // thread attribute
-                          InheritHandle,  // handle inheritance
-                          CreationFlags,  // Creation Flags
-                          nullptr,        // environment
-                          nullptr,        // current directory
+                          nullptr,         // security attribute
+                          nullptr,         // thread attribute
+                          inherit_handle,  // handle inheritance
+                          creation_flags,  // Creation Flags
+                          nullptr,         // environment
+                          nullptr,         // current directory
                           &si, &pi)) {
         // #TODO diagnostic here!
         // clean out here. No process created
@@ -175,17 +172,16 @@ inline std::tuple<DWORD, HANDLE, HANDLE> RunStdCommandAsJob(
 
 namespace win {
 inline bool IsElevated() {
-    BOOL fRet = FALSE;
-    HANDLE hToken = NULL;
-    if (!::OpenProcessToken(::GetCurrentProcess(), TOKEN_QUERY, &hToken))
+    HANDLE token = NULL;
+    if (!::OpenProcessToken(::GetCurrentProcess(), TOKEN_QUERY, &token))
         return false;
-    ON_OUT_OF_SCOPE(if (hToken)::CloseHandle(hToken););
+    ON_OUT_OF_SCOPE(if (token)::CloseHandle(token););
 
-    TOKEN_ELEVATION Elevation;
-    DWORD cbSize = sizeof(TOKEN_ELEVATION);
-    if (::GetTokenInformation(hToken, TokenElevation, &Elevation,
-                              sizeof(Elevation), &cbSize)) {
-        return Elevation.TokenIsElevated == TRUE;
+    TOKEN_ELEVATION elevation;
+    DWORD size = sizeof(TOKEN_ELEVATION);
+    if (::GetTokenInformation(token, TokenElevation, &elevation,
+                              sizeof(elevation), &size)) {
+        return elevation.TokenIsElevated == TRUE;
     }
     return false;
 }

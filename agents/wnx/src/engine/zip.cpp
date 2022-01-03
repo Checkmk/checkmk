@@ -13,6 +13,7 @@
 
 #include <array>
 #include <filesystem>
+#include <fstream>
 
 #include "common/cfg_info.h"
 #include "common/wtools.h"

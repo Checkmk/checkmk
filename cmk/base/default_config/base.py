@@ -202,7 +202,7 @@ host_contactgroups: _List = []
 parents: _List = []
 define_hostgroups = None
 define_servicegroups = None
-define_contactgroups: _Optional[_Dict[str, str]] = None
+define_contactgroups: _Dict[str, str] = {}
 contactgroup_members: _Dict = {}
 contacts: _Dict = {}
 # needed for WATO

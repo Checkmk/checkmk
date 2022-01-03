@@ -770,34 +770,19 @@ def _create_nagios_config_servicegroups(cfg: NagiosConfig) -> None:
 
 
 def _create_nagios_config_contactgroups(cfg: NagiosConfig) -> None:
-    # TODO: According to our types, define_contactgroups can NEVER be False,
-    # but to be sure (old user configs lying around???) we keep the test and
-    # shut up mypy. :-/
-    if config.define_contactgroups is False:  # type: ignore[comparison-overlap]
-        return
-
     cgs = cfg.contactgroups_to_define
     if not cgs:
         return
-
     cfg.write("\n# ------------------------------------------------------------\n")
     cfg.write("# Contact groups (controlled by define_contactgroups)\n")
     cfg.write("# ------------------------------------------------------------\n\n")
     for name in sorted(cgs):
-        if isinstance(config.define_contactgroups, dict):
-            alias = config.define_contactgroups.get(name, name)
-        else:
-            alias = name
-
         contactgroup_spec = {
             "contactgroup_name": name,
-            "alias": alias,
+            "alias": config.define_contactgroups.get(name, name),
         }
-
-        members = config.contactgroup_members.get(name)
-        if members:
+        if members := config.contactgroup_members.get(name):
             contactgroup_spec["members"] = ",".join(members)
-
         cfg.write(_format_nagios_object("contactgroup", contactgroup_spec))
 
 

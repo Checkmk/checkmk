@@ -1218,76 +1218,18 @@ filter_registry.register(
     )
 )
 
-# INFO          0 // all messages not in any other class
-# ALERT         1 // alerts: the change service/host state
-# PROGRAM       2 // important programm events (restart, ...)
-# NOTIFICATION  3 // host/service notifications
-# PASSIVECHECK  4 // passive checks
-# COMMAND       5 // external commands
-# STATE         6 // initial or current states
-# ALERT HANDLERS 8
-
-
-@filter_registry.register_instance
-class FilterLogClass(Filter):
-    def __init__(self):
-        # NOTE: We have to keep this table in sync with the enum LogEntry::Class on the C++ side.
-        self.log_classes = [
-            (0, _l("Informational")),
-            (1, _l("Alerts")),
-            (2, _l("Program")),
-            (3, _l("Notifications")),
-            (4, _l("Passive checks")),
-            (5, _l("Commands")),
-            (6, _l("States")),
-            (8, _l("Alert handlers")),
-        ]
-
-        super().__init__(
+filter_registry.register(
+    CheckboxRowFilter(
+        title=_l("Logentry class"),
+        sort_index=255,
+        info="log",
+        query_filter=query_filters.FilterMultipleOptions(
             ident="log_class",
-            title=_l("Logentry class"),
-            sort_index=255,
-            info="log",
-            htmlvars=["logclass_filled"] + ["logclass%d" % l for l, _c in self.log_classes],
-            link_columns=[],
-        )
-
-    def display(self, value: FilterHTTPVariables) -> None:
-        html.hidden_field("logclass_filled", "1", add_var=True)
-        html.open_table(cellspacing="0", cellpadding="0")
-        checkbox_default = not any(value.values())  # everything by default
-        if config.filter_columns == 1:
-            num_cols = 4
-        else:
-            num_cols = 2
-        col = 1
-        for l, c in self.log_classes:
-            if col == 1:
-                html.open_tr()
-            html.open_td()
-            html.checkbox("logclass%d" % l, bool(value.get("logclass%d" % l, checkbox_default)))
-            html.write_text(str(c))
-            html.close_td()
-            if col == num_cols:
-                html.close_tr()
-                col = 1
-            else:
-                col += 1
-        if col < num_cols:
-            html.open_td()
-            html.close_td()
-            html.close_tr()
-        html.close_table()
-
-    def filter(self, value: FilterHTTPVariables) -> FilterHeader:
-        if not any(value.values()):
-            return ""  # Do not apply this filter
-
-        headers = [str(l) for l, _c in self.log_classes if value.get("logclass%d" % l)]
-
-        if not headers:
-            return "Limit: 0\n"  # no class allowed
-        return lq_logic("Filter: class =", headers, "Or")
+            options=query_filters.log_class_options(),
+            filter_lq=query_filters.log_class_filter,
+        ),
+    )
+)
 
 
 filter_registry.register(

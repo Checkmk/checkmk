@@ -795,9 +795,42 @@ def discovery_state_options() -> List[Tuple[str, str]]:
     ]
 
 
+def log_class_options() -> Options:
+    # NOTE: We have to keep this table in sync with the enum LogEntry::Class on the C++ side.
+    # INFO          0 // all messages not in any other class
+    # ALERT         1 // alerts: the change service/host state
+    # PROGRAM       2 // important programm events (restart, ...)
+    # NOTIFICATION  3 // host/service notifications
+    # PASSIVECHECK  4 // passive checks
+    # COMMAND       5 // external commands
+    # STATE         6 // initial or current states
+    # ALERT HANDLERS 8
+
+    return [
+        ("logclass0", _("Informational")),
+        ("logclass1", _("Alerts")),
+        ("logclass2", _("Program")),
+        ("logclass3", _("Notifications")),
+        ("logclass4", _("Passive checks")),
+        ("logclass5", _("Commands")),
+        ("logclass6", _("States")),
+        ("logclass8", _("Alert handlers")),
+    ]
+
+
 def discovery_state_filter_table(ident: str, context: VisualContext, rows: Rows) -> Rows:
     filter_options = context.get(ident, {})
     return [row for row in rows if filter_options.get("discovery_state_" + row["discovery_state"])]
+
+
+def log_class_filter(value: FilterHTTPVariables) -> FilterHeader:
+    if not any(value.values()):
+        return ""  # Do not apply this filter
+
+    if toggled := [request_var[-1] for request_var, value in value.items() if value == "on"]:
+        return lq_logic("Filter: class =", toggled, "Or")
+
+    return "Limit: 0\n"  # no class allowed
 
 
 def if_oper_status_filter_table(ident: str, context: VisualContext, rows: Rows) -> Rows:

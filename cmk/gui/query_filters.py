@@ -74,6 +74,15 @@ class FilterMultipleOptions(Filter):
         )
         self.options = options
 
+    def filter(self, value: FilterHTTPVariables) -> FilterHeader:
+        if self.ident == "hostgroupvisibility":
+            # jump directly because selection is empty filter
+            return self.filter_lq(value)
+
+        if all(value.values()):  # everything on, skip filter
+            return ""
+        return self.filter_lq(value)
+
 
 ### Tri State filter
 def default_tri_state_options() -> Options:
@@ -633,48 +642,47 @@ class FilterMultiple(FilterText):
 
 
 def service_state_filter(prefix: str, value: FilterHTTPVariables) -> FilterHeader:
-    headers = []
-    filter_is_used = any(value.values())
-    for i in [0, 1, 2, 3]:
-        check_result = bool(value.get(prefix + "st%d" % i))
+    if not any(value.values()):  # empty selection discard
+        return ""
 
-        if filter_is_used and check_result is False:
+    headers = []
+    for request_var, toggled in value.items():
+        if toggled:
+            continue
+
+        if request_var.endswith("p"):
+            headers.append("Filter: service_has_been_checked = 1\n")
+        else:
             if prefix == "hd":
                 column = "service_last_hard_state"
             else:
                 column = "service_state"
             headers.append(
-                "Filter: %s = %d\n"
+                "Filter: %s = %s\n"
                 "Filter: service_has_been_checked = 1\n"
-                "And: 2\nNegate:\n" % (column, i)
+                "And: 2\nNegate:\n" % (column, request_var[-1])
             )
 
-    if filter_is_used and bool(value.get(prefix + "stp")) is False:
-        headers.append("Filter: service_has_been_checked = 1\n")
-
-    if len(headers) == 5:  # none allowed = all allowed (makes URL building easier)
-        return ""
     return "".join(headers)
 
 
 def host_state_filter(value: FilterHTTPVariables) -> FilterHeader:
-    headers = []
-    filter_is_used = any(value.values())
-    for i in [0, 1, 2]:
-        check_result = bool(value.get("hst%d" % i))
-
-        if filter_is_used and check_result is False:
-            headers.append(
-                "Filter: host_state = %d\n"
-                "Filter: host_has_been_checked = 1\n"
-                "And: 2\nNegate:\n" % i
-            )
-
-    if filter_is_used and bool(value.get("hstp")) is False:
-        headers.append("Filter: host_has_been_checked = 1\n")
-
-    if len(headers) == 4:  # none allowed = all allowed (makes URL building easier)
+    if not any(value.values()):  # empty selection discard
         return ""
+    headers = []
+    for request_var, toggled in value.items():
+        if toggled:
+            continue
+
+        if request_var == "hstp":
+            headers.append("Filter: host_has_been_checked = 1\n")
+
+        else:
+            headers.append(
+                "Filter: host_state = %s\n"
+                "Filter: host_has_been_checked = 1\n"
+                "And: 2\nNegate:\n" % request_var[-1]
+            )
     return "".join(headers)
 
 
@@ -709,7 +717,7 @@ def hostgroup_problems_filter(value: FilterHTTPVariables) -> FilterHeader:
 
 def log_alerts_filter(value: FilterHTTPVariables) -> FilterHeader:
     if not any(value.values()):
-        return ""  # Do not apply this filter
+        return "Limit: 0\n"  # no allowed state
 
     headers = []
     for request_var, toggled in value.items():
@@ -720,10 +728,6 @@ def log_alerts_filter(value: FilterHTTPVariables) -> FilterHeader:
                 lq_logic("Filter:", [f"log_type ~ {log_type} .*", f"log_state = {state}"], "And")
             )
 
-    if len(headers) == 0:
-        return "Limit: 0\n"  # no allowed state
-    if len(headers) == len(value):
-        return ""  # all allowed or form not filled in
     return "".join(headers) + ("Or: %d\n" % len(headers))
 
 
@@ -735,8 +739,6 @@ def empty_hostgroup_filter(value: FilterHTTPVariables) -> FilterHeader:
 
 def options_toggled_filter(column: str, value: FilterHTTPVariables) -> FilterHeader:
     "When VALUE keys are the options, return filterheaders that equal column to option."
-    if all(value.values()):  # everything on, skip filter
-        return ""
 
     def drop_column_prefix(var: str):
         if var.startswith(column + "_"):
@@ -825,12 +827,10 @@ def discovery_state_filter_table(ident: str, context: VisualContext, rows: Rows)
 
 def log_class_filter(value: FilterHTTPVariables) -> FilterHeader:
     if not any(value.values()):
-        return ""  # Do not apply this filter
+        return "Limit: 0\n"  # no class allowed
 
-    if toggled := [request_var[-1] for request_var, value in value.items() if value == "on"]:
-        return lq_logic("Filter: class =", toggled, "Or")
-
-    return "Limit: 0\n"  # no class allowed
+    toggled = [request_var[-1] for request_var, value in value.items() if value == "on"]
+    return lq_logic("Filter: class =", toggled, "Or")
 
 
 def if_oper_status_filter_table(ident: str, context: VisualContext, rows: Rows) -> Rows:

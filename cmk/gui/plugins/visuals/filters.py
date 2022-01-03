@@ -18,7 +18,7 @@ import cmk.gui.bi as bi
 import cmk.gui.mkeventd as mkeventd
 import cmk.gui.sites as sites
 from cmk.gui.exceptions import MKMissingDataError, MKUserError
-from cmk.gui.globals import config, html, request, response, user_errors
+from cmk.gui.globals import config, html, request, user_errors
 from cmk.gui.i18n import _, _l
 from cmk.gui.type_defs import (
     Choices,
@@ -30,7 +30,6 @@ from cmk.gui.type_defs import (
     VisualContext,
 )
 from cmk.gui.utils.labels import encode_labels_for_livestatus
-from cmk.gui.utils.mobile import is_mobile
 from cmk.gui.utils.regex import validate_regex
 from cmk.gui.utils.speaklater import LazyString
 from cmk.gui.valuespec import DualListChoice, Labels
@@ -1383,74 +1382,37 @@ filter_registry.register(
 )
 
 
+# TODO: I would be great to split this in two filters for host & service states
 @filter_registry.register_instance
-class FilterLogState(Filter):
+class FilterLogState(CheckboxRowFilter):
     def __init__(self):
-        self._items = [
-            ("h0", "host", 0, _l("Up")),
-            ("h1", "host", 1, _l("Down")),
-            ("h2", "host", 2, _l("Unreachable")),
-            ("s0", "service", 0, _l("OK")),
-            ("s1", "service", 1, _l("Warning")),
-            ("s2", "service", 2, _l("Critical")),
-            ("s3", "service", 3, _l("Unknown")),
+        self.host_states = [
+            ("logst_h0", _("Up")),
+            ("logst_h1", _("Down")),
+            ("logst_h2", _("Unreachable")),
+        ]
+        self.service_states = [
+            ("logst_s0", _("OK")),
+            ("logst_s1", _("Warning")),
+            ("logst_s2", _("Critical")),
+            ("logst_s3", _("Unknown")),
         ]
 
         super().__init__(
-            ident="log_state",
             title=_l("Type of alerts of hosts and services"),
             sort_index=270,
             info="log",
-            htmlvars=["log_state_filled"] + ["logst_" + e[0] for e in self._items],
-            link_columns=[],
+            query_filter=query_filters.FilterMultipleOptions(
+                ident="log_state",
+                options=self.host_states + self.service_states,
+                filter_lq=query_filters.log_alerts_filter,
+            ),
         )
 
     def display(self, value: FilterHTTPVariables) -> None:
-        html.hidden_field("log_state_filled", "1", add_var=True)
-        html.open_table(class_="alertstatefilter")
-        html.open_tr()
-        html.open_td()
-        html.begin_checkbox_group()
-        mobile = is_mobile(request, response)
-        checkbox_default = not any(value.values())  # everything by default
-        for varsuffix, what, state, text in self._items:
-            if state == 0:
-                title = _("Host") if what == "host" else _("Service")
-                html.u("%s:" % title)
-                html.close_td()
-                html.open_td()
-            html.checkbox(
-                "logst_" + varsuffix,
-                bool(value.get("logst_" + varsuffix, checkbox_default)),
-                label=str(text),
-            )
-            if not mobile:
-                html.br()
-            if varsuffix == "h2":
-                html.close_td()
-                html.open_td()
-        html.end_checkbox_group()
-        html.close_td()
-        html.close_tr()
-        html.close_table()
-
-    def filter(self, value: FilterHTTPVariables) -> FilterHeader:
-        if not any(value.values()):
-            return ""  # Do not apply this filter
-
-        headers = []
-        for varsuffix, what, state, _text in self._items:
-            if value.get("logst_" + varsuffix):
-                headers.append(
-                    "Filter: log_type ~ %s .*\nFilter: log_state = %d\nAnd: 2\n"
-                    % (what.upper(), state)
-                )
-
-        if len(headers) == 0:
-            return "Limit: 0\n"  # no allowed state
-        if len(headers) == len(self._items):
-            return ""  # all allowed or form not filled in
-        return "".join(headers) + ("Or: %d\n" % len(headers))
+        checkbox_row(self.host_states, value, "Hosts: ")
+        html.br()
+        checkbox_row(self.service_states, value, "Services: ")
 
 
 filter_registry.register(

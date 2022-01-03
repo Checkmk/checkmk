@@ -473,7 +473,6 @@ filter_tests = [
     FilterTest(
         ident="log_state",
         request_vars=[
-            ("log_state_filled", "1"),
             ("logst_h0", "on"),
             ("logst_h1", "on"),
             ("logst_s0", "on"),

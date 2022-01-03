@@ -707,6 +707,26 @@ def hostgroup_problems_filter(value: FilterHTTPVariables) -> FilterHeader:
     return lq_logic("Filter:", headers, "Or")
 
 
+def log_alerts_filter(value: FilterHTTPVariables) -> FilterHeader:
+    if not any(value.values()):
+        return ""  # Do not apply this filter
+
+    headers = []
+    for request_var, toggled in value.items():
+        if toggled:
+            log_type = "HOST" if request_var[-2] == "h" else "SERVICE"
+            state = request_var[-1]
+            headers.append(
+                lq_logic("Filter:", [f"log_type ~ {log_type} .*", f"log_state = {state}"], "And")
+            )
+
+    if len(headers) == 0:
+        return "Limit: 0\n"  # no allowed state
+    if len(headers) == len(value):
+        return ""  # all allowed or form not filled in
+    return "".join(headers) + ("Or: %d\n" % len(headers))
+
+
 def empty_hostgroup_filter(value: FilterHTTPVariables) -> FilterHeader:
     if any(value.values()):  # Selected to show empty
         return ""

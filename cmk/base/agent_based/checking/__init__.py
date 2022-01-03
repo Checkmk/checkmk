@@ -64,7 +64,7 @@ from cmk.base.agent_based.utils import (
 from cmk.base.api.agent_based import checking_classes, value_store
 from cmk.base.api.agent_based.register.check_plugins_legacy import wrap_parameters
 from cmk.base.api.agent_based.type_defs import Parameters
-from cmk.base.check_utils import LegacyCheckParameters, Service
+from cmk.base.check_utils import ConfiguredService, LegacyCheckParameters
 
 from . import _cluster_modes, _submit_to_core
 from .utils import AggregatedResult
@@ -297,7 +297,7 @@ def check_host_services(
     host_config: config.HostConfig,
     ipaddress: Optional[HostAddress],
     parsed_sections_broker: ParsedSectionsBroker,
-    services: Sequence[Service],
+    services: Sequence[ConfiguredService],
     run_plugin_names: Container[CheckPluginName],
     dry_run: bool,
     show_perfdata: bool,
@@ -339,11 +339,11 @@ def check_host_services(
 
 def _filter_services_to_check(
     *,
-    services: Sequence[Service],
+    services: Sequence[ConfiguredService],
     run_plugin_names: Container[CheckPluginName],
     config_cache: config.ConfigCache,
     host_name: HostName,
-) -> List[Service]:
+) -> List[ConfiguredService]:
     """Filter list of services to check
 
     If check types are specified in `run_plugin_names` (e.g. via command line), drop all others
@@ -373,7 +373,7 @@ def _execute_check(
     parsed_sections_broker: ParsedSectionsBroker,
     host_config: config.HostConfig,
     ipaddress: Optional[HostAddress],
-    service: Service,
+    service: ConfiguredService,
     *,
     dry_run: bool,
     show_perfdata: bool,
@@ -386,7 +386,6 @@ def _execute_check(
         ipaddress,
         service,
         plugin,
-        service.parameters,
         value_store_manager=value_store_manager,
         persist_value_store_changes=not dry_run,
     )
@@ -408,9 +407,8 @@ def get_aggregated_result(
     parsed_sections_broker: ParsedSectionsBroker,
     host_config: config.HostConfig,
     ipaddress: Optional[HostAddress],
-    service: Service,
+    service: ConfiguredService,
     plugin: Optional[checking_classes.CheckPlugin],
-    timespecific_parameters: Union[LegacyCheckParameters, TimespecificParameters],
     *,
     value_store_manager: value_store.ValueStoreManager,
     persist_value_store_changes: bool,
@@ -462,7 +460,7 @@ def get_aggregated_result(
     params_kw = (
         {}
         if plugin.check_default_parameters is None
-        else {"params": _final_read_only_check_parameters(timespecific_parameters)}
+        else {"params": _final_read_only_check_parameters(service.parameters)}
     )
 
     try:
@@ -515,7 +513,7 @@ def _get_monitoring_data_kwargs_handle_pre20_services(
     host_config: config.HostConfig,
     config_cache: config.ConfigCache,
     ipaddress: Optional[HostAddress],
-    service: Service,
+    service: ConfiguredService,
     sections: Sequence[ParsedSectionName],
 ) -> Tuple[Mapping[str, object], ServiceCheckResult]:
     """Handle cases of missing data due to changed plugin names
@@ -551,7 +549,7 @@ def _get_monitoring_data_kwargs(
     host_config: config.HostConfig,
     config_cache: config.ConfigCache,
     ipaddress: Optional[HostAddress],
-    service: Service,
+    service: ConfiguredService,
     sections: Sequence[ParsedSectionName],
     source_type: Optional[SourceType] = None,
 ) -> Tuple[Mapping[str, object], ServiceCheckResult]:

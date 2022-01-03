@@ -18,7 +18,7 @@ import cmk.utils.piggyback as piggyback
 import cmk.utils.version as cmk_version
 from cmk.utils.caching import config_cache as _config_cache
 from cmk.utils.exceptions import MKGeneralException
-from cmk.utils.parameters import TimespecificParameterSet
+from cmk.utils.parameters import TimespecificParameters, TimespecificParameterSet
 from cmk.utils.rulesets.ruleset_matcher import RulesetMatchObject
 from cmk.utils.type_defs import (
     CheckPluginName,
@@ -37,7 +37,7 @@ import cmk.base.config as config
 from cmk.base.api.agent_based.checking_classes import CheckPlugin
 from cmk.base.api.agent_based.type_defs import ParsedSectionName, SNMPSectionPlugin
 from cmk.base.autochecks import AutocheckEntry
-from cmk.base.check_utils import Service
+from cmk.base.check_utils import ConfiguredService
 
 
 def test_duplicate_hosts(monkeypatch: MonkeyPatch) -> None:
@@ -1508,19 +1508,23 @@ def test_http_proxies() -> None:
 
 
 @pytest.fixture(name="service_list")
-def _service_list() -> List[Service]:
+def _service_list() -> List[ConfiguredService]:
     return [
-        Service(
+        ConfiguredService(
             check_plugin_name=CheckPluginName("plugin_%s" % d),
             item="item",
             description="description %s" % d,
-            parameters={},
+            parameters=TimespecificParameters(),
+            discovered_parameters={},
+            service_labels={},
         )
         for d in "FDACEB"
     ]
 
 
-def test_get_sorted_check_table_cmc(monkeypatch: MonkeyPatch, service_list: List[Service]) -> None:
+def test_get_sorted_check_table_cmc(
+    monkeypatch: MonkeyPatch, service_list: List[ConfiguredService]
+) -> None:
     monkeypatch.setattr(config, "is_cmc", lambda: True)
 
     assert service_list == config.resolve_service_dependencies(
@@ -1530,7 +1534,7 @@ def test_get_sorted_check_table_cmc(monkeypatch: MonkeyPatch, service_list: List
 
 
 def test_get_sorted_check_table_no_cmc(
-    monkeypatch: MonkeyPatch, service_list: List[Service]
+    monkeypatch: MonkeyPatch, service_list: List[ConfiguredService]
 ) -> None:
     monkeypatch.setattr(config, "is_cmc", lambda: False)
     monkeypatch.setattr(
@@ -1558,7 +1562,7 @@ def test_get_sorted_check_table_no_cmc(
 
 
 def test_resolve_service_dependencies_cyclic(
-    monkeypatch: MonkeyPatch, service_list: List[Service]
+    monkeypatch: MonkeyPatch, service_list: List[ConfiguredService]
 ) -> None:
     monkeypatch.setattr(config, "is_cmc", lambda: False)
     monkeypatch.setattr(

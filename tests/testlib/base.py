@@ -14,8 +14,8 @@ from tests.testlib.utils import get_standard_linux_agent_output
 import cmk.utils.tags
 from cmk.utils.type_defs import HostAddress, HostName
 
-import cmk.base.autochecks as autochecks
 import cmk.base.config as config
+from cmk.base import autochecks
 
 
 class _AutochecksMocker(autochecks.AutochecksManager):

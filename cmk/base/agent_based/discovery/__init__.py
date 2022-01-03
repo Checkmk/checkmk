@@ -65,7 +65,13 @@ import cmk.base.section as section
 from cmk.base.agent_based.data_provider import make_broker, ParsedSectionsBroker
 from cmk.base.agent_based.utils import check_parsing_errors, check_sources
 from cmk.base.api.agent_based.value_store import load_host_value_store, ValueStoreManager
-from cmk.base.check_utils import AutocheckService, LegacyCheckParameters, Service, ServiceID
+from cmk.base.check_utils import (
+    AutocheckService,
+    ConfiguredService,
+    LegacyCheckParameters,
+    Service,
+    ServiceID,
+)
 from cmk.base.core_config import MonitoringCore
 from cmk.base.discovered_labels import HostLabel
 
@@ -1091,7 +1097,7 @@ def _node_service_source(
 
 def _manual_services(
     host_config: config.HostConfig,
-) -> Mapping[ServiceID, Service]:
+) -> Mapping[ServiceID, ConfiguredService]:
     return check_table.get_check_table(host_config.hostname, skip_autochecks=True)
 
 
@@ -1264,14 +1270,26 @@ def get_check_preview(
             _check_preview_table_row(
                 host_config=host_config,
                 ip_address=ip_address,
-                service=service,
+                service=ConfiguredService(
+                    check_plugin_name=autocheck_service.check_plugin_name,
+                    item=autocheck_service.item,
+                    description=autocheck_service.description,
+                    parameters=config.compute_check_parameters(
+                        host_config.hostname,
+                        autocheck_service.check_plugin_name,
+                        autocheck_service.item,
+                        autocheck_service.parameters,
+                    ),
+                    discovered_parameters=autocheck_service.parameters,
+                    service_labels=autocheck_service.service_labels,
+                ),
                 check_source=check_source,
                 parsed_sections_broker=parsed_sections_broker,
                 found_on_nodes=found_on_nodes,
                 value_store_manager=value_store_manager,
             )
             for check_source, services_with_nodes in grouped_services.items()
-            for service, found_on_nodes in services_with_nodes
+            for autocheck_service, found_on_nodes in services_with_nodes
         ] + [
             _check_preview_table_row(
                 host_config=host_config,
@@ -1296,23 +1314,12 @@ def _check_preview_table_row(
     *,
     host_config: config.HostConfig,
     ip_address: Optional[HostAddress],
-    service: Service,
+    service: ConfiguredService,
     check_source: Union[_Transition, Literal["manual"]],
     parsed_sections_broker: ParsedSectionsBroker,
     found_on_nodes: Sequence[HostName],
     value_store_manager: ValueStoreManager,
 ) -> CheckPreviewEntry:
-    effective_parameters: Union[LegacyCheckParameters, TimespecificParameters] = (
-        config.compute_check_parameters(
-            host_config.hostname,
-            service.check_plugin_name,
-            service.item,
-            service.parameters,
-        )
-        if isinstance(service, AutocheckService)
-        else service.parameters
-    )
-
     plugin = agent_based_register.get_check_plugin(service.check_plugin_name)
     ruleset_name = str(plugin.check_ruleset_name) if plugin and plugin.check_ruleset_name else None
 
@@ -1322,7 +1329,6 @@ def _check_preview_table_row(
         ip_address,
         service,
         plugin,
-        effective_parameters,
         value_store_manager=value_store_manager,
         persist_value_store_changes=False,  # never during discovery
     ).result
@@ -1334,8 +1340,8 @@ def _check_preview_table_row(
         description=service.description,
         check_source=check_source,
         ruleset_name=ruleset_name,
-        discovered_parameters=service.parameters if isinstance(service, AutocheckService) else None,
-        effective_parameters=effective_parameters,
+        discovered_parameters=service.discovered_parameters,
+        effective_parameters=service.parameters,
         exitcode=result.state,
         output=result.output,
         found_on_nodes=found_on_nodes,

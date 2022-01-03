@@ -1265,14 +1265,14 @@ def _checktype_ignored_for_host(
 def resolve_service_dependencies(
     *,
     host_name: HostName,
-    services: Sequence[cmk.base.check_utils.Service],
-) -> Sequence[cmk.base.check_utils.Service]:
+    services: Sequence[cmk.base.check_utils.ConfiguredService],
+) -> Sequence[cmk.base.check_utils.ConfiguredService]:
     if is_cmc():
         return services
 
     unresolved = [(s, set(service_depends_on(host_name, s.description))) for s in services]
 
-    resolved: List[cmk.base.check_utils.Service] = []
+    resolved: List[cmk.base.check_utils.ConfiguredService] = []
     while unresolved:
         resolved_descriptions = {service.description for service in resolved}
         newly_resolved = {
@@ -3833,7 +3833,7 @@ class ConfigCache:
 
     def get_autochecks_of(
         self, hostname: HostName
-    ) -> Sequence[cmk.base.check_utils.Service[TimespecificParameters]]:
+    ) -> Sequence[cmk.base.check_utils.ConfiguredService]:
         return self._autochecks_manager.get_autochecks_of(
             hostname,
             compute_check_parameters,

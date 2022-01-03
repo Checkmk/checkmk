@@ -13,12 +13,12 @@ import pytest
 from tests.testlib.base import Scenario
 
 import cmk.utils.paths
+from cmk.utils.parameters import TimespecificParameters, TimespecificParameterSet
 from cmk.utils.type_defs import CheckPluginName, HostName
 
-import cmk.base.agent_based.discovery as discovery
 import cmk.base.autochecks as autochecks
 import cmk.base.config as config
-from cmk.base.check_utils import AutocheckService
+from cmk.base.check_utils import AutocheckService, ConfiguredService
 
 
 @pytest.fixture(autouse=True)
@@ -43,21 +43,30 @@ def test_config(monkeypatch) -> config.ConfigCache:
   {'check_plugin_name': 'df', 'item': u'/', 'parameters': {}, 'service_labels': {}},
 ]""",
             [
-                discovery.Service(
-                    CheckPluginName("df"),
-                    "/",
-                    "",
-                    {
-                        "inodes_levels": (10.0, 5.0),
-                        "levels": (80.0, 90.0),
-                        "levels_low": (50.0, 60.0),
-                        "magic_normsize": 20,
-                        "show_inodes": "onlow",
-                        "show_levels": "onmagic",
-                        "show_reserved": False,
-                        "trend_perfdata": True,
-                        "trend_range": 24,
-                    },
+                ConfiguredService(
+                    check_plugin_name=CheckPluginName("df"),
+                    item="/",
+                    description="fs_/",
+                    parameters=TimespecificParameters(
+                        (
+                            TimespecificParameterSet(
+                                {
+                                    "inodes_levels": (10.0, 5.0),
+                                    "levels": (80.0, 90.0),
+                                    "levels_low": (50.0, 60.0),
+                                    "magic_normsize": 20,
+                                    "show_inodes": "onlow",
+                                    "show_levels": "onmagic",
+                                    "show_reserved": False,
+                                    "trend_perfdata": True,
+                                    "trend_range": 24,
+                                },
+                                (),
+                            ),
+                        )
+                    ),
+                    discovered_parameters={},
+                    service_labels={},
                 ),
             ],
         ),
@@ -66,7 +75,7 @@ def test_config(monkeypatch) -> config.ConfigCache:
 def test_manager_get_autochecks_of(
     test_config: config.ConfigCache,
     autochecks_content: str,
-    expected_result: Sequence[discovery.Service],
+    expected_result: Sequence[ConfiguredService],
 ) -> None:
     autochecks_file = Path(cmk.utils.paths.autochecks_dir, "host.mk")
     with autochecks_file.open("w", encoding="utf-8") as f:

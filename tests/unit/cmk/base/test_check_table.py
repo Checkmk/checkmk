@@ -22,7 +22,7 @@ from cmk.base import check_table, config
 from cmk.base.api.agent_based.checking_classes import CheckPlugin
 from cmk.base.autochecks import AutocheckEntry
 from cmk.base.check_table import HostCheckTable
-from cmk.base.check_utils import Service, ServiceID
+from cmk.base.check_utils import ConfiguredService, ServiceID
 
 
 @pytest.mark.usefixtures("fix_register")
@@ -73,11 +73,18 @@ def test_cluster_ignores_nodes_parameters(monkeypatch: MonkeyPatch) -> None:
         (
             "no-autochecks",
             {
-                (CheckPluginName("smart_temp"), "/dev/sda"): Service(
+                (CheckPluginName("smart_temp"), "/dev/sda"): ConfiguredService(
                     check_plugin_name=CheckPluginName("smart_temp"),
                     item="/dev/sda",
-                    parameters={"levels": (35, 40)},
                     description="Temperature SMART /dev/sda",
+                    parameters=TimespecificParameters(
+                        (
+                            TimespecificParameterSet({}, ()),
+                            TimespecificParameterSet({"levels": (35, 40)}, ()),
+                        )
+                    ),
+                    discovered_parameters=None,
+                    service_labels={},
                 ),
             },
         ),
@@ -85,90 +92,149 @@ def test_cluster_ignores_nodes_parameters(monkeypatch: MonkeyPatch) -> None:
         (
             "autocheck-overwrite",
             {
-                (CheckPluginName("smart_temp"), "/dev/sda"): Service(
+                (CheckPluginName("smart_temp"), "/dev/sda"): ConfiguredService(
                     check_plugin_name=CheckPluginName("smart_temp"),
                     item="/dev/sda",
-                    parameters={"levels": (35, 40)},
                     description="Temperature SMART /dev/sda",
+                    parameters=TimespecificParameters(
+                        (
+                            TimespecificParameterSet({}, ()),
+                            TimespecificParameterSet({"levels": (35, 40)}, ()),
+                        )
+                    ),
+                    discovered_parameters=None,
+                    service_labels={},
                 ),
-                (CheckPluginName("smart_temp"), "/dev/sdb"): Service(
+                (CheckPluginName("smart_temp"), "/dev/sdb"): ConfiguredService(
                     check_plugin_name=CheckPluginName("smart_temp"),
                     item="/dev/sdb",
-                    parameters={"is_autocheck": True},
                     description="Temperature SMART /dev/sdb",
+                    parameters=TimespecificParameters(
+                        (
+                            TimespecificParameterSet(
+                                {
+                                    "levels": (35, 40),
+                                    "is_autocheck": True,
+                                },
+                                (),
+                            ),
+                        )
+                    ),
+                    discovered_parameters={"is_autocheck": True},
+                    service_labels={},
                 ),
             },
         ),
         (
             "ignore-not-existing-checks",
             {
-                (CheckPluginName("bla_blub"), "ITEM"): Service(
+                (CheckPluginName("bla_blub"), "ITEM"): ConfiguredService(
                     check_plugin_name=CheckPluginName("bla_blub"),
                     item="ITEM",
-                    description="Blub ITEM",
-                    parameters={},
+                    description="Unimplemented check bla_blub / ITEM",
+                    parameters=TimespecificParameters(()),
+                    discovered_parameters={},
+                    service_labels={},
                 ),
-                (CheckPluginName("blub_bla"), "ITEM"): Service(
+                (CheckPluginName("blub_bla"), "ITEM"): ConfiguredService(
                     check_plugin_name=CheckPluginName("blub_bla"),
                     item="ITEM",
                     description="Unimplemented check blub_bla / ITEM",
-                    parameters=None,
+                    parameters=TimespecificParameters(),
+                    discovered_parameters=None,
+                    service_labels={},
                 ),
             },
         ),
         (
             "ignore-disabled-rules",
             {
-                (CheckPluginName("smart_temp"), "ITEM2"): Service(
+                (CheckPluginName("smart_temp"), "ITEM2"): ConfiguredService(
                     check_plugin_name=CheckPluginName("smart_temp"),
                     item="ITEM2",
-                    parameters={"levels": (35, 40)},
                     description="Temperature SMART ITEM2",
+                    parameters=TimespecificParameters(
+                        (
+                            TimespecificParameterSet({}, ()),
+                            TimespecificParameterSet({"levels": (35, 40)}, ()),
+                        )
+                    ),
+                    discovered_parameters=None,
+                    service_labels={},
                 ),
             },
         ),
         (
             "static-check-overwrite",
             {
-                (CheckPluginName("smart_temp"), "/dev/sda"): Service(
+                (CheckPluginName("smart_temp"), "/dev/sda"): ConfiguredService(
                     check_plugin_name=CheckPluginName("smart_temp"),
                     item="/dev/sda",
-                    parameters={"levels": (35, 40), "rule": 1},
                     description="Temperature SMART /dev/sda",
+                    parameters=TimespecificParameters(
+                        (
+                            TimespecificParameterSet({"rule": 1}, ()),
+                            TimespecificParameterSet({"levels": (35, 40)}, ()),
+                        )
+                    ),
+                    discovered_parameters=None,
+                    service_labels={},
                 )
             },
         ),
         (
             "node1",
             {
-                (CheckPluginName("smart_temp"), "auto-not-clustered"): Service(
+                (CheckPluginName("smart_temp"), "auto-not-clustered"): ConfiguredService(
                     check_plugin_name=CheckPluginName("smart_temp"),
                     item="auto-not-clustered",
-                    parameters={},
                     description="Temperature SMART auto-not-clustered",
+                    parameters=TimespecificParameters(
+                        (TimespecificParameterSet({"levels": (35, 40)}, ()),)
+                    ),
+                    discovered_parameters={},
+                    service_labels={},
                 ),
-                (CheckPluginName("smart_temp"), "static-node1"): Service(
+                (CheckPluginName("smart_temp"), "static-node1"): ConfiguredService(
                     check_plugin_name=CheckPluginName("smart_temp"),
                     item="static-node1",
-                    parameters={"levels": (35, 40)},
                     description="Temperature SMART static-node1",
+                    parameters=TimespecificParameters(
+                        (
+                            TimespecificParameterSet({}, ()),
+                            TimespecificParameterSet({"levels": (35, 40)}, ()),
+                        )
+                    ),
+                    discovered_parameters=None,
+                    service_labels={},
                 ),
             },
         ),
         (
             "cluster1",
             {
-                (CheckPluginName("smart_temp"), "static-cluster"): Service(
+                (CheckPluginName("smart_temp"), "static-cluster"): ConfiguredService(
                     check_plugin_name=CheckPluginName("smart_temp"),
                     item="static-cluster",
-                    parameters={"levels": (35, 40)},
                     description="Temperature SMART static-cluster",
+                    parameters=TimespecificParameters(
+                        (
+                            TimespecificParameterSet({}, ()),
+                            TimespecificParameterSet({"levels": (35, 40)}, ()),
+                        )
+                    ),
+                    discovered_parameters=None,
+                    service_labels={},
                 ),
-                (CheckPluginName("smart_temp"), "auto-clustered"): Service(
+                (CheckPluginName("smart_temp"), "auto-clustered"): ConfiguredService(
                     check_plugin_name=CheckPluginName("smart_temp"),
                     item="auto-clustered",
-                    parameters={"levels": (35, 40)},
                     description="Temperature SMART auto-clustered",
+                    parameters=TimespecificParameters(
+                        (TimespecificParameterSet({"levels": (35, 40)}, ()),)
+                    ),
+                    discovered_parameters={},
+                    service_labels={},
                 ),
             },
         ),
@@ -234,7 +300,10 @@ def test_get_check_table(
 
     ts.apply(monkeypatch)
 
-    assert check_table.get_check_table(hostname) == expected_result
+    assert set(check_table.get_check_table(hostname)) == set(expected_result)
+    for key, value in check_table.get_check_table(hostname).items():
+        assert key in expected_result
+        assert expected_result[key] == value
 
 
 @pytest.mark.parametrize(
@@ -315,7 +384,7 @@ def test_get_check_table__static_checks_win(monkeypatch: MonkeyPatch) -> None:
     assert len(chk_table) == 1
     # assert static checks won
     effective_params = chk_table[(plugin_name, item)].parameters.evaluate(lambda _: True)
-    assert effective_params["source"] == "static"
+    assert effective_params["source"] == "static"  # type: ignore[index,call-overload]
 
 
 @pytest.mark.parametrize(

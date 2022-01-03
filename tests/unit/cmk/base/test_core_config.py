@@ -14,6 +14,7 @@ from tests.testlib.base import Scenario
 import cmk.utils.paths
 import cmk.utils.version as cmk_version
 from cmk.utils.exceptions import MKGeneralException
+from cmk.utils.parameters import TimespecificParameters
 from cmk.utils.type_defs import CheckPluginName, HostName
 
 import cmk.core_helpers.config_path
@@ -22,7 +23,7 @@ from cmk.core_helpers.config_path import ConfigPath, LATEST_CONFIG
 import cmk.base.config as config
 import cmk.base.core_config as core_config
 import cmk.base.nagios_utils
-from cmk.base.check_utils import Service
+from cmk.base.check_utils import ConfiguredService
 from cmk.base.core_factory import create_core
 
 
@@ -210,7 +211,14 @@ def test_get_cmk_passive_service_attributes(monkeypatch, hostname, result):
     host_config = config_cache.get_host_config(hostname)
     check_mk_attrs = core_config.get_service_attributes(hostname, "Check_MK", config_cache)
 
-    service = Service(CheckPluginName("cpu_loads"), None, "CPU load", {"": ""})
+    service = ConfiguredService(
+        check_plugin_name=CheckPluginName("cpu_loads"),
+        item=None,
+        description="CPU load",
+        parameters=TimespecificParameters(),
+        discovered_parameters={},
+        service_labels={},
+    )
     service_spec = core_config.get_cmk_passive_service_attributes(
         config_cache, host_config, service, check_mk_attrs
     )

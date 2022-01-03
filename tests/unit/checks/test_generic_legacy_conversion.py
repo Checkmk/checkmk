@@ -2145,7 +2145,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy):
         "netapp_api_protocol",
         "netapp_api_psu",
         "netapp_api_psu.summary",
-        "netapp_api_qtree_quota",
         "netapp_api_snapshots",
         "netapp_api_status",
         "netapp_api_systemtime",

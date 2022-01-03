@@ -4,19 +4,30 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Mapping, Sequence, Tuple
+from typing import Mapping, Sequence
 
 import pytest
 
 from cmk.utils.type_defs import CheckPluginName, SectionName
 
+import cmk.base.plugins.agent_based.netapp_api_qtree_quota as qtree_quota
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult
+from cmk.base.plugins.agent_based.netapp_api_qtree_quota import Qtree
 
 from tests.unit.conftest import FixRegister
 
 
+@pytest.fixture(name="value_store_patch")
+def value_store_fixture(monkeypatch):
+    value_store_patched = {
+        "QUOTA-10.user.delta": [0, 0],
+    }
+    monkeypatch.setattr(qtree_quota, "get_value_store", lambda: value_store_patched)
+
+
 @pytest.mark.parametrize(
-    "info, expected_parsed",
+    "string_table, expected_parsed",
     [
         pytest.param(
             [
@@ -29,13 +40,9 @@ from tests.unit.conftest import FixRegister
                 ]
             ],
             {
-                "QUOTA-10": {
-                    "quota": "QUOTA-10",
-                    "quota-type": "tree",
-                    "disk-limit": "5",
-                    "volume": "quota_common_10",
-                    "disk-used": "0",
-                },
+                "QUOTA-10": Qtree(
+                    quota_type="tree", disk_limit="5", disk_used="0", files_used="", file_limit=""
+                ),
             },
             id="qtree_without_quota_users",
         ),
@@ -51,24 +58,21 @@ from tests.unit.conftest import FixRegister
                 ]
             ],
             {
-                "QUOTA-10.user": {
-                    "quota": "QUOTA-10",
-                    "quota-type": "tree",
-                    "quota-users": "user",
-                    "disk-limit": "6",
-                    "volume": "quota_common_10",
-                    "disk-used": "0",
-                },
+                "QUOTA-10.user": Qtree(
+                    quota_type="tree", disk_limit="6", disk_used="0", files_used="", file_limit=""
+                ),
             },
             id="qtree_with_quota_users",
         ),
     ],
 )
 def test_parse_netapp_api_qtree_quota(
-    fix_register: FixRegister, info: Sequence[Sequence[str]], expected_parsed: Mapping
+    fix_register: FixRegister,
+    string_table: Sequence[Sequence[str]],
+    expected_parsed: Mapping[str, Qtree],
 ) -> None:
     section_plugin = fix_register.agent_sections[SectionName("netapp_api_qtree_quota")]
-    result = section_plugin.parse_function(info)
+    result = section_plugin.parse_function(string_table)
     assert result == expected_parsed
 
 
@@ -77,14 +81,9 @@ def test_parse_netapp_api_qtree_quota(
     [
         pytest.param(
             {
-                "QUOTA-10.user": {
-                    "quota": "QUOTA-10",
-                    "quota-type": "tree",
-                    "quota-users": "user",
-                    "disk-limit": "6",
-                    "volume": "quota_common_10",
-                    "disk-used": "0",
-                },
+                "QUOTA-10.user": Qtree(
+                    quota_type="tree", disk_limit="6", disk_used="0", files_used="", file_limit=""
+                ),
             },
             [Service(item="QUOTA-10.user")],
             id="qtree",
@@ -93,8 +92,8 @@ def test_parse_netapp_api_qtree_quota(
 )
 def test_inventory_netapp_api_qtree_quota(
     fix_register: FixRegister,
-    parsed: Mapping,
-    expected_discovery: Sequence[Tuple[str, Mapping]],
+    parsed: Mapping[str, Qtree],
+    expected_discovery: Sequence[Service],
 ) -> None:
     check_plugin = fix_register.check_plugins[CheckPluginName("netapp_api_qtree_quota")]
     result = list(check_plugin.discovery_function(parsed))
@@ -106,36 +105,30 @@ def test_inventory_netapp_api_qtree_quota(
     [
         pytest.param(
             {
-                "QUOTA-10.user": {
-                    "quota": "QUOTA-10",
-                    "quota-type": "tree",
-                    "quota-users": "user",
-                    "disk-limit": "6",
-                    "volume": "quota_common_10",
-                    "disk-used": "0",
-                },
+                "QUOTA-10.user": Qtree(
+                    quota_type="tree", disk_limit="6", disk_used="0", files_used="", file_limit=""
+                ),
             },
             "QUOTA-10.user",
             [
-                Result(state=State.OK, summary="0% used (0.00 B of 6.00 kB)"),
                 Metric(
                     "fs_used", 0.0, levels=(0.0046875, 0.0052734375), boundaries=(0.0, 0.005859375)
                 ),
-                Metric("fs_size", 0.005859375),
-                Metric("fs_used_percent", 0.0),
+                Metric("fs_size", 0.005859375, boundaries=(0.0, None)),
+                Metric("fs_used_percent", 0.0, levels=(80.0, 90.0), boundaries=(0.0, 100.0)),
+                Result(state=State.OK, summary="0% used (0 B of 6.00 KiB)"),
+                Metric("growth", 0.0),
+                Result(state=State.OK, summary="trend per 1 day 0 hours: +0 B"),
+                Result(state=State.OK, summary="trend per 1 day 0 hours: +0%"),
+                Metric("trend", 0.0, boundaries=(0.0, 0.000244140625)),
             ],
             id="qtree_without_inodes",
         ),
         pytest.param(
             {
-                "QUOTA-10.user": {
-                    "quota": "QUOTA-10",
-                    "quota-type": "tree",
-                    "quota-users": "user",
-                    "disk-limit": "",
-                    "volume": "quota_common_10",
-                    "disk-used": "0",
-                },
+                "QUOTA-10.user": Qtree(
+                    quota_type="tree", disk_limit="", disk_used="0", files_used="", file_limit=""
+                ),
             },
             "QUOTA-10.user",
             [
@@ -145,29 +138,28 @@ def test_inventory_netapp_api_qtree_quota(
         ),
         pytest.param(
             {
-                "QUOTA-10.user": {
-                    "quota": "QUOTA-10",
-                    "quota-type": "tree",
-                    "quota-users": "user",
-                    "disk-limit": "6",
-                    "volume": "quota_common_10",
-                    "disk-used": "0",
-                    "files-used": "99",
-                    "file-limit": "100",
-                },
+                "QUOTA-10.user": Qtree(
+                    quota_type="tree",
+                    disk_limit="6",
+                    disk_used="0",
+                    files_used="99",
+                    file_limit="100",
+                ),
             },
             "QUOTA-10.user",
             [
-                Result(
-                    state=State.OK,
-                    summary="0% used (0.00 B of 6.00 kB), Inodes used: 99, Inodes available: 1 (1.00%)",
-                ),
                 Metric(
                     "fs_used", 0.0, levels=(0.0046875, 0.0052734375), boundaries=(0.0, 0.005859375)
                 ),
-                Metric("fs_size", 0.005859375),
-                Metric("fs_used_percent", 0.0),
+                Metric("fs_size", 0.005859375, boundaries=(0.0, None)),
+                Metric("fs_used_percent", 0.0, levels=(80.0, 90.0), boundaries=(0.0, 100.0)),
+                Result(state=State.OK, summary="0% used (0 B of 6.00 KiB)"),
+                Metric("growth", 0.0),
+                Result(state=State.OK, summary="trend per 1 day 0 hours: +0 B"),
+                Result(state=State.OK, summary="trend per 1 day 0 hours: +0%"),
+                Metric("trend", 0.0, boundaries=(0.0, 0.000244140625)),
                 Metric("inodes_used", 99.0, boundaries=(0.0, 100.0)),
+                Result(state=State.OK, summary="Inodes used: 99, Inodes available: 1 (1.00%)"),
             ],
             id="qtree_with_inodes",
         ),
@@ -175,9 +167,10 @@ def test_inventory_netapp_api_qtree_quota(
 )
 def test_check_netapp_api_qtree_quota(
     fix_register: FixRegister,
-    parsed: Mapping,
+    value_store_patch: None,
+    parsed: Mapping[str, Qtree],
     item: str,
-    expected_result: Sequence[Tuple[str, Mapping]],
+    expected_result: Sequence[CheckResult],
 ) -> None:
     check_plugin = fix_register.check_plugins[CheckPluginName("netapp_api_qtree_quota")]
     result = list(check_plugin.check_function(item=item, params={}, section=parsed))

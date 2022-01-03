@@ -32,11 +32,13 @@ import logging
 import pprint
 import re
 import sys
-from typing import Final, Mapping
+from typing import Final, Iterator, Mapping, Tuple
 
 import requests
 
 from cmk.special_agents.utils import vcrtrace
+
+UPNPInfo = Tuple[Mapping[str, str], str, str]
 
 _QUERIES: Final = (
     ("WANIPConn1", "urn:schemas-upnp-org:service:WANIPConnection:1", "GetStatusInfo"),
@@ -154,7 +156,9 @@ def _get_response(
     return response
 
 
-def get_upnp_info(control: str, namespace: str, action: str, connection: FritzConnection):
+def get_upnp_info(
+    control: str, namespace: str, action: str, connection: FritzConnection
+) -> UPNPInfo:
 
     response = _get_response(control, namespace, action, connection)
     device, version = response.headers["SERVER"].split("UPnP/1.0 ")[1].rsplit(" ", 1)
@@ -174,6 +178,19 @@ def get_upnp_info(control: str, namespace: str, action: str, connection: FritzCo
     return attrs, device, version
 
 
+def _get_query_responses(connection: FritzConnection, debug: bool) -> Iterator[UPNPInfo]:
+    for query in _QUERIES:
+        try:
+            yield get_upnp_info(*query, connection)
+        except requests.exceptions.ConnectionError as exc:
+            sys.stderr.write(f"{exc}\n")
+            raise
+        except (ValueError, requests.exceptions.HTTPError):
+            if debug:
+                raise
+            continue
+
+
 def main(sys_argv=None):
     if sys_argv is None:
         sys_argv = sys.argv[1:]
@@ -182,27 +199,19 @@ def main(sys_argv=None):
     setup_logging(args.verbose)
 
     connection = FritzConnection(args.host_address, args.timeout)
-    g_device, g_version = "", ""
 
-    status = {}
-    for control, namespace, action in _QUERIES:
-        try:
-            attrs, g_device, g_version = get_upnp_info(control, namespace, action, connection)
-        except requests.exceptions.ConnectionError as exc:
-            sys.stderr.write(f"{exc}\n")
-            raise
-        except (ValueError, requests.exceptions.HTTPError):
-            if args.debug:
-                raise
-            continue
+    upnp_infos = list(_get_query_responses(connection, args.debug))
 
-        status.update(attrs)
+    version = next((v for _, _, v in upnp_infos if v), "")
+    device = next((d for _, d, _ in upnp_infos if d), "")
 
     sys.stdout.write("<<<fritz>>>\n")
-    sys.stdout.write("VersionOS %s\n" % g_version)
-    sys.stdout.write("VersionDevice %s\n" % g_device)
-    for pair in status.items():
-        sys.stdout.write("%s %s\n" % pair)
+    sys.stdout.write(f"VersionOS {version}\n")
+    sys.stdout.write(f"VersionDevice {device}\n")
+
+    for attrs, _, _ in upnp_infos:
+        for key, value in attrs.items():
+            sys.stdout.write(f"{key} {value}\n")
 
     sys.stdout.write("<<<check_mk>>>\n")
     sys.stdout.write("AgentOS: FRITZ!OS\n")

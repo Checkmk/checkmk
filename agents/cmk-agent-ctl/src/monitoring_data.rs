@@ -2,11 +2,22 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
-use std::io::{Read, Result as IoResult, Write};
+use std::io::{Result as IoResult, Write};
+
+#[cfg(unix)]
+use std::io::Read;
+#[cfg(unix)]
 use std::os::unix::net::UnixStream;
 
 pub const COMPRESSION_ALGORITHM: &str = "zlib";
 
+#[cfg(windows)]
+pub fn collect() -> IoResult<Vec<u8>> {
+    let mondata: Vec<u8> = vec![];
+    Ok(mondata)
+}
+
+#[cfg(unix)]
 pub fn collect() -> IoResult<Vec<u8>> {
     let mut mondata: Vec<u8> = vec![];
     UnixStream::connect("/run/check-mk-agent.socket")?.read_to_end(&mut mondata)?;

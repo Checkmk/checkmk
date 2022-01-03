@@ -13,6 +13,7 @@ mod tls_server;
 use anyhow::{Context, Result as AnyhowResult};
 use config::JSONLoader;
 use log::error;
+#[cfg(unix)]
 use nix::unistd;
 use std::fs;
 use std::io::Result as IoResult;
@@ -20,6 +21,7 @@ use std::io::{self, Write};
 use std::path::{Path, PathBuf};
 use structopt::StructOpt;
 
+#[cfg(unix)]
 const CMK_AGENT_USER: &str = "cmk-agent";
 const HOME_DIR: &str = "/var/lib/cmk-agent";
 // Normally, the config would be expected at /etc/check_mk/, but we
@@ -122,6 +124,7 @@ fn ensure_home_directory(path: &Path) -> io::Result<()> {
     Ok(())
 }
 
+#[cfg(unix)]
 fn try_sanitize_home_dir_ownership(home_dir: &Path, user: &str) {
     if let Err(error) = sanitize_home_dir_ownership(home_dir, user).context(format!(
         "Failed to recursively set ownership of {} to {}",
@@ -134,6 +137,8 @@ fn try_sanitize_home_dir_ownership(home_dir: &Path, user: &str) {
         error!("{:?}", error)
     };
 }
+
+#[cfg(unix)]
 fn sanitize_home_dir_ownership(home_dir: &Path, user: &str) -> AnyhowResult<()> {
     if !unistd::Uid::current().is_root() {
         return Ok(());
@@ -149,6 +154,7 @@ fn sanitize_home_dir_ownership(home_dir: &Path, user: &str) -> AnyhowResult<()> 
     )?)
 }
 
+#[cfg(unix)]
 fn recursive_chown(
     dir: &Path,
     uid: Option<unistd::Uid>,
@@ -221,6 +227,7 @@ fn main() -> AnyhowResult<()> {
         error!("{:?}", error)
     }
 
+    #[cfg(unix)]
     try_sanitize_home_dir_ownership(Path::new(HOME_DIR), CMK_AGENT_USER);
 
     result

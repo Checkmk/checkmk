@@ -9,9 +9,11 @@ use rustls::{
     Stream as RustlsStream,
 };
 use rustls_pemfile::Item;
+#[cfg(unix)]
 use std::fs::File;
 use std::io::Result as IoResult;
 use std::io::{Read, Write};
+#[cfg(unix)]
 use std::os::unix::prelude::FromRawFd;
 use std::sync::Arc;
 
@@ -92,12 +94,22 @@ fn certificate(cert_pem: &str) -> AnyhowResult<Certificate> {
     }
 }
 
+#[cfg(unix)]
 pub struct IoStream {
     reader: File,
     writer: File,
 }
 
+#[cfg(windows)]
+pub struct IoStream {
+    // Windows Agent will not use stdio/stdin as a communication channel
+    // This is just temporary stub to keep API more or less in sync.
+    reader: std::io::Stdin,
+    writer: std::io::Stdout,
+}
+
 impl IoStream {
+    #[cfg(unix)]
     pub fn new() -> Self {
         IoStream {
             // Using File type from raw FDs here instead of
@@ -108,19 +120,49 @@ impl IoStream {
             writer: unsafe { File::from_raw_fd(1) },
         }
     }
+
+    #[cfg(windows)]
+    pub fn new() -> Self {
+        IoStream {
+            reader: { std::io::stdin() },
+            writer: { std::io::stdout() },
+        }
+    }
 }
 
+#[cfg(unix)]
 impl Read for IoStream {
     fn read(&mut self, buf: &mut [u8]) -> IoResult<usize> {
         self.reader.read(buf)
     }
 }
 
+#[cfg(unix)]
 impl Write for IoStream {
     fn write(&mut self, buf: &[u8]) -> IoResult<usize> {
         self.writer.write(buf)
     }
     fn flush(&mut self) -> IoResult<()> {
         self.writer.flush()
+    }
+}
+
+#[cfg(windows)]
+impl Read for IoStream {
+    fn read(&mut self, buf: &mut [u8]) -> IoResult<usize> {
+        let mut handle = self.reader.lock();
+        handle.read(buf)
+    }
+}
+
+#[cfg(windows)]
+impl Write for IoStream {
+    fn write(&mut self, buf: &[u8]) -> IoResult<usize> {
+        let mut handle = self.writer.lock();
+        handle.write(buf)
+    }
+    fn flush(&mut self) -> IoResult<()> {
+        let mut handle = self.writer.lock();
+        handle.flush()
     }
 }

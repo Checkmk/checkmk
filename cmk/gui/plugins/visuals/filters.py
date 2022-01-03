@@ -1405,35 +1405,21 @@ class TagFilter(Filter):
     def __init__(
         self,
         *,
-        ident: str,
         title: Union[str, LazyString],
-        object_type: str,
+        query_filter: query_filters.TagsQuery,
         is_show_more: bool = False,
     ):
-        self.count = 3
-        self._object_type = object_type
 
-        htmlvars: List[str] = []
-        for num in range(self.count):
-            htmlvars += [
-                "%s%d_grp" % (self._var_prefix, num),
-                "%s%d_op" % (self._var_prefix, num),
-                "%s%d_val" % (self._var_prefix, num),
-            ]
-
+        self.query_filter = query_filter
         super().__init__(
-            ident=ident,
+            ident=self.query_filter.ident,
             title=title,
             sort_index=302,
-            info=object_type,
-            htmlvars=htmlvars,
+            info=self.query_filter.object_type,
+            htmlvars=self.query_filter.request_vars,
             link_columns=[],
             is_show_more=is_show_more,
         )
-
-    @property
-    def _var_prefix(self):
-        return "%s_tag_" % (self._object_type)
 
     def display(self, value: FilterHTTPVariables) -> None:
         groups = config.tags.get_tag_group_choices()
@@ -1452,19 +1438,19 @@ class TagFilter(Filter):
 
         html.javascript(
             "cmk.utils.set_tag_groups(%s, %s);"
-            % (json.dumps(self._object_type), json.dumps(grouped))
+            % (json.dumps(self.query_filter.object_type), json.dumps(grouped))
         )
         html.open_table()
         group_choices: Choices = [("", "")]
-        for num in range(self.count):
-            prefix = "%s%d" % (self._var_prefix, num)
+        for num in range(self.query_filter.count):
+            prefix = "%s%d" % (self.query_filter.var_prefix, num)
             html.open_tr()
             html.open_td()
             html.dropdown(
                 prefix + "_grp",
                 group_choices + list(groups),
                 onchange="cmk.utils.tag_update_value('%s', '%s', this.value)"
-                % (self._object_type, prefix),
+                % (self.query_filter.object_type, prefix),
                 style="width:129px",
                 ordered=True,
                 class_="grp",
@@ -1498,50 +1484,20 @@ class TagFilter(Filter):
         html.close_table()
 
     def filter(self, value: FilterHTTPVariables) -> FilterHeader:
-        headers = []
-
-        # Do not restrict to a certain number, because we'd like to link to this
-        # via an URL, e.g. from the virtual host tree snapin
-        num = 0
-        while value.get("%s%d_op" % (self._var_prefix, num)):
-            prefix = "%s%d" % (self._var_prefix, num)
-            num += 1
-
-            op = value.get(prefix + "_op")
-            tag_group = config.tags.get_tag_group(value[prefix + "_grp"])
-            tag = value.get(prefix + "_val")
-
-            if not tag_group or not op:
-                continue
-
-            headers.append(self._tag_filter(tag_group.id, tag, negate=op != "is"))
-
-        if headers:
-            return "\n".join(headers) + "\n"
-        return ""
-
-    def _tag_filter(self, tag_group, tag, negate):
-        return "Filter: %s_tags %s %s %s" % (
-            livestatus.lqencode(self._object_type),
-            "!=" if negate else "=",
-            livestatus.lqencode(livestatus.quote_dict(tag_group)),
-            livestatus.lqencode(livestatus.quote_dict(tag)),
-        )
+        return self.query_filter.filter(value)
 
 
 filter_registry.register(
     TagFilter(
-        ident="host_tags",
         title=_l("Host Tags"),
-        object_type="host",
+        query_filter=query_filters.TagsQuery(ident="host_tags", object_type="host"),
     )
 )
 
 filter_registry.register(
     TagFilter(
-        ident="service_tags",
         title=_l("Tags"),
-        object_type="service",
+        query_filter=query_filters.TagsQuery(ident="service_tags", object_type="service"),
         is_show_more=True,
     )
 )
@@ -1584,27 +1540,7 @@ class FilterHostAuxTags(Filter):
         return aux_tag_choices + list(config.tags.aux_tag_list.get_choices())
 
     def filter(self, value: FilterHTTPVariables) -> FilterHeader:
-        headers = []
-
-        # Do not restrict to a certain number, because we'd like to link to this
-        # via an URL, e.g. from the virtual host tree snapin
-        num = 0
-        while (this_tag := value.get("%s_%d" % (self.prefix, num))) is not None:
-            if this_tag:
-                negate = value.get("%s_%d_neg" % (self.prefix, num))
-                headers.append(self._host_auxtags_filter(this_tag, negate))
-            num += 1
-
-        if headers:
-            return "\n".join(headers) + "\n"
-        return ""
-
-    def _host_auxtags_filter(self, tag, negate):
-        return "Filter: host_tags %s %s %s" % (
-            "!=" if negate else "=",
-            livestatus.lqencode(livestatus.quote_dict(tag)),
-            livestatus.lqencode(livestatus.quote_dict(tag)),
-        )
+        return query_filters.host_aux_tags_lq(self.prefix, value)
 
 
 class LabelFilter(Filter):

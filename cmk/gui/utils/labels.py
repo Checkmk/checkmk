@@ -29,13 +29,15 @@ def encode_label_for_livestatus(
     column: str,
     label_id: str,
     label_value: str,
+    negate: bool = False,
 ) -> str:
     """
     >>> encode_label_for_livestatus("labels", "key", "value")
     "Filter: labels = 'key' 'value'"
     """
-    return "Filter: %s = %s %s" % (
+    return "Filter: %s %s %s %s" % (
         lqencode(column),
+        "!=" if negate else "=",
         lqencode(quote_dict(label_id)),
         lqencode(quote_dict(label_value)),
     )

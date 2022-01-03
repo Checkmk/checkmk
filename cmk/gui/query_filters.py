@@ -22,6 +22,7 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.globals import config, user, user_errors
 from cmk.gui.i18n import _
 from cmk.gui.type_defs import FilterHeader, FilterHTTPVariables, Row, Rows, VisualContext
+from cmk.gui.utils.labels import encode_label_for_livestatus
 
 Options = List[Tuple[str, str]]
 
@@ -639,6 +640,72 @@ class FilterMultiple(FilterText):
         joiner = "And" if negate else "Or"
 
         return lq_logic(f"Filter: {self.column} {negate}{self.op}", self.selection(value), joiner)
+
+
+class TagsQuery(Filter):
+    def __init__(
+        self,
+        *,
+        ident: str,
+        object_type: Literal["host", "service"],
+    ):
+        self.count = 3
+        self.object_type = object_type
+        self.var_prefix = "%s_tag_" % object_type
+
+        request_vars: List[str] = []
+        for num in range(self.count):
+            request_vars += [
+                "%s%d_grp" % (self.var_prefix, num),
+                "%s%d_op" % (self.var_prefix, num),
+                "%s%d_val" % (self.var_prefix, num),
+            ]
+
+        super().__init__(ident=ident, request_vars=request_vars)
+
+    def filter(self, value: FilterHTTPVariables) -> FilterHeader:
+        headers = []
+
+        # Do not restrict to a certain number, because we'd like to link to this
+        # via an URL, e.g. from the virtual host tree snapin
+        num = 0
+        column = livestatus.lqencode(self.object_type) + "_tags"
+        while value.get("%s%d_op" % (self.var_prefix, num)):
+            prefix = "%s%d" % (self.var_prefix, num)
+            num += 1
+
+            op = value.get(prefix + "_op")
+            tag_group = config.tags.get_tag_group(value[prefix + "_grp"])
+            tag = value.get(prefix + "_val", "")
+
+            if not tag_group or not op:
+                continue
+
+            headers.append(
+                encode_label_for_livestatus(column, tag_group.id, tag, negate=op != "is")
+            )
+
+        if headers:
+            return "\n".join(headers) + "\n"
+        return ""
+
+
+def host_aux_tags_lq(prefix: str, value: FilterHTTPVariables) -> FilterHeader:
+    headers = []
+
+    # Do not restrict to a certain number, because we'd like to link to this
+    # via an URL, e.g. from the virtual host tree snapin
+    num = 0
+    while (this_tag := value.get("%s_%d" % (prefix, num))) is not None:
+        if this_tag:
+            negate = bool(value.get("%s_%d_neg" % (prefix, num)))
+            headers.append(encode_label_for_livestatus("host_tags", this_tag, this_tag, negate))
+
+        num += 1
+
+    if headers:
+        return "\n".join(headers) + "\n"
+    return ""
 
 
 def service_state_filter(prefix: str, value: FilterHTTPVariables) -> FilterHeader:

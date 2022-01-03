@@ -563,8 +563,6 @@ def _event_match_servicegroups(
             if is_regex:
                 r = regex(group)
                 for sg in servicegroups:
-                    if config.define_servicegroups is None:
-                        continue
                     match_value = (
                         config.define_servicegroups[sg] if match_type == "match_alias" else sg
                     )
@@ -575,8 +573,6 @@ def _event_match_servicegroups(
 
         if is_regex:
             if match_type == "match_alias":
-                if config.define_servicegroups is None:
-                    return "No service groups defined."
                 return (
                     "The service is only in the groups %s. None of these patterns match: %s"
                     % (
@@ -637,8 +633,6 @@ def _event_match_exclude_servicegroups(
             if is_regex:
                 r = regex(group)
                 for sg in servicegroups:
-                    if config.define_servicegroups is None:
-                        continue
                     match_value = (
                         config.define_servicegroups[sg] if match_type == "match_alias" else sg
                     )

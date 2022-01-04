@@ -38,7 +38,7 @@ info_unavailable_crit = [
 
 info_surge_crit = [
     [
-        '{"strategy_type": "RollingUpdate", "replicas": 2, "paused": false, "max_unavailable": 1, "ready_replicas": 4, "max_surge": "25%"}'
+        '{"strategy_type": "RollingUpdate", "replicas": 2, "paused": false, "max_unavailable": 4, "ready_replicas": 4, "max_surge": "25%"}'
     ]
 ]
 
@@ -105,7 +105,7 @@ info_recreate = [
                 Metric("total_replicas", 2),
                 Result(
                     state=State.OK,
-                    summary="Strategy: RollingUpdate (max unavailable: 1, max surge: 25%)",
+                    summary="Strategy: RollingUpdate (max unavailable: 4, max surge: 25%)",
                 ),
             ],
             id="4/2 ready replicas with RollingUpdate strategy and 25% max surge is CRIT",

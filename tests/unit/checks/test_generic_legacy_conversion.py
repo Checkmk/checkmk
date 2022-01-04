@@ -1981,7 +1981,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy):
         "k8s_pods_memory",
         "k8s_pods_cpu",
         "k8s_pods_fs",
-        "k8s_replicas",
         "k8s_resources",
         "k8s_resources.pods",
         "k8s_resources.cpu",

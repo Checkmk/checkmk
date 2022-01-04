@@ -14,6 +14,7 @@ from cmk.utils.type_defs import CheckPluginName
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
+from cmk.base.plugins.agent_based.k8s_replicas import parse_k8s_surge, parse_k8s_unavailability
 from cmk.base.plugins.agent_based.utils.k8s import parse_json
 
 pytestmark = pytest.mark.checks
@@ -141,4 +142,26 @@ def test_k8s_replicas(
     expected: Sequence[Union[Result, Metric]],
 ) -> None:
     check = fix_register.check_plugins[CheckPluginName("k8s_replicas")]
-    assert list(check.check_function(item=None, params={}, section=parse_json(info))) == expected
+    assert list(check.check_function(section=parse_json(info))) == expected
+
+
+@pytest.mark.parametrize(
+    "max_surge,total,expected",
+    [
+        (1, 4, 6),
+        ("25%", 10, 14),
+    ],
+)
+def test_surge_levels(max_surge: Union[str, int], total: int, expected: int) -> None:
+    assert parse_k8s_surge(max_surge, total) == expected
+
+
+@pytest.mark.parametrize(
+    "max_unavailable,total,expected",
+    [
+        (2, 5, 3),
+        ("25%", 10, 7),
+    ],
+)
+def test_unavailability_levels(max_unavailable: Union[str, int], total: int, expected: int) -> None:
+    assert parse_k8s_unavailability(max_unavailable, total) == expected

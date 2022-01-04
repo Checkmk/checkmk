@@ -187,27 +187,21 @@ def main(sys_argv=None):
     connection = FritzConnection(args.host_address, args.timeout)
     g_device, g_version = "", ""
 
-    try:
-        status = {}
-        for control, namespace, action in _QUERIES:
-            try:
-                attrs, g_device, g_version = get_upnp_info(control, namespace, action, connection)
-            except Exception:
-                if args.debug:
-                    raise
-            else:
-                status.update(attrs)
+    status = {}
+    for control, namespace, action in _QUERIES:
+        try:
+            attrs, g_device, g_version = get_upnp_info(control, namespace, action, connection)
+        except Exception:
+            if args.debug:
+                raise
+        else:
+            status.update(attrs)
 
-        sys.stdout.write("<<<fritz>>>\n")
-        sys.stdout.write("VersionOS %s\n" % g_version)
-        sys.stdout.write("VersionDevice %s\n" % g_device)
-        for pair in status.items():
-            sys.stdout.write("%s %s\n" % pair)
-
-    except Exception:
-        if args.debug:
-            raise
-        logging.error("Unhandled error: %s", traceback.format_exc())
+    sys.stdout.write("<<<fritz>>>\n")
+    sys.stdout.write("VersionOS %s\n" % g_version)
+    sys.stdout.write("VersionDevice %s\n" % g_device)
+    for pair in status.items():
+        sys.stdout.write("%s %s\n" % pair)
 
     sys.stdout.write("<<<check_mk>>>\n")
     sys.stdout.write("AgentOS: FRITZ!OS\n")

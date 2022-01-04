@@ -874,9 +874,9 @@ section_heartbeat() {
         for NODE in $(cl_status listnodes); do
             if [ "${NODE}" != "$(uname -n | tr '[:upper:]' '[:lower:]')" ]; then
                 STATUS=$(cl_status nodestatus "${NODE}")
-                echo -n "${NODE} ${STATUS}"
+                printf "%s %s" "${NODE}" "${STATUS}"
                 for LINK in $(cl_status listhblinks "${NODE}" 2>/dev/null); do
-                    echo -n " ${LINK} $(cl_status hblinkstatus "${NODE}" "${LINK}")"
+                    printf " %s %s" "${LINK}" "$(cl_status hblinkstatus "${NODE}" "${LINK}")"
                 done
                 echo
             fi

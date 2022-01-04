@@ -19,37 +19,37 @@ from cmk.base.plugins.agent_based.utils.k8s import parse_json
 
 pytestmark = pytest.mark.checks
 
-info_unavailable_ok = [
+section_unavailable_ok = [
     [
         '{"strategy_type": "RollingUpdate", "replicas": 2, "paused": null, "max_unavailable": 1, "ready_replicas": 1, "max_surge": "25%"}'
     ]
 ]
 
-info_surge_ok = [
+section_surge_ok = [
     [
         '{"strategy_type": "RollingUpdate", "replicas": 2, "paused": null, "max_unavailable": 1, "ready_replicas": 3, "max_surge": 1}'
     ]
 ]
 
-info_unavailable_crit = [
+section_unavailable_crit = [
     [
         '{"strategy_type": "RollingUpdate", "replicas": 2, "paused": null, "max_unavailable": 1, "ready_replicas": 0, "max_surge": "25%"}'
     ]
 ]
 
-info_surge_crit = [
+section_surge_crit = [
     [
         '{"strategy_type": "RollingUpdate", "replicas": 2, "paused": false, "max_unavailable": 4, "ready_replicas": 4, "max_surge": "25%"}'
     ]
 ]
 
-info_paused = [
+section_paused = [
     [
         '{"strategy_type": "RollingUpdate", "replicas": 2, "paused": true, "max_unavailable": 1, "ready_replicas": 4, "max_surge": "25%"}'
     ]
 ]
 
-info_recreate = [
+section_recreate = [
     [
         '{"strategy_type": "Recreate", "replicas": 10, "paused": null, "max_unavailable": null, "ready_replicas": 0, "max_surge": null}'
     ]
@@ -57,10 +57,10 @@ info_recreate = [
 
 
 @pytest.mark.parametrize(
-    "info,expected",
+    "section,expected_check_result",
     [
         pytest.param(
-            info_unavailable_ok,
+            section_unavailable_ok,
             [
                 Result(state=State.OK, summary="Ready: 1/2"),
                 Metric("ready_replicas", 1, levels=(None, 4.0), boundaries=(0.0, 2.0)),
@@ -73,7 +73,7 @@ info_recreate = [
             id="1/2 ready replicas with RollingUpdate strategy and max 1 unavailable replica is OK",
         ),
         pytest.param(
-            info_surge_ok,
+            section_surge_ok,
             [
                 Result(state=State.OK, summary="Ready: 3/2"),
                 Metric("ready_replicas", 3, levels=(None, 4.0), boundaries=(0.0, 2.0)),
@@ -86,7 +86,7 @@ info_recreate = [
             id="3/2 ready replicas with RollingUpdate strategy and 1 max surge is OK",
         ),
         pytest.param(
-            info_unavailable_crit,
+            section_unavailable_crit,
             [
                 Result(state=State.CRIT, summary="Ready: 0/2 (crit below 1)"),
                 Metric("ready_replicas", 0, levels=(None, 4.0), boundaries=(0.0, 2.0)),
@@ -99,7 +99,7 @@ info_recreate = [
             id="0/2 ready replicas with RollingUpdate strategy and 1 max unavailable is CRIT",
         ),
         pytest.param(
-            info_surge_crit,
+            section_surge_crit,
             [
                 Result(state=State.CRIT, summary="Ready: 4/2 (crit at 4)"),
                 Metric("ready_replicas", 4, levels=(None, 4.0), boundaries=(0.0, 2.0)),
@@ -112,7 +112,7 @@ info_recreate = [
             id="4/2 ready replicas with RollingUpdate strategy and 25% max surge is CRIT",
         ),
         pytest.param(
-            info_paused,
+            section_paused,
             [
                 Result(state=State.OK, summary="Ready: 4/2 (paused)"),
                 Metric("ready_replicas", 4, boundaries=(0.0, 2.0)),
@@ -125,7 +125,7 @@ info_recreate = [
             id="4/2 ready replicas in paused state is OK",
         ),
         pytest.param(
-            info_recreate,
+            section_recreate,
             [
                 Result(state=State.OK, summary="Ready: 0/10"),
                 Metric("ready_replicas", 0, boundaries=(0.0, 10.0)),
@@ -138,30 +138,38 @@ info_recreate = [
 )
 def test_k8s_replicas(
     fix_register: FixRegister,
-    info: StringTable,
-    expected: Sequence[Union[Result, Metric]],
+    section: StringTable,
+    expected_check_result: Sequence[Union[Result, Metric]],
 ) -> None:
     check = fix_register.check_plugins[CheckPluginName("k8s_replicas")]
-    assert list(check.check_function(section=parse_json(info))) == expected
+    assert list(check.check_function(section=parse_json(section))) == expected_check_result
 
 
 @pytest.mark.parametrize(
-    "max_surge,total,expected",
+    "max_surge,total_replicas,expected_upper_level",
     [
         (1, 4, 6),
         ("25%", 10, 14),
     ],
 )
-def test_surge_levels(max_surge: Union[str, int], total: int, expected: int) -> None:
-    assert parse_k8s_surge(max_surge, total) == expected
+def test_surge_levels(
+    max_surge: Union[str, int],
+    total_replicas: int,
+    expected_upper_level: int,
+) -> None:
+    assert parse_k8s_surge(max_surge, total_replicas) == expected_upper_level
 
 
 @pytest.mark.parametrize(
-    "max_unavailable,total,expected",
+    "max_unavailable,total_replicas,expected_lower_level",
     [
         (2, 5, 3),
         ("25%", 10, 7),
     ],
 )
-def test_unavailability_levels(max_unavailable: Union[str, int], total: int, expected: int) -> None:
-    assert parse_k8s_unavailability(max_unavailable, total) == expected
+def test_unavailability_levels(
+    max_unavailable: Union[str, int],
+    total_replicas: int,
+    expected_lower_level: int,
+) -> None:
+    assert parse_k8s_unavailability(max_unavailable, total_replicas) == expected_lower_level

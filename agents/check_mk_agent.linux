@@ -196,27 +196,24 @@ set_up_profiling() {
     export MK_DEFINE_LOG_SECTION_TIME
 }
 
-#
-# END COMMON AGENT CODE
-#
-
-# Remove locale settings to eliminate localized outputs where possible
-# The locale logic here is used to make the Python encoding detection work (see CMK-2778).
-preamble_5() {
+unset_locale() {
+    # eliminate localized outputs where possible
+    # The locale logic here is used to make the Python encoding detection work (see CMK-2778).
     unset -v LANG
     if inpath locale && inpath paste; then
-        # The space at the beginning of " $(locale ...)" is important, since we also have a space in
-        # the conditions. We need this to also match C.UTF-8 and C.utf8 right at the beginning.
-        # Furthermore, we cannot simply use *'C.UTF-8'* (without the space), because this also
-        # matches e.g. es_EC.UTF-8.
-        case " $(locale -a | paste -sd ' ' -)" in
-            *' C.UTF-8'*) LC_ALL="C.UTF-8" ;;
-            *' C.utf8'*) LC_ALL="C.utf8" ;;
+        # match C.UTF-8 at the beginning, but not e.g. es_EC.UTF-8!
+        case "$(locale -a | paste -sd ' ' -)" in
+            *' C.UTF-8'* | 'C.UTF-8'*) LC_ALL="C.UTF-8" ;;
+            *' C.utf8'* | 'C.utf8'*) LC_ALL="C.utf8" ;;
         esac
     fi
     LC_ALL="${LC_ALL:-C}"
     export LC_ALL
 }
+
+#
+# END COMMON AGENT CODE
+#
 
 read_python_version() {
     if inpath "${1}"; then
@@ -1904,7 +1901,7 @@ main_setup() {
     preamble_1
     set_up_remote
     set_up_profiling
-    preamble_5
+    unset_locale
     preamble_6
     set_up_encryption
     preamble_7

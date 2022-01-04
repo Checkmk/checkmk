@@ -111,10 +111,6 @@ set_variable_defaults() {
 }
 
 preamble_1() {
-    # Remove locale settings to eliminate localized outputs where possible
-    export LC_ALL=C
-    unset LANG
-
     export MK_LIBDIR
     export MK_CONFDIR
     export MK_TMPDIR
@@ -191,6 +187,21 @@ set_up_profiling() {
 
     eval "${MK_DEFINE_LOG_SECTION_TIME}"
     export MK_DEFINE_LOG_SECTION_TIME
+}
+
+unset_locale() {
+    # eliminate localized outputs where possible
+    # The locale logic here is used to make the Python encoding detection work (see CMK-2778).
+    unset -v LANG
+    if inpath locale && inpath paste; then
+        # match C.UTF-8 at the beginning, but not e.g. es_EC.UTF-8!
+        case "$(locale -a | paste -sd ' ' -)" in
+            *' C.UTF-8'* | 'C.UTF-8'*) LC_ALL="C.UTF-8" ;;
+            *' C.utf8'* | 'C.utf8'*) LC_ALL="C.utf8" ;;
+        esac
+    fi
+    LC_ALL="${LC_ALL:-C}"
+    export LC_ALL
 }
 
 #
@@ -718,6 +729,8 @@ main_setup() {
     set_up_process_commandline_arguments "$@"
 
     set_variable_defaults
+
+    unset_locale
 
     preamble_1
 

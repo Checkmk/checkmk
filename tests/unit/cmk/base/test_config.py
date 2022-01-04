@@ -2423,7 +2423,7 @@ def test_host_config_add_discovery_check(
 def test_get_config_file_paths_with_confd(folder_path_test_config: None) -> None:
     rel_paths = [
         "%s" % p.relative_to(cmk.utils.paths.default_config_dir)
-        for p in config._get_config_file_paths(with_conf_d=True)
+        for p in config.get_config_file_paths(with_conf_d=True)
     ]
     assert rel_paths == [
         "main.mk",

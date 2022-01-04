@@ -423,7 +423,7 @@ def _load_config(with_conf_d: bool, exclude_parents_mk: bool) -> None:
 
     host_storage_loaders = get_host_storage_loaders(config_storage_format)
     config_dir_path = Path(cmk.utils.paths.check_mk_config_dir)
-    for path in _get_config_file_paths(with_conf_d):
+    for path in get_config_file_paths(with_conf_d):
         # During parent scan mode we must not read in old version of parents.mk!
         if exclude_parents_mk and path.name == "parents.mk":
             continue
@@ -545,7 +545,7 @@ def _collect_parameter_rulesets_from_globals(global_dict: Dict[str, Any]) -> Non
 
 
 # Create list of all files to be included during configuration loading
-def _get_config_file_paths(with_conf_d: bool) -> List[Path]:
+def get_config_file_paths(with_conf_d: bool) -> List[Path]:
     list_of_files = [Path(cmk.utils.paths.main_config_file)]
     if with_conf_d:
         all_files = Path(cmk.utils.paths.check_mk_config_dir).rglob("*")

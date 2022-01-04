@@ -77,14 +77,16 @@ def check_k8s_replicas(section) -> CheckResult:
         first_unavailable_time = value_store.get("unavailable")
         if first_unavailable_time:
             age = time.time() - first_unavailable_time
-            if age > 600:  # setting 10 minutes as default threshold for missing replica data
-                yield from check_levels(
-                    age,
-                    levels_upper=(600, 600),
-                    render_func=render.timespan,
-                    label="The replicas data has been missing",
-                )
-                return
+            yield from check_levels(
+                age,
+                levels_upper=(
+                    600,
+                    600,
+                ),  # setting 10 minutes as default threshold for missing replica data
+                render_func=render.timespan,
+                label="The replicas data has been missing",
+            )
+            return
         value_store["unavailable"] = time.time()
         raise IgnoreResultsError("The replicas data is currently unavailable")
 
@@ -93,45 +95,37 @@ def check_k8s_replicas(section) -> CheckResult:
         value_store["unavailable"] = None
 
     if paused or strategy == "Recreate":
-        crit, crit_lower = None, None
+        levels_upper = None
+        levels_lower = None
     elif strategy == "RollingUpdate":
         crit = parse_k8s_surge(section["max_surge"], total)
+        levels_upper = crit, crit
         crit_lower = parse_k8s_unavailability(section["max_unavailable"], total)
+        levels_lower = crit_lower, crit_lower
     else:
         yield Result(state=State.UNKNOWN, summary=f"Unknown deployment strategy: {strategy}")
         return
 
-    state = 0
-    infotext = "Ready: %s/%s" % (ready, total)
-    if paused:
-        infotext += " (paused)"
-    if crit is not None and ready >= crit:
-        state = 2
-        infotext += " (crit at %d)" % crit
-    if crit_lower is not None and ready < crit_lower:
-        state = 2
-        infotext += " (crit below %d)" % crit_lower
+    yield from check_levels(
+        ready,
+        metric_name="ready_replicas",
+        levels_upper=levels_upper,
+        levels_lower=levels_lower,
+        boundaries=(0, total),
+        render_func=lambda r: f"{r}/{total}",
+        label="Ready",
+    )
 
-    yield Result(state=State(state), summary=infotext)
-    for metric_name, metric_value, levels_warn, levels_crit, lower_boundary, upper_boundary in [
-        ("ready_replicas", ready, None, crit, 0, total),
-        ("total_replicas", total, None, None, None, None),
-    ]:
-        yield Metric(
-            metric_name,
-            metric_value,
-            levels=(levels_warn, levels_crit),
-            boundaries=(lower_boundary, upper_boundary),
-        )
+    if paused:
+        yield Result(state=State.OK, summary="Paused")
+
+    yield Metric("total_replicas", total)
 
     if strategy:
-        strategy_infotext = "Strategy: %s" % section["strategy_type"]
+        summary = f"Strategy: {section['strategy_type']}"
         if strategy == "RollingUpdate":
-            strategy_infotext += " (max unavailable: %s, max surge: %s)" % (
-                section["max_unavailable"],
-                section["max_surge"],
-            )
-        yield Result(state=State.OK, summary=strategy_infotext)
+            summary = f"{summary} (max unavailable: {section['max_unavailable']}, max surge: {section['max_surge']})"
+        yield Result(state=State.OK, summary=summary)
 
 
 register.check_plugin(

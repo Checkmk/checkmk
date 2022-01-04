@@ -68,7 +68,7 @@ section_recreate = [
             section_unavailable_ok,
             [
                 Result(state=State.OK, summary="Ready: 1/2"),
-                Metric("ready_replicas", 1, levels=(None, 4.0), boundaries=(0.0, 2.0)),
+                Metric("ready_replicas", 1, levels=(4.0, 4.0), boundaries=(0.0, 2.0)),
                 Metric("total_replicas", 2),
                 Result(
                     state=State.OK,
@@ -81,7 +81,7 @@ section_recreate = [
             section_surge_ok,
             [
                 Result(state=State.OK, summary="Ready: 3/2"),
-                Metric("ready_replicas", 3, levels=(None, 4.0), boundaries=(0.0, 2.0)),
+                Metric("ready_replicas", 3, levels=(4.0, 4.0), boundaries=(0.0, 2.0)),
                 Metric("total_replicas", 2),
                 Result(
                     state=State.OK,
@@ -93,8 +93,8 @@ section_recreate = [
         pytest.param(
             section_unavailable_crit,
             [
-                Result(state=State.CRIT, summary="Ready: 0/2 (crit below 1)"),
-                Metric("ready_replicas", 0, levels=(None, 4.0), boundaries=(0.0, 2.0)),
+                Result(state=State.CRIT, summary="Ready: 0/2 (warn/crit below 1/2/1/2)"),
+                Metric("ready_replicas", 0, levels=(4.0, 4.0), boundaries=(0.0, 2.0)),
                 Metric("total_replicas", 2),
                 Result(
                     state=State.OK,
@@ -106,8 +106,8 @@ section_recreate = [
         pytest.param(
             section_surge_crit,
             [
-                Result(state=State.CRIT, summary="Ready: 4/2 (crit at 4)"),
-                Metric("ready_replicas", 4, levels=(None, 4.0), boundaries=(0.0, 2.0)),
+                Result(state=State.CRIT, summary="Ready: 4/2 (warn/crit at 4/2/4/2)"),
+                Metric("ready_replicas", 4, levels=(4.0, 4.0), boundaries=(0.0, 2.0)),
                 Metric("total_replicas", 2),
                 Result(
                     state=State.OK,
@@ -119,8 +119,9 @@ section_recreate = [
         pytest.param(
             section_paused,
             [
-                Result(state=State.OK, summary="Ready: 4/2 (paused)"),
+                Result(state=State.OK, summary="Ready: 4/2"),
                 Metric("ready_replicas", 4, boundaries=(0.0, 2.0)),
+                Result(state=State.OK, summary="Paused"),
                 Metric("total_replicas", 2),
                 Result(
                     state=State.OK,

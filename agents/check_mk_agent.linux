@@ -1442,12 +1442,16 @@ run_real_time_checks_for_remote() {
     done
 }
 
+_non_comment_lines() {
+    grep -Ev '^[[:space:]]*($|#)' "${1}"
+}
+
 run_remote_plugins() {
     configfile="${1}"
     prefix="${2}"
     [ -f "${configfile}" ] || return
 
-    grep -Ev '^[[:space:]]*($|#)' "${configfile}" | while read -r descr cmdline; do
+    _non_comment_lines "${configfile}" | while read -r descr cmdline; do
         interval=
         # NOTE: Due to an escaping-related bug in some old bash versions
         # (3.2.x), we have to use an intermediate variable for the pattern.
@@ -1480,7 +1484,7 @@ run_remote_plugins() {
 run_runas_executor() {
     [ -f "${MK_CONFDIR}/runas.cfg" ] || return
 
-    grep -Ev '^[[:space:]]*($|#)' "${MK_CONFDIR}/runas.cfg" | while read -r type user configfile; do
+    _non_comment_lines "${MK_CONFDIR}/runas.cfg" | while read -r type user configfile; do
         prefix=""
         if [ "${user}" != "-" ]; then
             prefix="su ${user} -c "

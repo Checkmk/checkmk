@@ -8,9 +8,9 @@ from typing import Optional, Tuple
 
 from apispec.ext import marshmallow  # type: ignore[import]
 from apispec.ext.marshmallow import common, field_converter  # type: ignore[import]
-from marshmallow import fields
+from marshmallow import base, fields
 
-from cmk.gui.fields.base import MultiNested, ValueTypedDictSchema
+from cmk.gui.fields.base import FieldWrapper, MultiNested, ValueTypedDictSchema
 
 
 def is_value_typed_dict(schema):
@@ -31,7 +31,7 @@ def type_and_format_of_field(field: fields.Field) -> Tuple[str, Optional[str]]:
         ('string', None)
 
         >>> type_and_format_of_field(fields.Integer())
-        ('integer', 'int32')
+        ('integer', None)
 
     Args:
         field:
@@ -109,19 +109,19 @@ class CheckmkOpenAPIConverter(marshmallow.OpenAPIConverter):
         if not is_value_typed_dict(schema):
             return super().schema2jsonschema(schema)
 
-        try:
+        if isinstance(schema.value_type, FieldWrapper):
+            properties = field_properties(schema.value_type.field)
+        elif isinstance(schema.value_type, base.SchemaABC) or (
+            isinstance(schema.value_type, type) and issubclass(schema.value_type, base.SchemaABC)
+        ):
             schema_instance = common.resolve_schema_instance(schema.value_type)
-        except ValueError:
-            schema_instance = None
-
-        if schema_instance is None:
-            properties = field_properties(schema.value_type[0])
-        else:
             schema_key = common.make_schema_key(schema_instance)
             if schema_key not in self.refs:
                 component_name = self.schema_name_resolver(schema.value_type)
                 self.spec.components.schema(component_name, schema=schema_instance)
             properties = self.get_ref_dict(schema_instance)
+        else:
+            raise RuntimeError(f"Unsupported value_type: {schema.value_type}")
 
         return {
             "type": "object",

@@ -82,19 +82,19 @@ class MovieDictSchema(ValueTypedDictSchema):
 
 
 class CustomTagDictSchema(ValueTypedDictSchema):
-    value_type = (fields.String(
+    value_type = ValueTypedDictSchema.field(fields.String(
         description="Tag value here",
         pattern="foo|bar",
         required=True,
-    ),)
+    ))
 
 
 class IntegerDictSchema(ValueTypedDictSchema):
-    value_type = (fields.Integer(),)
+    value_type = ValueTypedDictSchema.field(fields.Integer())
 
 
 class EmailSchema(ValueTypedDictSchema):
-    value_type = (fields.Email(),)
+    value_type = ValueTypedDictSchema.field(fields.Email())
 
 
 @pytest.fixture(name="spec", scope='function')

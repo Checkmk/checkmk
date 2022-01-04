@@ -7,7 +7,7 @@ import collections
 import typing
 
 from apispec.ext.marshmallow import common  # type: ignore[import]
-from marshmallow import fields, post_dump, post_load, Schema, types, utils, ValidationError
+from marshmallow import base, fields, post_dump, post_load, Schema, types, utils, ValidationError
 from marshmallow.decorators import POST_DUMP, POST_LOAD, PRE_DUMP, PRE_LOAD
 from marshmallow.error_store import ErrorStore
 
@@ -32,6 +32,11 @@ class BaseSchema(Schema):
         return data
 
 
+class FieldWrapper:
+    def __init__(self, field: fields.Field):
+        self.field = field
+
+
 class ValueTypedDictSchema(BaseSchema):
     """A schema where you can define the type for a dict's values
 
@@ -41,7 +46,11 @@ class ValueTypedDictSchema(BaseSchema):
 
     """
 
-    value_type: typing.Union[typing.Type[Schema], typing.Tuple[fields.Field]]
+    value_type: typing.Union[typing.Type[Schema], FieldWrapper]
+
+    @classmethod
+    def field(cls, field: fields.Field) -> FieldWrapper:
+        return FieldWrapper(field)
 
     def _convert_with_schema(self, data, schema_func):
         result = {}
@@ -75,11 +84,17 @@ class ValueTypedDictSchema(BaseSchema):
         if not isinstance(data, dict):
             raise ValidationError(f"Data type is invalid: {data}", field_name="_schema")
 
-        try:
+        if isinstance(self.value_type, FieldWrapper):
+            result = self._serialize_field(data, field=self.value_type.field)
+        elif isinstance(self.value_type, BaseSchema) or (
+            isinstance(self.value_type, type) and issubclass(self.value_type, base.SchemaABC)
+        ):
             schema = common.resolve_schema_instance(self.value_type)
             result = self._convert_with_schema(data, schema_func=schema.load)
-        except ValueError:
-            result = self._serialize_field(data, field=self.value_type[0])  # type: ignore[index]
+        else:
+            raise ValidationError(
+                f"Data type is not known: {type(self.value_type)} {self.value_type}"
+            )
 
         if self._has_processors(POST_LOAD):
             result = self._invoke_load_processors(
@@ -96,11 +111,15 @@ class ValueTypedDictSchema(BaseSchema):
         if self._has_processors(PRE_DUMP):
             obj = self._invoke_dump_processors(PRE_DUMP, obj, many=many, original_data=obj)
 
-        try:
+        if isinstance(self.value_type, FieldWrapper):
+            result = self._deserialize_field(obj, field=self.value_type.field)
+        elif isinstance(self.value_type, BaseSchema) or (
+            isinstance(self.value_type, type) and issubclass(self.value_type, base.SchemaABC)
+        ):
             schema = common.resolve_schema_instance(self.value_type)
             result = self._convert_with_schema(obj, schema_func=schema.dump)
-        except ValueError:
-            result = self._deserialize_field(obj, field=self.value_type[0])  # type: ignore[index]
+        else:
+            raise ValidationError(f"Data type is not known: {type(obj)}")
 
         if self._has_processors(POST_DUMP):
             result = self._invoke_dump_processors(POST_DUMP, result, many=many, original_data=obj)

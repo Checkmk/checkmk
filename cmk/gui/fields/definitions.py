@@ -949,7 +949,9 @@ def host_is_monitored(host_name: str) -> bool:
 
 
 class CustomHostAttributes(ValueTypedDictSchema):
-    value_type = (_fields.String(description="Each tag is a mapping of string to string"),)
+    value_type = ValueTypedDictSchema.field(
+        _fields.String(description="Each tag is a mapping of string to string")
+    )
 
     @post_load
     def _valid(self, data, **kwargs):
@@ -960,7 +962,9 @@ class CustomHostAttributes(ValueTypedDictSchema):
 
 
 class CustomFolderAttributes(ValueTypedDictSchema):
-    value_type = (_fields.String(description="Each tag is a mapping of string to string"),)
+    value_type = ValueTypedDictSchema.field(
+        _fields.String(description="Each tag is a mapping of string to string")
+    )
 
     @post_load
     def _valid(self, data, **kwargs):

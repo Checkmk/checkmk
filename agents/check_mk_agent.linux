@@ -1447,71 +1447,69 @@ run_remote_plugins() {
     prefix="${2}"
     [ -f "${configfile}" ] || return
 
-    grep -Ev '^[[:space:]]*($|#)' "${configfile}" |
-        while read -r descr cmdline; do
-            interval=
-            # NOTE: Due to an escaping-related bug in some old bash versions
-            # (3.2.x), we have to use an intermediate variable for the pattern.
-            pattern='\(([^\)]*)\)[[:space:]](.*)'
-            if [[ ${cmdline} =~ ${pattern} ]]; then
-                parameters=${BASH_REMATCH[1]}
-                cmdline=${BASH_REMATCH[2]}
+    grep -Ev '^[[:space:]]*($|#)' "${configfile}" | while read -r descr cmdline; do
+        interval=
+        # NOTE: Due to an escaping-related bug in some old bash versions
+        # (3.2.x), we have to use an intermediate variable for the pattern.
+        pattern='\(([^\)]*)\)[[:space:]](.*)'
+        if [[ ${cmdline} =~ ${pattern} ]]; then
+            parameters=${BASH_REMATCH[1]}
+            cmdline=${BASH_REMATCH[2]}
 
-                # split multiple parameter assignments
-                for par in $(echo "${parameters}" | tr ":" "\n"); do
-                    # split each assignment
-                    IFS='=' read -r key value <<<"${par}"
-                    if [ "${key}" = "interval" ]; then
-                        interval=${value}
-                    fi
-                done
-            fi
+            # split multiple parameter assignments
+            for par in $(echo "${parameters}" | tr ":" "\n"); do
+                # split each assignment
+                IFS='=' read -r key value <<<"${par}"
+                if [ "${key}" = "interval" ]; then
+                    interval=${value}
+                fi
+            done
+        fi
 
-            if [ -n "${prefix}" ]; then
-                cmdline="${prefix}'${cmdline}'"
-            fi
-            if [ -z "${interval}" ]; then
-                ${MK_RUN_SYNC_PARTS} && run_mrpe "${descr}" "${cmdline}"
-            else
-                run_cached "mrpe_${descr}" "${interval}" "run_mrpe '${descr}' '${cmdline}'"
-            fi
-        done
+        if [ -n "${prefix}" ]; then
+            cmdline="${prefix}'${cmdline}'"
+        fi
+        if [ -z "${interval}" ]; then
+            ${MK_RUN_SYNC_PARTS} && run_mrpe "${descr}" "${cmdline}"
+        else
+            run_cached "mrpe_${descr}" "${interval}" "run_mrpe '${descr}' '${cmdline}'"
+        fi
+    done
 }
 
 run_runas_executor() {
     [ -f "${MK_CONFDIR}/runas.cfg" ] || return
 
-    grep -Ev '^[[:space:]]*($|#)' "${MK_CONFDIR}/runas.cfg" |
-        while read -r type user configfile; do
-            prefix=""
-            if [ "${user}" != "-" ]; then
-                prefix="su ${user} -c "
-            fi
+    grep -Ev '^[[:space:]]*($|#)' "${MK_CONFDIR}/runas.cfg" | while read -r type user configfile; do
+        prefix=""
+        if [ "${user}" != "-" ]; then
+            prefix="su ${user} -c "
+        fi
 
-            # mrpe includes
-            if [ "${type}" = "mrpe" ]; then
-                run_remote_plugins "${configfile}" "${prefix}"
+        # mrpe includes
+        if [ "${type}" = "mrpe" ]; then
+            run_remote_plugins "${configfile}" "${prefix}"
 
-            # local and plugin includes
-            elif [ "${type}" = "local" ] || [ "${type}" = "plugin" ]; then
-                if ${MK_RUN_SYNC_PARTS}; then
-                    if [ "${type}" = "local" ]; then
-                        echo "<<<local:sep(0)>>>"
-                    fi
-
-                    find "${configfile}/" -executable -type f |
-                        while read -r filename; do
-                            if [ -n "${prefix}" ]; then
-                                cmdline="${prefix}\"${filename}\""
-                            else
-                                cmdline=${filename}
-                            fi
-
-                            _log_section_time "${cmdline}"
-                        done
+        # local and plugin includes
+        elif [ "${type}" = "local" ] || [ "${type}" = "plugin" ]; then
+            if ${MK_RUN_SYNC_PARTS}; then
+                if [ "${type}" = "local" ]; then
+                    echo "<<<local:sep(0)>>>"
                 fi
+
+                find "${configfile}/" -executable -type f |
+                    while read -r filename; do
+                        if [ -n "${prefix}" ]; then
+                            cmdline="${prefix}\"${filename}\""
+                        else
+                            cmdline=${filename}
+                        fi
+
+                        _log_section_time "${cmdline}"
+                    done
             fi
-        done
+        fi
+    done
 }
 
 # Run a command asynchronous by use of a cache file.

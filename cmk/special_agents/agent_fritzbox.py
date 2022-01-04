@@ -132,7 +132,9 @@ class FritzConnection:
         self._urlidx = 1 - self._urlidx
 
 
-def get_upnp_info(control: str, namespace: str, action: str, connection: FritzConnection):
+def _get_response(
+    control: str, namespace: str, action: str, connection: FritzConnection
+) -> requests.Response:
 
     data = _SOAP_TEMPLATE % (action, namespace)
 
@@ -152,6 +154,12 @@ def get_upnp_info(control: str, namespace: str, action: str, connection: FritzCo
             logging.debug(traceback.format_exc())
             raise
 
+    return response
+
+
+def get_upnp_info(control: str, namespace: str, action: str, connection: FritzConnection):
+
+    response = _get_response(control, namespace, action, connection)
     device, version = response.headers["SERVER"].split("UPnP/1.0 ")[1].rsplit(" ", 1)
 
     # parse the response body

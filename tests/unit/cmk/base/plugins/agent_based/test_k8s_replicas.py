@@ -12,9 +12,14 @@ from tests.unit.conftest import FixRegister
 
 from cmk.utils.type_defs import CheckPluginName
 
+import cmk.base.plugins.agent_based.k8s_replicas as k8s_replicas
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
-from cmk.base.plugins.agent_based.k8s_replicas import parse_k8s_surge, parse_k8s_unavailability
+from cmk.base.plugins.agent_based.k8s_replicas import (
+    check_k8s_replicas,
+    parse_k8s_surge,
+    parse_k8s_unavailability,
+)
 from cmk.base.plugins.agent_based.utils.k8s import parse_json
 
 pytestmark = pytest.mark.checks
@@ -173,3 +178,27 @@ def test_unavailability_levels(
     expected_lower_level: int,
 ) -> None:
     assert parse_k8s_unavailability(max_unavailable, total_replicas) == expected_lower_level
+
+
+def test_first_unavailable_time(monkeypatch: pytest.MonkeyPatch) -> None:
+    def mock_get_value_store():
+        return {"unavailable": 1}
+
+    monkeypatch.setattr(k8s_replicas, "get_value_store", mock_get_value_store)
+    monkeypatch.setattr("time.time", lambda: 701.0)
+
+    assert list(
+        check_k8s_replicas(
+            section={
+                "ready_replicas": None,
+                "replicas": None,
+                "paused": None,
+                "strategy_type": None,
+            }
+        )
+    ) == [
+        Result(
+            state=State.CRIT,
+            summary="The replicas data has been missing: 11 minutes 40 seconds (warn/crit at 10 minutes 0 seconds/10 minutes 0 seconds)",
+        )
+    ]

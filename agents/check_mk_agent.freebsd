@@ -107,7 +107,7 @@ set_up_get_epoch() {
 set_variable_defaults() {
     : "${MK_LIBDIR:=/usr/local/lib/check_mk_agent}"
     : "${MK_CONFDIR:=/etc/check_mk}"
-    : "${MK_TMPDIR:=/var/lib/check_mk_agent}"  # TODO: rename to VARDIR
+    : "${MK_VARDIR:=/var/lib/check_mk_agent}"
     : "${MK_LOGDIR:=/var/log/check_mk_agent}"
     : "${SPOOLDIR:=/var/spool/check_mk_agent}"
 
@@ -119,7 +119,7 @@ set_variable_defaults() {
 preamble_1() {
     export MK_LIBDIR
     export MK_CONFDIR
-    export MK_TMPDIR
+    export MK_VARDIR
 
     # Optionally set a tempdir for all subsequent calls
     #export TMPDIR=
@@ -553,8 +553,8 @@ run_cached() {
         return
     fi
 
-    if [ ! -d ${MK_TMPDIR}/cache ]; then mkdir -p ${MK_TMPDIR}/cache; fi
-    CACHEFILE="${MK_TMPDIR}/cache/${NAME}.cache"
+    if [ ! -d "${MK_VARDIR}/cache" ]; then mkdir -p "${MK_VARDIR}/cache"; fi
+    CACHEFILE="${MK_VARDIR}/cache/${NAME}.cache"
 
     # Check if the creation of the cache takes suspiciously long and return
     # nothing if the age (access time) of ${CACHEFILE}.new is twice the MAXAGE

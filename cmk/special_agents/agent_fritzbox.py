@@ -32,7 +32,6 @@ import logging
 import pprint
 import re
 import sys
-import traceback
 from typing import Final, Mapping
 
 import requests
@@ -137,23 +136,21 @@ def _get_response(
 ) -> requests.Response:
 
     data = _SOAP_TEMPLATE % (action, namespace)
+    post_args = (f"/control/{control}", data, {"SoapAction": namespace + "#" + action})
 
-    for _retry in (0, 1):
-        try:
-            response = connection.post(
-                f"/control/{control}", data, {"SoapAction": namespace + "#" + action}
-            )
-            response.raise_for_status()
-            break  # got a good response
-        except requests.exceptions.HTTPError:
-            if response.status_code == 500:
-                # old URL can not be found, select other base url in the hope that the other
-                # url gets a successful result to have only one try on future requests
-                connection.toggle_base_url()
-        except Exception:
-            logging.debug(traceback.format_exc())
+    try:
+        response = connection.post(*post_args)
+        response.raise_for_status()
+        return response
+    except requests.exceptions.HTTPError:
+        if response.status_code != 500:
             raise
 
+    # old URL can not be found, select other base url in the hope that the other
+    # url gets a successful result to have only one try on future requests
+    connection.toggle_base_url()
+    response = connection.post(*post_args)
+    response.raise_for_status()
     return response
 
 
@@ -191,11 +188,15 @@ def main(sys_argv=None):
     for control, namespace, action in _QUERIES:
         try:
             attrs, g_device, g_version = get_upnp_info(control, namespace, action, connection)
-        except Exception:
+        except requests.exceptions.ConnectionError as exc:
+            sys.stderr.write(f"{exc}\n")
+            raise
+        except (ValueError, requests.exceptions.HTTPError):
             if args.debug:
                 raise
-        else:
-            status.update(attrs)
+            continue
+
+        status.update(attrs)
 
     sys.stdout.write("<<<fritz>>>\n")
     sys.stdout.write("VersionOS %s\n" % g_version)

@@ -525,7 +525,7 @@ def _write_sections(sections: Mapping[str, Callable[[], Optional[JsonProtocol]]]
             writer.append(section_output.json())
 
 
-def output_cluster_api_sections(cluster: Cluster) -> None:
+def write_cluster_api_sections(cluster: Cluster) -> None:
     sections = {
         "kube_pod_resources_with_capacity_v1": cluster.pod_resources,
         "kube_node_count_v1": cluster.node_count,
@@ -535,7 +535,7 @@ def output_cluster_api_sections(cluster: Cluster) -> None:
     _write_sections(sections)
 
 
-def output_nodes_api_sections(api_nodes: Sequence[Node]) -> None:
+def write_nodes_api_sections(api_nodes: Sequence[Node]) -> None:
     def output_sections(cluster_node: Node) -> None:
         sections = {
             "kube_node_container_count_v1": cluster_node.container_count,
@@ -550,7 +550,7 @@ def output_nodes_api_sections(api_nodes: Sequence[Node]) -> None:
             output_sections(node)
 
 
-def output_deployments_api_sections(api_deployments: Sequence[Deployment]) -> None:
+def write_deployments_api_sections(api_deployments: Sequence[Deployment]) -> None:
     """Write the deployment relevant sections based on k8 API information"""
 
     def output_sections(cluster_deployment: Deployment) -> None:
@@ -567,7 +567,7 @@ def output_deployments_api_sections(api_deployments: Sequence[Deployment]) -> No
             output_sections(deployment)
 
 
-def output_pods_api_sections(api_pods: Sequence[Pod]) -> None:
+def write_pods_api_sections(api_pods: Sequence[Pod]) -> None:
     for pod in api_pods:
         with ConditionalPiggybackSection(f"pod_{pod.name(prepend_namespace=True)}"):
             for section_name, section_content in pod_api_based_checkmk_sections(pod):
@@ -885,10 +885,10 @@ def main(args: Optional[List[str]] = None) -> int:
             cluster = Cluster.from_api_server(api_server)
 
             # Sections based on API server data
-            output_cluster_api_sections(cluster)
-            output_nodes_api_sections(cluster.nodes())
-            output_deployments_api_sections(cluster.deployments())
-            output_pods_api_sections(cluster.pods())  # TODO: make more explicit
+            write_cluster_api_sections(cluster)
+            write_nodes_api_sections(cluster.nodes())
+            write_deployments_api_sections(cluster.deployments())
+            write_pods_api_sections(cluster.pods())  # TODO: make more explicit
 
             # Sections based on cluster collector performance data
             collected_metrics = request_metrics_from_cluster_collector(

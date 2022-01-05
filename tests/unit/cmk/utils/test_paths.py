@@ -12,7 +12,8 @@ from tests.testlib import import_module, repo_path
 
 _NON_STD_PREFIX: Mapping[str, str] = {
     "mkbackup_lock_dir": "/%.0s",
-    "opt_root": "/opt%s",
+    "rrd_multiple_dir": "/opt%s",
+    "rrd_single_dir": "/opt%s",
 }
 
 _STR_PATHS: Final = {

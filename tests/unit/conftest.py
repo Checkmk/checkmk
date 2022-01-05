@@ -95,9 +95,13 @@ def _touch(path):
 def cleanup_after_test():
     yield
 
+    if cmk.utils.paths.omd_root == Path(""):
+        logger.warning("OMD_ROOT not set, skipping cleanup")
+        return
+
     # Ensure there is no file left over in the unit test fake site
     # to prevent tests involving eachother
-    for entry in Path(cmk.utils.paths.omd_root).iterdir():
+    for entry in cmk.utils.paths.omd_root.iterdir():
         # This randomly fails for some unclear reasons. Looks like a race condition, but I
         # currently have no idea which triggers this since the tests are not executed in
         # parallel at the moment. This is meant as quick hack, trying to reduce flaky results.

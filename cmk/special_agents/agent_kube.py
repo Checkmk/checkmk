@@ -668,6 +668,14 @@ def pod_performance_sections(pod: PerformancePod) -> None:
         ),
     )
 
+    # Memory section
+    _write_performance_section(
+        section_name=SectionName("memory"),
+        section_output=section.Memory(
+            memory_usage_bytes=_aggregate_metric(pod.containers, MetricName("memory_usage_bytes")),
+        ),
+    )
+
 
 def _aggregate_metric(containers: Sequence[PerformanceContainer], metric: MetricName) -> float:
     """Aggregate a metric across all containers"""

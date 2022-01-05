@@ -49,31 +49,31 @@ def main(args):
                           update_from_git=version == "git",
                           install_test_python_modules=True)
 
-    site = sf.get_existing_site("test")
+    try:
+        site = sf.get_existing_site("test")
 
-    if os.environ.get("REUSE"):
-        logger.info("Reuse previously existing site in case it exists (REUSE=1)")
-        if not site.exists():
+        if os.environ.get("REUSE"):
+            logger.info("Reuse previously existing site in case it exists (REUSE=1)")
+            if not site.exists():
+                logger.info("Creating new site")
+                site = sf.get_site("test")
+            else:
+                logger.info("Reuse existing site")
+                site.start()
+        else:
+            if site.exists():
+                logger.info("Remove previously existing site (REUSE=0)")
+                site.rm()
+
             logger.info("Creating new site")
             site = sf.get_site("test")
-        else:
-            logger.info("Reuse existing site")
-            site.start()
-    else:
-        if site.exists():
-            logger.info("Remove previously existing site (REUSE=0)")
-            site.rm()
 
-        logger.info("Creating new site")
-        site = sf.get_site("test")
+        logger.info("Site %s is ready!", site.id)
 
-    logger.info("Site %s is ready!", site.id)
+        logger.info("===============================================")
+        logger.info("Switching to site context")
+        logger.info("===============================================")
 
-    logger.info("===============================================")
-    logger.info("Switching to site context")
-    logger.info("===============================================")
-
-    try:
         return _execute_as_site_user(site, args)
     finally:
         sf.save_results()

@@ -10,6 +10,7 @@ The schemas contained in this file are used to serialize data in the agent outpu
 This file should not contain any code and should not import from anywhere
 except the python standard library or pydantic.
 """
+
 import enum
 from typing import Literal, Mapping, NewType, Optional, Sequence, Union
 
@@ -125,11 +126,20 @@ class PodContainers(BaseModel):
     containers: Mapping[str, api.ContainerInfo]
 
 
+class ReadyCount(BaseModel):
+    ready: int = 0
+    not_ready: int = 0
+
+    @property
+    def total(self) -> int:
+        return self.ready + self.not_ready
+
+
 class NodeCount(BaseModel):
     """section: kube_node_count_v1"""
 
-    worker: int = 0
-    control_plane: int = 0
+    worker: ReadyCount = ReadyCount()
+    control_plane: ReadyCount = ReadyCount()
 
 
 class NodeInfo(api.NodeInfo):

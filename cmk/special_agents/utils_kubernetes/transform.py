@@ -244,7 +244,8 @@ def node_conditions(node: client.V1Node) -> Optional[api.NodeConditions]:
     conditions = node.status.conditions
     if not conditions:
         return None
-    return api.NodeConditions(**{c.type: bool(c.status) for c in conditions})
+    result = api.NodeConditions(**{c.type: c.status for c in conditions})
+    return result
 
 
 def node_info(node: client.V1Node) -> api.NodeInfo:

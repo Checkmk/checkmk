@@ -5,11 +5,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
+import re
 from typing import Literal, Mapping, Optional, Tuple, Union
 
-from .agent_based_api.v1 import check_levels, register, Service
+from .agent_based_api.v1 import check_levels, Metric, register, Result, Service, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
-from .utils.k8s import NodeCount
+from .utils.k8s import NodeCount, ReadyCount
 
 OptionalLevels = Union[Literal["no_levels"], Tuple[Literal["levels"], Tuple[int, int]]]
 
@@ -37,24 +38,40 @@ def _get_levels(
 
 
 def _check_levels(
-    value: int, name: Literal["worker", "control_plane"], params: K8sNodeCountVSResult
+    ready_count: ReadyCount, name: Literal["worker", "control_plane"], params: K8sNodeCountVSResult
 ) -> CheckResult:
     levels_upper = _get_levels(params, name, "levels_upper")
     levels_lower = _get_levels(params, name, "levels_lower")
-    yield from check_levels(
-        value,
-        metric_name=f"k8s_node_count_{name}",
+    result, metric = check_levels(
+        ready_count.ready,
+        metric_name=f"kube_node_count_{name}_ready",
         levels_upper=levels_upper,
         levels_lower=levels_lower,
         render_func=lambda x: str(int(x)),
-        label=f"Number of {name.replace('_', ' ')} nodes",
+        label=f"{name.replace('_', ' ')} nodes".capitalize(),
         boundaries=(0, None),
     )
+    assert isinstance(result, Result)
+    levels = ""
+    # if '(warn/crit below 3/1)' is part of the summary, append it to our summary
+    if match := re.match(r"[^(]+(\([^)]+\))", result.summary):
+        levels = " " + match.groups()[0]
+
+    yield Result(
+        state=result.state,
+        summary=f"{name.replace('_', ' ').capitalize()} nodes {ready_count.ready}/{ready_count.total}{levels}",
+    )
+    yield metric
+    yield Metric(f"kube_node_count_{name}_not_ready", ready_count.not_ready)
+    yield Metric(f"kube_node_count_{name}_total", ready_count.total)
 
 
 def check(params: K8sNodeCountVSResult, section: NodeCount) -> CheckResult:
     yield from _check_levels(section.worker, "worker", params)
-    yield from _check_levels(section.control_plane, "control_plane", params)
+    if section.control_plane.total == 0:
+        yield Result(state=State.OK, summary="No control plane nodes found")
+    else:
+        yield from _check_levels(section.control_plane, "control_plane", params)
 
 
 register.agent_section(

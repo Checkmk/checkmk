@@ -6,11 +6,7 @@ from mocket import Mocketizer  # type: ignore[import]
 from mocket.mockhttp import Entry  # type: ignore[import]
 
 from cmk.special_agents.utils_kubernetes.schemata import api
-from cmk.special_agents.utils_kubernetes.transform import (
-    node_conditions,
-    node_info,
-    parse_metadata,
-)
+from cmk.special_agents.utils_kubernetes.transform import node_conditions, node_info, parse_metadata
 
 
 class TestAPINode:
@@ -120,4 +116,4 @@ class TestAPINode:
         conditions = node_conditions(node)
         assert conditions is not None
         assert conditions.NetworkUnavailable is None
-        assert conditions.Ready is True
+        assert conditions.Ready is api.NodeConditionStatus.TRUE

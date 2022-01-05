@@ -58,12 +58,18 @@ class PodMetaData(MetaData):
     namespace: Namespace
 
 
+class NodeConditionStatus(str, enum.Enum):
+    TRUE = "True"
+    FALSE = "False"
+    UNKNWON = "Unknown"
+
+
 class NodeConditions(BaseModel):
-    NetworkUnavailable: Optional[bool] = None
-    MemoryPressure: bool
-    DiskPressure: bool
-    PIDPressure: bool
-    Ready: bool
+    NetworkUnavailable: Optional[NodeConditionStatus] = None
+    MemoryPressure: NodeConditionStatus
+    DiskPressure: NodeConditionStatus
+    PIDPressure: NodeConditionStatus
+    Ready: NodeConditionStatus
 
 
 class NodeResources(BaseModel):

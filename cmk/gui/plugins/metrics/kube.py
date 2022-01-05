@@ -110,6 +110,43 @@ for resource, usage_unit in zip(["memory", "cpu"], ["bytes", ""]):
             "color": color,
         }
 
+metric_info["kube_node_count_worker_ready"] = {
+    "title": _("Worker nodes ready"),
+    "unit": "count",
+    "color": "14/a",
+}
+
+metric_info["kube_node_count_worker_not_ready"] = {
+    "title": _("Worker nodes not ready"),
+    "unit": "count",
+    "color": "14/b",
+}
+
+metric_info["kube_node_count_worker_total"] = {
+    "title": _("Worker nodes total"),
+    "unit": "count",
+    "color": "51/a",
+}
+
+metric_info["kube_node_count_control_plane_ready"] = {
+    "title": _("Control plane nodes ready"),
+    "unit": "count",
+    "color": "42/a",
+}
+
+metric_info["kube_node_count_control_plane_not_ready"] = {
+    "title": _("Control plane nodes not ready"),
+    "unit": "count",
+    "color": "42/b",
+}
+
+metric_info["kube_node_count_control_plane_total"] = {
+    "title": _("Control plane nodes total"),
+    "unit": "count",
+    "color": "51/a",
+}
+
+
 #   .--Graphs--------------------------------------------------------------.
 #   |                    ____                 _                            |
 #   |                   / ___|_ __ __ _ _ __ | |__  ___                    |
@@ -180,3 +217,21 @@ for resource, usage_title in zip(["memory", "cpu"], [_("Memory"), _("CPU")]):
                 f"{metric_name}:crit",
             ],
         }
+
+graph_info["kube_node_count_worker"] = {
+    "title": _("Worker nodes"),
+    "metrics": [
+        ("kube_node_count_worker_ready", "stack"),
+        ("kube_node_count_worker_not_ready", "stack"),
+        ("kube_node_count_worker_total", "line"),
+    ],
+}
+
+graph_info["kube_node_count_control_plane"] = {
+    "title": _("Control plane nodes"),
+    "metrics": [
+        ("kube_node_count_control_plane_ready", "stack"),
+        ("kube_node_count_control_plane_not_ready", "stack"),
+        ("kube_node_count_control_plane_total", "line"),
+    ],
+}

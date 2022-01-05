@@ -469,14 +469,20 @@ class Cluster:
         return self._deployments
 
     def node_count(self) -> section.NodeCount:
-        worker = 0
-        control_plane = 0
+        node_count = section.NodeCount()
         for node in self._nodes.values():
+            ready = node.status.conditions.Ready == api.NodeConditionStatus.TRUE
             if node.control_plane:
-                control_plane += 1
+                if ready:
+                    node_count.control_plane.ready += 1
+                else:
+                    node_count.control_plane.not_ready += 1
             else:
-                worker += 1
-        return section.NodeCount(worker=worker, control_plane=control_plane)
+                if ready:
+                    node_count.worker.ready += 1
+                else:
+                    node_count.worker.not_ready += 1
+        return node_count
 
     def cluster_details(self) -> api.ClusterInfo:
         if self._cluster_details is None:

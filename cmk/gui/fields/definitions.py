@@ -611,6 +611,15 @@ class FolderField(String):
             if value:
                 raise self.make_error("not_found", folder_id=value)
 
+    def _serialize(self, value, attr, obj, **kwargs) -> typing.Optional[str]:
+        if isinstance(value, str):
+            return value
+
+        if isinstance(value, watolib.CREFolder):
+            return "/" + value.path()
+
+        raise ValueError(f"Unknown type: {value!r}")
+
 
 class BinaryExprSchema(BaseSchema):
     """

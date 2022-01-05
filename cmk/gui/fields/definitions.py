@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """A few upgraded Fields which handle some OpenAPI validation internally."""
+import ast
 import collections.abc
 import json
 import re
@@ -153,6 +154,54 @@ The maximum length is 3.
             raise self.make_error("minimum", value=value, minimum=minimum)
 
         return value
+
+
+class PythonString(String):
+    """Represent a Python value expression.
+
+    Any native Python datastructures like tuple, dict, set, etc. can be used.
+
+        Examples:
+
+            >>> expr = PythonString()
+            >>> expr.deserialize("{}")
+            {}
+
+            >>> expr.deserialize("{'a': (5.5, None)}")
+            {'a': (5.5, None)}
+
+            >>> expr.deserialize("...")  # doctest: +ELLIPSIS
+            Ellipsis
+
+        Borked syntax leads to an ValidationError
+
+            >>> expr.deserialize("{'a': (5.5,")  # doctest: +ELLIPSIS
+            Traceback (most recent call last):
+            ...
+            marshmallow.exceptions.ValidationError: ...
+
+            >>> expr.deserialize("globals")  # doctest: +ELLIPSIS
+            Traceback (most recent call last):
+            ...
+            marshmallow.exceptions.ValidationError: ...
+
+            >>> expr.deserialize('{"foo": "bar"}["foo"]')  # doctest: +ELLIPSIS
+            Traceback (most recent call last):
+            ...
+            marshmallow.exceptions.ValidationError: ...
+
+    """
+
+    def _deserialize(self, value, attr, data, **kwargs):
+        if not isinstance(value, str):
+            raise ValidationError("Unsupported type. Field must be string.")
+        try:
+            return ast.literal_eval(value)
+        except SyntaxError as exc:
+            msg = str(exc).replace(" (<unknown>, line 1)", "")
+            raise ValidationError(f"Syntax Error: {msg} in {value!r}") from exc
+        except ValueError as exc:
+            raise ValidationError(f"Not a Python data structure: {value!r}") from exc
 
 
 class Integer(_fields.Integer):
@@ -1374,6 +1423,7 @@ __all__ = [
     "PasswordIdent",
     "PasswordOwner",
     "PasswordShare",
+    "PythonString",
     "query_field",
     "SiteField",
     "String",

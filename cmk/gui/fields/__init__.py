@@ -47,6 +47,7 @@ from cmk.gui.fields.definitions import (
     PasswordIdent,
     PasswordOwner,
     PasswordShare,
+    PythonString,
     query_field,
     SiteField,
     String,

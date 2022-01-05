@@ -82,8 +82,56 @@ def patch_omd_site(monkeypatch):
     _touch(cmk.utils.paths.default_config_dir + "/mkeventd.mk")
     _touch(cmk.utils.paths.default_config_dir + "/multisite.mk")
 
+    omd_config_dir = "%s/etc/omd" % (cmk.utils.paths.omd_root,)
+    _dump(
+        omd_config_dir + "/site.conf",
+        """
+CONFIG_ADMIN_MAIL=''
+CONFIG_AGENT_RECEIVER='on'
+CONFIG_AGENT_RECEIVER_PORT='8000'
+CONFIG_APACHE_MODE='own'
+CONFIG_APACHE_TCP_ADDR='127.0.0.1'
+CONFIG_APACHE_TCP_PORT='5002'
+CONFIG_AUTOSTART='off'
+CONFIG_CORE='cmc'
+CONFIG_LIVEPROXYD='on'
+CONFIG_LIVESTATUS_TCP='off'
+CONFIG_LIVESTATUS_TCP_ONLY_FROM='0.0.0.0 ::/0'
+CONFIG_LIVESTATUS_TCP_PORT='6557'
+CONFIG_LIVESTATUS_TCP_TLS='on'
+CONFIG_MKEVENTD='on'
+CONFIG_MKEVENTD_SNMPTRAP='off'
+CONFIG_MKEVENTD_SYSLOG='on'
+CONFIG_MKEVENTD_SYSLOG_TCP='off'
+CONFIG_MULTISITE_AUTHORISATION='on'
+CONFIG_MULTISITE_COOKIE_AUTH='on'
+CONFIG_NAGIOS_THEME='classicui'
+CONFIG_NSCA='off'
+CONFIG_NSCA_TCP_PORT='5667'
+CONFIG_PNP4NAGIOS='on'
+CONFIG_TMPFS='on'
+    """,
+    )
+    _dump(
+        cmk.utils.paths.default_config_dir + "/mkeventd.d/wato/rules.mk",
+        r"""
+# Written by WATO
+# encoding: utf-8
+
+rule_packs += \
+[{'id': 'default', 'title': 'Default rule pack', 'rules': [], 'disabled': False, 'hits': 0}]
+""",
+    )
+
     yield
     omd_site.cache_clear()
+
+
+def _dump(path, data):
+    p = Path(path)
+    p.parent.mkdir(parents=True, exist_ok=True)
+    with open(path, "w") as f:
+        f.write(data)
 
 
 def _touch(path):

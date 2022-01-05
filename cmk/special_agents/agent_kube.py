@@ -315,6 +315,9 @@ class Deployment:
     def memory_resources(self) -> section.Resources:
         return _collect_memory_resources(self._pods)
 
+    def cpu_resources(self) -> section.Resources:
+        return _collect_cpu_resources(self._pods)
+
 
 class Node:
     def __init__(
@@ -376,6 +379,9 @@ class Node:
 
     def memory_resources(self) -> section.Resources:
         return _collect_memory_resources(self._pods)
+
+    def cpu_resources(self) -> section.Resources:
+        return _collect_cpu_resources(self._pods)
 
 
 class Cluster:
@@ -476,6 +482,9 @@ class Cluster:
     def memory_resources(self) -> section.Resources:
         return _collect_memory_resources(list(self._pods.values()))
 
+    def cpu_resources(self) -> section.Resources:
+        return _collect_cpu_resources(list(self._pods.values()))
+
 
 # TODO aggregating this by combining the values from pods duplicates some of logic (compare this
 # function to aggregate_limit_values). In the future, Kubernetes objects such as cluster should
@@ -511,6 +520,13 @@ def _collect_memory_resources(pods: Sequence[Pod]) -> section.Resources:
     )
 
 
+def _collect_cpu_resources(pods: Sequence[Pod]) -> section.Resources:
+    return section.Resources(
+        limit=aggregate_limit_values_from_pods([pod.cpu_limit() for pod in pods]),
+        request=aggregate_request_values_from_pods([pod.cpu_request() for pod in pods]),
+    )
+
+
 class JsonProtocol(Protocol):
     def json(self) -> str:
         ...
@@ -531,6 +547,7 @@ def write_cluster_api_sections(cluster: Cluster) -> None:
         "kube_node_count_v1": cluster.node_count,
         "kube_cluster_details_v1": cluster.cluster_details,
         "kube_memory_resources_v1": cluster.memory_resources,
+        "kube_cpu_resources_v1": cluster.cpu_resources,
     }
     _write_sections(sections)
 
@@ -542,6 +559,7 @@ def write_nodes_api_sections(api_nodes: Sequence[Node]) -> None:
             "kube_node_kubelet_v1": cluster_node.kubelet,
             "kube_pod_resources_with_capacity_v1": cluster_node.pod_resources,
             "kube_node_info_v1": cluster_node.info,
+            "kube_cpu_resources_v1": cluster_node.cpu_resources,
         }
         _write_sections(sections)
 
@@ -559,6 +577,7 @@ def write_deployments_api_sections(api_deployments: Sequence[Deployment]) -> Non
             "kube_memory_resources_v1": cluster_deployment.memory_resources,
             "kube_deployment_info_v1": cluster_deployment.info,
             "kube_deployment_conditions_v1": cluster_deployment.conditions,
+            "kube_cpu_resources_v1": cluster_deployment.cpu_resources,
         }
         _write_sections(sections)
 

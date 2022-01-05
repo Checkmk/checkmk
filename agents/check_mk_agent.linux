@@ -238,7 +238,7 @@ read_python_version() {
     return 1
 }
 
-preamble_6() {
+detect_python() {
     PYTHON3=$(read_python_version python3 3 4 || read_python_version python 3 4)
     PYTHON2=$(read_python_version python2 2 6 || read_python_version python 2 6)
     if [ -f "${MK_CONFDIR}/python_path.cfg" ]; then
@@ -260,9 +260,9 @@ preamble_6() {
     )" -eq 127 ]; then
         WRONG_PYTHON_COMMAND=true
     fi
+}
 
-    # Detect whether or not the agent is being executed in a container
-    # environment.
+detect_container_environment() {
     if [ -f /.dockerenv ]; then
         IS_DOCKERIZED=1
     elif grep container=lxc /proc/1/environ >/dev/null 2>&1; then
@@ -1912,7 +1912,8 @@ main_setup() {
     set_up_remote
     set_up_profiling
     unset_locale
-    preamble_6
+    detect_python
+    detect_container_environment
     set_up_encryption
     preamble_7
 

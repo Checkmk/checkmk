@@ -822,6 +822,7 @@ class Rule:
         super().__init__()
         self.ruleset = ruleset
         self.folder = folder
+        self.id: str
 
         # Content of the rule itself
         self._initialize()

@@ -560,6 +560,7 @@ def write_nodes_api_sections(api_nodes: Sequence[Node]) -> None:
             "kube_pod_resources_with_capacity_v1": cluster_node.pod_resources,
             "kube_node_info_v1": cluster_node.info,
             "kube_cpu_resources_v1": cluster_node.cpu_resources,
+            "kube_memory_resources_v1": cluster_node.memory_resources,
         }
         _write_sections(sections)
 

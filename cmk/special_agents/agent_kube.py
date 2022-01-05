@@ -978,7 +978,9 @@ def main(args: Optional[List[str]] = None) -> int:
 
             for deployment in cluster.deployments():
                 write_kube_object_performance_section(
-                    f"deployment_{deployment.name()}", deployment, performance_pods
+                    f"deployment_{deployment.name(prepend_namespace=True)}",
+                    deployment,
+                    performance_pods,
                 )
 
             write_kube_object_performance_section(cluster_name, cluster, performance_pods)

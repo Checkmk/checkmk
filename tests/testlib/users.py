@@ -6,7 +6,6 @@
 
 import contextlib
 import shutil
-from pathlib import Path
 
 import cmk.utils.paths
 
@@ -52,7 +51,7 @@ def create_and_destroy_user(*, automation=False, role="user", username=None):
     edit_users(_mk_user_obj(username, password, automation, role))
     config.load_config()
 
-    profile_path = Path(cmk.utils.paths.omd_root, "var", "check_mk", "web", username)
+    profile_path = cmk.utils.paths.omd_root / "var/check_mk/web" / username
     profile_path.joinpath("cached_profile.mk").write_text(
         str(
             repr(

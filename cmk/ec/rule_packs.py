@@ -158,7 +158,7 @@ class RulePackType(Enum):  # pylint: disable=too-few-public-methods
 def _default_settings() -> Settings:
     """Returns default EC settings. This function should vanish in the long run!"""
     return create_settings(
-        "", Path(cmk.utils.paths.omd_root), Path(cmk.utils.paths.default_config_dir), [""]
+        "", cmk.utils.paths.omd_root, Path(cmk.utils.paths.default_config_dir), [""]
     )
 
 

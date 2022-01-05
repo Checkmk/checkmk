@@ -103,7 +103,7 @@ PACKAGE_EXTENSION: Final[str] = ".mkp"
 
 
 def package_dir() -> Path:
-    return Path(cmk.utils.paths.omd_root, "var", "check_mk", "packages")
+    return cmk.utils.paths.omd_root / "var/check_mk/packages"
 
 
 def get_config_parts() -> List[PackagePart]:

@@ -3917,7 +3917,7 @@ def main() -> None:
     logger = getLogger("cmk.mkeventd")
     settings = create_settings(
         cmk_version.__version__,
-        Path(cmk.utils.paths.omd_root),
+        cmk.utils.paths.omd_root,
         Path(cmk.utils.paths.default_config_dir),
         sys.argv,
     )

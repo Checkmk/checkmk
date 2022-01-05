@@ -262,7 +262,7 @@ if __name__ == "__main__":
     print(
         settings(
             str(cmk_version.__version__),
-            Path(cmk.utils.paths.omd_root),
+            cmk.utils.paths.omd_root,
             Path(cmk.utils.paths.default_config_dir),
             sys.argv,
         )

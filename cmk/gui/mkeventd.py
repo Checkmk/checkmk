@@ -30,7 +30,7 @@ from cmk.gui.valuespec import DropdownChoiceEntry
 
 
 def _socket_path() -> Path:
-    return Path(cmk.utils.paths.omd_root, "tmp", "run", "mkeventd", "status")
+    return cmk.utils.paths.omd_root / "tmp/run/mkeventd/status"
 
 
 def mib_upload_dir() -> Path:
@@ -146,9 +146,7 @@ def action_choices(omit_hidden=False) -> List[Tuple[str, str]]:
 @request_memoize()
 def _eventd_configuration() -> ec.ConfigFromWATO:
     return ec.load_config(
-        ec.settings(
-            "", Path(cmk.utils.paths.omd_root), Path(cmk.utils.paths.default_config_dir), [""]
-        )
+        ec.settings("", cmk.utils.paths.omd_root, Path(cmk.utils.paths.default_config_dir), [""])
     )
 
 

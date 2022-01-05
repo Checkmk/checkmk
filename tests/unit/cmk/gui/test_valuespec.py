@@ -7,7 +7,6 @@
 import hashlib
 from contextlib import nullcontext
 from enum import Enum
-from pathlib import Path
 
 import pytest
 
@@ -378,7 +377,7 @@ def test_transform_value_and_json():
 
 @pytest.fixture()
 def fixture_auth_secret():
-    secret_path = Path(cmk.utils.paths.omd_root) / "etc" / "auth.secret"
+    secret_path = cmk.utils.paths.omd_root / "etc" / "auth.secret"
     secret_path.parent.mkdir(parents=True, exist_ok=True)
     with secret_path.open("wb") as f:
         f.write(b"auth-secret")

@@ -23,7 +23,6 @@ import sys
 import time
 from dataclasses import dataclass
 from functools import lru_cache
-from pathlib import Path
 from typing import Any, Dict, Tuple, Union
 
 import livestatus
@@ -35,7 +34,7 @@ from cmk.utils.type_defs._misc import assert_never
 
 @lru_cache
 def omd_version() -> str:
-    version_link = Path(cmk.utils.paths.omd_root).joinpath("version")
+    version_link = cmk.utils.paths.omd_root / "version"
     return version_link.resolve().name
 
 

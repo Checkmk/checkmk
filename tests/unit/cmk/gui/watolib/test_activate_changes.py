@@ -172,7 +172,7 @@ def test_get_replication_components(
 
 
 def test_add_replication_paths_pre_17(monkeypatch):
-    monkeypatch.setattr(cmk.utils.paths, "omd_root", "/path")
+    monkeypatch.setattr(cmk.utils.paths, "omd_root", Path("/path"))
     # dir/file, ident, path, optional list of excludes
     activate_changes.add_replication_paths(
         [
@@ -249,7 +249,7 @@ def test_automation_get_config_sync_state():
 
 
 def test_get_config_sync_file_infos():
-    base_dir = Path(cmk.utils.paths.omd_root) / "replication"
+    base_dir = cmk.utils.paths.omd_root / "replication"
     _create_get_config_sync_file_infos_test_config(base_dir)
 
     replication_paths = [
@@ -566,7 +566,7 @@ def _get_test_sync_archive(tmp_path):
 
 
 def test_automation_receive_config_sync(monkeypatch, tmp_path):
-    remote_path = tmp_path.joinpath("remote")
+    remote_path = tmp_path / "remote"
     monkeypatch.setattr(cmk.utils.paths, "omd_root", remote_path)
 
     # Disable for the moment, because the unit test fake environment is not ready for this yet

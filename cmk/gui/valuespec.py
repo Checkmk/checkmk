@@ -5814,7 +5814,7 @@ class ValueEncrypter:
         Use the sites auth.secret for encryption. This secret is only known to the current site
         and other distributed sites.
         """
-        secret_path = Path(cmk.utils.paths.omd_root) / "etc" / "auth.secret"
+        secret_path = cmk.utils.paths.omd_root / "etc" / "auth.secret"
         with secret_path.open(mode="rb") as f:
             passphrase = f.read().strip()
             return hashlib.scrypt(passphrase, salt=salt, n=2 ** 14, r=8, p=1, dklen=32)

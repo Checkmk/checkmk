@@ -261,7 +261,7 @@ def test_diagnostics_element_omd_config_content(tmp_path, _collectors):
     diagnostics_element = diagnostics.OMDConfigDiagnosticsElement()
 
     # Fake raw output of site.conf
-    etc_omd_dir = Path(cmk.utils.paths.omd_root) / "etc" / "omd"
+    etc_omd_dir = cmk.utils.paths.omd_root / "etc" / "omd"
     etc_omd_dir.mkdir(parents=True, exist_ok=True)
     with etc_omd_dir.joinpath("site.conf").open("w") as f:
         f.write(
@@ -646,7 +646,7 @@ def test_diagnostics_element_performance_graphs_error(
     with automation_dir.joinpath("automation.secret").open("w") as f:
         f.write("my-123-password")
 
-    etc_omd_dir = Path(cmk.utils.paths.omd_root) / "etc" / "omd"
+    etc_omd_dir = cmk.utils.paths.omd_root / "etc" / "omd"
     etc_omd_dir.mkdir(parents=True, exist_ok=True)
     with etc_omd_dir.joinpath("site.conf").open("w") as f:
         f.write(
@@ -700,7 +700,7 @@ def test_diagnostics_element_performance_graphs_content(
     with automation_dir.joinpath("automation.secret").open("w") as f:
         f.write("my-123-password")
 
-    etc_omd_dir = Path(cmk.utils.paths.omd_root) / "etc" / "omd"
+    etc_omd_dir = cmk.utils.paths.omd_root / "etc" / "omd"
     etc_omd_dir.mkdir(parents=True, exist_ok=True)
     with etc_omd_dir.joinpath("site.conf").open("w") as f:
         f.write(

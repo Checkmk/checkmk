@@ -1098,7 +1098,7 @@ class CRESnapshotDataCollector(ABCSnapshotDataCollector):
             if component.ident == "sitespecific":
                 continue  # Will be created for each site individually later
 
-            source_path = Path(cmk.utils.paths.omd_root).joinpath(component.site_path)
+            source_path = cmk.utils.paths.omd_root / component.site_path
             target_path = Path(snapshot_settings.work_dir).joinpath(component.site_path)
 
             store.makedirs(target_path.parent)
@@ -2040,7 +2040,7 @@ def apply_pre_17_sync_snapshot(
         _save_pre_17_site_globals_on_slave_site(tar_content)
 
         # Create rule making this site only monitor our hosts
-        create_distributed_wato_files(Path(cmk.utils.paths.omd_root), site_id, is_remote=True)
+        create_distributed_wato_files(cmk.utils.paths.omd_root, site_id, is_remote=True)
 
         _execute_post_config_sync_actions(site_id)
         _execute_cmk_update_config()
@@ -2418,9 +2418,7 @@ class AutomationGetConfigSyncState(AutomationCommand):
 
     def execute(self, api_request: List[ReplicationPath]) -> GetConfigSyncStateResponse:
         with store.lock_checkmk_configuration():
-            file_infos = _get_config_sync_file_infos(
-                api_request, base_dir=Path(cmk.utils.paths.omd_root)
-            )
+            file_infos = _get_config_sync_file_infos(api_request, base_dir=cmk.utils.paths.omd_root)
             transport_file_infos = {
                 k: (v.st_mode, v.st_size, v.link_target, v.file_hash) for k, v in file_infos.items()
             }
@@ -2557,7 +2555,7 @@ class AutomationReceiveConfigSync(AutomationCommand):
 
     def _update_config_on_remote_site(self, sync_archive: bytes, to_delete: List[str]) -> None:
         """Use the given tar archive and list of files to be deleted to update the local files"""
-        base_dir = Path(cmk.utils.paths.omd_root)
+        base_dir = cmk.utils.paths.omd_root
 
         for site_path in to_delete:
             site_file = base_dir.joinpath(site_path)

@@ -96,7 +96,7 @@ def _create_test_sync_config(monkeypatch):
     with conf_dir.joinpath("hosts.mk").open("w", encoding="utf-8") as f:
         f.write("all_hosts = []\n")
 
-    Path(cmk.utils.paths.omd_root, "local").mkdir(parents=True, exist_ok=True)
+    (cmk.utils.paths.omd_root / "local").mkdir(parents=True, exist_ok=True)
     Path(cmk.utils.paths.var_dir, "packages").mkdir(parents=True, exist_ok=True)
 
     gui_conf_dir = Path(cmk.utils.paths.default_config_dir) / "multisite.d" / "wato"

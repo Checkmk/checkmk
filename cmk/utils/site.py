@@ -34,7 +34,7 @@ def url_prefix() -> str:
 
 def get_omd_config(omd_root: Optional[Path] = None) -> OMDConfig:
     if omd_root is None:
-        omd_root = Path(cmk.utils.paths.omd_root)
+        omd_root = cmk.utils.paths.omd_root
 
     site_conf = omd_root / "etc" / "omd" / "site.conf"
 

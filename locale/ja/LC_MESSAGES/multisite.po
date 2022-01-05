@@ -16690,6 +16690,10 @@ msgstr "次のSIDを除外します(見つかった場合)"
 msgid "Exclude times out of notification period"
 msgstr "通知期間外の時間を除外する"
 
+#, fuzzy
+msgid "Exclude volume from service name"
+msgstr "予約済みスペースを除外する"
+
 msgid "Exclusion patterns"
 msgstr "除外パターン"
 
@@ -29618,6 +29622,10 @@ msgstr ""
 
 msgid "NetApp LUNs"
 msgstr "NetApp LUN"
+
+#, fuzzy
+msgid "NetApp Qtree discovery"
+msgstr "Netappポートの検出"
 
 msgid "NetApp Snapshot Reserve"
 msgstr "NetAppスナップショットリザーブ"
@@ -46219,6 +46227,20 @@ msgstr "選択したアイコンは存在しません。"
 msgid "The sensor name"
 msgstr "センサー名"
 
+#, fuzzy
+msgid ""
+"The service description of qtree services is composed of the quota, quota-"
+"users and the volume name by default. Check this boxif you would like to use "
+"the quota and quota-users combination as the service description on its own. "
+"Please be advised that this may lead to a service description that is not "
+"unique, resulting in some services, which are not shown!"
+msgstr ""
+"クラスターモードのインストールにのみ適用されます。snapvaultサービスのサービス"
+"記述は、デフォルトで宛先vserver (SVM)と宛先ボリュームで構成されます。宛先ボ"
+"リュームを単独でサービスの説明として使用する場合は、このボックスをオンにしま"
+"す。これにより、サービスの説明が一意でなくなり、一部のサービスが表示されなく"
+"なる可能性があることに注意してください。"
+
 msgid ""
 "The service description will be <b>LDAP</b> plus this name. If the name "
 "starts with a caret (<tt>^</tt>), the service description will not be "
@@ -58386,6 +58408,9 @@ msgstr "予測値を超える"
 msgid "access unrestricted"
 msgstr "無制限のアクセス"
 
+msgid "acknowledged"
+msgstr "認められた"
+
 msgid "acknowledged events will not be honored"
 msgstr "承認されたイベントは、尊重されません"
 
@@ -58587,6 +58612,9 @@ msgstr "子"
 msgid "clients"
 msgstr "クライアント"
 
+msgid "closed"
+msgstr "閉まっている"
+
 msgid "collapsed"
 msgstr "崩壊した"
 
@@ -58623,6 +58651,9 @@ msgid "contact groups: "
 msgstr "連絡先グループ: "
 
 msgid "count"
+msgstr "カウント"
+
+msgid "counting"
 msgstr "カウント"
 
 msgid "cp437"
@@ -58719,6 +58750,9 @@ msgstr "劣化したホスト"
 
 msgid "delay precompiling"
 msgstr "プリコンパイルを遅らせる"
+
+msgid "delayed"
+msgstr "遅延"
 
 msgid "demand"
 msgstr "要求する"
@@ -59624,6 +59658,9 @@ msgstr "v6のみ"
 
 msgid "only when the host is not in downtime"
 msgstr "ホストがダウンタイムになっていない場合のみ"
+
+msgid "open"
+msgstr "開いた"
 
 msgid "optional"
 msgstr "オプション"
@@ -62851,21 +62888,6 @@ msgstr "© 2020 tribe29 GmbH. All Rights Reserved."
 
 #~ msgid "You can enable this checkbox to show empty hostgroups"
 #~ msgstr "このチェックボックスを有効にして、空のホストグループを表示できます"
-
-#~ msgid "acknowledged"
-#~ msgstr "認められた"
-
-#~ msgid "closed"
-#~ msgstr "閉まっている"
-
-#~ msgid "counting"
-#~ msgstr "カウント"
-
-#~ msgid "delayed"
-#~ msgstr "遅延"
-
-#~ msgid "open"
-#~ msgstr "開いた"
 
 #~ msgid "vBuckets"
 #~ msgstr "vBuckets"

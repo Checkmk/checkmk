@@ -16665,6 +16665,10 @@ msgid "Exclude times out of notification period"
 msgstr ""
 
 #, fuzzy
+msgid "Exclude volume from service name"
+msgstr "spatiu utilizat"
+
+#, fuzzy
 msgid "Exclusion patterns"
 msgstr "Adaugă model/tipar"
 
@@ -29344,6 +29348,10 @@ msgstr ""
 
 msgid "NetApp LUNs"
 msgstr ""
+
+#, fuzzy
+msgid "NetApp Qtree discovery"
+msgstr "Inventariere in masa"
 
 msgid "NetApp Snapshot Reserve"
 msgstr ""
@@ -45700,6 +45708,14 @@ msgid "The sensor name"
 msgstr "Adaugă nume de senzor"
 
 msgid ""
+"The service description of qtree services is composed of the quota, quota-"
+"users and the volume name by default. Check this boxif you would like to use "
+"the quota and quota-users combination as the service description on its own. "
+"Please be advised that this may lead to a service description that is not "
+"unique, resulting in some services, which are not shown!"
+msgstr ""
+
+msgid ""
 "The service description will be <b>LDAP</b> plus this name. If the name "
 "starts with a caret (<tt>^</tt>), the service description will not be "
 "prefixed with <tt>LDAP</tt>."
@@ -56476,6 +56492,10 @@ msgstr ""
 msgid "access unrestricted"
 msgstr ""
 
+#, fuzzy
+msgid "acknowledged"
+msgstr "Confirmă"
+
 msgid "acknowledged events will not be honored"
 msgstr ""
 
@@ -56678,6 +56698,10 @@ msgstr ""
 msgid "clients"
 msgstr ""
 
+#, fuzzy
+msgid "closed"
+msgstr "Cluster nou"
+
 msgid "collapsed"
 msgstr ""
 
@@ -56719,6 +56743,9 @@ msgid "contact groups: "
 msgstr ""
 
 msgid "count"
+msgstr ""
+
+msgid "counting"
 msgstr ""
 
 msgid "cp437"
@@ -56815,6 +56842,9 @@ msgid "degraded hosts"
 msgstr ""
 
 msgid "delay precompiling"
+msgstr ""
+
+msgid "delayed"
 msgstr ""
 
 msgid "demand"
@@ -57776,6 +57806,9 @@ msgid "only v6"
 msgstr ""
 
 msgid "only when the host is not in downtime"
+msgstr ""
+
+msgid "open"
 msgstr ""
 
 msgid "optional"

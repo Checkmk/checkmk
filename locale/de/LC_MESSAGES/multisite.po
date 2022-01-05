@@ -17276,6 +17276,10 @@ msgstr "Folgende SIDs auslassen (falls vorhanden)"
 msgid "Exclude times out of notification period"
 msgstr "Zeiten außerhalb der Alarmierungsperiode ausschließen"
 
+#, fuzzy
+msgid "Exclude volume from service name"
+msgstr "Folgende Services ausschließen"
+
 msgid "Exclusion patterns"
 msgstr "Ausschluss-Muster"
 
@@ -30721,6 +30725,10 @@ msgstr "NetApp Filer: Belegter Platz in Dateisystemen - mit 32-Bit-Zählern"
 
 msgid "NetApp LUNs"
 msgstr "NetApp LUNs"
+
+#, fuzzy
+msgid "NetApp Qtree discovery"
+msgstr "Netapp Port-Erkennung"
 
 msgid "NetApp Snapshot Reserve"
 msgstr "NetApp Snapshot-Reserve"
@@ -48119,6 +48127,21 @@ msgstr "Das ausgewählte Symbol ist nicht vorhanden."
 msgid "The sensor name"
 msgstr "Der Sensorname"
 
+#, fuzzy
+msgid ""
+"The service description of qtree services is composed of the quota, quota-"
+"users and the volume name by default. Check this boxif you would like to use "
+"the quota and quota-users combination as the service description on its own. "
+"Please be advised that this may lead to a service description that is not "
+"unique, resulting in some services, which are not shown!"
+msgstr ""
+"Gilt nur für Installationen im Clustermodus. Die Dienstbeschreibung von "
+"Snapvault-Diensten setzt sich standardmäßig aus dem Ziel-VServer (SVM) und "
+"dem Zielvolume zusammen. Aktivieren Sie dieses Kontrollkästchen, wenn Sie "
+"das Zielvolume als eigenständige Dienstbeschreibung verwenden möchten. Bitte "
+"beachten Sie, dass dies zu einer nicht eindeutigen Service-Beschreibung "
+"führen kann, was dazu führt, dass einige Services nicht angezeigt werden!"
+
 msgid ""
 "The service description will be <b>LDAP</b> plus this name. If the name "
 "starts with a caret (<tt>^</tt>), the service description will not be "
@@ -61304,6 +61327,9 @@ msgstr "über Prognose"
 msgid "access unrestricted"
 msgstr "unbeschränkter Zugriff"
 
+msgid "acknowledged"
+msgstr "quittiert"
+
 msgid "acknowledged events will not be honored"
 msgstr "quittierte Ereignisse werden nicht berücksichtigt"
 
@@ -61504,6 +61530,9 @@ msgstr "Childhosts"
 msgid "clients"
 msgstr "Clients"
 
+msgid "closed"
+msgstr "geschlossen"
+
 msgid "collapsed"
 msgstr "zugeklappt"
 
@@ -61541,6 +61570,9 @@ msgstr "Kontakt-Gruppen:"
 
 msgid "count"
 msgstr "Anzahl"
+
+msgid "counting"
+msgstr "Zählung"
 
 msgid "cp437"
 msgstr "cp437"
@@ -61636,6 +61668,9 @@ msgstr "degraded Hosts"
 
 msgid "delay precompiling"
 msgstr "verschiebe Vor-Übersetzung"
+
+msgid "delayed"
+msgstr "verspätet"
 
 msgid "demand"
 msgstr "Bedarf"
@@ -62547,6 +62582,9 @@ msgstr "nur v6"
 
 msgid "only when the host is not in downtime"
 msgstr "nur wenn der Host nicht in Wartung ist"
+
+msgid "open"
+msgstr "offen"
 
 msgid "optional"
 msgstr "optional"
@@ -65953,21 +65991,6 @@ msgstr "© %s tribe29 GmbH. Alle Rechte vorbehalten."
 #~ msgid "Youngest age"
 #~ msgstr "Ältestes Alter"
 
-#~ msgid "acknowledged"
-#~ msgstr "quittiert"
-
-#~ msgid "closed"
-#~ msgstr "geschlossen"
-
-#~ msgid "counting"
-#~ msgstr "Zählung"
-
-#~ msgid "delayed"
-#~ msgstr "verspätet"
-
-#~ msgid "open"
-#~ msgstr "offen"
-
 #~ msgid "vBuckets"
 #~ msgstr "vBuckets"
 
@@ -67420,9 +67443,6 @@ msgstr "© %s tribe29 GmbH. Alle Rechte vorbehalten."
 
 #~ msgid "Exclude the following hosts"
 #~ msgstr "Folgende Hosts ausschließen"
-
-#~ msgid "Exclude the following services"
-#~ msgstr "Folgende Services ausschließen"
 
 #~ msgid "Filter Group (Only use in special situations)"
 #~ msgstr "Gruppen-Filter (nur in speziellen Situationen)"

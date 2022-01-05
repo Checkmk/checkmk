@@ -17372,6 +17372,10 @@ msgstr "Excluya los siguientes SID (si los encuentra)"
 msgid "Exclude times out of notification period"
 msgstr "Excluir los tiempos fuera del periodo de notificación"
 
+#, fuzzy
+msgid "Exclude volume from service name"
+msgstr "Excluir el espacio reservado"
+
 msgid "Exclusion patterns"
 msgstr "Patrones de exclusión"
 
@@ -30916,6 +30920,10 @@ msgstr ""
 
 msgid "NetApp LUNs"
 msgstr "LUNs de NetApp"
+
+#, fuzzy
+msgid "NetApp Qtree discovery"
+msgstr "Descubrimiento de puertos de Netapp"
 
 msgid "NetApp Snapshot Reserve"
 msgstr "Reserva de instantáneas de NetApp"
@@ -48468,6 +48476,21 @@ msgstr "El icono seleccionado no existe."
 msgid "The sensor name"
 msgstr "El nombre del sensor"
 
+#, fuzzy
+msgid ""
+"The service description of qtree services is composed of the quota, quota-"
+"users and the volume name by default. Check this boxif you would like to use "
+"the quota and quota-users combination as the service description on its own. "
+"Please be advised that this may lead to a service description that is not "
+"unique, resulting in some services, which are not shown!"
+msgstr ""
+"Sólo aplicable a instalaciones en modo clúster. La descripción del servicio "
+"de los servicios de snapvault está compuesta por el vservidor de destino "
+"(SVM) y el volumen de destino por defecto. Marque esta casilla si desea "
+"utilizar el volumen de destino como descripción del servicio por sí solo. "
+"¡Tenga en cuenta que esto puede dar lugar a una descripción de servicio que "
+"no es única, lo que resulta en algunos servicios, que no se muestran!"
+
 msgid ""
 "The service description will be <b>LDAP</b> plus this name. If the name "
 "starts with a caret (<tt>^</tt>), the service description will not be "
@@ -61786,6 +61809,9 @@ msgstr "por encima del valor previsto"
 msgid "access unrestricted"
 msgstr "acceso sin restricciones"
 
+msgid "acknowledged"
+msgstr "reconoció"
+
 msgid "acknowledged events will not be honored"
 msgstr "los eventos reconocidos no serán respetados"
 
@@ -61989,6 +62015,9 @@ msgstr "niños"
 msgid "clients"
 msgstr "clientes"
 
+msgid "closed"
+msgstr "cerrado"
+
 msgid "collapsed"
 msgstr "colapsado"
 
@@ -62026,6 +62055,9 @@ msgstr "grupos de contacto: "
 
 msgid "count"
 msgstr "cuenta"
+
+msgid "counting"
+msgstr "contando"
 
 msgid "cp437"
 msgstr "cp437"
@@ -62121,6 +62153,9 @@ msgstr "anfitriones degradados"
 
 msgid "delay precompiling"
 msgstr "retrasar la precompilación"
+
+msgid "delayed"
+msgstr "retrasado"
 
 msgid "demand"
 msgstr "demanda"
@@ -63034,6 +63069,9 @@ msgstr "sólo v6"
 
 msgid "only when the host is not in downtime"
 msgstr "sólo cuando el host no está en tiempo de inactividad"
+
+msgid "open"
+msgstr "Abrir"
 
 msgid "optional"
 msgstr "opcional"
@@ -66452,21 +66490,6 @@ msgstr "2020 tribe29 GmbH. Todos los derechos reservados."
 
 #~ msgid "Youngest age"
 #~ msgstr "Edad más joven"
-
-#~ msgid "acknowledged"
-#~ msgstr "reconoció"
-
-#~ msgid "closed"
-#~ msgstr "cerrado"
-
-#~ msgid "counting"
-#~ msgstr "contando"
-
-#~ msgid "delayed"
-#~ msgstr "retrasado"
-
-#~ msgid "open"
-#~ msgstr "Abrir"
 
 #~ msgid "vBuckets"
 #~ msgstr "vBuckets"

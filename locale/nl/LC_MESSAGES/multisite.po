@@ -17230,6 +17230,10 @@ msgstr "Sluit de volgende SID's uit (indien gevonden)"
 msgid "Exclude times out of notification period"
 msgstr "Exclusief tijden buiten de meldingsperiode"
 
+#, fuzzy
+msgid "Exclude volume from service name"
+msgstr "Exclusief gereserveerde ruimte"
+
 msgid "Exclusion patterns"
 msgstr "Uitsluitingspatronen"
 
@@ -30668,6 +30672,10 @@ msgstr "NetApp Filers: Gebruikte ruimte in bestandssysteem met 32-bits tellers"
 
 msgid "NetApp LUNs"
 msgstr "NetApp LUN's"
+
+#, fuzzy
+msgid "NetApp Qtree discovery"
+msgstr "Netapp poort ontdekking"
 
 msgid "NetApp Snapshot Reserve"
 msgstr "NetApp Snapshot Reserve"
@@ -48066,6 +48074,21 @@ msgstr "Het geselecteerde pictogram bestaat niet."
 msgid "The sensor name"
 msgstr "De naam van de sensor"
 
+#, fuzzy
+msgid ""
+"The service description of qtree services is composed of the quota, quota-"
+"users and the volume name by default. Check this boxif you would like to use "
+"the quota and quota-users combination as the service description on its own. "
+"Please be advised that this may lead to a service description that is not "
+"unique, resulting in some services, which are not shown!"
+msgstr ""
+"Alleen van toepassing op clustermode installaties. De servicebeschrijving "
+"van snapvault-services is standaard samengesteld uit de bestemmings-VServer "
+"(SVM) en het bestemmingsvolume. Vink dit vakje aan als u het "
+"bestemmingsvolume wilt gebruiken als de servicebeschrijving op zichzelf. "
+"Houd er rekening mee dat dit kan leiden tot een servicebeschrijving die niet "
+"uniek is, wat resulteert in sommige services, die niet worden getoond!"
+
 msgid ""
 "The service description will be <b>LDAP</b> plus this name. If the name "
 "starts with a caret (<tt>^</tt>), the service description will not be "
@@ -61275,6 +61298,9 @@ msgstr "boven voorspelde waarde"
 msgid "access unrestricted"
 msgstr "onbeperkte toegang"
 
+msgid "acknowledged"
+msgstr "erkend"
+
 msgid "acknowledged events will not be honored"
 msgstr "erkende gebeurtenissen worden niet gehonoreerd"
 
@@ -61476,6 +61502,9 @@ msgstr "kinderen"
 msgid "clients"
 msgstr "klanten"
 
+msgid "closed"
+msgstr "gesloten"
+
 msgid "collapsed"
 msgstr "ingestort"
 
@@ -61514,6 +61543,9 @@ msgstr "contactgroepen: "
 
 msgid "count"
 msgstr "tel"
+
+msgid "counting"
+msgstr "tellen"
 
 msgid "cp437"
 msgstr "cp437"
@@ -61609,6 +61641,9 @@ msgstr "gedegradeerde hosts"
 
 msgid "delay precompiling"
 msgstr "het precompileren vertragen"
+
+msgid "delayed"
+msgstr "vertraagd"
 
 msgid "demand"
 msgstr "vraag"
@@ -62517,6 +62552,9 @@ msgstr "alleen v6"
 
 msgid "only when the host is not in downtime"
 msgstr "alleen wanneer de host niet in downtime is"
+
+msgid "open"
+msgstr "open"
 
 msgid "optional"
 msgstr "optionele"
@@ -65905,21 +65943,6 @@ msgstr "© 2020 tribe29 GmbH. Alle rechten voorbehouden."
 
 #~ msgid "Youngest age"
 #~ msgstr "Jongste leeftijd"
-
-#~ msgid "acknowledged"
-#~ msgstr "erkend"
-
-#~ msgid "closed"
-#~ msgstr "gesloten"
-
-#~ msgid "counting"
-#~ msgstr "tellen"
-
-#~ msgid "delayed"
-#~ msgstr "vertraagd"
-
-#~ msgid "open"
-#~ msgstr "open"
 
 #~ msgid "vBuckets"
 #~ msgstr "vBuckets"

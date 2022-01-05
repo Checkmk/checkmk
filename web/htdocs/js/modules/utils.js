@@ -637,32 +637,6 @@ export function wheel_event_name() {
     else return "mousewheel";
 }
 
-var g_tag_groups = {
-    host: {},
-    service: {},
-};
-
-export function set_tag_groups(object_type, grouped) {
-    g_tag_groups[object_type] = grouped;
-}
-
-export function tag_update_value(object_type, prefix, grp) {
-    var value_select = document.getElementById(prefix + "_val");
-
-    // Remove all options
-    value_select.options.length = 0;
-
-    if (grp === "") return; // skip over when empty group selected
-
-    var opt = null;
-    for (var i = 0, len = g_tag_groups[object_type][grp].length; i < len; i++) {
-        opt = document.createElement("option");
-        opt.value = g_tag_groups[object_type][grp][i][0];
-        opt.text = g_tag_groups[object_type][grp][i][1];
-        value_select.appendChild(opt);
-    }
-}
-
 export function toggle_more(trigger, toggle_id, dom_levels_up) {
     event.stopPropagation();
     let container = trigger;

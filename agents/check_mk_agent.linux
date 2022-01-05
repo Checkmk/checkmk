@@ -1944,8 +1944,6 @@ main_async_parts() {
 }
 
 main_finalize_sync() {
-    _log_section_time section_checkmk_failed_plugins
-
     finalize_profiling
 }
 

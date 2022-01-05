@@ -523,7 +523,7 @@ class Site:
 
     def _log_cmc_startup(self):
         tool = "memcheck"  # sensible tools for us: None, "memcheck" or "helgrind"
-        valgrind = f"valgrind --tool={tool} --quiet --num-callers=30 --error-exitcode=42 --exit-on-first-error=yes"
+        valgrind = f"valgrind --tool={tool} --quiet --num-callers=30" # --error-exitcode=42 --exit-on-first-error=yes"
         redirect = ">> $OMD_ROOT/var/log/cmc-startup.log 2>&1"
         self.write_file(
             "etc/init.d/cmc",

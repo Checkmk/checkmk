@@ -63,8 +63,8 @@ class RegExpFilter(InputTextFilter):
         validate_regex(value.get(htmlvar, ""), htmlvar)
 
 
-class DropdownFilter(Filter):
-    "Select options from dropdown"
+class AjaxDropdownFilter(Filter):
+    "Select from dropdown with dynamic option query"
 
     def __init__(
         self,
@@ -73,13 +73,11 @@ class DropdownFilter(Filter):
         sort_index: int,
         info: str,
         query_filter: query_filters.TextQuery,
-        options: query_filters.Options,
         link_columns: Optional[List[ColumnName]] = None,
         description: Union[None, str, LazyString] = None,
         is_show_more: bool = False,
     ) -> None:
         self.query_filter = query_filter
-        self.options = options
 
         super().__init__(
             ident=self.query_filter.ident,
@@ -92,18 +90,6 @@ class DropdownFilter(Filter):
             is_show_more=is_show_more,
         )
 
-    def display(self, value: FilterHTTPVariables) -> None:
-        current_value = value.get(self.query_filter.request_vars[0], "")
-        html.dropdown(
-            self.query_filter.request_vars[0],
-            self.options,
-            deflt=current_value,
-            ordered=True,
-        )
-
-        if self.query_filter.negateable:
-            checkbox_component(self.query_filter.request_vars[1], value, _("negate"))
-
     def filter(self, value: FilterHTTPVariables) -> FilterHeader:
         return self.query_filter.filter(value)
 
@@ -113,8 +99,6 @@ class DropdownFilter(Filter):
     def request_vars_from_row(self, row: Row) -> Dict[str, str]:
         return {self.query_filter.request_vars[0]: row[self.query_filter.column]}
 
-
-class AjaxDropdownFilter(DropdownFilter):
     def display(self, value: FilterHTTPVariables) -> None:
         current_value = value.get(self.query_filter.request_vars[0], "")
         choices = [(current_value, current_value)] if current_value else []
@@ -166,7 +150,6 @@ filter_registry.register(
             op="~~",
             negateable=True,
         ),
-        options=[],
         description=_l("Search field allowing regular expressions and partial matches"),
     )
 )
@@ -179,7 +162,6 @@ filter_registry.register(
         query_filter=query_filters.TextQuery(
             ident="host", column="host_name", op="=", negateable=True
         ),
-        options=[],
         description=_l("Exact match, used for linking"),
         is_show_more=True,
     )
@@ -210,7 +192,6 @@ filter_registry.register(
             op="~~",
             negateable=True,
         ),
-        options=[],
         description=_l("Search field allowing regular expressions and partial matches"),
     )
 )
@@ -221,7 +202,6 @@ filter_registry.register(
         sort_index=201,
         info="service",
         query_filter=query_filters.TextQuery(ident="service", column="service_description", op="="),
-        options=[],
         description=_l("Exact match, used for linking"),
         is_show_more=True,
     )
@@ -428,7 +408,6 @@ class FilterGroupCombo(AjaxDropdownFilter):
             sort_index=sort_index,
             info=group_type.split("_")[0],
             query_filter=query_filter,
-            options=[],
             link_columns=[group_type + "group_name"],
             description=description,
         )
@@ -576,7 +555,6 @@ filter_registry.register(
         sort_index=104,
         description=_l("Selection of the host group"),
         info="hostgroup",
-        options=[],
         query_filter=query_filters.TextQuery(
             ident="hostgroup",
             column="hostgroup_name",
@@ -591,7 +569,6 @@ filter_registry.register(
         sort_index=104,
         description=_l("Selection of the service group"),
         info="servicegroup",
-        options=[],
         query_filter=query_filters.TextQuery(
             ident="servicegroup",
             column="servicegroup_name",
@@ -655,7 +632,6 @@ filter_registry.register(
         sort_index=110,
         info="host",
         query_filter=query_filters.CheckCommandQuery(ident="host_check_command", op="~"),
-        options=[],
     )
 )
 
@@ -669,7 +645,6 @@ filter_registry.register(
             op="~",
             column="service_check_command",
         ),
-        options=[],
     )
 )
 
@@ -2396,7 +2371,6 @@ filter_registry.register(
         sort_index=210,
         info="event",
         query_filter=query_filters.TextQuery(ident="event_facility", op="="),
-        options=[],
     )
 )
 
@@ -2406,7 +2380,6 @@ filter_registry.register(
         sort_index=211,
         info="event",
         query_filter=query_filters.TextQuery(ident="event_sl", op=">="),
-        options=[],
     )
 )
 
@@ -2416,7 +2389,6 @@ filter_registry.register(
         sort_index=211,
         info="event",
         query_filter=query_filters.TextQuery(ident="event_sl_max", op="<=", column="event_sl"),
-        options=[],
     )
 )
 

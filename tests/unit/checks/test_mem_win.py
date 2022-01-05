@@ -11,7 +11,6 @@ from pytest_mock import MockerFixture
 
 from cmk.utils.type_defs import CheckPluginName
 
-from cmk.base.check_utils import Service
 from cmk.base.plugin_contexts import current_host, current_service
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult
@@ -275,12 +274,7 @@ def test_mem_win(
         return_value=(100000, (90000, 110000, None, None)),
     )
     with current_host("unittest-hn"), current_service(
-        Service(
-            CheckPluginName("unittest_sd"),
-            parameters={},
-            item=None,
-            description="unittest_sd_description",
-        )
+        CheckPluginName("unittest_sd"), "unittest_sd_description"
     ):
         assert (
             list(

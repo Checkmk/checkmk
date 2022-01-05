@@ -472,7 +472,7 @@ def get_aggregated_result(
 
     try:
         with plugin_contexts.current_host(host_config.hostname), plugin_contexts.current_service(
-            service
+            service.check_plugin_name, service.description
         ), value_store_manager.namespace(service.id()):
             result = _aggregate_results(
                 check_function(

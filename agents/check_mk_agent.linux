@@ -332,16 +332,10 @@ define_optionally_encrypt() {
 
 }
 
-preamble_7() {
+set_up_disabled_sections() {
     if [ -f "${MK_CONFDIR}/exclude_sections.cfg" ]; then
         # shellcheck source=/dev/null
         . "${MK_CONFDIR}/exclude_sections.cfg"
-    fi
-
-    RTC_PLUGINS=""
-    if [ -e "${MK_CONFDIR}/real_time_checks.cfg" ]; then
-        # shellcheck source=/dev/null
-        . "${MK_CONFDIR}/real_time_checks.cfg"
     fi
 }
 
@@ -1355,7 +1349,9 @@ section_ntp() {
 }
 
 run_real_time_checks() {
-    [ -e "${MK_CONFDIR}/real_time_checks.cfg" ] || return
+    RTC_PLUGINS=""
+    # shellcheck source=/dev/null
+    . "${MK_CONFDIR}/real_time_checks.cfg" 2>/dev/null || return
 
     # new mechanism to set the passphrase has priority
     secret="${PASSPHRASE:-"${RTC_SECRET}"}"
@@ -1910,7 +1906,7 @@ main_setup() {
     detect_python
     detect_container_environment
     set_up_encryption
-    preamble_7
+    set_up_disabled_sections
 
 }
 

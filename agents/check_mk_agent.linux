@@ -92,27 +92,22 @@ set_up_get_epoch() {
 #
 
 set_variable_defaults() {
+    # some 'booleans'
+    [ "${MK_RUN_SYNC_PARTS}" = "false" ] || MK_RUN_SYNC_PARTS=true
+    [ "${MK_RUN_ASYNC_PARTS}" = "false" ] || MK_RUN_ASYNC_PARTS=true
+
+    # WATCH OUT: These 4 lines are searched for and replaced by the
+    # agent bakery!
+    # TODO: CMK-8339 (proper configuration)
     : "${MK_LIBDIR:="/usr/lib/check_mk_agent"}"
     : "${MK_CONFDIR:="/etc/check_mk"}"
     : "${MK_VARDIR:="/var/lib/check_mk_agent"}"
     : "${MK_LOGDIR:="/var/log/check_mk_agent"}"
 
-    # some 'booleans'
-    [ "${MK_RUN_SYNC_PARTS}" = "false" ] || MK_RUN_SYNC_PARTS=true
-    [ "${MK_RUN_ASYNC_PARTS}" = "false" ] || MK_RUN_ASYNC_PARTS=true
-}
-
-preamble_1() { # TODO: split these up more meaningful
-    # Make sure that locally installed binaries are found
-    PATH=${PATH}:/usr/local/bin
-    [ -d /var/qmail/bin ] && PATH=${PATH}:/var/qmail/bin
-
     export MK_LIBDIR
     export MK_CONFDIR
     export MK_VARDIR
     export MK_LOGDIR
-
-    # TODO: CMK-8339 (proper configuration)
 
     # Optionally set a tempdir for all subsequent calls
     #export TMPDIR=
@@ -130,6 +125,12 @@ preamble_1() { # TODO: split these up more meaningful
     # All files in SPOOLDIR will simply appended to the agent
     # output if they are not outdated (see below)
     SPOOLDIR=${MK_VARDIR}/spool
+}
+
+set_up_path() {
+    # Make sure that locally installed binaries are found
+    PATH="${PATH}:/usr/local/bin"
+    [ -d "/var/qmail/bin" ] && PATH="${PATH}:/var/qmail/bin"
 }
 
 set_up_remote() {
@@ -1899,7 +1900,8 @@ main_setup() {
 
     set_variable_defaults
 
-    preamble_1
+    set_up_path
+
     set_up_remote
     set_up_profiling
     unset_locale

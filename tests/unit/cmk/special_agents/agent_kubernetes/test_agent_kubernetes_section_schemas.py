@@ -14,7 +14,6 @@ from cmk.base.plugins.agent_based.utils.k8s import (
 from cmk.base.plugins.agent_based.utils.k8s import ContainerWaitingState as ContainerWaitingStateC
 from cmk.base.plugins.agent_based.utils.k8s import KubeletInfo as KubeletInfoC
 from cmk.base.plugins.agent_based.utils.k8s import Memory as MemoryC
-from cmk.base.plugins.agent_based.utils.k8s import NodeCount as NodeCountC
 from cmk.base.plugins.agent_based.utils.k8s import NodeInfo as NodeInfoC
 from cmk.base.plugins.agent_based.utils.k8s import PodCondition as PodConditionC
 from cmk.base.plugins.agent_based.utils.k8s import PodConditions as PodConditionsC
@@ -25,6 +24,7 @@ from cmk.base.plugins.agent_based.utils.k8s import (
     PodResourcesWithCapacity as PodResourcesWithCapacityC,
 )
 from cmk.base.plugins.agent_based.utils.k8s import StartTime as StartTimeC
+from cmk.base.plugins.agent_based.utils.kube import NodeCount as NodeCountC
 from cmk.base.plugins.agent_based.utils.kube import PodLifeCycle as PodLifeCycleC
 from cmk.base.plugins.agent_based.utils.kube_resources import Resources as ResourcesC
 

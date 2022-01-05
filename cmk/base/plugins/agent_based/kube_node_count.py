@@ -10,12 +10,12 @@ from typing import Literal, Mapping, Optional, Tuple, Union
 
 from .agent_based_api.v1 import check_levels, Metric, register, Result, Service, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
-from .utils.k8s import NodeCount, ReadyCount
+from .utils.kube import NodeCount, ReadyCount
 
 OptionalLevels = Union[Literal["no_levels"], Tuple[Literal["levels"], Tuple[int, int]]]
 
 
-K8sNodeCountVSResult = Mapping[str, OptionalLevels]
+KubeNodeCountVSResult = Mapping[str, OptionalLevels]
 
 
 def parse(string_table: StringTable) -> NodeCount:
@@ -27,7 +27,7 @@ def discovery(section: NodeCount) -> DiscoveryResult:
 
 
 def _get_levels(
-    params: K8sNodeCountVSResult,
+    params: KubeNodeCountVSResult,
     name: Literal["worker", "control_plane"],
     level_name: Literal["levels_lower", "levels_upper"],
 ) -> Optional[Tuple[int, int]]:
@@ -38,7 +38,7 @@ def _get_levels(
 
 
 def _check_levels(
-    ready_count: ReadyCount, name: Literal["worker", "control_plane"], params: K8sNodeCountVSResult
+    ready_count: ReadyCount, name: Literal["worker", "control_plane"], params: KubeNodeCountVSResult
 ) -> CheckResult:
     levels_upper = _get_levels(params, name, "levels_upper")
     levels_lower = _get_levels(params, name, "levels_lower")
@@ -66,7 +66,7 @@ def _check_levels(
     yield Metric(f"kube_node_count_{name}_total", ready_count.total)
 
 
-def check(params: K8sNodeCountVSResult, section: NodeCount) -> CheckResult:
+def check(params: KubeNodeCountVSResult, section: NodeCount) -> CheckResult:
     yield from _check_levels(section.worker, "worker", params)
     if section.control_plane.total == 0:
         yield Result(state=State.OK, summary="No control plane nodes found")
@@ -80,13 +80,13 @@ register.agent_section(
     parsed_section_name="kube_node_count",
 )
 
-check_default_parameters: K8sNodeCountVSResult = {}
+check_default_parameters: KubeNodeCountVSResult = {}
 
 register.check_plugin(
     name="kube_node_count",
     service_name="Node Count",
     discovery_function=discovery,
     check_function=check,
-    check_ruleset_name="k8s_node_count",
+    check_ruleset_name="kube_node_count",
     check_default_parameters=check_default_parameters,
 )

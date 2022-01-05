@@ -129,22 +129,6 @@ class PerformanceContainer(BaseModel):
     name: ContainerName
 
 
-class ReadyCount(BaseModel):
-    ready: int = 0
-    not_ready: int = 0
-
-    @property
-    def total(self) -> int:
-        return self.ready + self.not_ready
-
-
-class NodeCount(BaseModel):
-    """section: kube_node_count_v1"""
-
-    worker: ReadyCount = ReadyCount()
-    control_plane: ReadyCount = ReadyCount()
-
-
 class HealthZ(BaseModel):
     status_code: int
     response: str

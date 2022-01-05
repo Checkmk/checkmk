@@ -13,7 +13,7 @@ from cmk.base.plugins.agent_based.kube_node_count import (
 )
 
 
-def test_check_k8s_node_count_default_params() -> None:
+def test_check_kube_node_count_default_params() -> None:
     result = list(
         check(
             check_default_parameters,
@@ -38,7 +38,7 @@ def test_check_k8s_node_count_default_params() -> None:
     ]
 
 
-def test_check_k8s_node_count_default_params_cp_zero() -> None:
+def test_check_kube_node_count_default_params_cp_zero() -> None:
     result = list(
         check(
             check_default_parameters,
@@ -57,7 +57,7 @@ def test_check_k8s_node_count_default_params_cp_zero() -> None:
     ]
 
 
-def test_check_k8s_node_count_params() -> None:
+def test_check_kube_node_count_params() -> None:
     result = list(
         check(
             {"worker_levels_lower": ("levels", (80, 100))},

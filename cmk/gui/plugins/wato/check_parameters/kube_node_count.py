@@ -53,7 +53,7 @@ def __levels(key, title_upper, title_lower):
     ]
 
 
-def _parameter_valuespec_k8s_node_count():
+def _parameter_valuespec_kube_node_count():
     return Dictionary(
         elements=__levels(
             "worker",
@@ -70,10 +70,10 @@ def _parameter_valuespec_k8s_node_count():
 
 rulespec_registry.register(
     CheckParameterRulespecWithoutItem(
-        check_group_name="k8s_node_count",
+        check_group_name="kube_node_count",
         group=RulespecGroupCheckParametersApplications,
         match_type="dict",
-        parameter_valuespec=_parameter_valuespec_k8s_node_count,
+        parameter_valuespec=_parameter_valuespec_kube_node_count,
         title=lambda: _("Kubernetes node count"),
     )
 )

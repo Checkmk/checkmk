@@ -10,7 +10,7 @@ import os
 import shutil
 import socket
 import sys
-from contextlib import contextmanager
+from contextlib import contextmanager, suppress
 from pathlib import Path
 from typing import (
     AnyStr,
@@ -385,13 +385,11 @@ def _create_core_config(
         # Purpose of code is to delete the old config file after format switching to have precisely
         # one microcore config in core config directory.
         if config.is_cmc():
-            try:
+            with suppress(OSError):
                 if config.get_microcore_config_format() == "protobuf":
                     os.remove(cmk.utils.paths.var_dir + "/core/config")
                 else:
                     os.remove(cmk.utils.paths.var_dir + "/core/config.pb")
-            except OSError as _:
-                pass
 
     cmk.utils.password_store.save(config.stored_passwords)
 

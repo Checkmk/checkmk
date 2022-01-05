@@ -44,7 +44,7 @@ def type_and_format_of_field(field: fields.Field) -> Tuple[str, Optional[str]]:
     for class_, spec in field_converter.DEFAULT_FIELD_MAPPING.items():
         if isinstance(field, class_):
             return spec
-    raise ValueError("No fitting spec found.")
+    raise ValueError(f"No fitting spec found for field {field!r}.")
 
 
 FieldProperties = typing.TypedDict(

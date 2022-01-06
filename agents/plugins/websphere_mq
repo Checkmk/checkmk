@@ -30,7 +30,7 @@ then
 
 else
     # Loop over all local mq instances
-    for QM in $( ps -ef|grep [/]usr/mqm/bin/runmqlsr|awk -v FS="-m" '{print $2}'|awk '{print $1}'| uniq)
+    for QM in $( ps -ef|grep "[/]usr/mqm/bin/runmqlsr" | awk -v FS="-m" '{print $2}'|awk '{print $1}'| uniq)
     do
         echo '<<<websphere_mq_channels>>>'
         for i in `echo " display CHANNEL (*) TYPE (SDR) " | /usr/bin/runmqsc $QM | grep CHLTYPE | \

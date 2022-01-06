@@ -181,7 +181,7 @@ else
     if [ -e "$MK_VARDIR/cache/mk_db2.aix.cache" ] ; then
         rm $MK_VARDIR/cache/mk_db2.aix.cache
     fi
-    INSTANCES=$(ps -ef | grep [d]b2sysc | awk '{print $1 }')
+    INSTANCES=$(ps -ef | grep "[d]b2sysc" | awk '{print $1 }')
 
     # Output any section headers
     # If no data is available there will be at least the section headers

@@ -454,7 +454,7 @@ section_uptime() {
 }
 
 section_ntp() {
-    ps -o comm ${pszone} | grep -w .*ntpd &>/dev/null || return
+    ps -o comm ${pszone} | grep -w ".*ntpd" &>/dev/null || return
 
     echo '<<<ntp>>>'
     ntpq -np | sed -e 1,2d -e 's/^\(.\)/\1 /' -e 's/^ /%/'

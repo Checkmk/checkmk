@@ -11,4 +11,4 @@
 # shellcheck disable=SC2034
 CMK_VERSION="2.1.0i1"
 
-su - griduser -c "asmcmd $@"
+su - griduser -c "asmcmd $*"

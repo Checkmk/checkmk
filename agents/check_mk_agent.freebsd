@@ -366,11 +366,15 @@ run_purely_synchronous_sections() {
 
     # Produce compatible load/cpu output to linux agent. Not so easy here.
     echo '<<<cpu>>>'
-    echo `sysctl -n vm.loadavg | tr -d '{}'` `top -b -n 1 | grep -E '^[0-9]+ processes' | awk '{print $3"/"$1}'` `sysctl -n kern.lastpid` `sysctl -n hw.ncpu`
+    printf "%s %s %s %s\n" \
+        "$(sysctl -n vm.loadavg | tr -d '{}')" \
+        "$(top -b -n 1 | grep -E '^[0-9]+ processes' | awk '{print $3"/"$1}')" \
+        "$(sysctl -n kern.lastpid)" \
+        "$(sysctl -n hw.ncpu)"
 
     # Calculate the uptime in seconds since epoch compatible to /proc/uptime in linux
     echo '<<<uptime>>>'
-    up_seconds=$(($(get_epoch) - `sysctl -n kern.boottime  | cut -f1 -d\, | awk '{print $4}'`))
+    up_seconds=$(($(get_epoch) - $(sysctl -n kern.boottime  | cut -f1 -d\, | awk '{print $4}')))
     idle_seconds=$(ps axw | grep idle | grep -v grep | awk '{print $4}' | cut -f1 -d\: )
     echo "${up_seconds} ${idle_seconds}"
 
@@ -400,9 +404,9 @@ run_purely_synchronous_sections() {
     vforks=`sysctl -n vm.stats.vm.v_vforks`
     rforks=`sysctl -n vm.stats.vm.v_rforks`
     kthreads=`sysctl -n vm.stats.vm.v_kthreads`
-    echo "cpu" `sysctl -n kern.cp_time | awk ' { print $1" "$2" "$3" "$5" "$4 } '`
-    echo "ctxt" `sysctl -n vm.stats.sys.v_swtch`
-    echo "processes" `expr ${forks} + ${vforks} + ${rforks} + ${kthreads}`
+    echo "cpu $(sysctl -n kern.cp_time | awk ' { print $1" "$2" "$3" "$5" "$4 } ')"
+    echo "ctxt $(sysctl -n vm.stats.sys.v_swtch)"
+    echo "processes $(expr ${forks} + ${vforks} + ${rforks} + ${kthreads})"
 
     # Network device statistics (Packets, Collisions, etc)
     # only the "Link/Num" interface has all counters.

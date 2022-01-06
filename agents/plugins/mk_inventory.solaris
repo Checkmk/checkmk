@@ -19,7 +19,7 @@ CMK_VERSION="2.1.0i1"
 INTERVAL=${INVENTORY_INTERVAL:-14400}
 
 FLAGFILE=$MK_VARDIR/mk_inventory.last.$REMOTE
-if [ `uname -r` = "5.10" ]; then
+if [ "$(uname -r)" = "5.10" ]; then
     NOW=$(truss /usr/bin/date 2>&1 | grep ^time | awk -F"= " '{print $2}')
 else
     NOW="$(date +%s)"

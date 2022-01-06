@@ -25,10 +25,9 @@ if type zypper > /dev/null ; then
     if egrep -q 'VERSION = 10|VERSION_ID="10' < $RELEASEFILE
     then
         ZYPPER='waitmax 50 zypper --no-gpg-checks --non-interactive --terse'
-        REFRESH=`$ZYPPER refresh 2>&1`
-        if  [ "$REFRESH" ]
-        then
-	    echo "ERROR: $REFRESH"
+        REFRESH="$("${ZYPPER}" refresh 2>&1)"
+        if  [ "${REFRESH}" ]; then
+            echo "ERROR: ${REFRESH}"
         else
             {
                 "${ZYPPER}" pchk || { [ "$?" = 100 ] || [ "$?" = 101 ]; } && "${ZYPPER}" lu
@@ -36,13 +35,13 @@ if type zypper > /dev/null ; then
         fi
     else
         ZYPPER='waitmax 50 zypper --no-gpg-checks --non-interactive --quiet'
-        REFRESH=`$ZYPPER refresh 2>&1`
-        if  [ "$REFRESH" ]
+        REFRESH="$("${ZYPPER}" refresh 2>&1)"
+        if  [ "${REFRESH}" ]
         then
-            echo "ERROR: $REFRESH"
+            echo "ERROR: ${REFRESH}"
         else
             {
-                { "${ZYPPER}" pchk || { [ "$?" = 100 ] || [ "$?" = 101 ];} && "${ZYPPER}" lp; }; "${ZYPPER}" ll
+                { "${ZYPPER}" pchk || { [ "$?" = 100 ] || [ "$?" = 101 ]; } && "${ZYPPER}" lp; }; "${ZYPPER}" ll
                 } | grep -E '(patches needed|\|)' | grep -v -E '^(#|Repository)'
         fi
     fi

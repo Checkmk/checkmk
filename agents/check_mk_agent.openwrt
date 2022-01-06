@@ -231,7 +231,7 @@ section_mem() {
 
 section_cpu() {
     echo '<<<cpu>>>'
-    if [ $(uname -m) = "armv7l" ]; then
+    if [ "$(uname -m)" = "armv7l" ]; then
         CPU_REGEX='^processor'
     else
         CPU_REGEX='^CPU|^processor'
@@ -253,7 +253,7 @@ section_checkmk() {
     # If we are called via xinetd, try to find only_from configuration
     if [ -n "${REMOTE_HOST}" ]; then
         echo -n 'OnlyFrom: '
-        echo $(sed -n '/^service[[:space:]]*'${XINETD_SERVICE_NAME}'/,/}/s/^[[:space:]]*only_from[[:space:]]*=[[:space:]]*\(.*\)/\1/p' /etc/xinetd.d/* | head -n1)
+        echo "$(sed -n '/^service[[:space:]]*'"${XINETD_SERVICE_NAME}"'/,/}/s/^[[:space:]]*only_from[[:space:]]*=[[:space:]]*\(.*\)/\1/p' /etc/xinetd.d/* | head -n1)"
     fi
 
     #
@@ -503,7 +503,7 @@ section_dmraid() {
         DISKS=$(echo "${DMSTATUS}" | cut -f1 -d\:)
 
         for disk in ${DISKS}; do
-            device=$(cat /sys/block/$(basename ${disk})/device/model)
+            device=$(cat "/sys/block/$(basename "${disk}")/device/model")
             status=$(echo "${DMSTATUS}" | grep ^${disk})
             echo "${status} Model: ${device}"
         done
@@ -653,7 +653,9 @@ section_heartbeat() {
     # Heartbeat monitoring
     # Different handling for heartbeat clusters with and without CRM
     # for the resource state
-    if { [ -S /var/run/heartbeat/crm/cib_ro ] || [ -S /var/run/crm/cib_ro ];} || pgrep "^(crmd|pacemaker-contr)$" >/dev/null 2>&1; then
+    if {
+        [ -S /var/run/heartbeat/crm/cib_ro ] || [ -S /var/run/crm/cib_ro ]
+    } || pgrep "^(crmd|pacemaker-contr)$" >/dev/null 2>&1; then
         echo '<<<heartbeat_crm>>>'
         TZ=UTC crm_mon -1 -r | grep -v ^$ | sed 's/^ //; /^\sResource Group:/,$ s/^\s//; s/^\s/_/g'
     fi
@@ -663,7 +665,7 @@ section_heartbeat() {
 
         echo '<<<heartbeat_nodes>>>'
         for NODE in $(cl_status listnodes); do
-            if [ ${NODE} != $(echo ${HOSTNAME} | tr 'A-Z' 'a-z') ]; then
+            if [ "${NODE}" != "$(echo "${HOSTNAME}" | tr 'A-Z' 'a-z')" ]; then
                 STATUS=$(cl_status nodestatus ${NODE})
                 echo -n "${NODE} ${STATUS}"
                 for LINK in $(cl_status listhblinks ${NODE} 2>/dev/null); do
@@ -923,7 +925,7 @@ run_real_time_checks_for_remote() {
 
     while true; do
         # terminate when pidfile is gone or other Real-Time Check process started or configured timeout
-        if [ ! -e ${PIDFILE} ] || [ $(<${PIDFILE}) -ne $$ ] || [ ${RTC_TIMEOUT} -eq 0 ]; then
+        if [ ! -e "${PIDFILE}" ] || [ "$(cat "${PIDFILE}")" -ne $$ ] || [ "${RTC_TIMEOUT}" -eq 0 ]; then
             exit 1
         fi
 

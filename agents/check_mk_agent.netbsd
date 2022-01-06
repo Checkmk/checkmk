@@ -9,6 +9,11 @@
 
 # NOTE: This agent has been adapted from the Checkmk FreeBSD agent.
 
+get_epoch() {
+    date +%s 2>/dev/null ||
+        perl -e 'print($^T."\n");'
+}
+
 # Remove locale settings to eliminate localized outputs where possible
 export LC_ALL=C
 unset LANG
@@ -63,10 +68,13 @@ section_misc_sections() {
     ps ax -o user,vsz,rss,pcpu,command | sed -e 1d -e 's/ *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) */(\1,\2,\3,\4) /'
 
     echo '<<<cpu>>>'
-    echo `sysctl -n vm.loadavg | tr -d '{}'` `top -b -n 1 | grep -E '^[0-9]+ processes' | awk '{print $3"/"$1}'` `sysctl -n hw.ncpu`
+    printf "%s %s %s\n" \
+        "$(sysctl -n vm.loadavg | tr -d '{}')" \
+        "$(top -b -n 1 | grep -E '^[0-9]+ processes' | awk '{ print $3"/"$1 }')" \
+        "$(sysctl -n hw.ncpu)"
 
     echo '<<<uptime>>>'
-    echo `date +%s` - `sysctl -n kern.boottime | cut -d' ' -f 4,7 | tr ',' '.' | tr -d ' '` | bc
+    echo "$(get_epoch) - $(sysctl -n kern.boottime | cut -d' ' -f 4,7 | tr ',' '.' | tr -d ' ')" | bc
 
     echo '<<<netctr>>>'
     # BI= Bytes in
@@ -82,14 +90,14 @@ section_misc_sections() {
 
     date +%s
     while [ $Z1 -lt 15 ]; do
-      BI=$( netstat -inb | egrep -v Name | grep Link | awk '{print $1" "$5}' | sed -ne $Z1$Z2 )
-      PI=$( netstat -in | egrep -v Name | grep Link | awk '{print $5}' | sed -ne $Z1$Z2 )
-      EI=$( netstat -in | egrep -v Name | grep Link | awk '{print $6}' | sed -ne $Z1$Z2 )
+      BI=$( netstat -inb | egrep -v Name | grep Link | awk '{ print $1" "$5 }' | sed -ne $Z1$Z2 )
+      PI=$( netstat -in | egrep -v Name | grep Link | awk '{ print $5 }' | sed -ne $Z1$Z2 )
+      EI=$( netstat -in | egrep -v Name | grep Link | awk '{ print $6 }' | sed -ne $Z1$Z2 )
       FF1="0 0 0 0 0"
-      BO=$( netstat -inb | egrep -v Name | grep Link | awk '{print $6}' | sed -ne $Z1$Z2 )
-      PO=$( netstat -in | egrep -v Name | grep Link | awk '{print $7}' | sed -ne $Z1$Z2 )
-      EO=$( netstat -in | egrep -v Name | grep Link | awk '{print $8}' | sed -ne $Z1$Z2 )
-      CO=$( netstat -in | egrep -v Name | grep Link | awk '{print $9}' | sed -ne $Z1$Z2 )
+      BO=$( netstat -inb | egrep -v Name | grep Link | awk '{ print $6 }' | sed -ne $Z1$Z2 )
+      PO=$( netstat -in | egrep -v Name | grep Link | awk '{ print $7 }' | sed -ne $Z1$Z2 )
+      EO=$( netstat -in | egrep -v Name | grep Link | awk '{ print $8 }' | sed -ne $Z1$Z2 )
+      CO=$( netstat -in | egrep -v Name | grep Link | awk '{ print $9 }' | sed -ne $Z1$Z2 )
       FF2="0 0"
         if [ "$PI" -gt "0" ]; then
             echo $BI $PI $EI $FF1 $BO $PO $EO $FF2 $CO $FF2

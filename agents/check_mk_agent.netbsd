@@ -115,24 +115,23 @@ section_misc_sections() {
 }
 
 run_plugins() {
-    if cd $PLUGINSDIR; then
-      for script in $(ls); do
-        if [ -x "${script}" ]; then
-            ./${script}
-        fi
-      done
-    fi
+    (
+        cd "${PLUGINSDIR}" || return
+        for script in "./"*; do
+            [ -x "${script}" ] && "${script}"
+
+        done
+    )
 }
 
 run_local_checks() {
-    echo '<<<local:sep(0)>>>'
-    if cd $LOCALDIR; then
-      for script in $(ls); do
-        if [ -x "${script}" ]; then
-            ./${script}
-        fi
-      done
-    fi
+    (
+        cd "${LOCALDIR}" || return
+        echo '<<<local:sep(0)>>>'
+        for script in "./"*; do
+            [ -x "${script}" ] && "${script}"
+        done
+    )
 }
 
 run_mrpe_plugins() {

@@ -113,7 +113,7 @@ run_purely_synchronous_sections() {
     echo '<<<hpux_hbahealth:sep(61)>>>'
     for hba in /dev/fcd*; do
         echo "$hba"
-        $fcms_util $hba | grep -e "Driver state" -e "Topology" -e "Dump Available"\
+        "${fcms_util}" "${hba}" | grep -e "Driver state" -e "Topology" -e "Dump Available"\
                           -e "Code version" -e "Hardware Path" -e "Port World"
     done
 
@@ -125,24 +125,22 @@ run_purely_synchronous_sections() {
 }
 
 run_plugins() {
-    if cd $PLUGINSDIR; then
-      for script in $(ls); do
-        if [ -x "${script}" ]; then
-            ./${script}
-        fi
-      done
-    fi
+    (
+        cd "${PLUGINSDIR}" || return
+        for script in "./"*; do
+            [ -x "${script}" ] && "${script}"
+          done
+    )
 }
 
 run_local_checks() {
-    echo '<<<local:sep(0)>>>'
-    if cd $LOCALDIR; then
-      for script in $(ls); do
-        if [ -x "${script}" ]; then
-            ./${script}
-        fi
-      done
-    fi
+    (
+        cd "${LOCALDIR}" || return
+        echo '<<<local:sep(0)>>>'
+        for script in "./"*; do
+            [ -x "${script}" ] && "${script}"
+        done
+    )
 }
 
 run_mrpe_plugins() {

@@ -32,7 +32,7 @@ CMK_VERSION="2.1.0i1"
 grep -Ev '^[[:space:]]*($|#)' "$MK_CONFDIR/runas.cfg" | \
 while read type user include
 do
-    if [ -d $include -o \( "$type" == "mrpe" -a -f $include \) ] ; then
+    if [ -d "${include}" ] || { [ "${type}" = "mrpe" ] && [ -f "${include}" ]; } ; then
         PREFIX=""
         if [ "$user" != "-" ] ; then
             PREFIX="su $user -c "
@@ -53,7 +53,7 @@ do
                 echo
             done
         # local and plugin includes
-        elif [ "$type" == "local" -o "$type" == "plugin" ] ; then
+        elif [ "$type" = "local" ] || [ "$type" = "plugin" ] ; then
             if [ "$type" == "local" ] ; then
                 echo "<<<local:sep(0)>>>"
             fi

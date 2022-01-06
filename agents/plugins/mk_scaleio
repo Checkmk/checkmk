@@ -32,7 +32,7 @@ fi
 
 . $MK_CONFDIR/mk_scaleio.cfg || exit 1
 
-if [ -z "$SIO_USER" -o -z "$SIO_PASSWORD" ]; then
+if [ -z "${SIO_USER}" ] || [ -z "${SIO_PASSWORD}" ]; then
     echo "Please set SIO_USER and SIO_PASSWORD in $MK_CONFDIR/mk_scalio.cfg" >&2
     exit 1
 fi

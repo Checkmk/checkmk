@@ -17,7 +17,7 @@ CMK_VERSION="2.1.0i1"
 . $MK_CONFDIR/saprouter.cfg || exit 1
 
 
-if [ ! -z "$SAPROUTER_USER" -a ! -z "$SAPGENPSE_PATH" ]
+if [ ! -z "$SAPROUTER_USER" ] && [ ! -z "$SAPGENPSE_PATH" ]
 then
     if type ${SAPGENPSE_PATH}/sapgenpse > /dev/null
     then

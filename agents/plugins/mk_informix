@@ -197,7 +197,7 @@ if [ -f "$MK_CONFDIR/informix.cfg" ]; then
 fi
 
 
-if [ -z "$ONINIT_PATH" -o ! -x "$ONINIT_PATH" ]; then
+if [ -z "$ONINIT_PATH" ] || [ ! -x "$ONINIT_PATH" ]; then
     ONINIT=$(UNIX95=true ps ax  | grep oninit | grep -v grep | head -1 | awk '{print $1 " " $5}')
     if [ -z "$ONINIT" ]; then
         exit 0
@@ -214,7 +214,7 @@ if [ -z "$ONINIT_PATH" -o ! -x "$ONINIT_PATH" ]; then
     esac
 
     # If not set in config or not found we end up here
-    if [ -z "$ONINIT_PATH" -o ! -f "$ONINIT_PATH" ]; then
+    if [ -z "$ONINIT_PATH" ] || [ ! -f "$ONINIT_PATH" ]; then
         exit 1
     fi
 fi
@@ -249,7 +249,7 @@ for IDSENV in $( export INFORMIXDIR=${ONINIT_PATH%/bin*}
 
 	    # try to set them via 'onstat -g env' otherwise
 	    # DB HAS TO BE RUNNING
-	    if [ -z "$INFORMIXSQLHOSTS" -o -z "$ONCONFIG" ]; then
+	    if [ -z "$INFORMIXSQLHOSTS" ] || [ -z "$ONCONFIG" ]; then
 	        onstat -g env | egrep -e '^INFORMIXSQLHOSTS' \
 	    	                      -e '^ONCONFIG' |       \
 	    	                sed   -e 's/[         ][      ]*/=/'

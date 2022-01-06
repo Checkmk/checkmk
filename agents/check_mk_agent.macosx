@@ -45,8 +45,6 @@ run_purely_synchronous_sections() {
 
     section_checkmk
 
-    osver="$(uname -r)"
-
     echo '<<<df>>>'
     df -kPT hfs,apfs | sed 1d | \
     while read DEV REST; do

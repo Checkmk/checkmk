@@ -57,8 +57,6 @@ section_misc_sections() {
     echo "PluginsDirectory: $PLUGINSDIR"
     echo "LocalDirectory: $LOCALDIR"
 
-    osver="$(uname -r)"
-
     echo '<<<df>>>'
     df -kPt ffs | sed -e 's/^\([^ ][^ ]*\) \(.*\)$/\1 ffs \2/' | sed 1d
 

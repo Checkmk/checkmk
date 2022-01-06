@@ -539,6 +539,13 @@ run_cached() {
     shift 2
     CMDLINE="${section}$@"
 
+    if ${DISABLE_CACHING:-false}; then
+        # We need the re-splitting to be compatible with the caching case, so:
+        # shellcheck disable=SC2068
+        $@
+        return
+    fi
+
     if [ ! -d ${MK_TMPDIR}/cache ]; then mkdir -p ${MK_TMPDIR}/cache; fi
     CACHEFILE="${MK_TMPDIR}/cache/${NAME}.cache"
 

@@ -460,7 +460,7 @@ section_ipmitool() {
 section_ipmisensors() {  # keep in sync with linux agent
     # IPMI data via ipmi-sensors (of freeipmi).
     # Even if freeipmi is installed make sure that IPMI is really supported by your hardware.
-    inpath ipmi-sensors && ls /dev/ipmi* &> /dev/null || return
+    inpath ipmi-sensors && ls /dev/ipmi* 2>/dev/null 1>&2 || return
 
     ${MK_RUN_SYNC_PARTS} && echo '<<<ipmi_sensors>>>'
     # Newer ipmi-sensors version have new output format; Legacy format can be used
@@ -539,8 +539,8 @@ section_megaraid() {
         for part in $(${MegaCli_bin} -EncInfo -aALL -NoLog </dev/null |
             sed -rn 's/:/ /g; s/[[:space:]]+/ /g; s/^ //; s/ $//; s/Number of enclosures on adapter ([0-9]+).*/adapter \1/g; /^(Enclosure|Device ID|adapter) [0-9]+$/ p'); do
             [ ${part} = adapter ] && echo ""
-            [ ${part} = 'Enclosure' ] && echo -ne "\ndev2enc"
-            echo -n " ${part}"
+            [ ${part} = 'Enclosure' ] && printf "\ndev2enc"
+            printf " %s" "${part}"
         done
         echo
         ${MegaCli_bin} -PDList -aALL -NoLog </dev/null | egrep 'Enclosure|Raw Size|Slot Number|Device Id|Firmware state|Inquiry|Adapter'
@@ -664,7 +664,7 @@ section_heartbeat() {
 
         echo '<<<heartbeat_nodes>>>'
         for NODE in $(cl_status listnodes); do
-            if [ "${NODE}" != "$(echo "${HOSTNAME}" | tr 'A-Z' 'a-z')" ]; then
+            if [ "${NODE}" != "$(uname -n | tr 'A-Z' 'a-z')" ]; then
                 STATUS=$(cl_status nodestatus ${NODE})
                 echo -n "${NODE} ${STATUS}"
                 for LINK in $(cl_status listhblinks ${NODE} 2>/dev/null); do
@@ -843,7 +843,7 @@ section_job() {
             (
                 # the return below only terminates the subshell, not the entire function
                 cd "${username}" 2>/dev/null || return
-                if [ ${EUID} -eq 0 ]; then
+                if [ "$(id -u)" -eq 0 ]; then
                     su -s "${SHELL}" "${username}" -c "head -n -0 -v *"
                 else
                     head -n -0 -v *
@@ -924,7 +924,7 @@ run_real_time_checks_for_remote() {
 
     while true; do
         # terminate when pidfile is gone or other Real-Time Check process started or configured timeout
-        if [ ! -e "${PIDFILE}" ] || [ "$(cat "${PIDFILE}")" -ne $$ ] || [ "${RTC_TIMEOUT}" -eq 0 ]; then
+        if [ ! -e "${PIDFILE}" ] || [ "$(cat "${PIDFILE}")" -ne "$$" ] || [ "${RTC_TIMEOUT}" -eq 0 ]; then
             exit 1
         fi
 
@@ -938,6 +938,10 @@ run_real_time_checks_for_remote() {
             # output and do some kind of nicer error handling.
             # 2 bytes: protocol version, 10 bytes: timestamp, rest: encrypted data
             # dd is used to concatenate the output of all commands to a single write/block => udp packet
+            #
+            # This never works, we should make that more transparent or remove the code.
+            # For now:
+            # shellcheck disable=SC2169 # In dash, /dev/{tcp,udp} is not supported
             {
                 echo -n ${PROTOCOL}
                 get_epoch | tr -d '\n'
@@ -947,7 +951,7 @@ run_real_time_checks_for_remote() {
                 else
                     section_${SECTION}
                 fi
-            } | dd bs=9999 iflag=fullblock 2>/dev/null >/dev/udp/${REMOTE}/${RTC_PORT}
+            } | dd bs=9999 iflag=fullblock 2>/dev/null >"/dev/udp/${REMOTE}/${RTC_PORT}"
         done
 
         sleep 1

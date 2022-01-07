@@ -199,16 +199,15 @@ impl Registry {
     pub fn register_connection(
         &mut self,
         connection_type: ConnectionType,
-        address: String,
+        address: &str,
         connection: Connection,
-    ) -> AnyhowResult<()> {
+    ) {
         let (insert_connections, remove_connections) = match connection_type {
             ConnectionType::Push => (&mut self.connections.push, &mut self.connections.pull),
             ConnectionType::Pull => (&mut self.connections.pull, &mut self.connections.push),
         };
-        remove_connections.remove(&address);
-        insert_connections.insert(address, connection);
-        Ok(())
+        remove_connections.remove(address);
+        insert_connections.insert(String::from(address), connection);
     }
 
     pub fn register_imported_connection(&mut self, connection: Connection) {
@@ -366,12 +365,7 @@ mod test_registry {
     #[test]
     fn test_register_push_connection_new() {
         let mut reg = registry();
-        reg.register_connection(
-            ConnectionType::Push,
-            String::from("new_server:1234"),
-            connection(),
-        )
-        .unwrap();
+        reg.register_connection(ConnectionType::Push, "new_server:1234", connection());
         assert!(reg.connections.push.len() == 2);
         assert!(reg.connections.pull.len() == 1);
         assert!(reg.connections.pull_imported.len() == 1);
@@ -380,12 +374,7 @@ mod test_registry {
     #[test]
     fn test_register_push_connection_from_pull() {
         let mut reg = registry();
-        reg.register_connection(
-            ConnectionType::Push,
-            String::from("pull_server:8000"),
-            connection(),
-        )
-        .unwrap();
+        reg.register_connection(ConnectionType::Push, "pull_server:8000", connection());
         assert!(reg.connections.push.len() == 2);
         assert!(reg.connections.pull.is_empty());
         assert!(reg.connections.pull_imported.len() == 1);
@@ -394,12 +383,7 @@ mod test_registry {
     #[test]
     fn test_register_pull_connection_new() {
         let mut reg = registry();
-        reg.register_connection(
-            ConnectionType::Pull,
-            String::from("new_server:1234"),
-            connection(),
-        )
-        .unwrap();
+        reg.register_connection(ConnectionType::Pull, "new_server:1234", connection());
         assert!(reg.connections.push.len() == 1);
         assert!(reg.connections.pull.len() == 2);
         assert!(reg.connections.pull_imported.len() == 1);
@@ -408,12 +392,7 @@ mod test_registry {
     #[test]
     fn test_register_pull_connection_from_push() {
         let mut reg = registry();
-        reg.register_connection(
-            ConnectionType::Pull,
-            String::from("push_server:8000"),
-            connection(),
-        )
-        .unwrap();
+        reg.register_connection(ConnectionType::Pull, "push_server:8000", connection());
         assert!(reg.connections.push.is_empty());
         assert!(reg.connections.pull.len() == 2);
         assert!(reg.connections.pull_imported.len() == 1);

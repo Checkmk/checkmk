@@ -170,14 +170,14 @@ pub fn register(
             &uuid,
             &pairing_response.client_cert,
         )?,
-        config.agent_receiver_address,
+        &config.agent_receiver_address,
         config::Connection {
             uuid,
             private_key,
             certificate: pairing_response.client_cert,
             root_cert: pairing_response.root_cert,
         },
-    )?;
+    );
 
     registry.save()?;
 

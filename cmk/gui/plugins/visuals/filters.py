@@ -1485,6 +1485,7 @@ filter_registry.register(
 @filter_registry.register_instance
 class FilterLogClass(Filter):
     def __init__(self):
+        # NOTE: We have to keep this table in sync with the enum LogEntry::Class on the C++ side.
         self.log_classes = [
             (0, _l("Informational")),
             (1, _l("Alerts")),

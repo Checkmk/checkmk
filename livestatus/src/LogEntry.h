@@ -70,7 +70,8 @@ enum class LogEntryKind {
 
 class LogEntry {
 public:
-    // TODO(sp) Do we have to keep the values in sync with something?
+    // NOTE: We have to keep this enum in sync with the table in
+    // cmk.gui.plugins.visuals.filters.FilterLogClass on the Python side.
     enum class Class {
         info = 0,             // all messages not in any other class
         alert = 1,            // alerts: the change service/host state

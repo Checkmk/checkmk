@@ -9,6 +9,7 @@
 
 #include <algorithm>
 #include <sstream>
+#include <stdexcept>
 #include <vector>
 
 #include "LogCache.h"
@@ -138,10 +139,11 @@ long Logfile::freeMessages(unsigned logclasses) {
 
 bool Logfile::processLogLine(size_t lineno, std::string line,
                              unsigned logclasses) {
-    auto entry = std::make_unique<LogEntry>(lineno, std::move(line));
-    // ignored invalid lines
-    if (entry->log_class() == LogEntry::Class::invalid) {
-        return false;
+    std::unique_ptr<LogEntry> entry;
+    try {
+        entry = std::make_unique<LogEntry>(lineno, std::move(line));
+    } catch (const std::invalid_argument &) {
+        return false;  // simply ignore invalid lines
     }
     if (((1U << static_cast<int>(entry->log_class())) & logclasses) == 0U) {
         return false;

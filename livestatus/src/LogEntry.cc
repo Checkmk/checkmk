@@ -10,6 +10,7 @@
 #include <charconv>
 #include <ctime>
 #include <iterator>
+#include <stdexcept>
 #include <system_error>
 #include <utility>
 
@@ -37,11 +38,7 @@ LogEntry::LogEntry(size_t lineno, std::string line)
         message_[0] != '[' || message_[11] != ']' || message_[12] != ' ' ||
         std::from_chars(&message_[1], &message_[11], timestamp).ec !=
             std::errc{}) {
-        class_ = Class::invalid;
-        kind_ = LogEntryKind::none;
-        time_ = {};
-        type_ = {};
-        return;  // ignore invalid lines silently
+        throw std::invalid_argument{"invalid log line"};
     }
     time_ = std::chrono::system_clock::from_time_t(timestamp);
 

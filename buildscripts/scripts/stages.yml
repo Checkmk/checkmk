@@ -149,7 +149,6 @@ STAGES:
       DIR: 'tests'
       ENV_VARS:
         SHELLCHECK_OUTPUT_ARGS: -S warning
-            -e SC1083
             -e SC1090
             -e SC2027
             -e SC2034

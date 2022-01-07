@@ -301,11 +301,6 @@ def do_create_config(core: MonitoringCore, hosts_to_update: HostsToUpdate = None
     and available for starting the monitoring.
     """
     out.output("Generating configuration for core (type %s)...\n" % core.name())
-    if hosts_to_update is not None:
-        out.output(
-            "Reuse old configuration, create new configuration for %s and dependant hosts\n"
-            % ", ".join(hosts_to_update)
-        )
 
     try:
         _create_core_config(core, hosts_to_update=hosts_to_update)

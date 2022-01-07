@@ -3956,7 +3956,7 @@ class ConfigCache:
                 self._clusters_of_cache.setdefault(name, []).append(clustername)
             self._nodes_of_cache[clustername] = hosts
 
-    def get_cluster_caches(self) -> ClusterCacheInfo:
+    def get_cluster_cache_info(self) -> ClusterCacheInfo:
         return ClusterCacheInfo(self._clusters_of_cache, self._nodes_of_cache)
 
     def clusters_of(self, hostname: HostName) -> List[HostName]:

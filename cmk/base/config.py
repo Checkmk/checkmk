@@ -151,6 +151,11 @@ ShadowHosts = Dict[HostName, Dict]
 AllClusters = Dict[HostName, List[HostName]]
 
 
+class ClusterCacheInfo(NamedTuple):
+    clusters_of: Dict[HostName, List[HostName]]
+    nodes_of: Dict[HostName, List[HostName]]
+
+
 class RRDConfig(TypedDict):
     """RRDConfig
     This typing might not be complete or even wrong, feel free to improve"""
@@ -3950,6 +3955,9 @@ class ConfigCache:
             for name in hosts:
                 self._clusters_of_cache.setdefault(name, []).append(clustername)
             self._nodes_of_cache[clustername] = hosts
+
+    def get_cluster_caches(self) -> ClusterCacheInfo:
+        return ClusterCacheInfo(self._clusters_of_cache, self._nodes_of_cache)
 
     def clusters_of(self, hostname: HostName) -> List[HostName]:
         """Returns names of cluster hosts the host is a node of"""

@@ -192,14 +192,14 @@ $(liblivestatus_a_SOURCES): $(ASIO_INCLUDE) $(RRDTOOL_VERSION)
 all-packaging-local: Makefile $(bin_PROGRAMS) $(pkglib_LIBRARIES) all-local
 
 $(ASIO_INCLUDE): $(ASIO_VERSION)
-	mkdir -p $(ASIO_INCLUDE)
-	rsync -a --delete --exclude=Makefile.am --exclude=.gitignore $(ASIO_VERSION)/asio/include/ $(ASIO_INCLUDE)
-	patch -p0 < $(PACKAGE_ASIO)/asio.diff
+	mkdir -p $@
+	rsync -a --delete --exclude=Makefile.am --exclude=.gitignore $</asio/include/ $@
 	touch $@
 
-$(ASIO_VERSION): $(PACKAGE_ASIO)/$(ASIO_VERSION).tar.gz
+$(ASIO_VERSION): $(PACKAGE_ASIO)/$(ASIO_VERSION).tar.gz $(PACKAGE_ASIO)/asio.diff
 	$(RM) -r $@
 	tar xzf $<
+	patch -p0 < $(PACKAGE_ASIO)/asio.diff
 	touch $@
 
 $(RRDTOOL_VERSION):

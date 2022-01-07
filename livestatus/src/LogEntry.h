@@ -10,7 +10,6 @@
 
 #include <chrono>
 #include <cstddef>
-#include <cstdint>
 #include <string>
 #include <string_view>
 #include <vector>
@@ -83,7 +82,6 @@ public:
         // text = 7,          // specific text passages, seems to be unused
         alert_handlers = 8,  // Started and stopped alert handlers
     };
-    static constexpr uint32_t all_classes = 0xffffU;
 
     // Constructed by Logfile::processLogLine(). All instances owned by
     // Logfile::_entries.

@@ -6,20 +6,39 @@
 
 # pylint: disable=comparison-with-callable,redefined-outer-name
 
-# import itertools
+import itertools
 import json
 
 import pytest
 
 from cmk.base.plugins.agent_based import kube_cpu_usage
+from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, render, Result, State
 
-# from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, render, Result, State
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Result
+USAGE = 0.08917935971914392879  # value for cpu usage (Germain & Cunningham)
+LEVELS = 60.0, 90.0  # default values for upper levels
+OK = 0.18  # value for request and limit to set state to OK
+WARN = 0.12  # value for request and limit to set state to WARN
+CRIT = 0.09  # value for request and limit to set state to CRIT
+
+
+@pytest.fixture
+def params_request():
+    return ("perc_used", LEVELS)
+
+
+@pytest.fixture
+def params_limit():
+    return ("perc_used", (LEVELS[0] / 2, LEVELS[1] / 2))
+
+
+@pytest.fixture
+def params(params_request, params_limit):
+    return kube_cpu_usage.Params(request=params_request, limit=params_limit)
 
 
 @pytest.fixture
 def usage_usage():
-    return 0.089179359719143728735745
+    return USAGE
 
 
 @pytest.fixture
@@ -38,18 +57,33 @@ def usage_section(usage_string_table):
 
 
 @pytest.fixture
-def resources_limit():
-    return 0.3
+def state():
+    return OK
 
 
 @pytest.fixture
-def resources_request():
-    return 0.15
+def state_request(state):
+    return state
 
 
 @pytest.fixture
-def resources_string_table_element(resources_limit, resources_request):
-    return {"limit": resources_limit, "request": resources_request}
+def state_limit(state):
+    return state
+
+
+@pytest.fixture
+def resources_request(state_request):
+    return state_request
+
+
+@pytest.fixture
+def resources_limit(state_limit):
+    return state_limit * 2
+
+
+@pytest.fixture
+def resources_string_table_element(resources_request, resources_limit):
+    return {"request": resources_request, "limit": resources_limit}
 
 
 @pytest.fixture
@@ -63,57 +97,24 @@ def resources_section(resources_string_table):
 
 
 @pytest.fixture
-def check_result(usage_section, resources_section):
-    return kube_cpu_usage.check(
-        kube_cpu_usage.Params(request="ignore", limit=("perc_used", (80.0, 90.0))),
-        usage_section,
-        resources_section,
-    )
+def check_result(params, usage_section, resources_section):
+    return kube_cpu_usage.check(params, usage_section, resources_section)
 
 
-@pytest.fixture
-def agent_section(fix_register):
-    for name, resources_section in fix_register.agent_sections.items():
-        if str(name) == "kube_cpu_resources_v1":
-            return resources_section
-    assert False, "Should be able to find the resources_section"
-
-
-@pytest.fixture
-def check_plugin(fix_register):
-    for name, plugin in fix_register.check_plugins.items():
-        if str(name) == "kube_cpu_usage":
-            return plugin
-    assert False, "Should be able to find the plugin"
-
-
-def test_register_agent_section_calls(agent_section):
-    assert str(agent_section.name) == "kube_cpu_resources_v1"
-    assert str(agent_section.parsed_section_name) == "kube_cpu_resources"
-    assert agent_section.parse_function == kube_cpu_usage.parse_kube_cpu_resources_v1
-
-
-def test_register_check_plugin_calls(check_plugin):
-    assert str(check_plugin.name) == "kube_cpu_usage"
-    assert check_plugin.service_name == "Container CPU"
-    assert check_plugin.discovery_function.__wrapped__ == kube_cpu_usage.discovery
-    assert check_plugin.check_function.__wrapped__ == kube_cpu_usage.check
-
-
-def test_parse_kube_cpu_resources_v1(resources_string_table, resources_limit, resources_request):
+def test_parse_kube_cpu_resources_v1(resources_string_table, resources_request, resources_limit):
     resources_section = kube_cpu_usage.parse_kube_cpu_resources_v1(resources_string_table)
-    assert resources_section.limit == resources_limit
     assert resources_section.request == resources_request
+    assert resources_section.limit == resources_limit
 
 
-def test_discovery_returns_an_iterable_with_one_element(usage_section, resources_section):
+def test_discovery_returns_an_iterable_with_single_element(usage_section, resources_section):
     assert len(list(kube_cpu_usage.discovery(usage_section, resources_section))) == 1
     assert len(list(kube_cpu_usage.discovery(usage_section, None))) == 1
 
 
-# def test_discovery_returns_an_empty_iterable(resources_section):
-#     assert len(list(kube_cpu_usage.discovery(None, None))) == 0
-#     assert len(list(kube_cpu_usage.discovery(None, resources_section))) == 0
+def test_discovery_returns_an_empty_iterable(resources_section):
+    assert len(list(kube_cpu_usage.discovery(None, None))) == 0
+    assert len(list(kube_cpu_usage.discovery(None, resources_section))) == 0
 
 
 @pytest.mark.parametrize("usage_section", [None])
@@ -121,8 +122,10 @@ def test_check_yields_no_check_results(check_result):
     assert len(list(check_result)) == 0
 
 
-# def test_check_yields_check_results(check_result, usage_section, resources_section):
-#     assert len(list(check_result)) == len(usage_section.dict()) + 2 * len(resources_section.dict())
+def test_check_yields_check_results(check_result, usage_section, resources_section):
+    assert len(list(check_result)) == 2 * len(usage_section.dict()) + 3 * len(
+        resources_section.dict()
+    )
 
 
 def test_check_yields_results(check_result, usage_section, resources_section):
@@ -135,66 +138,121 @@ def test_check_yields_no_results(check_result):
     assert len(list(check_result)) == 0
 
 
-# @pytest.mark.parametrize("resources_section", [None])
-# def test_check_yields_one_results(check_result):
-#     assert len(list(check_result)) == 1
+@pytest.mark.parametrize("resources_section", [None])
+def test_check_yields_two_results(check_result):
+    assert len(list(check_result)) == 2
 
 
-# @pytest.mark.parametrize("resources_section", [None])
-# def test_check_yields_one_result_with_summary(check_result, usage_usage):
-#     expected = [f"CPU usage: {usage_usage:0.3f}"]
-#     assert [r.summary for r in check_result] == expected
+@pytest.mark.parametrize("resources_section", [None])
+def test_check_yields_single_result_with_summary(check_result):
+    expected = [f"Usage: {USAGE:0.3f}"]
+    assert [r.summary for r in check_result if isinstance(r, Result)] == expected
 
 
-# def test_check_yields_one_result_with_summaries(
-#     check_result, usage_usage, resources_limit, resources_request
-# ):
-#     expected = [
-#         f"CPU usage: {usage_usage:0.3f}",
-#         f"Limit utilization: {render.percent(usage_usage / resources_limit * 100)} - {usage_usage:0.3f} of {resources_limit:0.3f}",
-#         f"Request utilization: {render.percent(usage_usage / resources_request * 100)} - {usage_usage:0.3f} of {resources_request:0.3f} (warn/crit at 50.00%/80.00%)",
-#     ]
-#     assert [r.summary for r in check_result if isinstance(r, Result)] == expected
+@pytest.mark.parametrize("resources_section", [None])
+def test_check_yields_single_metric_with_value(check_result):
+    expected = [USAGE]
+    assert [m.value for m in check_result if isinstance(m, Metric)] == expected
 
 
-# def test_check_yields_one_result_with_metric_values(
-#     check_result, usage_usage, resources_limit, resources_request
-# ):
-#     expected = [
-#         ("limit_utilization", usage_usage / resources_limit * 100),
-#         ("request_utilization", usage_usage / resources_request * 100),
-#     ]
-#     assert [(m.name, m.value) for m in check_result if isinstance(m, Metric)] == expected
+def test_check_yields_multiple_results_with_summaries(
+    check_result, resources_request, resources_limit
+):
+    expected = [
+        f"Usage: {USAGE:0.3f}",
+        f"Request utilization: {render.percent(USAGE / resources_request * 100)} - {USAGE:0.3f} of {resources_request:0.3f}",
+        f"Limit utilization: {render.percent(USAGE / resources_limit * 100)} - {USAGE:0.3f} of {resources_limit:0.3f}",
+    ]
+    assert [r.summary for r in check_result if isinstance(r, Result)] == expected
 
 
-# @pytest.mark.parametrize(
-#     "resources_limit, resources_request",
-#     list(
-#         itertools.product(["unspecified", "zero", "zero_unspecified"], ["unspecified"])
-#     ),  # FIXME: remove hardcoded values
-# )
-# def test_check_yields_one_result_with_summaries_aggregated_results(check_result, usage_usage):
-#     expected = [f"CPU usage: {usage_usage:0.3f}", "Limit n/a", "Request n/a"]
-#     assert [r.summary for r in check_result] == expected
+def test_check_yields_multiple_metrics_with_values(
+    check_result, resources_request, resources_limit
+):
+    expected = [
+        ("kube_cpu_usage", USAGE),
+        ("kube_cpu_request", resources_request),
+        ("kube_cpu_request_utilization", USAGE / resources_request * 100),
+        ("kube_cpu_limit", resources_limit),
+        ("kube_cpu_limit_utilization", USAGE / resources_limit * 100),
+    ]
+    assert [(m.name, m.value) for m in check_result if isinstance(m, Metric)] == expected
 
 
-# @pytest.mark.parametrize(
-#     "resources_limit, resources_request",
-#     list(
-#         itertools.product(["unspecified", "zero", "zero_unspecified"], ["unspecified"])
-#     ),  # FIXME: remove hardcoded values
-# )
-# def test_check_yields_one_results_with_details_aggregated_results(
-#     check_result, usage_usage, resources_limit, resources_request
-# ):
-#     expected = [
-#         f"CPU usage: {usage_usage:0.3f}",
-#         f"Limit: {resources_limit}",
-#         f"Request: {resources_request}",
-#     ]
-#     assert [r.details for r in check_result] == expected
+@pytest.mark.parametrize(
+    "resources_request, resources_limit",
+    list(
+        itertools.product(["unspecified"], ["unspecified", "zero", "zero_unspecified"])
+    ),  # FIXME: remove hardcoded values
+)
+def test_check_yields_multiple_results_with_summaries_exceptional_res(check_result):
+    expected = [f"Usage: {USAGE:0.3f}", "Request n/a", "Limit n/a"]
+    assert [r.summary for r in check_result if isinstance(r, Result)] == expected
 
 
-# def test_check_all_states_ok(check_result):
-#     expected = [State.OK, State.OK, State.WARN]
-#     assert [r.state for r in check_result if isinstance(r, Result)] == expected
+@pytest.mark.parametrize(
+    "resources_request, resources_limit",
+    list(
+        itertools.product(["unspecified"], ["unspecified", "zero", "zero_unspecified"])
+    ),  # FIXME: remove hardcoded values
+)
+def test_check_yields_results_with_details_exceptional_res(
+    check_result, resources_request, resources_limit
+):
+    expected = [
+        f"Usage: {USAGE:0.3f}",
+        f"Request: {resources_request}",
+        f"Limit: {resources_limit}",
+    ]
+    assert [r.details for r in check_result if isinstance(r, Result)] == expected
+
+
+@pytest.mark.parametrize(
+    "resources_request, resources_limit",
+    list(
+        itertools.product(["unspecified"], ["unspecified", "zero", "zero_unspecified"])
+    ),  # FIXME: remove hardcoded values
+)
+def test_check_yields_single_metric_with_value_exceptional_res(check_result):
+    expected = [USAGE]
+    assert [m.value for m in check_result if isinstance(m, Metric)] == expected
+
+
+@pytest.mark.parametrize("resources_request", [0])
+def test_check_yields_result_with_details_request_set_to_zero(check_result):
+    expected_details = "Request: set to zero for all containers"
+    assert sum(r.details == expected_details for r in check_result if isinstance(r, Result)) == 1
+
+
+def test_check_all_states_ok(check_result):
+    assert all(r.state == State.OK for r in check_result if isinstance(r, Result))
+
+
+@pytest.mark.parametrize("state", [OK, WARN, CRIT])
+@pytest.mark.parametrize("params_request, params_limit", [(("ignore"), ("ignore"))])
+def test_check_all_states_ok_params_ignore(check_result):
+    assert all(r.state == State.OK for r in check_result if isinstance(r, Result))
+
+
+@pytest.mark.parametrize("state", [OK, WARN, CRIT])
+@pytest.mark.parametrize("params", [{}])
+def test_check_all_states_ok_empty_params(check_result):
+    assert all(r.state == State.OK for r in check_result if isinstance(r, Result))
+
+
+@pytest.mark.parametrize(
+    "state_request, state_limit, expected_states",
+    [
+        (OK, OK, [State.OK, State.OK, State.OK]),
+        (OK, WARN, [State.OK, State.OK, State.WARN]),
+        (OK, CRIT, [State.OK, State.OK, State.CRIT]),
+        (WARN, OK, [State.OK, State.WARN, State.OK]),
+        (CRIT, OK, [State.OK, State.CRIT, State.OK]),
+        (WARN, WARN, [State.OK, State.WARN, State.WARN]),
+        (WARN, CRIT, [State.OK, State.WARN, State.CRIT]),
+        (CRIT, WARN, [State.OK, State.CRIT, State.WARN]),
+        (CRIT, CRIT, [State.OK, State.CRIT, State.CRIT]),
+    ],
+)
+def test_check_result_states_mixed(expected_states, check_result):
+    assert [r.state for r in check_result if isinstance(r, Result)] == expected_states

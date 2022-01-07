@@ -518,18 +518,19 @@ run_purely_synchronous_sections() {
 
 # Runs a command asynchronous by use of a cache file
 run_cached() {
+    local NAME MAXAGE CMDLINE NOW MTIME
     if [ "${1}" = -s ]; then local section="echo '<<<${2}>>>'; "; shift; fi
-    local NAME=${1}
-    local MAXAGE=${2}
+    NAME=${1}
+    MAXAGE=${2}
     shift 2
-    local CMDLINE="${section}$@"
+    CMDLINE="${section}$@"
 
     if [ ! -d ${MK_TMPDIR}/cache ]; then mkdir -p ${MK_TMPDIR}/cache; fi
     CACHEFILE="${MK_TMPDIR}/cache/${NAME}.cache"
 
     # Check if the creation of the cache takes suspiciously long and return
     # nothing if the age (access time) of ${CACHEFILE}.new is twice the MAXAGE
-    local NOW=$(get_epoch)
+    NOW=$(get_epoch)
     if [ -e "${CACHEFILE}.new" ]; then
         if [ $((NOW - $(get_file_atime "${CACHEFILE}.new"))) -ge $((MAXAGE * 2)) ]; then
             return
@@ -538,7 +539,7 @@ run_cached() {
 
     # Check if cache file exists and is recent enough
     if [ -s "${CACHEFILE}" ]; then
-        local MTIME=$(get_file_mtime "${CACHEFILE}")
+        MTIME=$(get_file_mtime "${CACHEFILE}")
         if [ $((NOW - MTIME)) -le ${MAXAGE} ]; then local USE_CACHEFILE=1; fi
 
         if ${MK_RUN_SYNC_PARTS}; then

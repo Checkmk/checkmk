@@ -514,7 +514,7 @@ div.add_snapin {
       float: left;
       width: 270px;
       height: 220px;
-      padding: 8px;
+      padding: $spacing;
       margin: 0 16px 16px 0;
       background-color: $snapin-bg-color;
       border: 1px solid $snapin-bg-color;
@@ -531,7 +531,7 @@ div.add_snapin {
     }
 
     div.description {
-      padding: $spacing;
+      padding: $spacing 0;
       border-top: 1px solid $snapin-heading-border-color;
     }
 
@@ -543,10 +543,11 @@ div.add_snapin {
     }
 
     .head {
-      padding: 8px;
+      padding: 0 0 $spacing;
     }
 
     .content {
+      padding: $spacing 0;
       border-bottom: none;
     }
   }

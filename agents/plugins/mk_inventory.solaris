@@ -12,7 +12,8 @@
 CMK_VERSION="2.1.0i1"
 
 # Run and *send* only once every __ seconds
-. $MK_CONFDIR/mk_inventory.cfg 2>/dev/null || true
+# shellcheck source=../cfg_examples/mk_inventory.cfg
+. "${MK_CONFDIR}/mk_inventory.cfg" 2>/dev/null || true
 
 # Default to four hours
 INTERVAL=${INVENTORY_INTERVAL:-14400}
@@ -21,21 +22,21 @@ FLAGFILE=$MK_VARDIR/mk_inventory.last.$REMOTE
 if [ `uname -r` = "5.10" ]; then
     NOW=$(truss /usr/bin/date 2>&1 | grep ^time | awk -F"= " '{print $2}')
 else
-    NOW=`date +%s`
+    NOW="$(date +%s)"
 fi
 UNTIL=$((NOW + INTERVAL + 600))
 
 #check if flagfile exits
 if [ -e "$FLAGFILE" ]; then
-    LAST_RUN=$(cat $FLAGFILE)
+    LAST_RUN="$(cat "${FLAGFILE}")"
 else
     #First run of the script
     LAST_RUN=0
 fi
 
-if [ $(( NOW - LAST_RUN )) -ge $INTERVAL ]
+if [ $(( NOW - LAST_RUN )) -ge "${INTERVAL}" ]
 then
-    echo $NOW > $FLAGFILE
+    echo "${NOW}" > "${FLAGFILE}"
 
     echo "<<<solaris_uname:sep(61):persist($UNTIL)>>>"
     uname -X

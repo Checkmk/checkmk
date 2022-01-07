@@ -18,13 +18,13 @@ CMK_VERSION="2.1.0i1"
 INTERVAL=${INVENTORY_INTERVAL:-14400}
 
 FLAGFILE=$MK_VARDIR/mk_inventory.last.$REMOTE
-LAST_RUN=$(stat -c %Y $FLAGFILE)
-NOW=$(date +%s)
+LAST_RUN="$(stat -c %Y "${FLAGFILE}")"
+NOW="$(date +%s)"
 UNTIL=$((NOW + INTERVAL + 600))
 
-if [ $(( NOW - LAST_RUN )) -ge $INTERVAL ]
+if [ $(( NOW - LAST_RUN )) -ge "${INTERVAL}" ]
 then
-    touch $FLAGFILE
+    touch "${FLAGFILE}"
 
     # List of DEB packages
     if type dpkg-query >/dev/null; then

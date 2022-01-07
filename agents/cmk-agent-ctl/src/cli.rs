@@ -38,6 +38,18 @@ pub struct DeleteArgs {
 }
 
 #[derive(StructOpt)]
+pub struct ImportArgs {
+    /// Path to a file containing the JSON-encoded connection to be imported (output of the
+    /// 'register-surrogate-pull' command). If not provided, the JSON data is expected via stdin.
+    #[structopt(name = "CONNECTION_FILE")]
+    pub conn_file: Option<std::path::PathBuf>,
+
+    /// Enable verbose output
+    #[structopt(long, short = "v")]
+    pub verbose: bool,
+}
+
+#[derive(StructOpt)]
 #[structopt(name = "cmk-agent-ctl", about = "Checkmk agent controller.")]
 pub enum Args {
     #[structopt(about = "Register with a Checkmk instance for monitoring")]
@@ -67,4 +79,7 @@ pub enum Args {
 
     #[structopt(about = "Delete all connections to Checkmk instances")]
     DeleteAll {},
+
+    #[structopt(about = "Import a pull connection, provided either via stdin or from a file")]
+    Import(ImportArgs),
 }

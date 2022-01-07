@@ -9,6 +9,7 @@ mod config;
 mod constants;
 mod delete_connection;
 mod dump;
+mod import_connection;
 mod monitoring_data;
 mod pull;
 mod registration;
@@ -133,6 +134,7 @@ fn run_requested_mode(args: cli::Args, paths: constants::Paths) -> AnyhowResult<
             delete_connection::delete(&mut registry, &delete_args.connection)
         }
         cli::Args::DeleteAll { .. } => delete_connection::delete_all(&mut registry),
+        cli::Args::Import(import_args) => import_connection::import(&mut registry, &import_args),
     }
 }
 

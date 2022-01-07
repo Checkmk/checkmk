@@ -184,10 +184,10 @@ pub fn register(
     Ok(())
 }
 
-#[derive(serde::Serialize)]
-struct SurrogatePullData {
-    agent_controller_version: String,
-    connection: config::Connection,
+#[derive(serde::Serialize, serde::Deserialize)]
+pub struct SurrogatePullData {
+    pub agent_controller_version: String,
+    pub connection: config::Connection,
 }
 
 pub fn register_surrogate_pull(config: config::RegistrationConfig) -> AnyhowResult<()> {

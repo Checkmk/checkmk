@@ -211,6 +211,10 @@ impl Registry {
         Ok(())
     }
 
+    pub fn register_imported_connection(&mut self, connection: Connection) {
+        self.connections.pull_imported.push(connection);
+    }
+
     pub fn delete_connection(&mut self, connection_id: &str) -> AnyhowResult<()> {
         if self.delete_connection_by_server(connection_id).is_ok()
             || self.delete_connection_by_uuid(connection_id).is_ok()
@@ -413,6 +417,16 @@ mod test_registry {
         assert!(reg.connections.push.is_empty());
         assert!(reg.connections.pull.len() == 2);
         assert!(reg.connections.pull_imported.len() == 1);
+    }
+
+    #[test]
+    fn test_register_imported_connection() {
+        let mut reg = registry();
+        reg.register_imported_connection(connection());
+        assert!(reg.connections.push.len() == 1);
+        assert!(reg.connections.pull.len() == 1);
+        assert!(reg.connections.pull_imported.len() == 2);
+        assert!(reg.connections.pull_imported[1].uuid == "abc-123");
     }
 
     #[test]

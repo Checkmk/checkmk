@@ -120,7 +120,7 @@ def check(
 
 
 register.agent_section(
-    name="kube_live_cpu_usage_v1",
+    name="k8s_live_cpu_usage_v1",
     parsed_section_name="kube_live_cpu_usage",
     parse_function=parse_kube_live_cpu_usage_v1,
 )

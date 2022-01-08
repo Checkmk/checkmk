@@ -417,11 +417,7 @@ def _get_post_discovery_autocheck_services(
                 new = {
                     s.service.id(): s
                     for s in discovered_services_with_nodes
-                    if service_filters.new(
-                        config.service_description(
-                            host_name, s.service.check_plugin_name, s.service.item
-                        )
-                    )
+                    if service_filters.new(config.service_description(host_name, *s.service.id()))
                 }
                 result.self_new += len(new)
                 post_discovery_services.update(new)
@@ -443,9 +439,7 @@ def _get_post_discovery_autocheck_services(
                     DiscoveryMode.FIXALL,
                     DiscoveryMode.REMOVE,
                 ) and service_filters.vanished(
-                    config.service_description(
-                        host_name, entry.service.check_plugin_name, entry.service.item
-                    )
+                    config.service_description(host_name, *entry.service.id())
                 ):
                     result.self_removed += 1
                 else:
@@ -648,9 +642,7 @@ def _check_service_lists(
             affected_check_plugin_names[discovered_service.check_plugin_name] += 1
 
             if not unfiltered and service_filter(
-                config.service_description(
-                    host_name, discovered_service.check_plugin_name, discovered_service.item
-                )
+                config.service_description(host_name, *discovered_service.id())
             ):
                 unfiltered = True
 

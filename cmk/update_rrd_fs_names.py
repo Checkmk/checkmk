@@ -209,7 +209,7 @@ def update_service_info(config_cache, hostnames):
             if entry.check_plugin_name not in CHECKS_USING_DF_INCLUDE:
                 continue
 
-            description = config.service_description(hostname, entry.check_plugin_name, entry.item)
+            description = config.service_description(hostname, *entry.id())
 
             if cmc_capable:
                 update_files(hostname, description, entry.item, "cmc")

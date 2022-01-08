@@ -84,7 +84,7 @@ def _analyse_discovered_services(
             run_plugin_names=run_plugin_names,
             keep_vanished=keep_vanished,
         ),
-        key=lambda s: (s.check_plugin_name, s.item),
+        key=lambda s: s.id(),
     )
 
 
@@ -168,7 +168,7 @@ def _discover_services(
                 try:
                     service_table.update(
                         {
-                            (entry.check_plugin_name, entry.item): entry
+                            entry.id(): entry
                             for entry in _discover_plugins_services(
                                 check_plugin_name=check_plugin_name,
                                 host_name=host_name,

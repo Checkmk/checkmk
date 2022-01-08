@@ -861,7 +861,7 @@ def test_commandline_discovery(monkeypatch: MonkeyPatch) -> None:
         )
 
     entries = autochecks.AutochecksStore(testhost).read()
-    found = {(e.check_plugin_name, e.item): e.service_labels for e in entries}
+    found = {e.id(): e.service_labels for e in entries}
     assert found == _expected_services
 
     store = DiscoveredHostLabelsStore(testhost)
@@ -1471,7 +1471,7 @@ def test__discover_host_labels_and_services_on_realhost(
             run_plugin_names=EVERYTHING,
         )
 
-    services = {(s.check_plugin_name, s.item) for s in discovered_services}
+    services = {s.id() for s in discovered_services}
 
     assert services == discovery_test_case.expected_services
 

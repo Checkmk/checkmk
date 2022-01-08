@@ -7583,6 +7583,10 @@ msgstr "CPU belasting via WMI"
 msgid "CPU Memory used"
 msgstr "CPU Gebruikt geheugen"
 
+#, fuzzy
+msgid "CPU Utilization"
+msgstr "CPU-gebruik"
+
 msgid "CPU Utilization of Clusters"
 msgstr "CPU-gebruik van clusters"
 
@@ -10662,6 +10666,10 @@ msgid "Container - Display the information on container level"
 msgstr "Container - Geef de informatie weer op containerniveau"
 
 msgid "Container Name"
+msgstr "Container Naam"
+
+#, fuzzy
+msgid "Container memory"
 msgstr "Container Naam"
 
 msgid "Containerization"
@@ -20210,6 +20218,11 @@ msgstr ""
 "het eerste knooppunt worden de gezondheidsniveaus gecontroleerd."
 
 msgid ""
+"Here you can configure absolute levels or percentual levels for memory "
+"request utilization and memory limit utilization, respectively."
+msgstr ""
+
+msgid ""
 "Here you can configure global settings, that should just be applied on that "
 "site. <b>Note</b>: this only makes sense if the site is part of a "
 "distributed setup."
@@ -20224,6 +20237,11 @@ msgid ""
 msgstr ""
 "Hier kunt u configureren hoe u op de hoogte wilt worden gebracht van host- "
 "en serviceproblemen en andere monitoringgebeurtenissen."
+
+msgid ""
+"Here you can configure percentual levels for CPU request utilization and CPU "
+"limit utilization, respectively."
+msgstr ""
 
 msgid ""
 "Here you can configure the 3.3V and 12V voltage levels for each chassis."
@@ -25779,6 +25797,10 @@ msgstr "Kubernetes"
 msgid "Kubernetes 2.0"
 msgstr "Kubernetes"
 
+#, fuzzy
+msgid "Kubernetes CPU resource utilization"
+msgstr "Kubernetes-bronnen"
+
 msgid "Kubernetes Namespaced pods Filesystem usage"
 msgstr "Kubernetes pods met naamgeving Bestandssysteem gebruik"
 
@@ -25801,6 +25823,10 @@ msgstr "Kubernetes-bronnen"
 
 msgid "Kubernetes Port"
 msgstr "Kubernetes Poort"
+
+#, fuzzy
+msgid "Kubernetes memory resource utilization"
+msgstr "Kubernetes-bronnen"
 
 #, fuzzy
 msgid "Kubernetes node container count"
@@ -26864,6 +26890,10 @@ msgstr "Beperk tot de volgende hosts"
 
 msgid "Limit to the following services"
 msgstr "Beperking tot de volgende diensten"
+
+#, fuzzy
+msgid "Limit utilization"
+msgstr "Schijfgebruik"
 
 msgid "Limit width"
 msgstr "Grensbreedte"
@@ -29208,10 +29238,6 @@ msgstr "Geheugengebruik"
 msgid "Memory usage for %s hosts"
 msgstr "Geheugengebruik voor %s hosts"
 
-#, fuzzy
-msgid "Memory usage for Kubernetes objects"
-msgstr "Geheugengebruik voor %s hosts"
-
 msgid "Memory usage growth"
 msgstr "Groei geheugengebruik"
 
@@ -29239,6 +29265,9 @@ msgstr "Gebruikt geheugen"
 
 msgid "Memory used by caches"
 msgstr "Geheugen gebruikt door caches"
+
+msgid "Memory utilization"
+msgstr "Geheugengebruik"
 
 msgid "Memory warning at"
 msgstr "Geheugenwaarschuwing bij"
@@ -37594,6 +37623,10 @@ msgstr "Vraag metriek"
 
 msgid "Request rate"
 msgstr "Aanvraag tarief"
+
+#, fuzzy
+msgid "Request utilization"
+msgstr "Gebruik van tapes"
 
 msgid "Request wait time"
 msgstr "Aanvraag wachttijd"
@@ -55398,6 +55431,10 @@ msgstr "Bovenste niveaus voor latentie"
 msgid "Upper levels for license usage"
 msgstr "Bovenste niveaus voor licentiegebruik"
 
+#, fuzzy
+msgid "Upper levels for limit utilization"
+msgstr "Bovenste niveaus voor schijfgebruik"
+
 msgid "Upper levels for load balancer capacity units"
 msgstr "Bovenste niveaus voor loadbalancer-capaciteitseenheden"
 
@@ -55449,6 +55486,10 @@ msgstr "Bovenste niveau voor wachtrijlengte"
 
 msgid "Upper levels for rate of server errors"
 msgstr "Bovenste niveaus voor foutenpercentage bij de server"
+
+#, fuzzy
+msgid "Upper levels for request utilization"
+msgstr "Bovenste niveaus voor schijfgebruik"
 
 msgid "Upper levels for reserved space"
 msgstr "Bovenste niveaus voor gereserveerde ruimte"
@@ -62230,6 +62271,10 @@ msgstr "links"
 msgid "legacy run"
 msgstr "erfenis run"
 
+#, fuzzy
+msgid "limit utilization"
+msgstr "Schijfgebruik"
+
 msgid "local connect"
 msgstr "lokale verbinding"
 
@@ -62757,6 +62802,10 @@ msgid ""
 msgstr ""
 "staat voor wachten op een verbindingsverzoek van een TCP op afstand en poort"
 
+#, fuzzy
+msgid "request utilization"
+msgstr "Gebruik van tapes"
+
 msgid "requests"
 msgstr "verzoeken"
 
@@ -63201,6 +63250,11 @@ msgstr "z/OS"
 #, fuzzy, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. Alle rechten voorbehouden."
+
+#, fuzzy
+#~| msgid "Memory usage for %s hosts"
+#~ msgid "Memory usage for Kubernetes objects"
+#~ msgstr "Geheugengebruik voor %s hosts"
 
 #, fuzzy
 #~| msgid "Define a tolerating time period for activating services"
@@ -64940,9 +64994,6 @@ msgstr "© 2020 tribe29 GmbH. Alle rechten voorbehouden."
 #~ msgid "Memory Size in percent"
 #~ msgstr "Geheugengebruik in procenten"
 
-#~ msgid "Memory utilization"
-#~ msgstr "Geheugengebruik"
-
 #~ msgid "Message Rate"
 #~ msgstr "Berichtensnelheid"
 
@@ -65659,9 +65710,6 @@ msgstr "© 2020 tribe29 GmbH. Alle rechten voorbehouden."
 
 #~ msgid "TLS Processed Bytes"
 #~ msgstr "TLS Verwerkte bytes"
-
-#~ msgid "Tapes utilization"
-#~ msgstr "Gebruik van tapes"
 
 #~ msgid ""
 #~ "The event was cancelled because the corresponding OK message was received"

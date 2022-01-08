@@ -7285,6 +7285,10 @@ msgstr "WMIを介したCPU負荷"
 msgid "CPU Memory used"
 msgstr "使用されるCPUメモリ"
 
+#, fuzzy
+msgid "CPU Utilization"
+msgstr "CPU使用率"
+
 msgid "CPU Utilization of Clusters"
 msgstr "クラスターのCPU使用率"
 
@@ -10242,6 +10246,10 @@ msgid "Container - Display the information on container level"
 msgstr "コンテナ - コンテナレベルで情報を表示します"
 
 msgid "Container Name"
+msgstr "コンテナ名"
+
+#, fuzzy
+msgid "Container memory"
 msgstr "コンテナ名"
 
 msgid "Containerization"
@@ -19579,6 +19587,11 @@ msgid ""
 msgstr ""
 
 msgid ""
+"Here you can configure absolute levels or percentual levels for memory "
+"request utilization and memory limit utilization, respectively."
+msgstr ""
+
+msgid ""
 "Here you can configure global settings, that should just be applied on that "
 "site. <b>Note</b>: this only makes sense if the site is part of a "
 "distributed setup."
@@ -19592,6 +19605,11 @@ msgid ""
 msgstr ""
 "ここでは、ホストとサービスの問題、およびその他の監視イベントについて通知する"
 "方法を構成できます。"
+
+msgid ""
+"Here you can configure percentual levels for CPU request utilization and CPU "
+"limit utilization, respectively."
+msgstr ""
 
 msgid ""
 "Here you can configure the 3.3V and 12V voltage levels for each chassis."
@@ -24798,6 +24816,10 @@ msgstr "Kubernetes"
 msgid "Kubernetes 2.0"
 msgstr "Kubernetes"
 
+#, fuzzy
+msgid "Kubernetes CPU resource utilization"
+msgstr "Kubernetesリソース"
+
 msgid "Kubernetes Namespaced pods Filesystem usage"
 msgstr "KubernetesネームスペースPodファイルシステムの使用法"
 
@@ -24820,6 +24842,10 @@ msgstr "Kubernetesリソース"
 
 msgid "Kubernetes Port"
 msgstr "Kubernetesポート"
+
+#, fuzzy
+msgid "Kubernetes memory resource utilization"
+msgstr "Kubernetesリソース"
 
 #, fuzzy
 msgid "Kubernetes node container count"
@@ -25860,6 +25886,10 @@ msgstr "次のホストに制限する"
 
 msgid "Limit to the following services"
 msgstr "以下のサービスに限定する"
+
+#, fuzzy
+msgid "Limit utilization"
+msgstr "ディスク使用率"
 
 msgid "Limit width"
 msgstr "幅を制限する"
@@ -28161,10 +28191,6 @@ msgstr "メモリ使用量"
 msgid "Memory usage for %s hosts"
 msgstr "%s ホストのメモリ使用量"
 
-#, fuzzy
-msgid "Memory usage for Kubernetes objects"
-msgstr "%s ホストのメモリ使用量"
-
 msgid "Memory usage growth"
 msgstr "メモリ使用量の増加"
 
@@ -28192,6 +28218,9 @@ msgstr "使用メモリ"
 
 msgid "Memory used by caches"
 msgstr "キャッシュによって使用されるメモリ"
+
+msgid "Memory utilization"
+msgstr "メモリ使用率"
 
 msgid "Memory warning at"
 msgstr "でのメモリ警告"
@@ -36348,6 +36377,10 @@ msgstr "メトリックを要求する"
 
 msgid "Request rate"
 msgstr "リクエストレート"
+
+#, fuzzy
+msgid "Request utilization"
+msgstr "テープの使用率"
 
 msgid "Request wait time"
 msgstr "待ち時間をリクエストする"
@@ -52973,6 +53006,10 @@ msgstr "レイテンシの上位レベル"
 msgid "Upper levels for license usage"
 msgstr "ライセンス使用の上位レベル"
 
+#, fuzzy
+msgid "Upper levels for limit utilization"
+msgstr "ディスク使用率の上位レベル"
+
 msgid "Upper levels for load balancer capacity units"
 msgstr "ロードバランサー容量ユニットの上位レベル"
 
@@ -53024,6 +53061,10 @@ msgstr "キューの長さの上位レベル"
 
 msgid "Upper levels for rate of server errors"
 msgstr "サーバーエラー率の上位レベル"
+
+#, fuzzy
+msgid "Upper levels for request utilization"
+msgstr "ディスク使用率の上位レベル"
 
 msgid "Upper levels for reserved space"
 msgstr "予約済みスペースの上位レベル"
@@ -59337,6 +59378,10 @@ msgstr "左"
 msgid "legacy run"
 msgstr "レガシーラン"
 
+#, fuzzy
+msgid "limit utilization"
+msgstr "ディスク使用率"
+
 msgid "local connect"
 msgstr "ローカルコネクト"
 
@@ -59860,6 +59905,10 @@ msgid ""
 "represents waiting for a connection request from any remote TCP and port"
 msgstr ""
 
+#, fuzzy
+msgid "request utilization"
+msgstr "テープの使用率"
+
 msgid "requests"
 msgstr "リクエスト"
 
@@ -60302,6 +60351,11 @@ msgstr "z/OS"
 #, fuzzy, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. All Rights Reserved."
+
+#, fuzzy
+#~| msgid "Memory usage for %s hosts"
+#~ msgid "Memory usage for Kubernetes objects"
+#~ msgstr "%s ホストのメモリ使用量"
 
 #, fuzzy
 #~| msgid "Define a tolerating time period for activating services"
@@ -61938,9 +61992,6 @@ msgstr "© 2020 tribe29 GmbH. All Rights Reserved."
 #~ msgid "Memory Size in percent"
 #~ msgstr "パーセントで表したメモリ使用量"
 
-#~ msgid "Memory utilization"
-#~ msgstr "メモリ使用率"
-
 #~ msgid "Message Rate"
 #~ msgstr "メッセージレート"
 
@@ -62614,9 +62665,6 @@ msgstr "© 2020 tribe29 GmbH. All Rights Reserved."
 
 #~ msgid "TLS Processed Bytes"
 #~ msgstr "TLS処理されたバイト"
-
-#~ msgid "Tapes utilization"
-#~ msgstr "テープの使用率"
 
 #~ msgid ""
 #~ "The event was cancelled because the corresponding OK message was received"

@@ -7597,6 +7597,10 @@ msgstr "Carico della CPU tramite WMI"
 msgid "CPU Memory used"
 msgstr "CPU Memoria utilizzata"
 
+#, fuzzy
+msgid "CPU Utilization"
+msgstr "Utilizzo della CPU"
+
 msgid "CPU Utilization of Clusters"
 msgstr "Utilizzo della CPU dei cluster"
 
@@ -10690,6 +10694,10 @@ msgid "Container - Display the information on container level"
 msgstr "Contenitore - Visualizza le informazioni a livello di contenitore"
 
 msgid "Container Name"
+msgstr "Nome del contenitore"
+
+#, fuzzy
+msgid "Container memory"
 msgstr "Nome del contenitore"
 
 msgid "Containerization"
@@ -20259,6 +20267,11 @@ msgstr ""
 "livelli di salute sono controllati."
 
 msgid ""
+"Here you can configure absolute levels or percentual levels for memory "
+"request utilization and memory limit utilization, respectively."
+msgstr ""
+
+msgid ""
 "Here you can configure global settings, that should just be applied on that "
 "site. <b>Note</b>: this only makes sense if the site is part of a "
 "distributed setup."
@@ -20273,6 +20286,11 @@ msgid ""
 msgstr ""
 "Qui puoi configurare come vuoi essere avvisato dei problemi dell'host e del "
 "servizio e di altri eventi di monitoraggio."
+
+msgid ""
+"Here you can configure percentual levels for CPU request utilization and CPU "
+"limit utilization, respectively."
+msgstr ""
 
 msgid ""
 "Here you can configure the 3.3V and 12V voltage levels for each chassis."
@@ -25824,6 +25842,10 @@ msgstr "Kubernetes"
 msgid "Kubernetes 2.0"
 msgstr "Kubernetes"
 
+#, fuzzy
+msgid "Kubernetes CPU resource utilization"
+msgstr "Risorse di Kubernetes"
+
 msgid "Kubernetes Namespaced pods Filesystem usage"
 msgstr "Kubernetes Pod con nomi diversi Utilizzo del filesystem"
 
@@ -25846,6 +25868,10 @@ msgstr "Risorse di Kubernetes"
 
 msgid "Kubernetes Port"
 msgstr "Porta Kubernetes"
+
+#, fuzzy
+msgid "Kubernetes memory resource utilization"
+msgstr "Risorse di Kubernetes"
 
 #, fuzzy
 msgid "Kubernetes node container count"
@@ -26909,6 +26935,10 @@ msgstr "Limitare ai seguenti host"
 
 msgid "Limit to the following services"
 msgstr "Limitare ai seguenti servizi"
+
+#, fuzzy
+msgid "Limit utilization"
+msgstr "Utilizzo del disco"
 
 msgid "Limit width"
 msgstr "Larghezza limite"
@@ -29265,10 +29295,6 @@ msgstr "Uso della memoria"
 msgid "Memory usage for %s hosts"
 msgstr "Utilizzo della memoria per %s host"
 
-#, fuzzy
-msgid "Memory usage for Kubernetes objects"
-msgstr "Utilizzo della memoria per %s host"
-
 msgid "Memory usage growth"
 msgstr "Crescita dell'uso della memoria"
 
@@ -29297,6 +29323,9 @@ msgstr "Memoria utilizzata"
 
 msgid "Memory used by caches"
 msgstr "Memoria usata dalle cache"
+
+msgid "Memory utilization"
+msgstr "Utilizzo della memoria"
 
 msgid "Memory warning at"
 msgstr "Avviso di memoria a"
@@ -37702,6 +37731,10 @@ msgstr "Richiesta di metrica"
 
 msgid "Request rate"
 msgstr "Tasso di richiesta"
+
+#, fuzzy
+msgid "Request utilization"
+msgstr "Utilizzo di nastri"
 
 msgid "Request wait time"
 msgstr "Tempo di attesa della richiesta"
@@ -55523,6 +55556,10 @@ msgstr "Livelli superiori di latenza"
 msgid "Upper levels for license usage"
 msgstr "Livelli superiori per l'uso della licenza"
 
+#, fuzzy
+msgid "Upper levels for limit utilization"
+msgstr "Livelli superiori di utilizzo del disco"
+
 msgid "Upper levels for load balancer capacity units"
 msgstr "Livelli superiori per le unità di capacità del bilanciatore di carico"
 
@@ -55574,6 +55611,10 @@ msgstr "Livello superiore per la lunghezza della coda"
 
 msgid "Upper levels for rate of server errors"
 msgstr "Livelli superiori per il tasso di errori del server"
+
+#, fuzzy
+msgid "Upper levels for request utilization"
+msgstr "Livelli superiori di utilizzo del disco"
 
 msgid "Upper levels for reserved space"
 msgstr "Livelli superiori per lo spazio riservato"
@@ -62354,6 +62395,10 @@ msgstr "sinistra"
 msgid "legacy run"
 msgstr "corsa di eredità"
 
+#, fuzzy
+msgid "limit utilization"
+msgstr "Utilizzo del disco"
+
 msgid "local connect"
 msgstr "collegamento locale"
 
@@ -62882,6 +62927,10 @@ msgstr ""
 "rappresenta l'attesa di una richiesta di connessione da qualsiasi TCP remoto "
 "e porta"
 
+#, fuzzy
+msgid "request utilization"
+msgstr "Utilizzo di nastri"
+
 msgid "requests"
 msgstr "richieste"
 
@@ -63327,6 +63376,11 @@ msgstr "z/OS"
 #, fuzzy, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. Tutti i diritti riservati."
+
+#, fuzzy
+#~| msgid "Memory usage for %s hosts"
+#~ msgid "Memory usage for Kubernetes objects"
+#~ msgstr "Utilizzo della memoria per %s host"
 
 #, fuzzy
 #~| msgid "Define a tolerating time period for activating services"
@@ -65078,9 +65132,6 @@ msgstr "© 2020 tribe29 GmbH. Tutti i diritti riservati."
 #~ msgid "Memory Size in percent"
 #~ msgstr "Utilizzo della memoria in percentuale"
 
-#~ msgid "Memory utilization"
-#~ msgstr "Utilizzo della memoria"
-
 #~ msgid "Message Rate"
 #~ msgstr "Tasso del messaggio"
 
@@ -65799,9 +65850,6 @@ msgstr "© 2020 tribe29 GmbH. Tutti i diritti riservati."
 
 #~ msgid "TLS Processed Bytes"
 #~ msgstr "TLS Bytes processati"
-
-#~ msgid "Tapes utilization"
-#~ msgstr "Utilizzo di nastri"
 
 #~ msgid ""
 #~ "The event was cancelled because the corresponding OK message was received"

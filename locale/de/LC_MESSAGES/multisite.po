@@ -7579,6 +7579,10 @@ msgstr "CPU-Last via WMI"
 msgid "CPU Memory used"
 msgstr "verwendeter CPU Speicher"
 
+#, fuzzy
+msgid "CPU Utilization"
+msgstr "CPU-Auslastung"
+
 msgid "CPU Utilization of Clusters"
 msgstr "CPU-Auslastung von Clustern"
 
@@ -10677,6 +10681,10 @@ msgid "Container - Display the information on container level"
 msgstr "Container - Anzeige der Informationen auf Containerebene"
 
 msgid "Container Name"
+msgstr "Containername"
+
+#, fuzzy
+msgid "Container memory"
 msgstr "Containername"
 
 msgid "Containerization"
@@ -20275,6 +20283,11 @@ msgstr ""
 "werden."
 
 msgid ""
+"Here you can configure absolute levels or percentual levels for memory "
+"request utilization and memory limit utilization, respectively."
+msgstr ""
+
+msgid ""
 "Here you can configure global settings, that should just be applied on that "
 "site. <b>Note</b>: this only makes sense if the site is part of a "
 "distributed setup."
@@ -20289,6 +20302,11 @@ msgid ""
 msgstr ""
 "Hier legen Sie fest wie Sie über Host-/Serviceprobleme (und andere "
 "Ereignisse) alarmiert werden möchten."
+
+msgid ""
+"Here you can configure percentual levels for CPU request utilization and CPU "
+"limit utilization, respectively."
+msgstr ""
 
 msgid ""
 "Here you can configure the 3.3V and 12V voltage levels for each chassis."
@@ -25819,6 +25837,10 @@ msgstr "Kubernetes"
 msgid "Kubernetes 2.0"
 msgstr "Kubernetes"
 
+#, fuzzy
+msgid "Kubernetes CPU resource utilization"
+msgstr "Kubernetes Resourcen"
+
 msgid "Kubernetes Namespaced pods Filesystem usage"
 msgstr "Kubernetes Namespaced Pods Dateisystemnutzung"
 
@@ -25841,6 +25863,10 @@ msgstr "Kubernetes Resourcen"
 
 msgid "Kubernetes Port"
 msgstr "Kubernetes Port"
+
+#, fuzzy
+msgid "Kubernetes memory resource utilization"
+msgstr "Kubernetes Resourcen"
 
 #, fuzzy
 msgid "Kubernetes node container count"
@@ -26902,6 +26928,10 @@ msgstr "Limit für die folgenden Hosts"
 
 msgid "Limit to the following services"
 msgstr "Limitiere auf die folgenden Services"
+
+#, fuzzy
+msgid "Limit utilization"
+msgstr "Festplattenauslastung"
 
 msgid "Limit width"
 msgstr "Breite begrenzen"
@@ -29251,10 +29281,6 @@ msgstr "Speicherauslastung"
 msgid "Memory usage for %s hosts"
 msgstr "Speicherauslastung für %s Hosts"
 
-#, fuzzy
-msgid "Memory usage for Kubernetes objects"
-msgstr "Speicherauslastung für %s Hosts"
-
 msgid "Memory usage growth"
 msgstr "Zunahme der Speicherauslastung"
 
@@ -29282,6 +29308,9 @@ msgstr "Belegter Speicher"
 
 msgid "Memory used by caches"
 msgstr "Speicher belegt von Caches"
+
+msgid "Memory utilization"
+msgstr "Speicherauslastung"
 
 msgid "Memory warning at"
 msgstr "speicherwarnung ab"
@@ -37669,6 +37698,10 @@ msgstr "Anforderungsmetriken"
 
 msgid "Request rate"
 msgstr "Anfragerate"
+
+#, fuzzy
+msgid "Request utilization"
+msgstr "Bänderauslastung"
 
 msgid "Request wait time"
 msgstr "Request-Wartezeite"
@@ -55439,6 +55472,10 @@ msgstr "Obere Schwellen für Latenzzeit"
 msgid "Upper levels for license usage"
 msgstr "Obere Schwellen für die Lizenznutzung"
 
+#, fuzzy
+msgid "Upper levels for limit utilization"
+msgstr "Obere Schwellen für die Festplattennutzung"
+
 msgid "Upper levels for load balancer capacity units"
 msgstr "Obere Schwellen für Kapazitätseinheiten von Loadbalancer"
 
@@ -55490,6 +55527,10 @@ msgstr "Obergrenze für Warteschlangenlänge"
 
 msgid "Upper levels for rate of server errors"
 msgstr "Obere Schwellen für die Rate der Serverfehler"
+
+#, fuzzy
+msgid "Upper levels for request utilization"
+msgstr "Obere Schwellen für die Festplattennutzung"
 
 msgid "Upper levels for reserved space"
 msgstr "Obere Schwellen für den reservierten Speicherplatz"
@@ -62259,6 +62300,10 @@ msgstr "links"
 msgid "legacy run"
 msgstr "veralteter Lauf"
 
+#, fuzzy
+msgid "limit utilization"
+msgstr "Festplattenauslastung"
+
 msgid "local connect"
 msgstr "lokale Verbindung"
 
@@ -62789,6 +62834,10 @@ msgstr ""
 "repräsentiert das Warten auf eine Verbindungsanfrage beliebiger Remote-TCP-"
 "Verbindungen und Ports"
 
+#, fuzzy
+msgid "request utilization"
+msgstr "Bänderauslastung"
+
 msgid "requests"
 msgstr "Anfragen"
 
@@ -63231,6 +63280,11 @@ msgstr "z/OS"
 #, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. Alle Rechte vorbehalten."
+
+#, fuzzy
+#~| msgid "Memory usage for %s hosts"
+#~ msgid "Memory usage for Kubernetes objects"
+#~ msgstr "Speicherauslastung für %s Hosts"
 
 #, fuzzy
 #~| msgid "Define a tolerating time period for activating services"
@@ -64981,9 +65035,6 @@ msgstr "© %s tribe29 GmbH. Alle Rechte vorbehalten."
 #~ msgid "Memory Size in percent"
 #~ msgstr "Speicherbelegung in Prozent"
 
-#~ msgid "Memory utilization"
-#~ msgstr "Speicherauslastung"
-
 #~ msgid "Message Rate"
 #~ msgstr "Meldungsrate"
 
@@ -65705,9 +65756,6 @@ msgstr "© %s tribe29 GmbH. Alle Rechte vorbehalten."
 
 #~ msgid "TLS Processed Bytes"
 #~ msgstr "Verarbeitete Bytes via TLS"
-
-#~ msgid "Tapes utilization"
-#~ msgstr "Bänderauslastung"
 
 #~ msgid ""
 #~ "The event was cancelled because the corresponding OK message was received"

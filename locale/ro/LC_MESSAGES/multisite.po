@@ -7105,6 +7105,10 @@ msgstr ""
 msgid "CPU Memory used"
 msgstr "% utilizare"
 
+#, fuzzy
+msgid "CPU Utilization"
+msgstr "Dezactiveaza Notificarile"
+
 msgid "CPU Utilization of Clusters"
 msgstr ""
 
@@ -10002,6 +10006,10 @@ msgstr ""
 
 #, fuzzy
 msgid "Container Name"
+msgstr "Numele Elementului"
+
+#, fuzzy
+msgid "Container memory"
 msgstr "Numele Elementului"
 
 #, fuzzy
@@ -19547,6 +19555,11 @@ msgid ""
 msgstr ""
 
 msgid ""
+"Here you can configure absolute levels or percentual levels for memory "
+"request utilization and memory limit utilization, respectively."
+msgstr ""
+
+msgid ""
 "Here you can configure global settings, that should just be applied on that "
 "site. <b>Note</b>: this only makes sense if the site is part of a "
 "distributed setup."
@@ -19555,6 +19568,11 @@ msgstr ""
 msgid ""
 "Here you can configure how you want to be notified about host and service "
 "problems and other monitoring events."
+msgstr ""
+
+msgid ""
+"Here you can configure percentual levels for CPU request utilization and CPU "
+"limit utilization, respectively."
 msgstr ""
 
 msgid ""
@@ -24215,6 +24233,10 @@ msgstr ""
 msgid "Kubernetes 2.0"
 msgstr ""
 
+#, fuzzy
+msgid "Kubernetes CPU resource utilization"
+msgstr "Dezactiveaza Notificarile"
+
 msgid "Kubernetes Namespaced pods Filesystem usage"
 msgstr ""
 
@@ -24236,6 +24258,10 @@ msgstr "Adresă"
 
 msgid "Kubernetes Port"
 msgstr ""
+
+#, fuzzy
+msgid "Kubernetes memory resource utilization"
+msgstr "Dezactiveaza Notificarile"
 
 #, fuzzy
 msgid "Kubernetes node container count"
@@ -25371,6 +25397,10 @@ msgstr ""
 
 msgid "Limit to the following services"
 msgstr ""
+
+#, fuzzy
+msgid "Limit utilization"
+msgstr "Dezactiveaza Notificarile"
 
 #, fuzzy
 msgid "Limit width"
@@ -27819,10 +27849,6 @@ msgstr "% utilizare"
 msgid "Memory usage for %s hosts"
 msgstr " pentru elementul %s"
 
-#, fuzzy
-msgid "Memory usage for Kubernetes objects"
-msgstr " pentru elementul %s"
-
 msgid "Memory usage growth"
 msgstr ""
 
@@ -27852,6 +27878,10 @@ msgstr "% utilizare"
 
 msgid "Memory used by caches"
 msgstr ""
+
+#, fuzzy
+msgid "Memory utilization"
+msgstr "Dezactiveaza Notificarile"
 
 msgid "Memory warning at"
 msgstr ""
@@ -36224,6 +36254,10 @@ msgstr "cereri/sec"
 #, fuzzy
 msgid "Request rate"
 msgstr "cereri/sec"
+
+#, fuzzy
+msgid "Request utilization"
+msgstr "Dezactiveaza Notificarile"
 
 msgid "Request wait time"
 msgstr ""
@@ -51636,6 +51670,10 @@ msgid "Upper levels for license usage"
 msgstr "Nivel-urile absolute de licențe neutilizate"
 
 #, fuzzy
+msgid "Upper levels for limit utilization"
+msgstr "Dezactiveaza Notificarile"
+
+#, fuzzy
 msgid "Upper levels for load balancer capacity units"
 msgstr "Nivelurile maxime pentru voltaj"
 
@@ -51690,6 +51728,10 @@ msgstr "Nivel-urile absolute de licențe neutilizate"
 
 msgid "Upper levels for rate of server errors"
 msgstr ""
+
+#, fuzzy
+msgid "Upper levels for request utilization"
+msgstr "Dezactiveaza Notificarile"
 
 #, fuzzy
 msgid "Upper levels for reserved space"
@@ -57464,6 +57506,10 @@ msgstr ""
 msgid "legacy run"
 msgstr ""
 
+#, fuzzy
+msgid "limit utilization"
+msgstr "Dezactiveaza Notificarile"
+
 msgid "local connect"
 msgstr ""
 
@@ -58015,6 +58061,10 @@ msgid ""
 "represents waiting for a connection request from any remote TCP and port"
 msgstr ""
 
+#, fuzzy
+msgid "request utilization"
+msgstr "Dezactiveaza Notificarile"
+
 msgid "requests"
 msgstr "cereri"
 
@@ -58472,6 +58522,10 @@ msgstr "z/OS"
 #, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr ""
+
+#, fuzzy
+#~ msgid "Memory usage for Kubernetes objects"
+#~ msgstr " pentru elementul %s"
 
 #, fuzzy
 #~ msgid "Administration Tool (WATO)"
@@ -59164,10 +59218,6 @@ msgstr ""
 #~ msgstr "Nivelurile maxime pentru incarcare in procente"
 
 #, fuzzy
-#~ msgid "Memory utilization"
-#~ msgstr "Dezactiveaza Notificarile"
-
-#, fuzzy
 #~ msgid "Message Rate"
 #~ msgstr "Mesajul Text"
 
@@ -59352,10 +59402,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Pending vBuckets"
 #~ msgstr "Afectat de serviciu"
-
-#, fuzzy
-#~ msgid "Per Core utilization"
-#~ msgstr "Dezactiveaza Notificarile"
 
 #, fuzzy
 #~ msgid "Percentage of HTTP 3/4/5XX Errors"
@@ -59601,10 +59647,6 @@ msgstr ""
 #~ msgstr "Numele Elementului"
 
 #, fuzzy
-#~ msgid "Tapes utilization"
-#~ msgstr "Dezactiveaza Notificarile"
-
-#, fuzzy
 #~ msgid "Thread creations per second"
 #~ msgstr "cereri/sec"
 
@@ -59711,10 +59753,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Used size"
 #~ msgstr "licente nefolosite"
-
-#, fuzzy
-#~ msgid "Utilization"
-#~ msgstr "Dezactiveaza Notificarile"
 
 #, fuzzy
 #~ msgid "Vault size"

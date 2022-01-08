@@ -18,7 +18,7 @@ from cmk.utils.type_defs import CheckPluginName, HostName
 
 import cmk.base.autochecks as autochecks
 import cmk.base.config as config
-from cmk.base.check_utils import AutocheckService, ConfiguredService
+from cmk.base.check_utils import ConfiguredService
 
 
 @pytest.fixture(autouse=True)
@@ -95,10 +95,6 @@ def test_manager_get_autochecks_of(
     assert test_config.get_autochecks_of(HostName("host")) == result
 
 
-def _service(name: str, params: Optional[Dict[str, str]] = None) -> AutocheckService:
-    return AutocheckService(CheckPluginName(name), None, "", params or {})
-
-
 def _entry(name: str, params: Optional[Dict[str, str]] = None) -> autochecks.AutocheckEntry:
     return autochecks.AutocheckEntry(CheckPluginName(name), None, params or {}, {})
 
@@ -107,16 +103,16 @@ def test_consolidate_autochecks_of_real_hosts() -> None:
 
     new_services_with_nodes = [
         autochecks.AutocheckServiceWithNodes(  # found on node and new
-            _service("A"), [HostName("node"), HostName("othernode")]
+            _entry("A"), [HostName("node"), HostName("othernode")]
         ),
         autochecks.AutocheckServiceWithNodes(  # not found, not present (i.e. unrelated)
-            _service("B"), [HostName("othernode"), HostName("yetanothernode")]
+            _entry("B"), [HostName("othernode"), HostName("yetanothernode")]
         ),
         autochecks.AutocheckServiceWithNodes(  # found and preexistting
-            _service("C", {"params": "new"}), [HostName("node"), HostName("node2")]
+            _entry("C", {"params": "new"}), [HostName("node"), HostName("node2")]
         ),
         autochecks.AutocheckServiceWithNodes(  # not found but present
-            _service("D"), [HostName("othernode"), HostName("yetanothernode")]
+            _entry("D"), [HostName("othernode"), HostName("yetanothernode")]
         ),
     ]
     preexisting_entries = [

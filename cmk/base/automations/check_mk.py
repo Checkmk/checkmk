@@ -83,13 +83,12 @@ import cmk.base.notify as notify
 import cmk.base.parent_scan
 import cmk.base.plugin_contexts as plugin_contexts
 import cmk.base.sources as sources
-from cmk.base.autochecks import AutocheckServiceWithNodes
+from cmk.base.autochecks import AutocheckEntry, AutocheckServiceWithNodes
 from cmk.base.automations import Automation, automations, MKAutomationError
-from cmk.base.check_utils import AutocheckService
 from cmk.base.core import CoreAction, do_restart
 from cmk.base.core_factory import create_core
 from cmk.base.diagnostics import DiagnosticsDump
-from cmk.base.discovered_labels import HostLabel, ServiceLabel
+from cmk.base.discovered_labels import HostLabel
 
 HistoryFile = str
 HistoryFilePair = Tuple[HistoryFile, HistoryFile]
@@ -279,20 +278,16 @@ class AutomationSetAutochecks(DiscoveryAutomation):
         # Fix data from version <2.0
         new_services: List[AutocheckServiceWithNodes] = []
         for (raw_check_plugin_name, item), (
-            descr,
+            _descr,
             params,
             raw_service_labels,
             found_on_nodes,
         ) in _transform_pre_20_items(new_items).items():
             check_plugin_name = CheckPluginName(raw_check_plugin_name)
 
-            service_labels = {
-                name: ServiceLabel(name, value) for name, value in raw_service_labels.items()
-            }
-
             new_services.append(
                 AutocheckServiceWithNodes(
-                    AutocheckService(check_plugin_name, item, descr, params, service_labels),
+                    AutocheckEntry(check_plugin_name, item, params, raw_service_labels),
                     found_on_nodes,
                 )
             )

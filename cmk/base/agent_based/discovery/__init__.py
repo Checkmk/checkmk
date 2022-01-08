@@ -65,15 +65,9 @@ import cmk.base.section as section
 from cmk.base.agent_based.data_provider import make_broker, ParsedSectionsBroker
 from cmk.base.agent_based.utils import check_parsing_errors, check_sources
 from cmk.base.api.agent_based.value_store import load_host_value_store, ValueStoreManager
-from cmk.base.check_utils import (
-    AutocheckService,
-    ConfiguredService,
-    LegacyCheckParameters,
-    Service,
-    ServiceID,
-)
+from cmk.base.check_utils import ConfiguredService, LegacyCheckParameters, ServiceID
 from cmk.base.core_config import MonitoringCore
-from cmk.base.discovered_labels import HostLabel
+from cmk.base.discovered_labels import HostLabel, ServiceLabel
 
 from ._discovered_services import analyse_discovered_services
 from ._filters import ServiceFilters as _ServiceFilters
@@ -88,7 +82,7 @@ _Transition = Union[
 
 _L = TypeVar("_L", bound=str)
 
-ServicesTableEntry = Tuple[_L, AutocheckService, List[HostName]]
+ServicesTableEntry = Tuple[_L, autochecks.AutocheckEntry, List[HostName]]
 ServicesTable = Dict[ServiceID, ServicesTableEntry[_L]]
 ServicesByTransition = Dict[_Transition, List[autochecks.AutocheckServiceWithNodes]]
 
@@ -467,8 +461,8 @@ def _get_post_discovery_autocheck_services(
 def _make_diff(
     labels_vanished: Iterable[HostLabel],
     labels_new: Iterable[HostLabel],
-    services_vanished: Iterable[Service],
-    services_new: Iterable[Service],
+    services_vanished: Iterable[autochecks.AutocheckEntry],
+    services_new: Iterable[autochecks.AutocheckEntry],
 ) -> str:
     """Textual representation of what changed
 
@@ -646,9 +640,6 @@ def _check_service_lists(
             ):
                 unfiltered = True
 
-            # TODO In service_filter:we use config.service_description(...)
-            # in order to finalize service_description (translation, etc.).
-            # Why do we use discovered_service.description here?
             subresults.append(
                 ActiveCheckResult(
                     0,
@@ -658,7 +649,7 @@ def _check_service_lists(
                         % (
                             title,
                             discovered_service.check_plugin_name,
-                            discovered_service.description,
+                            config.service_description(host_name, *discovered_service.id()),
                         )
                     ],
                 )
@@ -695,7 +686,11 @@ def _check_service_lists(
                 0,
                 "",
                 [
-                    f"ignored: {discovered_service.check_plugin_name}: {discovered_service.description}"
+                    "ignored: %s: %s"
+                    % (
+                        discovered_service.check_plugin_name,
+                        config.service_description(host_name, *discovered_service.id()),
+                    )
                 ],
             )
         )
@@ -1041,29 +1036,20 @@ def _get_node_services(
         on_error=on_error,
     )
 
-    # TODO: see if we really need the service object. Can we just compute
-    # the description and keep using the AucheckEntry instances?
-    services = [
-        (check_source, service)
-        for check_source, autocheck_entry in service_result.chain_with_qualifier()
-        if (
-            service := autochecks.parse_autocheck_service(
-                host_name, autocheck_entry, config.service_description
-            )
-        )
-    ]
     return {
-        service.id(): (
+        entry.id(): (
             _node_service_source(
                 check_source=check_source,
                 host_name=host_name,
-                cluster_name=host_of_clustered_service(host_name, service.description),
-                service=service,
+                cluster_name=host_of_clustered_service(host_name, service_name),
+                check_plugin_name=entry.check_plugin_name,
+                service_name=service_name,
             ),
-            service,
+            entry,
             [host_name],
         )
-        for check_source, service in services
+        for check_source, entry in service_result.chain_with_qualifier()
+        if (service_name := config.service_description(host_name, *entry.id()))
     }
 
 
@@ -1072,12 +1058,13 @@ def _node_service_source(
     check_source: _BasicTransition,
     host_name: HostName,
     cluster_name: HostName,
-    service: Service,
+    check_plugin_name: CheckPluginName,
+    service_name: ServiceName,
 ) -> _Transition:
     if host_name == cluster_name:
         return check_source
 
-    if config.service_ignored(cluster_name, service.check_plugin_name, service.description):
+    if config.service_ignored(cluster_name, check_plugin_name, service_name):
         return "ignored"
 
     if check_source == "vanished":
@@ -1101,7 +1088,11 @@ def _reclassify_disabled_items(
     yield from (
         (service.id(), ("ignored", service, [host_name]))
         for check_source, service, _found_on_nodes in services.values()
-        if config.service_ignored(host_name, service.check_plugin_name, service.description)
+        if config.service_ignored(
+            host_name,
+            service.check_plugin_name,
+            config.service_description(host_name, *service.id()),
+        )
     )
 
 
@@ -1146,28 +1137,17 @@ def _get_cluster_services(
             on_error=on_error,
         )
 
-        # TODO: see if we really need the service object. Can we just compute
-        # the description and keep using the AucheckEntry instances?
-        services = [
-            (check_source, service)
-            for check_source, autocheck_entry in entries.chain_with_qualifier()
-            if (
-                service := autochecks.parse_autocheck_service(
-                    node, autocheck_entry, config.service_description
-                )
-            )
-        ]
-        for check_source, service in services:
+        for check_source, entry in entries.chain_with_qualifier():
             cluster_items.update(
                 _cluster_service_entry(
                     check_source=check_source,
                     host_name=host_config.hostname,
                     node_name=node,
                     services_cluster=config_cache.host_of_clustered_service(
-                        node, service.description
+                        node, config.service_description(node, *entry.id())
                     ),
-                    service=service,
-                    existing_entry=cluster_items.get(service.id()),
+                    entry=entry,
+                    existing_entry=cluster_items.get(entry.id()),
                 )
             )
 
@@ -1180,17 +1160,17 @@ def _cluster_service_entry(
     host_name: HostName,
     node_name: HostName,
     services_cluster: HostName,
-    service: AutocheckService,
+    entry: autochecks.AutocheckEntry,
     existing_entry: Optional[ServicesTableEntry[_BasicTransition]],
 ) -> Iterable[Tuple[ServiceID, ServicesTableEntry[_BasicTransition]]]:
     if host_name != services_cluster:
         return  # not part of this host
 
     if existing_entry is None:
-        yield service.id(), (check_source, service, [node_name])
+        yield entry.id(), (check_source, entry, [node_name])
         return
 
-    first_check_source, existing_service, nodes_with_service = existing_entry
+    first_check_source, existing_ac_entry, nodes_with_service = existing_entry
     if node_name not in nodes_with_service:
         nodes_with_service.append(node_name)
 
@@ -1198,11 +1178,11 @@ def _cluster_service_entry(
         return
 
     if check_source == "old":
-        yield service.id(), (check_source, service, nodes_with_service)
+        yield entry.id(), (check_source, entry, nodes_with_service)
         return
 
     if {first_check_source, check_source} == {"vanished", "new"}:
-        yield existing_service.id(), ("old", existing_service, nodes_with_service)
+        yield existing_ac_entry.id(), ("old", existing_ac_entry, nodes_with_service)
         return
 
     # In all other cases either both must be "new" or "vanished" -> let it be
@@ -1263,17 +1243,17 @@ def get_check_preview(
                 host_config=host_config,
                 ip_address=ip_address,
                 service=ConfiguredService(
-                    check_plugin_name=autocheck_service.check_plugin_name,
-                    item=autocheck_service.item,
-                    description=autocheck_service.description,
+                    check_plugin_name=entry.check_plugin_name,
+                    item=entry.item,
+                    description=config.service_description(host_name, *entry.id()),
                     parameters=config.compute_check_parameters(
                         host_config.hostname,
-                        autocheck_service.check_plugin_name,
-                        autocheck_service.item,
-                        autocheck_service.parameters,
+                        entry.check_plugin_name,
+                        entry.item,
+                        entry.parameters,
                     ),
-                    discovered_parameters=autocheck_service.parameters,
-                    service_labels=autocheck_service.service_labels,
+                    discovered_parameters=entry.parameters,
+                    service_labels={n: ServiceLabel(n, v) for n, v in entry.service_labels.items()},
                 ),
                 check_source=check_source,
                 parsed_sections_broker=parsed_sections_broker,
@@ -1281,7 +1261,7 @@ def get_check_preview(
                 value_store_manager=value_store_manager,
             )
             for check_source, services_with_nodes in grouped_services.items()
-            for autocheck_service, found_on_nodes in services_with_nodes
+            for entry, found_on_nodes in services_with_nodes
         ] + [
             _check_preview_table_row(
                 host_config=host_config,

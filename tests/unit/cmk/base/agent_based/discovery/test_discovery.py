@@ -43,57 +43,9 @@ from cmk.base.agent_based.data_provider import (
 )
 from cmk.base.agent_based.discovery import _discovered_services
 from cmk.base.check_utils import AutocheckService, Service
-from cmk.base.discovered_labels import HostLabel, ServiceLabel
+from cmk.base.discovered_labels import HostLabel
 from cmk.base.sources.agent import AgentHostSections
 from cmk.base.sources.snmp import SNMPHostSections
-
-
-def test_discovered_service_init() -> None:
-    ser = discovery.Service(CheckPluginName("abc"), "Item", "ABC Item", None)
-    assert ser.check_plugin_name == CheckPluginName("abc")
-    assert ser.item == "Item"
-    assert ser.description == "ABC Item"
-    assert ser.parameters is None
-    assert ser.service_labels == {}
-
-    ser = discovery.Service(
-        CheckPluginName("abc"),
-        "Item",
-        "ABC Item",
-        None,
-        {"läbel": ServiceLabel("läbel", "lübel")},
-    )
-
-    assert ser.service_labels == {"läbel": ServiceLabel("läbel", "lübel")}
-
-    with pytest.raises(AttributeError):
-        ser.xyz = "abc"  # type: ignore[attr-defined] # pylint: disable=assigning-non-slot
-
-
-def test_discovered_service_eq() -> None:
-    ser1: Service[LegacyCheckParameters] = Service(CheckPluginName("abc"), "Item", "ABC Item", None)
-    ser2: Service[LegacyCheckParameters] = Service(CheckPluginName("abc"), "Item", "ABC Item", None)
-    ser3: Service[LegacyCheckParameters] = Service(CheckPluginName("xyz"), "Item", "ABC Item", None)
-    ser4: Service[LegacyCheckParameters] = Service(CheckPluginName("abc"), "Xtem", "ABC Item", None)
-    ser5: Service[LegacyCheckParameters] = Service(CheckPluginName("abc"), "Item", "ABC Item", [""])
-
-    assert ser1 == ser1  # pylint: disable=comparison-with-itself
-    assert ser1 == ser2
-    assert ser1 != ser3
-    assert ser1 != ser4
-    assert ser1 == ser5
-
-    assert ser1 in [ser1]
-    assert ser1 in [ser2]
-    assert ser1 not in [ser3]
-    assert ser1 not in [ser4]
-    assert ser1 in [ser5]
-
-    assert ser1 in {ser1}
-    assert ser1 in {ser2}
-    assert ser1 not in {ser3}
-    assert ser1 not in {ser4}
-    assert ser1 in {ser5}
 
 
 @pytest.fixture

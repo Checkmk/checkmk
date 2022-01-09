@@ -3036,7 +3036,7 @@ class HostConfig:
     @property
     def static_checks(
         self,
-    ) -> Sequence[Tuple[RulesetName, CheckPluginNameStr, Item, TimespecificParameterSet]]:
+    ) -> Sequence[Tuple[RulesetName, CheckPluginName, Item, TimespecificParameterSet]]:
         """Returns a table of all "manual checks" configured for this host"""
         matched = []
         for checkgroup_name in static_checks:
@@ -3052,7 +3052,7 @@ class HostConfig:
                 matched.append(
                     (
                         RulesetName(checkgroup_name),
-                        CheckPluginNameStr(checktype),
+                        CheckPluginName(maincheckify(checktype)),
                         None if item is None else str(item),
                         TimespecificParameterSet.from_parameters(params),
                     )

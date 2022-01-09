@@ -9,7 +9,6 @@ import enum
 from contextlib import suppress
 from typing import Iterable, Iterator, List, Mapping, Set
 
-from cmk.utils.check_utils import maincheckify
 from cmk.utils.parameters import TimespecificParameters
 from cmk.utils.type_defs import CheckPluginName, HostName
 
@@ -133,11 +132,7 @@ def _get_static_check_entries(
     host_config: config.HostConfig,
 ) -> Iterator[Service]:
     entries: List[Service] = []
-    for _checkgroup_name, check_plugin_name_str, item, params in host_config.static_checks:
-        # TODO (mo): centralize maincheckify: CMK-4295
-        # in this case: move it to the transform of the static services rule.
-        check_plugin_name = CheckPluginName(maincheckify(check_plugin_name_str))
-
+    for _checkgroup_name, check_plugin_name, item, params in host_config.static_checks:
         descr = config.service_description(host_config.hostname, check_plugin_name, item)
         new_parameters = config.compute_check_parameters(
             config_cache.host_of_clustered_service(host_config.hostname, descr),

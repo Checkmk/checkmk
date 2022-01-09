@@ -22,7 +22,6 @@ from typing import Any, cast, Dict, List, Mapping, Optional, Sequence, Tuple, Un
 import cmk.utils.debug
 import cmk.utils.log as log
 import cmk.utils.man_pages as man_pages
-from cmk.utils.check_utils import maincheckify
 from cmk.utils.diagnostics import deserialize_cl_parameters, DiagnosticsCLParameters
 from cmk.utils.encoding import ensure_str_with_fallback
 from cmk.utils.exceptions import MKBailOut, MKGeneralException, MKSNMPError, OnError
@@ -716,15 +715,13 @@ class AutomationAnalyseServices(Automation):
         # 1. Manual checks
         # If we used the check table here, we would end up with the
         # *effective* parameters, these are the *configured* ones.
-        for checkgroup_name, checktype, item, params in host_config.static_checks:
-            # TODO (mo): centralize maincheckify: CMK-4295
-            check_plugin_name = CheckPluginName(maincheckify(checktype))
+        for checkgroup_name, check_plugin_name, item, params in host_config.static_checks:
             descr = config.service_description(hostname, check_plugin_name, item)
             if descr == servicedesc:
                 return {
                     "origin": "static",
                     "checkgroup": checkgroup_name,
-                    "checktype": checktype,
+                    "checktype": str(check_plugin_name),
                     "item": item,
                     "parameters": TimespecificParameters((params,)).preview(
                         cmk.base.core.timeperiod_active

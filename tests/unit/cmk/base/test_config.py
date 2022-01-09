@@ -1182,8 +1182,18 @@ def test_host_config_custom_checks(
         (
             "testhost2",
             [
-                ("checkgroup", "checktype1", "item1", TimespecificParameterSet({"param1": 1}, ())),
-                ("checkgroup", "checktype2", "item2", TimespecificParameterSet({"param2": 2}, ())),
+                (
+                    "checkgroup",
+                    CheckPluginName("checktype1"),
+                    "item1",
+                    TimespecificParameterSet({"param1": 1}, ()),
+                ),
+                (
+                    "checkgroup",
+                    CheckPluginName("checktype2"),
+                    "item2",
+                    TimespecificParameterSet({"param2": 2}, ()),
+                ),
             ],
         ),
     ],

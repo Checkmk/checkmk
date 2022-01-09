@@ -46,7 +46,8 @@ def mode_fixture(request):
 
 
 def make_scenario(hostname, tags):
-    ts = Scenario().add_host(hostname, tags=tags)
+    ts = Scenario()
+    ts.add_host(hostname, tags=tags)
     ts.set_ruleset(
         "datasource_programs",
         [
@@ -121,7 +122,8 @@ class TestMakeHostSectionsHosts:
 
     @pytest.fixture
     def config_cache(self, hostname, ipaddress, monkeypatch):
-        ts = Scenario().add_host(hostname)
+        ts = Scenario()
+        ts.add_host(hostname)
         return ts.apply(monkeypatch)
 
     def test_no_sources(self, hostname, ipaddress, config_cache, host_config):
@@ -337,7 +339,8 @@ class TestMakeHostSectionsClusters:
 
     @pytest.fixture
     def config_cache(self, cluster, nodes, monkeypatch):
-        ts = Scenario().add_cluster(cluster, nodes=nodes.keys())
+        ts = Scenario()
+        ts.add_cluster(cluster, nodes=nodes.keys())
         return ts.apply(monkeypatch)
 
     @pytest.mark.usefixtures("config_cache")

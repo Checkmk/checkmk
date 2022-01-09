@@ -135,7 +135,8 @@ def test_active_check_arguments_list_with_invalid_type():
 
 
 def test_get_host_attributes(fixup_ip_lookup, monkeypatch):
-    ts = Scenario().add_host("test-host", tags={"agent": "no-agent"})
+    ts = Scenario()
+    ts.add_host("test-host", tags={"agent": "no-agent"})
     ts.set_option(
         "host_labels",
         {
@@ -190,7 +191,8 @@ def test_get_host_attributes(fixup_ip_lookup, monkeypatch):
     ],
 )
 def test_get_cmk_passive_service_attributes(monkeypatch, hostname, result):
-    ts = Scenario().add_host("localhost")
+    ts = Scenario()
+    ts.add_host("localhost")
     ts.add_host("blub")
     ts.set_option(
         "extra_service_conf",

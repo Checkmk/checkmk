@@ -20,6 +20,7 @@ from cmk.utils.type_defs import CheckPluginName, HostName, LegacyCheckParameters
 import cmk.base.api.agent_based.register as agent_based_register
 from cmk.base import check_table, config
 from cmk.base.api.agent_based.checking_classes import CheckPlugin
+from cmk.base.autochecks import AutocheckEntry
 from cmk.base.check_table import HostCheckTable
 from cmk.base.check_utils import Service, ServiceID
 
@@ -39,7 +40,7 @@ def test_cluster_ignores_nodes_parameters(monkeypatch: MonkeyPatch) -> None:
         "clustered_services",
         [([], ["node"], ["Temperature SMART auto-clustered$"])],
     )
-    ts.set_autochecks("node", [Service(*service_id, "Temperature SMART auto-clustered", {})])
+    ts.set_autochecks("node", [AutocheckEntry(*service_id, {}, {})])
     ts.apply(monkeypatch)
 
     # a rule for the node:
@@ -225,7 +226,8 @@ def test_get_check_table(
         ],
     }
 
-    ts = Scenario().add_host(hostname, tags={"criticality": "test"})
+    ts = Scenario()
+    ts.add_host(hostname, tags={"criticality": "test"})
     ts.add_host("ping-host", tags={"agent": "no-agent"})
     ts.add_host("node1")
     ts.add_cluster("cluster1", nodes=["node1"])
@@ -282,7 +284,8 @@ def test_get_check_table_of_mgmt_boards(
         ],
     }
 
-    ts = Scenario().add_host(
+    ts = Scenario()
+    ts.add_host(
         "mgmt-board-ipmi",
         tags={
             "piggyback": "auto-piggyback",
@@ -376,7 +379,8 @@ def test_get_check_table_of_static_check(
         ],
     }
 
-    ts = Scenario().add_host(hostname, tags={"criticality": "test"})
+    ts = Scenario()
+    ts.add_host(hostname, tags={"criticality": "test"})
     ts.add_host("df_host")
     ts.add_host("df_host_1")
     ts.add_host("df_host_2")
@@ -464,7 +468,8 @@ def test_check_table__get_static_check_entries(
         "ps": [(("ps", "item", static_parameters_default), [], [hostname], {})],
     }
 
-    ts = Scenario().add_host(hostname)
+    ts = Scenario()
+    ts.add_host(hostname)
     ts.set_option("static_checks", static_checks)
 
     ts.set_ruleset(

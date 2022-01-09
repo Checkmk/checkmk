@@ -41,7 +41,9 @@ def ipaddress_fixture():
 
 @pytest.fixture(name="scenario")
 def scenario_fixture(hostname, monkeypatch):
-    Scenario().add_host(hostname).apply(monkeypatch)
+    ts = Scenario()
+    ts.add_host(hostname)
+    ts.apply(monkeypatch)
 
 
 @pytest.fixture(name="source")
@@ -59,7 +61,9 @@ def test_snmp_ipaddress_from_mgmt_board_unresolvable(hostname, monkeypatch):
     def fake_lookup_ip_address(*_a, **_kw):
         raise MKIPAddressLookupError("Failed to ...")
 
-    Scenario().add_host(hostname).apply(monkeypatch)
+    ts = Scenario()
+    ts.add_host(hostname)
+    ts.apply(monkeypatch)
     monkeypatch.setattr(ip_lookup, "lookup_ip_address", fake_lookup_ip_address)
     monkeypatch.setattr(
         config,
@@ -89,7 +93,9 @@ class TestSNMPSource_SNMP:
         hostname = "testhost"
         ipaddress = "1.2.3.4"
 
-        Scenario().add_host(hostname).apply(monkeypatch)
+        ts = Scenario()
+        ts.add_host(hostname)
+        ts.apply(monkeypatch)
 
         source = SNMPSource.snmp(
             HostName(hostname),

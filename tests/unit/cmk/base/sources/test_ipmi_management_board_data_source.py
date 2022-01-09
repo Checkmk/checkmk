@@ -28,7 +28,9 @@ def mode_fixture(request):
 
 def test_attribute_defaults(mode, monkeypatch):
     hostname = HostName("testhost")
-    Scenario().add_host(hostname).apply(monkeypatch)
+    ts = Scenario()
+    ts.add_host(hostname)
+    ts.apply(monkeypatch)
 
     host_config = config.get_config_cache().get_host_config(hostname)
     ipaddress = config.lookup_mgmt_board_ip_address(host_config)
@@ -55,7 +57,9 @@ def test_ipmi_ipaddress_from_mgmt_board(monkeypatch):
     def fake_lookup_ip_address(host_config, *, family, for_mgmt_board=True):
         return ipaddress
 
-    Scenario().add_host(hostname).apply(monkeypatch)
+    ts = Scenario()
+    ts.add_host(hostname)
+    ts.apply(monkeypatch)
     monkeypatch.setattr(ip_lookup, "lookup_ip_address", fake_lookup_ip_address)
     monkeypatch.setattr(
         config,

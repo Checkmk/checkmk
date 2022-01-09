@@ -465,7 +465,9 @@ def test__rename_discovered_host_label_files_fix_wrong_name(
     monkeypatch: pytest.MonkeyPatch,
     uc: update_config.UpdateConfig,
 ) -> None:
-    Scenario().add_host("abc.d").apply(monkeypatch)
+    ts = Scenario()
+    ts.add_host("abc.d")
+    ts.apply(monkeypatch)
 
     host_name = "abc.d"
     old_path = (cmk.utils.paths.discovered_host_labels_dir / host_name).with_suffix(".mk")
@@ -487,7 +489,9 @@ def test__rename_discovered_host_label_files_do_not_overwrite(
     monkeypatch: pytest.MonkeyPatch,
     uc: update_config.UpdateConfig,
 ) -> None:
-    Scenario().add_host("abc.d").apply(monkeypatch)
+    ts = Scenario()
+    ts.add_host("abc.d")
+    ts.apply(monkeypatch)
 
     host_name = "abc.d"
     old_path = (cmk.utils.paths.discovered_host_labels_dir / host_name).with_suffix(".mk")

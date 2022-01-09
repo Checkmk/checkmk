@@ -28,7 +28,8 @@ def autochecks_dir(monkeypatch, tmp_path):
 
 @pytest.fixture()
 def test_config(monkeypatch) -> config.ConfigCache:
-    ts = Scenario().add_host("host")
+    ts = Scenario()
+    ts.add_host("host")
     return ts.apply(monkeypatch)
 
 

@@ -847,7 +847,8 @@ _expected_host_labels = {
 @pytest.mark.usefixtures("fix_register")
 def test_commandline_discovery(monkeypatch: MonkeyPatch) -> None:
     testhost = HostName("test-host")
-    ts = Scenario().add_host(testhost, ipaddress="127.0.0.1")
+    ts = Scenario()
+    ts.add_host(testhost, ipaddress="127.0.0.1")
     ts.fake_standard_linux_agent_output(testhost)
     ts.apply(monkeypatch)
 
@@ -877,7 +878,8 @@ class RealHostScenario(NamedTuple):
 def _realhost_scenario(monkeypatch: MonkeyPatch) -> RealHostScenario:
     hostname = HostName("test-realhost")
     ipaddress = HostAddress("1.2.3.4")
-    ts = Scenario().add_host(hostname, ipaddress=ipaddress)
+    ts = Scenario()
+    ts.add_host(hostname, ipaddress=ipaddress)
     ts.set_ruleset(
         "inventory_df_rules",
         [

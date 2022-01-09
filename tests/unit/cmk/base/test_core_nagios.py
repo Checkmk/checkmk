@@ -316,7 +316,8 @@ def test_dump_precompiled_hostcheck(
     monkeypatch: MonkeyPatch, config_path: VersionedConfigPath
 ) -> None:
     hostname = HostName("localhost")
-    ts = Scenario().add_host(hostname)
+    ts = Scenario()
+    ts.add_host(hostname)
     config_cache = ts.apply(monkeypatch)
 
     # Ensure a host check is created
@@ -339,7 +340,8 @@ def test_dump_precompiled_hostcheck_without_check_mk_service(
     monkeypatch: MonkeyPatch, config_path: VersionedConfigPath
 ) -> None:
     hostname = HostName("localhost")
-    ts = Scenario().add_host(hostname)
+    ts = Scenario()
+    ts.add_host(hostname)
     config_cache = ts.apply(monkeypatch)
     host_check = core_nagios._dump_precompiled_hostcheck(
         config_cache,
@@ -365,7 +367,8 @@ def test_compile_delayed_host_check(
     monkeypatch: MonkeyPatch, config_path: VersionedConfigPath
 ) -> None:
     hostname = HostName("localhost")
-    ts = Scenario().add_host(hostname)
+    ts = Scenario()
+    ts.add_host(hostname)
     ts.set_option("delay_precompile", True)
     config_cache = ts.apply(monkeypatch)
 

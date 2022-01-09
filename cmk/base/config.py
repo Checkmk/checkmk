@@ -3451,7 +3451,9 @@ class ConfigCache:
         # Caches for nodes and clusters
         self._clusters_of_cache: Dict[HostName, List[HostName]] = {}
         self._nodes_of_cache: Dict[HostName, List[HostName]] = {}
+        self._initialize_host_config()
 
+    def _initialize_host_config(self) -> None:
         # Keep HostConfig instances created with the current configuration cache
         self._host_configs: Dict[HostName, HostConfig] = {}
 
@@ -3478,13 +3480,10 @@ class ConfigCache:
 
         It lazy initializes the host config object and caches the objects during the livetime
         of the ConfigCache."""
-        host_config = self._host_configs.get(hostname)
-        if host_config:
-            return host_config
+        with contextlib.suppress(KeyError):
+            return self._host_configs[hostname]
 
-        config_class = HostConfig if cmk_version.is_raw_edition() else CEEHostConfig
-        host_config = self._host_configs[hostname] = config_class(self, hostname)
-        return host_config
+        return self._host_configs.setdefault(hostname, HostConfig(self, hostname))
 
     def invalidate_host_config(self, hostname: HostName) -> None:
         try:
@@ -4102,6 +4101,22 @@ def get_config_cache() -> ConfigCache:
 # configuration settings are not held in cmk.base.config namespace anymore.
 class CEEConfigCache(ConfigCache):
     """Encapsulates the CEE specific functionality"""
+
+    def _initialize_host_config(self) -> None:
+        # Keep HostConfig instances created with the current configuration cache
+        # This can be ignored for now -- it only is used privately as a cache, so the
+        # contravariance is not a problem here.
+        self._host_configs: Dict[HostName, "CEEHostConfig"] = {}  # type: ignore[assignment]
+
+    def get_host_config(self, hostname: HostName) -> "CEEHostConfig":
+        """Returns a HostConfig instance for the given host
+
+        It lazy initializes the host config object and caches the objects during the livetime
+        of the ConfigCache."""
+        with contextlib.suppress(KeyError):
+            return self._host_configs[hostname]
+
+        return self._host_configs.setdefault(hostname, CEEHostConfig(self, hostname))
 
     def rrd_config_of_service(
         self, hostname: HostName, description: ServiceName

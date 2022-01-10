@@ -5,9 +5,7 @@
 
 #include "Store.h"
 
-#ifndef CMC
 #include <chrono>
-#endif
 #include <filesystem>
 #include <memory>
 #include <sstream>
@@ -16,6 +14,7 @@
 #include "CrashReport.h"
 #include "EventConsoleConnection.h"
 #include "InputBuffer.h"
+#include "Logfile.h"
 #include "Logger.h"
 #include "MonitoringCore.h"
 #include "OutputBuffer.h"
@@ -300,5 +299,11 @@ bool Store::answerGetRequest(const std::list<std::string> &lines,
 Logger *Store::logger() const { return _mc->loggerLivestatus(); }
 
 size_t Store::numCachedLogMessages() {
-    return _log_cache.numCachedLogMessages();
+    return _log_cache.apply([](LogCache &log_cache) {
+        size_t sum{0};
+        for (const auto &[since, logfile] : log_cache) {
+            sum += logfile->size();
+        }
+        return sum;
+    });
 }

@@ -47,9 +47,6 @@ public:
         return f(*this);
     }
 
-    // Used by Store::numCachedLogMessages()
-    [[nodiscard]] size_t numCachedLogMessages();
-
     // Used by Logfile::loadRange()
     void logLineHasBeenAdded(Logfile *logfile, unsigned logclasses);
 

@@ -16,7 +16,7 @@ from cmk.base.check_legacy_includes.alcatel import *  # pylint: disable=wildcard
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
-factory_settings["alcatel_temp"] = ALCATEL_TEMP_CHECK_DEFAULT_PARAMETERS
+factory_settings["alcatel_temp_aos7"] = ALCATEL_TEMP_CHECK_DEFAULT_PARAMETERS
 
 
 def parse_alcatel_aos7_temp(info):
@@ -64,7 +64,7 @@ check_info["alcatel_temp_aos7"] = {
     "check_function": check_alcatel_aos7_temp,
     "service_description": "Temperature Board %s",
     "group": "temperature",
-    "default_levels_variable": "alcatel_temp",
+    "default_levels_variable": "alcatel_temp_aos7",
     "has_perfdata": True,
     "snmp_scan_function": alcatel_new_networking_products_scan_function,
     "snmp_info": (

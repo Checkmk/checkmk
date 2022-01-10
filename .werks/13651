@@ -1,0 +1,14 @@
+Title: API: fix user config show endpoints to include user attributes
+Class: fix
+Compatible: compat
+Component: rest-api
+Date: 1641982281
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0p19
+
+In the previous version, both the show user and show all users
+endpoints did not behave as intended hiding the user attributes.
+This werk changes this behaviour and also introduces proper field
+definitions for the response schema.

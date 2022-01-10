@@ -41,12 +41,11 @@ def test_openapi_customer(wsgi_app, with_automation_user, monkeypatch):
             status=200,
             content_type='application/json',
         )
-    assert resp.json_body["extensions"]["attributes"] == {
+    assert resp.json_body['extensions'] == {
         'fullname': 'User Name',
         'customer': 'global',
         'contactgroups': [],
         'disable_notifications': {},
-        'auth_option': {},
         'contact_options': {
             "email": '',
             "fallback_contact": False
@@ -66,7 +65,7 @@ def test_openapi_customer(wsgi_app, with_automation_user, monkeypatch):
         status=200,
         content_type='application/json',
     )
-    assert resp.json_body["extensions"]["attributes"]["customer"] == "provider"
+    assert resp.json_body['extensions']['customer'] == 'provider'
 
 
 @managedtest
@@ -146,7 +145,7 @@ def test_openapi_user_minimal_password_settings(wsgi_app, with_automation_user, 
             status=200,
             content_type='application/json',
         )
-    assert resp.json_body["extensions"]["attributes"] == {
+    assert resp.json_body['extensions'] == {
         'fullname': 'User Name',
         'customer': 'provider',
         'pager_address': '',
@@ -154,13 +153,9 @@ def test_openapi_user_minimal_password_settings(wsgi_app, with_automation_user, 
         'idle_timeout': {
             'option': 'global'
         },
-        "auth_option": {
-            'password': '$5$rounds=535000$eUtToQgKz6n7Qyqk$hh5tq.snoP4J95gVoswOep4LbUxycNG1QF1HI7B4d8C',
-            'auth_type': 'password',
-        },
-        "contact_options": {
-            "email": "",
-            "fallback_contact": False,
+        'contact_options': {
+            'email': '',
+            'fallback_contact': False,
         },
         'disable_notifications': {},
         'disable_login': False,
@@ -186,16 +181,12 @@ def test_openapi_user_minimal_password_settings(wsgi_app, with_automation_user, 
             headers={'If-Match': resp.headers['ETag']},
             content_type='application/json',
         )
-    assert resp.json_body["extensions"]["attributes"] == {
+    assert resp.json_body['extensions'] == {
         'fullname': 'User Name',
         'customer': 'provider',
         'contact_options': {
             'email': '',
             'fallback_contact': False,
-        },
-        'auth_option': {
-            'auth_type': 'automation',
-            'secret': 'SOMEAUTOMATION',
         },
         'idle_timeout': {
             'option': 'disable',
@@ -206,6 +197,21 @@ def test_openapi_user_minimal_password_settings(wsgi_app, with_automation_user, 
         'disable_notifications': {},
         'roles': ['user'],
     }
+
+
+@managedtest
+def test_openapi_all_users(wsgi_app, with_automation_user):
+    username, secret = with_automation_user
+    wsgi_app.set_authorization(('Bearer', username + ' ' + secret))
+    base = '/NO_SITE/check_mk/api/1.0'
+
+    resp = wsgi_app.call_method('get',
+                                base + '/domain-types/user_config/collections/all',
+                                status=200)
+    users = resp.json_body['value']
+    assert len(users) == 1
+
+    _user_resp = wsgi_app.call_method('get', users[0]['links'][0]['href'], status=200)
 
 
 @managedtest
@@ -225,10 +231,6 @@ def test_openapi_user_config(wsgi_app, with_automation_user, monkeypatch):
         'username': name,
         'fullname': alias,
         'customer': 'provider',
-        'auth_option': {
-            "auth_type": "password",
-            "password": "hello"
-        },
         'disable_notifications': {
             "timerange": {
                 'start_time': '2020-01-01T00:00:00Z',
@@ -249,11 +251,7 @@ def test_openapi_user_config(wsgi_app, with_automation_user, monkeypatch):
 
     resp = wsgi_app.call_method('get', base + f"/objects/user_config/{name}", status=200)
 
-    assert resp.json_body["extensions"]["attributes"] == {
-        'auth_option': {
-            'auth_type': 'password',
-            'password': '$5$rounds=535000$eUtToQgKz6n7Qyqk$hh5tq.snoP4J95gVoswOep4LbUxycNG1QF1HI7B4d8C'
-        },
+    assert resp.json_body['extensions'] == {
         'contact_options': {
             'email': '',
             'fallback_contact': False
@@ -265,8 +263,8 @@ def test_openapi_user_config(wsgi_app, with_automation_user, monkeypatch):
         'customer': 'provider',
         'disable_notifications': {
             'timerange': {
-                'end_time': '2020-01-02T00:00:00Z',
-                'start_time': '2020-01-01T00:00:00Z'
+                'end_time': '2020-01-02T00:00:00+00:00',
+                'start_time': '2020-01-01T00:00:00+00:00'
             }
         },
         'idle_timeout': {
@@ -393,11 +391,7 @@ def test_openapi_user_edit_auth(wsgi_app, with_automation_user, monkeypatch):
             status=200,
             content_type='application/json',
         )
-    assert resp.json_body["extensions"]["attributes"] == {
-        'auth_option': {
-            'auth_type': 'password',
-            'password': '$5$rounds=535000$eUtToQgKz6n7Qyqk$hh5tq.snoP4J95gVoswOep4LbUxycNG1QF1HI7B4d8C'
-        },
+    assert resp.json_body['extensions'] == {
         'contact_options': {
             'email': '',
             'fallback_contact': False
@@ -430,11 +424,7 @@ def test_openapi_user_edit_auth(wsgi_app, with_automation_user, monkeypatch):
             headers={'If-Match': resp.headers['ETag']},
             content_type='application/json',
         )
-    assert resp.json_body["extensions"]["attributes"] == {
-        'auth_option': {
-            'auth_type': 'automation',
-            'secret': 'QWXWBFUCSUOXNCPJUMS@',
-        },
+    assert resp.json_body['extensions'] == {
         'contact_options': {
             'email': '',
             'fallback_contact': False
@@ -465,8 +455,7 @@ def test_openapi_user_edit_auth(wsgi_app, with_automation_user, monkeypatch):
             headers={'If-Match': resp.headers['ETag']},
             content_type='application/json',
         )
-    assert resp.json_body["extensions"]["attributes"] == {
-        'auth_option': {},
+    assert resp.json_body['extensions'] == {
         'contact_options': {
             'email': '',
             'fallback_contact': False
@@ -618,8 +607,7 @@ def test_openapi_managed_global_edition(wsgi_app, with_automation_user, monkeypa
             status=200,
             content_type='application/json',
         )
-    assert resp.json_body["extensions"]["attributes"] == {
-        'auth_option': {},
+    assert resp.json_body['extensions'] == {
         'contact_options': {
             'email': '',
             'fallback_contact': False
@@ -721,11 +709,7 @@ def test_global_full_configuration(wsgi_app, with_automation_user, monkeypatch):
 
     resp = wsgi_app.call_method('get', base + "/objects/user_config/cmkuser", status=200)
 
-    assert resp.json_body["extensions"]["attributes"] == {
-        'auth_option': {
-            'auth_type': 'password',
-            'password': '$5$rounds=535000$eUtToQgKz6n7Qyqk$hh5tq.snoP4J95gVoswOep4LbUxycNG1QF1HI7B4d8C'
-        },
+    assert resp.json_body['extensions'] == {
         'contact_options': {
             'email': 'user@example.com',
             'fallback_contact': False
@@ -835,12 +819,8 @@ def test_openapi_user_update_contact_options(wsgi_app, with_automation_user, mon
         content_type='application/json',
     )
 
-    resp = wsgi_app.call_method('get', base + "/objects/user_config/cmkuser", status=200)
-    assert resp.json_body["extensions"]["attributes"] == {
-        'auth_option': {
-            'auth_type': 'password',
-            'password': '$5$rounds=535000$eUtToQgKz6n7Qyqk$hh5tq.snoP4J95gVoswOep4LbUxycNG1QF1HI7B4d8C'
-        },
+    resp = wsgi_app.call_method('get', base + '/objects/user_config/cmkuser', status=200)
+    assert resp.json_body['extensions'] == {
         'contact_options': {
             'email': '',
             'fallback_contact': False
@@ -890,8 +870,7 @@ def test_openapi_user_disable_notifications(wsgi_app, with_automation_user, monk
             content_type='application/json',
         )
     resp = wsgi_app.call_method('get', base + "/objects/user_config/cmkuser", status=200)
-    assert resp.json_body["extensions"]["attributes"] == {
-        'auth_option': {},
+    assert resp.json_body["extensions"] == {
         'contact_options': {
             'email': '',
             'fallback_contact': False
@@ -920,8 +899,7 @@ def test_openapi_user_disable_notifications(wsgi_app, with_automation_user, monk
         headers={'If-Match': resp.headers['ETag']},
         content_type='application/json',
     )
-    assert resp.json_body["extensions"]["attributes"] == {
-        'auth_option': {},
+    assert resp.json_body["extensions"] == {
         'contact_options': {
             'email': '',
             'fallback_contact': False

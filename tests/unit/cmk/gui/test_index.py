@@ -4,11 +4,15 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import pytest  # type: ignore[import]
+from typing import Iterator
 
-from cmk.gui.globals import html
-import cmk.gui.main
+import pytest
+
 import cmk.gui.config
+import cmk.gui.main
+from cmk.gui.globals import html
+
+RequestContextFixture = Iterator[None]
 
 
 def test_get_start_url_default(register_builtin_html):
@@ -25,7 +29,7 @@ def test_get_start_url_user_config(monkeypatch, module_wide_request_context):
 
     class MockUser:
         @property
-        def start_url(self):
+        def start_url(self) -> str:
             return "user_url.py"
 
     monkeypatch.setattr(cmk.gui.config, "user", MockUser())
@@ -42,7 +46,6 @@ def test_get_start_url(register_builtin_html):
 
 @pytest.mark.parametrize("invalid_url", [
     "http://localhost/",
-    "://localhost",
     "javascript:alert(1)",
     "javAscRiPt:alert(1)",
     "localhost:80/bla",

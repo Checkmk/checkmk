@@ -6,7 +6,7 @@
 """This module wraps some regex handling functions used by Check_MK"""
 
 import re
-from typing import Any, AnyStr, Dict, Pattern, Tuple
+from typing import Any, Dict, Pattern, Tuple
 
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.i18n import _
@@ -19,8 +19,16 @@ REGEX_HOST_NAME = r'^[%s]+$' % REGEX_HOST_NAME_CHARS
 REGEX_GENERIC_IDENTIFIER_CHARS = r'-0-9a-zA-Z_.'
 REGEX_GENERIC_IDENTIFIER = r'^[%s]+$' % REGEX_GENERIC_IDENTIFIER_CHARS
 
+# URL CHARS
+# See https://www.ietf.org/rfc/rfc3986.txt
+_URL_UNRESERVED_CHARS = re.escape("-.~")
+_URL_GEN_DELIMS = re.escape(":/?#[]@")
+_URL_SUB_DELIMS = re.escape("!$&()*+,;=")  # Leaving out "'"
+URL_CHAR_REGEX_CHARS = r"\w%" + _URL_UNRESERVED_CHARS + _URL_GEN_DELIMS + _URL_SUB_DELIMS
+URL_CHAR_REGEX = r"^[%s]+$" % URL_CHAR_REGEX_CHARS
 
-def regex(pattern: AnyStr, flags: int = 0) -> Pattern[AnyStr]:
+
+def regex(pattern: str, flags: int = 0) -> Pattern[str]:
     """Compile regex or look it up in already compiled regexes.
     (compiling is a CPU consuming process. We cache compiled regexes)."""
     try:

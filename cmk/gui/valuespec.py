@@ -42,22 +42,17 @@ from typing import (
     Dict,
     Final,
     Generic,
-    Iterable,
     ItemsView,
+    Iterable,
     List,
     Literal,
     Mapping,
     NamedTuple,
-    Optional as _Optional,
-    Pattern,
-    Protocol,
-    Sequence,
-    SupportsFloat,
-    Tuple as _Tuple,
-    Type,
-    TypeVar,
-    Union,
 )
+from typing import Optional as _Optional
+from typing import Pattern, Protocol, Sequence, SupportsFloat
+from typing import Tuple as _Tuple
+from typing import Type, TypeVar, Union
 
 from Cryptodome.Cipher import AES
 from Cryptodome.PublicKey import RSA
@@ -72,8 +67,8 @@ import livestatus
 import cmk.utils.defines as defines
 import cmk.utils.log
 import cmk.utils.paths
-import cmk.utils.regex
 import cmk.utils.plugin_registry
+import cmk.utils.regex
 from cmk.utils.type_defs import Seconds
 
 import cmk.gui.config as config
@@ -87,7 +82,7 @@ from cmk.gui.globals import request as global_request
 from cmk.gui.http import UploadedFile
 from cmk.gui.i18n import _, ungettext
 from cmk.gui.pages import AjaxPage, page_registry
-from cmk.gui.type_defs import ChoiceGroup, ChoiceId, ChoiceText, Choices, GroupedChoices
+from cmk.gui.type_defs import ChoiceGroup, ChoiceId, Choices, ChoiceText, GroupedChoices
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.labels import (
     encode_labels_for_http,
@@ -6618,8 +6613,16 @@ class RuleComment(TextAreaUnicode):
         html.close_div()
 
 
-def DocumentationURL() -> TextAscii:
-    return TextAscii(
+def DocumentationURL() -> TextInput:
+    def _validate_documentation_url(value: str, varprefix: str) -> None:
+        if utils.is_allowed_url(value, cross_domain=True, schemes=["http", "https"]):
+            return
+        raise MKUserError(
+            varprefix,
+            _("Not a valid URL (Only http and https URLs are allowed)."),
+        )
+
+    return TextInput(
         title=_("Documentation URL"),
         help=HTML(
             _("An optional URL pointing to documentation or any other page. This will be displayed "
@@ -6628,6 +6631,7 @@ def DocumentationURL() -> TextAscii:
               "(beginning with <tt>/</tt>) or relative URLs (that are relative to <tt>check_mk/</tt>)."
              ) % html.render_icon("url")),
         size=80,
+        validate=_validate_documentation_url,
     )
 
 

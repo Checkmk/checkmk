@@ -4,49 +4,49 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Dict, List
 import urllib.parse
+from typing import Any, Callable, Dict, List
 
 import cmk.utils.store as store
 
 import cmk.gui.config as config
 import cmk.gui.pagetypes as pagetypes
-from cmk.gui.i18n import _
-from cmk.gui.globals import html
 from cmk.gui.exceptions import MKUserError
-
-from cmk.gui.valuespec import (
-    TextUnicode,
-    ListOf,
-    Transform,
-    Tuple,
-    IconSelector,
-    Alternative,
-    FixedValue,
-    OptionalDropdownChoice,
-)
-
+from cmk.gui.globals import html
+from cmk.gui.i18n import _
 from cmk.gui.plugins.sidebar import (
-    SidebarSnapin,
-    snapin_registry,
-    iconlink,
-    link,
     begin_footnote_links,
     end_footnote_links,
+    iconlink,
+    link,
+    SidebarSnapin,
+    snapin_registry,
+)
+from cmk.gui.type_defs import RoleName
+from cmk.gui.utils import is_allowed_url
+from cmk.gui.valuespec import (
+    Alternative,
+    FixedValue,
+    IconSelector,
+    ListOf,
+    OptionalDropdownChoice,
+    TextUnicode,
+    Transform,
+    Tuple,
 )
 
 
 class BookmarkList(pagetypes.Overridable):
     @classmethod
-    def type_name(cls):
+    def type_name(cls) -> str:
         return "bookmark_list"
 
     @classmethod
-    def type_icon(cls):
+    def type_icon(cls) -> str:
         return "bookmark_list"
 
     @classmethod
-    def phrase(cls, phrase):
+    def phrase(cls, phrase: str) -> str:
         return {
             "title": _("Bookmark list"),
             "title_plural": _("Bookmark lists"),
@@ -120,7 +120,7 @@ class BookmarkList(pagetypes.Overridable):
         return parameters
 
     @classmethod
-    def _vs_topic(cls):
+    def _vs_topic(cls) -> Alternative:
         choices = cls._topic_choices()
 
         return Alternative(
@@ -157,19 +157,17 @@ class BookmarkList(pagetypes.Overridable):
         return [(t, t) for t in sorted(list(topics))]
 
     @classmethod
-    def validate_url(cls, value, varprefix):
-        parsed = urllib.parse.urlparse(value)
-
-        # Absolute URLs are allowed, but limit it to http/https
-        if parsed.scheme != "" and parsed.scheme not in ["http", "https"]:
-            raise MKUserError(varprefix, _("This URL ist not allowed to be used as bookmark"))
+    def validate_url(cls, value: str, varprefix: str) -> None:
+        if is_allowed_url(value, cross_domain=True, schemes=["http", "https"]):
+            return
+        raise MKUserError(varprefix, _("This URL ist not allowed to be used as bookmark"))
 
     @classmethod
-    def _load(cls):
+    def _load(cls) -> None:
         cls.load_legacy_bookmarks()
 
     @classmethod
-    def add_default_bookmark_list(cls):
+    def add_default_bookmark_list(cls) -> None:
         attrs = {
             "title": u"My Bookmarks",
             "public": False,
@@ -183,7 +181,7 @@ class BookmarkList(pagetypes.Overridable):
         cls.add_instance((config.user.id, "my_bookmarks"), cls(attrs))
 
     @classmethod
-    def load_legacy_bookmarks(cls):
+    def load_legacy_bookmarks(cls) -> None:
         # Don't load the legacy bookmarks when there is already a my_bookmarks list
         if cls.has_instance((config.user.id, "my_bookmarks")):
             return
@@ -236,19 +234,19 @@ pagetypes.declare(BookmarkList)
 @snapin_registry.register
 class Bookmarks(SidebarSnapin):
     @staticmethod
-    def type_name():
+    def type_name() -> str:
         return "bookmarks"
 
     @classmethod
-    def title(cls):
+    def title(cls) -> str:
         return _("Bookmarks")
 
     @classmethod
-    def description(cls):
+    def description(cls) -> str:
         return _("A simple and yet practical snapin allowing to create "
                  "bookmarks to views and other content in the main frame")
 
-    def show(self):
+    def show(self) -> None:
         for topic, bookmarks in self._get_bookmarks_by_topic():
             html.begin_foldable_container(
                 treename="bookmarks",
@@ -286,10 +284,10 @@ class Bookmarks(SidebarSnapin):
         return sorted(topics.items())
 
     @classmethod
-    def allowed_roles(cls):
+    def allowed_roles(cls) -> List[RoleName]:
         return ["admin", "user", "guest"]
 
-    def _ajax_add_bookmark(self):
+    def _ajax_add_bookmark(self) -> None:
         title = html.request.var("title")
         url = html.request.var("url")
         if title and url:
@@ -297,7 +295,7 @@ class Bookmarks(SidebarSnapin):
             self._add_bookmark(title, url)
         self.show()
 
-    def _add_bookmark(self, title, url):
+    def _add_bookmark(self, title: str, url: str) -> None:
         BookmarkList.load()
 
         if not BookmarkList.has_instance((config.user.id, "my_bookmarks")):
@@ -307,7 +305,7 @@ class Bookmarks(SidebarSnapin):
         bookmarks.add_bookmark(title, self._try_shorten_url(url))
         bookmarks.save_user_instances()
 
-    def _try_shorten_url(self, url):
+    def _try_shorten_url(self, url: str) -> str:
         referer = html.request.referer
         if referer:
             ref_p = urllib.parse.urlsplit(referer)
@@ -341,7 +339,7 @@ class Bookmarks(SidebarSnapin):
                     url = '../' + url
         return url
 
-    def page_handlers(self):
+    def page_handlers(self) -> Dict[str, Callable[[], None]]:
         return {
             "add_bookmark": self._ajax_add_bookmark,
         }

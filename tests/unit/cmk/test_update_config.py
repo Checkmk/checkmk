@@ -6,20 +6,22 @@
 
 # pylint: disable=redefined-outer-name
 import argparse
-import sys
 import io
+import sys
 from pathlib import Path
+
 import pytest  # type: ignore[import]
 
 from testlib.base import Scenario
 
 import cmk.utils.log
-import cmk.update_config as update_config
-import cmk.gui.config
 import cmk.utils.paths
+
+import cmk.gui.config
+import cmk.update_config as update_config
+from cmk.gui.watolib.changes import AuditLogStore, ObjectRef, ObjectRefType
 from cmk.gui.watolib.hosts_and_folders import Folder
 from cmk.gui.watolib.rulesets import Rule, Ruleset, RulesetCollection
-from cmk.gui.watolib.changes import AuditLogStore, ObjectRef, ObjectRefType
 
 
 @pytest.fixture()

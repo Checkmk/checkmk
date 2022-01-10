@@ -11,7 +11,6 @@ from cmk.gui.globals import html
 
 @pytest.mark.parametrize("invalid_url", [
     "http://localhost/",
-    "://localhost",
     "localhost:80/bla",
 ])
 def test_get_url_input_invalid_urls(register_builtin_html, invalid_url):
@@ -26,8 +25,6 @@ def test_get_url_input(register_builtin_html):
     html.request.set_var("url", "view.py?bla=blub")
     html.request.set_var("no_url", "2")
     html.request.set_var("invalid_url", "http://bla/")
-    html.request.set_var("invalid_char", "viäw.py")
-    html.request.set_var("invalid_char2", "vi+w.py")
 
     with pytest.raises(MKUserError) as e:
         html.get_url_input("not_existing")
@@ -40,14 +37,6 @@ def test_get_url_input(register_builtin_html):
 
     with pytest.raises(MKUserError) as e:
         html.get_url_input("invalid_url")
-    assert "not a valid" in "%s" % e
-
-    with pytest.raises(MKUserError) as e:
-        html.get_url_input("invalid_char")
-    assert "not a valid" in "%s" % e
-
-    with pytest.raises(MKUserError) as e:
-        html.get_url_input("invalid_char2")
     assert "not a valid" in "%s" % e
 
     assert html.get_url_input("no_url") == "2"

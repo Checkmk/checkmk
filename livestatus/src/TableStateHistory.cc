@@ -289,7 +289,7 @@ void TableStateHistory::answerQuery(Query *query) {
 }
 
 void TableStateHistory::answerQueryInternal(Query *query, LogCache &log_cache) {
-    if (log_cache.empty()) {
+    if (log_cache.begin() == log_cache.end()) {
         return;
     }
     auto object_filter = createPartialFilter(*query);

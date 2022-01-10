@@ -53,10 +53,6 @@ public:
     // Used by Logfile::loadRange()
     void logLineHasBeenAdded(Logfile *logfile, unsigned logclasses);
 
-    // Used by TableLog::answerQuery() and TableStateHistory::answerQuery().
-    // StateHistoryThread::run() uses this, too.
-    [[nodiscard]] bool empty() const { return _logfiles.empty(); }
-
     // Used by TableLog::answerQuery(), TableStateHistory::answerQuery(),
     // TableStateHistory::getPreviousLogentry(),
     // TableStateHistory::getNextLogentry(), and StateHistoryThread::run()

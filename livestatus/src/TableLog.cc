@@ -155,7 +155,7 @@ void TableLog::answerQuery(Query *query) {
 }
 
 void TableLog::answerQueryInternal(Query *query, LogCache &log_cache) {
-    if (log_cache.empty()) {
+    if (log_cache.begin() == log_cache.end()) {
         return;
     }
 

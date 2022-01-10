@@ -19,7 +19,7 @@ import sys
 from types import GeneratorType
 from typing import Any, Callable, List, Optional, Sequence
 
-from requests.packages import urllib3
+import urllib3
 
 import cmk.utils.password_store
 

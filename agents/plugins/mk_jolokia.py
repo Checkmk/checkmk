@@ -51,7 +51,10 @@ except ImportError:
 try:
     import requests
     from requests.auth import HTTPDigestAuth
-    from requests.packages import urllib3
+
+    # These days urllib3 would be included directly, but we leave it as it is for the moment
+    # for compatibility reasons - at least for the agent plugin here.
+    from requests.packages import urllib3  # type: ignore[attr-defined]
 except ImportError:
     sys.stdout.write(
         "<<<jolokia_info>>>\n"

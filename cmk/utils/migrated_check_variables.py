@@ -112,3 +112,6 @@ MAP_BUILD_STATES = {
     "null": 1,  # module was not built
     "none": 0,  # running
 }
+
+# ucd_cpu_load
+cpuload_default_levels = (5.0, 10.0)

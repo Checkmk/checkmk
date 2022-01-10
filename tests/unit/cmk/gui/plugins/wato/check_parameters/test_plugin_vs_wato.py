@@ -547,7 +547,6 @@ class ErrorReporter:
         ("check", "tinkerforge_ambient", "checkgroup_parameters:brightness"),
         ("check", "tplink_mem", "checkgroup_parameters:memory_percentage_used"),
         ("check", "tplink_poe_summary", "checkgroup_parameters:epower_single"),
-        ("check", "ucd_cpu_load", "checkgroup_parameters:cpu_load"),
         ("check", "ucs_c_rack_server_util_cpu", "checkgroup_parameters:cpu_utilization_multiitem"),
         ("check", "ups_in_freq", "checkgroup_parameters:efreq"),
         ("check", "ups_in_voltage", "checkgroup_parameters:evolt"),

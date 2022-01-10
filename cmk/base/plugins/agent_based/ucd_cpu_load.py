@@ -32,6 +32,7 @@ def parse_ucd_cpu_load(string_table: StringTable) -> Optional[Section]:
 
 register.snmp_section(
     name="ucd_cpu_load",
+    parsed_section_name="cpu",
     parse_function=parse_ucd_cpu_load,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.2021.10.1",

@@ -1,0 +1,13 @@
+Title: <tt>ucd_cpu_load</tt>: Fix "AttributeError ('tuple' object has no attribute 'get')"
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1641820584
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0i1
+
+The check plugin <tt>ucd_cpu_load</tt> crashed with
+"AttributeError ('tuple' object has no attribute 'get')"
+when using its default parameters.

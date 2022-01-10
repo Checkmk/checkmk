@@ -2508,7 +2508,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy):
         "tsm_scratch",
         "tsm_sessions",
         "tsm_storagepools",
-        "ucd_cpu_load",
         "ucd_cpu_util",
         "ucd_disk",
         "ucd_diskio",

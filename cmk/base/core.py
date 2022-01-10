@@ -49,8 +49,11 @@ class CoreAction(enum.Enum):
     STOP = "stop"
 
 
-def do_reload(core: MonitoringCore) -> None:
-    do_restart(core, action=CoreAction.RELOAD)
+def do_reload(
+    core: MonitoringCore,
+    hosts_to_update: HostsToUpdate = None,
+) -> None:
+    do_restart(core, action=CoreAction.RELOAD, hosts_to_update=hosts_to_update)
 
 
 def do_restart(

@@ -182,7 +182,7 @@ SpecialAgentInfoFunction = Callable[
 HostCheckCommand = Union[None, str, Tuple[str, Union[int, str]]]
 PingLevels = Dict[str, Union[int, Tuple[float, float]]]
 
-# TODO: Improve this, the config generation uses it in a totally chaotic way.
+# TODO (sk): Make the type narrower: TypedDict isn't easy in the case - "too chaotic usage"(c) SP
 ObjectAttributes = Dict[str, Any]
 
 GroupDefinitions = Dict[str, str]

@@ -299,9 +299,9 @@ bool Store::answerGetRequest(const std::list<std::string> &lines,
 Logger *Store::logger() const { return _mc->loggerLivestatus(); }
 
 size_t Store::numCachedLogMessages() {
-    return _log_cache.apply([](LogCache &log_cache) {
+    return _log_cache.apply([](const LogFiles &log_files) {
         size_t sum{0};
-        for (const auto &[since, logfile] : log_cache) {
+        for (const auto &[since, logfile] : log_files) {
             sum += logfile->size();
         }
         return sum;

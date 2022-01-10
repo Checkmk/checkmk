@@ -211,11 +211,11 @@ const Logfile::map_type *TableStateHistory::getEntries(Logfile *logfile) {
 }
 
 void TableStateHistory::getPreviousLogentry(
-    LogCache &log_cache, LogCache::const_iterator &it_logs,
+    const LogFiles &log_files, LogCache::const_iterator &it_logs,
     const Logfile::map_type *&entries, Logfile::const_iterator &it_entries) {
     while (it_entries == entries->begin()) {
         // open previous logfile
-        if (it_logs == log_cache.begin()) {
+        if (it_logs == log_files.begin()) {
             return;
         }
         --it_logs;
@@ -226,7 +226,7 @@ void TableStateHistory::getPreviousLogentry(
 }
 
 LogEntry *TableStateHistory::getNextLogentry(
-    LogCache &log_cache, LogCache::const_iterator &it_logs,
+    const LogFiles &log_files, LogCache::const_iterator &it_logs,
     const Logfile::map_type *&entries, Logfile::const_iterator &it_entries) {
     if (it_entries != entries->end()) {
         ++it_entries;
@@ -234,7 +234,7 @@ LogEntry *TableStateHistory::getNextLogentry(
 
     while (it_entries == entries->end()) {
         auto it_logs_cpy = it_logs;
-        if (++it_logs_cpy == log_cache.end()) {
+        if (++it_logs_cpy == log_files.end()) {
             return nullptr;
         }
         ++it_logs;
@@ -283,13 +283,14 @@ std::unique_ptr<Filter> TableStateHistory::createPartialFilter(
 }
 
 void TableStateHistory::answerQuery(Query *query) {
-    _log_cache->apply([this, query](LogCache &log_cache) {
+    _log_cache->apply([this, query](const LogFiles &log_cache) {
         answerQueryInternal(query, log_cache);
     });
 }
 
-void TableStateHistory::answerQueryInternal(Query *query, LogCache &log_cache) {
-    if (log_cache.begin() == log_cache.end()) {
+void TableStateHistory::answerQueryInternal(Query *query,
+                                            const LogFiles &log_files) {
+    if (log_files.begin() == log_files.end()) {
         return;
     }
     auto object_filter = createPartialFilter(*query);
@@ -330,12 +331,12 @@ void TableStateHistory::answerQueryInternal(Query *query, LogCache &log_cache) {
     }
 
     // Switch to last logfile (we have at least one)
-    LogCache::const_iterator it_logs{log_cache.end()};
+    LogCache::const_iterator it_logs{log_files.end()};
     --it_logs;
     auto newest_log = it_logs;
 
     // Now find the log where 'since' starts.
-    while (it_logs != log_cache.begin() && it_logs->first >= since) {
+    while (it_logs != log_files.begin() && it_logs->first >= since) {
         --it_logs;  // go back in history
     }
 
@@ -369,13 +370,13 @@ void TableStateHistory::answerQueryInternal(Query *query, LogCache &log_cache) {
     std::map<std::string, int> notification_periods;
 
     while (LogEntry *entry =
-               getNextLogentry(log_cache, it_logs, entries, it_entries)) {
+               getNextLogentry(log_files, it_logs, entries, it_entries)) {
         if (_abort_query) {
             break;
         }
 
         if (entry->time() >= until) {
-            getPreviousLogentry(log_cache, it_logs, entries, it_entries);
+            getPreviousLogentry(log_files, it_logs, entries, it_entries);
             break;
         }
         if (only_update && entry->time() >= since) {

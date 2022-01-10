@@ -16,6 +16,7 @@
 #include "contact_fwd.h"
 class Column;
 class LogCache;
+class LogFiles;
 class Logfile;
 class MonitoringCore;
 class Query;
@@ -34,7 +35,7 @@ public:
 
 private:
     LogCache *_log_cache;
-    void answerQueryInternal(Query *query, LogCache &log_cache);
+    void answerQueryInternal(Query *query, const LogFiles &log_files);
     bool answerQueryReverse(Query *query, Logfile *logfile,
                             unsigned long classmask,
                             std::chrono::system_clock::time_point since,

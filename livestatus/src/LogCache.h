@@ -17,6 +17,22 @@ class Logfile;
 class Logger;
 class MonitoringCore;
 
+// We keep this on top level to make forawrd declarations possible.
+class LogFiles {
+public:
+    // TODO(sp) Remove the duplication of types.
+    using key_type = std::chrono::system_clock::time_point;
+    using mapped_type = std::unique_ptr<Logfile>;
+    using map_type = std::map<key_type, mapped_type>;
+
+    explicit LogFiles(map_type &log_files) : log_files_{log_files} {}
+    [[nodiscard]] auto begin() const { return log_files_.begin(); }
+    [[nodiscard]] auto end() const { return log_files_.end(); }
+
+private:
+    map_type &log_files_;
+};
+
 // TODO(sp) Split this class into 2 parts: One is really only a cache for the
 // logfiles to monitor, the other part is about the lines in them.
 class LogCache {
@@ -44,17 +60,11 @@ public:
     inline auto apply(F f) {
         std::lock_guard<std::mutex> lg(_lock);
         update();
-        return f(*this);
+        return f(LogFiles{_logfiles});
     }
 
     // Used by Logfile::loadRange()
     void logLineHasBeenAdded(Logfile *logfile, unsigned logclasses);
-
-    // Used by TableLog::answerQuery(), TableStateHistory::answerQuery(),
-    // TableStateHistory::getPreviousLogentry(),
-    // TableStateHistory::getNextLogentry(), and StateHistoryThread::run()
-    auto begin() { return _logfiles.begin(); }
-    auto end() { return _logfiles.end(); }
 
 private:
     MonitoringCore *const _mc;

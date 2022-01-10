@@ -12,11 +12,15 @@ from cmk.base.api.agent_based.checking_classes import Metric, Result, State
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Service
 from cmk.base.plugins.agent_based.cpu import parse_cpu
 from cmk.base.plugins.agent_based.cpu_threads import check_cpu_threads, discover_cpu_threads
-from cmk.base.plugins.agent_based.utils.cpu import Load, Section
+from cmk.base.plugins.agent_based.utils.cpu import Load, Section, Threads
 
 
 def test_cpu_threads():
-    section = Section(load=Load(0.1, 0.1, 0.1), num_cpus=4, num_threads=1234)
+    section = Section(
+        load=Load(0.1, 0.1, 0.1),
+        num_cpus=4,
+        threads=Threads(count=1234),
+    )
     params: Dict[str, Any] = {}
     result = set(check_cpu_threads(params, section))
     assert result == {
@@ -26,7 +30,11 @@ def test_cpu_threads():
 
 
 def test_cpu_threads_max_threads():
-    section = Section(load=Load(0.1, 0.1, 0.1), num_cpus=4, num_threads=1234, max_threads=2468)
+    section = Section(
+        load=Load(0.1, 0.1, 0.1),
+        num_cpus=4,
+        threads=Threads(count=1234, max=2468),
+    )
     params: Dict[str, Any] = {}
     result = set(check_cpu_threads(params, section))
     assert result == {

@@ -21,10 +21,15 @@ class ProcessorType(Enum):
     logical = 2
 
 
+@dataclass(frozen=True)
+class Threads:
+    count: int
+    max: Optional[int] = None
+
+
 @dataclass
 class Section:
     load: Load
     num_cpus: int
-    num_threads: int
-    max_threads: Optional[int] = None
+    threads: Optional[Threads] = None
     type: ProcessorType = ProcessorType.unspecified

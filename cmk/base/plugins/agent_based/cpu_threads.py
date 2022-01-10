@@ -12,18 +12,21 @@ from .utils.cpu import Section
 
 
 def discover_cpu_threads(section: Section) -> DiscoveryResult:
-    yield Service()
+    if section.threads:
+        yield Service()
 
 
 def check_cpu_threads(params: Mapping[str, Any], section: Section) -> CheckResult:
+    if not (threads := section.threads):
+        return
     yield from check_levels(
-        section.num_threads,
+        threads.count,
         metric_name="threads",
         levels_upper=params.get("levels"),
         render_func="{:}".format,
     )
-    if section.max_threads is not None:
-        thread_usage = 100.0 * section.num_threads / section.max_threads
+    if threads.max is not None:
+        thread_usage = 100.0 * threads.count / threads.max
         yield from check_levels(
             thread_usage,
             metric_name="thread_usage",

@@ -11,7 +11,9 @@ from __future__ import annotations
 import binascii
 import contextlib
 import enum
+import errno
 import hashlib
+import re
 import socket
 from pathlib import Path
 from typing import Callable, Iterable, List, NamedTuple, Tuple
@@ -134,6 +136,30 @@ def _derive_openssl_key_and_iv(
 
 def _strip_fill_bytes(content: bytes) -> bytes:
     return content[0 : -content[-1]]
+
+
+_PEM_RE = re.compile(
+    "-----BEGIN CERTIFICATE-----\r?.+?\r?-----END CERTIFICATE-----\r?\n?", re.DOTALL
+)
+
+
+def raw_certificates_from_file(path: Path) -> List[str]:
+    try:
+        # Some users use comments in certificate files e.g. to write the content of the
+        # certificate outside of encapsulation boundaries. We only want to extract the
+        # certificates between the encapsulation boundaries which have to be 7-bit ASCII
+        # characters.
+        with path.open("r", encoding="ascii", errors="surrogateescape") as f:
+            return [
+                content
+                for match in _PEM_RE.finditer(f.read())
+                if (content := match.group(0)).isascii()
+            ]
+    except IOError as e:
+        if e.errno == errno.ENOENT:
+            # Silently ignore e.g. dangling symlinks
+            return []
+        raise
 
 
 class CertificateDetails(NamedTuple):

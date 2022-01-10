@@ -91,6 +91,7 @@ class WebAuthnCredential(TypedDict):
 
 class TwoFactorCredentials(TypedDict):
     webauthn_credentials: Dict[str, WebAuthnCredential]
+    backup_codes: List[str]
 
 
 def load_plugins() -> None:
@@ -278,6 +279,7 @@ def load_two_factor_credentials(user_id: UserId, lock: bool = False) -> TwoFacto
         default=TwoFactorCredentials(
             {
                 "webauthn_credentials": {},
+                "backup_codes": [],
             }
         ),
         lock=lock,
@@ -286,6 +288,40 @@ def load_two_factor_credentials(user_id: UserId, lock: bool = False) -> TwoFacto
 
 def save_two_factor_credentials(user_id: UserId, credentials: TwoFactorCredentials) -> None:
     save_custom_attr(user_id, "two_factor_credentials", repr(credentials))
+
+
+def make_two_factor_backup_codes() -> Tuple[List[str], List[str]]:
+    """Creates a set of new two factor backup codes
+
+    The codes are returned in plain form for displaying and in hashed+salted form for storage
+    """
+    display_codes = []
+    store_codes = []
+    for _index in range(10):
+        code = utils.get_random_string(10)
+        display_codes.append(code)
+        store_codes.append(cmk.gui.plugins.userdb.htpasswd.hash_password(code))
+    return display_codes, store_codes
+
+
+def is_two_factor_backup_code_valid(user_id: UserId, code: str) -> bool:
+    """Verifies whether or not the given backup code is valid and invalidates the code"""
+    credentials = load_two_factor_credentials(user_id)
+    matched_code = ""
+    for stored_code in credentials["backup_codes"]:
+        if cmk.gui.plugins.userdb.htpasswd.check_password(code, stored_code):
+            matched_code = stored_code
+            break
+
+    if not matched_code:
+        return False
+
+    # Invalidate the just used code
+    credentials = load_two_factor_credentials(user_id, lock=True)
+    credentials["backup_codes"].remove(matched_code)
+    save_two_factor_credentials(user_id, credentials)
+
+    return True
 
 
 def load_user(user_id: UserId) -> UserSpec:

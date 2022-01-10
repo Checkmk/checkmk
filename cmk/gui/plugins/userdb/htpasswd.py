@@ -92,6 +92,16 @@ def hash_password(password: str) -> str:
     return bcrypt.hash(password, rounds=12)
 
 
+def check_password(password: str, pwhash: str) -> bool:
+    try:
+        return crypt_context.verify(password, pwhash)
+    except ValueError:
+        # ValueError("hash could not be identified")
+        # Is raised in case of locked users because we prefix the hashes with
+        # a "!" sign in this situation.
+        return False
+
+
 @user_connector_registry.register
 class HtpasswdUserConnector(UserConnector):
     @classmethod
@@ -129,18 +139,8 @@ class HtpasswdUserConnector(UserConnector):
     def _is_automation_user(self, user_id: UserId) -> bool:
         return Path(cmk.utils.paths.var_dir, "web", str(user_id), "automation.secret").is_file()
 
-    # Validate hashes taken from the htpasswd file. For the moment this function
-    # needs to be able to deal with des_crypt and apr-md5 hashes which were used
-    # by installations till Checkmk 1.6. The current algorithm also needs to be
-    # handled: sha256_crypt.
     def _password_valid(self, pwhash: str, password: str) -> bool:
-        try:
-            return crypt_context.verify(password, pwhash)
-        except ValueError:
-            # ValueError("hash could not be identified")
-            # Is raised in case of locked users because we prefix the hashes with
-            # a "!" sign in this situation.
-            return False
+        return check_password(password, pwhash)
 
     def save_users(self, users: dict[UserId, UserSpec]) -> None:
         # Apache htpasswd. We only store passwords here. During

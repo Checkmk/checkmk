@@ -8,7 +8,7 @@
 import abc
 import http.client as http_client
 import time
-from typing import Any
+from typing import Any, Sequence
 
 from fido2 import cbor  # type: ignore[import]
 from fido2.client import ClientData  # type: ignore[import]
@@ -23,7 +23,7 @@ from fido2.webauthn import PublicKeyCredentialRpEntity  # type: ignore[import]
 from cmk.gui import forms
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.crash_reporting import handle_exception_as_gui_crash_report
-from cmk.gui.exceptions import MKGeneralException
+from cmk.gui.exceptions import HTTPRedirect, MKGeneralException
 from cmk.gui.globals import (
     g,
     html,
@@ -38,6 +38,7 @@ from cmk.gui.globals import (
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.page_menu import (
+    make_form_submit_link,
     make_javascript_link,
     PageMenu,
     PageMenuDropdown,
@@ -47,8 +48,10 @@ from cmk.gui.page_menu import (
 from cmk.gui.pages import Page, page_registry
 from cmk.gui.table import table_element
 from cmk.gui.userdb import (
+    is_two_factor_backup_code_valid,
     is_two_factor_login_enabled,
     load_two_factor_credentials,
+    make_two_factor_backup_codes,
     save_two_factor_credentials,
     set_two_factor_completed,
     WebAuthnCredential,
@@ -77,12 +80,24 @@ class UserTwoFactorOverview(ABCUserProfilePage):
     def _action(self) -> None:
         assert user.id is not None
         credentials = load_two_factor_credentials(user.id)
+
         if credential_id := request.get_ascii_input("_delete"):
             if credential_id not in credentials["webauthn_credentials"]:
                 return
             del credentials["webauthn_credentials"][credential_id]
             save_two_factor_credentials(user.id, credentials)
             flash(_("Credential has been deleted"))
+
+        if request.has_var("_backup_codes"):
+            display_codes, credentials["backup_codes"] = make_two_factor_backup_codes()
+            save_two_factor_credentials(user.id, credentials)
+            flash(
+                _(
+                    "Backup codes have been generated: <ul>%s</ul> Save them now. "
+                    "If you loose them, you will have to generate new ones."
+                )
+                % "".join(f"<li><tt>{c}</tt></li>" for c in display_codes)
+            )
 
     def _page_menu(self, breadcrumb) -> PageMenu:
         return PageMenu(
@@ -101,6 +116,13 @@ class UserTwoFactorOverview(ABCUserProfilePage):
                                     is_shortcut=True,
                                     is_suggested=True,
                                 ),
+                                PageMenuEntry(
+                                    title=_("Regenerate backup codes"),
+                                    icon_name="2fa_backup_codes",
+                                    item=make_form_submit_link("two_factor", "_backup_codes"),
+                                    is_shortcut=True,
+                                    is_suggested=True,
+                                ),
                             ],
                         ),
                     ],
@@ -112,11 +134,13 @@ class UserTwoFactorOverview(ABCUserProfilePage):
 
     def _show_form(self) -> None:
         assert user.id is not None
+
         credentials = load_two_factor_credentials(user.id)
 
         html.begin_form("two_factor", method="POST")
 
         self._show_webauthn_credentials(credentials["webauthn_credentials"])
+        self._show_backup_codes(credentials["backup_codes"])
 
         html.hidden_fields()
         html.end_form()
@@ -153,6 +177,17 @@ class UserTwoFactorOverview(ABCUserProfilePage):
                     _("Registered at"),
                     time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(credential["registered_at"])),
                 )
+
+    def _show_backup_codes(self, backup_codes: Sequence[str]) -> None:
+        forms.header(_("Backup codes"))
+        forms.section(_("Backup codes"), simple=True)
+        if backup_codes:
+            html.p(_("You have %d unused backup codes left.") % len(backup_codes))
+            html.i(_("If you regenerate backup codes, you automatically invalidate old codes."))
+        else:
+            html.i(_("No backup codes created yet."))
+
+        forms.end()
 
 
 CBORPageResult = dict[str, Any]
@@ -269,7 +304,14 @@ class UserLoginTwoFactor(Page):
             "two_factor_login", method="POST", add_transid=False, action="user_login_two_factor.py"
         )
         html.prevent_password_auto_completion()
-        html.hidden_field("_origtarget", request.get_url_input("_origtarget", "index.py"))
+        html.hidden_field(
+            "_origtarget", origtarget := request.get_url_input("_origtarget", "index.py")
+        )
+
+        if backup_code := request.get_ascii_input("_backup_code"):
+            if is_two_factor_backup_code_valid(user.id, backup_code):
+                set_two_factor_completed()
+                raise HTTPRedirect(origtarget)
 
         html.label(
             _("Two-factor authentication"),
@@ -296,7 +338,7 @@ class UserLoginTwoFactor(Page):
         html.javascript("cmk.webauthn.login()")
 
         html.open_div(id_="button_text")
-        html.button("_login", _("Login"), cssclass="hot")
+        html.button("_use_backup_code", _("Use backup code"), cssclass="hot")
         html.close_div()
         html.close_div()
 

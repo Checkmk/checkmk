@@ -720,6 +720,7 @@ def test_cleanup_user_profiles_keep_active_profile_old(user_id: UserId) -> None:
 def test_load_two_factor_credentials_unset(user_id: UserId) -> None:
     assert userdb.load_two_factor_credentials(user_id) == {
         "webauthn_credentials": {},
+        "backup_codes": [],
     }
 
 
@@ -735,7 +736,36 @@ def test_save_two_factor_credentials(user_id: UserId) -> None:
                     }
                 ),
             },
+            "backup_codes": [
+                "asdr2ar2a2ra2rara2",
+                "dddddddddddddddddd",
+            ],
         }
     )
     userdb.save_two_factor_credentials(user_id, credentials)
     assert userdb.load_two_factor_credentials(user_id) == credentials
+
+
+def test_make_two_factor_backup_codes(user_id) -> None:
+    display_codes, store_codes = userdb.make_two_factor_backup_codes()
+    assert len(display_codes) == 10
+    assert len(store_codes) == 10
+    for index in range(10):
+        assert htpasswd.check_password(display_codes[index], store_codes[index]) is True
+
+
+def test_is_two_factor_backup_code_valid_no_codes(user_id) -> None:
+    assert userdb.is_two_factor_backup_code_valid(user_id, "yxz") is False
+
+
+def test_is_two_factor_backup_code_valid_matches(user_id) -> None:
+    display_codes, store_codes = userdb.make_two_factor_backup_codes()
+    credentials = userdb.load_two_factor_credentials(user_id)
+    credentials["backup_codes"] = store_codes
+    assert len(credentials["backup_codes"]) == 10
+    userdb.save_two_factor_credentials(user_id, credentials)
+
+    assert userdb.is_two_factor_backup_code_valid(user_id, display_codes[3]) is True
+
+    credentials = userdb.load_two_factor_credentials(user_id)
+    assert len(credentials["backup_codes"]) == 9

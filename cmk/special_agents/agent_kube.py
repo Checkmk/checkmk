@@ -49,9 +49,13 @@ from cmk.special_agents.utils_kubernetes.schemata import api, section
 
 AGENT_TMP_PATH = Path(cmk.utils.paths.tmp_dir, "agent_kube")
 
+RawMetrics = Mapping[str, str]
+
 MetricName = NewType("MetricName", str)
 ContainerName = NewType("ContainerName", str)
 SectionName = NewType("SectionName", str)
+PodLookupName = NewType("PodLookupName", str)
+PodNamespacedName = NewType("PodNamespacedName", str)
 
 
 class PerformanceMetric(BaseModel):
@@ -68,13 +72,13 @@ class RateMetric(BaseModel):
 
 class PerformanceContainer(BaseModel):
     name: ContainerName
-    pod_uid: api.PodUID
+    pod_lookup_name: PodLookupName
     metrics: Mapping[MetricName, PerformanceMetric]
     rate_metrics: Optional[Mapping[MetricName, RateMetric]]
 
 
 class PerformancePod(NamedTuple):
-    uid: api.PodUID
+    lookup_name: PodLookupName
     containers: List[PerformanceContainer]
 
 
@@ -95,7 +99,7 @@ class ContainersStore(BaseModel):
 
 class ContainerMetadata(BaseModel):
     name: ContainerName
-    pod_uid: api.PodUID
+    pod_lookup_name: PodLookupName
 
 
 class PathPrefixAction(argparse.Action):
@@ -154,7 +158,7 @@ class Pod:
     def __init__(
         self,
         uid: api.PodUID,
-        metadata: api.MetaData,
+        metadata: api.PodMetaData,
         status: api.PodStatus,
         spec: api.PodSpec,
         containers: Mapping[str, api.ContainerInfo],
@@ -618,14 +622,20 @@ def pod_api_based_checkmk_sections(pod: Pod):
 
 
 def filter_outdated_pods(
-    live_pods: Sequence[PerformancePod], uid_piggyback_mappings: Mapping[api.PodUID, str]
+    live_pods: Sequence[PerformancePod],
+    lookup_name_to_piggyback_mappings: Mapping[PodLookupName, PodNamespacedName],
 ) -> Iterator[PerformancePod]:
-    return (live_pod for live_pod in live_pods if live_pod.uid in uid_piggyback_mappings)
+    """Filter out all performance data based pods that are not in the API data based lookup table"""
+    return (
+        live_pod
+        for live_pod in live_pods
+        if live_pod.lookup_name in lookup_name_to_piggyback_mappings
+    )
 
 
 def write_kube_object_performance_section(
     kube_obj: Union[Cluster, Node, Deployment],
-    performance_pods: Mapping[api.PodUID, PerformancePod],
+    performance_pods: Mapping[PodLookupName, PerformancePod],
     piggyback_name: Optional[str] = None,
 ):
     """Write cluster, node & deployment sections based on collected performance metrics"""
@@ -638,6 +648,7 @@ def write_kube_object_performance_section(
                 memory_usage_bytes=_aggregate_metric(containers, MetricName("memory_usage_bytes")),
             ),
         )
+
         # CPU section
         _write_performance_section(
             section_name=SectionName("cpu_usage"),
@@ -649,7 +660,15 @@ def write_kube_object_performance_section(
     if not (pods := kube_obj.pods(phase=api.Phase.RUNNING)):
         return
 
-    selected_pods = [performance_pods[pod.uid] for pod in pods if pod.uid in performance_pods]
+    selected_pods = []
+    for pod in pods:
+        # Some pods which are running according to the Kubernetes API might not yet be
+        # included in the performance data due to various reasons (e.g. pod just started)
+        if (pod_lookup := pod_lookup_from_api_pod(pod)) not in performance_pods:
+            # TODO: include logging without adding false positives
+            continue
+        selected_pods.append(performance_pods[pod_lookup])
+
     if not selected_pods:
         return
 
@@ -720,7 +739,7 @@ class SetupError(Exception):
 
 def request_metrics_from_cluster_collector(
     cluster_agent_url: str, verify: bool
-) -> Sequence[Mapping[str, str]]:
+) -> Sequence[RawMetrics]:
     cluster_resp = requests.get(
         f"{cluster_agent_url}/container_metrics", verify=verify
     )  # TODO: certificate validation
@@ -734,8 +753,12 @@ def request_metrics_from_cluster_collector(
     return json.loads(resp_content[0])
 
 
-def map_uid_to_piggyback_host_name(api_pods: Sequence[Pod]) -> Mapping[api.PodUID, str]:
-    return {pod.uid: pod.name(prepend_namespace=True) for pod in api_pods}
+def map_lookup_name_to_piggyback_host_name(
+    api_pods: Sequence[Pod], pod_lookup: Callable[[Pod], PodLookupName]
+) -> Mapping[PodLookupName, PodNamespacedName]:
+    return {
+        pod_lookup(pod): PodNamespacedName(pod.name(prepend_namespace=True)) for pod in api_pods
+    }
 
 
 def make_api_client(arguments: argparse.Namespace) -> client.ApiClient:
@@ -758,7 +781,7 @@ def make_api_client(arguments: argparse.Namespace) -> client.ApiClient:
 
 
 def parse_performance_metrics(
-    cluster_collector_metrics: Sequence[Mapping[str, str]]
+    cluster_collector_metrics: Sequence[RawMetrics],
 ) -> Sequence[PerformanceMetric]:
     metrics = []
     for metric in cluster_collector_metrics:
@@ -861,24 +884,27 @@ def group_metrics_by_container(
 
 def group_containers_by_pods(
     performance_containers: Iterator[PerformanceContainer],
-) -> Mapping[api.PodUID, PerformancePod]:
-    parsed_pods: Dict[api.PodUID, List[PerformanceContainer]] = {}
+) -> Mapping[PodLookupName, PerformancePod]:
+    parsed_pods: Dict[PodLookupName, List[PerformanceContainer]] = {}
     for container in performance_containers:
-        pod_containers = parsed_pods.setdefault(container.pod_uid, [])
+        pod_containers = parsed_pods.setdefault(container.pod_lookup_name, [])
         pod_containers.append(container)
+
     return {
-        pod_uid: PerformancePod(uid=pod_uid, containers=containers)
-        for pod_uid, containers in parsed_pods.items()
+        pod_lookup_name: PerformancePod(lookup_name=pod_lookup_name, containers=containers)
+        for pod_lookup_name, containers in parsed_pods.items()
     }
 
 
-def parse_containers_metadata(metrics) -> Mapping[ContainerName, ContainerMetadata]:
+def parse_containers_metadata(
+    metrics: Sequence[RawMetrics], lookup_func: Callable[[Mapping[str, str]], PodLookupName]
+) -> Mapping[ContainerName, ContainerMetadata]:
     containers = {}
     for metric in metrics:
         if (container_name := metric["container_name"]) in containers:
             continue
         containers[ContainerName(container_name)] = ContainerMetadata(
-            name=container_name, pod_uid=api.PodUID(metric["pod_uid"])
+            name=container_name, pod_lookup_name=lookup_func(metric)
         )
     return containers
 
@@ -896,10 +922,32 @@ def group_container_components(
     for container in containers_metadata.values():
         yield PerformanceContainer(
             name=container.name,
-            pod_uid=container.pod_uid,
+            pod_lookup_name=container.pod_lookup_name,
             metrics=containers_metrics[container.name],
             rate_metrics=containers_rate_metrics.get(container.name),
         )
+
+
+def lookup_name(namespace: str, pod_name: str) -> PodLookupName:
+    """Parse the pod lookup name
+
+    This function parses an identifier which is used to match the pod based on the
+    performance data to the associating pod based on the Kubernetes API data
+
+    The namespace & pod name combination is unique across the cluster and is used instead of the pod
+    uid due to a cAdvisor bug. This bug causes it to return the container config hash value
+    (kubernetes.io/config.hash) as the pod uid for system containers and consequently differs to the
+    uid reported by the Kubernetes API.
+    """
+    return PodLookupName(f"{namespace}_{pod_name}")
+
+
+def pod_lookup_from_api_pod(api_pod: Pod) -> PodLookupName:
+    return lookup_name(api_pod.metadata.namespace, api_pod.metadata.name)
+
+
+def pod_lookup_from_metric(metric: Mapping[str, str]) -> PodLookupName:
+    return lookup_name(metric["namespace"], metric["pod_name"])
 
 
 def main(args: Optional[List[str]] = None) -> int:
@@ -961,20 +1009,28 @@ def main(args: Optional[List[str]] = None) -> int:
             containers_metrics = group_metrics_by_container(
                 performance_metrics, omit_metrics=relevant_counter_metrics
             )
-            containers_metadata = parse_containers_metadata(collected_metrics)
+
+            containers_metadata = parse_containers_metadata(
+                collected_metrics, pod_lookup_from_metric
+            )
+
             performance_containers = group_container_components(
                 containers_metadata, containers_metrics, containers_rate_metrics
             )
 
             performance_pods = group_containers_by_pods(performance_containers)
 
-            uid_piggyback_mappings = map_uid_to_piggyback_host_name(cluster.pods())
+            lookup_name_piggyback_mappings = map_lookup_name_to_piggyback_host_name(
+                cluster.pods(), pod_lookup_from_api_pod
+            )
 
             # Write performance sections
             for pod in filter_outdated_pods(
-                list(performance_pods.values()), uid_piggyback_mappings
+                list(performance_pods.values()), lookup_name_piggyback_mappings
             ):
-                with ConditionalPiggybackSection(f"pod_{uid_piggyback_mappings[pod.uid]}"):
+                with ConditionalPiggybackSection(
+                    f"pod_{lookup_name_piggyback_mappings[pod.lookup_name]}"
+                ):
                     pod_performance_sections(pod)
 
             for node in cluster.nodes():
@@ -991,8 +1047,6 @@ def main(args: Optional[List[str]] = None) -> int:
                     piggyback_name=f"deployment_{deployment.name(prepend_namespace=True)}",
                 )
 
-            # TODO: make name configurable when introducing multi-cluster support
-            # remember that host with k8 rule must have at least one service
             write_kube_object_performance_section(cluster, performance_pods)
 
             # TODO: handle pods with no performance data (pod.uid not in performance pods)

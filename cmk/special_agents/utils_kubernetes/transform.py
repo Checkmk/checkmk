@@ -13,7 +13,7 @@ from __future__ import annotations
 
 import datetime
 import time
-from typing import Dict, List, Mapping, Optional, Sequence, Union
+from typing import Dict, List, Mapping, Optional, Sequence, Type, Union
 
 from kubernetes import client  # type: ignore[import] # pylint: disable=import-error
 
@@ -92,8 +92,10 @@ def parse_labels(labels: Mapping[str, str]) -> Optional[Mapping[LabelName, Label
     return {LabelName(k): Label(name=LabelName(k), value=LabelValue(v)) for k, v in labels.items()}
 
 
-def parse_metadata(metadata: client.V1ObjectMeta) -> api.MetaData:
-    return api.MetaData(
+def parse_metadata(
+    metadata: client.V1ObjectMeta, model: Type[api.MetaData] = api.MetaData
+) -> api.MetaData:
+    return model(
         name=metadata.name,
         namespace=metadata.namespace,
         creation_timestamp=convert_to_timestamp(metadata.creation_timestamp),
@@ -319,7 +321,7 @@ def deployment_conditions(status: client.V1DeploymentStatus) -> Sequence[api.Dep
 def pod_from_client(pod: client.V1Pod) -> api.Pod:
     return api.Pod(
         uid=api.PodUID(pod.metadata.uid),
-        metadata=parse_metadata(pod.metadata),
+        metadata=parse_metadata(pod.metadata, model=api.PodMetaData),
         status=pod_status(pod),
         spec=pod_spec(pod),
         containers=pod_containers(pod),

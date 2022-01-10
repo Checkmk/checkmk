@@ -52,8 +52,10 @@ class MetaData(BaseModel):
     namespace: Optional[Namespace] = None
     creation_timestamp: Optional[CreationTimestamp] = None
     labels: Optional[Labels] = None
-    prefix = ""
-    use_namespace = False
+
+
+class PodMetaData(MetaData):
+    namespace: Namespace
 
 
 class NodeConditions(BaseModel):
@@ -242,7 +244,7 @@ class PodStatus(BaseModel):
 
 class Pod(BaseModel):
     uid: PodUID
-    metadata: MetaData
+    metadata: PodMetaData
     status: PodStatus
     spec: PodSpec
     containers: Mapping[str, ContainerInfo]

@@ -15,7 +15,7 @@ def default_pod(uid: str, attributes: Optional[Mapping[str, Any]] = None) -> Pod
         attributes = {}
     return Pod(
         uid=api.PodUID(uid),
-        metadata=api.MetaData(name=""),
+        metadata=api.PodMetaData(name="", namespace="default"),
         status=api.PodStatus(
             conditions=[],
             phase=api.Phase.RUNNING,

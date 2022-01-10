@@ -27,17 +27,10 @@ public:
     using iterator = map_type::iterator;
     using const_iterator = map_type::const_iterator;
 
-    // TODO(sp) Using this class requires a very tricky and fragile protocol:
-    // You have to get the lock and call update() before you use any of the
-    // other methods. Furthermore, the constructor is not allowed to call any
-    // method of the MonitoringCore it gets, because there is a knot between the
-    // Store and the NagiosCore classes, so the MonitoringCore is not yet fully
-    // constructed. :-P
-
-    // Used internally and to guard the execution of TableLog::answerQuery() and
-    // TableStateHistory::answerQuery(). StateHistoryThread::run() uses this,
-    // too.
-    std::mutex _lock;
+    // TODO(sp) The constructor is not allowed to call any method of the
+    // MonitoringCore it gets, because there is a knot between the Store and the
+    // NagiosCore classes, so the MonitoringCore is not yet fully constructed.
+    // :-P
 
     // Used by Store::Store(), which owns the single instance of it in
     // Store::_log_cached. It passes this instance to TableLog::TableLog() and
@@ -45,12 +38,16 @@ public:
     // constructs its own instance.
     explicit LogCache(MonitoringCore *mc);
 
-    // Used internally and by TableLog::answerQuery() and
-    // TableStateHistory::answerQuery(). StateHistoryThread::run() uses this,
-    // too. Always guarded by _lock.
-    void update();
+    // Call the given function with a locked and updated LogCache, keeping the
+    // lock and the update function local.
+    template <class F>
+    inline auto apply(F f) {
+        std::lock_guard<std::mutex> lg(_lock);
+        update();
+        return f(*this);
+    }
 
-    // Used by Store::numCachedLogMessages(), uses _lock for itself.
+    // Used by Store::numCachedLogMessages()
     [[nodiscard]] size_t numCachedLogMessages();
 
     // Used by Logfile::loadRange()
@@ -68,11 +65,13 @@ public:
 
 private:
     MonitoringCore *const _mc;
+    std::mutex _lock;
     size_t _num_cached_log_messages;
     size_t _num_at_last_check;
     LogCache::map_type _logfiles;
     std::chrono::system_clock::time_point _last_index_update;
 
+    void update();
     void addToIndex(mapped_type logfile);
     [[nodiscard]] Logger *logger() const;
 };

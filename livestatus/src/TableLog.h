@@ -34,6 +34,7 @@ public:
 
 private:
     LogCache *_log_cache;
+    void answerQueryInternal(Query *query, LogCache &log_cache);
     bool answerQueryReverse(Query *query, Logfile *logfile,
                             unsigned long classmask,
                             std::chrono::system_clock::time_point since,

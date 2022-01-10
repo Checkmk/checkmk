@@ -43,11 +43,14 @@ protected:
 private:
     LogCache *_log_cache;
 
+    void answerQueryInternal(Query *query, LogCache &log_cache);
     const Logfile::map_type *getEntries(Logfile *logfile);
-    void getPreviousLogentry(LogCache::const_iterator &it_logs,
+    void getPreviousLogentry(LogCache &log_cache,
+                             LogCache::const_iterator &it_logs,
                              const Logfile::map_type *&entries,
                              Logfile::const_iterator &it_entries);
-    LogEntry *getNextLogentry(LogCache::const_iterator &it_logs,
+    LogEntry *getNextLogentry(LogCache &log_cache,
+                              LogCache::const_iterator &it_logs,
                               const Logfile::map_type *&entries,
                               Logfile::const_iterator &it_entries);
     void process(Query *query,

@@ -152,9 +152,8 @@ void LogCache::logLineHasBeenAdded(Logfile *logfile, unsigned logclasses) {
 }
 
 size_t LogCache::numCachedLogMessages() {
-    std::lock_guard<std::mutex> lg(_lock);
-    update();
-    return _num_cached_log_messages;
+    return apply(
+        [this](LogCache & /*log_cache*/) { return _num_cached_log_messages; });
 }
 
 Logger *LogCache::logger() const { return _mc->loggerLivestatus(); }

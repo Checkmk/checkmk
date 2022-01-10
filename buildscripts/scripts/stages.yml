@@ -158,7 +158,6 @@ STAGES:
             -e SC2089
             -e SC2090
             -e SC2124
-            -e SC2125
             -e SC2128
             -e SC2153
             -e SC2169

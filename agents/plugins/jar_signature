@@ -18,12 +18,10 @@ CMK_VERSION="2.1.0i1"
 # same certificate. So we only deal with the last signed file here.
 
 JAVA_HOME=/home/oracle/bin/jdk_latest_version
-JAR_PATH=/home/oracle/fmw/11gR2/as_1/forms/java/*.jar
+JAR_PATH="/home/oracle/fmw/11gR2/as_1/forms/java/*.jar"
 
 # Let user override these defaults in a configuration file
-if [ -e $MK_CONFDIR/jar_signature.cfg ] ; then
-    . $MK_CONFDIR/jar_signature.cfg
-fi
+[ -e "${MK_CONFDIR}/jar_signature.cfg" ] && . "${MK_CONFDIR}/jar_signature.cfg"
 
 PATH=$JAVA_HOME/bin:$PATH
 
@@ -33,8 +31,7 @@ for JAR in $JAR_PATH; do
         echo "[[[${JAR##*/}]]]"
         OUTPUT=$(jarsigner -verify -verbose -certs "$JAR")
         LINE=$(echo "$OUTPUT" | grep -n ^s | tail -n1 | cut -d: -f1)
-        echo "$(echo "$OUTPUT" | tail -n +$LINE)"
+        echo "${OUTPUT}" | tail -n +"${LINE}"
         echo
     fi
 done
-

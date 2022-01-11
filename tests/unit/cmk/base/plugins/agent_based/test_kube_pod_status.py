@@ -3,12 +3,14 @@
 # Copyright (C) 2021 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from typing import Optional, Union
+import itertools
+from typing import MutableMapping, Optional, Union
 
 import pytest
 
+from cmk.base.plugins.agent_based import kube_pod_status
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, State
-from cmk.base.plugins.agent_based.kube_pod_status import check_kube_pod_status
+from cmk.base.plugins.agent_based.kube_pod_status import check_kube_pod_status, DEFAULT_PARAMS
 from cmk.base.plugins.agent_based.utils.k8s import (
     ContainerInfo,
     ContainerRunningState,
@@ -17,6 +19,8 @@ from cmk.base.plugins.agent_based.utils.k8s import (
     PodContainers,
 )
 from cmk.base.plugins.agent_based.utils.kube import PodLifeCycle
+
+from cmk.gui.plugins.wato.check_parameters import kube_pod_status as wato_kube_pod_status
 
 
 def _mocked_container_info_from_state(
@@ -46,7 +50,7 @@ def _mocked_container_info_from_state(
                 },
             ),
             PodLifeCycle(phase="running"),
-            (Result(state=State.OK, summary="Running"),),
+            "Running",
             id="A single running container",
         ),
         pytest.param(
@@ -60,7 +64,7 @@ def _mocked_container_info_from_state(
                 }
             ),
             PodLifeCycle(phase="pending"),
-            (Result(state=State.OK, summary="Pending"),),
+            "Pending",
             id="Container image is still being downloaded.",
         ),
         pytest.param(
@@ -79,12 +83,12 @@ def _mocked_container_info_from_state(
                 }
             ),
             PodLifeCycle(phase="succeeded"),
-            (Result(state=State.OK, summary="Succeeded"),),
+            "Succeeded",
             id="Container exits with 0, and is not restarted",
         ),
     ],
 )
-def test_check_k8s_node_kubelet_no_issues_in_containers(
+def test_check_kube_pod_status_no_issues_in_containers(
     section_kube_pod_containers: Optional[PodContainers],
     section_kube_pod_lifecycle: Optional[PodLifeCycle],
     expected_result,
@@ -92,9 +96,11 @@ def test_check_k8s_node_kubelet_no_issues_in_containers(
     """
     Tested Pods have a single container which is configured correctly and in a good state.
     """
-    assert expected_result == tuple(
-        check_kube_pod_status(section_kube_pod_containers, None, section_kube_pod_lifecycle)
-    )
+    for result in check_kube_pod_status(
+        DEFAULT_PARAMS, section_kube_pod_containers, None, section_kube_pod_lifecycle
+    ):
+        assert isinstance(result, Result)
+        assert result.summary.startswith(expected_result)
 
 
 @pytest.mark.parametrize(
@@ -113,7 +119,7 @@ def test_check_k8s_node_kubelet_no_issues_in_containers(
                 }
             ),
             PodLifeCycle(phase="running"),
-            (Result(state=State.OK, summary="CrashLoopBackOff"),),
+            "CrashLoopBackOff",
             id="Container exits with 0 or 1 (exit code does not change container state), and is restarted",
         ),
         pytest.param(
@@ -132,12 +138,12 @@ def test_check_k8s_node_kubelet_no_issues_in_containers(
                 },
             ),
             PodLifeCycle(phase="failed"),
-            (Result(state=State.OK, summary="Error"),),
+            "Error",
             id="Container exits with 1, and is not restarted",
         ),
     ],
 )
-def test_check_k8s_node_kubelet_failing_container(
+def test_check_kube_pod_status_failing_container(
     section_kube_pod_containers: Optional[PodContainers],
     section_kube_pod_lifecycle: Optional[PodLifeCycle],
     expected_result,
@@ -145,9 +151,11 @@ def test_check_k8s_node_kubelet_failing_container(
     """
     Tested Pods with a single failing or misconfigured container.
     """
-    assert expected_result == tuple(
-        check_kube_pod_status(section_kube_pod_containers, None, section_kube_pod_lifecycle)
-    )
+    for result in check_kube_pod_status(
+        DEFAULT_PARAMS, section_kube_pod_containers, None, section_kube_pod_lifecycle
+    ):
+        assert isinstance(result, Result)
+        assert result.summary.startswith(expected_result)
 
 
 @pytest.mark.parametrize(
@@ -179,7 +187,7 @@ def test_check_k8s_node_kubelet_failing_container(
                 }
             ),
             PodLifeCycle(phase="failed"),
-            (Result(state=State.OK, summary="Error"),),
+            "Error",
             id="Both containers are terminating, one with exit code 1, the other with exit code 0.",
         ),
         pytest.param(
@@ -202,18 +210,18 @@ def test_check_k8s_node_kubelet_failing_container(
                 }
             ),
             PodLifeCycle(phase="pending"),
-            (Result(state=State.OK, summary="CrashLoopBackOff"),),
+            "CrashLoopBackOff",
             id="One container has incorrect image name, one container fails with exit code 0",
         ),
         pytest.param(
             None,
             PodLifeCycle(phase="pending"),
-            (Result(state=State.OK, summary="Pending"),),
+            "Pending",
             id="One container is too large to be scheduled, one container fails",
         ),
     ],
 )
-def test_check_k8s_node_kubelet_multiple_issues(
+def test_check_kube_pod_status_multiple_issues(
     section_kube_pod_containers: Optional[PodContainers],
     section_kube_pod_lifecycle: Optional[PodLifeCycle],
     expected_result,
@@ -222,9 +230,48 @@ def test_check_k8s_node_kubelet_multiple_issues(
     Tested Pods have two containers with different issues, which are then summarized into a
     single status.
     """
-    assert expected_result == tuple(
-        check_kube_pod_status(section_kube_pod_containers, None, section_kube_pod_lifecycle)
+    for result in check_kube_pod_status(
+        DEFAULT_PARAMS, section_kube_pod_containers, None, section_kube_pod_lifecycle
+    ):
+        assert isinstance(result, Result)
+        assert result.summary.startswith(expected_result)
+
+
+@pytest.fixture(name="get_value_store")
+def fixture_get_value_store(mocker):
+    value_store: MutableMapping[str, float] = {}
+    get_value_store_mock = mocker.MagicMock(return_value=value_store)
+    mocker.patch.object(kube_pod_status, "get_value_store", get_value_store_mock)
+    return get_value_store_mock
+
+
+@pytest.fixture(name="time_time")
+def fixture_time(mocker):
+    mocked_time = mocker.Mock()
+    mocked_time.time = mocker.Mock(side_effect=itertools.count(0.1, 60.1))
+    mocker.patch.object(kube_pod_status, "time", mocked_time)
+    return mocked_time
+
+
+def test_check_alert_if_pending_too_long(get_value_store, time_time) -> None:
+
+    section_kube_pod_containers = None
+    section_kube_pod_lifecycle = PodLifeCycle(phase="pending")
+    params: kube_pod_status.Params = {"Pending": ("levels", (60, 120))}
+
+    expected_results = (
+        (State.OK, "0 seconds"),
+        (State.WARN, "1 minute 0 seconds (warn/crit at 1 minute 0 seconds/2 minutes 0 seconds)"),
+        (State.CRIT, "2 minutes 0 seconds (warn/crit at 1 minute 0 seconds/2 minutes 0 seconds)"),
     )
+    for expected_result in expected_results:
+        expected_state, expected_message = expected_result
+        for result in check_kube_pod_status(
+            params, section_kube_pod_containers, None, section_kube_pod_lifecycle
+        ):
+            assert isinstance(result, Result)
+            assert result.state == expected_state
+            assert result.summary.endswith(expected_message)
 
 
 @pytest.mark.parametrize(
@@ -253,14 +300,14 @@ def test_check_k8s_node_kubelet_multiple_issues(
                 }
             ),
             PodLifeCycle(phase="pending"),
-            "Init:",
+            "Init:Error",
             id="Both containers have an error, but the second container is not intialized",
         ),
     ],
 )
 def test_check_kube_pod_stauts_init_container_broken(
-    section_kube_pod_init_containers: Optional[PodContainers],
-    section_kube_pod_containers: Optional[PodContainers],
+    section_kube_pod_init_containers: PodContainers,
+    section_kube_pod_containers: PodContainers,
     section_kube_pod_lifecycle: Optional[PodLifeCycle],
     expected_result,
 ) -> None:
@@ -268,9 +315,53 @@ def test_check_kube_pod_stauts_init_container_broken(
     Tested Pods has a failing init-container.
     """
     for result in check_kube_pod_status(
+        DEFAULT_PARAMS,
         section_kube_pod_containers,
         section_kube_pod_init_containers,
         section_kube_pod_lifecycle,
     ):
         assert isinstance(result, Result)
-        assert result.summary.startswith("Init:Error")
+        assert result.summary.startswith(expected_result)
+
+
+def test_check_alert_resets(get_value_store, time_time) -> None:
+
+    params: kube_pod_status.Params = {
+        "Pending": ("levels", (60, 120)),
+        "Running": ("levels", (60, 120)),
+    }
+    section_kube_pod_containers = None
+
+    pod_cycles = (
+        PodLifeCycle(phase="pending"),
+        PodLifeCycle(phase="pending"),
+        PodLifeCycle(phase="running"),
+        PodLifeCycle(phase="pending"),
+    )
+
+    expected_results = (
+        (State.OK, "0 seconds"),
+        (
+            State.WARN,
+            "1 minute 0 seconds (warn/crit at 1 minute 0 seconds/2 minutes 0 seconds)",
+        ),
+        (State.OK, "0 seconds"),
+        (State.OK, "0 seconds"),
+    )
+
+    for expected_result, section_kube_pod_lifecycle in zip(expected_results, pod_cycles):
+        expected_state, expected_message = expected_result
+        for result in check_kube_pod_status(
+            params, section_kube_pod_containers, None, section_kube_pod_lifecycle
+        ):
+            assert isinstance(result, Result)
+            assert result.state == expected_state
+            assert result.summary.endswith(expected_message)
+
+
+def test_check_variables_in_check_parameters_and_agent_based_plugins_agree() -> None:
+    """Variables have to be defined twice in order to preserve cmk-module-layer"""
+    assert wato_kube_pod_status.CONTAINER_STATUSES == kube_pod_status.CONTAINER_STATUSES
+    assert wato_kube_pod_status.INIT_STATUSES == kube_pod_status.INIT_STATUSES
+    assert wato_kube_pod_status.DESIRED_PHASE == kube_pod_status.DESIRED_PHASE
+    assert wato_kube_pod_status.UNDESIRED_PHASE == kube_pod_status.UNDESIRED_PHASE

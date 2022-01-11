@@ -44,5 +44,5 @@ def valuespec_age(
                 ),
             ),
         ],
-        default_value="no_levels",
+        default_value=default_choice,
     )

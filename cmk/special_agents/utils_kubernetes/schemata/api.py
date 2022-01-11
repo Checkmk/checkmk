@@ -116,7 +116,8 @@ class Node(BaseModel):
     kubelet_info: KubeletInfo
 
 
-class DeploymentReplicas(BaseModel):
+class Replicas(BaseModel):
+    replicas: int
     updated: int
     available: int
     ready: int
@@ -139,12 +140,27 @@ class DeploymentCondition(BaseModel):
 
 class DeploymentStatus(BaseModel):
     # https://v1-18.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.18/#deploymentstatus-v1-apps
-    replicas: DeploymentReplicas
+    replicas: Replicas
     conditions: Sequence[DeploymentCondition]
+
+
+class RollingUpdate(BaseModel):
+    max_surge: str
+    max_unavailable: str
+
+
+class UpdateStrategy(BaseModel):
+    type_: Literal["RollingUpdate", "Recreate"]
+    rolling_update: Optional[RollingUpdate]
+
+
+class DeploymentSpec(BaseModel):
+    strategy: UpdateStrategy
 
 
 class Deployment(BaseModel):
     metadata: MetaData
+    spec: DeploymentSpec
     status: DeploymentStatus
     pods: Sequence[PodUID]
 

@@ -290,17 +290,18 @@ def node_resources(capacity, allocatable) -> Dict[str, api.NodeResources]:
     return resources
 
 
-def deployment_replicas(status: client.V1DeploymentStatus) -> api.DeploymentReplicas:
-    def replica_count(count: Optional[int]) -> int:
-        if count is None:
-            return 0
-        return count
-
-    return api.DeploymentReplicas(
-        available=replica_count(status.available_replicas),
-        unavailable=replica_count(status.unavailable_replicas),
-        updated=replica_count(status.updated_replicas),
-        ready=replica_count(status.ready_replicas),
+def deployment_replicas(status: client.V1DeploymentStatus) -> api.Replicas:
+    # A deployment always has at least 1 replica. It is not possible to deploy
+    # a deployment that has 0 replicas. On the other hand, it is possible to have
+    # 0 available/unavailable/updated/ready replicas. This is shown as 'null'
+    # (i.e. None) in the source data, but the interpretation is that the number
+    # of the replicas in this case is 0.
+    return api.Replicas(
+        replicas=status.replicas,
+        available=status.available_replicas or 0,
+        unavailable=status.unavailable_replicas or 0,
+        updated=status.updated_replicas or 0,
+        ready=status.ready_replicas or 0,
     )
 
 
@@ -347,11 +348,26 @@ def node_from_client(node: client.V1Node, kubelet_health: api.HealthZ) -> api.No
     )
 
 
+def parse_deployment_spec(deployment_spec: client.V1DeploymentSpec) -> api.DeploymentSpec:
+    return api.DeploymentSpec(
+        strategy=api.UpdateStrategy(
+            type_=(deployment_spec.strategy.type),
+            rolling_update=api.RollingUpdate(
+                max_surge=deployment_spec.strategy.rolling_update.max_surge,
+                max_unavailable=deployment_spec.strategy.rolling_update.max_unavailable,
+            )
+            if deployment_spec.strategy.rolling_update
+            else None,
+        )
+    )
+
+
 def deployment_from_client(
     deployment: client.V1Deployment, pod_uids=Sequence[api.PodUID]
 ) -> api.Deployment:
     return api.Deployment(
         metadata=parse_metadata(deployment.metadata),
+        spec=parse_deployment_spec(deployment.spec),
         status=api.DeploymentStatus(
             conditions=deployment_conditions(deployment.status),
             replicas=deployment_replicas(deployment.status),

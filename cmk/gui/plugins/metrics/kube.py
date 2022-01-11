@@ -159,6 +159,25 @@ metric_info["kube_pod_restart_rate"] = {
     "color": "42/b",
 }
 
+metric_info["kube_desired_replicas"] = {
+    "title": _("Desired replicas"),
+    "unit": "count",
+    "color": "41/a",
+}
+
+metric_info["kube_ready_replicas"] = {
+    "title": _("Ready replicas"),
+    "unit": "count",
+    "color": "21/a",
+}
+
+metric_info["kube_updated_replicas"] = {
+    "title": _("Up-to-date replicas"),
+    "unit": "count",
+    "color": "31/a",
+}
+
+
 #   .--Graphs--------------------------------------------------------------.
 #   |                    ____                 _                            |
 #   |                   / ___|_ __ __ _ _ __ | |__  ___                    |
@@ -257,5 +276,23 @@ graph_info["kube_pod_restarts"] = {
     "metrics": [
         ("kube_pod_restart_count", "line"),
         ("kube_pod_restart_rate", "line"),
+    ],
+}
+
+
+graph_info["kube_replica_state"] = {
+    "title": _("Replica state"),
+    "metrics": [
+        ("kube_desired_replicas", "area"),
+        ("kube_ready_replicas", "line"),
+    ],
+}
+
+
+graph_info["kube_replica_update_state"] = {
+    "title": _("Replica update state"),
+    "metrics": [
+        ("kube_desired_replicas", "area"),
+        ("kube_updated_replicas", "line"),
     ],
 }

@@ -289,3 +289,28 @@ class PodContainers(BaseModel):
     """section: kube_pod_containers_v1"""
 
     containers: Mapping[str, ContainerInfo]
+
+
+class Replicas(BaseModel):
+    replicas: int
+    updated: int
+    available: int
+    ready: int
+    unavailable: int
+
+
+class RollingUpdate(BaseModel):
+    max_surge: str
+    max_unavailable: str
+
+
+# TODO: see how typing can be improved here:
+# rolling_udpate is only populated when type is
+# RollingUpdate
+class UpdateStrategy(BaseModel):
+    type_: Literal["RollingUpdate", "Recreate"]
+    rolling_update: Optional[RollingUpdate]
+
+
+class DeploymentSpec(BaseModel):
+    strategy: UpdateStrategy

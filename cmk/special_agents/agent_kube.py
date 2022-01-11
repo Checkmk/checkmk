@@ -311,8 +311,14 @@ def aggregate_limit_values(limit_values: Sequence[Optional[float]]) -> section.A
 
 
 class Deployment:
-    def __init__(self, metadata: api.MetaData, status: api.DeploymentStatus) -> None:
+    def __init__(
+        self,
+        metadata: api.MetaData,
+        spec: api.DeploymentSpec,
+        status: api.DeploymentStatus,
+    ) -> None:
         self.metadata = metadata
+        self._spec = spec
         self.status = status
         self._pods: List[Pod] = []
         self.type_: str = "deployment"
@@ -367,6 +373,12 @@ class Deployment:
 
     def cpu_resources(self) -> section.Resources:
         return _collect_cpu_resources(self._pods)
+
+    def replicas(self) -> api.Replicas:
+        return self.status.replicas
+
+    def spec(self) -> api.DeploymentSpec:
+        return self._spec
 
 
 class Node:
@@ -469,7 +481,7 @@ class Cluster:
 
         for deployment in api_server.deployments():
             cluster.add_deployment(
-                Deployment(deployment.metadata, deployment.status), deployment.pods
+                Deployment(deployment.metadata, deployment.spec, deployment.status), deployment.pods
             )
 
         return cluster
@@ -660,6 +672,8 @@ def write_deployments_api_sections(api_deployments: Sequence[Deployment]) -> Non
             "kube_deployment_info_v1": cluster_deployment.info,
             "kube_deployment_conditions_v1": cluster_deployment.conditions,
             "kube_cpu_resources_v1": cluster_deployment.cpu_resources,
+            "kube_replicas_v1": cluster_deployment.replicas,
+            "kube_deployment_spec_v1": cluster_deployment.spec,
         }
         _write_sections(sections)
 

@@ -5,6 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import enum
+from typing import Literal, Tuple, Union
 
 from pydantic import BaseModel
 
@@ -41,3 +42,6 @@ class NodeCount(BaseModel):
 
     worker: ReadyCount = ReadyCount()
     control_plane: ReadyCount = ReadyCount()
+
+
+VSResultAge = Union[Tuple[Literal["levels"], Tuple[int, int]], Literal["no_levels"]]

@@ -243,8 +243,8 @@ def stack(apoints, bpoints, scale):
 def compute_vertical_range(swapped):
     mmin, mmax = 0.0, 0.0
     for points in swapped.values():
-        mmax = max(mmax, max(points)) or 0.0  # convert None into 0.0
-        mmin = min(mmin, min(points)) or 0.0
+        mmax = max(mmax, max(filter(None, points), default=0.0))
+        mmin = min(mmin, min(filter(None, points), default=0.0))
     return mmin, mmax
 
 

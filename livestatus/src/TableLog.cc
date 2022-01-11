@@ -190,11 +190,11 @@ void TableLog::answerQueryInternal(Query *query, const LogFiles &log_files) {
     // Now find newest log where 'until' is contained. The problem
     // here: For each logfile we only know the time of the *first* entry,
     // not that of the last.
-    while (it != log_files.begin() && it->first > until) {
+    while (it != log_files.begin() && it->second->since() > until) {
         // while logfiles are too new go back in history
         --it;
     }
-    if (it->first > until) {
+    if (it->second->since() > until) {
         return;  // all logfiles are too new
     }
 

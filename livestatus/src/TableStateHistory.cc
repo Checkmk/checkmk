@@ -336,12 +336,12 @@ void TableStateHistory::answerQueryInternal(Query *query,
     auto newest_log = it_logs;
 
     // Now find the log where 'since' starts.
-    while (it_logs != log_files.begin() && it_logs->first >= since) {
+    while (it_logs != log_files.begin() && it_logs->second->since() >= since) {
         --it_logs;  // go back in history
     }
 
     // Check if 'until' is within these logfiles
-    if (it_logs->first > until) {
+    if (it_logs->second->since() > until) {
         // All logfiles are too new, invalid timeframe
         // -> No data available. Return empty result.
         return;

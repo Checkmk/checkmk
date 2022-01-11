@@ -11,8 +11,8 @@
 # shellcheck disable=SC2034
 CMK_VERSION="2.1.0i1"
 
-# Run and *send* only once every __ seconds
-. $MK_CONFDIR/mk_inventory.cfg 2>/dev/null || true
+# shellcheck source=../cfg_examples/mk_inventory.cfg
+. "${MK_CONFDIR}/mk_inventory.cfg" 2>/dev/null || true
 
 # Default to four hours
 INTERVAL=${INVENTORY_INTERVAL:-14400}

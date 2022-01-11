@@ -12,13 +12,13 @@ import pytest
 
 from tests.testlib import Check
 
+from tests.unit.conftest import FixRegister
+
 from cmk.utils.type_defs import CheckPluginName, SectionName
 
 from cmk.base.check_api import MKCounterWrapped
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
 from cmk.base.plugins.agent_based.utils.df import FILESYSTEM_DEFAULT_LEVELS
-
-from tests.unit.conftest import FixRegister  # pylint: disable=ungrouped-imports
 
 from .checktestlib import assertDiscoveryResultsEqual, DiscoveryResult, mock_item_state
 

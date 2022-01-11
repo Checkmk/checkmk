@@ -1,5 +1,6 @@
 [tool.isort]
 known_testlib = "tests.testlib"
+known_unittests = "tests.unit"
 known_livestatus = "livestatus"
 known_omd = "omdlib"
 known_cmk_utils = "cmk.utils"
@@ -14,8 +15,9 @@ known_cmk_core_helpers = "cmk.core_helpers"
 known_first_party = "cmk"
 
 # Order sections according to our layering.
-sections = """FUTURE,STDLIB,THIRDPARTY,TESTLIB,LIVESTATUS,OMD,CMK_UTILS,CMK_AUTOMATIONS,CMK_SNMPLIB,
-CMK_CORE_HELPERS,CMK_BASE,CMK_EC,CMK_GUI,CMK_CEE,CMK_NOTIFICATION_PLUGINS,FIRSTPARTY,LOCALFOLDER"""
+sections = """FUTURE,STDLIB,THIRDPARTY,TESTLIB,UNITTESTS,LIVESTATUS,OMD,CMK_UTILS,CMK_AUTOMATIONS,
+CMK_SNMPLIB,CMK_CORE_HELPERS,CMK_BASE,CMK_EC,CMK_GUI,CMK_CEE,CMK_NOTIFICATION_PLUGINS,FIRSTPARTY,
+LOCALFOLDER"""
 
 # configuration options compatible with black
 multi_line_output = 3

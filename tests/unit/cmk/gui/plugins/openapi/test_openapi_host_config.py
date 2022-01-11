@@ -8,14 +8,14 @@ import json
 
 import pytest
 
+from tests.unit.cmk.gui.conftest import WebTestAppForCMK
+
 from cmk.utils import version
 
 from cmk.automations.results import DeleteHostsResult, RenameHostsResult
 
 from cmk.gui.type_defs import CustomAttr
 from cmk.gui.watolib.custom_attributes import save_custom_attrs_to_mk_file
-
-from tests.unit.cmk.gui.conftest import WebTestAppForCMK
 
 managedtest = pytest.mark.skipif(not version.is_managed_edition(), reason="see #7213")
 

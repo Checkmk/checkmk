@@ -8,11 +8,11 @@ import json
 
 import pytest
 
+from tests.unit.cmk.gui.conftest import WebTestAppForCMK
+
 from cmk.automations.results import CheckPreviewEntry, SetAutochecksResult, TryDiscoveryResult
 
 from cmk.gui.watolib.services import Discovery
-
-from tests.unit.cmk.gui.conftest import WebTestAppForCMK
 
 mock_discovery_result = TryDiscoveryResult(
     check_table=[

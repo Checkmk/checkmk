@@ -6,9 +6,9 @@
 
 import pytest
 
-from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
-
 from tests.unit.cmk.gui.conftest import WebTestAppForCMK
+
+from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
 
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls")

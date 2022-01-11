@@ -10,12 +10,12 @@ from uuid import UUID
 import pytest
 from pytest_mock import MockerFixture
 
+from tests.unit.cmk.gui.conftest import WebTestAppForCMK
+
 from cmk.utils.agent_registration import UUIDLinkManager
 from cmk.utils.paths import data_source_push_agent_dir, received_outputs_dir
 
 from cmk.gui.exceptions import MKAuthException
-
-from tests.unit.cmk.gui.conftest import WebTestAppForCMK
 
 _BASE = "/NO_SITE/check_mk/api/1.0"
 _URL_LINK_UUID = _BASE + "/objects/host_config/example.com/actions/link_uuid/invoke"

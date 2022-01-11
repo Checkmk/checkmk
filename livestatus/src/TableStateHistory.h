@@ -46,11 +46,11 @@ private:
     void answerQueryInternal(Query *query, const LogFiles &log_files);
     const Logfile::map_type *getEntries(Logfile *logfile);
     void getPreviousLogentry(const LogFiles &log_files,
-                             LogCache::const_iterator &it_logs,
+                             LogFiles::const_iterator &it_logs,
                              const Logfile::map_type *&entries,
                              Logfile::const_iterator &it_entries);
     LogEntry *getNextLogentry(const LogFiles &log_files,
-                              LogCache::const_iterator &it_logs,
+                              LogFiles::const_iterator &it_logs,
                               const Logfile::map_type *&entries,
                               Logfile::const_iterator &it_entries);
     void process(Query *query,

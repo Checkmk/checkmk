@@ -58,9 +58,9 @@ void LogCache::update() {
     }
 }
 
-void LogCache::addToIndex(mapped_type logfile) {
-    key_type since = logfile->since();
-    if (since == key_type{}) {  // TODO(sp) We simulate std::optional somehow...
+void LogCache::addToIndex(std::unique_ptr<Logfile> logfile) {
+    auto since = logfile->since();
+    if (since == decltype(since){}) {  // TODO(sp) Simulating std::optional?
         return;
     }
     // make sure that no entry with that 'since' is existing yet.  Under normal
@@ -95,8 +95,8 @@ void LogCache::logLineHasBeenAdded(Logfile *logfile, unsigned logclasses) {
     }
 
     // [1] Delete old logfiles: Begin deleting with the oldest logfile available
-    LogCache::iterator it;
-    for (it = _logfiles.begin(); it != _logfiles.end(); ++it) {
+    auto it{_logfiles.begin()};
+    for (; it != _logfiles.end(); ++it) {
         if (it->second.get() == logfile) {
             break;  // Do not touch the logfile the Query is currently accessing
         }

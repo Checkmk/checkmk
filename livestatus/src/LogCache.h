@@ -13,6 +13,7 @@
 #include <map>
 #include <memory>
 #include <mutex>
+
 class Logfile;
 class Logger;
 class MonitoringCore;
@@ -20,29 +21,22 @@ class MonitoringCore;
 // We keep this on top level to make forawrd declarations possible.
 class LogFiles {
 public:
-    // TODO(sp) Remove the duplication of types.
-    using key_type = std::chrono::system_clock::time_point;
-    using mapped_type = std::unique_ptr<Logfile>;
-    using map_type = std::map<key_type, mapped_type>;
+    using container = std::map<std::chrono::system_clock::time_point,
+                               std::unique_ptr<Logfile>>;
+    using const_iterator = container::const_iterator;
 
-    explicit LogFiles(map_type &log_files) : log_files_{log_files} {}
+    explicit LogFiles(const container &log_files) : log_files_{log_files} {}
     [[nodiscard]] auto begin() const { return log_files_.begin(); }
     [[nodiscard]] auto end() const { return log_files_.end(); }
 
 private:
-    map_type &log_files_;
+    const container &log_files_;
 };
 
 // TODO(sp) Split this class into 2 parts: One is really only a cache for the
 // logfiles to monitor, the other part is about the lines in them.
 class LogCache {
 public:
-    using key_type = std::chrono::system_clock::time_point;
-    using mapped_type = std::unique_ptr<Logfile>;
-    using map_type = std::map<key_type, mapped_type>;
-    using iterator = map_type::iterator;
-    using const_iterator = map_type::const_iterator;
-
     // TODO(sp) The constructor is not allowed to call any method of the
     // MonitoringCore it gets, because there is a knot between the Store and the
     // NagiosCore classes, so the MonitoringCore is not yet fully constructed.
@@ -71,11 +65,12 @@ private:
     std::mutex _lock;
     size_t _num_cached_log_messages;
     size_t _num_at_last_check;
-    LogCache::map_type _logfiles;
+    std::map<std::chrono::system_clock::time_point, std::unique_ptr<Logfile>>
+        _logfiles;
     std::chrono::system_clock::time_point _last_index_update;
 
     void update();
-    void addToIndex(mapped_type logfile);
+    void addToIndex(std::unique_ptr<Logfile> logfile);
     [[nodiscard]] Logger *logger() const;
 };
 

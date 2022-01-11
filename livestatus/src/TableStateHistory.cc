@@ -211,7 +211,7 @@ const Logfile::map_type *TableStateHistory::getEntries(Logfile *logfile) {
 }
 
 void TableStateHistory::getPreviousLogentry(
-    const LogFiles &log_files, LogCache::const_iterator &it_logs,
+    const LogFiles &log_files, LogFiles::const_iterator &it_logs,
     const Logfile::map_type *&entries, Logfile::const_iterator &it_entries) {
     while (it_entries == entries->begin()) {
         // open previous logfile
@@ -226,7 +226,7 @@ void TableStateHistory::getPreviousLogentry(
 }
 
 LogEntry *TableStateHistory::getNextLogentry(
-    const LogFiles &log_files, LogCache::const_iterator &it_logs,
+    const LogFiles &log_files, LogFiles::const_iterator &it_logs,
     const Logfile::map_type *&entries, Logfile::const_iterator &it_entries) {
     if (it_entries != entries->end()) {
         ++it_entries;
@@ -331,7 +331,7 @@ void TableStateHistory::answerQueryInternal(Query *query,
     }
 
     // Switch to last logfile (we have at least one)
-    LogCache::const_iterator it_logs{log_files.end()};
+    LogFiles::const_iterator it_logs{log_files.end()};
     --it_logs;
     auto newest_log = it_logs;
 

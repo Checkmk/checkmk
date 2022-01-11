@@ -391,7 +391,6 @@ class ErrorReporter:
             "checkgroup_parameters:aws_dynamodb_capacity",
         ),
         ("check", "barracuda_mail_latency", "checkgroup_parameters:mail_latency"),
-        ("check", "blade_bx_load", "checkgroup_parameters:cpu_load"),
         ("check", "blade_bx_powerfan", "checkgroup_parameters:hw_fans_perc"),
         ("check", "bluenet2_powerrail_rcm", "checkgroup_parameters:el_inphase"),
         ("check", "brocade_fan", "checkgroup_parameters:hw_fans"),

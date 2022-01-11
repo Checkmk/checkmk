@@ -115,3 +115,6 @@ MAP_BUILD_STATES = {
 
 # ucd_cpu_load
 cpuload_default_levels = (5.0, 10.0)
+
+# blade_bx_load
+blade_bx_cpuload_default_levels = (5, 20)

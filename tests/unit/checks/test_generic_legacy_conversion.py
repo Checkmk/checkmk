@@ -1152,7 +1152,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy):
         "blade_blades",
         "blade_blowers",
         "blade_bx_blades",
-        "blade_bx_load",
         "blade_bx_powerfan",
         "blade_bx_powermod",
         "blade_bx_temp",

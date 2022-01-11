@@ -83,7 +83,6 @@ RUN zypper ref -s \
     texinfo \
     tk-devel \
     unzip \
-    valgrind \
     wget \
     which \
     chrpath \
@@ -113,6 +112,7 @@ ENV NEXUS_ARCHIVES_URL="$NEXUS_ARCHIVES_URL" NEXUS_USERNAME="$NEXUS_USERNAME" NE
 
 COPY scripts/* /opt/
 RUN /opt/install-gnu-toolchain.sh
+RUN /opt/install-valgrind.sh
 RUN /opt/install-cmake.sh
 RUN /opt/install-openssl.sh
 RUN /opt/install-python2.sh

@@ -455,7 +455,7 @@ class NumericRenderer:
                 sepped += self._thousand_sep + text[pos : pos + 3]
             text = sepped
         if self._unit:
-            text += "&nbsp;" + self._unit
+            text += " %s" % self._unit
         return text
 
 

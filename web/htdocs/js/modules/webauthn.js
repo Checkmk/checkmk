@@ -34,14 +34,15 @@ export function register() {
             if (response.ok) {
                 show_info("Registration successful");
             } else {
-                show_error(
-                    "Registration failed. A Checkmk administrator may have a look at " +
-                        "<tt>var/log/web.log</tt> to get additional information."
-                );
+                response.text().then(function (text) {
+                    show_error(
+                        "Registration failed (" +
+                            text +
+                            "). A Checkmk administrator may have a look at " +
+                            "<tt>var/log/web.log</tt> to get additional information."
+                    );
+                });
             }
-        })
-        .then(function () {
-            window.location = "user_two_factor_overview.py";
         })
         .catch(function (e) {
             console.log(e);

@@ -106,6 +106,7 @@ import cmk.gui.utils as utils
 import cmk.gui.view_utils
 import cmk.gui.wato.mkeventd
 import cmk.gui.wato.pages.fetch_agent_output
+import cmk.gui.wato.pages.user_profile
 import cmk.gui.wato.permissions
 import cmk.gui.watolib as watolib
 import cmk.gui.watolib.hosts_and_folders

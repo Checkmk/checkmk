@@ -119,6 +119,9 @@ REMOVED_CHECK_PLUGIN_MAP = {
     CheckPluginName("hpux_cpu"): CheckPluginName("cpu_loads"),
     CheckPluginName("mcafee_emailgateway_cpuload"): CheckPluginName("cpu_loads"),
     CheckPluginName("statgrab_load"): CheckPluginName("cpu_loads"),
+    CheckPluginName("arbor_peakflow_sp_cpu_load"): CheckPluginName("cpu_loads"),
+    CheckPluginName("arbor_peakflow_tms_cpu_load"): CheckPluginName("cpu_loads"),
+    CheckPluginName("arbor_pravail_cpu_load"): CheckPluginName("cpu_loads"),
 }
 
 # List[(old_config_name, new_config_name, replacement_dict{old: new})]

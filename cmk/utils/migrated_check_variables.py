@@ -121,3 +121,6 @@ blade_bx_cpuload_default_levels = (5, 20)
 
 # mcafee_emailgateway_cpuload
 mcafee_emailgateway_cpuload_default_levels = (5.0, 10.0)
+
+# arbor_peakflow_sp, arbor_peakflow_tms, arbor_pravail
+arbor_cpuload_default_levels = (5.0, 10.0)

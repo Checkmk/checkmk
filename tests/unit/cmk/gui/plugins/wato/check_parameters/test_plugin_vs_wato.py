@@ -376,9 +376,6 @@ class ErrorReporter:
         ("check", "appdynamics_sessions", "checkgroup_parameters:jvm_sessions"),
         ("check", "appdynamics_web_container", "checkgroup_parameters:jvm_threads"),
         ("check", "apt", "checkgroup_parameters:apt"),
-        ("check", "arbor_peakflow_sp_cpu_load", "checkgroup_parameters:cpu_load"),
-        ("check", "arbor_peakflow_tms_cpu_load", "checkgroup_parameters:cpu_load"),
-        ("check", "arbor_pravail_cpu_load", "checkgroup_parameters:cpu_load"),
         ("check", "avaya_88xx_cpu", "checkgroup_parameters:cpu_utilization"),
         (
             "check",

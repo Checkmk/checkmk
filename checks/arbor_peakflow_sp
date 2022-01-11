@@ -9,12 +9,6 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.arbor import *  # pylint: disable=wildcard-import,unused-wildcard-import
-
-# NOTE: Careful when replacing the *-import below with a more specific import. This can cause
-# problems because it might remove variables from the check-context which are necessary for
-# resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
-# it might also remove variables needed for accessing discovery rulesets.
-from cmk.base.check_legacy_includes.cpu_load import *  # pylint: disable=wildcard-import,unused-wildcard-import
 from cmk.base.plugins.agent_based.utils.df import FILESYSTEM_DEFAULT_LEVELS
 
 # .1.3.6.1.4.1.9694.1.4.2.1.1.0 796 --> PEAKFLOW-SP-MIB::deviceCpuLoadAvg1min.0
@@ -38,10 +32,10 @@ factory_settings["arbor_memory_default_levels"] = ARBOR_MEMORY_CHECK_DEFAULT_PAR
 
 def parse_peakflow_sp(info):
     valid = info[0]
-    res = {"cpu_loads": valid[:3], "disk": valid[3], "memory": valid[4:6]}
-    if valid[6]:
+    res = {"disk": valid[0], "memory": valid[1:3]}
+    if valid[3]:
         # this value appears to be optional
-        res["flows"] = valid[6]
+        res["flows"] = valid[3]
 
     return res
 
@@ -57,9 +51,6 @@ check_info["arbor_peakflow_sp"] = {
     "snmp_info": (
         ".1.3.6.1.4.1.9694.1.4.2.1",
         [
-            "1.0",  # deviceCpuLoadAvg1min
-            "2.0",  # deviceCpuLoadAvg5min
-            "3.0",  # deviceCpuLoadAvg15min
             "4.0",  # deviceDiskUsage
             "7.0",  # devicePhysicalMemoryUsage
             "10.0",  # deviceSwapSpaceUsage
@@ -67,14 +58,6 @@ check_info["arbor_peakflow_sp"] = {
         ],
     ),
     "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.1.0").startswith("Peakflow SP"),
-}
-
-check_info["arbor_peakflow_sp.cpu_load"] = {
-    "check_function": check_arbor_cpu_load,
-    "inventory_function": inventory_arbor_cpu_load,
-    "service_description": "CPU load",
-    "has_perfdata": True,
-    "group": "cpu_load",
 }
 
 check_info["arbor_peakflow_sp.disk_usage"] = {

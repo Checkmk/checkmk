@@ -147,6 +147,18 @@ metric_info["kube_node_count_control_plane_total"] = {
 }
 
 
+metric_info["kube_pod_restart_count"] = {
+    "title": _("Restarts"),
+    "unit": "",
+    "color": "42/a",
+}
+
+metric_info["kube_pod_restart_rate"] = {
+    "title": _("Restarts per hour"),
+    "unit": "",
+    "color": "42/b",
+}
+
 #   .--Graphs--------------------------------------------------------------.
 #   |                    ____                 _                            |
 #   |                   / ___|_ __ __ _ _ __ | |__  ___                    |
@@ -233,5 +245,13 @@ graph_info["kube_node_count_control_plane"] = {
         ("kube_node_count_control_plane_ready", "stack"),
         ("kube_node_count_control_plane_not_ready", "stack"),
         ("kube_node_count_control_plane_total", "line"),
+    ],
+}
+
+graph_info["kube_pod_restarts"] = {
+    "title": _("Pod Restarts"),
+    "metrics": [
+        ("kube_pod_restart_count", "line"),
+        ("kube_pod_restart_rate", "line"),
     ],
 }

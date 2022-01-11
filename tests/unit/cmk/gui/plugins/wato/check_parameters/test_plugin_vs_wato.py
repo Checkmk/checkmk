@@ -538,7 +538,6 @@ class ErrorReporter:
         ("check", "skype_conferencing", "checkgroup_parameters:skype_conferencing"),
         ("check", "skype_sip_stack", "checkgroup_parameters:skype_sip"),
         ("check", "solaris_multipath", "checkgroup_parameters:multipath"),
-        ("check", "statgrab_load", "checkgroup_parameters:cpu_load"),
         ("check", "symantec_av_updates", "checkgroup_parameters:antivir_update_age"),
         ("check", "tinkerforge_ambient", "checkgroup_parameters:brightness"),
         ("check", "tplink_mem", "checkgroup_parameters:memory_percentage_used"),

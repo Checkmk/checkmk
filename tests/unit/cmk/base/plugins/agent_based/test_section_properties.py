@@ -219,7 +219,6 @@ def test_section_parse_function_does_something(fix_register):
         "solaris_prtdiag_status",
         "splunk_alerts",
         "statgrab_cpu",
-        "statgrab_load",
         "sylo",
         "symantec_av_progstate",
         "symantec_av_quarantine",

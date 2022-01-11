@@ -515,7 +515,6 @@ class ErrorReporter:
         ("check", "netapp_api_environment_fans", "checkgroup_parameters:hw_fans"),
         ("check", "netscaler_health_fan", "checkgroup_parameters:hw_fans"),
         ("check", "netscaler_mem", "checkgroup_parameters:netscaler_mem"),
-        ("check", "ntp", "checkgroup_parameters:ntp_peer"),
         ("check", "openhardwaremonitor_fan", "checkgroup_parameters:hw_fans"),
         ("check", "openhardwaremonitor_smart", "checkgroup_parameters:openhardwaremonitor_smart"),
         ("check", "openhardwaremonitor_temperature", "checkgroup_parameters:temperature"),

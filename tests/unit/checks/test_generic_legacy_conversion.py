@@ -2048,7 +2048,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy):
         "mcafee_emailgateway_av_authentium",
         "mcafee_emailgateway_av_mcafee",
         "mcafee_emailgateway_bridge",
-        "mcafee_emailgateway_cpuload",
         "mcafee_emailgateway_entities",
         "mcafee_emailgateway_smtp",
         "mcafee_emailgateway_spam_mcafee",

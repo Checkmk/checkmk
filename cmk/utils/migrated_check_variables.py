@@ -118,3 +118,6 @@ cpuload_default_levels = (5.0, 10.0)
 
 # blade_bx_load
 blade_bx_cpuload_default_levels = (5, 20)
+
+# mcafee_emailgateway_cpuload
+mcafee_emailgateway_cpuload_default_levels = (5.0, 10.0)

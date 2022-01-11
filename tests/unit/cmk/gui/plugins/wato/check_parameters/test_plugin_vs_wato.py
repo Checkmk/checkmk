@@ -494,7 +494,6 @@ class ErrorReporter:
         ("check", "logins", "checkgroup_parameters:logins"),
         ("check", "logwatch_ec", "checkgroup_parameters:logwatch_ec"),
         ("check", "lvm_vgs", "checkgroup_parameters:volume_groups"),
-        ("check", "mcafee_emailgateway_cpuload", "checkgroup_parameters:cpu_load"),
         ("check", "mikrotik_signal", "checkgroup_parameters:signal_quality"),
         ("check", "mongodb_collections", "checkgroup_parameters:mongodb_collections"),
         ("check", "mounts", "checkgroup_parameters:fs_mount_options"),

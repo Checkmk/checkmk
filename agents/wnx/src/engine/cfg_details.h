@@ -128,7 +128,7 @@ private:
     // make [recursive] folder in windows
     // returns path if folder was created successfully
     static std::filesystem::path makeDefaultDataFolder(
-        std::wstring_view AgentDataFolder, Protection protection);
+        std::wstring_view data_folder, Protection protection);
     std::filesystem::path root_;          // where is root
     std::filesystem::path data_;          // ProgramData
     std::filesystem::path public_logs_;   //

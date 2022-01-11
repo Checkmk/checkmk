@@ -30,6 +30,8 @@
 #include "tools/_tgt.h"      // we need IsDebug
 #include "upgrade.h"
 #include "windows_service_api.h"
+namespace fs = std::filesystem;
+using namespace std::string_literals;
 
 namespace cma::cfg {
 using ConfigRepo = MicroRepo<cma::cfg::details::ConfigInfo>;
@@ -51,12 +53,10 @@ bool RemoveNode(const std::string& name) {
 namespace cma {
 
 namespace details {
-
 // internal and hidden global variables
 // #GLOBAL x2
 bool g_is_service = false;  // set to true only when we run service
 bool g_is_test = false;     // set to true only when we run watest
-
 }  // namespace details
 
 bool IsService() { return details::g_is_service; }
@@ -67,17 +67,15 @@ bool IsTest() { return details::g_is_test; }
 namespace cma::cfg {
 
 InstallationType DetermineInstallationType() {
-    using namespace std::string_literals;
-    namespace fs = std::filesystem;
-
     fs::path source_install_yml{cma::cfg::GetRootInstallDir()};
     source_install_yml /= files::kInstallYmlFileW;
 
     try {
         auto file = YAML::LoadFile(source_install_yml.u8string());
 
-        if (file[groups::kGlobal][vars::kInstall].as<std::string>() == "no"s)
+        if (file[groups::kGlobal][vars::kInstall].as<std::string>() == "no"s) {
             return InstallationType::packaged;
+        }
 
     } catch (const std::exception& e) {
         XLOG::l.i(
@@ -111,7 +109,9 @@ std::wstring WinPerf::buildCmdLine() const {
         cmd_line += wtools::ConvertToUTF16(counter.name());
         cmd_line += L" ";
     }
-    if (!cmd_line.empty() && cmd_line.back() == L' ') cmd_line.pop_back();
+    if (!cmd_line.empty() && cmd_line.back() == L' ') {
+        cmd_line.pop_back();
+    }
     return cmd_line;
 }
 
@@ -171,9 +171,15 @@ bool MergeStringSequence(YAML::Node target_group, YAML::Node source_group,
 
 std::string GetMapNodeName(const YAML::Node& node) {
     try {
-        if (!node.IsDefined()) return "undefined";
-        if (node.IsSequence()) return "sequence";
-        if (!node.IsMap()) return "not-map";
+        if (!node.IsDefined()) {
+            return "undefined";
+        }
+        if (node.IsSequence()) {
+            return "sequence";
+        }
+        if (!node.IsMap()) {
+            return "not-map";
+        }
 
         for (const auto& kv : node) {
             return kv.first.as<std::string>();
@@ -192,7 +198,9 @@ bool MergeMapSequence(YAML::Node target_group, YAML::Node source_group,
     try {
         // check for source, if empty -> leave
         auto source = source_group[name];
-        if (!source.IsDefined() || !source.IsSequence()) return true;
+        if (!source.IsDefined() || !source.IsSequence()) {
+            return true;
+        }
 
         // check for target, if empty override with non empty source and leave
         auto target = target_group[name];
@@ -214,8 +222,9 @@ bool MergeMapSequence(YAML::Node target_group, YAML::Node source_group,
 
             if (std::ranges::none_of(target_array, [&](const YAML::Node& Node) {
                     return source_key == GetVal(Node, key, std::string());
-                }))
+                })) {
                 target.push_back(source_entry);
+            }
         }
     } catch (const std::exception& e) {
         XLOG::d.t("Failed to merge yaml '{}.{}' map '{}'", name, key, e.what());
@@ -232,21 +241,22 @@ ConfigInfo g_config_info;  // NOLINT
 uint64_t g_registered_performance_freq{
     static_cast<uint64_t>(wtools::QueryPerformanceFreq())};
 
-std::filesystem::path GetDefaultLogPath() {
-    std::filesystem::path dir = GetUserDir();
+fs::path GetDefaultLogPath() {
+    fs::path dir = GetUserDir();
     if (dir.empty()) {
-        auto rfid = cma::cfg::kPublicFolderId;
-        return cma::tools::win::GetSomeSystemFolder(rfid);
+        return tools::win::GetSomeSystemFolder(cfg::kPublicFolderId);
     }
 
     return dir / dirs::kLog;
 }
 
-std::filesystem::path ConvertLocationToLogPath(std::string_view location) {
-    if (location.empty()) return GetDefaultLogPath();
+fs::path ConvertLocationToLogPath(std::string_view location) {
+    if (location.empty()) {
+        return GetDefaultLogPath();
+    }
 
     std::error_code ec;
-    if (!std::filesystem::is_directory(location, ec)) {
+    if (!fs::is_directory(location, ec)) {
         XLOG::l("The log location '{}' is not valid, falling back to default",
                 location);
         return GetDefaultLogPath();
@@ -315,7 +325,7 @@ std::wstring GetUpgradeProtocolDir() {
 
 std::wstring GetBakeryDir() noexcept { return GetCfg().getBakeryDir(); }
 
-std::filesystem::path GetBakeryFile() {
+fs::path GetBakeryFile() {
     auto bakery = GetCfg().getBakeryDir();
     bakery /= files::kDefaultMainConfig;
     bakery.replace_extension(files::kDefaultBakeryExt);
@@ -368,7 +378,6 @@ std::wstring GetWorkingDir() noexcept { return GetCfg().getCwd(); }
 
 std::wstring GetMsiExecPath() noexcept { return GetCfg().getMsiExecPath(); }
 
-// #TODO gtest
 bool IsLoadedConfigOk() noexcept { return GetCfg().isOk(); }
 
 bool StoreUserYamlToCache() {
@@ -382,8 +391,7 @@ bool StoreUserYamlToCache() {
 }
 // Copies any file to cache with extension last successfully loaded yaml
 // file in the cache
-std::wstring StoreFileToCache(const std::filesystem::path& file_name) {
-    namespace fs = std::filesystem;
+std::wstring StoreFileToCache(const fs::path& file_name) {
     std::error_code ec;
     if (!fs::exists(file_name, ec)) {
         XLOG::d("Attempting to save into cache not existing file '{}' [{}]",
@@ -432,10 +440,9 @@ void LoadGlobal() {
 // test and reset function
 void KillDefaultConfig() { GetCfg().cleanConfig(); }
 
-std::filesystem::path FindRootByExePath(const std::wstring& cmd_line) {
+fs::path FindRootByExePath(const std::wstring& cmd_line) {
     if (cmd_line.empty()) return {};  // something strange
 
-    namespace fs = std::filesystem;
     std::error_code ec;
 
     fs::path exe = cma::tools::RemoveQuotes(cmd_line);
@@ -448,8 +455,9 @@ std::filesystem::path FindRootByExePath(const std::wstring& cmd_line) {
     fs::path path = FindServiceImagePath(cma::srv::kServiceName);
 
     if (fs::equivalent(path.lexically_normal().parent_path(), exe.parent_path(),
-                       ec))
+                       ec)) {
         return path.parent_path().lexically_normal();
+    }
 
     return {};
 }
@@ -469,9 +477,7 @@ std::wstring FindServiceImagePath(std::wstring_view service_name) {
     return cma::tools::RemoveQuotes(service_path_new);
 }
 
-std::filesystem::path ExtractPathFromServiceName(
-    std::wstring_view service_name) {
-    namespace fs = std::filesystem;
+fs::path ExtractPathFromServiceName(std::wstring_view service_name) {
     if (service_name.empty()) return {};
     XLOG::l.t("Try service: '{}'", wtools::ToUtf8(service_name));
 
@@ -496,7 +502,6 @@ std::filesystem::path ExtractPathFromServiceName(
 bool Folders::setRoot(const std::wstring& service_name,  // look in registry
                       const std::wstring& preset_root    // look in disk
 ) {
-    namespace fs = std::filesystem;
     XLOG::l.t("Setting root. service: '{}', preset: '{}'",
               wtools::ToUtf8(service_name), wtools::ToUtf8(preset_root));
 
@@ -544,10 +549,7 @@ bool Folders::setRoot(const std::wstring& service_name,  // look in registry
 // old API
 bool Folders::setRootEx(const std::wstring& service_name,  // look in registry
                         const std::wstring& preset_root    // look in disk
-)
-
-{
-    namespace fs = std::filesystem;
+) {
     // code is a bit strange, because we have to have possibility use
     // one of possible roots
     // storage for paths
@@ -574,16 +576,18 @@ bool Folders::setRootEx(const std::wstring& service_name,  // look in registry
     if (full.empty()) {
         std::error_code ec;
         fs::path work_dir = preset_root;
-        if (fs::exists(work_dir, ec))
+        if (fs::exists(work_dir, ec)) {
             full.emplace_back(work_dir.lexically_normal());
+        }
     }
 
     // Current exe path used for tests
     if (full.empty()) {
         std::error_code ec;
         auto cur_dir = fs::current_path(ec);
-        if (ec.value() == 0 && fs::exists(cur_dir, ec))
+        if (ec.value() == 0 && fs::exists(cur_dir, ec)) {
             full.emplace_back(cur_dir.lexically_normal());
+        }
     }
 
     if (full.empty()) {
@@ -599,7 +603,7 @@ bool Folders::setRootEx(const std::wstring& service_name,  // look in registry
 void Folders::createDataFolderStructure(const std::wstring& proposed_folder,
                                         Protection protection) {
     try {
-        std::filesystem::path folder = proposed_folder;
+        fs::path folder = proposed_folder;
         data_ = makeDefaultDataFolder(folder.lexically_normal().wstring(),
                                       protection);
     } catch (const std::exception& e) {
@@ -618,21 +622,23 @@ void Folders::cleanAll() {
 CleanMode GetCleanDataFolderMode() {
     auto mode_text = GetVal(groups::kSystem, vars::kCleanupUninstall,
                             std::string(values::kCleanupSmart));
-    if (cma::tools::IsEqual(mode_text, values::kCleanupNone))
+    if (cma::tools::IsEqual(mode_text, values::kCleanupNone)) {
         return CleanMode::none;
+    }
 
-    if (cma::tools::IsEqual(mode_text, values::kCleanupSmart))
+    if (cma::tools::IsEqual(mode_text, values::kCleanupSmart)) {
         return CleanMode::smart;
+    }
 
-    if (cma::tools::IsEqual(mode_text, values::kCleanupAll))
+    if (cma::tools::IsEqual(mode_text, values::kCleanupAll)) {
         return CleanMode::all;
+    }
 
     return CleanMode::none;
 }
 
 namespace {
 void RemoveCapGeneratedFile() {
-    namespace fs = std::filesystem;
     auto [target_cap, ignore_it] = cap::GetInstallPair(files::kCapFile);
     XLOG::l.i("Removing generated files...");
 
@@ -648,15 +654,13 @@ void RemoveCapGeneratedFile() {
 }
 
 void RemoveOwnGeneratedFiles() {
-    namespace fs = std::filesystem;
-
     auto [target_yml_example, ignore_it_again] = cap::GetExampleYmlNames();
 
     XLOG::l.i("Removing yml files.");
 
     fs::path user_yml{GetUserDir()};
     user_yml /= files::kUserYmlFile;
-    std::vector<std::filesystem::path> files;
+    std::vector<fs::path> files;
     if (cma::tools::AreFilesSame(target_yml_example, user_yml)) {
         files.emplace_back(user_yml);
     }
@@ -672,8 +676,7 @@ void RemoveOwnGeneratedFiles() {
     }
 }
 
-void RemoveDirs(const std::filesystem::path& path) {
-    namespace fs = std::filesystem;
+void RemoveDirs(const fs::path& path) {
     std::error_code ec;
     auto del_dirs = details::RemovableDirTable();
     for (auto& d : del_dirs) {
@@ -691,8 +694,6 @@ void RemoveDirs(const std::filesystem::path& path) {
 
 // This function should be tested only manually
 bool CleanDataFolder(CleanMode mode) {
-    namespace fs = std::filesystem;
-
     std::error_code ec;
     fs::path path = cma::cfg::GetUserDir();
     if (!fs::exists(path / dirs::kBakery, ec) ||
@@ -774,9 +775,7 @@ std::vector<std::wstring_view> RemovableDirTable() {
 // Create project defined Directory Structure in the Data Folder
 // gtest[+] indirectly
 // Returns error code
-int CreateTree(const std::filesystem::path& base_path) {
-    namespace fs = std::filesystem;
-
+int CreateTree(const fs::path& base_path) {
     // directories to be created
     // should be more clear defined in cfg_info
     auto dir_list = AllDirTable();
@@ -795,9 +794,8 @@ int CreateTree(const std::filesystem::path& base_path) {
 // to create folder structure in next folders:
 // 1. ProgramData/CorpName/AgentName
 //
-std::filesystem::path Folders::makeDefaultDataFolder(
-    std::wstring_view data_folder, Protection protection) {
-    namespace fs = std::filesystem;
+fs::path Folders::makeDefaultDataFolder(std::wstring_view data_folder,
+                                        Protection protection) {
     if (data_folder.empty()) {
         using cma::tools::win::GetSomeSystemFolder;
         auto draw_folder = [](std::wstring_view DataFolder) -> auto {
@@ -849,7 +847,6 @@ namespace cma::cfg {
 // Returns loaded one
 bool InitializeMainConfig(const std::vector<std::wstring>& config_filenames,
                           YamlCacheOp cache_op) {
-    namespace fs = std::filesystem;
     // ATTEMPT TO LOAD root config
     std::wstring usable_name;
 
@@ -924,14 +921,11 @@ std::wstring FindExeFileOnPath(const std::wstring& file_name) {
     return {};
 }
 
-std::vector<std::filesystem::path> GetExePaths() {
-    return GetCfg().getExePaths();
-}
+std::vector<fs::path> GetExePaths() { return GetCfg().getExePaths(); }
 
 // Find cfg file, usually YAML on one of the our paths for config
-std::wstring FindConfigFile(const std::filesystem::path& dir_name,
+std::wstring FindConfigFile(const fs::path& dir_name,
                             const std::wstring& file_name) {
-    namespace fs = std::filesystem;
     XLOG::d.t("trying path {}", dir_name);
     auto file_path = dir_name / file_name;
     std::error_code ec;
@@ -953,7 +947,7 @@ std::string GetCurrentLogFileName() {
     static std::string s_log_filename;
     if (s_first_start) {
         s_first_start = false;
-        std::filesystem::path p{
+        fs::path p{
             cma::tools::win::GetSomeSystemFolder(cma::cfg::kPublicFolderId)};
         p /= kDefaultLogFileName;
         s_log_filename = p.u8string();
@@ -986,7 +980,6 @@ namespace cma::cfg {
 YAML::Node LoadAndCheckYamlFile(const std::wstring& file_name,
                                 FallbackPolicy fallback_policy,
                                 int* error_code_ptr) {
-    namespace fs = std::filesystem;
     auto name = wtools::ToUtf8(file_name);
     if (fs::exists(file_name)) {
         int error_code = 0;
@@ -1171,8 +1164,9 @@ void SetupPluginEnvironment() {
                    {envs::kMkModulesDirName, GetUserModulesDir()},
                    {envs::kMkMsiPathName, GetUpdateDir()}}};
 
-    for (const auto& d : env_pairs)
+    for (const auto& d : env_pairs) {
         cma::tools::win::SetEnv(std::string{d.first}, wtools::ToUtf8(d.second));
+    }
 }
 
 void ProcessPluginEnvironment(
@@ -1218,17 +1212,16 @@ void SetupRemoteHostEnvironment(const std::string& IpAddress) {
 
 namespace cma::cfg::details {
 
-std::tuple<bool, std::filesystem::path> IsInstallProtocolExists(
-    const std::filesystem::path& root) {
+std::tuple<bool, fs::path> IsInstallProtocolExists(const fs::path& root) {
     XLOG::l.i("Current root for install protocol '{}'", root);
     auto install_file = ConstructInstallFileName(root);
     std::error_code ec;
     if (install_file.empty()) return {false, {}};
 
-    return {std::filesystem::exists(install_file, ec), install_file};
+    return {fs::exists(install_file, ec), install_file};
 }
 
-void ConfigInfo::fillExePaths(const std::filesystem::path& root) {
+void ConfigInfo::fillExePaths(const fs::path& root) {
     constexpr std::array<std::wstring_view, 3> dir_tails{
         dirs::kAgentPlugins, dirs::kAgentProviders, dirs::kAgentUtils};
 
@@ -1276,8 +1269,9 @@ void ConfigInfo::initFolders(
         wtools::ExecuteCommandsAsync(L"data", commands);
     }
 
-    if (folders_.getData().empty())
+    if (folders_.getData().empty()) {
         XLOG::l.crit("Data folder is empty.This is bad.");
+    }
 
     // exe
     fillExePaths(root);
@@ -1290,7 +1284,7 @@ void ConfigInfo::initFolders(
 void ConfigInfo::cleanFolders() {
     std::lock_guard lk(lock_);
     exe_command_paths_.resize(0);  // root/utils, root/plugins etc
-    config_dirs_.resize(0);        // root und data
+    config_dirs_.resize(0);        // root and data
 
     folders_.cleanAll();
 }
@@ -1308,8 +1302,7 @@ void ConfigInfo::cleanConfig() {
     ok_ = false;
 }
 
-bool ConfigInfo::pushFolders(const std::filesystem::path& root,
-                             const std::filesystem::path& data) {
+bool ConfigInfo::pushFolders(const fs::path& root, const fs::path& data) {
     std::lock_guard lk(lock_);
     if (folders_stack_.size() >= kMaxFoldersStackSize) {
         XLOG::l("Folders Stack is overflown, max size is [{}]",
@@ -1323,8 +1316,8 @@ bool ConfigInfo::pushFolders(const std::filesystem::path& root,
     return true;
 }
 
-bool ConfigInfo::pushFoldersNoIo(const std::filesystem::path& root,
-                                 const std::filesystem::path& data) {
+bool ConfigInfo::pushFoldersNoIo(const fs::path& root,
+                                 const fs::path& /*data*/) {
     std::lock_guard lk(lock_);
     if (folders_stack_.size() >= kMaxFoldersStackSize) {
         XLOG::l("Folders Stack is overflown, max size is [{}]",
@@ -1349,7 +1342,6 @@ bool ConfigInfo::popFolders() {
 }
 
 std::wstring FindMsiExec() {
-    namespace fs = std::filesystem;
     fs::path p = cma::tools::win::GetSystem32Folder();
     p /= "msiexec.exe";
 
@@ -1379,7 +1371,7 @@ std::string FindHostName() {
 
 void ConfigInfo::initEnvironment() {
     host_name_ = FindHostName();
-    cwd_ = std::filesystem::current_path().wstring();
+    cwd_ = fs::current_path().wstring();
     path_to_msi_exec_ = FindMsiExec();
 }
 
@@ -1453,8 +1445,9 @@ void CombineSequence(std::string_view name, YAML::Node target_value,
                                  std::end(target_value),
                                  [s_name](const YAML::Node& Node) -> bool {
                                      return s_name == GetMapNodeName(Node);
-                                 }))
+                                 })) {
                     target_value.push_back(entry);
+                }
             }
             break;
 
@@ -1469,8 +1462,9 @@ void CombineSequence(std::string_view name, YAML::Node target_value,
                                  std::end(source_value),
                                  [s_name](const YAML::Node& node) -> bool {
                                      return s_name == GetMapNodeName(node);
-                                 }))
+                                 })) {
                     new_seq.push_back(entry);
+                }
             }
             target_value = new_seq;
             break;
@@ -1482,9 +1476,10 @@ static void loadMap(std::string_view name, YAML::Node target_value,
                     const YAML::Node& source_value) {
     // MAP
     if (!IsYamlMap(source_value)) {
-        if (!source_value.IsNull())
+        if (!source_value.IsNull()) {
             XLOG::l(XLOG_FLINE + " expected map '{}', we have [{}]", name,
                     source_value.Type());
+        }
         return;
     }
 
@@ -1523,9 +1518,9 @@ bool ConfigInfo::smartMerge(YAML::Node& target, const YAML::Node& source,
             CombineSequence(name, target_value, source_value, combine);
         } else {
             // SCALAR or UNDEF
-            if (source_value.IsDefined())
+            if (source_value.IsDefined()) {
                 target_value = source_value;  // other just override
-            else {
+            } else {
                 XLOG::l.bp(XLOG_FLINE + " bad source");
             }
         }
@@ -1696,11 +1691,11 @@ void ConfigInfo::mergeYamlData(YAML::Node& config_node,
 
     std::lock_guard lk(lock_);
     root_yaml_time_ = root_data.timestamp();
-    bakery_yaml_time_ = bakery_ok ? bakery_data.timestamp()
-                                  : std::filesystem::file_time_type::min();
+    bakery_yaml_time_ =
+        bakery_ok ? bakery_data.timestamp() : fs::file_time_type::min();
     bakery_ok_ = bakery_ok;
-    user_yaml_time_ = user_ok ? user_data.timestamp()
-                              : std::filesystem::file_time_type::min();
+    user_yaml_time_ =
+        user_ok ? user_data.timestamp() : fs::file_time_type::min();
     user_ok_ = user_ok;
 
     yaml_ = config_node;
@@ -1768,8 +1763,9 @@ LoadCfgStatus ConfigInfo::loadAggregated(const std::wstring& config_filename,
         if (config[groups::kGlobal].IsDefined()) {
             mergeYamlData(config, yamls);
 
-            if (ok_ && user_ok_ && cache_op == YamlCacheOp::update)
+            if (ok_ && user_ok_ && cache_op == YamlCacheOp::update) {
                 StoreUserYamlToCache();
+            }
             return LoadCfgStatus::kFileLoaded;
         }
         error_code = ErrorCode::kNotCheckMK;
@@ -1795,8 +1791,7 @@ LoadCfgStatus ConfigInfo::loadAggregated(const std::wstring& config_filename,
 
 // LOOOONG operation
 // when failed old config retained
-bool ConfigInfo::loadDirect(const std::filesystem::path& file) {
-    namespace fs = std::filesystem;
+bool ConfigInfo::loadDirect(const fs::path& file) {
     int error = 0;
 
     const fs::path& fpath = file;
@@ -1878,9 +1873,7 @@ std::string ConstructTimeString() {
 
 // makes the name of install.protocol file
 // may return empty path
-std::filesystem::path ConstructInstallFileName(
-    const std::filesystem::path& dir) {
-    namespace fs = std::filesystem;
+fs::path ConstructInstallFileName(const fs::path& dir) {
     if (dir.empty()) {
         XLOG::d("Attempt to create install protocol in current folder");
         return {};
@@ -1957,7 +1950,6 @@ std::string ReplacePredefinedMarkers(std::string_view work_path) {
 bool PatchRelativePath(YAML::Node yaml_config, std::string_view group_name,
                        std::string_view key_name, std::string_view subkey_name,
                        std::string_view marker) {
-    namespace fs = std::filesystem;
     if (group_name.empty() || key_name.empty() || subkey_name.empty() ||
         marker.empty()) {
         XLOG::l(XLOG_FUNC + " Problems with parameter '{}' '{}' '{}' '{}'",
@@ -2006,14 +1998,14 @@ std::string CreateWmicCommand(std::string_view product_name) {
     return fmt::format(g_wmic_uninstall_command, product_name);
 }
 
-std::filesystem::path CreateWmicUninstallFile(
-    const std::filesystem::path& temp_dir, std::string_view product_name) {
+fs::path CreateWmicUninstallFile(const fs::path& temp_dir,
+                                 std::string_view product_name) {
     auto file = temp_dir / "exec_uninstall.cmd";
     try {
         std::ofstream ofs(file.u8string());
         ofs << CreateWmicCommand(product_name);
         ofs.close();
-        if (std::filesystem::exists(file)) return file;
+        if (fs::exists(file)) return file;
         XLOG::l("Attempt to create '{}' file is failed", file);
         return {};
     } catch (const std::exception& e) {
@@ -2025,7 +2017,7 @@ std::filesystem::path CreateWmicUninstallFile(
 }
 
 bool UninstallProduct(std::string_view name) {
-    std::filesystem::path temp{cfg::GetTempDir()};
+    fs::path temp{cfg::GetTempDir()};
     auto fname = CreateWmicUninstallFile(temp, name);
     if (fname.empty()) {
         return false;

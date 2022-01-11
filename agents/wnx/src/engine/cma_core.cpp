@@ -22,6 +22,7 @@
 #include "windows_service_api.h"
 namespace fs = std::filesystem;
 namespace rs = std::ranges;
+using namespace std::chrono_literals;
 
 namespace cma {
 
@@ -680,7 +681,9 @@ void PluginEntry::joinAndReleaseMainThread() {
     std::unique_lock lk(lock_);
     auto t = std::move(main_thread_);
     lk.unlock();
-    if (!t || !t->joinable()) return;
+    if (!t || !t->joinable()) {
+        return;
+    }
 
     try {
         minibox_.stopWaiting();
@@ -706,10 +709,11 @@ void LogProcessStatus(bool success, uint64_t ustime, ProcInfo& pi) {
         "perf:  In [{}] milliseconds process '{}' pid:[{}] {} - generated [{}] bytes of data in [{}] blocks",
         ustime / 1000, pi.proc_name, pi.waiting_processes,
         success ? "SUCCEDED" : "FAILED", pi.added, pi.blocks);
-    if (success)
+    if (success) {
         XLOG::d.i(text);
-    else
+    } else {
         XLOG::d(text);
+    }
 }
 }  // namespace
 
@@ -768,10 +772,10 @@ bool TheMiniBox::startEx(std::wstring_view uniq_id, const std::wstring& exec,
     return false;
 }
 
-// #TODO to be deprecated in 1.7 for Windows
 bool TheMiniBox::waitForEnd(std::chrono::milliseconds timeout) {
-    using namespace std::chrono_literals;
-    if (stop_set_) return false;
+    if (stop_set_) {
+        return false;
+    }
     ON_OUT_OF_SCOPE(readWhatLeft());
 
     constexpr std::chrono::milliseconds grane_long = 50ms;
@@ -820,10 +824,10 @@ bool TheMiniBox::waitForEnd(std::chrono::milliseconds timeout) {
     // never here
 }
 
-// #TODO 1.7 new function to speed up handles processing in windows
 bool TheMiniBox::waitForEndWindows(std::chrono::milliseconds Timeout) {
-    using namespace std::chrono_literals;
-    if (stop_set_) return false;
+    if (stop_set_) {
+        return false;
+    }
     ON_OUT_OF_SCOPE(readWhatLeft());
 
     auto* read_handle = getReadHandle();
@@ -1076,8 +1080,9 @@ void PluginEntry::restartAsyncThreadIfFinished(const std::wstring& Id) {
 }
 
 std::vector<char> PluginEntry::getResultsAsync(bool StartProcessNow) {
-    using namespace std::chrono_literals;
-    if (failed()) return {};
+    if (failed()) {
+        return {};
+    }
 
     // check is valid parameters
     if (cacheAge() < cma::cfg::kMinimumCacheAge && cacheAge() != 0) {

@@ -55,10 +55,14 @@ std::string CheckMk::makeOnlyFrom() {
     std::string out;
     for (auto& entry : only_from) {
         auto value = AddressToCheckMkString(entry);
-        if (!value.empty()) out += value + " ";
+        if (!value.empty()) {
+            out += value + " ";
+        }
     }
 
-    if (!out.empty()) out.pop_back();  // last space
+    if (!out.empty()) {
+        out.pop_back();  // last space
+    }
 
     return out;
 }

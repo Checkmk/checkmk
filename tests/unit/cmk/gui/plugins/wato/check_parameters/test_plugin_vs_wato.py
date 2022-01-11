@@ -462,7 +462,6 @@ class ErrorReporter:
         ("check", "hivemanager_devices", "checkgroup_parameters:hivemanager_devices"),
         ("check", "hp_proliant_power", "checkgroup_parameters:epower_single"),
         ("check", "hp_proliant_psu", "checkgroup_parameters:hw_psu"),
-        ("check", "hpux_cpu", "checkgroup_parameters:cpu_load"),
         ("check", "hpux_multipath", "checkgroup_parameters:hpux_multipath"),
         ("check", "huawei_osn_laser", "checkgroup_parameters:huawei_osn_laser"),
         ("check", "ibm_imm_fan", "checkgroup_parameters:hw_fans_perc"),

@@ -113,7 +113,7 @@ MAP_BUILD_STATES = {
     "none": 0,  # running
 }
 
-# ucd_cpu_load
+# ucd_cpu_load, hpux_cpu
 cpuload_default_levels = (5.0, 10.0)
 
 # blade_bx_load

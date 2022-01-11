@@ -151,7 +151,6 @@ def test_section_parse_function_does_something(fix_register):
         "heartbeat_crm",
         "heartbeat_nodes",
         "hivemanager_devices",
-        "hpux_cpu",
         "hpux_fchba",
         "hpux_lvm",
         "hpux_multipath",

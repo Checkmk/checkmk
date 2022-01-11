@@ -86,7 +86,6 @@ RUN yum -y makecache \
     sqlite-devel \
     texinfo \
     tk-devel \
-    valgrind \
     vim \
     wget \
     which \
@@ -108,6 +107,7 @@ ENV NEXUS_ARCHIVES_URL="$NEXUS_ARCHIVES_URL" NEXUS_USERNAME="$NEXUS_USERNAME" NE
 
 COPY scripts/* /opt/
 RUN /opt/install-gnu-toolchain.sh
+RUN /opt/install-valgrind.sh
 RUN /opt/install-cmake.sh
 RUN /opt/install-protobuf-cpp.sh
 RUN /opt/install-openssl.sh

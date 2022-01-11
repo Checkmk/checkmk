@@ -63,11 +63,5 @@ build_package() {
     rm -rf /opt/src
 }
 
-set_symlinks() {
-    log "Set symlink"
-    mkdir -p "${TARGET_DIR}/bin"
-    ln -sf "${TARGET_DIR}/${DIR_NAME}/bin/"* "${TARGET_DIR}/bin"
-}
-
 cached_build "${TARGET_DIR}" "${DIR_NAME}" "${BUILD_ID}" "${DISTRO}" "${BRANCH_VERSION}"
-set_symlinks
+set_bin_symlinks "${TARGET_DIR}" "${DIR_NAME}"

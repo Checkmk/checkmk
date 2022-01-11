@@ -156,3 +156,13 @@ cached_build() {
 
     _cleanup_package "${ARCHIVE_PATH}"
 }
+
+set_bin_symlinks() {
+    local TARGET_DIR="$1"
+    local DIR_NAME="$2"
+
+    log "Make binaries from ${TARGET_DIR}/${DIR_NAME}/bin available via ${TARGET_DIR}/bin"
+    mkdir -p "${TARGET_DIR}/bin"
+    ln -sf "${TARGET_DIR}/${DIR_NAME}/bin/"* "${TARGET_DIR}/bin"
+}
+

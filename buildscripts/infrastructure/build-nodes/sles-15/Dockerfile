@@ -64,7 +64,6 @@ RUN zypper addrepo -G ${ARTIFACT_STORAGE}/repository/sles15 sles15 \
     joe \
     iputils \
     vim \
-    valgrind \
     && zypper clean -a
 
 # krb5-devel installs krb5-config which will be in $PATH when /etc/profile is sourced \
@@ -88,6 +87,7 @@ ENV NEXUS_ARCHIVES_URL="$NEXUS_ARCHIVES_URL" NEXUS_USERNAME="$NEXUS_USERNAME" NE
 
 COPY scripts/* /opt/
 RUN /opt/install-gnu-toolchain.sh
+RUN /opt/install-valgrind.sh
 RUN /opt/install-cmake.sh
 RUN /opt/install-protobuf-cpp.sh
 RUN /opt/install-openssl.sh

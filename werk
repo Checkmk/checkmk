@@ -989,13 +989,17 @@ def current_branch() -> str:
     return [l for l in os.popen("git branch") if l.startswith("*")][0].split()[-1]
 
 
+def current_repo() -> str:
+    return list(os.popen("git config --get remote.origin.url"))[0].strip().split("/")[-1]
+
+
 def main_fetch_ids(args: argparse.Namespace) -> None:
     if args.count is None:
         sys.stdout.write("You have %d reserved IDs.\n" % (len(get_werk_ids())))
         sys.exit(0)
 
-    if current_branch() != "master":
-        bail_out("It is not allowed to reserve IDs on any other branch than the master.")
+    if current_branch() != "master" or current_repo() != "check_mk":
+        bail_out("Werk IDs can only be reserved on the master branch of the check_mk repository.")
 
     # Get the start werk_id to reserve
     try:

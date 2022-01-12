@@ -5,17 +5,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
-from typing import Literal, Optional, Tuple, TypedDict, Union
+from typing import Literal, Optional
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import (
-    check_levels,
-    Metric,
-    register,
-    render,
-    Result,
-    Service,
-    State,
-)
+from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, register, Result, Service, State
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
     CheckResult,
     DiscoveryResult,
@@ -23,8 +15,11 @@ from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
 )
 from cmk.base.plugins.agent_based.utils.kube_resources import (
     AggregatedLimit,
-    AggregatedRequest,
+    check_with_utilization,
+    DEFAULT_PARAMS,
     ExceptionalResource,
+    iterate_resources,
+    Params,
     Resources,
     Usage,
 )
@@ -48,69 +43,34 @@ def discovery(
         yield Service()
 
 
-Modes = Literal["perc_used"]
-Param = Union[Literal["ignore"], Tuple[Modes, Tuple[float, float]]]
-
-
-class Params(TypedDict):
-    request: Param
-    limit: Param
-
-
-def get_levels_for(params: Params, key: str) -> Optional[Tuple[float, float]]:
-    """Get the levels for the given key from the params
-
-    Examples:
-        >>> params = Params(
-        ...     request="ignore",
-        ...     limit=("perc_used", (80.0, 90.0)),
-        ... )
-        >>> get_levels_for(params, "request")
-        >>> get_levels_for(params, "limit")
-        (80.0, 90.0)
-    """
-    levels = params.get(key, "ignore")
-    if levels == "ignore":
-        return None
-    assert isinstance(levels, tuple)
-    return levels[1]
-
-
 def check_resource(
     params: Params,
-    resource_type: str,
-    resource_value: Union[AggregatedLimit, AggregatedRequest],
+    requirement_type: Literal["request", "limit"],
+    requirement_value: AggregatedLimit,
     cpu_usage: float,
 ) -> CheckResult:
-    if isinstance(resource_value, ExceptionalResource):
+    if isinstance(requirement_value, ExceptionalResource):
         yield Result(
             state=State.OK,
-            summary=f"{resource_type.title()} n/a",
-            details=f"{resource_type.title()}: {resource_value}",
+            summary=f"{requirement_type.title()} n/a",
+            details=f"{requirement_type.title()}: {requirement_value}",
         )
         return
-    if resource_value == 0:
+    if requirement_value == 0:
         yield Result(
             state=State.OK,
-            summary=f"{resource_type.title()} n/a",
-            details=f"{resource_type.title()}: set to zero for all containers",
+            summary=f"{requirement_type.title()} n/a",
+            details=f"{requirement_type.title()}: set to zero for all containers",
         )
         return
-    yield Metric(f"kube_cpu_{resource_type}", resource_value)
-    utilization = cpu_usage / resource_value * 100
-    result, metric = check_levels(
-        utilization,
-        levels_upper=get_levels_for(params, resource_type),
-        metric_name=f"kube_cpu_{resource_type}_utilization",
-        render_func=render.percent,
+    yield from check_with_utilization(
+        cpu_usage,
+        "cpu",
+        requirement_type,
+        requirement_value,
+        params[requirement_type],
+        lambda x: f"{x:0.3f}",
     )
-    assert isinstance(result, Result)
-    percentage, *warn_crit = result.summary.split()
-    yield Result(
-        state=result.state,
-        summary=f"{resource_type.title()} utilization: {percentage} - {cpu_usage:0.3f} of {resource_value:0.3f} {' '.join(warn_crit)}".rstrip(),
-    )
-    yield metric
 
 
 def check(
@@ -125,8 +85,8 @@ def check(
     yield Metric("kube_cpu_usage", cpu_usage)
     if section_kube_cpu_resources is None:
         return
-    yield from check_resource(params, "request", section_kube_cpu_resources.request, cpu_usage)
-    yield from check_resource(params, "limit", section_kube_cpu_resources.limit, cpu_usage)
+    for requirement_type, requirement_value in iterate_resources(section_kube_cpu_resources):
+        yield from check_resource(params, requirement_type, requirement_value, cpu_usage)
 
 
 register.agent_section(
@@ -148,5 +108,5 @@ register.check_plugin(
     check_ruleset_name="kube_cpu_usage",
     discovery_function=discovery,
     check_function=check,
-    check_default_parameters={},
+    check_default_parameters=DEFAULT_PARAMS,
 )

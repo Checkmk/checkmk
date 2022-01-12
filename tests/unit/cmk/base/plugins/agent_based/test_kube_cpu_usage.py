@@ -171,10 +171,10 @@ def test_check_yields_multiple_metrics_with_values(
 ):
     expected = [
         ("kube_cpu_usage", USAGE),
-        ("kube_cpu_request", resources_request),
         ("kube_cpu_request_utilization", USAGE / resources_request * 100),
-        ("kube_cpu_limit", resources_limit),
+        ("kube_cpu_request", resources_request),
         ("kube_cpu_limit_utilization", USAGE / resources_limit * 100),
+        ("kube_cpu_limit", resources_limit),
     ]
     assert [(m.name, m.value) for m in check_result if isinstance(m, Metric)] == expected
 
@@ -235,9 +235,23 @@ def test_check_all_states_ok_params_ignore(check_result):
 
 
 @pytest.mark.parametrize("state", [OK, WARN, CRIT])
-@pytest.mark.parametrize("params", [{}])
-def test_check_all_states_ok_empty_params(check_result):
-    assert all(r.state == State.OK for r in check_result if isinstance(r, Result))
+@pytest.mark.parametrize(
+    "params_request, params_limit, expected_states",
+    [
+        (
+            ("abs_used", (0.01, 1.0)),
+            ("abs_used", (0.01, 1.0)),
+            [State.OK, State.WARN, State.WARN],
+        ),
+        (
+            ("abs_used", (0.01, 0.01)),
+            ("abs_used", (0.01, 0.01)),
+            [State.OK, State.CRIT, State.CRIT],
+        ),
+    ],
+)
+def test_check_abs_levels_with_mixed(expected_states, check_result):
+    assert [r.state for r in check_result if isinstance(r, Result)] == expected_states
 
 
 @pytest.mark.parametrize(

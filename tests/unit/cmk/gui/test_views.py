@@ -185,7 +185,7 @@ def test_registered_commands():
         'ec_custom_actions': {
             'permission': 'mkeventd.actions',
             'tables': ['event'],
-            'title': u'Custom Action'
+            'title': u'Custom action'
         },
         'remove_comments': {
             'permission': 'action.addcomment',
@@ -210,7 +210,7 @@ def test_registered_commands():
         'ec_change_state': {
             'permission': 'mkeventd.changestate',
             'tables': ['event'],
-            'title': u'Change State'
+            'title': u'Change state'
         },
         'clear_modified_attributes': {
             'permission': 'action.clearmodattr',
@@ -225,7 +225,7 @@ def test_registered_commands():
         'ec_archive_event': {
             'permission': 'mkeventd.delete',
             'tables': ['event'],
-            'title': u'Archive Event'
+            'title': u'Archive event'
         },
         'add_comment': {
             'permission': 'action.addcomment',
@@ -267,7 +267,7 @@ def test_registered_commands():
         'ec_update_event': {
             'permission': 'mkeventd.update',
             'tables': ['event'],
-            'title': u'Update & Acknowledge'
+            'title': u'Update & acknowledge'
         },
         'delete_crash_reports': {
             'permission': 'action.delete_crash_report',
@@ -598,7 +598,7 @@ def test_registered_datasources():
             'keys': [],
             'table': ('tuple', ('query_ec_table', ['eventconsoleevents'])),
             'time_filters': ['event_first'],
-            'title': u'Event Console: Current Events'
+            'title': u'Event Console: Current events'
         },
         'mkeventd_history': {
             'auth_domain': 'ec',
@@ -607,7 +607,7 @@ def test_registered_datasources():
             'keys': [],
             'table': ('tuple', ('query_ec_table', ['eventconsolehistory'])),
             'time_filters': ['history_time'],
-            'title': u'Event Console: Event History'
+            'title': u'Event Console: Event history'
         },
         'service_discovery': {
             'add_columns': ['discovery_state', 'discovery_check', 'discovery_service'],

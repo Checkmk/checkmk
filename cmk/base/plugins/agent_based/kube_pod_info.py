@@ -34,9 +34,10 @@ def parse_kube_pod_info(string_table: StringTable):
     ... '"node": "k8-w2", '
     ... '"qos_class": "burstable", '
     ... '"restart_policy": "Always", '
-    ... '"uid": "dd1019ca-c429-46af-b6b7-8aad47b6081a"}'
+    ... '"uid": "dd1019ca-c429-46af-b6b7-8aad47b6081a", '
+    ... '"controllers": [{"type_": "deployment", "name": "redis-deployment"}]}'
     ... ]])
-    PodInfo(namespace='redis', creation_timestamp=1637069562.0, labels={}, node='k8-w2', qos_class='burstable', restart_policy='Always', uid='dd1019ca-c429-46af-b6b7-8aad47b6081a')
+    PodInfo(namespace='redis', creation_timestamp=1637069562.0, labels={}, node='k8-w2', qos_class='burstable', restart_policy='Always', uid='dd1019ca-c429-46af-b6b7-8aad47b6081a', controllers=[Controller(type_=<ControllerType.deployment: 'deployment'>, name='redis-deployment')])
     """
     return PodInfo(**json.loads(string_table[0][0]))
 
@@ -45,14 +46,21 @@ def host_labels(section: PodInfo) -> HostLabelGenerator:
     """Host label function
 
     Labels:
+        cmk/kubernetes/object:
+            This label is set to the Kubernetes object type.
+
         cmk/kubernetes/namespace:
             This label is set to the namespace of the deployment.
 
         cmk/kubernetes/node:
             This label is set to the node of the pod.
     """
+    yield HostLabel("cmk/kubernetes/object", "pod")
     yield HostLabel("cmk/kubernetes/node", section.node)
     yield HostLabel("cmk/kubernetes/namespace", section.namespace)
+
+    for controller in section.controllers:
+        yield HostLabel(f"cmk/kubernetes/{controller.type_.value}", controller.name)
 
     for label in section.labels.values():
         yield HostLabel(label.name, label.value)

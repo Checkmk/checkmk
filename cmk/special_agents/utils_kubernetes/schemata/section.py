@@ -68,6 +68,21 @@ class Resources(BaseModel):
     limit: AggregatedLimit
 
 
+class ControllerType(enum.Enum):
+    deployment = "deployment"
+
+    @staticmethod
+    def from_str(label):
+        if label == "deployment":
+            return ControllerType.deployment
+        raise ValueError(f"Unknown controller type {label} specified")
+
+
+class Controller(BaseModel):
+    type_: ControllerType
+    name: str
+
+
 class PodInfo(BaseModel):
     """section: kube_pod_info_v1"""
 
@@ -79,6 +94,7 @@ class PodInfo(BaseModel):
     qos_class: api.QosClass
     restart_policy: api.RestartPolicy
     uid: api.PodUID
+    controllers: Sequence[Controller] = []
 
 
 class PodResources(BaseModel):

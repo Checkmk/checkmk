@@ -3,7 +3,7 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
+import enum
 import json
 from dataclasses import dataclass
 from typing import Dict, List, Literal, Mapping, NewType, Optional, Sequence, TypedDict, Union
@@ -143,6 +143,21 @@ class KubeletInfo(BaseModel):
     health: HealthZ
 
 
+class ControllerType(enum.Enum):
+    deployment = "deployment"
+
+    @staticmethod
+    def from_str(label):
+        if label == "deployment":
+            return ControllerType.deployment
+        raise ValueError(f"Unknown controller type: {label}")
+
+
+class Controller(BaseModel):
+    type_: ControllerType
+    name: str
+
+
 class PodInfo(BaseModel):
     """section: kube_pod_info_v1"""
 
@@ -154,6 +169,7 @@ class PodInfo(BaseModel):
     qos_class: QosClass
     restart_policy: RestartPolicy
     uid: PodUID
+    controllers: Sequence[Controller] = []
 
 
 class APIHealth(BaseModel):

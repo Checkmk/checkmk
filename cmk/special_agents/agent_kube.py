@@ -168,6 +168,7 @@ class Pod:
         self.spec = spec
         self.status = status
         self.containers = containers
+        self._controllers: List[Deployment] = []
 
     @property
     def phase(self):
@@ -187,11 +188,21 @@ class Pod:
         return f"{self.metadata.namespace}_{self.metadata.name}"
 
     def info(self) -> section.PodInfo:
+        controllers = []
+        for controller in self._controllers:
+            controllers.append(
+                section.Controller(
+                    type_=section.ControllerType.from_str(controller.type_),
+                    name=controller.name(prepend_namespace=True),
+                )
+            )
+
         return section.PodInfo(
             namespace=self.metadata.namespace,
             creation_timestamp=self.metadata.creation_timestamp,
             labels=self.metadata.labels if self.metadata.labels else {},
             node=self.node,
+            controllers=controllers,
             restart_policy=self.spec.restart_policy,
             qos_class=self.status.qos_class,
             uid=self.uid,
@@ -245,6 +256,15 @@ class Pod:
             return None
         return api.StartTime(start_time=self.status.start_time)
 
+    def add_controller(self, controller: Deployment) -> None:
+        """Add a handling controller of the pod
+
+        Kubernetes control objects manage pods based on their labels. As the API does not
+        provide any information regarding these control objects from the pod's perspective
+        this double linking is done here
+        """
+        self._controllers.append(controller)
+
 
 def aggregate_request_values(
     request_values: Sequence[Optional[float]],
@@ -271,6 +291,7 @@ class Deployment:
         self.metadata = metadata
         self.status = status
         self._pods: List[Pod] = []
+        self.type_: str = "deployment"
 
     def name(self, prepend_namespace: bool = False) -> str:
         if not prepend_namespace:
@@ -306,6 +327,7 @@ class Deployment:
 
     def add_pod(self, pod: Pod) -> None:
         self._pods.append(pod)
+        pod.add_controller(self)
 
     def pod_resources(self) -> section.PodResources:
         resources: DefaultDict[str, List[str]] = defaultdict(list)

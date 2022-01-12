@@ -10,10 +10,10 @@ from cmk.base.plugins.agent_based.utils.k8s import Memory
 from cmk.base.plugins.agent_based.utils.kube_resources import (
     check_with_utilization,
     DEFAULT_PARAMS,
-    ExceptionalResource,
     iterate_resources,
     Params,
     Resources,
+    result_for_exceptional_resource,
 )
 
 from .agent_based_api.v1 import Metric, register, render, Result, Service, State
@@ -95,30 +95,7 @@ def check_kube_memory(
                 render.bytes,
             )
         else:
-            # TODO Add new logic to reduce code duplication.
-            summary = f"{requirement_name.title()}: n/a"
-            if requirement == ExceptionalResource.unspecified:
-                yield Result(
-                    state=State.OK,
-                    summary=summary,
-                    details=f"{requirement_name.title()}: not specified for at least one container",
-                )
-            if requirement == ExceptionalResource.zero:
-                yield Result(
-                    state=State.OK,
-                    summary=summary,
-                    details=f"{requirement_name.title()}: set to zero for at least one container",
-                )
-            if requirement == ExceptionalResource.zero_unspecified:
-                yield Result(
-                    state=State.OK,
-                    notice=f"{requirement_name.title()}: not specified for at least one container",
-                )
-                yield Result(
-                    state=State.OK,
-                    summary=summary,
-                    details=f"{requirement_name.title()}: set to zero for at least one container",
-                )
+            yield result_for_exceptional_resource(requirement_name, requirement)
 
 
 register.check_plugin(

@@ -15,10 +15,10 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Stat
 from cmk.base.plugins.agent_based.kube_memory import (
     check_kube_memory,
     DEFAULT_PARAMS,
-    ExceptionalResource,
     Memory,
     Resources,
 )
+from cmk.base.plugins.agent_based.utils.kube_resources import ExceptionalResource
 
 from cmk.gui.plugins.wato.check_parameters.kube_memory import _parameter_valuespec_memory
 
@@ -273,11 +273,10 @@ def test_register_check_plugin_calls(check_plugin):
                     summary="Request: n/a",
                     details="Request: set to zero for all containers",
                 ),
-                Result(state=State.OK, notice="Limit: not specified for at least one container"),
                 Result(
                     state=State.OK,
                     summary="Limit: n/a",
-                    details="Limit: set to zero for at least one container",
+                    details="Limit: not specified for at least one container, set to zero for at least one container",
                 ),
             ),
             id="Config data not defined, and limit value is zero",

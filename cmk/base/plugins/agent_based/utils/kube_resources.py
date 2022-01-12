@@ -19,7 +19,13 @@ from typing import (
 
 from pydantic import BaseModel
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import check_levels, Metric, render, Result
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    check_levels,
+    Metric,
+    render,
+    Result,
+    State,
+)
 
 
 class ExceptionalResource(str, enum.Enum):
@@ -134,3 +140,21 @@ def check_with_utilization(
     )
     yield metric
     yield Metric(f"kube_{resource_type}_{requirement_type}", requirement_value)
+
+
+def result_for_exceptional_resource(
+    requirement_type: str, requirement_value: ExceptionalResource
+) -> Result:
+    details_pieces = []
+    if requirement_value in (
+        ExceptionalResource.unspecified,
+        ExceptionalResource.zero_unspecified,
+    ):
+        details_pieces.append("not specified for at least one container")
+    if requirement_value in (ExceptionalResource.zero, ExceptionalResource.zero_unspecified):
+        details_pieces.append("set to zero for at least one container")
+    return Result(
+        state=State.OK,
+        summary=f"{requirement_type.title()}: n/a",
+        details=f"{requirement_type.title()}: {', '.join(details_pieces)}",
+    )

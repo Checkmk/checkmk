@@ -62,26 +62,31 @@ class APICallFolders(APICallCollection):
                 "handler": self._get,
                 "required_keys": ["folder"],
                 "optional_keys": ["effective_attributes"],
+                "required_permissions": ["wato.see_all_folders"],
                 "locking": False,
             },
             "add_folder": {
                 "handler": self._add,
                 "required_keys": ["folder", "attributes"],
                 "optional_keys": ["create_parent_folders"],
+                "required_permissions": ["wato.manage_folders"],
             },
             "edit_folder": {
                 "handler": self._edit,
                 "required_keys": ["folder"],
                 "optional_keys": ["attributes", "configuration_hash"],
+                "required_permissions": ["wato.edit_folders"],
             },
             "delete_folder": {
                 "handler": self._delete,
                 "required_keys": ["folder"],
                 "optional_keys": ["configuration_hash"],
+                "required_permissions": ["wato.manage_folders"],
             },
             "get_all_folders": {
                 "handler": self._get_all,
                 "optional_keys": ["effective_attributes"],
+                "required_permissions": ["wato.see_all_folders"],
                 "locking": False,
             },
         }
@@ -187,38 +192,46 @@ class APICallHosts(APICallCollection):
             "add_host": {
                 "handler": self._add,
                 "required_keys": ["hostname", "folder"],
+                "required_permissions": ["wato.manage_hosts", "wato.edit_hosts"],
                 "optional_keys": ["attributes", "nodes", "create_folders"],
             },
             "add_hosts": {
                 "handler": self._add_hosts,
+                "required_permissions": ["wato.manage_hosts", "wato.edit_hosts"],
                 "required_keys": ["hosts"],
             },
             "edit_host": {
                 "handler": self._edit,
                 "required_keys": ["hostname"],
+                "required_permissions": ["wato.edit_hosts"],
                 "optional_keys": ["unset_attributes", "attributes", "nodes"],
             },
             "edit_hosts": {
                 "handler": self._edit_hosts,
+                "required_permissions": ["wato.edit_hosts"],
                 "required_keys": ["hosts"],
             },
             "get_host": {
                 "handler": self._get,
                 "required_keys": ["hostname"],
                 "optional_keys": ["effective_attributes"],
+                "required_permissions": ["wato.see_all_folders"],
                 "locking": False,
             },
             "delete_host": {
                 "handler": self._delete,
+                "required_permissions": ["wato.manage_hosts"],
                 "required_keys": ["hostname"],
             },
             "delete_hosts": {
                 "handler": self._delete_hosts,
+                "required_permissions": ["wato.manage_hosts"],
                 "required_keys": ["hostnames"],
             },
             "get_all_hosts": {
                 "handler": self._get_all,
                 "optional_keys": ["effective_attributes"],
+                "required_permissions": ["wato.see_all_folders"],
                 "locking": False,
             },
         }
@@ -401,60 +414,73 @@ class APICallHosts(APICallCollection):
 @api_call_collection_registry.register
 class APICallGroups(APICallCollection):
     def get_api_calls(self):
+        required_permissions = ["wato.groups"]
         return {
             "get_all_contactgroups": {
                 "handler": self._get_all_contactgroups,
                 "locking": False,
+                "required_permissions": required_permissions,
             },
             "delete_contactgroup": {
                 "handler": partial(self._delete_group, "contact"),
                 "required_keys": ["groupname"],
+                "required_permissions": required_permissions,
             },
             "add_contactgroup": {
                 "handler": partial(self._add_group, "contact"),
                 "required_keys": ["groupname", "alias"],
                 "optional_keys": ["customer", "nagvis_maps"],
+                "required_permissions": required_permissions,
             },
             "edit_contactgroup": {
                 "handler": partial(self._edit_group, "contact"),
                 "required_keys": ["groupname", "alias"],
                 "optional_keys": ["customer", "nagvis_maps"],
+                "required_permissions": required_permissions,
             },
             "get_all_hostgroups": {
                 "handler": self._get_all_hostgroups,
                 "locking": False,
+                "required_permissions": required_permissions,
             },
             "delete_hostgroup": {
                 "handler": partial(self._delete_group, "host"),
                 "required_keys": ["groupname"],
+                "required_permissions": required_permissions,
             },
             "add_hostgroup": {
                 "handler": partial(self._add_group, "host"),
                 "required_keys": ["groupname", "alias"],
                 "optional_keys": ["customer"],
+                "required_permissions": required_permissions,
             },
             "edit_hostgroup": {
                 "handler": partial(self._edit_group, "host"),
                 "required_keys": ["groupname", "alias"],
                 "optional_keys": ["customer"],
+                "required_permissions": required_permissions,
             },
             "get_all_servicegroups": {
                 "handler": self._get_all_servicegroups,
                 "locking": False,
+                "required_permissions": required_permissions,
             },
             "delete_servicegroup": {
                 "handler": partial(self._delete_group, "service"),
                 "required_keys": ["groupname"],
+                "required_permissions": required_permissions,
             },
             "add_servicegroup": {
                 "handler": partial(self._add_group, "service"),
                 "required_keys": ["groupname", "alias"],
                 "optional_keys": ["customer"],
+                "required_permissions": required_permissions,
             },
             "edit_servicegroup": {
                 "handler": partial(self._edit_group, "service"),
                 "required_keys": ["groupname", "alias"],
                 "optional_keys": ["customer"],
+                "required_permissions": required_permissions,
             },
         }
 
@@ -525,22 +551,27 @@ class APICallGroups(APICallCollection):
 @api_call_collection_registry.register
 class APICallUsers(APICallCollection):
     def get_api_calls(self):
+        required_permissions = ["wato.users"]
         return {
             "get_all_users": {
                 "handler": self._get_all_users,
                 "locking": False,
+                "required_permissions": required_permissions,
             },
             "delete_users": {
                 "handler": self._delete_users,
                 "required_keys": ["users"],
+                "required_permissions": required_permissions,
             },
             "add_users": {
                 "handler": self._add_users,
                 "required_keys": ["users"],
+                "required_permissions": required_permissions,
             },
             "edit_users": {
                 "handler": self._edit_users,
                 "required_keys": ["users"],
+                "required_permissions": required_permissions,
             },
         }
 
@@ -1123,6 +1154,7 @@ class APICallOther(APICallCollection):
             "activate_changes": {
                 "handler": self._activate_changes,
                 "optional_keys": ["mode", "sites", "allow_foreign_changes", "comment"],
+                "required_permissions": ["wato.activate"],
             },
         }
 

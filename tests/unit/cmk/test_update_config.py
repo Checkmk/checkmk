@@ -9,7 +9,7 @@ import argparse
 import io
 import sys
 from pathlib import Path
-from typing import Iterator
+from typing import Any, Iterator, Mapping, MutableMapping, Sequence, Tuple
 
 import pytest
 from pytest_mock import MockerFixture
@@ -21,6 +21,7 @@ from tests.unit.cmk.gui.conftest import load_plugins  # noqa: F401 # pylint: dis
 
 import cmk.utils.log
 import cmk.utils.paths
+from cmk.utils.type_defs import ContactgroupName, RulesetName, RuleSpec, RuleValue
 
 import cmk.gui.config
 from cmk.gui.utils.script_helpers import application_and_request_context
@@ -37,38 +38,38 @@ def request_context() -> Iterator[None]:
         yield
 
 
-@pytest.fixture()
-def uc():
+@pytest.fixture(name="uc")
+def fixture_uc() -> update_config.UpdateConfig:
     return update_config.UpdateConfig(cmk.utils.log.logger, argparse.Namespace())
 
 
-def test_parse_arguments_defaults():
+def test_parse_arguments_defaults() -> None:
     assert update_config.parse_arguments([]).__dict__ == {
         "debug": False,
         "verbose": 0,
     }
 
 
-def test_parse_arguments_verbose():
+def test_parse_arguments_verbose() -> None:
     assert update_config.parse_arguments(["-v"]).verbose == 1
     assert update_config.parse_arguments(["-v"] * 2).verbose == 2
     assert update_config.parse_arguments(["-v"] * 3).verbose == 3
 
 
-def test_parse_arguments_debug():
+def test_parse_arguments_debug() -> None:
     assert update_config.parse_arguments(["--debug"]).debug is True
 
 
-def test_update_config_init():
+def test_update_config_init() -> None:
     update_config.UpdateConfig(cmk.utils.log.logger, argparse.Namespace())
 
 
-def mock_run():
+def mock_run() -> int:
     sys.stdout.write("XYZ\n")
     return 0
 
 
-def test_main(monkeypatch):
+def test_main(monkeypatch: pytest.MonkeyPatch) -> None:
     buf = io.StringIO()
     monkeypatch.setattr(sys, "stdout", buf)
     monkeypatch.setattr(update_config.UpdateConfig, "run", lambda self: mock_run())
@@ -76,11 +77,11 @@ def test_main(monkeypatch):
     assert "XYZ" in buf.getvalue()
 
 
-def test_cleanup_version_specific_caches_missing_directory(uc):
+def test_cleanup_version_specific_caches_missing_directory(uc: update_config.UpdateConfig) -> None:
     uc._cleanup_version_specific_caches()
 
 
-def test_cleanup_version_specific_caches(uc):
+def test_cleanup_version_specific_caches(uc: update_config.UpdateConfig) -> None:
     paths = [
         Path(cmk.utils.paths.include_cache_dir, "builtin"),
         Path(cmk.utils.paths.include_cache_dir, "local"),
@@ -109,15 +110,14 @@ def test_cleanup_version_specific_caches(uc):
 )
 @pytest.mark.usefixtures("request_context")
 def test__transform_wato_rulesets_params(
-    ruleset_name,
-    param_value,
-    transformed_param_value,
-):
+    uc: update_config.UpdateConfig,
+    ruleset_name: RulesetName,
+    param_value: RuleValue,
+    transformed_param_value: RuleValue,
+) -> None:
     ruleset = _instantiate_ruleset(ruleset_name, param_value)
     rulesets = RulesetCollection()
     rulesets.set_rulesets({ruleset_name: ruleset})
-
-    uc = update_config.UpdateConfig(cmk.utils.log.logger, argparse.Namespace())
 
     uc._transform_wato_rulesets_params(rulesets)
 
@@ -134,11 +134,12 @@ def test__transform_wato_rulesets_params(
 )
 @pytest.mark.usefixtures("request_context")
 def test__transform_replaced_wato_rulesets_and_params(
-    ruleset_name,
-    param_value,
-    new_ruleset_name,
-    transformed_param_value,
-):
+    uc: update_config.UpdateConfig,
+    ruleset_name: RulesetName,
+    param_value: RuleValue,
+    new_ruleset_name: RulesetName,
+    transformed_param_value: RuleValue,
+) -> None:
     all_rulesets = RulesetCollection()
     # checkmk: all_rulesets are loaded via
     # all_rulesets = cmk.gui.watolib.rulesets.AllRulesets()
@@ -148,8 +149,6 @@ def test__transform_replaced_wato_rulesets_and_params(
             new_ruleset_name: Ruleset(new_ruleset_name, {}),
         }
     )
-
-    uc = update_config.UpdateConfig(cmk.utils.log.logger, argparse.Namespace())
 
     uc._transform_replaced_wato_rulesets(all_rulesets)
     uc._transform_wato_rulesets_params(all_rulesets)
@@ -164,7 +163,7 @@ def test__transform_replaced_wato_rulesets_and_params(
     assert rule[2].value == transformed_param_value
 
 
-def _instantiate_ruleset(ruleset_name, param_value):
+def _instantiate_ruleset(ruleset_name, param_value) -> Ruleset:
     ruleset = Ruleset(ruleset_name, {})
     rule = Rule(Folder(""), ruleset)
     rule.value = param_value
@@ -173,7 +172,7 @@ def _instantiate_ruleset(ruleset_name, param_value):
     return ruleset
 
 
-def _2_0_ignored_services():
+def _2_0_ignored_services() -> Sequence[RuleSpec]:
     return [
         {
             "id": "1",
@@ -198,7 +197,7 @@ def _2_0_ignored_services():
     ]
 
 
-def _non_discovery_ignored_services_ruleset():
+def _non_discovery_ignored_services_ruleset() -> Sequence[RuleSpec]:
     return [
         # Skip rule with multiple hostnames
         {
@@ -266,9 +265,10 @@ def _non_discovery_ignored_services_ruleset():
 )
 @pytest.mark.usefixtures("request_context")
 def test__transform_discovery_disabled_services(
-    ruleset_spec,
-    expected_ruleset,
-):
+    uc: update_config.UpdateConfig,
+    ruleset_spec: Sequence[RuleSpec],
+    expected_ruleset: Sequence[RuleSpec],
+) -> None:
     ruleset = Ruleset("ignored_services", {})
     ruleset.from_config(Folder(""), ruleset_spec)
     assert ruleset.get_rules()
@@ -276,7 +276,6 @@ def test__transform_discovery_disabled_services(
     rulesets = RulesetCollection()
     rulesets.set_rulesets({"ignored_services": ruleset})
 
-    uc = update_config.UpdateConfig(cmk.utils.log.logger, argparse.Namespace())
     uc._transform_discovery_disabled_services(rulesets)
 
     folder_rules = ruleset.get_folder_rules(Folder(""))
@@ -284,17 +283,17 @@ def test__transform_discovery_disabled_services(
 
 
 @pytest.fixture(name="old_path")
-def fixture_old_path():
+def fixture_old_path() -> Path:
     return Path(cmk.utils.paths.var_dir, "wato", "log", "audit.log")
 
 
 @pytest.fixture(name="new_path")
-def fixture_new_path():
+def fixture_new_path() -> Path:
     return Path(cmk.utils.paths.var_dir, "wato", "log", "wato_audit.log")
 
 
 @pytest.fixture(name="old_audit_log")
-def fixture_old_audit_log(old_path):
+def fixture_old_audit_log(old_path: Path) -> Path:
     old_path.parent.mkdir(exist_ok=True, parents=True)
     with old_path.open("w") as f:
         f.write(
@@ -310,9 +309,11 @@ def fixture_old_audit_log(old_path):
     return old_path
 
 
-def test__migrate_pre_2_0_audit_log(tmp_path, old_audit_log, new_path):
-    uc = update_config.UpdateConfig(cmk.utils.log.logger, argparse.Namespace())
-
+def test__migrate_pre_2_0_audit_log(
+    uc: update_config.UpdateConfig,
+    old_audit_log: Path,
+    new_path: Path,
+) -> None:
     assert not new_path.exists()
     assert old_audit_log.exists()
 
@@ -375,9 +376,11 @@ def test__migrate_pre_2_0_audit_log(tmp_path, old_audit_log, new_path):
     ]
 
 
-def test__migrate_pre_2_0_audit_log_not_existing(tmp_path, old_path, new_path):
-    uc = update_config.UpdateConfig(cmk.utils.log.logger, argparse.Namespace())
-
+def test__migrate_pre_2_0_audit_log_not_existing(
+    uc: update_config.UpdateConfig,
+    old_path: Path,
+    new_path: Path,
+) -> None:
     assert not new_path.exists()
     assert not old_path.exists()
     uc._migrate_pre_2_0_audit_log()
@@ -385,9 +388,11 @@ def test__migrate_pre_2_0_audit_log_not_existing(tmp_path, old_path, new_path):
     assert not old_path.exists()
 
 
-def test__migrate_pre_2_0_audit_log_not_migrate_already_migrated(tmp_path, old_audit_log, new_path):
-    uc = update_config.UpdateConfig(cmk.utils.log.logger, argparse.Namespace())
-
+def test__migrate_pre_2_0_audit_log_not_migrate_already_migrated(
+    uc: update_config.UpdateConfig,
+    old_audit_log: Path,
+    new_path: Path,
+) -> None:
     assert not new_path.exists()
     assert old_audit_log.exists()
 
@@ -402,10 +407,11 @@ def test__migrate_pre_2_0_audit_log_not_migrate_already_migrated(tmp_path, old_a
     assert old_audit_log.exists()
 
 
-def test__rename_discovered_host_label_files_fix_wrong_name(monkeypatch):
+def test__rename_discovered_host_label_files_fix_wrong_name(
+    monkeypatch: pytest.MonkeyPatch,
+    uc: update_config.UpdateConfig,
+) -> None:
     Scenario().add_host("abc.d").apply(monkeypatch)
-
-    uc = update_config.UpdateConfig(cmk.utils.log.logger, argparse.Namespace())
 
     host_name = "abc.d"
     old_path = (cmk.utils.paths.discovered_host_labels_dir / host_name).with_suffix(".mk")
@@ -423,10 +429,11 @@ def test__rename_discovered_host_label_files_fix_wrong_name(monkeypatch):
     assert new_path.exists()
 
 
-def test__rename_discovered_host_label_files_do_not_overwrite(monkeypatch):
+def test__rename_discovered_host_label_files_do_not_overwrite(
+    monkeypatch: pytest.MonkeyPatch,
+    uc: update_config.UpdateConfig,
+) -> None:
     Scenario().add_host("abc.d").apply(monkeypatch)
-
-    uc = update_config.UpdateConfig(cmk.utils.log.logger, argparse.Namespace())
 
     host_name = "abc.d"
     old_path = (cmk.utils.paths.discovered_host_labels_dir / host_name).with_suffix(".mk")
@@ -507,13 +514,16 @@ def test__rename_discovered_host_label_files_do_not_overwrite(monkeypatch):
         ),
     ],
 )
-def test__transform_contact_groups(monkeypatch, contact_groups, expected_contact_groups):
-    uc = update_config.UpdateConfig(cmk.utils.log.logger, argparse.Namespace())
+def test__transform_contact_groups(
+    uc: update_config.UpdateConfig,
+    contact_groups: Mapping[ContactgroupName, MutableMapping[str, Any]],
+    expected_contact_groups: Mapping[ContactgroupName, MutableMapping[str, Any]],
+) -> None:
     uc._transform_contact_groups(contact_groups)
     assert contact_groups == expected_contact_groups
 
 
-def _edit_rule(key):
+def _edit_rule(key: str) -> Tuple[str, str]:
     # note that values ending with [1 are missing a closing "
     return (
         'Value of "%s changed from "mysecret" to "verysecret".' % key,
@@ -521,7 +531,7 @@ def _edit_rule(key):
     )
 
 
-def mock_audit_log_entry(action, diff_text):
+def mock_audit_log_entry(action: str, diff_text: str) -> AuditLogStore.Entry:
     return AuditLogStore.Entry(
         time=0, object_ref=None, user_id="", action=action, text="", diff_text=diff_text
     )
@@ -572,7 +582,7 @@ def mock_audit_log_entry(action, diff_text):
         ),
     ],
 )
-def test_password_sanitizer_edit_rule(diff, expected):
+def test_password_sanitizer_edit_rule(diff: str, expected: str) -> None:
     sanitizer = update_config.PasswordSanitizer()
     entry = sanitizer.replace_password(mock_audit_log_entry("edit-rule", diff))
     assert entry.diff_text == expected
@@ -656,13 +666,13 @@ def test_password_sanitizer_edit_rule(diff, expected):
         ),
     ],
 )
-def test_password_sanitizer_new_rule(diff, expected):
+def test_password_sanitizer_new_rule(diff: str, expected: str) -> None:
     sanitizer = update_config.PasswordSanitizer()
     entry = sanitizer.replace_password(mock_audit_log_entry("new-rule", diff))
     assert entry.diff_text == expected
 
 
-def test_password_sanitizer_multiline():
+def test_password_sanitizer_multiline() -> None:
     diff_fst, expected_fst = _edit_rule("value/instance/api_key/[1")
     diff_snd, expected_snd = _edit_rule("value/instance/app_key/[1")
     diff = "\n".join([diff_fst, diff_snd])
@@ -673,7 +683,10 @@ def test_password_sanitizer_multiline():
     assert entry.diff_text == expected
 
 
-def test_update_global_config(mocker: MockerFixture) -> None:
+def test_update_global_config(
+    mocker: MockerFixture,
+    uc: update_config.UpdateConfig,
+) -> None:
     mocker.patch.object(
         update_config,
         "REMOVED_GLOBALS_MAP",
@@ -698,9 +711,7 @@ def test_update_global_config(mocker: MockerFixture) -> None:
             "unchanged": config_val,
         }[config_var],
     )
-    assert update_config.UpdateConfig(
-        cmk.utils.log.logger, argparse.Namespace()
-    )._update_global_config(
+    assert uc._update_global_config(
         {
             "global_a": True,
             "global_b": 14,

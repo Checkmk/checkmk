@@ -492,7 +492,7 @@ def extract_snapshot(tar: tarfile.TarFile, domains: Dict[str, DomainSpec]) -> No
             return errors
 
         for line in stdout:
-            full_path = prefix + "/" + line
+            full_path = str(prefix) + "/" + line
             path_tokens = full_path.split("/")
             check_exists_or_writable(path_tokens)
 

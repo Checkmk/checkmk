@@ -1526,7 +1526,7 @@ class PainterInvhistDelta(Painter):
 
     @property
     def columns(self):
-        return ['invhist_deltainvhist_time']
+        return ["invhist_delta", "invhist_time"]
 
     def render(self, row, cell):
         return paint_host_inventory_tree(row, column="invhist_delta")

@@ -10,10 +10,16 @@ import astroid  # type: ignore[import]
 import pytest
 
 from tests.testlib.pylint_checker_forbidden_objects import (
+    ABCMetaChecker,
     ForbiddenFunctionChecker,
     SixEnsureStrBinChecker,
     TypingNamedTupleChecker,
 )
+
+
+@pytest.fixture(name="abcmeta_checker")
+def abcmeta_checker_fixture() -> ABCMetaChecker:
+    return ABCMetaChecker(None)
 
 
 @pytest.fixture(name="namedtuple_checker")
@@ -237,3 +243,61 @@ def test_multiple_modules_multiple_functions(
             )
             is ref_value
         )
+
+
+@pytest.mark.parametrize(
+    ["call_code", "ref_value"],
+    [
+        (
+            """
+from abc import ABCMeta
+class b(metaclass=ABCMeta): #@
+    pass
+""",
+            True,
+        ),
+        (
+            """
+from abc import ABCMeta as k
+class b(metaclass=k): #@
+    pass
+""",
+            True,
+        ),
+        (
+            """
+ABCMeta=type
+class b(metaclass=ABCMeta): #@
+    pass
+""",
+            False,
+        ),
+        (
+            """
+class b(ABC): #@
+    pass
+""",
+            False,
+        ),
+        (
+            """
+from abc import ABCMeta
+k=ABCMeta
+class a(metaclass=k): #@
+    pass
+""",
+            True,
+        ),
+        (
+            """
+from abc import smth
+class a(metaclass=smth): #@
+    pass
+""",
+            False,
+        ),
+    ],
+)
+def test_abcmeta_usage(call_code: str, ref_value: bool, abcmeta_checker: ABCMetaChecker) -> None:
+    node = astroid.extract_node(call_code)
+    assert abcmeta_checker._visit_classdef(node) is ref_value

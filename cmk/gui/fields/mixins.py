@@ -10,7 +10,7 @@ from typing import Dict, Optional, Tuple, Union
 from marshmallow import fields, post_load, pre_dump, ValidationError
 
 
-class Converter(metaclass=abc.ABCMeta):
+class Converter(abc.ABC):
     """A converter class to map values from and to Checkmk"""
 
     def to_checkmk(self, data):

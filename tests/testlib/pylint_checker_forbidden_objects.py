@@ -16,6 +16,7 @@ def register(linter) -> None:
     linter.register_checker(CollectionsNamedTupleChecker(linter))
     linter.register_checker(TypingNamedTupleChecker(linter))
     linter.register_checker(SixEnsureStrBinChecker(linter))
+    linter.register_checker(ABCMetaChecker(linter))
 
 
 class ForbiddenObjectChecker(BaseChecker):
@@ -83,6 +84,18 @@ class ForbiddenFunctionChecker(ForbiddenObjectChecker):
                 self.add_message(self.name, node=arg)
 
 
+class ForbiddenMetaclassChecker(ForbiddenObjectChecker):
+    def visit_classdef(self, node: astroid.nodes.scoped_nodes.ClassDef) -> None:
+        if self._visit_classdef(node):
+            self.add_message(self.name, node=node)
+
+    def _visit_classdef(self, node: astroid.nodes.scoped_nodes.ClassDef) -> bool:
+        return (
+            node.declared_metaclass() is not None
+            and node.declared_metaclass().name in self.target_objects
+        )
+
+
 class TypingNamedTupleChecker(ForbiddenFunctionChecker):
     name = "typing-namedtuple-call"
     target_lib = "typing"
@@ -118,5 +131,18 @@ class SixEnsureStrBinChecker(ForbiddenFunctionChecker):
             "Called six.ensure_str or six.ensure_binary",
             "six-ensure-str-bin-call",
             "six.ensure_str and six.ensure_binary should not be used",
+        )
+    }
+
+
+class ABCMetaChecker(ForbiddenMetaclassChecker):
+    name = "abcmeta-metaclass"
+    target_lib = "abc"
+    target_objects = frozenset(["ABCMeta"])
+    msgs = {
+        "E9210": (
+            "ABCMeta is used for metaclass argument",
+            "abcmeta-metaclass",
+            "Inheritance from ABC should be used instead to define metaclass",
         )
     }

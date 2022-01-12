@@ -1783,7 +1783,7 @@ def _valuespec_special_agents_vsphere():
                     "skip_placeholder_vms",
                     Checkbox(
                         title=_("Placeholder VMs"),
-                        label=_("Do no monitor placeholder VMs"),
+                        label=_("Do not monitor placeholder VMs"),
                         default_value=True,
                         true_label=_("ignore"),
                         false_label=_("monitor"),

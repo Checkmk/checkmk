@@ -17,8 +17,6 @@ RUN zypper addrepo -G ${ARTIFACT_STORAGE}/repository/sles12sp3 sles12sp3 \
     krb5-devel \
     libmysqlclient-devel \
     make \
-    nodejs \
-    npm \
     openldap2-devel \
     python \
     python-devel \

@@ -17,8 +17,6 @@ RUN zypper addrepo -G ${ARTIFACT_STORAGE}/repository/sles15sp2 sles15sp2 \
     git \
     krb5-devel \
     make \
-    nodejs10 \
-    npm10 \
     openldap2-devel \
     python \
     python-devel \

@@ -98,7 +98,7 @@ from cmk.gui.sites import is_wato_slave_site
 from cmk.gui.userdb import load_users, save_users, Users
 from cmk.gui.utils.logged_in import SuperUserContext
 from cmk.gui.utils.script_helpers import gui_context
-from cmk.gui.watolib.changes import AuditLogStore, ObjectRef, ObjectRefType
+from cmk.gui.watolib.changes import add_change, AuditLogStore, ObjectRef, ObjectRefType
 from cmk.gui.watolib.global_settings import GlobalSettings
 from cmk.gui.watolib.notifications import load_notification_rules, save_notification_rules
 from cmk.gui.watolib.rulesets import RulesetCollection
@@ -204,6 +204,14 @@ class UpdateConfig:
                     self._logger.error(' + "%s" failed' % title, exc_info=True)
                     if self._arguments.debug:
                         raise
+
+            if not self._has_errors and not is_wato_slave_site():
+                # Force synchronization of the config after a successful configuration update
+                add_change(
+                    "cmk-update-config",
+                    "Successfully updated Checkmk configuration",
+                    need_sync=True,
+                )
 
         self._logger.log(VERBOSE, "Done")
         return self._has_errors

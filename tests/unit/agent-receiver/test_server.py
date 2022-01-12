@@ -19,6 +19,7 @@ from agent_receiver.models import HostTypeEnum
 from fastapi import HTTPException
 from fastapi.testclient import TestClient
 from pytest_mock import MockerFixture
+from zstandard import compress
 
 
 @pytest.fixture(autouse=True)
@@ -138,15 +139,20 @@ def test_register_with_labels_folder_exists(
     )
 
 
+@pytest.fixture(name="compressed_agent_data")
+def fixture_compressed_agent_data() -> io.BytesIO:
+    return io.BytesIO(compress(b"mock file"))
+
+
 def test_agent_data_no_host(
     client: TestClient,
     uuid: UUID,
+    compressed_agent_data: io.BytesIO,
 ) -> None:
-    mock_file = io.StringIO("mock file")
     response = client.post(
         f"/agent_data/{uuid}",
         headers={"certificate": "irrelevant"},
-        files={"monitoring_data": ("filename", mock_file)},
+        files={"monitoring_data": ("filename", compressed_agent_data)},
     )
     assert response.status_code == 403
     assert response.json() == {"detail": "Host is not registered"}
@@ -156,6 +162,7 @@ def test_agent_data_pull_host(
     tmp_path: Path,
     client: TestClient,
     uuid: UUID,
+    compressed_agent_data: io.BytesIO,
 ) -> None:
     source = constants.AGENT_OUTPUT_DIR / str(uuid)
     source.symlink_to(tmp_path / "hostname")
@@ -166,7 +173,7 @@ def test_agent_data_pull_host(
         files={
             "monitoring_data": (
                 "filename",
-                io.StringIO("mock file"),
+                compressed_agent_data,
             )
         },
     )
@@ -178,9 +185,8 @@ def test_agent_data_success(
     tmp_path: Path,
     client: TestClient,
     uuid: UUID,
+    compressed_agent_data: io.BytesIO,
 ) -> None:
-    mock_file = io.StringIO("mock file")
-
     source = constants.AGENT_OUTPUT_DIR / str(uuid)
     target_dir = tmp_path / "hostname"
     os.mkdir(target_dir)
@@ -189,11 +195,11 @@ def test_agent_data_success(
     response = client.post(
         f"/agent_data/{uuid}",
         headers={"certificate": "irrelevant"},
-        files={"monitoring_data": ("filename", mock_file)},
+        files={"monitoring_data": ("filename", compressed_agent_data)},
     )
 
     file_path = tmp_path / "hostname" / "agent_output"
-    assert file_path.exists()
+    assert file_path.read_text() == "mock file"
 
     assert response.status_code == 204
 
@@ -203,9 +209,8 @@ def test_agent_data_move_error(
     caplog,
     client: TestClient,
     uuid: UUID,
+    compressed_agent_data: io.BytesIO,
 ) -> None:
-    mock_file = io.StringIO("mock file")
-
     os.mkdir(constants.REGISTRATION_REQUESTS / "READY")
     Path(constants.REGISTRATION_REQUESTS / "READY" / f"{uuid}.json").touch()
     os.mkdir(constants.REGISTRATION_REQUESTS / "DISCOVERABLE")
@@ -220,7 +225,7 @@ def test_agent_data_move_error(
         response = client.post(
             f"/agent_data/{uuid}",
             headers={"certificate": "irrelevant"},
-            files={"monitoring_data": ("filename", mock_file)},
+            files={"monitoring_data": ("filename", compressed_agent_data)},
         )
 
     assert response.status_code == 204
@@ -231,9 +236,8 @@ def test_agent_data_move_ready(
     tmp_path: Path,
     client: TestClient,
     uuid: UUID,
+    compressed_agent_data: io.BytesIO,
 ) -> None:
-    mock_file = io.StringIO("mock file")
-
     os.mkdir(constants.REGISTRATION_REQUESTS / "READY")
     Path(constants.REGISTRATION_REQUESTS / "READY" / f"{uuid}.json").touch()
     os.mkdir(constants.REGISTRATION_REQUESTS / "DISCOVERABLE")
@@ -246,7 +250,7 @@ def test_agent_data_move_ready(
     client.post(
         f"/agent_data/{uuid}",
         headers={"certificate": "irrelevant"},
-        files={"monitoring_data": ("filename", mock_file)},
+        files={"monitoring_data": ("filename", compressed_agent_data)},
     )
 
     registration_request = constants.REGISTRATION_REQUESTS / "DISCOVERABLE" / f"{uuid}.json"

@@ -6,7 +6,6 @@
 
 import json
 import os
-import shutil
 import tempfile
 from contextlib import suppress
 from pathlib import Path
@@ -39,6 +38,7 @@ from starlette.status import (
     HTTP_404_NOT_FOUND,
     HTTP_501_NOT_IMPLEMENTED,
 )
+from zstandard import ZstdDecompressor
 
 app = FastAPI()
 cert_validation_router = APIRouter(route_class=CertValidationRoute)
@@ -183,7 +183,7 @@ def _store_agent_data(
         delete=False,
     )
 
-    shutil.copyfileobj(uploaded_data.file, temp_file)
+    ZstdDecompressor().copy_stream(uploaded_data.file, temp_file)
 
     try:
         os.rename(temp_file.name, target_dir / "agent_output")

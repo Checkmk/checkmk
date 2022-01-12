@@ -10,3 +10,19 @@ pub fn collect() -> IoResult<Vec<u8>> {
     UnixStream::connect("/run/check-mk-agent.socket")?.read_to_end(&mut mondata)?;
     Ok(mondata)
 }
+
+pub fn compress(data: &[u8]) -> IoResult<Vec<u8>> {
+    zstd::encode_all(data, zstd::DEFAULT_COMPRESSION_LEVEL)
+}
+
+#[cfg(test)]
+mod test_registry {
+    use super::*;
+
+    #[test]
+    fn test_compress() {
+        let compressed_data = compress("abc".as_bytes()).unwrap();
+        let decompressed_data = zstd::decode_all(&compressed_data[..]).unwrap();
+        assert_eq!("abc", String::from_utf8(decompressed_data).unwrap());
+    }
+}

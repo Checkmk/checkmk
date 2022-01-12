@@ -36,7 +36,10 @@ const LEGACY_PULL_FILE: &str = "allow-legacy-pull";
 const TLS_ID: &[u8] = b"16";
 
 fn push(registry: config::Registry) -> AnyhowResult<()> {
-    let mon_data = monitoring_data::collect().context("Error collecting monitoring data")?;
+    let compressed_mon_data = monitoring_data::compress(
+        &monitoring_data::collect().context("Error collecting monitoring data")?,
+    )
+    .context("Error compressing monitoring data")?;
 
     for (agent_receiver_address, server_spec) in registry.push_connections() {
         agent_receiver_api::agent_data(
@@ -44,7 +47,7 @@ fn push(registry: config::Registry) -> AnyhowResult<()> {
             &server_spec.root_cert,
             &server_spec.uuid,
             &server_spec.certificate,
-            &mon_data,
+            &compressed_mon_data,
         )
         .context(format!(
             "Error pushing monitoring data to {}.",

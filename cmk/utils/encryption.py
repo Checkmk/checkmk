@@ -211,7 +211,7 @@ def _fetch_certificate_chain_verify_results(
     """Opens a SSL connection and performs a handshake to get the certificate chain"""
 
     ctx = SSL.Context(SSL.SSLv23_METHOD)
-    ctx.load_verify_locations(trusted_ca_file)
+    ctx.load_verify_locations(str(trusted_ca_file))
 
     with contextlib.closing(
         SSL.Connection(ctx, socket.socket(address_family, socket.SOCK_STREAM))

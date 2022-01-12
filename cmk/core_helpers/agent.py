@@ -126,8 +126,6 @@ class AgentFetcher(Fetcher[AgentRawData]):
     pass
 
 
-AgentHostSections = HostSections[AgentRawDataSection]
-
 MutableSection = MutableMapping[SectionMarker, List[AgentRawData]]
 ImmutableSection = Mapping[SectionMarker, Sequence[AgentRawData]]
 
@@ -486,7 +484,7 @@ class HostSectionParser(ParserState):
         return self
 
 
-class AgentParser(Parser[AgentRawData, AgentHostSections]):
+class AgentParser(Parser[AgentRawData, AgentRawDataSection]):
     """A parser for agent data."""
 
     def __init__(
@@ -517,7 +515,7 @@ class AgentParser(Parser[AgentRawData, AgentHostSections]):
         raw_data: AgentRawData,
         *,
         selection: SectionNameCollection,
-    ) -> AgentHostSections:
+    ) -> HostSections[AgentRawDataSection]:
         if self.simulation:
             raw_data = agent_simulator.process(raw_data)
 
@@ -600,7 +598,7 @@ class AgentParser(Parser[AgentRawData, AgentHostSections]):
             now=now,
             keep_outdated=self.keep_outdated,
         )
-        return AgentHostSections(
+        return HostSections[AgentRawDataSection](
             new_sections,
             cache_info=cache_info,
             piggybacked_raw_data=piggybacked_raw_data,
@@ -625,7 +623,7 @@ class AgentParser(Parser[AgentRawData, AgentHostSections]):
         return parser.sections, parser.piggyback_sections
 
 
-class AgentSummarizer(Summarizer[AgentHostSections]):
+class AgentSummarizer(Summarizer[AgentRawDataSection]):
     pass
 
 
@@ -648,7 +646,7 @@ class AgentSummarizerDefault(AgentSummarizer):
 
     def summarize_success(
         self,
-        host_sections: AgentHostSections,
+        host_sections: HostSections[AgentRawDataSection],
         *,
         mode: Mode,
     ) -> Sequence[ActiveCheckResult]:

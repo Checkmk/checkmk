@@ -11,12 +11,13 @@ from tests.testlib.base import Scenario
 from cmk.utils.check_utils import ActiveCheckResult
 from cmk.utils.type_defs import HostName, result, SourceType
 
+from cmk.core_helpers.host_sections import HostSections
 from cmk.core_helpers.ipmi import IPMISummarizer
 from cmk.core_helpers.type_defs import Mode
 
 import cmk.base.config as config
 import cmk.base.ip_lookup as ip_lookup
-from cmk.base.sources.agent import AgentHostSections
+from cmk.base.sources.agent import AgentRawDataSection
 from cmk.base.sources.ipmi import IPMISource
 
 
@@ -37,7 +38,7 @@ def test_attribute_defaults(mode, monkeypatch):
     assert source.ipaddress == ipaddress
     assert source.description == "Management board - IPMI"
     assert source.source_type is SourceType.MANAGEMENT
-    assert source.summarize(result.OK(AgentHostSections()), mode=mode) == [
+    assert source.summarize(result.OK(HostSections[AgentRawDataSection]()), mode=mode) == [
         ActiveCheckResult(0, "Version: unknown")
     ]
     assert source.id == "mgmt_ipmi"

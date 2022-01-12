@@ -29,6 +29,7 @@ from cmk.utils.type_defs import (
     SourceType,
 )
 
+from cmk.core_helpers.host_sections import HostSections
 from cmk.core_helpers.type_defs import NO_SELECTION
 
 import cmk.base.agent_based.discovery as discovery
@@ -44,8 +45,8 @@ from cmk.base.agent_based.data_provider import (
 from cmk.base.agent_based.discovery import _discovered_services
 from cmk.base.check_utils import AutocheckService, Service
 from cmk.base.discovered_labels import HostLabel
-from cmk.base.sources.agent import AgentHostSections
-from cmk.base.sources.snmp import SNMPHostSections
+from cmk.base.sources.agent import AgentRawDataSection
+from cmk.base.sources.snmp import SNMPRawDataSection
 
 
 @pytest.fixture
@@ -689,7 +690,7 @@ def test__find_candidates() -> None:
                     ],
                 ),
                 SectionsParser(
-                    host_sections=AgentHostSections(
+                    host_sections=HostSections[AgentRawDataSection](
                         {
                             SectionName("kernel"): [],  # host only
                             SectionName("uptime"): [["123"]],  # host & mgmt
@@ -706,7 +707,7 @@ def test__find_candidates() -> None:
                     ],
                 ),
                 SectionsParser(
-                    host_sections=SNMPHostSections(
+                    host_sections=HostSections[SNMPRawDataSection](
                         {
                             # host & mgmt:
                             SectionName("uptime"): [["123"]],  # type: ignore[dict-item]
@@ -919,7 +920,7 @@ def _realhost_scenario(monkeypatch: MonkeyPatch) -> RealHostScenario:
                     ],
                 ),
                 SectionsParser(
-                    host_sections=AgentHostSections(
+                    host_sections=HostSections[AgentRawDataSection](
                         sections={
                             SectionName("labels"): [
                                 [
@@ -1027,7 +1028,7 @@ def _cluster_scenario(monkeypatch) -> ClusterScenario:
                     ],
                 ),
                 SectionsParser(
-                    host_sections=AgentHostSections(
+                    host_sections=HostSections[AgentRawDataSection](
                         sections={
                             SectionName("labels"): [
                                 [
@@ -1066,7 +1067,7 @@ def _cluster_scenario(monkeypatch) -> ClusterScenario:
                     ],
                 ),
                 SectionsParser(
-                    host_sections=AgentHostSections(
+                    host_sections=HostSections[AgentRawDataSection](
                         sections={
                             SectionName("labels"): [
                                 [

@@ -10,13 +10,15 @@ import pytest
 
 from cmk.utils.type_defs import SectionName
 
+from cmk.core_helpers.host_sections import HostSections
+
 from cmk.base import crash_reporting
 from cmk.base.agent_based.data_provider import SectionsParser
 from cmk.base.api.agent_based.register.section_plugins import (
     AgentSectionPlugin,
     trivial_section_factory,
 )
-from cmk.base.sources.agent import AgentHostSections
+from cmk.base.sources.agent import AgentRawDataSection
 
 
 def _section(name: str, parse_function: Callable) -> AgentSectionPlugin:
@@ -29,7 +31,7 @@ class TestSectionsParser:
     @pytest.fixture
     def sections_parser(self) -> SectionsParser:
         return SectionsParser(
-            host_sections=AgentHostSections(
+            host_sections=HostSections[AgentRawDataSection](
                 sections={
                     SectionName("one"): [],
                     SectionName("two"): [],

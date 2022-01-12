@@ -31,7 +31,7 @@ from cmk.core_helpers.type_defs import Mode, NO_SELECTION
 import cmk.base.config as config
 from cmk.base.agent_based.data_provider import _collect_host_sections
 from cmk.base.sources import make_cluster_sources, Source
-from cmk.base.sources.agent import AgentHostSections
+from cmk.base.sources.agent import AgentRawDataSection
 from cmk.base.sources.piggyback import PiggybackSource
 from cmk.base.sources.programs import ProgramSource
 from cmk.base.sources.snmp import SNMPSource
@@ -392,7 +392,9 @@ def test_get_host_sections_cluster(monkeypatch, mocker):
         return hosts[host_config.hostname]
 
     def check(_, *args, **kwargs):
-        return result.OK(AgentHostSections(sections={section_name: [[str(section_name)]]}))
+        return result.OK(
+            HostSections[AgentRawDataSection](sections={section_name: [[str(section_name)]]})
+        )
 
     monkeypatch.setattr(
         config,

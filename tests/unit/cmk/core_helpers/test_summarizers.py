@@ -12,7 +12,8 @@ from cmk.utils.piggyback import PiggybackRawDataInfo
 from cmk.utils.type_defs import AgentRawData, ExitSpec, HostName
 
 import cmk.core_helpers.piggyback
-from cmk.core_helpers.agent import AgentHostSections, AgentSummarizer, AgentSummarizerDefault
+from cmk.core_helpers.agent import AgentRawDataSection, AgentSummarizer, AgentSummarizerDefault
+from cmk.core_helpers.host_sections import HostSections
 from cmk.core_helpers.piggyback import PiggybackSummarizer
 from cmk.core_helpers.type_defs import Mode
 
@@ -351,7 +352,7 @@ class TestPiggybackSummarizer:
 
     @pytest.fixture
     def host_sections(self):
-        return AgentHostSections(
+        return HostSections[AgentRawDataSection](
             sections={},
             cache_info={},
             piggybacked_raw_data={HostName("other"): [b"line0", b"line1"]},

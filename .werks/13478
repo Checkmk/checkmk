@@ -1,4 +1,4 @@
-Title: Mitigate wrong converion of disabled service rules on update
+Title: Mitigate wrong conversion of disabled service rules on update
 Class: fix
 Compatible: incomp
 Component: wato

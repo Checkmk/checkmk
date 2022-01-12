@@ -634,12 +634,13 @@ class Site:
         self.write_file(
             "etc/init.d/cmc",
             self.read_file("etc/init.d/cmc").replace(
-                "\n"  #
-                "    if $DAEMON $CONFIGFILE; then\n",
+                "\n    if $DAEMON $CONFIGFILE; then\n",
                 "\n"  #
                 f"    date {redirect}\n"  #
                 f"    ps -fu {self.id} {redirect}\n"
-                f"    if {valgrind if tool else ''} $DAEMON $CONFIGFILE {redirect}; then\n"))
+                f"    if {valgrind if tool else ''} $DAEMON $CONFIGFILE {redirect}; then\n",
+            ),
+        )
 
     def _enable_cmc_core_dumps(self) -> None:
         self.makedirs("etc/check_mk/conf.d")

@@ -107,7 +107,6 @@ RUN /opt/install-openssl.sh
 RUN /opt/install-python2.sh
 RUN /opt/install-python.sh
 RUN /opt/install-pipenv.sh
-RUN /opt/install-nodejs.sh
 RUN /opt/install-freetds.sh
 RUN /opt/install-rust-cargo.sh
 RUN /opt/install-cmk-dependencies.sh
@@ -117,6 +116,7 @@ RUN /opt/install-cmk-dependencies.sh
 # containers, ...). Scripts should be usable with other Ubuntu versions.
 RUN /opt/install-docker.sh
 RUN /opt/install-make-dist-deps.sh
+RUN /opt/install-nodejs.sh
 RUN /opt/install-clang.sh
 RUN /opt/install-shellcheck.sh
 

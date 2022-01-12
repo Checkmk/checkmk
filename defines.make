@@ -72,6 +72,8 @@ PYTHON_MAJOR_DOT_MINOR := $(PYTHON_VERSION_MAJOR).$(PYTHON_VERSION_MINOR)
 # Needed for bootstrapping CI and development environments
 PIPENV_VERSION := 2022.1.8
 VIRTUALENV_VERSION := 20.13.0
+NODEJS_VERSION := 16
+NPM_VERSION := 8
 
 print-%:
 	@echo '$($*)'

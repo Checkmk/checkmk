@@ -348,7 +348,9 @@ node_modules/.bin/redoc-cli: .ran-npm
 node_modules/.bin/prettier: .ran-npm
 .ran-npm: package.json package-lock.json
 	@echo "npm version: $$(npm --version)"
+	npm --version | grep "^$(NPM_VERSION)\." >/dev/null 2>&1
 	@echo "node version: $$(node --version)"
+	node --version | grep "^v$(NODEJS_VERSION)\." >/dev/null 2>&1
 	@echo "open file descriptor limit (soft): $$(ulimit -Sn)"
 	@echo "open file descriptor limit (hard): $$(ulimit -Hn)"
 	@if curl --silent --output /dev/null --head '${ARTIFACT_STORAGE}/#browse/browse:npm-proxy'; then \

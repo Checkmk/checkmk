@@ -24,7 +24,7 @@ def namedtuple_checker_fixture() -> TypingNamedTupleChecker:
 class _TestChecker(ForbiddenFunctionChecker):
     name = "test_checker"
     target_lib = "testlib"
-    target_functions = frozenset(["test1", "test2"])
+    target_objects = frozenset(["test1", "test2"])
     mgs = {"E9210": ("Checker for test purposes", "test_checker", "Checker only for test purposes")}
 
 

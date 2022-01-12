@@ -18,16 +18,16 @@ def register(linter) -> None:
     linter.register_checker(SixEnsureStrBinChecker(linter))
 
 
-class ForbiddenFunctionChecker(BaseChecker):
+class ForbiddenObjectChecker(BaseChecker):
     __implements__ = IAstroidChecker
-    name = "forbidden-function"
-    target_functions: FrozenSet[str] = frozenset([])
+    name = "forbidden-object"
+    target_objects: FrozenSet[str] = frozenset([])
     target_lib = ""
 
     def __init__(self, linter) -> None:
         super().__init__(linter)
         self.was_imported = False
-        self.function_names: List[str] = []
+        self.object_names: List[str] = []
         self.library_name = self.target_lib
 
     def visit_import(self, node: astroid.node_classes.Import) -> None:
@@ -37,22 +37,28 @@ class ForbiddenFunctionChecker(BaseChecker):
 
     def visit_importfrom(self, node: astroid.node_classes.ImportFrom) -> None:
         if node.modname == self.target_lib or node.modname.endswith("." + self.target_lib):
-            for fct, alias in node.names:
-                if fct in self.target_functions:
+            for obj, alias in node.names:
+                if obj in self.target_objects:
                     self.was_imported = True
                     if alias:
-                        self.function_names.append(alias)
+                        self.object_names.append(alias)
                     else:
-                        self.function_names.append(fct)
+                        self.object_names.append(obj)
 
+    def visit_module(self, node: astroid.scoped_nodes.Module) -> None:
+        self.was_imported = False
+        self.object_names.clear()
+
+
+class ForbiddenFunctionChecker(ForbiddenObjectChecker):
     def _called_with_library(self, value: astroid.NodeNG) -> bool:
         if not isinstance(value, astroid.node_classes.Attribute):
             return False
         if isinstance(value.expr, astroid.node_classes.Name):
-            return value.attrname in self.target_functions and value.expr.name == self.library_name
+            return value.attrname in self.target_objects and value.expr.name == self.library_name
         if isinstance(value.expr, astroid.node_classes.Attribute):
             return (
-                value.attrname in self.target_functions
+                value.attrname in self.target_objects
                 and value.expr.as_string() == self.library_name
             )
         return False
@@ -60,13 +66,9 @@ class ForbiddenFunctionChecker(BaseChecker):
     def _called_directly(self, value: astroid.NodeNG) -> bool:
         return (
             isinstance(value, astroid.node_classes.Name)
-            and value.name in self.function_names
+            and value.name in self.object_names
             and self.was_imported
         )
-
-    def visit_module(self, node: astroid.scoped_nodes.Module) -> None:
-        self.was_imported = False
-        self.function_names.clear()
 
     def _visit_call(self, node: astroid.NodeNG) -> bool:
         if not isinstance(node, astroid.node_classes.Call):
@@ -84,7 +86,7 @@ class ForbiddenFunctionChecker(BaseChecker):
 class TypingNamedTupleChecker(ForbiddenFunctionChecker):
     name = "typing-namedtuple-call"
     target_lib = "typing"
-    target_functions = frozenset(["NamedTuple"])
+    target_objects = frozenset(["NamedTuple"])
     msgs = {
         "E9010": (
             "Called typing.NamedTuple",
@@ -97,7 +99,7 @@ class TypingNamedTupleChecker(ForbiddenFunctionChecker):
 class CollectionsNamedTupleChecker(ForbiddenFunctionChecker):
     name = "collections-namedtuple-call"
     target_lib = "collections"
-    target_functions = frozenset(["namedtuple"])
+    target_objects = frozenset(["namedtuple"])
     msgs = {
         "E8910": (
             "Called collections.namedtuple",
@@ -110,7 +112,7 @@ class CollectionsNamedTupleChecker(ForbiddenFunctionChecker):
 class SixEnsureStrBinChecker(ForbiddenFunctionChecker):
     name = "six-ensure-str-bin-call"
     target_lib = "six"
-    target_functions = frozenset(["ensure_str", "ensure_binary"])
+    target_objects = frozenset(["ensure_str", "ensure_binary"])
     msgs = {
         "E9110": (
             "Called six.ensure_str or six.ensure_binary",

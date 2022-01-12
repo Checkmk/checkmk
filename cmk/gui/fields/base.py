@@ -22,14 +22,20 @@ class BaseSchema(Schema):
 
     cast_to_dict: bool = False
 
-    @post_load
-    @post_dump
+    @post_load(pass_many=True)
+    @post_dump(pass_many=True)
     def remove_ordered_dict(self, data, **kwargs):
+        def _remove_ordered_dict(obj):
+            if self.cast_to_dict and isinstance(obj, collections.OrderedDict):
+                return dict(obj)
+            return obj
+
         # This is a post-load hook to cast the OrderedDict instances to normal dicts. This would
         # lead to problems with the *.mk file persisting logic otherwise.
-        if self.cast_to_dict and isinstance(data, collections.OrderedDict):
-            return dict(data)
-        return data
+        if isinstance(data, list):
+            return [_remove_ordered_dict(obj) for obj in data]
+
+        return _remove_ordered_dict(data)
 
 
 class FieldWrapper:

@@ -487,7 +487,7 @@ class Site:
             self._ensure_sample_config_is_present()
             if not self.version.is_raw_edition():
                 self._set_number_of_helpers()
-                self._log_cmc_startup()
+                # self._log_cmc_startup()
                 self._enable_cmc_core_dumps()
                 self._enable_cmc_debug_logging()
                 self._disable_cmc_log_rotation()

@@ -174,6 +174,23 @@ async def register_with_labels(
     return Response(status_code=HTTP_204_NO_CONTENT)
 
 
+def _store_agent_data(
+    uploaded_data: UploadFile,
+    target_dir: Path,
+) -> None:
+    temp_file = tempfile.NamedTemporaryFile(
+        dir=target_dir,
+        delete=False,
+    )
+
+    shutil.copyfileobj(uploaded_data.file, temp_file)
+
+    try:
+        os.rename(temp_file.name, target_dir / "agent_output")
+    finally:
+        Path(temp_file.name).unlink(missing_ok=True)
+
+
 def _move_ready_file(uuid: UUID) -> None:
     with suppress(FileNotFoundError):
         # TODO: use RegistrationState.READY.name
@@ -213,9 +230,9 @@ async def agent_data(
         )
 
     try:
-        temp_file = tempfile.NamedTemporaryFile(
-            dir=host.source_path,
-            delete=False,
+        _store_agent_data(
+            monitoring_data,
+            host.source_path,
         )
     except FileNotFoundError:
         # We only end up here in case someone re-configures the host at exactly the same time when
@@ -228,12 +245,6 @@ async def agent_data(
             status_code=403,
             detail="Host is not registered or not configured as push host",
         )
-
-    shutil.copyfileobj(monitoring_data.file, temp_file)
-    try:
-        os.rename(temp_file.name, host.source_path / "agent_output")
-    finally:
-        Path(temp_file.name).unlink(missing_ok=True)
 
     _move_ready_file(uuid)
 

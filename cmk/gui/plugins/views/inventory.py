@@ -84,7 +84,7 @@ PaintResult = Tuple[str, Union[str, HTML]]
 PaintFunction = Callable[[Any], PaintResult]
 
 
-def paint_host_inventory_tree(
+def _paint_host_inventory_tree(
     row: Row, invpath: SDRawPath = ".", column: str = "host_inventory"
 ) -> CellSpec:
     raw_hostname = row.get("host_name")
@@ -101,6 +101,7 @@ def paint_host_inventory_tree(
     struct_tree = row.get(column)
     if struct_tree is None:
         return "", ""
+
     assert isinstance(struct_tree, StructuredDataNode)
 
     tree_renderer = _get_tree_renderer(row, column, invpath)
@@ -216,7 +217,7 @@ def _declare_inv_column(
         # not look good for the HW/SW inventory tree
         "printable": is_leaf_node,
         "load_inv": True,
-        "paint": lambda row: paint_host_inventory_tree(row, invpath),
+        "paint": lambda row: _paint_host_inventory_tree(row, invpath),
         "sorter": name,
     }
     if short:
@@ -340,7 +341,7 @@ class PainterInventoryTree(Painter):
         return True
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return paint_host_inventory_tree(row)
+        return _paint_host_inventory_tree(row)
 
 
 class ABCRowTable(RowTable):
@@ -1677,10 +1678,10 @@ class PainterInvhistDelta(Painter):
         return ["invhist_deltainvhist_time"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return paint_host_inventory_tree(row, column="invhist_delta")
+        return _paint_host_inventory_tree(row, column="invhist_delta")
 
 
-def paint_invhist_count(row: Row, what: str) -> CellSpec:
+def _paint_invhist_count(row: Row, what: str) -> CellSpec:
     number = row["invhist_" + what]
     if number:
         return "narrow number", str(number)
@@ -1704,7 +1705,7 @@ class PainterInvhistRemoved(Painter):
         return ["invhist_removed"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return paint_invhist_count(row, "removed")
+        return _paint_invhist_count(row, "removed")
 
 
 @painter_registry.register
@@ -1724,7 +1725,7 @@ class PainterInvhistNew(Painter):
         return ["invhist_new"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return paint_invhist_count(row, "new")
+        return _paint_invhist_count(row, "new")
 
 
 @painter_registry.register
@@ -1744,7 +1745,7 @@ class PainterInvhistChanged(Painter):
         return ["invhist_changed"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return paint_invhist_count(row, "changed")
+        return _paint_invhist_count(row, "changed")
 
 
 # sorters

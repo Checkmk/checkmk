@@ -8,35 +8,15 @@ set -e -o pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
 . "${SCRIPT_DIR}/build_lib.sh"
 
-# When building our build containers we don't have the whole repo available,
-# but we copy defines.make to scripts (see build-build-containers.jenkins).
-# However, in other situations we have the git available and need to find
-# defines.make in the repo base directory.
-find_defines_make() {
-    cd "$SCRIPT_DIR"
-    while [ ! -e defines.make ]; do
-        if [ "$PWD" = / ] ; then
-            failure "could not find defines.make"
-            break
-        fi
-        cd ..
-    done
-    echo "$PWD/defines.make"
-}
-
-get_version() {
-    make --no-print-directory --file="$(find_defines_make)" print-"$1"
-}
-
 # read optional command line argument
 if [ "$#" -eq 1 ]; then
     PYTHON_VERSION=$1
 else
-    PYTHON_VERSION=$(get_version PYTHON_VERSION)
+    PYTHON_VERSION=$(get_version "$SCRIPT_DIR" PYTHON_VERSION)
 fi
 
-PIPENV_VERSION=$(get_version PIPENV_VERSION)
-VIRTUALENV_VERSION=$(get_version VIRTUALENV_VERSION)
+PIPENV_VERSION=$(get_version "$SCRIPT_DIR" PIPENV_VERSION)
+VIRTUALENV_VERSION=$(get_version "$SCRIPT_DIR" VIRTUALENV_VERSION)
 
 pip3 install \
     pipenv=="$PIPENV_VERSION" \

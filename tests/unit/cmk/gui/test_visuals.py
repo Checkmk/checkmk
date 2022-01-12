@@ -3846,4 +3846,4 @@ def test_get_missing_single_infos_missing_context():
                  id="-> 2.1.0 Site hint is not bound to single info"),
 ])
 def test_cleanup_contexts(context, single_infos, expected_context):
-    assert visuals.cleaup_context_filters(context, single_infos) == expected_context
+    assert visuals.cleanup_context_filters(context, single_infos) == expected_context

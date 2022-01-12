@@ -331,10 +331,10 @@ def transform_old_visual(visual):
     visual.setdefault("is_show_more", False)
 
     # 2.1
-    visual["context"] = cleaup_context_filters(visual["context"], visual["single_infos"])
+    visual["context"] = cleanup_context_filters(visual["context"], visual["single_infos"])
 
 
-def cleaup_context_filters(context, single_infos: SingleInfos) -> VisualContext:
+def cleanup_context_filters(context, single_infos: SingleInfos) -> VisualContext:
     # Fix context into type VisualContext
     if filter_conf := context.get("discovery_state"):
         # CMK-6606: States were saved as bools instead of str

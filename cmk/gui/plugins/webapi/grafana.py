@@ -20,7 +20,7 @@ from cmk.gui.plugins.metrics.utils import (
 )
 from cmk.gui.plugins.views.utils import data_source_registry
 from cmk.gui.plugins.webapi.utils import api_call_collection_registry, APICallCollection
-from cmk.gui.visuals import cleaup_context_filters, get_filter_headers
+from cmk.gui.visuals import cleanup_context_filters, get_filter_headers
 
 
 @api_call_collection_registry.register
@@ -156,7 +156,7 @@ class APICallGrafanaConnector(APICallCollection):
         else:
             single_infos = []
 
-        context = cleaup_context_filters(request["context"], single_infos)
+        context = cleanup_context_filters(request["context"], single_infos)
 
         filter_headers, only_sites = self._get_filter_headers_of_context(
             datasource_name="services", context=context, single_infos=single_infos

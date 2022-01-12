@@ -26,7 +26,7 @@ from cmk.base.plugins.agent_based.utils.k8s import (
 )
 from cmk.base.plugins.agent_based.utils.k8s import StartTime as StartTimeC
 from cmk.base.plugins.agent_based.utils.kube import PodLifeCycle as PodLifeCycleC
-from cmk.base.plugins.agent_based.utils.kube import Resources as ResourcesC
+from cmk.base.plugins.agent_based.utils.kube_resources import Resources as ResourcesC
 
 from cmk.special_agents.utils_kubernetes.schemata.api import ClusterInfo as ClusterInfoA
 from cmk.special_agents.utils_kubernetes.schemata.api import ContainerInfo as ContainerInfoA

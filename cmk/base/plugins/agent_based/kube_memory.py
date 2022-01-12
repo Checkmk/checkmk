@@ -1,17 +1,23 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# Copyright (C) 2021 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import json
-from typing import Literal, Optional, Tuple, TypedDict, Union
+from typing import Optional
 
 from cmk.base.plugins.agent_based.utils.k8s import Memory
-from cmk.base.plugins.agent_based.utils.kube import ExceptionalResource, Resources
+from cmk.base.plugins.agent_based.utils.kube_resources import (
+    check_with_utilization,
+    DEFAULT_PARAMS,
+    ExceptionalResource,
+    iterate_resources,
+    Params,
+    Resources,
+)
 
 from .agent_based_api.v1 import Metric, register, render, Result, Service, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
-from .utils.memory import check_element
 
 
 def parse_memory_resources(string_table: StringTable) -> Resources:
@@ -57,21 +63,6 @@ def discovery_kube_memory(
         yield Service()
 
 
-Modes = Literal["perc_used", "abs_used"]
-Param = Union[Literal["ignore"], Tuple[Modes, Tuple[float, float]]]
-
-
-class Params(TypedDict):
-    request: Param
-    limit: Param
-
-
-_DEFAULT_PARAMS = Params(
-    request="ignore",
-    limit=("perc_used", (80.0, 90.0)),
-)
-
-
 # TODO This should be moved to utils, and used jointly by kube_container_memory and kube_container_cpu
 # TODO Add Perf-O-Meter
 def check_kube_memory(
@@ -86,7 +77,7 @@ def check_kube_memory(
     yield Result(state=State.OK, summary=f"Usage: {render.bytes(total_usage)}")
     yield Metric("kube_memory_usage", total_usage)
 
-    for requirement_name, requirement in section_kube_memory_resources:
+    for requirement_name, requirement in iterate_resources(section_kube_memory_resources):
         if requirement == 0:
             yield Result(
                 state=State.OK,
@@ -94,25 +85,15 @@ def check_kube_memory(
                 details=f"{requirement_name.title()}: set to zero for all containers",
             )
         elif isinstance(requirement, float):
-            param = params[requirement_name]  # type: ignore
-            result, metric = check_element(
-                f"{requirement_name.title()} utilization",
-                used=total_usage,
-                total=requirement,
-                levels=param if param != "ignore" else None,
-                create_percent_metric=True,
+            param = params[requirement_name]
+            yield from check_with_utilization(
+                total_usage,
+                "memory",
+                requirement_name,
+                requirement,
+                param,
+                render.bytes,
             )
-
-            assert isinstance(metric, Metric)
-
-            yield result
-            yield Metric(
-                name=f"kube_memory_{requirement_name}_utilization",
-                value=metric.value,
-                levels=metric.levels,
-                boundaries=metric.boundaries,
-            )
-            yield Metric(f"kube_memory_{requirement_name}", requirement)
         else:
             # TODO Add new logic to reduce code duplication.
             summary = f"{requirement_name.title()}: n/a"
@@ -147,5 +128,5 @@ register.check_plugin(
     discovery_function=discovery_kube_memory,
     check_function=check_kube_memory,
     check_ruleset_name="kube_memory",
-    check_default_parameters=_DEFAULT_PARAMS,
+    check_default_parameters=DEFAULT_PARAMS,
 )

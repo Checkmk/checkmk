@@ -13,8 +13,8 @@ import pytest
 from cmk.base.plugins.agent_based import kube_memory
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
 from cmk.base.plugins.agent_based.kube_memory import (
-    _DEFAULT_PARAMS,
     check_kube_memory,
+    DEFAULT_PARAMS,
     ExceptionalResource,
     Memory,
     Resources,
@@ -299,7 +299,7 @@ def test_register_check_plugin_calls(check_plugin):
                 Metric(
                     "kube_memory_limit_utilization",
                     64.4390126221591,
-                    levels=(80.00000000000001, 90.0),
+                    levels=(80.0, 90.0),
                     boundaries=(0.0, None),
                 ),
                 Metric("kube_memory_limit", 28120704.0),
@@ -321,12 +321,12 @@ def test_register_check_plugin_calls(check_plugin):
                 Metric("kube_memory_request", 13120704.0),
                 Result(
                     state=State.CRIT,
-                    summary="Limit utilization: 96.44% - 25.9 MiB of 26.8 MiB (warn/crit at 80.00%/90.00% used)",
+                    summary="Limit utilization: 96.44% - 25.9 MiB of 26.8 MiB (warn/crit at 80.00%/90.00%)",
                 ),
                 Metric(
                     "kube_memory_limit_utilization",
                     96.44390126221592,
-                    levels=(80.00000000000001, 90.0),
+                    levels=(80.0, 90.0),
                     boundaries=(0.0, None),
                 ),
                 Metric("kube_memory_limit", 28120704.0),
@@ -341,11 +341,11 @@ def test_check_kube_memory(
     expected_result: Tuple[Union[Result, Metric], ...],
 ) -> None:
     assert expected_result == tuple(
-        check_kube_memory(_DEFAULT_PARAMS, section_kube_memory_resources, section_k8s_live_memory)
+        check_kube_memory(DEFAULT_PARAMS, section_kube_memory_resources, section_k8s_live_memory)
     )
 
 
 def test_valuespec_and_check_agree() -> None:
-    assert tuple(_DEFAULT_PARAMS) == tuple(
+    assert tuple(DEFAULT_PARAMS) == tuple(
         element[0] for element in _parameter_valuespec_memory()._get_elements()
     )

@@ -408,9 +408,11 @@ def test_compile_delayed_host_check(
     # Expect the command to fail: We don't have the correct environment to execute it.
     # But this is no problem for our test, we only want to see the result of the compilation.
     assert (
-        subprocess.Popen(["python3", str(compiled_file)], shell=False, close_fds=True).wait() == 1
+        subprocess.run(
+            ["python3", str(compiled_file)], shell=False, close_fds=True, check=False
+        ).returncode
+        == 1
     )
-
     assert compiled_file.resolve() != source_file
     with compiled_file.open("rb") as f:
         assert f.read().startswith(importlib.util.MAGIC_NUMBER)

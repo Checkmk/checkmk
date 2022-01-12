@@ -952,13 +952,14 @@ class AutomationDeleteHostsKnownRemote(ABCDeleteHosts, Automation):
             "%s/%s" % (counters_dir, hostname),
             "%s/%s" % (tcp_cache_dir, hostname),
             "%s/persisted/%s" % (var_dir, hostname),
+            "%s/inventory/%s" % (var_dir, hostname),
+            "%s/inventory/%s.gz" % (var_dir, hostname),
         ]
 
     def _delete_host_files(self, hostname: HostName) -> None:
         """
         The following locations are skipped on local sites for hosts only known
         on remote sites:
-        - var/check_mk/inventory
         - var/check_mk/agent_deployment
         - var/check_mk/agents
         """

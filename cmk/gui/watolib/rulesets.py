@@ -912,8 +912,8 @@ class Rule:
 
     def _rule_options_to_config(self) -> RuleOptions:
         ro = {}
-        if self.rule_options.get("disabled"):
-            ro["disabled"] = True
+        if (disabled := self.rule_options.get("disabled")) is not None:
+            ro["disabled"] = disabled
         if self.rule_options.get("description"):
             ro["description"] = self.rule_options["description"]
         if self.rule_options.get("comment"):

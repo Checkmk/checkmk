@@ -297,7 +297,7 @@ def test_response_del_cookie(register_builtin_html, monkeypatch):
     html.response.delete_cookie("auth_SITE")
 
     assert html.response.headers.getlist("Set-Cookie")[-1] == \
-            "auth_SITE=; Expires=Thu, 01-Jan-1970 00:00:00 GMT; Max-Age=0; Path=/"
+            "auth_SITE=; Expires=Thu, 01 Jan 1970 00:00:00 GMT; Max-Age=0; Path=/"
 
 
 # User IDs in Checkmk may contain non ascii characters. When they need to be encoded,

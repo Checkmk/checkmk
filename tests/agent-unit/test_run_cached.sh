@@ -19,6 +19,7 @@ oneTimeSetUp() {
     MRPE_CACHE="$MK_VARDIR/cache/mrpe_mrpetest.cache"
 
     # create some caches.
+    # similar/duplicate lines are on purpose, because sed is for pros.
 
     # local plugin
     {
@@ -58,7 +59,7 @@ test_run_cached_plugin() {
         echo "<<<my_plugin_section:cached($MTIME,180)>>>"
         echo "This is a custom plugin output"
         echo "<<<my_plugin_section2:cached(123,456)>>>"
-        echo "<<<my_plugin_section3:cached(123,789):cached($MTIME,180)>>>"  # FIXME
+        echo "<<<my_plugin_section3:cached(123,789)>>>"
         echo "This is a custom plugin output with own cache info"
     }
 
@@ -74,9 +75,9 @@ test_run_cached_local() {
     expected() {
         echo "cached($MTIME,180) P \"This is local output without custom cache info\""
         echo "<<<local>>>"
-        echo "cached($MTIME,180) <<<local>>>"  # FIXME
+        echo "<<<local>>>"
         echo "cached(123,456) P \"leave my custom cache info alone!\""
-        echo "cached($MTIME,180) cached(123,456) P \"leave my custom cache info alone as well!\"" # FIXME
+        echo "cached(123,456) P \"leave my custom cache info alone as well!\""
         echo "cached($MTIME,180) P \"This is more output without custom cache info\""
     }
 

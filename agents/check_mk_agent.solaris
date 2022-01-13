@@ -673,7 +673,7 @@ run_cached() {
                 sed -e "/^<<</! s/^/${CACHE_INFO} /" "${CACHEFILE}"
             else
                 # insert CACHE_INFO in the header, but skip headers with existing CACHE_INFO
-                sed -e '/^<<<.*\(:cached(\).*>>>/n; s/^<<<\([^>]*\)>>>$/<<<\1:'"${CACHE_INFO}"'>>>/' "${CACHEFILE}"
+                sed -e '/^<<<.*\(:cached(\).*>>>/{p;d;}; s/^<<<\([^>]*\)>>>$/<<<\1:'"${CACHE_INFO}"'>>>/' "${CACHEFILE}"
             fi
         fi
     fi

@@ -615,10 +615,10 @@ run_cached() {
             CACHE_INFO="cached(${MTIME},${MAXAGE})"
             if [[ ${NAME} == local_* ]]; then
                 # prefix CACHE_INFO, but skip any headers and lines with existing CACHE_INFO
-                sed -e "/^<<<.*>>>/n; /^cached([0-9]*,[0-9]*) /n; s/^/${CACHE_INFO} /" "${CACHEFILE}"
+                sed -e "/^<<<.*>>>/{p;d;}; /^cached([0-9]*,[0-9]*) /{p;d;}; s/^/${CACHE_INFO} /" "${CACHEFILE}"
             else
                 # insert CACHE_INFO in header, but skip headers with existing CACHE_INFO
-                sed -e '/^<<<.*\(:cached(\).*>>>/n; s/^<<<\([^>]*\)>>>$/<<<\1:'"${CACHE_INFO}"'>>>/' "${CACHEFILE}"
+                sed -e '/^<<<.*\(:cached(\).*>>>/{p;d;}; s/^<<<\([^>]*\)>>>$/<<<\1:'"${CACHE_INFO}"'>>>/' "${CACHEFILE}"
             fi
         fi
     fi

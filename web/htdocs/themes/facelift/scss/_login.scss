@@ -179,11 +179,33 @@ body.login {
     }
 
     #label_pass {
-      top: 138px;
+      top: 153px;
     }
 
     #input_pass {
-      top: 132px;
+      top: 146px;
+    }
+
+    #_use_backup_code {
+      bottom: 20px;
+    }
+
+    .foldable {
+      .foldable_header {
+        position: absolute;
+        top: 125px;
+        left: 40px;
+        text-align: left;
+
+        b {
+          font-weight: normal;
+        }
+      }
+
+      .treeangle {
+        position: unset;
+        margin: 0;
+      }
     }
   }
 }

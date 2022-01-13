@@ -35,6 +35,7 @@ from cmk.gui.globals import (
     user,
     user_errors,
 )
+from cmk.gui.htmllib.foldable_container import foldable_container
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.page_menu import (
@@ -321,14 +322,27 @@ class UserLoginTwoFactor(Page):
         )
         html.div("", id_="webauthn_message")
 
-        html.label(
-            "%s:" % _("Backup code"),
-            id_="label_pass",
-            class_=["legend"],
-            for_="_backup_code",
-        )
-        html.br()
-        html.password_input("_backup_code", id_="input_pass", size=None)
+        with foldable_container(
+            treename="webauthn_backup_codes",
+            id_="backup_container",
+            isopen=False,
+            title=_("Use backup code"),
+            indent=False,
+            save_state=False,
+        ):
+            html.label(
+                "%s:" % _("Backup code"),
+                id_="label_pass",
+                class_=["legend"],
+                for_="_backup_code",
+            )
+            html.br()
+            html.password_input("_backup_code", id_="input_pass", size=None)
+
+            html.open_div(id_="button_text")
+            html.button("_use_backup_code", _("Use backup code"), cssclass="hot")
+            html.close_div()
+            html.close_div()
 
         if user_errors:
             html.open_div(id_="login_error")
@@ -336,11 +350,6 @@ class UserLoginTwoFactor(Page):
             html.close_div()
 
         html.javascript("cmk.webauthn.login()")
-
-        html.open_div(id_="button_text")
-        html.button("_use_backup_code", _("Use backup code"), cssclass="hot")
-        html.close_div()
-        html.close_div()
 
         html.hidden_fields()
         html.end_form()

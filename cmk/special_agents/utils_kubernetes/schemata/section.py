@@ -202,4 +202,4 @@ class CpuUsage(BaseModel):
 class Memory(BaseModel):
     """section: k8s_live_memory_v1"""
 
-    memory_usage_bytes: float
+    memory_usage_bytes: float  # TODO: change naming

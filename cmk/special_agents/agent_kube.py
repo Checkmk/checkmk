@@ -679,7 +679,9 @@ def write_kube_object_performance_section(
         _write_performance_section(
             section_name=SectionName("memory"),
             section_output=section.Memory(
-                memory_usage_bytes=_aggregate_metric(containers, MetricName("memory_usage_bytes")),
+                memory_usage_bytes=_aggregate_metric(
+                    containers, MetricName("memory_working_set_bytes")
+                ),
             ),
         )
 
@@ -729,15 +731,24 @@ def pod_performance_sections(pod: PerformancePod) -> None:
     )
 
     # Memory section
+    # the containers with "POD" in their cAdvisor generated name represent the container's
+    # respective parent cgroup. A multitude of memory calculation references omit these for
+    # container level calculations. We keep them as we calculate values at least on the pod level.
     _write_performance_section(
         section_name=SectionName("memory"),
         section_output=section.Memory(
-            memory_usage_bytes=_aggregate_metric(pod.containers, MetricName("memory_usage_bytes")),
+            memory_usage_bytes=_aggregate_metric(
+                pod.containers,
+                MetricName("memory_working_set_bytes"),
+            ),
         ),
     )
 
 
-def _aggregate_metric(containers: Sequence[PerformanceContainer], metric: MetricName) -> float:
+def _aggregate_metric(
+    containers: Sequence[PerformanceContainer],
+    metric: MetricName,
+) -> float:
     """Aggregate a metric across all containers"""
     return 0.0 + sum(
         [container.metrics[metric].value for container in containers if metric in container.metrics]

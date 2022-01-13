@@ -149,6 +149,9 @@ disable=
     #---------------------------------------------------------------------------
     # To be evaluated
     wrong-import-order,
+    # werkzeug's LocalProxy uses slots, so this check doesn't really blend well
+    # with out cmk.gui.globals.
+    assigning-non-slot,
 
 enable=
     #---------------------------------------------------------------------------

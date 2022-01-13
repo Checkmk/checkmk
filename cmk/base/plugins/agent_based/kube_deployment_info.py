@@ -31,6 +31,9 @@ def host_labels(section: DeploymentInfo) -> HostLabelGenerator:
     """Host label function
 
     Labels:
+        cmk/kubernetes/object:
+            This label is set to the Kubernetes object type.
+
         cmk/kubernetes/namespace:
             This label is set to the namespace of the deployment.
 
@@ -48,6 +51,7 @@ def host_labels(section: DeploymentInfo) -> HostLabelGenerator:
     if not section:
         return
 
+    yield HostLabel("cmk/kubernetes/object", "deployment")
     yield HostLabel("cmk/kubernetes/namespace", section.namespace)
     yield HostLabel("cmk/kubernetes/deployment", section.name)
 

@@ -139,10 +139,10 @@ def _get_sites_with_same_named_hosts(hostname: HostName) -> List[SiteId]:
         return [SiteId(r[0]) for r in sites.live().query(query_str)]
 
 
-def _get_tree_renderer(row: Row, column: str, invpath: SDRawPath) -> NodeRenderer:
+def _get_tree_renderer(row: Row, column: str, invpath: SDRawPath) -> ABCNodeRenderer:
     if column == "host_inventory":
         painter_options = PainterOptions.get_instance()
-        return AttributeRenderer(
+        return NodeRenderer(
             row["site"],
             row["host_name"],
             invpath,
@@ -1826,7 +1826,7 @@ def _sort_by_index(keyorder, item):
 TableTitles = List[Tuple[str, str, bool]]
 
 
-class NodeRenderer:
+class ABCNodeRenderer(abc.ABC):
     def __init__(
         self,
         site_id: SiteId,
@@ -1977,6 +1977,7 @@ class NodeRenderer:
             html.close_tr()
         html.close_table()
 
+    @abc.abstractmethod
     def _show_table_value(
         self,
         value: Any,
@@ -2019,6 +2020,7 @@ class NodeRenderer:
             html.close_tr()
         html.close_table()
 
+    @abc.abstractmethod
     def _show_attribute(
         self,
         value: Any,
@@ -2090,7 +2092,7 @@ class NodeRenderer:
         return html.render_span(_(" (outdated)"), style="color: darkred")
 
 
-class AttributeRenderer(NodeRenderer):
+class NodeRenderer(ABCNodeRenderer):
     def _show_table_value(
         self,
         value: Any,
@@ -2108,7 +2110,7 @@ class AttributeRenderer(NodeRenderer):
         self._show_child_value(value, hint, retention_intervals)
 
 
-class DeltaNodeRenderer(NodeRenderer):
+class DeltaNodeRenderer(ABCNodeRenderer):
     def _show_table_value(
         self,
         value: Any,
@@ -2174,7 +2176,7 @@ def ajax_inv_render_tree() -> None:
                 )
             )
             return
-        tree_renderer: NodeRenderer = DeltaNodeRenderer(
+        tree_renderer: ABCNodeRenderer = DeltaNodeRenderer(
             site_id,
             hostname,
             invpath,
@@ -2194,7 +2196,7 @@ def ajax_inv_render_tree() -> None:
                 )
             )
             return
-        tree_renderer = AttributeRenderer(
+        tree_renderer = NodeRenderer(
             site_id,
             hostname,
             invpath,

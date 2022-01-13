@@ -2702,6 +2702,10 @@ msgstr "Niveles absolutos de arrendamientos usados"
 msgid "Absolute value"
 msgstr "Valor absoluto"
 
+#, fuzzy
+msgid "Accept all"
+msgstr "esperar todo"
+
 msgid "Accept any SSH Host Key"
 msgstr "Aceptar cualquier clave de host SSH"
 
@@ -3275,6 +3279,10 @@ msgstr "Añadir contenido"
 
 msgid "Add context information to title"
 msgstr "Añadir información de contexto al título"
+
+#, fuzzy
+msgid "Add credential"
+msgstr "Vincular credenciales"
 
 msgid "Add custom icon or action"
 msgstr "Añadir un icono o una acción personalizada"
@@ -5268,10 +5276,6 @@ msgstr "Aplicar el tiempo mínimo de retraso"
 msgid "Apply OMD config changes"
 msgstr "Aplicar Lag"
 
-#, fuzzy
-msgid "Apply changes"
-msgstr "Aplicar Lag"
-
 msgid "Apply conditions"
 msgstr "Aplicar condiciones"
 
@@ -6385,6 +6389,20 @@ msgstr "Placa base"
 
 msgid "Backplanes"
 msgstr "Placas base"
+
+#, fuzzy
+msgid "Backup code"
+msgstr "Modos de copia de seguridad"
+
+#, fuzzy
+msgid "Backup codes"
+msgstr "Modos de copia de seguridad"
+
+#, python-format
+msgid ""
+"Backup codes have been generated: <ul>%s</ul> Save them now. If you loose "
+"them, you will have to generate new ones."
+msgstr ""
 
 msgid "Backup conditions"
 msgstr "Condiciones de respaldo"
@@ -11534,6 +11552,10 @@ msgstr "Creación / Bloqueo"
 msgid "Creation of gateway hosts"
 msgstr "Creación de hosts de puerta de enlace"
 
+#, fuzzy
+msgid "Credential has been deleted"
+msgstr "El objetivo ha sido eliminado."
+
 msgid "Credentials"
 msgstr "Credenciales"
 
@@ -11859,10 +11881,6 @@ msgstr "Actualmente en marcha"
 
 msgid "Currently running processes"
 msgstr "Procesos en curso"
-
-#, python-format
-msgid "Currently there are %d changes to activate."
-msgstr "Actualmente hay %d cambios para activar."
 
 #, python-format
 msgid "Currently there are %s to activate."
@@ -13205,6 +13223,10 @@ msgstr "Eliminar este trabajo de copia de seguridad"
 msgid "Delete this backup target"
 msgstr "Eliminar este objetivo de copia de seguridad"
 
+#, fuzzy
+msgid "Delete this credential"
+msgstr "Eliminar este elemento"
+
 msgid "Delete this customer"
 msgstr "Borrar este cliente"
 
@@ -14113,6 +14135,10 @@ msgstr "Desactivar esta prueba"
 msgid "Disable timespecific parameters"
 msgstr "Desactivar los parámetros específicos del tiempo"
 
+#, fuzzy
+msgid "Disable two-factor authentication"
+msgstr "Desactivar las notificaciones del host"
+
 msgid "Disable undecided services"
 msgstr "Desactivar los servicios indecisos"
 
@@ -14678,9 +14704,6 @@ msgstr "Realizar acciones de anulación"
 msgid "Do hardware/software inventory"
 msgstr "Hacer un inventario de hardware/software"
 
-msgid "Do no monitor placeholder VMs"
-msgstr "No supervisar las máquinas virtuales de los marcadores de posición"
-
 msgid "Do not activate changes"
 msgstr "No activar los cambios"
 
@@ -15022,6 +15045,10 @@ msgstr "No fusionar fases consecutivas con igual estado"
 msgid "Do not monitor"
 msgstr "No vigilar"
 
+#, fuzzy
+msgid "Do not monitor placeholder VMs"
+msgstr "No supervisar las máquinas virtuales de los marcadores de posición"
+
 msgid "Do not offer this action as a command on open events"
 msgstr "No ofrecer esta acción como comando en eventos abiertos"
 
@@ -15255,6 +15282,10 @@ msgstr "¿Realmente quieres borrar este %s?"
 msgid "Do you really want to delete this backup?"
 msgstr "¿Realmente quieres borrar esta copia de seguridad?"
 
+#, fuzzy
+msgid "Do you really want to delete this credential"
+msgstr "¿Realmente quieres eliminar este objetivo?"
+
 msgid "Do you really want to delete this job?"
 msgstr "¿Realmente quieres eliminar este trabajo?"
 
@@ -15263,6 +15294,10 @@ msgstr "¿Realmente quieres eliminar este objetivo?"
 
 msgid "Do you really want to delete your logo?"
 msgstr "¿Realmente quiere eliminar su logotipo?"
+
+#, fuzzy, python-format
+msgid "Do you really want to disable the two-factor authentication of %s?"
+msgstr "¿Realmente quieres eliminar el atributo personalizado \"%s\"?"
 
 #, python-format
 msgid "Do you really want to log out of '%s'?"
@@ -16173,6 +16208,10 @@ msgstr "Editar periodo de tiempo"
 
 msgid "Edit topic"
 msgstr "Editar tema"
+
+#, fuzzy
+msgid "Edit two-factor authentication"
+msgstr "Autenticación básica"
 
 #, python-format
 msgid "Edit user %s"
@@ -19402,9 +19441,6 @@ msgstr ""
 
 msgid "From:"
 msgstr "De:"
-
-msgid "From: "
-msgstr "De: "
 
 msgid "From: email address"
 msgstr "De: dirección de correo electrónico"
@@ -23586,6 +23622,9 @@ msgstr ""
 "omitirá la dirección principal configurada en el host, mientras que la "
 "opción \"Ping todas las direcciones\" incluirá tanto la dirección principal "
 "como las adicionales."
+
+msgid "If you regenerate backup codes, you automatically invalidate old codes."
+msgstr ""
 
 msgid ""
 "If you select a contact group here, then all notifications of hosts and "
@@ -31285,6 +31324,10 @@ msgstr ""
 msgid "No authentication, no privacy"
 msgstr "Sin autenticación, sin privacidad"
 
+#, fuzzy
+msgid "No backup codes created yet."
+msgstr "Esta copia de seguridad no existe."
+
 msgid "No baked agent for this host available"
 msgstr "No hay ningún agente horneado para este host disponible"
 
@@ -31316,6 +31359,10 @@ msgstr "Sin problemas de conectividad"
 
 msgid "No contact groups assigned."
 msgstr "No se han asignado grupos de contacto."
+
+#, fuzzy
+msgid "No credentials registered"
+msgstr "Credenciales SNMP"
 
 msgid "No custom attributes are defined yet."
 msgstr "Todavía no se han definido atributos personalizados."
@@ -34482,7 +34529,8 @@ msgstr "pendiente"
 msgid "Pending DHCP leases"
 msgstr "Arrendamientos DHCP pendientes"
 
-msgid "Pending changes"
+#, fuzzy, python-format
+msgid "Pending changes (%s)"
 msgstr "Cambios pendientes"
 
 msgid "Pending memory"
@@ -37208,6 +37256,10 @@ msgstr ""
 "situación de alto volumen de registro."
 
 #, fuzzy
+msgid "Regenerate backup codes"
+msgstr "Crear una clave de seguridad"
+
+#, fuzzy
 msgid "Regex"
 msgstr "Juegos de reglas"
 
@@ -37233,6 +37285,14 @@ msgstr "Registrado"
 msgid "Registered agents"
 msgstr "Agentes registrados"
 
+#, fuzzy
+msgid "Registered at"
+msgstr "Registrado"
+
+#, fuzzy
+msgid "Registered credentials"
+msgstr "Agentes registrados"
+
 msgid "Registered instances per load balancer"
 msgstr ""
 
@@ -37241,6 +37301,10 @@ msgstr "Módems registrados"
 
 msgid "Registration and fallback"
 msgstr "Registro y retroceso"
+
+#, fuzzy
+msgid "Registration successful"
+msgstr "Horneando con éxito"
 
 msgid "Registry Keys to search for software (Windows)"
 msgstr "Claves del registro para buscar software (Windows)"
@@ -37995,6 +38059,9 @@ msgstr "Puerto requerido"
 
 msgid "Required switch contact state"
 msgstr "Estado del contacto del interruptor requerido"
+
+msgid "Rescan"
+msgstr ""
 
 msgid "Reschedule"
 msgstr "Reprogramar"
@@ -41115,6 +41182,10 @@ msgstr "Mostrar detalles sobre la codificación de livestatus"
 
 msgid "Show discovered service labels"
 msgstr "Mostrar etiquetas de servicios descubiertos"
+
+#, fuzzy
+msgid "Show empty groups"
+msgstr "Mostrar número de grupos"
 
 msgid "Show failed notifications"
 msgstr "Mostrar notificaciones fallidas"
@@ -53965,9 +54036,6 @@ msgstr ""
 msgid "To:"
 msgstr "Para:"
 
-msgid "To: "
-msgstr "Para: "
-
 msgid "Today"
 msgstr "Hoy"
 
@@ -54626,6 +54694,14 @@ msgstr "Túneles que ignoran los niveles"
 
 msgid "Two hours"
 msgstr "Dos horas"
+
+#, fuzzy
+msgid "Two-factor authentication"
+msgstr "Autenticación básica"
+
+#, fuzzy
+msgid "Two-factor authentication not enabled"
+msgstr "Sin autenticación, sin privacidad"
 
 msgid "Tx"
 msgstr "Tx"
@@ -56336,6 +56412,10 @@ msgstr "Utilizar un alias"
 
 msgid "Use alternative display name for services"
 msgstr "Utilizar un nombre de visualización alternativo para los servicios"
+
+#, fuzzy
+msgid "Use backup code"
+msgstr "Nuevo trabajo de copia de seguridad"
 
 msgid "Use bold font"
 msgstr "Utilizar la fuente en negrita"
@@ -58223,6 +58303,10 @@ msgstr "Estadísticas varias de la pasarela web"
 
 msgid "Web gateway statistics"
 msgstr "Estadísticas de la pasarela web"
+
+#, fuzzy
+msgid "WebAuthn credentials"
+msgstr "Credenciales por defecto"
 
 msgid "Webhook URL"
 msgstr "URL del gancho web"
@@ -61156,6 +61240,10 @@ msgstr "Tiene %d agentes horneados que contienen el plugin de actualización"
 msgid "You have %d rules for deploying the update plugin"
 msgstr "Tiene %d reglas para desplegar el plugin de actualización"
 
+#, fuzzy, python-format
+msgid "You have %d unused backup codes left."
+msgstr "Ha configurado %d trabajos de copia de seguridad"
+
 #, python-format
 msgid "You have %d users configured"
 msgstr "Tiene %d usuarios configurados"
@@ -61607,6 +61695,9 @@ msgstr "Tu %s ha sido borrado."
 #, python-format
 msgid "Your %s has been saved."
 msgstr "Tu %s ha sido guardado."
+
+msgid "Your WebAuthn credetial is already in use"
+msgstr ""
 
 #, fuzzy, python-format
 msgid ""
@@ -63768,6 +63859,21 @@ msgstr "z/OS"
 #, fuzzy, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "2020 tribe29 GmbH. Todos los derechos reservados."
+
+#, fuzzy
+#~| msgid "Apply Lag"
+#~ msgid "Apply changes"
+#~ msgstr "Aplicar Lag"
+
+#, python-format
+#~ msgid "Currently there are %d changes to activate."
+#~ msgstr "Actualmente hay %d cambios para activar."
+
+#~ msgid "From: "
+#~ msgstr "De: "
+
+#~ msgid "To: "
+#~ msgstr "Para: "
 
 #, fuzzy
 #~| msgid "Memory usage for %s hosts"

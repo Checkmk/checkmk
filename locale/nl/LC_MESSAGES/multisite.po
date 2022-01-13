@@ -2683,6 +2683,10 @@ msgstr "Absolute gebruikte leasingniveaus"
 msgid "Absolute value"
 msgstr "Absolute waarde"
 
+#, fuzzy
+msgid "Accept all"
+msgstr "verwachten alle"
+
 msgid "Accept any SSH Host Key"
 msgstr "Accepteer elke SSH Host Sleutel"
 
@@ -3256,6 +3260,10 @@ msgstr "Inhoud toevoegen"
 
 msgid "Add context information to title"
 msgstr "Voeg contextinformatie toe aan titel"
+
+#, fuzzy
+msgid "Add credential"
+msgstr "Inloggegevens binden"
 
 msgid "Add custom icon or action"
 msgstr "Aangepast pictogram of actie toevoegen"
@@ -5241,10 +5249,6 @@ msgstr "Breng vertraging aan Minimum tijd"
 msgid "Apply OMD config changes"
 msgstr "Solliciteer Lag"
 
-#, fuzzy
-msgid "Apply changes"
-msgstr "Solliciteer Lag"
-
 msgid "Apply conditions"
 msgstr "Voorwaarden toepassen"
 
@@ -6346,6 +6350,20 @@ msgstr "Backplane"
 
 msgid "Backplanes"
 msgstr "Backplanes"
+
+#, fuzzy
+msgid "Backup code"
+msgstr "Back-up modi"
+
+#, fuzzy
+msgid "Backup codes"
+msgstr "Back-up modi"
+
+#, python-format
+msgid ""
+"Backup codes have been generated: <ul>%s</ul> Save them now. If you loose "
+"them, you will have to generate new ones."
+msgstr ""
 
 msgid "Backup conditions"
 msgstr "Back-up voorwaarden"
@@ -11446,6 +11464,10 @@ msgstr "Creatie / Vergrendeling"
 msgid "Creation of gateway hosts"
 msgstr "Aanmaken van gateway hosts"
 
+#, fuzzy
+msgid "Credential has been deleted"
+msgstr "Het doelwit is verwijderd."
+
 msgid "Credentials"
 msgstr "Geloofsbrieven"
 
@@ -11764,10 +11786,6 @@ msgstr "Momenteel bezig"
 
 msgid "Currently running processes"
 msgstr "Momenteel lopende processen"
-
-#, python-format
-msgid "Currently there are %d changes to activate."
-msgstr "Momenteel zijn er %d wijzigingen te activeren."
 
 #, python-format
 msgid "Currently there are %s to activate."
@@ -13103,6 +13121,10 @@ msgstr "Deze back-uptaak verwijderen"
 msgid "Delete this backup target"
 msgstr "Dit back-updoel verwijderen"
 
+#, fuzzy
+msgid "Delete this credential"
+msgstr "Verwijder dit element"
+
 msgid "Delete this customer"
 msgstr "Verwijder deze klant"
 
@@ -13999,6 +14021,10 @@ msgstr "Schakel deze test uit"
 msgid "Disable timespecific parameters"
 msgstr "Tijdspecifieke parameters uitschakelen"
 
+#, fuzzy
+msgid "Disable two-factor authentication"
+msgstr "Host meldingen uitschakelen"
+
 msgid "Disable undecided services"
 msgstr "Schakel onbesliste diensten uit"
 
@@ -14553,9 +14579,6 @@ msgstr "Doe annulerende acties"
 msgid "Do hardware/software inventory"
 msgstr "Inventarisatie hardware/software"
 
-msgid "Do no monitor placeholder VMs"
-msgstr "Geen placeholder VM's monitoren"
-
 msgid "Do not activate changes"
 msgstr "Veranderingen niet activeren"
 
@@ -14898,6 +14921,10 @@ msgstr "Voeg geen opeenvolgende fasen met gelijke toestand samen"
 msgid "Do not monitor"
 msgstr "Controleer niet"
 
+#, fuzzy
+msgid "Do not monitor placeholder VMs"
+msgstr "Geen placeholder VM's monitoren"
+
 msgid "Do not offer this action as a command on open events"
 msgstr "Bied deze actie niet aan als een commando bij open gebeurtenissen"
 
@@ -15129,6 +15156,10 @@ msgstr "Wil je deze %s echt verwijderen?"
 msgid "Do you really want to delete this backup?"
 msgstr "Wilt u deze back-up echt verwijderen?"
 
+#, fuzzy
+msgid "Do you really want to delete this credential"
+msgstr "Wil je dit doelwit echt verwijderen?"
+
 msgid "Do you really want to delete this job?"
 msgstr "Wil je deze baan echt verwijderen?"
 
@@ -15137,6 +15168,10 @@ msgstr "Wil je dit doelwit echt verwijderen?"
 
 msgid "Do you really want to delete your logo?"
 msgstr "Wil je echt je logo verwijderen?"
+
+#, fuzzy, python-format
+msgid "Do you really want to disable the two-factor authentication of %s?"
+msgstr "Wilt u echt het aangepaste attribuut \"%s\" verwijderen?"
 
 #, python-format
 msgid "Do you really want to log out of '%s'?"
@@ -16045,6 +16080,10 @@ msgstr "Wijzig tijdsperiode"
 
 msgid "Edit topic"
 msgstr "Wijzig onderwerp"
+
+#, fuzzy
+msgid "Edit two-factor authentication"
+msgstr "Basisauthenticatie"
 
 #, python-format
 msgid "Edit user %s"
@@ -19246,9 +19285,6 @@ msgstr ""
 
 msgid "From:"
 msgstr "Van:"
-
-msgid "From: "
-msgstr "Van: "
 
 msgid "From: email address"
 msgstr "Van: e-mail adres"
@@ -23402,6 +23438,9 @@ msgstr ""
 "bijkomende IP adressen\" zal het door de host geconfigureerde hoofdadres "
 "weglaten terwijl de \"Ping alle adressen\" optie zowel het hoofdadres als de "
 "bijkomende adressen zal opnemen."
+
+msgid "If you regenerate backup codes, you automatically invalidate old codes."
+msgstr ""
 
 msgid ""
 "If you select a contact group here, then all notifications of hosts and "
@@ -31034,6 +31073,10 @@ msgstr ""
 msgid "No authentication, no privacy"
 msgstr "Geen authenticatie, geen privacy"
 
+#, fuzzy
+msgid "No backup codes created yet."
+msgstr "Deze backup bestaat niet."
+
 msgid "No baked agent for this host available"
 msgstr "Geen gebakken agent voor deze host beschikbaar"
 
@@ -31066,6 +31109,10 @@ msgstr "Geen connectiviteitsproblemen"
 
 msgid "No contact groups assigned."
 msgstr "Geen contactgroepen toegewezen."
+
+#, fuzzy
+msgid "No credentials registered"
+msgstr "SNMP geloofsbrieven"
 
 msgid "No custom attributes are defined yet."
 msgstr "Er zijn nog geen aangepaste attributen gedefinieerd."
@@ -34209,7 +34256,8 @@ msgstr "in afwachting van"
 msgid "Pending DHCP leases"
 msgstr "In afwachting van DHCP leases"
 
-msgid "Pending changes"
+#, fuzzy, python-format
+msgid "Pending changes (%s)"
 msgstr "In afwachting van wijzigingen"
 
 msgid "Pending memory"
@@ -36903,6 +36951,10 @@ msgstr ""
 "situaties met een hoog logvolume."
 
 #, fuzzy
+msgid "Regenerate backup codes"
+msgstr "Back-up sleutel maken"
+
+#, fuzzy
 msgid "Regex"
 msgstr "Regelsets"
 
@@ -36928,6 +36980,14 @@ msgstr "Geregistreerd"
 msgid "Registered agents"
 msgstr "Geregistreerde agenten"
 
+#, fuzzy
+msgid "Registered at"
+msgstr "Geregistreerd"
+
+#, fuzzy
+msgid "Registered credentials"
+msgstr "Geregistreerde agenten"
+
 msgid "Registered instances per load balancer"
 msgstr ""
 
@@ -36936,6 +36996,10 @@ msgstr "Geregistreerde modems"
 
 msgid "Registration and fallback"
 msgstr "Registratie en terugval"
+
+#, fuzzy
+msgid "Registration successful"
+msgstr "Succesvol bakken"
 
 msgid "Registry Keys to search for software (Windows)"
 msgstr "Registersleutels om naar software te zoeken (Windows)"
@@ -37683,6 +37747,9 @@ msgstr "Vereiste poort"
 
 msgid "Required switch contact state"
 msgstr "Vereiste schakelaarcontactstatus"
+
+msgid "Rescan"
+msgstr ""
 
 msgid "Reschedule"
 msgstr "Herschikken"
@@ -40769,6 +40836,10 @@ msgstr "Toon details over livestatus encryptie"
 
 msgid "Show discovered service labels"
 msgstr "Ontdekte service labels tonen"
+
+#, fuzzy
+msgid "Show empty groups"
+msgstr "Toon aantal groepen"
 
 msgid "Show failed notifications"
 msgstr "Toon mislukte meldingen"
@@ -53517,9 +53588,6 @@ msgstr ""
 msgid "To:"
 msgstr "Naar:"
 
-msgid "To: "
-msgstr "Naar: "
-
 msgid "Today"
 msgstr "Vandaag"
 
@@ -54175,6 +54243,14 @@ msgstr "Tunnels die niveaus negeren"
 
 msgid "Two hours"
 msgstr "Twee uur."
+
+#, fuzzy
+msgid "Two-factor authentication"
+msgstr "Basisauthenticatie"
+
+#, fuzzy
+msgid "Two-factor authentication not enabled"
+msgstr "Geen authenticatie, geen privacy"
 
 msgid "Tx"
 msgstr "Tx"
@@ -55867,6 +55943,10 @@ msgstr "Gebruik alias"
 
 msgid "Use alternative display name for services"
 msgstr "Gebruik alternatieve weergavenaam voor diensten"
+
+#, fuzzy
+msgid "Use backup code"
+msgstr "Nieuwe back-uptaak"
 
 msgid "Use bold font"
 msgstr "Gebruik vet lettertype"
@@ -57736,6 +57816,10 @@ msgstr "Web gateway diverse statistieken"
 
 msgid "Web gateway statistics"
 msgstr "Web gateway statistieken"
+
+#, fuzzy
+msgid "WebAuthn credentials"
+msgstr "Standaard inloggegevens"
 
 msgid "Webhook URL"
 msgstr "Webhook URL"
@@ -60658,6 +60742,10 @@ msgstr "U heeft %d gebakken agenten die de update plugin bevatten"
 msgid "You have %d rules for deploying the update plugin"
 msgstr "Je hebt %d regels voor het implementeren van de update plugin"
 
+#, fuzzy, python-format
+msgid "You have %d unused backup codes left."
+msgstr "U hebt %d back-uptaken geconfigureerd"
+
 #, python-format
 msgid "You have %d users configured"
 msgstr "U hebt %d gebruikers geconfigureerd"
@@ -61100,6 +61188,9 @@ msgstr "Uw %s is verwijderd."
 #, python-format
 msgid "Your %s has been saved."
 msgstr "Uw %s is opgeslagen."
+
+msgid "Your WebAuthn credetial is already in use"
+msgstr ""
 
 #, fuzzy, python-format
 msgid ""
@@ -63250,6 +63341,21 @@ msgstr "z/OS"
 #, fuzzy, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. Alle rechten voorbehouden."
+
+#, fuzzy
+#~| msgid "Apply Lag"
+#~ msgid "Apply changes"
+#~ msgstr "Solliciteer Lag"
+
+#, python-format
+#~ msgid "Currently there are %d changes to activate."
+#~ msgstr "Momenteel zijn er %d wijzigingen te activeren."
+
+#~ msgid "From: "
+#~ msgstr "Van: "
+
+#~ msgid "To: "
+#~ msgstr "Naar: "
 
 #, fuzzy
 #~| msgid "Memory usage for %s hosts"

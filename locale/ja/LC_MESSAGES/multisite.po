@@ -2565,6 +2565,10 @@ msgstr "絶対使用済みリースレベル"
 msgid "Absolute value"
 msgstr "絶対値"
 
+#, fuzzy
+msgid "Accept all"
+msgstr "すべてを期待する"
+
 msgid "Accept any SSH Host Key"
 msgstr "SSHホストキーを受け入れる"
 
@@ -3131,6 +3135,10 @@ msgstr "コンテンツを追加する"
 
 msgid "Add context information to title"
 msgstr "タイトルにコンテキスト情報を追加する"
+
+#, fuzzy
+msgid "Add credential"
+msgstr "資格情報をバインドする"
 
 msgid "Add custom icon or action"
 msgstr "カスタムアイコンまたはアクションを追加する"
@@ -5055,10 +5063,6 @@ msgstr "ラグ最小時間を適用する"
 msgid "Apply OMD config changes"
 msgstr "ラグを適用する"
 
-#, fuzzy
-msgid "Apply changes"
-msgstr "ラグを適用する"
-
 msgid "Apply conditions"
 msgstr "条件を適用する"
 
@@ -6130,6 +6134,20 @@ msgstr "バックプレーン"
 
 msgid "Backplanes"
 msgstr "バックプレーン"
+
+#, fuzzy
+msgid "Backup code"
+msgstr "バックアップモード"
+
+#, fuzzy
+msgid "Backup codes"
+msgstr "バックアップモード"
+
+#, python-format
+msgid ""
+"Backup codes have been generated: <ul>%s</ul> Save them now. If you loose "
+"them, you will have to generate new ones."
+msgstr ""
 
 msgid "Backup conditions"
 msgstr "バックアップ条件"
@@ -11014,6 +11032,10 @@ msgstr "作成/ロック"
 msgid "Creation of gateway hosts"
 msgstr "ゲートウェイホストの作成"
 
+#, fuzzy
+msgid "Credential has been deleted"
+msgstr "ターゲットが削除されました"
+
 msgid "Credentials"
 msgstr "資格情報"
 
@@ -11327,10 +11349,6 @@ msgstr "現在実行中"
 
 msgid "Currently running processes"
 msgstr "現在実行中のプロセス"
-
-#, python-format
-msgid "Currently there are %d changes to activate."
-msgstr "現在、アクティブ化する%dの変更があります。"
 
 #, python-format
 msgid "Currently there are %s to activate."
@@ -12643,6 +12661,10 @@ msgstr "このバックアップジョブを削除します"
 msgid "Delete this backup target"
 msgstr "このバックアップターゲットを削除します"
 
+#, fuzzy
+msgid "Delete this credential"
+msgstr "このエレメントを削除します"
+
 msgid "Delete this customer"
 msgstr "この顧客を削除する"
 
@@ -13517,6 +13539,10 @@ msgstr "このテストを無効にする"
 msgid "Disable timespecific parameters"
 msgstr "時間固有のパラメータを無効にする"
 
+#, fuzzy
+msgid "Disable two-factor authentication"
+msgstr "ホスト通知を無効にする"
+
 msgid "Disable undecided services"
 msgstr "未決定のサービスを無効にする"
 
@@ -14055,9 +14081,6 @@ msgstr "アクションをキャンセルする"
 msgid "Do hardware/software inventory"
 msgstr "ハードウェア/ソフトウェアのインベントリを行う"
 
-msgid "Do no monitor placeholder VMs"
-msgstr "プレースホルダーVMsを監視しない"
-
 msgid "Do not activate changes"
 msgstr "変更をアクティブにしないでください"
 
@@ -14397,6 +14420,10 @@ msgstr "連続するフェーズを等しい状態でマージしないでくだ
 msgid "Do not monitor"
 msgstr "監視しない"
 
+#, fuzzy
+msgid "Do not monitor placeholder VMs"
+msgstr "プレースホルダーVMsを監視しない"
+
 msgid "Do not offer this action as a command on open events"
 msgstr "オープンイベントのコマンドとしてこのアクションを提供しないでください"
 
@@ -14621,6 +14648,10 @@ msgstr "この %sを本当に削除しますか？"
 msgid "Do you really want to delete this backup?"
 msgstr "このバックアップを本当に削除しますか？"
 
+#, fuzzy
+msgid "Do you really want to delete this credential"
+msgstr "このターゲットを本当に削除しますか？"
+
 msgid "Do you really want to delete this job?"
 msgstr "本当にこのジョブを削除しますか？"
 
@@ -14629,6 +14660,10 @@ msgstr "このターゲットを本当に削除しますか？"
 
 msgid "Do you really want to delete your logo?"
 msgstr "本当にロゴを削除しますか?"
+
+#, fuzzy, python-format
+msgid "Do you really want to disable the two-factor authentication of %s?"
+msgstr "カスタム属性\"%s\"を本当に削除しますか?"
 
 #, python-format
 msgid "Do you really want to log out of '%s'?"
@@ -15527,6 +15562,10 @@ msgstr "期間の編集"
 
 msgid "Edit topic"
 msgstr "トピックの編集"
+
+#, fuzzy
+msgid "Edit two-factor authentication"
+msgstr "基本認証"
 
 #, python-format
 msgid "Edit user %s"
@@ -18649,9 +18688,6 @@ msgstr ""
 
 msgid "From:"
 msgstr "から:"
-
-msgid "From: "
-msgstr "から: "
 
 msgid "From: email address"
 msgstr "差出人:メールアドレス"
@@ -22539,6 +22575,9 @@ msgstr ""
 "選択できます。\"追加のIPアドレスにpingを実行する\"では、ホストで構成されたメ"
 "インアドレスが省略されますが、\"すべてのアドレスにpingを実行する\"オプション"
 "には、メインアドレスと追加のアドレスの両方が含まれます。"
+
+msgid "If you regenerate backup codes, you automatically invalidate old codes."
+msgstr ""
 
 msgid ""
 "If you select a contact group here, then all notifications of hosts and "
@@ -29984,6 +30023,10 @@ msgstr ""
 msgid "No authentication, no privacy"
 msgstr "認証なし、プライバシーなし"
 
+#, fuzzy
+msgid "No backup codes created yet."
+msgstr "このバックアップは存在しません。"
+
 msgid "No baked agent for this host available"
 msgstr "このホストのベイクドエージェントは利用できません。"
 
@@ -30015,6 +30058,10 @@ msgstr "接続の問題はありません"
 
 msgid "No contact groups assigned."
 msgstr "連絡先グループは割り当てられていません"
+
+#, fuzzy
+msgid "No credentials registered"
+msgstr "SNMP資格情報"
 
 msgid "No custom attributes are defined yet."
 msgstr "カスタム属性はまだ定義されていません。"
@@ -33067,7 +33114,8 @@ msgstr "保留中"
 msgid "Pending DHCP leases"
 msgstr "保留中のDHCPリース"
 
-msgid "Pending changes"
+#, fuzzy, python-format
+msgid "Pending changes (%s)"
 msgstr "保留中の変更"
 
 msgid "Pending memory"
@@ -35669,6 +35717,10 @@ msgid ""
 msgstr ""
 
 #, fuzzy
+msgid "Regenerate backup codes"
+msgstr "バックアップキーを作成する"
+
+#, fuzzy
 msgid "Regex"
 msgstr "ルールセット"
 
@@ -35694,6 +35746,14 @@ msgstr "登録済み"
 msgid "Registered agents"
 msgstr "登録エージェント"
 
+#, fuzzy
+msgid "Registered at"
+msgstr "登録済み"
+
+#, fuzzy
+msgid "Registered credentials"
+msgstr "登録エージェント"
+
 msgid "Registered instances per load balancer"
 msgstr ""
 
@@ -35702,6 +35762,10 @@ msgstr "登録済みモデム"
 
 msgid "Registration and fallback"
 msgstr "登録とフォールバック"
+
+#, fuzzy
+msgid "Registration successful"
+msgstr "成功したベーキング"
 
 msgid "Registry Keys to search for software (Windows)"
 msgstr "ソフトウェアを検索するためのレジストリキー(Windows)"
@@ -36436,6 +36500,9 @@ msgstr "必要なポート"
 
 msgid "Required switch contact state"
 msgstr "必要なスイッチの接触状態"
+
+msgid "Rescan"
+msgstr ""
 
 msgid "Reschedule"
 msgstr "再スケジュール"
@@ -39424,6 +39491,10 @@ msgstr "ライブステータス暗号化に関する詳細を表示する"
 
 msgid "Show discovered service labels"
 msgstr ""
+
+#, fuzzy
+msgid "Show empty groups"
+msgstr "グループの数を表示する"
 
 msgid "Show failed notifications"
 msgstr "失敗した通知を表示する"
@@ -51120,9 +51191,6 @@ msgstr ""
 msgid "To:"
 msgstr "に:"
 
-msgid "To: "
-msgstr "に: "
-
 msgid "Today"
 msgstr "今日"
 
@@ -51774,6 +51842,14 @@ msgstr "レベルを無視するトンネル"
 
 msgid "Two hours"
 msgstr "2時間"
+
+#, fuzzy
+msgid "Two-factor authentication"
+msgstr "基本認証"
+
+#, fuzzy
+msgid "Two-factor authentication not enabled"
+msgstr "認証なし、プライバシーなし"
 
 msgid "Tx"
 msgstr "Tx"
@@ -53431,6 +53507,10 @@ msgstr "エイリアスを使用する"
 
 msgid "Use alternative display name for services"
 msgstr "サービスに代替表示名を使用する"
+
+#, fuzzy
+msgid "Use backup code"
+msgstr "新しいバックアップジョブ"
 
 msgid "Use bold font"
 msgstr "太字を使用する"
@@ -55217,6 +55297,10 @@ msgstr "Webゲートウェイのその他の統計"
 
 msgid "Web gateway statistics"
 msgstr "Webゲートウェイ統計"
+
+#, fuzzy
+msgid "WebAuthn credentials"
+msgstr "デフォルトの資格情報"
 
 msgid "Webhook URL"
 msgstr "WebhookのURL"
@@ -57821,6 +57905,10 @@ msgstr "更新プラグインを含む %d ベイク処理されたエージェ�
 msgid "You have %d rules for deploying the update plugin"
 msgstr "更新プラグインをデプロイするための %d ルールがあります"
 
+#, fuzzy, python-format
+msgid "You have %d unused backup codes left."
+msgstr "%dバックアップジョブを構成しました"
+
 #, python-format
 msgid "You have %d users configured"
 msgstr ""
@@ -58225,6 +58313,9 @@ msgstr "%s が削除されました。"
 #, python-format
 msgid "Your %s has been saved."
 msgstr "%s が保存されました。"
+
+msgid "Your WebAuthn credetial is already in use"
+msgstr ""
 
 #, fuzzy, python-format
 msgid ""
@@ -60351,6 +60442,21 @@ msgstr "z/OS"
 #, fuzzy, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. All Rights Reserved."
+
+#, fuzzy
+#~| msgid "Apply Lag"
+#~ msgid "Apply changes"
+#~ msgstr "ラグを適用する"
+
+#, python-format
+#~ msgid "Currently there are %d changes to activate."
+#~ msgstr "現在、アクティブ化する%dの変更があります。"
+
+#~ msgid "From: "
+#~ msgstr "から: "
+
+#~ msgid "To: "
+#~ msgstr "に: "
 
 #, fuzzy
 #~| msgid "Memory usage for %s hosts"

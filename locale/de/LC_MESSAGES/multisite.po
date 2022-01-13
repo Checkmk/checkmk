@@ -2687,6 +2687,10 @@ msgstr "Absolute Schwellen für benutzte Leases"
 msgid "Absolute value"
 msgstr "Absoluter Wert"
 
+#, fuzzy
+msgid "Accept all"
+msgstr "erwarte alles"
+
 msgid "Accept any SSH Host Key"
 msgstr "Jeden SSH-Hostschlüssel akzeptieren"
 
@@ -3259,6 +3263,10 @@ msgstr "Inhalt hinzufügen"
 
 msgid "Add context information to title"
 msgstr "Kontaktinformation zu Titel ergänzen"
+
+#, fuzzy
+msgid "Add credential"
+msgstr "Anmeldedaten anbinden"
 
 msgid "Add custom icon or action"
 msgstr "Benutzersymbol oder -aktion hinzufügen"
@@ -5242,10 +5250,6 @@ msgstr "Minimale Zeit für das Apply-Lag"
 msgid "Apply OMD config changes"
 msgstr "Verzögerung des Anwendens"
 
-#, fuzzy
-msgid "Apply changes"
-msgstr "Verzögerung des Anwendens"
-
 msgid "Apply conditions"
 msgstr "Bedingungen anwenden"
 
@@ -6345,6 +6349,20 @@ msgstr "Backplane"
 
 msgid "Backplanes"
 msgstr "Backplanes"
+
+#, fuzzy
+msgid "Backup code"
+msgstr "Backup-Modi"
+
+#, fuzzy
+msgid "Backup codes"
+msgstr "Backup-Modi"
+
+#, python-format
+msgid ""
+"Backup codes have been generated: <ul>%s</ul> Save them now. If you loose "
+"them, you will have to generate new ones."
+msgstr ""
 
 msgid "Backup conditions"
 msgstr "Backup-Bedingungen"
@@ -11469,6 +11487,10 @@ msgstr "Erstellung / Sperrung"
 msgid "Creation of gateway hosts"
 msgstr "Erstellung von Gatewayhosts"
 
+#, fuzzy
+msgid "Credential has been deleted"
+msgstr "Das Ziel wurde gelöscht."
+
 msgid "Credentials"
 msgstr "Anmeldedaten"
 
@@ -11788,10 +11810,6 @@ msgstr "Läuft aktuell"
 
 msgid "Currently running processes"
 msgstr "Aktuell laufende Prozesse"
-
-#, python-format
-msgid "Currently there are %d changes to activate."
-msgstr "Derzeit sind %d Änderungen zu aktivieren."
 
 #, python-format
 msgid "Currently there are %s to activate."
@@ -13133,6 +13151,10 @@ msgstr "Diesen Sicherungs-Job löschen"
 msgid "Delete this backup target"
 msgstr "Dieses Sicherungsziel löschen"
 
+#, fuzzy
+msgid "Delete this credential"
+msgstr "Dieses Element löschen"
+
 msgid "Delete this customer"
 msgstr "Lösche Kunden"
 
@@ -14037,6 +14059,10 @@ msgstr "Diesen Test deaktiveren"
 msgid "Disable timespecific parameters"
 msgstr "Zeitspezifische Parameter deaktivieren"
 
+#, fuzzy
+msgid "Disable two-factor authentication"
+msgstr "Schalte Hostalarme ab"
+
 msgid "Disable undecided services"
 msgstr "Deaktiviere nicht entschiedene Services"
 
@@ -14596,9 +14622,6 @@ msgstr "Hebe alle Aktionen auf"
 msgid "Do hardware/software inventory"
 msgstr "Hardware/Software-Inventur durchführen"
 
-msgid "Do no monitor placeholder VMs"
-msgstr "Platzhalter-VMs nicht überwachen"
-
 msgid "Do not activate changes"
 msgstr "Änderungen nicht aktivieren"
 
@@ -14939,6 +14962,10 @@ msgstr "Phasen gleichen Zustands nicht zusammenfassen"
 msgid "Do not monitor"
 msgstr "Nicht überwachen"
 
+#, fuzzy
+msgid "Do not monitor placeholder VMs"
+msgstr "Platzhalter-VMs nicht überwachen"
+
 msgid "Do not offer this action as a command on open events"
 msgstr "Biete Aktion nicht als Befehl für offene Ereignisse an"
 
@@ -15172,6 +15199,10 @@ msgstr "Wollen Sie diese %s wirklich löschen?"
 msgid "Do you really want to delete this backup?"
 msgstr "Wollen Sie die Sicherung wirklich löschen?"
 
+#, fuzzy
+msgid "Do you really want to delete this credential"
+msgstr "Wollen Sie das Sicherungsziel wirklich löschen?"
+
 msgid "Do you really want to delete this job?"
 msgstr "Wollen Sie den Sicherungs-Job wirklich löschen?"
 
@@ -15180,6 +15211,10 @@ msgstr "Wollen Sie das Sicherungsziel wirklich löschen?"
 
 msgid "Do you really want to delete your logo?"
 msgstr "Wollen Sie wirklich Ihr aktuelles Logo löschen?"
+
+#, fuzzy, python-format
+msgid "Do you really want to disable the two-factor authentication of %s?"
+msgstr "Wollen Sie das Attribut \"%s\" wirklich löschen?"
 
 #, python-format
 msgid "Do you really want to log out of '%s'?"
@@ -16086,6 +16121,10 @@ msgstr "Bearbeite Zeitperiode"
 
 msgid "Edit topic"
 msgstr "Thema bearbeiten"
+
+#, fuzzy
+msgid "Edit two-factor authentication"
+msgstr "Basis-Authentifizierung"
 
 #, python-format
 msgid "Edit user %s"
@@ -19304,9 +19343,6 @@ msgstr ""
 "Intervall für diesen Vorgang fest."
 
 msgid "From:"
-msgstr "Von:"
-
-msgid "From: "
 msgstr "Von:"
 
 msgid "From: email address"
@@ -23450,6 +23486,9 @@ msgstr ""
 "diesen Check aufnehmen möchten. \"Ping additional IP addresses\" lässt die "
 "vom Host konfigurierte Hauptadresse aus, während die Option \"Ping all "
 "addresses\" sowohl die Haupt- als auch die zusätzlichen Adressen enthält."
+
+msgid "If you regenerate backup codes, you automatically invalidate old codes."
+msgstr ""
 
 msgid ""
 "If you select a contact group here, then all notifications of hosts and "
@@ -31092,6 +31131,10 @@ msgstr ""
 msgid "No authentication, no privacy"
 msgstr "Keine Authentifizierung, keine Privacy"
 
+#, fuzzy
+msgid "No backup codes created yet."
+msgstr "Diese Sicherung existiert nicht."
+
 msgid "No baked agent for this host available"
 msgstr "Für diesen Host ist kein gebackener Agent vefügbar"
 
@@ -31123,6 +31166,10 @@ msgstr "Keine Verbindungsprobleme"
 
 msgid "No contact groups assigned."
 msgstr "Keine Kontakt-Gruppen zugewiesen."
+
+#, fuzzy
+msgid "No credentials registered"
+msgstr "SNMP-Zugangsdaten"
 
 msgid "No custom attributes are defined yet."
 msgstr "Keine Benutzer-Attribute definiert."
@@ -34265,7 +34312,8 @@ msgstr "anstehend"
 msgid "Pending DHCP leases"
 msgstr "Ausstehende DHCP-Leases"
 
-msgid "Pending changes"
+#, fuzzy, python-format
+msgid "Pending changes (%s)"
 msgstr "Offene Änderungen"
 
 msgid "Pending memory"
@@ -36985,6 +37033,10 @@ msgstr ""
 "übersteigen, da die Größe nur periodisch geprüft wird."
 
 #, fuzzy
+msgid "Regenerate backup codes"
+msgstr "Sicherungsschlüssel erzeugen"
+
+#, fuzzy
 msgid "Regex"
 msgstr "Regex-Sets"
 
@@ -37009,6 +37061,14 @@ msgstr "Registriert"
 msgid "Registered agents"
 msgstr "Registrierte Agenten"
 
+#, fuzzy
+msgid "Registered at"
+msgstr "Registriert"
+
+#, fuzzy
+msgid "Registered credentials"
+msgstr "Registrierte Agenten"
+
 msgid "Registered instances per load balancer"
 msgstr ""
 
@@ -37017,6 +37077,10 @@ msgstr "Registrierte Modems"
 
 msgid "Registration and fallback"
 msgstr "Registrierung und Fallback"
+
+#, fuzzy
+msgid "Registration successful"
+msgstr "Der Benutzerabgleich wurde erfolgreich durchgeführt."
 
 msgid "Registry Keys to search for software (Windows)"
 msgstr "Registrierungsschlüssel, in denen nach Software gesucht wird (Windows)"
@@ -37757,6 +37821,10 @@ msgstr "Erforderlicher Port"
 
 msgid "Required switch contact state"
 msgstr "Erwarteter Zustand des Schaltkontaktes"
+
+#, fuzzy
+msgid "Rescan"
+msgstr "Parent-Scan"
 
 msgid "Reschedule"
 msgstr "Neu ansetzen"
@@ -40850,6 +40918,10 @@ msgstr "Details zur Livestatus-Verschlüsselung anzeigen"
 
 msgid "Show discovered service labels"
 msgstr "Erkannte Servicelabels anzeigen"
+
+#, fuzzy
+msgid "Show empty groups"
+msgstr "Host-Gruppen"
 
 msgid "Show failed notifications"
 msgstr ""
@@ -53549,9 +53621,6 @@ msgstr ""
 msgid "To:"
 msgstr "An:"
 
-msgid "To: "
-msgstr "An: "
-
 msgid "Today"
 msgstr "Heute"
 
@@ -54209,6 +54278,14 @@ msgstr "Tunnel, die Levels ignorieren"
 
 msgid "Two hours"
 msgstr "Zwei Stunden"
+
+#, fuzzy
+msgid "Two-factor authentication"
+msgstr "Basis-Authentifizierung"
+
+#, fuzzy
+msgid "Two-factor authentication not enabled"
+msgstr "Keine Authentifizierung, keine Privacy"
 
 msgid "Tx"
 msgstr "Tx"
@@ -55908,6 +55985,10 @@ msgstr "Alias verwenden"
 
 msgid "Use alternative display name for services"
 msgstr "Alternativen Anzeigenamen für Services verwenden"
+
+#, fuzzy
+msgid "Use backup code"
+msgstr "Neuer Backup-Job"
 
 msgid "Use bold font"
 msgstr "Fettschritt verwenden"
@@ -57778,6 +57859,10 @@ msgstr "sonstige Webgateway-Statistiken"
 
 msgid "Web gateway statistics"
 msgstr "Webgateway-Statistiken"
+
+#, fuzzy
+msgid "WebAuthn credentials"
+msgstr "Standard-Zugangsdaten"
 
 msgid "Webhook URL"
 msgstr "Webhook-URL"
@@ -60678,6 +60763,10 @@ msgstr "Sie haben %d gebackene Agenten, die das Update Plugin beinhalten."
 msgid "You have %d rules for deploying the update plugin"
 msgstr "Sie haben %d Regeln für die Bereitstellung des Update-Plugins"
 
+#, fuzzy, python-format
+msgid "You have %d unused backup codes left."
+msgstr "Sie haben %d Sicherungs-Aufträge konfiguriert"
+
 #, python-format
 msgid "You have %d users configured"
 msgstr "Sie haben %d Nutzer konfiguriert"
@@ -61126,6 +61215,9 @@ msgstr "Ihr %s wurde gelöscht."
 #, python-format
 msgid "Your %s has been saved."
 msgstr "Ihr %s wurde gespeichert."
+
+msgid "Your WebAuthn credetial is already in use"
+msgstr ""
 
 #, fuzzy, python-format
 msgid ""
@@ -63280,6 +63372,21 @@ msgstr "z/OS"
 #, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. Alle Rechte vorbehalten."
+
+#, fuzzy
+#~| msgid "Apply Lag"
+#~ msgid "Apply changes"
+#~ msgstr "Verzögerung des Anwendens"
+
+#, python-format
+#~ msgid "Currently there are %d changes to activate."
+#~ msgstr "Derzeit sind %d Änderungen zu aktivieren."
+
+#~ msgid "From: "
+#~ msgstr "Von:"
+
+#~ msgid "To: "
+#~ msgstr "An: "
 
 #, fuzzy
 #~| msgid "Memory usage for %s hosts"
@@ -69500,9 +69607,6 @@ msgstr "© %s tribe29 GmbH. Alle Rechte vorbehalten."
 #~ "Parameter für checks, die von der Check_MK Serviceerkennung gefunden "
 #~ "wurden."
 
-#~ msgid "Parentscan"
-#~ msgstr "Parent-Scan"
-
 #~ msgid "Password management"
 #~ msgstr "Passwortspeicher"
 
@@ -72517,9 +72621,6 @@ msgstr "© %s tribe29 GmbH. Alle Rechte vorbehalten."
 #~ "Diese Adresse wird als Standard-Empfängeradresse für Fehlerberichte "
 #~ "verwendet"
 
-#~ msgid "User synchronization successful"
-#~ msgstr "Der Benutzerabgleich wurde erfolgreich durchgeführt."
-
 #~ msgid ""
 #~ "<br><br><b>Passive checks</b>: Do no specify a command line if you want "
 #~ "to define passive checks."
@@ -73015,9 +73116,6 @@ msgstr "© %s tribe29 GmbH. Alle Rechte vorbehalten."
 
 #~ msgid "contact groups"
 #~ msgstr "Kontakt-Gruppen"
-
-#~ msgid "host groups"
-#~ msgstr "Host-Gruppen"
 
 #~ msgid "(local)"
 #~ msgstr "(lokal)"

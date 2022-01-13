@@ -2357,6 +2357,9 @@ msgstr "Liber Exact"
 msgid "Absolute value"
 msgstr "Liber Exact"
 
+msgid "Accept all"
+msgstr ""
+
 msgid "Accept any SSH Host Key"
 msgstr "Accept orice cheie SSH Host Key"
 
@@ -2993,6 +2996,10 @@ msgstr "Adaugă Conținut"
 #, fuzzy
 msgid "Add context information to title"
 msgstr "Adaugă informații despre contact"
+
+#, fuzzy
+msgid "Add credential"
+msgstr "Adaugă comentariu"
 
 #, fuzzy
 msgid "Add custom icon or action"
@@ -4957,10 +4964,6 @@ msgstr ""
 msgid "Apply OMD config changes"
 msgstr "%d schimbări"
 
-#, fuzzy
-msgid "Apply changes"
-msgstr "%d schimbări"
-
 msgid "Apply conditions"
 msgstr ""
 
@@ -6035,6 +6038,20 @@ msgid "Backplane"
 msgstr ""
 
 msgid "Backplanes"
+msgstr ""
+
+#, fuzzy
+msgid "Backup code"
+msgstr "foloseste numele portului"
+
+#, fuzzy
+msgid "Backup codes"
+msgstr "foloseste numele portului"
+
+#, python-format
+msgid ""
+"Backup codes have been generated: <ul>%s</ul> Save them now. If you loose "
+"them, you will have to generate new ones."
 msgstr ""
 
 msgid "Backup conditions"
@@ -10821,6 +10838,10 @@ msgstr "Conexiune Noua"
 msgid "Creation of gateway hosts"
 msgstr ""
 
+#, fuzzy
+msgid "Credential has been deleted"
+msgstr "Un utilizator cu id-ul \"%s\" nu există."
+
 msgid "Credentials"
 msgstr ""
 
@@ -11150,10 +11171,6 @@ msgstr ""
 
 msgid "Currently running processes"
 msgstr ""
-
-#, fuzzy, python-format
-msgid "Currently there are %d changes to activate."
-msgstr "%d schimbări"
 
 #, python-format
 msgid "Currently there are %s to activate."
@@ -12530,6 +12547,10 @@ msgid "Delete this backup target"
 msgstr "Sterge Elementul"
 
 #, fuzzy
+msgid "Delete this credential"
+msgstr "Sterge Elementul"
+
+#, fuzzy
 msgid "Delete this customer"
 msgstr "Sterge Elementul"
 
@@ -13419,6 +13440,10 @@ msgid "Disable timespecific parameters"
 msgstr "Dezactiveaza Notificarile"
 
 #, fuzzy
+msgid "Disable two-factor authentication"
+msgstr "Confirma Parola"
+
+#, fuzzy
 msgid "Disable undecided services"
 msgstr "Vizibilitatea Elementelor/Serviciilor"
 
@@ -13991,9 +14016,6 @@ msgstr "Acțiune"
 msgid "Do hardware/software inventory"
 msgstr ""
 
-msgid "Do no monitor placeholder VMs"
-msgstr ""
-
 #, fuzzy
 msgid "Do not activate changes"
 msgstr "Activare schimbări"
@@ -14331,6 +14353,9 @@ msgstr ""
 msgid "Do not monitor"
 msgstr ""
 
+msgid "Do not monitor placeholder VMs"
+msgstr ""
+
 msgid "Do not offer this action as a command on open events"
 msgstr ""
 
@@ -14559,6 +14584,10 @@ msgstr ""
 msgid "Do you really want to delete this backup?"
 msgstr ""
 
+#, fuzzy
+msgid "Do you really want to delete this credential"
+msgstr "O agregare legată de un singur element"
+
 msgid "Do you really want to delete this job?"
 msgstr ""
 
@@ -14567,6 +14596,10 @@ msgstr ""
 
 msgid "Do you really want to delete your logo?"
 msgstr ""
+
+#, fuzzy, python-format
+msgid "Do you really want to disable the two-factor authentication of %s?"
+msgstr "O agregare legată de un singur element"
 
 #, python-format
 msgid "Do you really want to log out of '%s'?"
@@ -15474,6 +15507,10 @@ msgstr ""
 #, fuzzy
 msgid "Edit topic"
 msgstr "Adaugă group de model"
+
+#, fuzzy
+msgid "Edit two-factor authentication"
+msgstr "trimite notificare"
 
 #, python-format
 msgid "Edit user %s"
@@ -18608,9 +18645,6 @@ msgid ""
 msgstr ""
 
 msgid "From:"
-msgstr ""
-
-msgid "From: "
 msgstr ""
 
 msgid "From: email address"
@@ -22120,6 +22154,9 @@ msgid ""
 "check. \"Ping additional IP addresses\" will omit the host configured main "
 "address while the \"Ping all addresses\" option will include both the main "
 "and additional addresses."
+msgstr ""
+
+msgid "If you regenerate backup codes, you automatically invalidate old codes."
 msgstr ""
 
 msgid ""
@@ -29746,6 +29783,9 @@ msgstr ""
 msgid "No authentication, no privacy"
 msgstr ""
 
+msgid "No backup codes created yet."
+msgstr ""
+
 msgid "No baked agent for this host available"
 msgstr ""
 
@@ -29778,6 +29818,9 @@ msgid "No connectivity problems"
 msgstr "afiseaza numai probleme"
 
 msgid "No contact groups assigned."
+msgstr ""
+
+msgid "No credentials registered"
 msgstr ""
 
 msgid "No custom attributes are defined yet."
@@ -32889,8 +32932,9 @@ msgstr "cereri"
 msgid "Pending DHCP leases"
 msgstr ""
 
-msgid "Pending changes"
-msgstr ""
+#, fuzzy, python-format
+msgid "Pending changes (%s)"
+msgstr "Activare Schimbări!"
 
 msgid "Pending memory"
 msgstr ""
@@ -35540,6 +35584,9 @@ msgid ""
 "by a few percent in situation with a high logging volume."
 msgstr ""
 
+msgid "Regenerate backup codes"
+msgstr ""
+
 #, fuzzy
 msgid "Regex"
 msgstr "Reguli"
@@ -35568,6 +35615,14 @@ msgstr "ieri"
 msgid "Registered agents"
 msgstr ""
 
+#, fuzzy
+msgid "Registered at"
+msgstr "ieri"
+
+#, fuzzy
+msgid "Registered credentials"
+msgstr "trei nivele"
+
 msgid "Registered instances per load balancer"
 msgstr ""
 
@@ -35576,6 +35631,10 @@ msgstr ""
 
 msgid "Registration and fallback"
 msgstr ""
+
+#, fuzzy
+msgid "Registration successful"
+msgstr "Numele Aplicatiei"
 
 msgid "Registry Keys to search for software (Windows)"
 msgstr ""
@@ -36318,6 +36377,10 @@ msgstr "rapoarte"
 
 msgid "Required switch contact state"
 msgstr ""
+
+#, fuzzy
+msgid "Rescan"
+msgstr "Scanarea parintilor"
 
 msgid "Reschedule"
 msgstr ""
@@ -39409,6 +39472,10 @@ msgstr ""
 #, fuzzy
 msgid "Show discovered service labels"
 msgstr "spatiu utilizat"
+
+#, fuzzy
+msgid "Show empty groups"
+msgstr "Arata regulile de utilizator"
 
 #, fuzzy
 msgid "Show failed notifications"
@@ -49676,9 +49743,6 @@ msgstr ""
 msgid "To:"
 msgstr ""
 
-msgid "To: "
-msgstr ""
-
 msgid "Today"
 msgstr ""
 
@@ -50405,6 +50469,14 @@ msgstr ""
 #, fuzzy
 msgid "Two hours"
 msgstr "2 ore"
+
+#, fuzzy
+msgid "Two-factor authentication"
+msgstr "trimite notificare"
+
+#, fuzzy
+msgid "Two-factor authentication not enabled"
+msgstr "Notificari"
 
 msgid "Tx"
 msgstr ""
@@ -52122,6 +52194,10 @@ msgstr "foloseste alias"
 
 msgid "Use alternative display name for services"
 msgstr ""
+
+#, fuzzy
+msgid "Use backup code"
+msgstr "Eticheta Auxiliara noua"
 
 msgid "Use bold font"
 msgstr ""
@@ -53866,6 +53942,9 @@ msgid "Web gateway miscellaneous statistics"
 msgstr ""
 
 msgid "Web gateway statistics"
+msgstr ""
+
+msgid "WebAuthn credentials"
 msgstr ""
 
 msgid "Webhook URL"
@@ -55981,6 +56060,10 @@ msgid "You have %d rules for deploying the update plugin"
 msgstr ""
 
 #, python-format
+msgid "You have %d unused backup codes left."
+msgstr ""
+
+#, python-format
 msgid "You have %d users configured"
 msgstr ""
 
@@ -56330,6 +56413,9 @@ msgstr ""
 
 #, python-format
 msgid "Your %s has been saved."
+msgstr ""
+
+msgid "Your WebAuthn credetial is already in use"
 msgstr ""
 
 #, python-format
@@ -58522,6 +58608,15 @@ msgstr "z/OS"
 #, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr ""
+
+#, fuzzy
+#~| msgid "%d changes"
+#~ msgid "Apply changes"
+#~ msgstr "%d schimbări"
+
+#, fuzzy, python-format
+#~ msgid "Currently there are %d changes to activate."
+#~ msgstr "%d schimbări"
 
 #, fuzzy
 #~ msgid "Memory usage for Kubernetes objects"
@@ -61208,10 +61303,6 @@ msgstr ""
 #~ msgstr "Scanarea parintilor"
 
 #, fuzzy
-#~ msgid "Parentscan"
-#~ msgstr "Scanarea parintilor"
-
-#, fuzzy
 #~ msgid "Password / Secret"
 #~ msgstr "Parola"
 
@@ -62531,10 +62622,6 @@ msgstr ""
 
 #, fuzzy
 #~ msgid "Replication method"
-#~ msgstr "Numele Aplicatiei"
-
-#, fuzzy
-#~ msgid "Replication result"
 #~ msgstr "Numele Aplicatiei"
 
 #, fuzzy

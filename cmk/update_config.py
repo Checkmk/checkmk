@@ -743,7 +743,7 @@ class UpdateConfig:
             filter_ident
             for filter_ident, filter_object in filter_registry.items()
             if hasattr(filter_object, "query_filter")
-            and isinstance(filter_object.query_filter, query_filters.FilterNumberRange)  # type: ignore[attr-defined]
+            and isinstance(filter_object.query_filter, query_filters.NumberRangeQuery)  # type: ignore[attr-defined]
         ]
 
         self._migrate_visual_range_filter(range_filters, "views", get_all_views())

@@ -34,7 +34,7 @@ def _parameter_valuespec_memory():
                 "limit",
                 UpperMemoryLevels(
                     _("limit utilization"),
-                    default_levels_type="perc_used",
+                    default_levels_type="ignore",
                     default_percents=(80.0, 90.0),
                 ),
             ),

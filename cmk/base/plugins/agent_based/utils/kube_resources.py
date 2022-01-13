@@ -103,7 +103,7 @@ class Params(TypedDict):
 
 DEFAULT_PARAMS = Params(
     request="ignore",
-    limit=("perc_used", (80.0, 90.0)),
+    limit="ignore",
 )
 
 

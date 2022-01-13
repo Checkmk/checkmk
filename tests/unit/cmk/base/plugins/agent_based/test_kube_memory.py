@@ -12,7 +12,12 @@ import pytest
 
 from cmk.base.plugins.agent_based import kube_memory
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
-from cmk.base.plugins.agent_based.kube_memory import check_kube_memory, DEFAULT_PARAMS, Resources
+from cmk.base.plugins.agent_based.kube_memory import (
+    check_kube_memory,
+    DEFAULT_PARAMS,
+    Params,
+    Resources,
+)
 from cmk.base.plugins.agent_based.utils.kube_resources import ExceptionalResource, Usage
 
 from cmk.gui.plugins.wato.check_parameters.kube_memory import _parameter_valuespec_memory
@@ -336,7 +341,9 @@ def test_check_kube_memory(
 ) -> None:
     assert expected_result == tuple(
         check_kube_memory(
-            DEFAULT_PARAMS, section_kube_performance_memory, section_kube_memory_resources
+            Params(request="ignore", limit=("perc_used", (80.0, 90.0))),
+            section_kube_performance_memory,
+            section_kube_memory_resources,
         )
     )
 

@@ -19,6 +19,7 @@ from cmk.utils.type_defs import AgentRawData, HostAddress, HostName
 
 from ._base import verify_ipaddress
 from .agent import AgentFetcher, DefaultAgentFileCache
+from .tcp_agent_ctl import AgentCtlMessage
 from .type_defs import Mode
 
 
@@ -137,7 +138,11 @@ class TCPFetcher(AgentFetcher):
 
         if protocol is TransportProtocol.TLS:
             with self._wrap_tls() as ssock:
-                agent_data = self._recvall(ssock)
+                raw_agent_data = self._recvall(ssock)
+            try:
+                agent_data = AgentCtlMessage.from_bytes(raw_agent_data).payload
+            except ValueError as e:
+                raise MKFetcherError(f"Failed to deserialize versioned agent data: {e!r}") from e
             return AgentRawData(agent_data[2:]), self._detect_transport_protocol(agent_data[:2])
 
         return AgentRawData(self._recvall(self._socket, socket.MSG_WAITALL)), protocol

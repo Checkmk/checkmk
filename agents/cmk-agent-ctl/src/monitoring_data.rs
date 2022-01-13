@@ -9,8 +9,6 @@ use std::io::Read;
 #[cfg(unix)]
 use std::os::unix::net::UnixStream;
 
-pub const COMPRESSION_ALGORITHM: &str = "zlib";
-
 #[cfg(windows)]
 pub fn collect() -> IoResult<Vec<u8>> {
     let mondata: Vec<u8> = vec![];
@@ -28,6 +26,18 @@ pub fn compress(data: &[u8]) -> IoResult<Vec<u8>> {
     let mut zlib_enc = flate2::write::ZlibEncoder::new(Vec::new(), flate2::Compression::default());
     zlib_enc.write_all(data)?;
     zlib_enc.finish()
+}
+
+pub struct CompressionHeaderInfo {
+    pub push: String,
+    pub pull: Vec<u8>,
+}
+
+pub fn compression_header_info() -> CompressionHeaderInfo {
+    CompressionHeaderInfo {
+        push: String::from("zlib"),
+        pull: b"\x01".to_vec(),
+    }
 }
 
 #[cfg(test)]

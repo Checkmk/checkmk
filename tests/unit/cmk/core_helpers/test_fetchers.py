@@ -10,6 +10,7 @@ import socket
 from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import Any, List, NamedTuple, Optional, Sequence, Type, Union
+from zlib import compress
 
 import pytest
 from _pytest.monkeypatch import MonkeyPatch
@@ -48,6 +49,7 @@ from cmk.core_helpers.snmp import (
     SNMPPluginStoreItem,
 )
 from cmk.core_helpers.tcp import TCPFetcher
+from cmk.core_helpers.tcp_agent_ctl import CompressionType, HeaderV1, Version
 from cmk.core_helpers.type_defs import Mode
 
 
@@ -934,12 +936,20 @@ class TestTCPFetcher:
         assert protocol == TransportProtocol.PLAIN
 
     def test_get_agent_data_with_tls(self, monkeypatch: MonkeyPatch, fetcher: TCPFetcher) -> None:
-        mock_sock = _MockSock(b"16<<<section:sep(0)>>>\nbody\n")
+        mock_data = b"<<<section:sep(0)>>>\nbody\n"
+        mock_sock = _MockSock(
+            b"16%b%b%b"
+            % (
+                Version.V1,
+                bytes(HeaderV1(CompressionType.ZLIB)),
+                compress(mock_data),
+            )
+        )
         monkeypatch.setattr(fetcher, "_opt_socket", mock_sock)
         monkeypatch.setattr(fetcher, "_wrap_tls", lambda: mock_sock)
 
         agent_data, protocol = fetcher._get_agent_data()
-        assert agent_data == mock_sock.data[4:]
+        assert agent_data == mock_data[2:]
         assert protocol == TransportProtocol.PLAIN
 
     def test_detect_transport_protocol(self, fetcher: TCPFetcher) -> None:

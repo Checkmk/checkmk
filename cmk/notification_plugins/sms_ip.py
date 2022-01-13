@@ -6,7 +6,7 @@
 
 import sys
 from dataclasses import dataclass
-from typing import Dict, List, Optional, Tuple, Union
+from typing import Dict, List, Optional, Union
 
 import requests
 
@@ -54,7 +54,7 @@ class Context:
     url: str
     request_parameter: RequestParameter
     message: Message
-    params: Tuple
+    data: Dict[str, str]
 
 
 # .
@@ -110,12 +110,12 @@ def _get_context_parameter(raw_context: RawContext) -> Union[Errors, Context]:
             url=request_parameter.url + "/cgi-bin/sms_send",
             request_parameter=request_parameter,
             message=message,
-            params=(
-                ("username", request_parameter.user),
-                ("password", request_parameter.pwd),
-                ("number", request_parameter.recipient),
-                ("text", message),
-            ),
+            data={
+                "username": request_parameter.user,
+                "password": request_parameter.pwd,
+                "number": request_parameter.recipient,
+                "text": message,
+            },
         )
 
     return Errors(["Unknown unsupported modem: %s" % endpoint])
@@ -158,13 +158,12 @@ def process_notifications(context: Context) -> int:
         context.url,
         proxies=context.request_parameter.proxies,
         timeout=context.request_parameter.timeout,
-        params=context.params,
+        data=context.data,
     )
 
-    response_content = str(response.content)
-    if response.status_code != 200 or response_content != "OK":
+    if response.status_code != 200 or response.content != b"OK\n":
         sys.stderr.write(
-            "Error Status: %s Details: %s\n" % (response.status_code, response_content)
+            "Error Status: %s Details: %r\n" % (response.status_code, response.content)
         )
         return 2
 

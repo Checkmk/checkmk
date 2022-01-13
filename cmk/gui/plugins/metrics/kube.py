@@ -81,66 +81,34 @@ metric_info["kube_node_container_count_total"] = {
     "color": "42/a",
 }
 
-metric_info["kube_cpu_usage"] = {
-    "title": _("Usage"),
-    "unit": "",
-    "color": "31/a",
+requirement_to_utilization_titles = {
+    "request": _("Request utilization"),
+    "limit": _("Limit utilization"),
+}
+requirement_to_absolute_titles = {
+    "request": _("Request"),
+    "limit": _("Limit"),
 }
 
-metric_info["kube_cpu_request"] = {
-    "title": _("Request"),
-    "unit": "",
-    "color": "42/a",
-}
+for resource, usage_unit in zip(["memory", "cpu"], ["bytes", ""]):
+    metric_info[f"kube_{resource}_usage"] = {
+        "title": _("Usage"),
+        "unit": usage_unit,
+        "color": "31/a",
+    }
 
-metric_info["kube_cpu_limit"] = {
-    "title": _("Limit"),
-    "unit": "",
-    "color": "42/b",
-}
+    for requirement, color in {"request": "42/a", "limit": "42/b"}.items():
+        metric_info[f"kube_{resource}_{requirement}"] = {
+            "title": requirement_to_absolute_titles[requirement],
+            "unit": usage_unit,
+            "color": color,
+        }
 
-metric_info["kube_cpu_request_utilization"] = {
-    "title": _("Request utilization"),
-    "unit": "%",
-    "color": "22/a",
-}
-
-metric_info["kube_cpu_limit_utilization"] = {
-    "title": _("Limit utilization"),
-    "unit": "%",
-    "color": "46/a",
-}
-
-metric_info["kube_memory_usage"] = {
-    "title": _("Usage"),
-    "unit": "bytes",
-    "color": "31/a",
-}
-
-metric_info["kube_memory_request"] = {
-    "title": _("Request"),
-    "unit": "bytes",
-    "color": "42/a",
-}
-
-metric_info["kube_memory_limit"] = {
-    "title": _("Limit"),
-    "unit": "bytes",
-    "color": "42/b",
-}
-
-
-metric_info["kube_memory_request_utilization"] = {
-    "title": _("Request utilization"),
-    "unit": "%",
-    "color": "42/a",
-}
-
-metric_info["kube_memory_limit_utilization"] = {
-    "title": _("Limit utilization"),
-    "unit": "%",
-    "color": "42/b",
-}
+        metric_info[f"kube_{resource}_{requirement}_utilization"] = {
+            "title": requirement_to_utilization_titles[requirement],
+            "unit": "%",
+            "color": color,
+        }
 
 #   .--Graphs--------------------------------------------------------------.
 #   |                    ____                 _                            |
@@ -187,41 +155,23 @@ graph_info["kube_node_container_count"] = {
     ],
 }
 
-graph_info["kube_cpu_usage"] = {
-    "title": _("CPU"),
-    "metrics": [
-        ("kube_cpu_request", "line"),
-        ("kube_cpu_limit", "line"),
-        ("kube_cpu_usage", "area"),
-    ],
-    "optional_metrics": ["kube_cpu_request", "kube_cpu_limit"],
-}
-
-graph_info["kube_cpu_utilization"] = {
-    "title": _("CPU Utilization"),
-    "metrics": [
-        ("kube_cpu_request_utilization", "line"),
-        ("kube_cpu_limit_utilization", "line"),
-    ],
-    "optional_metrics": ["kube_cpu_request_utilization", "kube_cpu_limit_utilization"],
-}
-
 # TODO Add additional boundaries for percent. (only zero at the bottom)
-graph_info["kube_memory_usage"] = {
-    "title": _("Container memory"),
-    "metrics": [
-        ("kube_memory_request", "line"),
-        ("kube_memory_limit", "line"),
-        ("kube_memory_usage", "area"),
-    ],
-    "optional_metrics": ["kube_memory_request", "kube_memory_limit"],
-}
 
-graph_info["kube_memory_utilization"] = {
-    "title": _("Memory utilization"),
-    "metrics": [
-        ("kube_memory_request_utilization", "line"),
-        ("kube_memory_limit_utilization", "line"),
-    ],
-    "optional_metrics": ["kube_memory_request_utilization", "kube_memory_limit_utilization"],
-}
+for resource, usage_title in zip(["memory", "cpu"], [_("Memory"), _("CPU")]):
+    graph_info[f"kube_{resource}_usage"] = {
+        "title": usage_title,
+        "metrics": [
+            (f"kube_{resource}_request", "line"),
+            (f"kube_{resource}_limit", "line"),
+            (f"kube_{resource}_usage", "area"),
+        ],
+        "optional_metrics": [f"kube_{resource}_request", f"kube_{resource}_limit"],
+    }
+
+    for requirement, utilization_title in requirement_to_utilization_titles.items():
+        graph_info[f"kube_{resource}_{requirement}_utilization"] = {
+            "title": utilization_title,
+            "metrics": [
+                (f"kube_{resource}_{requirement}_utilization", "line"),
+            ],
+        }

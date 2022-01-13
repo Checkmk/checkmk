@@ -8,8 +8,7 @@
 from typing import Optional, Any, Iterator, Union, Dict, Tuple, TypeVar
 
 from six import ensure_binary, ensure_str
-import werkzeug.wrappers
-import werkzeug.wrappers.json as json
+import werkzeug
 from werkzeug.utils import get_content_type
 
 from cmk.gui.globals import request
@@ -233,8 +232,7 @@ def mandatory_parameter(varname: str, value: Optional[T]) -> T:
     return value
 
 
-class Request(LegacyVarsMixin, LegacyUploadMixin, LegacyDeprecatedMixin, json.JSONMixin,
-              werkzeug.wrappers.Request):
+class Request(LegacyVarsMixin, LegacyUploadMixin, LegacyDeprecatedMixin, werkzeug.Request):
     """Provides information about the users HTTP-request to the application
 
     This class essentially wraps the information provided with the WSGI environment
@@ -323,7 +321,7 @@ class Request(LegacyVarsMixin, LegacyUploadMixin, LegacyDeprecatedMixin, json.JS
         return mandatory_parameter(varname, self.get_float_input(varname, deflt))
 
 
-class Response(werkzeug.wrappers.Response):
+class Response(werkzeug.Response):
     # NOTE: Currently we rely on a *relative* Location header in redirects!
     autocorrect_location_header = False
 

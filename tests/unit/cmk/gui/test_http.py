@@ -333,3 +333,24 @@ def test_del_vars():
 
         assert html.request.var("opt_x") is None
         assert html.request.var("foo") == "foo"
+
+
+def test_del_vars_from_post():
+    """apparently there was a bug in master while introducing Werkzeug 2.0.2
+    and this was a unittest resulting from the fix, so what can it harm?
+    See: dcc7f6920f0"""
+
+    environ = {
+        **create_environ(
+            input_stream=io.StringIO("_username=foo&_secret=bar"),
+            content_type="application/x-www-form-urlencoded",
+        ),
+        "REQUEST_URI": "",
+    }
+    with application_context(environ), request_context(environ):
+        assert html.request.form
+
+        html.del_var_from_env("_username")
+        html.del_var_from_env("_secret")
+
+        assert not html.request.form

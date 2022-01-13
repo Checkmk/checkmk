@@ -511,7 +511,7 @@ class Endpoint:
                 if request_schema:
                     # Try to decode only when there is data. Decoding an empty string will fail.
                     if request.get_data(cache=True):
-                        json_data = request.json or {}
+                        json_data = request.json or {}  # type: ignore[attr-defined]
                     else:
                         json_data = {}
                     param['body'] = request_schema().load(json_data)

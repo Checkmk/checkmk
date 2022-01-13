@@ -1171,10 +1171,14 @@ class html(ABCHTMLGenerator):
         decoded_qs = [
             (key, value) for key, value in self.request.args.items(multi=True) if key != varname
         ]
-        self.request.environ['QUERY_STRING'] = urllib.parse.urlencode(decoded_qs)
+        self.request.query_string = urllib.parse.urlencode(decoded_qs).encode("utf-8")
+        self.request.environ['QUERY_STRING'] = self.request
         # We remove the form entry. As this entity is never copied it will be modified within
         # it's cache.
-        dict.pop(self.request.form, varname, None)
+        try:
+            dict.pop(self.request.form, varname)
+        except KeyError:
+            pass
         # We remove the __dict__ entries to allow @cached_property to reload them from
         # the environment. The rest of the request object stays the same.
         self.request.__dict__.pop('args', None)

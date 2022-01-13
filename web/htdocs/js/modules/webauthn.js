@@ -33,6 +33,7 @@ export function register() {
         .then(function (response) {
             if (response.ok) {
                 show_info("Registration successful");
+                window.location = "user_two_factor_overview.py";
             } else {
                 response.text().then(function (text) {
                     show_error(

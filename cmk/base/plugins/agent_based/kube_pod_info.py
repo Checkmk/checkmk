@@ -56,7 +56,8 @@ def host_labels(section: PodInfo) -> HostLabelGenerator:
             This label is set to the node of the pod.
     """
     yield HostLabel("cmk/kubernetes/object", "pod")
-    yield HostLabel("cmk/kubernetes/node", section.node)
+    if section.node is not None:
+        yield HostLabel("cmk/kubernetes/node", section.node)
     yield HostLabel("cmk/kubernetes/namespace", section.namespace)
 
     for controller in section.controllers:

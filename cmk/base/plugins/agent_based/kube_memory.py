@@ -58,7 +58,6 @@ def discovery_kube_memory(
         yield Service()
 
 
-# TODO Add Perf-O-Meter
 def check_kube_memory(
     params: Params,
     section_kube_performance_memory: Optional[Usage],

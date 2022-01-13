@@ -79,6 +79,7 @@ RUN sed -i -re 's/([a-z]{2}\.)?archive.ubuntu.com|security.ubuntu.com/old-releas
     tk-dev \
     uuid-dev \
     vim \
+    libc6-dbg \
     && rm -rf /var/lib/apt/lists/*
 
 # Install our standard tool chain for building

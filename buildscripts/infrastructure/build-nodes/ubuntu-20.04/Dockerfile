@@ -83,6 +83,7 @@ RUN apt-get update \
     tk-dev \
     uuid-dev \
     vim \
+    libc6-dbg \
     && rm -rf /var/lib/apt/lists/*
 
 # Install our standard tool chain for building

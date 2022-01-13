@@ -522,7 +522,7 @@ class Site:
             })
 
     def _log_cmc_startup(self):
-        tool = "memcheck"  # sensible tools for us: None, "memcheck" or "helgrind"
+        tool = None  # sensible tools for us: None, "memcheck" or "helgrind"
         valgrind = (
             'PATH="/opt/bin:$PATH" '
             f"valgrind --tool={tool} --quiet --num-callers=30 --error-exitcode=42 --exit-on-first-error=yes"

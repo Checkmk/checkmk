@@ -18,6 +18,7 @@ import cmk.utils.paths
 import cmk.utils.store as store
 import cmk.utils.version as cmk_version
 from cmk.utils.encryption import raw_certificates_from_file
+from cmk.utils.process import pid_from_file, send_signal
 from cmk.utils.site import omd_site
 from cmk.utils.type_defs import ConfigurationWarnings, HostName
 
@@ -286,7 +287,13 @@ class ConfigDomainCACertificates(ABCConfigDomain):
 
     def activate(self, settings: Optional[SerializedSettings] = None) -> ConfigurationWarnings:
         try:
-            return self._update_trusted_cas(config.trusted_certificate_authorities)
+            warnings = self._update_trusted_cas(config.trusted_certificate_authorities)
+            stunnel_pid = pid_from_file(
+                cmk.utils.paths.omd_root / "tmp" / "run" / "stunnel-server.pid"
+            )
+            if stunnel_pid:
+                send_signal(stunnel_pid, signal.SIGHUP)
+            return warnings
         except Exception:
             logger.exception("error updating trusted CAs")
             return [

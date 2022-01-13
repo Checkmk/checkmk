@@ -168,16 +168,6 @@ def _get_filtered_attributes(
     return attributes.get_filtered_attributes(lambda key: key == keys[-1])
 
 
-def _inv_filter_info():
-    return {
-        "bytes": {"unit": _("MB"), "scale": 1024 * 1024},
-        "bytes_rounded": {"unit": _("MB"), "scale": 1024 * 1024},
-        "hz": {"unit": _("MHz"), "scale": 1000000},
-        "volt": {"unit": _("Volt")},
-        "timestamp": {"unit": _("secs")},
-    }
-
-
 def _declare_inv_column(
     invpath: SDRawPath,
     datatype: str,
@@ -192,7 +182,7 @@ def _declare_inv_column(
     else:
         name = "inv_" + invpath.replace(":", "_").replace(".", "_").strip("_")
 
-    is_leaf_node = invpath[-1] not in ":."
+    is_attribute = invpath[-1] not in ":."
 
     # Declare column painter
     painter_spec = {
@@ -212,10 +202,10 @@ def _declare_inv_column(
             ],
             required_keys=["use_short"],
         ),
-        # Only leaf nodes can be shown in reports. There is currently no way to render trees.
+        # Only attributes can be shown in reports. There is currently no way to render trees.
         # The HTML code would simply be stripped by the default rendering mechanism which does
         # not look good for the HW/SW inventory tree
-        "printable": is_leaf_node,
+        "printable": is_attribute,
         "load_inv": True,
         "paint": lambda row: _paint_host_inventory_tree(row, invpath),
         "sorter": name,
@@ -224,8 +214,8 @@ def _declare_inv_column(
         painter_spec["short"] = short
     register_painter(name, painter_spec)
 
-    # Sorters and Filters only for leaf nodes
-    if is_leaf_node:
+    # Sorters and Filters only for attributes
+    if is_attribute:
         # Declare sorter. It will detect numbers automatically
         register_sorter(
             name,
@@ -237,8 +227,6 @@ def _declare_inv_column(
                 "cmp": lambda self, a, b: _cmp_inventory_node(a, b, self._spec["_inv_path"]),
             },
         )
-
-        filter_info = _inv_filter_info().get(datatype, {})
 
         # Declare filter. Sync this with _declare_invtable_column()
         if datatype == "str":
@@ -260,6 +248,7 @@ def _declare_inv_column(
                 )
             )
         else:
+            filter_info = _inv_filter_info().get(datatype, {})
             filter_registry.register(
                 FilterInvFloat(
                     ident=name,
@@ -270,6 +259,16 @@ def _declare_inv_column(
                     is_show_more=is_show_more,
                 )
             )
+
+
+def _inv_filter_info():
+    return {
+        "bytes": {"unit": _("MB"), "scale": 1024 * 1024},
+        "bytes_rounded": {"unit": _("MB"), "scale": 1024 * 1024},
+        "hz": {"unit": _("MHz"), "scale": 1000000},
+        "volt": {"unit": _("Volt")},
+        "timestamp": {"unit": _("secs")},
+    }
 
 
 def _cmp_inventory_node(

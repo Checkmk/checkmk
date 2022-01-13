@@ -181,21 +181,16 @@ def check_resource(
     resource_type: Literal["memory", "cpu"],
     render_func: Callable[[float], str],
 ) -> CheckResult:
-    if usage is None or resources is None:
+    if resources is None:
         return
 
-    total_usage = usage.usage
-    yield Result(state=State.OK, summary=f"Usage: {render_func(total_usage)}")
-    yield Metric(f"kube_{resource_type}_usage", total_usage)
+    if usage is not None:
+        total_usage = usage.usage
+        yield Result(state=State.OK, summary=f"Usage: {render_func(total_usage)}")
+        yield Metric(f"kube_{resource_type}_usage", total_usage)
 
     for requirement_name, requirement in iterate_resources(resources):
-        if requirement == 0:
-            yield Result(
-                state=State.OK,
-                summary=f"{requirement_name.title()}: n/a",
-                details=f"{requirement_name.title()}: set to zero for all containers",
-            )
-        elif isinstance(requirement, float):
+        if isinstance(requirement, float) and requirement != 0.0 and usage is not None:
             param = params[requirement_name]
             yield from check_with_utilization(
                 total_usage,
@@ -205,5 +200,13 @@ def check_resource(
                 param,
                 render_func,
             )
-        else:
+        elif isinstance(requirement, ExceptionalResource):
             yield result_for_exceptional_resource(requirement_name, requirement)
+        else:  # configured resource with no usage
+            yield from check_levels(
+                requirement,
+                label=requirement_name.title(),
+                metric_name=f"kube_{resource_type}_{requirement_name}",
+                render_func=render_func,
+                boundaries=(0.0, None),
+            )

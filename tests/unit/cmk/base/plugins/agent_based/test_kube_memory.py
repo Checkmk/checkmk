@@ -209,7 +209,12 @@ def test_register_check_plugin_calls(check_plugin):
         pytest.param(
             Resources(request=0.0, limit=28120704.0),
             None,
-            tuple(),
+            (
+                Result(state=State.OK, summary="Request: 0 B"),
+                Metric("kube_memory_request", 0.0, boundaries=(0.0, None)),
+                Result(state=State.OK, summary="Limit: 26.8 MiB"),
+                Metric("kube_memory_limit", 28120704.0, boundaries=(0.0, None)),
+            ),
             id="No performance data",
         ),
         pytest.param(
@@ -226,9 +231,9 @@ def test_register_check_plugin_calls(check_plugin):
                 Metric("kube_memory_usage", 18120704.0),
                 Result(
                     state=State.OK,
-                    summary="Request: n/a",
-                    details="Request: set to zero for all containers",
+                    summary="Request: 0 B",
                 ),
+                Metric("kube_memory_request", 0.0, boundaries=(0.0, None)),
                 Result(
                     state=State.OK,
                     summary="Limit: n/a",
@@ -270,9 +275,9 @@ def test_register_check_plugin_calls(check_plugin):
                 Metric("kube_memory_usage", 18120704.0),
                 Result(
                     state=State.OK,
-                    summary="Request: n/a",
-                    details="Request: set to zero for all containers",
+                    summary="Request: 0 B",
                 ),
+                Metric("kube_memory_request", 0.0, boundaries=(0.0, None)),
                 Result(
                     state=State.OK,
                     summary="Limit: n/a",

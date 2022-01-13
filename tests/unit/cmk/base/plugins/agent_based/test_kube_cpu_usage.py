@@ -108,19 +108,16 @@ def test_parse_kube_cpu_resources_v1(resources_string_table, resources_request, 
     assert resources_section.limit == resources_limit
 
 
-def test_discovery_returns_an_iterable_with_single_element(usage_section, resources_section):
-    assert len(list(kube_cpu_usage.discovery_kube_cpu(usage_section, resources_section))) == 1
-    assert len(list(kube_cpu_usage.discovery_kube_cpu(usage_section, None))) == 0
-
-
-def test_discovery_returns_an_empty_iterable(resources_section):
+def test_discovery(usage_section, resources_section):
+    # assert len(list(kube_cpu_usage.discovery_kube_cpu(usage_section, None))) == 1
+    assert len(list(kube_cpu_usage.discovery_kube_cpu(None, resources_section))) == 1
     assert len(list(kube_cpu_usage.discovery_kube_cpu(None, None))) == 0
-    assert len(list(kube_cpu_usage.discovery_kube_cpu(None, resources_section))) == 0
+    assert len(list(kube_cpu_usage.discovery_kube_cpu(usage_section, resources_section))) == 1
 
 
 @pytest.mark.parametrize("usage_section", [None])
-def test_check_yields_no_check_results(check_result):
-    assert len(list(check_result)) == 0
+def test_check_missing_usage(check_result):
+    assert len(list(check_result)) == 4
 
 
 def test_check_yields_check_results(check_result, usage_section, resources_section):
@@ -135,17 +132,17 @@ def test_check_yields_results(check_result, usage_section, resources_section):
 
 
 @pytest.mark.parametrize("usage_section", [None])
-def test_check_yields_no_results(check_result):
-    assert len(list(check_result)) == 0
+def test_check_yields_results_without_usage(check_result):
+    assert list(check_result) == [
+        Result(state=State.OK, summary="Request: 0.180"),
+        Metric("kube_cpu_request", 0.18, boundaries=(0.0, None)),
+        Result(state=State.OK, summary="Limit: 0.360"),
+        Metric("kube_cpu_limit", 0.36, boundaries=(0.0, None)),
+    ]
 
 
 @pytest.mark.parametrize("resources_section", [None])
-def test_check_yields_two_results(check_result):
-    assert len(list(check_result)) == 0
-
-
-@pytest.mark.parametrize("resources_section", [None])
-def test_check_yields_single_result_with_summary(check_result):
+def test_check_if_no_resources(check_result):
     assert list(check_result) == []
 
 
@@ -242,12 +239,6 @@ def test_check_yields_results_with_details_exceptional_limits(
 def test_check_yields_single_metric_with_value_exceptional_res(check_result):
     expected = [USAGE]
     assert [m.value for m in check_result if isinstance(m, Metric)] == expected
-
-
-@pytest.mark.parametrize("resources_request", [0])
-def test_check_yields_result_with_details_request_set_to_zero(check_result):
-    expected_details = "Request: set to zero for all containers"
-    assert sum(r.details == expected_details for r in check_result if isinstance(r, Result)) == 1
 
 
 def test_check_all_states_ok(check_result):

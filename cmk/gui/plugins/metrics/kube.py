@@ -214,7 +214,11 @@ for resource, usage_title in zip(["memory", "cpu"], [_("Memory"), _("CPU")]):
             (f"kube_{resource}_limit", "line"),
             (f"kube_{resource}_usage", "area"),
         ],
-        "optional_metrics": [f"kube_{resource}_request", f"kube_{resource}_limit"],
+        "optional_metrics": [
+            f"kube_{resource}_request",
+            f"kube_{resource}_limit",
+            f"kube_{resource}_usage",
+        ],
     }
 
     for requirement, utilization_title in requirement_to_utilization_titles.items():

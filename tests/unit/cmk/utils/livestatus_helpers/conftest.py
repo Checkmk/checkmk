@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import pytest  # type: ignore[import]
 
-from werkzeug import create_environ
+from werkzeug.test import create_environ
 from cmk.gui.display_options import DisplayOptions
 from cmk.gui.globals import AppContext, RequestContext
 from cmk.gui.http import Request

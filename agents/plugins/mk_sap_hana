@@ -457,7 +457,6 @@ sap_hana_connect() {
     local instance_user="$3"
     local hostname="$4"
     local landscape="$5"
-    local status="$6"
 
     local port
     local host_role
@@ -747,7 +746,7 @@ query_instance() {
     if [ -v PASSWORD_CONNECT ] && [ -v USER_CONNECT ]; then
         echo "<<<sap_hana_connect:sep(59)>>>"
         echo "$instance_name"
-        sap_hana_connect "$sid" "$instance" "$instance_user" "$hostname" "$sap_landscape" "$instance_status"
+        sap_hana_connect "$sid" "$instance" "$instance_user" "$hostname" "$sap_landscape"
     fi
 
 }

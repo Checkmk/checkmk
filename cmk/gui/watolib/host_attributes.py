@@ -20,6 +20,7 @@ from cmk.gui.globals import html
 from cmk.gui.i18n import _, _u
 from cmk.gui.exceptions import MKUserError, MKGeneralException
 from cmk.gui.valuespec import (
+    Alternative,
     TextAscii,
     Transform,
     Checkbox,
@@ -820,7 +821,7 @@ class ABCHostAttributeValueSpec(ABCHostAttribute):
         # which is not escaped). For Dictionary we know that it cares about
         # escaping it's values. For this reason it is OK to wrap it into HTML
         # to prevent escaping during rendering.
-        if isinstance(vs, (ListOf, Dictionary)):
+        if isinstance(vs, (ListOf, Dictionary, Alternative)):
             content = HTML(content)
 
         return "", content

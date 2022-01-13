@@ -1,0 +1,13 @@
+Title: Don't show HTML code in IPMI credentials
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1642146909
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0p19
+
+If e.g. a folder defines IMPI credentials and a host in that
+folder inherits the credentials HTML code was shown in the
+default value when a host was created or modified.

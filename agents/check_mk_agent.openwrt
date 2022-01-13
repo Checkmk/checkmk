@@ -961,7 +961,7 @@ run_cached() {
     NAME="${1}"
     MAXAGE="${2}"
     shift 2
-    CMDLINE="${section}$@"
+    CMDLINE="$@"
 
     if ${DISABLE_CACHING:-false}; then
         ${CMDLINE}

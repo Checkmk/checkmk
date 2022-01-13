@@ -6,7 +6,7 @@
 
 import abc
 
-from cmk.gui.breadcrumb import make_simple_page_breadcrumb
+from cmk.gui.breadcrumb import Breadcrumb, make_simple_page_breadcrumb
 from cmk.gui.exceptions import MKAuthException, MKUserError
 from cmk.gui.globals import config, html, request, transactions, user, user_errors
 from cmk.gui.i18n import _
@@ -53,9 +53,12 @@ class ABCUserProfilePage(Page):
         menu.dropdowns.insert(1, page_menu_dropdown_user_related(requested_file_name(request)))
         return menu
 
+    def _breadcrumb(self) -> Breadcrumb:
+        return make_simple_page_breadcrumb(mega_menu_registry.menu_user(), self._page_title())
+
     def page(self) -> None:
         title = self._page_title()
-        breadcrumb = make_simple_page_breadcrumb(mega_menu_registry.menu_user(), title)
+        breadcrumb = self._breadcrumb()
         html.header(title, breadcrumb, self._page_menu(breadcrumb))
 
         if transactions.check_transaction():

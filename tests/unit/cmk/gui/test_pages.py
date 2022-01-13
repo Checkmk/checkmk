@@ -129,6 +129,7 @@ def test_registered_pages():
         "user_profile_replicate",
         "user_webauthn_register_begin",
         "user_two_factor_overview",
+        "user_two_factor_edit_credential",
         "user_webauthn_register_complete",
         "user_login_two_factor",
         "user_webauthn_login_complete",

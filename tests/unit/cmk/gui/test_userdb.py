@@ -732,6 +732,7 @@ def test_save_two_factor_credentials(user_id: UserId) -> None:
                     {
                         "credential_id": "id",
                         "registered_at": 1337,
+                        "alias": "Steckding",
                         "credential_data": b"whatever",
                     }
                 ),
@@ -754,6 +755,7 @@ def test_disable_two_factor_authentication(user_id: UserId) -> None:
                     {
                         "credential_id": "id",
                         "registered_at": 1337,
+                        "alias": "Steckding",
                         "credential_data": b"whatever",
                     }
                 ),

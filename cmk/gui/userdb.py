@@ -86,6 +86,7 @@ Users = Dict[UserId, UserSpec]  # TODO: Improve this type
 class WebAuthnCredential(TypedDict):
     credential_id: str
     registered_at: int
+    alias: str
     credential_data: bytes
 
 

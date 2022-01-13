@@ -21,9 +21,9 @@ from fido2.server import Fido2Server  # type: ignore[import]
 from fido2.webauthn import PublicKeyCredentialRpEntity  # type: ignore[import]
 
 from cmk.gui import forms
-from cmk.gui.breadcrumb import Breadcrumb
+from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem, make_simple_page_breadcrumb
 from cmk.gui.crash_reporting import handle_exception_as_gui_crash_report
-from cmk.gui.exceptions import HTTPRedirect, MKGeneralException
+from cmk.gui.exceptions import HTTPRedirect, MKGeneralException, MKUserError
 from cmk.gui.globals import (
     g,
     html,
@@ -38,15 +38,18 @@ from cmk.gui.globals import (
 from cmk.gui.htmllib.foldable_container import foldable_container
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
+from cmk.gui.main_menu import mega_menu_registry
 from cmk.gui.page_menu import (
     make_form_submit_link,
     make_javascript_link,
+    make_simple_form_page_menu,
     PageMenu,
     PageMenuDropdown,
     PageMenuEntry,
     PageMenuTopic,
 )
 from cmk.gui.pages import Page, page_registry
+from cmk.gui.plugins.wato.utils.base_modes import redirect
 from cmk.gui.table import table_element
 from cmk.gui.userdb import (
     is_two_factor_backup_code_valid,
@@ -58,7 +61,8 @@ from cmk.gui.userdb import (
     WebAuthnCredential,
 )
 from cmk.gui.utils.flashed_messages import flash
-from cmk.gui.utils.urls import make_confirm_link, makeactionuri
+from cmk.gui.utils.urls import make_confirm_link, makeactionuri, makeuri_contextless
+from cmk.gui.valuespec import Dictionary, FixedValue, TextInput
 
 from .abstract_page import ABCUserProfilePage
 from .page_menu import page_menu_dropdown_user_related
@@ -174,6 +178,17 @@ class UserTwoFactorOverview(ABCUserProfilePage):
                     message=_("Do you really want to delete this credential"),
                 )
                 html.icon_button(delete_url, _("Delete this credential"), "delete")
+
+                html.icon_button(
+                    makeuri_contextless(
+                        request,
+                        [("_edit", credential["credential_id"])],
+                        filename="user_two_factor_edit_credential.py",
+                    ),
+                    _("Edit this credential"),
+                    "edit",
+                )
+                table.cell(_("Alias"), credential["alias"])
                 table.cell(
                     _("Registered at"),
                     time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(credential["registered_at"])),
@@ -189,6 +204,113 @@ class UserTwoFactorOverview(ABCUserProfilePage):
             html.i(_("No backup codes created yet."))
 
         forms.end()
+
+
+@page_registry.register_page("user_two_factor_edit_credential")
+class UserChangePasswordPage(ABCUserProfilePage):
+    def _page_title(self) -> str:
+        return _("Edit credential")
+
+    def __init__(self) -> None:
+        super().__init__("general.manage_2fa")
+
+    def _breadcrumb(self) -> Breadcrumb:
+        breadcrumb = make_simple_page_breadcrumb(mega_menu_registry.menu_user(), self._page_title())
+        breadcrumb.insert(
+            -1,
+            BreadcrumbItem(
+                title=_("Two-factor authentication"),
+                url="user_two_factor_overview.py",
+            ),
+        )
+        return breadcrumb
+
+    def _page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+        menu = make_simple_form_page_menu(
+            _("Profile"), breadcrumb, form_name="profile", button_name="_save", add_abort_link=True
+        )
+        return menu
+
+    def _action(self) -> None:
+        assert user.id is not None
+        credentials = load_two_factor_credentials(user.id, lock=True)
+
+        credential_id = request.get_ascii_input_mandatory("_edit")
+        credential = credentials["webauthn_credentials"].get(credential_id)
+        if credential is None:
+            raise MKUserError("_edit", _("The credential does not exist"))
+
+        vs = self._valuespec(credential)
+        settings = vs.from_html_vars("profile")
+        vs.validate_value(settings, "profile")
+
+        credential["alias"] = settings["alias"]
+
+        save_two_factor_credentials(user.id, credentials)
+
+        flash(_("Successfully changed the credential."))
+
+        # In distributed setups with remote sites where the user can login, start the
+        # user profile replication now which will redirect the user to the destination
+        # page after completion. Otherwise directly open up the destination page.
+        origtarget = "user_two_factor_overview.py"
+        if user.authorized_login_sites():
+            raise redirect(
+                makeuri_contextless(
+                    request, [("back", origtarget)], filename="user_profile_replicate.py"
+                )
+            )
+        raise redirect(origtarget)
+
+    def _show_form(self) -> None:
+        assert user.id is not None
+        credentials = load_two_factor_credentials(user.id)
+
+        credential_id = request.get_ascii_input_mandatory("_edit")
+        credential = credentials["webauthn_credentials"].get(credential_id)
+        if credential is None:
+            raise MKUserError("_edit", _("The credential does not exist"))
+
+        html.begin_form("profile", method="POST")
+        html.prevent_password_auto_completion()
+        html.open_div(class_="wato")
+
+        self._valuespec(credential).render_input(
+            "profile",
+            {
+                "registered_at": credential["registered_at"],
+                "alias": credential["alias"],
+            },
+        )
+
+        forms.end()
+        html.close_div()
+        html.hidden_field("_edit", credential_id)
+        html.hidden_fields()
+        html.end_form()
+        html.footer()
+
+    def _valuespec(self, credential: WebAuthnCredential) -> Dictionary:
+        return Dictionary(
+            title=_("Edit credential"),
+            optional_keys=False,
+            render="form",
+            elements=[
+                (
+                    "registered_at",
+                    FixedValue(
+                        value=time.strftime(
+                            "%Y-%m-%d %H:%M:%S", time.localtime(credential["registered_at"])
+                        ),
+                        title=_("Registered at"),
+                    ),
+                ),
+                (
+                    "alias",
+                    TextInput(title=_("Alias")),
+                ),
+            ],
+        )
 
 
 CBORPageResult = dict[str, Any]
@@ -267,6 +389,7 @@ class UserWebAuthnRegisterComplete(CBORPage):
             {
                 "credential_id": ident,
                 "registered_at": int(time.time()),
+                "alias": "",
                 "credential_data": bytes(auth_data.credential_data),
             }
         )

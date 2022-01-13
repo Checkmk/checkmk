@@ -27,7 +27,7 @@ filter_registry.register(
         title="test",
         sort_index=102,
         info="host",
-        query_filter=query_filters.FilterText(
+        query_filter=query_filters.TextQuery(
             ident="test", op="~~", negateable=False, request_var="test", column="host_test"
         ),
         description="",
@@ -79,7 +79,7 @@ filter_registry.register(
         title="test",
         sort_index=102,
         info="host",
-        query_filter=query_filters.FilterText(
+        query_filter=query_filters.TextQuery(
             ident="test", op="~~", negateable=False, request_var="test", column="host_test"
         ),
         description="",

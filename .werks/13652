@@ -1,0 +1,14 @@
+Title: timesyncd: slight increase of last synchronization warn level
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1642059699
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.0.0p19
+
+This werk slightly increases the tolerating time period for the
+last synchronization warn value from 2h5m to 2h15m. This change is
+based on the observation that for some environments the previous
+default value was deemed slightly too low.

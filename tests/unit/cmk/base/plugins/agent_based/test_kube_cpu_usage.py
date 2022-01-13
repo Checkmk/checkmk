@@ -109,7 +109,7 @@ def test_parse_kube_cpu_resources_v1(resources_string_table, resources_request, 
 
 
 def test_discovery(usage_section, resources_section):
-    # assert len(list(kube_cpu_usage.discovery_kube_cpu(usage_section, None))) == 1
+    assert len(list(kube_cpu_usage.discovery_kube_cpu(usage_section, None))) == 1
     assert len(list(kube_cpu_usage.discovery_kube_cpu(None, resources_section))) == 1
     assert len(list(kube_cpu_usage.discovery_kube_cpu(None, None))) == 0
     assert len(list(kube_cpu_usage.discovery_kube_cpu(usage_section, resources_section))) == 1
@@ -143,7 +143,10 @@ def test_check_yields_results_without_usage(check_result):
 
 @pytest.mark.parametrize("resources_section", [None])
 def test_check_if_no_resources(check_result):
-    assert list(check_result) == []
+    assert list(check_result) == [
+        Result(state=State.OK, summary="Usage: 0.089"),
+        Metric("kube_cpu_usage", 0.08917935971914392, boundaries=(0.0, None)),
+    ]
 
 
 def test_check_yields_multiple_results_with_summaries(

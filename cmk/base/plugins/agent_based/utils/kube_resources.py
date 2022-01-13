@@ -181,32 +181,36 @@ def check_resource(
     resource_type: Literal["memory", "cpu"],
     render_func: Callable[[float], str],
 ) -> CheckResult:
-    if resources is None:
-        return
-
     if usage is not None:
         total_usage = usage.usage
-        yield Result(state=State.OK, summary=f"Usage: {render_func(total_usage)}")
-        yield Metric(f"kube_{resource_type}_usage", total_usage)
+        yield from check_levels(
+            total_usage,
+            label="Usage",
+            levels_upper=None,
+            metric_name=f"kube_{resource_type}_usage",
+            render_func=render_func,
+            boundaries=(0.0, None),
+        )
 
-    for requirement_name, requirement in iterate_resources(resources):
-        if isinstance(requirement, float) and requirement != 0.0 and usage is not None:
-            param = params[requirement_name]
-            yield from check_with_utilization(
-                total_usage,
-                resource_type,
-                requirement_name,
-                requirement,
-                param,
-                render_func,
-            )
-        elif isinstance(requirement, ExceptionalResource):
-            yield result_for_exceptional_resource(requirement_name, requirement)
-        else:  # configured resource with no usage
-            yield from check_levels(
-                requirement,
-                label=requirement_name.title(),
-                metric_name=f"kube_{resource_type}_{requirement_name}",
-                render_func=render_func,
-                boundaries=(0.0, None),
-            )
+    if resources is not None:
+        for requirement_name, requirement in iterate_resources(resources):
+            if isinstance(requirement, float) and requirement != 0.0 and usage is not None:
+                param = params[requirement_name]
+                yield from check_with_utilization(
+                    total_usage,
+                    resource_type,
+                    requirement_name,
+                    requirement,
+                    param,
+                    render_func,
+                )
+            elif isinstance(requirement, ExceptionalResource):
+                yield result_for_exceptional_resource(requirement_name, requirement)
+            else:  # configured resource with no usage
+                yield from check_levels(
+                    requirement,
+                    label=requirement_name.title(),
+                    metric_name=f"kube_{resource_type}_{requirement_name}",
+                    render_func=render_func,
+                    boundaries=(0.0, None),
+                )

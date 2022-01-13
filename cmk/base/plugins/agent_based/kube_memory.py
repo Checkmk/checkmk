@@ -48,13 +48,11 @@ register.agent_section(
 )
 
 
-# TODO Add different logic, service should always be discovered, but instead be pending
-# (not unknown)
 def discovery_kube_memory(
     section_kube_performance_memory: Optional[Usage],
     section_kube_memory_resources: Optional[Resources],
 ) -> DiscoveryResult:
-    if section_kube_memory_resources is not None:
+    if section_kube_performance_memory is not None or section_kube_memory_resources is not None:
         yield Service()
 
 

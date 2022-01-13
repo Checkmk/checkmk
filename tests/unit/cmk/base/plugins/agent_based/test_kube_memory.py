@@ -220,7 +220,10 @@ def test_register_check_plugin_calls(check_plugin):
         pytest.param(
             None,
             Usage(usage=18120704.0),
-            tuple(),
+            (
+                Result(state=State.OK, summary="Usage: 17.3 MiB"),
+                Metric("kube_memory_usage", 18120704.0, boundaries=(0.0, None)),
+            ),
             id="No resources",
         ),
         pytest.param(
@@ -228,7 +231,7 @@ def test_register_check_plugin_calls(check_plugin):
             Usage(usage=18120704.0),
             (
                 Result(state=State.OK, summary="Usage: 17.3 MiB"),
-                Metric("kube_memory_usage", 18120704.0),
+                Metric("kube_memory_usage", 18120704.0, boundaries=(0.0, None)),
                 Result(
                     state=State.OK,
                     summary="Request: 0 B",
@@ -250,7 +253,7 @@ def test_register_check_plugin_calls(check_plugin):
             Usage(usage=18120704.0),
             (
                 Result(state=State.OK, summary="Usage: 17.3 MiB"),
-                Metric("kube_memory_usage", 18120704.0),
+                Metric("kube_memory_usage", 18120704.0, boundaries=(0.0, None)),
                 Result(
                     state=State.OK,
                     summary="Request: n/a",
@@ -272,7 +275,7 @@ def test_register_check_plugin_calls(check_plugin):
             Usage(usage=18120704.0),
             (
                 Result(state=State.OK, summary="Usage: 17.3 MiB"),
-                Metric("kube_memory_usage", 18120704.0),
+                Metric("kube_memory_usage", 18120704.0, boundaries=(0.0, None)),
                 Result(
                     state=State.OK,
                     summary="Request: 0 B",
@@ -291,7 +294,7 @@ def test_register_check_plugin_calls(check_plugin):
             Usage(usage=18120704.0),
             (
                 Result(state=State.OK, summary="Usage: 17.3 MiB"),
-                Metric("kube_memory_usage", 18120704.0),
+                Metric("kube_memory_usage", 18120704.0, boundaries=(0.0, None)),
                 Result(
                     state=State.OK, summary="Request utilization: 138.11% - 17.3 MiB of 12.5 MiB"
                 ),
@@ -315,7 +318,7 @@ def test_register_check_plugin_calls(check_plugin):
             Usage(usage=27120704.0),
             (
                 Result(state=State.OK, summary="Usage: 25.9 MiB"),
-                Metric("kube_memory_usage", 27120704.0),
+                Metric("kube_memory_usage", 27120704.0, boundaries=(0.0, None)),
                 Result(
                     state=State.OK, summary="Request utilization: 206.70% - 25.9 MiB of 12.5 MiB"
                 ),

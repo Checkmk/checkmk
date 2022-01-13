@@ -169,9 +169,14 @@ for resource, usage_title in zip(["memory", "cpu"], [_("Memory"), _("CPU")]):
     }
 
     for requirement, utilization_title in requirement_to_utilization_titles.items():
-        graph_info[f"kube_{resource}_{requirement}_utilization"] = {
+        metric_name = f"kube_{resource}_{requirement}_utilization"
+        graph_info[metric_name] = {
             "title": utilization_title,
             "metrics": [
-                (f"kube_{resource}_{requirement}_utilization", "line"),
+                (metric_name, "line"),
+            ],
+            "scalars": [
+                f"{metric_name}:warn",
+                f"{metric_name}:crit",
             ],
         }

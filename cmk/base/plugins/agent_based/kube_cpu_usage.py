@@ -21,6 +21,7 @@ from cmk.base.plugins.agent_based.utils.kube_resources import (
     iterate_resources,
     Params,
     Resources,
+    result_for_exceptional_resource,
     Usage,
 )
 
@@ -50,11 +51,7 @@ def check_resource(
     cpu_usage: float,
 ) -> CheckResult:
     if isinstance(requirement_value, ExceptionalResource):
-        yield Result(
-            state=State.OK,
-            summary=f"{requirement_type.title()} n/a",
-            details=f"{requirement_type.title()}: {requirement_value}",
-        )
+        yield result_for_exceptional_resource(requirement_type, requirement_value)
         return
     if requirement_value == 0:
         yield Result(

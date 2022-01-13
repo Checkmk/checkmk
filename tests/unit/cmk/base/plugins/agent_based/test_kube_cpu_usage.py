@@ -13,6 +13,7 @@ import pytest
 
 from cmk.base.plugins.agent_based import kube_cpu_usage
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, render, Result, State
+from cmk.base.plugins.agent_based.utils.kube_resources import ExceptionalResource
 
 USAGE = 0.08917935971914392879  # value for cpu usage (Germain & Cunningham)
 LEVELS = 60.0, 90.0  # default values for upper levels
@@ -182,27 +183,59 @@ def test_check_yields_multiple_metrics_with_values(
 @pytest.mark.parametrize(
     "resources_request, resources_limit",
     list(
-        itertools.product(["unspecified"], ["unspecified", "zero", "zero_unspecified"])
-    ),  # FIXME: remove hardcoded values
+        itertools.product([ExceptionalResource.unspecified], [e.value for e in ExceptionalResource])
+    ),
 )
 def test_check_yields_multiple_results_with_summaries_exceptional_res(check_result):
-    expected = [f"Usage: {USAGE:0.3f}", "Request n/a", "Limit n/a"]
+    expected = [f"Usage: {USAGE:0.3f}", "Request: n/a", "Limit: n/a"]
     assert [r.summary for r in check_result if isinstance(r, Result)] == expected
 
 
 @pytest.mark.parametrize(
-    "resources_request, resources_limit",
-    list(
-        itertools.product(["unspecified"], ["unspecified", "zero", "zero_unspecified"])
-    ),  # FIXME: remove hardcoded values
+    "resources_request, resources_limit, expected_text",
+    [
+        (
+            ExceptionalResource.unspecified,
+            ExceptionalResource.unspecified,
+            "not specified for at least one container",
+        )
+    ],
 )
-def test_check_yields_results_with_details_exceptional_res(
-    check_result, resources_request, resources_limit
+def test_check_yields_results_with_details_unspecified(
+    check_result, resources_request, resources_limit, expected_text
 ):
     expected = [
         f"Usage: {USAGE:0.3f}",
-        f"Request: {resources_request}",
-        f"Limit: {resources_limit}",
+        f"Request: {expected_text}",
+        f"Limit: {expected_text}",
+    ]
+    assert [r.details for r in check_result if isinstance(r, Result)] == expected
+
+
+@pytest.mark.parametrize(
+    "resources_limit, expected_text",
+    [
+        (
+            ExceptionalResource.unspecified,
+            "not specified for at least one container",
+        ),
+        (
+            ExceptionalResource.zero,
+            "set to zero for at least one container",
+        ),
+        (
+            ExceptionalResource.zero_unspecified,
+            "not specified for at least one container, set to zero for at least one container",
+        ),
+    ],
+)
+def test_check_yields_results_with_details_exceptional_limits(
+    check_result, resources_request, resources_limit, expected_text
+):
+    expected = [
+        f"Usage: {USAGE:0.3f}",
+        "Request utilization: 49.54% - 0.089 of 0.180",
+        f"Limit: {expected_text}",
     ]
     assert [r.details for r in check_result if isinstance(r, Result)] == expected
 
@@ -210,8 +243,8 @@ def test_check_yields_results_with_details_exceptional_res(
 @pytest.mark.parametrize(
     "resources_request, resources_limit",
     list(
-        itertools.product(["unspecified"], ["unspecified", "zero", "zero_unspecified"])
-    ),  # FIXME: remove hardcoded values
+        itertools.product([ExceptionalResource.unspecified], [e.value for e in ExceptionalResource])
+    ),
 )
 def test_check_yields_single_metric_with_value_exceptional_res(check_result):
     expected = [USAGE]

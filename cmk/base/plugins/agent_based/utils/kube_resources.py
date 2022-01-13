@@ -5,6 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import enum
+import json
 from typing import (
     Callable,
     Iterable,
@@ -26,6 +27,7 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     Result,
     State,
 )
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult, StringTable
 
 
 class ExceptionalResource(str, enum.Enum):
@@ -72,6 +74,18 @@ def iterate_resources(
         ("request", resources.request),
         ("limit", resources.limit),
     ]
+
+
+def parse_resources(string_table: StringTable) -> Resources:
+    """Parses limit and request values into Resources
+    >>> parse_resources([['{"request": 23120704.0, "limit": 28120704.0}']])
+    Resources(request=23120704.0, limit=28120704.0)
+    >>> parse_resources([['{"request": "unspecified", "limit": "unspecified"}']])
+    Resources(request=<ExceptionalResource.unspecified: 'unspecified'>, limit=<ExceptionalResource.unspecified: 'unspecified'>)
+    >>> parse_resources([['{"request": 0.0, "limit": "zero"}']])
+    Resources(request=0.0, limit=<ExceptionalResource.zero: 'zero'>)
+    """
+    return Resources(**json.loads(string_table[0][0]))
 
 
 class Usage(BaseModel):
@@ -158,3 +172,38 @@ def result_for_exceptional_resource(
         summary=f"{requirement_type.title()}: n/a",
         details=f"{requirement_type.title()}: {', '.join(details_pieces)}",
     )
+
+
+def check_resource(
+    params: Params,
+    usage: Optional[Usage],
+    resources: Optional[Resources],
+    resource_type: Literal["memory", "cpu"],
+    render_func: Callable[[float], str],
+) -> CheckResult:
+    if usage is None or resources is None:
+        return
+
+    total_usage = usage.usage
+    yield Result(state=State.OK, summary=f"Usage: {render_func(total_usage)}")
+    yield Metric(f"kube_{resource_type}_usage", total_usage)
+
+    for requirement_name, requirement in iterate_resources(resources):
+        if requirement == 0:
+            yield Result(
+                state=State.OK,
+                summary=f"{requirement_name.title()}: n/a",
+                details=f"{requirement_name.title()}: set to zero for all containers",
+            )
+        elif isinstance(requirement, float):
+            param = params[requirement_name]
+            yield from check_with_utilization(
+                total_usage,
+                resource_type,
+                requirement_name,
+                requirement,
+                param,
+                render_func,
+            )
+        else:
+            yield result_for_exceptional_resource(requirement_name, requirement)

@@ -12,13 +12,8 @@ import pytest
 
 from cmk.base.plugins.agent_based import kube_memory
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
-from cmk.base.plugins.agent_based.kube_memory import (
-    check_kube_memory,
-    DEFAULT_PARAMS,
-    Memory,
-    Resources,
-)
-from cmk.base.plugins.agent_based.utils.kube_resources import ExceptionalResource
+from cmk.base.plugins.agent_based.kube_memory import check_kube_memory, DEFAULT_PARAMS, Resources
+from cmk.base.plugins.agent_based.utils.kube_resources import ExceptionalResource, Usage
 
 from cmk.gui.plugins.wato.check_parameters.kube_memory import _parameter_valuespec_memory
 
@@ -180,14 +175,14 @@ def check_plugin(fix_register):
 
 def test_register_agent_memory_section_calls(agent_performance_section):
     assert str(agent_performance_section.name) == "k8s_live_memory_v1"
-    assert str(agent_performance_section.parsed_section_name) == "k8s_live_memory"
+    assert str(agent_performance_section.parsed_section_name) == "kube_performance_memory"
     assert agent_performance_section.parse_function == kube_memory.parse_performance_memory
 
 
 def test_register_agent_memory_resources_section_calls(agent_resources_section):
     assert str(agent_resources_section.name) == "kube_memory_resources_v1"
     assert str(agent_resources_section.parsed_section_name) == "kube_memory_resources"
-    assert agent_resources_section.parse_function == kube_memory.parse_memory_resources
+    assert agent_resources_section.parse_function == kube_memory.parse_resources
 
 
 def test_register_check_plugin_calls(check_plugin):
@@ -198,7 +193,7 @@ def test_register_check_plugin_calls(check_plugin):
 
 
 @pytest.mark.parametrize(
-    "section_kube_memory_resources,section_k8s_live_memory,expected_result",
+    "section_kube_memory_resources,section_kube_performance_memory,expected_result",
     [
         pytest.param(
             None,
@@ -214,13 +209,13 @@ def test_register_check_plugin_calls(check_plugin):
         ),
         pytest.param(
             None,
-            Memory(memory_usage_bytes=18120704.0),
+            Usage(usage=18120704.0),
             tuple(),
             id="No resources",
         ),
         pytest.param(
             Resources(request=0.0, limit=ExceptionalResource.zero),
-            Memory(memory_usage_bytes=18120704.0),
+            Usage(usage=18120704.0),
             (
                 Result(state=State.OK, summary="Usage: 17.3 MiB"),
                 Metric("kube_memory_usage", 18120704.0),
@@ -242,7 +237,7 @@ def test_register_check_plugin_calls(check_plugin):
                 request=ExceptionalResource.unspecified,
                 limit=ExceptionalResource.unspecified,
             ),
-            Memory(memory_usage_bytes=18120704.0),
+            Usage(usage=18120704.0),
             (
                 Result(state=State.OK, summary="Usage: 17.3 MiB"),
                 Metric("kube_memory_usage", 18120704.0),
@@ -264,7 +259,7 @@ def test_register_check_plugin_calls(check_plugin):
                 request=0.0,
                 limit=ExceptionalResource.zero_unspecified,
             ),
-            Memory(memory_usage_bytes=18120704.0),
+            Usage(usage=18120704.0),
             (
                 Result(state=State.OK, summary="Usage: 17.3 MiB"),
                 Metric("kube_memory_usage", 18120704.0),
@@ -283,7 +278,7 @@ def test_register_check_plugin_calls(check_plugin):
         ),
         pytest.param(
             Resources(request=13120704.0, limit=28120704.0),
-            Memory(memory_usage_bytes=18120704.0),
+            Usage(usage=18120704.0),
             (
                 Result(state=State.OK, summary="Usage: 17.3 MiB"),
                 Metric("kube_memory_usage", 18120704.0),
@@ -307,7 +302,7 @@ def test_register_check_plugin_calls(check_plugin):
         ),
         pytest.param(
             Resources(request=13120704.0, limit=28120704.0),
-            Memory(memory_usage_bytes=27120704.0),
+            Usage(usage=27120704.0),
             (
                 Result(state=State.OK, summary="Usage: 25.9 MiB"),
                 Metric("kube_memory_usage", 27120704.0),
@@ -335,12 +330,14 @@ def test_register_check_plugin_calls(check_plugin):
     ],
 )
 def test_check_kube_memory(
+    section_kube_performance_memory: Optional[Usage],
     section_kube_memory_resources: Optional[Resources],
-    section_k8s_live_memory: Optional[Memory],
     expected_result: Tuple[Union[Result, Metric], ...],
 ) -> None:
     assert expected_result == tuple(
-        check_kube_memory(DEFAULT_PARAMS, section_kube_memory_resources, section_k8s_live_memory)
+        check_kube_memory(
+            DEFAULT_PARAMS, section_kube_performance_memory, section_kube_memory_resources
+        )
     )
 
 

@@ -54,7 +54,7 @@ def usage_string_table(usage_string_table_element):
 
 @pytest.fixture
 def usage_section(usage_string_table):
-    return kube_cpu_usage.parse_kube_live_cpu_usage_v1(usage_string_table)
+    return kube_cpu_usage.parse_kube_performance_cpu_v1(usage_string_table)
 
 
 @pytest.fixture
@@ -94,28 +94,28 @@ def resources_string_table(resources_string_table_element):
 
 @pytest.fixture
 def resources_section(resources_string_table):
-    return kube_cpu_usage.parse_kube_cpu_resources_v1(resources_string_table)
+    return kube_cpu_usage.parse_resources(resources_string_table)
 
 
 @pytest.fixture
 def check_result(params, usage_section, resources_section):
-    return kube_cpu_usage.check(params, usage_section, resources_section)
+    return kube_cpu_usage.check_kube_cpu(params, usage_section, resources_section)
 
 
 def test_parse_kube_cpu_resources_v1(resources_string_table, resources_request, resources_limit):
-    resources_section = kube_cpu_usage.parse_kube_cpu_resources_v1(resources_string_table)
+    resources_section = kube_cpu_usage.parse_resources(resources_string_table)
     assert resources_section.request == resources_request
     assert resources_section.limit == resources_limit
 
 
 def test_discovery_returns_an_iterable_with_single_element(usage_section, resources_section):
-    assert len(list(kube_cpu_usage.discovery(usage_section, resources_section))) == 1
-    assert len(list(kube_cpu_usage.discovery(usage_section, None))) == 1
+    assert len(list(kube_cpu_usage.discovery_kube_cpu(usage_section, resources_section))) == 1
+    assert len(list(kube_cpu_usage.discovery_kube_cpu(usage_section, None))) == 0
 
 
 def test_discovery_returns_an_empty_iterable(resources_section):
-    assert len(list(kube_cpu_usage.discovery(None, None))) == 0
-    assert len(list(kube_cpu_usage.discovery(None, resources_section))) == 0
+    assert len(list(kube_cpu_usage.discovery_kube_cpu(None, None))) == 0
+    assert len(list(kube_cpu_usage.discovery_kube_cpu(None, resources_section))) == 0
 
 
 @pytest.mark.parametrize("usage_section", [None])
@@ -141,19 +141,12 @@ def test_check_yields_no_results(check_result):
 
 @pytest.mark.parametrize("resources_section", [None])
 def test_check_yields_two_results(check_result):
-    assert len(list(check_result)) == 2
+    assert len(list(check_result)) == 0
 
 
 @pytest.mark.parametrize("resources_section", [None])
 def test_check_yields_single_result_with_summary(check_result):
-    expected = [f"Usage: {USAGE:0.3f}"]
-    assert [r.summary for r in check_result if isinstance(r, Result)] == expected
-
-
-@pytest.mark.parametrize("resources_section", [None])
-def test_check_yields_single_metric_with_value(check_result):
-    expected = [USAGE]
-    assert [m.value for m in check_result if isinstance(m, Metric)] == expected
+    assert list(check_result) == []
 
 
 def test_check_yields_multiple_results_with_summaries(

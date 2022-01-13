@@ -721,27 +721,26 @@ section_ipmitool() {
 }
 
 section_ipmisensors() {
-    if (inpath ipmi-sensors && ls /dev/ipmi* >/dev/null); then
-        ${MK_RUN_SYNC_PARTS} && echo '<<<ipmi_sensors>>>'
-        # Newer ipmi-sensors version have new output format; Legacy format can be used
-        if ipmi-sensors --help | grep -q legacy-output; then
-            IPMI_FORMAT="--legacy-output"
-        else
-            IPMI_FORMAT=""
-        fi
-        if ipmi-sensors --help | grep -q " \-\-groups"; then
-            IPMI_GROUP_OPT="-g"
-        else
-            IPMI_GROUP_OPT="-t"
-        fi
-
-        # At least with ipmi-sensors 0.7.16 this group is Power_Unit instead of "Power Unit"
-        run_cached "ipmi_sensors" 300 "echo '<<<ipmi_sensors>>>'; for class in Temperature Power_Unit Fan; do
-            ipmi-sensors ${IPMI_FORMAT} --sdr-cache-directory /var/cache ${IPMI_GROUP_OPT} \"\${class}\" | sed -e 's/ /_/g' -e 's/:_\?/ /g' -e 's@ \([^(]*\)_(\([^)]*\))@ \2_\1@'
-            # In case of a timeout immediately leave loop.
-            if [ $? = 255 ]; then break; fi
-        done"
+    inpath ipmi-sensors && ls /dev/ipmi* >/dev/null || return
+    ${MK_RUN_SYNC_PARTS} && echo '<<<ipmi_sensors>>>'
+    # Newer ipmi-sensors version have new output format; Legacy format can be used
+    if ipmi-sensors --help | grep -q legacy-output; then
+        IPMI_FORMAT="--legacy-output"
+    else
+        IPMI_FORMAT=""
     fi
+    if ipmi-sensors --help | grep -q " \-\-groups"; then
+        IPMI_GROUP_OPT="-g"
+    else
+        IPMI_GROUP_OPT="-t"
+    fi
+
+    # At least with ipmi-sensors 0.7.16 this group is Power_Unit instead of "Power Unit"
+    run_cached "ipmi_sensors" 300 "echo '<<<ipmi_sensors>>>'; for class in Temperature Power_Unit Fan; do
+        ipmi-sensors ${IPMI_FORMAT} --sdr-cache-directory /var/cache ${IPMI_GROUP_OPT} \"\${class}\" | sed -e 's/ /_/g' -e 's/:_\?/ /g' -e 's@ \([^(]*\)_(\([^)]*\))@ \2_\1@'
+        # In case of a timeout immediately leave loop.
+        if [ $? = 255 ]; then break; fi
+    done"
 }
 
 section_md() {

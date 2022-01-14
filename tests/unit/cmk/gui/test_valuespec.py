@@ -226,6 +226,19 @@ def test_timerange_value_to_json_conversion(request_context):
 
 
 @pytest.mark.parametrize(
+    "elements,value,expected",
+    [
+        ([], {}, {}),
+        ([], {"a": 1}, {}),
+        ([("a", vs.Integer())], {"a": 1}, {"a": 1}),
+        ([("a", vs.Tuple(elements=[]))], {"a": tuple()}, {"a": []}),
+    ],
+)
+def test_dictionary_value_to_json(elements, value, expected):
+    assert vs.Dictionary(elements=elements).value_to_json(value) == expected
+
+
+@pytest.mark.parametrize(
     "address",
     [
         "user@localhost",

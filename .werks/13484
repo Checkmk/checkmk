@@ -1,0 +1,12 @@
+Title: HW/SW inventory was not updating SNMP data
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1642157779
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0p19
+
+In the HW/SW inventory SNMP hosts have not been updated.
+This has been a regression in version 2.0.0p6.

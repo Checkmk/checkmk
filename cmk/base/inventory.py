@@ -9,11 +9,12 @@ while the inventory is performed for one host.
 In the future all inventory code should be moved to this module."""
 
 import os
-from contextlib import suppress
+from contextlib import contextmanager, suppress
 from typing import (
     Dict,
     Hashable,
     Iterable,
+    Iterator,
     List,
     Literal,
     NamedTuple,
@@ -248,6 +249,27 @@ def _do_active_inventory_for(
     )
 
 
+@contextmanager
+def _set_force_snmp_cache_refresh() -> Iterator[None]:
+    _old_value = checkers.snmp.SNMPFileCacheFactory.force_snmp_cache_refresh
+    # The following line is necessary due to the fundamental difference between SNMP
+    # and agent data:
+    #  * Agent data has a common cache for all modes (inventory, checking, discovery).
+    #    Therefore the caches will be updated during checking, and we can safely use them
+    #    disregarding the age (because they will be fairly new)
+    #  * SNMP data has a dedicated cache for every mode. As the inventory cache may not
+    #    be updated apart from when the active inventory check is run (i.e. here),
+    #    we need to enforce an update.
+    # Disabling "--cache" altogether may result in data loss (e.g. logwatch messages only
+    # reported once).
+    checkers.snmp.SNMPFileCacheFactory.force_snmp_cache_refresh = True
+
+    try:
+        yield
+    finally:
+        checkers.snmp.SNMPFileCacheFactory.force_snmp_cache_refresh = _old_value
+
+
 def _fetch_multi_host_sections_for_inv(
     config_cache: config.ConfigCache,
     host_config: config.HostConfig,
@@ -274,20 +296,23 @@ def _fetch_multi_host_sections_for_inv(
         mode,
         sources,
     )
+
     multi_host_sections = MultiHostSections()
-    results = checkers.update_host_sections(
-        multi_host_sections,
-        nodes,
-        max_cachefile_age=host_config.max_cachefile_age,
-        host_config=host_config,
-        fetcher_messages=list(
-            checkers.fetch_all(
-                nodes,
-                max_cachefile_age=host_config.max_cachefile_age,
-                host_config=host_config,
-            )),
-        selected_sections=selected_sections,
-    )
+
+    with _set_force_snmp_cache_refresh():
+        results = checkers.update_host_sections(
+            multi_host_sections,
+            nodes,
+            max_cachefile_age=host_config.max_cachefile_age,
+            host_config=host_config,
+            fetcher_messages=list(
+                checkers.fetch_all(
+                    nodes,
+                    max_cachefile_age=host_config.max_cachefile_age,
+                    host_config=host_config,
+                )),
+            selected_sections=selected_sections,
+        )
 
     return multi_host_sections, results
 

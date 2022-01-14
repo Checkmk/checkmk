@@ -118,6 +118,7 @@ pub fn agent_data(
     root_cert: &str,
     uuid: &str,
     certificate: &str,
+    compression_algorithm: &str,
     monitoring_data: &[u8],
 ) -> AnyhowResult<()> {
     check_response_204(
@@ -127,6 +128,7 @@ pub fn agent_data(
                 agent_receiver_address, uuid,
             ))
             .header("certificate", encode_pem_cert_base64(certificate)?)
+            .header("compression", compression_algorithm)
             .multipart(
                 reqwest::blocking::multipart::Form::new().part(
                     "monitoring_data",

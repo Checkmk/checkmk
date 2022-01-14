@@ -9,6 +9,7 @@ import json
 import os
 import stat
 from pathlib import Path
+from typing import Mapping
 from unittest import mock
 from uuid import UUID
 from zlib import compress
@@ -139,6 +140,14 @@ def test_register_with_labels_folder_exists(
     )
 
 
+@pytest.fixture(name="agent_data_headers")
+def fixture_agent_data_headers() -> Mapping[str, str]:
+    return {
+        "certificate": "irrelevant",
+        "compression": "zlib",
+    }
+
+
 @pytest.fixture(name="compressed_agent_data")
 def fixture_compressed_agent_data() -> io.BytesIO:
     return io.BytesIO(compress(b"mock file"))
@@ -147,11 +156,12 @@ def fixture_compressed_agent_data() -> io.BytesIO:
 def test_agent_data_no_host(
     client: TestClient,
     uuid: UUID,
+    agent_data_headers: Mapping[str, str],
     compressed_agent_data: io.BytesIO,
 ) -> None:
     response = client.post(
         f"/agent_data/{uuid}",
-        headers={"certificate": "irrelevant"},
+        headers=agent_data_headers,
         files={"monitoring_data": ("filename", compressed_agent_data)},
     )
     assert response.status_code == 403
@@ -162,6 +172,7 @@ def test_agent_data_pull_host(
     tmp_path: Path,
     client: TestClient,
     uuid: UUID,
+    agent_data_headers: Mapping[str, str],
     compressed_agent_data: io.BytesIO,
 ) -> None:
     source = constants.AGENT_OUTPUT_DIR / str(uuid)
@@ -169,7 +180,7 @@ def test_agent_data_pull_host(
 
     response = client.post(
         f"/agent_data/{uuid}",
-        headers={"certificate": "irrelevant"},
+        headers=agent_data_headers,
         files={
             "monitoring_data": (
                 "filename",
@@ -181,10 +192,52 @@ def test_agent_data_pull_host(
     assert response.json() == {"detail": "Host is not a push host"}
 
 
+def test_agent_data_invalid_compression(
+    tmp_path: Path,
+    client: TestClient,
+    uuid: UUID,
+    agent_data_headers: Mapping[str, str],
+) -> None:
+    source = constants.AGENT_OUTPUT_DIR / str(uuid)
+    target_dir = tmp_path / "hostname"
+    os.mkdir(target_dir)
+    source.symlink_to(target_dir)
+    response = client.post(
+        f"/agent_data/{uuid}",
+        headers={
+            **agent_data_headers,
+            "compression": "gzip",
+        },
+        files={"monitoring_data": ("filename", io.BytesIO(b"certainly invalid"))},
+    )
+    assert response.status_code == 400
+    assert response.json() == {"detail": "Unsupported compression algorithm: gzip"}
+
+
+def test_agent_data_invalid_data(
+    tmp_path: Path,
+    client: TestClient,
+    uuid: UUID,
+    agent_data_headers: Mapping[str, str],
+) -> None:
+    source = constants.AGENT_OUTPUT_DIR / str(uuid)
+    target_dir = tmp_path / "hostname"
+    os.mkdir(target_dir)
+    source.symlink_to(target_dir)
+    response = client.post(
+        f"/agent_data/{uuid}",
+        headers=agent_data_headers,
+        files={"monitoring_data": ("filename", io.BytesIO(b"certainly invalid"))},
+    )
+    assert response.status_code == 400
+    assert response.json() == {"detail": "Decompression of agent data failed"}
+
+
 def test_agent_data_success(
     tmp_path: Path,
     client: TestClient,
     uuid: UUID,
+    agent_data_headers: Mapping[str, str],
     compressed_agent_data: io.BytesIO,
 ) -> None:
     source = constants.AGENT_OUTPUT_DIR / str(uuid)
@@ -194,7 +247,7 @@ def test_agent_data_success(
 
     response = client.post(
         f"/agent_data/{uuid}",
-        headers={"certificate": "irrelevant"},
+        headers=agent_data_headers,
         files={"monitoring_data": ("filename", compressed_agent_data)},
     )
 
@@ -209,6 +262,7 @@ def test_agent_data_move_error(
     caplog,
     client: TestClient,
     uuid: UUID,
+    agent_data_headers: Mapping[str, str],
     compressed_agent_data: io.BytesIO,
 ) -> None:
     os.mkdir(constants.REGISTRATION_REQUESTS / "READY")
@@ -224,7 +278,7 @@ def test_agent_data_move_error(
         move_mock.side_effect = FileNotFoundError()
         response = client.post(
             f"/agent_data/{uuid}",
-            headers={"certificate": "irrelevant"},
+            headers=agent_data_headers,
             files={"monitoring_data": ("filename", compressed_agent_data)},
         )
 
@@ -236,6 +290,7 @@ def test_agent_data_move_ready(
     tmp_path: Path,
     client: TestClient,
     uuid: UUID,
+    agent_data_headers: Mapping[str, str],
     compressed_agent_data: io.BytesIO,
 ) -> None:
     os.mkdir(constants.REGISTRATION_REQUESTS / "READY")
@@ -249,7 +304,7 @@ def test_agent_data_move_ready(
 
     client.post(
         f"/agent_data/{uuid}",
-        headers={"certificate": "irrelevant"},
+        headers=agent_data_headers,
         files={"monitoring_data": ("filename", compressed_agent_data)},
     )
 

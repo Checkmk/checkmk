@@ -43,6 +43,7 @@ fn push(registry: config::Registry) -> AnyhowResult<()> {
             &server_spec.root_cert,
             &server_spec.uuid,
             &server_spec.certificate,
+            monitoring_data::COMPRESSION_ALGORITHM,
             &compressed_mon_data,
         )
         .context(format!(

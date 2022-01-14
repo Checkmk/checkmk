@@ -169,7 +169,6 @@ uvicorn = "==0.16.0"  # used for running agent-receiver server
 gunicorn= "==20.1.0" # used for running agent-receiver server
 agent-receiver = {editable = true, path = "./agent-receiver"}
 pysmb = "1.2"  # used by SMB share special agent
-zstandard = "==0.16.0" # decompressing agent data
 
 [requires]
 python_version = "3.9"

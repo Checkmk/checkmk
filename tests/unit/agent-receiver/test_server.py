@@ -11,6 +11,7 @@ import stat
 from pathlib import Path
 from unittest import mock
 from uuid import UUID
+from zlib import compress
 
 import pytest
 from agent_receiver import constants
@@ -19,7 +20,6 @@ from agent_receiver.models import HostTypeEnum
 from fastapi import HTTPException
 from fastapi.testclient import TestClient
 from pytest_mock import MockerFixture
-from zstandard import compress
 
 
 @pytest.fixture(autouse=True)

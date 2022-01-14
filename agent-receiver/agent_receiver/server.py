@@ -10,6 +10,7 @@ import tempfile
 from contextlib import suppress
 from pathlib import Path
 from uuid import UUID
+from zlib import decompress
 
 from agent_receiver.certificates import CertValidationRoute, uuid_from_pem_csr
 from agent_receiver.checkmk_rest_api import (
@@ -38,7 +39,6 @@ from starlette.status import (
     HTTP_404_NOT_FOUND,
     HTTP_501_NOT_IMPLEMENTED,
 )
-from zstandard import ZstdDecompressor
 
 app = FastAPI()
 cert_validation_router = APIRouter(route_class=CertValidationRoute)
@@ -182,9 +182,7 @@ def _store_agent_data(
         dir=target_dir,
         delete=False,
     )
-
-    ZstdDecompressor().copy_stream(uploaded_data.file, temp_file)
-
+    temp_file.write(decompress(uploaded_data.file.read()))
     try:
         os.rename(temp_file.name, target_dir / "agent_output")
     finally:

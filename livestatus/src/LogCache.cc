@@ -5,11 +5,10 @@
 
 #include "LogCache.h"
 
-#include <filesystem>
+#include <iterator>
 #include <sstream>
 #include <string>
 #include <system_error>
-#include <utility>
 
 #include "Logfile.h"
 #include "Logger.h"
@@ -72,6 +71,27 @@ void LogCache::addToIndex(std::unique_ptr<Logfile> logfile) {
     }
 
     _logfiles.emplace(since, std::move(logfile));
+}
+
+std::pair<std::vector<std::filesystem::path>,
+          std::optional<std::filesystem::path>>
+LogCache::pathsSince(std::chrono::system_clock::time_point since) {
+    std::lock_guard<std::mutex> lg(_lock);
+    update();
+    std::vector<std::filesystem::path> paths;
+    bool horizon_reached{false};
+    for (auto it = _logfiles.crbegin(); it != _logfiles.crend(); ++it) {
+        const auto &[unused, log_file] = *it;
+        if (horizon_reached) {
+            return {paths, log_file->path()};
+        }
+        paths.push_back(log_file->path());
+        // NOTE: We really need "<" below, "<=" is not enough: Lines at the end
+        // of one log file might have the same timestamp as the lines at the
+        // beginning of the next log file.
+        horizon_reached = log_file->since() < since;
+    }
+    return {paths, {}};
 }
 
 // This method is called each time a log message is loaded into memory. If the

@@ -10,9 +10,13 @@
 
 #include <chrono>
 #include <cstddef>
+#include <filesystem>
 #include <map>
 #include <memory>
 #include <mutex>
+#include <optional>
+#include <utility>
+#include <vector>
 
 class Logfile;
 class Logger;
@@ -33,23 +37,9 @@ private:
     const container &log_files_;
 };
 
-class LogFilesReverse {
-public:
-    using container = std::map<std::chrono::system_clock::time_point,
-                               std::unique_ptr<Logfile>>;
-    using const_iterator = container::const_iterator;
-
-    explicit LogFilesReverse(const container &log_files)
-        : log_files_{log_files} {}
-    [[nodiscard]] auto begin() const { return log_files_.rbegin(); }
-    [[nodiscard]] auto end() const { return log_files_.rend(); }
-
-private:
-    const container &log_files_;
-};
-
 // TODO(sp) Split this class into 2 parts: One is really only a cache for the
-// logfiles to monitor, the other part is about the lines in them.
+// logfiles to monitor (pathsSince), the other part is about the lines in them
+// (apply).
 class LogCache {
 public:
     // TODO(sp) The constructor is not allowed to call any method of the
@@ -72,14 +62,11 @@ public:
         return f(LogFiles{_logfiles});
     }
 
-    // Call the given function with a locked and updated LogCache, keeping the
-    // lock and the update function local. Reverse version.
-    template <class F>
-    inline auto applyReverse(F f) {
-        std::lock_guard<std::mutex> lg(_lock);
-        update();
-        return f(LogFilesReverse{_logfiles});
-    }
+    // Return log file paths chronologically backwards up to a given horizon
+    // plus the first skipped log file path (if any).
+    std::pair<std::vector<std::filesystem::path>,
+              std::optional<std::filesystem::path>>
+    pathsSince(std::chrono::system_clock::time_point since);
 
     // Used by Logfile::loadRange()
     void logLineHasBeenAdded(Logfile *logfile, unsigned logclasses);

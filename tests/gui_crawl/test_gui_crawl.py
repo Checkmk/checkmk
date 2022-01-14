@@ -372,7 +372,6 @@ class Crawler:
 
     # TODO: Better write it as report XML that can be parsed by jenkins?
     def report(self):
-        self.site.save_results()
         self._write_report_file()
 
         if self.errors:
@@ -456,12 +455,13 @@ def test_crawl():
     sf = get_site_factory(prefix="crawl_",
                           update_from_git=version == "git",
                           install_test_python_modules=False)
-    site = sf.get_site("central")
-    logger.info("Site %s is ready!", site.id)
-
-    crawler = Crawler(site)
-
     try:
-        crawler.crawl()
+        site = sf.get_site("central")
+        logger.info("Site %s is ready!", site.id)
+        crawler = Crawler(site)
+        try:
+            crawler.crawl()
+        finally:
+            crawler.report()
     finally:
-        crawler.report()
+        sf.save_results()

@@ -55,7 +55,8 @@ def get_config():
         "ssl_ports": [443],
     }
     if os.path.exists(config_file):
-        exec(open(config_file).read(), config)  # pylint:disable=consider-using-with
+        with open(config_file) as conffile:
+            exec(conffile.read(), config)
     return config
 
 

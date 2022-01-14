@@ -5905,12 +5905,15 @@ class Labels(ValueSpec):
 
     def render_input(self, varprefix, value):
         html.help(self.help())
-        html.text_input(varprefix,
-                        default_value=encode_labels_for_http(value.items()),
-                        cssclass="labels",
-                        placeholder=_("Add some label"),
-                        data_world=self._world.value,
-                        data_max_labels=self._max_labels)
+        label_type = "host_label" if "host_labels" in varprefix else "service_label"
+        html.text_input(
+            varprefix,
+            default_value=encode_labels_for_http(value.items()),
+            cssclass="labels" + " " + label_type,
+            placeholder=_("Add some label"),
+            data_world=self._world.value,
+            data_max_labels=self._max_labels,
+        )
 
     def value_to_json(self, value: Any) -> Any:
         return value

@@ -221,6 +221,16 @@ def test_dictionary_value_to_json(elements, value, expected):
     assert vs.Dictionary(elements=elements).value_to_json(value) == expected
 
 
+def test_werk_13609_regression():
+    spec = vs.Transform(
+        vs.Integer(),
+        forth=lambda x: int(x),
+        back=lambda x: str(x),
+    )
+    assert spec.value_to_json('1') == 1
+    assert spec.value_to_json_safe('1') == 1
+
+
 @pytest.mark.parametrize(
     "address",
     [

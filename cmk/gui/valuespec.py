@@ -5461,7 +5461,7 @@ class Transform(ValueSpec):
         return self.back(self._valuespec.value_from_json(json_value))
 
     def value_to_json_safe(self, value: Any) -> Any:
-        return self._valuespec.value_to_json_safe(value)
+        return self._valuespec.value_to_json_safe(self.forth(value))
 
 
 # TODO: Change to factory, cleanup kwargs

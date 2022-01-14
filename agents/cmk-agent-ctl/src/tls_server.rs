@@ -1,4 +1,6 @@
-use crate::config::Connection;
+// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+// conditions defined in the file COPYING, which is part of this source code package.
 
 use super::config;
 use anyhow::{anyhow, Context, Result as AnyhowResult};
@@ -33,7 +35,7 @@ pub fn tls_stream<'a>(
 fn tls_config<'a>(
     connections: impl Iterator<Item = &'a config::Connection>,
 ) -> AnyhowResult<Arc<ServerConfig>> {
-    let connections: Vec<&Connection> = connections.collect();
+    let connections: Vec<&config::Connection> = connections.collect();
     Ok(Arc::new(
         ServerConfig::builder()
             .with_safe_defaults()
@@ -57,7 +59,7 @@ fn root_cert_store<'a>(
 }
 
 fn sni_resolver<'a>(
-    connections: impl Iterator<Item = &'a Connection>,
+    connections: impl Iterator<Item = &'a config::Connection>,
 ) -> AnyhowResult<Arc<ResolvesServerCertUsingSni>> {
     let mut resolver = rustls::server::ResolvesServerCertUsingSni::new();
 

@@ -11,7 +11,7 @@ ROOT=/omd/sites/$SITE
 CMK_VERSION=$(basename $(readlink $ROOT/version))
 CMK_VERSION=${CMK_VERSION%.*}
 
-# Needed by managed/cmk/.f12 to set the correct edition after .f12
+# Needed by {managed,plus}/cmk/.f12 to set the correct edition after .f12
 if [ -z "$ORIG_EDITION" ]; then
     export ORIG_EDITION=$(sudo su - $SITE -c "python3 -c 'import cmk.utils.version; print(cmk.utils.version.edition_short())'")
 fi
@@ -40,6 +40,8 @@ sudo rsync \
     --exclude=cee.py \
     --exclude=cme \
     --exclude=cme.py \
+    --exclude=cpe \
+    --exclude=cpe.py \
     -aR \
     "${PYTHON3_PATHS[@]}" \
     $ROOT/lib/python3/cmk/
@@ -84,7 +86,7 @@ sudo sed -i "s|^__version__.*$|__version__ = \"$CMK_VERSION\"|g" $ROOT/lib/pytho
 
 # Also deploy all other directories of same type
 if [ ${ALL_EDITIONS:-1} != 0 ]; then
-    for WHAT in enterprise managed; do
+    for WHAT in enterprise managed plus; do
         if [ -e ../$WHAT/cmk/.f12 ]; then
             (
                 cd ../$WHAT/cmk

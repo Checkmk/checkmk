@@ -34,6 +34,7 @@ from tests.testlib.utils import (
     get_standard_linux_agent_output,
     is_enterprise_repo,
     is_managed_repo,
+    is_plus_repo,
     is_running_as_site_user,
     repo_path,
     site_id,
@@ -79,6 +80,8 @@ def fake_version_and_paths():
 
     if is_managed_repo():
         edition_short = "cme"
+    elif is_plus_repo():
+        edition_short = "cpe"
     elif is_enterprise_repo():
         edition_short = "cee"
     else:

@@ -14,7 +14,7 @@ from unittest import mock
 import pytest
 from fakeredis import FakeRedis  # type: ignore[import]
 
-from tests.testlib import is_enterprise_repo, is_managed_repo
+from tests.testlib import is_enterprise_repo, is_managed_repo, is_plus_repo
 from tests.testlib.debug_utils import cmk_debug_enabled
 
 import livestatus
@@ -49,9 +49,12 @@ def fixture_umask():
         yield
 
 
-@pytest.fixture(name="edition_short", params=["cre", "cee", "cme"])
+@pytest.fixture(name="edition_short", params=["cre", "cee", "cme", "cpe"])
 def fixture_edition_short(monkeypatch, request):
     edition_short = request.param
+    if edition_short == "cpe" and not is_plus_repo():
+        pytest.skip("Needed files are not available")
+
     if edition_short == "cme" and not is_managed_repo():
         pytest.skip("Needed files are not available")
 

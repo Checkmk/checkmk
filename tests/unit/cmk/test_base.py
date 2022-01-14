@@ -57,3 +57,19 @@ def test_is_free_edition(monkeypatch):
     cmk_version.edition_short.cache_clear()
     assert cmk_version.is_free_edition() is True
     cmk_version.edition_short.cache_clear()
+
+
+def test_is_plus_edition(monkeypatch):
+    monkeypatch.setattr(cmk_version, "omd_version", lambda: "1.4.0i1.cre")
+    cmk_version.edition_short.cache_clear()
+    assert cmk_version.is_plus_edition() is False
+    monkeypatch.setattr(cmk_version, "omd_version", lambda: "1.4.0i1.cee")
+    cmk_version.edition_short.cache_clear()
+    assert cmk_version.is_plus_edition() is False
+    monkeypatch.setattr(cmk_version, "omd_version", lambda: "2016.09.22.cee")
+    cmk_version.edition_short.cache_clear()
+    assert cmk_version.is_plus_edition() is False
+    monkeypatch.setattr(cmk_version, "omd_version", lambda: "2016.09.22.cpe")
+    cmk_version.edition_short.cache_clear()
+    assert cmk_version.is_plus_edition() is True
+    cmk_version.edition_short.cache_clear()

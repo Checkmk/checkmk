@@ -161,7 +161,6 @@ STAGES:
             -e SC2187
             -e SC2188
             -e SC2206
-            -e SC2207
       COMMAND: "make test-shellcheck &> ${RESULTS}/shellcheck.txt"
       RESULT_CHECK_TYPE: "GCC"
       RESULT_CHECK_FILE_PATTERN: "results/shellcheck.txt"

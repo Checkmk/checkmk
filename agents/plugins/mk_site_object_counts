@@ -35,7 +35,7 @@ get_tag_stats() {
     local site header tags_arr tags_query
     site="${1}"
     header="${2}"
-    tags_arr=($(echo "$header" | tr ' ' '\n'))
+    IFS=" " read -r -a tags_arr <<< "${header}"
 
     { [ "${#tags_arr[@]}" -ne 0 ] && _socket_exists "${site}"; } || return
 
@@ -49,19 +49,18 @@ get_tag_stats() {
 
 
 get_check_command_stats() {
-    local site header srv_commands commands_query
+    local site srv_commands commands_query
     site="${1}"
-    header="${2}"
-    srv_commands=($(echo "$header" | tr ' ' '\n'))
+    srv_commands="${2}"
 
-    { [ "${#srv_commands[@]}" -ne 0 ] && _socket_exists "${site}"; } || return
+    { [ -n "${srv_commands}" ] && _socket_exists "${site}"; } || return
 
     commands_query="GET services\n"
-    for srv_cmd in "${srv_commands[@]}";
+    for srv_cmd in ${srv_commands};
     do
         commands_query="${commands_query}Stats: check_command ~~ ${srv_cmd}$\n"
     done
-    echo "Service check commands|${header}|$(_query_site "${site}" "${commands_query}")"
+    echo "Service check commands|${srv_commands}|$(_query_site "${site}" "${commands_query}")"
 }
 
 
@@ -92,9 +91,9 @@ main() {
         echo "<<<site_object_counts:sep(124)>>>"
         if [ -n "$SITES" ];
         then
-            sites=($(echo "$SITES" | tr ' ' '\n'))
+            read -r -a sites <<< "${SITES}"
         else
-            sites=($(omd sites | cut -d' ' -f1))
+            read -r -a sites <<< "$(omd sites | cut -d' ' -f1 | paste -s)"
         fi
 
         if [ -n "$TAGS" ];

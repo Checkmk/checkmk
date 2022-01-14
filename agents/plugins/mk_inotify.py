@@ -64,7 +64,8 @@ config.remove_section("global")
 def output_data():
     sys.stdout.write("<<<inotify:sep(9)>>>\n")
     if os.path.exists(configured_paths):
-        sys.stdout.write(open(configured_paths).read())  # pylint:disable=consider-using-with
+        with open(configured_paths) as opened_conf_paths:
+            sys.stdout.write(opened_conf_paths.read())
 
     now = time.time()
     for dirpath, _unused_dirnames, filenames in os.walk(mk_vardir):
@@ -75,9 +76,8 @@ def output_data():
                     filetime = os.stat(the_file).st_mtime
                     file_age = now - filetime
                     if file_age > 5:
-                        sys.stdout.write(
-                            open(the_file).read()  # pylint:disable=consider-using-with
-                        )
+                        with open(the_file) as opened_the_file:
+                            sys.stdout.write(opened_the_file.read())
                     if file_age > stats_retention:
                         os.unlink(the_file)
                 except Exception:
@@ -87,10 +87,12 @@ def output_data():
 
 # Check if another mk_inotify process is already running
 if os.path.exists(pid_filename):
-    pid_str = open(pid_filename).read()  # pylint:disable=consider-using-with
+    with open(pid_filename) as opened_file:
+        pid_str = opened_file.read()
     proc_cmdline = "/proc/%s/cmdline" % pid_str
     if os.path.exists(proc_cmdline):
-        cmdline = open(proc_cmdline).read()  # pylint:disable=consider-using-with
+        with open(proc_cmdline) as opened_inner_file:
+            cmdline = opened_inner_file.read()
         cmdline_tokens = cmdline.split("\0")
         if "mk_inotify" in cmdline_tokens[1]:
             # Another mk_notify process is already running..
@@ -131,7 +133,8 @@ if not opt_foreground:
         sys.stderr.write("Error forking mk_inotify: %s" % e)
 
     # Save pid of working process.
-    open(pid_filename, "w").write("%d" % os.getpid())  # pylint:disable=consider-using-with
+    with open(pid_filename, "w") as opened_file:
+        opened_file.write("%d" % os.getpid())
 # .
 #   .--Main----------------------------------------------------------------.
 #   |                        __  __       _                                |
@@ -167,9 +170,8 @@ def wakeup_handler(signum, frame):
             sys.stdout.write("%s\n" % "\n".join(get_watched_files()))
         else:
             filename = "mk_inotify.stats.%d" % time.time()
-            open("%s/%s" % (mk_vardir, filename), "w").write(  # pylint:disable=consider-using-with
-                "\n".join(output) + "\n"
-            )
+            with open("%s/%s" % (mk_vardir, filename), "w") as stats_file:
+                stats_file.write("\n".join(output) + "\n")
         output = []
 
     # Check if configuration has changed -> restart
@@ -182,10 +184,9 @@ def wakeup_handler(signum, frame):
             sys.exit(0)
         if time.time() - os.stat(pid_filename).st_mtime > heartbeat_timeout:  # heartbeat timeout
             sys.exit(0)
-        if os.getpid() != int(  # pidfile differs
-            open(pid_filename).read()  # pylint:disable=consider-using-with
-        ):
-            sys.exit(0)
+        with open(pid_filename) as opened_pid_file:
+            if os.getpid() != int(opened_pid_file.read()):  # pidfile differs
+                sys.exit(0)
 
     update_watched_folders()
     signal.alarm(write_interval)
@@ -351,9 +352,8 @@ def main():
         sys.stdout.write(pprint.pformat(folder_configs))
 
     # Save monitored file/folder information specified in mk_inotify.cfg
-    open(configured_paths, "w").write(  # pylint:disable=consider-using-with
-        "\n".join(get_watched_files()) + "\n"
-    )
+    with open(configured_paths, "w") as opened_conf_paths:
+        opened_conf_paths.write("\n".join(get_watched_files()) + "\n")
 
     # Event handler
     eh = NotifyEventHandler()

@@ -365,7 +365,6 @@ class PostgresWin(PostgresBase):
                 self.db_user,
                 sql_cmd,
             )
-
         proc = subprocess.Popen(  # pylint:disable=consider-using-with
             cmd_str,
             env=self.my_env,
@@ -685,7 +684,7 @@ class PostgresLinux(PostgresBase):
             )
             proc = subprocess.Popen(  # pylint:disable=consider-using-with
                 base_cmd_list, env=self.my_env, stdout=subprocess.PIPE
-            )  # pylint:disable=consider-using-with
+            )
             out = ensure_str(proc.communicate()[0])
 
         return out.rstrip()
@@ -695,7 +694,7 @@ class PostgresLinux(PostgresBase):
         try:
             proc = subprocess.Popen(  # pylint:disable=consider-using-with
                 ["which", "psql"], stdout=subprocess.PIPE
-            )  # pylint:disable=consider-using-with
+            )
             out = ensure_str(proc.communicate()[0])
         except subprocess.CalledProcessError:
             raise RuntimeError("Could not determine psql executable.")
@@ -1062,7 +1061,8 @@ def main(argv=None):
     instances = []
     try:
         postgres_cfg_path = os.path.join(os.getenv("MK_CONFDIR", default_path), "postgres.cfg")
-        postgres_cfg = open(postgres_cfg_path).readlines()  # pylint:disable=consider-using-with
+        with open(postgres_cfg_path) as opened_file:
+            postgres_cfg = opened_file.readlines()
         dbuser, instances = parse_postgres_cfg(postgres_cfg)
     except Exception:
         _, e = sys.exc_info()[:2]  # python2 and python3 compatible exception logging

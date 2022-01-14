@@ -353,7 +353,7 @@ DataDirectory: ${MK_VARDIR}
 SpoolDirectory: ${SPOOLDIR}
 PluginsDirectory: ${PLUGINSDIR}
 LocalDirectory: ${LOCALDIR}
-AgentController: $(command -v cmk-agent-ctl)
+AgentController: $(cmk-agent-ctl --version 2>/dev/null)
 HERE
 
     if id cmk-agent >/dev/null && [ -f ~cmk-agent/"allow-legacy-pull" ]; then

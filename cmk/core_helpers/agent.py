@@ -684,7 +684,7 @@ class AgentSummarizerDefault(AgentSummarizer):
                         agent_info.get("failedpythonplugins"), agent_info.get("failedpythonreason")
                     ),
                     self._check_transport(
-                        agent_info.get("agentcontroller"), agent_info.get("legacypullmode")
+                        bool(agent_info.get("agentcontroller")), agent_info.get("legacypullmode")
                     ),
                 ]
                 if r
@@ -851,10 +851,10 @@ class AgentSummarizerDefault(AgentSummarizer):
 
     def _check_transport(
         self,
-        controller: Optional[str],
+        controller_present: bool,
         legacy_pull_mode: Optional[str],
     ) -> Optional[ActiveCheckResult]:
-        if controller is None or controller == "":
+        if not controller_present:
             return None
 
         if not legacy_pull_mode or legacy_pull_mode == "no":

@@ -12,17 +12,13 @@ mod status;
 mod tls_server;
 use anyhow::{Context, Result as AnyhowResult};
 use config::JSONLoader;
+use log::error;
 use nix::unistd;
 use std::fs;
 use std::io::Result as IoResult;
 use std::io::{self, Write};
 use std::path::{Path, PathBuf};
 use structopt::StructOpt;
-
-use log::{info, LevelFilter};
-use log4rs::append::file::FileAppender;
-use log4rs::config::{Appender, Config, Root};
-use log4rs::encode::pattern::PatternEncoder;
 
 const CMK_AGENT_USER: &str = "cmk-agent";
 const HOME_DIR: &str = "/var/lib/cmk-agent";
@@ -109,16 +105,12 @@ fn disallow_legacy_pull() -> IoResult<()> {
 }
 
 fn init_logging(path: &Path) -> AnyhowResult<()> {
-    let logfile = FileAppender::builder()
-        .encoder(Box::new(PatternEncoder::new("{l} - {m}\n")))
-        .build(path)?;
-
-    let config = Config::builder()
-        .appender(Appender::builder().build("logfile", Box::new(logfile)))
-        .build(Root::builder().appender("logfile").build(LevelFilter::Info))?;
-
-    log4rs::init_config(config)?;
-
+    flexi_logger::Logger::try_with_env_or_str("error")?
+        .log_to_file(flexi_logger::FileSpec::try_from(path)?)
+        .append()
+        .format(flexi_logger::detailed_format)
+        .start()
+        .unwrap();
     Ok(())
 }
 
@@ -138,7 +130,7 @@ fn try_sanitize_home_dir_ownership(home_dir: &Path, user: &str) {
         io::stderr()
             .write_all(format!("{:?}", error).as_bytes())
             .unwrap_or(());
-        info!("{:?}", error)
+        error!("{:?}", error)
     };
 }
 fn sanitize_home_dir_ownership(home_dir: &Path, user: &str) -> AnyhowResult<()> {
@@ -225,7 +217,7 @@ fn main() -> AnyhowResult<()> {
     let result = run_requested_mode(args, &config_path, &conn_path);
 
     if let Err(error) = &result {
-        info!("{:?}", error)
+        error!("{:?}", error)
     }
 
     try_sanitize_home_dir_ownership(Path::new(HOME_DIR), CMK_AGENT_USER);

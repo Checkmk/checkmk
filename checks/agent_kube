@@ -13,6 +13,11 @@ def agent_kube_arguments(params, hostname, ipaddress):
     if "token" in api_server_params:
         args.extend(["--token", passwordstore_get_cmdline("%s", api_server_params["token"])])
 
+    args += [
+        "--monitored-objects",
+        " ".join(params.get("monitored_objects", ["nodes", "deployments", "pods"])),
+    ]
+
     args.append("--api-server-endpoint")
     configured_endpoint_name, configured_endpoint = api_server_params["endpoint"]
     if configured_endpoint_name == "url_custom":

@@ -122,6 +122,12 @@ def parse_arguments(args: List[str]) -> argparse.Namespace:
     )
     p.add_argument("--token", help="Token for that user")
     p.add_argument(
+        "--monitored-objects",
+        nargs="+",
+        default=["deployments", "nodes", "pods"],
+        help="The Kubernetes objects which are supposed to be monitored. Available objects: deployments, nodes, pods",
+    )
+    p.add_argument(
         "--api-server-endpoint", required=True, help="API server endpoint for Kubernetes API calls"
     )
     p.add_argument(
@@ -998,9 +1004,18 @@ def main(args: Optional[List[str]] = None) -> int:
 
             # Sections based on API server data
             write_cluster_api_sections(cluster)
-            write_nodes_api_sections(cluster.nodes())
-            write_deployments_api_sections(cluster.deployments())
-            write_pods_api_sections(cluster.pods())  # TODO: make more explicit
+
+            if "nodes" in arguments.monitored_objects:
+                write_nodes_api_sections(cluster.nodes())
+
+            if "deployments" in arguments.monitored_objects:
+                write_deployments_api_sections(cluster.deployments())
+
+            if "pods" in arguments.monitored_objects:
+                write_pods_api_sections(cluster.pods())
+
+            # TODO: add an option to skip the performance data query
+            # TODO: refactor write out sections in case this performance skip is not implemented
 
             # Sections based on cluster collector performance data
             collected_metrics = request_metrics_from_cluster_collector(
@@ -1053,27 +1068,30 @@ def main(args: Optional[List[str]] = None) -> int:
             )
 
             # Write performance sections
-            for pod in filter_outdated_pods(
-                list(performance_pods.values()), lookup_name_piggyback_mappings
-            ):
-                with ConditionalPiggybackSection(
-                    f"pod_{lookup_name_piggyback_mappings[pod.lookup_name]}"
+            if "pods" in arguments.monitored_objects:
+                for pod in filter_outdated_pods(
+                    list(performance_pods.values()), lookup_name_piggyback_mappings
                 ):
-                    pod_performance_sections(pod)
+                    with ConditionalPiggybackSection(
+                        f"pod_{lookup_name_piggyback_mappings[pod.lookup_name]}"
+                    ):
+                        pod_performance_sections(pod)
 
-            for node in cluster.nodes():
-                write_kube_object_performance_section(
-                    node,
-                    performance_pods,
-                    piggyback_name=f"node_{node.name}",
-                )
+            if "nodes" in arguments.monitored_objects:
+                for node in cluster.nodes():
+                    write_kube_object_performance_section(
+                        node,
+                        performance_pods,
+                        piggyback_name=f"node_{node.name}",
+                    )
 
-            for deployment in cluster.deployments():
-                write_kube_object_performance_section(
-                    deployment,
-                    performance_pods,
-                    piggyback_name=f"deployment_{deployment.name(prepend_namespace=True)}",
-                )
+            if "deployments" in arguments.monitored_objects:
+                for deployment in cluster.deployments():
+                    write_kube_object_performance_section(
+                        deployment,
+                        performance_pods,
+                        piggyback_name=f"deployment_{deployment.name(prepend_namespace=True)}",
+                    )
 
             write_kube_object_performance_section(cluster, performance_pods)
 

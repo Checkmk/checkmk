@@ -31,6 +31,8 @@ pytestmark = pytest.mark.checks
                 "verify-cert": False,
             },
             [
+                "--monitored-objects",
+                "nodes deployments pods",
                 "--api-server-endpoint",
                 "https://127.0.0.1",
                 "--cluster-agent-endpoint",
@@ -50,6 +52,8 @@ pytestmark = pytest.mark.checks
                 "verify-cert": True,
             },
             [
+                "--monitored-objects",
+                "nodes deployments pods",
                 "--api-server-endpoint",
                 "http://127.0.0.1:8080",
                 "--cluster-agent-endpoint",
@@ -59,6 +63,7 @@ pytestmark = pytest.mark.checks
         ),
         (
             {
+                "monitored_objects": ["pods"],
                 "kubernetes-api-server": {
                     "endpoint": ("url_custom", "http://localhost:8080"),
                     "token": ("password", "randomtoken"),
@@ -73,6 +78,8 @@ pytestmark = pytest.mark.checks
             [
                 "--token",
                 "randomtoken",
+                "--monitored-objects",
+                "pods",
                 "--api-server-endpoint",
                 "http://localhost:8080",
                 "--cluster-agent-endpoint",

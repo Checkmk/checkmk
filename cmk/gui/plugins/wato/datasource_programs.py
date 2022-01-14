@@ -863,6 +863,24 @@ def _valuespec_special_agents_kube():
                     default_value=False,
                 ),
             ),
+            (
+                "monitored_objects",
+                ListChoice(
+                    choices=[
+                        ("deployments", _("Deployments")),
+                        ("nodes", _("Nodes")),
+                        ("pods", _("Pods")),
+                    ],
+                    default_value=[
+                        "deployments",
+                        "nodes",
+                        "pods",
+                    ],
+                    allow_empty=False,
+                    title=_("Collect information about..."),
+                    help=_("Select the Kubernetes objects you would like to monitor."),
+                ),
+            ),
         ],
         optional_keys=[],
         title=_("Kubernetes 2.0"),

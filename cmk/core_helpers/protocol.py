@@ -61,7 +61,7 @@ import logging
 import math
 import pickle
 import struct
-from typing import Final, Iterator, Sequence, Type, Union
+from typing import Final, Generic, Iterator, Sequence, Type, Union
 
 import cmk.utils.log as log
 from cmk.utils.cpu_tracking import Snapshot
@@ -69,7 +69,7 @@ from cmk.utils.exceptions import MKFetcherError, MKTimeout
 from cmk.utils.type_defs import AgentRawData, result, SectionName
 from cmk.utils.type_defs.protocol import Protocol
 
-from cmk.snmplib.type_defs import AbstractRawData, SNMPRawData
+from cmk.snmplib.type_defs import SNMPRawData, TRawData
 
 from . import FetcherType
 
@@ -109,7 +109,7 @@ class CMCLogLevel(str, enum.Enum):
         }[level]
 
 
-class ResultMessage(Protocol):
+class ResultMessage(Protocol, Generic[TRawData]):
     fmt = "!HQ"
     length = struct.calcsize(fmt)
 
@@ -128,7 +128,7 @@ class ResultMessage(Protocol):
         raise NotImplementedError
 
     @abc.abstractmethod
-    def result(self) -> result.Result[AbstractRawData, Exception]:
+    def result(self) -> result.Result[TRawData, Exception]:
         raise NotImplementedError
 
 
@@ -152,8 +152,7 @@ class PayloadType(enum.Enum):
     AGENT = enum.auto()
     SNMP = enum.auto()
 
-    def make(self) -> Type[ResultMessage]:
-        # This typing error is a false positive.  There are tests to demonstrate that.
+    def make(self) -> Type[Union[ResultMessage[AgentRawData], ResultMessage[SNMPRawData]]]:
         return {  # type: ignore[return-value]
             PayloadType.ERROR: ErrorResultMessage,
             PayloadType.AGENT: AgentResultMessage,
@@ -161,7 +160,7 @@ class PayloadType(enum.Enum):
         }[self]
 
 
-class AgentResultMessage(ResultMessage):
+class AgentResultMessage(ResultMessage[AgentRawData]):
     payload_type = PayloadType.AGENT
 
     def __init__(self, value: AgentRawData) -> None:
@@ -192,11 +191,11 @@ class AgentResultMessage(ResultMessage):
         except SyntaxError as exc:
             raise ValueError(repr(data)) from exc
 
-    def result(self) -> result.Result[AbstractRawData, Exception]:
+    def result(self) -> result.Result[AgentRawData, Exception]:
         return result.OK(self._value)
 
 
-class SNMPResultMessage(ResultMessage):
+class SNMPResultMessage(ResultMessage[SNMPRawData]):
     payload_type = PayloadType.SNMP
 
     def __init__(self, value: SNMPRawData) -> None:
@@ -243,7 +242,7 @@ class SNMPResultMessage(ResultMessage):
             raise ValueError(repr(data))
 
 
-class ErrorResultMessage(ResultMessage):
+class ErrorResultMessage(ResultMessage[AgentRawData]):
     payload_type = PayloadType.ERROR
 
     def __init__(self, error: Exception) -> None:
@@ -272,7 +271,7 @@ class ErrorResultMessage(ResultMessage):
         except SyntaxError as exc:
             raise ValueError(repr(data)) from exc
 
-    def result(self) -> result.Result[AbstractRawData, Exception]:
+    def result(self) -> result.Result[AgentRawData, Exception]:
         return result.Error(self._error)
 
     @staticmethod
@@ -365,12 +364,12 @@ class FetcherMessage(Protocol):
     def __init__(
         self,
         header: FetcherHeader,
-        payload: ResultMessage,
+        payload: Union[ResultMessage[AgentRawData], ResultMessage[SNMPRawData]],
         stats: ResultStats,
     ) -> None:
-        self.header: Final[FetcherHeader] = header
-        self.payload: Final[ResultMessage] = payload
-        self.stats: Final[ResultStats] = stats
+        self.header: Final = header
+        self.payload: Final = payload
+        self.stats: Final = stats
 
     def __repr__(self) -> str:
         return "%s(%r, %r, %r)" % (type(self).__name__, self.header, self.payload, self.stats)
@@ -402,7 +401,7 @@ class FetcherMessage(Protocol):
     @classmethod
     def from_raw_data(
         cls,
-        raw_data: result.Result[AbstractRawData, Exception],
+        raw_data: result.Result[TRawData, Exception],
         duration: Snapshot,
         fetcher_type: FetcherType,
     ) -> FetcherMessage:
@@ -439,7 +438,7 @@ class FetcherMessage(Protocol):
             )
 
         assert isinstance(raw_data.ok, bytes)
-        agent_payload = AgentResultMessage(raw_data.ok)
+        agent_payload = AgentResultMessage(AgentRawData(raw_data.ok))
         return cls(
             FetcherHeader(
                 fetcher_type,
@@ -494,7 +493,9 @@ class FetcherMessage(Protocol):
         return self.header.fetcher_type
 
     @property
-    def raw_data(self) -> result.Result[AbstractRawData, Exception]:
+    def raw_data(
+        self,
+    ) -> Union[result.Result[AgentRawData, Exception], result.Result[SNMPRawData, Exception]]:
         return self.payload.result()
 
 

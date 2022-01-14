@@ -9,7 +9,10 @@ from typing import Tuple
 import pytest
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, State
-from cmk.base.plugins.agent_based.kube_pod_info import check_kube_pod_info, PodInfo
+from cmk.base.plugins.agent_based.kube_deployment_info import (
+    check_kube_deployment_info,
+    DeploymentInfo,
+)
 from cmk.base.plugins.agent_based.utils import kube_info
 
 
@@ -26,28 +29,24 @@ def fixture_time(mocker):
     "section, expected_check_result",
     [
         pytest.param(
-            PodInfo(
-                namespace="default",
-                creation_timestamp=1600000000.0,
+            DeploymentInfo(
+                name="oh-lord",
+                namespace="have-mercy",
                 labels={},
-                node=None,
-                qos_class="burstable",
-                restart_policy="Always",
-                uid="dd1019ca-c429-46af-b6b7-8aad47b6081a",
+                creation_timestamp=1600000000.0,
+                images=["i/name:0.5"],
+                containers=["name"],
             ),
             (
-                Result(state=State.OK, summary="Node: None"),
-                Result(state=State.OK, summary="Namespace: default"),
+                Result(state=State.OK, summary="Name: oh-lord"),
+                Result(state=State.OK, summary="Namespace: have-mercy"),
                 Result(state=State.OK, summary="Age: 1 second"),
-                Result(state=State.OK, notice="QoS class: burstable"),
-                Result(state=State.OK, notice="UID: dd1019ca-c429-46af-b6b7-8aad47b6081a"),
-                Result(state=State.OK, notice="Restart policy: Always"),
             ),
-            id="overall look of pod with age 1 second",
+            id="overall look of deployment with age 1 second",
         ),
     ],
 )
 def test_check_kube_pod_info(
-    section: PodInfo, expected_check_result: Tuple[Result, ...], time
+    section: DeploymentInfo, expected_check_result: Tuple[Result, ...], time
 ) -> None:
-    assert tuple(check_kube_pod_info(section)) == expected_check_result
+    assert tuple(check_kube_deployment_info(section)) == expected_check_result

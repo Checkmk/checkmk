@@ -5,16 +5,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
-import time
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import (
-    HostLabel,
-    register,
-    render,
-    Result,
-    Service,
-    State,
-)
+from cmk.base.plugins.agent_based.agent_based_api.v1 import HostLabel, register, Service
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
     CheckResult,
     DiscoveryResult,
@@ -23,6 +15,7 @@ from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
 )
 from cmk.base.plugins.agent_based.utils.k8s import PodInfo
 from cmk.base.plugins.agent_based.utils.kube import KubernetesError
+from cmk.base.plugins.agent_based.utils.kube_info import check_info
 
 
 def parse_kube_pod_info(string_table: StringTable):
@@ -79,22 +72,6 @@ def discovery_kube_pod_info(section: PodInfo) -> DiscoveryResult:
     yield Service()
 
 
-_DETAILS_ONLY = (
-    "qos_class",
-    "uid",
-    "restart_policy",
-)
-
-_DISPLAY_NAME = {
-    "node": "Node",
-    "namespace": "Namespace",
-    "qos_class": "QoS class",
-    "uid": "UID",
-    "creation_timestamp": "Age",
-    "restart_policy": "Restart policy",
-}
-
-
 def check_kube_pod_info(section: PodInfo) -> CheckResult:
     # To get an understanding of API objects this check deals with, one can take a look at
     # PodInfo and the definition of its fields
@@ -105,23 +82,21 @@ def check_kube_pod_info(section: PodInfo) -> CheckResult:
     if section.creation_timestamp is None:
         raise KubernetesError("Pod has no creation timestamp")
 
-    yield Result(state=State.OK, summary=f"{_DISPLAY_NAME['node']}: {section.node}")
-    yield Result(state=State.OK, summary=f"{_DISPLAY_NAME['namespace']}: {section.namespace}")
-    yield Result(
-        state=State.OK,
-        summary=f"{_DISPLAY_NAME['creation_timestamp']}: "
-        f"{render.timespan(time.time() - section.creation_timestamp)}",
+    yield from check_info(
+        {
+            "node": section.node,
+            "namespace": section.namespace,
+            "creation_timestamp": section.creation_timestamp,
+            "qos_class": section.qos_class,
+            "uid": section.uid,
+            "restart_policy": section.restart_policy,
+        }
     )
-
-    for field_name in _DETAILS_ONLY:
-        yield Result(
-            state=State.OK, notice=f"{_DISPLAY_NAME[field_name]}: {getattr(section, field_name)}"
-        )
 
 
 register.check_plugin(
     name="kube_pod_info",
-    service_name="Pod Info",
+    service_name="Pod info",
     discovery_function=discovery_kube_pod_info,
     check_function=check_kube_pod_info,
 )

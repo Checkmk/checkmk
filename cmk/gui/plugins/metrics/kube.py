@@ -223,8 +223,6 @@ graph_info["kube_node_container_count"] = {
     ],
 }
 
-# TODO Add additional boundaries for percent. (only zero at the bottom)
-
 for resource, usage_title in zip(["memory", "cpu"], [_("Memory"), _("CPU")]):
     graph_info[f"kube_{resource}_usage"] = {
         "title": usage_title,
@@ -238,6 +236,10 @@ for resource, usage_title in zip(["memory", "cpu"], [_("Memory"), _("CPU")]):
             f"kube_{resource}_limit",
             f"kube_{resource}_usage",
         ],
+        "scalars": [
+            f"kube_{resource}_usage:warn",
+            f"kube_{resource}_usage:crit",
+        ],
     }
 
     for requirement, utilization_title in requirement_to_utilization_titles.items():
@@ -245,13 +247,14 @@ for resource, usage_title in zip(["memory", "cpu"], [_("Memory"), _("CPU")]):
         graph_info[metric_name] = {
             "title": utilization_title,
             "metrics": [
-                (metric_name, "line"),
+                (metric_name, "area"),
             ],
             "scalars": [
                 f"{metric_name}:warn",
                 f"{metric_name}:crit",
             ],
         }
+
 
 graph_info["kube_node_count_worker"] = {
     "title": _("Worker nodes"),

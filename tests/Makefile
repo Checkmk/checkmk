@@ -244,7 +244,9 @@ test-mypy: prepare-protobuf-files
 	grep -v $$(realpath '../inventory') | \
 	`: files are only needed for pylint to understand the module hierarchy` \
 	grep -v $$(realpath -m '../enterprise/cmk/__init__.py') | \
-	grep -v $$(realpath -m '../enterprise/cmk/base/__init__.py') \
+	grep -v $$(realpath -m '../enterprise/cmk/base/__init__.py') | \
+	grep -v $$(realpath -m '../plus/cmk/__init__.py') | \
+	grep -v $$(realpath -m '../plus/cmk/base/__init__.py') \
 	) ; \
 	cd .. ; scripts/run-mypy $(MYPY_ADDOPTS) $(ADDITIONAL_MYPY_ARGS) $$PYTHON_FILES
 

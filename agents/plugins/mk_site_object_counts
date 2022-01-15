@@ -34,12 +34,12 @@ _query_site() {
 get_tag_stats() {
     local site="$1"
     local header="$2"
-    local tags=($(echo "$header" | tr ' ' '\n'))
+    local tags_arr=($(echo "$header" | tr ' ' '\n'))
 
-    { [ "${#tags[@]}" -ne 0 ] && _socket_exists "${site}"; } || return
+    { [ "${#tags_arr[@]}" -ne 0 ] && _socket_exists "${site}"; } || return
 
     local tags_query="GET hosts\n"
-    for tag in "${tags[@]}";
+    for tag in "${tags_arr[@]}";
     do
         tags_query="${tags_query}Stats: custom_variables ~ TAGS ${tag}\n"
     done
@@ -50,16 +50,16 @@ get_tag_stats() {
 get_check_command_stats() {
     local site="$1"
     local header="$2"
-    local service_check_commands=($(echo "$header" | tr ' ' '\n'))
+    local srv_commands=($(echo "$header" | tr ' ' '\n'))
 
-    { [ "${#service_check_commands[@]}" -ne 0 ] && _socket_exists "${site}"; } || return
+    { [ "${#srv_commands[@]}" -ne 0 ] && _socket_exists "${site}"; } || return
 
-    local service_check_commands_query="GET services\n"
-    for service_check_command in "${service_check_commands[@]}";
+    local commands_query="GET services\n"
+    for srv_cmd in "${srv_commands[@]}";
     do
-        service_check_commands_query="${service_check_commands_query}Stats: check_command ~~ ${service_check_command}$\n"
+        commands_query="${commands_query}Stats: check_command ~~ ${srv_cmd}$\n"
     done
-    echo "Service check commands|$header|$(_query_site "${site}" "${service_check_commands_query}")"
+    echo "Service check commands|$header|$(_query_site "${site}" "${commands_query}")"
 }
 
 

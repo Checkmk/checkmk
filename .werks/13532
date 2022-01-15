@@ -1,0 +1,12 @@
+Title: storeonce4x_cat_stores: Do not check filesystem if quota is disabled
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1643620493
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.0.0p20
+
+

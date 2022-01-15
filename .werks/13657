@@ -1,0 +1,13 @@
+Title: Fix failed logins for LDAP users without connector attribute
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1642241912
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0p19
+
+Werk #13508 fixed failed logins for users with an old "connector" attribute but
+took not into account, that there could be users without this attribute, e.g.
+users that were manually created and also exist in an LDAP connection.

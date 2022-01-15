@@ -1101,7 +1101,8 @@ class LDAPUserConnector(UserConnector):
         # Connect only to servers of connections, the user is configured for,
         # to avoid connection errors for unrelated servers
         user_connection_id = self._connection_id_of_user(user_id)
-        if user_connection_id is not None and user_connection_id != self.id():
+        if user_connection_id is not None and cleanup_connection_id(
+                user_connection_id) != self.id():
             return None
 
         self.connect()
@@ -1153,7 +1154,7 @@ class LDAPUserConnector(UserConnector):
         user = load_cached_profile(user_id)
         if user is None:
             return None
-        return cleanup_connection_id(user.get('connector'))
+        return user.get('connector')
 
     def _user_enforces_this_connection(self, username):
         matched_connection_ids = []

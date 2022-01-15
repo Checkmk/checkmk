@@ -11,6 +11,16 @@
 # shellcheck disable=SC2034
 CMK_VERSION="2.1.0i1"
 
+
+_socket_exists() {
+    [ -S "/omd/sites/${1}/tmp/run/live" ]
+}
+
+
+_query_site() {
+    echo -e "${2}" | waitmax 3 "/omd/sites/${1}/bin/unixcat" "/omd/sites/${1}/tmp/run/live"
+}
+
 #   .--queries-------------------------------------------------------------.
 #   |                                        _                             |
 #   |                   __ _ _   _  ___ _ __(_) ___  ___                   |
@@ -22,35 +32,33 @@ CMK_VERSION="2.1.0i1"
 
 
 get_tag_stats() {
-    local socket="$1"
-    local site="$2"
-    local header="$3"
+    local site="$1"
+    local header="$2"
     local tags=($(echo "$header" | tr ' ' '\n'))
-    if [ "${#tags[@]}" -ne 0 ] && [ -S "$socket" ];
+    if [ "${#tags[@]}" -ne 0 ] && _socket_exists "${site}";
     then
         local tags_query="GET hosts\n"
         for tag in "${tags[@]}";
         do
             tags_query="${tags_query}Stats: custom_variables ~ TAGS ${tag}\n"
         done
-        echo "Tags|$header|$(echo -e "${tags_query}" | waitmax 3 "/omd/sites/${site}/bin/unixcat" "${socket}")"
+        echo "Tags|$header|$(_query_site "${site}" "${tags_query}")"
     fi
 }
 
 
 get_check_command_stats() {
-    local socket="$1"
-    local site="$2"
-    local header="$3"
+    local site="$1"
+    local header="$2"
     local service_check_commands=($(echo "$header" | tr ' ' '\n'))
-    if [ "${#service_check_commands[@]}" -ne 0 ] && [ -S "$socket" ];
+    if [ "${#service_check_commands[@]}" -ne 0 ] && _socket_exists "${site}";
     then
         local service_check_commands_query="GET services\n"
         for service_check_command in "${service_check_commands[@]}";
         do
             service_check_commands_query="${service_check_commands_query}Stats: check_command ~~ ${service_check_command}$\n"
         done
-        echo "Service check commands|$header|$(echo -e "${service_check_commands_query}" | waitmax 3 "/omd/sites/${site}/bin/unixcat" "${socket}")"
+        echo "Service check commands|$header|$(_query_site "${site}" "${service_check_commands_query}")"
     fi
 }
 
@@ -118,10 +126,8 @@ then
             site_service_check_commands="$service_check_commands"
         fi
 
-        socket="/omd/sites/${site}/tmp/run/live"
-
         echo "[[[$site]]]"
-        get_tag_stats "$socket" "$site" "$site_tags"
-        get_check_command_stats "$socket" "$site" "$site_service_check_commands"
+        get_tag_stats "$site" "$site_tags"
+        get_check_command_stats "$site" "$site_service_check_commands"
     done
 fi

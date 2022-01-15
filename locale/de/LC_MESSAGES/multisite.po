@@ -3709,14 +3709,15 @@ msgstr "Zusätzliche IPv4-Adressen"
 msgid "Additional IPv6 addresses"
 msgstr "Zusätzliche IPv6-Adressen"
 
-msgid "Additional Information"
-msgstr "Zusätzliche Information"
-
 msgid "Additional Plugin Output"
 msgstr "Zusätzliche Pluginausgabe"
 
 msgid "Additional header lines"
 msgstr "Zusätzliche Headerzeilen"
+
+#, fuzzy
+msgid "Additional information"
+msgstr "Zusätzliche Information"
 
 msgid "Additional note that will be added while closing the alert."
 msgstr "Zusätzliche Notiz, die beim Schließen des Alerts hinzugefügt wird."
@@ -5336,6 +5337,10 @@ msgstr "April"
 
 msgid "Archive Event"
 msgstr "Ereignis archivieren"
+
+#, fuzzy
+msgid "Archive event"
+msgstr "Ereignisse archivieren"
 
 msgid "Archive events"
 msgstr "Ereignisse archivieren"
@@ -8210,9 +8215,6 @@ msgstr "Ändere Ereignisstatus zu:"
 msgid "Change OK State to"
 msgstr "Ok-Status ändern zu"
 
-msgid "Change State"
-msgstr "Änderungsstatus"
-
 msgid "Change Timerange"
 msgstr "Zeitbereich ändern"
 
@@ -8256,6 +8258,10 @@ msgstr "Passwort ändern"
 
 msgid "Change password at next login or access"
 msgstr "Passwort bei der nächsten Anmeldung oder Zugriff ändern"
+
+#, fuzzy
+msgid "Change state"
+msgstr "Änderungsstatus"
 
 msgid "Change the default user interface theme of your Checkmk installation"
 msgstr ""
@@ -10644,9 +10650,6 @@ msgstr "Kontaktgruppen"
 msgid "Contact Name"
 msgstr "Kontaktname"
 
-msgid "Contact Person"
-msgstr "Kontaktperson"
-
 msgid "Contact Selection"
 msgstr "Kontaktauswahl"
 
@@ -10677,7 +10680,8 @@ msgstr ""
 msgid "Contact groups defined in rule"
 msgstr "In der Regel definierte Kontaktgruppen"
 
-msgid "Contact groups effective (Host or rule contact groups)"
+#, fuzzy
+msgid "Contact groups effective (host or rule contact groups)"
 msgstr "Kontaktgruppen effektiv (Host oder Regel)"
 
 msgid "Contact groups in rule have precedence"
@@ -10685,6 +10689,10 @@ msgstr "Kontaktgruppen in Regel haben Priorität"
 
 msgid "Contact information"
 msgstr "Kontaktinformation"
+
+#, fuzzy
+msgid "Contact person"
+msgstr "Kontaktperson"
 
 msgid "Contactgroup Membership"
 msgstr "Kontaktgruppenmitgliedschaft"
@@ -12706,6 +12714,14 @@ msgstr "Lege deaktivierte Services als noch nicht entschieden fest"
 msgid "Declare monitored services as undecided"
 msgstr "Lege überwachte Services als noch nicht entschieden fest"
 
+#, fuzzy
+msgid "Declined reason"
+msgstr "Modell und Revision"
+
+#, python-format
+msgid "Declined requests (PID %s: %s)"
+msgstr ""
+
 msgid "Dedicated white-/blacklists for new and vanished services"
 msgstr "Dedizierte White- und Blacklist für neue und verschwundene Services"
 
@@ -14661,6 +14677,10 @@ msgstr "Windows-Firewall nicht konfigurieren"
 msgid "Do not convert case"
 msgstr "Groß-/Kleinschreibung nicht umwandeln"
 
+#, fuzzy
+msgid "Do not create hosts"
+msgstr "lege keine Gateway-Hosts an"
+
 msgid "Do not deploy AD-Replication plugin"
 msgstr "Plugin für AD-Replikation nicht ausrollen"
 
@@ -15923,6 +15943,10 @@ msgstr "Verbindung bearbeiten"
 msgid "Edit contact group"
 msgstr "Kontaktgruppe Bearbeiten"
 
+#, fuzzy
+msgid "Edit credential"
+msgstr "Anmeldedaten anbinden"
+
 msgid "Edit custom graph"
 msgstr "Benutzergraph editieren"
 
@@ -16088,6 +16112,10 @@ msgstr "Diesen Sicherungs-Job bearbeiten"
 
 msgid "Edit this backup target"
 msgstr "Diese Sicherungsziel bearbeiten"
+
+#, fuzzy
+msgid "Edit this credential"
+msgstr "Dieses Element löschen"
 
 msgid "Edit this customer"
 msgstr "Diesen Kunden bearbeiten"
@@ -17057,10 +17085,12 @@ msgstr "Eventkonsolen-Regeln"
 msgid "Event Console settings"
 msgstr "Eventkonsole Einstellungen"
 
-msgid "Event Console: Current Events"
+#, fuzzy
+msgid "Event Console: Current events"
 msgstr "Event Console: Aktuelle Ereignisse"
 
-msgid "Event Console: Event History"
+#, fuzzy
+msgid "Event Console: Event history"
 msgstr "Event Console: Ereignisverlauf"
 
 msgid "Event Console: Generic"
@@ -17076,23 +17106,11 @@ msgstr "Event Console: SNMP-Traps"
 msgid "Event Daemon is running."
 msgstr "Ereignis Daemon läuft."
 
-msgid "Event Details"
-msgstr "Details des Events"
-
 msgid "Event History"
 msgstr "Ereignisgeschichte"
 
-msgid "Event History Entry"
-msgstr "Eintrag in der Ereignisgeschichte"
-
-msgid "Event History of Host"
-msgstr "Ereignisgeschichte von Host"
-
 msgid "Event ID"
 msgstr "Ereignis ID"
-
-msgid "Event Icons"
-msgstr "Ereignissymbole"
 
 msgid "Event Log"
 msgstr "Ereignisprotokoll"
@@ -17118,14 +17136,30 @@ msgstr "Ereignisserzeugung"
 msgid "Event database"
 msgstr "Event-Datenbank"
 
+#, fuzzy
+msgid "Event details"
+msgstr "Details des Events"
+
 msgid "Event handlers"
 msgstr "Ereignisbehandlung"
+
+#, fuzzy
+msgid "Event history entry"
+msgstr "Eintrag in der Ereignisgeschichte"
 
 msgid "Event history lifetime"
 msgstr "Ereignisverlauf: Lebenszeit"
 
 msgid "Event history logfile rotation"
 msgstr "Ereignisverlauf: Rotation der Logdatei"
+
+#, fuzzy
+msgid "Event history of host"
+msgstr "Ereignisgeschichte von Host"
+
+#, fuzzy
+msgid "Event icons"
+msgstr "Ereignissymbole"
 
 msgid "Event processing time"
 msgstr "Ereignissverarbeitungszeit"
@@ -17150,18 +17184,19 @@ msgstr "Ereignisse"
 msgid "Events of Application \"%s\" on Host %s"
 msgstr "Ereignisse von Anwendung \"%s\" auf %s"
 
-msgid "Events of Host"
-msgstr "Ereignisse von Host"
-
 #, python-format
 msgid "Events of Host %s"
 msgstr "Ereignisse von Host %s"
 
-msgid "Events of Monitored Host"
-msgstr "Ereignisse von überwachtem Host"
+msgid "Events of host"
+msgstr "Ereignisse von Host"
 
 msgid "Events of host & services"
 msgstr "Ereignisse von Hosts/Services"
+
+#, fuzzy
+msgid "Events of monitored host"
+msgstr "Ereignisse von überwachtem Host"
 
 msgid "Events of recent 4 hours"
 msgstr "Ereignisse der letzten 4 Std."
@@ -18638,6 +18673,10 @@ msgstr "Klappbarer Baum"
 
 msgid "Folder"
 msgstr "Ordner"
+
+#, fuzzy, python-format
+msgid "Folder %r does not exist."
+msgstr "Der Ordner %s existiert nicht"
 
 #, python-format
 msgid "Folder %s does not exist"
@@ -20339,10 +20378,13 @@ msgstr ""
 "Hier legen Sie fest wie Sie über Host-/Serviceprobleme (und andere "
 "Ereignisse) alarmiert werden möchten."
 
+#, fuzzy
 msgid ""
-"Here you can configure percentual levels for CPU request utilization and CPU "
-"limit utilization, respectively."
+"Here you can configure levels for CPU request utilization and CPU limit "
+"utilization, respectively."
 msgstr ""
+"Hier können Sie Schwellwerte für CPU-Auslastung für die einzelnen Kerne "
+"festlegen"
 
 msgid ""
 "Here you can configure the 3.3V and 12V voltage levels for each chassis."
@@ -21354,6 +21396,10 @@ msgstr "Hostalarm"
 msgid "Host alias"
 msgstr "Hostalias"
 
+#, fuzzy
+msgid "Host already exist"
+msgstr "Hostname %s existiert bereits"
+
 msgid "Host and Service Events"
 msgstr "Host/Service-Ereignisse"
 
@@ -21672,6 +21718,10 @@ msgid "Host status"
 msgstr "Hoststatus"
 
 #, fuzzy
+msgid "Host successfully created"
+msgstr "Suchindex erfolgreich aktualisiert"
+
+#, fuzzy
 msgid "Host tag"
 msgstr "Hostmerkmal:"
 
@@ -21746,6 +21796,10 @@ msgstr "Hostname / IP-Adresse des Graphite-Servers"
 msgid "Hostname computation"
 msgstr "Matchen der Hostnamen"
 
+#, fuzzy
+msgid "Hostname conflict"
+msgstr "Hostname oder Alias"
+
 #, fuzzy, python-format
 msgid "Hostname contains illegal characters: %s"
 msgstr "Ihr Skriptname enthält ungültige Zeichen."
@@ -21806,10 +21860,6 @@ msgstr "Hosts Verbindungen (als Client)"
 
 msgid "Hosts Contacts (as Server)"
 msgstr "Hosts Verbindungen (als Server)"
-
-#, fuzzy
-msgid "Hosts already exist"
-msgstr "Hostname %s existiert bereits"
 
 msgid "Hosts and Folders"
 msgstr "Hosts und Verzeichnisse"
@@ -21889,10 +21939,6 @@ msgstr "Hostname/IP Adresse"
 
 msgid "Hosts not using Inline-SNMP"
 msgstr "Hosts, die kein inline-SNMP verwenden"
-
-#, fuzzy
-msgid "Hosts successfully created"
-msgstr "Suchindex erfolgreich aktualisiert"
 
 msgid "Hosts that contacted us during the last 24 hours"
 msgstr "Hosts, die uns innerhalb der letzten 24 Stunden kontaktiert haben."
@@ -28562,9 +28608,6 @@ msgstr "Hauptschalter"
 msgid "Match"
 msgstr "Passend"
 
-msgid "Match Groups"
-msgstr "Matchgruppen"
-
 msgid "Match admin states (SNMP with 64-bit counters only)"
 msgstr "Admin-Zustände abgleichen (nur SNMP mit 64-Bit-Zählern)"
 
@@ -28616,6 +28659,10 @@ msgstr "Ordner"
 
 msgid "Match folders"
 msgstr "Ordner einbeziehen"
+
+#, fuzzy
+msgid "Match groups"
+msgstr "Matchgruppen"
 
 msgid "Match host"
 msgstr "Passender Host"
@@ -31736,6 +31783,10 @@ msgstr "Nicht aktiviert"
 msgid "Not executed in OMD environment!"
 msgstr "Nicht in Instanz ausgeführt!"
 
+#, fuzzy
+msgid "Not found"
+msgstr "Kein Gateway gefunden"
+
 msgid "Not locked"
 msgstr "Nicht gesperrt"
 
@@ -33486,11 +33537,12 @@ msgstr "Ursprung"
 msgid "Original %s"
 msgstr "Original %s"
 
+#, fuzzy
+msgid "Original IP address"
+msgstr "Ursprüngliche IP-Adresse"
+
 msgid "Original IP address the event was received from"
 msgstr "Originale IP-Adresse, von der die Nachricht empfangen wurde"
-
-msgid "Original IP-Address"
-msgstr "Ursprüngliche IP-Adresse"
 
 msgid "Original Text"
 msgstr "Originaltext"
@@ -36874,7 +36926,8 @@ msgstr "Empfangene Mails"
 msgid "Received messages"
 msgstr "Erhaltene Nachrichten"
 
-msgid "Recent Event History"
+#, fuzzy
+msgid "Recent event history"
 msgstr "Jüngste Ereignisgeschichte"
 
 msgid "Recent hardware/software inventory"
@@ -38976,10 +39029,6 @@ msgstr "Safenet NTLS Links"
 msgid "Salesforce"
 msgstr "Salesforce"
 
-#, fuzzy
-msgid "Same hostname"
-msgstr "Hostnamen benutzen"
-
 msgid "Same times for all weekdays"
 msgstr "Gleiche Zeiten für alle Wochentage"
 
@@ -40157,8 +40206,9 @@ msgstr "Service-Tags"
 msgid "Service tags (with titles)"
 msgstr "Hostmerkmake (mit Titeln)"
 
-msgid "Service-Level"
-msgstr "Service-Level"
+#, fuzzy
+msgid "Service-level"
+msgstr "Servicelevel"
 
 msgid "Service: "
 msgstr "Service: "
@@ -41333,10 +41383,18 @@ msgstr "Einfache Checks für BIOS/Hardware Fehler"
 msgid "Simulate for site"
 msgstr "Für Instanz simulieren"
 
+#, fuzzy
+msgid "Simulate this bundle"
+msgstr "Lösche Regel"
+
 msgid "Simulating SNMP by using a stored SNMP walk"
 msgstr "Simuliere SNMP (Verwende gesp. SNMP Walk)"
 
 msgid "Simulation mode"
+msgstr "Simulationsmodus"
+
+#, fuzzy
+msgid "Simulation result"
 msgstr "Simulationsmodus"
 
 msgid "Simultanous activation of changes"
@@ -43908,6 +43966,10 @@ msgstr "Agenten erfolgreich gebacken"
 msgid "Successfully changed password."
 msgstr "Das Passwort wurde erfolgreich geändert."
 
+#, fuzzy
+msgid "Successfully changed the credential."
+msgstr "Das Passwort wurde erfolgreich geändert."
+
 #, python-format
 msgid ""
 "Successfully created the host. Now you should do a <a href=\"%s\">service "
@@ -46165,6 +46227,10 @@ msgstr ""
 "Die Erstellung eines Ereignisses wird um dieses Zeitintervall verzögert. Das "
 "macht nur bei Ereignissen Sinn die durch eine negative Regel abgebrochen "
 "werde können."
+
+#, fuzzy
+msgid "The credential does not exist"
+msgstr "Das Element ist nicht vorhanden."
 
 msgid "The credentials for api calls with authentication."
 msgstr "Die Anmeldedaten für Api-Aufrufe mit Authentifizierung."
@@ -51654,10 +51720,6 @@ msgstr ""
 msgid "This rule does a cancelling match."
 msgstr "Diese Regel bricht den Treffervorgang ab."
 
-#, fuzzy
-msgid "This rule does not match."
-msgstr "Diese Regel trifft nicht zu"
-
 #, python-format
 msgid "This rule does not match: %s"
 msgstr "Diese Regel trifft nicht zu: %s"
@@ -54592,6 +54654,9 @@ msgstr "UTC -9 Stunden"
 msgid "UTF-8"
 msgstr "UTF-8"
 
+msgid "UUID"
+msgstr ""
+
 #, fuzzy
 msgid "UUID and mountpoint"
 msgstr "Ist ein Mount-Point"
@@ -55087,7 +55152,8 @@ msgstr "Auf und ab (lang)"
 msgid "Update"
 msgstr "Aktualisierung"
 
-msgid "Update & Acknowledge"
+#, fuzzy
+msgid "Update & acknowledge"
 msgstr "Aktualisieren & Bestätigen"
 
 msgid "Update DNS cache"
@@ -55944,9 +56010,6 @@ msgstr "Verwende STS AssumeRole um eine andere IAM Rolle zu übernehmen"
 msgid "Use TLS encryption (Linux)"
 msgstr "Keine Verschlüsselung verwenden"
 
-msgid "Use TLS encryption fall back to plain text"
-msgstr ""
-
 msgid "Use TLS for IMAP authentification"
 msgstr "TLS für IMAP-Authentifikation verwenden"
 
@@ -56589,6 +56652,9 @@ msgstr ""
 "bearbeiten kann. Wenn Sie viele parallele Anfragen haben, kann es gut sein "
 "diesen Wert anzupassen. Alledings müßsen Sie darauf achten, dass das System "
 "den Speicherbedarf der Apache-Prozesse erfüllen kann."
+
+msgid "Use unverified TLS encryption, fall back to plain text"
+msgstr ""
 
 #, fuzzy
 msgid "Use volume name and mountpoint"
@@ -62768,9 +62834,6 @@ msgstr ""
 msgid "over treshold"
 msgstr "Schwellwert überschritten"
 
-msgid "owner"
-msgstr "Eigentümer"
-
 msgid "packets/s"
 msgstr "Pkt/s"
 
@@ -63372,6 +63435,25 @@ msgstr "z/OS"
 #, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. Alle Rechte vorbehalten."
+
+#, fuzzy
+#~| msgid "The rule does not match"
+#~ msgid "This rule does not match."
+#~ msgstr "Diese Regel trifft nicht zu"
+
+#~ msgid "Events of Host"
+#~ msgstr "Ereignisse von Host"
+
+#, fuzzy
+#~| msgid "Use hostname"
+#~ msgid "Same hostname"
+#~ msgstr "Hostnamen benutzen"
+
+#~ msgid "Service-Level"
+#~ msgstr "Service-Level"
+
+#~ msgid "owner"
+#~ msgstr "Eigentümer"
 
 #, fuzzy
 #~| msgid "Apply Lag"
@@ -64535,9 +64617,6 @@ msgstr "© %s tribe29 GmbH. Alle Rechte vorbehalten."
 
 #~ msgid "Event was deleted automatically"
 #~ msgstr "Ereignis wurde automatisch gelöscht"
-
-#~ msgid "Events of host"
-#~ msgstr "Ereignisse von Host"
 
 #~ msgid "Exchanges"
 #~ msgstr "Wechsel"
@@ -69031,9 +69110,6 @@ msgstr "© %s tribe29 GmbH. Alle Rechte vorbehalten."
 #~ msgid "Hostname of original event"
 #~ msgstr "Hostname des ursprünglichen Events"
 
-#~ msgid "Hostname or Alias"
-#~ msgstr "Hostname oder Alias"
-
 #~ msgid "Hosts grouped by hostgroups, with a brief list of all services"
 #~ msgstr ""
 #~ "Hosts gruppiert nach Hostgruppen, mit einer knappen Liste aller Services"
@@ -71282,9 +71358,6 @@ msgstr "© %s tribe29 GmbH. Alle Rechte vorbehalten."
 
 #~ msgid "New parents configured"
 #~ msgstr "Neue Parents konfiguriert"
-
-#~ msgid "No gateway found"
-#~ msgstr "Kein Gateway gefunden"
 
 #~ msgid "Nonheap Memory Levels"
 #~ msgstr "Nonheap Speicherlevel"

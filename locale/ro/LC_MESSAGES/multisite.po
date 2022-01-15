@@ -3519,14 +3519,15 @@ msgstr "Linii de header adiționale"
 msgid "Additional IPv6 addresses"
 msgstr "Linii de header adiționale"
 
-msgid "Additional Information"
-msgstr "Informații Adiționale"
-
 msgid "Additional Plugin Output"
 msgstr "Output adițional de la Plugin"
 
 msgid "Additional header lines"
 msgstr "Linii de header adiționale"
+
+#, fuzzy
+msgid "Additional information"
+msgstr "Informații Adiționale"
 
 msgid "Additional note that will be added while closing the alert."
 msgstr ""
@@ -5037,6 +5038,10 @@ msgstr ""
 
 msgid "Archive Event"
 msgstr ""
+
+#, fuzzy
+msgid "Archive event"
+msgstr "Adaugă element"
 
 msgid "Archive events"
 msgstr ""
@@ -7690,9 +7695,6 @@ msgstr ""
 msgid "Change OK State to"
 msgstr ""
 
-msgid "Change State"
-msgstr ""
-
 msgid "Change Timerange"
 msgstr ""
 
@@ -7740,6 +7742,10 @@ msgstr "Parola"
 
 msgid "Change password at next login or access"
 msgstr ""
+
+#, fuzzy
+msgid "Change state"
+msgstr "Nici o schimbare"
 
 msgid "Change the default user interface theme of your Checkmk installation"
 msgstr ""
@@ -9974,9 +9980,6 @@ msgstr ""
 msgid "Contact Name"
 msgstr ""
 
-msgid "Contact Person"
-msgstr ""
-
 msgid "Contact Selection"
 msgstr ""
 
@@ -9999,14 +10002,19 @@ msgstr ""
 msgid "Contact groups defined in rule"
 msgstr ""
 
-msgid "Contact groups effective (Host or rule contact groups)"
-msgstr ""
+#, fuzzy
+msgid "Contact groups effective (host or rule contact groups)"
+msgstr "Eticheta de grup nou"
 
 msgid "Contact groups in rule have precedence"
 msgstr ""
 
 #, fuzzy
 msgid "Contact information"
+msgstr "Adaugă informații despre contact"
+
+#, fuzzy
+msgid "Contact person"
 msgstr "Adaugă informații despre contact"
 
 msgid "Contactgroup Membership"
@@ -12117,6 +12125,13 @@ msgstr ""
 msgid "Declare monitored services as undecided"
 msgstr "nemonitorizat"
 
+msgid "Declined reason"
+msgstr ""
+
+#, python-format
+msgid "Declined requests (PID %s: %s)"
+msgstr ""
+
 msgid "Dedicated white-/blacklists for new and vanished services"
 msgstr ""
 
@@ -14056,6 +14071,10 @@ msgstr ""
 msgid "Do not convert case"
 msgstr ""
 
+#, fuzzy
+msgid "Do not create hosts"
+msgstr "(Nu trimite site-ului de la distanță)"
+
 msgid "Do not deploy AD-Replication plugin"
 msgstr ""
 
@@ -15289,6 +15308,10 @@ msgid "Edit contact group"
 msgstr ""
 
 #, fuzzy
+msgid "Edit credential"
+msgstr "Adaugă comentariu"
+
+#, fuzzy
 msgid "Edit custom graph"
 msgstr "Atribute personalizate"
 
@@ -15470,6 +15493,10 @@ msgstr ""
 #, fuzzy
 msgid "Edit this backup target"
 msgstr "Adaugă element"
+
+#, fuzzy
+msgid "Edit this credential"
+msgstr "Sterge Elementul"
 
 #, fuzzy
 msgid "Edit this customer"
@@ -16418,11 +16445,13 @@ msgstr "Acces la Consola de Evenimente"
 msgid "Event Console settings"
 msgstr "Acces la Consola de Evenimente"
 
-msgid "Event Console: Current Events"
-msgstr ""
+#, fuzzy
+msgid "Event Console: Current events"
+msgstr "Acces la Consola de Evenimente"
 
-msgid "Event Console: Event History"
-msgstr ""
+#, fuzzy
+msgid "Event Console: Event history"
+msgstr "Acces la Consola de Evenimente"
 
 #, fuzzy
 msgid "Event Console: Generic"
@@ -16438,22 +16467,10 @@ msgstr ""
 msgid "Event Daemon is running."
 msgstr ""
 
-msgid "Event Details"
-msgstr ""
-
 msgid "Event History"
 msgstr ""
 
-msgid "Event History Entry"
-msgstr ""
-
-msgid "Event History of Host"
-msgstr ""
-
 msgid "Event ID"
-msgstr ""
-
-msgid "Event Icons"
 msgstr ""
 
 msgid "Event Log"
@@ -16484,14 +16501,31 @@ msgstr "Numele Elementului"
 msgid "Event database"
 msgstr ""
 
+#, fuzzy
+msgid "Event details"
+msgstr "servicii"
+
 msgid "Event handlers"
 msgstr ""
+
+#, fuzzy
+msgid "Event history entry"
+msgstr "Adaungă un nou element"
 
 msgid "Event history lifetime"
 msgstr ""
 
 msgid "Event history logfile rotation"
 msgstr ""
+
+# georgem ##############
+#, fuzzy
+msgid "Event history of host"
+msgstr "Grup nou"
+
+#, fuzzy
+msgid "Event icons"
+msgstr "randuri"
 
 #, fuzzy
 msgid "Event processing time"
@@ -16519,18 +16553,21 @@ msgstr ""
 msgid "Events of Application \"%s\" on Host %s"
 msgstr ""
 
-msgid "Events of Host"
-msgstr ""
-
 #, python-format
 msgid "Events of Host %s"
 msgstr ""
 
-msgid "Events of Monitored Host"
-msgstr ""
+#, fuzzy
+msgid "Events of host"
+msgstr "% / gamă"
 
 msgid "Events of host & services"
 msgstr ""
+
+# georgem ##############
+#, fuzzy
+msgid "Events of monitored host"
+msgstr "Grup nou"
 
 msgid "Events of recent 4 hours"
 msgstr ""
@@ -18041,6 +18078,10 @@ msgstr "Proprietatile Folderului"
 
 msgid "Folder"
 msgstr ""
+
+#, fuzzy, python-format
+msgid "Folder %r does not exist."
+msgstr "Un utilizator cu id-ul \"%s\" nu există."
 
 #, fuzzy, python-format
 msgid "Folder %s does not exist"
@@ -19605,8 +19646,8 @@ msgid ""
 msgstr ""
 
 msgid ""
-"Here you can configure percentual levels for CPU request utilization and CPU "
-"limit utilization, respectively."
+"Here you can configure levels for CPU request utilization and CPU limit "
+"utilization, respectively."
 msgstr ""
 
 msgid ""
@@ -20403,6 +20444,10 @@ msgstr "Numele Elementului"
 msgid "Host alias"
 msgstr ""
 
+#, fuzzy
+msgid "Host already exist"
+msgstr "Un director cu acest nume deja există."
+
 msgid "Host and Service Events"
 msgstr ""
 
@@ -20744,6 +20789,10 @@ msgid "Host status"
 msgstr ""
 
 #, fuzzy
+msgid "Host successfully created"
+msgstr "Portul TCP pentru conexiune"
+
+#, fuzzy
 msgid "Host tag"
 msgstr "Numele Elementului"
 
@@ -20822,6 +20871,10 @@ msgstr ""
 msgid "Hostname computation"
 msgstr "foloseste configuratia locala"
 
+#, fuzzy
+msgid "Hostname conflict"
+msgstr "Grup nou"
+
 #, python-format
 msgid "Hostname contains illegal characters: %s"
 msgstr ""
@@ -20881,10 +20934,6 @@ msgstr ""
 
 msgid "Hosts Contacts (as Server)"
 msgstr ""
-
-#, fuzzy
-msgid "Hosts already exist"
-msgstr "Un director cu acest nume deja există."
 
 #, fuzzy
 msgid "Hosts and Folders"
@@ -20950,10 +20999,6 @@ msgstr ""
 
 msgid "Hosts not using Inline-SNMP"
 msgstr ""
-
-#, fuzzy
-msgid "Hosts successfully created"
-msgstr "Portul TCP pentru conexiune"
 
 msgid "Hosts that contacted us during the last 24 hours"
 msgstr ""
@@ -27069,9 +27114,6 @@ msgstr ""
 msgid "Match"
 msgstr ""
 
-msgid "Match Groups"
-msgstr ""
-
 msgid "Match admin states (SNMP with 64-bit counters only)"
 msgstr ""
 
@@ -27125,6 +27167,10 @@ msgstr "Folder nou"
 
 msgid "Match folders"
 msgstr ""
+
+#, fuzzy
+msgid "Match groups"
+msgstr " Se potrivește grupurilor: %s"
 
 msgid "Match host"
 msgstr ""
@@ -30346,6 +30392,10 @@ msgstr ""
 msgid "Not executed in OMD environment!"
 msgstr ""
 
+#, fuzzy
+msgid "Not found"
+msgstr "de sus in jos"
+
 msgid "Not locked"
 msgstr ""
 
@@ -32120,10 +32170,11 @@ msgstr ""
 msgid "Original %s"
 msgstr ""
 
-msgid "Original IP address the event was received from"
-msgstr ""
+#, fuzzy
+msgid "Original IP address"
+msgstr "Linii de header adiționale"
 
-msgid "Original IP-Address"
+msgid "Original IP address the event was received from"
 msgstr ""
 
 msgid "Original Text"
@@ -35431,8 +35482,9 @@ msgstr ""
 msgid "Received messages"
 msgstr ""
 
-msgid "Recent Event History"
-msgstr ""
+#, fuzzy
+msgid "Recent event history"
+msgstr "Verificări active"
 
 msgid "Recent hardware/software inventory"
 msgstr ""
@@ -37539,10 +37591,6 @@ msgstr ""
 msgid "Salesforce"
 msgstr " (aplicare forțată)"
 
-#, fuzzy
-msgid "Same hostname"
-msgstr "foloseste numele portului"
-
 msgid "Same times for all weekdays"
 msgstr ""
 
@@ -38753,8 +38801,9 @@ msgstr "Grup nou"
 msgid "Service tags (with titles)"
 msgstr "Numele Elementului"
 
-msgid "Service-Level"
-msgstr ""
+#, fuzzy
+msgid "Service-level"
+msgstr "Numele Elementului"
 
 #, fuzzy
 msgid "Service: "
@@ -39903,10 +39952,16 @@ msgstr ""
 msgid "Simulate for site"
 msgstr ""
 
+msgid "Simulate this bundle"
+msgstr ""
+
 msgid "Simulating SNMP by using a stored SNMP walk"
 msgstr ""
 
 msgid "Simulation mode"
+msgstr ""
+
+msgid "Simulation result"
 msgstr ""
 
 msgid "Simultanous activation of changes"
@@ -42263,6 +42318,10 @@ msgstr ""
 msgid "Successfully changed password."
 msgstr "Parola"
 
+#, fuzzy
+msgid "Successfully changed the credential."
+msgstr "Parola"
+
 #, python-format
 msgid ""
 "Successfully created the host. Now you should do a <a href=\"%s\">service "
@@ -44160,6 +44219,10 @@ msgid ""
 "The creation of an event will be delayed by this time period. This does only "
 "make sense for events that can be cancelled by a negative rule."
 msgstr ""
+
+#, fuzzy
+msgid "The credential does not exist"
+msgstr "Un utilizator cu id-ul \"%s\" nu există."
 
 msgid "The credentials for api calls with authentication."
 msgstr ""
@@ -48265,10 +48328,6 @@ msgstr ""
 msgid "This rule does a cancelling match."
 msgstr ""
 
-#, fuzzy
-msgid "This rule does not match."
-msgstr "Un utilizator cu id-ul \"%s\" nu există."
-
 #, python-format
 msgid "This rule does not match: %s"
 msgstr ""
@@ -50768,6 +50827,9 @@ msgstr ""
 msgid "UTF-8"
 msgstr ""
 
+msgid "UUID"
+msgstr ""
+
 #, fuzzy
 msgid "UUID and mountpoint"
 msgstr " pe siteul de monitorizare: "
@@ -51224,7 +51286,7 @@ msgid "Update"
 msgstr ""
 
 #, fuzzy
-msgid "Update & Acknowledge"
+msgid "Update & acknowledge"
 msgstr "Confirmă"
 
 #, fuzzy
@@ -52154,9 +52216,6 @@ msgstr ""
 msgid "Use TLS encryption (Linux)"
 msgstr "Salveaza configuratia manuala a verificarilor"
 
-msgid "Use TLS encryption fall back to plain text"
-msgstr ""
-
 msgid "Use TLS for IMAP authentification"
 msgstr ""
 
@@ -52696,6 +52755,9 @@ msgid ""
 "not always better. The apache processes normally need a decent amount of "
 "memory and you should only configure as many apache processes as your system "
 "can handle in high load situations."
+msgstr ""
+
+msgid "Use unverified TLS encryption, fall back to plain text"
 msgstr ""
 
 #, fuzzy
@@ -57982,9 +58044,6 @@ msgstr ""
 msgid "over treshold"
 msgstr ""
 
-msgid "owner"
-msgstr ""
-
 msgid "packets/s"
 msgstr ""
 
@@ -58608,6 +58667,14 @@ msgstr "z/OS"
 #, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr ""
+
+#, fuzzy
+#~ msgid "This rule does not match."
+#~ msgstr "Un utilizator cu id-ul \"%s\" nu există."
+
+#, fuzzy
+#~ msgid "Same hostname"
+#~ msgstr "foloseste numele portului"
 
 #, fuzzy
 #~| msgid "%d changes"
@@ -59675,19 +59742,9 @@ msgstr ""
 #~ msgid "Service check durations"
 #~ msgstr "Salveaza configuratia manuala a verificarilor"
 
-# georgem ##############
-#, fuzzy
-#~ msgid "Service graphs of host"
-#~ msgstr "Grup nou"
-
 #, fuzzy
 #~ msgid "Services in downtime"
 #~ msgstr "Numele Elementului"
-
-# georgem ##############
-#, fuzzy
-#~ msgid "Services of down hosts"
-#~ msgstr "Grup nou"
 
 #, fuzzy
 #~ msgid "Single host aggregations"
@@ -60028,10 +60085,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Hide context"
 #~ msgstr "cu context"
-
-#, fuzzy
-#~ msgid "Hide details"
-#~ msgstr "servicii"
 
 #, fuzzy
 #~ msgid "Hide discovered service labels"
@@ -60508,10 +60561,6 @@ msgstr ""
 #~ msgstr "Adaugă model/tipar"
 
 #, fuzzy
-#~ msgid "Archive an event"
-#~ msgstr "Adaugă element"
-
-#, fuzzy
 #~ msgid "Author comment"
 #~ msgstr "Comentariu adhoc"
 
@@ -60982,10 +61031,6 @@ msgstr ""
 #~ msgstr "Numele elementului pentru eveniment"
 
 #, fuzzy
-#~ msgid "Hostname or Alias"
-#~ msgstr "Grup nou"
-
-#, fuzzy
 #~ msgid "Hosts/Service visibility (Webservice, Deprecated)"
 #~ msgstr "Vizibilitatea Elementelor/Serviciilor </br> (Serviciu Web)"
 
@@ -61279,20 +61324,12 @@ msgstr ""
 #~ msgstr "Starea porturilor pentru inventariere"
 
 #, fuzzy
-#~ msgid "Optional selection of host contact group"
-#~ msgstr "Eticheta de grup nou"
-
-#, fuzzy
 #~ msgid "Optional selection of host group"
 #~ msgstr "O descriere sau comentariu despre acest element"
 
 #, fuzzy
 #~ msgid "Optional selection of service group"
 #~ msgstr "Afectat de serviciu"
-
-#, fuzzy
-#~ msgid "Original IP Address of event"
-#~ msgstr "Linii de header adiționale"
 
 #, fuzzy
 #~ msgid "Package Name"
@@ -61887,10 +61924,6 @@ msgstr ""
 
 #~ msgid "'%s' is not a valid email address."
 #~ msgstr "'%s' nu este o adresă de email validă."
-
-#, fuzzy
-#~ msgid "(no Service level)"
-#~ msgstr "Numele Elementului"
 
 #~ msgid "(obsolete) Link to PNP4Nagios"
 #~ msgstr "(învechit) Link câtre PNP4Nagios"

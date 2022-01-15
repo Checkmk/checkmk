@@ -3572,14 +3572,15 @@ msgstr "追加のIPv4アドレス"
 msgid "Additional IPv6 addresses"
 msgstr "追加のIPv6アドレス"
 
-msgid "Additional Information"
-msgstr "追加情報"
-
 msgid "Additional Plugin Output"
 msgstr "追加のプラグイン出力"
 
 msgid "Additional header lines"
 msgstr "追加のヘッダー行"
+
+#, fuzzy
+msgid "Additional information"
+msgstr "追加情報"
 
 msgid "Additional note that will be added while closing the alert."
 msgstr "アラートを閉じるときに追加される追加のメモ"
@@ -5143,6 +5144,10 @@ msgstr "4月"
 
 msgid "Archive Event"
 msgstr "アーカイブイベント"
+
+#, fuzzy
+msgid "Archive event"
+msgstr "イベントのアーカイブ"
 
 msgid "Archive events"
 msgstr "イベントのアーカイブ"
@@ -7884,9 +7889,6 @@ msgstr "イベントの状態を次のように変更します。"
 msgid "Change OK State to"
 msgstr "OK状態をに変更します"
 
-msgid "Change State"
-msgstr "状態の変更"
-
 msgid "Change Timerange"
 msgstr "時間範囲の変更"
 
@@ -7930,6 +7932,10 @@ msgstr "パスワードを変更する"
 
 msgid "Change password at next login or access"
 msgstr "次回のログインまたはアクセス時にパスワードを変更する"
+
+#, fuzzy
+msgid "Change state"
+msgstr "状態の変更"
 
 msgid "Change the default user interface theme of your Checkmk installation"
 msgstr ""
@@ -10210,9 +10216,6 @@ msgstr "連絡先グループ"
 msgid "Contact Name"
 msgstr "連絡先"
 
-msgid "Contact Person"
-msgstr "コンタクトパーソン"
-
 msgid "Contact Selection"
 msgstr "連絡先の選択"
 
@@ -10242,7 +10245,8 @@ msgstr ""
 msgid "Contact groups defined in rule"
 msgstr "ルールで定義された連絡先グループ"
 
-msgid "Contact groups effective (Host or rule contact groups)"
+#, fuzzy
+msgid "Contact groups effective (host or rule contact groups)"
 msgstr "有効な連絡先グループ(ホストまたはルールの連絡先グループ)"
 
 msgid "Contact groups in rule have precedence"
@@ -10250,6 +10254,10 @@ msgstr "ルール内の連絡先グループが優先されます"
 
 msgid "Contact information"
 msgstr "連絡先"
+
+#, fuzzy
+msgid "Contact person"
+msgstr "コンタクトパーソン"
 
 msgid "Contactgroup Membership"
 msgstr "コンタクトグループメンバーシップ"
@@ -12240,6 +12248,14 @@ msgstr "無効になっているサービスを未決定として宣言する"
 msgid "Declare monitored services as undecided"
 msgstr "監視対象サービスを未決定として宣言する"
 
+#, fuzzy
+msgid "Declined reason"
+msgstr "モデルと改訂"
+
+#, python-format
+msgid "Declined requests (PID %s: %s)"
+msgstr ""
+
 msgid "Dedicated white-/blacklists for new and vanished services"
 msgstr "新規および消滅したサービス専用のホワイト/ブラックリスト"
 
@@ -14121,6 +14137,10 @@ msgstr "Windowsファイアウォールを設定しないでください"
 msgid "Do not convert case"
 msgstr "ケースを変換しないでください"
 
+#, fuzzy
+msgid "Do not create hosts"
+msgstr "ゲートウェイホストを作成しないでください"
+
 msgid "Do not deploy AD-Replication plugin"
 msgstr "AD-Replicationプラグインをデプロイしないでください"
 
@@ -15365,6 +15385,10 @@ msgstr "接続を編集する"
 msgid "Edit contact group"
 msgstr "連絡先グループを編集する"
 
+#, fuzzy
+msgid "Edit credential"
+msgstr "資格情報をバインドする"
+
 msgid "Edit custom graph"
 msgstr "カスタムグラフを編集する"
 
@@ -15529,6 +15553,10 @@ msgstr "このバックアップジョブを編集する"
 
 msgid "Edit this backup target"
 msgstr "このバックアップターゲットを編集します"
+
+#, fuzzy
+msgid "Edit this credential"
+msgstr "このエレメントを削除します"
 
 msgid "Edit this customer"
 msgstr ""
@@ -16472,10 +16500,12 @@ msgstr "イベントコンソールのルール"
 msgid "Event Console settings"
 msgstr "イベントコンソールの設定"
 
-msgid "Event Console: Current Events"
+#, fuzzy
+msgid "Event Console: Current events"
 msgstr "イベントコンソール: 現在のイベント"
 
-msgid "Event Console: Event History"
+#, fuzzy
+msgid "Event Console: Event history"
 msgstr "イベントコンソール: イベント履歴"
 
 msgid "Event Console: Generic"
@@ -16491,23 +16521,11 @@ msgstr "イベントコンソール:SNMPトラップ"
 msgid "Event Daemon is running."
 msgstr "イベントデーモンが実行されています"
 
-msgid "Event Details"
-msgstr "イベントの詳細"
-
 msgid "Event History"
 msgstr "イベント履歴"
 
-msgid "Event History Entry"
-msgstr "イベント履歴エントリ"
-
-msgid "Event History of Host"
-msgstr "ホストのイベント履歴"
-
 msgid "Event ID"
 msgstr "イベント ID"
-
-msgid "Event Icons"
-msgstr "イベントアイコン"
 
 msgid "Event Log"
 msgstr "イベントログ"
@@ -16533,14 +16551,30 @@ msgstr "イベントの作成"
 msgid "Event database"
 msgstr "イベントデータベース"
 
+#, fuzzy
+msgid "Event details"
+msgstr "イベントの詳細"
+
 msgid "Event handlers"
 msgstr "イベントハンドラー"
+
+#, fuzzy
+msgid "Event history entry"
+msgstr "イベント履歴エントリ"
 
 msgid "Event history lifetime"
 msgstr "イベント履歴の存続期間"
 
 msgid "Event history logfile rotation"
 msgstr "イベント履歴ログファイルのローテーション"
+
+#, fuzzy
+msgid "Event history of host"
+msgstr "ホストのイベント履歴"
+
+#, fuzzy
+msgid "Event icons"
+msgstr "イベントアイコン"
 
 msgid "Event processing time"
 msgstr "イベント処理時間"
@@ -16565,18 +16599,19 @@ msgstr "イベント"
 msgid "Events of Application \"%s\" on Host %s"
 msgstr "ホスト %s でのアプリケーション \"%s\"のイベント"
 
-msgid "Events of Host"
-msgstr "ホストのイベント"
-
 #, python-format
 msgid "Events of Host %s"
 msgstr "ホスト %sのイベント"
 
-msgid "Events of Monitored Host"
-msgstr "監視対象ホストのイベント"
+msgid "Events of host"
+msgstr "ホストのイベント"
 
 msgid "Events of host & services"
 msgstr "ホストとサービスのイベント"
+
+#, fuzzy
+msgid "Events of monitored host"
+msgstr "監視対象ホストのイベント"
 
 msgid "Events of recent 4 hours"
 msgstr "最近の4時間のイベント"
@@ -18029,6 +18064,10 @@ msgstr "フォルダツリー"
 
 msgid "Folder"
 msgstr "フォルダ"
+
+#, fuzzy, python-format
+msgid "Folder %r does not exist."
+msgstr "フォルダ %sは存在しません"
 
 #, python-format
 msgid "Folder %s does not exist"
@@ -19642,10 +19681,11 @@ msgstr ""
 "ここでは、ホストとサービスの問題、およびその他の監視イベントについて通知する"
 "方法を構成できます。"
 
+#, fuzzy
 msgid ""
-"Here you can configure percentual levels for CPU request utilization and CPU "
-"limit utilization, respectively."
-msgstr ""
+"Here you can configure levels for CPU request utilization and CPU limit "
+"utilization, respectively."
+msgstr "ここでは、シングルコアのCPU使用率のレベルを設定できます"
 
 msgid ""
 "Here you can configure the 3.3V and 12V voltage levels for each chassis."
@@ -20568,6 +20608,10 @@ msgstr "ホストアラート"
 msgid "Host alias"
 msgstr "ホストエイリアス"
 
+#, fuzzy
+msgid "Host already exist"
+msgstr "ホスト %s はすでにフォルダ %s に存在します"
+
 msgid "Host and Service Events"
 msgstr "ホストおよびサービスイベント"
 
@@ -20886,6 +20930,10 @@ msgid "Host status"
 msgstr "ホストステータス"
 
 #, fuzzy
+msgid "Host successfully created"
+msgstr "検索インデックスが正常に更新されました"
+
+#, fuzzy
 msgid "Host tag"
 msgstr "ホストタグ:"
 
@@ -20960,6 +21008,10 @@ msgstr ""
 msgid "Hostname computation"
 msgstr "ホスト名の一致"
 
+#, fuzzy
+msgid "Hostname conflict"
+msgstr "デバイスのホスト名"
+
 #, python-format
 msgid "Hostname contains illegal characters: %s"
 msgstr ""
@@ -21019,10 +21071,6 @@ msgstr "連絡したホスト(クライアントとして)"
 
 msgid "Hosts Contacts (as Server)"
 msgstr "連絡先をホストします(サーバーとして)"
-
-#, fuzzy
-msgid "Hosts already exist"
-msgstr "ホスト %s はすでにフォルダ %s に存在します"
 
 msgid "Hosts and Folders"
 msgstr "ホストとフォルダー"
@@ -21101,10 +21149,6 @@ msgstr "ホスト名/IPアドレス"
 
 msgid "Hosts not using Inline-SNMP"
 msgstr "Inline-SNMPを使用しないホスト"
-
-#, fuzzy
-msgid "Hosts successfully created"
-msgstr "検索インデックスが正常に更新されました"
 
 msgid "Hosts that contacted us during the last 24 hours"
 msgstr "過去24時間に私たちに連絡したホスト"
@@ -27487,10 +27531,6 @@ msgstr "マスタースイッチ"
 msgid "Match"
 msgstr "一致"
 
-#, fuzzy
-msgid "Match Groups"
-msgstr "マッチグループ"
-
 msgid "Match admin states (SNMP with 64-bit counters only)"
 msgstr "adminステータスの一致(64ビットカウンターのみのSNMP)"
 
@@ -27542,6 +27582,10 @@ msgstr "一致フォルダー"
 
 msgid "Match folders"
 msgstr "フォルダーを一致させる"
+
+#, fuzzy
+msgid "Match groups"
+msgstr "マッチグループ"
 
 msgid "Match host"
 msgstr "ホストと一致する"
@@ -30603,6 +30647,10 @@ msgstr "有効になっていません"
 msgid "Not executed in OMD environment!"
 msgstr "OMD環境では実行されません！"
 
+#, fuzzy
+msgid "Not found"
+msgstr "データが見つかりません"
+
 msgid "Not locked"
 msgstr "ロックされていません"
 
@@ -32300,11 +32348,12 @@ msgstr "原点"
 msgid "Original %s"
 msgstr "元の %s"
 
+#, fuzzy
+msgid "Original IP address"
+msgstr "元のIPアドレス"
+
 msgid "Original IP address the event was received from"
 msgstr "イベントを受信した元のIPアドレス"
-
-msgid "Original IP-Address"
-msgstr "元のIPアドレス"
 
 msgid "Original Text"
 msgstr "元のテキスト"
@@ -35568,7 +35617,8 @@ msgstr "受信メール"
 msgid "Received messages"
 msgstr "受信したメッセージ"
 
-msgid "Recent Event History"
+#, fuzzy
+msgid "Recent event history"
 msgstr "最近のイベント履歴"
 
 msgid "Recent hardware/software inventory"
@@ -37631,10 +37681,6 @@ msgstr "Safenet NTLS リンク"
 msgid "Salesforce"
 msgstr "Salesforce"
 
-#, fuzzy
-msgid "Same hostname"
-msgstr "ホスト名を使用する"
-
 msgid "Same times for all weekdays"
 msgstr "平日は同じ時間"
 
@@ -38775,7 +38821,8 @@ msgstr "サービスタグ"
 msgid "Service tags (with titles)"
 msgstr ""
 
-msgid "Service-Level"
+#, fuzzy
+msgid "Service-level"
 msgstr "サービスレベル"
 
 msgid "Service: "
@@ -39897,10 +39944,18 @@ msgstr "BIOS/ハードウェアエラーの簡単なチェック"
 msgid "Simulate for site"
 msgstr "サイトのシミュレーション"
 
+#, fuzzy
+msgid "Simulate this bundle"
+msgstr "このルールを削除する"
+
 msgid "Simulating SNMP by using a stored SNMP walk"
 msgstr "保存されたSNMP walkを使用したSNMPのシミュレーション"
 
 msgid "Simulation mode"
+msgstr "シミュレーションモード"
+
+#, fuzzy
+msgid "Simulation result"
 msgstr "シミュレーションモード"
 
 msgid "Simultanous activation of changes"
@@ -42358,6 +42413,10 @@ msgstr "焼き上げに成功したエージェント"
 msgid "Successfully changed password."
 msgstr "パスワードが正常に変更されました。"
 
+#, fuzzy
+msgid "Successfully changed the credential."
+msgstr "パスワードが正常に変更されました。"
+
 #, python-format
 msgid ""
 "Successfully created the host. Now you should do a <a href=\"%s\">service "
@@ -44451,6 +44510,10 @@ msgid ""
 msgstr ""
 "イベントの作成はこの期間までに遅れます。これは、否定的なルールによってキャン"
 "セルできるイベントに対してのみ意味があります。"
+
+#, fuzzy
+msgid "The credential does not exist"
+msgstr "エレメントが存在しません。"
 
 msgid "The credentials for api calls with authentication."
 msgstr "認証付きのAPI呼び出しの資格情報。"
@@ -49396,10 +49459,6 @@ msgstr ""
 msgid "This rule does a cancelling match."
 msgstr "このルールはキャンセルマッチを行います。"
 
-#, fuzzy
-msgid "This rule does not match."
-msgstr "ルールが一致しません"
-
 #, python-format
 msgid "This rule does not match: %s"
 msgstr "このルールは一致しません:%s"
@@ -52151,6 +52210,9 @@ msgstr "UTC-9時間"
 msgid "UTF-8"
 msgstr "UTF-8"
 
+msgid "UUID"
+msgstr ""
+
 msgid "UUID and mountpoint"
 msgstr ""
 
@@ -52621,7 +52683,8 @@ msgstr "アップダウン(ロング)"
 msgid "Update"
 msgstr "アップデート"
 
-msgid "Update & Acknowledge"
+#, fuzzy
+msgid "Update & acknowledge"
 msgstr "更新と確認"
 
 msgid "Update DNS cache"
@@ -53468,9 +53531,6 @@ msgstr "STS AssumeRoleを使用して、別のIAMロールを引き受けます�
 msgid "Use TLS encryption (Linux)"
 msgstr "暗号化を使用しない"
 
-msgid "Use TLS encryption fall back to plain text"
-msgstr ""
-
 msgid "Use TLS for IMAP authentification"
 msgstr "IMAP認証にTLSを使用する"
 
@@ -54055,6 +54115,9 @@ msgid ""
 "not always better. The apache processes normally need a decent amount of "
 "memory and you should only configure as many apache processes as your system "
 "can handle in high load situations."
+msgstr ""
+
+msgid "Use unverified TLS encryption, fall back to plain text"
 msgstr ""
 
 msgid "Use volume name and mountpoint"
@@ -59841,9 +59904,6 @@ msgstr ""
 msgid "over treshold"
 msgstr "しきい値を超えて"
 
-msgid "owner"
-msgstr "オーナー"
-
 msgid "packets/s"
 msgstr "パケット/秒"
 
@@ -60442,6 +60502,25 @@ msgstr "z/OS"
 #, fuzzy, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. All Rights Reserved."
+
+#, fuzzy
+#~| msgid "The rule does not match"
+#~ msgid "This rule does not match."
+#~ msgstr "ルールが一致しません"
+
+#~ msgid "Events of Host"
+#~ msgstr "ホストのイベント"
+
+#, fuzzy
+#~| msgid "Use hostname"
+#~ msgid "Same hostname"
+#~ msgstr "ホスト名を使用する"
+
+#~ msgid "Service-Level"
+#~ msgstr "サービスレベル"
+
+#~ msgid "owner"
+#~ msgstr "オーナー"
 
 #, fuzzy
 #~| msgid "Apply Lag"
@@ -61524,9 +61603,6 @@ msgstr "© 2020 tribe29 GmbH. All Rights Reserved."
 
 #~ msgid "Event was deleted automatically"
 #~ msgstr "イベントは自動的に削除されました"
-
-#~ msgid "Events of host"
-#~ msgstr "ホストのイベント"
 
 #~ msgid "Exchanges"
 #~ msgstr "Exchanges"

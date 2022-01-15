@@ -3700,14 +3700,15 @@ msgstr "Extra IPv4-adressen"
 msgid "Additional IPv6 addresses"
 msgstr "Extra IPv6-adressen"
 
-msgid "Additional Information"
-msgstr "Aanvullende informatie"
-
 msgid "Additional Plugin Output"
 msgstr "Extra plug-in uitgang"
 
 msgid "Additional header lines"
 msgstr "Extra kopregels"
+
+#, fuzzy
+msgid "Additional information"
+msgstr "Aanvullende informatie"
 
 msgid "Additional note that will be added while closing the alert."
 msgstr ""
@@ -5335,6 +5336,10 @@ msgstr "April"
 
 msgid "Archive Event"
 msgstr "Archief evenement"
+
+#, fuzzy
+msgid "Archive event"
+msgstr "Archief gebeurtenissen"
 
 msgid "Archive events"
 msgstr "Archief gebeurtenissen"
@@ -8202,9 +8207,6 @@ msgstr "Verander de status van de gebeurtenis in:"
 msgid "Change OK State to"
 msgstr "Verander OK-status in"
 
-msgid "Change State"
-msgstr "Verander van staat"
-
 msgid "Change Timerange"
 msgstr "Timer wijzigen"
 
@@ -8248,6 +8250,10 @@ msgstr "Wijzig wachtwoord"
 
 msgid "Change password at next login or access"
 msgstr "Wijzig wachtwoord bij volgende login of toegang"
+
+#, fuzzy
+msgid "Change state"
+msgstr "Verander van staat"
 
 msgid "Change the default user interface theme of your Checkmk installation"
 msgstr ""
@@ -10628,9 +10634,6 @@ msgstr "Contact Groepen"
 msgid "Contact Name"
 msgstr "Naam contactpersoon"
 
-msgid "Contact Person"
-msgstr "Contactpersoon"
-
 msgid "Contact Selection"
 msgstr "Contact Selectie"
 
@@ -10662,7 +10665,8 @@ msgstr ""
 msgid "Contact groups defined in rule"
 msgstr "Contactgroepen gedefinieerd in regel"
 
-msgid "Contact groups effective (Host or rule contact groups)"
+#, fuzzy
+msgid "Contact groups effective (host or rule contact groups)"
 msgstr "Contactgroepen effectief (Host of regel contactgroepen)"
 
 msgid "Contact groups in rule have precedence"
@@ -10670,6 +10674,10 @@ msgstr "Contactgroepen in regel hebben voorrang"
 
 msgid "Contact information"
 msgstr "Contact informatie"
+
+#, fuzzy
+msgid "Contact person"
+msgstr "Contactpersoon"
 
 msgid "Contactgroup Membership"
 msgstr "Contactgroep Lidmaatschap"
@@ -12681,6 +12689,14 @@ msgstr "Gehandicapte diensten opgeven als onbeslist"
 msgid "Declare monitored services as undecided"
 msgstr "Bewaakte diensten als onbeslist opgeven"
 
+#, fuzzy
+msgid "Declined reason"
+msgstr "Model en revsion"
+
+#, python-format
+msgid "Declined requests (PID %s: %s)"
+msgstr ""
+
 msgid "Dedicated white-/blacklists for new and vanished services"
 msgstr "Speciale witte/blacklists voor nieuwe en verdwenen diensten"
 
@@ -14619,6 +14635,10 @@ msgstr "Windows Firewall niet configureren"
 msgid "Do not convert case"
 msgstr "Niet omzetten geval"
 
+#, fuzzy
+msgid "Do not create hosts"
+msgstr "geen gateway hosts aanmaken"
+
 msgid "Do not deploy AD-Replication plugin"
 msgstr "Implementeer geen AD-Replicatie plugin"
 
@@ -15883,6 +15903,10 @@ msgstr "Verbinding bewerken"
 msgid "Edit contact group"
 msgstr "Contactgroep bewerken"
 
+#, fuzzy
+msgid "Edit credential"
+msgstr "Inloggegevens binden"
+
 msgid "Edit custom graph"
 msgstr "Bewerk aangepaste grafiek"
 
@@ -16047,6 +16071,10 @@ msgstr "Deze back-uptaak bewerken"
 
 msgid "Edit this backup target"
 msgstr "Bewerk dit back-up doel"
+
+#, fuzzy
+msgid "Edit this credential"
+msgstr "Verwijder dit element"
 
 msgid "Edit this customer"
 msgstr "Deze klant bewerken"
@@ -17012,10 +17040,12 @@ msgstr "Event Console regels"
 msgid "Event Console settings"
 msgstr "Gebeurtenis Console instellingen"
 
-msgid "Event Console: Current Events"
+#, fuzzy
+msgid "Event Console: Current events"
 msgstr "Gebeurtenis Console: Huidige gebeurtenissen"
 
-msgid "Event Console: Event History"
+#, fuzzy
+msgid "Event Console: Event history"
 msgstr "Gebeurtenis Console: Gebeurtenis Geschiedenis"
 
 msgid "Event Console: Generic"
@@ -17031,23 +17061,11 @@ msgstr "Gebeurtenis Console: SNMP traps"
 msgid "Event Daemon is running."
 msgstr "Event Daemon draait."
 
-msgid "Event Details"
-msgstr "Details evenement"
-
 msgid "Event History"
 msgstr "Geschiedenis"
 
-msgid "Event History Entry"
-msgstr "Gebeurtenis Geschiedenis Invoer"
-
-msgid "Event History of Host"
-msgstr "Geschiedenis van de gastheer"
-
 msgid "Event ID"
 msgstr "Evenement ID"
-
-msgid "Event Icons"
-msgstr "Pictogrammen"
 
 msgid "Event Log"
 msgstr "Gebeurtenislogboek"
@@ -17073,14 +17091,30 @@ msgstr "Evenement creaties"
 msgid "Event database"
 msgstr "Gebeurtenisendatabase"
 
+#, fuzzy
+msgid "Event details"
+msgstr "Details evenement"
+
 msgid "Event handlers"
 msgstr "Gebeurtenis afhandeling"
+
+#, fuzzy
+msgid "Event history entry"
+msgstr "Gebeurtenis Geschiedenis Invoer"
 
 msgid "Event history lifetime"
 msgstr "Geschiedenis van de gebeurtenis levensduur"
 
 msgid "Event history logfile rotation"
 msgstr "Gebeurtenis geschiedenis logbestand rotatie"
+
+#, fuzzy
+msgid "Event history of host"
+msgstr "Geschiedenis van de gastheer"
+
+#, fuzzy
+msgid "Event icons"
+msgstr "Pictogrammen"
 
 msgid "Event processing time"
 msgstr "Verwerkingstijd van gebeurtenissen"
@@ -17105,18 +17139,19 @@ msgstr "Evenementen"
 msgid "Events of Application \"%s\" on Host %s"
 msgstr "Gebeurtenissen van toepassing \"%s\" op host %s"
 
-msgid "Events of Host"
-msgstr "Gebeurtenissen van Gastheer"
-
 #, python-format
 msgid "Events of Host %s"
 msgstr "Gebeurtenissen van Host %s"
 
-msgid "Events of Monitored Host"
-msgstr "Gebeurtenissen van gecontroleerde gastheer"
+msgid "Events of host"
+msgstr "Gebeurtenissen van gastheer"
 
 msgid "Events of host & services"
 msgstr "Gebeurtenissen van gastheer & diensten"
+
+#, fuzzy
+msgid "Events of monitored host"
+msgstr "Gebeurtenissen van gecontroleerde gastheer"
 
 msgid "Events of recent 4 hours"
 msgstr "Gebeurtenissen van de laatste 4 uur"
@@ -18580,6 +18615,10 @@ msgstr "Opvouwbare boom"
 
 msgid "Folder"
 msgstr "Map"
+
+#, fuzzy, python-format
+msgid "Folder %r does not exist."
+msgstr "Map %s bestaat niet"
 
 #, python-format
 msgid "Folder %s does not exist"
@@ -20274,10 +20313,11 @@ msgstr ""
 "Hier kunt u configureren hoe u op de hoogte wilt worden gebracht van host- "
 "en serviceproblemen en andere monitoringgebeurtenissen."
 
+#, fuzzy
 msgid ""
-"Here you can configure percentual levels for CPU request utilization and CPU "
-"limit utilization, respectively."
-msgstr ""
+"Here you can configure levels for CPU request utilization and CPU limit "
+"utilization, respectively."
+msgstr "Hier kunt u niveaus instellen voor het CPU-gebruik op enkele cores"
 
 msgid ""
 "Here you can configure the 3.3V and 12V voltage levels for each chassis."
@@ -21280,6 +21320,10 @@ msgstr "Gastheer alarm"
 msgid "Host alias"
 msgstr "Host alias"
 
+#, fuzzy
+msgid "Host already exist"
+msgstr "Host %s bestaat al in de map %s"
+
 msgid "Host and Service Events"
 msgstr "Host- en Service-evenementen"
 
@@ -21600,6 +21644,10 @@ msgid "Host status"
 msgstr "Gastheer status"
 
 #, fuzzy
+msgid "Host successfully created"
+msgstr "Zoekindex succesvol bijgewerkt"
+
+#, fuzzy
 msgid "Host tag"
 msgstr "Host tag:"
 
@@ -21674,6 +21722,10 @@ msgstr "Hostnaam / IP-adres van Graphite server"
 msgid "Hostname computation"
 msgstr "Hostnaam matching"
 
+#, fuzzy
+msgid "Hostname conflict"
+msgstr "Hostnaam van het apparaat"
+
 #, python-format
 msgid "Hostname contains illegal characters: %s"
 msgstr ""
@@ -21733,10 +21785,6 @@ msgstr "Hosts gecontacteerd (als klant)"
 
 msgid "Hosts Contacts (as Server)"
 msgstr "Hosts Contacten (als Server)"
-
-#, fuzzy
-msgid "Hosts already exist"
-msgstr "Host %s bestaat al in de map %s"
 
 msgid "Hosts and Folders"
 msgstr "Hosts en mappen"
@@ -21819,10 +21867,6 @@ msgstr "Hostnaam / IP-adres"
 
 msgid "Hosts not using Inline-SNMP"
 msgstr "Hosts die geen Inline-SNMP gebruiken"
-
-#, fuzzy
-msgid "Hosts successfully created"
-msgstr "Zoekindex succesvol bijgewerkt"
 
 msgid "Hosts that contacted us during the last 24 hours"
 msgstr "Hosts die de laatste 24 uur contact met ons hebben opgenomen"
@@ -28523,9 +28567,6 @@ msgstr "Hoofdschakelaar"
 msgid "Match"
 msgstr "Wedstrijd"
 
-msgid "Match Groups"
-msgstr "Wedstrijdgroepen"
-
 msgid "Match admin states (SNMP with 64-bit counters only)"
 msgstr "Overeenkomen met admin toestanden (alleen SNMP met 64-bit tellers)"
 
@@ -28577,6 +28618,10 @@ msgstr "Wedstrijd map"
 
 msgid "Match folders"
 msgstr "Overeenkomende mappen"
+
+#, fuzzy
+msgid "Match groups"
+msgstr "Wedstrijdgroepen"
 
 msgid "Match host"
 msgstr "Wedstrijd gastheer"
@@ -31678,6 +31723,10 @@ msgstr "Niet ingeschakeld"
 msgid "Not executed in OMD environment!"
 msgstr "Niet uitgevoerd in OMD omgeving!"
 
+#, fuzzy
+msgid "Not found"
+msgstr "Gegevens niet gevonden"
+
 msgid "Not locked"
 msgstr "Niet vergrendeld"
 
@@ -33425,11 +33474,12 @@ msgstr "Oorsprong"
 msgid "Original %s"
 msgstr "Origineel %s"
 
+#, fuzzy
+msgid "Original IP address"
+msgstr "Oorspronkelijk IP-Adres"
+
 msgid "Original IP address the event was received from"
 msgstr "Oorspronkelijk IP-adres waarvan de gebeurtenis werd ontvangen"
-
-msgid "Original IP-Address"
-msgstr "Oorspronkelijk IP-Adres"
 
 msgid "Original Text"
 msgstr "Originele tekst"
@@ -36792,7 +36842,8 @@ msgstr "Ontvangen mails"
 msgid "Received messages"
 msgstr "Ontvangen berichten"
 
-msgid "Recent Event History"
+#, fuzzy
+msgid "Recent event history"
 msgstr "Recente gebeurtenissen"
 
 msgid "Recent hardware/software inventory"
@@ -38891,10 +38942,6 @@ msgstr "Safenet NTLS Links"
 msgid "Salesforce"
 msgstr "Salesforce"
 
-#, fuzzy
-msgid "Same hostname"
-msgstr "Gebruik hostnaam"
-
 msgid "Same times for all weekdays"
 msgstr "Dezelfde tijden voor alle weekdagen"
 
@@ -40076,8 +40123,9 @@ msgstr "Dienstmarkeringen"
 msgid "Service tags (with titles)"
 msgstr "Dienstmarkeringen (met titels)"
 
-msgid "Service-Level"
-msgstr "Service-Level"
+#, fuzzy
+msgid "Service-level"
+msgstr "Serviceniveau"
 
 msgid "Service: "
 msgstr "Service: "
@@ -41251,10 +41299,18 @@ msgstr "Eenvoudige controles op BIOS/Hardware fouten"
 msgid "Simulate for site"
 msgstr "Simuleren voor site"
 
+#, fuzzy
+msgid "Simulate this bundle"
+msgstr "Verwijder deze regel"
+
 msgid "Simulating SNMP by using a stored SNMP walk"
 msgstr "SNMP simuleren door een opgeslagen SNMP wandeling te gebruiken"
 
 msgid "Simulation mode"
+msgstr "Simulatiemodus"
+
+#, fuzzy
+msgid "Simulation result"
 msgstr "Simulatiemodus"
 
 msgid "Simultanous activation of changes"
@@ -43827,6 +43883,10 @@ msgstr "Succesvol gebakken agenten"
 msgid "Successfully changed password."
 msgstr "Wachtwoord succesvol gewijzigd."
 
+#, fuzzy
+msgid "Successfully changed the credential."
+msgstr "Wachtwoord succesvol gewijzigd."
+
 #, python-format
 msgid ""
 "Successfully created the host. Now you should do a <a href=\"%s\">service "
@@ -46098,6 +46158,10 @@ msgstr ""
 "Het aanmaken van een gebeurtenis zal met deze periode worden vertraagd. Dit "
 "heeft alleen zin voor gebeurtenissen die kunnen worden geannuleerd door een "
 "negatieve regel."
+
+#, fuzzy
+msgid "The credential does not exist"
+msgstr "Het element bestaat niet."
 
 msgid "The credentials for api calls with authentication."
 msgstr "De credentials voor api calls met authenticatie."
@@ -51614,10 +51678,6 @@ msgstr ""
 msgid "This rule does a cancelling match."
 msgstr "Deze regel doet een annulerende wedstrijd."
 
-#, fuzzy
-msgid "This rule does not match."
-msgstr "De regel komt niet overeen met"
-
 #, python-format
 msgid "This rule does not match: %s"
 msgstr "Deze regel komt niet overeen met: %s"
@@ -54555,6 +54615,9 @@ msgstr "UTC -9 uur"
 msgid "UTF-8"
 msgstr "UTF-8"
 
+msgid "UUID"
+msgstr ""
+
 #, fuzzy
 msgid "UUID and mountpoint"
 msgstr "Is mountpoint"
@@ -55042,7 +55105,8 @@ msgstr "Omhoog Omlaag (lang)"
 msgid "Update"
 msgstr "Update"
 
-msgid "Update & Acknowledge"
+#, fuzzy
+msgid "Update & acknowledge"
 msgstr "Bijwerken en bevestigen"
 
 msgid "Update DNS cache"
@@ -55902,9 +55966,6 @@ msgstr "Gebruik STS AssumeRole om een andere IAM rol aan te nemen"
 msgid "Use TLS encryption (Linux)"
 msgstr "Gebruik geen encryptie"
 
-msgid "Use TLS encryption fall back to plain text"
-msgstr ""
-
 msgid "Use TLS for IMAP authentification"
 msgstr "Gebruik TLS voor IMAP verificatie"
 
@@ -56540,6 +56601,9 @@ msgstr ""
 "processen hebben normaal gesproken een behoorlijke hoeveelheid geheugen "
 "nodig en je zou alleen zoveel apache processen moeten instellen als je "
 "systeem aan kan in situaties met hoge belasting."
+
+msgid "Use unverified TLS encryption, fall back to plain text"
+msgstr ""
 
 msgid "Use volume name and mountpoint"
 msgstr "Gebruik volumenaam en koppelpunt"
@@ -62736,9 +62800,6 @@ msgstr ""
 msgid "over treshold"
 msgstr "over de drempel"
 
-msgid "owner"
-msgstr "eigenaar"
-
 msgid "packets/s"
 msgstr "pakketten/s"
 
@@ -63341,6 +63402,25 @@ msgstr "z/OS"
 #, fuzzy, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. Alle rechten voorbehouden."
+
+#, fuzzy
+#~| msgid "The rule does not match"
+#~ msgid "This rule does not match."
+#~ msgstr "De regel komt niet overeen met"
+
+#~ msgid "Events of Host"
+#~ msgstr "Gebeurtenissen van Gastheer"
+
+#, fuzzy
+#~| msgid "Use hostname"
+#~ msgid "Same hostname"
+#~ msgstr "Gebruik hostnaam"
+
+#~ msgid "Service-Level"
+#~ msgstr "Service-Level"
+
+#~ msgid "owner"
+#~ msgstr "eigenaar"
 
 #, fuzzy
 #~| msgid "Apply Lag"
@@ -64494,9 +64574,6 @@ msgstr "© 2020 tribe29 GmbH. Alle rechten voorbehouden."
 
 #~ msgid "Event was deleted automatically"
 #~ msgstr "Gebeurtenis werd automatisch verwijderd"
-
-#~ msgid "Events of host"
-#~ msgstr "Gebeurtenissen van gastheer"
 
 #~ msgid "Exchanges"
 #~ msgstr "Uitwisselingen"

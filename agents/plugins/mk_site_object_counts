@@ -32,34 +32,36 @@ _query_site() {
 
 
 get_tag_stats() {
-    local site="$1"
-    local header="$2"
-    local tags_arr=($(echo "$header" | tr ' ' '\n'))
+    local site header tags_arr tags_query
+    site="${1}"
+    header="${2}"
+    tags_arr=($(echo "$header" | tr ' ' '\n'))
 
     { [ "${#tags_arr[@]}" -ne 0 ] && _socket_exists "${site}"; } || return
 
-    local tags_query="GET hosts\n"
+    tags_query="GET hosts\n"
     for tag in "${tags_arr[@]}";
     do
         tags_query="${tags_query}Stats: custom_variables ~ TAGS ${tag}\n"
     done
-    echo "Tags|$header|$(_query_site "${site}" "${tags_query}")"
+    echo "Tags|${header}|$(_query_site "${site}" "${tags_query}")"
 }
 
 
 get_check_command_stats() {
-    local site="$1"
-    local header="$2"
-    local srv_commands=($(echo "$header" | tr ' ' '\n'))
+    local site header srv_commands commands_query
+    site="${1}"
+    header="${2}"
+    srv_commands=($(echo "$header" | tr ' ' '\n'))
 
     { [ "${#srv_commands[@]}" -ne 0 ] && _socket_exists "${site}"; } || return
 
-    local commands_query="GET services\n"
+    commands_query="GET services\n"
     for srv_cmd in "${srv_commands[@]}";
     do
         commands_query="${commands_query}Stats: check_command ~~ ${srv_cmd}$\n"
     done
-    echo "Service check commands|$header|$(_query_site "${site}" "${commands_query}")"
+    echo "Service check commands|${header}|$(_query_site "${site}" "${commands_query}")"
 }
 
 

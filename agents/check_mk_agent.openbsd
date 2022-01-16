@@ -157,7 +157,7 @@ section_misc_sections() {
             # Speed
             SP=$(echo "$IO" | egrep "media:.*base" | cut -d\( -f2 | cut -db -f1)
             if [ "$SP" ]; then
-                echo "\tSpeed: "$SP"Mb/s"
+                printf "\tSpeed: %sMb/s\n" "${SP}"
             fi
             # Detect duplexity - in reality only available for physical devices but
             # virtual ones like CARP devices will get at least a half duplex

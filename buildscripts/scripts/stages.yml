@@ -150,7 +150,6 @@ STAGES:
       ENV_VARS:
         SHELLCHECK_OUTPUT_ARGS: -S warning
             -e SC1090
-            -e SC2027
             -e SC2039
             -e SC2089
             -e SC2090

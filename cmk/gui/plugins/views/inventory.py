@@ -680,7 +680,7 @@ def inv_paint_service_status(status: str) -> PaintResult:
 #   '----------------------------------------------------------------------'
 
 
-def _inv_display_hint(invpath: SDRawPath) -> InventoryHintSpec:
+def _get_display_hint(invpath: SDRawPath) -> InventoryHintSpec:
     """Generic access function to display hints
     Don't use other methods to access the hints!"""
     hint_id = _find_display_hint_id(invpath)
@@ -757,7 +757,7 @@ def _inv_titleinfo(
     invpath: SDRawPath,
     key: Optional[str] = None,
 ) -> Tuple[Optional[str], str]:
-    hint = _inv_display_hint(invpath)
+    hint = _get_display_hint(invpath)
     icon = hint.get("icon")
     if "title" in hint:
         title = hint["title"]
@@ -1177,7 +1177,7 @@ def _declare_views(
 ) -> None:
     is_show_more = True
     if len(invpaths) == 1:
-        hint = _inv_display_hint(invpaths[0])
+        hint = _get_display_hint(invpaths[0])
         is_show_more = hint.get("is_show_more", True)
 
     # Declare two views: one for searching globally. And one
@@ -1906,7 +1906,7 @@ class ABCNodeRenderer(abc.ABC):
         # FIXME these kind of paths are required for hints.
         # Clean this up one day.
         invpath = ".%s:" % self._get_raw_path(list(table.path))
-        hint = _inv_display_hint(invpath)
+        hint = _get_display_hint(invpath)
         keyorder = hint.get("keyorder", [])  # well known keys
 
         # Add titles for those keys
@@ -1914,7 +1914,7 @@ class ABCNodeRenderer(abc.ABC):
         for key in keyorder:
             sub_invpath = "%s0.%s" % (invpath, key)
             _icon, title = _inv_titleinfo(sub_invpath)
-            sub_hint = _inv_display_hint(sub_invpath)
+            sub_hint = _get_display_hint(sub_invpath)
             short_title = sub_hint.get("short", title)
             titles.append((short_title, key, key in table.key_columns))
 
@@ -1957,7 +1957,7 @@ class ABCNodeRenderer(abc.ABC):
             for title, key, _is_key_column in titles:
                 value = entry.get(key)
                 sub_invpath = "%s%d.%s" % (invpath, index, key)
-                hint = _inv_display_hint(sub_invpath)
+                hint = _get_display_hint(sub_invpath)
                 if "paint_function" in hint:
                     # FIXME At the moment  we need it to get tdclass
                     # Clean this up one day.
@@ -1990,7 +1990,7 @@ class ABCNodeRenderer(abc.ABC):
 
     def show_attributes(self, attributes: Attributes) -> None:
         invpath = ".%s" % self._get_raw_path(list(attributes.path))
-        hint = _inv_display_hint(invpath)
+        hint = _get_display_hint(invpath)
 
         keyorder = hint.get("keyorder")
         if keyorder:
@@ -2006,7 +2006,7 @@ class ABCNodeRenderer(abc.ABC):
         for key, value in sorted(attributes.pairs.items(), key=sort_func):
             sub_invpath = "%s.%s" % (invpath, key)
             _icon, title = _inv_titleinfo(sub_invpath)
-            hint = _inv_display_hint(sub_invpath)
+            hint = _get_display_hint(sub_invpath)
 
             html.open_tr()
             html.th(self._get_header(title, key, "#DDD"), title=sub_invpath)

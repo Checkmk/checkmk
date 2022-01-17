@@ -40,7 +40,12 @@ test_basic_function() {
     LOG_SECTION_TIME=true set_up_profiling
     _log_section_time "echo" "some" "string" > /dev/null
 
-    assertTrue "[ -e $(profiling_dir)/echo_some_string_.log ]"
+    assertEquals "
+real	0mRUNTIMEs
+user	0mRUNTIMEs
+sys	0mRUNTIMEs
+runtime RUNTIME" "$(sed 's/0[.,][0-9]\+/RUNTIME/' "$(profiling_dir)/echo_some_string_.log")"
+
 }
 
 test_export_with_run_cached() {

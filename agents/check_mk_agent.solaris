@@ -164,8 +164,7 @@ set_up_profiling() {
 
             start="$(perl -MTime::HiRes=time -le "print time()")"
             { time ${section_func}; } 2>> "${profiling_logfile}"
-            end="$(perl -MTime::HiRes=time -le "print time()")"
-            echo "runtime $(echo "${end} - ${start}" | bc)" >>"${profiling_logfile}"
+            echo "runtime $(perl -MTime::HiRes=time -le "print time() - ${start}")" >> "${profiling_logfile}"
         }'
 
         finalize_profiling() {

@@ -79,8 +79,8 @@ LOCK_PATH := .venv.lock
 
 .PHONY: all analyze build check check-binaries check-permissions check-version \
         clean compile-neb-cmc compile-neb-cmc-docker dist documentation \
-        documentation-quick format format-c format-python format-shell format-js \
-        GTAGS headers help install iwyu mrproper mrclean optimize-images \
+        documentation-quick format format-c test-format-c format-python format-shell \
+        format-js GTAGS headers help install iwyu mrproper mrclean optimize-images \
         packages setup setversion tidy version am--refresh skel openapi openapi-doc \
         protobuf-files
 
@@ -548,7 +548,7 @@ GTAGS: config.h
 # to configure.ac).
 	$(MAKE) -C livestatus GTAGS
 
-compile-neb-cmc: config.status
+compile-neb-cmc: config.status test-format-c
 	$(MAKE) -C livestatus -j4
 ifeq ($(ENTERPRISE),yes)
 	$(MAKE) -C enterprise/core -j4
@@ -579,9 +579,13 @@ format: format-python format-c format-shell format-js format-css
 # TODO: We should probably handle this rule via AM_EXTRA_RECURSIVE_TARGETS in
 # src/configure.ac, but this needs at least automake-1.13, which in turn is only
 # available from e.g. Ubuntu Saucy (13) onwards, so some magic is needed.
-format-c:
-	$(CLANG_FORMAT) -style=file -i $(FILES_TO_FORMAT_LINUX)
+clang-format-with = $(CLANG_FORMAT) -style=file $(1) $(FILES_TO_FORMAT_LINUX)
 
+format-c:
+	$(call clang-format-with,-i)
+
+test-format-c:
+	@$(call clang-format-with,-Werror --dry-run)
 
 format-python: format-python-isort format-python-black
 

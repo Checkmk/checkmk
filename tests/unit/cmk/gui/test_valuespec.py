@@ -518,3 +518,65 @@ def test_host_address_validate_value(
             allow_ipv6_address=allow_ipv6_address,
             allow_empty=False,
         ).validate_value(value, "varprefix")
+
+
+@pytest.mark.parametrize(
+    "choices,default_value,expected_default",
+    [
+        (
+            [("single_age", "Age", vs.Age(default_value=30))],
+            None,
+            ("single_age", 30),
+        ),
+        (
+            [("age_1", "Age", vs.Age()), ("age_2", "Age", vs.Age())],
+            "age_1",
+            ("age_1", 0),
+        ),
+        (
+            [("list_choice", "ListChoice", vs.ListChoice())],
+            None,
+            ("list_choice", []),
+        ),
+        ([("value", "Title")], None, "value"),
+        ([("value", "Title", None)], None, "value"),
+        ([], None, None),
+    ],
+)
+def test_default_value_in_cascading_dropdown(
+    choices,
+    default_value,
+    expected_default,
+):
+    assert vs.CascadingDropdown(choices=choices).default_value() == expected_default
+
+
+@pytest.mark.parametrize(
+    "choices,default_value,expected_canonical",
+    [
+        (
+            [("single_age", "Age", vs.Age(default_value=30))],
+            None,
+            ("single_age", 0),
+        ),
+        (
+            [("age_1", "Age", vs.Age()), ("age_2", "Age", vs.Age())],
+            "age_1",
+            ("age_1", 0),
+        ),
+        (
+            [("list_choice", "ListChoice", vs.ListChoice())],
+            None,
+            ("list_choice", []),
+        ),
+        ([], None, None),
+        ([("value", "Title")], None, "value"),
+        ([("value", "Title", None)], None, "value"),
+    ],
+)
+def test_canonical_value_in_cascading_dropdown(
+    choices,
+    default_value,
+    expected_canonical,
+):
+    assert vs.CascadingDropdown(choices=choices).canonical_value() == expected_canonical

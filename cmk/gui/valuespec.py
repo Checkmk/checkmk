@@ -2968,19 +2968,23 @@ class CascadingDropdown(ValueSpec[CascadingDropdownChoiceValue]):
         return list(itertools.chain(self._preselected, self._choices()))
 
     def canonical_value(self) -> CascadingDropdownChoiceValue:
-        result = self._fallback_choice()
-        if isinstance(result, tuple):
-            return result[0], result[1].canonical_value()
-        return result
+        return self._result_from_fallback_choice("canonical_value")
 
     def default_value(self) -> CascadingDropdownChoiceValue:
-        try:
-            return super().default_value()
-        except Exception:
-            result = self._fallback_choice()
-            if isinstance(result, tuple):
+        if isinstance(self._default_value, Sentinel):
+            return self._result_from_fallback_choice("default_value")
+        return super().default_value()
+
+    def _result_from_fallback_choice(
+        self,
+        value: Literal["default_value", "canonical_value"],
+    ) -> CascadingDropdownChoiceValue:
+        result = self._fallback_choice()
+        if isinstance(result, tuple):
+            if value == "default_value":
                 return result[0], result[1].default_value()
-            return result
+            return result[0], result[1].canonical_value()
+        return result
 
     def _fallback_choice(
         self,

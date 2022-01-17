@@ -96,6 +96,37 @@ def test_parse_arguments(params, expected_args):
     assert arguments == expected_args
 
 
+def test_parse_namespace_patterns():
+    """Tests if all required arguments are present."""
+    agent = SpecialAgent("agent_kube")
+    arguments = agent.argument_func(
+        {
+            "kubernetes-api-server": {"endpoint": ("ipaddress", {"protocol": "https"})},
+            "cluster-agent": {
+                "node_ip": "11.211.3.32",
+                "connection_port": 20026,
+                "protocol": "https",
+            },
+            "verify-cert": False,
+            "namespaces": ("namespace-include-patterns", ["default", "kube-system"]),
+        },
+        "host",
+        "127.0.0.1",
+    )
+    assert arguments == [
+        "--monitored-objects",
+        "nodes deployments pods",
+        "--namespace-include-patterns",
+        "default",
+        "--namespace-include-patterns",
+        "kube-system",
+        "--api-server-endpoint",
+        "https://127.0.0.1",
+        "--cluster-agent-endpoint",
+        "https://11.211.3.32:20026",
+    ]
+
+
 @pytest.mark.parametrize(
     "params, host",
     [

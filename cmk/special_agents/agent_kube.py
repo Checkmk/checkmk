@@ -15,6 +15,7 @@ import argparse
 import json
 import logging
 import os
+import re
 import sys
 import time
 from collections import defaultdict
@@ -31,6 +32,7 @@ from typing import (
     Optional,
     Protocol,
     Sequence,
+    Set,
     Union,
 )
 
@@ -137,6 +139,22 @@ def parse_arguments(args: List[str]) -> argparse.Namespace:
     )
 
     p.add_argument("--verify-cert", action="store_true", help="Verify certificate")
+    namespaces = p.add_mutually_exclusive_group()
+    namespaces.add_argument(
+        "--namespace-include-patterns",
+        "-n",
+        action="append",
+        default=[],
+        help="Regex patterns of namespaces to show in the output. Cannot use both include and "
+        "exclude patterns",
+    )
+    namespaces.add_argument(
+        "--namespace-exclude-patterns",
+        action="append",
+        default=[],
+        help="Regex patterns of namespaces to exclude in the output. Cannot use both include and "
+        "exclude patterns.",
+    )
     p.add_argument(
         "--profile",
         metavar="FILE",
@@ -485,6 +503,11 @@ class Cluster:
         resources.update(phases_pods)
         return section.PodResourcesWithCapacity(**resources)
 
+    def namespaces(self) -> Set[api.Namespace]:
+        namespaces: Set[api.Namespace] = set()
+        namespaces.update(api.Namespace(pod.metadata.namespace) for pod in self._pods.values())
+        return namespaces
+
     def pods(self, phase: Optional[api.Phase] = None) -> Sequence[Pod]:
         if phase is None:
             return list(self._pods.values())
@@ -655,7 +678,7 @@ def pod_api_based_checkmk_sections(pod: Pod):
         yield section_name, section_call()
 
 
-def filter_outdated_pods(
+def filter_outdated_and_non_monitored_pods(
     live_pods: Sequence[PerformancePod],
     lookup_name_to_piggyback_mappings: Mapping[PodLookupName, PodNamespacedName],
 ) -> Iterator[PerformancePod]:
@@ -999,6 +1022,69 @@ def pod_lookup_from_metric(metric: Mapping[str, str]) -> PodLookupName:
     return lookup_name(metric["namespace"], metric["pod_name"])
 
 
+def pods_from_namespaces(pods: Sequence[Pod], namespaces: Set[api.Namespace]) -> Sequence[Pod]:
+    return [pod for pod in pods if pod.metadata.namespace in namespaces]
+
+
+def deployments_from_namespaces(
+    deployments: Sequence[Deployment], namespaces: Set[api.Namespace]
+) -> Sequence[Deployment]:
+    return [deployment for deployment in deployments if deployment.metadata.namespace in namespaces]
+
+
+def filter_monitored_namespaces(
+    cluster_namespaces: Set[api.Namespace],
+    namespace_include_patterns: Sequence[str],
+    namespace_exclude_patterns: Sequence[str],
+) -> Set[api.Namespace]:
+    """Filter Kubernetes namespaces based on the provided patterns
+
+    Examples:
+        >>> filter_monitored_namespaces({api.Namespace("foo"), api.Namespace("bar")}, ["foo"], [])
+        {'foo'}
+
+        >>> filter_monitored_namespaces({api.Namespace("foo"), api.Namespace("bar")}, [], ["foo"])
+        {'bar'}
+
+        >>> sorted(filter_monitored_namespaces({api.Namespace("foo"), api.Namespace("bar"),
+        ... api.Namespace("man")}, ["foo", "bar"], []))
+        ['bar', 'foo']
+
+    """
+    if (
+        namespace_include_patterns and namespace_exclude_patterns
+    ):  # this should be handled by argparse
+        raise ValueError("It is not possible to define patterns for both filter mechanisms")
+
+    if namespace_include_patterns:
+        return _filter_namespaces(cluster_namespaces, namespace_include_patterns)
+
+    if namespace_exclude_patterns:
+        return cluster_namespaces - _filter_namespaces(
+            cluster_namespaces, namespace_exclude_patterns
+        )
+
+    return cluster_namespaces
+
+
+def _filter_namespaces(
+    kubernetes_namespaces: Set[api.Namespace], re_patterns: Sequence[str]
+) -> Set[api.Namespace]:
+    """Filter namespaces based on the provided regular expression patterns
+
+    Examples:
+         >>> sorted(_filter_namespaces({api.Namespace("foo"), api.Namespace("bar"),
+         ... api.Namespace("man")}, ["foo", "man"]))
+         ['foo', 'man']
+    """
+    filtered_namespaces = set()
+    compiled_re = re.compile(f"({'|'.join(re_patterns)})")
+    for namespace in kubernetes_namespaces:
+        if compiled_re.match(namespace):
+            filtered_namespaces.add(namespace)
+    return filtered_namespaces
+
+
 def main(args: Optional[List[str]] = None) -> int:
     if args is None:
         cmk.utils.password_store.replace_passwords()
@@ -1020,14 +1106,22 @@ def main(args: Optional[List[str]] = None) -> int:
             # Sections based on API server data
             write_cluster_api_sections(cluster)
 
+            monitored_namespaces = filter_monitored_namespaces(
+                cluster.namespaces(),
+                arguments.namespace_include_patterns,
+                arguments.namespace_exclude_patterns,
+            )
+
             if "nodes" in arguments.monitored_objects:
                 write_nodes_api_sections(cluster.nodes())
 
             if "deployments" in arguments.monitored_objects:
-                write_deployments_api_sections(cluster.deployments())
+                write_deployments_api_sections(
+                    deployments_from_namespaces(cluster.deployments(), monitored_namespaces)
+                )
 
             if "pods" in arguments.monitored_objects:
-                write_pods_api_sections(cluster.pods())
+                write_pods_api_sections(pods_from_namespaces(cluster.pods(), monitored_namespaces))
 
             # TODO: add an option to skip the performance data query
             # TODO: refactor write out sections in case this performance skip is not implemented
@@ -1079,12 +1173,12 @@ def main(args: Optional[List[str]] = None) -> int:
             performance_pods = group_containers_by_pods(performance_containers)
 
             lookup_name_piggyback_mappings = map_lookup_name_to_piggyback_host_name(
-                cluster.pods(), pod_lookup_from_api_pod
+                pods_from_namespaces(cluster.pods(), monitored_namespaces), pod_lookup_from_api_pod
             )
 
             # Write performance sections
             if "pods" in arguments.monitored_objects:
-                for pod in filter_outdated_pods(
+                for pod in filter_outdated_and_non_monitored_pods(
                     list(performance_pods.values()), lookup_name_piggyback_mappings
                 ):
                     with ConditionalPiggybackSection(
@@ -1101,7 +1195,9 @@ def main(args: Optional[List[str]] = None) -> int:
                     )
 
             if "deployments" in arguments.monitored_objects:
-                for deployment in cluster.deployments():
+                for deployment in deployments_from_namespaces(
+                    cluster.deployments(), monitored_namespaces
+                ):
                     write_kube_object_performance_section(
                         deployment,
                         performance_pods,

@@ -18,6 +18,12 @@ def agent_kube_arguments(params, hostname, ipaddress):
         " ".join(params.get("monitored_objects", ["nodes", "deployments", "pods"])),
     ]
 
+    if "namespaces" in params:
+        namespace_filter_option, filter_patterns = params["namespaces"]
+        for namespace_pattern in filter_patterns:
+            args.append(f"--{namespace_filter_option}")
+            args.append(namespace_pattern)
+
     args.append("--api-server-endpoint")
     configured_endpoint_name, configured_endpoint = api_server_params["endpoint"]
     if configured_endpoint_name == "url_custom":

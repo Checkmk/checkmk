@@ -881,8 +881,58 @@ def _valuespec_special_agents_kube():
                     help=_("Select the Kubernetes objects you would like to monitor."),
                 ),
             ),
+            (
+                "namespaces",
+                CascadingDropdown(
+                    choices=[
+                        (
+                            "namespace_include_patterns",
+                            _("Monitor namespaces matching"),
+                            ListOf(
+                                RegExp(
+                                    mode=RegExp.complete,
+                                    title=_("Pattern"),
+                                    allow_empty=False,
+                                ),
+                                add_label=_("Add new pattern"),
+                                allow_empty=False,
+                                help=_(
+                                    "You can specify a list of regex patterns to monitor specific "
+                                    "namespaces. Only those that do match the predefined patterns "
+                                    "will be monitored."
+                                ),
+                            ),
+                        ),
+                        (
+                            "namespace_exclude_patterns",
+                            _("Exclude namespaces matching"),
+                            ListOf(
+                                RegExp(
+                                    mode=RegExp.complete,
+                                    title=_("Pattern"),
+                                    allow_empty=False,
+                                ),
+                                add_label=_("Add new pattern"),
+                                allow_empty=False,
+                                help=_(
+                                    "You can specify a list of regex patterns to exclude "
+                                    "namespaces. Only those that do not match the predefined "
+                                    "patterns are monitored."
+                                ),
+                            ),
+                        ),
+                    ],
+                    orientation="horizontal",
+                    title=_("Monitor namespaces"),
+                    help=_(
+                        "If your cluster has multiple namespaces, you can filter specific ones "
+                        "to be monitored. Note that this concerns everything which is part of the "
+                        "selected namespaces such as pods for example."
+                    ),
+                ),
+            ),
         ],
-        optional_keys=[],
+        optional_keys=["namespaces"],
         title=_("Kubernetes 2.0"),
     )
 

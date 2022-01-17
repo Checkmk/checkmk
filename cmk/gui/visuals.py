@@ -262,30 +262,6 @@ def declare_visual_permissions(what, what_plural):
 #   '----------------------------------------------------------------------'
 
 
-class UserVisualsCache:
-    """Realizes a in memory cache (per apache process). This has been introduced to improve the
-    situation where there are hundreds of custom visuals (views here). These visuals are rarely
-    changed, but read and evaluated(!) during each page request which costs a lot of time."""
-
-    def __init__(self):
-        super().__init__()
-        self._cache = {}
-
-    def get(self, path):
-        try:
-            cached_mtime, cached_user_visuals = self._cache[path]
-            current_mtime = os.stat(path).st_mtime
-            return cached_user_visuals if current_mtime <= cached_mtime else None
-        except (KeyError, IOError):
-            return None
-
-    def add(self, path, modification_timestamp, user_visuals):
-        self._cache[path] = modification_timestamp, user_visuals
-
-
-_user_visuals_cache = UserVisualsCache()
-
-
 def save(what, visuals, user_id=None):
     if user_id is None:
         user_id = user.id
@@ -483,15 +459,9 @@ def _load_custom_user_visuals(
             if not userdb.user_exists(UserId(user_id)):
                 continue
 
-            user_visuals = _user_visuals_cache.get(visual_path)
-            if user_visuals is None:
-                modification_timestamp = os.stat(visual_path).st_mtime
-                user_visuals = load_visuals_of_a_user(
-                    what, builtin_visuals, skip_func, visual_path, user_id
-                )
-                _user_visuals_cache.add(visual_path, modification_timestamp, user_visuals)
-
-            visuals.update(user_visuals)
+            visuals.update(
+                load_visuals_of_a_user(what, builtin_visuals, skip_func, visual_path, user_id)
+            )
 
         except SyntaxError as e:
             raise MKGeneralException(_("Cannot load %s from %s: %s") % (what, visual_path, e))

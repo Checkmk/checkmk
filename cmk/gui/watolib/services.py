@@ -531,9 +531,7 @@ def get_check_table(discovery_request: StartDiscoveryRequest) -> DiscoveryResult
     if site_is_local(discovery_request.host.site_id()):
         return execute_discovery_job(discovery_request)
 
-    discovery_result = _get_check_table_from_remote(discovery_request)
-    discovery_result = _add_missing_discovery_result_fields(discovery_result)
-    return discovery_result
+    return _get_check_table_from_remote(discovery_request)
 
 
 def execute_discovery_job(api_request: StartDiscoveryRequest) -> DiscoveryResult:
@@ -554,39 +552,6 @@ def execute_discovery_job(api_request: StartDiscoveryRequest) -> DiscoveryResult
     return job.get_result(api_request)
 
 
-def _add_missing_discovery_result_fields(discovery_result: DiscoveryResult) -> DiscoveryResult:
-    # 1.6.0b4 introduced the service labels column which might be missing when
-    # fetching information from remote sites.
-    d = discovery_result._asdict()
-    d["check_table"] = [(e + ({},) if len(e) < 11 else e) for e in d["check_table"]]
-
-    # 2.0.0b2 introduced the found_on_nodes info
-    d["check_table"] = [(e + (None,) if len(e) < 12 else e) for e in d["check_table"]]
-
-    return DiscoveryResult(**d)
-
-
-def _deserialize_remote_result(raw_result: str) -> DiscoveryResult:
-    remote_result = ast.literal_eval(raw_result)
-
-    if isinstance(remote_result, tuple):
-        # Previous to 2.0.0p1 the remote call returned
-        # a) a tuple
-        # b) did not know about the new_labels, vanished_labels and changed_labels
-        return DiscoveryResult(
-            job_status=remote_result[0],
-            check_table_created=remote_result[1],
-            check_table=remote_result[2],
-            host_labels=remote_result[3],
-            new_labels={},
-            vanished_labels={},
-            changed_labels={},
-        )
-
-    assert isinstance(remote_result, dict)
-    return DiscoveryResult(**remote_result)
-
-
 def _get_check_table_from_remote(api_request):
     """Gathers the check table from a remote site
 
@@ -596,7 +561,7 @@ def _get_check_table_from_remote(api_request):
     try:
         sync_changes_before_remote_automation(api_request.host.site_id())
 
-        return _deserialize_remote_result(
+        return DiscoveryResult.deserialize(
             watolib.do_remote_automation(
                 get_site_config(api_request.host.site_id()),
                 "service-discovery-job",

@@ -232,7 +232,7 @@ class AutomationServiceDiscoveryJob(AutomationCommand):
                 new_check_table.append(tuple(tmp_entry))
             fixed_data = (data[0], data[1], new_check_table, data[3])
             return PythonPrinter().pformat(fixed_data)
-        return repr(execute_discovery_job(api_request)._asdict())
+        return execute_discovery_job(api_request).serialize()
 
 
 @page_registry.register_page("ajax_service_discovery")

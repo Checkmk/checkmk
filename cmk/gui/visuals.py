@@ -458,40 +458,43 @@ def _load_custom_user_visuals(
     builtin_visuals: Dict[Any, Any],
     skip_func: Optional[Callable[[Dict[Any, Any]], bool]],
 ) -> CustomUserVisuals:
+    """Note: Try NOT to use pathlib.Path functionality in this function, as pathlib is
+    measurably slower (7 times), due to path object creation and concatenation. This function
+    can iterate over several thousand files, which may take 250ms (Path) or 50ms(os.path)"""
 
     visuals: CustomUserVisuals = {}
+    visual_filename = "user_%s.mk" % what
+    old_views_filename = "views.mk"
 
-    for dirpath in cmk.utils.paths.profile_dir.iterdir():
+    for dirname in cmk.utils.paths.profile_dir.iterdir():
         try:
-            if not dirpath.exists():
-                continue
-
+            user_dirname = os.path.join(cmk.utils.paths.profile_dir, dirname)
+            visual_path = os.path.join(user_dirname, visual_filename)
             # Be compatible to old views.mk. The views.mk contains customized views
             # in an old format which will be loaded, transformed and when saved stored
             # in users_views.mk. When this file exists only this file is used.
-            path = dirpath.joinpath("user_%s.mk" % what)
-            if what == "views" and not path.exists():
-                path = dirpath.joinpath("%s.mk" % what)
+            if what == "views" and not os.path.exists(visual_path):
+                visual_path = os.path.join(user_dirname, old_views_filename)
 
-            if not path.exists():
+            if not os.path.exists(visual_path):
                 continue
 
-            user_id = dirpath.name
+            user_id = os.path.basename(dirname)
             if not userdb.user_exists(UserId(user_id)):
                 continue
 
-            user_visuals = _user_visuals_cache.get(path)
+            user_visuals = _user_visuals_cache.get(visual_path)
             if user_visuals is None:
-                modification_timestamp = os.stat(path).st_mtime
+                modification_timestamp = os.stat(visual_path).st_mtime
                 user_visuals = load_visuals_of_a_user(
-                    what, builtin_visuals, skip_func, path, user_id
+                    what, builtin_visuals, skip_func, visual_path, user_id
                 )
-                _user_visuals_cache.add(path, modification_timestamp, user_visuals)
+                _user_visuals_cache.add(visual_path, modification_timestamp, user_visuals)
 
             visuals.update(user_visuals)
 
         except SyntaxError as e:
-            raise MKGeneralException(_("Cannot load %s from %s: %s") % (what, path, e))
+            raise MKGeneralException(_("Cannot load %s from %s: %s") % (what, visual_path, e))
 
     return visuals
 

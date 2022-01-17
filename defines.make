@@ -25,6 +25,14 @@ else
 MANAGED            := no
 endif
 
+ifneq (,$(wildcard $(REPO_PATH)/plus))
+PLUS               := yes
+EDITION            := plus
+EDITION_SHORT      := cpe
+else
+PLUS               := no
+endif
+
 # Will be set to "yes" by cmk build system when building a free edition
 FREE               := no
 

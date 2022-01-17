@@ -175,6 +175,8 @@ $(DISTNAME).tar.gz: omd/packages/mk-livestatus/mk-livestatus-$(VERSION).tar.gz .
 	    --exclude "cee.py*" \
 	    --exclude "cme" \
 	    --exclude "cme.py*" \
+	    --exclude "cpe" \
+	    --exclude "cpe.py*" \
 	    cmk/*
 	tar czf $(DISTNAME)/werks.tar.gz $(TAROPTS) -C .werks werks
 	tar czf $(DISTNAME)/checks.tar.gz $(TAROPTS) -C checks $$(cd checks ; ls)
@@ -381,7 +383,7 @@ web/htdocs/themes/facelift/theme.css: .ran-webpack
 web/htdocs/themes/modern-dark/theme.css: .ran-webpack
 web/htdocs/themes/facelift/cma_facelift.css: .ran-webpack
 .ran-webpack: node_modules/.bin/webpack webpack.config.js postcss.config.js $(JAVASCRIPT_SOURCES) $(SCSS_SOURCES)
-	WEBPACK_MODE=$(WEBPACK_MODE) ENTERPRISE=$(ENTERPRISE) MANAGED=$(MANAGED) node_modules/.bin/webpack --mode=$(WEBPACK_MODE:quick=development)
+	WEBPACK_MODE=$(WEBPACK_MODE) ENTERPRISE=$(ENTERPRISE) MANAGED=$(MANAGED) PLUS=$(PLUS) node_modules/.bin/webpack --mode=$(WEBPACK_MODE:quick=development)
 	touch web/htdocs/js/*_min.js web/htdocs/themes/*/theme.css
 
 # TODO(sp) The target below is not correct, we should not e.g. remove any stuff

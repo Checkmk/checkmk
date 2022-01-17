@@ -332,11 +332,14 @@ class Site:
         completed_process = subprocess.run(
             cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, encoding="utf-8", check=False
         )
-        logger.debug("Exit code: %d", completed_process.returncode)
+
+        log_level = logging.DEBUG if completed_process.returncode == 0 else logging.WARNING
+        logger.log(log_level, "Exit code: %d", completed_process.returncode)
         if completed_process.stdout:
-            logger.debug("Output:")
+            logger.log(log_level, "Output:")
         for line in completed_process.stdout.strip().split("\n"):
-            logger.debug("> %s", line)
+            logger.log(log_level, "> %s", line)
+
         return completed_process.returncode
 
     def path(self, rel_path: str) -> str:

@@ -9,13 +9,17 @@ from __future__ import annotations
 import copy
 import json
 import os
+import pickle
 import sys
 import traceback
+from enum import Enum
 from itertools import chain, starmap
+from pathlib import Path
 from typing import (
     Any,
     Callable,
     Dict,
+    Final,
     Iterator,
     List,
     Literal,
@@ -40,6 +44,7 @@ import cmk.gui.pages
 import cmk.gui.pagetypes as pagetypes
 import cmk.gui.userdb as userdb
 import cmk.gui.utils as utils
+from cmk.gui import hooks
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem, make_main_menu_breadcrumb
 from cmk.gui.exceptions import HTTPRedirect, MKAuthException, MKGeneralException, MKUserError
 from cmk.gui.globals import config, g, html, output_funnel, request, transactions, user
@@ -116,6 +121,15 @@ from cmk.gui.valuespec import (
     Transform,
     ValueSpec,
 )
+
+CustomUserVisuals = Dict[Tuple[UserId, VisualName], Dict]
+
+
+class VisualType(Enum):
+    views: VisualTypeName = "views"
+    dashboards: VisualTypeName = "dashboards"
+    reports: VisualTypeName = "reports"
+
 
 T = TypeVar("T")
 #   .--Plugins-------------------------------------------------------------.
@@ -282,15 +296,13 @@ def save(what, visuals, user_id=None):
         if user_id == owner_id:
             uservisuals[name] = visual
     save_user_file("user_" + what, uservisuals, user_id=user_id)
+    _CombinedVisualsCache(VisualType(what)).invalidate_cache()
 
 
-# FIXME: Currently all user visual files of this type are locked. We could optimize
-# this not to lock all files but only lock the files the user is about to modify.
 def load(
     what: str,
     builtin_visuals: Dict[Any, Any],
     skip_func: Optional[Callable[[Dict[Any, Any]], bool]] = None,
-    lock: bool = False,
 ) -> Dict[Tuple[UserId, str], Dict[str, Any]]:
     visuals: Dict[Tuple[UserId, str], Dict[str, Any]] = {}
 
@@ -307,8 +319,8 @@ def load(
 
         visuals[(UserId(""), name)] = visual
 
-    # Now scan users subdirs for files "user_*.mk"
-    visuals.update(load_user_visuals(what, builtin_visuals, skip_func, lock))
+    # Add custom "user_*.mk" visuals
+    visuals.update(_CombinedVisualsCache(VisualType(what)).load(builtin_visuals, skip_func))
 
     return visuals
 
@@ -365,13 +377,89 @@ def cleanup_context_filters(context, single_infos: SingleInfos) -> VisualContext
     return dict(starmap(unsingle, context.items()))
 
 
-def load_user_visuals(
+class _CombinedVisualsCache:
+    _visuals_cache_dir: Final[Path] = Path(cmk.utils.paths.tmp_dir) / "visuals_cache"
+
+    def __init__(self, visual_type: VisualType):
+        self._visual_type: Final[VisualType] = visual_type
+
+    @classmethod
+    def invalidate_all_caches(cls) -> None:
+        for visual_type in VisualType:
+            _CombinedVisualsCache(visual_type).invalidate_cache()
+
+    def invalidate_cache(self) -> None:
+        self._update_cache_info_timestamp()
+
+    def _update_cache_info_timestamp(self) -> None:
+        cache_info_filename = self._info_filename
+        cache_info_filename.parent.mkdir(parents=True, exist_ok=True)
+        cache_info_filename.touch()
+
+    @property
+    def _info_filename(self) -> Path:
+        return self._visuals_cache_dir / f"last_update_{self._visual_type.value}"
+
+    @property
+    def _content_filename(self) -> Path:
+        return self._visuals_cache_dir / f"cached_{self._visual_type.value}"
+
+    def load(
+        self,
+        builtin_visuals: Dict[Any, Any],
+        skip_func: Optional[Callable[[Dict[Any, Any]], bool]],
+    ) -> CustomUserVisuals:
+
+        if self._may_use_cache():
+            if (content := self._read_from_cache()) is not None:
+                return content
+        return self._compute_and_write_cache(builtin_visuals, skip_func)
+
+    def _may_use_cache(self) -> bool:
+        if not self._content_filename.exists():
+            return False
+
+        if not self._info_filename.exists():
+            # Create a new file for future reference (this obviously has the newest timestamp)
+            self.invalidate_cache()
+            return False
+
+        if self._content_filename.stat().st_mtime < self._info_filename.stat().st_mtime:
+            return False
+
+        return True
+
+    def _compute_and_write_cache(
+        self,
+        builtin_visuals: Dict[Any, Any],
+        skip_func: Optional[Callable[[Dict[Any, Any]], bool]],
+    ) -> CustomUserVisuals:
+        visuals = _load_custom_user_visuals(self._visual_type.value, builtin_visuals, skip_func)
+        self._write_to_cache(visuals)
+        return visuals
+
+    def _read_from_cache(self) -> Optional[CustomUserVisuals]:
+        try:
+            return pickle.loads(store.load_bytes_from_file(self._content_filename))
+        except (TypeError, pickle.UnpicklingError):
+            return None
+
+    def _write_to_cache(self, visuals: CustomUserVisuals) -> None:
+        store.save_bytes_to_file(self._content_filename, pickle.dumps(visuals))
+        self._update_cache_info_timestamp()
+
+
+hooks.register_builtin("snapshot-pushed", _CombinedVisualsCache.invalidate_all_caches)
+hooks.register_builtin("users-saved", lambda x: _CombinedVisualsCache.invalidate_all_caches())
+
+
+def _load_custom_user_visuals(
     what: str,
     builtin_visuals: Dict[Any, Any],
     skip_func: Optional[Callable[[Dict[Any, Any]], bool]],
-    lock: bool,
-) -> Dict[Tuple[UserId, str], Dict]:
-    visuals: Dict[Tuple[UserId, str], Dict] = {}
+) -> CustomUserVisuals:
+
+    visuals: CustomUserVisuals = {}
 
     for dirpath in cmk.utils.paths.profile_dir.iterdir():
         try:
@@ -396,7 +484,7 @@ def load_user_visuals(
             if user_visuals is None:
                 modification_timestamp = os.stat(path).st_mtime
                 user_visuals = load_visuals_of_a_user(
-                    what, builtin_visuals, skip_func, lock, path, user_id
+                    what, builtin_visuals, skip_func, path, user_id
                 )
                 _user_visuals_cache.add(path, modification_timestamp, user_visuals)
 
@@ -408,9 +496,9 @@ def load_user_visuals(
     return visuals
 
 
-def load_visuals_of_a_user(what, builtin_visuals, skip_func, lock, path, user_id):
-    user_visuals: Dict[Tuple[UserId, str], Dict] = {}
-    for name, visual in store.load_object_from_file(path, default={}, lock=lock).items():
+def load_visuals_of_a_user(what, builtin_visuals, skip_func, path, user_id) -> CustomUserVisuals:
+    user_visuals: CustomUserVisuals = {}
+    for name, visual in store.load_object_from_file(path, default={}).items():
         visual["owner"] = user_id
         visual["name"] = name
 

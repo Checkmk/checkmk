@@ -179,11 +179,6 @@ void TableLog::answerQueryInternal(Query *query, const LogFiles &log_files) {
         return;
     }
 
-    /* This code start with the oldest log entries. I'm going
-       to change this and start with the newest. That way,
-       the Limit: header produces more reasonable results. */
-
-    /* NEW CODE - NEWEST FIRST */
     auto it = log_files.end();  // it now points beyond last log file
     --it;                       // switch to last logfile (we have at least one)
 

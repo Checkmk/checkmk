@@ -27,6 +27,7 @@
 #include "yaml-cpp/node/node.h"  // for Node
 
 namespace fs = std::filesystem;
+using namespace std::string_literals;
 
 namespace tst {
 
@@ -515,5 +516,18 @@ void CopyFailedPythonLogFileToLog(const std::filesystem::path& data) {
                                 cma::install::kMsiLogFileName);
 }
 }  // namespace misc
+
+namespace {
+using Level = cma::evl::EventLogRecordBase::Level;
+const std::vector<EventRecordData> simple_log_data{
+    {13, 0x11, 1, L"Source"s, L"Message 1"s, Level::error},
+    {13, 0x11, 2, L"Source"s, L"Message 1"s, Level::error},
+    {13, 0x11, 3, L"Source"s, L"Message 2"s, Level::error},
+    {13, 0x11, 4, L"Source"s, L"Message 3"s, Level::error},
+    {13, 0x11, 5, L"Source"s, L"Message 3"s, Level::error},
+    {13, 0x11, 6, L"Source"s, L"Message 3"s, Level::error}};
+}  // namespace
+
+const std::vector<EventRecordData>& SimpleLogData() { return simple_log_data; }
 
 }  // namespace tst

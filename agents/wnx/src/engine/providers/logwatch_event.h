@@ -30,6 +30,7 @@ struct LogWatchLimits {
     int64_t max_line_length;
     int64_t max_entries;
     int64_t timeout;
+    cma::evl::SkipDuplicatedRecords skip;
 };
 
 // simple data structure to keep states internally
@@ -143,6 +144,7 @@ private:
     size_t default_entry_ = 0;
     bool send_all_ = false;
     EvlType evl_type_ = EvlType::classic;
+    evl::SkipDuplicatedRecords skip_{evl::SkipDuplicatedRecords::no};
 
     // limits block
     int64_t max_size_ = cma::cfg::logwatch::kMaxSize;

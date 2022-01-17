@@ -13,6 +13,9 @@
 
 #include "cfg.h"
 #include "common/yaml.h"
+#include "eventlog/eventlogbase.h"
+#include "eventlog/eventlogstd.h"
+#include "eventlog/eventlogvista.h"
 #include "iosfwd"                // for ofstream
 #include "on_start.h"            // for OnStart, AppType, AppType::test
 #include "system_error"          // for error_code
@@ -286,5 +289,78 @@ void CopyFailedPythonLogFileToLog(const std::filesystem::path& data);
 
 }  // namespace misc
 
+struct EventRecordData {
+    uint16_t event_id;
+    uint16_t event_qualifiers;
+    time_t time_generated;
+    std::wstring source;
+    std::wstring message;
+    cma::evl::EventLogRecordBase::Level event_level;
+};
+
+const std::vector<EventRecordData>& SimpleLogData();
 }  // namespace tst
+
+namespace cma::evl {
+class EventLogRecordDebug : public EventLogRecordBase {
+public:
+    EventLogRecordDebug(uint64_t record_id, const tst::EventRecordData& data)
+        : record_id_{record_id}
+        , event_id_{data.event_id}
+        , event_qualifiers_{data.event_qualifiers}
+        , time_generated_{data.time_generated}
+        , source_(data.source)
+        , message_(data.message)
+        , event_level_{data.event_level} {}
+
+    virtual uint64_t recordId() const override { return record_id_; }
+
+    uint16_t eventId() const override { return event_id_; }
+
+    uint16_t eventQualifiers() const override { return event_qualifiers_; }
+
+    time_t timeGenerated() const override { return time_generated_; }
+
+    std::wstring source() const override { return source_; }
+
+    Level eventLevel() const override { return event_level_; }
+
+    std::wstring makeMessage() const override { return message_; }
+
+private:
+    uint64_t record_id_;
+    uint16_t event_id_;
+    uint16_t event_qualifiers_;
+    time_t time_generated_;
+    std::wstring source_;
+    std::wstring message_;
+    Level event_level_;
+};
+
+class EventLogDebug : public EventLogBase {
+public:
+    EventLogDebug(const std::vector<tst::EventRecordData>& data)
+        : data_(data) {}
+    ~EventLogDebug() {}
+
+    std::wstring getName() const override { return L"debug"; }
+    void seek(uint64_t record_id) override { pos_ = record_id; }
+    EventLogRecordBase* readRecord() override {
+        if (pos_ < data_.size()) {
+            const auto& d = data_[static_cast<size_t>(pos_)];
+            return new EventLogRecordDebug(pos_++, d);
+        }
+        return nullptr;
+    }
+    uint64_t getLastRecordId() override { return 0; }
+    bool isLogValid() const override { return true; }
+
+private:
+    uint64_t pos_{0U};
+    std::vector<tst::EventRecordData> data_;
+    bool seek_possible_{true};
+};
+
+}  // namespace cma::evl
+
 #endif  // test_tools_h__

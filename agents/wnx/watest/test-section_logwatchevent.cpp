@@ -15,6 +15,9 @@
 #include "tools/_misc.h"
 #include "tools/_process.h"
 
+using cma::evl::SkipDuplicatedRecords;
+using std::chrono::steady_clock;
+
 namespace cma::provider {
 
 static void LoadTestConfig(YAML::Node Node) {
@@ -73,22 +76,105 @@ TEST(LogWatchEventTest, GetLastPos) {
     }
 }
 
+/// \brief Keeps temporary folder and pair of file names and dirs
+class LogWatchEventFixture : public ::testing::Test {
+public:
+    cma::evl::EventLogDebug event_log{tst::SimpleLogData()};
+    State state{"Application", cfg::kFromBegin};
+    const size_t max_pos{tst::SimpleLogData().size()};
+    static constexpr LogWatchLimits lwl_all_with_skip{
+        .max_size = 10'000,
+        .max_line_length = -1,
+        .max_entries = -1,
+        .timeout = -1,
+        .skip = SkipDuplicatedRecords::yes};
+    static constexpr LogWatchLimits lwl_all_without_skip{
+        .max_size = 10'000,
+        .max_line_length = -1,
+        .max_entries = -1,
+        .timeout = -1,
+        .skip = SkipDuplicatedRecords::no};
+    static constexpr LogWatchLimits lwl_all_with_skip_and_cut_same{
+        .max_size = 10'000,
+        .max_line_length = -1,
+        .max_entries = 2,
+        .timeout = -1,
+        .skip = SkipDuplicatedRecords::yes};
+    static constexpr LogWatchLimits lwl_all_with_skip_and_cut_diff{
+        .max_size = 10'000,
+        .max_line_length = -1,
+        .max_entries = 4,
+        .timeout = -1,
+        .skip = SkipDuplicatedRecords::yes};
+};
+
+TEST_F(LogWatchEventFixture, DumpEventLogWithSkip) {
+    auto [pos, out] = DumpEventLog(event_log, state, lwl_all_with_skip);
+    EXPECT_EQ(pos, max_pos - 1);
+    auto table = tools::SplitString(out, "\n");
+    EXPECT_EQ(table.size(), 5);  // 3 unique entry + 2 repeated messages
+    EXPECT_EQ(fmt::format(evl::kSkippedMessageFormat, 1), table[1] + "\n");
+    EXPECT_EQ(fmt::format(evl::kSkippedMessageFormat, 2), table[4] + "\n");
+    for (const auto& x : {0, 2, 3}) {
+        EXPECT_NE(table[x].find("Message "), std::string::npos);
+    }
+}
+
+TEST_F(LogWatchEventFixture, DumpEventLogWithoutSkip) {
+    auto [pos, out] = DumpEventLog(event_log, state, lwl_all_without_skip);
+    EXPECT_EQ(pos, max_pos - 1);
+    auto table = tools::SplitString(out, "\n");
+    EXPECT_EQ(table.size(), max_pos);
+    for (const auto& x : table) {
+        EXPECT_NE(x.find("Message "), std::string::npos);
+    }
+}
+
+TEST_F(LogWatchEventFixture, DumpEventLogWithSkipAndCutOnSameEntry) {
+    // special case when cut occurs at the repeating entry
+    // we can cut  at the entries+1 !
+    auto lwl = lwl_all_with_skip_and_cut_same;
+    auto [pos, out] = DumpEventLog(event_log, state, lwl);
+    EXPECT_EQ(pos, lwl.max_entries);
+    auto table = tools::SplitString(out, "\n");
+    EXPECT_EQ(table.size(), lwl.max_entries + 1);
+    EXPECT_EQ(fmt::format(evl::kSkippedMessageFormat, 1), table[1] + "\n");
+    EXPECT_NE(table[0].find("Message "), std::string::npos);
+}
+
+TEST_F(LogWatchEventFixture, DumpEventLogWithSkipAndCutOnDiffEntry) {
+    auto lwl = lwl_all_with_skip_and_cut_diff;
+    auto [pos, out] = DumpEventLog(event_log, state, lwl);
+    EXPECT_EQ(pos, lwl.max_entries - 1);
+    auto table = tools::SplitString(out, "\n");
+    EXPECT_EQ(table.size(), lwl.max_entries);
+    EXPECT_EQ(fmt::format(evl::kSkippedMessageFormat, 1), table[1] + "\n");
+    EXPECT_NE(table[0].find("Message "), std::string::npos);
+}
+
 TEST(LogWatchEventTest, DumpEventLog) {
     using namespace cma::cfg;
-    using namespace std::chrono;
     auto ptr = cma::evl::OpenEvl(L"Application", false);
     ASSERT_TRUE(ptr);
 
     State state("Application", 0);
     {
-        LogWatchLimits lwl{10'000, -1, -1, -1};
+        LogWatchLimits lwl{.max_size = 10'000,
+                           .max_line_length = -1,
+                           .max_entries = -1,
+                           .timeout = -1,
+                           .skip = SkipDuplicatedRecords::no};
         auto [pos, out] = DumpEventLog(*ptr, state, lwl);
         EXPECT_TRUE(pos > 0);
         EXPECT_TRUE(out.length() < 12'000);
     }
 
     {
-        LogWatchLimits lwl{-1, 10, 19, -1};
+        LogWatchLimits lwl{.max_size = -1,
+                           .max_line_length = 10,
+                           .max_entries = 19,
+                           .timeout = -1,
+                           .skip = SkipDuplicatedRecords::no};
         auto [pos, out] = DumpEventLog(*ptr, state, lwl);
         EXPECT_TRUE(pos > 0);
         EXPECT_TRUE(out.length() < 20000);
@@ -98,11 +184,17 @@ TEST(LogWatchEventTest, DumpEventLog) {
     }
 
     {
-        LogWatchLimits lwl{-1, 10, -1, 1};
+        LogWatchLimits lwl{.max_size = -1,
+                           .max_line_length = 10,
+                           .max_entries = -1,
+                           .timeout = -1,
+                           .skip = SkipDuplicatedRecords::no};
         auto start = steady_clock::now();
         auto [pos, out] = DumpEventLog(*ptr, state, lwl);
         auto end = steady_clock::now();
-        EXPECT_TRUE(duration_cast<seconds>(end - start).count() < 2);
+        EXPECT_TRUE(
+            std::chrono::duration_cast<std::chrono::seconds>(end - start)
+                .count() < 2);
     }
 }
 

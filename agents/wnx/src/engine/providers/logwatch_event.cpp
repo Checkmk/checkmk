@@ -392,14 +392,14 @@ std::optional<uint64_t> GetLastPos(EvlType type, std::string_view name) {
     return {};
 }
 
-std::pair<uint64_t, std::string> DumpEventLog(cma::evl::EventLogBase& log,
+std::pair<uint64_t, std::string> DumpEventLog(evl::EventLogBase& log,
                                               const State& state,
                                               LogWatchLimits lwl) {
     std::string out;
     int64_t count = 0;
     auto start = std::chrono::steady_clock::now();
     auto pos = cma::evl::PrintEventLog(
-        log, state.pos_, state.level_, state.hide_context_,
+        log, state.pos_, state.level_, state.hide_context_, lwl.skip,
         [&out, lwl, &count, start](const std::string& str) -> bool {
             if (lwl.max_line_length > 0 &&
                 static_cast<int64_t>(str.length()) >= lwl.max_line_length) {
@@ -515,7 +515,11 @@ void UpdateStatesByConfig(StateVector& states,
 }
 
 LogWatchLimits LogWatchEvent::getLogWatchLimits() const noexcept {
-    return {max_size_, max_line_length_, max_entries_, timeout_};
+    return {.max_size = max_size_,
+            .max_line_length = max_line_length_,
+            .max_entries = max_entries_,
+            .timeout = timeout_,
+            .skip = skip_};
 }
 
 std::vector<std::filesystem::path> LogWatchEvent::makeStateFilesTable() const {

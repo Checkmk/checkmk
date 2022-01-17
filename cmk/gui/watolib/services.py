@@ -24,7 +24,7 @@ from cmk.gui.background_job import BackgroundProcessInterface, JobStatusStates
 from cmk.gui.globals import config, user
 from cmk.gui.i18n import _
 from cmk.gui.sites import get_site_config, site_is_local, SiteStatus, states
-from cmk.gui.watolib.automations import MKAutomationException, sync_changes_before_remote_automation
+from cmk.gui.watolib.automations import sync_changes_before_remote_automation
 from cmk.gui.watolib.check_mk_automations import discovery, set_autochecks, try_discovery
 from cmk.gui.watolib.rulesets import RuleConditions, service_description_to_condition
 from cmk.gui.watolib.utils import is_pre_17_remote_site
@@ -531,7 +531,18 @@ def get_check_table(discovery_request: StartDiscoveryRequest) -> DiscoveryResult
     if site_is_local(discovery_request.host.site_id()):
         return execute_discovery_job(discovery_request)
 
-    return _get_check_table_from_remote(discovery_request)
+    sync_changes_before_remote_automation(discovery_request.host.site_id())
+
+    return DiscoveryResult.deserialize(
+        watolib.do_remote_automation(
+            get_site_config(discovery_request.host.site_id()),
+            "service-discovery-job",
+            [
+                ("host_name", discovery_request.host.name()),
+                ("options", json.dumps(discovery_request.options._asdict())),
+            ],
+        )
+    )
 
 
 def execute_discovery_job(api_request: StartDiscoveryRequest) -> DiscoveryResult:
@@ -550,59 +561,6 @@ def execute_discovery_job(api_request: StartDiscoveryRequest) -> DiscoveryResult
         job.stop()
 
     return job.get_result(api_request)
-
-
-def _get_check_table_from_remote(api_request):
-    """Gathers the check table from a remote site
-
-    Cares about pre 1.6 sites that does not support the new service-discovery-job API call.
-    Falling back to the previously existing try-inventry and inventory automation calls.
-    """
-    try:
-        sync_changes_before_remote_automation(api_request.host.site_id())
-
-        return DiscoveryResult.deserialize(
-            watolib.do_remote_automation(
-                get_site_config(api_request.host.site_id()),
-                "service-discovery-job",
-                [
-                    ("host_name", api_request.host.name()),
-                    ("options", json.dumps(api_request.options._asdict())),
-                ],
-            )
-        )
-    except watolib.MKAutomationException as e:
-        if "Invalid automation command: service-discovery-job" not in "%s" % e:
-            raise
-
-        # Compatibility for pre 1.6 remote sites.
-        if api_request.options.action == DiscoveryAction.TABULA_RASA:
-            raise MKAutomationException(_("Tabula rasa not supported any more"))
-
-        if api_request.options.action == DiscoveryAction.REFRESH:
-            options = ["@scan"]
-        else:
-            options = ["@noscan"]
-
-        if not api_request.options.ignore_errors:
-            options.append("@raiseerrors")
-
-        return DiscoveryResult(
-            job_status={
-                "is_active": False,
-                "state": JobStatusStates.INITIALIZED,
-            },
-            check_table=try_discovery(
-                api_request.host.site_id(),
-                options,
-                api_request.host.name(),
-            ).check_table,
-            check_table_created=int(time.time()),
-            host_labels={},
-            new_labels={},
-            vanished_labels={},
-            changed_labels={},
-        )
 
 
 @gui_background_job.job_registry.register

@@ -19,7 +19,7 @@ class Decompressor(Enum):
     def __call__(self, data: bytes) -> bytes:
         """
         >>> from zlib import compress
-        >>> Decompressor("zlib").decompress(compress(b"blablub"))
+        >>> Decompressor("zlib")(compress(b"blablub"))
         b'blablub'
         """
         return {Decompressor.ZLIB: Decompressor._zlib_decompress}[self](data)

@@ -284,6 +284,7 @@ test-unit: prepare-protobuf-files
 		../cmk/gui \
 		../cmk/special_agents \
 		../cmk/utils \
+		../agent-receiver \
 		unit
 
 test-unit-docker:
@@ -299,6 +300,7 @@ test-unit-resilience: prepare-protobuf-files
 		../cmk/gui \
 		../cmk/special_agents \
 		../cmk/utils \
+		../agent-receiver \
 	        -m "not non_resilient" \
 		unit
 
@@ -320,6 +322,7 @@ test-unit-coverage-html: prepare-protobuf-files
 		../cmk/gui \
 		../cmk/special_agents \
 		../cmk/utils \
+		../agent-receiver \
 		unit
 
 test-unit-sh:

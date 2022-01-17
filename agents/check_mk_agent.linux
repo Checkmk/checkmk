@@ -365,7 +365,7 @@ HERE
     if [ -n "${REMOTE_HOST}" ]; then # xinetd
         sed -n "/^service[[:space:]]*${XINETD_SERVICE_NAME}/,/}/s/^[[:space:]]*only_from[[:space:]]*=[[:space:]]*\(.*\)/OnlyFrom: \1/p" /etc/xinetd.d/* | head -n1
     elif inpath systemctl; then # systemd
-        sed -n '/^IPAddressAllow/s/IPAddressAllow=/OnlyFrom: /p' /usr/lib/systemd/system/${XINETD_SERVICE_NAME}.socket
+        sed -n '/^IPAddressAllow/s/IPAddressAllow=/OnlyFrom: /p' "/usr/lib/systemd/system/${XINETD_SERVICE_NAME}.socket" 2>/dev/null
         # NOTE: The above line just reads back the socket file we deployed ourselves. Systemd units can be altered by
         # other user defined unit files, so this *may* not be correct. A better way of doing this seemed to be querying
         # systemctl itself about the 'effective' property:

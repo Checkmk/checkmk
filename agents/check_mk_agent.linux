@@ -1316,7 +1316,7 @@ section_timesyncd() {
     systemctl is-enabled systemd-timesyncd.service >/dev/null 2>&1 || return 1
     # debian 10.8 uses ConditionFileIsExecutable to "disable" systemd-timedatectl when ntp is installed.
     # The service is still enabled, but does not start timesyncd as the condition is not met.
-    (inpath ntpd || inpath openntpd) && return 1 # we check the same condition as the systemd condition
+    (inpath ntpd || inpath openntpd || inpath chronyd || inpath VBoxService) && return 1 # we check the same condition as the systemd condition
     timedatectl timesync-status >/dev/null 2>&1 || return 1
 
     ${MK_RUN_SYNC_PARTS} || return 0

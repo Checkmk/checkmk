@@ -141,6 +141,8 @@ TagCondition = Union[Optional[TagID], TagConditionNE, TagConditionOR, TagConditi
 TaggroupIDToTagCondition = Mapping[TaggroupID, TagCondition]
 TagsOfHosts = Dict[HostName, TaggroupIDToTagID]
 
+LabelConditions = Dict[str, Union[str, TagConditionNE]]
+
 
 class GroupedTagSpec(TypedDict):
     id: Optional[TagID]

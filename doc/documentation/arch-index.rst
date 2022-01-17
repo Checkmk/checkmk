@@ -30,3 +30,5 @@ Components
    arch-comp-liveproxyd.rst
    arch-comp-livestatus.rst
    arch-comp-template.rst
+
+   arch-comp-agent-linux.rst

@@ -7620,10 +7620,6 @@ msgstr "Carico della CPU tramite WMI"
 msgid "CPU Memory used"
 msgstr "CPU Memoria utilizzata"
 
-#, fuzzy
-msgid "CPU Utilization"
-msgstr "Utilizzo della CPU"
-
 msgid "CPU Utilization of Clusters"
 msgstr "Utilizzo della CPU dei cluster"
 
@@ -10720,10 +10716,6 @@ msgid "Container - Display the information on container level"
 msgstr "Contenitore - Visualizza le informazioni a livello di contenitore"
 
 msgid "Container Name"
-msgstr "Nome del contenitore"
-
-#, fuzzy
-msgid "Container memory"
 msgstr "Nome del contenitore"
 
 msgid "Containerization"
@@ -29408,9 +29400,6 @@ msgstr "Memoria utilizzata"
 
 msgid "Memory used by caches"
 msgstr "Memoria usata dalle cache"
-
-msgid "Memory utilization"
-msgstr "Utilizzo della memoria"
 
 msgid "Memory warning at"
 msgstr "Avviso di memoria a"
@@ -63529,6 +63518,19 @@ msgstr "z/OS"
 #, fuzzy, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. Tutti i diritti riservati."
+
+#, fuzzy
+#~| msgid "CPU utilization"
+#~ msgid "CPU Utilization"
+#~ msgstr "Utilizzo della CPU"
+
+#, fuzzy
+#~| msgid "Container Name"
+#~ msgid "Container memory"
+#~ msgstr "Nome del contenitore"
+
+#~ msgid "Memory utilization"
+#~ msgstr "Utilizzo della memoria"
 
 #, fuzzy
 #~| msgid "The rule does not match"

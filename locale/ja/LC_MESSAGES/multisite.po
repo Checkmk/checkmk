@@ -7308,10 +7308,6 @@ msgstr "WMIを介したCPU負荷"
 msgid "CPU Memory used"
 msgstr "使用されるCPUメモリ"
 
-#, fuzzy
-msgid "CPU Utilization"
-msgstr "CPU使用率"
-
 msgid "CPU Utilization of Clusters"
 msgstr "クラスターのCPU使用率"
 
@@ -10272,10 +10268,6 @@ msgid "Container - Display the information on container level"
 msgstr "コンテナ - コンテナレベルで情報を表示します"
 
 msgid "Container Name"
-msgstr "コンテナ名"
-
-#, fuzzy
-msgid "Container memory"
 msgstr "コンテナ名"
 
 msgid "Containerization"
@@ -28301,9 +28293,6 @@ msgstr "使用メモリ"
 
 msgid "Memory used by caches"
 msgstr "キャッシュによって使用されるメモリ"
-
-msgid "Memory utilization"
-msgstr "メモリ使用率"
 
 msgid "Memory warning at"
 msgstr "でのメモリ警告"
@@ -60502,6 +60491,19 @@ msgstr "z/OS"
 #, fuzzy, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. All Rights Reserved."
+
+#, fuzzy
+#~| msgid "CPU utilization"
+#~ msgid "CPU Utilization"
+#~ msgstr "CPU使用率"
+
+#, fuzzy
+#~| msgid "Container Name"
+#~ msgid "Container memory"
+#~ msgstr "コンテナ名"
+
+#~ msgid "Memory utilization"
+#~ msgstr "メモリ使用率"
 
 #, fuzzy
 #~| msgid "The rule does not match"

@@ -7127,10 +7127,6 @@ msgstr ""
 msgid "CPU Memory used"
 msgstr "% utilizare"
 
-#, fuzzy
-msgid "CPU Utilization"
-msgstr "Dezactiveaza Notificarile"
-
 msgid "CPU Utilization of Clusters"
 msgstr ""
 
@@ -10031,10 +10027,6 @@ msgstr ""
 
 #, fuzzy
 msgid "Container Name"
-msgstr "Numele Elementului"
-
-#, fuzzy
-msgid "Container memory"
 msgstr "Numele Elementului"
 
 #, fuzzy
@@ -27961,10 +27953,6 @@ msgstr "% utilizare"
 
 msgid "Memory used by caches"
 msgstr ""
-
-#, fuzzy
-msgid "Memory utilization"
-msgstr "Dezactiveaza Notificarile"
 
 msgid "Memory warning at"
 msgstr ""
@@ -58667,6 +58655,18 @@ msgstr "z/OS"
 #, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr ""
+
+#, fuzzy
+#~ msgid "CPU Utilization"
+#~ msgstr "Dezactiveaza Notificarile"
+
+#, fuzzy
+#~ msgid "Container memory"
+#~ msgstr "Numele Elementului"
+
+#, fuzzy
+#~ msgid "Memory utilization"
+#~ msgstr "Dezactiveaza Notificarile"
 
 #, fuzzy
 #~ msgid "This rule does not match."

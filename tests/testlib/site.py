@@ -271,11 +271,14 @@ class Site:
                              stderr=subprocess.STDOUT,
                              encoding="utf-8")
         stdout, _stderr = p.communicate()
-        logger.debug("Exit code: %d", p.returncode)
+
+        log_level = logging.DEBUG if p.returncode == 0 else logging.WARNING
+        logger.log(log_level, "Exit code: %d", p.returncode)
         if stdout:
-            logger.debug("Output:")
+            logger.log(log_level, "Output:")
         for line in stdout.strip().split("\n"):
-            logger.debug("> %s", line)
+            logger.log(log_level, "> %s", line)
+
         return p.returncode
 
     def path(self, rel_path):

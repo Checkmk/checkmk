@@ -80,6 +80,7 @@ apt-get update
 apt-get install -y \
         clang-$CLANG_VERSION \
         clangd-$CLANG_VERSION \
+        clang-format-$CLANG_VERSION \
         clang-tidy-$CLANG_VERSION \
         lld-$CLANG_VERSION \
         lldb-$CLANG_VERSION \

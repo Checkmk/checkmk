@@ -6,7 +6,9 @@ mod agent_receiver_api;
 mod certs;
 mod cli;
 mod config;
+mod dump;
 mod monitoring_data;
+mod pull;
 mod registration;
 mod status;
 mod tls_server;
@@ -16,7 +18,6 @@ use log::error;
 #[cfg(unix)]
 use nix::unistd;
 use std::fs;
-use std::io::Result as IoResult;
 use std::io::{self, Write};
 use std::path::{Path, PathBuf};
 use structopt::StructOpt;
@@ -31,7 +32,6 @@ const CONFIG_FILE: &str = "cmk-agent-ctl-config.json";
 const CONN_FILE: &str = "registered_connections.json";
 const LOG_FILE: &str = "cmk-agent-ctl.log";
 const LEGACY_PULL_FILE: &str = "allow-legacy-pull";
-const TLS_ID: &[u8] = b"16";
 
 fn push(registry: config::Registry) -> AnyhowResult<()> {
     let compressed_mon_data = monitoring_data::compress(
@@ -55,56 +55,6 @@ fn push(registry: config::Registry) -> AnyhowResult<()> {
     }
 
     Ok(())
-}
-
-fn dump() -> AnyhowResult<()> {
-    let mon_data = monitoring_data::collect().context("Error collecting monitoring data.")?;
-    io::stdout()
-        .write_all(&mon_data)
-        .context("Error writing monitoring data to stdout.")?;
-
-    Ok(())
-}
-
-fn pull(registry: config::Registry) -> AnyhowResult<()> {
-    if is_legacy_pull(&registry) {
-        return dump();
-    }
-
-    let mut stream = tls_server::IoStream::new();
-
-    stream.write_all(TLS_ID)?;
-    stream.flush()?;
-
-    let mut tls_connection = tls_server::tls_connection(registry.pull_connections())
-        .context("Could not initialize TLS.")?;
-    let mut tls_stream = tls_server::tls_stream(&mut tls_connection, &mut stream);
-
-    let mon_data = monitoring_data::collect().context("Error collecting monitoring data.")?;
-    tls_stream.write_all(&mon_data)?;
-    tls_stream.flush()?;
-
-    disallow_legacy_pull().context("Just provided agent data via TLS, but legacy pull mode is still allowed, and could not delete marker")?;
-    Ok(())
-}
-
-fn is_legacy_pull(registry: &config::Registry) -> bool {
-    if !Path::new(HOME_DIR).join(LEGACY_PULL_FILE).exists() {
-        return false;
-    }
-    if !registry.is_empty() {
-        return false;
-    }
-    true
-}
-
-fn disallow_legacy_pull() -> IoResult<()> {
-    let legacy_pull_marker = Path::new(HOME_DIR).join(LEGACY_PULL_FILE);
-    if !legacy_pull_marker.exists() {
-        return Ok(());
-    }
-
-    fs::remove_file(legacy_pull_marker)
 }
 
 fn init_logging(path: &Path) -> AnyhowResult<()> {
@@ -201,19 +151,20 @@ fn run_requested_mode(args: cli::Args, config_path: &Path, conn_path: &Path) -> 
     let stored_config = config::ConfigFromDisk::load(config_path)?;
     let registry = config::Registry::from_file(conn_path)
         .context("Error while loading registered connections.")?;
+    let legacy_pull_marker = Path::new(HOME_DIR).join(LEGACY_PULL_FILE);
     match args {
         cli::Args::Register(reg_args) => {
             registration::register(
                 config::RegistrationConfig::new(stored_config, reg_args)?,
                 registry,
             )?;
-            disallow_legacy_pull().context(
+            pull::disallow_legacy_pull(&legacy_pull_marker).context(
                 "Registration successful, but could not delete marker for legacy pull mode",
             )
         }
         cli::Args::Push { .. } => push(registry),
-        cli::Args::Pull { .. } => pull(registry),
-        cli::Args::Dump { .. } => dump(),
+        cli::Args::Pull { .. } => pull::pull(&registry, &legacy_pull_marker),
+        cli::Args::Dump { .. } => dump::dump(),
         cli::Args::Status(status_args) => status::status(registry, status_args.json),
     }
 }

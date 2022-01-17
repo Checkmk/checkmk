@@ -20,7 +20,7 @@ pub fn compress(data: &[u8]) -> IoResult<Vec<u8>> {
 }
 
 #[cfg(test)]
-mod test_registry {
+mod tests {
     use super::*;
 
     #[test]

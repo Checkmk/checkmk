@@ -16,17 +16,10 @@ requirements.txt: Pipfile.lock
             sed -i "1s|-i.*|-i https://pypi.python.org/simple/|" $@ \
 	)
 
-requirements-no-dev.txt: Pipfile.lock
-	@( \
-	    echo "Creating $@" ; \
-	    $(PIPENV) lock -r > $@; \
-            sed -i "1s|-i.*|-i https://pypi.python.org/simple/|" $@ \
-	)
 # This will only work after exporting USE_EXTERNAL_PIPENV_MIRROR=true
-pip-mirror-update: requirements.txt requirements-no-dev.txt
+pip-mirror-update: requirements.txt
 	set -x; \
 	PIP_MIRROR_FOLDER=./pip-mirror-tmp; \
 	$(PIPENV) run pip download -r $< -d $${PIP_MIRROR_FOLDER}; \
-	$(PIPENV) run pip download -r $(filter-out $<,$^) --no-binary :all: -d $${PIP_MIRROR_FOLDER}; \
 	$(PIPENV) run twine upload -r pypi --repository-url $(INTERNAL_PYPI_MIRROR)/ $${PIP_MIRROR_FOLDER}/*;
 

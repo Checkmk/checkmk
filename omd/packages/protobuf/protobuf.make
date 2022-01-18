@@ -1,6 +1,6 @@
 # This package builds the python protobuf module and also protoc (for tests)
 PROTOBUF := protobuf
-PROTOBUF_VERS := 3.17.3
+PROTOBUF_VERS := 3.18.1
 PROTOBUF_DIR := $(PROTOBUF)-$(PROTOBUF_VERS)
 # Increase this to enforce a recreation of the build cache
 PROTOBUF_BUILD_ID := 9

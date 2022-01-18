@@ -55,6 +55,7 @@ def test_registered_background_jobs():
     if not cmk_version.is_raw_edition():
         expected_jobs += [
             "HostRegistrationBackgroundJob",
+            "DiscoverRegisteredHostsBackgroundJob",
             "BakeAgentsBackgroundJob",
             "SignAgentsBackgroundJob",
             "ReportingBackgroundJob",

@@ -288,6 +288,7 @@ def _get_expected_paths(user_id, is_pre_17_site, with_local):
         expected_paths += [
             "etc/check_mk/mkeventd.d/mkp",
             "etc/check_mk/mkeventd.d/mkp/rule_packs",
+            "etc/check_mk/mkeventd.d/wato/rules.mk",
         ]
 
     # The paths are registered once the enterprise plugins are available, independent of the

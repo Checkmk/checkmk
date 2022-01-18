@@ -1141,6 +1141,7 @@ class Rule:
         return self.ruleset.get_folder_rules(self.folder).index(self)
 
     def is_disabled(self) -> bool:
+        # TODO consolidate with cmk.utils.rulesets.ruleset_matcher.py::_is_disabled
         return self.rule_options.get("disabled", False)
 
     def description(self) -> str:

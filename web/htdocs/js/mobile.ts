@@ -8,7 +8,7 @@
 // NOTE: We use an up-to-date version of jQuery from the package-lock.json together
 // with a patched version of jQuery mobile to make it compatible with jQuery:
 // https://github.com/jquery/jquery-mobile/issues/8662#issuecomment-687738965
-require("script-loader!jquery");
+var $ = require("script-loader!jquery");
 require("script-loader!../jquery/jquery.mobile-1.4.5.min.js");
 
 // Optional import is currently not possible using the ES6 imports
@@ -36,7 +36,7 @@ $(document).bind("mobileinit", function () {
 // Never allow the mobile page to be opened in an iframe. Redirect top page to the current content page.
 // This will result in a full screen mobile interface page.
 if (top != self) {
-    window.top.location.href = location;
+    window.top.location.href = location.toString();
 }
 
 $(document).ready(function () {

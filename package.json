@@ -16,6 +16,7 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "//": "COMMENT: Process 'resolutions' key below",
     "watch": "webpack --mode development --watch",
+    "check-types-list": "tsc --listFiles",
     "check-types": "tsc",
     "preinstall": "npx npm-force-resolutions"
   },
@@ -36,7 +37,8 @@
     "@babel/plugin-proposal-object-rest-spread": "^7.16.0",
     "@babel/preset-env": "^7.16.4",
     "@babel/preset-typescript": "^7.16.0",
-    "@types/jquery": "^3.5.11",
+    "@types/jquery": "^3.5.13",
+    "@types/node": "^17.0.10",
     "autoprefixer": "^10.4.0",
     "babel-loader": "^8.2.3",
     "css-loader": "^6.5.1",

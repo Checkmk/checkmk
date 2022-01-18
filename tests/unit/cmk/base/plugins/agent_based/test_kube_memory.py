@@ -157,7 +157,7 @@ from cmk.gui.plugins.wato.check_parameters.kube_resources import _parameter_valu
 @pytest.fixture
 def agent_performance_section(fix_register):
     for name, section in fix_register.agent_sections.items():
-        if str(name) == "k8s_live_memory_v1":
+        if str(name) == "kube_performance_memory_v1":
             return section
     assert False, "Should be able to find the section"
 
@@ -179,7 +179,7 @@ def check_plugin(fix_register):
 
 
 def test_register_agent_memory_section_calls(agent_performance_section):
-    assert str(agent_performance_section.name) == "k8s_live_memory_v1"
+    assert str(agent_performance_section.name) == "kube_performance_memory_v1"
     assert str(agent_performance_section.parsed_section_name) == "kube_performance_memory"
     assert agent_performance_section.parse_function == kube_memory.parse_performance_memory
 

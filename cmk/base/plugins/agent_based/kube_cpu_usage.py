@@ -29,7 +29,7 @@ def parse_kube_performance_cpu_v1(string_table: StringTable) -> Usage:
 
 
 register.agent_section(
-    name="k8s_live_cpu_usage_v1",
+    name="kube_performance_cpu_usage_v1",
     parsed_section_name="kube_performance_cpu",
     parse_function=parse_kube_performance_cpu_v1,
 )

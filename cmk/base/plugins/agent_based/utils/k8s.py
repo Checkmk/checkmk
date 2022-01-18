@@ -209,7 +209,7 @@ class ContainerCount(BaseModel):
 
 
 class Memory(BaseModel):
-    """section: k8s_live_memory_v1"""
+    """section: kube_performance_memory_v1"""
 
     memory_usage_bytes: float
 

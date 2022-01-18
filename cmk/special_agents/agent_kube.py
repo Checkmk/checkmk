@@ -770,7 +770,7 @@ def _aggregate_rate_metric(
 
 def _write_performance_section(section_name: SectionName, section_output: BaseModel):
     # TODO: change live to performance (including checks)
-    with SectionWriter(f"k8s_live_{section_name}_v1") as writer:
+    with SectionWriter(f"kube_performance_{section_name}_v1") as writer:
         writer.append(section_output.json())
 
 

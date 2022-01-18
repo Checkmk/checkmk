@@ -194,12 +194,12 @@ class ContainerCpuUsage(PerformanceContainer):
 
 
 class CpuUsage(BaseModel):
-    """section: k8s_live_cpu_usage_v1"""
+    """section: kube_performance_cpu_usage_v1"""
 
     usage: float
 
 
 class Memory(BaseModel):
-    """section: k8s_live_memory_v1"""
+    """section: kube_performance_memory_v1"""
 
     memory_usage_bytes: float  # TODO: change naming

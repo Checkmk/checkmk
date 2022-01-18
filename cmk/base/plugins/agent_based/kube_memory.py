@@ -42,7 +42,7 @@ register.agent_section(
 
 
 register.agent_section(
-    name="k8s_live_memory_v1",
+    name="kube_performance_memory_v1",
     parse_function=parse_performance_memory,
     parsed_section_name="kube_performance_memory",
 )

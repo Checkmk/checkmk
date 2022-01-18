@@ -7,6 +7,7 @@ import time
 
 import cmk.utils.tags
 from cmk.utils.type_defs import HostName, List
+from cmk.utils.version import Edition, is_plus_edition
 
 import cmk.gui.hooks as hooks
 import cmk.gui.userdb as userdb
@@ -294,6 +295,10 @@ class HostAttributeAgentConnection(ABCHostAttributeValueSpec):
     def sort_index(cls):
         return 64  # after agent, before snmp
 
+    def is_show_more(self) -> bool:
+        # non plus edition currently only has one option
+        return not is_plus_edition()
+
     def name(self):
         return "cmk_agent_connection"
 
@@ -314,14 +319,19 @@ class HostAttributeAgentConnection(ABCHostAttributeValueSpec):
             title=_("Checkmk agent connection mode"),
             choices=[
                 ("pull-agent", _("Pull: Checkmk server contacts the agent")),
-                ("push-agent", _("Push: Checkmk agent contacts the server")),
+                (
+                    "push-agent",
+                    _("Push: Checkmk agent contacts the server (%s only)") % Edition.CPE.short,
+                ),
             ],
-            help=_(  #
+            help=_(
                 "By default the server will try to contact the monitored host and pull the"
-                " data by initializing a TCP connection. You can configure a push"
-                " configuration, where the monitored host is expected to send the data to"
-                " the monitoring server without being actively triggered."
-            ),
+                " data by initializing a TCP connection. "
+                "On the %s you can configure a push configuration, where the monitored host is"
+                " expected to send the data to the monitoring server without being actively"
+                " triggered."
+            )
+            % Edition.CPE.title,
         )
 
     def openapi_field(self) -> fields.Field:

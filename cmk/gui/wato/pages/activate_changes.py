@@ -260,13 +260,9 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
         self._activation_msg()
         self._activation_form()
 
-        html.h3(_("Activation status"))
         self._activation_status()
 
         if self.has_changes():
-            html.open_h3(class_="pending_changes_header")
-            html.write_text(_("Pending changes (%s)") % self._get_amount_changes())
-            html.close_h3()
             self._change_table()
 
     def _activation_msg(self):
@@ -340,6 +336,7 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
     def _change_table(self):
         with table_element(
             "changes",
+            title=_("Pending changes (%s)") % self._get_amount_changes(),
             sortable=False,
             searchable=False,
             css="changes",
@@ -380,7 +377,12 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
 
     def _activation_status(self):
         with table_element(
-            "site-status", searchable=False, sortable=False, css="activation"
+            "site-status",
+            title=_("Activation status"),
+            searchable=False,
+            sortable=False,
+            css="activation",
+            foldable=Foldable.FOLDABLE_STATELESS,
         ) as table:
 
             for site_id, site in sort_sites(activation_sites()):

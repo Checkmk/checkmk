@@ -1,0 +1,33 @@
+Title: Improve speed of activate changes by incremental activating changes
+Class: feature
+Compatible: compat
+Component: wato
+Date: 1642494650
+Edition: cre
+Knowledge: undoc
+Level: 2
+Version: 2.1.0i1
+
+With this change the microcore and its helper processes are able to reuse parts of the previous configuration,
+without compiling everything anew. Only actually changed hosts will be fully recompiled.
+This can significantly reduce the waiting time for "Activate changes".
+In addition, the workload during the compilation phase is also reduced, giving the monitoring core some room to breathe.
+
+F+:
+## Compilation time comparison using a demo config with 150k services ##
+
+# Full compiliation of all hosts (default behaviour in all previous versions)
+real   0m21.107s
+user   2m10.626s
+sys     0m2.581s
+
+# Using new incremental activation
+real    0m6.936s
+user   0m24.366s
+sys     0m1.492s
+F-:
+
+
+The incremental activation mechanism is used automatically when it is feasible.
+Actions where hosts are changed (edit/add/remove/discovery) can make use of this new feature.
+However, changes to rulesets require a complete recompilation of the entire configuration, just as in previous versions.

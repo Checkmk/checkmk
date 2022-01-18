@@ -297,6 +297,9 @@ class HostAttributeAgentConnection(ABCHostAttributeValueSpec):
     def name(self):
         return "cmk_agent_connection"
 
+    def is_explicit(self) -> bool:
+        return True
+
     def show_in_table(self):
         return False
 

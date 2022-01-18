@@ -2613,7 +2613,7 @@ class HostConfig:
         return list(parent_candidates.intersection(self._config_cache.all_active_realhosts()))
 
     def agent_connection_mode(self) -> Literal["pull-agent", "push-agent"]:
-        mode = cmk_agent_connection.get(self.hostname, "pull-agent")
+        mode = self._explicit_host_attributes.get("cmk_agent_connection", "pull-agent")
         if mode == "pull-agent":
             return "pull-agent"
         if mode == "push-agent":

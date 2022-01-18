@@ -139,6 +139,7 @@ REQUIRED_ARGUMENTS: Dict[str, List[str]] = {
         "PASSWORD",
         "Shared folder",
     ],
+    "agent_gcp": [],
 }
 
 

@@ -1,0 +1,37 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
+from typing import Any, Dict, Tuple, Union
+
+from cmk.utils import password_store
+
+
+def _agent_gcp_stdin(
+    *,
+    credentials: Union[str, Tuple[str, str]],
+) -> str:
+    if isinstance(credentials, tuple):
+        credentials = password_store.extract(credentials)
+    return credentials
+
+
+def agent_gcp_arguments(params, hostname, ipaddress):
+
+    args = []
+    args += ["--project", params.get("project")]
+
+    # TODO: Cleanup this separation violation. This should be accessed through some API
+    from cmk.base.config import SpecialAgentConfiguration
+
+    return SpecialAgentConfiguration(
+        args,
+        _agent_gcp_stdin(
+            credentials=params["credentials"],
+        ),
+    )
+
+
+special_agent_info["gcp"] = agent_gcp_arguments

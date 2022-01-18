@@ -121,6 +121,7 @@ const char* const kWinPerfFork = "fork";              // bool
 // root
 const char* const kLogWatchEventSendall = "sendall";                // bool
 const char* const kLogWatchEventVistaApi = "vista_api";             // bool
+const char* const kLogWatchEventSkip = "skip_duplicated";           // bool
 const char* const kLogWatchEventMaxSize = "max_size";               // int
 const char* const kLogWatchEventMaxEntries = "max_entries";         // int
 const char* const kLogWatchEventTimeout = "timeout";                // int

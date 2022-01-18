@@ -149,6 +149,11 @@ void LogWatchEvent::loadConfig() {
                     ? EvlType::vista
                     : EvlType::classic;
 
+    skip_ = GetVal(cfg::groups::kLogWatchEvent, cfg::vars::kLogWatchEventSkip,
+                   false)
+                ? evl::SkipDuplicatedRecords::yes
+                : evl::SkipDuplicatedRecords::no;
+
     max_size_ =
         GetVal(cfg::groups::kLogWatchEvent, cfg::vars::kLogWatchEventMaxSize,
                cfg::logwatch::kMaxSize);

@@ -209,6 +209,7 @@ TEST(CvtTest, LogWatchSection) {
     EXPECT_TRUE(logwatch[vars::kEnabled].as<bool>());
     EXPECT_TRUE(logwatch[vars::kLogWatchEventSendall].as<bool>());
     EXPECT_TRUE(logwatch[vars::kLogWatchEventVistaApi].as<bool>());
+    EXPECT_FALSE(logwatch[vars::kLogWatchEventSkip].as<bool>());
 
     ASSERT_TRUE(logwatch[vars::kLogWatchEventLogFile].size() == 4);
     auto logfiles = logwatch[vars::kLogWatchEventLogFile];

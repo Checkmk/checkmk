@@ -39,15 +39,27 @@ Todo:
 import enum
 from typing import Any, Mapping, Type, Union
 
+from cmk.utils import version
+
 from . import cache
 from ._base import Fetcher, FileCache, Parser, Summarizer, verify_ipaddress
 from .agent import AgentFileCache
 from .ipmi import IPMIFetcher
 from .piggyback import PiggybackFetcher
 from .program import ProgramFetcher
-from .push_agent import PushAgentFetcher
 from .snmp import SNMPFetcher, SNMPFileCache
 from .tcp import TCPFetcher
+
+if version.is_plus_edition():
+    from cmk.core_helpers.cpe.push_agent_fetcher import PushAgentFetcher  # type: ignore[import]
+else:
+
+    class PushAgentFetcher:  # type: ignore[no-redef]
+        def from_json(self, _serialized):
+            raise NotImplementedError(
+                f"Push agent fetcher not available ({version.edition_short()})"
+            )
+
 
 __all__ = [
     "PushAgentFetcher",

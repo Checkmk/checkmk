@@ -30,13 +30,16 @@ from cmk.snmplib.type_defs import (
     SNMPTable,
 )
 
-from cmk.core_helpers import Fetcher, FetcherType, snmp
+from cmk.core_helpers import Fetcher, FetcherType
+from cmk.core_helpers import (
+    PushAgentFetcher as FallbackPushAgentFetcher,  # We must test the FetcherType factory agains the fallback class, because during import we are not a CPE. Patching this during the test will make no difference...
+)
+from cmk.core_helpers import snmp
 from cmk.core_helpers.agent import DefaultAgentFileCache, NoCache
 from cmk.core_helpers.cache import FileCache, MaxAge
 from cmk.core_helpers.ipmi import IPMIFetcher
 from cmk.core_helpers.piggyback import PiggybackFetcher
 from cmk.core_helpers.program import ProgramFetcher
-from cmk.core_helpers.push_agent import PushAgentFetcher, PushAgentFileCache
 from cmk.core_helpers.snmp import (
     SectionMeta,
     SNMPFetcher,
@@ -791,32 +794,6 @@ class TestSNMPSectionMeta:
         assert SectionMeta.deserialize(meta.serialize()) == meta
 
 
-class TestPushAgentFetcher:
-    @pytest.fixture
-    def file_cache(self) -> PushAgentFileCache:
-        return PushAgentFileCache(
-            HostName("hostname"),
-            base_path=Path(os.devnull),
-            max_age=MaxAge.none(),
-            disabled=True,
-            use_outdated=True,
-            simulation=True,
-        )
-
-    @pytest.fixture
-    def fetcher(self, file_cache: PushAgentFileCache) -> PushAgentFetcher:
-        return PushAgentFetcher(file_cache, allowed_age=10, use_only_cache=False)
-
-    def test_repr(self, fetcher: PushAgentFetcher) -> None:
-        assert isinstance(repr(fetcher), str)
-
-    def test_fetcher_deserialization(self, fetcher: PushAgentFetcher) -> None:
-        other = type(fetcher).from_json(json_identity(fetcher.to_json()))
-        assert isinstance(other, type(fetcher))
-        assert other.allowed_age == fetcher.allowed_age
-        assert other.use_only_cache == fetcher.use_only_cache
-
-
 class _MockSock:
     def __init__(self, data: bytes) -> None:
         self.data = data
@@ -1028,7 +1005,7 @@ _FACTORIES_CLASSES = (
     (FetcherType.PROGRAM, ProgramFetcher),
     (FetcherType.SNMP, SNMPFetcher),
     (FetcherType.TCP, TCPFetcher),
-    (FetcherType.PUSH_AGENT, PushAgentFetcher),
+    (FetcherType.PUSH_AGENT, FallbackPushAgentFetcher),
 )
 
 

@@ -1844,11 +1844,9 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
         for change in self._site_changes:
             if change["need_restart"]:
                 for domain_name in change["domains"]:
-                    domain_settings.setdefault(domain_name, [])
-                    if (
-                        settings := get_config_domain(domain_name).get_domain_settings(change)
-                    ) is not None:
-                        domain_settings[domain_name].append(settings)
+                    domain_settings.setdefault(domain_name, []).append(
+                        get_config_domain(domain_name).get_domain_settings(change)
+                    )
 
         return sorted(
             (

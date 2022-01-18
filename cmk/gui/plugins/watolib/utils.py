@@ -140,8 +140,8 @@ class ABCConfigDomain(abc.ABC):
         ]
 
     @classmethod
-    def get_domain_settings(cls, change) -> Optional[SerializedSettings]:
-        return change.get("domain_settings", {}).get(cls.ident())
+    def get_domain_settings(cls, change) -> SerializedSettings:
+        return change.get("domain_settings", {}).get(cls.ident(), {})
 
     @classmethod
     def get_domain_request(cls, settings: List[SerializedSettings]) -> DomainRequest:

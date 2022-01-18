@@ -24,7 +24,8 @@ REGEX_GENERIC_IDENTIFIER = r'^[%s]+$' % REGEX_GENERIC_IDENTIFIER_CHARS
 _URL_UNRESERVED_CHARS = re.escape("-.~")
 _URL_GEN_DELIMS = re.escape(":/?#[]@")
 _URL_SUB_DELIMS = re.escape("!$&()*+,;=")  # Leaving out "'"
-URL_CHAR_REGEX_CHARS = r"\w%" + _URL_UNRESERVED_CHARS + _URL_GEN_DELIMS + _URL_SUB_DELIMS
+# The space character should be encoded but it often isn't, so we allow it
+URL_CHAR_REGEX_CHARS = r" \w%" + _URL_UNRESERVED_CHARS + _URL_GEN_DELIMS + _URL_SUB_DELIMS
 URL_CHAR_REGEX = r"^[%s]+$" % URL_CHAR_REGEX_CHARS
 
 

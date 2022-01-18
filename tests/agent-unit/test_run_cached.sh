@@ -22,10 +22,13 @@ oneTimeSetUp() {
 
     # local plugin
     {
-        echo 'P "This is local output"'
+        echo 'P "This is local output without custom cache info"'
         # the header is against the spec, but users do it so often that we ignore it
         echo '<<<local>>>'
-        echo 'cached(123,456) P "leave my cache info alone!"'
+        echo '<<<local>>>'
+        echo 'cached(123,456) P "leave my custom cache info alone!"'
+        echo 'cached(123,456) P "leave my custom cache info alone as well!"'
+        echo 'P "This is more output without custom cache info"'
     } > "$LOCA_CACHE"
 
     # mrpe plugin
@@ -37,8 +40,11 @@ oneTimeSetUp() {
 
     # agent plugin
     {
-        echo "<<<my_plugin>>>"
+        echo "<<<my_plugin_section>>>"
         echo "This is a custom plugin output"
+        echo "<<<my_plugin_section2:cached(123,456)>>>"
+        echo "<<<my_plugin_section3:cached(123,789)>>>"
+        echo "This is a custom plugin output with own cache info"
     } > "$PLUG_CACHE"
 
 }
@@ -48,8 +54,15 @@ test_run_cached_plugin() {
     MTIME="$(stat -c %X "$PLUG_CACHE")"
     OUTPUT="$(run_cached "plugins_my_plugin" "180" "run_agent_plugin" "180/my_plugin")"
 
-    assertEquals "<<<my_plugin:cached($MTIME,180)>>>
-This is a custom plugin output" "$OUTPUT"
+    expected() {
+        echo "<<<my_plugin_section:cached($MTIME,180)>>>"
+        echo "This is a custom plugin output"
+        echo "<<<my_plugin_section2:cached(123,456)>>>"
+        echo "<<<my_plugin_section3:cached(123,789):cached($MTIME,180)>>>"  # FIXME
+        echo "This is a custom plugin output with own cache info"
+    }
+
+    assertEquals "$(expected)" "$OUTPUT"
 
 }
 
@@ -58,9 +71,16 @@ test_run_cached_local() {
     MTIME="$(stat -c %X "$LOCA_CACHE")"
     OUTPUT=$(run_cached "local_my_local_check" "180" "run_agent_locals" "_log_section_time 'local_180/my_local_check' './180/my_local_check'")
 
-    assertEquals "cached($MTIME,180) P \"This is local output\"
-<<<local>>>
-cached(123,456) P \"leave my cache info alone!\"" "$OUTPUT"
+    expected() {
+        echo "cached($MTIME,180) P \"This is local output without custom cache info\""
+        echo "<<<local>>>"
+        echo "cached($MTIME,180) <<<local>>>"  # FIXME
+        echo "cached(123,456) P \"leave my custom cache info alone!\""
+        echo "cached($MTIME,180) cached(123,456) P \"leave my custom cache info alone as well!\"" # FIXME
+        echo "cached($MTIME,180) P \"This is more output without custom cache info\""
+    }
+
+    assertEquals "$(expected)" "$OUTPUT"
 
 }
 

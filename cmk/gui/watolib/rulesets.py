@@ -22,6 +22,7 @@ from cmk.utils.type_defs import (
     RuleOptions,
     RulesetName,
     RuleSpec,
+    RuleValue,
     TagConditionNE,
     TaggroupIDToTagCondition,
     TagID,
@@ -194,6 +195,30 @@ class RuleConditions:
                 pattern_list.append(entry)
 
         return pattern_list, negate
+
+    def clone(self) -> RuleConditions:
+        return RuleConditions(
+            host_folder=self.host_folder,
+            host_tags={**self.host_tags},
+            host_labels={**self.host_labels},
+            host_name=self.host_name.copy()
+            if isinstance(
+                self.host_name,
+                dict,
+            )
+            else [*self.host_name]
+            if self.host_name is not None
+            else None,
+            service_description=self.service_description.copy()
+            if isinstance(
+                self.service_description,
+                dict,
+            )
+            else [*self.service_description]
+            if self.service_description is not None
+            else None,
+            service_labels={**self.service_labels},
+        )
 
 
 class RulesetCollection:
@@ -543,8 +568,7 @@ class Ruleset:
         )
 
         for rule_config in rules_config:
-            rule = Rule(folder, self)
-            rule.from_config(rule_config)
+            rule = Rule.from_config(folder, self, rule_config)
             self._rules[folder.path()].append(rule)
             self._rules_by_id[rule.id] = rule
 
@@ -815,59 +839,75 @@ class Ruleset:
 class Rule:
     @classmethod
     def create(cls, folder: CREFolder, ruleset: Ruleset) -> Rule:
-        rule = Rule(folder, ruleset)
-        rule.id = utils.gen_id()
-        rule.value = rule.ruleset.valuespec().default_value()
-        return rule
+        return Rule(
+            utils.gen_id(),
+            folder,
+            ruleset,
+            RuleConditions(folder.path()),
+            {},
+            ruleset.valuespec().default_value(),
+        )
 
-    def __init__(self, folder: CREFolder, ruleset: Ruleset) -> None:
-        super().__init__()
-        self.ruleset = ruleset
-        self.folder = folder
-        self.id: str
-
-        # Content of the rule itself
-        self._initialize()
+    def __init__(
+        self,
+        id_: str,
+        folder: CREFolder,
+        ruleset: Ruleset,
+        conditions: RuleConditions,
+        options: RuleOptions,
+        value: RuleValue,
+    ) -> None:
+        self.ruleset: Ruleset = ruleset
+        self.folder: CREFolder = folder
+        self.conditions: RuleConditions = conditions
+        self.id: str = id_
+        self.rule_options: RuleOptions = options
+        self.value: RuleValue = value
 
     def clone(self, preserve_id: bool = False) -> Rule:
-        cloned = Rule(self.folder, self.ruleset)
-        cloned.from_config(self.to_config())
-        if not preserve_id:
-            cloned.id = utils.gen_id()
-        return cloned
+        return Rule(
+            self.id if preserve_id else utils.gen_id(),
+            self.folder,
+            self.ruleset,
+            self.conditions.clone(),
+            self.rule_options.copy(),
+            self.value,
+        )
 
-    def _initialize(self) -> None:
-        self.conditions = RuleConditions(self.folder.path())
-        self.rule_options: RuleOptions = {}
-        # TODO: refine type
-        self.value: Any = True if self.ruleset.rulespec.is_binary_ruleset else None
-        self.id = ""  # Will be populated later
-
-    def from_config(self, rule_config: Any) -> None:
+    @classmethod
+    def from_config(
+        cls,
+        folder: CREFolder,
+        ruleset: Ruleset,
+        rule_config: Any,
+    ) -> Rule:
         try:
-            self._initialize()
-            self._parse_rule(rule_config)
+            if isinstance(rule_config, dict):
+                return cls._parse_dict_rule(
+                    folder,
+                    ruleset,
+                    rule_config,
+                )
+            raise NotImplementedError()
         except Exception:
             logger.exception("error parsing rule")
             raise MKGeneralException(_("Invalid rule <tt>%s</tt>") % (rule_config,))
 
-    def _parse_rule(self, rule_config: Any) -> None:
-        if isinstance(rule_config, dict):
-            self._parse_dict_rule(rule_config)
-        else:
-            raise NotImplementedError()
-
-    def _parse_dict_rule(self, rule_config: Dict[Any, Any]) -> None:
+    @classmethod
+    def _parse_dict_rule(
+        cls,
+        folder: CREFolder,
+        ruleset: Ruleset,
+        rule_config: Dict[Any, Any],
+    ) -> Rule:
         # cmk-update-config uses this to load rules from the config file for rewriting them To make
         # this possible, we need to accept missing "id" fields here. During runtime this is not
         # needed anymore, since cmk-update-config has updated all rules from the user configuration.
-        self.id = rule_config["id"] if "id" in rule_config else utils.gen_id()
-        assert isinstance(self.id, str)
+        id_ = rule_config["id"] if "id" in rule_config else utils.gen_id()
+        assert isinstance(id_, str)
 
-        self.rule_options = rule_config.get("options", {})
-        assert all(isinstance(k, str) for k in self.rule_options)
-
-        self.value = rule_config["value"]
+        rule_options = rule_config.get("options", {})
+        assert all(isinstance(k, str) for k in rule_options)
 
         conditions = rule_config["condition"].copy()
 
@@ -876,8 +916,17 @@ class Rule:
         # for writing it back
         conditions.pop("host_folder", None)
 
-        self.conditions = RuleConditions(self.folder.path())
-        self.conditions.from_config(conditions)
+        rule_conditions = RuleConditions(folder.path())
+        rule_conditions.from_config(conditions)
+
+        return cls(
+            id_,
+            folder,
+            ruleset,
+            rule_conditions,
+            rule_options,
+            rule_config["value"],
+        )
 
     def to_config(self) -> RuleSpec:
         # Special case: The main folder must not have a host_folder condition, because

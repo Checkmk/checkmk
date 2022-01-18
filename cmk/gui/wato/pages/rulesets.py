@@ -1590,7 +1590,7 @@ class ABCEditRuleMode(WatoMode):
                     "rule_id", _("You are trying to edit a rule which does " "not exist anymore.")
                 )
         elif request.has_var("_export_rule"):
-            self._rule = watolib.Rule(self._folder, self._ruleset)
+            self._rule = watolib.Rule.create(self._folder, self._ruleset)
             self._update_rule_from_vars()
         else:
             raise NotImplementedError()

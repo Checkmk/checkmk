@@ -534,8 +534,11 @@ class UpdateConfig:
             if not sections_to_disable:
                 continue
 
-            new_rule = cmk.gui.watolib.rulesets.Rule(rule.folder, snmp_exclude_sections_ruleset)
-            new_rule.from_config(rule.to_config())
+            new_rule = cmk.gui.watolib.rulesets.Rule.from_config(
+                rule.folder,
+                snmp_exclude_sections_ruleset,
+                rule.to_config(),
+            )
             new_rule.id = cmk.gui.watolib.rulesets.utils.gen_id()
             new_rule.value = {  # type: ignore[assignment]
                 "sections_disabled": sorted(str(s) for s in sections_to_disable),

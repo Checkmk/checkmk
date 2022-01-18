@@ -16,11 +16,12 @@ import cmk.gui.watolib.hosts_and_folders as hosts_and_folders
 import cmk.gui.watolib.rulesets as rulesets
 from cmk.gui.exceptions import MKGeneralException
 from cmk.gui.globals import config
+from cmk.gui.plugins.wato.check_parameters.local import _parameter_valuespec_local
+from cmk.gui.plugins.wato.check_parameters.ps import _valuespec_inventory_processes_rules
 
 
-def _rule(ruleset_name):
-    ruleset = rulesets.Ruleset(ruleset_name, ruleset_matcher.get_tag_to_group_map(config.tags))
-    return rulesets.Rule(hosts_and_folders.Folder.root_folder(), ruleset)
+def _ruleset(ruleset_name) -> rulesets.Ruleset:
+    return rulesets.Ruleset(ruleset_name, ruleset_matcher.get_tag_to_group_map(config.tags))
 
 
 GEN_ID_COUNT = {"c": 0}
@@ -41,17 +42,26 @@ def fixture_gen_id(monkeypatch):
     "ruleset_name,default_value,is_binary",
     [
         # non-binary host ruleset
-        ("inventory_processes_rules", None, False),
+        (
+            "inventory_processes_rules",
+            _valuespec_inventory_processes_rules().default_value(),
+            False,
+        ),
         # binary host ruleset
         ("only_hosts", True, True),
         # non-binary service ruleset
-        ("checkgroup_parameters:local", None, False),
+        (
+            "checkgroup_parameters:local",
+            _parameter_valuespec_local().default_value(),
+            False,
+        ),
         # binary service ruleset
         ("clustered_services", True, True),
     ],
 )
 def test_rule_initialize(request_context, ruleset_name, default_value, is_binary):
-    rule = _rule(ruleset_name)
+    ruleset = _ruleset(ruleset_name)
+    rule = rulesets.Rule.create(hosts_and_folders.Folder.root_folder(), ruleset)
     assert isinstance(rule.conditions, rulesets.RuleConditions)
     assert rule.rule_options == {}
     assert rule.value == default_value
@@ -61,12 +71,21 @@ def test_rule_initialize(request_context, ruleset_name, default_value, is_binary
 def test_rule_from_config_unhandled_format(
     request_context,
 ):
-    rule = _rule("inventory_processes_rules")
-    with pytest.raises(MKGeneralException, match="Invalid rule"):
-        rule.from_config([])
+    ruleset = _ruleset("inventory_processes_rules")
 
     with pytest.raises(MKGeneralException, match="Invalid rule"):
-        rule.from_config((None,))
+        rulesets.Rule.from_config(
+            hosts_and_folders.Folder.root_folder(),
+            ruleset,
+            [],
+        )
+
+    with pytest.raises(MKGeneralException, match="Invalid rule"):
+        rulesets.Rule.from_config(
+            hosts_and_folders.Folder.root_folder(),
+            ruleset,
+            (None,),
+        )
 
 
 @pytest.mark.parametrize(
@@ -424,8 +443,11 @@ def test_rule_from_config_dict(
     if rule_options is not None:
         rule_spec["options"] = rule_options
 
-    rule = _rule(ruleset_name)
-    rule.from_config(rule_spec)
+    rule = rulesets.Rule.from_config(
+        hosts_and_folders.Folder.root_folder(),
+        _ruleset(ruleset_name),
+        rule_spec,
+    )
 
     for key, val in expected_attributes.items():
         if key == "conditions":
@@ -441,7 +463,7 @@ def test_rule_from_config_dict(
     # test for synchronous to_dict on the way. Except when rule_spec.id was not set, because the ID
     # is added dynamically when processing such rules.
     rule_spec_for_config = rule_spec.copy()
-    new_rule_config = rule.to_config()
+    new_rule_config = dict(rule.to_config())
 
     if "id" in rule_spec:
         assert new_rule_config == rule_spec_for_config
@@ -574,8 +596,9 @@ def test_ruleset_to_config_sub_folder(with_admin_login, monkeypatch, wato_use_gi
 
 
 def test_rule_clone(request_context):
-    rule = _rule("clustered_services")
-    rule.from_config(
+    rule = rulesets.Rule.from_config(
+        hosts_and_folders.Folder.root_folder(),
+        _ruleset("clustered_services"),
         {
             "id": "10",
             "value": True,
@@ -583,14 +606,14 @@ def test_rule_clone(request_context):
                 "host_name": ["HOSTLIST"],
                 "service_description": [{"$regex": "SVC"}, {"$regex": "LIST"}],
             },
-        }
+        },
     )
 
     cloned_rule = rule.clone()
 
-    rule_config = rule.to_config()
+    rule_config = dict(rule.to_config())
     del rule_config["id"]
-    cloned_config = cloned_rule.to_config()
+    cloned_config = dict(cloned_rule.to_config())
     del cloned_config["id"]
     assert rule_config == cloned_config
 

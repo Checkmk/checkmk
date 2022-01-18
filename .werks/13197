@@ -1,0 +1,15 @@
+Title: Add space as valid URL character
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1642577233
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0p19
+
+With Werk 13195 a stricter URL validation was introduced. In the original
+implementation the space character was not allowed. Unfortunately servicenames
+with spaces are not encoded properly and spaces used to work. Since this is
+also common behaviour and does not impose security risks the space is allowed
+again.

@@ -753,6 +753,18 @@ def _valuespec_special_agents_kube():
     return Dictionary(
         elements=[
             (
+                "cluster-name",
+                Hostname(
+                    title=_("Cluster name"),
+                    allow_empty=False,
+                    help=_(
+                        "You must specify a name for your Kubernetes cluster. The provided name"
+                        " will be used to make the objects from your cluster unique in a "
+                        "multi-cluster setup."
+                    ),
+                ),
+            ),
+            (
                 "kubernetes-api-server",
                 Dictionary(
                     elements=[

@@ -91,6 +91,8 @@ REQUIRED_ARGUMENTS: Dict[str, List[str]] = {
         "ENDPOINT",
     ],
     "agent_kube": [
+        "--cluster",
+        "CLUSTER",
         "--token",
         "TOKEN",
         "--api-server-endpoint",

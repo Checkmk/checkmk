@@ -12,6 +12,7 @@ is supported: https://github.com/kubernetes-client/python
 from __future__ import annotations
 
 import argparse
+import functools
 import json
 import logging
 import os
@@ -121,6 +122,11 @@ def parse_arguments(args: List[str]) -> argparse.Namespace:
         action="count",
         default=0,
         help="Verbose mode (for even more output use -vvv)",
+    )
+    p.add_argument(
+        "--cluster",
+        required=True,
+        help="The name of the kubernetes cluster",
     )
     p.add_argument("--token", help="Token for that user")
     p.add_argument(
@@ -643,7 +649,9 @@ def write_cluster_api_sections(cluster: Cluster) -> None:
     _write_sections(sections)
 
 
-def write_nodes_api_sections(api_nodes: Sequence[Node]) -> None:
+def write_nodes_api_sections(
+    api_nodes: Sequence[Node], piggyback_formatter: Callable[[str], str]
+) -> None:
     def output_sections(cluster_node: Node) -> None:
         sections = {
             "kube_node_container_count_v1": cluster_node.container_count,
@@ -658,11 +666,13 @@ def write_nodes_api_sections(api_nodes: Sequence[Node]) -> None:
         _write_sections(sections)
 
     for node in api_nodes:
-        with ConditionalPiggybackSection(f"node_{node.name}"):
+        with ConditionalPiggybackSection(piggyback_formatter(node.name)):
             output_sections(node)
 
 
-def write_deployments_api_sections(api_deployments: Sequence[Deployment]) -> None:
+def write_deployments_api_sections(
+    api_deployments: Sequence[Deployment], piggyback_formatter: Callable[[str], str]
+) -> None:
     """Write the deployment relevant sections based on k8 API information"""
 
     def output_sections(cluster_deployment: Deployment) -> None:
@@ -678,13 +688,17 @@ def write_deployments_api_sections(api_deployments: Sequence[Deployment]) -> Non
         _write_sections(sections)
 
     for deployment in api_deployments:
-        with ConditionalPiggybackSection(f"deployment_{deployment.name(prepend_namespace=True)}"):
+        with ConditionalPiggybackSection(
+            piggyback_formatter(deployment.name(prepend_namespace=True))
+        ):
             output_sections(deployment)
 
 
-def write_pods_api_sections(api_pods: Sequence[Pod]) -> None:
+def write_pods_api_sections(
+    api_pods: Sequence[Pod], piggyback_formatter: Callable[[str], str]
+) -> None:
     for pod in api_pods:
-        with ConditionalPiggybackSection(f"pod_{pod.name(prepend_namespace=True)}"):
+        with ConditionalPiggybackSection(piggyback_formatter(pod.name(prepend_namespace=True))):
             for section_name, section_content in pod_api_based_checkmk_sections(pod):
                 if section_content is None:
                     continue
@@ -1119,6 +1133,10 @@ def _filter_namespaces(
     return filtered_namespaces
 
 
+def cluster_piggyback_formatter(cluster_name: str, object_type: str, namespace_name: str) -> str:
+    return f"{object_type}_{cluster_name}_{namespace_name}"
+
+
 def main(args: Optional[List[str]] = None) -> int:
     if args is None:
         cmk.utils.password_store.replace_passwords()
@@ -1145,17 +1163,25 @@ def main(args: Optional[List[str]] = None) -> int:
                 arguments.namespace_include_patterns,
                 arguments.namespace_exclude_patterns,
             )
+            piggyback_formatter = functools.partial(cluster_piggyback_formatter, arguments.cluster)
 
             if "nodes" in arguments.monitored_objects:
-                write_nodes_api_sections(cluster.nodes())
+                write_nodes_api_sections(
+                    cluster.nodes(),
+                    piggyback_formatter=functools.partial(piggyback_formatter, "node"),
+                )
 
             if "deployments" in arguments.monitored_objects:
                 write_deployments_api_sections(
-                    deployments_from_namespaces(cluster.deployments(), monitored_namespaces)
+                    deployments_from_namespaces(cluster.deployments(), monitored_namespaces),
+                    piggyback_formatter=functools.partial(piggyback_formatter, "deployment"),
                 )
 
             if "pods" in arguments.monitored_objects:
-                write_pods_api_sections(pods_from_namespaces(cluster.pods(), monitored_namespaces))
+                write_pods_api_sections(
+                    pods_from_namespaces(cluster.pods(), monitored_namespaces),
+                    piggyback_formatter=functools.partial(piggyback_formatter, "pod"),
+                )
 
             # TODO: add an option to skip the performance data query
             # TODO: refactor write out sections in case this performance skip is not implemented
@@ -1180,8 +1206,7 @@ def main(args: Optional[List[str]] = None) -> int:
                 }
             )
 
-            # TODO: file_name must be adjusted when adding multi-cluster/rule support later
-            store_file_name = "containers_counters.json"
+            store_file_name = f"{arguments.cluster}_containers_counters.json"
             previous_cycle_store = load_containers_store(
                 path=AGENT_TMP_PATH, file_name=store_file_name
             )
@@ -1216,7 +1241,10 @@ def main(args: Optional[List[str]] = None) -> int:
                     list(performance_pods.values()), lookup_name_piggyback_mappings
                 ):
                     with ConditionalPiggybackSection(
-                        f"pod_{lookup_name_piggyback_mappings[pod.lookup_name]}"
+                        piggyback_formatter(
+                            object_type="pod",
+                            namespace_name=lookup_name_piggyback_mappings[pod.lookup_name],
+                        )
                     ):
                         pod_performance_sections(pod)
 
@@ -1225,7 +1253,9 @@ def main(args: Optional[List[str]] = None) -> int:
                     write_kube_object_performance_section(
                         node,
                         performance_pods,
-                        piggyback_name=f"node_{node.name}",
+                        piggyback_name=piggyback_formatter(
+                            object_type="node", namespace_name=node.name
+                        ),
                     )
 
             if "deployments" in arguments.monitored_objects:
@@ -1235,7 +1265,10 @@ def main(args: Optional[List[str]] = None) -> int:
                     write_kube_object_performance_section(
                         deployment,
                         performance_pods,
-                        piggyback_name=f"deployment_{deployment.name(prepend_namespace=True)}",
+                        piggyback_name=piggyback_formatter(
+                            object_type="deployment",
+                            namespace_name=deployment.name(prepend_namespace=True),
+                        ),
                     )
 
             write_kube_object_performance_section(cluster, performance_pods)

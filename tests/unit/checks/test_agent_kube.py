@@ -22,6 +22,7 @@ pytestmark = pytest.mark.checks
     [
         (
             {
+                "cluster-name": "cluster",
                 "kubernetes-api-server": {"endpoint": ("ipaddress", {"protocol": "https"})},
                 "cluster-agent": {
                     "node_ip": "11.211.3.32",
@@ -31,6 +32,8 @@ pytestmark = pytest.mark.checks
                 "verify-cert": False,
             },
             [
+                "--cluster",
+                "cluster",
                 "--monitored-objects",
                 "nodes",
                 "deployments",
@@ -43,6 +46,7 @@ pytestmark = pytest.mark.checks
         ),
         (
             {
+                "cluster-name": "cluster",
                 "kubernetes-api-server": {
                     "endpoint": ("ipaddress", {"port": 8080, "protocol": "http"})
                 },
@@ -54,6 +58,8 @@ pytestmark = pytest.mark.checks
                 "verify-cert": True,
             },
             [
+                "--cluster",
+                "cluster",
                 "--monitored-objects",
                 "nodes",
                 "deployments",
@@ -67,6 +73,7 @@ pytestmark = pytest.mark.checks
         ),
         (
             {
+                "cluster-name": "cluster",
                 "monitored_objects": ["pods"],
                 "kubernetes-api-server": {
                     "endpoint": ("url_custom", "http://localhost:8080"),
@@ -80,6 +87,8 @@ pytestmark = pytest.mark.checks
                 "verify-cert": False,
             },
             [
+                "--cluster",
+                "cluster",
                 "--token",
                 "randomtoken",
                 "--monitored-objects",
@@ -105,6 +114,7 @@ def test_parse_namespace_patterns():
     agent = SpecialAgent("agent_kube")
     arguments = agent.argument_func(
         {
+            "cluster-name": "cluster",
             "kubernetes-api-server": {"endpoint": ("ipaddress", {"protocol": "https"})},
             "cluster-agent": {
                 "node_ip": "11.211.3.32",
@@ -118,6 +128,8 @@ def test_parse_namespace_patterns():
         "127.0.0.1",
     )
     assert arguments == [
+        "--cluster",
+        "cluster",
         "--monitored-objects",
         "nodes",
         "deployments",
@@ -138,6 +150,7 @@ def test_parse_namespace_patterns():
     [
         (
             {
+                "cluster-name": "test",
                 "kubernetes-api-server": {"endpoint": ("ipaddress", {"protocol": "https"})},
                 "cluster-agent": {
                     "node_ip": "11.211.3.32",
@@ -150,6 +163,7 @@ def test_parse_namespace_patterns():
         ),
         (
             {
+                "cluster-name": "test",
                 "kubernetes-api-server": {
                     "endpoint": ("ipaddress", {"port": 8080, "protocol": "http"})
                 },
@@ -164,6 +178,7 @@ def test_parse_namespace_patterns():
         ),
         (
             {
+                "cluster-name": "test",
                 "kubernetes-api-server": {
                     "endpoint": ("url_custom", "http://localhost:8080"),
                     "token": ("password", "randomtoken"),

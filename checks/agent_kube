@@ -6,7 +6,7 @@
 
 
 def agent_kube_arguments(params, hostname, ipaddress):
-    args = []
+    args = ["--cluster", params["cluster-name"]]
 
     api_server_params = params["kubernetes-api-server"]
 

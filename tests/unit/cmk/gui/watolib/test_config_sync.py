@@ -442,7 +442,7 @@ def test_generate_pre_17_site_snapshot(
         "mkeventd_mkp.tar": [],
         "multisite.tar": ["global.mk", "users.mk"],
         "usersettings.tar": [with_user_login],
-        "mkeventd.tar": [],
+        "mkeventd.tar": ["rules.mk"],
         "check_mk.tar": ["hosts.mk", "contacts.mk"],
         "htpasswd.tar": ["htpasswd"],
         "liveproxyd.tar": [],

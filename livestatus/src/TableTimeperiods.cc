@@ -16,20 +16,20 @@
 #include "TimeperiodsCache.h"
 #include "nagios.h"
 
-TableTimeperiods::TableTimeperiods(MonitoringCore* mc) : Table(mc) {
+TableTimeperiods::TableTimeperiods(MonitoringCore *mc) : Table(mc) {
     ColumnOffsets offsets{};
     addColumn(std::make_unique<StringColumn<timeperiod>>(
         "name", "The name of the timeperiod", offsets,
-        [](const timeperiod& tp) { return tp.name; }));
+        [](const timeperiod &tp) { return tp.name; }));
     addColumn(std::make_unique<StringColumn<timeperiod>>(
         "alias", "The alias of the timeperiod", offsets,
-        [](const timeperiod& tp) { return tp.alias; }));
+        [](const timeperiod &tp) { return tp.alias; }));
     // unknown timeperiod is assumed to be 24X7
     addColumn(std::make_unique<BoolColumn<timeperiod, true>>(
         "in", "Wether we are currently in this period (0/1)", offsets,
-        [](const timeperiod& tp) {
+        [](const timeperiod &tp) {
             // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
-            extern TimeperiodsCache* g_timeperiods_cache;
+            extern TimeperiodsCache *g_timeperiods_cache;
             return g_timeperiods_cache->inTimeperiod(&tp);
         }));
     // TODO(sp): Missing columns: transitions, num_transitions,
@@ -40,8 +40,8 @@ std::string TableTimeperiods::name() const { return "timeperiods"; }
 
 std::string TableTimeperiods::namePrefix() const { return "timeperiod_"; }
 
-void TableTimeperiods::answerQuery(Query* query) {
-    for (const timeperiod* tp = timeperiod_list; tp != nullptr; tp = tp->next) {
+void TableTimeperiods::answerQuery(Query *query) {
+    for (const timeperiod *tp = timeperiod_list; tp != nullptr; tp = tp->next) {
         if (!query->processDataset(Row{tp})) {
             break;
         }

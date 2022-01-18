@@ -28,7 +28,7 @@ TEST(TimeColumn, GetValueLambda) {
     const auto val = DummyValue{};
     const auto row = DummyRow{&val};
     const auto col = TimeColumn<DummyRow>{
-        "name"s, "description"s, {}, [v](const DummyRow& /*row*/) {
+        "name"s, "description"s, {}, [v](const DummyRow & /*row*/) {
             return v;
         }};
 
@@ -40,7 +40,7 @@ TEST(TimeColumn, GetValueDefault) {
     const auto tz = 1h;
     const auto row = DummyRow{nullptr};
     const auto col = TimeColumn<DummyRow>{
-        "name"s, "description"s, {}, [v](const DummyRow& /*row*/) {
+        "name"s, "description"s, {}, [v](const DummyRow & /*row*/) {
             return v;
         }};
 

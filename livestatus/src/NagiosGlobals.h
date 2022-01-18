@@ -25,11 +25,11 @@ extern int check_host_freshness;
 // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 extern int check_service_freshness;
 // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
-extern command* command_list;
+extern command *command_list;
 // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
-extern contactgroup* contactgroup_list;
+extern contactgroup *contactgroup_list;
 // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
-extern contact* contact_list;
+extern contact *contact_list;
 // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 extern int enable_environment_macros;
 // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
@@ -49,9 +49,9 @@ extern circular_buffer external_command_buffer;
 // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 extern int external_command_buffer_slots;
 // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
-extern hostgroup* hostgroup_list;
+extern hostgroup *hostgroup_list;
 // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
-extern host* host_list;
+extern host *host_list;
 // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 extern int interval_length;
 // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
@@ -59,13 +59,13 @@ extern time_t last_command_check;
 // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 extern time_t last_log_rotation;
 // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
-extern char* log_archive_path;
+extern char *log_archive_path;
 // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
-extern char* log_file;
+extern char *log_file;
 // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 extern int log_initial_states;
 // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
-extern char* macro_user[MAX_USER_MACROS];
+extern char *macro_user[MAX_USER_MACROS];
 // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 extern int nagios_pid;
 // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
@@ -77,13 +77,13 @@ extern int process_performance_data;
 // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 extern time_t program_start;
 // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
-extern scheduled_downtime* scheduled_downtime_list;
+extern scheduled_downtime *scheduled_downtime_list;
 // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
-extern servicegroup* servicegroup_list;
+extern servicegroup *servicegroup_list;
 // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
-extern service* service_list;
+extern service *service_list;
 // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
-extern timeperiod* timeperiod_list;
+extern timeperiod *timeperiod_list;
 }
 #endif  // NAGIOS4
 

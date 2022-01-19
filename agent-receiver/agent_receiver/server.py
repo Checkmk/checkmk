@@ -178,7 +178,7 @@ def _store_agent_data(
     target_dir: Path,
     decompressed_data: bytes,
 ) -> None:
-    temp_file = tempfile.NamedTemporaryFile(
+    temp_file = tempfile.NamedTemporaryFile(  # pylint:disable=consider-using-with
         dir=target_dir,
         delete=False,
     )

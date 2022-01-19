@@ -40,7 +40,7 @@ def backup_paths() -> List[BackupPath]:
 
 def do_backup(tarname: str) -> None:
     console.verbose("Creating backup file '%s'...\n", tarname)
-    tar = tarfile.open(tarname, "w:gz")
+    tar = tarfile.open(tarname, "w:gz")  # pylint:disable=consider-using-with
 
     for (
         name,
@@ -55,12 +55,14 @@ def do_backup(tarname: str) -> None:
             if is_dir:
                 subtarname = name + ".tar"
                 subfile = io.BytesIO()
-                subtar = tarfile.open(mode="w", fileobj=subfile, dereference=True)
+                subtar = tarfile.open(  # pylint:disable=consider-using-with
+                    mode="w", fileobj=subfile, dereference=True
+                )
                 subtar.add(path, arcname=".")
                 subdata = subfile.getvalue()
             else:
                 subtarname = canonical_name
-                subdata = open(absdir, mode="rb").read()
+                subdata = open(absdir, mode="rb").read()  # pylint:disable=consider-using-with
 
             info = tarfile.TarInfo(subtarname)
             info.mtime = int(time.time())
@@ -117,9 +119,11 @@ def do_restore(tarname: str) -> None:
             os.makedirs(basedir)
 
         console.verbose("  Extracting %s (%s)\n", descr, absdir)
-        tar = tarfile.open(tarname, "r:gz")
+        tar = tarfile.open(tarname, "r:gz")  # pylint:disable=consider-using-with
         if is_dir:
-            subtar = tarfile.open(fileobj=tar.extractfile(name + ".tar"))
+            subtar = tarfile.open(  # pylint:disable=consider-using-with
+                fileobj=tar.extractfile(name + ".tar")
+            )
             if filename == ".":
                 subtar.extractall(basedir)
             elif filename in subtar.getnames():

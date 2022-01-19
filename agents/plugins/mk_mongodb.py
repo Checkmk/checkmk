@@ -691,7 +691,7 @@ def get_timestamp(text):
 
 def read_statefile(state_file):
     try:
-        state_fd = open(state_file)
+        state_fd = open(state_file)  # pylint:disable=consider-using-with
         try:
             last_timestamp = int(state_fd.read())
         finally:
@@ -716,7 +716,7 @@ def update_statefile(state_file, startup_warnings):
         return
     timestamp = get_timestamp(lines[-1])
     try:
-        state_fd = open(state_file, "w")
+        state_fd = open(state_file, "w")  # pylint:disable=consider-using-with
         try:
             state_fd.write("%d" % timestamp)
         finally:

@@ -164,7 +164,7 @@ else:
 
 # Load the state file into memory
 try:
-    states = ast.literal_eval(open(STATE_FILE).read())
+    states = ast.literal_eval(open(STATE_FILE).read())  # pylint:disable=consider-using-with
 except IOError:
     states = {}
 

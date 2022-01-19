@@ -37,8 +37,8 @@ def compress_history_file(input_path: str, output_path: str) -> None:
     known_services: Dict[str, Set[Optional[str]]] = {}
     machine_state = "START"
 
-    output = io.open(output_path, "wt")
-    for line in open(input_path):
+    output = io.open(output_path, "wt")  # pylint:disable=consider-using-with
+    for line in open(input_path):  # pylint:disable=consider-using-with
         skip_this_line = False
         timestamp = int(line[1:11])
         line_type, host, service = parse_history_line(line)

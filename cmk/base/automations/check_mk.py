@@ -573,7 +573,9 @@ class AutomationRenameHosts(Automation):
             # Create a file "renamed_hosts" with the information about the
             # renaming of the hosts. The core will honor this file when it
             # reads the status file with the saved state.
-            open(var_dir + "/core/renamed_hosts", "w").write("%s\n%s\n" % (oldname, newname))
+            open(var_dir + "/core/renamed_hosts", "w").write(  # pylint:disable=consider-using-with
+                "%s\n%s\n" % (oldname, newname)
+            )
             actions.append("retention")
 
         # NagVis maps
@@ -637,10 +639,10 @@ s/(HOST|SERVICE) NOTIFICATION: ([^;]+);%(old)s;/\1 NOTIFICATION: \2;%(new)s;/
         handled_files: List[str] = []
 
         command = ["sed", "-ri", "--file=/dev/fd/0"]
-        p = subprocess.Popen(
+        p = subprocess.Popen(  # pylint:disable=consider-using-with
             command + file_paths,
             stdin=subprocess.PIPE,
-            stdout=open(os.devnull, "w"),
+            stdout=open(os.devnull, "w"),  # pylint:disable=consider-using-with
             stderr=subprocess.STDOUT,
             close_fds=True,
         )
@@ -660,7 +662,7 @@ s/(HOST|SERVICE) NOTIFICATION: ([^;]+);%(old)s;/\1 NOTIFICATION: \2;%(new)s;/
             extended = ["-r"] if extended_regex else []
             subprocess.call(
                 ["sed", "-i"] + extended + ["s@%s@%s@" % (old, new)] + paths,
-                stderr=open(os.devnull, "w"),
+                stderr=open(os.devnull, "w"),  # pylint:disable=consider-using-with
             )
             return True
 
@@ -1317,7 +1319,7 @@ class AutomationDiagHost(Automation):
 
     def _execute_ping(self, host_config: config.HostConfig, ipaddress: str) -> Tuple[int, str]:
         base_cmd = "ping6" if host_config.is_ipv6_primary else "ping"
-        p = subprocess.Popen(
+        p = subprocess.Popen(  # pylint:disable=consider-using-with
             [base_cmd, "-A", "-i", "0.2", "-c", "2", "-W", "5", ipaddress],
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
@@ -1374,7 +1376,7 @@ class AutomationDiagHost(Automation):
     ) -> Tuple[int, str]:
         family_flag = "-6" if host_config.is_ipv6_primary else "-4"
         try:
-            p = subprocess.Popen(
+            p = subprocess.Popen(  # pylint:disable=consider-using-with
                 ["traceroute", family_flag, "-n", ipaddress],
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,

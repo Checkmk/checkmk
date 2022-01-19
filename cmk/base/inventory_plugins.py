@@ -86,7 +86,7 @@ def load_legacy_inventory_plugins(
 
             _load_plugin_includes(f, plugin_context)
 
-            exec(open(f).read(), plugin_context)
+            exec(open(f).read(), plugin_context)  # pylint:disable=consider-using-with
             loaded_files.add(file_name)
         except Exception as exc:
             errors.append(f"Error in inventory plugin file {f}: {exc}\n")
@@ -191,7 +191,7 @@ def _load_plugin_includes(check_file_path: str, plugin_context: Dict) -> None:
     for name in config.includes_of_plugin(check_file_path):
         path = _include_file_path(name)
         try:
-            exec(open(path).read(), plugin_context)
+            exec(open(path).read(), plugin_context)  # pylint:disable=consider-using-with
         except Exception as e:
             console.error("Error in include file %s: %s\n", path, e)
             if cmk.utils.debug.enabled():

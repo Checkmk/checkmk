@@ -289,7 +289,9 @@ class Test:
             self.load()
 
     def load(self):
-        raw_state = ast.literal_eval(open(os.path.join(self.dir(), "state")).read())
+        raw_state = ast.literal_eval(
+            open(os.path.join(self.dir(), "state")).read()  # pylint:disable=consider-using-with
+        )
         self.deserialize(raw_state)
         self.load_measurements()
 
@@ -505,7 +507,7 @@ class TestRunner(threading.Thread):
         with open("%s/etc/rrdcached.conf" % omd_root(), "w") as f:
             f.write("TIMEOUT=300\n" "RANDOM_DELAY=10\n" "FLUSH_TIMEOUT=7200\n" "WRITE_THREADS=4\n")
 
-        p = subprocess.Popen(
+        p = subprocess.Popen(  # pylint:disable=consider-using-with
             ["omd", "restart", "rrdcached"],
             close_fds=True,
             stdout=subprocess.PIPE,
@@ -838,7 +840,7 @@ class SystemInfo:
         return os.path.basename(os.path.realpath("%s/version" % omd_root()))
 
     def _get_monitoring_core(self):
-        for l in open("%s/etc/omd/site.conf" % omd_root()):
+        for l in open("%s/etc/omd/site.conf" % omd_root()):  # pylint:disable=consider-using-with
             if l.startswith("CONFIG_CORE="):
                 return l.strip().split("=", 1)[1].strip("'")
         return None
@@ -847,7 +849,7 @@ class SystemInfo:
         node: Dict[str, Any] = {}
         num_threads_total = 0
         sockets = set([])
-        for l in open("/proc/cpuinfo"):
+        for l in open("/proc/cpuinfo"):  # pylint:disable=consider-using-with
             parts = l.split(": ", 1)
             if len(parts) != 2:
                 continue
@@ -968,7 +970,7 @@ class Measurement:
 
     def load(self, path):
         try:
-            raw_data = ast.literal_eval(open(path).read())
+            raw_data = ast.literal_eval(open(path).read())  # pylint:disable=consider-using-with
             self.deserialize(raw_data)
         except Exception as e:
             if opt_debug:
@@ -1052,7 +1054,7 @@ class Measurement:
         return psutil.disk_io_counters()
 
     def _get_site_state(self):
-        self.site_state = subprocess.call(
+        self.site_state = subprocess.call(  # pylint:disable=consider-using-with
             ["omd", "status", "--bare"], stdout=open(os.devnull, "w"), close_fds=True
         )
 
@@ -2709,9 +2711,9 @@ class TestAgentBasedStandardHosts(TestCase):
             shutil.copy(src_file, "%s/%s.mk" % (autochecks_dir, host_name))
 
     def _discover_services_of_host(self, host_name):
-        p = subprocess.Popen(
+        p = subprocess.Popen(  # pylint:disable=consider-using-with
             ["cmk", "-II", host_name],
-            stdin=open(os.devnull),
+            stdin=open(os.devnull),  # pylint:disable=consider-using-with
             close_fds=True,
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
@@ -2768,7 +2770,11 @@ class TestAgentBasedStandardHosts(TestCase):
             # We have to stop and start the CMC during manual RRD copy.
             # a) No races with the core
             # b) Cached RRD info held by the core during runtime
-            subprocess.call(["omd", "stop", "cmc"], stdout=open(os.devnull, "w"), close_fds=True)
+            subprocess.call(
+                ["omd", "stop", "cmc"],
+                stdout=open(os.devnull, "w"),  # pylint:disable=consider-using-with
+                close_fds=True,
+            )
 
             src_dir = "%s/%s" % (rrd_dir, first_host_name)
             for num in range(1, self.num_hosts):
@@ -2791,12 +2797,12 @@ class TestAgentBasedStandardHosts(TestCase):
 
                 # Replace the host name in the just copied info files
                 for f in glob.glob("%s/%s/*.info" % (rrd_dir, host_name)):
-                    new_content = open(f).readlines()
+                    new_content = open(f).readlines()  # pylint:disable=consider-using-with
                     for index, line in enumerate(new_content):
                         if line.startswith("HOST "):
                             new_content[index] = "HOST %s\n" % host_name
 
-                    open(f, "w").write("".join(new_content))
+                    open(f, "w").write("".join(new_content))  # pylint:disable=consider-using-with
         finally:
             self._activate_changes()
 
@@ -2804,9 +2810,9 @@ class TestAgentBasedStandardHosts(TestCase):
     def _create_rrds_of_host(self, host_name):
         # Do 2 iterations to initialize the rrds that base on counter values
         for _i in range(2):
-            p = subprocess.Popen(
+            p = subprocess.Popen(  # pylint:disable=consider-using-with
                 ["cmk", "-v", host_name],
-                stdin=open(os.devnull),
+                stdin=open(os.devnull),  # pylint:disable=consider-using-with
                 close_fds=True,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
@@ -2847,7 +2853,7 @@ class TestAgentBasedStandardHosts(TestCase):
     def _activate_changes(self):
         if self._test:
             self._test.info("  Activating changes")
-        p = subprocess.Popen(
+        p = subprocess.Popen(  # pylint:disable=consider-using-with
             ["cmk", "-R"],
             close_fds=True,
             stdout=subprocess.PIPE,
@@ -3313,7 +3319,9 @@ def verify_is_site():
 
 def verify_site_is_running():
     site_state = subprocess.call(
-        ["omd", "status", "--bare"], stdout=open(os.devnull, "w"), close_fds=True
+        ["omd", "status", "--bare"],
+        stdout=open(os.devnull, "w"),  # pylint:disable=consider-using-with
+        close_fds=True,
     )
     if site_state != 0:
         raise MKGeneralException("Site needs to be running")

@@ -225,7 +225,9 @@ def _open_command_pipe() -> None:
         try:
             signal.signal(signal.SIGALRM, _core_pipe_open_timeout)
             signal.alarm(3)  # three seconds to open pipe
-            _nagios_command_pipe = open(cmk.utils.paths.nagios_command_pipe_path, "wb")
+            _nagios_command_pipe = open(  # pylint:disable=consider-using-with
+                cmk.utils.paths.nagios_command_pipe_path, "wb"
+            )
             signal.alarm(0)  # cancel alarm
         except Exception as e:
             _nagios_command_pipe = False

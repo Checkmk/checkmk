@@ -111,7 +111,9 @@ def do_core_action(action: CoreAction, quiet: bool = False) -> None:
     else:
         command = ["omd", action.value, "cmc"]
 
-    p = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, close_fds=True)
+    p = subprocess.Popen(  # pylint:disable=consider-using-with
+        command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, close_fds=True
+    )
     result = p.wait()
     if result != 0:
         assert p.stdout is not None

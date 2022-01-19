@@ -461,7 +461,7 @@ def _werk_table_option_entries():
                     (None, _("All editions")),
                     *(
                         (e.short, _("Werks only concerning the %s") % e.title)
-                        for e in (Edition.CME, Edition.CEE, Edition.CRE)
+                        for e in (Edition.CPE, Edition.CME, Edition.CEE, Edition.CRE)
                     ),
                 ],
             ),

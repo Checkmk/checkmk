@@ -165,7 +165,7 @@ def test__transform_replaced_wato_rulesets_and_params(
 
 def _instantiate_ruleset(ruleset_name, param_value) -> Ruleset:
     ruleset = Ruleset(ruleset_name, {})
-    rule = Rule.create(Folder(""), ruleset)
+    rule = Rule.from_ruleset_defaults(Folder(""), ruleset)
     rule.value = param_value
     ruleset.append_rule(Folder(""), rule)
     assert ruleset.get_rules()

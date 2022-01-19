@@ -838,7 +838,7 @@ class Ruleset:
 
 class Rule:
     @classmethod
-    def create(cls, folder: CREFolder, ruleset: Ruleset) -> Rule:
+    def from_ruleset_defaults(cls, folder: CREFolder, ruleset: Ruleset) -> Rule:
         return Rule(
             utils.gen_id(),
             folder,

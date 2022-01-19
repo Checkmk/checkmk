@@ -59,9 +59,9 @@ def fixture_gen_id(monkeypatch):
         ("clustered_services", True, True),
     ],
 )
-def test_rule_initialize(request_context, ruleset_name, default_value, is_binary):
+def test_rule_from_ruleset_defaults(request_context, ruleset_name, default_value, is_binary):
     ruleset = _ruleset(ruleset_name)
-    rule = rulesets.Rule.create(hosts_and_folders.Folder.root_folder(), ruleset)
+    rule = rulesets.Rule.from_ruleset_defaults(hosts_and_folders.Folder.root_folder(), ruleset)
     assert isinstance(rule.conditions, rulesets.RuleConditions)
     assert rule.rule_options == {}
     assert rule.value == default_value

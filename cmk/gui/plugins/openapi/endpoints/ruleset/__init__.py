@@ -79,7 +79,7 @@ def create_rule(param):
             title=title,
         )
 
-    rule = watolib.Rule.create(folder, ruleset)
+    rule = watolib.Rule.from_ruleset_defaults(folder, ruleset)
     rule.value = value
     rule.rule_options = body["properties"]
     rule.update_conditions(

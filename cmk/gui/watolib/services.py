@@ -330,7 +330,7 @@ class Discovery:
                     rule.conditions.service_description.append(service_condition)
 
         elif service_patterns:
-            rule = watolib.Rule.create(folder, ruleset)
+            rule = watolib.Rule.from_ruleset_defaults(folder, ruleset)
 
             conditions = RuleConditions(folder.path())
             conditions.host_name = [self._host.name()]

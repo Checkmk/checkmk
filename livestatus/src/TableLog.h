@@ -12,12 +12,12 @@
 #include <memory>
 #include <string>
 
+#include "Logfile.h"
 #include "Table.h"
 #include "contact_fwd.h"
 class Column;
 class LogCache;
 class LogFiles;
-class Logfile;
 class MonitoringCore;
 class Query;
 class Row;
@@ -36,8 +36,7 @@ public:
 private:
     LogCache *_log_cache;
     void answerQueryInternal(Query *query, const LogFiles &log_files);
-    bool answerQueryReverse(Query *query, Logfile *logfile,
-                            unsigned long classmask,
+    bool answerQueryReverse(Query *query, const Logfile::map_type *entries,
                             std::chrono::system_clock::time_point since,
                             std::chrono::system_clock::time_point until);
 };

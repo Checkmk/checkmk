@@ -194,8 +194,9 @@ void TableLog::answerQueryInternal(Query *query, const LogFiles &log_files) {
     }
 
     while (true) {
-        if (!answerQueryReverse(query, it->second.get(), classmask, since,
-                                until)) {
+        const auto *entries =
+            it->second->getEntriesFor(core()->maxLinesPerLogFile(), classmask);
+        if (!answerQueryReverse(query, entries, since, until)) {
             break;  // end of time range found
         }
         if (it == log_files.begin()) {
@@ -205,12 +206,10 @@ void TableLog::answerQueryInternal(Query *query, const LogFiles &log_files) {
     }
 }
 
-bool TableLog::answerQueryReverse(Query *query, Logfile *logfile,
-                                  unsigned long classmask,
+bool TableLog::answerQueryReverse(Query *query,
+                                  const Logfile::map_type *entries,
                                   std::chrono::system_clock::time_point since,
                                   std::chrono::system_clock::time_point until) {
-    const auto *entries =
-        logfile->getEntriesFor(core()->maxLinesPerLogFile(), classmask);
     auto it = entries->upper_bound(Logfile::makeKey(until, 999999999));
     while (it != entries->begin()) {
         --it;

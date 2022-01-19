@@ -750,8 +750,8 @@ section_omd_apache() {
                 site=${statsfile%/var/log*}
                 site=${site#/omd/sites/}
                 echo "[${site}]"
-                cat ${statsfile}
-                >${statsfile}
+                cat "${statsfile}"
+                : >"${statsfile}"
             fi
         done
     fi

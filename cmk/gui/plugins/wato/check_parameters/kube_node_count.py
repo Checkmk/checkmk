@@ -5,30 +5,20 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
+from cmk.gui.plugins.wato.check_parameters.kube import wrap_with_no_levels_dropdown
 from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithoutItem,
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
 )
-from cmk.gui.valuespec import CascadingDropdown, Dictionary, Integer, Tuple
-
-
-def __optional(title, value_spec):
-    return CascadingDropdown(
-        title=title,
-        choices=[
-            ("no_levels", _("No Levels")),
-            ("levels", _("Impose levels"), value_spec),
-        ],
-        default_value="no_levels",
-    )
+from cmk.gui.valuespec import Dictionary, Integer, Tuple
 
 
 def __levels(key, title_upper, title_lower):
     return [
         (
             key + "_levels_upper",
-            __optional(
+            wrap_with_no_levels_dropdown(
                 title_upper,
                 Tuple(
                     elements=[
@@ -40,7 +30,7 @@ def __levels(key, title_upper, title_lower):
         ),
         (
             key + "_levels_lower",
-            __optional(
+            wrap_with_no_levels_dropdown(
                 title_lower,
                 Tuple(
                     elements=[

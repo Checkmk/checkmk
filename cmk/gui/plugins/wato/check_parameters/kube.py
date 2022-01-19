@@ -11,6 +11,17 @@ from cmk.gui.i18n import _
 from cmk.gui.valuespec import Age, CascadingDropdown, Tuple
 
 
+def wrap_with_no_levels_dropdown(title, value_spec) -> CascadingDropdown:
+    return CascadingDropdown(
+        title=title,
+        choices=[
+            ("no_levels", _("No Levels")),
+            ("levels", _("Impose levels"), value_spec),
+        ],
+        default_value="no_levels",
+    )
+
+
 def valuespec_age(
     title: str, default_choice: Literal["levels", "no_levels"] = "no_levels"
 ) -> CascadingDropdown:

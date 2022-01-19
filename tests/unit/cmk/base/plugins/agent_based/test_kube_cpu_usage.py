@@ -23,18 +23,23 @@ CRIT = 0.09  # value for request and limit to set state to CRIT
 
 
 @pytest.fixture
+def params_usage():
+    return "no_levels"
+
+
+@pytest.fixture
 def params_request():
-    return ("perc_used", LEVELS)
+    return ("levels", LEVELS)
 
 
 @pytest.fixture
 def params_limit():
-    return ("perc_used", (LEVELS[0] / 2, LEVELS[1] / 2))
+    return ("levels", (LEVELS[0] / 2, LEVELS[1] / 2))
 
 
 @pytest.fixture
-def params(params_request, params_limit):
-    return kube_cpu_usage.Params(request=params_request, limit=params_limit)
+def params(params_usage, params_request, params_limit):
+    return kube_cpu_usage.Params(usage=params_usage, request=params_request, limit=params_limit)
 
 
 @pytest.fixture
@@ -249,24 +254,26 @@ def test_check_all_states_ok(check_result):
 
 
 @pytest.mark.parametrize("state", [OK, WARN, CRIT])
-@pytest.mark.parametrize("params_request, params_limit", [(("ignore"), ("ignore"))])
+@pytest.mark.parametrize("params_request, params_limit", [(("no_levels"), ("no_levels"))])
 def test_check_all_states_ok_params_ignore(check_result):
     assert all(r.state == State.OK for r in check_result if isinstance(r, Result))
 
 
 @pytest.mark.parametrize("state", [OK, WARN, CRIT])
 @pytest.mark.parametrize(
-    "params_request, params_limit, expected_states",
+    "params_usage, params_request, params_limit, expected_states",
     [
         (
-            ("abs_used", (0.01, 1.0)),
-            ("abs_used", (0.01, 1.0)),
-            [State.OK, State.WARN, State.WARN],
+            ("no_levels", (0.01, 1.0)),
+            "no_levels",
+            "no_levels",
+            [State.WARN, State.OK, State.OK],
         ),
         (
-            ("abs_used", (0.01, 0.01)),
-            ("abs_used", (0.01, 0.01)),
-            [State.OK, State.CRIT, State.CRIT],
+            ("no_levels", (0.01, 0.01)),
+            "no_levels",
+            "no_levels",
+            [State.CRIT, State.OK, State.OK],
         ),
     ],
 )

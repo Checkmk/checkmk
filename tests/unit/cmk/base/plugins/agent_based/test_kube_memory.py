@@ -20,7 +20,7 @@ from cmk.base.plugins.agent_based.kube_memory import (
 )
 from cmk.base.plugins.agent_based.utils.kube_resources import ExceptionalResource, Usage
 
-from cmk.gui.plugins.wato.check_parameters.kube_memory import _parameter_valuespec_memory
+from cmk.gui.plugins.wato.check_parameters.kube_resources import _parameter_valuespec_memory
 
 # TODO Refactor these tests, so there functionality is not lost. Also the new test needs to below
 # refactored into smaller tests.
@@ -349,7 +349,7 @@ def test_check_kube_memory(
 ) -> None:
     assert expected_result == tuple(
         check_kube_memory(
-            Params(request="ignore", limit=("perc_used", (80.0, 90.0))),
+            Params(usage="no_levels", request="no_levels", limit=("levels", (80.0, 90.0))),
             section_kube_performance_memory,
             section_kube_memory_resources,
         )

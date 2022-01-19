@@ -6,17 +6,7 @@
 
 import enum
 import json
-from typing import (
-    Callable,
-    Iterable,
-    Literal,
-    NamedTuple,
-    Optional,
-    Sequence,
-    Tuple,
-    TypedDict,
-    Union,
-)
+from typing import Callable, Iterable, Literal, Optional, Sequence, Tuple, TypedDict, Union
 
 from pydantic import BaseModel
 
@@ -92,37 +82,20 @@ class Usage(BaseModel):
     usage: float
 
 
-Modes = Literal["perc_used", "abs_used"]
-Param = Union[Literal["ignore"], Tuple[Modes, Tuple[float, float]]]
+Param = Union[Literal["no_levels"], Tuple[Literal["levels"], Tuple[float, float]]]
 
 
 class Params(TypedDict):
+    usage: Param
     request: Param
     limit: Param
 
 
 DEFAULT_PARAMS = Params(
-    request="ignore",
-    limit="ignore",
+    usage="no_levels",
+    request="no_levels",
+    limit="no_levels",
 )
-
-
-class Levels(NamedTuple):
-    warn: float
-    crit: float
-
-
-def scale_to_perc(total: float) -> Callable[[float], float]:
-    return lambda x: x * 100.0 / total
-
-
-def normalize_levels(param: Param, requirement_value: float) -> Optional[Levels]:
-    if param == "ignore":
-        return None
-    if param[0] == "perc_used":
-        return Levels(*param[1])
-    # param[0] == "abs_used":
-    return Levels(*map(scale_to_perc(requirement_value), param[1]))
 
 
 def check_with_utilization(
@@ -133,10 +106,10 @@ def check_with_utilization(
     param: Param,
     render_func: Callable[[float], str],
 ) -> Iterable[Union[Metric, Result]]:
-    utilization = scale_to_perc(requirement_value)(usage)
+    utilization = usage * 100.0 / requirement_value
     result, metric = check_levels(
         utilization,
-        levels_upper=normalize_levels(param, requirement_value),
+        levels_upper=param[1] if param != "no_levels" else None,
         metric_name=f"kube_{resource_type}_{requirement_type}_utilization",
         render_func=render.percent,
         boundaries=(0.0, None),
@@ -186,7 +159,7 @@ def check_resource(
         yield from check_levels(
             total_usage,
             label="Usage",
-            levels_upper=None,
+            levels_upper=params["usage"][1] if params["usage"] != "no_levels" else None,
             metric_name=f"kube_{resource_type}_usage",
             render_func=render_func,
             boundaries=(0.0, None),
@@ -195,13 +168,12 @@ def check_resource(
     if resources is not None:
         for requirement_name, requirement in iterate_resources(resources):
             if isinstance(requirement, float) and requirement != 0.0 and usage is not None:
-                param = params[requirement_name]
                 yield from check_with_utilization(
                     total_usage,
                     resource_type,
                     requirement_name,
                     requirement,
-                    param,
+                    params[requirement_name],
                     render_func,
                 )
             elif isinstance(requirement, ExceptionalResource):

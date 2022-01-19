@@ -16,7 +16,7 @@ from typing import Any, Dict, Iterator, List, Union
 import cmk.utils.paths
 import cmk.utils.store as store
 import cmk.utils.werks
-from cmk.utils.version import __version__, edition_title, Version
+from cmk.utils.version import __version__, Edition, edition_title, Version
 
 import cmk.gui.pages
 import cmk.gui.utils as utils
@@ -459,9 +459,10 @@ def _werk_table_option_entries():
                 title=_("Edition"),
                 choices=[
                     (None, _("All editions")),
-                    ("cme", _("Werks only concerning the Managed Services Edition")),
-                    ("cee", _("Werks only concerning the Enterprise Edition")),
-                    ("cre", _("Werks also concerning the Raw Edition")),
+                    *(
+                        (e.short, _("Werks only concerning the %s") % e.title)
+                        for e in (Edition.CME, Edition.CEE, Edition.CRE)
+                    ),
                 ],
             ),
             None,

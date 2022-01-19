@@ -2181,20 +2181,20 @@ def test_config_cache_check_period_of_service(
 
 
 @pytest.mark.parametrize(
-    "edition_short,expected_cache_class_name,expected_host_class_name",
+    "edition,expected_cache_class_name,expected_host_class_name",
     [
-        ("cme", "CEEConfigCache", "CEEHostConfig"),
-        ("cee", "CEEConfigCache", "CEEHostConfig"),
-        ("cre", "ConfigCache", "HostConfig"),
+        (cmk_version.Edition.CME, "CEEConfigCache", "CEEHostConfig"),
+        (cmk_version.Edition.CEE, "CEEConfigCache", "CEEHostConfig"),
+        (cmk_version.Edition.CRE, "ConfigCache", "HostConfig"),
     ],
 )
 def test_config_cache_get_host_config(
     monkeypatch: MonkeyPatch,
-    edition_short: str,
+    edition: cmk_version.Edition,
     expected_cache_class_name: str,
     expected_host_class_name: str,
 ) -> None:
-    monkeypatch.setattr(cmk_version, "edition_short", lambda: edition_short)
+    monkeypatch.setattr(cmk_version, "_edition", lambda: edition)
 
     _config_cache.clear()
 

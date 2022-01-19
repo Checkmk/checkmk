@@ -23,13 +23,26 @@ import sys
 import time
 from dataclasses import dataclass
 from functools import lru_cache
-from typing import Any, Dict, Tuple, Union
+from typing import Any, Dict, NamedTuple, Tuple, Union
 
 import livestatus
 
 import cmk.utils.paths
 from cmk.utils.i18n import _
 from cmk.utils.type_defs._misc import assert_never
+
+
+class _EditionValue(NamedTuple):
+    short: str
+    title: str
+
+
+class Edition(_EditionValue, enum.Enum):
+    CRE = _EditionValue("cre", "Checkmk Raw Edition")
+    CEE = _EditionValue("cee", "Checkmk Enterprise Edition")
+    CPE = _EditionValue("cpe", "Checkmk Enterprise Plus Edition")
+    CME = _EditionValue("cme", "Checkmk Managed Services Edition")
+    CFE = _EditionValue("cfe", "Checkmk Free Edition")
 
 
 @lru_cache
@@ -39,44 +52,40 @@ def omd_version() -> str:
 
 
 @lru_cache
-def edition_short() -> str:
-    return str(omd_version().split(".")[-1])
+def _edition() -> Edition:
+    return Edition[omd_version().split(".")[-1].upper()]
 
 
 def is_enterprise_edition() -> bool:
-    return edition_short() == "cee"
+    return _edition() is Edition.CEE
 
 
 def is_plus_edition() -> bool:
-    return edition_short() == "cpe"
+    return _edition() is Edition.CPE
 
 
 def is_raw_edition() -> bool:
-    return edition_short() == "cre"
+    return _edition() is Edition.CRE
 
 
 def is_managed_edition() -> bool:
-    return edition_short() == "cme"
+    return _edition() is Edition.CME
 
 
 def is_free_edition() -> bool:
-    return edition_short() == "cfe"
+    return _edition() is Edition.CFE
 
 
 def is_cma() -> bool:
     return os.path.exists("/etc/cma/cma.conf")
 
 
-def edition_title():
-    if is_enterprise_edition():
-        return "Checkmk Enterprise Edition"
-    if is_plus_edition():
-        return "Checkmk Enterprise Plus Edition"
-    if is_managed_edition():
-        return "Checkmk Managed Services Edition"
-    if is_free_edition():
-        return "Checkmk Free Edition"
-    return "Checkmk Raw Edition"
+def edition_short() -> str:
+    return _edition().short
+
+
+def edition_title() -> str:
+    return _edition().title
 
 
 class TrialState(enum.Enum):

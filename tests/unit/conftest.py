@@ -62,6 +62,7 @@ def fixture_edition_short(monkeypatch, request):
         pytest.skip("Needed files are not available")
 
     monkeypatch.setattr(cmk_version, "edition_short", lambda: edition_short)
+    monkeypatch.setattr(cmk_version, "_edition", lambda: cmk_version.Edition[edition_short.upper()])
     yield edition_short
 
 
@@ -176,7 +177,7 @@ def _clear_caches():
     cmk.utils.caching.config_cache.clear()
     cmk.utils.caching.runtime_cache.clear()
 
-    cmk_version.edition_short.cache_clear()
+    cmk_version._edition.cache_clear()
 
 
 @pytest.fixture(autouse=True, scope="module")

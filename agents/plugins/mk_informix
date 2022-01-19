@@ -44,12 +44,12 @@ sql() {
 
 
 set_excludes() {
-    excludes=""
+    exclude=""
     if [ "$EXCLUDES" = "ALL" ]; then
-        excludes="$all_sections"
+        exclude="$all_sections"
         global_exclude=true
-    elif [ ! -z "$EXCLUDES" ]; then
-        excludes=$EXCLUDES
+    elif [ -n "$EXCLUDES" ]; then
+        exclude=$EXCLUDES
         global_exclude=true
     else
         global_exclude=false
@@ -58,9 +58,9 @@ set_excludes() {
     if [ "$global_exclude" = "false" ]; then
         excludes_i="EXCLUDES_${1}"
         if [ "${!excludes_i}" = "ALL" ]; then
-            excludes="$all_sections"
-        elif [ ! -z "${!excludes_i}" ]; then
-            excludes=${!excludes_i}
+            exclude="$all_sections"
+        elif [ -n "${!excludes_i}" ]; then
+            exclude=${!excludes_i}
         fi
     fi
 }
@@ -259,23 +259,23 @@ for IDSENV in $( export INFORMIXDIR=${ONINIT_PATH%/bin*}
 
         set_excludes $INFORMIXSERVER
 
-        if do_check "sessions" "$excludes"; then
+        if do_check "sessions" "$exclude"; then
             informix_sessions
         fi
 
-        if do_check "locks" "$excludes"; then
+        if do_check "locks" "$exclude"; then
             informix_locks
         fi
 
-        if do_check "tabextents" "$excludes"; then
+        if do_check "tabextents" "$exclude"; then
             informix_tabextents
         fi
 
-        if do_check "dbspaces" "$excludes"; then
+        if do_check "dbspaces" "$exclude"; then
             informix_dbspaces
         fi
 
-        if do_check "logusage" "$excludes"; then
+        if do_check "logusage" "$exclude"; then
             informix_logusage
         fi
     )

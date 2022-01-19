@@ -54,13 +54,10 @@ if [ -r "$sapservices" ]; then
             path=$(echo "/sapmnt/$id2/exe")
             sappfpar=$(find $path -name sappfpar | head -1)
             sapcontrol=$(find $path -name sapcontrol | head -1)
-            libpath=$(find $path -name libicuuc\*.a | head -1 | sed -e 's,/[^ /]*$,,')
-            id=$(LIBPATH=$LIBPATH:$libpath $sappfpar SAPSYSTEM $command)
+            lib_path=$(find $path -name libicuuc\*.a | head -1 | sed -e 's,/[^ /]*$,,')
+            id=$(LIBPATH=$LIBPATH:$lib_path $sappfpar SAPSYSTEM $command)
             echo -n "[$id]"
-            LIBPATH=$LIBPATH:$libpath $sapcontrol -nr $id -function GetProcessList
+            LIBPATH=$LIBPATH:$lib_path $sapcontrol -nr $id -function GetProcessList
 	fi
     done
 fi
-
-
-

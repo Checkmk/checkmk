@@ -579,7 +579,7 @@ class OMDConfigChangeBackgroundJob(WatoBackgroundJob):
         job_interface.send_result_message(_("OMD config changes have been applied."))
 
     def _do_config_change(self, config_change_commands) -> None:
-        p = subprocess.Popen(
+        p = subprocess.Popen(  # pylint:disable=consider-using-with
             ["omd", "config", "change"],
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,

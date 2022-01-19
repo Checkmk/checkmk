@@ -426,7 +426,7 @@ def message_mail(user_id, msg):
         )
 
     try:
-        p = subprocess.Popen(
+        p = subprocess.Popen(  # pylint:disable=consider-using-with
             command,
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,

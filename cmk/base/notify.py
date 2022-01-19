@@ -262,7 +262,7 @@ def do_notify(options: Dict[str, bool], args: List[str]) -> Optional[int]:
         crash_dir = cmk.utils.paths.var_dir + "/notify"
         if not os.path.exists(crash_dir):
             os.makedirs(crash_dir)
-        open(crash_dir + "/crash.log", "a").write(
+        open(crash_dir + "/crash.log", "a").write(  # pylint:disable=consider-using-with
             "CRASH (%s):\n%s\n" % (time.strftime("%Y-%m-%d %H:%M:%S"), format_exception())
         )
     return None
@@ -1499,7 +1499,7 @@ def notify_via_email(plugin_context: PluginContext) -> int:
     logger.debug("Executing command: %s", command)
 
     # TODO: Cleanup this shell=True call!
-    p = subprocess.Popen(  # nosec
+    p = subprocess.Popen(  # nosec # pylint:disable=consider-using-with
         command_utf8,
         shell=True,
         stdout=subprocess.PIPE,
@@ -1528,7 +1528,7 @@ def _ensure_utf8() -> None:
     # Our resultion in future: use /usr/sbin/sendmail directly.
     # Our resultion in the present: look with locale -a for an existing UTF encoding
     # and use that.
-    proc: subprocess.Popen = subprocess.Popen(
+    proc: subprocess.Popen = subprocess.Popen(  # pylint:disable=consider-using-with
         ["locale", "-a"],
         close_fds=True,
         stdout=subprocess.PIPE,
@@ -1650,7 +1650,7 @@ def call_notification_script(
     plugin_log("executing %s" % path)
     try:
         set_notification_timeout()
-        p = subprocess.Popen(
+        p = subprocess.Popen(  # pylint:disable=consider-using-with
             [path],
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
@@ -1938,7 +1938,9 @@ def do_bulk_notify(
     bulk_dirname = create_bulk_dirname(bulk_path)
     notify_uuid = fresh_uuid()
     filename = bulk_dirname + "/" + notify_uuid
-    open(filename + ".new", "w").write("%r\n" % ((params, plugin_context),))
+    open(filename + ".new", "w").write(  # pylint:disable=consider-using-with
+        "%r\n" % ((params, plugin_context),)
+    )
     os.rename(filename + ".new", filename)  # We need an atomic creation!
     logger.info("        - stored in %s", filename)
 
@@ -2223,7 +2225,7 @@ def call_bulk_notification_script(
         # Protocol: The script gets the context on standard input and
         # read until that is closed. It is being called with the parameter
         # --bulk.
-        p = subprocess.Popen(
+        p = subprocess.Popen(  # pylint:disable=consider-using-with
             [path, "--bulk"],
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,

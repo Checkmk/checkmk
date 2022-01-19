@@ -203,8 +203,10 @@ def parse_report(host, status):
         # See if it's running
         try:
             pid = int(
-                open(reportfile + ".pid", "r").readline().rstrip()
-            )  # pylint:disable=consider-using-with
+                open(reportfile + ".pid", "r")  # pylint:disable=consider-using-with
+                .readline()
+                .rstrip()
+            )
             if check_mtr_pid(pid):
                 # Still running, we're done.
                 if not host in status.keys():
@@ -379,9 +381,9 @@ def start_mtr(host, mtr_binary, config, status):
     report = open(reportfile, "a+")  # pylint:disable=consider-using-with
     report.write(str(int(time.time())) + "\n")
     report.flush()
-    process = subprocess.Popen(
+    process = subprocess.Popen(  # pylint:disable=consider-using-with
         options, stdout=report, stderr=report
-    )  # pylint:disable=consider-using-with
+    )
     # Write pid to report.pid
     pidfile = open(reportfile + ".pid", "w")  # pylint:disable=consider-using-with
     pidfile.write("%d\n" % process.pid)

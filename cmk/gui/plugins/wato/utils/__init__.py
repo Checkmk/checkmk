@@ -2056,13 +2056,13 @@ class SiteBackupJobs(backup.Jobs):
         super().__init__(backup.site_config_path())
 
     def _apply_cron_config(self):
-        p = subprocess.Popen(
+        p = subprocess.Popen(  # pylint:disable=consider-using-with
             ["omd", "restart", "crontab"],
             close_fds=True,
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
             encoding="utf-8",
-            stdin=open(os.devnull),
+            stdin=open(os.devnull),  # pylint:disable=consider-using-with
         )
         if p.wait() != 0:
             out = "Huh???" if p.stdout is None else p.stdout.read()

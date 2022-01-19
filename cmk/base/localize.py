@@ -141,7 +141,12 @@ def _write_alias(lang: LanguageName, alias: Optional[str]) -> None:
 def _check_binaries() -> None:
     """Are the xgettext utils available?"""
     for b in ["xgettext", "msgmerge", "msgfmt"]:
-        if subprocess.call(["which", b], stdout=open(os.devnull, "wb")) != 0:
+        if (
+            subprocess.call(
+                ["which", b], stdout=open(os.devnull, "wb")  # pylint:disable=consider-using-with
+            )
+            != 0
+        ):
             raise LocalizeException("%s binary not found in PATH\n" % b)
 
 
@@ -154,7 +159,8 @@ def _localize_update_po(lang: LanguageName) -> None:
     logger.log(VERBOSE, "Merging translations...")
     if (
         subprocess.call(
-            ["msgmerge", "-U", _po_file(lang), _pot_file()], stdout=open(os.devnull, "wb")
+            ["msgmerge", "-U", _po_file(lang), _pot_file()],
+            stdout=open(os.devnull, "wb"),  # pylint:disable=consider-using-with
         )
         != 0
     ):
@@ -167,7 +173,7 @@ def _localize_init_po(lang: LanguageName) -> None:
     if (
         subprocess.call(
             ["msginit", "-i", _pot_file(), "--no-translator", "-l", lang, "-o", _po_file(lang)],
-            stdout=open(os.devnull, "wb"),
+            stdout=open(os.devnull, "wb"),  # pylint:disable=consider-using-with
         )
         != 0
     ):
@@ -208,7 +214,7 @@ def _localize_sniff() -> None:
                 _pot_file(),
             ]
             + sniff_files,
-            stdout=open(os.devnull, "wb"),
+            stdout=open(os.devnull, "wb"),  # pylint:disable=consider-using-with
         )
         != 0
     ):
@@ -232,8 +238,8 @@ msgstr ""
 
 """
 
-        f = open(_pot_file()).read()
-        open(_pot_file(), "w").write(header + f)
+        f = open(_pot_file()).read()  # pylint:disable=consider-using-with
+        open(_pot_file(), "w").write(header + f)  # pylint:disable=consider-using-with
         logger.info("Success! Output: %s", _pot_file())
 
 

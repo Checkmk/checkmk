@@ -1418,12 +1418,14 @@ def is_pdf2png_possible():
 def pdf2png(pdf_source):
     # Older version of pdftoppm cannot read pipes. The need to seek around
     # in the file. Therefore we need to save the PDF source into a temporary file.
-    temp_file = tempfile.NamedTemporaryFile(dir=cmk.utils.paths.tmp_dir)
+    temp_file = tempfile.NamedTemporaryFile(  # pylint:disable=consider-using-with
+        dir=cmk.utils.paths.tmp_dir
+    )
     temp_file.write(pdf_source)
     temp_file.flush()
 
     command = ["pdftoppm", "-png", "-f", "1", "-l", "1", "-scale-to", "1000", temp_file.name]
-    p = subprocess.Popen(
+    p = subprocess.Popen(  # pylint:disable=consider-using-with
         command,
         close_fds=True,
         stdout=subprocess.PIPE,

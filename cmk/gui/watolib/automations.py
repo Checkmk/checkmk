@@ -98,7 +98,7 @@ def check_mk_local_automation_serialized(
         # if config.debug:
         #     html.write_text("<div class=message>Running <tt>%s</tt></div>\n" % subprocess.list2cmdline(cmd))
         auto_logger.info("RUN: %s" % subprocess.list2cmdline(cmd))
-        p = subprocess.Popen(
+        p = subprocess.Popen(  # pylint:disable=consider-using-with
             cmd,
             stdin=subprocess.PIPE,
             stdout=subprocess.PIPE,

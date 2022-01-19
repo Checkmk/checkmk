@@ -439,9 +439,9 @@ class ConfigDomainApache(ABCConfigDomain):
         try:
             self._write_config_file()
 
-            p = subprocess.Popen(
+            p = subprocess.Popen(  # pylint:disable=consider-using-with
                 ["omd", "reload", "apache"],
-                stdin=open(os.devnull),
+                stdin=open(os.devnull),  # pylint:disable=consider-using-with
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
                 close_fds=True,
@@ -563,9 +563,9 @@ class ConfigDomainRRDCached(ABCConfigDomain):
         try:
             self._write_config_file()
 
-            p = subprocess.Popen(
+            p = subprocess.Popen(  # pylint:disable=consider-using-with
                 ["omd", "restart", "rrdcached"],
-                stdin=open(os.devnull),
+                stdin=open(os.devnull),  # pylint:disable=consider-using-with
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
                 close_fds=True,

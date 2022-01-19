@@ -10,7 +10,6 @@ OS_PACKAGES    += traceroute # needed for Checkmk parent scan
 OS_PACKAGES    += curl
 OS_PACKAGES    += dialog
 OS_PACKAGES    += dnsutils
-OS_PACKAGES    += ed
 OS_PACKAGES    += graphviz
 OS_PACKAGES    += apache2
 OS_PACKAGES    += apache2-utils # contains htpasswd2

@@ -7,7 +7,7 @@
 
 import abc
 from collections import Counter
-from datetime import datetime
+from datetime import date, datetime
 from typing import Dict, List, NamedTuple, Optional, Tuple, Union
 
 from dateutil.relativedelta import relativedelta
@@ -236,3 +236,16 @@ class MonthlyServiceAveragesOfCmkUser(ABCMonthlyServiceAverages):
             }
         )
         return aggregation
+
+
+class SubscriptionPeriodError(Exception):
+    pass
+
+
+def validate_subscription_period(attrs: Dict) -> None:
+    delta = date.fromtimestamp(attrs["subscription_end"]) - date.fromtimestamp(
+        attrs["subscription_start"]
+    )
+    # full year is e.g. 01.01.1970-31.12.1970 (364 days)
+    if delta.days < 364:
+        raise SubscriptionPeriodError()

@@ -772,10 +772,14 @@ class SetupError(Exception):
 
 
 def request_metrics_from_cluster_collector(
-    cluster_agent_url: str, verify: bool
+    cluster_agent_url: str,
+    token: str,
+    verify: bool,
 ) -> Sequence[RawMetrics]:
     cluster_resp = requests.get(
-        f"{cluster_agent_url}/container_metrics", verify=verify
+        f"{cluster_agent_url}/container_metrics",
+        headers={"Authorization": f"Bearer {token}"},
+        verify=verify,
     )  # TODO: certificate validation
     if cluster_resp.status_code != 200:
         raise SetupError("Checkmk cannot make a connection to the k8 cluster agent")
@@ -1019,7 +1023,7 @@ def main(args: Optional[List[str]] = None) -> int:
 
             # Sections based on cluster collector performance data
             collected_metrics = request_metrics_from_cluster_collector(
-                arguments.cluster_agent_endpoint, arguments.verify_cert
+                arguments.cluster_agent_endpoint, arguments.token, arguments.verify_cert
             )
             performance_metrics = parse_performance_metrics(collected_metrics)
 

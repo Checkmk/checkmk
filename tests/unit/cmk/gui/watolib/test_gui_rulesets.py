@@ -4,9 +4,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import Optional
+
 import pytest
 
 import cmk.utils.rulesets.ruleset_matcher as ruleset_matcher
+from cmk.utils.type_defs import RuleOptions, RuleOptionsSpec, RuleSpec
 
 import cmk.gui.utils
 
@@ -63,7 +66,13 @@ def test_rule_from_ruleset_defaults(request_context, ruleset_name, default_value
     ruleset = _ruleset(ruleset_name)
     rule = rulesets.Rule.from_ruleset_defaults(hosts_and_folders.Folder.root_folder(), ruleset)
     assert isinstance(rule.conditions, rulesets.RuleConditions)
-    assert rule.rule_options == {}
+    assert rule.rule_options == RuleOptions(
+        disabled=False,
+        description="",
+        comment="",
+        docu_url="",
+        predefined_condition_id=None,
+    )
     assert rule.value == default_value
     assert rule.ruleset.rulespec.is_binary_ruleset == is_binary
 
@@ -185,7 +194,11 @@ def test_rule_from_config_unhandled_format(
     ],
 )
 def test_rule_from_config_tuple(
-    request_context, ruleset_name, rule_spec, expected_attributes, rule_options
+    request_context,
+    ruleset_name,
+    rule_spec,
+    expected_attributes,
+    rule_options: Optional[RuleOptionsSpec],
 ):
     if rule_options is not None:
         rule_spec = rule_spec + (rule_options,)
@@ -201,9 +214,9 @@ def test_rule_from_config_tuple(
             assert getattr(rule, key) == val
 
     if rule_options is not None:
-        assert rule.rule_options == rule_options
+        assert rule.rule_options == RuleOptions.from_config(rule_options)
     else:
-        assert rule.rule_options == {}
+        assert rule.rule_options == RuleOptions.from_config({})
 
 
 @pytest.mark.parametrize(
@@ -437,7 +450,11 @@ def test_rule_from_config_tuple(
     ],
 )
 def test_rule_from_config_dict(
-    request_context, ruleset_name, rule_spec, expected_attributes, rule_options
+    request_context,
+    ruleset_name,
+    rule_spec: RuleSpec,
+    expected_attributes,
+    rule_options: RuleOptionsSpec,
 ):
     rule_spec = rule_spec.copy()
     if rule_options is not None:
@@ -456,9 +473,9 @@ def test_rule_from_config_dict(
             assert getattr(rule, key) == val
 
     if rule_options is not None:
-        assert rule.rule_options == rule_options
+        assert rule.rule_options == RuleOptions.from_config(rule_options)
     else:
-        assert rule.rule_options == {}
+        assert rule.rule_options == RuleOptions.from_config({})
 
     # test for synchronous to_dict on the way. Except when rule_spec.id was not set, because the ID
     # is added dynamically when processing such rules.

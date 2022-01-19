@@ -544,7 +544,7 @@ class UpdateConfig:
                 "sections_disabled": sorted(str(s) for s in sections_to_disable),
                 "sections_enabled": [],
             }
-            new_rule.rule_options["comment"] = (
+            new_rule.rule_options.comment = (
                 "%s - Checkmk: automatically converted during upgrade from rule "
                 '"Disabled checks". Please review if these rules can be deleted.'
             ) % time.strftime("%Y-%m-%d %H:%M", time.localtime())

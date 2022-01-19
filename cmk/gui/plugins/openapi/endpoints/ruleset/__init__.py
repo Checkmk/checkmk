@@ -8,10 +8,13 @@ from __future__ import annotations
 
 import typing
 
+from cmk.gui.utils import gen_id
 from cmk.gui.utils.escaping import strip_tags
 
 if typing.TYPE_CHECKING:
     from typing import List, Tuple
+
+from cmk.utils.type_defs import RuleOptions
 
 from cmk.gui import exceptions, http, watolib
 from cmk.gui.i18n import _l
@@ -79,10 +82,10 @@ def create_rule(param):
             title=title,
         )
 
-    rule = watolib.Rule.from_ruleset_defaults(folder, ruleset)
-    rule.value = value
-    rule.rule_options = body["properties"]
-    rule.update_conditions(
+    rule = watolib.Rule(
+        gen_id(),
+        folder,
+        ruleset,
         RuleConditions(
             host_folder=folder,
             host_tags=body["conditions"]["host_tag"],
@@ -90,7 +93,9 @@ def create_rule(param):
             host_name=body["conditions"]["host_name"],
             service_description=body["conditions"]["service_description"],
             service_labels=body["conditions"]["service_label"],
-        )
+        ),
+        RuleOptions.from_config(body["properties"]),
+        value,
     )
     index = ruleset.append_rule(folder, rule)
     rulesets.save()
@@ -291,7 +296,7 @@ def _serialize_rule(
             "ruleset": rule.ruleset.name,
             "folder": folder.path(),
             "folder_index": index,
-            "properties": rule._rule_options_to_config(),
+            "properties": rule.rule_options.to_config(),
             "value_raw": rule.value,
             "conditions": {
                 "host_name": rule.conditions.host_name,

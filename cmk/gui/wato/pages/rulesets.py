@@ -24,6 +24,7 @@ from cmk.utils.type_defs import (
     HostName,
     HostOrServiceConditions,
     HostOrServiceConditionsSimple,
+    RuleOptions,
     ServiceName,
     TagConditionNE,
     TagConditionNOR,
@@ -1735,12 +1736,16 @@ class ABCEditRuleMode(WatoMode):
         rule_options = self._vs_rule_options(self._rule.id).from_html_vars("options")
         self._vs_rule_options(self._rule.id).validate_value(rule_options, "options")
 
-        del rule_options["id"]
-        self._rule.rule_options = rule_options
+        self._rule.rule_options = RuleOptions(
+            disabled=rule_options["disabled"],
+            description=rule_options["description"],
+            comment=rule_options["comment"],
+            docu_url=rule_options["docu_url"],
+        )
 
         if self._get_condition_type_from_vars() == "predefined":
             condition_id = self._get_condition_id_from_vars()
-            self._rule.rule_options["predefined_condition_id"] = condition_id
+            self._rule.rule_options.predefined_condition_id = condition_id
 
         # CONDITION
         self._rule.update_conditions(self._get_rule_conditions_from_vars())

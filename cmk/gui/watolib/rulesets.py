@@ -6,6 +6,7 @@
 
 from __future__ import annotations
 
+import dataclasses
 import os
 import pprint
 import re
@@ -844,7 +845,13 @@ class Rule:
             folder,
             ruleset,
             RuleConditions(folder.path()),
-            {},
+            RuleOptions(
+                disabled=False,
+                description="",
+                comment="",
+                docu_url="",
+                predefined_condition_id=None,
+            ),
             ruleset.valuespec().default_value(),
         )
 
@@ -870,7 +877,7 @@ class Rule:
             self.folder,
             self.ruleset,
             self.conditions.clone(),
-            self.rule_options.copy(),
+            dataclasses.replace(self.rule_options),
             self.value,
         )
 
@@ -924,7 +931,7 @@ class Rule:
             folder,
             ruleset,
             rule_conditions,
-            rule_options,
+            RuleOptions.from_config(rule_options),
             rule_config["value"],
         )
 
@@ -950,35 +957,14 @@ class Rule:
     def _to_config(
         self, conditions: RuleConditionsSpec, value_func: Callable[[Any], Any] = lambda x: x
     ) -> RuleSpec:
-        result: RuleSpec = {
+        rule_spec: RuleSpec = {
             "id": self.id,
             "value": value_func(self.value),
             "condition": conditions,
         }
-
-        rule_options = self._rule_options_to_config()
-        if rule_options:
-            result["options"] = rule_options
-
-        return result
-
-    def _rule_options_to_config(self) -> RuleOptions:
-        ro = {}
-        if (disabled := self.rule_options.get("disabled")) is not None:
-            ro["disabled"] = disabled
-        if self.rule_options.get("description"):
-            ro["description"] = self.rule_options["description"]
-        if self.rule_options.get("comment"):
-            ro["comment"] = self.rule_options["comment"]
-        if self.rule_options.get("docu_url"):
-            ro["docu_url"] = self.rule_options["docu_url"]
-
-        # Preserve other keys that we do not know of
-        for k, v in self.rule_options.items():
-            if k not in ["disabled", "description", "comment", "docu_url"]:
-                ro[k] = v
-
-        return ro
+        if options := self.rule_options.to_config():
+            rule_spec["options"] = options
+        return rule_spec
 
     def object_ref(self) -> ObjectRef:
         return ObjectRef(
@@ -1193,13 +1179,13 @@ class Rule:
 
     def is_disabled(self) -> bool:
         # TODO consolidate with cmk.utils.rulesets.ruleset_matcher.py::_is_disabled
-        return self.rule_options.get("disabled", False)
+        return bool(self.rule_options.disabled)
 
     def description(self) -> str:
-        return self.rule_options.get("description", "")
+        return self.rule_options.description
 
     def comment(self) -> str:
-        return self.rule_options.get("comment", "")
+        return self.rule_options.comment
 
     def predefined_condition_id(self) -> Optional[str]:
         """When a rule refers to a predefined condition return the ID
@@ -1209,7 +1195,7 @@ class Rule:
         in the rule options for the moment.
         """
         # TODO: Once we switched the rule format to be dict base, we can move this key to the conditions dict
-        return self.rule_options.get("predefined_condition_id")
+        return self.rule_options.predefined_condition_id
 
     def update_conditions(self, conditions: RuleConditions) -> None:
         self.conditions = conditions

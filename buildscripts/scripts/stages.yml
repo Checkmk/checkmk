@@ -153,7 +153,6 @@ STAGES:
             -e SC2039
             -e SC2089
             -e SC2090
-            -e SC2124
             -e SC2153
             -e SC2188
       COMMAND: "make test-shellcheck &> ${RESULTS}/shellcheck.txt"

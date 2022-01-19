@@ -151,8 +151,6 @@ STAGES:
         SHELLCHECK_OUTPUT_ARGS: -S warning
             -e SC1090
             -e SC2039
-            -e SC2089
-            -e SC2090
       COMMAND: "make test-shellcheck &> ${RESULTS}/shellcheck.txt"
       RESULT_CHECK_TYPE: "GCC"
       RESULT_CHECK_FILE_PATTERN: "results/shellcheck.txt"

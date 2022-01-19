@@ -247,9 +247,11 @@ class RulesetCollection:
         self, folder: CREFolder, rulesets_config, only_varname: Optional[RulesetName] = None
     ) -> None:
         varnames = [only_varname] if only_varname else rulespec_registry.keys()
+        config_varname: str
+        subkey: Optional[str]
         for varname in varnames:
             if ":" in varname:
-                config_varname, subkey = varname.split(":", 1)  # type: Tuple[str, Optional[str]]
+                config_varname, subkey = varname.split(":", 1)
                 rulegroup_config = rulesets_config.get(config_varname, {})
                 if subkey not in rulegroup_config:
                     continue  # Nothing configured: nothing left to do

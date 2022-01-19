@@ -5065,7 +5065,7 @@ DictionaryElementsThunk = Callable[[], DictionaryElements]
 DictionaryElementsRaw = Union[DictionaryElements, DictionaryElementsThunk]
 
 
-class Dictionary(ValueSpec):
+class Dictionary(ValueSpec[dict[str, Any]]):
     # TODO: Cleanup ancient "migrate"
     def __init__(  # pylint: disable=redefined-builtin
         self,
@@ -5355,7 +5355,7 @@ class Dictionary(ValueSpec):
             if param in value
         }
 
-    def from_html_vars(self, varprefix):
+    def from_html_vars(self, varprefix) -> dict[str, Any]:
         return {
             param: vs.from_html_vars(f"{varprefix}_p_{param}")
             for param, vs in self._get_elements()

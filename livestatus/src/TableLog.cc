@@ -178,6 +178,11 @@ void TableLog::answerQueryInternal(Query *query, const LogFiles &log_files) {
     if (classmask == 0) {
         return;
     }
+    auto max_lines_per_logfile = core()->maxLinesPerLogFile();
+    auto processEntry = [core = core(), query](const LogEntry &entry) {
+        LogRow r{entry, core};
+        return query->processDataset(Row{&r});
+    };
 
     auto it = log_files.end();  // it now points beyond last log file
     --it;                       // switch to last logfile (we have at least one)
@@ -195,8 +200,8 @@ void TableLog::answerQueryInternal(Query *query, const LogFiles &log_files) {
 
     while (true) {
         const auto *entries =
-            it->second->getEntriesFor(core()->maxLinesPerLogFile(), classmask);
-        if (!answerQueryReverse(query, entries, since, until)) {
+            it->second->getEntriesFor(max_lines_per_logfile, classmask);
+        if (!answerQueryReverse(processEntry, entries, since, until)) {
             break;  // end of time range found
         }
         if (it == log_files.begin()) {
@@ -206,10 +211,12 @@ void TableLog::answerQueryInternal(Query *query, const LogFiles &log_files) {
     }
 }
 
-bool TableLog::answerQueryReverse(Query *query,
-                                  const Logfile::map_type *entries,
-                                  std::chrono::system_clock::time_point since,
-                                  std::chrono::system_clock::time_point until) {
+// static
+bool TableLog::answerQueryReverse(
+    const std::function<bool(const LogEntry &)> &processEntry,
+    const Logfile::map_type *entries,
+    std::chrono::system_clock::time_point since,
+    std::chrono::system_clock::time_point until) {
     auto it = entries->upper_bound(Logfile::makeKey(until, 999999999));
     while (it != entries->begin()) {
         --it;
@@ -217,8 +224,7 @@ bool TableLog::answerQueryReverse(Query *query,
         if (entry.time() < since) {
             return false;  // time limit exceeded
         }
-        LogRow r{entry, core()};
-        if (!query->processDataset(Row{&r})) {
+        if (!processEntry(entry)) {
             return false;
         }
     }

@@ -97,7 +97,7 @@ class PushAgentFetcher(AgentFetcher):
 
     def _fetch_from_io(self, mode: Mode) -> AgentRawData:
         """
-        The active agent cannot really 'fetch' live data.
+        The push agent cannot really 'fetch' live data.
         We consider data 'live', if they have been written to the cache
         by the receiver quite recently.
         """

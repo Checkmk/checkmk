@@ -5,7 +5,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # pylint: disable=comparison-with-callable,redefined-outer-name
-
 from typing import Optional, Tuple, Union
 
 import pytest
@@ -201,12 +200,6 @@ def test_register_check_plugin_calls(check_plugin):
     "section_kube_memory_resources,section_kube_performance_memory,expected_result",
     [
         pytest.param(
-            None,
-            None,
-            tuple(),
-            id="No data",
-        ),
-        pytest.param(
             Resources(request=0.0, limit=28120704.0),
             None,
             (
@@ -216,15 +209,6 @@ def test_register_check_plugin_calls(check_plugin):
                 Metric("kube_memory_limit", 28120704.0, boundaries=(0.0, None)),
             ),
             id="No performance data",
-        ),
-        pytest.param(
-            None,
-            Usage(usage=18120704.0),
-            (
-                Result(state=State.OK, summary="Usage: 17.3 MiB"),
-                Metric("kube_memory_usage", 18120704.0, boundaries=(0.0, None)),
-            ),
-            id="No resources",
         ),
         pytest.param(
             Resources(request=0.0, limit=ExceptionalResource.zero),
@@ -354,6 +338,24 @@ def test_check_kube_memory(
             section_kube_memory_resources,
         )
     )
+
+
+@pytest.mark.parametrize(
+    "section_kube_performance_memory",
+    [
+        pytest.param(
+            Usage(usage=18120704.0),
+            id="With usage",
+        ),
+        pytest.param(
+            None,
+            id="Without usage",
+        ),
+    ],
+)
+def test_crashes_if_no_resources(section_kube_performance_memory) -> None:
+    with pytest.raises(AssertionError):
+        list(check_kube_memory(DEFAULT_PARAMS, Usage(usage=18120704.0), None))
 
 
 def test_valuespec_and_check_agree() -> None:

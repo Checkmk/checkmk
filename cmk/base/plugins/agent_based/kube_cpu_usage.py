@@ -39,8 +39,7 @@ def discovery_kube_cpu(
     section_kube_performance_cpu: Optional[Usage],
     section_kube_cpu_resources: Optional[Resources],
 ) -> DiscoveryResult:
-    if section_kube_performance_cpu is not None or section_kube_cpu_resources is not None:
-        yield Service()
+    yield Service()
 
 
 def check_kube_cpu(
@@ -48,6 +47,7 @@ def check_kube_cpu(
     section_kube_performance_cpu: Optional[Usage],
     section_kube_cpu_resources: Optional[Resources],
 ) -> CheckResult:
+    assert section_kube_cpu_resources is not None
     yield from check_resource(
         params,
         section_kube_performance_cpu,

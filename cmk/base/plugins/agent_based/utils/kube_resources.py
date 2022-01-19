@@ -150,7 +150,7 @@ def result_for_exceptional_resource(
 def check_resource(
     params: Params,
     usage: Optional[Usage],
-    resources: Optional[Resources],
+    resources: Resources,
     resource_type: Literal["memory", "cpu"],
     render_func: Callable[[float], str],
 ) -> CheckResult:
@@ -165,24 +165,23 @@ def check_resource(
             boundaries=(0.0, None),
         )
 
-    if resources is not None:
-        for requirement_name, requirement in iterate_resources(resources):
-            if isinstance(requirement, float) and requirement != 0.0 and usage is not None:
-                yield from check_with_utilization(
-                    total_usage,
-                    resource_type,
-                    requirement_name,
-                    requirement,
-                    params[requirement_name],
-                    render_func,
-                )
-            elif isinstance(requirement, ExceptionalResource):
-                yield result_for_exceptional_resource(requirement_name, requirement)
-            else:  # configured resource with no usage
-                yield from check_levels(
-                    requirement,
-                    label=requirement_name.title(),
-                    metric_name=f"kube_{resource_type}_{requirement_name}",
-                    render_func=render_func,
-                    boundaries=(0.0, None),
-                )
+    for requirement_name, requirement in iterate_resources(resources):
+        if isinstance(requirement, float) and requirement != 0.0 and usage is not None:
+            yield from check_with_utilization(
+                total_usage,
+                resource_type,
+                requirement_name,
+                requirement,
+                params[requirement_name],
+                render_func,
+            )
+        elif isinstance(requirement, ExceptionalResource):
+            yield result_for_exceptional_resource(requirement_name, requirement)
+        else:  # configured resource with no usage
+            yield from check_levels(
+                requirement,
+                label=requirement_name.title(),
+                metric_name=f"kube_{resource_type}_{requirement_name}",
+                render_func=render_func,
+                boundaries=(0.0, None),
+            )

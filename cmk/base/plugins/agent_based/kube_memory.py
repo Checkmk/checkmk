@@ -52,8 +52,7 @@ def discovery_kube_memory(
     section_kube_performance_memory: Optional[Usage],
     section_kube_memory_resources: Optional[Resources],
 ) -> DiscoveryResult:
-    if section_kube_performance_memory is not None or section_kube_memory_resources is not None:
-        yield Service()
+    yield Service()
 
 
 def check_kube_memory(
@@ -61,6 +60,7 @@ def check_kube_memory(
     section_kube_performance_memory: Optional[Usage],
     section_kube_memory_resources: Optional[Resources],
 ) -> CheckResult:
+    assert section_kube_memory_resources is not None
     yield from check_resource(
         params,
         section_kube_performance_memory,

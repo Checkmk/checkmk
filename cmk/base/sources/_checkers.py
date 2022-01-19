@@ -32,6 +32,7 @@ from .snmp import SNMPSource
 from .tcp import TCPSource
 
 if version.is_plus_edition():
+    # pylint: disable=no-name-in-module,import-error
     from cmk.base.cpe.sources.push_agent import PushAgentSource  # type: ignore[import]
 else:
 

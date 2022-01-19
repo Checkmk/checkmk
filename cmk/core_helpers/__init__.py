@@ -51,6 +51,7 @@ from .snmp import SNMPFetcher, SNMPFileCache
 from .tcp import TCPFetcher
 
 if version.is_plus_edition():
+    # pylint: disable=no-name-in-module,import-error
     from cmk.core_helpers.cpe.push_agent_fetcher import PushAgentFetcher  # type: ignore[import]
 else:
 

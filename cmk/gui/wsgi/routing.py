@@ -12,7 +12,7 @@ from werkzeug.middleware.proxy_fix import ProxyFix
 from werkzeug.routing import Map, Rule, Submount
 
 from cmk.gui.wsgi.applications import CheckmkApp, CheckmkRESTAPI
-from cmk.gui.wsgi.applications.helper_apps import dump_environ_app, test_formdata
+from cmk.gui.wsgi.applications.helper_apps import discover_receiver, dump_environ_app, test_formdata
 
 if TYPE_CHECKING:
     from cmk.gui.wsgi.type_defs import StartResponse, WSGIApplication, WSGIEnvironment, WSGIResponse
@@ -38,6 +38,11 @@ def create_url_map(debug: bool = False) -> Map:
                         [
                             Rule("/", endpoint="cmk"),
                             *(debug_rules if debug else []),
+                            Rule(
+                                "/api/<string:version>/domain-types/internal/actions"
+                                "/discover-receiver/invoke",
+                                endpoint="discover-receiver",
+                            ),
                             Rule("/api/<string:version>/<path:path>", endpoint="rest-api"),
                             Rule("/<string:script>", endpoint="cmk"),
                         ],
@@ -68,6 +73,7 @@ def make_router(debug: bool = False) -> WSGIApplication:
         "rest-api": api_app,
         "debug-dump": dump_environ_app,
         "debug-form": test_formdata,
+        "discover-receiver": discover_receiver,
     }
 
     def router(environ: WSGIEnvironment, start_response: StartResponse) -> WSGIResponse:

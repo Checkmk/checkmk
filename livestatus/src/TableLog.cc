@@ -183,7 +183,16 @@ void TableLog::answerQueryInternal(Query *query, const LogFiles &log_files) {
         LogRow r{entry, core};
         return query->processDataset(Row{&r});
     };
+    processLogFiles(processEntry, log_files, max_lines_per_logfile, classmask,
+                    since, until);
+}
 
+// static
+void TableLog::processLogFiles(
+    const std::function<bool(const LogEntry &)> &processEntry,
+    const LogFiles &log_files, size_t max_lines_per_logfile, unsigned classmask,
+    std::chrono::system_clock::time_point since,
+    std::chrono::system_clock::time_point until) {
     auto it = log_files.end();  // it now points beyond last log file
     --it;                       // switch to last logfile (we have at least one)
 

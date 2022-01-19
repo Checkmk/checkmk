@@ -9,6 +9,7 @@
 #include "config.h"  // IWYU pragma: keep
 
 #include <chrono>
+#include <cstddef>
 #include <functional>
 #include <memory>
 #include <string>
@@ -38,6 +39,11 @@ public:
 private:
     LogCache *_log_cache;
     void answerQueryInternal(Query *query, const LogFiles &log_files);
+    static void processLogFiles(
+        const std::function<bool(const LogEntry &)> &processEntry,
+        const LogFiles &log_files, size_t max_lines_per_logfile,
+        unsigned classmask, std::chrono::system_clock::time_point since,
+        std::chrono::system_clock::time_point until);
     static bool answerQueryReverse(
         const std::function<bool(const LogEntry &)> &processEntry,
         const Logfile::map_type *entries,

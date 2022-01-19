@@ -51,7 +51,8 @@ def create_snapshot(comment):
     if comment:
         data["comment"] += _("Comment: %s") % comment
 
-    data["created_by"] = user.id
+    # with SuperUserContext the user.id is None; later this value will be encoded for tar
+    data["created_by"] = "" if user.id is None else user.id
     data["type"] = "automatic"
     data["snapshot_name"] = snapshot_name
 

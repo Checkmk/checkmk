@@ -31,7 +31,7 @@ def _parameter_valuespec_memory():
     return Dictionary(
         help=_(
             "Here you can configure levels for usage, request "
-            "utilization and limit utilization, respectively."
+            "utilization, limit utilization and node utilization, respectively."
         ),
         title=_("Memory"),
         elements=[
@@ -49,6 +49,14 @@ def _parameter_valuespec_memory():
                 "limit",
                 valuespec_percentual(title=_("Upper levels for limit utilization")),
             ),
+            (
+                "cluster",
+                valuespec_percentual(title=_("Upper levels for cluster utilization")),
+            ),
+            (
+                "node",
+                valuespec_percentual(title=_("Upper levels for node utilization")),
+            ),
         ],
     )
 
@@ -57,6 +65,7 @@ rulespec_registry.register(
     CheckParameterRulespecWithoutItem(
         check_group_name="kube_memory",
         group=RulespecGroupCheckParametersApplications,
+        match_type="dict",
         parameter_valuespec=_parameter_valuespec_memory,
         title=lambda: _("Kubernetes memory resource utilization"),
     )
@@ -91,6 +100,14 @@ def _parameter_valuespec_cpu():
                 "limit",
                 valuespec_percentual(title=_("Upper levels for limit utilization")),
             ),
+            (
+                "cluster",
+                valuespec_percentual(title=_("Upper levels for cluster utilization")),
+            ),
+            (
+                "node",
+                valuespec_percentual(title=_("Upper levels for node utilization")),
+            ),
         ],
     )
 
@@ -99,6 +116,7 @@ rulespec_registry.register(
     CheckParameterRulespecWithoutItem(
         check_group_name="kube_cpu_usage",
         group=RulespecGroupCheckParametersApplications,
+        match_type="dict",
         parameter_valuespec=_parameter_valuespec_cpu,
         title=lambda: _("Kubernetes CPU resource utilization"),
     )

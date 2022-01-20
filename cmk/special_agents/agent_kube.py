@@ -523,10 +523,16 @@ class Node:
         return _collect_cpu_resources(self._pods)
 
     def allocatable_memory_resource(self) -> section.AllocatableResource:
-        return section.AllocatableResource(value=self.resources["allocatable"].memory)
+        return section.AllocatableResource(
+            context="node",
+            value=self.resources["allocatable"].memory,
+        )
 
     def allocatable_cpu_resource(self) -> section.AllocatableResource:
-        return section.AllocatableResource(value=self.resources["allocatable"].cpu)
+        return section.AllocatableResource(
+            context="node",
+            value=self.resources["allocatable"].cpu,
+        )
 
 
 class Cluster:
@@ -653,12 +659,14 @@ class Cluster:
 
     def allocatable_memory_resource(self) -> section.AllocatableResource:
         return section.AllocatableResource(
-            value=sum(node.resources["allocatable"].memory for node in self._nodes.values())
+            context="cluster",
+            value=sum(node.resources["allocatable"].memory for node in self._nodes.values()),
         )
 
     def allocatable_cpu_resource(self) -> section.AllocatableResource:
         return section.AllocatableResource(
-            value=sum(node.resources["allocatable"].cpu for node in self._nodes.values())
+            context="cluster",
+            value=sum(node.resources["allocatable"].cpu for node in self._nodes.values()),
         )
 
 

@@ -9,13 +9,17 @@ from cmk.special_agents.utils_kubernetes.schemata import section
 
 
 def test_cluster_allocatable_memory_resource(node_allocatable_memory, cluster_nodes, cluster):
-    expected = section.AllocatableResource(value=node_allocatable_memory * cluster_nodes)
+    expected = section.AllocatableResource(
+        context="cluster", value=node_allocatable_memory * cluster_nodes
+    )
     actual = cluster.allocatable_memory_resource()
     assert actual == expected
 
 
 def test_cluster_allocatable_cpu_resource(node_allocatable_cpu, cluster_nodes, cluster):
-    expected = section.AllocatableResource(value=node_allocatable_cpu * cluster_nodes)
+    expected = section.AllocatableResource(
+        context="cluster", value=node_allocatable_cpu * cluster_nodes
+    )
     actual = cluster.allocatable_cpu_resource()
     assert actual == expected
 

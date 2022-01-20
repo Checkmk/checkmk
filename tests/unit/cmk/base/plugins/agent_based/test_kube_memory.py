@@ -12,6 +12,7 @@ import pytest
 from cmk.base.plugins.agent_based import kube_memory
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
 from cmk.base.plugins.agent_based.kube_memory import (
+    AllocatableResource,
     check_kube_memory,
     DEFAULT_PARAMS,
     Params,
@@ -153,6 +154,11 @@ def check_plugin(fix_register):
     assert False, "Should be able to find the plugin"
 
 
+@pytest.fixture
+def section_kube_memory_allocatable_resource():
+    return AllocatableResource(context="node", value=35917989.0)
+
+
 def test_register_agent_memory_section_calls(agent_performance_section):
     assert str(agent_performance_section.name) == "kube_performance_memory_v1"
     assert str(agent_performance_section.parsed_section_name) == "kube_performance_memory"
@@ -190,6 +196,8 @@ def test_register_check_plugin_calls(check_plugin):
                 Metric("kube_memory_request", 0.0, boundaries=(0.0, None)),
                 Result(state=State.OK, summary="Limit: 26.8 MiB (2/2 containers with limits)"),
                 Metric("kube_memory_limit", 28120704.0, boundaries=(0.0, None)),
+                Result(state=State.OK, summary="Allocatable: 34.3 MiB"),
+                Metric("kube_memory_allocatable", 35917989.0, boundaries=(0.0, None)),
             ),
             id="No performance data",
         ),
@@ -210,6 +218,14 @@ def test_register_check_plugin_calls(check_plugin):
                 Metric("kube_memory_request", 0.0, boundaries=(0.0, None)),
                 Result(state=State.OK, summary="Limit: 0 B (0/2 containers with limits)"),
                 Metric("kube_memory_limit", 0.0, boundaries=(0.0, None)),
+                Metric("kube_memory_allocatable", 35917989.0),
+                Result(state=State.OK, summary="Node utilization: 50.45% - 17.3 MiB of 34.3 MiB"),
+                Metric(
+                    "kube_memory_node_allocatable_utilization",
+                    50.45021869125245,
+                    levels=(80.0, 90.0),
+                    boundaries=(0.0, None),
+                ),
             ),
             id="Weird config data set to zero",
         ),
@@ -236,6 +252,14 @@ def test_register_check_plugin_calls(check_plugin):
                 Metric(
                     "kube_memory_limit_utilization",
                     64.4390126221591,
+                    levels=(80.0, 90.0),
+                    boundaries=(0.0, None),
+                ),
+                Metric("kube_memory_allocatable", 35917989.0),
+                Result(state=State.OK, summary="Node utilization: 50.45% - 17.3 MiB of 34.3 MiB"),
+                Metric(
+                    "kube_memory_node_allocatable_utilization",
+                    50.45021869125245,
                     levels=(80.0, 90.0),
                     boundaries=(0.0, None),
                 ),
@@ -268,6 +292,14 @@ def test_register_check_plugin_calls(check_plugin):
                 Metric(
                     "kube_memory_limit_utilization",
                     64.4390126221591,
+                    levels=(80.0, 90.0),
+                    boundaries=(0.0, None),
+                ),
+                Metric("kube_memory_allocatable", 35917989.0),
+                Result(state=State.OK, summary="Node utilization: 50.45% - 17.3 MiB of 34.3 MiB"),
+                Metric(
+                    "kube_memory_node_allocatable_utilization",
+                    50.45021869125245,
                     levels=(80.0, 90.0),
                     boundaries=(0.0, None),
                 ),
@@ -306,6 +338,14 @@ def test_register_check_plugin_calls(check_plugin):
                     levels=(80.0, 90.0),
                     boundaries=(0.0, None),
                 ),
+                Metric("kube_memory_allocatable", 35917989.0),
+                Result(state=State.OK, summary="Node utilization: 50.45% - 17.3 MiB of 34.3 MiB"),
+                Metric(
+                    "kube_memory_node_allocatable_utilization",
+                    50.45021869125245,
+                    levels=(80.0, 90.0),
+                    boundaries=(0.0, None),
+                ),
             ),
             id="All config data present, usage below request, this is the desirable state for a cluster",
         ),
@@ -341,6 +381,14 @@ def test_register_check_plugin_calls(check_plugin):
                     levels=(80.0, 90.0),
                     boundaries=(0.0, None),
                 ),
+                Metric("kube_memory_allocatable", 35917989.0),
+                Result(state=State.OK, summary="Node utilization: 75.51% - 25.9 MiB of 34.3 MiB"),
+                Metric(
+                    "kube_memory_node_allocatable_utilization",
+                    75.50730081241464,
+                    levels=(80.0, 90.0),
+                    boundaries=(0.0, None),
+                ),
             ),
             id="All config data present, usage above levels for limit",
         ),
@@ -349,13 +397,21 @@ def test_register_check_plugin_calls(check_plugin):
 def test_check_kube_memory(
     section_kube_performance_memory: Optional[Usage],
     section_kube_memory_resources: Optional[Resources],
+    section_kube_memory_allocatable_resource: Optional[AllocatableResource],
     expected_result: Tuple[Union[Result, Metric], ...],
 ) -> None:
     assert expected_result == tuple(
         check_kube_memory(
-            Params(usage="no_levels", request="no_levels", limit=("levels", (80.0, 90.0))),
+            Params(
+                usage="no_levels",
+                request="no_levels",
+                limit=("levels", (80.0, 90.0)),
+                cluster=("levels", (80.0, 90.0)),
+                node=("levels", (80.0, 90.0)),
+            ),
             section_kube_performance_memory,
             section_kube_memory_resources,
+            section_kube_memory_allocatable_resource,
         )
     )
 
@@ -375,7 +431,14 @@ def test_check_kube_memory(
 )
 def test_crashes_if_no_resources(section_kube_performance_memory) -> None:
     with pytest.raises(AssertionError):
-        list(check_kube_memory(DEFAULT_PARAMS, Usage(usage=18120704.0), None))
+        list(
+            check_kube_memory(
+                DEFAULT_PARAMS,
+                Usage(usage=18120704.0),
+                None,
+                AllocatableResource(context="node", value=35917989.0),
+            )
+        )
 
 
 def test_valuespec_and_check_agree() -> None:

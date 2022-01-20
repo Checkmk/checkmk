@@ -8,9 +8,11 @@ from typing import Optional
 
 from cmk.base.plugins.agent_based.utils.k8s import Memory
 from cmk.base.plugins.agent_based.utils.kube_resources import (
+    AllocatableResource,
     check_resource,
     DEFAULT_PARAMS,
     Params,
+    parse_allocatable_resource,
     parse_resources,
     Resources,
     Usage,
@@ -48,9 +50,17 @@ register.agent_section(
 )
 
 
+register.agent_section(
+    name="kube_allocatable_memory_resource_v1",
+    parsed_section_name="kube_allocatable_memory_resource",
+    parse_function=parse_allocatable_resource,
+)
+
+
 def discovery_kube_memory(
     section_kube_performance_memory: Optional[Usage],
     section_kube_memory_resources: Optional[Resources],
+    section_kube_allocatable_memory_resource: Optional[AllocatableResource],
 ) -> DiscoveryResult:
     yield Service()
 
@@ -59,12 +69,14 @@ def check_kube_memory(
     params: Params,
     section_kube_performance_memory: Optional[Usage],
     section_kube_memory_resources: Optional[Resources],
+    section_kube_allocatable_memory_resource: Optional[AllocatableResource],
 ) -> CheckResult:
     assert section_kube_memory_resources is not None
     yield from check_resource(
         params,
         section_kube_performance_memory,
         section_kube_memory_resources,
+        section_kube_allocatable_memory_resource,
         "memory",
         render.bytes,
     )
@@ -73,7 +85,11 @@ def check_kube_memory(
 register.check_plugin(
     name="kube_memory",  # TODO change this plugin name
     service_name="Memory resources",
-    sections=["kube_performance_memory", "kube_memory_resources"],
+    sections=[
+        "kube_performance_memory",
+        "kube_memory_resources",
+        "kube_allocatable_memory_resource",
+    ],
     discovery_function=discovery_kube_memory,
     check_function=check_kube_memory,
     check_ruleset_name="kube_memory",

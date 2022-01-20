@@ -63,6 +63,7 @@ class Resources(BaseModel):
 class AllocatableResource(BaseModel):
     """sections: [kube_allocatable_cpu_resource_v1, kube_allocatable_memory_resource_v1]"""
 
+    context: Literal["cluster", "node"]
     value: float
 
 

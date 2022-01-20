@@ -43,13 +43,13 @@ def test_node_pod_resources_pods_in_phase_no_phase_param(node, node_pods):
 
 
 def test_node_allocatable_memory_resource(node_allocatable_memory, node):
-    expected = section.AllocatableResource(value=node_allocatable_memory)
+    expected = section.AllocatableResource(context="node", value=node_allocatable_memory)
     actual = node.allocatable_memory_resource()
     assert actual == expected
 
 
 def test_node_allocatable_cpu_resource(node_allocatable_cpu, node):
-    expected = section.AllocatableResource(value=node_allocatable_cpu)
+    expected = section.AllocatableResource(context="node", value=node_allocatable_cpu)
     actual = node.allocatable_cpu_resource()
     assert actual == expected
 

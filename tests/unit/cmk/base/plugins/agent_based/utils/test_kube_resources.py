@@ -4,29 +4,29 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.base.plugins.agent_based.utils.kube_resources import iterate_resources, Resources
+from pydantic_factories import ModelFactory
+
+from cmk.base.plugins.agent_based.utils import kube_resources
 
 
-# TODO: Test will be refactored in future commit
-def test_correct_order_resources() -> None:
-    """
-    Requests and limits should always be displayed in the order: Request, Limit. This is because
-    requests are smaller than limits and Kubernetes follows this convention for the most part.
-    """
-    order = ("request", "limit")
-    assert (
-        tuple(
-            requirement[0]
-            for requirement in iterate_resources(
-                Resources(
-                    limit=0.0,
-                    request=0.0,
-                    count_unspecified_requests=0,
-                    count_unspecified_limits=0,
-                    count_zeroed_limits=0,
-                    count_total=0,
-                )
-            )
-        )
-        == order
-    )
+class ResourcesFactory(ModelFactory):
+    __model__ = kube_resources.Resources
+
+
+class AllocatableResourceFactory(ModelFactory):
+    __model__ = kube_resources.AllocatableResource
+
+
+def test_requirements_for_object_has_request_limit_ordered_as_per_kubernetes_convention() -> None:
+    resources = ResourcesFactory.build()
+    expected = ["request", "limit"]
+    actual = [t for t, _, _ in kube_resources.requirements_for_object(resources, None)]
+    assert actual == expected
+
+
+def test_requirements_for_object_has_allocatable_after_limit() -> None:
+    resources = ResourcesFactory.build()
+    allocatable = AllocatableResourceFactory.build()
+    expected = ["request", "limit", "allocatable"]
+    actual = [t for t, _, _ in kube_resources.requirements_for_object(resources, allocatable)]
+    assert actual == expected

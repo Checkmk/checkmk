@@ -6,6 +6,7 @@
 
 # pylint: disable=comparison-with-callable,redefined-outer-name
 
+import itertools
 import json
 
 import pytest
@@ -15,10 +16,15 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, render, Resu
 from cmk.base.plugins.agent_based.utils import kube_resources
 
 USAGE = 0.08917935971914392879  # value for cpu usage (Germain & Cunningham)
-LEVELS = 60.0, 90.0  # default values for upper levels
+LEVELS = 60.0, 90.0  # default values for upper levels for request and limit
 OK = 0.18  # value for request and limit to set state to OK
 WARN = 0.12  # value for request and limit to set state to WARN
 CRIT = 0.09  # value for request and limit to set state to CRIT
+ALLOCATABLE = 5.0  # value for allocatable cpu
+ALLOCATABLE_OK = ALLOCATABLE / 0.5  # value for allocatable to set state to OK
+ALLOCATABLE_WARN = ALLOCATABLE / 0.6  # value for allocatable to set state to WARN
+ALLOCATABLE_CRIT = ALLOCATABLE / 0.9  # value for allocatable to set state to CRIT
+LEVELS_ALLOCATABLE = USAGE  # default values for upper levels for allocatable
 
 # Resources
 LIMIT = 2 * OK
@@ -45,8 +51,24 @@ def params_limit():
 
 
 @pytest.fixture
-def params(params_usage, params_request, params_limit):
-    return kube_cpu_usage.Params(usage=params_usage, request=params_request, limit=params_limit)
+def params_cluster():
+    return ("levels", (LEVELS[0] / 4, LEVELS[1] / 4))
+
+
+@pytest.fixture
+def params_node():
+    return ("levels", (LEVELS[0] / 4, LEVELS[1] / 4))
+
+
+@pytest.fixture
+def params(params_usage, params_request, params_limit, params_cluster, params_node):
+    return kube_cpu_usage.Params(
+        usage=params_usage,
+        request=params_request,
+        limit=params_limit,
+        cluster=params_cluster,
+        node=params_node,
+    )
 
 
 @pytest.fixture
@@ -102,34 +124,82 @@ def resources_section(resources_string_table):
 
 
 @pytest.fixture
-def check_result(params, usage_section, resources_section):
-    return kube_cpu_usage.check_kube_cpu(params, usage_section, resources_section)
+def overview_limits_ignored(resources_section):
+    return kube_resources.count_overview(resources_section, "limit")
 
 
-def test_parse_kube_cpu_resources_v1(resources_string_table, resources_request, resources_limit):
+@pytest.fixture
+def overview_requests_ignored(resources_section):
+    return kube_resources.count_overview(resources_section, "request")
+
+
+@pytest.fixture
+def allocatable_value():
+    return ALLOCATABLE
+
+
+@pytest.fixture
+def allocatable_resource_string_table_element(allocatable_value):
+    return {"context": "node", "value": allocatable_value}
+
+
+@pytest.fixture
+def allocatable_resource_string_table(allocatable_resource_string_table_element):
+    return [[json.dumps(allocatable_resource_string_table_element)]]
+
+
+@pytest.fixture
+def allocatable_resource_section(allocatable_resource_string_table):
+    return kube_cpu_usage.parse_allocatable_resource(allocatable_resource_string_table)
+
+
+@pytest.fixture
+def check_result(params, usage_section, resources_section, allocatable_resource_section):
+    return kube_cpu_usage.check_kube_cpu(
+        params, usage_section, resources_section, allocatable_resource_section
+    )
+
+
+def test_parse_resources(resources_string_table, resources_request, resources_limit):
     resources_section = kube_cpu_usage.parse_resources(resources_string_table)
     assert resources_section.request == resources_request
     assert resources_section.limit == resources_limit
 
 
-def test_discovery(usage_section, resources_section):
-    assert len(list(kube_cpu_usage.discovery_kube_cpu(usage_section, None))) == 1
-    assert len(list(kube_cpu_usage.discovery_kube_cpu(None, resources_section))) == 1
-    assert len(list(kube_cpu_usage.discovery_kube_cpu(None, None))) == 1
-    assert len(list(kube_cpu_usage.discovery_kube_cpu(usage_section, resources_section))) == 1
+def test_parse_allocatable_resource(allocatable_resource_string_table, allocatable_value):
+    allocatable_resource_section = kube_cpu_usage.parse_allocatable_resource(
+        allocatable_resource_string_table
+    )
+    assert allocatable_resource_section.value == allocatable_value
+
+
+def test_discovery(usage_section, resources_section, allocatable_resource_section):
+    for s1, s2, s3 in itertools.product(
+        (usage_section, None), (resources_section, None), (allocatable_resource_section, None)
+    ):
+        assert len(list(kube_cpu_usage.discovery_kube_cpu(s1, s2, s3))) == 1
 
 
 @pytest.mark.parametrize("usage_section", [None])
 def test_check_missing_usage(check_result):
-    assert len(list(check_result)) == 4
+    assert len(list(check_result)) == 6
 
 
 def test_count_metrics_all_sections_present(check_result):
-    assert len([r for r in check_result if isinstance(r, Metric)]) == 5
+    assert len([r for r in check_result if isinstance(r, Metric)]) == 7
 
 
 def test_count_results_all_sections_present(check_result):
-    assert len([r for r in check_result if isinstance(r, Result)]) == 3
+    assert len([r for r in check_result if isinstance(r, Result)]) == 4
+
+
+def test_check_yields_check_results(check_result):
+    assert len(list(check_result)) == 3 * 1 + 4 * 2
+
+
+def test_check_yields_results(check_result):
+    expected = 1 + 2 + 1
+    assert len([r for r in check_result if isinstance(r, Result)]) == expected
 
 
 @pytest.mark.parametrize("usage_section", [None])
@@ -145,6 +215,7 @@ def test_check_results_without_usage(check_result):
 @pytest.mark.parametrize("usage_section", [None])
 def test_check_metrics_without_usage(check_result):
     expected_metrics = {
+        Metric("kube_cpu_allocatable", ALLOCATABLE, boundaries=(0.0, None)),
         Metric("kube_cpu_request", 0.18, boundaries=(0.0, None)),
         Metric("kube_cpu_limit", 0.36, boundaries=(0.0, None)),
     }
@@ -185,6 +256,8 @@ def test_check_yields_multiple_metrics_with_values(
         ("kube_cpu_request_utilization", USAGE / resources_request * 100),
         ("kube_cpu_limit", resources_limit),
         ("kube_cpu_limit_utilization", USAGE / resources_limit * 100),
+        ("kube_cpu_allocatable", ALLOCATABLE),
+        ("kube_cpu_node_allocatable_utilization", USAGE / ALLOCATABLE * 100),
     ]
     assert [(m.name, m.value) for m in check_result if isinstance(m, Metric)] == expected
 
@@ -221,13 +294,13 @@ def test_check_all_states_ok_params_ignore(check_result):
             ("no_levels", (0.01, 1.0)),
             "no_levels",
             "no_levels",
-            [State.WARN, State.OK, State.OK],
+            [State.WARN, State.OK, State.OK, State.OK],
         ),
         (
             ("no_levels", (0.01, 0.01)),
             "no_levels",
             "no_levels",
-            [State.CRIT, State.OK, State.OK],
+            [State.CRIT, State.OK, State.OK, State.OK],
         ),
     ],
 )
@@ -238,15 +311,15 @@ def test_check_abs_levels_with_mixed(expected_states, check_result):
 @pytest.mark.parametrize(
     "resources_request, resources_limit, expected_states",
     [
-        (OK, 2 * OK, [State.OK, State.OK, State.OK]),
-        (OK, 2 * WARN, [State.OK, State.OK, State.WARN]),
-        (OK, 2 * CRIT, [State.OK, State.OK, State.CRIT]),
-        (WARN, 2 * OK, [State.OK, State.WARN, State.OK]),
-        (CRIT, 2 * OK, [State.OK, State.CRIT, State.OK]),
-        (WARN, 2 * WARN, [State.OK, State.WARN, State.WARN]),
-        (WARN, 2 * CRIT, [State.OK, State.WARN, State.CRIT]),
-        (CRIT, 2 * WARN, [State.OK, State.CRIT, State.WARN]),
-        (CRIT, 2 * CRIT, [State.OK, State.CRIT, State.CRIT]),
+        (OK, 2 * OK, [State.OK, State.OK, State.OK, State.OK]),
+        (OK, 2 * WARN, [State.OK, State.OK, State.WARN, State.OK]),
+        (OK, 2 * CRIT, [State.OK, State.OK, State.CRIT, State.OK]),
+        (WARN, 2 * OK, [State.OK, State.WARN, State.OK, State.OK]),
+        (CRIT, 2 * OK, [State.OK, State.CRIT, State.OK, State.OK]),
+        (WARN, 2 * WARN, [State.OK, State.WARN, State.WARN, State.OK]),
+        (WARN, 2 * CRIT, [State.OK, State.WARN, State.CRIT, State.OK]),
+        (CRIT, 2 * WARN, [State.OK, State.CRIT, State.WARN, State.OK]),
+        (CRIT, 2 * CRIT, [State.OK, State.CRIT, State.CRIT, State.OK]),
     ],
 )
 def test_check_result_states_mixed(expected_states, check_result):

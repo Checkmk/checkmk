@@ -1,0 +1,16 @@
+Title: Autochecks file corruption due to "'" in parameters
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0p28
+Date: 1642678744
+Class: fix
+
+Note: This werk most likely only affects users with custom check
+plugins.
+
+Single quotes in check parameters led to corrupt autocheck files.
+This then resulted in error messages such as
+"Syntax error in file ...: invalid syntax"
+"Unable to parse autochecks file ...: invalid syntax"

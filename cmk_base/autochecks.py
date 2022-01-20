@@ -336,7 +336,7 @@ def _parse_unresolved_parameters_from_ast(ast_parameters_unresolved):
 
             value = _parse_unresolved_parameters_from_ast(ast_parameters_unresolved.values[index])
             values.append((key.s, value))
-        return "{%s}" % ", ".join(["'%s': %s" % p for p in sorted(values, key=lambda x: x[0])])
+        return "{%s}" % ", ".join(["%r: %s" % p for p in sorted(values, key=lambda x: x[0])])
 
     # Other structures, like dicts, lists and so on should also be loaded as repr() str
     # instead of an interpreted structure

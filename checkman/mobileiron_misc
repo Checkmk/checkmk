@@ -1,0 +1,19 @@
+title: Mobileiron device: Mobileiron miscellaneous
+agents: mobileiron
+catalog: app/mobileiron
+license: GPL
+distribution: check_mk
+description:
+ The special agent mobileiron queries the mobileiron cloud instance
+ through the REST API and then displays the status of each
+ device via the piggyback mechanism.
+
+ This check monitors the miscellaneous parameters of each device in mobileiron.
+
+ The monitored parameters are:
+ - Uptime
+ - IP address
+ - Available capacity
+
+discovery:
+ One service is created

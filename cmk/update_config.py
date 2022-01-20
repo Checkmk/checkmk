@@ -1123,7 +1123,7 @@ class UpdateConfig:
         ] + files
 
         self._logger.log(VERBOSE, "Executing: %s", subprocess.list2cmdline(cmd))
-        p = subprocess.Popen(
+        p = subprocess.Popen(  # pylint:disable=consider-using-with
             cmd,
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,

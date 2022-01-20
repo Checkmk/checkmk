@@ -29,7 +29,7 @@ def main(sys_argv=None):
         os.makedirs(state_dir)
     state_file = state_dir + hostname
     try:
-        history = ast.literal_eval(open(state_file).read())
+        history = ast.literal_eval(open(state_file).read())  # pylint:disable=consider-using-with
     except (OSError, SyntaxError, IOError):
         history = {}
 
@@ -74,4 +74,4 @@ def main(sys_argv=None):
             % (new_state, service.replace(" ", "_"), state_names[new_state], state_texts[new_state])
         )
 
-    open(state_file, "w").write("%r\n" % history)
+    open(state_file, "w").write("%r\n" % history)  # pylint:disable=consider-using-with

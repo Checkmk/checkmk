@@ -550,7 +550,7 @@ def _get_os_info() -> str:
     info = {}
     for f in ["/etc/os-release", "/etc/lsb-release"]:
         if os.path.exists(f):
-            for line in open(f).readlines():
+            for line in open(f).readlines():  # pylint:disable=consider-using-with
                 if "=" in line:
                     k, v = line.split("=", 1)
                     info[k.strip()] = v.strip().strip('"')
@@ -572,12 +572,12 @@ def _get_os_info() -> str:
 
 def _current_monitoring_core() -> str:
     try:
-        p = subprocess.Popen(
+        p = subprocess.Popen(  # pylint:disable=consider-using-with
             ["omd", "config", "show", "CORE"],
             close_fds=True,
-            stdin=open(os.devnull),
+            stdin=open(os.devnull),  # pylint:disable=consider-using-with
             stdout=subprocess.PIPE,
-            stderr=open(os.devnull, "w"),
+            stderr=open(os.devnull, "w"),  # pylint:disable=consider-using-with
             encoding="utf-8",
         )
         return p.communicate()[0].rstrip()

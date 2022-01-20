@@ -89,7 +89,7 @@ def _git_command(args: List[str]) -> None:
         subprocess.list2cmdline(command),
     )
     try:
-        p = subprocess.Popen(
+        p = subprocess.Popen(  # pylint:disable=consider-using-with
             command,
             cwd=cmk.utils.paths.default_config_dir,
             stdout=subprocess.PIPE,
@@ -115,7 +115,7 @@ def _git_command(args: List[str]) -> None:
 
 def _git_has_pending_changes() -> bool:
     try:
-        p = subprocess.Popen(
+        p = subprocess.Popen(  # pylint:disable=consider-using-with
             ["git", "status", "--porcelain"],
             cwd=cmk.utils.paths.default_config_dir,
             stdout=subprocess.PIPE,

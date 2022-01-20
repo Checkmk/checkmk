@@ -1115,11 +1115,11 @@ class CRESnapshotDataCollector(ABCSnapshotDataCollector):
             # With Python 3 we could use "shutil.copytree(src, dst, copy_function=os.link)", but
             # please have a look at the performance before switching over...
             # shutil.copytree(source_path, str(target_path.parent) + "/", copy_function=os.link)
-            p = subprocess.Popen(
+            p = subprocess.Popen(  # pylint:disable=consider-using-with
                 ["cp", "-al", str(source_path), str(target_path.parent) + "/"],
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
-                stdin=open(os.devnull),
+                stdin=open(os.devnull),  # pylint:disable=consider-using-with
                 shell=False,
                 close_fds=True,
             )
@@ -1144,7 +1144,7 @@ class CRESnapshotDataCollector(ABCSnapshotDataCollector):
             if os.path.exists(snapshot_settings.work_dir):
                 shutil.rmtree(snapshot_settings.work_dir)
 
-            p = subprocess.Popen(
+            p = subprocess.Popen(  # pylint:disable=consider-using-with
                 ["cp", "-al", origin_site_work_dir, snapshot_settings.work_dir],
                 shell=False,
                 close_fds=True,
@@ -2051,7 +2051,7 @@ def apply_pre_17_sync_snapshot(
 
 
 def _execute_cmk_update_config():
-    p = subprocess.Popen(
+    p = subprocess.Popen(  # pylint:disable=consider-using-with
         "cmk-update-config",
         stdin=subprocess.DEVNULL,
         stdout=subprocess.PIPE,
@@ -2319,7 +2319,7 @@ def get_file_names_to_sync(
 
 def _get_sync_archive(to_sync: List[str], base_dir: Path) -> bytes:
     # Use native tar instead of python tarfile for performance reasons
-    p = subprocess.Popen(
+    p = subprocess.Popen(  # pylint:disable=consider-using-with
         [
             "tar",
             "-c",
@@ -2352,7 +2352,7 @@ def _get_sync_archive(to_sync: List[str], base_dir: Path) -> bytes:
 
 
 def _unpack_sync_archive(sync_archive: bytes, base_dir: Path) -> None:
-    p = subprocess.Popen(
+    p = subprocess.Popen(  # pylint:disable=consider-using-with
         [
             "tar",
             "-x",

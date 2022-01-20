@@ -195,7 +195,7 @@ def send_mail_sendmail(m, target, from_address):
     cmd += ["-i", target]
 
     try:
-        p = subprocess.Popen(
+        p = subprocess.Popen(  # pylint:disable=consider-using-with
             cmd,
             stdin=subprocess.PIPE,
             encoding="utf-8",

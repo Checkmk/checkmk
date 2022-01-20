@@ -254,13 +254,13 @@ def _main(args: Args) -> None:
         sys.stdout.write("<<<ipmi%s:sep(124)>>>\n" % section)
         try:
             try:
-                p = subprocess.Popen(
+                p = subprocess.Popen(  # pylint:disable=consider-using-with
                     [
                         *ipmi_cmd,
                         *types,
                     ],
                     close_fds=True,
-                    stdin=open(os.devnull),
+                    stdin=open(os.devnull),  # pylint:disable=consider-using-with
                     stdout=subprocess.PIPE,
                     stderr=subprocess.PIPE,
                     encoding="utf-8",

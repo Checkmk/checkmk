@@ -81,7 +81,7 @@ def save(stored_passwords):
 
 def load():
     passwords = {}
-    for line in open(password_store_path):
+    for line in open(password_store_path):  # pylint:disable=consider-using-with
         ident, password = line.strip().split(":", 1)
         passwords[ident] = password
     return passwords

@@ -198,7 +198,7 @@ def write_file(
     config_parts: Callable = get_config_parts,
 ) -> None:
     package["version.packaged"] = cmk_version.__version__
-    tar = tarfile.open(fileobj=file_object, mode="w:gz")
+    tar = tarfile.open(fileobj=file_object, mode="w:gz")  # pylint:disable=consider-using-with
 
     def create_tar_info(filename: str, size: int) -> tarfile.TarInfo:
         info = tarfile.TarInfo()
@@ -388,7 +388,7 @@ def install(file_object: BinaryIO) -> PackageInfo:
         logger.log(VERBOSE, "Installing %s version %s.", pacname, package["version"])
         update = False
 
-    tar = tarfile.open(fileobj=file_object, mode="r:gz")
+    tar = tarfile.open(fileobj=file_object, mode="r:gz")  # pylint:disable=consider-using-with
 
     # Before installing check for conflicts
     keep_files = {}
@@ -428,7 +428,7 @@ def install(file_object: BinaryIO) -> PackageInfo:
 
             # Important: Do not preserve the tared timestamp. Checkmk needs to know when the files
             # been installed for cache invalidation.
-            tardest = subprocess.Popen(
+            tardest = subprocess.Popen(  # pylint:disable=consider-using-with
                 ["tar", "xf", "-", "--touch", "-C", part.path] + filenames,
                 stdin=subprocess.PIPE,
                 shell=False,
@@ -514,7 +514,7 @@ def _remove_packaged_rule_packs(file_names: Iterable[str], delete_export: bool =
 
 
 def _get_package_info_from_package(file_object: BinaryIO) -> PackageInfo:
-    tar = tarfile.open(fileobj=file_object, mode="r:gz")
+    tar = tarfile.open(fileobj=file_object, mode="r:gz")  # pylint:disable=consider-using-with
     package_info_file = tar.extractfile("info")
     if package_info_file is None:
         raise PackageException("Failed to open package info file")

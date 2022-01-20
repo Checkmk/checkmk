@@ -188,9 +188,6 @@ LogFilter TableLog::constructFilter(Query *query,
 
 void TableLog::answerQueryInternal(Query *query, const LogFilter &log_filter,
                                    const LogFiles &log_files) {
-    if (log_files.begin() == log_files.end()) {
-        return;
-    }
     auto processLogEntry = [core = core(), query](const LogEntry &entry) {
         LogRow r{entry, core};
         return query->processDataset(Row{&r});
@@ -202,6 +199,9 @@ void TableLog::answerQueryInternal(Query *query, const LogFilter &log_filter,
 void TableLog::processLogFiles(
     const std::function<bool(const LogEntry &)> &processLogEntry,
     const LogFiles &log_files, const LogFilter &log_filter) {
+    if (log_files.begin() == log_files.end()) {
+        return;
+    }
     auto it = log_files.end();  // it now points beyond last log file
     --it;                       // switch to last logfile (we have at least one)
 

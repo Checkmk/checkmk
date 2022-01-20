@@ -38,7 +38,7 @@ div#top_heading {
   div.page_state {
     position: absolute;
     top: 14px;
-    right: 17px;
+    right: $spacing;
     display: flex;
     align-items: center;
     height: inherit;
@@ -177,7 +177,7 @@ div#top_heading {
       }
 
       &.icon_container {
-        padding-right: 3px;
+        padding-right: $spacing;
         background-color: $page-menu-bg-color;
         border-right: 1px solid $headline-color;
 

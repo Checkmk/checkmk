@@ -99,7 +99,14 @@ def current_values():
 
 
 @pytest.fixture
-def value_store(expired_values, current_values, restart_count):
+def is_empty_value_store():
+    return False
+
+
+@pytest.fixture
+def value_store(expired_values, current_values, restart_count, is_empty_value_store):
+    if is_empty_value_store:
+        return {}
     n = ONE_HOUR // ONE_MINUTE + expired_values
     restart_count_list = [
         (TIMESTAMP - (n - i) * ONE_MINUTE, restart_count * (-n + i) * NUMBER_OF_CONTAINERS)
@@ -183,8 +190,7 @@ def test_check_results_considers_only_current_values(current_values, check_resul
     assert actual == expected
 
 
-@pytest.mark.skip(reason="This test is broken, it depends on the order of tests executed")
-@pytest.mark.parametrize("value_store", [{}])
+@pytest.mark.parametrize("is_empty_value_store", [True])
 def test_check_results_creates_restart_count_list(value_store, check_result):
     list(check_result)
     assert len(value_store) == 1

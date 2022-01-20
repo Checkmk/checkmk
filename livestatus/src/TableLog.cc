@@ -149,6 +149,18 @@ std::string TableLog::name() const { return "log"; }
 std::string TableLog::namePrefix() const { return "log_"; }
 
 void TableLog::answerQuery(Query *query) {
+    auto log_filter = constructFilter(query, core()->maxLinesPerLogFile());
+    if (log_filter.classmask == 0) {
+        return;
+    }
+    _log_cache->apply([this, query, &log_filter](const LogFiles &log_files) {
+        answerQueryInternal(query, log_filter, log_files);
+    });
+}
+
+// static
+LogFilter TableLog::constructFilter(Query *query,
+                                    size_t max_lines_per_logfile) {
     // Optimize time interval for the query. In log querys there should always
     // be a time range in form of one or two filter expressions over time. We
     // use that to limit the number of logfiles we need to scan and to find the
@@ -166,20 +178,12 @@ void TableLog::answerQuery(Query *query) {
         static_cast<unsigned>(query->valueSetLeastUpperBoundFor("class")
                                   .value_or(~std::bitset<32>())
                                   .to_ulong());
-    auto max_lines_per_logfile = core()->maxLinesPerLogFile();
-    LogFilter log_filter = {
+    return {
         .max_lines_per_logfile = max_lines_per_logfile,
         .classmask = classmask,
         .since = since,
         .until = until,
     };
-
-    if (log_filter.classmask == 0) {
-        return;
-    }
-    _log_cache->apply([this, query, &log_filter](const LogFiles &log_files) {
-        answerQueryInternal(query, log_filter, log_files);
-    });
 }
 
 void TableLog::answerQueryInternal(Query *query, const LogFilter &log_filter,

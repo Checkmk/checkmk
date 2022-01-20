@@ -46,8 +46,11 @@ public:
 
 private:
     LogCache *_log_cache;
+
     void answerQueryInternal(Query *query, const LogFilter &log_filter,
                              const LogFiles &log_files);
+    static LogFilter constructFilter(Query *query,
+                                     size_t max_lines_per_logfile);
     static void processLogFiles(
         const std::function<bool(const LogEntry &)> &processLogEntry,
         const LogFiles &log_files, const LogFilter &log_filter);

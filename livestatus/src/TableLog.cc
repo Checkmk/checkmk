@@ -153,9 +153,14 @@ void TableLog::answerQuery(Query *query) {
     if (log_filter.classmask == 0) {
         return;
     }
-    _log_cache->apply([this, query, &log_filter](const LogFiles &log_files) {
-        answerQueryInternal(query, log_filter, log_files);
-    });
+    auto processLogEntry = [core = core(), query](const LogEntry &entry) {
+        LogRow r{entry, core};
+        return query->processDataset(Row{&r});
+    };
+    _log_cache->apply(
+        [&processLogEntry, &log_filter](const LogFiles &log_files) {
+            processLogFiles(processLogEntry, log_files, log_filter);
+        });
 }
 
 // static
@@ -184,15 +189,6 @@ LogFilter TableLog::constructFilter(Query *query,
         .since = since,
         .until = until,
     };
-}
-
-void TableLog::answerQueryInternal(Query *query, const LogFilter &log_filter,
-                                   const LogFiles &log_files) {
-    auto processLogEntry = [core = core(), query](const LogEntry &entry) {
-        LogRow r{entry, core};
-        return query->processDataset(Row{&r});
-    };
-    processLogFiles(processLogEntry, log_files, log_filter);
 }
 
 // static

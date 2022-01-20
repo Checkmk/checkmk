@@ -272,8 +272,9 @@ test-shellcheck:
 	@CMK_DIR="$(realpath ..)" ; \
 	ENTERPRISE_DIR="$(realpath ../enterprise)" ; \
 	shellcheck \
+	        -P SCRIPTDIR \
 		$(SHELLCHECK_OUTPUT_ARGS) \
-		$$(grep -l '^#!/.*sh' $$CMK_DIR/agents/* $$CMK_DIR/agents/plugins/* $$CMK_DIR/agents/special/* 2>/dev/null) \
+		$$(grep -l '^#!/.*sh' $$CMK_DIR/agents/* $$CMK_DIR/agents/plugins/* $$CMK_DIR/agents/special/* $$CMK_DIR/agents/cfg_examples/* 2>/dev/null) \
 		"$$ENTERPRISE_DIR/agents/mk-remote-alert-handler"
 
 test-unit: prepare-protobuf-files

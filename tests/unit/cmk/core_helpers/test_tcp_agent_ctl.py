@@ -27,13 +27,19 @@ def fixture_zlib_compressed_data(uncompressed_data: bytes) -> bytes:
     return compress(uncompressed_data)
 
 
+class TestVersion:
+    def test_members(self):
+        for member in Version:
+            assert Version.from_bytes(bytes(member)) is member
+
+
 class TestAgentCtlMessage:
     def test_from_bytes(self) -> None:
         assert AgentCtlMessage.from_bytes(
             b"%b%b%b"
             % (
-                Version.V1,
-                CompressionType.UNCOMPRESSED,
+                bytes(Version.V1),
+                bytes(CompressionType.UNCOMPRESSED),
                 b"some data",
             )
         ) == AgentCtlMessage(
@@ -74,10 +80,10 @@ class TestAgentCtlMessage:
 
 class TestHeaderV1:
     def test_from_bytes(self) -> None:
-        assert HeaderV1.from_bytes(CompressionType.ZLIB) == HeaderV1(CompressionType.ZLIB)
+        assert HeaderV1.from_bytes(bytes(CompressionType.ZLIB)) == HeaderV1(CompressionType.ZLIB)
 
     def test_iter(self) -> None:
-        assert list(HeaderV1(CompressionType.ZLIB)) == [CompressionType.ZLIB]
+        assert list(HeaderV1(CompressionType.ZLIB)) == [bytes(CompressionType.ZLIB)]
 
 
 class TestMessageV1:
@@ -89,7 +95,7 @@ class TestMessageV1:
         agent_data_with_header = MessageV1.from_bytes(
             b"%b%b"
             % (
-                CompressionType.ZLIB,
+                bytes(CompressionType.ZLIB),
                 zlib_compressed_data,
             )
         )
@@ -107,7 +113,7 @@ class TestMessageV1:
             MessageV1.from_bytes(
                 b"%b%b"
                 % (
-                    CompressionType.ZLIB,
+                    bytes(CompressionType.ZLIB),
                     uncompressed_data,
                 )
             )

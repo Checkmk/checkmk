@@ -940,7 +940,7 @@ class TestTCPFetcher:
         mock_sock = _MockSock(
             b"16%b%b%b"
             % (
-                Version.V1,
+                bytes(Version.V1),
                 bytes(HeaderV1(CompressionType.ZLIB)),
                 compress(mock_data),
             )

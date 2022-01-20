@@ -13,26 +13,34 @@ from typing import Final, Iterator
 from cmk.utils.type_defs.protocol import Deserializer, Serializer
 
 
-class Version(
-    bytes,
-    Enum,
-):
-    V1 = b"\0\0"
+class Version(Enum):
+    V1 = 0
+
+    def __bytes__(self) -> bytes:
+        return self.value.to_bytes(self._length(), "big")
+
+    @classmethod
+    def from_bytes(cls, data: bytes) -> Version:
+        return cls(int.from_bytes(data[: cls._length()], "big"))
 
     @staticmethod
-    def length() -> int:
+    def _length() -> int:
         return 2
 
 
-class CompressionType(
-    bytes,
-    Enum,
-):
-    UNCOMPRESSED = b"\0"
-    ZLIB = b"\1"
+class CompressionType(Enum):
+    UNCOMPRESSED = 0
+    ZLIB = 1
+
+    def __bytes__(self) -> bytes:
+        return self.value.to_bytes(self._length(), "big")
+
+    @classmethod
+    def from_bytes(cls, data: bytes) -> CompressionType:
+        return cls(int.from_bytes(data[: cls._length()], "big"))
 
     @staticmethod
-    def length() -> int:
+    def _length() -> int:
         return 1
 
 
@@ -51,8 +59,8 @@ class AgentCtlMessage(Deserializer):
         cls,
         data: bytes,
     ) -> AgentCtlMessage:
-        version = Version(data[: Version.length()])
-        remaining_data = data[len(version) :]
+        version = Version.from_bytes(data)
+        remaining_data = data[len(bytes(version)) :]
         if version is Version.V1:
             return cls(
                 version,
@@ -87,14 +95,14 @@ class HeaderV1(Serializer, Deserializer):
         self.compression_type: Final = compression_type
 
     def __iter__(self) -> Iterator[bytes]:
-        yield self.compression_type
+        yield bytes(self.compression_type)
 
     @classmethod
     def from_bytes(
         cls,
         data: bytes,
     ) -> HeaderV1:
-        return cls(CompressionType(data[: CompressionType.length()]))
+        return cls(CompressionType.from_bytes(data))
 
 
 class MessageV1(Deserializer):

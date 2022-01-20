@@ -183,6 +183,7 @@ def test_check_results_considers_only_current_values(current_values, check_resul
     assert actual == expected
 
 
+@pytest.mark.skip(reason="This test is broken, it depends on the order of tests executed")
 @pytest.mark.parametrize("value_store", [{}])
 def test_check_results_creates_restart_count_list(value_store, check_result):
     list(check_result)

@@ -172,9 +172,10 @@ void TableLog::answerQueryInternal(Query *query, const LogFiles &log_files) {
 
     // The second optimization is for log message types. We want to load only
     // those log type that are queried.
-    auto classmask = query->valueSetLeastUpperBoundFor("class")
-                         .value_or(~std::bitset<32>())
-                         .to_ulong();
+    auto classmask =
+        static_cast<unsigned>(query->valueSetLeastUpperBoundFor("class")
+                                  .value_or(~std::bitset<32>())
+                                  .to_ulong());
     if (classmask == 0) {
         return;
     }
@@ -183,34 +184,37 @@ void TableLog::answerQueryInternal(Query *query, const LogFiles &log_files) {
         LogRow r{entry, core};
         return query->processDataset(Row{&r});
     };
-    processLogFiles(processLogEntry, log_files, max_lines_per_logfile,
-                    classmask, since, until);
+    LogFilter log_filter = {
+        .max_lines_per_logfile = max_lines_per_logfile,
+        .classmask = classmask,
+        .since = since,
+        .until = until,
+    };
+    processLogFiles(processLogEntry, log_files, log_filter);
 }
 
 // static
 void TableLog::processLogFiles(
     const std::function<bool(const LogEntry &)> &processLogEntry,
-    const LogFiles &log_files, size_t max_lines_per_logfile, unsigned classmask,
-    std::chrono::system_clock::time_point since,
-    std::chrono::system_clock::time_point until) {
+    const LogFiles &log_files, const LogFilter &log_filter) {
     auto it = log_files.end();  // it now points beyond last log file
     --it;                       // switch to last logfile (we have at least one)
 
     // Now find newest log where 'until' is contained. The problem
     // here: For each logfile we only know the time of the *first* entry,
     // not that of the last.
-    while (it != log_files.begin() && it->second->since() > until) {
+    while (it != log_files.begin() && it->second->since() > log_filter.until) {
         // while logfiles are too new go back in history
         --it;
     }
-    if (it->second->since() > until) {
+    if (it->second->since() > log_filter.until) {
         return;  // all logfiles are too new
     }
 
     while (true) {
-        const auto *entries =
-            it->second->getEntriesFor(max_lines_per_logfile, classmask);
-        if (!processLogEntries(processLogEntry, entries, since, until)) {
+        const auto *entries = it->second->getEntriesFor(
+            log_filter.max_lines_per_logfile, log_filter.classmask);
+        if (!processLogEntries(processLogEntry, entries, log_filter)) {
             break;  // end of time range found
         }
         if (it == log_files.begin()) {
@@ -223,14 +227,13 @@ void TableLog::processLogFiles(
 // static
 bool TableLog::processLogEntries(
     const std::function<bool(const LogEntry &)> &processLogEntry,
-    const Logfile::map_type *entries,
-    std::chrono::system_clock::time_point since,
-    std::chrono::system_clock::time_point until) {
-    auto it = entries->upper_bound(Logfile::makeKey(until, 999999999));
+    const Logfile::map_type *entries, const LogFilter &log_filter) {
+    auto it =
+        entries->upper_bound(Logfile::makeKey(log_filter.until, 999999999));
     while (it != entries->begin()) {
         --it;
         const auto &entry = *it->second;
-        if (entry.time() < since) {
+        if (entry.time() < log_filter.since) {
             return false;  // time limit exceeded
         }
         if (!processLogEntry(entry)) {

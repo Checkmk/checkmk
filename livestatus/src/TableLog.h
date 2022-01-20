@@ -25,6 +25,14 @@ class MonitoringCore;
 class Query;
 class Row;
 
+class LogFilter {
+public:
+    size_t max_lines_per_logfile;
+    unsigned classmask;
+    std::chrono::system_clock::time_point since;
+    std::chrono::system_clock::time_point until;
+};
+
 class TableLog : public Table {
 public:
     TableLog(MonitoringCore *mc, LogCache *log_cache);
@@ -41,14 +49,10 @@ private:
     void answerQueryInternal(Query *query, const LogFiles &log_files);
     static void processLogFiles(
         const std::function<bool(const LogEntry &)> &processLogEntry,
-        const LogFiles &log_files, size_t max_lines_per_logfile,
-        unsigned classmask, std::chrono::system_clock::time_point since,
-        std::chrono::system_clock::time_point until);
+        const LogFiles &log_files, const LogFilter &log_filter);
     static bool processLogEntries(
         const std::function<bool(const LogEntry &)> &processLogEntry,
-        const Logfile::map_type *entries,
-        std::chrono::system_clock::time_point since,
-        std::chrono::system_clock::time_point until);
+        const Logfile::map_type *entries, const LogFilter &log_filter);
 };
 
 #endif  // TableLog_h

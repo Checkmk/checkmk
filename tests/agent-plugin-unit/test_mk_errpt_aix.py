@@ -106,7 +106,9 @@ def test_mk_errpt_aix(tmpdir, state_file_name, errpt_output, last_reported, expe
 
         prepare_state(tmp_dir, state_file_name, state)
 
-        p = subprocess.Popen(PLUGIN, env=env, stdout=subprocess.STDOUT)
+        p = subprocess.Popen(  # pylint:disable=consider-using-with
+            PLUGIN, env=env, stdout=subprocess.STDOUT
+        )
         output = p.communicate()[0]
 
         expected = _format_expected(expected)

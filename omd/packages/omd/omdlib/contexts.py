@@ -174,7 +174,7 @@ class SiteContext(AbstractSiteContext):
         if not os.path.exists(confpath):
             return {}
 
-        for line in open(confpath):
+        for line in open(confpath):  # pylint:disable=consider-using-with
             line = line.strip()
             if line == "" or line[0] == "#":
                 continue

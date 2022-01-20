@@ -41,7 +41,7 @@ def test_backup_site_to_tarfile(site, tmp_path):
         omdlib.backup.backup_site_to_tarfile(site, backup_tar, mode="w:", options={}, verbose=False)
 
     with tar_path.open("rb") as backup_tar:
-        tar = tarfile.open(fileobj=backup_tar, mode="r:*")
+        tar = tarfile.open(fileobj=backup_tar, mode="r:*")  # pylint:disable=consider-using-with
         sitename, version = omdlib.backup.get_site_and_version_from_backup(tar)
         assert sitename == "unit"
         assert version == "1.3.3i7.cee"
@@ -58,7 +58,7 @@ def test_backup_site_to_tarfile_broken_link(site, tmp_path):
         omdlib.backup.backup_site_to_tarfile(site, backup_tar, mode="w:", options={}, verbose=False)
 
     with tar_path.open("rb") as backup_tar:
-        tar = tarfile.open(fileobj=backup_tar, mode="r:*")
+        tar = tarfile.open(fileobj=backup_tar, mode="r:*")  # pylint:disable=consider-using-with
         _sitename, _version = omdlib.backup.get_site_and_version_from_backup(tar)
 
         link = tar.getmember("unit/link")
@@ -92,5 +92,5 @@ def test_backup_site_to_tarfile_vanishing_files(site, tmp_path, monkeypatch):
         omdlib.backup.backup_site_to_tarfile(site, backup_tar, mode="w:", options={}, verbose=False)
 
     with tar_path.open("rb") as backup_tar:
-        tar = tarfile.open(fileobj=backup_tar, mode="r:*")
+        tar = tarfile.open(fileobj=backup_tar, mode="r:*")  # pylint:disable=consider-using-with
         _sitename, _version = omdlib.backup.get_site_and_version_from_backup(tar)

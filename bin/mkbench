@@ -1054,8 +1054,10 @@ class Measurement:
         return psutil.disk_io_counters()
 
     def _get_site_state(self):
-        self.site_state = subprocess.call(  # pylint:disable=consider-using-with
-            ["omd", "status", "--bare"], stdout=open(os.devnull, "w"), close_fds=True
+        self.site_state = subprocess.call(
+            ["omd", "status", "--bare"],
+            stdout=open(os.devnull, "w"),  # pylint:disable=consider-using-with
+            close_fds=True,
         )
 
     def _get_site_stats(self):

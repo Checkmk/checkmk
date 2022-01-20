@@ -604,8 +604,8 @@ def test_edit_cg_group_with_nagvis_maps(
     dummy_map_filepath1 = "%s/etc/nagvis/maps/blabla.cfg" % site.root
     dummy_map_filepath2 = "%s/etc/nagvis/maps/bloblo.cfg" % site.root
     try:
-        open(dummy_map_filepath1, "w")
-        open(dummy_map_filepath2, "w")
+        open(dummy_map_filepath1, "w")  # pylint:disable=consider-using-with
+        open(dummy_map_filepath2, "w")  # pylint:disable=consider-using-with
 
         attributes = {"alias": "nagvis_test_alias", "nagvis_maps": ["blabla"]}
 
@@ -843,7 +843,7 @@ def graph_test_config(web, site: Site):  # noqa: F811 # pylint: disable=redefine
         )
         for attempt in range(50):
             time.sleep(0.1)
-            proc = subprocess.Popen(
+            proc = subprocess.Popen(  # pylint:disable=consider-using-with
                 [site.path("bin/unixcat"), site.path("tmp/run/rrdcached.sock")],
                 stdin=subprocess.PIPE,
                 stdout=subprocess.PIPE,

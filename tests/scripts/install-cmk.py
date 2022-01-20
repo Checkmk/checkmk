@@ -190,7 +190,9 @@ class ABCPackageManager(abc.ABC):
         if os.geteuid() != 0:
             cmd.insert(0, "sudo")
 
-        p = subprocess.Popen(cmd, shell=False, close_fds=True, encoding="utf-8")
+        p = subprocess.Popen(  # pylint:disable=consider-using-with
+            cmd, shell=False, close_fds=True, encoding="utf-8"
+        )
         if p.wait() >> 8 != 0:
             raise Exception("Failed to install package")
 

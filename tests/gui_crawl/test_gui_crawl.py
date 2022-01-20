@@ -267,7 +267,9 @@ class Crawler:
             return False
 
         try:
-            tar = tarfile.open(fileobj=io.BytesIO(response.content))
+            tar = tarfile.open(  # pylint:disable=consider-using-with
+                fileobj=io.BytesIO(response.content)
+            )
         except tarfile.ReadError:
             self.handle_error(
                 Url(url=crash_report_url, referer_url=url.url),

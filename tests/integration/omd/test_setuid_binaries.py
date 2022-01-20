@@ -45,7 +45,9 @@ def test_binary_capability(site, rel_path, expected_capability):
     if getcap_bin is None:
         raise Exception("Unable to find getcap")
 
-    p = subprocess.Popen([getcap_bin, path], stdout=subprocess.PIPE, encoding="utf-8")
+    p = subprocess.Popen(  # pylint:disable=consider-using-with
+        [getcap_bin, path], stdout=subprocess.PIPE, encoding="utf-8"
+    )
     assert p.stdout
     stdout = p.stdout.read()
 

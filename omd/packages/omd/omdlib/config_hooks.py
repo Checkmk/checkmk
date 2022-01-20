@@ -69,7 +69,7 @@ def save_site_conf(site: "SiteContext") -> None:
     if not os.path.exists(confdir):
         os.mkdir(confdir)
 
-    f = open(site.dir + "/etc/omd/site.conf", "w")
+    f = open(site.dir + "/etc/omd/site.conf", "w")  # pylint:disable=consider-using-with
 
     for hook_name, value in sorted(site.conf.items(), key=lambda x: x[0]):
         f.write("CONFIG_%s='%s'\n" % (hook_name, value))
@@ -104,7 +104,9 @@ def _config_load_hook(site: "SiteContext", hook_name: str) -> ConfigHook:
 
     description = ""
     description_active = False
-    for line in open(site.dir + "/lib/omd/hooks/" + hook_name):
+    for line in open(  # pylint:disable=consider-using-with
+        site.dir + "/lib/omd/hooks/" + hook_name
+    ):
         if line.startswith("# Alias:"):
             hook["alias"] = line[8:].strip()
         elif line.startswith("# Menu:"):
@@ -185,7 +187,7 @@ def call_hook(site: "SiteContext", hook_name: str, args: List[str]) -> ConfigHoo
 
     logger.log(VERBOSE, "Calling hook: %s", subprocess.list2cmdline(cmd))
 
-    p = subprocess.Popen(
+    p = subprocess.Popen(  # pylint:disable=consider-using-with
         cmd,
         env=hook_env,
         close_fds=True,

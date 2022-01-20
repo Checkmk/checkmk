@@ -43,7 +43,7 @@ def backup_site_to_tarfile(
     # Mypy does not understand this: Unexpected keyword argument "verbose" for "open" of "TarFile", same for "site".
     tar = cast(
         BackupTarFile,
-        BackupTarFile.open(  # type: ignore[call-arg]
+        BackupTarFile.open(  # type: ignore[call-arg] # pylint:disable=consider-using-with
             fileobj=fh, mode=mode, site=site, verbose=verbose
         ),
     )

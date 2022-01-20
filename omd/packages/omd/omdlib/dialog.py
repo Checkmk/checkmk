@@ -101,7 +101,7 @@ def _run_dialog(args: List[str]) -> DialogResult:
         # TODO: Why de_DE?
         "LANG": "de_DE.UTF-8",
     }
-    p = subprocess.Popen(
+    p = subprocess.Popen(  # pylint:disable=consider-using-with
         ["dialog", "--shadow"] + args, env=dialog_env, stderr=subprocess.PIPE, encoding="utf-8"
     )
     if p.stderr is None:
@@ -144,7 +144,9 @@ def user_confirms(
         if choice == "shell":
             thedir = "/".join(user_path.split("/")[:-1])
             sys.stdout.write("\n Starting BASH. Type CTRL-D to continue.\n\n")
-            subprocess.Popen(["bash", "-i"], cwd=thedir).wait()
+            subprocess.Popen(  # pylint:disable=consider-using-with
+                ["bash", "-i"], cwd=thedir
+            ).wait()
         else:
             return choice == yes_choice
 

@@ -43,7 +43,9 @@ def _get_file_from_package(package_path, cmk_version, version_rel_path):
     omd_version = _get_omd_version(cmk_version, package_path)
 
     if package_path.endswith(".rpm"):
-        rpm2cpio = subprocess.Popen(["rpm2cpio", package_path], stdout=subprocess.PIPE)
+        rpm2cpio = subprocess.Popen(  # pylint:disable=consider-using-with
+            ["rpm2cpio", package_path], stdout=subprocess.PIPE
+        )
         return subprocess.check_output(
             [
                 "cpio",
@@ -56,7 +58,9 @@ def _get_file_from_package(package_path, cmk_version, version_rel_path):
         )
 
     if package_path.endswith(".deb"):
-        dpkg = subprocess.Popen(["dpkg", "--fsys-tarfile", package_path], stdout=subprocess.PIPE)
+        dpkg = subprocess.Popen(  # pylint:disable=consider-using-with
+            ["dpkg", "--fsys-tarfile", package_path], stdout=subprocess.PIPE
+        )
         return subprocess.check_output(
             ["tar", "xOf", "-", "./opt/omd/versions/%s/%s" % (omd_version, version_rel_path)],
             stdin=dpkg.stdout,

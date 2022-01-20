@@ -22,7 +22,10 @@ def test_no_exeption(site: Site):
     for special_agent_path in special_agent_dir.glob("agent_*"):
         command = [str(special_agent_path)]
         p = site.execute(
-            command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=open(os.devnull)
+            command,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            stdin=open(os.devnull),  # pylint:disable=consider-using-with
         )
         stderr = p.communicate()[1]
         assert "Traceback (most recent call last):" not in stderr

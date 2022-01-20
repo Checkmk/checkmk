@@ -68,6 +68,12 @@ class Resources(BaseModel):
     limit: AggregatedLimit
 
 
+class AllocatableResource(BaseModel):
+    """sections: [kube_allocatable_cpu_resource_v1, kube_allocatable_memory_resource_v1]"""
+
+    value: float
+
+
 class ControllerType(enum.Enum):
     deployment = "deployment"
 

@@ -241,25 +241,17 @@ class Pod:
             uid=self.uid,
         )
 
-    def cpu_limit(self) -> section.AggregatedLimit:
-        return aggregate_limit_values(
-            [container.resources.limits.cpu for container in self.spec.containers]
-        )
+    def container_cpu_limits(self) -> Sequence[Optional[float]]:
+        return [container.resources.limits.cpu for container in self.spec.containers]
 
-    def cpu_request(self) -> section.AggregatedRequest:
-        return aggregate_request_values(
-            [container.resources.requests.cpu for container in self.spec.containers]
-        )
+    def container_cpu_requests(self) -> Sequence[Optional[float]]:
+        return [container.resources.requests.cpu for container in self.spec.containers]
 
-    def memory_limit(self) -> section.AggregatedLimit:
-        return aggregate_limit_values(
-            [container.resources.limits.memory for container in self.spec.containers]
-        )
+    def container_memory_limits(self) -> Sequence[Optional[float]]:
+        return [container.resources.limits.memory for container in self.spec.containers]
 
-    def memory_request(self) -> section.AggregatedRequest:
-        return aggregate_request_values(
-            [container.resources.requests.memory for container in self.spec.containers]
-        )
+    def container_memory_requests(self) -> Sequence[Optional[float]]:
+        return [container.resources.requests.memory for container in self.spec.containers]
 
     def conditions(self) -> Optional[section.PodConditions]:
         if not self.status.conditions:
@@ -304,24 +296,23 @@ class Pod:
         self._controllers.append(controller)
 
 
-def aggregate_request_values(
+def aggregate_resources(
     request_values: Sequence[Optional[float]],
-) -> section.AggregatedRequest:
-    if None in request_values:
-        return section.ExceptionalResource.unspecified
-    return sum(request_values)  # type: ignore
+    limit_values: Sequence[Optional[float]],
+) -> section.Resources:
+    specified_requests = [value for value in request_values if value is not None]
+    specified_limits = [value for value in limit_values if value is not None]
 
+    count_total = len(request_values)
 
-def aggregate_limit_values(limit_values: Sequence[Optional[float]]) -> section.AggregatedLimit:
-    contains_unspecified = None in limit_values
-    contains_zero = 0 in limit_values
-    if contains_unspecified and contains_zero:
-        return section.ExceptionalResource.zero_unspecified
-    if contains_zero:
-        return section.ExceptionalResource.zero
-    if contains_unspecified:
-        return section.ExceptionalResource.unspecified
-    return sum(limit_values)  # type: ignore
+    return section.Resources(
+        request=sum(specified_requests),
+        limit=sum(specified_limits),
+        count_unspecified_requests=count_total - len(specified_requests),
+        count_unspecified_limits=count_total - len(specified_limits),
+        count_zeroed_limits=sum(1 for x in specified_limits if x == 0),
+        count_total=count_total,
+    )
 
 
 class Deployment:
@@ -590,45 +581,18 @@ class Cluster:
         )
 
 
-# TODO aggregating this by combining the values from pods duplicates some of logic (compare this
-# function to aggregate_limit_values). In the future, Kubernetes objects such as cluster should
-# use aggregate_limit_values.
-def aggregate_limit_values_from_pods(
-    limit_values: Sequence[section.AggregatedLimit],
-) -> section.AggregatedLimit:
-    if section.ExceptionalResource.zero_unspecified in limit_values:
-        return section.ExceptionalResource.zero_unspecified
-    contains_unspecified = section.ExceptionalResource.unspecified in limit_values
-    contains_zero = section.ExceptionalResource.zero in limit_values
-    if contains_zero and contains_unspecified:
-        return section.ExceptionalResource.zero_unspecified
-    if contains_unspecified:
-        return section.ExceptionalResource.unspecified
-    if contains_zero:
-        return section.ExceptionalResource.zero
-    return sum(limit_values)
-
-
-def aggregate_request_values_from_pods(
-    request_values: Sequence[section.AggregatedRequest],
-) -> section.AggregatedRequest:
-    if section.ExceptionalResource.unspecified in request_values:
-        return section.ExceptionalResource.unspecified
-    return sum(request_values)
-
-
 def _collect_memory_resources(pods: Sequence[Pod]) -> section.Resources:
-    return section.Resources(
-        limit=aggregate_limit_values_from_pods([pod.memory_limit() for pod in pods]),
-        request=aggregate_request_values_from_pods([pod.memory_request() for pod in pods]),
-    )
+    container_memory_requests = [
+        request for pod in pods for request in pod.container_memory_requests()
+    ]
+    container_memory_limits = [limit for pod in pods for limit in pod.container_memory_limits()]
+    return aggregate_resources(container_memory_requests, container_memory_limits)
 
 
 def _collect_cpu_resources(pods: Sequence[Pod]) -> section.Resources:
-    return section.Resources(
-        limit=aggregate_limit_values_from_pods([pod.cpu_limit() for pod in pods]),
-        request=aggregate_request_values_from_pods([pod.cpu_request() for pod in pods]),
-    )
+    container_cpu_requests = [request for pod in pods for request in pod.container_cpu_requests()]
+    container_cpu_limits = [limit for pod in pods for limit in pod.container_cpu_limits()]
+    return aggregate_resources(container_cpu_requests, container_cpu_limits)
 
 
 class JsonProtocol(Protocol):
@@ -725,11 +689,11 @@ def pod_api_based_checkmk_sections(pod: Pod):
         ("kube_pod_info_v1", pod.info),
         (
             "kube_cpu_resources_v1",
-            lambda: section.Resources(limit=pod.cpu_limit(), request=pod.cpu_request()),
+            lambda: _collect_cpu_resources([pod]),
         ),
         (
             "kube_memory_resources_v1",
-            lambda: section.Resources(limit=pod.memory_limit(), request=pod.memory_request()),
+            lambda: _collect_memory_resources([pod]),
         ),
     )
     for section_name, section_call in sections:

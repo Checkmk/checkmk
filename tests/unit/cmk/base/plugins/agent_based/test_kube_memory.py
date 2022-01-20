@@ -17,7 +17,7 @@ from cmk.base.plugins.agent_based.kube_memory import (
     Params,
     Resources,
 )
-from cmk.base.plugins.agent_based.utils.kube_resources import ExceptionalResource, Usage
+from cmk.base.plugins.agent_based.utils.kube_resources import Usage
 
 from cmk.gui.plugins.wato.check_parameters.kube_resources import _parameter_valuespec_memory
 
@@ -176,53 +176,68 @@ def test_register_check_plugin_calls(check_plugin):
     "section_kube_memory_resources,section_kube_performance_memory,expected_result",
     [
         pytest.param(
-            Resources(request=0.0, limit=28120704.0),
+            Resources(
+                request=0.0,
+                limit=28120704.0,
+                count_unspecified_limits=0,
+                count_zeroed_limits=0,
+                count_unspecified_requests=0,
+                count_total=2,
+            ),
             None,
             (
-                Result(state=State.OK, summary="Request: 0 B"),
+                Result(state=State.OK, summary="Request: 0 B (2/2 containers with requests)"),
                 Metric("kube_memory_request", 0.0, boundaries=(0.0, None)),
-                Result(state=State.OK, summary="Limit: 26.8 MiB"),
+                Result(state=State.OK, summary="Limit: 26.8 MiB (2/2 containers with limits)"),
                 Metric("kube_memory_limit", 28120704.0, boundaries=(0.0, None)),
             ),
             id="No performance data",
         ),
         pytest.param(
-            Resources(request=0.0, limit=ExceptionalResource.zero),
+            Resources(
+                request=0.0,
+                limit=0.0,
+                count_unspecified_limits=0,
+                count_zeroed_limits=2,
+                count_unspecified_requests=0,
+                count_total=2,
+            ),
             Usage(usage=18120704.0),
             (
                 Result(state=State.OK, summary="Usage: 17.3 MiB"),
                 Metric("kube_memory_usage", 18120704.0, boundaries=(0.0, None)),
-                Result(
-                    state=State.OK,
-                    summary="Request: 0 B",
-                ),
+                Result(state=State.OK, summary="Request: 0 B (2/2 containers with requests)"),
                 Metric("kube_memory_request", 0.0, boundaries=(0.0, None)),
-                Result(
-                    state=State.OK,
-                    summary="Limit: n/a",
-                    details="Limit: set to zero for at least one container",
-                ),
+                Result(state=State.OK, summary="Limit: 0 B (0/2 containers with limits)"),
+                Metric("kube_memory_limit", 0.0, boundaries=(0.0, None)),
             ),
             id="Weird config data set to zero",
         ),
         pytest.param(
             Resources(
-                request=ExceptionalResource.unspecified,
-                limit=ExceptionalResource.unspecified,
+                request=0.0,
+                limit=28120704.0,
+                count_unspecified_limits=1,
+                count_zeroed_limits=0,
+                count_unspecified_requests=1,
+                count_total=2,
             ),
             Usage(usage=18120704.0),
             (
                 Result(state=State.OK, summary="Usage: 17.3 MiB"),
                 Metric("kube_memory_usage", 18120704.0, boundaries=(0.0, None)),
+                Result(state=State.OK, summary="Request: 0 B (1/2 containers with requests)"),
+                Metric("kube_memory_request", 0.0, boundaries=(0.0, None)),
+                Metric("kube_memory_limit", 28120704.0),
                 Result(
                     state=State.OK,
-                    summary="Request: n/a",
-                    details="Request: not specified for at least one container",
+                    summary="Limit utilization: 64.44% - 17.3 MiB of 26.8 MiB (1/2 containers with limits)",
                 ),
-                Result(
-                    state=State.OK,
-                    summary="Limit: n/a",
-                    details="Limit: not specified for at least one container",
+                Metric(
+                    "kube_memory_limit_utilization",
+                    64.4390126221591,
+                    levels=(80.0, 90.0),
+                    boundaries=(0.0, None),
                 ),
             ),
             id="Config data not defined for at least container",
@@ -230,7 +245,11 @@ def test_register_check_plugin_calls(check_plugin):
         pytest.param(
             Resources(
                 request=0.0,
-                limit=ExceptionalResource.zero_unspecified,
+                limit=28120704.0,
+                count_unspecified_limits=1,
+                count_zeroed_limits=1,
+                count_unspecified_requests=2,
+                count_total=3,
             ),
             Usage(usage=18120704.0),
             (
@@ -238,57 +257,83 @@ def test_register_check_plugin_calls(check_plugin):
                 Metric("kube_memory_usage", 18120704.0, boundaries=(0.0, None)),
                 Result(
                     state=State.OK,
-                    summary="Request: 0 B",
+                    summary="Request: 0 B (1/3 containers with requests)",
                 ),
                 Metric("kube_memory_request", 0.0, boundaries=(0.0, None)),
+                Metric("kube_memory_limit", 28120704.0),
                 Result(
                     state=State.OK,
-                    summary="Limit: n/a",
-                    details="Limit: not specified for at least one container, set to zero for at least one container",
+                    summary="Limit utilization: 64.44% - 17.3 MiB of 26.8 MiB (1/3 containers with limits)",
                 ),
-            ),
-            id="Config data not defined, and limit value is zero",
-        ),
-        pytest.param(
-            Resources(request=13120704.0, limit=28120704.0),
-            Usage(usage=18120704.0),
-            (
-                Result(state=State.OK, summary="Usage: 17.3 MiB"),
-                Metric("kube_memory_usage", 18120704.0, boundaries=(0.0, None)),
-                Result(
-                    state=State.OK, summary="Request utilization: 138.11% - 17.3 MiB of 12.5 MiB"
-                ),
-                Metric(
-                    "kube_memory_request_utilization", 138.10771129354035, boundaries=(0.0, None)
-                ),
-                Metric("kube_memory_request", 13120704.0),
-                Result(state=State.OK, summary="Limit utilization: 64.44% - 17.3 MiB of 26.8 MiB"),
                 Metric(
                     "kube_memory_limit_utilization",
                     64.4390126221591,
                     levels=(80.0, 90.0),
                     boundaries=(0.0, None),
                 ),
+            ),
+            id="Config data not defined, and limit value is zero",
+        ),
+        pytest.param(
+            Resources(
+                request=13120704.0,
+                limit=28120704.0,
+                count_unspecified_limits=0,
+                count_zeroed_limits=0,
+                count_unspecified_requests=0,
+                count_total=2,
+            ),
+            Usage(usage=18120704.0),
+            (
+                Result(state=State.OK, summary="Usage: 17.3 MiB"),
+                Metric("kube_memory_usage", 18120704.0, boundaries=(0.0, None)),
+                Metric("kube_memory_request", 13120704.0),
+                Result(
+                    state=State.OK,
+                    summary="Request utilization: 138.11% - 17.3 MiB of 12.5 MiB (2/2 containers with requests)",
+                ),
+                Metric(
+                    "kube_memory_request_utilization", 138.10771129354035, boundaries=(0.0, None)
+                ),
                 Metric("kube_memory_limit", 28120704.0),
+                Result(
+                    state=State.OK,
+                    summary="Limit utilization: 64.44% - 17.3 MiB of 26.8 MiB (2/2 containers with limits)",
+                ),
+                Metric(
+                    "kube_memory_limit_utilization",
+                    64.4390126221591,
+                    levels=(80.0, 90.0),
+                    boundaries=(0.0, None),
+                ),
             ),
             id="All config data present, usage below request, this is the desirable state for a cluster",
         ),
         pytest.param(
-            Resources(request=13120704.0, limit=28120704.0),
+            Resources(
+                request=13120704.0,
+                limit=28120704.0,
+                count_unspecified_limits=0,
+                count_zeroed_limits=0,
+                count_unspecified_requests=0,
+                count_total=2,
+            ),
             Usage(usage=27120704.0),
             (
                 Result(state=State.OK, summary="Usage: 25.9 MiB"),
                 Metric("kube_memory_usage", 27120704.0, boundaries=(0.0, None)),
+                Metric("kube_memory_request", 13120704.0),
                 Result(
-                    state=State.OK, summary="Request utilization: 206.70% - 25.9 MiB of 12.5 MiB"
+                    state=State.OK,
+                    summary="Request utilization: 206.70% - 25.9 MiB of 12.5 MiB (2/2 containers with requests)",
                 ),
                 Metric(
                     "kube_memory_request_utilization", 206.70159162191297, boundaries=(0.0, None)
                 ),
-                Metric("kube_memory_request", 13120704.0),
+                Metric("kube_memory_limit", 28120704.0),
                 Result(
                     state=State.CRIT,
-                    summary="Limit utilization: 96.44% - 25.9 MiB of 26.8 MiB (warn/crit at 80.00%/90.00%)",
+                    summary="Limit utilization: 96.44% - 25.9 MiB of 26.8 MiB (warn/crit at 80.00%/90.00%) (2/2 containers with limits)",
                 ),
                 Metric(
                     "kube_memory_limit_utilization",
@@ -296,9 +341,8 @@ def test_register_check_plugin_calls(check_plugin):
                     levels=(80.0, 90.0),
                     boundaries=(0.0, None),
                 ),
-                Metric("kube_memory_limit", 28120704.0),
             ),
-            id="All config data present, usage above request",
+            id="All config data present, usage above levels for limit",
         ),
     ],
 )

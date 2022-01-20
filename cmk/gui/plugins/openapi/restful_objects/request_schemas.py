@@ -158,7 +158,7 @@ class UpdateHost(BaseSchema):
         names_only=True,
         description="A list of attributes which should be removed.",
         example=["tag_foobar"],
-        missing=list,
+        load_default=list,
         required=False,
     )
 
@@ -510,7 +510,7 @@ class UpdateFolder(BaseSchema):
         "update",
         description="A list of attributes which should be removed.",
         example=["tag_foobar"],
-        missing=list,
+        load_default=list,
         required=False,
         names_only=True,
     )
@@ -569,13 +569,13 @@ class CreateDowntimeBase(BaseSchema):
         ],
         description=param_description(schedule_host_downtime.__doc__, "recur"),
         example="hour",
-        missing="fixed",
+        load_default="fixed",
     )
     duration = fields.Integer(
         required=False,
         description=param_description(schedule_host_downtime.__doc__, "duration"),
         example=3600,
-        missing=0,
+        load_default=0,
     )
     comment = fields.String(required=False, example="Security updates")
 
@@ -777,20 +777,20 @@ HOST_DURATION = fields.Integer(
     required=False,
     description=param_description(schedule_host_downtime.__doc__, "duration"),
     example=3600,
-    missing=0,
+    load_default=0,
 )
 
 SERVICE_DURATION = fields.Integer(
     required=False,
     description=param_description(schedule_service_downtime.__doc__, "duration"),
     example=3600,
-    missing=0,
+    load_default=0,
 )
 
 INCLUDE_ALL_SERVICES = fields.Bool(
     description="If set, downtimes for all services associated with the given host will be scheduled.",
     required=False,
-    missing=False,
+    load_default=False,
     example=True,
 )
 
@@ -813,7 +813,7 @@ class CreateServiceDowntime(CreateServiceDowntimeBase):
         required=False,
         description=param_description(schedule_service_downtime.__doc__, "duration"),
         example=3600,
-        missing=0,
+        load_default=0,
     )
 
 
@@ -929,7 +929,10 @@ class InputPassword(BaseSchema):
         description="A title for the password",
     )
     comment = fields.String(
-        required=False, example="Kommentar", description="A comment for the password", missing=""
+        required=False,
+        example="Kommentar",
+        description="A comment for the password",
+        load_default="",
     )
 
     documentation_url = fields.String(
@@ -937,7 +940,7 @@ class InputPassword(BaseSchema):
         attribute="docu_url",
         example="localhost",
         description="An optional URL pointing to documentation or any other page. You can use either global URLs (beginning with http://), absolute local urls (beginning with /) or relative URLs (that are relative to check_mk/).",
-        missing="",
+        load_default="",
     )
 
     password = fields.String(
@@ -962,7 +965,7 @@ class InputPassword(BaseSchema):
         description="The list of members to share the password with",
         required=False,
         attribute="shared_with",
-        missing=list,
+        load_default=list,
     )
     customer = fields.customer_field(
         required=True,
@@ -1172,7 +1175,7 @@ class IdleOption(BaseSchema):
         description="The duration in seconds of the individual idle timeout if individual is "
         "selected as idle timeout option.",
         example=3600,
-        missing=3600,
+        load_default=3600,
     )
 
 
@@ -1188,7 +1191,7 @@ class UserContactOption(BaseSchema):
         description="In case none of your notification rules handles a certain event a notification "
         "will be sent to the specified email",
         required=False,
-        missing=False,
+        load_default=False,
         example=False,
     )
 
@@ -1233,11 +1236,11 @@ class CreateUser(BaseSchema):
         required=False,
         description="Authentication option for the user",
         example={"auth_type": "password", "password": "password"},
-        missing=dict,
+        load_default=dict,
     )
     disable_login = fields.Bool(
         required=False,
-        missing=False,
+        load_default=False,
         description="The user can be blocked from login but will remain part of the site. "
         "The disabling does not affect notification and alerts.",
         example=False,
@@ -1247,14 +1250,14 @@ class CreateUser(BaseSchema):
         UserContactOption,
         required=False,
         description="Contact settings for the user",
-        missing=lambda: {"email": "", "fallback_contact": False},
+        load_default=lambda: {"email": "", "fallback_contact": False},
         example={"email": "user@example.com"},
     )
     pager_address = fields.String(
         required=False,
         description="",
         example="",
-        missing="",
+        load_default="",
         attribute="pager",
     )
     idle_timeout = fields.Nested(
@@ -1271,7 +1274,7 @@ class CreateUser(BaseSchema):
             example="user",
         ),
         required=False,
-        missing=list,
+        load_default=list,
         description="The list of assigned roles to the user",
         example=["user"],
     )
@@ -1288,7 +1291,7 @@ class CreateUser(BaseSchema):
             example="all",
         ),
         required=False,
-        missing=list,
+        load_default=list,
         description="Assign the user to one or multiple contact groups. If no contact group is "
         "specified then no monitoring contact will be created for the user."
         "",
@@ -1297,7 +1300,7 @@ class CreateUser(BaseSchema):
     disable_notifications = fields.Nested(
         DisabledNotifications,
         required=False,
-        missing=dict,
+        load_default=dict,
         example={"disable": False},
         description="",
     )
@@ -1327,7 +1330,7 @@ class UpdateUser(BaseSchema):
         required=False,
         description="Authentication option for the user",
         example={"auth_type": "password", "password": "password"},
-        missing=dict,
+        load_default=dict,
     )
     enforce_password_change = fields.Bool(
         required=False,
@@ -1503,7 +1506,7 @@ class HostTag(BaseSchema):
         required=False,
         example="tag_id",
         description="An unique id for the tag",
-        missing=None,
+        load_default=None,
         attribute="id",
     )
     title = fields.String(
@@ -1520,7 +1523,7 @@ class HostTag(BaseSchema):
         description="The list of auxiliary tag ids. Built-in tags (ip-v4, ip-v6, snmp, tcp, ping) and custom defined tags are allowed.",
         example=["ip-v4, ip-v6"],
         required=False,
-        missing=list,
+        load_default=list,
     )
 
 
@@ -1546,7 +1549,7 @@ class InputHostTagGroup(BaseSchema):
         required=False,
         example="Kubernetes Pods",
         description="A help description for the tag group",
-        missing="",
+        load_default="",
     )
     tags = Tags(
         fields.Nested(HostTag),
@@ -1559,7 +1562,7 @@ class InputHostTagGroup(BaseSchema):
 class DeleteHostTagGroup(BaseSchema):
     repair = fields.Boolean(
         required=False,
-        missing=False,
+        load_default=False,
         example=False,
         description="The host tag group can still be in use. Setting repair to True gives permission to automatically remove the tag from the affected hosts.",
     )
@@ -1590,7 +1593,7 @@ class UpdateHostTagGroup(BaseSchema):
     )
     repair = fields.Boolean(
         required=False,
-        missing=False,
+        load_default=False,
         example=False,
         description="The host tag group can be in use by other hosts. Setting repair to True gives permission to automatically update the tag from the affected hosts.",
     )
@@ -1605,21 +1608,21 @@ class AcknowledgeHostProblemBase(BaseSchema):
     )
     sticky = fields.Boolean(
         required=False,
-        missing=True,
+        load_default=True,
         example=False,
         description=param_description(acknowledge_host_problem.__doc__, "sticky"),
     )
 
     persistent = fields.Boolean(
         required=False,
-        missing=False,
+        load_default=False,
         example=False,
         description=param_description(acknowledge_host_problem.__doc__, "persistent"),
     )
 
     notify = fields.Boolean(
         required=False,
-        missing=True,
+        load_default=True,
         example=False,
         description=param_description(acknowledge_host_problem.__doc__, "notify"),
     )
@@ -1676,21 +1679,21 @@ class AcknowledgeServiceProblemBase(BaseSchema):
 
     sticky = fields.Boolean(
         required=False,
-        missing=True,
+        load_default=True,
         example=False,
         description=param_description(acknowledge_service_problem.__doc__, "sticky"),
     )
 
     persistent = fields.Boolean(
         required=False,
-        missing=False,
+        load_default=False,
         example=False,
         description=param_description(acknowledge_service_problem.__doc__, "persistent"),
     )
 
     notify = fields.Boolean(
         required=False,
-        missing=True,
+        load_default=True,
         example=False,
         description=param_description(acknowledge_service_problem.__doc__, "notify"),
     )
@@ -1742,28 +1745,28 @@ class AcknowledgeServiceRelatedProblem(OneOfSchema):
 
 SERVICE_STICKY_FIELD = fields.Boolean(
     required=False,
-    missing=False,
+    load_default=False,
     example=False,
     description=param_description(acknowledge_service_problem.__doc__, "sticky"),
 )
 
 SERVICE_PERSISTENT_FIELD = fields.Boolean(
     required=False,
-    missing=False,
+    load_default=False,
     example=False,
     description=param_description(acknowledge_service_problem.__doc__, "persistent"),
 )
 
 SERVICE_NOTIFY_FIELD = fields.Boolean(
     required=False,
-    missing=False,
+    load_default=False,
     example=False,
     description=param_description(acknowledge_service_problem.__doc__, "notify"),
 )
 
 SERVICE_COMMENT_FIELD = fields.String(
     required=False,
-    missing="Acknowledged",
+    load_default="Acknowledged",
     example="This was expected.",
     description=param_description(acknowledge_service_problem.__doc__, "comment"),
 )
@@ -1859,7 +1862,7 @@ class ActivateChanges(BaseSchema):
     redirect = fields.Boolean(
         description="Redirect immediately to the 'Wait for completion' endpoint.",
         required=False,
-        missing=False,
+        load_default=False,
         example=False,
     )
     sites = fields.List(
@@ -1869,7 +1872,7 @@ class ActivateChanges(BaseSchema):
             " An empty list means all sites which have pending changes."
         ),
         required=False,
-        missing=list,
+        load_default=list,
         example=["production"],
     )
     force_foreign_changes = fields.Boolean(
@@ -1877,7 +1880,7 @@ class ActivateChanges(BaseSchema):
             watolib.activate_changes_start.__doc__, "force_foreign_changes"
         ),
         required=False,
-        missing=False,
+        load_default=False,
         example=False,
     )
 

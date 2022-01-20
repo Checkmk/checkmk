@@ -24,12 +24,12 @@ class ApiError(BaseSchema):
         required=True,
         example=404,
     )
-    message = fields.Str(
+    message = fields.String(
         description="Detailed information on what exactly went wrong.",
         required=True,
         example="The resource could not be found.",
     )
-    title = fields.Str(
+    title = fields.String(
         description="A summary of the problem.",
         required=True,
         example="Not found",
@@ -44,12 +44,12 @@ class ApiError(BaseSchema):
 
 
 class UserSchema(BaseSchema):
-    id = fields.Int(dump_only=True)
-    name = fields.Str(description="The user's name")
+    id = fields.Integer(dump_only=True)
+    name = fields.String(description="The user's name")
     created = fields.DateTime(
         dump_only=True,
         format="iso8601",
-        default=dt.datetime.utcnow,
+        dump_default=dt.datetime.utcnow,
         doc_default="The current datetime",
     )
 
@@ -66,7 +66,7 @@ class LinkSchema(BaseSchema):
         required=True,
         example="self",
     )
-    href = fields.Str(
+    href = fields.String(
         description=(
             "The (absolute) address of the related resource. Any characters that are "
             "invalid in URLs must be URL encoded."
@@ -119,7 +119,7 @@ class Parameter(Linkable):
         required=True,
         example="folder-move",
     )
-    number = fields.Int(
+    number = fields.Integer(
         description="the number of the parameter (starting from 0)", required=True, example=0
     )
     name = fields.String(
@@ -149,7 +149,7 @@ class Parameter(Linkable):
         ),
         required=False,
     )
-    maxLength = fields.Int(
+    maxLength = fields.Integer(
         description=(
             "for string action parameters, indicates the maximum allowable length. A "
             "value of 0 means unlimited."
@@ -186,7 +186,7 @@ class ObjectMemberBase(Linkable):
         allow_none=True,
     )
     x_ro_invalidReason = fields.String(
-        dump_to="x-ro-invalidReason",
+        data_key="x-ro-invalidReason",
         description=(
             "Provides the reason why a SET OF proposed values for properties or arguments "
             "is invalid."
@@ -341,7 +341,7 @@ class HostExtensions(BaseSchema):
     cluster_nodes = fields.List(
         fields.HostField(),
         allow_none=True,
-        missing=None,
+        load_default=None,
         description="In the case this is a cluster host, these are the cluster nodes.",
     )
 
@@ -478,7 +478,7 @@ class ConcreteHostTagGroup(DomainObject):
 class DomainObjectCollection(Linkable):
     id = fields.String(
         description="The name of this collection.",
-        missing="all",
+        load_default="all",
     )
     domainType: fields.Field = fields.String(
         description="The domain type of the objects in the collection."
@@ -517,14 +517,14 @@ class FolderCollection(DomainObjectCollection):
 
 
 class User(Linkable):
-    userName = fields.Str(description="A unique user name.")
-    friendlyName = fields.Str(
+    userName = fields.String(description="A unique user name.")
+    friendlyName = fields.String(
         required=True,
         description="The user's name in a form suitable to be rendered in a UI.",
     )
-    email = fields.Str(description="(optional) the user's email address, if known.")
+    email = fields.String(description="(optional) the user's email address, if known.")
     roles = fields.List(
-        fields.Str(),
+        fields.String(),
         description="List of unique role names that apply to this user (can be empty).",
     )
 
@@ -657,7 +657,7 @@ class VersionCapabilities(BaseSchema):
             "deletion of persisted objects through the DELETE Object resource C14.3," " see A3.5"
         ),
     )
-    domainModel = fields.Str(
+    domainModel = fields.String(
         required=False,
         description=(
             'different domain metadata representations. A value of "selectable" means '

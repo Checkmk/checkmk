@@ -206,7 +206,7 @@ class DiscoverServices(BaseSchema):
 """,
         enum=list(DISCOVERY_ACTION.keys()),
         example="refresh",
-        missing="fix_all",
+        load_default="fix_all",
     )
 
 

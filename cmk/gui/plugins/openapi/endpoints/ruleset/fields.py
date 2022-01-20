@@ -8,7 +8,6 @@ from __future__ import annotations
 import typing
 
 import marshmallow_oneofschema  # type: ignore[import]
-from marshmallow import fields as _fields
 from marshmallow import post_load, pre_dump, types, ValidationError
 
 from cmk.utils.type_defs import (
@@ -565,7 +564,7 @@ class RuleProperties(base.BaseSchema):
         description="Any comment string.",
         example="Created yesterday due to foo hosts behaving weird.",
     )
-    documentation_url = _fields.URL(
+    documentation_url = fields.URL(
         attr="docu_url",
         description="An URL (e.g. an internal Wiki entry) which explains this rule.",
         example="http://example.com/wiki/ConfiguringFooBarHosts",

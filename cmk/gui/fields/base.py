@@ -133,7 +133,33 @@ class ValueTypedDictSchema(BaseSchema):
         return result
 
 
-class MultiNested(fields.Field):
+class OpenAPIAttributes:
+    def __init__(self, *args, **kwargs):
+        metadata = kwargs.setdefault("metadata", {})
+        for key in [
+            "description",
+            "doc_default",
+            "enum",
+            "example",
+            "maximum",
+            "maxLength",
+            "minimum",
+            "minLength",
+            "pattern",
+            "format",
+            "uniqueItems",
+            "table",  # used for Livestatus ExprSchema, not an OpenAPI key
+            "context",  # used in MultiNested, not an OpenAPI key
+        ]:
+            if key in kwargs:
+                if key in metadata:
+                    raise RuntimeError(f"Key {key!r} defined in 'metadata' and 'kwargs'.")
+                metadata[key] = kwargs.pop(key)
+
+        super().__init__(*args, **kwargs)
+
+
+class MultiNested(OpenAPIAttributes, fields.Field):
     """
 
     >>> class User(BaseSchema):
@@ -172,8 +198,9 @@ class MultiNested(fields.Field):
         if mode != "anyOf":
             raise NotImplementedError("allOf is not yet implemented.")
 
+        metadata = kwargs.pop("metadata", {})
         context = getattr(self.parent, "context", {})
-        context.update(kwargs.get("context", {}))
+        context.update(metadata.get("context", {}))
 
         self.nested = []
         schema_inst: Schema
@@ -182,12 +209,14 @@ class MultiNested(fields.Field):
             schema_inst.context.update(context)
             self.nested.append(schema_inst)
 
+        metadata["anyOf"] = self.nested
+
         self.mode = mode
         self.only = only
         self.exclude = exclude
         self.many = many
         self.unknown = unknown
-        super().__init__(default=default, metadata={"anyOf": nested}, **kwargs)
+        super().__init__(default=default, metadata=metadata, **kwargs)
 
     def _serialize(
         self,

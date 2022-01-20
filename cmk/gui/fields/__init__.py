@@ -3,25 +3,17 @@
 # Copyright (C) 2021 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from marshmallow.fields import (
-    Bool,
-    Boolean,
-    Constant,
-    Date,
-    DateTime,
-    Decimal,
-    Dict,
-    Field,
-    Function,
-    Int,
-    IPv4,
-    IPv4Interface,
-    IPv6,
-    IPv6Interface,
-    Str,
-    Time,
-    UUID,
-)
+
+# import warnings
+# from marshmallow.warnings import RemovedInMarshmallow4Warning
+# NOTE
+# This warning is not permanently an error, so that no new warnings will be introduced by
+# unsuspecting developers.
+# This could be moved to the test setup, so it won't make trouble for our users.
+# warnings.simplefilter("error", RemovedInMarshmallow4Warning)
+
+
+from marshmallow.fields import Field, missing_
 
 from cmk.gui.fields.attributes import (
     HostAttributeManagementBoardField,
@@ -41,6 +33,7 @@ from cmk.gui.fields.definitions import (
     FolderField,
     GroupField,
     HostField,
+    Int,
     Integer,
     List,
     Nested,
@@ -50,9 +43,28 @@ from cmk.gui.fields.definitions import (
     PythonString,
     query_field,
     SiteField,
+    Str,
     String,
     Timestamp,
     X509ReqPEMField,
+)
+from cmk.gui.fields.primitives import (
+    Bool,
+    Boolean,
+    Constant,
+    Date,
+    DateTime,
+    Decimal,
+    Dict,
+    Email,
+    Function,
+    IPv4,
+    IPv4Interface,
+    IPv6,
+    IPv6Interface,
+    Time,
+    URL,
+    UUID,
 )
 from cmk.gui.fields.validators import (
     ValidateAnyOfValidators,
@@ -72,6 +84,7 @@ __all__ = [
     "DateTime",
     "Decimal",
     "Dict",
+    "Email",
     "ExprSchema",
     "Field",
     "FolderField",
@@ -90,6 +103,7 @@ __all__ = [
     "IPv6Interface",
     "List",
     "MetaData",
+    "missing_",
     "Nested",
     "NetworkScan",
     "NetworkScanResult",
@@ -103,6 +117,7 @@ __all__ = [
     "String",
     "Time",
     "Timestamp",
+    "URL",
     "UUID",
     "ValidateAnyOfValidators",
     "ValidateIPv4",

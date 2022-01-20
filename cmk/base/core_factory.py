@@ -10,12 +10,6 @@ from cmk.base.core_config import MonitoringCore
 
 def create_core(core_name: str) -> MonitoringCore:
     if core_name == "cmc":
-        if get_microcore_config_format() == "binary":
-            # pylint: disable=no-name-in-module,import-outside-toplevel
-            from cmk.base.cee.core_cmc import CMC
-
-            return CMC()
-
         if get_microcore_config_format() == "protobuf":
             # pylint: disable=no-name-in-module,import-outside-toplevel
             from cmk.base.cee.microcore_config import CmcPb

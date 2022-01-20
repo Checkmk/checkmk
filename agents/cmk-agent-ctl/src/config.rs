@@ -142,8 +142,8 @@ impl JSONLoader for RegisteredConnections {}
 
 #[derive(PartialEq, Debug)]
 pub struct Registry {
-    pub connections: RegisteredConnections,
-    pub path: PathBuf,
+    connections: RegisteredConnections,
+    path: PathBuf,
 }
 
 impl Registry {

@@ -14,13 +14,7 @@ from datetime import timedelta
 from typing import List
 
 from cmk.utils.plugin_registry import Registry
-from cmk.utils.version import (
-    __version__,
-    edition_title,
-    get_age_trial,
-    is_expired_trial,
-    is_free_edition,
-)
+from cmk.utils.version import __version__, edition, get_age_trial, is_expired_trial, is_free_edition
 
 from cmk.gui.i18n import _, _l
 from cmk.gui.type_defs import MegaMenu, TopicMenuItem, TopicMenuTopic
@@ -212,7 +206,7 @@ mega_menu_registry.register(
         icon="main_help",
         sort_index=18,
         topics=_help_menu_topics,
-        info_line=lambda: f"{edition_title()} {__version__}{free_edition_status()}",
+        info_line=lambda: f"{edition().title} {__version__}{free_edition_status()}",
     )
 )
 

@@ -52,40 +52,32 @@ def omd_version() -> str:
 
 
 @lru_cache
-def _edition() -> Edition:
+def edition() -> Edition:
     return Edition[omd_version().split(".")[-1].upper()]
 
 
 def is_enterprise_edition() -> bool:
-    return _edition() is Edition.CEE
+    return edition() is Edition.CEE
 
 
 def is_plus_edition() -> bool:
-    return _edition() is Edition.CPE
+    return edition() is Edition.CPE
 
 
 def is_raw_edition() -> bool:
-    return _edition() is Edition.CRE
+    return edition() is Edition.CRE
 
 
 def is_managed_edition() -> bool:
-    return _edition() is Edition.CME
+    return edition() is Edition.CME
 
 
 def is_free_edition() -> bool:
-    return _edition() is Edition.CFE
+    return edition() is Edition.CFE
 
 
 def is_cma() -> bool:
     return os.path.exists("/etc/cma/cma.conf")
-
-
-def edition_short() -> str:
-    return _edition().short
-
-
-def edition_title() -> str:
-    return _edition().title
 
 
 class TrialState(enum.Enum):
@@ -533,7 +525,7 @@ def get_general_version_infos() -> Dict[str, Any]:
         "time": time.time(),
         "os": _get_os_info(),
         "version": __version__,
-        "edition": edition_short(),
+        "edition": edition().short,
         "core": _current_monitoring_core(),
         "python_version": sys.version,
         "python_paths": sys.path,

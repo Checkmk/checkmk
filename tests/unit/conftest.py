@@ -8,7 +8,7 @@ import logging
 import shutil
 import socket
 from pathlib import Path
-from typing import Any, Mapping, NamedTuple
+from typing import Any, Mapping, NamedTuple, Iterable
 from unittest import mock
 
 import pytest
@@ -49,8 +49,8 @@ def fixture_umask():
         yield
 
 
-@pytest.fixture(name="edition_short", params=["cre", "cee", "cme", "cpe"])
-def fixture_edition_short(monkeypatch, request):
+@pytest.fixture(name="edition", params=["cre", "cee", "cme", "cpe"])
+def fixture_edition(monkeypatch, request) -> Iterable[cmk_version.Edition]:
     edition_short = request.param
     if edition_short == "cpe" and not is_plus_repo():
         pytest.skip("Needed files are not available")
@@ -61,9 +61,9 @@ def fixture_edition_short(monkeypatch, request):
     if edition_short == "cee" and not is_enterprise_repo():
         pytest.skip("Needed files are not available")
 
-    monkeypatch.setattr(cmk_version, "edition_short", lambda: edition_short)
-    monkeypatch.setattr(cmk_version, "_edition", lambda: cmk_version.Edition[edition_short.upper()])
-    yield edition_short
+    edition = cmk_version.Edition[edition_short.upper()]
+    monkeypatch.setattr(cmk_version, "edition", lambda: edition)
+    yield edition
 
 
 @pytest.fixture(autouse=True)
@@ -177,7 +177,7 @@ def _clear_caches():
     cmk.utils.caching.config_cache.clear()
     cmk.utils.caching.runtime_cache.clear()
 
-    cmk_version._edition.cache_clear()
+    cmk_version.edition.cache_clear()
 
 
 @pytest.fixture(autouse=True, scope="module")

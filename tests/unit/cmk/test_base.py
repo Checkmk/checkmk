@@ -15,7 +15,7 @@ def test_version():
 
 @pytest.fixture(scope="function")
 def cache_clear() -> None:
-    cmk_version._edition.cache_clear()
+    cmk_version.edition.cache_clear()
 
 
 _TEST_VERSIONS = ("1.4.0i1.cre", "1.4.0i1.cee", "2016.09.22.cee", "2016.09.22.cfe", "2.1.0p3.cpe")

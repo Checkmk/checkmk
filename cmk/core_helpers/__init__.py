@@ -58,7 +58,7 @@ else:
     class PushAgentFetcher:  # type: ignore[no-redef]
         def from_json(self, _serialized):
             raise NotImplementedError(
-                f"Push agent fetcher not available ({version.edition_short()})"
+                f"Push agent fetcher not available ({version.edition().short})"
             )
 
 

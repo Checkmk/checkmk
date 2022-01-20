@@ -40,7 +40,7 @@ else:
         def __init__(self, host_name, *a, **kw):
             raise NotImplementedError(
                 f"[{host_name}]: connection mode 'push-agent' not available on "
-                f"{version.edition_title()}"
+                f"{version.edition().title}"
             )
 
 

@@ -149,16 +149,6 @@ std::string TableLog::name() const { return "log"; }
 std::string TableLog::namePrefix() const { return "log_"; }
 
 void TableLog::answerQuery(Query *query) {
-    _log_cache->apply([this, query](const LogFiles &log_files) {
-        answerQueryInternal(query, log_files);
-    });
-}
-
-void TableLog::answerQueryInternal(Query *query, const LogFiles &log_files) {
-    if (log_files.begin() == log_files.end()) {
-        return;
-    }
-
     // Optimize time interval for the query. In log querys there should always
     // be a time range in form of one or two filter expressions over time. We
     // use that to limit the number of logfiles we need to scan and to find the
@@ -176,19 +166,30 @@ void TableLog::answerQueryInternal(Query *query, const LogFiles &log_files) {
         static_cast<unsigned>(query->valueSetLeastUpperBoundFor("class")
                                   .value_or(~std::bitset<32>())
                                   .to_ulong());
-    if (classmask == 0) {
-        return;
-    }
     auto max_lines_per_logfile = core()->maxLinesPerLogFile();
-    auto processLogEntry = [core = core(), query](const LogEntry &entry) {
-        LogRow r{entry, core};
-        return query->processDataset(Row{&r});
-    };
     LogFilter log_filter = {
         .max_lines_per_logfile = max_lines_per_logfile,
         .classmask = classmask,
         .since = since,
         .until = until,
+    };
+
+    if (log_filter.classmask == 0) {
+        return;
+    }
+    _log_cache->apply([this, query, &log_filter](const LogFiles &log_files) {
+        answerQueryInternal(query, log_filter, log_files);
+    });
+}
+
+void TableLog::answerQueryInternal(Query *query, const LogFilter &log_filter,
+                                   const LogFiles &log_files) {
+    if (log_files.begin() == log_files.end()) {
+        return;
+    }
+    auto processLogEntry = [core = core(), query](const LogEntry &entry) {
+        LogRow r{entry, core};
+        return query->processDataset(Row{&r});
     };
     processLogFiles(processLogEntry, log_files, log_filter);
 }

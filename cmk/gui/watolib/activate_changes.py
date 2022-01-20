@@ -807,7 +807,9 @@ class ActivateChangesManager(ActivateChanges):
             except KeyError:
                 pass
 
-            snapshot_manager = SnapshotManager.factory(work_dir, site_snapshot_settings)
+            snapshot_manager = SnapshotManager.factory(
+                work_dir, site_snapshot_settings, cmk_version.edition()
+            )
             snapshot_manager.generate_snapshots()
             logger.debug("Config sync snapshot creation took %.4f", time.time() - start)
 
@@ -919,9 +921,11 @@ class ActivateChangesManager(ActivateChanges):
 class SnapshotManager:
     @staticmethod
     def factory(
-        work_dir: str, site_snapshot_settings: Dict[SiteId, SnapshotSettings]
+        work_dir: str,
+        site_snapshot_settings: Dict[SiteId, SnapshotSettings],
+        edition: cmk_version.Edition,
     ) -> "SnapshotManager":
-        if cmk_version.is_managed_edition():
+        if edition is cmk_version.Edition.CME:
             import cmk.gui.cme.managed_snapshots as managed_snapshots  # pylint: disable=no-name-in-module
 
             return SnapshotManager(

@@ -61,9 +61,7 @@ def fixture_edition(monkeypatch, request) -> Iterable[cmk_version.Edition]:
     if edition_short == "cee" and not is_enterprise_repo():
         pytest.skip("Needed files are not available")
 
-    edition = cmk_version.Edition[edition_short.upper()]
-    monkeypatch.setattr(cmk_version, "edition", lambda: edition)
-    yield edition
+    yield cmk_version.Edition[edition_short.upper()]
 
 
 @pytest.fixture(autouse=True)

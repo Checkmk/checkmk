@@ -78,6 +78,7 @@ def _create_sync_snapshot(
     tmp_path,
     is_pre_17_site,
     remote_site,
+    edition: cmk_version.Edition,
 ):
     _create_test_sync_config(monkeypatch)
     return _generate_sync_snapshot(
@@ -86,6 +87,7 @@ def _create_sync_snapshot(
         tmp_path,
         is_pre_17_site=is_pre_17_site,
         remote_site=remote_site,
+        edition=edition,
     )
 
 
@@ -197,7 +199,13 @@ def _get_activation_manager(monkeypatch, remote_site="unit_remote_1"):
 
 
 def _generate_sync_snapshot(
-    activation_manager, snapshot_data_collector_class, tmp_path, is_pre_17_site, remote_site
+    activation_manager,
+    snapshot_data_collector_class,
+    tmp_path,
+    is_pre_17_site,
+    remote_site,
+    *,
+    edition: cmk_version.Edition,
 ):
     site_snapshot_settings = activation_manager._get_site_snapshot_settings(
         activation_manager._activation_id, activation_manager._sites
@@ -210,7 +218,7 @@ def _generate_sync_snapshot(
     # Now create the snapshot
     work_dir = tmp_path / "activation"
     snapshot_manager = activate_changes.SnapshotManager.factory(
-        str(work_dir), site_snapshot_settings
+        str(work_dir), site_snapshot_settings, edition
     )
     assert snapshot_manager._data_collector.__class__.__name__ == snapshot_data_collector_class
 
@@ -352,6 +360,7 @@ def test_generate_snapshot(
         tmp_path,
         is_pre_17_site=False,
         remote_site=remote_site,
+        edition=edition,
     )
 
     expected_paths = _get_expected_paths(
@@ -388,6 +397,7 @@ def test_generate_pre_17_site_snapshot(
         tmp_path,
         is_pre_17_site,
         remote_site,
+        edition=edition,
     )
 
     # And now check the resulting snapshot contents
@@ -532,6 +542,7 @@ def test_apply_pre_17_sync_snapshot(
         tmp_path,
         is_pre_17_site=is_pre_17_site,
         remote_site=remote_site,
+        edition=edition,
     )
 
     # Change unpack target directory from "unit test site" paths to a test specific path
@@ -692,6 +703,7 @@ def test_synchronize_site(
         tmp_path,
         is_pre_17_site=is_pre_17_site,
         remote_site="unit_remote_1",
+        edition=edition,
     )
 
     site_activation = activate_changes.ActivateChangesSite(
@@ -716,7 +728,6 @@ def test_synchronize_pre_17_site(monkeypatch, edition: cmk_version.Edition, tmp_
         pytest.skip("Seems faked site environment is not 100% correct")
 
     is_pre_17_site = True
-    monkeypatch.setattr(cmk_version, "edition", lambda: edition)
     monkeypatch.setattr(utils, "is_pre_17_remote_site", lambda s: is_pre_17_site)
 
     activation_manager = _get_activation_manager(monkeypatch)
@@ -727,6 +738,7 @@ def test_synchronize_pre_17_site(monkeypatch, edition: cmk_version.Edition, tmp_
         tmp_path,
         is_pre_17_site=is_pre_17_site,
         remote_site="unit_remote_1",
+        edition=edition,
     )
 
     site_activation = activate_changes.ActivateChangesSite(

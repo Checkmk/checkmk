@@ -10,7 +10,7 @@ const TLS_ID: &[u8] = b"16";
 const HEADER_VERSION: &[u8] = b"\x00\x00";
 
 pub fn pull(registry: &config::Registry, legacy_pull_marker: &std::path::Path) -> AnyhowResult<()> {
-    if is_legacy_pull(&registry, legacy_pull_marker) {
+    if is_legacy_pull(registry, legacy_pull_marker) {
         return dump::dump();
     }
 

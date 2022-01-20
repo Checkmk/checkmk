@@ -40,12 +40,12 @@ private:
     LogCache *_log_cache;
     void answerQueryInternal(Query *query, const LogFiles &log_files);
     static void processLogFiles(
-        const std::function<bool(const LogEntry &)> &processEntry,
+        const std::function<bool(const LogEntry &)> &processLogEntry,
         const LogFiles &log_files, size_t max_lines_per_logfile,
         unsigned classmask, std::chrono::system_clock::time_point since,
         std::chrono::system_clock::time_point until);
-    static bool answerQueryReverse(
-        const std::function<bool(const LogEntry &)> &processEntry,
+    static bool processLogEntries(
+        const std::function<bool(const LogEntry &)> &processLogEntry,
         const Logfile::map_type *entries,
         std::chrono::system_clock::time_point since,
         std::chrono::system_clock::time_point until);

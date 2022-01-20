@@ -179,17 +179,17 @@ void TableLog::answerQueryInternal(Query *query, const LogFiles &log_files) {
         return;
     }
     auto max_lines_per_logfile = core()->maxLinesPerLogFile();
-    auto processEntry = [core = core(), query](const LogEntry &entry) {
+    auto processLogEntry = [core = core(), query](const LogEntry &entry) {
         LogRow r{entry, core};
         return query->processDataset(Row{&r});
     };
-    processLogFiles(processEntry, log_files, max_lines_per_logfile, classmask,
-                    since, until);
+    processLogFiles(processLogEntry, log_files, max_lines_per_logfile,
+                    classmask, since, until);
 }
 
 // static
 void TableLog::processLogFiles(
-    const std::function<bool(const LogEntry &)> &processEntry,
+    const std::function<bool(const LogEntry &)> &processLogEntry,
     const LogFiles &log_files, size_t max_lines_per_logfile, unsigned classmask,
     std::chrono::system_clock::time_point since,
     std::chrono::system_clock::time_point until) {
@@ -210,7 +210,7 @@ void TableLog::processLogFiles(
     while (true) {
         const auto *entries =
             it->second->getEntriesFor(max_lines_per_logfile, classmask);
-        if (!answerQueryReverse(processEntry, entries, since, until)) {
+        if (!processLogEntries(processLogEntry, entries, since, until)) {
             break;  // end of time range found
         }
         if (it == log_files.begin()) {
@@ -221,8 +221,8 @@ void TableLog::processLogFiles(
 }
 
 // static
-bool TableLog::answerQueryReverse(
-    const std::function<bool(const LogEntry &)> &processEntry,
+bool TableLog::processLogEntries(
+    const std::function<bool(const LogEntry &)> &processLogEntry,
     const Logfile::map_type *entries,
     std::chrono::system_clock::time_point since,
     std::chrono::system_clock::time_point until) {
@@ -233,7 +233,7 @@ bool TableLog::answerQueryReverse(
         if (entry.time() < since) {
             return false;  // time limit exceeded
         }
-        if (!processEntry(entry)) {
+        if (!processLogEntry(entry)) {
             return false;
         }
     }

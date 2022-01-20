@@ -172,3 +172,37 @@ void LogCache::logLineHasBeenAdded(Logfile *logfile, unsigned logclasses) {
 }
 
 Logger *LogCache::logger() const { return _mc->loggerLivestatus(); }
+
+// static
+void LogCache::processLogFiles(
+    const std::function<bool(const LogEntry &)> &processLogEntry,
+    const LogFiles &log_files, const LogFilter &log_filter) {
+    if (log_files.begin() == log_files.end()) {
+        return;
+    }
+    auto it = log_files.end();  // it now points beyond last log file
+    --it;                       // switch to last logfile (we have at least one)
+
+    // Now find newest log where 'until' is contained. The problem
+    // here: For each logfile we only know the time of the *first* entry,
+    // not that of the last.
+    while (it != log_files.begin() && it->second->since() > log_filter.until) {
+        // while logfiles are too new go back in history
+        --it;
+    }
+    if (it->second->since() > log_filter.until) {
+        return;  // all logfiles are too new
+    }
+
+    while (true) {
+        const auto *entries = it->second->getEntriesFor(
+            log_filter.max_lines_per_logfile, log_filter.classmask);
+        if (!Logfile::processLogEntries(processLogEntry, entries, log_filter)) {
+            break;  // end of time range found
+        }
+        if (it == log_files.begin()) {
+            break;  // this was the oldest one
+        }
+        --it;
+    }
+}

@@ -11,6 +11,7 @@
 #include <chrono>
 #include <cstddef>
 #include <filesystem>
+#include <functional>
 #include <map>
 #include <memory>
 #include <mutex>
@@ -18,6 +19,7 @@
 #include <utility>
 #include <vector>
 
+class LogEntry;
 class Logfile;
 class Logger;
 class MonitoringCore;
@@ -35,6 +37,14 @@ public:
 
 private:
     const container &log_files_;
+};
+
+class LogFilter {
+public:
+    size_t max_lines_per_logfile;
+    unsigned classmask;
+    std::chrono::system_clock::time_point since;
+    std::chrono::system_clock::time_point until;
 };
 
 // TODO(sp) Split this class into 2 parts: One is really only a cache for the
@@ -70,6 +80,10 @@ public:
 
     // Used by Logfile::loadRange()
     void logLineHasBeenAdded(Logfile *logfile, unsigned logclasses);
+
+    static void processLogFiles(
+        const std::function<bool(const LogEntry &)> &processLogEntry,
+        const LogFiles &log_files, const LogFilter &log_filter);
 
 private:
     MonitoringCore *const _mc;

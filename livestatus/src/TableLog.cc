@@ -6,17 +6,14 @@
 #include "TableLog.h"
 
 #include <bitset>
+#include <chrono>
 #include <cstdint>
-#include <map>
 #include <optional>
 #include <stdexcept>
-#include <utility>
 
 #include "Column.h"
 #include "IntColumn.h"
-#include "LogCache.h"
 #include "LogEntry.h"
-#include "Logfile.h"
 #include "MonitoringCore.h"
 #include "Query.h"
 #include "Row.h"
@@ -159,7 +156,7 @@ void TableLog::answerQuery(Query *query) {
     };
     _log_cache->apply(
         [&processLogEntry, &log_filter](const LogFiles &log_files) {
-            processLogFiles(processLogEntry, log_files, log_filter);
+            LogCache::processLogFiles(processLogEntry, log_files, log_filter);
         });
 }
 
@@ -189,59 +186,6 @@ LogFilter TableLog::constructFilter(Query *query,
         .since = since,
         .until = until,
     };
-}
-
-// static
-void TableLog::processLogFiles(
-    const std::function<bool(const LogEntry &)> &processLogEntry,
-    const LogFiles &log_files, const LogFilter &log_filter) {
-    if (log_files.begin() == log_files.end()) {
-        return;
-    }
-    auto it = log_files.end();  // it now points beyond last log file
-    --it;                       // switch to last logfile (we have at least one)
-
-    // Now find newest log where 'until' is contained. The problem
-    // here: For each logfile we only know the time of the *first* entry,
-    // not that of the last.
-    while (it != log_files.begin() && it->second->since() > log_filter.until) {
-        // while logfiles are too new go back in history
-        --it;
-    }
-    if (it->second->since() > log_filter.until) {
-        return;  // all logfiles are too new
-    }
-
-    while (true) {
-        const auto *entries = it->second->getEntriesFor(
-            log_filter.max_lines_per_logfile, log_filter.classmask);
-        if (!processLogEntries(processLogEntry, entries, log_filter)) {
-            break;  // end of time range found
-        }
-        if (it == log_files.begin()) {
-            break;  // this was the oldest one
-        }
-        --it;
-    }
-}
-
-// static
-bool TableLog::processLogEntries(
-    const std::function<bool(const LogEntry &)> &processLogEntry,
-    const Logfile::map_type *entries, const LogFilter &log_filter) {
-    auto it =
-        entries->upper_bound(Logfile::makeKey(log_filter.until, 999999999));
-    while (it != entries->begin()) {
-        --it;
-        const auto &entry = *it->second;
-        if (entry.time() < log_filter.since) {
-            return false;  // time limit exceeded
-        }
-        if (!processLogEntry(entry)) {
-            return false;
-        }
-    }
-    return true;
 }
 
 namespace {

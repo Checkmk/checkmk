@@ -8,30 +8,17 @@
 
 #include "config.h"  // IWYU pragma: keep
 
-#include <chrono>
 #include <cstddef>
-#include <functional>
 #include <memory>
 #include <string>
 
-#include "Logfile.h"
+#include "LogCache.h"
 #include "Table.h"
 #include "contact_fwd.h"
 class Column;
-class LogCache;
-class LogEntry;
-class LogFiles;
 class MonitoringCore;
 class Query;
 class Row;
-
-class LogFilter {
-public:
-    size_t max_lines_per_logfile;
-    unsigned classmask;
-    std::chrono::system_clock::time_point since;
-    std::chrono::system_clock::time_point until;
-};
 
 class TableLog : public Table {
 public:
@@ -49,12 +36,6 @@ private:
 
     static LogFilter constructFilter(Query *query,
                                      size_t max_lines_per_logfile);
-    static void processLogFiles(
-        const std::function<bool(const LogEntry &)> &processLogEntry,
-        const LogFiles &log_files, const LogFilter &log_filter);
-    static bool processLogEntries(
-        const std::function<bool(const LogEntry &)> &processLogEntry,
-        const Logfile::map_type *entries, const LogFilter &log_filter);
 };
 
 #endif  // TableLog_h

@@ -39,14 +39,6 @@ def parse_arguments(argv: Optional[Sequence[str]]) -> Args:
     )
 
     parser.add_argument(
-        "share_names",
-        type=str,
-        nargs="*",
-        metavar="SHARE1 SHARE2 ...",
-        help="Share names from which files are collected",
-    )
-
-    parser.add_argument(
         "--username",
         type=str,
         metavar="USERNAME",
@@ -79,32 +71,64 @@ def parse_arguments(argv: Optional[Sequence[str]]) -> Args:
     return parser.parse_args(argv)
 
 
+def get_child_dirs(
+    conn: SMBConnection, share_name: str, parent_dir: str
+) -> Generator[str, None, None]:
+    yield parent_dir
+
+    for shared_file in conn.listPath(share_name, parent_dir):
+        if shared_file.filename in (".", ".."):
+            continue
+
+        if shared_file.isDirectory:
+            relative_path = f"{parent_dir}{shared_file.filename}"
+            yield from get_child_dirs(conn, share_name, f"{relative_path}\\")
+
+
 def iter_shared_files(
-    conn: SMBConnection, share_name: str, pattern: str, subdir: str = ""
+    conn: SMBConnection, hostname: str, share_name: str, pattern: List[str], subdir: str = ""
 ) -> Generator[File, None, None]:
+
+    if pattern[0] == "**":
+        child_dirs = get_child_dirs(conn, share_name, subdir)
+        for child_dir in child_dirs:
+            yield from iter_shared_files(conn, hostname, share_name, pattern[1:], subdir=child_dir)
+        return
+
     for shared_file in conn.listPath(share_name, subdir):
         if shared_file.filename in (".", ".."):
             continue
 
         relative_path = f"{subdir}{shared_file.filename}"
-        absolute_path = f"\\{share_name}\\{relative_path}"
+        absolute_path = f"\\\\{hostname}\\{share_name}\\{relative_path}"
 
-        if shared_file.isDirectory and pattern.startswith(absolute_path):
-            yield from iter_shared_files(conn, share_name, pattern, subdir=f"{relative_path}\\")
-            return
+        if not fnmatch(shared_file.filename, pattern[0]):
+            continue
 
-        if not shared_file.isDirectory and fnmatch(absolute_path, pattern):
+        if shared_file.isDirectory and len(pattern) > 1:
+            yield from iter_shared_files(
+                conn, hostname, share_name, pattern[1:], subdir=f"{relative_path}\\"
+            )
+            continue
+
+        if not shared_file.isDirectory and len(pattern) == 1:
             yield File(absolute_path, shared_file)
 
 
 def get_all_shared_files(
-    conn: SMBConnection, share_names: List[str], patterns: List[str]
+    conn: SMBConnection, hostname: str, patterns: List[str]
 ) -> Generator[Tuple[str, List[File]], None, None]:
-    for pattern in patterns:
-        shared_files = [
-            file for share in share_names for file in iter_shared_files(conn, share, pattern)
-        ]
-        yield pattern, shared_files
+    share_names = [s.name for s in conn.listShares()]
+    for pattern_string in patterns:
+        pattern = pattern_string.replace("\\**\\**\\", "\\**\\").strip("\\").split("\\")
+        if pattern[0] != hostname:
+            raise RuntimeError(f"Pattern {pattern_string} doesn't match {hostname} hostname")
+
+        share_name = pattern[1]
+        if share_name not in share_names:
+            raise RuntimeError(f"Share {share_name} doesn't exist on host {hostname}")
+
+        yield pattern_string, list(iter_shared_files(conn, hostname, share_name, pattern[2:]))
 
 
 def write_section(all_files: Generator[Tuple[str, List[File]], None, None]) -> None:
@@ -127,7 +151,9 @@ def write_section(all_files: Generator[Tuple[str, List[File]], None, None]) -> N
 
 
 @contextmanager
-def connect(username, password, remote_name, ip_address, port):
+def connect(
+    username: str, password: str, remote_name: str, ip_address: str, port: int
+) -> Generator[SMBConnection, None, None]:
     conn = SMBConnection(username, password, socket.gethostname(), remote_name)
 
     try:
@@ -148,7 +174,7 @@ def connect(username, password, remote_name, ip_address, port):
 
 def smb_share_agent(args: Args) -> None:
     with connect(args.username, args.password, args.hostname, args.ip_address, args.port) as conn:
-        all_files = get_all_shared_files(conn, args.share_names, args.patterns)
+        all_files = get_all_shared_files(conn, args.hostname, args.patterns)
         try:
             write_section(all_files)
         except OperationFailure as err:

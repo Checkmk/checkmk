@@ -5550,7 +5550,6 @@ def _valuespec_special_agents_smb_share():
                     ],
                 ),
             ),
-            ("share_names", ListOfStrings(title="Share names", allow_empty=False)),
             (
                 "patterns",
                 ListOfStrings(
@@ -5558,11 +5557,12 @@ def _valuespec_special_agents_smb_share():
                     size=80,
                     help=_(
                         "<p>Here you can specify a list of filename patterns to be sent by the "
-                        "agent in the section <tt>fileinfo</tt>. Use patterns like "
-                        "<tt>\\Share folder\\foo\\*.log</tt> here. Wildcards are only allowed in the"
-                        "filename part, not in the directory path. Per default each found file "
-                        "will be monitored for size and age. By building groups you can alternatively "
-                        "monitor a collection of files as an entity and monitor the count, total size, the largest, "
+                        "agent in the section <tt>fileinfo</tt>. UNC paths with globbing patterns "
+                        "are used here, e.g. <tt>\\\\hostname\\share name\\**\\foo\\*.log</tt>. "
+                        "Wildcards are not allowed in host or share names. "
+                        "Per default each found file will be monitored for size and age. "
+                        "By building groups you can alternatively monitor a collection "
+                        "of files as an entity and monitor the count, total size, the largest, "
                         "smallest oldest or newest file. Note: if you specify more than one matching rule, then "
                         "<b>all</b> matching rules will be used for defining pattern - not just the "
                         " first one.</p>"
@@ -5572,7 +5572,7 @@ def _valuespec_special_agents_smb_share():
             ),
         ],
         optional_keys=["hostname", "ip_address", "authentication"],
-        title=_("SMB Share"),
+        title=_("SMB Share fileinfo"),
     )
 
 

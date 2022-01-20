@@ -135,9 +135,6 @@ REQUIRED_ARGUMENTS: Dict[str, List[str]] = {
     "agent_smb_share": [
         "REMOTE_NAME",
         "ADDRESS",
-        "USERNAME",
-        "PASSWORD",
-        "Shared folder",
     ],
     "agent_gcp": [],
 }

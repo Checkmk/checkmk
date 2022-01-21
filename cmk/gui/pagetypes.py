@@ -90,7 +90,7 @@ from cmk.gui.type_defs import (
 )
 from cmk.gui.main_menu import mega_menu_registry
 
-from cmk.gui.utils import unique_default_name_suggestion
+from cmk.gui.utils import unique_default_name_suggestion, validate_id
 from cmk.gui.utils.urls import makeuri, makeuri_contextless, make_confirm_link
 
 SubPagesSpec = List[Tuple[str, str, str]]
@@ -1239,20 +1239,13 @@ class Overridable(Base):
 
         parameters, keys_by_topic = cls._collect_parameters(mode)
 
-        def _validate_clone(page_dict, varprefix):
-            page_name = page_dict["name"]
-            if cls.find_foreign_page(owner_id, page_name) and mode == "clone":
-                raise MKUserError(
-                    varprefix + "_p_name",
-                    _("You already have an element with the ID <b>%s</b>") % page_dict["name"])
-
         vs = Dictionary(
             title=_("General Properties"),
             render='form',
             optional_keys=False,
             elements=parameters,
             headers=keys_by_topic,
-            validate=_validate_clone,
+            validate=validate_id(mode, cls.permitted_instances_sorted()),
         )
 
         varprefix = ""

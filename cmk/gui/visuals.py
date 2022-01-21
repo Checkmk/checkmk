@@ -75,7 +75,7 @@ from cmk.gui.type_defs import (
     VisualName,
     VisualTypeName,
 )
-from cmk.gui.utils import unique_default_name_suggestion
+from cmk.gui.utils import unique_default_name_suggestion, validate_id
 from cmk.gui.utils.flashed_messages import flash, get_flashed_messages
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.urls import (
@@ -838,7 +838,15 @@ def render_context_specs(
         spec.render_input(ident, value)
 
 
-def _vs_general(single_infos, default_id, visual_type, visibility_elements):
+def _vs_general(
+    single_infos,
+    default_id,
+    visual_type,
+    visibility_elements,
+    all_visuals: Dict[Tuple[UserId, VisualName], Visual],
+    mode: str,
+    what: str,
+):
     return Dictionary(
         title=_("General Properties"),
         render='form',
@@ -920,6 +928,7 @@ def _vs_general(single_infos, default_id, visual_type, visibility_elements):
                 elements=visibility_elements,
             )),
         ],
+        validate=validate_id(mode, available(what, all_visuals)),
     )
 
 
@@ -1041,7 +1050,13 @@ def page_edit_visual(
         unique_default_name_suggestion(
             what[:-1],
             (visual["name"] for visual in all_visuals.values()),
-        ), visual_type, visibility_elements)
+        ),
+        visual_type,
+        visibility_elements,
+        all_visuals,
+        mode,
+        what,
+    )
     context_specs = get_context_specs(visual, info_handler)
 
     # handle case of save or try or press on search button

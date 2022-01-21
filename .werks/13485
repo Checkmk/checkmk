@@ -1,0 +1,13 @@
+Title: docker_container_health: crash upon multiline health test script
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1642756366
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.0.0p19
+
+In case of a multiline container health test the service now reports the
+first line in the summary, and the full health test in the service details.

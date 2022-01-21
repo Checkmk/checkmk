@@ -5,18 +5,15 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import pytest  # type: ignore[import]
+
 from testlib import on_time  # type: ignore[import]
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import (
-    Service,
-    State as state,
-    Result,
-    IgnoreResults,
-    Metric,
-)
 import cmk.base.plugins.agent_based.docker_container_status as docker
-from cmk.base.plugins.agent_based.utils.legacy_docker import DeprecatedDict
+from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResults, Metric, Result, Service
+from cmk.base.plugins.agent_based.agent_based_api.v1 import State as state
 from cmk.base.plugins.agent_based.utils import uptime
+from cmk.base.plugins.agent_based.utils.legacy_docker import DeprecatedDict
+
 NOW_SIMULATED = 1559728800, "UTC"
 STRING_TABLE_WITH_VERSION = [
     [
@@ -170,25 +167,56 @@ def test_discover_docker_container_status_health():
     )
 
 
-@pytest.mark.parametrize("section, expected", [
-    (PARSED, [
-        Result(state=state.CRIT,
-               summary='Health status: Unhealthy',
-               details='Health status: Unhealthy'),
-        Result(state=state.OK,
-               summary='Last health report: mysqld is alive',
-               details='Last health report: mysqld is alive'),
-        Result(state=state.CRIT, summary='Failing streak: 0'),
-        Result(state=state.OK,
-               summary='Health test: CMD-SHELL /healthcheck.sh',
-               details='Health test: CMD-SHELL /healthcheck.sh')
-    ]),
-    (PARSED_NOT_RUNNING, [
-        IgnoreResults("Container is not running"),
-    ]),
-])
+@pytest.mark.parametrize(
+    "section, expected",
+    [
+        (
+            PARSED,
+            [
+                Result(
+                    state=state.CRIT,
+                    summary="Health status: Unhealthy",
+                ),
+                Result(
+                    state=state.OK,
+                    summary="Last health report: mysqld is alive",
+                ),
+                Result(state=state.CRIT, summary="Failing streak: 0"),
+                Result(
+                    state=state.OK,
+                    summary="Health test: CMD-SHELL /healthcheck.sh",
+                ),
+            ],
+        ),
+        (
+            PARSED_NOT_RUNNING,
+            [
+                IgnoreResults("Container is not running"),
+            ],
+        ),
+        # the health check is a script here:
+        (
+            {
+                "Health": {
+                    "Status": "healthy"
+                },
+                "Healthcheck": {
+                    "Test": ["CMD-SHELL", "#!/bin/bash\n\nexit $(my_healthcheck)\n"]
+                },
+                "Status": "running",
+            },
+            [
+                Result(state=state.OK, summary="Health status: Healthy"),
+                Result(state=state.WARN, summary="Last health report: no output"),
+                Result(
+                    state=state.OK,
+                    summary="Health test: CMD-SHELL",
+                    details="Health test: CMD-SHELL #!/bin/bash\n\nexit $(my_healthcheck)\n",
+                ),
+            ],
+        ),
+    ],
+)
 def test_check_docker_container_status_health(section, expected):
-    import pprint as pp
-    pp.pprint(section)
     yielded_results = list(docker.check_docker_container_status_health(section))
-    assert repr(yielded_results) == repr(expected)
+    assert yielded_results == expected

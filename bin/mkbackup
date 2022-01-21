@@ -219,12 +219,13 @@ def _open_lock_file(lock_file_path: Path) -> IO[bytes]:
     # the locking.
     if not lock_file_path.exists():
         try:
-            backup_lock = tempfile.NamedTemporaryFile(  # pylint:disable=consider-using-with
+
+            with tempfile.NamedTemporaryFile(
                 mode="ab+", dir=str(lock_file_path.parent), delete=False
-            )
-            set_permissions(backup_lock.name, -1, grp.getgrnam("omd").gr_gid, 0o660)
-            os.rename(backup_lock.name, lock_file_path)
-            return backup_lock
+            ) as backup_lock:
+                set_permissions(backup_lock.name, -1, grp.getgrnam("omd").gr_gid, 0o660)
+                os.rename(backup_lock.name, lock_file_path)
+                return backup_lock
         except (IOError, OSError) as e:
             raise MKGeneralException('Failed to open lock file "%s": %s' % (lock_file_path, e))
     return lock_file_path.open("ab")
@@ -747,55 +748,58 @@ def do_site_backup(opts, site=None, try_stop=True):
     makedirs(os.path.dirname(backup_path), group="omd", mode=0o775)
 
     verbose("Command: %s" % " ".join(cmd))
-    p = subprocess.Popen(  # pylint:disable=consider-using-with
-        cmd,
-        close_fds=True,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        stdin=open(os.devnull),  # pylint:disable=consider-using-with
-    )
-    assert p.stdout is not None
-    assert p.stderr is not None
+    with open(os.devnull) as devnull:
+        with subprocess.Popen(
+            cmd,
+            close_fds=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            stdin=devnull,
+        ) as p:
+            assert p.stdout is not None
+            assert p.stderr is not None
 
-    with open(backup_path, "wb") as backup_file:
-        s = BackupStream(
-            stream=p.stdout, is_alive=lambda: p.poll() is None, key_ident=g_job_config["encrypt"]
-        )
-        for chunk in s.process():
-            backup_file.write(chunk)
-
-    if p.returncode != 0:
-        err = p.stderr.read().decode()
-        if not compress_archives() and "Invalid option '--no-compression'" in err:
-            err = (
-                "The Check_MK version of this site does not support uncompressed backups. "
-                "you can either re-enable the compression or update your site to version "
-                "1.2.8p5 or later."
-            )
-
-        elif "The site needs to be stopped" in err:
-            if try_stop:
-                log(
-                    "The Check_MK version of this site does not support online backups. The site "
-                    "seems to be at least partially running. Stopping the site during backup and "
-                    "starting it again after completion."
+            with open(backup_path, "wb") as backup_file:
+                s = BackupStream(
+                    stream=p.stdout,
+                    is_alive=lambda: p.poll() is None,
+                    key_ident=g_job_config["encrypt"],
                 )
+                for chunk in s.process():
+                    backup_file.write(chunk)
 
-                log("Stopping site")
-                stop_site(site)
-                try:
-                    log("Start offline site backup")
-                    return do_site_backup(opts, site, try_stop=False)
-                finally:
-                    log("Starting site again")
-                    start_site(site)
+            if p.returncode != 0:
+                err = p.stderr.read().decode()
+                if not compress_archives() and "Invalid option '--no-compression'" in err:
+                    err = (
+                        "The Check_MK version of this site does not support uncompressed backups. "
+                        "you can either re-enable the compression or update your site to version "
+                        "1.2.8p5 or later."
+                    )
 
-            else:
-                raise MKGeneralException(
-                    "Failed to backup site that only supports " "offline backup."
-                )
+                elif "The site needs to be stopped" in err:
+                    if try_stop:
+                        log(
+                            "The Check_MK version of this site does not support online backups. The site "
+                            "seems to be at least partially running. Stopping the site during backup and "
+                            "starting it again after completion."
+                        )
 
-        raise MKGeneralException("Site backup failed: %s" % err)
+                        log("Stopping site")
+                        stop_site(site)
+                        try:
+                            log("Start offline site backup")
+                            return do_site_backup(opts, site, try_stop=False)
+                        finally:
+                            log("Starting site again")
+                            start_site(site)
+
+                    else:
+                        raise MKGeneralException(
+                            "Failed to backup site that only supports " "offline backup."
+                        )
+
+                raise MKGeneralException("Site backup failed: %s" % err)
 
 
 def start_site(site: str) -> None:
@@ -822,18 +826,18 @@ def start_stop_site(site: str, command: str, expected_return_code: int) -> None:
 def omd_command(cmd: List[str]) -> None:
     verbose("Command: %s" % " ".join(cmd))
     with open(os.devnull, "r") as f:
-        p = subprocess.Popen(  # pylint:disable=consider-using-with
+        p = subprocess.run(
             cmd,
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
             stdin=f,
             close_fds=True,
             encoding="utf-8",
+            check=False,
         )
-        stdout, _stderr = p.communicate()
-    verbose(stdout)
+    verbose(p.stdout)
     if p.returncode != 0:
-        raise MKGeneralException("Failed to run <tt>%s</tt>: %s" % (" ".join(cmd), stdout))
+        raise MKGeneralException("Failed to run <tt>%s</tt>: %s" % (" ".join(cmd), p.stdout))
 
 
 # Using RSA directly to encrypt the whole backup is a bad idea. So we use the RSA
@@ -933,7 +937,7 @@ class MKBackupStream:
 
         variables: Dict[str, Dict[str, Any]] = {"keys": {}}
         if os.path.exists(path):
-            exec(open(path).read(), variables, variables)  # pylint:disable=consider-using-with
+            exec(Path(path).read_text(), variables, variables)
         # TODO: Verify value of keys.
         return variables["keys"]
 
@@ -1490,7 +1494,7 @@ g_state = None
 def load_state():
     global g_state
     if g_state is None:
-        g_state = json.load(open(state_path()))  # pylint:disable=consider-using-with
+        g_state = json.loads(Path(state_path()).read_text())
 
     return g_state
 
@@ -1658,40 +1662,38 @@ def do_site_restore(opts, info, site=None):
 
     backup_path = site_backup_archive_path(site)
 
-    p = subprocess.Popen(  # pylint:disable=consider-using-with
-        cmd, close_fds=True, stderr=subprocess.PIPE, stdin=subprocess.PIPE
-    )
-    assert p.stdin is not None
-    assert p.stderr is not None
+    with subprocess.Popen(cmd, close_fds=True, stderr=subprocess.PIPE, stdin=subprocess.PIPE) as p:
+        assert p.stdin is not None
+        assert p.stderr is not None
 
-    with open(backup_path, "rb") as backup_file:
-        s = RestoreStream(
-            stream=backup_file, is_alive=lambda: False, key_ident=g_job_config["encrypt"]
-        )
-        try:
-            archive_started = False
-            for chunk in s.process():
-                # Hack for all handling of site backups created with Checkmk
-                # versions < 2016-03-16 and till 1.2.8p6:
-                # When a site was just stopped, the next "omd backup" unmounts the sites
-                # tmpfs. In this case the output "Unmounting temporary filesystem...OK" was
-                # produced which broke the restore of the site on the local system. Skip to
-                # the beginning of the archive
-                if not archive_started:
-                    if chunk.startswith(b"Unmounting temporary filesystem"):
-                        chunk = chunk[37:]
-                    archive_started = True
+        with open(backup_path, "rb") as backup_file:
+            s = RestoreStream(
+                stream=backup_file, is_alive=lambda: False, key_ident=g_job_config["encrypt"]
+            )
+            try:
+                archive_started = False
+                for chunk in s.process():
+                    # Hack for all handling of site backups created with Checkmk
+                    # versions < 2016-03-16 and till 1.2.8p6:
+                    # When a site was just stopped, the next "omd backup" unmounts the sites
+                    # tmpfs. In this case the output "Unmounting temporary filesystem...OK" was
+                    # produced which broke the restore of the site on the local system. Skip to
+                    # the beginning of the archive
+                    if not archive_started:
+                        if chunk.startswith(b"Unmounting temporary filesystem"):
+                            chunk = chunk[37:]
+                        archive_started = True
 
-                p.stdin.write(chunk)
-        except IOError as e:
-            log("Error while sending data to restore process: %s" % e)
+                    p.stdin.write(chunk)
+            except IOError as e:
+                log("Error while sending data to restore process: %s" % e)
 
-        # s.process() ends when backup_file is processed. Then end the restore process.
-        p.stdin.close()
+            # s.process() ends when backup_file is processed. Then end the restore process.
+            p.stdin.close()
 
-    if p.wait() != 0:
-        log(ensure_str(p.stderr.read()))  # pylint: disable= six-ensure-str-bin-call
-        raise MKGeneralException("Site restore failed")
+        if p.wait() != 0:
+            log(ensure_str(p.stderr.read()))  # pylint: disable= six-ensure-str-bin-call
+            raise MKGeneralException("Site restore failed")
 
     if not is_root():
         site_arg = [site] if is_root() else []

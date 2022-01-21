@@ -10,8 +10,6 @@ import pytest
 
 from tests.testlib import SpecialAgent
 
-from cmk.base.config import SpecialAgentConfiguration
-
 pytestmark = pytest.mark.checks
 
 
@@ -23,7 +21,7 @@ pytestmark = pytest.mark.checks
                 "project": "test",
                 "credentials": "definitely some json",
             },
-            SpecialAgentConfiguration(args=["--project", "test"], stdin="definitely some json"),
+            ["--project", "test", "--credentials", "definitely some json"],
             id="minimal case",
         ),
     ],

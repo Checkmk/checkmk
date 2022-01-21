@@ -1,15 +1,13 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2021 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-import argparse
 import base64
 import json
-import sys
 import time
 from dataclasses import dataclass
-from typing import Any, Dict, Iterable, List
+from typing import Any, Dict, Iterable, List, Optional, Sequence
 
 from google.cloud import monitoring_v3
 from google.cloud.monitoring_v3 import Aggregation
@@ -20,9 +18,8 @@ from google.cloud.monitoring_v3.types import TimeSeries
 Aligner = Aggregation.Aligner
 Reducer = Aggregation.Reducer
 
-import cmk.utils.password_store
-
-from cmk.special_agents.utils.agent_common import SectionWriter
+from cmk.special_agents.utils.agent_common import SectionWriter, special_agent_main
+from cmk.special_agents.utils.argument_parsing import Args, create_default_argument_parser
 
 
 @dataclass()
@@ -99,33 +96,21 @@ def run(client: Client, s: GCPService) -> None:
             w.append(Result.serialize(result))
 
 
-def parse_arguments(argv):
-    parser = argparse.ArgumentParser(
-        description=__doc__, formatter_class=argparse.RawTextHelpFormatter
-    )
-    parser.add_argument("--project", type=str)
-    parser.add_argument("--debug", action="store_true")
+def parse_arguments(argv: Optional[Sequence[str]]) -> Args:
+    parser = create_default_argument_parser(description=__doc__)
+    parser.add_argument("--project", type=str, help="Global ID of Project")
+    parser.add_argument("--credentials", type=str, help="JSON credentials for service account")
     return parser.parse_args(argv)
 
 
-def main(sys_argv=None) -> int:
-    if sys_argv is None:
-        cmk.utils.password_store.replace_passwords()
-        sys_argv = sys.argv[1:]
-
-    args = parse_arguments(sys_argv)
-    # secrets can be passed in as a command line argument for testing,
-    # BUT the standard method is to pass them via stdin so that they
-    # are not accessible from outside, e.g. visible on the ps output
-    stdin_args = json.loads(sys.stdin.read() or "{}")
-    try:
-        client = Client.from_service_account_info(stdin_args, args.project)
-    except Exception:
-        sys.stderr.write("secret access key is not set\n")
-        return 1
-
+def agent_gcp_main(args: Args) -> None:
+    client = Client.from_service_account_info(json.loads(args.credentials), args.project)
     run(client, GCS)
-    return 0
+
+
+def main() -> None:
+    """Main entry point to be used"""
+    special_agent_main(parse_arguments, agent_gcp_main)
 
 
 GCS = GCPService(

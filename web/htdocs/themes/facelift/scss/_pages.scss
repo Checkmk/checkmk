@@ -387,6 +387,10 @@ table.data {
         padding: 2px 8px; /* spacing in every row */
         text-overflow: $td-text-overflow;
       }
+
+      ul {
+        padding-left: $spacing;
+      }
     }
 
     td.checkbox {

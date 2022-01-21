@@ -344,9 +344,10 @@ class ABCNotificationsMode(ABCEventsMode):
                 if not infos:
                     html.i(_("(no one)"))
                 else:
+                    html.open_ul()
                     for line in infos:
-                        html.write_text("&bullet; %s" % line)
-                        html.br()
+                        html.li(line)
+                    html.close_ul()
 
                 table.cell(_("Conditions"), css="rule_conditions")
                 num_conditions = len([key for key in rule if key.startswith("match_")])

@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import argparse
+import base64
 import json
 import sys
 import time
@@ -24,7 +25,7 @@ import cmk.utils.password_store
 from cmk.special_agents.utils.agent_common import SectionWriter
 
 
-@dataclass(frozen=True)
+@dataclass()
 class Client:
     client: monitoring_v3.MetricServiceClient
     project: str
@@ -51,7 +52,23 @@ class GCPService:
     name: str
 
 
-def time_series(client: Client, service: GCPService) -> Iterable[TimeSeries]:
+@dataclass(frozen=True)
+class Result:
+    ts: TimeSeries
+
+    @staticmethod
+    def serialize(obj):
+        b = TimeSeries.serialize(obj.ts)
+        return base64.b64encode(b).decode("utf-8")
+
+    @classmethod
+    def deserialize(cls, data: str):
+        b = base64.b64decode(data.encode("utf-8"))
+        ts = TimeSeries.deserialize(b)
+        return cls(ts=ts)
+
+
+def time_series(client: Client, service: GCPService) -> Iterable[Result]:
     now = time.time()
     seconds = int(now)
     nanos = int((now - seconds) * 10 ** 9)
@@ -73,13 +90,13 @@ def time_series(client: Client, service: GCPService) -> Iterable[TimeSeries]:
             }
         )
         for ts in results:
-            yield ts
+            yield Result(ts=ts)
 
 
 def run(client: Client, s: GCPService) -> None:
     with SectionWriter(f"gcp_service_{s.name.lower()}") as w:
         for result in time_series(client, s):
-            w.append(TimeSeries.serialize(result))
+            w.append(Result.serialize(result))
 
 
 def parse_arguments(argv):

@@ -192,12 +192,14 @@ class Pod:
         status: api.PodStatus,
         spec: api.PodSpec,
         containers: Mapping[str, api.ContainerInfo],
+        init_containers: Mapping[str, api.ContainerInfo],
     ) -> None:
         self.uid = uid
         self.metadata = metadata
         self.spec = spec
         self.status = status
         self.containers = containers
+        self.init_containers = init_containers
         self._controllers: List[Deployment] = []
 
     @property
@@ -280,6 +282,11 @@ class Pod:
         if not self.containers:
             return None
         return section.PodContainers(containers=self.containers)
+
+    def init_containers_infos(self) -> Optional[section.PodContainers]:
+        if not self.init_containers:
+            return None
+        return section.PodContainers(containers=self.init_containers)
 
     def start_time(self) -> Optional[api.StartTime]:
         if self.status.start_time is None:
@@ -482,6 +489,7 @@ class Cluster:
                     pod.status,
                     pod.spec,
                     pod.containers,
+                    pod.init_containers,
                 )
             )
 
@@ -710,6 +718,7 @@ def pod_api_based_checkmk_sections(pod: Pod):
     sections = (
         ("k8s_pod_conditions_v1", pod.conditions),
         ("kube_pod_containers_v1", pod.containers_infos),
+        ("kube_pod_init_containers_v1", pod.init_containers_infos),
         ("kube_start_time_v1", pod.start_time),
         ("kube_pod_lifecycle_v1", pod.lifecycle_phase),
         ("kube_pod_info_v1", pod.info),

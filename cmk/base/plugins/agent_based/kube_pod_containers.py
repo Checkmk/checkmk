@@ -32,7 +32,14 @@ from cmk.base.plugins.agent_based.utils.k8s import (
 
 
 def parse(string_table: StringTable) -> Optional[PodContainers]:
-    """Parses `string_table` into a PodContainers instance"""
+    """Parses `string_table` into a PodContainers isinstance
+    >>> section_kube_pod_containers_v1 = '{"containers": {"busybox": {"id": null, "name": "busybox", "image": "busybox", "ready": false, "state": {"type": "waiting", "reason": "PodInitializing", "detail": null}, "restart_count": 0}}}'
+    >>> parse([[section_kube_pod_containers_v1]])
+    PodContainers(containers={'busybox': ContainerInfo(id=None, name='busybox', image='busybox', ready=False, state=ContainerWaitingState(type='waiting', reason='PodInitializing', detail=None), restart_count=0)})
+    >>> section_kube_pod_init_containers_v1 = '{"containers": {"busybox-init": {"id": "docker://992c4192439a93bcc445912f9a9e76fd20a4822ce0e05430cbd162c983d6178f", "name": "busybox-init", "image": "busybox:latest", "ready": false, "state": {"type": "waiting", "reason": "CrashLoopBackOff", "detail": "back-off 5m0s restarting failed container=busybox-init pod=failing-initcontainer-64ff5bdcd-vhl59_pod-status(8c812676-6e30-45ae-8271-16a279c95168)"}, "restart_count": 144}}}'
+    >>> parse([[section_kube_pod_init_containers_v1]])
+    PodContainers(containers={'busybox-init': ContainerInfo(id='docker://992c4192439a93bcc445912f9a9e76fd20a4822ce0e05430cbd162c983d6178f', name='busybox-init', image='busybox:latest', ready=False, state=ContainerWaitingState(type='waiting', reason='CrashLoopBackOff', detail='back-off 5m0s restarting failed container=busybox-init pod=failing-initcontainer-64ff5bdcd-vhl59_pod-status(8c812676-6e30-45ae-8271-16a279c95168)'), restart_count=144)})
+    """
     if not string_table:
         return None
     return PodContainers(**json.loads(string_table[0][0]))
@@ -53,6 +60,13 @@ def host_labels(section: PodContainers) -> HostLabelGenerator:
 register.agent_section(
     name="kube_pod_containers_v1",
     parsed_section_name="kube_pod_containers",
+    parse_function=parse,
+    host_label_function=host_labels,
+)
+
+register.agent_section(
+    name="kube_pod_init_containers_v1",
+    parsed_section_name="kube_pod_init_containers",
     parse_function=parse,
     host_label_function=host_labels,
 )

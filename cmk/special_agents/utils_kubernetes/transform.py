@@ -161,11 +161,12 @@ def pod_status(pod: client.V1Pod) -> api.PodStatus:
     )
 
 
-def pod_containers(pod: client.V1Pod) -> Dict[str, api.ContainerInfo]:
-    container_statuses: List[client.V1ContainerStatus] = (
-        [] if pod.status.container_statuses is None else pod.status.container_statuses
-    )
+def pod_containers(
+    container_statuses: Optional[Sequence[client.V1ContainerStatus]],
+) -> Dict[str, api.ContainerInfo]:
     result: Dict[str, api.ContainerInfo] = {}
+    if container_statuses is None:
+        return {}
     for status in container_statuses:
         state: Union[
             api.ContainerTerminatedState, api.ContainerRunningState, api.ContainerWaitingState
@@ -326,7 +327,8 @@ def pod_from_client(pod: client.V1Pod) -> api.Pod:
         metadata=parse_metadata(pod.metadata, model=api.PodMetaData),
         status=pod_status(pod),
         spec=pod_spec(pod),
-        containers=pod_containers(pod),
+        containers=pod_containers(pod.status.container_statuses),
+        init_containers=pod_containers(pod.status.init_container_statuses),
     )
 
 

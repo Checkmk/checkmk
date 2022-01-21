@@ -270,6 +270,7 @@ class Pod(BaseModel):
     status: PodStatus
     spec: PodSpec
     containers: Mapping[str, ContainerInfo]
+    init_containers: Mapping[str, ContainerInfo]
 
 
 class ClusterInfo(BaseModel):

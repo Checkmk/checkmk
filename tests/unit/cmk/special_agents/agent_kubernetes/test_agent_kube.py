@@ -34,6 +34,9 @@ def default_pod(
         if "spec" not in attributes
         else attributes["spec"],
         containers={} if "containers" not in attributes else attributes["containers"],
+        init_containers={}
+        if "init_containers" not in attributes
+        else attributes["init_containers"],
     )
 
 

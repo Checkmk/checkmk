@@ -15,11 +15,8 @@ from cmk.base.plugins.agent_based.utils.k8s import (
 from cmk.base.plugins.agent_based.utils.kube import PodLifeCycle
 
 
-def _pod_status_message(
-    section_kube_pod_containers: Optional[PodContainers],
-    section_kube_pod_lifecycle: PodLifeCycle,
-) -> str:
-    if pod_containers := section_kube_pod_containers:
+def _pod_container_message(pod_containers: Optional[PodContainers]) -> Optional[str]:
+    if pod_containers is not None:
         container_states = [container.state for container in pod_containers.containers.values()]
         for state in container_states:
             if isinstance(state, ContainerWaitingState) and state.reason != "ContainerCreating":
@@ -28,11 +25,24 @@ def _pod_status_message(
             if isinstance(state, ContainerTerminatedState):
                 if state.exit_code != 0 and state.reason is not None:
                     return state.reason
+    return None
+
+
+def _pod_status_message(
+    section_kube_pod_containers: Optional[PodContainers],
+    section_kube_pod_init_containers: Optional[PodContainers],
+    section_kube_pod_lifecycle: PodLifeCycle,
+) -> str:
+    if init_container_message := _pod_container_message(section_kube_pod_init_containers):
+        return f"Init:{init_container_message}"
+    if container_message := _pod_container_message(section_kube_pod_containers):
+        return container_message
     return section_kube_pod_lifecycle.phase.title()
 
 
 def discovery_kube_pod_status(
     section_kube_pod_containers: Optional[PodContainers],
+    section_kube_pod_init_containers: Optional[PodContainers],
     section_kube_pod_lifecycle: Optional[PodLifeCycle],
 ) -> DiscoveryResult:
     yield Service()
@@ -40,19 +50,24 @@ def discovery_kube_pod_status(
 
 def check_kube_pod_status(
     section_kube_pod_containers: Optional[PodContainers],
+    section_kube_pod_init_containers: Optional[PodContainers],
     section_kube_pod_lifecycle: Optional[PodLifeCycle],
 ) -> CheckResult:
     if section_kube_pod_lifecycle is not None:
         yield Result(
             state=State.OK,
-            summary=_pod_status_message(section_kube_pod_containers, section_kube_pod_lifecycle),
+            summary=_pod_status_message(
+                section_kube_pod_containers,
+                section_kube_pod_init_containers,
+                section_kube_pod_lifecycle,
+            ),
         )
 
 
 register.check_plugin(
     name="kube_pod_status",
     service_name="Status",
-    sections=["kube_pod_containers", "kube_pod_lifecycle"],
+    sections=["kube_pod_containers", "kube_pod_init_containers", "kube_pod_lifecycle"],
     discovery_function=discovery_kube_pod_status,
     check_function=check_kube_pod_status,
 )

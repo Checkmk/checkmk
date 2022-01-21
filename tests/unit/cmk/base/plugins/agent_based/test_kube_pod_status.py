@@ -93,7 +93,7 @@ def test_check_k8s_node_kubelet_no_issues_in_containers(
     Tested Pods have a single container which is configured correctly and in a good state.
     """
     assert expected_result == tuple(
-        check_kube_pod_status(section_kube_pod_containers, section_kube_pod_lifecycle)
+        check_kube_pod_status(section_kube_pod_containers, None, section_kube_pod_lifecycle)
     )
 
 
@@ -146,7 +146,7 @@ def test_check_k8s_node_kubelet_failing_container(
     Tested Pods with a single failing or misconfigured container.
     """
     assert expected_result == tuple(
-        check_kube_pod_status(section_kube_pod_containers, section_kube_pod_lifecycle)
+        check_kube_pod_status(section_kube_pod_containers, None, section_kube_pod_lifecycle)
     )
 
 
@@ -223,5 +223,54 @@ def test_check_k8s_node_kubelet_multiple_issues(
     single status.
     """
     assert expected_result == tuple(
-        check_kube_pod_status(section_kube_pod_containers, section_kube_pod_lifecycle)
+        check_kube_pod_status(section_kube_pod_containers, None, section_kube_pod_lifecycle)
     )
+
+
+@pytest.mark.parametrize(
+    "section_kube_pod_init_containers, section_kube_pod_containers, section_kube_pod_lifecycle, expected_result",
+    [
+        pytest.param(
+            PodContainers(
+                containers={
+                    "failing-container": _mocked_container_info_from_state(
+                        ContainerTerminatedState(
+                            type="terminated",
+                            exit_code=1,
+                            start_time=1639136911,
+                            end_time=1639136911,
+                            reason="Error",
+                            detail=None,
+                        )
+                    ),
+                }
+            ),
+            PodContainers(
+                containers={
+                    "failing-container-2": _mocked_container_info_from_state(
+                        state=ContainerWaitingState(reason="PodInitializing")
+                    ),
+                }
+            ),
+            PodLifeCycle(phase="pending"),
+            "Init:",
+            id="Both containers have an error, but the second container is not intialized",
+        ),
+    ],
+)
+def test_check_kube_pod_stauts_init_container_broken(
+    section_kube_pod_init_containers: Optional[PodContainers],
+    section_kube_pod_containers: Optional[PodContainers],
+    section_kube_pod_lifecycle: Optional[PodLifeCycle],
+    expected_result,
+) -> None:
+    """
+    Tested Pods has a failing init-container.
+    """
+    for result in check_kube_pod_status(
+        section_kube_pod_containers,
+        section_kube_pod_init_containers,
+        section_kube_pod_lifecycle,
+    ):
+        assert isinstance(result, Result)
+        assert result.summary.startswith("Init:Error")

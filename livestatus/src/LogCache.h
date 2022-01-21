@@ -97,10 +97,6 @@ private:
     void update();
     void addToIndex(std::unique_ptr<Logfile> logfile);
     [[nodiscard]] Logger *logger() const;
-    static void processLogFiles(
-        const LogFilter &log_filter,
-        const std::function<bool(const LogEntry &)> &process_log_entry,
-        const LogFiles &log_files);
 };
 
 #endif  // LogCache_h

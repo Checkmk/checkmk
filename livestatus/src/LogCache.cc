@@ -176,26 +176,19 @@ Logger *LogCache::logger() const { return _mc->loggerLivestatus(); }
 void LogCache::for_each(
     const LogFilter &log_filter,
     const std::function<bool(const LogEntry &)> &process_log_entry) {
-    apply([&process_log_entry, &log_filter](const LogFiles &log_files) {
-        LogCache::processLogFiles(log_filter, process_log_entry, log_files);
-    });
-}
+    std::lock_guard<std::mutex> lg(_lock);
+    update();
 
-// static
-void LogCache::processLogFiles(
-    const LogFilter &log_filter,
-    const std::function<bool(const LogEntry &)> &process_log_entry,
-    const LogFiles &log_files) {
-    if (log_files.begin() == log_files.end()) {
+    if (_logfiles.begin() == _logfiles.end()) {
         return;
     }
-    auto it = log_files.end();  // it now points beyond last log file
+    auto it = _logfiles.end();  // it now points beyond last log file
     --it;                       // switch to last logfile (we have at least one)
 
     // Now find newest log where 'until' is contained. The problem
     // here: For each logfile we only know the time of the *first* entry,
     // not that of the last.
-    while (it != log_files.begin() && it->second->since() > log_filter.until) {
+    while (it != _logfiles.begin() && it->second->since() > log_filter.until) {
         // while logfiles are too new go back in history
         --it;
     }
@@ -210,7 +203,7 @@ void LogCache::processLogFiles(
                                         log_filter)) {
             break;  // end of time range found
         }
-        if (it == log_files.begin()) {
+        if (it == _logfiles.begin()) {
             break;  // this was the oldest one
         }
         --it;

@@ -24,7 +24,7 @@ class Logfile;
 class Logger;
 class MonitoringCore;
 
-// We keep this on top level to make forawrd declarations possible.
+// We keep this on top level to make forward declarations possible.
 class LogFiles {
 public:
     using container = std::map<std::chrono::system_clock::time_point,
@@ -81,9 +81,8 @@ public:
     // Used by Logfile::loadRange()
     void logLineHasBeenAdded(Logfile *logfile, unsigned logclasses);
 
-    static void processLogFiles(
-        const std::function<bool(const LogEntry &)> &processLogEntry,
-        const LogFiles &log_files, const LogFilter &log_filter);
+    void for_each(const LogFilter &log_filter,
+                  const std::function<bool(const LogEntry &)> &processLogEntry);
 
 private:
     MonitoringCore *const _mc;
@@ -97,6 +96,10 @@ private:
     void update();
     void addToIndex(std::unique_ptr<Logfile> logfile);
     [[nodiscard]] Logger *logger() const;
+    static void processLogFiles(
+        const LogFilter &log_filter,
+        const std::function<bool(const LogEntry &)> &processLogEntry,
+        const LogFiles &log_files);
 };
 
 #endif  // LogCache_h

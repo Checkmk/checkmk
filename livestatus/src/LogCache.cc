@@ -173,10 +173,19 @@ void LogCache::logLineHasBeenAdded(Logfile *logfile, unsigned logclasses) {
 
 Logger *LogCache::logger() const { return _mc->loggerLivestatus(); }
 
+void LogCache::for_each(
+    const LogFilter &log_filter,
+    const std::function<bool(const LogEntry &)> &processLogEntry) {
+    apply([&processLogEntry, &log_filter](const LogFiles &log_files) {
+        LogCache::processLogFiles(log_filter, processLogEntry, log_files);
+    });
+}
+
 // static
 void LogCache::processLogFiles(
+    const LogFilter &log_filter,
     const std::function<bool(const LogEntry &)> &processLogEntry,
-    const LogFiles &log_files, const LogFilter &log_filter) {
+    const LogFiles &log_files) {
     if (log_files.begin() == log_files.end()) {
         return;
     }

@@ -154,10 +154,7 @@ void TableLog::answerQuery(Query *query) {
         LogRow r{entry, core};
         return query->processDataset(Row{&r});
     };
-    _log_cache->apply(
-        [&processLogEntry, &log_filter](const LogFiles &log_files) {
-            LogCache::processLogFiles(processLogEntry, log_files, log_filter);
-        });
+    _log_cache->for_each(log_filter, processLogEntry);
 }
 
 // static

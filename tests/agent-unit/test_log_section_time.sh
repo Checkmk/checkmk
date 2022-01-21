@@ -14,6 +14,7 @@ oneTimeSetUp() {
     export MK_VARDIR="${SHUNIT_TMPDIR}"
     export MK_LOGDIR="${SHUNIT_TMPDIR}"
 
+    set_up_get_epoch
 }
 
 profiling_dir() {

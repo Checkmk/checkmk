@@ -11,6 +11,8 @@ MK_SOURCE_AGENT="true" source "$AGENT_LINUX"
 
 oneTimeSetUp() {
 
+    set_up_get_epoch
+
     export MK_VARDIR="${SHUNIT_TMPDIR}"
     mkdir -p "$MK_VARDIR/cache/"
 

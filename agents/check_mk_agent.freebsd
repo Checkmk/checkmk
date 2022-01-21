@@ -39,11 +39,6 @@ inpath() {
     command -v "${1:?No command to test}" >/dev/null 2>&1
 }
 
-get_epoch() {
-    date +%s 2>/dev/null ||
-        perl -e 'print($^T."\n");'
-}
-
 get_file_atime() {
     stat -c %X "${1}" 2>/dev/null ||
         stat -f %a "${1}" 2>/dev/null ||
@@ -92,6 +87,17 @@ set_up_process_commandline_arguments() {
                 ;;
         esac
     done
+}
+
+set_up_get_epoch() {
+    # On some systems date +%s returns a literal %s
+    if date +%s | grep "^[0-9].*$" >/dev/null 2>&1; then
+        get_epoch() { date +%s; }
+    else
+        # do not check whether perl is even present.
+        # in weird cases we may be fine without get_epoch.
+        get_epoch() { perl -e 'print($^T."\n");'; }
+    fi
 }
 
 #
@@ -737,6 +743,8 @@ main_setup() {
     exec </dev/null 9>&2 2>/dev/null
 
     set_up_process_commandline_arguments "$@"
+
+    set_up_get_epoch
 
     set_variable_defaults
 

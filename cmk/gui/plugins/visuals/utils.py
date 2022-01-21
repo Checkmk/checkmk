@@ -494,10 +494,14 @@ class FilterTime(Filter):
             html.open_tr()
             html.td("%s:" % whatname)
             html.open_td()
-            html.text_input(varprefix)
+            html.text_input(varprefix, default_value=value.get(varprefix, ""))
             html.close_td()
             html.open_td()
-            html.dropdown(varprefix + "_range", query_filters.time_filter_options(), deflt="3600")
+            html.dropdown(
+                varprefix + "_range",
+                query_filters.time_filter_options(),
+                deflt=value.get(varprefix + "_range", "3600"),
+            )
             html.close_td()
             html.close_tr()
         html.close_table()

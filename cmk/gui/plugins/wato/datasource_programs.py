@@ -886,7 +886,7 @@ def _valuespec_special_agents_kube():
                 CascadingDropdown(
                     choices=[
                         (
-                            "namespace_include_patterns",
+                            "namespace-include-patterns",
                             _("Monitor namespaces matching"),
                             ListOf(
                                 RegExp(
@@ -904,7 +904,7 @@ def _valuespec_special_agents_kube():
                             ),
                         ),
                         (
-                            "namespace_exclude_patterns",
+                            "namespace-exclude-patterns",
                             _("Exclude namespaces matching"),
                             ListOf(
                                 RegExp(

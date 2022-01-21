@@ -62,7 +62,6 @@ BRANCH_VERSION     := 2.1.0
 
 SHELL              := /bin/bash
 CLANG_VERSION      := 12
-PYTHON2_VERSION	   := 2.7.17
 
 # When you update the Python version, you have to update the test expectations
 # in test_03_python_interpreter_version and test_03_pip_interpreter_version.

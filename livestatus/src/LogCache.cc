@@ -175,16 +175,16 @@ Logger *LogCache::logger() const { return _mc->loggerLivestatus(); }
 
 void LogCache::for_each(
     const LogFilter &log_filter,
-    const std::function<bool(const LogEntry &)> &processLogEntry) {
-    apply([&processLogEntry, &log_filter](const LogFiles &log_files) {
-        LogCache::processLogFiles(log_filter, processLogEntry, log_files);
+    const std::function<bool(const LogEntry &)> &process_log_entry) {
+    apply([&process_log_entry, &log_filter](const LogFiles &log_files) {
+        LogCache::processLogFiles(log_filter, process_log_entry, log_files);
     });
 }
 
 // static
 void LogCache::processLogFiles(
     const LogFilter &log_filter,
-    const std::function<bool(const LogEntry &)> &processLogEntry,
+    const std::function<bool(const LogEntry &)> &process_log_entry,
     const LogFiles &log_files) {
     if (log_files.begin() == log_files.end()) {
         return;
@@ -206,7 +206,8 @@ void LogCache::processLogFiles(
     while (true) {
         const auto *entries = it->second->getEntriesFor(
             log_filter.max_lines_per_logfile, log_filter.classmask);
-        if (!Logfile::processLogEntries(processLogEntry, entries, log_filter)) {
+        if (!Logfile::processLogEntries(process_log_entry, entries,
+                                        log_filter)) {
             break;  // end of time range found
         }
         if (it == log_files.begin()) {

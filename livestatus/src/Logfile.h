@@ -61,7 +61,7 @@ public:
     }
 
     static bool processLogEntries(
-        const std::function<bool(const LogEntry &)> &processLogEntry,
+        const std::function<bool(const LogEntry &)> &process_log_entry,
         const map_type *entries, const LogFilter &log_filter);
 
 private:

@@ -150,11 +150,11 @@ void TableLog::answerQuery(Query *query) {
     if (log_filter.classmask == 0) {
         return;
     }
-    auto processLogEntry = [core = core(), query](const LogEntry &entry) {
+    auto process_log_entry = [core = core(), query](const LogEntry &entry) {
         LogRow r{entry, core};
         return query->processDataset(Row{&r});
     };
-    _log_cache->for_each(log_filter, processLogEntry);
+    _log_cache->for_each(log_filter, process_log_entry);
 }
 
 // static

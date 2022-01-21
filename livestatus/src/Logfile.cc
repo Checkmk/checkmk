@@ -167,7 +167,7 @@ const Logfile::map_type *Logfile::getEntriesFor(size_t max_lines_per_logfile,
 
 // static
 bool Logfile::processLogEntries(
-    const std::function<bool(const LogEntry &)> &processLogEntry,
+    const std::function<bool(const LogEntry &)> &process_log_entry,
     const map_type *entries, const LogFilter &log_filter) {
     auto it =
         entries->upper_bound(Logfile::makeKey(log_filter.until, 999999999));
@@ -177,7 +177,7 @@ bool Logfile::processLogEntries(
         if (entry.time() < log_filter.since) {
             return false;  // time limit exceeded
         }
-        if (!processLogEntry(entry)) {
+        if (!process_log_entry(entry)) {
             return false;
         }
     }

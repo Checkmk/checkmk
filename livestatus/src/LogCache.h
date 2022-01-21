@@ -81,8 +81,9 @@ public:
     // Used by Logfile::loadRange()
     void logLineHasBeenAdded(Logfile *logfile, unsigned logclasses);
 
-    void for_each(const LogFilter &log_filter,
-                  const std::function<bool(const LogEntry &)> &processLogEntry);
+    void for_each(
+        const LogFilter &log_filter,
+        const std::function<bool(const LogEntry &)> &process_log_entry);
 
 private:
     MonitoringCore *const _mc;
@@ -98,7 +99,7 @@ private:
     [[nodiscard]] Logger *logger() const;
     static void processLogFiles(
         const LogFilter &log_filter,
-        const std::function<bool(const LogEntry &)> &processLogEntry,
+        const std::function<bool(const LogEntry &)> &process_log_entry,
         const LogFiles &log_files);
 };
 

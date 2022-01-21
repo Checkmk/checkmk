@@ -2007,10 +2007,7 @@ def _add_extensions_for_license_usage():
 
 
 def _update_links_for_agent_receiver() -> None:
-    uuid_link_manager = agent_registration.UUIDLinkManager(
-        received_outputs_dir=cmk.utils.paths.received_outputs_dir,
-        data_source_dir=cmk.utils.paths.data_source_push_agent_dir,
-    )
+    uuid_link_manager = agent_registration.get_uuid_link_manager()
     uuid_link_manager.update_links(cmk.gui.watolib.collect_all_hosts())
 
 

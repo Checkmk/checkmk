@@ -178,15 +178,15 @@ def _store_agent_data(
     target_dir: Path,
     decompressed_data: bytes,
 ) -> None:
-    temp_file = tempfile.NamedTemporaryFile(  # pylint:disable=consider-using-with
+    with tempfile.NamedTemporaryFile(
         dir=target_dir,
         delete=False,
-    )
-    try:
-        temp_file.write(decompressed_data)
-        os.rename(temp_file.name, target_dir / "agent_output")
-    finally:
-        Path(temp_file.name).unlink(missing_ok=True)
+    ) as temp_file:
+        try:
+            temp_file.write(decompressed_data)
+            os.rename(temp_file.name, target_dir / "agent_output")
+        finally:
+            Path(temp_file.name).unlink(missing_ok=True)
 
 
 def _move_ready_file(uuid: UUID) -> None:

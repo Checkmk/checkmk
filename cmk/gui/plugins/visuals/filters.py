@@ -1549,7 +1549,7 @@ class LabelFilter(Filter):
         return Labels(world=Labels.World.CORE)
 
     def display(self, value: FilterHTTPVariables) -> None:
-        self._valuespec().render_input(self._var_prefix, value)
+        self._valuespec().render_input(self._var_prefix, self._parsed_value(value))
 
     def filter(self, value: FilterHTTPVariables) -> FilterHeader:
         if value := self._parsed_value(value):

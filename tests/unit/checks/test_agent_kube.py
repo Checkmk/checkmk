@@ -32,7 +32,9 @@ pytestmark = pytest.mark.checks
             },
             [
                 "--monitored-objects",
-                "nodes deployments pods",
+                "nodes",
+                "deployments",
+                "pods",
                 "--api-server-endpoint",
                 "https://127.0.0.1",
                 "--cluster-agent-endpoint",
@@ -53,7 +55,9 @@ pytestmark = pytest.mark.checks
             },
             [
                 "--monitored-objects",
-                "nodes deployments pods",
+                "nodes",
+                "deployments",
+                "pods",
                 "--api-server-endpoint",
                 "http://127.0.0.1:8080",
                 "--cluster-agent-endpoint",
@@ -115,7 +119,9 @@ def test_parse_namespace_patterns():
     )
     assert arguments == [
         "--monitored-objects",
-        "nodes deployments pods",
+        "nodes",
+        "deployments",
+        "pods",
         "--namespace-include-patterns",
         "default",
         "--namespace-include-patterns",

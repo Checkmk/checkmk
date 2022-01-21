@@ -92,7 +92,7 @@ from cmk.gui.type_defs import (
     VisualName,
     VisualTypeName,
 )
-from cmk.gui.utils import unique_default_name_suggestion
+from cmk.gui.utils import unique_default_name_suggestion, validate_id
 from cmk.gui.utils.flashed_messages import flash, get_flashed_messages
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.logged_in import save_user_file
@@ -1089,7 +1089,15 @@ def render_context_specs(
         spec.render_input(ident, value)
 
 
-def _vs_general(single_infos, default_id, visual_type, visibility_elements):
+def _vs_general(
+    single_infos,
+    default_id,
+    visual_type,
+    visibility_elements,
+    all_visuals: Dict[Tuple[UserId, VisualName], Visual],
+    mode: str,
+    what: str,
+):
     return Dictionary(
         title=_("General Properties"),
         render="form",
@@ -1202,12 +1210,16 @@ def _vs_general(single_infos, default_id, visual_type, visibility_elements):
                 ),
             ),
         ],
+        validate=validate_id(
+            mode,
+            {k: v for k, v in available(what, all_visuals).items() if v["owner"] == user.id},
+        ),
     )
 
 
 def page_edit_visual(
     what: Literal["dashboards", "views", "reports"],
-    all_visuals: Dict[Any, Dict[str, Any]],
+    all_visuals: Dict[Tuple[UserId, VisualName], Visual],
     custom_field_handler=None,
     create_handler=None,
     load_handler=None,
@@ -1346,6 +1358,9 @@ def page_edit_visual(
         ),
         visual_type,
         visibility_elements,
+        all_visuals,
+        mode,
+        what,
     )
     context_specs = get_context_specs(visual, info_handler)
 
@@ -1422,6 +1437,7 @@ def page_edit_visual(
                     )
 
                 if transactions.check_transaction():
+                    assert owner_user_id is not None
                     all_visuals[(owner_user_id, visual["name"])] = visual
                     # Handle renaming of visuals
                     if oldname and oldname != visual["name"]:

@@ -478,7 +478,12 @@ setup:
 	    ksh \
 	    p7zip-full \
 	    zlib1g-dev
-	sudo -H pip3 install -U \
+	if type pyenv >/dev/null 2>&1 && pyenv shims --short | grep '^pipenv$$'; then \
+	    CMD="pyenv exec" ; \
+	else \
+	    CMD="sudo -H" ; \
+	fi ; \
+	$$CMD pip3 install -U \
 	    pipenv=="$(PIPENV_VERSION)" \
 	    virtualenv=="$(VIRTUALENV_VERSION)" \
 	    wheel

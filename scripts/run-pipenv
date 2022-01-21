@@ -34,6 +34,14 @@ if [ -z "$LANG" ]; then
     done
 fi
 
+EXPECTED_PIPENV_VERSION="$(make --no-print-directory --file="${REPO_PATH}"/defines.make print-PIPENV_VERSION)"
+PIPENV_VERSION="$(pipenv --version | cut -d' ' -f3)"
+if [ "$EXPECTED_PIPENV_VERSION" != "$PIPENV_VERSION" ]; then
+    echo "Expected pipenv version $EXPECTED_PIPENV_VERSION, but you have $PIPENV_VERSION ($(type pipenv))."
+    echo "Please update (e.g. using \"make setup\")"
+    exit 1
+fi
+
 PIPENV_VENV_IN_PROJECT=true \
     PIPENV_NOSPIN=true \
     PIPENV_HIDE_EMOJIS=true \

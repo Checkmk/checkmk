@@ -317,136 +317,32 @@ def test_get_check_table_of_mgmt_boards(
     assert list(check_table.get_check_table(hostname).keys()) == expected_result
 
 
-# verify static check outcome, including timespecific params
-@pytest.mark.usefixtures("fix_register")
-@pytest.mark.parametrize(
-    "hostname_str,expected_result",
-    [
-        ("df_host", [(CheckPluginName("df"), "/snap/core/9066")]),
-        # old format, without TimespecificParameters
-        ("df_host_1", [(CheckPluginName("df"), "/snap/core/9067")]),
-        ("df_host_2", [(CheckPluginName("df"), "/snap/core/9068")]),
-    ],
-)
-def test_get_check_table_of_static_check(
-    monkeypatch: MonkeyPatch, hostname_str: str, expected_result: List[ServiceID]
-) -> None:
+def test_get_check_table__static_checks_win(monkeypatch: MonkeyPatch) -> None:
+    hostname_str = "df_host"
     hostname = HostName(hostname_str)
-    static_checks = {
-        "df_host": [
-            Service(
-                CheckPluginName("df"),
-                "/snap/core/9066",
-                "Filesystem /snap/core/9066",
-                [
-                    {"tp_values": [("24X7", {"inodes_levels": None})], "tp_default_value": {}},
-                    {
-                        "trend_range": 24,
-                        "show_levels": "onmagic",
-                        "inodes_levels": (10.0, 5.0),
-                        "magic_normsize": 20,
-                        "show_inodes": "onlow",
-                        "levels": (80.0, 90.0),
-                        "show_reserved": False,
-                        "levels_low": (50.0, 60.0),
-                        "trend_perfdata": True,
-                    },
-                ],
-            ),
-        ],
-        "df_host_1": [
-            Service(
-                CheckPluginName("df"),
-                "/snap/core/9067",
-                "Filesystem /snap/core/9067",
-                {
-                    "trend_range": 24,
-                    "show_levels": "onmagic",
-                    "inodes_levels": (10.0, 5.0),
-                    "magic_normsize": 20,
-                    "show_inodes": "onlow",
-                    "levels": (80.0, 90.0),
-                    "tp_default_value": {"levels": (87.0, 90.0)},
-                    "show_reserved": False,
-                    "tp_values": [("24X7", {"inodes_levels": None})],
-                    "levels_low": (50.0, 60.0),
-                    "trend_perfdata": True,
-                },
-            )
-        ],
-        "df_host_2": [
-            Service(CheckPluginName("df"), "/snap/core/9068", "Filesystem /snap/core/9068", None)
-        ],
-    }
+    plugin_name = CheckPluginName("df")
+    item = "/snap/core/9066"
 
     ts = Scenario()
-    ts.add_host(hostname, tags={"criticality": "test"})
-    ts.add_host("df_host")
-    ts.add_host("df_host_1")
-    ts.add_host("df_host_2")
+    ts.add_host(hostname)
     ts.set_option(
         "static_checks",
         {
             "filesystem": [
-                (
-                    (
-                        "df",
-                        "/snap/core/9066",
-                        [
-                            {
-                                "tp_values": [("24X7", {"inodes_levels": None})],
-                                "tp_default_value": {},
-                            },
-                            {
-                                "trend_range": 24,
-                                "show_levels": "onmagic",
-                                "inodes_levels": (10.0, 5.0),
-                                "magic_normsize": 20,
-                                "show_inodes": "onlow",
-                                "levels": (80.0, 90.0),
-                                "show_reserved": False,
-                                "levels_low": (50.0, 60.0),
-                                "trend_perfdata": True,
-                            },
-                        ],
-                    ),
-                    [],
-                    ["df_host"],
-                ),
-                (
-                    (
-                        "df",
-                        "/snap/core/9067",
-                        [
-                            {
-                                "tp_values": [("24X7", {"inodes_levels": None})],
-                                "tp_default_value": {},
-                            },
-                            {
-                                "trend_range": 24,
-                                "show_levels": "onmagic",
-                                "inodes_levels": (10.0, 5.0),
-                                "magic_normsize": 20,
-                                "show_inodes": "onlow",
-                                "levels": (80.0, 90.0),
-                                "show_reserved": False,
-                                "levels_low": (50.0, 60.0),
-                                "trend_perfdata": True,
-                            },
-                        ],
-                    ),
-                    [],
-                    ["df_host_1"],
-                ),
-                (("df", "/snap/core/9068", None), [], ["df_host_2"]),
+                ((str(plugin_name), item, {"source": "static"}), [], [hostname_str]),
             ],
         },
     )
+    ts.set_autochecks(hostname_str, [AutocheckEntry(plugin_name, item, {"source": "auto"}, {})])
+    ts.apply(monkeypatch)
 
-    config_cache = ts.apply(monkeypatch)
-    monkeypatch.setattr(config_cache, "get_autochecks_of", lambda h: static_checks.get(h, []))
+    chk_table = check_table.get_check_table(hostname)
 
-    assert list(check_table.get_check_table(hostname).keys()) == expected_result
+    # assert check table is populated as expected
+    assert len(chk_table) == 1
+    # assert static checks won
+    effective_params = chk_table[(plugin_name, item)].parameters.evaluate(lambda _: True)
+    assert effective_params["source"] == "static"
 
 
 @pytest.mark.parametrize(

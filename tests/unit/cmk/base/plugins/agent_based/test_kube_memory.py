@@ -127,30 +127,6 @@ from cmk.gui.plugins.wato.check_parameters.kube_resources import _parameter_valu
 #    usage_result = check_result[0]
 #    assert isinstance(usage_result, Result)
 #    assert usage_result.summary == f"Usage: {render.bytes(usage)}"
-#
-#
-# @pytest.fixture
-# def agent_performance_section(fix_register):
-#    for name, section in fix_register.agent_sections.items():
-#        if str(name) == "k8s_live_memory_v1":
-#            return section
-#    assert False, "Should be able to find the section"
-#
-#
-# @pytest.fixture
-# def agent_resources_section(fix_register):
-#    for name, section in fix_register.agent_sections.items():
-#        if str(name) == "kube_memory_resources_v1":
-#            return section
-#    assert False, "Should be able to find the section"
-#
-#
-# @pytest.fixture
-# def check_plugin(fix_register):
-#    for name, plugin in fix_register.check_plugins.items():
-#        if str(name) == "kube_memory":
-#            return plugin
-#    assert False, "Should be able to find the plugin"
 
 
 @pytest.fixture

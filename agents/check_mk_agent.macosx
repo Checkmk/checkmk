@@ -53,7 +53,7 @@ run_purely_synchronous_sections() {
     done
 
     echo '<<<cpu>>>';
-    echo "$(sysctl -n vm.loadavg | tr -d '{}') $(top -l 1 -n 1 | egrep ^Processes: |
+    echo "$(sysctl -n vm.loadavg | tr -d '{}') $(top -l 1 -n 1 | grep -E ^Processes: |
         awk '{ print $4"/"$2; }') $(echo 'echo $$' | bash) $(sysctl -n hw.ncpu)"
 
     echo '<<<mem>>>'
@@ -72,7 +72,7 @@ run_purely_synchronous_sections() {
     # the output size by grepping away totally useless parts
 
     echo '<<<netctr>>>';
-    date +'%s'; netstat -inb | egrep -v '(^Name|lo|plip)' | grep Link | awk '{
+    date +'%s'; netstat -inb | grep -v -E '(^Name|lo|plip)' | grep Link | awk '{
     print $1,$7,$5,$6,"0","0","0","0","0",$10,$8,$9,"0","0",$11,"0","0"; }'
     # FIXME: send netstat -inb plain, write proper check plugins for
     # clean parsing of the output

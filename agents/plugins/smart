@@ -55,7 +55,7 @@ megaraid_info()
 
             # /dev/sdc ATA SAMSUNG_SSD_830   5 Reallocated_Sector_Ct   0x0033   100   100   010    Pre-fail  Always       -
             smartctl -d megaraid,"${LOG_DEV_ID}" -v 9,raw48 -A /dev/sg0 | \
-              grep Always  | grep -E -v '^190(.*)Temperature(.*)'       | \
+              grep Always  | grep -v -E '^190(.*)Temperature(.*)'       | \
               sed "s|^|Enc${ENC}/Slot${SLOT} $VEND $MODEL |"
             ;;
             esac
@@ -166,7 +166,7 @@ if which smartctl > /dev/null 2>&1 ; then
                 echo "$DNAME $VEND $MODEL"
                 [ -n "$CMD" ] && $CMD | sed -e '1,5d; /^$/d'
             else
-                [ -n "$CMD" ] && $CMD | grep Always | grep -E -v '^190(.*)Temperature(.*)' | sed "s|^|$DNAME $VEND $MODEL |"
+                [ -n "$CMD" ] && $CMD | grep Always | grep -v -E '^190(.*)Temperature(.*)' | sed "s|^|$DNAME $VEND $MODEL |"
             fi
     done 2>/dev/null
 

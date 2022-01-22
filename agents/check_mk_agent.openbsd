@@ -114,8 +114,8 @@ section_misc_sections() {
 
     NI=0
     # special (lo/pfsync/pflog/enc) and inactive (*) interfaces are not needed
-    NETSTAT_OUTPUT=$(netstat -in | grep '<Link>' | egrep -v "\*|lo|pfsync|enc")
-    NETSTAT_OUTPUT_BYTES=$(netstat -inb | grep '<Link>' | egrep -v "\*|lo|pfsync|enc")
+    NETSTAT_OUTPUT=$(netstat -in | grep '<Link>' | grep -v -E "\*|lo|pfsync|enc")
+    NETSTAT_OUTPUT_BYTES=$(netstat -inb | grep '<Link>' | grep -v -E "\*|lo|pfsync|enc")
 
     # adjust internal field separator to get lines from netstat and backup it before
     OFS=$IFS
@@ -155,25 +155,25 @@ section_misc_sections() {
         IFCONFIG_OUTPUT=$(ifconfig "${INTERFACES[$IF]}")
         for IO in $IFCONFIG_OUTPUT; do
             # Speed
-            SP=$(echo "$IO" | egrep "media:.*base" | cut -d\( -f2 | cut -db -f1)
+            SP=$(echo "$IO" | grep -E "media:.*base" | cut -d\( -f2 | cut -db -f1)
             if [ "$SP" ]; then
                 printf "\tSpeed: %sMb/s\n" "${SP}"
             fi
             # Detect duplexity - in reality only available for physical devices but
             # virtual ones like CARP devices will get at least a half duplex
-            if [ "$(echo "$IO" | egrep "media:.*full-duplex")" ]; then
+            if [ "$(echo "$IO" | grep -E "media:.*full-duplex")" ]; then
                 echo "\tDuplex: Full"
             elif [ "$(echo "$IO" | grep "media:" | grep -v "full-duplex")" ]; then
                 echo "\tDuplex: Half"
             fi
             # Auto-negotiation
-            if [ "$(echo "$IO" | egrep "media:.*autoselect")" ]; then
+            if [ "$(echo "$IO" | grep -E "media:.*autoselect")" ]; then
                 echo "\tAuto-negotiation: on"
             elif [ "$(echo "$IO" | grep "media:" | grep -v "autoselect")" ]; then
                 echo "\tAuto-negotiation: off"
             fi
             # Detect detected link
-            if [ "$(echo "$IO" | grep "status:" | egrep "active|backup|master")" ]; then
+            if [ "$(echo "$IO" | grep "status:" | grep -E "active|backup|master")" ]; then
                 echo "\tLink detected: yes"
             fi
         done
@@ -192,7 +192,7 @@ section_misc_sections() {
         ipmitool sensor list \
             | grep -v 'command failed' \
             | sed -e 's/ *| */|/g' -e "s/ /_/g" -e 's/_*$//' -e 's/|/ /g' \
-            | egrep -v '^[^ ]+ na ' \
+            | grep -v -E '^[^ ]+ na ' \
             | grep -v ' discrete '
     fi
 

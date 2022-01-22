@@ -441,10 +441,10 @@ section_mem() {
         grep -F 'MemTotal:' /proc/meminfo
     elif [ -n "${IS_LXC_CONTAINER}" ]; then
         echo '<<<mem>>>'
-        grep -E -v '^Swap:|^Mem:|total:|^Vmalloc|^Committed' </proc/meminfo
+        grep -v -E '^Swap:|^Mem:|total:|^Vmalloc|^Committed' </proc/meminfo
     else
         echo '<<<mem>>>'
-        grep -E -v '^Swap:|^Mem:|total:' </proc/meminfo
+        grep -v -E '^Swap:|^Mem:|total:' </proc/meminfo
     fi
 }
 
@@ -719,7 +719,7 @@ section_kernel() {
 
 section_ipmitool() {
     if inpath ipmitool; then
-        run_cached "ipmi" 300 "echo '<<<ipmi:sep(124)>>>'; waitmax 300 ipmitool sensor list | grep -v 'command failed' | grep -E -v '^[^ ]+ na ' | grep -v ' discrete '"
+        run_cached "ipmi" 300 "echo '<<<ipmi:sep(124)>>>'; waitmax 300 ipmitool sensor list | grep -v 'command failed' | grep -v -E '^[^ ]+ na ' | grep -v ' discrete '"
         # readable discrete sensor states
         run_cached "ipmi_discrete" 300 "echo '<<<ipmi_discrete:sep(124)>>>'; waitmax 300 ipmitool sdr elist compact"
     fi

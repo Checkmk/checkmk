@@ -34,7 +34,7 @@ to'
 
 get_lun_map()
 {
-scsimgr lun_map | egrep '^[[:space:]]*(LUN PATH|World Wide Identifier)' | tr '\=' ':'
+scsimgr lun_map | grep -E '^[[:space:]]*(LUN PATH|World Wide Identifier)' | tr '\=' ':'
 }
 
 

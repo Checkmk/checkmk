@@ -89,7 +89,7 @@ run_purely_synchronous_sections() {
 
     # Multipathing
     echo '<<<hpux_multipath>>>'
-    scsimgr lun_map | egrep '^[[:space:]]*(LUN PATH|State|World Wide Identifier)'
+    scsimgr lun_map | grep -E '^[[:space:]]*(LUN PATH|State|World Wide Identifier)'
 
     echo '<<<hpux_serviceguard:sep(124)>>>'
     if type cmviewcl >/dev/null 2>&1; then

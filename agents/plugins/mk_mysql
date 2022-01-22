@@ -49,8 +49,8 @@ fi
 
 if type mysqladmin >/dev/null
 then
-  mysql_sockets=$(fgrep -h socket "$MK_CONFDIR"/mysql{.local,}.cfg | sed -ne 's/.*socket=\([^ ]*\).*/\1/p')
-  alias=$(fgrep -h alias "$MK_CONFDIR"/mysql{.local,}.cfg | cut -d \" -f2)
+  mysql_sockets=$(grep -F -h socket "$MK_CONFDIR"/mysql{.local,}.cfg | sed -ne 's/.*socket=\([^ ]*\).*/\1/p')
+  alias=$(grep -F -h alias "$MK_CONFDIR"/mysql{.local,}.cfg | cut -d \" -f2)
   if [ -z "$mysql_sockets" ] ; then
     mysql_sockets=$(ps -fww -C mysqld | grep "socket" | sed -ne 's/.*socket=\([^ ]*\).*/\1/p')
   fi

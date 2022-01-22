@@ -239,7 +239,7 @@ section_mem() {
     # who uses this agent without modifications. They expect it to be run
     # without docker detection.
     echo '<<<mem>>>'
-    egrep -v '^Swap:|^Mem:|total:' </proc/meminfo
+    grep -v -E '^Swap:|^Mem:|total:' </proc/meminfo
 }
 
 section_cpu() {
@@ -456,7 +456,7 @@ section_diskstat() {
     # without docker detection.
     echo '<<<diskstat>>>'
     get_epoch
-    egrep ' (x?[shv]d[a-z]*|cciss/c[0-9]+d[0-9]+|emcpower[a-z]+|dm-[0-9]+|VxVM.*|mmcblk.*|dasd[a-z]*) ' </proc/diskstats
+    grep -E ' (x?[shv]d[a-z]*|cciss/c[0-9]+d[0-9]+|emcpower[a-z]+|dm-[0-9]+|VxVM.*|mmcblk.*|dasd[a-z]*) ' </proc/diskstats
     if inpath dmsetup; then
         echo '[dmsetup_info]'
         dmsetup info -c --noheadings --separator ' ' -o name,devno,vg_name,lv_name
@@ -480,7 +480,7 @@ section_kernel() {
 section_ipmitool() {
     # Hardware sensors via IPMI (need ipmitool)
     if inpath ipmitool; then
-        run_cached "ipmi" 300 "echo <<<ipmi:sep(124)>>>; waitmax 300 ipmitool sensor list | grep -v 'command failed' | egrep -v '^[^ ]+ na ' | grep -v ' discrete '"
+        run_cached "ipmi" 300 "echo <<<ipmi:sep(124)>>>; waitmax 300 ipmitool sensor list | grep -v 'command failed' | grep -v -E '^[^ ]+ na ' | grep -v ' discrete '"
         # readable discrete sensor states
         run_cached "ipmi_discrete" 300 "echo <<<ipmi_discrete:sep(124)>>>; waitmax 300 ipmitool sdr elist compact"
     fi
@@ -542,7 +542,7 @@ section_lsi() {
     # RAID status of LSI controllers via cfggen
     if inpath cfggen; then
         echo '<<<lsi>>>'
-        cfggen 0 DISPLAY | egrep '(Target ID|State|Volume ID|Status of volume)[[:space:]]*:' | sed -e 's/ *//g' -e 's/:/ /'
+        cfggen 0 DISPLAY | grep -E '(Target ID|State|Volume ID|Status of volume)[[:space:]]*:' | sed -e 's/ *//g' -e 's/:/ /'
     fi
 }
 
@@ -572,9 +572,9 @@ section_megaraid() {
             printf " %s" "${part}"
         done
         echo
-        ${MegaCli_bin} -PDList -aALL -NoLog </dev/null | egrep 'Enclosure|Raw Size|Slot Number|Device Id|Firmware state|Inquiry|Adapter'
+        ${MegaCli_bin} -PDList -aALL -NoLog </dev/null | grep -E 'Enclosure|Raw Size|Slot Number|Device Id|Firmware state|Inquiry|Adapter'
         echo '<<<megaraid_ldisks>>>'
-        ${MegaCli_bin} -LDInfo -Lall -aALL -NoLog </dev/null | egrep 'Size|State|Number|Adapter|Virtual'
+        ${MegaCli_bin} -LDInfo -Lall -aALL -NoLog </dev/null | grep -E 'Size|State|Number|Adapter|Virtual'
         echo '<<<megaraid_bbu>>>'
         ${MegaCli_bin} -AdpBbuCmd -GetBbuStatus -aALL -NoLog </dev/null | grep -v Exit
     fi
@@ -585,10 +585,11 @@ section_3ware() {
     if inpath tw_cli; then
         for C in $(tw_cli show | awk 'NR < 4 { next } { print $1 }'); do
             echo '<<<3ware_info>>>'
-            tw_cli "/${C}" show all | egrep 'Model =|Firmware|Serial'
+            tw_cli "/${C}" show all | grep -E 'Model =|Firmware|Serial'
             echo '<<<3ware_disks>>>'
-            tw_cli "/${C}" show drivestatus | egrep 'p[0-9]' | sed "s/^/${C}\//"
+            tw_cli "/${C}" show drivestatus | grep -E 'p[0-9]' | sed "s/^/${C}\//"
             echo '<<<3ware_units>>>'
+            tw_cli "/${C}" show unitstatus | grep -E 'u[0-9]' | sed "s/^/${C}\//"
         done
     fi
 }

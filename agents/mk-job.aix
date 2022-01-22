@@ -49,7 +49,7 @@ echo "start_time `perl -e 'print time'`" > "$RUNNING_FILE"
 RC=$?                                            # save return code
 echo "exit_code $RC" >> "$RUNNING_FILE"          # then add the return code
                                                  # and finally add the output of /usr/bin/time
-egrep  '^real   |^user   |^sys    ' "$TMP_FILE" | sed \
+grep -E  '^real   |^user   |^sys    ' "$TMP_FILE" | sed \
        -e 's/,/\./g' \
        -e 's/^real  /real_time/g' \
        -e 's/^user  /user_time/g' \

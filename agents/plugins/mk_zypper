@@ -22,7 +22,7 @@ fi
 
 if type zypper > /dev/null ; then
     echo '<<<zypper:sep(124)>>>'
-    if egrep -q 'VERSION = 10|VERSION_ID="10' < $RELEASEFILE
+    if grep -E -q 'VERSION = 10|VERSION_ID="10' < $RELEASEFILE
     then
         ZYPPER='waitmax 50 zypper --no-gpg-checks --non-interactive --terse'
         REFRESH="$("${ZYPPER}" refresh 2>&1)"
@@ -31,7 +31,7 @@ if type zypper > /dev/null ; then
         else
             {
                 "${ZYPPER}" pchk || { [ "$?" = 100 ] || [ "$?" = 101 ]; } && "${ZYPPER}" lu
-            } | grep -E '(patches needed|\|)' | grep -E -v '^(#|Repository |Catalog )'
+            } | grep -E '(patches needed|\|)' | grep -v -E '^(#|Repository |Catalog )'
         fi
     else
         ZYPPER='waitmax 50 zypper --no-gpg-checks --non-interactive --quiet'

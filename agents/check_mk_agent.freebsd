@@ -320,9 +320,9 @@ run_purely_synchronous_sections() {
     # no special zfs handling so far, the ZFS.pools plugin has been tested to
     # work on FreeBSD
     if df -T > /dev/null; then
-        df -kTP -t ufs | egrep -v '(Filesystem|devfs|procfs|fdescfs|basejail)'
+        df -kTP -t ufs | grep -v -E '(Filesystem|devfs|procfs|fdescfs|basejail)'
     else
-        df -kP -t ufs | egrep -v '(Filesystem|devfs|procfs|fdescfs|basejail)' | awk '{ print $1,"ufs",$2,$3,$4,$5,$6 }'
+        df -kP -t ufs | grep -v -E '(Filesystem|devfs|procfs|fdescfs|basejail)' | awk '{ print $1,"ufs",$2,$3,$4,$5,$6 }'
     fi
 
     # Filesystem usage for ZFS
@@ -392,7 +392,7 @@ run_purely_synchronous_sections() {
     # Platten- und RAID-Status von LSI-Controlleren, falls vorhanden
     #if inpath cfggen; then
     #   echo '<<<lsi>>>'
-    #   cfggen 0 DISPLAY | egrep '(Target ID|State|Volume ID|Status of volume)[[:space:]]*:' | sed -e 's/ *//g' -e 's/:/ /'
+    #   cfggen 0 DISPLAY | grep -E '(Target ID|State|Volume ID|Status of volume)[[:space:]]*:' | sed -e 's/ *//g' -e 's/:/ /'
     #fi
 
 
@@ -424,10 +424,10 @@ run_purely_synchronous_sections() {
     echo '<<<netctr>>>'
     get_epoch
     if [ "$(echo "${osver}" | cut -f1 -d\. )" -gt "8" ]; then
-        netstat -inb | egrep -v '(^Name|lo|plip)' | grep Link | awk '{print $1" "$8" "$5" "$6" "$7" 0 0 0 0 "$11" "$9" "$10" 0 0 0 0 0"}'
+        netstat -inb | grep -v -E '(^Name|lo|plip)' | grep Link | awk '{print $1" "$8" "$5" "$6" "$7" 0 0 0 0 "$11" "$9" "$10" 0 0 0 0 0"}'
     else
         # pad output for freebsd 7 and before
-        netstat -inb | egrep -v '(^Name|lo|plip)' | grep Link | awk '{print $1" "$7" "$5" "$6" 0 0 0 0 0 "$10" "$8" "$9" 0 0 "$11" 0 0"}'
+        netstat -inb | grep -v -E '(^Name|lo|plip)' | grep Link | awk '{print $1" "$7" "$5" "$6" 0 0 0 0 0 "$10" "$8" "$9" 0 0 "$11" 0 0"}'
     fi
 
 
@@ -438,7 +438,7 @@ run_purely_synchronous_sections() {
         ipmitool sensor list \
             | grep -v 'command failed' \
             | sed -e 's/ *| */|/g' -e "s/ /_/g" -e 's/_*$//' -e 's/|/ /g' \
-            | egrep -v '^[^ ]+ na ' \
+            | grep -v -E '^[^ ]+ na ' \
             | grep -v ' discrete '
     fi
 
@@ -447,9 +447,9 @@ run_purely_synchronous_sections() {
     # To install: pkg install megacli
     if inpath MegaCli; then
         echo '<<<megaraid_pdisks>>>'
-        MegaCli -PDList -aALL -NoLog < /dev/null | egrep 'Enclosure|Raw Size|Slot Number|Device Id|Firmware state|Inquiry|Predictive Failure Count'
+        MegaCli -PDList -aALL -NoLog < /dev/null | grep -E 'Enclosure|Raw Size|Slot Number|Device Id|Firmware state|Inquiry|Predictive Failure Count'
         echo '<<<megaraid_ldisks>>>'
-        MegaCli -LDInfo -Lall -aALL -NoLog < /dev/null | egrep 'Size|State|Number|Adapter|Virtual'
+        MegaCli -LDInfo -Lall -aALL -NoLog < /dev/null | grep -E 'Size|State|Number|Adapter|Virtual'
         echo '<<<megaraid_bbu>>>'
         MegaCli -AdpBbuCmd -GetBbuStatus -aALL -NoLog < /dev/null | grep -v Exit
     fi
@@ -536,7 +536,7 @@ run_purely_synchronous_sections() {
         statgrab net. 2>&1 | cut -d. -f2-99 | sed 's/ *= */ /'
 
         echo '<<<statgrab_mem>>>'
-        egrep "^(swap|mem)\." /tmp/statgrab.$$ | sed 's/ *= */ /'
+        grep -E "^(swap|mem)\." /tmp/statgrab.$$ | sed 's/ *= */ /'
 
         [ -f /tmp/statgrab.$$ ] && rm -f /tmp/statgrab.$$
     fi

@@ -17,6 +17,6 @@ if [ "$INSTANCES" ] ; then
     echo "<<<db2_mem>>>"
     for INSTANCE in $INSTANCES; do
         echo "Instance $INSTANCE"
-        su - "$INSTANCE" -c "db2pd -dbptnmem " | egrep '(Memory Limit|HWM usage)'
+        su - "$INSTANCE" -c "db2pd -dbptnmem " | grep -E '(Memory Limit|HWM usage)'
     done
 fi

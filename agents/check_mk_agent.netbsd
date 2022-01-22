@@ -88,14 +88,14 @@ section_misc_sections() {
 
     date +%s
     while [ $Z1 -lt 15 ]; do
-      BI=$( netstat -inb | egrep -v Name | grep Link | awk '{ print $1" "$5 }' | sed -ne $Z1$Z2 )
-      PI=$( netstat -in | egrep -v Name | grep Link | awk '{ print $5 }' | sed -ne $Z1$Z2 )
-      EI=$( netstat -in | egrep -v Name | grep Link | awk '{ print $6 }' | sed -ne $Z1$Z2 )
+      BI=$( netstat -inb | grep -v -E Name | grep Link | awk '{ print $1" "$5 }' | sed -ne $Z1$Z2 )
+      PI=$( netstat -in | grep -v -E Name | grep Link | awk '{ print $5 }' | sed -ne $Z1$Z2 )
+      EI=$( netstat -in | grep -v -E Name | grep Link | awk '{ print $6 }' | sed -ne $Z1$Z2 )
       FF1="0 0 0 0 0"
-      BO=$( netstat -inb | egrep -v Name | grep Link | awk '{ print $6 }' | sed -ne $Z1$Z2 )
-      PO=$( netstat -in | egrep -v Name | grep Link | awk '{ print $7 }' | sed -ne $Z1$Z2 )
-      EO=$( netstat -in | egrep -v Name | grep Link | awk '{ print $8 }' | sed -ne $Z1$Z2 )
-      CO=$( netstat -in | egrep -v Name | grep Link | awk '{ print $9 }' | sed -ne $Z1$Z2 )
+      BO=$( netstat -inb | grep -v -E Name | grep Link | awk '{ print $6 }' | sed -ne $Z1$Z2 )
+      PO=$( netstat -in | grep -v -E Name | grep Link | awk '{ print $7 }' | sed -ne $Z1$Z2 )
+      EO=$( netstat -in | grep -v -E Name | grep Link | awk '{ print $8 }' | sed -ne $Z1$Z2 )
+      CO=$( netstat -in | grep -v -E Name | grep Link | awk '{ print $9 }' | sed -ne $Z1$Z2 )
       FF2="0 0"
         if [ "$PI" -gt "0" ]; then
             echo "$BI $PI $EI $FF1 $BO $PO $EO $FF2 $CO $FF2"
@@ -110,7 +110,7 @@ section_misc_sections() {
         ipmitool sensor list \
             | grep -v 'command failed' \
             | sed -e 's/ *| */|/g' -e "s/ /_/g" -e 's/_*$//' -e 's/|/ /g' \
-            | egrep -v '^[^ ]+ na ' \
+            | grep -v -E '^[^ ]+ na ' \
             | grep -v ' discrete '
     fi
 

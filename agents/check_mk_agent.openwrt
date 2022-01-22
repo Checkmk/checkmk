@@ -346,7 +346,7 @@ section_mounts() {
         sed -n '/ nfs4\? /s/[^ ]* \([^ ]*\) .*/\1/p' </proc/mounts |
             sed 's/\\040/ /g' |
             while read MP; do
-                if [ ${STAT_VERSION} != ${STAT_BROKE} ]; then
+                if [ "${STAT_VERSION}" != "${STAT_BROKE}" ]; then
                     waitmax -s 9 5 stat -f -c "${MP} ok %b %f %a %s" "${MP}" ||
                         echo "${MP} hanging 0 0 0 0"
                 else
@@ -359,9 +359,9 @@ section_mounts() {
         sed -n '/ cifs\? /s/[^ ]* \([^ ]*\) .*/\1/p' </proc/mounts |
             sed 's/\\040/ /g' |
             while read MP; do
-                if [ ! -r ${MP} ]; then
+                if [ ! -r "${MP}" ]; then
                     echo "${MP} Permission denied"
-                elif [ ${STAT_VERSION} != ${STAT_BROKE} ]; then
+                elif [ "${STAT_VERSION}" != "${STAT_BROKE}" ]; then
                     waitmax -s 9 2 stat -f -c "${MP} ok %b %f %a %s" "${MP}" ||
                         echo "${MP} hanging 0 0 0 0"
                 else
@@ -426,9 +426,9 @@ section_ovs_bonding() {
         BONDS=$(ovs-appctl bond/list)
         COL=$(echo "${BONDS}" | awk '{for(i=1;i<=NF;i++) {if($i == "bond") printf("%d", i)} exit 0}')
         echo '<<<ovs_bonding:sep(58)>>>'
-        for bond in $(echo "${BONDS}" | sed -e 1d | cut -f${COL}); do
+        for bond in $(echo "${BONDS}" | sed -e 1d | cut "-f${COL}"); do
             echo "[${bond}]"
-            ovs-appctl bond/show ${bond}
+            ovs-appctl bond/show "${bond}"
         done
     fi
 }
@@ -532,7 +532,7 @@ section_dmraid() {
 
         for disk in ${DISKS}; do
             device=$(cat "/sys/block/$(basename "${disk}")/device/model")
-            status=$(echo "${DMSTATUS}" | grep ^${disk})
+            status=$(echo "${DMSTATUS}" | grep "^${disk}")
             echo "${status} Model: ${device}"
         done
     fi
@@ -567,8 +567,8 @@ section_megaraid() {
         echo '<<<megaraid_pdisks>>>'
         for part in $(${MegaCli_bin} -EncInfo -aALL -NoLog </dev/null |
             sed -rn 's/:/ /g; s/[[:space:]]+/ /g; s/^ //; s/ $//; s/Number of enclosures on adapter ([0-9]+).*/adapter \1/g; /^(Enclosure|Device ID|adapter) [0-9]+$/ p'); do
-            [ ${part} = adapter ] && echo ""
-            [ ${part} = 'Enclosure' ] && printf "\ndev2enc"
+            [ "${part}" = adapter ] && echo ""
+            [ "${part}" = 'Enclosure' ] && printf "\ndev2enc"
             printf " %s" "${part}"
         done
         echo
@@ -585,11 +585,10 @@ section_3ware() {
     if inpath tw_cli; then
         for C in $(tw_cli show | awk 'NR < 4 { next } { print $1 }'); do
             echo '<<<3ware_info>>>'
-            tw_cli /${C} show all | egrep 'Model =|Firmware|Serial'
+            tw_cli "/${C}" show all | egrep 'Model =|Firmware|Serial'
             echo '<<<3ware_disks>>>'
-            tw_cli /${C} show drivestatus | egrep 'p[0-9]' | sed "s/^/${C}\//"
+            tw_cli "/${C}" show drivestatus | egrep 'p[0-9]' | sed "s/^/${C}\//"
             echo '<<<3ware_units>>>'
-            tw_cli /${C} show unitstatus | egrep 'u[0-9]' | sed "s/^/${C}\//"
         done
     fi
 }
@@ -656,16 +655,16 @@ section_cups_queues() {  # TODO: this seems broken. Don't we need to export cups
                 if [ -r "${CPRINTCONF}" ]; then
                     LOCAL_PRINTERS=$(grep -E "<(Default)?Printer .*>" ${CPRINTCONF} | awk '{print $2}' | sed -e 's/>//')
                     lpstat -p | while read LINE; do
-                        PRINTER=$(echo ${LINE} | awk '{print $2}')
+                        PRINTER=$(echo "${LINE}" | awk '{print $2}')
                         if echo "${LOCAL_PRINTERS}" | grep -q "${PRINTER}"; then
-                            echo ${LINE}
+                            echo "${LINE}"
                         fi
                     done
                     echo '---'
                     lpstat -o | while read LINE; do
                         PRINTER=${LINE%%-*}
-                        if echo ${LOCAL_PRINTERS} | grep -q ${PRINTER}; then
-                            echo ${LINE}
+                        if echo "${LOCAL_PRINTERS}" | grep -q "${PRINTER}"; then
+                            echo "${LINE}"
                         fi
                     done
                 else
@@ -697,10 +696,10 @@ section_heartbeat() {
         echo '<<<heartbeat_nodes>>>'
         for NODE in $(cl_status listnodes); do
             if [ "${NODE}" != "$(uname -n | tr 'A-Z' 'a-z')" ]; then
-                STATUS=$(cl_status nodestatus ${NODE})
+                STATUS=$(cl_status nodestatus "${NODE}")
                 echo -n "${NODE} ${STATUS}"
-                for LINK in $(cl_status listhblinks ${NODE} 2>/dev/null); do
-                    echo -n " ${LINK} $(cl_status hblinkstatus ${NODE} ${LINK})"
+                for LINK in $(cl_status listhblinks "${NODE}" 2>/dev/null); do
+                    echo -n " ${LINK} $(cl_status hblinkstatus "${NODE}" "${LINK}")"
                 done
                 echo
             fi
@@ -717,8 +716,8 @@ section_postfix() {
         if [ -n "${postfix_queue_dir}" ]; then
             echo '<<<postfix_mailq>>>'
             for queue in deferred active; do
-                count=$(find ${postfix_queue_dir}/${queue} -type f | wc -l)
-                size=$(du -s ${postfix_queue_dir}/${queue} | awk '{print $1 }')
+                count=$(find "${postfix_queue_dir}/${queue}" -type f | wc -l)
+                size=$(du -s "${postfix_queue_dir}/${queue}" | awk '{print $1 }')
                 if [ -z "${size}" ]; then
                     size=0
                 fi
@@ -760,7 +759,7 @@ section_mknotify() {
                 site=${statefile%/var/log*}
                 site=${site#/omd/sites/}
                 echo "[${site}]"
-                grep -v '^#' <${statefile}
+                grep -v '^#' <"${statefile}"
             fi
         done
     fi
@@ -800,8 +799,8 @@ section_veritas_vcs() {
         vcshost=$(hostname | cut -d. -f1)
         waitmax -s 9 2 /opt/VRTSvcs/bin/haclus -display -localclus | grep -e ClusterName -e ClusState
         waitmax -s 9 2 /opt/VRTSvcs/bin/hasys -display -attribute SysState
-        waitmax -s 9 2 /opt/VRTSvcs/bin/hagrp -display -sys ${vcshost} -attribute State -localclus
-        waitmax -s 9 2 /opt/VRTSvcs/bin/hares -display -sys ${vcshost} -attribute State -localclus
+        waitmax -s 9 2 /opt/VRTSvcs/bin/hagrp -display -sys "${vcshost}" -attribute State -localclus
+        waitmax -s 9 2 /opt/VRTSvcs/bin/hares -display -sys "${vcshost}" -attribute State -localclus
     fi
 }
 
@@ -857,7 +856,7 @@ section_livestatus_status() {
         for site in *; do
             if [ -S "/omd/sites/${site}/tmp/run/live" ]; then
                 echo "[${site}]"
-                echo "GET status" | waitmax 3 /omd/sites/${site}/bin/unixcat /omd/sites/${site}/tmp/run/live
+                echo "GET status" | waitmax 3 "/omd/sites/${site}/bin/unixcat" "/omd/sites/${site}/tmp/run/live"
             fi
         done
     fi
@@ -893,8 +892,8 @@ section_lnx_thermal() {
         echo '<<<lnx_thermal>>>'
         for F in /sys/class/thermal/thermal_zone*; do
             echo -n "${F##*/} "
-            if [ ! -e ${F}/mode ]; then echo -n "- "; fi
-            cat ${F}/mode ${F}/type ${F}/temp ${F}/trip_point_* | tr \\n " "
+            if [ ! -e "${F}/mode" ]; then echo -n "- "; fi
+            cat "${F}/mode" "${F}/type" "${F}/temp" "${F}/trip_point_"* | tr \\n " "
             echo
         done
     fi
@@ -946,7 +945,7 @@ run_real_time_checks_for_remote() {
     PIDFILE=${MK_VARDIR}/real_time_checks.pid
     echo $$ >${PIDFILE}
 
-    . ${MK_CONFDIR}/real_time_checks.cfg
+    . "${MK_CONFDIR}/real_time_checks.cfg"
 
     if [ "${PASSPHRASE}" != "" ]; then
         # new mechanism to set the passphrase has priority
@@ -978,9 +977,9 @@ run_real_time_checks_for_remote() {
                 get_epoch | tr -d '\n'
                 if [ "${ENCRYPTED_RT}" != "no" ]; then
                     export RTC_SECRET=${RTC_SECRET}
-                    section_${SECTION} | openssl enc -aes-256-cbc -md md5 -pass env:RTC_SECRET -nosalt
+                    "section_${SECTION}" | openssl enc -aes-256-cbc -md md5 -pass env:RTC_SECRET -nosalt
                 else
-                    section_${SECTION}
+                    "section_${SECTION}"
                 fi
             } | dd bs=9999 iflag=fullblock 2>/dev/null >"/dev/udp/${REMOTE}/${RTC_PORT}"
         done
@@ -995,7 +994,7 @@ run_real_time_checks() {
     # a new live update process will terminate the old one automatically after
     # max. 1 sec.
     if [ -e ${MK_CONFDIR}/real_time_checks.cfg ]; then
-        if [ -z ${REMOTE} ]; then
+        if [ -z "${REMOTE}" ]; then
             echo "ERROR: \${REMOTE} not specified. Not sending real-time data." >&2
         elif ! inpath openssl; then
             echo "ERROR: openssl command is missing. Not sending real-time data." >&2
@@ -1042,7 +1041,7 @@ run_cached() {
     if [ -s "${CACHEFILE}" ]; then
         MTIME=$(get_file_mtime "${CACHEFILE}")
         AGE=$((NOW - MTIME))
-        if [ ${AGE} -le ${MAXAGE} ]; then local USE_CACHEFILE=1; fi
+        if [ ${AGE} -le "${MAXAGE}" ]; then local USE_CACHEFILE=1; fi
 
         if ${MK_RUN_SYNC_PARTS}; then
             # Output the file even if it is outdated.

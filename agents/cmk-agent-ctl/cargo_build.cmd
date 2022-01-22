@@ -15,9 +15,13 @@
 SETLOCAL EnableDelayedExpansion
 
 echo --- info ---
-echo %user%
-echo %path%
+echo USENAME=%username%
+echo PATH=%path%
 echo ------------
+
+which cargo > nul
+if not %errorlevel% == 0 powershell Write-Host "Cargo not found" -Foreground Red && exit /b 7
+exit 0
 
 set cur_dir=%cd%
 set arte=%cur_dir%\..\..\artefacts

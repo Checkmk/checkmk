@@ -73,11 +73,11 @@ section_misc_sections() {
     echo "<<<openbsd_mem>>>"
     MEM_FREE=$(vmstat | tail -n1 | awk '{ print $5 }')
     MEM_TOTAL=$(sysctl hw.usermem | cut -d= -f2)
-    MEM_TOTAL=$(echo $MEM_TOTAL/1024 | bc)
+    MEM_TOTAL=$(echo "$MEM_TOTAL/1024" | bc)
 
     SWAPCTL_OUTPUT=$(swapctl -k -s)
-    SWAP_FREE=$(echo $SWAPCTL_OUTPUT | awk '{ print $7 }')
-    SWAP_TOTAL=$(echo $SWAPCTL_OUTPUT | awk '{ print $2 }')
+    SWAP_FREE=$(echo "$SWAPCTL_OUTPUT" | awk '{ print $7 }')
+    SWAP_TOTAL=$(echo "$SWAPCTL_OUTPUT" | awk '{ print $2 }')
 
     # if there is no swap space swap values are 0
     if [ -z "$SWAPCTL_OUTPUT" ]; then
@@ -85,10 +85,10 @@ section_misc_sections() {
         SWAP_TOTAL=0
     fi
 
-    echo "MemTotal:\t" $MEM_TOTAL kB
-    echo "MemFree:\t" $MEM_FREE kB
-    echo "SwapTotal:\t" $SWAP_TOTAL kB
-    echo "SwapFree:\t" $SWAP_FREE kB
+    echo "MemTotal:\t $MEM_TOTAL kB"
+    echo "MemFree:\t $MEM_FREE kB"
+    echo "SwapTotal:\t $SWAP_TOTAL kB"
+    echo "SwapFree:\t $SWAP_FREE kB"
 
     echo '<<<lnx_if:sep(58)>>>'
     # MC= MAC address
@@ -124,21 +124,21 @@ section_misc_sections() {
     # collect netstat values and interface number
     for NS in $NETSTAT_OUTPUT; do
         NI=$((NI+1))
-        INTERFACES[$NI]=$(echo $NS | awk '{ print $1 }')
-        MC[$NI]=$(echo $NS | awk '{ print $4 }')
-        PI[$NI]=$(echo $NS | awk '{ print $5 }')
-        EI[$NI]=$(echo $NS | awk '{ print $6 }')
-        PO[$NI]=$(echo $NS | awk '{ print $7 }')
-        EO[$NI]=$(echo $NS | awk '{ print $8 }')
-        CO[$NI]=$(echo $NS | awk '{ print $9 }')
+        INTERFACES[$NI]=$(echo "$NS" | awk '{ print $1 }')
+        MC[$NI]=$(echo "$NS" | awk '{ print $4 }')
+        PI[$NI]=$(echo "$NS" | awk '{ print $5 }')
+        EI[$NI]=$(echo "$NS" | awk '{ print $6 }')
+        PO[$NI]=$(echo "$NS" | awk '{ print $7 }')
+        EO[$NI]=$(echo "$NS" | awk '{ print $8 }')
+        CO[$NI]=$(echo "$NS" | awk '{ print $9 }')
     done
 
     # need NIC counter again for byte values - reset it
     NI=0
     for NS in $NETSTAT_OUTPUT_BYTES; do
         NI=$((NI+1))
-        BI[$NI]=$(echo $NS | awk '{ print $5 }')
-        BO[$NI]=$(echo $NS | awk '{ print $6 }')
+        BI[$NI]=$(echo "$NS" | awk '{ print $5 }')
+        BO[$NI]=$(echo "$NS" | awk '{ print $6 }')
     done
 
     # what is this for?
@@ -150,9 +150,9 @@ section_misc_sections() {
     done
 
     for IF in $(jot $NI); do
-        echo \[${INTERFACES[$IF]}\]
+        echo "[${INTERFACES[$IF]}]"
 
-        IFCONFIG_OUTPUT=$(ifconfig ${INTERFACES[$IF]})
+        IFCONFIG_OUTPUT=$(ifconfig "${INTERFACES[$IF]}")
         for IO in $IFCONFIG_OUTPUT; do
             # Speed
             SP=$(echo "$IO" | egrep "media:.*base" | cut -d\( -f2 | cut -db -f1)
@@ -178,7 +178,7 @@ section_misc_sections() {
             fi
         done
 
-        echo "\tAddress: "${MC[$IF]}
+        echo "\tAddress: ${MC[$IF]}"
 
     done
 

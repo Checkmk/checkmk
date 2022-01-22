@@ -806,12 +806,7 @@ class AutomationAnalyseServices(Automation):
                 "checktype": str(plugin.name),
                 "checkgroup": str(plugin.check_ruleset_name),
                 "item": service.item,
-                # Putting service.parameters here is wrong.
-                # servce.parameters here contains the computed check parameters.
-                # Those may be timespecific, but not yet resolved.
-                # In order to show the "discovered" parameters here, we must have a
-                # *Autocheck*Service (not a general Service) instance.
-                "inv_parameters": "not available in this view",
+                "inv_parameters": service.discovered_parameters,
                 "factory_settings": plugin.check_default_parameters,
                 # effective parameters:
                 "parameters": service.parameters.preview(cmk.base.core.timeperiod_active),

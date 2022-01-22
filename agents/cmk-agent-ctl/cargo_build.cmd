@@ -4,9 +4,9 @@
 :: Sign mode:
 :: cargo_build file password
 :: file is located in c:\common\store and must be well protected from access
-:: Password is from jenkins(in a turn from our password store)
+:: The password is delivered by jenkins(in a turn from our password store)
 :: In future we could download file too(from the password store), but this will 
-:: not change the requirement to protect the file from access
+:: not change the requirement to protect the file from free access.
 ::
 :: Standard Mode:
 :: cargo_build
@@ -15,12 +15,13 @@
 SETLOCAL EnableDelayedExpansion
 
 echo --- info ---
-echo USENAME=%username%
+echo USERNAME=%username%
 echo PATH=%path%
 echo ------------
 
-which cargo > nul
-if not %errorlevel% == 0 powershell Write-Host "Cargo not found" -Foreground Red && exit /b 7
+:: Jenkins calls windows scripts in a quite strange manner, better to check is cargo available
+where cargo > nul
+if not %errorlevel% == 0 powershell Write-Host "Cargo not found, please install it and/or add to PATH" -Foreground Red && exit /b 7
 exit 0
 
 set cur_dir=%cd%

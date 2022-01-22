@@ -6,7 +6,7 @@
 
 # pylint: disable=protected-access
 
-from typing import Dict, List, Mapping, Sequence
+from typing import Dict, List
 
 import pytest
 from _pytest.monkeypatch import MonkeyPatch
@@ -64,7 +64,6 @@ def test_cluster_ignores_nodes_parameters(monkeypatch: MonkeyPatch) -> None:
 
 # TODO: This misses a lot of cases
 # - different get_check_table arguments
-@pytest.mark.usefixtures("fix_register")
 @pytest.mark.parametrize(
     "hostname_str,expected_result",
     [
@@ -179,52 +178,6 @@ def test_get_check_table(
     monkeypatch: MonkeyPatch, hostname_str: str, expected_result: HostCheckTable
 ) -> None:
     hostname = HostName(hostname_str)
-    autochecks = {
-        "ping-host": [
-            Service(
-                CheckPluginName("smart_temp"),
-                "bla",
-                "Temperature SMART bla",
-                {},
-            )
-        ],
-        "autocheck-overwrite": [
-            Service(
-                CheckPluginName("smart_temp"),
-                "/dev/sda",
-                "Temperature SMART /dev/sda",
-                {"is_autocheck": True},
-            ),
-            Service(
-                CheckPluginName("smart_temp"),
-                "/dev/sdb",
-                "Temperature SMART /dev/sdb",
-                {"is_autocheck": True},
-            ),
-        ],
-        "ignore-not-existing-checks": [
-            Service(
-                CheckPluginName("bla_blub"),
-                "ITEM",
-                "Blub ITEM",
-                {},
-            ),
-        ],
-        "node1": [
-            Service(
-                CheckPluginName("smart_temp"),
-                "auto-clustered",
-                "Temperature SMART auto-clustered",
-                {},
-            ),
-            Service(
-                CheckPluginName("smart_temp"),
-                "auto-not-clustered",
-                "Temperature SMART auto-not-clustered",
-                {},
-            ),
-        ],
-    }
 
     ts = Scenario()
     ts.add_host(hostname, tags={"criticality": "test"})
@@ -252,13 +205,38 @@ def test_get_check_table(
             ([], ["node1"], ["Temperature SMART auto-clustered$"]),
         ],
     )
-    config_cache = ts.apply(monkeypatch)
-    monkeypatch.setattr(config_cache, "get_autochecks_of", lambda h: autochecks.get(h, []))
+    ts.set_autochecks(
+        "ping-host",
+        [
+            AutocheckEntry(CheckPluginName("smart_temp"), "bla", {}, {}),
+        ],
+    )
+    ts.set_autochecks(
+        "autocheck-overwrite",
+        [
+            AutocheckEntry(CheckPluginName("smart_temp"), "/dev/sda", {"is_autocheck": True}, {}),
+            AutocheckEntry(CheckPluginName("smart_temp"), "/dev/sdb", {"is_autocheck": True}, {}),
+        ],
+    )
+    ts.set_autochecks(
+        "ignore-not-existing-checks",
+        [
+            AutocheckEntry(CheckPluginName("bla_blub"), "ITEM", {}, {}),
+        ],
+    )
+    ts.set_autochecks(
+        "node1",
+        [
+            AutocheckEntry(CheckPluginName("smart_temp"), "auto-clustered", {}, {}),
+            AutocheckEntry(CheckPluginName("smart_temp"), "auto-not-clustered", {}, {}),
+        ],
+    )
+
+    ts.apply(monkeypatch)
 
     assert check_table.get_check_table(hostname) == expected_result
 
 
-@pytest.mark.usefixtures("fix_register")
 @pytest.mark.parametrize(
     "hostname_str, expected_result",
     [
@@ -270,19 +248,6 @@ def test_get_check_table_of_mgmt_boards(
     monkeypatch: MonkeyPatch, hostname_str: str, expected_result: List[ServiceID]
 ) -> None:
     hostname = HostName(hostname_str)
-    autochecks: Mapping[str, Sequence[Service[LegacyCheckParameters]]] = {
-        "mgmt-board-ipmi": [
-            Service(
-                CheckPluginName("mgmt_ipmi_sensors"),
-                "TEMP X",
-                "Management Interface: IPMI Sensor TEMP X",
-                {},
-            ),
-        ],
-        "ipmi-host": [
-            Service(CheckPluginName("ipmi_sensors"), "TEMP Y", "IPMI Sensor TEMP Y", {}),
-        ],
-    }
 
     ts = Scenario()
     ts.add_host(
@@ -311,8 +276,16 @@ def test_get_check_table_of_mgmt_boards(
     )
     ts.set_option("management_protocol", {"mgmt-board-ipmi": "ipmi"})
 
-    config_cache = ts.apply(monkeypatch)
-    monkeypatch.setattr(config_cache, "get_autochecks_of", lambda h: autochecks.get(h, []))
+    ts.set_autochecks(
+        "mgmt-board-ipmi",
+        [AutocheckEntry(CheckPluginName("mgmt_ipmi_sensors"), "TEMP X", {}, {})],
+    )
+    ts.set_autochecks(
+        "ipmi-host",
+        [AutocheckEntry(CheckPluginName("ipmi_sensors"), "TEMP Y", {}, {})],
+    )
+
+    ts.apply(monkeypatch)
 
     assert list(check_table.get_check_table(hostname).keys()) == expected_result
 

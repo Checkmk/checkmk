@@ -14,6 +14,11 @@
 
 SETLOCAL EnableDelayedExpansion
 
+echo --- info ---
+echo %user%
+echo %path%
+echo ------------
+
 set cur_dir=%cd%
 set arte=%cur_dir%\..\..\artefacts
 set target=i686-pc-windows-msvc

@@ -20,7 +20,7 @@ UNTIL=$((NOW + INTERVAL + 600))
 
 #check if flagfile exits
 if [ -e "$FLAGFILE" ]; then
-    LAST_RUN=$(cat $FLAGFILE)
+    LAST_RUN=$(cat "$FLAGFILE")
 else
     #First run of the script
     LAST_RUN=0
@@ -28,7 +28,7 @@ fi
 
 if [ $(( NOW - LAST_RUN )) -ge $INTERVAL ]
 then
-    echo $NOW > $FLAGFILE
+    echo "$NOW" > "$FLAGFILE"
 
     # List of installed AIX packages
     if type lslpp >/dev/null; then

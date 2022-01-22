@@ -18,7 +18,7 @@ CMK_VERSION="2.1.0i1"
 
 
 if [ -e "$MK_CONFDIR/ceph.cfg" ]; then
-    . $MK_CONFDIR/ceph.cfg
+    . "$MK_CONFDIR/ceph.cfg"
 fi
 
 
@@ -30,7 +30,7 @@ if [ ! -z "$USER" ] && [ ! -z "$KEYRING" ]; then
     if [ $? -eq 0 ]; then
         echo "<<<ceph_df_json:sep(0)>>>"
         $CEPH_CMD version --format json
-        echo $OUT
+        echo "$OUT"
     else
         # fallback for old versions if json output is not available
         echo "<<<ceph_df>>>"

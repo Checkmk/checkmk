@@ -83,12 +83,12 @@ all_sections="sessions locks tabextents dbspaces logusage"
 informix_status(){
     echo "<<<informix_status:sep(58)>>>"
     echo "[[[$INFORMIXSERVER/$SERVERNUM]]]"
-    $INFORMIXDIR/bin/onstat - >/dev/null 2>&1
+    "$INFORMIXDIR/bin/onstat" - >/dev/null 2>&1
     state=$?
     echo "Status:"$state
-    $INFORMIXDIR/bin/onstat -g dis
-    port=$(grep $INFORMIXSERVER /etc/services)
-    echo "PORT:"$port
+    "$INFORMIXDIR/bin/onstat" -g dis
+    port=$(grep "$INFORMIXSERVER" /etc/services)
+    echo "PORT:$port"
 }
 
 
@@ -193,7 +193,7 @@ informix_logusage(){
 
 
 if [ -f "$MK_CONFDIR/informix.cfg" ]; then
-    . $MK_CONFDIR/informix.cfg
+    . "$MK_CONFDIR/informix.cfg"
 fi
 
 
@@ -209,7 +209,7 @@ if [ -z "$ONINIT_PATH" ] || [ ! -x "$ONINIT_PATH" ]; then
     /*)
         ;;
     *)    # BUG not platform independent!
-        ONINIT_PATH=$(ls -l /proc/$ONINIT_PID/exe 2>/dev/null| sed 's/.* //')
+        ONINIT_PATH=$(ls -l "/proc/$ONINIT_PID/exe" 2>/dev/null| sed 's/.* //')
         ;;
     esac
 
@@ -232,8 +232,8 @@ fi
 
 
 for IDSENV in $( export INFORMIXDIR=${ONINIT_PATH%/bin*}
-    $INFORMIXDIR/bin/onstat -g dis | \
-        egrep '^Server[         ]*:|^Server Number[     ]*:|^INFORMIX|^SQLHOSTS|^ONCONFIG' | \
+    "$INFORMIXDIR/bin/onstat" -g dis | \
+        grep -E '^Server[         ]*:|^Server Number[     ]*:|^INFORMIX|^SQLHOSTS|^ONCONFIG' | \
         sed -e 's/Server Number/SERVERNUM/' \
             -e 's/Server/INFORMIXSERVER/' \
             -e 's/SQLHOSTS/INFORMIXSQLHOSTS/' \
@@ -244,8 +244,8 @@ for IDSENV in $( export INFORMIXDIR=${ONINIT_PATH%/bin*}
     ) ; do
     (
         # Set environment
-        eval $IDSENV
-    	PATH=$INFORMIXDIR/bin:$PATH
+        eval "$IDSENV"
+    	PATH="$INFORMIXDIR/bin:$PATH"
 
 	    # try to set them via 'onstat -g env' otherwise
 	    # DB HAS TO BE RUNNING
@@ -257,7 +257,7 @@ for IDSENV in $( export INFORMIXDIR=${ONINIT_PATH%/bin*}
 
         informix_status
 
-        set_excludes $INFORMIXSERVER
+        set_excludes "$INFORMIXSERVER"
 
         if do_check "sessions" "$exclude"; then
             informix_sessions

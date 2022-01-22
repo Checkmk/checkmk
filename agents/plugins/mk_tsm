@@ -21,7 +21,7 @@ CMK_VERSION="2.1.0i1"
 # If you have more than once instance, make sure that the upper
 # login works on all of them.
 
-. $MK_CONFDIR/tsm.cfg || exit 1
+. "$MK_CONFDIR/tsm.cfg" || exit 1
 
 if [ -z "${TSM_USER}" ] || [ -z "${TSM_PASSWORD}" ]; then
     echo "Please set TSM_USER and TSM_PASSWORD in ${MK_CONFDIR}/tsm.cfg" >&2

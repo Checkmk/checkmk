@@ -14,7 +14,7 @@ CMK_VERSION="2.1.0i1"
 SSHD_CONFIG=/etc/ssh/sshd_config
 
 drop_comments_whitespace(){
-    sed -e '/^#/d' -e '/^\s*$/d' -e 's/\s\+/ /g' $1
+    sed -e '/^#/d' -e '/^\s*$/d' -e 's/\s\+/ /g' "$1"
 }
 
 if [ -f $SSHD_CONFIG ] ; then

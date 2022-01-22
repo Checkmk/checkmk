@@ -49,7 +49,7 @@ function waitmax
    PID=$!
 
    # Wait for termination within TIMOUT seconds
-   while [ $TIMEOUT -gt 0 ]
+   while [ "$TIMEOUT" -gt 0 ]
    do
        TIMEOUT=$((TIMEOUT - 1))
        if [ ! -e /proc/$PID ] ; then
@@ -167,7 +167,7 @@ WAITMAX
 }
 
 if [ "$1" = "query" ]; then
-    query_instance $2
+    query_instance "$2"
     exit $?
 else
     #### RUN CACHED #####
@@ -175,11 +175,11 @@ else
         /usr/bin/perl -e 'if (! -f $ARGV[0]){die "0000000"};$mtime=(stat($ARGV[0]))[9];print ($^T-$mtime);' "$1"
     }
 
-    if [ ! -d $MK_VARDIR/cache ]; then mkdir -p $MK_VARDIR/cache ; fi
+    if [ ! -d "$MK_VARDIR/cache" ]; then mkdir -p "$MK_VARDIR/cache" ; fi
 
 
     if [ -e "$MK_VARDIR/cache/mk_db2.aix.cache" ] ; then
-        rm $MK_VARDIR/cache/mk_db2.aix.cache
+        rm "$MK_VARDIR/cache/mk_db2.aix.cache"
     fi
     INSTANCES=$(ps -ef | grep "[d]b2sysc" | awk '{print $1 }')
 
@@ -206,7 +206,7 @@ else
         # there are still unwanted processes soiling the system.
         if [ -e "$CACHEFILE.new" ] ; then
             AGE=$(file_age "$CACHEFILE.new")
-            if [ $AGE -ge $((MAXAGE * 10)) ] ; then
+            if [ "$AGE" -ge $((MAXAGE * 10)) ] ; then
                 rm "$CACHEFILE.new"
             fi
         fi
@@ -215,7 +215,7 @@ else
         # nothing if the age (access time) of $CACHEFILE.new is twice the MAXAGE
         if [ -e "$CACHEFILE.new" ] ; then
             AGE=$(file_age "$CACHEFILE.new")
-            if [ $AGE -ge $((MAXAGE * 2)) ] ; then
+            if [ "$AGE" -ge $((MAXAGE * 2)) ] ; then
                 return
             fi
         fi
@@ -224,7 +224,7 @@ else
         USE_CACHEFILE=""
         if [ -s "$CACHEFILE" ] ; then
             AGE=$(file_age "$CACHEFILE")
-            if [ $AGE -le $MAXAGE ] ; then USE_CACHEFILE=1 ; fi
+            if [ "$AGE" -le $MAXAGE ] ; then USE_CACHEFILE=1 ; fi
             # Output the file in any case, even if it is
             # outdated. The new file will not yet be available
             cat "$CACHEFILE"

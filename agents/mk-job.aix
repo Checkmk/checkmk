@@ -37,7 +37,7 @@ if [ ! -d "$OUTPUT_PATH" ]; then
     fi
 fi
 
-if ! type $1 >/dev/null 2>&1; then
+if ! type "$1" >/dev/null 2>&1; then
     echo -e "ERROR: Cannot run $1. Command not found.\n" >&2
     help >&2
     exit 1
@@ -45,11 +45,11 @@ fi
 
 echo "start_time `perl -e 'print time'`" > "$RUNNING_FILE"
 
-/usr/bin/time -p "$@" 2>$TMP_FILE                # execute the command
+/usr/bin/time -p "$@" 2>"$TMP_FILE"              # execute the command
 RC=$?                                            # save return code
 echo "exit_code $RC" >> "$RUNNING_FILE"          # then add the return code
                                                  # and finally add the output of /usr/bin/time
-egrep  '^real   |^user   |^sys    ' $TMP_FILE | sed \
+egrep  '^real   |^user   |^sys    ' "$TMP_FILE" | sed \
        -e 's/,/\./g' \
        -e 's/^real  /real_time/g' \
        -e 's/^user  /user_time/g' \
@@ -57,6 +57,6 @@ egrep  '^real   |^user   |^sys    ' $TMP_FILE | sed \
        >> "$RUNNING_FILE"
 
 mv "$RUNNING_FILE" "$OUTPUT_PATH/$IDENT"
-rm $TMP_FILE
+rm "$TMP_FILE"
 exit $RC
 

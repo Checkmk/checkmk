@@ -15,14 +15,14 @@ CMK_VERSION="2.1.0i1"
 
 
 # shellcheck source=../cfg_example/saprouter.cfg
-. $MK_CONFDIR/saprouter.cfg || exit 1
+. "$MK_CONFDIR/saprouter.cfg" || exit 1
 
 
 if [ ! -z "$SAPROUTER_USER" ] && [ ! -z "$SAPGENPSE_PATH" ]
 then
-    if type ${SAPGENPSE_PATH}/sapgenpse > /dev/null
+    if type "${SAPGENPSE_PATH}/sapgenpse" > /dev/null
     then
         echo "<<<saprouter_cert>>>"
-        su - $SAPROUTER_USER -c "${SAPGENPSE_PATH}/sapgenpse get_my_name -n validity 2>&1"
+        su - "$SAPROUTER_USER" -c "${SAPGENPSE_PATH}/sapgenpse get_my_name -n validity 2>&1"
     fi
 fi

@@ -18,7 +18,7 @@ run () {
     suite="$1"
     control="/opt/kaspersky/$suite/bin/$suite-control"
 
-    [ -x "$(command -v $control)" ] || return
+    [ -x "$(command -v "$control")" ] || return
 
     if [ "$suite" = "$KAV4FS" ]; then
         echo "<<<kaspersky_av_updates:sep(58)>>>"

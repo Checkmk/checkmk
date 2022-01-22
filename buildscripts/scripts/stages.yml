@@ -156,7 +156,6 @@ STAGES:
             -e SC2003
             -e SC2004
             -e SC2005
-            -e SC2006
             -e SC2009
             -e SC2012
             -e SC2013

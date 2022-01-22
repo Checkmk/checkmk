@@ -411,10 +411,10 @@ run_purely_synchronous_sections() {
     # Performancecounter Kernel
     echo "<<<kernel>>>"
     get_epoch
-    forks=`sysctl -n vm.stats.vm.v_forks`
-    vforks=`sysctl -n vm.stats.vm.v_vforks`
-    rforks=`sysctl -n vm.stats.vm.v_rforks`
-    kthreads=`sysctl -n vm.stats.vm.v_kthreads`
+    forks=$(sysctl -n vm.stats.vm.v_forks)
+    vforks=$(sysctl -n vm.stats.vm.v_vforks)
+    rforks=$(sysctl -n vm.stats.vm.v_rforks)
+    kthreads=$(sysctl -n vm.stats.vm.v_kthreads)
     echo "cpu $(sysctl -n kern.cp_time | awk ' { print $1" "$2" "$3" "$5" "$4 } ')"
     echo "ctxt $(sysctl -n vm.stats.sys.v_swtch)"
     echo "processes $(expr "${forks}" + "${vforks}" + "${rforks}" + "${kthreads}")"

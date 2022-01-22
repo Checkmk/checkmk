@@ -24,7 +24,7 @@ fi
 echo "<<<mrpe>>>"
 for HOSTADDRESS in $HOSTADDRESSES
 do
-    ADDRESSES=`nslookup $HOSTADDRESS | sed -n -e 1,3d -e '/^Address: *\(.*\)$/s//\1/p'`
+    ADDRESSES=$(nslookup $HOSTADDRESS | sed -n -e 1,3d -e '/^Address: *\(.*\)$/s//\1/p')
     if [ ! "$ADDRESSES" ] ; then
         STATE=2
         OUTPUT="CRIT - $HOSTADDRESS could not be resolved"

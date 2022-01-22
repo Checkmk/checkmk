@@ -98,7 +98,7 @@ section_misc_sections() {
       CO=$( netstat -in | egrep -v Name | grep Link | awk '{ print $9 }' | sed -ne $Z1$Z2 )
       FF2="0 0"
         if [ "$PI" -gt "0" ]; then
-            echo $BI $PI $EI $FF1 $BO $PO $EO $FF2 $CO $FF2
+            echo "$BI $PI $EI $FF1 $BO $PO $EO $FF2 $CO $FF2"
         fi
       Z1=$(($Z1+1))
     done

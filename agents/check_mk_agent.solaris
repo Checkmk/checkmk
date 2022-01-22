@@ -442,7 +442,7 @@ section_cpu() {
     load=$(uptime|sed -e 's;.*average: \([0-9]\{1,\}\.[0-9]\{1,\}\), \([0-9]\{1,\}\.[0-9]\{1,\}\), \([0-9]\{1,\}\.[0-9]\{1,\}\).*;\1 \2 \3;')
     nthreads=$(($(ps -AL | wc -l)))
     procs=$(($(psrinfo | wc -l)))
-    echo ${load} 1/${nthreads} $$ ${procs}
+    echo "${load} 1/${nthreads} $$ ${procs}"
 }
 
 section_zpool() {
@@ -603,10 +603,10 @@ run_remote_plugins() {
             cmdline=${BASH_REMATCH[2]}
 
             # split multiple parameter assignments
-            for par in $(echo ${parameters} | tr ":" "\n"); do
+            for par in $(echo "${parameters}" | tr ":" "\n"); do
                 # split each assignment
-                key=$(echo ${par} | cut -d= -f1)
-                value=$(echo ${par} | cut -d= -f2)
+                key=$(echo "${par}" | cut -d= -f1)
+                value=$(echo "${par}" | cut -d= -f2)
 
                 if [ "${key}" = "interval" ]; then
                     interval=${value}
@@ -615,7 +615,7 @@ run_remote_plugins() {
         fi
 
         if [ -z "${interval}" ]; then
-            ${MK_RUN_SYNC_PARTS} && run_mrpe ${descr} "${cmdline}"
+            ${MK_RUN_SYNC_PARTS} && run_mrpe "${descr}" "${cmdline}"
         else
             run_cached "mrpe_${descr}" "${interval}" "run_mrpe '${descr}' '${cmdline}'"
         fi

@@ -543,8 +543,8 @@ section_aix_hacmp() {
             nodes=$(cllsnode | grep "NODE" | sed -e s/NODE//g -e s/://g)
             list_active_nodes=""
             for node in ${nodes}; do
-                active_nodes=$(clgetactivenodes -n ${node})
-                if echo ${active_nodes} | grep -q ${node}; then
+                active_nodes=$(clgetactivenodes -n "${node}")
+                if echo "${active_nodes}" | grep -q "${node}"; then
                     list_active_nodes=${list_active_nodes}"\n${node}"
                 fi
             done

@@ -417,13 +417,13 @@ run_purely_synchronous_sections() {
     kthreads=`sysctl -n vm.stats.vm.v_kthreads`
     echo "cpu $(sysctl -n kern.cp_time | awk ' { print $1" "$2" "$3" "$5" "$4 } ')"
     echo "ctxt $(sysctl -n vm.stats.sys.v_swtch)"
-    echo "processes $(expr ${forks} + ${vforks} + ${rforks} + ${kthreads})"
+    echo "processes $(expr "${forks}" + "${vforks}" + "${rforks}" + "${kthreads}")"
 
     # Network device statistics (Packets, Collisions, etc)
     # only the "Link/Num" interface has all counters.
     echo '<<<netctr>>>'
     get_epoch
-    if [ "$(echo ${osver} | cut -f1 -d\. )" -gt "8" ]; then
+    if [ "$(echo "${osver}" | cut -f1 -d\. )" -gt "8" ]; then
         netstat -inb | egrep -v '(^Name|lo|plip)' | grep Link | awk '{print $1" "$8" "$5" "$6" "$7" 0 0 0 0 "$11" "$9" "$10" 0 0 0 0 0"}'
     else
         # pad output for freebsd 7 and before
@@ -490,10 +490,10 @@ run_purely_synchronous_sections() {
     if inpath postconf; then
         echo '<<<postfix_mailq>>>'
         postfix_queue_dir=$(postconf -h queue_directory)
-        postfix_count=$(find ${postfix_queue_dir}/deferred -type f | wc -l)
-        postfix_size=$(du -ks ${postfix_queue_dir}/deferred | awk '{print $1 }')
-        if [ ${postfix_count} -gt 0 ]; then
-           echo -- ${postfix_size} Kbytes in ${postfix_count} Requests.
+        postfix_count=$(find "${postfix_queue_dir}/deferred" -type f | wc -l)
+        postfix_size=$(du -ks "${postfix_queue_dir}/deferred" | awk '{print $1 }')
+        if [ "${postfix_count}" -gt 0 ]; then
+           echo -- "${postfix_size} Kbytes in ${postfix_count} Requests."
         else
            echo Mail queue is empty
         fi
@@ -523,8 +523,8 @@ run_purely_synchronous_sections() {
         statgrab_vars_mem="mem. swap."
         statgrab_sections="proc disk page"
 
-        statgrab ${statgrab_vars} | grep -v md 1> /tmp/statgrab.$$
-        statgrab ${statgrab_vars_mem} 1>>/tmp/statgrab.$$
+        statgrab "${statgrab_vars}" | grep -v md 1> /tmp/statgrab.$$
+        statgrab "${statgrab_vars_mem}" 1>>/tmp/statgrab.$$
 
 
         for s in ${statgrab_sections}; do
@@ -571,7 +571,7 @@ run_cached() {
     # Check if cache file exists and is recent enough
     if [ -s "${CACHEFILE}" ]; then
         MTIME=$(get_file_mtime "${CACHEFILE}")
-        if [ $((NOW - MTIME)) -le ${MAXAGE} ]; then local USE_CACHEFILE=1; fi
+        if [ $((NOW - MTIME)) -le "${MAXAGE}" ]; then local USE_CACHEFILE=1; fi
 
         if ${MK_RUN_SYNC_PARTS}; then
             # Output the file even if it is outdated.
@@ -590,7 +590,7 @@ run_cached() {
 
     # Cache file outdated and new job not yet running? Start it
     if [ -z "${USE_CACHEFILE}" ] && [ ! -e "${CACHEFILE}.new" ]; then
-        echo "$*" | daemon /usr/local/bin/bash -o noclobber > ${CACHEFILE}.new && mv ${CACHEFILE}.new ${CACHEFILE} || rm -f ${CACHEFILE} ${CACHEFILE}.new &
+        echo "$*" | daemon /usr/local/bin/bash -o noclobber > "${CACHEFILE}.new" && mv "${CACHEFILE}.new" "${CACHEFILE}" || rm -f "${CACHEFILE}" "${CACHEFILE}.new" &
     fi
 }
 

@@ -1,0 +1,18 @@
+Title: mssql_blocked_sessions: use new service description by default
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0p28
+Date: 1642836267
+Class: fix
+
+For serivces of the plugin <tt>mssql_blocked_sessions</tt> the old service
+description was used, even if the Checkmk installation was not an upgrade
+from a previous version (< 1.6).
+
+This could result in the warning <i>"Duplicate service description (auto
+check) 'MSSQLBlocked Sessions'"</i>.
+
+Affected users have to select <i>"MSSQL Blocked Sessions"</i> in the rule
+set <i>"Use new service descriptions"</i>.

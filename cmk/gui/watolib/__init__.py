@@ -585,6 +585,7 @@ class ConfigGeneratorBasicWATOConfig(SampleConfigGenerator):
                 "qmail_stats",
                 "http",
                 "mssql_backup",
+                "mssql_blocked_sessions",
                 "mssql_counters.cache_hits",
                 "mssql_counters.transactions",
                 "mssql_counters.locks",

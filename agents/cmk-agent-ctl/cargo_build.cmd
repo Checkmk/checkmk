@@ -22,7 +22,6 @@ echo ------------
 :: Jenkins calls windows scripts in a quite strange manner, better to check is cargo available
 where cargo > nul
 if not %errorlevel% == 0 powershell Write-Host "Cargo not found, please install it and/or add to PATH" -Foreground Red && exit /b 7
-exit 0
 
 set cur_dir=%cd%
 set arte=%cur_dir%\..\..\artefacts

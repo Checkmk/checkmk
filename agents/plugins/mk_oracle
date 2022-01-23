@@ -382,8 +382,8 @@ file_mtime () {
 
 set_os_env () {
     if [ "$OS_TYPE" = 'Linux' ]; then
-        GREP=$(which grep)
-        AWK=$(which awk)
+        GREP="grep"
+        AWK="awk"
 
     elif [ "$OS_TYPE" = 'SunOS' ]; then
         # expand the PATH for inetd. Otherwise some stuff in /opt/sfw/bin is not found!
@@ -394,15 +394,15 @@ set_os_env () {
             exit 127
         fi
 
-        AWK=$(which nawk)
+        AWK="nawk"
 
     elif [ "$OS_TYPE" = 'AIX' ]; then
-        GREP=$(which grep)
-        AWK=$(which awk)
+        GREP="grep"
+        AWK="awk"
 
     elif [ "$OS_TYPE" = 'HP-UX' ]; then
-        GREP=$(which grep)
-        AWK=$(which awk)
+        GREP="grep"
+        AWK="awk"
 
     else
         unsupported_os

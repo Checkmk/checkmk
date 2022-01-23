@@ -5,6 +5,13 @@
 
 # NOTE: This agent has beed adapted from the Checkmk linux agent.
 
+inpath() {
+    # replace "if type [somecmd]" idiom
+    # 'command -v' tends to be more robust vs 'which' and 'type' based tests
+    command -v "${1:?No command to test}" >/dev/null 2>&1
+}
+
+
 get_epoch() {
     date +%s 2>/dev/null ||
         perl -e 'print($^T."\n");'
@@ -81,7 +88,7 @@ run_purely_synchronous_sections() {
     ps ax -o user,vsz,rss,pcpu,command | sed -e 1d -e 's/ *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) */(\1,\2,\3,\4) /'
 
     # NTP seems to be enabled as a default
-    if which ntpq >/dev/null; then
+    if inpath ntpq; then
         echo '<<<ntp>>>'
         ntpq -np | sed -e 1,2d -e 's/^\(.\)/\1 /' -e 's/^ /%/'
     fi

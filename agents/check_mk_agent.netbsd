@@ -9,6 +9,12 @@
 
 # NOTE: This agent has been adapted from the Checkmk FreeBSD agent.
 
+inpath() {
+    # replace "if type [somecmd]" idiom
+    # 'command -v' tends to be more robust vs 'which' and 'type' based tests
+    command -v "${1:?No command to test}" >/dev/null 2>&1
+}
+
 get_epoch() {
     date +%s 2>/dev/null ||
         perl -e 'print($^T."\n");'
@@ -105,7 +111,7 @@ section_misc_sections() {
 
     # IPMI-Data (Fans, CPU, temperature, etc)
     # needs the sysutils/ipmitool and kldload ipmi.ko
-    if which ipmitool >/dev/null; then
+    if inpath ipmitool; then
         echo '<<<ipmi>>>'
         ipmitool sensor list \
             | grep -v 'command failed' \
@@ -114,7 +120,7 @@ section_misc_sections() {
             | grep -v ' discrete '
     fi
 
-    if which mailq >/dev/null 2>&1 && getent passwd postfix >/dev/null 2>&1; then
+    if inpath mailq && getent passwd postfix >/dev/null 2>&1; then
       echo '<<<postfix_mailq>>>'
       mailq | tail -n 6
     fi

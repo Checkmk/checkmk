@@ -64,12 +64,12 @@ megaraid_info()
 
 
 # Only handle always updated values, add device path and vendor/model
-if which smartctl > /dev/null 2>&1 ; then
+if inpath smartctl > /dev/null 2>&1 ; then
     #
     # if the 3ware-utility is found
     # get the serials for all disks on the controller
     #
-    if which tw_cli > /dev/null 2>&1 ; then
+    if inpath tw_cli > /dev/null 2>&1 ; then
         # support for only one controller at the moment
         TWAC=$(tw_cli show | awk 'NR < 4 { next } { print $1 }' | head -n 1)
 

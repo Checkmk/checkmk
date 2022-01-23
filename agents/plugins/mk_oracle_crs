@@ -33,7 +33,7 @@ function set_osenv () {
     if [ "$ostype" = 'Linux' ] ; then
         ocrcfgfile=/etc/oracle/ocr.loc
         olrcfgfile=/etc/oracle/olr.loc
-        GREP=$(which grep)
+        GREP="grep"
     elif [ "$ostype" = 'SunOS' ] ; then
         ocrcfgfile=/var/opt/oracle/ocr.loc
         olrcfgfile=/var/opt/oracle/olr.loc

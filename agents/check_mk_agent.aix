@@ -446,7 +446,7 @@ section_libelle() {
     # Libelle Business Shadow
     if inpath trd; then
       echo '<<<libelle_business_shadow:sep(58)>>>'
-      $(which trd) -s
+      trd -s
     fi
 }
 

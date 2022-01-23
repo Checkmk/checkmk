@@ -53,6 +53,10 @@ run_purely_synchronous_sections() {
     section_checkmk
 
     echo '<<<df>>>'
+    # SC2162: read without -r will mangle backslashes.
+    # The following suppression was added when we enabled the corresponding shellcheck.
+    # It may well be that "read -r" would be more appropriate.
+    # shellcheck disable=SC2162
     df -kPT hfs,apfs | sed 1d | \
     while read DEV REST; do
         TYPE=$(diskutil info "$DEV" | grep '^\s*Type' | cut -d: -f2 | tr -d '[:space:]')
@@ -153,6 +157,10 @@ run_purely_synchronous_sections() {
 run_mrpe_plugins() {
     if [ -e "/etc/mrpe.cfg" ]; then
         echo '<<<mrpe>>>'
+        # SC2162: read without -r will mangle backslashes.
+        # The following suppression was added when we enabled the corresponding shellcheck.
+        # It may well be that "read -r" would be more appropriate.
+        # shellcheck disable=SC2162
         grep -Ev '^[[:space:]]*($|#)' "/etc/mrpe.cfg" | \
         while read descr cmdline; do
             PLUGIN=${cmdline%% *}

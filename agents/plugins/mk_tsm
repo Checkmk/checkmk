@@ -60,6 +60,11 @@ EOF
 # Find in the list of processes TSM daemons. Example output of 'ps xewwg'
 # 8781984      - A    127:26 dsmserv _=/usr/bin/dsmserv LANG=en_US LOGIN=root PATH=/usr/bin:/etc:/usr/sbin:/usr/ucb:/usr/bin/X11:/sbin:/usr/java5/jre/bin:/usr/java5/bin LC_ALL=en_US DSMSERV_CONFIG=/foobar_17g/dsmserv.opt LC__FASTMSG=true LOGNAME=root MAIL=/var/spool/mail/root LOCPATH=/usr/lib/nls/loc DSMSERV_DIR=/foobar_17g USER=root AUTHSTATE=compat AIXTHREAD_MNRATIO=1:1 SHELL=/usr/bin/ksh ODMDIR=/etc/objrepos HOME=/ SSH_CLIENT=192.168.21.199 37725 22 SSH_CONNECTION=192.168.21.199 37725 192.168.21.214 22 PWD=/foobar_17g TZ=Europe/Bucharest AIXTHREAD_SCOPE=S DSMSERV_ACCOUNTING_DIR=/foobar_17g/acc NLSPATH=/usr/lib/nls/msg/%L/%N:/usr/lib/nls/msg/%L/%N.cat LIBPATH=/usr/local/Centera_SDK/lib/64/
 
+# SC2162: read without -r will mangle backslashes.
+# We suppress it here for compatibility (curretly backslashes e.g. before spaces are dropped).
+# Since escaping of field seperators is not relevant when reading into one variable, we probably
+# would have wanted "read -r".
+# shellcheck disable=SC2162
 ps xewwg | sed -n '/ dsmserv .* DSMSERV_CONFIG=/s/^.* dsmserv //p' | \
 while read line
 do

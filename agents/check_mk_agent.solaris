@@ -329,6 +329,10 @@ section_df() {
     # Filesystem usage for UFS and VXFS
     echo '<<<df>>>'
     for fs in ufs vxfs samfs lofs tmpfs; do
+        # SC2162: read without -r will mangle backslashes.
+        # The following suppression was added when we enabled the corresponding shellcheck.
+        # It may well be that "read -r" would be more appropriate.
+        # shellcheck disable=SC2162
         df -l -k -F ${fs} 2>/dev/null | sed 1d | grep -v "^[^ ]*/lib/[^ ]*\.so\.1 " | \
         while read Filesystem kbytes used avail capacity Mountedon; do
             kbytes=$((used + avail))
@@ -595,6 +599,10 @@ run_remote_plugins() {
 
     # MK's Remote Plugin Executor
     echo '<<<mrpe>>>'
+    # SC2162: read without -r will mangle backslashes.
+    # The following suppression was added when we enabled the corresponding shellcheck.
+    # It may well be that "read -r" would be more appropriate.
+    # shellcheck disable=SC2162
     grep -v '^ *#' "${MK_CONFDIR}/mrpe.cfg" | grep -v '^ *$' | \
     while read descr cmdline; do
         interval=

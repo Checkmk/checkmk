@@ -149,6 +149,10 @@ run_local_checks() {
 run_mrpe_plugins() {
     if [ -e "$MK_CONFDIR/mrpe.cfg" ]; then
         echo '<<<mrpe>>>'
+        # SC2162: read without -r will mangle backslashes.
+        # The following suppression was added when we enabled the corresponding shellcheck.
+        # It may well be that "read -r" would be more appropriate.
+        # shellcheck disable=SC2162
         grep -Ev '^[[:space:]]*($|#)' "$MK_CONFDIR/mrpe.cfg" | \
         while read descr cmdline; do
             PLUGIN=${cmdline%% *}

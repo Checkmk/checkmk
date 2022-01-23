@@ -227,9 +227,15 @@ run_local_checks() {
     )
 }
 
+# TODO: sync with linux agent
 run_mrpe_plugins() {
     if [ -e "$MK_CONFDIR/mrpe.cfg" ]; then
         echo '<<<mrpe>>>'
+        # SC2162: read without -r will mangle backslashes.
+        # We suppress it here for compatibility (curretly backslashes e.g. before spaces are dropped).
+        # Since escaping of field seperators is not relevant when reading into one variable, we probably
+        # would have wanted "read -r".
+        # shellcheck disable=SC2162
         grep -Ev '^[[:space:]]*($|#)' "$MK_CONFDIR/mrpe.cfg" | \
         while read descr cmdline; do
             PLUGIN=${cmdline%% *}

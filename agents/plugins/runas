@@ -29,6 +29,10 @@ CMK_VERSION="2.1.0i1"
 # local ab /var/ab/local
 #
 
+# SC2162: read without -r will mangle backslashes.
+# The following suppression was added when we enabled the corresponding shellcheck.
+# It may well be that "read -r" would be more appropriate (for all of the three read commands).
+# shellcheck disable=SC2162
 grep -Ev '^[[:space:]]*($|#)' "$MK_CONFDIR/runas.cfg" | \
 while read type user include
 do

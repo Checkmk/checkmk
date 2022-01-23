@@ -161,8 +161,6 @@ STAGES:
             -e SC2013
             -e SC2015
             -e SC2016
-            -e SC2018
-            -e SC2019
             -e SC2030
             -e SC2031
             -e SC2034

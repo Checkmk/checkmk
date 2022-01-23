@@ -22,7 +22,7 @@ if [ -e "$MK_CONFDIR/ceph.cfg" ]; then
 fi
 
 
-if [ ! -z "$USER" ] && [ ! -z "$KEYRING" ]; then
+if [ -n "$USER" ] && [ -n "$KEYRING" ]; then
     CEPH_CMD="ceph -n $USER --keyring=$KEYRING"
     echo "<<<ceph_status>>>"
     $CEPH_CMD -s -f json-pretty

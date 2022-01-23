@@ -56,7 +56,7 @@ if [ -r "$sapservices" ]; then
         command=$(echo "$LINE" | grep "^LIBPATH=/usr/sap/" | grep -v "^LIBPATH=/usr/sap/D" | awk -F" " '{print $5}')
 	if [ -n "$command" ]; then
             id2=$(echo "$command" | awk -F"/" '{print $4}')
-            path=$(echo "/sapmnt/$id2/exe")
+            path="/sapmnt/$id2/exe"
             sappfpar=$(find "$path" -name sappfpar | head -1)
             sapcontrol=$(find "$path" -name sapcontrol | head -1)
             lib_path=$(find "$path" -name libicuuc\*.a | head -1 | sed -e 's,/[^ /]*$,,')

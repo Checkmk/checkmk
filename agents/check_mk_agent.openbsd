@@ -240,7 +240,7 @@ run_mrpe_plugins() {
         while read descr cmdline; do
             PLUGIN=${cmdline%% *}
             OUTPUT=$(eval "$cmdline")
-            echo -n "(${PLUGIN##*/}) $descr $? $OUTPUT" | tr \\n \\1
+            printf "(%s) %s %s %s"  "${PLUGIN##*/}" "$descr" "$?" "$OUTPUT" | tr \\n \\1
             echo
         done
     fi

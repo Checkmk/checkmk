@@ -386,7 +386,7 @@ run_purely_synchronous_sections() {
     # Calculate the uptime in seconds since epoch compatible to /proc/uptime in linux
     echo '<<<uptime>>>'
     up_seconds=$(($(get_epoch) - $(sysctl -n kern.boottime  | cut -f1 -d\, | awk '{print $4}')))
-    idle_seconds=$(ps axw | grep idle | grep -v grep | awk '{print $4}' | cut -f1 -d\: )
+    idle_seconds=$(ps axw | grep idle | grep -v grep | awk '{print $4}' | cut -f1 -d: )
     echo "${up_seconds} ${idle_seconds}"
 
     # Platten- und RAID-Status von LSI-Controlleren, falls vorhanden
@@ -417,7 +417,7 @@ run_purely_synchronous_sections() {
     kthreads=$(sysctl -n vm.stats.vm.v_kthreads)
     echo "cpu $(sysctl -n kern.cp_time | awk ' { print $1" "$2" "$3" "$5" "$4 } ')"
     echo "ctxt $(sysctl -n vm.stats.sys.v_swtch)"
-    echo "processes $(expr "${forks}" + "${vforks}" + "${rforks}" + "${kthreads}")"
+    echo "processes $((forks + vforks + rforks + kthreads))"
 
     # Network device statistics (Packets, Collisions, etc)
     # only the "Link/Num" interface has all counters.

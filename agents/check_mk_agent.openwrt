@@ -252,7 +252,7 @@ section_cpu() {
     else
         CPU_REGEX='^CPU|^processor'
     fi
-    echo "$(cat /proc/loadavg) $(grep -E ${CPU_REGEX} </proc/cpuinfo | wc -l)"
+    echo "$(cat /proc/loadavg) $(grep -c -E ${CPU_REGEX} </proc/cpuinfo)"
 }
 
 section_checkmk() {
@@ -268,8 +268,8 @@ section_checkmk() {
 
     # If we are called via xinetd, try to find only_from configuration
     if [ -n "${REMOTE_HOST}" ]; then
-        echo -n 'OnlyFrom: '
-        echo "$(sed -n '/^service[[:space:]]*'"${XINETD_SERVICE_NAME}"'/,/}/s/^[[:space:]]*only_from[[:space:]]*=[[:space:]]*\(.*\)/\1/p' /etc/xinetd.d/* | head -n1)"
+        printf 'OnlyFrom: '
+        sed -n '/^service[[:space:]]*'"${XINETD_SERVICE_NAME}"'/,/}/s/^[[:space:]]*only_from[[:space:]]*=[[:space:]]*\(.*\)/\1/p' /etc/xinetd.d/* | head -n1
     fi
 
     #
@@ -413,7 +413,7 @@ section_lnx_if() {
     echo '<<<lnx_if:sep(58)>>>'
     sed 1,2d /proc/net/dev
     if inpath ethtool; then
-        for eth in $(sed -e 1,2d /proc/net/dev | cut -d':' -f1 | sort); do
+        sed -e 1,2d /proc/net/dev | cut -d':' -f1 | sort | while read -r eth; do
             echo "[${eth}]"
             ethtool "${eth}" | grep -E '(Speed|Duplex|Link detected|Auto-negotiation):'
             echo "Address: $(cat "/sys/class/net/${eth}/address")"
@@ -426,7 +426,7 @@ section_bonding_interfaces() {
     (
         cd /proc/net/bonding 2>/dev/null || return
         echo '<<<lnx_bonding:sep(58)>>>'
-        head -v -n 1000 *
+        head -v -n 1000 ./*
     )
 }
 
@@ -538,7 +538,7 @@ section_dmraid() {
         dmraid -s | grep -e ^name -e ^status
 
         # Output disk names of the RAID disks
-        DISKS=$(echo "${DMSTATUS}" | cut -f1 -d\:)
+        DISKS=$(echo "${DMSTATUS}" | cut -f1 -d:)
 
         for disk in ${DISKS}; do
             device=$(cat "/sys/block/$(basename "${disk}")/device/model")
@@ -898,7 +898,7 @@ section_job() {
                 if [ "$(id -u)" -eq 0 ]; then
                     su -s "${SHELL}" "${username}" -c "head -n -0 -v *"
                 else
-                    head -n -0 -v *
+                    head -n -0 -v ./*
                 fi
                 cd ..
             )

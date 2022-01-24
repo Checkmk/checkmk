@@ -167,7 +167,7 @@ def test_check_phase_duration_with_different_pods(
 
     Here we focus on different sequences of pending pods.
     """
-    params = Params(pending=("levels", (60, 120)), unknown=3)
+    params = Params(pending=("levels", (60, 120)))
     for pending_pods, expected_result in zip(
         pending_pods_in_each_check_call,
         expected_result_in_each_check_call,
@@ -186,9 +186,9 @@ def test_check_phase_duration_with_different_pods(
             # If the user deactivates a rule and then later activates it again, the phase duration
             # should be persistent.
             (
-                Params(pending=("levels", (60, 120)), unknown=3),
-                Params(pending="no_levels", unknown=3),
-                Params(pending=("levels", (60, 120)), unknown=3),
+                Params(pending=("levels", (60, 120))),
+                Params(pending="no_levels"),
+                Params(pending=("levels", (60, 120))),
             ),
             (
                 Result(state=State.OK, summary="Pending: 1"),
@@ -202,9 +202,9 @@ def test_check_phase_duration_with_different_pods(
         ),
         pytest.param(
             (
-                Params(pending="no_levels", unknown=3),
-                Params(pending="no_levels", unknown=3),
-                Params(pending="no_levels", unknown=3),
+                Params(pending="no_levels"),
+                Params(pending="no_levels"),
+                Params(pending="no_levels"),
             ),
             (
                 Result(state=State.OK, summary="Pending: 1"),
@@ -241,7 +241,7 @@ def test_check_phase_duration_with_changing_params(
 
 
 @pytest.mark.parametrize(
-    "pending_pods_in_each_check_call,params_in_each_check_call,expected_result_in_each_check_call",
+    "pending_pods_in_each_check_call,expected_result_in_each_check_call",
     [
         pytest.param(
             (
@@ -251,16 +251,10 @@ def test_check_phase_duration_with_changing_params(
                 ["pod_4"],
             ),
             (
-                Params(pending="no_levels", unknown=0),
-                Params(pending="no_levels", unknown=1),
-                Params(pending="no_levels", unknown=2),
-                Params(pending="no_levels", unknown=3),
-            ),
-            (
                 Result(state=State.OK, summary="Unknown: 1", details="Unknown: 1 (pod_1)"),
-                Result(state=State.WARN, summary="Unknown: 1", details="Unknown: 1 (pod_2)"),
-                Result(state=State.CRIT, summary="Unknown: 1", details="Unknown: 1 (pod_3)"),
-                Result(state=State.UNKNOWN, summary="Unknown: 1", details="Unknown: 1 (pod_4)"),
+                Result(state=State.OK, summary="Unknown: 1", details="Unknown: 1 (pod_2)"),
+                Result(state=State.OK, summary="Unknown: 1", details="Unknown: 1 (pod_3)"),
+                Result(state=State.OK, summary="Unknown: 1", details="Unknown: 1 (pod_4)"),
             ),
             id="different_pods_unknown",
         ),
@@ -270,12 +264,6 @@ def test_check_phase_duration_with_changing_params(
                 [],
                 [],
                 [],
-            ),
-            (
-                Params(pending="no_levels", unknown=0),
-                Params(pending="no_levels", unknown=1),
-                Params(pending="no_levels", unknown=2),
-                Params(pending="no_levels", unknown=3),
             ),
             (
                 Result(state=State.OK, summary="Unknown: 0", details="Unknown: 0"),
@@ -289,7 +277,6 @@ def test_check_phase_duration_with_changing_params(
 )
 def test_check_bevaviour_if_there_are_unknown_pods(
     pending_pods_in_each_check_call: Tuple[PodSequence, ...],
-    params_in_each_check_call: Tuple[Params, ...],
     expected_result_in_each_check_call: Tuple[Result, ...],
     time_time,
     get_value_store,
@@ -300,14 +287,17 @@ def test_check_bevaviour_if_there_are_unknown_pods(
     time, which are relevant to the behaviour of unknown pods, i.e., check_kube_pod_resources will
     return other Results/Metrics, but will only return one Result, which is related to unknown.
     """
-    for pending_pods, params, expected_result in zip(
+    for pending_pods, expected_result in zip(
         pending_pods_in_each_check_call,
-        params_in_each_check_call,
         expected_result_in_each_check_call,
         # strict=True, would be nice
     ):
         assert (
-            tuple(check_kube_pod_resources(params, PodResources(unknown=pending_pods)))[8]
+            tuple(
+                check_kube_pod_resources(
+                    Params(pending="no_levels"), PodResources(unknown=pending_pods)
+                )
+            )[8]
             == expected_result
         )
 
@@ -320,9 +310,9 @@ _PYTEST_PARAMS_OVER_ALL_LOOK = [
             ["pod"],
         ),
         (
-            Params(pending=("levels", (60, 120)), unknown=0),
-            Params(pending=("levels", (60, 120)), unknown=0),
-            Params(pending=("levels", (60, 120)), unknown=0),
+            Params(pending=("levels", (60, 120))),
+            Params(pending=("levels", (60, 120))),
+            Params(pending=("levels", (60, 120))),
         ),
         (
             Result(state=State.OK, summary="Running: 0"),
@@ -347,7 +337,7 @@ _PYTEST_PARAMS_OVER_ALL_LOOK = [
     ),
     pytest.param(
         (["pod_1"],),
-        (Params(pending=("levels", (60, 120)), unknown=0),),
+        (Params(pending=("levels", (60, 120))),),
         (
             Result(state=State.OK, summary="Running: 0"),
             Metric("kube_pod_running", 0.0),

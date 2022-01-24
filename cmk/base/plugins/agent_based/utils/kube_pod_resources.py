@@ -7,7 +7,7 @@
 import json
 import time
 from itertools import islice
-from typing import Literal, MutableMapping, NamedTuple, TypedDict
+from typing import MutableMapping, NamedTuple, TypedDict
 
 from ..agent_based_api.v1 import get_value_store, Metric, render, Result, Service, State
 from ..agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
@@ -106,10 +106,9 @@ def _check_phase_duration_pods(
 
 class Params(TypedDict):
     pending: VSResultAge
-    unknown: Literal[0, 1, 2, 3]
 
 
-_DEFAULT_PARAMS = Params(pending="no_levels", unknown=3)
+_DEFAULT_PARAMS = Params(pending="no_levels")
 
 _POD_RESOURCES_FIELDS = ("running", "pending", "succeeded", "failed", "unknown")
 
@@ -130,7 +129,7 @@ def check_kube_pod_resources(params: Params, section: PodResources) -> CheckResu
         summary = _summary(resource, pod_count)
         if resource == "unknown":
             yield Result(
-                state=State(params["unknown"]) if pod_names else State.OK,
+                state=State.OK,
                 summary=summary,
                 details=f"{summary}{_view_pod_list(pod_names)}",
             )

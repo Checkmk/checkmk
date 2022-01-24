@@ -31,10 +31,8 @@ description:
  pods. If there are more than three pods exceeding the time limit, only the those three pods, which
  have been in the pending phase the longest will be shown.
 
- For pods in the phase unknown, the state of the check result is configurable. By default the
- service goes {UNKNOWN}, if there are unknown pods. The pod names are displayed in similar fashion
- as for the pending pods. However, pod names are not displayed based on how long they have been
- unknown.
+ The pod names are displayed in similar fashion as for the pending pods. However, pod names are not
+ displayed based on how long they have been unknown.
 
  The check requires that the special agent kube is configured.
 

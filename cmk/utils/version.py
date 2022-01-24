@@ -53,7 +53,12 @@ def omd_version() -> str:
 
 @lru_cache
 def edition() -> Edition:
-    return Edition[omd_version().split(".")[-1].upper()]
+    try:
+        return Edition[omd_version().split(".")[-1].upper()]
+    except KeyError:
+        # Without this fallback CI jobs may fail.
+        # The last job known to fail was we the building of the sphinx documentation
+        return Edition.CRE
 
 
 def is_enterprise_edition() -> bool:

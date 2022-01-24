@@ -5510,12 +5510,22 @@ def main(sys_argv=None):
     # Special distributor for S3 limits which distributes results across different regions
     s3_limits_distributor = ResultDistributorS3Limits()
 
+    if regional_services and not args.regions:
+        logging.error(
+            (
+                "You have to specify a region for the services: %s."
+                " Otherwise data for these services cannot be fetched."
+            ),
+            ", ".join(regional_services),
+        )
+
     for aws_services, aws_regions, aws_sections in [
         (global_services, ["us-east-1"], AWSSectionsUSEast),
         (regional_services, args.regions, AWSSectionsGeneric),
     ]:
         if not aws_services or not aws_regions:
             continue
+
         for region in aws_regions:
             try:
                 if args.assume_role:

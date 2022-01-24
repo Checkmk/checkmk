@@ -723,9 +723,12 @@ class ModeEditUser(WatoMode):
         auth_method = request.var("authmethod")
         if auth_method == "secret":
             secret = request.get_str_input_mandatory("_auth_secret", "").strip()
-            user_attrs["automation_secret"] = secret
-            user_attrs["password"] = hash_password(secret)
-            increase_serial = True  # password changed, reflect in auth serial
+            if secret:
+                user_attrs["automation_secret"] = secret
+                user_attrs["password"] = hash_password(secret)
+                increase_serial = True  # password changed, reflect in auth serial
+            elif "automation_secret" not in user_attrs and "password" in user_attrs:
+                del user_attrs["password"]
 
         else:
             password = request.get_str_input_mandatory("_password_" + self._pw_suffix(), "").strip()
@@ -765,9 +768,7 @@ class ModeEditUser(WatoMode):
 
         idle_timeout = watolib.get_vs_user_idle_timeout().from_html_vars("idle_timeout")
         user_attrs["idle_timeout"] = idle_timeout
-        if idle_timeout is not None:
-            user_attrs["idle_timeout"] = idle_timeout
-        elif idle_timeout is None and "idle_timeout" in user_attrs:
+        if idle_timeout is None:
             del user_attrs["idle_timeout"]
 
         # Pager
@@ -1000,9 +1001,10 @@ class ModeEditUser(WatoMode):
         html.open_ul()
         html.text_input(
             "_auth_secret",
-            self._user.get("automation_secret", ""),
+            "",
             size=30,
             id_="automation_secret",
+            placeholder="******" if "automation_secret" in self._user else "",
         )
         html.write_text(" ")
         html.open_b(style=["position: relative", "top: 4px;"])

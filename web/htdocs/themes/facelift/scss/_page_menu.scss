@@ -43,10 +43,6 @@ div#top_heading {
     align-items: center;
     height: inherit;
 
-    &.default {
-      top: 6px;
-    }
-
     > a {
       display: inherit;
       align-items: inherit;
@@ -59,6 +55,7 @@ div#top_heading {
 
     div.text_container span {
       display: table;
+      font-size: $font-size-large;
     }
 
     div.icon_container {
@@ -67,8 +64,8 @@ div#top_heading {
 
       img.icon {
         display: block;
-        width: 14px;
-        height: 14px;
+        width: 2 * $spacing;
+        height: 2 * $spacing;
 
         &:hover {
           /* disable hover effect */
@@ -78,7 +75,9 @@ div#top_heading {
     }
 
     &.default {
-      div.text_container {
+      top: 6px;
+
+      div.text_container span {
         position: absolute;
         right: 6px;
         bottom: 22px;

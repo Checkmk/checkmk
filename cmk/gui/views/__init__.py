@@ -206,7 +206,7 @@ from cmk.gui.valuespec import (
 )
 from cmk.gui.view_utils import get_labels, render_labels, render_tag_groups
 from cmk.gui.views.builtin_views import builtin_views
-from cmk.gui.watolib.activate_changes import get_pending_changes_info
+from cmk.gui.watolib.activate_changes import get_pending_changes_info, get_pending_changes_tooltip
 
 if not cmk_version.is_raw_edition():
     from cmk.gui.cee.ntop.connector import get_cache  # pylint: disable=no-name-in-module
@@ -977,6 +977,7 @@ class GUIViewRenderer(ABCViewRenderer):
             dropdowns=page_menu_dropdowns,
             breadcrumb=breadcrumb,
             has_pending_changes=bool(get_pending_changes_info()),
+            pending_changes_tooltip=get_pending_changes_tooltip(),
         )
 
         self._extend_display_dropdown(menu, show_filters)

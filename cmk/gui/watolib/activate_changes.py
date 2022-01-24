@@ -22,6 +22,7 @@ import hashlib
 import io
 import multiprocessing
 import os
+import re
 import shutil
 import subprocess
 import time
@@ -391,11 +392,11 @@ class ActivateChanges:
         for site_id in activation_sites():
             changes_counter += len(SiteChanges(SiteChanges.make_path(site_id)).read())
             if changes_counter > 10:
-                return _("10+ changes")
+                return _("10+ pending changes")
         if changes_counter == 1:
-            return _("1 change")
+            return _("1 pending change")
         if changes_counter > 1:
-            return _("%d changes") % changes_counter
+            return _("%d pending changes") % changes_counter
         return None
 
     def grouped_changes(self):
@@ -2020,6 +2021,22 @@ def confirm_all_local_changes() -> None:
 def get_pending_changes_info() -> Optional[str]:
     changes = ActivateChanges()
     return changes.get_changes_estimate()
+
+
+def get_pending_changes_tooltip() -> str:
+    changes_info = get_pending_changes_info()
+    if changes_info:
+        n_changes = int(re.findall(r"\d+", changes_info)[0])
+        return (
+            (
+                _("Currently, there is one pending change not yet activated.")
+                if n_changes == 1
+                else _("Currently, there are %s not yet activated.") % changes_info
+            )
+            + "\n"
+            + _("Click here for details.")
+        )
+    return _("Click here to see the activation status per site.")
 
 
 def get_number_of_pending_changes() -> int:

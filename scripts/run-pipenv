@@ -34,7 +34,7 @@ if [ -z "$LANG" ]; then
     done
 fi
 
-EXPECTED_PIPENV_VERSION="$(make --silent --no-print-directory --file="${REPO_PATH}"/defines.make print-PIPENV_VERSION)"
+EXPECTED_PIPENV_VERSION="$(MFLAGs= MAKEFLAGS= make --silent --no-print-directory --file="${REPO_PATH}"/defines.make print-PIPENV_VERSION)"
 PIPENV_VERSION="$(pipenv --version | cut -d' ' -f3)"
 if [ "$EXPECTED_PIPENV_VERSION" != "$PIPENV_VERSION" ]; then
     echo "Expected pipenv version $EXPECTED_PIPENV_VERSION, but you have $PIPENV_VERSION ($(type pipenv))."

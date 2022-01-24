@@ -38,7 +38,7 @@ import cmk.gui.forms as forms
 import cmk.gui.view_utils
 import cmk.gui.watolib as watolib
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
-from cmk.gui.exceptions import MKAuthException, MKUserError
+from cmk.gui.exceptions import HTTPRedirect, MKAuthException, MKUserError
 from cmk.gui.globals import config, g, html, output_funnel, request, transactions, user
 from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _
@@ -71,7 +71,7 @@ from cmk.gui.plugins.wato.utils import (
 from cmk.gui.plugins.wato.utils.main_menu import main_module_registry
 from cmk.gui.sites import wato_slave_sites
 from cmk.gui.table import Foldable, Table, table_element
-from cmk.gui.type_defs import ActionResult, HTTPVariables
+from cmk.gui.type_defs import ActionResult, HTTPVariables, PermissionName
 from cmk.gui.utils.escaping import escape_html_permissive, strip_tags
 from cmk.gui.utils.urls import makeuri, makeuri_contextless
 from cmk.gui.valuespec import (
@@ -123,7 +123,7 @@ class ABCRulesetMode(WatoMode):
     """
 
     @classmethod
-    def permissions(cls) -> List[str]:
+    def permissions(cls) -> list[PermissionName]:
         return ["rulesets"]
 
     def __init__(self) -> None:
@@ -376,7 +376,7 @@ class ModeRuleSearch(ABCRulesetMode):
             )
         super().page()
 
-    def action(self):
+    def action(self) -> HTTPRedirect:
         forms.remove_unused_vars("search_p_rule", _is_var_to_delete)
         return redirect(makeuri(request, []))
 
@@ -626,18 +626,18 @@ def _page_menu_entry_search_rules(
     )
 
 
-def _is_deprecated_rulesets_page(search_options):
+def _is_deprecated_rulesets_page(search_options) -> bool:
     return search_options.get("ruleset_deprecated") is True
 
 
-def _is_ineffective_rules_page(search_options):
+def _is_ineffective_rules_page(search_options) -> bool:
     return (
         search_options.get("ruleset_deprecated") is False
         and search_options.get("rule_ineffective") is True
     )
 
 
-def _is_used_rulesets_page(search_options):
+def _is_used_rulesets_page(search_options) -> bool:
     return (
         search_options.get("ruleset_deprecated") is False
         and search_options.get("ruleset_used") is True
@@ -651,7 +651,7 @@ class ModeEditRuleset(WatoMode):
         return "edit_ruleset"
 
     @classmethod
-    def permissions(cls) -> List[str]:
+    def permissions(cls) -> list[PermissionName]:
         return []
 
     @classmethod
@@ -941,7 +941,7 @@ class ModeEditRuleset(WatoMode):
         rulesets.save()
         return redirect(back_url)
 
-    def page(self):
+    def page(self) -> None:
         if not config.wato_hide_varnames:
             display_varname = (
                 '%s["%s"]' % tuple(self._name.split(":")) if ":" in self._name else self._name
@@ -957,7 +957,7 @@ class ModeEditRuleset(WatoMode):
         self._rule_listing(ruleset)
         self._create_form()
 
-    def _explain_match_type(self, match_type):
+    def _explain_match_type(self, match_type) -> None:
         html.open_div(class_="matching_message")
         html.b("%s: " % _("Matching"))
         if match_type == "first":
@@ -1021,7 +1021,7 @@ class ModeEditRuleset(WatoMode):
         html.javascript("cmk.utils.update_row_info(%s);" % json.dumps(row_info))
 
     @staticmethod
-    def _css_for_rule(search_options, rule):
+    def _css_for_rule(search_options, rule: Rule) -> Optional[str]:
         css = []
         if rule.is_disabled():
             css.append("disabled")
@@ -1040,7 +1040,14 @@ class ModeEditRuleset(WatoMode):
         if self._just_edited_rule and self._just_edited_rule.id == rule.id:
             html.focus_here()
 
-    def _show_rule_icons(self, table, match_state, folder, rule, rulenr):
+    def _show_rule_icons(
+        self,
+        table: Table,
+        match_state,
+        folder,
+        rule: Rule,
+        rulenr,
+    ) -> None:
         if self._hostname:
             table.cell(_("Ma."))
             title, img = self._match(match_state, rule)
@@ -1093,7 +1100,7 @@ class ModeEditRuleset(WatoMode):
             icon="delete",
         )
 
-    def _match(self, match_state, rule):
+    def _match(self, match_state, rule: Rule) -> _Tuple[str, str]:
         self._get_host_labels_from_remote_site()
         reasons = (
             [_("This rule is disabled")]
@@ -1231,13 +1238,13 @@ class ModeEditRuleset(WatoMode):
         desc = rule_options.description or rule_options.comment or ""
         html.write_text(desc)
 
-    def _rule_conditions(self, rule):
+    def _rule_conditions(self, rule: Rule) -> None:
         self._predefined_condition_info(rule)
         html.write_text(
             VSExplicitConditions(rulespec=self._rulespec).value_to_html(rule.get_rule_conditions())
         )
 
-    def _predefined_condition_info(self, rule):
+    def _predefined_condition_info(self, rule: Rule) -> None:
         condition_id = rule.predefined_condition_id()
         if condition_id is None:
             return
@@ -1274,7 +1281,7 @@ class ModeRuleSearchForm(WatoMode):
         return "rule_search_form"
 
     @classmethod
-    def permissions(cls) -> List[str]:
+    def permissions(cls) -> list[PermissionName]:
         return ["rulesets"]
 
     @classmethod
@@ -1311,7 +1318,7 @@ class ModeRuleSearchForm(WatoMode):
         )
         return menu
 
-    def page(self):
+    def page(self) -> None:
         html.begin_form("rule_search", method="POST")
         html.hidden_field("mode", self.back_mode, add_var=True)
 
@@ -2153,7 +2160,7 @@ class VSExplicitConditions(Transform):
             encode_value=False,
         )
 
-    def _vs_host_label_condition(self):
+    def _vs_host_label_condition(self) -> LabelCondition:
         return LabelCondition(
             title=_("Host labels"),
             help_txt=_("Use this condition to select hosts based on the configured host labels."),
@@ -2395,7 +2402,7 @@ class RuleConditionRenderer:
             % (object_title, html.render_i(_("and"), class_="label_operator").join(labels_html))
         )
 
-    def _single_label_condition(self, object_type, label_id, label_spec):
+    def _single_label_condition(self, object_type, label_id, label_spec) -> HTML:
         negate = False
         label_value = label_spec
         if isinstance(label_spec, dict):
@@ -2579,7 +2586,7 @@ class ModeEditRule(ABCEditRuleMode):
         return "edit_rule"
 
     @classmethod
-    def permissions(cls):
+    def permissions(cls) -> list[PermissionName]:
         return []
 
     def _save_rule(self) -> None:
@@ -2595,7 +2602,7 @@ class ModeCloneRule(ABCEditRuleMode):
         return "clone_rule"
 
     @classmethod
-    def permissions(cls):
+    def permissions(cls) -> list[PermissionName]:
         return []
 
     def title(self) -> str:
@@ -2609,7 +2616,7 @@ class ModeCloneRule(ABCEditRuleMode):
         self._ruleset.clone_rule(self._orig_rule, self._rule)
         self._rulesets.save()
 
-    def _remove_from_orig_folder(self):
+    def _remove_from_orig_folder(self) -> None:
         pass  # Cloned rule is not yet in folder, don't try to remove
 
 
@@ -2620,7 +2627,7 @@ class ModeNewRule(ABCEditRuleMode):
         return "new_rule"
 
     @classmethod
-    def permissions(cls):
+    def permissions(cls) -> list[PermissionName]:
         return []
 
     def title(self) -> str:
@@ -2647,7 +2654,7 @@ class ModeNewRule(ABCEditRuleMode):
                 # Folder can not be gathered from form if an error occurs
                 self._folder = watolib.Folder.folder(request.var("rule_folder"))
 
-    def _get_folder_path_from_vars(self):
+    def _get_folder_path_from_vars(self) -> str:
         return self._get_rule_conditions_from_vars().host_folder
 
     def _set_rule(self) -> None:

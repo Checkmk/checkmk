@@ -10,7 +10,8 @@
 
 /////////////////////////////////////////////////////////////
 // Careful! All Evt-Functions have to be used through the
-//          function pointers
+//          function pointers. The reason is possible crash
+//          on incompatible(old) systems
 /////////////////////////////////////////////////////////////
 namespace cma::evl {
 
@@ -28,24 +29,24 @@ class EventLogRecordVista : public EventLogRecordBase {
 
 public:
     // non-owning access to the Handles and this is DISASTER
-    EventLogRecordVista(EVT_HANDLE EventHandle, EVT_HANDLE RenderHandle)
-        : event_handle_(EventHandle) {
+    EventLogRecordVista(EVT_HANDLE event_handle, EVT_HANDLE render_handle)
+        : event_handle_(event_handle) {
         if (g_evt.render == nullptr) {
             XLOG::l("EvtRender function not found in wevtapi.dll");
             return;
         }
 
         if (event_handle_ == nullptr) {
-            XLOG::l.bp("INVALID CALL: No more entries");
+            XLOG::l("INVALID CALL: No more entries");
             return;
         }
 
         DWORD required = 0;
         DWORD property_count = 0;
-        g_evt.render(RenderHandle, event_handle_, EvtRenderEventValues, 0,
+        g_evt.render(render_handle, event_handle_, EvtRenderEventValues, 0,
                      nullptr, &required, &property_count);
         buffer_.resize(required);
-        g_evt.render(RenderHandle, event_handle_, EvtRenderEventValues,
+        g_evt.render(render_handle, event_handle_, EvtRenderEventValues,
                      static_cast<DWORD>(buffer_.size()), &buffer_[0], &required,
                      &property_count);
     }
@@ -78,16 +79,15 @@ public:
 
     };
 
-    const EVT_VARIANT &getValByType(int Index) const {
+    const EVT_VARIANT &getValByType(int index) const {
         auto values = reinterpret_cast<const EVT_VARIANT *>(&buffer_[0]);
 
-        return values[Index];
+        return values[index];
     }
 
     virtual uint16_t eventId() const override {
         // I believe type is always UInt16 but since MS can't do documentation
-        // I'm not
-        // sure
+        // I'm not sure
         auto val = getValByType(kEventId);
         switch (val.Type) {
             case EvtVarTypeUInt16:
@@ -118,7 +118,7 @@ public:
     virtual time_t timeGenerated() const override {
         auto val = getValByType(kTimeGenerated);
         auto ullTimeStamp = val.FileTimeVal;
-        static const ULONGLONG time_offset = 116444736000000000;
+        constexpr ULONGLONG time_offset = 116444736000000000;
         return (ullTimeStamp - time_offset) / 10000000;
     }
 
@@ -182,8 +182,8 @@ public:
             }
         } else {
             // can't read from the system, this may happen
-            auto n = GetLastError();
-            XLOG::t("open publishing meta error {} {}", n,
+            auto n = ::GetLastError();
+            XLOG::t("open publishing meta error [{}] '{}", n,
                     wtools::ToUtf8(source().c_str()));
             result.resize(0);
         }
@@ -198,17 +198,17 @@ public:
         // null character within the required buffer size! Later, this would
         // cause the socket output to be cut at the 1st null character, so
         // we need to trim trailing null away here.
-        while (!result.empty() && result.back() == L'\0') result.pop_back();
+        while (!result.empty() && result.back() == L'\0') {
+            result.pop_back();
+        }
 
-        std::replace_if(
-            result.begin(), result.end(),
-            [](wchar_t ch) { return ch == L'\n' || ch == L'\r'; }, ' ');
+        std::ranges::replace_if(
+            result, [](auto ch) { return ch == L'\n' || ch == L'\r'; }, ' ');
         return result;
     }
 
 private:
-    // this function is AS-IS, i.e. not tested
-    // #TODO check
+    // ultra-legacy code from 1.5
     std::wstring eventData() const {
         auto values = reinterpret_cast<const EVT_VARIANT *>(&buffer_[0]);
         constexpr size_t IDX = 6;  // ??? what ???
@@ -238,11 +238,12 @@ private:
     std::vector<BYTE> buffer_;
 };
 
+// Legacy code, I'm sorry.
 #define GET_FUNC(func) \
     ((decltype(&func))::GetProcAddress(module_handle_, #func))
 
 EvtFunctionMap::EvtFunctionMap() {
-    module_handle_ = LoadLibraryW(L"wevtapi.dll");
+    module_handle_ = ::LoadLibraryW(L"wevtapi.dll");
     if (module_handle_ == nullptr) {
         XLOG::l("CRIT ERROR");
         return;
@@ -264,7 +265,9 @@ EvtFunctionMap::EvtFunctionMap() {
 }
 
 EvtFunctionMap::~EvtFunctionMap() {
-    if (module_handle_) FreeLibrary(module_handle_);
+    if (module_handle_ != nullptr) {
+        ::FreeLibrary(module_handle_);
+    }
 }
 
 EventLogVista::EventLogVista(const std::wstring &LogName)
@@ -277,14 +280,17 @@ EventLogVista::EventLogVista(const std::wstring &LogName)
 std::wstring EventLogVista::getName() const { return log_name_; }
 
 std::wstring EventLogVista::renderBookmark(EVT_HANDLE bookmark) const {
-    if (g_evt.render == nullptr) return {};
+    if (g_evt.render == nullptr) {
+        return {};
+    }
 
     std::wstring buffer;
     buffer.resize(64);
 
-    DWORD required, count;
+    DWORD required = 0;
+    DWORD count = 0;
 
-    for (;;) {
+    while (true) {
         if (g_evt.render(nullptr, bookmark, EvtRenderBookmark,
                          static_cast<DWORD>(buffer.size() * sizeof(wchar_t)),
                          reinterpret_cast<void *>(&buffer[0]), &required,
@@ -312,7 +318,9 @@ EVT_HANDLE CreateLogHandle(EVT_QUERY_FLAGS flags, const std::wstring &path) {
     auto handle =
         g_evt.query(nullptr, path.c_str(), L"*", flags | EvtQueryChannelPath);
 
-    if (handle) return handle;
+    if (handle) {
+        return handle;
+    }
 
     handle = g_evt.query(nullptr, path.c_str(), L"*", flags | EvtQueryFilePath);
 
@@ -382,7 +390,9 @@ void EventLogVista::seek(uint64_t record_id) {
     auto bookmark_handle = g_evt.createBookmark(bookmark_xml.c_str());
     ON_OUT_OF_SCOPE(if (bookmark_handle) g_evt.close(bookmark_handle));
 
-    if (subscription_handle_) g_evt.close(subscription_handle_);
+    if (subscription_handle_ != nullptr) {
+        g_evt.close(subscription_handle_);
+    }
 
     subscription_handle_ = g_evt.subscribe(
         nullptr, event_signal_, log_name_.c_str(), L"*", bookmark_handle,
@@ -409,7 +419,9 @@ EventLogRecordBase *EventLogVista::readRecord() {
 // open/close to see what happens
 bool EventLogVista::isLogValid() const {
     auto handle = CreateLogHandle(EvtQueryReverseDirection, log_name_);
-    if (!handle) return false;
+    if (!handle) {
+        return false;
+    }
     g_evt.close(handle);
     return true;
 }
@@ -430,8 +442,9 @@ uint64_t EventLogVista::getLastRecordId() {
 
     EVT_HANDLE event_handle = nullptr;
     DWORD num_events = 0;
-    if (!g_evt.next(handle, 1, &event_handle, INFINITE, 0, &num_events))
+    if (!g_evt.next(handle, 1, &event_handle, INFINITE, 0, &num_events)) {
         return 0;
+    }
 
     ON_OUT_OF_SCOPE(g_evt.close(event_handle));
 
@@ -442,7 +455,9 @@ uint64_t EventLogVista::getLastRecordId() {
 
 bool EventLogVista::fillBuffer() {
     // don't wait, just query the signal <-- this is damned polling, my friends
-    if (subscription_handle_ == nullptr) return false;
+    if (subscription_handle_ == nullptr) {
+        return false;
+    }
 
     DWORD res = WaitForSingleObject(event_signal_, 0);
     if (res == WAIT_OBJECT_0) {

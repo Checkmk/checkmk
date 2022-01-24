@@ -2618,7 +2618,7 @@ class HostConfig:
             return "pull-agent"
         if mode == "push-agent":
             return "push-agent"
-        raise NotImplementedError("unknown connection mode: {mode!r}")
+        raise NotImplementedError(f"unknown connection mode: {mode!r}")
 
     def snmp_config(self, ip_address: HostAddress) -> SNMPHostConfig:
         return SNMPHostConfig(

@@ -1,4 +1,5 @@
 #!/bin/bash
+
 set -e
 
 SITE=${SITE:-$(until [ $PWD == / ]; do if [ -e .site ]; then
@@ -17,6 +18,8 @@ sudo rsync \
   --exclude="*.pyc" \
   --exclude="flycheck*" \
   --exclude="cee" \
+  --exclude="cpe" \
+  --exclude="cme" \
   -a * "$DESTDIR"
 
 # Also deploy all other directories of same type

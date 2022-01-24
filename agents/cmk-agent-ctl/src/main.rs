@@ -19,7 +19,6 @@ use config::JSONLoader;
 use log::error;
 #[cfg(unix)]
 use nix::unistd;
-use std::fs;
 use std::io::{self, Write};
 use std::path::Path;
 use structopt::StructOpt;
@@ -58,85 +57,57 @@ fn init_logging(path: &Path) -> AnyhowResult<()> {
     Ok(())
 }
 
-fn ensure_home_directory(path: &Path) -> io::Result<()> {
-    if !path.exists() {
-        fs::create_dir_all(path)?;
-    }
+#[cfg(unix)]
+fn become_user(user: &unistd::User) -> AnyhowResult<()> {
+    unistd::setgid(user.gid).context(format!(
+        "Failed to set group id {} corresponding to user {}",
+        user.gid, user.name,
+    ))?;
+    unistd::setuid(user.uid).context(format!(
+        "Failed to set user id {} corresponding to user {}",
+        user.uid, user.name,
+    ))?;
     Ok(())
 }
 
 #[cfg(unix)]
-fn try_sanitize_home_dir_ownership(home_dir: &Path, user: &str) {
-    if let Err(error) = sanitize_home_dir_ownership(home_dir, user).context(format!(
-        "Failed to recursively set ownership of {} to {}",
-        home_dir.display(),
-        user
-    )) {
-        io::stderr()
-            .write_all(format!("{:?}", error).as_bytes())
-            .unwrap_or(());
-        error!("{:?}", error)
-    };
-}
+fn user_setup(username: &str) -> AnyhowResult<constants::Paths> {
+    let user = unistd::User::from_name(username)?.context(format!(
+        "Could not find dedicated Checkmk agent user {}",
+        username
+    ))?;
 
-#[cfg(unix)]
-fn sanitize_home_dir_ownership(home_dir: &Path, user: &str) -> AnyhowResult<()> {
-    if !unistd::Uid::current().is_root() {
-        return Ok(());
+    if let Err(error) = become_user(&user) {
+        return Err(error.context(format!(
+            "Failed to become dedicated Checkmk agent user {}",
+            user.name,
+        )));
     }
-    let cmk_agent_user =
-        unistd::User::from_name(user)?.context(format!("Could not find user {}", user))?;
-    let cmk_agent_group =
-        unistd::Group::from_name(user)?.context(format!("Could not find group {}", user))?;
-    Ok(recursive_chown(
-        home_dir,
-        Some(cmk_agent_user.uid),
-        Some(cmk_agent_group.gid),
-    )?)
+
+    Ok(constants::Paths::new(&user.dir))
 }
 
-#[cfg(unix)]
-fn recursive_chown(
-    dir: &Path,
-    uid: Option<unistd::Uid>,
-    gid: Option<unistd::Gid>,
-) -> io::Result<()> {
-    unistd::chown(dir, uid, gid)?;
-    for entry in fs::read_dir(dir)? {
-        let path = entry?.path();
-        if path.is_dir() {
-            recursive_chown(&path, uid, gid)?;
-        } else {
-            unistd::chown(&path, uid, gid)?;
-        }
-    }
-    Ok(())
-}
-
-fn init() -> cli::Args {
+fn init() -> AnyhowResult<(cli::Args, constants::Paths)> {
     // Parse args as first action to directly exit from --help or malformatted arguments
     let args = cli::Args::from_args();
 
-    // TODO: Decide: Check if running as cmk-agent or root, and abort otherwise?
-    if let Err(error) = ensure_home_directory(&constants::home_dir()) {
-        panic!(
-            "Cannot go on: Missing cmk-agent home directory and failed to create it: {}",
-            error
-        );
-    }
+    let paths = match user_setup(constants::CMK_AGENT_USER) {
+        Ok(paths) => paths,
+        Err(err) => return Err(err),
+    };
 
-    if let Err(error) = init_logging(&constants::log_path()) {
+    if let Err(error) = init_logging(&paths.log_path) {
         io::stderr()
             .write_all(format!("Failed to initialize logging: {:?}", error).as_bytes())
             .unwrap_or(());
     }
 
-    args
+    Ok((args, paths))
 }
 
-fn run_requested_mode(args: cli::Args) -> AnyhowResult<()> {
-    let stored_config = config::ConfigFromDisk::load(&constants::config_path())?;
-    let mut registry = config::Registry::from_file(&constants::registry_path())
+fn run_requested_mode(args: cli::Args, paths: constants::Paths) -> AnyhowResult<()> {
+    let stored_config = config::ConfigFromDisk::load(&paths.config_path)?;
+    let mut registry = config::Registry::from_file(&paths.registry_path)
         .context("Error while loading registered connections.")?;
     match args {
         cli::Args::Register(reg_args) => {
@@ -144,7 +115,7 @@ fn run_requested_mode(args: cli::Args) -> AnyhowResult<()> {
                 config::RegistrationConfig::new(stored_config, reg_args)?,
                 &mut registry,
             )?;
-            pull::disallow_legacy_pull(&constants::legacy_pull_path()).context(
+            pull::disallow_legacy_pull(&paths.legacy_pull_path).context(
                 "Registration successful, but could not delete marker for legacy pull mode",
             )
         }
@@ -155,7 +126,7 @@ fn run_requested_mode(args: cli::Args) -> AnyhowResult<()> {
             )?)
         }
         cli::Args::Push { .. } => push(registry),
-        cli::Args::Pull { .. } => pull::pull(&registry, &constants::legacy_pull_path()),
+        cli::Args::Pull { .. } => pull::pull(&registry, &paths.legacy_pull_path),
         cli::Args::Dump { .. } => dump::dump(),
         cli::Args::Status(status_args) => status::status(registry, status_args.json),
         cli::Args::Delete(delete_args) => {
@@ -166,16 +137,20 @@ fn run_requested_mode(args: cli::Args) -> AnyhowResult<()> {
 }
 
 fn main() -> AnyhowResult<()> {
-    let args = init();
+    let (args, paths) = match init() {
+        Ok(args) => args,
+        Err(error) => {
+            // Do not log errors which occured for example when trying to become the cmk-agent user,
+            // otherwise, the log file ownership might be messed up
+            return Err(error);
+        }
+    };
 
-    let result = run_requested_mode(args);
+    let result = run_requested_mode(args, paths);
 
     if let Err(error) = &result {
         error!("{:?}", error)
     }
-
-    #[cfg(unix)]
-    try_sanitize_home_dir_ownership(&constants::home_dir(), constants::CMK_AGENT_USER);
 
     result
 }

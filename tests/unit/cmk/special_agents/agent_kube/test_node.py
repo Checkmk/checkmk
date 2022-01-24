@@ -6,8 +6,40 @@
 
 from unittest.mock import Mock
 
+import pytest
+
 from cmk.special_agents import agent_kube
 from cmk.special_agents.utils_kubernetes.schemata import section
+
+
+@pytest.mark.parametrize("node_pods", [0, 10, 20])
+def test_node_pod_resources_returns_all_node_pods(node, node_pods):
+    resources = dict(node.pod_resources())
+    pod_resources = section.PodResources(**resources)
+    assert sum(len(pods) for _, pods in pod_resources) == node_pods
+
+
+def test_node_pod_resources_one_pod_per_phase(node):
+    resources = dict(node.pod_resources())
+    pod_resources = section.PodResources(**resources)
+    for _phase, pods in pod_resources:
+        assert len(pods) == 1
+
+
+@pytest.mark.parametrize(
+    "phases", [["running"], ["pending"], ["succeeded"], ["failed"], ["unknown"]]
+)
+def test_node_pod_resources_pods_in_phase(node, phases, node_pods):
+    pods = node.pods(phases[0])
+    assert len(pods) == node_pods
+
+
+@pytest.mark.parametrize(
+    "phases", [["running"], ["pending"], ["succeeded"], ["failed"], ["unknown"]]
+)
+def test_node_pod_resources_pods_in_phase_no_phase_param(node, node_pods):
+    pods = node.pods()
+    assert len(pods) == node_pods
 
 
 def test_node_allocatable_memory_resource(node_allocatable_memory, node):

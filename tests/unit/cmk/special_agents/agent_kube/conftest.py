@@ -5,6 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # pylint: disable=comparison-with-callable,redefined-outer-name
+import itertools
 
 import pytest
 from pydantic_factories import ModelFactory
@@ -17,6 +18,20 @@ ONE_MiB = 1024 * ONE_KiB
 ONE_GiB = 1024 * ONE_MiB
 
 
+# Pod Factories
+class PodMetaDataFactory(ModelFactory):
+    __model__ = api.PodMetaData
+
+
+class PodStatusFactory(ModelFactory):
+    __model__ = api.PodStatus
+
+
+class PodSpecFactory(ModelFactory):
+    __model__ = api.PodSpec
+
+
+# Node Factories
 class KubeletInfoFactory(ModelFactory):
     __model__ = api.KubeletInfo
 
@@ -71,8 +86,48 @@ def new_node(node_resources_builder):
 
 
 @pytest.fixture
-def node(new_node):
-    return new_node()
+def node(new_node, node_pods, new_pod):
+    node = new_node()
+    for _ in range(node_pods):
+        node.append(new_pod())
+    return node
+
+
+@pytest.fixture
+def phases():
+    return api.Phase
+
+
+@pytest.fixture
+def phase_generator(phases):
+    def _phase_generator():
+        yield from itertools.cycle(phases)
+
+    return _phase_generator
+
+
+@pytest.fixture
+def new_pod(phase_generator):
+    phases = phase_generator()
+
+    def _new_pod():
+        pod_status = PodStatusFactory.build()
+        pod_status.phase = next(phases)
+        return agent_kube.Pod(
+            uid=api.PodUID("test-pod"),
+            metadata=PodMetaDataFactory.build(),
+            status=pod_status,
+            spec=PodSpecFactory.build(),
+            containers={},
+            init_containers={},
+        )
+
+    return _new_pod
+
+
+@pytest.fixture
+def node_pods():
+    return len(api.Phase)
 
 
 @pytest.fixture

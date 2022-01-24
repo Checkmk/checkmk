@@ -198,7 +198,7 @@ graph_info["kube_pod_resources"] = {
         ("kube_pod_free", "stack"),
         ("kube_pod_allocatable", "line"),
     ],
-    "optional_metrics": ["kube_pod_allocatable", "kube_pod_free"],
+    "optional_metrics": ["kube_pod_free", "kube_pod_allocatable"],
 }
 
 graph_info["kube_resources_terminated"] = {

@@ -6,7 +6,7 @@
 
 
 import itertools
-from typing import MutableMapping, Tuple
+from typing import MutableMapping, Sequence, Tuple
 
 import pytest
 
@@ -15,10 +15,12 @@ from cmk.base.plugins.agent_based.utils import kube_pod_resources
 from cmk.base.plugins.agent_based.utils.k8s import AllocatablePods, PodResources
 from cmk.base.plugins.agent_based.utils.kube_pod_resources import (
     _POD_RESOURCES_FIELDS,
+    check_free_pods,
     check_kube_pod_resources,
     Params,
     PodPhaseTimes,
     PodSequence,
+    VSResultPercent,
 )
 
 
@@ -166,7 +168,7 @@ def test_check_phase_duration_with_different_pods(
 
     Here we focus on different sequences of pending pods.
     """
-    params = Params(pending=("levels", (60, 120)))
+    params = Params(pending=("levels", (60, 120)), free="no_levels")
     for pending_pods, expected_result in zip(
         pending_pods_in_each_check_call,
         expected_result_in_each_check_call,
@@ -185,9 +187,9 @@ def test_check_phase_duration_with_different_pods(
             # If the user deactivates a rule and then later activates it again, the phase duration
             # should be persistent.
             (
-                Params(pending=("levels", (60, 120))),
-                Params(pending="no_levels"),
-                Params(pending=("levels", (60, 120))),
+                Params(pending=("levels", (60, 120)), free="no_levels"),
+                Params(pending="no_levels", free="no_levels"),
+                Params(pending=("levels", (60, 120)), free="no_levels"),
             ),
             (
                 Result(state=State.OK, summary="Pending: 1"),
@@ -201,9 +203,9 @@ def test_check_phase_duration_with_different_pods(
         ),
         pytest.param(
             (
-                Params(pending="no_levels"),
-                Params(pending="no_levels"),
-                Params(pending="no_levels"),
+                Params(pending="no_levels", free="no_levels"),
+                Params(pending="no_levels", free="no_levels"),
+                Params(pending="no_levels", free="no_levels"),
             ),
             (
                 Result(state=State.OK, summary="Pending: 1"),
@@ -294,11 +296,117 @@ def test_check_bevaviour_if_there_are_unknown_pods(
         assert (
             tuple(
                 check_kube_pod_resources(
-                    Params(pending="no_levels"), PodResources(unknown=pending_pods), None
+                    Params(pending="no_levels", free="no_levels"),
+                    PodResources(unknown=pending_pods),
+                    None,
                 )
             )[8]
             == expected_result
         )
+
+
+@pytest.mark.parametrize(
+    "pending_pods_in_each_check_call,param,expected_result_in_each_check_call",
+    [
+        pytest.param(
+            (
+                [],
+                ["pod_1"],
+                ["pod_1", "pod_2"],
+                ["pod_1", "pod_2", "pod_3"],
+            ),
+            "no_levels",
+            [
+                Result(state=State.OK, notice="Free: 2"),
+                Result(state=State.OK, notice="Free: 1"),
+                Result(state=State.OK, notice="Free: 0"),
+                Result(state=State.OK, notice="Free: 0"),
+            ],
+            id="Total number of free pods decreases to zero with levels disabled.",
+        ),
+        pytest.param(
+            (
+                [],
+                ["pod_1"],
+                ["pod_1", "pod_2"],
+                ["pod_1", "pod_2", "pod_3"],
+            ),
+            ("levels_abs", (2, 1)),
+            [
+                Result(state=State.OK, notice="Free: 2"),
+                Result(state=State.WARN, notice="Free: 1 (warn/crit below 2/1)"),
+                Result(state=State.CRIT, notice="Free: 0 (warn/crit below 2/1)"),
+                Result(state=State.CRIT, notice="Free: 0 (warn/crit below 2/1)"),
+            ],
+            id="Total number of free pods decreases to zero with absolute levels set.",
+        ),
+        pytest.param(
+            (
+                [],
+                ["pod_1"],
+                ["pod_1", "pod_2"],
+                ["pod_1", "pod_2", "pod_3"],
+            ),
+            ("levels_free", (100.0, 50.0)),
+            [
+                Result(state=State.OK, notice="Free: 2"),
+                Result(state=State.WARN, notice="Free: 1 (warn/crit below 2/1)"),
+                Result(state=State.CRIT, notice="Free: 0 (warn/crit below 2/1)"),
+                Result(state=State.CRIT, notice="Free: 0 (warn/crit below 2/1)"),
+            ],
+            id="Total number of free pods decreases to zero with percentual levels set.",
+        ),
+    ],
+)
+def test_check_levels_free_pods(
+    pending_pods_in_each_check_call: Tuple[PodSequence, ...],
+    param: VSResultPercent,
+    expected_result_in_each_check_call: Sequence[Result],
+) -> None:
+    for pending_pods, expected_result in zip(
+        pending_pods_in_each_check_call,
+        expected_result_in_each_check_call,
+    ):
+        result, _ = check_free_pods(
+            param,
+            PodResources(pending=pending_pods),
+            allocatable_pods=2,
+        )
+        assert result == expected_result
+
+
+@pytest.mark.parametrize(
+    "param, expected_result",
+    [
+        pytest.param(
+            ("levels_free", (50.1, 50.0)),
+            Result(state=State.WARN, notice="Free: 1 (warn/crit below 2/1)"),
+            id="The number of allocatable pods is two, and therefore the number of free pods is "
+            "below 50.1 if and only if it is below 2.",
+        ),
+        pytest.param(
+            ("levels_free", (100.0, 50.0)),
+            Result(state=State.WARN, notice="Free: 1 (warn/crit below 2/1)"),
+            id="The number of allocatable pods is two, and therefore the number of free pods is "
+            "below 100.0 if and only if it is below 2.",
+        ),
+    ],
+)
+def test_check_matches_what_valuespec_promises(
+    param: VSResultPercent, expected_result: Sequence[Result]
+) -> None:
+    """The rule set for free pods looks like this:
+    Warning below x %
+    Crit below y %
+    These percentual values need to be converted to absolute levels such that, what the rule set
+    promises, is true.
+    """
+    result, _ = check_free_pods(
+        param,
+        PodResources(pending=["pod_1"]),
+        allocatable_pods=2,
+    )
+    assert result == expected_result
 
 
 _PYTEST_PARAMS_OVER_ALL_LOOK = [
@@ -309,9 +417,9 @@ _PYTEST_PARAMS_OVER_ALL_LOOK = [
             ["pod"],
         ),
         (
-            Params(pending=("levels", (60, 120))),
-            Params(pending=("levels", (60, 120))),
-            Params(pending=("levels", (60, 120))),
+            Params(pending=("levels", (60, 120)), free="no_levels"),
+            Params(pending=("levels", (60, 120)), free="no_levels"),
+            Params(pending=("levels", (60, 120)), free="no_levels"),
         ),
         (
             Result(state=State.OK, summary="Running: 0"),
@@ -329,6 +437,7 @@ _PYTEST_PARAMS_OVER_ALL_LOOK = [
             # Results/Metrics below only for check_kube_pod_resources_with_capacity
             Result(state=State.OK, summary="Allocatable: 110"),
             Result(state=State.OK, notice="Capacity: 110"),
+            Result(state=State.OK, notice="Free: 109"),
             Metric("kube_pod_free", 109.0),
             Metric("kube_pod_allocatable", 110.0),
         ),
@@ -336,7 +445,7 @@ _PYTEST_PARAMS_OVER_ALL_LOOK = [
     ),
     pytest.param(
         (["pod_1"],),
-        (Params(pending=("levels", (60, 120))),),
+        (Params(pending=("levels", (60, 120)), free="no_levels"),),
         (
             Result(state=State.OK, summary="Running: 0"),
             Metric("kube_pod_running", 0.0),
@@ -350,6 +459,7 @@ _PYTEST_PARAMS_OVER_ALL_LOOK = [
             # Results/Metrics below only for check_kube_pod_resources_with_capacity
             Result(state=State.OK, summary="Allocatable: 110"),
             Result(state=State.OK, notice="Capacity: 110"),
+            Result(state=State.OK, notice="Free: 109"),
             Metric("kube_pod_free", 109.0),
             Metric("kube_pod_allocatable", 110.0),
         ),

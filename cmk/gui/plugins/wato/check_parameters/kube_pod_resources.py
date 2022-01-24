@@ -11,7 +11,7 @@ from cmk.gui.plugins.wato.utils import (
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
 )
-from cmk.gui.valuespec import Dictionary
+from cmk.gui.valuespec import CascadingDropdown, Dictionary, Integer, Percentage, Tuple
 
 
 def _parameter_valuespec_kube_pod_resources(help_text: str):
@@ -20,6 +20,36 @@ def _parameter_valuespec_kube_pod_resources(help_text: str):
             (
                 "pending",
                 valuespec_age(title=_("Define levels for pending pods")),
+            ),
+            (
+                "free",
+                CascadingDropdown(
+                    title=_("Define lower levels for free pods (clusters and nodes only)"),
+                    choices=[
+                        ("no_levels", _("No Levels")),
+                        (
+                            "levels_perc",
+                            _("Percentual levels"),
+                            Tuple(
+                                elements=[
+                                    Percentage(title=_("Warning below"), default_value=10.0),
+                                    Percentage(title=_("Critical below"), default_value=5.0),
+                                ]
+                            ),
+                        ),
+                        (
+                            "levels_abs",
+                            _("Absolute levels"),
+                            Tuple(
+                                elements=[
+                                    Integer(title=_("Warning below"), default_value=10),
+                                    Integer(title=_("Critical below"), default_value=5),
+                                ]
+                            ),
+                        ),
+                    ],
+                    default_value="levels_perc",
+                ),
             ),
         ],
         help=help_text,
@@ -39,6 +69,7 @@ rulespec_registry.register(
                 "for how long they have been pending. If a tolerating time period is set, the "
                 "service goes WARN/CRIT after any of the pods has been pending for longer than the "
                 "set duration. "
+                "For clusters and nodes one can define levels on the number of free pods."
             )
         ),
         title=lambda: _("Kubernetes pod resources"),

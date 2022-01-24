@@ -5,11 +5,20 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
+import math
 import time
 from itertools import islice
-from typing import MutableMapping, NamedTuple, Optional, TypedDict
+from typing import Literal, MutableMapping, NamedTuple, Optional, Tuple, TypedDict, Union
 
-from ..agent_based_api.v1 import get_value_store, Metric, render, Result, Service, State
+from ..agent_based_api.v1 import (
+    check_levels,
+    get_value_store,
+    Metric,
+    render,
+    Result,
+    Service,
+    State,
+)
 from ..agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 from .k8s import AllocatablePods, PodResources, PodSequence
 from .kube import VSResultAge
@@ -96,11 +105,19 @@ def _check_phase_duration_pods(
     return Result(state=State.OK, summary=summary)
 
 
+VSResultPercent = Union[
+    Tuple[Literal["levels_abs"], Tuple[int, int]],
+    Tuple[Literal["levels_perc"], Tuple[float, float]],
+    Literal["no_levels"],
+]
+
+
 class Params(TypedDict):
     pending: VSResultAge
+    free: VSResultPercent
 
 
-_DEFAULT_PARAMS = Params(pending="no_levels")
+_DEFAULT_PARAMS = Params(pending="no_levels", free=("levels_perc", (10.0, 5.0)))
 
 _POD_RESOURCES_FIELDS = ("running", "pending", "succeeded", "failed", "unknown")
 
@@ -142,6 +159,32 @@ def check_kube_pods(params: Params, section: PodResources) -> CheckResult:
             yield Metric(name=f"kube_pod_{resource}", value=pod_count)
 
 
+def check_free_pods(
+    vs_result: VSResultPercent, pod_resources: PodResources, allocatable_pods: int
+) -> CheckResult:
+    # At the cluster level there can be more pods pending than space available. Thus, the number of
+    # free pods may be negative.
+    num_free_pods = max(
+        0, allocatable_pods - len(pod_resources.pending) - len(pod_resources.running)
+    )
+
+    if vs_result == "no_levels":
+        levels = None
+    elif vs_result[0] == "levels_abs":
+        levels = Levels(*vs_result[1])
+    else:  # vs_result[0] == "levels_perc"
+        levels = Levels(*tuple(math.ceil(level * allocatable_pods / 100) for level in vs_result[1]))
+
+    yield from check_levels(
+        value=num_free_pods,
+        label="Free",
+        metric_name="kube_pod_free",
+        levels_lower=levels,
+        render_func=lambda x: str(int(x)),
+        notice_only=True,
+    )
+
+
 def check_kube_pod_resources(
     params: Params,
     section_kube_pod_resources: Optional[PodResources],
@@ -162,13 +205,7 @@ def check_kube_pod_resources(
         state=State.OK,
         notice=_summary("capacity", section_kube_allocatable_pods.capacity),
     )
-    # At the cluster level there can be more pods pending than space available. Thus, the number of
-    # free pods may be negative.
-    num_free_pods = max(
-        0,
-        section_kube_allocatable_pods.allocatable
-        - len(section_kube_pod_resources.pending)
-        - len(section_kube_pod_resources.running),
+    yield from check_free_pods(
+        params["free"], section_kube_pod_resources, section_kube_allocatable_pods.allocatable
     )
-    yield Metric(name="kube_pod_free", value=num_free_pods)
     yield Metric(name="kube_pod_allocatable", value=section_kube_allocatable_pods.allocatable)

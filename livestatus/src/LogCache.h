@@ -85,6 +85,8 @@ public:
         const LogFilter &log_filter,
         const std::function<bool(const LogEntry &)> &process_log_entry);
 
+    size_t numCachedLogMessages();
+
 private:
     MonitoringCore *const _mc;
     std::mutex _lock;

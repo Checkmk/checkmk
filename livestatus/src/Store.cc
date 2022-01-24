@@ -14,7 +14,6 @@
 #include "CrashReport.h"
 #include "EventConsoleConnection.h"
 #include "InputBuffer.h"
-#include "Logfile.h"
 #include "Logger.h"
 #include "MonitoringCore.h"
 #include "OutputBuffer.h"
@@ -299,11 +298,5 @@ bool Store::answerGetRequest(const std::list<std::string> &lines,
 Logger *Store::logger() const { return _mc->loggerLivestatus(); }
 
 size_t Store::numCachedLogMessages() {
-    return _log_cache.apply([](const LogFiles &log_files) {
-        size_t sum{0};
-        for (const auto &[since, log_file] : log_files) {
-            sum += log_file->size();
-        }
-        return sum;
-    });
+    return _log_cache.numCachedLogMessages();
 }

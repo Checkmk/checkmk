@@ -209,3 +209,9 @@ void LogCache::for_each(
         --it;
     }
 }
+
+size_t LogCache::numCachedLogMessages() {
+    std::lock_guard<std::mutex> lg(_lock);
+    update();
+    return _num_cached_log_messages;
+}

@@ -363,13 +363,13 @@ test-unit-core:
 	cd ../enterprise/core/src && ./.f12
 
 test-cargo-check:
-	$(SCRIPTS)/run-cargo-command-in-projects check
+	$(SCRIPTS)/run-cargo-command-in-projects check --all-targets
 
 test-cargo-check-docker:
 	$(SCRIPTS)/run-in-docker.sh make test-cargo-check
 
 test-cargo-test:
-	$(SCRIPTS)/run-cargo-command-in-projects test
+	$(SCRIPTS)/run-cargo-command-in-projects test --all-targets
 
 test-cargo-test-docker:
 	$(SCRIPTS)/run-in-docker.sh make test-cargo-test
@@ -381,7 +381,7 @@ test-cargo-fmt-docker:
 	$(SCRIPTS)/run-in-docker.sh make test-cargo-fmt
 
 test-cargo-clippy:
-	$(SCRIPTS)/run-cargo-command-in-projects clippy
+	$(SCRIPTS)/run-cargo-command-in-projects clippy --all-targets
 
 test-cargo-clippy-docker:
 	$(SCRIPTS)/run-in-docker.sh make test-cargo-clippy

@@ -210,6 +210,9 @@ test-format-shell:
 test-format-js:
 	cd ..; scripts/run-prettier --check --no-color --loglevel warn "{enterprise/web,web}/htdocs/js/**/*.js"
 
+test-type-js:
+	cd ..; npm run check-types
+
 test-format-js-docker:
 	../scripts/run-in-docker.sh make --quiet test-format-js
 

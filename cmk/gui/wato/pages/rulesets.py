@@ -70,7 +70,7 @@ from cmk.gui.plugins.wato.utils import (
 )
 from cmk.gui.plugins.wato.utils.main_menu import main_module_registry
 from cmk.gui.sites import wato_slave_sites
-from cmk.gui.table import Foldable, table_element
+from cmk.gui.table import Foldable, Table, table_element
 from cmk.gui.type_defs import ActionResult, HTTPVariables
 from cmk.gui.utils.escaping import escape_html_permissive, strip_tags
 from cmk.gui.utils.urls import makeuri, makeuri_contextless
@@ -93,7 +93,7 @@ from cmk.gui.watolib.check_mk_automations import get_check_information
 from cmk.gui.watolib.host_label_sync import execute_host_label_sync
 from cmk.gui.watolib.hosts_and_folders import Folder
 from cmk.gui.watolib.predefined_conditions import PredefinedConditionStore
-from cmk.gui.watolib.rulesets import RuleConditions, SearchOptions
+from cmk.gui.watolib.rulesets import Rule, RuleConditions, SearchOptions
 from cmk.gui.watolib.rulespecs import (
     main_module_from_rulespec_group_name,
     Rulespec,
@@ -1187,7 +1187,11 @@ class ModeEditRuleset(WatoMode):
         return make_action_link(vars_)
 
     # TODO: Refactor this whole method
-    def _rule_cells(self, table, rule):
+    def _rule_cells(
+        self,
+        table: Table,
+        rule: Rule,
+    ) -> None:
         value = rule.value
         rule_options = rule.rule_options
 
@@ -1215,12 +1219,16 @@ class ModeEditRuleset(WatoMode):
 
         # Comment
         table.cell(_("Description"))
-        url = rule_options.get("docu_url")
-        if url:
-            html.icon_button(url, _("Context information about this rule"), "url", target="_blank")
+        if docu_url := rule_options.docu_url:
+            html.icon_button(
+                docu_url,
+                _("Context information about this rule"),
+                "url",
+                target="_blank",
+            )
             html.write_text("&nbsp;")
 
-        desc = rule_options.get("description") or rule_options.get("comment", "")
+        desc = rule_options.description or rule_options.comment or ""
         html.write_text(desc)
 
     def _rule_conditions(self, rule):

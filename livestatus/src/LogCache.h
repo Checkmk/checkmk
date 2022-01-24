@@ -47,9 +47,12 @@ public:
     std::chrono::system_clock::time_point until;
 };
 
-// TODO(sp) Split this class into 2 parts: One is really only a cache for the
-// logfiles to monitor (pathsSince), the other part is about the lines in them
-// (apply).
+// NOTE: This class is currently broken due to race conditions: Although it uses
+// a lock internally to guard against concurrent modifications happening by its
+// own functions, there is no locking at all regarding the writing of log
+// messages to the monitoring history and no locking to protect against
+// concurrent monitoring history rotations. All of this *has* to move into this
+// class, otherwise strange things can happen. Rarely, but nevertheless...
 class LogCache {
 public:
     // TODO(sp) The constructor is not allowed to call any method of the
@@ -63,8 +66,21 @@ public:
     // constructs its own instance.
     explicit LogCache(MonitoringCore *mc);
 
+    // Used for a confusing fragile protocol betwwen LogCache and Logfile to
+    // keep the number of cached log entries under control. Used by
+    // Logfile::loadRange()
+    void logLineHasBeenAdded(Logfile *logfile, unsigned logclasses);
+
+    // Return log file paths chronologically backwards up to a given horizon
+    // plus the first skipped log file path (if any). Used by
+    // StateHistoryThread::run().
+    std::pair<std::vector<std::filesystem::path>,
+              std::optional<std::filesystem::path>>
+    pathsSince(std::chrono::system_clock::time_point since);
+
     // Call the given function with a locked and updated LogCache, keeping the
-    // lock and the update function local.
+    // lock and the update function local. Used by
+    // TableStateHistory::answerQuery()
     template <class F>
     inline auto apply(F f) {
         std::lock_guard<std::mutex> lg(_lock);
@@ -72,19 +88,15 @@ public:
         return f(LogFiles{_logfiles});
     }
 
-    // Return log file paths chronologically backwards up to a given horizon
-    // plus the first skipped log file path (if any).
-    std::pair<std::vector<std::filesystem::path>,
-              std::optional<std::filesystem::path>>
-    pathsSince(std::chrono::system_clock::time_point since);
-
-    // Used by Logfile::loadRange()
-    void logLineHasBeenAdded(Logfile *logfile, unsigned logclasses);
-
+    // Call the given callback for each log entry matching the filter in a
+    // chronologically backwards fashion, until the callback returns false. Used
+    // by TableLog::answerQuery().
     void for_each(
         const LogFilter &log_filter,
         const std::function<bool(const LogEntry &)> &process_log_entry);
 
+    // Returns the overall number of log entries currently in the cache. Used by
+    // Store::numCachedLogMessages().
     size_t numCachedLogMessages();
 
 private:

@@ -13,7 +13,7 @@ CMK_VERSION=${CMK_VERSION%.*}
 
 # Needed by {managed,plus}/cmk/.f12 to set the correct edition after .f12
 if [ -z "$ORIG_EDITION" ]; then
-    export ORIG_EDITION=$(sudo su - $SITE -c "python3 -c 'import cmk.utils.version; print(cmk.utils.version.edition_short())'")
+    export ORIG_EDITION=$(sudo su - $SITE -c "python3 -c 'import cmk.utils.version; print(cmk.utils.version.edition().short)'")
 fi
 
 echo "Update site $SITE..."

@@ -20,6 +20,7 @@ from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import (
     ABCHostAttributeNagiosText,
+    ABCHostAttributeNagiosValueSpec,
     ABCHostAttributeValueSpec,
     ConfigHostname,
     host_attribute_registry,
@@ -287,7 +288,7 @@ class HostAttributeAdditionalIPv6Addresses(ABCHostAttributeValueSpec):
 
 
 @host_attribute_registry.register
-class HostAttributeAgentConnection(ABCHostAttributeValueSpec):
+class HostAttributeAgentConnection(ABCHostAttributeNagiosValueSpec):
     def topic(self):
         return HostAttributeTopicDataSources
 
@@ -302,9 +303,6 @@ class HostAttributeAgentConnection(ABCHostAttributeValueSpec):
     def name(self):
         return "cmk_agent_connection"
 
-    def is_explicit(self) -> bool:
-        return True
-
     def show_in_table(self):
         return False
 
@@ -313,6 +311,12 @@ class HostAttributeAgentConnection(ABCHostAttributeValueSpec):
 
     def depends_on_tags(self):
         return ["checkmk-agent"]
+
+    def nagios_name(self) -> str:
+        return self.name()
+
+    def to_nagios(self, value: str) -> str:
+        return value
 
     def valuespec(self):
         return DropdownChoice(

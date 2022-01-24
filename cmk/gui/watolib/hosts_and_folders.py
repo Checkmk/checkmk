@@ -930,7 +930,6 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
             # host attr, cmk.base variable name, value, title
             ("ipaddress", "ipaddresses", {}, "Explicit IPv4 addresses"),
             ("ipv6address", "ipv6addresses", {}, "Explicit IPv6 addresses"),
-            ("cmk_agent_connection", "cmk_agent_connection", {}, "Checkmk agent connection mode"),
             ("snmp_community", "explicit_snmp_communities", {}, "Explicit SNMP communities"),
             (
                 "management_snmp_community",

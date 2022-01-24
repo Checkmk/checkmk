@@ -166,6 +166,7 @@ from cmk.gui.watolib.config_sync import (  # noqa: F401 # pylint: disable=unused
 )
 from cmk.gui.watolib.host_attributes import (  # noqa: F401 # pylint: disable=unused-import
     ABCHostAttributeNagiosText,
+    ABCHostAttributeNagiosValueSpec,
     ABCHostAttributeValueSpec,
     host_attribute_registry,
     host_attribute_topic_registry,

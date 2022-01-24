@@ -1900,7 +1900,7 @@ def fetch_data(connection, opt):
 #   '----------------------------------------------------------------------'
 
 
-def main(argv=None):
+def main(argv=None) -> int:
     if argv is None:
         cmk.utils.password_store.replace_passwords()
         argv = sys.argv[1:]
@@ -1924,7 +1924,7 @@ def main(argv=None):
         if opt.debug:
             raise
         sys.stderr.write("%s\n" % exc)
-        return 0 if opt.agent else 1
+        return 1
 
     sys.stdout.writelines("%s\n" % line for line in vsphere_output)
 

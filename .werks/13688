@@ -1,0 +1,16 @@
+Title: agent_vsphere: missleading error message
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1643035347
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0p19
+
+If wrongly configured, the Checkmk serivce displayed
+a missleading error message ("<i>AttributeError:
+'Namespace' object has no attribute 'agent'</i>").
+
+This has been fixed, such that the original error
+can be seen.

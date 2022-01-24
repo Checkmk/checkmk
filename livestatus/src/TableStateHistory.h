@@ -43,6 +43,8 @@ protected:
 private:
     LogCache *_log_cache;
 
+    enum class ModificationStatus { unchanged, changed };
+
     void answerQueryInternal(Query *query, const LogFiles &log_files);
     const Logfile::map_type *getEntries(Logfile *logfile);
     void getPreviousLogentry(const LogFiles &log_files,
@@ -56,7 +58,7 @@ private:
     void process(Query *query,
                  std::chrono::system_clock::duration query_timeframe,
                  HostServiceState *hs_state);
-    int updateHostServiceState(
+    ModificationStatus updateHostServiceState(
         Query *query, std::chrono::system_clock::duration query_timeframe,
         const LogEntry *entry, HostServiceState *hs_state, bool only_update,
         const std::map<std::string, int> &notification_periods);

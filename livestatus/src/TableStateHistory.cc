@@ -576,14 +576,14 @@ void TableStateHistory::answerQueryInternal(Query *query,
                     state = it_hst->second;
                 }
 
-                int state_changed =
+                auto state_changed =
                     updateHostServiceState(query, query_timeframe, entry, state,
                                            only_update, notification_periods);
                 // Host downtime or state changes also affect its services
                 if (entry->kind() == LogEntryKind::alert_host ||
                     entry->kind() == LogEntryKind::state_host ||
                     entry->kind() == LogEntryKind::downtime_alert_host) {
-                    if (state_changed != 0) {
+                    if (state_changed == ModificationStatus::changed) {
                         for (auto &svc : state->_services) {
                             updateHostServiceState(query, query_timeframe,
                                                    entry, svc, only_update,
@@ -669,11 +669,11 @@ void TableStateHistory::answerQueryInternal(Query *query,
     object_blacklist.clear();
 }
 
-int TableStateHistory::updateHostServiceState(
+TableStateHistory::ModificationStatus TableStateHistory::updateHostServiceState(
     Query *query, std::chrono::system_clock::duration query_timeframe,
     const LogEntry *entry, HostServiceState *hs_state, bool only_update,
     const std::map<std::string, int> &notification_periods) {
-    int state_changed = 1;
+    ModificationStatus state_changed{ModificationStatus::changed};
 
     // Revive host / service if it was unmonitored
     if (entry->kind() != LogEntryKind::timeperiod_transition &&
@@ -752,7 +752,7 @@ int TableStateHistory::updateHostServiceState(
                     hs_state->_host_down = static_cast<int>(entry->state() > 0);
                     hs_state->_debug_info = "HOST STATE";
                 } else {
-                    state_changed = 0;
+                    state_changed = ModificationStatus::unchanged;
                 }
             } else if (hs_state->_host_down !=
                        static_cast<int>(entry->state() > 0)) {
@@ -794,7 +794,7 @@ int TableStateHistory::updateHostServiceState(
                     hs_state->_in_downtime = downtime_active;
                 }
             } else {
-                state_changed = 0;
+                state_changed = ModificationStatus::unchanged;
             }
             break;
         }
@@ -823,7 +823,7 @@ int TableStateHistory::updateHostServiceState(
                 hs_state->_debug_info = "FLAPPING ";
                 hs_state->_is_flapping = flapping_active;
             } else {
-                state_changed = 0;
+                state_changed = ModificationStatus::unchanged;
             }
             break;
         }

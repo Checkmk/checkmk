@@ -43,6 +43,7 @@ class RequestParameter:
 
     recipient: str
     url: str
+    verify: bool
     proxies: Optional[Dict[str, str]]
     user: str
     pwd: str
@@ -132,6 +133,7 @@ def _get_request_params_from_context(raw_context: RawContext) -> Union[Errors, R
     return RequestParameter(
         recipient=recipient,
         url=raw_context["PARAMETER_URL"],
+        verify="PARAMETER_IGNORE_SSL" in raw_context,
         proxies=proxies,
         user=raw_context["PARAMETER_USERNAME"],
         pwd=retrieve_from_passwordstore(raw_context["PARAMETER_PASSWORD"]),
@@ -159,6 +161,7 @@ def process_notifications(context: Context) -> int:
         proxies=context.request_parameter.proxies,
         timeout=context.request_parameter.timeout,
         data=context.data,
+        verify=context.request_parameter.verify,
     )
 
     if response.status_code != 200 or response.content != b"OK\n":

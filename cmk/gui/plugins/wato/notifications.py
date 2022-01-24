@@ -1836,7 +1836,7 @@ class NotificationParameterSMSviaIP(NotificationParameter):
     def spec(self):
         return Dictionary(
             title=_("Create notification with the following parameters"),
-            optional_keys=False,
+            optional_keys=["ignore_ssl"],
             elements=[
                 (
                     "modem_type",
@@ -1855,8 +1855,19 @@ class NotificationParameterSMSviaIP(NotificationParameter):
                     "url",
                     HTTPUrl(
                         title=_("Modem URL"),
-                        help=_("Configure your modem URL here (eg. https://mymodem.com)."),
+                        help=_(
+                            "Configure your modem URL here (eg. https://mymodem.mydomain.example)."
+                        ),
                         allow_empty=False,
+                    ),
+                ),
+                (
+                    "ignore_ssl",
+                    FixedValue(
+                        True,
+                        title=_("Disable SSL certificate verification"),
+                        totext=_("Disable SSL certificate verification"),
+                        help=_("Ignore unverified HTTPS request warnings. Use with caution."),
                     ),
                 ),
                 ("proxy_url", HTTPProxyReference()),

@@ -325,7 +325,8 @@ class HostAttributeAgentConnection(ABCHostAttributeNagiosValueSpec):
                 ("pull-agent", _("Pull: Checkmk server contacts the agent")),
                 (
                     "push-agent",
-                    _("Push: Checkmk agent contacts the server (%s only)") % Edition.CPE.short,
+                    _("Push: Checkmk agent contacts the server (%s only)")
+                    % Edition.CPE.short.upper(),
                 ),
             ],
             help=_(

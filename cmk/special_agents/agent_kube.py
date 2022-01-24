@@ -9,6 +9,7 @@ depends on the corresponding python module. E.g. v11 of the python module will s
 Kubernetes API v1.15. Please take a look on the official website to see, if you API version
 is supported: https://github.com/kubernetes-client/python
 """
+
 from __future__ import annotations
 
 import argparse
@@ -21,6 +22,7 @@ import sys
 from collections import defaultdict
 from pathlib import Path
 from typing import (
+    Any,
     Callable,
     DefaultDict,
     Dict,
@@ -727,6 +729,20 @@ def write_pods_api_sections(
                     writer.append(section_content.json())
 
 
+def write_machine_sections(
+    cluster: Cluster,
+    machine_sections: Dict[str, str],
+    piggyback_formatter: functools.partial[str],
+) -> None:
+    # make sure we only print sections for nodes currently visible via kubernetes api:
+    for node in cluster.nodes():
+        if sections := machine_sections.get(str(node.name)):
+            with ConditionalPiggybackSection(
+                piggyback_formatter(object_type="node", namespace_name=node.name)
+            ):
+                sys.stdout.write(sections)
+
+
 def pod_api_based_checkmk_sections(pod: Pod):
     sections = (
         ("k8s_pod_conditions_v1", pod.conditions),
@@ -902,28 +918,32 @@ class ClusterConnectionError(Exception):
     pass
 
 
-def request_metrics_from_cluster_collector(
-    cluster_agent_url: str,
-    token: str,
-    verify: bool,
-) -> Sequence[RawMetrics]:
-    LOGGER.info("Collecting metrics from cluster collector")
+def request_cluster_collector(
+    cluster_agent_url: str, page: str, token: str, verify: bool, debug: bool
+) -> Optional[Any]:
     if not verify:
         LOGGER.info("Disabling SSL certificate verification")
         urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-    cluster_resp = requests.get(
-        f"{cluster_agent_url}/container_metrics",
-        headers={"Authorization": f"Bearer {token}"},
-        verify=False,  # nosec
-    )  # TODO: certificate validation
+    try:
+        cluster_resp = requests.get(
+            f"{cluster_agent_url}/{page}",
+            headers={"Authorization": f"Bearer {token}"},
+            verify=verify,
+        )  # TODO: certificate validation
+    except requests.exceptions.ConnectionError as e:
+        if debug:
+            raise ClusterConnectionError(
+                f"Failed to establish a connection to cluster collector "
+                f"to {e.args[0].pool.host}:{e.args[0].pool.port} at URL {e.args[0].url}"
+            )
+        return None
+
     if cluster_resp.status_code != 200:
         raise SetupError("Checkmk cannot make a connection to the k8 cluster agent")
 
     if not cluster_resp.content:
         raise SetupError("Worker nodes")
-
-    resp_content = cluster_resp.content.decode("utf-8").split("\n")
-    return json.loads(resp_content[0])
+    return json.loads(cluster_resp.content.decode("utf-8"))
 
 
 def map_lookup_name_to_piggyback_host_name(
@@ -1269,21 +1289,20 @@ def main(args: Optional[List[str]] = None) -> int:
                 return 0
 
             # Sections based on cluster collector performance data
-            try:
-                collected_metrics = request_metrics_from_cluster_collector(
-                    arguments.cluster_agent_endpoint, arguments.token, arguments.verify_cert
-                )
-            except requests.exceptions.ConnectionError as e:
-                if arguments.debug:
-                    raise ClusterConnectionError(
-                        f"Failed to establish a connection to cluster collector "
-                        f"to {e.args[0].pool.host}:{e.args[0].pool.port} at URL {e.args[0].url}"
-                    )
-                # a non-zero code would discard all API sections as the written out sections
-                # would not be further processed by Checkmk
+            LOGGER.info("Collecting container metrics from cluster collector")
+            container_metrics: Optional[Sequence[RawMetrics]] = request_cluster_collector(
+                arguments.cluster_agent_endpoint,
+                "container_metrics",
+                arguments.token,
+                arguments.verify_cert,
+                arguments.debug,
+            )
+            # a non-zero code would discard all API sections as the written out sections
+            # would not be further processed by Checkmk
+            if container_metrics is None:
                 return 0
 
-            performance_metrics = parse_performance_metrics(collected_metrics)
+            performance_metrics = parse_performance_metrics(container_metrics)
 
             relevant_counter_metrics = [MetricName("cpu_usage_seconds_total")]
             performance_counter_metrics = filter_specific_metrics(
@@ -1317,7 +1336,7 @@ def main(args: Optional[List[str]] = None) -> int:
             )
 
             containers_metadata = parse_containers_metadata(
-                collected_metrics, pod_lookup_from_metric
+                container_metrics, pod_lookup_from_metric
             )
 
             performance_containers = group_container_components(
@@ -1373,6 +1392,21 @@ def main(args: Optional[List[str]] = None) -> int:
             write_kube_object_performance_section(cluster, performance_pods)
 
             # TODO: handle pods with no performance data (pod.uid not in performance pods)
+
+            # Sections based on cluster collector machine sections
+            LOGGER.info("Collecting machine sections from cluster collector")
+            machine_sections: Optional[Dict[str, str]] = request_cluster_collector(
+                arguments.cluster_agent_endpoint,
+                "machine_sections",
+                arguments.token,
+                arguments.verify_cert,
+                arguments.debug,
+            )
+            if machine_sections is None:
+                return 0
+
+            write_machine_sections(cluster, machine_sections, piggyback_formatter)
+
     except Exception as e:
         if arguments.debug:
             raise

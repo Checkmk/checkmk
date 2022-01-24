@@ -38,6 +38,7 @@ EXISTING_HOST_NAME = fields.HostField(
 MONITORED_HOST = fields.HostField(
     description="The hostname or IP address itself.",
     example='example.com',
+    should_exist=None,
     should_be_monitored=True,
     required=True,
 )

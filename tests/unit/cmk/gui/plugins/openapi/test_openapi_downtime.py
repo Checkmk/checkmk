@@ -108,6 +108,50 @@ def test_openapi_schedule_host_downtime(
         )
 
 
+def test_openapi_schedule_host_downtime_for_host_without_config(
+    wsgi_app,
+    with_automation_user,
+    mock_livestatus,
+):
+    live: MockLiveStatusConnection = mock_livestatus
+    live.set_sites(['NO_SITE'])
+    username, secret = with_automation_user
+    wsgi_app.set_authorization(('Bearer', username + " " + secret))
+
+    base = "/NO_SITE/check_mk/api/1.0"
+
+    monitored_only_host = "this-host-only.exists-in.livestatus"
+
+    live.add_table(
+        "hosts",
+        [
+            {
+                "name": monitored_only_host,
+            },
+        ],
+    )
+
+    live.expect_query(f"GET hosts\nColumns: name\nFilter: name = {monitored_only_host}")
+    live.expect_query(f"GET hosts\nColumns: name\nFilter: name = {monitored_only_host}")
+    live.expect_query(
+        f"COMMAND [...] SCHEDULE_HOST_DOWNTIME;{monitored_only_host};1577836800;1577923200;1;0;0;test123-...;Downtime for ...",
+        match_type="ellipsis",
+    )
+    with live:
+        wsgi_app.post(
+            base + "/domain-types/downtime/collections/host",
+            content_type="application/json",
+            params=json.dumps({
+                "downtime_type": "host",
+                "host_name": monitored_only_host,
+                "start_time": "2020-01-01T00:00:00Z",
+                "end_time": "2020-01-02T00:00:00Z",
+            }),
+            headers={"Accept": "application/json"},
+            status=204,
+        )
+
+
 def test_openapi_schedule_servicegroup_downtime(
     wsgi_app,
     with_automation_user,
@@ -771,22 +815,28 @@ def test_openapi_downtime_non_existing_instance(
     wsgi_app,
     with_automation_user,
     suppress_automation_calls,
+    mock_livestatus: MockLiveStatusConnection,
 ):
     username, secret = with_automation_user
     wsgi_app.set_authorization(('Bearer', username + " " + secret))
     base = '/NO_SITE/check_mk/api/1.0'
 
-    wsgi_app.post(
-        base + '/domain-types/downtime/collections/host',
-        content_type='application/json',
-        params=json.dumps({
-            'downtime_type': 'host',
-            'host_name': 'non-existant',
-            'start_time': '2020-01-01T00:00:00Z',
-            'end_time': '2020-01-02T00:00:00Z',
-        }),
-        status=400,
-    )
+    live: MockLiveStatusConnection = mock_livestatus
+    live.expect_query(["GET hosts", "Columns: name", "Filter: name = non-existant"])
+
+    with live:
+        wsgi_app.post(
+            base + "/domain-types/downtime/collections/host",
+            content_type="application/json",
+            params=json.dumps({
+                "downtime_type": "host",
+                "host_name": "non-existant",
+                "start_time": "2020-01-01T00:00:00Z",
+                "end_time": "2020-01-02T00:00:00Z",
+            }),
+            headers={"Accept": "application/json"},
+            status=400,
+        )
 
 
 def test_openapi_downtime_non_existing_groups(

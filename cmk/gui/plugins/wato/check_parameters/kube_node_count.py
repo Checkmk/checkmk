@@ -22,8 +22,8 @@ def __levels(key, title_upper, title_lower):
                 title_upper,
                 Tuple(
                     elements=[
-                        Integer(title=_("Warning above")),
-                        Integer(title=_("Critical above")),
+                        Integer(title=_("Warning at")),
+                        Integer(title=_("Critical at")),
                     ],
                 ),
             ),
@@ -47,13 +47,13 @@ def _parameter_valuespec_kube_node_count():
     return Dictionary(
         elements=__levels(
             "worker",
-            _("Set upper levels of worker nodes"),
-            _("Set lower levels of worker nodes"),
+            _("Maximum number of ready worker nodes"),
+            _("Minimum number of ready worker nodes"),
         )
         + __levels(
             "control_plane",
-            _("Set upper levels of control plane nodes"),
-            _("Set lower levels of control plane nodes"),
+            _("Maximum number of ready control plane nodes"),
+            _("Minimum number of ready control plane nodes"),
         ),
     )
 

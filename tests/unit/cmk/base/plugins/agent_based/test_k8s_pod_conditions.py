@@ -418,7 +418,7 @@ def test_register_agent_section_calls(agent_section):
 
 def test_register_check_plugin_calls(check_plugin):
     assert str(check_plugin.name) == "k8s_pod_conditions"
-    assert check_plugin.service_name == "Pod Condition"
+    assert check_plugin.service_name == "Condition"
     assert check_plugin.discovery_function.__wrapped__ == k8s_pod_conditions.discovery
     assert check_plugin.check_function.__wrapped__ == k8s_pod_conditions.check
     assert check_plugin.check_default_parameters == dict(

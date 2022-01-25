@@ -91,7 +91,7 @@ def check_kube_deployment_info(section: DeploymentInfo) -> CheckResult:
 
 register.check_plugin(
     name="kube_deployment_info",
-    service_name="Deployment info",
+    service_name="Info",
     discovery_function=discovery,
     check_function=check_kube_deployment_info,
 )

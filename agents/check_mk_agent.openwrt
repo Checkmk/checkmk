@@ -235,11 +235,17 @@ fi
 #
 
 section_mem() {
+    # If you add a IS_DOCKERIZED check here please inform the kubernetes team
+    # who uses this agent without modifications. They expect it to be run
+    # without docker detection.
     echo '<<<mem>>>'
     egrep -v '^Swap:|^Mem:|total:' </proc/meminfo
 }
 
 section_cpu() {
+    # If you add a IS_DOCKERIZED check here please inform the kubernetes team
+    # who uses this agent without modifications. They expect it to be run
+    # without docker detection.
     echo '<<<cpu>>>'
     if [ "$(uname -m)" = "armv7l" ]; then
         CPU_REGEX='^processor'
@@ -298,6 +304,9 @@ section_checkmk_failed_plugin() {
 section_df() {
     # Print out Partitions / Filesystems. (-P gives non-wrapped POSIXed output)
     # Note: BusyBox df does not support -x and -l as arguments
+    # If you add a IS_DOCKERIZED check here please inform the kubernetes team
+    # who uses this agent without modifications. They expect it to be run
+    # without docker detection.
     if ! inpath waitmax; then
         return
     fi
@@ -375,6 +384,9 @@ section_ps() {
 }
 
 section_uptime() {
+    # If you add a IS_DOCKERIZED check here please inform the kubernetes team
+    # who uses this agent without modifications. They expect it to be run
+    # without docker detection.
     echo '<<<uptime>>>'
     cat /proc/uptime
 }
@@ -439,6 +451,9 @@ section_multipath() {
 
 section_diskstat() {
     # Performancecounter Platten
+    # If you add a IS_DOCKERIZED check here please inform the kubernetes team
+    # who uses this agent without modifications. They expect it to be run
+    # without docker detection.
     echo '<<<diskstat>>>'
     get_epoch
     egrep ' (x?[shv]d[a-z]*|cciss/c[0-9]+d[0-9]+|emcpower[a-z]+|dm-[0-9]+|VxVM.*|mmcblk.*|dasd[a-z]*) ' </proc/diskstats
@@ -454,6 +469,9 @@ section_diskstat() {
 
 section_kernel() {
     # Performancecounter Kernel
+    # If you add a IS_DOCKERIZED check here please inform the kubernetes team
+    # who uses this agent without modifications. They expect it to be run
+    # without docker detection.
     echo '<<<kernel>>>'
     get_epoch
     cat /proc/vmstat /proc/stat
@@ -619,6 +637,9 @@ section_nvidia() {
 }
 
 section_drbd() {
+    # If you add a IS_DOCKERIZED check here please inform the kubernetes team
+    # which uses this agent without modifications. They expect it to be run
+    # without docker detection.
     if [ -e /proc/drbd ]; then
         echo '<<<drbd>>>'
         cat /proc/drbd

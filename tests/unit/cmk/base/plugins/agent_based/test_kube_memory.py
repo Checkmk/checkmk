@@ -191,7 +191,7 @@ def test_register_agent_memory_resources_section_calls(agent_resources_section):
 
 def test_register_check_plugin_calls(check_plugin):
     assert str(check_plugin.name) == "kube_memory"
-    assert check_plugin.service_name == "Container memory"
+    assert check_plugin.service_name == "Memory resources"
     assert check_plugin.discovery_function.__wrapped__ == kube_memory.discovery_kube_memory
     assert check_plugin.check_function.__wrapped__ == kube_memory.check_kube_memory
 

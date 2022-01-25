@@ -72,7 +72,7 @@ def check_kube_memory(
 
 register.check_plugin(
     name="kube_memory",  # TODO change this plugin name
-    service_name="Container memory",  # TODO change this service name
+    service_name="Memory resources",
     sections=["kube_performance_memory", "kube_memory_resources"],
     discovery_function=discovery_kube_memory,
     check_function=check_kube_memory,

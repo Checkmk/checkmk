@@ -139,7 +139,6 @@ def parse_arguments(args: List[str]) -> argparse.Namespace:
     )
     p.add_argument(
         "--cluster-agent-endpoint",
-        required=True,
         help="Endpoint to query metrics from Kubernetes cluster agent",
     )
 
@@ -835,6 +834,10 @@ class SetupError(Exception):
     pass
 
 
+class ClusterConnectionError(Exception):
+    pass
+
+
 def request_metrics_from_cluster_collector(
     cluster_agent_url: str,
     token: str,
@@ -1127,10 +1130,16 @@ def main(args: Optional[List[str]] = None) -> int:
             enabled=bool(arguments.profile), profile_file=arguments.profile
         ):
             api_client = make_api_client(arguments)
-            api_server = APIServer.from_kubernetes(api_client)
+
+            try:
+                api_server = APIServer.from_kubernetes(api_client)
+            except urllib3.exceptions.MaxRetryError as e:
+                raise ClusterConnectionError(
+                    f"Failed to establish a connection to {e.pool.host}:{e.pool.port} "
+                    f"at URL {e.url}"
+                )
 
             cluster = Cluster.from_api_server(api_server)
-
             # Sections based on API server data
             write_cluster_api_sections(cluster)
 
@@ -1159,13 +1168,24 @@ def main(args: Optional[List[str]] = None) -> int:
                     piggyback_formatter=functools.partial(piggyback_formatter, "pod"),
                 )
 
-            # TODO: add an option to skip the performance data query
-            # TODO: refactor write out sections in case this performance skip is not implemented
+            if arguments.cluster_agent_endpoint is None:
+                return 0
 
             # Sections based on cluster collector performance data
-            collected_metrics = request_metrics_from_cluster_collector(
-                arguments.cluster_agent_endpoint, arguments.token, arguments.verify_cert
-            )
+            try:
+                collected_metrics = request_metrics_from_cluster_collector(
+                    arguments.cluster_agent_endpoint, arguments.token, arguments.verify_cert
+                )
+            except requests.exceptions.ConnectionError as e:
+                if arguments.debug:
+                    raise ClusterConnectionError(
+                        f"Failed to establish a connection to cluster collector "
+                        f"to {e.args[0].pool.host}:{e.args[0].pool.port} at URL {e.args[0].url}"
+                    )
+                # a non-zero code would discard all API sections as the written out sections
+                # would not be further processed by Checkmk
+                return 0
+
             performance_metrics = parse_performance_metrics(collected_metrics)
 
             relevant_counter_metrics = [MetricName("cpu_usage_seconds_total")]
@@ -1250,18 +1270,6 @@ def main(args: Optional[List[str]] = None) -> int:
             write_kube_object_performance_section(cluster, performance_pods)
 
             # TODO: handle pods with no performance data (pod.uid not in performance pods)
-
-    except urllib3.exceptions.MaxRetryError as e:
-        if arguments.debug:
-            raise
-        if isinstance(e.reason, urllib3.exceptions.NewConnectionError):
-            sys.stderr.write(
-                "Failed to establish a connection to %s:%s at URL %s"
-                % (e.pool.host, e.pool.port, e.url)
-            )
-        else:
-            sys.stderr.write("%s" % e)
-        return 1
     except Exception as e:
         if arguments.debug:
             raise

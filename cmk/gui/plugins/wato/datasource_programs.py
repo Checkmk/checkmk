@@ -944,7 +944,8 @@ def _valuespec_special_agents_kube():
                 ),
             ),
         ],
-        optional_keys=["namespaces"],
+        optional_keys=["namespaces", "cluster-agent"],
+        default_keys=["cluster-agent"],
         title=_("Kubernetes 2.0"),
     )
 

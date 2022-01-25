@@ -109,6 +109,25 @@ def test_parse_arguments(params, expected_args):
     assert arguments == expected_args
 
 
+def test_parse_arguments_with_no_cluster_endpoint():
+    agent = SpecialAgent("agent_kube")
+    params = {
+        "cluster-name": "cluster",
+        "kubernetes-api-server": {"endpoint": ("ipaddress", {"protocol": "https"})},
+        "monitored_objects": ["pods"],
+        "verify-cert": False,
+    }
+    arguments = agent.argument_func(params, "host", "127.0.0.1")
+    assert arguments == [
+        "--cluster",
+        "cluster",
+        "--monitored-objects",
+        "pods",
+        "--api-server-endpoint",
+        "https://127.0.0.1",
+    ]
+
+
 def test_parse_namespace_patterns():
     """Tests if all required arguments are present."""
     agent = SpecialAgent("agent_kube")

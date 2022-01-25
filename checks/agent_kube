@@ -36,11 +36,11 @@ def agent_kube_arguments(params, hostname, ipaddress):
         port = f":{configured_endpoint['port']}" if "port" in configured_endpoint else ""
         args.append(f"{protocol}://{address}{port}")
 
-    agent_options = params["cluster-agent"]
-    args.append("--cluster-agent-endpoint")
-    args.append(
-        f'{agent_options["protocol"]}://{agent_options["node_ip"]}:{agent_options["connection_port"]}'
-    )
+    if (agent_options := params.get("cluster-agent")) is not None:
+        args.append("--cluster-agent-endpoint")
+        args.append(
+            f'{agent_options["protocol"]}://{agent_options["node_ip"]}:{agent_options["connection_port"]}'
+        )
 
     if params.get("verify-cert"):
         args.append("--verify-cert")

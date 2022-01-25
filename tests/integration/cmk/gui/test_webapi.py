@@ -461,7 +461,7 @@ def test_write_host_tags(web, site: Site):  # noqa: F811 # pylint: disable=redef
             "host_labels": {},
             "ipaddresses": {},
             "host_attributes": {},
-            "cmk_agent_connection": {},
+            "explicit_host_conf": {},
             "host_contactgroups": [],
             "service_contactgroups": [],
         }
@@ -499,7 +499,7 @@ def test_write_host_labels(web, site: Site):  # noqa: F811 # pylint: disable=red
             "host_labels": {},
             "ipaddresses": {},
             "host_attributes": {},
-            "cmk_agent_connection": {},
+            "explicit_host_conf": {},
             "host_contactgroups": [],
             "service_contactgroups": [],
         }

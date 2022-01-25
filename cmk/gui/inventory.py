@@ -134,14 +134,16 @@ def get_status_data_via_livestatus(site: Optional[livestatus.SiteId], hostname: 
 
 
 def load_delta_tree(
-    hostname: HostName, timestamp: int
+    hostname: HostName,
+    timestamp: int,
 ) -> Tuple[Optional[StructuredDataNode], List[str]]:
     """Load inventory history and compute delta tree of a specific timestamp"""
     # Timestamp is timestamp of the younger of both trees. For the oldest
     # tree we will just return the complete tree - without any delta
     # computation.
     delta_history, corrupted_history_files = get_history_deltas(
-        hostname, search_timestamp=str(timestamp)
+        hostname,
+        search_timestamp=str(timestamp),
     )
     if not delta_history:
         return None, []
@@ -149,7 +151,8 @@ def load_delta_tree(
 
 
 def get_history_deltas(
-    hostname: HostName, search_timestamp: Optional[str] = None
+    hostname: HostName,
+    search_timestamp: Optional[str] = None,
 ) -> Tuple[List[Tuple[str, InventoryDeltaData]], List[str]]:
     if "/" in hostname:
         return [], []  # just for security reasons

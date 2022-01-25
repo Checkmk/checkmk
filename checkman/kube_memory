@@ -16,10 +16,8 @@ description:
  The service includes metrics for the memory usage, the request utilization, the limit utilization,
  the memory request and memory limit of the Kubernetes object.
 
- By default, the service goes to {WARN} or {CRIT}, if the limit utilization passes 80.0% or 90.0%,
- respectively. There are no default levels regarding the request utilization, i.e. the service is
- {OK} irrespective of request utilization. This behaviour can be changed via the rule Kubernetes
- memory resource utilization.
+ There are no default thresholds for this service. However, thresholds can be configured via the
+ "Kubernetes memory resource utilization" ruleset.
 
  Currently, this check does not have swap support.
 

@@ -16,10 +16,8 @@ description:
  The service includes metrics for the CPU usage, the request utilization, the limit utilization,
  the CPU request and CPU limit of the Kubernetes object.
 
- By default, the service goes to {WARN} or {CRIT}, if the limit utilization passes 80.0% or 90.0%,
- respectively. There are no default levels regarding the request utilization, i.e. the service is
- {OK} irrespective of request utilization. This behaviour can be changed via the rule Kubernetes
- CPU resource utilization.
+ There are no default thresholds for this service. However, thresholds can be configured via the
+ "Kubernetes CPU resource utilization" ruleset.
 
  The check requires that the special agent kube is configured.
 

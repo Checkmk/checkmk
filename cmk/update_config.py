@@ -76,7 +76,6 @@ import cmk.gui.watolib.rulesets
 import cmk.gui.watolib.tags
 from cmk.gui import main_modules
 from cmk.gui.bi import BIManager
-from cmk.gui.exceptions import MKUserError
 from cmk.gui.plugins.dashboard.utils import (
     builtin_dashboards,
     get_all_dashboards,
@@ -490,7 +489,6 @@ class UpdateConfig:
         self._transform_replaced_wato_rulesets(all_rulesets)
         self._transform_wato_rulesets_params(all_rulesets)
         self._transform_discovery_disabled_services(all_rulesets)
-        self._validate_rule_values(all_rulesets)
         self._validate_regexes_in_item_specs(all_rulesets)
         all_rulesets.save()
 
@@ -668,49 +666,13 @@ class UpdateConfig:
                     if isinstance(s, dict) and "$regex" in s
                 ]
 
-    def _validate_rule_values(
-        self,
-        all_rulesets: RulesetCollection,
-    ) -> None:
-        num_errors = 0
-        for ruleset in all_rulesets.get_rulesets().values():
-            vs = ruleset.rulespec.valuespec
-            for folder, index, rule in ruleset.get_rules():
-                try:
-                    vs.validate_value(
-                        rule.value,
-                        "",
-                    )
-                except MKUserError as excpt:
-                    num_errors += 1
-                    self._logger.error(
-                        format_error(
-                            "ERROR: Invalid rule configuration detected (Ruleset: %s, Title: %s, "
-                            "Folder: %s, Rule nr: %s, Exception: %s)"
-                        ),
-                        ruleset.name,
-                        ruleset.title(),
-                        folder.path(),
-                        index + 1,
-                        excpt,
-                    )
-
-        if num_errors:
-            self._has_errors = True
-            self._logger.error(
-                format_error(
-                    "Detected %s error(s) in configured rules.\n"
-                    "You must correct these errors *before* starting Checkmk.\n"
-                    "To do so, we recommend to open the affected rules in the GUI. Upon attempting "
-                    "to save them, any problematic field will be highlighted."
-                ),
-                num_errors,
-            )
-
     def _validate_regexes_in_item_specs(
         self,
         all_rulesets: RulesetCollection,
     ) -> None:
+        def format_error(msg: str):
+            return "\033[91m {}\033[00m".format(msg)
+
         def format_warning(msg: str):
             return "\033[93m {}\033[00m".format(msg)
 
@@ -732,14 +694,12 @@ class UpdateConfig:
                     except re.error as e:
                         self._logger.error(
                             format_error(
-                                "ERROR: Invalid regular expression in service condition detected "
-                                "(Ruleset: %s, Title: %s, Folder: %s, Rule nr: %s, Condition: %s, "
-                                "Exception: %s)"
+                                "ERROR: Invalid regular expression in service condition detected: (Ruleset: %s, Folder: %s, "
+                                "Rule nr: %s, Condition: %s, Exception: %s)"
                             ),
                             ruleset.name,
-                            ruleset.title(),
                             folder.path(),
-                            index + 1,
+                            index,
                             regex,
                             e,
                         )
@@ -765,11 +725,9 @@ class UpdateConfig:
             self._has_errors = True
             self._logger.error(
                 format_error(
-                    "Detected %s errors in service conditions.\n"
-                    "You must correct these errors *before* starting Checkmk.\n"
-                    "To do so, we recommend to open the affected rules in the GUI. Upon attempting "
-                    "to save them, any problematic field will be highlighted.\n"
-                    "For more information regarding errors in regular expressions see:\n"
+                    "Detected %s errors in service conditions.\n "
+                    "You must correct these errors *before* starting checkmk.\n "
+                    "For more information regarding errors in regular expressions see:\n "
                     "https://docs.checkmk.com/latest/en/regexes.html"
                 ),
                 num_errors,
@@ -1488,10 +1446,6 @@ class PasswordSanitizer:
 
     def _hash(self, password: str) -> str:
         return hashlib.sha256(password.encode()).hexdigest()[:10]
-
-
-def format_error(msg: str) -> str:
-    return "\033[91m {}\033[00m".format(msg)
 
 
 def _add_show_mode(users: Users, user_id: UserId) -> Users:

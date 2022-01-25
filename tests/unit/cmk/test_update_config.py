@@ -282,60 +282,6 @@ def test__transform_discovery_disabled_services(
     assert [r.to_config() for r in folder_rules] == expected_ruleset
 
 
-@pytest.mark.usefixtures("request_context")
-@pytest.mark.parametrize(
-    ["rulesets", "expect_error"],
-    [
-        pytest.param(
-            {
-                "logwatch_rules": {
-                    "reclassify_patterns": [
-                        ("C", "\\\\x\\\\y\\\\z", "some comment"),
-                        ("W", "\\H", "invalid_regex"),
-                    ]
-                },
-                "checkgroup_parameters:ntp_time": {
-                    "ntp_levels": (10, 200.0, 500.0),
-                },
-            },
-            True,
-            id="invalid configuration",
-        ),
-        pytest.param(
-            {
-                "logwatch_rules": {
-                    "reclassify_patterns": [
-                        ("C", "\\\\x\\\\y\\\\z", "some comment"),
-                    ]
-                },
-                "checkgroup_parameters:ntp_time": {
-                    "ntp_levels": (10, 200.0, 500.0),
-                },
-            },
-            False,
-            id="valid configuration",
-        ),
-    ],
-)
-def test__validate_rule_values(
-    uc: update_config.UpdateConfig,
-    rulesets: Mapping[RulesetName, RuleValue],
-    expect_error: bool,
-) -> None:
-    all_rulesets = RulesetCollection()
-    all_rulesets.set_rulesets(
-        {
-            ruleset_name: _instantiate_ruleset(
-                ruleset_name,
-                rule_value,
-            )
-            for ruleset_name, rule_value in rulesets.items()
-        }
-    )
-    uc._validate_rule_values(all_rulesets)
-    assert uc._has_errors is expect_error
-
-
 @pytest.fixture(name="old_path")
 def fixture_old_path() -> Path:
     return Path(cmk.utils.paths.var_dir, "wato", "log", "audit.log")

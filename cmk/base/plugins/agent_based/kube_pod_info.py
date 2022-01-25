@@ -96,7 +96,7 @@ def check_kube_pod_info(section: PodInfo) -> CheckResult:
 
 register.check_plugin(
     name="kube_pod_info",
-    service_name="Pod info",
+    service_name="Info",
     discovery_function=discovery_kube_pod_info,
     check_function=check_kube_pod_info,
 )

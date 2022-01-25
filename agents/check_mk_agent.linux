@@ -295,7 +295,7 @@ if inpath timeout; then
 fi
 
 set_up_encryption() {
-    # shellcheck source=/dev/null
+    # shellcheck source=../cfg_examples/encryption.cfg
     [ -f "${MK_CONFDIR}/encryption.cfg" ] && . "${MK_CONFDIR}/encryption.cfg"
     define_optionally_encrypt "${ENCRYPTED:-"no"}"
 }

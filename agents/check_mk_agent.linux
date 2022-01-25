@@ -1351,7 +1351,7 @@ section_ntp() {
 
 run_real_time_checks() {
     RTC_PLUGINS=""
-    # shellcheck source=/dev/null
+    # shellcheck source=../cfg_examples/real_time_checks.cfg
     . "${MK_CONFDIR}/real_time_checks.cfg" 2>/dev/null || return
 
     # new mechanism to set the passphrase has priority

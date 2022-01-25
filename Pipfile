@@ -23,6 +23,7 @@ mocket = "*"    # used for mocking kubernetes python client
 pylint = "*"  # used by test/Makefile's test-pylint target
 hypothesis = "*"    # used by unit tests
 mypy = "*"  # used by test/static/Makefile's test-mypy target
+twine = "*" # used to upload packages to internal PyPi mirror
 types-six = "*"  # used for type checking
 types-requests = "*"  # used for type checking
 types-PyYAML = "*"  # used for type checking

@@ -44,6 +44,26 @@ def test_all_deployment_packages_pinned() -> None:
     ) % " ,".join(unpinned_packages)
 
 
+def test_pipfile_syntax() -> None:
+    parsed_pipfile = Pipfile.load(filename=repo_path() + "/Pipfile")
+    packages_with_faulty_syntax = []
+
+    for type_ in ("default", "develop"):
+        packages_with_faulty_syntax.extend(
+            [
+                (n, s)
+                for n, s in parsed_pipfile.data[type_].items()
+                if isinstance(s, str) and s[0].isnumeric()
+            ]
+        )
+    assert not any(packages_with_faulty_syntax), (
+        "The following packages seem to have a faulty Pipfile syntax: %s. "
+        "Assuming you forgot to add a comparision operator, like '<', '==' etc. '"
+        "Have a look at: https://github.com/pypa/pipfile"
+        % ",".join([f"Package {n} with Version: {v}" for n, v in packages_with_faulty_syntax])
+    )
+
+
 def iter_sourcefiles(basepath: Path) -> t.Iterable[Path]:
     """iter over the repo and return all source files
 

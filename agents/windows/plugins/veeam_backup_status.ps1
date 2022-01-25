@@ -18,8 +18,21 @@ $pswindow.buffersize = $newsize
 
 # Get Information from veeam backup and replication in cmk-friendly format
 # V0.9
+
 # Load Veeam Backup and Replication Powershell Snapin
-Add-PSSnapin VeeamPSSnapIn -ErrorAction SilentlyContinue
+try {
+    Import-Module Veeam.Backup.PowerShell -ErrorAction Stop
+}
+catch {
+    try {
+        Add-PSSnapin VeeamPSSnapIn -ErrorAction Stop
+    }
+    catch {
+        Write-Host "No Veeam powershell modules could be loaded"
+        Exit 1
+    }
+}
+
 
 try
 {

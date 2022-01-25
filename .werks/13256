@@ -1,0 +1,12 @@
+Title: veeam_backup_status: loading of Veeam Powershell modules improved
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1643125830
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0p19
+
+Loading of Veeam Powershell Snapin is not supported anymore so this fix tries to load the
+new module first and falls back to the Snapin if that didn't work.

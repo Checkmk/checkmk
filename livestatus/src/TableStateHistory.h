@@ -37,11 +37,9 @@ public:
         std::string colname) const override;
     static std::unique_ptr<Filter> createPartialFilter(const Query &query);
 
-protected:
-    bool _abort_query;
-
 private:
     LogCache *_log_cache;
+    bool _abort_query;
 
     enum class ModificationStatus { unchanged, changed };
 

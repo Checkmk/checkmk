@@ -20,7 +20,7 @@ register.agent_section(
 
 register.check_plugin(
     name="kube_pod_resources",
-    service_name="Pod Resources",
+    service_name="Pod resources",
     discovery_function=discovery_kube_pod_resources,
     check_function=check_kube_pod_resources,
     check_default_parameters=_DEFAULT_PARAMS,

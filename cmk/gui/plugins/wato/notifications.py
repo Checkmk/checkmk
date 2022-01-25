@@ -1830,7 +1830,7 @@ class NotificationParameterPushover(NotificationParameter):
 class NotificationParameterSMSviaIP(NotificationParameter):
     @property
     def ident(self):
-        return "sms_ip"
+        return "sms_api"
 
     @property
     def spec(self):

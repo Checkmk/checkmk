@@ -65,7 +65,7 @@ register.agent_section(
 
 register.check_plugin(
     name="kube_cpu_usage",
-    service_name="CPU",  # FIXME: YTBD
+    service_name="CPU resources",
     sections=["kube_performance_cpu", "kube_cpu_resources"],
     check_ruleset_name="kube_cpu_usage",
     discovery_function=discovery_kube_cpu,

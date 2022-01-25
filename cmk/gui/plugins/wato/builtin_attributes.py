@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import time
+from typing import Optional
 
 import cmk.utils.tags
 from cmk.utils.type_defs import HostName, List
@@ -315,8 +316,9 @@ class HostAttributeAgentConnection(ABCHostAttributeNagiosValueSpec):
     def nagios_name(self) -> str:
         return self.name()
 
-    def to_nagios(self, value: str) -> str:
-        return value
+    def to_nagios(self, value: str) -> Optional[str]:
+        # FIXME
+        return None  # value
 
     def valuespec(self):
         return DropdownChoice(

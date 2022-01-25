@@ -335,7 +335,7 @@ define_optionally_encrypt() {
 
 set_up_disabled_sections() {
     if [ -f "${MK_CONFDIR}/exclude_sections.cfg" ]; then
-        # shellcheck source=/dev/null
+        # shellcheck source=../cfg_examples/exclude_sections.cfg
         . "${MK_CONFDIR}/exclude_sections.cfg"
     fi
 }

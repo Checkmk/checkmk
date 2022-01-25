@@ -320,13 +320,13 @@ load_config() {
 
     # Source the optional configuration file for this agent plugin
     if [ -e "$MK_CONFDIR/mk_oracle.cfg" ]; then
-        # shellcheck source=/dev/null
+        # shellcheck source=../cfg_examples/mk_oracle.cfg
         . "$MK_CONFDIR/mk_oracle.cfg"
     fi
 
     if [ -d "$MK_CONFDIR/mk_oracle.d" ] && [ "$(ls -A "$MK_CONFDIR/mk_oracle.d")" ]; then
         for cfg in "$MK_CONFDIR"/mk_oracle.d/*.cfg; do
-            # shellcheck source=/dev/null
+            # shellcheck disable=SC1090
             . "$cfg"
         done
     fi
@@ -579,7 +579,7 @@ set_ora_env() {
             # oratab is not supported in Grid-Infrastructure 12.2+
             # => fetch ORACLE_HOME from cluster repository for all GI/Restart Environments!
             # OLRLOC holds CRS_HOME
-            # shellcheck source=/dev/null
+            # shellcheck disable=SC1090
             . ${OLRLOC}
             export ORA_HOME_SOURCE="(GI):    "
 

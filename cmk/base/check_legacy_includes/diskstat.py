@@ -25,6 +25,8 @@ from cmk.base.check_api import get_average
 from cmk.base.check_api import get_rate
 from cmk.base.check_api import check_levels
 
+from cmk.base.plugins.agent_based.utils.diskstat import _METRICS_TO_BE_AVERAGED
+
 diskstat_inventory_mode = "rule"  # "summary", "single", "legacy"
 
 diskstat_default_levels = {
@@ -411,7 +413,7 @@ def diskstat_select_disk(disks, item):
 
             if num_averaged:
                 for key, value in summarized.items():
-                    if key.startswith("ave") or key in ("utilization", "latency", "queue_length"):
+                    if key.startswith("ave") or key in _METRICS_TO_BE_AVERAGED:
                         summarized[key] /= num_averaged
 
         return summarized

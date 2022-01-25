@@ -162,6 +162,7 @@ class PodInfo(BaseModel):
     """section: kube_pod_info_v1"""
 
     namespace: Optional[Namespace]
+    name: str
     creation_timestamp: Optional[CreationTimestamp]
     labels: Labels  # used for host labels
     node: Optional[NodeName]  # this is optional, because there may be pods, which are not

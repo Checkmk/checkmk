@@ -28,6 +28,7 @@ def fixture_time(mocker):
         pytest.param(
             PodInfo(
                 namespace="default",
+                name="mypod",
                 creation_timestamp=1600000000.0,
                 labels={},
                 node=None,
@@ -36,6 +37,7 @@ def fixture_time(mocker):
                 uid="dd1019ca-c429-46af-b6b7-8aad47b6081a",
             ),
             (
+                Result(state=State.OK, summary="Name: mypod"),
                 Result(state=State.OK, summary="Node: None"),
                 Result(state=State.OK, summary="Namespace: default"),
                 Result(state=State.OK, summary="Age: 1 second"),

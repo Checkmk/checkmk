@@ -231,6 +231,7 @@ class Pod:
 
         return section.PodInfo(
             namespace=self.metadata.namespace,
+            name=self.metadata.name,
             creation_timestamp=self.metadata.creation_timestamp,
             labels=self.metadata.labels if self.metadata.labels else {},
             node=self.node,

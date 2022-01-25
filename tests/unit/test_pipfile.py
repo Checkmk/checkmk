@@ -31,28 +31,31 @@ PackageName = t.NewType("PackageName", str)  # Name in Pip(file)
 ImportName = t.NewType("ImportName", str)  # Name in Source (import ...)
 
 
+@pytest.fixture(name="loaded_pipfile")
+def load_pipfile():
+    return Pipfile.load(filename=repo_path() + "/Pipfile")
+
+
 @pytest.mark.skipif(
     current_base_branch_name() == "master",
     reason="In master we use latest and greatest, but once we release we start pinning...",
 )
-def test_all_deployment_packages_pinned() -> None:
-    parsed_pipfile = Pipfile.load(filename=repo_path() + "/Pipfile")
-    unpinned_packages = [f"'{n}'" for n, v in parsed_pipfile.data["default"].items() if v == "*"]
+def test_all_deployment_packages_pinned(loaded_pipfile) -> None:
+    unpinned_packages = [f"'{n}'" for n, v in loaded_pipfile.data["default"].items() if v == "*"]
     assert not unpinned_packages, (
         "The following packages are not pinned: %s. "
         "For the sake of reproducibility, all deployment packages must be pinned to a version!"
     ) % " ,".join(unpinned_packages)
 
 
-def test_pipfile_syntax() -> None:
-    parsed_pipfile = Pipfile.load(filename=repo_path() + "/Pipfile")
+def test_pipfile_syntax(loaded_pipfile) -> None:
     packages_with_faulty_syntax = []
 
     for type_ in ("default", "develop"):
         packages_with_faulty_syntax.extend(
             [
                 (n, s)
-                for n, s in parsed_pipfile.data[type_].items()
+                for n, s in loaded_pipfile.data[type_].items()
                 if isinstance(s, str) and s[0].isnumeric()
             ]
         )
@@ -334,7 +337,6 @@ def _get_lockfile_hash(lockfile_path) -> str:
     return ""
 
 
-def test_pipfile_lock_up_to_date():
-    pipfile_hash = Pipfile.load(filename=repo_path() + "/Pipfile").hash
+def test_pipfile_lock_up_to_date(loaded_pipfile):
     lockfile_hash = _get_lockfile_hash(Path(repo_path(), "Pipfile.lock"))
-    assert pipfile_hash == lockfile_hash
+    assert loaded_pipfile.hash == lockfile_hash

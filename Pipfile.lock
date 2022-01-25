@@ -46,11 +46,11 @@
         },
         "asgiref": {
             "hashes": [
-                "sha256:4ef1ab46b484e3c706329cedeff284a5d40824200638503f5768edb6de7d58e9",
-                "sha256:ffc141aa908e6f175673e7b1b3b7af4fdb0ecb738fc5c8b88f69f055c2415214"
+                "sha256:2f8abc20f7248433085eda803936d98992f1343ddb022065779f37c5da0181d0",
+                "sha256:88d59c13d634dcffe0510be048210188edd79aeccb6a6c9028cdad6f31d730a9"
             ],
-            "markers": "python_version >= '3.6'",
-            "version": "==3.4.1"
+            "markers": "python_version >= '3.7'",
+            "version": "==3.5.0"
         },
         "attrs": {
             "hashes": [
@@ -1786,7 +1786,6 @@
             "version": "==0.10.1"
         },
         "coverage": {
-            "extras": [],
             "hashes": [
                 "sha256:01774a2c2c729619760320270e42cd9e797427ecfddd32c2a7b639cdc481f3c0",
                 "sha256:03b20e52b7d31be571c9c06b74746746d4eb82fc260e594dc662ed48145e9efd",
@@ -2034,11 +2033,11 @@
         },
         "identify": {
             "hashes": [
-                "sha256:6b4b5031f69c48bf93a646b90de9b381c6b5f560df4cbe0ed3cf7650ae741e4d",
-                "sha256:aa68609c7454dbcaae60a01ff6b8df1de9b39fe6e50b1f6107ec81dcda624aa6"
+                "sha256:d11469ff952a4d7fd7f9be520d335dc450f585d474b39b5dfb86a500831ab6c7",
+                "sha256:d27d10099844741c277b45d809bd452db0d70a9b41ea3cd93799ebbbcc6dcb29"
             ],
-            "markers": "python_full_version >= '3.6.1'",
-            "version": "==2.4.4"
+            "markers": "python_version >= '3.7'",
+            "version": "==2.4.5"
         },
         "idna": {
             "hashes": [
@@ -2385,11 +2384,11 @@
         },
         "mypy-protobuf": {
             "hashes": [
-                "sha256:558dcc390290e43c7def0d4238cc41a79abde06ff509b3014c3dff0553c7b0c1",
-                "sha256:dfaad58dea15603f93dd8273ac6e82d0d1cbd405d69133a732b7737a16d8e7d9"
+                "sha256:65fc0492165f4a3c0aff69b03e34096fc1453e4dac8f14b4e9c2306cdde06010",
+                "sha256:730aa15337c38f0446fbe08f6c6c2370ee01d395125369d4b70e08b1e2ee30ee"
             ],
             "index": "pypi",
-            "version": "==3.1.0"
+            "version": "==3.2.0"
         },
         "nodeenv": {
             "hashes": [
@@ -2554,11 +2553,11 @@
         },
         "pydantic-factories": {
             "hashes": [
-                "sha256:12eed8a664d1d888f7f2b7fd86a384d22dc83c0706e30f62b022a094cdc18d46",
-                "sha256:7d360ce8f333ab302e9e0d3955cf6165e965f48054d59fdc70b2406cbf9b4222"
+                "sha256:8fdca27b9f549e4f3647632b35d322fc483d67527f823a3f1960746969d8e67d",
+                "sha256:a3a61c3044b498bad67999bafc7f488b37259521616b844cd7e9789697dc1b68"
             ],
             "index": "pypi",
-            "version": "==1.2.1"
+            "version": "==1.2.3"
         },
         "pyee": {
             "hashes": [
@@ -2945,11 +2944,11 @@
         },
         "sphinx-autodoc-typehints": {
             "hashes": [
-                "sha256:5bf7ae28f98dd2cae8b93c4f723fb5f4761ae340194d02d2742a81c7694d2e0a",
-                "sha256:91eb3c227ff0824bee39fabf92d92e21835546903d2ddde5467fd9b6fa10ad7f"
+                "sha256:21df6ee692c2c8366f6df13b13e4d4ab8af25cc0dfb65e2d182351528b6eb704",
+                "sha256:b5efe1fb5754349f849ca09b1f5c9b4bb37f1e360f00fbde003b12c60d67cc3a"
             ],
             "index": "pypi",
-            "version": "==1.15.3"
+            "version": "==1.16.0"
         },
         "sphinx-rtd-theme": {
             "hashes": [
@@ -3100,11 +3099,11 @@
         },
         "types-protobuf": {
             "hashes": [
-                "sha256:9e3d954de5f5693817514b8da3476daa22f035d2b8060217c78c3831a1a49c23",
-                "sha256:d0f501e897e17e8dd1f99d20c30b002b1900a3d6ff18124ada3d70c6ac6ea4f6"
+                "sha256:0d704eca8c7cf2cc9d8b52f63a5d03d7c39dff8f0915c23b3e90cb1563617e18",
+                "sha256:ba586359dc80f09abbff7d143cedd5c86d2c6e376b46647c7aa2262741accba1"
             ],
             "index": "pypi",
-            "version": "==3.19.5"
+            "version": "==3.19.6"
         },
         "types-pymysql": {
             "hashes": [

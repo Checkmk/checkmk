@@ -84,7 +84,7 @@ check_default_parameters: KubeNodeCountVSResult = {}
 
 register.check_plugin(
     name="kube_node_count",
-    service_name="Node Count",
+    service_name="Nodes",
     discovery_function=discovery,
     check_function=check,
     check_ruleset_name="kube_node_count",

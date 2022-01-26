@@ -12,47 +12,96 @@ from cmk.utils.type_defs import CheckPluginName
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult
+from cmk.base.plugins.agent_based.bluecoat_sensors import (
+    parse_bluecoat_sensors,
+    Section,
+    Sensor,
+    VoltageSensor,
+)
 
-_STRING_TABLE = [
-    ["DIMM A1 temperature", "30", "1", "0", "5"],
-    ["DIMM A2 temperature", "30", "1", "0", "5"],
-    ["PCH temperature", "45", "1", "0", "5"],
-    ["SAS controller temperature", "37", "1", "0", "5"],
-    ["SSL card temperature", "26", "4", "0", "5"],
-    ["System center temperature", "37", "1", "0", "5"],
-    ["System left temperature", "30", "1", "0", "5"],
-    ["System right temperature", "33", "1", "0", "5"],
-    ["CPU temperature", "39", "1", "0", "5"],
-    ["System fan 1 front speed", "8100", "1", "0", "6"],
-    ["System fan 1 rear speed", "6800", "1", "0", "6"],
-    ["+3.3V main bus voltage", "3244", "1", "-3", "4"],
-    ["+3.3V standby voltage", "3199", "1", "-3", "4"],
-    ["+5V main bus voltage", "50508", "1", "-4", "4"],
-    ["+5V standby voltage", "50508", "1", "-4", "4"],
-    ["BMC PLL voltage", "1264", "1", "-3", "4"],
-    ["CPU core voltage", "8428", "1", "-4", "4"],
-    ["CPU PLL voltage", "18326", "1", "-4", "4"],
-    ["CPU system agent voltage", "9310", "1", "-4", "4"],
-    ["CPU termination voltage", "1064", "1", "-3", "4"],
-    ["Memory I/O voltage", "1520", "1", "-3", "4"],
-    ["Memory termination voltage", "752", "1", "-3", "4"],
-    ["PCH core voltage", "1112", "1", "-3", "4"],
-    ["PCH SAS voltage", "1520", "1", "-3", "4"],
-    ["SAS core voltage", "1040", "1", "-3", "4"],
-    ["SAS I/O voltage", "18326", "1", "-4", "4"],
-    ["SSL core voltage", "904", "4", "-3", "4"],
-    ["SSL PLL voltage", "1800", "4", "-3", "4"],
-    ["SSL VPTX voltage", "1800", "4", "-3", "4"],
-    ["Power supply 1 status", "8", "1", "0", "3"],
-    ["Power supply 2 status", "8", "1", "0", "3"],
-]
+_SECTION = Section(
+    temperature_sensors={
+        "DIMM A1": Sensor(value=30.0, is_ok=True),
+        "DIMM A2": Sensor(value=30.0, is_ok=True),
+        "PCH": Sensor(value=45.0, is_ok=True),
+        "SAS controller": Sensor(value=37.0, is_ok=True),
+        "SSL card": Sensor(value=26.0, is_ok=False),
+        "System center": Sensor(value=37.0, is_ok=True),
+        "System left": Sensor(value=30.0, is_ok=True),
+        "System right": Sensor(value=33.0, is_ok=True),
+        "CPU": Sensor(value=39.0, is_ok=True),
+    },
+    other_sensors={
+        "System fan 1 front speed": Sensor(value=8100.0, is_ok=True),
+        "System fan 1 rear speed": Sensor(value=6800.0, is_ok=True),
+        "+3.3V main bus voltage": VoltageSensor(value=3.244, is_ok=True),
+        "+3.3V standby voltage": VoltageSensor(value=3.1990000000000003, is_ok=True),
+        "+5V main bus voltage": VoltageSensor(value=5.050800000000001, is_ok=True),
+        "+5V standby voltage": VoltageSensor(value=5.050800000000001, is_ok=True),
+        "BMC PLL voltage": VoltageSensor(value=1.264, is_ok=True),
+        "CPU core voltage": VoltageSensor(value=0.8428, is_ok=True),
+        "CPU PLL voltage": VoltageSensor(value=1.8326, is_ok=True),
+        "CPU system agent voltage": VoltageSensor(value=0.931, is_ok=True),
+        "CPU termination voltage": VoltageSensor(value=1.064, is_ok=True),
+        "Memory I/O voltage": VoltageSensor(value=1.52, is_ok=True),
+        "Memory termination voltage": VoltageSensor(value=0.752, is_ok=True),
+        "PCH core voltage": VoltageSensor(value=1.112, is_ok=True),
+        "PCH SAS voltage": VoltageSensor(value=1.52, is_ok=True),
+        "SAS core voltage": VoltageSensor(value=1.04, is_ok=True),
+        "SAS I/O voltage": VoltageSensor(value=1.8326, is_ok=True),
+        "SSL core voltage": VoltageSensor(value=0.904, is_ok=False),
+        "SSL PLL voltage": VoltageSensor(value=1.8, is_ok=False),
+        "SSL VPTX voltage": VoltageSensor(value=1.8, is_ok=False),
+        "Power supply 1 status": Sensor(value=8.0, is_ok=True),
+        "Power supply 2 status": Sensor(value=8.0, is_ok=True),
+    },
+)
+
+
+def test_parse_bluecoat_sensors() -> None:
+    assert (
+        parse_bluecoat_sensors(
+            [
+                ["DIMM A1 temperature", "30", "1", "0", "5"],
+                ["DIMM A2 temperature", "30", "1", "0", "5"],
+                ["PCH temperature", "45", "1", "0", "5"],
+                ["SAS controller temperature", "37", "1", "0", "5"],
+                ["SSL card temperature", "26", "4", "0", "5"],
+                ["System center temperature", "37", "1", "0", "5"],
+                ["System left temperature", "30", "1", "0", "5"],
+                ["System right temperature", "33", "1", "0", "5"],
+                ["CPU temperature", "39", "1", "0", "5"],
+                ["System fan 1 front speed", "8100", "1", "0", "6"],
+                ["System fan 1 rear speed", "6800", "1", "0", "6"],
+                ["+3.3V main bus voltage", "3244", "1", "-3", "4"],
+                ["+3.3V standby voltage", "3199", "1", "-3", "4"],
+                ["+5V main bus voltage", "50508", "1", "-4", "4"],
+                ["+5V standby voltage", "50508", "1", "-4", "4"],
+                ["BMC PLL voltage", "1264", "1", "-3", "4"],
+                ["CPU core voltage", "8428", "1", "-4", "4"],
+                ["CPU PLL voltage", "18326", "1", "-4", "4"],
+                ["CPU system agent voltage", "9310", "1", "-4", "4"],
+                ["CPU termination voltage", "1064", "1", "-3", "4"],
+                ["Memory I/O voltage", "1520", "1", "-3", "4"],
+                ["Memory termination voltage", "752", "1", "-3", "4"],
+                ["PCH core voltage", "1112", "1", "-3", "4"],
+                ["PCH SAS voltage", "1520", "1", "-3", "4"],
+                ["SAS core voltage", "1040", "1", "-3", "4"],
+                ["SAS I/O voltage", "18326", "1", "-4", "4"],
+                ["SSL core voltage", "904", "4", "-3", "4"],
+                ["SSL PLL voltage", "1800", "4", "-3", "4"],
+                ["SSL VPTX voltage", "1800", "4", "-3", "4"],
+                ["Power supply 1 status", "8", "1", "0", "3"],
+                ["Power supply 2 status", "8", "1", "0", "3"],
+            ]
+        )
+        == _SECTION
+    )
 
 
 def test_discover_bluecoat_sensors(fix_register: FixRegister) -> None:
     assert list(
-        fix_register.check_plugins[CheckPluginName("bluecoat_sensors")].discovery_function(
-            _STRING_TABLE
-        )
+        fix_register.check_plugins[CheckPluginName("bluecoat_sensors")].discovery_function(_SECTION)
     ) == [
         Service(item="System fan 1 front speed"),
         Service(item="System fan 1 rear speed"),
@@ -127,7 +176,7 @@ def test_check_bluecoat_sensors(
             fix_register.check_plugins[CheckPluginName("bluecoat_sensors")].check_function(
                 item=item,
                 params={},
-                section=_STRING_TABLE,
+                section=_SECTION,
             )
         )
         == expected_result
@@ -137,7 +186,7 @@ def test_check_bluecoat_sensors(
 def test_discover_bluecoat_sensors_temp(fix_register: FixRegister) -> None:
     assert list(
         fix_register.check_plugins[CheckPluginName("bluecoat_sensors_temp")].discovery_function(
-            _STRING_TABLE
+            _SECTION
         )
     ) == [
         Service(item="DIMM A1"),
@@ -186,7 +235,7 @@ def test_check_bluecoat_sensors_temp(
             fix_register.check_plugins[CheckPluginName("bluecoat_sensors_temp")].check_function(
                 item=item,
                 params={},
-                section=_STRING_TABLE,
+                section=_SECTION,
             )
         )
         == expected_result

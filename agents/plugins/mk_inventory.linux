@@ -41,7 +41,7 @@ then
     # List Gentoo packages
     if type equery >/dev/null; then
         echo "<<<lnx_packages:sep(124):persist($UNTIL)>>>"
-        equery -C list --format '$category/$name|$fullversion|$mask2|ebuild|Repository $repo|installed' \* | head -n -1
+        equery -C list --format "\$category/\$name|\$fullversion|\$mask2|ebuild|Repository \$repo|installed" \* | head -n -1
     fi
 
     # Information about distribution

@@ -5422,6 +5422,20 @@ def _proxy_address(
     return f"{authentication}{address}"
 
 
+def _get_credentials(args: argparse.Namespace, stdin_args: Mapping[str, str]) -> Tuple[str, str]:
+    access_key_id = stdin_args.get("access_key_id") or args.access_key_id
+    secret_access_key = stdin_args.get("secret_access_key") or args.secret_access_key
+
+    if access_key_id and secret_access_key:
+        return access_key_id, secret_access_key
+
+    raise AWSAccessCredentialsError("Access credentials not set properly")
+
+
+class AWSAccessCredentialsError(Exception):
+    pass
+
+
 def main(sys_argv=None):
     if sys_argv is None:
         cmk.utils.password_store.replace_passwords()
@@ -5431,23 +5445,17 @@ def main(sys_argv=None):
     # secrets can be passed in as a command line argument for testing,
     # BUT the standard method is to pass them via stdin so that they
     # are not accessible from outside, e.g. visible on the ps output
+
     stdin_args = json.loads(sys.stdin.read() or "{}")
-    access_key_id = stdin_args.get("access_key_id") or args.access_key_id
-    secret_access_key = stdin_args.get("secret_access_key") or args.secret_access_key
-    has_exceptions = False
-
-    if not access_key_id:
-        has_exceptions = True
-        sys.stderr.write("access key id is not set\n")
-
-    if not secret_access_key:
-        has_exceptions = True
-        sys.stderr.write("secret access key is not set\n")
-
-    if has_exceptions:
-        return 1
 
     _setup_logging(args.debug, args.verbose)
+
+    try:
+        access_key_id, secret_access_key = _get_credentials(args, stdin_args)
+    except AWSAccessCredentialsError as e:
+        logging.error(e)
+        return 1
+
     hostname = args.hostname
     proxy_config = None
     if args.proxy_host:

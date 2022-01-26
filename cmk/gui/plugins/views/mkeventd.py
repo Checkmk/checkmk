@@ -753,7 +753,7 @@ class PainterEventIcons(Painter):
         return "event_icons"
 
     def title(self, cell):
-        return _("Event Icons")
+        return _("Event icons")
 
     def short_title(self, cell):
         return _("Icons")
@@ -777,7 +777,7 @@ class PainterEventHistoryIcons(Painter):
         return "event_history_icons"
 
     def title(self, cell):
-        return _("Event Icons")
+        return _("Event history icons")
 
     def short_title(self, cell):
         return _("Icons")

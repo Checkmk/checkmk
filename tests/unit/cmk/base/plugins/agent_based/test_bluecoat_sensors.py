@@ -169,7 +169,7 @@ def test_discover_bluecoat_sensors_temp(fix_register: FixRegister) -> None:
         pytest.param(
             "SSL card",
             [
-                Result(state=State.OK, summary="26.0 °C"),
+                Result(state=State.CRIT, summary="26.0 °C"),
                 Metric("temp", 26.0),
             ],
             id="crit",

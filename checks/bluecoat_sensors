@@ -38,7 +38,10 @@ def check_bluecoat_sensors(item, params, info, temp):
             value = float(reading) * 10 ** float(scale)
             if temp and unit == "5":
                 return check_temperature(
-                    value, params, "bluecoat_sensors_%s" % item, status != "1" and 2 or 0
+                    value,
+                    params,
+                    "bluecoat_sensors_%s" % item,
+                    dev_status=status != "1" and 2 or 0,
                 )
             elif unit == "4":
                 unitname = " V"

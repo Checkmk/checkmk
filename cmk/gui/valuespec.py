@@ -62,6 +62,7 @@ import cmk.gui.utils as utils
 import cmk.gui.utils.escaping as escaping
 from cmk.gui.exceptions import MKGeneralException, MKUserError
 from cmk.gui.globals import config, html, output_funnel, request, theme, user
+from cmk.gui.htmllib import HTMLTagAttributes
 from cmk.gui.htmllib.foldable_container import foldable_container
 from cmk.gui.http import UploadedFile
 from cmk.gui.i18n import _
@@ -2468,6 +2469,7 @@ class DropdownChoice(ValueSpec):
         on_change: _Optional[str] = None,
         read_only: bool = False,
         encode_value: bool = True,
+        html_attrs: _Optional[HTMLTagAttributes] = None,
         # ValueSpec
         title: _Optional[str] = None,
         help: _Optional[ValueSpecHelp] = None,
@@ -2475,7 +2477,13 @@ class DropdownChoice(ValueSpec):
         validate: _Optional[ValueSpecValidateFunc] = None,
         deprecated_choices: Sequence[DropdownChoiceValue] = (),
     ):
-        super().__init__(title=title, help=help, default_value=default_value, validate=validate)
+
+        super().__init__(
+            title=title,
+            help=help,
+            default_value=default_value,
+            validate=validate,
+        )
         self._choices = choices
         self._help_separator = help_separator
         self._label = label
@@ -2509,6 +2517,7 @@ class DropdownChoice(ValueSpec):
         self._read_only = read_only
         self._encode_value = encode_value
         self._deprecated_choices = deprecated_choices
+        self._html_attrs: HTMLTagAttributes = {} if html_attrs is None else html_attrs
 
     def allow_empty(self) -> bool:
         return self._read_only or not self._no_preselect
@@ -2566,9 +2575,14 @@ class DropdownChoice(ValueSpec):
             varprefix,
             self._options_for_html(options),
             deflt=self._option_for_html(defval),
+            locked_choice=None,
             onchange=self._on_change,
             ordered=self._sorted,
+            label=None,
+            class_=None,
+            size=1,
             read_only=self._read_only,
+            **self._html_attrs,
         )
 
     def validate_datatype(self, value: Any, varprefix: str) -> None:
@@ -2664,6 +2678,7 @@ class AjaxDropdownChoice(DropdownChoice):
         # DropdownChoice
         label: _Optional[str] = None,
         choices: _Optional[DropdownChoices] = None,
+        html_attrs: _Optional[HTMLTagAttributes] = None,
         # From ValueSpec
         title: _Optional[str] = None,
         help: _Optional[ValueSpecHelp] = None,
@@ -2678,6 +2693,7 @@ class AjaxDropdownChoice(DropdownChoice):
             help=help,
             default_value=default_value,
             validate=validate,
+            html_attrs=html_attrs,
         )
 
         if isinstance(regex, str):
@@ -2718,12 +2734,17 @@ class AjaxDropdownChoice(DropdownChoice):
             varprefix,
             self._options_for_html(clean_choices),
             deflt=self._option_for_html(value),
+            locked_choice=None,
             onchange=self._on_change,
             ordered=self._sorted,
-            style="width: 250px;",
+            label=None,
             class_=["ajax-vals", self.ident],
+            size=1,
             read_only=self._read_only,
+            # kwargs following
+            style="width: 250px;",
             data_strict=self._strict,
+            **self._html_attrs,
         )
 
 

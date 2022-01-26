@@ -4775,7 +4775,7 @@ class AWSSectionsUSEast(AWSSections):
 
         if "route53" in services:
             route53_client = self._init_client("route53")
-            route53_health_checks, route53_cloudwatch = create_route53_sections(
+            route53_health_checks, route53_cloudwatch = _create_route53_sections(
                 route53_client,
                 cloudwatch_client,
                 region,
@@ -4785,7 +4785,7 @@ class AWSSectionsUSEast(AWSSections):
             self._sections.append(route53_cloudwatch)
 
 
-def create_lamdba_sections(
+def _create_lamdba_sections(
     lambda_client, cloudwatch_client, cloudwatch_logs_client, region: str, config: AWSConfig
 ) -> Tuple[
     LambdaRegionLimits,
@@ -4840,7 +4840,7 @@ def create_lamdba_sections(
     )
 
 
-def create_route53_sections(
+def _create_route53_sections(
     route53_client, cloudwatch_client, region: str, config: AWSConfig
 ) -> Tuple[Route53HealthChecks, Route53Cloudwatch]:
     route53_distributor = ResultDistributor()
@@ -5071,7 +5071,7 @@ class AWSSectionsGeneric(AWSSections):
                 lambda_provisioned_concurrency_configuration,
                 lambda_cloudwatch,
                 lambda_cloudwatch_insights,
-            ) = create_lamdba_sections(
+            ) = _create_lamdba_sections(
                 self._init_client("lambda"),
                 cloudwatch_client,
                 self._init_client("logs"),
@@ -5313,7 +5313,7 @@ def parse_arguments(argv):
     return parser.parse_args(argv)
 
 
-def setup_logging(opt_debug, opt_verbose):
+def _setup_logging(opt_debug, opt_verbose):
     logger = logging.getLogger()
     logger.disabled = True
     fmt = "%(levelname)s: %(name)s: %(filename)s: %(lineno)s: %(message)s"
@@ -5326,7 +5326,7 @@ def setup_logging(opt_debug, opt_verbose):
     logging.basicConfig(level=lvl, format=fmt)
 
 
-def create_session(access_key_id, secret_access_key, region):
+def _create_session(access_key_id, secret_access_key, region):
     try:
         return boto3.session.Session(
             aws_access_key_id=access_key_id,
@@ -5337,7 +5337,7 @@ def create_session(access_key_id, secret_access_key, region):
         raise AwsAccessError(e)
 
 
-def sts_assume_role(access_key_id, secret_access_key, role_arn, external_id, region):
+def _sts_assume_role(access_key_id, secret_access_key, role_arn, external_id, region):
     """
     Returns a session using a set of temporary security credentials that
     you can use to access AWS resources from another account.
@@ -5349,7 +5349,7 @@ def sts_assume_role(access_key_id, secret_access_key, role_arn, external_id, reg
     :return: AWS session
     """
     try:
-        session = create_session(access_key_id, secret_access_key, region)
+        session = _create_session(access_key_id, secret_access_key, region)
         sts_client = session.client("sts")
         if external_id:
             assumed_role_object = sts_client.assume_role(
@@ -5447,7 +5447,7 @@ def main(sys_argv=None):
     if has_exceptions:
         return 1
 
-    setup_logging(args.debug, args.verbose)
+    _setup_logging(args.debug, args.verbose)
     hostname = args.hostname
     proxy_config = None
     if args.proxy_host:
@@ -5529,11 +5529,11 @@ def main(sys_argv=None):
         for region in aws_regions:
             try:
                 if args.assume_role:
-                    session = sts_assume_role(
+                    session = _sts_assume_role(
                         access_key_id, secret_access_key, args.role_arn, args.external_id, region
                     )
                 else:
-                    session = create_session(access_key_id, secret_access_key, region)
+                    session = _create_session(access_key_id, secret_access_key, region)
 
                 sections = aws_sections(hostname, session, debug=args.debug, config=proxy_config)
                 sections.init_sections(

@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-threads_default_levels = (2000, 4000)
+threads_default_levels = {"levels": ("levels", (2000, 4000))}
 
 
 def inventory_bluecat_threads(info):
@@ -14,11 +14,13 @@ def inventory_bluecat_threads(info):
 
 def check_bluecat_threads(item, params, info):
     nthreads = int(info[0][0])
-    warn, crit = params
+    warn, crit = None, None
+    if "levels" in params and params["levels"] != "no_levels":
+        warn, crit = params["levels"][1]
     perfdata = [("threads", nthreads, warn, crit, 0)]
-    if nthreads >= crit:
+    if crit is not None and nthreads >= crit:
         return (2, "%d threads (critical at %d)" % (nthreads, crit), perfdata)
-    elif nthreads >= warn:
+    elif warn is not None and nthreads >= warn:
         return (1, "%d threads (warning at %d)" % (nthreads, warn), perfdata)
     return (0, "%d threads" % (nthreads,), perfdata)
 

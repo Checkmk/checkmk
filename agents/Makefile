@@ -12,12 +12,15 @@ RPM_TOPDIR := $$(pwd)/.rpm.topdir
 RPM_BUILDROOT := $$(pwd)/.rpm.buildroot
 RPM_PACKAGE := $(DISTNAME)-1.noarch.rpm
 DEB_PACKAGE := check-mk-agent_$(VERSION)-1_all.deb
+CONTROLLER := linux/cmk-agent-ctl
+
 usage:
-	@echo "make waitmax  -- compile waitmax.c"
-	@echo "make build    -- create all files needed for \"make dist\" of Check_MK"
-	@echo "make rpm      -- create RPM package of Linux agent"
-	@echo "make deb      -- create DEB package of Linux agent"
-	@echo "make packages -- create RPM and DEB package of Linux agent"
+	@echo "make waitmax       -- compile waitmax.c"
+	@echo "make build         -- create all files needed for \"make dist\" of Check_MK"
+	@echo "make rpm           -- create RPM package of Linux agent"
+	@echo "make deb           -- create DEB package of Linux agent"
+	@echo "make packages      -- create RPM and DEB package of Linux agent"
+	@echo "make cmk-agent-ctl --r"
 
 waitmax: waitmax.c
 	@if type diet >/dev/null ; then \
@@ -47,18 +50,22 @@ setversion:
 	sed -i 's/echo "Version: [0-9.a-z-]*"/echo "Version: $(NEW_VERSION)"/g' check_mk_agent.*
 	sed -i "s/^#define CMK_WIN_AGENT_VERSION .*/#define CMK_WIN_AGENT_VERSION \"$(NEW_VERSION)\"/" wnx/src/common/wnx_version.h
 
-build: $(DEB_PACKAGE) $(RPM_PACKAGE) $(WIN_PACKAGE)
-	pushd cmk-agent-ctl \
-	&& ../../scripts/run-cargo-command build --release \
-	&& popd \
-	&& mkdir -p linux \
-	&& cp cmk-agent-ctl/target/release/cmk-agent-ctl linux
+build: $(DEB_PACKAGE) $(RPM_PACKAGE) $(WIN_PACKAGE) $(CONTROLLER)
+
+cmk-agent-ctl: $(CONTROLLER)
 
 packages: $(DEB_PACKAGE) $(RPM_PACKAGE)
 
 deb: $(DEB_PACKAGE)
 
 rpm: $(RPM_PACKAGE)
+
+$(CONTROLLER):
+	pushd cmk-agent-ctl \
+	&& ../../scripts/run-cargo-command build --release \
+	&& popd \
+	&& mkdir -p linux \
+	&& cp cmk-agent-ctl/target/release/cmk-agent-ctl linux
 
 $(RPM_PACKAGE): waitmax
 	rm -rf $(RPM_TOPDIR)

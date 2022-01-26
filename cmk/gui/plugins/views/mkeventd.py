@@ -787,7 +787,7 @@ class PainterEventHistoryIcons(Painter):
         return "event_history_icons"
 
     def title(self, cell):
-        return _("Event icons")
+        return _("Event history icons")
 
     def short_title(self, cell):
         return _("Icons")

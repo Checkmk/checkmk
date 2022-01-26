@@ -1,10 +1,6 @@
 #!/bin/bash
 set -e
 
-COMMAND=$1
-shift
-COMMAND_OPTIONS=$*
-
 REPO_DIR=$(git rev-parse --show-toplevel)
 
 # When executed via "make deb", e.g. during local builds, these are set and confuse cargo
@@ -16,4 +12,4 @@ export RUSTUP_HOME
 : "${CARGO_HOME:="${REPO_DIR}/.cargo"}"
 export CARGO_HOME
 
-cargo ${COMMAND} ${COMMAND_OPTIONS}
+cargo "$@"

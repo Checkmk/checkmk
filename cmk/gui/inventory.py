@@ -206,8 +206,7 @@ def get_history_deltas(
     delta_history: List[Tuple[str, InventoryDeltaData]] = []
     for _idx, timestamp in enumerate(required_timestamps):
         cached_delta_path = os.path.join(
-            cmk.utils.paths.var_dir,
-            "inventory_delta_cache",
+            cmk.utils.paths.inventory_delta_cache_dir,
             hostname,
             "%s_%s" % (previous_timestamp, timestamp),
         )
@@ -551,7 +550,7 @@ class InventoryHousekeeping:
         super().__init__()
         self._inventory_path = Path(cmk.utils.paths.inventory_output_dir)
         self._inventory_archive_path = Path(cmk.utils.paths.inventory_archive_dir)
-        self._inventory_delta_cache_path = Path(cmk.utils.paths.var_dir) / "inventory_delta_cache"
+        self._inventory_delta_cache_path = Path(cmk.utils.paths.inventory_delta_cache_dir)
 
     def run(self):
         if (

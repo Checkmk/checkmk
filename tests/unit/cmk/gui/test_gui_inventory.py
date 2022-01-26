@@ -170,8 +170,7 @@ def test_get_history_deltas() -> None:
             [
                 fp.name
                 for fp in Path(
-                    cmk.utils.paths.var_dir,
-                    "inventory_delta_cache",
+                    cmk.utils.paths.inventory_delta_cache_dir,
                     hostname,
                 ).iterdir()
                 # Timestamp of current inventory tree is not static

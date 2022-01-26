@@ -89,12 +89,12 @@ constexpr int kDefaultAgentMaxWait = 15;  // max time agent waits for a sections
 // This value is set when timeout was defined badly by ini/yml/user
 constexpr int kDefaultAgentMinWait = 10;  // min safe timeout
 
-constexpr const char* const kDefaultLogFileName = "check_mk.log";
-constexpr const char* const kDefaultAppFileName = "check_mk_agent.exe";
+constexpr const char *const kDefaultLogFileName = "check_mk.log";
+constexpr const char *const kDefaultAppFileName = "check_mk_agent.exe";
 constexpr char kDefaultEventLogName[] =
     "checkmk";  // name for windows event log
-const wchar_t* const kAppDataAppName = L"agent";
-const wchar_t* const kDefaultConfigCacheFileName = L"check_mk.cached.yml";
+const wchar_t *const kAppDataAppName = L"agent";
+const wchar_t *const kDefaultConfigCacheFileName = L"check_mk.cached.yml";
 }  // namespace cma::cfg
 
 // section with folder names, file names and some textual app defaults
@@ -104,8 +104,8 @@ constexpr const wchar_t kAppDataCompanyName[] = L"checkmk";
 // defines default behavior of the main thread
 constexpr bool IsOneShotMode() { return true; }
 
-constexpr const KNOWNFOLDERID& kPublicFolderId = FOLDERID_Public;
-constexpr const KNOWNFOLDERID& kWindowsFolderId = FOLDERID_Windows;
+constexpr const KNOWNFOLDERID &kPublicFolderId = FOLDERID_Public;
+constexpr const KNOWNFOLDERID &kWindowsFolderId = FOLDERID_Windows;
 
 std::string GetCurrentLogFileName();
 int GetCurrentDebugLevel();
@@ -116,12 +116,12 @@ bool GetCurrentEventLog();
 inline const std::wstring GetDefaultPrefixName() { return L"agent: "; }
 
 // where you can find executables
-std::vector<std::wstring>& ExternalCommandPaths();
+std::vector<std::wstring> &ExternalCommandPaths();
 
 // API to find a file on exe path
-std::wstring FindExeFileOnPath(const std::wstring& file_name);
-std::wstring FindConfigFile(const std::filesystem::path& dir_name,
-                            const std::wstring& file_name);
+std::wstring FindExeFileOnPath(const std::wstring &file_name);
+std::wstring FindConfigFile(const std::filesystem::path &dir_name,
+                            const std::wstring &file_name);
 
 // API for testing and logging
 std::vector<std::filesystem::path> GetExePaths();
@@ -129,33 +129,33 @@ std::vector<std::filesystem::path> GetExePaths();
 // Directories
 namespace dirs {
 // Program Files/checkmk/service/
-constexpr const wchar_t* kAgentPlugins = L"plugins";      // plugins from CMK
-constexpr const wchar_t* kAgentProviders = L"providers";  // only agent's exe
-constexpr const wchar_t* kAgentUtils = L"utils";          // anything to use
-constexpr const wchar_t* kFileInstallDir = L"install";    // from here!
+constexpr const wchar_t *kAgentPlugins = L"plugins";      // plugins from CMK
+constexpr const wchar_t *kAgentProviders = L"providers";  // only agent's exe
+constexpr const wchar_t *kAgentUtils = L"utils";          // anything to use
+constexpr const wchar_t *kFileInstallDir = L"install";    // from here!
 
 // ProgramData/checkmk/agent
-constexpr const wchar_t* kUserBin = L"bin";  // owned by agent legacy for OHM
+constexpr const wchar_t *kUserBin = L"bin";  // owned by agent legacy for OHM
 
-constexpr const wchar_t* kBackup = L"backup";             // owned by agent
-constexpr const wchar_t* kUserPlugins = L"plugins";       // owned by user
-constexpr const wchar_t* kLocal = L"local";               // owned by user
-constexpr const wchar_t* kAgentMrpe = L"mrpe";            // owned by user
-constexpr const wchar_t* kInstall = L"install";           // owned by agent
-constexpr const wchar_t* kUserInstallDir = L"install";    // owned by agent
-constexpr const wchar_t* kBakery = L"bakery";             // owned by site
-constexpr const wchar_t* kState = L"state";               // owned by plugins
-constexpr const wchar_t* kPluginConfig = L"config";       // owned by plugins
-constexpr const wchar_t* kUserModules = L"modules";       // owned by agent
-constexpr const wchar_t* kInstalledModules = L"modules";  // owned by agent
+constexpr const wchar_t *kBackup = L"backup";             // owned by agent
+constexpr const wchar_t *kUserPlugins = L"plugins";       // owned by user
+constexpr const wchar_t *kLocal = L"local";               // owned by user
+constexpr const wchar_t *kAgentMrpe = L"mrpe";            // owned by user
+constexpr const wchar_t *kInstall = L"install";           // owned by agent
+constexpr const wchar_t *kUserInstallDir = L"install";    // owned by agent
+constexpr const wchar_t *kBakery = L"bakery";             // owned by site
+constexpr const wchar_t *kState = L"state";               // owned by plugins
+constexpr const wchar_t *kPluginConfig = L"config";       // owned by plugins
+constexpr const wchar_t *kUserModules = L"modules";       // owned by agent
+constexpr const wchar_t *kInstalledModules = L"modules";  // owned by agent
 
-constexpr const wchar_t* kAuStateLocation = kPluginConfig;  // owned by plugins
+constexpr const wchar_t *kAuStateLocation = kPluginConfig;  // owned by plugins
 
-constexpr const wchar_t* kSpool = L"spool";    // owned by user/sys plugins
-constexpr const wchar_t* kTemp = L"tmp";       // owned by user plugins
-constexpr const wchar_t* kUpdate = L"update";  // owned by agent
-constexpr const wchar_t* kMrpe = L"mrpe";      // owned by user(!) for mrpe
-constexpr const wchar_t* kLog = L"log";        // owned by agent
+constexpr const wchar_t *kSpool = L"spool";    // owned by user/sys plugins
+constexpr const wchar_t *kTemp = L"tmp";       // owned by user plugins
+constexpr const wchar_t *kUpdate = L"update";  // owned by agent
+constexpr const wchar_t *kMrpe = L"mrpe";      // owned by user(!) for mrpe
+constexpr const wchar_t *kLog = L"log";        // owned by agent
 
 };  // namespace dirs
 namespace envs {
@@ -183,7 +183,7 @@ enum class EventLevels { kIgnore = -2, kOff = -1, kAll = 0, kWarn, kCrit };
 // #TODO gtest
 // converts from internal and stable representation
 // to key word in logwatch section of the YAML config file
-constexpr const char* const ConvertLogWatchLevelToString(EventLevels Lvl) {
+constexpr const char *const ConvertLogWatchLevelToString(EventLevels Lvl) {
     switch (Lvl) {
         case EventLevels::kAll:
             return vars::kLogWatchEvent_ParamWords[2];
@@ -205,7 +205,7 @@ constexpr auto kFromBegin = std::numeric_limits<uint64_t>::max();
 inline const std::chrono::seconds G_DefaultDelayOnFail(3600);
 
 // Prefixes of mailslots' names
-constexpr const char* const kServiceMailSlot = "WinAgent";      // production
-constexpr const char* const kTestingMailSlot = "WinAgentTest";  // testing
+constexpr const char *const kServiceMailSlot = "WinAgent";      // production
+constexpr const char *const kTestingMailSlot = "WinAgentTest";  // testing
 
 };  // namespace cma::cfg

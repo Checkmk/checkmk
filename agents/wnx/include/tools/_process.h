@@ -16,8 +16,8 @@
 #include "tools/_xlog.h"
 
 namespace cma::tools {
-inline bool RunCommandAndWait(const std::wstring& command,
-                              const std::wstring& work_dir) {
+inline bool RunCommandAndWait(const std::wstring &command,
+                              const std::wstring &work_dir) {
     STARTUPINFOW si{0};
     ::memset(&si, 0, sizeof(si));
     si.cb = sizeof(STARTUPINFO);
@@ -30,7 +30,7 @@ inline bool RunCommandAndWait(const std::wstring& command,
     auto working_folder = work_dir.empty() ? nullptr : work_dir.data();
 
     if (::CreateProcessW(nullptr,  // stupid windows want null here
-                         const_cast<wchar_t*>(command.c_str()),  // win32!
+                         const_cast<wchar_t *>(command.c_str()),  // win32!
                          nullptr,         // security attribute
                          nullptr,         // thread attribute
                          FALSE,           // no handle inheritance
@@ -46,11 +46,11 @@ inline bool RunCommandAndWait(const std::wstring& command,
     return false;
 }
 
-inline bool RunCommandAndWait(const std::wstring& command) {
+inline bool RunCommandAndWait(const std::wstring &command) {
     return RunCommandAndWait(command, L"");
 }
 
-inline bool RunDetachedCommand(const std::string& command) {
+inline bool RunDetachedCommand(const std::string &command) {
     STARTUPINFOA si{0};
     memset(&si, 0, sizeof(si));
     si.cb = sizeof(STARTUPINFO);
@@ -61,7 +61,7 @@ inline bool RunDetachedCommand(const std::string& command) {
     // CREATE_NEW_CONSOLE
 
     if (::CreateProcessA(nullptr,  // stupid windows want null here
-                         const_cast<char*>(command.c_str()),  // win32!
+                         const_cast<char *>(command.c_str()),  // win32!
                          nullptr,  // security attribute
                          nullptr,  // thread attribute
                          FALSE,    // no handle inheritance
@@ -101,7 +101,7 @@ inline uint32_t RunStdCommand(
     memset(&pi, 0, sizeof(pi));
 
     if (::CreateProcessW(nullptr,  // stupid windows want null here
-                         const_cast<wchar_t*>(command.data()),  // win32!
+                         const_cast<wchar_t *>(command.data()),  // win32!
                          nullptr,         // security attribute
                          nullptr,         // thread attribute
                          inherit_handle,  // handle inheritance
@@ -122,7 +122,7 @@ inline uint32_t RunStdCommand(
 // #TODO make right API from this wrapper
 // returns [ProcId, JobHandle, ProcessHandle]
 inline std::tuple<DWORD, HANDLE, HANDLE> RunStdCommandAsJob(
-    const std::wstring& Command,  // full command with arguments
+    const std::wstring &Command,  // full command with arguments
     BOOL inherit_handle = FALSE,  // not optimal, but default
     HANDLE stdio_handle = 0,      // when we want to catch output
     HANDLE stderr_handle = 0,     // same
@@ -146,7 +146,7 @@ inline std::tuple<DWORD, HANDLE, HANDLE> RunStdCommandAsJob(
     if (!job_handle) return {0, nullptr, nullptr};
 
     if (!::CreateProcessW(NULL,  // stupid windows want null here
-                          const_cast<wchar_t*>(Command.c_str()),  // win32!
+                          const_cast<wchar_t *>(Command.c_str()),  // win32!
                           nullptr,         // security attribute
                           nullptr,         // thread attribute
                           inherit_handle,  // handle inheritance
@@ -186,8 +186,8 @@ inline bool IsElevated() {
     return false;
 }
 
-inline std::wstring GetSomeSystemFolder(const KNOWNFOLDERID& rfid) noexcept {
-    wchar_t* str = nullptr;
+inline std::wstring GetSomeSystemFolder(const KNOWNFOLDERID &rfid) noexcept {
+    wchar_t *str = nullptr;
     if (SHGetKnownFolderPath(rfid, KF_FLAG_DEFAULT, NULL, &str) != S_OK ||
         !str)  // probably impossible case when executed ok, but str is nullptr
         return {};

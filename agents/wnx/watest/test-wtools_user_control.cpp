@@ -33,7 +33,7 @@ NTSTATUS PrintDomainName() {
     };
 
     status = LsaQueryInformationPolicy(policy, PolicyDnsDomainInformation,
-                                       (void**)&ppddi);
+                                       (void **)&ppddi);
 
     if (!LSA_SUCCESS(status)) return status;
 
@@ -51,7 +51,7 @@ NTSTATUS PrintDomainName() {
 
     if (LSA_SUCCESS(
             status = LsaQueryInformationPolicy(
-                policy, PolicyAccountDomainInformation, (void**)&ppadi))) {
+                policy, PolicyAccountDomainInformation, (void **)&ppadi))) {
         XLOG::l("DomainName: '{}'", wtools::ToUtf8(ppadi->DomainName.Buffer));
         LsaFreeMemory(ppadi);
     }
@@ -147,7 +147,7 @@ TEST(WtoolsUserControl, AddDeleteCheckForbiddenGroupIntegration) {
         L"System Managed Accounts Group"s,
         L"Users"s};
 
-    for (auto& g : groups) {
+    for (auto &g : groups) {
         //
         EXPECT_EQ(Status::error, lc.localGroupDel(g)) << "Missing group: " << g;
     }

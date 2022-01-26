@@ -23,7 +23,7 @@ using namespace std::chrono_literals;
 
 namespace cma::cfg::details {
 namespace {
-fs::path CreateYamlnInTemp(const std::string& name, const std::string& text) {
+fs::path CreateYamlnInTemp(const std::string &name, const std::string &text) {
     fs::path temp_folder{GetTempDir()};
     auto path = temp_folder / name;
     std::ofstream ofs(path.u8string());
@@ -35,7 +35,7 @@ fs::path CreateYamlnInTemp(const std::string& name, const std::string& text) {
     return path;
 }
 
-static fs::path CreateTestFile(const fs::path& name, const std::string& text) {
+static fs::path CreateTestFile(const fs::path &name, const std::string &text) {
     auto path = name;
     std::ofstream ofs(path.u8string(), std::ios::binary);
     if (!ofs) {
@@ -46,8 +46,8 @@ static fs::path CreateTestFile(const fs::path& name, const std::string& text) {
     return path;
 }
 
-std::string TestMergerSeq(const std::string& target, const std::string& source,
-                          const std::string& name) {
+std::string TestMergerSeq(const std::string &target, const std::string &source,
+                          const std::string &name) {
     auto user = YAML::Load(target);
     auto bakery = YAML::Load(source);
     MergeStringSequence(user, bakery, name);
@@ -57,8 +57,8 @@ std::string TestMergerSeq(const std::string& target, const std::string& source,
     return emit.c_str();
 }
 
-YAML::Node TestMergerMap(const std::string& target, const std::string& source,
-                         const std::string& name, const std::string& key) {
+YAML::Node TestMergerMap(const std::string &target, const std::string &source,
+                         const std::string &name, const std::string &key) {
     auto user = YAML::Load(target);
     auto bakery = YAML::Load(source);
 
@@ -189,7 +189,7 @@ TEST(AgentConfig, AggregateMap) {
         auto merged_yaml = full_yaml[vars::kPluginsExecution];
 
         auto select = [merged_yaml](int index,
-                                    const std::string& name) -> auto {
+                                    const std::string &name) -> auto {
             return merged_yaml[index][name].as<std::string>();
         };
 
@@ -560,7 +560,7 @@ TEST(AgentConfig, YamlRead) {
 
 TEST(AgentConfig, InternalArray) {
     const std::string key = "sections";
-    auto create_yaml = [key](const std::string& text) -> YAML::Node {
+    auto create_yaml = [key](const std::string &text) -> YAML::Node {
         return YAML::Load(key + ": " + text + "\n");
     };
 
@@ -729,7 +729,7 @@ TEST(AgentConfig, WorkConfig) {
         auto winperf_counters =
             GetPairArray(groups::kWinPerf, vars::kWinPerfCounters);
         EXPECT_EQ(winperf_counters.size(), 3);
-        for (const auto& counter : winperf_counters) {
+        for (const auto &counter : winperf_counters) {
             auto id = counter.first;
             EXPECT_TRUE(id != "");
 
@@ -827,7 +827,7 @@ TEST(AgentConfig, UTF16LE) {
     // ************************************
     // Typical load scenario
     // ************************************
-    auto loader = [](const auto&... Str) -> bool {
+    auto loader = [](const auto &...Str) -> bool {
         auto cfg_files = cma::tools::ConstructVectorWstring(Str...);
         auto ret = InitializeMainConfig(cfg_files, YamlCacheOp::nothing);
         if (!ret) {
@@ -862,7 +862,7 @@ TEST(AgentConfig, UTF16LE) {
 }
 
 TEST(AgentConfig, FailScenario_Long) {
-    auto loader = [](auto&... str) -> bool {
+    auto loader = [](auto &...str) -> bool {
         auto cfg_files = cma::tools::ConstructVectorWstring(str...);
 
         auto ret = InitializeMainConfig(cfg_files, YamlCacheOp::nothing);
@@ -1180,10 +1180,10 @@ static std::string node_ok =
 
     ;
 
-static YAML::Node generateTestNode(const std::string& node_text) {
+static YAML::Node generateTestNode(const std::string &node_text) {
     try {
         return YAML::Load(node_text);
-    } catch (const std::exception& e) {
+    } catch (const std::exception &e) {
         XLOG::l("exception '{}'", e.what());
     }
 
@@ -1416,7 +1416,7 @@ TEST(AgentConfig, ExeUnitTestYaml) {
     };
 
     int i = 0;
-    for (const auto& d : data) {
+    for (const auto &d : data) {
         EXPECT_EQ(exe_units[i].pattern(), d.p);
         EXPECT_EQ(exe_units[i].async(), d.async);
         EXPECT_EQ(exe_units[i].run(), d.run);
@@ -1444,7 +1444,7 @@ TEST(AgentConfig, CleanupUninstall) {
         {values::kCleanupSmart, details::CleanMode::smart},
         {values::kCleanupAll, details::CleanMode::all}};
 
-    for (auto& [n, v] : fixtures) {
+    for (auto &[n, v] : fixtures) {
         SetCfgMode(cfg, vars::kCleanupUninstall, n);
         EXPECT_EQ(details::GetCleanDataFolderMode(), v);
     }

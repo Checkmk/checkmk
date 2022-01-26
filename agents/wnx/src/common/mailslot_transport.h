@@ -36,9 +36,9 @@ class MailSlot;
 
 constexpr bool kUsePublicProfileLog = true;  // to Profile(not to Windows)
 
-constexpr const char* const kMailSlotLogFilePrivate =
+constexpr const char *const kMailSlotLogFilePrivate =
     "\\Logs\\cmk_mail_log.log";
-constexpr const char* const kMailSlotLogFileName = "cmk_mail.log";
+constexpr const char *const kMailSlotLogFileName = "cmk_mail.log";
 
 inline bool IsMailApiTraced() { return false; }
 
@@ -72,8 +72,8 @@ void MailSlotLog(Args... args) {
 // Context is parameter supplied by YOU, my friend when you creates mailbox,
 // it may be nullptr or something important like an address of an object of
 // a class to which callback should deliver data
-using MailBoxThreadFoo = bool (*)(const MailSlot* slot, const void* data,
-                                  int len, void* context);
+using MailBoxThreadFoo = bool (*)(const MailSlot *slot, const void *data,
+                                  int len, void *context);
 
 constexpr int DEFAULT_THREAD_SLEEP = 20;
 
@@ -88,11 +88,11 @@ public:
         FAILED_CREATE = -5
     };
 
-    MailSlot(const MailSlot&) = delete;
-    MailSlot& operator=(const MailSlot&) = delete;
+    MailSlot(const MailSlot &) = delete;
+    MailSlot &operator=(const MailSlot &) = delete;
 
-    MailSlot(MailSlot&&) = delete;
-    MailSlot& operator=(MailSlot&&) = delete;
+    MailSlot(MailSlot &&) = delete;
+    MailSlot &operator=(MailSlot &&) = delete;
 
 public:
     // convert slot name into fully qualified global object
@@ -126,16 +126,16 @@ public:
         return owner_;
     }  // true, if mailslot had been "created", false if "opened"
     [[nodiscard]] bool IsPostman() const noexcept { return !owner_; }
-    [[nodiscard]] const char* GetName() const noexcept { return name_.c_str(); }
+    [[nodiscard]] const char *GetName() const noexcept { return name_.c_str(); }
     [[nodiscard]] HANDLE GetHandle() const noexcept { return handle_; }
 
-    bool ConstructThread(cma::MailBoxThreadFoo foo, int sleep_ms, void* context,
+    bool ConstructThread(cma::MailBoxThreadFoo foo, int sleep_ms, void *context,
                          wtools::SecurityLevel sl) {
         return ConstructThread(foo, sleep_ms, context, false, sl);
     }
 
     // mailbox start here
-    bool ConstructThread(cma::MailBoxThreadFoo foo, int sleep_ms, void* context,
+    bool ConstructThread(cma::MailBoxThreadFoo foo, int sleep_ms, void *context,
                          bool force_open, wtools::SecurityLevel sl) {
         if (main_thread_) {
             MailSlotLog(XLOG_FUNC + " Double call is forbidden");
@@ -173,7 +173,7 @@ public:
     }
 
     // postman the only operation
-    bool ExecPost(const void* data, uint64_t length) {
+    bool ExecPost(const void *data, uint64_t length) {
         auto len = static_cast<int>(length);
         if (data == nullptr && len != 0) {
             MailSlotLog("Bad data for \"%s\"posting %p %d", name_.c_str(), data,
@@ -250,7 +250,7 @@ public:
         return true;
     }
 
-    bool Post(const void* Data, int Len) {
+    bool Post(const void *Data, int Len) {
         std::lock_guard<std::mutex> lck(lock_);
         if (!handle_ || IsOwner()) {
             MailSlotLog("Bad situation %p %d", handle_, (int)IsOwner());
@@ -266,7 +266,7 @@ public:
         return false;
     }
 
-    int Get(void* data, unsigned int max_len) {
+    int Get(void *data, unsigned int max_len) {
         std::lock_guard<std::mutex> lck(lock_);
         if (!handle_ || IsPostman()) return ErrCodes::FAILED_INIT;
         auto event = ::CreateEvent(nullptr, FALSE, FALSE, nullptr);
@@ -312,9 +312,9 @@ public:
     }
 
     void MailBoxThread(cma::MailBoxThreadFoo foo, int sleep_value,
-                       void* context) {
+                       void *context) {
         int buffer_size = 16000;
-        char* buffer = new char[buffer_size];
+        char *buffer = new char[buffer_size];
         while (keep_running_) {
             auto required_size = Get(nullptr, buffer_size);
             if (required_size > buffer_size) {
@@ -338,12 +338,12 @@ public:
     }
 
     // typically called from the ::Open, to write data in
-    static HANDLE openMailSlotWrite(const char* name) {
+    static HANDLE openMailSlotWrite(const char *name) {
         return ::CreateFileA(name, GENERIC_WRITE, FILE_SHARE_READ, nullptr,
                              OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
     }
 
-    static HANDLE createMailSlot(const char* name, wtools::SecurityLevel sl) {
+    static HANDLE createMailSlot(const char *name, wtools::SecurityLevel sl) {
         wtools::SecurityAttributeKeeper security_attribute_keeper(
             sl);  // black magic behind, do not try to
                   // understand, RAII auto-destroy

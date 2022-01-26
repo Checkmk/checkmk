@@ -20,7 +20,7 @@
 
 namespace cma::cfg::cvt {
 class ParserImplementation;
-bool CheckIniFile(const std::filesystem::path& Path);
+bool CheckIniFile(const std::filesystem::path &Path);
 
 // Engine to parse ini and generate YAML
 // implementation in the lwa folder
@@ -30,20 +30,20 @@ public:
     virtual ~Parser();
 
     // no copy, no move
-    Parser(const Parser&) = delete;
-    Parser(Parser&&) = delete;
-    Parser& operator=(const Parser&) = delete;
-    Parser& operator=(Parser&&) = delete;
+    Parser(const Parser &) = delete;
+    Parser(Parser &&) = delete;
+    Parser &operator=(const Parser &) = delete;
+    Parser &operator=(Parser &&) = delete;
 
     void prepare();
-    bool readIni(const std::filesystem::path& Path, bool Local);
+    bool readIni(const std::filesystem::path &Path, bool Local);
 
-    void emitYaml(std::ostream& Out);
+    void emitYaml(std::ostream &Out);
 
     YAML::Node emitYaml() noexcept;
 
 private:
-    ParserImplementation* pi_ = nullptr;
+    ParserImplementation *pi_ = nullptr;
 };
 }  // namespace cma::cfg::cvt
 

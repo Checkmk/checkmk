@@ -53,11 +53,11 @@ std::string MakeWinPerfHeader(std::wstring_view prefix,
 
 // retrieve the next line from a Windows Registry MULTI_SZ registry value
 // returns nullptr
-const wchar_t* GetNextMultiSz(const std::vector<wchar_t>& data,
-                              size_t& offset) {
+const wchar_t *GetNextMultiSz(const std::vector<wchar_t> &data,
+                              size_t &offset) {
     if (data.size() < offset + 1) return nullptr;  // sanity check
 
-    const auto* str = &data[offset];
+    const auto *str = &data[offset];
     auto len = wcslen(str);
 
     if ((len == 0) ||  // end of data
@@ -70,7 +70,7 @@ const wchar_t* GetNextMultiSz(const std::vector<wchar_t>& data,
     return str;
 }
 
-std::string MakeWinPerfInstancesLine(const PERF_OBJECT_TYPE* perf_object) {
+std::string MakeWinPerfInstancesLine(const PERF_OBJECT_TYPE *perf_object) {
     if (perf_object == nullptr || perf_object->NumInstances <= 0) {
         return {};
     }
@@ -93,8 +93,8 @@ std::string MakeWinPerfInstancesLine(const PERF_OBJECT_TYPE* perf_object) {
 // Reads data and deliver it back
 // empty data is error
 // key_index is set to 0 on start
-wtools::perf::DataSequence LoadWinPerfData(const std::wstring& key,
-                                           uint32_t& key_index) {
+wtools::perf::DataSequence LoadWinPerfData(const std::wstring &key,
+                                           uint32_t &key_index) {
     namespace perf = wtools::perf;
 
     perf::DataSequence result;  // must be local
@@ -133,7 +133,7 @@ wtools::perf::DataSequence LoadWinPerfData(const std::wstring& key,
 // build Check MK formatted list of counters
 // Instance less support too
 // Empty string on error
-std::string MakeWinPerfNakedList(const PERF_OBJECT_TYPE* perf_object,
+std::string MakeWinPerfNakedList(const PERF_OBJECT_TYPE *perf_object,
                                  uint32_t key_index) {
     namespace perf = wtools::perf;
 
@@ -144,11 +144,11 @@ std::string MakeWinPerfNakedList(const PERF_OBJECT_TYPE* perf_object,
     }
 
     auto instances = perf::GenerateInstances(perf_object);
-    const PERF_COUNTER_BLOCK* block = nullptr;
+    const PERF_COUNTER_BLOCK *block = nullptr;
     auto counters = perf::GenerateCounters(perf_object, block);
 
     std::string accu;
-    for (const auto& counter : counters) {
+    for (const auto &counter : counters) {
         int first_column = counter->CounterNameTitleIndex;
         // this logic is strange, but this is as in LWA
         // 1. Index
@@ -191,7 +191,7 @@ std::string BuildWinPerfSection(std::wstring_view prefix,
     uint32_t key_index = 0;
     auto result = details::LoadWinPerfData(std::wstring(key), key_index);
 
-    const auto* object = perf::FindPerfObject(result, key_index);
+    const auto *object = perf::FindPerfObject(result, key_index);
     if (object == nullptr) {
         XLOG::d("Winperf Object name '{}' index [{}] is not found",
                 wtools::ToUtf8(key), key_index);

@@ -30,15 +30,15 @@ std::filesystem::path GetSolutionRoot();
 std::filesystem::path GetProjectRoot();
 std::filesystem::path GetUnitTestFilesRoot();
 
-std::filesystem::path MakePathToUnitTestFiles(const std::wstring& root);
+std::filesystem::path MakePathToUnitTestFiles(const std::wstring &root);
 inline std::filesystem::path MakePathToUnitTestFiles() {
     return MakePathToUnitTestFiles(GetSolutionRoot());
 }
-std::filesystem::path MakePathToConfigTestFiles(const std::wstring& root);
+std::filesystem::path MakePathToConfigTestFiles(const std::wstring &root);
 inline std::filesystem::path MakePathToConfigTestFiles() {
     return MakePathToConfigTestFiles(GetSolutionRoot());
 }
-std::filesystem::path MakePathToCapTestFiles(const std::wstring& root);
+std::filesystem::path MakePathToCapTestFiles(const std::wstring &root);
 inline std::filesystem::path MakePathToCapTestFiles() {
     return MakePathToCapTestFiles(GetSolutionRoot());
 }
@@ -64,14 +64,14 @@ public:
 void SafeCleanTempDir();
 void SafeCleanTempDir(std::string_view sub_dir);
 
-inline void CreateTextFile(const std::filesystem::path& path,
+inline void CreateTextFile(const std::filesystem::path &path,
                            std::string_view content) {
     std::ofstream ofs(path);
 
     ofs << content;
 }
 
-inline void CreateBinaryFile(const std::filesystem::path& path,
+inline void CreateBinaryFile(const std::filesystem::path &path,
                              std::string_view data) {
     std::ofstream ofs(path, std::ios::binary);
 
@@ -79,15 +79,15 @@ inline void CreateBinaryFile(const std::filesystem::path& path,
 }
 
 inline std::filesystem::path CreateIniFile(
-    const std::filesystem::path& lwa_path, const std::string content,
+    const std::filesystem::path &lwa_path, const std::string content,
     const std::string yaml_name) {
     auto ini_file = lwa_path / (yaml_name + ".ini");
     CreateTextFile(lwa_path / ini_file, content);
     return ini_file;
 }
 
-inline std::filesystem::path CreateWorkFile(const std::filesystem::path& path,
-                                            const std::string& content) {
+inline std::filesystem::path CreateWorkFile(const std::filesystem::path &path,
+                                            const std::string &content) {
     CreateBinaryFile(path, content + "\n");
     return path;
 }
@@ -95,11 +95,11 @@ inline std::filesystem::path CreateWorkFile(const std::filesystem::path& path,
 // Storage for temporary in out dir
 class TempDirPair {
 public:
-    TempDirPair(const std::string& case_name);
-    TempDirPair(const TempDirPair&) = delete;
-    TempDirPair(TempDirPair&&) = delete;
-    TempDirPair& operator=(const TempDirPair&) = delete;
-    TempDirPair& operator=(TempDirPair&&) = delete;
+    TempDirPair(const std::string &case_name);
+    TempDirPair(const TempDirPair &) = delete;
+    TempDirPair(TempDirPair &&) = delete;
+    TempDirPair &operator=(const TempDirPair &) = delete;
+    TempDirPair &operator=(TempDirPair &&) = delete;
 
     ~TempDirPair();
     std::filesystem::path in() const noexcept { return in_; }
@@ -164,15 +164,15 @@ const std::string_view very_temp = "tmpx";
 
 void SafeCleanTmpxDir();
 
-std::vector<std::string> ReadFileAsTable(const std::string& Name);
+std::vector<std::string> ReadFileAsTable(const std::string &Name);
 inline std::vector<std::string> ReadFileAsTable(
-    const std::filesystem::path& name) {
+    const std::filesystem::path &name) {
     return ReadFileAsTable(name.u8string());
 }
 
 using CheckYamlVector =
     std::vector<std::pair<std::string_view, YAML::NodeType::value>>;
-inline void CheckYaml(YAML::Node table, const CheckYamlVector& vec) {
+inline void CheckYaml(YAML::Node table, const CheckYamlVector &vec) {
     int pos = 0;
     for (auto t : table) {
         EXPECT_EQ(t.first.as<std::string>(), vec[pos].first);
@@ -190,8 +190,8 @@ public:
     explicit TempFolder(std::string_view folder_name)
         : TempFolder(wtools::ConvertToUTF16(folder_name)) {}
     explicit TempFolder(std::wstring_view folder_name);
-    TempFolder(const TempFolder&) = delete;
-    TempFolder& operator=(const TempFolder&) = delete;
+    TempFolder(const TempFolder &) = delete;
+    TempFolder &operator=(const TempFolder &) = delete;
     ~TempFolder();
 
     std::filesystem::path path() const { return folder_name_; }
@@ -220,23 +220,23 @@ public:
     }
     ~TempCfgFs();
 
-    TempCfgFs(const TempCfgFs&) = delete;
-    TempCfgFs(TempCfgFs&&) = delete;
-    TempCfgFs& operator=(const TempCfgFs&) = delete;
-    TempCfgFs& operator=(TempCfgFs&&) = delete;
+    TempCfgFs(const TempCfgFs &) = delete;
+    TempCfgFs(TempCfgFs &&) = delete;
+    TempCfgFs &operator=(const TempCfgFs &) = delete;
+    TempCfgFs &operator=(TempCfgFs &&) = delete;
 
-    [[nodiscard]] bool loadConfig(const std::filesystem::path& yml);
+    [[nodiscard]] bool loadConfig(const std::filesystem::path &yml);
     [[nodiscard]] bool reloadConfig();
     [[nodiscard]] bool loadFactoryConfig();
     [[nodiscard]] bool loadContent(std::string_view config);
 
-    [[nodiscard]] bool createRootFile(const std::filesystem::path& relative_p,
-                                      const std::string& content) const;
-    [[nodiscard]] bool createDataFile(const std::filesystem::path& relative_p,
-                                      const std::string& content) const;
+    [[nodiscard]] bool createRootFile(const std::filesystem::path &relative_p,
+                                      const std::string &content) const;
+    [[nodiscard]] bool createDataFile(const std::filesystem::path &relative_p,
+                                      const std::string &content) const;
 
-    void removeRootFile(const std::filesystem::path& relative_p) const;
-    void removeDataFile(const std::filesystem::path& relative_p) const;
+    void removeRootFile(const std::filesystem::path &relative_p) const;
+    void removeDataFile(const std::filesystem::path &relative_p) const;
 
     const std::filesystem::path root() const { return root_; }
     const std::filesystem::path data() const { return data_; }
@@ -246,10 +246,10 @@ public:
 private:
     TempCfgFs(Mode mode);
     [[nodiscard]] static bool createFile(
-        const std::filesystem::path& filepath,
-        const std::filesystem::path& filepath_base, const std::string& content);
-    static void removeFile(const std::filesystem::path& filepath,
-                           const std::filesystem::path& filepath_base);
+        const std::filesystem::path &filepath,
+        const std::filesystem::path &filepath_base, const std::string &content);
+    static void removeFile(const std::filesystem::path &filepath,
+                           const std::filesystem::path &filepath_base);
     std::filesystem::path root_;
     std::filesystem::path data_;
     std::filesystem::path base_;
@@ -272,11 +272,11 @@ public:
     FirewallOpener();
     ~FirewallOpener();
 
-    FirewallOpener(const FirewallOpener&) = delete;
-    FirewallOpener(FirewallOpener&&) = delete;
+    FirewallOpener(const FirewallOpener &) = delete;
+    FirewallOpener(FirewallOpener &&) = delete;
 
-    FirewallOpener& operator=(const FirewallOpener&) = delete;
-    FirewallOpener& operator=(FirewallOpener&&) = delete;
+    FirewallOpener &operator=(const FirewallOpener &) = delete;
+    FirewallOpener &operator=(FirewallOpener &&) = delete;
 
 private:
     std::wstring argv0_;
@@ -285,7 +285,7 @@ private:
 constexpr inline int TestPort() { return 64531; }
 
 namespace misc {
-void CopyFailedPythonLogFileToLog(const std::filesystem::path& data);
+void CopyFailedPythonLogFileToLog(const std::filesystem::path &data);
 
 }  // namespace misc
 
@@ -298,13 +298,13 @@ struct EventRecordData {
     cma::evl::EventLogRecordBase::Level event_level;
 };
 
-const std::vector<EventRecordData>& SimpleLogData();
+const std::vector<EventRecordData> &SimpleLogData();
 }  // namespace tst
 
 namespace cma::evl {
 class EventLogRecordDebug : public EventLogRecordBase {
 public:
-    EventLogRecordDebug(uint64_t record_id, const tst::EventRecordData& data)
+    EventLogRecordDebug(uint64_t record_id, const tst::EventRecordData &data)
         : record_id_{record_id}
         , event_id_{data.event_id}
         , event_qualifiers_{data.event_qualifiers}
@@ -339,15 +339,15 @@ private:
 
 class EventLogDebug : public EventLogBase {
 public:
-    EventLogDebug(const std::vector<tst::EventRecordData>& data)
+    EventLogDebug(const std::vector<tst::EventRecordData> &data)
         : data_(data) {}
     ~EventLogDebug() {}
 
     std::wstring getName() const override { return L"debug"; }
     void seek(uint64_t record_id) override { pos_ = record_id; }
-    EventLogRecordBase* readRecord() override {
+    EventLogRecordBase *readRecord() override {
         if (pos_ < data_.size()) {
-            const auto& d = data_[static_cast<size_t>(pos_)];
+            const auto &d = data_[static_cast<size_t>(pos_)];
             return new EventLogRecordDebug(pos_++, d);
         }
         return nullptr;

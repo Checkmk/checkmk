@@ -42,7 +42,7 @@ TEST(EventLogTest, PrintEventLogSkip) {
     std::vector<std::string> table;
     auto last =
         PrintEventLog(evd, cfg::kFromBegin, cfg::EventLevels::kCrit, false,
-                      SkipDuplicatedRecords::yes, [&](const auto& in) {
+                      SkipDuplicatedRecords::yes, [&](const auto &in) {
                           table.emplace_back(in);
                           return true;
                       });
@@ -60,7 +60,7 @@ TEST(EventLogTest, PrintEventLog) {
         std::string str;
         auto last = PrintEventLog(
             *ptr, 0, cfg::EventLevels::kCrit, false, SkipDuplicatedRecords::no,
-            [&str](const std::string& in) -> bool {
+            [&str](const std::string &in) -> bool {
                 str += in;
                 return str.length() < (cfg::logwatch::kMaxSize / 10);
             });
@@ -70,7 +70,7 @@ TEST(EventLogTest, PrintEventLog) {
             std::string str;
             auto last = PrintEventLog(*ptr, 0, cfg::EventLevels::kCrit, false,
                                       SkipDuplicatedRecords::no,
-                                      [&str](const std::string& in) -> bool {
+                                      [&str](const std::string &in) -> bool {
                                           str += in;
                                           return str.length() < 100 ||
                                                  str.length() > 10'000;
@@ -90,7 +90,7 @@ TEST(EventLogTest, BeginningOfTheLog) {  // check empty log
         std::string str;
         auto last = PrintEventLog(*ptr, cfg::kFromBegin, cfg::EventLevels::kAll,
                                   false, SkipDuplicatedRecords::no,
-                                  [&str](const std::string& in) -> bool {
+                                  [&str](const std::string &in) -> bool {
                                       str += in;
                                       return true;
                                   });
@@ -105,7 +105,7 @@ TEST(EventLogTest, BeginningOfTheLog) {  // check empty log
         std::string str;
         auto last = PrintEventLog(*ptr, cfg::kFromBegin, cfg::EventLevels::kAll,
                                   false, SkipDuplicatedRecords::no,
-                                  [&str](const std::string& in) -> bool {
+                                  [&str](const std::string &in) -> bool {
                                       str += in;
                                       return false;
                                   });

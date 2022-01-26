@@ -39,7 +39,7 @@ TEST(ObjectRepo, CheckShared) {
         }
         EXPECT_TRUE(fs.count() == 5);
 
-        for (const auto& v : {"a", "b", "c", "d", "e"}) {
+        for (const auto &v : {"a", "b", "c", "d", "e"}) {
             auto result = fs.getObject(v);
             ASSERT_TRUE(result);
             EXPECT_EQ(*result, val);

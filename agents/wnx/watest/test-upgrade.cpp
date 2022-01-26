@@ -20,7 +20,7 @@ namespace fs = std::filesystem;
 namespace cma::cfg::upgrade {
 
 extern std::filesystem::path G_LegacyAgentPresetPath;
-void SetLegacyAgentPath(const std::filesystem::path& path);
+void SetLegacyAgentPath(const std::filesystem::path &path);
 
 const std::string ini_expected = "b53c5b77c595ba7e";
 const std::string ini_name = "check_mk.hash.ini";
@@ -276,7 +276,7 @@ TEST(UpgradeTest, CreateProtocol) {
     auto f = cma::tools::ReadFileInVector(protocol_file);
     ASSERT_TRUE(f.has_value());
     auto file_content = f.value();
-    std::string str((const char*)file_content.data(), file_content.size());
+    std::string str((const char *)file_content.data(), file_content.size());
     auto table = cma::tools::SplitString(str, "\n");
     EXPECT_EQ(table.size(), 3);
 }
@@ -514,8 +514,8 @@ TEST(UpgradeTest, UserIniPackagedAgent) {
     }
 }
 
-void SimulateWatoInstall(const std::filesystem::path& lwa,
-                         const std::filesystem::path& pd_dir) {
+void SimulateWatoInstall(const std::filesystem::path &lwa,
+                         const std::filesystem::path &pd_dir) {
     auto bakery_yaml = ConstructBakeryYmlPath(pd_dir);
     auto user_yaml = ConstructUserYmlPath(pd_dir);
     std::error_code ec;

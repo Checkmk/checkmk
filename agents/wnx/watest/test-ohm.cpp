@@ -77,11 +77,11 @@ TEST(SectionProviderOhm, ReadData) {
             auto header = cma::tools::SplitString(table[1], ",");
             EXPECT_EQ(header.size(), 6);
             if (header.size() >= 6) {
-                const char* expected_strings[] = {"Index",  "Name",
+                const char *expected_strings[] = {"Index",  "Name",
                                                   "Parent", "SensorType",
                                                   "Value",  "WMIStatus"};
                 int index = 0;
-                for (auto& str : expected_strings) {
+                for (auto &str : expected_strings) {
                     EXPECT_EQ(str, header[index++]);
                 }
             }
@@ -116,7 +116,7 @@ int CalcOhmCount() {
     StringLower(ohm_name);
 
     wtools::ScanProcessList(
-        [ohm_name, &count](const PROCESSENTRY32& entry) -> bool {
+        [ohm_name, &count](const PROCESSENTRY32 &entry) -> bool {
             std::string incoming_name = wtools::ToUtf8(entry.szExeFile);
             StringLower(incoming_name);
             if (ohm_name == incoming_name) count++;

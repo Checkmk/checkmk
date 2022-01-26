@@ -58,7 +58,7 @@ TEST(SectionProviders, BasicUptime) {
     EXPECT_EQ(uptime_provider.getEngine().getUniqName(),
               cma::section::kUptimeName);
 
-    auto& e3 = uptime_provider.getEngine();
+    auto &e3 = uptime_provider.getEngine();
     auto uptime = e3.generateContent(section_name);
     ASSERT_TRUE(!uptime.empty());
     auto result = cma::tools::SplitString(uptime, "\n");
@@ -72,7 +72,7 @@ TEST(SectionProviders, BasicDf) {
     cma::srv::SectionProvider<cma::provider::Df> df_provider;
     EXPECT_EQ(df_provider.getEngine().getUniqName(), cma::section::kDfName);
 
-    auto& e2 = df_provider.getEngine();
+    auto &e2 = df_provider.getEngine();
     auto df = e2.generateContent(section_name);
     ASSERT_TRUE(!df.empty());
     auto result = cma::tools::SplitString(df, "\n");
@@ -99,7 +99,7 @@ TEST(SectionProviders, BasicDf) {
 TEST(SectionProviders, SystemTime) {
     auto seconds_since_epoch = tools::SecondsSinceEpoch();
     srv::SectionProvider<SystemTime> system_time_provider;
-    auto& engine = system_time_provider.getEngine();
+    auto &engine = system_time_provider.getEngine();
 
     EXPECT_EQ(engine.getUniqName(), section::kSystemTime);
 
@@ -151,7 +151,7 @@ public:
         result.erase(result.begin());
         return result;
     }
-    CheckMk& getEngine() { return check_mk_provider_.getEngine(); }
+    CheckMk &getEngine() { return check_mk_provider_.getEngine(); }
 
     YAML::Node getWorkingCfg() {
         if (!temp_fs_) {
@@ -167,7 +167,7 @@ public:
         return temp_fs_->data();
     }
 
-    auto get_val(const std::string& raw) -> std::string {
+    auto get_val(const std::string &raw) -> std::string {
         auto tbl = tools::SplitString(raw, ": ");
         if (tbl.size() == 2) {
             return tbl[1];
@@ -191,8 +191,8 @@ TEST_F(SectionProviderCheckMkFixture, ConstFields) {
 
     auto result = getCoreResultAsTable();
 
-    const auto* expected_name = names_;
-    for (const auto& r : result) {
+    const auto *expected_name = names_;
+    for (const auto &r : result) {
         auto values = tools::SplitString(r, ": ");
         EXPECT_EQ(values.size(), 2);
         EXPECT_EQ(values[0], std::string{*expected_name++});
@@ -257,7 +257,7 @@ public:
     std::vector<Row> rows_;
 
 private:
-    Mem& getEngine() { return mem_provider_.getEngine(); }
+    Mem &getEngine() { return mem_provider_.getEngine(); }
     srv::SectionProvider<Mem> mem_provider_;
 };
 
@@ -266,7 +266,7 @@ TEST_F(SectionProvidersMemFixture, Mem) {
     EXPECT_EQ(header_, "<<<mem>>>");
     ASSERT_EQ(rows_.size(), 8);
     for (size_t i = 0; i < rows_.size(); ++i) {
-        const auto& row = rows_[i];
+        const auto &row = rows_[i];
         EXPECT_EQ(row.title, field_names_[i]);
         EXPECT_TRUE(std::stoll(row.value) > 0);
         EXPECT_EQ(row.kb, "kB");
@@ -275,7 +275,7 @@ TEST_F(SectionProvidersMemFixture, Mem) {
 
 class SectionProvidersFixture : public ::testing::Test {
 public:
-    Services& getEngine() { return services_provider.getEngine(); }
+    Services &getEngine() { return services_provider.getEngine(); }
 
 private:
     srv::SectionProvider<Services> services_provider;

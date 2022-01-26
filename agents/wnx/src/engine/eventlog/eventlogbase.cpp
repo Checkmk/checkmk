@@ -8,7 +8,7 @@
 #include "logger.h"
 
 namespace cma::evl {
-std::unique_ptr<EventLogBase> OpenEvl(const std::wstring& name,
+std::unique_ptr<EventLogBase> OpenEvl(const std::wstring &name,
                                       bool vista_api) {
     if (vista_api && g_evt.close != nullptr) {
         return std::make_unique<EventLogVista>(name);
@@ -21,7 +21,7 @@ std::unique_ptr<EventLogBase> OpenEvl(const std::wstring& name,
 ///
 /// returns pos and case
 std::pair<uint64_t, cma::cfg::EventLevels> ScanEventLog(
-    EventLogBase& log, uint64_t pos, cma::cfg::EventLevels level) {
+    EventLogBase &log, uint64_t pos, cma::cfg::EventLevels level) {
     // we must seek past the previously read event - if there was one
     log.seek(choosePos(pos));
 
@@ -44,8 +44,8 @@ std::pair<uint64_t, cma::cfg::EventLevels> ScanEventLog(
 }
 
 namespace {
-bool operator==(const EventLogRecordBase::ptr& lhs,
-                const EventLogRecordBase::ptr& rhs) {
+bool operator==(const EventLogRecordBase::ptr &lhs,
+                const EventLogRecordBase::ptr &rhs) {
     if (lhs == nullptr && rhs == nullptr) {
         return true;
     }
@@ -60,8 +60,8 @@ bool operator==(const EventLogRecordBase::ptr& lhs,
 
     return false;
 }
-bool operator!=(const EventLogRecordBase::ptr& lhs,
-                const EventLogRecordBase::ptr& rhs) {
+bool operator!=(const EventLogRecordBase::ptr &lhs,
+                const EventLogRecordBase::ptr &rhs) {
     return !(lhs == rhs);
 }
 }  // namespace
@@ -69,10 +69,10 @@ bool operator!=(const EventLogRecordBase::ptr& lhs,
 /// scans eventlog and applies processor to every entry.
 ///
 /// returns last scanned pos where processor returns false
-uint64_t PrintEventLog(EventLogBase& log, uint64_t from_pos,
+uint64_t PrintEventLog(EventLogBase &log, uint64_t from_pos,
                        cma::cfg::EventLevels level, bool hide_context,
                        SkipDuplicatedRecords skip,
-                       const EvlProcessor& processor) {
+                       const EvlProcessor &processor) {
     // we must seek past the previously read event - if there was one
     log.seek(choosePos(from_pos));
 

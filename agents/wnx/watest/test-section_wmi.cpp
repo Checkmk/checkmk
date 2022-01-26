@@ -82,7 +82,7 @@ TEST_F(WmiWrapperFixture, Enumerating) {
     EXPECT_TRUE(result != nullptr);
 
     ULONG returned = 0;
-    IWbemClassObject* wmi_object = nullptr;
+    IWbemClassObject *wmi_object = nullptr;
     auto hres = result->Next(WBEM_INFINITE, 1, &wmi_object, &returned);
     EXPECT_EQ(hres, 0);
     EXPECT_NE(returned, 0);
@@ -213,7 +213,7 @@ TEST(WmiProviderTest, WmiConfiguration) {
     }
 }
 
-const char* exch_names[] = {kMsExchActiveSync,     //
+const char *exch_names[] = {kMsExchActiveSync,     //
                             kMsExchAvailability,   //
                             kMsExchOwa,            //
                             kMsExchAutoDiscovery,  //
@@ -406,12 +406,12 @@ TEST(WmiProviderTest, SimulationIntegration) {  //
 
         // sub section count
         const int count = 7;
-        auto& subs = msexch.sub_objects_;
+        auto &subs = msexch.sub_objects_;
         EXPECT_EQ(subs.size(), count);
         for (int k = 0; k < count; ++k)
             EXPECT_EQ(subs[k].getUniqName(), exch_names[k]);
 
-        for (auto& sub : subs) {
+        for (auto &sub : subs) {
             EXPECT_TRUE(!sub.name_space_.empty());
             EXPECT_TRUE(!sub.object_.empty());
         }
@@ -446,7 +446,7 @@ TEST(WmiProviderTest, WmiDotnet_Integration) {
     cma::srv::SectionProvider<Wmi> wmi_provider(wmi_name, ',');
     EXPECT_EQ(wmi_provider.getEngine().getUniqName(), wmi_name);
 
-    auto& e2 = wmi_provider.getEngine();
+    auto &e2 = wmi_provider.getEngine();
     EXPECT_TRUE(e2.isAllowedByCurrentConfig());
     EXPECT_TRUE(e2.isAllowedByTime());
 
@@ -536,14 +536,14 @@ public:
     }
 
 protected:
-    std::vector<std::string> execWmiProvider(const std::string& wmi_name,
-                                             const std::string& test_name) {
+    std::vector<std::string> execWmiProvider(const std::string &wmi_name,
+                                             const std::string &test_name) {
         auto f = tst::GetTempDir() / test_name;
 
         cma::srv::SectionProvider<Wmi> wmi_provider(wmi_name, wmi::kSepChar);
         EXPECT_EQ(wmi_provider.getEngine().getUniqName(), wmi_name);
 
-        auto& e2 = wmi_provider.getEngine();
+        auto &e2 = wmi_provider.getEngine();
         EXPECT_TRUE(e2.isAllowedByCurrentConfig());
         EXPECT_TRUE(e2.isAllowedByTime());
 
@@ -593,12 +593,12 @@ TEST_F(WmiProviderTestFixture, WmiCpu) {
     EXPECT_EQ(table[0] + "\n",
               cma::section::MakeHeader(kWmiCpuLoad, wmi::kSepChar));
 
-    for (const auto& section :
+    for (const auto &section :
          {kSubSectionSystemPerf, kSubSectionComputerSystem}) {
         auto header = cma::section::MakeSubSectionHeader(section);
         header.pop_back();
         EXPECT_TRUE(std::ranges::any_of(
-            table, [header](auto const& e) { return e == header; }));
+            table, [header](auto const &e) { return e == header; }));
     }
 }
 

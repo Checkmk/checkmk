@@ -53,13 +53,13 @@ class TheMiniProcess {
 public:
     TheMiniProcess() = default;
 
-    TheMiniProcess(const TheMiniProcess&) = delete;
-    TheMiniProcess& operator=(const TheMiniProcess&) = delete;
-    TheMiniProcess(TheMiniProcess&&) = delete;
-    TheMiniProcess& operator=(TheMiniProcess&&) = delete;
+    TheMiniProcess(const TheMiniProcess &) = delete;
+    TheMiniProcess &operator=(const TheMiniProcess &) = delete;
+    TheMiniProcess(TheMiniProcess &&) = delete;
+    TheMiniProcess &operator=(TheMiniProcess &&) = delete;
 
     ~TheMiniProcess() { stop(); }
-    bool start(const std::wstring& exe_name);
+    bool start(const std::wstring &exe_name);
     bool stop();
     bool running() const {
         std::lock_guard lk(lock_);
@@ -80,10 +80,10 @@ private:
 };
 
 // ASSORTED
-constexpr const wchar_t* kMainLogName = L"cmk_service.log";
+constexpr const wchar_t *kMainLogName = L"cmk_service.log";
 
-bool SystemMailboxCallback(const cma::MailSlot*, const void* data, int len,
-                           void* context);
+bool SystemMailboxCallback(const cma::MailSlot *, const void *data, int len,
+                           void *context);
 
 class ServiceProcessor;
 
@@ -97,7 +97,7 @@ public:
     SectionProvider() { provider_uniq_name_ = engine_.getUniqName(); }
 
     // with engine init
-    SectionProvider(const std::string& uniq_name,  // id for the provider
+    SectionProvider(const std::string &uniq_name,  // id for the provider
                     char separator)
         : engine_(uniq_name, separator) {
         provider_uniq_name_ = engine_.getUniqName();
@@ -105,9 +105,9 @@ public:
 
     std::future<bool> kick(
         std::launch mode,             // type of execution
-        const std::string& cmd_line,  // command line, first is Ip address
+        const std::string &cmd_line,  // command line, first is Ip address
         AnswerId answer_id,           // expected id
-        ServiceProcessor* processor   // hosting object
+        ServiceProcessor *processor   // hosting object
     ) {
         engine_.registerOwner(processor);
         engine_.loadConfig();
@@ -117,7 +117,7 @@ public:
             mode,
             [this](const std::string command_line,  //
                    const AnswerId answer_id,        //
-                   const ServiceProcessor* Proc) {
+                   const ServiceProcessor *Proc) {
                 engine_.updateSectionStatus();  // actual data gathering is
                                                 // here for plugins and local
 
@@ -142,9 +142,9 @@ public:
     // used to call complicated providers directly without any threads
     // to obtain maximally correct results
     bool directCall(
-        const std::string& cmd_line,  // command line, first is Ip address
+        const std::string &cmd_line,  // command line, first is Ip address
         AnswerId timestamp,           // expected id
-        const std::string& port_name  // port to report results
+        const std::string &port_name  // port to report results
     ) {
         engine_.loadConfig();
         section_expected_timeout_ = engine_.timeout();
@@ -158,8 +158,8 @@ public:
         return true;
     }
 
-    const T& getEngine() const { return engine_; }
-    T& getEngine() { return engine_; }
+    const T &getEngine() const { return engine_; }
+    T &getEngine() { return engine_; }
 
     int expectedTimeout() const { return section_expected_timeout_; }
 
@@ -168,9 +168,9 @@ protected:
     T engine_;
     int section_expected_timeout_ = 0;
 
-    void goGoGo(const std::string& section_name,  //
-                const std::string& command_line,  //
-                const std::string& port,          //
+    void goGoGo(const std::string &section_name,  //
+                const std::string &command_line,  //
+                const std::string &port,          //
                 uint64_t marker) {                // std marker
         engine_.stopWatchStart();
         auto cmd_line =
@@ -188,7 +188,7 @@ protected:
 // Thread Safe
 class ServiceProcessor : public wtools::BaseServiceProcessor {
 public:
-    using thread_callback = std::function<bool(const void*)>;
+    using thread_callback = std::function<bool(const void *)>;
     using AnswerDataBlock = cma::srv::AsyncAnswer::DataBlock;
     ServiceProcessor(std::chrono::milliseconds delay, thread_callback callback)
         : delay_(delay), callback_(callback), external_port_(this) {}
@@ -199,10 +199,10 @@ public:
     ~ServiceProcessor() { ohm_process_.stop(); }
 
     // boiler plate
-    ServiceProcessor(const ServiceProcessor& Rhs) = delete;
-    ServiceProcessor& operator=(ServiceProcessor& Rhs) = delete;
-    ServiceProcessor(const ServiceProcessor&& Rhs) = delete;
-    ServiceProcessor& operator=(ServiceProcessor&& Rhs) = delete;
+    ServiceProcessor(const ServiceProcessor &Rhs) = delete;
+    ServiceProcessor &operator=(ServiceProcessor &Rhs) = delete;
+    ServiceProcessor(const ServiceProcessor &&Rhs) = delete;
+    ServiceProcessor &operator=(ServiceProcessor &&Rhs) = delete;
 
     // Standard Windows API to Service
     void stopService();
@@ -216,7 +216,7 @@ public:
 
     void cleanupOnStop() override;
 
-    const wchar_t* getMainLogName() const { return kMainLogName; }
+    const wchar_t *getMainLogName() const { return kMainLogName; }
 
     const std::string getInternalPort() const noexcept {
         return internal_port_;
@@ -227,29 +227,29 @@ public:
     void stopTestingMainThread();
 
     // called by callbacks from Internal Transport section providers
-    bool addSectionToAnswer(const std::string& name, const AnswerId timestamp,
-                            const AsyncAnswer::DataBlock& data) {
+    bool addSectionToAnswer(const std::string &name, const AnswerId timestamp,
+                            const AsyncAnswer::DataBlock &data) {
         return answer_.addSegment(name, timestamp, data);
     }
 
     // called when no data for section generated - this is ok
-    bool addSectionToAnswer(const std::string& name, const AnswerId timestamp) {
+    bool addSectionToAnswer(const std::string &name, const AnswerId timestamp) {
         return answer_.addSegment(name, timestamp, std::vector<uint8_t>());
     }
 
     static void resetOhm() noexcept;
     bool isOhmStarted() const noexcept { return ohm_started_; }
 
-    cma::cfg::modules::ModuleCommander& getModuleCommander() noexcept {
+    cma::cfg::modules::ModuleCommander &getModuleCommander() noexcept {
         return mc_;
     }
-    const cma::cfg::modules::ModuleCommander& getModuleCommander()
+    const cma::cfg::modules::ModuleCommander &getModuleCommander()
         const noexcept {
         return mc_;
     }
 
 private:
-    std::vector<uint8_t> makeTestString(const char* text) {
+    std::vector<uint8_t> makeTestString(const char *text) {
         const std::string answer_test{text == nullptr ? "" : text};
         std::vector<uint8_t> answer_vector{answer_test.begin(),
                                            answer_test.end()};
@@ -265,13 +265,13 @@ private:
     // on this phase we are starting our async plugins
     void preContextCall() {}
 
-    void informDevice(cma::rt::Device& Device,
+    void informDevice(cma::rt::Device &Device,
                       std::string_view Ip) const noexcept;
 
     // used to start OpenHardwareMonitor if conditions are ok
     bool stopRunningOhmProcess() noexcept;
     [[nodiscard]] bool conditionallyStartOhm() noexcept;
-    void mainThread(world::ExternalPort* Port) noexcept;
+    void mainThread(world::ExternalPort *Port) noexcept;
 
     // object data
     std::thread thread_;
@@ -284,19 +284,19 @@ private:
     std::condition_variable stop_thread_;
     std::mutex lock_stopper_;
     bool stop_requested_ = false;
-    thread_callback callback_ = [](const void*) { return true; };  // nothing
+    thread_callback callback_ = [](const void *) { return true; };  // nothing
 
     uint16_t working_port_ = cma::cfg::kMainPort;
 
     // First Class Objects
     cma::world::ExternalPort external_port_;
-    AsyncAnswer& getAsyncAnswer() { return answer_; }
+    AsyncAnswer &getAsyncAnswer() { return answer_; }
 
 private:
     bool ohm_started_ = false;
     // support of mainThread
-    void prepareAnswer(const std::string& ip_from, cma::rt::Device& rt_device);
-    cma::ByteVector generateAnswer(const std::string& ip_from);
+    void prepareAnswer(const std::string &ip_from, cma::rt::Device &rt_device);
+    cma::ByteVector generateAnswer(const std::string &ip_from);
     void sendDebugData();
 
     bool timedWaitForStop() {
@@ -307,7 +307,7 @@ private:
         return stop_requested;
     }
 
-    bool restartBinariesIfCfgChanged(uint64_t& last_cfg_id);
+    bool restartBinariesIfCfgChanged(uint64_t &last_cfg_id);
 
     // type of breaks in mainWaitLoop
     enum class Signal { restart, quit };
@@ -320,7 +320,7 @@ private:
     std::vector<std::future<bool>> vf_;
 
     // called from the network callbacks in ExternalPort
-    std::optional<AnswerId> openAnswer(const std::string& ip_addr) {
+    std::optional<AnswerId> openAnswer(const std::string &ip_addr) {
         using namespace std::chrono_literals;
         if (answer_.isAnswerInUse() &&
             !answer_.isAnswerOlder(60s))  // answer is in process
@@ -335,7 +335,7 @@ private:
     }
 
     //
-    int startProviders(AnswerId timestamp, const std::string& ip_addr);
+    int startProviders(AnswerId timestamp, const std::string &ip_addr);
 
     // all pre operation required for normal functionality
     void preStartBinaries();
@@ -349,7 +349,7 @@ private:
     int max_wait_time_;  // this is waiting time for all section to run
 
     template <typename T>
-    bool isAllowed(const T& engine) {
+    bool isAllowed(const T &engine) {
         // check time
         auto allowed_by_time = engine.isAllowedByTime();
         if (!allowed_by_time) {
@@ -368,9 +368,9 @@ private:
     }
 
     template <typename T>
-    bool tryToKick(T& section_provider, AnswerId stamp,
-                   const std::string& cmdline) {
-        const auto& engine = section_provider.getEngine();
+    bool tryToKick(T &section_provider, AnswerId stamp,
+                   const std::string &cmdline) {
+        const auto &engine = section_provider.getEngine();
 
         if (!isAllowed(engine)) return false;
 
@@ -384,9 +384,9 @@ private:
     }
 
     template <typename T>
-    bool tryToDirectCall(T& section_provider, AnswerId stamp,
-                         const std::string& cmdline) {
-        const auto& engine = section_provider.getEngine();
+    bool tryToDirectCall(T &section_provider, AnswerId stamp,
+                         const std::string &cmdline) {
+        const auto &engine = section_provider.getEngine();
 
         if (!isAllowed(engine)) return false;
 
@@ -396,7 +396,7 @@ private:
         return true;
     }
 
-    void kickWinPerf(AnswerId answer_id, const std::string& ip_addr);
+    void kickWinPerf(AnswerId answer_id, const std::string &ip_addr);
 
     template <typename T>
     std::string generate() {
@@ -413,7 +413,7 @@ private:
     /// pre sections[s] - usually Check_MK
     /// body from answer
     /// post sections[s]- usually SystemTime
-    AnswerDataBlock wrapResultWithStaticSections(const AnswerDataBlock& block) {
+    AnswerDataBlock wrapResultWithStaticSections(const AnswerDataBlock &block) {
         // pre sections generation
         auto pre = generate<provider::CheckMk>();
         auto post = generate<provider::SystemTime>();
@@ -426,7 +426,7 @@ private:
             result.insert(result.end(), pre.begin(), pre.end());
             result.insert(result.end(), block.begin(), block.end());
             result.insert(result.end(), post.begin(), post.end());
-        } catch (std::exception& e) {
+        } catch (std::exception &e) {
             XLOG::l.crit(XLOG_FUNC + "Weird exception '{}'", e.what());
         }
 
@@ -437,7 +437,7 @@ private:
         auto get_segments_text = [this]() -> std::string {
             auto list = answer_.segmentNameList();
             std::string s;
-            for (auto const& l : list) {
+            for (auto const &l : list) {
                 s += " " + l;
             }
             return s;
@@ -470,7 +470,7 @@ private:
         // NOTE: here we are starting futures, i.e. just fire all
         // futures in C++ kind of black magic, do not care too much
         for_each(vf_.begin(), vf_.end(),  // scan future array
-                 [&future_count](std::future<bool>& x) {
+                 [&future_count](std::future<bool> &x) {
                      // kill future
                      x.get();
                      ++future_count;
@@ -493,13 +493,13 @@ private:
 
     class SectionProviderText {
     public:
-        SectionProviderText(const std::string& name, const std::string& text)
+        SectionProviderText(const std::string &name, const std::string &text)
             : name_(name), text_(text) {}
 
-        std::future<bool> kick(AnswerId stamp, ServiceProcessor* proc) {
+        std::future<bool> kick(AnswerId stamp, ServiceProcessor *proc) {
             return std::async(
                 std::launch::async,
-                [this](const AnswerId stamp, ServiceProcessor* proc) {
+                [this](const AnswerId stamp, ServiceProcessor *proc) {
                     auto block = gatherData();
                     if (block) {
                         XLOG::d("Provider '{}' added answer", name_);
@@ -530,11 +530,11 @@ private:
             : name_(name), file_name_(filename) {}
 
         std::future<bool> kick(const AnswerId answer_id,
-                               ServiceProcessor* service_processor) {
+                               ServiceProcessor *service_processor) {
             return std::async(
                 std::launch::async,
                 [this](const AnswerId answer_id,
-                       ServiceProcessor* service_processor) {
+                       ServiceProcessor *service_processor) {
                     auto block = gatherData();
                     if (!block) {
                         return false;
@@ -563,7 +563,7 @@ private:
     void logExeNotFound(std::wstring_view exe_name) {
         std::string path_string;
         auto paths = cfg::GetExePaths();
-        for (const auto& dir : paths) {
+        for (const auto &dir : paths) {
             path_string += dir.u8string() + "\n";
         }
 
@@ -577,17 +577,17 @@ private:
         bool async_mode,                      // controlled from the config
         const std::wstring exe_name,          //
         AnswerId answer_id,                   //
-        ServiceProcessor* service_processor,  // host
-        const std::wstring& segment_name,     // identifies exe
+        ServiceProcessor *service_processor,  // host
+        const std::wstring &segment_name,     // identifies exe
         int timeout,                          // for exe
-        const std::wstring& command_line,     //
-        const std::wstring& log_file) {       // this is optional
+        const std::wstring &command_line,     //
+        const std::wstring &log_file) {       // this is optional
         return std::async(
             async_mode ? std::launch::async : std::launch::deferred,
             [this, exe_name, log_file](
-                AnswerId answer_id, ServiceProcessor* service_processor,
-                const std::wstring& segment_name, int timeout,
-                const std::wstring& command_line) {
+                AnswerId answer_id, ServiceProcessor *service_processor,
+                const std::wstring &segment_name, int timeout,
+                const std::wstring &command_line) {
                 // finding and checking
                 XLOG::d.i("Exec '{}' for '{}' to be started",
                           wtools::ToUtf8(exe_name),
@@ -634,10 +634,10 @@ private:
         bool async,                           // controlled from the config
         const std::wstring exe_name,          //
         const AnswerId answer_id,             //
-        ServiceProcessor* service_processor,  // host
-        const std::wstring& segment_name,     // identifies exe
+        ServiceProcessor *service_processor,  // host
+        const std::wstring &segment_name,     // identifies exe
         int timeout,                          // for exe
-        const std::wstring& command_line) {
+        const std::wstring &command_line) {
         return kickExe(async, exe_name, answer_id, service_processor,
                        segment_name, timeout, command_line, {});
     }

@@ -4,27 +4,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Dict, List, Optional, TypedDict
+from typing import Dict
 
 import cmk.gui.userdb as userdb
 from cmk.gui.globals import user
 from cmk.gui.plugins.wato.utils import ConfigDomainCore
 from cmk.gui.watolib.changes import add_change
 from cmk.gui.watolib.groups import load_contact_group_information
-from cmk.gui.watolib.password_store import PasswordStore
-
-# Password = Dict[str, Union[Optional[str], List[str]]]
-Password = TypedDict(
-    "Password",
-    {
-        "title": str,
-        "comment": str,
-        "docu_url": str,
-        "password": str,
-        "owned_by": Optional[str],
-        "shared_with": List[str],
-    },
-)
+from cmk.gui.watolib.password_store import Password, PasswordStore
 
 
 def contact_group_choices(only_own=False):

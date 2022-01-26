@@ -465,6 +465,7 @@ class SimpleEditMode(_SimpleWatoModeBase, abc.ABC):
 
         if "ident" in config:
             self._ident = config.pop("ident")
+        assert self._ident is not None
         self._entry = config
 
         entries = self._store.load_for_modification()

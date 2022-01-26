@@ -5,14 +5,27 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from pathlib import Path
+from typing import Optional, TypedDict
 
 import cmk.gui.userdb as userdb
 from cmk.gui.globals import user
 from cmk.gui.watolib.simple_config_file import WatoSimpleConfigFile
 from cmk.gui.watolib.utils import wato_root_dir
 
+Password = TypedDict(
+    "Password",
+    {
+        "title": str,
+        "comment": str,
+        "docu_url": str,
+        "password": str,
+        "owned_by": Optional[str],
+        "shared_with": list[str],
+    },
+)
 
-class PasswordStore(WatoSimpleConfigFile):
+
+class PasswordStore(WatoSimpleConfigFile[Password]):
     def __init__(self):
         super().__init__(
             config_file_path=Path(wato_root_dir()) / "passwords.mk",

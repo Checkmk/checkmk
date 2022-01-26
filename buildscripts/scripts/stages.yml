@@ -151,7 +151,6 @@ STAGES:
         SHELLCHECK_OUTPUT_ARGS: -e SC1090
             -e SC1091
             -e SC2001
-            -e SC2002
             -e SC2009
             -e SC2012
             -e SC2015

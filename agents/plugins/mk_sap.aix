@@ -51,7 +51,7 @@ if [ -r "$sapservices" ]; then
     # Since escaping of field seperators is not relevant when reading into one variable, we probably
     # would have wanted "read -r".
     # shellcheck disable=SC2162
-    cat $sapservices | while read LINE
+    while read LINE
     do
         command=$(echo "$LINE" | grep "^LIBPATH=/usr/sap/" | grep -v "^LIBPATH=/usr/sap/D" | awk -F" " '{print $5}')
 	if [ -n "$command" ]; then
@@ -64,5 +64,5 @@ if [ -r "$sapservices" ]; then
             echo -n "[$id]"
             LIBPATH=$LIBPATH:$lib_path $sapcontrol -nr "$id" -function GetProcessList
 	fi
-    done
+    done < $sapservices
 fi

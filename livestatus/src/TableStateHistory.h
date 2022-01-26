@@ -18,6 +18,7 @@
 #include "Table.h"
 #include "contact_fwd.h"
 class Column;
+class ColumnOffsets;
 class Filter;
 class HostServiceState;
 class LogEntry;
@@ -28,6 +29,8 @@ class Row;
 class TableStateHistory : public Table {
 public:
     TableStateHistory(MonitoringCore *mc, LogCache *log_cache);
+    static void addColumns(Table *table, const std::string &prefix,
+                           const ColumnOffsets &offsets);
 
     [[nodiscard]] std::string name() const override;
     [[nodiscard]] std::string namePrefix() const override;

@@ -7,8 +7,18 @@
 import dataclasses
 from typing import Mapping
 
-from .agent_based_api.v1 import contains, register, SNMPTree
-from .agent_based_api.v1.type_defs import StringTable
+from .agent_based_api.v1 import (
+    contains,
+    get_value_store,
+    Metric,
+    register,
+    Result,
+    Service,
+    SNMPTree,
+    State,
+)
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
+from .utils.temperature import check_temperature, TempParamType
 
 # OID branch 3 means the sensor unit type (from SENSOR-MIB):
 # other(1)
@@ -79,4 +89,77 @@ register.snmp_section(
         ".1.3.6.1.2.1.1.2.0",
         "1.3.6.1.4.1.3417.1.1",
     ),
+)
+
+
+def discover_bluecoat_sensors(section: Section) -> DiscoveryResult:
+    yield from (Service(item=sensor_name) for sensor_name in section.other_sensors)
+
+
+def check_bluecoat_sensors(
+    item: str,
+    section: Section,
+) -> CheckResult:
+    if not (sensor := section.other_sensors.get(item)):
+        return
+
+    state = State.OK if sensor.is_ok else State.CRIT
+
+    if not isinstance(
+            sensor,
+            VoltageSensor,
+    ):
+        yield Result(
+            state=state,
+            summary=f"{sensor.value:.1f}",
+        )
+        return
+
+    yield Result(
+        state=state,
+        summary=f"{sensor.value:.1f} V",
+    )
+    yield Metric(
+        name="voltage",
+        value=sensor.value,
+    )
+
+
+register.check_plugin(
+    name="bluecoat_sensors",
+    service_name="%s",
+    discovery_function=discover_bluecoat_sensors,
+    check_function=check_bluecoat_sensors,
+)
+
+
+def discover_bluecoat_sensors_temp(section: Section) -> DiscoveryResult:
+    yield from (Service(item=sensor_name) for sensor_name in section.temperature_sensors)
+
+
+def check_bluecoat_sensors_temp(
+    item: str,
+    params: TempParamType,
+    section: Section,
+) -> CheckResult:
+    if not (sensor := section.temperature_sensors.get(item)):
+        return
+    yield from check_temperature(
+        reading=sensor.value,
+        params=params,
+        unique_name=item,
+        value_store=get_value_store(),
+        dev_status=0 if sensor.is_ok else 2,
+        dev_status_name="OK" if sensor.is_ok else "Not OK",
+    )
+
+
+register.check_plugin(
+    name="bluecoat_sensors_temp",
+    sections=["bluecoat_sensors"],
+    service_name="%s",
+    discovery_function=discover_bluecoat_sensors_temp,
+    check_function=check_bluecoat_sensors_temp,
+    check_ruleset_name="temperature",
+    check_default_parameters={"device_levels_handling": "devdefault"},
 )

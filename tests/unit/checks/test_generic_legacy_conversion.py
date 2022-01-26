@@ -1162,8 +1162,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy):
         "bluecat_ntp",
         "bluecat_threads",
         "bluecoat_diskcpu",
-        "bluecoat_sensors",
-        "bluecoat_sensors.temp",
         "bluenet2_powerrail",
         "bluenet2_powerrail.rcm",
         "bluenet2_powerrail.temp",

@@ -6,13 +6,13 @@
 
 import pytest
 
-from tests.unit.conftest import FixRegister
-
-from cmk.utils.type_defs import CheckPluginName
-
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult
 from cmk.base.plugins.agent_based.bluecoat_sensors import (
+    check_bluecoat_sensors,
+    check_bluecoat_sensors_temp,
+    discover_bluecoat_sensors,
+    discover_bluecoat_sensors_temp,
     parse_bluecoat_sensors,
     Section,
     Sensor,
@@ -99,10 +99,8 @@ def test_parse_bluecoat_sensors() -> None:
     )
 
 
-def test_discover_bluecoat_sensors(fix_register: FixRegister) -> None:
-    assert list(
-        fix_register.check_plugins[CheckPluginName("bluecoat_sensors")].discovery_function(_SECTION)
-    ) == [
+def test_discover_bluecoat_sensors() -> None:
+    assert list(discover_bluecoat_sensors(_SECTION)) == [
         Service(item="System fan 1 front speed"),
         Service(item="System fan 1 rear speed"),
         Service(item="+3.3V main bus voltage"),
@@ -167,15 +165,13 @@ def test_discover_bluecoat_sensors(fix_register: FixRegister) -> None:
     ],
 )
 def test_check_bluecoat_sensors(
-    fix_register: FixRegister,
     item: str,
     expected_result: CheckResult,
 ) -> None:
     assert (
         list(
-            fix_register.check_plugins[CheckPluginName("bluecoat_sensors")].check_function(
+            check_bluecoat_sensors(
                 item=item,
-                params={},
                 section=_SECTION,
             )
         )
@@ -183,12 +179,8 @@ def test_check_bluecoat_sensors(
     )
 
 
-def test_discover_bluecoat_sensors_temp(fix_register: FixRegister) -> None:
-    assert list(
-        fix_register.check_plugins[CheckPluginName("bluecoat_sensors_temp")].discovery_function(
-            _SECTION
-        )
-    ) == [
+def test_discover_bluecoat_sensors_temp() -> None:
+    assert list(discover_bluecoat_sensors_temp(_SECTION)) == [
         Service(item="DIMM A1"),
         Service(item="DIMM A2"),
         Service(item="PCH"),
@@ -210,31 +202,40 @@ def test_discover_bluecoat_sensors_temp(fix_register: FixRegister) -> None:
         pytest.param(
             "System center",
             [
-                Result(state=State.OK, summary="37.0 °C"),
                 Metric("temp", 37.0),
+                Result(state=State.OK, summary="Temperature: 37.0°C"),
+                Result(state=State.OK, notice="State on device: OK"),
+                Result(
+                    state=State.OK,
+                    notice="Configuration: prefer device levels over user levels (no levels found)",
+                ),
             ],
             id="ok",
         ),
         pytest.param(
             "SSL card",
             [
-                Result(state=State.CRIT, summary="26.0 °C"),
                 Metric("temp", 26.0),
+                Result(state=State.OK, summary="Temperature: 26.0°C"),
+                Result(state=State.CRIT, summary="State on device: Not OK"),
+                Result(
+                    state=State.OK,
+                    notice="Configuration: prefer device levels over user levels (no levels found)",
+                ),
             ],
             id="crit",
         ),
     ],
 )
 def test_check_bluecoat_sensors_temp(
-    fix_register: FixRegister,
     item: str,
     expected_result: CheckResult,
 ) -> None:
     assert (
         list(
-            fix_register.check_plugins[CheckPluginName("bluecoat_sensors_temp")].check_function(
+            check_bluecoat_sensors_temp(
                 item=item,
-                params={},
+                params={"device_levels_handling": "devdefault"},
                 section=_SECTION,
             )
         )

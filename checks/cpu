@@ -58,13 +58,22 @@ check_info["cpu.loads"] = {
 threads_default_levels = {}  # legacy default levels variable
 
 factory_settings["cpu_threads_default_levels"] = {
-    "levels": (2000, 4000),
+    "levels": ("levels", (2000, 4000)),
 }
 
 
 def inventory_cpu_threads(section):
     if section:
         return [(None, {})]
+
+
+def _get_levels(params, level_name):
+    if level_name not in params:
+        return (None, None)
+    levels = params[level_name]
+    if levels == "no_levels":
+        return (None, None)
+    return levels[1]
 
 
 def check_cpu_threads(item, params, section):
@@ -76,7 +85,7 @@ def check_cpu_threads(item, params, section):
     except Exception:
         return
 
-    absolute_levels = params.get("levels", (None, None))
+    absolute_levels = _get_levels(params, "levels")
     yield check_levels(num_threads,
                        'threads',
                        absolute_levels,
@@ -86,7 +95,7 @@ def check_cpu_threads(item, params, section):
 
     if 'max_threads' in section:
         thread_usage = 100.0 * num_threads / section['max_threads']
-        relative_levels = params.get("levels_percent", (None, None))
+        relative_levels = _get_levels(params, "levels_percent")
         yield check_levels(thread_usage,
                            'thread_usage',
                            relative_levels,

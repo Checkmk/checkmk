@@ -4290,7 +4290,3 @@ class CEEHostConfig(HostConfig):
         return self._config_cache.host_extra_conf(
             self.hostname, agent_config.get("lnx_remote_alert_handlers", [])
         )
-
-
-def get_microcore_config_format() -> str:
-    return cmk.base.config.microcore_config_format

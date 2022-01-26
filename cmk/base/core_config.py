@@ -10,7 +10,7 @@ import os
 import shutil
 import socket
 import sys
-from contextlib import contextmanager, suppress
+from contextlib import contextmanager
 from pathlib import Path
 from typing import (
     AnyStr,
@@ -376,15 +376,6 @@ def _create_core_config(
     config_cache = config.get_config_cache()
     with config_path.create(is_cmc=config.is_cmc()), _backup_objects_file(core):
         core.create_config(config_path, config_cache, hosts_to_update=hosts_to_update)
-        # TODO: Remove once we drop the binary config
-        # Purpose of code is to delete the old config file after format switching to have precisely
-        # one microcore config in core config directory.
-        if config.is_cmc():
-            with suppress(OSError):
-                if config.get_microcore_config_format() == "protobuf":
-                    os.remove(cmk.utils.paths.var_dir + "/core/config")
-                else:
-                    os.remove(cmk.utils.paths.var_dir + "/core/config.pb")
 
     cmk.utils.password_store.save(config.stored_passwords)
 

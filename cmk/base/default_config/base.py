@@ -286,4 +286,3 @@ legacy_checks: _List = []
 logwatch_rules: _List = []
 
 config_storage_format: _Literal["standard", "raw", "pickle"] = "pickle"
-microcore_config_format: _Literal["protobuf"] = "protobuf"

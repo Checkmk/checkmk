@@ -1245,7 +1245,8 @@ class Overridable(Base):
             optional_keys=False,
             elements=parameters,
             headers=keys_by_topic,
-            validate=validate_id(mode, {p.name(): p for p in cls.permitted_instances_sorted()}),
+            validate=validate_id(
+                mode, {p.name(): p for p in cls.permitted_instances_sorted() if p.is_mine()}),
         )
 
         varprefix = ""

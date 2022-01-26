@@ -928,13 +928,16 @@ def _vs_general(
                 elements=visibility_elements,
             )),
         ],
-        validate=validate_id(mode, available(what, all_visuals)),
+        validate=validate_id(
+            mode,
+            {k: v for k, v in available(what, all_visuals).items() if v["owner"] == config.user.id
+            }),
     )
 
 
 def page_edit_visual(
     what: Literal["dashboards", "views", "reports"],
-    all_visuals: Dict[Any, Dict[str, Any]],
+    all_visuals: Dict[Tuple[UserId, VisualName], Visual],
     custom_field_handler=None,
     create_handler=None,
     load_handler=None,
@@ -1132,6 +1135,7 @@ def page_edit_visual(
                     )
 
                 if html.check_transaction():
+                    assert owner_user_id is not None
                     all_visuals[(owner_user_id, visual["name"])] = visual
                     # Handle renaming of visuals
                     if oldname and oldname != visual["name"]:

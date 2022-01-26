@@ -1727,6 +1727,9 @@ class ListOfStrings(ValueSpec):
     def value_to_json_safe(self, value):
         return [self._valuespec.value_to_json_safe(e) for e in value]
 
+    def transform_value(self, value) -> List[str]:
+        return [self._valuespec.transform_value(v) for v in value]
+
 
 # TODO: Spread use of this valuespec
 def NetworkPort(title: _Optional[str], default_value: Union[object, int] = DEF_VALUE) -> Integer:
@@ -1745,6 +1748,9 @@ def ListOfNetworkPorts(title: _Optional[str], default_value: List[int]) -> ListO
         orientation="horizontal",
         default_value=default_value,
     )
+
+
+ListOfMultipleChoices = List[_Tuple[str, ValueSpec]]
 
 
 class ListOf(ValueSpec):
@@ -2017,8 +2023,9 @@ class ListOf(ValueSpec):
     def value_to_json_safe(self, value):
         return [self._valuespec.value_to_json_safe(e) for e in value]
 
+    def transform_value(self, value) -> ListOfMultipleChoices:
+        return [self._valuespec.transform_value(v) for v in value]
 
-ListOfMultipleChoices = List[_Tuple[str, ValueSpec]]
 
 ListOfMultipleChoiceGroup = NamedTuple("ListOfMultipleChoiceGroup", [
     ("title", str),

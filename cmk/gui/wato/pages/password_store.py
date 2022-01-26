@@ -29,11 +29,11 @@ from cmk.gui.valuespec import (
 from cmk.gui.valuespec import Password as PasswordValuespec
 from cmk.gui.valuespec import ValueSpec
 from cmk.gui.watolib.groups import load_contact_group_information
-from cmk.gui.watolib.password_store import PasswordStore
+from cmk.gui.watolib.password_store import Password, PasswordStore
 from cmk.gui.watolib.passwords import sorted_contact_group_choices
 
 
-class PasswordStoreModeType(SimpleModeType):
+class PasswordStoreModeType(SimpleModeType[Password]):
     def type_name(self) -> str:
         return "password"
 
@@ -101,8 +101,7 @@ class ModePasswords(SimpleListMode):
         )
         super().page()
 
-    # TODO: Replace entry with dict. Need to improve typing of the parent class first
-    def _show_entry_cells(self, table: Table, ident: str, entry: dict) -> None:
+    def _show_entry_cells(self, table: Table, ident: str, entry: Password) -> None:
         table.cell(_("Title"), entry["title"])
         table.cell(_("Editable by"))
         if entry["owned_by"] is None:

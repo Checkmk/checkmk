@@ -45,6 +45,7 @@ import cmk.utils.password_store
 import cmk.utils.paths
 import cmk.utils.profile
 
+from cmk.special_agents.utils import vcrtrace
 from cmk.special_agents.utils.agent_common import ConditionalPiggybackSection, SectionWriter
 from cmk.special_agents.utils_kubernetes.api_server import APIServer
 from cmk.special_agents.utils_kubernetes.schemata import api, section
@@ -121,6 +122,11 @@ def parse_arguments(args: List[str]) -> argparse.Namespace:
         action="count",
         default=0,
         help="Verbose mode (for even more output use -vvv)",
+    )
+    p.add_argument(
+        "--vcrtrace",
+        action=vcrtrace(filter_headers=[("authorization", "Bearer ****")]),
+        help="Enables VCR tracing for the API calls",
     )
     p.add_argument(
         "--cluster",

@@ -15,7 +15,6 @@ from cmk.utils.exceptions import MKGeneralException, MKTimeout, OnError
 from cmk.utils.log import console
 from cmk.utils.type_defs import (
     CheckPluginName,
-    EVERYTHING,
     HostAddress,
     HostKey,
     HostName,
@@ -126,11 +125,7 @@ def _drop_plugins_services(
     services: Sequence[AutocheckEntry],
     plugin_names: Container[CheckPluginName],
 ) -> List[AutocheckEntry]:
-    return (
-        []
-        if plugin_names is EVERYTHING
-        else [s for s in services if s.check_plugin_name not in plugin_names]
-    )
+    return [s for s in services if s.check_plugin_name not in plugin_names]
 
 
 # Create a table of autodiscovered services of a host. Do not save
@@ -216,12 +211,9 @@ def _find_candidates(
     plugins that are not already designed for management boards.
 
     """
-    if run_plugin_names is EVERYTHING:
-        preliminary_candidates = list(agent_based_register.iter_all_check_plugins())
-    else:
-        preliminary_candidates = [
-            p for p in agent_based_register.iter_all_check_plugins() if p.name in run_plugin_names
-        ]
+    preliminary_candidates = [
+        p for p in agent_based_register.iter_all_check_plugins() if p.name in run_plugin_names
+    ]
 
     parsed_sections_of_interest = {
         parsed_section_name

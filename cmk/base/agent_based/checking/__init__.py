@@ -344,15 +344,10 @@ def _filter_services_to_check(
     config_cache: config.ConfigCache,
     host_name: HostName,
 ) -> List[Service]:
-    """Filter list of services to check"""
-    if run_plugin_names is EVERYTHING:
-        return [
-            service
-            for service in services
-            if not service_outside_check_period(config_cache, host_name, service.description)
-        ]
+    """Filter list of services to check
 
-    # If check types are specified (e.g. via command line), drop all others
+    If check types are specified in `run_plugin_names` (e.g. via command line), drop all others
+    """
     return [
         service
         for service in services

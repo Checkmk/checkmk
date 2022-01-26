@@ -297,9 +297,9 @@ def _inventorize_host(
         parsing_errors=parsing_errors,
         safe_to_write=(
             _safe_to_write_tree(results)
-            and selected_sections is NO_SELECTION  #
-            and run_plugin_names is EVERYTHING  #
-            and not parsing_errors  #
+            and selected_sections is NO_SELECTION
+            and run_plugin_names is EVERYTHING
+            and not parsing_errors
         ),
     )
 

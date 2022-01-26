@@ -21,7 +21,7 @@ def run_script(work_python: Path, *, script: Path) -> Tuple[int, str, str]:
     assert exe.exists()
     assert script.exists()
 
-    process = Popen([exe, script], stdout=PIPE, stderr=PIPE)
+    process = Popen([exe, script], stdout=PIPE, stderr=PIPE)  # pylint:disable=consider-using-with
     pipe, err = process.communicate()
     ret = process.wait()
 

@@ -42,7 +42,7 @@ def get_pid():
     # https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=926896
     lsb_path = "/etc/lsb-release"
     if os.path.exists(lsb_path):
-        for line in open(lsb_path):
+        for line in open(lsb_path):  # pylint:disable=consider-using-with
             if "buster" in line:
                 cmd = "ps aux | grep -w [d]hcpd | awk {'printf (\"%s \", $2)'}"
                 break
@@ -57,7 +57,7 @@ sys.stdout.write("[pools]\n")
 
 
 def parse_config(filename):
-    for l in open(filename):
+    for l in open(filename):  # pylint:disable=consider-using-with
         line = l.strip()
         if line.startswith("include"):
             regex_result = re.search(r'include\s+"(.*)"', line)
@@ -87,7 +87,7 @@ now = time.time()
 ip_address = None
 binding_state = None
 seen_addresses = set()
-for lease_line in open(leases_file):
+for lease_line in open(leases_file):  # pylint:disable=consider-using-with
     parts = lease_line.strip().rstrip(";").split()
     if not parts:
         continue

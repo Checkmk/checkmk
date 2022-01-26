@@ -675,7 +675,7 @@ class PostgresLinux(PostgresBase):
                 field_sep,
                 ' -c "%s" ' % sql_cmd,
             )
-            proc = subprocess.Popen(
+            proc = subprocess.Popen(  # pylint:disable=consider-using-with
                 base_cmd_list, env=self.my_env, stdout=subprocess.PIPE
             )  # pylint:disable=consider-using-with
             out = ensure_str(proc.communicate()[0])
@@ -685,7 +685,7 @@ class PostgresLinux(PostgresBase):
     def get_psql_and_bin_path(self):
         # type: () -> Tuple[str, str]
         try:
-            proc = subprocess.Popen(
+            proc = subprocess.Popen(  # pylint:disable=consider-using-with
                 ["which", "psql"], stdout=subprocess.PIPE
             )  # pylint:disable=consider-using-with
             out = ensure_str(proc.communicate()[0])

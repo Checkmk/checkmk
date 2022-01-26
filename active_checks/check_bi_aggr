@@ -152,7 +152,7 @@ def init_auth():
     if not username or not password:
         return None
     if auth_mode == "kerberos":
-        kinit = subprocess.Popen(
+        kinit = subprocess.Popen(  # pylint:disable=consider-using-with
             ["kinit", username],
             stdin=subprocess.PIPE,
             stdout=subprocess.PIPE,

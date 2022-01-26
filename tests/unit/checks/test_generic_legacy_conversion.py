@@ -1949,7 +1949,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy):
         "juniper_alarm",
         "juniper_bgp_state",
         "juniper_cpu",
-        "juniper_cpu_util",
         "juniper_fru",
         "juniper_fru.fan",
         "juniper_mem",

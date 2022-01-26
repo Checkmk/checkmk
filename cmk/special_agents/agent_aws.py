@@ -5455,30 +5455,9 @@ def _get_proxy(args: argparse.Namespace, stdin_args: Mapping[str, str]) -> botoc
     )
 
 
-def main(sys_argv=None):
-    if sys_argv is None:
-        cmk.utils.password_store.replace_passwords()
-        sys_argv = sys.argv[1:]
+def _configure_aws(args: argparse.Namespace, sys_argv: list) -> AWSConfig:
+    aws_config = AWSConfig(args.hostname, sys_argv, (args.overall_tag_key, args.overall_tag_values))
 
-    args = parse_arguments(sys_argv)
-    # secrets can be passed in as a command line argument for testing,
-    # BUT the standard method is to pass them via stdin so that they
-    # are not accessible from outside, e.g. visible on the ps output
-
-    stdin_args = json.loads(sys.stdin.read() or "{}")
-
-    _setup_logging(args.debug, args.verbose)
-
-    try:
-        access_key_id, secret_access_key = _get_credentials(args, stdin_args)
-    except AWSAccessCredentialsError as e:
-        logging.error(e)
-        return 1
-
-    hostname = args.hostname
-    proxy_config = _get_proxy(args, stdin_args)
-
-    aws_config = AWSConfig(hostname, sys_argv, (args.overall_tag_key, args.overall_tag_values))
     for service_key, service_names, service_tags, service_limits in [
         ("ec2", args.ec2_names, (args.ec2_tag_key, args.ec2_tag_values), args.ec2_limits),
         ("ebs", args.ebs_names, (args.ebs_tag_key, args.ebs_tag_values), args.ebs_limits),
@@ -5513,6 +5492,34 @@ def main(sys_argv=None):
 
     for arg in ["s3_requests", "cloudwatch_alarms_limits", "cloudwatch_alarms", "wafv2_cloudfront"]:
         aws_config.add_single_service_config(arg, getattr(args, arg))
+
+    return aws_config
+
+
+def main(sys_argv=None):
+    if sys_argv is None:
+        cmk.utils.password_store.replace_passwords()
+        sys_argv = sys.argv[1:]
+
+    args = parse_arguments(sys_argv)
+    # secrets can be passed in as a command line argument for testing,
+    # BUT the standard method is to pass them via stdin so that they
+    # are not accessible from outside, e.g. visible on the ps output
+
+    stdin_args = json.loads(sys.stdin.read() or "{}")
+
+    _setup_logging(args.debug, args.verbose)
+
+    try:
+        access_key_id, secret_access_key = _get_credentials(args, stdin_args)
+    except AWSAccessCredentialsError as e:
+        logging.error(e)
+        return 1
+
+    hostname = args.hostname
+    proxy_config = _get_proxy(args, stdin_args)
+
+    aws_config = _configure_aws(args, sys_argv)
 
     global_services, regional_services = _sanitize_aws_services_params(
         args.global_services, args.services, r_and_g_aws_services=("wafv2",)

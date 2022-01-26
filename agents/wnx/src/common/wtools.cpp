@@ -233,7 +233,7 @@ uint32_t AppRunner::goExecAsJobAndUser(
 }
 
 // returns process id
-uint32_t AppRunner::goExecAsUpdater(std::wstring_view command_line) noexcept {
+uint32_t AppRunner::goExecAsDetached(std::wstring_view command_line) noexcept {
     try {
         if (process_id_ != 0) {
             XLOG::l.bp("Attempt to reuse AppRunner/updater");

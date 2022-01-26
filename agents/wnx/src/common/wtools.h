@@ -331,7 +331,7 @@ public:
                                 std::wstring_view password,
                                 std::wstring_view command_line) noexcept;
     // returns process id
-    uint32_t goExecAsUpdater(std::wstring_view command_line) noexcept;
+    uint32_t goExecAsDetached(std::wstring_view command_line) noexcept;
 
     void kill(bool kill_tree_too) {
         auto proc_id = process_id_.exchange(0);

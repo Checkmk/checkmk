@@ -70,6 +70,7 @@ constexpr const wchar_t *kDefaultDevMinimum = L"check_mk_dev_minimum.yml";
 constexpr const wchar_t *kDefaultDevUt = L"check_mk_dev_unit_testing.yml";
 
 constexpr const wchar_t *kAgentUpdaterPython = L"cmk_update_agent.checkmk.py";
+constexpr const wchar_t *kAgentCtl = L"cmk-agent-ctl.exe";
 
 }  // namespace files
 

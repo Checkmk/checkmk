@@ -2306,12 +2306,12 @@ TEST(CmaMain, Config) {
     EXPECT_EQ(TheMiniBox::StartMode::job, GetStartMode("abc.exe"));
     std::filesystem::path path = ".";
 
-    EXPECT_EQ(TheMiniBox::StartMode::updater,
+    EXPECT_EQ(TheMiniBox::StartMode::detached,
               GetStartMode(path / cma::cfg::files::kAgentUpdaterPython));
     auto str = (path / cma::cfg::files::kAgentUpdaterPython).wstring();
     cma::tools::WideUpper(str);
 
-    EXPECT_EQ(TheMiniBox::StartMode::updater, GetStartMode(str));
+    EXPECT_EQ(TheMiniBox::StartMode::detached, GetStartMode(str));
 }
 
 TEST(CmaMain, MiniBoxStartMode) {
@@ -2322,7 +2322,7 @@ TEST(CmaMain, MiniBoxStartMode) {
     CreatePluginInTemp(path, 0, "aaa");
 
     for (auto mode :
-         {TheMiniBox::StartMode::job, TheMiniBox::StartMode::updater}) {
+         {TheMiniBox::StartMode::job, TheMiniBox::StartMode::detached}) {
         TheMiniBox mb;
 
         auto started = mb.startStd(L"x", path, mode);

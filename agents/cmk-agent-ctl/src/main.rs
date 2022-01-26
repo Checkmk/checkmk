@@ -72,7 +72,7 @@ fn become_user(user: &unistd::User) -> AnyhowResult<()> {
 }
 
 #[cfg(unix)]
-fn user_setup(username: &str) -> AnyhowResult<constants::Paths> {
+fn determine_paths(username: &str) -> AnyhowResult<constants::Paths> {
     let user = unistd::User::from_name(username)?.context(format!(
         "Could not find dedicated Checkmk agent user {}",
         username
@@ -88,11 +88,25 @@ fn user_setup(username: &str) -> AnyhowResult<constants::Paths> {
     Ok(constants::Paths::new(&user.dir))
 }
 
+#[cfg(windows)]
+fn determine_default_paths() -> AnyhowResult<constants::Paths> {
+    // TODO(sk): replace with windows get env
+    let home = std::path::PathBuf::from("c:\\ProgramData\\checkmk\\agent");
+    Ok(constants::Paths::new(&home))
+}
+
 fn init() -> AnyhowResult<(cli::Args, constants::Paths)> {
     // Parse args as first action to directly exit from --help or malformatted arguments
     let args = cli::Args::from_args();
 
-    let paths = match user_setup(constants::CMK_AGENT_USER) {
+    #[cfg(unix)]
+    let paths = match determine_paths(constants::CMK_AGENT_USER) {
+        Ok(paths) => paths,
+        Err(err) => return Err(err),
+    };
+
+    #[cfg(windows)]
+    let paths = match determine_default_paths() {
         Ok(paths) => paths,
         Err(err) => return Err(err),
     };

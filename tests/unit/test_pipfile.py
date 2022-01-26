@@ -18,7 +18,7 @@ import pytest
 from pipfile import Pipfile  # type: ignore[import]
 
 from tests.testlib import repo_path
-from tests.testlib.utils import current_base_branch_name, is_enterprise_repo
+from tests.testlib.utils import is_enterprise_repo
 
 IGNORED_LIBS = set(["cmk", "livestatus", "mk_jolokia"])  # our stuff
 IGNORED_LIBS |= isort.stdlibs._all.stdlib  # builtin stuff
@@ -36,10 +36,6 @@ def load_pipfile():
     return Pipfile.load(filename=repo_path() + "/Pipfile")
 
 
-@pytest.mark.skipif(
-    current_base_branch_name() == "master",
-    reason="In master we use latest and greatest, but once we release we start pinning...",
-)
 def test_all_deployment_packages_pinned(loaded_pipfile) -> None:
     unpinned_packages = [f"'{n}'" for n, v in loaded_pipfile.data["default"].items() if v == "*"]
     assert not unpinned_packages, (
@@ -49,6 +45,10 @@ def test_all_deployment_packages_pinned(loaded_pipfile) -> None:
 
 
 def test_pipfile_syntax(loaded_pipfile) -> None:
+    # pipenv is currently (e.g. in version 2022.1.8) accepting false Pipfile syntax like:
+    # pysmb = "1.2"
+    # So it will not throw an error or warning if the comparision operator is missing.
+    # Remove this test as soon pipenv is getting smarter..
     packages_with_faulty_syntax = []
 
     for type_ in ("default", "develop"):

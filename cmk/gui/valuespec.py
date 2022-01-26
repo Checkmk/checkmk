@@ -1737,6 +1737,9 @@ class ListOfStrings(ValueSpec):
     def value_to_json_safe(self, value: Any) -> list[Any]:
         return [self._valuespec.value_to_json_safe(e) for e in value]
 
+    def transform_value(self, value) -> list[str]:
+        return [self._valuespec.transform_value(v) for v in value]
+
 
 def NetworkPort(  # pylint: disable=redefined-builtin
     title: _Optional[str],
@@ -2041,6 +2044,9 @@ class ListOf(ValueSpec):
 
     def value_to_json_safe(self, value: Any) -> list[Any]:
         return [self._valuespec.value_to_json_safe(e) for e in value]
+
+    def transform_value(self, value) -> list[Any]:
+        return [self._valuespec.transform_value(v) for v in value]
 
 
 ListOfMultipleChoices = Sequence[tuple[str, ValueSpec]]

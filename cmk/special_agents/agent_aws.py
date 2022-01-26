@@ -5436,6 +5436,25 @@ class AWSAccessCredentialsError(Exception):
     pass
 
 
+def _get_proxy(args: argparse.Namespace, stdin_args: Mapping[str, str]) -> botocore.config.Config:
+
+    if not args.proxy_host:
+        return None
+
+    proxy_user = stdin_args.get("proxy_user") or args.proxy_user
+    proxy_password = stdin_args.get("proxy_password") or args.proxy_password
+    return botocore.config.Config(
+        proxies={
+            "https": _proxy_address(
+                args.proxy_host,
+                args.proxy_port,
+                proxy_user,
+                proxy_password,
+            )
+        }
+    )
+
+
 def main(sys_argv=None):
     if sys_argv is None:
         cmk.utils.password_store.replace_passwords()
@@ -5457,20 +5476,7 @@ def main(sys_argv=None):
         return 1
 
     hostname = args.hostname
-    proxy_config = None
-    if args.proxy_host:
-        proxy_user = stdin_args.get("proxy_user") or args.proxy_user
-        proxy_password = stdin_args.get("proxy_password") or args.proxy_password
-        proxy_config = botocore.config.Config(
-            proxies={
-                "https": _proxy_address(
-                    args.proxy_host,
-                    args.proxy_port,
-                    proxy_user,
-                    proxy_password,
-                )
-            }
-        )
+    proxy_config = _get_proxy(args, stdin_args)
 
     aws_config = AWSConfig(hostname, sys_argv, (args.overall_tag_key, args.overall_tag_values))
     for service_key, service_names, service_tags, service_limits in [

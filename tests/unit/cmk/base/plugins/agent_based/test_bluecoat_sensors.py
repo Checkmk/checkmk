@@ -100,6 +100,20 @@ def test_discover_bluecoat_sensors() -> None:
             ],
             id="voltage crit",
         ),
+        pytest.param(
+            "System fan 1 front speed",
+            [
+                Result(state=State.OK, summary="8100.0"),
+            ],
+            id="fan_speed",
+        ),
+        pytest.param(
+            "Power supply 1 status",
+            [
+                Result(state=State.OK, summary="8.0"),
+            ],
+            id="supply_status",
+        ),
     ],
 )
 @pytest.mark.usefixtures("config_load_all_checks")

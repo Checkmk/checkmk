@@ -42,7 +42,7 @@ def check_bluecoat_sensors(item, params, info, temp):
                 unitname = " V"
                 perfdata = [("voltage", value)]
             else:
-                perfdata = None
+                perfdata = []
                 unitname = ""
 
             if status == '1':

@@ -8,14 +8,12 @@ from cmk.base.plugins.agent_based.juniper_cpu_util import parse_juniper_cpu_util
 
 
 def test_parse_juniper_cpu_util():
-    assert parse_juniper_cpu_util(
-        [
-            ["midplane", "0"],
-            ["Bottom Tray Fan 1", "0"],
-            ["FPC: EX9200-40FE @ 0/*/*", "42"],
-            ["Routing Engine 0", "5"],
-        ]
-    ) == {
+    assert parse_juniper_cpu_util([
+        ["midplane", "0"],
+        ["Bottom Tray Fan 1", "0"],
+        ["FPC: EX9200-40FE @ 0/*/*", "42"],
+        ["Routing Engine 0", "5"],
+    ]) == {
         "Bottom Tray Fan 1": 0,
         "FPC: EX9200-40FE 0": 42,
         "Routing Engine 0": 5,

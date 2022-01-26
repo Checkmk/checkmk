@@ -40,11 +40,12 @@ class PasswordStore(WatoSimpleConfigFile[Password]):
             return entries
 
         assert user.id is not None
-        user_groups = userdb.contactgroups_of_user(user.id)
+        user_groups = set(userdb.contactgroups_of_user(user.id))
 
         passwords = self.filter_editable_entries(entries)
-        # TODO: This bug was uncovered by the new type hints. Will fix the issue in the next commit
-        passwords.update({k: v for k, v in entries.items() if v["shared_with"] in user_groups})  # type: ignore[comparison-overlap]
+        passwords.update(
+            {k: v for k, v in entries.items() if set(v["shared_with"]).intersection(user_groups)}
+        )
         return passwords
 
     def filter_editable_entries(self, entries: dict[str, Password]) -> dict[str, Password]:

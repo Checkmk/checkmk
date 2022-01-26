@@ -65,13 +65,12 @@ def test_password_store_filter_usable_entries_not_permitted(
     assert test_store.filter_usable_entries(test_store.load_for_reading()) == {}
 
 
-# TODO: This case is broken at the moment. Will be fixed in next commit.
-# @pytest.mark.usefixtures("with_user_login")
-# def test_password_store_filter_usable_entries_shared_with_user_group(
-#    test_store: PasswordStore, monkeypatch: pytest.MonkeyPatch
-# ):
-#    monkeypatch.setattr(userdb, "contactgroups_of_user", lambda u: ["group2"])
-#    assert test_store.filter_usable_entries(test_store.load_for_reading()) != {}
+@pytest.mark.usefixtures("with_user_login")
+def test_password_store_filter_usable_entries_shared_with_user_group(
+    test_store: PasswordStore, monkeypatch: pytest.MonkeyPatch
+):
+    monkeypatch.setattr(userdb, "contactgroups_of_user", lambda u: ["group2"])
+    assert test_store.filter_usable_entries(test_store.load_for_reading()) != {}
 
 
 @pytest.mark.usefixtures("with_user_login")

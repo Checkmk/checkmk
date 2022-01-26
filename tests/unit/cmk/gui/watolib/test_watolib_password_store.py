@@ -6,8 +6,10 @@
 
 import pytest
 
+from cmk.utils.password_store import Password
+
 from cmk.gui import userdb
-from cmk.gui.watolib.password_store import Password, PasswordStore
+from cmk.gui.watolib.password_store import PasswordStore
 
 
 @pytest.fixture(name="store")

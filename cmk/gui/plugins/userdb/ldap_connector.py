@@ -447,7 +447,7 @@ class LDAPUserConnector(UserConnector):
                 )
             )
 
-    def _bind(self, user_dn, password: _Tuple[str, str], catch=True, conn=None):
+    def _bind(self, user_dn, password: password_store.PasswordId, catch=True, conn=None):
         if conn is None:
             conn = self._ldap_obj
         self._logger.info("LDAP_BIND %s" % user_dn)

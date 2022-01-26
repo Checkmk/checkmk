@@ -49,7 +49,18 @@ def test_parse_all_arguments() -> None:
 
 
 def test_parse_password_store(monkeypatch) -> None:
-    password_store.save({"mqtt_password": {"password": "blablu"}})
+    password_store.save(
+        {
+            "mqtt_password": {
+                "title": "Title",
+                "comment": "Comment",
+                "docu_url": "",
+                "owned_by": "group1",
+                "shared_with": [],
+                "password": "blablu",
+            }
+        }
+    )
     monkeypatch.setattr(
         "sys.argv",
         [

@@ -8,13 +8,14 @@ import pytest
 
 from cmk.utils import password_store
 from cmk.utils.exceptions import MKGeneralException
+from cmk.utils.password_store import PasswordId
 
 PW_STORE = "pw_from_store"
 PW_EXPL = "pw_explicit"
 PW_STORE_KEY = "from_store"
 
 
-def load_patch():
+def load_patch() -> dict[str, str]:
     return {PW_STORE_KEY: PW_STORE}
 
 
@@ -26,13 +27,18 @@ def load_patch():
         (PW_STORE_KEY, PW_STORE),
     ],
 )
-def test_extract(monkeypatch, password_id, password_actual):
+def test_extract(
+    monkeypatch: pytest.MonkeyPatch,
+    password_id: PasswordId,
+    password_actual: str,
+) -> None:
     monkeypatch.setattr(password_store, "load", load_patch)
     assert password_store.extract(password_id) == password_actual
 
 
-def test_extract_from_unknown_valuespec():
+def test_extract_from_unknown_valuespec() -> None:
     password_id = ("unknown", "unknown_pw")
     with pytest.raises(MKGeneralException) as excinfo:
-        password_store.extract(password_id)
+        # We test for an invalid structure here
+        password_store.extract(password_id)  # type: ignore[arg-type]
     assert "Unknown password type." in str(excinfo.value)

@@ -4,12 +4,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.utils.password_store import Password
+
 import cmk.gui.userdb as userdb
 from cmk.gui.globals import user
 from cmk.gui.plugins.wato.utils import ConfigDomainCore
 from cmk.gui.watolib.changes import add_change
 from cmk.gui.watolib.groups import load_contact_group_information
-from cmk.gui.watolib.password_store import Password, PasswordStore
+from cmk.gui.watolib.password_store import PasswordStore
 
 
 def contact_group_choices(only_own: bool = False) -> list[tuple[str, str]]:
@@ -31,7 +33,7 @@ def sorted_contact_group_choices(only_own: bool = False) -> list[tuple[str, str]
     return sorted(contact_group_choices(only_own), key=lambda x: x[1])
 
 
-def save_password(ident: str, details: Password, new_password=False) -> None:
+def save_password(ident: str, details: Password, new_password: bool = False) -> None:
     password_store = PasswordStore()
     entries = password_store.load_for_modification()
     entries[ident] = details

@@ -167,19 +167,19 @@ section_misc_sections() {
             fi
             # Detect duplexity - in reality only available for physical devices but
             # virtual ones like CARP devices will get at least a half duplex
-            if [ "$(echo "$IO" | grep -E "media:.*full-duplex")" ]; then
+            if echo "$IO" | grep -q -E "media:.*full-duplex"; then
                 printf "\tDuplex: Full\n"
-            elif [ "$(echo "$IO" | grep "media:" | grep -v "full-duplex")" ]; then
+            elif echo "$IO" | grep "media:" | grep -q -v "full-duplex"; then
                 printf "\tDuplex: Half\n"
             fi
             # Auto-negotiation
-            if [ "$(echo "$IO" | grep -E "media:.*autoselect")" ]; then
+            if echo "$IO" | grep -q -E "media:.*autoselect"; then
                 printf "\tAuto-negotiation: on\n"
-            elif [ "$(echo "$IO" | grep "media:" | grep -v "autoselect")" ]; then
+            elif echo "$IO" | grep "media:" | grep -q -v "autoselect"; then
                 printf "\tAuto-negotiation: off\n"
             fi
             # Detect detected link
-            if [ "$(echo "$IO" | grep "status:" | grep -E "active|backup|master")" ]; then
+            if echo "$IO" | grep "status:" | grep -q -E "active|backup|master"; then
                 printf "\tLink detected: yes\n"
             fi
         done

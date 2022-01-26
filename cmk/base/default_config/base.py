@@ -9,6 +9,7 @@ from typing import List as _List
 from typing import Literal as _Literal
 from typing import Optional as _Optional
 
+from cmk.utils.password_store import Password
 from cmk.utils.type_defs import Ruleset, TagConfigSpec, TagsOfHosts, TimeperiodSpecs
 
 # This file contains the defaults settings for almost all configuration
@@ -55,7 +56,7 @@ debug_log = False  # deprecated
 monitoring_host = None  # deprecated
 max_num_processes = 50
 fallback_agent_output_encoding = "latin-1"
-stored_passwords: _Dict = {}
+stored_passwords: _Dict[str, Password] = {}
 # Collection of predefined rule conditions. For the moment this setting is only stored
 # in this config domain but not used by the base code. The WATO logic for writing out
 # rule.mk files is resolving the predefined conditions.

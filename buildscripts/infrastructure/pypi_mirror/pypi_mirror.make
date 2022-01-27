@@ -2,16 +2,17 @@ EXTERNAL_PYPI_MIRROR := https://pypi.python.org
 
 INTERNAL_PYPI_MIRROR := https://artifacts.lan.tribe29.com/repository/pip-mirror-$(BRANCH_VERSION)
 
-ifeq (true,${USE_EXTERNAL_PIPENV_MIRROR})
+# Temporary fix to make nightly builds work again
+#ifeq (true,${USE_EXTERNAL_PIPENV_MIRROR})
 PIPENV_PYPI_MIRROR  := $(EXTERNAL_PYPI_MIRROR)
-else
-PIPENV_PYPI_MIRROR  := $(INTERNAL_PYPI_MIRROR)
-endif
+#else
+#PIPENV_PYPI_MIRROR  := $(INTERNAL_PYPI_MIRROR)
+#endif
 
 requirements.txt: Pipfile.lock
 	@( \
 	    echo "Creating $@" ; \
-	    $(PIPENV) lock --pre --dev -r > $@; \
+	    $(PIPENV) lock --dev -r > $@; \
             sed -i "1s|-i.*|-i https://pypi.python.org/simple/|" $@ \
 	)
 

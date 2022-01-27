@@ -4,7 +4,9 @@
 // source code package.
 
 #include <algorithm>
+#include <initializer_list>
 #include <map>
+#include <ostream>
 #include <string>
 #include <utility>
 #include <vector>
@@ -24,46 +26,71 @@
 #include "TableTimeperiods.h"
 #include "gtest/gtest.h"
 
-using column_definition = std::pair<std::string, ColumnType>;
-using column_definitions = std::vector<column_definition>;
+using ColumnDefinition = std::pair<std::string, ColumnType>;
 
-static column_definitions sorted(column_definitions defs) {
-    std::sort(defs.begin(), defs.end());
-    return defs;
-}
+class ColumnDefinitions {
+public:
+    ColumnDefinitions(std::initializer_list<ColumnDefinition> defs)
+        : defs_{defs} {
+        sort();
+    }
 
-static column_definitions append(column_definitions defs1,
-                                 const column_definitions &defs2) {
-    defs1.insert(defs1.end(), defs2.begin(), defs2.end());
-    std::sort(defs1.begin(), defs1.end());
-    return defs1;
-}
+    explicit ColumnDefinitions(const Table &table) {
+        table.any_column([this](const auto &c) {
+            defs_.emplace_back(c->name(), c->type());
+            return false;
+        });
+        sort();
+    }
 
-static column_definitions columns(const Table &table) {
-    column_definitions defs;
-    table.any_column([&defs](const auto &c) {
-        defs.emplace_back(c->name(), c->type());
-        return false;
-    });
-    return defs;
-}
+    bool operator==(const ColumnDefinitions &rhs) const {
+        return defs_ == rhs.defs_;
+    }
+
+    bool operator!=(const ColumnDefinitions &rhs) const {
+        return !(*this == rhs);
+    }
+
+    ColumnDefinitions &operator+=(const ColumnDefinitions &rhs) {
+        defs_.insert(defs_.end(), rhs.defs_.begin(), rhs.defs_.end());
+        sort();
+        return *this;
+    }
+
+    ColumnDefinitions operator+(const ColumnDefinitions &other) const {
+        return ColumnDefinitions{*this} += other;
+    }
+
+private:
+    std::vector<ColumnDefinition> defs_;
+
+    void sort() { std::sort(defs_.begin(), defs_.end()); }
+
+    friend std::ostream &operator<<(std::ostream &os,
+                                    const ColumnDefinitions &foo) {
+        for (const auto &[name, type] : foo.defs_) {
+            os << "{" << name << ", " << static_cast<int>(type) << "}, ";
+        }
+        return os;
+    }
+};
 
 TEST(TableColumns, ColumnNamesAndTypes) {
-    EXPECT_EQ(sorted({
+    EXPECT_EQ(ColumnDefinitions({
                   {"description", ColumnType::string},
                   {"name", ColumnType::string},
                   {"table", ColumnType::string},
                   {"type", ColumnType::string},
               }),
-              sorted(columns(TableColumns{nullptr})));
+              ColumnDefinitions(TableColumns{nullptr}));
 }
 
 TEST(TableCommands, ColumnNamesAndTypes) {
-    EXPECT_EQ(sorted({
+    EXPECT_EQ(ColumnDefinitions({
                   {"line", ColumnType::string},
                   {"name", ColumnType::string},
               }),
-              sorted(columns(TableCommands{nullptr})));
+              ColumnDefinitions(TableCommands{nullptr}));
 }
 
 TEST(TableComments, ColumnNamesAndTypes) {
@@ -71,16 +98,16 @@ TEST(TableComments, ColumnNamesAndTypes) {
 }
 
 TEST(TableContactGroups, ColumnNamesAndTypes) {
-    EXPECT_EQ(sorted({
+    EXPECT_EQ(ColumnDefinitions({
                   {"alias", ColumnType::string},
                   {"members", ColumnType::list},
                   {"name", ColumnType::string},
               }),
-              sorted(columns(TableContactGroups{nullptr})));
+              ColumnDefinitions(TableContactGroups{nullptr}));
 }
 
 TEST(TableContacts, ColumnNamesAndTypes) {
-    EXPECT_EQ(sorted({
+    EXPECT_EQ(ColumnDefinitions({
                   {"address1", ColumnType::string},
                   {"address2", ColumnType::string},
                   {"address3", ColumnType::string},
@@ -113,16 +140,16 @@ TEST(TableContacts, ColumnNamesAndTypes) {
                   {"tag_values", ColumnType::list},
                   {"tags", ColumnType::dict},
               }),
-              sorted(columns(TableContacts{nullptr})));
+              ColumnDefinitions(TableContacts{nullptr}));
 }
 
 TEST(TableCrashReports, ColumnNamesAndTypes) {
-    EXPECT_EQ(sorted({
+    EXPECT_EQ(ColumnDefinitions({
                   {"component", ColumnType::string},
                   {"id", ColumnType::string},
 
               }),
-              sorted(columns(TableCrashReports{nullptr})));
+              ColumnDefinitions(TableCrashReports{nullptr}));
 }
 
 TEST(TableDowntimes, ColumnNamesAndTypes) {
@@ -138,16 +165,16 @@ TEST(TableEventConsoleHistory, ColumnNamesAndTypes) {
 }
 
 TEST(TableEventConsoleRules, ColumnNamesAndTypes) {
-    EXPECT_EQ(sorted({
+    EXPECT_EQ(ColumnDefinitions({
                   {"rule_hits", ColumnType::int_},
                   {"rule_id", ColumnType::string},
               }),
-              sorted(columns(TableEventConsoleRules{nullptr})));
+              ColumnDefinitions(TableEventConsoleRules{nullptr}));
 }
 
 TEST(TableEventConsoleStatus, ColumnNamesAndTypes) {
     // Why on earth do all column names have a "status_" prefix here?
-    EXPECT_EQ(sorted({
+    EXPECT_EQ(ColumnDefinitions({
                   {"status_average_connect_rate", ColumnType::double_},
                   {"status_average_drop_rate", ColumnType::double_},
                   {"status_average_event_rate", ColumnType::double_},
@@ -185,11 +212,11 @@ TEST(TableEventConsoleStatus, ColumnNamesAndTypes) {
                   {"status_rule_tries", ColumnType::int_},
                   {"status_virtual_memory_size", ColumnType::int_},
               }),
-              sorted(columns(TableEventConsoleStatus{nullptr})));
+              ColumnDefinitions(TableEventConsoleStatus{nullptr}));
 }
 
-static column_definitions common_host_and_service_groups_columns() {
-    return sorted({
+static ColumnDefinitions common_host_and_service_groups_columns() {
+    return {
         {"action_url", ColumnType::string},
         {"alias", ColumnType::string},
         {"members", ColumnType::list},
@@ -210,23 +237,23 @@ static column_definitions common_host_and_service_groups_columns() {
         {"num_services_unknown", ColumnType::int_},
         {"num_services_warn", ColumnType::int_},
         {"worst_service_state", ColumnType::int_},
-    });
+    };
 }
 
 TEST(TableHostGroups, ColumnNamesAndTypes) {
-    EXPECT_EQ(
-        append(sorted({{"num_hosts", ColumnType::int_},
-                       {"num_hosts_down", ColumnType::int_},
-                       {"num_hosts_handled_problems", ColumnType::int_},
-                       {"num_hosts_pending", ColumnType::int_},
-                       {"num_hosts_unhandled_problems", ColumnType::int_},
-                       {"num_hosts_unreach", ColumnType::int_},
-                       {"num_hosts_up", ColumnType::int_},
-                       {"worst_host_state", ColumnType::int_},
-                       // TODO(sp) HUH??? Why is this not in the common columns?
-                       {"worst_service_hard_state", ColumnType::int_}}),
-               common_host_and_service_groups_columns()),
-        sorted(columns(TableHostGroups{nullptr})));
+    EXPECT_EQ(ColumnDefinitions(
+                  {{"num_hosts", ColumnType::int_},
+                   {"num_hosts_down", ColumnType::int_},
+                   {"num_hosts_handled_problems", ColumnType::int_},
+                   {"num_hosts_pending", ColumnType::int_},
+                   {"num_hosts_unhandled_problems", ColumnType::int_},
+                   {"num_hosts_unreach", ColumnType::int_},
+                   {"num_hosts_up", ColumnType::int_},
+                   {"worst_host_state", ColumnType::int_},
+                   // TODO(sp) HUH??? Why is this not in the common columns?
+                   {"worst_service_hard_state", ColumnType::int_}}) +
+                  common_host_and_service_groups_columns(),
+              ColumnDefinitions(TableHostGroups{nullptr}));
 }
 
 TEST(TableHosts, ColumnNamesAndTypes) {
@@ -242,8 +269,8 @@ TEST(TableLog, ColumnNamesAndTypes) {
 }
 
 TEST(TableServiceGroups, ColumnNamesAndTypes) {
-    EXPECT_EQ(sorted(common_host_and_service_groups_columns()),
-              sorted(columns(TableServiceGroups{nullptr})));
+    EXPECT_EQ(common_host_and_service_groups_columns(),
+              ColumnDefinitions(TableServiceGroups{nullptr}));
 }
 
 TEST(TableServices, ColumnNamesAndTypes) {
@@ -263,7 +290,7 @@ TEST(TableStateHistory, ColumnNamesAndTypes) {
 }
 
 TEST(TableStatus, ColumnNamesAndTypes) {
-    EXPECT_EQ(sorted({
+    EXPECT_EQ(ColumnDefinitions({
                   {"accept_passive_host_checks", ColumnType::int_},
                   {"accept_passive_service_checks", ColumnType::int_},
                   {"average_latency_cmk", ColumnType::double_},
@@ -339,15 +366,15 @@ TEST(TableStatus, ColumnNamesAndTypes) {
                   {"state_file_created", ColumnType::time},
               }),
 #ifdef CMC
-              sorted(columns(TableStatus{nullptr, nullptr}))
+              ColumnDefinitions(TableStatus{nullptr, nullptr})
 #else
-              sorted(columns(TableStatus{nullptr}))
+              ColumnDefinitions(TableStatus{nullptr})
 #endif
     );
 }
 
 TEST(TableTimeperiods, ColumnNamesAndTypes) {
-    EXPECT_EQ(sorted({
+    EXPECT_EQ(ColumnDefinitions({
                   {"alias", ColumnType::string},
                   {"in", ColumnType::int_},
                   {"name", ColumnType::string},
@@ -358,5 +385,5 @@ TEST(TableTimeperiods, ColumnNamesAndTypes) {
                   {"transitions", ColumnType::list},
 #endif
               }),
-              sorted(columns(TableTimeperiods{nullptr})));
+              ColumnDefinitions(TableTimeperiods{nullptr}));
 }

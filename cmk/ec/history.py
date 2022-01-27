@@ -14,6 +14,7 @@ from pathlib import Path
 from typing import Any, AnyStr, Dict, Iterable, List, Optional, Tuple, Union
 
 from cmk.utils.log import VERBOSE
+from cmk.utils.misc import quote_shell_string
 from cmk.utils.render import date_and_time
 
 from .config import Config
@@ -689,7 +690,3 @@ _scrub_string_str_table = b"".join(
     b" " if x == ord(b"\t") else struct.Struct(">B").pack(x) for x in range(256)
 )
 _scrub_string_unicode_table = {0: None, 1: None, 2: None, ord("\n"): None, ord("\t"): ord(" ")}
-
-
-def quote_shell_string(s: str) -> str:
-    return "'" + s.replace("'", "'\"'\"'") + "'"

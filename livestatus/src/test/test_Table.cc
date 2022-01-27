@@ -18,6 +18,8 @@
 #include "TableCrashReports.h"
 #include "TableEventConsoleRules.h"
 #include "TableEventConsoleStatus.h"
+#include "TableHostGroups.h"
+#include "TableServiceGroups.h"
 #include "TableStatus.h"
 #include "TableTimeperiods.h"
 #include "gtest/gtest.h"
@@ -28,6 +30,13 @@ using column_definitions = std::vector<column_definition>;
 static column_definitions sorted(column_definitions defs) {
     std::sort(defs.begin(), defs.end());
     return defs;
+}
+
+static column_definitions append(column_definitions defs1,
+                                 const column_definitions &defs2) {
+    defs1.insert(defs1.end(), defs2.begin(), defs2.end());
+    std::sort(defs1.begin(), defs1.end());
+    return defs1;
 }
 
 static column_definitions columns(const Table &table) {
@@ -179,8 +188,45 @@ TEST(TableEventConsoleStatus, ColumnNamesAndTypes) {
               sorted(columns(TableEventConsoleStatus{nullptr})));
 }
 
+static column_definitions common_host_and_service_groups_columns() {
+    return sorted({
+        {"action_url", ColumnType::string},
+        {"alias", ColumnType::string},
+        {"members", ColumnType::list},
+        {"members_with_state", ColumnType::list},
+        {"name", ColumnType::string},
+        {"notes", ColumnType::string},
+        {"notes_url", ColumnType::string},
+        {"num_services", ColumnType::int_},
+        {"num_services_crit", ColumnType::int_},
+        {"num_services_handled_problems", ColumnType::int_},
+        {"num_services_hard_crit", ColumnType::int_},
+        {"num_services_hard_ok", ColumnType::int_},
+        {"num_services_hard_unknown", ColumnType::int_},
+        {"num_services_hard_warn", ColumnType::int_},
+        {"num_services_ok", ColumnType::int_},
+        {"num_services_pending", ColumnType::int_},
+        {"num_services_unhandled_problems", ColumnType::int_},
+        {"num_services_unknown", ColumnType::int_},
+        {"num_services_warn", ColumnType::int_},
+        {"worst_service_state", ColumnType::int_},
+    });
+}
+
 TEST(TableHostGroups, ColumnNamesAndTypes) {
-    // TODO(sp)
+    EXPECT_EQ(
+        append(sorted({{"num_hosts", ColumnType::int_},
+                       {"num_hosts_down", ColumnType::int_},
+                       {"num_hosts_handled_problems", ColumnType::int_},
+                       {"num_hosts_pending", ColumnType::int_},
+                       {"num_hosts_unhandled_problems", ColumnType::int_},
+                       {"num_hosts_unreach", ColumnType::int_},
+                       {"num_hosts_up", ColumnType::int_},
+                       {"worst_host_state", ColumnType::int_},
+                       // TODO(sp) HUH??? Why is this not in the common columns?
+                       {"worst_service_hard_state", ColumnType::int_}}),
+               common_host_and_service_groups_columns()),
+        sorted(columns(TableHostGroups{nullptr})));
 }
 
 TEST(TableHosts, ColumnNamesAndTypes) {
@@ -196,7 +242,8 @@ TEST(TableLog, ColumnNamesAndTypes) {
 }
 
 TEST(TableServiceGroups, ColumnNamesAndTypes) {
-    // TODO(sp)
+    EXPECT_EQ(sorted(common_host_and_service_groups_columns()),
+              sorted(columns(TableServiceGroups{nullptr})));
 }
 
 TEST(TableServices, ColumnNamesAndTypes) {

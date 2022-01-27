@@ -15,10 +15,13 @@ requirements.txt: Pipfile.lock
             sed -i "1s|-i.*|-i https://pypi.python.org/simple/|" $@ \
 	)
 
-# This will only work after exporting USE_EXTERNAL_PIPENV_MIRROR=true
-pip-mirror-update: requirements.txt
+.PHONY: pip-mirror-update pip-mirror-update-internal
+
+pip-mirror-update:
+	@USE_EXTERNAL_PIPENV_MIRROR=true $(MAKE) --no-print-directory pip-mirror-update-internal
+
+pip-mirror-update-internal: requirements.txt
 	set -x; \
 	PIP_MIRROR_FOLDER=./pip-mirror-tmp; \
 	$(PIPENV) run pip download -r $< -d $${PIP_MIRROR_FOLDER}; \
 	$(PIPENV) run twine upload -r pypi --repository-url $(INTERNAL_PYPI_MIRROR)/ $${PIP_MIRROR_FOLDER}/*;
-

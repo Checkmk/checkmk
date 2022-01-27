@@ -377,7 +377,8 @@ def _create_core_config(
     with config_path.create(is_cmc=config.is_cmc()), _backup_objects_file(core):
         core.create_config(config_path, config_cache, hosts_to_update=hosts_to_update)
 
-    cmk.utils.password_store.save(config.stored_passwords)
+    # TODO: Move to separate "activated location"
+    # cmk.utils.password_store.save(config.stored_passwords)
 
     return get_configuration_warnings()
 
@@ -462,6 +463,7 @@ def _prepare_check_command(
     """
     passwords: List[Tuple[str, str, str]] = []
     formated: List[str] = []
+    stored_passwords = cmk.utils.password_store.load()
     for arg in command_spec:
         if isinstance(arg, (int, float)):
             formated.append("%s" % arg)
@@ -472,7 +474,7 @@ def _prepare_check_command(
         elif isinstance(arg, tuple) and len(arg) == 3:
             pw_ident, preformated_arg = arg[1:]
             try:
-                password = config.stored_passwords[pw_ident]["password"]
+                password = stored_passwords[pw_ident]
             except KeyError:
                 if hostname and description:
                     descr = ' used by service "%s" on host "%s"' % (description, hostname)

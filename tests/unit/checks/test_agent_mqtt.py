@@ -60,18 +60,7 @@ def test_mqtt_argument_parsing(
     params: Mapping[str, Any],
     expected_result: Sequence[str],
 ) -> None:
-    password_store.save(
-        {
-            "mqtt_password": {
-                "title": "Title",
-                "comment": "Comment",
-                "docu_url": "",
-                "owned_by": "group1",
-                "shared_with": [],
-                "password": "blablu",
-            }
-        }
-    )
+    password_store.save({"mqtt_password": "blablu"})
     assert (
         SpecialAgent("agent_mqtt").argument_func(
             params,

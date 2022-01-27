@@ -18,6 +18,7 @@ Do it like this:
 """
 
 import sys
+from contextlib import suppress
 from typing import Literal, Mapping, NoReturn, Optional, TypedDict, Union
 
 import cmk.utils.paths
@@ -89,19 +90,20 @@ def replace_passwords() -> None:
         sys.argv[num_arg] = arg[:pos_in_arg] + password + arg[pos_in_arg + len(password) :]
 
 
-def save(stored_passwords: Mapping[str, Password]) -> None:
+def save(stored_passwords: Mapping[str, str]) -> None:
     content = ""
     for ident, pw in stored_passwords.items():
-        content += "%s:%s\n" % (ident, pw["password"])
+        content += "%s:%s\n" % (ident, pw)
 
     store.save_text_to_file(password_store_path, content)
 
 
 def load() -> dict[str, str]:
     passwords = {}
-    for line in open(password_store_path):  # pylint:disable=consider-using-with
-        ident, password = line.strip().split(":", 1)
-        passwords[ident] = password
+    with suppress(FileNotFoundError):
+        for line in open(password_store_path):  # pylint:disable=consider-using-with
+            ident, password = line.strip().split(":", 1)
+            passwords[ident] = password
     return passwords
 
 

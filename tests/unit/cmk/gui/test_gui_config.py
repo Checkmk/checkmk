@@ -708,6 +708,10 @@ def test_registered_permissions():
     if not cmk_version.is_raw_edition():
         expected_permissions += [
             "agent_registration.edit",
+            "dashboard.linux_hosts_overview",
+            "dashboard.linux_single_overview",
+            "dashboard.windows_hosts_overview",
+            "dashboard.windows_single_overview",
             "dashboard.problems",
             "dashboard.site",
             "dashboard.ntop_alerts",

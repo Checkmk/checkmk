@@ -2057,16 +2057,18 @@ class SiteBackupJobs(backup.Jobs):
         super().__init__(backup.site_config_path())
 
     def _apply_cron_config(self):
-        p = subprocess.Popen(  # pylint:disable=consider-using-with
-            ["omd", "restart", "crontab"],
-            close_fds=True,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-            encoding="utf-8",
-            stdin=open(os.devnull),  # pylint:disable=consider-using-with
-        )
-        if p.wait() != 0:
-            out = "Huh???" if p.stdout is None else p.stdout.read()
+        with open(os.devnull) as devnull:
+            completed_process = subprocess.run(
+                ["omd", "restart", "crontab"],
+                close_fds=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                encoding="utf-8",
+                stdin=devnull,
+                check=False,
+            )
+        if completed_process.returncode != 0:
+            out = "Huh???" if completed_process.stdout is None else completed_process.stdout
             raise MKGeneralException(_("Failed to apply the cronjob config: %s") % out)
 
 

@@ -98,30 +98,29 @@ def check_mk_local_automation_serialized(
         # if config.debug:
         #     html.write_text("<div class=message>Running <tt>%s</tt></div>\n" % subprocess.list2cmdline(cmd))
         auto_logger.info("RUN: %s" % subprocess.list2cmdline(cmd))
-        p = subprocess.Popen(  # pylint:disable=consider-using-with
+        completed_process = subprocess.run(
             cmd,
             stdin=subprocess.PIPE,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             close_fds=True,
             encoding="utf-8",
+            input=stdin_data,
+            check=False,
         )
     except Exception as e:
         raise local_automation_failure(command=command, cmdline=cmd, exc=e)
 
-    assert p.stdin is not None
-    assert p.stdout is not None
-    assert p.stderr is not None
+    assert completed_process.stdout is not None
+    assert completed_process.stderr is not None
 
     auto_logger.info("STDIN: %r" % stdin_data)
-    p.stdin.write(stdin_data)
-    p.stdin.close()
 
-    outdata = p.stdout.read()
-    exitcode = p.wait()
+    outdata = completed_process.stdout
+    exitcode = completed_process.returncode
     auto_logger.info("FINISHED: %d" % exitcode)
     auto_logger.debug("OUTPUT: %r" % outdata)
-    errdata = p.stderr.read()
+    errdata = completed_process.stderr
     if errdata:
         auto_logger.warning("'%s' returned '%s'" % (" ".join(cmd), errdata))
     if exitcode != 0:

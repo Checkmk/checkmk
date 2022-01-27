@@ -3287,7 +3287,7 @@ class ListChoice(ValueSpec):
         d = dict(self._elements)
         texts = [self._render_function(v, d.get(v, v)) for v in value]
         if self._render_orientation == "horizontal":
-            return ", ".join(texts)
+            return ", ".join(escaping.escape_text(t) for t in texts)
 
         # TODO: This is a workaround for a bug. This function needs to return str objects right now.
         return "%s" % html.render_table(

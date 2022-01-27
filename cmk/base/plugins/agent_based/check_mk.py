@@ -67,7 +67,7 @@ register.agent_section(
 def inventory_checkmk(section: CheckmkSection) -> InventoryResult:
     yield Attributes(
         path=["networking"],
-        inventory_attributes={"hostname": section.get("Hostname")},
+        inventory_attributes={"hostname": section.get("hostname")},
     )
     yield Attributes(
         path=["software", "applications", "checkmk-agent"],

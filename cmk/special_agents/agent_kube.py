@@ -50,6 +50,8 @@ from cmk.special_agents.utils.agent_common import ConditionalPiggybackSection, S
 from cmk.special_agents.utils_kubernetes.api_server import APIServer
 from cmk.special_agents.utils_kubernetes.schemata import api, section
 
+LOGGER = logging.getLogger()
+
 AGENT_TMP_PATH = Path(cmk.utils.paths.tmp_dir, "agent_kube")
 
 RawMetrics = Mapping[str, str]
@@ -473,6 +475,7 @@ class Node:
 class Cluster:
     @classmethod
     def from_api_server(cls, api_server: api.API) -> Cluster:
+        LOGGER.debug("Constructing k8s objects based on collected API data")
         cluster_details = api_server.cluster_details()
 
         cluster = cls(cluster_details=cluster_details)
@@ -503,6 +506,12 @@ class Cluster:
                 Deployment(deployment.metadata, deployment.spec, deployment.status), deployment.pods
             )
 
+        LOGGER.debug(
+            "Cluster composition: Nodes (%s), " "Deployments (%s), " "Pods (%s)",
+            len(cluster.nodes()),
+            len(cluster.deployments()),
+            len(cluster.pods()),
+        )
         return cluster
 
     def __init__(self, *, cluster_details: Optional[api.ClusterInfo] = None) -> None:
@@ -716,13 +725,34 @@ def pod_api_based_checkmk_sections(pod: Pod):
 def filter_outdated_and_non_monitored_pods(
     live_pods: Sequence[PerformancePod],
     lookup_name_to_piggyback_mappings: Mapping[PodLookupName, PodNamespacedName],
-) -> Iterator[PerformancePod]:
-    """Filter out all performance data based pods that are not in the API data based lookup table"""
-    return (
-        live_pod
-        for live_pod in live_pods
-        if live_pod.lookup_name in lookup_name_to_piggyback_mappings
+) -> Sequence[PerformancePod]:
+    """Filter out all performance data based pods that are not in the API data based lookup table
+
+    Examples:
+        >>> len(filter_outdated_and_non_monitored_pods(
+        ... [PerformancePod(lookup_name=PodLookupName("foobar"), containers=[])],
+        ... {PodLookupName("foobar"): PodNamespacedName("space_foobar")}))
+        1
+
+        >>> len(filter_outdated_and_non_monitored_pods(
+        ... [PerformancePod(lookup_name=PodLookupName("foobar"), containers=[])],
+        ... {}))
+        0
+
+    """
+    LOGGER.info("Filtering out outdated and non-monitored pods from performance data")
+    current_pods = []
+    outdated_and_non_monitored_pods = []
+    for live_pod in live_pods:
+        if live_pod.lookup_name in lookup_name_to_piggyback_mappings:
+            current_pods.append(live_pod)
+            continue
+        outdated_and_non_monitored_pods.append(live_pod.lookup_name)
+
+    LOGGER.debug(
+        "Outdated or non-monitored live pods: %s", ", ".join(outdated_and_non_monitored_pods)
     )
+    return current_pods
 
 
 def write_kube_object_performance_section(
@@ -849,6 +879,7 @@ def request_metrics_from_cluster_collector(
     token: str,
     verify: bool,
 ) -> Sequence[RawMetrics]:
+    LOGGER.info("Collecting metrics from cluster collector")
     cluster_resp = requests.get(
         f"{cluster_agent_url}/container_metrics",
         headers={"Authorization": f"Bearer {token}"},
@@ -923,6 +954,7 @@ def determine_rate_metrics(
     """Determine the rate metrics for each container based on the current and previous
     counter metric values"""
 
+    LOGGER.debug("Determine rate metrics from the latest containers counters stores")
     containers = {}
     for container in containers_counters.values():
         if (old_container := containers_counters_old.get(container.name)) is None:
@@ -971,19 +1003,25 @@ def calculate_rate(counter_metric: CounterMetric, old_counter_metric: CounterMet
 
 
 def load_containers_store(path: Path, file_name: str) -> ContainersStore:
+    LOGGER.debug("Load previous cycle containers store from %s", file_name)
     try:
         with open(f"{path}/{file_name}", "r") as f:
             return ContainersStore(**json.loads(f.read()))
-    except FileNotFoundError:
-        logging.debug("Could not find metrics file. This is expected if the first run.")
+    except FileNotFoundError as e:
+        LOGGER.info("Could not find metrics file. This is expected if the first run.")
+        LOGGER.debug("Exception: %s", e)
     except SyntaxError:
-        logging.debug("Found metrics file, but could not parse it.")
+        LOGGER.exception("Found metrics file, but could not parse it.")
+
     return ContainersStore(containers={})
 
 
 def persist_containers_store(containers_store: ContainersStore, path: Path, file_name: str) -> None:
+    file_path = f"{path}/{file_name}"
+    LOGGER.debug("Creating directory %s for containers store file", path)
     path.mkdir(parents=True, exist_ok=True)
-    with open(f"{path}/{file_name}", "w") as f:
+    LOGGER.debug("Persisting current containers store under %s", file_path)
+    with open(file_path, "w") as f:
         f.write(containers_store.json())
 
 
@@ -1105,9 +1143,11 @@ def filter_monitored_namespaces(
         raise ValueError("It is not possible to define patterns for both filter mechanisms")
 
     if namespace_include_patterns:
+        LOGGER.debug("Filtering for included namespaces")
         return _filter_namespaces(cluster_namespaces, namespace_include_patterns)
 
     if namespace_exclude_patterns:
+        LOGGER.debug("Filtering for namespaces based on excluded patterns")
         return cluster_namespaces - _filter_namespaces(
             cluster_namespaces, namespace_exclude_patterns
         )
@@ -1151,6 +1191,7 @@ def main(args: Optional[List[str]] = None) -> int:
             enabled=bool(arguments.profile), profile_file=arguments.profile
         ):
             api_client = make_api_client(arguments)
+            LOGGER.info("Collecting API data")
 
             try:
                 api_server = APIServer.from_kubernetes(api_client)
@@ -1162,6 +1203,7 @@ def main(args: Optional[List[str]] = None) -> int:
 
             cluster = Cluster.from_api_server(api_server)
             # Sections based on API server data
+            LOGGER.info("Write cluster sections based on API data")
             write_cluster_api_sections(cluster)
 
             monitored_namespaces = filter_monitored_namespaces(
@@ -1172,18 +1214,21 @@ def main(args: Optional[List[str]] = None) -> int:
             piggyback_formatter = functools.partial(cluster_piggyback_formatter, arguments.cluster)
 
             if "nodes" in arguments.monitored_objects:
+                LOGGER.info("Write nodes sections based on API data")
                 write_nodes_api_sections(
                     cluster.nodes(),
                     piggyback_formatter=functools.partial(piggyback_formatter, "node"),
                 )
 
             if "deployments" in arguments.monitored_objects:
+                LOGGER.info("Write deployments sections based on API data")
                 write_deployments_api_sections(
                     deployments_from_namespaces(cluster.deployments(), monitored_namespaces),
                     piggyback_formatter=functools.partial(piggyback_formatter, "deployment"),
                 )
 
             if "pods" in arguments.monitored_objects:
+                LOGGER.info("Write pods sections based on API data")
                 write_pods_api_sections(
                     pods_from_namespaces(cluster.pods(), monitored_namespaces),
                     piggyback_formatter=functools.partial(piggyback_formatter, "pod"),
@@ -1225,8 +1270,10 @@ def main(args: Optional[List[str]] = None) -> int:
 
             store_file_name = f"{arguments.cluster}_containers_counters.json"
             previous_cycle_store = load_containers_store(
-                path=AGENT_TMP_PATH, file_name=store_file_name
+                path=AGENT_TMP_PATH,
+                file_name=store_file_name,
             )
+
             containers_rate_metrics = determine_rate_metrics(
                 current_cycle_store.containers, previous_cycle_store.containers
             )
@@ -1254,6 +1301,7 @@ def main(args: Optional[List[str]] = None) -> int:
 
             # Write performance sections
             if "pods" in arguments.monitored_objects:
+                LOGGER.info("Write pod sections based on performance data")
                 for pod in filter_outdated_and_non_monitored_pods(
                     list(performance_pods.values()), lookup_name_piggyback_mappings
                 ):
@@ -1266,6 +1314,7 @@ def main(args: Optional[List[str]] = None) -> int:
                         pod_performance_sections(pod)
 
             if "nodes" in arguments.monitored_objects:
+                LOGGER.info("Write node sections based on performance data")
                 for node in cluster.nodes():
                     write_kube_object_performance_section(
                         node,
@@ -1276,6 +1325,7 @@ def main(args: Optional[List[str]] = None) -> int:
                     )
 
             if "deployments" in arguments.monitored_objects:
+                LOGGER.info("Write deployment sections based on performance data")
                 for deployment in deployments_from_namespaces(
                     cluster.deployments(), monitored_namespaces
                 ):
@@ -1288,6 +1338,7 @@ def main(args: Optional[List[str]] = None) -> int:
                         ),
                     )
 
+            LOGGER.info("Write cluster sections based on performance data")
             write_kube_object_performance_section(cluster, performance_pods)
 
             # TODO: handle pods with no performance data (pod.uid not in performance pods)

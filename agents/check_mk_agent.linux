@@ -117,11 +117,6 @@ preamble_1() { # TODO: split these up more meaningful
     # Optionally set a tempdir for all subsequent calls
     #export TMPDIR=
 
-    # The service name gets patched for baked agents to "check-mk-agent"
-    # TODO: Once the the RAW edition agent package is adjusted to the
-    # baked one, we can drop this variable and hardcode "check-mk-agent" instead.
-    XINETD_SERVICE_NAME=check_mk
-
     # All executables in PLUGINSDIR will simply be executed and their
     # ouput appended to the output of the agent. Plugins define their own
     # sections and must output headers with '<<<' and '>>>'
@@ -372,14 +367,14 @@ HERE
 
     # try to find only_from configuration
     if [ -n "${REMOTE_HOST}" ]; then # xinetd
-        sed -n "/^service[[:space:]]*${XINETD_SERVICE_NAME}/,/}/s/^[[:space:]]*only_from[[:space:]]*=[[:space:]]*\(.*\)/OnlyFrom: \1/p" /etc/xinetd.d/* | head -n1
+        sed -n "/^service[[:space:]]*check-mk-agent/,/}/s/^[[:space:]]*only_from[[:space:]]*=[[:space:]]*\(.*\)/OnlyFrom: \1/p" /etc/xinetd.d/* | head -n1
     elif inpath systemctl; then # systemd
-        sed -n '/^IPAddressAllow/s/IPAddressAllow=/OnlyFrom: /p' "/usr/lib/systemd/system/${XINETD_SERVICE_NAME}.socket" 2>/dev/null
+        sed -n '/^IPAddressAllow/s/IPAddressAllow=/OnlyFrom: /p' "/usr/lib/systemd/system/check-mk-agent.socket" 2>/dev/null
         # NOTE: The above line just reads back the socket file we deployed ourselves. Systemd units can be altered by
         # other user defined unit files, so this *may* not be correct. A better way of doing this seemed to be querying
         # systemctl itself about the 'effective' property:
         #
-        #    systemctl show --property IPAddressAllow "${XINETD_SERVICE_NAME}.socket" | sed 's/IPAddressAllow=/OnlyFrom: /'
+        #    systemctl show --property IPAddressAllow "check-mk-agent.socket" | sed 's/IPAddressAllow=/OnlyFrom: /'
         #
         # However this ("successfully") reports an empty list or '[unprintable]' on older systemd versions :-(
     fi

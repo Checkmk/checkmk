@@ -6,12 +6,384 @@
 
 import pytest
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import TableRow
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import InventoryResult
+from tests.unit.conftest import FixRegister
+
+from cmk.utils.type_defs import CheckPluginName
+
+from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State, TableRow
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult, InventoryResult
 from cmk.base.plugins.agent_based.oracle_instance import (
     inventory_oracle_instance,
     parse_oracle_instance,
 )
+
+
+def test_parse_oracle_instance() -> None:
+    assert parse_oracle_instance(
+        [
+            [
+                "XE",
+                "11.2.0.2.0",
+                "OPEN",
+                "ALLOWED",
+                "STOPPED",
+                "1212537",
+                "2858521146",
+                "NOARCHIVELOG",
+                "PRIMARY",
+                "NO",
+                "XE",
+                "290520181207",
+            ],
+            [
+                "IC731",
+                "12.1.0.2.0",
+                "OPEN",
+                "ALLOWED",
+                "STARTED",
+                "2144847",
+                "3190399742",
+                "ARCHIVELOG",
+                "PRIMARY",
+                "YES",
+                "IC73",
+                "130920150251",
+            ],
+            ["I442", "FAILURE"],
+            [
+                "+ASM",
+                "FAILURE",
+                "ORA-99999 tnsping failed for +ASM ERROR: ORA-28002: the password will expire within 1 days",
+            ],
+        ]
+    ) == {
+        "+ASM": {
+            "_con_id": None,
+            "_dbid": None,
+            "_pblock_size": None,
+            "_pdbid": None,
+            "_precovery_status": None,
+            "archiver": None,
+            "database_role": None,
+            "db_creation_time": None,
+            "force_logging": None,
+            "general_error": "ORA-99999 tnsping failed for +ASM ERROR: "
+            "ORA-28002: the password will expire within 1 days",
+            "invalid_data": True,
+            "log_mode": None,
+            "logins": None,
+            "name": None,
+            "old_agent": False,
+            "openmode": None,
+            "pdb": False,
+            "pluggable": "FALSE",
+            "pname": None,
+            "popenmode": None,
+            "prestricted": None,
+            "ptotal_size": None,
+            "pup_seconds": None,
+            "sid": "+ASM",
+            "up_seconds": None,
+            "version": None,
+        },
+        "I442": {
+            "_con_id": None,
+            "_dbid": None,
+            "_pblock_size": None,
+            "_pdbid": None,
+            "_precovery_status": None,
+            "archiver": None,
+            "database_role": None,
+            "db_creation_time": None,
+            "force_logging": None,
+            "general_error": "",
+            "invalid_data": True,
+            "log_mode": None,
+            "logins": None,
+            "name": None,
+            "old_agent": False,
+            "openmode": None,
+            "pdb": False,
+            "pluggable": "FALSE",
+            "pname": None,
+            "popenmode": None,
+            "prestricted": None,
+            "ptotal_size": None,
+            "pup_seconds": None,
+            "sid": "I442",
+            "up_seconds": None,
+            "version": "FAILURE",
+        },
+        "IC731": {
+            "_con_id": None,
+            "_dbid": "3190399742",
+            "_pblock_size": None,
+            "_pdbid": None,
+            "_precovery_status": None,
+            "archiver": "STARTED",
+            "database_role": "PRIMARY",
+            "db_creation_time": "130920150251",
+            "force_logging": "YES",
+            "general_error": None,
+            "invalid_data": False,
+            "log_mode": "ARCHIVELOG",
+            "logins": "ALLOWED",
+            "name": "IC73",
+            "old_agent": False,
+            "openmode": "OPEN",
+            "pdb": False,
+            "pluggable": "FALSE",
+            "pname": None,
+            "popenmode": None,
+            "prestricted": None,
+            "ptotal_size": None,
+            "pup_seconds": None,
+            "sid": "IC731",
+            "up_seconds": "2144847",
+            "version": "12.1.0.2.0",
+        },
+        "XE": {
+            "_con_id": None,
+            "_dbid": "2858521146",
+            "_pblock_size": None,
+            "_pdbid": None,
+            "_precovery_status": None,
+            "archiver": "STOPPED",
+            "database_role": "PRIMARY",
+            "db_creation_time": "290520181207",
+            "force_logging": "NO",
+            "general_error": None,
+            "invalid_data": False,
+            "log_mode": "NOARCHIVELOG",
+            "logins": "ALLOWED",
+            "name": "XE",
+            "old_agent": False,
+            "openmode": "OPEN",
+            "pdb": False,
+            "pluggable": "FALSE",
+            "pname": None,
+            "popenmode": None,
+            "prestricted": None,
+            "ptotal_size": None,
+            "pup_seconds": None,
+            "sid": "XE",
+            "up_seconds": "1212537",
+            "version": "11.2.0.2.0",
+        },
+    }
+
+
+def test_discover_oracle_instance(fix_register: FixRegister) -> None:
+    assert list(
+        fix_register.check_plugins[CheckPluginName("oracle_instance")].discovery_function(
+            {
+                "a": {},
+                "b": {},
+                "c": {},
+            },
+        )
+    ) == [
+        Service(item="a"),
+        Service(item="b"),
+        Service(item="c"),
+    ]
+
+
+@pytest.mark.parametrize(
+    ["agent_line", "expected_result"],
+    [
+        pytest.param(
+            [
+                "IC731",
+                "12.1.0.2.0",
+                "OPEN",
+                "ALLOWED",
+                "STARTED",
+                "2144847",
+                "3190399742",
+                "ARCHIVELOG",
+                "PRIMARY",
+                "YES",
+                "IC73",
+                "130920150251",
+            ],
+            [
+                Result(
+                    state=State.OK,
+                    summary="Database Name IC73, Status OPEN, Role PRIMARY, Version 12.1.0.2.0, Logins allowed, Log Mode archivelog, Force Logging yes",
+                ),
+            ],
+            id="normal",
+        ),
+        pytest.param(
+            [
+                "IC731",
+                "12.1.0.2.0",
+                "LOCKED",
+                "ALLOWED",
+                "STARTED",
+                "2144847",
+                "3190399742",
+                "ARCHIVELOG",
+                "PRIMARY",
+                "YES",
+                "IC73",
+                "130920150251",
+            ],
+            [
+                Result(
+                    state=State.CRIT,
+                    summary="Database Name IC73, Status LOCKED(!!), Role PRIMARY, Version 12.1.0.2.0, Log Mode archivelog, Force Logging yes",
+                ),
+            ],
+            id="locked",
+        ),
+        pytest.param(
+            [
+                "IC731",
+                "12.1.0.2.0",
+                "OPEN",
+                "RESTRICTED",
+                "STARTED",
+                "2144847",
+                "3190399742",
+                "ARCHIVELOG",
+                "PRIMARY",
+                "YES",
+                "IC73",
+                "130920150251",
+            ],
+            [
+                Result(
+                    state=State.CRIT,
+                    summary="Database Name IC73, Status OPEN, Role PRIMARY, Version 12.1.0.2.0, Logins restricted(!!), Log Mode archivelog, Force Logging yes",
+                ),
+            ],
+            id="logins_restricted",
+        ),
+        pytest.param(
+            [
+                "IC731",
+                "12.1.0.2.0",
+                "OPEN",
+                "ALLOWED",
+                "STARTED",
+                "2144847",
+                "3190399742",
+                "NOARCHIVELOG",
+                "PRIMARY",
+                "YES",
+                "IC73",
+                "130920150251",
+            ],
+            [
+                Result(
+                    state=State.WARN,
+                    summary="Database Name IC73, Status OPEN, Role PRIMARY, Version 12.1.0.2.0, Logins allowed, Log Mode noarchivelog(!)",
+                ),
+            ],
+            id="no_archive_log",
+        ),
+        pytest.param(
+            [
+                "IC731",
+                "12.1.0.2.0",
+                "OPEN",
+                "ALLOWED",
+                "STOPPED",
+                "2144847",
+                "3190399742",
+                "ARCHIVELOG",
+                "PRIMARY",
+                "YES",
+                "IC73",
+                "130920150251",
+            ],
+            [
+                Result(
+                    state=State.CRIT,
+                    summary="Database Name IC73, Status OPEN, Role PRIMARY, Version 12.1.0.2.0, Logins allowed, Log Mode archivelog. Archiver stopped(!!), Force Logging yes",
+                ),
+            ],
+            id="archiver_stopped",
+        ),
+        pytest.param(
+            [
+                "IC731",
+                "12.1.0.2.0",
+                "OPEN",
+                "ALLOWED",
+                "STARTED",
+                "2144847",
+                "3190399742",
+                "ARCHIVELOG",
+                "PRIMARY",
+                "NO",
+                "IC73",
+                "130920150251",
+            ],
+            [
+                Result(
+                    state=State.WARN,
+                    summary="Database Name IC73, Status OPEN, Role PRIMARY, Version 12.1.0.2.0, Logins allowed, Log Mode archivelog, Force Logging no(!)",
+                ),
+            ],
+            id="logging_not_forced",
+        ),
+        pytest.param(
+            [
+                "IC731",
+                "FAILURE",
+                "ORA-99999 tnsping failed for IC731 ERROR: ORA-28002: the password will expire within 1 days",
+            ],
+            [
+                Result(
+                    state=State.CRIT,
+                    summary="ORA-99999 tnsping failed for IC731 ERROR: ORA-28002: the password will expire within 1 days",
+                )
+            ],
+            id="error",
+        ),
+    ],
+)
+def test_check_oracle_instance(
+    fix_register: FixRegister,
+    agent_line: list[str],
+    expected_result: CheckResult,
+) -> None:
+    assert (
+        list(
+            fix_register.check_plugins[CheckPluginName("oracle_instance")].check_function(
+                item="IC731",
+                params={
+                    "logins": 2,
+                    "noforcelogging": 1,
+                    "noarchivelog": 1,
+                    "primarynotopen": 2,
+                },
+                section=parse_oracle_instance([agent_line]),
+            )
+        )
+        == expected_result
+    )
+
+
+def test_check_oracle_instance_empty_section(fix_register: FixRegister) -> None:
+    assert (
+        list(
+            fix_register.check_plugins[CheckPluginName("oracle_instance")].check_function(
+                item="item",
+                params={
+                    "logins": 2,
+                    "noforcelogging": 1,
+                    "noarchivelog": 1,
+                    "primarynotopen": 2,
+                },
+                section={},
+            )
+        )
+        == []
+    )
 
 
 @pytest.mark.parametrize(

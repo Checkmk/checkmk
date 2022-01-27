@@ -177,18 +177,21 @@ def delete_rule(param):
     all_sets = watolib.AllRulesets()
     all_sets.load()
 
-    # If we don't find the rule, we return a 404.
-    status_code = 404
-
+    found = False
     for ruleset in all_sets.get_rulesets().values():
         for _folder, _index, rule in ruleset.get_rules():
             if rule.id == rule_id:
                 ruleset.delete_rule(rule)
                 all_sets.save()
+                found = True
+    if found:
+        return http.Response(status=204)
 
-                status_code = 204
-
-    return http.Response(status=status_code)
+    return problem(
+        status=404,
+        title="Rule could not be found.",
+        detail=f"The rule with ID {rule_id!r} could not be found.",
+    )
 
 
 def _serialize_rule(

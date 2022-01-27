@@ -931,6 +931,10 @@ def determine_rate_metrics(
         container_rate_metrics = container_available_rate_metrics(
             container.metrics, old_container.metrics
         )
+
+        if not container_rate_metrics:
+            continue
+
         containers[container.name] = container_rate_metrics
     return containers
 
@@ -943,14 +947,25 @@ def container_available_rate_metrics(
         if counter_metric.name not in old_counter_metrics:
             continue
 
+        try:
+            rate_value = calculate_rate(counter_metric, old_counter_metrics[counter_metric.name])
+        except ZeroDivisionError:
+            continue
+
         rate_metrics[counter_metric.name] = RateMetric(
             name=counter_metric.name,
-            rate=calculate_rate(counter_metric, old_counter_metrics[counter_metric.name]),
+            rate=rate_value,
         )
     return rate_metrics
 
 
 def calculate_rate(counter_metric: CounterMetric, old_counter_metric: CounterMetric) -> float:
+    """Calculate the rate value based on two counter metric values
+    Examples:
+        >>> calculate_rate(CounterMetric(name="foo", value=40, timestamp=60),
+        ... CounterMetric(name="foo", value=10, timestamp=30))
+        1.0
+    """
     time_delta = counter_metric.timestamp - old_counter_metric.timestamp
     return (counter_metric.value - old_counter_metric.value) / time_delta
 

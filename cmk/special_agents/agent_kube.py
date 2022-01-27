@@ -428,7 +428,16 @@ class Node:
         return self.kubelet_info
 
     def info(self) -> section.NodeInfo:
-        return section.NodeInfo(labels=self.metadata.labels, **dict(self.status.node_info))
+        return section.NodeInfo(
+            labels=self.metadata.labels,
+            name=self.metadata.name,
+            creation_timestamp=self.metadata.creation_timestamp,
+            architecture=self.status.node_info.architecture,
+            kernel_version=self.status.node_info.kernel_version,
+            os_image=self.status.node_info.os_image,
+            operating_system=self.status.node_info.operating_system,
+            container_runtime_version=self.status.node_info.container_runtime_version,
+        )
 
     def container_count(self) -> section.ContainerCount:
         result = section.ContainerCount()

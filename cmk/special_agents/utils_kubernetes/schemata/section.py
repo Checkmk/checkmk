@@ -142,6 +142,8 @@ class NodeCount(BaseModel):
 class NodeInfo(api.NodeInfo):
     """section: kube_node_info_v1"""
 
+    name: api.NodeName
+    creation_timestamp: api.CreationTimestamp
     labels: api.Labels
 
 

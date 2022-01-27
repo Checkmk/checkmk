@@ -223,6 +223,8 @@ class NodeInfo(BaseModel):
     os_image: str
     operating_system: str
     container_runtime_version: str
+    name: NodeName
+    creation_timestamp: CreationTimestamp
     labels: Labels
 
 

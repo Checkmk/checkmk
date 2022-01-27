@@ -18,7 +18,6 @@ import logging
 import os
 import re
 import sys
-import time
 from collections import defaultdict
 from pathlib import Path
 from typing import (
@@ -879,19 +878,13 @@ def parse_performance_metrics(
 ) -> Sequence[PerformanceMetric]:
     metrics = []
     for metric in cluster_collector_metrics:
-        if " " in (metric_value := metric["metric_value_string"]):
-            metric_value, timestamp = metric_value.split(" ")
-            metric_timestamp = float(timestamp) / 1000.0
-        else:
-            metric_timestamp = time.time()
-
         metric_name = metric["metric_name"].replace("container_", "", 1)
         metrics.append(
             PerformanceMetric(
                 container_name=section.ContainerName(metric["container_name"]),
                 name=MetricName(metric_name),
-                value=metric_value,
-                timestamp=metric_timestamp,
+                value=float(metric["metric_value_string"]),
+                timestamp=float(metric["timestamp"]),
             )
         )
     return metrics

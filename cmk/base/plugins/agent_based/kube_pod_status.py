@@ -14,6 +14,7 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     render,
     Result,
     Service,
+    State,
 )
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
 from cmk.base.plugins.agent_based.utils.k8s import (
@@ -136,6 +137,20 @@ def _pod_containers(pod_containers: Optional[PodContainers]) -> Sequence[Contain
     return list(pod_containers.containers.values()) if pod_containers is not None else []
 
 
+def _container_status_details(containers: Sequence[ContainerInfo]) -> CheckResult:
+    """Show container status details for debugging purposes, if the container
+    status is not running or not terminated successfully."""
+    yield from (
+        Result(
+            state=State.OK,
+            notice=f"{container.name}: {container.state.detail}",
+        )
+        for container in _erroneous_or_incomplete_containers(containers)
+        if isinstance(container.state, (ContainerTerminatedState, ContainerWaitingState))
+        and container.state.detail is not None
+    )
+
+
 def discovery_kube_pod_status(
     section_kube_pod_containers: Optional[PodContainers],
     section_kube_pod_init_containers: Optional[PodContainers],
@@ -151,9 +166,13 @@ def check_kube_pod_status(
     section_kube_pod_lifecycle: Optional[PodLifeCycle],
 ) -> CheckResult:
     assert section_kube_pod_lifecycle is not None, "Missing Api data"
+
+    pod_containers = _pod_containers(section_kube_pod_containers)
+    pod_init_containers = _pod_containers(section_kube_pod_init_containers)
+
     status_message = _pod_status_message(
-        _pod_containers(section_kube_pod_containers),
-        _pod_containers(section_kube_pod_init_containers),
+        pod_containers,
+        pod_init_containers,
         section_kube_pod_lifecycle,
     )
 
@@ -169,6 +188,9 @@ def check_kube_pod_status(
         levels_upper=_get_levels_from_params(status_message, params),
     ):
         yield Result(state=result.state, summary=f"{status_message}: since {result.summary}")
+
+    yield from _container_status_details(pod_init_containers)
+    yield from _container_status_details(pod_containers)
 
 
 register.check_plugin(

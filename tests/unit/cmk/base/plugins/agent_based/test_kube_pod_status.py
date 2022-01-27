@@ -122,7 +122,13 @@ def test_check_kube_pod_status_no_issues_in_containers(
                 }
             ),
             PodLifeCycle(phase="running"),
-            [Result(state=State.OK, summary="CrashLoopBackOff: since 0 seconds")],
+            [
+                Result(state=State.OK, summary="CrashLoopBackOff: since 0 seconds"),
+                Result(
+                    state=State.OK,
+                    notice="some_name: back-off 5m0s restarting failed container=busybox pod=container-exits-with-1-but-is-restarted_default(c654fe38-6551-473f-8cd1-4a9b06e609de)",
+                ),
+            ],
             id="Container exits with 0 or 1 (exit code does not change container state), and is restarted",
         ),
         pytest.param(
@@ -216,7 +222,14 @@ def test_check_kube_pod_status_failing_container(
                 }
             ),
             PodLifeCycle(phase="pending"),
-            [Result(state=State.OK, summary="CrashLoopBackOff: since 0 seconds")],
+            [
+                Result(state=State.OK, summary="CrashLoopBackOff: since 0 seconds"),
+                Result(
+                    state=State.OK,
+                    notice="some_name: back-off 5m0s restarting failed container=busybox pod=failingcontainer-imagepullbackerror_default(e7437bfb-3043-44a0-a071-4221ab43c550)",
+                ),
+                Result(state=State.OK, notice='some_name: Back-off pulling image "busybox1"'),
+            ],
             id="One container has incorrect image name, one container fails with exit code 0",
         ),
         pytest.param(

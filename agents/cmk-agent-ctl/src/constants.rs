@@ -8,6 +8,8 @@ pub const VERSION: &str = env!("CARGO_PKG_VERSION");
 
 #[cfg(unix)]
 pub const CMK_AGENT_USER: &str = "cmk-agent";
+//TODO: Pass agent port via cmdline or config.
+pub const AGENT_PORT: &str = "6556";
 
 const CONFIG_FILE: &str = "cmk-agent-ctl-config.json";
 const REGISTRY_FILE: &str = "registered_connections.json";

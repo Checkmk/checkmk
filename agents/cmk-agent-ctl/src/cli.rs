@@ -68,6 +68,11 @@ pub enum Args {
     )]
     Pull {},
 
+    #[structopt(
+        about = "Run cmk-agent-ctl as a daemon that handles all pull and push connections"
+    )]
+    Daemon {},
+
     #[structopt(about = "Collects monitoring data and prints it to stdout")]
     Dump {},
 

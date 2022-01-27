@@ -22,9 +22,13 @@ use log::error;
 use nix::unistd;
 use std::io::{self, Write};
 use std::path::Path;
+use std::sync::mpsc;
+use std::sync::Arc;
+use std::thread;
+use std::time::{Duration, Instant};
 use structopt::StructOpt;
 
-fn push(registry: config::Registry) -> AnyhowResult<()> {
+fn push(registry: &config::Registry) -> AnyhowResult<()> {
     let compressed_mon_data = monitoring_data::compress(
         &monitoring_data::collect().context("Error collecting monitoring data")?,
     )
@@ -44,8 +48,37 @@ fn push(registry: config::Registry) -> AnyhowResult<()> {
             agent_receiver_address
         ))?
     }
-
     Ok(())
+}
+
+fn push_daemon(registry: Arc<config::Registry>) -> AnyhowResult<()> {
+    loop {
+        let begin = Instant::now();
+        push(&registry)?;
+        thread::sleep(Duration::from_secs(1).saturating_sub(begin.elapsed()));
+    }
+}
+
+fn daemon(registry: config::Registry, legacy_pull_marker: &std::path::Path) -> AnyhowResult<()> {
+    let registry_for_push = Arc::<config::Registry>::new(registry);
+    let registry_for_pull = registry_for_push.clone();
+    let legacy_pull_marker = legacy_pull_marker.to_owned();
+
+    let (tx_push, rx) = mpsc::channel();
+    let tx_pull = tx_push.clone();
+
+    thread::spawn(move || {
+        tx_push.send(push_daemon(registry_for_push)).unwrap();
+    });
+    thread::spawn(move || {
+        tx_pull
+            .send(pull::pull(registry_for_pull, &legacy_pull_marker))
+            .unwrap();
+    });
+
+    // We should never receive anything here, unless one of the threads crashed.
+    // In that case, this will contain an error that should be propagated.
+    rx.recv().unwrap()
 }
 
 fn init_logging(path: &Path) -> AnyhowResult<()> {
@@ -140,8 +173,9 @@ fn run_requested_mode(args: cli::Args, paths: constants::Paths) -> AnyhowResult<
                 surr_pull_reg_args,
             )?)
         }
-        cli::Args::Push { .. } => push(registry),
-        cli::Args::Pull { .. } => pull::pull(&registry, &paths.legacy_pull_path),
+        cli::Args::Push { .. } => push(&registry),
+        cli::Args::Pull { .. } => pull::pull(Arc::new(registry), &paths.legacy_pull_path),
+        cli::Args::Daemon { .. } => daemon(registry, &paths.legacy_pull_path),
         cli::Args::Dump { .. } => dump::dump(),
         cli::Args::Status(status_args) => status::status(registry, status_args.json),
         cli::Args::Delete(delete_args) => {

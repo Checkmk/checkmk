@@ -6,9 +6,12 @@
 
 import pytest
 
-from cmk.utils.type_defs import InventoryPluginName, SectionName
-
 from cmk.base.plugins.agent_based.agent_based_api.v1 import TableRow
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import InventoryResult
+from cmk.base.plugins.agent_based.oracle_instance import (
+    inventory_oracle_instance,
+    parse_oracle_instance,
+)
 
 
 @pytest.mark.parametrize(
@@ -262,14 +265,14 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import TableRow
         ),
     ],
 )
-def test_inv_oracle_instance(fix_register, line, expected_data):
-    section = fix_register.agent_sections[SectionName("oracle_instance")]
-    parsed = section.parse_function([line])
-    inv_plugin = fix_register.inventory_plugins[InventoryPluginName("oracle_instance")]
-    assert list(inv_plugin.inventory_function(parsed)) == expected_data
+def test_inv_oracle_instance(
+    line: list[str],
+    expected_data: InventoryResult,
+) -> None:
+    assert list(inventory_oracle_instance(parse_oracle_instance([line]))) == expected_data
 
 
-def test_inv_oracle_instance_multiline(fix_register):
+def test_inv_oracle_instance_multiline() -> None:
     lines = [
         [
             "SID",
@@ -320,11 +323,6 @@ def test_inv_oracle_instance_multiline(fix_register):
             "_PBLOCK_SIZE",
         ],
     ]
-
-    section = fix_register.agent_sections[SectionName("oracle_instance")]
-    parsed = section.parse_function(lines)  # type: ignore[arg-type]
-    inv_plugin = fix_register.inventory_plugins[InventoryPluginName("oracle_instance")]
-
     expected_data = [
         TableRow(
             path=["software", "applications", "oracle", "instance"],
@@ -362,4 +360,4 @@ def test_inv_oracle_instance_multiline(fix_register):
         ),
     ]
 
-    assert list(inv_plugin.inventory_function(parsed)) == expected_data  # type: ignore[union-attr]
+    assert list(inventory_oracle_instance(parse_oracle_instance(lines))) == expected_data

@@ -28,7 +28,7 @@ from cmk.gui.plugins.openapi.restful_objects.type_defs import DomainObject
     response_schema=RulesetCollection,
 )
 def list_rulesets(param):
-    """List or search for configured rule sets."""
+    """Search rule sets"""
     all_sets = (
         watolib.FolderRulesets(param["folder"]) if param.get("folder") else watolib.AllRulesets()
     )
@@ -66,7 +66,7 @@ def list_rulesets(param):
     response_schema=RulesetObject,
 )
 def show_ruleset(param):
-    """Show a ruleset."""
+    """Show a ruleset"""
     ruleset_name = param["ruleset_name"]
     collection = watolib.SingleRulesetRecursively(ruleset_name)
     collection.load()

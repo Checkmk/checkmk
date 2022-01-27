@@ -128,6 +128,7 @@ timeout(time: 12, unit: 'HOURS') {
                             def FOLDER_ID = currentBuild.fullProjectName.split('/')[0]
                             def WIN_PROJECT = "${FOLDER_ID}/windows-agent-build"
                             def WIN_PY_PROJECT = "${FOLDER_ID}/Windows-Python-Build"
+                            def WIN_RUST_PROJECT = "${FOLDER_ID}/Windows-Rust-Build"
     
                             def WIN_BUILD = build(job: WIN_PROJECT, parameters: [string(name: 'VERSION', value: VERSION)])
                             copyArtifacts(
@@ -141,6 +142,14 @@ timeout(time: 12, unit: 'HOURS') {
                             copyArtifacts(
                                 projectName: WIN_PY_PROJECT,
                                 selector: specific(WIN_PY_BUILD.getId()),
+                                target: 'agents',
+                                fingerprintArtifacts: true
+                            )
+    
+                            def WIN_RUST_BUILD = build(job: WIN_RUST_PROJECT, parameters: [string(name: 'VERSION', value: VERSION)])
+                            copyArtifacts(
+                                projectName: WIN_RUST_PROJECT,
+                                selector: specific(WIN_RUST_BUILD.getId()),
                                 target: 'agents',
                                 fingerprintArtifacts: true
                             )
@@ -393,7 +402,7 @@ def create_source_package(WORKSPACE, CMK_VERS) {
                 sh "touch ${WORKSPACE}/agents/cmk-update-agent"
                 sh "touch ${WORKSPACE}/agents/cmk-update-agent-32"
             }
-            sh "touch ${WORKSPACE}/agents/{check_mk_agent-64.exe,check_mk_agent.exe,check_mk_agent.msi,check_mk.user.yml,python-3.cab,python-3.4.cab}"
+            sh "touch ${WORKSPACE}/agents/{check_mk_agent-64.exe,check_mk_agent.exe,check_mk_agent.msi,check_mk.user.yml,python-3.cab,python-3.4.cab,cmk-agent-ctl.exe}"
         }
 
         dir("git") {
@@ -401,7 +410,7 @@ def create_source_package(WORKSPACE, CMK_VERS) {
                 sh "cp ${WORKSPACE}/agents/cmk-update-agent enterprise/agents/plugins/"
                 sh "cp ${WORKSPACE}/agents/cmk-update-agent-32 enterprise/agents/plugins/"
             }
-            sh "cp ${WORKSPACE}/agents/{check_mk_agent-64.exe,check_mk_agent.exe,check_mk_agent.msi,check_mk.user.yml,python-3.cab,python-3.4.cab} agents/windows"
+            sh "cp ${WORKSPACE}/agents/{check_mk_agent-64.exe,check_mk_agent.exe,check_mk_agent.msi,check_mk.user.yml,python-3.cab,python-3.4.cab,cmk-agent-ctl.exe} agents/windows"
             sh 'make dist || cat /root/.npm/_logs/*-debug.log'
         }
     }

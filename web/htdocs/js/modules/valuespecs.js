@@ -777,6 +777,8 @@ function select2_ajax_vs_autocomplete(elem, ident, params) {
 function select2_vs_autocomplete(container, css_class, params) {
     let field_element =
         ["hostname", "service", "metric", "graph"].find(el => css_class.includes(el)) || "item";
+    let placeholder_title = `(Select ${field_element})`;
+    if (css_class === "wato_folder_choices") placeholder_title = "(Select target folder)";
     $(container)
         .find("select." + css_class)
         .each((i, elem) => {
@@ -784,7 +786,7 @@ function select2_vs_autocomplete(container, css_class, params) {
                 .select2({
                     width: "style",
                     allowClear: true,
-                    placeholder: `(Select ${field_element})`,
+                    placeholder: placeholder_title,
                     ajax: select2_ajax_vs_autocomplete(elem, css_class, params),
                 })
                 .on("select2:open", () => {
@@ -869,6 +871,7 @@ export function initialize_autocompleters(container) {
     single_autocompleter("check_cmd", container);
     single_autocompleter("syslog_facilities", container);
     single_autocompleter("service_levels", container);
+    single_autocompleter("wato_folder_choices", container);
     service_desc_autocompleter("monitored_service_description", container);
     autocompleter_with_host_service_hints("monitored_metrics", container);
     autocompleter_with_host_service_hints("available_graphs", container);

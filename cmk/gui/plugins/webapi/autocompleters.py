@@ -162,6 +162,11 @@ def monitored_service_description_autocompleter(value: str, params: Dict) -> Cho
     return _sorted_unique_lq(query, 200, value, params)
 
 
+@autocompleter_registry.register_expression("wato_folder_choices")
+def wato_folder_choices_autocompleter(value: str, params: Dict) -> Choices:
+    return watolib.Folder.folder_choices_fulltitle()
+
+
 @autocompleter_registry.register_expression("monitored_metrics")
 def metrics_autocompleter(value: str, params: Dict) -> Choices:
     context = params.get("context", {})

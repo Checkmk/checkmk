@@ -2803,6 +2803,10 @@ class MonitoredServiceDescription(AjaxDropdownChoice):
     ident = "monitored_service_description"
 
 
+class WatoFolderChoices(AjaxDropdownChoice):
+    ident = "wato_folder_choices"
+
+
 class DropdownChoiceWithHostAndServiceHints(AjaxDropdownChoice):
     def __init__(
         self,

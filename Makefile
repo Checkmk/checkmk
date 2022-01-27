@@ -474,7 +474,6 @@ setup:
 	    python3-pip \
 	    python3.9-dev \
 	    python-setuptools \
-	    chrpath \
 	    enchant-2 \
 	    ksh \
 	    p7zip-full \

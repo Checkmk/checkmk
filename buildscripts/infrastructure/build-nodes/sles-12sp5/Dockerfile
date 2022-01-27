@@ -84,7 +84,6 @@ RUN zypper ref -s \
     unzip \
     wget \
     which \
-    chrpath \
     joe \
     gtk-doc \
     iputils \

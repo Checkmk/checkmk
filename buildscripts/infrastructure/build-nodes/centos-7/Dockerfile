@@ -34,7 +34,6 @@ RUN yum -y makecache \
     autoconf \
     automake \
     bind-utils \
-    chrpath \
     curl \
     curl-devel \
     expat-devel \

@@ -109,7 +109,6 @@ RUN yum -y makecache \
 # --nogpgcheck: Workaround for failing installation, not locally reproducable
 RUN yum -y makecache \
     && yum -y --enablerepo=powertools install \
-    chrpath \
     joe \
     iputils \
     vim \

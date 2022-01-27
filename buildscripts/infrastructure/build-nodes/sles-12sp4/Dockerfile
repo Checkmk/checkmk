@@ -81,7 +81,6 @@ RUN zypper ref -s \
     unzip \
     wget \
     which \
-    chrpath \
     joe \
     iputils \
     vim \

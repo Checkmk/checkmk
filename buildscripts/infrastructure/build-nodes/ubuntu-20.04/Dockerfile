@@ -37,7 +37,6 @@ RUN apt-get update \
     apache2-dev \
     autoconf \
     build-essential \
-    chrpath \
     curl \
     default-jdk \
     devscripts \

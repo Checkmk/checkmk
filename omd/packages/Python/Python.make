@@ -52,7 +52,7 @@ $(PYTHON_CACHE_PKG_PROCESS): $(PYTHON_CACHE_PKG_PATH)
 	         $(PACKAGE_PYTHON_LD_LIBRARY_PATH)/libpython$(PYTHON_MAJOR_DOT_MINOR).so.1.0 \
 	         $(PACKAGE_PYTHON_LD_LIBRARY_PATH)/libpython3.so \
 	         $(PACKAGE_PYTHON_PYTHONPATH)/lib-dynload/*.so ; do \
-	    chrpath -r "$(OMD_ROOT)/lib" $$i; \
+           patchelf --set-rpath "$(OMD_ROOT)/lib" $$i; \
 	done
 # Native modules built based on this version need to use the correct rpath
 	sed -i 's|--rpath,/omd/versions/[^/]*/lib|--rpath,$(OMD_ROOT)/lib|g' \

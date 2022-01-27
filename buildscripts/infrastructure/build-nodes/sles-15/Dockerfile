@@ -60,7 +60,6 @@ RUN zypper addrepo -G ${ARTIFACT_STORAGE}/repository/sles15 sles15 \
     tk-devel \
     unzip \
     wget \
-    chrpath \
     joe \
     iputils \
     vim \

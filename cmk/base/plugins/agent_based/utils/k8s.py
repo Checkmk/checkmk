@@ -221,6 +221,8 @@ class NodeInfo(BaseModel):
     architecture: str
     kernel_version: str
     os_image: str
+    operating_system: str
+    container_runtime_version: str
     labels: Labels
 
 

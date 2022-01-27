@@ -254,6 +254,8 @@ def node_info(node: client.V1Node) -> api.NodeInfo:
         architecture=node.status.node_info.architecture,
         kernel_version=node.status.node_info.kernel_version,
         os_image=node.status.node_info.os_image,
+        operating_system=node.status.node_info.operating_system,
+        container_runtime_version=node.status.node_info.container_runtime_version,
     )
 
 

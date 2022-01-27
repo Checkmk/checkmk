@@ -50,7 +50,7 @@ def _mocked_container_info_from_state(
                 },
             ),
             PodLifeCycle(phase="running"),
-            "Running",
+            [Result(state=State.OK, summary="Running: since 0 seconds")],
             id="A single running container",
         ),
         pytest.param(
@@ -64,7 +64,7 @@ def _mocked_container_info_from_state(
                 }
             ),
             PodLifeCycle(phase="pending"),
-            "Pending",
+            [Result(state=State.OK, summary="Pending: since 0 seconds")],
             id="Container image is still being downloaded.",
         ),
         pytest.param(
@@ -83,7 +83,7 @@ def _mocked_container_info_from_state(
                 }
             ),
             PodLifeCycle(phase="succeeded"),
-            "Succeeded",
+            [Result(state=State.OK, summary="Succeeded: since 0 seconds")],
             id="Container exits with 0, and is not restarted",
         ),
     ],
@@ -96,11 +96,14 @@ def test_check_kube_pod_status_no_issues_in_containers(
     """
     Tested Pods have a single container which is configured correctly and in a good state.
     """
-    for result in check_kube_pod_status(
-        DEFAULT_PARAMS, section_kube_pod_containers, None, section_kube_pod_lifecycle
-    ):
-        assert isinstance(result, Result)
-        assert result.summary.startswith(expected_result)
+    assert (
+        list(
+            check_kube_pod_status(
+                DEFAULT_PARAMS, section_kube_pod_containers, None, section_kube_pod_lifecycle
+            )
+        )
+        == expected_result
+    )
 
 
 @pytest.mark.parametrize(
@@ -119,7 +122,7 @@ def test_check_kube_pod_status_no_issues_in_containers(
                 }
             ),
             PodLifeCycle(phase="running"),
-            "CrashLoopBackOff",
+            [Result(state=State.OK, summary="CrashLoopBackOff: since 0 seconds")],
             id="Container exits with 0 or 1 (exit code does not change container state), and is restarted",
         ),
         pytest.param(
@@ -138,7 +141,7 @@ def test_check_kube_pod_status_no_issues_in_containers(
                 },
             ),
             PodLifeCycle(phase="failed"),
-            "Error",
+            [Result(state=State.OK, summary="Error: since 0 seconds")],
             id="Container exits with 1, and is not restarted",
         ),
     ],
@@ -151,11 +154,14 @@ def test_check_kube_pod_status_failing_container(
     """
     Tested Pods with a single failing or misconfigured container.
     """
-    for result in check_kube_pod_status(
-        DEFAULT_PARAMS, section_kube_pod_containers, None, section_kube_pod_lifecycle
-    ):
-        assert isinstance(result, Result)
-        assert result.summary.startswith(expected_result)
+    assert (
+        list(
+            check_kube_pod_status(
+                DEFAULT_PARAMS, section_kube_pod_containers, None, section_kube_pod_lifecycle
+            )
+        )
+        == expected_result
+    )
 
 
 @pytest.mark.parametrize(
@@ -187,7 +193,7 @@ def test_check_kube_pod_status_failing_container(
                 }
             ),
             PodLifeCycle(phase="failed"),
-            "Error",
+            [Result(state=State.OK, summary="Error: since 0 seconds")],
             id="Both containers are terminating, one with exit code 1, the other with exit code 0.",
         ),
         pytest.param(
@@ -210,13 +216,13 @@ def test_check_kube_pod_status_failing_container(
                 }
             ),
             PodLifeCycle(phase="pending"),
-            "CrashLoopBackOff",
+            [Result(state=State.OK, summary="CrashLoopBackOff: since 0 seconds")],
             id="One container has incorrect image name, one container fails with exit code 0",
         ),
         pytest.param(
             None,
             PodLifeCycle(phase="pending"),
-            "Pending",
+            [Result(state=State.OK, summary="Pending: since 0 seconds")],
             id="One container is too large to be scheduled, one container fails",
         ),
     ],
@@ -230,11 +236,14 @@ def test_check_kube_pod_status_multiple_issues(
     Tested Pods have two containers with different issues, which are then summarized into a
     single status.
     """
-    for result in check_kube_pod_status(
-        DEFAULT_PARAMS, section_kube_pod_containers, None, section_kube_pod_lifecycle
-    ):
-        assert isinstance(result, Result)
-        assert result.summary.startswith(expected_result)
+    assert (
+        list(
+            check_kube_pod_status(
+                DEFAULT_PARAMS, section_kube_pod_containers, None, section_kube_pod_lifecycle
+            )
+        )
+        == expected_result
+    )
 
 
 @pytest.fixture(name="get_value_store")

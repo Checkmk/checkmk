@@ -1223,6 +1223,11 @@ def test_registered_sorters():
             'load_inv': True,
             'title': u'Inventory: Networking \u27a4 Ports'
         },
+        'inv_networking_hostname': {
+            'columns': ['host_inventory', 'host_structured_status'],
+            'load_inv': True,
+            'title': u'Inventory: Networking \u27a4 Hostname'
+        },
         'inv_networking_total_interfaces': {
             'columns': ['host_inventory', 'host_structured_status'],
             'load_inv': True,
@@ -2694,6 +2699,7 @@ def test_registered_display_hints():
     '.networking.routes:*.target',
     '.networking.routes:*.type',
     '.networking.total_ethernet_ports',
+    '.networking.hostname',
     '.networking.total_interfaces',
     '.networking.tunnels:',
     '.networking.tunnels:*.index',

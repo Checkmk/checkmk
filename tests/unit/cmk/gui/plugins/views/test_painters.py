@@ -261,6 +261,7 @@ def test_registered_painters():
         "inv_networking_addresses",
         "inv_networking_available_ethernet_ports",
         "inv_networking_interfaces",
+        "inv_networking_hostname",
         "inv_networking_routes",
         "inv_networking_total_ethernet_ports",
         "inv_networking_total_interfaces",

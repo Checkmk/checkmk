@@ -925,6 +925,7 @@ inventory_displayhints.update({
     ".networking.": {"title": _l("Networking"), "icon": "networking"},
     ".networking.total_interfaces": {"title": _l("Interfaces"), "paint": "count"},
     ".networking.total_ethernet_ports": {"title": _l("Ports"), "paint": "count"},
+    ".networking.hostname": {"title": _l("Hostname")},
     ".networking.available_ethernet_ports": {"title": _l("Ports available"), "paint": "count"},
     ".networking.addresses:": {
         "title": _l("IP Addresses"),

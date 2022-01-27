@@ -1304,6 +1304,15 @@ expected_filters: Dict[str, Dict[str, Any]] = {
         'sort_index': 800,
         'title': u'Networking \u27a4 Ports'
     },
+    'inv_networking_hostname': {
+        'comment': None,
+        'filter_class': 'FilterInvText',
+        'htmlvars': ['inv_networking_hostname_from', 'inv_networking_hostname_to'],
+        'info': 'host',
+        'link_columns': [],
+        'sort_index': 800,
+        'title': u'Networking \u27a4 Hostname'
+    },
     'inv_networking_total_interfaces': {
         'comment': None,
         'filter_class': 'FilterInvFloat',

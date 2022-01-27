@@ -546,7 +546,7 @@ class RuleProperties(base.BaseSchema):
         example="Created yesterday due to foo hosts behaving weird.",
     )
     documentation_url = fields.URL(
-        attr="docu_url",
+        attribute="docu_url",
         description="An URL (e.g. an internal Wiki entry) which explains this rule.",
         example="http://example.com/wiki/ConfiguringFooBarHosts",
     )
@@ -562,6 +562,7 @@ class RuleConditions(base.BaseSchema):
 
     host_name = fields.Nested(
         HostOrServiceConditionSchema,
+        many=False,
         description=(
             "Here you can enter a list of explicit host names that the rule should or should "
             "not apply to. "
@@ -572,7 +573,6 @@ class RuleConditions(base.BaseSchema):
             "of the host names in question."
         ),
         example={"match_on": ["host1", "host2"], "operator": "one_of"},
-        missing={},
     )
     host_tag = fields.Nested(
         TagConditionSchema,
@@ -582,14 +582,12 @@ class RuleConditions(base.BaseSchema):
             "listed here, even if they appear in the list of explicit host names."
         ),
         example=[{"key": "criticality", "operator": "is", "value": "prod"}],
-        missing={},
     )
     host_label = fields.Nested(
         LabelConditionSchema,
         many=True,
         description="Further restrict this rule by applying host label conditions.",
         example=[{"key": "os", "operator": "is", "value": "windows"}],
-        missing=[],
     )
     service_label = fields.Nested(
         LabelConditionSchema,
@@ -598,10 +596,10 @@ class RuleConditions(base.BaseSchema):
             "Restrict the application of the rule, by checking against service label conditions."
         ),
         example=[{"key": "os", "operator": "is", "value": "windows"}],
-        missing=[],
     )
     service_description = fields.Nested(
         HostOrServiceConditionSchema(use_regex="always"),
+        many=False,
         description=(
             "Specify a list of service patterns this rule shall apply to.\n"
             " * The patterns must match the beginning of the service in question.\n"
@@ -617,7 +615,6 @@ class RuleConditions(base.BaseSchema):
             "descriptions."
         ),
         example={"match_on": ["foo1", "bar2"], "operator": "none_of"},
-        missing={},
     )
 
 
@@ -646,19 +643,13 @@ class RuleExtensions(base.BaseSchema):
         ...     rv
         {'folder': Folder('', 'Main'), \
 'conditions': {\
-'host_name': {},\
- 'host_tag': {'criticality': 'prod'},\
- 'host_label': [],\
- 'service_label': [],\
+'host_tag': {'criticality': 'prod'},\
  'service_description': {'$nor': [{'$regex': 'foo'}]}\
 }}
 
         >>> ext.dump(rv)
         {'folder': '/', 'conditions': {\
-'host_name': {}, \
 'host_tag': [{'key': 'criticality', 'operator': 'is', 'value': 'prod'}], \
-'host_label': [], \
-'service_label': [], \
 'service_description': {'match_on': ['foo'], 'operator': 'none_of'}}}
 
     """
@@ -746,9 +737,7 @@ class InputRuleObject(base.BaseSchema):
 'conditions': {\
 'host_name': ['example.com', 'heute'], \
 'host_tag': {'criticality': {'$ne': 'prod'}, 'foo': {'$ne': 'testing'}}, \
-'host_label': {'os': 'windows', 'foo': {'$ne': 'bar'}}, \
-'service_label': [], \
-'service_description': {}}}
+'host_label': {'os': 'windows', 'foo': {'$ne': 'bar'}}}}
 
         >>> rv['folder'].path()
         ''
@@ -758,9 +747,7 @@ class InputRuleObject(base.BaseSchema):
 'conditions': {\
 'host_name': {'match_on': ['example.com', 'heute'], 'operator': 'one_of'}, \
 'host_tag': [{'key': 'criticality', 'operator': 'is_not', 'value': 'prod'}, {'key': 'foo', 'operator': 'is_not', 'value': 'testing'}], \
-'host_label': [{'key': 'os', 'operator': 'is', 'value': 'windows'}, {'key': 'foo', 'operator': 'is_not', 'value': 'bar'}], \
-'service_label': [], \
-'service_description': {}}}
+'host_label': [{'key': 'os', 'operator': 'is', 'value': 'windows'}, {'key': 'foo', 'operator': 'is_not', 'value': 'bar'}]}}
 
     """
 
@@ -775,7 +762,7 @@ class InputRuleObject(base.BaseSchema):
     properties = fields.Nested(
         RuleProperties,
         description="Configuration values for rules.",
-        example={},
+        example={"disabled": False},
     )
     value_raw = fields.PythonString(
         description=(

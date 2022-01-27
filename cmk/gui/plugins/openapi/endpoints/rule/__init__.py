@@ -8,8 +8,7 @@ from __future__ import annotations
 
 import typing
 
-from cmk.gui.utils import gen_id
-from cmk.gui.utils.escaping import strip_tags
+from cmk.gui.plugins.openapi.restful_objects.datastructures import denilled
 
 if typing.TYPE_CHECKING:
     from typing import Tuple
@@ -29,6 +28,8 @@ from cmk.gui.plugins.openapi.restful_objects import constructors, Endpoint
 from cmk.gui.plugins.openapi.restful_objects.constructors import serve_json
 from cmk.gui.plugins.openapi.restful_objects.type_defs import DomainObject
 from cmk.gui.plugins.openapi.utils import problem
+from cmk.gui.utils import gen_id
+from cmk.gui.utils.escaping import strip_tags
 from cmk.gui.watolib import add_change, make_diff_text
 from cmk.gui.watolib.rulesets import RuleConditions
 
@@ -44,7 +45,7 @@ from cmk.gui.watolib.rulesets import RuleConditions
     response_schema=RuleObject,
 )
 def create_rule(param):
-    """Create rule."""
+    """Create rule"""
     body = param["body"]
     folder = body["folder"]
     value = body["value_raw"]
@@ -79,11 +80,11 @@ def create_rule(param):
         ruleset,
         RuleConditions(
             host_folder=folder,
-            host_tags=body["conditions"]["host_tag"],
-            host_labels=body["conditions"]["host_label"],
-            host_name=body["conditions"]["host_name"],
-            service_description=body["conditions"]["service_description"],
-            service_labels=body["conditions"]["service_label"],
+            host_tags=body["conditions"].get("host_tag"),
+            host_labels=body["conditions"].get("host_label"),
+            host_name=body["conditions"].get("host_name"),
+            service_description=body["conditions"].get("service_description"),
+            service_labels=body["conditions"].get("service_label"),
         ),
         RuleOptions.from_config(body["properties"]),
         value,
@@ -111,7 +112,7 @@ def create_rule(param):
     query_params=[RuleSearchOptions],
 )
 def list_rules(param):
-    """List some rules."""
+    """List rules"""
     all_sets = watolib.AllRulesets()
     all_sets.load()
     ruleset = all_sets.get(param["ruleset_name"].replace("-", ":"))
@@ -133,7 +134,7 @@ def list_rules(param):
 
 @Endpoint(
     constructors.object_href(domain_type="rule", obj_id="{rule_id}"),
-    ".../collection",
+    "cmk/show",
     method="get",
     response_schema=RuleObject,
     path_params=[RULE_ID],
@@ -157,7 +158,7 @@ def _get_rule_by_id(rule_uuid: str) -> Tuple[watolib.Ruleset, watolib.CREFolder,
 
 @Endpoint(
     constructors.object_href(domain_type="rule", obj_id="{rule_id}"),
-    "cmk/show",
+    ".../delete",
     method="delete",
     path_params=[RULE_ID],
     output_empty=True,
@@ -189,7 +190,7 @@ def delete_rule(param):
 
     return problem(
         status=404,
-        title="Rule could not be found.",
+        title="Rule not found.",
         detail=f"The rule with ID {rule_id!r} could not be found.",
     )
 
@@ -205,16 +206,18 @@ def _serialize_rule(
         title=rule.description(),
         extensions={
             "ruleset": rule.ruleset.name,
-            "folder": folder.path(),
+            "folder": "/" + folder.path(),
             "folder_index": index,
             "properties": rule.rule_options.to_config(),
             "value_raw": rule.value,
-            "conditions": {
-                "host_name": rule.conditions.host_name,
-                "host_tag": rule.conditions.host_tags,
-                "host_label": rule.conditions.host_labels,
-                "service_description": rule.conditions.service_description,
-                "service_label": rule.conditions.service_labels,
-            },
+            "conditions": denilled(
+                {
+                    "host_name": rule.conditions.host_name,
+                    "host_tag": rule.conditions.host_tags,
+                    "host_label": rule.conditions.host_labels,
+                    "service_description": rule.conditions.service_description,
+                    "service_label": rule.conditions.service_labels,
+                }
+            ),
         },
     )

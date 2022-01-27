@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import time
-from typing import Mapping, NamedTuple, Optional
+from typing import Mapping, NamedTuple, Optional, Sequence
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     check_levels,
@@ -17,6 +17,8 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
 )
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
 from cmk.base.plugins.agent_based.utils.k8s import (
+    ContainerInfo,
+    ContainerRunningState,
     ContainerTerminatedState,
     ContainerWaitingState,
     PodContainers,
@@ -79,29 +81,59 @@ def _get_levels_from_params(status_message: str, params: Params) -> Optional[Lev
     return Levels(*param[1]) if param != "no_levels" else None
 
 
-def _pod_container_message(pod_containers: Optional[PodContainers]) -> Optional[str]:
-    if pod_containers is not None:
-        container_states = [container.state for container in pod_containers.containers.values()]
-        for state in container_states:
-            if isinstance(state, ContainerWaitingState) and state.reason != "ContainerCreating":
-                return state.reason
-        for state in container_states:
-            if isinstance(state, ContainerTerminatedState):
-                if state.exit_code != 0 and state.reason is not None:
-                    return state.reason
+def _erroneous_or_incomplete_containers(
+    containers: Sequence[ContainerInfo],
+) -> Sequence[ContainerInfo]:
+    return [
+        container
+        for container in containers
+        if not isinstance(container.state, ContainerRunningState)
+        and not (
+            isinstance(container.state, ContainerTerminatedState) and container.state.exit_code == 0
+        )
+    ]
+
+
+def _pod_container_message(pod_containers: Sequence[ContainerInfo]) -> Optional[str]:
+    containers = _erroneous_or_incomplete_containers(pod_containers)
+    for container in containers:
+        if (
+            isinstance(container.state, ContainerWaitingState)
+            and container.state.reason != "ContainerCreating"
+        ):
+            return container.state.reason
+    for container in containers:
+        if (
+            isinstance(container.state, ContainerTerminatedState)
+            and container.state.reason is not None
+        ):
+            return container.state.reason
     return None
 
 
 def _pod_status_message(
-    section_kube_pod_containers: Optional[PodContainers],
-    section_kube_pod_init_containers: Optional[PodContainers],
+    pod_containers: Sequence[ContainerInfo],
+    pod_init_containers: Sequence[ContainerInfo],
     section_kube_pod_lifecycle: PodLifeCycle,
 ) -> str:
-    if init_container_message := _pod_container_message(section_kube_pod_init_containers):
+    if init_container_message := _pod_container_message(pod_init_containers):
         return f"Init:{init_container_message}"
-    if container_message := _pod_container_message(section_kube_pod_containers):
+    if container_message := _pod_container_message(pod_containers):
         return container_message
     return section_kube_pod_lifecycle.phase.title()
+
+
+def _pod_containers(pod_containers: Optional[PodContainers]) -> Sequence[ContainerInfo]:
+    """Return a sequence of containers with their associated status information.
+
+    Kubernetes populates the sequence of containers and container status
+    information by calling docker inspect.
+
+    However, This is not always possible, e.g. when the pod has not been/could
+    not be scheduled to a node. In this event, the section
+    section_kube_pod_(init)_containers is None."""
+
+    return list(pod_containers.containers.values()) if pod_containers is not None else []
 
 
 def discovery_kube_pod_status(
@@ -120,10 +152,11 @@ def check_kube_pod_status(
 ) -> CheckResult:
     assert section_kube_pod_lifecycle is not None, "Missing Api data"
     status_message = _pod_status_message(
-        section_kube_pod_containers,
-        section_kube_pod_init_containers,
+        _pod_containers(section_kube_pod_containers),
+        _pod_containers(section_kube_pod_init_containers),
         section_kube_pod_lifecycle,
     )
+
     now = time.time()
     value_store = get_value_store()
     if status_message not in value_store:

@@ -1441,7 +1441,7 @@ class html(ABCHTMLGenerator):
         else:
             self.response.set_http_cookie("language", lang)
 
-    def help(self, text: Union[None, HTML, str], escape_text: bool = False) -> None:
+    def help(self, text: Union[None, HTML, str], escape_text: bool = True) -> None:
         """Embed help box, whose visibility is controlled by a global button in the page.
 
         You may add macros like this to the help texts to create links to the user
@@ -1449,8 +1449,10 @@ class html(ABCHTMLGenerator):
         """
         self.write_html(self.render_help(text, escape_text=escape_text))
 
-    def render_help(self, text: Union[None, HTML, str], escape_text: bool = False) -> HTML:
-        if isinstance(text, HTML):
+    def render_help(self, text: Union[None, HTML, str], escape_text: bool = True) -> HTML:
+        if isinstance(text, str) and escape_text:
+            text = escaping.escape_text(text)
+        elif isinstance(text, HTML):
             text = "%s" % text
 
         if not text:
@@ -1459,9 +1461,6 @@ class html(ABCHTMLGenerator):
         stripped = text.strip()
         if not stripped:
             return HTML("")
-
-        if escape_text:
-            stripped = escaping.escape_text(stripped)
 
         help_text = self.resolve_help_text_macros(stripped)
 

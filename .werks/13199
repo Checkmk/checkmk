@@ -1,0 +1,34 @@
+Title: Persistant XSS in Custom User Attributes
+Class: security
+Compatible: incomp
+Component: wato
+Date: 1643279806
+Edition: cre
+Knowledge: doc
+Level: 2
+Version: 2.0.0p20
+
+This Werk fixes a Persistant Cross-Site-Scripting (XSS) vulnerability. (CWE-79)
+
+While creating or editing a <i>user attribute</i> the <i>Help Text</i> is
+subject to HTML injection. Which can be triggerd editing a user.
+
+To mitigate this vulnerability ensure that only trustwothy users have the
+<i>User management</i> and <i>Manage custom attributes</i> rights.
+
+Checkmk 1.6 is not subject to this vulnerability, but all 2.0 versions
+including 2.0.0p19.
+
+If you have custom HTML code in the <i>Help Text</i> this will no longer be
+rendered as HTML, but will be escaped.
+
+To detect if this vulnerability is/was used you can check
+<tt>etc/check_mk/multisite.d/wato/custom_attrs.mk</tt> for HTML code. Please be
+aware that an attacker could delete the code after a attack.
+
+CVE is requested and will be added later.
+
+CVSS: CVSS:3.1/AV:N/AC:L/PR:H/UI:R/S:U/C:L/I:H/A:N (5.2 medium)
+
+We thank Manuel Sommer for finding this vulnerability and bringing this to our
+attention.

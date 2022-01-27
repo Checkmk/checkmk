@@ -34,6 +34,14 @@ def test_render_help_html(register_builtin_html):
 def test_render_help_text(register_builtin_html):
     assert compare_html(html.render_help(u"äbc"),
                         HTML(u"<div style=\"display:none\" class=\"help\">äbc</div>"))
+    assert compare_html(
+        html.render_help("<tt>permissive?</tt>"),
+        HTML(u"<div style=\"display:none\" class=\"help\"><tt>permissive?</tt></div>"))
+    assert compare_html(
+        html.render_help("<script>alert(1)</script>"),
+        HTML(
+            u"<div style=\"display:none\" class=\"help\">&gt;script&lt;alert(1)&gt;/script&lt;</div>"
+        ))
 
 
 def test_render_help_visible(module_wide_request_context, register_builtin_html, monkeypatch):

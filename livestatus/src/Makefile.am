@@ -67,6 +67,7 @@ test_neb_SOURCES = \
     test/test_RegExp.cc \
     test/test_StringColumn.cc \
     test/test_StringUtil.cc \
+    test/test_Table.cc \
     test/test_TimeColumn.cc \
     test/test_utilities.cc
 $(test_neb_SOURCES): $(ASIO_INCLUDE) $(GOOGLETEST_INCLUDE) $(RRDTOOL_VERSION)

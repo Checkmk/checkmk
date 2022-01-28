@@ -48,13 +48,14 @@ def tmpfs_mounted(sitename: str) -> bool:
     # then in /proc/mounts the physical path will appear and be
     # different from tmp_path. We just check the suffix therefore.
     path_suffix = "sites/%s/tmp" % sitename
-    for line in open("/proc/mounts"):  # pylint:disable=consider-using-with
-        try:
-            _device, mp, fstype, _options, _dump, _fsck = line.split()
-            if mp.endswith(path_suffix) and fstype == "tmpfs":
-                return True
-        except Exception:
-            continue
+    with open("/proc/mounts") as opened_file:
+        for line in opened_file:
+            try:
+                _device, mp, fstype, _options, _dump, _fsck = line.split()
+                if mp.endswith(path_suffix) and fstype == "tmpfs":
+                    return True
+            except Exception:
+                continue
     return False
 
 
@@ -83,23 +84,24 @@ def prepare_tmpfs(version_info: VersionInfo, site: SiteContext) -> None:
         os.mkdir(site.tmp_dir)
 
     mount_options = shlex.split(version_info.MOUNT_OPTIONS)
-    p = subprocess.Popen(  # pylint:disable=consider-using-with
-        ["mount"] + mount_options + [site.tmp_dir],
-        shell=False,
-        stdin=open(os.devnull),  # pylint:disable=consider-using-with
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
-        encoding="utf-8",
-    )
-    exit_code = p.wait()
-    if exit_code == 0:
+    with open(os.devnull) as devnull:
+        completed_process = subprocess.run(
+            ["mount"] + mount_options + [site.tmp_dir],
+            shell=False,
+            stdin=devnull,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            encoding="utf-8",
+            check=False,
+        )
+    if completed_process.returncode == 0:
         ok()
         return  # Fine: Mounted
 
-    if p.stdout is None:
+    if completed_process.stdout is None:
         raise Exception("stdout needs to be set")
 
-    sys.stdout.write(p.stdout.read())
+    sys.stdout.write(completed_process.stdout)
     if is_dockerized():
         sys.stdout.write(
             tty.warn + ": "
@@ -219,7 +221,7 @@ def add_to_fstab(site: SiteContext, tmpfs_size: Optional[str] = None) -> None:
         sizespec = ",size=%s" % tmpfs_size
 
     # Ensure the fstab has a newline char at it's end before appending
-    previous_fstab = open(fstab_path()).read()  # pylint:disable=consider-using-with
+    previous_fstab = Path(fstab_path()).read_text()
     complete_last_line = previous_fstab and not previous_fstab.endswith("\n")
 
     with open(fstab_path(), "a+") as fstab:
@@ -238,11 +240,12 @@ def remove_from_fstab(site: SiteContext) -> None:
 
     mountpoint = site.tmp_dir
     sys.stdout.write("Removing %s from /etc/fstab..." % mountpoint)
-    newtab = open("/etc/fstab.new", "w")  # pylint:disable=consider-using-with
-    for line in open("/etc/fstab"):  # pylint:disable=consider-using-with
-        if "uid=%s," % site.name in line and mountpoint in line:
-            continue
-        newtab.write(line)
+    with open("/etc/fstab.new", "w") as newtab:
+        with open("/etc/fstab") as opened_file:
+            for line in opened_file:
+                if "uid=%s," % site.name in line and mountpoint in line:
+                    continue
+                newtab.write(line)
     os.rename("/etc/fstab.new", "/etc/fstab")
     ok()
 

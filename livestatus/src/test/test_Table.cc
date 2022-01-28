@@ -15,9 +15,11 @@
 #include "Table.h"
 #include "TableColumns.h"
 #include "TableCommands.h"
+#include "TableComments.h"
 #include "TableContactGroups.h"
 #include "TableContacts.h"
 #include "TableCrashReports.h"
+#include "TableDowntimes.h"
 #include "TableEventConsoleEvents.h"
 #include "TableEventConsoleHistory.h"
 #include "TableEventConsoleRules.h"
@@ -27,9 +29,16 @@
 #include "TableHostsByGroup.h"
 #include "TableServiceGroups.h"
 #include "TableServices.h"
+#include "TableServicesByGroup.h"
+#include "TableServicesByHostGroup.h"
+#include "TableStateHistory.h"
 #include "TableStatus.h"
 #include "TableTimeperiods.h"
 #include "gtest/gtest.h"
+
+#ifdef CMC
+#include "TableCachedStatehist.h"
+#endif
 
 using ColumnDefinition = std::pair<std::string, ColumnType>;
 
@@ -89,181 +98,287 @@ private:
     }
 };
 
+static ColumnDefinitions columns_columns();
+static ColumnDefinitions commands_columns();
+static ColumnDefinitions comments_columns();
+static ColumnDefinitions contact_groups_columns();
+static ColumnDefinitions contacts_columns();
+static ColumnDefinitions crash_reports_columns();
+static ColumnDefinitions downtimes_columns();
+static ColumnDefinitions event_console_events_columns();
+static ColumnDefinitions event_console_history_columns();
+static ColumnDefinitions event_console_rules_columns();
+static ColumnDefinitions event_console_status_columns();
+static ColumnDefinitions service_groups_columns();
+static ColumnDefinitions host_groups_columns();
+static ColumnDefinitions hosts_and_services_columns(bool add_cmc_stuff);
 static ColumnDefinitions hosts_columns();
+static ColumnDefinitions services_columns(bool add_hosts);
+static ColumnDefinitions state_history_columns();
+static ColumnDefinitions status_columns();
+static ColumnDefinitions timeperiods_columns();
+
+#ifdef CMC
+TEST(TableCachedStatehist, ColumnNamesAndTypes) {
+    EXPECT_EQ(state_history_columns() +
+                  (hosts_columns() + hosts_and_services_columns(true))
+                      .add_prefix("current_host_") +
+                  services_columns(false).add_prefix("current_service_"),
+              ColumnDefinitions(TableCachedStatehist{nullptr}));
+}
+#endif
+
+static ColumnDefinitions columns_columns() {
+    return {
+        {"description", ColumnType::string},
+        {"name", ColumnType::string},
+        {"table", ColumnType::string},
+        {"type", ColumnType::string},
+    };
+}
 
 TEST(TableColumns, ColumnNamesAndTypes) {
-    EXPECT_EQ(ColumnDefinitions({
-                  {"description", ColumnType::string},
-                  {"name", ColumnType::string},
-                  {"table", ColumnType::string},
-                  {"type", ColumnType::string},
-              }),
-              ColumnDefinitions(TableColumns{nullptr}));
+    EXPECT_EQ(columns_columns(), ColumnDefinitions(TableColumns{nullptr}));
+}
+
+static ColumnDefinitions commands_columns() {
+    return {
+        {"line", ColumnType::string},
+        {"name", ColumnType::string},
+    };
 }
 
 TEST(TableCommands, ColumnNamesAndTypes) {
-    EXPECT_EQ(ColumnDefinitions({
-                  {"line", ColumnType::string},
-                  {"name", ColumnType::string},
-              }),
-              ColumnDefinitions(TableCommands{nullptr}));
+    EXPECT_EQ(commands_columns(), ColumnDefinitions(TableCommands{nullptr}));
+}
+
+static ColumnDefinitions comments_columns() {
+    return {
+        {"author", ColumnType::string},     //
+        {"comment", ColumnType::string},    //
+        {"entry_time", ColumnType::time},   //
+        {"entry_type", ColumnType::int_},   //
+        {"expire_time", ColumnType::time},  //
+        {"expires", ColumnType::int_},      //
+        {"id", ColumnType::int_},           //
+        {"is_service", ColumnType::int_},   //
+        {"persistent", ColumnType::int_},   //
+        {"source", ColumnType::int_},       //
+        {"type", ColumnType::int_},
+    };
 }
 
 TEST(TableComments, ColumnNamesAndTypes) {
-    // TODO(sp)
+    EXPECT_EQ(comments_columns() +
+                  (hosts_columns() + hosts_and_services_columns(true))
+                      .add_prefix("host_") +
+                  services_columns(false).add_prefix("service_"),
+              ColumnDefinitions(TableComments{nullptr}));
+}
+
+static ColumnDefinitions contact_groups_columns() {
+    return {
+        {"alias", ColumnType::string},
+        {"members", ColumnType::list},
+        {"name", ColumnType::string},
+    };
 }
 
 TEST(TableContactGroups, ColumnNamesAndTypes) {
-    EXPECT_EQ(ColumnDefinitions({
-                  {"alias", ColumnType::string},
-                  {"members", ColumnType::list},
-                  {"name", ColumnType::string},
-              }),
+    EXPECT_EQ(contact_groups_columns(),
               ColumnDefinitions(TableContactGroups{nullptr}));
 }
 
+static ColumnDefinitions contacts_columns() {
+    return {
+        {"address1", ColumnType::string},
+        {"address2", ColumnType::string},
+        {"address3", ColumnType::string},
+        {"address4", ColumnType::string},
+        {"address5", ColumnType::string},
+        {"address6", ColumnType::string},
+        {"alias", ColumnType::string},
+        {"can_submit_commands", ColumnType::int_},
+        {"custom_variable_names", ColumnType::list},
+        {"custom_variable_values", ColumnType::list},
+        {"custom_variables", ColumnType::dict},
+        {"email", ColumnType::string},
+        {"host_notification_period", ColumnType::string},
+        {"host_notifications_enabled", ColumnType::int_},
+        {"in_host_notification_period", ColumnType::int_},
+        {"in_service_notification_period", ColumnType::int_},
+        {"label_names", ColumnType::list},
+        {"label_source_names", ColumnType::list},
+        {"label_source_values", ColumnType::list},
+        {"label_sources", ColumnType::dict},
+        {"label_values", ColumnType::list},
+        {"labels", ColumnType::dict},
+        {"modified_attributes", ColumnType::int_},
+        {"modified_attributes_list", ColumnType::list},
+        {"name", ColumnType::string},
+        {"pager", ColumnType::string},
+        {"service_notification_period", ColumnType::string},
+        {"service_notifications_enabled", ColumnType::int_},
+        {"tag_names", ColumnType::list},
+        {"tag_values", ColumnType::list},
+        {"tags", ColumnType::dict},
+    };
+}
+
 TEST(TableContacts, ColumnNamesAndTypes) {
-    EXPECT_EQ(ColumnDefinitions({
-                  {"address1", ColumnType::string},
-                  {"address2", ColumnType::string},
-                  {"address3", ColumnType::string},
-                  {"address4", ColumnType::string},
-                  {"address5", ColumnType::string},
-                  {"address6", ColumnType::string},
-                  {"alias", ColumnType::string},
-                  {"can_submit_commands", ColumnType::int_},
-                  {"custom_variable_names", ColumnType::list},
-                  {"custom_variable_values", ColumnType::list},
-                  {"custom_variables", ColumnType::dict},
-                  {"email", ColumnType::string},
-                  {"host_notification_period", ColumnType::string},
-                  {"host_notifications_enabled", ColumnType::int_},
-                  {"in_host_notification_period", ColumnType::int_},
-                  {"in_service_notification_period", ColumnType::int_},
-                  {"label_names", ColumnType::list},
-                  {"label_source_names", ColumnType::list},
-                  {"label_source_values", ColumnType::list},
-                  {"label_sources", ColumnType::dict},
-                  {"label_values", ColumnType::list},
-                  {"labels", ColumnType::dict},
-                  {"modified_attributes", ColumnType::int_},
-                  {"modified_attributes_list", ColumnType::list},
-                  {"name", ColumnType::string},
-                  {"pager", ColumnType::string},
-                  {"service_notification_period", ColumnType::string},
-                  {"service_notifications_enabled", ColumnType::int_},
-                  {"tag_names", ColumnType::list},
-                  {"tag_values", ColumnType::list},
-                  {"tags", ColumnType::dict},
-              }),
-              ColumnDefinitions(TableContacts{nullptr}));
+    EXPECT_EQ(contacts_columns(), ColumnDefinitions(TableContacts{nullptr}));
+}
+
+static ColumnDefinitions crash_reports_columns() {
+    return {
+        {"component", ColumnType::string},
+        {"id", ColumnType::string},
+    };
 }
 
 TEST(TableCrashReports, ColumnNamesAndTypes) {
-    EXPECT_EQ(ColumnDefinitions({
-                  {"component", ColumnType::string},
-                  {"id", ColumnType::string},
-
-              }),
+    EXPECT_EQ(crash_reports_columns(),
               ColumnDefinitions(TableCrashReports{nullptr}));
 }
 
+static ColumnDefinitions downtimes_columns() {
+    return {
+        {"author", ColumnType::string},    //
+        {"comment", ColumnType::string},   //
+        {"duration", ColumnType::int_},    //
+        {"end_time", ColumnType::time},    //
+        {"entry_time", ColumnType::time},  //
+        {"fixed", ColumnType::int_},       //
+        {"id", ColumnType::int_},
+#ifdef CMC
+        {"is_pending", ColumnType::int_},
+#endif
+        {"is_service", ColumnType::int_},
+#ifdef CMC
+        {"origin", ColumnType::int_},  //
+        {"recurring", ColumnType::int_},
+#endif
+        {"start_time", ColumnType::time},    //
+        {"triggered_by", ColumnType::int_},  //
+        {"type", ColumnType::int_},
+    };
+}
+
 TEST(TableDowntimes, ColumnNamesAndTypes) {
-    // TODO(sp)
+    EXPECT_EQ(downtimes_columns() +
+                  (hosts_columns() + hosts_and_services_columns(true))
+                      .add_prefix("host_") +
+                  services_columns(false).add_prefix("service_"),
+              ColumnDefinitions(TableDowntimes{nullptr}));
 }
 
 static ColumnDefinitions event_console_events_columns() {
-    return ColumnDefinitions({
-               {"event_application", ColumnType::string},
-               {"event_comment", ColumnType::string},
-               {"event_contact", ColumnType::string},
-               {"event_contact_groups", ColumnType::list},
-               {"event_contact_groups_precedence", ColumnType::string},
-               {"event_count", ColumnType::int_},
-               {"event_facility", ColumnType::int_},
-               {"event_first", ColumnType::time},
-               {"event_host", ColumnType::string},
-               {"event_host_in_downtime", ColumnType::int_},
-               {"event_id", ColumnType::int_},
-               {"event_ipaddress", ColumnType::string},
-               {"event_last", ColumnType::time},
-               {"event_match_groups", ColumnType::list},
-               {"event_owner", ColumnType::string},
-               {"event_phase", ColumnType::string},
-               {"event_pid", ColumnType::int_},
-               {"event_priority", ColumnType::int_},
-               {"event_rule_id", ColumnType::string},
-               {"event_sl", ColumnType::int_},
-               {"event_state", ColumnType::int_},
-               {"event_text", ColumnType::string},
-           }) +
-           hosts_columns().add_prefix("host_");
+    return {
+        {"event_application", ColumnType::string},
+        {"event_comment", ColumnType::string},
+        {"event_contact", ColumnType::string},
+        {"event_contact_groups", ColumnType::list},
+        {"event_contact_groups_precedence", ColumnType::string},
+        {"event_count", ColumnType::int_},
+        {"event_facility", ColumnType::int_},
+        {"event_first", ColumnType::time},
+        {"event_host", ColumnType::string},
+        {"event_host_in_downtime", ColumnType::int_},
+        {"event_id", ColumnType::int_},
+        {"event_ipaddress", ColumnType::string},
+        {"event_last", ColumnType::time},
+        {"event_match_groups", ColumnType::list},
+        {"event_owner", ColumnType::string},
+        {"event_phase", ColumnType::string},
+        {"event_pid", ColumnType::int_},
+        {"event_priority", ColumnType::int_},
+        {"event_rule_id", ColumnType::string},
+        {"event_sl", ColumnType::int_},
+        {"event_state", ColumnType::int_},
+        {"event_text", ColumnType::string},
+    };
 }
 
 TEST(TableEventConsoleEvents, ColumnNamesAndTypes) {
-    EXPECT_EQ(event_console_events_columns(),
+    EXPECT_EQ(event_console_events_columns() +
+                  (hosts_columns() + hosts_and_services_columns(true))
+                      .add_prefix("host_"),
               ColumnDefinitions(TableEventConsoleEvents{nullptr}));
 }
 
+static ColumnDefinitions event_console_history_columns() {
+    return {
+        {"history_addinfo", ColumnType::string},
+        {"history_line", ColumnType::int_},
+        {"history_time", ColumnType::time},
+        {"history_what", ColumnType::string},
+        {"history_who", ColumnType::string},
+    };
+}
+
 TEST(TableEventConsoleHistory, ColumnNamesAndTypes) {
-    EXPECT_EQ(ColumnDefinitions({
-                  {"history_addinfo", ColumnType::string},
-                  {"history_line", ColumnType::int_},
-                  {"history_time", ColumnType::time},
-                  {"history_what", ColumnType::string},
-                  {"history_who", ColumnType::string},
-              }) + event_console_events_columns(),
+    EXPECT_EQ(event_console_history_columns() + event_console_events_columns() +
+                  (hosts_columns() + hosts_and_services_columns(true))
+                      .add_prefix("host_"),
               ColumnDefinitions(TableEventConsoleHistory{nullptr}));
 }
 
+static ColumnDefinitions event_console_rules_columns() {
+    return {
+        {"rule_hits", ColumnType::int_},
+        {"rule_id", ColumnType::string},
+    };
+}
+
 TEST(TableEventConsoleRules, ColumnNamesAndTypes) {
-    EXPECT_EQ(ColumnDefinitions({
-                  {"rule_hits", ColumnType::int_},
-                  {"rule_id", ColumnType::string},
-              }),
+    EXPECT_EQ(event_console_rules_columns(),
               ColumnDefinitions(TableEventConsoleRules{nullptr}));
 }
 
+// Why on earth do all column names have a "status_" prefix here?
+static ColumnDefinitions event_console_status_columns() {
+    return {
+        {"status_average_connect_rate", ColumnType::double_},
+        {"status_average_drop_rate", ColumnType::double_},
+        {"status_average_event_rate", ColumnType::double_},
+        {"status_average_message_rate", ColumnType::double_},
+        {"status_average_overflow_rate", ColumnType::double_},
+        {"status_average_processing_time", ColumnType::double_},
+        {"status_average_request_time", ColumnType::double_},
+        {"status_average_rule_hit_rate", ColumnType::double_},
+        {"status_average_rule_trie_rate", ColumnType::double_},
+        {"status_average_sync_time", ColumnType::double_},
+        {"status_config_load_time", ColumnType::int_},
+        {"status_connect_rate", ColumnType::double_},
+        {"status_connects", ColumnType::int_},
+        {"status_drop_rate", ColumnType::double_},
+        {"status_drops", ColumnType::int_},
+        {"status_event_limit_active_hosts", ColumnType::list},
+        {"status_event_limit_active_overall", ColumnType::int_},
+        {"status_event_limit_active_rules", ColumnType::list},
+        {"status_event_limit_host", ColumnType::int_},
+        {"status_event_limit_overall", ColumnType::int_},
+        {"status_event_limit_rule", ColumnType::int_},
+        {"status_event_rate", ColumnType::double_},
+        {"status_events", ColumnType::int_},
+        {"status_message_rate", ColumnType::double_},
+        {"status_messages", ColumnType::int_},
+        {"status_num_open_events", ColumnType::int_},
+        {"status_overflow_rate", ColumnType::double_},
+        {"status_overflows", ColumnType::int_},
+        {"status_replication_last_sync", ColumnType::time},
+        {"status_replication_slavemode", ColumnType::string},
+        {"status_replication_success", ColumnType::int_},
+        {"status_rule_hit_rate", ColumnType::double_},
+        {"status_rule_hits", ColumnType::int_},
+        {"status_rule_trie_rate", ColumnType::double_},
+        {"status_rule_tries", ColumnType::int_},
+        {"status_virtual_memory_size", ColumnType::int_},
+    };
+}
+
 TEST(TableEventConsoleStatus, ColumnNamesAndTypes) {
-    // Why on earth do all column names have a "status_" prefix here?
-    EXPECT_EQ(ColumnDefinitions({
-                  {"status_average_connect_rate", ColumnType::double_},
-                  {"status_average_drop_rate", ColumnType::double_},
-                  {"status_average_event_rate", ColumnType::double_},
-                  {"status_average_message_rate", ColumnType::double_},
-                  {"status_average_overflow_rate", ColumnType::double_},
-                  {"status_average_processing_time", ColumnType::double_},
-                  {"status_average_request_time", ColumnType::double_},
-                  {"status_average_rule_hit_rate", ColumnType::double_},
-                  {"status_average_rule_trie_rate", ColumnType::double_},
-                  {"status_average_sync_time", ColumnType::double_},
-                  {"status_config_load_time", ColumnType::int_},
-                  {"status_connect_rate", ColumnType::double_},
-                  {"status_connects", ColumnType::int_},
-                  {"status_drop_rate", ColumnType::double_},
-                  {"status_drops", ColumnType::int_},
-                  {"status_event_limit_active_hosts", ColumnType::list},
-                  {"status_event_limit_active_overall", ColumnType::int_},
-                  {"status_event_limit_active_rules", ColumnType::list},
-                  {"status_event_limit_host", ColumnType::int_},
-                  {"status_event_limit_overall", ColumnType::int_},
-                  {"status_event_limit_rule", ColumnType::int_},
-                  {"status_event_rate", ColumnType::double_},
-                  {"status_events", ColumnType::int_},
-                  {"status_message_rate", ColumnType::double_},
-                  {"status_messages", ColumnType::int_},
-                  {"status_num_open_events", ColumnType::int_},
-                  {"status_overflow_rate", ColumnType::double_},
-                  {"status_overflows", ColumnType::int_},
-                  {"status_replication_last_sync", ColumnType::time},
-                  {"status_replication_slavemode", ColumnType::string},
-                  {"status_replication_success", ColumnType::int_},
-                  {"status_rule_hit_rate", ColumnType::double_},
-                  {"status_rule_hits", ColumnType::int_},
-                  {"status_rule_trie_rate", ColumnType::double_},
-                  {"status_rule_tries", ColumnType::int_},
-                  {"status_virtual_memory_size", ColumnType::int_},
-              }),
+    EXPECT_EQ(event_console_status_columns(),
               ColumnDefinitions(TableEventConsoleStatus{nullptr}));
 }
 
@@ -293,23 +408,22 @@ static ColumnDefinitions service_groups_columns() {
 }
 
 static ColumnDefinitions host_groups_columns() {
-    return ColumnDefinitions({
-               {"num_hosts", ColumnType::int_},
-               {"num_hosts_down", ColumnType::int_},
-               {"num_hosts_handled_problems", ColumnType::int_},
-               {"num_hosts_pending", ColumnType::int_},
-               {"num_hosts_unhandled_problems", ColumnType::int_},
-               {"num_hosts_unreach", ColumnType::int_},
-               {"num_hosts_up", ColumnType::int_},
-               {"worst_host_state", ColumnType::int_},
-               // TODO(sp) HUH??? Why is this not in service_groups_columns?
-               {"worst_service_hard_state", ColumnType::int_},
-           }) +
-           service_groups_columns();
+    return {
+        {"num_hosts", ColumnType::int_},
+        {"num_hosts_down", ColumnType::int_},
+        {"num_hosts_handled_problems", ColumnType::int_},
+        {"num_hosts_pending", ColumnType::int_},
+        {"num_hosts_unhandled_problems", ColumnType::int_},
+        {"num_hosts_unreach", ColumnType::int_},
+        {"num_hosts_up", ColumnType::int_},
+        {"worst_host_state", ColumnType::int_},
+        // TODO(sp) HUH??? Why is this not in service_groups_columns?
+        {"worst_service_hard_state", ColumnType::int_},
+    };
 }
 
 TEST(TableHostGroups, ColumnNamesAndTypes) {
-    EXPECT_EQ(host_groups_columns(),
+    EXPECT_EQ(host_groups_columns() + service_groups_columns(),
               ColumnDefinitions(TableHostGroups{nullptr}));
 }
 
@@ -424,65 +538,67 @@ static ColumnDefinitions hosts_and_services_columns(bool add_cmc_stuff) {
 }
 
 static ColumnDefinitions hosts_columns() {
-    return ColumnDefinitions({
-               {"address", ColumnType::string},
-               {"alias", ColumnType::string},
-               {"childs", ColumnType::list},
-               {"filename", ColumnType::string},
-               {"groups", ColumnType::list},
-               {"last_time_down", ColumnType::time},
-               {"last_time_unreachable", ColumnType::time},
-               {"last_time_up", ColumnType::time},
-               {"mk_inventory", ColumnType::blob},
-               {"mk_inventory_gz", ColumnType::blob},
-               {"mk_inventory_last", ColumnType::time},
-               {"mk_logwatch_files", ColumnType::list},
-               {"name", ColumnType::string},
-               {"num_services", ColumnType::int_},
-               {"num_services_crit", ColumnType::int_},
-               {"num_services_handled_problems", ColumnType::int_},
-               {"num_services_hard_crit", ColumnType::int_},
-               {"num_services_hard_ok", ColumnType::int_},
-               {"num_services_hard_unknown", ColumnType::int_},
-               {"num_services_hard_warn", ColumnType::int_},
-               {"num_services_ok", ColumnType::int_},
-               {"num_services_pending", ColumnType::int_},
-               {"num_services_unhandled_problems", ColumnType::int_},
-               {"num_services_unknown", ColumnType::int_},
-               {"num_services_warn", ColumnType::int_},
-               {"obsess_over_host", ColumnType::int_},
-               {"parents", ColumnType::list},
-               {"services", ColumnType::list},
-               {"services_with_fullstate", ColumnType::list},
-               {"services_with_info", ColumnType::list},
-               {"services_with_state", ColumnType::list},
+    return {
+        {"address", ColumnType::string},
+        {"alias", ColumnType::string},
+        {"childs", ColumnType::list},
+        {"filename", ColumnType::string},
+        {"groups", ColumnType::list},
+        {"last_time_down", ColumnType::time},
+        {"last_time_unreachable", ColumnType::time},
+        {"last_time_up", ColumnType::time},
+        {"mk_inventory", ColumnType::blob},
+        {"mk_inventory_gz", ColumnType::blob},
+        {"mk_inventory_last", ColumnType::time},
+        {"mk_logwatch_files", ColumnType::list},
+        {"name", ColumnType::string},
+        {"num_services", ColumnType::int_},
+        {"num_services_crit", ColumnType::int_},
+        {"num_services_handled_problems", ColumnType::int_},
+        {"num_services_hard_crit", ColumnType::int_},
+        {"num_services_hard_ok", ColumnType::int_},
+        {"num_services_hard_unknown", ColumnType::int_},
+        {"num_services_hard_warn", ColumnType::int_},
+        {"num_services_ok", ColumnType::int_},
+        {"num_services_pending", ColumnType::int_},
+        {"num_services_unhandled_problems", ColumnType::int_},
+        {"num_services_unknown", ColumnType::int_},
+        {"num_services_warn", ColumnType::int_},
+        {"obsess_over_host", ColumnType::int_},
+        {"parents", ColumnType::list},
+        {"services", ColumnType::list},
+        {"services_with_fullstate", ColumnType::list},
+        {"services_with_info", ColumnType::list},
+        {"services_with_state", ColumnType::list},
 #ifdef CMC
-               {"smartping_timeout", ColumnType::int_},
+        {"smartping_timeout", ColumnType::int_},
 #endif
-               {"statusmap_image", ColumnType::string},
-               {"structured_status", ColumnType::blob},
-               {"total_services", ColumnType::int_},
-               {"worst_service_hard_state", ColumnType::int_},
-               {"worst_service_state", ColumnType::int_},
+        {"statusmap_image", ColumnType::string},
+        {"structured_status", ColumnType::blob},
+        {"total_services", ColumnType::int_},
+        {"worst_service_hard_state", ColumnType::int_},
+        {"worst_service_state", ColumnType::int_},
 #ifdef CMC
-               {"x_3d", ColumnType::string},
-               {"y_3d", ColumnType::string},
-               {"z_3d", ColumnType::string},
+        {"x_3d", ColumnType::string},
+        {"y_3d", ColumnType::string},
+        {"z_3d", ColumnType::string},
 #else
-               {"x_3d", ColumnType::double_},
-               {"y_3d", ColumnType::double_},
-               {"z_3d", ColumnType::double_},
+        {"x_3d", ColumnType::double_},
+        {"y_3d", ColumnType::double_},
+        {"z_3d", ColumnType::double_},
 #endif
-           }) +
-           hosts_and_services_columns(true);
+    };
 }
 
 TEST(TableHosts, ColumnNamesAndTypes) {
-    EXPECT_EQ(hosts_columns(), ColumnDefinitions(TableHosts{nullptr}));
+    EXPECT_EQ((hosts_columns() + hosts_and_services_columns(true)),
+              ColumnDefinitions(TableHosts{nullptr}));
 }
 
 TEST(TableHostsByGroup, ColumnNamesAndTypes) {
-    EXPECT_EQ(hosts_columns() + host_groups_columns().add_prefix("hostgroup_"),
+    EXPECT_EQ((hosts_columns() + hosts_and_services_columns(true)) +
+                  (host_groups_columns() + service_groups_columns())
+                      .add_prefix("hostgroup_"),
               ColumnDefinitions(TableHostsByGroup{nullptr}));
 }
 
@@ -495,127 +611,183 @@ TEST(TableServiceGroups, ColumnNamesAndTypes) {
               ColumnDefinitions(TableServiceGroups{nullptr}));
 }
 
-TEST(TableServices, ColumnNamesAndTypes) {
-    EXPECT_EQ(ColumnDefinitions({
-                  {"cache_interval", ColumnType::int_},
-                  {"cached_at", ColumnType::time},
-                  {"description", ColumnType::string},
-                  {"groups", ColumnType::list},
+static ColumnDefinitions services_columns(bool add_hosts) {
+    auto result = ColumnDefinitions({
+                      {"cache_interval", ColumnType::int_},
+                      {"cached_at", ColumnType::time},
+                      {"description", ColumnType::string},
+                      {"groups", ColumnType::list},
 #ifdef CMC
-                  {"in_passive_check_period", ColumnType::int_},
+                      {"in_passive_check_period", ColumnType::int_},
 #endif
-                  {"last_time_critical", ColumnType::time},
-                  {"last_time_ok", ColumnType::time},
-                  {"last_time_unknown", ColumnType::time},
-                  {"last_time_warning", ColumnType::time},
-                  {"obsess_over_service", ColumnType::int_},
+                      {"last_time_critical", ColumnType::time},
+                      {"last_time_ok", ColumnType::time},
+                      {"last_time_unknown", ColumnType::time},
+                      {"last_time_warning", ColumnType::time},
+                      {"obsess_over_service", ColumnType::int_},
 #ifdef CMC
-                  {"passive_check_period", ColumnType::string},
+                      {"passive_check_period", ColumnType::string},
 #endif
-                  {"robotmk_last_error_log", ColumnType::blob},
-                  {"robotmk_last_error_log_gz", ColumnType::blob},
-                  {"robotmk_last_log", ColumnType::blob},
-                  {"robotmk_last_log_gz", ColumnType::blob},
-              }) +
+                      {"robotmk_last_error_log", ColumnType::blob},
+                      {"robotmk_last_error_log_gz", ColumnType::blob},
+                      {"robotmk_last_log", ColumnType::blob},
+                      {"robotmk_last_log_gz", ColumnType::blob},
+                  }) +
                   hosts_and_services_columns(
 #ifdef CMC
                       true
 #else
                       false
 #endif
-                      ) +
-                  hosts_columns().add_prefix("host_"),
+                  );
+    if (add_hosts) {
+        result += (hosts_columns() + hosts_and_services_columns(true))
+                      .add_prefix("host_");
+    }
+    return result;
+}
+
+TEST(TableServices, ColumnNamesAndTypes) {
+    EXPECT_EQ(services_columns(true),
               ColumnDefinitions(TableServices{nullptr}));
 }
 
 TEST(TableServicesByGroup, ColumnNamesAndTypes) {
-    // TODO(sp)
+    EXPECT_EQ(services_columns(true) +
+                  service_groups_columns().add_prefix("servicegroup_"),
+              ColumnDefinitions(TableServicesByGroup{nullptr}));
 }
 
 TEST(TableServicesByHostGroup, ColumnNamesAndTypes) {
-    // TODO(sp)
+    EXPECT_EQ(services_columns(true) +
+                  (host_groups_columns() + service_groups_columns())
+                      .add_prefix("hostgroup_"),
+              ColumnDefinitions(TableServicesByHostGroup{nullptr}));
+}
+
+static ColumnDefinitions state_history_columns() {
+    return {
+        {"debug_info", ColumnType::string},
+        {"duration", ColumnType::int_},
+        {"duration_critical", ColumnType::int_},
+        {"duration_ok", ColumnType::int_},
+        {"duration_part", ColumnType::double_},
+        {"duration_part_critical", ColumnType::double_},
+        {"duration_part_ok", ColumnType::double_},
+        {"duration_part_unknown", ColumnType::double_},
+        {"duration_part_unmonitored", ColumnType::double_},
+        {"duration_part_warning", ColumnType::double_},
+        {"duration_unknown", ColumnType::int_},
+        {"duration_unmonitored", ColumnType::int_},
+        {"duration_warning", ColumnType::int_},
+        {"from", ColumnType::time},
+        {"host_down", ColumnType::int_},
+        {"host_name", ColumnType::string},
+        {"in_downtime", ColumnType::int_},
+        {"in_host_downtime", ColumnType::int_},
+        {"in_notification_period", ColumnType::int_},
+        {"in_service_period", ColumnType::int_},
+        {"is_flapping", ColumnType::int_},
+        {"lineno", ColumnType::int_},
+        {"log_output", ColumnType::string},
+        {"long_log_output", ColumnType::string},
+        {"notification_period", ColumnType::string},
+        {"service_description", ColumnType::string},
+        {"service_period", ColumnType::string},
+        {"state", ColumnType::int_},
+        {"time", ColumnType::time},
+        {"until", ColumnType::time},
+    };
 }
 
 TEST(TableStateHistory, ColumnNamesAndTypes) {
-    // TODO(sp)
+    EXPECT_EQ(state_history_columns() +
+                  (hosts_columns() + hosts_and_services_columns(true))
+                      .add_prefix("current_host_") +
+                  services_columns(false).add_prefix("current_service_"),
+              ColumnDefinitions(TableStateHistory{nullptr, nullptr}));
+}
+
+static ColumnDefinitions status_columns() {
+    return {
+        {"accept_passive_host_checks", ColumnType::int_},
+        {"accept_passive_service_checks", ColumnType::int_},
+        {"average_latency_cmk", ColumnType::double_},
+        {"average_latency_fetcher", ColumnType::double_},
+        {"average_latency_generic", ColumnType::double_},
+        {"average_latency_real_time", ColumnType::double_},
+        {"average_runnable_jobs_checker", ColumnType::double_},
+        {"average_runnable_jobs_fetcher", ColumnType::double_},
+        {"cached_log_messages", ColumnType::int_},
+        {"check_external_commands", ColumnType::int_},
+        {"check_host_freshness", ColumnType::int_},
+        {"check_service_freshness", ColumnType::int_},
+        {"connections", ColumnType::double_},
+        {"connections_rate", ColumnType::double_},
+        {"core_pid", ColumnType::int_},
+        {"enable_event_handlers", ColumnType::int_},
+        {"enable_flap_detection", ColumnType::int_},
+        {"enable_notifications", ColumnType::int_},
+        {"execute_host_checks", ColumnType::int_},
+        {"execute_service_checks", ColumnType::int_},
+        {"external_command_buffer_max", ColumnType::int_},
+        {"external_command_buffer_slots", ColumnType::int_},
+        {"external_command_buffer_usage", ColumnType::int_},
+        {"external_commands", ColumnType::double_},
+        {"external_commands_rate", ColumnType::double_},
+        {"forks", ColumnType::double_},
+        {"forks_rate", ColumnType::double_},
+        {"has_event_handlers", ColumnType::int_},
+        {"helper_usage_checker", ColumnType::double_},
+        {"helper_usage_cmk", ColumnType::double_},
+        {"helper_usage_fetcher", ColumnType::double_},
+        {"helper_usage_generic", ColumnType::double_},
+        {"helper_usage_real_time", ColumnType::double_},
+        {"host_checks", ColumnType::double_},
+        {"host_checks_rate", ColumnType::double_},
+        {"interval_length", ColumnType::int_},
+        {"is_trial_expired", ColumnType::int_},
+#ifdef CMC
+        {"last_command_check", ColumnType::int_},
+#else
+        {"last_command_check", ColumnType::time},
+#endif
+        {"last_log_rotation", ColumnType::time},
+        {"license_usage_history", ColumnType::blob},
+        {"livechecks", ColumnType::double_},
+        {"livechecks_rate", ColumnType::double_},
+        {"livestatus_active_connections", ColumnType::int_},
+        {"livestatus_overflows", ColumnType::double_},
+        {"livestatus_overflows_rate", ColumnType::double_},
+        {"livestatus_queued_connections", ColumnType::int_},
+        {"livestatus_threads", ColumnType::int_},
+        {"livestatus_usage", ColumnType::double_},
+        {"livestatus_version", ColumnType::string},
+        {"log_messages", ColumnType::double_},
+        {"log_messages_rate", ColumnType::double_},
+        {"mk_inventory_last", ColumnType::time},
+        {"nagios_pid", ColumnType::int_},
+        {"neb_callbacks", ColumnType::double_},
+        {"neb_callbacks_rate", ColumnType::double_},
+        {"num_hosts", ColumnType::int_},
+        {"num_queued_alerts", ColumnType::int_},
+        {"num_queued_notifications", ColumnType::int_},
+        {"num_services", ColumnType::int_},
+        {"obsess_over_hosts", ColumnType::int_},
+        {"obsess_over_services", ColumnType::int_},
+        {"process_performance_data", ColumnType::int_},
+        {"program_start", ColumnType::time},
+        {"program_version", ColumnType::string},
+        {"requests", ColumnType::double_},
+        {"requests_rate", ColumnType::double_},
+        {"service_checks", ColumnType::double_},
+        {"service_checks_rate", ColumnType::double_},
+        {"state_file_created", ColumnType::time},
+    };
 }
 
 TEST(TableStatus, ColumnNamesAndTypes) {
-    EXPECT_EQ(ColumnDefinitions({
-                  {"accept_passive_host_checks", ColumnType::int_},
-                  {"accept_passive_service_checks", ColumnType::int_},
-                  {"average_latency_cmk", ColumnType::double_},
-                  {"average_latency_fetcher", ColumnType::double_},
-                  {"average_latency_generic", ColumnType::double_},
-                  {"average_latency_real_time", ColumnType::double_},
-                  {"average_runnable_jobs_checker", ColumnType::double_},
-                  {"average_runnable_jobs_fetcher", ColumnType::double_},
-                  {"cached_log_messages", ColumnType::int_},
-                  {"check_external_commands", ColumnType::int_},
-                  {"check_host_freshness", ColumnType::int_},
-                  {"check_service_freshness", ColumnType::int_},
-                  {"connections", ColumnType::double_},
-                  {"connections_rate", ColumnType::double_},
-                  {"core_pid", ColumnType::int_},
-                  {"enable_event_handlers", ColumnType::int_},
-                  {"enable_flap_detection", ColumnType::int_},
-                  {"enable_notifications", ColumnType::int_},
-                  {"execute_host_checks", ColumnType::int_},
-                  {"execute_service_checks", ColumnType::int_},
-                  {"external_command_buffer_max", ColumnType::int_},
-                  {"external_command_buffer_slots", ColumnType::int_},
-                  {"external_command_buffer_usage", ColumnType::int_},
-                  {"external_commands", ColumnType::double_},
-                  {"external_commands_rate", ColumnType::double_},
-                  {"forks", ColumnType::double_},
-                  {"forks_rate", ColumnType::double_},
-                  {"has_event_handlers", ColumnType::int_},
-                  {"helper_usage_checker", ColumnType::double_},
-                  {"helper_usage_cmk", ColumnType::double_},
-                  {"helper_usage_fetcher", ColumnType::double_},
-                  {"helper_usage_generic", ColumnType::double_},
-                  {"helper_usage_real_time", ColumnType::double_},
-                  {"host_checks", ColumnType::double_},
-                  {"host_checks_rate", ColumnType::double_},
-                  {"interval_length", ColumnType::int_},
-                  {"is_trial_expired", ColumnType::int_},
-#ifdef CMC
-                  {"last_command_check", ColumnType::int_},
-#else
-                  {"last_command_check", ColumnType::time},
-#endif
-                  {"last_log_rotation", ColumnType::time},
-                  {"license_usage_history", ColumnType::blob},
-                  {"livechecks", ColumnType::double_},
-                  {"livechecks_rate", ColumnType::double_},
-                  {"livestatus_active_connections", ColumnType::int_},
-                  {"livestatus_overflows", ColumnType::double_},
-                  {"livestatus_overflows_rate", ColumnType::double_},
-                  {"livestatus_queued_connections", ColumnType::int_},
-                  {"livestatus_threads", ColumnType::int_},
-                  {"livestatus_usage", ColumnType::double_},
-                  {"livestatus_version", ColumnType::string},
-                  {"log_messages", ColumnType::double_},
-                  {"log_messages_rate", ColumnType::double_},
-                  {"mk_inventory_last", ColumnType::time},
-                  {"nagios_pid", ColumnType::int_},
-                  {"neb_callbacks", ColumnType::double_},
-                  {"neb_callbacks_rate", ColumnType::double_},
-                  {"num_hosts", ColumnType::int_},
-                  {"num_queued_alerts", ColumnType::int_},
-                  {"num_queued_notifications", ColumnType::int_},
-                  {"num_services", ColumnType::int_},
-                  {"obsess_over_hosts", ColumnType::int_},
-                  {"obsess_over_services", ColumnType::int_},
-                  {"process_performance_data", ColumnType::int_},
-                  {"program_start", ColumnType::time},
-                  {"program_version", ColumnType::string},
-                  {"requests", ColumnType::double_},
-                  {"requests_rate", ColumnType::double_},
-                  {"service_checks", ColumnType::double_},
-                  {"service_checks_rate", ColumnType::double_},
-                  {"state_file_created", ColumnType::time},
-              }),
+    EXPECT_EQ(status_columns(),
 #ifdef CMC
               ColumnDefinitions(TableStatus{nullptr, nullptr})
 #else
@@ -624,17 +796,21 @@ TEST(TableStatus, ColumnNamesAndTypes) {
     );
 }
 
-TEST(TableTimeperiods, ColumnNamesAndTypes) {
-    EXPECT_EQ(ColumnDefinitions({
-                  {"alias", ColumnType::string},
-                  {"in", ColumnType::int_},
-                  {"name", ColumnType::string},
+static ColumnDefinitions timeperiods_columns() {
+    return {
+        {"alias", ColumnType::string},
+        {"in", ColumnType::int_},
+        {"name", ColumnType::string},
 #ifdef CMC
-                  {"next_transition", ColumnType::time},
-                  {"next_transition_id", ColumnType::int_},
-                  {"num_transitions", ColumnType::int_},
-                  {"transitions", ColumnType::list},
+        {"next_transition", ColumnType::time},
+        {"next_transition_id", ColumnType::int_},
+        {"num_transitions", ColumnType::int_},
+        {"transitions", ColumnType::list},
 #endif
-              }),
+    };
+}
+
+TEST(TableTimeperiods, ColumnNamesAndTypes) {
+    EXPECT_EQ(timeperiods_columns(),
               ColumnDefinitions(TableTimeperiods{nullptr}));
 }

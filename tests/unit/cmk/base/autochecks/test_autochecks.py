@@ -13,12 +13,14 @@ import pytest
 from tests.testlib.base import Scenario
 
 import cmk.utils.paths
-from cmk.utils.parameters import TimespecificParameters, TimespecificParameterSet
+from cmk.utils.parameters import TimespecificParameters
 from cmk.utils.type_defs import CheckPluginName, HostName
 
 import cmk.base.autochecks as autochecks
 import cmk.base.config as config
 from cmk.base.check_utils import ConfiguredService
+
+_COMPUTED_PARAMETERS_SENTINEL = TimespecificParameters(())
 
 
 @pytest.fixture(autouse=True)
@@ -46,25 +48,8 @@ def test_config(monkeypatch) -> config.ConfigCache:
                 ConfiguredService(
                     check_plugin_name=CheckPluginName("df"),
                     item="/",
-                    description="fs_/",
-                    parameters=TimespecificParameters(
-                        (
-                            TimespecificParameterSet(
-                                {
-                                    "inodes_levels": (10.0, 5.0),
-                                    "levels": (80.0, 90.0),
-                                    "levels_low": (50.0, 60.0),
-                                    "magic_normsize": 20,
-                                    "show_inodes": "onlow",
-                                    "show_levels": "onmagic",
-                                    "show_reserved": False,
-                                    "trend_perfdata": True,
-                                    "trend_range": 24,
-                                },
-                                (),
-                            ),
-                        )
-                    ),
+                    description="df-/",  # we pass a simple callback, not the real one!
+                    parameters=_COMPUTED_PARAMETERS_SENTINEL,
                     discovered_parameters={},
                     service_labels={},
                 ),
@@ -85,11 +70,13 @@ def test_manager_get_autochecks_of(
 
     result = manager.get_autochecks_of(
         HostName("host"),
-        config.compute_check_parameters,
-        config.service_description,
+        lambda *a: _COMPUTED_PARAMETERS_SENTINEL,
+        lambda _host, check, item: f"{check}-{item}",
         lambda hostname, _desc: hostname,
     )
     assert result == expected_result
+    # see that compute_check_parameters has been called:
+    assert result[0].parameters is _COMPUTED_PARAMETERS_SENTINEL
 
     # Check that the ConfigCache method also returns the correct data
     assert test_config.get_autochecks_of(HostName("host")) == result

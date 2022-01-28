@@ -4,6 +4,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from pathlib import Path
+
+import cmk.utils.paths
 from cmk.utils import password_store
 
 from cmk.special_agents import agent_mqtt
@@ -50,6 +53,7 @@ def test_parse_all_arguments() -> None:
 
 def test_parse_password_store(monkeypatch) -> None:
     password_store.save({"mqtt_password": "blablu"})
+    password_store.save_for_helpers(Path(cmk.utils.paths.core_helper_config_dir, "latest"))
     monkeypatch.setattr(
         "sys.argv",
         [

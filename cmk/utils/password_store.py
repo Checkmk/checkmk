@@ -37,15 +37,15 @@ file, there is the `extract` function which can be used like this:
 
 """
 
+import shutil
 import sys
 from contextlib import suppress
+from pathlib import Path
 from typing import Literal, Mapping, NoReturn, Optional, TypedDict, Union
 
 import cmk.utils.paths
 import cmk.utils.store as store
 from cmk.utils.exceptions import MKGeneralException
-
-password_store_path = cmk.utils.paths.var_dir + "/stored_passwords"
 
 PasswordLookupType = Literal["password", "store"]
 PasswordId = Union[str, tuple[PasswordLookupType, str]]
@@ -63,6 +63,10 @@ Password = TypedDict(
         "shared_with": list[str],
     },
 )
+
+
+def _password_store_path() -> Path:
+    return Path(cmk.utils.paths.var_dir, "stored_passwords")
 
 
 def bail_out(s: str) -> NoReturn:
@@ -85,7 +89,7 @@ def replace_passwords() -> None:
     # Extract first argument and parse it
 
     pwstore_args = sys.argv.pop(1).split("=", 1)[1]
-    passwords = load()
+    passwords = load_for_helpers()
 
     for password_spec in pwstore_args.split(","):
         parts = password_spec.split("@")
@@ -111,17 +115,22 @@ def replace_passwords() -> None:
 
 
 def save(stored_passwords: Mapping[str, str]) -> None:
+    """Save the passwords to the pre-activation path"""
     content = ""
     for ident, pw in stored_passwords.items():
         content += "%s:%s\n" % (ident, pw)
 
-    store.save_text_to_file(password_store_path, content)
+    store.save_text_to_file(_password_store_path(), content)
 
 
 def load() -> dict[str, str]:
+    return _load(_password_store_path())
+
+
+def _load(store_path: Path) -> dict[str, str]:
     passwords = {}
     with suppress(FileNotFoundError):
-        for line in open(password_store_path):  # pylint:disable=consider-using-with
+        for line in store_path.read_text().splitlines():
             ident, password = line.strip().split(":", 1)
             passwords[ident] = password
     return passwords
@@ -140,3 +149,22 @@ def extract(password_id: PasswordId) -> Optional[str]:
         return load().get(pw_id)
 
     raise MKGeneralException("Unknown password type.")
+
+
+def save_for_helpers(config_base_path: Path) -> None:
+    """Save the passwords for the helpers of the monitoring core"""
+    helper_path = _helper_password_store_path(config_base_path)
+    helper_path.parent.mkdir(parents=True, exist_ok=True)
+    with suppress(OSError):
+        shutil.copy(_password_store_path(), helper_path)
+
+
+def load_for_helpers() -> dict[str, str]:
+    # TODO: Use computation from cmk.core_helpers.config_path
+    return _load(
+        _helper_password_store_path(Path(cmk.utils.paths.core_helper_config_dir, "latest"))
+    )
+
+
+def _helper_password_store_path(config_path: Path) -> Path:
+    return Path(config_path) / "stored_passwords"

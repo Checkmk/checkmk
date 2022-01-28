@@ -662,7 +662,13 @@ class PostgresLinux(PostgresBase):
             cmd_to_pipe = subprocess.Popen(  # pylint:disable=consider-using-with
                 ["echo", sql_cmd], stdout=subprocess.PIPE
             )
-            base_cmd_list[-1] = base_cmd_list[-1] % (self.pg_passfile, self.psql, extra_args, field_sep, "")
+            base_cmd_list[-1] = base_cmd_list[-1] % (
+                self.pg_passfile,
+                self.psql,
+                extra_args,
+                field_sep,
+                "",
+            )
 
             receiving_pipe = subprocess.Popen(  # pylint:disable=consider-using-with
                 base_cmd_list, stdin=cmd_to_pipe.stdout, stdout=subprocess.PIPE, env=self.my_env

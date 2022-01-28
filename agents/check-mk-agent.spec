@@ -68,8 +68,6 @@ rm -rf $RPM_BUILD_ROOT
 
 %define reload_xinetd if which xinetd >/dev/null 2>&1 ; then if pgrep -x xinetd >/dev/null ; then echo "Reloading xinetd..." ; service xinetd reload ; else echo "Starting xinetd..." ; service xinetd start ; fi ; fi
 
-%define systemd_enable if which systemctl >/dev/null 2>&1 && ! which xinetd >/dev/null 2>&1 ; then echo "Enable Checkmk Agent in systemd..." ; systemctl daemon-reload >/dev/null; systemctl enable check-mk-agent.socket check_mk-async; systemctl restart check-mk-agent.socket check_mk-async; fi
-
 %pre
 
 # determine a suitable super server
@@ -108,8 +106,14 @@ if which xinetd >/dev/null 2>&1 && which chkconfig >/dev/null 2>&1; then
     chkconfig xinetd on
 fi
 
+if which systemctl >/dev/null 2>&1 && ! which xinetd >/dev/null 2>&1; then
+    echo "Enable Checkmk Agent in systemd..."
+    systemctl daemon-reload >/dev/null
+    systemctl enable check-mk-agent.socket check_mk-async
+    systemctl restart check-mk-agent.socket check_mk-async
+fi
+
 %reload_xinetd
-%systemd_enable
 
 %postun
 %reload_xinetd

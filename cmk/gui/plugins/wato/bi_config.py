@@ -285,6 +285,7 @@ class ModeBIEditPack(ABCBIMode):
             self._vs_pack().validate_value(vs_config, "bi_pack")
             if self._bi_pack:
                 self.bi_pack.title = vs_config["title"]
+                self.bi_pack.comment = vs_config["comment"]
                 self.bi_pack.contact_groups = vs_config["contact_groups"]
                 self.bi_pack.public = vs_config["public"]
                 self._add_change("bi-edit-pack", _("Modified BI pack %s") % self.bi_pack.id)
@@ -317,6 +318,7 @@ class ModeBIEditPack(ABCBIMode):
             vs_config = {
                 "id": self.bi_pack.id,
                 "title": self.bi_pack.title,
+                "comment": self.bi_pack.comment,
                 "contact_groups": self.bi_pack.contact_groups,
                 "public": self.bi_pack.public,
             }

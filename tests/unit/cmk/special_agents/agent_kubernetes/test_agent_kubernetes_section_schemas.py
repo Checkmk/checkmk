@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.plugins.agent_based.utils import kube as check
 from cmk.base.plugins.agent_based.utils.k8s import ClusterInfo as ClusterInfoC
 from cmk.base.plugins.agent_based.utils.k8s import ContainerCount as ContainerCountC
 from cmk.base.plugins.agent_based.utils.k8s import ContainerInfo as ContainerInfoC
@@ -30,6 +31,7 @@ from cmk.base.plugins.agent_based.utils.kube import NodeCount as NodeCountC
 from cmk.base.plugins.agent_based.utils.kube import PodLifeCycle as PodLifeCycleC
 from cmk.base.plugins.agent_based.utils.kube_resources import Resources as ResourcesC
 
+from cmk.special_agents.utils_kubernetes.schemata import section as agent
 from cmk.special_agents.utils_kubernetes.schemata.api import ClusterInfo as ClusterInfoA
 from cmk.special_agents.utils_kubernetes.schemata.api import ContainerInfo as ContainerInfoA
 from cmk.special_agents.utils_kubernetes.schemata.api import (
@@ -68,6 +70,7 @@ def test_schemata_did_not_diverge() -> None:
     assert ContainerRunningStateA.schema() == ContainerRunningStateC.schema()
     assert ContainerTerminatedStateA.schema() == ContainerTerminatedStateC.schema()
     assert ContainerWaitingStateA.schema() == ContainerWaitingStateC.schema()
+    assert agent.DeploymentConditions.schema() == check.DeploymentConditions.schema()
     assert KubeletInfoA.schema() == KubeletInfoC.schema()
     assert MemoryA.schema() == MemoryC.schema()
     assert NodeCountA.schema() == NodeCountC.schema()

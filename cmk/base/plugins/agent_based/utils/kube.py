@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import enum
-from typing import Literal, Tuple, Union
+from typing import Literal, Optional, Tuple, Union
 
 from pydantic import BaseModel
 
@@ -42,6 +42,27 @@ class NodeCount(BaseModel):
 
     worker: ReadyCount = ReadyCount()
     control_plane: ReadyCount = ReadyCount()
+
+
+class ConditionStatus(str, enum.Enum):
+    TRUE = "True"
+    FALSE = "False"
+    UNKNOWN = "Unknown"
+
+
+class DeploymentCondition(BaseModel):
+    status: ConditionStatus
+    last_transition_time: float
+    reason: str
+    message: str
+
+
+class DeploymentConditions(BaseModel):
+    """section: kube_deployment_conditions_v1"""
+
+    available: Optional[DeploymentCondition]
+    progressing: Optional[DeploymentCondition]
+    replicafailure: Optional[DeploymentCondition]
 
 
 VSResultAge = Union[Tuple[Literal["levels"], Tuple[int, int]], Literal["no_levels"]]

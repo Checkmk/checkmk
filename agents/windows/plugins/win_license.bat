@@ -12,4 +12,6 @@ if not exist "%temp%\slmgr.vbs" (
 if exist "%temp%\slmgr.vbs" (
     cscript //NoLogo "%temp%\slmgr.vbs" /dli
     del "%temp%\slmgr.vbs" > NUL
+) else (
+    cscript //NoLogo "%windir%\System32\slmgr.vbs" /dli
 )

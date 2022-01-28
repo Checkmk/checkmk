@@ -127,8 +127,10 @@ def _transform_oracle_instance_params(p):
     return p
 
 
-@get_parsed_item_data
-def check_oracle_instance(item, params, item_data):
+def check_oracle_instance(item, params, section):
+    if not (item_data := section.get(item)):
+        return 2, "Database or necessary processes not running or login failed"
+
     params = _transform_oracle_instance_params(params)
 
     def state_marker(state, infotext, param, column, data):

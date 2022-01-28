@@ -236,9 +236,8 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
         if not isinstance(elements, dict):
             raise NotImplementedError()
 
-        cmk.gui.watolib.snapshots.extract_snapshot(
-            tarfile.open(filename, "r"), elements  # pylint:disable=consider-using-with
-        )
+        with tarfile.open(filename, "r") as opened_file:
+            cmk.gui.watolib.snapshots.extract_snapshot(opened_file, elements)
 
     # TODO: Remove once new changes mechanism has been implemented
     def _get_last_wato_snapshot_file(self):

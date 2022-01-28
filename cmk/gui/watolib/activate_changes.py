@@ -1129,18 +1129,22 @@ class CRESnapshotDataCollector(ABCSnapshotDataCollector):
             # With Python 3 we could use "shutil.copytree(src, dst, copy_function=os.link)", but
             # please have a look at the performance before switching over...
             # shutil.copytree(source_path, str(target_path.parent) + "/", copy_function=os.link)
-            p = subprocess.Popen(  # pylint:disable=consider-using-with
+
+            completed_process = subprocess.run(
                 ["cp", "-al", str(source_path), str(target_path.parent) + "/"],
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
                 stdin=subprocess.DEVNULL,
                 shell=False,
                 close_fds=True,
+                check=False,
             )
-            stdout = p.communicate()[0]
-            if p.returncode != 0:
+            if completed_process.returncode:
                 self._logger.error(
-                    "Failed to clone files from %s to %s: %s", source_path, str(target_path), stdout
+                    "Failed to clone files from %s to %s: %s",
+                    source_path,
+                    str(target_path),
+                    completed_process.stdout,
                 )
                 raise MKGeneralException("Failed to create site config directory")
 
@@ -1158,13 +1162,14 @@ class CRESnapshotDataCollector(ABCSnapshotDataCollector):
             if os.path.exists(snapshot_settings.work_dir):
                 shutil.rmtree(snapshot_settings.work_dir)
 
-            p = subprocess.Popen(  # pylint:disable=consider-using-with
+            completed_process = subprocess.run(
                 ["cp", "-al", origin_site_work_dir, snapshot_settings.work_dir],
                 shell=False,
                 close_fds=True,
+                check=False,
             )
-            p.wait()
-            assert p.returncode == 0
+
+            assert completed_process.returncode == 0
             self._logger.debug("Finished site")
 
     def get_generic_components(self) -> List[ReplicationPath]:
@@ -2089,17 +2094,20 @@ def apply_pre_17_sync_snapshot(
 
 
 def _execute_cmk_update_config():
-    p = subprocess.Popen(  # pylint:disable=consider-using-with
+    completed_process = subprocess.run(
         "cmk-update-config",
         stdin=subprocess.DEVNULL,
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
         close_fds=True,
         encoding="utf-8",
+        check=False,
     )
-    stdout, _stderr = p.communicate()
-    if p.returncode != 0:
-        raise MKGeneralException(_("Unable to convert configuration into 2.0 format\n%s") % stdout)
+
+    if completed_process.returncode:
+        raise MKGeneralException(
+            _("Unable to convert configuration into 2.0 format\n%s") % completed_process.stdout
+        )
 
 
 def _execute_post_config_sync_actions(site_id):

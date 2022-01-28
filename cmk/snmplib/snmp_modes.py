@@ -159,14 +159,6 @@ def do_snmptranslate(walk_filename: str) -> None:
         "-M+%s" % cmk.utils.paths.local_mib_dir,
         "-",
     ]
-    p = subprocess.Popen(  # pylint:disable=consider-using-with
-        command,
-        stdin=subprocess.PIPE,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.DEVNULL,
-        close_fds=True,
-    )
-
     with walk_path.open("rb") as walk_file:
         walk = walk_file.read().split(b"\n")
     while walk[-1] == b"":
@@ -177,9 +169,17 @@ def do_snmptranslate(walk_filename: str) -> None:
     # version without values. The output should look like:
     # "[full oid] [value] --> [translated oid]"
     walk_without_values = b"\n".join(line.split(b" ", 1)[0] for line in walk)
-    stdout, _stderr = p.communicate(walk_without_values)
 
-    data_translated = stdout.split(b"\n")
+    completed_process = subprocess.run(
+        command,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.DEVNULL,
+        close_fds=True,
+        check=False,
+        input=walk_without_values,
+    )
+
+    data_translated = completed_process.stdout.split(b"\n")
     # remove last empty line (some tools add a '\n' at the end of the file, others not)
     if data_translated[-1] == b"":
         del data_translated[-1]

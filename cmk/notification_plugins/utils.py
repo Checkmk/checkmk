@@ -195,17 +195,12 @@ def send_mail_sendmail(m, target, from_address):
     cmd += ["-i", target]
 
     try:
-        p = subprocess.Popen(  # pylint:disable=consider-using-with
-            cmd,
-            stdin=subprocess.PIPE,
-            encoding="utf-8",
-        )
+        completed_process = subprocess.run(cmd, encoding="utf-8", check=False, input=m.as_string())
     except OSError:
         raise Exception("Failed to send the mail: /usr/sbin/sendmail is missing")
 
-    p.communicate(input=m.as_string())
-    if p.returncode != 0:
-        raise Exception("sendmail returned with exit code: %d" % p.returncode)
+    if completed_process.returncode:
+        raise Exception("sendmail returned with exit code: %d" % completed_process.returncode)
 
     sys.stdout.write("Spooled mail to local mail transmission agent\n")
     return 0

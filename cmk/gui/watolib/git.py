@@ -89,12 +89,13 @@ def _git_command(args: List[str]) -> None:
         subprocess.list2cmdline(command),
     )
     try:
-        p = subprocess.Popen(  # pylint:disable=consider-using-with
+        completed_process = subprocess.run(
             command,
             cwd=cmk.utils.paths.default_config_dir,
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
             encoding="utf-8",
+            check=False,
         )
     except OSError as e:
         if e.errno == errno.ENOENT:
@@ -104,24 +105,23 @@ def _git_command(args: List[str]) -> None:
             )
         raise
 
-    status = p.wait()
-    if status != 0:
-        out = "" if p.stdout is None else p.stdout.read()
+    if completed_process.returncode:
         raise MKGeneralException(
             _("Error executing GIT command <tt>%s</tt>:<br><br>%s")
-            % (subprocess.list2cmdline(command), out.replace("\n", "<br>\n"))
+            % (subprocess.list2cmdline(command), completed_process.stdout.replace("\n", "<br>\n"))
         )
 
 
 def _git_has_pending_changes() -> bool:
     try:
-        p = subprocess.Popen(  # pylint:disable=consider-using-with
+        completed_process = subprocess.run(
             ["git", "status", "--porcelain"],
             cwd=cmk.utils.paths.default_config_dir,
             stdout=subprocess.PIPE,
             encoding="utf-8",
+            check=False,
         )
-        return p.stdout is not None and p.stdout.read() != ""
+        return bool(completed_process.stdout)
     except OSError as e:
         if e.errno == errno.ENOENT:
             return False  # ignore missing git command

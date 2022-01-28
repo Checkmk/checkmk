@@ -77,7 +77,6 @@ TEST(EventLogTest, PrintEventLog) {
                                       });
             EXPECT_TRUE(last > 0);
             EXPECT_TRUE(str.size() >= 100);
-            EXPECT_TRUE(str.size() < 12'000);  // approximately
         }
     }
 }

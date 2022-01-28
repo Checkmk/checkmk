@@ -21,6 +21,8 @@
 #include "install_api.h"
 #include "onlyfrom.h"
 
+namespace fs = std::filesystem;
+
 using namespace std::string_literals;
 
 namespace cma::provider {
@@ -107,13 +109,29 @@ std::string MakeDirs() {
 
 }  // namespace
 
+// TODO(sk): make public API and replace all Trailing/trim with this one
+void TrimRight(std::string &s, std::string_view chars) {
+    auto end = s.find_last_not_of(chars);
+    if (end != std::string::npos) {
+        s.erase(end + 1);
+    }
+}
+
+std::string DetermineAgentCtlVersion() {
+    auto path_to_agent_ctl =
+        (fs::path{cfg::GetUserPluginsDir()} / cfg::files::kAgentCtl).wstring();
+    auto result = wtools::RunCommand(path_to_agent_ctl + L" -V"s);
+    TrimRight(result, "\n\r");
+    return result;
+}
+
 std::string CheckMk::makeBody() {
     auto out = MakeInfo();
     out += MakeDirs();
+    out += "AgentController: "s + DetermineAgentCtlVersion() + "\n";
     out += "OnlyFrom: "s + makeOnlyFrom() + "\n"s;
 
     if (install::GetLastInstallFailReason()) {
-        // We deliver fixed strings because it is a prototype solution.
         out += "<<<check_mk>>>\n";
         out +=
             "UpdateFailed: The last agent update failed. Supplied Python environment is not compatible with OS. \n";

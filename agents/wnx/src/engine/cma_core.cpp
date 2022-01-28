@@ -781,7 +781,7 @@ bool TheMiniBox::waitForEnd(std::chrono::milliseconds timeout) {
         auto grane = grane_long;
         auto ready = checkProcessExit(pi.waiting_processes) ||  // process exit?
                      cma::srv::IsGlobalStopSignaled();  // agent is exiting?
-        auto buf = tools::ReadFromHandle<std::vector<char>>(read_handle);
+        auto buf = wtools::ReadFromHandle(read_handle);
         if (!buf.empty()) {
             pi.added += buf.size();
             pi.blocks++;
@@ -835,7 +835,7 @@ bool TheMiniBox::waitForEndWindows(std::chrono::milliseconds Timeout) {
             2, handles, FALSE, static_cast<DWORD>(time_grane_windows.count()));
 
         if (ret == WAIT_OBJECT_0) {
-            auto buf = tools::ReadFromHandle<std::vector<char>>(read_handle);
+            auto buf = wtools::ReadFromHandle(read_handle);
             if (!buf.empty()) {
                 pi.added += buf.size();
                 pi.blocks++;
@@ -887,7 +887,7 @@ constexpr std::chrono::milliseconds time_grane{250};
 
 void TheMiniBox::readAndAppend(HANDLE read_handle,
                                std::chrono::milliseconds timeout) {
-    auto buf = tools::ReadFromHandle<std::vector<char>>(read_handle);
+    auto buf = wtools::ReadFromHandle(read_handle);
     if (buf.empty()) {
         return;
     }

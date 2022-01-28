@@ -8,6 +8,7 @@
 #define check_mk_h__
 
 #include <string>
+#include <string_view>
 
 #include "providers/internal.h"
 #include "section_header.h"
@@ -21,6 +22,12 @@ namespace cma::provider {
 /// integrations tests.
 /// On error returns empty string
 std::string AddressToCheckMkString(std::string_view entry);
+
+/// \b returns version of the 'cmk-agent-ctl' if present else empty<summary>
+///
+/// This is public API because exists probability that we will run
+/// this function asynchronously
+std::string DetermineAgentCtlVersion();
 
 class CheckMk : public Synchronous {
 public:

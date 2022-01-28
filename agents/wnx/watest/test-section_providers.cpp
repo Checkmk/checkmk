@@ -115,7 +115,7 @@ TEST(SectionProviders, SystemTime) {
 
 class SectionProviderCheckMkFixture : public ::testing::Test {
 public:
-    static constexpr size_t core_lines_ = 18;
+    static constexpr size_t core_lines_ = 19;
     static constexpr size_t full_lines_ = core_lines_ + 3;
     static constexpr std::string_view names_[] = {
         "Version",          "BuildDate",       "AgentOS",
@@ -123,7 +123,7 @@ public:
         "ConfigFile",       "LocalConfigFile", "AgentDirectory",
         "PluginsDirectory", "StateDirectory",  "ConfigDirectory",
         "TempDirectory",    "LogDirectory",    "SpoolDirectory",
-        "LocalDirectory",   "OnlyFrom"};
+        "LocalDirectory",   "AgentController", "OnlyFrom"};
 
     static constexpr std::pair<std::string_view, std::string_view>
         only_from_cases_[] = {
@@ -194,9 +194,12 @@ TEST_F(SectionProviderCheckMkFixture, ConstFields) {
     const auto *expected_name = names_;
     for (const auto &r : result) {
         auto values = tools::SplitString(r, ": ");
-        EXPECT_EQ(values.size(), 2);
         EXPECT_EQ(values[0], std::string{*expected_name++});
-        EXPECT_FALSE(values[1].empty());
+        if (values[0] == "AgentController") {
+            EXPECT_EQ(values.size(), 1);
+        } else {
+            EXPECT_EQ(values.size(), 2);
+        }
     }
 }
 

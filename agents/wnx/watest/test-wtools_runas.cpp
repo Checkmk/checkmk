@@ -28,7 +28,7 @@ static std::string ReadFromHandle(HANDLE h) {
 
     if (ready_ret != WAIT_OBJECT_0) return {};
 
-    auto buf = cma::tools::ReadFromHandle<std::vector<char>>(handles[0]);
+    auto buf = wtools::ReadFromHandle(handles[0]);
     EXPECT_TRUE(!buf.empty());
     if (buf.empty()) return {};
 

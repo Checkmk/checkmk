@@ -1093,6 +1093,14 @@ const wchar_t *GetMultiSzEntry(wchar_t *&pos, const wchar_t *end);
 
 std::wstring SidToName(const std::wstring_view sid,
                        const SID_NAME_USE &sid_type);
+
+std::vector<char> ReadFromHandle(HANDLE handle);
+
+/// \brief Calls any command and return back output
+///
+/// Wraps AppRunner
+std::string RunCommand(std::wstring_view cmd);
+
 }  // namespace wtools
 
 #endif  // wtools_h__

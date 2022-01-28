@@ -31,6 +31,24 @@ class PerformanceContainer(BaseModel):
     name: ContainerName
 
 
+class CollectorState(enum.Enum):
+    OK = "ok"
+    ERROR = "error"
+
+
+class CollectorLog(BaseModel):
+    component: str
+    status: CollectorState
+    message: str
+    detail: Optional[str]
+
+
+class CollectorLogs(BaseModel):
+    """section: kube_collector_connection_v1"""
+
+    logs: Sequence[CollectorLog]
+
+
 class Resources(BaseModel):
     """sections: "[kube_memory_resources_v1, kube_cpu_resources_v1]"""
 

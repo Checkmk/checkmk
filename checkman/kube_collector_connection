@@ -1,0 +1,13 @@
+title: Kubernetes: Cluster Collector
+agents: kubernetes
+catalog: containerization/kubernetes
+license: GPL
+distribution: check_mk
+description:
+ The connection status to the Kubernetes API is implicitly reported by the
+ Checkmk service. This check reports the connection status of the Cluster
+ Collector deployed in the Kubernetes cluster. It also reports any problems
+ which may arise during processing of the collected performance metrics.
+
+discovery:
+ One service is created if the cluster collector option is configured.

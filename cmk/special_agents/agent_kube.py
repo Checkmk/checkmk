@@ -28,6 +28,7 @@ from typing import (
     Dict,
     Iterator,
     List,
+    Literal,
     Mapping,
     NamedTuple,
     NewType,
@@ -35,6 +36,7 @@ from typing import (
     Protocol,
     Sequence,
     Set,
+    Tuple,
     Union,
 )
 
@@ -943,12 +945,14 @@ class ClusterConnectionError(Exception):
 
 
 def request_cluster_collector(
+    component: Literal["Container Metrics", "Machine Metrics"],
     cluster_agent_url: str,
     token: str,
     verify: bool,
-    debug: bool,
     timeout: TCPTimeout,
-) -> Optional[Any]:
+    debug: bool = False,
+) -> Tuple[Sequence[section.CollectorLog], Any]:
+    connection_logs = []
     if not verify:
         LOGGER.info("Disabling SSL certificate verification")
         urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
@@ -966,14 +970,22 @@ def request_cluster_collector(
             raise ClusterConnectionError(
                 f"Failed attempting to communicate with cluster collector at URL {cluster_agent_url}"
             ) from exception
-        return None
+        connection_logs.append(
+            section.CollectorLog(
+                status=section.CollectorState.ERROR,
+                component=component,
+                message="Connection error",
+                detail="Failure to establish a connection to cluster collector",
+            )
+        )
+        return connection_logs, None
 
     if cluster_resp.status_code != 200:
         raise SetupError("Checkmk cannot make a connection to the k8 cluster agent")
 
     if not cluster_resp.content:
         raise SetupError("Worker nodes")
-    return json.loads(cluster_resp.content.decode("utf-8"))
+    return connection_logs, json.loads(cluster_resp.content.decode("utf-8"))
 
 
 def map_lookup_name_to_piggyback_host_name(
@@ -1258,6 +1270,94 @@ def cluster_piggyback_formatter(cluster_name: str, object_type: str, namespace_n
     return f"{object_type}_{cluster_name}_{namespace_name}"
 
 
+def parse_and_group_containers_performance_metrics(
+    cluster_name: str,
+    container_metrics: Sequence[RawMetrics],
+) -> Mapping[PodLookupName, PerformancePod]:
+    """Parse container performance metrics and group them by pod"""
+
+    performance_metrics = parse_performance_metrics(container_metrics)
+    relevant_counter_metrics = [MetricName("cpu_usage_seconds_total")]
+    performance_counter_metrics = filter_specific_metrics(
+        performance_metrics, metric_names=relevant_counter_metrics
+    )
+    containers_counter_metrics = group_metrics_by_container(performance_counter_metrics)
+    # We only persist the relevant counter metrics (not all metrics)
+    current_cycle_store = ContainersStore(
+        containers={
+            container_name: ContainerMetricsStore(name=container_name, metrics=metrics)
+            for container_name, metrics in containers_counter_metrics.items()
+        }
+    )
+    store_file_name = f"{cluster_name}_containers_counters.json"
+    previous_cycle_store = load_containers_store(
+        path=AGENT_TMP_PATH,
+        file_name=store_file_name,
+    )
+    containers_rate_metrics = determine_rate_metrics(
+        current_cycle_store.containers, previous_cycle_store.containers
+    )
+    persist_containers_store(current_cycle_store, path=AGENT_TMP_PATH, file_name=store_file_name)
+    containers_metrics = group_metrics_by_container(
+        performance_metrics, omit_metrics=relevant_counter_metrics
+    )
+    containers_metadata = parse_containers_metadata(container_metrics, pod_lookup_from_metric)
+    performance_containers = group_container_components(
+        containers_metadata, containers_metrics, containers_rate_metrics
+    )
+    performance_pods = group_containers_by_pods(performance_containers)
+    return performance_pods
+
+
+def write_sections_based_on_performance_pods(
+    performance_pods: Mapping[PodLookupName, PerformancePod],
+    monitored_objects: Sequence[str],
+    cluster: Cluster,
+    monitored_namespaces: Set[api.Namespace],
+    piggyback_formatter,
+    piggyback_formatter_node,
+):
+
+    lookup_name_piggyback_mappings = map_lookup_name_to_piggyback_host_name(
+        pods_from_namespaces(cluster.pods(), monitored_namespaces), pod_lookup_from_api_pod
+    )
+
+    # Write performance sections
+    if "pods" in monitored_objects:
+        LOGGER.info("Write pod sections based on performance data")
+        for pod in filter_outdated_and_non_monitored_pods(
+            list(performance_pods.values()), lookup_name_piggyback_mappings
+        ):
+            with ConditionalPiggybackSection(
+                piggyback_formatter(
+                    object_type="pod",
+                    namespace_name=lookup_name_piggyback_mappings[pod.lookup_name],
+                )
+            ):
+                pod_performance_sections(pod)
+    if "nodes" in monitored_objects:
+        LOGGER.info("Write node sections based on performance data")
+        for node in cluster.nodes():
+            write_kube_object_performance_section(
+                node,
+                performance_pods,
+                piggyback_name=piggyback_formatter_node(node.name),
+            )
+    if "deployments" in monitored_objects:
+        LOGGER.info("Write deployment sections based on performance data")
+        for deployment in deployments_from_namespaces(cluster.deployments(), monitored_namespaces):
+            write_kube_object_performance_section(
+                deployment,
+                performance_pods,
+                piggyback_name=piggyback_formatter(
+                    object_type="deployment",
+                    namespace_name=deployment.name(prepend_namespace=True),
+                ),
+            )
+    LOGGER.info("Write cluster sections based on performance data")
+    write_kube_object_performance_section(cluster, performance_pods)
+
+
 def main(args: Optional[List[str]] = None) -> int:
     if args is None:
         cmk.utils.password_store.replace_passwords()
@@ -1318,8 +1418,15 @@ def main(args: Optional[List[str]] = None) -> int:
                     piggyback_formatter=functools.partial(piggyback_formatter, "pod"),
                 )
 
+            # Skip machine & container sections when cluster agent endpoint not configured
             if arguments.cluster_agent_endpoint is None:
                 return 0
+
+            # TODO: restructure the code to better support the log service
+            # We keep track of the connect & parse errors for the container & machine metrics
+            # and do not return early as we want the machine metrics even if the container
+            # metrics are not available and vice-versa.
+            collector_logs: List[section.CollectorLog] = []
 
             # Sections based on cluster collector performance data
             cluster_collector_timeout = TCPTimeout(
@@ -1327,118 +1434,81 @@ def main(args: Optional[List[str]] = None) -> int:
                 read=arguments.cluster_collector_read_timeout,
             )
             LOGGER.info("Collecting container metrics from cluster collector")
-            container_metrics: Optional[Sequence[RawMetrics]] = request_cluster_collector(
+            container_metrics: Optional[Sequence[RawMetrics]]
+            connection_logs, container_metrics = request_cluster_collector(
+                "Container Metrics",
                 f"{arguments.cluster_agent_endpoint}/container_metrics",
                 arguments.token,
                 arguments.verify_cert,
-                arguments.debug,
                 cluster_collector_timeout,
+                arguments.debug,
             )
-            # a non-zero code would discard all API sections as the written out sections
-            # would not be further processed by Checkmk
-            if container_metrics is None:
-                return 0
+            collector_logs.extend(connection_logs)
 
-            performance_metrics = parse_performance_metrics(container_metrics)
+            if container_metrics is not None:
+                try:
+                    performance_pods = parse_and_group_containers_performance_metrics(
+                        cluster_name=arguments.cluster,
+                        container_metrics=container_metrics,
+                    )
+                    write_sections_based_on_performance_pods(
+                        performance_pods=performance_pods,
+                        cluster=cluster,
+                        monitored_objects=arguments.monitored_objects,
+                        monitored_namespaces=monitored_namespaces,
+                        piggyback_formatter=piggyback_formatter,
+                        piggyback_formatter_node=piggyback_formatter_node,
+                    )
 
-            relevant_counter_metrics = [MetricName("cpu_usage_seconds_total")]
-            performance_counter_metrics = filter_specific_metrics(
-                performance_metrics, metric_names=relevant_counter_metrics
-            )
-            containers_counter_metrics = group_metrics_by_container(performance_counter_metrics)
-
-            # We only persist the relevant counter metrics (not all metrics)
-            current_cycle_store = ContainersStore(
-                containers={
-                    container_name: ContainerMetricsStore(name=container_name, metrics=metrics)
-                    for container_name, metrics in containers_counter_metrics.items()
-                }
-            )
-
-            store_file_name = f"{arguments.cluster}_containers_counters.json"
-            previous_cycle_store = load_containers_store(
-                path=AGENT_TMP_PATH,
-                file_name=store_file_name,
-            )
-
-            containers_rate_metrics = determine_rate_metrics(
-                current_cycle_store.containers, previous_cycle_store.containers
-            )
-            persist_containers_store(
-                current_cycle_store, path=AGENT_TMP_PATH, file_name=store_file_name
-            )
-
-            containers_metrics = group_metrics_by_container(
-                performance_metrics, omit_metrics=relevant_counter_metrics
-            )
-
-            containers_metadata = parse_containers_metadata(
-                container_metrics, pod_lookup_from_metric
-            )
-
-            performance_containers = group_container_components(
-                containers_metadata, containers_metrics, containers_rate_metrics
-            )
-
-            performance_pods = group_containers_by_pods(performance_containers)
-
-            lookup_name_piggyback_mappings = map_lookup_name_to_piggyback_host_name(
-                pods_from_namespaces(cluster.pods(), monitored_namespaces), pod_lookup_from_api_pod
-            )
-
-            # Write performance sections
-            if "pods" in arguments.monitored_objects:
-                LOGGER.info("Write pod sections based on performance data")
-                for pod in filter_outdated_and_non_monitored_pods(
-                    list(performance_pods.values()), lookup_name_piggyback_mappings
-                ):
-                    with ConditionalPiggybackSection(
-                        piggyback_formatter(
-                            object_type="pod",
-                            namespace_name=lookup_name_piggyback_mappings[pod.lookup_name],
+                    collector_logs.append(
+                        section.CollectorLog(
+                            status=section.CollectorState.OK,
+                            component="Container Metrics",
+                            message="Performance metrics queried and processed successfully",
                         )
-                    ):
-                        pod_performance_sections(pod)
-
-            if "nodes" in arguments.monitored_objects:
-                LOGGER.info("Write node sections based on performance data")
-                for node in cluster.nodes():
-                    write_kube_object_performance_section(
-                        node, performance_pods, piggyback_name=piggyback_formatter_node(node.name)
                     )
+                except Exception as e:
+                    if arguments.debug:
+                        raise e
 
-            if "deployments" in arguments.monitored_objects:
-                LOGGER.info("Write deployment sections based on performance data")
-                for deployment in deployments_from_namespaces(
-                    cluster.deployments(), monitored_namespaces
-                ):
-                    write_kube_object_performance_section(
-                        deployment,
-                        performance_pods,
-                        piggyback_name=piggyback_formatter(
-                            object_type="deployment",
-                            namespace_name=deployment.name(prepend_namespace=True),
-                        ),
+                    collector_logs.append(
+                        section.CollectorLog(
+                            status=section.CollectorState.ERROR,
+                            component="Container Metrics",
+                            message="Metrics processing error",
+                            detail="Successfully queried container metrics from cluster collector, "
+                            "but failed to process them",
+                        )
                     )
-
-            LOGGER.info("Write cluster sections based on performance data")
-            write_kube_object_performance_section(cluster, performance_pods)
-
-            # TODO: handle pods with no performance data (pod.uid not in performance pods)
 
             # Sections based on cluster collector machine sections
             LOGGER.info("Collecting machine sections from cluster collector")
-            machine_sections: Optional[Dict[str, str]] = request_cluster_collector(
+            machine_sections: Optional[Dict[str, str]]
+            connection_logs, machine_sections = request_cluster_collector(
+                "Machine Metrics",
                 f"{arguments.cluster_agent_endpoint}/machine_sections",
                 arguments.token,
                 arguments.verify_cert,
-                arguments.debug,
                 cluster_collector_timeout,
             )
-            if machine_sections is None:
-                return 0
+            collector_logs.extend(connection_logs)
 
-            write_machine_sections(cluster, machine_sections, piggyback_formatter_node)
+            if machine_sections is not None:
+                write_machine_sections(cluster, machine_sections, piggyback_formatter_node)
+                collector_logs.append(
+                    section.CollectorLog(
+                        status=section.CollectorState.OK,
+                        component="Machine Metrics",
+                        message="Machine sections queried and processed successfully",
+                    )
+                )
+
+            with SectionWriter("kube_collector_connection_v1") as writer:
+                writer.append(
+                    section.CollectorLogs(
+                        logs=collector_logs,
+                    ).json()
+                )
 
     except Exception as e:
         if arguments.debug:

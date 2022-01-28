@@ -5,13 +5,31 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import enum
-from typing import Literal, Optional, Tuple, Union
+from typing import Literal, Optional, Sequence, Tuple, Union
 
 from pydantic import BaseModel
 
 
 class KubernetesError(Exception):
     pass
+
+
+class CollectorState(enum.Enum):
+    OK = "ok"
+    ERROR = "error"
+
+
+class CollectorLog(BaseModel):
+    component: str
+    status: CollectorState
+    message: str
+    detail: Optional[str]
+
+
+class CollectorLogs(BaseModel):
+    """section: kube_collector_connection_v1"""
+
+    logs: Sequence[CollectorLog]
 
 
 class Phase(str, enum.Enum):

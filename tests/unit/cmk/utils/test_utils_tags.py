@@ -8,6 +8,7 @@ import pytest
 
 import cmk.utils.tags as tags
 from cmk.utils.exceptions import MKGeneralException
+from cmk.utils.type_defs import TaggroupIDToTagID
 
 
 @pytest.fixture(name="test_cfg")
@@ -440,3 +441,153 @@ def test_aux_tag_list_remove(test_cfg: tags.TagConfig) -> None:
     assert "bla" in test_cfg.aux_tag_list.get_tag_ids()
     test_cfg.aux_tag_list.remove("bla")
     assert "bla" not in test_cfg.aux_tag_list.get_tag_ids()
+
+
+@pytest.mark.parametrize(
+    "tag_groups, expected_computed_datasources",
+    [
+        (
+            {},
+            tags.ComputedDataSources(
+                is_tcp=False,
+                is_snmp=False,
+                is_all_agents_host=False,
+                is_all_special_agents_host=False,
+            ),
+        ),
+        (
+            {
+                "tcp": "tcp",
+            },
+            tags.ComputedDataSources(
+                is_tcp=True,
+                is_snmp=False,
+                is_all_agents_host=False,
+                is_all_special_agents_host=False,
+            ),
+        ),
+        (
+            {
+                "snmp_ds": "no-snmp",
+            },
+            tags.ComputedDataSources(
+                is_tcp=False,
+                is_snmp=False,
+                is_all_agents_host=False,
+                is_all_special_agents_host=False,
+            ),
+        ),
+        (
+            {
+                "snmp_ds": "snmp-v1",
+            },
+            tags.ComputedDataSources(
+                is_tcp=False,
+                is_snmp=True,
+                is_all_agents_host=False,
+                is_all_special_agents_host=False,
+            ),
+        ),
+        (
+            {
+                "snmp_ds": "snmp-v2",
+            },
+            tags.ComputedDataSources(
+                is_tcp=False,
+                is_snmp=True,
+                is_all_agents_host=False,
+                is_all_special_agents_host=False,
+            ),
+        ),
+        (
+            {
+                "snmp_ds": "snmp",
+            },
+            tags.ComputedDataSources(
+                is_tcp=False,
+                is_snmp=True,
+                is_all_agents_host=False,
+                is_all_special_agents_host=False,
+            ),
+        ),
+        (
+            {
+                "agent": "all-agents",
+            },
+            tags.ComputedDataSources(
+                is_tcp=False,
+                is_snmp=False,
+                is_all_agents_host=True,
+                is_all_special_agents_host=False,
+            ),
+        ),
+        (
+            {
+                "agent": "special-agents",
+            },
+            tags.ComputedDataSources(
+                is_tcp=False,
+                is_snmp=False,
+                is_all_agents_host=False,
+                is_all_special_agents_host=True,
+            ),
+        ),
+    ],
+)
+def test_compute_datasources(
+    tag_groups: TaggroupIDToTagID, expected_computed_datasources: tags.ComputedDataSources
+) -> None:
+    assert tags.compute_datasources(tag_groups) == expected_computed_datasources
+
+
+@pytest.mark.parametrize(
+    "computed_datasources_0, computed_datasources_1, expected_datasource_differences",
+    [
+        (
+            tags.ComputedDataSources(
+                is_tcp=False,
+                is_snmp=False,
+                is_all_agents_host=False,
+                is_all_special_agents_host=False,
+            ),
+            tags.ComputedDataSources(
+                is_tcp=False,
+                is_snmp=False,
+                is_all_agents_host=False,
+                is_all_special_agents_host=False,
+            ),
+            [],
+        ),
+        (
+            tags.ComputedDataSources(
+                is_tcp=True,
+                is_snmp=True,
+                is_all_agents_host=True,
+                is_all_special_agents_host=True,
+            ),
+            tags.ComputedDataSources(
+                is_tcp=False,
+                is_snmp=False,
+                is_all_agents_host=False,
+                is_all_special_agents_host=False,
+            ),
+            [
+                tags.DataSourceDifference(name="all agents", myself_is=True, other_is=False),
+                tags.DataSourceDifference(
+                    name="all special agents", myself_is=True, other_is=False
+                ),
+                tags.DataSourceDifference(name="TCP", myself_is=True, other_is=False),
+                tags.DataSourceDifference(name="SNMP", myself_is=True, other_is=False),
+            ],
+        ),
+    ],
+)
+def test_get_differences_to(
+    computed_datasources_0: tags.ComputedDataSources,
+    computed_datasources_1: tags.ComputedDataSources,
+    expected_datasource_differences: tags.DataSourceDifferences,
+) -> None:
+    assert (
+        computed_datasources_0.get_differences_to(computed_datasources_1)
+        == expected_datasource_differences
+    )

@@ -2433,9 +2433,11 @@ class HostConfig:
             self._config_cache.ruleset_matcher, hostname
         )
 
+        self.computed_datasources = cmk.utils.tags.compute_datasources(self.tag_groups)
+
         # Basic types
-        self.is_tcp_host: bool = self._config_cache.in_binary_hostlist(hostname, tcp_hosts)
-        self.is_snmp_host: bool = self._config_cache.in_binary_hostlist(hostname, snmp_hosts)
+        self.is_tcp_host: bool = self.computed_datasources.is_tcp
+        self.is_snmp_host: bool = self.computed_datasources.is_snmp
         self.is_usewalk_host: bool = self._config_cache.in_binary_hostlist(hostname, usewalk_hosts)
 
         if self.tag_groups["piggyback"] == "piggyback":
@@ -2454,8 +2456,8 @@ class HostConfig:
         )
 
         self.is_dual_host = self.is_tcp_host and self.is_snmp_host
-        self.is_all_agents_host = self.tag_groups["agent"] == "all-agents"
-        self.is_all_special_agents_host = self.tag_groups["agent"] == "special-agents"
+        self.is_all_agents_host = self.computed_datasources.is_all_agents_host
+        self.is_all_special_agents_host = self.computed_datasources.is_all_special_agents_host
 
         # IP addresses
         # Whether or not the given host is configured not to be monitored via IP

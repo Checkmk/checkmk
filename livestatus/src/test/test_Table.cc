@@ -111,7 +111,8 @@ static ColumnDefinitions event_console_rules_columns();
 static ColumnDefinitions event_console_status_columns();
 static ColumnDefinitions service_groups_columns();
 static ColumnDefinitions host_groups_columns();
-static ColumnDefinitions hosts_and_services_columns(bool add_cmc_stuff);
+static ColumnDefinitions hosts_and_services_columns();
+static ColumnDefinitions funny_hosts_and_services_columns();
 static ColumnDefinitions hosts_columns();
 static ColumnDefinitions services_columns(bool add_hosts);
 static ColumnDefinitions state_history_columns();
@@ -121,7 +122,8 @@ static ColumnDefinitions timeperiods_columns();
 #ifdef CMC
 TEST(TableCachedStatehist, ColumnNamesAndTypes) {
     EXPECT_EQ(state_history_columns() +
-                  (hosts_columns() + hosts_and_services_columns(true))
+                  (hosts_columns() + (hosts_and_services_columns() +
+                                      funny_hosts_and_services_columns()))
                       .add_prefix("current_host_") +
                   services_columns(false).add_prefix("current_service_"),
               ColumnDefinitions(TableCachedStatehist{nullptr}));
@@ -170,7 +172,8 @@ static ColumnDefinitions comments_columns() {
 
 TEST(TableComments, ColumnNamesAndTypes) {
     EXPECT_EQ(comments_columns() +
-                  (hosts_columns() + hosts_and_services_columns(true))
+                  (hosts_columns() + (hosts_and_services_columns() +
+                                      funny_hosts_and_services_columns()))
                       .add_prefix("host_") +
                   services_columns(false).add_prefix("service_"),
               ColumnDefinitions(TableComments{nullptr}));
@@ -266,7 +269,8 @@ static ColumnDefinitions downtimes_columns() {
 
 TEST(TableDowntimes, ColumnNamesAndTypes) {
     EXPECT_EQ(downtimes_columns() +
-                  (hosts_columns() + hosts_and_services_columns(true))
+                  (hosts_columns() + (hosts_and_services_columns() +
+                                      funny_hosts_and_services_columns()))
                       .add_prefix("host_") +
                   services_columns(false).add_prefix("service_"),
               ColumnDefinitions(TableDowntimes{nullptr}));
@@ -301,7 +305,8 @@ static ColumnDefinitions event_console_events_columns() {
 
 TEST(TableEventConsoleEvents, ColumnNamesAndTypes) {
     EXPECT_EQ(event_console_events_columns() +
-                  (hosts_columns() + hosts_and_services_columns(true))
+                  (hosts_columns() + (hosts_and_services_columns() +
+                                      funny_hosts_and_services_columns()))
                       .add_prefix("host_"),
               ColumnDefinitions(TableEventConsoleEvents{nullptr}));
 }
@@ -318,7 +323,8 @@ static ColumnDefinitions event_console_history_columns() {
 
 TEST(TableEventConsoleHistory, ColumnNamesAndTypes) {
     EXPECT_EQ(event_console_history_columns() + event_console_events_columns() +
-                  (hosts_columns() + hosts_and_services_columns(true))
+                  (hosts_columns() + (hosts_and_services_columns() +
+                                      funny_hosts_and_services_columns()))
                       .add_prefix("host_"),
               ColumnDefinitions(TableEventConsoleHistory{nullptr}));
 }
@@ -428,8 +434,8 @@ TEST(TableHostGroups, ColumnNamesAndTypes) {
 }
 
 // TODO(sp) Remove this funny flag!
-static ColumnDefinitions hosts_and_services_columns(bool add_cmc_stuff) {
-    auto result = ColumnDefinitions({
+static ColumnDefinitions hosts_and_services_columns() {
+    return {
         {"accept_passive_checks", ColumnType::int_},
         {"acknowledged", ColumnType::int_},
         {"acknowledgement_type", ColumnType::int_},
@@ -527,14 +533,16 @@ static ColumnDefinitions hosts_and_services_columns(bool add_cmc_stuff) {
         {"tag_names", ColumnType::list},
         {"tag_values", ColumnType::list},
         {"tags", ColumnType::dict},
-    });
-    if (add_cmc_stuff) {
-        result += ColumnDefinitions({
-            {"check_flapping_recovery_notification", ColumnType::int_},
-            {"pending_flex_downtime", ColumnType::int_},
-        });
-    }
-    return result;
+    };
+}
+
+// TODO(sp) These columns should really live unconditionally in
+// hosts_and_services_columns.
+static ColumnDefinitions funny_hosts_and_services_columns() {
+    return {
+        {"check_flapping_recovery_notification", ColumnType::int_},
+        {"pending_flex_downtime", ColumnType::int_},
+    };
 }
 
 static ColumnDefinitions hosts_columns() {
@@ -591,12 +599,14 @@ static ColumnDefinitions hosts_columns() {
 }
 
 TEST(TableHosts, ColumnNamesAndTypes) {
-    EXPECT_EQ((hosts_columns() + hosts_and_services_columns(true)),
+    EXPECT_EQ((hosts_columns() + (hosts_and_services_columns() +
+                                  funny_hosts_and_services_columns())),
               ColumnDefinitions(TableHosts{nullptr}));
 }
 
 TEST(TableHostsByGroup, ColumnNamesAndTypes) {
-    EXPECT_EQ((hosts_columns() + hosts_and_services_columns(true)) +
+    EXPECT_EQ((hosts_columns() + (hosts_and_services_columns() +
+                                  funny_hosts_and_services_columns())) +
                   (host_groups_columns() + service_groups_columns())
                       .add_prefix("hostgroup_"),
               ColumnDefinitions(TableHostsByGroup{nullptr}));
@@ -611,40 +621,42 @@ TEST(TableServiceGroups, ColumnNamesAndTypes) {
               ColumnDefinitions(TableServiceGroups{nullptr}));
 }
 
+static ColumnDefinitions service_columns_internal() {
+    return {
+        {"cache_interval", ColumnType::int_},
+        {"cached_at", ColumnType::time},
+        {"description", ColumnType::string},
+        {"groups", ColumnType::list},
+#ifdef CMC
+        {"in_passive_check_period", ColumnType::int_},
+#endif
+        {"last_time_critical", ColumnType::time},
+        {"last_time_ok", ColumnType::time},
+        {"last_time_unknown", ColumnType::time},
+        {"last_time_warning", ColumnType::time},
+        {"obsess_over_service", ColumnType::int_},
+#ifdef CMC
+        {"passive_check_period", ColumnType::string},
+#endif
+        {"robotmk_last_error_log", ColumnType::blob},
+        {"robotmk_last_error_log_gz", ColumnType::blob},
+        {"robotmk_last_log", ColumnType::blob},
+        {"robotmk_last_log_gz", ColumnType::blob},
+    };
+}
+
 static ColumnDefinitions services_columns(bool add_hosts) {
-    auto result = ColumnDefinitions({
-                      {"cache_interval", ColumnType::int_},
-                      {"cached_at", ColumnType::time},
-                      {"description", ColumnType::string},
-                      {"groups", ColumnType::list},
-#ifdef CMC
-                      {"in_passive_check_period", ColumnType::int_},
-#endif
-                      {"last_time_critical", ColumnType::time},
-                      {"last_time_ok", ColumnType::time},
-                      {"last_time_unknown", ColumnType::time},
-                      {"last_time_warning", ColumnType::time},
-                      {"obsess_over_service", ColumnType::int_},
-#ifdef CMC
-                      {"passive_check_period", ColumnType::string},
-#endif
-                      {"robotmk_last_error_log", ColumnType::blob},
-                      {"robotmk_last_error_log_gz", ColumnType::blob},
-                      {"robotmk_last_log", ColumnType::blob},
-                      {"robotmk_last_log_gz", ColumnType::blob},
-                  }) +
-                  hosts_and_services_columns(
-#ifdef CMC
-                      true
-#else
-                      false
-#endif
-                  );
+    ColumnDefinitions result{};
     if (add_hosts) {
-        result += (hosts_columns() + hosts_and_services_columns(true))
+        result += (hosts_columns() + (hosts_and_services_columns() +
+                                      funny_hosts_and_services_columns()))
                       .add_prefix("host_");
     }
-    return result;
+    return result + service_columns_internal() + hosts_and_services_columns()
+#ifdef CMC
+           + funny_hosts_and_services_columns()
+#endif
+        ;
 }
 
 TEST(TableServices, ColumnNamesAndTypes) {
@@ -702,7 +714,8 @@ static ColumnDefinitions state_history_columns() {
 
 TEST(TableStateHistory, ColumnNamesAndTypes) {
     EXPECT_EQ(state_history_columns() +
-                  (hosts_columns() + hosts_and_services_columns(true))
+                  (hosts_columns() + (hosts_and_services_columns() +
+                                      funny_hosts_and_services_columns()))
                       .add_prefix("current_host_") +
                   services_columns(false).add_prefix("current_service_"),
               ColumnDefinitions(TableStateHistory{nullptr, nullptr}));

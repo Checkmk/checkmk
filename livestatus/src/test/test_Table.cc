@@ -21,6 +21,7 @@
 #include "TableEventConsoleRules.h"
 #include "TableEventConsoleStatus.h"
 #include "TableHostGroups.h"
+#include "TableHosts.h"
 #include "TableServiceGroups.h"
 #include "TableStatus.h"
 #include "TableTimeperiods.h"
@@ -215,7 +216,7 @@ TEST(TableEventConsoleStatus, ColumnNamesAndTypes) {
               ColumnDefinitions(TableEventConsoleStatus{nullptr}));
 }
 
-static ColumnDefinitions common_host_and_service_groups_columns() {
+static ColumnDefinitions service_groups_columns() {
     return {
         {"action_url", ColumnType::string},
         {"alias", ColumnType::string},
@@ -250,14 +251,172 @@ TEST(TableHostGroups, ColumnNamesAndTypes) {
                    {"num_hosts_unreach", ColumnType::int_},
                    {"num_hosts_up", ColumnType::int_},
                    {"worst_host_state", ColumnType::int_},
-                   // TODO(sp) HUH??? Why is this not in the common columns?
+                   // TODO(sp) HUH??? Why is this not in service_groups_columns?
                    {"worst_service_hard_state", ColumnType::int_}}) +
-                  common_host_and_service_groups_columns(),
+                  service_groups_columns(),
               ColumnDefinitions(TableHostGroups{nullptr}));
 }
 
+static ColumnDefinitions hosts_and_services_columns() {
+    return {
+        {"accept_passive_checks", ColumnType::int_},
+        {"acknowledged", ColumnType::int_},
+        {"acknowledgement_type", ColumnType::int_},
+        {"action_url", ColumnType::string},
+        {"action_url_expanded", ColumnType::string},
+        {"active_checks_enabled", ColumnType::int_},
+        {"check_command", ColumnType::string},
+        {"check_command_expanded", ColumnType::string},
+        {"check_flapping_recovery_notification", ColumnType::int_},
+        {"check_freshness", ColumnType::int_},
+        {"check_interval", ColumnType::double_},
+        {"check_options", ColumnType::int_},
+        {"check_period", ColumnType::string},
+        {"check_type", ColumnType::int_},
+        {"checks_enabled", ColumnType::int_},
+        {"comments", ColumnType::list},
+        {"comments_with_extra_info", ColumnType::list},
+        {"comments_with_info", ColumnType::list},
+        {"contact_groups", ColumnType::list},
+        {"contacts", ColumnType::list},
+        {"current_attempt", ColumnType::int_},
+        {"current_notification_number", ColumnType::int_},
+        {"custom_variable_names", ColumnType::list},
+        {"custom_variable_values", ColumnType::list},
+        {"custom_variables", ColumnType::dict},
+        {"display_name", ColumnType::string},
+        {"downtimes", ColumnType::list},
+        {"downtimes_with_extra_info", ColumnType::list},
+        {"downtimes_with_info", ColumnType::list},
+        {"event_handler", ColumnType::string},
+        {"event_handler_enabled", ColumnType::int_},
+        {"execution_time", ColumnType::double_},
+        {"first_notification_delay", ColumnType::double_},
+        {"flap_detection_enabled", ColumnType::int_},
+#ifdef CMC
+        {"flappiness", ColumnType::double_},
+#endif
+        {"hard_state", ColumnType::int_},
+        {"has_been_checked", ColumnType::int_},
+        {"high_flap_threshold", ColumnType::double_},
+        {"icon_image", ColumnType::string},
+        {"icon_image_alt", ColumnType::string},
+        {"icon_image_expanded", ColumnType::string},
+        {"in_check_period", ColumnType::int_},
+        {"in_notification_period", ColumnType::int_},
+        {"in_service_period", ColumnType::int_},
+        {"initial_state", ColumnType::int_},
+        {"is_executing", ColumnType::int_},
+        {"is_flapping", ColumnType::int_},
+        {"label_names", ColumnType::list},
+        {"label_source_names", ColumnType::list},
+        {"label_source_values", ColumnType::list},
+        {"label_sources", ColumnType::dict},
+        {"label_values", ColumnType::list},
+        {"labels", ColumnType::dict},
+        {"last_check", ColumnType::time},
+        {"last_hard_state", ColumnType::int_},
+        {"last_hard_state_change", ColumnType::time},
+        {"last_notification", ColumnType::time},
+        {"last_state", ColumnType::int_},
+        {"last_state_change", ColumnType::time},
+        {"latency", ColumnType::double_},
+        {"long_plugin_output", ColumnType::string},
+        {"low_flap_threshold", ColumnType::double_},
+        {"max_check_attempts", ColumnType::int_},
+        {"metrics", ColumnType::list},
+        {"modified_attributes", ColumnType::int_},
+        {"modified_attributes_list", ColumnType::list},
+        {"next_check", ColumnType::time},
+        {"next_notification", ColumnType::time},
+        {"no_more_notifications", ColumnType::int_},
+        {"notes", ColumnType::string},
+        {"notes_expanded", ColumnType::string},
+        {"notes_url", ColumnType::string},
+        {"notes_url_expanded", ColumnType::string},
+        {"notification_interval", ColumnType::double_},
+        {"notification_period", ColumnType::string},
+#ifdef CMC
+        {"notification_postponement_reason", ColumnType::string},
+#endif
+        {"notifications_enabled", ColumnType::int_},
+        {"pending_flex_downtime", ColumnType::int_},
+        {"percent_state_change", ColumnType::double_},
+        {"perf_data", ColumnType::string},
+        {"plugin_output", ColumnType::string},
+        {"pnpgraph_present", ColumnType::int_},
+#ifdef CMC
+        {"previous_hard_state", ColumnType::int_},
+#endif
+        {"process_performance_data", ColumnType::int_},
+        {"retry_interval", ColumnType::double_},
+        {"scheduled_downtime_depth", ColumnType::int_},
+        {"service_period", ColumnType::string},
+        {"staleness", ColumnType::double_},
+        {"state", ColumnType::int_},
+        {"state_type", ColumnType::int_},
+        {"tag_names", ColumnType::list},
+        {"tag_values", ColumnType::list},
+        {"tags", ColumnType::dict},
+    };
+}
+
+static ColumnDefinitions hosts_columns() {
+    return {
+        {"address", ColumnType::string},
+        {"alias", ColumnType::string},
+        {"childs", ColumnType::list},
+        {"filename", ColumnType::string},
+        {"groups", ColumnType::list},
+        {"last_time_down", ColumnType::time},
+        {"last_time_unreachable", ColumnType::time},
+        {"last_time_up", ColumnType::time},
+        {"mk_inventory", ColumnType::blob},
+        {"mk_inventory_gz", ColumnType::blob},
+        {"mk_inventory_last", ColumnType::time},
+        {"mk_logwatch_files", ColumnType::list},
+        {"name", ColumnType::string},
+        {"num_services", ColumnType::int_},
+        {"num_services_crit", ColumnType::int_},
+        {"num_services_handled_problems", ColumnType::int_},
+        {"num_services_hard_crit", ColumnType::int_},
+        {"num_services_hard_ok", ColumnType::int_},
+        {"num_services_hard_unknown", ColumnType::int_},
+        {"num_services_hard_warn", ColumnType::int_},
+        {"num_services_ok", ColumnType::int_},
+        {"num_services_pending", ColumnType::int_},
+        {"num_services_unhandled_problems", ColumnType::int_},
+        {"num_services_unknown", ColumnType::int_},
+        {"num_services_warn", ColumnType::int_},
+        {"obsess_over_host", ColumnType::int_},
+        {"parents", ColumnType::list},
+        {"services", ColumnType::list},
+        {"services_with_fullstate", ColumnType::list},
+        {"services_with_info", ColumnType::list},
+        {"services_with_state", ColumnType::list},
+#ifdef CMC
+        {"smartping_timeout", ColumnType::int_},
+#endif
+        {"statusmap_image", ColumnType::string},
+        {"structured_status", ColumnType::blob},
+        {"total_services", ColumnType::int_},
+        {"worst_service_hard_state", ColumnType::int_},
+        {"worst_service_state", ColumnType::int_},
+#ifdef CMC
+        {"x_3d", ColumnType::string},
+        {"y_3d", ColumnType::string},
+        {"z_3d", ColumnType::string},
+#else
+        {"x_3d", ColumnType::double_},
+        {"y_3d", ColumnType::double_},
+        {"z_3d", ColumnType::double_},
+#endif
+    };
+}
+
 TEST(TableHosts, ColumnNamesAndTypes) {
-    // TODO(sp)
+    EXPECT_EQ(hosts_columns() + hosts_and_services_columns(),
+              ColumnDefinitions(TableHosts{nullptr}));
 }
 
 TEST(TableHostsByGroup, ColumnNamesAndTypes) {
@@ -269,7 +428,7 @@ TEST(TableLog, ColumnNamesAndTypes) {
 }
 
 TEST(TableServiceGroups, ColumnNamesAndTypes) {
-    EXPECT_EQ(common_host_and_service_groups_columns(),
+    EXPECT_EQ(service_groups_columns(),
               ColumnDefinitions(TableServiceGroups{nullptr}));
 }
 

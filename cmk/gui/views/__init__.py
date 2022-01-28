@@ -692,6 +692,15 @@ class View:
         return missing_single_infos
 
 
+class DummyView(View):
+    """Represents an empty view hull, not intended to be displayed
+    This view can be used as surrogate where a view-ish like object is needed
+    """
+
+    def __init__(self):
+        super().__init__("dummy_view", {}, {})
+
+
 class ABCViewRenderer(abc.ABC):
     def __init__(self, view: View) -> None:
         super().__init__()

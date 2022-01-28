@@ -1971,6 +1971,10 @@ class Cell:
         if painter_spec:
             self._from_view(painter_spec)
 
+    @property
+    def view(self) -> "View":
+        return self._view
+
     def _from_view(self, painter_spec: PainterSpec) -> None:
         self._painter_name = extract_painter_name(painter_spec)
         if isinstance(painter_spec[0], tuple):

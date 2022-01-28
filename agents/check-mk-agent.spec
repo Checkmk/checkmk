@@ -68,8 +68,6 @@ rm -rf $RPM_BUILD_ROOT
 
 %define reload_xinetd if which xinetd >/dev/null 2>&1 ; then if pgrep -x xinetd >/dev/null ; then echo "Reloading xinetd..." ; service xinetd reload ; else echo "Starting xinetd..." ; service xinetd start ; fi ; fi
 
-%define activate_xinetd if which xinetd >/dev/null 2>&1 && which chkconfig >/dev/null 2>&1 ; then echo "Activating startscript of xinetd" ; chkconfig xinetd on ; fi
-
 %define systemd_enable if which systemctl >/dev/null 2>&1 && ! which xinetd >/dev/null 2>&1 ; then echo "Enable Checkmk Agent in systemd..." ; systemctl daemon-reload >/dev/null; systemctl enable check-mk-agent.socket check_mk-async; systemctl restart check-mk-agent.socket check_mk-async; fi
 
 %pre
@@ -105,7 +103,11 @@ fi
 %post
 [ -f /etc/xinetd.d/check-mk-agent.rpmnew ] && rm /etc/xinetd.d/check-mk-agent.rpmnew
 
-%activate_xinetd
+if which xinetd >/dev/null 2>&1 && which chkconfig >/dev/null 2>&1; then
+    echo "Activating startscript of xinetd"
+    chkconfig xinetd on
+fi
+
 %reload_xinetd
 %systemd_enable
 

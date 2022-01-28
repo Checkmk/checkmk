@@ -309,21 +309,23 @@ def test_check_oracle_instance(
 
 
 def test_check_oracle_instance_empty_section(fix_register: FixRegister) -> None:
-    assert (
-        list(
-            fix_register.check_plugins[CheckPluginName("oracle_instance")].check_function(
-                item="item",
-                params={
-                    "logins": 2,
-                    "noforcelogging": 1,
-                    "noarchivelog": 1,
-                    "primarynotopen": 2,
-                },
-                section={},
-            )
+    assert list(
+        fix_register.check_plugins[CheckPluginName("oracle_instance")].check_function(
+            item="item",
+            params={
+                "logins": 2,
+                "noforcelogging": 1,
+                "noarchivelog": 1,
+                "primarynotopen": 2,
+            },
+            section={},
         )
-        == []
-    )
+    ) == [
+        Result(
+            state=State.CRIT,
+            summary="Database or necessary processes not running or login failed",
+        )
+    ]
 
 
 @pytest.mark.parametrize(

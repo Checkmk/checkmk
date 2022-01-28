@@ -14,25 +14,24 @@ from cmk.utils.type_defs import CheckPluginName
 
 from cmk.base.item_state import MKCounterWrapped
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
-from cmk.base.plugins.agent_based.oracle_instance import parse_oracle_instance
+from cmk.base.plugins.agent_based.oracle_instance import (
+    GeneralError,
+    Instance,
+    InvalidData,
+    parse_oracle_instance,
+)
 
 
 def test_discover_oracle_instance_uptime(fix_register: FixRegister) -> None:
     assert list(
         fix_register.check_plugins[CheckPluginName("oracle_instance_uptime")].discovery_function(
             {
-                "a": {
-                    "general_error": None,
-                    "invalid_data": False,
-                },
-                "b": {
-                    "general_error": "abc",
-                    "invalid_data": False,
-                },
-                "c": {
-                    "general_error": "123",
-                    "invalid_data": True,
-                },
+                "a": Instance(sid="a"),
+                "b": GeneralError(
+                    sid="b",
+                    err="whatever",
+                ),
+                "c": InvalidData(sid="c"),
             },
         )
     ) == [

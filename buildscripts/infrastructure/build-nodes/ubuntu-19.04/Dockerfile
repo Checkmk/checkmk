@@ -79,6 +79,7 @@ RUN sed -i -re 's/([a-z]{2}\.)?archive.ubuntu.com|security.ubuntu.com/old-releas
     tk-dev \
     uuid-dev \
     vim \
+    libc6-dbg \
     && rm -rf /var/lib/apt/lists/*
 
 # Install our standard tool chain for building
@@ -105,6 +106,7 @@ RUN /opt/install-pipenv.sh
 RUN /opt/install-freetds.sh
 RUN /opt/install-rust-cargo.sh
 RUN /opt/install-cmk-dependencies.sh
+RUN /opt/install-patchelf.sh
 
 # Exclusively for this distro at the moment, because it is used by several CI
 # jobs for special tasks (checking out git, "make dist", orchestrating other

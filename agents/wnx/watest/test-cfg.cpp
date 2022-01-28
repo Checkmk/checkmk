@@ -146,7 +146,7 @@ TEST(CmaCfg, LogFileLocation) {
 
     {
         // empty data to user/public
-        auto& user = GetCfg().folders_.data_;
+        auto &user = GetCfg().folders_.data_;
         auto old_user = user;
         ON_OUT_OF_SCOPE(GetCfg().folders_.data_ = old_user);
         user.clear();
@@ -164,7 +164,7 @@ TEST(CmaCfg, LogFileLocation) {
 
     {
         // empty without user gives us default to the public/user
-        auto& user = GetCfg().folders_.data_;
+        auto &user = GetCfg().folders_.data_;
         auto old_user = user;
         ON_OUT_OF_SCOPE(GetCfg().folders_.data_ = old_user);
         user.clear();
@@ -408,7 +408,7 @@ TEST(CmaCfg, ReloadCfg) {
 }
 
 TEST(Cma, CleanApi) {
-    auto& alert = cma::g_uninstall_alert;
+    auto &alert = cma::g_uninstall_alert;
     ASSERT_FALSE(alert.isSet()) << "initial always false";
     alert.clear();
     ASSERT_FALSE(alert.isSet());
@@ -509,7 +509,7 @@ protected:
         details::CreateTree(pd);
         auto table = details::AllDirTable();
         auto table_removed = details::RemovableDirTable();
-        for (auto& n : table) {
+        for (auto &n : table) {
             tst::CreateTextFile(pd / n / "1.tmp", wtools::ToUtf8(n));
         }
 
@@ -532,7 +532,7 @@ TEST_F(CmaCfg_F, CreateTree) {
     fs::path pd = GetUserDir();
     details::CreateTree(pd);
     auto table = details::AllDirTable();
-    for (auto& n : table)
+    for (auto &n : table)
         ASSERT_TRUE(fs::is_directory(pd / n))
             << "Doesn't exist: " << n.data() << "\n";
 }
@@ -553,7 +553,7 @@ TEST_F(CmaCfg_F, CleanDataFolderNoneAllSmartEmpty) {
 
     ASSERT_TRUE(details::CleanDataFolder(details::CleanMode::none));
 
-    for (auto& n : table) {
+    for (auto &n : table) {
         EXPECT_TRUE(fs::exists(pd / n / "1.tmp"))
             << "directory doesn't exist: " << n.data();
     }
@@ -561,18 +561,18 @@ TEST_F(CmaCfg_F, CleanDataFolderNoneAllSmartEmpty) {
     // check that all removes all folders
     ASSERT_TRUE(details::CleanDataFolder(details::CleanMode::all));
 
-    for (auto& n : table) {
+    for (auto &n : table) {
         EXPECT_TRUE(!fs::exists(pd / n));
     }
 
     // check that smart removes also all empty folders
     details::CreateTree(pd);
-    for (auto& n : table_removed) {
+    for (auto &n : table_removed) {
         EXPECT_TRUE(fs::exists(pd / n));
     }
     details::CleanDataFolder(details::CleanMode::smart);
 
-    for (auto& n : table) {
+    for (auto &n : table) {
         if (n == dirs::kLog) {
             continue;
         }
@@ -592,7 +592,7 @@ TEST_F(CmaCfg_F, CleanDataFolderSmart) {
     std::vector<std::wstring> files;
     cap::Process(tgt.u8string(), cap::ProcMode::install, files);
     ASSERT_TRUE(files.size() > 0);
-    for (auto& f : files) {
+    for (auto &f : files) {
         EXPECT_TRUE(fs::exists(f));
     }
 
@@ -601,13 +601,13 @@ TEST_F(CmaCfg_F, CleanDataFolderSmart) {
     tst::CreateTextFile(pd / files::kUserYmlFile, "aaa");
 
     ASSERT_TRUE(details::CleanDataFolder(details::CleanMode::smart));
-    for (auto& f : files) {
+    for (auto &f : files) {
         EXPECT_TRUE(!fs::exists(f));
     }
     EXPECT_TRUE(!fs::exists(target_yml_example));
     EXPECT_TRUE(!fs::exists(pd / files::kUserYmlFile));
 
-    for (auto& n : table_removed) {
+    for (auto &n : table_removed) {
         EXPECT_EQ(fs::exists(pd / n), !details::g_remove_dirs_on_clean)
             << "directory state is invalid : " << n.data();
     }
@@ -626,7 +626,7 @@ TEST_F(CmaCfg_F, CleanDataFolderSmart) {
         << "this file must be left on disk";
 
     int exists_count = 0;
-    for (auto& n : table) {
+    for (auto &n : table) {
         if (fs::exists(pd / n / "1.tmp")) ++exists_count;
     }
 
@@ -638,7 +638,7 @@ TEST_F(CmaCfg_F, CleanDataFolderSmart) {
 namespace {
 class JobToCheckEnvironment {
 public:
-    JobToCheckEnvironment(const std::string& case_name)
+    JobToCheckEnvironment(const std::string &case_name)
         : dirs{case_name}
         , cmd_file_{dirs.in() / "printer.cmd"}
         , results_file_{dirs.out() / "results.txt"} {}
@@ -699,7 +699,7 @@ TEST(CmaCfg, SetupPluginEnvironmentIntegration) {
 
     // check for uniqueness
     std::set<std::string> all;
-    for (auto const& raw : table) {
+    for (auto const &raw : table) {
         all.insert(raw);
     }
     EXPECT_EQ(all.size(), 11);

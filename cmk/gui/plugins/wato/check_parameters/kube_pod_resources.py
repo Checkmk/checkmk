@@ -5,12 +5,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
+from cmk.gui.plugins.wato.check_parameters.kube import valuespec_age
 from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithoutItem,
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
 )
-from cmk.gui.valuespec import Age, CascadingDropdown, Dictionary, MonitoringState, Tuple
+from cmk.gui.valuespec import Dictionary, MonitoringState
 
 
 def _parameter_valuespec_kube_pod_resources(help_text: str):
@@ -18,27 +19,7 @@ def _parameter_valuespec_kube_pod_resources(help_text: str):
         elements=[
             (
                 "pending",
-                CascadingDropdown(
-                    title=_("Define levels for pending pods"),
-                    choices=[
-                        (
-                            "no_levels",
-                            _("No levels"),
-                            None,
-                        ),
-                        (
-                            "levels",
-                            _("Impose levels"),
-                            Tuple(
-                                elements=[
-                                    Age(title=_("Warning after"), default_value=300),
-                                    Age(title=_("Critical after"), default_value=600),
-                                ],
-                            ),
-                        ),
-                    ],
-                    default_value="no_levels",
-                ),
+                valuespec_age(title=_("Define levels for pending pods")),
             ),
             (
                 "unknown",

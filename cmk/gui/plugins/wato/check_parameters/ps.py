@@ -646,7 +646,7 @@ def convert_inventory_processes(old_dict):
     return new_dict
 
 
-def _valuespec_inventory_processes_rules():
+def _valuespec_inventory_processes_rules() -> Transform:
     return Transform(
         Dictionary(
             title=_("Process discovery"),

@@ -26,9 +26,9 @@ class ServiceProcessor;
 namespace cma::provider {
 
 // simple creator valid state name
-inline std::string MakeStateFileName(const std::string& name,
-                                     const std::string& extension,
-                                     const std::string& ip_address) {
+inline std::string MakeStateFileName(const std::string &name,
+                                     const std::string &extension,
+                                     const std::string &ip_address) {
     if (name.empty() || extension.empty()) {
         XLOG::l("Invalid parameters to MakeStateFileName '{}' '{}'", name,
                 extension);
@@ -44,14 +44,14 @@ inline std::string MakeStateFileName(const std::string& name,
     return out;
 }
 
-inline std::string MakeStateFileName(const std::string& name,
-                                     const std::string& extension) {
+inline std::string MakeStateFileName(const std::string &name,
+                                     const std::string &extension) {
     return MakeStateFileName(name, extension, "");
 }
 
 class Basic {
 public:
-    Basic(const std::string_view& Name, char Separator = 0)
+    Basic(const std::string_view &Name, char Separator = 0)
         : uniq_name_{Name}
         , separator_{Separator}
         , delay_on_fail_{0}
@@ -64,12 +64,12 @@ public:
     virtual ~Basic() {}
 
     virtual bool startExecution(
-        const std::string& internal_port,  // format "type:value", where type:
+        const std::string &internal_port,  // format "type:value", where type:
         // mail - for mail slot
         // asio - for TCP
         // grpc - for GRPC
         // rest - for Rest
-        const std::string& command_line  // anything here
+        const std::string &command_line  // anything here
         ) = 0;
 
     virtual bool stop(bool Wait) = 0;
@@ -80,13 +80,13 @@ public:
     // implemented only for very special providers which has to change
     // itself during generation of output(like plugins)
     virtual void updateSectionStatus() {}
-    std::string generateContent(const std::string_view& section_name,
+    std::string generateContent(const std::string_view &section_name,
                                 bool force_generation);
     std::string generateContent() {
         return generateContent(section::kUseEmbeddedName, false);
     }
 
-    std::string generateContent(const std::string_view& section_name) {
+    std::string generateContent(const std::string_view &section_name) {
         return generateContent(section_name, false);
     }
 
@@ -97,9 +97,9 @@ public:
     void loadStandardConfig();
     virtual void loadConfig() {}
     int timeout() const { return timeout_; }
-    virtual void registerCommandLine(const std::string& command_line);
+    virtual void registerCommandLine(const std::string &command_line);
 
-    void registerOwner(cma::srv::ServiceProcessor* sp);
+    void registerOwner(cma::srv::ServiceProcessor *sp);
 
     virtual void preStart() {}
     uint64_t errorCount() const { return error_count_; }
@@ -121,7 +121,7 @@ protected:
     // usually related to the openhardware monitor
     void disableSectionTemporary();
 
-    bool sendGatheredData(const std::string& command_line);
+    bool sendGatheredData(const std::string &command_line);
     virtual std::string makeHeader(const std::string_view section_name) const {
         return section::MakeHeader(
             section_name == cma::section::kUseEmbeddedName
@@ -146,14 +146,14 @@ protected:
     // optional API to store info about errors used, for example by OHM
     uint64_t registerError() { return error_count_.fetch_add(1); }
 
-    cma::srv::ServiceProcessor* getHostSp() const noexcept { return host_sp_; }
+    cma::srv::ServiceProcessor *getHostSp() const noexcept { return host_sp_; }
 
 private:
     bool headerless_;  // if true no makeHeader called during content generation
     std::string ip_;
     char separator_;
     std::atomic<uint64_t> error_count_ = 0;
-    cma::srv::ServiceProcessor* host_sp_ = nullptr;
+    cma::srv::ServiceProcessor *host_sp_ = nullptr;
 
 #if defined(GTEST_INCLUDE_GTEST_GTEST_H_)
     friend class WmiProviderTest;
@@ -167,14 +167,14 @@ private:
 // use as a parent
 class Synchronous : public Basic {
 public:
-    Synchronous(const std::string_view& name) : Basic(name, 0) {}
-    Synchronous(const std::string_view& name, char separator)
+    Synchronous(const std::string_view &name) : Basic(name, 0) {}
+    Synchronous(const std::string_view &name, char separator)
         : Basic(name, separator) {}
     virtual ~Synchronous() = default;
 
     bool startExecution(
-        const std::string& internal_port,  // format "type:value
-        const std::string& command_line    // format "id name whatever"
+        const std::string &internal_port,  // format "type:value
+        const std::string &command_line    // format "id name whatever"
         ) override;
     bool stop(bool wait) override { return true; }
 };
@@ -184,22 +184,22 @@ public:
 // When you need choice, then  use this class
 class Asynchronous : public Basic {
 public:
-    Asynchronous(const std::string_view& name) : Basic(name, 0) {}
-    Asynchronous(const std::string_view& name, char separator)
+    Asynchronous(const std::string_view &name) : Basic(name, 0) {}
+    Asynchronous(const std::string_view &name, char separator)
         : Basic(name, separator) {}
     virtual ~Asynchronous() = default;
 
     bool startExecution(
-        const std::string& internal_port,  // format "type:value"
-        const std::string& command_line    // format "id name whatever"
+        const std::string &internal_port,  // format "type:value"
+        const std::string &command_line    // format "id name whatever"
         ) override;
 
     bool stop(bool wait) override;
 
 protected:
     // ASYNCHRONOUS PART:
-    void threadProc(const std::string& internal_port,
-                    const std::string& command_line,
+    void threadProc(const std::string &internal_port,
+                    const std::string &command_line,
                     std::chrono::milliseconds period);
 
     // thread

@@ -8,16 +8,14 @@
 
 #include "config.h"  // IWYU pragma: keep
 
-#include <chrono>
+#include <cstddef>
 #include <memory>
 #include <string>
 
+#include "LogCache.h"
 #include "Table.h"
 #include "contact_fwd.h"
 class Column;
-class LogCache;
-class LogFiles;
-class Logfile;
 class MonitoringCore;
 class Query;
 class Row;
@@ -35,11 +33,9 @@ public:
 
 private:
     LogCache *_log_cache;
-    void answerQueryInternal(Query *query, const LogFiles &log_files);
-    bool answerQueryReverse(Query *query, Logfile *logfile,
-                            unsigned long classmask,
-                            std::chrono::system_clock::time_point since,
-                            std::chrono::system_clock::time_point until);
+
+    static LogFilter constructFilter(Query *query,
+                                     size_t max_lines_per_logfile);
 };
 
 #endif  // TableLog_h

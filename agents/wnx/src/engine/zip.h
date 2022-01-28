@@ -16,7 +16,7 @@
 namespace cma::tools::zip {
 enum class Type { unknown, zip, cab };
 
-bool Extract(const std::filesystem::path& file_src,
-             const std::filesystem::path& dir_dest);
+bool Extract(const std::filesystem::path &file_src,
+             const std::filesystem::path &dir_dest);
 
 }  // namespace cma::tools::zip

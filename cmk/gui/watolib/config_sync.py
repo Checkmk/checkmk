@@ -205,7 +205,7 @@ class SnapshotCreationBase:
             if debug:
                 self._logger.debug(" ".join(command))
             try:
-                p = subprocess.Popen(
+                p = subprocess.Popen(  # pylint:disable=consider-using-with
                     command,
                     stdin=subprocess.PIPE,
                     stdout=subprocess.PIPE,
@@ -239,7 +239,9 @@ class SnapshotCreationBase:
 
             if not os.path.exists(source_path):
                 # Create an empty tarfile for this component
-                tar = tarfile.open(os.path.join(tarfile_dir, "%s.tar" % component.ident), "w")
+                tar = tarfile.open(  # pylint:disable=consider-using-with
+                    os.path.join(tarfile_dir, "%s.tar" % component.ident), "w"
+                )
                 tar.close()
                 continue
 
@@ -404,7 +406,9 @@ class SnapshotCreator(SnapshotCreationBase):
                 )
             else:
                 # create an empty tarfile for this component
-                tar = tarfile.open(os.path.join(self._tarfile_dir, "%s.tar" % component.ident), "w")
+                tar = tarfile.open(  # pylint:disable=consider-using-with
+                    os.path.join(self._tarfile_dir, "%s.tar" % component.ident), "w"
+                )
                 tar.close()
 
         self._execute_bash_commands(bash_commands)
@@ -421,7 +425,9 @@ def extract_from_buffer(buffer_: bytes, base_dir: Path, elements: List[Replicati
     stream = io.BytesIO()
     stream.write(buffer_)
     stream.seek(0)
-    _extract(tarfile.open(None, "r", stream), base_dir, elements)
+    _extract(
+        tarfile.open(None, "r", stream), base_dir, elements  # pylint:disable=consider-using-with
+    )
 
 
 def _extract(tar: tarfile.TarFile, base_dir: Path, components: List[ReplicationPath]) -> None:
@@ -442,7 +448,7 @@ def _extract(tar: tarfile.TarFile, base_dir: Path, components: List[ReplicationP
                 target_dir = os.path.dirname(component_path)
 
             # Extract without use of temporary files
-            subtar = tarfile.open(fileobj=subtarstream)
+            subtar = tarfile.open(fileobj=subtarstream)  # pylint:disable=consider-using-with
 
             # Remove old stuff
             if os.path.exists(component_path):

@@ -37,7 +37,7 @@ def value_store_fixture(monkeypatch) -> None:
                     "disk-limit 5",
                     "volume quota_common_10",
                     "disk-used 0",
-                ]
+                ],
             ],
             {
                 "QUOTA-10": Qtree(
@@ -97,6 +97,57 @@ def value_store_fixture(monkeypatch) -> None:
                 ),
             },
             id="qtree_with_quota_users",
+        ),
+        pytest.param(
+            [
+                [
+                    "quota QUOTA-10",
+                    "quota-type tree",
+                    "disk-limit 5",
+                    "volume quota_common_10",
+                    "disk-used 0",
+                ],
+                [
+                    "quota QUOTA-10",
+                    "quota-type tree",
+                    "disk-limit 5",
+                    "volume quota_common_11",
+                    "disk-used 0",
+                ],
+            ],
+            {
+                "quota_common_10/QUOTA-10": Qtree(
+                    quota="QUOTA-10",
+                    quota_users="",
+                    quota_type="tree",
+                    volume="quota_common_10",
+                    disk_limit="5",
+                    disk_used="0",
+                    files_used="",
+                    file_limit="",
+                ),
+                "QUOTA-10": Qtree(
+                    quota="QUOTA-10",
+                    quota_users="",
+                    quota_type="tree",
+                    volume="quota_common_11",
+                    disk_limit="5",
+                    disk_used="0",
+                    files_used="",
+                    file_limit="",
+                ),
+                "quota_common_11/QUOTA-10": Qtree(
+                    quota="QUOTA-10",
+                    quota_users="",
+                    quota_type="tree",
+                    volume="quota_common_11",
+                    disk_limit="5",
+                    disk_used="0",
+                    files_used="",
+                    file_limit="",
+                ),
+            },
+            id="qtrees_with_same_quota",
         ),
     ],
 )

@@ -5,53 +5,38 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from pathlib import Path
-from typing import Dict
+from typing import Any, Dict, Mapping, Optional, Sequence
+
+from _pytest.monkeypatch import MonkeyPatch
 
 from tests.testlib.utils import get_standard_linux_agent_output
 
 import cmk.utils.tags
+from cmk.utils.type_defs import HostAddress, HostName
 
-import cmk.base.autochecks as autochecks
 import cmk.base.config as config
+from cmk.base import autochecks
 
 
-class _AutochecksMocker:
+class _AutochecksMocker(autochecks.AutochecksManager):
     def __init__(self):
-        self.autochecks = {}
+        super().__init__()
+        self.raw_autochecks: dict[HostName, Sequence[autochecks.AutocheckEntry]] = {}
 
-    def get_autochecks_of(
-        self, hostname, compute_check_parameters, service_description, get_effective_hostname
-    ):
-        return [
-            autochecks.Service(
-                s.check_plugin_name,
-                s.item,
-                s.description,
-                compute_check_parameters(
-                    get_effective_hostname(hostname, s.description),
-                    s.check_plugin_name,
-                    s.item,
-                    s.parameters,
-                ),
-                s.service_labels,
-            )
-            for s in self.autochecks.get(hostname, ())
-        ]
-
-    def discovered_labels_of(self, hostname, service_descr, get_service_description):
-        try:
-            return {
-                service.description: service.service_labels
-                for service in self.autochecks.get(hostname, ())
-            }[service_descr]
-        except KeyError:
-            return {}
+    def _read_raw_autochecks(self, hostname: HostName) -> Sequence[autochecks.AutocheckEntry]:
+        return self.raw_autochecks.get(hostname, [])
 
 
 class Scenario:
     """Helper class to modify the Check_MK base configuration for unit tests"""
 
-    def __init__(self, site_id="unit"):
+    @staticmethod
+    def _get_config_cache() -> config.ConfigCache:
+        cc = config.get_config_cache()
+        assert isinstance(cc, config.ConfigCache)
+        return cc
+
+    def __init__(self, site_id: str = "unit") -> None:
         super().__init__()
 
         tag_config = cmk.utils.tags.sample_tag_config()
@@ -59,7 +44,7 @@ class Scenario:
         self.site_id = site_id
         self._autochecks_mocker = _AutochecksMocker()
 
-        self.config = {
+        self.config: dict[str, Any] = {
             "tag_config": tag_config,
             "distributed_wato_site": site_id,
             "all_hosts": [],
@@ -68,11 +53,16 @@ class Scenario:
             "host_labels": {},
             "clusters": {},
         }
-        self.config_cache = config.get_config_cache()
+        self.config_cache = self._get_config_cache()
 
     def add_host(
-        self, hostname, tags=None, host_path="/wato/hosts.mk", labels=None, ipaddress=None
-    ):
+        self,
+        hostname: HostName,
+        tags: Optional[dict[str, str]] = None,
+        host_path: str = "/wato/hosts.mk",
+        labels: Optional[dict[str, str]] = None,
+        ipaddress: Optional[HostAddress] = None,
+    ) -> None:
         if tags is None:
             tags = {}
         assert isinstance(tags, dict)
@@ -89,9 +79,7 @@ class Scenario:
         if ipaddress is not None:
             self.config.setdefault("ipaddresses", {})[hostname] = ipaddress
 
-        return self
-
-    def fake_standard_linux_agent_output(self, *test_hosts):
+    def fake_standard_linux_agent_output(self, *test_hosts: str) -> None:
         self.set_ruleset(
             "datasource_programs",
             [
@@ -106,7 +94,13 @@ class Scenario:
             with cache_path.open("w", encoding="utf-8") as f:
                 f.write(linux_agent_output)
 
-    def add_cluster(self, hostname, tags=None, host_path="/wato/hosts.mk", nodes=None):
+    def add_cluster(
+        self,
+        hostname: HostName,
+        tags: Optional[dict[str, str]] = None,
+        host_path: str = "/wato/hosts.mk",
+        nodes: Optional[Sequence[HostName]] = None,
+    ) -> None:
         if tags is None:
             tags = {}
         assert isinstance(tags, dict)
@@ -117,12 +111,11 @@ class Scenario:
         self.config["clusters"][hostname] = nodes
         self.config["host_paths"][hostname] = host_path
         self.config["host_tags"][hostname] = self._get_effective_tag_config(tags)
-        return self
 
     # TODO: This immitates the logic of cmk.gui.watolib.CREHost.tag_groups which
     # is currently responsible for calulcating the host tags of a host.
     # Would be better to untie the GUI code there and move it over to cmk.utils.tags.
-    def _get_effective_tag_config(self, tags):
+    def _get_effective_tag_config(self, tags: Mapping[str, str]) -> Mapping[str, str]:
         """Returns a full set of tag groups
 
         It contains the merged default tag groups and their default values
@@ -159,23 +152,18 @@ class Scenario:
 
         return tag_config
 
-    def set_option(self, varname, option):
+    def set_option(self, varname, option) -> None:
         self.config[varname] = option
-        return self
 
-    def set_ruleset(self, varname, ruleset):
+    def set_ruleset(self, varname, ruleset) -> None:
         self.config[varname] = ruleset
-        return self
 
-    def set_autochecks(self, hostname, services):
-        # these services have no real counterpart in the code:
-        #  * the description is used as given
-        #    (bypassing the get_service_description callback)
-        #  * the parameters are processed according to the config
-        #    (calling config.compute_check_parameters)
-        self._autochecks_mocker.autochecks[hostname] = services
+    def set_autochecks(
+        self, hostname: HostName, entries: Sequence[autochecks.AutocheckEntry]
+    ) -> None:
+        self._autochecks_mocker.raw_autochecks[hostname] = entries
 
-    def apply(self, monkeypatch):
+    def apply(self, monkeypatch: MonkeyPatch) -> config.ConfigCache:
         check_vars: Dict = {}
         for key, value in self.config.items():
             if key in config._check_variables:
@@ -183,11 +171,11 @@ class Scenario:
                 continue
             monkeypatch.setattr(config, key, value)
 
-        self.config_cache = config.get_config_cache()
+        self.config_cache = self._get_config_cache()
         self.config_cache.initialize()
         config.set_check_variables(check_vars)
 
-        if self._autochecks_mocker.autochecks:
+        if self._autochecks_mocker.raw_autochecks:
             monkeypatch.setattr(
                 self.config_cache,
                 "_autochecks_manager",
@@ -196,3 +184,18 @@ class Scenario:
             )
 
         return self.config_cache
+
+
+class CEEScenario(Scenario):
+    """Helper class to modify the Check_MK base configuration for unit tests"""
+
+    @staticmethod
+    def _get_config_cache() -> config.CEEConfigCache:
+        cc = config.get_config_cache()
+        assert isinstance(cc, config.CEEConfigCache)
+        return cc
+
+    def apply(self, monkeypatch: MonkeyPatch) -> config.CEEConfigCache:
+        cc = super().apply(monkeypatch)
+        assert isinstance(cc, config.CEEConfigCache)
+        return cc

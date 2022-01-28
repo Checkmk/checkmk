@@ -200,8 +200,8 @@ class Metric(
     Args:
         name:       The name of the metric.
         value:      The measured value.
-        levels:     A tuple of upper levels. This information is only used for visualization
-                    by the graphing system. It does not affect the service state.
+        levels:     A pair of upper levels, ie. warn and crit. This information is only used
+                    for visualization by the graphing system. It does not affect the service state.
         boundaries: Additional information on the value domain for the graphing system.
 
     If you create a Metric in this way, you may want to consider using :func:`check_levels`.

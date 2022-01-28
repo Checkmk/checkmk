@@ -56,8 +56,7 @@ $(PYTHON3_MODULES_BUILD): $(PYTHON_CACHE_PKG_PROCESS) $(OPENSSL_CACHE_PKG_PROCES
 	    export LD_LIBRARY_PATH="$(PACKAGE_PYTHON_LD_LIBRARY_PATH):$(PACKAGE_OPENSSL_LD_LIBRARY_PATH)" ; \
 	    export PATH="$(PACKAGE_PYTHON_BIN):$$PATH" ; \
 	    $(PACKAGE_PYTHON_EXECUTABLE) -m pip install \
-		`: dont use precompiled things, build with our build env ` \
-		--no-binary=":all:" \
+		`: do use precompiled things! ` \
 		--no-deps \
 		--compile \
 		--isolated \
@@ -95,12 +94,17 @@ $(PYTHON3_MODULES_CACHE_PKG_PROCESS): $(PYTHON3_MODULES_CACHE_PKG_PATH)
 	$(call upload_pkg_archive,$(PYTHON3_MODULES_CACHE_PKG_PATH),$(PYTHON3_MODULES_DIR),$(PYTHON3_MODULES_BUILD_ID))
 # Ensure that the rpath of the python binary and dynamic libs always points to the current version path
 	set -e ; for F in $$(find $(PYTHON3_MODULES_INSTALL_DIR) -name \*.so); do \
-	    chrpath -r "$(OMD_ROOT)/lib" $$F; \
+	    RPATH=$$(patchelf --print-rpath $$F) ; \
+	    if echo "$$RPATH" | grep '^$$ORIGIN' >/dev/null 2>&1; then \
+		echo "Keep '$$RPATH' rpath of $$F" ; \
+		continue ; \
+	    fi ; \
+	    patchelf --set-rpath "$(OMD_ROOT)/lib" $$F; \
 	    echo -n "Test rpath of $$F..." ; \
-		if chrpath "$$F" | grep "=$(OMD_ROOT)/lib" >/dev/null 2>&1; then \
+		if patchelf --print-rpath "$$F" | grep "$(OMD_ROOT)/lib" >/dev/null 2>&1; then \
 		    echo OK ; \
 		else \
-		    echo "ERROR ($$(chrpath $$F))"; \
+		    echo "ERROR ($$(patchelf --print-rpath $$F))"; \
 		    exit 1 ; \
 		fi \
 	done

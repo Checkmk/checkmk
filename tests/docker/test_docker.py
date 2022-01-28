@@ -59,7 +59,12 @@ def _package_name(version: testlib.CMKVersion) -> str:
 
 
 def _prepare_build():
-    assert subprocess.Popen(["make", "needed-packages"], cwd=build_path).wait() == 0
+    assert (
+        subprocess.Popen(  # pylint:disable=consider-using-with
+            ["make", "needed-packages"], cwd=build_path
+        ).wait()
+        == 0
+    )
 
 
 def _prepare_package(version: testlib.CMKVersion):

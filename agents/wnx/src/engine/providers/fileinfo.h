@@ -34,14 +34,14 @@ public:
     explicit FileInfo(Mode mode)
         : Asynchronous(section::kFileInfoName, kSep), mode_{mode} {}
 
-    FileInfo(const std::string& name, char separator)
+    FileInfo(const std::string &name, char separator)
         : Asynchronous(name, separator) {}
 
     virtual void loadConfig();
 
 protected:
     std::string makeBody() override;
-    std::string generateFileList(const YAML::Node& path_array_val);
+    std::string generateFileList(const YAML::Node &path_array_val);
     Mode mode_{Mode::legacy};
 };
 }  // namespace provider

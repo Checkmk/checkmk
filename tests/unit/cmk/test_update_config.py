@@ -165,7 +165,7 @@ def test__transform_replaced_wato_rulesets_and_params(
 
 def _instantiate_ruleset(ruleset_name, param_value) -> Ruleset:
     ruleset = Ruleset(ruleset_name, {})
-    rule = Rule(Folder(""), ruleset)
+    rule = Rule.from_ruleset_defaults(Folder(""), ruleset)
     rule.value = param_value
     ruleset.append_rule(Folder(""), rule)
     assert ruleset.get_rules()
@@ -280,60 +280,6 @@ def test__transform_discovery_disabled_services(
 
     folder_rules = ruleset.get_folder_rules(Folder(""))
     assert [r.to_config() for r in folder_rules] == expected_ruleset
-
-
-@pytest.mark.usefixtures("request_context")
-@pytest.mark.parametrize(
-    ["rulesets", "expect_error"],
-    [
-        pytest.param(
-            {
-                "logwatch_rules": {
-                    "reclassify_patterns": [
-                        ("C", "\\\\x\\\\y\\\\z", "some comment"),
-                        ("W", "\\H", "invalid_regex"),
-                    ]
-                },
-                "checkgroup_parameters:ntp_time": {
-                    "ntp_levels": (10, 200.0, 500.0),
-                },
-            },
-            True,
-            id="invalid configuration",
-        ),
-        pytest.param(
-            {
-                "logwatch_rules": {
-                    "reclassify_patterns": [
-                        ("C", "\\\\x\\\\y\\\\z", "some comment"),
-                    ]
-                },
-                "checkgroup_parameters:ntp_time": {
-                    "ntp_levels": (10, 200.0, 500.0),
-                },
-            },
-            False,
-            id="valid configuration",
-        ),
-    ],
-)
-def test__validate_rule_values(
-    uc: update_config.UpdateConfig,
-    rulesets: Mapping[RulesetName, RuleValue],
-    expect_error: bool,
-) -> None:
-    all_rulesets = RulesetCollection()
-    all_rulesets.set_rulesets(
-        {
-            ruleset_name: _instantiate_ruleset(
-                ruleset_name,
-                rule_value,
-            )
-            for ruleset_name, rule_value in rulesets.items()
-        }
-    )
-    uc._validate_rule_values(all_rulesets)
-    assert uc._has_errors is expect_error
 
 
 @pytest.fixture(name="old_path")
@@ -465,7 +411,9 @@ def test__rename_discovered_host_label_files_fix_wrong_name(
     monkeypatch: pytest.MonkeyPatch,
     uc: update_config.UpdateConfig,
 ) -> None:
-    Scenario().add_host("abc.d").apply(monkeypatch)
+    ts = Scenario()
+    ts.add_host("abc.d")
+    ts.apply(monkeypatch)
 
     host_name = "abc.d"
     old_path = (cmk.utils.paths.discovered_host_labels_dir / host_name).with_suffix(".mk")
@@ -487,7 +435,9 @@ def test__rename_discovered_host_label_files_do_not_overwrite(
     monkeypatch: pytest.MonkeyPatch,
     uc: update_config.UpdateConfig,
 ) -> None:
-    Scenario().add_host("abc.d").apply(monkeypatch)
+    ts = Scenario()
+    ts.add_host("abc.d")
+    ts.apply(monkeypatch)
 
     host_name = "abc.d"
     old_path = (cmk.utils.paths.discovered_host_labels_dir / host_name).with_suffix(".mk")

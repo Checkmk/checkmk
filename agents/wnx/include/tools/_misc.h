@@ -55,16 +55,16 @@ inline void sleep(std::chrono::duration<T, B> dur) noexcept {
                       });
 }
 
-[[nodiscard]] inline bool IsEqual(const std::wstring& lhs,
-                                  const std::wstring& rhs) {
+[[nodiscard]] inline bool IsEqual(const std::wstring &lhs,
+                                  const std::wstring &rhs) {
     return std::equal(lhs.cbegin(), lhs.cend(), rhs.cbegin(), rhs.cend(),
                       [](wchar_t l, wchar_t r) {
                           return std::tolower(l) == std::tolower(r);
                       });
 }
 
-[[nodiscard]] inline bool IsLess(const std::string& lhs,
-                                 const std::string& rhs) {
+[[nodiscard]] inline bool IsLess(const std::string &lhs,
+                                 const std::string &rhs) {
     auto li = lhs.cbegin();
     auto ri = rhs.cbegin();
     for (; li != lhs.cend() && ri != rhs.cend(); ++ri, ++li) {
@@ -81,7 +81,7 @@ inline void sleep(std::chrono::duration<T, B> dur) noexcept {
 
 // Stupid Approach but C++ has no good methods to uppercase/lowercase string
 // #TODO USE IBM ICU or Boost.Locale
-inline void WideUpper(std::wstring& str) {
+inline void WideUpper(std::wstring &str) {
     if constexpr (tgt::IsWindows()) {
         auto work_string = str.data();  // C++ 17, mutable string
         CharUpperW(work_string);        // Microsoft specific, but safe
@@ -92,7 +92,7 @@ inline void WideUpper(std::wstring& str) {
     }
 }
 
-inline void StringLower(std::string& str) {
+inline void StringLower(std::string &str) {
     if constexpr (tgt::IsWindows()) {
         auto work_string = str.data();  // C++ 17, mutable string
         CharLowerA(work_string);        // Microsoft specific, but safe
@@ -103,7 +103,7 @@ inline void StringLower(std::string& str) {
     }
 }
 
-inline void StringUpper(std::string& str) {
+inline void StringUpper(std::string &str) {
     if constexpr (tgt::IsWindows()) {
         auto work_string = str.data();
         CharUpperA(work_string);
@@ -115,7 +115,7 @@ inline void StringUpper(std::string& str) {
     }
 }
 
-inline void WideLower(std::wstring& str) {
+inline void WideLower(std::wstring &str) {
     if constexpr (tgt::IsWindows()) {
         auto work_string = str.data();
         CharLowerW(work_string);
@@ -130,33 +130,33 @@ inline void WideLower(std::wstring& str) {
 // Usage:
 // auto vector_of string
 template <typename... Args>
-std::vector<std::wstring> ConstructVectorWstring(Args&&... args) {
+std::vector<std::wstring> ConstructVectorWstring(Args &&...args) {
     std::vector<std::wstring> cfg_files;
-    static_assert((std::is_constructible_v<std::wstring, Args&> && ...));
+    static_assert((std::is_constructible_v<std::wstring, Args &> && ...));
     (cfg_files.emplace_back(args), ...);
     return cfg_files;
 }
 
 template <typename... Args>
-auto ConstructVector(Args&... str) {
+auto ConstructVector(Args &...str) {
     return std::vector{str...};
 };
 
-inline bool IsValidRegularFile(const std::filesystem::path& filepath) {
+inline bool IsValidRegularFile(const std::filesystem::path &filepath) {
     std::error_code ec;
     return std::filesystem::exists(filepath, ec) &&
            std::filesystem::is_regular_file(filepath);
 }
 
 template <typename T>
-inline void AddVector(std::vector<char>& accu, const T& add) noexcept {
+inline void AddVector(std::vector<char> &accu, const T &add) noexcept {
     auto add_size = add.size();
     if (add_size == 0) return;
     auto old_size = accu.size();
     try {
         accu.resize(add_size + old_size);
         memcpy(accu.data() + old_size, add.data(), add_size);
-    } catch (const std::exception& e) {
+    } catch (const std::exception &e) {
         xlog::l(XLOG_FLINE + " Exception %s", e.what());
         return;
     }
@@ -185,46 +185,46 @@ auto ParseKeyValue(const std::basic_string_view<T> value, T splitter) {
 }
 
 template <typename T>
-auto ParseKeyValue(const T* value, T splitter) {
+auto ParseKeyValue(const T *value, T splitter) {
     return ParseKeyValue(std::basic_string<T>(value), splitter);
 }
 
 // Calculates byte offset in arbitrary data
 template <typename T>
-void* GetOffsetInBytes(T* object, size_t offset) {
-    return static_cast<void*>(reinterpret_cast<char*>(object) + offset);
+void *GetOffsetInBytes(T *object, size_t offset) {
+    return static_cast<void *>(reinterpret_cast<char *>(object) + offset);
 }
 
 // returns const void*, never fails
 template <typename T>
-const void* GetOffsetInBytes(const T* object, size_t offset) {
-    return static_cast<const void*>(reinterpret_cast<const char*>(object) +
-                                    offset);
+const void *GetOffsetInBytes(const T *object, size_t offset) {
+    return static_cast<const void *>(reinterpret_cast<const char *>(object) +
+                                     offset);
 }
 
 template <typename T>
-std::optional<uint32_t> ConvertToUint32(const T& str) noexcept {
+std::optional<uint32_t> ConvertToUint32(const T &str) noexcept {
     try {
         return std::stoul(str);
-    } catch (const std::exception&) {
+    } catch (const std::exception &) {
         return {};
     }
 }
 
 template <typename T>
-std::optional<uint64_t> ConvertToUint64(const T& str) noexcept {
+std::optional<uint64_t> ConvertToUint64(const T &str) noexcept {
     try {
         return std::stoull(str);
-    } catch (const std::exception&) {
+    } catch (const std::exception &) {
         return {};
     }
 }
 
 template <typename T>
-uint64_t ConvertToUint64(const T& str, uint64_t dflt) noexcept {
+uint64_t ConvertToUint64(const T &str, uint64_t dflt) noexcept {
     try {
         return std::stoull(str);
-    } catch (const std::exception&) {
+    } catch (const std::exception &) {
         return dflt;
     }
 }
@@ -233,8 +233,8 @@ uint64_t ConvertToUint64(const T& str, uint64_t dflt) noexcept {
 
 namespace win {
 template <typename T>
-inline bool SetEnv(const std::basic_string<T>& name,
-                   const std::basic_string<T>& value) noexcept {
+inline bool SetEnv(const std::basic_string<T> &name,
+                   const std::basic_string<T> &value) noexcept {
     auto cmd = name;
     if constexpr (sizeof(T) == 1) {
         cmd += "=" + value;
@@ -254,7 +254,7 @@ template <typename T>
 class WithEnv {
 public:
     // ctor
-    WithEnv(const std::basic_string<T>& name, const std::basic_string<T>& value)
+    WithEnv(const std::basic_string<T> &name, const std::basic_string<T> &value)
         : name_(name) {
         if (!name_.empty()) {
             SetEnv(name, value);
@@ -268,15 +268,15 @@ public:
     }
 
     // no copy - environment variable are persistent globals
-    WithEnv(const WithEnv& rhs) = delete;
-    WithEnv& operator=(const WithEnv& rhs) = delete;
+    WithEnv(const WithEnv &rhs) = delete;
+    WithEnv &operator=(const WithEnv &rhs) = delete;
 
     // move is allowed
-    WithEnv(WithEnv&& rhs) {
+    WithEnv(WithEnv &&rhs) {
         name_ = rhs.name_;
         rhs.name_.clear();
     }
-    WithEnv& operator=(WithEnv&& rhs) {
+    WithEnv &operator=(WithEnv &&rhs) {
         if (!name_.empty()) {
             SetEnv(name_, {});
         }
@@ -291,7 +291,7 @@ private:
 };
 
 template <typename T>
-std::basic_string<T> GetEnv(const T* name) noexcept {
+std::basic_string<T> GetEnv(const T *name) noexcept {
     T env_var_value[MAX_PATH];
     env_var_value[0] = 0;
 
@@ -305,41 +305,41 @@ std::basic_string<T> GetEnv(const T* name) noexcept {
 }
 
 template <typename T>
-std::basic_string<T> GetEnv(const std::basic_string<T>& name) noexcept {
+std::basic_string<T> GetEnv(const std::basic_string<T> &name) noexcept {
     return GetEnv(name.c_str());
 }
 
 template <typename T>
-std::basic_string<T> GetEnv(const std::basic_string_view<T>& name) noexcept {
+std::basic_string<T> GetEnv(const std::basic_string_view<T> &name) noexcept {
     return GetEnv(name.data());
 }
 
 }  // namespace win
 #endif
 
-inline void LeftTrim(std::string& str) {
+inline void LeftTrim(std::string &str) {
     str.erase(str.begin(), std::find_if(str.cbegin(), str.cend(), [](int Ch) {
                   return !std::isspace(Ch);
               }));
 }
 
-inline void RightTrim(std::string& str) {
+inline void RightTrim(std::string &str) {
     str.erase(std::find_if(str.crbegin(), str.crend(),
                            [](int Ch) { return !std::isspace(Ch); })
                   .base(),
               str.end());
 }
 
-inline void AllTrim(std::string& str) {
+inline void AllTrim(std::string &str) {
     LeftTrim(str);
     RightTrim(str);
 }
 
 inline std::vector<std::string_view> ToView(
-    const std::vector<std::string>& table) {
+    const std::vector<std::string> &table) {
     std::vector<std::string_view> s_view;
 
-    for (const auto& str : table) {
+    for (const auto &str : table) {
         s_view.emplace_back(str);
     }
 
@@ -347,8 +347,8 @@ inline std::vector<std::string_view> ToView(
 }
 
 /// max_count == 0 means inifinite parsing
-inline std::vector<std::string> SplitString(const std::string& str,
-                                            const std::string& delimiter,
+inline std::vector<std::string> SplitString(const std::string &str,
+                                            const std::string &delimiter,
                                             size_t max_count = 0) noexcept {
     // sanity
     if (str.empty()) return {};
@@ -383,8 +383,8 @@ inline std::vector<std::string> SplitString(const std::string& str,
 // "a.b", "." => {"a", "b"}
 // ".b", "." => { "b"}
 // max_count == 0 means inifinite parsing
-inline std::vector<std::wstring> SplitString(const std::wstring& str,
-                                             const std::wstring& delimiter,
+inline std::vector<std::wstring> SplitString(const std::wstring &str,
+                                             const std::wstring &delimiter,
                                              size_t max_count = 0) noexcept {
     // sanity
     if (str.empty()) return {};
@@ -415,8 +415,8 @@ inline std::vector<std::wstring> SplitString(const std::wstring& str,
 
 // special case when we are parsing to the end
 // indirectly tested in the test-cma_tools
-inline std::vector<std::wstring> SplitStringExact(const std::wstring& str,
-                                                  const std::wstring& delimiter,
+inline std::vector<std::wstring> SplitStringExact(const std::wstring &str,
+                                                  const std::wstring &delimiter,
                                                   size_t max_count) noexcept {
     // sanity
     if (str.empty()) return {};
@@ -457,7 +457,7 @@ inline std::wstring JoinVector(const std::vector<std::wstring> values,
 
     size_t sz = 0;
     for_each(values.begin(), values.end(),
-             [&sz](const std::wstring& entry) { sz += entry.size() + 1; });
+             [&sz](const std::wstring &entry) { sz += entry.size() + 1; });
 
     std::wstring values_string;
     values_string.reserve(sz);
@@ -472,7 +472,7 @@ inline std::wstring JoinVector(const std::vector<std::wstring> values,
 }
 
 // version for string
-inline std::string JoinVector(const std::vector<std::string>& values,
+inline std::string JoinVector(const std::vector<std::string> &values,
                               std::string_view separator) {
     if (values.empty()) {
         return {};
@@ -480,7 +480,7 @@ inline std::string JoinVector(const std::vector<std::string>& values,
 
     size_t sz = 0;
     for_each(values.begin(), values.end(),
-             [&sz](const std::string& entry) { sz += entry.size() + 1; });
+             [&sz](const std::string &entry) { sz += entry.size() + 1; });
 
     std::string values_string;
     values_string.reserve(sz);
@@ -495,7 +495,7 @@ inline std::string JoinVector(const std::vector<std::string>& values,
 }
 
 template <typename T>
-void ConcatVector(std::vector<T>& target, const std::vector<T>& source) {
+void ConcatVector(std::vector<T> &target, const std::vector<T> &source) {
     std::copy(source.begin(), source.end(), std::back_inserter(target));
 }
 
@@ -516,7 +516,7 @@ inline auto SecondsSinceEpoch() {
     return now.count();
 }
 
-inline std::string RemoveQuotes(const std::string& in) {
+inline std::string RemoveQuotes(const std::string &in) {
     auto val = in;
     if (val.size() < 2) return val;
 
@@ -525,7 +525,7 @@ inline std::string RemoveQuotes(const std::string& in) {
     return val;
 }
 
-inline std::wstring RemoveQuotes(const std::wstring& in) {
+inline std::wstring RemoveQuotes(const std::wstring &in) {
     auto val = in;
     if (val.size() < 2) return val;
 
@@ -540,15 +540,15 @@ namespace fmt {
 
 // formatter extender for variable count of parameters
 template <typename... Args>
-auto formatv(const std::string format_string, const Args&... args) {
+auto formatv(const std::string format_string, const Args &...args) {
     std::string buffer;
     try {
         auto x = std::make_tuple(format_string, args...);
-        auto print_message = [&buffer](const auto&... args) {
+        auto print_message = [&buffer](const auto &...args) {
             buffer = fmt::format(args...);
         };
         std::apply(print_message, x);
-    } catch (const std::exception&) {
+    } catch (const std::exception &) {
         xlog::l("Invalid string/parameters to format '%s'",
                 format_string.c_str());
     }

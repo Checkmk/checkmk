@@ -3215,13 +3215,13 @@ class ModeEventConsoleUploadMIBs(ABCEventConsoleMode):
     # their path.
     def _is_zipfile(self, fo):
         try:
-            zipfile.ZipFile(fo)
+            zipfile.ZipFile(fo)  # pylint:disable=consider-using-with
             return True
         except zipfile.BadZipfile:
             return False
 
     def _process_uploaded_zip_file(self, filename, content):
-        zip_obj = zipfile.ZipFile(io.BytesIO(content))
+        zip_obj = zipfile.ZipFile(io.BytesIO(content))  # pylint:disable=consider-using-with
         messages = []
         for entry in zip_obj.infolist():
             success, fail = 0, 0
@@ -3232,7 +3232,7 @@ class ModeEventConsoleUploadMIBs(ABCEventConsoleMode):
 
                 self._validate_mib_file_name(mib_file_name)
 
-                mib_obj = zip_obj.open(mib_file_name)
+                mib_obj = zip_obj.open(mib_file_name)  # pylint:disable=consider-using-with
                 messages.append(self._process_uploaded_mib_file(mib_file_name, mib_obj.read()))
                 success += 1
             except Exception as e:

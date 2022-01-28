@@ -92,7 +92,9 @@ class ProgramFetcher(AgentFetcher):
             self._process = subprocess.Popen(  # nosec
                 self.cmdline,
                 shell=True,
-                stdin=subprocess.PIPE if self.stdin else open(os.devnull),
+                stdin=subprocess.PIPE
+                if self.stdin
+                else open(os.devnull),  # pylint:disable=consider-using-with
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
                 start_new_session=True,
@@ -102,10 +104,12 @@ class ProgramFetcher(AgentFetcher):
             # We can not create a separate process group when running Nagios
             # Upon reaching the service_check_timeout Nagios only kills the process
             # group of the active check.
-            self._process = subprocess.Popen(  # nosec
+            self._process = subprocess.Popen(  # nosec # pylint:disable=consider-using-with
                 self.cmdline,
                 shell=True,
-                stdin=subprocess.PIPE if self.stdin else open(os.devnull),
+                stdin=subprocess.PIPE
+                if self.stdin
+                else open(os.devnull),  # pylint:disable=consider-using-with
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
                 close_fds=True,

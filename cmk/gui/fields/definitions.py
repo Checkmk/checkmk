@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """A few upgraded Fields which handle some OpenAPI validation internally."""
+import ast
 import collections.abc
 import json
 import re
@@ -30,7 +31,8 @@ from cmk.utils.livestatus_helpers.types import Column, Table
 
 from cmk.gui import sites, watolib
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.fields.base import BaseSchema, MultiNested, ValueTypedDictSchema
+from cmk.gui.fields.base import BaseSchema, MultiNested, OpenAPIAttributes, ValueTypedDictSchema
+from cmk.gui.fields.primitives import DateTime
 from cmk.gui.fields.utils import attr_openapi_schema, collect_attributes, ObjectContext, ObjectType
 from cmk.gui.globals import user
 from cmk.gui.groups import GroupName, GroupType, load_group_information
@@ -42,8 +44,8 @@ if version.is_managed_edition():
     import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module
 
 
-class String(_fields.String):
-    """"A string field which validates OpenAPI keys.
+class String(OpenAPIAttributes, _fields.String):
+    """A string field which validates OpenAPI keys.
 
     Examples:
 
@@ -155,7 +157,58 @@ The maximum length is 3.
         return value
 
 
-class Integer(_fields.Integer):
+Str = String
+
+
+class PythonString(String):
+    """Represent a Python value expression.
+
+    Any native Python datastructures like tuple, dict, set, etc. can be used.
+
+        Examples:
+
+            >>> expr = PythonString()
+            >>> expr.deserialize("{}")
+            {}
+
+            >>> expr.deserialize("{'a': (5.5, None)}")
+            {'a': (5.5, None)}
+
+            >>> expr.deserialize("...")  # doctest: +ELLIPSIS
+            Ellipsis
+
+        Borked syntax leads to an ValidationError
+
+            >>> expr.deserialize("{'a': (5.5,")  # doctest: +ELLIPSIS
+            Traceback (most recent call last):
+            ...
+            marshmallow.exceptions.ValidationError: ...
+
+            >>> expr.deserialize("globals")  # doctest: +ELLIPSIS
+            Traceback (most recent call last):
+            ...
+            marshmallow.exceptions.ValidationError: ...
+
+            >>> expr.deserialize('{"foo": "bar"}["foo"]')  # doctest: +ELLIPSIS
+            Traceback (most recent call last):
+            ...
+            marshmallow.exceptions.ValidationError: ...
+
+    """
+
+    def _deserialize(self, value, attr, data, **kwargs):
+        if not isinstance(value, str):
+            raise ValidationError("Unsupported type. Field must be string.")
+        try:
+            return ast.literal_eval(value)
+        except SyntaxError as exc:
+            msg = str(exc).replace(" (<unknown>, line 1)", "")
+            raise ValidationError(f"Syntax Error: {msg} in {value!r}") from exc
+        except ValueError as exc:
+            raise ValidationError(f"Not a Python data structure: {value!r}") from exc
+
+
+class Integer(OpenAPIAttributes, _fields.Integer):
     """An integer field which validates OpenAPI keys.
 
     Examples:
@@ -249,6 +302,9 @@ class Integer(_fields.Integer):
         return value
 
 
+Int = Integer
+
+
 def _freeze(obj: Any, partial: Optional[Tuple[str, ...]] = None):
     """Freeze all the things, so we can put them in a set.
 
@@ -340,7 +396,7 @@ class UniqueFields:
             seen.add(entry)
 
 
-class List(_fields.List, UniqueFields):
+class List(OpenAPIAttributes, _fields.List, UniqueFields):
     """A list field, composed with another `Field` class or instance.
 
     Honors the OpenAPI key `uniqueItems`.
@@ -409,7 +465,7 @@ class List(_fields.List, UniqueFields):
         return value
 
 
-class Nested(_fields.Nested, UniqueFields):
+class Nested(OpenAPIAttributes, _fields.Nested, UniqueFields):
     """Allows you to nest a marshmallow Schema inside a field.
 
     Honors the OpenAPI key `uniqueItems`.
@@ -430,7 +486,7 @@ class Nested(_fields.Nested, UniqueFields):
             >>> class Bulk(Schema):
             ...      entries = Nested(Service,
             ...                       many=True, uniqueItems=True,
-            ...                       required=False, missing=lambda: [])
+            ...                       required=False, load_default=lambda: [])
 
             >>> entries = [
             ...     {'host': 'example', 'description': 'CPU load', 'recur': 'week'},
@@ -561,6 +617,15 @@ class FolderField(String):
         except MKException:
             if value:
                 raise self.make_error("not_found", folder_id=value)
+
+    def _serialize(self, value, attr, obj, **kwargs) -> typing.Optional[str]:
+        if isinstance(value, str):
+            return value
+
+        if isinstance(value, watolib.CREFolder):
+            return "/" + value.path()
+
+        raise ValueError(f"Unknown type: {value!r}")
 
 
 class BinaryExprSchema(BaseSchema):
@@ -763,7 +828,7 @@ def column_field(
         table=table,
         required=required,
         mandatory=column_names,
-        missing=[getattr(table, col) for col in column_names],
+        load_default=[getattr(table, col) for col in column_names],
         description=f"The desired columns of the `{table.__tablename__}` table. If left empty, a "
         "default set of columns is used.",
     )
@@ -950,7 +1015,7 @@ def host_is_monitored(host_name: str) -> bool:
 
 class CustomHostAttributes(ValueTypedDictSchema):
     value_type = ValueTypedDictSchema.field(
-        _fields.String(description="Each tag is a mapping of string to string")
+        String(description="Each tag is a mapping of string to string")
     )
 
     @post_load
@@ -963,7 +1028,7 @@ class CustomHostAttributes(ValueTypedDictSchema):
 
 class CustomFolderAttributes(ValueTypedDictSchema):
     value_type = ValueTypedDictSchema.field(
-        _fields.String(description="Each tag is a mapping of string to string")
+        String(description="Each tag is a mapping of string to string")
     )
 
     @post_load
@@ -980,7 +1045,7 @@ def attributes_field(
     description: Optional[str] = None,
     example: Optional[Any] = None,
     required: bool = False,
-    missing: Any = utils.missing,
+    load_default: Any = utils.missing,
     many: bool = False,
     names_only: bool = False,
 ) -> _fields.Field:
@@ -1002,7 +1067,7 @@ def attributes_field(
         required:
             Whether the field must be sent by the client or is option.
 
-        missing:
+        load_default:
         many:
 
         names_only:
@@ -1027,11 +1092,11 @@ def attributes_field(
                 attr_openapi_schema(object_type, object_context),
                 custom_schema[object_type],
             ],
-            context={"object_context": object_context},
+            metadata={"context": {"object_context": object_context}},
             description=description,
             example=example,
             many=many,
-            missing=dict if missing is utils.missing else utils.missing,
+            load_default=dict if load_default is utils.missing else utils.missing,
             required=required,
         )
 
@@ -1045,12 +1110,12 @@ def attributes_field(
         String(validate=validate),
         description=description,
         example=example,
-        missing=missing,
+        load_default=load_default,
         required=required,
     )
 
 
-class SiteField(_fields.String):
+class SiteField(String):
     """A field representing a site name."""
 
     default_error_messages = {"unknown_site": "Unknown site {site!r}"}
@@ -1066,7 +1131,7 @@ def customer_field(**kw):
     return None
 
 
-class _CustomerField(_fields.String):
+class _CustomerField(String):
     """A field representing a customer"""
 
     default_error_messages = {
@@ -1282,7 +1347,7 @@ def to_timestamp(value: datetime) -> float:
     return float(datetime.timestamp(value))
 
 
-class Timestamp(_fields.DateTime):
+class Timestamp(DateTime):
     """A timestamp field for Checkmk timestamp
 
     Examples:
@@ -1332,7 +1397,7 @@ class Timestamp(_fields.DateTime):
         return datetime.timestamp(val)
 
 
-class X509ReqPEMField(_fields.String):
+class X509ReqPEMField(String):
     default_error_messages = {
         "malformed": "Malformed CSR",
         "invalid": "Invalid CSR (signature and public key do not match)",
@@ -1362,21 +1427,25 @@ __all__ = [
     "attributes_field",
     "column_field",
     "customer_field",
+    "DateTime",
     "ExprSchema",
     "FolderField",
     "FOLDER_PATTERN",
     "GroupField",
     "HostField",
     "Integer",
+    "Int",
     "List",
     "MultiNested",
     "Nested",
     "PasswordIdent",
     "PasswordOwner",
     "PasswordShare",
+    "PythonString",
     "query_field",
     "SiteField",
     "String",
+    "Str",
     "Timestamp",
     "X509ReqPEMField",
 ]

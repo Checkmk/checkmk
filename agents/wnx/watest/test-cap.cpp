@@ -113,13 +113,13 @@ TEST_F(CapTestFixture, InstallFileAsCopy) {
     EXPECT_TRUE(fs::exists(target())) << "must be presented";
 }
 
-static bool ValidateInstallYml(const std::filesystem::path& file) {
+static bool ValidateInstallYml(const std::filesystem::path &file) {
     auto yml = YAML::LoadFile(file.u8string());
     if (!yml.IsDefined() || !yml.IsMap()) return false;
     try {
         return yml[groups::kGlobal][vars::kInstall].as<bool>() &&
                yml[groups::kGlobal][vars::kEnabled].as<bool>();
-    } catch (const std::exception& e) {
+    } catch (const std::exception &e) {
         XLOG::l("exception during tests", e.what());
         return false;
     }
@@ -367,7 +367,7 @@ public:
         names_[1] = GetUserPluginsDir() + L"\\mk_inventory.vbs";
     }
 
-    const std::array<std::wstring, 2>& names() const { return names_; };
+    const std::array<std::wstring, 2> &names() const { return names_; };
 
     void makeFilesInPlugins() {
         fs::create_directories(GetUserPluginsDir());
@@ -444,7 +444,7 @@ TEST_F(CapTestProcessFixture, BadFiles) {
 
     };
 
-    for (auto const& test : data) {
+    for (auto const &test : data) {
         auto bad_cap = tst::MakePathToCapTestFiles() / test.first;
         std::vector<std::wstring> results;
         EXPECT_FALSE(Process(bad_cap.u8string(), ProcMode::list, results));
@@ -501,7 +501,7 @@ TEST(CapTest, ReInstallRestoreIntegration) {
                 fs::copy_file(yml_w_base,
                               r / dirs::kInstall / files::kInstallYmlFileA);
 
-        } catch (const std::exception& e) {
+        } catch (const std::exception &e) {
             ASSERT_TRUE(false) << "can't create file data exception is "
                                << e.what() << "Mode " << static_cast<int>(mode);
         }

@@ -36,7 +36,7 @@ PARAMETERS = [
         "sites": fields.List(
             fields.SiteField(),
             description="Restrict the query to this particular site.",
-            missing=list,
+            load_default=list,
         ),
         "query": fields.query_field(
             Services,

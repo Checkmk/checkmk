@@ -43,31 +43,31 @@ bool RemoveRule(std::wstring_view rule_name, std::wstring_view app_name);
 int CountRules(std::wstring_view name, std::wstring_view raw_app_name);
 
 /// Find a rule by 'name'
-INetFwRule* FindRule(std::wstring_view name);
+INetFwRule *FindRule(std::wstring_view name);
 
 /// Find a rule by 'name' and 'app_name'
-INetFwRule* FindRule(std::wstring_view name, std::wstring_view app_name);
+INetFwRule *FindRule(std::wstring_view name, std::wstring_view app_name);
 
 // "Proxy" class to keep Windows Firewall API isolated
 class Policy {
 public:
-    Policy(const Policy& p) = delete;
-    Policy& operator=(const Policy& p) = delete;
-    Policy(const Policy&& p) = delete;
-    Policy& operator=(Policy&& p) = delete;
+    Policy(const Policy &p) = delete;
+    Policy &operator=(const Policy &p) = delete;
+    Policy(const Policy &&p) = delete;
+    Policy &operator=(Policy &&p) = delete;
 
     Policy();
     ~Policy();
 
-    INetFwRules* getRules() { return rules_; }
+    INetFwRules *getRules() { return rules_; }
     long getRulesCount();
     long getCurrentProfileTypes();
 
-    IEnumVARIANT* getEnum();
+    IEnumVARIANT *getEnum();
 
 private:
-    INetFwPolicy2* policy_ = nullptr;
-    INetFwRules* rules_ = nullptr;
+    INetFwPolicy2 *policy_ = nullptr;
+    INetFwRules *rules_ = nullptr;
 };
 
 }  // namespace cma::fw

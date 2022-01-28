@@ -7,7 +7,6 @@
 import errno
 import logging
 import os
-import re
 import signal
 import subprocess
 import traceback
@@ -18,6 +17,8 @@ from typing import Any, Dict, Iterable, List, Optional, Set, Tuple
 import cmk.utils.paths
 import cmk.utils.store as store
 import cmk.utils.version as cmk_version
+from cmk.utils.encryption import raw_certificates_from_file
+from cmk.utils.process import pid_from_file, send_signal
 from cmk.utils.site import omd_site
 from cmk.utils.type_defs import ConfigurationWarnings, HostName
 
@@ -252,10 +253,6 @@ class ConfigDomainCACertificates(ABCConfigDomain):
         "/etc/pki/tls/certs",  # CentOS/RedHat
     ]
 
-    _PEM_RE = re.compile(
-        "-----BEGIN CERTIFICATE-----\r?.+?\r?-----END CERTIFICATE-----\r?\n?", re.DOTALL
-    )
-
     @classmethod
     def ident(cls) -> ConfigDomainName:
         return "ca-certificates"
@@ -290,7 +287,13 @@ class ConfigDomainCACertificates(ABCConfigDomain):
 
     def activate(self, settings: Optional[SerializedSettings] = None) -> ConfigurationWarnings:
         try:
-            return self._update_trusted_cas(config.trusted_certificate_authorities)
+            warnings = self._update_trusted_cas(config.trusted_certificate_authorities)
+            stunnel_pid = pid_from_file(
+                cmk.utils.paths.omd_root / "tmp" / "run" / "stunnel-server.pid"
+            )
+            if stunnel_pid:
+                send_signal(stunnel_pid, signal.SIGHUP)
+            return warnings
         except Exception:
             logger.exception("error updating trusted CAs")
             return [
@@ -326,7 +329,7 @@ class ConfigDomainCACertificates(ABCConfigDomain):
                     if entry.suffix not in [".pem", ".crt"]:
                         continue
 
-                    trusted_cas.update(self._get_certificates_from_file(cert_file_path))
+                    trusted_cas.update(raw_certificates_from_file(cert_file_path))
                 except (IOError, PermissionError):
                     # This error is shown to the user as warning message during "activate changes".
                     # We keep this message for the moment because we think that it is a helpful
@@ -349,24 +352,6 @@ class ConfigDomainCACertificates(ABCConfigDomain):
             break
 
         return list(trusted_cas), errors
-
-    def _get_certificates_from_file(self, path: Path) -> List[str]:
-        try:
-            # Some users use comments in certificate files e.g. to write the content of the
-            # certificate outside of encapsulation boundaries. We only want to extract the
-            # certificates between the encapsulation boundaries which have to be 7-bit ASCII
-            # characters.
-            with path.open("r", encoding="ascii", errors="surrogateescape") as f:
-                return [
-                    content
-                    for match in self._PEM_RE.finditer(f.read())
-                    if (content := match.group(0)).isascii()
-                ]
-        except IOError as e:
-            if e.errno == errno.ENOENT:
-                # Silently ignore e.g. dangling symlinks
-                return []
-            raise
 
     def default_globals(self):
         return {
@@ -594,7 +579,7 @@ class OMDConfigChangeBackgroundJob(WatoBackgroundJob):
         job_interface.send_result_message(_("OMD config changes have been applied."))
 
     def _do_config_change(self, config_change_commands) -> None:
-        p = subprocess.Popen(
+        p = subprocess.Popen(  # pylint:disable=consider-using-with
             ["omd", "config", "change"],
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,

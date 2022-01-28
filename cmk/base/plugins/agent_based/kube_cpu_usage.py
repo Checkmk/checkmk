@@ -5,108 +5,70 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
-from typing import Literal, Optional
+from typing import Optional
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, register, Result, Service, State
+from cmk.base.plugins.agent_based.agent_based_api.v1 import register, Service
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
     CheckResult,
     DiscoveryResult,
     StringTable,
 )
 from cmk.base.plugins.agent_based.utils.kube_resources import (
-    AggregatedLimit,
-    check_with_utilization,
+    check_resource,
     DEFAULT_PARAMS,
-    ExceptionalResource,
-    iterate_resources,
     Params,
+    parse_resources,
     Resources,
     Usage,
 )
 
 
-def parse_kube_live_cpu_usage_v1(string_table: StringTable) -> Usage:
+def parse_kube_performance_cpu_v1(string_table: StringTable) -> Usage:
     """Parses usage value into Usage"""
     return Usage(**json.loads(string_table[0][0]))
 
 
-def parse_kube_cpu_resources_v1(string_table: StringTable) -> Resources:
-    """Parses limit and request values into Resources"""
-    return Resources(**json.loads(string_table[0][0]))
+register.agent_section(
+    name="kube_performance_cpu_usage_v1",
+    parsed_section_name="kube_performance_cpu",
+    parse_function=parse_kube_performance_cpu_v1,
+)
 
 
-def discovery(
-    section_kube_live_cpu_usage: Optional[Usage],
+def discovery_kube_cpu(
+    section_kube_performance_cpu: Optional[Usage],
     section_kube_cpu_resources: Optional[Resources],
 ) -> DiscoveryResult:
-    if section_kube_live_cpu_usage is not None:
-        yield Service()
+    yield Service()
 
 
-def check_resource(
+def check_kube_cpu(
     params: Params,
-    requirement_type: Literal["request", "limit"],
-    requirement_value: AggregatedLimit,
-    cpu_usage: float,
+    section_kube_performance_cpu: Optional[Usage],
+    section_kube_cpu_resources: Optional[Resources],
 ) -> CheckResult:
-    if isinstance(requirement_value, ExceptionalResource):
-        yield Result(
-            state=State.OK,
-            summary=f"{requirement_type.title()} n/a",
-            details=f"{requirement_type.title()}: {requirement_value}",
-        )
-        return
-    if requirement_value == 0:
-        yield Result(
-            state=State.OK,
-            summary=f"{requirement_type.title()} n/a",
-            details=f"{requirement_type.title()}: set to zero for all containers",
-        )
-        return
-    yield from check_with_utilization(
-        cpu_usage,
+    assert section_kube_cpu_resources is not None
+    yield from check_resource(
+        params,
+        section_kube_performance_cpu,
+        section_kube_cpu_resources,
         "cpu",
-        requirement_type,
-        requirement_value,
-        params[requirement_type],
         lambda x: f"{x:0.3f}",
     )
 
 
-def check(
-    params: Params,
-    section_kube_live_cpu_usage: Optional[Usage],
-    section_kube_cpu_resources: Optional[Resources],
-) -> CheckResult:
-    if section_kube_live_cpu_usage is None:
-        return
-    cpu_usage = section_kube_live_cpu_usage.usage
-    yield Result(state=State.OK, summary=f"Usage: {cpu_usage:0.3f}")
-    yield Metric("kube_cpu_usage", cpu_usage)
-    if section_kube_cpu_resources is None:
-        return
-    for requirement_type, requirement_value in iterate_resources(section_kube_cpu_resources):
-        yield from check_resource(params, requirement_type, requirement_value, cpu_usage)
-
-
-register.agent_section(
-    name="k8s_live_cpu_usage_v1",
-    parsed_section_name="kube_live_cpu_usage",
-    parse_function=parse_kube_live_cpu_usage_v1,
-)
-
 register.agent_section(
     name="kube_cpu_resources_v1",
     parsed_section_name="kube_cpu_resources",
-    parse_function=parse_kube_cpu_resources_v1,
+    parse_function=parse_resources,
 )
 
 register.check_plugin(
     name="kube_cpu_usage",
-    service_name="CPU",  # FIXME: YTBD
-    sections=["kube_live_cpu_usage", "kube_cpu_resources"],
+    service_name="CPU resources",
+    sections=["kube_performance_cpu", "kube_cpu_resources"],
     check_ruleset_name="kube_cpu_usage",
-    discovery_function=discovery,
-    check_function=check,
+    discovery_function=discovery_kube_cpu,
+    check_function=check_kube_cpu,
     check_default_parameters=DEFAULT_PARAMS,
 )

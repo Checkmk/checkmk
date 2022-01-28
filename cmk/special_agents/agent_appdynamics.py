@@ -104,7 +104,7 @@ def main(sys_argv=None):  # pylint: disable=too-many-branches
 
     if opt_filename:
         try:
-            data = json.loads(open(opt_filename).read())
+            data = json.loads(open(opt_filename).read())  # pylint:disable=consider-using-with
         except Exception as e:
             sys.stderr.write("Cannot read JSON data from file %s: %s\n" % (opt_filename, e))
             if opt_debug:

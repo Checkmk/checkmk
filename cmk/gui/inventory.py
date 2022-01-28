@@ -134,14 +134,16 @@ def get_status_data_via_livestatus(site: Optional[livestatus.SiteId], hostname: 
 
 
 def load_delta_tree(
-    hostname: HostName, timestamp: int
+    hostname: HostName,
+    timestamp: int,
 ) -> Tuple[Optional[StructuredDataNode], List[str]]:
     """Load inventory history and compute delta tree of a specific timestamp"""
     # Timestamp is timestamp of the younger of both trees. For the oldest
     # tree we will just return the complete tree - without any delta
     # computation.
     delta_history, corrupted_history_files = get_history_deltas(
-        hostname, search_timestamp=str(timestamp)
+        hostname,
+        search_timestamp=str(timestamp),
     )
     if not delta_history:
         return None, []
@@ -149,7 +151,8 @@ def load_delta_tree(
 
 
 def get_history_deltas(
-    hostname: HostName, search_timestamp: Optional[str] = None
+    hostname: HostName,
+    search_timestamp: Optional[str] = None,
 ) -> Tuple[List[Tuple[str, InventoryDeltaData]], List[str]]:
     if "/" in hostname:
         return [], []  # just for security reasons
@@ -203,8 +206,7 @@ def get_history_deltas(
     delta_history: List[Tuple[str, InventoryDeltaData]] = []
     for _idx, timestamp in enumerate(required_timestamps):
         cached_delta_path = os.path.join(
-            cmk.utils.paths.var_dir,
-            "inventory_delta_cache",
+            cmk.utils.paths.inventory_delta_cache_dir,
             hostname,
             "%s_%s" % (previous_timestamp, timestamp),
         )
@@ -548,7 +550,7 @@ class InventoryHousekeeping:
         super().__init__()
         self._inventory_path = Path(cmk.utils.paths.inventory_output_dir)
         self._inventory_archive_path = Path(cmk.utils.paths.inventory_archive_dir)
-        self._inventory_delta_cache_path = Path(cmk.utils.paths.var_dir) / "inventory_delta_cache"
+        self._inventory_delta_cache_path = Path(cmk.utils.paths.inventory_delta_cache_dir)
 
     def run(self):
         if (

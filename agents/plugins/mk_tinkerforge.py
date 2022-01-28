@@ -73,7 +73,7 @@ def install():
     url = "http://download.tinkerforge.com/bindings/python/tinkerforge_python_bindings_latest.zip"
     response = urlopen(url)
     buf = BytesIO(response.read())
-    z = ZipFile(buf)
+    z = ZipFile(buf)  # pylint:disable=consider-using-with
 
     extract_files = [f for f in z.namelist() if f.startswith("source/tinkerforge")]
     z.extractall(dest, extract_files)
@@ -272,7 +272,7 @@ def read_config(env):
     cfg_path = os.path.join(os.getenv("MK_CONFDIR", "/etc/check_mk"), "tinkerforge.cfg")
 
     if os.path.isfile(cfg_path):
-        exec(open(cfg_path).read(), settings, settings)
+        exec(open(cfg_path).read(), settings, settings)  # pylint:disable=consider-using-with
     return settings
 
 

@@ -12,7 +12,7 @@ if TYPE_CHECKING:
     from cmk.gui.wsgi.type_defs import StartResponse, WSGIApplication, WSGIEnvironment, WSGIResponse
 
 
-def dump_environ_app(environ, start_response):
+def dump_environ_app(environ: WSGIEnvironment, start_response: StartResponse) -> WSGIResponse:
     dumped_env = "\n".join(["{0}: {1}".format(k, environ[k]) for k in environ.keys()])
     return serve_string(dumped_env)(environ, start_response)
 

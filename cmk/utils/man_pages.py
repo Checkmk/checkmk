@@ -253,6 +253,7 @@ catalog_titles = {
     "unsorted": "Uncategorized",
     "zertificon": "Zertificon",
     "mqtt": "MQTT",
+    "smb_share": "SMB Share",
 }  # yapf: disable
 
 # TODO: Do we need a more generic place for this?
@@ -457,7 +458,9 @@ def _dialog_menu(title, text, choices, defvalue, oktext, canceltext):
 
 def _run_dialog(args):
     env = {"TERM": os.getenv("TERM", "linux"), "LANG": "de_DE.UTF-8"}
-    p = subprocess.Popen(["dialog", "--shadow"] + args, env=env, stderr=subprocess.PIPE)
+    p = subprocess.Popen(  # pylint:disable=consider-using-with
+        ["dialog", "--shadow"] + args, env=env, stderr=subprocess.PIPE
+    )
     if p.stderr is None:
         raise Exception()
     response = p.stderr.read()

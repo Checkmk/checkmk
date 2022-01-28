@@ -18,6 +18,7 @@ Do it like this:
 """
 
 import sys
+from typing import Literal, Mapping, NoReturn, Optional, TypedDict, Union
 
 import cmk.utils.paths
 import cmk.utils.store as store
@@ -25,13 +26,30 @@ from cmk.utils.exceptions import MKGeneralException
 
 password_store_path = cmk.utils.paths.var_dir + "/stored_passwords"
 
+PasswordLookupType = Literal["password", "store"]
+PasswordId = Union[str, tuple[PasswordLookupType, str]]
+Password = TypedDict(
+    "Password",
+    {
+        "title": str,
+        "comment": str,
+        "docu_url": str,
+        "password": str,
+        # Only owners can edit the password
+        # None -> Administrators (having the permission "Write access to all passwords")
+        # str -> Name of the contact group owning the password
+        "owned_by": Optional[str],
+        "shared_with": list[str],
+    },
+)
 
-def bail_out(s):
+
+def bail_out(s: str) -> NoReturn:
     sys.stdout.write("UNKNOWN - %s\n" % s)
     sys.exit(3)
 
 
-def replace_passwords():
+def replace_passwords() -> None:
     if len(sys.argv) < 2:
         return  # command line too short
 
@@ -71,7 +89,7 @@ def replace_passwords():
         sys.argv[num_arg] = arg[:pos_in_arg] + password + arg[pos_in_arg + len(password) :]
 
 
-def save(stored_passwords):
+def save(stored_passwords: Mapping[str, Password]) -> None:
     content = ""
     for ident, pw in stored_passwords.items():
         content += "%s:%s\n" % (ident, pw["password"])
@@ -79,16 +97,15 @@ def save(stored_passwords):
     store.save_text_to_file(password_store_path, content)
 
 
-def load():
+def load() -> dict[str, str]:
     passwords = {}
-    for line in open(password_store_path):
+    for line in open(password_store_path):  # pylint:disable=consider-using-with
         ident, password = line.strip().split(":", 1)
         passwords[ident] = password
     return passwords
 
 
-def extract(password_id):
-
+def extract(password_id: PasswordId) -> Optional[str]:
     if not isinstance(password_id, tuple):
         return load().get(password_id)
 
@@ -97,6 +114,7 @@ def extract(password_id):
     if pw_type == "password":
         return pw_id
     if pw_type == "store":
+        # TODO: Is this None really intended? Shouldn't we better raise an exception?
         return load().get(pw_id)
 
     raise MKGeneralException("Unknown password type.")

@@ -5,6 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import enum
+from typing import Literal, Tuple, Union
 
 from pydantic import BaseModel
 
@@ -25,3 +26,22 @@ class PodLifeCycle(BaseModel):
     """section: kube_pod_lifecycle_v1"""
 
     phase: Phase
+
+
+class ReadyCount(BaseModel):
+    ready: int = 0
+    not_ready: int = 0
+
+    @property
+    def total(self) -> int:
+        return self.ready + self.not_ready
+
+
+class NodeCount(BaseModel):
+    """section: kube_node_count_v1"""
+
+    worker: ReadyCount = ReadyCount()
+    control_plane: ReadyCount = ReadyCount()
+
+
+VSResultAge = Union[Tuple[Literal["levels"], Tuple[int, int]], Literal["no_levels"]]

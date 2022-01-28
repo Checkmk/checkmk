@@ -8,9 +8,10 @@ from typing import Type
 
 import pytest
 from apispec import APISpec  # type: ignore[import]
-from marshmallow import fields, post_load, Schema, ValidationError
+from marshmallow import post_load, Schema, ValidationError
 from marshmallow.base import SchemaABC
 
+from cmk.gui import fields
 from cmk.gui.fields.base import ValueTypedDictSchema
 from cmk.gui.fields.openapi import CheckmkMarshmallowPlugin
 

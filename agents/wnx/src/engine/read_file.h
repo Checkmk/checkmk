@@ -21,7 +21,7 @@ namespace cma::tools {
 namespace details {
 
 template <typename T>
-inline std::ifstream OpenFileStream(const T* FileName) {
+inline std::ifstream OpenFileStream(const T *FileName) {
 #if defined(_MSC_BUILD)
     std::ifstream f(FileName, std::ios::binary);
 #else
@@ -34,7 +34,7 @@ inline std::ifstream OpenFileStream(const T* FileName) {
 }
 
 template <typename T>
-void DisplayReadFileError(const T* file_name) {
+void DisplayReadFileError(const T *file_name) {
     std::error_code ec;
     auto cur_dir = std::filesystem::current_path(ec);
     if constexpr (sizeof(T) == 2)
@@ -44,7 +44,7 @@ void DisplayReadFileError(const T* file_name) {
         XLOG::l("File '{}' not found in {}", file_name, cur_dir);
 }
 
-inline uint32_t GetFileStreamSize(std::ifstream& f) {
+inline uint32_t GetFileStreamSize(std::ifstream &f) {
     // size obtain
     f.seekg(0, std::ios::end);
     auto fsize = static_cast<uint32_t>(f.tellg());
@@ -59,7 +59,7 @@ inline uint32_t GetFileStreamSize(std::ifstream& f) {
 // more or less tested indirectly with test-player
 template <typename T>
 std::optional<std::vector<uint8_t>> ReadFileInVector(
-    const T* FileName) noexcept {
+    const T *FileName) noexcept {
     if (FileName == nullptr) return {};
     try {
         auto f = details::OpenFileStream(FileName);
@@ -82,9 +82,9 @@ std::optional<std::vector<uint8_t>> ReadFileInVector(
         auto fsize = details::GetFileStreamSize(f);
         std::vector<uint8_t> v;
         v.resize(fsize);
-        f.read(reinterpret_cast<char*>(v.data()), fsize);
+        f.read(reinterpret_cast<char *>(v.data()), fsize);
         return v;
-    } catch (const std::exception& e) {
+    } catch (const std::exception &e) {
         // catching possible exceptions in the
         // ifstream or memory allocations
         XLOG::l(XLOG_FUNC + "Exception '{}' generated in read file", e.what());
@@ -94,7 +94,7 @@ std::optional<std::vector<uint8_t>> ReadFileInVector(
 }
 
 template <typename T>
-std::optional<std::string> ReadFileInString(const T* FileName) noexcept {
+std::optional<std::string> ReadFileInString(const T *FileName) noexcept {
     try {
 #if defined(_MSC_BUILD)
         std::ifstream f(FileName, std::ios::binary);
@@ -113,9 +113,9 @@ std::optional<std::string> ReadFileInString(const T* FileName) noexcept {
         auto fsize = details::GetFileStreamSize(f);
         std::string v;
         v.resize(fsize);
-        f.read(reinterpret_cast<char*>(v.data()), fsize);
+        f.read(reinterpret_cast<char *>(v.data()), fsize);
         return v;
-    } catch (const std::exception& e) {
+    } catch (const std::exception &e) {
         // catching possible exceptions in the
         // ifstream or memory allocations
         XLOG::l(XLOG_FUNC + "Exception '{}' generated in read file", e.what());
@@ -125,7 +125,7 @@ std::optional<std::string> ReadFileInString(const T* FileName) noexcept {
 }
 
 inline std::optional<std::vector<uint8_t>> ReadFileInVector(
-    const std::filesystem::path& File) noexcept {
+    const std::filesystem::path &File) noexcept {
     auto path = File.u8string();
     if (path.empty()) return {};
 

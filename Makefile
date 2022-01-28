@@ -79,8 +79,8 @@ LOCK_PATH := .venv.lock
 
 .PHONY: all analyze build check check-binaries check-permissions check-version \
         clean compile-neb-cmc compile-neb-cmc-docker dist documentation \
-        documentation-quick format format-c format-python format-shell format-js \
-        GTAGS headers help install iwyu mrproper mrclean optimize-images \
+        documentation-quick format format-c test-format-c format-python format-shell \
+        format-js GTAGS headers help install iwyu mrproper mrclean optimize-images \
         packages setup setversion tidy version am--refresh skel openapi openapi-doc \
         protobuf-files
 
@@ -175,6 +175,8 @@ $(DISTNAME).tar.gz: omd/packages/mk-livestatus/mk-livestatus-$(VERSION).tar.gz .
 	    --exclude "cee.py*" \
 	    --exclude "cme" \
 	    --exclude "cme.py*" \
+	    --exclude "cpe" \
+	    --exclude "cpe.py*" \
 	    cmk/*
 	tar czf $(DISTNAME)/werks.tar.gz $(TAROPTS) -C .werks werks
 	tar czf $(DISTNAME)/checks.tar.gz $(TAROPTS) -C checks $$(cd checks ; ls)
@@ -361,7 +363,7 @@ node_modules/.bin/prettier: .ran-npm
 	    REGISTRY= ; \
 	    echo "Installing from public registry" ; \
         fi ; \
-	npm install --audit=false --unsafe-perm $$REGISTRY
+	npm install --yes --audit=false --unsafe-perm $$REGISTRY
 	sed -i 's#"resolved": "https://artifacts.lan.tribe29.com/repository/npm-proxy/#"resolved": "https://registry.npmjs.org/#g' package-lock.json
 	touch node_modules/.bin/webpack node_modules/.bin/redoc-cli node_modules/.bin/prettier
 
@@ -381,7 +383,7 @@ web/htdocs/themes/facelift/theme.css: .ran-webpack
 web/htdocs/themes/modern-dark/theme.css: .ran-webpack
 web/htdocs/themes/facelift/cma_facelift.css: .ran-webpack
 .ran-webpack: node_modules/.bin/webpack webpack.config.js postcss.config.js $(JAVASCRIPT_SOURCES) $(SCSS_SOURCES)
-	WEBPACK_MODE=$(WEBPACK_MODE) ENTERPRISE=$(ENTERPRISE) MANAGED=$(MANAGED) node_modules/.bin/webpack --mode=$(WEBPACK_MODE:quick=development)
+	WEBPACK_MODE=$(WEBPACK_MODE) ENTERPRISE=$(ENTERPRISE) MANAGED=$(MANAGED) PLUS=$(PLUS) node_modules/.bin/webpack --mode=$(WEBPACK_MODE:quick=development)
 	touch web/htdocs/js/*_min.js web/htdocs/themes/*/theme.css
 
 # TODO(sp) The target below is not correct, we should not e.g. remove any stuff
@@ -476,7 +478,12 @@ setup:
 	    ksh \
 	    p7zip-full \
 	    zlib1g-dev
-	sudo -H pip3 install -U \
+	if type pyenv >/dev/null 2>&1 && pyenv shims --short | grep '^pipenv$$'; then \
+	    CMD="pyenv exec" ; \
+	else \
+	    CMD="sudo -H" ; \
+	fi ; \
+	$$CMD pip3 install -U \
 	    pipenv=="$(PIPENV_VERSION)" \
 	    virtualenv=="$(VIRTUALENV_VERSION)" \
 	    wheel
@@ -548,7 +555,7 @@ GTAGS: config.h
 # to configure.ac).
 	$(MAKE) -C livestatus GTAGS
 
-compile-neb-cmc: config.status
+compile-neb-cmc: config.status test-format-c
 	$(MAKE) -C livestatus -j4
 ifeq ($(ENTERPRISE),yes)
 	$(MAKE) -C enterprise/core -j4
@@ -579,9 +586,13 @@ format: format-python format-c format-shell format-js format-css
 # TODO: We should probably handle this rule via AM_EXTRA_RECURSIVE_TARGETS in
 # src/configure.ac, but this needs at least automake-1.13, which in turn is only
 # available from e.g. Ubuntu Saucy (13) onwards, so some magic is needed.
-format-c:
-	$(CLANG_FORMAT) -style=file -i $(FILES_TO_FORMAT_LINUX)
+clang-format-with = $(CLANG_FORMAT) -style=file $(1) $(FILES_TO_FORMAT_LINUX)
 
+format-c:
+	$(call clang-format-with,-i)
+
+test-format-c:
+	@$(call clang-format-with,-Werror --dry-run)
 
 format-python: format-python-isort format-python-black
 

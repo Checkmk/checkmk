@@ -37,7 +37,7 @@ if [ ! -d "$OUTPUT_PATH" ]; then
     fi
 fi
 
-if ! type $1 >/dev/null 2>&1; then
+if ! type "$1" >/dev/null 2>&1; then
     echo -e "ERROR: Cannot run $1. Command not found.\n" >&2
     help >&2
     exit 1
@@ -46,13 +46,13 @@ fi
 
 echo "start_time `perl -e 'print time'`" > "$RUNNING_FILE"
 
-program_with_args="$@ 2>/dev/null 1>&2"
+program_with_args="$* 2>/dev/null 1>&2"
 info=`(/usr/bin/time -p sh -c "$program_with_args" 2>&1; echo $?) | sed -e 's/,/\./g'`
-RC=`echo $info | awk '{print $7}'`
+RC=`echo "$info" | awk '{print $7}'`
 
-(echo $info | awk '{print "exit_code "$7"\nreal_time "$2"\nuser_time "$4"\nsystem_time "$6""}') >> "$RUNNING_FILE"
+(echo "$info" | awk '{print "exit_code "$7"\nreal_time "$2"\nuser_time "$4"\nsystem_time "$6""}') >> "$RUNNING_FILE"
 (echo -e "reads 0\nwrites 0\nmax_res_kbytes 0\navg_mem_kbytes 0\ninvol_context_switches 0\nvol_context_switches 0";) >> "$RUNNING_FILE"
 
 mv "$RUNNING_FILE" "$OUTPUT_PATH/$IDENT"
-exit $RC
+exit "$RC"
 

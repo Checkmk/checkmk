@@ -299,10 +299,10 @@ def check_levels(
     Args:
 
         value:        The currently measured value
-        levels_upper: A pair of upper thresholds. If value is larger than these, the
-                      service goes to **WARN** or **CRIT**, respecively.
-        levels_lower: A pair of lower thresholds. If value is smaller than these, the
-                      service goes to **WARN** or **CRIT**, respecively.
+        levels_upper: A pair of upper thresholds, ie. warn and crit. If value is larger than these,
+                      the service goes to **WARN** or **CRIT**, respecively.
+        levels_lower: A pair of lower thresholds, ie. warn and crit. If value is smaller than these,
+                      the service goes to **WARN** or **CRIT**, respecively.
         metric_name:  The name of the datasource in the RRD that corresponds to this value
                       or None in order not to generate a metric.
         render_func:  A single argument function to convert the value from float into a

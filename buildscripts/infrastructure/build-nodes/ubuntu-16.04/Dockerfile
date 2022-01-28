@@ -76,6 +76,7 @@ RUN apt-get update \
     tk-dev \
     uuid-dev \
     vim \
+    libc6-dbg \
     && rm -rf /var/lib/apt/lists/*
 
 # Install our standard tool chain for building
@@ -102,6 +103,7 @@ RUN /opt/install-pipenv.sh
 RUN /opt/install-freetds.sh
 RUN /opt/install-rust-cargo.sh
 RUN /opt/install-cmk-dependencies.sh
+RUN /opt/install-patchelf.sh
 
 # Ensure all our build containers have the jenkins user (with same uid/gid). The non privileged
 # jobs will be executed as this user in the container

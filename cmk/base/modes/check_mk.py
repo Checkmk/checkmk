@@ -2021,7 +2021,7 @@ Copyright (C) 2009 Mathias Kettner
 
 """,
         cmk_version.__version__,
-        cmk_version.edition_short().upper(),
+        cmk_version.edition().short.upper(),
     )
 
 

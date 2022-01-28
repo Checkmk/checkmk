@@ -1265,14 +1265,14 @@ def _checktype_ignored_for_host(
 def resolve_service_dependencies(
     *,
     host_name: HostName,
-    services: Sequence[cmk.base.check_utils.Service],
-) -> Sequence[cmk.base.check_utils.Service]:
+    services: Sequence[cmk.base.check_utils.ConfiguredService],
+) -> Sequence[cmk.base.check_utils.ConfiguredService]:
     if is_cmc():
         return services
 
     unresolved = [(s, set(service_depends_on(host_name, s.description))) for s in services]
 
-    resolved: List[cmk.base.check_utils.Service] = []
+    resolved: List[cmk.base.check_utils.ConfiguredService] = []
     while unresolved:
         resolved_descriptions = {service.description for service in resolved}
         newly_resolved = {
@@ -2613,12 +2613,12 @@ class HostConfig:
         return list(parent_candidates.intersection(self._config_cache.all_active_realhosts()))
 
     def agent_connection_mode(self) -> Literal["pull-agent", "push-agent"]:
-        mode = cmk_agent_connection.get(self.hostname, "pull-agent")
+        mode = self._explicit_host_attributes.get("cmk_agent_connection", "pull-agent")
         if mode == "pull-agent":
             return "pull-agent"
         if mode == "push-agent":
             return "push-agent"
-        raise NotImplementedError("unknown connection mode: {mode!r}")
+        raise NotImplementedError(f"unknown connection mode: {mode!r}")
 
     def snmp_config(self, ip_address: HostAddress) -> SNMPHostConfig:
         return SNMPHostConfig(
@@ -3833,7 +3833,7 @@ class ConfigCache:
 
     def get_autochecks_of(
         self, hostname: HostName
-    ) -> Sequence[cmk.base.check_utils.Service[TimespecificParameters]]:
+    ) -> Sequence[cmk.base.check_utils.ConfiguredService]:
         return self._autochecks_manager.get_autochecks_of(
             hostname,
             compute_check_parameters,
@@ -4290,7 +4290,3 @@ class CEEHostConfig(HostConfig):
         return self._config_cache.host_extra_conf(
             self.hostname, agent_config.get("lnx_remote_alert_handlers", [])
         )
-
-
-def get_microcore_config_format() -> str:
-    return cmk.base.config.microcore_config_format

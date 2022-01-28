@@ -91,6 +91,8 @@ REQUIRED_ARGUMENTS: Dict[str, List[str]] = {
         "ENDPOINT",
     ],
     "agent_kube": [
+        "--cluster",
+        "CLUSTER",
         "--token",
         "TOKEN",
         "--api-server-endpoint",
@@ -130,6 +132,13 @@ REQUIRED_ARGUMENTS: Dict[str, List[str]] = {
         "ADDRESS",
     ],
     "agent_mqtt": ["SERVER"],
+    "agent_smb_share": [
+        "REMOTE_NAME",
+        "ADDRESS",
+        "USERNAME",
+        "PASSWORD",
+        "Shared folder",
+    ],
 }
 
 

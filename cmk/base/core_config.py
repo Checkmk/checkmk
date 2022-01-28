@@ -10,7 +10,7 @@ import os
 import shutil
 import socket
 import sys
-from contextlib import contextmanager, suppress
+from contextlib import contextmanager
 from pathlib import Path
 from typing import (
     AnyStr,
@@ -50,7 +50,7 @@ import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.config as config
 import cmk.base.ip_lookup as ip_lookup
 import cmk.base.obsolete_output as out
-from cmk.base.check_utils import LegacyCheckParameters, Service
+from cmk.base.check_utils import ConfiguredService
 from cmk.base.config import (
     ConfigCache,
     HostCheckCommand,
@@ -376,15 +376,6 @@ def _create_core_config(
     config_cache = config.get_config_cache()
     with config_path.create(is_cmc=config.is_cmc()), _backup_objects_file(core):
         core.create_config(config_path, config_cache, hosts_to_update=hosts_to_update)
-        # TODO: Remove once we drop the binary config
-        # Purpose of code is to delete the old config file after format switching to have precisely
-        # one microcore config in core config directory.
-        if config.is_cmc():
-            with suppress(OSError):
-                if config.get_microcore_config_format() == "protobuf":
-                    os.remove(cmk.utils.paths.var_dir + "/core/config")
-                else:
-                    os.remove(cmk.utils.paths.var_dir + "/core/config.pb")
 
     cmk.utils.password_store.save(config.stored_passwords)
 
@@ -524,7 +515,7 @@ def _prepare_check_command(
 def get_cmk_passive_service_attributes(
     config_cache: ConfigCache,
     host_config: HostConfig,
-    service: Service,
+    service: ConfiguredService,
     check_mk_attrs: ObjectAttributes,
 ) -> ObjectAttributes:
     attrs = get_service_attributes(
@@ -545,7 +536,7 @@ def get_service_attributes(
     description: ServiceName,
     config_cache: ConfigCache,
     check_plugin_name: Optional[CheckPluginName] = None,
-    params: Union[LegacyCheckParameters, TimespecificParameters] = None,
+    params: Optional[TimespecificParameters] = None,
 ) -> ObjectAttributes:
     attrs: ObjectAttributes = _extra_service_attributes(
         hostname, description, config_cache, check_plugin_name, params
@@ -568,7 +559,7 @@ def _extra_service_attributes(
     description: ServiceName,
     config_cache: ConfigCache,
     check_plugin_name: Optional[CheckPluginName],
-    params: Union[LegacyCheckParameters, TimespecificParameters],
+    params: Optional[TimespecificParameters],
 ) -> ObjectAttributes:
     attrs = {}  # ObjectAttributes
 

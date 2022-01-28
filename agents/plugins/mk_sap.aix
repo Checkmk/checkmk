@@ -48,19 +48,16 @@ if [ -r "$sapservices" ]; then
     # loop over ids
     cat $sapservices | while read LINE
     do
-        command=$(echo $LINE | grep "^LIBPATH=/usr/sap/" | grep -v "^LIBPATH=/usr/sap/D" | awk -F" " '{print $5}')
+        command=$(echo "$LINE" | grep "^LIBPATH=/usr/sap/" | grep -v "^LIBPATH=/usr/sap/D" | awk -F" " '{print $5}')
 	if [ -n "$command" ]; then
-            id2=$(echo $command | awk -F"/" '{print $4}')
+            id2=$(echo "$command" | awk -F"/" '{print $4}')
             path=$(echo "/sapmnt/$id2/exe")
-            sappfpar=$(find $path -name sappfpar | head -1)
-            sapcontrol=$(find $path -name sapcontrol | head -1)
-            libpath=$(find $path -name libicuuc\*.a | head -1 | sed -e 's,/[^ /]*$,,')
-            id=$(LIBPATH=$LIBPATH:$libpath $sappfpar SAPSYSTEM $command)
+            sappfpar=$(find "$path" -name sappfpar | head -1)
+            sapcontrol=$(find "$path" -name sapcontrol | head -1)
+            lib_path=$(find "$path" -name libicuuc\*.a | head -1 | sed -e 's,/[^ /]*$,,')
+            id=$(LIBPATH=$LIBPATH:$lib_path $sappfpar SAPSYSTEM "$command")
             echo -n "[$id]"
-            LIBPATH=$LIBPATH:$libpath $sapcontrol -nr $id -function GetProcessList
+            LIBPATH=$LIBPATH:$lib_path $sapcontrol -nr "$id" -function GetProcessList
 	fi
     done
 fi
-
-
-

@@ -48,7 +48,7 @@ class ClassicSNMPBackend(SNMPBackend):
 
         console.vverbose("Running '%s'\n" % subprocess.list2cmdline(command))
 
-        snmp_process = subprocess.Popen(
+        snmp_process = subprocess.Popen(  # pylint:disable=consider-using-with
             command,
             close_fds=True,
             stdout=subprocess.PIPE,
@@ -110,10 +110,10 @@ class ClassicSNMPBackend(SNMPBackend):
         exitstatus = None
         rowinfo: SNMPRowInfo = []
         try:
-            snmp_process = subprocess.Popen(
+            snmp_process = subprocess.Popen(  # pylint:disable=consider-using-with
                 command,
                 close_fds=True,
-                stdin=open(os.devnull),
+                stdin=open(os.devnull),  # pylint:disable=consider-using-with
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
                 encoding="utf-8",

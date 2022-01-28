@@ -174,7 +174,7 @@ TEST(OnlyFromTest, Base) {
                 return {};
             }
 
-            auto data = reinterpret_cast<const uint8_t*>(Ip.data());
+            auto data = reinterpret_cast<const uint8_t *>(Ip.data());
             std::vector<uint8_t> v(data, data + Ip.size());
             return v;
         };
@@ -201,7 +201,7 @@ TEST(OnlyFromTest, Base) {
                 auto count = socket.read_some(asio::buffer(text), error);
                 EXPECT_TRUE(count > 1);
                 socket.close();
-            } catch (const std::exception& e) {
+            } catch (const std::exception &e) {
                 XLOG::l("Exception {} during connection to ", e.what());
             }
             test_port.shutdownIo();  //
@@ -282,8 +282,8 @@ TEST(OnlyFromTest, Base) {
                 socket.async_read_some(
                     asio::buffer(text, 10),
                     [&count, &signaled](
-                        const error_code&,  // Result of operation.
-                        std::size_t         // Number of bytes read.
+                        const error_code &,  // Result of operation.
+                        std::size_t          // Number of bytes read.
                     ) {});
                 for (int i = 0; i < 25; i++) {
                     if (text[0] != ' ') break;
@@ -325,7 +325,7 @@ TEST(OnlyFromTest, Ipv6Integration) {
                 return {};
             }
 
-            auto data = reinterpret_cast<const uint8_t*>(Ip.data());
+            auto data = reinterpret_cast<const uint8_t *>(Ip.data());
             std::vector<uint8_t> v(data, data + Ip.size());
             return v;
         };
@@ -352,7 +352,7 @@ TEST(OnlyFromTest, Ipv6Integration) {
                 auto count = socket.read_some(asio::buffer(text), error);
                 EXPECT_TRUE(count > 1);
                 socket.close();
-            } catch (const std::exception& e) {
+            } catch (const std::exception &e) {
                 XLOG::l("Exception {} during connection to ", e.what());
             }
             test_port.shutdownIo();  //

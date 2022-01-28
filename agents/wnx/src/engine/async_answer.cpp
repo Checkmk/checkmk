@@ -53,8 +53,8 @@ bool AsyncAnswer::waitAnswer(milliseconds to_wait) {
 namespace {
 // combines two vectors together
 // on exception(malicious plugin @ 32 bit OS) returns false
-bool AddVectorGracefully(std::vector<uint8_t>& out_data,
-                         const std::vector<uint8_t>& in_data) {
+bool AddVectorGracefully(std::vector<uint8_t> &out_data,
+                         const std::vector<uint8_t> &in_data) {
     if (in_data.empty()) return true;
 
     auto old_size = out_data.size();
@@ -66,7 +66,7 @@ bool AddVectorGracefully(std::vector<uint8_t>& out_data,
         // divider after every section with data
         out_data.push_back(static_cast<uint8_t>('\n'));
         return true;
-    } catch (const std::exception& e) {
+    } catch (const std::exception &e) {
         // return to invariant...
         XLOG::l(XLOG_FLINE + "- disaster '{}'", e.what());
         out_data.resize(old_size);
@@ -111,7 +111,7 @@ bool AsyncAnswer::prepareAnswer(std::string_view ip) {
 std::vector<std::string> AsyncAnswer::segmentNameList() const {
     std::unique_lock lk(lock_);
     std::vector<std::string> list;
-    for (const auto& s : segments_) {
+    for (const auto &s : segments_) {
         list.emplace_back(s.name_);
     }
     lk.unlock();
@@ -120,9 +120,9 @@ std::vector<std::string> AsyncAnswer::segmentNameList() const {
 }
 
 bool AsyncAnswer::addSegment(
-    const std::string& section_name,  // name
-    const AnswerId& answer_id,        // "password"
-    const std::vector<uint8_t>& data  // data for section
+    const std::string &section_name,  // name
+    const AnswerId &answer_id,        // "password"
+    const std::vector<uint8_t> &data  // data for section
 ) {
     std::lock_guard lk(lock_);
     if (answer_id != tp_id_) {
@@ -130,7 +130,7 @@ bool AsyncAnswer::addSegment(
         return false;
     }
 
-    for (const auto& s : segments_) {
+    for (const auto &s : segments_) {
         if (s.name_ == section_name) {
             XLOG::l("Section '{}' tries to store data twice. F-f",
                     section_name);
@@ -151,7 +151,7 @@ bool AsyncAnswer::addSegment(
         } else if (!data.empty()) {
             if (!AddVectorGracefully(data_, data)) segments_.back().length_ = 0;
         }
-    } catch (const std::exception& e) {
+    } catch (const std::exception &e) {
         // not possible, but we have to check
         XLOG::l(XLOG_FLINE + "-exception '{}'", e.what());
     }

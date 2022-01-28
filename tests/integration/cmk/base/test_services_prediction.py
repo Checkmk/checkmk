@@ -33,12 +33,16 @@ def cfg_setup_fixture(
     site.makedirs("var/check_mk/rrd/test-prediction")
     with open(site.path("var/check_mk/rrd/test-prediction/CPU_load.rrd"), "wb") as f:
         f.write(
-            open("%s/tests/integration/cmk/base/test-files/CPU_load.rrd" % repo_path(), "rb").read()
+            open(  # pylint:disable=consider-using-with
+                "%s/tests/integration/cmk/base/test-files/CPU_load.rrd" % repo_path(), "rb"
+            ).read()
         )
 
     site.write_text_file(
         "var/check_mk/rrd/test-prediction/CPU_load.info",
-        open("%s/tests/integration/cmk/base/test-files/CPU_load.info" % repo_path()).read(),
+        open(  # pylint:disable=consider-using-with
+            "%s/tests/integration/cmk/base/test-files/CPU_load.info" % repo_path()
+        ).read(),
     )
 
     site.restart_core()

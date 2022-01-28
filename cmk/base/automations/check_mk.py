@@ -83,13 +83,12 @@ import cmk.base.notify as notify
 import cmk.base.parent_scan
 import cmk.base.plugin_contexts as plugin_contexts
 import cmk.base.sources as sources
-from cmk.base.autochecks import AutocheckServiceWithNodes
+from cmk.base.autochecks import AutocheckEntry, AutocheckServiceWithNodes
 from cmk.base.automations import Automation, automations, MKAutomationError
-from cmk.base.check_utils import AutocheckService
 from cmk.base.core import CoreAction, do_restart
 from cmk.base.core_factory import create_core
 from cmk.base.diagnostics import DiagnosticsDump
-from cmk.base.discovered_labels import HostLabel, ServiceLabel
+from cmk.base.discovered_labels import HostLabel
 
 HistoryFile = str
 HistoryFilePair = Tuple[HistoryFile, HistoryFile]
@@ -279,20 +278,16 @@ class AutomationSetAutochecks(DiscoveryAutomation):
         # Fix data from version <2.0
         new_services: List[AutocheckServiceWithNodes] = []
         for (raw_check_plugin_name, item), (
-            descr,
+            _descr,
             params,
             raw_service_labels,
             found_on_nodes,
         ) in _transform_pre_20_items(new_items).items():
             check_plugin_name = CheckPluginName(raw_check_plugin_name)
 
-            service_labels = {
-                name: ServiceLabel(name, value) for name, value in raw_service_labels.items()
-            }
-
             new_services.append(
                 AutocheckServiceWithNodes(
-                    AutocheckService(check_plugin_name, item, descr, params, service_labels),
+                    AutocheckEntry(check_plugin_name, item, params, raw_service_labels),
                     found_on_nodes,
                 )
             )
@@ -573,7 +568,9 @@ class AutomationRenameHosts(Automation):
             # Create a file "renamed_hosts" with the information about the
             # renaming of the hosts. The core will honor this file when it
             # reads the status file with the saved state.
-            open(var_dir + "/core/renamed_hosts", "w").write("%s\n%s\n" % (oldname, newname))
+            open(var_dir + "/core/renamed_hosts", "w").write(  # pylint:disable=consider-using-with
+                "%s\n%s\n" % (oldname, newname)
+            )
             actions.append("retention")
 
         # NagVis maps
@@ -637,10 +634,10 @@ s/(HOST|SERVICE) NOTIFICATION: ([^;]+);%(old)s;/\1 NOTIFICATION: \2;%(new)s;/
         handled_files: List[str] = []
 
         command = ["sed", "-ri", "--file=/dev/fd/0"]
-        p = subprocess.Popen(
+        p = subprocess.Popen(  # pylint:disable=consider-using-with
             command + file_paths,
             stdin=subprocess.PIPE,
-            stdout=open(os.devnull, "w"),
+            stdout=open(os.devnull, "w"),  # pylint:disable=consider-using-with
             stderr=subprocess.STDOUT,
             close_fds=True,
         )
@@ -660,7 +657,7 @@ s/(HOST|SERVICE) NOTIFICATION: ([^;]+);%(old)s;/\1 NOTIFICATION: \2;%(new)s;/
             extended = ["-r"] if extended_regex else []
             subprocess.call(
                 ["sed", "-i"] + extended + ["s@%s@%s@" % (old, new)] + paths,
-                stderr=open(os.devnull, "w"),
+                stderr=open(os.devnull, "w"),  # pylint:disable=consider-using-with
             )
             return True
 
@@ -804,12 +801,7 @@ class AutomationAnalyseServices(Automation):
                 "checktype": str(plugin.name),
                 "checkgroup": str(plugin.check_ruleset_name),
                 "item": service.item,
-                # Putting service.parameters here is wrong.
-                # servce.parameters here contains the computed check parameters.
-                # Those may be timespecific, but not yet resolved.
-                # In order to show the "discovered" parameters here, we must have a
-                # *Autocheck*Service (not a general Service) instance.
-                "inv_parameters": "not available in this view",
+                "inv_parameters": service.discovered_parameters,
                 "factory_settings": plugin.check_default_parameters,
                 # effective parameters:
                 "parameters": service.parameters.preview(cmk.base.core.timeperiod_active),
@@ -1317,7 +1309,7 @@ class AutomationDiagHost(Automation):
 
     def _execute_ping(self, host_config: config.HostConfig, ipaddress: str) -> Tuple[int, str]:
         base_cmd = "ping6" if host_config.is_ipv6_primary else "ping"
-        p = subprocess.Popen(
+        p = subprocess.Popen(  # pylint:disable=consider-using-with
             [base_cmd, "-A", "-i", "0.2", "-c", "2", "-W", "5", ipaddress],
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
@@ -1374,7 +1366,7 @@ class AutomationDiagHost(Automation):
     ) -> Tuple[int, str]:
         family_flag = "-6" if host_config.is_ipv6_primary else "-4"
         try:
-            p = subprocess.Popen(
+            p = subprocess.Popen(  # pylint:disable=consider-using-with
                 ["traceroute", family_flag, "-n", ipaddress],
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,

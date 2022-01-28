@@ -366,7 +366,7 @@ class PostgresWin(PostgresBase):
                 sql_cmd,
             )
 
-        proc = subprocess.Popen(
+        proc = subprocess.Popen(  # pylint:disable=consider-using-with
             cmd_str,
             env=self.my_env,
             stdout=subprocess.PIPE,
@@ -659,10 +659,12 @@ class PostgresLinux(PostgresBase):
         # the full cmd string into psql executable
         # see https://www.postgresql.org/docs/9.2/app-psql.html
         if mixed_cmd:
-            cmd_to_pipe = subprocess.Popen(["echo", sql_cmd], stdout=subprocess.PIPE)
+            cmd_to_pipe = subprocess.Popen(  # pylint:disable=consider-using-with
+                ["echo", sql_cmd], stdout=subprocess.PIPE
+            )
             base_cmd_list[-1] = base_cmd_list[-1] % (self.pg_passfile, self.psql, extra_args, field_sep, "")
 
-            receiving_pipe = subprocess.Popen(
+            receiving_pipe = subprocess.Popen(  # pylint:disable=consider-using-with
                 base_cmd_list, stdin=cmd_to_pipe.stdout, stdout=subprocess.PIPE, env=self.my_env
             )
             out = ensure_str(receiving_pipe.communicate()[0])
@@ -675,7 +677,9 @@ class PostgresLinux(PostgresBase):
                 field_sep,
                 ' -c "%s" ' % sql_cmd,
             )
-            proc = subprocess.Popen(base_cmd_list, env=self.my_env, stdout=subprocess.PIPE)
+            proc = subprocess.Popen(  # pylint:disable=consider-using-with
+                base_cmd_list, env=self.my_env, stdout=subprocess.PIPE
+            )  # pylint:disable=consider-using-with
             out = ensure_str(proc.communicate()[0])
 
         return out.rstrip()
@@ -683,7 +687,9 @@ class PostgresLinux(PostgresBase):
     def get_psql_and_bin_path(self):
         # type: () -> Tuple[str, str]
         try:
-            proc = subprocess.Popen(["which", "psql"], stdout=subprocess.PIPE)
+            proc = subprocess.Popen(  # pylint:disable=consider-using-with
+                ["which", "psql"], stdout=subprocess.PIPE
+            )  # pylint:disable=consider-using-with
             out = ensure_str(proc.communicate()[0])
         except subprocess.CalledProcessError:
             raise RuntimeError("Could not determine psql executable.")
@@ -1011,7 +1017,9 @@ def parse_arguments(argv):
 def get_postgres_user_linux():
     for user_id in ("pgsql", "postgres"):
         try:
-            proc = subprocess.Popen(["id", user_id], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            proc = subprocess.Popen(  # pylint:disable=consider-using-with
+                ["id", user_id], stdout=subprocess.PIPE, stderr=subprocess.PIPE
+            )
             proc.communicate()
             if proc.returncode == 0:
                 return user_id.rstrip()
@@ -1048,7 +1056,7 @@ def main(argv=None):
     instances = []
     try:
         postgres_cfg_path = os.path.join(os.getenv("MK_CONFDIR", default_path), "postgres.cfg")
-        postgres_cfg = open(postgres_cfg_path).readlines()
+        postgres_cfg = open(postgres_cfg_path).readlines()  # pylint:disable=consider-using-with
         dbuser, instances = parse_postgres_cfg(postgres_cfg)
     except Exception:
         _, e = sys.exc_info()[:2]  # python2 and python3 compatible exception logging

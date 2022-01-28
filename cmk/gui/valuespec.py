@@ -2968,19 +2968,23 @@ class CascadingDropdown(ValueSpec[CascadingDropdownChoiceValue]):
         return list(itertools.chain(self._preselected, self._choices()))
 
     def canonical_value(self) -> CascadingDropdownChoiceValue:
-        result = self._fallback_choice()
-        if isinstance(result, tuple):
-            return result[0], result[1].canonical_value()
-        return result
+        return self._result_from_fallback_choice("canonical_value")
 
     def default_value(self) -> CascadingDropdownChoiceValue:
-        try:
-            return super().default_value()
-        except Exception:
-            result = self._fallback_choice()
-            if isinstance(result, tuple):
+        if isinstance(self._default_value, Sentinel):
+            return self._result_from_fallback_choice("default_value")
+        return super().default_value()
+
+    def _result_from_fallback_choice(
+        self,
+        value: Literal["default_value", "canonical_value"],
+    ) -> CascadingDropdownChoiceValue:
+        result = self._fallback_choice()
+        if isinstance(result, tuple):
+            if value == "default_value":
                 return result[0], result[1].default_value()
-            return result
+            return result[0], result[1].canonical_value()
+        return result
 
     def _fallback_choice(
         self,
@@ -5065,7 +5069,7 @@ DictionaryElementsThunk = Callable[[], DictionaryElements]
 DictionaryElementsRaw = Union[DictionaryElements, DictionaryElementsThunk]
 
 
-class Dictionary(ValueSpec):
+class Dictionary(ValueSpec[dict[str, Any]]):
     # TODO: Cleanup ancient "migrate"
     def __init__(  # pylint: disable=redefined-builtin
         self,
@@ -5355,7 +5359,7 @@ class Dictionary(ValueSpec):
             if param in value
         }
 
-    def from_html_vars(self, varprefix):
+    def from_html_vars(self, varprefix) -> dict[str, Any]:
         return {
             param: vs.from_html_vars(f"{varprefix}_p_{param}")
             for param, vs in self._get_elements()
@@ -6140,10 +6144,11 @@ class Labels(ValueSpec):
 
     def render_input(self, varprefix, value):
         html.help(self.help())
+        label_type = "host_label" if "host_labels" in varprefix else "service_label"
         html.text_input(
             varprefix,
             default_value=encode_labels_for_http(value.items()),
-            cssclass="labels",
+            cssclass="labels" + " " + label_type,
             placeholder=_("Add some label"),
             data_world=self._world.value,
             data_max_labels=self._max_labels,

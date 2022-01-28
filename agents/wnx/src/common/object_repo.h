@@ -1,6 +1,7 @@
 // Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
-// This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
-// conditions defined in the file COPYING, which is part of this source code package.
+// This file is part of Checkmk (https://checkmk.com). It is subject to the
+// terms and conditions defined in the file COPYING, which is part of this
+// source code package.
 
 #pragma once
 #include <mutex>
@@ -14,10 +15,10 @@ template <typename T>
 class MicroRepo {
 public:
     MicroRepo() = default;
-    MicroRepo(const MicroRepo&) = delete;
-    MicroRepo(const MicroRepo&&) = delete;
-    MicroRepo& operator=(const MicroRepo&) = delete;
-    MicroRepo& operator=(const MicroRepo&&) = delete;
+    MicroRepo(const MicroRepo &) = delete;
+    MicroRepo(const MicroRepo &&) = delete;
+    MicroRepo &operator=(const MicroRepo &) = delete;
+    MicroRepo &operator=(const MicroRepo &&) = delete;
 
     ~MicroRepo() {
         std::lock_guard lk(lock_);
@@ -29,13 +30,13 @@ public:
     }
 
     template <typename... Types>
-    std::shared_ptr<T> createObject(const std::string& name, Types... args) {
+    std::shared_ptr<T> createObject(const std::string &name, Types... args) {
         std::lock_guard lk(lock_);
         map_[name] = std::make_shared<T>(args...);
         return map_[name];
     }
 
-    std::shared_ptr<T> getObject(const std::string& name) const {
+    std::shared_ptr<T> getObject(const std::string &name) const {
         std::lock_guard lk(lock_);
         auto it = map_.find(name);
         if (it == map_.end()) return nullptr;
@@ -43,7 +44,7 @@ public:
         return it->second;
     }
 
-    bool removeObject(const std::string& name) {
+    bool removeObject(const std::string &name) {
         std::lock_guard lk(lock_);
 
         auto node = map_.extract(name);

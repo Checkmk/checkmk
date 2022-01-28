@@ -51,6 +51,7 @@ _STR_PATHS: Final = {
     "livebackendsdir",
     "inventory_output_dir",
     "inventory_archive_dir",
+    "inventory_delta_cache_dir",
     "status_data_dir",
     "robotmk_var_dir",
     "share_dir",

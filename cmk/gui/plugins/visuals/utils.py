@@ -8,6 +8,7 @@
 # TODO: More feature related splitting up would be better
 
 import abc
+import re
 from itertools import chain
 from typing import (
     Any,
@@ -418,6 +419,20 @@ def parse_ranged_tables_literal(s: str) -> RangedTables:
     raise ValueError("Expected a RangedTables Literal")
 
 
+def recover_pre_2_1_range_filter_request_vars(query: query_filters.NumberRangeQuery):
+    """Some range filters used the _to suffix instead of the standard _until.
+
+    Do inverse translation to search for this request vars."""
+    request_var_match = ((var, re.sub("_until(_|$)", "_to\\1", var)) for var in query.request_vars)
+    return {
+        current_var: (
+            request.get_str_input_mandatory(current_var, "")
+            or request.get_str_input_mandatory(old_var, "")
+        )
+        for current_var, old_var in request_var_match
+    }
+
+
 class FilterNumberRange(Filter):  # type is int
     def __init__(
         self,
@@ -462,6 +477,10 @@ class FilterNumberRange(Filter):  # type is int
     def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
         return self.query_filter.filter_table(context, rows)
 
+    def value(self) -> FilterHTTPVariables:
+        """Returns the current representation of the filter settings from the request context."""
+        return recover_pre_2_1_range_filter_request_vars(self.query_filter)
+
 
 class FilterTime(Filter):
     """Filter for setting time ranges, e.g. on last_state_change and last_check"""
@@ -494,10 +513,14 @@ class FilterTime(Filter):
             html.open_tr()
             html.td("%s:" % whatname)
             html.open_td()
-            html.text_input(varprefix)
+            html.text_input(varprefix, default_value=value.get(varprefix, ""))
             html.close_td()
             html.open_td()
-            html.dropdown(varprefix + "_range", query_filters.time_filter_options(), deflt="3600")
+            html.dropdown(
+                varprefix + "_range",
+                query_filters.time_filter_options(),
+                deflt=value.get(varprefix + "_range", "3600"),
+            )
             html.close_td()
             html.close_tr()
         html.close_table()
@@ -507,6 +530,10 @@ class FilterTime(Filter):
 
     def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
         return self.query_filter.filter_table(context, rows)
+
+    def value(self) -> FilterHTTPVariables:
+        """Returns the current representation of the filter settings from the request context."""
+        return recover_pre_2_1_range_filter_request_vars(self.query_filter)
 
 
 def checkbox_component(htmlvar: str, value: FilterHTTPVariables, label: str):

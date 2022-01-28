@@ -18,8 +18,8 @@ uuid = { version = "0.8.2", features = ["v4"] }
 openssl = { version = "*", features = ["vendored"] }
 rustls = { version = "0.20.0" }
 rustls-pemfile = { version = "*" }
-log4rs = { version = "*" }
 log = { version = "*" }
+flexi_logger = { version = "*" }
 http = { version = "*" }
 anyhow = { version = "1.0", features = ["backtrace"]}
 nix = { version = "*" }
@@ -29,3 +29,8 @@ requestty = { version = "*" }
 x509-parser = { version = "*" }
 thiserror = { version = "*" }
 tempfile = { version = "*" }
+flate2 = { version = "*" }
+regex = { version = "*" }
+mockall = { version = "*" }
+mockall_double = { version = "*" }
+lazy_static = { version = "*" }

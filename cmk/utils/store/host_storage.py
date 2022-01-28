@@ -60,7 +60,6 @@ def get_hosts_file_variables():
         "clusters": {},
         "ipaddresses": {},
         "ipv6addresses": {},
-        "cmk_agent_connection": {},
         "explicit_snmp_communities": {},
         "management_snmp_credentials": {},
         "management_ipmi_credentials": {},
@@ -397,7 +396,6 @@ class ExperimentalStorageLoader(ABCHostsStorageLoader[HostsData]):
             "host_labels",
             "ipaddresses",
             "ipv6addresses",
-            "cmk_agent_connection",  # TODO: will be changed to explicit_attribute
             "explicit_snmp_communities",
             "management_ipmi_credentials",
             "management_snmp_credentials",
@@ -408,8 +406,7 @@ class ExperimentalStorageLoader(ABCHostsStorageLoader[HostsData]):
             global_dict[key].update(data.get(key, {}))
 
         # "attributes" are moved to global scope
-        # 'attributes': {'cmk_agent_connection': {'test': 'pull-agent'},
-        #                'ipaddresses': {'test': '1.2.3.4'}}
+        # 'attributes': {'ipaddresses': {'test': '1.2.3.4'}}
         # This field should be removed in an upcoming commit
         # It is pretty much the same than the already existing explicit_host_conf
         # and has no dynamic components

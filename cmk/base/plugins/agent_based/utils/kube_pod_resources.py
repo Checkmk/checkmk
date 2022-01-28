@@ -7,11 +7,12 @@
 import json
 import time
 from itertools import islice
-from typing import Literal, MutableMapping, NamedTuple, Tuple, TypedDict, Union
+from typing import Literal, MutableMapping, NamedTuple, TypedDict
 
 from ..agent_based_api.v1 import get_value_store, Metric, render, Result, Service, State
 from ..agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 from .k8s import PodResources, PodResourcesWithCapacity, PodSequence
+from .kube import VSResultAge
 
 
 def discovery_kube_pod_resources(section: PodResources) -> DiscoveryResult:
@@ -104,7 +105,7 @@ def _check_phase_duration_pods(
 
 
 class Params(TypedDict):
-    pending: Union[Tuple[Literal["levels"], Tuple[int, int]], Literal["no_levels"]]
+    pending: VSResultAge
     unknown: Literal[0, 1, 2, 3]
 
 

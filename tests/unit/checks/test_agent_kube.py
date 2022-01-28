@@ -22,6 +22,7 @@ pytestmark = pytest.mark.checks
     [
         (
             {
+                "cluster-name": "cluster",
                 "kubernetes-api-server": {"endpoint": ("ipaddress", {"protocol": "https"})},
                 "cluster-agent": {
                     "node_ip": "11.211.3.32",
@@ -31,6 +32,12 @@ pytestmark = pytest.mark.checks
                 "verify-cert": False,
             },
             [
+                "--cluster",
+                "cluster",
+                "--monitored-objects",
+                "nodes",
+                "deployments",
+                "pods",
                 "--api-server-endpoint",
                 "https://127.0.0.1",
                 "--cluster-agent-endpoint",
@@ -39,6 +46,7 @@ pytestmark = pytest.mark.checks
         ),
         (
             {
+                "cluster-name": "cluster",
                 "kubernetes-api-server": {
                     "endpoint": ("ipaddress", {"port": 8080, "protocol": "http"})
                 },
@@ -50,6 +58,12 @@ pytestmark = pytest.mark.checks
                 "verify-cert": True,
             },
             [
+                "--cluster",
+                "cluster",
+                "--monitored-objects",
+                "nodes",
+                "deployments",
+                "pods",
                 "--api-server-endpoint",
                 "http://127.0.0.1:8080",
                 "--cluster-agent-endpoint",
@@ -59,6 +73,8 @@ pytestmark = pytest.mark.checks
         ),
         (
             {
+                "cluster-name": "cluster",
+                "monitored_objects": ["pods"],
                 "kubernetes-api-server": {
                     "endpoint": ("url_custom", "http://localhost:8080"),
                     "token": ("password", "randomtoken"),
@@ -71,8 +87,12 @@ pytestmark = pytest.mark.checks
                 "verify-cert": False,
             },
             [
+                "--cluster",
+                "cluster",
                 "--token",
                 "randomtoken",
+                "--monitored-objects",
+                "pods",
                 "--api-server-endpoint",
                 "http://localhost:8080",
                 "--cluster-agent-endpoint",
@@ -89,11 +109,48 @@ def test_parse_arguments(params, expected_args):
     assert arguments == expected_args
 
 
+def test_parse_namespace_patterns():
+    """Tests if all required arguments are present."""
+    agent = SpecialAgent("agent_kube")
+    arguments = agent.argument_func(
+        {
+            "cluster-name": "cluster",
+            "kubernetes-api-server": {"endpoint": ("ipaddress", {"protocol": "https"})},
+            "cluster-agent": {
+                "node_ip": "11.211.3.32",
+                "connection_port": 20026,
+                "protocol": "https",
+            },
+            "verify-cert": False,
+            "namespaces": ("namespace-include-patterns", ["default", "kube-system"]),
+        },
+        "host",
+        "127.0.0.1",
+    )
+    assert arguments == [
+        "--cluster",
+        "cluster",
+        "--monitored-objects",
+        "nodes",
+        "deployments",
+        "pods",
+        "--namespace-include-patterns",
+        "default",
+        "--namespace-include-patterns",
+        "kube-system",
+        "--api-server-endpoint",
+        "https://127.0.0.1",
+        "--cluster-agent-endpoint",
+        "https://11.211.3.32:20026",
+    ]
+
+
 @pytest.mark.parametrize(
     "params, host",
     [
         (
             {
+                "cluster-name": "test",
                 "kubernetes-api-server": {"endpoint": ("ipaddress", {"protocol": "https"})},
                 "cluster-agent": {
                     "node_ip": "11.211.3.32",
@@ -106,6 +163,7 @@ def test_parse_arguments(params, expected_args):
         ),
         (
             {
+                "cluster-name": "test",
                 "kubernetes-api-server": {
                     "endpoint": ("ipaddress", {"port": 8080, "protocol": "http"})
                 },
@@ -120,6 +178,7 @@ def test_parse_arguments(params, expected_args):
         ),
         (
             {
+                "cluster-name": "test",
                 "kubernetes-api-server": {
                     "endpoint": ("url_custom", "http://localhost:8080"),
                     "token": ("password", "randomtoken"),

@@ -26,7 +26,9 @@ def mode_fixture(request):
 @pytest.mark.parametrize("ipaddress", [None, HostAddress("127.0.0.1")])
 def test_attribute_defaults(monkeypatch: MonkeyPatch, ipaddress: HostAddress, mode: Mode) -> None:
     hostname = HostName("testhost")
-    Scenario().add_host(hostname).apply(monkeypatch)
+    ts = Scenario()
+    ts.add_host(hostname)
+    ts.apply(monkeypatch)
 
     source = PiggybackSource(hostname, ipaddress)
     assert source.hostname == hostname

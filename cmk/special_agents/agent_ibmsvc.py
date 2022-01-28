@@ -220,7 +220,7 @@ def main(sys_argv=None):
     if opt_debug:
         sys.stderr.write("executing external command: %s\n" % cmd)
 
-    result = subprocess.Popen(  # nosec
+    result = subprocess.Popen(  # nosec  # pylint:disable=consider-using-with
         cmd,
         shell=True,
         stdout=subprocess.PIPE,
@@ -248,7 +248,7 @@ def main(sys_argv=None):
     if g_profile:
         g_profile.dump_stats(g_profile_path)
         show_profile = os.path.join(os.path.dirname(g_profile_path), "show_profile.py")
-        open(show_profile, "w").write(
+        open(show_profile, "w").write(  # pylint:disable=consider-using-with
             "#!/usr/bin/python\n"
             "import pstats\n"
             "stats = pstats.Stats('%s')\n"

@@ -89,7 +89,13 @@ class ModeDiagnostics(WatoMode):
 
     def _get_diagnostics_parameters(self) -> Optional[DiagnosticsParameters]:
         if self._collect_dump:
-            return self._vs_diagnostics().from_html_vars("diagnostics")
+            params = self._vs_diagnostics().from_html_vars("diagnostics")
+            return {
+                "site": params["site"],
+                "general": params["general"],
+                "opt_info": params["opt_info"],
+                "comp_specific": params["comp_specific"],
+            }
         return None
 
     def title(self) -> str:

@@ -50,7 +50,6 @@ from cmk.utils.store.host_storage import (
     get_hosts_file_variables,
     get_storage_format,
     GroupRuleType,
-    HostAttributeMapping,
     HostsData,
     HostsStorageData,
     HostsStorageFieldsGenerator,
@@ -926,25 +925,14 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
         host_labels = {}
         group_rules_list: List[Tuple[List[GroupRuleType], bool]] = []
 
-        attribute_mappings: List[HostAttributeMapping] = [
-            # host attr, cmk.base variable name, value, title
-            ("ipaddress", "ipaddresses", {}, "Explicit IPv4 addresses"),
-            ("ipv6address", "ipv6addresses", {}, "Explicit IPv6 addresses"),
-            ("cmk_agent_connection", "cmk_agent_connection", {}, "Checkmk agent connection mode"),
-            ("snmp_community", "explicit_snmp_communities", {}, "Explicit SNMP communities"),
-            (
-                "management_snmp_community",
-                "management_snmp_credentials",
-                {},
-                "Management board SNMP credentials",
-            ),
-            (
-                "management_ipmi_credentials",
-                "management_ipmi_credentials",
-                {},
-                "Management board IPMI credentials",
-            ),
-            ("management_protocol", "management_protocol", {}, "Management board protocol"),
+        attribute_mappings: Sequence[tuple[str, str, dict[str, Any]]] = [
+            # host attr, cmk.base variable name, value
+            ("ipaddress", "ipaddresses", {}),
+            ("ipv6address", "ipv6addresses", {}),
+            ("snmp_community", "explicit_snmp_communities", {}),
+            ("management_snmp_community", "management_snmp_credentials", {}),
+            ("management_ipmi_credentials", "management_ipmi_credentials", {}),
+            ("management_protocol", "management_protocol", {}),
         ]
 
         for hostname in hostnames:
@@ -971,9 +959,8 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
             # attributes to Checkmk base.
             for (
                 attribute_name,
-                _unused_cmk_var_name,
+                _cmk_var_name,
                 dictionary,
-                _unused_title,
             ) in attribute_mappings:
                 value = effective.get(attribute_name)
                 if value:
@@ -1024,7 +1011,11 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
             locked_hosts=False,
             all_hosts=all_hosts,
             clusters=clusters,
-            attributes={name: values for _a, name, values, _b in attribute_mappings if values},
+            attributes={
+                cmk_var_name: values
+                for _attribute_name, cmk_var_name, values in attribute_mappings
+                if values
+            },
             custom_macros=HostsStorageFieldsGenerator.custom_macros(custom_macros),
             host_tags=host_tags,
             host_labels=host_labels,

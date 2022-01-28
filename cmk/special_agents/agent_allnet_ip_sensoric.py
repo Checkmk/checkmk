@@ -56,7 +56,7 @@ def get_allnet_ip_sensoric_info(host_address, opt_debug):
 
     try:
         req = urllib.request.Request(url, None, headers)
-        handle = urllib.request.urlopen(req)
+        handle = urllib.request.urlopen(req)  # pylint:disable=consider-using-with
     except Exception:
         if opt_debug:
             sys.stdout.write("----------------------------\n")

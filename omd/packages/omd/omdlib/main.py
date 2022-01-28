@@ -144,7 +144,7 @@ def bail_out(message: str) -> NoReturn:
 class Log(io.StringIO):
     def __init__(self, fd: int, logfile: str) -> None:
         super().__init__()
-        self.log = open(logfile, "a", encoding="utf-8")
+        self.log = open(logfile, "a", encoding="utf-8")  # pylint:disable=consider-using-with
         self.fd = fd
 
         if self.fd == 1:
@@ -335,8 +335,11 @@ def create_skeleton_file(
     elif os.path.isdir(skel_path):
         os.makedirs(user_path)
     else:
-        open(user_path, "wb").write(replace_tags(open(skel_path, "rb").read(), replacements))
-
+        open(user_path, "wb").write(  # pylint:disable=consider-using-with
+            replace_tags(
+                open(skel_path, "rb").read(), replacements  # pylint:disable=consider-using-with
+            )
+        )
     if not os.path.islink(skel_path):
         mode = read_skel_permissions().get(relpath)
         if mode is None:
@@ -473,16 +476,21 @@ def patch_template_file(
     conflict_mode: str, src: str, dst: str, old_site: SiteContext, new_site: SiteContext
 ) -> None:
     # Create patch from old instantiated skeleton file to new one
-    content = open(src, "rb").read()
+    content = open(src, "rb").read()  # pylint:disable=consider-using-with
     for site in [old_site, new_site]:
         filename = "%s.skel.%s" % (dst, site.name)
-        open(filename, "wb").write(replace_tags(content, site.replacements))
+        open(filename, "wb").write(  # pylint:disable=consider-using-with
+            replace_tags(content, site.replacements)
+        )
         try_chown(filename, new_site.name)
 
     # If old and new skeleton file are identical, then do nothing
     old_orig_path = "%s.skel.%s" % (dst, old_site.name)
     new_orig_path = "%s.skel.%s" % (dst, new_site.name)
-    if open(old_orig_path).read() == open(new_orig_path).read():
+    if (
+        open(old_orig_path).read()  # pylint:disable=consider-using-with
+        == open(new_orig_path).read()  # pylint:disable=consider-using-with
+    ):
         os.remove(old_orig_path)
         os.remove(new_orig_path)
         return
@@ -673,7 +681,12 @@ def merge_update_file(
             )
         elif choice == "missing":
             if os.path.exists(reject_file):
-                sys.stdout.write(tty.bgblue + tty.white + open(reject_file).read() + tty.normal)
+                sys.stdout.write(
+                    tty.bgblue
+                    + tty.white
+                    + open(reject_file).read()  # pylint:disable=consider-using-with
+                    + tty.normal
+                )
             else:
                 sys.stdout.write("File %s not found.\n" % reject_file)
 
@@ -740,7 +753,7 @@ def _try_merge(
         p = "%s/%s" % (skelroot, relpath)
         while True:
             try:
-                skel_content = open(p, "rb").read()
+                skel_content = open(p, "rb").read()  # pylint:disable=consider-using-with
                 break
             except Exception:
                 # Do not ask the user in non-interactive mode.
@@ -765,7 +778,7 @@ def _try_merge(
                 ):
                     skel_content = b""
                     break
-        open("%s-%s" % (user_path, version), "wb").write(
+        open("%s-%s" % (user_path, version), "wb").write(  # pylint:disable=consider-using-with
             replace_tags(skel_content, site.replacements)
         )
     version_patch = os.popen(  # nosec
@@ -1615,7 +1628,7 @@ def fstab_verify(site: SiteContext) -> bool:
         return True
 
     mountpoint = site.tmp_dir
-    for line in open("/etc/fstab"):
+    for line in open("/etc/fstab"):  # pylint:disable=consider-using-with
         if "uid=%s," % site.name in line and mountpoint in line:
             return True
     bail_out(tty.error + ": fstab entry for %s does not exist" % mountpoint)
@@ -1666,7 +1679,7 @@ def set_environment(site: SiteContext) -> None:
     envfile = site.dir + "/etc/environment"
     if os.path.exists(envfile):
         lineno = 0
-        for line in open(envfile):
+        for line in open(envfile):  # pylint:disable=consider-using-with
             lineno += 1
             line = line.strip()
             if line == "" or line[0] == "#":
@@ -1694,7 +1707,7 @@ def set_environment(site: SiteContext) -> None:
 
 def hostname() -> str:
     try:
-        p = subprocess.Popen(
+        p = subprocess.Popen(  # pylint:disable=consider-using-with
             ["hostname"], shell=False, close_fds=True, stdout=subprocess.PIPE, encoding="utf-8"
         )
     except OSError:
@@ -1785,7 +1798,7 @@ def call_scripts(site: SiteContext, phase: str) -> None:
             if f[0] == ".":
                 continue
             sys.stdout.write('Executing %s script "%s"...' % (phase, f))
-            p = subprocess.Popen(  # nosec
+            p = subprocess.Popen(  # nosec # pylint:disable=consider-using-with
                 "%s/%s" % (path, f),
                 shell=True,
                 stdout=subprocess.PIPE,
@@ -2627,7 +2640,7 @@ def print_diff(
                     diff = "colordiff"
                 else:
                     diff = "diff"
-                p = subprocess.Popen(
+                p = subprocess.Popen(  # pylint:disable=consider-using-with
                     [diff, "-", target_file], stdin=subprocess.PIPE, close_fds=True, shell=False
                 )
                 p.communicate(source_content)
@@ -3099,9 +3112,9 @@ def main_init_action(
         stdout: Union[int, IO[str]] = sys.stdout if not parallel else subprocess.PIPE
         stderr: Union[int, IO[str]] = sys.stderr if not parallel else subprocess.STDOUT
         bare_arg = ["--bare"] if bare else []
-        p = subprocess.Popen(
+        p = subprocess.Popen(  # pylint:disable=consider-using-with
             [sys.argv[0], command] + bare_arg + [site.name] + args,
-            stdin=open(os.devnull, "r"),
+            stdin=open(os.devnull, "r"),  # pylint:disable=consider-using-with
             stdout=stdout,
             stderr=stderr,
             encoding="utf-8",
@@ -3241,7 +3254,7 @@ def main_backup(
     else:
         if dest[0] != "/":
             dest = global_opts.orig_working_directory + "/" + dest
-        fh = open(dest, "wb")
+        fh = open(dest, "wb")  # pylint:disable=consider-using-with
         tar_mode = "w:"
 
     if "no-compression" not in options:
@@ -3272,13 +3285,13 @@ def main_restore(
         fh = sys.stdin.buffer
         tar_mode = "r|*"
     elif os.path.exists(source):
-        fh = open(source, "rb")
+        fh = open(source, "rb")  # pylint:disable=consider-using-with
         tar_mode = "r:*"
     else:
         bail_out("The backup archive does not exist.")
 
     try:
-        tar = tarfile.open(fileobj=fh, mode=tar_mode)
+        tar = tarfile.open(fileobj=fh, mode=tar_mode)  # pylint:disable=consider-using-with
     except tarfile.ReadError as e:
         bail_out("Failed to open the backup: %s" % e)
 
@@ -3526,10 +3539,10 @@ def site_user_processes(site: SiteContext, exclude_current_and_parents: bool) ->
     if exclude_current_and_parents:
         exclude = get_current_and_parent_pids()
 
-    p = subprocess.Popen(
+    p = subprocess.Popen(  # pylint:disable=consider-using-with
         ["ps", "-U", site.name, "-o", "pid", "--no-headers"],
         close_fds=True,
-        stdin=open(os.devnull),
+        stdin=open(os.devnull),  # pylint:disable=consider-using-with
         stdout=subprocess.PIPE,
         encoding="utf-8",
     )
@@ -3692,13 +3705,15 @@ class PackageManagerDEB(PackageManager):
         self._execute_uninstall(["apt-get", "-y", "purge", package_name])
 
     def find_packages_of_path(self, path: str) -> List[str]:
-        p = self._execute(["dpkg", "-S", path])
+        real_path = os.path.realpath(path)
+
+        p = self._execute(["dpkg", "-S", real_path])
         output = p.communicate()[0]
         if p.wait() != 0:
             bail_out("Failed to find packages:\n%s" % output)
 
         for line in output.split("\n"):
-            if line.endswith(": %s" % path):
+            if line.endswith(": %s" % real_path):
                 return line.split(": ", 1)[0].split(", ")
 
         return []
@@ -3709,7 +3724,9 @@ class PackageManagerRPM(PackageManager):
         self._execute_uninstall(["rpm", "-e", package_name])
 
     def find_packages_of_path(self, path: str) -> List[str]:
-        p = self._execute(["rpm", "-qf", path])
+        real_path = os.path.realpath(path)
+
+        p = self._execute(["rpm", "-qf", real_path])
         output = p.communicate()[0]
 
         if p.wait() == 1 and "not owned" in output:

@@ -10,6 +10,7 @@ import socket
 from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import Any, List, NamedTuple, Optional, Sequence, Type, Union
+from zlib import compress
 
 import pytest
 from _pytest.monkeypatch import MonkeyPatch
@@ -30,13 +31,16 @@ from cmk.snmplib.type_defs import (
     SNMPTable,
 )
 
-from cmk.core_helpers import Fetcher, FetcherType, snmp
+from cmk.core_helpers import Fetcher, FetcherType
+from cmk.core_helpers import (
+    PushAgentFetcher as FallbackPushAgentFetcher,  # We must test the FetcherType factory agains the fallback class, because during import we are not a CPE. Patching this during the test will make no difference...
+)
+from cmk.core_helpers import snmp
 from cmk.core_helpers.agent import DefaultAgentFileCache, NoCache
 from cmk.core_helpers.cache import FileCache, MaxAge
 from cmk.core_helpers.ipmi import IPMIFetcher
 from cmk.core_helpers.piggyback import PiggybackFetcher
 from cmk.core_helpers.program import ProgramFetcher
-from cmk.core_helpers.push_agent import PushAgentFetcher, PushAgentFileCache
 from cmk.core_helpers.snmp import (
     SectionMeta,
     SNMPFetcher,
@@ -45,6 +49,7 @@ from cmk.core_helpers.snmp import (
     SNMPPluginStoreItem,
 )
 from cmk.core_helpers.tcp import TCPFetcher
+from cmk.core_helpers.tcp_agent_ctl import CompressionType, HeaderV1, Version
 from cmk.core_helpers.type_defs import Mode
 
 
@@ -791,32 +796,6 @@ class TestSNMPSectionMeta:
         assert SectionMeta.deserialize(meta.serialize()) == meta
 
 
-class TestPushAgentFetcher:
-    @pytest.fixture
-    def file_cache(self) -> PushAgentFileCache:
-        return PushAgentFileCache(
-            HostName("hostname"),
-            base_path=Path(os.devnull),
-            max_age=MaxAge.none(),
-            disabled=True,
-            use_outdated=True,
-            simulation=True,
-        )
-
-    @pytest.fixture
-    def fetcher(self, file_cache: PushAgentFileCache) -> PushAgentFetcher:
-        return PushAgentFetcher(file_cache, allowed_age=10, use_only_cache=False)
-
-    def test_repr(self, fetcher: PushAgentFetcher) -> None:
-        assert isinstance(repr(fetcher), str)
-
-    def test_fetcher_deserialization(self, fetcher: PushAgentFetcher) -> None:
-        other = type(fetcher).from_json(json_identity(fetcher.to_json()))
-        assert isinstance(other, type(fetcher))
-        assert other.allowed_age == fetcher.allowed_age
-        assert other.use_only_cache == fetcher.use_only_cache
-
-
 class _MockSock:
     def __init__(self, data: bytes) -> None:
         self.data = data
@@ -957,12 +936,20 @@ class TestTCPFetcher:
         assert protocol == TransportProtocol.PLAIN
 
     def test_get_agent_data_with_tls(self, monkeypatch: MonkeyPatch, fetcher: TCPFetcher) -> None:
-        mock_sock = _MockSock(b"16<<<section:sep(0)>>>\nbody\n")
+        mock_data = b"<<<section:sep(0)>>>\nbody\n"
+        mock_sock = _MockSock(
+            b"16%b%b%b"
+            % (
+                bytes(Version.V1),
+                bytes(HeaderV1(CompressionType.ZLIB)),
+                compress(mock_data),
+            )
+        )
         monkeypatch.setattr(fetcher, "_opt_socket", mock_sock)
         monkeypatch.setattr(fetcher, "_wrap_tls", lambda: mock_sock)
 
         agent_data, protocol = fetcher._get_agent_data()
-        assert agent_data == mock_sock.data[4:]
+        assert agent_data == mock_data[2:]
         assert protocol == TransportProtocol.PLAIN
 
     def test_detect_transport_protocol(self, fetcher: TCPFetcher) -> None:
@@ -1028,7 +1015,7 @@ _FACTORIES_CLASSES = (
     (FetcherType.PROGRAM, ProgramFetcher),
     (FetcherType.SNMP, SNMPFetcher),
     (FetcherType.TCP, TCPFetcher),
-    (FetcherType.PUSH_AGENT, PushAgentFetcher),
+    (FetcherType.PUSH_AGENT, FallbackPushAgentFetcher),
 )
 
 

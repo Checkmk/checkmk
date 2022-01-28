@@ -53,9 +53,9 @@ from cmk.utils.exceptions import MKTerminate
 
 def find_processes_of_user(username: str) -> List[str]:
     try:
-        p = subprocess.Popen(
+        p = subprocess.Popen(  # pylint:disable=consider-using-with
             ["pgrep", "-u", username],
-            stdin=open(os.devnull, "r"),
+            stdin=open(os.devnull, "r"),  # pylint:disable=consider-using-with
             stdout=subprocess.PIPE,
             close_fds=True,
             encoding="utf-8",
@@ -69,10 +69,10 @@ def find_processes_of_user(username: str) -> List[str]:
 
 def groupdel(groupname: str) -> None:
     try:
-        p = subprocess.Popen(
+        p = subprocess.Popen(  # pylint:disable=consider-using-with
             ["groupdel", groupname],
-            stdin=open(os.devnull, "r"),
-            stdout=open(os.devnull, "w"),
+            stdin=open(os.devnull, "r"),  # pylint:disable=consider-using-with
+            stdout=open(os.devnull, "w"),  # pylint:disable=consider-using-with
             stderr=subprocess.PIPE,
             close_fds=True,
             encoding="utf-8",
@@ -127,10 +127,10 @@ def _groupadd(groupname: str, gid: Optional[str] = None) -> None:
     cmd.append(groupname)
 
     if (
-        subprocess.Popen(
+        subprocess.Popen(  # pylint:disable=consider-using-with
             cmd,
             close_fds=True,
-            stdin=open(os.devnull, "r"),
+            stdin=open(os.devnull, "r"),  # pylint:disable=consider-using-with
         ).wait()
         != 0
     ):
@@ -145,10 +145,10 @@ def _add_user_to_group(version_info: "VersionInfo", user: str, group: str) -> bo
 def userdel(name: str) -> None:
     if user_exists(name):
         try:
-            p = subprocess.Popen(
+            p = subprocess.Popen(  # pylint:disable=consider-using-with
                 ["userdel", "-r", name],
-                stdin=open(os.devnull, "r"),
-                stdout=open(os.devnull, "w"),
+                stdin=open(os.devnull, "r"),  # pylint:disable=consider-using-with
+                stdout=open(os.devnull, "w"),  # pylint:disable=consider-using-with
                 stderr=subprocess.PIPE,
                 close_fds=True,
                 encoding="utf-8",

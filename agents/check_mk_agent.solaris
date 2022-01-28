@@ -26,11 +26,6 @@ inpath() {
     command -v "${1:?No command to test}" >/dev/null 2>&1
 }
 
-get_epoch() {
-    date +%s 2>/dev/null ||
-        perl -e 'print($^T."\n");'
-}
-
 get_file_atime() {
     stat -c %X "${1}" 2>/dev/null ||
         stat -f %a "${1}" 2>/dev/null ||
@@ -81,6 +76,17 @@ set_up_process_commandline_arguments() {
     done
 }
 
+set_up_get_epoch() {
+    # On some systems date +%s returns a literal %s
+    if date +%s | grep "^[0-9].*$" >/dev/null 2>&1; then
+        get_epoch() { date +%s; }
+    else
+        # do not check whether perl is even present.
+        # in weird cases we may be fine without get_epoch.
+        get_epoch() { perl -e 'print($^T."\n");'; }
+    fi
+}
+
 #
 # END COMMON AGENT CODE
 #
@@ -97,10 +103,6 @@ set_variable_defaults() {
 }
 
 preamble_1() {
-    # Remove locale settings to eliminate localized outputs where possible
-
-    export LC_ALL=C
-    unset LANG
 
     export MK_LIBDIR
     export MK_CONFDIR
@@ -159,7 +161,8 @@ set_up_profiling() {
         agent_start="$(perl -MTime::HiRes=time -le 'print time()')"
 
         # SC2016: Expressions don't expand in single quotes, use double quotes for that.
-        # shellcheck disable=SC2016
+        # SC2089: Quotes/backslashes will be treated literally. Use an array.
+        # shellcheck disable=SC2016,SC2089
         MK_DEFINE_LOG_SECTION_TIME='_log_section_time() {
             section_func="$@"
 
@@ -168,8 +171,7 @@ set_up_profiling() {
 
             start="$(perl -MTime::HiRes=time -le "print time()")"
             { time ${section_func}; } 2>> "${profiling_logfile}"
-            end="$(perl -MTime::HiRes=time -le "print time()")"
-            echo "runtime $(echo "${end} - ${start}" | bc)" >>"${profiling_logfile}"
+            echo "runtime $(perl -MTime::HiRes=time -le "print time() - ${start}")" >> "${profiling_logfile}"
         }'
 
         finalize_profiling() {
@@ -180,7 +182,24 @@ set_up_profiling() {
     fi
 
     eval "${MK_DEFINE_LOG_SECTION_TIME}"
+    # SC2090: Quotes/backslashes in this variable will not be respected.
+    # shellcheck disable=SC2090
     export MK_DEFINE_LOG_SECTION_TIME
+}
+
+unset_locale() {
+    # eliminate localized outputs where possible
+    # The locale logic here is used to make the Python encoding detection work (see CMK-2778).
+    unset -v LANG
+    if inpath locale && inpath paste; then
+        # match C.UTF-8 at the beginning, but not e.g. es_EC.UTF-8!
+        case "$(locale -a | paste -sd ' ' -)" in
+            *' C.UTF-8'* | 'C.UTF-8'*) LC_ALL="C.UTF-8" ;;
+            *' C.utf8'* | 'C.utf8'*) LC_ALL="C.utf8" ;;
+        esac
+    fi
+    LC_ALL="${LC_ALL:-C}"
+    export LC_ALL
 }
 
 #
@@ -401,7 +420,7 @@ section_statgrab() {
         # <<<statgrab_mem>>> info is preferred over <<<solaris_mem>>>
         # since solaris_mem is under suspicion to be buggy.
         echo '<<<statgrab_mem>>>'
-        egrep "^(swap|mem)\." /tmp/statgrab.$$ | sed 's/ *= */ /'
+        grep -E "^(swap|mem)\." /tmp/statgrab.$$ | sed 's/ *= */ /'
 
         [ -f /tmp/statgrab.$$ ] && rm -f /tmp/statgrab.$$
 
@@ -423,7 +442,7 @@ section_cpu() {
     load=$(uptime|sed -e 's;.*average: \([0-9]\{1,\}\.[0-9]\{1,\}\), \([0-9]\{1,\}\.[0-9]\{1,\}\), \([0-9]\{1,\}\.[0-9]\{1,\}\).*;\1 \2 \3;')
     nthreads=$(($(ps -AL | wc -l)))
     procs=$(($(psrinfo | wc -l)))
-    echo ${load} 1/${nthreads} $$ ${procs}
+    echo "${load} 1/${nthreads} $$ ${procs}"
 }
 
 section_zpool() {
@@ -584,10 +603,10 @@ run_remote_plugins() {
             cmdline=${BASH_REMATCH[2]}
 
             # split multiple parameter assignments
-            for par in $(echo ${parameters} | tr ":" "\n"); do
+            for par in $(echo "${parameters}" | tr ":" "\n"); do
                 # split each assignment
-                key=$(echo ${par} | cut -d= -f1)
-                value=$(echo ${par} | cut -d= -f2)
+                key=$(echo "${par}" | cut -d= -f1)
+                value=$(echo "${par}" | cut -d= -f2)
 
                 if [ "${key}" = "interval" ]; then
                     interval=${value}
@@ -596,7 +615,7 @@ run_remote_plugins() {
         fi
 
         if [ -z "${interval}" ]; then
-            ${MK_RUN_SYNC_PARTS} && run_mrpe ${descr} "${cmdline}"
+            ${MK_RUN_SYNC_PARTS} && run_mrpe "${descr}" "${cmdline}"
         else
             run_cached "mrpe_${descr}" "${interval}" "run_mrpe '${descr}' '${cmdline}'"
         fi
@@ -604,16 +623,16 @@ run_remote_plugins() {
 }
 
 run_mrpe() {
-    local descr=${1}
+    local descr="${1}"
     shift
-    local cmdline="$@"
 
-    echo '<<<mrpe>>>'
+    PLUGIN="${1%% *}"
+    OUTPUT="$(eval "${MK_DEFINE_LOG_SECTION_TIME}; _log_section_time $*")"
+    STATUS="$?"
 
-    OUTPUT=$(eval "${MK_DEFINE_LOG_SECTION_TIME}; _log_section_time ${cmdline}")
-
-    echo -n "${descr} $? ${OUTPUT}" | tr \\n \\1
-    echo
+    printf "<<<mrpe>>>\n"
+    printf "(%s) %s %s %s" "${PLUGIN##*/}" "${descr}" "${STATUS}" "${OUTPUT}" | tr \\n \\1
+    printf "\n"
 }
 
 export -f run_mrpe
@@ -623,12 +642,12 @@ run_cached() {
     local NAME=${1}
     local MAXAGE=${2}
     shift 2
-    local CMDLINE="$@"
     local AGE
 
     if ${DISABLE_CACHING:-false}; then
-        # shellcheck disable=SC2090
-        ${CMDLINE}
+        # We need the re-splitting to be compatible with the caching case, so:
+        # shellcheck disable=SC2068
+        $@
         return
     fi
 
@@ -663,7 +682,7 @@ run_cached() {
                 sed -e "/^<<</! s/^/${CACHE_INFO} /" "${CACHEFILE}"
             else
                 # insert CACHE_INFO in the header, but skip headers with existing CACHE_INFO
-                sed -e '/^<<<.*\(:cached(\).*>>>/n; s/^<<<\([^>]*\)>>>$/<<<\1:'"${CACHE_INFO}"'>>>/' "${CACHEFILE}"
+                sed -e '/^<<<.*\(:cached(\).*>>>/{p;d;}; s/^<<<\([^>]*\)>>>$/<<<\1:'"${CACHE_INFO}"'>>>/' "${CACHEFILE}"
             fi
         fi
     fi
@@ -672,7 +691,7 @@ run_cached() {
 
     # Cache file outdated and new job not yet running? Start it
     if [ -z "${USE_CACHEFILE}" ] && [ ! -e "${CACHEFILE}.new" ]; then
-        echo "eval ${MK_DEFINE_LOG_SECTION_TIME}; set -o noclobber; exec > \"${CACHEFILE}.new\" || exit 1; ${CMDLINE} && mv \"${CACHEFILE}.new\" \"${CACHEFILE}\" || rm -f \"${CACHEFILE}\" \"${CACHEFILE}.new\"" | nohup /usr/bin/bash >/dev/null 2>&1 &
+        echo "eval ${MK_DEFINE_LOG_SECTION_TIME}; set -o noclobber; exec > \"${CACHEFILE}.new\" || exit 1; $* && mv \"${CACHEFILE}.new\" \"${CACHEFILE}\" || rm -f \"${CACHEFILE}\" \"${CACHEFILE}.new\"" | nohup /usr/bin/bash >/dev/null 2>&1 &
     fi
 }
 
@@ -849,7 +868,11 @@ main_setup(){
 
     set_up_process_commandline_arguments "$@"
 
+    set_up_get_epoch
+
     set_variable_defaults
+
+    unset_locale
 
     preamble_1
 

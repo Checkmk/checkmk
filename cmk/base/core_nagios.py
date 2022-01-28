@@ -290,6 +290,8 @@ def _create_nagios_host_spec(
     # Custom configuration last -> user may override all other values
     # TODO: Find a generic mechanism for CMC and Nagios
     for key, value in host_config.extra_host_attributes.items():
+        if key == "cmk_agent_connection":
+            continue
         if host_config.is_cluster and key == "parents":
             continue
         host_spec[key] = value
@@ -338,7 +340,7 @@ def _create_nagios_servicedefs(
     host_check_table = get_check_table(hostname)
     have_at_least_one_service = False
     used_descriptions: Dict[ServiceName, AbstractServiceID] = {}
-    for service in sorted(host_check_table.values(), key=lambda s: (s.check_plugin_name, s.item)):
+    for service in sorted(host_check_table.values(), key=lambda s: s.sort_key()):
 
         # TODO (mo): This should be done by the service object, much earlier.
         if not service.description:

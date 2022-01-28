@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# shellcheck shell=dash
+
 #
 # BEGIN COMMON AGENT CODE
 #
@@ -24,11 +26,6 @@ inpath() {
     # replace "if type [somecmd]" idiom
     # 'command -v' tends to be more robust vs 'which' and 'type' based tests
     command -v "${1:?No command to test}" >/dev/null 2>&1
-}
-
-get_epoch() {
-    date +%s 2>/dev/null ||
-        perl -e 'print($^T."\n");'
 }
 
 get_file_atime() {
@@ -81,6 +78,17 @@ set_up_process_commandline_arguments() {
     done
 }
 
+set_up_get_epoch() {
+    # On some systems date +%s returns a literal %s
+    if date +%s | grep "^[0-9].*$" >/dev/null 2>&1; then
+        get_epoch() { date +%s; }
+    else
+        # do not check whether perl is even present.
+        # in weird cases we may be fine without get_epoch.
+        get_epoch() { perl -e 'print($^T."\n");'; }
+    fi
+}
+
 #
 # END COMMON AGENT CODE
 #
@@ -97,10 +105,6 @@ set_variable_defaults() {
 }
 
 preamble_1() {
-    # Remove locale settings to eliminate localized outputs where possible
-    export LC_ALL=C
-    unset LANG
-
     export MK_LIBDIR
     export MK_CONFDIR
     export MK_VARDIR
@@ -171,7 +175,8 @@ set_up_profiling() {
         agent_start="$(perl -MTime::HiRes=time -le 'print time()')"
 
         # SC2016: Expressions don't expand in single quotes, use double quotes for that.
-        # shellcheck disable=SC2016
+        # SC2089: Quotes/backslashes will be treated literally. Use an array.
+        # shellcheck disable=SC2016,SC2089
         MK_DEFINE_LOG_SECTION_TIME='_log_section_time() {
             section_func="$@"
 
@@ -180,8 +185,7 @@ set_up_profiling() {
 
             start="$(perl -MTime::HiRes=time -le "print time()")"
             { time ${section_func}; } 2>> "${profiling_logfile}"
-            end="$(perl -MTime::HiRes=time -le "print time()")"
-            echo "runtime $(echo "${end} - ${start}" | bc)" >>"${profiling_logfile}"
+            echo "runtime $(perl -MTime::HiRes=time -le "print time() - ${start}")" >> "${profiling_logfile}"
         }'
 
         finalize_profiling() {
@@ -192,7 +196,24 @@ set_up_profiling() {
     fi
 
     eval "${MK_DEFINE_LOG_SECTION_TIME}"
+    # SC2090: Quotes/backslashes in this variable will not be respected.
+    # shellcheck disable=SC2090
     export MK_DEFINE_LOG_SECTION_TIME
+}
+
+unset_locale() {
+    # eliminate localized outputs where possible
+    # The locale logic here is used to make the Python encoding detection work (see CMK-2778).
+    unset -v LANG
+    if inpath locale && inpath paste; then
+        # match C.UTF-8 at the beginning, but not e.g. es_EC.UTF-8!
+        case "$(locale -a | paste -sd ' ' -)" in
+            *' C.UTF-8'* | 'C.UTF-8'*) LC_ALL="C.UTF-8" ;;
+            *' C.utf8'* | 'C.utf8'*) LC_ALL="C.utf8" ;;
+        esac
+    fi
+    LC_ALL="${LC_ALL:-C}"
+    export LC_ALL
 }
 
 #
@@ -214,13 +235,19 @@ fi
 #
 
 section_mem() {
+    # If you add a IS_DOCKERIZED check here please inform the kubernetes team
+    # who uses this agent without modifications. They expect it to be run
+    # without docker detection.
     echo '<<<mem>>>'
-    egrep -v '^Swap:|^Mem:|total:' </proc/meminfo
+    grep -v -E '^Swap:|^Mem:|total:' </proc/meminfo
 }
 
 section_cpu() {
+    # If you add a IS_DOCKERIZED check here please inform the kubernetes team
+    # who uses this agent without modifications. They expect it to be run
+    # without docker detection.
     echo '<<<cpu>>>'
-    if [ $(uname -m) = "armv7l" ]; then
+    if [ "$(uname -m)" = "armv7l" ]; then
         CPU_REGEX='^processor'
     else
         CPU_REGEX='^CPU|^processor'
@@ -242,7 +269,7 @@ section_checkmk() {
     # If we are called via xinetd, try to find only_from configuration
     if [ -n "${REMOTE_HOST}" ]; then
         echo -n 'OnlyFrom: '
-        echo $(sed -n '/^service[[:space:]]*'${XINETD_SERVICE_NAME}'/,/}/s/^[[:space:]]*only_from[[:space:]]*=[[:space:]]*\(.*\)/\1/p' /etc/xinetd.d/* | head -n1)
+        echo "$(sed -n '/^service[[:space:]]*'"${XINETD_SERVICE_NAME}"'/,/}/s/^[[:space:]]*only_from[[:space:]]*=[[:space:]]*\(.*\)/\1/p' /etc/xinetd.d/* | head -n1)"
     fi
 
     #
@@ -277,6 +304,9 @@ section_checkmk_failed_plugin() {
 section_df() {
     # Print out Partitions / Filesystems. (-P gives non-wrapped POSIXed output)
     # Note: BusyBox df does not support -x and -l as arguments
+    # If you add a IS_DOCKERIZED check here please inform the kubernetes team
+    # who uses this agent without modifications. They expect it to be run
+    # without docker detection.
     if ! inpath waitmax; then
         return
     fi
@@ -316,7 +346,7 @@ section_mounts() {
         sed -n '/ nfs4\? /s/[^ ]* \([^ ]*\) .*/\1/p' </proc/mounts |
             sed 's/\\040/ /g' |
             while read MP; do
-                if [ ${STAT_VERSION} != ${STAT_BROKE} ]; then
+                if [ "${STAT_VERSION}" != "${STAT_BROKE}" ]; then
                     waitmax -s 9 5 stat -f -c "${MP} ok %b %f %a %s" "${MP}" ||
                         echo "${MP} hanging 0 0 0 0"
                 else
@@ -329,9 +359,9 @@ section_mounts() {
         sed -n '/ cifs\? /s/[^ ]* \([^ ]*\) .*/\1/p' </proc/mounts |
             sed 's/\\040/ /g' |
             while read MP; do
-                if [ ! -r ${MP} ]; then
+                if [ ! -r "${MP}" ]; then
                     echo "${MP} Permission denied"
-                elif [ ${STAT_VERSION} != ${STAT_BROKE} ]; then
+                elif [ "${STAT_VERSION}" != "${STAT_BROKE}" ]; then
                     waitmax -s 9 2 stat -f -c "${MP} ok %b %f %a %s" "${MP}" ||
                         echo "${MP} hanging 0 0 0 0"
                 else
@@ -354,6 +384,9 @@ section_ps() {
 }
 
 section_uptime() {
+    # If you add a IS_DOCKERIZED check here please inform the kubernetes team
+    # who uses this agent without modifications. They expect it to be run
+    # without docker detection.
     echo '<<<uptime>>>'
     cat /proc/uptime
 }
@@ -393,9 +426,9 @@ section_ovs_bonding() {
         BONDS=$(ovs-appctl bond/list)
         COL=$(echo "${BONDS}" | awk '{for(i=1;i<=NF;i++) {if($i == "bond") printf("%d", i)} exit 0}')
         echo '<<<ovs_bonding:sep(58)>>>'
-        for bond in $(echo "${BONDS}" | sed -e 1d | cut -f${COL}); do
+        for bond in $(echo "${BONDS}" | sed -e 1d | cut "-f${COL}"); do
             echo "[${bond}]"
-            ovs-appctl bond/show ${bond}
+            ovs-appctl bond/show "${bond}"
         done
     fi
 }
@@ -418,9 +451,12 @@ section_multipath() {
 
 section_diskstat() {
     # Performancecounter Platten
+    # If you add a IS_DOCKERIZED check here please inform the kubernetes team
+    # who uses this agent without modifications. They expect it to be run
+    # without docker detection.
     echo '<<<diskstat>>>'
     get_epoch
-    egrep ' (x?[shv]d[a-z]*|cciss/c[0-9]+d[0-9]+|emcpower[a-z]+|dm-[0-9]+|VxVM.*|mmcblk.*|dasd[a-z]*) ' </proc/diskstats
+    grep -E ' (x?[shv]d[a-z]*|cciss/c[0-9]+d[0-9]+|emcpower[a-z]+|dm-[0-9]+|VxVM.*|mmcblk.*|dasd[a-z]*) ' </proc/diskstats
     if inpath dmsetup; then
         echo '[dmsetup_info]'
         dmsetup info -c --noheadings --separator ' ' -o name,devno,vg_name,lv_name
@@ -433,6 +469,9 @@ section_diskstat() {
 
 section_kernel() {
     # Performancecounter Kernel
+    # If you add a IS_DOCKERIZED check here please inform the kubernetes team
+    # who uses this agent without modifications. They expect it to be run
+    # without docker detection.
     echo '<<<kernel>>>'
     get_epoch
     cat /proc/vmstat /proc/stat
@@ -441,31 +480,37 @@ section_kernel() {
 section_ipmitool() {
     # Hardware sensors via IPMI (need ipmitool)
     if inpath ipmitool; then
-        run_cached "ipmi" 300 "echo <<<ipmi:sep(124)>>>; waitmax 300 ipmitool sensor list | grep -v 'command failed' | egrep -v '^[^ ]+ na ' | grep -v ' discrete '"
+        run_cached "ipmi" 300 "echo <<<ipmi:sep(124)>>>; waitmax 300 ipmitool sensor list | grep -v 'command failed' | grep -v -E '^[^ ]+ na ' | grep -v ' discrete '"
         # readable discrete sensor states
         run_cached "ipmi_discrete" 300 "echo <<<ipmi_discrete:sep(124)>>>; waitmax 300 ipmitool sdr elist compact"
     fi
 }
 
-section_ipmisensors() {
-    # IPMI data via ipmi-sensors (of freeipmi). Please make sure, that if you
-    # have installed freeipmi that IPMI is really support by your hardware.
-    if (inpath ipmi-sensors && ls /dev/ipmi*) &> /dev/null; then
-        ${MK_RUN_SYNC_PARTS} && echo '<<<ipmi_sensors>>>'
-        # Newer ipmi-sensors version have new output format; Legacy format can be used
-        if ipmi-sensors --help | grep -q legacy-output; then
-            IPMI_FORMAT="--legacy-output"
-        else
-            IPMI_FORMAT=""
-        fi
-        # At least with ipmi-sensors 0.7.16 this group is Power_Unit instead of "Power Unit"
-        run_cached "ipmi_sensors" 300 "echo <<<ipmi_sensors>>>
-            for class in Temperature Power_Unit Fan; do
-                ipmi-sensors ${IPMI_FORMAT} --sdr-cache-directory /var/cache -g \"${class}\" | sed -e 's/ /_/g' -e 's/:_\?/ /g' -e 's@ \([^(]*\)_(\([^)]*\))@ \2_\1@'
-            # In case of a timeout immediately leave loop.
-                if [ $? = 255 ]; then break; fi
-            done"
+section_ipmisensors() {  # keep in sync with linux agent
+    # IPMI data via ipmi-sensors (of freeipmi).
+    # Even if freeipmi is installed make sure that IPMI is really supported by your hardware.
+    inpath ipmi-sensors && ls /dev/ipmi* 2>/dev/null 1>&2 || return
+
+    ${MK_RUN_SYNC_PARTS} && echo '<<<ipmi_sensors>>>'
+    # Newer ipmi-sensors version have new output format; Legacy format can be used
+    if ipmi-sensors --help | grep -q legacy-output; then
+        IPMI_FORMAT="--legacy-output"
+    else
+        IPMI_FORMAT=""
     fi
+    if ipmi-sensors --help | grep -q " \-\-groups"; then
+        IPMI_GROUP_OPT="-g"
+    else
+        IPMI_GROUP_OPT="-t"
+    fi
+
+    # At least with ipmi-sensors 0.7.16 this group is Power_Unit instead of "Power Unit"
+    run_cached "ipmi_sensors" 300 "echo '<<<ipmi_sensors>>>';
+        for class in Temperature Power_Unit Fan; do
+            ipmi-sensors ${IPMI_FORMAT} --sdr-cache-directory /var/cache/ ${IPMI_GROUP_OPT} \"\${class}\" | sed -e 's/ /_/g' -e 's/:_\?/ /g' -e 's@ \([^(]*\)_(\([^)]*\))@ \2_\1@'
+            # In case of a timeout immediately leave loop.
+            if [ $? = 255 ]; then break; fi
+        done"
 }
 
 section_md() {
@@ -486,8 +531,8 @@ section_dmraid() {
         DISKS=$(echo "${DMSTATUS}" | cut -f1 -d\:)
 
         for disk in ${DISKS}; do
-            device=$(cat /sys/block/$(basename ${disk})/device/model)
-            status=$(echo "${DMSTATUS}" | grep ^${disk})
+            device=$(cat "/sys/block/$(basename "${disk}")/device/model")
+            status=$(echo "${DMSTATUS}" | grep "^${disk}")
             echo "${status} Model: ${device}"
         done
     fi
@@ -497,7 +542,7 @@ section_lsi() {
     # RAID status of LSI controllers via cfggen
     if inpath cfggen; then
         echo '<<<lsi>>>'
-        cfggen 0 DISPLAY | egrep '(Target ID|State|Volume ID|Status of volume)[[:space:]]*:' | sed -e 's/ *//g' -e 's/:/ /'
+        cfggen 0 DISPLAY | grep -E '(Target ID|State|Volume ID|Status of volume)[[:space:]]*:' | sed -e 's/ *//g' -e 's/:/ /'
     fi
 }
 
@@ -522,14 +567,14 @@ section_megaraid() {
         echo '<<<megaraid_pdisks>>>'
         for part in $(${MegaCli_bin} -EncInfo -aALL -NoLog </dev/null |
             sed -rn 's/:/ /g; s/[[:space:]]+/ /g; s/^ //; s/ $//; s/Number of enclosures on adapter ([0-9]+).*/adapter \1/g; /^(Enclosure|Device ID|adapter) [0-9]+$/ p'); do
-            [ ${part} = adapter ] && echo ""
-            [ ${part} = 'Enclosure' ] && echo -ne "\ndev2enc"
-            echo -n " ${part}"
+            [ "${part}" = adapter ] && echo ""
+            [ "${part}" = 'Enclosure' ] && printf "\ndev2enc"
+            printf " %s" "${part}"
         done
         echo
-        ${MegaCli_bin} -PDList -aALL -NoLog </dev/null | egrep 'Enclosure|Raw Size|Slot Number|Device Id|Firmware state|Inquiry|Adapter'
+        ${MegaCli_bin} -PDList -aALL -NoLog </dev/null | grep -E 'Enclosure|Raw Size|Slot Number|Device Id|Firmware state|Inquiry|Adapter'
         echo '<<<megaraid_ldisks>>>'
-        ${MegaCli_bin} -LDInfo -Lall -aALL -NoLog </dev/null | egrep 'Size|State|Number|Adapter|Virtual'
+        ${MegaCli_bin} -LDInfo -Lall -aALL -NoLog </dev/null | grep -E 'Size|State|Number|Adapter|Virtual'
         echo '<<<megaraid_bbu>>>'
         ${MegaCli_bin} -AdpBbuCmd -GetBbuStatus -aALL -NoLog </dev/null | grep -v Exit
     fi
@@ -540,11 +585,11 @@ section_3ware() {
     if inpath tw_cli; then
         for C in $(tw_cli show | awk 'NR < 4 { next } { print $1 }'); do
             echo '<<<3ware_info>>>'
-            tw_cli /${C} show all | egrep 'Model =|Firmware|Serial'
+            tw_cli "/${C}" show all | grep -E 'Model =|Firmware|Serial'
             echo '<<<3ware_disks>>>'
-            tw_cli /${C} show drivestatus | egrep 'p[0-9]' | sed "s/^/${C}\//"
+            tw_cli "/${C}" show drivestatus | grep -E 'p[0-9]' | sed "s/^/${C}\//"
             echo '<<<3ware_units>>>'
-            tw_cli /${C} show unitstatus | egrep 'u[0-9]' | sed "s/^/${C}\//"
+            tw_cli "/${C}" show unitstatus | grep -E 'u[0-9]' | sed "s/^/${C}\//"
         done
     fi
 }
@@ -592,6 +637,9 @@ section_nvidia() {
 }
 
 section_drbd() {
+    # If you add a IS_DOCKERIZED check here please inform the kubernetes team
+    # which uses this agent without modifications. They expect it to be run
+    # without docker detection.
     if [ -e /proc/drbd ]; then
         echo '<<<drbd>>>'
         cat /proc/drbd
@@ -608,16 +656,16 @@ section_cups_queues() {  # TODO: this seems broken. Don't we need to export cups
                 if [ -r "${CPRINTCONF}" ]; then
                     LOCAL_PRINTERS=$(grep -E "<(Default)?Printer .*>" ${CPRINTCONF} | awk '{print $2}' | sed -e 's/>//')
                     lpstat -p | while read LINE; do
-                        PRINTER=$(echo ${LINE} | awk '{print $2}')
+                        PRINTER=$(echo "${LINE}" | awk '{print $2}')
                         if echo "${LOCAL_PRINTERS}" | grep -q "${PRINTER}"; then
-                            echo ${LINE}
+                            echo "${LINE}"
                         fi
                     done
                     echo '---'
                     lpstat -o | while read LINE; do
                         PRINTER=${LINE%%-*}
-                        if echo ${LOCAL_PRINTERS} | grep -q ${PRINTER}; then
-                            echo ${LINE}
+                        if echo "${LOCAL_PRINTERS}" | grep -q "${PRINTER}"; then
+                            echo "${LINE}"
                         fi
                     done
                 else
@@ -636,7 +684,9 @@ section_heartbeat() {
     # Heartbeat monitoring
     # Different handling for heartbeat clusters with and without CRM
     # for the resource state
-    if { [ -S /var/run/heartbeat/crm/cib_ro ] || [ -S /var/run/crm/cib_ro ];} || pgrep "^(crmd|pacemaker-contr)$" >/dev/null 2>&1; then
+    if {
+        [ -S /var/run/heartbeat/crm/cib_ro ] || [ -S /var/run/crm/cib_ro ]
+    } || pgrep "^(crmd|pacemaker-contr)$" >/dev/null 2>&1; then
         echo '<<<heartbeat_crm>>>'
         TZ=UTC crm_mon -1 -r | grep -v ^$ | sed 's/^ //; /^\sResource Group:/,$ s/^\s//; s/^\s/_/g'
     fi
@@ -646,11 +696,11 @@ section_heartbeat() {
 
         echo '<<<heartbeat_nodes>>>'
         for NODE in $(cl_status listnodes); do
-            if [ ${NODE} != $(echo ${HOSTNAME} | tr 'A-Z' 'a-z') ]; then
-                STATUS=$(cl_status nodestatus ${NODE})
+            if [ "${NODE}" != "$(uname -n | tr 'A-Z' 'a-z')" ]; then
+                STATUS=$(cl_status nodestatus "${NODE}")
                 echo -n "${NODE} ${STATUS}"
-                for LINK in $(cl_status listhblinks ${NODE} 2>/dev/null); do
-                    echo -n " ${LINK} $(cl_status hblinkstatus ${NODE} ${LINK})"
+                for LINK in $(cl_status listhblinks "${NODE}" 2>/dev/null); do
+                    echo -n " ${LINK} $(cl_status hblinkstatus "${NODE}" "${LINK}")"
                 done
                 echo
             fi
@@ -667,8 +717,8 @@ section_postfix() {
         if [ -n "${postfix_queue_dir}" ]; then
             echo '<<<postfix_mailq>>>'
             for queue in deferred active; do
-                count=$(find ${postfix_queue_dir}/${queue} -type f | wc -l)
-                size=$(du -s ${postfix_queue_dir}/${queue} | awk '{print $1 }')
+                count=$(find "${postfix_queue_dir}/${queue}" -type f | wc -l)
+                size=$(du -s "${postfix_queue_dir}/${queue}" | awk '{print $1 }')
                 if [ -z "${size}" ]; then
                     size=0
                 fi
@@ -710,7 +760,7 @@ section_mknotify() {
                 site=${statefile%/var/log*}
                 site=${site#/omd/sites/}
                 echo "[${site}]"
-                grep -v '^#' <${statefile}
+                grep -v '^#' <"${statefile}"
             fi
         done
     fi
@@ -724,8 +774,8 @@ section_omd_apache() {
                 site=${statsfile%/var/log*}
                 site=${site#/omd/sites/}
                 echo "[${site}]"
-                cat ${statsfile}
-                >${statsfile}
+                cat "${statsfile}"
+                : >"${statsfile}"
             fi
         done
     fi
@@ -750,8 +800,8 @@ section_veritas_vcs() {
         vcshost=$(hostname | cut -d. -f1)
         waitmax -s 9 2 /opt/VRTSvcs/bin/haclus -display -localclus | grep -e ClusterName -e ClusState
         waitmax -s 9 2 /opt/VRTSvcs/bin/hasys -display -attribute SysState
-        waitmax -s 9 2 /opt/VRTSvcs/bin/hagrp -display -sys ${vcshost} -attribute State -localclus
-        waitmax -s 9 2 /opt/VRTSvcs/bin/hares -display -sys ${vcshost} -attribute State -localclus
+        waitmax -s 9 2 /opt/VRTSvcs/bin/hagrp -display -sys "${vcshost}" -attribute State -localclus
+        waitmax -s 9 2 /opt/VRTSvcs/bin/hares -display -sys "${vcshost}" -attribute State -localclus
     fi
 }
 
@@ -807,7 +857,7 @@ section_livestatus_status() {
         for site in *; do
             if [ -S "/omd/sites/${site}/tmp/run/live" ]; then
                 echo "[${site}]"
-                echo "GET status" | waitmax 3 /omd/sites/${site}/bin/unixcat /omd/sites/${site}/tmp/run/live
+                echo "GET status" | waitmax 3 "/omd/sites/${site}/bin/unixcat" "/omd/sites/${site}/tmp/run/live"
             fi
         done
     fi
@@ -825,7 +875,7 @@ section_job() {
             (
                 # the return below only terminates the subshell, not the entire function
                 cd "${username}" 2>/dev/null || return
-                if [ ${EUID} -eq 0 ]; then
+                if [ "$(id -u)" -eq 0 ]; then
                     su -s "${SHELL}" "${username}" -c "head -n -0 -v *"
                 else
                     head -n -0 -v *
@@ -843,8 +893,8 @@ section_lnx_thermal() {
         echo '<<<lnx_thermal>>>'
         for F in /sys/class/thermal/thermal_zone*; do
             echo -n "${F##*/} "
-            if [ ! -e ${F}/mode ]; then echo -n "- "; fi
-            cat ${F}/mode ${F}/type ${F}/temp ${F}/trip_point_* | tr \\n " "
+            if [ ! -e "${F}/mode" ]; then echo -n "- "; fi
+            cat "${F}/mode" "${F}/type" "${F}/temp" "${F}/trip_point_"* | tr \\n " "
             echo
         done
     fi
@@ -879,15 +929,14 @@ section_pvecm() {
 run_mrpe() {
     local descr=${1}
     shift
-    local cmdline="$@"
 
-    echo '<<<mrpe>>>'
+    PLUGIN="${1%% *}"
+    OUTPUT="$(eval "${MK_DEFINE_LOG_SECTION_TIME}; _log_section_time $*")"
+    STATUS="$?"
 
-    PLUGIN=${cmdline%% *}
-    OUTPUT=$(eval "${MK_DEFINE_LOG_SECTION_TIME}; _log_section_time ${cmdline}")
-
-    echo -n "(${PLUGIN##*/}) ${descr} $? ${OUTPUT}" | tr \\n \\1
-    echo
+    printf '<<<mrpe>>>\n'
+    printf "(%s) %s %s %s" "${PLUGIN##*/}" "${descr}" "${STATUS}" "${OUTPUT}" | tr \\n \\1
+    printf "\n"
 }
 
 # Implements Real-Time Check feature of the Checkmk agent which can send
@@ -897,7 +946,7 @@ run_real_time_checks_for_remote() {
     PIDFILE=${MK_VARDIR}/real_time_checks.pid
     echo $$ >${PIDFILE}
 
-    . ${MK_CONFDIR}/real_time_checks.cfg
+    . "${MK_CONFDIR}/real_time_checks.cfg"
 
     if [ "${PASSPHRASE}" != "" ]; then
         # new mechanism to set the passphrase has priority
@@ -906,7 +955,7 @@ run_real_time_checks_for_remote() {
 
     while true; do
         # terminate when pidfile is gone or other Real-Time Check process started or configured timeout
-        if [ ! -e ${PIDFILE} ] || [ $(<${PIDFILE}) -ne $$ ] || [ ${RTC_TIMEOUT} -eq 0 ]; then
+        if [ ! -e "${PIDFILE}" ] || [ "$(cat "${PIDFILE}")" -ne "$$" ] || [ "${RTC_TIMEOUT}" -eq 0 ]; then
             exit 1
         fi
 
@@ -920,16 +969,20 @@ run_real_time_checks_for_remote() {
             # output and do some kind of nicer error handling.
             # 2 bytes: protocol version, 10 bytes: timestamp, rest: encrypted data
             # dd is used to concatenate the output of all commands to a single write/block => udp packet
+            #
+            # This never works, we should make that more transparent or remove the code.
+            # For now:
+            # shellcheck disable=SC2169 # In dash, /dev/{tcp,udp} is not supported
             {
                 echo -n ${PROTOCOL}
                 get_epoch | tr -d '\n'
                 if [ "${ENCRYPTED_RT}" != "no" ]; then
                     export RTC_SECRET=${RTC_SECRET}
-                    section_${SECTION} | openssl enc -aes-256-cbc -md md5 -pass env:RTC_SECRET -nosalt
+                    "section_${SECTION}" | openssl enc -aes-256-cbc -md md5 -pass env:RTC_SECRET -nosalt
                 else
-                    section_${SECTION}
+                    "section_${SECTION}"
                 fi
-            } | dd bs=9999 iflag=fullblock 2>/dev/null >/dev/udp/${REMOTE}/${RTC_PORT}
+            } | dd bs=9999 iflag=fullblock 2>/dev/null >"/dev/udp/${REMOTE}/${RTC_PORT}"
         done
 
         sleep 1
@@ -942,7 +995,7 @@ run_real_time_checks() {
     # a new live update process will terminate the old one automatically after
     # max. 1 sec.
     if [ -e ${MK_CONFDIR}/real_time_checks.cfg ]; then
-        if [ -z ${REMOTE} ]; then
+        if [ -z "${REMOTE}" ]; then
             echo "ERROR: \${REMOTE} not specified. Not sending real-time data." >&2
         elif ! inpath openssl; then
             echo "ERROR: openssl command is missing. Not sending real-time data." >&2
@@ -957,20 +1010,21 @@ run_real_time_checks() {
 #   NAME is the cache file name
 #   MAXAGE is the maximum cache livetime in seconds
 run_cached() {
-    local NAME="${1}"
-    local MAXAGE="${2}"
-    shift 2
-    local CMDLINE="${section}$@"
+    local NAME MAXAGE NOW MTIME AGE
+    NAME="${1}"
+    MAXAGE="${2}"
 
     if ${DISABLE_CACHING:-false}; then
-        ${CMDLINE}
+        # We need the re-splitting to be compatible with the caching case, so:
+        # shellcheck disable=SC2068
+        $@
         return
     fi
 
     if [ ! -d ${MK_VARDIR}/cache ]; then mkdir -p ${MK_VARDIR}/cache; fi
     CACHEFILE="${MK_VARDIR}/cache/${NAME}.cache"
 
-    local NOW=$(get_epoch)
+    NOW=$(get_epoch)
 
     # Check if the creation of the cache takes suspiciously long and return
     # nothing if the age (access time) of ${CACHEFILE}.new is twice the MAXAGE
@@ -986,19 +1040,19 @@ run_cached() {
 
     # Check if cache file exists and is recent enough
     if [ -s "${CACHEFILE}" ]; then
-        local MTIME=$(get_file_mtime "${CACHEFILE}")
-        local AGE=$((NOW - MTIME))
-        if [ ${AGE} -le ${MAXAGE} ]; then local USE_CACHEFILE=1; fi
+        MTIME=$(get_file_mtime "${CACHEFILE}")
+        AGE=$((NOW - MTIME))
+        if [ ${AGE} -le "${MAXAGE}" ]; then local USE_CACHEFILE=1; fi
 
         if ${MK_RUN_SYNC_PARTS}; then
             # Output the file even if it is outdated.
             CACHE_INFO="cached(${MTIME},${MAXAGE})"
             if [ "${NAME%%_*}" = "local" ]; then
                 # prefix CACHE_INFO, but skip any headers and lines with existing CACHE_INFO
-                sed -e "/^<<<.*>>>/n; /^cached([0-9]*,[0-9]*) /n; s/^/${CACHE_INFO} /" "${CACHEFILE}"
+                sed -e "/^<<<.*>>>/{p;d;}; /^cached([0-9]*,[0-9]*) /{p;d;}; s/^/${CACHE_INFO} /" "${CACHEFILE}"
             else
                 # insert CACHE_INFO in the header, but skip headers with existing CACHE_INFO
-                sed -e '/^<<<.*\(:cached(\).*>>>/n; s/^<<<\([^>]*\)>>>$/<<<\1:'"${CACHE_INFO}"'>>>/' "${CACHEFILE}"
+                sed -e '/^<<<.*\(:cached(\).*>>>/{p;d;}; s/^<<<\([^>]*\)>>>$/<<<\1:'"${CACHE_INFO}"'>>>/' "${CACHEFILE}"
             fi
         fi
     fi
@@ -1009,7 +1063,7 @@ run_cached() {
     if [ -z "${USE_CACHEFILE}" ] && [ ! -e "${CACHEFILE}.new" ]; then
         # When the command fails, the output is thrown away
         # TODO: This won't work: do we even have bash?
-        echo "set -o noclobber; exec > \"${CACHEFILE}.new\" || exit 1; ${CMDLINE} && mv \"${CACHEFILE}.new\" \"${CACHEFILE}\" || rm -f \"${CACHEFILE}\" \"${CACHEFILE}.new\"" | nohup bash >/dev/null 2>&1 &
+        echo "set -o noclobber; exec > \"${CACHEFILE}.new\" || exit 1; $* && mv \"${CACHEFILE}.new\" \"${CACHEFILE}\" || rm -f \"${CACHEFILE}\" \"${CACHEFILE}.new\"" | nohup bash >/dev/null 2>&1 &
     fi
 }
 
@@ -1240,7 +1294,11 @@ main_setup() {
 
     set_up_process_commandline_arguments "$@"
 
+    set_up_get_epoch
+
     set_variable_defaults
+
+    unset_locale
 
     preamble_1
 

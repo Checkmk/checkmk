@@ -3,7 +3,7 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
+import enum
 import json
 from dataclasses import dataclass
 from typing import Dict, List, Literal, Mapping, NewType, Optional, Sequence, TypedDict, Union
@@ -129,13 +129,6 @@ class PerformanceContainer(BaseModel):
     name: ContainerName
 
 
-class NodeCount(BaseModel):
-    """section: kube_node_count_v1"""
-
-    worker: int = 0
-    control_plane: int = 0
-
-
 class HealthZ(BaseModel):
     status_code: int
     response: str
@@ -150,10 +143,26 @@ class KubeletInfo(BaseModel):
     health: HealthZ
 
 
+class ControllerType(enum.Enum):
+    deployment = "deployment"
+
+    @staticmethod
+    def from_str(label):
+        if label == "deployment":
+            return ControllerType.deployment
+        raise ValueError(f"Unknown controller type: {label}")
+
+
+class Controller(BaseModel):
+    type_: ControllerType
+    name: str
+
+
 class PodInfo(BaseModel):
     """section: kube_pod_info_v1"""
 
     namespace: Optional[Namespace]
+    name: str
     creation_timestamp: Optional[CreationTimestamp]
     labels: Labels  # used for host labels
     node: Optional[NodeName]  # this is optional, because there may be pods, which are not
@@ -161,6 +170,7 @@ class PodInfo(BaseModel):
     qos_class: QosClass
     restart_policy: RestartPolicy
     uid: PodUID
+    controllers: Sequence[Controller] = []
 
 
 class APIHealth(BaseModel):
@@ -200,7 +210,7 @@ class ContainerCount(BaseModel):
 
 
 class Memory(BaseModel):
-    """section: k8s_live_memory_v1"""
+    """section: kube_performance_memory_v1"""
 
     memory_usage_bytes: float
 
@@ -280,3 +290,28 @@ class PodContainers(BaseModel):
     """section: kube_pod_containers_v1"""
 
     containers: Mapping[str, ContainerInfo]
+
+
+class Replicas(BaseModel):
+    replicas: int
+    updated: int
+    available: int
+    ready: int
+    unavailable: int
+
+
+class RollingUpdate(BaseModel):
+    max_surge: str
+    max_unavailable: str
+
+
+# TODO: see how typing can be improved here:
+# rolling_udpate is only populated when type is
+# RollingUpdate
+class UpdateStrategy(BaseModel):
+    type_: Literal["RollingUpdate", "Recreate"]
+    rolling_update: Optional[RollingUpdate]
+
+
+class DeploymentSpec(BaseModel):
+    strategy: UpdateStrategy

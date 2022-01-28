@@ -35,7 +35,8 @@ class TestModeDumpAgent:
 
     @pytest.fixture
     def scenario(self, hostname, ipaddress, monkeypatch):
-        ts = Scenario().add_host(hostname)
+        ts = Scenario()
+        ts.add_host(hostname)
         ts.set_option("ipaddresses", {hostname: ipaddress})
         ts.apply(monkeypatch)
         return ts

@@ -44,12 +44,12 @@ sql() {
 
 
 set_excludes() {
-    excludes=""
+    exclude=""
     if [ "$EXCLUDES" = "ALL" ]; then
-        excludes="$all_sections"
+        exclude="$all_sections"
         global_exclude=true
-    elif [ ! -z "$EXCLUDES" ]; then
-        excludes=$EXCLUDES
+    elif [ -n "$EXCLUDES" ]; then
+        exclude=$EXCLUDES
         global_exclude=true
     else
         global_exclude=false
@@ -58,9 +58,9 @@ set_excludes() {
     if [ "$global_exclude" = "false" ]; then
         excludes_i="EXCLUDES_${1}"
         if [ "${!excludes_i}" = "ALL" ]; then
-            excludes="$all_sections"
-        elif [ ! -z "${!excludes_i}" ]; then
-            excludes=${!excludes_i}
+            exclude="$all_sections"
+        elif [ -n "${!excludes_i}" ]; then
+            exclude=${!excludes_i}
         fi
     fi
 }
@@ -83,12 +83,12 @@ all_sections="sessions locks tabextents dbspaces logusage"
 informix_status(){
     echo "<<<informix_status:sep(58)>>>"
     echo "[[[$INFORMIXSERVER/$SERVERNUM]]]"
-    $INFORMIXDIR/bin/onstat - >/dev/null 2>&1
+    "$INFORMIXDIR/bin/onstat" - >/dev/null 2>&1
     state=$?
     echo "Status:"$state
-    $INFORMIXDIR/bin/onstat -g dis
-    port=$(grep $INFORMIXSERVER /etc/services)
-    echo "PORT:"$port
+    "$INFORMIXDIR/bin/onstat" -g dis
+    port=$(grep "$INFORMIXSERVER" /etc/services)
+    echo "PORT:$port"
 }
 
 
@@ -193,7 +193,7 @@ informix_logusage(){
 
 
 if [ -f "$MK_CONFDIR/informix.cfg" ]; then
-    . $MK_CONFDIR/informix.cfg
+    . "$MK_CONFDIR/informix.cfg"
 fi
 
 
@@ -209,7 +209,7 @@ if [ -z "$ONINIT_PATH" ] || [ ! -x "$ONINIT_PATH" ]; then
     /*)
         ;;
     *)    # BUG not platform independent!
-        ONINIT_PATH=$(ls -l /proc/$ONINIT_PID/exe 2>/dev/null| sed 's/.* //')
+        ONINIT_PATH=$(ls -l "/proc/$ONINIT_PID/exe" 2>/dev/null| sed 's/.* //')
         ;;
     esac
 
@@ -232,8 +232,8 @@ fi
 
 
 for IDSENV in $( export INFORMIXDIR=${ONINIT_PATH%/bin*}
-    $INFORMIXDIR/bin/onstat -g dis | \
-        egrep '^Server[         ]*:|^Server Number[     ]*:|^INFORMIX|^SQLHOSTS|^ONCONFIG' | \
+    "$INFORMIXDIR/bin/onstat" -g dis | \
+        grep -E '^Server[         ]*:|^Server Number[     ]*:|^INFORMIX|^SQLHOSTS|^ONCONFIG' | \
         sed -e 's/Server Number/SERVERNUM/' \
             -e 's/Server/INFORMIXSERVER/' \
             -e 's/SQLHOSTS/INFORMIXSQLHOSTS/' \
@@ -244,38 +244,38 @@ for IDSENV in $( export INFORMIXDIR=${ONINIT_PATH%/bin*}
     ) ; do
     (
         # Set environment
-        eval $IDSENV
-    	PATH=$INFORMIXDIR/bin:$PATH
+        eval "$IDSENV"
+    	PATH="$INFORMIXDIR/bin:$PATH"
 
 	    # try to set them via 'onstat -g env' otherwise
 	    # DB HAS TO BE RUNNING
 	    if [ -z "$INFORMIXSQLHOSTS" ] || [ -z "$ONCONFIG" ]; then
-	        onstat -g env | egrep -e '^INFORMIXSQLHOSTS' \
+	        onstat -g env | grep -E -e '^INFORMIXSQLHOSTS' \
 	    	                      -e '^ONCONFIG' |       \
 	    	                sed   -e 's/[         ][      ]*/=/'
 	    fi
 
         informix_status
 
-        set_excludes $INFORMIXSERVER
+        set_excludes "$INFORMIXSERVER"
 
-        if do_check "sessions" "$excludes"; then
+        if do_check "sessions" "$exclude"; then
             informix_sessions
         fi
 
-        if do_check "locks" "$excludes"; then
+        if do_check "locks" "$exclude"; then
             informix_locks
         fi
 
-        if do_check "tabextents" "$excludes"; then
+        if do_check "tabextents" "$exclude"; then
             informix_tabextents
         fi
 
-        if do_check "dbspaces" "$excludes"; then
+        if do_check "dbspaces" "$exclude"; then
             informix_dbspaces
         fi
 
-        if do_check "logusage" "$excludes"; then
+        if do_check "logusage" "$exclude"; then
             informix_logusage
         fi
     )

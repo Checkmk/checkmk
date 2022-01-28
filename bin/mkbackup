@@ -219,7 +219,7 @@ def _open_lock_file(lock_file_path: Path) -> IO[bytes]:
     # the locking.
     if not lock_file_path.exists():
         try:
-            backup_lock = tempfile.NamedTemporaryFile(
+            backup_lock = tempfile.NamedTemporaryFile(  # pylint:disable=consider-using-with
                 mode="ab+", dir=str(lock_file_path.parent), delete=False
             )
             set_permissions(backup_lock.name, -1, grp.getgrnam("omd").gr_gid, 0o660)
@@ -747,8 +747,12 @@ def do_site_backup(opts, site=None, try_stop=True):
     makedirs(os.path.dirname(backup_path), group="omd", mode=0o775)
 
     verbose("Command: %s" % " ".join(cmd))
-    p = subprocess.Popen(
-        cmd, close_fds=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=open(os.devnull)
+    p = subprocess.Popen(  # pylint:disable=consider-using-with
+        cmd,
+        close_fds=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        stdin=open(os.devnull),  # pylint:disable=consider-using-with
     )
     assert p.stdout is not None
     assert p.stderr is not None
@@ -818,7 +822,7 @@ def start_stop_site(site: str, command: str, expected_return_code: int) -> None:
 def omd_command(cmd: List[str]) -> None:
     verbose("Command: %s" % " ".join(cmd))
     with open(os.devnull, "r") as f:
-        p = subprocess.Popen(
+        p = subprocess.Popen(  # pylint:disable=consider-using-with
             cmd,
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
@@ -929,7 +933,7 @@ class MKBackupStream:
 
         variables: Dict[str, Dict[str, Any]] = {"keys": {}}
         if os.path.exists(path):
-            exec(open(path).read(), variables, variables)
+            exec(open(path).read(), variables, variables)  # pylint:disable=consider-using-with
         # TODO: Verify value of keys.
         return variables["keys"]
 
@@ -1359,7 +1363,7 @@ def backup_files_to_tarfile(fobj: IO[bytes], base_path: str, exclude_patterns: L
 
     tar_mode = "w|gz" if compress_archives() else "w|"
     try:
-        tar = TarFile.open(fileobj=fobj, mode=tar_mode)
+        tar = TarFile.open(fileobj=fobj, mode=tar_mode)  # pylint:disable=consider-using-with
     except IOError as e:
         if not opt_debug and e.errno == errno.ESPIPE:
             log("Failed to init backup to tarfile: %s" % e)
@@ -1486,7 +1490,7 @@ g_state = None
 def load_state():
     global g_state
     if g_state is None:
-        g_state = json.load(open(state_path()))
+        g_state = json.load(open(state_path()))  # pylint:disable=consider-using-with
 
     return g_state
 
@@ -1654,7 +1658,9 @@ def do_site_restore(opts, info, site=None):
 
     backup_path = site_backup_archive_path(site)
 
-    p = subprocess.Popen(cmd, close_fds=True, stderr=subprocess.PIPE, stdin=subprocess.PIPE)
+    p = subprocess.Popen(  # pylint:disable=consider-using-with
+        cmd, close_fds=True, stderr=subprocess.PIPE, stdin=subprocess.PIPE
+    )
     assert p.stdin is not None
     assert p.stderr is not None
 

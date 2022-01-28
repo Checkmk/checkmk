@@ -10,8 +10,7 @@ WARNING: Use at your own risk, not supported.
 
 from uuid import UUID
 
-from cmk.utils.agent_registration import UUIDLinkManager
-from cmk.utils.paths import data_source_push_agent_dir, received_outputs_dir
+from cmk.utils.agent_registration import get_uuid_link_manager
 from cmk.utils.type_defs import HostName
 
 from cmk.gui.exceptions import MKAuthException
@@ -33,10 +32,8 @@ def _link_with_uuid(
     host: CREHost,
     uuid: UUID,
 ) -> None:
-    UUIDLinkManager(
-        received_outputs_dir=received_outputs_dir,
-        data_source_dir=data_source_push_agent_dir,
-    ).create_link(
+    uuid_link_manager = get_uuid_link_manager()
+    uuid_link_manager.create_link(
         host_name,
         uuid,
         create_target_dir=host.effective_attributes().get("cmk_agent_connection") == "push-agent",

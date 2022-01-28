@@ -22,6 +22,7 @@ import hashlib
 import io
 import multiprocessing
 import os
+import re
 import shutil
 import subprocess
 import time
@@ -391,11 +392,11 @@ class ActivateChanges:
         for site_id in activation_sites():
             changes_counter += len(SiteChanges(SiteChanges.make_path(site_id)).read())
             if changes_counter > 10:
-                return _("10+ changes")
+                return _("10+ pending changes")
         if changes_counter == 1:
-            return _("1 change")
+            return _("1 pending change")
         if changes_counter > 1:
-            return _("%d changes") % changes_counter
+            return _("%d pending changes") % changes_counter
         return None
 
     def grouped_changes(self):
@@ -807,7 +808,9 @@ class ActivateChangesManager(ActivateChanges):
             except KeyError:
                 pass
 
-            snapshot_manager = SnapshotManager.factory(work_dir, site_snapshot_settings)
+            snapshot_manager = SnapshotManager.factory(
+                work_dir, site_snapshot_settings, cmk_version.edition()
+            )
             snapshot_manager.generate_snapshots()
             logger.debug("Config sync snapshot creation took %.4f", time.time() - start)
 
@@ -919,9 +922,11 @@ class ActivateChangesManager(ActivateChanges):
 class SnapshotManager:
     @staticmethod
     def factory(
-        work_dir: str, site_snapshot_settings: Dict[SiteId, SnapshotSettings]
+        work_dir: str,
+        site_snapshot_settings: Dict[SiteId, SnapshotSettings],
+        edition: cmk_version.Edition,
     ) -> "SnapshotManager":
-        if cmk_version.is_managed_edition():
+        if edition is cmk_version.Edition.CME:
             import cmk.gui.cme.managed_snapshots as managed_snapshots  # pylint: disable=no-name-in-module
 
             return SnapshotManager(
@@ -1115,11 +1120,11 @@ class CRESnapshotDataCollector(ABCSnapshotDataCollector):
             # With Python 3 we could use "shutil.copytree(src, dst, copy_function=os.link)", but
             # please have a look at the performance before switching over...
             # shutil.copytree(source_path, str(target_path.parent) + "/", copy_function=os.link)
-            p = subprocess.Popen(
+            p = subprocess.Popen(  # pylint:disable=consider-using-with
                 ["cp", "-al", str(source_path), str(target_path.parent) + "/"],
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
-                stdin=open(os.devnull),
+                stdin=open(os.devnull),  # pylint:disable=consider-using-with
                 shell=False,
                 close_fds=True,
             )
@@ -1144,7 +1149,7 @@ class CRESnapshotDataCollector(ABCSnapshotDataCollector):
             if os.path.exists(snapshot_settings.work_dir):
                 shutil.rmtree(snapshot_settings.work_dir)
 
-            p = subprocess.Popen(
+            p = subprocess.Popen(  # pylint:disable=consider-using-with
                 ["cp", "-al", origin_site_work_dir, snapshot_settings.work_dir],
                 shell=False,
                 close_fds=True,
@@ -1840,11 +1845,9 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
         for change in self._site_changes:
             if change["need_restart"]:
                 for domain_name in change["domains"]:
-                    domain_settings.setdefault(domain_name, [])
-                    if (
-                        settings := get_config_domain(domain_name).get_domain_settings(change)
-                    ) is not None:
-                        domain_settings[domain_name].append(settings)
+                    domain_settings.setdefault(domain_name, []).append(
+                        get_config_domain(domain_name).get_domain_settings(change)
+                    )
 
         return sorted(
             (
@@ -2007,10 +2010,7 @@ def _add_extensions_for_license_usage():
 
 
 def _update_links_for_agent_receiver() -> None:
-    uuid_link_manager = agent_registration.UUIDLinkManager(
-        received_outputs_dir=cmk.utils.paths.received_outputs_dir,
-        data_source_dir=cmk.utils.paths.data_source_push_agent_dir,
-    )
+    uuid_link_manager = agent_registration.get_uuid_link_manager()
     uuid_link_manager.update_links(cmk.gui.watolib.collect_all_hosts())
 
 
@@ -2021,6 +2021,22 @@ def confirm_all_local_changes() -> None:
 def get_pending_changes_info() -> Optional[str]:
     changes = ActivateChanges()
     return changes.get_changes_estimate()
+
+
+def get_pending_changes_tooltip() -> str:
+    changes_info = get_pending_changes_info()
+    if changes_info:
+        n_changes = int(re.findall(r"\d+", changes_info)[0])
+        return (
+            (
+                _("Currently, there is one pending change not yet activated.")
+                if n_changes == 1
+                else _("Currently, there are %s not yet activated.") % changes_info
+            )
+            + "\n"
+            + _("Click here for details.")
+        )
+    return _("Click here to see the activation status per site.")
 
 
 def get_number_of_pending_changes() -> int:
@@ -2051,7 +2067,7 @@ def apply_pre_17_sync_snapshot(
 
 
 def _execute_cmk_update_config():
-    p = subprocess.Popen(
+    p = subprocess.Popen(  # pylint:disable=consider-using-with
         "cmk-update-config",
         stdin=subprocess.DEVNULL,
         stdout=subprocess.PIPE,
@@ -2319,7 +2335,7 @@ def get_file_names_to_sync(
 
 def _get_sync_archive(to_sync: List[str], base_dir: Path) -> bytes:
     # Use native tar instead of python tarfile for performance reasons
-    p = subprocess.Popen(
+    p = subprocess.Popen(  # pylint:disable=consider-using-with
         [
             "tar",
             "-c",
@@ -2352,7 +2368,7 @@ def _get_sync_archive(to_sync: List[str], base_dir: Path) -> bytes:
 
 
 def _unpack_sync_archive(sync_archive: bytes, base_dir: Path) -> None:
-    p = subprocess.Popen(
+    p = subprocess.Popen(  # pylint:disable=consider-using-with
         [
             "tar",
             "-x",

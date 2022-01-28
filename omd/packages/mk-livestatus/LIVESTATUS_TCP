@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 # Alias: Make MK Livestatus accessable via TCP
 # Menu: Distributed Monitoring
@@ -7,19 +7,6 @@
 #  for reasons of performance and security. This option is used
 #  to make it reachable via TCP on a port configurable with
 #  LIVESTATUS_TCP_PORT.
-
-(
-    command -v systemd > /dev/null && \
-    systemd --version | perl -ne 'exit +((/^systemd (\d+)/)[0] < 235)'
-)
-#USE_XINETD=$?
-# Force xinetd until we are sure we are good on SLES15 as well.
-USE_XINETD=1
-
-if [ $USE_XINETD = 1 ] && ! command -v xinetd > /dev/null; then
-    echo "This feature requires either xinetd or systemd >= 235"
-    exit 1
-fi
 
 case "$1" in
     default)
@@ -30,21 +17,12 @@ case "$1" in
         echo "off: disable"
     ;;
     set)
-        if [ "$2" = "on" ] && [ "$CONFIG_CORE" != "shinken" ]; then
-            if [ $USE_XINETD = 1 ]; then
-                mkdir -p "$OMD_ROOT/etc/xinetd.d"
-                ln -sfn ../mk-livestatus/xinetd.conf "$OMD_ROOT/etc/xinetd.d/mk-livestatus"
-            else
-                readonly unit_dir="$OMD_ROOT/.config/systemd/user"
-                mkdir -p "$unit_dir"
-                # No soft links here because systemd removes them.
-                ln -f "$OMD_ROOT/etc/mk-livestatus/livestatus.socket" "$unit_dir"
-                ln -f "$OMD_ROOT/etc/mk-livestatus/livestatus@.service" "$unit_dir"
-            fi
+        if [ "$2" == "on" -a "$CONFIG_CORE" != "shinken" ]
+        then
+ 	    mkdir -p $OMD_ROOT/etc/xinetd.d
+            ln -sfn ../mk-livestatus/xinetd.conf $OMD_ROOT/etc/xinetd.d/mk-livestatus
         else
-            rm -f "$OMD_ROOT/etc/xinetd.d/mk-livestatus"
-            rm -f "$OMD_ROOT/.config/systemd/user/livestatus.socket"
-            rm -f "$OMD_ROOT/.config/systemd/user/livestatus@.service"
+            rm -f $OMD_ROOT/etc/xinetd.d/mk-livestatus
         fi
     ;;
     depends)

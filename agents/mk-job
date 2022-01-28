@@ -37,7 +37,7 @@ if [ ! -d "$OUTPUT_PATH" ]; then
     fi
 fi
 
-if ! type $1 >/dev/null 2>&1; then
+if ! type "$1" >/dev/null 2>&1; then
     echo -e "ERROR: Cannot run $1. Command not found.\n" >&2
     help >&2
     exit 1

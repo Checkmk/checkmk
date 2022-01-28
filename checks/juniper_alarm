@@ -32,6 +32,7 @@ check_info["juniper_alarm"] = {
     "inventory_function": inventory_juniper_alarm,
     "check_function": check_juniper_alarm,
     "service_description": "Chassis",
+    # Use utils.juniper.DETECT when migrating
     "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(
         ".1.3.6.1.4.1.2636.1.1.1"
     ),

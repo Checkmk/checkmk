@@ -118,7 +118,7 @@ from cmk.gui.valuespec import (
     ValueSpecValidateFunc,
 )
 from cmk.gui.views import ABCAjaxInitialFilters
-from cmk.gui.watolib.activate_changes import get_pending_changes_info
+from cmk.gui.watolib.activate_changes import get_pending_changes_info, get_pending_changes_tooltip
 
 loaded_with_language: Union[None, bool, str] = False
 
@@ -900,6 +900,7 @@ def _page_menu(
         ],
         breadcrumb=breadcrumb,
         has_pending_changes=bool(get_pending_changes_info()),
+        pending_changes_tooltip=get_pending_changes_tooltip(),
     )
 
     _extend_display_dropdown(menu, board, board_context, unconfigured_single_infos)

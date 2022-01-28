@@ -387,6 +387,10 @@ table.data {
         padding: 2px 8px; /* spacing in every row */
         text-overflow: $td-text-overflow;
       }
+
+      ul {
+        padding-left: $spacing;
+      }
     }
 
     td.checkbox {
@@ -1502,6 +1506,7 @@ table.data.job_table td {
 
     > div {
       position: relative;
+      line-height: 1.1;
       padding: $tag-padding;
       padding-right: nth($tag-padding, 2) * 5;
       color: $font-color;

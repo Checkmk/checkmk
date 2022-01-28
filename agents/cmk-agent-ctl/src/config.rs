@@ -3,7 +3,7 @@
 // conditions defined in the file COPYING, which is part of this source code package.
 
 use super::cli;
-use anyhow::{Context, Result as AnyhowResult};
+use anyhow::{anyhow, Context, Result as AnyhowResult};
 use serde::de::DeserializeOwned;
 use serde::Deserialize;
 use serde::Serialize;
@@ -142,11 +142,21 @@ impl JSONLoader for RegisteredConnections {}
 
 #[derive(PartialEq, Debug)]
 pub struct Registry {
-    pub connections: RegisteredConnections,
-    pub path: PathBuf,
+    connections: RegisteredConnections,
+    path: PathBuf,
 }
 
 impl Registry {
+    #[cfg(test)]
+    pub fn new(connections: RegisteredConnections, path: PathBuf) -> Registry {
+        Registry { connections, path }
+    }
+
+    #[cfg(test)]
+    pub fn path(&self) -> &Path {
+        &self.path
+    }
+
     pub fn from_file(path: &Path) -> AnyhowResult<Registry> {
         Ok(Registry {
             connections: RegisteredConnections::load(path)?,
@@ -189,16 +199,103 @@ impl Registry {
     pub fn register_connection(
         &mut self,
         connection_type: ConnectionType,
-        address: String,
+        address: &str,
         connection: Connection,
-    ) -> AnyhowResult<()> {
+    ) {
         let (insert_connections, remove_connections) = match connection_type {
             ConnectionType::Push => (&mut self.connections.push, &mut self.connections.pull),
             ConnectionType::Pull => (&mut self.connections.pull, &mut self.connections.push),
         };
-        remove_connections.remove(&address);
-        insert_connections.insert(address, connection);
-        Ok(())
+        remove_connections.remove(address);
+        insert_connections.insert(String::from(address), connection);
+    }
+
+    pub fn register_imported_connection(&mut self, connection: Connection) {
+        self.connections.pull_imported.push(connection);
+    }
+
+    pub fn delete_connection(&mut self, connection_id: &str) -> AnyhowResult<()> {
+        if self.delete_connection_by_server(connection_id).is_ok()
+            || self.delete_connection_by_uuid(connection_id).is_ok()
+        {
+            return Ok(());
+        }
+        Err(anyhow!("Connection '{}' not found", connection_id))
+    }
+
+    pub fn delete_imported_connection_by_idx(&mut self, idx: usize) -> AnyhowResult<()> {
+        if self.connections.pull_imported.len() > idx {
+            self.connections.pull_imported.remove(idx);
+            return Ok(());
+        }
+        Err(anyhow!(
+            "Imported pull connection with index '{}' not found",
+            idx
+        ))
+    }
+
+    pub fn clear(&mut self) {
+        self.connections.push.clear();
+        self.connections.pull.clear();
+        self.connections.pull_imported.clear();
+    }
+
+    fn delete_connection_by_server(&mut self, server: &str) -> AnyhowResult<()> {
+        if self.connections.push.remove(server).is_some() {
+            println!("Deleted push connection '{}'", server);
+            return Ok(());
+        }
+        if self.connections.pull.remove(server).is_some() {
+            println!("Deleted pull connection '{}'", server);
+            return Ok(());
+        }
+        Err(anyhow!("Connection '{}' not found", server))
+    }
+
+    fn delete_by_uuid_from_standard_connections(&mut self, uuid: &str) -> AnyhowResult<()> {
+        for (conn_type, connections) in vec![
+            ("push", &mut self.connections.push),
+            ("pull", &mut self.connections.pull),
+        ] {
+            let mut address_to_delete: Option<String> = None;
+            for (address, conn) in connections.iter() {
+                if conn.uuid == uuid {
+                    address_to_delete = Some(String::from(address));
+                    break;
+                }
+            }
+            if let Some(addr) = address_to_delete {
+                connections.remove(&addr);
+                println!("Deleted {} connection '{}'", conn_type, uuid);
+                return Ok(());
+            }
+        }
+        Err(anyhow!("Connection '{}' not found", uuid))
+    }
+
+    fn delete_by_uuid_from_imported_connections(&mut self, uuid: &str) -> AnyhowResult<()> {
+        let mut idx_to_delete: Option<usize> = None;
+        for (idx, imp_pull_conn) in self.imported_pull_connections().enumerate() {
+            if imp_pull_conn.uuid == uuid {
+                idx_to_delete = Some(idx);
+                break;
+            }
+        }
+        if let Some(idx) = idx_to_delete {
+            self.connections.pull_imported.remove(idx);
+            println!("Deleted imported pull connection '{}'", uuid);
+            return Ok(());
+        }
+        Err(anyhow!("Connection '{}' not found", uuid))
+    }
+
+    fn delete_connection_by_uuid(&mut self, uuid: &str) -> AnyhowResult<()> {
+        if self.delete_by_uuid_from_standard_connections(uuid).is_ok()
+            || self.delete_by_uuid_from_imported_connections(uuid).is_ok()
+        {
+            return Ok(());
+        }
+        Err(anyhow!("Connection '{}' not found", uuid))
     }
 }
 
@@ -268,12 +365,7 @@ mod test_registry {
     #[test]
     fn test_register_push_connection_new() {
         let mut reg = registry();
-        reg.register_connection(
-            ConnectionType::Push,
-            String::from("new_server:1234"),
-            connection(),
-        )
-        .unwrap();
+        reg.register_connection(ConnectionType::Push, "new_server:1234", connection());
         assert!(reg.connections.push.len() == 2);
         assert!(reg.connections.pull.len() == 1);
         assert!(reg.connections.pull_imported.len() == 1);
@@ -282,12 +374,7 @@ mod test_registry {
     #[test]
     fn test_register_push_connection_from_pull() {
         let mut reg = registry();
-        reg.register_connection(
-            ConnectionType::Push,
-            String::from("pull_server:8000"),
-            connection(),
-        )
-        .unwrap();
+        reg.register_connection(ConnectionType::Push, "pull_server:8000", connection());
         assert!(reg.connections.push.len() == 2);
         assert!(reg.connections.pull.is_empty());
         assert!(reg.connections.pull_imported.len() == 1);
@@ -296,12 +383,7 @@ mod test_registry {
     #[test]
     fn test_register_pull_connection_new() {
         let mut reg = registry();
-        reg.register_connection(
-            ConnectionType::Pull,
-            String::from("new_server:1234"),
-            connection(),
-        )
-        .unwrap();
+        reg.register_connection(ConnectionType::Pull, "new_server:1234", connection());
         assert!(reg.connections.push.len() == 1);
         assert!(reg.connections.pull.len() == 2);
         assert!(reg.connections.pull_imported.len() == 1);
@@ -310,15 +392,20 @@ mod test_registry {
     #[test]
     fn test_register_pull_connection_from_push() {
         let mut reg = registry();
-        reg.register_connection(
-            ConnectionType::Pull,
-            String::from("push_server:8000"),
-            connection(),
-        )
-        .unwrap();
+        reg.register_connection(ConnectionType::Pull, "push_server:8000", connection());
         assert!(reg.connections.push.is_empty());
         assert!(reg.connections.pull.len() == 2);
         assert!(reg.connections.pull_imported.len() == 1);
+    }
+
+    #[test]
+    fn test_register_imported_connection() {
+        let mut reg = registry();
+        reg.register_imported_connection(connection());
+        assert!(reg.connections.push.len() == 1);
+        assert!(reg.connections.pull.len() == 1);
+        assert!(reg.connections.pull_imported.len() == 2);
+        assert!(reg.connections.pull_imported[1].uuid == "abc-123");
     }
 
     #[test]
@@ -340,5 +427,97 @@ mod test_registry {
         assert!(pull_conns.len() == 2);
         assert!(pull_conns[0].uuid == "uuid-pull");
         assert!(pull_conns[1].uuid == "uuid-imported");
+    }
+
+    #[test]
+    fn test_delete_push() {
+        for to_delete in ["push_server:8000", "uuid-push"] {
+            let mut reg = registry();
+            assert!(reg.delete_connection(to_delete).is_ok());
+            assert!(reg.connections.push.is_empty());
+            assert!(reg.connections.pull.len() == 1);
+            assert!(reg.connections.pull_imported.len() == 1);
+        }
+    }
+
+    #[test]
+    fn test_delete_pull() {
+        for to_delete in ["pull_server:8000", "uuid-pull"] {
+            let mut reg = registry();
+            assert!(reg.delete_connection(to_delete).is_ok());
+            assert!(reg.connections.push.len() == 1);
+            assert!(reg.connections.pull.is_empty());
+            assert!(reg.connections.pull_imported.len() == 1);
+        }
+    }
+
+    #[test]
+    fn test_delete_pull_imported() {
+        let mut reg = registry();
+        assert!(reg.delete_connection("uuid-imported").is_ok());
+        assert!(reg.connections.push.len() == 1);
+        assert!(reg.connections.pull.len() == 1);
+        assert!(reg.connections.pull_imported.is_empty());
+    }
+
+    #[test]
+    fn test_delete_missing() {
+        let mut reg = registry();
+        assert_eq!(
+            format!("{}", reg.delete_connection("wiener_schnitzel").unwrap_err()),
+            "Connection 'wiener_schnitzel' not found"
+        );
+        assert!(reg.connections.push.len() == 1);
+        assert!(reg.connections.pull.len() == 1);
+        assert!(reg.connections.pull_imported.len() == 1);
+    }
+
+    #[test]
+    fn test_delete_delete_imported_connection_by_idx_ok() {
+        let mut reg = Registry {
+            connections: RegisteredConnections {
+                push: std::collections::HashMap::new(),
+                pull: std::collections::HashMap::new(),
+                pull_imported: vec![
+                    Connection {
+                        uuid: String::from("uuid-imported-1"),
+                        private_key: String::from("private_key"),
+                        certificate: String::from("certificate"),
+                        root_cert: String::from("root_cert"),
+                    },
+                    Connection {
+                        uuid: String::from("uuid-imported-2"),
+                        private_key: String::from("private_key"),
+                        certificate: String::from("certificate"),
+                        root_cert: String::from("root_cert"),
+                    },
+                ],
+            },
+            path: std::path::PathBuf::from(
+                &tempfile::NamedTempFile::new().unwrap().into_temp_path(),
+            ),
+        };
+        assert!(reg.delete_imported_connection_by_idx(1).is_ok());
+        assert!(reg.connections.pull_imported.len() == 1);
+        assert!(reg.connections.pull_imported[0].uuid == "uuid-imported-1");
+    }
+
+    #[test]
+    fn test_delete_delete_imported_connection_by_idx_err() {
+        let mut reg = registry();
+        assert_eq!(
+            format!("{}", reg.delete_imported_connection_by_idx(1).unwrap_err()),
+            "Imported pull connection with index '1' not found"
+        );
+        assert!(reg.connections.push.len() == 1);
+        assert!(reg.connections.pull.len() == 1);
+        assert!(reg.connections.pull_imported.len() == 1);
+    }
+
+    #[test]
+    fn test_clear() {
+        let mut reg = registry();
+        reg.clear();
+        assert!(reg.is_empty());
     }
 }

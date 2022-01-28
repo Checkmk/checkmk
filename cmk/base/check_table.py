@@ -7,13 +7,13 @@
 
 import enum
 from contextlib import suppress
-from typing import Iterable, Iterator, List, Mapping, Set
+from typing import Iterable, Iterator, Mapping, Set
 
 from cmk.utils.parameters import TimespecificParameters
 from cmk.utils.type_defs import CheckPluginName, HostName
 
 import cmk.base.config as config
-from cmk.base.check_utils import Service, ServiceID
+from cmk.base.check_utils import ConfiguredService, ServiceID
 
 
 class FilterMode(enum.Enum):
@@ -22,15 +22,15 @@ class FilterMode(enum.Enum):
     INCLUDE_CLUSTERED = enum.auto()
 
 
-class HostCheckTable(Mapping[ServiceID, Service]):
+class HostCheckTable(Mapping[ServiceID, ConfiguredService]):
     def __init__(
         self,
         *,
-        services: Iterable[Service],
+        services: Iterable[ConfiguredService],
     ) -> None:
         self._data = {s.id(): s for s in services}
 
-    def __getitem__(self, key: ServiceID) -> Service:
+    def __getitem__(self, key: ServiceID) -> ConfiguredService:
         return self._data[key]
 
     def __len__(self) -> int:
@@ -50,7 +50,7 @@ def _aggregate_check_table_services(
     skip_autochecks: bool,
     skip_ignored: bool,
     filter_mode: FilterMode,
-) -> Iterable[Service]:
+) -> Iterable[ConfiguredService]:
 
     sfilter = _ServiceFilter(
         config_cache=config_cache,
@@ -98,7 +98,7 @@ class _ServiceFilter:
         self._mode = mode
         self._skip_ignored = skip_ignored
 
-    def keep(self, service: Service) -> bool:
+    def keep(self, service: ConfiguredService) -> bool:
 
         if self._skip_ignored and config.service_ignored(
             self._host_name,
@@ -130,19 +130,27 @@ class _ServiceFilter:
 def _get_static_check_entries(
     config_cache: config.ConfigCache,
     host_config: config.HostConfig,
-) -> Iterator[Service]:
-    entries: List[Service] = []
+) -> Iterator[ConfiguredService]:
+    entries = []
     for _checkgroup_name, check_plugin_name, item, params in host_config.static_checks:
-        descr = config.service_description(host_config.hostname, check_plugin_name, item)
-        new_parameters = config.compute_check_parameters(
-            config_cache.host_of_clustered_service(host_config.hostname, descr),
-            check_plugin_name,
-            item,
-            {},
-            configured_parameters=TimespecificParameters((params,)),
-        )
 
-        entries.append(Service(check_plugin_name, item, descr, new_parameters))
+        descr = config.service_description(host_config.hostname, check_plugin_name, item)
+        entries.append(
+            ConfiguredService(
+                check_plugin_name=check_plugin_name,
+                item=item,
+                description=descr,
+                parameters=config.compute_check_parameters(
+                    config_cache.host_of_clustered_service(host_config.hostname, descr),
+                    check_plugin_name,
+                    item,
+                    {},
+                    configured_parameters=TimespecificParameters((params,)),
+                ),
+                discovered_parameters=None,
+                service_labels={},
+            )
+        )
 
     # Note: We need to reverse the order of the static_checks. This is
     # because users assume that earlier rules have precedence over later
@@ -155,7 +163,7 @@ def _get_clustered_services(
     config_cache: config.ConfigCache,
     host_config: config.HostConfig,
     skip_autochecks: bool,
-) -> Iterable[Service]:
+) -> Iterable[ConfiguredService]:
     for node in host_config.nodes or []:
         # TODO: Cleanup this to work exactly like the logic above (for a single host)
         # (mo): in particular: this means that autochecks will win over static checks.

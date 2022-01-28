@@ -106,7 +106,7 @@ def _expected_replication_paths():
     return expected
 
 
-def test_get_replication_paths_defaults(edition_short, monkeypatch):
+def test_get_replication_paths_defaults(edition, monkeypatch):
     expected = _expected_replication_paths()
     assert sorted(activate_changes.get_replication_paths()) == sorted(expected)
 
@@ -115,7 +115,7 @@ def test_get_replication_paths_defaults(edition_short, monkeypatch):
 @pytest.mark.parametrize("replicate_mkps", [None, True, False])
 @pytest.mark.parametrize("is_pre_17_remote_site", [True, False])
 def test_get_replication_components(
-    edition_short, monkeypatch, replicate_ec, replicate_mkps, is_pre_17_remote_site
+    edition, monkeypatch, replicate_ec, replicate_mkps, is_pre_17_remote_site
 ):
     partial_site_config = {}
     if replicate_ec is not None:
@@ -237,11 +237,23 @@ def test_automation_get_config_sync_state():
                 None,
                 "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
             ),
+            "etc/check_mk/mkeventd.d/wato/rules.mk": (
+                33200,
+                147,
+                None,
+                "b129ce86d7aa063c31b0de5062196082744813a1ab506308aae36e5919badc50",
+            ),
             "etc/htpasswd": (
                 33200,
                 0,
                 None,
                 "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            ),
+            "etc/omd/site.conf": (
+                33200,
+                683,
+                None,
+                "f549a7f82c6841c886b56d4290c325faa939aa74f37a4b577e46d5789d10d0f5",
             ),
         },
         0,

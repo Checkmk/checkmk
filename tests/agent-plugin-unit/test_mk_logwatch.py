@@ -99,7 +99,7 @@ def test_get_config_files(mk_logwatch, tmpdir):
     logwatch_d_dir = os.path.join(fake_config_dir, "logwatch.d")
     os.mkdir(logwatch_d_dir)
 
-    open(os.path.join(logwatch_d_dir, "custom.cfg"), mode="w")
+    open(os.path.join(logwatch_d_dir, "custom.cfg"), mode="w")# pylint:disable=consider-using-with
 
     expected = [
         str(os.path.join(fake_config_dir, "logwatch.cfg")),

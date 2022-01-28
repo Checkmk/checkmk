@@ -35,25 +35,26 @@ Section = Mapping[str, Qtree]
 def iter_netapp_api_qtree_quota(
     string_table: StringTable,
 ) -> Generator[Tuple[str, Qtree], None, None]:
-    for item, instance in netapp_api.parse_netapp_api_single_instance(
+    for item, instances in netapp_api.parse_netapp_api_multiple_instances(
         string_table, custom_keys=["quota", "quota-users"]
     ).items():
-        qtree = Qtree(
-            quota=instance.get("quota", ""),
-            quota_users=instance.get("quota-users", ""),
-            quota_type=instance.get("quota-type", ""),
-            volume=instance.get("volume", ""),
-            disk_limit=instance.get("disk-limit", ""),
-            disk_used=instance.get("disk-used", ""),
-            files_used=instance.get("files-used", ""),
-            file_limit=instance.get("file-limit", ""),
-        )
-        yield item, qtree
+        for instance in instances:
+            qtree = Qtree(
+                quota=instance.get("quota", ""),
+                quota_users=instance.get("quota-users", ""),
+                quota_type=instance.get("quota-type", ""),
+                volume=instance.get("volume", ""),
+                disk_limit=instance.get("disk-limit", ""),
+                disk_used=instance.get("disk-used", ""),
+                files_used=instance.get("files-used", ""),
+                file_limit=instance.get("file-limit", ""),
+            )
+            yield item, qtree
 
-        # item name is configurable, so we add data under both names to the parsed section
-        # to make the check function easier
-        if qtree.volume:
-            yield f"{qtree.volume}/{item}", qtree
+            # item name is configurable, so we add data under both names to the parsed section
+            # to make the check function easier
+            if qtree.volume:
+                yield f"{qtree.volume}/{item}", qtree
 
 
 def parse_netapp_api_qtree_quota(string_table: StringTable) -> Section:

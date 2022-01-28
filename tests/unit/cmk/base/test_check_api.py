@@ -337,7 +337,8 @@ def test_http_proxy(mocker):
 
 
 def test_get_effective_service_level(monkeypatch):
-    ts = Scenario().add_host("testhost1")
+    ts = Scenario()
+    ts.add_host("testhost1")
     ts.add_host("testhost2")
     ts.add_host("testhost3")
     ts.set_ruleset(

@@ -27,7 +27,7 @@ static std::atomic<bool> S_OnStartCalled = false;
 bool ConfigLoaded() { return S_ConfigLoaded; }
 
 std::pair<std::filesystem::path, std::filesystem::path> FindTestDirs(
-    const std::filesystem::path& base) {
+    const std::filesystem::path &base) {
     auto root_dir = fs::path{base} / "test" / "root";
     auto data_dir = fs::path{base} / "test" / "data";
     std::error_code ec;
@@ -136,7 +136,7 @@ void UninstallAlert::set() noexcept {
     set_ = true;
 }
 
-bool LoadConfigBase(const std::vector<std::wstring>& config_filenames,
+bool LoadConfigBase(const std::vector<std::wstring> &config_filenames,
                     YamlCacheOp cache_op) {
     S_ConfigLoaded = cfg::InitializeMainConfig(config_filenames, cache_op);
 
@@ -150,7 +150,7 @@ bool LoadConfigBase(const std::vector<std::wstring>& config_filenames,
     return true;
 }
 
-bool LoadConfigFull(const std::wstring& ConfigFile) {
+bool LoadConfigFull(const std::wstring &ConfigFile) {
     cfg::details::KillDefaultConfig();
     // load config is here
     auto cfg_files = cfg::DefaultConfigArray();
@@ -162,7 +162,7 @@ bool LoadConfigFull(const std::wstring& ConfigFile) {
     return LoadConfigBase(cfg_files, YamlCacheOp::update);
 }
 
-bool OnStartCore(AppType type, const std::wstring& config_file) {
+bool OnStartCore(AppType type, const std::wstring &config_file) {
     if (!cfg::FindAndPrepareWorkingFolders(type)) return false;
     wtools::InitWindowsCom();
 
@@ -170,7 +170,7 @@ bool OnStartCore(AppType type, const std::wstring& config_file) {
 }
 
 // must be called on start
-bool OnStart(AppType proposed_type, const std::wstring& config_file) {
+bool OnStart(AppType proposed_type, const std::wstring &config_file) {
     auto type = CalcAppType(proposed_type);
 
     auto already_loaded = S_OnStartCalled.exchange(true);

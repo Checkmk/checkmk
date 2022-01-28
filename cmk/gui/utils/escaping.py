@@ -36,6 +36,9 @@ _A_HREF = re.compile(
     r"&lt;a href=(?:(?:&quot;|&#x27;)(.*?)(?:&quot;|&#x27;))(?: target=(?:(?:&quot;|&#x27;)(.*?)(?:&quot;|&#x27;)))?&gt;"
 )
 
+_COMMENT_RE = re.compile("(<!--.*?-->)")
+_TAG_RE = re.compile(r"(<[^>]+?>)")
+
 
 def escape_html(value: str) -> HTML:
     """Escape HTML and return as HTML object"""
@@ -184,34 +187,54 @@ def strip_scripts(ht: str) -> str:
 def strip_tags(ht: EscapableEntity) -> str:
     """Strip all HTML tags from a text.
 
+    This function does not handle all the possible edge cases. Beware.
+
     Args:
-        ht: A text with possible HTML tags in it.
+        ht: A text with possible html in it.
 
     Examples:
-        >>> strip_tags("<b>foobar</b> blah")
+
+        >>> strip_tags('<b>Important Message</b>')
+        'Important Message'
+
+        >>> strip_tags('<a hr<!-- hallo hallo -->ef="">hello&nbsp;world</ <!-- blah -->  a>')
+        'hello world'
+
+        Even split HTML entities are recognized.
+
+        >>> strip_tags("<b>foobar</b>&nb<a href="">s</a>p;blah")
         'foobar blah'
+
+        >>> strip_tags("<scr<!-- foo -->ipt>alert();</scr<!-- foo -->ipt> blah")
+        'alert(); blah'
 
         Edge cases.
 
         >>> strip_tags("<p<b<>re>foobar</</b>b> blah")
         're>foobarb> blah'
 
+        Even HTML objects get stripped.
+
+        >>> strip_tags(HTML('<a href="https://example.com">click here</a>'))
+        'click here'
+
+        Everything we don't know about won't get stripped.
+
+        >>> strip_tags(object())  # type: ignore  # doctest: +ELLIPSIS
+        '<object object at ...>'
+
     Returns:
         A string without working HTML tags.
 
     """
-    if isinstance(ht, (HTML, LazyString)):
-        ht = str(ht)
-
-    if not isinstance(ht, str):
+    if not isinstance(ht, (str, HTML, LazyString)):
         return str(ht)
 
+    string = str(ht)
     while True:
-        x = ht.find("<")
-        if x == -1:
-            break
-        y = ht.find(">", x)
-        if y == -1:
-            break
-        ht = ht[0:x] + ht[y + 1 :]
-    return ht.replace("&nbsp;", " ")
+        prev = string
+        string = string.replace("&nbsp;", " ")
+        string = _COMMENT_RE.sub("", string)
+        string = _TAG_RE.sub("", string)
+        if string == prev:
+            return string

@@ -29,21 +29,21 @@ class TimeColumn : public Column {
 public:
     using value_type = std::chrono::system_clock::time_point;
 
-    TimeColumn(const std::string& name, const std::string& description,
-               const ColumnOffsets& offsets,
-               std::function<value_type(const T&)> f)
+    TimeColumn(const std::string &name, const std::string &description,
+               const ColumnOffsets &offsets,
+               std::function<value_type(const T &)> f)
         : Column{name, description, offsets}, f_{std::move(f)} {}
 
     [[nodiscard]] ColumnType type() const override { return ColumnType::time; }
 
-    void output(Row row, RowRenderer& r, const contact* /*auth_user*/,
+    void output(Row row, RowRenderer &r, const contact * /*auth_user*/,
                 std::chrono::seconds timezone_offset) const override {
         r.output(getValue(row, timezone_offset));
     }
 
     [[nodiscard]] std::unique_ptr<Filter> createFilter(
         Filter::Kind kind, RelationalOperator relOp,
-        const std::string& value) const override {
+        const std::string &value) const override {
         return std::make_unique<TimeFilter>(
             kind, name(),
             [this](Row row, std::chrono::seconds timezone_offset) {
@@ -62,12 +62,12 @@ public:
 
     [[nodiscard]] value_type getValue(
         Row row, std::chrono::seconds timezone_offset) const {
-        const T* data = columnData<T>(row);
+        const T *data = columnData<T>(row);
         return timezone_offset + (data == nullptr ? value_type{} : f_(*data));
     }
 
 private:
-    std::function<value_type(const T&)> f_;
+    std::function<value_type(const T &)> f_;
 };
 
 #endif

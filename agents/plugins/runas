@@ -57,7 +57,7 @@ do
             if [ "$type" == "local" ] ; then
                 echo "<<<local:sep(0)>>>"
             fi
-            find $include -executable -type f | \
+            find "$include" -executable -type f | \
             while read filename
             do
                 if [ -n "$PREFIX" ] ; then

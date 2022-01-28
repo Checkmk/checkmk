@@ -289,12 +289,12 @@ class MKBackupJob:
         )
 
     def start(self, env=None):
-        p = subprocess.Popen(
+        p = subprocess.Popen(  # pylint:disable=consider-using-with
             self._start_command(),
             close_fds=True,
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
-            stdin=open(os.devnull),
+            stdin=open(os.devnull),  # pylint:disable=consider-using-with
             encoding="utf-8",
             env=env,
         )

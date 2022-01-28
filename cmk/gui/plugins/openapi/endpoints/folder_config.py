@@ -270,12 +270,12 @@ def move(params):
             "parent": fields.FolderField(
                 description="Show all sub-folders of this folder. The default is the root-folder.",
                 example="/servers",
-                missing=watolib.Folder.root_folder,  # because we can't load it too early.
+                load_default=watolib.Folder.root_folder,  # because we can't load it too early.
             ),
             "recursive": fields.Boolean(
                 description="List the folder (default: root) and all its sub-folders recursively.",
                 example=False,
-                missing=False,
+                load_default=False,
             ),
             "show_hosts": fields.Boolean(
                 description=(
@@ -284,7 +284,7 @@ def move(params):
                     "is switched off."
                 ),
                 example=False,
-                missing=False,
+                load_default=False,
             ),
         }
     ],
@@ -349,7 +349,7 @@ def _folders_collection(
                     "is switched off."
                 ),
                 example=False,
-                missing=False,
+                load_default=False,
             )
         }
     ],

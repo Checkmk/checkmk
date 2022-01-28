@@ -233,7 +233,7 @@ def main(sys_argv=None):
     if g_profile:
         g_profile.dump_stats(g_profile_path)
         show_profile = os.path.join(os.path.dirname(g_profile_path), "show_profile.py")
-        open(show_profile, "w").write(
+        open(show_profile, "w").write(  # pylint:disable=consider-using-with
             "#!/usr/bin/python\n"
             "import pstats\n"
             "stats = pstats.Stats('%s')\n"

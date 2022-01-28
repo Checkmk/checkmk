@@ -12,9 +12,9 @@ from cmk.base.plugins.agent_based.utils.k8s import (
     ContainerTerminatedState as ContainerTerminatedStateC,
 )
 from cmk.base.plugins.agent_based.utils.k8s import ContainerWaitingState as ContainerWaitingStateC
+from cmk.base.plugins.agent_based.utils.k8s import DeploymentSpec as DeploymentSpecC
 from cmk.base.plugins.agent_based.utils.k8s import KubeletInfo as KubeletInfoC
 from cmk.base.plugins.agent_based.utils.k8s import Memory as MemoryC
-from cmk.base.plugins.agent_based.utils.k8s import NodeCount as NodeCountC
 from cmk.base.plugins.agent_based.utils.k8s import NodeInfo as NodeInfoC
 from cmk.base.plugins.agent_based.utils.k8s import PodCondition as PodConditionC
 from cmk.base.plugins.agent_based.utils.k8s import PodConditions as PodConditionsC
@@ -24,7 +24,9 @@ from cmk.base.plugins.agent_based.utils.k8s import PodResources as PodResourcesC
 from cmk.base.plugins.agent_based.utils.k8s import (
     PodResourcesWithCapacity as PodResourcesWithCapacityC,
 )
+from cmk.base.plugins.agent_based.utils.k8s import Replicas as ReplicasC
 from cmk.base.plugins.agent_based.utils.k8s import StartTime as StartTimeC
+from cmk.base.plugins.agent_based.utils.kube import NodeCount as NodeCountC
 from cmk.base.plugins.agent_based.utils.kube import PodLifeCycle as PodLifeCycleC
 from cmk.base.plugins.agent_based.utils.kube_resources import Resources as ResourcesC
 
@@ -39,7 +41,9 @@ from cmk.special_agents.utils_kubernetes.schemata.api import (
 from cmk.special_agents.utils_kubernetes.schemata.api import (
     ContainerWaitingState as ContainerWaitingStateA,
 )
+from cmk.special_agents.utils_kubernetes.schemata.api import DeploymentSpec as DeploymentSpecA
 from cmk.special_agents.utils_kubernetes.schemata.api import KubeletInfo as KubeletInfoA
+from cmk.special_agents.utils_kubernetes.schemata.api import Replicas as ReplicasA
 from cmk.special_agents.utils_kubernetes.schemata.api import StartTime as StartTimeA
 from cmk.special_agents.utils_kubernetes.schemata.section import ContainerCount as ContainerCountA
 from cmk.special_agents.utils_kubernetes.schemata.section import Memory as MemoryA
@@ -77,3 +81,5 @@ def test_schemata_did_not_diverge() -> None:
     assert ResourcesA.schema() == ResourcesC.schema()
     assert StartTimeA.schema() == StartTimeC.schema()
     assert PodInfoA.schema() == PodInfoC.schema()
+    assert ReplicasA.schema() == ReplicasC.schema()
+    assert DeploymentSpecA.schema() == DeploymentSpecC.schema()

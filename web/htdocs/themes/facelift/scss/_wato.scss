@@ -240,6 +240,14 @@ div#fixall_container {
     border-right: none;
   }
 
+  a {
+    text-decoration: none;
+
+    &:hover {
+      opacity: 0.5;
+    }
+  }
+
   span {
     padding: 2px;
   }
@@ -872,14 +880,6 @@ div.filter_buttons {
 /* activation */
 .wato table.data.activation a.disabled {
   pointer-events: none;
-}
-
-.wato .pending_changes_header {
-  #row_info {
-    float: right;
-    padding-right: $spacing;
-    font-weight: $font-weight-default;
-  }
 }
 
 .wato table.changes {

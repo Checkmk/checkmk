@@ -37,7 +37,7 @@ def send_trap(oids, target, community):
         cmd += [oid, oid_id, "%s" % value]
 
     sys.stderr.write("%r" % cmd)
-    p = subprocess.Popen(cmd, stdin=subprocess.PIPE)
+    p = subprocess.Popen(cmd, stdin=subprocess.PIPE)  # pylint:disable=consider-using-with
     return p.wait()
 
 

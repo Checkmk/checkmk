@@ -201,6 +201,7 @@ class PageMenu:
     breadcrumb: Optional[Breadcrumb] = None
     inpage_search: Optional[PageMenuSearch] = None
     has_pending_changes: bool = False
+    pending_changes_tooltip: Optional[str] = None
 
     def __post_init__(self):
         # Add the display options dropdown
@@ -499,9 +500,7 @@ def _make_form_abort_link(breadcrumb: Breadcrumb, abort_url: Optional[str]) -> P
 class PageMenuRenderer:
     """Renders the given page menu to the page header"""
 
-    def show(
-        self, menu: PageMenu, hide_suggestions: bool = False, has_pending_changes: bool = False
-    ) -> None:
+    def show(self, menu: PageMenu, hide_suggestions: bool = False) -> None:
         html.open_table(
             id_="page_menu_bar",
             class_=["menubar", "" if not hide_suggestions else "hide_suggestions"],
@@ -513,7 +512,7 @@ class PageMenuRenderer:
             self._show_inpage_search_field(menu.inpage_search)
         self._show_shortcuts(menu)
         if menu.has_pending_changes:
-            self._show_pending_changes_icon()
+            self._show_pending_changes_icon(menu.pending_changes_tooltip)
         html.close_tr()
 
         self._show_suggestions(menu)
@@ -636,9 +635,9 @@ class PageMenuRenderer:
         inpage_search_form(mode=item.target_mode, default_value=item.default_value)
         html.close_td()
 
-    def _show_pending_changes_icon(self) -> None:
+    def _show_pending_changes_icon(self, tooltip: Optional[str]) -> None:
         html.open_td(class_="icon_container")
-        html.icon_button("wato.py?mode=changelog", _("View pending changes"), "activate_changes")
+        html.icon_button("wato.py?mode=changelog", tooltip if tooltip else "", "pending_changes")
         html.close_td()
 
 

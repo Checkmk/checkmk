@@ -114,7 +114,7 @@ register.agent_section(
 
 register.check_plugin(
     name="k8s_pod_conditions",
-    service_name="Pod Condition",
+    service_name="Condition",
     discovery_function=discovery,
     check_function=check,
     check_default_parameters=dict(

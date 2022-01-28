@@ -27,10 +27,10 @@ if which statgrab > /dev/null ; then
         done
 
         echo '<<<statgrab_mem>>>'
-        cat /tmp/statgrab.$$ | egrep "^(swap|mem)\." | sed 's/ *= */ /'
+        cat /tmp/statgrab.$$ | grep -E "^(swap|mem)\." | sed 's/ *= */ /'
 
         echo '<<<uptime>>>'
-        cat /tmp/statgrab.$$ | egrep "^general\.uptime" | sed 's/.* //'
+        cat /tmp/statgrab.$$ | grep -E "^general\.uptime" | sed 's/.* //'
 
     fi
     [ -f /tmp/statgrab.$$ ] && rm -f /tmp/statgrab.$$

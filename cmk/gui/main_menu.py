@@ -14,13 +14,7 @@ from datetime import timedelta
 from typing import List
 
 from cmk.utils.plugin_registry import Registry
-from cmk.utils.version import (
-    __version__,
-    edition_title,
-    get_age_trial,
-    is_expired_trial,
-    is_free_edition,
-)
+from cmk.utils.version import __version__, edition, get_age_trial, is_expired_trial, is_free_edition
 
 from cmk.gui.i18n import _, _l
 from cmk.gui.type_defs import MegaMenu, TopicMenuItem, TopicMenuTopic
@@ -187,16 +181,16 @@ def _help_menu_topics() -> List[TopicMenuTopic]:
             icon="about_checkmk",
             items=[
                 TopicMenuItem(
-                    name="release_notes",
-                    title=_("Release notes"),
-                    url="version.py?major=1",
+                    name="info",
+                    title=_("Info"),
+                    url="info.py",
                     sort_index=10,
                     icon="tribe29",
                 ),
                 TopicMenuItem(
                     name="change_log",
                     title=_("Change log (Werks)"),
-                    url="version.py",
+                    url="change_log.py",
                     sort_index=20,
                     icon="tribe29",
                 ),
@@ -212,7 +206,7 @@ mega_menu_registry.register(
         icon="main_help",
         sort_index=18,
         topics=_help_menu_topics,
-        info_line=lambda: f"{edition_title()} {__version__}{free_edition_status()}",
+        info_line=lambda: f"{edition().title} {__version__}{free_edition_status()}",
     )
 )
 

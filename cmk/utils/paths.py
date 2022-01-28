@@ -75,6 +75,7 @@ livestatus_unix_socket = _omd_path_str("tmp/run/live")
 livebackendsdir = _omd_path_str("share/check_mk/livestatus")
 inventory_output_dir = _omd_path_str("var/check_mk/inventory")
 inventory_archive_dir = _omd_path_str("var/check_mk/inventory_archive")
+inventory_delta_cache_dir = _omd_path_str("var/check_mk/inventory_delta_cache")
 status_data_dir = _omd_path_str("tmp/check_mk/status_data")
 robotmk_var_dir = _omd_path_str("var/robotmk")
 base_discovered_host_labels_dir = _omd_path("var/check_mk/discovered_host_labels")
@@ -137,6 +138,7 @@ _r4r_base_dir = Path(var_dir, "wato/requests-for-registration")
 r4r_new_dir = _r4r_base_dir.joinpath("NEW")
 r4r_pending_dir = _r4r_base_dir.joinpath("PENDING")
 r4r_declined_dir = _r4r_base_dir.joinpath("DECLINED")
+r4r_declined_bundles_dir = _r4r_base_dir.joinpath("DECLINED-BUNDLES")
 r4r_ready_dir = _r4r_base_dir.joinpath("READY")
 r4r_discoverable_dir = _r4r_base_dir.joinpath("DISCOVERABLE")
 
@@ -146,6 +148,5 @@ def make_experimental_config_file() -> Path:
     Used to enable features which is "in development" and not good enough to be enabled by default.
     Example of experimental.mk:
     config_storage_format = "raw"
-    microcore_config_format = "protobuf"
     """
     return Path(default_config_dir) / "experimental.mk"

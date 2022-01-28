@@ -90,7 +90,7 @@ TEST(WinPerf, ValidateFabricConfig) {
     };
 
     int found_count = 0;
-    for (const auto& counter : counters) {
+    for (const auto &counter : counters) {
         std::pair<std::string, std::string> counter_low(counter.first,
                                                         counter.second);
         tools::StringLower(counter_low.first);
@@ -240,8 +240,8 @@ TEST(WinPerf, TsCounter) {
     }
 
     {
-        constexpr const wchar_t* name = L"ts_sessions";
-        constexpr const wchar_t* index = L"Terminal Services";
+        constexpr const wchar_t *name = L"ts_sessions";
+        constexpr const wchar_t *index = L"Terminal Services";
         auto x = BuildWinPerfSection(L"winperf", name, index);
         ASSERT_TRUE(!x.empty());
 

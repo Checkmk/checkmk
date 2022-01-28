@@ -9,6 +9,11 @@
 
 # NOTE: This agent has been adapted from the Checkmk FreeBSD agent.
 
+get_epoch() {
+    date +%s 2>/dev/null ||
+        perl -e 'print($^T."\n");'
+}
+
 # Remove locale settings to eliminate localized outputs where possible
 export LC_ALL=C
 unset LANG
@@ -51,8 +56,6 @@ section_misc_sections() {
     echo "PluginsDirectory: $PLUGINSDIR"
     echo "LocalDirectory: $LOCALDIR"
 
-    osver="$(uname -r)"
-
     echo '<<<df>>>'
     df -kPt ffs | sed -e 's/^\([^ ][^ ]*\) \(.*\)$/\1 ffs \2/' | sed 1d
 
@@ -62,19 +65,19 @@ section_misc_sections() {
     ps ax -o user,vsz,rss,pcpu,command | sed -e 1d -e 's/ *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) */(\1,\2,\3,\4) /'
 
     echo '<<<cpu>>>'
-    echo `sysctl -n vm.loadavg | tr -d '{}'` `top -b -n 1 | grep -E '^[0-9]+ processes' | awk '{print $3"/"$1}'` `sysctl -n hw.ncpu`
+    echo "$(sysctl -n vm.loadavg | tr -d '{}') $(top -b -n 1 | grep -E '^[0-9]+ processes' | awk '{ print $3"/"$1 }') $(sysctl -n hw.ncpu)"
 
     echo '<<<uptime>>>'
-    echo `date +%s` - `sysctl -n kern.boottime | cut -d' ' -f 4,7 | tr ',' '.' | tr -d ' '` | bc
+    echo "$(get_epoch) - $(sysctl -n kern.boottime | cut -d' ' -f 4,7 | tr ',' '.' | tr -d ' ')" | bc
 
     echo "<<<openbsd_mem>>>"
     MEM_FREE=$(vmstat | tail -n1 | awk '{ print $5 }')
     MEM_TOTAL=$(sysctl hw.usermem | cut -d= -f2)
-    MEM_TOTAL=$(echo $MEM_TOTAL/1024 | bc)
+    MEM_TOTAL=$(echo "$MEM_TOTAL/1024" | bc)
 
     SWAPCTL_OUTPUT=$(swapctl -k -s)
-    SWAP_FREE=$(echo $SWAPCTL_OUTPUT | awk '{ print $7 }')
-    SWAP_TOTAL=$(echo $SWAPCTL_OUTPUT | awk '{ print $2 }')
+    SWAP_FREE=$(echo "$SWAPCTL_OUTPUT" | awk '{ print $7 }')
+    SWAP_TOTAL=$(echo "$SWAPCTL_OUTPUT" | awk '{ print $2 }')
 
     # if there is no swap space swap values are 0
     if [ -z "$SWAPCTL_OUTPUT" ]; then
@@ -82,10 +85,10 @@ section_misc_sections() {
         SWAP_TOTAL=0
     fi
 
-    echo "MemTotal:\t" $MEM_TOTAL kB
-    echo "MemFree:\t" $MEM_FREE kB
-    echo "SwapTotal:\t" $SWAP_TOTAL kB
-    echo "SwapFree:\t" $SWAP_FREE kB
+    echo "MemTotal:\t $MEM_TOTAL kB"
+    echo "MemFree:\t $MEM_FREE kB"
+    echo "SwapTotal:\t $SWAP_TOTAL kB"
+    echo "SwapFree:\t $SWAP_FREE kB"
 
     echo '<<<lnx_if:sep(58)>>>'
     # MC= MAC address
@@ -111,8 +114,8 @@ section_misc_sections() {
 
     NI=0
     # special (lo/pfsync/pflog/enc) and inactive (*) interfaces are not needed
-    NETSTAT_OUTPUT=$(netstat -in | grep '<Link>' | egrep -v "\*|lo|pfsync|enc")
-    NETSTAT_OUTPUT_BYTES=$(netstat -inb | grep '<Link>' | egrep -v "\*|lo|pfsync|enc")
+    NETSTAT_OUTPUT=$(netstat -in | grep '<Link>' | grep -v -E "\*|lo|pfsync|enc")
+    NETSTAT_OUTPUT_BYTES=$(netstat -inb | grep '<Link>' | grep -v -E "\*|lo|pfsync|enc")
 
     # adjust internal field separator to get lines from netstat and backup it before
     OFS=$IFS
@@ -121,21 +124,21 @@ section_misc_sections() {
     # collect netstat values and interface number
     for NS in $NETSTAT_OUTPUT; do
         NI=$((NI+1))
-        INTERFACES[$NI]=$(echo $NS | awk '{print $1}')
-        MC[$NI]=$(echo $NS | awk '{print $4}')
-        PI[$NI]=$(echo $NS | awk '{print $5}')
-        EI[$NI]=$(echo $NS | awk '{print $6}')
-        PO[$NI]=$(echo $NS | awk '{print $7}')
-        EO[$NI]=$(echo $NS | awk '{print $8}')
-        CO[$NI]=$(echo $NS | awk '{print $9}')
+        INTERFACES[$NI]=$(echo "$NS" | awk '{ print $1 }')
+        MC[$NI]=$(echo "$NS" | awk '{ print $4 }')
+        PI[$NI]=$(echo "$NS" | awk '{ print $5 }')
+        EI[$NI]=$(echo "$NS" | awk '{ print $6 }')
+        PO[$NI]=$(echo "$NS" | awk '{ print $7 }')
+        EO[$NI]=$(echo "$NS" | awk '{ print $8 }')
+        CO[$NI]=$(echo "$NS" | awk '{ print $9 }')
     done
 
     # need NIC counter again for byte values - reset it
     NI=0
     for NS in $NETSTAT_OUTPUT_BYTES; do
         NI=$((NI+1))
-        BI[$NI]=$(echo $NS | awk '{print $5}')
-        BO[$NI]=$(echo $NS | awk '{print $6}')
+        BI[$NI]=$(echo "$NS" | awk '{ print $5 }')
+        BO[$NI]=$(echo "$NS" | awk '{ print $6 }')
     done
 
     # what is this for?
@@ -147,35 +150,35 @@ section_misc_sections() {
     done
 
     for IF in $(jot $NI); do
-        echo \[${INTERFACES[$IF]}\]
+        echo "[${INTERFACES[$IF]}]"
 
-        IFCONFIG_OUTPUT=$(ifconfig ${INTERFACES[$IF]})
+        IFCONFIG_OUTPUT=$(ifconfig "${INTERFACES[$IF]}")
         for IO in $IFCONFIG_OUTPUT; do
             # Speed
-            SP=$(echo "$IO" | egrep "media:.*base" | cut -d\( -f2 | cut -db -f1)
+            SP=$(echo "$IO" | grep -E "media:.*base" | cut -d\( -f2 | cut -db -f1)
             if [ "$SP" ]; then
-                echo "\tSpeed: "$SP"Mb/s"
+                printf "\tSpeed: %sMb/s\n" "${SP}"
             fi
             # Detect duplexity - in reality only available for physical devices but
             # virtual ones like CARP devices will get at least a half duplex
-            if [ "$(echo "$IO" | egrep "media:.*full-duplex")" ]; then
+            if [ "$(echo "$IO" | grep -E "media:.*full-duplex")" ]; then
                 echo "\tDuplex: Full"
             elif [ "$(echo "$IO" | grep "media:" | grep -v "full-duplex")" ]; then
                 echo "\tDuplex: Half"
             fi
             # Auto-negotiation
-            if [ "$(echo "$IO" | egrep "media:.*autoselect")" ]; then
+            if [ "$(echo "$IO" | grep -E "media:.*autoselect")" ]; then
                 echo "\tAuto-negotiation: on"
             elif [ "$(echo "$IO" | grep "media:" | grep -v "autoselect")" ]; then
                 echo "\tAuto-negotiation: off"
             fi
             # Detect detected link
-            if [ "$(echo "$IO" | grep "status:" | egrep "active|backup|master")" ]; then
+            if [ "$(echo "$IO" | grep "status:" | grep -E "active|backup|master")" ]; then
                 echo "\tLink detected: yes"
             fi
         done
 
-        echo "\tAddress: "${MC[$IF]}
+        echo "\tAddress: ${MC[$IF]}"
 
     done
 
@@ -189,7 +192,7 @@ section_misc_sections() {
         ipmitool sensor list \
             | grep -v 'command failed' \
             | sed -e 's/ *| */|/g' -e "s/ /_/g" -e 's/_*$//' -e 's/|/ /g' \
-            | egrep -v '^[^ ]+ na ' \
+            | grep -v -E '^[^ ]+ na ' \
             | grep -v ' discrete '
     fi
 

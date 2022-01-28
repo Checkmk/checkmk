@@ -5,11 +5,10 @@
 
 #include "LogCache.h"
 
-#include <filesystem>
+#include <iterator>
 #include <sstream>
 #include <string>
 #include <system_error>
-#include <utility>
 
 #include "Logfile.h"
 #include "Logger.h"
@@ -72,6 +71,27 @@ void LogCache::addToIndex(std::unique_ptr<Logfile> logfile) {
     }
 
     _logfiles.emplace(since, std::move(logfile));
+}
+
+std::pair<std::vector<std::filesystem::path>,
+          std::optional<std::filesystem::path>>
+LogCache::pathsSince(std::chrono::system_clock::time_point since) {
+    std::lock_guard<std::mutex> lg(_lock);
+    update();
+    std::vector<std::filesystem::path> paths;
+    bool horizon_reached{false};
+    for (auto it = _logfiles.crbegin(); it != _logfiles.crend(); ++it) {
+        const auto &[unused, log_file] = *it;
+        if (horizon_reached) {
+            return {paths, log_file->path()};
+        }
+        paths.push_back(log_file->path());
+        // NOTE: We really need "<" below, "<=" is not enough: Lines at the end
+        // of one log file might have the same timestamp as the lines at the
+        // beginning of the next log file.
+        horizon_reached = log_file->since() < since;
+    }
+    return {paths, {}};
 }
 
 // This method is called each time a log message is loaded into memory. If the
@@ -152,3 +172,46 @@ void LogCache::logLineHasBeenAdded(Logfile *logfile, unsigned logclasses) {
 }
 
 Logger *LogCache::logger() const { return _mc->loggerLivestatus(); }
+
+void LogCache::for_each(
+    const LogFilter &log_filter,
+    const std::function<bool(const LogEntry &)> &process_log_entry) {
+    std::lock_guard<std::mutex> lg(_lock);
+    update();
+
+    if (_logfiles.begin() == _logfiles.end()) {
+        return;
+    }
+    auto it = _logfiles.end();  // it now points beyond last log file
+    --it;                       // switch to last logfile (we have at least one)
+
+    // Now find newest log where 'until' is contained. The problem
+    // here: For each logfile we only know the time of the *first* entry,
+    // not that of the last.
+    while (it != _logfiles.begin() && it->second->since() > log_filter.until) {
+        // while logfiles are too new go back in history
+        --it;
+    }
+    if (it->second->since() > log_filter.until) {
+        return;  // all logfiles are too new
+    }
+
+    while (true) {
+        const auto *entries = it->second->getEntriesFor(
+            log_filter.max_lines_per_logfile, log_filter.classmask);
+        if (!Logfile::processLogEntries(process_log_entry, entries,
+                                        log_filter)) {
+            break;  // end of time range found
+        }
+        if (it == _logfiles.begin()) {
+            break;  // this was the oldest one
+        }
+        --it;
+    }
+}
+
+size_t LogCache::numCachedLogMessages() {
+    std::lock_guard<std::mutex> lg(_lock);
+    update();
+    return _num_cached_log_messages;
+}

@@ -37,7 +37,7 @@ JSON and encoded in UTF-8.
 
 ## JSON envelope attributes for objects
 
-All objects are wrapped in a JSON structure called an "Domain Object" which take the following
+All objects are wrapped in a JSON structure called a "Domain Object" which take the following
 form:
 
     {
@@ -71,6 +71,8 @@ used. All relations to other objects will be listed in the `links` attribute.
 
 ## JSON envelope for collections
 
+For collections, the JSON envelope looks slightly different.
+
     {
         "domainType": <domain type>,
         "instanceId": <string to uniquely identify domain object>,
@@ -80,10 +82,7 @@ used. All relations to other objects will be listed in the `links` attribute.
             <attribute name>: <attribute value>,
             ...
         },
-        "members": {
-            <member name>: <member definition>,
-            ...
-        }
+        "value": [<domain object 1>, <domain object 2>, ...],
     }
 
 ## Link relations

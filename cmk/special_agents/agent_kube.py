@@ -12,9 +12,11 @@ is supported: https://github.com/kubernetes-client/python
 from __future__ import annotations
 
 import argparse
+import functools
 import json
 import logging
 import os
+import re
 import sys
 import time
 from collections import defaultdict
@@ -31,6 +33,7 @@ from typing import (
     Optional,
     Protocol,
     Sequence,
+    Set,
     Union,
 )
 
@@ -49,9 +52,13 @@ from cmk.special_agents.utils_kubernetes.schemata import api, section
 
 AGENT_TMP_PATH = Path(cmk.utils.paths.tmp_dir, "agent_kube")
 
+RawMetrics = Mapping[str, str]
+
 MetricName = NewType("MetricName", str)
 ContainerName = NewType("ContainerName", str)
 SectionName = NewType("SectionName", str)
+PodLookupName = NewType("PodLookupName", str)
+PodNamespacedName = NewType("PodNamespacedName", str)
 
 
 class PerformanceMetric(BaseModel):
@@ -68,13 +75,13 @@ class RateMetric(BaseModel):
 
 class PerformanceContainer(BaseModel):
     name: ContainerName
-    pod_uid: api.PodUID
+    pod_lookup_name: PodLookupName
     metrics: Mapping[MetricName, PerformanceMetric]
     rate_metrics: Optional[Mapping[MetricName, RateMetric]]
 
 
 class PerformancePod(NamedTuple):
-    uid: api.PodUID
+    lookup_name: PodLookupName
     containers: List[PerformanceContainer]
 
 
@@ -95,7 +102,7 @@ class ContainersStore(BaseModel):
 
 class ContainerMetadata(BaseModel):
     name: ContainerName
-    pod_uid: api.PodUID
+    pod_lookup_name: PodLookupName
 
 
 class PathPrefixAction(argparse.Action):
@@ -116,7 +123,18 @@ def parse_arguments(args: List[str]) -> argparse.Namespace:
         default=0,
         help="Verbose mode (for even more output use -vvv)",
     )
+    p.add_argument(
+        "--cluster",
+        required=True,
+        help="The name of the kubernetes cluster",
+    )
     p.add_argument("--token", help="Token for that user")
+    p.add_argument(
+        "--monitored-objects",
+        nargs="+",
+        default=["deployments", "nodes", "pods"],
+        help="The Kubernetes objects which are supposed to be monitored. Available objects: deployments, nodes, pods",
+    )
     p.add_argument(
         "--api-server-endpoint", required=True, help="API server endpoint for Kubernetes API calls"
     )
@@ -127,6 +145,22 @@ def parse_arguments(args: List[str]) -> argparse.Namespace:
     )
 
     p.add_argument("--verify-cert", action="store_true", help="Verify certificate")
+    namespaces = p.add_mutually_exclusive_group()
+    namespaces.add_argument(
+        "--namespace-include-patterns",
+        "-n",
+        action="append",
+        default=[],
+        help="Regex patterns of namespaces to show in the output. Cannot use both include and "
+        "exclude patterns",
+    )
+    namespaces.add_argument(
+        "--namespace-exclude-patterns",
+        action="append",
+        default=[],
+        help="Regex patterns of namespaces to exclude in the output. Cannot use both include and "
+        "exclude patterns.",
+    )
     p.add_argument(
         "--profile",
         metavar="FILE",
@@ -154,16 +188,19 @@ class Pod:
     def __init__(
         self,
         uid: api.PodUID,
-        metadata: api.MetaData,
+        metadata: api.PodMetaData,
         status: api.PodStatus,
         spec: api.PodSpec,
         containers: Mapping[str, api.ContainerInfo],
+        init_containers: Mapping[str, api.ContainerInfo],
     ) -> None:
         self.uid = uid
         self.metadata = metadata
         self.spec = spec
         self.status = status
         self.containers = containers
+        self.init_containers = init_containers
+        self._controllers: List[Deployment] = []
 
     @property
     def phase(self):
@@ -183,35 +220,38 @@ class Pod:
         return f"{self.metadata.namespace}_{self.metadata.name}"
 
     def info(self) -> section.PodInfo:
+        controllers = []
+        for controller in self._controllers:
+            controllers.append(
+                section.Controller(
+                    type_=section.ControllerType.from_str(controller.type_),
+                    name=controller.name(prepend_namespace=True),
+                )
+            )
+
         return section.PodInfo(
             namespace=self.metadata.namespace,
+            name=self.metadata.name,
             creation_timestamp=self.metadata.creation_timestamp,
             labels=self.metadata.labels if self.metadata.labels else {},
             node=self.node,
+            controllers=controllers,
             restart_policy=self.spec.restart_policy,
             qos_class=self.status.qos_class,
             uid=self.uid,
         )
 
-    def cpu_limit(self) -> section.AggregatedLimit:
-        return aggregate_limit_values(
-            [container.resources.limits.cpu for container in self.spec.containers]
-        )
+    def container_cpu_limits(self) -> Sequence[Optional[float]]:
+        return [container.resources.limits.cpu for container in self.spec.containers]
 
-    def cpu_request(self) -> section.AggregatedRequest:
-        return aggregate_request_values(
-            [container.resources.requests.cpu for container in self.spec.containers]
-        )
+    def container_cpu_requests(self) -> Sequence[Optional[float]]:
+        return [container.resources.requests.cpu for container in self.spec.containers]
 
-    def memory_limit(self) -> section.AggregatedLimit:
-        return aggregate_limit_values(
-            [container.resources.limits.memory for container in self.spec.containers]
-        )
+    def container_memory_limits(self) -> Sequence[Optional[float]]:
+        return [container.resources.limits.memory for container in self.spec.containers]
 
-    def memory_request(self) -> section.AggregatedRequest:
-        return aggregate_request_values(
-            [container.resources.requests.memory for container in self.spec.containers]
-        )
+    def container_memory_requests(self) -> Sequence[Optional[float]]:
+        return [container.resources.requests.memory for container in self.spec.containers]
 
     def conditions(self) -> Optional[section.PodConditions]:
         if not self.status.conditions:
@@ -236,37 +276,57 @@ class Pod:
             return None
         return section.PodContainers(containers=self.containers)
 
+    def init_containers_infos(self) -> Optional[section.PodContainers]:
+        if not self.init_containers:
+            return None
+        return section.PodContainers(containers=self.init_containers)
+
     def start_time(self) -> Optional[api.StartTime]:
         if self.status.start_time is None:
             return None
         return api.StartTime(start_time=self.status.start_time)
 
+    def add_controller(self, controller: Deployment) -> None:
+        """Add a handling controller of the pod
 
-def aggregate_request_values(
+        Kubernetes control objects manage pods based on their labels. As the API does not
+        provide any information regarding these control objects from the pod's perspective
+        this double linking is done here
+        """
+        self._controllers.append(controller)
+
+
+def aggregate_resources(
     request_values: Sequence[Optional[float]],
-) -> section.AggregatedRequest:
-    if None in request_values:
-        return section.ExceptionalResource.unspecified
-    return sum(request_values)  # type: ignore
+    limit_values: Sequence[Optional[float]],
+) -> section.Resources:
+    specified_requests = [value for value in request_values if value is not None]
+    specified_limits = [value for value in limit_values if value is not None]
 
+    count_total = len(request_values)
 
-def aggregate_limit_values(limit_values: Sequence[Optional[float]]) -> section.AggregatedLimit:
-    contains_unspecified = None in limit_values
-    contains_zero = 0 in limit_values
-    if contains_unspecified and contains_zero:
-        return section.ExceptionalResource.zero_unspecified
-    if contains_zero:
-        return section.ExceptionalResource.zero
-    if contains_unspecified:
-        return section.ExceptionalResource.unspecified
-    return sum(limit_values)  # type: ignore
+    return section.Resources(
+        request=sum(specified_requests),
+        limit=sum(specified_limits),
+        count_unspecified_requests=count_total - len(specified_requests),
+        count_unspecified_limits=count_total - len(specified_limits),
+        count_zeroed_limits=sum(1 for x in specified_limits if x == 0),
+        count_total=count_total,
+    )
 
 
 class Deployment:
-    def __init__(self, metadata: api.MetaData, status: api.DeploymentStatus) -> None:
+    def __init__(
+        self,
+        metadata: api.MetaData,
+        spec: api.DeploymentSpec,
+        status: api.DeploymentStatus,
+    ) -> None:
         self.metadata = metadata
+        self._spec = spec
         self.status = status
         self._pods: List[Pod] = []
+        self.type_: str = "deployment"
 
     def name(self, prepend_namespace: bool = False) -> str:
         if not prepend_namespace:
@@ -302,6 +362,7 @@ class Deployment:
 
     def add_pod(self, pod: Pod) -> None:
         self._pods.append(pod)
+        pod.add_controller(self)
 
     def pod_resources(self) -> section.PodResources:
         resources: DefaultDict[str, List[str]] = defaultdict(list)
@@ -317,6 +378,12 @@ class Deployment:
 
     def cpu_resources(self) -> section.Resources:
         return _collect_cpu_resources(self._pods)
+
+    def replicas(self) -> api.Replicas:
+        return self.status.replicas
+
+    def spec(self) -> api.DeploymentSpec:
+        return self._spec
 
 
 class Node:
@@ -383,6 +450,12 @@ class Node:
     def cpu_resources(self) -> section.Resources:
         return _collect_cpu_resources(self._pods)
 
+    def allocatable_memory_resource(self) -> section.AllocatableResource:
+        return section.AllocatableResource(value=self.resources["allocatable"].memory)
+
+    def allocatable_cpu_resource(self) -> section.AllocatableResource:
+        return section.AllocatableResource(value=self.resources["allocatable"].cpu)
+
 
 class Cluster:
     @classmethod
@@ -408,12 +481,13 @@ class Cluster:
                     pod.status,
                     pod.spec,
                     pod.containers,
+                    pod.init_containers,
                 )
             )
 
         for deployment in api_server.deployments():
             cluster.add_deployment(
-                Deployment(deployment.metadata, deployment.status), deployment.pods
+                Deployment(deployment.metadata, deployment.spec, deployment.status), deployment.pods
             )
 
         return cluster
@@ -453,6 +527,11 @@ class Cluster:
         resources.update(phases_pods)
         return section.PodResourcesWithCapacity(**resources)
 
+    def namespaces(self) -> Set[api.Namespace]:
+        namespaces: Set[api.Namespace] = set()
+        namespaces.update(api.Namespace(pod.metadata.namespace) for pod in self._pods.values())
+        return namespaces
+
     def pods(self, phase: Optional[api.Phase] = None) -> Sequence[Pod]:
         if phase is None:
             return list(self._pods.values())
@@ -465,14 +544,20 @@ class Cluster:
         return self._deployments
 
     def node_count(self) -> section.NodeCount:
-        worker = 0
-        control_plane = 0
+        node_count = section.NodeCount()
         for node in self._nodes.values():
+            ready = node.status.conditions.Ready == api.NodeConditionStatus.TRUE
             if node.control_plane:
-                control_plane += 1
+                if ready:
+                    node_count.control_plane.ready += 1
+                else:
+                    node_count.control_plane.not_ready += 1
             else:
-                worker += 1
-        return section.NodeCount(worker=worker, control_plane=control_plane)
+                if ready:
+                    node_count.worker.ready += 1
+                else:
+                    node_count.worker.not_ready += 1
+        return node_count
 
     def cluster_details(self) -> api.ClusterInfo:
         if self._cluster_details is None:
@@ -485,46 +570,29 @@ class Cluster:
     def cpu_resources(self) -> section.Resources:
         return _collect_cpu_resources(list(self._pods.values()))
 
+    def allocatable_memory_resource(self) -> section.AllocatableResource:
+        return section.AllocatableResource(
+            value=sum(node.resources["allocatable"].memory for node in self._nodes.values())
+        )
 
-# TODO aggregating this by combining the values from pods duplicates some of logic (compare this
-# function to aggregate_limit_values). In the future, Kubernetes objects such as cluster should
-# use aggregate_limit_values.
-def aggregate_limit_values_from_pods(
-    limit_values: Sequence[section.AggregatedLimit],
-) -> section.AggregatedLimit:
-    if section.ExceptionalResource.zero_unspecified in limit_values:
-        return section.ExceptionalResource.zero_unspecified
-    contains_unspecified = section.ExceptionalResource.unspecified in limit_values
-    contains_zero = section.ExceptionalResource.zero in limit_values
-    if contains_zero and contains_unspecified:
-        return section.ExceptionalResource.zero_unspecified
-    if contains_unspecified:
-        return section.ExceptionalResource.unspecified
-    if contains_zero:
-        return section.ExceptionalResource.zero
-    return sum(limit_values)
-
-
-def aggregate_request_values_from_pods(
-    request_values: Sequence[section.AggregatedRequest],
-) -> section.AggregatedRequest:
-    if section.ExceptionalResource.unspecified in request_values:
-        return section.ExceptionalResource.unspecified
-    return sum(request_values)
+    def allocatable_cpu_resource(self) -> section.AllocatableResource:
+        return section.AllocatableResource(
+            value=sum(node.resources["allocatable"].cpu for node in self._nodes.values())
+        )
 
 
 def _collect_memory_resources(pods: Sequence[Pod]) -> section.Resources:
-    return section.Resources(
-        limit=aggregate_limit_values_from_pods([pod.memory_limit() for pod in pods]),
-        request=aggregate_request_values_from_pods([pod.memory_request() for pod in pods]),
-    )
+    container_memory_requests = [
+        request for pod in pods for request in pod.container_memory_requests()
+    ]
+    container_memory_limits = [limit for pod in pods for limit in pod.container_memory_limits()]
+    return aggregate_resources(container_memory_requests, container_memory_limits)
 
 
 def _collect_cpu_resources(pods: Sequence[Pod]) -> section.Resources:
-    return section.Resources(
-        limit=aggregate_limit_values_from_pods([pod.cpu_limit() for pod in pods]),
-        request=aggregate_request_values_from_pods([pod.cpu_request() for pod in pods]),
-    )
+    container_cpu_requests = [request for pod in pods for request in pod.container_cpu_requests()]
+    container_cpu_limits = [limit for pod in pods for limit in pod.container_cpu_limits()]
+    return aggregate_resources(container_cpu_requests, container_cpu_limits)
 
 
 class JsonProtocol(Protocol):
@@ -548,11 +616,15 @@ def write_cluster_api_sections(cluster: Cluster) -> None:
         "kube_cluster_details_v1": cluster.cluster_details,
         "kube_memory_resources_v1": cluster.memory_resources,
         "kube_cpu_resources_v1": cluster.cpu_resources,
+        "kube_allocatable_memory_resource_v1": cluster.allocatable_memory_resource,
+        "kube_allocatable_cpu_resource_v1": cluster.allocatable_cpu_resource,
     }
     _write_sections(sections)
 
 
-def write_nodes_api_sections(api_nodes: Sequence[Node]) -> None:
+def write_nodes_api_sections(
+    api_nodes: Sequence[Node], piggyback_formatter: Callable[[str], str]
+) -> None:
     def output_sections(cluster_node: Node) -> None:
         sections = {
             "kube_node_container_count_v1": cluster_node.container_count,
@@ -561,15 +633,19 @@ def write_nodes_api_sections(api_nodes: Sequence[Node]) -> None:
             "kube_node_info_v1": cluster_node.info,
             "kube_cpu_resources_v1": cluster_node.cpu_resources,
             "kube_memory_resources_v1": cluster_node.memory_resources,
+            "kube_allocatable_cpu_resource_v1": cluster_node.allocatable_cpu_resource,
+            "kube_allocatable_memory_resource_v1": cluster_node.allocatable_memory_resource,
         }
         _write_sections(sections)
 
     for node in api_nodes:
-        with ConditionalPiggybackSection(f"node_{node.name}"):
+        with ConditionalPiggybackSection(piggyback_formatter(node.name)):
             output_sections(node)
 
 
-def write_deployments_api_sections(api_deployments: Sequence[Deployment]) -> None:
+def write_deployments_api_sections(
+    api_deployments: Sequence[Deployment], piggyback_formatter: Callable[[str], str]
+) -> None:
     """Write the deployment relevant sections based on k8 API information"""
 
     def output_sections(cluster_deployment: Deployment) -> None:
@@ -579,17 +655,23 @@ def write_deployments_api_sections(api_deployments: Sequence[Deployment]) -> Non
             "kube_deployment_info_v1": cluster_deployment.info,
             "kube_deployment_conditions_v1": cluster_deployment.conditions,
             "kube_cpu_resources_v1": cluster_deployment.cpu_resources,
+            "kube_replicas_v1": cluster_deployment.replicas,
+            "kube_deployment_spec_v1": cluster_deployment.spec,
         }
         _write_sections(sections)
 
     for deployment in api_deployments:
-        with ConditionalPiggybackSection(f"deployment_{deployment.name(prepend_namespace=True)}"):
+        with ConditionalPiggybackSection(
+            piggyback_formatter(deployment.name(prepend_namespace=True))
+        ):
             output_sections(deployment)
 
 
-def write_pods_api_sections(api_pods: Sequence[Pod]) -> None:
+def write_pods_api_sections(
+    api_pods: Sequence[Pod], piggyback_formatter: Callable[[str], str]
+) -> None:
     for pod in api_pods:
-        with ConditionalPiggybackSection(f"pod_{pod.name(prepend_namespace=True)}"):
+        with ConditionalPiggybackSection(piggyback_formatter(pod.name(prepend_namespace=True))):
             for section_name, section_content in pod_api_based_checkmk_sections(pod):
                 if section_content is None:
                     continue
@@ -601,31 +683,38 @@ def pod_api_based_checkmk_sections(pod: Pod):
     sections = (
         ("k8s_pod_conditions_v1", pod.conditions),
         ("kube_pod_containers_v1", pod.containers_infos),
+        ("kube_pod_init_containers_v1", pod.init_containers_infos),
         ("kube_start_time_v1", pod.start_time),
         ("kube_pod_lifecycle_v1", pod.lifecycle_phase),
         ("kube_pod_info_v1", pod.info),
         (
             "kube_cpu_resources_v1",
-            lambda: section.Resources(limit=pod.cpu_limit(), request=pod.cpu_request()),
+            lambda: _collect_cpu_resources([pod]),
         ),
         (
             "kube_memory_resources_v1",
-            lambda: section.Resources(limit=pod.memory_limit(), request=pod.memory_request()),
+            lambda: _collect_memory_resources([pod]),
         ),
     )
     for section_name, section_call in sections:
         yield section_name, section_call()
 
 
-def filter_outdated_pods(
-    live_pods: Sequence[PerformancePod], uid_piggyback_mappings: Mapping[api.PodUID, str]
+def filter_outdated_and_non_monitored_pods(
+    live_pods: Sequence[PerformancePod],
+    lookup_name_to_piggyback_mappings: Mapping[PodLookupName, PodNamespacedName],
 ) -> Iterator[PerformancePod]:
-    return (live_pod for live_pod in live_pods if live_pod.uid in uid_piggyback_mappings)
+    """Filter out all performance data based pods that are not in the API data based lookup table"""
+    return (
+        live_pod
+        for live_pod in live_pods
+        if live_pod.lookup_name in lookup_name_to_piggyback_mappings
+    )
 
 
 def write_kube_object_performance_section(
     kube_obj: Union[Cluster, Node, Deployment],
-    performance_pods: Mapping[api.PodUID, PerformancePod],
+    performance_pods: Mapping[PodLookupName, PerformancePod],
     piggyback_name: Optional[str] = None,
 ):
     """Write cluster, node & deployment sections based on collected performance metrics"""
@@ -635,9 +724,12 @@ def write_kube_object_performance_section(
         _write_performance_section(
             section_name=SectionName("memory"),
             section_output=section.Memory(
-                memory_usage_bytes=_aggregate_metric(containers, MetricName("memory_usage_bytes")),
+                memory_usage_bytes=_aggregate_metric(
+                    containers, MetricName("memory_working_set_bytes")
+                ),
             ),
         )
+
         # CPU section
         _write_performance_section(
             section_name=SectionName("cpu_usage"),
@@ -649,7 +741,15 @@ def write_kube_object_performance_section(
     if not (pods := kube_obj.pods(phase=api.Phase.RUNNING)):
         return
 
-    selected_pods = [performance_pods[pod.uid] for pod in pods if pod.uid in performance_pods]
+    selected_pods = []
+    for pod in pods:
+        # Some pods which are running according to the Kubernetes API might not yet be
+        # included in the performance data due to various reasons (e.g. pod just started)
+        if (pod_lookup := pod_lookup_from_api_pod(pod)) not in performance_pods:
+            # TODO: include logging without adding false positives
+            continue
+        selected_pods.append(performance_pods[pod_lookup])
+
     if not selected_pods:
         return
 
@@ -676,15 +776,24 @@ def pod_performance_sections(pod: PerformancePod) -> None:
     )
 
     # Memory section
+    # the containers with "POD" in their cAdvisor generated name represent the container's
+    # respective parent cgroup. A multitude of memory calculation references omit these for
+    # container level calculations. We keep them as we calculate values at least on the pod level.
     _write_performance_section(
         section_name=SectionName("memory"),
         section_output=section.Memory(
-            memory_usage_bytes=_aggregate_metric(pod.containers, MetricName("memory_usage_bytes")),
+            memory_usage_bytes=_aggregate_metric(
+                pod.containers,
+                MetricName("memory_working_set_bytes"),
+            ),
         ),
     )
 
 
-def _aggregate_metric(containers: Sequence[PerformanceContainer], metric: MetricName) -> float:
+def _aggregate_metric(
+    containers: Sequence[PerformanceContainer],
+    metric: MetricName,
+) -> float:
     """Aggregate a metric across all containers"""
     return 0.0 + sum(
         [container.metrics[metric].value for container in containers if metric in container.metrics]
@@ -706,7 +815,7 @@ def _aggregate_rate_metric(
 
 def _write_performance_section(section_name: SectionName, section_output: BaseModel):
     # TODO: change live to performance (including checks)
-    with SectionWriter(f"k8s_live_{section_name}_v1") as writer:
+    with SectionWriter(f"kube_performance_{section_name}_v1") as writer:
         writer.append(section_output.json())
 
 
@@ -719,10 +828,14 @@ class SetupError(Exception):
 
 
 def request_metrics_from_cluster_collector(
-    cluster_agent_url: str, verify: bool
-) -> Sequence[Mapping[str, str]]:
+    cluster_agent_url: str,
+    token: str,
+    verify: bool,
+) -> Sequence[RawMetrics]:
     cluster_resp = requests.get(
-        f"{cluster_agent_url}/container_metrics", verify=verify
+        f"{cluster_agent_url}/container_metrics",
+        headers={"Authorization": f"Bearer {token}"},
+        verify=verify,
     )  # TODO: certificate validation
     if cluster_resp.status_code != 200:
         raise SetupError("Checkmk cannot make a connection to the k8 cluster agent")
@@ -734,8 +847,12 @@ def request_metrics_from_cluster_collector(
     return json.loads(resp_content[0])
 
 
-def map_uid_to_piggyback_host_name(api_pods: Sequence[Pod]) -> Mapping[api.PodUID, str]:
-    return {pod.uid: pod.name(prepend_namespace=True) for pod in api_pods}
+def map_lookup_name_to_piggyback_host_name(
+    api_pods: Sequence[Pod], pod_lookup: Callable[[Pod], PodLookupName]
+) -> Mapping[PodLookupName, PodNamespacedName]:
+    return {
+        pod_lookup(pod): PodNamespacedName(pod.name(prepend_namespace=True)) for pod in api_pods
+    }
 
 
 def make_api_client(arguments: argparse.Namespace) -> client.ApiClient:
@@ -758,7 +875,7 @@ def make_api_client(arguments: argparse.Namespace) -> client.ApiClient:
 
 
 def parse_performance_metrics(
-    cluster_collector_metrics: Sequence[Mapping[str, str]]
+    cluster_collector_metrics: Sequence[RawMetrics],
 ) -> Sequence[PerformanceMetric]:
     metrics = []
     for metric in cluster_collector_metrics:
@@ -861,24 +978,27 @@ def group_metrics_by_container(
 
 def group_containers_by_pods(
     performance_containers: Iterator[PerformanceContainer],
-) -> Mapping[api.PodUID, PerformancePod]:
-    parsed_pods: Dict[api.PodUID, List[PerformanceContainer]] = {}
+) -> Mapping[PodLookupName, PerformancePod]:
+    parsed_pods: Dict[PodLookupName, List[PerformanceContainer]] = {}
     for container in performance_containers:
-        pod_containers = parsed_pods.setdefault(container.pod_uid, [])
+        pod_containers = parsed_pods.setdefault(container.pod_lookup_name, [])
         pod_containers.append(container)
+
     return {
-        pod_uid: PerformancePod(uid=pod_uid, containers=containers)
-        for pod_uid, containers in parsed_pods.items()
+        pod_lookup_name: PerformancePod(lookup_name=pod_lookup_name, containers=containers)
+        for pod_lookup_name, containers in parsed_pods.items()
     }
 
 
-def parse_containers_metadata(metrics) -> Mapping[ContainerName, ContainerMetadata]:
+def parse_containers_metadata(
+    metrics: Sequence[RawMetrics], lookup_func: Callable[[Mapping[str, str]], PodLookupName]
+) -> Mapping[ContainerName, ContainerMetadata]:
     containers = {}
     for metric in metrics:
         if (container_name := metric["container_name"]) in containers:
             continue
         containers[ContainerName(container_name)] = ContainerMetadata(
-            name=container_name, pod_uid=api.PodUID(metric["pod_uid"])
+            name=container_name, pod_lookup_name=lookup_func(metric)
         )
     return containers
 
@@ -896,10 +1016,99 @@ def group_container_components(
     for container in containers_metadata.values():
         yield PerformanceContainer(
             name=container.name,
-            pod_uid=container.pod_uid,
+            pod_lookup_name=container.pod_lookup_name,
             metrics=containers_metrics[container.name],
             rate_metrics=containers_rate_metrics.get(container.name),
         )
+
+
+def lookup_name(namespace: str, pod_name: str) -> PodLookupName:
+    """Parse the pod lookup name
+
+    This function parses an identifier which is used to match the pod based on the
+    performance data to the associating pod based on the Kubernetes API data
+
+    The namespace & pod name combination is unique across the cluster and is used instead of the pod
+    uid due to a cAdvisor bug. This bug causes it to return the container config hash value
+    (kubernetes.io/config.hash) as the pod uid for system containers and consequently differs to the
+    uid reported by the Kubernetes API.
+    """
+    return PodLookupName(f"{namespace}_{pod_name}")
+
+
+def pod_lookup_from_api_pod(api_pod: Pod) -> PodLookupName:
+    return lookup_name(api_pod.metadata.namespace, api_pod.metadata.name)
+
+
+def pod_lookup_from_metric(metric: Mapping[str, str]) -> PodLookupName:
+    return lookup_name(metric["namespace"], metric["pod_name"])
+
+
+def pods_from_namespaces(pods: Sequence[Pod], namespaces: Set[api.Namespace]) -> Sequence[Pod]:
+    return [pod for pod in pods if pod.metadata.namespace in namespaces]
+
+
+def deployments_from_namespaces(
+    deployments: Sequence[Deployment], namespaces: Set[api.Namespace]
+) -> Sequence[Deployment]:
+    return [deployment for deployment in deployments if deployment.metadata.namespace in namespaces]
+
+
+def filter_monitored_namespaces(
+    cluster_namespaces: Set[api.Namespace],
+    namespace_include_patterns: Sequence[str],
+    namespace_exclude_patterns: Sequence[str],
+) -> Set[api.Namespace]:
+    """Filter Kubernetes namespaces based on the provided patterns
+
+    Examples:
+        >>> filter_monitored_namespaces({api.Namespace("foo"), api.Namespace("bar")}, ["foo"], [])
+        {'foo'}
+
+        >>> filter_monitored_namespaces({api.Namespace("foo"), api.Namespace("bar")}, [], ["foo"])
+        {'bar'}
+
+        >>> sorted(filter_monitored_namespaces({api.Namespace("foo"), api.Namespace("bar"),
+        ... api.Namespace("man")}, ["foo", "bar"], []))
+        ['bar', 'foo']
+
+    """
+    if (
+        namespace_include_patterns and namespace_exclude_patterns
+    ):  # this should be handled by argparse
+        raise ValueError("It is not possible to define patterns for both filter mechanisms")
+
+    if namespace_include_patterns:
+        return _filter_namespaces(cluster_namespaces, namespace_include_patterns)
+
+    if namespace_exclude_patterns:
+        return cluster_namespaces - _filter_namespaces(
+            cluster_namespaces, namespace_exclude_patterns
+        )
+
+    return cluster_namespaces
+
+
+def _filter_namespaces(
+    kubernetes_namespaces: Set[api.Namespace], re_patterns: Sequence[str]
+) -> Set[api.Namespace]:
+    """Filter namespaces based on the provided regular expression patterns
+
+    Examples:
+         >>> sorted(_filter_namespaces({api.Namespace("foo"), api.Namespace("bar"),
+         ... api.Namespace("man")}, ["foo", "man"]))
+         ['foo', 'man']
+    """
+    filtered_namespaces = set()
+    compiled_re = re.compile(f"({'|'.join(re_patterns)})")
+    for namespace in kubernetes_namespaces:
+        if compiled_re.match(namespace):
+            filtered_namespaces.add(namespace)
+    return filtered_namespaces
+
+
+def cluster_piggyback_formatter(cluster_name: str, object_type: str, namespace_name: str) -> str:
+    return f"{object_type}_{cluster_name}_{namespace_name}"
 
 
 def main(args: Optional[List[str]] = None) -> int:
@@ -922,13 +1131,38 @@ def main(args: Optional[List[str]] = None) -> int:
 
             # Sections based on API server data
             write_cluster_api_sections(cluster)
-            write_nodes_api_sections(cluster.nodes())
-            write_deployments_api_sections(cluster.deployments())
-            write_pods_api_sections(cluster.pods())  # TODO: make more explicit
+
+            monitored_namespaces = filter_monitored_namespaces(
+                cluster.namespaces(),
+                arguments.namespace_include_patterns,
+                arguments.namespace_exclude_patterns,
+            )
+            piggyback_formatter = functools.partial(cluster_piggyback_formatter, arguments.cluster)
+
+            if "nodes" in arguments.monitored_objects:
+                write_nodes_api_sections(
+                    cluster.nodes(),
+                    piggyback_formatter=functools.partial(piggyback_formatter, "node"),
+                )
+
+            if "deployments" in arguments.monitored_objects:
+                write_deployments_api_sections(
+                    deployments_from_namespaces(cluster.deployments(), monitored_namespaces),
+                    piggyback_formatter=functools.partial(piggyback_formatter, "deployment"),
+                )
+
+            if "pods" in arguments.monitored_objects:
+                write_pods_api_sections(
+                    pods_from_namespaces(cluster.pods(), monitored_namespaces),
+                    piggyback_formatter=functools.partial(piggyback_formatter, "pod"),
+                )
+
+            # TODO: add an option to skip the performance data query
+            # TODO: refactor write out sections in case this performance skip is not implemented
 
             # Sections based on cluster collector performance data
             collected_metrics = request_metrics_from_cluster_collector(
-                arguments.cluster_agent_endpoint, arguments.verify_cert
+                arguments.cluster_agent_endpoint, arguments.token, arguments.verify_cert
             )
             performance_metrics = parse_performance_metrics(collected_metrics)
 
@@ -946,8 +1180,7 @@ def main(args: Optional[List[str]] = None) -> int:
                 }
             )
 
-            # TODO: file_name must be adjusted when adding multi-cluster/rule support later
-            store_file_name = "containers_counters.json"
+            store_file_name = f"{arguments.cluster}_containers_counters.json"
             previous_cycle_store = load_containers_store(
                 path=AGENT_TMP_PATH, file_name=store_file_name
             )
@@ -961,38 +1194,57 @@ def main(args: Optional[List[str]] = None) -> int:
             containers_metrics = group_metrics_by_container(
                 performance_metrics, omit_metrics=relevant_counter_metrics
             )
-            containers_metadata = parse_containers_metadata(collected_metrics)
+
+            containers_metadata = parse_containers_metadata(
+                collected_metrics, pod_lookup_from_metric
+            )
+
             performance_containers = group_container_components(
                 containers_metadata, containers_metrics, containers_rate_metrics
             )
 
             performance_pods = group_containers_by_pods(performance_containers)
 
-            uid_piggyback_mappings = map_uid_to_piggyback_host_name(cluster.pods())
+            lookup_name_piggyback_mappings = map_lookup_name_to_piggyback_host_name(
+                pods_from_namespaces(cluster.pods(), monitored_namespaces), pod_lookup_from_api_pod
+            )
 
             # Write performance sections
-            for pod in filter_outdated_pods(
-                list(performance_pods.values()), uid_piggyback_mappings
-            ):
-                with ConditionalPiggybackSection(f"pod_{uid_piggyback_mappings[pod.uid]}"):
-                    pod_performance_sections(pod)
+            if "pods" in arguments.monitored_objects:
+                for pod in filter_outdated_and_non_monitored_pods(
+                    list(performance_pods.values()), lookup_name_piggyback_mappings
+                ):
+                    with ConditionalPiggybackSection(
+                        piggyback_formatter(
+                            object_type="pod",
+                            namespace_name=lookup_name_piggyback_mappings[pod.lookup_name],
+                        )
+                    ):
+                        pod_performance_sections(pod)
 
-            for node in cluster.nodes():
-                write_kube_object_performance_section(
-                    node,
-                    performance_pods,
-                    piggyback_name=f"node_{node.name}",
-                )
+            if "nodes" in arguments.monitored_objects:
+                for node in cluster.nodes():
+                    write_kube_object_performance_section(
+                        node,
+                        performance_pods,
+                        piggyback_name=piggyback_formatter(
+                            object_type="node", namespace_name=node.name
+                        ),
+                    )
 
-            for deployment in cluster.deployments():
-                write_kube_object_performance_section(
-                    deployment,
-                    performance_pods,
-                    piggyback_name=f"deployment_{deployment.name(prepend_namespace=True)}",
-                )
+            if "deployments" in arguments.monitored_objects:
+                for deployment in deployments_from_namespaces(
+                    cluster.deployments(), monitored_namespaces
+                ):
+                    write_kube_object_performance_section(
+                        deployment,
+                        performance_pods,
+                        piggyback_name=piggyback_formatter(
+                            object_type="deployment",
+                            namespace_name=deployment.name(prepend_namespace=True),
+                        ),
+                    )
 
-            # TODO: make name configurable when introducing multi-cluster support
-            # remember that host with k8 rule must have at least one service
             write_kube_object_performance_section(cluster, performance_pods)
 
             # TODO: handle pods with no performance data (pod.uid not in performance pods)

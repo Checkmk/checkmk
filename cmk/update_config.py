@@ -9,7 +9,6 @@ This command is normally executed automatically at the end of "omd update" on
 all sites and on remote sites after receiving a snapshot and does not need to
 be called manually.
 """
-
 import argparse
 import ast
 import copy
@@ -22,6 +21,7 @@ import re
 import shutil
 import subprocess
 import time
+from contextlib import contextmanager
 from pathlib import Path, PureWindowsPath
 from typing import (
     Any,
@@ -43,6 +43,7 @@ import cmk.utils.paths
 import cmk.utils.tty as tty
 from cmk.utils.bi.bi_legacy_config_converter import BILegacyPacksConverter
 from cmk.utils.check_utils import maincheckify
+from cmk.utils.encryption import raw_certificates_from_file
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.log import VERBOSE
 from cmk.utils.regex import unescape
@@ -67,7 +68,6 @@ from cmk.base.autochecks.migration import load_unmigrated_autocheck_entries
 import cmk.gui.config
 import cmk.gui.groups
 import cmk.gui.pagetypes as pagetypes
-import cmk.gui.query_filters as query_filters
 import cmk.gui.utils
 import cmk.gui.visuals as visuals
 import cmk.gui.watolib.groups
@@ -76,7 +76,6 @@ import cmk.gui.watolib.rulesets
 import cmk.gui.watolib.tags
 from cmk.gui import main_modules
 from cmk.gui.bi import BIManager
-from cmk.gui.exceptions import MKUserError
 from cmk.gui.plugins.dashboard.utils import (
     builtin_dashboards,
     get_all_dashboards,
@@ -90,14 +89,13 @@ from cmk.gui.plugins.userdb.utils import (
     USER_SCHEME_SERIAL,
 )
 from cmk.gui.plugins.views.utils import get_all_views
-from cmk.gui.plugins.visuals.utils import filter_registry
 from cmk.gui.plugins.wato.utils import config_variable_registry
 from cmk.gui.plugins.watolib.utils import filter_unknown_settings
 from cmk.gui.sites import is_wato_slave_site
 from cmk.gui.userdb import load_users, save_users, Users
 from cmk.gui.utils.logged_in import SuperUserContext
 from cmk.gui.utils.script_helpers import gui_context
-from cmk.gui.watolib.changes import AuditLogStore, ObjectRef, ObjectRefType
+from cmk.gui.watolib.changes import add_change, AuditLogStore, ObjectRef, ObjectRefType
 from cmk.gui.watolib.global_settings import GlobalSettings
 from cmk.gui.watolib.notifications import load_notification_rules, save_notification_rules
 from cmk.gui.watolib.rulesets import RulesetCollection
@@ -162,6 +160,17 @@ REMOVED_WATO_RULESETS_MAP = {
 _MATCH_SINGLE_BACKSLASH = re.compile(r"[^\\]\\[^\\]")
 
 
+@contextmanager
+def _save_user_instances(visual_type: str, all_visuals: Dict):
+    modified_user_instances: Set[UserId] = set()
+
+    yield modified_user_instances
+
+    # Now persist all modified instances
+    for user_id in modified_user_instances:
+        visuals.save(visual_type, all_visuals, user_id)
+
+
 class UpdateConfig:
     def __init__(self, logger: logging.Logger, arguments: argparse.Namespace) -> None:
         super().__init__()
@@ -204,12 +213,20 @@ class UpdateConfig:
                     if self._arguments.debug:
                         raise
 
+            if not self._has_errors and not is_wato_slave_site():
+                # Force synchronization of the config after a successful configuration update
+                add_change(
+                    "cmk-update-config",
+                    "Successfully updated Checkmk configuration",
+                    need_sync=True,
+                )
+
         self._logger.log(VERBOSE, "Done")
         return self._has_errors
 
     def _steps(self) -> List[Tuple[Callable[[], None], str]]:
         return [
-            (self._migrate_range_filters, "Migrate Range filters"),
+            (self._rewrite_visuals, "Migrate Visuals context"),
             (self._migrate_dashlets, "Migrate dashlets"),
             (self._update_global_settings, "Update global settings"),
             (self._rewrite_wato_tag_config, "Rewriting tags"),
@@ -232,6 +249,7 @@ class UpdateConfig:
                 self._rewrite_servicenow_notification_config,
                 "Rewriting notification configuration for ServiceNow",
             ),
+            (self._add_site_ca_to_trusted_cas, "Adding site CA to trusted CAs"),
         ]
 
     def _initialize_base_environment(self) -> None:
@@ -471,7 +489,6 @@ class UpdateConfig:
         self._transform_replaced_wato_rulesets(all_rulesets)
         self._transform_wato_rulesets_params(all_rulesets)
         self._transform_discovery_disabled_services(all_rulesets)
-        self._validate_rule_values(all_rulesets)
         self._validate_regexes_in_item_specs(all_rulesets)
         all_rulesets.save()
 
@@ -524,14 +541,17 @@ class UpdateConfig:
             if not sections_to_disable:
                 continue
 
-            new_rule = cmk.gui.watolib.rulesets.Rule(rule.folder, snmp_exclude_sections_ruleset)
-            new_rule.from_config(rule.to_config())
+            new_rule = cmk.gui.watolib.rulesets.Rule.from_config(
+                rule.folder,
+                snmp_exclude_sections_ruleset,
+                rule.to_config(),
+            )
             new_rule.id = cmk.gui.watolib.rulesets.utils.gen_id()
             new_rule.value = {  # type: ignore[assignment]
                 "sections_disabled": sorted(str(s) for s in sections_to_disable),
                 "sections_enabled": [],
             }
-            new_rule.rule_options["comment"] = (
+            new_rule.rule_options.comment = (
                 "%s - Checkmk: automatically converted during upgrade from rule "
                 '"Disabled checks". Please review if these rules can be deleted.'
             ) % time.strftime("%Y-%m-%d %H:%M", time.localtime())
@@ -646,49 +666,13 @@ class UpdateConfig:
                     if isinstance(s, dict) and "$regex" in s
                 ]
 
-    def _validate_rule_values(
-        self,
-        all_rulesets: RulesetCollection,
-    ) -> None:
-        num_errors = 0
-        for ruleset in all_rulesets.get_rulesets().values():
-            vs = ruleset.rulespec.valuespec
-            for folder, index, rule in ruleset.get_rules():
-                try:
-                    vs.validate_value(
-                        rule.value,
-                        "",
-                    )
-                except MKUserError as excpt:
-                    num_errors += 1
-                    self._logger.error(
-                        format_error(
-                            "ERROR: Invalid rule configuration detected (Ruleset: %s, Title: %s, "
-                            "Folder: %s, Rule nr: %s, Exception: %s)"
-                        ),
-                        ruleset.name,
-                        ruleset.title(),
-                        folder.path(),
-                        index + 1,
-                        excpt,
-                    )
-
-        if num_errors:
-            self._has_errors = True
-            self._logger.error(
-                format_error(
-                    "Detected %s error(s) in configured rules.\n"
-                    "You must correct these errors *before* starting Checkmk.\n"
-                    "To do so, we recommend to open the affected rules in the GUI. Upon attempting "
-                    "to save them, any problematic field will be highlighted."
-                ),
-                num_errors,
-            )
-
     def _validate_regexes_in_item_specs(
         self,
         all_rulesets: RulesetCollection,
     ) -> None:
+        def format_error(msg: str):
+            return "\033[91m {}\033[00m".format(msg)
+
         def format_warning(msg: str):
             return "\033[93m {}\033[00m".format(msg)
 
@@ -710,14 +694,12 @@ class UpdateConfig:
                     except re.error as e:
                         self._logger.error(
                             format_error(
-                                "ERROR: Invalid regular expression in service condition detected "
-                                "(Ruleset: %s, Title: %s, Folder: %s, Rule nr: %s, Condition: %s, "
-                                "Exception: %s)"
+                                "ERROR: Invalid regular expression in service condition detected: (Ruleset: %s, Folder: %s, "
+                                "Rule nr: %s, Condition: %s, Exception: %s)"
                             ),
                             ruleset.name,
-                            ruleset.title(),
                             folder.path(),
-                            index + 1,
+                            index,
                             regex,
                             e,
                         )
@@ -743,11 +725,9 @@ class UpdateConfig:
             self._has_errors = True
             self._logger.error(
                 format_error(
-                    "Detected %s errors in service conditions.\n"
-                    "You must correct these errors *before* starting Checkmk.\n"
-                    "To do so, we recommend to open the affected rules in the GUI. Upon attempting "
-                    "to save them, any problematic field will be highlighted.\n"
-                    "For more information regarding errors in regular expressions see:\n"
+                    "Detected %s errors in service conditions.\n "
+                    "You must correct these errors *before* starting checkmk.\n "
+                    "For more information regarding errors in regular expressions see:\n "
                     "https://docs.checkmk.com/latest/en/regexes.html"
                 ),
                 num_errors,
@@ -838,42 +818,29 @@ class UpdateConfig:
 
         return topic_created_for
 
-    def _migrate_range_filters(self) -> None:
-        range_filters = [
-            filter_ident
-            for filter_ident, filter_object in filter_registry.items()
-            if hasattr(filter_object, "query_filter")
-            and isinstance(filter_object.query_filter, query_filters.NumberRangeQuery)  # type: ignore[attr-defined]
-        ]
+    def _rewrite_visuals(self):
+        """This function uses the updates in visuals.transform_old_visual which
+        takes place upon visuals load. However, load forces no save, thus save
+        the transformed visual in this update step. All user configs are rewriten.
+        The load and transform functions are specific to each visual, saving is generic."""
 
-        self._migrate_visual_range_filter(range_filters, "views", get_all_views())
-        self._migrate_visual_range_filter(range_filters, "dashboards", get_all_dashboards())
+        def updates(visual_type: str, all_visuals: Dict):
+            with _save_user_instances(visual_type, all_visuals) as affected_user:
+                # skip builtins, only users
+                affected_user.update(owner for owner, _name in all_visuals if owner)
+
+        updates("views", get_all_views())
+        updates("dashboards", get_all_dashboards())
+
         # Reports
         try:
-            import cmk.gui.cee.reporting as reporting
-
-            reporting.load_reports()
-            self._migrate_visual_range_filter(range_filters, "reports", reporting.reports)
+            import cmk.gui.cee.reporting as reporting  # pylint: disable=cmk-module-layer-violation
         except ImportError:
-            pass
+            reporting = None  # type: ignore[assignment]
 
-    def _migrate_visual_range_filter(
-        self, range_filters: List[str], visual_type: str, all_visuals: Dict
-    ) -> None:
-        modified_user_instances = set()
-        for (owner, _name), visual_spec in all_visuals.items():
-            for key, filter_vars in visual_spec.get("context", {}).items():
-                if key in range_filters:
-                    new_vars = {
-                        re.sub("_to$", "_until", request_var): value
-                        for request_var, value in filter_vars.items()
-                    }
-                    if filter_vars != new_vars:
-                        modified_user_instances.add(owner)
-                        visual_spec["context"][key] = new_vars
-
-        for owner in modified_user_instances:
-            visuals.save(visual_type, all_visuals, owner)
+        if reporting:
+            reporting.load_reports()  # Loading does the transformation
+            updates("reports", reporting.reports)
 
     def _migrate_all_visuals_topics(self, topics: Dict) -> Set[UserId]:
         topic_created_for: Set[UserId] = set()
@@ -913,23 +880,19 @@ class UpdateConfig:
         all_visuals: Dict,
     ) -> Set[UserId]:
         topic_created_for: Set[UserId] = set()
-        modified_user_instances: Set[UserId] = set()
+        with _save_user_instances(visual_type, all_visuals) as affected_user:
 
-        # First modify all instances in memory and remember which things have changed
-        for (owner, _name), visual_spec in all_visuals.items():
-            instance_modified, topic_created = self._transform_pre_17_topic_to_id(
-                topics, visual_spec
-            )
+            # First modify all instances in memory and remember which things have changed
+            for (owner, _name), visual_spec in all_visuals.items():
+                instance_modified, topic_created = self._transform_pre_17_topic_to_id(
+                    topics, visual_spec
+                )
 
-            if instance_modified and owner:
-                modified_user_instances.add(owner)
+                if instance_modified and owner:
+                    affected_user.add(owner)
 
-            if topic_created and owner:
-                topic_created_for.add(owner)
-
-        # Now persist all modified instances
-        for user_id in modified_user_instances:
-            visuals.save(visual_type, all_visuals, user_id)
+                if topic_created and owner:
+                    topic_created_for.add(owner)
 
         return topic_created_for
 
@@ -1012,26 +975,23 @@ class UpdateConfig:
         filter_group = global_config.get("topology_default_filter_group", "")
 
         dashboards = visuals.load("dashboards", builtin_dashboards)
-        modified_user_instances: Set[UserId] = set()
-        for (owner, _name), dashboard in dashboards.items():
-            for dashlet in dashboard["dashlets"]:
-                if dashlet["type"] == "network_topology":
-                    transform_topology_dashlet(dashlet, filter_group)
-                    modified_user_instances.add(owner)
-                elif dashlet["type"] in ("hoststats", "servicestats"):
-                    transform_stats_dashlet(dashlet)
-                    modified_user_instances.add(owner)
-                elif dashlet["type"] in (
-                    "single_timeseries",
-                    "custom_graph",
-                    "combined_graph",
-                    "problem_graph",
-                ):
-                    transform_timerange_dashlet(dashlet)
-                    modified_user_instances.add(owner)
-
-        for user_id in modified_user_instances:
-            visuals.save("dashboards", dashboards, user_id)
+        with _save_user_instances("dashboards", dashboards) as affected_user:
+            for (owner, _name), dashboard in dashboards.items():
+                for dashlet in dashboard["dashlets"]:
+                    if dashlet["type"] == "network_topology":
+                        transform_topology_dashlet(dashlet, filter_group)
+                        affected_user.add(owner)
+                    elif dashlet["type"] in ("hoststats", "servicestats"):
+                        transform_stats_dashlet(dashlet)
+                        affected_user.add(owner)
+                    elif dashlet["type"] in (
+                        "single_timeseries",
+                        "custom_graph",
+                        "combined_graph",
+                        "problem_graph",
+                    ):
+                        transform_timerange_dashlet(dashlet)
+                        affected_user.add(owner)
 
     def _adjust_user_attributes(self) -> None:
         """All users are loaded and attributes can be transformed or set."""
@@ -1113,7 +1073,7 @@ class UpdateConfig:
         ] + files
 
         self._logger.log(VERBOSE, "Executing: %s", subprocess.list2cmdline(cmd))
-        p = subprocess.Popen(
+        p = subprocess.Popen(  # pylint:disable=consider-using-with
             cmd,
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
@@ -1343,6 +1303,30 @@ class UpdateConfig:
 
         save_notification_rules(notification_rules)
 
+    def _add_site_ca_to_trusted_cas(self) -> None:
+        site_ca = (
+            site_cas[-1]
+            if (site_cas := raw_certificates_from_file(cmk.utils.paths.site_cert_file))
+            else None
+        )
+
+        if not site_ca:
+            return
+
+        global_config = cmk.gui.watolib.global_settings.load_configuration_settings(
+            full_config=True
+        )
+        cert_settings = global_config.setdefault(
+            "trusted_certificate_authorities", {"use_system_wide_cas": False, "trusted_cas": []}
+        )
+        # For remotes with config sync the settings would be overwritten by activate changes. To keep the config
+        # consistent exclude remotes during the update.
+        if is_wato_slave_site() or site_ca in cert_settings["trusted_cas"]:
+            return
+
+        cert_settings["trusted_cas"].append(site_ca)
+        cmk.gui.watolib.global_settings.save_global_settings(global_config)
+
 
 class PasswordSanitizer:
     """
@@ -1462,10 +1446,6 @@ class PasswordSanitizer:
 
     def _hash(self, password: str) -> str:
         return hashlib.sha256(password.encode()).hexdigest()[:10]
-
-
-def format_error(msg: str) -> str:
-    return "\033[91m {}\033[00m".format(msg)
 
 
 def _add_show_mode(users: Users, user_id: UserId) -> Users:

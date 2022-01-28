@@ -753,6 +753,18 @@ def _valuespec_special_agents_kube():
     return Dictionary(
         elements=[
             (
+                "cluster-name",
+                Hostname(
+                    title=_("Cluster name"),
+                    allow_empty=False,
+                    help=_(
+                        "You must specify a name for your Kubernetes cluster. The provided name"
+                        " will be used to make the objects from your cluster unique in a "
+                        "multi-cluster setup."
+                    ),
+                ),
+            ),
+            (
                 "kubernetes-api-server",
                 Dictionary(
                     elements=[
@@ -863,8 +875,76 @@ def _valuespec_special_agents_kube():
                     default_value=False,
                 ),
             ),
+            (
+                "monitored_objects",
+                ListChoice(
+                    choices=[
+                        ("deployments", _("Deployments")),
+                        ("nodes", _("Nodes")),
+                        ("pods", _("Pods")),
+                    ],
+                    default_value=[
+                        "deployments",
+                        "nodes",
+                        "pods",
+                    ],
+                    allow_empty=False,
+                    title=_("Collect information about..."),
+                    help=_("Select the Kubernetes objects you would like to monitor."),
+                ),
+            ),
+            (
+                "namespaces",
+                CascadingDropdown(
+                    choices=[
+                        (
+                            "namespace-include-patterns",
+                            _("Monitor namespaces matching"),
+                            ListOf(
+                                RegExp(
+                                    mode=RegExp.complete,
+                                    title=_("Pattern"),
+                                    allow_empty=False,
+                                ),
+                                add_label=_("Add new pattern"),
+                                allow_empty=False,
+                                help=_(
+                                    "You can specify a list of regex patterns to monitor specific "
+                                    "namespaces. Only those that do match the predefined patterns "
+                                    "will be monitored."
+                                ),
+                            ),
+                        ),
+                        (
+                            "namespace-exclude-patterns",
+                            _("Exclude namespaces matching"),
+                            ListOf(
+                                RegExp(
+                                    mode=RegExp.complete,
+                                    title=_("Pattern"),
+                                    allow_empty=False,
+                                ),
+                                add_label=_("Add new pattern"),
+                                allow_empty=False,
+                                help=_(
+                                    "You can specify a list of regex patterns to exclude "
+                                    "namespaces. Only those that do not match the predefined "
+                                    "patterns are monitored."
+                                ),
+                            ),
+                        ),
+                    ],
+                    orientation="horizontal",
+                    title=_("Monitor namespaces"),
+                    help=_(
+                        "If your cluster has multiple namespaces, you can filter specific ones "
+                        "to be monitored. Note that this concerns everything which is part of the "
+                        "selected namespaces such as pods for example."
+                    ),
+                ),
+            ),
         ],
-        optional_keys=[],
+        optional_keys=["namespaces"],
         title=_("Kubernetes 2.0"),
     )
 
@@ -5402,5 +5482,77 @@ rulespec_registry.register(
         group=RulespecGroupDatasourceProgramsApps,
         name="special_agents:rabbitmq",
         valuespec=_valuespec_special_agents_rabbitmq,
+    )
+)
+
+
+def _valuespec_special_agents_smb_share():
+    return Dictionary(
+        elements=[
+            (
+                "hostname",
+                TextInput(
+                    title="Hostname",
+                    allow_empty=False,
+                    help=_(
+                        "<p>Usually Checkmk will use the hostname of the host it is attached to. "
+                        "With this option you can override this parameter.</p>"
+                    ),
+                ),
+            ),
+            (
+                "ip_address",
+                HostAddress(
+                    title=_("IP address"),
+                    allow_empty=False,
+                    allow_ipv6_address=False,
+                    help=_(
+                        "<p>Usually Checkmk will use the primary IP address of the host it is "
+                        "attached to. With this option you can override this parameter.</p>"
+                    ),
+                ),
+            ),
+            ("port", Integer(title=_("Port"), default_value=139)),
+            (
+                "authentication",
+                Tuple(
+                    title=_("Authentication"),
+                    elements=[
+                        TextInput(title=_("Username"), allow_empty=False),
+                        IndividualOrStoredPassword(title=_("Password"), allow_empty=False),
+                    ],
+                ),
+            ),
+            ("share_names", ListOfStrings(title="Share names", allow_empty=False)),
+            (
+                "patterns",
+                ListOfStrings(
+                    title=_("File patterns"),
+                    size=80,
+                    help=_(
+                        "<p>Here you can specify a list of filename patterns to be sent by the "
+                        "agent in the section <tt>fileinfo</tt>. Use patterns like "
+                        "<tt>\\Share folder\\foo\\*.log</tt> here. Wildcards are only allowed in the"
+                        "filename part, not in the directory path. Per default each found file "
+                        "will be monitored for size and age. By building groups you can alternatively "
+                        "monitor a collection of files as an entity and monitor the count, total size, the largest, "
+                        "smallest oldest or newest file. Note: if you specify more than one matching rule, then "
+                        "<b>all</b> matching rules will be used for defining pattern - not just the "
+                        " first one.</p>"
+                    ),
+                    valuespec=TextInput(size=80),
+                ),
+            ),
+        ],
+        optional_keys=["hostname", "ip_address", "authentication"],
+        title=_("SMB Share"),
+    )
+
+
+rulespec_registry.register(
+    HostRulespec(
+        group=RulespecGroupDatasourceProgramsApps,
+        name="special_agents:smb_share",
+        valuespec=_valuespec_special_agents_smb_share,
     )
 )

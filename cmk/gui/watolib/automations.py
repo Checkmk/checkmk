@@ -98,7 +98,7 @@ def check_mk_local_automation_serialized(
         # if config.debug:
         #     html.write_text("<div class=message>Running <tt>%s</tt></div>\n" % subprocess.list2cmdline(cmd))
         auto_logger.info("RUN: %s" % subprocess.list2cmdline(cmd))
-        p = subprocess.Popen(
+        p = subprocess.Popen(  # pylint:disable=consider-using-with
             cmd,
             stdin=subprocess.PIPE,
             stdout=subprocess.PIPE,
@@ -344,7 +344,7 @@ def get_url_raw(url, insecure, auth=None, data=None, files=None, timeout=None):
         timeout=timeout,
         headers={
             "x-checkmk-version": cmk_version.__version__,
-            "x-checkmk-edition": cmk_version.edition_short(),
+            "x-checkmk-edition": cmk_version.edition().short,
         },
     )
 
@@ -377,7 +377,7 @@ def _verify_compatibility(response: requests.Response) -> None:
     Since 2.0.0p13 the remote site answers with x-checkmk-version, x-checkmk-edition headers.
     """
     central_version = cmk_version.__version__
-    central_edition_short = cmk_version.edition_short()
+    central_edition_short = cmk_version.edition().short
 
     remote_version = response.headers.get("x-checkmk-version", "")
     remote_edition_short = response.headers.get("x-checkmk-edition", "")
@@ -427,7 +427,7 @@ def do_site_login(site_id: SiteId, name: UserId, password: str) -> str:
         "_username": name,
         "_password": password,
         "_origtarget": "automation_login.py?_version=%s&_edition_short=%s"
-        % (cmk_version.__version__, cmk_version.edition_short()),
+        % (cmk_version.__version__, cmk_version.edition().short),
         "_plain_error": "1",
     }
     response = get_url(

@@ -267,7 +267,9 @@ class Crawler:
             return False
 
         try:
-            tar = tarfile.open(fileobj=io.BytesIO(response.content))
+            tar = tarfile.open(  # pylint:disable=consider-using-with
+                fileobj=io.BytesIO(response.content)
+            )
         except tarfile.ReadError:
             self.handle_error(
                 Url(url=crash_report_url, referer_url=url.url),
@@ -433,6 +435,7 @@ class Crawler:
         parsed = urlsplit(url)
         if parsed.scheme != "http":
             raise InvalidUrl(url, f"invalid scheme: {parsed.scheme}")
+
         # skip external urls
         if url.startswith("http://") and not url.startswith(self.site.internal_url):
             raise InvalidUrl(url, "external url")
@@ -445,6 +448,9 @@ class Crawler:
             or "../nagios/" in parsed.path
         ):
             raise InvalidUrl(url, "non Check_MK URL")
+
+        query = parse_qs(parsed.query)
+
         # skip current url with link to index
         if "index.py?start_url=" in url:
             raise InvalidUrl(url, "link to index with current URL")
@@ -469,6 +475,11 @@ class Crawler:
         # Skip agent download files
         if parsed.path.startswith(f"/{self.site.id}/check_mk/agents/"):
             raise InvalidUrl(url, "agent download file")
+
+        # Skip combined graph pages which take way too long for our crawler with unrestricted
+        # contexts. These pages take >10 seconds to load while crawling
+        if parsed.path.endswith("/combined_graphs.py") and not query.get("host"):
+            raise InvalidUrl(url, "combined graph with unrestricted context")
 
     def normalize_url(self, url: str) -> str:
         url = urljoin(self.site.internal_url, url.rstrip("#"))

@@ -81,66 +81,102 @@ metric_info["kube_node_container_count_total"] = {
     "color": "42/a",
 }
 
-metric_info["kube_cpu_usage"] = {
-    "title": _("Usage"),
+requirement_to_utilization_titles = {
+    "request": _("Request utilization"),
+    "limit": _("Limit utilization"),
+}
+requirement_to_absolute_titles = {
+    "request": _("Request"),
+    "limit": _("Limit"),
+}
+
+for resource, usage_unit in zip(["memory", "cpu"], ["bytes", ""]):
+    metric_info[f"kube_{resource}_usage"] = {
+        "title": _("Usage"),
+        "unit": usage_unit,
+        "color": "31/a",
+    }
+
+    for requirement, color in {"request": "42/a", "limit": "42/b"}.items():
+        metric_info[f"kube_{resource}_{requirement}"] = {
+            "title": requirement_to_absolute_titles[requirement],
+            "unit": usage_unit,
+            "color": color,
+        }
+
+        metric_info[f"kube_{resource}_{requirement}_utilization"] = {
+            "title": requirement_to_utilization_titles[requirement],
+            "unit": "%",
+            "color": color,
+        }
+
+metric_info["kube_node_count_worker_ready"] = {
+    "title": _("Worker nodes ready"),
+    "unit": "count",
+    "color": "14/a",
+}
+
+metric_info["kube_node_count_worker_not_ready"] = {
+    "title": _("Worker nodes not ready"),
+    "unit": "count",
+    "color": "14/b",
+}
+
+metric_info["kube_node_count_worker_total"] = {
+    "title": _("Worker nodes total"),
+    "unit": "count",
+    "color": "51/a",
+}
+
+metric_info["kube_node_count_control_plane_ready"] = {
+    "title": _("Control plane nodes ready"),
+    "unit": "count",
+    "color": "42/a",
+}
+
+metric_info["kube_node_count_control_plane_not_ready"] = {
+    "title": _("Control plane nodes not ready"),
+    "unit": "count",
+    "color": "42/b",
+}
+
+metric_info["kube_node_count_control_plane_total"] = {
+    "title": _("Control plane nodes total"),
+    "unit": "count",
+    "color": "51/a",
+}
+
+
+metric_info["kube_pod_restart_count"] = {
+    "title": _("Restarts"),
     "unit": "",
+    "color": "42/a",
+}
+
+metric_info["kube_pod_restart_rate"] = {
+    "title": _("Restarts per hour"),
+    "unit": "",
+    "color": "42/b",
+}
+
+metric_info["kube_desired_replicas"] = {
+    "title": _("Desired replicas"),
+    "unit": "count",
+    "color": "41/a",
+}
+
+metric_info["kube_ready_replicas"] = {
+    "title": _("Ready replicas"),
+    "unit": "count",
+    "color": "21/a",
+}
+
+metric_info["kube_updated_replicas"] = {
+    "title": _("Up-to-date replicas"),
+    "unit": "count",
     "color": "31/a",
 }
 
-metric_info["kube_cpu_request"] = {
-    "title": _("Request"),
-    "unit": "",
-    "color": "42/a",
-}
-
-metric_info["kube_cpu_limit"] = {
-    "title": _("Limit"),
-    "unit": "",
-    "color": "42/b",
-}
-
-metric_info["kube_cpu_request_utilization"] = {
-    "title": _("Request utilization"),
-    "unit": "%",
-    "color": "22/a",
-}
-
-metric_info["kube_cpu_limit_utilization"] = {
-    "title": _("Limit utilization"),
-    "unit": "%",
-    "color": "46/a",
-}
-
-metric_info["kube_memory_usage"] = {
-    "title": _("Usage"),
-    "unit": "bytes",
-    "color": "31/a",
-}
-
-metric_info["kube_memory_request"] = {
-    "title": _("Request"),
-    "unit": "bytes",
-    "color": "42/a",
-}
-
-metric_info["kube_memory_limit"] = {
-    "title": _("Limit"),
-    "unit": "bytes",
-    "color": "42/b",
-}
-
-
-metric_info["kube_memory_request_utilization"] = {
-    "title": _("Request utilization"),
-    "unit": "%",
-    "color": "42/a",
-}
-
-metric_info["kube_memory_limit_utilization"] = {
-    "title": _("Limit utilization"),
-    "unit": "%",
-    "color": "42/b",
-}
 
 #   .--Graphs--------------------------------------------------------------.
 #   |                    ____                 _                            |
@@ -187,41 +223,79 @@ graph_info["kube_node_container_count"] = {
     ],
 }
 
-graph_info["kube_cpu_usage"] = {
-    "title": _("CPU"),
+for resource, usage_title in zip(["memory", "cpu"], [_("Memory"), _("CPU")]):
+    graph_info[f"kube_{resource}_usage"] = {
+        "title": usage_title,
+        "metrics": [
+            (f"kube_{resource}_request", "line"),
+            (f"kube_{resource}_limit", "line"),
+            (f"kube_{resource}_usage", "area"),
+        ],
+        "optional_metrics": [
+            f"kube_{resource}_request",
+            f"kube_{resource}_limit",
+            f"kube_{resource}_usage",
+        ],
+        "scalars": [
+            f"kube_{resource}_usage:warn",
+            f"kube_{resource}_usage:crit",
+        ],
+    }
+
+    for requirement, utilization_title in requirement_to_utilization_titles.items():
+        metric_name = f"kube_{resource}_{requirement}_utilization"
+        graph_info[metric_name] = {
+            "title": utilization_title,
+            "metrics": [
+                (metric_name, "area"),
+            ],
+            "scalars": [
+                f"{metric_name}:warn",
+                f"{metric_name}:crit",
+            ],
+        }
+
+
+graph_info["kube_node_count_worker"] = {
+    "title": _("Worker nodes"),
     "metrics": [
-        ("kube_cpu_request", "line"),
-        ("kube_cpu_limit", "line"),
-        ("kube_cpu_usage", "area"),
+        ("kube_node_count_worker_ready", "stack"),
+        ("kube_node_count_worker_not_ready", "stack"),
+        ("kube_node_count_worker_total", "line"),
     ],
-    "optional_metrics": ["kube_cpu_request", "kube_cpu_limit"],
 }
 
-graph_info["kube_cpu_utilization"] = {
-    "title": _("CPU Utilization"),
+graph_info["kube_node_count_control_plane"] = {
+    "title": _("Control plane nodes"),
     "metrics": [
-        ("kube_cpu_request_utilization", "line"),
-        ("kube_cpu_limit_utilization", "line"),
+        ("kube_node_count_control_plane_ready", "stack"),
+        ("kube_node_count_control_plane_not_ready", "stack"),
+        ("kube_node_count_control_plane_total", "line"),
     ],
-    "optional_metrics": ["kube_cpu_request_utilization", "kube_cpu_limit_utilization"],
 }
 
-# TODO Add additional boundaries for percent. (only zero at the bottom)
-graph_info["kube_memory_usage"] = {
-    "title": _("Container memory"),
+graph_info["kube_pod_restarts"] = {
+    "title": _("Pod Restarts"),
     "metrics": [
-        ("kube_memory_request", "line"),
-        ("kube_memory_limit", "line"),
-        ("kube_memory_usage", "area"),
+        ("kube_pod_restart_count", "line"),
+        ("kube_pod_restart_rate", "line"),
     ],
-    "optional_metrics": ["kube_memory_request", "kube_memory_limit"],
 }
 
-graph_info["kube_memory_utilization"] = {
-    "title": _("Memory utilization"),
+
+graph_info["kube_replica_state"] = {
+    "title": _("Replica state"),
     "metrics": [
-        ("kube_memory_request_utilization", "line"),
-        ("kube_memory_limit_utilization", "line"),
+        ("kube_desired_replicas", "area"),
+        ("kube_ready_replicas", "line"),
     ],
-    "optional_metrics": ["kube_memory_request_utilization", "kube_memory_limit_utilization"],
+}
+
+
+graph_info["kube_replica_update_state"] = {
+    "title": _("Replica update state"),
+    "metrics": [
+        ("kube_desired_replicas", "area"),
+        ("kube_updated_replicas", "line"),
+    ],
 }

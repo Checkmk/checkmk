@@ -636,7 +636,7 @@ def render_cmk_graphs(context, is_bulk):
     )
 
     try:
-        json_data = urlopen(url).read()
+        json_data = urlopen(url).read()  # pylint:disable=consider-using-with
     except Exception as e:
         if opt_debug:
             raise

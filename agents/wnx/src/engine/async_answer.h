@@ -62,9 +62,9 @@ public:
     DataBlock getDataAndClear();
 
     bool prepareAnswer(std::string_view ip);
-    bool addSegment(const std::string& section_name,  // name
-                    const AnswerId& answer_id,        // "password"
-                    const std::vector<uint8_t>& data  // data for section
+    bool addSegment(const std::string &section_name,  // name
+                    const AnswerId &answer_id,        // "password"
+                    const std::vector<uint8_t> &data  // data for section
     );
 
     bool tryBreakWait();
@@ -93,7 +93,7 @@ public:
         return external_ip_;
     }
 
-    const wtools::StopWatch& getStopWatch() const { return sw_; }
+    const wtools::StopWatch &getStopWatch() const { return sw_; }
 
 private:
     wtools::StopWatch sw_;

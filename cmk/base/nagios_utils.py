@@ -20,7 +20,7 @@ def do_check_nagiosconfig() -> bool:
     console.verbose("Running '%s'\n" % subprocess.list2cmdline(command))
     out.output("Validating Nagios configuration...")
 
-    p = subprocess.Popen(
+    p = subprocess.Popen(  # pylint:disable=consider-using-with
         command,
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,

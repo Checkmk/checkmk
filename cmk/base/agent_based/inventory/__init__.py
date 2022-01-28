@@ -52,7 +52,7 @@ class ActiveInventoryResult(NamedTuple):
     trees: InventoryTrees
     source_results: Sequence[Tuple[Source, result.Result[HostSections, Exception]]]
     parsing_errors: Sequence[str]
-    safe_to_write: bool
+    processing_failed: bool
 
 
 #   .--cmk -i--------------------------------------------------------------.
@@ -174,14 +174,12 @@ def active_check_inventory(hostname: HostName, options: Dict[str, int]) -> Activ
         do_update=bool(host_config.inv_retention_intervals),
     )
 
-    if inv_result.safe_to_write:
+    if inv_result.processing_failed:
+        old_tree = None
+        update_result = ActiveCheckResult(1, "Cannot update tree")
+    else:
         old_tree = _save_inventory_tree(hostname, trees.inventory, retentions)
         update_result = ActiveCheckResult()
-    else:
-        old_tree, sources_state = None, 1
-        update_result = ActiveCheckResult(
-            sources_state, f"Cannot update tree{state_markers[sources_state]}"
-        )
 
     _run_inventory_export_hooks(host_config, trees.inventory)
 
@@ -266,7 +264,7 @@ def _inventorize_host(
             trees=_do_inv_for_cluster(host_config),
             source_results=(),
             parsing_errors=(),
-            safe_to_write=True,
+            processing_failed=False,
         )
 
     ipaddress = config.lookup_ip_address(host_config)
@@ -295,16 +293,11 @@ def _inventorize_host(
         ),
         source_results=results,
         parsing_errors=parsing_errors,
-        safe_to_write=(
-            _safe_to_write_tree(results)
-            and selected_sections is NO_SELECTION  #
-            and run_plugin_names is EVERYTHING  #
-            and not parsing_errors  #
-        ),
+        processing_failed=(_sources_failed(results) or bool(parsing_errors)),
     )
 
 
-def _safe_to_write_tree(
+def _sources_failed(
     results: Sequence[Tuple[Source, result.Result[HostSections, Exception]]],
 ) -> bool:
     """Check if data sources of a host failed
@@ -314,7 +307,7 @@ def _safe_to_write_tree(
     of the tree, which would blow up the inventory history (in terms of disk usage).
     """
     # If a result is not OK, that means the corresponding sections have not been added.
-    return all(source_result.is_ok() for _source, source_result in results)
+    return any(not source_result.is_ok() for _source, source_result in results)
 
 
 def do_inventory_actions_during_checking_for(

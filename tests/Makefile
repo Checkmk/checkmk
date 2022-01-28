@@ -210,6 +210,9 @@ test-format-shell:
 test-format-js:
 	cd ..; scripts/run-prettier --check --no-color --loglevel warn "{enterprise/web,web}/htdocs/js/**/*.js"
 
+test-type-js:
+	cd ..; npm run check-types
+
 test-format-js-docker:
 	../scripts/run-in-docker.sh make --quiet test-format-js
 
@@ -244,7 +247,9 @@ test-mypy: prepare-protobuf-files
 	grep -v $$(realpath '../inventory') | \
 	`: files are only needed for pylint to understand the module hierarchy` \
 	grep -v $$(realpath -m '../enterprise/cmk/__init__.py') | \
-	grep -v $$(realpath -m '../enterprise/cmk/base/__init__.py') \
+	grep -v $$(realpath -m '../enterprise/cmk/base/__init__.py') | \
+	grep -v $$(realpath -m '../plus/cmk/__init__.py') | \
+	grep -v $$(realpath -m '../plus/cmk/base/__init__.py') \
 	) ; \
 	cd .. ; scripts/run-mypy $(MYPY_ADDOPTS) $(ADDITIONAL_MYPY_ARGS) $$PYTHON_FILES
 
@@ -270,8 +275,9 @@ test-shellcheck:
 	@CMK_DIR="$(realpath ..)" ; \
 	ENTERPRISE_DIR="$(realpath ../enterprise)" ; \
 	shellcheck \
+	        -P SCRIPTDIR \
 		$(SHELLCHECK_OUTPUT_ARGS) \
-		$$(grep -l '^#!/.*sh' $$CMK_DIR/agents/* $$CMK_DIR/agents/plugins/* $$CMK_DIR/agents/special/* 2>/dev/null) \
+		$$(grep -l '^#!/.*sh' $$CMK_DIR/agents/* $$CMK_DIR/agents/plugins/* $$CMK_DIR/agents/special/* $$CMK_DIR/agents/cfg_examples/* 2>/dev/null) \
 		"$$ENTERPRISE_DIR/agents/mk-remote-alert-handler"
 
 test-unit: prepare-protobuf-files
@@ -282,6 +288,7 @@ test-unit: prepare-protobuf-files
 		../cmk/gui \
 		../cmk/special_agents \
 		../cmk/utils \
+		../agent-receiver \
 		unit
 
 test-unit-docker:
@@ -297,6 +304,7 @@ test-unit-resilience: prepare-protobuf-files
 		../cmk/gui \
 		../cmk/special_agents \
 		../cmk/utils \
+		../agent-receiver \
 	        -m "not non_resilient" \
 		unit
 
@@ -318,6 +326,7 @@ test-unit-coverage-html: prepare-protobuf-files
 		../cmk/gui \
 		../cmk/special_agents \
 		../cmk/utils \
+		../agent-receiver \
 		unit
 
 test-unit-sh:
@@ -357,13 +366,13 @@ test-unit-core:
 	cd ../enterprise/core/src && ./.f12
 
 test-cargo-check:
-	$(SCRIPTS)/run-cargo-command-in-projects check
+	$(SCRIPTS)/run-cargo-command-in-projects check --all-targets
 
 test-cargo-check-docker:
 	$(SCRIPTS)/run-in-docker.sh make test-cargo-check
 
 test-cargo-test:
-	$(SCRIPTS)/run-cargo-command-in-projects test
+	$(SCRIPTS)/run-cargo-command-in-projects test --all-targets
 
 test-cargo-test-docker:
 	$(SCRIPTS)/run-in-docker.sh make test-cargo-test
@@ -375,7 +384,7 @@ test-cargo-fmt-docker:
 	$(SCRIPTS)/run-in-docker.sh make test-cargo-fmt
 
 test-cargo-clippy:
-	$(SCRIPTS)/run-cargo-command-in-projects clippy
+	$(SCRIPTS)/run-cargo-command-in-projects clippy --all-targets
 
 test-cargo-clippy-docker:
 	$(SCRIPTS)/run-in-docker.sh make test-cargo-clippy

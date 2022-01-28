@@ -38,7 +38,7 @@ std::string AddressToCheckMkString(std::string_view entry) {
         if (cfg::of::IsAddressV6(entry)) {
             return std::string{entry};
         }
-    } catch (const std::exception& e) {
+    } catch (const std::exception &e) {
         XLOG::l("Entry '{}' is bad, exception '{}'", entry, e.what());
     }
 
@@ -53,7 +53,7 @@ std::string CheckMk::makeOnlyFrom() {
     if (only_from.size() == 1 && only_from[0] == "~") return {};
 
     std::string out;
-    for (auto& entry : only_from) {
+    for (auto &entry : only_from) {
         auto value = AddressToCheckMkString(entry);
         if (!value.empty()) {
             out += value + " ";
@@ -77,7 +77,7 @@ std::string MakeInfo() {
         {"Architecture", tgt::Is64bit() ? "64bit" : "32bit"},
     };
     std::string out;
-    for (const auto& info : infos) {
+    for (const auto &info : infos) {
         out += fmt::format("{}: {}\n", info.first, info.second);
     }
 
@@ -98,7 +98,7 @@ std::string MakeDirs() {
         {"LocalDirectory", cfg::GetLocalDir()}};
 
     std::string out;
-    for (const auto& d : directories) {
+    for (const auto &d : directories) {
         out += fmt::format("{}: {}\n", d.first, wtools::ToUtf8(d.second));
     }
 

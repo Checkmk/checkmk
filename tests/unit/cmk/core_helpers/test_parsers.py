@@ -545,7 +545,9 @@ class TestSNMPParser:
 
     @pytest.fixture(autouse=True)
     def scenario_fixture(self, hostname, monkeypatch):
-        Scenario().add_host(hostname).apply(monkeypatch)
+        ts = Scenario()
+        ts.add_host(hostname)
+        ts.apply(monkeypatch)
 
     @pytest.fixture
     def parser(self, hostname):

@@ -152,15 +152,15 @@ def init_auth():
     if not username or not password:
         return None
     if auth_mode == "kerberos":
-        kinit = subprocess.Popen(
+        with subprocess.Popen(
             ["kinit", username],
             stdin=subprocess.PIPE,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             encoding="utf-8",
-        )
-        stdout, stderr = kinit.communicate(input=("%s\n" % password))
-        kinit.wait()
+        ) as kinit:
+            stdout, stderr = kinit.communicate(input=("%s\n" % password))
+            kinit.wait()
         if kinit.returncode or stderr:
             sys.stderr.write("Error getting Kerberos Ticket:\n")
             sys.stderr.write("stdout: %s\nstderr: %s\nrc: %s" % (stdout, stderr, kinit.returncode))

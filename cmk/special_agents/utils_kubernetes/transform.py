@@ -13,7 +13,7 @@ from __future__ import annotations
 
 import datetime
 import time
-from typing import Dict, List, Mapping, Optional, Sequence, Union
+from typing import Dict, List, Mapping, Optional, Sequence, Type, Union
 
 from kubernetes import client  # type: ignore[import] # pylint: disable=import-error
 
@@ -92,8 +92,10 @@ def parse_labels(labels: Mapping[str, str]) -> Optional[Mapping[LabelName, Label
     return {LabelName(k): Label(name=LabelName(k), value=LabelValue(v)) for k, v in labels.items()}
 
 
-def parse_metadata(metadata: client.V1ObjectMeta) -> api.MetaData:
-    return api.MetaData(
+def parse_metadata(
+    metadata: client.V1ObjectMeta, model: Type[api.MetaData] = api.MetaData
+) -> api.MetaData:
+    return model(
         name=metadata.name,
         namespace=metadata.namespace,
         creation_timestamp=convert_to_timestamp(metadata.creation_timestamp),
@@ -159,11 +161,12 @@ def pod_status(pod: client.V1Pod) -> api.PodStatus:
     )
 
 
-def pod_containers(pod: client.V1Pod) -> Dict[str, api.ContainerInfo]:
-    container_statuses: List[client.V1ContainerStatus] = (
-        [] if pod.status.container_statuses is None else pod.status.container_statuses
-    )
+def pod_containers(
+    container_statuses: Optional[Sequence[client.V1ContainerStatus]],
+) -> Dict[str, api.ContainerInfo]:
     result: Dict[str, api.ContainerInfo] = {}
+    if container_statuses is None:
+        return {}
     for status in container_statuses:
         state: Union[
             api.ContainerTerminatedState, api.ContainerRunningState, api.ContainerWaitingState
@@ -242,7 +245,8 @@ def node_conditions(node: client.V1Node) -> Optional[api.NodeConditions]:
     conditions = node.status.conditions
     if not conditions:
         return None
-    return api.NodeConditions(**{c.type: bool(c.status) for c in conditions})
+    result = api.NodeConditions(**{c.type: c.status for c in conditions})
+    return result
 
 
 def node_info(node: client.V1Node) -> api.NodeInfo:
@@ -287,17 +291,18 @@ def node_resources(capacity, allocatable) -> Dict[str, api.NodeResources]:
     return resources
 
 
-def deployment_replicas(status: client.V1DeploymentStatus) -> api.DeploymentReplicas:
-    def replica_count(count: Optional[int]) -> int:
-        if count is None:
-            return 0
-        return count
-
-    return api.DeploymentReplicas(
-        available=replica_count(status.available_replicas),
-        unavailable=replica_count(status.unavailable_replicas),
-        updated=replica_count(status.updated_replicas),
-        ready=replica_count(status.ready_replicas),
+def deployment_replicas(status: client.V1DeploymentStatus) -> api.Replicas:
+    # A deployment always has at least 1 replica. It is not possible to deploy
+    # a deployment that has 0 replicas. On the other hand, it is possible to have
+    # 0 available/unavailable/updated/ready replicas. This is shown as 'null'
+    # (i.e. None) in the source data, but the interpretation is that the number
+    # of the replicas in this case is 0.
+    return api.Replicas(
+        replicas=status.replicas,
+        available=status.available_replicas or 0,
+        unavailable=status.unavailable_replicas or 0,
+        updated=status.updated_replicas or 0,
+        ready=status.ready_replicas or 0,
     )
 
 
@@ -319,10 +324,11 @@ def deployment_conditions(status: client.V1DeploymentStatus) -> Sequence[api.Dep
 def pod_from_client(pod: client.V1Pod) -> api.Pod:
     return api.Pod(
         uid=api.PodUID(pod.metadata.uid),
-        metadata=parse_metadata(pod.metadata),
+        metadata=parse_metadata(pod.metadata, model=api.PodMetaData),
         status=pod_status(pod),
         spec=pod_spec(pod),
-        containers=pod_containers(pod),
+        containers=pod_containers(pod.status.container_statuses),
+        init_containers=pod_containers(pod.status.init_container_statuses),
     )
 
 
@@ -344,11 +350,26 @@ def node_from_client(node: client.V1Node, kubelet_health: api.HealthZ) -> api.No
     )
 
 
+def parse_deployment_spec(deployment_spec: client.V1DeploymentSpec) -> api.DeploymentSpec:
+    return api.DeploymentSpec(
+        strategy=api.UpdateStrategy(
+            type_=(deployment_spec.strategy.type),
+            rolling_update=api.RollingUpdate(
+                max_surge=deployment_spec.strategy.rolling_update.max_surge,
+                max_unavailable=deployment_spec.strategy.rolling_update.max_unavailable,
+            )
+            if deployment_spec.strategy.rolling_update
+            else None,
+        )
+    )
+
+
 def deployment_from_client(
     deployment: client.V1Deployment, pod_uids=Sequence[api.PodUID]
 ) -> api.Deployment:
     return api.Deployment(
         metadata=parse_metadata(deployment.metadata),
+        spec=parse_deployment_spec(deployment.spec),
         status=api.DeploymentStatus(
             conditions=deployment_conditions(deployment.status),
             replicas=deployment_replicas(deployment.status),

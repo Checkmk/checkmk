@@ -19,7 +19,7 @@ CMK_VERSION="2.1.0i1"
 
 get_stats()
 {
-    scsimgr get_stat -D $LUN | tr '\=' ':' | grep -e 'STATISTICS FOR LUN'  -e 'Bytes' -e 'Total I/Os processed' -e 'I/O failure' -e 'IO failures due
+    scsimgr get_stat -D "$LUN" | tr '\=' ':' | grep -e 'STATISTICS FOR LUN'  -e 'Bytes' -e 'Total I/Os processed' -e 'I/O failure' -e 'IO failures due
 to'
     return $?
 }
@@ -34,18 +34,18 @@ to'
 
 get_lun_map()
 {
-scsimgr lun_map | egrep '^[[:space:]]*(LUN PATH|World Wide Identifier)' | tr '\=' ':'
+scsimgr lun_map | grep -E '^[[:space:]]*(LUN PATH|World Wide Identifier)' | tr '\=' ':'
 }
 
 
 main()
 {
 get_lun_map | while read line ; do
-    descr=$(echo $line | awk -F: '{print $1}')
-    val=$(  echo $line | awk -F: '{print $2}')
+    descr=$(echo "$line" | awk -F: '{print $1}')
+    val=$(  echo "$line" | awk -F: '{print $2}')
     case $descr in
       LUN*)
-          if echo $val | grep /dev/rdisk 1>/dev/null; then
+          if echo "$val" | grep /dev/rdisk 1>/dev/null; then
               DMP=yes
               LUN=$val
           else
@@ -56,14 +56,14 @@ get_lun_map | while read line ; do
       World*)
           if [ $DMP = "yes" ]; then
               echo "WWID: $val"
-              get_stats $LUN
+              get_stats "$LUN"
           fi
       ;;
       *)
           echo "Fehler:"
-          echo $line
-          echo $descr
-          echo $val
+          echo "$line"
+          echo "$descr"
+          echo "$val"
           sleep 1
       ;;
     esac

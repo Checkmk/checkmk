@@ -17,8 +17,8 @@ CMK_VERSION="2.1.0i1"
 
 HOSTADDRESSES=mathias-kettner.de
 
-if [ -e $MK_CONFDIR/dnsclient.cfg ] ; then
-    . $MK_CONFDIR/dnsclient.cfg
+if [ -e "$MK_CONFDIR/dnsclient.cfg" ] ; then
+    . "$MK_CONFDIR/dnsclient.cfg"
 fi
 
 echo "<<<mrpe>>>"
@@ -32,5 +32,5 @@ do
         STATE=0
         OUTPUT="OK - $HOSTADDRESS resolved into $ADDRESSES"
     fi
-    echo Resolve_$HOSTADDRESS $STATE $OUTPUT
+    echo "Resolve_$HOSTADDRESS $STATE $OUTPUT"
 done

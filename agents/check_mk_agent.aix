@@ -26,11 +26,6 @@ inpath() {
     command -v "${1:?No command to test}" >/dev/null 2>&1
 }
 
-get_epoch() {
-    date +%s 2>/dev/null ||
-        perl -e 'print($^T."\n");'
-}
-
 get_file_atime() {
     stat -c %X "${1}" 2>/dev/null ||
         stat -f %a "${1}" 2>/dev/null ||
@@ -81,6 +76,17 @@ set_up_process_commandline_arguments() {
     done
 }
 
+set_up_get_epoch() {
+    # On some systems date +%s returns a literal %s
+    if date +%s | grep "^[0-9].*$" >/dev/null 2>&1; then
+        get_epoch() { date +%s; }
+    else
+        # do not check whether perl is even present.
+        # in weird cases we may be fine without get_epoch.
+        get_epoch() { perl -e 'print($^T."\n");'; }
+    fi
+}
+
 #
 # END COMMON AGENT CODE
 #
@@ -103,10 +109,6 @@ preamble_1() {  # TODO: split these up more meaningful
     if [ -e "${HOME}"/.profile ]; then
         . "${HOME}"/.profile >/dev/null 2>&1
     fi
-
-    # Remove locale settings to eliminate localized outputs where possible
-    export LC_ALL=C
-    unset LANG
 
     export MK_LIBDIR
     export MK_CONFDIR
@@ -172,7 +174,8 @@ set_up_profiling() {
         agent_start="$(perl -MTime::HiRes=time -le 'print time()')"
 
         # SC2016: Expressions don't expand in single quotes, use double quotes for that.
-        # shellcheck disable=SC2016
+        # SC2089: Quotes/backslashes will be treated literally. Use an array.
+        # shellcheck disable=SC2016,SC2089
         MK_DEFINE_LOG_SECTION_TIME='_log_section_time() {
             section_func="$@"
 
@@ -181,8 +184,7 @@ set_up_profiling() {
 
             start="$(perl -MTime::HiRes=time -le "print time()")"
             { time ${section_func}; } 2>> "${profiling_logfile}"
-            end="$(perl -MTime::HiRes=time -le "print time()")"
-            echo "runtime $(echo "${end} - ${start}" | bc)" >>"${profiling_logfile}"
+            echo "runtime $(perl -MTime::HiRes=time -le "print time() - ${start}")" >> "${profiling_logfile}"
         }'
 
         finalize_profiling() {
@@ -193,7 +195,24 @@ set_up_profiling() {
     fi
 
     eval "${MK_DEFINE_LOG_SECTION_TIME}"
+    # SC2090: Quotes/backslashes in this variable will not be respected.
+    # shellcheck disable=SC2090
     export MK_DEFINE_LOG_SECTION_TIME
+}
+
+unset_locale() {
+    # eliminate localized outputs where possible
+    # The locale logic here is used to make the Python encoding detection work (see CMK-2778).
+    unset -v LANG
+    if inpath locale && inpath paste; then
+        # match C.UTF-8 at the beginning, but not e.g. es_EC.UTF-8!
+        case "$(locale -a | paste -sd ' ' -)" in
+            *' C.UTF-8'* | 'C.UTF-8'*) LC_ALL="C.UTF-8" ;;
+            *' C.utf8'* | 'C.utf8'*) LC_ALL="C.utf8" ;;
+        esac
+    fi
+    LC_ALL="${LC_ALL:-C}"
+    export LC_ALL
 }
 
 #
@@ -524,8 +543,8 @@ section_aix_hacmp() {
             nodes=$(cllsnode | grep "NODE" | sed -e s/NODE//g -e s/://g)
             list_active_nodes=""
             for node in ${nodes}; do
-                active_nodes=$(clgetactivenodes -n ${node})
-                if echo ${active_nodes} | grep -q ${node}; then
+                active_nodes=$(clgetactivenodes -n "${node}")
+                if echo "${active_nodes}" | grep -q "${node}"; then
                     list_active_nodes=${list_active_nodes}"\n${node}"
                 fi
             done
@@ -605,10 +624,10 @@ run_cached() {
             CACHE_INFO="cached(${MTIME},${MAXAGE})"
             if [[ ${NAME} == local_* ]]; then
                 # prefix CACHE_INFO, but skip any headers and lines with existing CACHE_INFO
-                sed -e "/^<<<.*>>>/n; /^cached([0-9]*,[0-9]*) /n; s/^/${CACHE_INFO} /" "${CACHEFILE}"
+                sed -e "/^<<<.*>>>/{p;d;}; /^cached([0-9]*,[0-9]*) /{p;d;}; s/^/${CACHE_INFO} /" "${CACHEFILE}"
             else
                 # insert CACHE_INFO in header, but skip headers with existing CACHE_INFO
-                sed -e '/^<<<.*\(:cached(\).*>>>/n; s/^<<<\([^>]*\)>>>$/<<<\1:'"${CACHE_INFO}"'>>>/' "${CACHEFILE}"
+                sed -e '/^<<<.*\(:cached(\).*>>>/{p;d;}; s/^<<<\([^>]*\)>>>$/<<<\1:'"${CACHE_INFO}"'>>>/' "${CACHEFILE}"
             fi
         fi
     fi
@@ -818,6 +837,8 @@ run_partially_asynchronous_sections() {
 main_setup() {
     exec </dev/null 9>&2 2>/dev/null
     set_up_process_commandline_arguments "$@" 
+    set_up_get_epoch
+    unset_locale
     preamble_1
     preamble_2
     preamble_3

@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from __future__ import annotations
+
 from pathlib import Path
 from typing import Any, Iterator, Mapping, NamedTuple, Optional
 from uuid import UUID
@@ -14,6 +16,13 @@ from cmk.utils.type_defs import HostName
 
 def get_r4r_filepath(folder: Path, uuid: UUID) -> Path:
     return folder.joinpath(f"{uuid}.json")
+
+
+def get_uuid_link_manager() -> UUIDLinkManager:
+    return UUIDLinkManager(
+        received_outputs_dir=cmk.utils.paths.received_outputs_dir,
+        data_source_dir=cmk.utils.paths.data_source_push_agent_dir,
+    )
 
 
 class UUIDLink(NamedTuple):

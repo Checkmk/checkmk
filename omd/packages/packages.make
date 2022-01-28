@@ -161,6 +161,12 @@ ifeq ($(EDITION),free)
 include $(REPO_PATH)/enterprise/enterprise.make
 endif
 ifeq ($(EDITION),managed)
-include $(REPO_PATH)/enterprise/enterprise.make \
+include \
+    $(REPO_PATH)/enterprise/enterprise.make \
     $(REPO_PATH)/managed/managed.make
+endif
+ifeq ($(EDITION),plus)
+include \
+    $(REPO_PATH)/enterprise/enterprise.make \
+    $(REPO_PATH)/plus/plus.make
 endif

@@ -61,19 +61,19 @@ def collect_attributes(
     Examples:
 
         >>> attrs = collect_attributes('host', 'create')
-        >>> assert len(attrs) > 10
+        >>> assert len(attrs) > 10, len(attrs)
 
         >>> attrs = collect_attributes('host', 'update')
-        >>> assert len(attrs) > 10
+        >>> assert len(attrs) > 10, len(attrs)
 
         >>> attrs = collect_attributes('cluster', 'create')
-        >>> assert len(attrs) > 10
+        >>> assert len(attrs) > 10, len(attrs)
 
         >>> attrs = collect_attributes('cluster', 'update')
-        >>> assert len(attrs) > 10
+        >>> assert len(attrs) > 10, len(attrs)
 
         >>> attrs = collect_attributes('folder', 'create')
-        >>> assert len(attrs) > 10
+        >>> assert len(attrs) > 10, len(attrs)
 
         >>> attrs = collect_attributes('folder', 'update')
         >>> assert len(attrs) > 10

@@ -52,16 +52,24 @@ class MetaData(BaseModel):
     namespace: Optional[Namespace] = None
     creation_timestamp: Optional[CreationTimestamp] = None
     labels: Optional[Labels] = None
-    prefix = ""
-    use_namespace = False
+
+
+class PodMetaData(MetaData):
+    namespace: Namespace
+
+
+class NodeConditionStatus(str, enum.Enum):
+    TRUE = "True"
+    FALSE = "False"
+    UNKNWON = "Unknown"
 
 
 class NodeConditions(BaseModel):
-    NetworkUnavailable: Optional[bool] = None
-    MemoryPressure: bool
-    DiskPressure: bool
-    PIDPressure: bool
-    Ready: bool
+    NetworkUnavailable: Optional[NodeConditionStatus] = None
+    MemoryPressure: NodeConditionStatus
+    DiskPressure: NodeConditionStatus
+    PIDPressure: NodeConditionStatus
+    Ready: NodeConditionStatus
 
 
 class NodeResources(BaseModel):
@@ -108,7 +116,8 @@ class Node(BaseModel):
     kubelet_info: KubeletInfo
 
 
-class DeploymentReplicas(BaseModel):
+class Replicas(BaseModel):
+    replicas: int
     updated: int
     available: int
     ready: int
@@ -131,12 +140,27 @@ class DeploymentCondition(BaseModel):
 
 class DeploymentStatus(BaseModel):
     # https://v1-18.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.18/#deploymentstatus-v1-apps
-    replicas: DeploymentReplicas
+    replicas: Replicas
     conditions: Sequence[DeploymentCondition]
+
+
+class RollingUpdate(BaseModel):
+    max_surge: str
+    max_unavailable: str
+
+
+class UpdateStrategy(BaseModel):
+    type_: Literal["RollingUpdate", "Recreate"]
+    rolling_update: Optional[RollingUpdate]
+
+
+class DeploymentSpec(BaseModel):
+    strategy: UpdateStrategy
 
 
 class Deployment(BaseModel):
     metadata: MetaData
+    spec: DeploymentSpec
     status: DeploymentStatus
     pods: Sequence[PodUID]
 
@@ -242,10 +266,11 @@ class PodStatus(BaseModel):
 
 class Pod(BaseModel):
     uid: PodUID
-    metadata: MetaData
+    metadata: PodMetaData
     status: PodStatus
     spec: PodSpec
     containers: Mapping[str, ContainerInfo]
+    init_containers: Mapping[str, ContainerInfo]
 
 
 class ClusterInfo(BaseModel):

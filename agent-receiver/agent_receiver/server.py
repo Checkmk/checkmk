@@ -6,7 +6,6 @@
 
 import json
 import os
-import shutil
 import tempfile
 from contextlib import suppress
 from pathlib import Path
@@ -21,6 +20,7 @@ from agent_receiver.checkmk_rest_api import (
     post_csr,
 )
 from agent_receiver.constants import REGISTRATION_REQUESTS
+from agent_receiver.decompression import DecompressionError, Decompressor
 from agent_receiver.log import logger
 from agent_receiver.models import (
     HostTypeEnum,
@@ -174,6 +174,21 @@ async def register_with_labels(
     return Response(status_code=HTTP_204_NO_CONTENT)
 
 
+def _store_agent_data(
+    target_dir: Path,
+    decompressed_data: bytes,
+) -> None:
+    with tempfile.NamedTemporaryFile(
+        dir=target_dir,
+        delete=False,
+    ) as temp_file:
+        try:
+            temp_file.write(decompressed_data)
+            os.rename(temp_file.name, target_dir / "agent_output")
+        finally:
+            Path(temp_file.name).unlink(missing_ok=True)
+
+
 def _move_ready_file(uuid: UUID) -> None:
     with suppress(FileNotFoundError):
         # TODO: use RegistrationState.READY.name
@@ -190,6 +205,7 @@ async def agent_data(
     uuid: UUID,
     *,
     certificate: str = Header(...),
+    compression: str = Header(...),
     monitoring_data: UploadFile = File(...),
 ) -> Response:
     host = Host(uuid)
@@ -213,9 +229,35 @@ async def agent_data(
         )
 
     try:
-        temp_file = tempfile.NamedTemporaryFile(
-            dir=host.source_path,
-            delete=False,
+        decompressor = Decompressor(compression)
+    except ValueError:
+        logger.error(
+            "uuid=%s Unsupported compression algorithm: %s",
+            uuid,
+            compression,
+        )
+        raise HTTPException(
+            status_code=400,
+            detail=f"Unsupported compression algorithm: {compression}",
+        )
+
+    try:
+        decompressed_agent_data = decompressor(monitoring_data.file.read())
+    except DecompressionError as e:
+        logger.error(
+            "uuid=%s Decompression of agent data failed: %s",
+            uuid,
+            e,
+        )
+        raise HTTPException(
+            status_code=400,
+            detail="Decompression of agent data failed",
+        ) from e
+
+    try:
+        _store_agent_data(
+            host.source_path,
+            decompressed_agent_data,
         )
     except FileNotFoundError:
         # We only end up here in case someone re-configures the host at exactly the same time when
@@ -228,12 +270,6 @@ async def agent_data(
             status_code=403,
             detail="Host is not registered or not configured as push host",
         )
-
-    shutil.copyfileobj(monitoring_data.file, temp_file)
-    try:
-        os.rename(temp_file.name, host.source_path / "agent_output")
-    finally:
-        Path(temp_file.name).unlink(missing_ok=True)
 
     _move_ready_file(uuid)
 

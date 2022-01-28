@@ -65,7 +65,7 @@ class HostParameters(BaseSchema):
     sites = fields.List(
         fields.SiteField(),
         description="Restrict the query to this particular site.",
-        missing=[],
+        load_default=[],
     )
     query = fields.query_field(Hosts, required=False)
     columns = fields.column_field(Hosts, mandatory=[Hosts.name])

@@ -25,7 +25,7 @@ public:
     void pauseService() { paused_ = true; }
     void continueService() { continued_ = true; }
     void shutdownService() { shutdowned_ = true; }
-    const wchar_t* getMainLogName() const { return L"log.log"; }
+    const wchar_t *getMainLogName() const { return L"log.log"; }
     void preContextCall() { pre_context_call_ = true; }
 
     bool stopped_ = false;
@@ -229,7 +229,7 @@ TEST_F(ExternalPortTestFixture, MultiConnectIntegration) {
             std::async(std::launch::async, runThread, tst::TestPort()));
     }
 
-    for (auto& f : futures) {
+    for (auto &f : futures) {
         f.get();
     }
 

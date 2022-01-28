@@ -611,6 +611,25 @@ inventory_displayhints.update({
     ".software.applications.fortinet.fortigate_high_availability.": {
         "title": _l("FortiGate HighAvailability"),
     },
+
+    ".software.applications.kube.": {"title": _l("Kubernetes")},
+
+    ".software.applications.kube.labels:": {
+        "title": _l("Labels"),
+        "keyorder": ["label_name", "label_value"],
+    },
+    ".software.applications.kube.labels:*.label_name": {
+        "title": _l("Name"),
+    },
+    ".software.applications.kube.labels:*.label_value": {
+        "title": _l("Value"),
+    },
+
+    ".software.applications.kube.deployment.": {"title": _l("Deployment")},
+    ".software.applications.kube.deployment.name": {"title": _l("Name")},
+    ".software.applications.kube.deployment.namespace": {"title": _l("Namespace")},
+    ".software.applications.kube.deployment.strategy": {"title": _l("StrategyType")},
+
     ".software.applications.citrix.": {"title": _l("Citrix")},
     ".software.applications.citrix.controller.": {"title": _l("Controller")},
     ".software.applications.citrix.controller.controller_version": {

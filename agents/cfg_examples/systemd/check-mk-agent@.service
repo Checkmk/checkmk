@@ -1,4 +1,3 @@
-# systemd service definition file
 [Unit]
 Description=Checkmk agent
 
@@ -6,10 +5,9 @@ Description=Checkmk agent
 # "-" path prefix makes systemd record the exit code,
 # but the unit is not set to failed.
 ExecStart=-/usr/bin/check_mk_agent
+Environment='MK_RUN_ASYNC_PARTS=false'
 Type=simple
-Environment="MK_RUN_ASYNC_PARTS=false"
 
 User=root
-Group=root
 
 StandardInput=socket

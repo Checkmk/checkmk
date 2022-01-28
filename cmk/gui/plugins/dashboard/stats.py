@@ -258,7 +258,7 @@ class StatsDashletDataGenerator:
             ("view_name", cls._view_name()),
             ("filled_in", "filter"),
             ("search", "1"),
-            *visuals.context_to_uri_vars(context),
+            *visuals.get_context_uri_vars(context, single_infos),
         ]
 
 
@@ -391,7 +391,7 @@ class EventStatsDashletDataGenerator(StatsDashletDataGenerator):
         return [
             ("view_name", cls._view_name()),
             ("filled_in", "filter"),
-            *visuals.context_to_uri_vars(context),
+            *visuals.get_context_uri_vars(context, single_infos),
         ]
 
     @classmethod

@@ -1625,13 +1625,22 @@ def visible_filters_of_visual(visual: Visual, use_filters: List[Filter]) -> List
     return show_filters
 
 
-def context_to_uri_vars(context: VisualContext) -> HTTPVariables:
+def get_context_uri_vars(context: VisualContext, single_infos: SingleInfos) -> HTTPVariables:
     """Produce key/value tuples for HTTP variables from the visual context"""
     uri_vars: HTTPVariables = []
+    single_info_keys = get_single_info_keys(single_infos)
 
-    for _filter_name, filter_vars in context.items():
+    for filter_name, filter_vars in context.items():
+        # Enforce the single context variables that are available in the visual context
+        if filter_name in single_info_keys:
+            uri_vars.append((filter_name, str(filter_vars)))
+
+        if not isinstance(filter_vars, dict):
+            continue  # Skip invalid filter values
+
+        # This is a multi-context filter
         for uri_varname, value in filter_vars.items():
-            uri_vars.append((uri_varname, str(value)))
+            uri_vars.append((uri_varname, "%s" % value))
 
     return uri_vars
 

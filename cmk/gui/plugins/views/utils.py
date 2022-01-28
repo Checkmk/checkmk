@@ -1359,8 +1359,8 @@ def make_linked_visual_url(
 
     # Include visual default context. This comes from the hard_filters. Linked
     # view would have no _active flag. Thus prepend the default context
-    required_vars = [(visual_type.ident_attr, name)] + visuals.context_to_uri_vars(
-        visual.get("context", {})
+    required_vars = [(visual_type.ident_attr, name)] + visuals.get_context_uri_vars(
+        visual.get("context", {}), visual.get("single_infos", [])
     )
 
     # add context link to this visual. For reports we put in

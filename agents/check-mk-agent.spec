@@ -4,7 +4,7 @@
 
 Summary:   Checkmk Agent for Linux
 Name:      check-mk-agent
-Version:   (automatically inserted)
+Version:   %{_rpm_version}
 Release:   1
 License:   GPL
 Group:     System/Monitoring

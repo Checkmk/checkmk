@@ -82,13 +82,12 @@ $(RPM_PACKAGE): waitmax
 	    check_mk_caching_agent.linux \
 	    waitmax \
 	    mk-job
-	sed "s/^Version:.*/Version: $(RPM_VERSION)/" $(NAME).spec > $(NAME)-$(VERSION).spec
 	rm -f *.rpm
 	rpmbuild -ba --buildroot "$(RPM_BUILDROOT)" \
 	    --define "_topdir $(RPM_TOPDIR)" \
 	    --define "_version $(VERSION)" \
-	    $(DISTNAME).spec
-	rm -f $(DISTNAME).spec
+	    --define "_rpm_version $(RPM_VERSION)" \
+	    $(NAME).spec
 	mv -v $(RPM_TOPDIR)/RPMS/*/* $(RPM_PACKAGE)
 	rm -rf $(RPM_TOPDIR) $(RPM_BUILDROOT)
 

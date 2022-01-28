@@ -75,20 +75,27 @@ rm -rf $RPM_BUILD_ROOT
 %define systemd_enable if which systemctl >/dev/null 2>&1 && ! which xinetd >/dev/null 2>&1 ; then echo "Enable Checkmk Agent in systemd..." ; systemctl daemon-reload >/dev/null; systemctl enable check-mk-agent.socket check_mk-async; systemctl restart check-mk-agent.socket check_mk-async; fi
 
 %pre
-if ! which xinetd >/dev/null 2>&1 && ! which systemctl >/dev/null 2>&1 ; then
-    echo
-    echo "---------------------------------------------"
-    echo "WARNING"
-    echo
-    echo "This package needs xinetd to be installed. "
-    echo "Currently you do not have installed xinetd. "
-    echo "Please install and start xinetd or install "
-    echo "and setup another inetd manually."
-    echo ""
-    echo "It's also possible to monitor via SSH without "
-    echo "an inetd."
-    echo "---------------------------------------------"
-    echo
+
+# determine a suitable super server
+super_server='missing'
+which xinetd >/dev/null 2>&1 && super_server="xinetd"
+which systemctl >/dev/null 2>&1 && super_server="systemd"
+if [ "${super_server}" = "missing" ]; then
+    cat << EOF
+---------------------------------------------
+WARNING
+
+This package comes with configuration files
+for the following super server(s):
+  systemd (preferred)
+  xinetd (fallback)
+None of these have been found.
+Hint: It's also possible to call the
+Checkmk agent via SSH without a running
+agent service.
+---------------------------------------------
+
+EOF
 fi
 
 # migrate old xinetd service

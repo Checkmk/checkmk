@@ -570,6 +570,14 @@ class View:
         return missing_single_infos
 
 
+class DummyView(View):
+    """Represents an empty view hull, not intended to be displayed
+    This view can be used as surrogate where a view-ish like object is needed
+    """
+    def __init__(self):
+        super().__init__("dummy_view", {}, {})
+
+
 class ABCViewRenderer(metaclass=abc.ABCMeta):
     def __init__(self, view: View) -> None:
         super().__init__()
@@ -2985,7 +2993,7 @@ def get_plugin_title_for_choices(plugin: Union[Painter, Sorter]) -> str:
     if plugin.columns == ["site"]:
         info_title = _("Site")
 
-    dummy_cell = Cell(View("", {}, {}), PainterSpec(plugin.ident))
+    dummy_cell = Cell(DummyView(), PainterSpec(plugin.ident))
     title: str
     if isinstance(plugin, Painter):
         title = plugin.list_title(dummy_cell)

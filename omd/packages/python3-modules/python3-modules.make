@@ -73,6 +73,12 @@ $(PYTHON3_MODULES_BUILD): $(PYTHON_CACHE_PKG_PROCESS) $(OPENSSL_CACHE_PKG_PROCES
 	$(RM) -r $(PYTHON3_MODULES_INSTALL_DIR)/snmpsim
 # Fix python interpreter for kept scripts
 	$(SED) -i '1s|^#!.*/python3$$|#!/usr/bin/env python3|' $(PYTHON3_MODULES_INSTALL_DIR)/bin/[!_]*
+# pip is using pip._vendor.distlib.scripts.ScriptMaker._build_shebang() to
+# build the shebang of the scripts installed to bin. When executed via our CI
+# containers, the shebang exceeds the max_shebang_length of 127 bytes. For this
+# case, it adds a #!/bin/sh wrapper in front of the python code o_O to make it
+# fit into the shebang. Let's also cleanup this case.
+	$(SED) -i -z "s|^#\!/bin/sh\n'''exec.*python3 \"\$$0\" \"\$$@\"\n' '''|#\!/usr/bin/env python3|" $(PYTHON3_MODULES_INSTALL_DIR)/bin/[!_]*
 	$(TOUCH) $@
 
 $(PYTHON3_MODULES_PATCHING): $(PYTHON3_MODULES_UNPACK)

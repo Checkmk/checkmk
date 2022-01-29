@@ -364,7 +364,7 @@ def _get_struct_tree(is_history, hostname, site_id):
         return struct_tree_cache[cache_id]
 
     if is_history:
-        struct_tree = inventory.load_filtered_inventory_tree(hostname)
+        struct_tree = inventory.load_latest_delta_tree(hostname)
     else:
         row = inventory.get_status_data_via_livestatus(site_id, hostname)
         struct_tree = inventory.load_filtered_and_merged_tree(row)

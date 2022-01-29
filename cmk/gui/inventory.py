@@ -11,7 +11,7 @@ import shutil
 import time
 import xml.dom.minidom  # type: ignore[import]
 from pathlib import Path
-from typing import Any, Dict, List, Literal, NamedTuple, Optional, Sequence, Tuple, Union
+from typing import Any, Callable, Dict, List, Literal, NamedTuple, Optional, Sequence, Tuple, Union
 
 import dicttoxml  # type: ignore[import]
 
@@ -132,6 +132,30 @@ def get_status_data_via_livestatus(site: Optional[livestatus.SiteId], hostname: 
     return row
 
 
+class FilteredTimestamps(NamedTuple):
+    start_timestamp: Optional[int]
+    timestamps: Sequence[int]
+
+
+def load_latest_delta_tree(hostname: HostName) -> Optional[StructuredDataNode]:
+    def _get_latest_timestamps(timestamps: Sequence[int]) -> FilteredTimestamps:
+        # If there's no archive entry then there's no history thus the timestamps are empty.
+        # This case is already handled in 'get_history'.
+        # Here: timestamps consist of at least one archive entry + timestamp of current tree.
+        return FilteredTimestamps(
+            start_timestamp=timestamps[-2],
+            timestamps=[timestamps[-1]],
+        )
+
+    delta_history, _corrupted_history_files = get_history(
+        hostname,
+        filter_timestamps=_get_latest_timestamps,
+    )
+    if not delta_history:
+        return None
+    return delta_history[0].delta_tree
+
+
 def load_delta_tree(
     hostname: HostName,
     timestamp: int,
@@ -140,9 +164,29 @@ def load_delta_tree(
     # Timestamp is timestamp of the younger of both trees. For the oldest
     # tree we will just return the complete tree - without any delta
     # computation.
+
+    def _search_timestamps(timestamps: Sequence[int], timestamp: int) -> FilteredTimestamps:
+        try:
+            timestamp_idx = timestamps.index(timestamp)
+        except ValueError:
+            raise MKGeneralException(
+                _("Found no history entry at the time of '%s' for the host '%s'")
+                % (timestamp, hostname)
+            )
+
+        if timestamp_idx == 0:
+            return FilteredTimestamps(
+                start_timestamp=None,
+                timestamps=[timestamp],
+            )
+        return FilteredTimestamps(
+            start_timestamp=timestamps[timestamp_idx - 1],
+            timestamps=[timestamp],
+        )
+
     delta_history, corrupted_history_files = get_history(
         hostname,
-        search_timestamp=timestamp,
+        filter_timestamps=lambda timestamps: _search_timestamps(timestamps, timestamp),
     )
     if not delta_history:
         return None, []
@@ -159,7 +203,7 @@ class HistoryEntry(NamedTuple):
 
 def get_history(
     hostname: HostName,
-    search_timestamp: Optional[int] = None,
+    filter_timestamps: Optional[Callable[[Sequence[int]], FilteredTimestamps]] = None,
 ) -> Tuple[Sequence[HistoryEntry], Sequence[str]]:
     if "/" in hostname:
         return [], []  # just for security reasons
@@ -176,18 +220,15 @@ def get_history(
         return [], []
 
     all_timestamps: Sequence[int] = archived_timestamps + [latest_timestamp]
-    previous_timestamp: Optional[int] = None
+    previous_timestamp: Optional[int]
 
-    required_timestamps: Sequence[int]
-    if search_timestamp is None:
+    if filter_timestamps is None:
+        previous_timestamp = None
         required_timestamps = all_timestamps
     else:
-        new_timestamp_idx = all_timestamps.index(search_timestamp)
-        if new_timestamp_idx == 0:
-            required_timestamps = [search_timestamp]
-        else:
-            previous_timestamp = all_timestamps[new_timestamp_idx - 1]
-            required_timestamps = [search_timestamp]
+        filtered_timestamps = filter_timestamps(all_timestamps)
+        previous_timestamp = filtered_timestamps.start_timestamp
+        required_timestamps = filtered_timestamps.timestamps
 
     tree_lookup: Dict[int, Any] = {}
 

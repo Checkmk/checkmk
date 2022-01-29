@@ -5,11 +5,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from pathlib import Path
-from typing import Dict, Tuple
+from typing import Dict
 
 import pytest
 
 import cmk.utils
+from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.structured_data import StructuredDataNode
 
 import cmk.gui.inventory
@@ -190,39 +191,6 @@ def test_get_history() -> None:
 
 @pytest.mark.usefixtures("create_inventory_history")
 @pytest.mark.parametrize(
-    "search_timestamp, expected_result",
-    [
-        ("0", (1, 0, 0)),
-        ("1", (0, 1, 0)),
-        ("2", (1, 0, 1)),
-        ("3", (1, 0, 1)),
-    ],
-)
-def test_get_history_search_timestamp(
-    search_timestamp: str,
-    expected_result: Tuple[int, int, int],
-) -> None:
-    hostname = "inv-host"
-
-    delta_history, corrupted_history_files = cmk.gui.inventory.get_history(
-        hostname,
-        int(search_timestamp),
-    )
-
-    assert len(delta_history) == 1
-
-    entry = delta_history[0]
-    e_new, e_changed, e_removed = expected_result
-    assert isinstance(entry.timestamp, int)
-    assert entry.new == e_new
-    assert entry.changed == e_changed
-    assert entry.removed == e_removed
-
-    assert len(corrupted_history_files) == 0
-
-
-@pytest.mark.usefixtures("create_inventory_history")
-@pytest.mark.parametrize(
     "search_timestamp, expected_raw_delta_tree",
     [
         (0, {"inv": (None, "attr-0")}),
@@ -249,6 +217,14 @@ def test_load_delta_tree(
 
 
 @pytest.mark.usefixtures("create_inventory_history")
+def test_load_delta_tree_no_such_timestamp():
+    hostname = "inv-host"
+    with pytest.raises(MKGeneralException) as e:
+        cmk.gui.inventory.load_delta_tree(hostname, -1)
+    assert "Found no history entry at the time of '-1' for the host 'inv-host'" == str(e.value)
+
+
+@pytest.mark.usefixtures("create_inventory_history")
 def test_load_latest_delta_tree() -> None:
     hostname = "inv-host"
     expected_delta_tree = StructuredDataNode.deserialize({"inv": ("attr-3", "attr")})
@@ -262,3 +238,8 @@ def test_load_latest_delta_tree() -> None:
     assert delta_tree is not None
     assert delta_tree.is_equal(expected_delta_tree)
     assert len(corrupted_history_files) == 0
+
+    delta_tree_2 = cmk.gui.inventory.load_latest_delta_tree(hostname)
+
+    assert delta_tree_2 is not None
+    assert delta_tree_2.is_equal(expected_delta_tree)

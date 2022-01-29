@@ -10,17 +10,16 @@ License:   GPL
 Group:     System/Monitoring
 URL:       https://checkmk.com/
 Vendor:    tribe29 GmbH
-Source:    check-mk-agent-%{_version}.tar.gz
 BuildRoot: %{_topdir}/buildroot
 AutoReq:   off
 AutoProv:  off
 BuildArch: noarch
-Obsoletes: check_mk-agent check_mk_agent
+Obsoletes: check_mk-agent check_mk_agent check_mk-agent-logwatch
 Provides:  check_mk-agent check_mk_agent
 
 %description
-The Checkmk Agent uses xinetd or systemd to provide information about the system
-on TCP port 6556. This can be used to monitor the host via Checkmk.
+ The Checkmk Agent for Linux provides information about the system.
+ This can be used to monitor the host via Checkmk.
 
 %define _binaries_in_noarch_packages_terminate_build 0
 
@@ -60,13 +59,17 @@ mkdir -p $R/var/lib/check_mk_agent/spool
 rm -rf $RPM_BUILD_ROOT
 
 %files
-%config(noreplace) /etc/xinetd.d/check-mk-agent
-/usr/lib/systemd/system/check-mk-agent@.service
-/usr/lib/systemd/system/check-mk-agent.socket
-/usr/lib/systemd/system/check-mk-agent-async.service
 /etc/check_mk
-/usr/bin/*
+%config(noreplace) /etc/xinetd.d/check-mk-agent
+/usr/bin/check_mk_agent
+/usr/bin/check_mk_caching_agent
+/usr/bin/cmk-agent-ctl
+/usr/bin/mk-job
+/usr/bin/waitmax
 /usr/lib/check_mk_agent
+/usr/lib/systemd/system/check-mk-agent-async.service
+/usr/lib/systemd/system/check-mk-agent.socket
+/usr/lib/systemd/system/check-mk-agent@.service
 /var/lib/check_mk_agent
 /var/lib/cmk-agent/scripts/cmk-agent-useradd.sh
 

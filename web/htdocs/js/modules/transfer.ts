@@ -4,6 +4,7 @@
 
 import * as ajax from "ajax";
 
+declare var XDomainRequest;
 //# +--------------------------------------------------------------------+
 //# | Posting crash report to official Checkmk crash reporting API      |
 //# '--------------------------------------------------------------------'
@@ -43,14 +44,14 @@ export function submit_license_usage_report(url, authorization, post_data) {
 
                 var success_container = document.getElementById("success_msg");
                 success_container.style.display = "block";
-                success_container.children[0].innerText += " " + response_msg;
+                (success_container.children[0] as HTMLElement).innerText += " " + response_msg;
             },
             error_handler: function (_unused_data, _unused_status, _unused_error, response_msg) {
                 hide_report_processing_msg();
 
                 var fail_container = document.getElementById("fail_msg");
                 fail_container.style.display = "block";
-                fail_container.children[0].innerText += " (" + response_msg + ")";
+                (fail_container.children[0] as HTMLElement).innerText += " (" + response_msg + ")";
             },
             add_ajax_id: false,
             handler_data: {
@@ -72,14 +73,17 @@ function submit_with_ie(url, post_data) {
     var handler_data = {
         base_url: url,
     };
-    var xdr = new window.XDomainRequest();
+    //not sure if this is the best solution
+    //see for another solution: https://stackoverflow.com/questions/66120513/property-does-not-exist-on-type-window-typeof-globalthis
+    var xdr = new (window as any).XDomainRequest();
     xdr.onload = function () {
         handle_report_response(handler_data, xdr.responseText);
     };
     xdr.onerror = function () {
         handle_report_error(handler_data, null, xdr.responseText);
     };
-    xdr.onprogress = function () {};
+    xdr.onprogress = function () {
+    };
     xdr.open("post", url);
     xdr.send(post_data);
 }

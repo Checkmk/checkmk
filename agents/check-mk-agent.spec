@@ -33,6 +33,9 @@ R=$RPM_BUILD_ROOT
 rm -rf $R
 
 # install agent
+mkdir -p "${R}/var/lib/cmk-agent/scripts"
+install -m 751 "scripts/cmk-agent-useradd.sh" "${R}/var/lib/cmk-agent/scripts/cmk-agent-useradd.sh"
+
 # xinitd
 mkdir -p $R/etc/xinetd.d
 install -m 644 cfg_examples/xinetd.conf $R/etc/xinetd.d/check-mk-agent
@@ -65,6 +68,7 @@ rm -rf $RPM_BUILD_ROOT
 /usr/bin/*
 /usr/lib/check_mk_agent
 /var/lib/check_mk_agent
+/var/lib/cmk-agent/scripts/cmk-agent-useradd.sh
 
 %define reload_xinetd if which xinetd >/dev/null 2>&1 ; then if pgrep -x xinetd >/dev/null ; then echo "Reloading xinetd..." ; service xinetd reload ; else echo "Starting xinetd..." ; service xinetd start ; fi ; fi
 
@@ -99,6 +103,7 @@ if [ ! -e "/etc/xinetd.d/check-mk-agent" ] && [ -e "/etc/xinetd.d/check_mk" ]; t
 fi
 
 %post
+
 [ -f /etc/xinetd.d/check-mk-agent.rpmnew ] && rm /etc/xinetd.d/check-mk-agent.rpmnew
 
 if which xinetd >/dev/null 2>&1 && which chkconfig >/dev/null 2>&1; then
@@ -117,3 +122,12 @@ fi
 
 %postun
 %reload_xinetd
+
+%posttrans
+
+# determine a suitable super server
+super_server='missing'
+which xinetd >/dev/null 2>&1 && super_server="xinetd"
+which systemctl >/dev/null 2>&1 && super_server="systemd"
+
+[ "${super_server}" = "systemd" ] && /var/lib/cmk-agent/scripts/cmk-agent-useradd.sh --create

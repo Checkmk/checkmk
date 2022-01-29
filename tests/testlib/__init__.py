@@ -102,6 +102,10 @@ def fake_version_and_paths():
         "cmk.utils.paths.inventory_archive_dir",
         os.path.join(tmp_dir, "var/check_mk/inventory_archive"),
     )
+    monkeypatch.setattr(
+        "cmk.utils.paths.inventory_delta_cache_dir",
+        os.path.join(tmp_dir, "var/check_mk/inventory_delta_cache"),
+    )
     monkeypatch.setattr("cmk.utils.paths.check_manpages_dir", "%s/checkman" % cmk_path())
     monkeypatch.setattr("cmk.utils.paths.web_dir", "%s/web" % cmk_path())
     monkeypatch.setattr("cmk.utils.paths.omd_root", Path(tmp_dir))

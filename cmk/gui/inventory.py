@@ -11,7 +11,7 @@ import shutil
 import time
 import xml.dom.minidom  # type: ignore[import]
 from pathlib import Path
-from typing import Any, Dict, List, Literal, Optional, Tuple, Union
+from typing import Any, Dict, List, Literal, NamedTuple, Optional, Sequence, Tuple, Union
 
 import dicttoxml  # type: ignore[import]
 
@@ -49,7 +49,6 @@ from cmk.gui.valuespec import TextInput, ValueSpec
 # => Should be unified one day.
 
 InventoryValue = Union[None, str, int, float]
-InventoryDeltaData = Tuple[int, int, int, StructuredDataNode]
 InventoryRows = List[SDRow]
 
 
@@ -136,24 +135,32 @@ def get_status_data_via_livestatus(site: Optional[livestatus.SiteId], hostname: 
 def load_delta_tree(
     hostname: HostName,
     timestamp: int,
-) -> Tuple[Optional[StructuredDataNode], List[str]]:
+) -> Tuple[Optional[StructuredDataNode], Sequence[str]]:
     """Load inventory history and compute delta tree of a specific timestamp"""
     # Timestamp is timestamp of the younger of both trees. For the oldest
     # tree we will just return the complete tree - without any delta
     # computation.
-    delta_history, corrupted_history_files = get_history_deltas(
+    delta_history, corrupted_history_files = get_history(
         hostname,
-        search_timestamp=str(timestamp),
+        search_timestamp=timestamp,
     )
     if not delta_history:
         return None, []
-    return delta_history[0][1][3], corrupted_history_files
+    return delta_history[0].delta_tree, corrupted_history_files
 
 
-def get_history_deltas(
+class HistoryEntry(NamedTuple):
+    timestamp: Optional[int]
+    new: int
+    changed: int
+    removed: int
+    delta_tree: StructuredDataNode
+
+
+def get_history(
     hostname: HostName,
-    search_timestamp: Optional[str] = None,
-) -> Tuple[List[Tuple[str, InventoryDeltaData]], List[str]]:
+    search_timestamp: Optional[int] = None,
+) -> Tuple[Sequence[HistoryEntry], Sequence[str]]:
     if "/" in hostname:
         return [], []  # just for security reasons
 
@@ -161,17 +168,18 @@ def get_history_deltas(
     if not os.path.exists(inventory_path):
         return [], []
 
-    latest_timestamp = str(int(os.stat(inventory_path).st_mtime))
+    latest_timestamp = int(os.stat(inventory_path).st_mtime)
     inventory_archive_dir = "%s/%s" % (cmk.utils.paths.inventory_archive_dir, hostname)
     try:
-        archived_timestamps = sorted(os.listdir(inventory_archive_dir))
+        archived_timestamps = sorted([int(fn) for fn in os.listdir(inventory_archive_dir)])
     except OSError:
         return [], []
 
-    all_timestamps: List[str] = archived_timestamps + [latest_timestamp]
-    previous_timestamp: Optional[str] = None
+    all_timestamps: Sequence[int] = archived_timestamps + [latest_timestamp]
+    previous_timestamp: Optional[int] = None
 
-    if not search_timestamp:
+    required_timestamps: Sequence[int]
+    if search_timestamp is None:
         required_timestamps = all_timestamps
     else:
         new_timestamp_idx = all_timestamps.index(search_timestamp)
@@ -181,9 +189,9 @@ def get_history_deltas(
             previous_timestamp = all_timestamps[new_timestamp_idx - 1]
             required_timestamps = [search_timestamp]
 
-    tree_lookup: Dict[str, Any] = {}
+    tree_lookup: Dict[int, Any] = {}
 
-    def get_tree(timestamp: Optional[str]) -> StructuredDataNode:
+    def get_tree(timestamp: Optional[int]) -> StructuredDataNode:
         if timestamp is None:
             return StructuredDataNode()
 
@@ -196,14 +204,14 @@ def get_history_deltas(
                 raise LoadStructuredDataError()
             tree_lookup[timestamp] = inventory_tree
         else:
-            inventory_archive_path = Path(inventory_archive_dir, timestamp)
+            inventory_archive_path = Path(inventory_archive_dir, str(timestamp))
             tree_lookup[timestamp] = _filter_tree(
                 StructuredDataStore.load_file(inventory_archive_path)
             )
         return tree_lookup[timestamp]
 
     corrupted_history_files = []
-    delta_history: List[Tuple[str, InventoryDeltaData]] = []
+    history: List[HistoryEntry] = []
     for _idx, timestamp in enumerate(required_timestamps):
         cached_delta_path = os.path.join(
             cmk.utils.paths.inventory_delta_cache_dir,
@@ -220,7 +228,7 @@ def get_history_deltas(
         if cached_data:
             new, changed, removed, delta_tree_data = cached_data
             delta_tree = StructuredDataNode.deserialize(delta_tree_data)
-            delta_history.append((timestamp, (new, changed, removed, delta_tree)))
+            history.append(HistoryEntry(timestamp, new, changed, removed, delta_tree))
             previous_timestamp = timestamp
             continue
 
@@ -240,15 +248,15 @@ def get_history_deltas(
                     cached_delta_path,
                     repr((new, changed, removed, delta_tree.serialize())),
                 )
-                delta_history.append((timestamp, delta_data))
+                history.append(HistoryEntry(timestamp, new, changed, removed, delta_tree))
         except LoadStructuredDataError:
             corrupted_history_files.append(
-                str(get_short_inventory_history_filepath(hostname, timestamp))
+                str(_get_short_inventory_history_filepath(hostname, timestamp))
             )
 
         previous_timestamp = timestamp
 
-    return delta_history, corrupted_history_files
+    return history, corrupted_history_files
 
 
 def get_short_inventory_filepath(hostname: HostName) -> Path:
@@ -259,7 +267,7 @@ def get_short_inventory_filepath(hostname: HostName) -> Path:
     )
 
 
-def get_short_inventory_history_filepath(hostname: HostName, timestamp: str) -> Path:
+def _get_short_inventory_history_filepath(hostname: HostName, timestamp: int) -> Path:
     return (
         Path(cmk.utils.paths.inventory_archive_dir)
         .joinpath("%s/%s" % (hostname, timestamp))

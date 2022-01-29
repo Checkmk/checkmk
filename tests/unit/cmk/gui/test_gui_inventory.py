@@ -91,9 +91,9 @@ def test_get_history_empty():
         "inv-host",
         "/inv-host",
     ]:
-        delta_history, corrupted_history_files = cmk.gui.inventory.get_history_deltas(hostname)
+        history, corrupted_history_files = cmk.gui.inventory.get_history(hostname)
 
-        assert len(delta_history) == 0
+        assert len(history) == 0
         assert len(corrupted_history_files) == 0
 
 
@@ -106,9 +106,9 @@ def test_get_history_empty_but_inv_tree():
         StructuredDataNode.deserialize({"inv": "attr-0"}).serialize(),
     )
 
-    delta_history, corrupted_history_files = cmk.gui.inventory.get_history_deltas(hostname)
+    history, corrupted_history_files = cmk.gui.inventory.get_history(hostname)
 
-    assert len(delta_history) == 0
+    assert len(history) == 0
     assert len(corrupted_history_files) == 0
 
 
@@ -141,7 +141,7 @@ def _create_inventory_history() -> None:
 
 
 @pytest.mark.usefixtures("create_inventory_history")
-def test_get_history_deltas() -> None:
+def test_get_history() -> None:
     hostname = "inv-host"
     expected_results = [
         (1, 0, 0),
@@ -151,17 +151,16 @@ def test_get_history_deltas() -> None:
         (0, 1, 0),
     ]
 
-    delta_history, corrupted_history_files = cmk.gui.inventory.get_history_deltas(hostname)
+    history, corrupted_history_files = cmk.gui.inventory.get_history(hostname)
 
-    assert len(delta_history) == 5
+    assert len(history) == 5
 
-    for entry, expected_result in zip(delta_history, expected_results):
-        ts, (new, changed, removed, _tree) = entry
+    for entry, expected_result in zip(history, expected_results):
         e_new, e_changed, e_removed = expected_result
-        assert isinstance(ts, str)
-        assert new == e_new
-        assert changed == e_changed
-        assert removed == e_removed
+        assert isinstance(entry.timestamp, int)
+        assert entry.new == e_new
+        assert entry.changed == e_changed
+        assert entry.removed == e_removed
 
     assert len(corrupted_history_files) == 0
 
@@ -199,25 +198,25 @@ def test_get_history_deltas() -> None:
         ("3", (1, 0, 1)),
     ],
 )
-def test_get_history_deltas_search_timestamp(
+def test_get_history_search_timestamp(
     search_timestamp: str,
     expected_result: Tuple[int, int, int],
 ) -> None:
     hostname = "inv-host"
 
-    delta_history, corrupted_history_files = cmk.gui.inventory.get_history_deltas(
+    delta_history, corrupted_history_files = cmk.gui.inventory.get_history(
         hostname,
-        search_timestamp,
+        int(search_timestamp),
     )
 
     assert len(delta_history) == 1
 
-    ts, (new, changed, removed, _tree) = delta_history[0]
+    entry = delta_history[0]
     e_new, e_changed, e_removed = expected_result
-    assert isinstance(ts, str)
-    assert new == e_new
-    assert changed == e_changed
-    assert removed == e_removed
+    assert isinstance(entry.timestamp, int)
+    assert entry.new == e_new
+    assert entry.changed == e_changed
+    assert entry.removed == e_removed
 
     assert len(corrupted_history_files) == 0
 

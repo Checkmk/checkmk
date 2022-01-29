@@ -9,7 +9,18 @@ from __future__ import annotations
 import abc
 import time
 from functools import partial
-from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, TYPE_CHECKING, Union
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    Iterable,
+    List,
+    Optional,
+    Sequence,
+    Tuple,
+    TYPE_CHECKING,
+    Union,
+)
 
 from livestatus import LivestatusResponse, OnlySites, SiteId
 
@@ -34,7 +45,6 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.globals import config, html, output_funnel, request, user_errors
 from cmk.gui.htmllib import foldable_container, HTML
 from cmk.gui.i18n import _
-from cmk.gui.inventory import InventoryDeltaData, InventoryRows
 from cmk.gui.plugins.views.utils import (
     ABCDataSource,
     Cell,
@@ -938,7 +948,7 @@ class RowTableInventory(ABCRowTable):
         super().__init__([info_name], ["host_structured_status"])
         self._inventory_path = inventory_path
 
-    def _get_inv_data(self, hostrow: Row) -> InventoryRows:
+    def _get_inv_data(self, hostrow: Row) -> inventory.InventoryRows:
         try:
             merged_tree = inventory.load_filtered_and_merged_tree(hostrow)
         except inventory.LoadStructuredDataError:
@@ -959,7 +969,7 @@ class RowTableInventory(ABCRowTable):
             return []
         return table
 
-    def _prepare_rows(self, inv_data: InventoryRows) -> Iterable[Row]:
+    def _prepare_rows(self, inv_data: inventory.InventoryRows) -> Iterable[Row]:
         # TODO check: hopefully there's only a table as input arg
         info_name = self._info_names[0]
         entries = []
@@ -1026,7 +1036,7 @@ def declare_invtable_view(
     _declare_views(infoname, title_plural, painters, filters, [invpath], icon)
 
 
-InventorySourceRows = Tuple[str, InventoryRows]
+InventorySourceRows = Tuple[str, inventory.InventoryRows]
 
 
 class RowMultiTableInventory(ABCRowTable):
@@ -1583,9 +1593,9 @@ class RowTableInventoryHistory(ABCRowTable):
         super().__init__(["invhist"], [])
         self._inventory_path = None
 
-    def _get_inv_data(self, hostrow: Row) -> List[Tuple[str, InventoryDeltaData]]:
+    def _get_inv_data(self, hostrow: Row) -> Sequence[inventory.HistoryEntry]:
         hostname: HostName = hostrow["host_name"]
-        history_deltas, corrupted_history_files = inventory.get_history_deltas(hostname)
+        history, corrupted_history_files = inventory.get_history(hostname)
         if corrupted_history_files:
             user_errors.add(
                 MKUserError(
@@ -1597,19 +1607,17 @@ class RowTableInventoryHistory(ABCRowTable):
                 )
             )
 
-        return history_deltas
+        return history
 
-    def _prepare_rows(self, inv_data: List[Tuple[str, InventoryDeltaData]]) -> Iterable[Row]:
-        for timestamp, delta_info in inv_data:
-            new, changed, removed, delta_tree = delta_info
-            newrow = {
-                "invhist_time": int(timestamp),
-                "invhist_delta": delta_tree,
-                "invhist_removed": removed,
-                "invhist_new": new,
-                "invhist_changed": changed,
+    def _prepare_rows(self, inv_data: Sequence[inventory.HistoryEntry]) -> Iterable[Row]:
+        for history_entry in inv_data:
+            yield {
+                "invhist_time": history_entry.timestamp,
+                "invhist_delta": history_entry.delta_tree,
+                "invhist_removed": history_entry.removed,
+                "invhist_new": history_entry.new,
+                "invhist_changed": history_entry.changed,
             }
-            yield newrow
 
 
 @data_source_registry.register

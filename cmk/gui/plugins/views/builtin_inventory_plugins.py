@@ -635,6 +635,25 @@ inventory_displayhints.update({
     ".software.applications.kube.network:*.address_type": {
         "title": _l("Type"),
     },
+    ".software.applications.kube.containers:": {
+        "title": _l("Containers"),
+        "keyorder": [
+            "name",
+            "ready",
+            "restart_count",
+            "image",
+            "image_pull_policy",
+            "image_id",
+            "container_id",
+        ],
+    },
+    ".software.applications.kube.containers:*.name": {"title": _l("Name")},
+    ".software.applications.kube.containers:*.image": {"title": _l("Image")},
+    ".software.applications.kube.containers:*.image_pull_policy": {"title": _l("Image pull policy")},
+    ".software.applications.kube.containers:*.image_id": {"title": _l("Image ID")},
+    ".software.applications.kube.containers:*.ready": {"title": _l("Ready"), "paint": "container_ready"},
+    ".software.applications.kube.containers:*.restart_count": {"title": _l("Restart count")},
+    ".software.applications.kube.containers:*.container_id": {"title": _l("Container ID")},
 
     ".software.applications.kube.deployment.": {"title": _l("Deployment")},
     ".software.applications.kube.deployment.name": {"title": _l("Name")},
@@ -652,6 +671,16 @@ inventory_displayhints.update({
     ".software.applications.kube.node.container_runtime_version": {"title": _l("Container runtime version")},
     ".software.applications.kube.node.kubelet_version": {"title": _l("Kubelet version")},
     ".software.applications.kube.node.kube_proxy_version": {"title": _l("Kube-proxy version")},
+
+    ".software.applications.kube.pod.": {"title": _l("Pod")},
+    ".software.applications.kube.pod.name": {"title": _l("Name")},
+    ".software.applications.kube.pod.namespace": {"title": _l("Namespace")},
+    ".software.applications.kube.pod.dns_policy": {"title": _l("DNS policy")},
+    ".software.applications.kube.pod.host_ip": {"title": _l("Host IP")},
+    ".software.applications.kube.pod.host_network": {"title": _l("Host network")},
+    ".software.applications.kube.pod.node": {"title": _l("Node")},
+    ".software.applications.kube.pod.pod_ip": {"title": _l("Pod IP")},
+    ".software.applications.kube.pod.qos_class": {"title": _l("QoS class")},
 
     ".software.applications.citrix.": {"title": _l("Citrix")},
     ".software.applications.citrix.controller.": {"title": _l("Controller")},

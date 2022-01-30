@@ -354,3 +354,17 @@ class DeploymentStrategy(BaseModel):
     """section: kube_deployment_strategy_v1"""
 
     strategy: Union[Recreate, RollingUpdate] = Field(discriminator="type_")
+
+
+ImagePullPolicy = Literal["Always", "Never", "IfNotPresent"]
+
+
+class ContainerSpec(BaseModel):
+    name: ContainerName
+    image_pull_policy: ImagePullPolicy
+
+
+class ContainerSpecs(BaseModel):
+    """section: kube_pod_container_specs_v1"""
+
+    containers: Mapping[ContainerName, ContainerSpec]

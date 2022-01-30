@@ -20,6 +20,7 @@ from .agent_based_api.v1 import (
 )
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 from .utils.k8s import DeploymentSpec, Replicas
+from .utils.kube_deployment_spec import strategy_text
 
 
 def parse_kube_replicas(string_table: StringTable) -> Replicas:
@@ -134,17 +135,9 @@ def check_kube_replicas(
     if section_kube_deployment_spec is None or all_updated:
         return
 
-    if section_kube_deployment_spec.strategy.rolling_update:
-        rolling_update_text = (
-            f" (max surge: {section_kube_deployment_spec.strategy.rolling_update.max_surge}, "
-            f"max unavailable: {section_kube_deployment_spec.strategy.rolling_update.max_unavailable})"
-        )
-    else:
-        rolling_update_text = ""
-
     yield Result(
         state=State.OK,
-        summary=f"Strategy: {section_kube_deployment_spec.strategy.type_}{rolling_update_text}",
+        summary=f"Strategy: {strategy_text(section_kube_deployment_spec.strategy)}",
     )
 
 

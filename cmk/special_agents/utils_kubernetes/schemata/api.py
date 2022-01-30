@@ -147,17 +147,17 @@ class DeploymentStatus(BaseModel):
 
 
 class RollingUpdate(BaseModel):
+    type_: Literal["RollingUpdate"] = Field("RollingUpdate", const=True)
     max_surge: str
     max_unavailable: str
 
 
-class UpdateStrategy(BaseModel):
-    type_: Literal["RollingUpdate", "Recreate"]
-    rolling_update: Optional[RollingUpdate]
+class Recreate(BaseModel):
+    type_: Literal["Recreate"] = Field("Recreate", const=True)
 
 
 class DeploymentSpec(BaseModel):
-    strategy: UpdateStrategy
+    strategy: Union[Recreate, RollingUpdate] = Field(discriminator="type_")
 
 
 class Deployment(BaseModel):

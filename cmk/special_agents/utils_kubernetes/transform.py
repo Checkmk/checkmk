@@ -354,17 +354,16 @@ def node_from_client(node: client.V1Node, kubelet_health: api.HealthZ) -> api.No
 
 
 def parse_deployment_spec(deployment_spec: client.V1DeploymentSpec) -> api.DeploymentSpec:
-    return api.DeploymentSpec(
-        strategy=api.UpdateStrategy(
-            type_=(deployment_spec.strategy.type),
-            rolling_update=api.RollingUpdate(
+    if deployment_spec.strategy.type == "Recreate":
+        return api.DeploymentSpec(strategy=api.Recreate())
+    if deployment_spec.strategy.type == "RollingUpdate":
+        return api.DeploymentSpec(
+            strategy=api.RollingUpdate(
                 max_surge=deployment_spec.strategy.rolling_update.max_surge,
                 max_unavailable=deployment_spec.strategy.rolling_update.max_unavailable,
             )
-            if deployment_spec.strategy.rolling_update
-            else None,
         )
-    )
+    raise ValueError(f"Unknown strategy type: {deployment_spec.strategy.type}")
 
 
 def deployment_from_client(

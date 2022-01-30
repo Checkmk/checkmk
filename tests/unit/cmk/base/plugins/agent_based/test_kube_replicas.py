@@ -18,12 +18,7 @@ from cmk.base.plugins.agent_based.kube_replicas import (
     parse_kube_deployment_spec,
     parse_kube_replicas,
 )
-from cmk.base.plugins.agent_based.utils.k8s import (
-    DeploymentSpec,
-    Replicas,
-    RollingUpdate,
-    UpdateStrategy,
-)
+from cmk.base.plugins.agent_based.utils.k8s import DeploymentSpec, Recreate, Replicas, RollingUpdate
 
 
 def test_parse_kube_replicas() -> None:
@@ -51,44 +46,40 @@ def test_parse_kube_replicas() -> None:
 
 
 def test_parse_kube_deployment_spec() -> None:
-    assert parse_kube_deployment_spec(
-        [
+    assert (
+        parse_kube_deployment_spec(
             [
-                json.dumps(
-                    {
-                        "strategy": {
-                            "type_": "RollingUpdate",
-                            "rolling_update": {"max_surge": "25%", "max_unavailable": "25%"},
-                        },
-                    }
-                )
+                [
+                    json.dumps(
+                        {
+                            "strategy": {
+                                "type_": "RollingUpdate",
+                                "max_surge": "25%",
+                                "max_unavailable": "25%",
+                            }
+                        }
+                    )
+                ]
             ]
-        ]
-    ) == DeploymentSpec(
-        strategy=UpdateStrategy(
-            type_="RollingUpdate",
-            rolling_update=RollingUpdate(max_surge="25%", max_unavailable="25%"),
         )
+        == DeploymentSpec(strategy=RollingUpdate(max_surge="25%", max_unavailable="25%"))
     )
 
-    assert parse_kube_deployment_spec(
-        [
+    assert (
+        parse_kube_deployment_spec(
             [
-                json.dumps(
-                    {
-                        "strategy": {
-                            "type_": "Recreate",
-                            "rolling_update": None,
-                        },
-                    }
-                )
+                [
+                    json.dumps(
+                        {
+                            "strategy": {
+                                "type_": "Recreate",
+                            },
+                        }
+                    )
+                ]
             ]
-        ]
-    ) == DeploymentSpec(
-        strategy=UpdateStrategy(
-            type_="Recreate",
-            rolling_update=None,
         )
+        == DeploymentSpec(strategy=Recreate())
     )
 
 
@@ -101,9 +92,9 @@ def test_discover_kube_replicas() -> None:
         unavailable=3,
     )
     spec = DeploymentSpec(
-        strategy=UpdateStrategy(
-            type_="RollingUpdate",
-            rolling_update=RollingUpdate(max_surge="25%", max_unavailable="25%"),
+        strategy=RollingUpdate(
+            max_surge="25%",
+            max_unavailable="25%",
         )
     )
     assert list(discover_kube_replicas(replicas, spec)) == [Service()]
@@ -147,10 +138,10 @@ def test_check_kube_replicas() -> None:
                 unavailable=0,
             ),
             DeploymentSpec(
-                strategy=UpdateStrategy(
-                    type_="RollingUpdate",
-                    rolling_update=RollingUpdate(max_surge="25%", max_unavailable="25%"),
-                )
+                strategy=RollingUpdate(
+                    max_surge="25%",
+                    max_unavailable="25%",
+                ),
             ),
             {"update_started_timestamp": 100.0},
             [
@@ -177,10 +168,10 @@ def test_check_kube_replicas() -> None:
                 unavailable=0,
             ),
             DeploymentSpec(
-                strategy=UpdateStrategy(
-                    type_="RollingUpdate",
-                    rolling_update=RollingUpdate(max_surge="25%", max_unavailable="25%"),
-                )
+                strategy=RollingUpdate(
+                    max_surge="25%",
+                    max_unavailable="25%",
+                ),
             ),
             {"update_started_timestamp": 100.0},
             [
@@ -207,10 +198,10 @@ def test_check_kube_replicas() -> None:
                 unavailable=0,
             ),
             DeploymentSpec(
-                strategy=UpdateStrategy(
-                    type_="RollingUpdate",
-                    rolling_update=RollingUpdate(max_surge="25%", max_unavailable="25%"),
-                )
+                strategy=RollingUpdate(
+                    max_surge="25%",
+                    max_unavailable="25%",
+                ),
             ),
             {"update_started_timestamp": 100.0},
             [
@@ -355,10 +346,10 @@ def test_check_kube_replicas_not_ready_replicas(
                 unavailable=0,
             ),
             DeploymentSpec(
-                strategy=UpdateStrategy(
-                    type_="RollingUpdate",
-                    rolling_update=RollingUpdate(max_surge="25%", max_unavailable="25%"),
-                )
+                strategy=RollingUpdate(
+                    max_surge="25%",
+                    max_unavailable="25%",
+                ),
             ),
             {"not_ready_started_timestamp": 100.0, "update_started_timestamp": 100.0},
             [
@@ -394,12 +385,7 @@ def test_check_kube_replicas_not_ready_replicas(
                 ready=0,
                 unavailable=0,
             ),
-            DeploymentSpec(
-                strategy=UpdateStrategy(
-                    type_="Recreate",
-                    rolling_update=None,
-                )
-            ),
+            DeploymentSpec(strategy=Recreate()),
             {"not_ready_started_timestamp": 100.0, "update_started_timestamp": 100.0},
             [
                 Result(state=State.OK, summary="Ready: 0/3"),

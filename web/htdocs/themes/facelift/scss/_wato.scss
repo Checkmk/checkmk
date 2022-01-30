@@ -940,7 +940,7 @@ div.filter_buttons {
       top: 4px;
       left: 0;
       z-index: 0;
-      width: 160px;
+      width: 0;
       height: 24px;
       padding-top: 10px;
       color: $font-color-black;
@@ -950,6 +950,7 @@ div.filter_buttons {
 
       &.in_progress {
         background: $repprogress-progress-bg-color;
+        transition: width 1s;
       }
 
       &.state_success {

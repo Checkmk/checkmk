@@ -13,6 +13,7 @@ import pytest
 from tests.testlib import on_time
 
 import cmk.utils.paths
+from cmk.utils.encryption import Encrypter
 
 import cmk.gui.valuespec as vs
 from cmk.gui.exceptions import MKUserError
@@ -422,7 +423,7 @@ def test_password_from_html_vars_initial_pw(request_context):
 )
 @pytest.mark.usefixtures("fixture_auth_secret")
 def test_password_from_html_vars_unchanged_pw(request_context):
-    html.request.set_var("pw_orig", vs.ValueEncrypter.encrypt("abc"))
+    html.request.set_var("pw_orig", Encrypter.encrypt("abc"))
     html.request.set_var("pw", "")
     pw = vs.Password()
     assert pw.from_html_vars("pw") == "abc"
@@ -433,29 +434,10 @@ def test_password_from_html_vars_unchanged_pw(request_context):
 )
 @pytest.mark.usefixtures("fixture_auth_secret")
 def test_password_from_html_vars_change_pw(request_context):
-    html.request.set_var("pw_orig", vs.ValueEncrypter.encrypt("abc"))
+    html.request.set_var("pw_orig", Encrypter.encrypt("abc"))
     html.request.set_var("pw", "xyz")
     pw = vs.Password()
     assert pw.from_html_vars("pw") == "xyz"
-
-
-@pytest.mark.skipif(
-    not hasattr(hashlib, "scrypt"), reason="OpenSSL version too old, must be >= 1.1"
-)
-@pytest.mark.usefixtures("fixture_auth_secret")
-def test_value_encrypter_encrypt():
-    encrypted = vs.ValueEncrypter.encrypt("abc")
-    assert isinstance(encrypted, str)
-    assert encrypted != "abc"
-
-
-@pytest.mark.skipif(
-    not hasattr(hashlib, "scrypt"), reason="OpenSSL version too old, must be >= 1.1"
-)
-@pytest.mark.usefixtures("fixture_auth_secret")
-def test_value_encrypter_transparent():
-    enc = vs.ValueEncrypter
-    assert enc.decrypt(enc.encrypt("abc")) == "abc"
 
 
 class ValueType(Enum):

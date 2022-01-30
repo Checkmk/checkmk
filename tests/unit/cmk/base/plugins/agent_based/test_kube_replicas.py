@@ -15,10 +15,15 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Serv
 from cmk.base.plugins.agent_based.kube_replicas import (
     check_kube_replicas,
     discover_kube_replicas,
-    parse_kube_deployment_spec,
+    parse_kube_deployment_strategy,
     parse_kube_replicas,
 )
-from cmk.base.plugins.agent_based.utils.k8s import DeploymentSpec, Recreate, Replicas, RollingUpdate
+from cmk.base.plugins.agent_based.utils.k8s import (
+    DeploymentStrategy,
+    Recreate,
+    Replicas,
+    RollingUpdate,
+)
 
 
 def test_parse_kube_replicas() -> None:
@@ -45,9 +50,9 @@ def test_parse_kube_replicas() -> None:
     )
 
 
-def test_parse_kube_deployment_spec() -> None:
+def test_parse_kube_deployment_strategy() -> None:
     assert (
-        parse_kube_deployment_spec(
+        parse_kube_deployment_strategy(
             [
                 [
                     json.dumps(
@@ -62,11 +67,11 @@ def test_parse_kube_deployment_spec() -> None:
                 ]
             ]
         )
-        == DeploymentSpec(strategy=RollingUpdate(max_surge="25%", max_unavailable="25%"))
+        == DeploymentStrategy(strategy=RollingUpdate(max_surge="25%", max_unavailable="25%"))
     )
 
     assert (
-        parse_kube_deployment_spec(
+        parse_kube_deployment_strategy(
             [
                 [
                     json.dumps(
@@ -79,7 +84,7 @@ def test_parse_kube_deployment_spec() -> None:
                 ]
             ]
         )
-        == DeploymentSpec(strategy=Recreate())
+        == DeploymentStrategy(strategy=Recreate())
     )
 
 
@@ -91,15 +96,15 @@ def test_discover_kube_replicas() -> None:
         ready=3,
         unavailable=3,
     )
-    spec = DeploymentSpec(
+    strategy = DeploymentStrategy(
         strategy=RollingUpdate(
             max_surge="25%",
             max_unavailable="25%",
         )
     )
-    assert list(discover_kube_replicas(replicas, spec)) == [Service()]
+    assert list(discover_kube_replicas(replicas, strategy)) == [Service()]
     assert list(discover_kube_replicas(replicas, None)) == [Service()]
-    assert list(discover_kube_replicas(None, spec)) == []
+    assert list(discover_kube_replicas(None, strategy)) == []
     assert list(discover_kube_replicas(None, None)) == []
 
 
@@ -126,7 +131,7 @@ def test_check_kube_replicas() -> None:
 
 
 @pytest.mark.parametrize(
-    "params,replicas,spec,value_store,expected_check_result",
+    "params,replicas,strategy,value_store,expected_check_result",
     [
         pytest.param(
             {"update_duration": "no_levels"},
@@ -137,7 +142,7 @@ def test_check_kube_replicas() -> None:
                 ready=3,
                 unavailable=0,
             ),
-            DeploymentSpec(
+            DeploymentStrategy(
                 strategy=RollingUpdate(
                     max_surge="25%",
                     max_unavailable="25%",
@@ -167,7 +172,7 @@ def test_check_kube_replicas() -> None:
                 ready=3,
                 unavailable=0,
             ),
-            DeploymentSpec(
+            DeploymentStrategy(
                 strategy=RollingUpdate(
                     max_surge="25%",
                     max_unavailable="25%",
@@ -197,7 +202,7 @@ def test_check_kube_replicas() -> None:
                 ready=3,
                 unavailable=0,
             ),
-            DeploymentSpec(
+            DeploymentStrategy(
                 strategy=RollingUpdate(
                     max_surge="25%",
                     max_unavailable="25%",
@@ -226,7 +231,7 @@ def test_check_kube_replicas() -> None:
 def test_check_kube_replicas_outdated_replicas(
     params: Mapping[str, Any],
     replicas: Replicas,
-    spec: DeploymentSpec,
+    strategy: DeploymentStrategy,
     value_store: MutableMapping[str, Any],
     expected_check_result: Sequence[Union[Result, Metric]],
     monkeypatch: pytest.MonkeyPatch,
@@ -240,7 +245,7 @@ def test_check_kube_replicas_outdated_replicas(
     monkeypatch.setattr(kube_replicas, "get_value_store", mock_value_store)
     monkeypatch.setattr(time, "time", mock_time)
 
-    assert list(check_kube_replicas(params, replicas, spec)) == expected_check_result
+    assert list(check_kube_replicas(params, replicas, strategy)) == expected_check_result
 
 
 @pytest.mark.parametrize(
@@ -331,7 +336,7 @@ def test_check_kube_replicas_not_ready_replicas(
 
 
 @pytest.mark.parametrize(
-    "params,replicas,spec,value_store,expected_check_result",
+    "params,replicas,strategy,value_store,expected_check_result",
     [
         pytest.param(
             {
@@ -345,7 +350,7 @@ def test_check_kube_replicas_not_ready_replicas(
                 ready=0,
                 unavailable=0,
             ),
-            DeploymentSpec(
+            DeploymentStrategy(
                 strategy=RollingUpdate(
                     max_surge="25%",
                     max_unavailable="25%",
@@ -385,7 +390,7 @@ def test_check_kube_replicas_not_ready_replicas(
                 ready=0,
                 unavailable=0,
             ),
-            DeploymentSpec(strategy=Recreate()),
+            DeploymentStrategy(strategy=Recreate()),
             {"not_ready_started_timestamp": 100.0, "update_started_timestamp": 100.0},
             [
                 Result(state=State.OK, summary="Ready: 0/3"),
@@ -413,7 +418,7 @@ def test_check_kube_replicas_not_ready_replicas(
 def test_check_kube_replicas_not_ready_and_outdated(
     params: Mapping[str, Any],
     replicas: Replicas,
-    spec: DeploymentSpec,
+    strategy: DeploymentStrategy,
     value_store: MutableMapping[str, Any],
     expected_check_result: Sequence[Union[Result, Metric]],
     monkeypatch: pytest.MonkeyPatch,
@@ -427,7 +432,7 @@ def test_check_kube_replicas_not_ready_and_outdated(
     monkeypatch.setattr(kube_replicas, "get_value_store", mock_value_store)
     monkeypatch.setattr(time, "time", mock_time)
 
-    assert list(check_kube_replicas(params, replicas, spec)) == expected_check_result
+    assert list(check_kube_replicas(params, replicas, strategy)) == expected_check_result
 
 
 @pytest.mark.parametrize(

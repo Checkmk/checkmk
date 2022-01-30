@@ -441,8 +441,8 @@ class Deployment:
     def replicas(self) -> api.Replicas:
         return self.status.replicas
 
-    def spec(self) -> api.DeploymentSpec:
-        return self._spec
+    def strategy(self) -> section.DeploymentStrategy:
+        return section.DeploymentStrategy(strategy=self._spec.strategy)
 
 
 class Node:
@@ -738,7 +738,7 @@ def write_deployments_api_sections(
             "kube_deployment_conditions_v1": cluster_deployment.conditions,
             "kube_cpu_resources_v1": cluster_deployment.cpu_resources,
             "kube_replicas_v1": cluster_deployment.replicas,
-            "kube_deployment_spec_v1": cluster_deployment.spec,
+            "kube_deployment_strategy_v1": cluster_deployment.strategy,
         }
         _write_sections(sections)
 

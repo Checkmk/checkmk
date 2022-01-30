@@ -12,9 +12,9 @@ except the python standard library or pydantic.
 """
 
 import enum
-from typing import Literal, Mapping, NewType, Optional, Sequence
+from typing import Literal, Mapping, NewType, Optional, Sequence, Union
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from cmk.special_agents.utils_kubernetes.schemata import api
 
@@ -226,3 +226,9 @@ class Memory(BaseModel):
     """section: kube_performance_memory_v1"""
 
     memory_usage_bytes: float  # TODO: change naming
+
+
+class DeploymentStrategy(BaseModel):
+    """section: kube_deployment_strategy_v1"""
+
+    strategy: Union[api.Recreate, api.RollingUpdate] = Field(discriminator="type_")

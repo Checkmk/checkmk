@@ -19,8 +19,8 @@ from .agent_based_api.v1 import (
     State,
 )
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
-from .utils.k8s import DeploymentSpec, Replicas
-from .utils.kube_deployment_spec import strategy_text
+from .utils.k8s import DeploymentStrategy, Replicas
+from .utils.kube_deployment_strategy import strategy_text
 
 
 def parse_kube_replicas(string_table: StringTable) -> Replicas:
@@ -34,20 +34,20 @@ register.agent_section(
 )
 
 
-def parse_kube_deployment_spec(string_table: StringTable) -> DeploymentSpec:
-    return DeploymentSpec(**json.loads(string_table[0][0]))
+def parse_kube_deployment_strategy(string_table: StringTable) -> DeploymentStrategy:
+    return DeploymentStrategy(**json.loads(string_table[0][0]))
 
 
 register.agent_section(
-    name="kube_deployment_spec_v1",
-    parsed_section_name="kube_deployment_spec",
-    parse_function=parse_kube_deployment_spec,
+    name="kube_deployment_strategy_v1",
+    parsed_section_name="kube_deployment_strategy",
+    parse_function=parse_kube_deployment_strategy,
 )
 
 
 def discover_kube_replicas(
     section_kube_replicas: Optional[Replicas],
-    section_kube_deployment_spec: Optional[DeploymentSpec],
+    section_kube_deployment_strategy: Optional[DeploymentStrategy],
 ) -> DiscoveryResult:
     if section_kube_replicas is not None:
         yield Service()
@@ -79,7 +79,7 @@ def _levels(params: Mapping[str, Any], param_name: str) -> Optional[Tuple[int, i
 def check_kube_replicas(
     params: Mapping[str, Any],
     section_kube_replicas: Optional[Replicas],
-    section_kube_deployment_spec: Optional[DeploymentSpec],
+    section_kube_deployment_strategy: Optional[DeploymentStrategy],
 ) -> CheckResult:
 
     if section_kube_replicas is None:
@@ -132,18 +132,18 @@ def check_kube_replicas(
         "Not updated for",
     )
 
-    if section_kube_deployment_spec is None or all_updated:
+    if section_kube_deployment_strategy is None or all_updated:
         return
 
     yield Result(
         state=State.OK,
-        summary=f"Strategy: {strategy_text(section_kube_deployment_spec.strategy)}",
+        summary=f"Strategy: {strategy_text(section_kube_deployment_strategy.strategy)}",
     )
 
 
 register.check_plugin(
     name="kube_replicas",
-    sections=["kube_replicas", "kube_deployment_spec"],
+    sections=["kube_replicas", "kube_deployment_strategy"],
     service_name="Replicas",
     discovery_function=discover_kube_replicas,
     check_function=check_kube_replicas,

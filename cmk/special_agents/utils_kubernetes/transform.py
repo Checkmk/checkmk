@@ -375,15 +375,27 @@ def node_from_client(node: client.V1Node, kubelet_health: api.HealthZ) -> api.No
     )
 
 
+def parse_selector(selector: client.V1LabelSelector) -> api.Selector:
+    match_expressions = selector.match_expressions or []
+    return api.Selector(
+        match_labels=selector.match_labels or {},
+        match_expressions=[expression.to_dict() for expression in match_expressions],
+    )
+
+
 def parse_deployment_spec(deployment_spec: client.V1DeploymentSpec) -> api.DeploymentSpec:
     if deployment_spec.strategy.type == "Recreate":
-        return api.DeploymentSpec(strategy=api.Recreate())
+        return api.DeploymentSpec(
+            strategy=api.Recreate(),
+            selector=parse_selector(deployment_spec.selector),
+        )
     if deployment_spec.strategy.type == "RollingUpdate":
         return api.DeploymentSpec(
             strategy=api.RollingUpdate(
                 max_surge=deployment_spec.strategy.rolling_update.max_surge,
                 max_unavailable=deployment_spec.strategy.rolling_update.max_unavailable,
-            )
+            ),
+            selector=parse_selector(deployment_spec.selector),
         )
     raise ValueError(f"Unknown strategy type: {deployment_spec.strategy.type}")
 

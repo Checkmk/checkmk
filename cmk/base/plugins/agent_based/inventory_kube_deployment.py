@@ -9,22 +9,22 @@ from typing import Optional
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Attributes, register, TableRow
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import InventoryResult
-from cmk.base.plugins.agent_based.utils.k8s import DeploymentInfo, DeploymentSpec
-from cmk.base.plugins.agent_based.utils.kube_deployment_spec import strategy_text
+from cmk.base.plugins.agent_based.utils.k8s import DeploymentInfo, DeploymentStrategy
+from cmk.base.plugins.agent_based.utils.kube_deployment_strategy import strategy_text
 
 
 def inventory_kube_deployment(
     section_kube_deployment_info: Optional[DeploymentInfo],
-    section_kube_deployment_spec: Optional[DeploymentSpec],
+    section_kube_deployment_strategy: Optional[DeploymentStrategy],
 ) -> InventoryResult:
-    if section_kube_deployment_info is None or section_kube_deployment_spec is None:
+    if section_kube_deployment_info is None or section_kube_deployment_strategy is None:
         return
     yield Attributes(
         path=["software", "applications", "kube", "deployment"],
         inventory_attributes={
             "name": section_kube_deployment_info.name,
             "namespace": section_kube_deployment_info.namespace,
-            "strategy": strategy_text(section_kube_deployment_spec.strategy),
+            "strategy": strategy_text(section_kube_deployment_strategy.strategy),
         },
     )
     for label in section_kube_deployment_info.labels.values():
@@ -37,6 +37,6 @@ def inventory_kube_deployment(
 
 register.inventory_plugin(
     name="kube_deployment",
-    sections=["kube_deployment_info", "kube_deployment_spec"],
+    sections=["kube_deployment_info", "kube_deployment_strategy"],
     inventory_function=inventory_kube_deployment,
 )

@@ -338,5 +338,7 @@ class Recreate(BaseModel):
     type_: Literal["Recreate"] = Field("Recreate", const=True)
 
 
-class DeploymentSpec(BaseModel):
+class DeploymentStrategy(BaseModel):
+    """section: kube_deployment_strategy_v1"""
+
     strategy: Union[Recreate, RollingUpdate] = Field(discriminator="type_")

@@ -14,7 +14,18 @@ except the python standard library or pydantic.
 """
 
 import enum
-from typing import Dict, List, Literal, Mapping, NewType, Optional, Protocol, Sequence, Union
+from typing import (
+    Dict,
+    List,
+    Literal,
+    Mapping,
+    NewType,
+    Optional,
+    Protocol,
+    Sequence,
+    TypedDict,
+    Union,
+)
 
 from pydantic import BaseModel
 from pydantic.class_validators import validator
@@ -155,6 +166,21 @@ class DeploymentStatus(BaseModel):
     conditions: Mapping[str, DeploymentCondition]
 
 
+class MatchExpression(TypedDict):
+    key: LabelName
+    operator: Literal["In", "NotIn", "Exists", "DoesNotExist"]
+    values: Sequence[LabelValue]
+
+
+MatchLabels = Mapping[LabelName, LabelValue]
+MatchExpressions = Sequence[MatchExpression]
+
+
+class Selector(BaseModel):
+    match_labels: MatchLabels
+    match_expressions: MatchExpressions
+
+
 class RollingUpdate(BaseModel):
     type_: Literal["RollingUpdate"] = Field("RollingUpdate", const=True)
     max_surge: str
@@ -167,6 +193,7 @@ class Recreate(BaseModel):
 
 class DeploymentSpec(BaseModel):
     strategy: Union[Recreate, RollingUpdate] = Field(discriminator="type_")
+    selector: Selector
 
 
 class Deployment(BaseModel):

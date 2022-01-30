@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.plugins.agent_based.utils import k8s as k8s_check
 from cmk.base.plugins.agent_based.utils import kube as check
 from cmk.base.plugins.agent_based.utils.k8s import AllocatablePods as AllocatablePodsC
 from cmk.base.plugins.agent_based.utils.k8s import ClusterInfo as ClusterInfoC
@@ -14,7 +15,6 @@ from cmk.base.plugins.agent_based.utils.k8s import (
     ContainerTerminatedState as ContainerTerminatedStateC,
 )
 from cmk.base.plugins.agent_based.utils.k8s import ContainerWaitingState as ContainerWaitingStateC
-from cmk.base.plugins.agent_based.utils.k8s import DeploymentSpec as DeploymentSpecC
 from cmk.base.plugins.agent_based.utils.k8s import KubeletInfo as KubeletInfoC
 from cmk.base.plugins.agent_based.utils.k8s import Memory as MemoryC
 from cmk.base.plugins.agent_based.utils.k8s import NodeInfo as NodeInfoC
@@ -41,7 +41,6 @@ from cmk.special_agents.utils_kubernetes.schemata.api import (
 from cmk.special_agents.utils_kubernetes.schemata.api import (
     ContainerWaitingState as ContainerWaitingStateA,
 )
-from cmk.special_agents.utils_kubernetes.schemata.api import DeploymentSpec as DeploymentSpecA
 from cmk.special_agents.utils_kubernetes.schemata.api import KubeletInfo as KubeletInfoA
 from cmk.special_agents.utils_kubernetes.schemata.api import Replicas as ReplicasA
 from cmk.special_agents.utils_kubernetes.schemata.api import StartTime as StartTimeA
@@ -82,4 +81,4 @@ def test_schemata_did_not_diverge() -> None:
     assert StartTimeA.schema() == StartTimeC.schema()
     assert PodInfoA.schema() == PodInfoC.schema()
     assert ReplicasA.schema() == ReplicasC.schema()
-    assert DeploymentSpecA.schema() == DeploymentSpecC.schema()
+    assert agent.DeploymentStrategy.schema() == k8s_check.DeploymentStrategy.schema()

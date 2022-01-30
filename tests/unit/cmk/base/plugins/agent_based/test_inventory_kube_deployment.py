@@ -12,7 +12,7 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import Attributes, TableRow
 from cmk.base.plugins.agent_based.inventory_kube_deployment import inventory_kube_deployment
 from cmk.base.plugins.agent_based.utils.k8s import (
     DeploymentInfo,
-    DeploymentSpec,
+    DeploymentStrategy,
     Label,
     LabelName,
     RollingUpdate,
@@ -20,7 +20,7 @@ from cmk.base.plugins.agent_based.utils.k8s import (
 
 
 @pytest.mark.parametrize(
-    "section_info, section_spec, expected_check_result",
+    "section_info, section_strategy, expected_check_result",
     [
         pytest.param(
             DeploymentInfo(
@@ -31,7 +31,7 @@ from cmk.base.plugins.agent_based.utils.k8s import (
                 images=["i/name:0.5"],
                 containers=["name"],
             ),
-            DeploymentSpec(
+            DeploymentStrategy(
                 strategy=RollingUpdate(
                     max_surge="25%",
                     max_unavailable="25%",
@@ -60,7 +60,7 @@ from cmk.base.plugins.agent_based.utils.k8s import (
 )
 def test_inventory_kube_deployment(
     section_info: DeploymentInfo,
-    section_spec: DeploymentSpec,
+    section_strategy: DeploymentStrategy,
     expected_check_result: Sequence[Any],
 ) -> None:
-    assert list(inventory_kube_deployment(section_info, section_spec)) == expected_check_result
+    assert list(inventory_kube_deployment(section_info, section_strategy)) == expected_check_result

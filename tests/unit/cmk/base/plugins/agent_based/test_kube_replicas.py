@@ -380,7 +380,47 @@ def test_check_kube_replicas_not_ready_replicas(
                     summary="Strategy: RollingUpdate (max surge: 25%, max unavailable: 25%)",
                 ),
             ],
-            id="Not ready and outdated replicas are both checked and shown",
+            id="Not ready and outdated replicas are both checked and shown, strategy is RollingUpdate",
+        ),
+        pytest.param(
+            {
+                "not_ready_duration": ("levels", (300, 500)),
+                "update_duration": ("levels", (300, 500)),
+            },
+            Replicas(
+                replicas=3,
+                updated=0,
+                available=3,
+                ready=0,
+                unavailable=0,
+            ),
+            DeploymentSpec(
+                strategy=UpdateStrategy(
+                    type_="Recreate",
+                    rolling_update=None,
+                )
+            ),
+            {"not_ready_started_timestamp": 100.0, "update_started_timestamp": 100.0},
+            [
+                Result(state=State.OK, summary="Ready: 0/3"),
+                Result(state=State.OK, summary="Up-to-date: 0/3"),
+                Metric("kube_desired_replicas", 3.0, boundaries=(0.0, 3.0)),
+                Metric("kube_ready_replicas", 0.0, boundaries=(0.0, 3.0)),
+                Metric("kube_updated_replicas", 0.0, boundaries=(0.0, 3.0)),
+                Result(
+                    state=State.CRIT,
+                    summary="Not ready for: 11 minutes 40 seconds (warn/crit at 5 minutes 0 seconds/8 minutes 20 seconds)",
+                ),
+                Result(
+                    state=State.CRIT,
+                    summary="Not updated for: 11 minutes 40 seconds (warn/crit at 5 minutes 0 seconds/8 minutes 20 seconds)",
+                ),
+                Result(
+                    state=State.OK,
+                    summary="Strategy: Recreate",
+                ),
+            ],
+            id="Not ready and outdated replicas are both checked and shown, strategy is Recreate",
         ),
     ],
 )

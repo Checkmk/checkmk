@@ -139,6 +139,8 @@ def check_kube_replicas(
             f" (max surge: {section_kube_deployment_spec.strategy.rolling_update.max_surge}, "
             f"max unavailable: {section_kube_deployment_spec.strategy.rolling_update.max_unavailable})"
         )
+    else:
+        rolling_update_text = ""
 
     yield Result(
         state=State.OK,

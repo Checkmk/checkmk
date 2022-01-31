@@ -24,7 +24,7 @@ sudo rsync \
 
 # Also deploy all other directories of same type
 if [ ${ALL_EDITIONS:-1} != 0 ]; then
-    for WHAT in enterprise managed; do
+    for WHAT in enterprise managed plus; do
         if [ -e ../../$WHAT/cmk/core_helpers/.f12 ]; then
             (
                 cd ../../$WHAT/cmk/core_helpers

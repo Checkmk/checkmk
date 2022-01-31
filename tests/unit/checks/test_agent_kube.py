@@ -25,8 +25,8 @@ pytestmark = pytest.mark.checks
                 "cluster-name": "cluster",
                 "kubernetes-api-server": {"endpoint": ("ipaddress", {"protocol": "https"})},
                 "cluster-agent": {
-                    "node_ip": "11.211.3.32",
-                    "connection_port": 20026,
+                    "node-ip": "11.211.3.32",
+                    "connection-port": 20026,
                     "protocol": "https",
                 },
                 "verify-cert": False,
@@ -51,8 +51,8 @@ pytestmark = pytest.mark.checks
                     "endpoint": ("ipaddress", {"port": 8080, "protocol": "http"})
                 },
                 "cluster-agent": {
-                    "node_ip": "11.211.3.32",
-                    "connection_port": 20026,
+                    "node-ip": "11.211.3.32",
+                    "connection-port": 20026,
                     "protocol": "https",
                 },
                 "verify-cert": True,
@@ -74,14 +74,14 @@ pytestmark = pytest.mark.checks
         (
             {
                 "cluster-name": "cluster",
-                "monitored_objects": ["pods"],
+                "monitored-objects": ["pods"],
                 "kubernetes-api-server": {
-                    "endpoint": ("url_custom", "http://localhost:8080"),
+                    "endpoint": ("url-custom", "http://localhost:8080"),
                     "token": ("password", "randomtoken"),
                 },
                 "cluster-agent": {
-                    "node_ip": "11.211.3.32",
-                    "connection_port": 20026,
+                    "node-ip": "11.211.3.32",
+                    "connection-port": 20026,
                     "protocol": "https",
                 },
                 "verify-cert": False,
@@ -114,7 +114,7 @@ def test_parse_arguments_with_no_cluster_endpoint():
     params = {
         "cluster-name": "cluster",
         "kubernetes-api-server": {"endpoint": ("ipaddress", {"protocol": "https"})},
-        "monitored_objects": ["pods"],
+        "monitored-objects": ["pods"],
         "verify-cert": False,
     }
     arguments = agent.argument_func(params, "host", "127.0.0.1")
@@ -136,8 +136,8 @@ def test_parse_namespace_patterns():
             "cluster-name": "cluster",
             "kubernetes-api-server": {"endpoint": ("ipaddress", {"protocol": "https"})},
             "cluster-agent": {
-                "node_ip": "11.211.3.32",
-                "connection_port": 20026,
+                "node-ip": "11.211.3.32",
+                "connection-port": 20026,
                 "protocol": "https",
             },
             "verify-cert": False,
@@ -172,8 +172,8 @@ def test_parse_namespace_patterns():
                 "cluster-name": "test",
                 "kubernetes-api-server": {"endpoint": ("ipaddress", {"protocol": "https"})},
                 "cluster-agent": {
-                    "node_ip": "11.211.3.32",
-                    "connection_port": 20026,
+                    "node-ip": "11.211.3.32",
+                    "connection-port": 20026,
                     "protocol": "https",
                 },
                 "verify-cert": False,
@@ -187,8 +187,8 @@ def test_parse_namespace_patterns():
                     "endpoint": ("ipaddress", {"port": 8080, "protocol": "http"})
                 },
                 "cluster-agent": {
-                    "node_ip": "11.211.3.32",
-                    "connection_port": 20026,
+                    "node-ip": "11.211.3.32",
+                    "connection-port": 20026,
                     "protocol": "https",
                 },
                 "verify-cert": True,
@@ -199,12 +199,12 @@ def test_parse_namespace_patterns():
             {
                 "cluster-name": "test",
                 "kubernetes-api-server": {
-                    "endpoint": ("url_custom", "http://localhost:8080"),
+                    "endpoint": ("url-custom", "http://localhost:8080"),
                     "token": ("password", "randomtoken"),
                 },
                 "cluster-agent": {
-                    "node_ip": "11.211.3.32",
-                    "connection_port": 20026,
+                    "node-ip": "11.211.3.32",
+                    "connection-port": 20026,
                     "protocol": "https",
                 },
                 "verify-cert": False,

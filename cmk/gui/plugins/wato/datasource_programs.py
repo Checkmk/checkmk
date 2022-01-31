@@ -783,7 +783,7 @@ def _valuespec_special_agents_kube():
                                         _kube_connection_elements(),
                                     ),
                                     (
-                                        "url_custom",
+                                        "url-custom",
                                         _("Custom URL"),
                                         TextInput(
                                             allow_empty=False,
@@ -817,7 +817,7 @@ def _valuespec_special_agents_kube():
                 Dictionary(
                     elements=[
                         (
-                            "node_ip",
+                            "node-ip",
                             TextInput(
                                 title=_("IP address of Kubernetes node"),
                                 allow_empty=False,
@@ -829,7 +829,7 @@ def _valuespec_special_agents_kube():
                             ),
                         ),
                         (
-                            "connection_port",
+                            "connection-port",
                             Integer(
                                 title=_("Port of Kubernetes' checkmk-external service"),
                                 default_value=30035,
@@ -876,7 +876,7 @@ def _valuespec_special_agents_kube():
                 ),
             ),
             (
-                "monitored_objects",
+                "monitored-objects",
                 ListChoice(
                     choices=[
                         ("deployments", _("Deployments")),

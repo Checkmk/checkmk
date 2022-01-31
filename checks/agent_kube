@@ -14,7 +14,7 @@ def agent_kube_arguments(params, hostname, ipaddress):
         args.extend(["--token", passwordstore_get_cmdline("%s", api_server_params["token"])])
 
     args.append("--monitored-objects")
-    for monitored_object in params.get("monitored_objects", ["nodes", "deployments", "pods"]):
+    for monitored_object in params.get("monitored-objects", ["nodes", "deployments", "pods"]):
         args.append(monitored_object)
 
     if "namespaces" in params:
@@ -25,7 +25,7 @@ def agent_kube_arguments(params, hostname, ipaddress):
 
     args.append("--api-server-endpoint")
     configured_endpoint_name, configured_endpoint = api_server_params["endpoint"]
-    if configured_endpoint_name == "url_custom":
+    if configured_endpoint_name == "url-custom":
         args.append(configured_endpoint)
     else:
         protocol = configured_endpoint["protocol"]
@@ -39,7 +39,7 @@ def agent_kube_arguments(params, hostname, ipaddress):
     if (agent_options := params.get("cluster-agent")) is not None:
         args.append("--cluster-agent-endpoint")
         args.append(
-            f'{agent_options["protocol"]}://{agent_options["node_ip"]}:{agent_options["connection_port"]}'
+            f'{agent_options["protocol"]}://{agent_options["node-ip"]}:{agent_options["connection-port"]}'
         )
 
     if params.get("verify-cert"):

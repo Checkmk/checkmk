@@ -884,10 +884,13 @@ def request_metrics_from_cluster_collector(
     verify: bool,
 ) -> Sequence[RawMetrics]:
     LOGGER.info("Collecting metrics from cluster collector")
+    if not verify:
+        LOGGER.info("Disabling SSL certificate verification")
+        urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
     cluster_resp = requests.get(
         f"{cluster_agent_url}/container_metrics",
         headers={"Authorization": f"Bearer {token}"},
-        verify=verify,
+        verify=False,
     )  # TODO: certificate validation
     if cluster_resp.status_code != 200:
         raise SetupError("Checkmk cannot make a connection to the k8 cluster agent")

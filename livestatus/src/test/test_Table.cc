@@ -27,6 +27,7 @@
 #include "TableHostGroups.h"
 #include "TableHosts.h"
 #include "TableHostsByGroup.h"
+#include "TableLog.h"
 #include "TableServiceGroups.h"
 #include "TableServices.h"
 #include "TableServicesByGroup.h"
@@ -114,6 +115,7 @@ static ColumnDefinitions host_groups_columns();
 static ColumnDefinitions hosts_and_services_columns();
 static ColumnDefinitions funny_hosts_and_services_columns();
 static ColumnDefinitions hosts_columns();
+static ColumnDefinitions log_columns();
 static ColumnDefinitions services_columns(bool add_hosts);
 static ColumnDefinitions state_history_columns();
 static ColumnDefinitions status_columns();
@@ -433,7 +435,6 @@ TEST(TableHostGroups, ColumnNamesAndTypes) {
               ColumnDefinitions(TableHostGroups{nullptr}));
 }
 
-// TODO(sp) Remove this funny flag!
 static ColumnDefinitions hosts_and_services_columns() {
     return {
         {"accept_passive_checks", ColumnType::int_},
@@ -612,8 +613,38 @@ TEST(TableHostsByGroup, ColumnNamesAndTypes) {
               ColumnDefinitions(TableHostsByGroup{nullptr}));
 }
 
+static ColumnDefinitions log_columns() {
+    return {
+        {"attempt", ColumnType::int_},
+        {"class", ColumnType::int_},
+        {"command_name", ColumnType::string},
+        {"comment", ColumnType::string},
+        {"contact_name", ColumnType::string},
+        {"host_name", ColumnType::string},
+        {"lineno", ColumnType::int_},
+        {"long_plugin_output", ColumnType::string},
+        {"message", ColumnType::string},
+        {"options", ColumnType::string},
+        {"plugin_output", ColumnType::string},
+        {"service_description", ColumnType::string},
+        {"state", ColumnType::int_},
+        {"state_info", ColumnType::string},
+        {"state_type", ColumnType::string},
+        {"time", ColumnType::time},
+        {"type", ColumnType::string},
+    };
+}
+
 TEST(TableLog, ColumnNamesAndTypes) {
-    // TODO(sp)
+    EXPECT_EQ(
+        log_columns() +  //
+            hosts_and_services_columns().add_prefix("current_host_") +
+            hosts_columns().add_prefix("current_host_") +
+            funny_hosts_and_services_columns().add_prefix("current_host_") +
+            services_columns(false).add_prefix("current_service_") +
+            contacts_columns().add_prefix("current_contact_") +
+            commands_columns().add_prefix("current_command_"),
+        ColumnDefinitions(TableLog{nullptr, nullptr}));
 }
 
 TEST(TableServiceGroups, ColumnNamesAndTypes) {

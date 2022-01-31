@@ -43,7 +43,6 @@ PLUGINSDIR=$MK_LIBDIR/plugins
 # to online documentation for details.
 LOCALDIR=$MK_LIBDIR/local
 
-
 # close standard input (for security reasons) and stderr
 if [ "$1" = -d ]; then
     set -xv
@@ -94,35 +93,35 @@ section_misc_sections() {
 
     date +%s
     while [ $Z1 -lt 15 ]; do
-      BI=$( netstat -inb | grep -v -E Name | grep Link | awk '{ print $1" "$5 }' | sed -ne $Z1$Z2 )
-      PI=$( netstat -in | grep -v -E Name | grep Link | awk '{ print $5 }' | sed -ne $Z1$Z2 )
-      EI=$( netstat -in | grep -v -E Name | grep Link | awk '{ print $6 }' | sed -ne $Z1$Z2 )
-      FF1="0 0 0 0 0"
-      BO=$( netstat -inb | grep -v -E Name | grep Link | awk '{ print $6 }' | sed -ne $Z1$Z2 )
-      PO=$( netstat -in | grep -v -E Name | grep Link | awk '{ print $7 }' | sed -ne $Z1$Z2 )
-      EO=$( netstat -in | grep -v -E Name | grep Link | awk '{ print $8 }' | sed -ne $Z1$Z2 )
-      CO=$( netstat -in | grep -v -E Name | grep Link | awk '{ print $9 }' | sed -ne $Z1$Z2 )
-      FF2="0 0"
+        BI=$(netstat -inb | grep -v -E Name | grep Link | awk '{ print $1" "$5 }' | sed -ne $Z1$Z2)
+        PI=$(netstat -in | grep -v -E Name | grep Link | awk '{ print $5 }' | sed -ne $Z1$Z2)
+        EI=$(netstat -in | grep -v -E Name | grep Link | awk '{ print $6 }' | sed -ne $Z1$Z2)
+        FF1="0 0 0 0 0"
+        BO=$(netstat -inb | grep -v -E Name | grep Link | awk '{ print $6 }' | sed -ne $Z1$Z2)
+        PO=$(netstat -in | grep -v -E Name | grep Link | awk '{ print $7 }' | sed -ne $Z1$Z2)
+        EO=$(netstat -in | grep -v -E Name | grep Link | awk '{ print $8 }' | sed -ne $Z1$Z2)
+        CO=$(netstat -in | grep -v -E Name | grep Link | awk '{ print $9 }' | sed -ne $Z1$Z2)
+        FF2="0 0"
         if [ "$PI" -gt "0" ]; then
             echo "$BI $PI $EI $FF1 $BO $PO $EO $FF2 $CO $FF2"
         fi
-      Z1=$((Z1 + 1))
+        Z1=$((Z1 + 1))
     done
 
     # IPMI-Data (Fans, CPU, temperature, etc)
     # needs the sysutils/ipmitool and kldload ipmi.ko
     if inpath ipmitool; then
         echo '<<<ipmi>>>'
-        ipmitool sensor list \
-            | grep -v 'command failed' \
-            | sed -e 's/ *| */|/g' -e "s/ /_/g" -e 's/_*$//' -e 's/|/ /g' \
-            | grep -v -E '^[^ ]+ na ' \
-            | grep -v ' discrete '
+        ipmitool sensor list |
+            grep -v 'command failed' |
+            sed -e 's/ *| */|/g' -e "s/ /_/g" -e 's/_*$//' -e 's/|/ /g' |
+            grep -v -E '^[^ ]+ na ' |
+            grep -v ' discrete '
     fi
 
     if inpath mailq && getent passwd postfix >/dev/null 2>&1; then
-      echo '<<<postfix_mailq>>>'
-      mailq | tail -n 6
+        echo '<<<postfix_mailq>>>'
+        mailq | tail -n 6
     fi
 }
 
@@ -153,13 +152,13 @@ run_mrpe_plugins() {
         # The following suppression was added when we enabled the corresponding shellcheck.
         # It may well be that "read -r" would be more appropriate.
         # shellcheck disable=SC2162
-        grep -Ev '^[[:space:]]*($|#)' "$MK_CONFDIR/mrpe.cfg" | \
-        while read descr cmdline; do
-            PLUGIN=${cmdline%% *}
-            OUTPUT=$(eval "$cmdline")
-            printf "(%s) %s %s %s" "${PLUGIN##*/}" "$descr" "$?" "$OUTPUT" | tr \\n \\1
-            printf "\n"
-        done
+        grep -Ev '^[[:space:]]*($|#)' "$MK_CONFDIR/mrpe.cfg" |
+            while read descr cmdline; do
+                PLUGIN=${cmdline%% *}
+                OUTPUT=$(eval "$cmdline")
+                printf "(%s) %s %s %s" "${PLUGIN##*/}" "$descr" "$?" "$OUTPUT" | tr \\n \\1
+                printf "\n"
+            done
     fi
 }
 

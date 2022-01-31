@@ -43,7 +43,6 @@ PLUGINSDIR=$MK_LIBDIR/plugins
 # to online documentation for details.
 LOCALDIR=$MK_LIBDIR/local
 
-
 # close standard input (for security reasons) and stderr
 if [ "$1" = -d ]; then
     set -xv
@@ -129,7 +128,7 @@ section_misc_sections() {
     '
     # collect netstat values and interface number
     for NS in $NETSTAT_OUTPUT; do
-        NI=$((NI+1))
+        NI=$((NI + 1))
         INTERFACES[$NI]=$(echo "$NS" | awk '{ print $1 }')
         MC[$NI]=$(echo "$NS" | awk '{ print $4 }')
         PI[$NI]=$(echo "$NS" | awk '{ print $5 }')
@@ -142,7 +141,7 @@ section_misc_sections() {
     # need NIC counter again for byte values - reset it
     NI=0
     for NS in $NETSTAT_OUTPUT_BYTES; do
-        NI=$((NI+1))
+        NI=$((NI + 1))
         BI[$NI]=$(echo "$NS" | awk '{ print $5 }')
         BO[$NI]=$(echo "$NS" | awk '{ print $6 }')
     done
@@ -195,16 +194,16 @@ section_misc_sections() {
     # needs the sysutils/ipmitool and kldload ipmi.ko
     if inpath ipmitool; then
         echo '<<<ipmi>>>'
-        ipmitool sensor list \
-            | grep -v 'command failed' \
-            | sed -e 's/ *| */|/g' -e "s/ /_/g" -e 's/_*$//' -e 's/|/ /g' \
-            | grep -v -E '^[^ ]+ na ' \
-            | grep -v ' discrete '
+        ipmitool sensor list |
+            grep -v 'command failed' |
+            sed -e 's/ *| */|/g' -e "s/ /_/g" -e 's/_*$//' -e 's/|/ /g' |
+            grep -v -E '^[^ ]+ na ' |
+            grep -v ' discrete '
     fi
 
     if inpath mailq && getent passwd postfix >/dev/null 2>&1; then
-      echo '<<<postfix_mailq>>>'
-      mailq | tail -n 6
+        echo '<<<postfix_mailq>>>'
+        mailq | tail -n 6
     fi
 }
 
@@ -236,13 +235,13 @@ run_mrpe_plugins() {
         # Since escaping of field seperators is not relevant when reading into one variable, we probably
         # would have wanted "read -r".
         # shellcheck disable=SC2162
-        grep -Ev '^[[:space:]]*($|#)' "$MK_CONFDIR/mrpe.cfg" | \
-        while read descr cmdline; do
-            PLUGIN=${cmdline%% *}
-            OUTPUT=$(eval "$cmdline")
-            printf "(%s) %s %s %s"  "${PLUGIN##*/}" "$descr" "$?" "$OUTPUT" | tr \\n \\1
-            echo
-        done
+        grep -Ev '^[[:space:]]*($|#)' "$MK_CONFDIR/mrpe.cfg" |
+            while read descr cmdline; do
+                PLUGIN=${cmdline%% *}
+                OUTPUT=$(eval "$cmdline")
+                printf "(%s) %s %s %s" "${PLUGIN##*/}" "$descr" "$?" "$OUTPUT" | tr \\n \\1
+                echo
+            done
     fi
 }
 

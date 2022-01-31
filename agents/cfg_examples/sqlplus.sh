@@ -15,7 +15,7 @@
 # result on stdout. Error messages goes to stderr.
 
 ORACLE_SID=$1
-if [ -z "$ORACLE_SID" ] ; then
+if [ -z "$ORACLE_SID" ]; then
     echo "Usage: $0 ORACLE_SID" >&2
     exit 1
 fi

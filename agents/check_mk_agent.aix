@@ -102,8 +102,7 @@ set_variable_defaults() {
     [ "${MK_RUN_ASYNC_PARTS}" = "false" ] || MK_RUN_ASYNC_PARTS=true
 }
 
-
-preamble_1() {  # TODO: split these up more meaningful
+preamble_1() { # TODO: split these up more meaningful
     # force load of environment
 
     if [ -e "${HOME}"/.profile ]; then
@@ -245,9 +244,15 @@ preamble_3() {
 
     if [ -z "${PYTHON2}" ] && [ -z "${PYTHON3}" ]; then
         NO_PYTHON=true
-    elif [ -n "${PYTHON3}" ] && [ "$(${PYTHON3} -c 'pass' > /dev/null 2>&1; echo $?)" -eq 127 ]; then
+    elif [ -n "${PYTHON3}" ] && [ "$(
+        ${PYTHON3} -c 'pass' >/dev/null 2>&1
+        echo $?
+    )" -eq 127 ]; then
         WRONG_PYTHON_COMMAND=true
-    elif [ -z "${PYTHON3}" ] && [ "$(${PYTHON2} -c 'pass' > /dev/null 2>&1; echo $?)" -eq 127 ]; then
+    elif [ -z "${PYTHON3}" ] && [ "$(
+        ${PYTHON2} -c 'pass' >/dev/null 2>&1
+        echo $?
+    )" -eq 127 ]; then
         WRONG_PYTHON_COMMAND=true
     fi
 }
@@ -260,26 +265,26 @@ optionally_encrypt() { cat; }
 # of the command. It is successfull if the command terminated
 # in time.
 waitmax() {
-   TIMEOUT=${1}0
-   shift
+    TIMEOUT=${1}0
+    shift
 
-   # Run command in background
-   ksh -c "$*" &
-   PID=$!
+    # Run command in background
+    ksh -c "$*" &
+    PID=$!
 
-   # Wait for termination within TIMOUT seconds
-   while [ "${TIMEOUT}" -gt 0 ]; do
-       TIMEOUT=$((TIMEOUT - 1))
-       if [ ! -e /proc/${PID} ]; then
-           return 0
-       fi
-       perl -e "select(undef, undef, undef, 0.1);"
-   done
+    # Wait for termination within TIMOUT seconds
+    while [ "${TIMEOUT}" -gt 0 ]; do
+        TIMEOUT=$((TIMEOUT - 1))
+        if [ ! -e /proc/${PID} ]; then
+            return 0
+        fi
+        perl -e "select(undef, undef, undef, 0.1);"
+    done
 
-   # Process did not terminate in time. Kill and
-   # return with an error
-   kill -9 ${PID}
-   return 255
+    # Process did not terminate in time. Kill and
+    # return with an error
+    kill -9 ${PID}
+    return 255
 }
 
 section_checkmk() {
@@ -352,7 +357,7 @@ section_nfs_mounts() {
             if [ ! -r "${MP}" ]; then
                 echo "${MP} Permission denied"
             else
-                waitmax 2 stat -f -c '"'"${MP}"' ok - - - -"' "${MP}" || \
+                waitmax 2 stat -f -c '"'"${MP}"' ok - - - -"' "${MP}" ||
                     echo "${MP} hanging 0 0 0 0"
             fi
         done
@@ -366,8 +371,8 @@ section_ps() {
 
 section_lparstat_aix() {
     if inpath lparstat; then
-      echo '<<<lparstat_aix>>>'
-      lparstat 1 1
+        echo '<<<lparstat_aix>>>'
+        lparstat 1 1
     fi
 }
 
@@ -383,7 +388,7 @@ section_aix_diskio() {
 
 section_aix_memory() {
     echo '<<<aix_memory>>>'
-    vmstat -v  | tr -s ' '
+    vmstat -v | tr -s ' '
     swap -s
 }
 
@@ -418,7 +423,7 @@ section_aix_if() {
 
 section_ntp() {
     if inpath ntpq; then
-        if [ "$(lssrc -s xntpd|grep -c active)" -gt 0 ]; then
+        if [ "$(lssrc -s xntpd | grep -c active)" -gt 0 ]; then
             echo '<<<ntp>>>'
             ntpq -np | sed -e 1,2d -e 's/^\(.\)/\1 /' -e 's/^ /%/'
         fi
@@ -445,14 +450,14 @@ section_tcp() {
 section_libelle() {
     # Libelle Business Shadow
     if inpath trd; then
-      echo '<<<libelle_business_shadow:sep(58)>>>'
-      trd -s
+        echo '<<<libelle_business_shadow:sep(58)>>>'
+        trd -s
     fi
 }
 
-section_mailqueue () {
+section_mailqueue() {
     if [ -x /usr/sbin/sendmail ]; then
-        echo '<<<postfix_mailq>>>';
+        echo '<<<postfix_mailq>>>'
         mailq 2>&1 | tail -n 6
     fi
 }
@@ -469,26 +474,30 @@ section_uptime() {
     echo '<<<uptime>>>'
     UPTIME=$(uptime | sed -e 's/^.*up//g' -e 's/[0-9]* user.*//g')
     case ${UPTIME} in
-        *day* ) DAYS=$(echo "${UPTIME}" | sed -e 's/days\{0,1\},.*//g') ;;
-        * ) DAYS="0" ;;
+        *day*) DAYS=$(echo "${UPTIME}" | sed -e 's/days\{0,1\},.*//g') ;;
+        *) DAYS="0" ;;
     esac
 
     case ${UPTIME} in
-        *:* )
+        *:*)
             HOURS=$(echo "${UPTIME}" | sed -e 's/.*days\{0,1\},//g' -e 's/:.*//g')
-            MINS=$(echo "${UPTIME}" | sed -e 's/.*days\{0,1\},//g' -e 's/.*://g' -e 's/,.*//g') ;;
-        *hr* )
+            MINS=$(echo "${UPTIME}" | sed -e 's/.*days\{0,1\},//g' -e 's/.*://g' -e 's/,.*//g')
+            ;;
+        *hr*)
             HOURS=$(echo "${UPTIME}" | sed -e 's/hrs\{0,1\},.*//g' -e 's/.*,//g')
-            MINS=0 ;;
-        *min* )
+            MINS=0
+            ;;
+        *min*)
             HOURS=0
-            MINS=$(echo "${UPTIME}" | sed -e 's/mins\{0,1\},.*//g' -e 's/.*hrs\{0,1\},//g' -e 's/.*days\{0,1\},//g') ;;
-        * )
+            MINS=$(echo "${UPTIME}" | sed -e 's/mins\{0,1\},.*//g' -e 's/.*hrs\{0,1\},//g' -e 's/.*days\{0,1\},//g')
+            ;;
+        *)
             HOURS="0"
-            MINS=0 ;;
+            MINS=0
+            ;;
     esac
 
-    echo $(((DAYS*86400)+(HOURS*3600)+(MINS*60)))
+    echo $(((DAYS * 86400) + (HOURS * 3600) + (MINS * 60)))
 }
 
 #
@@ -576,17 +585,17 @@ section_job() {
     if [ -d "${MK_VARDIR}/job" ]; then
         echo '<<<job>>>'
         CDIR=$(pwd)
-        cd "${MK_VARDIR}/job" 2> /dev/null || exit
+        cd "${MK_VARDIR}/job" 2>/dev/null || exit
         for username in *; do
             if [ -d "${username}" ] && cd "${username}"; then
                 for i in *; do
-                   echo "==> ${i} <=="
-                   cat "${i}"
+                    echo "==> ${i} <=="
+                    cat "${i}"
                 done
-                cd .. > /dev/null
+                cd .. >/dev/null
             fi
         done
-        cd "${CDIR}" 2> /dev/null || exit
+        cd "${CDIR}" 2>/dev/null || exit
     fi
 }
 
@@ -614,7 +623,7 @@ run_cached() {
     # Check if file exists and is recent enough
     if [ -s "${CACHEFILE}" ]; then
         AGE=$((NOW - $(get_file_mtime "${CACHEFILE}")))
-        if (( AGE < MAXAGE )); then
+        if ((AGE < MAXAGE)); then
             USE_CACHEFILE=1
         fi
 
@@ -635,7 +644,7 @@ run_cached() {
     ${MK_RUN_ASYNC_PARTS} || return
 
     if [ -z "${USE_CACHEFILE}" ] && [ ! -e "${CACHEFILE}.new" ]; then
-        nohup sh -c "eval ${MK_DEFINE_LOG_SECTION_TIME}; ${CMDLINE}" > "${CACHEFILE}.new" 2> /dev/null && mv -f "${CACHEFILE}.new" "${CACHEFILE}" || rm -f "${CACHEFILE}.new" "${CACHEFILE}"  &
+        nohup sh -c "eval ${MK_DEFINE_LOG_SECTION_TIME}; ${CMDLINE}" >"${CACHEFILE}.new" 2>/dev/null && mv -f "${CACHEFILE}.new" "${CACHEFILE}" || rm -f "${CACHEFILE}.new" "${CACHEFILE}" &
     fi
 }
 
@@ -776,13 +785,13 @@ run_remote_plugins() {
     # The following suppression was added when we enabled the corresponding shellcheck.
     # It may well be that "read -r" would be more appropriate.
     # shellcheck disable=SC2162
-    grep -Ev '^[[:space:]]*($|#)' "${MK_CONFDIR}/mrpe.cfg" | \
-    while read descr cmdline; do
-        PLUGIN=${cmdline%% *}
-        OUTPUT=$(eval "${MK_DEFINE_LOG_SECTION_TIME}; _log_section_time ${cmdline}")
-        echo "(${PLUGIN##*/}) ${descr} $? ${OUTPUT}" | tr \\n \\1
-        echo
-    done
+    grep -Ev '^[[:space:]]*($|#)' "${MK_CONFDIR}/mrpe.cfg" |
+        while read descr cmdline; do
+            PLUGIN=${cmdline%% *}
+            OUTPUT=$(eval "${MK_DEFINE_LOG_SECTION_TIME}; _log_section_time ${cmdline}")
+            echo "(${PLUGIN##*/}) ${descr} $? ${OUTPUT}" | tr \\n \\1
+            echo
+        done
 }
 
 run_purely_synchronous_sections() {
@@ -840,7 +849,7 @@ run_partially_asynchronous_sections() {
 
 main_setup() {
     exec </dev/null 9>&2 2>/dev/null
-    set_up_process_commandline_arguments "$@" 
+    set_up_process_commandline_arguments "$@"
     set_up_get_epoch
     unset_locale
     preamble_1

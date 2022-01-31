@@ -229,7 +229,6 @@ if inpath timeout; then
     }
 fi
 
-
 #
 # CHECK SECTIONS
 #
@@ -496,7 +495,7 @@ section_ipmitool() {
     fi
 }
 
-section_ipmisensors() {  # keep in sync with linux agent
+section_ipmisensors() { # keep in sync with linux agent
     # IPMI data via ipmi-sensors (of freeipmi).
     # Even if freeipmi is installed make sure that IPMI is really supported by your hardware.
     inpath ipmi-sensors && ls /dev/ipmi* 2>/dev/null 1>&2 || return
@@ -656,7 +655,7 @@ section_drbd() {
     fi
 }
 
-section_cups_queues() {  # TODO: this seems broken. Don't we need to export cups_queues?
+section_cups_queues() { # TODO: this seems broken. Don't we need to export cups_queues?
     # Status of CUPS printer queues
     if inpath lpstat; then
         if pgrep -f "\bcupsd" >/dev/null 2>&1; then
@@ -1348,7 +1347,7 @@ main_async_parts() {
 
 }
 
-main_finalize_sync(){
+main_finalize_sync() {
     finalize_profiling
 }
 

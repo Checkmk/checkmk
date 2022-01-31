@@ -62,6 +62,6 @@ if [ -r "$sapservices" ]; then
             id=$(LIBPATH=$LIBPATH:$lib_path $sappfpar SAPSYSTEM "$command")
             echo -n "[$id]"
             LIBPATH=$LIBPATH:$lib_path $sapcontrol -nr "$id" -function GetProcessList
-	fi
-    done < "$sapservices"
+        fi
+    done <"$sapservices"
 fi

@@ -3,17 +3,15 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-
 usage() {
-    cat<<HERE
+    cat <<HERE
 Usage: ${0} --create
 Create the system user 'cmk-agent' for the Checkmk agent package.
 HERE
     exit 1
 }
 
-
-main () {
+main() {
     [ "${1}" = "--create" ] || usage
 
     # add cmk-agent system user

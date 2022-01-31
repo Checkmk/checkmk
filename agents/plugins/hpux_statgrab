@@ -17,7 +17,6 @@ CMK_VERSION="2.1.0i1"
 # flags used for compiling - disable documentation, examples and set*id
 
 if command -v statgrab >/dev/null; then
-
     if statgrab const. cpu. general. mem. page. proc. swap. user. >"/tmp/statgrab.$$" 2>/dev/null; then
         for s in proc cpu page; do
             echo "<<<statgrab_$s>>>"

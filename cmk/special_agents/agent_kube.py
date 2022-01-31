@@ -243,6 +243,8 @@ class Pod:
             node=self.node,
             host_network=self.spec.host_network,
             dns_policy=self.spec.dns_policy,
+            host_ip=self.status.host_ip,
+            pod_ip=self.status.pod_ip,
             qos_class=self.status.qos_class,
             restart_policy=self.spec.restart_policy,
             uid=self.uid,

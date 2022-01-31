@@ -74,6 +74,8 @@ class PodInfo(BaseModel):
     # scheduled on any node (e.g., no node with enough capacity is available).
     host_network: Optional[str]
     dns_policy: Optional[str]
+    host_ip: Optional[api.IpAddress]
+    pod_ip: Optional[api.IpAddress]
     qos_class: api.QosClass
     restart_policy: api.RestartPolicy
     uid: api.PodUID

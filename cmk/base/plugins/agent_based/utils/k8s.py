@@ -158,6 +158,9 @@ class Controller(BaseModel):
     name: str
 
 
+IpAddress = NewType("IpAddress", str)
+
+
 class PodInfo(BaseModel):
     """section: kube_pod_info_v1"""
 
@@ -169,6 +172,8 @@ class PodInfo(BaseModel):
     # scheduled on any node (e.g., no node with enough capacity is available).
     host_network: Optional[str]
     dns_policy: Optional[str]
+    host_ip: Optional[IpAddress]
+    pod_ip: Optional[IpAddress]
     qos_class: QosClass
     restart_policy: RestartPolicy
     uid: PodUID

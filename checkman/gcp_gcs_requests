@@ -1,0 +1,18 @@
+title: GCP GCS: Request Count
+agents: gcp
+catalog: cloud/gcp
+license: GPLv2
+distribution: check_mk
+description:
+ This check monitors the request count of Cloud Storage (GCS) buckets and reports
+
+ - the total number of request in the last minute
+
+ To make this check work you have to configure the related
+ special agent {Google Cloud Platform (GCP)}.
+
+ There are no default levels. Upper levels on the number of requests
+ are configurable via the rule "GCP/GCS Request Count".
+
+discovery:
+ One service is created for each bucket.

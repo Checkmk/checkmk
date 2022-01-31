@@ -176,6 +176,14 @@ def vs_inventory_path_or_keys_help():
 #   '----------------------------------------------------------------------'
 
 
+class HistoryEntry(NamedTuple):
+    timestamp: Optional[int]
+    new: int
+    changed: int
+    removed: int
+    delta_tree: StructuredDataNode
+
+
 class FilteredTimestamps(NamedTuple):
     start_timestamp: Optional[int]
     timestamps: Sequence[int]
@@ -191,7 +199,7 @@ def load_latest_delta_tree(hostname: HostName) -> Optional[StructuredDataNode]:
             timestamps=[timestamps[-1]],
         )
 
-    delta_history, _corrupted_history_files = get_history(
+    delta_history, _corrupted_history_files = _get_history(
         hostname,
         filter_timestamps=_get_latest_timestamps,
     )
@@ -228,7 +236,7 @@ def load_delta_tree(
             timestamps=[timestamp],
         )
 
-    delta_history, corrupted_history_files = get_history(
+    delta_history, corrupted_history_files = _get_history(
         hostname,
         filter_timestamps=lambda timestamps: _search_timestamps(timestamps, timestamp),
     )
@@ -237,17 +245,20 @@ def load_delta_tree(
     return delta_history[0].delta_tree, corrupted_history_files
 
 
-class HistoryEntry(NamedTuple):
-    timestamp: Optional[int]
-    new: int
-    changed: int
-    removed: int
-    delta_tree: StructuredDataNode
+def get_history(hostname: HostName) -> Tuple[Sequence[HistoryEntry], Sequence[str]]:
+    return _get_history(
+        hostname,
+        filter_timestamps=lambda timestamps: FilteredTimestamps(
+            start_timestamp=None,
+            timestamps=timestamps,
+        ),
+    )
 
 
-def get_history(
+def _get_history(
     hostname: HostName,
-    filter_timestamps: Optional[Callable[[Sequence[int]], FilteredTimestamps]] = None,
+    *,
+    filter_timestamps: Callable[[Sequence[int]], FilteredTimestamps],
 ) -> Tuple[Sequence[HistoryEntry], Sequence[str]]:
     if "/" in hostname:
         return [], []  # just for security reasons
@@ -259,15 +270,10 @@ def get_history(
         return [], []
 
     latest_timestamp = all_timestamps[-1]
-    previous_timestamp: Optional[int]
 
-    if filter_timestamps is None:
-        previous_timestamp = None
-        required_timestamps = all_timestamps
-    else:
-        filtered_timestamps = filter_timestamps(all_timestamps)
-        previous_timestamp = filtered_timestamps.start_timestamp
-        required_timestamps = filtered_timestamps.timestamps
+    filtered_timestamps = filter_timestamps(all_timestamps)
+    previous_timestamp: Optional[int] = filtered_timestamps.start_timestamp
+    required_timestamps = filtered_timestamps.timestamps
 
     tree_lookup: Dict[int, Any] = {}
 

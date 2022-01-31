@@ -58,15 +58,6 @@ public:
         sort();
     }
 
-    [[nodiscard]] ColumnDefinitions add_prefix(
-        const std::string &prefix) const {
-        ColumnDefinitions result{*this};
-        for (auto &[name, type] : result.defs_) {
-            name.insert(0, prefix);
-        }
-        return result;
-    }
-
     bool operator==(const ColumnDefinitions &rhs) const {
         return defs_ == rhs.defs_;
     }
@@ -97,6 +88,14 @@ private:
         }
         return os;
     }
+
+    friend ColumnDefinitions operator/(const std::string &prefix,
+                                       ColumnDefinitions rhs) {
+        for (auto &[name, type] : rhs.defs_) {
+            name.insert(0, prefix);
+        }
+        return rhs;
+    }
 };
 
 // Our basic "building blocks"
@@ -125,11 +124,11 @@ static ColumnDefinitions timeperiods_columns();
 // Let's enforce the fact that TableCachedStatehist must be a drop-in
 // replacement for TableStateHistory.
 static ColumnDefinitions all_state_history_columns() {
-    return state_history_columns() +
-           hosts_columns().add_prefix("current_host_") +
-           hosts_and_services_columns().add_prefix("current_host_") +
-           funny_hosts_and_services_columns().add_prefix("current_host_") +
-           services_columns(false).add_prefix("current_service_");
+    return state_history_columns() +  //
+           "current_host_" / hosts_columns() +
+           "current_host_" / hosts_and_services_columns() +
+           "current_host_" / funny_hosts_and_services_columns() +
+           "current_service_" / services_columns(false);
 }
 
 #ifdef CMC
@@ -181,10 +180,10 @@ static ColumnDefinitions comments_columns() {
 
 TEST(TableComments, ColumnNamesAndTypes) {
     EXPECT_EQ(comments_columns() +  //
-                  hosts_columns().add_prefix("host_") +
-                  hosts_and_services_columns().add_prefix("host_") +
-                  funny_hosts_and_services_columns().add_prefix("host_") +
-                  services_columns(false).add_prefix("service_"),
+                  "host_" / hosts_columns() +
+                  "host_" / hosts_and_services_columns() +
+                  "host_" / funny_hosts_and_services_columns() +
+                  "service_" / services_columns(false),
               ColumnDefinitions(TableComments{nullptr}));
 }
 
@@ -278,10 +277,10 @@ static ColumnDefinitions downtimes_columns() {
 
 TEST(TableDowntimes, ColumnNamesAndTypes) {
     EXPECT_EQ(downtimes_columns() +  //
-                  hosts_columns().add_prefix("host_") +
-                  hosts_and_services_columns().add_prefix("host_") +
-                  funny_hosts_and_services_columns().add_prefix("host_") +
-                  services_columns(false).add_prefix("service_"),
+                  "host_" / hosts_columns() +
+                  "host_" / hosts_and_services_columns() +
+                  "host_" / funny_hosts_and_services_columns() +
+                  "service_" / services_columns(false),
               ColumnDefinitions(TableDowntimes{nullptr}));
 }
 
@@ -313,10 +312,10 @@ static ColumnDefinitions event_console_events_columns() {
 }
 
 TEST(TableEventConsoleEvents, ColumnNamesAndTypes) {
-    EXPECT_EQ(event_console_events_columns() +
-                  hosts_columns().add_prefix("host_") +
-                  hosts_and_services_columns().add_prefix("host_") +
-                  funny_hosts_and_services_columns().add_prefix("host_"),
+    EXPECT_EQ(event_console_events_columns() +  //
+                  "host_" / hosts_columns() +
+                  "host_" / hosts_and_services_columns() +
+                  "host_" / funny_hosts_and_services_columns(),
               ColumnDefinitions(TableEventConsoleEvents{nullptr}));
 }
 
@@ -331,11 +330,11 @@ static ColumnDefinitions event_console_history_columns() {
 }
 
 TEST(TableEventConsoleHistory, ColumnNamesAndTypes) {
-    EXPECT_EQ(event_console_history_columns() +  //
-                  event_console_events_columns() +
-                  hosts_columns().add_prefix("host_") +
-                  hosts_and_services_columns().add_prefix("host_") +
-                  funny_hosts_and_services_columns().add_prefix("host_"),
+    EXPECT_EQ(event_console_history_columns() +     //
+                  event_console_events_columns() +  //
+                  "host_" / hosts_columns() +
+                  "host_" / hosts_and_services_columns() +
+                  "host_" / funny_hosts_and_services_columns(),
               ColumnDefinitions(TableEventConsoleHistory{nullptr}));
 }
 
@@ -618,8 +617,8 @@ TEST(TableHostsByGroup, ColumnNamesAndTypes) {
     EXPECT_EQ(hosts_columns() +  //
                   hosts_and_services_columns() +
                   funny_hosts_and_services_columns() +
-                  host_groups_columns().add_prefix("hostgroup_") +
-                  service_groups_columns().add_prefix("hostgroup_"),
+                  "hostgroup_" / host_groups_columns() +
+                  "hostgroup_" / service_groups_columns(),
               ColumnDefinitions(TableHostsByGroup{nullptr}));
 }
 
@@ -646,15 +645,14 @@ static ColumnDefinitions log_columns() {
 }
 
 TEST(TableLog, ColumnNamesAndTypes) {
-    EXPECT_EQ(
-        log_columns() +  //
-            hosts_columns().add_prefix("current_host_") +
-            hosts_and_services_columns().add_prefix("current_host_") +
-            funny_hosts_and_services_columns().add_prefix("current_host_") +
-            services_columns(false).add_prefix("current_service_") +
-            contacts_columns().add_prefix("current_contact_") +
-            commands_columns().add_prefix("current_command_"),
-        ColumnDefinitions(TableLog{nullptr, nullptr}));
+    EXPECT_EQ(log_columns() +  //
+                  "current_host_" / hosts_columns() +
+                  "current_host_" / hosts_and_services_columns() +
+                  "current_host_" / funny_hosts_and_services_columns() +
+                  "current_service_" / services_columns(false) +
+                  "current_contact_" / contacts_columns() +
+                  "current_command_" / commands_columns(),
+              ColumnDefinitions(TableLog{nullptr, nullptr}));
 }
 
 TEST(TableServiceGroups, ColumnNamesAndTypes) {
@@ -692,9 +690,9 @@ static ColumnDefinitions services_columns(bool add_hosts) {
     result += funny_hosts_and_services_columns();
 #endif
     if (add_hosts) {
-        result += hosts_columns().add_prefix("host_") +
-                  hosts_and_services_columns().add_prefix("host_") +
-                  funny_hosts_and_services_columns().add_prefix("host_");
+        result += "host_" / hosts_columns() +
+                  "host_" / hosts_and_services_columns() +
+                  "host_" / funny_hosts_and_services_columns();
     }
     return result;
 }
@@ -705,15 +703,15 @@ TEST(TableServices, ColumnNamesAndTypes) {
 }
 
 TEST(TableServicesByGroup, ColumnNamesAndTypes) {
-    EXPECT_EQ(services_columns(true) +
-                  service_groups_columns().add_prefix("servicegroup_"),
+    EXPECT_EQ(services_columns(true) +  //
+                  "servicegroup_" / service_groups_columns(),
               ColumnDefinitions(TableServicesByGroup{nullptr}));
 }
 
 TEST(TableServicesByHostGroup, ColumnNamesAndTypes) {
-    EXPECT_EQ(services_columns(true) +
-                  host_groups_columns().add_prefix("hostgroup_") +
-                  service_groups_columns().add_prefix("hostgroup_"),
+    EXPECT_EQ(services_columns(true) +  //
+                  "hostgroup_" / host_groups_columns() +
+                  "hostgroup_" / service_groups_columns(),
               ColumnDefinitions(TableServicesByHostGroup{nullptr}));
 }
 

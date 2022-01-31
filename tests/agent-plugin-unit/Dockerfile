@@ -5,10 +5,8 @@ ENV LC_ALL=C.UTF-8 LANG=C.UTF-8
 ARG PYTHON_VERSION
 
 RUN \
-    if [ "$PYTHON_VERSION" = "2.7" ] || [ "$PYTHON_VERSION" = "2.6" ] || [ "$PYTHON_VERSION" = "3.4" ] || [ "$PYTHON_VERSION" = "3.3" ]; then \
+    if [ "$PYTHON_VERSION" = "2.7" ] || [ "$PYTHON_VERSION" = "2.6" ] || [ "$PYTHON_VERSION" = "3.3" ] || [ "$PYTHON_VERSION" = "3.4" ] || [ "$PYTHON_VERSION" = "3.5" ] || [ "$PYTHON_VERSION" = "3.6" ]; then \
         GET_PIP_URL="https://bootstrap.pypa.io/pip/$PYTHON_VERSION/get-pip.py" ; \
-    elif [ "$PYTHON_VERSION" = "3.5" ]; then \
-        GET_PIP_URL="https://bootstrap.pypa.io/pip/3.4/get-pip.py" ; \
     else \
         GET_PIP_URL="https://bootstrap.pypa.io/get-pip.py" ; \
     fi && \

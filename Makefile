@@ -232,7 +232,6 @@ $(DISTNAME).tar.gz: omd/packages/mk-livestatus/mk-livestatus-$(VERSION).tar.gz .
 		windows/python-3.cab \
 		windows/python-3.4.cab \
 		windows/check_mk.user.yml \
-		windows/cmk-agent-ctl.exe \
 		windows/CONTENTS \
 		windows/mrpe \
 		windows/plugins
@@ -474,6 +473,7 @@ setup:
 	    python3-pip \
 	    python3.9-dev \
 	    python-setuptools \
+	    chrpath \
 	    enchant-2 \
 	    ksh \
 	    p7zip-full \
@@ -661,11 +661,15 @@ Pipfile.lock: Pipfile
 # Cleanup partially created pipenv. This makes us able to automatically repair
 # broken virtual environments which may have been caused by network issues.
 .venv: Pipfile.lock
+	# Debugging only:
+	$(PIPENV) --where
+	$(PIPENV) --envs
+
 	@( \
 	    echo "Creating .venv..." ; \
 	    flock $(LOCK_FD); \
 	    $(RM) -r .venv; \
-	    ( SKIP_MAKEFILE_CALL=1 $(PIPENV) sync --dev && touch .venv ) || ( $(RM) -r .venv ; exit 1 ) \
+	    ( PIPENV_COLORBLIND=1 SKIP_MAKEFILE_CALL=1 $(PIPENV) sync --verbose --dev && touch .venv ) || ( $(RM) -r .venv ; exit 1 ) \
 	) $(LOCK_FD)>$(LOCK_PATH)
 
 # This dummy rule is called from subdirectories whenever one of the

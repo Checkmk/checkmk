@@ -116,7 +116,7 @@ static ColumnDefinitions hosts_and_services_columns();
 static ColumnDefinitions funny_hosts_and_services_columns();
 static ColumnDefinitions hosts_columns();
 static ColumnDefinitions log_columns();
-static ColumnDefinitions services_columns(bool add_hosts);
+static ColumnDefinitions services_columns();
 static ColumnDefinitions state_history_columns();
 static ColumnDefinitions status_columns();
 static ColumnDefinitions timeperiods_columns();
@@ -128,7 +128,7 @@ static ColumnDefinitions all_state_history_columns() {
            "current_host_" / hosts_columns() +
            "current_host_" / hosts_and_services_columns() +
            "current_host_" / funny_hosts_and_services_columns() +
-           "current_service_" / services_columns(false);
+           "current_service_" / services_columns();
 }
 
 #ifdef CMC
@@ -183,7 +183,7 @@ TEST(TableComments, ColumnNamesAndTypes) {
                   "host_" / hosts_columns() +
                   "host_" / hosts_and_services_columns() +
                   "host_" / funny_hosts_and_services_columns() +
-                  "service_" / services_columns(false),
+                  "service_" / services_columns(),
               ColumnDefinitions(TableComments{nullptr}));
 }
 
@@ -280,7 +280,7 @@ TEST(TableDowntimes, ColumnNamesAndTypes) {
                   "host_" / hosts_columns() +
                   "host_" / hosts_and_services_columns() +
                   "host_" / funny_hosts_and_services_columns() +
-                  "service_" / services_columns(false),
+                  "service_" / services_columns(),
               ColumnDefinitions(TableDowntimes{nullptr}));
 }
 
@@ -649,7 +649,7 @@ TEST(TableLog, ColumnNamesAndTypes) {
                   "current_host_" / hosts_columns() +
                   "current_host_" / hosts_and_services_columns() +
                   "current_host_" / funny_hosts_and_services_columns() +
-                  "current_service_" / services_columns(false) +
+                  "current_service_" / services_columns() +
                   "current_contact_" / contacts_columns() +
                   "current_command_" / commands_columns(),
               ColumnDefinitions(TableLog{nullptr, nullptr}));
@@ -684,32 +684,36 @@ static ColumnDefinitions service_columns_internal() {
     };
 }
 
-static ColumnDefinitions services_columns(bool add_hosts) {
+static ColumnDefinitions services_columns() {
     auto result = service_columns_internal() + hosts_and_services_columns();
 #ifdef CMC
     result += funny_hosts_and_services_columns();
 #endif
-    if (add_hosts) {
-        result += "host_" / hosts_columns() +
-                  "host_" / hosts_and_services_columns() +
-                  "host_" / funny_hosts_and_services_columns();
-    }
     return result;
 }
 
 TEST(TableServices, ColumnNamesAndTypes) {
-    EXPECT_EQ(services_columns(true),
+    EXPECT_EQ(services_columns() +  //
+                  "host_" / hosts_columns() +
+                  "host_" / hosts_and_services_columns() +
+                  "host_" / funny_hosts_and_services_columns(),
               ColumnDefinitions(TableServices{nullptr}));
 }
 
 TEST(TableServicesByGroup, ColumnNamesAndTypes) {
-    EXPECT_EQ(services_columns(true) +  //
+    EXPECT_EQ(services_columns() +  //
+                  "host_" / hosts_columns() +
+                  "host_" / hosts_and_services_columns() +
+                  "host_" / funny_hosts_and_services_columns() +
                   "servicegroup_" / service_groups_columns(),
               ColumnDefinitions(TableServicesByGroup{nullptr}));
 }
 
 TEST(TableServicesByHostGroup, ColumnNamesAndTypes) {
-    EXPECT_EQ(services_columns(true) +  //
+    EXPECT_EQ(services_columns() +  //
+                  "host_" / hosts_columns() +
+                  "host_" / hosts_and_services_columns() +
+                  "host_" / funny_hosts_and_services_columns() +
                   "hostgroup_" / host_groups_columns() +
                   "hostgroup_" / service_groups_columns(),
               ColumnDefinitions(TableServicesByHostGroup{nullptr}));

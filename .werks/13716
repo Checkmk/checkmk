@@ -1,0 +1,31 @@
+Title: Persistant XSS in Notification configuration
+Knowledge: doc
+Level: 1
+Component: wato
+Class: security
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0p28
+Date: 1643296630
+
+This Werk fixes a Persistant Cross-Site-Scripting (XSS) vulnerability. (CWE-79)
+
+The <i>Alias</i> of a site was not properly escaped when shown as condition for notifications.
+
+To mitigate this vulnerability ensure that only trustwothy users have the
+<i>Notification configuration</i> and <i>Site management</i> rights. These are
+<i>admin</i> rights by default.
+
+Checkmk 1.6 and Checkmk 2.0 were subject to this vulnerability.
+
+To detect if this vulnerability is/was used you can check
+<tt>etc/check_mk/multisite.d/sites.mk</tt> and <tt>etc/check_mk/conf.d/wato/notifications.mk</tt> for HTML code. Please be
+aware that an attacker could delete the code after a attack.
+
+CVE is requested and will be added later.
+
+CVSS: CVSS:3.1/AV:N/AC:L/PR:H/UI:R/S:U/C:L/I:H/A:N (5.2 medium)
+
+We thank Manuel Sommer for finding this vulnerability and bringing this to our
+attention.

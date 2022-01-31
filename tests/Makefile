@@ -22,10 +22,10 @@ GCC_TOOLCHAIN := /opt/gcc-11.2.0
 AGENT_PLUGIN_UNIT_TEST_FILES := $(wildcard agent-plugin-unit/test_*.py)
 AGENT_PLUGIN_UNIT_TEST_FILES_PY2 := $(subst agent-plugin-unit,agent-plugin-unit/py2,$(AGENT_PLUGIN_UNIT_TEST_FILES))
 
-# TODO: Complete this list
-SHELL_FILES := \
-	agents/check_mk_agent.linux \
-	agents/check_mk_caching_agent.linux
+# TODO: this duplicity is silly.
+SHELL_FILES_ABS := $(shell realpath `grep -rl '^\#!/.*sh' ../{enterprise/,}agents 2>/dev/null`)
+SHELL_FILES_REL := $(shell cd ..; grep -rl '^\#!/.*sh' {enterprise/,}agents 2>/dev/null)
+
 
 # Due to https://github.com/pypa/pypi-support/issues/978, we need to disable Plugin tests for py2.6
 # until we have a feasible solution or we drop the support for 2.6 completly.
@@ -112,7 +112,7 @@ bandit.ini:
 	  echo ) > bandit.ini
 
 format-shell:
-	docker run --rm -v "$(realpath ..):/sh" -w /sh peterdavehello/shfmt shfmt -w -i 4 -ci $(SHELL_FILES)
+	docker run --rm -v "$(realpath ..):/sh" -w /sh peterdavehello/shfmt shfmt -w -i 4 -ci $(SHELL_FILES_REL)
 
 agent-plugin-unit/py2/test_%.py: agent-plugin-unit/test_%.py
 	mkdir -p "$(dir $@)"
@@ -205,7 +205,7 @@ test-format-python-docker:
 	../scripts/run-in-docker.sh make --quiet test-format-python
 
 test-format-shell:
-	docker run --rm -v "$(realpath ..):/sh" -w /sh peterdavehello/shfmt shfmt -d -i 4 -ci $(SHELL_FILES)
+	docker run --rm -v "$(realpath ..):/sh" -w /sh peterdavehello/shfmt shfmt -d -i 4 -ci $(SHELL_FILES_REL)
 
 test-format-js:
 	cd ..; scripts/run-prettier --check --no-color --loglevel warn "{enterprise/web,web}/htdocs/js/**/*.js"
@@ -272,13 +272,10 @@ test-pylint-docker:
 	../scripts/run-in-docker.sh make --quiet test-pylint
 
 test-shellcheck:
-	@CMK_DIR="$(realpath ..)" ; \
-	ENTERPRISE_DIR="$(realpath ../enterprise)" ; \
 	shellcheck \
 	        -P SCRIPTDIR \
 		$(SHELLCHECK_OUTPUT_ARGS) \
-		$$(grep -l '^#!/.*sh' $$CMK_DIR/agents/* $$CMK_DIR/agents/plugins/* $$CMK_DIR/agents/special/* $$CMK_DIR/agents/cfg_examples/* $$CMK_DIR/agents/scripts/* 2>/dev/null) \
-		"$$ENTERPRISE_DIR/agents/mk-remote-alert-handler"
+		$(SHELL_FILES_ABS)
 
 test-unit: prepare-protobuf-files
 	$(PYTEST) \

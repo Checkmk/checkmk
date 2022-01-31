@@ -297,7 +297,7 @@ def get_history(
 
     corrupted_history_files = []
     history: List[HistoryEntry] = []
-    for _idx, timestamp in enumerate(required_timestamps):
+    for timestamp in required_timestamps:
         cached_delta_path = os.path.join(
             cmk.utils.paths.inventory_delta_cache_dir,
             hostname,

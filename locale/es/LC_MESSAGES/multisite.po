@@ -5,10 +5,10 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: faye.tandog@tribe29.com\n"
+"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2022-01-26 10:15+0000\n"
-"Last-Translator: Eneider Colina <eneidercolina@gmail.com>\n"
+"PO-Revision-Date: 2022-01-27 07:00+0000\n"
+"Last-Translator: Weblate Admin <marketing@tribe29.com>\n"
 "Language-Team: Spanish <https://translate.checkmk.com/projects/checkmk/"
 "software/es/>\n"
 "Language: es\n"
@@ -326,10 +326,6 @@ msgid "%d actions"
 msgstr "%d acciones"
 
 #, python-format
-msgid "%d changes"
-msgstr "%d cambios"
-
-#, python-format
 msgid "%d chaotic state changes from %s until %s (%s)"
 msgstr ""
 
@@ -385,16 +381,20 @@ msgstr "%d sitios protegidos"
 msgid "%d of %d connections used"
 msgstr "%d de %d conexiones utilizadas"
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
-"%d of %d the configured maximum of processes are started. This is a usage of "
-"%0.2f %%."
+"%d of the configured maximum of %d processes have been started. This is a "
+"usage of %0.2f %%."
 msgstr ""
 "%d de %d del número máximo de procesos iniciados. Este es un uso de %0.2f%%."
 
 #, python-format
 msgid "%d open incompatible werks"
 msgstr "%d abrir obras incompatibles"
+
+#, fuzzy, python-format
+msgid "%d pending changes"
+msgstr "No hay cambios pendientes"
 
 #, python-format
 msgid "%d rows"
@@ -887,8 +887,9 @@ msgstr "0.5 - 1.0 ms"
 msgid "1 Host"
 msgstr "1 Host"
 
-msgid "1 change"
-msgstr "1 cambio"
+#, fuzzy
+msgid "1 pending change"
+msgstr "No hay cambios pendientes"
 
 msgid "1 row"
 msgstr "1 fila"
@@ -908,8 +909,9 @@ msgstr "1/s"
 msgid "10 seconds"
 msgstr "10 segundos"
 
-msgid "10+ changes"
-msgstr "10+ cambios"
+#, fuzzy
+msgid "10+ pending changes"
+msgstr "No hay cambios pendientes"
 
 msgid "10.0 - 20.0 ms"
 msgstr "10.0 - 20.0 ms"
@@ -1502,9 +1504,9 @@ msgid ""
 "<p>Livestatus is used by several components, for example the GUI, to gather "
 "information about the monitored objects from the monitoring core. It is very "
 "important for the overall performance of the monitoring system that "
-"livestatus is a reliable and performant.</p><p>There should always be enough "
+"livestatus is reliable and performant.</p><p>There should always be enough "
 "free livestatus slots to serve new incoming queries.</p><p>You should never "
-"reach a livestatus usage of 100% for a longer time. Consider increasing "
+"reach a livestatus usage of 100% for a longer time. Consider increasing the "
 "number of parallel livestatus connections or track down the clients to check "
 "whether or not you can reduce the usage somehow.</p>"
 msgstr ""
@@ -1517,6 +1519,34 @@ msgstr ""
 "mucho tiempo. Considere aumentar el número de conexiones de estado en vivo "
 "paralelas o rastrear a los clientes para verificar si puede o no reducir el "
 "uso de alguna manera.</p>"
+
+#, fuzzy
+msgid ""
+"<p>The Apache has a number of maximum processes it may start in case of high "
+"load situations. These Apache processes may use a decent amount of memory, "
+"so you need to configure them in a way that your system can handle them "
+"without reaching out of memory situations.</p><p>Please note that this value "
+"is only a rough estimation, because the memory usage of the Apache processes "
+"may vary with the requests being processed.</p><p>Possible actions:"
+"<ul><li>Change the <a href=\"wato.py?"
+"mode=edit_configvar&varname=apache_process_tuning\">number of Apache "
+"processes</a></li></ul></p><p>Once you have verified your settings, you can "
+"acknowledge this test. The test will not automatically turn to OK, because "
+"it can not exactly estimate the required memory needed by the Apache "
+"processes.</p>"
+msgstr ""
+"<p>El apache tiene un número máximo de procesos que puede iniciar en caso de "
+"situaciones de alta carga. Estos procesos de apache pueden utilizar una "
+"cantidad decente de memoria, por lo que debe configurarlos de manera que su "
+"sistema pueda manejarlos sin llegar a situaciones de falta de memoria.</"
+"p><p>Tenga en cuenta que este valor es sólo una estimación aproximada, "
+"porque el uso de la memoria de los procesos de apache puede variar con las "
+"peticiones que se procesan.</p><p>Acciones posibles:<ul><li>Cambiar el <a "
+"href=\"wato.py?mode=edit_configvar&varname=apache_process_tuning\">número de "
+"procesos apache</a></li></ul><p>Una vez que haya verificado su "
+"configuración, puede reconocer esta prueba. La prueba no se convertirá "
+"automáticamente en OK, porque no puede estimar exactamente la memoria "
+"requerida por los procesos de apache.</p> <p>"
 
 #, no-python-format
 msgid ""
@@ -1658,33 +1688,6 @@ msgstr ""
 "mode=edit_configvar&varname=cmc_check_helpers\">número de ayudantes de "
 "comprobación</a></li></ul>."
 
-msgid ""
-"<p>The apache has a number maximum processes it can start in case of high "
-"load situations. These apache processes may use a decent amount of memory, "
-"so you need to configure them in a way that you system can handle them "
-"without reaching out of memory situations.</p><p>Please note that this value "
-"is only a rough estimation, because the memory usage of the apache processes "
-"may vary with the requests being processed.</p><p>Possible actions:"
-"<ul><li>Change the <a href=\"wato.py?"
-"mode=edit_configvar&varname=apache_process_tuning\">number of apache "
-"processes</a></li></ul></p><p>Once you have verified your settings, you can "
-"acknowledge this test. The test will not automatically turn to OK, because "
-"it can not exactly estimate the required memory needed by the apache "
-"processes.</p>"
-msgstr ""
-"<p>El apache tiene un número máximo de procesos que puede iniciar en caso de "
-"situaciones de alta carga. Estos procesos de apache pueden utilizar una "
-"cantidad decente de memoria, por lo que debe configurarlos de manera que su "
-"sistema pueda manejarlos sin llegar a situaciones de falta de memoria.</"
-"p><p>Tenga en cuenta que este valor es sólo una estimación aproximada, "
-"porque el uso de la memoria de los procesos de apache puede variar con las "
-"peticiones que se procesan.</p><p>Acciones posibles:<ul><li>Cambiar el <a "
-"href=\"wato.py?mode=edit_configvar&varname=apache_process_tuning\">número de "
-"procesos apache</a></li></ul><p>Una vez que haya verificado su "
-"configuración, puede reconocer esta prueba. La prueba no se convertirá "
-"automáticamente en OK, porque no puede estimar exactamente la memoria "
-"requerida por los procesos de apache.</p> <p>"
-
 #, python-format
 msgid ""
 "<p>The control group information is currently only specified by the linux "
@@ -1699,8 +1702,8 @@ msgstr ""
 "inventario sólo se activará si el grupo de control del proceso "
 "correspondiente coincide. Por ejemplo: se puede utilizar esta regla para "
 "excluir todos los procesos pertenecientes a un contenedor docker "
-"especificando la expresión \"%s\" (sin las comillas), y seleccionando \"%s\""
-".</p> <p"
+"especificando la expresión \"%s\" (sin las comillas), y seleccionando \"%s\"."
+"</p>"
 
 #, fuzzy
 msgid ""
@@ -7410,6 +7413,7 @@ msgstr ""
 "opción. Tenga en cuenta que puede abrir el camino a varios ataques de "
 "inyección."
 
+#, fuzzy
 msgid ""
 "By default, for security reasons, the GUI does not interpret any HTML code "
 "received from external sources, like service output or log messages. But "
@@ -7417,9 +7421,9 @@ msgid ""
 "you want to display the HTML output produced by a specific check plugin."
 "Disabling the escaping also allows the plugin to execute not only HTML, but "
 "also Javascript code in the context of your browser. This makes it possible "
-"to execute arbritary Javascript, even for injection attacks.<br>For this "
+"to execute arbitrary Javascript, even for injection attacks.<br>For this "
 "reason, you should only disable this for a small, very specific number of "
-"services, to be sure that not every random check plugin can make produce "
+"services, to be sure that not every random check plugin is able to produce "
 "code which your browser interprets."
 msgstr ""
 "Por defecto, por razones de seguridad, la GUI no interpreta ningún código "
@@ -9458,13 +9462,14 @@ msgstr "Registro de auditoría borrado."
 msgid "Click for instant reload."
 msgstr "Haga clic para una recarga instantánea."
 
+#, fuzzy
+msgid "Click here for details."
+msgstr "Detalles del servidor proxy"
+
 #, python-format
 msgid "Click here to change the graphs consolidation function to \"%s\"."
 msgstr ""
 "Haga clic aquí para cambiar la función de consolidación de gráficos a \"%s\"."
-
-msgid "Click here to go to pending changes."
-msgstr "Haga clic aquí para ir a los cambios pendientes."
 
 msgid "Click here to see the activation status per site."
 msgstr "Haga clic aquí para ver el estado de activación por sitio."
@@ -11922,17 +11927,18 @@ msgstr "Actualmente en marcha"
 msgid "Currently running processes"
 msgstr "Procesos en curso"
 
-#, python-format
-msgid "Currently there are %s to activate."
-msgstr "Actualmente hay %s para activar."
-
 msgid "Currently there are no changes to activate."
 msgstr "Actualmente no hay cambios que activar."
 
 msgid "Currently there are no unsent notification bulks pending."
 msgstr "Actualmente no hay bultos de notificaciones pendientes."
 
-msgid "Currently there is one change to activate."
+#, fuzzy, python-format
+msgid "Currently, there are %s not yet activated."
+msgstr "Actualmente hay %s para activar."
+
+#, fuzzy
+msgid "Currently, there is one pending change not yet activated."
 msgstr "Actualmente hay un cambio para activar."
 
 msgid "Custom Action"
@@ -16347,9 +16353,10 @@ msgstr ""
 "con el nombre de host. Ejemplo: <tt>srv.*p</tt> coincidirá con <tt>srv4711p</"
 "tt> pero no con <tt>xsrv4711p2</tt>. "
 
+#, fuzzy
 msgid ""
 "Either disable persistent connections or carefully review maximum number of "
-"apache processes and possible livestatus connections."
+"Apache processes and possible livestatus connections."
 msgstr ""
 "Desactivar las conexiones persistentes o revisar cuidadosamente el número "
 "máximo de procesos de apache y las posibles conexiones livestatus."
@@ -17287,6 +17294,10 @@ msgstr "Controladores de eventos"
 msgid "Event history entry"
 msgstr "Entrada del historial de eventos"
 
+#, fuzzy
+msgid "Event history icons"
+msgstr "Historial de eventos del anfitrión"
+
 msgid "Event history lifetime"
 msgstr "Historial de eventos de toda la vida"
 
@@ -18061,7 +18072,8 @@ msgstr "No se ha podido determinar la regla de origen de %s / %s"
 msgid "Failed to discover %s: %s"
 msgstr "Fallo al descubrir %s: %s"
 
-msgid "Failed to estimate the apache process size"
+#, fuzzy
+msgid "Failed to estimate the Apache process size"
 msgstr "Fallo en la estimación del tamaño del proceso de apache"
 
 #, python-format
@@ -18136,7 +18148,8 @@ msgstr ""
 msgid "Failed to process your MIB file (%s): %s"
 msgstr "Fallo al procesar su archivo MIB (%s): %s"
 
-msgid "Failed to read the apache process ID"
+#, fuzzy
+msgid "Failed to read the Apache process ID"
 msgstr "Fallo al leer el ID del proceso de apache"
 
 msgid ""
@@ -18188,11 +18201,12 @@ msgstr "Fallo al iniciar el escaneo de los padres: %s"
 msgid "Failed to start the job: %s"
 msgstr "Fallo al iniciar el trabajo: %s"
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
-"Failed to submit the license usage report to the Checkmk license server '%s'."
-"<br>Please download it manually and upload it in the <a href=\"https://"
-"customer.checkmk.com\">Checkmk user portal<a> or send it to sales@tribe29.com"
+"Failed to submit the license usage report to the Checkmk license server "
+"'%s'. Please download it manually and upload it in the <a href=\"https://"
+"customer.checkmk.com\">Checkmk user portal<a>. If this also does not work, "
+"please open a support ticket or send an email to sales@tribe29.com."
 msgstr ""
 "Ha fallado el envío del informe de uso de la licencia al servidor de "
 "licencias de Checkmk '%s'.<br>Por favor, descárguelo manualmente y súbalo en "
@@ -25213,6 +25227,10 @@ msgstr "Interpretación de los estados de registro"
 msgid "Interpretation of failover cluster state"
 msgstr "Interpretación del estado del clúster de conmutación por error"
 
+#, fuzzy
+msgid "Interpretation of pod status"
+msgstr "Interpretación del estado de la sincronización de la configuración"
+
 msgid "Interpretation of the device's own temperature status"
 msgstr "Interpretación del estado de la temperatura del propio dispositivo"
 
@@ -26187,6 +26205,10 @@ msgstr "Nodos Kubernetes"
 
 msgid "Kubernetes nodes"
 msgstr "Nodos Kubernetes"
+
+#, fuzzy
+msgid "Kubernetes pod status"
+msgstr "Puerto Kubernetes"
 
 msgid "Kubernetes resources"
 msgstr "Recursos de Kubernetes"
@@ -28809,6 +28831,12 @@ msgstr "Estados del mapa"
 msgid "Map systemd states to monitoring states"
 msgstr "Asignar los estados de systemd a los estados de monitorización"
 
+msgid ""
+"Map the Kubernetes pod status shown in the summary to an upper level of its "
+"age. In order the configure pod statuses not within the list below, use the "
+"'Other' option."
+msgstr ""
+
 #, fuzzy
 msgid "Map the admin state (<tt>ifAdminStatus</tt>) to a monitoring state."
 msgstr ""
@@ -29343,6 +29371,14 @@ msgstr "Número máximo de nodos superado %d/%d"
 
 msgid "Maximum number of parsed lines per log file"
 msgstr "Número máximo de líneas analizadas por archivo de registro"
+
+#, fuzzy
+msgid "Maximum number of ready control plane nodes"
+msgstr "Número máximo de conexiones del cortafuegos"
+
+#, fuzzy
+msgid "Maximum number of ready worker nodes"
+msgstr "Número máximo de hilos"
 
 msgid "Maximum number of service outages"
 msgstr "Número máximo de cortes de servicio"
@@ -29921,6 +29957,14 @@ msgstr "Número mínimo de elementos para crear un grupo"
 
 msgid "Minimum number of pool members"
 msgstr "Número mínimo de miembros del grupo"
+
+#, fuzzy
+msgid "Minimum number of ready control plane nodes"
+msgstr "Número mínimo de conexiones"
+
+#, fuzzy
+msgid "Minimum number of ready worker nodes"
+msgstr "Número máximo de hilos"
 
 msgid "Minimum password length"
 msgstr "Longitud mínima de la contraseña"
@@ -35099,15 +35143,16 @@ msgstr ""
 "Las conexiones persistentes son casi inútiles con Livestatus Proxy Daemon. "
 "Mejor desactívelo."
 
+#, fuzzy
 msgid ""
 "Persistent connections may be a configuration to improve the performance of "
 "the GUI, but be aware that you really need to tune your system to make it "
 "work properly. When you have enabled persistent connections, the single GUI "
-"pages may use already established connections of the apache process. This "
+"pages may use already established connections of the Apache process. This "
 "saves the time that is needed for establishing the Livestatus connections. "
-"But you need to be aware that each apache process that is running is keeping "
+"But you need to be aware that each Apache process that is running is keeping "
 "a persistent connection to each configured site via Livestatus open. This "
-"means you need to balance the maximum apache processes with the maximum "
+"means you need to balance the maximum Apache processes with the maximum "
 "parallel livestatus connections. Otherwise livestatus requests will be "
 "blocked by existing and possibly idle connections."
 msgstr ""
@@ -35525,9 +35570,10 @@ msgstr ""
 "ServiceNow puede cambiar en su sistema y puede diferir de nuestras "
 "definiciones. En este caso, utilice la opción siguiente."
 
+#, fuzzy
 msgid ""
 "Please note that you have to set <tt>RequestHeader set X-Forwarded-Proto "
-"\"https\"</tt> in your system apache configuration to tell the Checkmk GUI "
+"\"https\"</tt> in your system Apache configuration to tell the Checkmk GUI "
 "about the SSL setup."
 msgstr ""
 "Tenga en cuenta que tiene que establecer <tt>RequestHeader set X-Forwarded-"
@@ -40776,14 +40822,6 @@ msgstr "Establecer niveles más bajos"
 msgid "Set lower and upper levels for numerical sensors"
 msgstr "Establezca los niveles inferior y superior de los sensores numéricos"
 
-#, fuzzy
-msgid "Set lower levels of control plane nodes"
-msgstr "Número de contenedores"
-
-#, fuzzy
-msgid "Set lower levels of worker nodes"
-msgstr "Número de reintentos"
-
 msgid ""
 "Set lower levels on the age of the process (not the consumed CPU time, but "
 "the real time)."
@@ -41015,14 +41053,6 @@ msgid ""
 msgstr ""
 "Establezca los niveles superiores de las sesiones activas en relación con el "
 "número máximo de sesiones. Esto es opcional."
-
-#, fuzzy
-msgid "Set upper levels of control plane nodes"
-msgstr "Número de contenedores"
-
-#, fuzzy
-msgid "Set upper levels of worker nodes"
-msgstr "Niveles superiores de los índices"
 
 msgid ""
 "Set upper levels on the age of the process (not the consumed CPU time, but "
@@ -45393,6 +45423,30 @@ msgstr ""
 msgid "The Amazon Resource Name (ARN) of the role to assume."
 msgstr "El nombre de recurso de Amazon (ARN) del rol a asumir."
 
+#, fuzzy
+msgid ""
+"The Apache has a number maximum processes it can start in case of high load "
+"situations. The usage of these processes should not be too high in normal "
+"situations. Otherwise, if all processes are in use, the users of the GUI "
+"might have to wait too long for a free process, which would result in a slow "
+"GUI."
+msgstr ""
+"El apache tiene un número máximo de procesos que puede iniciar en caso de "
+"situaciones de alta carga. El uso de estos procesos no debe ser demasiado "
+"alto en situaciones normales. De lo contrario, si todos los procesos están "
+"en uso, los usuarios de la GUI podrían tener que esperar demasiado tiempo "
+"por un proceso libre, lo que resultaría en una GUI lenta."
+
+#, fuzzy, python-format
+msgid ""
+"The Apache may start up to %d processes while the current average process "
+"size is %s. With these process limits the Apache may use up to %s RAM. "
+"Please ensure that your system is able to handle this."
+msgstr ""
+"El apache puede iniciar hasta %d procesos mientras que el tamaño medio "
+"actual de los procesos es %s. Con estos números el apache puede usar hasta "
+"%s de RAM. Por favor, asegúrese de que su sistema es capaz de manejar esto."
+
 msgid "The Area"
 msgstr "La zona"
 
@@ -45501,12 +45555,13 @@ msgstr ""
 msgid "The Checkmk Micro Core"
 msgstr "El Checkmk Micro Core"
 
+#, fuzzy
 msgid ""
 "The Checkmk Microcore uses Checkmk checker processes to process the results "
 "from the Checkmk fetchers. Since the checker processes are not IO bound, "
 "they are most effective when each checker gets a dedicated CPU. Configuring "
 "more checkers than the number of available CPUs has a negative effect, "
-"because it increases the the amount of context switches."
+"because it increases the amount of context switches."
 msgstr ""
 "Checkmk Microcore utiliza los procesos de comprobación de Checkmk para "
 "procesar los resultados de los captadores de Checkmk. Dado que los procesos "
@@ -46219,29 +46274,6 @@ msgstr ""
 "Los títulos de agregación no son únicos. \"%s\" es creado por la agregación "
 "<b>%s</b> y <b>%s</b>."
 
-msgid ""
-"The apache has a number maximum processes it can start in case of high load "
-"situations. The usage of these processes should not be too high in normal "
-"situations. Otherwise, if all processes are in use, the users of the GUI "
-"might have to wait too long for a free process, which would result in a slow "
-"GUI."
-msgstr ""
-"El apache tiene un número máximo de procesos que puede iniciar en caso de "
-"situaciones de alta carga. El uso de estos procesos no debe ser demasiado "
-"alto en situaciones normales. De lo contrario, si todos los procesos están "
-"en uso, los usuarios de la GUI podrían tener que esperar demasiado tiempo "
-"por un proceso libre, lo que resultaría en una GUI lenta."
-
-#, python-format
-msgid ""
-"The apache may start up to %d processes while the current average process "
-"size is %s. With this numbers the apache may use up to %s RAM. Please ensure "
-"that your system is able to handle this."
-msgstr ""
-"El apache puede iniciar hasta %d procesos mientras que el tamaño medio "
-"actual de los procesos es %s. Con estos números el apache puede usar hasta "
-"%s de RAM. Por favor, asegúrese de que su sistema es capaz de manejar esto."
-
 msgid "The application (syslog tag) does not match"
 msgstr "La aplicación (etiqueta syslog) no coincide con"
 
@@ -46577,6 +46609,10 @@ msgstr ""
 "No se ha podido encontrar el grupo de filtros de usuarios ldap configurado. "
 "Por favor, compruebe <a href=\"%s\">su configuración</a>."
 
+#, fuzzy
+msgid "The configured password does not exist"
+msgstr "El gráfico personalizado configurado no existe."
+
 msgid ""
 "The configured password has either be removed or you are not permitted to "
 "use this password. Please choose another one."
@@ -46726,9 +46762,9 @@ msgstr ""
 msgid "The current check helper usage is %.2f%%"
 msgstr "El uso actual del ayudante de comprobación es %.2f%%."
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
-"The current checker usage is %.2f%%, The checks have an average check "
+"The current checker usage is %.2f%%. The checks have an average check "
 "latency of %.3fs."
 msgstr ""
 "El uso actual del comprobador es de %.2f%%, Las comprobaciones tienen una "
@@ -58015,9 +58051,6 @@ msgstr "Ver diseño"
 msgid "View name"
 msgstr "Ver nombre"
 
-msgid "View pending changes"
-msgstr "Ver los cambios pendientes"
-
 #, fuzzy
 msgid "View the rule based effective parameters of this host"
 msgstr "Ver los parámetros basados en reglas de este host"
@@ -61505,10 +61538,6 @@ msgstr ""
 "Tiene %d usuarios configurados. Por favor, revise el número de usuarios que "
 "ha configurado en Checkmk."
 
-#, python-format
-msgid "You have a connection overflow rate of %.2f/s"
-msgstr "Tiene una tasa de desbordamiento de la conexión de %.2f/s"
-
 msgid ""
 "You have an agent updater rule configured that enables use of plain text "
 "HTTP. Consider enabling HTTPS."
@@ -64109,12 +64138,52 @@ msgstr "sí"
 msgid "yesterday"
 msgstr "ayer"
 
+#, fuzzy, python-format
+msgid "you have a connection overflow rate of %.2f/s"
+msgstr "Tiene una tasa de desbordamiento de la conexión de %.2f/s"
+
 msgid "z/OS"
 msgstr "z/OS"
 
 #, fuzzy, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "2020 tribe29 GmbH. Todos los derechos reservados."
+
+#, python-format
+#~ msgid "%d changes"
+#~ msgstr "%d cambios"
+
+#~ msgid "1 change"
+#~ msgstr "1 cambio"
+
+#~ msgid "10+ changes"
+#~ msgstr "10+ cambios"
+
+#~ msgid "Click here to go to pending changes."
+#~ msgstr "Haga clic aquí para ir a los cambios pendientes."
+
+#, fuzzy
+#~| msgid "Number of containers"
+#~ msgid "Set lower levels of control plane nodes"
+#~ msgstr "Número de contenedores"
+
+#, fuzzy
+#~| msgid "Number of retries"
+#~ msgid "Set lower levels of worker nodes"
+#~ msgstr "Número de reintentos"
+
+#, fuzzy
+#~| msgid "Number of containers"
+#~ msgid "Set upper levels of control plane nodes"
+#~ msgstr "Número de contenedores"
+
+#, fuzzy
+#~| msgid "Upper levels for indexes"
+#~ msgid "Set upper levels of worker nodes"
+#~ msgstr "Niveles superiores de los índices"
+
+#~ msgid "View pending changes"
+#~ msgstr "Ver los cambios pendientes"
 
 #~ msgid "Deploy in minutes"
 #~ msgstr "Despliegue en minutos"
@@ -65959,9 +66028,6 @@ msgstr "2020 tribe29 GmbH. Todos los derechos reservados."
 
 #~ msgid "Maximum latency of successful Query requests"
 #~ msgstr "Latencia máxima de las solicitudes de consulta con éxito"
-
-#~ msgid "Maximum number of threads"
-#~ msgstr "Número máximo de hilos"
 
 #~ msgid ""
 #~ "Maximum number of threads started at any given time during the JVM "

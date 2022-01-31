@@ -54,6 +54,14 @@ class CoreAPI:
         )
 
 
+def get_controllers(
+    owner_references: Optional[Sequence[client.V1OwnerReference]],
+) -> Sequence[client.V1OwnerReference]:
+    if owner_references is None:
+        return []
+    return [reference for reference in owner_references if reference.controller]
+
+
 class AppsAPI:
     """
     Wrapper around ExternalV1APi;
@@ -65,6 +73,28 @@ class AppsAPI:
     def deployments(self) -> Iterator[client.V1Deployment]:
         for deployment in self.connection.list_deployment_for_all_namespaces().items:
             yield deployment
+
+    def owned_by_deployment(self, pod: client.V1Pod, deployment_uid: str) -> bool:
+        # owner_reference approach is taken from these two links:
+        # https://kubernetes.io/docs/concepts/workloads/controllers/replicaset/
+        # https://github.com/kubernetes-client/python/issues/946
+        # We have tested the solution in the github issue. It does not work, but was good
+        # enough as a prototype.
+        pod_controllers = get_controllers(pod.metadata.owner_references)
+        for pod_controller in pod_controllers:
+            if pod_controller.kind == "ReplicaSet":
+                replica_controllers = get_controllers(
+                    self.connection.read_namespaced_replica_set(
+                        # we assume the namespace of the replica set is the same as that of the pod it is
+                        # controlling
+                        pod_controller.name,
+                        pod.metadata.namespace,
+                    ).metadata.owner_references
+                )
+                for replica_controller in replica_controllers:
+                    if replica_controller.uid == deployment_uid:
+                        return True
+        return False
 
 
 T = TypeVar("T")
@@ -157,9 +187,22 @@ class APIServer:
         result = []
         for raw_deployment in self.apps_api.deployments():
             selector = raw_deployment.spec.selector
-            label_selector = ",".join(
-                [f"{key}={value}" for key, value in selector.match_labels.items()]
+            label_selector = (
+                ",".join([f"{key}={value}" for key, value in selector.match_labels.items()])
+                if selector.match_labels is not None
+                else ""
             )
+
+            # TODO for pod_uids computation: Needs an integration test
+            # TODO for pod_uids computation: Efficiency is questionable at best here. What we want
+            # is, that each object kind (Deployment, DaemonSet, ReplicaSet,...) can map to it's
+            # respective pods. For this need to parse the object_references of all the pods once.
+            # But we should not need to parse them more than once (here we parse the object
+            # references multiple times, if two deployments differ only by a match_expression
+            # selector. Moreover, it probably makes sense to only call
+            # self.core_api.query_namespaced_pods with no restriction).
+            # When we do this refactoring, we should also consider writing owned_by_deployment as a
+            # free function.
             result.append(
                 deployment_from_client(
                     raw_deployment,
@@ -168,6 +211,7 @@ class APIServer:
                         for pod in self.core_api.query_namespaced_pods(
                             raw_deployment.metadata.namespace, label_selector
                         )
+                        if self.apps_api.owned_by_deployment(pod, raw_deployment.metadata.uid)
                     ],
                 )
             )

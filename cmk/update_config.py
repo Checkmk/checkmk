@@ -41,6 +41,7 @@ import cmk.utils.debug
 import cmk.utils.log as log
 import cmk.utils.paths
 import cmk.utils.tty as tty
+from cmk.utils import password_store
 from cmk.utils.bi.bi_legacy_config_converter import BILegacyPacksConverter
 from cmk.utils.check_utils import maincheckify
 from cmk.utils.encryption import raw_certificates_from_file
@@ -98,6 +99,7 @@ from cmk.gui.utils.script_helpers import gui_context
 from cmk.gui.watolib.changes import add_change, AuditLogStore, ObjectRef, ObjectRefType
 from cmk.gui.watolib.global_settings import GlobalSettings
 from cmk.gui.watolib.notifications import load_notification_rules, save_notification_rules
+from cmk.gui.watolib.password_store import PasswordStore
 from cmk.gui.watolib.rulesets import RulesetCollection
 from cmk.gui.watolib.sites import site_globals_editable, SiteManagementFactory
 
@@ -233,6 +235,7 @@ class UpdateConfig:
             (self._rewrite_wato_host_and_folder_config, "Rewriting hosts and folders"),
             (self._rewrite_wato_rulesets, "Rewriting rulesets"),
             (self._rewrite_autochecks, "Rewriting autochecks"),
+            (self._rewrite_password_store, "Rewriting password store"),
             (self._cleanup_version_specific_caches, "Cleanup version specific caches"),
             # CAUTION: update_fs_used_name must be called *after* rewrite_autochecks!
             (self._update_fs_used_name, "Migrating fs_used name"),
@@ -391,6 +394,27 @@ class UpdateConfig:
             msg = "Failed to rewrite autochecks file for hosts: %s" % ", ".join(failed_hosts)
             self._logger.error(msg)
             raise MKGeneralException(msg)
+
+    def _rewrite_password_store(self) -> None:
+        """With 2.1 the password store format changed. Ensure all sites get the new format"""
+        # First of all update the stored_passwords file
+        if self._is_pre_2_1_password_store():
+            passwords = self._load_pre_2_1_password_store()
+            password_store.save(passwords)
+
+        # Then load and save the setup config to update the passwords.mk
+        store = PasswordStore()
+        store.save(store.load_for_modification())
+
+    def _is_pre_2_1_password_store(self) -> bool:
+        return password_store.password_store_path().read_text()[:2] != "00"
+
+    def _load_pre_2_1_password_store(self) -> dict[str, str]:
+        passwords = {}
+        for line in password_store.password_store_path().read_text().splitlines():
+            ident, password = line.strip().split(":", 1)
+            passwords[ident] = password
+        return passwords
 
     def _transformed_params(
         self,

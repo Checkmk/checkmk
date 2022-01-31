@@ -72,7 +72,7 @@ Password = TypedDict(
 )
 
 
-def _password_store_path() -> Path:
+def password_store_path() -> Path:
     return Path(cmk.utils.paths.var_dir, "stored_passwords")
 
 
@@ -127,11 +127,11 @@ def save(stored_passwords: Mapping[str, str]) -> None:
     for ident, pw in stored_passwords.items():
         content += "%s:%s\n" % (ident, pw)
 
-    store.save_text_to_file(_password_store_path(), _obfuscate(content))
+    store.save_text_to_file(password_store_path(), _obfuscate(content))
 
 
 def load() -> dict[str, str]:
-    return _load(_password_store_path())
+    return _load(password_store_path())
 
 
 def _load(store_path: Path) -> dict[str, str]:
@@ -163,7 +163,7 @@ def save_for_helpers(config_base_path: ConfigPath) -> None:
     helper_path = _helper_password_store_path(config_base_path)
     helper_path.parent.mkdir(parents=True, exist_ok=True)
     with suppress(OSError):
-        shutil.copy(_password_store_path(), helper_path)
+        shutil.copy(password_store_path(), helper_path)
 
 
 def load_for_helpers() -> dict[str, str]:

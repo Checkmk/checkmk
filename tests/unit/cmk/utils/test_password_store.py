@@ -24,20 +24,20 @@ def test_save() -> None:
 
 
 def test_save_for_helpers_no_store() -> None:
-    assert not password_store._password_store_path().exists()
+    assert not password_store.password_store_path().exists()
 
     assert password_store.load_for_helpers() == {}
     password_store.save_for_helpers(LATEST_CONFIG)
 
-    assert not password_store._password_store_path().exists()
+    assert not password_store.password_store_path().exists()
     assert not password_store._helper_password_store_path(LATEST_CONFIG).exists()
     assert password_store.load_for_helpers() == {}
 
 
 def test_save_for_helpers() -> None:
-    assert not password_store._password_store_path().exists()
+    assert not password_store.password_store_path().exists()
     password_store.save({"ding": "blablu"})
-    assert password_store._password_store_path().exists()
+    assert password_store.password_store_path().exists()
     assert password_store.load_for_helpers() == {}
 
     password_store.save_for_helpers(LATEST_CONFIG)
@@ -85,7 +85,7 @@ def test_obfuscation() -> None:
 
 def test_save_obfuscated() -> None:
     password_store.save({"ding": "blablu"})
-    assert "blablu" not in password_store._password_store_path().read_text()
+    assert "blablu" not in password_store.password_store_path().read_text()
 
 
 def test_obfuscate_with_own_secret() -> None:

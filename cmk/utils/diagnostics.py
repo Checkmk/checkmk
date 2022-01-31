@@ -7,16 +7,32 @@
 import os
 from enum import Enum
 from pathlib import Path
-from typing import Any, Dict, List, Literal, NamedTuple, Optional, Set, Tuple, TypedDict
+from typing import (
+    Any,
+    Dict,
+    Iterator,
+    List,
+    Literal,
+    NamedTuple,
+    Optional,
+    Sequence,
+    Set,
+    Tuple,
+    TypedDict,
+)
 
 from livestatus import SiteId
 
+import cmk.utils.packaging as packaging
 import cmk.utils.paths
 
 DiagnosticsCLParameters = List[str]
 DiagnosticsModesParameters = Dict[str, Any]
 DiagnosticsOptionalParameters = Dict[str, Any]
 CheckmkFilesMap = Dict[str, Path]
+DiagnosticsElementJSONResult = Dict[str, Any]
+DiagnosticsElementCSVResult = str
+DiagnosticsElementFilepaths = Iterator[Path]
 
 
 class DiagnosticsParameters(TypedDict):
@@ -39,6 +55,7 @@ OPT_PERFORMANCE_GRAPHS = "performance-graphs"
 OPT_COMP_GLOBAL_SETTINGS = "global-settings"
 OPT_COMP_HOSTS_AND_FOLDERS = "hosts-and-folders"
 OPT_COMP_NOTIFICATIONS = "notifications"
+OPT_COMP_BUSINESS_INTELLIGENCE = "business-intelligence"
 
 _BOOLEAN_CONFIG_OPTS = [
     OPT_LOCAL_FILES,
@@ -50,6 +67,44 @@ _BOOLEAN_CONFIG_OPTS = [
 _FILES_OPTS = [
     OPT_CHECKMK_CONFIG_FILES,
     OPT_CHECKMK_LOG_FILES,
+]
+
+
+_MODULE_TO_PATH = {
+    "agent_based": "lib/check_mk/base/plugins/agent_based",
+    "agents": "share/check_mk/agents",
+    "alert_handlers": "share/check_mk/alert_handlers",
+    "bin": "bin",
+    "checkman": "share/check_mk/checkman",
+    "checks": "share/check_mk/checks",
+    "doc": "share/doc/check_mk",
+    "ec_rule_packs": "EC_RULE",
+    "inventory": "share/check_mk/inventory",
+    "lib": "lib",
+    "locales": "share/check_mk/locale",
+    "mibs": "share/snmp/mibs",
+    "notifications": "share/check_mk/notifications",
+    "pnp-templates": "share/check_mk/pnp-templates",
+    "web": "share/check_mk/web",
+}
+
+_CSV_COLUMNS = [
+    "path",
+    "exists",
+    "package",
+    "author",
+    "description",
+    "download_url",
+    "name",
+    "title",
+    "version",
+    "version.min_required",
+    "version.packaged",
+    "version.usable_until",
+    "permissions",
+    "installed",
+    "optional_packages",
+    "unpackaged",
 ]
 
 
@@ -83,6 +138,7 @@ def serialize_wato_parameters(
             OPT_COMP_GLOBAL_SETTINGS,
             OPT_COMP_HOSTS_AND_FOLDERS,
             OPT_COMP_NOTIFICATIONS,
+            OPT_COMP_BUSINESS_INTELLIGENCE,
         ]:
             config_files |= _extract_list_of_files(value.get("config_files"))
             log_files |= _extract_list_of_files(value.get("log_files"))
@@ -170,7 +226,7 @@ def get_checkmk_config_files_map() -> CheckmkFilesMap:
             if file_name == "ca-certificates.mk":
                 continue
             filepath = Path(root).joinpath(file_name)
-            if filepath.suffix in (".mk", ".conf") or filepath.name == ".wato":
+            if filepath.suffix in (".mk", ".conf", ".bi") or filepath.name == ".wato":
                 rel_filepath = str(filepath.relative_to(cmk.utils.paths.default_config_dir))
                 files_map.setdefault(rel_filepath, filepath)
     return files_map
@@ -187,6 +243,90 @@ def get_checkmk_log_files_map() -> CheckmkFilesMap:
     return files_map
 
 
+def get_all_package_infos() -> Dict[str, Any]:
+    return {
+        "installed": packaging.get_installed_package_infos(),
+        "unpackaged": packaging.get_unpackaged_files(),
+        "parts": packaging.package_part_info(),
+        "optional_packages": packaging.get_optional_package_infos(),
+        "disabled_packages": packaging.get_disabled_package_infos(),
+    }
+
+
+def _parse_mkp_file_parts(contents: Dict[str, Any]) -> Dict[str, Dict[str, Dict]]:
+    file_list: Dict[str, Any] = {}
+    for idx, file in enumerate(contents["files"]):
+        path = "%s/%s" % (contents["path"], file)
+        file_list[path] = {"path": path, "permissions": str(contents["permissions"][idx])}
+    return file_list
+
+
+def _parse_mkp_files(
+    items: List[str], module: str, contents: Dict[str, Any], state: str, package: str
+) -> Dict[str, Dict[str, Dict]]:
+    file_list: Dict[str, Dict[str, Any]] = {}
+    for file in items:
+        path = "%s/local/%s/%s" % (cmk.utils.paths.omd_root, _MODULE_TO_PATH[module], file)
+        file_list[path] = {
+            **{col: str(contents.get(col, "N/A")) for col in _CSV_COLUMNS},
+            "package": package,
+            state: "YES",
+            "path": path,
+        }
+
+    return file_list
+
+
+def _deep_update(
+    d1: Dict[str, Dict[str, Any]], d2: Dict[str, Dict[str, Any]]
+) -> Dict[str, Dict[str, Any]]:
+    for key in set(list(d1.keys()) + list(d2.keys())):
+        if key not in d1:
+            d1[key] = d2[key]
+        elif key in d2:
+            d1[key].update(d2[key])
+    return d1
+
+
+def _get_path_type(path: Path) -> str:
+    if path.is_file():
+        return "file"
+    if path.is_dir():
+        return "directory"
+    if path.exists():
+        return "unknown"
+    return "missing"
+
+
+def _filelist_to_csv_lines(dictlist: Dict[str, Dict[str, Any]]) -> Sequence[str]:
+    lines = ["'%s'" % "';'".join(_CSV_COLUMNS)]
+    for file_definition in dictlist.values():
+        lines.append("'%s'" % "';'".join([file_definition.get(col, "N/A") for col in _CSV_COLUMNS]))
+    return lines
+
+
+def get_local_files_csv(infos: DiagnosticsElementJSONResult) -> DiagnosticsElementCSVResult:
+    files: Dict[str, Dict[str, Any]] = {}
+
+    # Parse different secions of the packaging output
+    for (module, items) in infos["unpackaged"].items():
+        files = _deep_update(files, _parse_mkp_files(items, module, {}, "unpackaged", "N/A"))
+    for state in ["installed", "optional_packages"]:
+        for (package, contents) in infos[state].items():
+            for (module, items) in contents["files"].items():
+                files = _deep_update(
+                    files, _parse_mkp_files(items, module, contents, state, package)
+                )
+    for (module, contents) in infos["parts"].items():
+        files = _deep_update(files, _parse_mkp_file_parts(contents))
+
+    # Check which files exist
+    for path in files:
+        files[path]["exists"] = _get_path_type(Path(path))
+
+    return "\n".join(_filelist_to_csv_lines(files))
+
+
 class CheckmkFileSensitivity(Enum):
     insensitive = 0
     sensitive = 1
@@ -197,6 +337,7 @@ class CheckmkFileSensitivity(Enum):
 class CheckmkFileInfo(NamedTuple):
     components: List[str]
     sensitivity: CheckmkFileSensitivity
+    description: str
 
 
 def get_checkmk_file_sensitivity_for_humans(rel_filepath: str, file_info: CheckmkFileInfo) -> str:
@@ -207,6 +348,14 @@ def get_checkmk_file_sensitivity_for_humans(rel_filepath: str, file_info: Checkm
         return "%s (M)" % rel_filepath
     # insensitive
     return "%s (L)" % rel_filepath
+
+
+def get_checkmk_file_description(rel_filepath: Optional[str] = None) -> Sequence[Tuple[str, str]]:
+    cmk_file_info = {**CheckmkFileInfoByNameMap, **CheckmkFileInfoByRelFilePathMap}
+    if rel_filepath is not None:
+        return [(rel_filepath, cmk_file_info[rel_filepath].description)]
+
+    return [(f, d.description) for f, d in cmk_file_info.items()]
 
 
 def get_checkmk_file_info(rel_filepath: str, component: Optional[str] = None) -> CheckmkFileInfo:
@@ -240,10 +389,7 @@ def get_checkmk_file_info(rel_filepath: str, component: Optional[str] = None) ->
         if component is None or component in file_info_by_rel_filepath.components:
             return file_info_by_rel_filepath
 
-    return CheckmkFileInfo(
-        components=[],
-        sensitivity=CheckmkFileSensitivity(3),
-    )
+    return CheckmkFileInfo(components=[], sensitivity=CheckmkFileSensitivity(3), description="")
 
 
 # Feel free to extend the maps:
@@ -256,12 +402,14 @@ CheckmkFileInfoByNameMap: Dict[str, CheckmkFileInfo] = {
             OPT_COMP_GLOBAL_SETTINGS,
         ],
         sensitivity=CheckmkFileSensitivity(0),
+        description="Configuration for the distributed monitoring.",
     ),
     "global.mk": CheckmkFileInfo(
         components=[
             OPT_COMP_GLOBAL_SETTINGS,
         ],
         sensitivity=CheckmkFileSensitivity(1),
+        description="",
     ),
     "hosts.mk": CheckmkFileInfo(
         components=[
@@ -269,6 +417,7 @@ CheckmkFileInfoByNameMap: Dict[str, CheckmkFileInfo] = {
             OPT_COMP_NOTIFICATIONS,
         ],
         sensitivity=CheckmkFileSensitivity(2),
+        description="Contains all hosts of a particular folder, including their attributes.",
     ),
     "rules.mk": CheckmkFileInfo(
         components=[
@@ -276,6 +425,7 @@ CheckmkFileInfoByNameMap: Dict[str, CheckmkFileInfo] = {
             OPT_COMP_NOTIFICATIONS,
         ],
         sensitivity=CheckmkFileSensitivity(2),
+        description="Contains all rules assigned to a particular folder.",
     ),
     "tags.mk": CheckmkFileInfo(
         components=[
@@ -283,6 +433,7 @@ CheckmkFileInfoByNameMap: Dict[str, CheckmkFileInfo] = {
             OPT_COMP_NOTIFICATIONS,
         ],
         sensitivity=CheckmkFileSensitivity(1),
+        description="Contains tag groups and auxiliary tags.",
     ),
     ".wato": CheckmkFileInfo(
         components=[
@@ -290,6 +441,7 @@ CheckmkFileInfoByNameMap: Dict[str, CheckmkFileInfo] = {
             OPT_COMP_HOSTS_AND_FOLDERS,
         ],
         sensitivity=CheckmkFileSensitivity(0),
+        description="Contains the folder properties of a particular folder.",
     ),
 }
 
@@ -300,60 +452,77 @@ CheckmkFileInfoByRelFilePathMap: Dict[str, CheckmkFileInfo] = {
             OPT_COMP_NOTIFICATIONS,
         ],
         sensitivity=CheckmkFileSensitivity(2),
+        description="Alert handler configuration",
     ),
     "conf.d/wato/contacts.mk": CheckmkFileInfo(
         components=[
             OPT_COMP_NOTIFICATIONS,
         ],
         sensitivity=CheckmkFileSensitivity(2),
+        description="Contains users and their properties.",
     ),
     "conf.d/wato/global.mk": CheckmkFileInfo(
         components=[
             OPT_COMP_NOTIFICATIONS,
         ],
         sensitivity=CheckmkFileSensitivity(1),
+        description="Contains the global settings of a site.",
     ),
     "conf.d/wato/groups.mk": CheckmkFileInfo(
         components=[
             OPT_COMP_NOTIFICATIONS,
         ],
         sensitivity=CheckmkFileSensitivity(0),
+        description="Contains the contact groups.",
     ),
     "conf.d/wato/notifications.mk": CheckmkFileInfo(
         components=[
             OPT_COMP_NOTIFICATIONS,
         ],
         sensitivity=CheckmkFileSensitivity(2),
+        description="Contains the notification rules.",
     ),
     "main.mk": CheckmkFileInfo(
         components=[
             OPT_COMP_NOTIFICATIONS,
         ],
         sensitivity=CheckmkFileSensitivity(0),
+        description="The main config file, which is used if you don't use the Setup features of the GUI.",
     ),
     "mknotifyd.d/wato/global.mk": CheckmkFileInfo(
         components=[
             OPT_COMP_NOTIFICATIONS,
         ],
         sensitivity=CheckmkFileSensitivity(1),
+        description="Contains the notification spooler's global settings.",
+    ),
+    "multisite.d/wato/bi_config.bi": CheckmkFileInfo(
+        components=[
+            OPT_COMP_BUSINESS_INTELLIGENCE,
+        ],
+        sensitivity=CheckmkFileSensitivity(1),
+        description="Contains the Business Intelligence rules and aggregations.",
     ),
     "multisite.d/wato/global.mk": CheckmkFileInfo(
         components=[
             OPT_COMP_NOTIFICATIONS,
         ],
         sensitivity=CheckmkFileSensitivity(1),
+        description="Contains GUI related global settings.",
     ),
     "multisite.d/wato/groups.mk": CheckmkFileInfo(
         components=[
             OPT_COMP_NOTIFICATIONS,
         ],
         sensitivity=CheckmkFileSensitivity(0),
+        description="Contains GUI related contact group properties.",
     ),
     "multisite.d/wato/users.mk": CheckmkFileInfo(
         components=[
             OPT_COMP_NOTIFICATIONS,
         ],
         sensitivity=CheckmkFileSensitivity(2),
+        description="Contains GUI related user properties.",
     ),
     # Log files
     "cmc.log": CheckmkFileInfo(
@@ -361,23 +530,104 @@ CheckmkFileInfoByRelFilePathMap: Dict[str, CheckmkFileInfo] = {
             OPT_COMP_NOTIFICATIONS,
         ],
         sensitivity=CheckmkFileSensitivity(1),
+        description="In this file messages from starting and stopping the CMC can be found, as well as general warnings and error messages related to the core and the check helpers.",
+    ),
+    "web.log": CheckmkFileInfo(
+        components=[
+            OPT_COMP_NOTIFICATIONS,
+        ],
+        sensitivity=CheckmkFileSensitivity(1),
+        description="The log file of the checkmk weg gui. Here you can find all kind of automations call, ldap sync and some failing GUI extensions.",
+    ),
+    "liveproxyd.log": CheckmkFileInfo(
+        components=[],
+        sensitivity=CheckmkFileSensitivity(1),
+        description="Log file for the Livestatus proxies.",
+    ),
+    "liveproxyd.state": CheckmkFileInfo(
+        components=[],
+        sensitivity=CheckmkFileSensitivity(1),
+        description="The current state of the Livestatus proxies in a readable form. This file is updated every 5 seconds.",
     ),
     "mknotifyd.log": CheckmkFileInfo(
         components=[
             OPT_COMP_NOTIFICATIONS,
         ],
         sensitivity=CheckmkFileSensitivity(1),
+        description="The notification spooler’s log file.",
     ),
     "mknotifyd.state": CheckmkFileInfo(
         components=[
             OPT_COMP_NOTIFICATIONS,
         ],
         sensitivity=CheckmkFileSensitivity(1),
+        description="The current status of the notification spooler. This is primarily relevant for notifications in distributed environments.",
     ),
     "notify.log": CheckmkFileInfo(
         components=[
             OPT_COMP_NOTIFICATIONS,
         ],
         sensitivity=CheckmkFileSensitivity(1),
+        description="The notification module’s log file. This will show you the rule based processing of the notifications.",
+    ),
+    "apache/access_log": CheckmkFileInfo(
+        components=[],
+        sensitivity=CheckmkFileSensitivity(2),
+        description="This log file contains all requests that are sent to the site's apache server.",
+    ),
+    "apache/error_log": CheckmkFileInfo(
+        components=[],
+        sensitivity=CheckmkFileSensitivity(1),
+        description="this log file contains all errors that occur when requests are sent to the site's apache server.",
+    ),
+    "dcd.log": CheckmkFileInfo(
+        components=[],
+        sensitivity=CheckmkFileSensitivity(1),
+        description="The log file for the Dynamic Configuration Daemon (DCD).",
+    ),
+    "alerts.log": CheckmkFileInfo(
+        components=[],
+        sensitivity=CheckmkFileSensitivity(1),
+        description="Log file with all events relevant to the alert handler (logged by the alert helper).",
+    ),
+    "diskspace.log": CheckmkFileInfo(
+        components=[],
+        sensitivity=CheckmkFileSensitivity(0),
+        description="The log file of the automatic disk space cleanup.",
+    ),
+    "mkeventd.log": CheckmkFileInfo(
+        components=[],
+        sensitivity=CheckmkFileSensitivity(1),
+        description="The event console log file. This will show you the processing of the incoming messages, matching of the rule packs and the processing of the matched mibs.",
+    ),
+    "rrdcached.log": CheckmkFileInfo(
+        components=[],
+        sensitivity=CheckmkFileSensitivity(1),
+        description="The log file of the rrd cache daemon.",
+    ),
+    "redis-server.log": CheckmkFileInfo(
+        components=[],
+        sensitivity=CheckmkFileSensitivity(1),
+        description="The log file of the redis-server of the Checkmk instance.",
+    ),
+    "agent-receiver/access.log": CheckmkFileInfo(
+        components=[],
+        sensitivity=CheckmkFileSensitivity(1),
+        description="",
+    ),
+    "agent-receiver/agent-receiver.log": CheckmkFileInfo(
+        components=[],
+        sensitivity=CheckmkFileSensitivity(1),
+        description="",
+    ),
+    "agent-receiver/error.log": CheckmkFileInfo(
+        components=[],
+        sensitivity=CheckmkFileSensitivity(1),
+        description="",
+    ),
+    "agent-registration.log": CheckmkFileInfo(
+        components=[],
+        sensitivity=CheckmkFileSensitivity(1),
+        description="",
     ),
 }

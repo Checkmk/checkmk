@@ -605,15 +605,9 @@ static ColumnDefinitions hosts_columns() {
         {"total_services", ColumnType::int_},
         {"worst_service_hard_state", ColumnType::int_},
         {"worst_service_state", ColumnType::int_},
-#ifdef CMC
-        {"x_3d", ColumnType::string},
-        {"y_3d", ColumnType::string},
-        {"z_3d", ColumnType::string},
-#else
         {"x_3d", ColumnType::double_},
         {"y_3d", ColumnType::double_},
         {"z_3d", ColumnType::double_},
-#endif
     };
 }
 

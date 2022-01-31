@@ -923,21 +923,21 @@ class Hosts(Table):
 
     x_3d = Column(
         'x_3d',
-        col_type='string',
+        col_type='float',
         description='3D-Coordinates: X',
     )
     """3D-Coordinates: X"""
 
     y_3d = Column(
         'y_3d',
-        col_type='string',
+        col_type='float',
         description='3D-Coordinates: Y',
     )
     """3D-Coordinates: Y"""
 
     z_3d = Column(
         'z_3d',
-        col_type='string',
+        col_type='float',
         description='3D-Coordinates: Z',
     )
     """3D-Coordinates: Z"""

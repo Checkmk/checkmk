@@ -450,33 +450,33 @@ setup:
 	    clang-tools-$(CLANG_VERSION) \
 	    clangd-$(CLANG_VERSION) \
 	    cmake \
-	    lld-$(CLANG_VERSION) \
-	    lldb-$(CLANG_VERSION) \
-	    libclang-$(CLANG_VERSION)-dev \
 	    curl \
-	    libjpeg-dev \
+	    direnv \
 	    doxygen \
+	    enchant-2 \
 	    figlet \
 	    g++ \
-		gdebi \
+	    gdebi \
+	    ksh \
+	    libclang-$(CLANG_VERSION)-dev \
+	    libjpeg-dev \
+	    libkrb5-dev \
+	    libldap2-dev \
+	    libmariadb-dev-compat \
+	    libpango1.0-dev \
 	    libpcap-dev \
 	    librrd-dev \
-	    libxml2-dev \
-	    libpango1.0-dev \
 	    libsasl2-dev \
-	    libldap2-dev \
-	    libkrb5-dev \
-	    libmariadb-dev-compat \
+	    libxml2-dev \
+	    lld-$(CLANG_VERSION) \
+	    lldb-$(CLANG_VERSION) \
+	    p7zip-full \
 	    pngcrush \
-	    valgrind \
-	    shellcheck \
-	    direnv \
+	    python-setuptools \
 	    python3-pip \
 	    python3.9-dev \
-	    python-setuptools \
-	    enchant-2 \
-	    ksh \
-	    p7zip-full \
+	    shellcheck \
+	    valgrind \
 	    zlib1g-dev
 	if type pyenv >/dev/null 2>&1 && pyenv shims --short | grep '^pipenv$$'; then \
 	    CMD="pyenv exec" ; \

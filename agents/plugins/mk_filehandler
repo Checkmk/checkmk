@@ -17,4 +17,3 @@ echo '<<<filehandler>>>'
 if [ -a $FILE ]; then
     cat $FILE
 fi
-

@@ -252,15 +252,18 @@ def get_history(
     if "/" in hostname:
         return [], []  # just for security reasons
 
-    inventory_path = "%s/%s" % (cmk.utils.paths.inventory_output_dir, hostname)
-    if not os.path.exists(inventory_path):
+    inventory_path = Path(cmk.utils.paths.inventory_output_dir, hostname)
+    try:
+        latest_timestamp = int(inventory_path.stat().st_mtime)
+    except FileNotFoundError:
         return [], []
 
-    latest_timestamp = int(os.stat(inventory_path).st_mtime)
-    inventory_archive_dir = "%s/%s" % (cmk.utils.paths.inventory_archive_dir, hostname)
+    inventory_archive_dir = Path(cmk.utils.paths.inventory_archive_dir, hostname)
     try:
-        archived_timestamps = sorted([int(fn) for fn in os.listdir(inventory_archive_dir)])
-    except OSError:
+        archived_timestamps = sorted(
+            [int(filepath.name) for filepath in inventory_archive_dir.iterdir()]
+        )
+    except FileNotFoundError:
         return [], []
 
     all_timestamps: Sequence[int] = archived_timestamps + [latest_timestamp]
@@ -289,7 +292,7 @@ def get_history(
                 raise LoadStructuredDataError()
             tree_lookup[timestamp] = inventory_tree
         else:
-            inventory_archive_path = Path(inventory_archive_dir, str(timestamp))
+            inventory_archive_path = inventory_archive_dir.joinpath(str(timestamp))
             tree_lookup[timestamp] = _filter_tree(
                 StructuredDataStore.load_file(inventory_archive_path)
             )
@@ -298,7 +301,7 @@ def get_history(
     corrupted_history_files = []
     history: List[HistoryEntry] = []
     for timestamp in required_timestamps:
-        cached_delta_path = os.path.join(
+        cached_delta_path = Path(
             cmk.utils.paths.inventory_delta_cache_dir,
             hostname,
             "%s_%s" % (previous_timestamp, timestamp),
@@ -345,10 +348,8 @@ def get_history(
 
 
 def _get_short_inventory_history_filepath(hostname: HostName, timestamp: int) -> Path:
-    return (
-        Path(cmk.utils.paths.inventory_archive_dir)
-        .joinpath("%s/%s" % (hostname, timestamp))
-        .relative_to(cmk.utils.paths.omd_root)
+    return Path(cmk.utils.paths.inventory_archive_dir, hostname, str(timestamp)).relative_to(
+        cmk.utils.paths.omd_root
     )
 
 

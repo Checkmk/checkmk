@@ -16,11 +16,14 @@ from cmk.utils.diagnostics import (
     CheckmkFileSensitivity,
     DiagnosticsParameters,
     get_checkmk_config_files_map,
+    get_checkmk_file_description,
     get_checkmk_file_info,
     get_checkmk_file_sensitivity_for_humans,
     get_checkmk_log_files_map,
     OPT_CHECKMK_CONFIG_FILES,
+    OPT_CHECKMK_LOG_FILES,
     OPT_CHECKMK_OVERVIEW,
+    OPT_COMP_BUSINESS_INTELLIGENCE,
     OPT_COMP_GLOBAL_SETTINGS,
     OPT_COMP_HOSTS_AND_FOLDERS,
     OPT_COMP_NOTIFICATIONS,
@@ -159,6 +162,8 @@ class ModeDiagnostics(WatoMode):
         return Dictionary(
             title=_("Collect diagnostic dump"),
             render="form",
+            help="File Descriptions:<br>%s"
+            % "<br>".join([" - %s: %s" % (f, d) for (f, d) in get_checkmk_file_description()]),
             elements=[
                 (
                     "site",
@@ -167,6 +172,44 @@ class ModeDiagnostics(WatoMode):
                         choices=get_activation_site_choices(),
                     ),
                 ),
+                # TODO: provide the possibility to chose multiple sites
+                # (
+                #    "sites",
+                #    CascadingDropdown(
+                #        title="Sites",
+                #        sorted=False,
+                #        help="",
+                #        choices=[
+                #            (
+                #                "all",
+                #                _("Collect diagnostics data from all sites"),
+                #                FixedValue(
+                #                    [s for s, si in get_activation_site_choices()],
+                #                    totext="<br>".join([si for s, si in get_activation_site_choices()])
+                #                ),
+                #            ),
+                #            (
+                #                "local",
+                #                _("Collect diagnostics data from local site only"),
+                #                FixedValue(
+                #                    [omd_site()],
+                #                    #totext="%s - %s" % site_choices(omd_site())
+                #                    totext=[si for s, si in get_activation_site_choices() if s == omd_site()][0]
+                #                ),
+                #            ),
+                #            (
+                #                "explicit_list_of_sites",
+                #                _("Select individual sites from list"),
+                #                DualListChoice(
+                #                    choices=get_activation_site_choices(),
+                #                    size=80,
+                #                    rows=10,
+                #                ),
+                #            ),
+                #        ],
+                #        default_value="local",
+                #    )
+                # ),
                 (
                     "general",
                     FixedValue(
@@ -241,6 +284,13 @@ class ModeDiagnostics(WatoMode):
                 ),
             ),
             (
+                OPT_CHECKMK_LOG_FILES,
+                self._get_component_specific_checkmk_files_choices(
+                    _("Checkmk Log files"),
+                    [(f, get_checkmk_file_info(f)) for f in self._checkmk_log_files_map],
+                ),
+            ),
+            (
                 OPT_CHECKMK_CONFIG_FILES,
                 self._get_component_specific_checkmk_files_choices(
                     _("Checkmk Configuration files"),
@@ -308,6 +358,18 @@ class ModeDiagnostics(WatoMode):
                     default_keys=["config_files"],
                 ),
             ),
+            (
+                OPT_COMP_BUSINESS_INTELLIGENCE,
+                Dictionary(
+                    title=_("Business Intelligence"),
+                    help=_("Configuration files ('*.mk' or '*.conf') from etc/check_mk.%s")
+                    % _CHECKMK_FILES_NOTE,
+                    elements=self._get_component_specific_checkmk_files_elements(
+                        OPT_COMP_BUSINESS_INTELLIGENCE,
+                    ),
+                    default_keys=["config_files"],
+                ),
+            ),
         ]
         return elements
 
@@ -370,6 +432,7 @@ class ModeDiagnostics(WatoMode):
             sensitive_files + insensitive_files, key=lambda t: t[0]
         )
         sorted_insensitive_files = sorted(insensitive_files, key=lambda t: t[0])
+
         return CascadingDropdown(
             title=title,
             sorted=False,
@@ -457,7 +520,10 @@ class DiagnosticsDumpBackgroundJob(WatoBackgroundJob):
 
         chunks = serialize_wato_parameters(diagnostics_parameters)
 
+        # TODO: Currently, selecting multiple sites is not possible.
+        # sites = diagnostics_parameters["sites"][1]
         site = diagnostics_parameters["site"]
+
         timeout = request.request_timeout - 2
         results = []
         for chunk in chunks:
@@ -467,6 +533,16 @@ class DiagnosticsDumpBackgroundJob(WatoBackgroundJob):
                 timeout,
             )
             results.append(chunk_result)
+
+        # for site in sites:
+        #    for chunk in chunks:
+
+        #        chunk_result = create_diagnostics_dump(
+        #            site,
+        #            chunk,
+        #            timeout,
+        #        )
+        #        results.append(chunk_result)
 
         if len(results) > 1:
             result = _merge_results(results)

@@ -25,25 +25,25 @@ if [ -z $CHROOT_BUILD_DIR ]; then
     exit 1
 fi
 
-if ! mountpoint -q -- $CHROOT_PATH/proc ; then
+if ! mountpoint -q -- $CHROOT_PATH/proc; then
     mount -o bind /proc $CHROOT_PATH/proc
 fi
 
-if ! mountpoint -q -- $CHROOT_PATH/dev ; then
+if ! mountpoint -q -- $CHROOT_PATH/dev; then
     mount --rbind /dev $CHROOT_PATH/dev
 fi
 
-if ! mountpoint -q -- $CHROOT_PATH/$CHROOT_BUILD_DIR ; then
+if ! mountpoint -q -- $CHROOT_PATH/$CHROOT_BUILD_DIR; then
     mkdir $CHROOT_PATH/$CHROOT_BUILD_DIR
 fi
 
-if ! mountpoint -q -- $CHROOT_PATH/$CHROOT_BUILD_DIR/Makefile ; then
+if ! mountpoint -q -- $CHROOT_PATH/$CHROOT_BUILD_DIR/Makefile; then
     mount -o bind $BASE $CHROOT_PATH/$CHROOT_BUILD_DIR
 fi
 
-if [ -n "$CMD" ] ; then
+if [ -n "$CMD" ]; then
     chroot $CHROOT_PATH /usr/bin/env \
-           NEW_VERSION=$NEW_VERSION bash -c "$CMD"
+        NEW_VERSION=$NEW_VERSION bash -c "$CMD"
     EXIT_CODE=$?
 else
     chroot $CHROOT_PATH /usr/bin/env CHROOTNAME=$CHROOTNAME bash -l
@@ -53,7 +53,7 @@ fi
 unmount() {
     target=$1
     umount $target
-    if [ $? != 0 ] ; then
+    if [ $? != 0 ]; then
         echo "retrying after 5 seconds..."
         sleep 5
         umount $target && echo "successful"

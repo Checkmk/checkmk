@@ -68,7 +68,7 @@
 
 - name: checkmk agent should listen only on localhost
   ansible.builtin.lineinfile:
-    path: /etc/xinetd.d/check_mk
+    path: /etc/xinetd.d/check-mk-agent
     state: present
     regexp: '^.*# *only_from      = 127.0.0.1 10.0.20.1 10.0.20.2'
     line: 'bind            = 127.0.0.1'

@@ -800,13 +800,7 @@ static ColumnDefinitions status_columns() {
 }
 
 TEST(TableStatus, ColumnNamesAndTypes) {
-    EXPECT_EQ(status_columns(),
-#ifdef CMC
-              ColumnDefinitions(TableStatus{nullptr, nullptr})
-#else
-              ColumnDefinitions(TableStatus{nullptr})
-#endif
-    );
+    EXPECT_EQ(status_columns(), ColumnDefinitions(TableStatus{nullptr}));
 }
 
 static ColumnDefinitions timeperiods_columns() {

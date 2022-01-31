@@ -665,7 +665,7 @@ Pipfile.lock: Pipfile
 	    echo "Creating .venv..." ; \
 	    flock $(LOCK_FD); \
 	    $(RM) -r .venv; \
-	    ( SKIP_MAKEFILE_CALL=1 $(PIPENV) sync --dev && touch .venv ) || ( $(RM) -r .venv ; exit 1 ) \
+	    ( PIPENV_COLORBLIND=1 SKIP_MAKEFILE_CALL=1 $(PIPENV) sync --verbose --dev && touch .venv ) || ( $(RM) -r .venv ; exit 1 ) \
 	) $(LOCK_FD)>$(LOCK_PATH)
 
 # This dummy rule is called from subdirectories whenever one of the

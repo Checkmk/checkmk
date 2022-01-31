@@ -11,7 +11,7 @@
 # shellcheck disable=SC2034
 CMK_VERSION="2.1.0i1"
 
-if type SUSEConnect > /dev/null ; then
+if type SUSEConnect >/dev/null; then
     echo '<<<suseconnect:sep(58)>>>'
     SUSEConnect --status-text | sed -e '/^-/ d'
 fi

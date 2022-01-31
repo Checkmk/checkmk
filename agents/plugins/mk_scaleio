@@ -24,7 +24,6 @@ CMK_VERSION="2.1.0i1"
 # SIO_USER=myUser
 # SIO_PASSWORD=myPassword
 
-
 if [ ! "$MK_CONFDIR" ]; then
     echo "MK_CONFDIR not set!" >&2
     exit 1
@@ -37,8 +36,7 @@ if [ -z "${SIO_USER}" ] || [ -z "${SIO_PASSWORD}" ]; then
     exit 1
 fi
 
-if type scli > /dev/null
-then
+if type scli >/dev/null; then
     scli --login --username "$SIO_USER" --password "$SIO_PASSWORD" >/dev/null 2>&1
 
     if [ $? == 1 ]; then

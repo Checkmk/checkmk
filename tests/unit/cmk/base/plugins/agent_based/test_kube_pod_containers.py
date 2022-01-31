@@ -146,7 +146,7 @@ def test_check_result_state_ok(check_result):
 
 def test_check_result_summary_status(check_result):
     result, _, _ = check_result
-    assert result.summary == "Status: Running for: 0 seconds"
+    assert result.summary == "Status: Running for 0 seconds"
 
 
 def test_check_result_summary_image(container_name, string_table_element, check_result):
@@ -167,7 +167,7 @@ def test_check_result_summary_restart_count(container_name, string_table_element
 def test_check_result_summary_start_time(timespan, check_result):
     expected_timespan = render.timespan(timespan)
     result, _, _ = check_result
-    assert result.summary == f"Status: Running for: {expected_timespan}"
+    assert result.summary == f"Status: Running for {expected_timespan}"
 
 
 @pytest.mark.parametrize("container_state", ["waiting"])

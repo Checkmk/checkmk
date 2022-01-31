@@ -93,7 +93,7 @@ def check(item: str, params: Mapping[str, int], section: PodContainers) -> Check
 def check_running(params: Mapping[str, int], state: ContainerRunningState) -> CheckResult:
     start_time_timestamp = state.start_time
     time_delta = time() - start_time_timestamp
-    summary = f"Status: Running for: {render.timespan(time_delta)}"
+    summary = f"Status: Running for {render.timespan(time_delta)}"
     yield Result(state=State.OK, summary=summary)
 
 

@@ -2,17 +2,23 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
-use std::io::{Result as IoResult, Write};
+use std::io::{Read, Result as IoResult, Write};
+use std::net::TcpStream;
 
-#[cfg(unix)]
-use std::io::Read;
 #[cfg(unix)]
 use std::os::unix::net::UnixStream;
 
+// TODO(sk): add logging and unit testing(using local server)
+#[cfg(windows)]
+fn collect_from_ip(agent_ip: &str) -> IoResult<Vec<u8>> {
+    let mut data: Vec<u8> = vec![];
+    TcpStream::connect(agent_ip)?.read_to_end(&mut data)?;
+    Ok(data)
+}
+
 #[cfg(windows)]
 pub fn collect() -> IoResult<Vec<u8>> {
-    let mondata: Vec<u8> = vec![];
-    Ok(mondata)
+    collect_from_ip("localhost:6556")
 }
 
 #[cfg(unix)]

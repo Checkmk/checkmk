@@ -817,11 +817,7 @@ static ColumnDefinitions status_columns() {
         {"host_checks_rate", ColumnType::double_},
         {"interval_length", ColumnType::int_},
         {"is_trial_expired", ColumnType::int_},
-#ifdef CMC
-        {"last_command_check", ColumnType::int_},
-#else
         {"last_command_check", ColumnType::time},
-#endif
         {"last_log_rotation", ColumnType::time},
         {"license_usage_history", ColumnType::blob},
         {"livechecks", ColumnType::double_},

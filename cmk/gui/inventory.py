@@ -132,6 +132,50 @@ def get_status_data_via_livestatus(site: Optional[livestatus.SiteId], hostname: 
     return row
 
 
+def get_short_inventory_filepath(hostname: HostName) -> Path:
+    return (
+        Path(cmk.utils.paths.inventory_output_dir)
+        .joinpath(hostname)
+        .relative_to(cmk.utils.paths.omd_root)
+    )
+
+
+def vs_element_inventory_visible_raw_path() -> Tuple[str, ValueSpec]:
+    # Via 'Display options::Show internal tree paths' the tree paths are shown as 'path.to.node'.
+    # We keep this format in order to easily copy&paste these tree paths to
+    # 'Contact groups::Permitted HW/SW inventory paths'.
+    return (
+        "visible_raw_path",
+        TextInput(
+            title=_("Path to categories"),
+            size=60,
+            allow_empty=False,
+        ),
+    )
+
+
+def vs_inventory_path_or_keys_help():
+    return _(
+        "Via <tt>Display options > Show internal tree paths</tt>"
+        " on the HW/SW Inventory page of a host the internal tree paths leading"
+        " to subcategories, the keys of singles values or table column names"
+        " become visible. Key columns of tables are marked with '*'. See"
+        ' <a href="https://docs.checkmk.com/latest/de/inventory.html">HW/SW Inventory</a>.'
+        " for more details about the HW/SW Inventory system."
+    )
+
+
+# .
+#   .--history-------------------------------------------------------------.
+#   |                   _     _     _                                      |
+#   |                  | |__ (_)___| |_ ___  _ __ _   _                    |
+#   |                  | '_ \| / __| __/ _ \| '__| | | |                   |
+#   |                  | | | | \__ \ || (_) | |  | |_| |                   |
+#   |                  |_| |_|_|___/\__\___/|_|   \__, |                   |
+#   |                                             |___/                    |
+#   '----------------------------------------------------------------------'
+
+
 class FilteredTimestamps(NamedTuple):
     start_timestamp: Optional[int]
     timestamps: Sequence[int]
@@ -300,44 +344,11 @@ def get_history(
     return history, corrupted_history_files
 
 
-def get_short_inventory_filepath(hostname: HostName) -> Path:
-    return (
-        Path(cmk.utils.paths.inventory_output_dir)
-        .joinpath(hostname)
-        .relative_to(cmk.utils.paths.omd_root)
-    )
-
-
 def _get_short_inventory_history_filepath(hostname: HostName, timestamp: int) -> Path:
     return (
         Path(cmk.utils.paths.inventory_archive_dir)
         .joinpath("%s/%s" % (hostname, timestamp))
         .relative_to(cmk.utils.paths.omd_root)
-    )
-
-
-def vs_element_inventory_visible_raw_path() -> Tuple[str, ValueSpec]:
-    # Via 'Display options::Show internal tree paths' the tree paths are shown as 'path.to.node'.
-    # We keep this format in order to easily copy&paste these tree paths to
-    # 'Contact groups::Permitted HW/SW inventory paths'.
-    return (
-        "visible_raw_path",
-        TextInput(
-            title=_("Path to categories"),
-            size=60,
-            allow_empty=False,
-        ),
-    )
-
-
-def vs_inventory_path_or_keys_help():
-    return _(
-        "Via <tt>Display options > Show internal tree paths</tt>"
-        " on the HW/SW Inventory page of a host the internal tree paths leading"
-        " to subcategories, the keys of singles values or table column names"
-        " become visible. Key columns of tables are marked with '*'. See"
-        ' <a href="https://docs.checkmk.com/latest/de/inventory.html">HW/SW Inventory</a>.'
-        " for more details about the HW/SW Inventory system."
     )
 
 

@@ -253,20 +253,12 @@ def get_history(
         return [], []  # just for security reasons
 
     inventory_path = Path(cmk.utils.paths.inventory_output_dir, hostname)
-    try:
-        latest_timestamp = int(inventory_path.stat().st_mtime)
-    except FileNotFoundError:
-        return [], []
-
     inventory_archive_dir = Path(cmk.utils.paths.inventory_archive_dir, hostname)
-    try:
-        archived_timestamps = sorted(
-            [int(filepath.name) for filepath in inventory_archive_dir.iterdir()]
-        )
-    except FileNotFoundError:
+
+    if not (all_timestamps := _get_timestamps(inventory_path, inventory_archive_dir)):
         return [], []
 
-    all_timestamps: Sequence[int] = archived_timestamps + [latest_timestamp]
+    latest_timestamp = all_timestamps[-1]
     previous_timestamp: Optional[int]
 
     if filter_timestamps is None:
@@ -332,6 +324,20 @@ def get_history(
         previous_timestamp = timestamp
 
     return history, corrupted_history_files
+
+
+def _get_timestamps(inventory_path: Path, archive_dir: Path) -> Sequence[int]:
+    try:
+        latest_timestamp = int(inventory_path.stat().st_mtime)
+    except FileNotFoundError:
+        return []
+
+    try:
+        archived_timestamps = sorted([int(filepath.name) for filepath in archive_dir.iterdir()])
+    except FileNotFoundError:
+        return []
+
+    return archived_timestamps + [latest_timestamp]
 
 
 def _get_cached_history_entry(cached_delta_path: Path, timestamp: int) -> Optional[HistoryEntry]:

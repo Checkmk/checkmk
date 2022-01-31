@@ -50,6 +50,7 @@ from typing import Literal, Mapping, NoReturn, Optional, TypedDict, Union
 
 import cmk.utils.paths
 import cmk.utils.store as store
+from cmk.utils.config_path import ConfigPath, LATEST_CONFIG
 from cmk.utils.encryption import Encrypter
 from cmk.utils.exceptions import MKGeneralException
 
@@ -157,7 +158,7 @@ def extract(password_id: PasswordId) -> Optional[str]:
     raise MKGeneralException("Unknown password type.")
 
 
-def save_for_helpers(config_base_path: Path) -> None:
+def save_for_helpers(config_base_path: ConfigPath) -> None:
     """Save the passwords for the helpers of the monitoring core"""
     helper_path = _helper_password_store_path(config_base_path)
     helper_path.parent.mkdir(parents=True, exist_ok=True)
@@ -166,13 +167,10 @@ def save_for_helpers(config_base_path: Path) -> None:
 
 
 def load_for_helpers() -> dict[str, str]:
-    # TODO: Use computation from cmk.core_helpers.config_path
-    return _load(
-        _helper_password_store_path(Path(cmk.utils.paths.core_helper_config_dir, "latest"))
-    )
+    return _load(_helper_password_store_path(LATEST_CONFIG))
 
 
-def _helper_password_store_path(config_path: Path) -> Path:
+def _helper_password_store_path(config_path: ConfigPath) -> Path:
     return Path(config_path) / "stored_passwords"
 
 

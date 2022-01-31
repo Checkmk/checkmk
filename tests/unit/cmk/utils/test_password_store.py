@@ -4,12 +4,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from pathlib import Path
-
 import pytest
 
 import cmk.utils.paths
 from cmk.utils import password_store
+from cmk.utils.config_path import LATEST_CONFIG
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.password_store import PasswordId
 
@@ -26,13 +25,12 @@ def test_save() -> None:
 
 def test_save_for_helpers_no_store() -> None:
     assert not password_store._password_store_path().exists()
-    config_path = Path(cmk.utils.paths.core_helper_config_dir, "latest")
 
     assert password_store.load_for_helpers() == {}
-    password_store.save_for_helpers(config_path)
+    password_store.save_for_helpers(LATEST_CONFIG)
 
     assert not password_store._password_store_path().exists()
-    assert not password_store._helper_password_store_path(config_path).exists()
+    assert not password_store._helper_password_store_path(LATEST_CONFIG).exists()
     assert password_store.load_for_helpers() == {}
 
 
@@ -42,8 +40,7 @@ def test_save_for_helpers() -> None:
     assert password_store._password_store_path().exists()
     assert password_store.load_for_helpers() == {}
 
-    config_path = Path(cmk.utils.paths.core_helper_config_dir, "latest")
-    password_store.save_for_helpers(config_path)
+    password_store.save_for_helpers(LATEST_CONFIG)
     assert password_store.load_for_helpers() == {"ding": "blablu"}
 
 

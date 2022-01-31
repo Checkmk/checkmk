@@ -376,7 +376,7 @@ def _create_core_config(
     with config_path.create(is_cmc=config.is_cmc()), _backup_objects_file(core):
         core.create_config(config_path, config_cache, hosts_to_update=hosts_to_update)
 
-    cmk.utils.password_store.save_for_helpers(Path(config_path))
+    cmk.utils.password_store.save_for_helpers(config_path)
 
     return get_configuration_warnings()
 

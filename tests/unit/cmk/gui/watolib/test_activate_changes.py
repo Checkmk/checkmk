@@ -37,6 +37,7 @@ def _expected_replication_paths():
         ReplicationPath("dir", "multisite", "etc/check_mk/multisite.d/wato/", []),
         ReplicationPath("file", "htpasswd", "etc/htpasswd", []),
         ReplicationPath("file", "auth.secret", "etc/auth.secret", []),
+        ReplicationPath("file", "password_store.secret", "etc/password_store.secret", []),
         ReplicationPath("file", "auth.serials", "etc/auth.serials", []),
         ReplicationPath(
             "dir", "usersettings", "var/check_mk/web", ["report-thumbnails", "session_info.mk"]

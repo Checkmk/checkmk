@@ -74,3 +74,37 @@ def test_extract_from_unknown_valuespec() -> None:
         # We test for an invalid structure here
         password_store.extract(password_id)  # type: ignore[arg-type]
     assert "Unknown password type." in str(excinfo.value)
+
+
+def test_obfuscation() -> None:
+    obfuscated = password_store._obfuscate(secret := "$ecret")
+    assert isinstance(obfuscated, str)
+    assert secret not in obfuscated
+    # File format header
+    assert int(obfuscated[:2]) == 0
+
+    assert password_store._deobfuscate(obfuscated) == secret
+
+
+def test_save_obfuscated() -> None:
+    password_store.save({"ding": "blablu"})
+    assert "blablu" not in password_store._password_store_path().read_text()
+
+
+def test_obfuscate_with_own_secret() -> None:
+    obfuscated = password_store._obfuscate(secret := "$ecret")
+    assert password_store._deobfuscate(obfuscated) == secret
+
+    # The user may want to write some arbritary secret to the file.
+    key_path = password_store._PasswordStoreObfuscater()._secret_key_path()
+    key_path.write_text(custom_key := "this_will_be_pretty_secure_now.not.")
+
+    # Ensure we work with the right key file along the way
+    assert (cmk.utils.paths.omd_root / "etc" / "password_store.secret").read_text() == custom_key
+
+    # Old should not be decryptable anymore
+    with pytest.raises(ValueError, match="MAC check failed"):
+        assert password_store._deobfuscate(obfuscated)
+
+    # Test encryption and decryption with new key
+    assert password_store._deobfuscate(password_store._obfuscate(secret)) == secret

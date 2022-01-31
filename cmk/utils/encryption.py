@@ -289,26 +289,29 @@ class Encrypter:
     """
 
     @classmethod
+    def _secret_key_path(cls) -> Path:
+        return cmk.utils.paths.omd_root / "etc" / "auth.secret"
+
+    @classmethod
     def _secret_key(cls, salt: bytes) -> bytes:
         """Build some secret for the encryption
 
         Use the sites auth.secret for encryption. This secret is only known to the current site
         and other distributed sites.
         """
-        secret_path = cmk.utils.paths.omd_root / "etc" / "auth.secret"
-        with secret_path.open(mode="rb") as f:
+        with cls._secret_key_path().open(mode="rb") as f:
             passphrase = f.read().strip()
             return hashlib.scrypt(passphrase, salt=salt, n=2 ** 14, r=8, p=1, dklen=32)
 
     @classmethod
     def _cipher(cls, salt: bytes, nonce: bytes):
-        return AES.new(Encrypter._secret_key(salt), AES.MODE_GCM, nonce=nonce)
+        return AES.new(cls._secret_key(salt), AES.MODE_GCM, nonce=nonce)
 
     @classmethod
     def encrypt(cls, value: str) -> str:
         salt = os.urandom(AES.block_size)
         nonce = os.urandom(AES.block_size)
-        cipher = Encrypter._cipher(salt, nonce)
+        cipher = cls._cipher(salt, nonce)
         encrypted, tag = cipher.encrypt_and_digest(value.encode("utf-8"))
         return base64.b64encode(salt + nonce + tag + encrypted).decode("ascii")
 
@@ -319,4 +322,4 @@ class Encrypter:
         nonce, rest = rest[: AES.block_size], rest[AES.block_size :]
         tag, encrypted = rest[: AES.block_size], rest[AES.block_size :]
 
-        return Encrypter._cipher(salt, nonce).decrypt_and_verify(encrypted, tag).decode("utf-8")
+        return cls._cipher(salt, nonce).decrypt_and_verify(encrypted, tag).decode("utf-8")

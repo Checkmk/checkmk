@@ -207,6 +207,15 @@ def get_replication_paths() -> List[ReplicationPath]:
         ),
         ReplicationPath(
             "file",
+            "password_store.secret",
+            os.path.relpath(
+                "%s/password_store.secret" % os.path.dirname(cmk.utils.paths.htpasswd_file),
+                cmk.utils.paths.omd_root,
+            ),
+            [],
+        ),
+        ReplicationPath(
+            "file",
             "auth.serials",
             os.path.relpath(
                 "%s/auth.serials" % os.path.dirname(cmk.utils.paths.htpasswd_file),

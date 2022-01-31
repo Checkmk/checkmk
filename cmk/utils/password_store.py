@@ -6,6 +6,9 @@
 """This module is meant to be used by components (e.g. active checks, notifications, bakelets)
 that support getting credentials from the Check_MK password store.
 
+The password stores primary use is to centralize stored credentials. Instead of spreading the
+credentials in the whole configuration, we have this as a central place for sensitive information.
+
 The password store mechanic provides a mechanism for keeping passwords out of the cmdline of a
 process, e.g. an active check plugin. It has been built to extend existing plugins with as small
 modificiations as possible. It is built out of two parts:
@@ -37,7 +40,9 @@ file, there is the `extract` function which can be used like this:
 
 """
 
+import secrets
 import shutil
+import string
 import sys
 from contextlib import suppress
 from pathlib import Path
@@ -45,6 +50,7 @@ from typing import Literal, Mapping, NoReturn, Optional, TypedDict, Union
 
 import cmk.utils.paths
 import cmk.utils.store as store
+from cmk.utils.encryption import Encrypter
 from cmk.utils.exceptions import MKGeneralException
 
 PasswordLookupType = Literal["password", "store"]
@@ -120,7 +126,7 @@ def save(stored_passwords: Mapping[str, str]) -> None:
     for ident, pw in stored_passwords.items():
         content += "%s:%s\n" % (ident, pw)
 
-    store.save_text_to_file(_password_store_path(), content)
+    store.save_text_to_file(_password_store_path(), _obfuscate(content))
 
 
 def load() -> dict[str, str]:
@@ -130,7 +136,7 @@ def load() -> dict[str, str]:
 def _load(store_path: Path) -> dict[str, str]:
     passwords = {}
     with suppress(FileNotFoundError):
-        for line in store_path.read_text().splitlines():
+        for line in _deobfuscate(store_path.read_text()).splitlines():
             ident, password = line.strip().split(":", 1)
             passwords[ident] = password
     return passwords
@@ -168,3 +174,75 @@ def load_for_helpers() -> dict[str, str]:
 
 def _helper_password_store_path(config_path: Path) -> Path:
     return Path(config_path) / "stored_passwords"
+
+
+def _obfuscate(content: str) -> str:
+    return _PasswordStoreObfuscater().encrypt(content)
+
+
+def _deobfuscate(obfuscated: str) -> str:
+    return _PasswordStoreObfuscater.decrypt(obfuscated)
+
+
+class _PasswordStoreObfuscater(Encrypter):
+    """Encrypt the password store with the locally known password store key
+
+    But why?
+
+    We are a monitoring system. We definitely need credentials in clear text to contact remote some
+    systems all the time. And we also need to be able do this after restarting the whole system.
+    This means the secrets need to be available to the site user on disk in clear text.
+
+    To underline this fact, we kept the password store file in clear text on disk for a long time.
+    This approach made the situation clearly visible to everyone. And we were pretty comfortable
+    with this.
+
+    We are faced with the requirement that no credential shall be stored in clear text on disk, they
+    need to be encrypted. We'd love to have that too. But since securing is not possible, we are now
+    obfuscating. The best we can do in this case.
+
+    "Sometimes people don't want to hear the truth because they don't want their illusions
+    destroyed." - Friedrich Nietzsche
+
+    What we do from now is:
+
+    a) Use a locally stored secret accessible to the site user.
+    b) Encrypt the password store which is also accessible to the site user.
+
+    Obviously there is no added security here. Just obfuscation.
+
+    Sorry. But this is the way it is.
+
+    With the development of Checkmk 2.2 we will evaluate the usage of HSMs as well
+    as vault solutions in the future which may be helpful in some use cases.
+
+    PS. If you think this is all nonsense and you have a secure solution to this situation, I am
+    very interested in learning from you.
+    """
+
+    _VERSION_HEADER = "00"
+
+    @classmethod
+    def _secret_key_path(cls) -> Path:
+        path = cmk.utils.paths.omd_root / "etc" / "password_store.secret"
+        if not path.exists():
+            # Initialize the password store encryption key in case it does not exist
+            cls._create_secret_key(path)
+        return path
+
+    @classmethod
+    def _create_secret_key(cls, path: Path) -> None:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.touch()
+        path.chmod(0o660)
+        path.write_text(
+            "".join(secrets.choice(string.ascii_uppercase + string.digits) for i in range(256))
+        )
+
+    @classmethod
+    def encrypt(cls, value: str) -> str:
+        return cls._VERSION_HEADER + super().encrypt(value)
+
+    @classmethod
+    def decrypt(cls, value: str) -> str:
+        return super().decrypt(value[len(cls._VERSION_HEADER) :])

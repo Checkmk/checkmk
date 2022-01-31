@@ -410,6 +410,7 @@ def test_generate_pre_17_site_snapshot(
 
     expected_subtars = [
         "auth.secret.tar",
+        "password_store.secret.tar",
         "auth.serials.tar",
         "check_mk.tar",
         "diskspace.tar",
@@ -464,6 +465,7 @@ def test_generate_pre_17_site_snapshot(
         "liveproxyd.tar": [],
         "sitespecific.tar": ["sitespecific.mk"],
         "auth.secret.tar": [],
+        "password_store.secret.tar": [],
         "dcd.tar": [],
         "auth.serials.tar": ["auth.serials"],
         "mknotify.tar": [],

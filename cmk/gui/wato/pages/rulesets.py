@@ -874,7 +874,8 @@ class ModeEditRuleset(WatoMode):
             ("mode", "edit_predefined_condition"),
             ("ident", condition_id),
         ])
-        html.write(_("Predefined condition: <a href=\"%s\">%s</a>") % (url, condition["title"]))
+        html.write_text(
+            _("Predefined condition: <a href=\"%s\">%s</a>") % (url, condition["title"]))
 
     def _create_form(self):
         html.begin_form("new_rule", add_transid=False)

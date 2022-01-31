@@ -13,7 +13,7 @@ CMK_VERSION="2.1.0i1"
 
 INSTANCES=$(ps -ef | grep db2sysc | awk '{print $1}' | sort -u | grep -v root)
 
-if [ "$INSTANCES" ] ; then
+if [ "$INSTANCES" ]; then
     echo "<<<db2_mem>>>"
     for INSTANCE in $INSTANCES; do
         echo "Instance $INSTANCE"

@@ -16,12 +16,10 @@ CMK_VERSION="2.1.0i1"
 # https://github.com/i-scream/libstatgrab
 # flags used for compiling - disable documentation, examples and set*id
 
+if command -v statgrab >/dev/null; then
 
-if command -v statgrab > /dev/null ; then
-    if statgrab const. cpu. general. mem. page. proc. swap. user. > "/tmp/statgrab.$$" 2>/dev/null
-        then
-        for s in proc cpu page
-        do
+    if statgrab const. cpu. general. mem. page. proc. swap. user. >"/tmp/statgrab.$$" 2>/dev/null; then
+        for s in proc cpu page; do
             echo "<<<statgrab_$s>>>"
             grep "^$s\." "/tmp/statgrab.$$" | cut -d. -f2-99 | sed 's/ *= */ /'
         done

@@ -232,9 +232,15 @@ preamble_3() {
 
     if [ -z "${PYTHON2}" ] && [ -z "${PYTHON3}" ]; then
         NO_PYTHON=true
-    elif [ -n "${PYTHON3}" ] && [ "$(${PYTHON3} -c 'pass' > /dev/null 2>&1; echo $?)" -eq 127 ]; then
+    elif [ -n "${PYTHON3}" ] && [ "$(
+        ${PYTHON3} -c 'pass' >/dev/null 2>&1
+        echo $?
+    )" -eq 127 ]; then
         WRONG_PYTHON_COMMAND=true
-    elif [ -z "${PYTHON3}" ] && [ "$(${PYTHON2} -c 'pass' > /dev/null 2>&1; echo $?)" -eq 127 ]; then
+    elif [ -z "${PYTHON3}" ] && [ "$(
+        ${PYTHON2} -c 'pass' >/dev/null 2>&1
+        echo $?
+    )" -eq 127 ]; then
         WRONG_PYTHON_COMMAND=true
     fi
 }
@@ -333,11 +339,11 @@ section_df() {
         # The following suppression was added when we enabled the corresponding shellcheck.
         # It may well be that "read -r" would be more appropriate.
         # shellcheck disable=SC2162
-        df -l -k -F ${fs} 2>/dev/null | sed 1d | grep -v "^[^ ]*/lib/[^ ]*\.so\.1 " | \
-        while read Filesystem kbytes used avail capacity Mountedon; do
-            kbytes=$((used + avail))
-            echo "${Filesystem} ${fs} ${kbytes} ${used} ${avail} ${capacity} ${Mountedon}"
-        done
+        df -l -k -F ${fs} 2>/dev/null | sed 1d | grep -v "^[^ ]*/lib/[^ ]*\.so\.1 " |
+            while read Filesystem kbytes used avail capacity Mountedon; do
+                kbytes=$((used + avail))
+                echo "${Filesystem} ${fs} ${kbytes} ${used} ${avail} ${capacity} ${Mountedon}"
+            done
     done
 }
 
@@ -345,8 +351,8 @@ section_zfs() {
     # Filesystem usage for ZFS
     if inpath zfs; then
         echo '<<<zfsget>>>'
-        zfs get -t filesystem,volume -Hp name,quota,used,avail,mountpoint,type 2>/dev/null \
-        || zfs get -Hp name,referenced,avail,mountpoint,type | sed 's/referenced/used/g'
+        zfs get -t filesystem,volume -Hp name,quota,used,avail,mountpoint,type 2>/dev/null ||
+            zfs get -Hp name,referenced,avail,mountpoint,type | sed 's/referenced/used/g'
         echo '[df]'
         df -l -k -F zfs 2>/dev/null | sed 1d
     fi
@@ -373,8 +379,8 @@ section_ps() {
     # ps command to get the full command line instead. What a hack.
     if [ -x /usr/ucb/ps ]; then
         UCB_PS=$(/usr/ucb/ps -agwwwx)
-        PS=$(ps -o "user=USER............" -o vsz,rss,pcpu,etime,pid,args ${pszone} | \
-             sed -e 1d -e 's/ *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) */(\1,\2,\3,\4\/\5,\6) /')
+        PS=$(ps -o "user=USER............" -o vsz,rss,pcpu,etime,pid,args ${pszone} |
+            sed -e 1d -e 's/ *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) */(\1,\2,\3,\4\/\5,\6) /')
         while read -r LINE; do
             STATS=${LINE%) *}
             PID=${STATS##*,}
@@ -385,17 +391,17 @@ section_ps() {
                 continue
             fi
 
-            CMD=$(echo "${UCB_PS}" | grep "^[ ]*${PID} " | head -n1 | \
-                  awk '{ s = ""; for (i = 5; i <= NF; i++) s = s $i " "; print s }')
+            CMD=$(echo "${UCB_PS}" | grep "^[ ]*${PID} " | head -n1 |
+                awk '{ s = ""; for (i = 5; i <= NF; i++) s = s $i " "; print s }')
             # Only use the ucb ps line when it's not empty (process might already been gone)
             if [ -z "${CMD}" ]; then
                 echo "${LINE}"
             else
                 echo "${STATS}) ${CMD}"
             fi
-        done <<< "${PS}"
+        done <<<"${PS}"
     else
-        ps -o "user=USER............" -o vsz,rss,pcpu,etime,pid,args ${pszone} | \
+        ps -o "user=USER............" -o vsz,rss,pcpu,etime,pid,args ${pszone} |
             sed -e 1d -e 's/ *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) */(\1,\2,\3,\4\/\5,\6) /'
     fi
 }
@@ -415,7 +421,7 @@ section_statgrab() {
         fi
 
         # shellcheck disable=SC2086
-        statgrab ${statgrab_vars} | grep -v md 1> /tmp/statgrab.$$
+        statgrab ${statgrab_vars} | grep -v md 1>/tmp/statgrab.$$
         for s in ${statgrab_sections}; do
             echo "<<<statgrab_${s}>>>"
             grep "^${s}\." /tmp/statgrab.$$ | cut -d. -f2-99 | sed 's/ *= */ /'
@@ -443,7 +449,7 @@ section_cpu() {
     # /proc/cpu
     # Simulated Output of Linux /proc/cpu
     echo '<<<cpu>>>'
-    load=$(uptime|sed -e 's;.*average: \([0-9]\{1,\}\.[0-9]\{1,\}\), \([0-9]\{1,\}\.[0-9]\{1,\}\), \([0-9]\{1,\}\.[0-9]\{1,\}\).*;\1 \2 \3;')
+    load=$(uptime | sed -e 's;.*average: \([0-9]\{1,\}\.[0-9]\{1,\}\), \([0-9]\{1,\}\.[0-9]\{1,\}\), \([0-9]\{1,\}\.[0-9]\{1,\}\).*;\1 \2 \3;')
     nthreads=$(($(ps -AL | wc -l)))
     procs=$(($(psrinfo | wc -l)))
     echo "${load} 1/${nthreads} $$ ${procs}"
@@ -465,9 +471,9 @@ section_uptime() {
     # Solaris doesn't always give a consisten output on uptime, thus include side information
     # Tested in VM for solaris 10/11
     echo '<<<uptime>>>'
-    ctime=$(nawk 'BEGIN{print srand()}');
-    btime=$(kstat '-p' 'unix:::boot_time' 2>&1|grep 'boot_time'|awk '{print $2}');
-    echo $((ctime - btime));
+    ctime=$(nawk 'BEGIN{print srand()}')
+    btime=$(kstat '-p' 'unix:::boot_time' 2>&1 | grep 'boot_time' | awk '{print $2}')
+    echo $((ctime - btime))
     echo '[uptime_solaris_start]'
     uname -a
     zonename
@@ -496,8 +502,8 @@ section_solaris_prtg() {
 section_tcp() {
     # TCP Connection stats
     echo '<<<tcp_conn_stats>>>'
-    netstat -n -a -f inet -P tcp | tail  +5 | \
-    nawk '{ c[$7]++; } END { for (x in c) { print x, c[x]; } }'
+    netstat -n -a -f inet -P tcp | tail +5 |
+        nawk '{ c[$7]++; } END { for (x in c) { print x, c[x]; } }'
 }
 
 section_multipathing() {
@@ -603,31 +609,31 @@ run_remote_plugins() {
     # The following suppression was added when we enabled the corresponding shellcheck.
     # It may well be that "read -r" would be more appropriate.
     # shellcheck disable=SC2162
-    grep -v '^ *#' "${MK_CONFDIR}/mrpe.cfg" | grep -v '^ *$' | \
-    while read descr cmdline; do
-        interval=
-        if [[ ${cmdline} =~ \(([^\)]*)\)[[:space:]](.*) ]]; then
-            parameters=${BASH_REMATCH[1]}
-            cmdline=${BASH_REMATCH[2]}
+    grep -v '^ *#' "${MK_CONFDIR}/mrpe.cfg" | grep -v '^ *$' |
+        while read descr cmdline; do
+            interval=
+            if [[ ${cmdline} =~ \(([^\)]*)\)[[:space:]](.*) ]]; then
+                parameters=${BASH_REMATCH[1]}
+                cmdline=${BASH_REMATCH[2]}
 
-            # split multiple parameter assignments
-            for par in $(echo "${parameters}" | tr ":" "\n"); do
-                # split each assignment
-                key=$(echo "${par}" | cut -d= -f1)
-                value=$(echo "${par}" | cut -d= -f2)
+                # split multiple parameter assignments
+                for par in $(echo "${parameters}" | tr ":" "\n"); do
+                    # split each assignment
+                    key=$(echo "${par}" | cut -d= -f1)
+                    value=$(echo "${par}" | cut -d= -f2)
 
-                if [ "${key}" = "interval" ]; then
-                    interval=${value}
-                fi
-            done
-        fi
+                    if [ "${key}" = "interval" ]; then
+                        interval=${value}
+                    fi
+                done
+            fi
 
-        if [ -z "${interval}" ]; then
-            ${MK_RUN_SYNC_PARTS} && run_mrpe "${descr}" "${cmdline}"
-        else
-            run_cached "mrpe_${descr}" "${interval}" "run_mrpe '${descr}' '${cmdline}'"
-        fi
-    done
+            if [ -z "${interval}" ]; then
+                ${MK_RUN_SYNC_PARTS} && run_mrpe "${descr}" "${cmdline}"
+            else
+                run_cached "mrpe_${descr}" "${interval}" "run_mrpe '${descr}' '${cmdline}'"
+            fi
+        done
 }
 
 run_mrpe() {
@@ -870,9 +876,9 @@ run_partially_asynchronous_sections() {
     [ -z "${MK_SKIP_ZPOOL}" ] && _log_section_time section_zpool
 }
 
-main_setup(){
+main_setup() {
 
-    exec </dev/null 9>&2 2>/dev/null 
+    exec </dev/null 9>&2 2>/dev/null
 
     set_up_process_commandline_arguments "$@"
 
@@ -902,7 +908,7 @@ main_sync_parts() {
 
 }
 
-main_mixed_parts(){
+main_mixed_parts() {
 
     run_partially_asynchronous_sections
 
@@ -923,7 +929,7 @@ main_mixed_parts(){
 
 }
 
-main_async_parts(){
+main_async_parts() {
     # no run_real_time_checks available
     :
 }

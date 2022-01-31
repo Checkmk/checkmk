@@ -17,15 +17,14 @@ CMK_VERSION="2.1.0i1"
 
 HOSTADDRESSES=mathias-kettner.de
 
-if [ -e "$MK_CONFDIR/dnsclient.cfg" ] ; then
+if [ -e "$MK_CONFDIR/dnsclient.cfg" ]; then
     . "$MK_CONFDIR/dnsclient.cfg"
 fi
 
 echo "<<<mrpe>>>"
-for HOSTADDRESS in $HOSTADDRESSES
-do
+for HOSTADDRESS in $HOSTADDRESSES; do
     ADDRESSES=$(nslookup $HOSTADDRESS | sed -n -e 1,3d -e '/^Address: *\(.*\)$/s//\1/p')
-    if [ ! "$ADDRESSES" ] ; then
+    if [ ! "$ADDRESSES" ]; then
         STATE=2
         OUTPUT="CRIT - $HOSTADDRESS could not be resolved"
     else

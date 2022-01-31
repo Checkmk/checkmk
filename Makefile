@@ -441,8 +441,6 @@ setup:
 # librrd-dev is still needed by the python rrd package we build in our virtual environment
 	sudo apt-get install \
 	    aptitude \
-	    autoconf \
-	    bear \
 	    build-essential \
 	    clang-$(CLANG_VERSION) \
 	    clang-format-$(CLANG_VERSION) \
@@ -453,10 +451,12 @@ setup:
 	    curl \
 	    direnv \
 	    doxygen \
-	    enchant-2 \
 	    figlet \
-	    g++ \
+	    gawk \
 	    gdebi \
+	    git \
+	    git-svn \
+	    gitk \
 	    ksh \
 	    libclang-$(CLANG_VERSION)-dev \
 	    libjpeg-dev \
@@ -467,14 +467,15 @@ setup:
 	    libpcap-dev \
 	    librrd-dev \
 	    libsasl2-dev \
+	    libtool-bin \
 	    libxml2-dev \
 	    lld-$(CLANG_VERSION) \
 	    lldb-$(CLANG_VERSION) \
 	    p7zip-full \
+	    patchelf \
 	    pngcrush \
-	    python-setuptools \
 	    python3-pip \
-	    python3.9-dev \
+	    python3-venv \
 	    shellcheck \
 	    valgrind \
 	    zlib1g-dev

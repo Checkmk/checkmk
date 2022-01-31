@@ -11,8 +11,7 @@ from pathlib import Path
 import pytest
 
 import cmk.utils.paths
-
-from cmk.core_helpers.config_path import ConfigPath, LATEST_CONFIG, VersionedConfigPath
+from cmk.utils.config_path import ConfigPath, LATEST_CONFIG, VersionedConfigPath
 
 
 class TestVersionedConfigPath:

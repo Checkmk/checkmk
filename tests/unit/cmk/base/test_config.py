@@ -17,6 +17,7 @@ import cmk.utils.paths
 import cmk.utils.piggyback as piggyback
 import cmk.utils.version as cmk_version
 from cmk.utils.caching import config_cache as _config_cache
+from cmk.utils.config_path import VersionedConfigPath
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.parameters import TimespecificParameters, TimespecificParameterSet
 from cmk.utils.rulesets.ruleset_matcher import RulesetMatchObject
@@ -29,7 +30,6 @@ from cmk.utils.type_defs import (
     SourceType,
 )
 
-from cmk.core_helpers.config_path import VersionedConfigPath
 from cmk.core_helpers.type_defs import Mode
 
 import cmk.base.api.agent_based.register as agent_based_register

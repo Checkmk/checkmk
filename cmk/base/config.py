@@ -45,6 +45,7 @@ from typing import (
 import cmk.utils
 import cmk.utils.check_utils
 import cmk.utils.cleanup
+import cmk.utils.config_path
 import cmk.utils.debug
 import cmk.utils.migrated_check_variables
 import cmk.utils.paths
@@ -58,6 +59,7 @@ import cmk.utils.translations
 import cmk.utils.version as cmk_version
 from cmk.utils.caching import config_cache as _config_cache
 from cmk.utils.check_utils import maincheckify, section_name_of, unwrap_parameters
+from cmk.utils.config_path import ConfigPath, LATEST_CONFIG
 from cmk.utils.exceptions import MKGeneralException, MKIPAddressLookupError, MKTerminate
 from cmk.utils.http_proxy_config import http_proxy_config_from_user_setting, HTTPProxyConfig
 from cmk.utils.labels import LabelManager
@@ -108,8 +110,6 @@ from cmk.snmplib.type_defs import (  # noqa: F401 # pylint: disable=unused-impor
 )
 
 import cmk.core_helpers.cache as cache_file
-import cmk.core_helpers.config_path
-from cmk.core_helpers.config_path import ConfigPath, LATEST_CONFIG
 
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.autochecks as autochecks

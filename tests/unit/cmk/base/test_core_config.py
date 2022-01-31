@@ -11,15 +11,14 @@ import pytest
 
 from tests.testlib.base import Scenario
 
+import cmk.utils.config_path
 import cmk.utils.paths
 import cmk.utils.version as cmk_version
 from cmk.utils import password_store
+from cmk.utils.config_path import ConfigPath, LATEST_CONFIG
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.parameters import TimespecificParameters
 from cmk.utils.type_defs import CheckPluginName, HostName
-
-import cmk.core_helpers.config_path
-from cmk.core_helpers.config_path import ConfigPath, LATEST_CONFIG
 
 import cmk.base.config as config
 import cmk.base.core_config as core_config

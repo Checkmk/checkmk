@@ -531,7 +531,7 @@ class Hosts(Table):
 
     mk_inventory_last = Column(
         'mk_inventory_last',
-        col_type='int',
+        col_type='time',
         description='The timestamp of the last Check_MK HW/SW-Inventory for this host. 0 means that no inventory data is present',
     )
     """The timestamp of the last Check_MK HW/SW-Inventory for this host. 0 means that no inventory data is present"""

@@ -370,7 +370,7 @@ class Status(Table):
 
     mk_inventory_last = Column(
         'mk_inventory_last',
-        col_type='int',
+        col_type='time',
         description='The timestamp of the last time a host has been inventorized by Check_MK HW/SW-Inventory',
     )
     """The timestamp of the last time a host has been inventorized by Check_MK HW/SW-Inventory"""

@@ -573,7 +573,7 @@ class Downtimes(Table):
 
     host_mk_inventory_last = Column(
         'host_mk_inventory_last',
-        col_type='int',
+        col_type='time',
         description='The timestamp of the last Check_MK HW/SW-Inventory for this host. 0 means that no inventory data is present',
     )
     """The timestamp of the last Check_MK HW/SW-Inventory for this host. 0 means that no inventory data is present"""
@@ -1295,9 +1295,9 @@ class Downtimes(Table):
     service_hard_state = Column(
         'service_hard_state',
         col_type='int',
-        description='The effective hard state of the service (eliminates a problem in hard_state)',
+        description='The effective hard state of the host (eliminates a problem in hard_state)',
     )
-    """The effective hard state of the service (eliminates a problem in hard_state)"""
+    """The effective hard state of the host (eliminates a problem in hard_state)"""
 
     service_has_been_checked = Column(
         'service_has_been_checked',
@@ -1666,9 +1666,9 @@ class Downtimes(Table):
     service_pnpgraph_present = Column(
         'service_pnpgraph_present',
         col_type='int',
-        description='Whether there is a PNP4Nagios graph present for this service (0/1)',
+        description='Whether there is a PNP4Nagios graph present for this host (0/1)',
     )
-    """Whether there is a PNP4Nagios graph present for this service (0/1)"""
+    """Whether there is a PNP4Nagios graph present for this host (0/1)"""
 
     service_previous_hard_state = Column(
         'service_previous_hard_state',
@@ -1690,6 +1690,34 @@ class Downtimes(Table):
         description='Number of basic interval lengths between checks when retrying after a soft error',
     )
     """Number of basic interval lengths between checks when retrying after a soft error"""
+
+    service_robotmk_last_error_log = Column(
+        'service_robotmk_last_error_log',
+        col_type='blob',
+        description='The file content of the Robotmk error log',
+    )
+    """The file content of the Robotmk error log"""
+
+    service_robotmk_last_error_log_gz = Column(
+        'service_robotmk_last_error_log_gz',
+        col_type='blob',
+        description='The gzipped file content of the Robotmk error log',
+    )
+    """The gzipped file content of the Robotmk error log"""
+
+    service_robotmk_last_log = Column(
+        'service_robotmk_last_log',
+        col_type='blob',
+        description='The file content of the Robotmk log',
+    )
+    """The file content of the Robotmk log"""
+
+    service_robotmk_last_log_gz = Column(
+        'service_robotmk_last_log_gz',
+        col_type='blob',
+        description='The gzipped file content of the Robotmk log',
+    )
+    """The gzipped file content of the Robotmk log"""
 
     service_scheduled_downtime_depth = Column(
         'service_scheduled_downtime_depth',

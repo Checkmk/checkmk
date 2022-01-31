@@ -32,6 +32,8 @@ def fixture_time(mocker):
                 creation_timestamp=1600000000.0,
                 labels={},
                 node=None,
+                host_network=None,
+                dns_policy="Default",
                 qos_class="burstable",
                 restart_policy="Always",
                 uid="dd1019ca-c429-46af-b6b7-8aad47b6081a",

@@ -26,12 +26,14 @@ def parse_kube_pod_info(string_table: StringTable):
     ... '"creation_timestamp": 1637069562.0, '
     ... '"labels": {}, '
     ... '"node": "k8-w2", '
+    ... '"host_network": null, '
+    ... '"dns_policy": "Default", '
     ... '"qos_class": "burstable", '
     ... '"restart_policy": "Always", '
     ... '"uid": "dd1019ca-c429-46af-b6b7-8aad47b6081a", '
     ... '"controllers": [{"type_": "deployment", "name": "redis-deployment"}]}'
     ... ]])
-    PodInfo(namespace='redis', name='redis-xyz', creation_timestamp=1637069562.0, labels={}, node='k8-w2', qos_class='burstable', restart_policy='Always', uid='dd1019ca-c429-46af-b6b7-8aad47b6081a', controllers=[Controller(type_=<ControllerType.deployment: 'deployment'>, name='redis-deployment')])
+    PodInfo(namespace='redis', name='redis-xyz', creation_timestamp=1637069562.0, labels={}, node='k8-w2', host_network=None, dns_policy='Default', qos_class='burstable', restart_policy='Always', uid='dd1019ca-c429-46af-b6b7-8aad47b6081a', controllers=[Controller(type_=<ControllerType.deployment: 'deployment'>, name='redis-deployment')])
     """
     return PodInfo(**json.loads(string_table[0][0]))
 

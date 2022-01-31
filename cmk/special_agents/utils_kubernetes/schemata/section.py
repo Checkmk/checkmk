@@ -72,6 +72,8 @@ class PodInfo(BaseModel):
     labels: api.Labels  # used for host labels
     node: Optional[api.NodeName]  # this is optional, because there may be pods, which are not
     # scheduled on any node (e.g., no node with enough capacity is available).
+    host_network: Optional[str]
+    dns_policy: Optional[str]
     qos_class: api.QosClass
     restart_policy: api.RestartPolicy
     uid: api.PodUID

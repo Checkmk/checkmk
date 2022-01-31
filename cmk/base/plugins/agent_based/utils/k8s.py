@@ -167,6 +167,8 @@ class PodInfo(BaseModel):
     labels: Labels  # used for host labels
     node: Optional[NodeName]  # this is optional, because there may be pods, which are not
     # scheduled on any node (e.g., no node with enough capacity is available).
+    host_network: Optional[str]
+    dns_policy: Optional[str]
     qos_class: QosClass
     restart_policy: RestartPolicy
     uid: PodUID

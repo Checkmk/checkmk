@@ -241,10 +241,12 @@ class Pod:
             creation_timestamp=self.metadata.creation_timestamp,
             labels=self.metadata.labels if self.metadata.labels else {},
             node=self.node,
-            controllers=controllers,
-            restart_policy=self.spec.restart_policy,
+            host_network=self.spec.host_network,
+            dns_policy=self.spec.dns_policy,
             qos_class=self.status.qos_class,
+            restart_policy=self.spec.restart_policy,
             uid=self.uid,
+            controllers=controllers,
         )
 
     def container_cpu_limits(self) -> Sequence[Optional[float]]:

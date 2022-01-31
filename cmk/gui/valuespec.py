@@ -1750,9 +1750,6 @@ def ListOfNetworkPorts(title: _Optional[str], default_value: List[int]) -> ListO
     )
 
 
-ListOfMultipleChoices = List[_Tuple[str, ValueSpec]]
-
-
 class ListOf(ValueSpec):
     """Generic list-of-valuespec ValueSpec with Javascript-based add/delete/move"""
     class Style(Enum):
@@ -2023,9 +2020,11 @@ class ListOf(ValueSpec):
     def value_to_json_safe(self, value):
         return [self._valuespec.value_to_json_safe(e) for e in value]
 
-    def transform_value(self, value) -> ListOfMultipleChoices:
+    def transform_value(self, value) -> List[Any]:
         return [self._valuespec.transform_value(v) for v in value]
 
+
+ListOfMultipleChoices = List[_Tuple[str, ValueSpec]]
 
 ListOfMultipleChoiceGroup = NamedTuple("ListOfMultipleChoiceGroup", [
     ("title", str),

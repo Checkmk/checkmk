@@ -1,0 +1,12 @@
+Title: Fix required comment field on removing of downtimes
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1643706734
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0p20
+
+If downtimes were removed, a comment entry was required. This has been changed
+to optional because for removements of downtimes, no comment is necessary.

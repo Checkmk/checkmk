@@ -5,13 +5,15 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Helper functions for dealing with Check_MK tags"""
 
+from __future__ import annotations
+
 import abc
 import re
-from typing import Any, Dict, List, Optional, Set, Union
+from typing import Any, Dict, List, NamedTuple, Optional, Sequence, Set, Union
 
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.i18n import _
-from cmk.utils.type_defs import TaggroupID, TagID
+from cmk.utils.type_defs import TaggroupID, TaggroupIDToTagID, TagID
 
 
 def get_effective_tag_config(tag_config: Dict) -> 'TagConfig':
@@ -771,3 +773,42 @@ def sample_tag_config():
             },
         ],
     }
+
+
+class DataSourceDifference(NamedTuple):
+    name: str
+    myself_is: bool
+    other_is: bool
+
+
+DataSourceDifferences = Sequence[DataSourceDifference]
+
+
+class ComputedDataSources(NamedTuple):
+    is_all_agents_host: bool
+    is_all_special_agents_host: bool
+    is_tcp: bool
+    is_snmp: bool
+
+    def get_differences_to(self, other: ComputedDataSources) -> DataSourceDifferences:
+        return [
+            DataSourceDifference(
+                name,
+                myself_is=myself_is,
+                other_is=other_is,
+            ) for name, is_ds_func in [
+                (_("all agents"), lambda obj: obj.is_all_agents_host),
+                (_("all special agents"), lambda obj: obj.is_all_special_agents_host),
+                ("TCP", lambda obj: obj.is_tcp),
+                ("SNMP", lambda obj: obj.is_snmp),
+            ] if (myself_is := is_ds_func(self)) != (other_is := is_ds_func(other))
+        ]
+
+
+def compute_datasources(tag_groups: TaggroupIDToTagID) -> ComputedDataSources:
+    return ComputedDataSources(
+        is_tcp=tag_groups.get("tcp") == "tcp",
+        is_snmp=tag_groups.get("snmp_ds") in ["snmp", "snmp-v1", "snmp-v2"],
+        is_all_agents_host=tag_groups.get("agent") == "all-agents",
+        is_all_special_agents_host=tag_groups.get("agent") == "special-agents",
+    )

@@ -276,12 +276,10 @@ def test_iter_shared_files(
             [
                 "\\\\HOSTNAME\\SharedFolder1\\Subfolder1\\File1",
             ],
-            iter(
-                [
-                    ("path1", "file1"),
-                    ("path2", "file2"),
-                ]
-            ),
+            [
+                ("path1", "file1"),
+                ("path2", "file2"),
+            ],
             [
                 (
                     "\\\\HOSTNAME\\SharedFolder1\\Subfolder1\\File1",

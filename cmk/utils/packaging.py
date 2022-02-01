@@ -638,19 +638,12 @@ def _normalize_daily_version(version: str) -> str:
     return version
 
 
-# TODO: This function will be cleaned up in one of the next commits
-def get_all_package_infos() -> Dict[str, Any]:
-    packages = {}
-    for package_name in installed_names():
-        packages[package_name] = read_package_info(package_name)
+def get_unpackaged_files() -> Dict[str, List[str]]:
+    return {part.ident: files for part, files in unpackaged_files().items()}
 
-    return {
-        "installed": packages,
-        "unpackaged": {part.ident: files for part, files in unpackaged_files().items()},
-        "parts": package_part_info(),
-        "optional_packages": get_optional_package_infos(),
-        "disabled_packages": get_disabled_package_infos(),
-    }
+
+def get_installed_package_infos() -> Dict[PackageName, Optional[PackageInfo]]:
+    return {name: read_package_info(name) for name in installed_names()}
 
 
 def get_optional_package_infos() -> Dict[str, PackageInfo]:
@@ -811,16 +804,15 @@ def rule_pack_id_to_mkp() -> Dict[str, Any]:
     Every rule pack is contained exactly once in this mapping. If no corresponding
     MKP exists, the value of that mapping is None.
     """
-    package_info = get_all_package_infos()
 
     def mkp_of(rule_pack_file: str) -> Any:
         """Find the MKP for the given file"""
-        for mkp, content in package_info.get("installed", {}).items():
-            if rule_pack_file in content.get("files", {}).get("ec_rule_packs", []):
-                return mkp
+        for package_name, package in get_installed_package_infos().items():
+            if package and rule_pack_file in package.get("files", {}).get("ec_rule_packs", []):
+                return package_name
         return None
 
-    exported_rule_packs = package_info["parts"]["ec_rule_packs"]["files"]
+    exported_rule_packs = package_part_info()["ec_rule_packs"]["files"]
 
     return {os.path.splitext(file_)[0]: mkp_of(file_) for file_ in exported_rule_packs}
 

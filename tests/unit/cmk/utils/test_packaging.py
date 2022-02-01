@@ -393,25 +393,6 @@ def test_unpackaged_files():
 # def test_package_part_info()
 
 
-def test_get_all_package_infos(build_setup_search_index):
-    # Create some unpackaged file and a package
-    _create_test_file("abc")
-    _create_simple_test_package("p1")
-
-    # Create a disabled package
-    _create_simple_test_package("disabled")
-    package_info = packaging.read_package_info("disabled")
-    assert package_info is not None
-    packaging.disable("disable", package_info)
-    build_setup_search_index.assert_called_once()
-
-    result = packaging.get_all_package_infos()
-    assert "p1" in result["installed"]
-    assert result["unpackaged"]["checks"] == ["abc"]
-    assert result["optional_packages"] == {}
-    assert "agent_based" in result["parts"]
-
-
 def test_get_optional_package_infos_none():
     assert packaging.get_optional_package_infos() == {}
 

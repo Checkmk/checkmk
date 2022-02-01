@@ -7,7 +7,7 @@ ENV LC_ALL=C.UTF-8 LANG=C.UTF-8 PATH="/opt/bin:${PATH}"
 
 # Centos-8 is EOL, therfor we switch to the vault repos
 RUN sed -i 's/^mirrorlist/#mirrorlist/' /etc/yum.repos.d/* \
-    sed -i 's/^#baseurl\(.*\)mirror\(.*\)/baseurl\1vault\2/' /etc/yum.repos.d/*
+    && sed -i 's/^#baseurl\(.*\)mirror\(.*\)/baseurl\1vault\2/' /etc/yum.repos.d/*
 
 RUN yum -y --enablerepo=powertools --allowerasing install \
     epel-release \

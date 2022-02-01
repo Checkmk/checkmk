@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from __future__ import annotations
+
 import ast
 import json
 import os
@@ -171,6 +173,21 @@ def vs_inventory_path_or_keys_help():
 #   '----------------------------------------------------------------------'
 
 
+_DEFAULT_PATH_TO_TREE = Path()
+
+
+class TreePath(NamedTuple):
+    path: Path
+    timestamp: Optional[int]
+
+    @classmethod
+    def default(cls) -> TreePath:
+        return TreePath(
+            path=_DEFAULT_PATH_TO_TREE,
+            timestamp=None,
+        )
+
+
 class HistoryEntry(NamedTuple):
     timestamp: Optional[int]
     new: int
@@ -179,24 +196,24 @@ class HistoryEntry(NamedTuple):
     delta_tree: StructuredDataNode
 
 
-class FilteredTimestamps(NamedTuple):
-    start_timestamp: Optional[int]
-    timestamps: Sequence[int]
+class FilteredTreePaths(NamedTuple):
+    start_tree_path: TreePath
+    tree_paths: Sequence[TreePath]
 
 
 def load_latest_delta_tree(hostname: HostName) -> Optional[StructuredDataNode]:
-    def _get_latest_timestamps(timestamps: Sequence[int]) -> FilteredTimestamps:
+    def _get_latest_timestamps(tree_paths: Sequence[TreePath]) -> FilteredTreePaths:
         # If there's no archive entry then there's no history thus the timestamps are empty.
         # This case is already handled in 'get_history'.
         # Here: timestamps consist of at least one archive entry + timestamp of current tree.
-        return FilteredTimestamps(
-            start_timestamp=timestamps[-2],
-            timestamps=[timestamps[-1]],
+        return FilteredTreePaths(
+            start_tree_path=tree_paths[-2],
+            tree_paths=[tree_paths[-1]],
         )
 
     delta_history, _corrupted_history_files = _get_history(
         hostname,
-        filter_timestamps=_get_latest_timestamps,
+        filter_tree_paths=_get_latest_timestamps,
     )
     if not delta_history:
         return None
@@ -212,28 +229,28 @@ def load_delta_tree(
     # tree we will just return the complete tree - without any delta
     # computation.
 
-    def _search_timestamps(timestamps: Sequence[int], timestamp: int) -> FilteredTimestamps:
-        try:
-            timestamp_idx = timestamps.index(timestamp)
-        except ValueError:
-            raise MKGeneralException(
-                _("Found no history entry at the time of '%s' for the host '%s'")
-                % (timestamp, hostname)
-            )
-
-        if timestamp_idx == 0:
-            return FilteredTimestamps(
-                start_timestamp=None,
-                timestamps=[timestamp],
-            )
-        return FilteredTimestamps(
-            start_timestamp=timestamps[timestamp_idx - 1],
-            timestamps=[timestamp],
+    def _search_timestamps(tree_paths: Sequence[TreePath], timestamp: int) -> FilteredTreePaths:
+        for idx, tree_path in enumerate(tree_paths):
+            if tree_path.timestamp == timestamp:
+                if idx == 0:
+                    return FilteredTreePaths(
+                        start_tree_path=TreePath.default(),
+                        tree_paths=[tree_path],
+                    )
+                return FilteredTreePaths(
+                    start_tree_path=tree_paths[idx - 1],
+                    tree_paths=[tree_path],
+                )
+        raise MKGeneralException(
+            _("Found no history entry at the time of '%s' for the host '%s'")
+            % (timestamp, hostname)
         )
 
     delta_history, corrupted_history_files = _get_history(
         hostname,
-        filter_timestamps=lambda timestamps: _search_timestamps(timestamps, timestamp),
+        filter_tree_paths=lambda filter_tree_paths: _search_timestamps(
+            filter_tree_paths, timestamp
+        ),
     )
     if not delta_history:
         return None, []
@@ -243,9 +260,9 @@ def load_delta_tree(
 def get_history(hostname: HostName) -> Tuple[Sequence[HistoryEntry], Sequence[str]]:
     return _get_history(
         hostname,
-        filter_timestamps=lambda timestamps: FilteredTimestamps(
-            start_timestamp=None,
-            timestamps=timestamps,
+        filter_tree_paths=lambda tree_paths: FilteredTreePaths(
+            start_tree_path=TreePath.default(),
+            tree_paths=tree_paths,
         ),
     )
 
@@ -253,33 +270,19 @@ def get_history(hostname: HostName) -> Tuple[Sequence[HistoryEntry], Sequence[st
 def _get_history(
     hostname: HostName,
     *,
-    filter_timestamps: Callable[[Sequence[int]], FilteredTimestamps],
+    filter_tree_paths: Callable[[Sequence[TreePath]], FilteredTreePaths],
 ) -> Tuple[Sequence[HistoryEntry], Sequence[str]]:
     if "/" in hostname:
         return [], []  # just for security reasons
 
-    inventory_path = Path(cmk.utils.paths.inventory_output_dir, hostname)
-    inventory_archive_dir = Path(cmk.utils.paths.inventory_archive_dir, hostname)
-
-    if not (all_timestamps := _get_timestamps(inventory_path, inventory_archive_dir)):
+    if not (all_tree_paths := _get_tree_paths(hostname)):
         return [], []
-
-    latest_timestamp = all_timestamps[-1]
-
-    filtered_timestamps = filter_timestamps(all_timestamps)
-    previous_timestamp: Optional[int] = filtered_timestamps.start_timestamp
-    required_timestamps = filtered_timestamps.timestamps
 
     tree_lookup: Dict[Path, StructuredDataNode] = {}
 
-    def get_tree(timestamp: Optional[int]) -> StructuredDataNode:
-        if timestamp is None:
+    def _get_tree(filepath: Path) -> StructuredDataNode:
+        if filepath == _DEFAULT_PATH_TO_TREE:
             return StructuredDataNode()
-
-        if timestamp == latest_timestamp:
-            filepath = inventory_path
-        else:
-            filepath = inventory_archive_dir.joinpath(str(timestamp))
 
         if filepath in tree_lookup:
             return tree_lookup[filepath]
@@ -288,27 +291,27 @@ def _get_history(
 
     corrupted_history_files = []
     history: List[HistoryEntry] = []
-    for timestamp in required_timestamps:
+    for previous, current in _get_pairs(filter_tree_paths(all_tree_paths)):
+        if current.timestamp is None:
+            continue
+
         cached_delta_path = Path(
             cmk.utils.paths.inventory_delta_cache_dir,
             hostname,
-            "%s_%s" % (previous_timestamp, timestamp),
+            "%s_%s" % (previous.timestamp, current.timestamp),
         )
 
         if (
-            cached_history_entry := _get_cached_history_entry(cached_delta_path, timestamp)
+            cached_history_entry := _get_cached_history_entry(cached_delta_path, current.timestamp)
         ) is not None:
             history.append(cached_history_entry)
-            previous_timestamp = timestamp
             continue
 
         try:
-            previous_tree = get_tree(previous_timestamp)
-            current_tree = get_tree(timestamp)
+            previous_tree = _get_tree(previous.path)
+            current_tree = _get_tree(current.path)
         except LoadStructuredDataError:
-            corrupted_history_files.append(
-                str(_get_short_inventory_history_filepath(hostname, timestamp))
-            )
+            corrupted_history_files.append(str(_get_short_inventory_history_filepath(current.path)))
             continue
 
         if (
@@ -316,28 +319,53 @@ def _get_history(
                 cached_delta_path,
                 previous_tree,
                 current_tree,
-                timestamp,
+                current.timestamp,
             )
         ) is not None:
             history.append(history_entry)
 
-        previous_timestamp = timestamp
-
     return history, corrupted_history_files
 
 
-def _get_timestamps(inventory_path: Path, archive_dir: Path) -> Sequence[int]:
+def _get_tree_paths(hostname: HostName) -> Sequence[TreePath]:
+    inventory_path = Path(cmk.utils.paths.inventory_output_dir, hostname)
+    inventory_archive_dir = Path(cmk.utils.paths.inventory_archive_dir, hostname)
+
     try:
         latest_timestamp = int(inventory_path.stat().st_mtime)
     except FileNotFoundError:
         return []
 
     try:
-        archived_timestamps = sorted([int(filepath.name) for filepath in archive_dir.iterdir()])
+        archived_tree_paths = sorted(
+            [
+                TreePath(
+                    path=filepath,
+                    timestamp=int(filepath.name),
+                )
+                for filepath in inventory_archive_dir.iterdir()
+            ]
+        )
     except FileNotFoundError:
         return []
 
-    return archived_timestamps + [latest_timestamp]
+    return archived_tree_paths + [
+        TreePath(
+            path=inventory_path,
+            timestamp=latest_timestamp,
+        )
+    ]
+
+
+def _get_pairs(filtered_tree_paths: FilteredTreePaths) -> Sequence[Tuple[TreePath, TreePath]]:
+    start_tree_path = filtered_tree_paths.start_tree_path
+
+    pairs: List[Tuple[TreePath, TreePath]] = []
+    for tree_path in filtered_tree_paths.tree_paths:
+        pairs.append((start_tree_path, tree_path))
+        start_tree_path = tree_path
+
+    return pairs
 
 
 def _load_tree_from_file(filepath: Path) -> StructuredDataNode:
@@ -389,10 +417,8 @@ def _calculate_or_store_history_entry(
     return None
 
 
-def _get_short_inventory_history_filepath(hostname: HostName, timestamp: int) -> Path:
-    return Path(cmk.utils.paths.inventory_archive_dir, hostname, str(timestamp)).relative_to(
-        cmk.utils.paths.omd_root
-    )
+def _get_short_inventory_history_filepath(filepath: Path) -> Path:
+    return filepath.relative_to(cmk.utils.paths.omd_root)
 
 
 # .

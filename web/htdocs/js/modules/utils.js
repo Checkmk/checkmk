@@ -733,3 +733,25 @@ export function update_pending_changes(changes_info) {
 export function get_computed_style(object, property) {
     return object ? window.getComputedStyle(object).getPropertyValue(property) : null;
 }
+
+export function copy_to_clipboard(node_id, success_msg_id = "") {
+    const node = document.getElementById(node_id);
+    if (!node) {
+        console.warn("Copy to clipboard failed as no DOM element was given.");
+        return;
+    }
+    if (typeof navigator.clipboard.writeText === "undefined") {
+        console.warn(
+            "Copy to clipboard failed due to an unsupported browser. " +
+                "Could not select text in DOM element:",
+            node
+        );
+        return;
+    }
+
+    navigator.clipboard.writeText(node.innerHTML);
+    if (success_msg_id) {
+        const success_msg_node = document.getElementById(success_msg_id);
+        remove_class(success_msg_node, "hidden");
+    }
+}

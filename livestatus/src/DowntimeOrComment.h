@@ -31,6 +31,7 @@ public:
     host *_host;
     service *_service;
     unsigned long _triggered_by;
+    bool _is_active;
 };
 
 // TODO(sp): Merge with CommentData

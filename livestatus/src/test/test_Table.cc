@@ -269,16 +269,12 @@ static ColumnDefinitions downtimes_columns() {
         {"entry_time", ColumnType::time},  //
         {"fixed", ColumnType::int_},       //
         {"id", ColumnType::int_},
-#ifdef CMC
         {"is_pending", ColumnType::int_},
-#endif
         {"is_service", ColumnType::int_},
-#ifdef CMC
-        {"origin", ColumnType::int_},  //
+        {"origin", ColumnType::int_},
         {"recurring", ColumnType::int_},
-#endif
-        {"start_time", ColumnType::time},    //
-        {"triggered_by", ColumnType::int_},  //
+        {"start_time", ColumnType::time},  //
+        {"triggered_by", ColumnType::int_},
         {"type", ColumnType::int_},
     };
 }

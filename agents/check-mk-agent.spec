@@ -72,6 +72,7 @@ rm -rf $RPM_BUILD_ROOT
 /usr/lib/systemd/system/check-mk-agent-async.service
 /usr/lib/systemd/system/check-mk-agent.socket
 /usr/lib/systemd/system/check-mk-agent@.service
+/usr/lib/systemd/system/cmk-agent-ctl-daemon.service
 /var/lib/check_mk_agent
 /var/lib/cmk-agent/scripts/cmk-agent-useradd.sh
 
@@ -119,30 +120,6 @@ fi
 %post
 [ -f /etc/xinetd.d/check-mk-agent.rpmnew ] && rm /etc/xinetd.d/check-mk-agent.rpmnew
 
-if which xinetd >/dev/null 2>&1 && which chkconfig >/dev/null 2>&1; then
-    echo "Activating startscript of xinetd"
-    chkconfig xinetd on
-fi
-
-if which systemctl >/dev/null 2>&1 && ! which xinetd >/dev/null 2>&1; then
-    echo "Enable Checkmk Agent in systemd..."
-    systemctl daemon-reload >/dev/null
-    systemctl enable check-mk-agent.socket check_mk-async
-    systemctl restart check-mk-agent.socket check_mk-async
-fi
-
-if which xinetd >/dev/null 2>&1 ; then
-    if pgrep -x xinetd >/dev/null; then
-        echo "Reloading xinetd..."
-        service xinetd reload
-    else
-        echo "Starting xinetd..."
-        service xinetd start
-    fi
-fi
-
-%posttrans
-
 # determine a suitable super server
 super_server='missing'
 which xinetd >/dev/null 2>&1 && super_server="xinetd"
@@ -150,16 +127,51 @@ which systemctl >/dev/null 2>&1 && super_server="systemd"
 
 [ "${super_server}" = "systemd" ] && /var/lib/cmk-agent/scripts/cmk-agent-useradd.sh --create
 
-%postun
+if which systemctl >/dev/null 2>&1; then
+    rm -rf /etc/xinetd.d/check-mk-agent >/dev/null 2>&1
 
-if which xinetd >/dev/null 2>&1 ; then
-    if pgrep -x xinetd >/dev/null; then
+    if which xinetd >/dev/null 2>&1 && pgrep -G 0 -x xinetd >/dev/null 2>&1 ; then
         echo "Reloading xinetd..."
         service xinetd reload
-    else
-        echo "Starting xinetd..."
-        service xinetd start
     fi
+else
+
+    if which xinetd >/dev/null 2>&1 && which chkconfig >/dev/null 2>&1 ; then
+        echo "Activating startscript of xinetd"
+        chkconfig xinetd on
+    fi
+
+    if which xinetd >/dev/null 2>&1 ; then
+        if pgrep -G 0 -x xinetd >/dev/null 2>&1 ; then
+            echo "Reloading xinetd..."
+            service xinetd reload
+        else
+            echo "Starting xinetd..."
+            service xinetd start
+        fi
+    fi
+fi
+
+if which systemctl >/dev/null 2>&1; then
+    echo "Enable Checkmk agent in systemd..."
+    systemctl daemon-reload
+    systemctl enable check-mk-agent.socket check-mk-agent-async cmk-agent-ctl-daemon
+    systemctl restart check-mk-agent.socket check-mk-agent-async cmk-agent-ctl-daemon
+fi
+
+%preun
+
+if which systemctl >/dev/null 2>&1 ; then
+    echo "Disable Checkmk agent in systemd (if active)..."
+    systemctl stop check-mk-agent.socket check-mk-agent-async cmk-agent-ctl-daemon >/dev/null 2>&1
+    systemctl disable check-mk-agent.socket check-mk-agent-async cmk-agent-ctl-daemon >/dev/null 2>&1
+fi
+
+%postun
+
+if which xinetd >/dev/null 2>&1 && pgrep -G 0 -x xinetd >/dev/null 2>&1 ; then
+    echo "Reloading xinetd..."
+    service xinetd reload
 fi
 
 

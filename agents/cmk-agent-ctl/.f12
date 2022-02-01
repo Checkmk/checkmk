@@ -5,7 +5,7 @@
 
 set -e
 
-SITE=${SITE:-$(until [ $PWD == / ]; do if [ -e .site ]; then
+SITE=${SITE:-$(until [ "$PWD" = / ]; do if [ -e .site ]; then
     cat .site
     break
 else cd ..; fi; done)}
@@ -21,6 +21,6 @@ fi
 if [ -e "./target/release/${EXECUTABLE}" ]; then
     mkdir -p ../linux
     cp ./target/release/${EXECUTABLE} ../linux
-    sudo mkdir -p $ROOT/share/check_mk/agents/linux
-    sudo rsync -va ./target/release/${EXECUTABLE} $ROOT/share/check_mk/agents/linux
+    sudo mkdir -p "$ROOT/share/check_mk/agents/linux"
+    sudo rsync -va "./target/release/${EXECUTABLE}" "$ROOT/share/check_mk/agents/linux"
 fi

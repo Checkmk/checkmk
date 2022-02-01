@@ -8,5 +8,5 @@
 export _EDC_ADD_ERRNO2=1
 export PATH=/bin
 set -o pipecurrent
-cd $(dirname $0)/
+cd "$(dirname "$0")/" || exit 1
 . ./check_mk_agent | iconv -fIM1047 -tUTF8 | cat

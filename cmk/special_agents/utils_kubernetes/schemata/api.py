@@ -219,7 +219,8 @@ class ContainerTerminatedState(BaseModel):
 
 
 class ContainerInfo(BaseModel):
-    id: Optional[str]  # id of non-ready container is None
+    container_id: Optional[str]  # container_id of non-ready container is None
+    image_id: str  # image_id of non-ready container is ""
     name: str
     image: str
     ready: bool

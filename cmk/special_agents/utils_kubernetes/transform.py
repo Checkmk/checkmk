@@ -195,7 +195,8 @@ def pod_containers(
             raise AssertionError(f"Unknown container state {status.state}")
 
         result[status.name] = api.ContainerInfo(
-            id=status.container_id,
+            container_id=status.container_id,
+            image_id=status.image_id,
             name=status.name,
             image=status.image,
             ready=status.ready,

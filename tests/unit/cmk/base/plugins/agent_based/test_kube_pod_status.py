@@ -29,7 +29,8 @@ def _mocked_container_info_from_state(
     # The check only requires the state field to be populated, therefore all the other fields are
     # filled with some arbitrary values.
     return ContainerInfo(
-        id="some_id",
+        container_id="some_id",
+        image_id="some_other_id",
         name="some_name",
         image="some_image",
         ready=False,

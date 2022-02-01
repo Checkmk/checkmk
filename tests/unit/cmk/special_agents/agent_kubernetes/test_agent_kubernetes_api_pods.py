@@ -188,6 +188,7 @@ class TestPodStartUp(TestCase):
                     id=None,
                     name="unready_container",
                     image="gcr.io/kuar-demo/kuard-amd64:blue",
+                    image_id="",
                     ready=False,
                     state=api.ContainerWaitingState(
                         type="waiting", reason="ContainerCreating", detail=None

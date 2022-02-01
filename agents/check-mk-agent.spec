@@ -107,8 +107,18 @@ agent service.
 EOF
 fi
 
-%post
+if [ "${super_server}" = "systemd" ] && [ "${1}" -ge 2 ] && [ ! -f /usr/bin/cmk-agent-ctl ] >/dev/null 2>&1 ; then
+    mkdir -p /var/lib/cmk-agent
+    cat << EOF > /var/lib/cmk-agent/allow-legacy-pull
+This file has been placed as a marker for cmk-agent-ctl
+to allow unencrypted legacy agent pull mode.
+It will be removed automatically on first successful agent registration.
+You can remove it manually to disallow legacy mode, but note that
+for regular operation you need to register the agent anyway.
+EOF
+fi
 
+%post
 [ -f /etc/xinetd.d/check-mk-agent.rpmnew ] && rm /etc/xinetd.d/check-mk-agent.rpmnew
 
 if which xinetd >/dev/null 2>&1 && which chkconfig >/dev/null 2>&1; then

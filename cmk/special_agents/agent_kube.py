@@ -890,7 +890,7 @@ def request_metrics_from_cluster_collector(
     cluster_resp = requests.get(
         f"{cluster_agent_url}/container_metrics",
         headers={"Authorization": f"Bearer {token}"},
-        verify=False,
+        verify=False,  # nosec
     )  # TODO: certificate validation
     if cluster_resp.status_code != 200:
         raise SetupError("Checkmk cannot make a connection to the k8 cluster agent")

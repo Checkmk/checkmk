@@ -36,7 +36,7 @@ from cmk.gui.watolib.rulesets import RuleConditions
 
 
 @Endpoint(
-    constructors.collection_href("ruleset"),
+    constructors.collection_href("rule"),
     "cmk/create",
     method="post",
     etag="output",
@@ -104,11 +104,11 @@ def create_rule(param):
 
 
 @Endpoint(
-    constructors.collection_href(domain_type="rule", name="{ruleset_name}"),
+    constructors.collection_href(domain_type="rule"),
     ".../collection",
     method="get",
     response_schema=RuleCollection,
-    path_params=[RuleSearchOptions],
+    query_params=[RuleSearchOptions],
 )
 def list_rules(param):
     """List some rules."""

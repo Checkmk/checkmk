@@ -43,7 +43,7 @@ def new_rule_fixture(logged_in_wsgi_app):
         },
     }
     resp = wsgi_app.post(
-        base + "/domain-types/ruleset/collections/all",
+        base + "/domain-types/rule/collections/all",
         headers={"Accept": "application/json", "Content-Type": "application/json"},
         params=json.dumps(values),
     )
@@ -67,7 +67,7 @@ def test_openapi_create_rule_failure(logged_in_wsgi_app):
         "conditions": {},
     }
     resp = wsgi_app.post(
-        base + "/domain-types/ruleset/collections/all",
+        base + "/domain-types/rule/collections/all",
         headers={"Accept": "application/json", "Content-Type": "application/json"},
         params=json.dumps(values),
         status=400,
@@ -96,7 +96,7 @@ def test_openapi_list_rules(logged_in_wsgi_app, new_rule):
     rule_set = values["ruleset"]
 
     resp = wsgi_app.get(
-        base + f"/domain-types/rule/collections/{rule_set}",
+        base + f"/domain-types/rule/collections/all?ruleset_name={rule_set}",
         headers={"Accept": "application/json"},
         status=200,
     )

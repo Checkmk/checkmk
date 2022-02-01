@@ -272,7 +272,7 @@ def remove(package: PackageInfo) -> None:
 
     (package_dir() / package["name"]).unlink()
 
-    _build_setup_search_index_background()
+    _execute_post_package_change_actions(package)
 
 
 def disable(package_name: PackageName, package_info: PackageInfo) -> None:
@@ -486,7 +486,7 @@ def install(file_object: BinaryIO) -> PackageInfo:
     # Last but not least install package file
     write_package_info(package)
 
-    _build_setup_search_index_background()
+    _execute_post_package_change_actions(package)
 
     return package
 
@@ -935,6 +935,10 @@ def _is_16_feature_pack_package(package_name: PackageName, package_info: Package
         return False
 
     return package_info.get("version", "").startswith("1.")
+
+
+def _execute_post_package_change_actions(package: PackageInfo) -> None:
+    _build_setup_search_index_background()
 
 
 def _build_setup_search_index_background() -> None:

@@ -161,3 +161,5 @@ which xinetd >/dev/null 2>&1 && super_server="xinetd"
 which systemctl >/dev/null 2>&1 && super_server="systemd"
 
 [ "${super_server}" = "systemd" ] && /var/lib/cmk-agent/scripts/cmk-agent-useradd.sh --create
+
+

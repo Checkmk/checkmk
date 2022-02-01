@@ -60,9 +60,24 @@ from cmk.gui.plugins.openapi.restful_objects import (
 from cmk.gui.plugins.openapi.restful_objects.parameters import HOST_NAME
 from cmk.gui.plugins.openapi.utils import problem
 from cmk.gui.plugins.webapi.utils import check_hostname
+from cmk.gui.watolib import hosts_and_folders
 from cmk.gui.watolib.host_rename import perform_rename_hosts
 from cmk.gui.watolib.hosts_and_folders import CREFolder
-from cmk.gui.watolib.utils import try_bake_agents_for_hosts
+
+BAKE_AGENT_PARAM_NAME = "bake_agent"
+BAKE_AGENT_PARAM = {
+    BAKE_AGENT_PARAM_NAME: fields.Boolean(
+        missing=False,
+        required=False,
+        example=False,
+        description=(
+            "Tries to bake the agents for the just created hosts. This process is started in the "
+            "background after configuring the host. Please note that the backing may take some "
+            "time and might block subsequent API calls. "
+            "This only works when using the Enterprise Editions."
+        ),
+    )
+}
 
 
 @Endpoint(
@@ -72,6 +87,7 @@ from cmk.gui.watolib.utils import try_bake_agents_for_hosts
     etag="output",
     request_schema=request_schemas.CreateHost,
     response_schema=response_schemas.HostConfigSchema,
+    query_params=[BAKE_AGENT_PARAM],
 )
 def create_host(params):
     """Create a host"""
@@ -80,7 +96,9 @@ def create_host(params):
     folder: CREFolder = body["folder"]
 
     # is_cluster is defined as "cluster_hosts is not None"
-    folder.create_hosts([(host_name, body["attributes"], None)])
+    folder.create_hosts(
+        [(host_name, body["attributes"], None)], bake_hosts=params[BAKE_AGENT_PARAM_NAME]
+    )
 
     host = watolib.Host.load_host(host_name)
     return _serve_host(host, False)
@@ -93,6 +111,7 @@ def create_host(params):
     etag="output",
     request_schema=request_schemas.CreateClusterHost,
     response_schema=response_schemas.HostConfigSchema,
+    query_params=[BAKE_AGENT_PARAM],
 )
 def create_cluster_host(params):
     """Create a cluster host
@@ -103,7 +122,9 @@ def create_cluster_host(params):
     host_name = body["host_name"]
     folder: CREFolder = body["folder"]
 
-    folder.create_hosts([(host_name, body["attributes"], body["nodes"])])
+    folder.create_hosts(
+        [(host_name, body["attributes"], body["nodes"])], bake_hosts=params[BAKE_AGENT_PARAM_NAME]
+    )
 
     host = watolib.Host.load_host(host_name)
     return _serve_host(host, effective_attributes=False)
@@ -115,6 +136,7 @@ def create_cluster_host(params):
     method="post",
     request_schema=request_schemas.BulkCreateHost,
     response_schema=response_schemas.HostConfigCollection,
+    query_params=[BAKE_AGENT_PARAM],
 )
 def bulk_create_hosts(params):
     """Bulk create hosts"""
@@ -137,7 +159,8 @@ def bulk_create_hosts(params):
 
         folder.create_validated_hosts(validated_entries, bake_hosts=False)
 
-    try_bake_agents_for_hosts([host["host_name"] for host in body["entries"]])
+    if params[BAKE_AGENT_PARAM_NAME]:
+        hosts_and_folders.try_bake_agents_for_hosts([host["host_name"] for host in body["entries"]])
 
     if failed_hosts:
         return problem(

@@ -7,6 +7,7 @@
 
 #include <algorithm>
 #include <chrono>
+#include <cstdint>
 #include <filesystem>
 #include <functional>
 #include <iterator>
@@ -910,6 +911,13 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
                                [](auto &&m) { return m.string(); });
             }
             return metrics;
+        }));
+    table->addColumn(std::make_unique<IntColumn<host>>(
+        prefix + "smartping_timeout",
+        "Maximum expected time between two received packets in ms", offsets,
+        [](const host &r) {
+            // Let's pretend the default. Or should we simply use 0?
+            return static_cast<int32_t>(r.check_interval * 60000 * 2.5);
         }));
 }
 

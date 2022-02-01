@@ -593,9 +593,7 @@ static ColumnDefinitions hosts_columns() {
         {"services_with_fullstate", ColumnType::list},
         {"services_with_info", ColumnType::list},
         {"services_with_state", ColumnType::list},
-#ifdef CMC
         {"smartping_timeout", ColumnType::int_},
-#endif
         {"statusmap_image", ColumnType::string},
         {"structured_status", ColumnType::blob},
         {"total_services", ColumnType::int_},

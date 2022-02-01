@@ -1955,11 +1955,26 @@ def get_single_info_keys(single_infos: SingleInfos) -> List[FilterName]:
 
 
 def get_singlecontext_vars(context: VisualContext, single_infos: SingleInfos) -> Dict[str, str]:
+    # Link filters only happen when switching from (host/service)group
+    # datasource to host/service datasource. As this function is datasource
+    # unaware we optionally test for this posibility when (host/service)group
+    # is a single info.
+    link_filters = {
+        "hostgroup": "opthostgroup",
+        "servicegroup": "optservicegroup",
+    }
+
+    def var_value(filter_name: FilterName) -> str:
+        if filter_vars := context.get(filter_name):
+            if isinstance(filter_vars, str):
+                return filter_vars
+            if filt := filter_registry.get(filter_name):
+                return filter_vars.get(filt.htmlvars[0], "")
+        return ""
+
     return {
-        key: val  #
+        key: var_value(key) or var_value(link_filters.get(key, ""))
         for key in get_single_info_keys(single_infos)
-        for val in [context.get(key)]
-        if isinstance(val, str)
     }
 
 

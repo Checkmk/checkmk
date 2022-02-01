@@ -5906,7 +5906,7 @@ class FileUpload(ValueSpec):
                     % ", ".join(self._allowed_extensions),
                 )
 
-    def render_input(self, varprefix: str, value: bytes) -> None:
+    def render_input(self, varprefix: str, value: _Optional[bytes]) -> None:
         html.upload_file(varprefix)
 
     def from_html_vars(self, varprefix: str) -> UploadedFile:
@@ -5933,7 +5933,7 @@ class ImageUpload(FileUpload):
         self._show_current_image: Final = show_current_image
         super().__init__(**kwargs)
 
-    def render_input(self, varprefix: str, value: bytes) -> None:
+    def render_input(self, varprefix: str, value: _Optional[bytes]) -> None:
         if isinstance(value, str):
             # since latin_1 only uses one byte, we can use it for str->byte conversion
             value = value.encode("latin_1")

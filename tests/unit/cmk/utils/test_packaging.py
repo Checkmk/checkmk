@@ -81,6 +81,14 @@ def fixture_build_setup_search_index_background(mocker: MockerFixture) -> Callab
     )
 
 
+@pytest.fixture(name="reload_apache")
+def fixture_reload_apache(mocker: MockerFixture) -> Callable[[], None]:
+    return mocker.patch(
+        "cmk.utils.packaging._reload_apache",
+        side_effect=lambda: None,
+    )
+
+
 def test_package_parts():
     assert sorted(packaging.get_package_parts()) == sorted(
         [
@@ -472,3 +480,28 @@ def test_remove_disabled_package(mkp_file, build_setup_search_index):
     build_setup_search_index.assert_not_called()
     assert packaging._package_exists("aaa") is False
     assert not cmk.utils.paths.disabled_packages_dir.joinpath(package_file_name).exists()
+
+
+def test_reload_gui_without_gui_files(reload_apache, build_setup_search_index) -> None:
+    package = packaging.get_initial_package_info("ding")
+    packaging._execute_post_package_change_actions(package)
+    build_setup_search_index.assert_called_once()
+    reload_apache.assert_not_called()
+
+
+def test_reload_gui_with_gui_part(reload_apache, build_setup_search_index) -> None:
+    package = packaging.get_initial_package_info("ding")
+    package["files"] = {"gui": ["a"]}
+
+    packaging._execute_post_package_change_actions(package)
+    build_setup_search_index.assert_called_once()
+    reload_apache.assert_called_once()
+
+
+def test_reload_gui_with_web_part(reload_apache, build_setup_search_index) -> None:
+    package = packaging.get_initial_package_info("ding")
+    package["files"] = {"web": ["a"]}
+
+    packaging._execute_post_package_change_actions(package)
+    build_setup_search_index.assert_called_once()
+    reload_apache.assert_called_once()

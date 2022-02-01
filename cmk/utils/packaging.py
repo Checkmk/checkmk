@@ -965,9 +965,27 @@ def _is_16_feature_pack_package(package_name: PackageName, package_info: Package
 def _execute_post_package_change_actions(package: PackageInfo) -> None:
     _build_setup_search_index_background()
 
+    if _package_contains_gui_files(package):
+        _reload_apache()
+
 
 def _build_setup_search_index_background() -> None:
     subprocess.run(
         ["init-redis"],
         check=False,
     )
+
+
+def _package_contains_gui_files(package: PackageInfo) -> bool:
+    return "gui" in package["files"] or "web" in package["files"]
+
+
+def _reload_apache() -> None:
+    try:
+        subprocess.run(
+            ["omd", "reload", "apache"],
+            capture_output=True,
+            check=True,
+        )
+    except subprocess.CalledProcessError:
+        logger.error("Error reloading apache", exc_info=True)

@@ -727,6 +727,15 @@ void TableServices::addColumns(Table *table, const std::string &prefix,
         prefix + "cache_interval",
         "A dummy column in order to be compatible with Check_MK Multisite",
         offsets, [](const service & /*r*/) { return 0; }));
+
+    table->addColumn(std::make_unique<BoolColumn<service>>(
+        prefix + "in_passive_check_period",
+        "Whether this service is currently in its passive check period (0/1)",
+        offsets, [](const service & /*r*/) { return true; }));
+    table->addColumn(std::make_unique<StringColumn<service>>(
+        prefix + "passive_check_period",
+        "Time period in which this (passive) service will be checked.", offsets,
+        [](const service & /*r*/) { return "24X7"; }));
 }
 
 void TableServices::answerQuery(Query *query) {

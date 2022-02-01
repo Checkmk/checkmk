@@ -667,17 +667,13 @@ static ColumnDefinitions services_columns() {
         {"cached_at", ColumnType::time},
         {"description", ColumnType::string},
         {"groups", ColumnType::list},
-#ifdef CMC
         {"in_passive_check_period", ColumnType::int_},
-#endif
         {"last_time_critical", ColumnType::time},
         {"last_time_ok", ColumnType::time},
         {"last_time_unknown", ColumnType::time},
         {"last_time_warning", ColumnType::time},
         {"obsess_over_service", ColumnType::int_},
-#ifdef CMC
         {"passive_check_period", ColumnType::string},
-#endif
         {"robotmk_last_error_log", ColumnType::blob},
         {"robotmk_last_error_log_gz", ColumnType::blob},
         {"robotmk_last_log", ColumnType::blob},

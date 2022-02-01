@@ -917,40 +917,19 @@ table.data tr.data.dcd_log_entries {
   }
 }
 
-.wato table.progress {
-  width: 50%;
-  color: $font-color-black;
-  background: $bg-color-secondary;
-  border: 1px solid $color-table-border;
-  border-radius: $theme-border-radius;
-
-  th {
-    padding: 3px 0;
-    background-color: $white;
+.wato form.rule_representation {
+  div.success.hidden {
+    display: none;
   }
 
-  /* Log window */
-  td.log {
-    padding: 12px 12px 0;
+  textarea#rule_representation {
+    min-width: 400px;
+    min-height: 200px;
+    padding: $spacing;
+    margin-right: $spacing;
+    overflow: auto;
     font-family: $font-family-monospace;
-
-    > div {
-      height: 250px;
-      padding: 8px 16px;
-      margin: 16px;
-      overflow: auto;
-      color: $font-color-light-grey;
-      background: $navigation-bg-color;
-      border: 1px solid $color-table-border-dark;
-      border-radius: $theme-border-radius;
-    }
-
-    /* TODO: Reproduce this element: .wato table.progress td.log div.exc */
-    div.exc {
-      padding: 5px;
-      margin: 10px;
-      border: 1px solid rgb(255, 0, 0);
-    }
+    border: 1px solid $color-table-border;
   }
 }
 

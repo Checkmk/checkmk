@@ -64,7 +64,6 @@ from cmk.gui.plugins.wato.utils import (
     make_confirm_link,
     make_diff_text,
     mode_registry,
-    mode_url,
     redirect,
     search_form,
     WatoMode,
@@ -1060,34 +1059,29 @@ class ModeEditRuleset(WatoMode):
         else:
             html.empty_icon()
 
+        folder_preserving_vars = [
+            ("ruleset_back_mode", self._back_mode),
+            ("varname", self._name),
+            ("rule_id", rule.id),
+            ("host", self._hostname),
+            ("item", watolib.mk_repr(self._item).decode()),
+            ("service", watolib.mk_repr(self._service).decode()),
+            ("rule_folder", folder.path()),
+        ]
+
         table.cell(_("Actions"), css="buttons rulebuttons")
-        edit_url = watolib.folder_preserving_link(
-            [
-                ("mode", "edit_rule"),
-                ("ruleset_back_mode", self._back_mode),
-                ("varname", self._name),
-                ("rule_id", rule.id),
-                ("host", self._hostname),
-                ("item", watolib.mk_repr(self._item).decode()),
-                ("service", watolib.mk_repr(self._service).decode()),
-                ("rule_folder", folder.path()),
-            ]
-        )
+        edit_url = watolib.folder_preserving_link([("mode", "edit_rule"), *folder_preserving_vars])
         html.icon_button(edit_url, _("Edit this rule"), "edit")
 
         clone_url = watolib.folder_preserving_link(
-            [
-                ("mode", "clone_rule"),
-                ("ruleset_back_mode", self._back_mode),
-                ("varname", self._name),
-                ("rule_id", rule.id),
-                ("host", self._hostname),
-                ("item", watolib.mk_repr(self._item).decode()),
-                ("service", watolib.mk_repr(self._service).decode()),
-                ("rule_folder", folder.path()),
-            ]
+            [("mode", "clone_rule"), *folder_preserving_vars]
         )
         html.icon_button(clone_url, _("Create a copy of this rule"), "clone")
+
+        export_url = watolib.folder_preserving_link(
+            [("mode", "export_rule"), *folder_preserving_vars]
+        )
+        html.icon_button(export_url, _("Export this rule for API"), "export_rule")
 
         html.element_dragger_url("tr", base_url=self._action_url("move_to", folder, rule.id))
 
@@ -1604,11 +1598,8 @@ class ABCEditRuleMode(WatoMode):
                 self._rule = self._ruleset.get_rule_by_id(rule_id)
             except (KeyError, TypeError, ValueError, IndexError):
                 raise MKUserError(
-                    "rule_id", _("You are trying to edit a rule which does " "not exist anymore.")
+                    "rule_id", _("You are trying to edit a rule which does not exist anymore.")
                 )
-        elif request.has_var("_export_rule"):
-            self._rule = watolib.Rule.from_ruleset_defaults(self._folder, self._ruleset)
-            self._update_rule_from_vars()
         else:
             raise NotImplementedError()
 
@@ -1628,13 +1619,8 @@ class ABCEditRuleMode(WatoMode):
             abort_url=self._back_url(),
         )
 
-        action_dropdown = menu.dropdowns[0]
-        action_dropdown.topics.append(
-            PageMenuTopic(
-                title=_("This rule"),
-                entries=list(self._page_menu_entries_this_rule()),
-            )
-        )
+        if this_rule_topic := self._page_menu_topic_this_rule():
+            menu.dropdowns[0].topics.append(this_rule_topic)
 
         menu.dropdowns.insert(
             1,
@@ -1656,19 +1642,19 @@ class ABCEditRuleMode(WatoMode):
         yield _page_menu_entry_predefined_conditions()
         yield _page_menu_entry_rule_search()
 
-    def _page_menu_entries_this_rule(self) -> Iterable[PageMenuEntry]:
-        yield PageMenuEntry(
-            title=_("Export for API"),
-            icon_name="export",
-            item=make_form_submit_link("rule_editor", "_export_rule"),
-        )
-
+    def _page_menu_topic_this_rule(self) -> Optional[PageMenuTopic]:
         if user.may("wato.auditlog"):
-            yield PageMenuEntry(
-                title=_("Audit log"),
-                icon_name="auditlog",
-                item=make_simple_link(make_object_audit_log_url(self._rule.object_ref())),
+            return PageMenuTopic(
+                title=_("This rule"),
+                entries=[
+                    PageMenuEntry(
+                        title=_("Audit log"),
+                        icon_name="auditlog",
+                        item=make_simple_link(make_object_audit_log_url(self._rule.object_ref())),
+                    ),
+                ],
             )
+        return None
 
     def breadcrumb(self) -> Breadcrumb:
         # Let the ModeRulesetGroup know the group we are currently editing
@@ -1705,17 +1691,6 @@ class ABCEditRuleMode(WatoMode):
         if not isinstance(self, ModeNewRule):
             self._folder.need_permission("write")
         new_rule_folder.need_permission("write")
-
-        if request.has_var("_export_rule"):
-            return redirect(
-                mode_url(
-                    "edit_rule",
-                    _export_rule="ON",
-                    varname=self._name,
-                    rule_id=self._rule.id,
-                    folder=watolib.Folder.current().path(),
-                )
-            )
 
         if new_rule_folder == self._folder:
             self._rule.folder = new_rule_folder
@@ -1815,12 +1790,6 @@ class ABCEditRuleMode(WatoMode):
         return conditions
 
     def page(self) -> None:
-        if request.has_var("_export_rule"):
-            self._show_rule_representation()
-        else:
-            self._show_rule_editor()
-
-    def _show_rule_editor(self) -> None:
         help_text = self._ruleset.help()
         if help_text:
             html.div(HTML(help_text), class_="info")
@@ -1962,28 +1931,6 @@ class ABCEditRuleMode(WatoMode):
 
     def _vs_explicit_conditions(self, **kwargs) -> VSExplicitConditions:
         return VSExplicitConditions(rulespec=self._rulespec, **kwargs)
-
-    def _show_rule_representation(self) -> None:
-        pretty_rule_config = pprint.pformat(self._rule.to_config()).replace("\n", "<br>")
-        content = escape_html_permissive(pretty_rule_config)
-
-        html.write_text(_("This rule representation can be used for Web API calls."))
-        html.br()
-        html.br()
-
-        html.open_center()
-        html.open_table(class_="progress")
-
-        html.open_tr()
-        html.th("Rule representation for Web API")
-        html.close_tr()
-
-        html.open_tr()
-        html.td(html.render_div(content, id_="rule_representation"), class_="log")
-        html.close_tr()
-
-        html.close_table()
-        html.close_center()
 
     def _vs_rule_options(self, rule: watolib.Rule, disabling: bool = True) -> Dictionary:
         return Dictionary(
@@ -2716,4 +2663,70 @@ class ModeNewRule(ABCEditRuleMode):
         return _('Created new rule in ruleset "%s" in folder "%s"') % (
             self._ruleset.title(),
             self._folder.alias_path(),
+        )
+
+
+@mode_registry.register
+class ModeExportRule(ABCEditRuleMode):
+    @classmethod
+    def name(cls) -> str:
+        return "export_rule"
+
+    @classmethod
+    def permissions(cls) -> list[PermissionName]:
+        return []
+
+    def title(self) -> str:
+        return _("Rule representation: %s") % self._rulespec.title
+
+    def _save_rule(self) -> None:
+        pass
+
+    def page(self) -> None:
+        pretty_rule_config = pprint.pformat(self._rule.to_config())
+        content_id = "rule_representation"
+        success_msg_id = "copy_success"
+
+        html.begin_form("rule_representation")
+        html.div(
+            _("Successfully copied rule representation to the clipboard."),
+            id_=success_msg_id,
+            class_=["success", "hidden"],
+        )
+
+        forms.header(_("Rule representation for web API"))
+        forms.section("Rule representation")
+        html.text_area(content_id, deflt=pretty_rule_config, id_=content_id, readonly="true")
+        html.icon_button(
+            url=None,
+            title=_("Copy rule representation to clipboard"),
+            icon="clone",
+            onclick="cmk.utils.copy_to_clipboard(%s, %s)"
+            % (json.dumps(content_id), json.dumps(success_msg_id)),
+        )
+        html.close_form()
+
+    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+        return PageMenu(
+            dropdowns=list(self._page_menu_dropdowns()),
+            breadcrumb=breadcrumb,
+        )
+
+    def _page_menu_dropdowns(self) -> Iterable[PageMenuDropdown]:
+        if this_rule_topic := self._page_menu_topic_this_rule():
+            yield PageMenuDropdown(
+                name="rule",
+                title=_("Rule"),
+                topics=[this_rule_topic],
+            )
+
+        yield PageMenuDropdown(
+            name="related",
+            title=_("Related"),
+            topics=[
+                PageMenuTopic(
+                    title=_("Setup"),
+                    entries=list(self._page_menu_entries_related()),
+                ),
+            ],
         )

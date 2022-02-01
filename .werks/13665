@@ -1,0 +1,12 @@
+Title: Fix visibility of event console actions on rule editing
+Class: fix
+Compatible: compat
+Component: ec
+Date: 1643724889
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0p20
+
+If new actions were created in the event console settings, this actions were
+only visible in rules after a restart of the apache.

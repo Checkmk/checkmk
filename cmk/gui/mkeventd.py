@@ -24,7 +24,7 @@ import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
 import cmk.gui.config as config
 import cmk.gui.sites as sites
 from cmk.gui.i18n import _
-from cmk.gui.globals import html
+from cmk.gui.globals import g
 from cmk.gui.exceptions import MKGeneralException
 from cmk.gui.permissions import (
     permission_section_registry,
@@ -141,23 +141,16 @@ def action_choices(omit_hidden=False):
     # to load them from the configuration.
     return [ ( "@NOTIFY", _("Send monitoring notification")) ] + \
            [ (a["id"], a["title"])
-             for a in eventd_configuration().get("actions", [])
+             for a in _get_eventd_configuration().get("actions", [])
              if not omit_hidden or not a.get("hidden") ]
 
 
-cached_config = None
-
-
-def eventd_configuration():
-    global cached_config
-    if cached_config and cached_config[0] is html:
-        return cached_config[1]
-
-    settings = ec.settings('', Path(cmk.utils.paths.omd_root),
-                           Path(cmk.utils.paths.default_config_dir), [''])
-    cfg = ec.load_config(settings)
-    cached_config = (html, cfg)
-    return cfg
+def _get_eventd_configuration():
+    if "eventd_configuration" not in g:
+        settings = ec.settings('', Path(cmk.utils.paths.omd_root),
+                               Path(cmk.utils.paths.default_config_dir), [''])
+        g.eventd_configuration = ec.load_config(settings)
+    return g.eventd_configuration
 
 
 def daemon_running() -> bool:

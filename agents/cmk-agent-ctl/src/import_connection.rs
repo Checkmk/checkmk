@@ -88,7 +88,8 @@ mod tests {
                 pull_imported: vec![],
             },
             std::path::PathBuf::from(&tempfile::NamedTempFile::new().unwrap().into_temp_path()),
-        );
+        )
+        .unwrap();
         assert!(reg.is_empty());
         assert!(!reg.path().exists());
         assert!(_import(&mut reg, MockJSONProvider {}, false).is_ok());

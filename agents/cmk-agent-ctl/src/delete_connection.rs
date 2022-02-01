@@ -59,6 +59,7 @@ mod tests {
             },
             std::path::PathBuf::from(&tempfile::NamedTempFile::new().unwrap().into_temp_path()),
         )
+        .unwrap()
     }
 
     #[test]
@@ -112,7 +113,8 @@ mod tests {
                 ],
             },
             std::path::PathBuf::from(&tempfile::NamedTempFile::new().unwrap().into_temp_path()),
-        );
+        )
+        .unwrap();
         assert!(!reg.path().exists());
         assert!(delete(&mut reg, "imported-1").is_ok());
         assert!(reg.imported_pull_connections().next().unwrap().uuid == "uuid-imported-2");

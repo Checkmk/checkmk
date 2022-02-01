@@ -8,9 +8,10 @@ use serde::de::DeserializeOwned;
 use serde::Deserialize;
 use serde::Serialize;
 use std::collections::HashMap;
-use std::fs::{read_to_string, write};
+use std::fs::{metadata, read_to_string, write};
 use std::io;
 use std::path::{Path, PathBuf};
+use std::time::SystemTime;
 use string_enum::StringEnum;
 
 #[derive(StringEnum, PartialEq)]
@@ -140,16 +141,29 @@ pub struct RegisteredConnections {
 
 impl JSONLoader for RegisteredConnections {}
 
+fn mtime(path: &Path) -> AnyhowResult<Option<SystemTime>> {
+    Ok(if path.exists() {
+        Some(metadata(&path)?.modified()?)
+    } else {
+        None
+    })
+}
 #[derive(PartialEq, Debug)]
 pub struct Registry {
     connections: RegisteredConnections,
     path: PathBuf,
+    last_reload: Option<SystemTime>,
 }
 
 impl Registry {
     #[cfg(test)]
-    pub fn new(connections: RegisteredConnections, path: PathBuf) -> Registry {
-        Registry { connections, path }
+    pub fn new(connections: RegisteredConnections, path: PathBuf) -> AnyhowResult<Registry> {
+        let last_reload = mtime(&path)?;
+        Ok(Registry {
+            connections,
+            path,
+            last_reload,
+        })
     }
 
     #[cfg(test)]
@@ -161,7 +175,30 @@ impl Registry {
         Ok(Registry {
             connections: RegisteredConnections::load(path)?,
             path: PathBuf::from(path),
+            last_reload: mtime(path)?,
         })
+    }
+
+    pub fn refresh(&mut self) -> AnyhowResult<()> {
+        match (mtime(&self.path)?, self.last_reload) {
+            (Some(now), Some(then)) => {
+                match now.duration_since(then) {
+                    Ok(time) => {
+                        if !time.is_zero() {
+                            self.reload()?;
+                        }
+                    }
+                    // Error means "negative time". This may occur due to clock adjustments.
+                    // Force reload in this case.
+                    Err(_) => self.reload()?,
+                };
+            }
+
+            (None, Some(_)) => self.reload()?,
+
+            _ => {}
+        };
+        Ok(())
     }
 
     pub fn save(&self) -> io::Result<()> {
@@ -238,6 +275,12 @@ impl Registry {
         self.connections.push.clear();
         self.connections.pull.clear();
         self.connections.pull_imported.clear();
+    }
+
+    fn reload(&mut self) -> AnyhowResult<()> {
+        self.connections = RegisteredConnections::load(&self.path)?;
+        self.last_reload = mtime(&self.path)?;
+        Ok(())
     }
 
     fn delete_connection_by_server(&mut self, server: &str) -> AnyhowResult<()> {
@@ -327,6 +370,9 @@ mod test_registry {
             },
         );
 
+        let path =
+            std::path::PathBuf::from(&tempfile::NamedTempFile::new().unwrap().into_temp_path());
+        let last_reload = mtime(&path).unwrap();
         Registry {
             connections: RegisteredConnections {
                 push,
@@ -338,9 +384,8 @@ mod test_registry {
                     root_cert: String::from("root_cert"),
                 }],
             },
-            path: std::path::PathBuf::from(
-                &tempfile::NamedTempFile::new().unwrap().into_temp_path(),
-            ),
+            path,
+            last_reload,
         }
     }
 
@@ -357,9 +402,14 @@ mod test_registry {
     fn test_io() {
         let reg = registry();
         assert!(!reg.path.exists());
+        assert!(reg.last_reload.is_none());
+
         reg.save().unwrap();
         assert!(reg.path.exists());
-        assert_eq!(reg, Registry::from_file(&reg.path).unwrap());
+        let new_reg = Registry::from_file(&reg.path).unwrap();
+        assert_eq!(reg.connections, new_reg.connections);
+        assert_eq!(reg.path, new_reg.path);
+        assert!(new_reg.last_reload.is_some());
     }
 
     #[test]
@@ -474,6 +524,9 @@ mod test_registry {
 
     #[test]
     fn test_delete_delete_imported_connection_by_idx_ok() {
+        let path =
+            std::path::PathBuf::from(&tempfile::NamedTempFile::new().unwrap().into_temp_path());
+        let last_reload = mtime(&path).unwrap();
         let mut reg = Registry {
             connections: RegisteredConnections {
                 push: std::collections::HashMap::new(),
@@ -493,9 +546,8 @@ mod test_registry {
                     },
                 ],
             },
-            path: std::path::PathBuf::from(
-                &tempfile::NamedTempFile::new().unwrap().into_temp_path(),
-            ),
+            path,
+            last_reload,
         };
         assert!(reg.delete_imported_connection_by_idx(1).is_ok());
         assert!(reg.connections.pull_imported.len() == 1);

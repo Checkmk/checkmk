@@ -242,6 +242,7 @@ mod tests {
             config::RegisteredConnections::new().unwrap(),
             std::path::PathBuf::from(&tempfile::NamedTempFile::new().unwrap().into_temp_path()),
         )
+        .unwrap()
     }
 
     fn agent_labels() -> config::HostRegistrationData {

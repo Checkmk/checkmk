@@ -79,6 +79,12 @@ rm -rf $RPM_BUILD_ROOT
 
 %pre
 
+# migrate old xinetd service (regardless of the current super server setting)
+if [ ! -e "/etc/xinetd.d/check-mk-agent" ] && [ -e "/etc/xinetd.d/check_mk" ]; then
+    printf "migrating old /etc/xinetd.d/check_mk ... "
+    sed 's/service check_mk/service check-mk-agent/' "/etc/xinetd.d/check_mk" >"/etc/xinetd.d/check-mk-agent" && rm "/etc/xinetd.d/check_mk" && printf "OK\n"
+fi
+
 # determine a suitable super server
 super_server='missing'
 which xinetd >/dev/null 2>&1 && super_server="xinetd"
@@ -99,12 +105,6 @@ agent service.
 ---------------------------------------------
 
 EOF
-fi
-
-# migrate old xinetd service
-if [ ! -e "/etc/xinetd.d/check-mk-agent" ] && [ -e "/etc/xinetd.d/check_mk" ]; then
-    printf "migrating old /etc/xinetd.d/check_mk ... "
-    sed 's/service check_mk/service check-mk-agent/' "/etc/xinetd.d/check_mk" > "/etc/xinetd.d/check-mk-agent" && rm "/etc/xinetd.d/check_mk" && printf "OK\n"
 fi
 
 %post

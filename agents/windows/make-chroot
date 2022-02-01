@@ -16,27 +16,27 @@ export HOSTNAME=cmk-windows-agent-chroot
 export LC_ALL=en_US.UTF-8 LANGUAGE=en_US.UTF-8 LANG=en_US.UTF-8
 
 SCRIPT_DIR="$(realpath "$(dirname "${BASH_SOURCE[0]}")")"
-BASE="$(realpath $SCRIPT_DIR/../..)"
+BASE="$(realpath "$SCRIPT_DIR/../..")"
 
-if [ -z $CHROOT_PATH ]; then
+if [ -z "$CHROOT_PATH" ]; then
     echo "ERROR: CHROOT_PATH not set"
     exit 1
 fi
 
-if [ -z $SUDO_USER ]; then
+if [ -z "$SUDO_USER" ]; then
     echo "ERROR: $0 must be executed with sudo"
     exit 1
 fi
 
 cleanup_chroot() {
-    PIDS=$(lsof -Fp $CHROOT_PATH 2>/dev/null | cut -dp -f2)
-    [ -n "$PIDS" ] && kill -9 $PIDS 2>&1
+    PIDS=$(lsof -Fp "$CHROOT_PATH" 2>/dev/null | cut -dp -f2)
+    [ -n "$PIDS" ] && kill -9 "$PIDS" 2>&1
 
-    [ -e $CHROOT_PATH/dev/pts/ptmx ] && umount $CHROOT_PATH/dev/pts && sleep 2
-    [ -e $CHROOT_PATH/dev/sda ] && umount $CHROOT_PATH/dev && sleep 2
-    [ -e $CHROOT_PATH/proc/self ] && umount $CHROOT_PATH/proc && sleep 2
+    [ -e "$CHROOT_PATH/dev/pts/ptmx" ] && umount "$CHROOT_PATH/dev/pts" && sleep 2
+    [ -e "$CHROOT_PATH/dev/sda" ] && umount "$CHROOT_PATH/dev" && sleep 2
+    [ -e "$CHROOT_PATH/proc/self" ] && umount "$CHROOT_PATH/proc" && sleep 2
 
-    if mount | grep $CHROOT_PATH >/dev/null; then
+    if mount | grep "$CHROOT_PATH" >/dev/null; then
         echo "Error: There are still mounts below $CHROOT_PATH. Terminating."
         exit 1
     fi
@@ -53,7 +53,7 @@ echo "+ CLEANING UP CHROOT"
 cleanup_chroot
 
 # chroot leer machen
-rm -rf $CHROOT_PATH/*
+rm -rf "${CHROOT_PATH:?}/"*
 
 package_names=(
     autoconf
@@ -135,54 +135,54 @@ echo "+ INSTALLING SYSTEM (PHASE 1)"
 debootstrap \
     --components=main,universe \
     --include="$packages" \
-    --arch amd64 $DISTRO $CHROOT_PATH $MIRROR
+    --arch amd64 "$DISTRO" "$CHROOT_PATH" "$MIRROR"
 
 echo "+ INSTALLING SYSTEM (PHASE 2)"
 
 # "Disable" apt privilege dropping in chroot
-cat $CHROOT_PATH/etc/passwd
-sed -ri 's/^_apt:x:[0-9]+:/_apt:x:0:/g' $CHROOT_PATH/etc/passwd
-cat $CHROOT_PATH/etc/passwd
+cat "$CHROOT_PATH/etc/passwd"
+sed -ri 's/^_apt:x:[0-9]+:/_apt:x:0:/g' "$CHROOT_PATH/etc/passwd"
+cat "$CHROOT_PATH/etc/passwd"
 
 # Need to be installed for installation.
-cat <<EOF >$CHROOT_PATH/etc/fstab
+cat <<EOF >"$CHROOT_PATH/etc/fstab"
 # created by make-chroot
 /dev/sda1 / ext2 rw,noatime,nodiratime,errors=continue 0 1
 EOF
 
 # Prevent startup of daemons during package installation
-echo exit 101 >$CHROOT_PATH/usr/sbin/policy-rc.d
-chmod +x $CHROOT_PATH/usr/sbin/policy-rc.d
+echo exit 101 >"$CHROOT_PATH/usr/sbin/policy-rc.d"
+chmod +x "$CHROOT_PATH/usr/sbin/policy-rc.d"
 
-cp /etc/resolv.conf $CHROOT_PATH/etc/resolv.conf
+cp /etc/resolv.conf "$CHROOT_PATH/etc/resolv.conf"
 
 # Deploy fake hostname binary
-if [ ! -e $CHROOT_PATH/bin/hostname.bin ]; then
-    mv $CHROOT_PATH/bin/hostname{,.bin}
+if [ ! -e "$CHROOT_PATH/bin/hostname.bin" ]; then
+    mv "$CHROOT_PATH/bin/hostname"{,.bin}
 fi
-cat <<EOF >$CHROOT_PATH/bin/hostname
+cat <<EOF >"$CHROOT_PATH/bin/hostname"
 echo $HOSTNAME
 EOF
-chmod +x $CHROOT_PATH/bin/hostname
+chmod +x "$CHROOT_PATH/bin/hostname"
 
 # Cope with the known bug with libsane1 that wine depends on.
 # https://bugs.launchpad.net/ubuntu/+source/sane-backends/+bug/1725928/
 # Need to use --force-overwrite with apt-get. This option cannot be passed
 # through debootstrap.
-$SCRIPT_DIR/do-chroot 'apt-get -y -o Dpkg::Options::="--force-overwrite" install wine-stable'
+"$SCRIPT_DIR/do-chroot" 'apt-get -y -o Dpkg::Options::="--force-overwrite" install wine-stable'
 
 # We need to enable 32bit Wine
-$SCRIPT_DIR/do-chroot 'dpkg --add-architecture i386 && apt-get update && apt-get -o Dpkg::Options::="--force-overwrite" -y install wine32'
+"$SCRIPT_DIR/do-chroot" 'dpkg --add-architecture i386 && apt-get update && apt-get -o Dpkg::Options::="--force-overwrite" -y install wine32'
 
-cat <<EOF >$CHROOT_PATH/root/.bashrc
+cat <<EOF >"$CHROOT_PATH/root/.bashrc"
 debian_chroot=$(hostname)
 PS1='\${debian_chroot:+(\$debian_chroot)}\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\\$ '
 PS1="\[\e]0;\${debian_chroot:+(\$debian_chroot)}\u@\h: \w\a\]\$PS1"
 EOF
 
 # Debian pkg installation does not seem to link python executable
-if [ ! -h $CHROOT_PATH/usr/bin/python ]; then
-    ln -sf python2.7 $CHROOT_PATH/usr/bin/python
+if [ ! -h "$CHROOT_PATH/usr/bin/python" ]; then
+    ln -sf python2.7 "$CHROOT_PATH/usr/bin/python"
 fi
 
 cp "$BASE/agents/windows/$VERSIONFILE" "$CHROOT_PATH/"
@@ -190,8 +190,8 @@ cp "$BASE/agents/windows/$VERSIONFILE" "$CHROOT_PATH/"
 echo "+ CLEANING UP"
 
 # Raeume apt-cache auf
-ls $CHROOT_PATH/var/cache/apt/archives/*.deb >/dev/null 2>&1 &&
-    rm $CHROOT_PATH/var/cache/apt/archives/*.deb 2>&1 || true
+ls "$CHROOT_PATH/var/cache/apt/archives/"*.deb >/dev/null 2>&1 &&
+    rm "$CHROOT_PATH/var/cache/apt/archives/"*.deb 2>&1 || true
 
 # Alle Prozesse aus dem chroot killen
 cleanup_chroot

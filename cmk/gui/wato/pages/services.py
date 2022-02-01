@@ -351,10 +351,10 @@ class ModeAjaxServiceDiscovery(AjaxPage):
             if self._is_active(discovery_result):
                 return _("Initializing discovery...")
             if not cmk_check_entries:
-                return _("No discovery information available. Please perform a full scan.")
+                return _("No discovery information available. Please perform a rescan.")
             return _(
                 "No fresh discovery information available. Using latest cached information. "
-                "Please perform a full scan in case you want to discover the current state."
+                "Please perform a rescan in case you want to discover the current state."
             )
 
         job_title = discovery_result.job_status.get("title", _("Service discovery"))
@@ -389,9 +389,9 @@ class ModeAjaxServiceDiscovery(AjaxPage):
                 for e in cmk_check_entries
             )
             if no_data:
-                messages.append(_("No data for discovery available. Please perform a full scan."))
+                messages.append(_("No data for discovery available. Please perform a rescan."))
         else:
-            messages.append(_("Found no services yet. To retry please execute a full scan."))
+            messages.append(_("Found no services yet. To retry please execute a rescan."))
 
         progress_update_log = discovery_result.job_status["loginfo"]["JobProgressUpdate"]
         warnings = [f"<br>{line}" for line in progress_update_log if line.startswith("WARNING")]
@@ -755,7 +755,7 @@ class DiscoveryPageRenderer:
         ):
             return
 
-        html.icon("fixall", _("Services/Host labels to fix"))
+        html.icon("fixall", _("Service discovery details"))
 
         html.open_ul()
         self._render_fix_all_element(

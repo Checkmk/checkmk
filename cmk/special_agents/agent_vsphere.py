@@ -1737,8 +1737,10 @@ def fetch_virtual_machines(connection, hostsystems, datastores, opt):
         if "runtime.host" in vm_data:
             vm_data["runtime.host"] = hostsystems.get(vm_data["runtime.host"],
                                                       vm_data["runtime.host"])
-
-        vm_esx_host.setdefault(vm_data["runtime.host"], []).append(vm_data["name"])
+            vm_esx_host.setdefault(vm_data["runtime.host"], []).append(vm_data["name"])
+        else:
+            sys.stderr.write(
+                f"Could not find a host for vm '{vm_data['name']}'. Is this vm currently cloned?\n")
 
         transform_functions = {
             "snapshot.rootSnapshotList": eval_snapshot_list,

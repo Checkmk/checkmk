@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import warnings
 from pathlib import Path
 
 import pytest
@@ -66,7 +67,14 @@ def test_htpasswd_save(htpasswd_file: Path) -> None:
 
 
 def test_hash_password() -> None:
-    hashed_pw = htpasswd.hash_password("blä")
+    # Suppress this warning from passlib code. We can not do anything about this and it clutters our
+    # unit test log
+    # tests/unit/cmk/gui/test_userdb_htpasswd_connector.py::test_hash_password
+    # (...)/handlers/bcrypt.py:378: DeprecationWarning: NotImplemented should not be used in a boolean context
+    # if not result:
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore", category=DeprecationWarning)
+        hashed_pw = htpasswd.hash_password("blä")
     assert bcrypt.verify("blä", hashed_pw)
 
 

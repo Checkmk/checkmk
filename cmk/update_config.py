@@ -240,7 +240,7 @@ class UpdateConfig:
             # CAUTION: update_fs_used_name must be called *after* rewrite_autochecks!
             (self._update_fs_used_name, "Migrating fs_used name"),
             (self._migrate_pagetype_topics_to_ids, "Migrate pagetype topics"),
-            (self._add_missing_type_to_ldap_connections, "Migrate LDAP connections"),
+            (self._migrate_ldap_connections, "Migrate LDAP connections"),
             (self._rewrite_bi_configuration, "Rewrite BI Configuration"),
             (self._adjust_user_attributes, "Set version specific user attributes"),
             (self._rewrite_py2_inventory_data, "Rewriting inventory data"),
@@ -975,17 +975,25 @@ class UpdateConfig:
         spec["topic"] = name
         return True, True
 
-    def _add_missing_type_to_ldap_connections(self) -> None:
+    def _migrate_ldap_connections(self) -> None:
         """Each user connections needs to declare it's connection type.
 
         This is done using the "type" attribute. Previous versions did not always set this
-        attribute, which is corrected with this update method."""
+        attribute, which is corrected with this update method.
+
+        Furthermore, convert to password store compatible format"""
         connections = load_connection_config()
         if not connections:
             return
 
         for connection in connections:
             connection.setdefault("type", "ldap")
+
+            dn, password = connection["bind"]
+            if isinstance(password, tuple):
+                continue
+            connection["bind"] = (dn, ("password", password))
+
         save_connection_config(connections)
 
     def _rewrite_bi_configuration(self) -> None:

@@ -877,7 +877,6 @@ class BulkEmailContent(EmailContent):
         content_txt = ""
         content_html = ""
         parameters, contexts = context_function()
-        context = contexts[-1]
         hosts = set([])
 
         for i, c in enumerate(contexts, 1):
@@ -894,23 +893,23 @@ class BulkEmailContent(EmailContent):
         # TODO: cleanup duplicate code with SingleEmailContent
         # TODO: the context is only needed because of SMPT settings used in send_mail
         super().__init__(
-            context=context,
+            context=escaped_context,
             # Assume the same in each context
-            mailto=context["CONTACTEMAIL"],
+            mailto=escaped_context["CONTACTEMAIL"],
             # Use the single context subject in case there is only one context in the bulk
             subject=(
                 utils.get_bulk_notification_subject(contexts, hosts)
                 if len(contexts) > 1
-                else context["SUBJECT"]
+                else escaped_context["SUBJECT"]
             ),
             from_address=utils.format_address(
-                context.get("PARAMETER_FROM_DISPLAY_NAME", ""),
+                escaped_context.get("PARAMETER_FROM_DISPLAY_NAME", ""),
                 # TODO: Correct context parameter???
-                context.get("PARAMETER_FROM_ADDRESS", utils.default_from_address()),
+                escaped_context.get("PARAMETER_FROM_ADDRESS", utils.default_from_address()),
             ),
             reply_to=utils.format_address(
-                context.get("PARAMETER_REPLY_TO_DISPLAY_NAME", ""),
-                context.get("PARAMETER_REPLY_TO", ""),
+                escaped_context.get("PARAMETER_REPLY_TO_DISPLAY_NAME", ""),
+                escaped_context.get("PARAMETER_REPLY_TO", ""),
             ),
             content_txt=content_txt,
             content_html=content_html,

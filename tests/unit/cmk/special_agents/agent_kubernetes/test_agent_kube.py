@@ -55,6 +55,7 @@ def test_collect_cpu_resources():
                 containers=[
                     api.ContainerSpec(
                         name="container",
+                        image_pull_policy="Always",
                         resources=api.ContainerResources(
                             limits=api.ResourcesRequirements(
                                 cpu=0.4,

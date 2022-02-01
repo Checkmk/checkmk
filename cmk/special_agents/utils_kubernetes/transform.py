@@ -126,7 +126,11 @@ def container_resources(container: client.V1Container) -> api.ContainerResources
 
 def containers_spec(containers: Sequence[client.V1Container]) -> Sequence[api.ContainerSpec]:
     return [
-        api.ContainerSpec(name=container.name, resources=container_resources(container))
+        api.ContainerSpec(
+            name=container.name,
+            resources=container_resources(container),
+            image_pull_policy=container.image_pull_policy,
+        )
         for container in containers
     ]
 

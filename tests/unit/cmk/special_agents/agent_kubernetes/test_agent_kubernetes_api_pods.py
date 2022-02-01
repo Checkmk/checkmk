@@ -108,6 +108,7 @@ class TestPodWithNoNode(TestCase):
                 containers=[
                     client.V1Container(
                         name="non_scheduled_container",
+                        image_pull_policy="Always",
                     ),
                 ],
                 restart_policy="Always",

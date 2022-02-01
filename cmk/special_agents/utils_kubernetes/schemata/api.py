@@ -188,6 +188,7 @@ class ContainerResources(BaseModel):
 class ContainerSpec(BaseModel):
     resources: ContainerResources
     name: str
+    image_pull_policy: Literal["Always", "Never", "IfNotPresent"]
 
 
 class PodSpec(BaseModel):

@@ -61,6 +61,7 @@ from cmk.gui.plugins.openapi.restful_objects.parameters import HOST_NAME
 from cmk.gui.plugins.openapi.utils import problem
 from cmk.gui.plugins.webapi.utils import check_hostname
 from cmk.gui.watolib.host_rename import perform_rename_hosts
+from cmk.gui.watolib.hosts_and_folders import CREFolder
 from cmk.gui.watolib.utils import try_bake_agents_for_hosts
 
 
@@ -76,9 +77,10 @@ def create_host(params):
     """Create a host"""
     body = params["body"]
     host_name = body["host_name"]
+    folder: CREFolder = body["folder"]
 
     # is_cluster is defined as "cluster_hosts is not None"
-    body["folder"].create_hosts([(host_name, body["attributes"], None)])
+    folder.create_hosts([(host_name, body["attributes"], None)])
 
     host = watolib.Host.load_host(host_name)
     return _serve_host(host, False)
@@ -99,8 +101,9 @@ def create_cluster_host(params):
     All the services of the individual nodes will be collated on the cluster host."""
     body = params["body"]
     host_name = body["host_name"]
+    folder: CREFolder = body["folder"]
 
-    body["folder"].create_hosts([(host_name, body["attributes"], body["nodes"])])
+    folder.create_hosts([(host_name, body["attributes"], body["nodes"])])
 
     host = watolib.Host.load_host(host_name)
     return _serve_host(host, effective_attributes=False)
@@ -119,7 +122,7 @@ def bulk_create_hosts(params):
     entries = body["entries"]
 
     failed_hosts = []
-    folder: watolib.CREFolder
+    folder: CREFolder
     for folder, grouped_hosts in itertools.groupby(body["entries"], operator.itemgetter("folder")):
         validated_entries = []
         folder.prepare_create_hosts()
@@ -353,7 +356,7 @@ def move(params):
     host: watolib.CREHost = watolib.Host.load_host(host_name)
     _require_host_etag(host)
     current_folder = host.folder()
-    target_folder: watolib.CREFolder = params["body"]["target_folder"]
+    target_folder: CREFolder = params["body"]["target_folder"]
     if target_folder is current_folder:
         return problem(
             status=400,

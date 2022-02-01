@@ -222,7 +222,9 @@ def test_create_twice():
 
 def test_read_package_info():
     _create_simple_test_package("aaa")
-    assert _read_package_info("aaa")["version"] == "1.0"
+    package_info = _read_package_info("aaa")
+    assert package_info["version"] == "1.0"
+    assert packaging.package_num_files(package_info) == 1
 
 
 def test_read_package_info_not_existing():

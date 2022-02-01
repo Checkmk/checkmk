@@ -15,7 +15,19 @@ import time
 from contextlib import suppress
 from io import BytesIO
 from pathlib import Path
-from typing import Any, BinaryIO, Callable, cast, Dict, Final, Iterable, List, NamedTuple, Optional
+from typing import (
+    Any,
+    BinaryIO,
+    Callable,
+    cast,
+    Dict,
+    Final,
+    Iterable,
+    List,
+    NamedTuple,
+    Optional,
+    TypedDict,
+)
 
 import cmk.utils.debug
 import cmk.utils.misc
@@ -81,6 +93,8 @@ def _get_permissions(path: str) -> int:
 PackageName = str
 PartName = str
 PartPath = str
+PartFiles = List[str]
+PackageFiles = Dict[PartName, PartFiles]
 
 
 class PackagePart(NamedTuple):
@@ -89,10 +103,26 @@ class PackagePart(NamedTuple):
     path: PartPath
 
 
-PackageInfo = Dict
+# Would like to use class declaration here, but that is not compatible with the dots in the keys
+# below.
+PackageInfo = TypedDict(
+    "PackageInfo",
+    {
+        "title": str,
+        "name": str,
+        "description": str,
+        "version": str,
+        "version.packaged": str,
+        "version.min_required": str,
+        "version.usable_until": Optional[str],
+        "author": str,
+        "download_url": str,
+        "files": PackageFiles,
+    },
+)
+
+
 Packages = Dict[PackageName, PackageInfo]
-PartFiles = List[str]
-PackageFiles = Dict[PartName, PartFiles]
 PackagePartInfo = Dict[PartName, Any]
 
 package_ignored_files = {
@@ -608,7 +638,8 @@ def _normalize_daily_version(version: str) -> str:
     return version
 
 
-def get_all_package_infos() -> Packages:
+# TODO: This function will be cleaned up in one of the next commits
+def get_all_package_infos() -> Dict[str, Any]:
     packages = {}
     for package_name in installed_names():
         packages[package_name] = read_package_info(package_name)
@@ -688,8 +719,6 @@ def read_package_info(pacname: PackageName) -> Optional[PackageInfo]:
         with pkg_info_path.open("r", encoding="utf-8") as f:
             package = parse_package_info(f.read())
         package["name"] = pacname  # do not trust package content
-        num_files = sum([len(fl) for fl in package["files"].values()])
-        package["num_files"] = num_files
         return package
     except IOError:
         return None
@@ -702,6 +731,10 @@ def read_package_info(pacname: PackageName) -> Optional[PackageInfo]:
             e,
         )
         return None
+
+
+def package_num_files(package: PackageInfo) -> int:
+    return sum([len(fl) for fl in package["files"].values()])
 
 
 def _files_in_dir(part: str, directory: str, prefix: str = "") -> List[str]:

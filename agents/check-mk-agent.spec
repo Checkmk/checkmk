@@ -75,8 +75,6 @@ rm -rf $RPM_BUILD_ROOT
 /var/lib/check_mk_agent
 /var/lib/cmk-agent/scripts/cmk-agent-useradd.sh
 
-%define reload_xinetd if which xinetd >/dev/null 2>&1 ; then if pgrep -x xinetd >/dev/null ; then echo "Reloading xinetd..." ; service xinetd reload ; else echo "Starting xinetd..." ; service xinetd start ; fi ; fi
-
 %pre
 
 # migrate old xinetd service (regardless of the current super server setting)
@@ -133,10 +131,27 @@ if which systemctl >/dev/null 2>&1 && ! which xinetd >/dev/null 2>&1; then
     systemctl restart check-mk-agent.socket check_mk-async
 fi
 
-%reload_xinetd
+if which xinetd >/dev/null 2>&1 ; then
+    if pgrep -x xinetd >/dev/null; then
+        echo "Reloading xinetd..."
+        service xinetd reload
+    else
+        echo "Starting xinetd..."
+        service xinetd start
+    fi
+fi
 
 %postun
-%reload_xinetd
+
+if which xinetd >/dev/null 2>&1 ; then
+    if pgrep -x xinetd >/dev/null; then
+        echo "Reloading xinetd..."
+        service xinetd reload
+    else
+        echo "Starting xinetd..."
+        service xinetd start
+    fi
+fi
 
 %posttrans
 

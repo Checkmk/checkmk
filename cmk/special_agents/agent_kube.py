@@ -735,14 +735,12 @@ def write_pods_api_sections(
 def write_machine_sections(
     cluster: Cluster,
     machine_sections: Dict[str, str],
-    piggyback_formatter: functools.partial[str],
+    piggyback_formatter_node: Callable[[str], str],
 ) -> None:
     # make sure we only print sections for nodes currently visible via kubernetes api:
     for node in cluster.nodes():
         if sections := machine_sections.get(str(node.name)):
-            with ConditionalPiggybackSection(
-                piggyback_formatter(object_type="node", namespace_name=node.name)
-            ):
+            with ConditionalPiggybackSection(piggyback_formatter_node(node.name)):
                 sys.stdout.write(sections)
 
 
@@ -1266,12 +1264,15 @@ def main(args: Optional[List[str]] = None) -> int:
                 arguments.namespace_exclude_patterns,
             )
             piggyback_formatter = functools.partial(cluster_piggyback_formatter, arguments.cluster)
+            piggyback_formatter_node: Callable[[str], str] = functools.partial(
+                piggyback_formatter, "node"
+            )
 
             if "nodes" in arguments.monitored_objects:
                 LOGGER.info("Write nodes sections based on API data")
                 write_nodes_api_sections(
                     cluster.nodes(),
-                    piggyback_formatter=functools.partial(piggyback_formatter, "node"),
+                    piggyback_formatter=piggyback_formatter_node,
                 )
 
             if "deployments" in arguments.monitored_objects:
@@ -1370,11 +1371,7 @@ def main(args: Optional[List[str]] = None) -> int:
                 LOGGER.info("Write node sections based on performance data")
                 for node in cluster.nodes():
                     write_kube_object_performance_section(
-                        node,
-                        performance_pods,
-                        piggyback_name=piggyback_formatter(
-                            object_type="node", namespace_name=node.name
-                        ),
+                        node, performance_pods, piggyback_name=piggyback_formatter_node(node.name)
                     )
 
             if "deployments" in arguments.monitored_objects:
@@ -1408,7 +1405,7 @@ def main(args: Optional[List[str]] = None) -> int:
             if machine_sections is None:
                 return 0
 
-            write_machine_sections(cluster, machine_sections, piggyback_formatter)
+            write_machine_sections(cluster, machine_sections, piggyback_formatter_node)
 
     except Exception as e:
         if arguments.debug:

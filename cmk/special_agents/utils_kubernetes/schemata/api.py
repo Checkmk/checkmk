@@ -185,10 +185,13 @@ class ContainerResources(BaseModel):
     requests: ResourcesRequirements
 
 
+ImagePullPolicy = Literal["Always", "Never", "IfNotPresent"]
+
+
 class ContainerSpec(BaseModel):
     resources: ContainerResources
     name: str
-    image_pull_policy: Literal["Always", "Never", "IfNotPresent"]
+    image_pull_policy: ImagePullPolicy
 
 
 class PodSpec(BaseModel):

@@ -127,6 +127,17 @@ class PodContainers(BaseModel):
     containers: Mapping[str, api.ContainerInfo]
 
 
+class ContainerSpec(BaseModel):
+    name: ContainerName
+    image_pull_policy: api.ImagePullPolicy
+
+
+class ContainerSpecs(BaseModel):
+    """section: kube_pod_container_specs_v1"""
+
+    containers: Mapping[ContainerName, ContainerSpec]
+
+
 class ReadyCount(BaseModel):
     ready: int = 0
     not_ready: int = 0

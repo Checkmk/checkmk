@@ -291,6 +291,17 @@ class Pod:
             return None
         return section.PodContainers(containers=self.init_containers)
 
+    def container_specs(self) -> section.ContainerSpecs:
+        return section.ContainerSpecs(
+            containers={
+                container_spec.name: section.ContainerSpec(
+                    name=container_spec.name,
+                    image_pull_policy=container_spec.image_pull_policy,
+                )
+                for container_spec in self.spec.containers
+            }
+        )
+
     def start_time(self) -> Optional[api.StartTime]:
         if self.status.start_time is None:
             return None
@@ -709,6 +720,7 @@ def pod_api_based_checkmk_sections(pod: Pod):
     sections = (
         ("k8s_pod_conditions_v1", pod.conditions),
         ("kube_pod_containers_v1", pod.containers_infos),
+        ("kube_pod_container_specs_v1", pod.container_specs),
         ("kube_pod_init_containers_v1", pod.init_containers_infos),
         ("kube_start_time_v1", pod.start_time),
         ("kube_pod_lifecycle_v1", pod.lifecycle_phase),

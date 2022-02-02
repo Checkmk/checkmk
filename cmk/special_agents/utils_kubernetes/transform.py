@@ -145,6 +145,9 @@ def pod_spec(pod: client.V1Pod) -> api.PodSpec:
         dns_policy=pod.spec.dns_policy,
         restart_policy=pod.spec.restart_policy,
         containers=containers_spec(pod.spec.containers),
+        init_containers=containers_spec(
+            pod.spec.init_containers if pod.spec.init_containers is not None else []
+        ),
     )
 
 

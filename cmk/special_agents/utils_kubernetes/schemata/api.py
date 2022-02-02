@@ -200,6 +200,7 @@ class PodSpec(BaseModel):
     dns_policy: Optional[str] = None
     restart_policy: RestartPolicy
     containers: Sequence[ContainerSpec]
+    init_containers: Sequence[ContainerSpec]
 
 
 class ContainerRunningState(BaseModel):

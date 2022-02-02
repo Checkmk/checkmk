@@ -34,7 +34,7 @@ def default_pod(
         )
         if "status" not in attributes
         else attributes["status"],
-        spec=api.PodSpec(restart_policy="Always", containers=[])
+        spec=api.PodSpec(restart_policy="Always", containers=[], init_containers=[])
         if "spec" not in attributes
         else attributes["spec"],
         containers={} if "containers" not in attributes else attributes["containers"],
@@ -64,6 +64,7 @@ def test_collect_cpu_resources():
                         ),
                     )
                 ],
+                init_containers=[],
             )
         },
     )

@@ -299,15 +299,13 @@ def _get_history(
         if current.timestamp is None:
             continue
 
-        delta_cache_path = Path(
-            cmk.utils.paths.inventory_delta_cache_dir,
+        cached_delta_tree_loader = _CachedDeltaTreeLoader(
             hostname,
-            "%s_%s" % (previous.timestamp, current.timestamp),
+            previous.timestamp,
+            current.timestamp,
         )
 
-        if (
-            cached_history_entry := _get_cached_history_entry(delta_cache_path, current.timestamp)
-        ) is not None:
+        if (cached_history_entry := cached_delta_tree_loader.get_cached_entry()) is not None:
             history.append(cached_history_entry)
             continue
 
@@ -319,11 +317,8 @@ def _get_history(
             continue
 
         if (
-            history_entry := _calculate_or_store_history_entry(
-                delta_cache_path,
-                previous_tree,
-                current_tree,
-                current.timestamp,
+            history_entry := cached_delta_tree_loader.get_calculated_or_store_entry(
+                previous_tree, current_tree
             )
         ) is not None:
             history.append(history_entry)
@@ -396,40 +391,52 @@ class _CachedTreeLoader:
         return tree
 
 
-def _get_cached_history_entry(cached_delta_path: Path, timestamp: int) -> Optional[HistoryEntry]:
-    try:
-        cached_data = store.load_object_from_file(cached_delta_path, default=None)
-    except MKGeneralException:
-        return None
+@dataclass(frozen=True)
+class _CachedDeltaTreeLoader:
+    hostname: HostName
+    previous_timestamp: Optional[int]
+    current_timestamp: int
 
-    if cached_data is None:
-        return None
-
-    new, changed, removed, delta_tree_data = cached_data
-    delta_tree = StructuredDataNode.deserialize(delta_tree_data)
-    return HistoryEntry(timestamp, new, changed, removed, delta_tree)
-
-
-def _calculate_or_store_history_entry(
-    cached_delta_path: Path,
-    previous_tree: StructuredDataNode,
-    current_tree: StructuredDataNode,
-    timestamp: int,
-) -> Optional[HistoryEntry]:
-    delta_result = current_tree.compare_with(previous_tree)
-    new, changed, removed, delta_tree = (
-        delta_result.counter["new"],
-        delta_result.counter["changed"],
-        delta_result.counter["removed"],
-        delta_result.delta,
-    )
-    if new or changed or removed:
-        store.save_text_to_file(
-            cached_delta_path,
-            repr((new, changed, removed, delta_tree.serialize())),
+    @property
+    def _path(self) -> Path:
+        return Path(
+            cmk.utils.paths.inventory_delta_cache_dir,
+            self.hostname,
+            "%s_%s" % (self.previous_timestamp, self.current_timestamp),
         )
-        return HistoryEntry(timestamp, new, changed, removed, delta_tree)
-    return None
+
+    def get_cached_entry(self) -> Optional[HistoryEntry]:
+        try:
+            cached_data = store.load_object_from_file(self._path, default=None)
+        except MKGeneralException:
+            return None
+
+        if cached_data is None:
+            return None
+
+        new, changed, removed, delta_tree_data = cached_data
+        delta_tree = StructuredDataNode.deserialize(delta_tree_data)
+        return HistoryEntry(self.current_timestamp, new, changed, removed, delta_tree)
+
+    def get_calculated_or_store_entry(
+        self,
+        previous_tree: StructuredDataNode,
+        current_tree: StructuredDataNode,
+    ) -> Optional[HistoryEntry]:
+        delta_result = current_tree.compare_with(previous_tree)
+        new, changed, removed, delta_tree = (
+            delta_result.counter["new"],
+            delta_result.counter["changed"],
+            delta_result.counter["removed"],
+            delta_result.delta,
+        )
+        if new or changed or removed:
+            store.save_text_to_file(
+                self._path,
+                repr((new, changed, removed, delta_tree.serialize())),
+            )
+            return HistoryEntry(self.current_timestamp, new, changed, removed, delta_tree)
+        return None
 
 
 # .

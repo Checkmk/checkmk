@@ -233,7 +233,6 @@ $(DISTNAME).tar.gz: omd/packages/mk-livestatus/mk-livestatus-$(VERSION).tar.gz .
 		windows/python-3.cab \
 		windows/python-3.4.cab \
 		windows/check_mk.user.yml \
-		windows/cmk-agent-ctl.exe \
 		windows/CONTENTS \
 		windows/mrpe \
 		windows/plugins

@@ -30,7 +30,8 @@ RoleName = str
 CSSSpec = Union[None, str, List[str], List[Optional[str]], str]
 ChoiceText = str
 ChoiceId = Optional[str]
-Choices = List[Tuple[ChoiceId, ChoiceText]]
+Choice = Tuple[ChoiceId, ChoiceText]
+Choices = List[Choice]
 ChoiceGroup = NamedTuple("ChoiceGroup", [
     ("title", Text),
     ("choices", Choices),

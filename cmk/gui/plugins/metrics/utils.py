@@ -50,12 +50,13 @@ from cmk.gui.utils.html import HTML
 from cmk.gui.globals import g, html
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
-from cmk.gui.type_defs import Choices, RenderableRecipe, Row
+from cmk.gui.type_defs import Choice, Choices, RenderableRecipe, Row, VisualContext
 from cmk.gui.valuespec import (
     DropdownChoiceValue,
     DropdownChoiceWithHostAndServiceHints,
     autocompleter_registry,
 )
+from cmk.gui.plugins.visuals.utils import livestatus_query_bare
 
 LegacyPerfometer = Tuple[str, Any]
 Perfometer = Dict[str, Any]
@@ -1126,6 +1127,51 @@ def metric_choices(check_command: str, perfvars: Tuple[str, ...]) -> Iterator[Tu
         yield name, mi.get("title", name.title())
 
 
+# Sneak CMK 2.1 autocompleter endpoints to make the 2.0 connector usable on CMK 2.0 too.
+def metrics_of_query(context: VisualContext,) -> Iterator[Choice]:
+    # Fetch host data with the *same* query. This saves one round trip. And head
+    # host has at least one service
+    columns = [
+        "service_description",
+        "service_check_command",
+        "service_perf_data",
+        "service_metrics",
+        "host_check_command",
+        "host_metrics",
+    ]
+
+    row = {}
+    for row in livestatus_query_bare("service", context, columns):
+        parsed_perf_data, check_command = parse_perf_data(row["service_perf_data"],
+                                                          row["service_check_command"])
+        known_metrics = set([perf[0] for perf in parsed_perf_data] + row["service_metrics"])
+        yield from metric_choices(str(check_command), tuple(map(str, known_metrics)))
+
+    if row.get("host_check_command"):
+        yield from metric_choices(str(row["host_check_command"]),
+                                  tuple(map(str, row["host_metrics"])))
+
+
+def registered_metrics() -> Iterator[Choice]:
+    for metric_id, metric_detail in metric_info.items():
+        yield metric_id, str(metric_detail["title"])
+
+
+def metrics_autocompleter(value: str, params: Dict) -> Choices:
+    context = params.get("context", {})
+    host = context.get("host", {}).get("host", "")
+    service = context.get("service", {}).get("service", "")
+    if params.get("strict") == "withSource" and not all((host, service)):
+        return []
+
+    if context:
+        metrics = set(metrics_of_query(context))
+    else:
+        metrics = set(registered_metrics())
+
+    return sorted((v for v in metrics if value.lower() in v[1].lower()), key=lambda a: a[1].lower())
+
+
 @autocompleter_registry.register
 class MetricName(DropdownChoiceWithHostAndServiceHints):
     """Factory of a Dropdown menu from all known metric names"""
@@ -1167,6 +1213,10 @@ class MetricName(DropdownChoiceWithHostAndServiceHints):
     def autocomplete_choices(cls, value: str, params: Dict) -> Choices:
         """Return the matching list of dropdown choices
         Called by the webservice with the current input field value and the completions_params to get the list of choices"""
+        # Sneak CMK 2.1 autocompleter endpoints to make the 2.0 connector usable on CMK 2.0 too.
+        if "context" in params:
+            return metrics_autocompleter(value, params)
+
         def metrics():
             options = set(find_host_services(params.get("host", ""), params.get("service", "")))
             for _, check_command, metrics in options:

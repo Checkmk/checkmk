@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Tuple
+from typing import Tuple, Dict
 
 import livestatus
 
@@ -24,8 +24,9 @@ from cmk.gui.plugins.metrics.utils import (
     get_graph_template_choices,
 )
 from cmk.gui.plugins.metrics.graph_images import graph_recipes_for_api_request
-from cmk.gui.plugins.views.utils import (
-    data_source_registry,)
+from cmk.gui.plugins.views.utils import data_source_registry
+from cmk.gui.type_defs import Choices
+from cmk.gui.valuespec import AjaxDropdownChoice, autocompleter_registry
 
 
 @api_call_collection_registry.register
@@ -204,3 +205,65 @@ class APICallGrafanaConnector(APICallCollection):
                                                     av_rawdata=av_rawdata,
                                                     avoptions=avoptions)
         return av_data
+
+
+# Sneak CMK 2.1 autocompleter endpoints to make the 2.0 connector usable on CMK 2.0 too.
+@autocompleter_registry.register
+class AllGroupsCompleter(AjaxDropdownChoice):
+    ident = "allgroups"
+
+    @classmethod
+    def autocomplete_choices(cls, value: str, params: Dict) -> Choices:
+        group_type = params["group_type"]
+        # Have something without ifs
+        group_type = ("contact" if "_contact" in group_type else
+                      "host" if "host" in group_type else "service")
+        choices: Choices = sorted(
+            (v for v in sites.all_groups(group_type) if value.lower() in v[1].lower()),
+            key=lambda a: a[1].lower(),
+        )
+        # This part should not exists as the optional(not enforce) would better be not having the filter at all
+        if not params.get("strict"):
+            empty_choice: Choices = [("", "")]
+            choices = empty_choice + choices
+        return choices
+
+
+@autocompleter_registry.register
+class SitesCompleter(AjaxDropdownChoice):
+    ident = "sites"
+
+    @classmethod
+    def autocomplete_choices(cls, value: str, params: Dict) -> Choices:
+        return [v for v in config.sorted_sites() if value.lower() in v[1].lower()]
+
+
+@autocompleter_registry.register
+class TagGroupsCompleter(AjaxDropdownChoice):
+    ident = "tag_groups"
+
+    @classmethod
+    def autocomplete_choices(cls, value: str, params: Dict) -> Choices:
+
+        return sorted(
+            (v for v in config.tags.get_tag_group_choices() if value.lower() in v[1].lower()),
+            key=lambda a: a[1].lower(),
+        )
+
+
+@autocompleter_registry.register
+class TagGroupsOptCompleter(AjaxDropdownChoice):
+    ident = "tag_groups_opt"
+
+    @classmethod
+    def autocomplete_choices(cls, value: str, params: Dict) -> Choices:
+        grouped: Choices = []
+
+        for tag_group in config.tags.tag_groups:
+            if tag_group.id == params["group_id"]:
+                grouped.append(("", ""))
+                for grouped_tag in tag_group.tags:
+                    tag_id = "" if grouped_tag.id is None else grouped_tag.id
+                    if value.lower() in grouped_tag.title:
+                        grouped.append((tag_id, grouped_tag.title))
+        return grouped

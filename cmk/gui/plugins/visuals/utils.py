@@ -9,7 +9,7 @@
 
 import abc
 import time
-from typing import Any, Dict, Iterable, List, Optional, Tuple, Union, Type, Iterator
+from typing import Any, Dict, Iterable, List, Optional, Tuple, Union, Type, Iterator, Container, Literal
 
 from livestatus import SiteId
 
@@ -501,3 +501,62 @@ def get_only_sites_from_context(context: VisualContext) -> Optional[List[SiteId]
             return [SiteId(value)]
 
     return None
+
+
+# Sneak CMK 2.1 autocompleter endpoints to make the 2.0 connector usable on CMK 2.0 too.
+def get_livestatus_filter_headers(context: VisualContext, filters: Iterable[Filter]):
+    """Prepare Filter headers for Livestatus"""
+    with html.stashed_vars():
+        for filter_vars in context.values():
+            if not isinstance(filter_vars, dict):
+                continue
+            for varname, value in filter_vars.items():
+                html.request.set_var(varname, value)
+        for filt in filters:
+            if header := filt.filter(None):
+                yield header
+
+
+def collect_filters(info_keys: Container[str]) -> Iterable[Filter]:
+    for filter_obj in filter_registry.values():
+        if filter_obj.info in info_keys and filter_obj.available():
+            yield filter_obj
+
+
+def livestatus_query_bare_string(
+    table: Literal["host", "service"],
+    context: VisualContext,
+    columns: Iterable[str],
+    cache: Optional[Literal["reload"]] = None,
+) -> str:
+    """Return for the service table filtered by context the given columns.
+    Optional cache reload. Return with site info in"""
+    infos = {"host": ["host"], "service": ["host", "service"]}.get(table, [])
+    filters = collect_filters(infos)
+    filterheaders = "".join(get_livestatus_filter_headers(context, filters))
+
+    # optimization: avoid query with unconstrained result
+    if not filterheaders and not get_only_sites_from_context(context):
+        return ""
+    query = ["GET %ss" % table, "Columns: %s" % " ".join(columns), filterheaders]
+    if cache:
+        query.insert(1, f"Cache: {cache}")
+
+    return "\n".join(query)
+
+
+def livestatus_query_bare(
+    table: Literal["host", "service"],
+    context: VisualContext,
+    columns: List[str],
+    cache: Optional[Literal["reload"]] = None,
+) -> List[Dict[str, Any]]:
+    """Return for the service table filtered by context the given columns.
+    Optional cache reload. Return with site info in"""
+    if query := livestatus_query_bare_string(table, context, columns, cache):
+        selected_sites = get_only_sites_from_context(context)
+        res_columns = ["site"] + columns
+        with sites.only_sites(selected_sites), sites.prepend_site():
+            return [dict(zip(res_columns, row)) for row in sites.live().query(query)]
+
+    return []

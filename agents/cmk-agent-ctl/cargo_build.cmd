@@ -29,6 +29,8 @@ set target=i686-pc-windows-msvc
 set exe_name=cmk-agent-ctl.exe
 set exe=target\%target%\release\%exe_name%
 
+del %arte%\%exe_name%
+
 powershell Write-Host "Building Executables" -Foreground White
 cargo build --release --target %target%
 if not %errorlevel% == 0 powershell Write-Host "Failed cargo build" -Foreground Red && exit /b 8

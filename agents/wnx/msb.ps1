@@ -12,9 +12,11 @@ if( "$make_exe" -eq "" ){
         return 1
 }
 
-$sln = (Get-Item -Path ".\").FullName + "\wamain_build.sln"  # 'c:\z\m\check_mk\agents\wnx\wamain.sln'
+$cargo_build = (Get-Item -Path ".\").FullName + "\scripts\call_cargo_build.cmd"
+$sln = (Get-Item -Path ".\").FullName + "\wamain_build.sln"  # 'repo\check_mk\agents\wnx\wamain.sln'
 $makefile = (Get-Item -Path ".\").FullName + "\Makefile" 
 $host_dir = (Get-Item -Path ".\").FullName
+$cmk_agent_ctl_dir = (Get-Item -Path ".\").FullName + "\..\cmk-agent-ctl"
 # string below is used to quckly switch to the Powershell ISE, do not delete it
 # $sln = 'c:\z\m\check_mk\agents\wnx\wamain.sln'
 
@@ -79,8 +81,23 @@ else {
 }
 }
 
+$cargo_b = {
+& $using:cargo_build $args
+if ($LASTEXITCODE -ne 0) {
+    Write-Host "Error: " $LASTEXITCODE -foreground Red
+    throw "Failed cargo"
+}
+else {
+    Write-Host "Success cargo build!" -foreground Green
+}
+}
+
 # disabled as unstable
 # $j_make = start-job -Init ([ScriptBlock]::Create("Set-Location '$pwd'")) -scriptblock $mk -argumentlist "-w", "-j", "2", "frozen_binaries"
+
+$j_r = @()
+Write-Host "Starting Rust Job" -foreground Blue
+$j_r += start-job -scriptblock $cargo_b -argumentlist "$cmk_agent_ctl_dir"
 
 
 # Exe 32 & 64 bits
@@ -129,6 +146,17 @@ Write-Host "Jobs ready" -foreground Blue
 foreach ($job in $j_w) {
     RcvJob $job $job.Name
 }
+
+Write-Host "Job rust waiting... This may take few minutes" -foreground White
+do {
+    Wait-Job -Job $j_r -Timeout 5 | Out-Null
+} while(RunningCount($j_r) -eq 0 )
+
+Write-Host "Job rust ready" -foreground Blue
+foreach ($job in $j_r) {
+    RcvJob $job "rust"
+}
+
 
 # disabled as unstable ###############
 # Wait-Job -Job $j_make | Out-Null

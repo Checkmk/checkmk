@@ -24,5 +24,5 @@ register.check_plugin(
     discovery_function=discovery_kube_pod_resources_with_capacity,
     check_function=check_kube_pod_resources_with_capacity,
     check_default_parameters=_DEFAULT_PARAMS,
-    check_ruleset_name="kube_pod_resources_with_capacity",
+    check_ruleset_name="kube_pod_resources",
 )

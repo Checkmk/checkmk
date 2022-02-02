@@ -307,6 +307,19 @@ program_start num_hosts num_services core_pid'
 
         This is desirable in tests, to isolate the individual tests from one another. It is not
         recommended using the global test-data for all the tests.
+
+        Args:
+            table_name:
+                The name of the Livestatus table.
+
+            table_data:
+                A list of dicts where each dict represents a row of the table. The keys of the
+                dicts represent the columns of the Livestatus table.
+
+            site:
+                Optionally a site where the table should be added. NOTE: When this is not given,
+                it defaults to the FIRST SITE configured.
+
         Examples:
 
             If a table is set, the table is replaced.
@@ -340,7 +353,7 @@ program_start num_hosts num_services core_pid'
         query: Union[str, List[str]],
         match_type: MatchType = "strict",
         force_pos: Optional[int] = None,
-    ):
+    ) -> MockLiveStatusConnection:
         """Add a LiveStatus query to be expected by this class.
 
         This method is chainable, as it returns the instance again.

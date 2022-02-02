@@ -97,7 +97,7 @@ REQUIRED_ARGUMENTS: Dict[str, List[str]] = {
         "TOKEN",
         "--api-server-endpoint",
         "ENDPOINT",
-        "--cluster-agent-endpoint",
+        "--cluster-collector-endpoint",
         "ENDPOINT",
     ],
     "agent_prometheus": [],

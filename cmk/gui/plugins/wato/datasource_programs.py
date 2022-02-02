@@ -743,6 +743,17 @@ rulespec_registry.register(
 )
 
 
+def _ssl_verification():
+    return Alternative(
+        title=_("SSL certificate verification"),
+        elements=[
+            FixedValue(True, title=_("Verify the certificate"), totext=""),
+            FixedValue(False, title=_("Ignore certificate errors (unsecure)"), totext=""),
+        ],
+        default_value=False,
+    )
+
+
 def _valuespec_special_agents_kube():
     return Dictionary(
         elements=[
@@ -759,114 +770,56 @@ def _valuespec_special_agents_kube():
                 ),
             ),
             (
+                "token",
+                IndividualOrStoredPassword(
+                    title=_("Token"),
+                    allow_empty=False,
+                ),
+            ),
+            (
                 "kubernetes-api-server",
                 Dictionary(
                     elements=[
                         (
                             "endpoint",
-                            CascadingDropdown(
-                                choices=[
-                                    (
-                                        "hostname",
-                                        _("Hostname"),
-                                        _kube_connection_elements(),
-                                    ),
-                                    (
-                                        "ipaddress",
-                                        _("IP address"),
-                                        _kube_connection_elements(),
-                                    ),
-                                    (
-                                        "url-custom",
-                                        _("Custom URL"),
-                                        TextInput(
-                                            allow_empty=False,
-                                            size=80,
-                                        ),
-                                    ),
-                                ],
-                                orientation="horizontal",
-                                title=_("Server endpoint"),
+                            TextInput(
+                                title=_("Endpoint"),
+                                allow_empty=False,
+                                default_value="https://<control plane ip>:443",
                                 help=_(
-                                    'The URL that will be contacted for Kubernetes API calls. If the "Hostname" '
-                                    'or the "IP Address" options are selected, the DNS hostname or IP address and '
-                                    "a secure protocol (HTTPS) are used."
+                                    "The full URL to the Kubernetes API server including the "
+                                    "protocol (http or https) and the port."
                                 ),
                             ),
                         ),
-                        (
-                            "token",
-                            IndividualOrStoredPassword(
-                                title=_("Token"),
-                                allow_empty=False,
-                            ),
-                        ),
+                        ("verify-cert", _ssl_verification()),
                     ],
+                    required_keys=["endpoint", "verify-cert"],
                     title=_("API server connection"),
-                    optional_keys=["token"],
                 ),
             ),
             (
-                "cluster-agent",  # TODO: adjust help texts depending on ingress inclusion
+                "cluster-collector",  # TODO: adjust help texts depending on ingress inclusion
                 Dictionary(
                     elements=[
                         (
-                            "node-ip",
+                            "endpoint",
                             TextInput(
-                                title=_("IP address of Kubernetes node"),
+                                title=_("Collector NodePort / Ingress endpoint"),
                                 allow_empty=False,
+                                default_value="https://<service url>:30035",
                                 help=_(
-                                    "The IP address of any Kubernetes cluster node where a "
-                                    "kubelet is present. Valid nodes can be usually retrieved "
-                                    "using the 'kubectl get nodes -o wide' command."
+                                    "The full URL to the Cluster Collector service including "
+                                    "the protocol (http or https) and the port. Depending on "
+                                    "the deployed configuration of the service this can "
+                                    "either be the NodePort or the Ingress endpoint."
                                 ),
                             ),
                         ),
-                        (
-                            "connection-port",
-                            Integer(
-                                title=_("Port of Kubernetes' checkmk-external service"),
-                                default_value=30035,
-                                help=_("The service port of the running checkmk-external service"),
-                            ),
-                        ),
-                        (
-                            "protocol",
-                            DropdownChoice(
-                                title=_("Protocol"),
-                                choices=[
-                                    ("http", "HTTP"),
-                                    ("https", "HTTPS"),
-                                ],
-                                default_value="https",
-                                help=_(
-                                    "The option should match the configured protocol of the "
-                                    "cluster agent."
-                                ),
-                            ),
-                        ),
+                        ("verify-cert", _ssl_verification()),
                     ],
-                    title=_("Cluster agent connection"),
-                    help=_(
-                        "The Checkmk Kubernetes monitoring setup should be deployed in your "
-                        "Kubernetes cluster. Checkmk needs some additional information in order "
-                        "to query the deployed agent. A guide on how to retrieve this information "
-                        "can be found here https://github.com/tribe29/kubernetes/tree/main/kubernetes-agent"
-                    ),
-                    optional_keys=[],
-                ),
-            ),
-            (
-                "verify-cert",
-                Alternative(
-                    title=_("SSL certificate verification"),
-                    elements=[
-                        FixedValue(True, title=_("Verify the certificate"), totext=""),
-                        FixedValue(
-                            False, title=_("Ignore certificate errors (unsecure)"), totext=""
-                        ),
-                    ],
-                    default_value=False,
+                    required_keys=["endpoint", "verify-cert"],
+                    title=_("Get usage data via Checkmk Cluster Collector"),
                 ),
             ),
             (
@@ -938,50 +891,9 @@ def _valuespec_special_agents_kube():
                 ),
             ),
         ],
-        optional_keys=["namespaces", "cluster-agent"],
-        default_keys=["cluster-agent"],
+        optional_keys=["namespaces", "cluster-collector"],
+        default_keys=["cluster-collector"],
         title=_("Kubernetes"),
-    )
-
-
-def _kube_connection_elements():
-    return Dictionary(
-        elements=[
-            (
-                "port",
-                Integer(
-                    title=_("Port"),
-                    help=_("If no port is given, a default value of 6443 will be used."),
-                    default_value=6443,
-                ),
-            ),
-            (
-                "path-prefix",
-                TextInput(
-                    title=_("Custom path prefix"),
-                    help=_(
-                        "Specifies a URL path prefix, which is prepended to API calls "
-                        "to the Kubernetes API. This is a useful option for Rancher "
-                        "installations (more information can be found in the manual). "
-                        "If this option is not relevant for your installation, "
-                        "please leave it unchecked."
-                    ),
-                    allow_empty=False,
-                ),
-            ),
-            (
-                "protocol",
-                DropdownChoice(
-                    title=_("Protocol"),
-                    choices=[
-                        ("http", "HTTP"),
-                        ("https", "HTTPS"),
-                    ],
-                    default_value="https",
-                ),
-            ),
-        ],
-        optional_keys=["port", "path-prefix"],
     )
 
 

@@ -155,11 +155,12 @@ def parse_arguments(args: List[str]) -> argparse.Namespace:
         "--api-server-endpoint", required=True, help="API server endpoint for Kubernetes API calls"
     )
     p.add_argument(
-        "--cluster-agent-endpoint",
+        "--cluster-collector-endpoint",
         help="Endpoint to query metrics from Kubernetes cluster agent",
     )
 
-    p.add_argument("--verify-cert", action="store_true", help="Verify certificate")
+    p.add_argument("--verify-cert-api", action="store_true", help="Verify certificate")
+    p.add_argument("--verify-cert-collector", action="store_true", help="Verify certificate")
     namespaces = p.add_mutually_exclusive_group()
     namespaces.add_argument(
         "--namespace-include-patterns",
@@ -1005,7 +1006,7 @@ def make_api_client(arguments: argparse.Namespace) -> client.ApiClient:
         config.api_key_prefix["authorization"] = "Bearer"
         config.api_key["authorization"] = arguments.token
 
-    if arguments.verify_cert:
+    if arguments.verify_cert_api:
         config.ssl_ca_cert = os.environ.get("REQUESTS_CA_BUNDLE")
     else:
         logging.info("Disabling SSL certificate verification")
@@ -1419,7 +1420,7 @@ def main(args: Optional[List[str]] = None) -> int:
                 )
 
             # Skip machine & container sections when cluster agent endpoint not configured
-            if arguments.cluster_agent_endpoint is None:
+            if arguments.cluster_collector_endpoint is None:
                 return 0
 
             # TODO: restructure the code to better support the log service
@@ -1437,9 +1438,9 @@ def main(args: Optional[List[str]] = None) -> int:
             container_metrics: Optional[Sequence[RawMetrics]]
             connection_logs, container_metrics = request_cluster_collector(
                 "Container Metrics",
-                f"{arguments.cluster_agent_endpoint}/container_metrics",
+                f"{arguments.cluster_collector_endpoint}/container_metrics",
                 arguments.token,
-                arguments.verify_cert,
+                arguments.verify_cert_collector,
                 cluster_collector_timeout,
                 arguments.debug,
             )
@@ -1486,9 +1487,9 @@ def main(args: Optional[List[str]] = None) -> int:
             machine_sections: Optional[Dict[str, str]]
             connection_logs, machine_sections = request_cluster_collector(
                 "Machine Metrics",
-                f"{arguments.cluster_agent_endpoint}/machine_sections",
+                f"{arguments.cluster_collector_endpoint}/machine_sections",
                 arguments.token,
-                arguments.verify_cert,
+                arguments.verify_cert_collector,
                 cluster_collector_timeout,
             )
             collector_logs.extend(connection_logs)

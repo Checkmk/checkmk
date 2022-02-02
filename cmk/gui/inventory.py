@@ -12,6 +12,7 @@ import os
 import shutil
 import time
 import xml.dom.minidom  # type: ignore[import]
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Callable, Dict, List, Literal, NamedTuple, Optional, Sequence, Set, Tuple, Union
 
@@ -290,19 +291,10 @@ def _get_history(
     except FilterTreePathsError:
         return [], []
 
-    tree_lookup: Dict[Path, StructuredDataNode] = {}
-
-    def _get_tree(filepath: Path) -> StructuredDataNode:
-        if filepath == _DEFAULT_PATH_TO_TREE:
-            return StructuredDataNode()
-
-        if filepath in tree_lookup:
-            return tree_lookup[filepath]
-
-        return tree_lookup.setdefault(filepath, _load_tree_from_file(filepath))
-
+    cached_tree_loader = _CachedTreeLoader()
     corrupted_history_files: Set[Path] = set()
     history: List[HistoryEntry] = []
+
     for previous, current in _get_pairs(filtered_tree_paths):
         if current.timestamp is None:
             continue
@@ -320,8 +312,8 @@ def _get_history(
             continue
 
         try:
-            previous_tree = _get_tree(previous.path)
-            current_tree = _get_tree(current.path)
+            previous_tree = cached_tree_loader.get_tree(previous.path)
+            current_tree = cached_tree_loader.get_tree(current.path)
         except LoadStructuredDataError:
             corrupted_history_files.add(current.short)
             continue
@@ -378,17 +370,30 @@ def _get_pairs(filtered_tree_paths: FilteredTreePaths) -> Sequence[Tuple[TreePat
     return pairs
 
 
-def _load_tree_from_file(filepath: Path) -> StructuredDataNode:
-    try:
-        tree = _filter_tree(StructuredDataStore.load_file(filepath))
-    except FileNotFoundError:
-        raise LoadStructuredDataError()
+@dataclass(frozen=True)
+class _CachedTreeLoader:
+    _lookup: Dict[Path, StructuredDataNode] = field(default_factory=dict)
 
-    if tree is None or tree.is_empty():
-        # load_file may return an empty tree
-        raise LoadStructuredDataError()
+    def get_tree(self, filepath: Path) -> StructuredDataNode:
+        if filepath == _DEFAULT_PATH_TO_TREE:
+            return StructuredDataNode()
 
-    return tree
+        if filepath in self._lookup:
+            return self._lookup[filepath]
+
+        return self._lookup.setdefault(filepath, self._load_tree_from_file(filepath))
+
+    def _load_tree_from_file(self, filepath: Path) -> StructuredDataNode:
+        try:
+            tree = _filter_tree(StructuredDataStore.load_file(filepath))
+        except FileNotFoundError:
+            raise LoadStructuredDataError()
+
+        if tree is None or tree.is_empty():
+            # load_file may return an empty tree
+            raise LoadStructuredDataError()
+
+        return tree
 
 
 def _get_cached_history_entry(cached_delta_path: Path, timestamp: int) -> Optional[HistoryEntry]:

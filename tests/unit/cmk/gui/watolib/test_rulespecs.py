@@ -1493,7 +1493,7 @@ def test_rulespec_get_host_groups():
             "agents/windows_modules",
         ]
 
-    group_names = watolib.rulespec_group_registry.get_host_rulespec_group_names()
+    group_names = watolib.rulespec_group_registry.get_host_rulespec_group_names(True)
     assert sorted(group_names) == sorted(expected_rulespec_host_groups)
 
 

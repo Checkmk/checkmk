@@ -781,3 +781,9 @@ def test_rewrite_password_store_migrate(uc: update_config.UpdateConfig) -> None:
 
     # Once we have the new format, a second execution must not fail
     uc._rewrite_password_store()
+
+
+def test_rewrite_password_store_skip_when_missing(uc: update_config.UpdateConfig) -> None:
+    assert not password_store.password_store_path().exists()
+    uc._rewrite_password_store()
+    assert not password_store.password_store_path().exists()

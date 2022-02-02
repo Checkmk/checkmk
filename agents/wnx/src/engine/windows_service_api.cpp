@@ -1179,8 +1179,6 @@ int ServiceAsService(
 
     SelfConfigure();
 
-    ProcessFirewallConfiguration(app_name);
-
     // infinite loop to protect from exception in future SEH too
     while (true) {
         // we can exit from the service if service set to disabled

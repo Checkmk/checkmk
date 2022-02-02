@@ -317,13 +317,14 @@ TEST(CmaSrv, FirewallIntegration) {
     auto cfg = cma::cfg::GetLoadedConfig();
     constexpr std::wstring_view app_name = L"test.exe.exe";
 
+    auto fw_node = cfg::GetNode(cfg::groups::kSystem, cfg::vars::kFirewall);
+    auto value = cfg::GetVal(fw_node, cfg::vars::kFirewallMode, std::string{});
+    EXPECT_EQ(value, cfg::values::kModeConfigure);
+
     // remove all from the Firewall
     SetCfgMode(cfg, cfg::values::kModeRemove);
-
-    auto fw_node = cfg::GetNode(cfg::groups::kSystem, cfg::vars::kFirewall);
-    auto value =
-        cfg::GetVal(fw_node, cfg::vars::kFirewallMode, std::string(""));
-    ASSERT_TRUE(value == cfg::values::kModeRemove);
+    value = cfg::GetVal(fw_node, cfg::vars::kFirewallMode, std::string{});
+    EXPECT_EQ(value, cfg::values::kModeRemove);
     ProcessFirewallConfiguration(app_name);
 
     SetCfgMode(cfg, cfg::values::kModeConfigure, false);

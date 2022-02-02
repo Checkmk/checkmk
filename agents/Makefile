@@ -12,7 +12,6 @@ RPM_TOPDIR := $$(pwd)/.rpm.topdir
 RPM_BUILDROOT := $$(pwd)/.rpm.buildroot
 RPM_PACKAGE := $(DISTNAME)-1.noarch.rpm
 DEB_PACKAGE := check-mk-agent_$(VERSION)-1_all.deb
-CONTROLLER := linux/cmk-agent-ctl
 
 usage:
 	@echo "make waitmax       -- compile waitmax.c"
@@ -20,7 +19,7 @@ usage:
 	@echo "make rpm           -- create RPM package of Linux agent"
 	@echo "make deb           -- create DEB package of Linux agent"
 	@echo "make packages      -- create RPM and DEB package of Linux agent"
-	@echo "make cmk-agent-ctl -- build the agent controller binary"
+	@echo "make controller    -- build the agent controller binary"
 
 waitmax: waitmax.c
 	@if type diet >/dev/null ; then \
@@ -50,9 +49,13 @@ setversion:
 	sed -i 's/echo "Version: [0-9.a-z-]*"/echo "Version: $(NEW_VERSION)"/g' check_mk_agent.*
 	sed -i "s/^#define CMK_WIN_AGENT_VERSION .*/#define CMK_WIN_AGENT_VERSION \"$(NEW_VERSION)\"/" wnx/src/common/wnx_version.h
 
-build: $(DEB_PACKAGE) $(RPM_PACKAGE) $(WIN_PACKAGE) $(CONTROLLER)
+build: $(DEB_PACKAGE) $(RPM_PACKAGE) $(WIN_PACKAGE) controller
 
-cmk-agent-ctl: $(CONTROLLER)
+controller:
+	rm linux/cmk-agent-ctl
+	(cd cmk-agent-ctl; ../../scripts/run-cargo-command build --release) \
+	&& mkdir -p linux \
+	&& cp cmk-agent-ctl/target/release/cmk-agent-ctl linux
 
 packages: $(DEB_PACKAGE) $(RPM_PACKAGE)
 
@@ -60,14 +63,7 @@ deb: $(DEB_PACKAGE)
 
 rpm: $(RPM_PACKAGE)
 
-$(CONTROLLER):
-	pushd cmk-agent-ctl \
-	&& ../../scripts/run-cargo-command build --release \
-	&& popd \
-	&& mkdir -p linux \
-	&& cp cmk-agent-ctl/target/release/cmk-agent-ctl linux
-
-$(RPM_PACKAGE): $(CONTROLLER) waitmax
+$(RPM_PACKAGE): controller waitmax
 	rm -rf $(RPM_TOPDIR)
 	mkdir -p $(RPM_TOPDIR)/RPMS
 	mkdir -p $(RPM_TOPDIR)/SRPMS
@@ -126,4 +122,4 @@ $(DEB_PACKAGE): $(RPM_PACKAGE)
 	rm -rf deb-unpack
 
 clean:
-	rm -rf *~ waitmax *.rpm *.deb
+	rm -rf *~ waitmax *.rpm *.deb linux/cmk-agent-ctl

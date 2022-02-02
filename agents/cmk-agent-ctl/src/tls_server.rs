@@ -14,6 +14,9 @@ use rustls_pemfile::Item;
 use std::net::TcpStream;
 use std::sync::Arc;
 
+#[cfg(windows)]
+use std::io::{Read, Result as IoResult, Write};
+
 pub fn tls_connection<'a>(
     connections: impl Iterator<Item = &'a config::Connection>,
 ) -> AnyhowResult<ServerConnection> {
@@ -97,16 +100,6 @@ pub struct IoStream {
     // This is just temporary stub to keep API more or less in sync.
     reader: std::io::Stdin,
     writer: std::io::Stdout,
-}
-
-#[cfg(windows)]
-impl IoStream {
-    pub fn new() -> Self {
-        IoStream {
-            reader: { std::io::stdin() },
-            writer: { std::io::stdout() },
-        }
-    }
 }
 
 #[cfg(windows)]

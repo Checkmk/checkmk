@@ -11,7 +11,7 @@ import shutil
 import time
 import xml.dom.minidom  # type: ignore[import]
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Literal, NamedTuple, Optional, Sequence, Tuple, Union
+from typing import Callable, Dict, List, Literal, NamedTuple, Optional, Sequence, Tuple, Union
 
 import dicttoxml  # type: ignore[import]
 
@@ -97,11 +97,6 @@ def parse_tree_path(raw_path: SDRawPath) -> Tuple[SDPath, Optional[SDKeys]]:
         [p for part in path for p in (part.split(":") if ":" in part else [part]) if p],
         attribute_keys,
     )
-
-
-def load_filtered_inventory_tree(hostname: Optional[HostName]) -> Optional[StructuredDataNode]:
-    """Loads the host inventory tree from the current file and returns the filtered tree"""
-    return _filter_tree(_load_structured_data_tree("inventory", hostname))
 
 
 def load_filtered_and_merged_tree(row: Row) -> Optional[StructuredDataNode]:
@@ -275,26 +270,21 @@ def _get_history(
     previous_timestamp: Optional[int] = filtered_timestamps.start_timestamp
     required_timestamps = filtered_timestamps.timestamps
 
-    tree_lookup: Dict[int, Any] = {}
+    tree_lookup: Dict[Path, StructuredDataNode] = {}
 
     def get_tree(timestamp: Optional[int]) -> StructuredDataNode:
         if timestamp is None:
             return StructuredDataNode()
 
-        if timestamp in tree_lookup:
-            return tree_lookup[timestamp]
-
         if timestamp == latest_timestamp:
-            inventory_tree = load_filtered_inventory_tree(hostname)
-            if inventory_tree is None:
-                raise LoadStructuredDataError()
-            tree_lookup[timestamp] = inventory_tree
+            filepath = inventory_path
         else:
-            inventory_archive_path = inventory_archive_dir.joinpath(str(timestamp))
-            tree_lookup[timestamp] = _filter_tree(
-                StructuredDataStore.load_file(inventory_archive_path)
-            )
-        return tree_lookup[timestamp]
+            filepath = inventory_archive_dir.joinpath(str(timestamp))
+
+        if filepath in tree_lookup:
+            return tree_lookup[filepath]
+
+        return tree_lookup.setdefault(filepath, _load_tree_from_file(filepath))
 
     corrupted_history_files = []
     history: List[HistoryEntry] = []
@@ -313,18 +303,22 @@ def _get_history(
             continue
 
         try:
-            history_entry = _calculate_or_store_history_entry(
-                cached_delta_path,
-                get_tree(previous_timestamp),
-                get_tree(timestamp),
-                timestamp,
-            )
+            previous_tree = get_tree(previous_timestamp)
+            current_tree = get_tree(timestamp)
         except LoadStructuredDataError:
             corrupted_history_files.append(
                 str(_get_short_inventory_history_filepath(hostname, timestamp))
             )
+            continue
 
-        if history_entry is not None:
+        if (
+            history_entry := _calculate_or_store_history_entry(
+                cached_delta_path,
+                previous_tree,
+                current_tree,
+                timestamp,
+            )
+        ) is not None:
             history.append(history_entry)
 
         previous_timestamp = timestamp
@@ -344,6 +338,19 @@ def _get_timestamps(inventory_path: Path, archive_dir: Path) -> Sequence[int]:
         return []
 
     return archived_timestamps + [latest_timestamp]
+
+
+def _load_tree_from_file(filepath: Path) -> StructuredDataNode:
+    try:
+        tree = _filter_tree(StructuredDataStore.load_file(filepath))
+    except FileNotFoundError:
+        raise LoadStructuredDataError()
+
+    if tree is None or tree.is_empty():
+        # load_file may return an empty tree
+        raise LoadStructuredDataError()
+
+    return tree
 
 
 def _get_cached_history_entry(cached_delta_path: Path, timestamp: int) -> Optional[HistoryEntry]:

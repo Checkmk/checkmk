@@ -13,7 +13,7 @@ import shutil
 import time
 import xml.dom.minidom  # type: ignore[import]
 from pathlib import Path
-from typing import Callable, Dict, List, Literal, NamedTuple, Optional, Sequence, Tuple, Union
+from typing import Callable, Dict, List, Literal, NamedTuple, Optional, Sequence, Set, Tuple, Union
 
 import dicttoxml  # type: ignore[import]
 
@@ -187,6 +187,10 @@ class TreePath(NamedTuple):
             timestamp=None,
         )
 
+    @property
+    def short(self) -> Path:
+        return self.path.relative_to(cmk.utils.paths.omd_root)
+
 
 class HistoryEntry(NamedTuple):
     timestamp: Optional[int]
@@ -278,11 +282,11 @@ def _get_history(
     if "/" in hostname:
         return [], []  # just for security reasons
 
-    if not (all_tree_paths := _get_tree_paths(hostname)):
+    if not (tree_paths := _get_tree_paths(hostname)):
         return [], []
 
     try:
-        filtered_tree_paths = filter_tree_paths(all_tree_paths)
+        filtered_tree_paths = filter_tree_paths(tree_paths)
     except FilterTreePathsError:
         return [], []
 
@@ -297,20 +301,20 @@ def _get_history(
 
         return tree_lookup.setdefault(filepath, _load_tree_from_file(filepath))
 
-    corrupted_history_files = []
+    corrupted_history_files: Set[Path] = set()
     history: List[HistoryEntry] = []
     for previous, current in _get_pairs(filtered_tree_paths):
         if current.timestamp is None:
             continue
 
-        cached_delta_path = Path(
+        delta_cache_path = Path(
             cmk.utils.paths.inventory_delta_cache_dir,
             hostname,
             "%s_%s" % (previous.timestamp, current.timestamp),
         )
 
         if (
-            cached_history_entry := _get_cached_history_entry(cached_delta_path, current.timestamp)
+            cached_history_entry := _get_cached_history_entry(delta_cache_path, current.timestamp)
         ) is not None:
             history.append(cached_history_entry)
             continue
@@ -319,12 +323,12 @@ def _get_history(
             previous_tree = _get_tree(previous.path)
             current_tree = _get_tree(current.path)
         except LoadStructuredDataError:
-            corrupted_history_files.append(str(_get_short_inventory_history_filepath(current.path)))
+            corrupted_history_files.add(current.short)
             continue
 
         if (
             history_entry := _calculate_or_store_history_entry(
-                cached_delta_path,
+                delta_cache_path,
                 previous_tree,
                 current_tree,
                 current.timestamp,
@@ -332,7 +336,7 @@ def _get_history(
         ) is not None:
             history.append(history_entry)
 
-    return history, corrupted_history_files
+    return history, sorted([str(path) for path in corrupted_history_files])
 
 
 def _get_tree_paths(hostname: HostName) -> Sequence[TreePath]:
@@ -421,10 +425,6 @@ def _calculate_or_store_history_entry(
         )
         return HistoryEntry(timestamp, new, changed, removed, delta_tree)
     return None
-
-
-def _get_short_inventory_history_filepath(filepath: Path) -> Path:
-    return filepath.relative_to(cmk.utils.paths.omd_root)
 
 
 # .

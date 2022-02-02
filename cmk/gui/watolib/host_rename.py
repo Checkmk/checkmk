@@ -4,13 +4,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Dict, List
+from typing import Dict, List, Sequence
 from typing import Tuple as _Tuple
 
 from livestatus import SiteId
 
 import cmk.utils.paths
 import cmk.utils.store as store
+from cmk.utils.agent_registration import get_uuid_link_manager, UUIDLinkManager
 from cmk.utils.bi.bi_packs import BIHostRenamer
 from cmk.utils.type_defs import HostName
 
@@ -84,6 +85,13 @@ def perform_rename_hosts(renamings, job_interface=None):
     for folder, oldname, newname in successful_renamings:
         actions += _rename_host_in_event_rules(oldname, newname)
         actions += _rename_host_in_multisite(oldname, newname)
+
+    # 4. Update UUID links
+    update_interface(_("Renaming host(s): Update UUID links..."))
+    actions += _rename_host_in_uuid_link_manager(
+        get_uuid_link_manager(),
+        [(oldname, newname) for _folder, oldname, newname in successful_renamings],
+    )
 
     for action in actions:
         action_counts.setdefault(action, 0)
@@ -311,3 +319,10 @@ def _group_renamings_by_site(renamings):
         site_id = host.site_id()
         renamings_per_site.setdefault(site_id, []).append((oldname, newname))
     return renamings_per_site
+
+
+def _rename_host_in_uuid_link_manager(
+    uuid_link_manager: UUIDLinkManager,
+    successful_renamings: Sequence[_Tuple[HostName, HostName]],
+) -> Sequence[_Tuple[HostName, HostName]]:
+    return uuid_link_manager.rename(successful_renamings)

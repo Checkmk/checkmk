@@ -10,6 +10,7 @@ License:   GPL
 Group:     System/Monitoring
 URL:       https://checkmk.com/
 Vendor:    tribe29 GmbH
+Source:    check-mk-agent-%{_version}.tar.gz
 BuildRoot: %{_topdir}/buildroot
 AutoReq:   off
 AutoProv:  off

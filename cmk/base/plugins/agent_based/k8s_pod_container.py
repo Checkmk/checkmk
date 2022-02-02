@@ -12,6 +12,11 @@ from .utils import docker, k8s
 
 Section = Mapping[str, Mapping[str, Any]]
 
+###########################################################################
+# NOTE: This check (and associated special agent) is deprecated and will be
+#       removed in Checkmk version 2.2.
+###########################################################################
+
 
 def host_labels(section: Section) -> HostLabelGenerator:
     if section:

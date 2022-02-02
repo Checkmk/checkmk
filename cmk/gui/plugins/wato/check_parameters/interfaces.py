@@ -1334,6 +1334,10 @@ rulespec_registry.register(
 
 
 def _parameter_valuespec_k8s_if():
+    ######################################################################
+    # NOTE: This valuespec and associated check are deprecated and will be
+    #       removed in Checkmk version 2.2.
+    ######################################################################
     return Dictionary(
         elements=[
             (
@@ -1396,5 +1400,6 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_k8s_if,
         title=lambda: _("Kubernetes Network interfaces"),
+        is_deprecated=True,
     )
 )

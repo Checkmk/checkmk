@@ -722,18 +722,11 @@ def _valuespec_special_agents_kubernetes():
                 _filter_kubernetes_namespace_element(),
             ],
             optional_keys=["port", "url-prefix", "path-prefix", "namespace_include_patterns"],
-            title=_("Kubernetes"),
+            title=_("Kubernetes (deprecated)"),
             help=_(
-                "This rule selects the Kubernetes special agent for an existing Checkmk host. "
-                "If you want to monitor multiple Kubernetes clusters "
-                "we strongly recommend to set up "
-                '<a href="wato.py?mode=edit_ruleset&varname=piggyback_translation">Piggyback translation rules</a> '
-                "to avoid name collisions. Otherwise e.g. Pods with the same name in "
-                "different Kubernetes clusters cannot be distinguished.<br>"
-                "Please additionally keep in mind, that not every Kubernetes API is compatible with "
-                "every version of the official Kubernetes Python client. E.g. client v11 is only "
-                "with the API v1.15 fully compatible. Please check if the latest client version "
-                "supports your Kubernetes API version."
+                "This special agent is deprecated and will be removed in "
+                'Checkmk version 2.2.0. Please use the "Kubernetes" ruleset to '
+                "configure the new special agent for Kubernetes."
             ),
         ),
         forth=_special_agents_kubernetes_transform,
@@ -745,6 +738,7 @@ rulespec_registry.register(
         group=RulespecGroupVMCloudContainer,
         name="special_agents:kubernetes",
         valuespec=_valuespec_special_agents_kubernetes,
+        is_deprecated=True,
     )
 )
 
@@ -946,7 +940,7 @@ def _valuespec_special_agents_kube():
         ],
         optional_keys=["namespaces", "cluster-agent"],
         default_keys=["cluster-agent"],
-        title=_("Kubernetes 2.0"),
+        title=_("Kubernetes"),
     )
 
 

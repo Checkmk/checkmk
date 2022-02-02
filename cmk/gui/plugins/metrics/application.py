@@ -253,18 +253,6 @@ metric_info["db_log_latency"] = {
     "color": "25/a",
 }
 
-metric_info["ready_replicas"] = {
-    "title": _l("Ready replicas"),
-    "unit": "",
-    "color": "21/a",
-}
-
-metric_info["total_replicas"] = {
-    "title": _l("Total replicas"),
-    "unit": "",
-    "color": "35/a",
-}
-
 metric_info["active_vms"] = {
     "title": _l("Active VMs"),
     "unit": "count",
@@ -617,17 +605,6 @@ metric_info["gc_bytes_rate"] = {
 #   +----------------------------------------------------------------------+
 #   |  Definitions of time series graphs                                   |
 #   '----------------------------------------------------------------------'
-
-graph_info["replicas"] = {
-    "title": _l("Replicas"),
-    "metrics": [
-        ("ready_replicas", "area"),
-        ("total_replicas", "line"),
-    ],
-    "scalars": [
-        "ready_replicas:crit",
-    ],
-}
 
 # TODO: Warum ist hier überall line? Default ist Area.
 # Kann man die hit ratios nicht schön stacken? Ist

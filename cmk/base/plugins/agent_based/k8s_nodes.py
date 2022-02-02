@@ -16,6 +16,11 @@ from .utils import k8s
 
 Section = Dict
 
+###########################################################################
+# NOTE: This check (and associated special agent) is deprecated and will be
+#       removed in Checkmk version 2.2.
+###########################################################################
+
 
 def host_labels(section: Dict) -> HostLabelGenerator:
     if section:

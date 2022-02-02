@@ -51,7 +51,7 @@ def _mocked_container_info_from_state(
                 },
             ),
             PodLifeCycle(phase="running"),
-            [Result(state=State.OK, summary="Running: since 0 seconds")],
+            [Result(state=State.OK, summary="Running")],
             id="A single running container",
         ),
         pytest.param(
@@ -84,7 +84,7 @@ def _mocked_container_info_from_state(
                 }
             ),
             PodLifeCycle(phase="succeeded"),
-            [Result(state=State.OK, summary="Succeeded: since 0 seconds")],
+            [Result(state=State.OK, summary="Succeeded")],
             id="Container exits with 0, and is not restarted",
         ),
     ],

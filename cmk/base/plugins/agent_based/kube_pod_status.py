@@ -182,12 +182,16 @@ def check_kube_pod_status(
         value_store.clear()
         value_store[status_message] = now
 
-    for result in check_levels(
-        now - value_store[status_message],
-        render_func=render.timespan,
-        levels_upper=_get_levels_from_params(status_message, params),
-    ):
-        yield Result(state=result.state, summary=f"{status_message}: since {result.summary}")
+    levels = _get_levels_from_params(status_message, params)
+    if levels is None:
+        yield Result(state=State.OK, summary=status_message)
+    else:
+        for result in check_levels(
+            now - value_store[status_message],
+            render_func=render.timespan,
+            levels_upper=levels,
+        ):
+            yield Result(state=result.state, summary=f"{status_message}: since {result.summary}")
 
     yield from _container_status_details(pod_init_containers)
     yield from _container_status_details(pod_containers)

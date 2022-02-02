@@ -50,6 +50,7 @@ install -m 755 check_mk_agent.linux $R/usr/bin/check_mk_agent
 install -m 755 check_mk_caching_agent.linux $R/usr/bin/check_mk_caching_agent
 install -m 755 waitmax $R/usr/bin
 install -m 755 mk-job $R/usr/bin
+install -m 755 linux/cmk-agent-ctl $R/usr/bin
 mkdir -p $R/usr/lib/check_mk_agent/plugins
 mkdir -p $R/usr/lib/check_mk_agent/local
 mkdir -p $R/var/lib/check_mk_agent

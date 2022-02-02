@@ -20,7 +20,7 @@ usage:
 	@echo "make rpm           -- create RPM package of Linux agent"
 	@echo "make deb           -- create DEB package of Linux agent"
 	@echo "make packages      -- create RPM and DEB package of Linux agent"
-	@echo "make cmk-agent-ctl --r"
+	@echo "make cmk-agent-ctl -- build the agent controller binary"
 
 waitmax: waitmax.c
 	@if type diet >/dev/null ; then \
@@ -67,7 +67,7 @@ $(CONTROLLER):
 	&& mkdir -p linux \
 	&& cp cmk-agent-ctl/target/release/cmk-agent-ctl linux
 
-$(RPM_PACKAGE): waitmax
+$(RPM_PACKAGE): $(CONTROLLER) waitmax
 	rm -rf $(RPM_TOPDIR)
 	mkdir -p $(RPM_TOPDIR)/RPMS
 	mkdir -p $(RPM_TOPDIR)/SRPMS
@@ -81,6 +81,7 @@ $(RPM_PACKAGE): waitmax
 	    scripts \
 	    check_mk_agent.linux \
 	    check_mk_caching_agent.linux \
+	    linux/cmk-agent-ctl \
 	    waitmax \
 	    mk-job
 	rm -f *.rpm

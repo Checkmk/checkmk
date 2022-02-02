@@ -67,7 +67,7 @@ from cmk.gui.watolib.hosts_and_folders import CREFolder
 BAKE_AGENT_PARAM_NAME = "bake_agent"
 BAKE_AGENT_PARAM = {
     BAKE_AGENT_PARAM_NAME: fields.Boolean(
-        missing=False,
+        load_default=False,
         required=False,
         example=False,
         description=(
@@ -439,7 +439,7 @@ def bulk_delete(params):
     query_params=[
         {
             "effective_attributes": fields.Boolean(
-                missing=False,
+                load_default=False,
                 required=False,
                 example=False,
                 description=(

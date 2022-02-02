@@ -52,7 +52,7 @@ def _parameter_valuespec_kube_pod_status(sections: Sequence[Section]):
     elements.append(
         (
             "other",
-            valuespec_age(title="Define levels for remaining statuses", default_choice="no_levels"),
+            valuespec_age(title="Other", default_choice="no_levels"),
         )
     )
 

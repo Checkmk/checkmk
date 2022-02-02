@@ -217,6 +217,7 @@ $(DISTNAME).tar.gz: omd/packages/mk-livestatus/mk-livestatus-$(VERSION).tar.gz .
 		cfg_examples \
 		plugins \
 		sap \
+		scripts \
 		special \
 		z_os \
 		check-mk-agent_*.deb \

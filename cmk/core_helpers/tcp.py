@@ -12,7 +12,7 @@ from typing import Any, Final, List, Mapping, Optional, Tuple
 
 import cmk.utils.debug
 from cmk.utils import paths
-from cmk.utils.agent_registration import UUIDLinkManager
+from cmk.utils.agent_registration import get_uuid_link_manager
 from cmk.utils.encryption import decrypt_by_agent_protocol, TransportProtocol
 from cmk.utils.exceptions import MKFetcherError
 from cmk.utils.type_defs import AgentRawData, HostAddress, HostName
@@ -176,10 +176,7 @@ class TCPFetcher(AgentFetcher):
             )
 
     def _wrap_tls(self) -> ssl.SSLSocket:
-        controller_uuid = UUIDLinkManager(
-            received_outputs_dir=paths.received_outputs_dir,
-            data_source_dir=paths.data_source_push_agent_dir,
-        ).get_uuid(self.host_name)
+        controller_uuid = get_uuid_link_manager().get_uuid(self.host_name)
 
         if controller_uuid is None:
             raise MKFetcherError("Agent controller not registered")

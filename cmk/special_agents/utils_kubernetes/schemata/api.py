@@ -133,7 +133,6 @@ class ConditionStatus(str, enum.Enum):
 
 
 class DeploymentCondition(BaseModel):
-    type_: str
     status: ConditionStatus
     last_transition_time: float
     reason: str
@@ -143,7 +142,7 @@ class DeploymentCondition(BaseModel):
 class DeploymentStatus(BaseModel):
     # https://v1-18.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.18/#deploymentstatus-v1-apps
     replicas: Replicas
-    conditions: Sequence[DeploymentCondition]
+    conditions: Mapping[str, DeploymentCondition]
 
 
 class RollingUpdate(BaseModel):

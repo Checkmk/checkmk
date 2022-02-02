@@ -316,17 +316,16 @@ def deployment_replicas(status: client.V1DeploymentStatus) -> api.Replicas:
     )
 
 
-def deployment_conditions(status: client.V1DeploymentStatus) -> Sequence[api.DeploymentCondition]:
-    conditions = []
+def deployment_conditions(
+    status: client.V1DeploymentStatus,
+) -> Mapping[str, api.DeploymentCondition]:
+    conditions = {}
     for condition in status.conditions:
-        conditions.append(
-            api.DeploymentCondition(
-                type_=condition.type,
-                status=condition.status,
-                last_transition_time=convert_to_timestamp(condition.last_transition_time),
-                reason=condition.reason,
-                message=condition.message,
-            )
+        conditions[condition.type.lower()] = api.DeploymentCondition(
+            status=condition.status,
+            last_transition_time=convert_to_timestamp(condition.last_transition_time),
+            reason=condition.reason,
+            message=condition.message,
         )
     return conditions
 

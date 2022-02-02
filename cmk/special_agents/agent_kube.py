@@ -349,6 +349,7 @@ def aggregate_resources(
     )
 
 
+# TODO: addition of test framework for output sections
 class Deployment:
     def __init__(
         self,
@@ -404,8 +405,10 @@ class Deployment:
             resources[pod.phase].append(pod.name())
         return section.PodResources(**resources)
 
-    def conditions(self) -> section.DeploymentConditions:
-        return section.DeploymentConditions(conditions=self.status.conditions)
+    def conditions(self) -> Optional[section.DeploymentConditions]:
+        if not self.status.conditions:
+            return None
+        return section.DeploymentConditions(**self.status.conditions)
 
     def memory_resources(self) -> section.Resources:
         return _collect_memory_resources(self._pods)

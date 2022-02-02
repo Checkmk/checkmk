@@ -176,7 +176,9 @@ class DeploymentInfo(BaseModel):
 class DeploymentConditions(BaseModel):
     """section: kube_deployment_conditions_v1"""
 
-    conditions: Sequence[api.DeploymentCondition]
+    available: Optional[api.DeploymentCondition]
+    progressing: Optional[api.DeploymentCondition]
+    replicafailure: Optional[api.DeploymentCondition]
 
 
 class ContainerCount(BaseModel):

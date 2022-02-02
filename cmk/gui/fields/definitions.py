@@ -870,10 +870,17 @@ class _ListOfColumns(List):
         "unknown_column": "Unknown default column: {table_name}.{column_name}",
     }
 
-    def __init__(self, cls_or_instance: typing.Union[_fields.Field, type], **kwargs):
+    def __init__(
+        self,
+        cls_or_instance: typing.Union[_fields.Field, type],
+        table: typing.Type[Table],
+        mandatory: Optional[typing.List[str]] = None,
+        **kwargs,
+    ) -> None:
         super().__init__(cls_or_instance, **kwargs)
-        table = self.metadata["table"]
-        for column in self.metadata.get("mandatory", []):
+        self.table = table
+        self.mandatory = mandatory if mandatory is not None else []
+        for column in self.mandatory:
             if column not in table.__columns__():
                 raise ValueError(
                     f"Column {column!r} in parameter 'mandatory' is not a column "
@@ -882,15 +889,14 @@ class _ListOfColumns(List):
 
     def _deserialize(self, value, attr, data, **kwargs):
         value = super()._deserialize(value, attr, data)
-        table = self.metadata["table"]
-        for column in reversed(self.metadata.get("mandatory", [])):
+        for column in reversed(self.mandatory):
             if isinstance(column, Column):
                 column_name = column.name
             else:
                 column_name = column
             if column_name not in value:
                 value.insert(0, column_name)
-        return [getattr(table, col) for col in value]
+        return [getattr(self.table, col) for col in value]
 
 
 class _LiveStatusColumn(String):

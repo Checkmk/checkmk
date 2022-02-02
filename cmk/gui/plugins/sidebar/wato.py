@@ -148,37 +148,6 @@ match_item_generator_registry.register(
 
 
 @snapin_registry.register
-class SidebarSnapinWATO(SidebarSnapin):
-    @staticmethod
-    def type_name():
-        return "admin"
-
-    @classmethod
-    def title(cls):
-        return _("Setup")
-
-    @classmethod
-    def has_show_more_items(cls):
-        return True
-
-    @classmethod
-    def description(cls):
-        return _("Direct access to the setup menu")
-
-    @classmethod
-    def allowed_roles(cls):
-        return ["admin", "user"]
-
-    # refresh pending changes, if other user modifies something
-    @classmethod
-    def refresh_regularly(cls):
-        return True
-
-    def show(self):
-        render_wato(mini=False)
-
-
-@snapin_registry.register
 class SidebarSnapinWATOMini(SidebarSnapin):
     @staticmethod
     def type_name():
@@ -415,31 +384,4 @@ class SidebarSnapinWATOFoldertree(SidebarSnapin):
         if user_folders:
             render_tree_folder(
                 "wato-hosts", list(user_folders.values())[0], "cmk.sidebar.wato_tree_click"
-            )
-
-
-@snapin_registry.register
-class SidebarSnapinWATOFolders(SidebarSnapin):
-    @staticmethod
-    def type_name():
-        return "wato_folders"
-
-    @classmethod
-    def title(cls):
-        return _("Folders")
-
-    @classmethod
-    def description(cls):
-        return _(
-            "This snapin shows the folders defined in WATO. It can "
-            "be used to open views filtered by the WATO folder. This "
-            'snapin interacts with the "Views" snapin, when both are '
-            "enabled."
-        )
-
-    def show(self):
-        user_folders = compute_foldertree()
-        if user_folders:
-            render_tree_folder(
-                "wato-folders", list(user_folders.values())[0], "cmk.sidebar.wato_folders_clicked"
             )

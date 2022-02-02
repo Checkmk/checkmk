@@ -11,7 +11,6 @@ from cmk.gui.plugins.sidebar.utils import snapin_registry
 
 def test_registered_snapins():
     expected_snapins = [
-        "admin",
         "admin_mini",
         "biaggr_groups",
         "biaggr_groups_tree",
@@ -30,7 +29,6 @@ def test_registered_snapins():
         "tag_tree",
         "time",
         "views",
-        "wato_folders",
         "wato_foldertree",
     ]
 
@@ -50,7 +48,6 @@ def test_registered_snapins():
 
 def test_refresh_snapins():
     expected_refresh_snapins = [
-        "admin",
         "admin_mini",
         "performance",
         "mkeventd_performance",

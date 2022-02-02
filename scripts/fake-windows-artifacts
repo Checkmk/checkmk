@@ -20,6 +20,7 @@ touch agents/windows/check_mk.example.ini
 touch agents/windows/check_mk.user.yml
 touch agents/windows/python-3.cab
 touch agents/windows/python-3.4.cab
+touch agents/windows/cmk-agent-ctl.exe
 
 touch omd/packages/openhardwaremonitor/OpenHardwareMonitorCLI.exe
 chmod +x omd/packages/openhardwaremonitor/OpenHardwareMonitorCLI.exe

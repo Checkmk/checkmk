@@ -93,7 +93,8 @@ def nodes_api_sections():
     return [
         "kube_node_container_count_v1",
         "kube_node_kubelet_v1",
-        "kube_pod_resources_with_capacity_v1",
+        "kube_pod_resources_v1",
+        "kube_allocatable_pods_v1",
         "kube_node_info_v1",
         "kube_cpu_resources_v1",
         "kube_memory_resources_v1",
@@ -105,7 +106,8 @@ def nodes_api_sections():
 @pytest.fixture
 def cluster_api_sections():
     return [
-        "kube_pod_resources_with_capacity_v1",
+        "kube_pod_resources_v1",
+        "kube_allocatable_pods_v1",
         "kube_node_count_v1",
         "kube_cluster_details_v1",
         "kube_memory_resources_v1",

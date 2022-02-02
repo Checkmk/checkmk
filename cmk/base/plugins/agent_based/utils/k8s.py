@@ -201,8 +201,8 @@ class PodResources(BaseModel):
     unknown: PodSequence = []
 
 
-class PodResourcesWithCapacity(PodResources):
-    """section: kube_pod_resources_with_capacity_v1"""
+class AllocatablePods(BaseModel):
+    """section: kube_allocatable_pods_v1"""
 
     capacity: int
     allocatable: int

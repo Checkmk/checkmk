@@ -7,20 +7,17 @@
 import json
 import time
 from itertools import islice
-from typing import MutableMapping, NamedTuple, TypedDict
+from typing import MutableMapping, NamedTuple, Optional, TypedDict
 
 from ..agent_based_api.v1 import get_value_store, Metric, render, Result, Service, State
 from ..agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
-from .k8s import PodResources, PodResourcesWithCapacity, PodSequence
+from .k8s import AllocatablePods, PodResources, PodSequence
 from .kube import VSResultAge
 
 
-def discovery_kube_pod_resources(section: PodResources) -> DiscoveryResult:
-    yield Service()
-
-
-def discovery_kube_pod_resources_with_capacity(
-    section: PodResourcesWithCapacity,
+def discovery_kube_pod_resources(
+    section_kube_pod_resources: Optional[PodResources],
+    section_kube_allocatable_pods: Optional[AllocatablePods],
 ) -> DiscoveryResult:
     yield Service()
 
@@ -39,20 +36,15 @@ def parse_kube_pod_resources(string_table: StringTable):
     return PodResources(**json.loads(string_table[0][0]))
 
 
-def parse_kube_pod_resources_with_capacity(string_table: StringTable):
+def parse_kube_allocatable_pods(string_table: StringTable):
     """
-    >>> parse_kube_pod_resources_with_capacity([[
-    ...     '{"running": ["checkmk-cluster-agent", "storage-provisioner"],'
-    ...     ' "pending": ["success2"], "succeeded":'
-    ...     ' ["hello-27303194--1-9vtft"],'
-    ...     ' "failed": [], '
-    ...     '"unknown": [], '
-    ...     '"capacity": 110,'
+    >>> parse_kube_allocatable_pods([[
+    ...     '{"capacity": 110,'
     ...     ' "allocatable": 110}'
     ... ]])
-    PodResourcesWithCapacity(running=['checkmk-cluster-agent', 'storage-provisioner'], pending=['success2'], succeeded=['hello-27303194--1-9vtft'], failed=[], unknown=[], capacity=110, allocatable=110)
+    AllocatablePods(capacity=110, allocatable=110)
     """
-    return PodResourcesWithCapacity(**json.loads(string_table[0][0]))
+    return AllocatablePods(**json.loads(string_table[0][0]))
 
 
 class Levels(NamedTuple):
@@ -113,7 +105,7 @@ _DEFAULT_PARAMS = Params(pending="no_levels")
 _POD_RESOURCES_FIELDS = ("running", "pending", "succeeded", "failed", "unknown")
 
 
-def check_kube_pod_resources(params: Params, section: PodResources) -> CheckResult:
+def check_kube_pods(params: Params, section: PodResources) -> CheckResult:
     current_time = time.time()
     value_store = get_value_store()
     old_resource_store = value_store.get("pending", {})
@@ -150,20 +142,33 @@ def check_kube_pod_resources(params: Params, section: PodResources) -> CheckResu
             yield Metric(name=f"kube_pod_{resource}", value=pod_count)
 
 
-def check_kube_pod_resources_with_capacity(
-    params: Params, section: PodResourcesWithCapacity
+def check_kube_pod_resources(
+    params: Params,
+    section_kube_pod_resources: Optional[PodResources],
+    section_kube_allocatable_pods: Optional[AllocatablePods],
 ) -> CheckResult:
-    yield from check_kube_pod_resources(params, section)
+
+    assert section_kube_pod_resources is not None, "Missing Api data"
+    yield from check_kube_pods(params, section_kube_pod_resources)
+
+    if section_kube_allocatable_pods is None:
+        return
+
     yield Result(
         state=State.OK,
-        summary=_summary("allocatable", section.allocatable),
+        summary=_summary("allocatable", section_kube_allocatable_pods.allocatable),
     )
     yield Result(
         state=State.OK,
-        notice=_summary("capacity", section.capacity),
+        notice=_summary("capacity", section_kube_allocatable_pods.capacity),
     )
     # At the cluster level there can be more pods pending than space available. Thus, the number of
     # free pods may be negative.
-    num_free_pods = max(0, section.allocatable - len(section.pending) - len(section.running))
+    num_free_pods = max(
+        0,
+        section_kube_allocatable_pods.allocatable
+        - len(section_kube_pod_resources.pending)
+        - len(section_kube_pod_resources.running),
+    )
     yield Metric(name="kube_pod_free", value=num_free_pods)
-    yield Metric(name="kube_pod_allocatable", value=section.allocatable)
+    yield Metric(name="kube_pod_allocatable", value=section_kube_allocatable_pods.allocatable)

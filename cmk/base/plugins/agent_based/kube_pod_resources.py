@@ -9,6 +9,7 @@ from .utils.kube_pod_resources import (
     _DEFAULT_PARAMS,
     check_kube_pod_resources,
     discovery_kube_pod_resources,
+    parse_kube_allocatable_pods,
     parse_kube_pod_resources,
 )
 
@@ -18,9 +19,16 @@ register.agent_section(
     parsed_section_name="kube_pod_resources",
 )
 
+register.agent_section(
+    name="kube_allocatable_pods_v1",
+    parse_function=parse_kube_allocatable_pods,
+    parsed_section_name="kube_allocatable_pods",
+)
+
 register.check_plugin(
     name="kube_pod_resources",
     service_name="Pod resources",
+    sections=["kube_pod_resources", "kube_allocatable_pods"],
     discovery_function=discovery_kube_pod_resources,
     check_function=check_kube_pod_resources,
     check_default_parameters=_DEFAULT_PARAMS,

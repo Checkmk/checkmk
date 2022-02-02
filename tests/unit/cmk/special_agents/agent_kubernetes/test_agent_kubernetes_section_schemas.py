@@ -5,6 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.base.plugins.agent_based.utils import kube as check
+from cmk.base.plugins.agent_based.utils.k8s import AllocatablePods as AllocatablePodsC
 from cmk.base.plugins.agent_based.utils.k8s import ClusterInfo as ClusterInfoC
 from cmk.base.plugins.agent_based.utils.k8s import ContainerCount as ContainerCountC
 from cmk.base.plugins.agent_based.utils.k8s import ContainerInfo as ContainerInfoC
@@ -22,9 +23,6 @@ from cmk.base.plugins.agent_based.utils.k8s import PodConditions as PodCondition
 from cmk.base.plugins.agent_based.utils.k8s import PodContainers as PodContainersC
 from cmk.base.plugins.agent_based.utils.k8s import PodInfo as PodInfoC
 from cmk.base.plugins.agent_based.utils.k8s import PodResources as PodResourcesC
-from cmk.base.plugins.agent_based.utils.k8s import (
-    PodResourcesWithCapacity as PodResourcesWithCapacityC,
-)
 from cmk.base.plugins.agent_based.utils.k8s import Replicas as ReplicasC
 from cmk.base.plugins.agent_based.utils.k8s import StartTime as StartTimeC
 from cmk.base.plugins.agent_based.utils.kube import NodeCount as NodeCountC
@@ -47,6 +45,7 @@ from cmk.special_agents.utils_kubernetes.schemata.api import DeploymentSpec as D
 from cmk.special_agents.utils_kubernetes.schemata.api import KubeletInfo as KubeletInfoA
 from cmk.special_agents.utils_kubernetes.schemata.api import Replicas as ReplicasA
 from cmk.special_agents.utils_kubernetes.schemata.api import StartTime as StartTimeA
+from cmk.special_agents.utils_kubernetes.schemata.section import AllocatablePods as AllocatablePodsA
 from cmk.special_agents.utils_kubernetes.schemata.section import ContainerCount as ContainerCountA
 from cmk.special_agents.utils_kubernetes.schemata.section import Memory as MemoryA
 from cmk.special_agents.utils_kubernetes.schemata.section import NodeCount as NodeCountA
@@ -57,9 +56,6 @@ from cmk.special_agents.utils_kubernetes.schemata.section import PodContainers a
 from cmk.special_agents.utils_kubernetes.schemata.section import PodInfo as PodInfoA
 from cmk.special_agents.utils_kubernetes.schemata.section import PodLifeCycle as PodLifeCycleA
 from cmk.special_agents.utils_kubernetes.schemata.section import PodResources as PodResourcesA
-from cmk.special_agents.utils_kubernetes.schemata.section import (
-    PodResourcesWithCapacity as PodResourcesWithCapacityA,
-)
 from cmk.special_agents.utils_kubernetes.schemata.section import Resources as ResourcesA
 
 
@@ -80,7 +76,7 @@ def test_schemata_did_not_diverge() -> None:
     assert PodContainersA.schema() == PodContainersC.schema()
     assert PodResourcesA.schema() == PodResourcesC.schema()
     assert PodLifeCycleA.schema() == PodLifeCycleC.schema()
-    assert PodResourcesWithCapacityA.schema() == PodResourcesWithCapacityC.schema()
+    assert AllocatablePodsA.schema() == AllocatablePodsC.schema()
     assert ResourcesA.schema() == ResourcesC.schema()
     assert StartTimeA.schema() == StartTimeC.schema()
     assert PodInfoA.schema() == PodInfoC.schema()

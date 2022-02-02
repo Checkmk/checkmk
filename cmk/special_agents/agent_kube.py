@@ -451,16 +451,17 @@ class Node:
             return self._pods
         return [pod for pod in self._pods if pod.phase == phase]
 
-    def pod_resources(self) -> section.PodResourcesWithCapacity:
-        resources = {
-            "capacity": self.resources["capacity"].pods,
-            "allocatable": self.resources["allocatable"].pods,
-        }
-        phases_pods = defaultdict(list)
+    def pod_resources(self) -> section.PodResources:
+        resources: DefaultDict[str, List[str]] = defaultdict(list)
         for pod in self._pods:
-            phases_pods[pod.phase].append(pod.name())
-        resources.update(phases_pods)
-        return section.PodResourcesWithCapacity(**resources)
+            resources[pod.phase].append(pod.name())
+        return section.PodResources(**resources)
+
+    def allocatable_pods(self) -> section.AllocatablePods:
+        return section.AllocatablePods(
+            capacity=self.resources["capacity"].pods,
+            allocatable=self.resources["allocatable"].pods,
+        )
 
     def kubelet(self) -> api.KubeletInfo:
         return self.kubelet_info
@@ -569,16 +570,17 @@ class Cluster:
             self._nodes[pod.node].append(pod)
         self._pods[pod.uid] = pod
 
-    def pod_resources(self) -> section.PodResourcesWithCapacity:
-        resources = {
-            "capacity": sum(node.resources["capacity"].pods for node in self._nodes.values()),
-            "allocatable": sum(node.resources["allocatable"].pods for node in self._nodes.values()),
-        }
-        phases_pods = defaultdict(list)
+    def pod_resources(self) -> section.PodResources:
+        resources: DefaultDict[str, List[str]] = defaultdict(list)
         for pod in self._pods.values():
-            phases_pods[pod.phase].append(pod.name())
-        resources.update(phases_pods)
-        return section.PodResourcesWithCapacity(**resources)
+            resources[pod.phase].append(pod.name())
+        return section.PodResources(**resources)
+
+    def allocatable_pods(self) -> section.AllocatablePods:
+        return section.AllocatablePods(
+            capacity=sum(node.resources["capacity"].pods for node in self._nodes.values()),
+            allocatable=sum(node.resources["allocatable"].pods for node in self._nodes.values()),
+        )
 
     def namespaces(self) -> Set[api.Namespace]:
         namespaces: Set[api.Namespace] = set()
@@ -664,7 +666,8 @@ def _write_sections(sections: Mapping[str, Callable[[], Optional[JsonProtocol]]]
 
 def write_cluster_api_sections(cluster: Cluster) -> None:
     sections = {
-        "kube_pod_resources_with_capacity_v1": cluster.pod_resources,
+        "kube_pod_resources_v1": cluster.pod_resources,
+        "kube_allocatable_pods_v1": cluster.allocatable_pods,
         "kube_node_count_v1": cluster.node_count,
         "kube_cluster_details_v1": cluster.cluster_details,
         "kube_memory_resources_v1": cluster.memory_resources,
@@ -682,7 +685,8 @@ def write_nodes_api_sections(
         sections = {
             "kube_node_container_count_v1": cluster_node.container_count,
             "kube_node_kubelet_v1": cluster_node.kubelet,
-            "kube_pod_resources_with_capacity_v1": cluster_node.pod_resources,
+            "kube_pod_resources_v1": cluster_node.pod_resources,
+            "kube_allocatable_pods_v1": cluster_node.allocatable_pods,
             "kube_node_info_v1": cluster_node.info,
             "kube_cpu_resources_v1": cluster_node.cpu_resources,
             "kube_memory_resources_v1": cluster_node.memory_resources,

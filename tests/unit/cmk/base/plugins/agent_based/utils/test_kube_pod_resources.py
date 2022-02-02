@@ -12,11 +12,10 @@ import pytest
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
 from cmk.base.plugins.agent_based.utils import kube_pod_resources
-from cmk.base.plugins.agent_based.utils.k8s import PodResources, PodResourcesWithCapacity
+from cmk.base.plugins.agent_based.utils.k8s import AllocatablePods, PodResources
 from cmk.base.plugins.agent_based.utils.kube_pod_resources import (
     _POD_RESOURCES_FIELDS,
     check_kube_pod_resources,
-    check_kube_pod_resources_with_capacity,
     Params,
     PodPhaseTimes,
     PodSequence,
@@ -174,7 +173,7 @@ def test_check_phase_duration_with_different_pods(
         # strict=True, would be nice
     ):
         assert (
-            tuple(check_kube_pod_resources(params, PodResources(pending=pending_pods)))[2]
+            tuple(check_kube_pod_resources(params, PodResources(pending=pending_pods), None))[2]
             == expected_result
         )
 
@@ -235,7 +234,7 @@ def test_check_phase_duration_with_changing_params(
         # strict=True, would be nice
     ):
         assert (
-            tuple(check_kube_pod_resources(params, PodResources(pending=["pod"])))[2]
+            tuple(check_kube_pod_resources(params, PodResources(pending=["pod"]), None))[2]
             == expected_result
         )
 
@@ -295,7 +294,7 @@ def test_check_bevaviour_if_there_are_unknown_pods(
         assert (
             tuple(
                 check_kube_pod_resources(
-                    Params(pending="no_levels"), PodResources(unknown=pending_pods)
+                    Params(pending="no_levels"), PodResources(unknown=pending_pods), None
                 )
             )[8]
             == expected_result
@@ -374,7 +373,8 @@ def test_check_kube_pod_resources_overall_look(
         result = tuple(
             check_kube_pod_resources(
                 params=params,
-                section=PodResources(pending=pod_names),
+                section_kube_pod_resources=PodResources(pending=pod_names),
+                section_kube_allocatable_pods=None,
             )
         )
     assert result == expected_result[:9]
@@ -393,9 +393,10 @@ def test_check_kube_pod_resources_with_capacity_overall_look(
 ) -> None:
     for pod_names, params in zip(pending_pods_in_each_check_call, params_in_each_check_call):
         result = tuple(
-            check_kube_pod_resources_with_capacity(
+            check_kube_pod_resources(
                 params=params,
-                section=PodResourcesWithCapacity(pending=pod_names, allocatable=110, capacity=110),
+                section_kube_pod_resources=PodResources(pending=pod_names),
+                section_kube_allocatable_pods=AllocatablePods(allocatable=110, capacity=110),
             )
         )
     assert result == expected_result

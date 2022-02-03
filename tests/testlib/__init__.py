@@ -314,11 +314,11 @@ def wait_until_liveproxyd_ready(site: Site, site_ids):
 class WatchLog:
     """Small helper for integration tests: Watch a sites log file"""
 
-    def __init__(self, site: Site):
+    def __init__(self, site: Site, default_timeout: Optional[int] = None):
         self._site = site
         self._log_path = site.core_history_log()
         self._log: Optional[TextIO] = None
-        self._default_timeout = site.core_history_log_timeout()
+        self._default_timeout = default_timeout or site.core_history_log_timeout()
 
     def __enter__(self):
         if not self._site.file_exists(self._log_path):

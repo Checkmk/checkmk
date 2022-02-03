@@ -25,7 +25,7 @@ def fake_sendmail_fixture(site: Site) -> Iterator[None]:
 
 
 @pytest.fixture(name="test_log")
-def test_log_fixture(site: Site, fake_sendmail):
+def test_log_fixture(site: Site, fake_sendmail) -> Iterator[WatchLog]:
     users = {
         "hh": {
             "fullname": "Harry Hirsch",
@@ -54,7 +54,7 @@ def test_log_fixture(site: Site, fake_sendmail):
     )
     site.activate_changes_and_wait_for_core_reload()
 
-    with WatchLog(site) as l:
+    with WatchLog(site, default_timeout=20) as l:
         yield l
 
     site.live.command("[%d] START_EXECUTING_HOST_CHECKS" % time.time())
@@ -66,7 +66,7 @@ def test_log_fixture(site: Site, fake_sendmail):
     site.activate_changes_and_wait_for_core_reload()
 
 
-def test_simple_rbn_host_notification(test_log, site: Site):
+def test_simple_rbn_host_notification(test_log: WatchLog, site: Site) -> None:
     site.send_host_check_result("notify-test", 1, "FAKE DOWN", expected_state=1)
 
     # NOTE: "] " is necessary to get the actual log line and not the external command execution
@@ -79,7 +79,7 @@ def test_simple_rbn_host_notification(test_log, site: Site):
     )
 
 
-def test_simple_rbn_service_notification(test_log, site: Site):
+def test_simple_rbn_service_notification(test_log: WatchLog, site: Site) -> None:
     site.send_service_check_result("notify-test", "PING", 2, "FAKE CRIT")
 
     # NOTE: "] " is necessary to get the actual log line and not the external command execution

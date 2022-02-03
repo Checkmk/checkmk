@@ -621,7 +621,8 @@ void ServiceProcessor::mainThread(world::ExternalPort *ex_port) noexcept {
                     XLOG::d.i("Generating answer with id [{}]",
                               answer_.getId().time_since_epoch().count());
                     return generateAnswer(ip_addr);
-                });
+                },
+                {});
             ON_OUT_OF_SCOPE({
                 ex_port->shutdownIo();
                 rt_device.stop();

@@ -272,9 +272,11 @@ int TestIo() {
         XLOG::setup::DuplicateOnStdio(true);
         XLOG::setup::ColoredOutputOnStdio(true);
         cma::world::ExternalPort port(nullptr);
-        port.startIo([](const std::string Ip) -> std::vector<uint8_t> {
-            return std::vector<uint8_t>();
-        });  //
+        port.startIo(
+            [](const std::string) -> std::vector<uint8_t> {
+                return std::vector<uint8_t>();
+            },
+            {});  //
         XLOG::l.i("testing 10 seconds");
         std::this_thread::sleep_until(steady_clock::now() + 10000ms);
         port.shutdownIo();  //

@@ -135,12 +135,16 @@ inline std::pair<std::string, bool> GetSocketInfo(
 class ExternalPort : public std::enable_shared_from_this<ExternalPort> {
 public:
     // ctor&dtor
-    ExternalPort(wtools::BaseServiceProcessor *Owner, uint16_t Port = 0)
-        : default_port_(Port)
-        , shutdown_thread_(false)
+    ExternalPort(wtools::BaseServiceProcessor *owner)
+        : shutdown_thread_(false)
         , io_started_(false)
-        , owner_(Owner)
+        , owner_(owner)
         , wake_delay_(std::chrono::milliseconds(500)) {}
+
+    ExternalPort(wtools::BaseServiceProcessor *owner, uint16_t port)
+        : ExternalPort(owner) {
+        default_port_ = port;
+    }
 
     virtual ~ExternalPort() {}
 
@@ -151,15 +155,16 @@ public:
     ExternalPort &operator=(ExternalPort &&) = delete;
 
     // Main API
-    bool startIo(const cma::world::ReplyFunc &Reply);
+    bool startIo(const ReplyFunc &reply_func, std::optional<uint16_t> port);
     void shutdownIo();
-    int xmain(int PORT);
 
     // Supplementary API
     void reloadConfig() {}
     bool isIoStarted() const noexcept { return io_started_; }
 
-    uint16_t defaultPort() const noexcept { return default_port_; }
+    std::optional<uint16_t> defaultPort() const noexcept {
+        return default_port_;
+    }
 
     void putOnQueue(AsioSession::s_ptr asio_session);
     size_t sessionsInQueue();
@@ -171,7 +176,7 @@ private:
     // Internal class from  ASIO documentation
     class server {
     public:
-        server(asio::io_context &io_context, bool Ipv6, short port)
+        server(asio::io_context &io_context, bool Ipv6, uint16_t port)
             : acceptor_(
                   io_context,
                   asio::ip::tcp::endpoint(
@@ -269,9 +274,10 @@ protected:
         shutdown_thread_ = true;
     }
 
-    uint16_t default_port_ = 0;  // work port
+    std::optional<uint16_t> default_port_;  // work port
 
-    void ioThreadProc(const cma::world::ReplyFunc &Reply);
+    void ioThreadProc(const cma::world::ReplyFunc &Reply,
+                      std::optional<uint16_t> port);
 
     // probably overkill, but we want to restart and want to be sure that
     // everything is going smooth

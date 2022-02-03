@@ -989,8 +989,14 @@ class Site:
         for nagios_log_path in glob.glob(self.path("var/nagios/*.log")):
             shutil.copy(nagios_log_path, "%s/logs" % self.result_dir())
 
+        cmc_dir = "%s/cmc" % self.result_dir()
+        os.makedirs(cmc_dir, exist_ok=True)
+
         with suppress(FileNotFoundError):
-            shutil.copy(self.path("var/check_mk/core/core"), "%s/cmc_core_dump" % self.result_dir())
+            shutil.copy(self.path("var/check_mk/core/history"), "%s/history" % cmc_dir)
+
+        with suppress(FileNotFoundError):
+            shutil.copy(self.path("var/check_mk/core/core"), "%s/core_dump" % cmc_dir)
 
         with suppress(FileNotFoundError):
             shutil.copytree(

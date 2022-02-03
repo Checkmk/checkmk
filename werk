@@ -1064,6 +1064,7 @@ levels: List[Tuple[str, str]] = []
 compatible: List[Tuple[str, str]] = []
 knowledge: List[Tuple[str, str]] = []
 online_url = ""
+current_version = None
 
 versions: Set[str] = set([])
 g_current_version = None
@@ -1075,7 +1076,9 @@ def main(argv: Optional[Sequence[str]] = None) -> None:
     load_config()
     load_werks()
     global g_current_version
-    g_current_version = load_current_version()
+    g_current_version = current_version or load_current_version()
+    if not g_current_version:
+        raise SystemExit("Unable to determine project version")
     main_args = parse_arguments(argv or sys.argv[1:])
     main_args.func(main_args)
 

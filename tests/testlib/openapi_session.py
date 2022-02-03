@@ -164,9 +164,11 @@ class CMKOpenApiSession(requests.Session):
         hostname: str,
         folder: str = "/",
         attributes: Optional[dict[str, Any]] = None,
+        bake_agent: bool = False,
     ) -> None:
+        query_string = "?bake_agent=1" if bake_agent else ""
         response = self.post(
-            "/domain-types/host_config/collections/all",
+            f"/domain-types/host_config/collections/all{query_string}",
             json={"folder": folder, "host_name": hostname, "attributes": attributes or {}},
         )
         if response.status_code != 200:

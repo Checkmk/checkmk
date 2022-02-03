@@ -78,6 +78,7 @@ def password_store_path() -> Path:
 
 def bail_out(s: str) -> NoReturn:
     sys.stdout.write("UNKNOWN - %s\n" % s)
+    sys.stderr.write("UNKNOWN - %s\n" % s)
     sys.exit(3)
 
 

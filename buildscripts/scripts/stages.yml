@@ -152,7 +152,6 @@ STAGES:
             -e SC1091
             -e SC2001
             -e SC2009
-            -e SC2012
             -e SC2015
             -e SC2030
             -e SC2031

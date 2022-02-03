@@ -194,7 +194,7 @@ if [ -z "$ONINIT_PATH" ] || [ ! -x "$ONINIT_PATH" ]; then
         /*) ;;
 
         *) # BUG not platform independent!
-            ONINIT_PATH=$(ls -l "/proc/$ONINIT_PID/exe" 2>/dev/null | sed 's/.* //')
+            ONINIT_PATH=$(readlink "/proc/$ONINIT_PID/exe")
             ;;
     esac
 

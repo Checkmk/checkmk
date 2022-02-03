@@ -98,7 +98,7 @@ def test_get_history_empty():
         assert len(corrupted_history_files) == 0
 
 
-def test_get_history_empty_but_inv_tree():
+def test_get_history_archive_but_no_inv_tree():
     hostname = "inv-host"
 
     # history
@@ -109,7 +109,7 @@ def test_get_history_empty_but_inv_tree():
 
     history, corrupted_history_files = cmk.gui.inventory.get_history(hostname)
 
-    assert len(history) == 0
+    assert len(history) == 1
     assert len(corrupted_history_files) == 0
 
 
@@ -243,3 +243,55 @@ def test_load_latest_delta_tree() -> None:
 
     assert delta_tree_2 is not None
     assert delta_tree_2.is_equal(expected_delta_tree)
+
+
+def test_load_latest_delta_tree_no_archive_and_inv_tree() -> None:
+    hostname = "inv-host"
+
+    # current tree
+    cmk.utils.store.save_object_to_file(
+        Path(cmk.utils.paths.inventory_output_dir, hostname),
+        StructuredDataNode.deserialize({"inv": "attr"}).serialize(),
+    )
+
+    delta_tree = cmk.gui.inventory.load_latest_delta_tree(hostname)
+
+    assert delta_tree is None
+
+
+def test_load_latest_delta_tree_one_archive_and_inv_tree() -> None:
+    hostname = "inv-host"
+    expected_delta_tree = StructuredDataNode.deserialize({"inv": ("attr-0", "attr")})
+
+    # history
+    cmk.utils.store.save_object_to_file(
+        Path(cmk.utils.paths.inventory_archive_dir, hostname, "0"),
+        StructuredDataNode.deserialize({"inv": "attr-0"}).serialize(),
+    )
+
+    # current tree
+    cmk.utils.store.save_object_to_file(
+        Path(cmk.utils.paths.inventory_output_dir, hostname),
+        StructuredDataNode.deserialize({"inv": "attr"}).serialize(),
+    )
+
+    delta_tree = cmk.gui.inventory.load_latest_delta_tree(hostname)
+
+    assert delta_tree is not None
+    assert delta_tree.is_equal(expected_delta_tree)
+
+
+def test_load_latest_delta_tree_one_archive_and_no_inv_tree() -> None:
+    hostname = "inv-host"
+    expected_delta_tree = StructuredDataNode.deserialize({"inv": (None, "attr-0")})
+
+    # history
+    cmk.utils.store.save_object_to_file(
+        Path(cmk.utils.paths.inventory_archive_dir, hostname, "0"),
+        StructuredDataNode.deserialize({"inv": "attr-0"}).serialize(),
+    )
+
+    delta_tree = cmk.gui.inventory.load_latest_delta_tree(hostname)
+
+    assert delta_tree is not None
+    assert delta_tree.is_equal(expected_delta_tree)

@@ -201,13 +201,16 @@ class FilteredTreePaths(NamedTuple):
     tree_paths: Sequence[TreePath]
 
 
+class FilterTreePathsError(Exception):
+    pass
+
+
 def load_latest_delta_tree(hostname: HostName) -> Optional[StructuredDataNode]:
     def _get_latest_timestamps(tree_paths: Sequence[TreePath]) -> FilteredTreePaths:
-        # If there's no archive entry then there's no history thus the timestamps are empty.
-        # This case is already handled in 'get_history'.
-        # Here: timestamps consist of at least one archive entry + timestamp of current tree.
+        if len(tree_paths) == 0:
+            raise FilterTreePathsError()
         return FilteredTreePaths(
-            start_tree_path=tree_paths[-2],
+            start_tree_path=TreePath.default() if len(tree_paths) == 1 else tree_paths[-2],
             tree_paths=[tree_paths[-1]],
         )
 
@@ -278,6 +281,11 @@ def _get_history(
     if not (all_tree_paths := _get_tree_paths(hostname)):
         return [], []
 
+    try:
+        filtered_tree_paths = filter_tree_paths(all_tree_paths)
+    except FilterTreePathsError:
+        return [], []
+
     tree_lookup: Dict[Path, StructuredDataNode] = {}
 
     def _get_tree(filepath: Path) -> StructuredDataNode:
@@ -291,7 +299,7 @@ def _get_history(
 
     corrupted_history_files = []
     history: List[HistoryEntry] = []
-    for previous, current in _get_pairs(filter_tree_paths(all_tree_paths)):
+    for previous, current in _get_pairs(filtered_tree_paths):
         if current.timestamp is None:
             continue
 
@@ -332,29 +340,27 @@ def _get_tree_paths(hostname: HostName) -> Sequence[TreePath]:
     inventory_archive_dir = Path(cmk.utils.paths.inventory_archive_dir, hostname)
 
     try:
-        latest_timestamp = int(inventory_path.stat().st_mtime)
+        archived_tree_paths = [
+            TreePath(
+                path=filepath,
+                timestamp=int(filepath.name),
+            )
+            for filepath in sorted(inventory_archive_dir.iterdir())
+        ]
     except FileNotFoundError:
         return []
 
     try:
-        archived_tree_paths = sorted(
-            [
-                TreePath(
-                    path=filepath,
-                    timestamp=int(filepath.name),
-                )
-                for filepath in inventory_archive_dir.iterdir()
-            ]
+        archived_tree_paths.append(
+            TreePath(
+                path=inventory_path,
+                timestamp=int(inventory_path.stat().st_mtime),
+            )
         )
     except FileNotFoundError:
-        return []
+        pass
 
-    return archived_tree_paths + [
-        TreePath(
-            path=inventory_path,
-            timestamp=latest_timestamp,
-        )
-    ]
+    return archived_tree_paths
 
 
 def _get_pairs(filtered_tree_paths: FilteredTreePaths) -> Sequence[Tuple[TreePath, TreePath]]:

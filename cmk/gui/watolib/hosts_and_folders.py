@@ -3131,13 +3131,15 @@ class CMEHost(CREHost):
         super().edit(attributes, cluster_nodes)
 
 
-# TODO: Change to factory?
-if not cmk_version.is_managed_edition():
-    Folder: Type[CREFolder] = CREFolder
-    Host: Type[CREHost] = CREHost
-else:
-    Folder = CMEFolder
-    Host = CMEHost
+def _get_host_and_folder_class() -> Tuple[Type[CREFolder], Type[CREHost]]:
+    if not cmk_version.is_managed_edition():
+        return CREFolder, CREHost
+    return CMEFolder, CMEHost
+
+
+host_and_folder_classes = _get_host_and_folder_class()
+Folder: Type[CREFolder] = host_and_folder_classes[0]
+Host: Type[CREHost] = host_and_folder_classes[1]
 
 
 @MemoizeCache

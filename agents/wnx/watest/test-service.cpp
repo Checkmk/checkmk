@@ -287,12 +287,12 @@ TEST(CmaSrv, ServiceChange) {
 }
 
 namespace {
-void SetCfgMode(YAML::Node cfg, std::string_view mode) {
+void SetCfgMode(YAML::Node &cfg, std::string_view mode) {
     cfg[cfg::groups::kSystem] =
         YAML::Load(fmt::format("firewall:\n  mode: {}\n", mode));
 }
 
-void SetCfgMode(YAML::Node cfg, std::string_view mode, bool all_ports) {
+void SetCfgMode(YAML::Node &cfg, std::string_view mode, bool all_ports) {
     cfg[cfg::groups::kSystem] =
         YAML::Load(fmt::format("firewall:\n  mode: {}\n  port: {}\n", mode,
                                all_ports ? "all" : "auto"));
@@ -323,6 +323,7 @@ TEST(CmaSrv, FirewallIntegration) {
 
     // remove all from the Firewall
     SetCfgMode(cfg, cfg::values::kModeRemove);
+    fw_node = cfg::GetNode(cfg::groups::kSystem, cfg::vars::kFirewall);
     value = cfg::GetVal(fw_node, cfg::vars::kFirewallMode, std::string{});
     EXPECT_EQ(value, cfg::values::kModeRemove);
     ProcessFirewallConfiguration(app_name);

@@ -12,6 +12,7 @@
 #include <cstdint>  // wchar_t when compiler options set weird
 #include <ranges>
 
+#include "agent_controller.h"
 #include "commander.h"
 #include "common/mailslot_transport.h"
 #include "common/wtools.h"
@@ -576,6 +577,8 @@ void ServiceProcessor::mainThread(world::ExternalPort *ex_port) noexcept {
                         cfg::defaults::kServiceWaitNetwork);
         WaitForNetwork(std::chrono::seconds{wait_period});
     }
+    ac::StartAgentController(wtools::GetArgv(0));
+    ON_OUT_OF_SCOPE(ac::KillAgentController());
 
     MailSlot mailbox(mailslot_name, 0);
     internal_port_ = carrier::BuildPortName(carrier::kCarrierMailslotName,

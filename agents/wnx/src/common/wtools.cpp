@@ -1994,7 +1994,7 @@ bool KillProcess(uint32_t pid, int code) noexcept {
 }
 
 // process terminator
-// used to kill OpenHardwareMonitor
+// used to kill OpenHardwareMonitor or Agent controller
 bool KillProcess(std::wstring_view process_name, int exit_code) noexcept {
     auto *snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPALL, NULL);
     if (snapshot == nullptr) return false;

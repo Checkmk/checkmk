@@ -288,6 +288,7 @@ cd $(ProjectDir)</Command>
     <ClInclude Include="..\lwa\SettingsCollector.h" />
     <ClInclude Include="..\lwa\stringutil.h" />
     <ClInclude Include="..\lwa\types.h" />
+    <ClInclude Include="agent_controller.h" />
     <ClInclude Include="async_answer.h" />
     <ClInclude Include="cap.h" />
     <ClInclude Include="carrier.h" />
@@ -516,6 +517,7 @@ cd $(ProjectDir)</Command>
     <ClCompile Include="..\lwa\stringutil.cpp" />
     <ClCompile Include="..\lwa\types.cc" />
     <ClCompile Include="..\lwa\win_error.cc" />
+    <ClCompile Include="agent_controller.cpp" />
     <ClCompile Include="async_answer.cpp" />
     <ClCompile Include="cap.cpp" />
     <ClCompile Include="carrier.cpp" />

@@ -256,11 +256,11 @@ impl ConnectionStatus {
 
     fn to_human_readable(&self) -> String {
         format!(
-            "Connection: {}\nUUID: {}\nLocal:\n\t{}\nRemote:\n\t{}",
+            "Connection: {}\n\tUUID: {}\n\tLocal:\n\t\t{}\n\tRemote:\n\t\t{}",
             self.connection,
             self.uuid,
-            self.local_lines_readable().join("\n\t"),
-            self.remote_lines_readable().join("\n\t")
+            self.local_lines_readable().join("\n\t\t"),
+            self.remote_lines_readable().join("\n\t\t")
         )
     }
 }
@@ -372,15 +372,15 @@ mod tests {
             ),
             String::from(
                 "Connection: localhost:8000\n\
-                 UUID: abc-123\n\
-                 Local:\n\
-                 \tConnection type: pull-agent\n\
-                 \tCertificate issuer: Site 'site' local CA\n\
-                 \tCertificate validity: Thu, 16 Dec 2021 08:18:41 +0000 - Tue, 18 Apr 3020 08:18:41 +0000\n\
-                 Remote:\n\
-                 \tConnection type: pull-agent\n\
-                 \tRegistration state: operational\n\
-                 \tHost name: my-host"
+                 \tUUID: abc-123\n\
+                 \tLocal:\n\
+                 \t\tConnection type: pull-agent\n\
+                 \t\tCertificate issuer: Site 'site' local CA\n\
+                 \t\tCertificate validity: Thu, 16 Dec 2021 08:18:41 +0000 - Tue, 18 Apr 3020 08:18:41 +0000\n\
+                 \tRemote:\n\
+                 \t\tConnection type: pull-agent\n\
+                 \t\tRegistration state: operational\n\
+                 \t\tHost name: my-host"
             )
         );
     }
@@ -412,15 +412,15 @@ mod tests {
             ),
             String::from(
                 "Connection: localhost:8000\n\
-                 UUID: abc-123\n\
-                 Local:\n\
-                 \tConnection type: pull-agent\n\
-                 \tCertificate issuer: Site 'site' local CA\n\
-                 \tCertificate validity: Thu, 16 Dec 2021 08:18:41 +0000 - Tue, 18 Apr 3020 08:18:41 +0000\n\
-                 Remote:\n\
-                 \tConnection type: pull-agent\n\
-                 \tRegistration state: discoverable\n\
-                 \tHost name: my-host"
+                 \tUUID: abc-123\n\
+                 \tLocal:\n\
+                 \t\tConnection type: pull-agent\n\
+                 \t\tCertificate issuer: Site 'site' local CA\n\
+                 \t\tCertificate validity: Thu, 16 Dec 2021 08:18:41 +0000 - Tue, 18 Apr 3020 08:18:41 +0000\n\
+                 \tRemote:\n\
+                 \t\tConnection type: pull-agent\n\
+                 \t\tRegistration state: discoverable\n\
+                 \t\tHost name: my-host"
             )
         );
     }
@@ -446,13 +446,13 @@ mod tests {
             ),
             String::from(
                 "Connection: imported-1\n\
-                 UUID: abc-123\n\
-                 Local:\n\
-                 \tConnection type: pull-agent\n\
-                 \tCertificate issuer: Site 'site' local CA\n\
-                 \tCertificate validity: Thu, 16 Dec 2021 08:18:41 +0000 - Tue, 18 Apr 3020 08:18:41 +0000\n\
-                 Remote:\n\
-                 \tNo remote address (imported connection)"
+                 \tUUID: abc-123\n\
+                 \tLocal:\n\
+                 \t\tConnection type: pull-agent\n\
+                 \t\tCertificate issuer: Site 'site' local CA\n\
+                 \t\tCertificate validity: Thu, 16 Dec 2021 08:18:41 +0000 - Tue, 18 Apr 3020 08:18:41 +0000\n\
+                 \tRemote:\n\
+                 \t\tNo remote address (imported connection)"
             )
         );
     }
@@ -476,12 +476,12 @@ mod tests {
             ),
             String::from(
                 "Connection: localhost:8000\n\
-                 UUID: abc-123\n\
-                 Local:\n\
-                 \tConnection type: pull-agent\n\
-                 \tCertificate parsing failed (!!)\n\
-                 Remote:\n\
-                 \tConnection error: unspecified error (!!)"
+                 \tUUID: abc-123\n\
+                 \tLocal:\n\
+                 \t\tConnection type: pull-agent\n\
+                 \t\tCertificate parsing failed (!!)\n\
+                 \tRemote:\n\
+                 \t\tConnection error: unspecified error (!!)"
             )
         );
     }
@@ -509,13 +509,13 @@ mod tests {
             ),
             String::from(
                 "Connection: localhost:8000\n\
-                 UUID: abc-123\n\
-                 Local:\n\
-                 \tConnection type: pull-agent\n\
-                 \tCertificate issuer: Site 'site' local CA\n\
-                 \tCertificate validity: Thu, 16 Dec 2021 08:18:41 +0000 - Tue, 18 Apr 3020 08:18:41 +0000\n\
-                 Remote:\n\
-                 \tConnection error: refused (!!)"
+                 \tUUID: abc-123\n\
+                 \tLocal:\n\
+                 \t\tConnection type: pull-agent\n\
+                 \t\tCertificate issuer: Site 'site' local CA\n\
+                 \t\tCertificate validity: Thu, 16 Dec 2021 08:18:41 +0000 - Tue, 18 Apr 3020 08:18:41 +0000\n\
+                 \tRemote:\n\
+                 \t\tConnection error: refused (!!)"
             )
         );
     }
@@ -547,15 +547,15 @@ mod tests {
             ),
             String::from(
                 "Connection: localhost:8000\n\
-                 UUID: abc-123\n\
-                 Local:\n\
-                 \tConnection type: pull-agent\n\
-                 \tCertificate issuer: Site 'site' local CA\n\
-                 \tCertificate validity: Thu, 16 Dec 2021 08:18:41 +0000 - Tue, 18 Apr 3020 08:18:41 +0000\n\
-                 Remote:\n\
-                 \tConnection type: push-agent (!!)\n\
-                 \tRegistration state: operational\n\
-                 \tHost name: my-host"
+                 \tUUID: abc-123\n\
+                 \tLocal:\n\
+                 \t\tConnection type: pull-agent\n\
+                 \t\tCertificate issuer: Site 'site' local CA\n\
+                 \t\tCertificate validity: Thu, 16 Dec 2021 08:18:41 +0000 - Tue, 18 Apr 3020 08:18:41 +0000\n\
+                 \tRemote:\n\
+                 \t\tConnection type: push-agent (!!)\n\
+                 \t\tRegistration state: operational\n\
+                 \t\tHost name: my-host"
             )
         );
     }
@@ -587,15 +587,15 @@ mod tests {
             ),
             String::from(
                 "Connection: localhost:8000\n\
-                 UUID: abc-123\n\
-                 Local:\n\
-                 \tConnection type: pull-agent\n\
-                 \tCertificate issuer: Site 'site' local CA\n\
-                 \tCertificate validity: Thu, 16 Dec 2021 08:18:41 +0000 - Tue, 18 Apr 3020 08:18:41 +0000\n\
-                 Remote:\n\
-                 \tConnection type: pull-agent\n\
-                 \tRegistration state: unknown (!!)\n\
-                 \tHost name: unknown"
+                 \tUUID: abc-123\n\
+                 \tLocal:\n\
+                 \t\tConnection type: pull-agent\n\
+                 \t\tCertificate issuer: Site 'site' local CA\n\
+                 \t\tCertificate validity: Thu, 16 Dec 2021 08:18:41 +0000 - Tue, 18 Apr 3020 08:18:41 +0000\n\
+                 \tRemote:\n\
+                 \t\tConnection type: pull-agent\n\
+                 \t\tRegistration state: unknown (!!)\n\
+                 \t\tHost name: unknown"
             )
         );
     }
@@ -650,24 +650,25 @@ mod tests {
         assert_eq!(
             build_status().to_string(false).unwrap(),
             "Connection: localhost:8000\n\
-             UUID: abc-123\n\
-             Local:\n\
-             \tConnection type: pull-agent\n\
-             \tCertificate issuer: Site 'site' local CA\n\
-             \tCertificate validity: Thu, 16 Dec 2021 08:18:41 +0000 - Tue, 18 Apr 3020 08:18:41 +0000\n\
-             Remote:\n\
-             \tConnection type: pull-agent\n\
-             \tRegistration state: operational\n\
-             \tHost name: my-host\n\n\n\
+             \tUUID: abc-123\n\
+             \tLocal:\n\
+             \t\tConnection type: pull-agent\n\
+             \t\tCertificate issuer: Site 'site' local CA\n\
+             \t\tCertificate validity: Thu, 16 Dec 2021 08:18:41 +0000 - Tue, 18 Apr 3020 08:18:41 +0000\n\
+             \tRemote:\n\
+             \t\tConnection type: pull-agent\n\
+             \t\tRegistration state: operational\n\
+             \t\tHost name: my-host\n\n\n\
              Connection: somehwere:8000\n\
-             UUID: ghghhfjdkgf123\nLocal:\n\
-             \tConnection type: push-agent\n\
-             \tCertificate issuer: Site 'site2' local CA\n\
-             \tCertificate validity: Thu, 16 Dec 2021 08:18:41 +0000 - Tue, 18 Apr 3020 08:18:41 +0000\n\
-             Remote:\n\
-             \tConnection type: push-agent\n\
-             \tRegistration state: operational\n\
-             \tHost name: my-host2"
+             \tUUID: ghghhfjdkgf123\n\
+             \tLocal:\n\
+             \t\tConnection type: push-agent\n\
+             \t\tCertificate issuer: Site 'site2' local CA\n\
+             \t\tCertificate validity: Thu, 16 Dec 2021 08:18:41 +0000 - Tue, 18 Apr 3020 08:18:41 +0000\n\
+             \tRemote:\n\
+             \t\tConnection type: push-agent\n\
+             \t\tRegistration state: operational\n\
+             \t\tHost name: my-host2"
         );
     }
 

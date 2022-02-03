@@ -117,6 +117,11 @@ class PathPrefixAction(argparse.Action):
         setattr(namespace, self.dest, path_prefix)
 
 
+class TCPTimeout(BaseModel):
+    connect: Optional[int]
+    read: Optional[int]
+
+
 def parse_arguments(args: List[str]) -> argparse.Namespace:
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("--debug", action="store_true", help="Debug mode: raise Python exceptions")
@@ -173,6 +178,20 @@ def parse_arguments(args: List[str]) -> argparse.Namespace:
         "--profile",
         metavar="FILE",
         help="Profile the performance of the agent and write the output to a file",
+    )
+    p.add_argument(
+        "--cluster-collector-connect-timeout",
+        type=int,
+        default=10,
+        help="The timeout in seconds the special agent will wait for a "
+        "connection to the cluster collector.",
+    )
+    p.add_argument(
+        "--cluster-collector-read-timeout",
+        type=int,
+        default=12,
+        help="The timeout in seconds the special agent will wait for a "
+        "response from the cluster collector.",
     )
 
     arguments = p.parse_args(args)
@@ -924,23 +943,29 @@ class ClusterConnectionError(Exception):
 
 
 def request_cluster_collector(
-    cluster_agent_url: str, page: str, token: str, verify: bool, debug: bool
+    cluster_agent_url: str,
+    token: str,
+    verify: bool,
+    debug: bool,
+    timeout: TCPTimeout,
 ) -> Optional[Any]:
     if not verify:
         LOGGER.info("Disabling SSL certificate verification")
         urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
     try:
         cluster_resp = requests.get(
-            f"{cluster_agent_url}/{page}",
+            cluster_agent_url,
             headers={"Authorization": f"Bearer {token}"},
             verify=verify,
+            timeout=(timeout.connect, timeout.read),
         )  # TODO: certificate validation
-    except requests.exceptions.ConnectionError as e:
+    except requests.exceptions.RequestException as exception:
+        # All TCP Exceptions raised by requests inherit from RequestException,
+        # see https://docs.python-requests.org/en/latest/user/quickstart/#errors-and-exceptions
         if debug:
             raise ClusterConnectionError(
-                f"Failed to establish a connection to cluster collector "
-                f"to {e.args[0].pool.host}:{e.args[0].pool.port} at URL {e.args[0].url}"
-            )
+                f"Failed attempting to communicate with cluster collector at URL {cluster_agent_url}"
+            ) from exception
         return None
 
     if cluster_resp.status_code != 200:
@@ -1297,13 +1322,17 @@ def main(args: Optional[List[str]] = None) -> int:
                 return 0
 
             # Sections based on cluster collector performance data
+            cluster_collector_timeout = TCPTimeout(
+                connect=arguments.cluster_collector_connect_timeout,
+                read=arguments.cluster_collector_read_timeout,
+            )
             LOGGER.info("Collecting container metrics from cluster collector")
             container_metrics: Optional[Sequence[RawMetrics]] = request_cluster_collector(
-                arguments.cluster_agent_endpoint,
-                "container_metrics",
+                f"{arguments.cluster_agent_endpoint}/container_metrics",
                 arguments.token,
                 arguments.verify_cert,
                 arguments.debug,
+                cluster_collector_timeout,
             )
             # a non-zero code would discard all API sections as the written out sections
             # would not be further processed by Checkmk
@@ -1400,11 +1429,11 @@ def main(args: Optional[List[str]] = None) -> int:
             # Sections based on cluster collector machine sections
             LOGGER.info("Collecting machine sections from cluster collector")
             machine_sections: Optional[Dict[str, str]] = request_cluster_collector(
-                arguments.cluster_agent_endpoint,
-                "machine_sections",
+                f"{arguments.cluster_agent_endpoint}/machine_sections",
                 arguments.token,
                 arguments.verify_cert,
                 arguments.debug,
+                cluster_collector_timeout,
             )
             if machine_sections is None:
                 return 0

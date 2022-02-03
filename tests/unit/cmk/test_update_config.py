@@ -23,6 +23,7 @@ import cmk.utils.log
 import cmk.utils.paths
 from cmk.utils import password_store, store
 from cmk.utils.type_defs import ContactgroupName, RulesetName, RuleSpec, RuleValue
+from cmk.utils.type_defs.pluginname import CheckPluginName
 
 import cmk.gui.config
 from cmk.gui.utils.script_helpers import application_and_request_context
@@ -282,6 +283,57 @@ def test__transform_discovery_disabled_services(
 
     folder_rules = ruleset.get_folder_rules(Folder(""))
     assert [r.to_config() for r in folder_rules] == expected_ruleset
+
+
+@pytest.mark.usefixtures("request_context")
+def test_remove_removed_check_plugins_from_ignored_checks(uc: update_config.UpdateConfig) -> None:
+    ruleset = Ruleset("ignored_checks", {})
+    ruleset.from_config(
+        Folder(""),
+        [
+            {
+                "id": "1",
+                "condition": {},
+                "options": {"disabled": False},
+                "value": ["a", "b", "mgmt_c"],
+            },
+            {
+                "id": "2",
+                "condition": {},
+                "options": {"disabled": False},
+                "value": ["d", "e"],
+            },
+            {
+                "id": "3",
+                "condition": {},
+                "options": {"disabled": False},
+                "value": ["mgmt_f"],
+            },
+            {
+                "id": "4",
+                "condition": {},
+                "options": {"disabled": False},
+                "value": ["a", "g"],
+            },
+        ],
+    )
+    rulesets = RulesetCollection()
+    rulesets.set_rulesets({"ignored_checks": ruleset})
+    uc._remove_removed_check_plugins_from_ignored_checks(
+        rulesets,
+        {
+            CheckPluginName("b"),
+            CheckPluginName("d"),
+            CheckPluginName("e"),
+            CheckPluginName("f"),
+        },
+    )
+    leftover_rules = [rule for (_folder, idx, rule) in rulesets.get("ignored_checks").get_rules()]
+    assert len(leftover_rules) == 2
+    assert leftover_rules[0].id == "1"
+    assert leftover_rules[1].id == "4"
+    assert leftover_rules[0].value == ["a", "mgmt_c"]
+    assert leftover_rules[1].value == ["a", "g"]
 
 
 @pytest.fixture(name="old_path")

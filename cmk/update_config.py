@@ -26,6 +26,7 @@ from pathlib import Path, PureWindowsPath
 from typing import (
     Any,
     Callable,
+    Container,
     Dict,
     Iterable,
     List,
@@ -521,6 +522,10 @@ class UpdateConfig:
         self._transform_wato_rulesets_params(all_rulesets)
         self._transform_discovery_disabled_services(all_rulesets)
         self._validate_regexes_in_item_specs(all_rulesets)
+        self._remove_removed_check_plugins_from_ignored_checks(
+            all_rulesets,
+            REMOVED_CHECK_PLUGIN_MAP,
+        )
         all_rulesets.save()
 
     def _transform_ignored_checks_to_maincheckified_list(
@@ -763,6 +768,25 @@ class UpdateConfig:
                 ),
                 num_errors,
             )
+
+    def _remove_removed_check_plugins_from_ignored_checks(
+        self,
+        all_rulesets: RulesetCollection,
+        removed_check_plugins: Container[CheckPluginName],
+    ) -> None:
+        ignored_checks_ruleset = all_rulesets.get("ignored_checks")
+        for _folder, _index, rule in ignored_checks_ruleset.get_rules():
+            if plugins_to_keep := [
+                plugin_str
+                for plugin_str in rule.value
+                if CheckPluginName(plugin_str).create_basic_name() not in removed_check_plugins
+            ]:
+                rule.value = plugins_to_keep
+            else:
+                ignored_checks_ruleset.delete_rule(
+                    rule,
+                    create_change=False,
+                )
 
     def _check_failed_gui_plugins(self) -> None:
         failed_plugins = cmk.gui.utils.get_failed_plugins()

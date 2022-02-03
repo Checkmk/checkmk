@@ -6,6 +6,7 @@ ec2_key: "{{ lookup('env', 'EC2_KEY') }}"
 ansible_ssh_private_key_file: "{{ lookup('env', 'ANSIBLE_SSH_PRIVATE_KEY_FILE') }}"
 cmkadmin_pass: "{{ lookup('env', 'CMKADMIN_PASS') }}"
 package_dir: "{{ lookup('env', 'PACKAGE_DIR') }}"
+ami_cleanup_age_in_days: 7
 
 # AWS EC2 Global config
 ec2_auto_shutdown: 30  # Autoshutdown/terminate after x min, if 0 then disable

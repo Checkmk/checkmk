@@ -136,7 +136,7 @@ TEST(EventLogTest, PrintEventLogIntegration) {
                                       SkipDuplicatedRecords::no,
                                       [&str](const std::string &in) -> bool {
                                           str += in;
-                                          return str.length() > 10'000;
+                                          return str.length() < 10'000;
                                       });
             EXPECT_TRUE(last > 0);
             EXPECT_TRUE(str.size() >= 100);

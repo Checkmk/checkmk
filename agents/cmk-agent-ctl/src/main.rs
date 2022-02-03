@@ -82,7 +82,7 @@ fn determine_paths(username: &str) -> AnyhowResult<constants::Paths> {
 
     if let Err(error) = become_user(&user) {
         return Err(error.context(format!(
-            "Failed to become dedicated Checkmk agent user {}",
+            "Failed to run as user '{}'. Please execute with sufficient permissions (maybe try 'sudo').",
             user.name,
         )));
     }

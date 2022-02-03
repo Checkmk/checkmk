@@ -80,6 +80,7 @@ def test_byte_strings_are_prefixed(obj: object, result: str) -> None:
 @pytest.mark.parametrize('obj, result', [
     (u'', "u''"),
     (u'bläh', "u'bl\\xe4h'"),
+    ("I love it – 5 € only", "u'I love it \\u2013 5 \\u20ac only'"),
     (((11,), (22, (u'bläh', -44))), "((11,), (22, (u'bl\\xe4h', -44)))"),
     ([[], [11, (u'blöh', []), 3.5]], "[[], [11, (u'bl\\xf6h', []), 3.5]]"),
     ({

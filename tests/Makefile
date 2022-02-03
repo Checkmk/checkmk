@@ -51,7 +51,7 @@ PYTHON_VERSIONS := 2.7 3.3 3.4 3.5 3.6 3.7 3.8 3.9
 	test-bandit test-composition test-composition-docker test-composition-docker-debug \
 	test-docker test-docker-docker test-format-python test-format-python-docker test-format-shell \
 	test-format-js test-format-js-docker test-format-css test-format-css-docker \
-	test-gui-crawl test-gui-crawl-docker test-xss-crawl test-xss-crawl-docker \
+	test-gui-crawl test-gui-crawl-docker test-xss-crawl test-xss-crawl-docker test-gui-e2e test-gui-e2e-docker \
 	test-integration test-integration-docker test-integration-docker-debug \
 	test-mypy test-mypy-raw itest-mypy-docker test-packaging test-pipenv-deps test-pylint test-pylint-docker \
 	test-unit test-unit-docker test-unit-resilience test-unit-resilience-docker test-unit-coverage-html \
@@ -86,6 +86,8 @@ help:
 	@echo "test-gui-crawl-docker               - Run GUI crawl in container"
 	@echo "test-xss-crawl                      - Run XSS crawl locally"
 	@echo "test-xss-crawl-docker               - Run XSS crawl in container"
+	@echo "test-gui-e2e                        - Run GUI End-to-End locally"
+	@echo "test-gui-e2e-docker                 - Run GUI End-to-End in container"
 	@echo "test-integration                    - Run integration tests locally"
 	@echo "test-integration-docker             - Run integration tests in container"
 	@echo "test-integration-docker-debug       - Run test container for manual debugging"
@@ -251,6 +253,12 @@ test-xss-crawl-docker:
 
 test-integration:
 	CI=true $(PIPENV) run scripts/run-integration-test.py $(realpath integration)
+
+test-gui-e2e: prepare-playwright
+	$(PYTEST) -T gui_e2e -x --log-cli-level=INFO $(realpath gui_e2e/)
+
+test-gui-e2e-docker:
+	$(PIPENV) run scripts/run-dockerized.py "test-gui-e2e"
 
 test-integration-docker:
 	$(PIPENV) run scripts/run-dockerized.py "test-integration"

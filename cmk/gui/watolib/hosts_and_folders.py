@@ -250,6 +250,7 @@ class WithUniqueIdentifier(abc.ABC):
         data["__id"] = self._id
         store.makedirs(os.path.dirname(self._store_file_name()))
         self.wato_info_storage_manager().write(Path(self._store_file_name()), data)
+        self._instance_saved_postprocess()
 
     def load_instance(self) -> None:
         """Load the data of this instance and return it.
@@ -288,6 +289,10 @@ class WithUniqueIdentifier(abc.ABC):
     def _get_instance_data(self) -> Dict[str, Any]:
         """The data to persist to the file."""
         raise NotImplementedError()
+
+    def _instance_saved_postprocess(self) -> None:
+        """Additional actions after saving the data."""
+        return
 
     @abc.abstractmethod
     def _store_file_name(self) -> str:

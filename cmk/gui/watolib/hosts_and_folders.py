@@ -13,14 +13,17 @@ import os
 import pickle
 import re
 import shutil
+import subprocess
 import time
 import uuid
 from collections.abc import Mapping as ABCMapping
+from enum import Enum
 from pathlib import Path
 from typing import (
     Any,
     Callable,
     Dict,
+    Final,
     Iterable,
     List,
     Mapping,
@@ -41,6 +44,7 @@ import cmk.utils.version as cmk_version
 from cmk.utils import store
 from cmk.utils.iterables import first
 from cmk.utils.memoize import MemoizeCache
+from cmk.utils.redis import get_redis_client, Pipeline
 from cmk.utils.site import omd_site
 from cmk.utils.store import PickleSerializer
 from cmk.utils.store.host_storage import (
@@ -100,6 +104,56 @@ if cmk_version.is_managed_edition():
 HostAttributes = Mapping[str, Any]
 HostsWithAttributes = Mapping[HostName, HostAttributes]
 AttributeType = Tuple[str, str, Dict[str, Any], str]  # host attr, cmk.base var name, value, title
+
+
+class FolderMetaData:
+    """Stores meta information for one CREFolder. This information is fetched from Redis
+    and does not require complex instantation of a CREFolder Object"""
+
+    def __init__(
+        self,
+        path: PathWithSlash,
+        title: str,
+        title_path_without_root: str,
+        permitted_contact_groups: List[ContactgroupName],
+    ):
+        self._path: Final = path
+        self._title: Final = title
+        self._title_path_without_root: Final[str] = title_path_without_root
+        self._permitted_groups: Final[List[ContactgroupName]] = permitted_contact_groups
+        self._num_hosts_recursively: Optional[int] = None
+
+    @property
+    def path(self) -> PathWithSlash:
+        return self._path
+
+    @property
+    def title(self) -> str:
+        return self._title
+
+    @property
+    def title_path_without_root(self) -> str:
+        return self._title_path_without_root
+
+    @property
+    def path_titles(self) -> List[str]:
+        # TODO: store path title in redis
+        return self._path.split("/")
+
+    @property
+    def permitted_groups(self) -> List[ContactgroupName]:
+        return self._permitted_groups
+
+    @property
+    def num_hosts_recursively(self) -> int:
+        if self._num_hosts_recursively is None:
+            self._num_hosts_recursively = 0
+            self._num_hosts_recursively = _get_wato_redis_client().num_hosts_recursively_lua(
+                self._path
+            )
+        assert self._num_hosts_recursively is not None
+        return self._num_hosts_recursively
+
 
 # Names:
 # folder_path: Path of the folders directory relative to etc/check_mk/conf.d/wato
@@ -199,6 +253,361 @@ def _get_permitted_groups_of_all_folders(
         "/".join(path_tokens[1:]): groups_info
         for path_tokens, groups_info in effective_groups_per_folder.items()
     }
+
+
+class _WATOFolderScanTimestamps(NamedTuple):
+    second_newest: str
+    newest: str
+
+
+class _MoveType(Enum):
+    Host = "host"
+    Folder = "folder"
+
+
+class _RedisHelper:
+    """
+    This class
+    - communicates with redis
+    - handles the entire redis cache and checks its integrity
+    - computes the metadata out of CREFolder instances and stores it in redis
+    - provides functions to compute the number of hosts and fetch the metadata for folders"""
+
+    def __init__(self):
+        self._client = get_redis_client()
+        self._folder_metadata = {}
+
+        self._loaded_wato_folders: Optional[Mapping[PathWithoutSlash, CREFolder]] = None
+        self._folder_paths: Optional[Tuple[PathWithSlash, ...]] = None
+
+        if self._cache_integrity_ok():
+            return
+
+        # Store the fully loaded WATO folders. Maybe some process needs them later on
+        self._loaded_wato_folders = self._create_cache_from_scratch()
+        self._folder_paths = tuple(f"{path}/" for path in self._loaded_wato_folders)
+
+    @property
+    def folder_paths(self) -> Sequence[PathWithSlash]:
+        if self._folder_paths is None:
+            self._folder_paths = tuple(self._client.smembers("wato:folder_list"))
+        return self._folder_paths
+
+    @property
+    def loaded_wato_folders(self) -> Optional[Mapping[str, CREFolder]]:
+        return self._loaded_wato_folders
+
+    def clear_cached_folders(self) -> None:
+        self._loaded_wato_folders = None
+
+    def choices_for_moving(self, path: PathWithoutSlash, move_type: _MoveType) -> Choices:
+        self._fetch_all_metadata()
+        path_to_title = {x.path: x.title_path_without_root for x in self._folder_metadata.values()}
+
+        # Remove self
+        del path_to_title[f"{path}/"]
+
+        # Folder sanity checks. A folder cannot be moved into its subfolders
+        if move_type == _MoveType.Folder:
+            if path != "":
+                # Remove move into parent (folder is already there)
+                del path_to_title[f"{os.path.dirname(path)}/"]
+
+            # Remove all subfolders (recursively)
+            for possible_child_path in list(path_to_title.keys()):
+                if possible_child_path.startswith(path):
+                    del path_to_title[possible_child_path]
+
+        # Check permissions
+        if not user.may("wato.all_folders"):
+            assert user.id is not None
+            user_cgs = set(userdb.contactgroups_of_user(user.id))
+            # Remove folders without permission
+            for check_path in list(path_to_title.keys()):
+                if permitted_groups := self._folder_metadata[check_path].permitted_groups:
+                    if not user_cgs.intersection(set(permitted_groups.split(","))):
+                        del path_to_title[check_path]
+
+        return [(key.rstrip("/"), value) for key, value in path_to_title.items()]
+
+    def folder_metadata(self, path: PathWithoutSlash) -> Optional[FolderMetaData]:
+        path_with_slash = f"{path}/"
+        if path not in self._folder_metadata:
+            results = self._client.hmget(
+                f"wato:folders:{path_with_slash}",
+                "title",
+                "title_path_without_root",
+                "permitted_contact_groups",
+            )
+            if not results:
+                return None
+
+            # Redis hmget typing states that the field can be None
+            # It won't happen if the key is found, adding fallbacks anyway.
+            permitted_groups = results[2].split(",") if results[2] is not None else []
+            self._folder_metadata[path_with_slash] = FolderMetaData(
+                path_with_slash,
+                results[0] or path_with_slash,
+                results[1] or path_with_slash,
+                permitted_groups,
+            )
+
+        return self._folder_metadata.get(path_with_slash)
+
+    def _fetch_all_metadata(self) -> None:
+        pipeline = self._client.pipeline()
+        all_metadata = self._client.register_script(
+            """
+            local cursor = 0;
+            local values = {}
+            repeat
+                local result = redis.call("SSCAN", "wato:folder_list", cursor, "COUNT", 100000)
+                cursor = tonumber(result[1])
+                local data = result[2]
+                for i=1, #data do
+                    table.insert(values, data[i])
+                    for i, v in ipairs(redis.call("HMGET", "wato:folders:" .. data[i], "title", "title_path_without_root", "permitted_contact_groups")) do
+                        table.insert(values, v)
+                    end
+                end
+            until cursor == 0;
+            return values;
+        """
+        )
+        all_metadata(client=pipeline)
+
+        def pairwise(iterable):
+            a = iter(iterable)
+            return zip(a, a, a, a)
+
+        results = pipeline.execute()
+        for folder_path, title, title_path_without_root, permitted_contact_groups in pairwise(
+            results[0]
+        ):
+            self._folder_metadata[folder_path] = FolderMetaData(
+                folder_path, title, title_path_without_root, permitted_contact_groups
+            )
+
+    def _create_cache_from_scratch(self) -> Mapping[PathWithSlash, CREFolder]:
+        # Steps:
+        #  1) create a log entry, this shouldn't happen to often, helps to track down other effects
+        #  2) determine the latest timestamp from disk
+        #  3) load folder hierarchy
+        #  3) prepare pipeline
+        #  4) cleanup redis -> pipeline
+        #  5) compute new config -> pipeline
+        #  7) execute pipeline
+        # Note: Locking? Pipeline is an atomic operation
+
+        logger.warning("Creating wato folder cache")
+
+        newest_timestamp = self._get_latest_timestamps_from_disk().newest
+        all_folders = _get_fully_loaded_wato_folders()
+
+        pipeline = self._client.pipeline()
+        self._add_redis_cleanup_to_pipeline(pipeline)
+        self._add_all_folder_details_to_pipeline(pipeline, all_folders)
+        self._add_last_folder_update_to_pipeline(pipeline, newest_timestamp)
+        pipeline.execute()
+
+        return all_folders
+
+    def _add_redis_cleanup_to_pipeline(self, pipeline: Pipeline) -> None:
+        delete_keys = self._client.register_script(
+            """
+            local cursor = 0;
+            redis.call("DEL", "wato:folder_list");
+            redis.call("DEL", "wato:folder_list:last_update");
+            repeat
+                local result = redis.call("SCAN", cursor, "MATCH", "wato:folders:*", "COUNT", 100000);
+                cursor = tonumber(result[1]);
+                local data = result[2];
+                for i=1, #data do
+                    redis.call("DEL", data[i]);
+                end
+            until cursor == 0;
+        """
+        )
+        delete_keys(client=pipeline)
+
+    def _add_all_folder_details_to_pipeline(
+        self, pipeline: Pipeline, all_folders: Mapping[PathWithoutSlash, CREFolder]
+    ) -> None:
+        folder_groups = _get_permitted_groups_of_all_folders(all_folders)
+        folder_list_entries = []
+        for folder_path, folder in all_folders.items():
+            folder_list_entries.append(f"{folder_path}/")
+            self._add_folder_details_to_pipeline(
+                pipeline,
+                folder_path,
+                folder.num_hosts(),
+                folder.title(),
+                "/".join(str(p) for p in folder.title_path_without_root()),
+                folder_groups[folder_path].actual_groups,
+            )
+        pipeline.sadd("wato:folder_list", *folder_list_entries)
+
+    def _add_folder_details_to_pipeline(
+        self,
+        pipeline: Pipeline,
+        path: PathWithoutSlash,
+        num_hosts: int,
+        title: str,
+        title_path_without_root: str,
+        permitted_contact_groups: Set[ContactgroupName],
+    ) -> None:
+        folder_key = f"wato:folders:{path}/"
+        mapping: Mapping[Union[str, bytes], Union[str, int]] = {
+            "num_hosts": num_hosts,
+            "title": title,
+            "title_path_without_root": title_path_without_root,
+            "permitted_contact_groups": ",".join(permitted_contact_groups),
+        }
+        pipeline.hset(folder_key, mapping=mapping)
+
+    def _add_last_folder_update_to_pipeline(self, pipeline: Pipeline, timestamp: str) -> None:
+        pipeline.set("wato:folder_list:last_update", timestamp)
+
+    def num_hosts_recursively_lua(self, path_with_slash: PathWithSlash) -> int:
+        """Returns the number of hosts in subfolder, excluding hosts not visible to the current user"""
+        recursive_hosts = self._client.register_script(
+            """
+            local cursor = 0;
+            local values = {}
+            repeat
+                local result = redis.call("SSCAN", "wato:folder_list", cursor, "MATCH", KEYS[1], "COUNT", 100000)
+                cursor = tonumber(result[1])
+                local data = result[2]
+                for i=1, #data do
+                    for i, v in ipairs(redis.call("HMGET", "wato:folders:" .. data[i], ARGV[1], ARGV[2])) do
+                        table.insert(values, v)
+                    end
+                end
+            until cursor == 0;
+            return values;
+        """
+        )
+
+        pipeline = self._client.pipeline()
+        keys = [f"{path_with_slash}*"]
+        args = ["permitted_contact_groups", "num_hosts"]
+        recursive_hosts(keys=keys, args=args, client=pipeline)
+        results = pipeline.execute()
+
+        total_hosts = 0
+        if not results:
+            return total_hosts
+
+        if user.may("wato.see_all_folders"):
+            return sum(map(int, results[0][1::2]))
+
+        def pairwise(iterable):
+            """s -> (s0,s1), (s2,s3), (s4, s5), ..."""
+            a = iter(iterable)
+            return zip(a, a)
+
+        assert user.id is not None
+        user_cgs = set(userdb.contactgroups_of_user(user.id))
+        for (folder_cgs, num_hosts) in pairwise(results[0]):
+            folder_cgs = set(folder_cgs.split(","))
+            if user_cgs.intersection(folder_cgs):
+                total_hosts += int(num_hosts)
+
+        return total_hosts
+
+    def _cache_integrity_ok(self) -> bool:
+        return self._get_latest_timestamps_from_disk().newest == self._get_last_update_from_redis()
+
+    def _partial_data_update_possible(self, file_modification_time: str) -> bool:
+        """Checks whether a partial update is possible at all
+        The timestamps of the latest two files have to match
+        - the last update from redis
+        - the timestamp of the changed file
+        If there are any other timestamps present, they were created by some
+        unobserved mechanism, e.g modifying folders on the command line
+        """
+
+        disk_timestamps = self._get_latest_timestamps_from_disk()
+        if disk_timestamps.newest != file_modification_time:
+            logger.warning("file timestamp mismatch %r", file_modification_time)
+            return False
+
+        last_redis_update = self._get_last_update_from_redis()
+        # The last save operation may change the same file as the current save operation.
+        # In this scenario the second newest timestamp must be older than the last_redis_update
+        if last_redis_update < disk_timestamps.second_newest:
+            logger.warning("redis timestamp mismatch %r", last_redis_update)
+            return False
+
+        return True
+
+    def _get_folder_modification_time(self, folder: CREFolder) -> str:
+        return self._timestamp_to_fixed_precision_str(os.stat(folder.wato_info_path()).st_mtime)
+
+    def save_folder_info(
+        self,
+        folder: CREFolder,
+    ) -> None:
+        folder_modification_time = self._get_folder_modification_time(folder)
+        if not self._partial_data_update_possible(folder_modification_time):
+            # Something unexpected was modified in the meantime, rewrite cache
+            # TODO: check if return value can be used somehow
+            self._create_cache_from_scratch()
+            return
+
+        pipeline = self._client.pipeline()
+        self._add_folder_details_to_pipeline(
+            pipeline,
+            folder.path(),
+            folder.num_hosts(),
+            folder.title(),
+            "/".join(str(p) for p in folder.title_path_without_root()),
+            folder.groups()[0],
+        )
+        pipeline.sadd("wato:folder_list", f"{folder.path()}/")
+        self._add_last_folder_update_to_pipeline(pipeline, folder_modification_time)
+        pipeline.execute()
+
+    def _timestamp_to_fixed_precision_str(self, timestamp: float) -> str:
+        return "%.5f" % timestamp
+
+    def _get_latest_timestamps_from_disk(self) -> _WATOFolderScanTimestamps:
+        """Note: We are using the find command from the command line since it is considerable
+        faster than any python implementation. For example 9k files:
+        Path.glob             -> 1.12 seconds
+        os.walk               -> 0.34 seconds
+        find (+spawn process) -> 0.14 seconds
+        """
+        # TODO: tokenize command?
+        result = subprocess.run(
+            "find ~/etc/check_mk/conf.d/wato -type d -printf '%T@\n' -o -name .wato -printf '%T@\n' | sort -n | tail -2",
+            shell=True,
+            capture_output=True,
+            check=True,
+        )
+        try:
+            output = result.stdout.decode("utf-8")
+            timestamps = [
+                self._timestamp_to_fixed_precision_str(float(x)) for x in output.split("\n")[:2]
+            ]
+            return _WATOFolderScanTimestamps(timestamps[0], timestamps[1])
+        except ValueError:
+            fixed_zero = self._timestamp_to_fixed_precision_str(0.0)
+            return _WATOFolderScanTimestamps(fixed_zero, fixed_zero)
+
+    def _get_last_update_from_redis(self) -> str:
+        try:
+            if (value := self._client.get("wato:folder_list:last_update")) is not None:
+                return value
+        except ValueError:
+            pass
+        return self._timestamp_to_fixed_precision_str(0.0)
+
+
+def _get_fully_loaded_wato_folders() -> Mapping[PathWithoutSlash, CREFolder]:
+    wato_folders: Dict[PathWithoutSlash, CREFolder] = {}
+    Folder("", "").add_to_dictionary(wato_folders)
+    return wato_folders
 
 
 class _ABCWATOInfoStorage:
@@ -649,6 +1058,12 @@ def update_metadata(
     deep_update(attributes, {"meta_data": {"updated_at": now_}}, overwrite=True)
 
     return attributes
+
+
+def _get_wato_redis_client() -> _RedisHelper:
+    if "wato_redis_client" not in g:
+        g.wato_redis_client = _RedisHelper()
+    return g.wato_redis_client
 
 
 class WATOHosts(TypedDict):
@@ -1255,7 +1670,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
         # Do *not* load hosts here! This method must kept cheap
         return self._num_hosts
 
-    def num_hosts_recursively(self):
+    def num_hosts_recursively(self) -> int:
         num = self.num_hosts()
         for subfolder in self.subfolders(only_visible=True):
             num += subfolder.num_hosts_recursively()

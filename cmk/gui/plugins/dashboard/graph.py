@@ -38,6 +38,7 @@ from cmk.gui.plugins.metrics.html_render import (
     default_dashlet_graph_render_options,
     resolve_graph_recipe,
 )
+from cmk.gui.plugins.visuals.utils import livestatus_query_bare
 from cmk.gui.plugins.metrics.valuespecs import vs_graph_render_options
 from cmk.gui.type_defs import Choices, GraphIdentifier, VisualContext
 from cmk.gui.valuespec import (
@@ -55,6 +56,45 @@ from cmk.gui.valuespec import (
 def _metric_title_from_id(metric_or_graph_id: MetricName) -> str:
     metric_id = metric_or_graph_id.replace("METRIC_", "")
     return metric_info.get(metric_id, {}).get("title", metric_id)
+
+
+# Sneak CMK 2.1 autocompleter endpoints to make the 2.0 connector usable on CMK 2.0 too.
+def _graph_choices_from_livestatus_row(row) -> Iterable[TupleType[str, str]]:
+    def _graph_template_title(graph_template: Mapping) -> str:
+        return str(graph_template.get("title")) or _metric_title_from_id(graph_template["id"])
+
+    yield from ((
+        template["id"],
+        _graph_template_title(template),
+    ) for template in get_graph_templates(translated_metrics_from_row(row)))
+
+
+def graph_templates_autocompleter(value: str, params: Dict) -> Choices:
+    """Return the matching list of dropdown choices
+    Called by the webservice with the current input field value and the
+    completions_params to get the list of choices"""
+    if not params.get("context") and params.get("strict", "False") == "False":
+        choices: Iterable[TupleType[str, str]] = ((
+            graph_id,
+            str(graph_details.get(
+                "title",
+                graph_id,
+            )),
+        ) for graph_id, graph_details in graph_info.items())
+
+    else:
+        columns = [
+            "service_check_command",
+            "service_perf_data",
+            "service_metrics",
+        ]
+
+        choices = set(
+            chain.from_iterable(
+                _graph_choices_from_livestatus_row(row)
+                for row in livestatus_query_bare("service", params["context"], columns)))
+
+    return sorted((v for v in choices if value.lower() in v[1].lower()), key=lambda a: a[1].lower())
 
 
 @autocompleter_registry.register
@@ -142,6 +182,11 @@ class AvailableGraphs(DropdownChoiceWithHostAndServiceHints):
         """Return the matching list of dropdown choices
         Called by the webservice with the current input field value and the
         completions_params to get the list of choices"""
+
+        # Sneak CMK 2.1 autocompleter endpoints to make the 2.0 connector usable on CMK 2.0 too.
+        if "context" in params:
+            return graph_templates_autocompleter(value, params)
+
         if not (params.get("host") or params.get("service")):
             choices: Iterable[TupleType[str, str]] = ((
                 graph_id,

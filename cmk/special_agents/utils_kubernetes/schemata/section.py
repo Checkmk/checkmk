@@ -186,6 +186,23 @@ class NodeInfo(api.NodeInfo):
     addresses: api.NodeAddresses
 
 
+class NodeCondition(BaseModel):
+    status: api.NodeConditionStatus
+    reason: Optional[str]
+    detail: Optional[str]
+    last_transition_time: Optional[int]
+
+
+class NodeConditions(BaseModel):
+    """section: k8s_node_conditions_v1"""
+
+    ready: NodeCondition
+    memorypressure: NodeCondition
+    diskpressure: NodeCondition
+    pidpressure: NodeCondition
+    networkunavailable: Optional[NodeCondition]
+
+
 class DeploymentInfo(BaseModel):
     """section: kube_deployment_info_v1"""
 

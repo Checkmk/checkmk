@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import pytest
+
 from cmk.special_agents import agent_kube
 from cmk.special_agents.utils_kubernetes.schemata import section
 
@@ -39,3 +41,9 @@ def test_write_cluster_api_sections_maps_section_names_to_callables(
         callable(write_sections_mock.call_args[0][0][section_name])
         for section_name in cluster_api_sections
     )
+
+
+@pytest.mark.parametrize("cluster_nodes", [0, 10, 20])
+def test_node_count_returns_number_of_nodes_ready_not_ready(cluster_nodes, cluster):
+    node_count = cluster.node_count()
+    assert node_count.worker.ready + node_count.worker.not_ready == cluster_nodes

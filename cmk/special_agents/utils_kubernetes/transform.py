@@ -247,12 +247,20 @@ def is_control_plane(labels: Optional[Mapping[LabelName, Label]]) -> bool:
     )
 
 
-def node_conditions(status: client.V1Status) -> Optional[api.NodeConditions]:
+def node_conditions(status: client.V1Status) -> Optional[Sequence[api.NodeCondition]]:
     conditions = status.conditions
     if not conditions:
         return None
-    result = api.NodeConditions(**{c.type: c.status for c in conditions})
-    return result
+    return [
+        api.NodeCondition(
+            status=c.status,
+            type_=c.type,
+            reason=c.reason,
+            detail=c.message,
+            last_transition_time=int(convert_to_timestamp(c.last_transition_time)),
+        )
+        for c in conditions
+    ]
 
 
 def node_info(node: client.V1Node) -> api.NodeInfo:

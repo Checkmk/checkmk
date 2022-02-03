@@ -58,6 +58,14 @@ LOGGER = logging.getLogger()
 
 AGENT_TMP_PATH = Path(cmk.utils.paths.tmp_dir, "agent_kube")
 
+NATIVE_NODE_CONDITION_TYPES = [
+    "Ready",
+    "MemoryPressure",
+    "DiskPressure",
+    "PIDPressure",
+    "NetworkUnavailable",
+]
+
 RawMetrics = Mapping[str, str]
 
 MetricName = NewType("MetricName", str)
@@ -534,6 +542,25 @@ class Node:
             value=self.resources["allocatable"].cpu,
         )
 
+    def conditions(self) -> Optional[section.NodeConditions]:
+        if not self.status.conditions:
+            return None
+
+        # TODO: separate section for custom conditions and/or conditions added with NPD
+        # http://www.github.com/kubernetes/node-problem-detector
+        return section.NodeConditions(
+            **{
+                condition.type_.lower(): section.NodeCondition(
+                    status=condition.status,
+                    reason=condition.reason,
+                    detail=condition.detail,
+                    last_transition_time=condition.last_transition_time,
+                )
+                for condition in self.status.conditions
+                if condition.type_ in NATIVE_NODE_CONDITION_TYPES
+            }
+        )
+
 
 class Cluster:
     @classmethod
@@ -633,7 +660,9 @@ class Cluster:
     def node_count(self) -> section.NodeCount:
         node_count = section.NodeCount()
         for node in self._nodes.values():
-            ready = node.status.conditions.Ready == api.NodeConditionStatus.TRUE
+            ready = (
+                conditions := node.conditions()
+            ) is not None and conditions.ready.status == api.NodeConditionStatus.TRUE
             if node.control_plane:
                 if ready:
                     node_count.control_plane.ready += 1
@@ -726,6 +755,7 @@ def write_nodes_api_sections(
             "kube_memory_resources_v1": cluster_node.memory_resources,
             "kube_allocatable_cpu_resource_v1": cluster_node.allocatable_cpu_resource,
             "kube_allocatable_memory_resource_v1": cluster_node.allocatable_memory_resource,
+            "kube_node_conditions_v1": cluster_node.conditions,
         }
         _write_sections(sections)
 

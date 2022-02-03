@@ -76,3 +76,29 @@ def test_write_nodes_api_sections_calls_write_sections_for_each_node(
 ):
     agent_kube.write_nodes_api_sections([new_node() for _ in range(cluster_nodes)], Mock())
     assert write_sections_mock.call_count == cluster_nodes
+
+
+def test_conditions_returns_all_native_conditions(node):
+    conditions = node.conditions()
+    conditions_dict = conditions.dict()
+    assert len(conditions_dict) == len(agent_kube.NATIVE_NODE_CONDITION_TYPES)
+    assert all(
+        condition_type.lower() in conditions_dict
+        for condition_type in agent_kube.NATIVE_NODE_CONDITION_TYPES
+    )
+
+
+def test_conditions_respects_status_conditions(node):
+    conditions = node.conditions()
+    conditions_dict = conditions.dict()
+    assert len(conditions_dict) == len(node.status.conditions)
+    assert all(
+        conditions_dict[condition.type_.lower()]["status"] == condition.status
+        for condition in node.status.conditions
+    )
+
+
+def test_conditions_with_status_conditions_none(node):
+    node.status.conditions = None
+    conditions = node.conditions()
+    assert conditions is None

@@ -75,12 +75,12 @@ class NodeConditionStatus(str, enum.Enum):
     UNKNOWN = "Unknown"
 
 
-class NodeConditions(BaseModel):
-    NetworkUnavailable: Optional[NodeConditionStatus] = None
-    MemoryPressure: NodeConditionStatus
-    DiskPressure: NodeConditionStatus
-    PIDPressure: NodeConditionStatus
-    Ready: NodeConditionStatus
+class NodeCondition(BaseModel):
+    status: NodeConditionStatus
+    type_: Optional[str]
+    reason: Optional[str]
+    detail: Optional[str]
+    last_transition_time: Optional[int]
 
 
 class NodeResources(BaseModel):
@@ -126,7 +126,7 @@ NodeAddresses = Sequence[NodeAddress]
 
 
 class NodeStatus(BaseModel):
-    conditions: NodeConditions
+    conditions: Optional[Sequence[NodeCondition]]
     node_info: NodeInfo
     addresses: NodeAddresses
 

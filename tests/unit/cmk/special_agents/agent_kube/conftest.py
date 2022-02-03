@@ -8,7 +8,7 @@
 import itertools
 
 import pytest
-from pydantic_factories import ModelFactory
+from pydantic_factories import ModelFactory, Use
 
 from cmk.special_agents import agent_kube
 from cmk.special_agents.utils_kubernetes.schemata import api
@@ -44,8 +44,16 @@ class NodeResourcesFactory(ModelFactory):
     __model__ = api.NodeResources
 
 
+class NodeConditionFactory(ModelFactory):
+    __model__ = api.NodeCondition
+
+    type_ = Use(next, itertools.cycle(agent_kube.NATIVE_NODE_CONDITION_TYPES))
+
+
 class NodeStatusFactory(ModelFactory):
     __model__ = api.NodeStatus
+
+    conditions = Use(NodeConditionFactory.batch, size=len(agent_kube.NATIVE_NODE_CONDITION_TYPES))
 
 
 @pytest.fixture
@@ -155,6 +163,7 @@ def nodes_api_sections():
         "kube_memory_resources_v1",
         "kube_allocatable_cpu_resource_v1",
         "kube_allocatable_memory_resource_v1",
+        "kube_node_conditions_v1",
     ]
 
 

@@ -85,20 +85,44 @@ class TestAPINode:
                     "status": {
                         "conditions": [
                             {
-                                "type": "MemoryPressure",
+                                "lastHeartbeatTime": "2019-09-20T19:32:50Z",
+                                "lastTransitionTime": "2019-07-09T16:17:29Z",
+                                "message": "kubelet has no disk pressure",
+                                "reason": "KubeletHasNoDiskPressure",
                                 "status": "False",
-                            },
-                            {
                                 "type": "DiskPressure",
-                                "status": "False",
                             },
                             {
+                                "lastHeartbeatTime": "2019-09-20T19:32:50Z",
+                                "lastTransitionTime": "2019-07-09T16:17:29Z",
+                                "message": "kubelet has sufficient memory available",
+                                "reason": "KubeletHasSufficientMemory",
+                                "status": "False",
+                                "type": "MemoryPressure",
+                            },
+                            {
+                                "lastHeartbeatTime": "2019-07-09T16:17:47Z",
+                                "lastTransitionTime": "2019-07-09T16:17:47Z",
+                                "message": "RouteController created a route",
+                                "reason": "RouteCreated",
+                                "status": "False",
+                                "type": "NetworkUnavailable",
+                            },
+                            {
+                                "lastHeartbeatTime": "2019-09-20T19:32:50Z",
+                                "lastTransitionTime": "2019-07-09T16:17:29Z",
+                                "message": "kubelet has sufficient PID available",
+                                "reason": "KubeletHasSufficientPID",
+                                "status": "False",
                                 "type": "PIDPressure",
-                                "status": "False",
                             },
                             {
-                                "type": "Ready",
+                                "lastHeartbeatTime": "2019-09-20T19:32:50Z",
+                                "lastTransitionTime": "2019-07-09T16:17:49Z",
+                                "message": "kubelet is posting ready status. AppArmor enabled",
+                                "reason": "KubeletReady",
                                 "status": "True",
+                                "type": "Ready",
                             },
                         ],
                     },
@@ -115,8 +139,11 @@ class TestAPINode:
             node = list(core_client.list_node().items)[0]
         conditions = node_conditions(node.status)
         assert conditions is not None
-        assert conditions.NetworkUnavailable is None
-        assert conditions.Ready is api.NodeConditionStatus.TRUE
+        assert len(conditions) == 5
+        assert any(c.type_ == "DiskPressure" for c in conditions)
+        assert list(c.status for c in conditions if c.type_ == "Ready") == [
+            api.NodeConditionStatus.TRUE
+        ]
 
     def test_parse_conditions_no_status(self, core_client, dummy_host):
         node_with_conditions = {"items": [{"status": {}}]}  # type: ignore

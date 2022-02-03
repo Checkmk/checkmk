@@ -52,7 +52,7 @@ setversion:
 build: $(DEB_PACKAGE) $(RPM_PACKAGE) $(WIN_PACKAGE) controller
 
 controller:
-	rm linux/cmk-agent-ctl
+	rm -f linux/cmk-agent-ctl
 	(cd cmk-agent-ctl; ../../scripts/run-cargo-command build --release) \
 	&& mkdir -p linux \
 	&& cp cmk-agent-ctl/target/release/cmk-agent-ctl linux

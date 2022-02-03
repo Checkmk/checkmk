@@ -4,34 +4,25 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import json
 from typing import Optional
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import register, Service
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
-    CheckResult,
-    DiscoveryResult,
-    StringTable,
-)
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
+from cmk.base.plugins.agent_based.utils.k8s import PerformanceUsage
 from cmk.base.plugins.agent_based.utils.kube_resources import (
     AllocatableResource,
     check_resource,
     DEFAULT_PARAMS,
     Params,
     parse_allocatable_resource,
+    parse_performance_usage,
     parse_resources,
     Resources,
-    Usage,
 )
 
 
-def parse_kube_performance_cpu_v1(string_table: StringTable) -> Usage:
-    """Parses usage value into Usage"""
-    return Usage(**json.loads(string_table[0][0]))
-
-
 def discovery_kube_cpu(
-    section_kube_performance_cpu: Optional[Usage],
+    section_kube_performance_cpu: Optional[PerformanceUsage],
     section_kube_cpu_resources: Optional[Resources],
     section_kube_allocatable_cpu_resource: Optional[AllocatableResource],
 ) -> DiscoveryResult:
@@ -40,7 +31,7 @@ def discovery_kube_cpu(
 
 def check_kube_cpu(
     params: Params,
-    section_kube_performance_cpu: Optional[Usage],
+    section_kube_performance_cpu: Optional[PerformanceUsage],
     section_kube_cpu_resources: Optional[Resources],
     section_kube_allocatable_cpu_resource: Optional[AllocatableResource],
 ) -> CheckResult:
@@ -56,9 +47,9 @@ def check_kube_cpu(
 
 
 register.agent_section(
-    name="kube_performance_cpu_usage_v1",
+    name="kube_performance_cpu_v1",
     parsed_section_name="kube_performance_cpu",
-    parse_function=parse_kube_performance_cpu_v1,
+    parse_function=parse_performance_usage,
 )
 
 

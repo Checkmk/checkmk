@@ -11,12 +11,16 @@ from pydantic import BaseModel
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import check_levels, Metric, render, Result
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult, StringTable
+from cmk.base.plugins.agent_based.utils.k8s import PerformanceUsage
 
 ResourceType = Literal["memory", "cpu"]
 RequirementType = Literal["request", "limit", "allocatable"]
 AllocatableKubernetesObject = Literal["cluster", "node"]
 
 
+# TODO: Resources is a bad name, this should be changed to something like Requirements. When
+# choosing a name, other section BaseModel names like AllocatableResource and PerformanceUsage
+# be taken into account
 class Resources(BaseModel):
     """sections: "[kube_memory_resources_v1, kube_cpu_resources_v1]"""
 
@@ -33,6 +37,17 @@ class AllocatableResource(BaseModel):
 
     context: AllocatableKubernetesObject
     value: float
+
+
+def parse_performance_usage(string_table: StringTable) -> PerformanceUsage:
+    """Parses usage value for CPU and memory into PerformanceUsage
+
+    >>> parse_performance_usage([['{"resource": {"type_": "memory", "usage": 18120704.0}}']])
+    PerformanceUsage(resource=Memory(type_='memory', usage=18120704.0))
+    >>> parse_performance_usage([['{"resource": {"type_": "cpu", "usage": 0.9}}']])
+    PerformanceUsage(resource=Cpu(type_='cpu', usage=0.9))
+    """
+    return PerformanceUsage(**json.loads(string_table[0][0]))
 
 
 def count_overview(resources: Resources, requirement: RequirementType) -> str:
@@ -67,10 +82,6 @@ def parse_allocatable_resource(string_table: StringTable) -> AllocatableResource
     AllocatableResource(context='cluster', value=6.0)
     """
     return AllocatableResource(**json.loads(string_table[0][0]))
-
-
-class Usage(BaseModel):
-    usage: float
 
 
 Param = Union[Literal["no_levels"], Tuple[Literal["levels"], Tuple[float, float]]]
@@ -156,16 +167,16 @@ def requirements_for_object(
 
 def check_resource(
     params: Params,
-    usage: Optional[Usage],
+    resource_usage: Optional[PerformanceUsage],
     resources: Resources,
     allocatable_resource: Optional[AllocatableResource],
     resource_type: ResourceType,
     render_func: Callable[[float], str],
 ) -> CheckResult:
-    if usage is not None:
-        total_usage = usage.usage
+    if resource_usage is not None:
+        usage = resource_usage.resource.usage
         yield from check_levels(
-            total_usage,
+            usage,
             label="Usage",
             levels_upper=params["usage"][1] if params["usage"] != "no_levels" else None,
             metric_name=f"kube_{resource_type}_usage",
@@ -175,9 +186,9 @@ def check_resource(
     for requirement_type, kubernetes_object, requirement in requirements_for_object(
         resources, allocatable_resource
     ):
-        if requirement != 0.0 and usage is not None:
+        if requirement != 0.0 and resource_usage is not None:
             result, metric = check_with_utilization(
-                total_usage,
+                usage,
                 resource_type,
                 requirement_type,
                 kubernetes_object,

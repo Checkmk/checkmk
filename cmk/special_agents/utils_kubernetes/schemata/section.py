@@ -241,19 +241,11 @@ class ContainerCount(BaseModel):
     terminated: int = 0
 
 
-class ContainerCpuUsage(PerformanceContainer):
+class ContainerCpu(PerformanceContainer):
     cpu_usage_seconds_total: PerformanceMetric
 
 
-class CpuUsage(BaseModel):
-    """section: kube_performance_cpu_usage_v1"""
-
-    usage: float
-
-
-class Memory(BaseModel):
-    """section: kube_performance_memory_v1"""
-
+class ContainerMemory(BaseModel):
     memory_usage_bytes: float  # TODO: change naming
 
 
@@ -261,3 +253,19 @@ class DeploymentStrategy(BaseModel):
     """section: kube_deployment_strategy_v1"""
 
     strategy: Union[api.Recreate, api.RollingUpdate] = Field(discriminator="type_")
+
+
+class Memory(BaseModel):
+    type_: Literal["memory"] = Field("memory", const=True)
+    usage: float
+
+
+class Cpu(BaseModel):
+    type_: Literal["cpu"] = Field("cpu", const=True)
+    usage: float
+
+
+class PerformanceUsage(BaseModel):
+    """section: [kube_performance_cpu_v1, kube_performance_memory_v1]"""
+
+    resource: Union[Cpu, Memory] = Field(discriminator="type_")

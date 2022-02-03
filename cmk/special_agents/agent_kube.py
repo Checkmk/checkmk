@@ -932,18 +932,20 @@ def write_kube_object_performance_section(
         # Memory section
         _write_performance_section(
             section_name=SectionName("memory"),
-            section_output=section.Memory(
-                memory_usage_bytes=_aggregate_metric(
-                    containers, MetricName("memory_working_set_bytes")
+            section_output=section.PerformanceUsage(
+                resource=section.Memory(
+                    usage=_aggregate_metric(containers, MetricName("memory_working_set_bytes"))
                 ),
             ),
         )
 
         # CPU section
         _write_performance_section(
-            section_name=SectionName("cpu_usage"),
-            section_output=section.CpuUsage(
-                usage=_aggregate_rate_metric(containers, MetricName("cpu_usage_seconds_total")),
+            section_name=SectionName("cpu"),
+            section_output=section.PerformanceUsage(
+                resource=section.Cpu(
+                    usage=_aggregate_rate_metric(containers, MetricName("cpu_usage_seconds_total")),
+                ),
             ),
         )
 
@@ -978,9 +980,11 @@ def pod_performance_sections(pod: PerformancePod) -> None:
 
     # CPU section
     _write_performance_section(
-        section_name=SectionName("cpu_usage"),
-        section_output=section.CpuUsage(
-            usage=_aggregate_rate_metric(pod.containers, MetricName("cpu_usage_seconds_total")),
+        section_name=SectionName("cpu"),
+        section_output=section.PerformanceUsage(
+            resource=section.Cpu(
+                usage=_aggregate_rate_metric(pod.containers, MetricName("cpu_usage_seconds_total")),
+            ),
         ),
     )
 
@@ -990,10 +994,12 @@ def pod_performance_sections(pod: PerformancePod) -> None:
     # container level calculations. We keep them as we calculate values at least on the pod level.
     _write_performance_section(
         section_name=SectionName("memory"),
-        section_output=section.Memory(
-            memory_usage_bytes=_aggregate_metric(
-                pod.containers,
-                MetricName("memory_working_set_bytes"),
+        section_output=section.PerformanceUsage(
+            resource=section.Memory(
+                usage=_aggregate_metric(
+                    pod.containers,
+                    MetricName("memory_working_set_bytes"),
+                ),
             ),
         ),
     )

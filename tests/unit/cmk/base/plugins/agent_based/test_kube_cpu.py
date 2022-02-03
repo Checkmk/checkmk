@@ -78,7 +78,7 @@ def usage_usage():
 
 @pytest.fixture
 def usage_string_table_element(usage_usage):
-    return {"usage": usage_usage}
+    return {"resource": {"type_": "cpu", "usage": usage_usage}}
 
 
 @pytest.fixture
@@ -88,7 +88,7 @@ def usage_string_table(usage_string_table_element):
 
 @pytest.fixture
 def usage_section(usage_string_table):
-    return kube_cpu.parse_kube_performance_cpu_v1(usage_string_table)
+    return kube_resources.parse_performance_usage(usage_string_table)
 
 
 @pytest.fixture

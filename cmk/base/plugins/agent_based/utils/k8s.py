@@ -218,9 +218,19 @@ class ContainerCount(BaseModel):
 
 
 class Memory(BaseModel):
-    """section: kube_performance_memory_v1"""
+    type_: Literal["memory"] = Field("memory", const=True)
+    usage: float
 
-    memory_usage_bytes: float
+
+class Cpu(BaseModel):
+    type_: Literal["cpu"] = Field("cpu", const=True)
+    usage: float
+
+
+class PerformanceUsage(BaseModel):
+    """section: [kube_performance_cpu_v1, kube_performance_memory_v1]"""
+
+    resource: Union[Cpu, Memory] = Field(discriminator="type_")
 
 
 class NodeAddress(BaseModel):

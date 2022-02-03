@@ -18,7 +18,7 @@ from cmk.base.plugins.agent_based.kube_memory import (
     Params,
     Resources,
 )
-from cmk.base.plugins.agent_based.utils.kube_resources import Usage
+from cmk.base.plugins.agent_based.utils.k8s import Memory, PerformanceUsage
 
 from cmk.gui.plugins.wato.check_parameters.kube_resources import _parameter_valuespec_memory
 
@@ -162,7 +162,7 @@ def section_kube_memory_allocatable_resource():
 def test_register_agent_memory_section_calls(agent_performance_section):
     assert str(agent_performance_section.name) == "kube_performance_memory_v1"
     assert str(agent_performance_section.parsed_section_name) == "kube_performance_memory"
-    assert agent_performance_section.parse_function == kube_memory.parse_performance_memory
+    assert agent_performance_section.parse_function == kube_memory.parse_performance_usage
 
 
 def test_register_agent_memory_resources_section_calls(agent_resources_section):
@@ -210,7 +210,7 @@ def test_register_check_plugin_calls(check_plugin):
                 count_unspecified_requests=0,
                 count_total=2,
             ),
-            Usage(usage=18120704.0),
+            PerformanceUsage(resource=Memory(usage=18120704.0)),
             (
                 Result(state=State.OK, summary="Usage: 17.3 MiB"),
                 Metric("kube_memory_usage", 18120704.0, boundaries=(0.0, None)),
@@ -238,7 +238,7 @@ def test_register_check_plugin_calls(check_plugin):
                 count_unspecified_requests=1,
                 count_total=2,
             ),
-            Usage(usage=18120704.0),
+            PerformanceUsage(resource=Memory(usage=18120704.0)),
             (
                 Result(state=State.OK, summary="Usage: 17.3 MiB"),
                 Metric("kube_memory_usage", 18120704.0, boundaries=(0.0, None)),
@@ -275,7 +275,7 @@ def test_register_check_plugin_calls(check_plugin):
                 count_unspecified_requests=2,
                 count_total=3,
             ),
-            Usage(usage=18120704.0),
+            PerformanceUsage(resource=Memory(usage=18120704.0)),
             (
                 Result(state=State.OK, summary="Usage: 17.3 MiB"),
                 Metric("kube_memory_usage", 18120704.0, boundaries=(0.0, None)),
@@ -315,7 +315,7 @@ def test_register_check_plugin_calls(check_plugin):
                 count_unspecified_requests=0,
                 count_total=2,
             ),
-            Usage(usage=18120704.0),
+            PerformanceUsage(resource=Memory(usage=18120704.0)),
             (
                 Result(state=State.OK, summary="Usage: 17.3 MiB"),
                 Metric("kube_memory_usage", 18120704.0, boundaries=(0.0, None)),
@@ -358,7 +358,7 @@ def test_register_check_plugin_calls(check_plugin):
                 count_unspecified_requests=0,
                 count_total=2,
             ),
-            Usage(usage=27120704.0),
+            PerformanceUsage(resource=Memory(usage=27120704.0)),
             (
                 Result(state=State.OK, summary="Usage: 25.9 MiB"),
                 Metric("kube_memory_usage", 27120704.0, boundaries=(0.0, None)),
@@ -395,7 +395,7 @@ def test_register_check_plugin_calls(check_plugin):
     ],
 )
 def test_check_kube_memory(
-    section_kube_performance_memory: Optional[Usage],
+    section_kube_performance_memory: Optional[PerformanceUsage],
     section_kube_memory_resources: Optional[Resources],
     section_kube_memory_allocatable_resource: Optional[AllocatableResource],
     expected_result: Tuple[Union[Result, Metric], ...],
@@ -420,7 +420,7 @@ def test_check_kube_memory(
     "section_kube_performance_memory",
     [
         pytest.param(
-            Usage(usage=18120704.0),
+            PerformanceUsage(resource=Memory(usage=18120704.0)),
             id="With usage",
         ),
         pytest.param(
@@ -434,7 +434,7 @@ def test_crashes_if_no_resources(section_kube_performance_memory) -> None:
         list(
             check_kube_memory(
                 DEFAULT_PARAMS,
-                Usage(usage=18120704.0),
+                section_kube_performance_memory,
                 None,
                 AllocatableResource(context="node", value=35917989.0),
             )

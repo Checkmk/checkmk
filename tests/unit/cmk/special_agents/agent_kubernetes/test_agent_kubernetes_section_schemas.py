@@ -15,7 +15,6 @@ from cmk.base.plugins.agent_based.utils.k8s import (
 )
 from cmk.base.plugins.agent_based.utils.k8s import ContainerWaitingState as ContainerWaitingStateC
 from cmk.base.plugins.agent_based.utils.k8s import KubeletInfo as KubeletInfoC
-from cmk.base.plugins.agent_based.utils.k8s import Memory as MemoryC
 from cmk.base.plugins.agent_based.utils.k8s import NodeInfo as NodeInfoC
 from cmk.base.plugins.agent_based.utils.k8s import PodCondition as PodConditionC
 from cmk.base.plugins.agent_based.utils.k8s import PodConditions as PodConditionsC
@@ -44,7 +43,6 @@ from cmk.special_agents.utils_kubernetes.schemata.api import Replicas as Replica
 from cmk.special_agents.utils_kubernetes.schemata.api import StartTime as StartTimeA
 from cmk.special_agents.utils_kubernetes.schemata.section import AllocatablePods as AllocatablePodsA
 from cmk.special_agents.utils_kubernetes.schemata.section import ContainerCount as ContainerCountA
-from cmk.special_agents.utils_kubernetes.schemata.section import Memory as MemoryA
 from cmk.special_agents.utils_kubernetes.schemata.section import NodeCount as NodeCountA
 from cmk.special_agents.utils_kubernetes.schemata.section import NodeInfo as NodeInfoA
 from cmk.special_agents.utils_kubernetes.schemata.section import PodCondition as PodConditionA
@@ -65,7 +63,6 @@ def test_schemata_did_not_diverge() -> None:
     assert ContainerWaitingStateA.schema() == ContainerWaitingStateC.schema()
     assert agent.DeploymentConditions.schema() == check.DeploymentConditions.schema()
     assert KubeletInfoA.schema() == KubeletInfoC.schema()
-    assert MemoryA.schema() == MemoryC.schema()
     assert NodeCountA.schema() == NodeCountC.schema()
     assert NodeInfoA.schema() == NodeInfoC.schema()
     assert PodConditionA.schema() == PodConditionC.schema()
@@ -80,3 +77,4 @@ def test_schemata_did_not_diverge() -> None:
     assert ReplicasA.schema() == ReplicasC.schema()
     assert agent.DeploymentStrategy.schema() == k8s_check.DeploymentStrategy.schema()
     assert agent.NodeConditions.schema() == check.NodeConditions.schema()
+    assert agent.PerformanceUsage.schema() == k8s_check.PerformanceUsage.schema()

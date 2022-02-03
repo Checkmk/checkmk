@@ -37,7 +37,7 @@ ARCHIVE_NAME=${DIR_NAME}.tgz
 TARGET_DIR=/opt
 
 # Increase this to enforce a recreation of the build cache
-BUILD_ID=2
+BUILD_ID=3
 
 build_package() {
     mkdir -p /opt/src
@@ -55,6 +55,8 @@ build_package() {
         --prefix="${TARGET_DIR}/${DIR_NAME}" \
         --with-ensurepip=install \
         --with-openssl="${OPENSSL_PATH}" \
+        --enable-optimizations \
+        --with-lto \
         --enable-shared
     make -j2
     make install

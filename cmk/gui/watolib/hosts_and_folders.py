@@ -24,6 +24,7 @@ from typing import (
     Iterable,
     List,
     Mapping,
+    NamedTuple,
     Optional,
     Sequence,
     Set,
@@ -130,6 +131,74 @@ class WithPermissions:
 
     def _user_needs_permission(self, how: str) -> None:
         raise NotImplementedError()
+
+
+class _ContactGroupsInfo(NamedTuple):
+    actual_groups: Set[ContactgroupName]
+    configured_groups: Optional[List[ContactgroupName]]
+    apply_to_subfolders: bool
+
+
+PathWithSlash = str
+PathWithoutSlash = str
+PermittedGroupsOfFolder = Mapping[PathWithoutSlash, _ContactGroupsInfo]
+
+
+def _get_permitted_groups_of_all_folders(
+    all_folders: Mapping[PathWithoutSlash, CREFolder]
+) -> PermittedGroupsOfFolder:
+    def _compute_tokens(folder_path: PathWithoutSlash) -> Tuple[PathWithoutSlash, ...]:
+        """Create tokens for each folder. The main folder requires some special treatment
+        since it is not '/' but just an empty string"""
+        if folder_path == "":
+            # Main folder
+            return (folder_path,)
+        # Some subfolder, prefix root dir
+        return tuple([""] + folder_path.split("/"))
+
+    tokenized_folders = sorted(_compute_tokens(x) for x in all_folders.keys())
+    effective_groups_per_folder: Dict[Tuple[str, ...], _ContactGroupsInfo] = {}
+
+    for tokens in tokenized_folders:
+        # Compute the groups we get from the parent folders
+        # Either directly inherited (nearest parent wins) or enforce inherited through recurse_perms
+        parents_all_subfolder_groups: Set[ContactgroupName] = set()
+        parents_nearest_configured: Optional[List[ContactgroupName]] = None
+        parent_tokens = tokens[:-1]
+        while parent_tokens:
+            contact_groups_info = effective_groups_per_folder[parent_tokens]
+            if (
+                parents_nearest_configured is None
+                and contact_groups_info.configured_groups is not None
+            ):
+                parents_nearest_configured = contact_groups_info.configured_groups
+            if contact_groups_info.apply_to_subfolders and contact_groups_info.configured_groups:
+                parents_all_subfolder_groups.update(contact_groups_info.configured_groups)
+
+            parent_tokens = parent_tokens[:-1]
+
+        if contactgroups := all_folders["/".join(tokens[1:])].attributes().get("contactgroups"):
+            configured_contactgroups = contactgroups.get("groups")
+            inherit_groups = contactgroups["recurse_perms"]
+        else:
+            configured_contactgroups = None
+            inherit_groups = False
+
+        actual_groups = set()
+        if configured_contactgroups is not None:
+            actual_groups.update(configured_contactgroups)
+        elif parents_nearest_configured is not None:
+            actual_groups.update(parents_nearest_configured)
+        actual_groups.update(parents_all_subfolder_groups)
+
+        effective_groups_per_folder[tokens] = _ContactGroupsInfo(
+            actual_groups, configured_contactgroups, inherit_groups
+        )
+
+    return {
+        "/".join(path_tokens[1:]): groups_info
+        for path_tokens, groups_info in effective_groups_per_folder.items()
+    }
 
 
 class _ABCWATOInfoStorage:

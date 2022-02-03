@@ -6,7 +6,10 @@
 
 import contextlib
 import os
+import pprint
 import shutil
+import sys
+from typing import Any, Dict, List, NamedTuple
 
 import pytest
 
@@ -536,3 +539,186 @@ def test_match_item_generator_hosts():
             match_texts=["host", "alias", "1.2.3.4", "5.6.7.8"],
         )
     ]
+
+
+class _TreeStructure(NamedTuple):
+    path: str
+    attributes: Dict[str, Any]
+    subfolders: List["_TreeStructure"]  # type: ignore[misc]
+
+
+def make_monkeyfree_folder(tree_structure, parent=None):
+    new_folder = hosts_and_folders.CREFolder(
+        tree_structure.path,
+        parent_folder=parent,
+        title=f"Title of {tree_structure.path}",
+        attributes=tree_structure.attributes,
+    )
+    for subtree_structure in tree_structure.subfolders:
+        new_folder._subfolders[subtree_structure.path] = make_monkeyfree_folder(
+            subtree_structure, new_folder
+        )
+
+    return new_folder
+
+
+def dump_wato_folder_structure(wato_folder: hosts_and_folders.CREFolder):
+    # Debug function to have a look at the internal folder tree structure
+    sys.stdout.write("\n")
+
+    def dump_structure(wato_folder: hosts_and_folders.CREFolder, indent=0):
+        indent_space = " " * indent * 6
+        sys.stdout.write(f"{indent_space + '->' + str(wato_folder):80} {wato_folder.path()}\n")
+        sys.stdout.write(
+            "\n".join(
+                f"{indent_space}  {x}" for x in pprint.pformat(wato_folder.attributes()).split("\n")
+            )
+            + "\n"
+        )
+        for subfolder in wato_folder.subfolders():
+            dump_structure(subfolder, indent + 1)
+
+    dump_structure(wato_folder)
+
+
+@pytest.mark.parametrize(
+    "structure, testfolder_expected_groups",
+    [
+        # Basic inheritance
+        (
+            _TreeStructure(
+                "",
+                {
+                    "contactgroups": {
+                        "groups": ["group1"],
+                        "recurse_perms": False,
+                        "use": False,
+                        "use_for_services": False,
+                        "recurse_use": False,
+                    }
+                },
+                [
+                    _TreeStructure("sub1", {}, [_TreeStructure("testfolder", {}, [])]),
+                ],
+            ),
+            {"group1"},
+        ),
+        # Blocked inheritance by sub1
+        (
+            _TreeStructure(
+                "",
+                {
+                    "contactgroups": {
+                        "groups": ["group1"],
+                        "recurse_perms": False,
+                        "use": False,
+                        "use_for_services": False,
+                        "recurse_use": False,
+                    }
+                },
+                [
+                    _TreeStructure(
+                        "sub1",
+                        {
+                            "contactgroups": {
+                                "groups": [],
+                                "recurse_perms": False,
+                                "use": False,
+                                "use_for_services": False,
+                                "recurse_use": False,
+                            }
+                        },
+                        [_TreeStructure("testfolder", {}, [])],
+                    ),
+                ],
+            ),
+            set(),
+        ),
+        # Used recurs_perms(bypasses inheritance)
+        (
+            _TreeStructure(
+                "",
+                {
+                    "contactgroups": {
+                        "groups": ["group1"],
+                        "recurse_perms": True,
+                        "use": False,
+                        "use_for_services": False,
+                        "recurse_use": False,
+                    }
+                },
+                [
+                    _TreeStructure(
+                        "sub1",
+                        {
+                            "contactgroups": {
+                                "groups": [],
+                                "recurse_perms": False,
+                                "use": False,
+                                "use_for_services": False,
+                                "recurse_use": False,
+                            }
+                        },
+                        [_TreeStructure("testfolder", {}, [])],
+                    ),
+                ],
+            ),
+            {"group1"},
+        ),
+        # Used recurs_perms (bypasses inheritance), test multiple groups
+        (
+            _TreeStructure(
+                "",
+                {
+                    "contactgroups": {
+                        "groups": ["group1"],
+                        "recurse_perms": True,
+                        "use": False,
+                        "use_for_services": False,
+                        "recurse_use": False,
+                    }
+                },
+                [
+                    _TreeStructure(
+                        "sub1",
+                        {
+                            "contactgroups": {
+                                "groups": ["group2"],
+                                "recurse_perms": False,
+                                "use": False,
+                                "use_for_services": False,
+                                "recurse_use": False,
+                            }
+                        },
+                        [_TreeStructure("testfolder", {}, [])],
+                    ),
+                ],
+            ),
+            {"group1", "group2"},
+        ),
+    ],
+)
+def test_folder_permissions(structure, testfolder_expected_groups):
+    wato_folder = make_monkeyfree_folder(structure)
+    # dump_wato_folder_structure(wato_folder)
+    testfolder = wato_folder._subfolders["sub1"]._subfolders["testfolder"]
+    permitted_groups_cre_folder, _host_contact_groups, _use_for_service = testfolder.groups()
+    assert permitted_groups_cre_folder == testfolder_expected_groups
+
+    all_folders = _convert_folder_tree_to_all_folders(wato_folder)
+    permitted_groups_bulk = hosts_and_folders._get_permitted_groups_of_all_folders(all_folders)
+    assert permitted_groups_bulk["sub1/testfolder"].actual_groups == testfolder_expected_groups
+
+
+def _convert_folder_tree_to_all_folders(
+    root_folder,
+) -> Dict[hosts_and_folders.PathWithoutSlash, hosts_and_folders.CREFolder]:
+    all_folders = {}
+
+    def parse_folder(folder):
+        all_folders[folder.path()] = folder
+        for subfolder in folder.subfolders():
+            parse_folder(subfolder)
+
+    parse_folder(root_folder)
+    return all_folders

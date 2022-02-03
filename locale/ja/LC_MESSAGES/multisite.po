@@ -645,10 +645,26 @@ msgstr "%s: マニュアルページを解析できません: %s"
 msgid "%s: Download agent output"
 msgstr "%s:エージェント出力のダウンロード"
 
+#, fuzzy, python-format
+msgid "%s: No discovery result"
+msgstr "発見に成功"
+
+#, fuzzy, python-format
+msgid "%s: No such agent output"
+msgstr "%s:エージェント出力のダウンロード"
+
 #, python-format
 msgid "%s: Not using SSL. Consider enabling it in the connection settings."
 msgstr ""
 "%s: SSLを使用していません。接続設定で有効にすることを検討してください。"
+
+#, fuzzy, python-format
+msgid "%s: Service discovery: Permission denied"
+msgstr "サービス検出:サービスの説明"
+
+#, fuzzy, python-format
+msgid "%s: Services: %s, Host Labels: %s"
+msgstr "修正するサービス/ホストラベル"
 
 #, python-format
 msgid "%s: Uses SSL"
@@ -1367,6 +1383,18 @@ msgstr ""
 
 msgid ""
 "<p>Here you can specify a list of filename patterns to be sent by the agent "
+"in the section <tt>fileinfo</tt>. UNC paths with globbing patterns are used "
+"here, e.g. <tt>\\\\hostname\\share name\\**\\foo\\*.log</tt>. Wildcards are "
+"not allowed in host or share names. Per default each found file will be "
+"monitored for size and age. By building groups you can alternatively monitor "
+"a collection of files as an entity and monitor the count, total size, the "
+"largest, smallest oldest or newest file. Note: if you specify more than one "
+"matching rule, then <b>all</b> matching rules will be used for defining "
+"pattern - not just the  first one.</p>"
+msgstr ""
+
+msgid ""
+"<p>Here you can specify a list of filename patterns to be sent by the agent "
 "in the section <tt>fileinfo</tt>. Use globbing patterns like <tt>C:\\foo\\*."
 "log</tt> or <tt>/var/*/*.log</tt> here. Per default each found file will be "
 "monitored for size and age. By building groups you can alternatively monitor "
@@ -1400,18 +1428,6 @@ msgstr ""
 "かどうかを監視できます。1日の次の時間帯にのみオプションチェックを設定する必要"
 "があることに注意してください。そうしないと、当日のファイルがまだ存在しない場"
 "合に警告が表示されることがあります。</p>"
-
-msgid ""
-"<p>Here you can specify a list of filename patterns to be sent by the agent "
-"in the section <tt>fileinfo</tt>. Use patterns like <tt>\\Share folder\\foo"
-"\\*.log</tt> here. Wildcards are only allowed in thefilename part, not in "
-"the directory path. Per default each found file will be monitored for size "
-"and age. By building groups you can alternatively monitor a collection of "
-"files as an entity and monitor the count, total size, the largest, smallest "
-"oldest or newest file. Note: if you specify more than one matching rule, "
-"then <b>all</b> matching rules will be used for defining pattern - not just "
-"the  first one.</p>"
-msgstr ""
 
 msgid ""
 "<p>In distributed WATO setups it is possible to synchronize the extensions "
@@ -1961,9 +1977,6 @@ msgstr "このルールは、新しいパラメーターに一致し、定義し
 msgid "A list of specific users"
 msgstr "特定のユーザーのリスト"
 
-msgid "A matrix showing a colored square for each host"
-msgstr "各ホストの色付きの正方形を示すマトリックス"
-
 msgid "A ntopng user which belongs to the group 'Administrator' in ntopng."
 msgstr "ntopngのグループ 'Administrator'に属するntopngユーザー。"
 
@@ -2096,15 +2109,6 @@ msgstr "サーバー名とポートの文字列の組み合わせ(例:127.0.0.1:
 
 msgid "A string-combination of servername and port, e.g. 127.0.0.1:80."
 msgstr "サーバー名とポートの文字列の組み合わせ(例:127.0.0.1:80)。"
-
-msgid ""
-"A summary state of all hosts that have a problem, with links to problems of "
-"those hosts"
-msgstr ""
-
-msgid ""
-"A summary state of each host with a link to the view showing its services"
-msgstr "各ホストの状態の概要と、そのサービスを示すビューへのリンク"
 
 msgid ""
 "A tablespace is a container for segments (tables, indexes, etc). A database "
@@ -2673,11 +2677,10 @@ msgid ""
 "it intended to be a comprehensive state machine. For the pending pods, the "
 "check keeps track for how long they have been pending. If a tolerating time "
 "period is set, the service goes WARN/CRIT after any of the pods has been "
-"pending for longer than the set duration. If there is at least one unknown "
-"pod, the service goes UNKNOWN by default. The state the service goes can be "
-"configured. This rule affects any Pod Resources service, except for those on "
-"the Nodes and the Clusters. The configuration for Clusters and Nodes can be "
-"done via the rule Kubernetes Pod Resources: Clusters, Nodes."
+"pending for longer than the set duration. This rule affects any Pod "
+"Resources service, except for those on the Nodes and the Clusters. The "
+"configuration for Clusters and Nodes can be done via the rule Kubernetes Pod "
+"Resources: Clusters, Nodes."
 msgstr ""
 
 msgid ""
@@ -2687,11 +2690,10 @@ msgid ""
 "it intended to be a comprehensive state machine. For the pending pods, the "
 "check keeps track for how long they have been pending. If a tolerating time "
 "period is set, the service goes WARN/CRIT after any of the pods has been "
-"pending for longer than the set duration. If there is at least one unknown "
-"pod, the service goes UNKNOWN by default. The state the service goes can be "
-"configured. This rule affects the PodResources services of Kubernetes Nodes "
-"and Kubernetes Clusters. The configuration of other Pod Resources services "
-"can be done via the rule Kubernetes Pod Resources: Deployments."
+"pending for longer than the set duration. This rule affects the Pod "
+"Resources services of Kubernetes Nodes and Kubernetes Clusters. The "
+"configuration of other Pod Resources services can be done via the rule "
+"Kubernetes Pod Resources: Deployments."
 msgstr ""
 
 msgid "Ack"
@@ -8868,6 +8870,10 @@ msgid ""
 msgstr ""
 
 msgid ""
+"Choose what modem is used. Currently supported is only Teltonika-TRB140."
+msgstr ""
+
+msgid ""
 "Choose whether this rule gets prioritized over cache times that are "
 "configured in the plugin's dedicated rules. Please choose \"override\" only "
 "if you know what you're doing, because some plugins have minimum cache times "
@@ -9209,15 +9215,9 @@ msgstr "クラスター名"
 msgid "Cluster agent connection"
 msgstr "Checkmkエージェントバージョン"
 
-#, python-format
-msgid ""
-"Cluster and nodes must have the same datasource! The node <b>%s</b> has "
-"datasources <b>%s</b> and <b>%s</b> while the cluster has datasources <b>%s</"
-"b> and <b>%s</b>."
-msgstr ""
-"クラスタとノードは同じデータソースを持っている必要があります！ノード <b>%s</"
-"b> にはデータソース <b>%s</b> と <b>%s</b> があり、クラスターにはデータソース"
-"<b>%s</b> と <b>%s</b>があります。"
+#, fuzzy
+msgid "Cluster and nodes must have the same datasource. "
+msgstr "終了日は開始日より後でなければなりません"
 
 msgid "Cluster behaviour"
 msgstr "クラスターの動作"
@@ -9928,6 +9928,10 @@ msgid ""
 msgstr ""
 
 msgid "Configure your ServiceNow URL here (eg. https://myservicenow.com)."
+msgstr "ここでServiceNow URLを構成します(例 https://myservicenow.com)。"
+
+#, fuzzy
+msgid "Configure your modem URL here (eg. https://mymodem.mydomain.example)."
 msgstr "ここでServiceNow URLを構成します(例 https://myservicenow.com)。"
 
 msgid "Configured API integrations and Checkmk agent"
@@ -11519,9 +11523,6 @@ msgstr "カスタムタイトル"
 
 msgid "Custom limit"
 msgstr "カスタム制限"
-
-msgid "Custom links"
-msgstr "カスタムリンク"
 
 msgid "Custom localizations"
 msgstr "カスタムローカリゼーション"
@@ -14815,9 +14816,6 @@ msgstr "ドキュメント数のデルタ"
 
 msgid "Document count growth per minute"
 msgstr "1分あたりのドキュメント数の増加"
-
-msgid "Documentation"
-msgstr "ドキュメンテーション"
 
 msgid "Documentation URL"
 msgstr "ドキュメントURL"
@@ -18644,6 +18642,10 @@ msgid ""
 "Found no group object for synchronization. Please check your filter settings."
 msgstr ""
 
+#, fuzzy, python-format
+msgid "Found no history entry at the time of '%s' for the host '%s'"
+msgstr "このホストのインベントリデータが見つかりませんでした。"
+
 msgid "Found no inventory data for this host."
 msgstr "このホストのインベントリデータが見つかりませんでした。"
 
@@ -19035,6 +19037,12 @@ msgstr "ツリーレベルを1つ上げます"
 #, python-format
 msgid "Going to update %d sites"
 msgstr "%dサイトを更新します"
+
+msgid "Google Cloud Platform"
+msgstr ""
+
+msgid "Google Cloud Platform (GCP)"
+msgstr ""
 
 msgid "Got invalid data"
 msgstr "無効なデータを取得しました"
@@ -20511,9 +20519,6 @@ msgstr "HiveManagerのNGデバイス"
 msgid "Hivemanager Devices"
 msgstr ""
 
-msgid "Homepage"
-msgstr "ホームページ"
-
 msgid "Homepage / Download - URL of this package"
 msgstr "ホームページ/ダウンロード-このパッケージのURL"
 
@@ -20868,9 +20873,6 @@ msgstr "ホストルックアップエレメント"
 
 msgid "Host match list"
 msgstr "ホストマッチリスト"
-
-msgid "Host matrix"
-msgstr "ホストマトリックス"
 
 msgid "Host memory usage"
 msgstr "ホストのメモリ使用量"
@@ -26177,9 +26179,6 @@ msgstr "すべてのダッシュボードへのリンク"
 msgid "Links to global views and dashboards"
 msgstr "グローバルビューとダッシュボードへのリンク"
 
-msgid "Links to webpage, documentation and download of Checkmk"
-msgstr "Checkmkのウェブページ、ドキュメント、ダウンロードへのリンク"
-
 msgid "Linux"
 msgstr "Linux"
 
@@ -28866,6 +28865,14 @@ msgstr "モデルの季節性 %s"
 msgid "Modem States that lead to a critical state"
 msgstr "クリティカル状態につながるモデム状態"
 
+#, fuzzy
+msgid "Modem URL"
+msgstr "モデム"
+
+#, fuzzy
+msgid "Modem type"
+msgstr "モード"
+
 msgid "Modems"
 msgstr "モデム"
 
@@ -29313,9 +29320,6 @@ msgstr "このホストを次の場所に移動します。"
 #, python-format
 msgid "Move to %s services"
 msgstr "%sサービスに移動"
-
-msgid "Move to folder:"
-msgstr "フォルダへ移動:"
 
 msgid "Move to other folder"
 msgstr "他のフォルダに移動する"
@@ -30176,9 +30180,6 @@ msgstr "実際のSLA計算はありません"
 msgid "No agent labels present."
 msgstr ""
 
-msgid "No agent outputs for discoverable hosts found"
-msgstr ""
-
 msgid "No agent registration requests processed"
 msgstr ""
 
@@ -30314,6 +30315,10 @@ msgid ""
 msgstr ""
 "過去の指標は記録されていませんが、パフォーマンスデータは利用できます。パ"
 "フォーマンスデータ処理が無効になっている可能性があります。"
+
+#, fuzzy
+msgid "No hosts discovered"
+msgstr "ケースを変換しないでください"
 
 msgid "No hosts/services found."
 msgstr "ホスト/サービスが見つかりません。"
@@ -33988,14 +33993,6 @@ msgstr ""
 "さい。例: <tt>VM abcsrv123</tt>。また、名前の <i>先頭</i>>と一致することにも"
 "注意してください。"
 
-#, python-format
-msgid ""
-"Please edit <tt>%s</tt> in order to configure which links are shown in this "
-"snapin."
-msgstr ""
-"このスナップインに表示されるリンクを構成するには、 <tt>%s</tt> を編集してくだ"
-"さい。"
-
 msgid "Please enter <tt>Drives</tt>, <tt>Mdisks</tt> or <tt>VDisks</tt> here."
 msgstr ""
 "ここに<tt>ドライブ</tt>、<tt>Mdisks</tt>、または<tt>VDisks</tt>と入力してくだ"
@@ -34851,9 +34848,6 @@ msgstr "問題ダッシュボード"
 
 msgid "Problem details"
 msgstr "問題の詳細"
-
-msgid "Problem hosts"
-msgstr "問題のあるホスト"
 
 msgid "Problem is acknowledged, but is configured to be periodic"
 msgstr ""
@@ -37605,7 +37599,7 @@ msgstr "SLESライセンス"
 msgid "SMART harddisk monitoring (Linux)"
 msgstr "SMARTハードディスク監視(Linux)"
 
-msgid "SMB Share"
+msgid "SMB Share fileinfo"
 msgstr ""
 
 msgid "SMB share to check"
@@ -38145,11 +38139,6 @@ msgstr "<nobr> </nobr>で検索"
 
 msgid "Sec."
 msgstr "秒"
-
-#, python-format
-msgid "Second part of tuple must be list or string, not %s\n"
-msgstr ""
-"タプルの2番目の部分は、%sではなく、リストまたは文字列である必要があります\n"
 
 msgid "Secondary - Attaching"
 msgstr "セカンダリ - アタッチ"
@@ -38791,10 +38780,6 @@ msgstr "サービスディスカバリ: "
 msgid "Service discovery: Check type"
 msgstr "サービスディスカバリ: チェックタイプ"
 
-#, fuzzy
-msgid "Service discovery: Permission denied"
-msgstr "サービス検出:サービスの説明"
-
 msgid "Service discovery: Service description"
 msgstr "サービス検出:サービスの説明"
 
@@ -39040,10 +39025,6 @@ msgstr "修正するサービス/ホストラベル"
 msgid "Services: %d total (%d added, %d removed, %d kept)"
 msgstr "サービス: %d 合計 (%d 追加, %d 削除, %d 保持)"
 
-#, fuzzy, python-format
-msgid "Services: %s, Host labels: %s"
-msgstr "修正するサービス/ホストラベル"
-
 msgid "Session Rate"
 msgstr "セッションレート"
 
@@ -39192,6 +39173,10 @@ msgstr "JIRAへの接続にオプションのタイムアウトを設定する"
 msgid "Set optional timeout for connections to ServiceNow"
 msgstr "ServiceNowへの接続にオプションのタイムアウトを設定します"
 
+#, fuzzy
+msgid "Set optional timeout for connections to the modem."
+msgstr "JIRAへの接続にオプションのタイムアウトを設定する"
+
 msgid "Set period how long outdated piggyback data is treated as valid"
 msgstr "古いピギーバックデータが有効として扱われる期間を設定します"
 
@@ -39248,10 +39233,6 @@ msgstr ""
 "ここでサービス名または正規表現パターンを設定して、一致する消失したサービスを"
 "自動的に削除します。これと'一致する消失したサービスを削除しない'の両方を設定"
 "した場合、削除するサービスには両方のルールを適用する必要があります。"
-
-#, fuzzy
-msgid "Set state for unknown pods"
-msgstr "サイトの状態は不明です"
 
 msgid "Set state to"
 msgstr "状態をに設定します"
@@ -40646,9 +40627,6 @@ msgstr "ソフォスのディスク使用率"
 msgid "Sophos Memory utilization"
 msgstr "Sophosのメモリ使用率"
 
-msgid "Sorry, I will not display more than 900 hosts."
-msgstr "申し訳ありませんが、900を超えるホストは表示されません。"
-
 msgid ""
 "Sorry, but your unlimited 30-day trial of Checkmk has ended. The Checkmk "
 "Free Edition does not allow distributed setups after the 30-day trial "
@@ -41537,6 +41515,10 @@ msgstr "始まる時間"
 
 msgid "Started"
 msgstr "開始"
+
+#, fuzzy, python-format
+msgid "Started activate changes: %s"
+msgstr "変更をアクティブにしないでください"
 
 #, python-format
 msgid "Started activation of site %s"
@@ -43279,6 +43261,9 @@ msgstr ""
 "るようにjolokiaプラグインに指示します。この時間制限は、最初の接続と、プラグイ"
 "ンが受信するデータのチャンク間で待機する必要がある時間の両方に適用されます。"
 
+msgid "Teltonika-TRB140"
+msgstr ""
+
 msgid "Temperature"
 msgstr "温度"
 
@@ -44495,6 +44480,10 @@ msgid ""
 "The city name from the response will be checked against the regular "
 "expression specified here"
 msgstr "応答からの都市名は、ここで指定された正規表現と照合されます"
+
+#, python-format
+msgid "The cluster %s while the node <b>%s</b> %s"
+msgstr ""
 
 msgid "The cluster can not be a node of it's own"
 msgstr "クラスターを独自のノードにすることはできません"
@@ -47078,6 +47067,10 @@ msgid ""
 msgstr ""
 "ログインに使用されるユーザーは、ServiceNowで少なくともロール \"itil\" を持っ"
 "ている必要があります"
+
+#, fuzzy
+msgid "The user, used for login."
+msgstr "ログイン用のユーザー"
 
 #, python-format
 msgid "The username returned by the %s connector is not of type string (%r)."
@@ -50559,13 +50552,6 @@ msgid "This site needs a restart for activating the changes. Start it now."
 msgstr ""
 "このサイトは、変更をアクティブ化するために再起動する必要があります 今すぐ始め"
 "ましょう"
-
-msgid ""
-"This snapin contains custom links which can be configured via the "
-"configuration variable <tt>custom_links</tt> in <tt>multisite.mk</tt>"
-msgstr ""
-"このスナップインには、<tt>multisite.mk</tt> の設定変数 <tt>custom_links </"
-"tt> を介して設定できるカスタムリンクが含まれています"
 
 msgid ""
 "This snapin shows the folders defined in WATO. It can be used to open views "
@@ -58862,6 +58848,10 @@ msgstr "アラートハンドラールール"
 msgid "alerts"
 msgstr "アラート"
 
+#, fuzzy
+msgid "all agents"
+msgstr "ベーキングエージェント"
+
 msgid "all contacts of the notified object"
 msgstr ""
 
@@ -58877,6 +58867,10 @@ msgstr "ホスト %s のすべてのログファイル"
 
 msgid "all logfiles on all hosts"
 msgstr "すべてのホストのすべてのログファイル"
+
+#, fuzzy
+msgid "all special agents"
+msgstr "特別なエージェント"
 
 msgid "all states"
 msgstr "すべての状態"
@@ -59683,10 +59677,6 @@ msgstr "内部ID"
 msgid "intrusion"
 msgstr ""
 
-#, python-format
-msgid "invalid entry %s: %s<br>\n"
-msgstr "無効なエントリ%s:%s <br>\n"
-
 msgid "invalid:"
 msgstr "無効:"
 
@@ -59695,6 +59685,9 @@ msgstr "です"
 
 msgid "is "
 msgstr "です "
+
+msgid "is <b>not</b>"
+msgstr ""
 
 msgid "is clustered"
 msgstr "クラスター化されています"
@@ -59730,6 +59723,10 @@ msgstr "ジッター"
 
 msgid "jobs"
 msgstr "仕事"
+
+#, fuzzy
+msgid "json credentials for service accoun"
+msgstr "SNMP資格情報"
 
 msgid "kW"
 msgstr "kW"
@@ -60725,6 +60722,77 @@ msgstr "z/OS"
 #, fuzzy, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. All Rights Reserved."
+
+#~ msgid "A matrix showing a colored square for each host"
+#~ msgstr "各ホストの色付きの正方形を示すマトリックス"
+
+#~ msgid ""
+#~ "A summary state of each host with a link to the view showing its services"
+#~ msgstr "各ホストの状態の概要と、そのサービスを示すビューへのリンク"
+
+#~ msgid "Custom links"
+#~ msgstr "カスタムリンク"
+
+#~ msgid "Documentation"
+#~ msgstr "ドキュメンテーション"
+
+#~ msgid "Homepage"
+#~ msgstr "ホームページ"
+
+#~ msgid "Host matrix"
+#~ msgstr "ホストマトリックス"
+
+#~ msgid "Links to webpage, documentation and download of Checkmk"
+#~ msgstr "Checkmkのウェブページ、ドキュメント、ダウンロードへのリンク"
+
+#, python-format
+#~ msgid ""
+#~ "Please edit <tt>%s</tt> in order to configure which links are shown in "
+#~ "this snapin."
+#~ msgstr ""
+#~ "このスナップインに表示されるリンクを構成するには、 <tt>%s</tt> を編集して"
+#~ "ください。"
+
+#~ msgid "Problem hosts"
+#~ msgstr "問題のあるホスト"
+
+#, python-format
+#~ msgid "Second part of tuple must be list or string, not %s\n"
+#~ msgstr ""
+#~ "タプルの2番目の部分は、%sではなく、リストまたは文字列である必要がありま"
+#~ "す\n"
+
+#, fuzzy
+#~| msgid "Site state is unknown"
+#~ msgid "Set state for unknown pods"
+#~ msgstr "サイトの状態は不明です"
+
+#~ msgid "Sorry, I will not display more than 900 hosts."
+#~ msgstr "申し訳ありませんが、900を超えるホストは表示されません。"
+
+#~ msgid ""
+#~ "This snapin contains custom links which can be configured via the "
+#~ "configuration variable <tt>custom_links</tt> in <tt>multisite.mk</tt>"
+#~ msgstr ""
+#~ "このスナップインには、<tt>multisite.mk</tt> の設定変数 <tt>custom_links </"
+#~ "tt> を介して設定できるカスタムリンクが含まれています"
+
+#, python-format
+#~ msgid "invalid entry %s: %s<br>\n"
+#~ msgstr "無効なエントリ%s:%s <br>\n"
+
+#, python-format
+#~ msgid ""
+#~ "Cluster and nodes must have the same datasource! The node <b>%s</b> has "
+#~ "datasources <b>%s</b> and <b>%s</b> while the cluster has datasources <b>"
+#~ "%s</b> and <b>%s</b>."
+#~ msgstr ""
+#~ "クラスタとノードは同じデータソースを持っている必要があります！ノード <b>"
+#~ "%s</b> にはデータソース <b>%s</b> と <b>%s</b> があり、クラスターにはデー"
+#~ "タソース<b>%s</b> と <b>%s</b>があります。"
+
+#~ msgid "Move to folder:"
+#~ msgstr "フォルダへ移動:"
 
 #, python-format
 #~ msgid "%d changes"

@@ -641,9 +641,25 @@ msgstr ""
 msgid "%s: Download agent output"
 msgstr ""
 
+#, fuzzy, python-format
+msgid "%s: No discovery result"
+msgstr "Inventariere in masa"
+
+#, python-format
+msgid "%s: No such agent output"
+msgstr ""
+
 #, python-format
 msgid "%s: Not using SSL. Consider enabling it in the connection settings."
 msgstr ""
+
+#, fuzzy, python-format
+msgid "%s: Service discovery: Permission denied"
+msgstr "(fără Nivel de serviciu)"
+
+#, fuzzy, python-format
+msgid "%s: Services: %s, Host Labels: %s"
+msgstr "Numele Elementului"
 
 #, python-format
 msgid "%s: Uses SSL"
@@ -1348,6 +1364,18 @@ msgstr ""
 
 msgid ""
 "<p>Here you can specify a list of filename patterns to be sent by the agent "
+"in the section <tt>fileinfo</tt>. UNC paths with globbing patterns are used "
+"here, e.g. <tt>\\\\hostname\\share name\\**\\foo\\*.log</tt>. Wildcards are "
+"not allowed in host or share names. Per default each found file will be "
+"monitored for size and age. By building groups you can alternatively monitor "
+"a collection of files as an entity and monitor the count, total size, the "
+"largest, smallest oldest or newest file. Note: if you specify more than one "
+"matching rule, then <b>all</b> matching rules will be used for defining "
+"pattern - not just the  first one.</p>"
+msgstr ""
+
+msgid ""
+"<p>Here you can specify a list of filename patterns to be sent by the agent "
 "in the section <tt>fileinfo</tt>. Use globbing patterns like <tt>C:\\foo\\*."
 "log</tt> or <tt>/var/*/*.log</tt> here. Per default each found file will be "
 "monitored for size and age. By building groups you can alternatively monitor "
@@ -1364,18 +1392,6 @@ msgid ""
 "the Option Only check during the following times of the day should be set. "
 "Otherwise a warning may be displayed if the file for the current day is not "
 "present yet.</p>"
-msgstr ""
-
-msgid ""
-"<p>Here you can specify a list of filename patterns to be sent by the agent "
-"in the section <tt>fileinfo</tt>. Use patterns like <tt>\\Share folder\\foo"
-"\\*.log</tt> here. Wildcards are only allowed in thefilename part, not in "
-"the directory path. Per default each found file will be monitored for size "
-"and age. By building groups you can alternatively monitor a collection of "
-"files as an entity and monitor the count, total size, the largest, smallest "
-"oldest or newest file. Note: if you specify more than one matching rule, "
-"then <b>all</b> matching rules will be used for defining pattern - not just "
-"the  first one.</p>"
 msgstr ""
 
 msgid ""
@@ -1763,9 +1779,6 @@ msgstr ""
 msgid "A list of specific users"
 msgstr "O listă cu utilizatori specifici"
 
-msgid "A matrix showing a colored square for each host"
-msgstr "O matrice care arată un pătrat colorat pentru fiecare element"
-
 msgid "A ntopng user which belongs to the group 'Administrator' in ntopng."
 msgstr ""
 
@@ -1866,15 +1879,6 @@ msgid "A string-combination of servername and port, e.g. 127.0.0.1:5000."
 msgstr ""
 
 msgid "A string-combination of servername and port, e.g. 127.0.0.1:80."
-msgstr ""
-
-msgid ""
-"A summary state of all hosts that have a problem, with links to problems of "
-"those hosts"
-msgstr ""
-
-msgid ""
-"A summary state of each host with a link to the view showing its services"
 msgstr ""
 
 msgid ""
@@ -2466,11 +2470,10 @@ msgid ""
 "it intended to be a comprehensive state machine. For the pending pods, the "
 "check keeps track for how long they have been pending. If a tolerating time "
 "period is set, the service goes WARN/CRIT after any of the pods has been "
-"pending for longer than the set duration. If there is at least one unknown "
-"pod, the service goes UNKNOWN by default. The state the service goes can be "
-"configured. This rule affects any Pod Resources service, except for those on "
-"the Nodes and the Clusters. The configuration for Clusters and Nodes can be "
-"done via the rule Kubernetes Pod Resources: Clusters, Nodes."
+"pending for longer than the set duration. This rule affects any Pod "
+"Resources service, except for those on the Nodes and the Clusters. The "
+"configuration for Clusters and Nodes can be done via the rule Kubernetes Pod "
+"Resources: Clusters, Nodes."
 msgstr ""
 
 msgid ""
@@ -2480,11 +2483,10 @@ msgid ""
 "it intended to be a comprehensive state machine. For the pending pods, the "
 "check keeps track for how long they have been pending. If a tolerating time "
 "period is set, the service goes WARN/CRIT after any of the pods has been "
-"pending for longer than the set duration. If there is at least one unknown "
-"pod, the service goes UNKNOWN by default. The state the service goes can be "
-"configured. This rule affects the PodResources services of Kubernetes Nodes "
-"and Kubernetes Clusters. The configuration of other Pod Resources services "
-"can be done via the rule Kubernetes Pod Resources: Deployments."
+"pending for longer than the set duration. This rule affects the Pod "
+"Resources services of Kubernetes Nodes and Kubernetes Clusters. The "
+"configuration of other Pod Resources services can be done via the rule "
+"Kubernetes Pod Resources: Deployments."
 msgstr ""
 
 msgid "Ack"
@@ -8622,6 +8624,10 @@ msgid ""
 msgstr ""
 
 msgid ""
+"Choose what modem is used. Currently supported is only Teltonika-TRB140."
+msgstr ""
+
+msgid ""
 "Choose whether this rule gets prioritized over cache times that are "
 "configured in the plugin's dedicated rules. Please choose \"override\" only "
 "if you know what you're doing, because some plugins have minimum cache times "
@@ -8977,11 +8983,7 @@ msgstr "Numele Elementului"
 msgid "Cluster agent connection"
 msgstr "Perioada de timp Noua"
 
-#, python-format
-msgid ""
-"Cluster and nodes must have the same datasource! The node <b>%s</b> has "
-"datasources <b>%s</b> and <b>%s</b> while the cluster has datasources <b>%s</"
-"b> and <b>%s</b>."
+msgid "Cluster and nodes must have the same datasource. "
 msgstr ""
 
 msgid "Cluster behaviour"
@@ -9666,6 +9668,9 @@ msgid ""
 msgstr ""
 
 msgid "Configure your ServiceNow URL here (eg. https://myservicenow.com)."
+msgstr ""
+
+msgid "Configure your modem URL here (eg. https://mymodem.mydomain.example)."
 msgstr ""
 
 #, fuzzy
@@ -11356,10 +11361,6 @@ msgstr "Atribute personalizate"
 
 #, fuzzy
 msgid "Custom limit"
-msgstr "Atribute personalizate"
-
-#, fuzzy
-msgid "Custom links"
 msgstr "Atribute personalizate"
 
 msgid "Custom localizations"
@@ -14746,9 +14747,6 @@ msgid "Document count delta"
 msgstr "doua nivele"
 
 msgid "Document count growth per minute"
-msgstr ""
-
-msgid "Documentation"
 msgstr ""
 
 #, fuzzy
@@ -18604,6 +18602,10 @@ msgid ""
 "Found no group object for synchronization. Please check your filter settings."
 msgstr ""
 
+#, python-format
+msgid "Found no history entry at the time of '%s' for the host '%s'"
+msgstr ""
+
 msgid "Found no inventory data for this host."
 msgstr ""
 
@@ -18998,6 +19000,12 @@ msgstr ""
 
 #, python-format
 msgid "Going to update %d sites"
+msgstr ""
+
+msgid "Google Cloud Platform"
+msgstr ""
+
+msgid "Google Cloud Platform (GCP)"
 msgstr ""
 
 #, fuzzy
@@ -20337,9 +20345,6 @@ msgstr ""
 msgid "Hivemanager Devices"
 msgstr ""
 
-msgid "Homepage"
-msgstr ""
-
 msgid "Homepage / Download - URL of this package"
 msgstr ""
 
@@ -20712,10 +20717,6 @@ msgstr "Numele Elementului"
 
 msgid "Host match list"
 msgstr ""
-
-#, fuzzy
-msgid "Host matrix"
-msgstr "serviciu"
 
 #, fuzzy
 msgid "Host memory usage"
@@ -25676,9 +25677,6 @@ msgstr ""
 msgid "Links to global views and dashboards"
 msgstr ""
 
-msgid "Links to webpage, documentation and download of Checkmk"
-msgstr ""
-
 msgid "Linux"
 msgstr ""
 
@@ -28530,6 +28528,13 @@ msgstr ""
 msgid "Modem States that lead to a critical state"
 msgstr ""
 
+msgid "Modem URL"
+msgstr ""
+
+#, fuzzy
+msgid "Modem type"
+msgstr "Numele Elementului"
+
 msgid "Modems"
 msgstr ""
 
@@ -28994,10 +28999,6 @@ msgstr ""
 #, python-format
 msgid "Move to %s services"
 msgstr ""
-
-#, fuzzy
-msgid "Move to folder:"
-msgstr "Folder nou"
 
 #, fuzzy
 msgid "Move to other folder"
@@ -29924,9 +29925,6 @@ msgstr ""
 msgid "No agent labels present."
 msgstr ""
 
-msgid "No agent outputs for discoverable hosts found"
-msgstr ""
-
 msgid "No agent registration requests processed"
 msgstr ""
 
@@ -30056,6 +30054,10 @@ msgid ""
 "No historic metrics recorded but performance data is available. Maybe "
 "performance data processing is disabled."
 msgstr ""
+
+#, fuzzy
+msgid "No hosts discovered"
+msgstr "Inventariere in masa"
 
 msgid "No hosts/services found."
 msgstr ""
@@ -33793,12 +33795,6 @@ msgid ""
 "i> of the name."
 msgstr ""
 
-#, python-format
-msgid ""
-"Please edit <tt>%s</tt> in order to configure which links are shown in this "
-"snapin."
-msgstr ""
-
 msgid "Please enter <tt>Drives</tt>, <tt>Mdisks</tt> or <tt>VDisks</tt> here."
 msgstr ""
 
@@ -34627,10 +34623,6 @@ msgstr "Probleme"
 
 #, fuzzy
 msgid "Problem details"
-msgstr "Probleme"
-
-#, fuzzy
-msgid "Problem hosts"
 msgstr "Probleme"
 
 msgid "Problem is acknowledged, but is configured to be periodic"
@@ -37492,7 +37484,7 @@ msgstr ""
 msgid "SMART harddisk monitoring (Linux)"
 msgstr ""
 
-msgid "SMB Share"
+msgid "SMB Share fileinfo"
 msgstr ""
 
 msgid "SMB share to check"
@@ -38061,10 +38053,6 @@ msgid "Search<nobr> </nobr>in"
 msgstr ""
 
 msgid "Sec."
-msgstr ""
-
-#, python-format
-msgid "Second part of tuple must be list or string, not %s\n"
 msgstr ""
 
 msgid "Secondary - Attaching"
@@ -38729,10 +38717,6 @@ msgstr "(fără Nivel de serviciu)"
 msgid "Service discovery: Check type"
 msgstr ""
 
-#, fuzzy
-msgid "Service discovery: Permission denied"
-msgstr "(fără Nivel de serviciu)"
-
 msgid "Service discovery: Service description"
 msgstr ""
 
@@ -39001,10 +38985,6 @@ msgstr "Numele Elementului"
 msgid "Services: %d total (%d added, %d removed, %d kept)"
 msgstr ""
 
-#, fuzzy, python-format
-msgid "Services: %s, Host labels: %s"
-msgstr "Numele Elementului"
-
 #, fuzzy
 msgid "Session Rate"
 msgstr "Numele Aplicatiei"
@@ -39173,6 +39153,10 @@ msgstr "TCP port pentru conexiunile la agentul Check_MK"
 msgid "Set optional timeout for connections to ServiceNow"
 msgstr "TCP port pentru conexiunile la agentul Check_MK"
 
+#, fuzzy
+msgid "Set optional timeout for connections to the modem."
+msgstr "TCP port pentru conexiunile la agentul Check_MK"
+
 msgid "Set period how long outdated piggyback data is treated as valid"
 msgstr ""
 
@@ -39222,9 +39206,6 @@ msgid ""
 "vanished services automatically. If you set both this and 'Don't remove "
 "matching vanished services', both rules have to apply for a service to be "
 "removed."
-msgstr ""
-
-msgid "Set state for unknown pods"
 msgstr ""
 
 msgid "Set state to"
@@ -40613,9 +40594,6 @@ msgstr "Dezactiveaza Notificarile"
 msgid "Sophos Memory utilization"
 msgstr "Dezactiveaza Notificarile"
 
-msgid "Sorry, I will not display more than 900 hosts."
-msgstr ""
-
 msgid ""
 "Sorry, but your unlimited 30-day trial of Checkmk has ended. The Checkmk "
 "Free Edition does not allow distributed setups after the 30-day trial "
@@ -41387,6 +41365,10 @@ msgstr ""
 
 msgid "Started"
 msgstr ""
+
+#, fuzzy, python-format
+msgid "Started activate changes: %s"
+msgstr "Activare schimbări"
 
 #, python-format
 msgid "Started activation of site %s"
@@ -43220,6 +43202,9 @@ msgid ""
 "has to wait between chunks of data it receives."
 msgstr ""
 
+msgid "Teltonika-TRB140"
+msgstr ""
+
 msgid "Temperature"
 msgstr ""
 
@@ -44215,6 +44200,10 @@ msgstr ""
 msgid ""
 "The city name from the response will be checked against the regular "
 "expression specified here"
+msgstr ""
+
+#, python-format
+msgid "The cluster %s while the node <b>%s</b> %s"
 msgstr ""
 
 msgid "The cluster can not be a node of it's own"
@@ -46456,6 +46445,10 @@ msgstr ""
 msgid ""
 "The user, used for login, has to have at least the role 'itil' in ServiceNow."
 msgstr ""
+
+#, fuzzy
+msgid "The user, used for login."
+msgstr "trimite notificare"
 
 #, python-format
 msgid "The username returned by the %s connector is not of type string (%r)."
@@ -49191,11 +49184,6 @@ msgid "This site is up-to-date."
 msgstr ""
 
 msgid "This site needs a restart for activating the changes. Start it now."
-msgstr ""
-
-msgid ""
-"This snapin contains custom links which can be configured via the "
-"configuration variable <tt>custom_links</tt> in <tt>multisite.mk</tt>"
 msgstr ""
 
 msgid ""
@@ -56919,6 +56907,10 @@ msgstr ""
 msgid "alerts"
 msgstr ""
 
+#, fuzzy
+msgid "all agents"
+msgstr "Acces la Agenți"
+
 msgid "all contacts of the notified object"
 msgstr ""
 
@@ -56934,6 +56926,10 @@ msgstr " pentru hostul %s"
 
 msgid "all logfiles on all hosts"
 msgstr ""
+
+#, fuzzy
+msgid "all special agents"
+msgstr "Acces la Agenți"
 
 #, fuzzy
 msgid "all states"
@@ -57781,10 +57777,6 @@ msgstr ""
 msgid "intrusion"
 msgstr "sesiuni"
 
-#, python-format
-msgid "invalid entry %s: %s<br>\n"
-msgstr ""
-
 msgid "invalid:"
 msgstr ""
 
@@ -57792,6 +57784,9 @@ msgid "is"
 msgstr ""
 
 msgid "is "
+msgstr ""
+
+msgid "is <b>not</b>"
 msgstr ""
 
 #, fuzzy
@@ -57827,6 +57822,10 @@ msgstr ""
 
 msgid "jobs"
 msgstr ""
+
+#, fuzzy
+msgid "json credentials for service accoun"
+msgstr "Conexiuni Active"
 
 msgid "kW"
 msgstr ""
@@ -58864,6 +58863,25 @@ msgstr "z/OS"
 #, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr ""
+
+#~ msgid "A matrix showing a colored square for each host"
+#~ msgstr "O matrice care arată un pătrat colorat pentru fiecare element"
+
+#, fuzzy
+#~ msgid "Custom links"
+#~ msgstr "Atribute personalizate"
+
+#, fuzzy
+#~ msgid "Host matrix"
+#~ msgstr "serviciu"
+
+#, fuzzy
+#~ msgid "Problem hosts"
+#~ msgstr "Probleme"
+
+#, fuzzy
+#~ msgid "Move to folder:"
+#~ msgstr "Folder nou"
 
 #, python-format
 #~ msgid "%d changes"
@@ -61871,10 +61889,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Show only most frequently used buttons"
 #~ msgstr "Arata regulile de utilizator"
-
-#, fuzzy
-#~ msgid "Sign all agents"
-#~ msgstr "Acces la Agenți"
 
 #, fuzzy
 #~ msgid "Specify explicit host names"

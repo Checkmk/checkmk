@@ -7,8 +7,8 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2022-01-27 07:00+0000\n"
-"Last-Translator: Weblate Admin <marketing@tribe29.com>\n"
+"PO-Revision-Date: 2022-02-01 07:00+0000\n"
+"Last-Translator: Michele Flores <mflores@informationofficer.com>\n"
 "Language-Team: Spanish <https://translate.checkmk.com/projects/checkmk/"
 "software/es/>\n"
 "Language: es\n"
@@ -146,9 +146,8 @@ msgstr " para %d o %d destinatarios."
 msgid " for a period of %s"
 msgstr " por un período de f %s"
 
-#, fuzzy
 msgid " for all recipients."
-msgstr "Utilizar para todas las conexiones"
+msgstr " Utilizar para todas las conexiones destino"
 
 #, python-format
 msgid " for host %s"
@@ -327,7 +326,7 @@ msgstr "%d acciones"
 
 #, python-format
 msgid "%d chaotic state changes from %s until %s (%s)"
-msgstr ""
+msgstr "%d Cambio de estado caotico desde %s hasta %s (%s)"
 
 #, python-format
 msgid "%d columns"
@@ -652,9 +651,25 @@ msgstr "%s: no se puede analizar la página man: %s"
 msgid "%s: Download agent output"
 msgstr "%s: Descargar salida del agente"
 
+#, fuzzy, python-format
+msgid "%s: No discovery result"
+msgstr "descubrimiento exitoso"
+
+#, fuzzy, python-format
+msgid "%s: No such agent output"
+msgstr "%s: Descargar salida del agente"
+
 #, python-format
 msgid "%s: Not using SSL. Consider enabling it in the connection settings."
 msgstr "%s: No usa SSL. Considere habilitarlo en la configuración de conexión."
+
+#, fuzzy, python-format
+msgid "%s: Service discovery: Permission denied"
+msgstr "Descubrimiento del servicio: Descripción del servicio"
+
+#, fuzzy, python-format
+msgid "%s: Services: %s, Host Labels: %s"
+msgstr "Etiquetas de servicios/hostings a arreglar"
 
 #, python-format
 msgid "%s: Uses SSL"
@@ -1413,6 +1428,18 @@ msgstr ""
 
 msgid ""
 "<p>Here you can specify a list of filename patterns to be sent by the agent "
+"in the section <tt>fileinfo</tt>. UNC paths with globbing patterns are used "
+"here, e.g. <tt>\\\\hostname\\share name\\**\\foo\\*.log</tt>. Wildcards are "
+"not allowed in host or share names. Per default each found file will be "
+"monitored for size and age. By building groups you can alternatively monitor "
+"a collection of files as an entity and monitor the count, total size, the "
+"largest, smallest oldest or newest file. Note: if you specify more than one "
+"matching rule, then <b>all</b> matching rules will be used for defining "
+"pattern - not just the  first one.</p>"
+msgstr ""
+
+msgid ""
+"<p>Here you can specify a list of filename patterns to be sent by the agent "
 "in the section <tt>fileinfo</tt>. Use globbing patterns like <tt>C:\\foo\\*."
 "log</tt> or <tt>/var/*/*.log</tt> here. Per default each found file will be "
 "monitored for size and age. By building groups you can alternatively monitor "
@@ -1450,18 +1477,6 @@ msgstr ""
 "configurarse la opción Verificar solo durante las siguientes horas del día. "
 "De lo contrario, se puede mostrar una advertencia si el archivo del día "
 "actual aún no está presente..</p>"
-
-msgid ""
-"<p>Here you can specify a list of filename patterns to be sent by the agent "
-"in the section <tt>fileinfo</tt>. Use patterns like <tt>\\Share folder\\foo"
-"\\*.log</tt> here. Wildcards are only allowed in thefilename part, not in "
-"the directory path. Per default each found file will be monitored for size "
-"and age. By building groups you can alternatively monitor a collection of "
-"files as an entity and monitor the count, total size, the largest, smallest "
-"oldest or newest file. Note: if you specify more than one matching rule, "
-"then <b>all</b> matching rules will be used for defining pattern - not just "
-"the  first one.</p>"
-msgstr ""
 
 msgid ""
 "<p>In distributed WATO setups it is possible to synchronize the extensions "
@@ -2074,9 +2089,6 @@ msgstr "Esta regla coincide y define nuevos parámetros."
 msgid "A list of specific users"
 msgstr "Una lista de usuarios específicos"
 
-msgid "A matrix showing a colored square for each host"
-msgstr "Una matriz que muestra un cuadrado de color para cada huésped"
-
 msgid "A ntopng user which belongs to the group 'Administrator' in ntopng."
 msgstr "Un usuario de ntopng que pertenece al grupo 'Administrador' en ntopng."
 
@@ -2222,19 +2234,6 @@ msgid "A string-combination of servername and port, e.g. 127.0.0.1:80."
 msgstr ""
 "Una cadena-combinación de nombre de servidor y puerto, por ejemplo, "
 "127.0.0.1:80."
-
-msgid ""
-"A summary state of all hosts that have a problem, with links to problems of "
-"those hosts"
-msgstr ""
-"Un estado resumido de todos los hosts que tienen un problema, con enlaces a "
-"los problemas de esos hosts"
-
-msgid ""
-"A summary state of each host with a link to the view showing its services"
-msgstr ""
-"Un estado resumido de cada host con un enlace a la vista que muestra sus "
-"servicios"
 
 msgid ""
 "A tablespace is a container for segments (tables, indexes, etc). A database "
@@ -2811,11 +2810,10 @@ msgid ""
 "it intended to be a comprehensive state machine. For the pending pods, the "
 "check keeps track for how long they have been pending. If a tolerating time "
 "period is set, the service goes WARN/CRIT after any of the pods has been "
-"pending for longer than the set duration. If there is at least one unknown "
-"pod, the service goes UNKNOWN by default. The state the service goes can be "
-"configured. This rule affects any Pod Resources service, except for those on "
-"the Nodes and the Clusters. The configuration for Clusters and Nodes can be "
-"done via the rule Kubernetes Pod Resources: Clusters, Nodes."
+"pending for longer than the set duration. This rule affects any Pod "
+"Resources service, except for those on the Nodes and the Clusters. The "
+"configuration for Clusters and Nodes can be done via the rule Kubernetes Pod "
+"Resources: Clusters, Nodes."
 msgstr ""
 
 msgid ""
@@ -2825,11 +2823,10 @@ msgid ""
 "it intended to be a comprehensive state machine. For the pending pods, the "
 "check keeps track for how long they have been pending. If a tolerating time "
 "period is set, the service goes WARN/CRIT after any of the pods has been "
-"pending for longer than the set duration. If there is at least one unknown "
-"pod, the service goes UNKNOWN by default. The state the service goes can be "
-"configured. This rule affects the PodResources services of Kubernetes Nodes "
-"and Kubernetes Clusters. The configuration of other Pod Resources services "
-"can be done via the rule Kubernetes Pod Resources: Deployments."
+"pending for longer than the set duration. This rule affects the Pod "
+"Resources services of Kubernetes Nodes and Kubernetes Clusters. The "
+"configuration of other Pod Resources services can be done via the rule "
+"Kubernetes Pod Resources: Deployments."
 msgstr ""
 
 msgid "Ack"
@@ -9291,6 +9288,10 @@ msgstr ""
 "información sobre un solo archivo."
 
 msgid ""
+"Choose what modem is used. Currently supported is only Teltonika-TRB140."
+msgstr ""
+
+msgid ""
 "Choose whether this rule gets prioritized over cache times that are "
 "configured in the plugin's dedicated rules. Please choose \"override\" only "
 "if you know what you're doing, because some plugins have minimum cache times "
@@ -9640,15 +9641,9 @@ msgstr "Nombre del clúster"
 msgid "Cluster agent connection"
 msgstr "Versión del agente Checkmk"
 
-#, python-format
-msgid ""
-"Cluster and nodes must have the same datasource! The node <b>%s</b> has "
-"datasources <b>%s</b> and <b>%s</b> while the cluster has datasources <b>%s</"
-"b> and <b>%s</b>."
-msgstr ""
-"¡El clúster y los nodos deben tener el mismo origen de datos! El nodo <b>%s</"
-"b> tiene fuentes de datos <b>%s</b> y <b>%s</b> mientras que el clúster "
-"tiene fuentes de datos <b>%s</b> y <b>%s</b>."
+#, fuzzy
+msgid "Cluster and nodes must have the same datasource. "
+msgstr "La fecha de finalización debe ser posterior a la fecha de inicio"
 
 msgid "Cluster behaviour"
 msgstr "Comportamiento de los grupos"
@@ -10409,6 +10404,11 @@ msgid ""
 msgstr ""
 
 msgid "Configure your ServiceNow URL here (eg. https://myservicenow.com)."
+msgstr ""
+"Configure aquí su URL de ServiceNow (por ejemplo, https://myservicenow.com)."
+
+#, fuzzy
+msgid "Configure your modem URL here (eg. https://mymodem.mydomain.example)."
 msgstr ""
 "Configure aquí su URL de ServiceNow (por ejemplo, https://myservicenow.com)."
 
@@ -12053,9 +12053,6 @@ msgstr "Título personalizado"
 
 msgid "Custom limit"
 msgstr "Límite personalizado"
-
-msgid "Custom links"
-msgstr "Enlaces personalizados"
 
 msgid "Custom localizations"
 msgstr "Localizaciones personalizadas"
@@ -15452,9 +15449,6 @@ msgstr "Delta del recuento de documentos"
 
 msgid "Document count growth per minute"
 msgstr "Crecimiento del número de documentos por minuto"
-
-msgid "Documentation"
-msgstr "Documentación"
 
 msgid "Documentation URL"
 msgstr "URL de la documentación"
@@ -19391,6 +19385,10 @@ msgstr ""
 "No se ha encontrado ningún objeto de grupo para la sincronización. Por "
 "favor, compruebe la configuración del filtro."
 
+#, fuzzy, python-format
+msgid "Found no history entry at the time of '%s' for the host '%s'"
+msgstr "No se han encontrado datos de inventario para este host."
+
 msgid "Found no inventory data for this host."
 msgstr "No se han encontrado datos de inventario para este host."
 
@@ -19796,6 +19794,12 @@ msgstr "Sube un nivel de árbol"
 #, python-format
 msgid "Going to update %d sites"
 msgstr "Voy a actualizar %d sitios"
+
+msgid "Google Cloud Platform"
+msgstr ""
+
+msgid "Google Cloud Platform (GCP)"
+msgstr ""
 
 msgid "Got invalid data"
 msgstr "Tengo datos no válidos"
@@ -21404,9 +21408,6 @@ msgstr "Dispositivos HiveManager NG"
 msgid "Hivemanager Devices"
 msgstr "Dispositivos Hivemanager"
 
-msgid "Homepage"
-msgstr "Página web"
-
 msgid "Homepage / Download - URL of this package"
 msgstr "Página de inicio / Descarga - URL de este paquete"
 
@@ -21761,9 +21762,6 @@ msgstr "Elemento de búsqueda de host"
 
 msgid "Host match list"
 msgstr "Lista de partidos del anfitrión"
-
-msgid "Host matrix"
-msgstr "Matriz de acogida"
 
 msgid "Host memory usage"
 msgstr "Uso de la memoria del host"
@@ -27389,9 +27387,6 @@ msgstr "Enlaces a todos los cuadros de mando"
 msgid "Links to global views and dashboards"
 msgstr "Enlaces a vistas globales y cuadros de mando"
 
-msgid "Links to webpage, documentation and download of Checkmk"
-msgstr "Enlaces a la página web, documentación y descarga de Checkmk"
-
 msgid "Linux"
 msgstr "Linux"
 
@@ -30158,6 +30153,14 @@ msgstr "Modelo de estacionalidad%s"
 msgid "Modem States that lead to a critical state"
 msgstr "Estados del módem que conducen a un estado crítico"
 
+#, fuzzy
+msgid "Modem URL"
+msgstr "Módems"
+
+#, fuzzy
+msgid "Modem type"
+msgstr "P3 - Moderado"
+
 msgid "Modems"
 msgstr "Módems"
 
@@ -30616,9 +30619,6 @@ msgstr "Mueve este host a:"
 #, python-format
 msgid "Move to %s services"
 msgstr "Pasar a los servicios de %s"
-
-msgid "Move to folder:"
-msgstr "Mover a la carpeta:"
 
 msgid "Move to other folder"
 msgstr "Mover a otra carpeta"
@@ -31484,9 +31484,6 @@ msgstr "No hay cómputo real de SLA"
 msgid "No agent labels present."
 msgstr ""
 
-msgid "No agent outputs for discoverable hosts found"
-msgstr ""
-
 msgid "No agent registration requests processed"
 msgstr ""
 
@@ -31628,6 +31625,10 @@ msgstr ""
 "No se registran métricas históricas pero los datos de rendimiento están "
 "disponibles. Tal vez el procesamiento de datos de rendimiento esté "
 "desactivado."
+
+#, fuzzy
+msgid "No hosts discovered"
+msgstr "No convertir el caso"
 
 msgid "No hosts/services found."
 msgstr "No se han encontrado hosts/servicios."
@@ -35445,14 +35446,6 @@ msgstr ""
 "abcsrv123</tt>. También tenga en cuenta, que coincidimos con el <i>comienzo</"
 "i> del nombre."
 
-#, python-format
-msgid ""
-"Please edit <tt>%s</tt> in order to configure which links are shown in this "
-"snapin."
-msgstr ""
-"Por favor, edite <tt>%s</tt> para configurar qué enlaces se muestran en este "
-"snapin."
-
 msgid "Please enter <tt>Drives</tt>, <tt>Mdisks</tt> or <tt>VDisks</tt> here."
 msgstr ""
 "Por favor, introduzca aquí <tt>Unidades</tt>, <tt>Discos</tt> o <tt>Discos</"
@@ -36370,9 +36363,6 @@ msgstr "Cuadro de mandos del problema"
 
 msgid "Problem details"
 msgstr "Detalles del problema"
-
-msgid "Problem hosts"
-msgstr "Anfitriones con problemas"
 
 msgid "Problem is acknowledged, but is configured to be periodic"
 msgstr "Se reconoce el problema, pero está configurado para ser periódico"
@@ -39202,7 +39192,7 @@ msgstr "Licencia SLES"
 msgid "SMART harddisk monitoring (Linux)"
 msgstr "Monitorización SMART del disco duro (Linux)"
 
-msgid "SMB Share"
+msgid "SMB Share fileinfo"
 msgstr ""
 
 msgid "SMB share to check"
@@ -39756,10 +39746,6 @@ msgstr "Buscar<nobr> </nobr>en"
 
 msgid "Sec."
 msgstr "Sec."
-
-#, python-format
-msgid "Second part of tuple must be list or string, not %s\n"
-msgstr "La segunda parte de la tupla debe ser una lista o una cadena, no %s\n"
 
 msgid "Secondary - Attaching"
 msgstr "Secundaria - Fijación"
@@ -40431,10 +40417,6 @@ msgstr "Descubrimiento del servicio: "
 msgid "Service discovery: Check type"
 msgstr "Descubrimiento del servicio: Comprobar tipo"
 
-#, fuzzy
-msgid "Service discovery: Permission denied"
-msgstr "Descubrimiento del servicio: Descripción del servicio"
-
 msgid "Service discovery: Service description"
 msgstr "Descubrimiento del servicio: Descripción del servicio"
 
@@ -40683,10 +40665,6 @@ msgstr "Etiquetas de servicios/hostings a arreglar"
 msgid "Services: %d total (%d added, %d removed, %d kept)"
 msgstr "Servicios: %d total (%d añadido, %d eliminado, %d mantenido)"
 
-#, fuzzy, python-format
-msgid "Services: %s, Host labels: %s"
-msgstr "Etiquetas de servicios/hostings a arreglar"
-
 msgid "Session Rate"
 msgstr "Tarifa de la sesión"
 
@@ -40839,6 +40817,10 @@ msgid "Set optional timeout for connections to ServiceNow"
 msgstr ""
 "Establecer el tiempo de espera opcional para las conexiones a ServiceNow"
 
+#, fuzzy
+msgid "Set optional timeout for connections to the modem."
+msgstr "Establecer el tiempo de espera opcional para las conexiones a JIRA"
+
 msgid "Set period how long outdated piggyback data is treated as valid"
 msgstr ""
 "Establece el periodo durante el cual los datos obsoletos se consideran "
@@ -40912,10 +40894,6 @@ msgstr ""
 "para eliminar automáticamente los servicios desaparecidos que coincidan. Si "
 "establece tanto esto como \"No eliminar servicios desaparecidos que coincidan"
 "\", ambas reglas tienen que aplicarse para que se elimine un servicio."
-
-#, fuzzy
-msgid "Set state for unknown pods"
-msgstr "El estado del sitio es desconocido"
 
 msgid "Set state to"
 msgstr "Poner el estado en"
@@ -42404,9 +42382,6 @@ msgstr "Utilización del disco de Sophos"
 msgid "Sophos Memory utilization"
 msgstr "Sophos Utilización de la memoria"
 
-msgid "Sorry, I will not display more than 900 hosts."
-msgstr "Lo siento, no voy a mostrar más de 900 hosts."
-
 msgid ""
 "Sorry, but your unlimited 30-day trial of Checkmk has ended. The Checkmk "
 "Free Edition does not allow distributed setups after the 30-day trial "
@@ -43367,6 +43342,10 @@ msgstr "Hora de inicio"
 
 msgid "Started"
 msgstr "Comenzó"
+
+#, fuzzy, python-format
+msgid "Started activate changes: %s"
+msgstr "No activar los cambios"
 
 #, python-format
 msgid "Started activation of site %s"
@@ -45148,6 +45127,9 @@ msgstr ""
 "como al tiempo que el plugin tiene que esperar entre los trozos de datos que "
 "recibe."
 
+msgid "Teltonika-TRB140"
+msgstr ""
+
 msgid "Temperature"
 msgstr "Temperatura"
 
@@ -46517,6 +46499,10 @@ msgid ""
 msgstr ""
 "El nombre de la ciudad de la respuesta se comparará con la expresión regular "
 "especificada aquí"
+
+#, fuzzy, python-format
+msgid "The cluster %s while the node <b>%s</b> %s"
+msgstr "directamente en la carpeta <b>%s</b>"
 
 msgid "The cluster can not be a node of it's own"
 msgstr "El cluster no puede ser un nodo propio"
@@ -49378,6 +49364,10 @@ msgid ""
 msgstr ""
 "El usuario, utilizado para el inicio de sesión, tiene que tener al menos el "
 "rol 'itil' en ServiceNow."
+
+#, fuzzy
+msgid "The user, used for login."
+msgstr "Usuario para el inicio de sesión"
 
 #, python-format
 msgid "The username returned by the %s connector is not of type string (%r)."
@@ -53351,14 +53341,6 @@ msgstr "Este sitio está actualizado."
 msgid "This site needs a restart for activating the changes. Start it now."
 msgstr ""
 "Este sitio necesita un reinicio para activar los cambios. Inícialo ahora."
-
-msgid ""
-"This snapin contains custom links which can be configured via the "
-"configuration variable <tt>custom_links</tt> in <tt>multisite.mk</tt>"
-msgstr ""
-"Este snapin contiene enlaces personalizados que se pueden configurar a "
-"través de la variable de configuración <tt>custom_links</tt> en "
-"<tt>multisite.mk</tt>"
 
 msgid ""
 "This snapin shows the folders defined in WATO. It can be used to open views "
@@ -62271,6 +62253,10 @@ msgstr "regla de gestión de alertas"
 msgid "alerts"
 msgstr "alertas"
 
+#, fuzzy
+msgid "all agents"
+msgstr "Agentes de horneado"
+
 msgid "all contacts of the notified object"
 msgstr "todos los contactos del objeto notificado"
 
@@ -62286,6 +62272,10 @@ msgstr "todos los archivos de registro del host %s"
 
 msgid "all logfiles on all hosts"
 msgstr "todos los archivos de registro en todos los hosts"
+
+#, fuzzy
+msgid "all special agents"
+msgstr "Agente especial"
 
 msgid "all states"
 msgstr "todos los estados"
@@ -63099,10 +63089,6 @@ msgstr "Identificación interna"
 msgid "intrusion"
 msgstr "intrusión"
 
-#, python-format
-msgid "invalid entry %s: %s<br>\n"
-msgstr "entrada inválida %s: %s<br>\n"
-
 msgid "invalid:"
 msgstr "inválido:"
 
@@ -63111,6 +63097,9 @@ msgstr "es"
 
 msgid "is "
 msgstr "es "
+
+msgid "is <b>not</b>"
+msgstr ""
 
 msgid "is clustered"
 msgstr "se agrupa"
@@ -63146,6 +63135,10 @@ msgstr "jitter"
 
 msgid "jobs"
 msgstr "empleos"
+
+#, fuzzy
+msgid "json credentials for service accoun"
+msgstr "Credenciales SNMP"
 
 msgid "kW"
 msgstr "kW"
@@ -64148,6 +64141,86 @@ msgstr "z/OS"
 #, fuzzy, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "2020 tribe29 GmbH. Todos los derechos reservados."
+
+#~ msgid "A matrix showing a colored square for each host"
+#~ msgstr "Una matriz que muestra un cuadrado de color para cada huésped"
+
+#~ msgid ""
+#~ "A summary state of all hosts that have a problem, with links to problems "
+#~ "of those hosts"
+#~ msgstr ""
+#~ "Un estado resumido de todos los hosts que tienen un problema, con enlaces "
+#~ "a los problemas de esos hosts"
+
+#~ msgid ""
+#~ "A summary state of each host with a link to the view showing its services"
+#~ msgstr ""
+#~ "Un estado resumido de cada host con un enlace a la vista que muestra sus "
+#~ "servicios"
+
+#~ msgid "Custom links"
+#~ msgstr "Enlaces personalizados"
+
+#~ msgid "Documentation"
+#~ msgstr "Documentación"
+
+#~ msgid "Homepage"
+#~ msgstr "Página web"
+
+#~ msgid "Host matrix"
+#~ msgstr "Matriz de acogida"
+
+#~ msgid "Links to webpage, documentation and download of Checkmk"
+#~ msgstr "Enlaces a la página web, documentación y descarga de Checkmk"
+
+#, python-format
+#~ msgid ""
+#~ "Please edit <tt>%s</tt> in order to configure which links are shown in "
+#~ "this snapin."
+#~ msgstr ""
+#~ "Por favor, edite <tt>%s</tt> para configurar qué enlaces se muestran en "
+#~ "este snapin."
+
+#~ msgid "Problem hosts"
+#~ msgstr "Anfitriones con problemas"
+
+#, python-format
+#~ msgid "Second part of tuple must be list or string, not %s\n"
+#~ msgstr ""
+#~ "La segunda parte de la tupla debe ser una lista o una cadena, no %s\n"
+
+#, fuzzy
+#~| msgid "Site state is unknown"
+#~ msgid "Set state for unknown pods"
+#~ msgstr "El estado del sitio es desconocido"
+
+#~ msgid "Sorry, I will not display more than 900 hosts."
+#~ msgstr "Lo siento, no voy a mostrar más de 900 hosts."
+
+#~ msgid ""
+#~ "This snapin contains custom links which can be configured via the "
+#~ "configuration variable <tt>custom_links</tt> in <tt>multisite.mk</tt>"
+#~ msgstr ""
+#~ "Este snapin contiene enlaces personalizados que se pueden configurar a "
+#~ "través de la variable de configuración <tt>custom_links</tt> en "
+#~ "<tt>multisite.mk</tt>"
+
+#, python-format
+#~ msgid "invalid entry %s: %s<br>\n"
+#~ msgstr "entrada inválida %s: %s<br>\n"
+
+#, python-format
+#~ msgid ""
+#~ "Cluster and nodes must have the same datasource! The node <b>%s</b> has "
+#~ "datasources <b>%s</b> and <b>%s</b> while the cluster has datasources <b>"
+#~ "%s</b> and <b>%s</b>."
+#~ msgstr ""
+#~ "¡El clúster y los nodos deben tener el mismo origen de datos! El nodo <b>"
+#~ "%s</b> tiene fuentes de datos <b>%s</b> y <b>%s</b> mientras que el "
+#~ "clúster tiene fuentes de datos <b>%s</b> y <b>%s</b>."
+
+#~ msgid "Move to folder:"
+#~ msgstr "Mover a la carpeta:"
 
 #, python-format
 #~ msgid "%d changes"

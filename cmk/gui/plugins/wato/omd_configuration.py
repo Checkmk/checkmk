@@ -438,19 +438,19 @@ class ConfigDomainApache(ABCConfigDomain):
     def activate(self, settings: _Optional[SerializedSettings] = None) -> ConfigurationWarnings:
         try:
             self._write_config_file()
-            with open(os.devnull) as devnull:
-                completed_process = subprocess.run(
-                    ["omd", "reload", "apache"],
-                    stdin=devnull,
-                    stdout=subprocess.PIPE,
-                    stderr=subprocess.STDOUT,
-                    close_fds=True,
-                    encoding="utf-8",
-                    check=False,
-                )
 
-            if completed_process.returncode != 0:
-                raise Exception(completed_process.stdout)
+            p = subprocess.Popen(  # pylint:disable=consider-using-with
+                ["omd", "reload", "apache"],
+                stdin=open(os.devnull),  # pylint:disable=consider-using-with
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                close_fds=True,
+                encoding="utf-8",
+            )
+
+            stdout, _stderr = p.communicate()
+            if p.returncode != 0:
+                raise Exception(stdout)
 
             return []
         except Exception:

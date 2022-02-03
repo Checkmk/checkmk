@@ -1561,8 +1561,11 @@ def _paint_custom_notes(what: str, row: Row) -> CellSpec:
         )
 
     for f in files:
-        with io.open(f, encoding="utf8") as opened_file:
-            contents.append(replace_tags(opened_file.read().strip()))
+        contents.append(
+            replace_tags(
+                io.open(f, encoding="utf8").read().strip()  # pylint:disable=consider-using-with
+            )
+        )
     return "", "<hr>".join(contents)
 
 

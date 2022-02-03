@@ -1418,22 +1418,28 @@ def is_pdf2png_possible():
 def pdf2png(pdf_source):
     # Older version of pdftoppm cannot read pipes. The need to seek around
     # in the file. Therefore we need to save the PDF source into a temporary file.
-    with tempfile.NamedTemporaryFile(dir=cmk.utils.paths.tmp_dir) as temp_file:
-        temp_file.write(pdf_source)
-        temp_file.flush()
+    temp_file = tempfile.NamedTemporaryFile(  # pylint:disable=consider-using-with
+        dir=cmk.utils.paths.tmp_dir
+    )
+    temp_file.write(pdf_source)
+    temp_file.flush()
 
     command = ["pdftoppm", "-png", "-f", "1", "-l", "1", "-scale-to", "1000", temp_file.name]
-    completed_process = subprocess.run(
-        command, close_fds=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=False
+    p = subprocess.Popen(  # pylint:disable=consider-using-with
+        command,
+        close_fds=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
     )
-    exitcode = completed_process.returncode
+    stdout, stderr = p.communicate()
+    exitcode = p.returncode
     if exitcode != 0:
         raise MKInternalError(
             _(
                 "Cannot create PNG from PDF: %s, Exit code is %d, "
                 'command was "%s", PDF source code was "%s..."'
             )
-            % (completed_process.stderr, exitcode, " ".join(command), pdf_source[:500])
+            % (stderr, exitcode, " ".join(command), pdf_source[:500])
         )
 
-    return completed_process.stdout
+    return stdout

@@ -426,15 +426,13 @@ def message_mail(user_id, msg):
         )
 
     try:
-        completed_process = subprocess.run(
+        p = subprocess.Popen(  # pylint:disable=consider-using-with
             command,
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
             stdin=subprocess.PIPE,
             close_fds=True,
             encoding="utf-8",
-            check=False,
-            input=body,
         )
     except OSError as e:
         raise MKInternalError(
@@ -442,10 +440,11 @@ def message_mail(user_id, msg):
             % (" ".join(command), e)
         )
 
-    exitcode = completed_process.returncode
+    stdout, _stderr = p.communicate(input=body)
+    exitcode = p.returncode
     if exitcode != 0:
         raise MKInternalError(
             _("Mail could not be delivered. Exit code of command is %r. " "Output is: %s")
-            % (exitcode, completed_process.stdout)
+            % (exitcode, stdout)
         )
     return True

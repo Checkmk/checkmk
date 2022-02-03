@@ -92,8 +92,12 @@ fn determine_paths(username: &str) -> AnyhowResult<constants::Paths> {
 
 #[cfg(windows)]
 fn determine_default_paths() -> AnyhowResult<constants::Paths> {
-    // TODO(sk): replace with windows get env
-    let home = std::path::PathBuf::from("c:\\ProgramData\\checkmk\\agent");
+    let program_data_path: String;
+    match std::env::var(constants::ENV_PROGRAM_DATA) {
+        Ok(val) => program_data_path = val,
+        Err(_) => program_data_path = String::from("c:\\ProgramData"),
+    }
+    let home = std::path::PathBuf::from(program_data_path + constants::WIN_AGENT_HOME_DIR);
     Ok(constants::Paths::new(&home))
 }
 
@@ -174,4 +178,35 @@ fn main() -> AnyhowResult<()> {
     }
 
     result
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    #[cfg(windows)]
+    fn test_windows_paths() {
+        let p = determine_default_paths().unwrap();
+        let home = String::from("C:\\ProgramData") + constants::WIN_AGENT_HOME_DIR;
+        assert_eq!(p.home_dir, std::path::PathBuf::from(&home));
+        assert_eq!(
+            p.config_path,
+            std::path::PathBuf::from(&home).join("cmk-agent-ctl-config.json")
+        );
+        assert_eq!(
+            p.registry_path,
+            std::path::PathBuf::from(&home).join("registered_connections.json")
+        );
+        assert_eq!(
+            p.log_path,
+            std::path::PathBuf::from(&home)
+                .join("log")
+                .join("cmk-agent-ctl.log")
+        );
+        assert_eq!(
+            p.legacy_pull_path,
+            std::path::PathBuf::from(&home).join("allow-legacy-pull")
+        );
+    }
 }

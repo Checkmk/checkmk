@@ -11,6 +11,11 @@ pub const CMK_AGENT_USER: &str = "cmk-agent";
 //TODO: Pass agent port via cmdline or config.
 pub const AGENT_PORT: &str = "6556";
 
+#[cfg(windows)]
+pub const ENV_PROGRAM_DATA: &str = "ProgramData";
+#[cfg(windows)]
+pub const WIN_AGENT_HOME_DIR: &str = "\\checkmk\\agent";
+
 const CONFIG_FILE: &str = "cmk-agent-ctl-config.json";
 const REGISTRY_FILE: &str = "registered_connections.json";
 const LOG_FILE: &str = "cmk-agent-ctl.log";
@@ -30,7 +35,10 @@ impl Paths {
             home_dir: std::path::PathBuf::from(home_dir),
             config_path: home_dir.join(Path::new(CONFIG_FILE)),
             registry_path: home_dir.join(Path::new(REGISTRY_FILE)),
+            #[cfg(unix)]
             log_path: home_dir.join(Path::new(LOG_FILE)),
+            #[cfg(windows)]
+            log_path: home_dir.join("log").join(Path::new(LOG_FILE)),
             legacy_pull_path: home_dir.join(Path::new(LEGACY_PULL_FILE)),
         }
     }

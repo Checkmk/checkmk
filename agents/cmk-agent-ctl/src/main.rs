@@ -12,60 +12,20 @@ mod dump;
 mod import_connection;
 mod monitoring_data;
 mod pull;
+mod push;
 mod registration;
 mod status;
 mod tls_server;
 use anyhow::{Context, Result as AnyhowResult};
 use config::JSONLoader;
 use log::error;
-use log::info;
 #[cfg(unix)]
 use nix::unistd;
 use std::io::{self, Write};
 use std::path::Path;
 use std::sync::{mpsc, Arc, RwLock};
 use std::thread;
-use std::time::{Duration, Instant};
 use structopt::StructOpt;
-
-fn push(registry: &config::Registry) -> AnyhowResult<()> {
-    let compressed_mon_data = monitoring_data::compress(
-        &monitoring_data::collect().context("Error collecting monitoring data")?,
-    )
-    .context("Error compressing monitoring data")?;
-
-    for (agent_receiver_address, server_spec) in registry.push_connections() {
-        info!("Pushing monitoring data to {}", agent_receiver_address);
-        agent_receiver_api::Api::agent_data(
-            agent_receiver_address,
-            &server_spec.root_cert,
-            &server_spec.uuid,
-            &server_spec.certificate,
-            &monitoring_data::compression_header_info().push,
-            &compressed_mon_data,
-        )
-        .context(format!(
-            "Error pushing monitoring data to {}.",
-            agent_receiver_address
-        ))?
-    }
-    Ok(())
-}
-
-fn push_daemon(registry: Arc<RwLock<config::Registry>>) -> AnyhowResult<()> {
-    loop {
-        {
-            let mut registry_writer = registry.write().unwrap();
-            registry_writer.refresh()?;
-        }
-        let registry_reader = registry.read().unwrap();
-        let begin = Instant::now();
-        info!("Handling registered push connections");
-        push(&registry_reader)?;
-        drop(registry_reader);
-        thread::sleep(Duration::from_secs(60).saturating_sub(begin.elapsed()));
-    }
-}
 
 fn daemon(registry: config::Registry, legacy_pull_marker: &std::path::Path) -> AnyhowResult<()> {
     let registry_for_push = Arc::new(RwLock::new(registry));
@@ -76,7 +36,7 @@ fn daemon(registry: config::Registry, legacy_pull_marker: &std::path::Path) -> A
     let tx_pull = tx_push.clone();
 
     thread::spawn(move || {
-        tx_push.send(push_daemon(registry_for_push)).unwrap();
+        tx_push.send(push::push(registry_for_push)).unwrap();
     });
     thread::spawn(move || {
         tx_pull
@@ -182,7 +142,7 @@ fn run_requested_mode(args: cli::Args, paths: constants::Paths) -> AnyhowResult<
                 surr_pull_reg_args,
             )?)
         }
-        cli::Args::Push { .. } => push(&registry),
+        cli::Args::Push { .. } => push::handle_push_cycle(&registry),
         cli::Args::Pull { .. } => {
             pull::pull(Arc::new(RwLock::new(registry)), &paths.legacy_pull_path)
         }

@@ -18,7 +18,7 @@ def fixture_site() -> Site:
     return sf.get_existing_site("test")
 
 
-@pytest.fixture(scope="module", name="web")
+@pytest.fixture(scope="session", name="web")
 def fixture_web(site: Site) -> CMKWebSession:
     web = CMKWebSession(site)
     web.login()
@@ -26,6 +26,6 @@ def fixture_web(site: Site) -> CMKWebSession:
     return web
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture(scope="session")
 def ec(site: Site) -> CMKEventConsole:
     return CMKEventConsole(site)

@@ -78,6 +78,7 @@ import cmk.gui.watolib.rulesets
 import cmk.gui.watolib.tags
 from cmk.gui import main_modules
 from cmk.gui.bi import BIManager
+from cmk.gui.exceptions import MKUserError
 from cmk.gui.log import logger as gui_logger
 from cmk.gui.plugins.dashboard.utils import (
     builtin_dashboards,
@@ -526,6 +527,7 @@ class UpdateConfig:
             all_rulesets,
             REMOVED_CHECK_PLUGIN_MAP,
         )
+        self._validate_rule_values(all_rulesets)
         all_rulesets.save()
 
     def _transform_ignored_checks_to_maincheckified_list(
@@ -702,15 +704,57 @@ class UpdateConfig:
                     if isinstance(s, dict) and "$regex" in s
                 ]
 
+    def _validate_rule_values(
+        self,
+        all_rulesets: RulesetCollection,
+    ) -> None:
+        rulesets_skip = {
+            # the valid choices for this ruleset are user-dependent (SLAs) and not even an admin can
+            # see all of them
+            "extra_service_conf:_sla_config",
+        }
+
+        n_invalid = 0
+        for ruleset in all_rulesets.get_rulesets().values():
+            if ruleset.name in rulesets_skip:
+                continue
+
+            for folder, index, rule in ruleset.get_rules():
+                try:
+                    ruleset.rulespec.valuespec.validate_value(
+                        rule.value,
+                        "",
+                    )
+                except MKUserError as excpt:
+                    n_invalid += 1
+                    self._logger.warning(
+                        _format_warning(
+                            "WARNING: Invalid rule configuration detected (Ruleset: %s, Title: %s, "
+                            "Folder: %s,\nRule nr: %s, Exception: %s)"
+                        ),
+                        ruleset.name,
+                        ruleset.title(),
+                        folder.path(),
+                        index + 1,
+                        excpt,
+                    )
+
+        if n_invalid:
+            self._logger.warning(
+                _format_warning(
+                    "Detected %s issue(s) in configured rules.\n"
+                    "To correct these issues, we recommend to open the affected rules in the GUI.\n"
+                    "Upon attempting to save them, any problematic fields will be highlighted."
+                ),
+                n_invalid,
+            )
+
     def _validate_regexes_in_item_specs(
         self,
         all_rulesets: RulesetCollection,
     ) -> None:
         def format_error(msg: str):
             return "\033[91m {}\033[00m".format(msg)
-
-        def format_warning(msg: str):
-            return "\033[93m {}\033[00m".format(msg)
 
         num_errors = 0
         for ruleset in all_rulesets.get_rulesets().values():
@@ -730,12 +774,14 @@ class UpdateConfig:
                     except re.error as e:
                         self._logger.error(
                             format_error(
-                                "ERROR: Invalid regular expression in service condition detected: (Ruleset: %s, Folder: %s, "
-                                "Rule nr: %s, Condition: %s, Exception: %s)"
+                                "ERROR: Invalid regular expression in service condition detected "
+                                "(Ruleset: %s, Title: %s, Folder: %s,\nRule nr: %s, Condition: %s, "
+                                "Exception: %s)"
                             ),
                             ruleset.name,
+                            ruleset.title(),
                             folder.path(),
-                            index,
+                            index + 1,
                             regex,
                             e,
                         )
@@ -745,7 +791,7 @@ class UpdateConfig:
                         regex
                     ):
                         self._logger.warning(
-                            format_warning(
+                            _format_warning(
                                 "WARN: Service condition in rule looks like an absolute windows path that is not correctly escaped.\n"
                                 " Use double backslash as directory separator in regex expressions, e.g.\n"
                                 " 'C:\\\\Program Files\\\\'\n"
@@ -761,9 +807,11 @@ class UpdateConfig:
             self._has_errors = True
             self._logger.error(
                 format_error(
-                    "Detected %s errors in service conditions.\n "
-                    "You must correct these errors *before* starting checkmk.\n "
-                    "For more information regarding errors in regular expressions see:\n "
+                    "Detected %s errors in service conditions.\n"
+                    "You must correct these errors *before* starting Checkmk.\n"
+                    "To do so, we recommend to open the affected rules in the GUI. Upon attempting "
+                    "to save them, any problematic field will be highlighted.\n"
+                    "For more information regarding errors in regular expressions see:\n"
                     "https://docs.checkmk.com/latest/en/regexes.html"
                 ),
                 num_errors,
@@ -1509,6 +1557,10 @@ class PasswordSanitizer:
 
     def _hash(self, password: str) -> str:
         return hashlib.sha256(password.encode()).hexdigest()[:10]
+
+
+def _format_warning(msg: str) -> str:
+    return "\033[93m {}\033[00m".format(msg)
 
 
 def _add_show_mode(users: Users, user_id: UserId) -> Users:

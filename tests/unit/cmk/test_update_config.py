@@ -336,6 +336,66 @@ def test_remove_removed_check_plugins_from_ignored_checks(uc: update_config.Upda
     assert leftover_rules[1].value == ["a", "g"]
 
 
+@pytest.mark.parametrize(
+    ["rulesets", "n_expected_warnings"],
+    [
+        pytest.param(
+            {
+                "logwatch_rules": {
+                    "reclassify_patterns": [
+                        ("C", "\\\\x\\\\y\\\\z", "some comment"),
+                        ("W", "\\H", "invalid_regex"),
+                    ]
+                },
+                "checkgroup_parameters:ntp_time": {
+                    "ntp_levels": (10, 200.0, 500.0),
+                },
+            },
+            2,
+            id="invalid configuration",
+        ),
+        pytest.param(
+            {
+                "logwatch_rules": {
+                    "reclassify_patterns": [
+                        ("C", "\\\\x\\\\y\\\\z", "some comment"),
+                    ]
+                },
+                "checkgroup_parameters:ntp_time": {
+                    "ntp_levels": (10, 200.0, 500.0),
+                },
+                "extra_service_conf:_sla_config": "i am skipped",
+            },
+            0,
+            id="valid configuration",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("request_context")
+def test_validate_rule_values(
+    mocker: MockerFixture,
+    uc: update_config.UpdateConfig,
+    rulesets: Mapping[RulesetName, RuleValue],
+    n_expected_warnings: int,
+) -> None:
+    all_rulesets = RulesetCollection()
+    all_rulesets.set_rulesets(
+        {
+            ruleset_name: _instantiate_ruleset(
+                ruleset_name,
+                rule_value,
+            )
+            for ruleset_name, rule_value in rulesets.items()
+        }
+    )
+    mock_warner = mocker.patch.object(
+        uc._logger,
+        "warning",
+    )
+    uc._validate_rule_values(all_rulesets)
+    assert mock_warner.call_count == n_expected_warnings
+
+
 @pytest.fixture(name="old_path")
 def fixture_old_path() -> Path:
     return Path(cmk.utils.paths.var_dir, "wato", "log", "audit.log")

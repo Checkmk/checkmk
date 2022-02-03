@@ -12,14 +12,14 @@ from tests.testlib.web_session import CMKWebSession
 
 
 # Session fixtures must be in conftest.py to work properly
-@pytest.fixture(scope="session", autouse=True)
-def site(request) -> Site:
+@pytest.fixture(scope="session", autouse=True, name="site")
+def fixture_site() -> Site:
     sf = get_site_factory(prefix="int_", update_from_git=True, install_test_python_modules=True)
     return sf.get_existing_site("test")
 
 
-@pytest.fixture(scope="module")
-def web(site: Site):
+@pytest.fixture(scope="module", name="web")
+def fixture_web(site: Site) -> CMKWebSession:
     web = CMKWebSession(site)
     web.login()
     web.enforce_non_localized_gui()
@@ -27,5 +27,5 @@ def web(site: Site):
 
 
 @pytest.fixture(scope="module")
-def ec(site: Site, web):
+def ec(site: Site) -> CMKEventConsole:
     return CMKEventConsole(site)

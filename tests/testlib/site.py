@@ -16,7 +16,7 @@ import time
 import urllib.parse
 from contextlib import suppress
 from pathlib import Path
-from typing import List, Mapping, MutableMapping, Optional
+from typing import List, Literal, Mapping, MutableMapping, Optional
 
 import pytest
 
@@ -855,9 +855,6 @@ class Site:
             self.start()
             logger.debug("Started site")
 
-    def set_core(self, core: str) -> None:
-        self.set_config("CORE", core, with_restart=True)
-
     def get_config(self, key: str) -> str:
         p = self.execute(
             ["omd", "config", "show", key], stdout=subprocess.PIPE, stderr=subprocess.PIPE
@@ -867,6 +864,20 @@ class Site:
         if stderr:
             logger.error(stderr)
         return stdout.strip()
+
+    def core_name(self) -> Literal["cmc", "nagios"]:
+        return "nagios" if self.version.is_raw_edition() else "cmc"
+
+    def core_history_log(self) -> str:
+        core = self.core_name()
+        if core == "nagios":
+            return "var/log/nagios.log"
+        if core == "cmc":
+            return "var/check_mk/core/history"
+        raise ValueError(f"Unhandled core: {core}")
+
+    def core_history_log_timeout(self) -> int:
+        return 10 if self.core_name() == "cmc" else 30
 
     # These things are needed to make the site basically being setup. So this
     # is checked during site initialization instead of a dedicated test.

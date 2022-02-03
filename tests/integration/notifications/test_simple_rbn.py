@@ -6,17 +6,16 @@
 
 import os
 import time
+from typing import Iterator
 
 import pytest
 
 from tests.testlib import WatchLog
 from tests.testlib.site import Site
 
-from cmk.utils import version as cmk_version
-
 
 @pytest.fixture(name="fake_sendmail")
-def fake_sendmail_fixture(site: Site):
+def fake_sendmail_fixture(site: Site) -> Iterator[None]:
     site.write_text_file(
         "local/bin/sendmail", "#!/bin/bash\n" "set -e\n" 'echo "sendmail called with: $@"\n'
     )
@@ -25,22 +24,8 @@ def fake_sendmail_fixture(site: Site):
     site.delete_file("local/bin/sendmail")
 
 
-@pytest.fixture(
-    name="test_log",
-    params=[
-        ("nagios", "var/log/nagios.log"),
-        pytest.param(
-            ("cmc", "var/check_mk/core/history"),
-            marks=pytest.mark.skipif(
-                cmk_version.is_raw_edition(), reason="CMC not supported on CRE"
-            ),
-        ),
-    ],
-)
-def test_log_fixture(request, site: Site, fake_sendmail):
-    core, log = request.param
-    site.set_config("CORE", core, with_restart=True)
-
+@pytest.fixture(name="test_log")
+def test_log_fixture(site: Site, fake_sendmail):
     users = {
         "hh": {
             "fullname": "Harry Hirsch",
@@ -69,7 +54,7 @@ def test_log_fixture(request, site: Site, fake_sendmail):
     )
     site.activate_changes_and_wait_for_core_reload()
 
-    with WatchLog(site, log, default_timeout=20) as l:
+    with WatchLog(site) as l:
         yield l
 
     site.live.command("[%d] START_EXECUTING_HOST_CHECKS" % time.time())

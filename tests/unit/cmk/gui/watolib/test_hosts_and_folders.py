@@ -397,8 +397,9 @@ def fixture_make_folder(mocker):
 
     # convenience method NOT present in Folder
     def add_subfolders(self_, folders):
+        self_._loaded_subfolders = {}
         for folder in folders:
-            self_._subfolders[folder.name()] = folder
+            self_._loaded_subfolders[folder.name()] = folder
             folder._parent = self_
         return self_
 
@@ -416,7 +417,9 @@ def fixture_make_folder(mocker):
 
 
 def only_root(folder):
-    return folder("", title="Main")
+    root_folder = folder("", title="Main")
+    root_folder._loaded_subfolders = {}
+    return root_folder
 
 
 def three_levels(folder):

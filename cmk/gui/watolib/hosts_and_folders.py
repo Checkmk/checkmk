@@ -1189,7 +1189,9 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
         super().__init__()
         self._name = name
         self._parent = parent_folder
-        self._subfolders = {}
+
+        self._folder_path = folder_path
+        self._loaded_subfolders: Optional[Dict[PathWithoutSlash, CREFolder]] = None
 
         if attributes is None:
             attributes = {}
@@ -1205,10 +1207,12 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
             self._root_dir = wato_root_dir()
 
         if folder_path is not None:
+            # Existing folder
             self._hosts = None
             self.load_instance()
-            self.load_subfolders()
         else:
+            # New folder
+            logger.warning("New folder..")
             self._hosts = {}
             self._num_hosts = 0
             self._title = title or self._fallback_title()
@@ -1216,6 +1220,12 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
             self._locked = False
             self._locked_hosts = False
             self._locked_subfolders = False
+
+    @property
+    def _subfolders(self):
+        if self._loaded_subfolders is None:
+            self._loaded_subfolders = self._load_subfolders()
+        return self._loaded_subfolders
 
     def __repr__(self):
         return "Folder(%r, %r)" % (self.path(), self._title)
@@ -1585,20 +1595,30 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
             return _("Main")
         return self.name()
 
-    def load_subfolders(self):
+    def _load_subfolders(self) -> Dict[PathWithoutSlash, CREFolder]:
+        loaded_subfolders: Dict[str, CREFolder] = {}
+
         dir_path = self._root_dir + self.path()
         if not os.path.exists(dir_path):
-            return
+            return loaded_subfolders
+
         for entry in os.listdir(dir_path):
-            subfolder_dir = dir_path + "/" + entry
+            subfolder_dir = os.path.join(dir_path, entry)
             if os.path.isdir(subfolder_dir):
                 if self.path():
-                    subfolder_path = self.path() + "/" + entry
+                    subfolder_path = os.path.join(self.path(), entry)
                 else:
+                    # Main directory
                     subfolder_path = entry
-                self._subfolders[entry] = Folder(
-                    entry, subfolder_path, parent_folder=self, root_dir=self._root_dir
+
+                loaded_subfolders[entry] = Folder(
+                    entry,
+                    subfolder_path,
+                    parent_folder=self,
+                    root_dir=self._root_dir,
                 )
+
+        return loaded_subfolders
 
     def wato_info_path(self) -> str:
         return self.filesystem_path() + "/.wato"

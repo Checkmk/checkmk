@@ -570,12 +570,13 @@ def _check_deprecated_plugins(
         yield Result(
             state=State.CRIT,
             summary="Detected deprecated version of plugin 'windows_if.ps1' or 'wmic_if.bat' "
-            "(bakery ruleset 'Network interfaces on Windows'). Please update agent.",
+            "(bakery ruleset 'Network interfaces on Windows'). Please update the agent plugin.",
         )
     if mk_dhcp_enabled:
         yield Result(
             state=State.CRIT,
-            summary="Detected deprecated version of plugin 'mk_dhcp_enabled.bat'. Please update agent.",
+            summary="Detected deprecated version of plugin 'mk_dhcp_enabled.bat'. Please update "
+            "the agent plugin.",
         )
 
 

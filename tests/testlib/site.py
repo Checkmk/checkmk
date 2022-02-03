@@ -541,14 +541,12 @@ class Site:
     def _update_with_f12_files(self) -> None:
         paths = [
             cmk_path() + "/omd/packages/omd",
-            cmk_path() + "/livestatus",
             cmk_path() + "/livestatus/api/python",
             cmk_path() + "/bin",
             cmk_path() + "/agents/special",
             cmk_path() + "/agents/plugins",
             cmk_path() + "/agents/windows/plugins",
             cmk_path() + "/agents",
-            cmk_path() + "/modules",
             cmk_path() + "/cmk/base",
             cmk_path() + "/cmk",
             cmk_path() + "/checks",
@@ -558,6 +556,12 @@ class Site:
             cmk_path() + "/notifications",
             cmk_path() + "/.werks",
         ]
+
+        if self.version.is_raw_edition():
+            # The module is only used in CRE
+            paths += [
+                cmk_path() + "/livestatus",
+            ]
 
         if os.path.exists(cmc_path()) and not self.version.is_raw_edition():
             paths += [
@@ -583,7 +587,7 @@ class Site:
 
         for path in paths:
             if os.path.exists("%s/.f12" % path):
-                print('Executing .f12 in "%s"...' % path)
+                logger.info('Executing .f12 in "%s"...', path)
                 assert (
                     os.system(  # nosec
                         'cd "%s" ; '
@@ -594,8 +598,7 @@ class Site:
                     >> 8
                     == 0
                 )
-                print('Executing .f12 in "%s" DONE' % path)
-                sys.stdout.flush()
+                logger.info('Executing .f12 in "%s" DONE', path)
 
     def _update_cmk_core_config(self) -> None:
         logger.info("Updating core configuration...")

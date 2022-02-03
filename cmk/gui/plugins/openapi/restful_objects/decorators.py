@@ -621,33 +621,10 @@ class Endpoint:
             # We assume something has been modified and increase the config generation ID
             # by one. This is necessary to ensure a warning in the "Activate Changes" GUI
             # about there being new changes to activate can be given to the user.
-            if request.method != "get" and response.status_code < 300:
-                update_config_generation()
-
+            if self.method != "get" and response.status_code < 300:
                 # We assume no configuration change on GET and no configuration change on
                 # non-ok responses.
-                if config.wato_use_git:
-                    do_git_commit()
-
-            # We assume something has been modified and increase the config generation ID
-            # by one. This is necessary to ensure a warning in the "Activate Changes" GUI
-            # about there being new changes to activate can be given to the user.
-            if request.method != "get" and response.status_code < 300:
                 update_config_generation()
-
-                # We assume no configuration change on GET and no configuration change on
-                # non-ok responses.
-                if config.wato_use_git:
-                    do_git_commit()
-
-            # We assume something has been modified and increase the config generation ID
-            # by one. This is necessary to ensure a warning in the "Activate Changes" GUI
-            # about there being new changes to activate can be given to the user.
-            if request.method != "get" and response.status_code < 300:
-                update_config_generation()
-
-                # We assume no configuration change on GET and no configuration change on
-                # non-ok responses.
                 if config.wato_use_git:
                     do_git_commit()
 

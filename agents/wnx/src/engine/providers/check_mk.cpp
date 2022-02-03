@@ -119,7 +119,7 @@ void TrimRight(std::string &s, std::string_view chars) {
 
 std::string DetermineAgentCtlVersion() {
     auto path_to_agent_ctl =
-        (fs::path{cfg::GetUserPluginsDir()} / cfg::files::kAgentCtl).wstring();
+        (fs::path{cfg::GetRootDir()} / cfg::files::kAgentCtl).wstring();
     auto result = wtools::RunCommand(path_to_agent_ctl + L" -V"s);
     TrimRight(result, "\n\r");
     return result;

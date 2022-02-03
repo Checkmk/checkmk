@@ -10,11 +10,13 @@ withFolderProperties{
 properties([
   buildDiscarder(logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '', daysToKeepStr: '7', numToKeepStr: '14')),
   parameters([
-    string(name: 'EDITION', defaultValue: 'enterprise', description: 'Edition: raw, free, enterprise or managed' ),
+    string(name: 'EDITION', defaultValue: 'free', description: 'We currently build AMI only with the free edition.' ),
     string(name: 'VERSION', defaultValue: 'daily', description: 'Version: daily builds current git state of the branch. You also can specify a git tag here.' ),
     string(name: 'SET_LATEST_TAG', defaultValue: 'no', description: 'SET_LATEST_TAG: setting yes will push this docker container to the latest tag on docker hub.' )
   ])
 ])
+
+if (EDITION != 'free')  {error "The AMI build is currently only using the free edition."}
 
 // TODO: Change to versioning.get_branch and versioning.get_cmk_version! Then
 // the copy&paste below can be removed. First we'll have to clean up the

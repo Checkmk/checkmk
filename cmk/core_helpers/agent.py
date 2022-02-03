@@ -867,6 +867,8 @@ class AgentSummarizerDefault(AgentSummarizer):
                 "The hosts agent supports TLS, but it is not being used.",
                 "We strongly recommend to enable TLS by registering the host to the site "
                 "(using the `cmk-agent-ctl register` command on the monitored host).",
-                "However you can configure missing TLS to be OK in the settings of this service.",
+                "However you can configure missing TLS to be OK in the setting "
+                '"State in case of available but not enabled TLS" of the ruleset '
+                '"Status of the Checkmk services".',
             ),
         )

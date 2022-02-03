@@ -957,6 +957,10 @@ def request_cluster_collector(
     if not verify:
         LOGGER.info("Disabling SSL certificate verification")
         urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+
+    error_message = (
+        f"Failed attempting to communicate with cluster collector at URL {cluster_agent_url}"
+    )
     try:
         cluster_resp = requests.get(
             cluster_agent_url,
@@ -964,6 +968,19 @@ def request_cluster_collector(
             verify=verify,
             timeout=(timeout.connect, timeout.read),
         )  # TODO: certificate validation
+        cluster_resp.raise_for_status()
+    except requests.HTTPError as exception:
+        if debug:
+            raise SetupError(error_message) from exception
+        connection_logs.append(
+            section.CollectorLog(
+                status=section.CollectorState.ERROR,
+                component=component,
+                message="API HTTP error",
+                detail="Failure to retrieve data from cluster collector",
+            )
+        )
+        return connection_logs, None
     except requests.exceptions.RequestException as exception:
         # All TCP Exceptions raised by requests inherit from RequestException,
         # see https://docs.python-requests.org/en/latest/user/quickstart/#errors-and-exceptions
@@ -981,11 +998,6 @@ def request_cluster_collector(
         )
         return connection_logs, None
 
-    if cluster_resp.status_code != 200:
-        raise SetupError("Checkmk cannot make a connection to the k8 cluster agent")
-
-    if not cluster_resp.content:
-        raise SetupError("Worker nodes")
     return connection_logs, json.loads(cluster_resp.content.decode("utf-8"))
 
 

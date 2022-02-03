@@ -5,69 +5,69 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from marshmallow import fields
 
-from cmk.gui.fields.base import OpenAPIAttributes
+from cmk.fields import base
 
 
-class Constant(OpenAPIAttributes, fields.Constant):
+class Constant(base.OpenAPIAttributes, fields.Constant):
     pass
 
 
-class Boolean(OpenAPIAttributes, fields.Boolean):
+class Boolean(base.OpenAPIAttributes, fields.Boolean):
     pass
 
 
 Bool = Boolean
 
 
-class Date(OpenAPIAttributes, fields.Date):
+class Date(base.OpenAPIAttributes, fields.Date):
     pass
 
 
-class DateTime(OpenAPIAttributes, fields.DateTime):
+class DateTime(base.OpenAPIAttributes, fields.DateTime):
     pass
 
 
-class Decimal(OpenAPIAttributes, fields.Decimal):
+class Decimal(base.OpenAPIAttributes, fields.Decimal):
     pass
 
 
-class Dict(OpenAPIAttributes, fields.Dict):
+class Dict(base.OpenAPIAttributes, fields.Dict):
     pass
 
 
-class Email(OpenAPIAttributes, fields.Email):
+class Email(base.OpenAPIAttributes, fields.Email):
     pass
 
 
-class Function(OpenAPIAttributes, fields.Function):
+class Function(base.OpenAPIAttributes, fields.Function):
     pass
 
 
-class IPv4(OpenAPIAttributes, fields.IPv4):
+class IPv4(base.OpenAPIAttributes, fields.IPv4):
     pass
 
 
-class IPv4Interface(OpenAPIAttributes, fields.IPv4Interface):
+class IPv4Interface(base.OpenAPIAttributes, fields.IPv4Interface):
     pass
 
 
-class IPv6(OpenAPIAttributes, fields.IPv6):
+class IPv6(base.OpenAPIAttributes, fields.IPv6):
     pass
 
 
-class IPv6Interface(OpenAPIAttributes, fields.IPv6Interface):
+class IPv6Interface(base.OpenAPIAttributes, fields.IPv6Interface):
     pass
 
 
-class Time(OpenAPIAttributes, fields.Time):
+class Time(base.OpenAPIAttributes, fields.Time):
     pass
 
 
-class UUID(OpenAPIAttributes, fields.UUID):
+class UUID(base.OpenAPIAttributes, fields.UUID):
     pass
 
 
-class URL(OpenAPIAttributes, fields.URL):
+class URL(base.OpenAPIAttributes, fields.URL):
     pass
 
 

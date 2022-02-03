@@ -31,7 +31,7 @@ from cmk.utils.livestatus_helpers.types import Column, Table
 
 from cmk.gui import sites, watolib
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.fields.base import BaseSchema, MultiNested, OpenAPIAttributes, ValueTypedDictSchema
+from cmk.gui.fields.base import BaseSchema, MultiNested, ValueTypedDictSchema
 from cmk.gui.fields.primitives import DateTime
 from cmk.gui.fields.utils import attr_openapi_schema, collect_attributes, ObjectContext, ObjectType
 from cmk.gui.globals import user
@@ -40,11 +40,13 @@ from cmk.gui.plugins.webapi.utils import validate_host_attributes
 from cmk.gui.sites import allsites
 from cmk.gui.watolib.passwords import contact_group_choices, password_exists
 
+from cmk.fields import base
+
 if version.is_managed_edition():
     import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module
 
 
-class String(OpenAPIAttributes, _fields.String):
+class String(base.OpenAPIAttributes, _fields.String):
     """A string field which validates OpenAPI keys.
 
     Examples:
@@ -208,7 +210,7 @@ class PythonString(String):
             raise ValidationError(f"Not a Python data structure: {value!r}") from exc
 
 
-class Integer(OpenAPIAttributes, _fields.Integer):
+class Integer(base.OpenAPIAttributes, _fields.Integer):
     """An integer field which validates OpenAPI keys.
 
     Examples:
@@ -396,7 +398,7 @@ class UniqueFields:
             seen.add(entry)
 
 
-class List(OpenAPIAttributes, _fields.List, UniqueFields):
+class List(base.OpenAPIAttributes, _fields.List, UniqueFields):
     """A list field, composed with another `Field` class or instance.
 
     Honors the OpenAPI key `uniqueItems`.
@@ -465,7 +467,7 @@ class List(OpenAPIAttributes, _fields.List, UniqueFields):
         return value
 
 
-class Nested(OpenAPIAttributes, _fields.Nested, UniqueFields):
+class Nested(base.OpenAPIAttributes, _fields.Nested, UniqueFields):
     """Allows you to nest a marshmallow Schema inside a field.
 
     Honors the OpenAPI key `uniqueItems`.

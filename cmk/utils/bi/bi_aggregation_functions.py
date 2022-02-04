@@ -80,9 +80,9 @@ class BIAggregationFunctionBest(ABCBIAggregationFunction):
 
 class BIAggregationFunctionBestSchema(Schema):
     type = ReqConstant(BIAggregationFunctionBest.type())
-    count = ReqInteger(default=1)
+    count = ReqInteger(dump_default=1)
     restrict_state = ReqInteger(
-        default=2,
+        dump_default=2,
         validate=validate.OneOf(
             [
                 0,
@@ -133,9 +133,9 @@ class BIAggregationFunctionWorst(ABCBIAggregationFunction):
 
 class BIAggregationFunctionWorstSchema(Schema):
     type = ReqConstant(BIAggregationFunctionWorst.type())
-    count = ReqInteger(default=1, example=2)
+    count = ReqInteger(dump_default=1, example=2)
     restrict_state = ReqInteger(
-        default=2,
+        dump_default=2,
         validate=validate.OneOf(
             [
                 0,
@@ -193,8 +193,8 @@ class BIAggregationFunctionCountOK(ABCBIAggregationFunction):
 
 
 class BIAggregationFunctionCountSettings(Schema):
-    type = ReqString(default="count", validate=validate.OneOf(["count", "percentage"]))
-    value = ReqInteger(default=1)
+    type = ReqString(dump_default="count", validate=validate.OneOf(["count", "percentage"]))
+    value = ReqInteger(dump_default=1)
 
 
 class BIAggregationFunctionCountOKSchema(Schema):

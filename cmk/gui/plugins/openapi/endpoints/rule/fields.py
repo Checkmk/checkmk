@@ -553,7 +553,7 @@ class RuleProperties(base.BaseSchema):
     disabled = fields.Boolean(
         description="When set to False, the rule will be evaluated. Default is False.",
         example=False,
-        missing=False,
+        load_default=False,
     )
 
 

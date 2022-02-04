@@ -183,13 +183,13 @@ class BIRuleSchema(Schema):
         ordered = True
 
     id = ReqString(
-        default="",
+        dump_default="",
         example="rule1",
         description="TODO: Hier muß Andreas noch etwas reinschreiben!",
     )
     nodes = ReqList(
         fields.Nested(BINodeGeneratorSchema),
-        default=[],
+        dump_default=[],
         example=[],
         description="TODO: Hier muß Andreas noch etwas reinschreiben!",
     )

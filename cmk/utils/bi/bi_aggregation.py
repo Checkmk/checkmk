@@ -120,7 +120,7 @@ class BIAggregationSchema(Schema):
         ordered = True
 
     id = ReqString(
-        default="",
+        dump_default="",
         example="aggr1",
         description="TODO: Hier muß Andreas noch etwas reinschreiben!",
     )

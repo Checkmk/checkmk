@@ -74,18 +74,18 @@ class RulesetSearchOptions(base.BaseSchema):
         description="The folder in which to search for rules.",
     )
     deprecated = fields.String(
-        attr="ruleset_deprecated",
+        attribute="ruleset_deprecated",
         description="Also show deprecated rulesets. Defaults to False.",
     )
     used = fields.String(
-        attr="ruleset_used",
+        attribute="ruleset_used",
         description="Only show used rulesets. Defaults to True.",
     )
     group = fields.String(
-        attr="ruleset_group",
+        attribute="ruleset_group",
         description="The specific group to search for rules in.",
     )
     name = fields.String(
-        attr="ruleset_name",
+        attribute="ruleset_name",
         description="A regex of the name.",
     )

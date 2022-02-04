@@ -35,6 +35,10 @@ powershell Write-Host "Building Rust executables" -Foreground White
 cargo build --release --target %target% 2>&1
 if not "%errorlevel%" == "0" powershell Write-Host "Failed cargo build" -Foreground Red && exit /b 18
 powershell Write-Host "Building Rust SUCCESS" -Foreground Green
+powershell Write-Host "Testing Rust executables" -Foreground White
+cargo test --release --target %target% -- --test-threads=4 2>&1
+if not "%errorlevel%" == "0" powershell Write-Host "Failed cargo build" -Foreground Red && exit /b 19
+powershell Write-Host "Testing Rust SUCCESS" -Foreground Green
 
 if not "%2" == "" (
 powershell Write-Host "Signing Rust executables" -Foreground White

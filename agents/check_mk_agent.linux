@@ -445,11 +445,14 @@ section_mem() {
 }
 
 section_cpu() {
-    if [ "$(uname -m)" = "armv7l" ] || [ "$(uname -m)" = "armv6l" ]; then
-        CPU_REGEX='^processor'
-    else
-        CPU_REGEX='^CPU|^processor'
-    fi
+    case "$(uname -m)" in
+        "armv7l" | "armv6l" | "aarch64")
+            CPU_REGEX='^processor'
+            ;;
+        *)
+            CPU_REGEX='^CPU|^processor'
+            ;;
+    esac
     NUM_CPUS=$(grep -c -E ${CPU_REGEX} </proc/cpuinfo)
 
     if [ -z "${IS_DOCKERIZED}" ] && [ -z "${IS_LXC_CONTAINER}" ]; then

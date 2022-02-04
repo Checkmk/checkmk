@@ -84,8 +84,17 @@ def _prepare_package(version: testlib.CMKVersion):
         logger.info("File already exists - Fine")
         return
 
+    _cleanup_old_packages()
+
     logger.info("Copying from %s", source_package_path)
     test_package_path.write_bytes(source_package_path.read_bytes())
+
+
+def _cleanup_old_packages() -> None:
+    """Cleanup files created by _prepare_package during previous job executions"""
+    for p in Path(build_path).glob("*.deb"):
+        logger.info("Cleaning up old package %s", p)
+        p.unlink()
 
 
 def resolve_image_alias(alias):

@@ -61,6 +61,7 @@ mkdir -p $R/var/lib/check_mk_agent/spool
 rm -rf $RPM_BUILD_ROOT
 
 %files
+%defattr(-,root,root)
 /etc/check_mk
 %config(noreplace) /etc/xinetd.d/check-mk-agent
 /usr/bin/check_mk_agent

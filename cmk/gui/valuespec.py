@@ -6185,7 +6185,7 @@ class PageAutocompleteLabels(AjaxPage):
         return self._get_labels_from_core(search_label)
 
     def _get_labels_from_core(self, search_label: str) -> list[tuple[str, str]]:
-        return list(get_labels_cache().get_labels().items())
+        return get_labels_cache().get_labels_list()
 
 
 class IconSelector(ValueSpec):

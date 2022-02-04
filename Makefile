@@ -481,9 +481,9 @@ setup:
 	if type pyenv >/dev/null 2>&1 && pyenv shims --short | grep '^pipenv$$'; then \
 	    CMD="pyenv exec" ; \
 	else \
-	    CMD="sudo -H" ; \
+	    CMD="" ; \
 	fi ; \
-	$$CMD pip3 install -U \
+	$$CMD pip3 install --user --upgrade \
 	    pipenv=="$(PIPENV_VERSION)" \
 	    virtualenv=="$(VIRTUALENV_VERSION)" \
 	    wheel

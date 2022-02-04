@@ -36,17 +36,17 @@ class CollectorState(enum.Enum):
     ERROR = "error"
 
 
-class CollectorLog(BaseModel):
-    component: str
+class CollectorHandlerLog(BaseModel):
     status: CollectorState
-    message: str
+    title: str
     detail: Optional[str]
 
 
-class CollectorLogs(BaseModel):
-    """section: kube_collector_connection_v1"""
+class CollectorComponents(BaseModel):
+    """section: kube_collector_info_v1"""
 
-    logs: Sequence[CollectorLog]
+    container: CollectorHandlerLog
+    machine: CollectorHandlerLog
 
 
 class Resources(BaseModel):

@@ -13,6 +13,7 @@ is supported: https://github.com/kubernetes-client/python
 from __future__ import annotations
 
 import argparse
+import contextlib
 import functools
 import json
 import logging
@@ -28,7 +29,6 @@ from typing import (
     Dict,
     Iterator,
     List,
-    Literal,
     Mapping,
     NamedTuple,
     NewType,
@@ -36,7 +36,6 @@ from typing import (
     Protocol,
     Sequence,
     Set,
-    Tuple,
     Union,
 )
 
@@ -975,27 +974,16 @@ def _write_performance_section(section_name: SectionName, section_output: BaseMo
         writer.append(section_output.json())
 
 
-class DefinitionError(Exception):
-    pass
-
-
-class SetupError(Exception):
-    pass
-
-
 class ClusterConnectionError(Exception):
     pass
 
 
 def request_cluster_collector(
-    component: Literal["Container Metrics", "Machine Metrics"],
     cluster_agent_url: str,
     token: str,
     verify: bool,
     timeout: TCPTimeout,
-    debug: bool = False,
-) -> Tuple[Sequence[section.CollectorLog], Any]:
-    connection_logs = []
+) -> Any:
     if not verify:
         LOGGER.info("Disabling SSL certificate verification")
         urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
@@ -1011,36 +999,20 @@ def request_cluster_collector(
             timeout=(timeout.connect, timeout.read),
         )  # TODO: certificate validation
         cluster_resp.raise_for_status()
-    except requests.HTTPError as exception:
-        if debug:
-            raise SetupError(error_message) from exception
-        connection_logs.append(
-            section.CollectorLog(
-                status=section.CollectorState.ERROR,
-                component=component,
-                message="API HTTP error",
-                detail="Failure to retrieve data from cluster collector",
-            )
-        )
-        return connection_logs, None
-    except requests.exceptions.RequestException as exception:
+    except requests.HTTPError as e:
+        raise CollectorHandlingException(
+            title="Connection Error",
+            detail=error_message,
+        ) from e
+    except requests.exceptions.RequestException as e:
         # All TCP Exceptions raised by requests inherit from RequestException,
         # see https://docs.python-requests.org/en/latest/user/quickstart/#errors-and-exceptions
-        if debug:
-            raise ClusterConnectionError(
-                f"Failed attempting to communicate with cluster collector at URL {cluster_agent_url}"
-            ) from exception
-        connection_logs.append(
-            section.CollectorLog(
-                status=section.CollectorState.ERROR,
-                component=component,
-                message="Connection error",
-                detail="Failure to establish a connection to cluster collector",
-            )
-        )
-        return connection_logs, None
+        raise CollectorHandlingException(
+            title="Setup Error",
+            detail=f"Failure to establish a connection to cluster collector at URL {cluster_agent_url}",
+        ) from e
 
-    return connection_logs, json.loads(cluster_resp.content.decode("utf-8"))
+    return json.loads(cluster_resp.content.decode("utf-8"))
 
 
 def map_lookup_name_to_piggyback_host_name(
@@ -1372,7 +1344,6 @@ def write_sections_based_on_performance_pods(
     piggyback_formatter,
     piggyback_formatter_node,
 ):
-
     lookup_name_piggyback_mappings = map_lookup_name_to_piggyback_host_name(
         pods_from_namespaces(cluster.pods(), monitored_namespaces), pod_lookup_from_api_pod
     )
@@ -1411,6 +1382,33 @@ def write_sections_based_on_performance_pods(
             )
     LOGGER.info("Write cluster sections based on performance data")
     write_kube_object_performance_section(cluster, performance_pods)
+
+
+class CollectorHandlingException(Exception):
+    # This exception is used as report medium for the Cluster Collector service
+    def __init__(self, title: str, detail: str):
+        self.title = title
+        self.detail = detail
+        super().__init__()
+
+    def __str__(self):
+        return f"{self.title}: {self.detail}" if self.detail else self.title
+
+
+@contextlib.contextmanager
+def collector_exception_handler(logs: List[section.CollectorHandlerLog], debug: bool = False):
+    try:
+        yield
+    except CollectorHandlingException as e:
+        if debug:
+            raise e
+        logs.append(
+            section.CollectorHandlerLog(
+                status=section.CollectorState.ERROR,
+                title=e.title,
+                detail=e.detail,
+            )
+        )
 
 
 def main(args: Optional[List[str]] = None) -> int:
@@ -1477,35 +1475,35 @@ def main(args: Optional[List[str]] = None) -> int:
             if arguments.cluster_collector_endpoint is None:
                 return 0
 
-            # TODO: restructure the code to better support the log service
-            # We keep track of the connect & parse errors for the container & machine metrics
-            # and do not return early as we want the machine metrics even if the container
-            # metrics are not available and vice-versa.
-            collector_logs: List[section.CollectorLog] = []
-
             # Sections based on cluster collector performance data
             cluster_collector_timeout = TCPTimeout(
                 connect=arguments.cluster_collector_connect_timeout,
                 read=arguments.cluster_collector_read_timeout,
             )
-            LOGGER.info("Collecting container metrics from cluster collector")
-            container_metrics: Optional[Sequence[RawMetrics]]
-            connection_logs, container_metrics = request_cluster_collector(
-                "Container Metrics",
-                f"{arguments.cluster_collector_endpoint}/container_metrics",
-                arguments.token,
-                arguments.verify_cert_collector,
-                cluster_collector_timeout,
-                arguments.debug,
-            )
-            collector_logs.extend(connection_logs)
 
-            if container_metrics is not None:
+            collector_container_logs: List[section.CollectorHandlerLog] = []
+            with collector_exception_handler(logs=collector_container_logs, debug=arguments.debug):
+                LOGGER.info("Collecting container metrics from cluster collector")
+                container_metrics: Sequence[RawMetrics] = request_cluster_collector(
+                    f"{arguments.cluster_collector_endpoint}/container_metrics",
+                    arguments.token,
+                    arguments.verify_cert_collector,
+                    cluster_collector_timeout,
+                )
+
                 try:
                     performance_pods = parse_and_group_containers_performance_metrics(
                         cluster_name=arguments.cluster,
                         container_metrics=container_metrics,
                     )
+                except Exception as e:
+                    raise CollectorHandlingException(
+                        title="Processing Error",
+                        detail="Successfully queried and processed container metrics, but "
+                        "an error occurred while processing the data",
+                    ) from e
+
+                try:
                     write_sections_based_on_performance_pods(
                         performance_pods=performance_pods,
                         cluster=cluster,
@@ -1514,58 +1512,60 @@ def main(args: Optional[List[str]] = None) -> int:
                         piggyback_formatter=piggyback_formatter,
                         piggyback_formatter_node=piggyback_formatter_node,
                     )
-
-                    collector_logs.append(
-                        section.CollectorLog(
-                            status=section.CollectorState.OK,
-                            component="Container Metrics",
-                            message="Performance metrics queried and processed successfully",
-                        )
-                    )
                 except Exception as e:
-                    if arguments.debug:
-                        raise e
+                    raise CollectorHandlingException(
+                        title="Sections write out Error",
+                        detail="Metrics were successfully processed but Checkmk sections could not "
+                        "be written out",
+                    ) from e
 
-                    collector_logs.append(
-                        section.CollectorLog(
-                            status=section.CollectorState.ERROR,
-                            component="Container Metrics",
-                            message="Metrics processing error",
-                            detail="Successfully queried container metrics from cluster collector, "
-                            "but failed to process them",
-                        )
+                # Log when successfully queried and processed the metrics
+                collector_container_logs.append(
+                    section.CollectorHandlerLog(
+                        status=section.CollectorState.OK,
+                        title="Processed successfully",
+                        detail="Successfully queried and processed container metrics",
                     )
+                )
 
             # Sections based on cluster collector machine sections
-            LOGGER.info("Collecting machine sections from cluster collector")
-            machine_sections: Optional[List[Mapping[str, str]]]
-            connection_logs, machine_sections = request_cluster_collector(
-                "Machine Metrics",
-                f"{arguments.cluster_collector_endpoint}/machine_sections",
-                arguments.token,
-                arguments.verify_cert_collector,
-                cluster_collector_timeout,
-            )
-            collector_logs.extend(connection_logs)
-
-            if machine_sections is not None:
-                write_machine_sections(
-                    cluster,
-                    {s["node_name"]: s["sections"] for s in machine_sections},
-                    piggyback_formatter_node,
+            collector_machine_logs: List[section.CollectorHandlerLog] = []
+            with collector_exception_handler(logs=collector_machine_logs, debug=arguments.debug):
+                LOGGER.info("Collecting machine sections from cluster collector")
+                machine_sections: List[Mapping[str, str]] = request_cluster_collector(
+                    f"{arguments.cluster_collector_endpoint}/machine_sections",
+                    arguments.token,
+                    arguments.verify_cert_collector,
+                    cluster_collector_timeout,
                 )
-                collector_logs.append(
-                    section.CollectorLog(
+
+                try:
+                    write_machine_sections(
+                        cluster,
+                        {s["node_name"]: s["sections"] for s in machine_sections},
+                        piggyback_formatter_node,
+                    )
+                except Exception as e:
+                    raise CollectorHandlingException(
+                        title="Sections write out Error",
+                        detail="Metrics were successfully processed but Checkmk sections could "
+                        "not be written out",
+                    ) from e
+
+                # Log when successfully queried and processed the metrics
+                collector_machine_logs.append(
+                    section.CollectorHandlerLog(
                         status=section.CollectorState.OK,
-                        component="Machine Metrics",
-                        message="Machine sections queried and processed successfully",
+                        title="Processed successfully",
+                        detail="Machine sections queried and processed successfully",
                     )
                 )
 
-            with SectionWriter("kube_collector_connection_v1") as writer:
+            with SectionWriter("kube_collector_info_v1") as writer:
                 writer.append(
-                    section.CollectorLogs(
-                        logs=collector_logs,
+                    section.CollectorComponents(
+                        container=collector_container_logs[-1],
+                        machine=collector_machine_logs[-1],
                     ).json()
                 )
 

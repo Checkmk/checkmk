@@ -41,6 +41,8 @@ void ServiceProcessor::startService() {
     // service must reload config, because service may reconfigure itself
     cma::ReloadConfig();
 
+    ProcessFirewallConfiguration(wtools::GetArgv(0));
+
     rm_lwa_thread_ = std::thread(&cma::cfg::rm_lwa::Execute);
 
     thread_ = std::thread(&ServiceProcessor::mainThread, this, &external_port_);
@@ -520,7 +522,7 @@ cma::ByteVector ServiceProcessor::generateAnswer(const std::string& ip_from) {
     return makeTestString("No Answer");
 }
 
-bool ServiceProcessor::restartBinariesIfCfgChanged(uint64_t& last_cfg_id) {
+bool ServiceProcessor::restartBinariesIfCfgChanged(uint64_t &last_cfg_id) {
     // this may race condition, still probability is zero
     // Config Reload is for manual usage
     auto new_cfg_id = cma::cfg::GetCfg().uniqId();

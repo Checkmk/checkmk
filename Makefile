@@ -440,7 +440,6 @@ buildclean:
 setup:
 # librrd-dev is still needed by the python rrd package we build in our virtual environment
 	sudo apt-get install \
-	    aptitude \
 	    build-essential \
 	    clang-$(CLANG_VERSION) \
 	    clang-format-$(CLANG_VERSION) \

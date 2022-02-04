@@ -82,10 +82,10 @@ else {
 }
 
 $cargo_b = {
-& $using:cargo_build $args
+& Set-Location $using:cmk_agent_ctl_dir; .\cargo_build.cmd
 if ($LASTEXITCODE -ne 0) {
-    Write-Host "Error: " $LASTEXITCODE -foreground Red
-    throw "Failed cargo"
+    Write-Host "Error in cargo build: " $LASTEXITCODE -foreground Red
+    throw "Failed cargo build..."
 }
 else {
     Write-Host "Success cargo build!" -foreground Green
@@ -96,8 +96,8 @@ else {
 # $j_make = start-job -Init ([ScriptBlock]::Create("Set-Location '$pwd'")) -scriptblock $mk -argumentlist "-w", "-j", "2", "frozen_binaries"
 
 $j_r = @()
-Write-Host "Starting Rust Job" -foreground Blue
-$j_r += start-job -scriptblock $cargo_b -argumentlist "$cmk_agent_ctl_dir"
+Write-Host "Starting Rust Job" -foreground White
+$j_r += start-job -name Rust -scriptblock $cargo_b
 
 
 # Exe 32 & 64 bits
@@ -154,7 +154,7 @@ do {
 
 Write-Host "Job rust ready" -foreground Blue
 foreach ($job in $j_r) {
-    RcvJob $job "rust"
+    RcvJob $job Rust
 }
 
 

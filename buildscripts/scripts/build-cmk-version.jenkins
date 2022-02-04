@@ -133,7 +133,6 @@ timeout(time: 12, unit: 'HOURS') {
                             def FOLDER_ID = currentBuild.fullProjectName.split('/')[0]
                             def WIN_PROJECT = "${FOLDER_ID}/windows-agent-build"
                             def WIN_PY_PROJECT = "${FOLDER_ID}/Windows-Python-Build"
-                            def WIN_RUST_PROJECT = "${FOLDER_ID}/Windows-Rust-Build"
     
                             def WIN_BUILD = build(job: WIN_PROJECT, parameters: [string(name: 'VERSION', value: VERSION)])
                             copyArtifacts(
@@ -147,14 +146,6 @@ timeout(time: 12, unit: 'HOURS') {
                             copyArtifacts(
                                 projectName: WIN_PY_PROJECT,
                                 selector: specific(WIN_PY_BUILD.getId()),
-                                target: 'agents',
-                                fingerprintArtifacts: true
-                            )
-    
-                            def WIN_RUST_BUILD = build(job: WIN_RUST_PROJECT, parameters: [string(name: 'VERSION', value: VERSION)])
-                            copyArtifacts(
-                                projectName: WIN_RUST_PROJECT,
-                                selector: specific(WIN_RUST_BUILD.getId()),
                                 target: 'agents',
                                 fingerprintArtifacts: true
                             )

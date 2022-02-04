@@ -45,28 +45,30 @@ class SidebarSnapinCMAWebconf(SidebarSnapin):
         # The cma_nav-Module is a Python 2.7 module that is already installed by the CMA OS.  For
         # the future we should change this to some structured file format, but for the moment we
         # have to deal with existing firmwares. Use some py27 wrapper to produce the needed output.
-        completed_process = subprocess.run(
+        p = subprocess.Popen(  # pylint:disable=consider-using-with
             ["/usr/bin/python2.7"],
+            stdin=subprocess.PIPE,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             encoding="utf-8",
             shell=False,
             close_fds=True,
-            input="\n".join(
+        )
+        stdout, stderr = p.communicate(
+            "\n".join(
                 [
                     "import imp",
                     'cma_nav = imp.load_source("cma_nav", "/usr/lib/python2.7/cma_nav.py")',
                     "print(cma_nav.modules())",
                 ]
-            ),
-            check=False,
+            )
         )
 
-        if completed_process.stderr:
-            html.show_error(_("Failed to render navigation: %s") % completed_process.stderr)
+        if stderr:
+            html.show_error(_("Failed to render navigation: %s") % stderr)
             return
 
-        nav_modules = ast.literal_eval(completed_process.stdout)
+        nav_modules = ast.literal_eval(stdout)
 
         base_url = "/webconf/"
 

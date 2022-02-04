@@ -7,7 +7,6 @@ import subprocess
 import sys
 import time
 import traceback
-from pathlib import Path
 from typing import Any, Dict, List, Literal, Optional, Set, Tuple
 
 from cmk.utils.paths import omd_root, var_dir
@@ -57,7 +56,7 @@ def _read_config() -> None:
     globals().update(default_config)
 
     try:
-        exec(Path(config_file).read_text(), globals(), globals())
+        exec(open(config_file).read(), globals(), globals())  # pylint:disable=consider-using-with
     except IOError:
         pass  # ignore non existant config
     except Exception as e:
@@ -125,7 +124,7 @@ def _load_plugins() -> None:
             _verbose("Loading plugin: %s" % path)
             try:
                 exec(
-                    Path(path).read_text(),
+                    open(path).read(),  # pylint:disable=consider-using-with
                     plugins[file_name],
                     plugins[file_name],
                 )
@@ -306,7 +305,7 @@ def _get_configured_hosts() -> Tuple[Set, Set, bool]:
     file_vars: dict = {}
     if os.path.exists(distr_wato_filepath):
         exec(
-            Path(distr_wato_filepath).read_text(),
+            open(distr_wato_filepath).read(),  # pylint:disable=consider-using-with
             file_vars,
             file_vars,
         )

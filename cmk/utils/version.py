@@ -547,11 +547,10 @@ def _get_os_info() -> str:
     info = {}
     for f in ["/etc/os-release", "/etc/lsb-release"]:
         if os.path.exists(f):
-            with open(f) as opened_file:
-                for line in opened_file.readlines():
-                    if "=" in line:
-                        k, v = line.split("=", 1)
-                        info[k.strip()] = v.strip().strip('"')
+            for line in open(f).readlines():  # pylint:disable=consider-using-with
+                if "=" in line:
+                    k, v = line.split("=", 1)
+                    info[k.strip()] = v.strip().strip('"')
             break
 
     if "PRETTY_NAME" in info:
@@ -570,18 +569,15 @@ def _get_os_info() -> str:
 
 def _current_monitoring_core() -> str:
     try:
-        with open(os.devnull) as devnull1:
-            with open(os.devnull, "w") as devnull2:
-                completed_process = subprocess.run(
-                    ["omd", "config", "show", "CORE"],
-                    close_fds=True,
-                    stdin=devnull1,
-                    stdout=subprocess.PIPE,
-                    stderr=devnull2,
-                    encoding="utf-8",
-                    check=False,
-                )
-        return completed_process.stdout.rstrip()
+        p = subprocess.Popen(  # pylint:disable=consider-using-with
+            ["omd", "config", "show", "CORE"],
+            close_fds=True,
+            stdin=open(os.devnull),  # pylint:disable=consider-using-with
+            stdout=subprocess.PIPE,
+            stderr=open(os.devnull, "w"),  # pylint:disable=consider-using-with
+            encoding="utf-8",
+        )
+        return p.communicate()[0].rstrip()
     except OSError as e:
         # Allow running unit tests on systems without omd installed (e.g. on travis)
         if e.errno != errno.ENOENT:

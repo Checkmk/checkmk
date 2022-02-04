@@ -174,16 +174,15 @@ class SiteContext(AbstractSiteContext):
         if not os.path.exists(confpath):
             return {}
 
-        with open(confpath) as opened_file:
-            for line in opened_file:
-                line = line.strip()
-                if line == "" or line[0] == "#":
-                    continue
-                var, value = line.split("=", 1)
-                if not var.startswith("CONFIG_"):
-                    sys.stderr.write("Ignoring invalid variable %s.\n" % var)
-                else:
-                    config[var[7:].strip()] = value.strip().strip("'")
+        for line in open(confpath):  # pylint:disable=consider-using-with
+            line = line.strip()
+            if line == "" or line[0] == "#":
+                continue
+            var, value = line.split("=", 1)
+            if not var.startswith("CONFIG_"):
+                sys.stderr.write("Ignoring invalid variable %s.\n" % var)
+            else:
+                config[var[7:].strip()] = value.strip().strip("'")
 
         return config
 

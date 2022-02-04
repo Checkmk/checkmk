@@ -5,12 +5,18 @@ SITE=${SITE:-$(until [ $PWD == / ]; do if [ -e .site ]; then cat .site; break; e
 SITE=${SITE:-$(omd sites --bare | head -n 1)}
 ROOT=/omd/sites/$SITE
 
-for dir in update-pre-hooks post-create; do
-    dir_in_site="$ROOT/lib/omd/scripts/$dir"
+for dir in scripts/update-pre-hooks post-create; do
+    dir_in_site="$ROOT/lib/omd/scripts/$(basename $dir)"
     sudo mkdir -p "$dir_in_site"
     for hook in "$dir"/*; do
         sudo install -m 755 "$hook" "$dir_in_site"
     done
 done
+
+# TODO: More stuff is probably missing here... :-/
+sudo install -m 644 skel/etc/nagios/conf.d/check_mk_templates.cfg "$ROOT/etc/nagios/conf.d"
+
 sed -e "s|###ROOT###|$ROOT|g" -e "s|###SITE###|$SITE|g" skel/etc/check_mk/apache.conf | sudo tee "$ROOT/etc/check_mk/apache.conf" >/dev/null
-sudo omd restart "$SITE" apache
+if [ -z $ONLY_COPY ]; then
+    sudo omd restart "$SITE" apache
+fi

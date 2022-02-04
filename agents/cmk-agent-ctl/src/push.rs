@@ -4,12 +4,20 @@
 
 use super::{agent_receiver_api, config, monitoring_data};
 use anyhow::{Context, Result as AnyhowResult};
-use log::info;
+use log::{debug, info};
+use rand::Rng;
 use std::sync::{Arc, RwLock};
 use std::thread;
 use std::time::{Duration, Instant};
 
+fn sleep_randomly() {
+    let random_period = rand::thread_rng().gen_range(0..59);
+    debug!("Sleeping {}s to avoid DDOSing of sites", random_period);
+    thread::sleep(Duration::from_secs(random_period));
+}
+
 pub fn push(registry: Arc<RwLock<config::Registry>>) -> AnyhowResult<()> {
+    sleep_randomly();
     loop {
         {
             let mut registry_writer = registry.write().unwrap();

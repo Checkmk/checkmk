@@ -846,12 +846,10 @@ static ColumnDefinitions timeperiods_columns() {
         {"alias", ColumnType::string},
         {"in", ColumnType::int_},
         {"name", ColumnType::string},
-#ifdef CMC
         {"next_transition", ColumnType::time},
         {"next_transition_id", ColumnType::int_},
         {"num_transitions", ColumnType::int_},
         {"transitions", ColumnType::list},
-#endif
     };
 }
 

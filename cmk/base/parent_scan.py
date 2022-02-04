@@ -48,9 +48,7 @@ def do_scan_parents(hosts: List[HostName]) -> None:
         )
 
     if os.path.exists(outfilename):
-        with open(outfilename, "r") as opened_file:
-            first_line = opened_file.readline()
-
+        first_line = open(outfilename, "r").readline()  # pylint:disable=consider-using-with
         if not first_line.startswith("# Automatically created by --scan-parents at"):
             raise MKGeneralException(
                 "conf.d/parents.mk seems to be created manually.\n\n"
@@ -174,7 +172,6 @@ def scan_parents_of(
                     ),
                 )
             )
-
         except Exception as e:
             if cmk.utils.debug.enabled():
                 raise

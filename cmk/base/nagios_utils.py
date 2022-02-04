@@ -20,18 +20,19 @@ def do_check_nagiosconfig() -> bool:
     console.verbose("Running '%s'\n" % subprocess.list2cmdline(command))
     out.output("Validating Nagios configuration...")
 
-    completed_process = subprocess.run(
+    p = subprocess.Popen(  # pylint:disable=consider-using-with
         command,
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
         close_fds=True,
         encoding="utf-8",
-        check=False,
     )
-    if not completed_process.returncode:
+    stdout = p.communicate()[0]
+    exit_status = p.returncode
+    if not exit_status:
         out.output(tty.ok + "\n")
         return True
 
     out.output("ERROR:\n")
-    out.output(completed_process.stdout, stream=sys.stderr)
+    out.output(stdout, stream=sys.stderr)
     return False

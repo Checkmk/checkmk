@@ -48,22 +48,22 @@ class ClassicSNMPBackend(SNMPBackend):
 
         console.vverbose("Running '%s'\n" % subprocess.list2cmdline(command))
 
-        with subprocess.Popen(
+        snmp_process = subprocess.Popen(  # pylint:disable=consider-using-with
             command,
             close_fds=True,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             encoding="utf-8",
-        ) as snmp_process:
-            exitstatus = snmp_process.wait()
-            if snmp_process.stderr is None or snmp_process.stdout is None:
-                raise TypeError()
-            if exitstatus:
-                console.verbose(tty.red + tty.bold + "ERROR: " + tty.normal + "SNMP error\n")
-                console.verbose(snmp_process.stderr.read() + "\n")
-                return None
+        )
+        exitstatus = snmp_process.wait()
+        if snmp_process.stderr is None or snmp_process.stdout is None:
+            raise TypeError()
+        if exitstatus:
+            console.verbose(tty.red + tty.bold + "ERROR: " + tty.normal + "SNMP error\n")
+            console.verbose(snmp_process.stderr.read() + "\n")
+            return None
 
-            line = snmp_process.stdout.readline().strip()
+        line = snmp_process.stdout.readline().strip()
         if not line:
             console.verbose("Error in response to snmpget.\n")
             return None
@@ -110,17 +110,16 @@ class ClassicSNMPBackend(SNMPBackend):
         exitstatus = None
         rowinfo: SNMPRowInfo = []
         try:
-            with open(os.devnull) as devnull:
-                with subprocess.Popen(
-                    command,
-                    close_fds=True,
-                    stdin=devnull,
-                    stdout=subprocess.PIPE,
-                    stderr=subprocess.PIPE,
-                    encoding="utf-8",
-                ) as snmp_process:
+            snmp_process = subprocess.Popen(  # pylint:disable=consider-using-with
+                command,
+                close_fds=True,
+                stdin=open(os.devnull),  # pylint:disable=consider-using-with
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                encoding="utf-8",
+            )
 
-                    rowinfo = self._get_rowinfo_from_snmp_process(snmp_process)
+            rowinfo = self._get_rowinfo_from_snmp_process(snmp_process)
 
         except MKTimeout:
             # On timeout exception try to stop the process to prevent child process "leakage"

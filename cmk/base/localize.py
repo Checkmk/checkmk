@@ -141,9 +141,13 @@ def _write_alias(lang: LanguageName, alias: Optional[str]) -> None:
 def _check_binaries() -> None:
     """Are the xgettext utils available?"""
     for b in ["xgettext", "msgmerge", "msgfmt"]:
-        with open(os.devnull, "wb") as devnull:
-            if subprocess.call(["which", b], stdout=devnull) != 0:
-                raise LocalizeException("%s binary not found in PATH\n" % b)
+        if (
+            subprocess.call(
+                ["which", b], stdout=open(os.devnull, "wb")  # pylint:disable=consider-using-with
+            )
+            != 0
+        ):
+            raise LocalizeException("%s binary not found in PATH\n" % b)
 
 
 def _get_languages() -> List[LanguageName]:
@@ -153,29 +157,27 @@ def _get_languages() -> List[LanguageName]:
 def _localize_update_po(lang: LanguageName) -> None:
     """Merge the current .pot file with a given .po file"""
     logger.log(VERBOSE, "Merging translations...")
-    with open(os.devnull, "wb") as devnull:
-        if (
-            subprocess.call(
-                ["msgmerge", "-U", _po_file(lang), _pot_file()],
-                stdout=devnull,
-            )
-            != 0
-        ):
-            logger.error("Failed!")
-        else:
-            logger.info("Success! Output: %s", _po_file(lang))
+    if (
+        subprocess.call(
+            ["msgmerge", "-U", _po_file(lang), _pot_file()],
+            stdout=open(os.devnull, "wb"),  # pylint:disable=consider-using-with
+        )
+        != 0
+    ):
+        logger.error("Failed!")
+    else:
+        logger.info("Success! Output: %s", _po_file(lang))
 
 
 def _localize_init_po(lang: LanguageName) -> None:
-    with open(os.devnull, "wb") as devnull:
-        if (
-            subprocess.call(
-                ["msginit", "-i", _pot_file(), "--no-translator", "-l", lang, "-o", _po_file(lang)],
-                stdout=devnull,
-            )
-            != 0
-        ):
-            logger.error("Failed!\n")
+    if (
+        subprocess.call(
+            ["msginit", "-i", _pot_file(), "--no-translator", "-l", lang, "-o", _po_file(lang)],
+            stdout=open(os.devnull, "wb"),  # pylint:disable=consider-using-with
+        )
+        != 0
+    ):
+        logger.error("Failed!\n")
 
 
 def _localize_sniff() -> None:
@@ -197,29 +199,28 @@ def _localize_sniff() -> None:
                 if f.endswith(".py") or f.endswith(".mk"):
                     sniff_files.append(os.path.join(root, f))
 
-    with open(os.devnull, "wb") as devnull:
-        if (
-            subprocess.call(
-                [
-                    "xgettext",
-                    "--no-wrap",
-                    "--sort-output",
-                    "--force-po",
-                    "-L",
-                    "Python",
-                    "--from-code=utf-8",
-                    "--omit-header",
-                    "-o",
-                    _pot_file(),
-                ]
-                + sniff_files,
-                stdout=devnull,
-            )
-            != 0
-        ):
-            logger.error("Failed!\n")
-        else:
-            header = r"""# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+    if (
+        subprocess.call(
+            [
+                "xgettext",
+                "--no-wrap",
+                "--sort-output",
+                "--force-po",
+                "-L",
+                "Python",
+                "--from-code=utf-8",
+                "--omit-header",
+                "-o",
+                _pot_file(),
+            ]
+            + sniff_files,
+            stdout=open(os.devnull, "wb"),  # pylint:disable=consider-using-with
+        )
+        != 0
+    ):
+        logger.error("Failed!\n")
+    else:
+        header = r"""# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 msgid ""
@@ -237,9 +238,9 @@ msgstr ""
 
 """
 
-            f = Path(_pot_file()).read_text()
-            Path(_pot_file()).write_text(header + f)
-            logger.info("Success! Output: %s", _pot_file())
+        f = open(_pot_file()).read()  # pylint:disable=consider-using-with
+        open(_pot_file(), "w").write(header + f)  # pylint:disable=consider-using-with
+        logger.info("Success! Output: %s", _pot_file())
 
 
 def _localize_edit(lang: LanguageName) -> None:

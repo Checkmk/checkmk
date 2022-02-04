@@ -217,25 +217,24 @@ def _send_email(config: Config, to: str, subject: str, body: str, logger: Logger
     if config["debug_rules"]:
         logger.info("  Executing: %s" % " ".join(x.decode("utf-8") for x in command_utf8))
 
-    completed_process = subprocess.run(
+    p = subprocess.Popen(  # pylint:disable=consider-using-with
         command_utf8,
         close_fds=True,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
+        stdin=subprocess.PIPE,
         encoding="utf-8",
-        input=body,
-        check=False,
     )
     # FIXME: This may lock on too large buffer. We should move all "mail sending" code
     # to a general place and fix this for all our components (notification plugins,
     # notify.py, this one, ...)
-
-    exitcode = completed_process.returncode
+    stdout, stderr = p.communicate(input=body)
+    exitcode = p.returncode
 
     logger.info("  Exitcode: %d" % exitcode)
     if exitcode != 0:
         logger.info("  Error: Failed to send the mail.")
-        for line in (completed_process.stdout + completed_process.stderr).splitlines():
+        for line in (stdout + stderr).splitlines():
             logger.info("  Output: %s" % line.rstrip())
         return False
 
@@ -251,20 +250,19 @@ def _execute_script(
 
     # Traps can contain 0-Bytes. We need to remove this from the script
     # body. Otherwise suprocess.Popen will crash.
-    completed_process = subprocess.run(
+    p = subprocess.Popen(  # pylint:disable=consider-using-with
         ["/bin/bash"],
+        stdin=subprocess.PIPE,
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
         close_fds=True,
         env=script_env,
         encoding="utf-8",
-        input=body,
-        check=False,
     )
-
-    logger.info("  Exit code: %d" % completed_process.returncode)
-    if completed_process.stdout:
-        logger.info("  Output: '%s'" % completed_process.stdout)
+    stdout, _stderr = p.communicate(input=body)
+    logger.info("  Exit code: %d" % p.returncode)
+    if stdout:
+        logger.info("  Output: '%s'" % stdout)
 
 
 def _get_event_tags(
@@ -350,18 +348,18 @@ def do_notify(
         ["%s=%s\n" % (varname, value.replace("\n", "\\n")) for (varname, value) in context.items()]
     )
 
-    completed_process = subprocess.run(
+    p = subprocess.Popen(  # pylint:disable=consider-using-with
         ["cmk", "--notify", "stdin"],
+        stdin=subprocess.PIPE,
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
         close_fds=True,
         encoding="utf-8",
-        input=context_string,
-        check=False,
     )
-    status = completed_process.returncode
+    stdout, _stderr = p.communicate(input=context_string)
+    status = p.returncode
     if status:
-        logger.error("Error notifying via Check_MK: %s" % completed_process.stdout.strip())
+        logger.error("Error notifying via Check_MK: %s" % stdout.strip())
     else:
         logger.info("Successfully forwarded notification for event %d to Check_MK" % event["id"])
 

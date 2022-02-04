@@ -5,7 +5,6 @@
 use super::{agent_receiver_api, config, monitoring_data};
 use anyhow::{Context, Result as AnyhowResult};
 use log::info;
-#[cfg(unix)]
 use std::sync::{Arc, RwLock};
 use std::thread;
 use std::time::{Duration, Instant};

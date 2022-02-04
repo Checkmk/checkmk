@@ -105,7 +105,9 @@ def test_base_dir(th: Theme) -> None:
 def test_has_custom_logo(
     monkeypatch, th: Theme, edition: cmk.utils.version.Edition, with_logo: bool
 ) -> None:
-    monkeypatch.setattr("cmk.utils.version.edition", lambda: edition)
+    monkeypatch.setattr(
+        "cmk.gui.utils.theme.is_managed_edition", lambda: edition is cmk.utils.version.Edition.CME
+    )
     if with_logo:
         th.base_dir().joinpath("images").mkdir(parents=True, exist_ok=True)
         th.base_dir().joinpath("images", "mk-logo.png").touch()

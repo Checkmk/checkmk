@@ -2198,7 +2198,7 @@ def test_config_cache_get_host_config(
     expected_cache_class_name: str,
     expected_host_class_name: str,
 ) -> None:
-    monkeypatch.setattr(cmk_version, "edition", lambda: edition)
+    monkeypatch.setattr(cmk_version, "is_raw_edition", lambda: edition is cmk_version.Edition.CRE)
 
     _config_cache.clear()
 

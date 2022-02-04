@@ -349,7 +349,10 @@ def test_generate_snapshot(
     )
 
     activation_manager = _get_activation_manager(monkeypatch, remote_site)
-    monkeypatch.setattr(cmk_version, "edition", lambda: edition)
+    monkeypatch.setattr(cmk_version, "is_raw_edition", lambda: edition is cmk_version.Edition.CRE)
+    monkeypatch.setattr(
+        cmk_version, "is_managed_edition", lambda: edition is cmk_version.Edition.CME
+    )
 
     monkeypatch.setattr(utils, "is_pre_17_remote_site", lambda s: False)
 
@@ -386,7 +389,10 @@ def test_generate_pre_17_site_snapshot(
     )
 
     is_pre_17_site = True
-    monkeypatch.setattr(cmk_version, "edition", lambda: edition)
+    monkeypatch.setattr(cmk_version, "is_raw_edition", lambda: edition is cmk_version.Edition.CRE)
+    monkeypatch.setattr(
+        cmk_version, "is_managed_edition", lambda: edition is cmk_version.Edition.CME
+    )
     monkeypatch.setattr(utils, "is_pre_17_remote_site", lambda s: is_pre_17_site)
 
     activation_manager = _get_activation_manager(monkeypatch, remote_site)
@@ -533,7 +539,10 @@ def test_apply_pre_17_sync_snapshot(
     )
 
     is_pre_17_site = True
-    monkeypatch.setattr(cmk_version, "edition", lambda: edition)
+    monkeypatch.setattr(cmk_version, "is_raw_edition", lambda: edition is cmk_version.Edition.CRE)
+    monkeypatch.setattr(
+        cmk_version, "is_managed_edition", lambda: edition is cmk_version.Edition.CME
+    )
     monkeypatch.setattr(utils, "is_pre_17_remote_site", lambda s: is_pre_17_site)
 
     activation_manager = _get_activation_manager(monkeypatch, remote_site)
@@ -694,7 +703,10 @@ def test_synchronize_site(
     )
 
     is_pre_17_site = False
-    monkeypatch.setattr(cmk_version, "edition", lambda: edition)
+    monkeypatch.setattr(cmk_version, "is_raw_edition", lambda: edition is cmk_version.Edition.CRE)
+    monkeypatch.setattr(
+        cmk_version, "is_managed_edition", lambda: edition is cmk_version.Edition.CME
+    )
     monkeypatch.setattr(utils, "is_pre_17_remote_site", lambda s: is_pre_17_site)
 
     activation_manager = _get_activation_manager(monkeypatch)

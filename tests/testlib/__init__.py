@@ -91,6 +91,16 @@ def fake_version_and_paths():
         cmk_version, "omd_version", lambda: "%s.%s" % (cmk_version.__version__, edition_short)
     )
 
+    # Unit test context: load all available modules
+    monkeypatch.setattr(
+        cmk_version,
+        "is_raw_edition",
+        lambda: not (is_enterprise_repo() and is_managed_repo() and is_plus_repo()),
+    )
+    monkeypatch.setattr(cmk_version, "is_enterprise_edition", is_enterprise_repo)
+    monkeypatch.setattr(cmk_version, "is_managed_edition", is_managed_repo)
+    monkeypatch.setattr(cmk_version, "is_plus_edition", is_plus_repo)
+
     monkeypatch.setattr("cmk.utils.paths.agents_dir", "%s/agents" % cmk_path())
     monkeypatch.setattr("cmk.utils.paths.checks_dir", "%s/checks" % cmk_path())
     monkeypatch.setattr("cmk.utils.paths.notifications_dir", Path(cmk_path()) / "notifications")

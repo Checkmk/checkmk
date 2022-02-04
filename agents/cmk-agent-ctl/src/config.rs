@@ -208,10 +208,16 @@ impl Registry {
         )
     }
 
-    pub fn is_empty(&self) -> bool {
+    pub fn pull_is_empty(&self) -> bool {
+        self.connections.pull.is_empty() & self.connections.pull_imported.is_empty()
+    }
+
+    pub fn push_is_empty(&self) -> bool {
         self.connections.push.is_empty()
-            & self.connections.pull.is_empty()
-            & self.connections.pull_imported.is_empty()
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.push_is_empty() & self.pull_is_empty()
     }
 
     pub fn standard_pull_connections(&self) -> impl Iterator<Item = (&String, &Connection)> {

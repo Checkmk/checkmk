@@ -25,7 +25,7 @@ pub fn push(registry: Arc<RwLock<config::Registry>>) -> AnyhowResult<()> {
         }
         let registry_reader = registry.read().unwrap();
         let begin = Instant::now();
-        info!("Handling registered push connections");
+        debug!("Handling registered push connections");
         // TODO(sk): enable this for Windows when this will be ready to production
         #[cfg(unix)]
         handle_push_cycle(&registry_reader)?;
@@ -35,6 +35,10 @@ pub fn push(registry: Arc<RwLock<config::Registry>>) -> AnyhowResult<()> {
 }
 
 pub fn handle_push_cycle(registry: &config::Registry) -> AnyhowResult<()> {
+    if registry.push_is_empty() {
+        return Ok(());
+    }
+
     let compressed_mon_data = monitoring_data::compress(
         &monitoring_data::collect().context("Error collecting monitoring data")?,
     )

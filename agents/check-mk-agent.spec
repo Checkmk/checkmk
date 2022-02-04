@@ -22,6 +22,8 @@ Provides:  check_mk-agent check_mk_agent
  The Checkmk Agent for Linux provides information about the system.
  This can be used to monitor the host via Checkmk.
 
+
+%global _python_bytecompile_errors_terminate_build 0
 %define _binaries_in_noarch_packages_terminate_build 0
 
 %prep

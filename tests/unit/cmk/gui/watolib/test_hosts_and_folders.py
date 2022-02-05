@@ -877,10 +877,10 @@ def _fake_redis_num_hosts_answer(wato_folder: hosts_and_folders.CREFolder):
 
 @contextmanager
 def get_fake_setup_redis_client(monkeypatch, all_folders, redis_answers: List):
-    monkeypatch.setattr(hosts_and_folders, "_may_use_redis", lambda: True)
+    monkeypatch.setattr(hosts_and_folders, "may_use_redis", lambda: True)
     mock_redis_client = MockRedisClient(redis_answers)
     monkeypatch.setattr(hosts_and_folders._RedisHelper, "_cache_integrity_ok", lambda x: True)
-    redis_helper = hosts_and_folders._get_wato_redis_client()
+    redis_helper = hosts_and_folders.get_wato_redis_client()
     monkeypatch.setattr(redis_helper, "_client", mock_redis_client)
     monkeypatch.setattr(redis_helper, "_folder_paths", [f"{x}/" for x in all_folders.keys()])
     monkeypatch.setattr(
@@ -892,7 +892,8 @@ def get_fake_setup_redis_client(monkeypatch, all_folders, redis_answers: List):
         },
     )
     yield mock_redis_client
-    monkeypatch.setattr(hosts_and_folders, "_may_use_redis", lambda: False)
+    monkeypatch.setattr(hosts_and_folders, "may_use_redis", lambda: False)
+    # I have no idea if this is actually working..
     monkeypatch.undo()
 
 

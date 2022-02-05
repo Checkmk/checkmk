@@ -152,7 +152,7 @@ class FolderMetaData:
     @property
     def num_hosts_recursively(self) -> int:
         if self._num_hosts_recursively is None:
-            self._num_hosts_recursively = _get_wato_redis_client().num_hosts_recursively_lua(
+            self._num_hosts_recursively = get_wato_redis_client().num_hosts_recursively_lua(
                 self._path
             )
         return self._num_hosts_recursively
@@ -1086,7 +1086,7 @@ def update_metadata(
     return attributes
 
 
-def _get_wato_redis_client() -> _RedisHelper:
+def get_wato_redis_client() -> _RedisHelper:
     if "wato_redis_client" not in g:
         g.wato_redis_client = _RedisHelper()
     return g.wato_redis_client
@@ -1127,7 +1127,7 @@ class WATOFoldersOnDemand(dict):
 _enforce_disabled_redis = False
 
 
-def _may_use_redis() -> bool:
+def may_use_redis() -> bool:
     # Redis can't be used for certain scenarios. For example
     # - Redis server is not running during cmk_update_config.py
     # - Bulk operations which would update redis several thousand times, instead of just once
@@ -1158,10 +1158,10 @@ def disable_redis() -> Iterator[None]:
 
 
 def _wato_folders_factory() -> Mapping[PathWithoutSlash, Optional[CREFolder]]:
-    if not _may_use_redis():
+    if not may_use_redis():
         return _get_fully_loaded_wato_folders()
 
-    wato_redis_client = _get_wato_redis_client()
+    wato_redis_client = get_wato_redis_client()
     if wato_redis_client.loaded_wato_folders is not None:
         # Folders were already completely loaded during cache generation -> use these
         return wato_redis_client.loaded_wato_folders
@@ -1233,8 +1233,8 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
     @staticmethod
     def invalidate_caches():
         Folder.root_folder().drop_caches()
-        if _may_use_redis():
-            _get_wato_redis_client().clear_cached_folders()
+        if may_use_redis():
+            get_wato_redis_client().clear_cached_folders()
         g.pop("wato_folders", {})
         for cache_id in ["folder_choices", "folder_choices_full_title"]:
             g.pop(cache_id, None)
@@ -1679,8 +1679,8 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
         return self.get_wato_info()
 
     def _instance_saved_postprocess(self) -> None:
-        if _may_use_redis():
-            _get_wato_redis_client().save_folder_info(self)
+        if may_use_redis():
+            get_wato_redis_client().save_folder_info(self)
 
     def get_wato_info(self):
         return {
@@ -1766,7 +1766,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
         return self.path()
 
     def path(self):
-        if _may_use_redis():
+        if may_use_redis():
             return self._folder_path
 
         if self.parent() and not self.parent().is_root() and not self.is_root():
@@ -1795,8 +1795,8 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
         return self._num_hosts
 
     def num_hosts_recursively(self) -> int:
-        if _may_use_redis():
-            if folder_metadata := _get_wato_redis_client().folder_metadata(self.path()):
+        if may_use_redis():
+            if folder_metadata := get_wato_redis_client().folder_metadata(self.path()):
                 return folder_metadata.num_hosts_recursively
             return 0
 
@@ -1937,8 +1937,8 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
     def _choices_for_moving(self, what: str) -> Choices:
         choices: Choices = []
 
-        if _may_use_redis():
-            return _get_wato_redis_client().choices_for_moving(self.path(), _MoveType(what))
+        if may_use_redis():
+            return get_wato_redis_client().choices_for_moving(self.path(), _MoveType(what))
 
         for folder_path, folder in Folder.all_folders().items():
             if not folder.may("write"):

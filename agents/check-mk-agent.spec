@@ -105,7 +105,7 @@ agent service.
 EOF
 fi
 
-if [ "${super_server}" = "systemd" ] && [ "${1}" -ge 2 ] && [ ! -f /usr/bin/cmk-agent-ctl ] >/dev/null 2>&1 ; then
+if [ "${super_server}" = "systemd" ] && { [ "${1}" = "upgrade" ] || [ "${1}" -ge 2 ] 2>/dev/null; }; then
     mkdir -p /var/lib/cmk-agent
     cat << EOF > /var/lib/cmk-agent/allow-legacy-pull
 This file has been placed as a marker for cmk-agent-ctl

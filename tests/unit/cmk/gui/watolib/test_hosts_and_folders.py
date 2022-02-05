@@ -4,17 +4,22 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import contextlib
 import os
 import pprint
 import shutil
 import sys
-from typing import Any, Dict, List, NamedTuple
+from contextlib import contextmanager
+from dataclasses import dataclass
+from typing import Any, Dict, Iterator, List
 
 import pytest
 
+from cmk.utils.type_defs import ContactgroupName
+
 import cmk.gui.watolib as watolib
 import cmk.gui.watolib.hosts_and_folders as hosts_and_folders
+from cmk.gui import userdb
+from cmk.gui.globals import config
 from cmk.gui.watolib.search import MatchItem
 from cmk.gui.watolib.utils import has_agent_bakery
 
@@ -167,7 +172,7 @@ def test_write_and_read_host_attributes(tmp_path, attributes):
         assert host.attributes() == attributes
 
 
-@contextlib.contextmanager
+@contextmanager
 def in_chdir(directory):
     cur = os.getcwd()
     os.chdir(directory)
@@ -544,23 +549,31 @@ def test_match_item_generator_hosts():
     ]
 
 
-class _TreeStructure(NamedTuple):
+@dataclass
+class _TreeStructure:
     path: str
     attributes: Dict[str, Any]
-    subfolders: List["_TreeStructure"]  # type: ignore[misc]
+    subfolders: List["_TreeStructure"]
+    num_hosts: int = 0
 
 
-def make_monkeyfree_folder(tree_structure, parent=None):
+def make_monkeyfree_folder(tree_structure, parent=None) -> hosts_and_folders.CREFolder:
     new_folder = hosts_and_folders.CREFolder(
         tree_structure.path,
         parent_folder=parent,
         title=f"Title of {tree_structure.path}",
         attributes=tree_structure.attributes,
     )
+
+    # Small monkeys :(
+    new_folder._num_hosts = tree_structure.num_hosts
+    new_folder._folder_path = tree_structure.path
+
     for subtree_structure in tree_structure.subfolders:
         new_folder._subfolders[subtree_structure.path] = make_monkeyfree_folder(
             subtree_structure, new_folder
         )
+        new_folder._folder_path = tree_structure.path
 
     return new_folder
 
@@ -585,7 +598,7 @@ def dump_wato_folder_structure(wato_folder: hosts_and_folders.CREFolder):
 
 
 @pytest.mark.parametrize(
-    "structure, testfolder_expected_groups",
+    "structure,testfolder_expected_groups",
     [
         # Basic inheritance
         (
@@ -725,3 +738,181 @@ def _convert_folder_tree_to_all_folders(
 
     parse_folder(root_folder)
     return all_folders
+
+
+@dataclass
+class _UserTest:
+    contactgroups: List[ContactgroupName]
+    hide_folders_without_permission: bool
+    expected_num_hosts: int
+    fix_legacy_visibility: bool = False
+
+
+@contextmanager
+def hide_folders_without_permission(do_hide) -> Iterator[None]:
+    old_value = config.wato_hide_folders_without_read_permissions
+    try:
+        config.wato_hide_folders_without_read_permissions = do_hide
+        yield
+    finally:
+        config.wato_hide_folders_without_read_permissions = old_value
+
+
+def _default_groups(configured_groups: List[ContactgroupName]):
+    return {
+        "contactgroups": {
+            "groups": configured_groups,
+            "recurse_perms": False,
+            "use": False,
+            "use_for_services": False,
+            "recurse_use": False,
+        }
+    }
+
+
+group_tree_test = (
+    _TreeStructure(
+        "",
+        _default_groups(["group1"]),
+        [
+            _TreeStructure(
+                "sub1.1",
+                {},
+                [
+                    _TreeStructure(
+                        "sub2.1",
+                        _default_groups(["supersecret_group"]),
+                        [],
+                        100,
+                    ),
+                ],
+                8,
+            ),
+            _TreeStructure(
+                "sub1.2",
+                _default_groups(["group2"]),
+                [],
+                3,
+            ),
+            _TreeStructure(
+                "sub1.3",
+                _default_groups(["group1", "group3"]),
+                [],
+                1,
+            ),
+        ],
+        5,
+    ),
+    [
+        _UserTest([], True, 0, True),
+        _UserTest(["nomatch"], True, 0, True),
+        _UserTest(["group2"], True, 3, True),
+        _UserTest(["group1", "group2"], True, 17, False),
+        _UserTest(["group1", "group2"], False, 117, False),
+    ],
+)
+
+
+@pytest.mark.usefixtures("with_user_login")
+@pytest.mark.parametrize(
+    "structure, user_tests",
+    [group_tree_test],
+)
+def test_num_hosts_normal_user(structure, user_tests, monkeypatch):
+    for user_test in user_tests:
+        _run_num_host_test(
+            structure,
+            user_test,
+            user_test.expected_num_hosts,
+            False,
+            monkeypatch,
+        )
+
+
+@pytest.mark.usefixtures("with_admin_login")
+@pytest.mark.parametrize(
+    "structure, user_tests",
+    [group_tree_test],
+)
+def test_num_hosts_admin_user(structure, user_tests, monkeypatch):
+    for user_test in user_tests:
+        _run_num_host_test(structure, user_test, 117, True, monkeypatch)
+
+
+def _run_num_host_test(structure, user_test, expected_host_count, is_admin, monkeypatch):
+    wato_folder = make_monkeyfree_folder(structure)
+    with hide_folders_without_permission(user_test.hide_folders_without_permission):
+        # The algorithm implemented in CREFolder actually computes the num_hosts_recursively wrong.
+        # It does not exclude hosts in the questioned base folder, even when it should adhere
+        # the visibility permissions. This error is not visible in the GUI since another(..)
+        # function filters those folders in advance
+        legacy_base_folder_host_offset = (
+            0
+            if (not user_test.fix_legacy_visibility or is_admin)
+            else (structure.num_hosts if user_test.hide_folders_without_permission else 0)
+        )
+
+        # Old mechanism
+        monkeypatch.setattr(userdb, "contactgroups_of_user", lambda u: user_test.contactgroups)
+        assert (
+            wato_folder.num_hosts_recursively()
+            == expected_host_count + legacy_base_folder_host_offset
+        )
+
+        # New mechanism
+        with get_fake_setup_redis_client(
+            monkeypatch,
+            _convert_folder_tree_to_all_folders(wato_folder),
+            [_fake_redis_num_hosts_answer(wato_folder)],
+        ):
+            assert wato_folder.num_hosts_recursively() == expected_host_count
+
+
+def _fake_redis_num_hosts_answer(wato_folder: hosts_and_folders.CREFolder):
+    redis_answer = []
+    for folder in _convert_folder_tree_to_all_folders(wato_folder).values():
+        redis_answer.extend([",".join(folder.groups()[0]), str(folder._num_hosts)])
+    return [redis_answer]
+
+
+@contextmanager
+def get_fake_setup_redis_client(monkeypatch, all_folders, redis_answers: List):
+    monkeypatch.setattr(hosts_and_folders, "_may_use_redis", lambda: True)
+    mock_redis_client = MockRedisClient(redis_answers)
+    monkeypatch.setattr(hosts_and_folders._RedisHelper, "_cache_integrity_ok", lambda x: True)
+    redis_helper = hosts_and_folders._get_wato_redis_client()
+    monkeypatch.setattr(redis_helper, "_client", mock_redis_client)
+    monkeypatch.setattr(redis_helper, "_folder_paths", [f"{x}/" for x in all_folders.keys()])
+    monkeypatch.setattr(
+        redis_helper,
+        "_folder_metadata",
+        {
+            f"{x}/": hosts_and_folders.FolderMetaData(f"{x}/", "nix", "nix", [])
+            for x in all_folders.keys()
+        },
+    )
+    yield mock_redis_client
+    monkeypatch.setattr(hosts_and_folders, "_may_use_redis", lambda: False)
+    monkeypatch.undo()
+
+
+class MockRedisClient:
+    def __init__(self, answers: List[List[str]]):
+        class FakePipeline:
+            def __init__(self, answers):
+                self._answers = answers
+
+            def execute(self):
+                return self._answers.pop(0)
+
+            def __getattr__(self, name):
+                return lambda *args, **kwargs: None
+
+        self._fake_pipeline = FakePipeline(answers)
+        self._answers = answers
+
+    def __getattr__(self, name):
+        if name == "pipeline":
+            return lambda: self._fake_pipeline
+
+        return lambda *args, **kwargs: lambda *args, **kwargs: None

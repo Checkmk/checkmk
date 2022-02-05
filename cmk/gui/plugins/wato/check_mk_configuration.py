@@ -21,7 +21,6 @@ from cmk.gui.exceptions import MKConfigError, MKUserError
 from cmk.gui.globals import config, request, user
 from cmk.gui.i18n import _
 from cmk.gui.plugins.views.icons.utils import icon_and_action_registry
-from cmk.gui.plugins.wato.omd_configuration import ConfigVariableGroupSiteManagement
 from cmk.gui.plugins.wato.utils import (
     BinaryHostRulespec,
     BinaryServiceRulespec,
@@ -34,6 +33,9 @@ from cmk.gui.plugins.wato.utils import (
     ConfigHostname,
     ConfigVariable,
     ConfigVariableGroup,
+    ConfigVariableGroupSiteManagement,
+    ConfigVariableGroupUserInterface,
+    ConfigVariableGroupWATO,
     ContactGroupSelection,
     get_section_information,
     HostGroupSelection,
@@ -110,15 +112,6 @@ from cmk.gui.watolib.groups import load_contact_group_information
 #   +----------------------------------------------------------------------+
 #   | Global configuration settings for main.mk and multisite.mk           |
 #   '----------------------------------------------------------------------'
-
-
-@config_variable_group_registry.register
-class ConfigVariableGroupUserInterface(ConfigVariableGroup):
-    def title(self):
-        return _("User interface")
-
-    def sort_index(self):
-        return 20
 
 
 @config_variable_registry.register
@@ -1828,15 +1821,6 @@ class RestAPIETagLocking(ConfigVariable):
 #   +----------------------------------------------------------------------+
 #   | Global Configuration for WATO                                        |
 #   '----------------------------------------------------------------------'
-
-
-@config_variable_group_registry.register
-class ConfigVariableGroupWATO(ConfigVariableGroup):
-    def title(self):
-        return _("Setup")
-
-    def sort_index(self):
-        return 25
 
 
 @config_variable_registry.register

@@ -21,11 +21,10 @@ from cmk.gui.plugins.wato.utils import (
     ABCConfigDomain,
     add_replication_paths,
     config_domain_registry,
-    config_variable_group_registry,
     config_variable_registry,
     ConfigDomainOMD,
     ConfigVariable,
-    ConfigVariableGroup,
+    ConfigVariableGroupSiteManagement,
     LivestatusViaTCP,
     ReplicationPath,
     site_neutral_path,
@@ -44,16 +43,6 @@ from cmk.gui.valuespec import (
     Optional,
     Tuple,
 )
-
-
-@config_variable_group_registry.register
-class ConfigVariableGroupSiteManagement(ConfigVariableGroup):
-    def title(self):
-        return _("Site management")
-
-    def sort_index(self):
-        return 30
-
 
 # .
 #   .--omd config----------------------------------------------------------.

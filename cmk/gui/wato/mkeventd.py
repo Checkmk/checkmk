@@ -64,11 +64,6 @@ from cmk.gui.page_menu import (
     PageMenuTopic,
 )
 from cmk.gui.permissions import Permission, permission_registry
-from cmk.gui.plugins.wato.check_mk_configuration import (
-    ConfigVariableGroupUserInterface,
-    ConfigVariableGroupWATO,
-)
-from cmk.gui.plugins.wato.globals_notification import ConfigVariableGroupNotifications
 from cmk.gui.plugins.wato.utils import (
     ABCMainModule,
     add_change,
@@ -78,6 +73,9 @@ from cmk.gui.plugins.wato.utils import (
     ConfigDomainGUI,
     ConfigVariable,
     ConfigVariableGroup,
+    ConfigVariableGroupNotifications,
+    ConfigVariableGroupUserInterface,
+    ConfigVariableGroupWATO,
     ContactGroupSelection,
     flash,
     get_search_expression,

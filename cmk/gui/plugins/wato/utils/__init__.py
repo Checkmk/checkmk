@@ -167,6 +167,12 @@ from cmk.gui.watolib.check_mk_automations import (
 from cmk.gui.watolib.config_sync import (  # noqa: F401 # pylint: disable=unused-import
     ReplicationPath,
 )
+from cmk.gui.watolib.config_variable_groups import (  # noqa: F401 # pylint: disable=unused-import
+    ConfigVariableGroupNotifications,
+    ConfigVariableGroupSiteManagement,
+    ConfigVariableGroupUserInterface,
+    ConfigVariableGroupWATO,
+)
 from cmk.gui.watolib.host_attributes import (  # noqa: F401 # pylint: disable=unused-import
     ABCHostAttributeNagiosText,
     ABCHostAttributeNagiosValueSpec,

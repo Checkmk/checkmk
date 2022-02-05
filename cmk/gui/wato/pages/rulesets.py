@@ -1514,7 +1514,7 @@ class ModeRuleSearchForm(WatoMode):
                         elements=[
                             DropdownChoice(
                                 title=_("Selection"),
-                                choices=watolib.Folder.folder_choices(),
+                                choices=watolib.Folder.folder_choices,
                             ),
                             DropdownChoice(
                                 title=_("Recursion"),
@@ -2156,7 +2156,7 @@ class VSExplicitConditions(Transform):
         return DropdownChoice(
             title=_("Folder"),
             help=_("The rule is only applied to hosts directly in or below this folder."),
-            choices=watolib.Folder.folder_choices(),
+            choices=watolib.Folder.folder_choices,
             encode_value=False,
         )
 

@@ -24,7 +24,6 @@ AGENT_PLUGIN_UNIT_TEST_FILES_PY2 := $(subst agent-plugin-unit,agent-plugin-unit/
 
 SHELL_FILES_REL := $(shell cd ..; grep -rl \
     --exclude-dir="buildscripts" \
-    --exclude-dir="cmk" \
     --exclude-dir="core" \
     --exclude-dir="doc" \
     --exclude-dir="livestatus" \
@@ -38,8 +37,8 @@ SHELL_FILES_REL := $(shell cd ..; grep -rl \
     --exclude-dir="web" \
     --exclude="LIVEPROXYD" \
     --exclude="install-sh" \
+    --exclude="code_examples.py" \
     '^\#!/.*sh' [^.]* 2>/dev/null)
-
 
 # Due to https://github.com/pypa/pypi-support/issues/978, we need to disable Plugin tests for py2.6
 # until we have a feasible solution or we drop the support for 2.6 completly.

@@ -50,6 +50,9 @@ else
     exec </dev/null 2>/dev/null
 fi
 
+# We're suppressing this, so we can enable the shellchecker.
+# TODO: Find out if this is working, and why. Are we implicitily assuming a specific shell?
+# shellcheck disable=SC2039 # In POSIX sh, set flag -A is undefined.
 section_misc_sections() {
     echo "<<<check_mk>>>"
     echo "Version: 2.1.0i1"

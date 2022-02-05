@@ -148,9 +148,7 @@ STAGES:
     - NAME: 'Shell check'
       DIR: 'tests'
       ENV_VARS:
-        SHELLCHECK_OUTPUT_ARGS: -e SC1090
-            -e SC1091
-            -e SC2009
+        SHELLCHECK_OUTPUT_ARGS: -e SC1090 -e SC1091
       COMMAND: "make test-shellcheck &> ${RESULTS}/shellcheck.txt"
       RESULT_CHECK_TYPE: "GCC"
       RESULT_CHECK_FILE_PATTERN: "results/shellcheck.txt"

@@ -65,8 +65,9 @@ def check_network_fs_mounts(item, params, attrs):
         return 0, "Mount seems OK"
     size_blocks, _, free_blocks, blocksize = map(int, data)
 
-    if size_blocks <= 0 or free_blocks < 0 or blocksize > 16.0 * MEGA:
-        return 2, "Stale fs handle"
+    if "/.snapshot" not in item:
+        if size_blocks <= 0 or free_blocks < 0 or blocksize > 16.0 * MEGA:
+            return 2, "Stale fs handle"
 
     to_mb = blocksize / MEGA
     size_mb = size_blocks * to_mb

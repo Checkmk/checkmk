@@ -10,10 +10,9 @@ from typing import MutableMapping, Sequence, Tuple
 
 import pytest
 
+from cmk.base.plugins.agent_based import kube_pod_resources
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
-from cmk.base.plugins.agent_based.utils import kube_pod_resources
-from cmk.base.plugins.agent_based.utils.k8s import AllocatablePods, PodResources
-from cmk.base.plugins.agent_based.utils.kube_pod_resources import (
+from cmk.base.plugins.agent_based.kube_pod_resources import (
     _POD_RESOURCES_FIELDS,
     check_free_pods,
     check_kube_pod_resources,
@@ -22,6 +21,7 @@ from cmk.base.plugins.agent_based.utils.kube_pod_resources import (
     PodSequence,
     VSResultPercent,
 )
+from cmk.base.plugins.agent_based.utils.k8s import AllocatablePods, PodResources
 
 
 @pytest.fixture(name="get_value_store")

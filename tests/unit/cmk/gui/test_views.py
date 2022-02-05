@@ -2836,6 +2836,8 @@ def test_registered_display_hints():
     '.software.applications.kube.deployment.name',
     '.software.applications.kube.deployment.namespace',
     '.software.applications.kube.deployment.strategy',
+    '.software.applications.kube.deployment.match_labels',
+    '.software.applications.kube.deployment.match_expressions',
     '.software.applications.kube.labels:',
     '.software.applications.kube.labels:*.label_name',
     '.software.applications.kube.labels:*.label_value',

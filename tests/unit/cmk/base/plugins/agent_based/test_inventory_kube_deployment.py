@@ -46,6 +46,8 @@ from cmk.base.plugins.agent_based.utils.k8s import (
                         "name": "oh-lord",
                         "namespace": "have-mercy",
                         "strategy": "RollingUpdate (max surge: 25%, max unavailable: 25%)",
+                        "match_labels": "",
+                        "match_expressions": "",
                     },
                     status_attributes={},
                 ),

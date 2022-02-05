@@ -629,6 +629,8 @@ inventory_displayhints.update({
     ".software.applications.kube.deployment.name": {"title": _l("Name")},
     ".software.applications.kube.deployment.namespace": {"title": _l("Namespace")},
     ".software.applications.kube.deployment.strategy": {"title": _l("StrategyType")},
+    ".software.applications.kube.deployment.match_labels": {"title": _l("matchLabels")},
+    ".software.applications.kube.deployment.match_expressions": {"title": _l("matchExpressions")},
 
     ".software.applications.citrix.": {"title": _l("Citrix")},
     ".software.applications.citrix.controller.": {"title": _l("Controller")},

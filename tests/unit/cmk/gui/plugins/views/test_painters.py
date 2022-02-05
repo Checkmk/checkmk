@@ -318,6 +318,8 @@ def test_registered_painters():
         "inv_software_applications_kube_deployment_name",
         "inv_software_applications_kube_deployment_namespace",
         "inv_software_applications_kube_deployment_strategy",
+        "inv_software_applications_kube_deployment_match_labels",
+        "inv_software_applications_kube_deployment_match_expressions",
         "inv_software_applications_kube_labels",
         "inv_software_applications_kubernetes_assigned_pods",
         "inv_software_applications_kubernetes_daemon_pod_containers",

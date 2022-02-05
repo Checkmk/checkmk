@@ -152,7 +152,6 @@ STAGES:
             -e SC1091
             -e SC2001
             -e SC2009
-            -e SC2015
             -e SC2039
       COMMAND: "make test-shellcheck &> ${RESULTS}/shellcheck.txt"
       RESULT_CHECK_TYPE: "GCC"

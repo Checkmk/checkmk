@@ -965,7 +965,7 @@ run_real_time_checks_for_remote() {
     PIDFILE=${MK_VARDIR}/real_time_checks.pid
     echo $$ >${PIDFILE}
 
-    # shellcheck source=../cfg_examples/real_time_checks.cfg
+    # shellcheck source=agents/cfg_examples/real_time_checks.cfg
     . "${MK_CONFDIR}/real_time_checks.cfg"
 
     if [ "${PASSPHRASE}" != "" ]; then

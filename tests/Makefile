@@ -22,8 +22,6 @@ GCC_TOOLCHAIN := /opt/gcc-11.2.0
 AGENT_PLUGIN_UNIT_TEST_FILES := $(wildcard agent-plugin-unit/test_*.py)
 AGENT_PLUGIN_UNIT_TEST_FILES_PY2 := $(subst agent-plugin-unit,agent-plugin-unit/py2,$(AGENT_PLUGIN_UNIT_TEST_FILES))
 
-# TODO: this duplicity is silly.
-SHELL_FILES_ABS := $(shell realpath `grep -rl '^\#!/.*sh' ../{enterprise/,}agents 2>/dev/null`)
 SHELL_FILES_REL := $(shell cd ..; grep -rl '^\#!/.*sh' {enterprise/,}agents 2>/dev/null)
 
 
@@ -272,7 +270,7 @@ test-pylint-docker:
 	../scripts/run-in-docker.sh make --quiet test-pylint
 
 test-shellcheck:
-	shellcheck $(SHELLCHECK_OUTPUT_ARGS) $(SHELL_FILES_ABS)
+	cd .. && shellcheck $(SHELLCHECK_OUTPUT_ARGS) $(SHELL_FILES_REL)
 
 test-unit: prepare-protobuf-files
 	$(PYTEST) \

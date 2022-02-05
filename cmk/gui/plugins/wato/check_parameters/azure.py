@@ -8,7 +8,7 @@ from typing import Optional
 from typing import Tuple as TupleType
 
 from cmk.gui.i18n import _
-from cmk.gui.plugins.wato import (
+from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithItem,
     CheckParameterRulespecWithoutItem,
     rulespec_registry,

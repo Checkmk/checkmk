@@ -16,9 +16,9 @@ from cmk.utils.type_defs import HostName
 opt_verbose = "-v" in sys.argv
 opt_force = "-f" in sys.argv
 
-config_file: str = omd_root + "/etc/diskspace.conf"
-plugin_dir: str = omd_root + "/share/diskspace"
-plugin_dir_local: str = omd_root + "/local/share/diskspace"
+config_file = str(omd_root / "etc/diskspace.conf")
+plugin_dir = str(omd_root / "share/diskspace")
+plugin_dir_local = str(omd_root / "local/share/diskspace")
 
 # Configuration variables
 min_free_bytes: Optional[int] = None
@@ -56,7 +56,7 @@ def _read_config() -> None:
     globals().update(default_config)
 
     try:
-        exec(open(config_file).read(), globals(), globals())
+        exec(open(config_file).read(), globals(), globals())  # pylint:disable=consider-using-with
     except IOError:
         pass  # ignore non existant config
     except Exception as e:
@@ -93,7 +93,7 @@ def _resolve_paths() -> None:
         for path in plugin.get("cleanup_paths", []):
             # Make relative paths absolute ones
             if path[0] != "/":
-                path = omd_root + "/" + path
+                path = str(omd_root / path)
 
             # This resolves given path patterns to really existing files.
             # It also ensures that the files in the resolved list do really exist.
@@ -123,7 +123,11 @@ def _load_plugins() -> None:
             path = base_dir + "/" + file_name
             _verbose("Loading plugin: %s" % path)
             try:
-                exec(open(path).read(), plugins[file_name], plugins[file_name])
+                exec(
+                    open(path).read(),  # pylint:disable=consider-using-with
+                    plugins[file_name],
+                    plugins[file_name],
+                )
             except Exception as e:
                 _error('Exception while loading plugin "%s": %s' % (path, e))
 
@@ -300,7 +304,11 @@ def _get_configured_hosts() -> Tuple[Set, Set, bool]:
     distr_wato_filepath: str = os.path.expanduser("~/etc/check_mk/conf.d/distributed_wato.mk")
     file_vars: dict = {}
     if os.path.exists(distr_wato_filepath):
-        exec(open(distr_wato_filepath).read(), file_vars, file_vars)
+        exec(
+            open(distr_wato_filepath).read(),  # pylint:disable=consider-using-with
+            file_vars,
+            file_vars,
+        )
 
     if not file_vars.get("is_wato_slave_site", False):
         is_wato_remote_site = False

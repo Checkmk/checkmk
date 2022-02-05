@@ -25,11 +25,12 @@ from mock import MagicMock
 from tests.testlib.users import create_and_destroy_user
 
 import cmk.utils.log
+from cmk.utils.type_defs import UserId
 
 import cmk.gui.config as config_module
 import cmk.gui.login as login
 import cmk.gui.watolib.activate_changes as activate_changes
-from cmk.gui import modules, watolib
+from cmk.gui import main_modules, watolib
 from cmk.gui.globals import config
 from cmk.gui.utils import get_failed_plugins
 from cmk.gui.utils.json import patch_json
@@ -57,7 +58,7 @@ HTTPMethod = Literal[
 
 
 @pytest.fixture()
-def request_context():
+def request_context() -> Iterator[None]:
     """This fixture registers a global htmllib.html() instance just like the regular GUI"""
     with application_and_request_context():
         yield
@@ -83,7 +84,7 @@ def monkeypatch(monkeypatch, request_context) -> Generator[MonkeyPatch, None, No
 
 
 @pytest.fixture()
-def load_config(request_context):
+def load_config(request_context: None) -> Iterator[None]:
     old_root_log_level = cmk.utils.log.logger.getEffectiveLevel()
     config_module.initialize()
     yield
@@ -92,7 +93,7 @@ def load_config(request_context):
 
 @pytest.fixture(scope="session", autouse=True)
 def load_plugins():
-    modules.load_plugins()
+    main_modules.load_plugins()
     if errors := get_failed_plugins():
         raise Exception(f"The following errors occured during plugin loading: {errors}")
 
@@ -104,7 +105,7 @@ def fixture_patch_json():
 
 
 @pytest.fixture()
-def with_user(request_context, load_config):
+def with_user(request_context: None, load_config: None) -> Iterator[tuple[UserId, str]]:
     with create_and_destroy_user(automation=False, role="user") as user:
         yield user
 

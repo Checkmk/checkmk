@@ -11,9 +11,9 @@ ROOT=/omd/sites/$SITE
 CMK_VERSION=$(basename $(readlink $ROOT/version))
 CMK_VERSION=${CMK_VERSION%.*}
 
-# Needed by managed/cmk/.f12 to set the correct edition after .f12
+# Needed by {managed,plus}/cmk/.f12 to set the correct edition after .f12
 if [ -z "$ORIG_EDITION" ]; then
-    export ORIG_EDITION=$(sudo su - $SITE -c "python3 -c 'import cmk.utils.version; print(cmk.utils.version.edition_short())'")
+    export ORIG_EDITION=$(sudo su - $SITE -c "python3 -c 'import cmk.utils.version; print(cmk.utils.version.edition().short)'")
 fi
 
 echo "Update site $SITE..."
@@ -40,6 +40,8 @@ sudo rsync \
     --exclude=cee.py \
     --exclude=cme \
     --exclude=cme.py \
+    --exclude=cpe \
+    --exclude=cpe.py \
     -aR \
     "${PYTHON3_PATHS[@]}" \
     $ROOT/lib/python3/cmk/
@@ -60,14 +62,31 @@ sudo rm -f \
     "$ROOT/lib/python3/cmk/post_rename_site/plugins/__init__.py" \
     "$ROOT/lib/python3/cmk/post_rename_site/plugins/actions/__init__.py" \
     "$ROOT/lib/python3/cmk/gui/__init__.py" \
-    "$ROOT/lib/python3/cmk/gui/plugins/__init__.py"
+    "$ROOT/lib/python3/cmk/gui/plugins/__init__.py" \
+    "$ROOT/lib/python3/cmk/gui/plugins/dashboard/__init__.py" \
+    "$ROOT/lib/python3/cmk/gui/plugins/config/__init__.py" \
+    "$ROOT/lib/python3/cmk/gui/plugins/cron/__init__.py" \
+    "$ROOT/lib/python3/cmk/gui/plugins/userdb/__init__.py" \
+    "$ROOT/lib/python3/cmk/gui/plugins/bi/__init__.py" \
+    "$ROOT/lib/python3/cmk/gui/plugins/webapi/__init__.py" \
+    "$ROOT/lib/python3/cmk/gui/plugins/watolib/__init__.py" \
+    "$ROOT/lib/python3/cmk/gui/plugins/openapi/__init__.py" \
+    "$ROOT/lib/python3/cmk/gui/plugins/openapi/endpoints/__init__.py" \
+    "$ROOT/lib/python3/cmk/gui/plugins/sidebar/__init__.py" \
+    "$ROOT/lib/python3/cmk/gui/plugins/views/__init__.py" \
+    "$ROOT/lib/python3/cmk/gui/plugins/views/icons/__init__.py" \
+    "$ROOT/lib/python3/cmk/gui/plugins/views/perfometers/__init__.py" \
+    "$ROOT/lib/python3/cmk/gui/plugins/visuals/__init__.py" \
+    "$ROOT/lib/python3/cmk/gui/plugins/metrics/__init__.py" \
+    "$ROOT/lib/python3/cmk/gui/plugins/wato/__init__.py" \
+    "$ROOT/lib/python3/cmk/gui/plugins/wato/check_parameters/__init__.py"
 
 # Restore site version after .f12
 sudo sed -i "s|^__version__.*$|__version__ = \"$CMK_VERSION\"|g" $ROOT/lib/python3/cmk/utils/version.py
 
 # Also deploy all other directories of same type
 if [ ${ALL_EDITIONS:-1} != 0 ]; then
-    for WHAT in enterprise managed; do
+    for WHAT in enterprise managed plus; do
         if [ -e ../$WHAT/cmk/.f12 ]; then
             (
                 cd ../$WHAT/cmk

@@ -22,6 +22,7 @@ import hashlib
 import io
 import multiprocessing
 import os
+import re
 import shutil
 import subprocess
 import time
@@ -206,6 +207,15 @@ def get_replication_paths() -> List[ReplicationPath]:
         ),
         ReplicationPath(
             "file",
+            "password_store.secret",
+            os.path.relpath(
+                "%s/password_store.secret" % os.path.dirname(cmk.utils.paths.htpasswd_file),
+                cmk.utils.paths.omd_root,
+            ),
+            [],
+        ),
+        ReplicationPath(
+            "file",
             "auth.serials",
             os.path.relpath(
                 "%s/auth.serials" % os.path.dirname(cmk.utils.paths.htpasswd_file),
@@ -231,15 +241,13 @@ def get_replication_paths() -> List[ReplicationPath]:
         ReplicationPath(
             "dir",
             "local",
-            os.path.relpath(cmk.utils.paths.omd_root + "/local", cmk.utils.paths.omd_root),
+            "local",
             [],
         ),
         ReplicationPath(
             "file",
             "omd",
-            os.path.relpath(
-                cmk.utils.paths.omd_root + "/etc/omd/sitespecific.mk", cmk.utils.paths.omd_root
-            ),
+            "etc/omd/sitespecific.mk",
             [],
         ),
     ]
@@ -393,11 +401,11 @@ class ActivateChanges:
         for site_id in activation_sites():
             changes_counter += len(SiteChanges(SiteChanges.make_path(site_id)).read())
             if changes_counter > 10:
-                return _("10+ changes")
+                return _("10+ pending changes")
         if changes_counter == 1:
-            return _("1 change")
+            return _("1 pending change")
         if changes_counter > 1:
-            return _("%d changes") % changes_counter
+            return _("%d pending changes") % changes_counter
         return None
 
     def grouped_changes(self):
@@ -809,7 +817,9 @@ class ActivateChangesManager(ActivateChanges):
             except KeyError:
                 pass
 
-            snapshot_manager = SnapshotManager.factory(work_dir, site_snapshot_settings)
+            snapshot_manager = SnapshotManager.factory(
+                work_dir, site_snapshot_settings, cmk_version.edition()
+            )
             snapshot_manager.generate_snapshots()
             logger.debug("Config sync snapshot creation took %.4f", time.time() - start)
 
@@ -921,9 +931,11 @@ class ActivateChangesManager(ActivateChanges):
 class SnapshotManager:
     @staticmethod
     def factory(
-        work_dir: str, site_snapshot_settings: Dict[SiteId, SnapshotSettings]
+        work_dir: str,
+        site_snapshot_settings: Dict[SiteId, SnapshotSettings],
+        edition: cmk_version.Edition,
     ) -> "SnapshotManager":
-        if cmk_version.is_managed_edition():
+        if edition is cmk_version.Edition.CME:
             import cmk.gui.cme.managed_snapshots as managed_snapshots  # pylint: disable=no-name-in-module
 
             return SnapshotManager(
@@ -1100,7 +1112,7 @@ class CRESnapshotDataCollector(ABCSnapshotDataCollector):
             if component.ident == "sitespecific":
                 continue  # Will be created for each site individually later
 
-            source_path = Path(cmk.utils.paths.omd_root).joinpath(component.site_path)
+            source_path = cmk.utils.paths.omd_root / component.site_path
             target_path = Path(snapshot_settings.work_dir).joinpath(component.site_path)
 
             store.makedirs(target_path.parent)
@@ -1117,11 +1129,11 @@ class CRESnapshotDataCollector(ABCSnapshotDataCollector):
             # With Python 3 we could use "shutil.copytree(src, dst, copy_function=os.link)", but
             # please have a look at the performance before switching over...
             # shutil.copytree(source_path, str(target_path.parent) + "/", copy_function=os.link)
-            p = subprocess.Popen(
+            p = subprocess.Popen(  # pylint:disable=consider-using-with
                 ["cp", "-al", str(source_path), str(target_path.parent) + "/"],
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
-                stdin=open(os.devnull),
+                stdin=open(os.devnull),  # pylint:disable=consider-using-with
                 shell=False,
                 close_fds=True,
             )
@@ -1146,7 +1158,7 @@ class CRESnapshotDataCollector(ABCSnapshotDataCollector):
             if os.path.exists(snapshot_settings.work_dir):
                 shutil.rmtree(snapshot_settings.work_dir)
 
-            p = subprocess.Popen(
+            p = subprocess.Popen(  # pylint:disable=consider-using-with
                 ["cp", "-al", origin_site_work_dir, snapshot_settings.work_dir],
                 shell=False,
                 close_fds=True,
@@ -1225,15 +1237,28 @@ class ActivationCleanupBackgroundJob(WatoBackgroundJob):
                 if not delete:
                     continue
 
+                # Because the heuristic to detect if an activation is or isn't running is not
+                # very reliable (stated politely) we need to make sure that we don't accidentally
+                # delete activations WHICH HAVE NOT BEEN STARTED YET. To make sure this is not the
+                # case we wait for a very long time and only delete very old activations.
+                # As there is no way to determine how long an activation will actually take,
+                # because the load on the server and the size of the activations vary by a huge
+                # margin, we make the definition of "very old" configurable.
                 for base_dir in (
                     str(cmk.utils.paths.site_config_dir),
                     ActivateChangesManager.activation_tmp_base_dir,
                 ):
                     activation_dir = os.path.join(base_dir, activation_id)
+                    if not os.path.isdir(activation_dir):
+                        continue
+
+                    # Hardcoded to 1h for now. Seems reasonable.
+                    dir_stat = os.stat(activation_dir)
+                    if time.time() - dir_stat.st_mtime < 3600:
+                        continue
+
                     try:
                         shutil.rmtree(activation_dir)
-                    except FileNotFoundError:
-                        pass
                     except Exception:
                         self._logger.error(
                             "  Failed to delete the activation directory '%s'" % activation_dir,
@@ -1842,11 +1867,9 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
         for change in self._site_changes:
             if change["need_restart"]:
                 for domain_name in change["domains"]:
-                    domain_settings.setdefault(domain_name, [])
-                    if (
-                        settings := get_config_domain(domain_name).get_domain_settings(change)
-                    ) is not None:
-                        domain_settings[domain_name].append(settings)
+                    domain_settings.setdefault(domain_name, []).append(
+                        get_config_domain(domain_name).get_domain_settings(change)
+                    )
 
         return sorted(
             (
@@ -1895,7 +1918,7 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
         self._status_text = status_text
 
         if phase != PHASE_INITIALIZED:
-            self._set_status_details(phase, status_details)
+            self._status_details = self._calc_status_details(phase, status_details)
 
         self._time_updated = time.time()
         if phase == PHASE_DONE:
@@ -1919,31 +1942,31 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
             },
         )
 
-    def _set_status_details(self, phase: Phase, status_details: Optional[str]) -> None:
+    def _calc_status_details(self, phase: Phase, status_details: Optional[str]) -> str:
         # As long as the site is in queue, there is no time started
         if phase == PHASE_QUEUED:
-            self._status_details = _("Queued for update")
+            value = _("Queued for update")
         elif self._time_started is not None:
-            self._status_details = _("Started at: %s.") % render.time_of_day(self._time_started)
+            value = _("Started at: %s.") % render.time_of_day(self._time_started)
         else:
-            self._status_details = _("Not started.")
+            value = _("Not started.")
 
         if phase == PHASE_DONE:
-            self._status_details += _(" Finished at: %s.") % render.time_of_day(self._time_ended)
+            value += _(" Finished at: %s.") % render.time_of_day(self._time_ended)
         elif phase != PHASE_QUEUED:
             assert isinstance(self._time_started, (int, float))
             estimated_time_left = self._expected_duration - (time.time() - self._time_started)
             if estimated_time_left < 0:
-                self._status_details += " " + _("Takes %.1f seconds longer than expected") % abs(
+                value += " " + _("Takes %.1f seconds longer than expected") % abs(
                     estimated_time_left
                 )
             else:
-                self._status_details += (
-                    " " + _("Approximately finishes in %.1f seconds") % estimated_time_left
-                )
+                value += " " + _("Approximately finishes in %.1f seconds") % estimated_time_left
 
         if status_details:
-            self._status_details += "<br>%s" % status_details
+            value += "<br>%s" % status_details
+
+        return value
 
     def _save_state(
         self, activation_id: ActivationId, site_id: SiteId, state: SiteActivationState
@@ -2009,10 +2032,7 @@ def _add_extensions_for_license_usage():
 
 
 def _update_links_for_agent_receiver() -> None:
-    uuid_link_manager = agent_registration.UUIDLinkManager(
-        received_outputs_dir=cmk.utils.paths.received_outputs_dir,
-        data_source_dir=cmk.utils.paths.data_source_push_agent_dir,
-    )
+    uuid_link_manager = agent_registration.get_uuid_link_manager()
     uuid_link_manager.update_links(cmk.gui.watolib.collect_all_hosts())
 
 
@@ -2023,6 +2043,22 @@ def confirm_all_local_changes() -> None:
 def get_pending_changes_info() -> Optional[str]:
     changes = ActivateChanges()
     return changes.get_changes_estimate()
+
+
+def get_pending_changes_tooltip() -> str:
+    changes_info = get_pending_changes_info()
+    if changes_info:
+        n_changes = int(re.findall(r"\d+", changes_info)[0])
+        return (
+            (
+                _("Currently, there is one pending change not yet activated.")
+                if n_changes == 1
+                else _("Currently, there are %s not yet activated.") % changes_info
+            )
+            + "\n"
+            + _("Click here for details.")
+        )
+    return _("Click here to see the activation status per site.")
 
 
 def get_number_of_pending_changes() -> int:
@@ -2042,7 +2078,7 @@ def apply_pre_17_sync_snapshot(
         _save_pre_17_site_globals_on_slave_site(tar_content)
 
         # Create rule making this site only monitor our hosts
-        create_distributed_wato_files(Path(cmk.utils.paths.omd_root), site_id, is_remote=True)
+        create_distributed_wato_files(cmk.utils.paths.omd_root, site_id, is_remote=True)
 
         _execute_post_config_sync_actions(site_id)
         _execute_cmk_update_config()
@@ -2053,7 +2089,7 @@ def apply_pre_17_sync_snapshot(
 
 
 def _execute_cmk_update_config():
-    p = subprocess.Popen(
+    p = subprocess.Popen(  # pylint:disable=consider-using-with
         "cmk-update-config",
         stdin=subprocess.DEVNULL,
         stdout=subprocess.PIPE,
@@ -2321,7 +2357,7 @@ def get_file_names_to_sync(
 
 def _get_sync_archive(to_sync: List[str], base_dir: Path) -> bytes:
     # Use native tar instead of python tarfile for performance reasons
-    p = subprocess.Popen(
+    p = subprocess.Popen(  # pylint:disable=consider-using-with
         [
             "tar",
             "-c",
@@ -2354,7 +2390,7 @@ def _get_sync_archive(to_sync: List[str], base_dir: Path) -> bytes:
 
 
 def _unpack_sync_archive(sync_archive: bytes, base_dir: Path) -> None:
-    p = subprocess.Popen(
+    p = subprocess.Popen(  # pylint:disable=consider-using-with
         [
             "tar",
             "-x",
@@ -2420,9 +2456,7 @@ class AutomationGetConfigSyncState(AutomationCommand):
 
     def execute(self, api_request: List[ReplicationPath]) -> GetConfigSyncStateResponse:
         with store.lock_checkmk_configuration():
-            file_infos = _get_config_sync_file_infos(
-                api_request, base_dir=Path(cmk.utils.paths.omd_root)
-            )
+            file_infos = _get_config_sync_file_infos(api_request, base_dir=cmk.utils.paths.omd_root)
             transport_file_infos = {
                 k: (v.st_mode, v.st_size, v.link_target, v.file_hash) for k, v in file_infos.items()
             }
@@ -2559,7 +2593,7 @@ class AutomationReceiveConfigSync(AutomationCommand):
 
     def _update_config_on_remote_site(self, sync_archive: bytes, to_delete: List[str]) -> None:
         """Use the given tar archive and list of files to be deleted to update the local files"""
-        base_dir = Path(cmk.utils.paths.omd_root)
+        base_dir = cmk.utils.paths.omd_root
 
         for site_path in to_delete:
             site_file = base_dir.joinpath(site_path)

@@ -1,17 +1,18 @@
 #include "stdafx.h"
 
+#include "stringutil.h"
+
 #include <ws2tcpip.h>
+
 #include <cassert>
 #include <cctype>
 #include <cstdio>
 #include <cstdlib>
 #include <optional>
 #include <regex>
-#include "stringutil.h"
-
-#include "win_error.h"
 
 #include "Logger.h"
+#include "win_error.h"
 
 #ifdef _WIN32
 #endif

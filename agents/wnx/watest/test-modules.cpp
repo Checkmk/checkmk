@@ -36,7 +36,7 @@ constexpr bool is_iterable_v = is_iterable<T>::value;
 namespace cma::cfg::modules {
 
 template <typename T>
-bool Compare(const T& t, const T& v) {
+bool Compare(const T &t, const T &v) {
     static_assert(cma::tools::is_iterable<T>::value);
     if (t.size() != v.size()) return false;
 
@@ -357,8 +357,8 @@ protected:
         return {modules_dir, backup_dir};
     }
 
-    ::testing::AssertionResult IsPresented(const fs::path& file,
-                                           const fs::path& dir) {
+    ::testing::AssertionResult IsPresented(const fs::path &file,
+                                           const fs::path &dir) {
         if (!fs::exists(file)) {
             return ::testing::AssertionFailure()
                    << file.u8string() << " is absent";
@@ -382,8 +382,8 @@ protected:
         return ::testing::AssertionSuccess();
     }
 
-    ::testing::AssertionResult IsAbsent(const fs::path& file,
-                                        const fs::path& dir) {
+    ::testing::AssertionResult IsAbsent(const fs::path &file,
+                                        const fs::path &dir) {
         if (fs::exists(file)) {
             return ::testing::AssertionFailure()
                    << file.u8string() << " should be absent";
@@ -397,7 +397,7 @@ protected:
         return ::testing::AssertionSuccess();
     }
 
-    std::pair<fs::path, fs::path> makeExpectedPair(const fs::path& zip_file) {
+    std::pair<fs::path, fs::path> makeExpectedPair(const fs::path &zip_file) {
         auto name{zip_file.filename()};
         auto target_folder = temp_fs_->data() / dirs::kUserModules / name;
         target_folder.replace_extension();
@@ -457,7 +457,7 @@ TEST_F(ModuleCommanderTest, PrepareToWork2) {
     ASSERT_EQ(mc.modules_.size(), 2);
 
     mc.prepareToWork();
-    for (auto& m : mc.modules_) {
+    for (auto &m : mc.modules_) {
         ASSERT_TRUE(m.bin().empty());
         ASSERT_TRUE(m.package().empty());
     }

@@ -8,15 +8,15 @@ import json
 
 import pytest
 
-from cmk.automations.results import SetAutochecksResult, TryDiscoveryResult
+from tests.unit.cmk.gui.conftest import WebTestAppForCMK
+
+from cmk.automations.results import CheckPreviewEntry, SetAutochecksResult, TryDiscoveryResult
 
 from cmk.gui.watolib.services import Discovery
 
-from tests.unit.cmk.gui.conftest import WebTestAppForCMK
-
 mock_discovery_result = TryDiscoveryResult(
     check_table=[
-        (
+        CheckPreviewEntry(
             "old",
             "cpu.loads",
             "cpu_load",
@@ -34,7 +34,7 @@ mock_discovery_result = TryDiscoveryResult(
             {},
             ["heute"],
         ),
-        (
+        CheckPreviewEntry(
             "old",
             "cpu.threads",
             "threads",
@@ -51,7 +51,7 @@ mock_discovery_result = TryDiscoveryResult(
             {},
             ["heute"],
         ),
-        (
+        CheckPreviewEntry(
             "new",
             "df",
             "filesystem",
@@ -81,7 +81,7 @@ mock_discovery_result = TryDiscoveryResult(
             {},
             ["heute"],
         ),
-        (
+        CheckPreviewEntry(
             "new",
             "df",
             "filesystem",
@@ -111,7 +111,7 @@ mock_discovery_result = TryDiscoveryResult(
             {},
             ["heute"],
         ),
-        (
+        CheckPreviewEntry(
             "new",
             "df",
             "filesystem",
@@ -141,7 +141,7 @@ mock_discovery_result = TryDiscoveryResult(
             {},
             ["heute"],
         ),
-        (
+        CheckPreviewEntry(
             "new",
             "df",
             "filesystem",
@@ -171,7 +171,7 @@ mock_discovery_result = TryDiscoveryResult(
             {},
             ["heute"],
         ),
-        (
+        CheckPreviewEntry(
             "old",
             "df",
             "filesystem",
@@ -200,7 +200,7 @@ mock_discovery_result = TryDiscoveryResult(
             {},
             ["heute"],
         ),
-        (
+        CheckPreviewEntry(
             "new",
             "df",
             "filesystem",
@@ -230,7 +230,7 @@ mock_discovery_result = TryDiscoveryResult(
             {},
             ["heute"],
         ),
-        (
+        CheckPreviewEntry(
             "old",
             "kernel.performance",
             "kernel_performance",
@@ -250,7 +250,7 @@ mock_discovery_result = TryDiscoveryResult(
             {},
             ["heute"],
         ),
-        (
+        CheckPreviewEntry(
             "old",
             "kernel.util",
             "cpu_iowait",
@@ -269,7 +269,7 @@ mock_discovery_result = TryDiscoveryResult(
             {},
             ["heute"],
         ),
-        (
+        CheckPreviewEntry(
             "old",
             "lnx_thermal",
             "temperature",
@@ -283,7 +283,7 @@ mock_discovery_result = TryDiscoveryResult(
             {},
             ["heute"],
         ),
-        (
+        CheckPreviewEntry(
             "old",
             "lnx_thermal",
             "temperature",
@@ -297,7 +297,7 @@ mock_discovery_result = TryDiscoveryResult(
             {},
             ["heute"],
         ),
-        (
+        CheckPreviewEntry(
             "old",
             "lnx_thermal",
             "temperature",
@@ -311,7 +311,7 @@ mock_discovery_result = TryDiscoveryResult(
             {},
             ["heute"],
         ),
-        (
+        CheckPreviewEntry(
             "old",
             "lnx_thermal",
             "temperature",
@@ -325,7 +325,7 @@ mock_discovery_result = TryDiscoveryResult(
             {},
             ["heute"],
         ),
-        (
+        CheckPreviewEntry(
             "old",
             "lnx_thermal",
             "temperature",
@@ -339,7 +339,7 @@ mock_discovery_result = TryDiscoveryResult(
             {},
             ["heute"],
         ),
-        (
+        CheckPreviewEntry(
             "old",
             "lnx_thermal",
             "temperature",
@@ -353,7 +353,7 @@ mock_discovery_result = TryDiscoveryResult(
             {},
             ["heute"],
         ),
-        (
+        CheckPreviewEntry(
             "old",
             "lnx_thermal",
             "temperature",
@@ -367,7 +367,7 @@ mock_discovery_result = TryDiscoveryResult(
             {},
             ["heute"],
         ),
-        (
+        CheckPreviewEntry(
             "old",
             "lnx_thermal",
             "temperature",
@@ -381,7 +381,7 @@ mock_discovery_result = TryDiscoveryResult(
             {},
             ["heute"],
         ),
-        (
+        CheckPreviewEntry(
             "old",
             "lnx_thermal",
             "temperature",
@@ -395,7 +395,7 @@ mock_discovery_result = TryDiscoveryResult(
             {},
             ["heute"],
         ),
-        (
+        CheckPreviewEntry(
             "new",
             "mem.linux",
             "memory_linux",
@@ -465,7 +465,7 @@ mock_discovery_result = TryDiscoveryResult(
             {},
             ["heute"],
         ),
-        (
+        CheckPreviewEntry(
             "old",
             "mkeventd_status",
             None,
@@ -489,7 +489,7 @@ mock_discovery_result = TryDiscoveryResult(
             {},
             ["heute"],
         ),
-        (
+        CheckPreviewEntry(
             "old",
             "mkeventd_status",
             None,
@@ -513,7 +513,7 @@ mock_discovery_result = TryDiscoveryResult(
             {},
             ["heute"],
         ),
-        (
+        CheckPreviewEntry(
             "old",
             "mknotifyd",
             None,
@@ -530,7 +530,7 @@ mock_discovery_result = TryDiscoveryResult(
             {},
             ["heute"],
         ),
-        (
+        CheckPreviewEntry(
             "old",
             "mknotifyd",
             None,
@@ -547,7 +547,7 @@ mock_discovery_result = TryDiscoveryResult(
             {},
             ["heute"],
         ),
-        (
+        CheckPreviewEntry(
             "old",
             "mounts",
             "fs_mount_options",
@@ -561,7 +561,7 @@ mock_discovery_result = TryDiscoveryResult(
             {},
             ["heute"],
         ),
-        (
+        CheckPreviewEntry(
             "old",
             "mounts",
             "fs_mount_options",
@@ -575,7 +575,7 @@ mock_discovery_result = TryDiscoveryResult(
             {},
             ["heute"],
         ),
-        (
+        CheckPreviewEntry(
             "old",
             "mounts",
             "fs_mount_options",
@@ -598,7 +598,7 @@ mock_discovery_result = TryDiscoveryResult(
             {},
             ["heute"],
         ),
-        (
+        CheckPreviewEntry(
             "old",
             "omd_apache",
             None,
@@ -652,7 +652,7 @@ mock_discovery_result = TryDiscoveryResult(
             {},
             ["heute"],
         ),
-        (
+        CheckPreviewEntry(
             "old",
             "omd_apache",
             None,
@@ -706,7 +706,7 @@ mock_discovery_result = TryDiscoveryResult(
             {},
             ["heute"],
         ),
-        (
+        CheckPreviewEntry(
             "old",
             "systemd_units.services_summary",
             "systemd_services_summary",
@@ -720,7 +720,7 @@ mock_discovery_result = TryDiscoveryResult(
             {},
             ["heute"],
         ),
-        (
+        CheckPreviewEntry(
             "old",
             "tcp_conn_stats",
             "tcp_conn_stats",
@@ -746,7 +746,7 @@ mock_discovery_result = TryDiscoveryResult(
             {},
             ["heute"],
         ),
-        (
+        CheckPreviewEntry(
             "old",
             "uptime",
             "uptime",
@@ -760,7 +760,7 @@ mock_discovery_result = TryDiscoveryResult(
             {},
             ["heute"],
         ),
-        (
+        CheckPreviewEntry(
             "active",
             "cmk_inv",
             None,

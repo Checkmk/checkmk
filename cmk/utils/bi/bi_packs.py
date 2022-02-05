@@ -156,7 +156,7 @@ class BIAggregationPacks:
         bi_rule = self.get_rule(rule_id)
         if bi_rule:
             return bi_rule
-        raise AssertionError()
+        raise MKGeneralException(_("The requested BI rule does not exist."))
 
     def delete_rule(self, rule_id: str) -> None:
         # Only delete a rule if it is not referenced by other rules/aggregations
@@ -217,7 +217,7 @@ class BIAggregationPacks:
         bi_aggregation = self.get_aggregation(aggregation_id)
         if bi_aggregation:
             return bi_aggregation
-        raise AssertionError()
+        raise MKGeneralException(_("The requested BI aggregation does not exist."))
 
     def get_all_aggregations(self) -> List[BIAggregation]:
         aggregations: List[BIAggregation] = []

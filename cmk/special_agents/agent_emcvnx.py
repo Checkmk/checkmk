@@ -23,6 +23,7 @@ import cProfile
 import getopt
 import os
 import sys
+from pathlib import Path
 from typing import Any, Dict
 
 
@@ -233,7 +234,7 @@ def main(sys_argv=None):
     if g_profile:
         g_profile.dump_stats(g_profile_path)
         show_profile = os.path.join(os.path.dirname(g_profile_path), "show_profile.py")
-        open(show_profile, "w").write(
+        Path(show_profile).write_text(
             "#!/usr/bin/python\n"
             "import pstats\n"
             "stats = pstats.Stats('%s')\n"

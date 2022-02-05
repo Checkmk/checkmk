@@ -8,25 +8,25 @@ import json
 import os
 from pathlib import Path
 from typing import Optional
+from uuid import UUID
 
 from agent_receiver.constants import AGENT_OUTPUT_DIR, REGISTRATION_REQUESTS
 from agent_receiver.models import HostTypeEnum, RegistrationData, RegistrationStatusEnum
 
 
 class Host:
-    def __init__(self, uuid: str):
-        source_path = AGENT_OUTPUT_DIR / uuid
+    def __init__(self, uuid: UUID):
+        self._source_path = AGENT_OUTPUT_DIR / str(uuid)
 
-        self.registered = source_path.is_symlink()
-        target_path = self._get_target_path(source_path) if self.registered else None
+        self._registered = self.source_path.is_symlink()
+        target_path = self._get_target_path() if self.registered else None
 
-        self.hostname = target_path.name if target_path else None
-        self.host_type = self._get_host_type(target_path)
+        self._hostname = target_path.name if target_path else None
+        self._host_type = self._get_host_type(target_path)
 
-    @staticmethod
-    def _get_target_path(source_path: Path) -> Optional[Path]:
+    def _get_target_path(self) -> Optional[Path]:
         try:
-            return Path(os.readlink(source_path))
+            return Path(os.readlink(self.source_path))
         except (FileNotFoundError, OSError):
             return None
 
@@ -36,6 +36,22 @@ class Host:
             return None
 
         return HostTypeEnum.PUSH if target_path.exists() else HostTypeEnum.PULL
+
+    @property
+    def source_path(self) -> Path:
+        return self._source_path
+
+    @property
+    def registered(self) -> bool:
+        return self._registered
+
+    @property
+    def hostname(self) -> Optional[str]:
+        return self._hostname
+
+    @property
+    def host_type(self) -> Optional[HostTypeEnum]:
+        return self._host_type
 
 
 def read_message_from_file(path: Path) -> Optional[str]:
@@ -54,7 +70,7 @@ def update_file_access_time(path: Path) -> None:
         pass
 
 
-def get_registration_status_from_file(uuid: str) -> Optional[RegistrationData]:
+def get_registration_status_from_file(uuid: UUID) -> Optional[RegistrationData]:
     for status in RegistrationStatusEnum:
         path = REGISTRATION_REQUESTS / status.name / f"{uuid}.json"
         if path.exists():

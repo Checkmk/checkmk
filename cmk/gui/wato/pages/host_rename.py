@@ -9,6 +9,7 @@ import socket
 from typing import Optional, Type
 
 from cmk.utils.regex import regex
+from cmk.utils.site import omd_site
 
 import cmk.gui.background_job as background_job
 import cmk.gui.forms as forms
@@ -27,7 +28,7 @@ from cmk.gui.page_menu import (
     PageMenuEntry,
     PageMenuTopic,
 )
-from cmk.gui.plugins.wato import flash, mode_registry, redirect, WatoMode
+from cmk.gui.plugins.wato.utils import flash, mode_registry, redirect, WatoMode
 from cmk.gui.plugins.wato.utils.html_elements import wato_html_head
 from cmk.gui.type_defs import ActionResult
 from cmk.gui.utils.confirm_with_preview import confirm_with_preview
@@ -45,6 +46,7 @@ from cmk.gui.valuespec import (
 )
 from cmk.gui.wato.pages.folders import ModeFolder
 from cmk.gui.wato.pages.hosts import ModeEditHost, page_menu_host_entries
+from cmk.gui.watolib.changes import SiteChanges
 from cmk.gui.watolib.host_rename import perform_rename_hosts
 from cmk.gui.watolib.hosts_and_folders import validate_host_uniqueness
 
@@ -381,8 +383,9 @@ def rename_hosts_background_job(renamings, job_interface=None):
     )  # Already activates the changes!
     watolib.confirm_all_local_changes()  # All activated by the underlying rename automation
     action_txt = "".join(["<li>%s</li>" % a for a in actions])
-    message = _("Renamed %d hosts at the following places:<br><ul>%s</ul>") % (
+    message = _("Renamed %d %s at the following places:<br><ul>%s</ul>") % (
         len(renamings),
+        ungettext("host", "hosts", len(renamings)),
         action_txt,
     )
     if auth_problems:
@@ -465,9 +468,20 @@ class ModeRenameHost(WatoMode):
         return menu
 
     def action(self) -> ActionResult:
-        if watolib.get_pending_changes_info():
+        local_site = omd_site()
+        renamed_host_site = self._host.site_id()
+        if (
+            SiteChanges(SiteChanges.make_path(local_site)).read()
+            or SiteChanges(SiteChanges.make_path(renamed_host_site)).read()
+        ):
             raise MKUserError(
-                "newname", _("You cannot rename a host while you have pending changes.")
+                "newname",
+                _(
+                    "You cannot rename a host while you have "
+                    "pending changes on the central site (%s) or the "
+                    "site the host is monitored on (%s)."
+                )
+                % (local_site, renamed_host_site),
             )
 
         newname = request.var("newname")

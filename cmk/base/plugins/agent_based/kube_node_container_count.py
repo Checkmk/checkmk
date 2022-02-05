@@ -49,8 +49,8 @@ def check(params: K8sContainersLevelsUpperLower, section: ContainerCount) -> Che
             value,
             levels_upper=levels.get("levels_upper"),
             levels_lower=levels.get("levels_lower"),
-            metric_name=f"k8s_node_container_count_{name}",
-            label=f"Number of {name} node containers",
+            metric_name=f"kube_node_container_count_{name}",
+            label=f"{name.title()}",
         )
 
 
@@ -62,9 +62,9 @@ register.agent_section(
 
 register.check_plugin(
     name="kube_node_container_count",
-    service_name="Container Count",
+    service_name="Containers",
     discovery_function=discovery,
     check_function=check,
-    check_ruleset_name="k8s_node_container_count",
+    check_ruleset_name="kube_node_container_count",
     check_default_parameters={},
 )

@@ -25,7 +25,7 @@ from cmk.utils.type_defs import ExitSpec, HostAddress, result
 from cmk.snmplib.type_defs import TRawData
 
 from .cache import FileCache
-from .host_sections import THostSections
+from .host_sections import HostSections, TRawDataSection
 from .type_defs import Mode, SectionNameCollection
 
 __all__ = ["Fetcher", "verify_ipaddress"]
@@ -63,7 +63,11 @@ class Fetcher(Generic[TRawData], abc.ABC):
 
     @final
     def __enter__(self) -> "Fetcher":
-        """Prepare the data source."""
+        """Prepare the data source. Only needed if simulation mode is
+        disabled"""
+        if self.file_cache.simulation:
+            return self
+
         try:
             self.open()
         except MKFetcherError:
@@ -81,7 +85,10 @@ class Fetcher(Generic[TRawData], abc.ABC):
         exc_value: Optional[BaseException],
         traceback: Optional[TracebackType],
     ) -> Literal[False]:
-        """Destroy the data source."""
+        """Destroy the data source. Only needed if simulation mode is
+        disabled"""
+        if self.file_cache.simulation:
+            return False
         self.close()
         return False
 
@@ -125,15 +132,17 @@ class Fetcher(Generic[TRawData], abc.ABC):
         raise NotImplementedError()
 
 
-class Parser(Generic[TRawData, THostSections], abc.ABC):
+class Parser(Generic[TRawData, TRawDataSection], abc.ABC):
     """Parse raw data into host sections."""
 
     @abc.abstractmethod
-    def parse(self, raw_data: TRawData, *, selection: SectionNameCollection) -> THostSections:
+    def parse(
+        self, raw_data: TRawData, *, selection: SectionNameCollection
+    ) -> HostSections[TRawDataSection]:
         raise NotImplementedError
 
 
-class Summarizer(Generic[THostSections], abc.ABC):
+class Summarizer(Generic[TRawDataSection], abc.ABC):
     """Class to summarize parsed data into a ServiceCheckResult.
 
     Note:
@@ -149,7 +158,7 @@ class Summarizer(Generic[THostSections], abc.ABC):
     @abc.abstractmethod
     def summarize_success(
         self,
-        host_sections: THostSections,
+        host_sections: HostSections[TRawDataSection],
         *,
         mode: Mode,
     ) -> Sequence[ActiveCheckResult]:

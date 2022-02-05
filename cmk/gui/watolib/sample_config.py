@@ -9,6 +9,8 @@ import os
 from typing import Any, Dict
 
 from cmk.utils import store
+from cmk.utils.encryption import raw_certificates_from_file
+from cmk.utils.paths import site_cert_file
 from cmk.utils.tags import sample_tag_config, TagConfig
 from cmk.utils.version import is_free_edition
 
@@ -372,6 +374,16 @@ class ConfigGeneratorBasicWATOConfig(SampleConfigGenerator):
             "enable_rulebased_notifications": True,
             "log_logon_failures": True,
             "lock_on_logon_failures": 10,
+            "trusted_certificate_authorities": {
+                "use_system_wide_cas": True,
+                # Add the CA of the site to the trusted CAs. This has the benefit that remote sites
+                # automatically trust central sites in distributed setups where the config is replicated.
+                "trusted_cas": (
+                    (site_cas := raw_certificates_from_file(site_cert_file))
+                    and [site_cas[-1]]
+                    or []
+                ),
+            },
         }
 
         if is_free_edition():

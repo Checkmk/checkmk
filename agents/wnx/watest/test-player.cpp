@@ -51,10 +51,10 @@ public:
 
 static TestStorage S_Storage;
 
-bool MailboxCallback(const cma::MailSlot* Slot, const void* Data, int Len,
-                     void* Context) {
+bool MailboxCallback(const cma::MailSlot *Slot, const void *Data, int Len,
+                     void *Context) {
     using namespace std::chrono;
-    auto storage = (TestStorage*)Context;
+    auto storage = (TestStorage *)Context;
     if (!storage) {
         xlog::l("error in param\n");
         return false;
@@ -65,7 +65,7 @@ bool MailboxCallback(const cma::MailSlot* Slot, const void* Data, int Len,
 
     auto fname = cma::cfg::GetCurrentLogFileName();
 
-    auto dt = static_cast<const cma::carrier::CarrierDataHeader*>(Data);
+    auto dt = static_cast<const cma::carrier::CarrierDataHeader *>(Data);
     switch (dt->type()) {
         case cma::carrier::DataType::kLog:
             // IMPORTANT ENTRY POINT
@@ -79,7 +79,7 @@ bool MailboxCallback(const cma::MailSlot* Slot, const void* Data, int Len,
             {
                 nanoseconds duration_since_epoch(dt->answerId());
                 time_point<steady_clock> tp(duration_since_epoch);
-                auto data_source = static_cast<const uint8_t*>(dt->data());
+                auto data_source = static_cast<const uint8_t *>(dt->data());
                 auto data_end = data_source + dt->length();
                 std::vector<uint8_t> vectorized_data(data_source, data_end);
                 S_Storage.buffer_ = vectorized_data;
@@ -167,7 +167,7 @@ TEST(PlayerTest, ConfigFolders) {
     }
 }
 
-static void CreateFileInTemp(const std::filesystem::path& Path) {
+static void CreateFileInTemp(const std::filesystem::path &Path) {
     std::ofstream ofs(Path.u8string());
 
     if (!ofs) {
@@ -178,9 +178,9 @@ static void CreateFileInTemp(const std::filesystem::path& Path) {
     ofs << Path.u8string() << std::endl;
 }
 
-constexpr const char* SecondLine = "0, 1, 2, 3, 4, 5, 6, 7, 8";
+constexpr const char *SecondLine = "0, 1, 2, 3, 4, 5, 6, 7, 8";
 
-static void CreatePluginInTemp(const std::filesystem::path& Path, int Timeout,
+static void CreatePluginInTemp(const std::filesystem::path &Path, int Timeout,
                                std::string Name) {
     std::ofstream ofs(Path.u8string());
 
@@ -196,14 +196,14 @@ static void CreatePluginInTemp(const std::filesystem::path& Path, int Timeout,
         << "@echo " << SecondLine << "\n";
 }
 
-static void RemoveFolder(const std::filesystem::path& Path) {
+static void RemoveFolder(const std::filesystem::path &Path) {
     namespace fs = std::filesystem;
     fs::path top = Path;
     fs::path dir_path;
 
     cma::PathVector directories;
     std::error_code ec;
-    for (auto& p : fs::recursive_directory_iterator(top, ec)) {
+    for (auto &p : fs::recursive_directory_iterator(top, ec)) {
         dir_path = p.path();
         if (fs::is_directory(dir_path)) {
             directories.push_back(fs::canonical(dir_path));
@@ -234,7 +234,7 @@ static cma::PathVector GetFolderStructure() {
         return {};
     }
     PathVector pv;
-    for (auto& folder : {"a", "b", "c"}) {
+    for (auto &folder : {"a", "b", "c"}) {
         auto dir = tmp / folder;
         pv.emplace_back(dir);
     }
@@ -286,7 +286,7 @@ TEST(PlayerTest, All) {
     bool test2_size_ok = false;
     bool test2_content_ok = false;
     box.processResults([&](const std::wstring CmdLine, uint32_t Pid,
-                           uint32_t Code, const std::vector<char>& Data) {
+                           uint32_t Code, const std::vector<char> &Data) {
         auto data = Data;
         if (data.size() == test_plugin_output->size()) {
             test_size_ok = true;
@@ -360,14 +360,14 @@ TEST(PlayerTest, RealLifeInventory_Long) {
     int count = 0;
 
     box.processResults([&](const std::wstring CmdLine, uint32_t Pid,
-                           uint32_t Code, const std::vector<char>& Data) {
+                           uint32_t Code, const std::vector<char> &Data) {
         // we check for the UNICODE output(see msdn 0xFFFE, -xFEFF etc.)
         bool convert_required =
             Data.data()[0] == '\xFF' && Data.data()[1] == '\xFE';
 
         std::string data;
         if (convert_required) {
-            auto raw_data = reinterpret_cast<const wchar_t*>(Data.data() + 2);
+            auto raw_data = reinterpret_cast<const wchar_t *>(Data.data() + 2);
             wstring wdata(raw_data, raw_data + (Data.size() - 2) / 2);
             if (wdata.back() != 0) wdata += L'\0';
             data = wtools::ToUtf8(wdata);

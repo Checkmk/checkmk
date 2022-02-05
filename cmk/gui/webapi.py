@@ -40,7 +40,7 @@ from cmk.gui.watolib.activate_changes import update_config_generation
 
 
 def load_plugins() -> None:
-    """Plugin initialization hook (Called by cmk.gui.modules.call_load_plugins_hooks())"""
+    """Plugin initialization hook (Called by cmk.gui.main_modules.load_plugins())"""
     utils.load_web_plugins("webapi", globals())
 
 

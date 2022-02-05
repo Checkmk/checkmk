@@ -95,8 +95,8 @@ def set_acknowledgement_on_hosts(params):
         except ValueError:
             raise ProblemException(
                 400,
-                title="Hostgroup could not be found.",
-                detail=f"Unknown hostgroup: {host_group}",
+                title="Host group could not be found.",
+                detail=f"Unknown host group: {host_group}",
             )
     elif acknowledge_type == "host_by_query":
         query = body["query"]
@@ -192,8 +192,8 @@ def set_acknowledgement_on_services(params):
         except ValueError:
             raise ProblemException(
                 status=400,
-                title="Servicegroup could not be found.",
-                detail=f"Unknown servicegroup: {service_group}",
+                title="Service group could not be found.",
+                detail=f"Unknown service group: {service_group}",
             )
     elif acknowledge_type == "service_by_query":
         services = Query(

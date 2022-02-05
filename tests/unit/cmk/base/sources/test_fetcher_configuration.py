@@ -14,8 +14,10 @@ import cmk.base.config as config
 from cmk.base.sources import fetcher_configuration
 
 
-def make_scenario(hostname, tags):
-    return Scenario().add_host(hostname, tags=tags)
+def make_scenario(hostname, tags) -> Scenario:
+    ts = Scenario()
+    ts.add_host(hostname, tags=tags)
+    return ts
 
 
 @pytest.mark.parametrize(

@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from contextlib import nullcontext
-from typing import Any, Dict, List
+from typing import Any, ContextManager, Dict, List
 
 import cmk.gui.sites as sites
 import cmk.gui.watolib as watolib
@@ -13,10 +13,9 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.globals import config, html, request, response, user
 from cmk.gui.htmllib import foldable_container, HTML
 from cmk.gui.i18n import _
+from cmk.gui.plugins.sidebar.utils import SidebarSnapin, snapin_registry
 from cmk.gui.plugins.wato.check_mk_configuration import transform_virtual_host_trees
 from cmk.gui.utils.urls import makeuri_contextless
-
-from . import SidebarSnapin, snapin_registry
 
 
 @snapin_registry.register
@@ -117,13 +116,13 @@ class VirtualHostTree(SidebarSnapin):
             [(tree["id"], tree["title"]) for tree in self._trees.values()], key=lambda x: x[1]
         )
 
-    def _render_tag_tree_level(self, tree_spec, path, cwd, title, tree):
+    def _render_tag_tree_level(self, tree_spec, path, cwd, title, tree) -> None:
         if not self._is_tag_subdir(path=path, cwd=cwd) and not self._is_tag_subdir(
             path=cwd, cwd=path
         ):
             return
 
-        container = nullcontext(False)
+        container: ContextManager[bool] = nullcontext(False)
         if path != cwd and self._is_tag_subdir(path, cwd):
             bullet = self._tag_tree_bullet(self._tag_tree_worst_state(tree), path, False)
             if self._tag_tree_has_svc_problems(tree):

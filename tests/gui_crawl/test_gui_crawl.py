@@ -7,28 +7,49 @@
 # pylint: disable=redefined-outer-name,c-extension-no-member
 
 import asyncio
+import io
+import json
 import logging
 import os
+import re
+import tarfile
 import time
 from collections import deque
 from dataclasses import dataclass, field
 from itertools import chain
 from pathlib import Path
-from typing import Deque, Generator, Iterable, MutableMapping, MutableSequence, Optional, Set, Tuple
+from typing import (
+    Generator,
+    Iterable,
+    MutableMapping,
+    MutableSequence,
+    NamedTuple,
+    Optional,
+    Set,
+    Tuple,
+)
 from urllib.parse import parse_qs, parse_qsl, urlencode, urljoin, urlparse, urlsplit, urlunsplit
 
 import playwright.async_api
 import pytest
 import requests
+import requests.utils
 from bs4 import BeautifulSoup  # type: ignore[import]
 from lxml import etree
 from playwright.async_api import async_playwright
 
 from tests.testlib.site import get_site_factory, Site
 from tests.testlib.version import CMKVersion
-from tests.testlib.web_session import CMKWebSession
 
 logger = logging.getLogger()
+
+CrashIdRegex = r"\w{8}-\w{4}-\w{4}-\w{4}-\w{12}"
+CrashLinkRegex = rf"crash\.py\?crash_id=({CrashIdRegex})"
+
+
+class PageContent(NamedTuple):
+    content: str
+    logs: Iterable[str]
 
 
 class Progress:
@@ -100,109 +121,6 @@ class Url:
         return urlunsplit(parsed)
 
 
-class PageVisitor:
-    Timeout: int = 60
-
-    def __init__(self, web_session: CMKWebSession) -> None:
-        self.web_session = web_session
-
-    async def get_content_type(self, url: Url) -> str:
-        def blocking():
-            try:
-                response = self.web_session.request(
-                    "head", url.url_without_host(), timeout=self.Timeout
-                )
-            except requests.Timeout:
-                raise TimeoutError(url)
-            return response.headers.get("content-type")
-
-        loop = asyncio.get_running_loop()
-        return await loop.run_in_executor(None, blocking)
-
-    async def get_text_and_logs(self, url: Url) -> Tuple[str, Iterable[str]]:
-        def blocking():
-            response = self.web_session.get(url.url_without_host())
-            return response.text
-
-        loop = asyncio.get_running_loop()
-        return await loop.run_in_executor(None, blocking), []
-
-
-class BrowserPageVisitor(PageVisitor):
-    def __init__(
-        self,
-        web_session: CMKWebSession,
-        browser: playwright.async_api.Browser,
-        storage_state: playwright.async_api.StorageState,
-    ) -> None:
-        super().__init__(web_session)
-        self.browser = browser
-        self.storage_state = storage_state
-
-    async def get_text_and_logs(self, url: Url) -> Tuple[str, Iterable[str]]:
-        logs = []
-
-        async def handle_console_messages(msg):
-            location = (
-                f"{msg.location['url']}:{msg.location['lineNumber']}:{msg.location['columnNumber']}"
-            )
-            logs.append(f"{msg.type}: {msg.text} ({location})")
-
-        page = await self.browser.new_page(storage_state=self.storage_state)
-        page.on("console", handle_console_messages)
-        try:
-            await page.goto(url.url, timeout=self.Timeout * 1000)
-            text = await page.content()
-        except playwright.async_api.TimeoutError:
-            await page.close()
-            raise TimeoutError(url)
-        except playwright.async_api.Error as e:
-            raise RuntimeError(f"{type(e)}: {e.message} ({e.name})")
-        await page.close()
-        return text, logs
-
-
-async def create_web_session(site: Site) -> CMKWebSession:
-    def blocking():
-        web_session = CMKWebSession(site)
-        # disable content parsing on each request for performance reasons
-        web_session._handle_http_response = lambda *args, **kwargs: None  # type: ignore
-        web_session.login()
-        web_session.enforce_non_localized_gui()
-        return web_session
-
-    loop = asyncio.get_running_loop()
-    return await loop.run_in_executor(None, blocking)
-
-
-async def create_browser_and_context(
-    site: Site,
-) -> Tuple[playwright.async_api.Browser, playwright.async_api.StorageState]:
-    pw = await async_playwright().start()
-    browser = await pw.chromium.launch()
-
-    context = await browser.new_context()
-    page = await context.new_page()
-    await page.goto(site.internal_url)
-    await page.fill('input[name="_username"]', "cmkadmin")
-    await page.fill('input[name="_password"]', "cmk")
-    async with page.expect_navigation():
-        await page.click("text=Login")
-    await page.close()
-    storage_state = await context.storage_state()
-    await context.close()
-
-    return browser, storage_state
-
-
-async def create_visitor(site: Site, use_browser: bool) -> PageVisitor:
-    web_session = await create_web_session(site)
-    if use_browser:
-        browser, storage_state = await create_browser_and_context(site)
-        return BrowserPageVisitor(web_session, browser, storage_state)
-    return PageVisitor(web_session)
-
-
 @dataclass
 class ErrorResult:
     message: str
@@ -228,87 +146,52 @@ class Crawler:
         self.results: MutableMapping[str, CrawlResult] = {}
         self.site = site
         self.report_file = Path(report_file or self.site.result_dir() + "/crawl.xml")
+        self.requests_session = requests.Session()
 
-        self._todos: Deque[Url] = deque([Url(self.site.internal_url)])
+        self._todos = deque([Url(self.site.internal_url)])
 
-    def report(self) -> None:
-        self.site.save_results()
-        self._write_report_file()
+    async def crawl(self, max_tasks: int = 10) -> None:
+        browser, storage_state = await self.create_browser_and_storage_state()
 
-        error_messages = list(
-            chain.from_iterable(
-                (
-                    [
-                        f"[{url} - found on {error.referer_url}] {error.message}"
-                        for error in result.errors
-                    ]
-                    for url, result in self.results.items()
-                    if result.errors
-                )
-            )
-        )
-        if error_messages:
-            joined_error_messages = "\n".join(error_messages)
-            raise Exception(
-                f"Crawled {len(self.results)} URLs in {self.duration} seconds. Failures:\n{joined_error_messages}"
+        # makes sure authentication cookies is also available in the requests session.
+        for cookie_dict in storage_state["cookies"]:
+            self.requests_session.cookies.set(
+                name=cookie_dict["name"],
+                value=cookie_dict["value"],
             )
 
-    def _write_report_file(self) -> None:
-        root = etree.Element("testsuites")
-        testsuite = etree.SubElement(root, "testsuite")
-
-        tests, errors, skipped = 0, 0, 0
-        for url, result in self.results.items():
-            testcase = etree.SubElement(
-                testsuite,
-                "testcase",
-                attrib={
-                    "name": url,
-                    "classname": "crawled_urls",
-                    "time": f"{result.duration:.3f}",
-                },
-            )
-            if result.skipped is not None:
-                skipped += 1
-                etree.SubElement(
-                    testcase,
-                    "skipped",
-                    attrib={
-                        "type": result.skipped.reason,
-                        "message": result.skipped.message,
-                    },
-                )
-            elif result.errors:
-                errors += 1
-                for error in result.errors:
-                    failure = etree.SubElement(
-                        testcase, "failure", attrib={"message": error.message}
-                    )
-                    failure.text = f"referer_url: {error.referer_url}"
-
-            tests += 1
-
-        testsuite.attrib["name"] = "test-gui-crawl"
-        testsuite.attrib["tests"] = str(tests)
-        testsuite.attrib["skipped"] = str(skipped)
-        testsuite.attrib["errors"] = str(errors)
-        testsuite.attrib["failures"] = "0"
-        testsuite.attrib["time"] = f"{self.duration:.3f}"
-        testsuite.attrib["timestamp"] = time.strftime("%Y-%m-%dT%H:%M:%S")
-
-        Path(self.report_file).write_bytes(etree.tostring(root, pretty_print=True))
-
-    async def crawl(self, max_tasks: int = 10, use_browser: bool = True) -> None:
-        visitor = await create_visitor(self.site, use_browser=use_browser)
         with Progress() as progress:
             tasks: Set = set()
             while tasks or self._todos:
                 while self._todos and len(tasks) < max_tasks:
-                    tasks.add(asyncio.create_task(self.visit_url(visitor, self._todos.popleft())))
+                    tasks.add(
+                        asyncio.create_task(
+                            self.visit_url(browser, storage_state, self._todos.popleft())
+                        )
+                    )
 
                 done, tasks = await asyncio.wait(tasks, return_when=asyncio.FIRST_COMPLETED)
                 progress.done(done=sum(1 for t in done if t.result()))
                 self.duration = progress.duration
+
+    async def create_browser_and_storage_state(
+        self,
+    ) -> Tuple[playwright.async_api.Browser, playwright.async_api.StorageState]:
+        pw = await async_playwright().start()
+        browser = await pw.chromium.launch()
+
+        context = await browser.new_context()
+        page = await context.new_page()
+        await page.goto(self.site.internal_url)
+        await page.fill('input[name="_username"]', "cmkadmin")
+        await page.fill('input[name="_password"]', "cmk")
+        async with page.expect_navigation():
+            await page.click("text=Login")
+        await page.close()
+        storage_state = await context.storage_state()
+        await context.close()
+
+        return browser, storage_state
 
     def _ensure_result(self, url: Url) -> None:
         if url.url not in self.results:
@@ -343,22 +226,86 @@ class Crawler:
         logger.info("page done in %.2f secs (%s)", duration, url.url)
         return self.results[url.url].skipped is None and len(self.results[url.url].errors) == 0
 
-    async def visit_url(self, visitor: PageVisitor, url: Url) -> bool:
-        start = time.time()
+    def handle_crash_reports(self) -> None:
+        crash_reports_url = urljoin(self.site.internal_url, "view.py?view_name=crash_reports")
         try:
-            content_type = await visitor.get_content_type(url)
-        except TimeoutError:
-            self.handle_error(url, "Timeout")
+            response = self.requests_session.get(crash_reports_url)
+        except requests.RequestException as exception:
+            self.handle_error(Url(url=crash_reports_url), "GetCrashReportsFailed", str(exception))
+            return
+
+        if response.status_code != 200:
+            self.handle_error(
+                Url(url=crash_reports_url), "CrashReportsPageFailed", str(response.status_code)
+            )
+
+        for crash_id_match in re.finditer(rf"crash_id=({CrashIdRegex})", response.text):
+            self.handle_crash_report(Url("unknown url"), crash_id_match.group(1))
+
+    def handle_crash_report(self, url: Url, crash_id: str) -> bool:
+        crash_report_url = urljoin(
+            self.site.internal_url,
+            f"download_crash_report.py?crash_id={crash_id}&site={self.site.id}",
+        )
+        try:
+            response = self.requests_session.get(crash_report_url)
+        except requests.RequestException as exception:
+            self.handle_error(
+                Url(url=crash_report_url, referer_url=url.url),
+                "CrashReportDownloadFailed",
+                str(exception),
+            )
             return False
 
+        content_type = response.headers.get("content-type")
+        if response.status_code != 200 or content_type != "application/x-tar":
+            self.handle_error(
+                Url(url=crash_report_url, referer_url=url.url),
+                "CrashReportDownloadFailed",
+                f"status code: {response.status_code}, content-type: {content_type}",
+            )
+            return False
+
+        try:
+            tar = tarfile.open(  # pylint:disable=consider-using-with
+                fileobj=io.BytesIO(response.content)
+            )
+        except tarfile.ReadError:
+            self.handle_error(
+                Url(url=crash_report_url, referer_url=url.url),
+                "InvalidCrashReportTarFile",
+                repr(response.content),
+            )
+            return False
+
+        crash_info = tar.extractfile("crash.info")
+        if crash_info is None:
+            self.handle_error(
+                Url(url=crash_report_url, referer_url=url.url),
+                "EmptyCrashReportTarFile",
+                message=crash_id,
+            )
+            return False
+
+        # reads the crash report and dumps it indented for better readability
+        crash_report = json.dumps(json.loads(crash_info.read().decode("utf-8")), indent=4)
+        return self.handle_error(url, "CrashReport", message=crash_report)
+
+    async def visit_url(
+        self,
+        browser: playwright.async_api.Browser,
+        storage_state: playwright.async_api.StorageState,
+        url: Url,
+    ) -> bool:
+        start = time.time()
+
+        content_type = self.requests_session.head(url.url).headers["content-type"]
         if content_type.startswith("text/html"):
             try:
-                text, logs = await visitor.get_text_and_logs(url)
-                await self.validate(url, text, logs)
-            except TimeoutError:
-                self.handle_error(url, "Timeout")
-            except RuntimeError as e:
-                self.handle_error(url, "RuntimeError", repr(e))
+                page_content = await self.get_page_content(browser, storage_state, url)
+                await self.validate(url, page_content.content, page_content.logs)
+            except playwright.async_api.Error as e:
+                self.handle_error(url, "BrowserError", repr(e))
         elif any(
             (content_type.startswith(ignored_start) for ignored_start in ["text/plain", "text/csv"])
         ):
@@ -387,6 +334,28 @@ class Crawler:
             self.handle_error(url, error_type="UnknownContentType", message=content_type)
 
         return self.handle_page_done(url, duration=time.time() - start)
+
+    @staticmethod
+    async def get_page_content(
+        browser: playwright.async_api.Browser,
+        storage_state: playwright.async_api.StorageState,
+        url: Url,
+    ) -> PageContent:
+        logs = []
+
+        async def handle_console_messages(msg):
+            location = (
+                f"{msg.location['url']}:{msg.location['lineNumber']}:{msg.location['columnNumber']}"
+            )
+            logs.append(f"{msg.type}: {msg.text} ({location})")
+
+        page = await browser.new_page(storage_state=storage_state)
+        page.on("console", handle_console_messages)
+        try:
+            await page.goto(url.url, timeout=60 * 1000)
+            return PageContent(content=await page.content(), logs=logs)
+        finally:
+            await page.close()
 
     async def validate(self, url: Url, text: str, logs: Iterable[str]) -> None:
         def blocking():
@@ -466,6 +435,7 @@ class Crawler:
         parsed = urlsplit(url)
         if parsed.scheme != "http":
             raise InvalidUrl(url, f"invalid scheme: {parsed.scheme}")
+
         # skip external urls
         if url.startswith("http://") and not url.startswith(self.site.internal_url):
             raise InvalidUrl(url, "external url")
@@ -478,6 +448,9 @@ class Crawler:
             or "../nagios/" in parsed.path
         ):
             raise InvalidUrl(url, "non Check_MK URL")
+
+        query = parse_qs(parsed.query)
+
         # skip current url with link to index
         if "index.py?start_url=" in url:
             raise InvalidUrl(url, "link to index with current URL")
@@ -503,11 +476,88 @@ class Crawler:
         if parsed.path.startswith(f"/{self.site.id}/check_mk/agents/"):
             raise InvalidUrl(url, "agent download file")
 
+        # Skip combined graph pages which take way too long for our crawler with unrestricted
+        # contexts. These pages take >10 seconds to load while crawling
+        if parsed.path.endswith("/combined_graphs.py") and not query.get("host"):
+            raise InvalidUrl(url, "combined graph with unrestricted context")
+
     def normalize_url(self, url: str) -> str:
         url = urljoin(self.site.internal_url, url.rstrip("#"))
         parsed = list(urlsplit(url))
         parsed[3] = urlencode(sorted(parse_qsl(parsed[3], keep_blank_values=True)))
         return urlunsplit(parsed)
+
+    def report(self) -> None:
+        self.site.save_results()
+        self._write_report_file()
+
+        error_messages = list(
+            chain.from_iterable(
+                (
+                    [
+                        f"[{url} - found on {error.referer_url}] {error.message}"
+                        for error in result.errors
+                    ]
+                    for url, result in self.results.items()
+                    if result.errors
+                )
+            )
+        )
+        if error_messages:
+            joined_error_messages = "\n".join(error_messages)
+            raise Exception(
+                f"Crawled {len(self.results)} URLs in {self.duration} seconds. Failures:\n{joined_error_messages}"
+            )
+
+    def _write_report_file(self) -> None:
+        root = etree.Element("testsuites")
+        testsuite = etree.SubElement(root, "testsuite")
+
+        tests, errors, skipped = 0, 0, 0
+        for url, result in self.results.items():
+            testcase = etree.SubElement(
+                testsuite,
+                "testcase",
+                attrib={
+                    "name": url,
+                    "classname": "crawled_urls",
+                    "time": f"{result.duration:.3f}",
+                },
+            )
+            if result.skipped is not None:
+                skipped += 1
+                etree.SubElement(
+                    testcase,
+                    "skipped",
+                    attrib={
+                        "type": result.skipped.reason,
+                        "message": result.skipped.message,
+                    },
+                )
+            elif result.errors:
+                errors += 1
+                for error in result.errors:
+                    failure = etree.SubElement(
+                        testcase, "failure", attrib={"message": error.message}
+                    )
+                    failure.text = f"referer_url: {error.referer_url}"
+
+            tests += 1
+
+        testsuite.attrib["name"] = "test-gui-crawl"
+        testsuite.attrib["tests"] = str(tests)
+        testsuite.attrib["skipped"] = str(skipped)
+        testsuite.attrib["errors"] = str(errors)
+        testsuite.attrib["failures"] = "0"
+        testsuite.attrib["time"] = f"{self.duration:.3f}"
+        testsuite.attrib["timestamp"] = time.strftime("%Y-%m-%dT%H:%M:%S")
+
+        report_file_path = Path(self.report_file)
+        try:
+            report_file_path.write_bytes(etree.tostring(root, pretty_print=True))
+        except PermissionError:
+            # write to the current directory when no permissions to write to the site directory
+            Path(report_file_path.name).write_bytes(etree.tostring(root, pretty_print=True))
 
 
 class XssCrawler(Crawler):
@@ -564,16 +614,16 @@ def site() -> Site:
 
 
 def test_crawl(site: Site) -> None:
-    use_browser = os.environ.get("USE_BROWSER", "1") == "1"
-    max_crawler_tasks = int(os.environ.get("GUI_CRAWLER_TASK_LIMIT", 10 if use_browser else 100))
+    max_crawler_tasks = int(os.environ.get("GUI_CRAWLER_TASK_LIMIT", 10))
     xss_crawl = os.environ.get("XSS_CRAWL", "0") == "1"
 
     crawler_type = XssCrawler if xss_crawl else Crawler
 
     crawler = crawler_type(site, report_file=os.environ.get("CRAWL_REPORT"))
     try:
-        asyncio.run(crawler.crawl(max_tasks=max_crawler_tasks, use_browser=use_browser))
+        asyncio.run(crawler.crawl(max_tasks=max_crawler_tasks))
     finally:
+        crawler.handle_crash_reports()
         crawler.report()
 
 

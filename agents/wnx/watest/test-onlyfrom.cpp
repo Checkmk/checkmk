@@ -174,7 +174,7 @@ TEST(OnlyFromTest, Base) {
                 return {};
             }
 
-            auto data = reinterpret_cast<const uint8_t*>(Ip.data());
+            auto data = reinterpret_cast<const uint8_t *>(Ip.data());
             std::vector<uint8_t> v(data, data + Ip.size());
             return v;
         };
@@ -182,8 +182,8 @@ TEST(OnlyFromTest, Base) {
         using namespace asio;
         // ipv4
         {
-            cma::world::ExternalPort test_port(nullptr, tst::TestPort());  //
-            auto ret = test_port.startIo(reply);                           //
+            cma::world::ExternalPort test_port(nullptr);           //
+            auto ret = test_port.startIo(reply, tst::TestPort());  //
             ASSERT_TRUE(ret);
 
             try {
@@ -201,7 +201,7 @@ TEST(OnlyFromTest, Base) {
                 auto count = socket.read_some(asio::buffer(text), error);
                 EXPECT_TRUE(count > 1);
                 socket.close();
-            } catch (const std::exception& e) {
+            } catch (const std::exception &e) {
                 XLOG::l("Exception {} during connection to ", e.what());
             }
             test_port.shutdownIo();  //
@@ -210,7 +210,7 @@ TEST(OnlyFromTest, Base) {
         // ipv6 connect
         {
             cma::world::ExternalPort test_port(nullptr, tst::TestPort());  //
-            auto ret = test_port.startIo(reply);                           //
+            auto ret = test_port.startIo(reply, {});                       //
             ASSERT_TRUE(ret);
             io_context ios;
             ip::tcp::endpoint endpoint(ip::make_address("::1"),
@@ -239,7 +239,7 @@ TEST(OnlyFromTest, Base) {
                 groups::global.loadFromMainConfig();
                 auto only_froms = groups::global.getOnlyFrom();
                 EXPECT_TRUE(only_froms.size() == 2);
-                auto ret = test_port.startIo(reply);  //
+                auto ret = test_port.startIo(reply, {});  //
                 ASSERT_TRUE(ret);
                 io_context ios;
                 ip::tcp::endpoint endpoint(ip::make_address("::1"),
@@ -264,7 +264,7 @@ TEST(OnlyFromTest, Base) {
 
                 groups::global.loadFromMainConfig();
                 auto only_froms = groups::global.getOnlyFrom();
-                auto ret = test_port.startIo(reply);  //
+                auto ret = test_port.startIo(reply, {});  //
                 ASSERT_FALSE(ret);
                 io_context ios;
                 ip::tcp::endpoint endpoint(ip::make_address("::1"),
@@ -282,8 +282,8 @@ TEST(OnlyFromTest, Base) {
                 socket.async_read_some(
                     asio::buffer(text, 10),
                     [&count, &signaled](
-                        const error_code&,  // Result of operation.
-                        std::size_t         // Number of bytes read.
+                        const error_code &,  // Result of operation.
+                        std::size_t          // Number of bytes read.
                     ) {});
                 for (int i = 0; i < 25; i++) {
                     if (text[0] != ' ') break;
@@ -325,7 +325,7 @@ TEST(OnlyFromTest, Ipv6Integration) {
                 return {};
             }
 
-            auto data = reinterpret_cast<const uint8_t*>(Ip.data());
+            auto data = reinterpret_cast<const uint8_t *>(Ip.data());
             std::vector<uint8_t> v(data, data + Ip.size());
             return v;
         };
@@ -334,7 +334,7 @@ TEST(OnlyFromTest, Ipv6Integration) {
         // ipv4
         {
             cma::world::ExternalPort test_port(nullptr, tst::TestPort());  //
-            auto ret = test_port.startIo(reply);                           //
+            auto ret = test_port.startIo(reply, {});                       //
             ASSERT_TRUE(ret);
 
             try {
@@ -352,7 +352,7 @@ TEST(OnlyFromTest, Ipv6Integration) {
                 auto count = socket.read_some(asio::buffer(text), error);
                 EXPECT_TRUE(count > 1);
                 socket.close();
-            } catch (const std::exception& e) {
+            } catch (const std::exception &e) {
                 XLOG::l("Exception {} during connection to ", e.what());
             }
             test_port.shutdownIo();  //
@@ -361,7 +361,7 @@ TEST(OnlyFromTest, Ipv6Integration) {
         // ipv6 connect
         {
             cma::world::ExternalPort test_port(nullptr, tst::TestPort());  //
-            auto ret = test_port.startIo(reply);                           //
+            auto ret = test_port.startIo(reply, {});                       //
             ASSERT_TRUE(ret);
             io_context ios;
             ip::tcp::endpoint endpoint(ip::make_address("::1"),
@@ -394,7 +394,7 @@ TEST(OnlyFromTest, Ipv6Integration) {
             {
                 cma::world::ExternalPort test_port(nullptr,
                                                    tst::TestPort());  //
-                auto ret = test_port.startIo(reply);                  //
+                auto ret = test_port.startIo(reply, {});              //
                 ASSERT_TRUE(ret);
                 io_context ios;
                 ip::tcp::endpoint endpoint(ip::make_address("::1"),
@@ -416,7 +416,7 @@ TEST(OnlyFromTest, Ipv6Integration) {
             {
                 cma::world::ExternalPort test_port(nullptr,
                                                    tst::TestPort());  //
-                auto ret = test_port.startIo(reply);                  //
+                auto ret = test_port.startIo(reply, {});              //
                 ASSERT_TRUE(ret);
                 io_context ios;
                 ip::tcp::endpoint endpoint(ip::make_address("127.0.0.1"),

@@ -27,7 +27,7 @@ std::filesystem::path GetOhmCliPath() noexcept {
     return GetOhmCliPath(cma::cfg::GetUserDir());
 }
 
-std::filesystem::path GetOhmCliPath(const std::filesystem::path& dir) noexcept {
+std::filesystem::path GetOhmCliPath(const std::filesystem::path &dir) noexcept {
     namespace fs = std::filesystem;
 
     fs::path ohm_exe = dir;

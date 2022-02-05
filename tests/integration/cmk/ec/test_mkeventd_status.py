@@ -8,24 +8,12 @@ import time
 
 import pytest
 
-from tests.testlib.fixtures import ec  # noqa: F401 # pylint: disable=unused-import
 from tests.testlib.site import Site
 
 
-def ensure_core_and_get_connection(
-    site: Site, ec, core
-):  # noqa: F811 # pylint: disable=redefined-outer-name
-    if core is None:
-        return ec.status
-    site.set_config("CORE", core, with_restart=True)
-    return site.live
-
-
-@pytest.mark.parametrize(("core"), ["nagios", "cmc"])
 @pytest.mark.skip("needs to be analyzed later...")
-def test_command_reload(site: Site, ec, core):  # noqa: F811 # pylint: disable=redefined-outer-name
-    print("Checking core: %s" % core)
-    live = ensure_core_and_get_connection(site, ec, core)
+def test_command_reload(site: Site, ec):
+    live = site.live
 
     old_t = live.query_value("GET eventconsolestatus\nColumns: status_config_load_time\n")
     print("Old config load time: %s" % old_t)
@@ -40,15 +28,11 @@ def test_command_reload(site: Site, ec, core):  # noqa: F811 # pylint: disable=r
     assert new_t > old_t
 
 
-# core is None means direct query to status socket
-@pytest.mark.parametrize(("core"), [None, "nagios", "cmc"])
+@pytest.mark.parametrize(("via_core"), [True, False])
 @pytest.mark.skip("needs to be analyzed later...")
-def test_status_table_via_core(
-    site: Site, ec, core
-):  # noqa: F811 # pylint: disable=redefined-outer-name
-    print("Checking core: %s" % core)
-    live = ensure_core_and_get_connection(site, ec, core)
-    prefix = "" if core is None else "eventconsole"
+def test_status_table_via_core(site: Site, ec, via_core: bool) -> None:
+    live = site.live if via_core else ec.status
+    prefix = "eventconsole" if via_core else ""
     result = live.query_table_assoc("GET %sstatus\n" % prefix)
     assert len(result) == 1
 
@@ -92,15 +76,11 @@ def test_status_table_via_core(
     assert isinstance(status["status_event_limit_overall"], int)
 
 
-# core is None means direct query to status socket
-@pytest.mark.parametrize(("core"), [None, "nagios", "cmc"])
+@pytest.mark.parametrize(("via_core"), [True, False])
 @pytest.mark.skip("needs to be analyzed later...")
-def test_rules_table_via_core(
-    site: Site, ec, core
-):  # noqa: F811 # pylint: disable=redefined-outer-name
-    print("Checking core: %s" % core)
-    live = ensure_core_and_get_connection(site, ec, core)
-    prefix = "" if core is None else "eventconsole"
+def test_rules_table_via_core(site: Site, ec, via_core: bool) -> None:
+    live = site.live if via_core else ec.status
+    prefix = "eventconsole" if via_core else ""
     result = live.query_table_assoc("GET %srules\n" % prefix)
     assert isinstance(result, list)
     # assert len(result) == 0

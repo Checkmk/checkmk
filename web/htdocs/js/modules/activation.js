@@ -220,6 +220,10 @@ function update_site_progress(site_state) {
 
     // TODO: Visualize overdue
 
+    if (site_state["_time_started"] === null) {
+        return; // Do not update width in case it was not started yet
+    }
+
     var duration = parseFloat(utils.time() - site_state["_time_started"]);
 
     var expected_duration = site_state["_expected_duration"];

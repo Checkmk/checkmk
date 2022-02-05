@@ -36,13 +36,13 @@ def may_with_roles(some_role_ids: List[str], pname: str) -> bool:
     for role_id in some_role_ids:
         role = config.roles[role_id]
 
-        he_may = role.get("permissions", {}).get(pname)
+        they_may = role.get("permissions", {}).get(pname)
         # Handle compatibility with permissions without "general." that
         # users might have saved in their own custom roles.
-        if he_may is None and pname.startswith("general."):
-            he_may = role.get("permissions", {}).get(pname[8:])
+        if they_may is None and pname.startswith("general."):
+            they_may = role.get("permissions", {}).get(pname[8:])
 
-        if he_may is None:  # not explicitely listed -> take defaults
+        if they_may is None:  # not explicitely listed -> take defaults
             if "basedon" in role:
                 base_role_id = role["basedon"]
             else:
@@ -50,8 +50,8 @@ def may_with_roles(some_role_ids: List[str], pname: str) -> bool:
             if pname not in permissions.permission_registry:
                 return False  # Permission unknown. Assume False. Functionality might be missing
             perm = permissions.permission_registry[pname]
-            he_may = base_role_id in perm.defaults
-        if he_may:
+            they_may = base_role_id in perm.defaults
+        if they_may:
             return True
     return False
 

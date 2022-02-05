@@ -15,33 +15,32 @@ CMK_VERSION="2.1.0i1"
 
 RELEASEFILE="/etc/SuSE-release"
 
-if [ -f "/etc/os-release" ]
-    then
+if [ -f "/etc/os-release" ]; then
     RELEASEFILE="/etc/os-release"
 fi
 
-if type zypper > /dev/null ; then
+if type zypper >/dev/null; then
     echo '<<<zypper:sep(124)>>>'
-    if egrep -q 'VERSION = 10|VERSION_ID="10' < $RELEASEFILE
-    then
+    if grep -E -q 'VERSION = 10|VERSION_ID="10' <$RELEASEFILE; then
         ZYPPER='waitmax 50 zypper --no-gpg-checks --non-interactive --terse'
-        REFRESH=`$ZYPPER refresh 2>&1`
-        if  [ "$REFRESH" ]
-        then
-	    echo "ERROR: $REFRESH"
+        REFRESH="$("${ZYPPER}" refresh 2>&1)"
+        if [ "${REFRESH}" ]; then
+            echo "ERROR: ${REFRESH}"
         else
-            { $ZYPPER pchk || [ $? = 100 -o $? = 101 ] && $ZYPPER lu ; } \
-    	      | egrep '(patches needed|\|)' | egrep -v '^(#|Repository |Catalog )'
+            {
+                "${ZYPPER}" pchk || { [ "$?" = 100 ] || [ "$?" = 101 ]; } && "${ZYPPER}" lu
+            } | grep -E '(patches needed|\|)' | grep -v -E '^(#|Repository |Catalog )'
         fi
     else
         ZYPPER='waitmax 50 zypper --no-gpg-checks --non-interactive --quiet'
-        REFRESH=`$ZYPPER refresh 2>&1`
-        if  [ "$REFRESH" ]
-        then
-            echo "ERROR: $REFRESH"
+        REFRESH="$("${ZYPPER}" refresh 2>&1)"
+        if [ "${REFRESH}" ]; then
+            echo "ERROR: ${REFRESH}"
         else
-            { { $ZYPPER pchk || [ $? = 100 -o $? = 101 ] && $ZYPPER lp ; } ; $ZYPPER ll ; } \
-    	      | egrep '(patches needed|\|)' | egrep -v '^(#|Repository)'
+            {
+                { "${ZYPPER}" pchk || { [ "$?" = 100 ] || [ "$?" = 101 ]; } && "${ZYPPER}" lp; }
+                "${ZYPPER}" ll
+            } | grep -E '(patches needed|\|)' | grep -v -E '^(#|Repository)'
         fi
     fi
 fi

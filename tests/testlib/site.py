@@ -16,10 +16,11 @@ import time
 import urllib.parse
 from contextlib import suppress
 from pathlib import Path
-from typing import List, Mapping, MutableMapping, Optional
+from typing import List, Literal, Mapping, MutableMapping, Optional
 
 import pytest
 
+from tests.testlib.openapi_session import CMKOpenApiSession
 from tests.testlib.utils import (
     cmc_path,
     cme_path,
@@ -47,6 +48,7 @@ class Site:
         branch: str = "master",
         update_from_git: bool = False,
         install_test_python_modules: bool = True,
+        admin_password: str = "cmk",
     ) -> None:
         assert site_id
         self.id = site_id
@@ -63,6 +65,15 @@ class Site:
         self._apache_port: Optional[int] = None  # internal cache for the port
 
         self._livestatus_port: Optional[int] = None
+        self.admin_password = admin_password
+
+        self.openapi = CMKOpenApiSession(
+            host=self.http_address,
+            port=self.apache_port if self.exists() else 80,
+            user="automation" if self.exists() else "cmkadmin",
+            password=self.get_automation_secret() if self.exists() else self.admin_password,
+            site=self.id,
+        )
 
     @property
     def apache_port(self) -> int:
@@ -318,16 +329,18 @@ class Site:
         sudo, site_id = ([], []) if self._is_running_as_site_user() else (["sudo"], [self.id])
         cmd = sudo + ["/usr/bin/omd", mode] + site_id + list(args)
         logger.info("Executing: %s", subprocess.list2cmdline(cmd))
-        p = subprocess.Popen(
-            cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, encoding="utf-8"
+        completed_process = subprocess.run(
+            cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, encoding="utf-8", check=False
         )
-        stdout, _stderr = p.communicate()
-        logger.debug("Exit code: %d", p.returncode)
-        if stdout:
-            logger.debug("Output:")
-        for line in stdout.strip().split("\n"):
-            logger.debug("> %s", line)
-        return p.returncode
+
+        log_level = logging.DEBUG if completed_process.returncode == 0 else logging.WARNING
+        logger.log(log_level, "Exit code: %d", completed_process.returncode)
+        if completed_process.stdout:
+            logger.log(log_level, "Output:")
+        for line in completed_process.stdout.strip().split("\n"):
+            logger.log(log_level, "> %s", line)
+
+        return completed_process.returncode
 
     def path(self, rel_path: str) -> str:
         return os.path.join(self.root, rel_path)
@@ -360,15 +373,15 @@ class Site:
 
     def write_text_file(self, rel_path: str, content: str) -> None:
         if not self._is_running_as_site_user():
-            p = self.execute(
+            with self.execute(
                 ["tee", self.path(rel_path)], stdin=subprocess.PIPE, stdout=open(os.devnull, "w")
-            )
-            # ? content seems to have the type str
-            p.communicate(content)
-            if p.stdin is not None:
-                p.stdin.close()
-            if p.wait() != 0:
-                raise Exception("Failed to write file %s. Exit-Code: %d" % (rel_path, p.wait()))
+            ) as p:
+                # ? content seems to have the type str
+                p.communicate(content)
+                if p.stdin is not None:
+                    p.stdin.close()
+                if p.wait() != 0:
+                    raise Exception("Failed to write file %s. Exit-Code: %d" % (rel_path, p.wait()))
         else:
             file_path = Path(self.path(rel_path))
             file_path.parent.mkdir(parents=True, exist_ok=True)
@@ -377,17 +390,17 @@ class Site:
 
     def write_binary_file(self, rel_path: str, content: bytes) -> None:
         if not self._is_running_as_site_user():
-            p = self.execute(
+            with self.execute(
                 ["tee", self.path(rel_path)],
                 stdin=subprocess.PIPE,
                 stdout=open(os.devnull, "w"),
                 encoding=None,
-            )
-            p.communicate(content)
-            if p.stdin is not None:
-                p.stdin.close()
-            if p.wait() != 0:
-                raise Exception("Failed to write file %s. Exit-Code: %d" % (rel_path, p.wait()))
+            ) as p:
+                p.communicate(content)
+                if p.stdin is not None:
+                    p.stdin.close()
+                if p.wait() != 0:
+                    raise Exception("Failed to write file %s. Exit-Code: %d" % (rel_path, p.wait()))
         else:
             file_path = Path(self.path(rel_path))
             file_path.parent.mkdir(parents=True, exist_ok=True)
@@ -456,7 +469,7 @@ class Site:
 
         if not self.exists():
             logger.info("Creating site '%s'", self.id)
-            p = subprocess.Popen(
+            completed_process = subprocess.run(
                 [
                     "/usr/bin/sudo",
                     "/usr/bin/omd",
@@ -464,18 +477,19 @@ class Site:
                     self.version.version_directory(),
                     "create",
                     "--admin-password",
-                    "cmk",
+                    self.admin_password,
                     "--apache-reload",
                     self.id,
-                ]
+                ],
+                check=False,
             )
-            exit_code = p.wait()
-            assert exit_code == 0
+            assert completed_process.returncode == 0
             assert os.path.exists("/omd/sites/%s" % self.id)
 
             self._ensure_sample_config_is_present()
             if not self.version.is_raw_edition():
                 self._set_number_of_helpers()
+                self._log_cmc_startup()
                 self._enable_cmc_core_dumps()
                 self._enable_cmc_debug_logging()
                 self._disable_cmc_log_rotation()
@@ -496,6 +510,11 @@ class Site:
         self._update_cmk_core_config()
 
         self.makedirs(self.result_dir())
+
+        self.openapi.port = self.apache_port
+        self.openapi.set_authentication_header(
+            user="automation", password=self.get_automation_secret()
+        )
 
     def _ensure_sample_config_is_present(self) -> None:
         if missing_files := self._missing_but_required_wato_files():
@@ -522,14 +541,12 @@ class Site:
     def _update_with_f12_files(self) -> None:
         paths = [
             cmk_path() + "/omd/packages/omd",
-            cmk_path() + "/livestatus",
             cmk_path() + "/livestatus/api/python",
             cmk_path() + "/bin",
             cmk_path() + "/agents/special",
             cmk_path() + "/agents/plugins",
             cmk_path() + "/agents/windows/plugins",
             cmk_path() + "/agents",
-            cmk_path() + "/modules",
             cmk_path() + "/cmk/base",
             cmk_path() + "/cmk",
             cmk_path() + "/checks",
@@ -539,6 +556,12 @@ class Site:
             cmk_path() + "/notifications",
             cmk_path() + "/.werks",
         ]
+
+        if self.version.is_raw_edition():
+            # The module is only used in CRE
+            paths += [
+                cmk_path() + "/livestatus",
+            ]
 
         if os.path.exists(cmc_path()) and not self.version.is_raw_edition():
             paths += [
@@ -564,7 +587,7 @@ class Site:
 
         for path in paths:
             if os.path.exists("%s/.f12" % path):
-                print('Executing .f12 in "%s"...' % path)
+                logger.info('Executing .f12 in "%s"...', path)
                 assert (
                     os.system(  # nosec
                         'cd "%s" ; '
@@ -575,8 +598,7 @@ class Site:
                     >> 8
                     == 0
                 )
-                print('Executing .f12 in "%s" DONE' % path)
-                sys.stdout.flush()
+                logger.info('Executing .f12 in "%s" DONE', path)
 
     def _update_cmk_core_config(self) -> None:
         logger.info("Updating core configuration...")
@@ -608,6 +630,24 @@ class Site:
                 "cmk.mkeventd.StatusServer": 10,
                 "cmk.mkeventd.lock": 20,
             },
+        )
+
+    def _log_cmc_startup(self):
+        tool = None  # sensible tools for us: None, "memcheck" or "helgrind"
+        valgrind = (
+            'PATH="/opt/bin:$PATH" '
+            f"valgrind --tool={tool} --quiet --num-callers=30 --error-exitcode=42 --exit-on-first-error=yes"
+        )
+        redirect = ">> $OMD_ROOT/var/log/cmc-startup.log 2>&1"
+        self.write_text_file(
+            "etc/init.d/cmc",
+            self.read_file("etc/init.d/cmc").replace(
+                "\n    if $DAEMON $CONFIGFILE; then\n",
+                "\n"  #
+                f"    date {redirect}\n"  #
+                f"    ps -fu {self.id} {redirect}\n"
+                f"    if {valgrind if tool else ''} $DAEMON $CONFIGFILE {redirect}; then\n",
+            ),
         )
 
     def _enable_cmc_core_dumps(self) -> None:
@@ -716,7 +756,7 @@ class Site:
     def rm(self, site_id: Optional[str] = None) -> None:
         # TODO: LM: Temporarily disabled until "omd rm" issue is fixed.
         # assert subprocess.Popen(["/usr/bin/sudo", "/usr/bin/omd",
-        subprocess.Popen(
+        subprocess.run(
             [
                 "/usr/bin/sudo",
                 "/usr/bin/omd",
@@ -725,8 +765,9 @@ class Site:
                 "--apache-reload",
                 "--kill",
                 site_id or self.id,
-            ]
-        ).wait()
+            ],
+            check=False,
+        )
 
     def start(self) -> None:
         if not self.is_running():
@@ -817,9 +858,6 @@ class Site:
             self.start()
             logger.debug("Started site")
 
-    def set_core(self, core: str) -> None:
-        self.set_config("CORE", core, with_restart=True)
-
     def get_config(self, key: str) -> str:
         p = self.execute(
             ["omd", "config", "show", key], stdout=subprocess.PIPE, stderr=subprocess.PIPE
@@ -829,6 +867,20 @@ class Site:
         if stderr:
             logger.error(stderr)
         return stdout.strip()
+
+    def core_name(self) -> Literal["cmc", "nagios"]:
+        return "nagios" if self.version.is_raw_edition() else "cmc"
+
+    def core_history_log(self) -> str:
+        core = self.core_name()
+        if core == "nagios":
+            return "var/log/nagios.log"
+        if core == "cmc":
+            return "var/check_mk/core/history"
+        raise ValueError(f"Unhandled core: {core}")
+
+    def core_history_log_timeout(self) -> int:
+        return 10 if self.core_name() == "cmc" else 30
 
     # These things are needed to make the site basically being setup. So this
     # is checked during site initialization instead of a dedicated test.
@@ -906,11 +958,12 @@ class Site:
 
     def get_free_port_from(self, port: int) -> int:
         used_ports = set([])
-        for cfg_path in glob.glob("/omd/sites/*/etc/omd/site.conf"):
-            for line in open(cfg_path):
-                if line.startswith("CONFIG_LIVESTATUS_TCP_PORT="):
-                    port = int(line.strip().split("=", 1)[1].strip("'"))
-                    used_ports.add(port)
+        for cfg_path in Path("/omd/sites").glob("*/etc/omd/site.conf"):
+            with cfg_path.open() as cfg_file:
+                for line in cfg_file:
+                    if line.startswith("CONFIG_LIVESTATUS_TCP_PORT="):
+                        port = int(line.strip().split("=", 1)[1].strip("'"))
+                        used_ports.add(port)
 
         while port in used_ports:
             port += 1
@@ -939,8 +992,14 @@ class Site:
         for nagios_log_path in glob.glob(self.path("var/nagios/*.log")):
             shutil.copy(nagios_log_path, "%s/logs" % self.result_dir())
 
+        cmc_dir = "%s/cmc" % self.result_dir()
+        os.makedirs(cmc_dir, exist_ok=True)
+
         with suppress(FileNotFoundError):
-            shutil.copy(self.path("var/check_mk/core/core"), "%s/cmc_core_dump" % self.result_dir())
+            shutil.copy(self.path("var/check_mk/core/history"), "%s/history" % cmc_dir)
+
+        with suppress(FileNotFoundError):
+            shutil.copy(self.path("var/check_mk/core/core"), "%s/core_dump" % cmc_dir)
 
         with suppress(FileNotFoundError):
             shutil.copytree(
@@ -951,6 +1010,40 @@ class Site:
 
     def result_dir(self) -> str:
         return os.path.join(os.environ.get("RESULT_PATH", self.path("results")), self.id)
+
+    def get_automation_secret(self):
+        secret_path = "var/check_mk/web/automation/automation.secret"
+        secret = self.read_file(secret_path).strip()
+
+        if secret == "":
+            raise Exception("Failed to read secret from %s" % secret_path)
+
+        return secret
+
+    def activate_changes_and_wait_for_core_reload(
+        self, allow_foreign_changes: bool = False, remote_site: Optional["Site"] = None
+    ):
+        self.ensure_running()
+        site = remote_site or self
+
+        logger.debug("Getting old program start")
+        old_t = site.live.query_value("GET status\nColumns: program_start\n")
+
+        logger.debug("Read replication changes of site")
+        base_dir = site.path("var/check_mk/wato")
+        for site_changes_path in glob.glob(base_dir + "/replication_*"):
+            logger.debug("Replication changes of site: %r", site_changes_path)
+            if os.path.exists(site_changes_path):
+                logger.debug(site.read_file(base_dir + "/" + os.path.basename(site_changes_path)))
+
+        changed = self.openapi.activate_changes_and_wait_for_completion(
+            sites=[site.id], force_foreign_changes=allow_foreign_changes
+        )
+        if changed:
+            logger.info("Waiting for core reloads of: %s", site.id)
+            site.wait_for_core_reloaded(old_t)
+
+        self.ensure_running()
 
 
 def _is_dockerized() -> bool:
@@ -1035,7 +1128,7 @@ class SiteFactory:
         site.start()
         site.prepare_for_tests()
         # There seem to be still some changes that want to be activated
-        CMKWebSession(site).activate_changes()
+        site.activate_changes_and_wait_for_core_reload()
         logger.debug("Created site %s", site.id)
         return site
 

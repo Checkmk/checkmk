@@ -65,7 +65,7 @@ class Database:
 
     def list_instances(self) -> List[str]:
         try:
-            process = Popen(
+            process = Popen(  # pylint:disable=consider-using-with
                 args=LISTER,
                 shell=False,
                 stdout=PIPE,
@@ -287,7 +287,7 @@ class Database:
     @staticmethod
     def shell_runner():
         if platform.system() == "Windows":
-            shell = Popen(
+            shell = Popen(  # pylint:disable=consider-using-with
                 ["cmd.exe"],
                 shell=False,
                 stdin=PIPE,

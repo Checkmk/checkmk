@@ -29,7 +29,7 @@ class ProgramSource(AgentSource):
     def __init__(
         self,
         hostname: HostName,
-        ipaddress: HostAddress,
+        ipaddress: Optional[HostAddress],
         *,
         id_: str,
         main_data_source: bool,
@@ -54,7 +54,7 @@ class ProgramSource(AgentSource):
     @staticmethod
     def special_agent(
         hostname: HostName,
-        ipaddress: HostAddress,
+        ipaddress: Optional[HostAddress],
         *,
         main_data_source: bool = False,
         special_agent_id: str,
@@ -120,7 +120,7 @@ class DSProgramSource(ProgramSource):
     def __init__(
         self,
         hostname: HostName,
-        ipaddress: HostAddress,
+        ipaddress: Optional[HostAddress],
         *,
         main_data_source: bool = False,
         template: str,
@@ -142,7 +142,7 @@ class DSProgramSource(ProgramSource):
     def _translate(
         cmd: str,
         hostname: HostName,
-        ipaddress: HostAddress,
+        ipaddress: Optional[HostAddress],
     ) -> str:
         host_config = config.HostConfig.make_host_config(hostname)
         return DSProgramSource._translate_host_macros(
@@ -154,7 +154,7 @@ class DSProgramSource(ProgramSource):
     def _translate_legacy_macros(
         cmd: str,
         hostname: HostName,
-        ipaddress: HostAddress,
+        ipaddress: Optional[HostAddress],
     ) -> str:
         # Make "legacy" translation. The users should use the $...$ macros in future
         return replace_macros_in_str(
@@ -191,7 +191,7 @@ class SpecialAgentSource(ProgramSource):
     def __init__(
         self,
         hostname: HostName,
-        ipaddress: HostAddress,
+        ipaddress: Optional[HostAddress],
         *,
         main_data_source: bool = False,
         special_agent_id: str,
@@ -221,7 +221,7 @@ class SpecialAgentSource(ProgramSource):
     @staticmethod
     def _make_cmdline(
         hostname: HostName,
-        ipaddress: HostAddress,
+        ipaddress: Optional[HostAddress],
         special_agent_id: str,
         params: Dict,
     ) -> str:
@@ -237,11 +237,15 @@ class SpecialAgentSource(ProgramSource):
     @staticmethod
     def _make_stdin(
         hostname: HostName,
-        ipaddress: HostAddress,
+        ipaddress: Optional[HostAddress],
         special_agent_id: str,
         params: Dict,
     ) -> Optional[str]:
         info_func = config.special_agent_info[special_agent_id]
+        # TODO: We call a user supplied function here.
+        # If this crashes during config generation, it can get quite ugly.
+        # We should really wrap this and implement proper sanitation and exception handling.
+        # Deal with this when modernizing the API (CMK-3812).
         agent_configuration = info_func(params, hostname, ipaddress)
         if isinstance(agent_configuration, SpecialAgentConfiguration):
             return agent_configuration.stdin
@@ -258,10 +262,11 @@ class SpecialAgentSource(ProgramSource):
     @staticmethod
     def _make_source_args(
         hostname: HostName,
-        ipaddress: HostAddress,
+        ipaddress: Optional[HostAddress],
         special_agent_id: str,
         params: Dict,
     ) -> str:
         info_func = config.special_agent_info[special_agent_id]
+        # TODO: CMK-3812 (see above)
         agent_configuration = info_func(params, hostname, ipaddress)
         return core_config.active_check_arguments(hostname, None, agent_configuration)

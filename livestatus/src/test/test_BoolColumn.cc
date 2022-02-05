@@ -25,7 +25,7 @@ TEST(BoolColumn, GetValueLambda) {
     const DummyRow row{&val};
     for (const auto v : {false, true}) {
         const BoolColumn<DummyRow> col{
-            "name"s, "description"s, {}, [v](const DummyRow& /*row*/) {
+            "name"s, "description"s, {}, [v](const DummyRow & /*row*/) {
                 return v;
             }};
 
@@ -37,7 +37,7 @@ TEST(BoolColumn, GetValueDefault) {
     const DummyRow row{nullptr};
     for (const auto v : {false, true}) {
         const BoolColumn<DummyRow, true> col{
-            "name"s, "description"s, {}, [v](const DummyRow& /*row*/) {
+            "name"s, "description"s, {}, [v](const DummyRow & /*row*/) {
                 return v;
             }};
 

@@ -17,7 +17,7 @@ import cmk.gui.utils.escaping as escaping
 from cmk.gui.globals import html, output_funnel, request
 from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _
-from cmk.gui.plugins.views import (
+from cmk.gui.plugins.views.utils import (
     ABCDataSource,
     Cell,
     CellSpec,
@@ -163,7 +163,7 @@ class DataSourceBIHostnameByGroupAggregations(ABCDataSource):
 
     @property
     def title(self):
-        return _("BI Aggregations for Hosts by Hostgroups")
+        return _("BI aggregations for hosts by host groups")
 
     @property
     def table(self):

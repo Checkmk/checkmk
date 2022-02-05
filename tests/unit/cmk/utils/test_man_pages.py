@@ -5,16 +5,20 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from pathlib import Path
-from typing import Set
+from typing import Mapping, Optional, Set
 
 import pytest
 
 from tests.testlib.utils import cmk_path
 
+from tests.unit.conftest import FixPluginLegacy, FixRegister
+
 import cmk.utils.man_pages as man_pages
 from cmk.utils.type_defs import CheckPluginName
 
 # TODO: Add tests for module internal functions
+
+ManPages = Mapping[str, Optional[man_pages.ManPage]]
 
 
 @pytest.fixture(autouse=True)
@@ -23,12 +27,12 @@ def patch_cmk_paths(monkeypatch, tmp_path):
 
 
 @pytest.fixture(scope="module", name="all_pages")
-def _get_all_pages():
+def get_all_pages() -> ManPages:
     return {name: man_pages.load_man_page(name) for name in man_pages.all_man_pages()}
 
 
 @pytest.fixture(scope="module", name="catalog")
-def _get_catalog():
+def get_catalog():
     return man_pages.load_man_page_catalog()
 
 
@@ -68,7 +72,7 @@ def test_man_page_path_both_dirs(tmp_path):
     assert man_pages.man_page_path("if") == tmp_path / "if"
 
 
-def test_all_manpages_migrated(all_pages):
+def test_all_manpages_migrated(all_pages: ManPages):
     for name in all_pages:
         if name in ("check-mk-inventory", "check-mk"):
             continue
@@ -90,7 +94,7 @@ def test_all_man_pages(tmp_path):
     assert pages["if64"] == "%s/checkman/if64" % cmk_path()
 
 
-def test_load_all_man_pages(all_pages):
+def test_load_all_man_pages(all_pages: ManPages):
     for name, man_page in all_pages.items():
         assert man_page is not None, name
         assert isinstance(man_page, dict)
@@ -140,21 +144,43 @@ def test_no_unsorted_man_pages():
     assert not unsorted_page_names, "Found unsorted man pages: %s" % ", ".join(unsorted_page_names)
 
 
-def test_manpage_files(all_pages):
+def test_manpage_files(all_pages: ManPages):
     assert len(all_pages) > 1000
 
 
-def test_find_missing_manpages_passive(fix_register, all_pages):
+def test_find_missing_manpages_passive(fix_register: FixRegister, all_pages: ManPages):
     for plugin_name in fix_register.check_plugins:
         assert str(plugin_name) in all_pages, "Manpage missing: %s" % plugin_name
 
 
-def test_find_missing_manpages_active(fix_plugin_legacy, all_pages):
+def test_find_missing_manpages_active(fix_plugin_legacy: FixPluginLegacy, all_pages: ManPages):
     for plugin_name in ("check_%s" % n for n in fix_plugin_legacy.active_check_info):
         assert plugin_name in all_pages, "Manpage missing: %s" % plugin_name
 
 
-def test_cluster_check_functions_match_manpages_cluster_sections(fix_register, all_pages):
+def test_find_missing_plugins(
+    fix_register: FixRegister,
+    fix_plugin_legacy: FixPluginLegacy,
+    all_pages: ManPages,
+) -> None:
+    missing_plugins = (
+        set(all_pages)
+        - set(str(plugin_name) for plugin_name in fix_register.check_plugins)
+        - set(f"check_{name}" for name in fix_plugin_legacy.active_check_info)
+        - {
+            "check-mk",
+            "check-mk-inventory",
+        }
+    )
+    assert (
+        not missing_plugins
+    ), f"The following manpages have no corresponding plugins: {', '.join(missing_plugins)}"
+
+
+def test_cluster_check_functions_match_manpages_cluster_sections(
+    fix_register: FixRegister,
+    all_pages: ManPages,
+):
     missing_cluster_description: Set[str] = set()
     unexpected_cluster_description: Set[str] = set()
 
@@ -202,7 +228,7 @@ def _check_man_page_structure(page):
     assert isinstance(page["header"]["agents"], list)
 
 
-def test_load_man_page_format(all_pages):
+def test_load_man_page_format(all_pages: ManPages):
     page = all_pages["if64"]
     assert isinstance(page, dict)
 
@@ -245,7 +271,7 @@ def test_print_man_page(capsys):
     assert "\n License: " in out
 
 
-def test_missing_catalog_entries_of_man_pages(all_pages) -> None:
+def test_missing_catalog_entries_of_man_pages(all_pages: ManPages) -> None:
     catalog_titles = set(man_pages.catalog_titles.keys())
     found_catalog_entries_from_man_pages = set()
     for name in man_pages.all_man_pages():

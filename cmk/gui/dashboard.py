@@ -118,7 +118,7 @@ from cmk.gui.valuespec import (
     ValueSpecValidateFunc,
 )
 from cmk.gui.views import ABCAjaxInitialFilters
-from cmk.gui.watolib.activate_changes import get_pending_changes_info
+from cmk.gui.watolib.activate_changes import get_pending_changes_info, get_pending_changes_tooltip
 
 loaded_with_language: Union[None, bool, str] = False
 
@@ -289,7 +289,9 @@ class PermissionSectionDashboard(PermissionSection):
 
 
 def load_plugins() -> None:
-    """Plugin initialization hook (Called by cmk.gui.modules.call_load_plugins_hooks())"""
+    """Plugin initialization hook (Called by cmk.gui.main_modules.load_plugins())"""
+    _register_pre_21_plugin_api()
+
     # Load plugins for dashboards. Currently these files
     # just may add custom dashboards by adding to builtin_dashboards.
     utils.load_web_plugins("dashboard", globals())
@@ -323,6 +325,34 @@ def load_plugins() -> None:
 
     # Make sure that custom views also have permissions
     declare_dynamic_permissions(lambda: visuals.declare_custom_permissions("dashboards"))
+
+
+def _register_pre_21_plugin_api() -> None:
+    """Register pre 2.1 "plugin API"
+
+    This was never an official API, but the names were used by builtin and also 3rd party plugins.
+
+    Our builtin plugin have been changed to directly import from the .utils module. We add these old
+    names to remain compatible with 3rd party plugins for now.
+
+    In the moment we define an official plugin API, we can drop this and require all plugins to
+    switch to the new API. Until then let's not bother the users with it.
+    """
+    # Needs to be a local import to not influence the regular plugin loading order
+    import cmk.gui.plugins.dashboard as api_module
+    import cmk.gui.plugins.dashboard.utils as plugin_utils
+
+    for name in (
+        "ABCFigureDashlet",
+        "builtin_dashboards",
+        "Dashlet",
+        "dashlet_registry",
+        "dashlet_types",
+        "GROW",
+        "IFrameDashlet",
+        "MAX",
+    ):
+        api_module.__dict__[name] = plugin_utils.__dict__[name]
 
 
 class LegacyDashlet(IFrameDashlet):
@@ -547,7 +577,7 @@ def draw_dashboard(name: DashboardName) -> None:
     board = _add_context_to_dashboard(board)
 
     # Like _dashboard_info_handler we assume that only host / service filters are relevant
-    board_context = visuals.active_context_from_request(["host", "service"]) or board["context"]
+    board_context = visuals.active_context_from_request(["host", "service"], board["context"])
     board["context"] = board_context
 
     title = visuals.visual_title("dashboard", board, board_context)
@@ -870,6 +900,7 @@ def _page_menu(
         ],
         breadcrumb=breadcrumb,
         has_pending_changes=bool(get_pending_changes_info()),
+        pending_changes_tooltip=get_pending_changes_tooltip(),
     )
 
     _extend_display_dropdown(menu, board, board_context, unconfigured_single_infos)
@@ -1359,9 +1390,9 @@ def _dashboard_add_checkmk_dashlet_entries(name: DashboardName) -> Iterable[Page
     )
 
     yield PageMenuEntry(
-        title="User notifications",
+        title="User messages",
         icon_name="notifications",
-        item=_dashboard_add_non_view_dashlet_link(name, "notify_users"),
+        item=_dashboard_add_non_view_dashlet_link(name, "user_messages"),
     )
 
     yield PageMenuEntry(
@@ -1546,7 +1577,7 @@ def ajax_dashlet() -> None:
         raise MKUserError("name", _("The requested dashboard does not exist."))
 
     board = _add_context_to_dashboard(board)
-    board_context = visuals.active_context_from_request(["host", "service"]) or board["context"]
+    board_context = visuals.active_context_from_request(["host", "service"], board["context"])
     board["context"] = board_context
 
     ident = request.get_integer_input_mandatory("id")
@@ -1829,7 +1860,10 @@ def choose_view(name: DashboardName, title: str, create_dashlet_spec_func: Calla
         no_preselect=True,
     )
 
-    dashboard = get_permitted_dashboards()[name]
+    try:
+        dashboard = get_permitted_dashboards()[name]
+    except KeyError:
+        raise MKUserError("name", _("The requested dashboard does not exist."))
 
     breadcrumb = _dashlet_editor_breadcrumb(name, dashboard, title)
     html.header(title, breadcrumb=breadcrumb, page_menu=_choose_view_page_menu(breadcrumb))

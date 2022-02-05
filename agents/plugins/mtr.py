@@ -100,7 +100,7 @@ def read_status():
     if not os.path.exists(status_filename):
         return current_status
 
-    for line in open(status_filename):
+    for line in open(status_filename):  # pylint:disable=consider-using-with
         try:
             parts = line.split("|")
             if len(parts) < 2:
@@ -130,7 +130,7 @@ def read_status():
 
 
 def save_status(current_status):
-    f = open(status_filename, "w")
+    f = open(status_filename, "w")  # pylint:disable=consider-using-with
     for host, hostdict in current_status.items():
         hopnum = len(hostdict["hops"].keys())
         lastreport = hostdict["lasttime"]
@@ -202,7 +202,11 @@ def parse_report(host, status):
     if os.path.exists(reportfile + ".pid"):
         # See if it's running
         try:
-            pid = int(open(reportfile + ".pid", "r").readline().rstrip())
+            pid = int(
+                open(reportfile + ".pid", "r")  # pylint:disable=consider-using-with
+                .readline()
+                .rstrip()
+            )
             if check_mtr_pid(pid):
                 # Still running, we're done.
                 if not host in status.keys():
@@ -217,7 +221,7 @@ def parse_report(host, status):
         os.unlink(reportfile + ".pid")
 
     # Parse the existing report
-    lines = open(reportfile).readlines()
+    lines = open(reportfile).readlines()  # pylint:disable=consider-using-with
     if len(lines) < 3:
         sys.stdout.write(
             "**ERROR** Report file %s has less than 3 lines, "
@@ -374,12 +378,14 @@ def start_mtr(host, mtr_binary, config, status):
     reportfile = report_filepre + host_to_filename(host)
     if os.path.exists(reportfile):
         os.unlink(reportfile)
-    report = open(reportfile, "a+")
+    report = open(reportfile, "a+")  # pylint:disable=consider-using-with
     report.write(str(int(time.time())) + "\n")
     report.flush()
-    process = subprocess.Popen(options, stdout=report, stderr=report)
+    process = subprocess.Popen(  # pylint:disable=consider-using-with
+        options, stdout=report, stderr=report
+    )
     # Write pid to report.pid
-    pidfile = open(reportfile + ".pid", "w")
+    pidfile = open(reportfile + ".pid", "w")  # pylint:disable=consider-using-with
     pidfile.write("%d\n" % process.pid)
     pidfile.flush()
     pidfile.close()

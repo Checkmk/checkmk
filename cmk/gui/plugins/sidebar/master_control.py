@@ -13,7 +13,7 @@ from cmk.gui.globals import html, request, response, transactions, user
 from cmk.gui.htmllib import foldable_container
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
-from cmk.gui.plugins.sidebar import (
+from cmk.gui.plugins.sidebar.utils import (
     PageHandlers,
     SidebarSnapin,
     snapin_registry,

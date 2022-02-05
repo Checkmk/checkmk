@@ -8,6 +8,9 @@ description:
  kubernetes cluster.
  Upper and lower levels for worker nodes and control plane nodes are
  configurable via WATO.
+ By default, no levels are set. Thus, the check is always OK.
+
+ The check requires that the special agent kube is configured.
 
 discovery:
  One service is created.

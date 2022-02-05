@@ -45,7 +45,9 @@ void Commander::cleanup() {
 std::tuple<bool, size_t> Commander::encode(void *in_out, size_t size,
                                            size_t buffer_size,
                                            bool last_block) const {
-    if (!available()) return {false, 0};
+    if (!available()) {
+        return {false, 0};
+    }
 
     auto input_size = static_cast<DWORD>(size);
     if (input_size == 0) return {true, 0};
@@ -58,7 +60,9 @@ std::tuple<bool, size_t> Commander::encode(void *in_out, size_t size,
                                 static_cast<BYTE *>(in_out), &input_size,
                                 static_cast<DWORD>(buffer_size))) {
         // special case, when error is recoverable
-        if (GetLastError() == ERROR_MORE_DATA) return {false, input_size};
+        if (GetLastError() == ERROR_MORE_DATA) {
+            return {false, input_size};
+        }
 
         XLOG::l.crit("Cannot encode buffer {}", GetLastError());
         return {false, 0};
@@ -69,7 +73,9 @@ std::tuple<bool, size_t> Commander::encode(void *in_out, size_t size,
 
 std::tuple<bool, size_t> Commander::decode(void *in_out, size_t size,
                                            bool last_block) {
-    if (!available()) return {false, 0};
+    if (!available()) {
+        return {false, 0};
+    }
 
     auto input_size = static_cast<DWORD>(size);
     if (input_size == 0) return {true, 0};
@@ -82,7 +88,9 @@ std::tuple<bool, size_t> Commander::decode(void *in_out, size_t size,
     if (FALSE == ::CryptDecrypt(key_, 0, last_block ? TRUE : FALSE, 0,
                                 static_cast<BYTE *>(in_out), &input_size)) {
         // special case, when error is recoverable
-        if (GetLastError() == ERROR_MORE_DATA) return {false, input_size};
+        if (GetLastError() == ERROR_MORE_DATA) {
+            return {false, input_size};
+        }
 
         XLOG::l.crit("Cannot decode buffer [{}]", GetLastError());
         return {false, 0};

@@ -17,7 +17,7 @@ from typing import Any, Dict, List
 import pytest
 from PIL import Image  # type: ignore[import]
 
-from tests.testlib import APIError, wait_until, web  # noqa: F401 # pylint: disable=unused-import
+from tests.testlib import APIError, wait_until
 from tests.testlib.site import Site
 from tests.testlib.utils import get_standard_linux_agent_output
 
@@ -461,7 +461,7 @@ def test_write_host_tags(web, site: Site):  # noqa: F811 # pylint: disable=redef
             "host_labels": {},
             "ipaddresses": {},
             "host_attributes": {},
-            "cmk_agent_connection": {},
+            "explicit_host_conf": {},
             "host_contactgroups": [],
             "service_contactgroups": [],
         }
@@ -499,7 +499,7 @@ def test_write_host_labels(web, site: Site):  # noqa: F811 # pylint: disable=red
             "host_labels": {},
             "ipaddresses": {},
             "host_attributes": {},
-            "cmk_agent_connection": {},
+            "explicit_host_conf": {},
             "host_contactgroups": [],
             "service_contactgroups": [],
         }
@@ -604,8 +604,8 @@ def test_edit_cg_group_with_nagvis_maps(
     dummy_map_filepath1 = "%s/etc/nagvis/maps/blabla.cfg" % site.root
     dummy_map_filepath2 = "%s/etc/nagvis/maps/bloblo.cfg" % site.root
     try:
-        open(dummy_map_filepath1, "w")
-        open(dummy_map_filepath2, "w")
+        open(dummy_map_filepath1, "w")  # pylint:disable=consider-using-with
+        open(dummy_map_filepath2, "w")  # pylint:disable=consider-using-with
 
         attributes = {"alias": "nagvis_test_alias", "nagvis_maps": ["blabla"]}
 
@@ -796,13 +796,13 @@ def test_activate_changes(web, site: Site):  # noqa: F811 # pylint: disable=rede
             },
         )
 
-        web.activate_changes()
+        site.activate_changes_and_wait_for_core_reload()
 
         result = site.live.query("GET hosts\nColumns: name\nFilter: name = test-host-activate\n")
         assert result == [["test-host-activate"]]
     finally:
         web.delete_host("test-host-activate")
-        web.activate_changes()
+        site.activate_changes_and_wait_for_core_reload()
 
 
 @pytest.fixture(scope="module")
@@ -832,7 +832,7 @@ def graph_test_config(web, site: Site):  # noqa: F811 # pylint: disable=redefine
         )
 
         web.discover_services("test-host-get-graph")
-        web.activate_changes()
+        site.activate_changes_and_wait_for_core_reload()
         site.schedule_check("test-host-get-graph", "Check_MK", 0)
 
         # Wait for RRD file creation. Isn't this a bug that the graph is not instantly available?
@@ -843,7 +843,7 @@ def graph_test_config(web, site: Site):  # noqa: F811 # pylint: disable=redefine
         )
         for attempt in range(50):
             time.sleep(0.1)
-            proc = subprocess.Popen(
+            proc = subprocess.Popen(  # pylint:disable=consider-using-with
                 [site.path("bin/unixcat"), site.path("tmp/run/rrdcached.sock")],
                 stdin=subprocess.PIPE,
                 stdout=subprocess.PIPE,
@@ -869,7 +869,7 @@ def graph_test_config(web, site: Site):  # noqa: F811 # pylint: disable=redefine
     finally:
         web.delete_host("test-host-get-graph")
         site.delete_file("etc/check_mk/conf.d/test-host-get-graph.mk")
-    web.activate_changes()
+    site.activate_changes_and_wait_for_core_reload()
 
 
 @pytest.mark.skipif(cmk_version.is_raw_edition(), reason="not supported in raw edition")
@@ -1515,8 +1515,8 @@ def test_get_combined_graph_identifications(
             "datasource": "services",
             "context": {
                 "service": {"service": "CPU load"},
-                "site": {"site": web.site.id},
-                "host": "test-host-get-graph",
+                "siteopt": {"site": web.site.id},
+                "host": {"host": "test-host-get-graph"},
             },
         }
     )
@@ -1527,9 +1527,9 @@ def test_get_combined_graph_identifications(
                 "combined",
                 {
                     "context": {
-                        "host": "test-host-get-graph",
+                        "host": {"host": "test-host-get-graph"},
                         "service": {"service": "CPU load"},
-                        "site": {
+                        "siteopt": {
                             "site": web.site.id,
                         },
                     },

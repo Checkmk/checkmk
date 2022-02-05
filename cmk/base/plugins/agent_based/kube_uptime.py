@@ -16,6 +16,8 @@ from .utils.uptime import Section
 
 
 def parse_k8s_start_time(string_table: StringTable) -> Optional[Section]:
+    if not string_table:
+        return None
     return Section(
         uptime_sec=time() - StartTime(**loads(string_table[0][0])).start_time, message=None
     )

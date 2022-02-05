@@ -33,7 +33,7 @@ void Global::loadFromMainConfig() {
         try {
             me_ = config[groups::kGlobal];
             exist_in_cfg_ = true;
-        } catch (std::exception&) {
+        } catch (std::exception &) {
             me_.reset();
         }
 
@@ -135,7 +135,7 @@ void Global::setDefaults() {
 }
 
 static std::filesystem::path CheckAndCreateLogPath(
-    const std::filesystem::path& forced_path) {
+    const std::filesystem::path &forced_path) {
     namespace fs = std::filesystem;
     try {
         std::error_code ec;
@@ -147,7 +147,7 @@ static std::filesystem::path CheckAndCreateLogPath(
         XLOG::l.bp("Failed to create [{}' folder as log",
                    forced_path.u8string());
 
-    } catch (const std::exception& e) {
+    } catch (const std::exception &e) {
         XLOG::l.bp("Failed to use [{}' folder as log, exception is '{}'",
                    forced_path.u8string(), e.what());
     }
@@ -172,7 +172,7 @@ void Global::updateLogNames() {
 
 // empty string does nothing
 // used to set values during start
-void Global::setLogFolder(const std::filesystem::path& forced_path) {
+void Global::setLogFolder(const std::filesystem::path &forced_path) {
     std::unique_lock lk(lock_);
     if (cma::IsService()) {
         XLOG::details::LogWindowsEventAlways(
@@ -232,17 +232,17 @@ void WinPerf::loadFromMainConfig() {
         enabled_in_cfg_ =
             GetVal(groups::kWinPerf, vars::kEnabled, exist_in_cfg_);
         auto counters = GetPairArray(groups::kWinPerf, vars::kWinPerfCounters);
-        for (const auto& entry : counters) {
+        for (const auto &entry : counters) {
             counters_.emplace_back(entry.first, entry.second);
         }
-    } catch (std::exception& e) {
+    } catch (std::exception &e) {
         XLOG::l("Section {} ", groups::kWinPerf, e.what());
     }
 }
 
-void LoadExeUnitsFromYaml(std::vector<Plugins::ExeUnit>& exe_unit,
-                          const std::vector<YAML::Node>& yaml_node) noexcept {
-    for (const auto& entry : yaml_node) {
+void LoadExeUnitsFromYaml(std::vector<Plugins::ExeUnit> &exe_unit,
+                          const std::vector<YAML::Node> &yaml_node) noexcept {
+    for (const auto &entry : yaml_node) {
         try {
             auto pattern = entry[vars::kPluginPattern].as<std::string>();
             pattern = ReplacePredefinedMarkers(pattern);
@@ -275,18 +275,18 @@ void LoadExeUnitsFromYaml(std::vector<Plugins::ExeUnit>& exe_unit,
 
             exe_unit.back().assignGroup(group);
             exe_unit.back().assignUser(user);
-        } catch (const std::exception& e) {
+        } catch (const std::exception &e) {
             XLOG::l("bad entry at {} {} exc {}", groups::kPlugins,
                     vars::kPluginsExecution, e.what());
         }
     }
 }
 
-void Plugins::ExeUnit::assign(const YAML::Node& entry) {
+void Plugins::ExeUnit::assign(const YAML::Node &entry) {
     try {
         source_ = YAML::Clone(entry);
         ApplyValueIfScalar(source_, run_, vars::kPluginRun);
-    } catch (const std::exception& e) {
+    } catch (const std::exception &e) {
         pattern_ = "";
         source_.reset();
         XLOG::l("bad entry at {} {} exc {}", groups::kPlugins,
@@ -304,7 +304,7 @@ void Plugins::ExeUnit::assignUser(std::string_view user) {
 }
 
 void Plugins::ExeUnit::apply(std::string_view filename,
-                             const YAML::Node& entry) {
+                             const YAML::Node &entry) {
     try {
         if (!entry.IsMap()) return;
 
@@ -322,7 +322,7 @@ void Plugins::ExeUnit::apply(std::string_view filename,
             async_ = true;
         }
 
-    } catch (const std::exception& e) {
+    } catch (const std::exception &e) {
         pattern_ = "";
         source_.reset();
         XLOG::l("bad entry at {} {} exc {}", groups::kPlugins,
@@ -365,12 +365,12 @@ void Plugins::loadFromMainConfig(std::string_view group_name) {
         } else {
             auto folders =
                 GetArray<std::string>(group_name, vars::kPluginsFolders);
-            for (const auto& folder : folders) {
+            for (const auto &folder : folders) {
                 auto f = ReplacePredefinedMarkers(folder);
                 folders_.push_back(wtools::ConvertToUTF16(f));
             }
         }
-    } catch (std::exception& e) {
+    } catch (std::exception &e) {
         XLOG::l("Section {} exception {}", group_name, e.what());
     }
 }
@@ -399,7 +399,7 @@ Plugins::CmdLineInfo Plugins::buildCmdLine() const {
     int count_of_folders = 0;
     int count_of_files = 0;
     std::vector<std::wstring> files;
-    for (auto& folder : folders) {
+    for (auto &folder : folders) {
         if (folder == default_folder_mark) {
             folder = default_plugins_folder;
         }
@@ -409,7 +409,7 @@ Plugins::CmdLineInfo Plugins::buildCmdLine() const {
         }
         count_of_folders++;
 
-        for (const auto& unit : units) {
+        for (const auto &unit : units) {
             // THIS IS NOT VALID CODE
             // must be complicated full folder scanning by mask
             fs::path file = folder;
@@ -431,7 +431,7 @@ Plugins::CmdLineInfo Plugins::buildCmdLine() const {
     files.erase(undefined, files.end());
 
     // build command line
-    for (const auto& file_name : files) {
+    for (const auto &file_name : files) {
         cli.cmd_line_ += L"\"" + file_name + L"\" ";
     }
     if (cli.cmd_line_.empty()) {

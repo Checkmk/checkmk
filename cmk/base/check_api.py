@@ -124,13 +124,7 @@ from cmk.utils.type_defs import (  # noqa: F401 # pylint: disable=unused-import
 from cmk.utils.type_defs import HostName, MetricName, RuleConditionsSpec
 from cmk.utils.type_defs import Ruleset as _Ruleset
 from cmk.utils.type_defs import SectionName as _SectionName
-from cmk.utils.type_defs import (
-    ServiceCheckResult,
-    ServiceDetails,
-    ServiceName,
-    ServiceState,
-    state_markers,
-)
+from cmk.utils.type_defs import ServiceDetails, ServiceName, ServiceState, state_markers
 
 from cmk.snmplib.type_defs import SpecialColumn as _SpecialColumn
 
@@ -148,7 +142,19 @@ from cmk.base.plugin_contexts import service_description
 
 Warn = Union[None, int, float]
 Crit = Union[None, int, float]
+_Bound = Union[None, int, float]
 Levels = Tuple  # Has length 2 or 4
+
+_MetricTuple = Tuple[
+    MetricName,
+    float,
+    Warn,
+    Crit,
+    _Bound,
+    _Bound,
+]
+
+ServiceCheckResult = Tuple[ServiceState, ServiceDetails, List[_MetricTuple]]
 
 # These 3 are no longer used, but we keep the names around, so old plugins won't crash.
 MGMT_ONLY = "mgmt_only"  # Use host address/credentials when it's a SNMP HOST

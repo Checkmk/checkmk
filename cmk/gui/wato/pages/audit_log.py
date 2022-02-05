@@ -34,7 +34,7 @@ from cmk.gui.page_menu import (
     PageMenuSidePopup,
     PageMenuTopic,
 )
-from cmk.gui.plugins.wato import flash, make_confirm_link, mode_registry, redirect, WatoMode
+from cmk.gui.plugins.wato.utils import flash, make_confirm_link, mode_registry, redirect, WatoMode
 from cmk.gui.table import table_element
 from cmk.gui.type_defs import ActionResult, Choices
 from cmk.gui.userdb import UserSelection
@@ -606,10 +606,11 @@ class ModeAuditLog(WatoMode):
             if entry.user_id != self._options["user_id"]:
                 return False
 
-        if self._options["filter_regex"]:
+        filter_regex: str = self._options["filter_regex"]
+        if filter_regex:
             return any(
-                re.search(self._options["filter_regex"], val)
-                for val in [entry.user_id, entry.action, entry.text]
+                re.search(filter_regex, val)
+                for val in [entry.user_id, entry.action, str(entry.text)]
             )
 
         return True

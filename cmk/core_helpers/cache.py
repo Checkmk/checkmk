@@ -64,6 +64,7 @@ from typing import (
     MutableMapping,
     NamedTuple,
     Optional,
+    Sequence,
     Tuple,
     Type,
     TypeVar,
@@ -97,20 +98,24 @@ TRawDataSection = TypeVar("TRawDataSection", bound=ABCRawDataSection)
 
 class PersistedSections(  # pylint: disable=too-many-ancestors
     Generic[TRawDataSection],
-    MutableMapping[SectionName, Tuple[int, int, TRawDataSection]],
+    MutableMapping[SectionName, Tuple[int, int, Sequence[TRawDataSection]]],
 ):
     __slots__ = ("_store",)
 
-    def __init__(self, store: MutableMapping[SectionName, Tuple[int, int, TRawDataSection]]):
+    def __init__(
+        self, store: MutableMapping[SectionName, Tuple[int, int, Sequence[TRawDataSection]]]
+    ):
         self._store = store
 
     def __repr__(self) -> str:
         return "%s(%r)" % (type(self).__name__, self._store)
 
-    def __getitem__(self, key: SectionName) -> Tuple[int, int, TRawDataSection]:
+    def __getitem__(self, key: SectionName) -> Tuple[int, int, Sequence[TRawDataSection]]:
         return self._store.__getitem__(key)
 
-    def __setitem__(self, key: SectionName, value: Tuple[int, int, TRawDataSection]) -> None:
+    def __setitem__(
+        self, key: SectionName, value: Tuple[int, int, Sequence[TRawDataSection]]
+    ) -> None:
         return self._store.__setitem__(key, value)
 
     def __delitem__(self, key: SectionName) -> None:
@@ -126,7 +131,7 @@ class PersistedSections(  # pylint: disable=too-many-ancestors
     def from_sections(
         cls,
         *,
-        sections: Mapping[SectionName, TRawDataSection],
+        sections: Mapping[SectionName, Sequence[TRawDataSection]],
         lookup_persist: Callable[[SectionName], Optional[Tuple[int, int]]],
     ) -> "PersistedSections[TRawDataSection]":
         return cls(
@@ -178,21 +183,21 @@ class SectionStore(Generic[TRawDataSection]):
             {SectionName(k): v for k, v in raw_sections_data.items()}
         )
 
-    def update_and_mutate(
+    def update(
         self,
-        sections: MutableMapping[SectionName, TRawDataSection],
+        sections: Mapping[SectionName, Sequence[TRawDataSection]],
         cache_info: MutableMapping[SectionName, Tuple[int, int]],
         lookup_persist: Callable[[SectionName], Optional[Tuple[int, int]]],
         now: int,
         keep_outdated: bool,
-    ):
+    ) -> Mapping[SectionName, Sequence[TRawDataSection]]:
         persisted_sections = self._update(
             sections,
             lookup_persist,
             now=now,
             keep_outdated=keep_outdated,
         )
-        self._add_persisted_sections(
+        return self._add_persisted_sections(
             sections,
             cache_info,
             persisted_sections,
@@ -200,7 +205,7 @@ class SectionStore(Generic[TRawDataSection]):
 
     def _update(
         self,
-        sections: Mapping[SectionName, TRawDataSection],
+        sections: Mapping[SectionName, Sequence[TRawDataSection]],
         lookup_persist: Callable[[SectionName], Optional[Tuple[int, int]]],
         *,
         now: int,
@@ -227,10 +232,10 @@ class SectionStore(Generic[TRawDataSection]):
 
     def _add_persisted_sections(
         self,
-        sections: MutableMapping[SectionName, TRawDataSection],
+        sections: Mapping[SectionName, Sequence[TRawDataSection]],
         cache_info: MutableMapping[SectionName, Tuple[int, int]],
         persisted_sections: PersistedSections[TRawDataSection],
-    ) -> None:
+    ) -> Mapping[SectionName, Sequence[TRawDataSection]]:
         cache_info.update(
             {
                 section_name: (created_at, valid_until - created_at)
@@ -238,6 +243,7 @@ class SectionStore(Generic[TRawDataSection]):
                 if section_name not in sections
             }
         )
+        result: MutableMapping[SectionName, Sequence[TRawDataSection]] = dict(sections.items())
         for section_name, entry in persisted_sections.items():
             if len(entry) == 2:
                 continue  # Skip entries of "old" format
@@ -251,7 +257,8 @@ class SectionStore(Generic[TRawDataSection]):
                 continue
 
             self._logger.debug("Using persisted section %r", section_name)
-            sections[section_name] = entry[-1]
+            result[section_name] = entry[-1]
+        return result
 
 
 TFileCache = TypeVar("TFileCache", bound="FileCache")
@@ -382,6 +389,10 @@ class FileCache(Generic[TRawData], abc.ABC):
 
         path = self.make_path(mode)
         if not path.exists():
+            if self.simulation:
+                raise MKFetcherError(
+                    "Got no data (Simulation mode enabled and no cachefile present)"
+                )
             self._logger.debug("Not using cache (Does not exist)")
             return None
 
@@ -396,9 +407,6 @@ class FileCache(Generic[TRawData], abc.ABC):
             return None
 
         raw_data = self._read(path)
-        if raw_data is None and self.simulation:
-            raise MKFetcherError("Got no data (Simulation mode enabled and no cachefile present)")
-
         if raw_data is not None:
             self._logger.debug("Got %r bytes data from cache", len(raw_data))
         return raw_data

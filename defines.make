@@ -25,6 +25,14 @@ else
 MANAGED            := no
 endif
 
+ifneq (,$(wildcard $(REPO_PATH)/plus))
+PLUS               := yes
+EDITION            := plus
+EDITION_SHORT      := cpe
+else
+PLUS               := no
+endif
+
 # Will be set to "yes" by cmk build system when building a free edition
 FREE               := no
 
@@ -54,7 +62,6 @@ BRANCH_VERSION     := 2.1.0
 
 SHELL              := /bin/bash
 CLANG_VERSION      := 12
-PYTHON2_VERSION	   := 2.7.17
 
 # When you update the Python version, you have to update the test expectations
 # in test_03_python_interpreter_version and test_03_pip_interpreter_version.
@@ -68,6 +75,12 @@ PYTHON_VERSION_MINOR   := $(word 2,$(PY_ARRAY))
 PYTHON_VERSION_PATCH   := $(word 3,$(PY_ARRAY))
 PYTHON_MAJOR_MINOR     := $(PYTHON_VERSION_MAJOR)$(PYTHON_VERSION_MINOR)
 PYTHON_MAJOR_DOT_MINOR := $(PYTHON_VERSION_MAJOR).$(PYTHON_VERSION_MINOR)
+
+# Needed for bootstrapping CI and development environments
+PIPENV_VERSION := 2022.1.8
+VIRTUALENV_VERSION := 20.13.0
+NODEJS_VERSION := 16
+NPM_VERSION := 8
 
 print-%:
 	@echo '$($*)'

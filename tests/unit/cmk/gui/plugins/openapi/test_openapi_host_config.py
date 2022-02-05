@@ -5,8 +5,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
+from unittest.mock import MagicMock
 
 import pytest
+from pytest_mock import MockerFixture
+
+from tests.unit.cmk.gui.conftest import WebTestAppForCMK
 
 from cmk.utils import version
 
@@ -15,15 +19,16 @@ from cmk.automations.results import DeleteHostsResult, RenameHostsResult
 from cmk.gui.type_defs import CustomAttr
 from cmk.gui.watolib.custom_attributes import save_custom_attrs_to_mk_file
 
-from tests.unit.cmk.gui.conftest import WebTestAppForCMK
-
 managedtest = pytest.mark.skipif(not version.is_managed_edition(), reason="see #7213")
 
 
-@pytest.mark.usefixtures("with_host")
-def test_openapi_cluster_host(aut_user_auth_wsgi_app: WebTestAppForCMK):
-    base = "/NO_SITE/check_mk/api/1.0"
+@pytest.fixture(name="base")
+def fixture_base() -> str:
+    return "/NO_SITE/check_mk/api/1.0"
 
+
+@pytest.mark.usefixtures("with_host")
+def test_openapi_cluster_host(base: str, aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
     aut_user_auth_wsgi_app.call_method(
         "post",
         base + "/domain-types/host_config/collections/all",
@@ -92,12 +97,142 @@ def test_openapi_cluster_host(aut_user_auth_wsgi_app: WebTestAppForCMK):
     assert resp.json["extensions"]["cluster_nodes"] == ["example.com"]
 
 
+@pytest.fixture(name="try_bake_agents_for_hosts")
+def fixture_try_bake_agents_for_hosts(mocker: MockerFixture) -> MagicMock:
+    return mocker.patch(
+        "cmk.gui.watolib.hosts_and_folders.try_bake_agents_for_hosts",
+        side_effect=lambda _hosts: None,
+    )
+
+
+@pytest.mark.parametrize(
+    "query,called",
+    [
+        ("?bake_agent=1", True),
+        ("?bake_agent=0", False),
+        ("", False),
+    ],
+)
+def test_openapi_add_host_bake_agent_parameter(
+    base: str,
+    query: str,
+    called: bool,
+    aut_user_auth_wsgi_app: WebTestAppForCMK,
+    try_bake_agents_for_hosts: MagicMock,
+) -> None:
+    aut_user_auth_wsgi_app.call_method(
+        "post",
+        f"{base}/domain-types/host_config/collections/all{query}",
+        params='{"host_name": "foobar", "folder": "/"}',
+        status=200,
+        headers={"Accept": "application/json"},
+        content_type="application/json; charset=utf-8",
+    )
+    if called:
+        try_bake_agents_for_hosts.assert_called_once_with(["foobar"])
+    else:
+        try_bake_agents_for_hosts.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    "query,called",
+    [
+        ("?bake_agent=1", True),
+        ("?bake_agent=0", False),
+        ("", False),
+    ],
+)
+def test_openapi_add_cluster_bake_agent_parameter(
+    base: str,
+    query: str,
+    called: bool,
+    aut_user_auth_wsgi_app: WebTestAppForCMK,
+    try_bake_agents_for_hosts: MagicMock,
+) -> None:
+    aut_user_auth_wsgi_app.call_method(
+        "post",
+        f"{base}/domain-types/host_config/collections/all{query}",
+        params='{"host_name": "foobar", "folder": "/"}',
+        status=200,
+        headers={"Accept": "application/json"},
+        content_type="application/json; charset=utf-8",
+    )
+
+    if called:
+        try_bake_agents_for_hosts.assert_called_once_with(["foobar"])
+    else:
+        try_bake_agents_for_hosts.assert_not_called()
+    try_bake_agents_for_hosts.reset_mock()
+
+    aut_user_auth_wsgi_app.call_method(
+        "post",
+        f"{base}/domain-types/host_config/collections/clusters{query}",
+        params='{"host_name": "bazfoo", "folder": "/", "nodes": ["foobar"]}',
+        status=200,
+        headers={"Accept": "application/json"},
+        content_type='application/json; charset="utf-8"',
+    )
+
+    if called:
+        try_bake_agents_for_hosts.assert_called_once_with(["bazfoo"])
+    else:
+        try_bake_agents_for_hosts.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    "query,called",
+    [
+        ("?bake_agent=1", True),
+        ("?bake_agent=0", False),
+        ("", False),
+    ],
+)
+def test_openapi_bulk_add_hosts_bake_agent_parameter(
+    base: str,
+    query: str,
+    called: bool,
+    aut_user_auth_wsgi_app: WebTestAppForCMK,
+    try_bake_agents_for_hosts: MagicMock,
+) -> None:
+    resp = aut_user_auth_wsgi_app.call_method(
+        "post",
+        f"{base}/domain-types/host_config/actions/bulk-create/invoke{query}",
+        params=json.dumps(
+            {
+                "entries": [
+                    {
+                        "host_name": "foobar",
+                        "folder": "/",
+                        "attributes": {"ipaddress": "127.0.0.2"},
+                    },
+                    {
+                        "host_name": "sample",
+                        "folder": "/",
+                        "attributes": {
+                            "ipaddress": "127.0.0.2",
+                            "site": "NO_SITE",
+                        },
+                    },
+                ]
+            }
+        ),
+        status=200,
+        headers={"Accept": "application/json"},
+        content_type="application/json",
+    )
+    assert len(resp.json["value"]) == 2
+
+    if called:
+        try_bake_agents_for_hosts.assert_called_once_with(["foobar", "sample"])
+    else:
+        try_bake_agents_for_hosts.assert_not_called()
+
+
 def test_openapi_hosts(
+    base: str,
     monkeypatch: pytest.MonkeyPatch,
     aut_user_auth_wsgi_app: WebTestAppForCMK,
-):
-    base = "/NO_SITE/check_mk/api/1.0"
-
+) -> None:
     resp = aut_user_auth_wsgi_app.call_method(
         "post",
         base + "/domain-types/host_config/collections/all",

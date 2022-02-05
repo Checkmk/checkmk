@@ -156,3 +156,36 @@ cached_build() {
 
     _cleanup_package "${ARCHIVE_PATH}"
 }
+
+set_bin_symlinks() {
+    local TARGET_DIR="$1"
+    local DIR_NAME="$2"
+
+    log "Make binaries from ${TARGET_DIR}/${DIR_NAME}/bin available via ${TARGET_DIR}/bin"
+    mkdir -p "${TARGET_DIR}/bin"
+    ln -sf "${TARGET_DIR}/${DIR_NAME}/bin/"* "${TARGET_DIR}/bin"
+}
+
+# When building our build containers we don't have the whole repo available,
+# but we copy defines.make to scripts (see build-build-containers.jenkins).
+# However, in other situations we have the git available and need to find
+# defines.make in the repo base directory.
+find_defines_make() {
+    local SEARCH_PATH="$1"
+    cd "$SEARCH_PATH" || true
+    while [ ! -e defines.make ]; do
+        if [ "$PWD" = / ] ; then
+            failure "could not find defines.make"
+            break
+        fi
+        cd ..
+    done
+    echo "$PWD/defines.make"
+}
+
+get_version() {
+    local SEARCH_PATH="$1"
+    local NAME="$2"
+    make --no-print-directory --file="$(find_defines_make "$SEARCH_PATH")" print-"$NAME"
+}
+

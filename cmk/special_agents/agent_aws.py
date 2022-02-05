@@ -4775,7 +4775,7 @@ class AWSSectionsUSEast(AWSSections):
 
         if "route53" in services:
             route53_client = self._init_client("route53")
-            route53_health_checks, route53_cloudwatch = create_route53_sections(
+            route53_health_checks, route53_cloudwatch = _create_route53_sections(
                 route53_client,
                 cloudwatch_client,
                 region,
@@ -4785,7 +4785,7 @@ class AWSSectionsUSEast(AWSSections):
             self._sections.append(route53_cloudwatch)
 
 
-def create_lamdba_sections(
+def _create_lamdba_sections(
     lambda_client, cloudwatch_client, cloudwatch_logs_client, region: str, config: AWSConfig
 ) -> Tuple[
     LambdaRegionLimits,
@@ -4840,7 +4840,7 @@ def create_lamdba_sections(
     )
 
 
-def create_route53_sections(
+def _create_route53_sections(
     route53_client, cloudwatch_client, region: str, config: AWSConfig
 ) -> Tuple[Route53HealthChecks, Route53Cloudwatch]:
     route53_distributor = ResultDistributor()
@@ -5071,7 +5071,7 @@ class AWSSectionsGeneric(AWSSections):
                 lambda_provisioned_concurrency_configuration,
                 lambda_cloudwatch,
                 lambda_cloudwatch_insights,
-            ) = create_lamdba_sections(
+            ) = _create_lamdba_sections(
                 self._init_client("lambda"),
                 cloudwatch_client,
                 self._init_client("logs"),
@@ -5313,7 +5313,7 @@ def parse_arguments(argv):
     return parser.parse_args(argv)
 
 
-def setup_logging(opt_debug, opt_verbose):
+def _setup_logging(opt_debug, opt_verbose):
     logger = logging.getLogger()
     logger.disabled = True
     fmt = "%(levelname)s: %(name)s: %(filename)s: %(lineno)s: %(message)s"
@@ -5326,7 +5326,7 @@ def setup_logging(opt_debug, opt_verbose):
     logging.basicConfig(level=lvl, format=fmt)
 
 
-def create_session(access_key_id, secret_access_key, region):
+def _create_session(access_key_id, secret_access_key, region):
     try:
         return boto3.session.Session(
             aws_access_key_id=access_key_id,
@@ -5337,7 +5337,7 @@ def create_session(access_key_id, secret_access_key, region):
         raise AwsAccessError(e)
 
 
-def sts_assume_role(access_key_id, secret_access_key, role_arn, external_id, region):
+def _sts_assume_role(access_key_id, secret_access_key, role_arn, external_id, region):
     """
     Returns a session using a set of temporary security credentials that
     you can use to access AWS resources from another account.
@@ -5349,7 +5349,7 @@ def sts_assume_role(access_key_id, secret_access_key, role_arn, external_id, reg
     :return: AWS session
     """
     try:
-        session = create_session(access_key_id, secret_access_key, region)
+        session = _create_session(access_key_id, secret_access_key, region)
         sts_client = session.client("sts")
         if external_id:
             assumed_role_object = sts_client.assume_role(
@@ -5422,49 +5422,42 @@ def _proxy_address(
     return f"{authentication}{address}"
 
 
-def main(sys_argv=None):
-    if sys_argv is None:
-        cmk.utils.password_store.replace_passwords()
-        sys_argv = sys.argv[1:]
-
-    args = parse_arguments(sys_argv)
-    # secrets can be passed in as a command line argument for testing,
-    # BUT the standard method is to pass them via stdin so that they
-    # are not accessible from outside, e.g. visible on the ps output
-    stdin_args = json.loads(sys.stdin.read() or "{}")
+def _get_credentials(args: argparse.Namespace, stdin_args: Mapping[str, str]) -> Tuple[str, str]:
     access_key_id = stdin_args.get("access_key_id") or args.access_key_id
     secret_access_key = stdin_args.get("secret_access_key") or args.secret_access_key
-    has_exceptions = False
 
-    if not access_key_id:
-        has_exceptions = True
-        sys.stderr.write("access key id is not set\n")
+    if access_key_id and secret_access_key:
+        return access_key_id, secret_access_key
 
-    if not secret_access_key:
-        has_exceptions = True
-        sys.stderr.write("secret access key is not set\n")
+    raise AWSAccessCredentialsError("Access credentials not set properly")
 
-    if has_exceptions:
-        return 1
 
-    setup_logging(args.debug, args.verbose)
-    hostname = args.hostname
-    proxy_config = None
-    if args.proxy_host:
-        proxy_user = stdin_args.get("proxy_user") or args.proxy_user
-        proxy_password = stdin_args.get("proxy_password") or args.proxy_password
-        proxy_config = botocore.config.Config(
-            proxies={
-                "https": _proxy_address(
-                    args.proxy_host,
-                    args.proxy_port,
-                    proxy_user,
-                    proxy_password,
-                )
-            }
-        )
+class AWSAccessCredentialsError(Exception):
+    pass
 
-    aws_config = AWSConfig(hostname, sys_argv, (args.overall_tag_key, args.overall_tag_values))
+
+def _get_proxy(args: argparse.Namespace, stdin_args: Mapping[str, str]) -> botocore.config.Config:
+
+    if not args.proxy_host:
+        return None
+
+    proxy_user = stdin_args.get("proxy_user") or args.proxy_user
+    proxy_password = stdin_args.get("proxy_password") or args.proxy_password
+    return botocore.config.Config(
+        proxies={
+            "https": _proxy_address(
+                args.proxy_host,
+                args.proxy_port,
+                proxy_user,
+                proxy_password,
+            )
+        }
+    )
+
+
+def _configure_aws(args: argparse.Namespace, sys_argv: list) -> AWSConfig:
+    aws_config = AWSConfig(args.hostname, sys_argv, (args.overall_tag_key, args.overall_tag_values))
+
     for service_key, service_names, service_tags, service_limits in [
         ("ec2", args.ec2_names, (args.ec2_tag_key, args.ec2_tag_values), args.ec2_limits),
         ("ebs", args.ebs_names, (args.ebs_tag_key, args.ebs_tag_values), args.ebs_limits),
@@ -5500,6 +5493,34 @@ def main(sys_argv=None):
     for arg in ["s3_requests", "cloudwatch_alarms_limits", "cloudwatch_alarms", "wafv2_cloudfront"]:
         aws_config.add_single_service_config(arg, getattr(args, arg))
 
+    return aws_config
+
+
+def main(sys_argv=None):
+    if sys_argv is None:
+        cmk.utils.password_store.replace_passwords()
+        sys_argv = sys.argv[1:]
+
+    args = parse_arguments(sys_argv)
+    # secrets can be passed in as a command line argument for testing,
+    # BUT the standard method is to pass them via stdin so that they
+    # are not accessible from outside, e.g. visible on the ps output
+
+    stdin_args = json.loads(sys.stdin.read() or "{}")
+
+    _setup_logging(args.debug, args.verbose)
+
+    try:
+        access_key_id, secret_access_key = _get_credentials(args, stdin_args)
+    except AWSAccessCredentialsError as e:
+        logging.error(e)
+        return 1
+
+    hostname = args.hostname
+    proxy_config = _get_proxy(args, stdin_args)
+
+    aws_config = _configure_aws(args, sys_argv)
+
     global_services, regional_services = _sanitize_aws_services_params(
         args.global_services, args.services, r_and_g_aws_services=("wafv2",)
     )
@@ -5510,20 +5531,30 @@ def main(sys_argv=None):
     # Special distributor for S3 limits which distributes results across different regions
     s3_limits_distributor = ResultDistributorS3Limits()
 
+    if regional_services and not args.regions:
+        logging.error(
+            (
+                "You have to specify a region for the services: %s."
+                " Otherwise data for these services cannot be fetched."
+            ),
+            ", ".join(regional_services),
+        )
+
     for aws_services, aws_regions, aws_sections in [
         (global_services, ["us-east-1"], AWSSectionsUSEast),
         (regional_services, args.regions, AWSSectionsGeneric),
     ]:
         if not aws_services or not aws_regions:
             continue
+
         for region in aws_regions:
             try:
                 if args.assume_role:
-                    session = sts_assume_role(
+                    session = _sts_assume_role(
                         access_key_id, secret_access_key, args.role_arn, args.external_id, region
                     )
                 else:
-                    session = create_session(access_key_id, secret_access_key, region)
+                    session = _create_session(access_key_id, secret_access_key, region)
 
                 sections = aws_sections(hostname, session, debug=args.debug, config=proxy_config)
                 sections.init_sections(

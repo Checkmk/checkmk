@@ -5,12 +5,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.plugins.wato import (
+from cmk.gui.plugins.wato.check_parameters.websphere_mq import websphere_mq_common_elements
+from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithItem,
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
 )
-from cmk.gui.plugins.wato.check_parameters.websphere_mq import websphere_mq_common_elements
 from cmk.gui.valuespec import Dictionary, MonitoringState, TextInput
 
 

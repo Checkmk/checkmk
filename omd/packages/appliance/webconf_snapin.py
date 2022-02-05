@@ -14,7 +14,7 @@ from cmk.gui.globals import html  # pylint: disable=cmk-module-layer-violation
 # Does not detect the module hierarchy correctly. Imports are fine.
 from cmk.gui.i18n import _  # pylint: disable=cmk-module-layer-violation
 
-from cmk.gui.plugins.sidebar import (  # pylint: disable=cmk-module-layer-violation # isort: skip
+from cmk.gui.plugins.sidebar.utils import (  # pylint: disable=cmk-module-layer-violation # isort: skip
     SidebarSnapin,
     snapin_registry,
 )
@@ -45,7 +45,7 @@ class SidebarSnapinCMAWebconf(SidebarSnapin):
         # The cma_nav-Module is a Python 2.7 module that is already installed by the CMA OS.  For
         # the future we should change this to some structured file format, but for the moment we
         # have to deal with existing firmwares. Use some py27 wrapper to produce the needed output.
-        p = subprocess.Popen(
+        p = subprocess.Popen(  # pylint:disable=consider-using-with
             ["/usr/bin/python2.7"],
             stdin=subprocess.PIPE,
             stdout=subprocess.PIPE,

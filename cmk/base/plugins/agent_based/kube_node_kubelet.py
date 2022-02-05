@@ -15,26 +15,30 @@ def parse_kube_node_kubelet_v1(string_table: StringTable) -> KubeletInfo:
     return KubeletInfo(**json.loads(string_table[0][0]))
 
 
-def check_k8s_node_kubelet(section: KubeletInfo) -> CheckResult:
+def check_kube_node_kubelet(section: KubeletInfo) -> CheckResult:
     # The conversion of the status code is based on:
     # https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#container-probes
+    if section.health.status_code == 200:
+        yield Result(state=State.OK, summary="Healthy")
+    else:
+        yield Result(state=State.CRIT, summary="Not healthy")
+        if section.health.verbose_response:
+            yield Result(
+                state=State.OK,
+                notice=f"Verbose response:\n{section.health.verbose_response}",
+            )
     yield Result(state=State.OK, summary=f"Version {section.version}")
-    yield Result(
-        state=State.OK if section.health.status_code == 200 else State.CRIT,
-        summary="Health check response is %s" % section.health.response.replace("\n", ""),
-        details=section.health.verbose_response,
-    )
 
 
-def discover_k8s_node_kubelet(section: KubeletInfo) -> DiscoveryResult:
+def discover_kube_node_kubelet(section: KubeletInfo) -> DiscoveryResult:
     yield Service()
 
 
 register.check_plugin(
     name="kube_node_kubelet",
     sections=["kube_node_kubelet"],
-    discovery_function=discover_k8s_node_kubelet,
-    check_function=check_k8s_node_kubelet,
+    discovery_function=discover_kube_node_kubelet,
+    check_function=check_kube_node_kubelet,
     service_name="Kubelet",
 )
 

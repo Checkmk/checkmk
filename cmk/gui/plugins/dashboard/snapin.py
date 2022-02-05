@@ -7,7 +7,7 @@
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.globals import html, theme
 from cmk.gui.i18n import _
-from cmk.gui.plugins.dashboard import dashlet_registry, IFrameDashlet
+from cmk.gui.plugins.dashboard.utils import dashlet_registry, IFrameDashlet
 from cmk.gui.valuespec import DropdownChoice
 
 

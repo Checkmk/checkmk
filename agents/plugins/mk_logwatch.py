@@ -1062,7 +1062,7 @@ def write_output(header, lines, options):
     lines = _filter_maxoutputsize(lines, options.maxoutputsize)
 
     sys.stdout.write(header)
-    sys.stdout.writelines(lines)
+    sys.stdout.writelines(map(ensure_str, lines))
 
 
 def main(argv=None):

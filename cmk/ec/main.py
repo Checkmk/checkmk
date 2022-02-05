@@ -672,7 +672,7 @@ class EventServer(ECServerThread):
         ]
 
     def _virtual_memory_size(self) -> int:
-        parts = open("/proc/self/stat").read().split()
+        parts = open("/proc/self/stat").read().split()  # pylint:disable=consider-using-with
         return int(parts[22])  # in Bytes
 
     def _add_replication_status(self) -> List[Any]:
@@ -3917,7 +3917,7 @@ def main() -> None:
     logger = getLogger("cmk.mkeventd")
     settings = create_settings(
         cmk_version.__version__,
-        Path(cmk.utils.paths.omd_root),
+        cmk.utils.paths.omd_root,
         Path(cmk.utils.paths.default_config_dir),
         sys.argv,
     )

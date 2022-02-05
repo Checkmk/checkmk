@@ -8,11 +8,16 @@ data within the Checkmk ecosystem."""
 
 from __future__ import annotations
 
+import base64
 import binascii
 import contextlib
 import enum
+import errno
 import hashlib
+import os
+import re
 import socket
+from pathlib import Path
 from typing import Callable, Iterable, List, NamedTuple, Tuple
 
 from Cryptodome.Cipher import AES
@@ -24,6 +29,7 @@ from cryptography.hazmat.primitives import hashes
 from cryptography.x509.oid import ExtensionOID, NameOID
 from OpenSSL import crypto, SSL  # type: ignore[import]
 
+import cmk.utils.paths
 from cmk.utils.exceptions import MKGeneralException
 
 OPENSSL_SALTED_MARKER = "Salted__"
@@ -135,6 +141,30 @@ def _strip_fill_bytes(content: bytes) -> bytes:
     return content[0 : -content[-1]]
 
 
+_PEM_RE = re.compile(
+    "-----BEGIN CERTIFICATE-----\r?.+?\r?-----END CERTIFICATE-----\r?\n?", re.DOTALL
+)
+
+
+def raw_certificates_from_file(path: Path) -> List[str]:
+    try:
+        # Some users use comments in certificate files e.g. to write the content of the
+        # certificate outside of encapsulation boundaries. We only want to extract the
+        # certificates between the encapsulation boundaries which have to be 7-bit ASCII
+        # characters.
+        with path.open("r", encoding="ascii", errors="surrogateescape") as f:
+            return [
+                content
+                for match in _PEM_RE.finditer(f.read())
+                if (content := match.group(0)).isascii()
+            ]
+    except IOError as e:
+        if e.errno == errno.ENOENT:
+            # Silently ignore e.g. dangling symlinks
+            return []
+        raise
+
+
 class CertificateDetails(NamedTuple):
     issued_to: str
     issued_by: str
@@ -155,8 +185,9 @@ class ChainVerifyResult(NamedTuple):
     is_valid: bool
 
 
+# NOTE: Use this function only in conjunction with the permission server_side_requests
 def fetch_certificate_details(
-    trusted_ca_file: str, address_family: socket.AddressFamily, address: Tuple[str, int]
+    trusted_ca_file: Path, address_family: socket.AddressFamily, address: Tuple[str, int]
 ) -> Iterable[CertificateDetails]:
     """Creates a list of certificate details for the chain certs"""
     verify_chain_results = _fetch_certificate_chain_verify_results(
@@ -202,14 +233,14 @@ def _is_ca_certificate(crypto_cert: x509.Certificate) -> bool:
 
 
 def _fetch_certificate_chain_verify_results(
-    trusted_ca_file: str,
+    trusted_ca_file: Path,
     address_family: socket.AddressFamily,
     address: Tuple[str, int],
 ) -> List[ChainVerifyResult]:
     """Opens a SSL connection and performs a handshake to get the certificate chain"""
 
     ctx = SSL.Context(SSL.SSLv23_METHOD)
-    ctx.load_verify_locations(trusted_ca_file)
+    ctx.load_verify_locations(str(trusted_ca_file))
 
     with contextlib.closing(
         SSL.Connection(ctx, socket.socket(address_family, socket.SOCK_STREAM))
@@ -248,3 +279,47 @@ def _verify_certificate_chain(
         )
 
     return verify_chain_results
+
+
+class Encrypter:
+    """Helper to encrypt site secrets
+
+    The secrets are encrypted using the auth.secret which is only known to the local and remotely
+    configured sites. The encrypted values are base64 encoded for easier processing.
+    """
+
+    @classmethod
+    def _secret_key_path(cls) -> Path:
+        return cmk.utils.paths.omd_root / "etc" / "auth.secret"
+
+    @classmethod
+    def _secret_key(cls, salt: bytes) -> bytes:
+        """Build some secret for the encryption
+
+        Use the sites auth.secret for encryption. This secret is only known to the current site
+        and other distributed sites.
+        """
+        with cls._secret_key_path().open(mode="rb") as f:
+            passphrase = f.read().strip()
+            return hashlib.scrypt(passphrase, salt=salt, n=2 ** 14, r=8, p=1, dklen=32)
+
+    @classmethod
+    def _cipher(cls, salt: bytes, nonce: bytes):
+        return AES.new(cls._secret_key(salt), AES.MODE_GCM, nonce=nonce)
+
+    @classmethod
+    def encrypt(cls, value: str) -> str:
+        salt = os.urandom(AES.block_size)
+        nonce = os.urandom(AES.block_size)
+        cipher = cls._cipher(salt, nonce)
+        encrypted, tag = cipher.encrypt_and_digest(value.encode("utf-8"))
+        return base64.b64encode(salt + nonce + tag + encrypted).decode("ascii")
+
+    @classmethod
+    def decrypt(cls, value: str) -> str:
+        raw = base64.b64decode(value.encode("ascii"))
+        salt, rest = raw[: AES.block_size], raw[AES.block_size :]
+        nonce, rest = rest[: AES.block_size], rest[AES.block_size :]
+        tag, encrypted = rest[: AES.block_size], rest[AES.block_size :]
+
+        return cls._cipher(salt, nonce).decrypt_and_verify(encrypted, tag).decode("utf-8")

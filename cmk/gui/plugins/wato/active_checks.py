@@ -10,7 +10,7 @@ from typing import Any, Mapping
 import cmk.gui.mkeventd as mkeventd
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
-from cmk.gui.plugins.wato import (
+from cmk.gui.plugins.wato.utils import (
     HostRulespec,
     IndividualOrStoredPassword,
     PasswordFromStore,

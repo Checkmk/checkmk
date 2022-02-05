@@ -19,15 +19,15 @@ import cmk.gui.login
 import cmk.gui.logwatch
 import cmk.gui.main
 import cmk.gui.main_menu
+import cmk.gui.message
 import cmk.gui.metrics
 import cmk.gui.mobile
 import cmk.gui.node_visualization
 import cmk.gui.notifications
-import cmk.gui.notify
 import cmk.gui.openapi
 import cmk.gui.prediction
 import cmk.gui.sidebar
-import cmk.gui.user_notify
+import cmk.gui.user_message
 import cmk.gui.userdb
 import cmk.gui.valuespec
 import cmk.gui.views

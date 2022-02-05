@@ -8,8 +8,7 @@
 
 namespace cma::provider {
 TEST(CheckMkHeader, Convert) {
-    using namespace cma::provider;
-    auto local_host = cma::provider::AddressToCheckMkString("127.0.0.1");
+    auto local_host = AddressToCheckMkString("127.0.0.1");
     EXPECT_EQ(local_host, "127.0.0.1");
 
     auto usual_addr = AddressToCheckMkString("10.1.2.3");

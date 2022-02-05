@@ -4,7 +4,7 @@ include $(REPO_PATH)/defines.make
 PYTHON := Python
 PYTHON_DIR := Python-$(PYTHON_VERSION)
 # Increase this to enforce a recreation of the build cache
-PYTHON_BUILD_ID := 7
+PYTHON_BUILD_ID := 8
 
 PYTHON_UNPACK := $(BUILD_HELPER_DIR)/$(PYTHON_DIR)-unpack
 PYTHON_BUILD := $(BUILD_HELPER_DIR)/$(PYTHON_DIR)-build
@@ -52,7 +52,7 @@ $(PYTHON_CACHE_PKG_PROCESS): $(PYTHON_CACHE_PKG_PATH)
 	         $(PACKAGE_PYTHON_LD_LIBRARY_PATH)/libpython$(PYTHON_MAJOR_DOT_MINOR).so.1.0 \
 	         $(PACKAGE_PYTHON_LD_LIBRARY_PATH)/libpython3.so \
 	         $(PACKAGE_PYTHON_PYTHONPATH)/lib-dynload/*.so ; do \
-	    chrpath -r "$(OMD_ROOT)/lib" $$i; \
+           patchelf --set-rpath "$(OMD_ROOT)/lib" $$i; \
 	done
 # Native modules built based on this version need to use the correct rpath
 	sed -i 's|--rpath,/omd/versions/[^/]*/lib|--rpath,$(OMD_ROOT)/lib|g' \

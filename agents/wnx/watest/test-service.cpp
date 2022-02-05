@@ -23,7 +23,7 @@ public:
     void pauseService() { paused_ = true; }
     void continueService() { continued_ = true; }
     void shutdownService() { shutdowned_ = true; }
-    const wchar_t* getMainLogName() const { return L"log.log"; }
+    const wchar_t *getMainLogName() const { return L"log.log"; }
     void preContextCall() { pre_context_call_ = true; }
 
     bool stopped_ = false;
@@ -41,7 +41,7 @@ TEST(ServiceControllerTest, CreateDelete) {
     {
         wtools::ServiceController controller(std::make_unique<TestProcessor>());
         EXPECT_EQ(TestProcessor::s_counter, 1);
-        auto p = dynamic_cast<TestProcessor*>(controller.processor_.get());
+        auto p = dynamic_cast<TestProcessor *>(controller.processor_.get());
         ASSERT_NE(nullptr, p);
         EXPECT_FALSE(p->started_ || p->continued_ || p->paused_ ||
                      p->shutdowned_ || p->stopped_);
@@ -56,7 +56,7 @@ TEST(ServiceControllerTest, CreateDelete) {
     EXPECT_EQ(ServiceController::s_controller_, nullptr);
 }
 
-static constexpr const wchar_t* const test_service_name = L"CmkTestService";
+static constexpr const wchar_t *const test_service_name = L"CmkTestService";
 
 TEST(ServiceControllerTest, InstallUninstall) {
     if (!cma::tools::win::IsElevated()) {
@@ -82,7 +82,7 @@ TEST(ServiceControllerTest, StartStop) {
     int counter = 0;
 
     wtools::ServiceController controller(std::make_unique<ServiceProcessor>(
-        100ms, [&counter](const void* Processor) {
+        100ms, [&counter](const void *Processor) {
             xlog::l("pip").print();
             counter++;
             return true;
@@ -176,7 +176,7 @@ static YAML::Node GetServiceNode() {
     return GetNode(os, vars::kService);
 }
 
-static std::string GetServiceStart(const std::string& dflt) {
+static std::string GetServiceStart(const std::string &dflt) {
     using namespace cma::cfg;
     auto service = GetServiceNode();
 
@@ -190,7 +190,7 @@ static bool GetServiceRestart(bool dflt) {
     return GetVal(service, vars::kRestartOnCrash, dflt);
 }
 
-static std::string GetServiceError(const std::string& dflt) {
+static std::string GetServiceError(const std::string &dflt) {
     using namespace cma::cfg;
     auto service = GetServiceNode();
 
@@ -287,12 +287,12 @@ TEST(CmaSrv, ServiceChange) {
 }
 
 namespace {
-void SetCfgMode(YAML::Node cfg, std::string_view mode) {
+void SetCfgMode(YAML::Node &cfg, std::string_view mode) {
     cfg[cfg::groups::kSystem] =
         YAML::Load(fmt::format("firewall:\n  mode: {}\n", mode));
 }
 
-void SetCfgMode(YAML::Node cfg, std::string_view mode, bool all_ports) {
+void SetCfgMode(YAML::Node &cfg, std::string_view mode, bool all_ports) {
     cfg[cfg::groups::kSystem] =
         YAML::Load(fmt::format("firewall:\n  mode: {}\n  port: {}\n", mode,
                                all_ports ? "all" : "auto"));
@@ -317,13 +317,15 @@ TEST(CmaSrv, FirewallIntegration) {
     auto cfg = cma::cfg::GetLoadedConfig();
     constexpr std::wstring_view app_name = L"test.exe.exe";
 
+    auto fw_node = cfg::GetNode(cfg::groups::kSystem, cfg::vars::kFirewall);
+    auto value = cfg::GetVal(fw_node, cfg::vars::kFirewallMode, std::string{});
+    EXPECT_EQ(value, cfg::values::kModeConfigure);
+
     // remove all from the Firewall
     SetCfgMode(cfg, cfg::values::kModeRemove);
-
-    auto fw_node = cfg::GetNode(cfg::groups::kSystem, cfg::vars::kFirewall);
-    auto value =
-        cfg::GetVal(fw_node, cfg::vars::kFirewallMode, std::string(""));
-    ASSERT_TRUE(value == cfg::values::kModeRemove);
+    fw_node = cfg::GetNode(cfg::groups::kSystem, cfg::vars::kFirewall);
+    value = cfg::GetVal(fw_node, cfg::vars::kFirewallMode, std::string{});
+    EXPECT_EQ(value, cfg::values::kModeRemove);
     ProcessFirewallConfiguration(app_name);
 
     SetCfgMode(cfg, cfg::values::kModeConfigure, false);

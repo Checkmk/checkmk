@@ -21,6 +21,8 @@
 #include "install_api.h"
 #include "onlyfrom.h"
 
+namespace fs = std::filesystem;
+
 using namespace std::string_literals;
 
 namespace cma::provider {
@@ -38,7 +40,7 @@ std::string AddressToCheckMkString(std::string_view entry) {
         if (cfg::of::IsAddressV6(entry)) {
             return std::string{entry};
         }
-    } catch (const std::exception& e) {
+    } catch (const std::exception &e) {
         XLOG::l("Entry '{}' is bad, exception '{}'", entry, e.what());
     }
 
@@ -53,12 +55,16 @@ std::string CheckMk::makeOnlyFrom() {
     if (only_from.size() == 1 && only_from[0] == "~") return {};
 
     std::string out;
-    for (auto& entry : only_from) {
+    for (auto &entry : only_from) {
         auto value = AddressToCheckMkString(entry);
-        if (!value.empty()) out += value + " ";
+        if (!value.empty()) {
+            out += value + " ";
+        }
     }
 
-    if (!out.empty()) out.pop_back();  // last space
+    if (!out.empty()) {
+        out.pop_back();  // last space
+    }
 
     return out;
 }
@@ -73,7 +79,7 @@ std::string MakeInfo() {
         {"Architecture", tgt::Is64bit() ? "64bit" : "32bit"},
     };
     std::string out;
-    for (const auto& info : infos) {
+    for (const auto &info : infos) {
         out += fmt::format("{}: {}\n", info.first, info.second);
     }
 
@@ -94,7 +100,7 @@ std::string MakeDirs() {
         {"LocalDirectory", cfg::GetLocalDir()}};
 
     std::string out;
-    for (const auto& d : directories) {
+    for (const auto &d : directories) {
         out += fmt::format("{}: {}\n", d.first, wtools::ToUtf8(d.second));
     }
 
@@ -103,13 +109,29 @@ std::string MakeDirs() {
 
 }  // namespace
 
+// TODO(sk): make public API and replace all Trailing/trim with this one
+void TrimRight(std::string &s, std::string_view chars) {
+    auto end = s.find_last_not_of(chars);
+    if (end != std::string::npos) {
+        s.erase(end + 1);
+    }
+}
+
+std::string DetermineAgentCtlVersion() {
+    auto path_to_agent_ctl =
+        (fs::path{cfg::GetRootDir()} / cfg::files::kAgentCtl).wstring();
+    auto result = wtools::RunCommand(path_to_agent_ctl + L" -V"s);
+    TrimRight(result, "\n\r");
+    return result;
+}
+
 std::string CheckMk::makeBody() {
     auto out = MakeInfo();
     out += MakeDirs();
+    out += "AgentController: "s + DetermineAgentCtlVersion() + "\n";
     out += "OnlyFrom: "s + makeOnlyFrom() + "\n"s;
 
     if (install::GetLastInstallFailReason()) {
-        // We deliver fixed strings because it is a prototype solution.
         out += "<<<check_mk>>>\n";
         out +=
             "UpdateFailed: The last agent update failed. Supplied Python environment is not compatible with OS. \n";

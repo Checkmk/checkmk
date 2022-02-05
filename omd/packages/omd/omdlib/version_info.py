@@ -57,7 +57,7 @@ class VersionInfo:
         info_dir = "/omd/versions/" + omdlib.__version__ + "/share/omd"
         for f in os.listdir(info_dir):
             if f.endswith(".info"):
-                for line in open(info_dir + "/" + f):
+                for line in open(info_dir + "/" + f):  # pylint:disable=consider-using-with
                     try:
                         line = line.strip()
                         # Skip comment and empty lines

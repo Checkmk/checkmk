@@ -19,7 +19,7 @@
 namespace cma::provider {
 
 namespace {
-void RemoveTrailingCR(std::string& accu) {
+void RemoveTrailingCR(std::string &accu) {
     if (!accu.empty() && accu.back() == '\n') {
         accu.pop_back();
     }
@@ -28,9 +28,9 @@ void RemoveTrailingCR(std::string& accu) {
 
 std::string AccumulateCounters(
     std::wstring_view prefix_name,
-    const std::vector<std::wstring_view>& counter_array) {
+    const std::vector<std::wstring_view> &counter_array) {
     std::string accu;
-    for (const auto& cur_counter : counter_array) {
+    for (const auto &cur_counter : counter_array) {
         auto [key, name] =
             tools::ParseKeyValue(cur_counter, exe::cmdline::kSplitter);
 
@@ -58,9 +58,9 @@ std::string AccumulateCounters(
 // sends accumulated data to internal port
 // return 0 on success
 int RunPerf(
-    const std::wstring& peer_name,  // name assigned by starting program
-    const std::wstring& port,       // format as in carrier.h mail:*
-    const std::wstring& answer_id,  // answer id, should be set
+    const std::wstring &peer_name,  // name assigned by starting program
+    const std::wstring &port,       // format as in carrier.h mail:*
+    const std::wstring &answer_id,  // answer id, should be set
     int /*timeout*/,                // how long wait for execution
     const std::vector<std::wstring_view> counter_array  // name of counters
 ) {

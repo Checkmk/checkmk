@@ -78,6 +78,7 @@ def _create_sync_snapshot(
     tmp_path,
     is_pre_17_site,
     remote_site,
+    edition: cmk_version.Edition,
 ):
     _create_test_sync_config(monkeypatch)
     return _generate_sync_snapshot(
@@ -86,6 +87,7 @@ def _create_sync_snapshot(
         tmp_path,
         is_pre_17_site=is_pre_17_site,
         remote_site=remote_site,
+        edition=edition,
     )
 
 
@@ -96,7 +98,7 @@ def _create_test_sync_config(monkeypatch):
     with conf_dir.joinpath("hosts.mk").open("w", encoding="utf-8") as f:
         f.write("all_hosts = []\n")
 
-    Path(cmk.utils.paths.omd_root, "local").mkdir(parents=True, exist_ok=True)
+    (cmk.utils.paths.omd_root / "local").mkdir(parents=True, exist_ok=True)
     Path(cmk.utils.paths.var_dir, "packages").mkdir(parents=True, exist_ok=True)
 
     gui_conf_dir = Path(cmk.utils.paths.default_config_dir) / "multisite.d" / "wato"
@@ -197,7 +199,13 @@ def _get_activation_manager(monkeypatch, remote_site="unit_remote_1"):
 
 
 def _generate_sync_snapshot(
-    activation_manager, snapshot_data_collector_class, tmp_path, is_pre_17_site, remote_site
+    activation_manager,
+    snapshot_data_collector_class,
+    tmp_path,
+    is_pre_17_site,
+    remote_site,
+    *,
+    edition: cmk_version.Edition,
 ):
     site_snapshot_settings = activation_manager._get_site_snapshot_settings(
         activation_manager._activation_id, activation_manager._sites
@@ -210,7 +218,7 @@ def _generate_sync_snapshot(
     # Now create the snapshot
     work_dir = tmp_path / "activation"
     snapshot_manager = activate_changes.SnapshotManager.factory(
-        str(work_dir), site_snapshot_settings
+        str(work_dir), site_snapshot_settings, edition
     )
     assert snapshot_manager._data_collector.__class__.__name__ == snapshot_data_collector_class
 
@@ -288,10 +296,11 @@ def _get_expected_paths(user_id, is_pre_17_site, with_local):
         expected_paths += [
             "etc/check_mk/mkeventd.d/mkp",
             "etc/check_mk/mkeventd.d/mkp/rule_packs",
+            "etc/check_mk/mkeventd.d/wato/rules.mk",
         ]
 
     # The paths are registered once the enterprise plugins are available, independent of the
-    # cmk_version.edition_short() value.
+    # cmk_version.edition().short value.
     # TODO: The second condition should not be needed. Seems to be a subtle difference between the
     # CME and CRE/CEE snapshot logic
     if is_enterprise_repo() and (not is_pre_17_site or not cmk_version.is_managed_edition()):
@@ -330,13 +339,17 @@ def _get_expected_paths(user_id, is_pre_17_site, with_local):
 
 @pytest.mark.usefixtures("request_context")
 @pytest.mark.parametrize("remote_site", ["unit_remote_1", "unit_remote_2"])
-def test_generate_snapshot(edition_short, monkeypatch, tmp_path, with_user_login, remote_site):
+def test_generate_snapshot(
+    edition: cmk_version.Edition, monkeypatch, tmp_path, with_user_login, remote_site
+):
     snapshot_data_collector_class = (
-        "CMESnapshotDataCollector" if edition_short == "cme" else "CRESnapshotDataCollector"
+        "CMESnapshotDataCollector"
+        if edition is cmk_version.Edition.CME
+        else "CRESnapshotDataCollector"
     )
 
     activation_manager = _get_activation_manager(monkeypatch, remote_site)
-    monkeypatch.setattr(cmk_version, "edition_short", lambda: edition_short)
+    monkeypatch.setattr(cmk_version, "edition", lambda: edition)
 
     monkeypatch.setattr(utils, "is_pre_17_remote_site", lambda s: False)
 
@@ -347,6 +360,7 @@ def test_generate_snapshot(edition_short, monkeypatch, tmp_path, with_user_login
         tmp_path,
         is_pre_17_site=False,
         remote_site=remote_site,
+        edition=edition,
     )
 
     expected_paths = _get_expected_paths(
@@ -363,14 +377,16 @@ def test_generate_snapshot(edition_short, monkeypatch, tmp_path, with_user_login
 @pytest.mark.usefixtures("request_context")
 @pytest.mark.parametrize("remote_site", ["unit_remote_1", "unit_remote_2"])
 def test_generate_pre_17_site_snapshot(
-    edition_short, monkeypatch, tmp_path, with_user_login, remote_site
+    edition: cmk_version.Edition, monkeypatch, tmp_path, with_user_login, remote_site
 ):
     snapshot_data_collector_class = (
-        "CMESnapshotDataCollector" if edition_short == "cme" else "CRESnapshotDataCollector"
+        "CMESnapshotDataCollector"
+        if edition is cmk_version.Edition.CME
+        else "CRESnapshotDataCollector"
     )
 
     is_pre_17_site = True
-    monkeypatch.setattr(cmk_version, "edition_short", lambda: edition_short)
+    monkeypatch.setattr(cmk_version, "edition", lambda: edition)
     monkeypatch.setattr(utils, "is_pre_17_remote_site", lambda s: is_pre_17_site)
 
     activation_manager = _get_activation_manager(monkeypatch, remote_site)
@@ -381,6 +397,7 @@ def test_generate_pre_17_site_snapshot(
         tmp_path,
         is_pre_17_site,
         remote_site,
+        edition=edition,
     )
 
     # And now check the resulting snapshot contents
@@ -393,6 +410,7 @@ def test_generate_pre_17_site_snapshot(
 
     expected_subtars = [
         "auth.secret.tar",
+        "password_store.secret.tar",
         "auth.serials.tar",
         "check_mk.tar",
         "diskspace.tar",
@@ -441,12 +459,13 @@ def test_generate_pre_17_site_snapshot(
         "mkeventd_mkp.tar": [],
         "multisite.tar": ["global.mk", "users.mk"],
         "usersettings.tar": [with_user_login],
-        "mkeventd.tar": [],
+        "mkeventd.tar": ["rules.mk"],
         "check_mk.tar": ["hosts.mk", "contacts.mk"],
         "htpasswd.tar": ["htpasswd"],
         "liveproxyd.tar": [],
         "sitespecific.tar": ["sitespecific.mk"],
         "auth.secret.tar": [],
+        "password_store.secret.tar": [],
         "dcd.tar": [],
         "auth.serials.tar": ["auth.serials"],
         "mknotify.tar": [],
@@ -501,18 +520,20 @@ def test_generate_pre_17_site_snapshot(
 @pytest.mark.usefixtures("request_context", "fixture_disable_cmk_update_config")
 @pytest.mark.parametrize("remote_site", ["unit_remote_1", "unit_remote_2"])
 def test_apply_pre_17_sync_snapshot(
-    edition_short,
+    edition: cmk_version.Edition,
     monkeypatch,
     tmp_path,
     with_user_login,
     remote_site,
 ):
     snapshot_data_collector_class = (
-        "CMESnapshotDataCollector" if edition_short == "cme" else "CRESnapshotDataCollector"
+        "CMESnapshotDataCollector"
+        if edition is cmk_version.Edition.CME
+        else "CRESnapshotDataCollector"
     )
 
     is_pre_17_site = True
-    monkeypatch.setattr(cmk_version, "edition_short", lambda: edition_short)
+    monkeypatch.setattr(cmk_version, "edition", lambda: edition)
     monkeypatch.setattr(utils, "is_pre_17_remote_site", lambda s: is_pre_17_site)
 
     activation_manager = _get_activation_manager(monkeypatch, remote_site)
@@ -523,6 +544,7 @@ def test_apply_pre_17_sync_snapshot(
         tmp_path,
         is_pre_17_site=is_pre_17_site,
         remote_site=remote_site,
+        edition=edition,
     )
 
     # Change unpack target directory from "unit test site" paths to a test specific path
@@ -623,8 +645,10 @@ def test_update_contacts_dict(master, slave, result):
 # This test does not perform the full synchronization. It executes the central site parts and mocks
 # the remote site HTTP calls
 @pytest.mark.usefixtures("request_context")
-def test_synchronize_site(mocked_responses, monkeypatch, edition_short, tmp_path, mocker):
-    if edition_short == "cme":
+def test_synchronize_site(
+    mocked_responses, monkeypatch, edition: cmk_version.Edition, tmp_path, mocker
+):
+    if edition is cmk_version.Edition.CME:
         pytest.skip("Seems faked site environment is not 100% correct")
 
     mocked_responses.add(
@@ -664,11 +688,13 @@ def test_synchronize_site(mocked_responses, monkeypatch, edition_short, tmp_path
     )
 
     snapshot_data_collector_class = (
-        "CMESnapshotDataCollector" if edition_short == "cme" else "CRESnapshotDataCollector"
+        "CMESnapshotDataCollector"
+        if edition is cmk_version.Edition.CME
+        else "CRESnapshotDataCollector"
     )
 
     is_pre_17_site = False
-    monkeypatch.setattr(cmk_version, "edition_short", lambda: edition_short)
+    monkeypatch.setattr(cmk_version, "edition", lambda: edition)
     monkeypatch.setattr(utils, "is_pre_17_remote_site", lambda s: is_pre_17_site)
 
     activation_manager = _get_activation_manager(monkeypatch)
@@ -679,6 +705,7 @@ def test_synchronize_site(mocked_responses, monkeypatch, edition_short, tmp_path
         tmp_path,
         is_pre_17_site=is_pre_17_site,
         remote_site="unit_remote_1",
+        edition=edition,
     )
 
     site_activation = activate_changes.ActivateChangesSite(
@@ -692,16 +719,17 @@ def test_synchronize_site(mocked_responses, monkeypatch, edition_short, tmp_path
 # This test does not perform the full synchronization. It executes the central site parts and mocks
 # the remote site HTTP calls
 @pytest.mark.usefixtures("request_context")
-def test_synchronize_pre_17_site(monkeypatch, edition_short, tmp_path, mocker):
+def test_synchronize_pre_17_site(monkeypatch, edition: cmk_version.Edition, tmp_path, mocker):
     snapshot_data_collector_class = (
-        "CMESnapshotDataCollector" if edition_short == "cme" else "CRESnapshotDataCollector"
+        "CMESnapshotDataCollector"
+        if edition is cmk_version.Edition.CME
+        else "CRESnapshotDataCollector"
     )
 
-    if edition_short == "cme":
+    if edition is cmk_version.Edition.CME:
         pytest.skip("Seems faked site environment is not 100% correct")
 
     is_pre_17_site = True
-    monkeypatch.setattr(cmk_version, "edition_short", lambda: edition_short)
     monkeypatch.setattr(utils, "is_pre_17_remote_site", lambda s: is_pre_17_site)
 
     activation_manager = _get_activation_manager(monkeypatch)
@@ -712,6 +740,7 @@ def test_synchronize_pre_17_site(monkeypatch, edition_short, tmp_path, mocker):
         tmp_path,
         is_pre_17_site=is_pre_17_site,
         remote_site="unit_remote_1",
+        edition=edition,
     )
 
     site_activation = activate_changes.ActivateChangesSite(

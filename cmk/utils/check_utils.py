@@ -4,10 +4,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import dataclasses
-from typing import Any, List, Mapping, Tuple, Union
+from __future__ import annotations
 
-from cmk.utils.type_defs import state_markers
+import dataclasses
+from typing import Any, List, Mapping, Sequence, Tuple, Union
+
+from cmk.utils.type_defs import HostKey, MetricTuple, state_markers
 
 
 def section_name_of(check_plugin_name: str) -> str:
@@ -42,6 +44,34 @@ def worst_service_state(*states: int, default: int) -> int:
     That's why this function is just not quite `max`.
     """
     return 2 if 2 in states else max(states, default=default)
+
+
+@dataclasses.dataclass
+class ServiceCheckResult:
+    state: int = 0
+    output: str = ""
+    metrics: Sequence[MetricTuple] = ()
+
+    @classmethod
+    def item_not_found(cls) -> ServiceCheckResult:
+        return cls(3, "Item not found in monitoring data")
+
+    @classmethod
+    def received_no_data(cls) -> ServiceCheckResult:
+        return cls(3, "Check plugin received no monitoring data")
+
+    @classmethod
+    def check_not_implemented(cls) -> ServiceCheckResult:
+        return cls(3, "Check plugin not implemented")
+
+    @classmethod
+    def cluster_received_no_data(cls, node_keys: Sequence[HostKey]) -> ServiceCheckResult:
+        node_hint = (
+            f"configured nodes: {', '.join(nk.hostname for nk in node_keys)}"
+            if node_keys
+            else "no nodes configured"
+        )
+        return cls(3, f"Clustered service received no monitoring data ({node_hint})")
 
 
 @dataclasses.dataclass

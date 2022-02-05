@@ -26,7 +26,6 @@ import json
 import logging
 import math
 import numbers
-import os
 import re
 import socket
 import time
@@ -40,7 +39,6 @@ from typing import Any, Callable, Final, Generic, Iterable, Literal, Mapping, Na
 from typing import Optional as _Optional
 from typing import Pattern, Protocol, Sequence, SupportsFloat, Type, TypeVar, Union
 
-from Cryptodome.Cipher import AES
 from Cryptodome.PublicKey import RSA
 from dateutil.relativedelta import relativedelta
 from dateutil.tz import tzlocal
@@ -53,6 +51,7 @@ import cmk.utils.log
 import cmk.utils.paths
 import cmk.utils.plugin_registry
 import cmk.utils.regex
+from cmk.utils.encryption import Encrypter, fetch_certificate_details
 from cmk.utils.plugin_registry import Registry
 from cmk.utils.render import SecondsRenderer
 from cmk.utils.type_defs import Seconds
@@ -63,10 +62,11 @@ import cmk.gui.utils as utils
 import cmk.gui.utils.escaping as escaping
 from cmk.gui.exceptions import MKGeneralException, MKUserError
 from cmk.gui.globals import config, html, output_funnel, request, theme, user
+from cmk.gui.htmllib import HTMLTagAttributes
 from cmk.gui.htmllib.foldable_container import foldable_container
 from cmk.gui.http import UploadedFile
 from cmk.gui.i18n import _
-from cmk.gui.pages import AjaxPage, page_registry
+from cmk.gui.pages import AjaxPage, AjaxPageResult, page_registry
 from cmk.gui.type_defs import ChoiceGroup, ChoiceId, Choices, ChoiceText, GroupedChoices
 from cmk.gui.utils.escaping import escape_html_permissive
 from cmk.gui.utils.html import HTML
@@ -84,12 +84,12 @@ from cmk.gui.view_utils import render_labels
 seconds_per_day = 86400
 
 
-class _Sentinel:
+class Sentinel:
     pass
 
 
 # Some arbitrary object for checking whether or not default_value was set
-DEF_VALUE = _Sentinel()
+DEF_VALUE = Sentinel()
 
 ValueSpecValidateFunc = Callable[[Any, str], None]
 ValueSpecHelp = Union[str, HTML, Callable[[], Union[str, HTML]]]
@@ -142,7 +142,7 @@ class ValueSpec(abc.ABC, Generic[_VT]):
         self,
         title: _Optional[str] = None,
         help: _Optional[ValueSpecHelp] = None,
-        default_value: Union[_Sentinel, _VT, Callable[[], Union[_Sentinel, _VT]]] = DEF_VALUE,
+        default_value: Union[Sentinel, _VT, Callable[[], Union[Sentinel, _VT]]] = DEF_VALUE,
         validate: _Optional[ValueSpecValidateFunc] = None,
         **kwargs,
     ):
@@ -208,7 +208,7 @@ class ValueSpec(abc.ABC, Generic[_VT]):
         else:
             value = self._default_value
 
-        if isinstance(value, _Sentinel):
+        if isinstance(value, Sentinel):
             return self.canonical_value()
         return value
 
@@ -454,7 +454,7 @@ class NumericRenderer:
                 sepped += self._thousand_sep + text[pos : pos + 3]
             text = sepped
         if self._unit:
-            text += "&nbsp;" + self._unit
+            text += " %s" % self._unit
         return text
 
 
@@ -474,7 +474,7 @@ class Integer(ValueSpec[int]):
         # ValueSpec
         title: _Optional[str] = None,
         help: _Optional[ValueSpecHelp] = None,
-        default_value: Union[_Sentinel, int] = DEF_VALUE,
+        default_value: Union[Sentinel, int] = DEF_VALUE,
         validate: _Optional[ValueSpecValidateFunc] = None,
     ):
         super().__init__(title=title, help=help, default_value=default_value, validate=validate)
@@ -597,7 +597,7 @@ class TextInput(ValueSpec[str]):
         # ValueSpec
         title: _Optional[str] = None,
         help: _Optional[ValueSpecHelp] = None,
-        default_value: Union[_Sentinel, str, Callable[[], str]] = DEF_VALUE,
+        default_value: Union[Sentinel, str, Callable[[], str]] = DEF_VALUE,
         validate: _Optional[ValueSpecValidateFunc] = None,
     ):
         super().__init__(title=title, help=help, default_value=default_value, validate=validate)
@@ -999,7 +999,7 @@ def IPNetwork(  # pylint: disable=redefined-builtin
     # From ValueSpec
     title: _Optional[str] = None,
     help: _Optional[ValueSpecHelp] = None,
-    default_value: Union[_Sentinel, str] = DEF_VALUE,
+    default_value: Union[Sentinel, str] = DEF_VALUE,
 ) -> TextInput:
     """Same as IPv4Network, but allowing both IPv4 and IPv6"""
 
@@ -1058,7 +1058,7 @@ def IPv4Address(  # pylint: disable=redefined-builtin
     # From ValueSpec
     title: _Optional[str] = None,
     help: _Optional[ValueSpecHelp] = None,
-    default_value: Union[_Sentinel, str] = DEF_VALUE,
+    default_value: Union[Sentinel, str] = DEF_VALUE,
 ) -> TextInput:
     def _validate_value(value: str, varprefix: str):
         try:
@@ -1082,7 +1082,7 @@ def Hostname(  # pylint: disable=redefined-builtin
     # ValueSpec
     title: _Optional[str] = None,
     help: _Optional[ValueSpecHelp] = None,
-    default_value: Union[_Sentinel, str] = DEF_VALUE,
+    default_value: Union[Sentinel, str] = DEF_VALUE,
 ):
     """A host name with or without domain part. Also allow IP addresses"""
     return TextInput(
@@ -1126,7 +1126,7 @@ class HostAddress(TextInput):
         # ValueSpec
         title: _Optional[str] = None,
         help: _Optional[ValueSpecHelp] = None,
-        default_value: Union[_Sentinel, str] = DEF_VALUE,
+        default_value: Union[Sentinel, str] = DEF_VALUE,
         validate: _Optional[ValueSpecValidateFunc] = None,
     ):
         super().__init__(
@@ -1157,17 +1157,22 @@ class HostAddress(TextInput):
 
     def _validate_value(self, value: str, varprefix: str) -> None:
         if value and self._allow_host_name and self._is_valid_host_name(value):
-            pass
-        elif value and self._allow_ipv4_address and self._is_valid_ipv4_address(value):
-            pass
-        elif value and self._allow_ipv6_address and self._is_valid_ipv6_address(value):
-            pass
-        elif not self._allow_empty:
-            raise MKUserError(
-                varprefix,
-                _("Invalid host address. You need to specify the address " "either as %s.")
-                % ", ".join(self._allowed_type_names()),
-            )
+            return
+
+        if value and self._allow_ipv4_address and self._is_valid_ipv4_address(value):
+            return
+
+        if value and self._allow_ipv6_address and self._is_valid_ipv6_address(value):
+            return
+
+        if value == "" and self._allow_empty:
+            return
+
+        raise MKUserError(
+            varprefix,
+            _("Invalid host address. You need to specify the address either as %s.")
+            % ", ".join(self._allowed_type_names()),
+        )
 
     def _is_valid_host_name(self, hostname: str) -> bool:
         # http://stackoverflow.com/questions/2532053/validate-a-hostname-string/2532344#2532344
@@ -1233,7 +1238,7 @@ def AbsoluteDirname(  # pylint: disable=redefined-builtin
     # ValueSpec
     title: _Optional[str] = None,
     help: _Optional[ValueSpecHelp] = None,
-    default_value: Union[_Sentinel, str] = DEF_VALUE,
+    default_value: Union[Sentinel, str] = DEF_VALUE,
     validate: _Optional[ValueSpecValidateFunc] = None,
 ) -> TextInput:
     return TextInput(
@@ -1275,7 +1280,7 @@ class Url(TextInput):
         # ValueSpec
         title: _Optional[str] = None,
         help: _Optional[ValueSpecHelp] = None,
-        default_value: Union[_Sentinel, str] = DEF_VALUE,
+        default_value: Union[Sentinel, str] = DEF_VALUE,
         validate: _Optional[ValueSpecValidateFunc] = None,
     ):
         super().__init__(
@@ -1361,7 +1366,7 @@ def HTTPUrl(  # pylint: disable=redefined-builtin
     # ValueSpec
     title: _Optional[str] = None,
     help: _Optional[ValueSpecHelp] = None,
-    default_value: Union[_Sentinel, str] = DEF_VALUE,
+    default_value: Union[Sentinel, str] = DEF_VALUE,
 ):
     """Valuespec for a HTTP or HTTPS Url, that automatically adds http:// to the value if no scheme has been specified"""
     return Url(
@@ -1381,7 +1386,7 @@ def HTTPUrl(  # pylint: disable=redefined-builtin
 def CheckMKVersion(
     # ValueSpec
     title: _Optional[str] = None,
-    default_value: Union[_Sentinel, str] = DEF_VALUE,
+    default_value: Union[Sentinel, str] = DEF_VALUE,
 ):
     return TextInput(
         regex=r"[0-9]+\.[0-9]+\.[0-9]+([bpi][0-9]+|i[0-9]+p[0-9]+)?$",
@@ -1418,7 +1423,7 @@ class TextAreaUnicode(TextInput):
         # ValueSpec
         title: _Optional[str] = None,
         help: _Optional[ValueSpecHelp] = None,
-        default_value: Union[_Sentinel, str] = DEF_VALUE,
+        default_value: Union[Sentinel, str] = DEF_VALUE,
         validate: _Optional[ValueSpecValidateFunc] = None,
     ):
         super().__init__(
@@ -1515,7 +1520,7 @@ class Filename(TextInput):
         # ValueSpec
         title: _Optional[str] = None,
         help: _Optional[ValueSpecHelp] = None,
-        default_value: Union[_Sentinel, str] = DEF_VALUE,
+        default_value: Union[Sentinel, str] = DEF_VALUE,
         validate: _Optional[ValueSpecValidateFunc] = None,
     ):
         super().__init__(
@@ -1594,7 +1599,7 @@ class ListOfStrings(ValueSpec):
         # ValueSpec
         title: _Optional[str] = None,
         help: _Optional[ValueSpecHelp] = None,
-        default_value: Union[_Sentinel, list] = DEF_VALUE,
+        default_value: Union[Sentinel, list] = DEF_VALUE,
         validate: _Optional[ValueSpecValidateFunc] = None,
     ):
         super().__init__(title=title, help=help, default_value=default_value, validate=validate)
@@ -1732,13 +1737,16 @@ class ListOfStrings(ValueSpec):
     def value_to_json_safe(self, value: Any) -> list[Any]:
         return [self._valuespec.value_to_json_safe(e) for e in value]
 
+    def transform_value(self, value) -> list[str]:
+        return [self._valuespec.transform_value(v) for v in value]
+
 
 def NetworkPort(  # pylint: disable=redefined-builtin
     title: _Optional[str],
     help: _Optional[str] = None,
     minvalue: int = 1,
     maxvalue: int = 65535,
-    default_value: Union[_Sentinel, int] = DEF_VALUE,
+    default_value: Union[Sentinel, int] = DEF_VALUE,
 ) -> Integer:
     return Integer(
         title=title,
@@ -2037,6 +2045,9 @@ class ListOf(ValueSpec):
     def value_to_json_safe(self, value: Any) -> list[Any]:
         return [self._valuespec.value_to_json_safe(e) for e in value]
 
+    def transform_value(self, value) -> list[Any]:
+        return [self._valuespec.transform_value(v) for v in value]
+
 
 ListOfMultipleChoices = Sequence[tuple[str, ValueSpec]]
 
@@ -2276,7 +2287,7 @@ class Float(ValueSpec[float]):
         # ValueSpec
         title: _Optional[str] = None,
         help: _Optional[ValueSpecHelp] = None,
-        default_value: Union[_Sentinel, float, Callable[[], Union[_Sentinel, float]]] = DEF_VALUE,
+        default_value: Union[Sentinel, float, Callable[[], Union[Sentinel, float]]] = DEF_VALUE,
         validate: _Optional[ValueSpecValidateFunc] = None,
     ):
         super().__init__(title=title, help=help, default_value=default_value, validate=validate)
@@ -2348,7 +2359,7 @@ class Percentage(Float):
         # ValueSpec
         title: _Optional[str] = None,
         help: _Optional[ValueSpecHelp] = None,
-        default_value: Union[_Sentinel, float] = DEF_VALUE,
+        default_value: Union[Sentinel, float] = DEF_VALUE,
         validate: _Optional[ValueSpecValidateFunc] = None,
     ):
         super().__init__(
@@ -2392,7 +2403,7 @@ class Checkbox(ValueSpec[bool]):
         onclick: _Optional[str] = None,
         title: _Optional[str] = None,
         help: _Optional[ValueSpecHelp] = None,
-        default_value: Union[_Sentinel, bool, Callable[[], Union[_Sentinel, bool]]] = DEF_VALUE,
+        default_value: Union[Sentinel, bool, Callable[[], Union[Sentinel, bool]]] = DEF_VALUE,
         validate: _Optional[ValueSpecValidateFunc] = None,
     ):
         super().__init__(title=title, help=help, default_value=default_value, validate=validate)
@@ -2464,6 +2475,7 @@ class DropdownChoice(ValueSpec):
         on_change: _Optional[str] = None,
         read_only: bool = False,
         encode_value: bool = True,
+        html_attrs: _Optional[HTMLTagAttributes] = None,
         # ValueSpec
         title: _Optional[str] = None,
         help: _Optional[ValueSpecHelp] = None,
@@ -2471,7 +2483,13 @@ class DropdownChoice(ValueSpec):
         validate: _Optional[ValueSpecValidateFunc] = None,
         deprecated_choices: Sequence[DropdownChoiceValue] = (),
     ):
-        super().__init__(title=title, help=help, default_value=default_value, validate=validate)
+
+        super().__init__(
+            title=title,
+            help=help,
+            default_value=default_value,
+            validate=validate,
+        )
         self._choices = choices
         self._help_separator = help_separator
         self._label = label
@@ -2505,6 +2523,7 @@ class DropdownChoice(ValueSpec):
         self._read_only = read_only
         self._encode_value = encode_value
         self._deprecated_choices = deprecated_choices
+        self._html_attrs: HTMLTagAttributes = {} if html_attrs is None else html_attrs
 
     def allow_empty(self) -> bool:
         return self._read_only or not self._no_preselect
@@ -2562,9 +2581,14 @@ class DropdownChoice(ValueSpec):
             varprefix,
             self._options_for_html(options),
             deflt=self._option_for_html(defval),
+            locked_choice=None,
             onchange=self._on_change,
             ordered=self._sorted,
+            label=None,
+            class_=None,
+            size=1,
             read_only=self._read_only,
+            **self._html_attrs,
         )
 
     def validate_datatype(self, value: Any, varprefix: str) -> None:
@@ -2660,6 +2684,7 @@ class AjaxDropdownChoice(DropdownChoice):
         # DropdownChoice
         label: _Optional[str] = None,
         choices: _Optional[DropdownChoices] = None,
+        html_attrs: _Optional[HTMLTagAttributes] = None,
         # From ValueSpec
         title: _Optional[str] = None,
         help: _Optional[ValueSpecHelp] = None,
@@ -2674,6 +2699,7 @@ class AjaxDropdownChoice(DropdownChoice):
             help=help,
             default_value=default_value,
             validate=validate,
+            html_attrs=html_attrs,
         )
 
         if isinstance(regex, str):
@@ -2714,12 +2740,17 @@ class AjaxDropdownChoice(DropdownChoice):
             varprefix,
             self._options_for_html(clean_choices),
             deflt=self._option_for_html(value),
+            locked_choice=None,
             onchange=self._on_change,
             ordered=self._sorted,
-            style="width: 250px;",
+            label=None,
             class_=["ajax-vals", self.ident],
+            size=1,
             read_only=self._read_only,
+            # kwargs following
+            style="width: 250px;",
             data_strict=self._strict,
+            **self._html_attrs,
         )
 
 
@@ -2776,6 +2807,10 @@ class MonitoredServiceDescription(AjaxDropdownChoice):
     Fetching the choices from the current live config via livestatus"""
 
     ident = "monitored_service_description"
+
+
+class WatoFolderChoices(AjaxDropdownChoice):
+    ident = "wato_folder_choices"
 
 
 class DropdownChoiceWithHostAndServiceHints(AjaxDropdownChoice):
@@ -2915,7 +2950,7 @@ class CascadingDropdown(ValueSpec[CascadingDropdownChoiceValue]):
         # ValueSpec
         title: _Optional[str] = None,
         help: _Optional[ValueSpecHelp] = None,
-        default_value: Union[_Sentinel, CascadingDropdownChoiceValue] = DEF_VALUE,
+        default_value: Union[Sentinel, CascadingDropdownChoiceValue] = DEF_VALUE,
         validate: _Optional[ValueSpecValidateFunc] = None,
     ):
         super().__init__(title=title, help=help, default_value=default_value, validate=validate)
@@ -2962,19 +2997,23 @@ class CascadingDropdown(ValueSpec[CascadingDropdownChoiceValue]):
         return list(itertools.chain(self._preselected, self._choices()))
 
     def canonical_value(self) -> CascadingDropdownChoiceValue:
-        result = self._fallback_choice()
-        if isinstance(result, tuple):
-            return result[0], result[1].canonical_value()
-        return result
+        return self._result_from_fallback_choice("canonical_value")
 
     def default_value(self) -> CascadingDropdownChoiceValue:
-        try:
-            return super().default_value()
-        except Exception:
-            result = self._fallback_choice()
-            if isinstance(result, tuple):
+        if isinstance(self._default_value, Sentinel):
+            return self._result_from_fallback_choice("default_value")
+        return super().default_value()
+
+    def _result_from_fallback_choice(
+        self,
+        value: Literal["default_value", "canonical_value"],
+    ) -> CascadingDropdownChoiceValue:
+        result = self._fallback_choice()
+        if isinstance(result, tuple):
+            if value == "default_value":
                 return result[0], result[1].default_value()
-            return result
+            return result[0], result[1].canonical_value()
+        return result
 
     def _fallback_choice(
         self,
@@ -4866,7 +4905,7 @@ class Alternative(ValueSpec):
         else:
             value = self._default_value
 
-        if isinstance(value, _Sentinel):
+        if isinstance(value, Sentinel):
             return self._elements[0].default_value()
         return value
 
@@ -5059,7 +5098,7 @@ DictionaryElementsThunk = Callable[[], DictionaryElements]
 DictionaryElementsRaw = Union[DictionaryElements, DictionaryElementsThunk]
 
 
-class Dictionary(ValueSpec):
+class Dictionary(ValueSpec[dict[str, Any]]):
     # TODO: Cleanup ancient "migrate"
     def __init__(  # pylint: disable=redefined-builtin
         self,
@@ -5349,7 +5388,7 @@ class Dictionary(ValueSpec):
             if param in value
         }
 
-    def from_html_vars(self, varprefix):
+    def from_html_vars(self, varprefix) -> dict[str, Any]:
         return {
             param: vs.from_html_vars(f"{varprefix}_p_{param}")
             for param, vs in self._get_elements()
@@ -5551,10 +5590,9 @@ class Foldable(ValueSpec):
                     pass
             return self._title_function(title_value)
 
-        title = self._valuespec.title()
-        if not title:
-            title = _("(no title)")
-        return title
+        if title := self._valuespec.title():
+            return title
+        return _("(no title)")
 
     def set_focus(self, varprefix: str) -> None:
         self._valuespec.set_focus(varprefix)
@@ -5705,6 +5743,24 @@ class LDAPDistinguishedName(TextInput):
 
 
 class Password(TextInput):
+    """Text input for passwords
+
+    About the Encrypter:
+
+    A basic concept of valuespecs is that they transport ALL data back and forth between different
+    states. This has also the consequence that also secrets, like passwords, must be transported to
+    the client, which should remain better only on the server.
+
+    To deal with this in a reasonably secure way, we encrypt passwords for transport from backend =>
+    HTML => backend.
+
+    If it turns out that the approach is not sufficient, then we will have to soften this principle
+    of valuespecs and somehow leave the passwords on the server.
+
+    The encrypted values are only used for transactions and not persisted. This means you can change
+    the algorithm at any time.
+    """
+
     # TODO: Cleanup kwargs
     def __init__(
         self, is_stored_plain: bool = True, encrypt_value: bool = True, **kwargs: Any
@@ -5736,9 +5792,7 @@ class Password(TextInput):
             html.span(self._label, class_="vs_floating_text")
 
         if self._encrypt_value:
-            html.hidden_field(
-                varprefix + "_orig", value=ValueEncrypter.encrypt(value) if value else ""
-            )
+            html.hidden_field(varprefix + "_orig", value=Encrypter.encrypt(value) if value else "")
             default_value = ""
         else:
             default_value = value
@@ -5782,60 +5836,7 @@ class Password(TextInput):
         if not value:
             return value
 
-        return ValueEncrypter.decrypt(value)
-
-
-class ValueEncrypter:
-    """Helping to secure transport of secrets
-
-    A basic concept of valuespecs is that they transport ALL data back and forth between
-    different states. This has also the consequence that also secrets, like passwords, must be
-    transported to the client, which should remain better only on the server.
-
-    To deal with this in a reasonably secure way, we encrypt passwords for transport from backend =>
-    HTML => backend.
-
-    If it turns out that the approach is not sufficient, then we will have to soften this principle
-    of valuespecs and somehow leave the passwords on the server.
-
-    The encrypted values are only used for transactions and not persisted. This means you can change
-    the algorithm at any time.
-    """
-
-    @staticmethod
-    def _secret_key(salt: bytes) -> bytes:
-        """Build some secret for the ecryption
-
-        Use the sites auth.secret for encryption. This secret is only known to the current site
-        and other distributed sites.
-        """
-        secret_path = Path(cmk.utils.paths.omd_root) / "etc" / "auth.secret"
-        with secret_path.open(mode="rb") as f:
-            passphrase = f.read().strip()
-            return hashlib.scrypt(passphrase, salt=salt, n=2 ** 14, r=8, p=1, dklen=32)
-
-    @staticmethod
-    def _cipher(salt: bytes, nonce: bytes):
-        return AES.new(ValueEncrypter._secret_key(salt), AES.MODE_GCM, nonce=nonce)
-
-    @staticmethod
-    def encrypt(value: str) -> str:
-        salt = os.urandom(AES.block_size)
-        nonce = os.urandom(AES.block_size)
-        cipher = ValueEncrypter._cipher(salt, nonce)
-        encrypted, tag = cipher.encrypt_and_digest(value.encode("utf-8"))
-        return base64.b64encode(salt + nonce + tag + encrypted).decode("ascii")
-
-    @staticmethod
-    def decrypt(value: str) -> str:
-        raw = base64.b64decode(value.encode("ascii"))
-        salt, rest = raw[: AES.block_size], raw[AES.block_size :]
-        nonce, rest = rest[: AES.block_size], rest[AES.block_size :]
-        tag, encrypted = rest[: AES.block_size], rest[AES.block_size :]
-
-        return (
-            ValueEncrypter._cipher(salt, nonce).decrypt_and_verify(encrypted, tag).decode("utf-8")
-        )
+        return Encrypter.decrypt(value)
 
 
 class PasswordSpec(Password):
@@ -5905,7 +5906,7 @@ class FileUpload(ValueSpec):
                     % ", ".join(self._allowed_extensions),
                 )
 
-    def render_input(self, varprefix: str, value: bytes) -> None:
+    def render_input(self, varprefix: str, value: _Optional[bytes]) -> None:
         html.upload_file(varprefix)
 
     def from_html_vars(self, varprefix: str) -> UploadedFile:
@@ -5932,7 +5933,7 @@ class ImageUpload(FileUpload):
         self._show_current_image: Final = show_current_image
         super().__init__(**kwargs)
 
-    def render_input(self, varprefix: str, value: bytes) -> None:
+    def render_input(self, varprefix: str, value: _Optional[bytes]) -> None:
         if isinstance(value, str):
             # since latin_1 only uses one byte, we can use it for str->byte conversion
             value = value.encode("latin_1")
@@ -5981,13 +5982,18 @@ class UploadOrPasteTextFile(Alternative):
     def __init__(self, **kwargs):
         file_title = kwargs.pop("file_title", _("File"))
         allow_empty = kwargs.pop("allow_empty", False)
-        kwargs["elements"] = [
-            FileUpload(title=_("Upload %s") % file_title, allow_empty=allow_empty),
-            TextAreaUnicode(
-                title=_("Content of %s") % file_title, allow_empty=allow_empty, cols=80, rows="auto"
-            ),
-        ]
-        kwargs["match"] = lambda val: 0 if isinstance(val, tuple) else 1
+        kwargs.setdefault("elements", []).extend(
+            [
+                FileUpload(title=_("Upload %s") % file_title, allow_empty=allow_empty),
+                TextAreaUnicode(
+                    title=_("Content of %s") % file_title,
+                    allow_empty=allow_empty,
+                    cols=80,
+                    rows="auto",
+                ),
+            ]
+        )
+        kwargs.setdefault("match", lambda val: 0 if isinstance(val, tuple) else 1)
 
         super().__init__(**kwargs)
 
@@ -6001,7 +6007,7 @@ class UploadOrPasteTextFile(Alternative):
         if isinstance(value, tuple):
             try:
                 # We are only interested in the file content here. Get it from FileUpload value.
-                return value[2].decode("utf-8")
+                return value[-1].decode("utf-8")
             except UnicodeDecodeError as exc:
                 raise MKUserError(varprefix, _("Please choose a file to upload.")) from exc
         return value
@@ -6130,10 +6136,11 @@ class Labels(ValueSpec):
 
     def render_input(self, varprefix, value):
         html.help(self.help())
+        label_type = "host_label" if "host_labels" in varprefix else "service_label"
         html.text_input(
             varprefix,
             default_value=encode_labels_for_http(value.items()),
-            cssclass="labels",
+            cssclass="labels" + " " + label_type,
             placeholder=_("Add some label"),
             data_world=self._world.value,
             data_max_labels=self._max_labels,
@@ -6700,10 +6707,99 @@ def SchedulePeriod(from_end=True, **kwargs):
     )
 
 
+class _CAInput(ValueSpec[tuple[str, int, bytes]]):
+    """Allows users to fetch CAs interactively so that they don't have to upload files or
+    paste text manually."""
+
+    def __init__(self) -> None:
+        super().__init__(title=_("Fetch certificate from server"))
+        self.address = HostAddress()
+        self.port = NetworkPort(title=None)
+
+    def render_input(self, varprefix: str, value: _Optional[tuple[str, int, bytes]]) -> None:
+        address, port, content = value or ("", 443, b"")
+
+        self.address.render_input(varprefix + "_address", address)
+        self.port.render_input(varprefix + "_port", port)
+        html.icon_button(
+            url=None,
+            title=_("Fetch certificate from server"),
+            icon="host",
+            onclick="cmk.valuespecs.fetch_ca_from_server(%s)" % json.dumps(varprefix),
+        )
+        html.div(None, id_=varprefix + "_status")
+        html.text_area(varprefix, content.decode("ascii"), cols=80, readonly="")
+
+    def value_to_json(self, value: tuple[str, int, bytes]) -> JSONValue:
+        return [value[0], value[1], value[2].decode("ascii")]
+
+    def value_from_json(self, json_value: JSONValue) -> tuple[str, int, bytes]:
+        return (json_value[0], json_value[1], json_value[2].encode("ascii"))
+
+    def from_html_vars(self, varprefix: str) -> tuple[str, int, bytes]:
+        address = self.address.from_html_vars(varprefix + "_address")
+        port = self.port.from_html_vars(varprefix + "_port")
+        content = html.request.get_binary_input_mandatory(varprefix)
+        return (address, port, content)
+
+
+@page_registry.register_page("ajax_fetch_ca")
+class AjaxFetchCA(AjaxPage):
+    def page(self) -> AjaxPageResult:
+        user.need_permission("general.server_side_requests")
+
+        try:
+            vs_address = HostAddress()
+            address = vs_address.from_html_vars("address")
+            vs_address.validate_value(address, "address")
+
+            vs_port = NetworkPort(title=None)
+            port = vs_port.from_html_vars("port")
+            vs_port.validate_value(port, "port")
+        except Exception:
+            raise MKUserError(None, _("Please provide a valid host and port"))
+
+        try:
+            certs = fetch_certificate_details(
+                cmk.utils.paths.trusted_ca_file, socket.AF_INET, (address, port)
+            )
+        except Exception as e:
+            raise MKUserError(None, _("Error fetching data: %s") % e)
+
+        for cert in certs:
+            if not cert.is_ca:
+                continue
+
+            try:
+                cert_pem = cert.verify_result.cert_pem.decode("ascii")
+            except Exception:
+                raise MKUserError(None, _("Failed to decode certificate data"))
+
+            def row(key: str, value: str) -> HTML:
+                return html.render_tr(html.render_td(key) + html.render_td(value), class_="data")
+
+            summary = html.render_table(
+                row(_("Issued to"), cert.issued_to)
+                + row(_("Issued by"), cert.issued_by)
+                + row(_("Valid from"), cert.valid_from)
+                + row(_("Valid until"), cert.valid_till)
+                + row(_("Fingerprint"), cert.digest_sha256),
+                class_="data",
+            )
+
+            return {"summary": summary, "cert_pem": cert_pem}
+
+        raise MKUserError(None, _("Found no CA"))
+
+
 class CAorCAChain(UploadOrPasteTextFile):
     def __init__(self, **args):
         args.setdefault("title", _("Certificate Chain (Root / Intermediate Certificate)"))
         args.setdefault("file_title", _("CRT/PEM File"))
+        args["elements"] = [_CAInput()]
+        args["match"] = (
+            lambda val: 2 if not isinstance(val, tuple) else (0 if isinstance(val[1], int) else 1)
+        )
         super().__init__(**args)
 
     def _validate_value(self, value, varprefix):
@@ -6766,7 +6862,7 @@ def ListOfCAs(**args):
         _(
             "Only accepting HTTPS connections with a server which certificate "
             "is signed with one of the CAs that are listed here. That way it is guaranteed "
-            "that it is communicating only with the authentic update server. "
+            "that it is communicating only with the authentic server. "
             "If you use self signed certificates for you server then enter that certificate "
             "here."
         ),
@@ -6899,6 +6995,14 @@ class RuleComment(TextAreaUnicode):
 
 
 def DocumentationURL() -> TextInput:
+    def _validate_documentation_url(value: str, varprefix: str) -> None:
+        if utils.is_allowed_url(value, cross_domain=True, schemes=["http", "https"]):
+            return
+        raise MKUserError(
+            varprefix,
+            _("Not a valid URL (Only http and https URLs are allowed)."),
+        )
+
     return TextInput(
         title=_("Documentation URL"),
         help=HTML(
@@ -6911,6 +7015,7 @@ def DocumentationURL() -> TextInput:
             % html.render_icon("url")
         ),
         size=80,
+        validate=_validate_documentation_url,
     )
 
 

@@ -4,11 +4,17 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import Any, Mapping
+
 # No stub file
 import pytest
 
+from cmk.utils.structured_data import StructuredDataNode
+
 import cmk.gui.inventory
 import cmk.gui.plugins.views.inventory as inventory
+import cmk.gui.utils
+from cmk.gui.plugins.visuals.inventory import FilterInvtableVersion
 from cmk.gui.views import View
 
 RAW_ROWS = [("this_site", "this_hostname")]
@@ -29,9 +35,9 @@ EXPECTED_INV_KEYS = [
 ]
 
 INV_HIST_ROWS = [
-    (123, (1, 2, 3, None)),
-    (456, (4, 5, 6, None)),
-    (789, (7, 8, 9, None)),
+    cmk.gui.inventory.HistoryEntry(123, 1, 2, 3, StructuredDataNode()),
+    cmk.gui.inventory.HistoryEntry(456, 4, 5, 6, StructuredDataNode()),
+    cmk.gui.inventory.HistoryEntry(789, 7, 8, 9, StructuredDataNode()),
 ]
 
 EXPECTED_INV_HIST_KEYS = [
@@ -212,3 +218,119 @@ def test__cmp_inventory_node(monkeypatch, val_a, val_b, result):
         )
         == result
     )
+
+
+@pytest.mark.parametrize(
+    "invpath, expected_hint",
+    [
+        # root
+        (
+            "",
+            {
+                "title": "Inventory",
+            },
+        ),
+        (
+            ".",
+            {
+                "title": "Inventory",
+            },
+        ),
+        # 'short'
+        (
+            ".hardware.cpu.arch",
+            {
+                "title": "CPU Architecture",
+                "short": "CPU Arch",
+            },
+        ),
+        # 'keyorder'
+        (
+            ".hardware.cpu.",
+            {
+                "title": "Processor",
+                "keyorder": [
+                    "arch",
+                    "max_speed",
+                    "model",
+                    "type",
+                    "threads",
+                    "smt_threads",
+                    "sharing_mode",
+                    "implementation_mode",
+                    "entitlement",
+                    "cpu_max_capa",
+                    "logical_cpus",
+                ],
+            },
+        ),
+        # 'paint'
+        (
+            ".hardware.cpu.max_speed",
+            {
+                "title": "Maximum Speed",
+                "paint": "hz",
+                "paint_function": inventory.inv_paint_hz,
+            },
+        ),
+        # 'is_show_more'
+        (
+            ".hardware.system.product",
+            {
+                "title": "Product",
+                "is_show_more": False,
+            },
+        ),
+        # 'view'
+        (
+            ".hardware.components.others:",
+            {
+                "title": "Other entities",
+                "keyorder": [
+                    "index",
+                    "name",
+                    "description",
+                    "software",
+                    "serial",
+                    "manufacturer",
+                    "model",
+                    "location",
+                ],
+                "view": "invother_of_host",
+            },
+        ),
+        # 'icon'
+        (
+            ".software.packages:",
+            {
+                "title": "Packages",
+                "icon": "packages",
+                "keyorder": ["name", "version", "arch", "package_type", "summary"],
+                "view": "invswpac_of_host",
+                "is_show_more": False,
+            },
+        ),
+        # 'sort', 'filter'
+        (
+            ".software.packages:*.version",
+            {
+                "title": "Version",
+                "sort": cmk.gui.utils.cmp_version,
+                "filter": FilterInvtableVersion,
+            },
+        ),
+        # table headers
+        (
+            ".hardware.components.others:0.index",
+            {
+                "title": "Index",
+            },
+        ),
+        # unknown
+        (".path.to.something.", {}),
+        (".path.to.something", {}),
+        (".path.to.something:", {}),
+    ],
+)
+def test__get_display_hint(invpath: str, expected_hint: Mapping[str, Any]) -> None:
+    assert inventory._get_display_hint(invpath) == expected_hint

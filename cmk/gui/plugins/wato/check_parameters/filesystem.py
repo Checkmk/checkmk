@@ -8,15 +8,16 @@ from typing import Dict, List
 
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
-from cmk.gui.plugins.wato import (
+from cmk.gui.plugins.wato.check_parameters.utils import vs_filesystem
+from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithItem,
     HostRulespec,
     rulespec_registry,
     RulespecGroupCheckParametersDiscovery,
     RulespecGroupCheckParametersStorage,
 )
-from cmk.gui.plugins.wato.check_parameters.utils import vs_filesystem
 from cmk.gui.valuespec import (
+    Checkbox,
     Dictionary,
     DropdownChoice,
     ListChoice,
@@ -314,5 +315,37 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=vs_filesystem,
         title=lambda: _("Filesystems (used space and growth)"),
+    )
+)
+
+
+def _discovery_valuespec_qtree_quota() -> Dictionary:
+    return Dictionary(
+        elements=[
+            (
+                "exclude_volume",
+                Checkbox(
+                    title=_("Exclude volume from service name"),
+                    help=_(
+                        "The service description of qtree services is composed of the "
+                        "quota, quota-users and the volume name by default. Check this box"
+                        "if you would like to use the quota and quota-users combination as the "
+                        "service description on its own. "
+                        "Please be advised that this may lead to a service description that is "
+                        "not unique, resulting in some services, which are not shown!"
+                    ),
+                ),
+            ),
+        ],
+        title=_("NetApp Qtree discovery"),
+    )
+
+
+rulespec_registry.register(
+    HostRulespec(
+        group=RulespecGroupCheckParametersDiscovery,
+        match_type="list",
+        name="discovery_qtree",
+        valuespec=_discovery_valuespec_qtree_quota,
     )
 )

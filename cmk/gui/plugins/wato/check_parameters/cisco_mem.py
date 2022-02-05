@@ -7,14 +7,14 @@
 from typing import Any, List, MutableMapping
 
 from cmk.gui.i18n import _
-from cmk.gui.plugins.wato import (
-    CheckParameterRulespecWithItem,
-    rulespec_registry,
-    RulespecGroupCheckParametersOperatingSystem,
-)
 from cmk.gui.plugins.wato.check_parameters.utils import (
     size_trend_elements,
     transform_trend_mb_to_trend_bytes,
+)
+from cmk.gui.plugins.wato.utils import (
+    CheckParameterRulespecWithItem,
+    rulespec_registry,
+    RulespecGroupCheckParametersOperatingSystem,
 )
 from cmk.gui.valuespec import (
     Alternative,

@@ -6,325 +6,207 @@ mod agent_receiver_api;
 mod certs;
 mod cli;
 mod config;
+mod constants;
+mod delete_connection;
+mod dump;
+mod import_connection;
 mod monitoring_data;
+mod pull;
+mod push;
+mod registration;
+mod status;
 mod tls_server;
-use anyhow::{anyhow, Context, Result as AnyhowResult};
+use anyhow::{Context, Result as AnyhowResult};
 use config::JSONLoader;
+use log::error;
+#[cfg(unix)]
 use nix::unistd;
-use std::fs;
-use std::io::Result as IoResult;
 use std::io::{self, Write};
-use std::path::{Path, PathBuf};
+use std::path::Path;
+use std::sync::{mpsc, Arc, RwLock};
+use std::thread;
 use structopt::StructOpt;
-use uuid::Uuid;
 
-use log::{info, LevelFilter};
-use log4rs::append::file::FileAppender;
-use log4rs::config::{Appender, Config, Root};
-use log4rs::encode::pattern::PatternEncoder;
+fn daemon(registry: config::Registry, legacy_pull_marker: &std::path::Path) -> AnyhowResult<()> {
+    let registry_for_push = Arc::new(RwLock::new(registry));
+    let registry_for_pull = Arc::clone(&registry_for_push);
+    let legacy_pull_marker = legacy_pull_marker.to_owned();
 
-const CMK_AGENT_USER: &str = "cmk-agent";
-const HOME_DIR: &str = "/var/lib/cmk-agent";
-// Normally, the config would be expected at /etc/check_mk/, but we
-// need to read it as cmk-agent user, so we use its home directory.
-const CONFIG_FILE: &str = "cmk-agent-ctl-config.json";
+    let (tx_push, rx) = mpsc::channel();
+    let tx_pull = tx_push.clone();
 
-const CONN_FILE: &str = "registered_connections.json";
-const LOG_FILE: &str = "cmk-agent-ctl.log";
-const LEGACY_PULL_FILE: &str = "allow-legacy-pull";
-const TLS_ID: &[u8] = b"16";
+    thread::spawn(move || {
+        tx_push.send(push::push(registry_for_push)).unwrap();
+    });
+    thread::spawn(move || {
+        tx_pull
+            .send(pull::pull(registry_for_pull, &legacy_pull_marker))
+            .unwrap();
+    });
 
-fn post_registration_conn_type(
-    server: &str,
-    root_cert: &str,
-    uuid: &str,
-    client_cert: &str,
-) -> AnyhowResult<config::ConnectionType> {
-    loop {
-        let status_resp = agent_receiver_api::status(server, root_cert, uuid, client_cert)?;
-        if let Some(agent_receiver_api::HostStatus::Declined) = status_resp.status {
-            return Err(anyhow!(
-                "Registration declined by Checkmk instance, please check credentials"
-            ));
-        }
-        if let Some(ct) = status_resp.connection_type {
-            return Ok(ct);
-        }
-        println!("Waiting for registration to complete on Checkmk instance, sleeping 20 s");
-        std::thread::sleep(std::time::Duration::from_secs(20));
-    }
-}
-
-fn register(
-    config: config::RegistrationConfig,
-    mut registration: config::Registration,
-) -> AnyhowResult<()> {
-    // TODO: what if registration_state.contains_key(agent_receiver_address) (already registered)?
-    let uuid = Uuid::new_v4().to_string();
-    let server_cert = match &config.root_certificate {
-        Some(cert) => Some(cert.clone()),
-        None => {
-            let fetched_server_cert = certs::fetch_server_cert(&config.agent_receiver_address)
-                .context("Error establishing trust with agent_receiver.")?;
-            println!("Trusting \n\n{}\nfor pairing", &fetched_server_cert);
-            None
-        }
-    };
-
-    let (csr, private_key) = certs::make_csr(&uuid).context("Error creating CSR.")?;
-    let pairing_response = agent_receiver_api::pairing(
-        &config.agent_receiver_address,
-        server_cert,
-        csr,
-        &config.credentials,
-    )
-    .context(format!(
-        "Error pairing with {}",
-        &config.agent_receiver_address
-    ))?;
-
-    match config.host_reg_data {
-        config::HostRegistrationData::Name(hn) => {
-            agent_receiver_api::register_with_hostname(
-                &config.agent_receiver_address,
-                &pairing_response.root_cert,
-                &config.credentials,
-                &uuid,
-                &hn,
-            )
-            .context(format!(
-                "Error registering with hostname at {}",
-                &config.agent_receiver_address
-            ))?;
-        }
-        config::HostRegistrationData::Labels(al) => {
-            agent_receiver_api::register_with_agent_labels(
-                &config.agent_receiver_address,
-                &pairing_response.root_cert,
-                &config.credentials,
-                &uuid,
-                &al,
-            )
-            .context(format!(
-                "Error registering with agent labels at {}",
-                &config.agent_receiver_address
-            ))?;
-        }
-    }
-
-    registration.register_connection(
-        post_registration_conn_type(
-            &config.agent_receiver_address,
-            &pairing_response.root_cert,
-            &uuid,
-            &pairing_response.client_cert,
-        )?,
-        config.agent_receiver_address,
-        config::Connection {
-            uuid,
-            private_key,
-            certificate: pairing_response.client_cert,
-            root_cert: pairing_response.root_cert,
-        },
-    )?;
-
-    registration.save()?;
-
-    disallow_legacy_pull()
-        .context("Registration successful, but could not delete marker for legacy pull mode")?;
-    Ok(())
-}
-
-fn push(registration: config::Registration) -> AnyhowResult<()> {
-    let mon_data = monitoring_data::collect().context("Error collecting monitoring data")?;
-
-    for (agent_receiver_address, server_spec) in registration.push_connections() {
-        agent_receiver_api::agent_data(
-            agent_receiver_address,
-            &server_spec.root_cert,
-            &server_spec.uuid,
-            &server_spec.certificate,
-            &mon_data,
-        )
-        .context(format!(
-            "Error pushing monitoring data to {}.",
-            agent_receiver_address
-        ))?
-    }
-
-    Ok(())
-}
-
-fn dump() -> AnyhowResult<()> {
-    let mon_data = monitoring_data::collect().context("Error collecting monitoring data.")?;
-    io::stdout()
-        .write_all(&mon_data)
-        .context("Error writing monitoring data to stdout.")?;
-
-    Ok(())
-}
-
-fn status(_registration: config::Registration) -> AnyhowResult<()> {
-    Err(anyhow!("Status mode not yet implemented"))
-}
-
-fn pull(registration: config::Registration) -> AnyhowResult<()> {
-    if is_legacy_pull(&registration) {
-        return dump();
-    }
-
-    let mut stream = tls_server::IoStream::new();
-
-    stream.write_all(TLS_ID)?;
-    stream.flush()?;
-
-    let mut tls_connection = tls_server::tls_connection(registration.pull_connections())
-        .context("Could not initialize TLS.")?;
-    let mut tls_stream = tls_server::tls_stream(&mut tls_connection, &mut stream);
-
-    let mon_data = monitoring_data::collect().context("Error collecting monitoring data.")?;
-    tls_stream.write_all(&mon_data)?;
-    tls_stream.flush()?;
-
-    disallow_legacy_pull().context("Just provided agent data via TLS, but legacy pull mode is still allowed, and could not delete marker")?;
-    Ok(())
-}
-
-fn is_legacy_pull(registration: &config::Registration) -> bool {
-    if !Path::new(HOME_DIR).join(LEGACY_PULL_FILE).exists() {
-        return false;
-    }
-    if !registration.is_empty() {
-        return false;
-    }
-    true
-}
-
-fn disallow_legacy_pull() -> IoResult<()> {
-    let legacy_pull_marker = Path::new(HOME_DIR).join(LEGACY_PULL_FILE);
-    if !legacy_pull_marker.exists() {
-        return Ok(());
-    }
-
-    fs::remove_file(legacy_pull_marker)
+    // We should never receive anything here, unless one of the threads crashed.
+    // In that case, this will contain an error that should be propagated.
+    rx.recv().unwrap()
 }
 
 fn init_logging(path: &Path) -> AnyhowResult<()> {
-    let logfile = FileAppender::builder()
-        .encoder(Box::new(PatternEncoder::new("{l} - {m}\n")))
-        .build(path)?;
-
-    let config = Config::builder()
-        .appender(Appender::builder().build("logfile", Box::new(logfile)))
-        .build(Root::builder().appender("logfile").build(LevelFilter::Info))?;
-
-    log4rs::init_config(config)?;
-
+    // TODO: Change log level to "error" before first official release
+    flexi_logger::Logger::try_with_env_or_str("info")?
+        .log_to_file(flexi_logger::FileSpec::try_from(path)?)
+        .append()
+        .format(flexi_logger::detailed_format)
+        .start()
+        .unwrap();
     Ok(())
 }
 
-fn ensure_home_directory(path: &Path) -> io::Result<()> {
-    if !path.exists() {
-        fs::create_dir_all(path)?;
-    }
+#[cfg(unix)]
+fn become_user(user: &unistd::User) -> AnyhowResult<()> {
+    unistd::setgid(user.gid).context(format!(
+        "Failed to set group id {} corresponding to user {}",
+        user.gid, user.name,
+    ))?;
+    unistd::setuid(user.uid).context(format!(
+        "Failed to set user id {} corresponding to user {}",
+        user.uid, user.name,
+    ))?;
     Ok(())
 }
 
-fn try_sanitize_home_dir_ownership(home_dir: &Path, user: &str) {
-    if let Err(error) = sanitize_home_dir_ownership(home_dir, user).context(format!(
-        "Failed to recursively set ownership of {} to {}",
-        home_dir.display(),
-        user
-    )) {
-        io::stderr()
-            .write_all(format!("{:?}", error).as_bytes())
-            .unwrap_or(());
-        info!("{:?}", error)
-    };
-}
-fn sanitize_home_dir_ownership(home_dir: &Path, user: &str) -> AnyhowResult<()> {
-    if !unistd::Uid::current().is_root() {
-        return Ok(());
+#[cfg(unix)]
+fn determine_paths(username: &str) -> AnyhowResult<constants::Paths> {
+    let user = unistd::User::from_name(username)?.context(format!(
+        "Could not find dedicated Checkmk agent user {}",
+        username
+    ))?;
+
+    if let Err(error) = become_user(&user) {
+        return Err(error.context(format!(
+            "Failed to run as user '{}'. Please execute with sufficient permissions (maybe try 'sudo').",
+            user.name,
+        )));
     }
-    let cmk_agent_user =
-        unistd::User::from_name(user)?.context(format!("Could not find user {}", user))?;
-    let cmk_agent_group =
-        unistd::Group::from_name(user)?.context(format!("Could not find group {}", user))?;
-    Ok(recursive_chown(
-        home_dir,
-        Some(cmk_agent_user.uid),
-        Some(cmk_agent_group.gid),
-    )?)
+
+    Ok(constants::Paths::new(&user.dir))
 }
 
-fn recursive_chown(
-    dir: &Path,
-    uid: Option<unistd::Uid>,
-    gid: Option<unistd::Gid>,
-) -> io::Result<()> {
-    unistd::chown(dir, uid, gid)?;
-    for entry in fs::read_dir(dir)? {
-        let path = entry?.path();
-        if path.is_dir() {
-            recursive_chown(&path, uid, gid)?;
-        } else {
-            unistd::chown(&path, uid, gid)?;
-        }
+#[cfg(windows)]
+fn determine_default_paths() -> AnyhowResult<constants::Paths> {
+    let program_data_path: String;
+    match std::env::var(constants::ENV_PROGRAM_DATA) {
+        Ok(val) => program_data_path = val,
+        Err(_) => program_data_path = String::from("c:\\ProgramData"),
     }
-    Ok(())
+    let home = std::path::PathBuf::from(program_data_path + constants::WIN_AGENT_HOME_DIR);
+    Ok(constants::Paths::new(&home))
 }
 
-fn init() -> (cli::Args, PathBuf, PathBuf) {
-    let conn_path = Path::new(HOME_DIR).join(CONN_FILE);
-    let config_path = Path::new(HOME_DIR).join(CONFIG_FILE);
-    let log_path = Path::new(HOME_DIR).join(LOG_FILE);
-
+fn init() -> AnyhowResult<(cli::Args, constants::Paths)> {
     // Parse args as first action to directly exit from --help or malformatted arguments
     let args = cli::Args::from_args();
 
-    // TODO: Decide: Check if running as cmk-agent or root, and abort otherwise?
-    if let Err(error) = ensure_home_directory(Path::new(HOME_DIR)) {
-        panic!(
-            "Cannot go on: Missing cmk-agent home directory and failed to create it: {}",
-            error
-        );
-    }
+    #[cfg(unix)]
+    let paths = match determine_paths(constants::CMK_AGENT_USER) {
+        Ok(paths) => paths,
+        Err(err) => return Err(err),
+    };
 
-    if let Err(error) = init_logging(&log_path) {
+    #[cfg(windows)]
+    let paths = match determine_default_paths() {
+        Ok(paths) => paths,
+        Err(err) => return Err(err),
+    };
+
+    if let Err(error) = init_logging(&paths.log_path) {
         io::stderr()
             .write_all(format!("Failed to initialize logging: {:?}", error).as_bytes())
             .unwrap_or(());
     }
 
-    (args, config_path, conn_path)
+    Ok((args, paths))
 }
 
-fn run_requested_mode(args: cli::Args, config_path: &Path, conn_path: &Path) -> AnyhowResult<()> {
-    let stored_config = config::ConfigFromDisk::load(config_path)?;
-    let registration = config::Registration::from_file(conn_path)
+fn run_requested_mode(args: cli::Args, paths: constants::Paths) -> AnyhowResult<()> {
+    let stored_config = config::ConfigFromDisk::load(&paths.config_path)?;
+    let mut registry = config::Registry::from_file(&paths.registry_path)
         .context("Error while loading registered connections.")?;
     match args {
-        cli::Args::Register(reg_args) => register(
-            config::RegistrationConfig::new(stored_config, reg_args)?,
-            registration,
-        ),
-        cli::Args::Push { .. } => push(registration),
-        cli::Args::Pull { .. } => pull(registration),
-        cli::Args::Dump { .. } => dump(),
-        cli::Args::Status { .. } => status(registration),
+        cli::Args::Register(reg_args) => {
+            registration::register(
+                config::RegistrationConfig::new(stored_config, reg_args)?,
+                &mut registry,
+            )?;
+            pull::disallow_legacy_pull(&paths.legacy_pull_path).context(
+                "Registration successful, but could not delete marker for legacy pull mode",
+            )
+        }
+        cli::Args::RegisterSurrogatePull(surr_pull_reg_args) => {
+            registration::register_surrogate_pull(config::RegistrationConfig::new(
+                stored_config,
+                surr_pull_reg_args,
+            )?)
+        }
+        cli::Args::Push { .. } => push::handle_push_cycle(&registry),
+        cli::Args::Pull { .. } => {
+            pull::pull(Arc::new(RwLock::new(registry)), &paths.legacy_pull_path)
+        }
+        cli::Args::Daemon { .. } => daemon(registry, &paths.legacy_pull_path),
+        cli::Args::Dump { .. } => dump::dump(),
+        cli::Args::Status(status_args) => status::status(registry, status_args.json),
+        cli::Args::Delete(delete_args) => {
+            delete_connection::delete(&mut registry, &delete_args.connection)
+        }
+        cli::Args::DeleteAll { .. } => delete_connection::delete_all(&mut registry),
+        cli::Args::Import(import_args) => import_connection::import(&mut registry, &import_args),
     }
 }
 
 fn main() -> AnyhowResult<()> {
-    let (args, config_path, conn_path) = init();
+    let (args, paths) = match init() {
+        Ok(args) => args,
+        Err(error) => {
+            // Do not log errors which occured for example when trying to become the cmk-agent user,
+            // otherwise, the log file ownership might be messed up
+            return Err(error);
+        }
+    };
 
-    let result = run_requested_mode(args, &config_path, &conn_path);
+    let result = run_requested_mode(args, paths);
 
     if let Err(error) = &result {
-        info!("{:?}", error)
+        error!("{:?}", error)
     }
 
-    try_sanitize_home_dir_ownership(Path::new(HOME_DIR), CMK_AGENT_USER);
-
     result
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    #[cfg(windows)]
+    fn test_windows_paths() {
+        let p = determine_default_paths().unwrap();
+        let home = String::from("C:\\ProgramData") + constants::WIN_AGENT_HOME_DIR;
+        assert_eq!(p.home_dir, std::path::PathBuf::from(&home));
+        assert_eq!(
+            p.config_path,
+            std::path::PathBuf::from(&home).join("cmk-agent-ctl-config.json")
+        );
+        assert_eq!(
+            p.registry_path,
+            std::path::PathBuf::from(&home).join("registered_connections.json")
+        );
+        assert_eq!(
+            p.log_path,
+            std::path::PathBuf::from(&home)
+                .join("log")
+                .join("cmk-agent-ctl.log")
+        );
+        assert_eq!(
+            p.legacy_pull_path,
+            std::path::PathBuf::from(&home).join("allow-legacy-pull")
+        );
+    }
 }

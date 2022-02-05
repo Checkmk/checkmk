@@ -25,6 +25,7 @@ from cmk.utils.type_defs import (
     Labels,
     RuleConditionsSpec,
     Ruleset,
+    RuleSpec,
     RuleValue,
     ServiceName,
     TagCondition,
@@ -276,7 +277,7 @@ class RulesetMatcher:
         self.tuple_transformer.transform_in_place(ruleset, is_service=False, is_binary=False)
         entries = []
         for rule in ruleset:
-            if "options" in rule and "disabled" in rule["options"]:
+            if _is_disabled(rule):
                 continue
 
             hostlist = rule["condition"].get("host_name")
@@ -421,7 +422,7 @@ class RulesetOptimizer:
         """
         host_values: PreprocessedHostRuleset = {}
         for rule in ruleset:
-            if "options" in rule and "disabled" in rule["options"]:
+            if _is_disabled(rule):
                 continue
 
             for hostname in self._all_matching_hosts(rule["condition"], with_foreign_hosts):
@@ -448,7 +449,7 @@ class RulesetOptimizer:
     ) -> PreprocessedServiceRuleset:
         new_rules: PreprocessedServiceRuleset = []
         for rule in ruleset:
-            if "options" in rule and "disabled" in rule["options"]:
+            if _is_disabled(rule):
                 continue
 
             # Directly compute set of all matching hosts here, this will avoid
@@ -1040,3 +1041,8 @@ def get_tag_to_group_map(tag_config: TagConfig) -> TagIDToTaggroupID:
             if grouped_tag.id is not None:
                 tag_id_to_tag_group_id_map[grouped_tag.id] = tag_group.id
     return tag_id_to_tag_group_id_map
+
+
+def _is_disabled(rule: RuleSpec) -> bool:
+    # TODO consolidate with cmk.gui.watolib.rulesets.py::Rule::is_disabled
+    return "options" in rule and bool(rule["options"].get("disabled", False))

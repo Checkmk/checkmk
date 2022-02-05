@@ -90,7 +90,7 @@ if [ ${#REDIS_INSTANCES[@]} -eq 0 ]; then
             declare "REDIS_PORT_$REDIS_NAME=${parts[1]}"
 
             # append instance to array
-            REDIS_INSTANCES+=($REDIS_NAME)
+            REDIS_INSTANCES+=("${REDIS_NAME}")
         done
     done
 fi
@@ -103,11 +103,11 @@ else
 fi
 
 for INSTANCE in ${REDIS_INSTANCES[*]}; do
-    redis_args $INSTANCE
+    redis_args "${INSTANCE}"
     # print server section
     echo "[[[$INSTANCE|${!HOST}|${!PORT}]]]"
 
     # execute command
-    $WAITMAX_CMD 3 $REDIS_CLI_CMD $REDIS_ARGS || true
+    $WAITMAX_CMD 3 "${REDIS_CLI_CMD}" "${REDIS_ARGS}" || true
     echo
 done

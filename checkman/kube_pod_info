@@ -19,7 +19,7 @@ description:
 
  - Restart policy
 
- This is provided by the API server. The service is {OK}.
+ This is provided by the API server. The service is always {OK}.
 
  It requires that the special agent kube is configured.
 

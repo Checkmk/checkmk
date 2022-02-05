@@ -16,7 +16,7 @@ VARIABLES:
       SH: "git rev-parse ${PATCHSET_REVISION}^"
 
     - NAME: CHANGED_FILES_REL
-      SH: "git diff-tree --no-commit-id --name-only -r ${BASE_COMMIT_ID}..HEAD | sed -E 's#(enterprise|managed)/cmk/#cmk/#g' | sort"
+      SH: "git diff-tree --no-commit-id --name-only -r ${BASE_COMMIT_ID}..HEAD | sed -E 's#(enterprise|managed|plus)/cmk/#cmk/#g' | sort"
 
     - NAME: CHANGED_FILES_ABS
       # prefix ${WORKSPACE} to every line, make sure empty input won't be handled as a line
@@ -144,6 +144,21 @@ STAGES:
       DIR: 'tests'
       COMMAND: "make --quiet test-format-shell &> ${RESULTS}/shell-format.txt"
       RESULT_CHECK_FILE_PATTERN: "results/shell-format.txt"
+
+    - NAME: 'Shell check'
+      DIR: 'tests'
+      ENV_VARS:
+        SHELLCHECK_OUTPUT_ARGS: -e SC1090
+            -e SC1091
+            -e SC2001
+            -e SC2009
+            -e SC2015
+            -e SC2030
+            -e SC2031
+            -e SC2039
+      COMMAND: "make test-shellcheck &> ${RESULTS}/shellcheck.txt"
+      RESULT_CHECK_TYPE: "GCC"
+      RESULT_CHECK_FILE_PATTERN: "results/shellcheck.txt"
 
     - NAME: 'Shell Unit'
       DIR: 'tests'

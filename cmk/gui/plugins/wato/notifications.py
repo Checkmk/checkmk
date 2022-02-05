@@ -14,7 +14,7 @@ from cmk.utils.site import url_prefix
 import cmk.gui.mkeventd as mkeventd
 from cmk.gui.globals import request
 from cmk.gui.i18n import _
-from cmk.gui.plugins.wato import (
+from cmk.gui.plugins.wato.utils import (
     HTTPProxyReference,
     IndividualOrStoredPassword,
     notification_parameter_registry,
@@ -1824,3 +1824,76 @@ class NotificationParameterPushover(NotificationParameter):
         if isinstance(params, dict):
             return (params["priority"], (params["retry"], params["expire"], params["receipts"]))
         return params
+
+
+@notification_parameter_registry.register
+class NotificationParameterSMSviaIP(NotificationParameter):
+    @property
+    def ident(self):
+        return "sms_api"
+
+    @property
+    def spec(self):
+        return Dictionary(
+            title=_("Create notification with the following parameters"),
+            optional_keys=["ignore_ssl"],
+            elements=[
+                (
+                    "modem_type",
+                    CascadingDropdown(
+                        title=_("Modem type"),
+                        help=_(
+                            "Choose what modem is used. Currently supported "
+                            "is only Teltonika-TRB140."
+                        ),
+                        choices=[
+                            ("trb140", _("Teltonika-TRB140")),
+                        ],
+                    ),
+                ),
+                (
+                    "url",
+                    HTTPUrl(
+                        title=_("Modem URL"),
+                        help=_(
+                            "Configure your modem URL here (eg. https://mymodem.mydomain.example)."
+                        ),
+                        allow_empty=False,
+                    ),
+                ),
+                (
+                    "ignore_ssl",
+                    FixedValue(
+                        True,
+                        title=_("Disable SSL certificate verification"),
+                        totext=_("Disable SSL certificate verification"),
+                        help=_("Ignore unverified HTTPS request warnings. Use with caution."),
+                    ),
+                ),
+                ("proxy_url", HTTPProxyReference()),
+                (
+                    "username",
+                    TextInput(
+                        title=_("Username"),
+                        help=_("The user, used for login."),
+                        size=40,
+                        allow_empty=False,
+                    ),
+                ),
+                (
+                    "password",
+                    IndividualOrStoredPassword(
+                        title=_("Password of the user"),
+                        allow_empty=False,
+                    ),
+                ),
+                (
+                    "timeout",
+                    TextInput(
+                        title=_("Set optional timeout for connections to the modem."),
+                        help=_("Here you can configure timeout settings."),
+                        default_value="10",
+                    ),
+                ),
+            ],
+        )

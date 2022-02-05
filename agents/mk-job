@@ -29,7 +29,7 @@ RUNNING_FILE="$OUTPUT_PATH/$IDENT.$$running"
 shift
 
 if [ ! -d "$OUTPUT_PATH" ]; then
-    if [ "$MYSELF" = root ] ; then
+    if [ "$MYSELF" = root ]; then
         mkdir -p "$OUTPUT_PATH"
     else
         echo "ERROR: Missing output directory $OUTPUT_PATH for non-root user '$MYSELF'." >&2
@@ -37,23 +37,22 @@ if [ ! -d "$OUTPUT_PATH" ]; then
     fi
 fi
 
-if ! type $1 >/dev/null 2>&1; then
+if ! type "$1" >/dev/null 2>&1; then
     echo -e "ERROR: Cannot run $1. Command not found.\n" >&2
     help >&2
     exit 1
 fi
 
-date +"start_time %s" > "$RUNNING_FILE" 2>/dev/null
+date +"start_time %s" >"$RUNNING_FILE" 2>/dev/null
 
-if [ ! -w "$RUNNING_FILE" ] ; then
-  # Looks like we are lacking the permissions to create this file..
-  # In this scenario no mk-job status file is created. We simply execute the command
-  exec "$@"
+if [ ! -w "$RUNNING_FILE" ]; then
+    # Looks like we are lacking the permissions to create this file..
+    # In this scenario no mk-job status file is created. We simply execute the command
+    exec "$@"
 fi
 
-
 /usr/bin/time -o "$RUNNING_FILE" --append \
-              -f "exit_code %x\nreal_time %E\nuser_time %U\nsystem_time %S\nreads %I\nwrites %O\nmax_res_kbytes %M\navg_mem_kbytes %K\ninvol_context_switches %c\nvol_context_switches %w" "$@"
+    -f "exit_code %x\nreal_time %E\nuser_time %U\nsystem_time %S\nreads %I\nwrites %O\nmax_res_kbytes %M\navg_mem_kbytes %K\ninvol_context_switches %c\nvol_context_switches %w" "$@"
 RC=$?
 mv "$RUNNING_FILE" "$OUTPUT_PATH/$IDENT"
 exit $RC

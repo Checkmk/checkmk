@@ -12,6 +12,11 @@ from .utils import k8s
 
 Section = Mapping[str, Mapping]
 
+########################################################################
+# NOTE: This inv plugin (and associated special agent) is deprecated and
+#       will be removed in Checkmk version 2.2.
+########################################################################
+
 
 register.agent_section(
     name="k8s_job_container",

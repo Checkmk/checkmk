@@ -62,7 +62,7 @@ def _get_files_to_check(pylint_test_dir):
     # Not checking compiled check, inventory, bakery plugins with Python 3
     files = [pylint_test_dir]
 
-    p = subprocess.Popen(
+    p = subprocess.Popen(  # pylint:disable=consider-using-with
         ["%s/scripts/find-python-files" % repo_path()],
         stdout=subprocess.PIPE,
         encoding="utf-8",

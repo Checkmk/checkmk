@@ -6,10 +6,10 @@
 
 from unittest.mock import Mock
 
-from cmk.base.check_utils import CheckPluginName, Service
+from cmk.base.check_utils import CheckPluginName
 from cmk.base.plugin_contexts import current_host, current_service
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
-from cmk.base.plugins.agent_based.utils.cpu import Load, ProcessorType, Section
+from cmk.base.plugins.agent_based.utils.cpu import Load, ProcessorType, Section, Threads
 from cmk.base.plugins.agent_based.utils.cpu_load import check_cpu_load
 
 
@@ -20,7 +20,7 @@ def test_cpu_loads_fixed_levels() -> None:
             Section(
                 load=Load(0.5, 1.0, 1.5),
                 num_cpus=4,
-                num_threads=123,
+                threads=Threads(count=123),
                 type=ProcessorType.physical,
             ),
         )
@@ -39,14 +39,7 @@ def test_cpu_loads_predictive(mocker: Mock) -> None:
         "cmk.base.check_api._prediction.get_levels",
         return_value=(None, (2.2, 4.2, None, None)),
     )
-    with current_host("unittest"), current_service(
-        Service(
-            CheckPluginName("cpu_loads"),
-            "item",
-            "unittest-sd",
-            {},
-        )
-    ):
+    with current_host("unittest"), current_service(CheckPluginName("cpu_loads"), "item"):
         assert list(
             check_cpu_load(
                 {
@@ -59,7 +52,7 @@ def test_cpu_loads_predictive(mocker: Mock) -> None:
                 Section(
                     load=Load(0.5, 1.0, 1.5),
                     num_cpus=4,
-                    num_threads=123,
+                    threads=Threads(count=123),
                 ),
             )
         ) == [

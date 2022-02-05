@@ -17,7 +17,6 @@ from contextlib import contextmanager
 
 import pytest
 
-from tests.testlib.fixtures import web  # noqa: F401 # pylint: disable=unused-import
 from tests.testlib.site import Site
 
 from cmk.utils.paths import mkbackup_lock_dir
@@ -68,9 +67,7 @@ def backup_lock_dir_fixture(request):
 
 
 @pytest.fixture(name="test_cfg", scope="function")
-def test_cfg_fixture(
-    web, site: Site, backup_path
-):  # noqa:F811  # pylint: disable=redefined-outer-name
+def test_cfg_fixture(web, site: Site, backup_path):
     site.ensure_running()
 
     cfg = {
@@ -312,7 +309,9 @@ def test_mkbackup_no_history_backup_and_restore(site, test_cfg, backup_path):
 
     tar_path = os.path.join(backup_path, backup_id, "site-%s.tar" % site.id)
 
-    member_names = [m.name for m in tarfile.open(tar_path).getmembers()]
+    member_names = [
+        m.name for m in tarfile.open(tar_path).getmembers()  # pylint:disable=consider-using-with
+    ]
     history = [n for n in member_names if fnmatch.fnmatch(n, "*/var/check_mk/core/archive/*")]
     logs = [n for n in member_names if fnmatch.fnmatch(n, "*/var/log/*.log")]
     rrds = [n for n in member_names if n.endswith(".rrd")]

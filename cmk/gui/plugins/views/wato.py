@@ -11,7 +11,7 @@ from cmk.gui.exceptions import MKGeneralException
 from cmk.gui.globals import request
 from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _
-from cmk.gui.plugins.views import Painter, painter_registry, Sorter, sorter_registry
+from cmk.gui.plugins.views.utils import Painter, painter_registry, Sorter, sorter_registry
 from cmk.gui.type_defs import Row
 
 

@@ -97,17 +97,18 @@ from cmk.gui.permissions import (
 )
 
 # Needed for legacy (pre 1.6) plugins
-from cmk.gui.plugins.views.icons import (  # noqa: F401  # pylint: disable=unused-import
+from cmk.gui.plugins.views.icons.utils import (  # noqa: F401  # pylint: disable=unused-import
     get_icons,
     get_multisite_icons,
+    Icon,
+    icon_and_action_registry,
     IconEntry,
     IconObjectType,
     iconpainter_columns,
     LegacyIconEntry,
     multisite_icons_and_actions,
 )
-from cmk.gui.plugins.views.icons.utils import Icon, icon_and_action_registry
-from cmk.gui.plugins.views.perfometers import (  # noqa: F401 # pylint: disable=unused-import
+from cmk.gui.plugins.views.perfometers.utils import (  # noqa: F401 # pylint: disable=unused-import
     perfometers,
 )
 from cmk.gui.plugins.views.utils import (  # noqa: F401 # pylint: disable=unused-import
@@ -203,8 +204,9 @@ from cmk.gui.valuespec import (
     Tuple,
     ValueSpec,
 )
+from cmk.gui.view_utils import get_labels, render_labels, render_tag_groups
 from cmk.gui.views.builtin_views import builtin_views
-from cmk.gui.watolib.activate_changes import get_pending_changes_info
+from cmk.gui.watolib.activate_changes import get_pending_changes_info, get_pending_changes_tooltip
 
 if not cmk_version.is_raw_edition():
     from cmk.gui.cee.ntop.connector import get_cache  # pylint: disable=no-name-in-module
@@ -215,8 +217,11 @@ from cmk.gui.type_defs import (
     HTTPVariables,
     InfoName,
     PainterSpec,
+    Perfdata,
+    PerfometerSpec,
     Row,
     Rows,
+    TranslatedMetrics,
     ViewName,
     ViewProcessTracking,
     ViewSpec,
@@ -359,7 +364,7 @@ def _get_struct_tree(is_history, hostname, site_id):
         return struct_tree_cache[cache_id]
 
     if is_history:
-        struct_tree = inventory.load_filtered_inventory_tree(hostname)
+        struct_tree = inventory.load_latest_delta_tree(hostname)
     else:
         row = inventory.get_status_data_via_livestatus(site_id, hostname)
         struct_tree = inventory.load_filtered_and_merged_tree(row)
@@ -661,7 +666,7 @@ class View:
             self.spec["single_infos"], self.context
         )
 
-        # Special hack for the situation where hostgroup views link to host views: The host view uses
+        # Special hack for the situation where host group views link to host views: The host view uses
         # the datasource "hosts" which does not have the "hostgroup" info, but is configured to have a
         # single_info "hostgroup". To make this possible there exists a feature in
         # (ABCDataSource.link_filters, views._patch_view_context) which is a very specific hack. Have a
@@ -685,6 +690,15 @@ class View:
             return set()
 
         return missing_single_infos
+
+
+class DummyView(View):
+    """Represents an empty view hull, not intended to be displayed
+    This view can be used as surrogate where a view-ish like object is needed
+    """
+
+    def __init__(self):
+        super().__init__("dummy_view", {}, {})
 
 
 class ABCViewRenderer(abc.ABC):
@@ -972,6 +986,7 @@ class GUIViewRenderer(ABCViewRenderer):
             dropdowns=page_menu_dropdowns,
             breadcrumb=breadcrumb,
             has_pending_changes=bool(get_pending_changes_info()),
+            pending_changes_tooltip=get_pending_changes_tooltip(),
         )
 
         self._extend_display_dropdown(menu, show_filters)
@@ -1191,7 +1206,8 @@ class GUIViewRenderer(ABCViewRenderer):
 
 
 def load_plugins() -> None:
-    """Plugin initialization hook (Called by cmk.gui.modules.call_load_plugins_hooks())"""
+    """Plugin initialization hook (Called by cmk.gui.main_modules.load_plugins())"""
+    _register_pre_21_plugin_api()
     utils.load_web_plugins("views", globals())
     utils.load_web_plugins("icons", globals())
     utils.load_web_plugins("perfometer", globals())
@@ -1247,6 +1263,105 @@ def load_plugins() -> None:
 
     # Make sure that custom views also have permissions
     declare_dynamic_permissions(lambda: visuals.declare_custom_permissions("views"))
+
+
+def _register_pre_21_plugin_api() -> None:
+    """Register pre 2.1 "plugin API"
+
+    This was never an official API, but the names were used by builtin and also 3rd party plugins.
+
+    Our builtin plugin have been changed to directly import from the .utils module. We add these old
+    names to remain compatible with 3rd party plugins for now.
+
+    In the moment we define an official plugin API, we can drop this and require all plugins to
+    switch to the new API. Until then let's not bother the users with it.
+    """
+    # Needs to be a local import to not influence the regular plugin loading order
+    import cmk.gui.plugins.views as api_module
+    import cmk.gui.plugins.views.utils as plugin_utils
+
+    for name in (
+        "ABCDataSource",
+        "Cell",
+        "CellSpec",
+        "cmp_custom_variable",
+        "cmp_ip_address",
+        "cmp_num_split",
+        "cmp_service_name_equiv",
+        "cmp_simple_number",
+        "cmp_simple_string",
+        "cmp_string_list",
+        "Command",
+        "command_group_registry",
+        "command_registry",
+        "CommandActionResult",
+        "CommandGroup",
+        "CommandSpec",
+        "compare_ips",
+        "data_source_registry",
+        "DataSourceLivestatus",
+        "declare_1to1_sorter",
+        "declare_simple_sorter",
+        "DerivedColumnsSorter",
+        "display_options",
+        "EmptyCell",
+        "ExportCellContent",
+        "Exporter",
+        "exporter_registry",
+        "format_plugin_output",
+        "get_graph_timerange_from_painter_options",
+        "get_label_sources",
+        "get_perfdata_nth_value",
+        "get_permitted_views",
+        "get_tag_groups",
+        "group_value",
+        "inventory_displayhints",
+        "InventoryHintSpec",
+        "is_stale",
+        "join_row",
+        "Layout",
+        "layout_registry",
+        "multisite_builtin_views",
+        "output_csv_headers",
+        "paint_age",
+        "paint_host_list",
+        "paint_nagiosflag",
+        "paint_stalified",
+        "Painter",
+        "painter_option_registry",
+        "painter_registry",
+        "PainterOption",
+        "PainterOptions",
+        "query_livestatus",
+        "register_painter",
+        "register_sorter",
+        "render_cache_info",
+        "render_link_to_view",
+        "replace_action_url_macros",
+        "Row",
+        "row_id",
+        "RowTable",
+        "RowTableLivestatus",
+        "Sorter",
+        "sorter_registry",
+        "transform_action_url",
+        "url_to_visual",
+        "view_is_enabled",
+        "view_title",
+        "VisualLinkSpec",
+    ):
+        api_module.__dict__[name] = plugin_utils.__dict__[name]
+
+    api_module.__dict__.update(
+        {
+            "Perfdata": Perfdata,
+            "PerfometerSpec": PerfometerSpec,
+            "TranslatedMetrics": TranslatedMetrics,
+            "get_labels": get_labels,
+            "render_labels": render_labels,
+            "render_tag_groups": render_tag_groups,
+        }
+    )
 
 
 # Transform pre 1.6 icon plugins. Deprecate this one day.
@@ -1527,9 +1642,9 @@ def format_view_title(name, view):
     elif "host" in infos:
         title_parts.append(_("Hosts"))
     elif "hostgroup" in infos:
-        title_parts.append(_("Hostgroups"))
+        title_parts.append(_("Host groups"))
     elif "servicegroup" in infos:
-        title_parts.append(_("Servicegroups"))
+        title_parts.append(_("Service groups"))
 
     title_parts.append("%s (%s)" % (_u(view["title"]), name))
 
@@ -2000,7 +2115,7 @@ def page_view():
         _patch_view_context(view_spec)
 
         datasource = data_source_registry[view_spec["datasource"]]()
-        context = visuals.active_context_from_request(datasource.infos) or view_spec["context"]
+        context = visuals.active_context_from_request(datasource.infos, view_spec["context"])
 
         view = View(view_name, view_spec, context)
         view.row_limit = get_limit()

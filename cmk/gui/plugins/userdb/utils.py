@@ -156,20 +156,6 @@ def validate_start_url(value: str, varprefix: str) -> None:
 #   '----------------------------------------------------------------------'
 
 
-def cleanup_connection_id(connection_id: Optional[str]) -> str:
-    if connection_id is None:
-        return "htpasswd"
-
-    # Old Checkmk used a static "ldap" connector id for all LDAP users.
-    # Since Checkmk now supports multiple LDAP connections, the ID has
-    # been changed to "default". But only transform this when there is
-    # no connection existing with the id LDAP.
-    if connection_id == "ldap" and not get_connection("ldap"):
-        return "default"
-
-    return connection_id
-
-
 @request_memoize(maxsize=None)
 def get_connection(connection_id: Optional[str]) -> "Optional[UserConnector]":
     """Returns the connection object of the requested connection id
@@ -329,8 +315,7 @@ def _get_builtin_roles() -> Roles:
 
 
 class UserConnector(abc.ABC):
-    def __init__(self, cfg):
-        super().__init__()
+    def __init__(self, cfg) -> None:
         self._config = cfg
 
     @classmethod

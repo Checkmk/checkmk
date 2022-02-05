@@ -53,6 +53,21 @@ PermissionGeneralUse = permission_registry.register(
 permission_registry.register(
     Permission(
         section=PermissionSectionGeneral,
+        name="server_side_requests",
+        title=_l("Perform requests from the Checkmk server"),
+        description=_l(
+            "Users with this permission can use GUI features that initiate network connections "
+            "from the Checkmk server to other hosts on the intra/internet. Although this feature "
+            "makes it e.g. easier to fetch CAs from servers it may be used to scan the internal "
+            "network for open ports and running services."
+        ),
+        defaults=["admin"],
+    )
+)
+
+permission_registry.register(
+    Permission(
+        section=PermissionSectionGeneral,
         name="see_all",
         title=_l("See all host and services"),
         description=_l(
@@ -209,6 +224,18 @@ permission_registry.register(
         name="change_password",
         title=_l("Edit the user password"),
         description=_l("Permits the user to change the password."),
+        defaults=["admin", "user"],
+    )
+)
+
+permission_registry.register(
+    Permission(
+        section=PermissionSectionGeneral,
+        name="manage_2fa",
+        title=_l("Edit the user two-factor authentication"),
+        description=_l(
+            "Permits the user to edit two-factor authentication (Webauthn credentials)."
+        ),
         defaults=["admin", "user"],
     )
 )

@@ -6,6 +6,7 @@
 
 from enum import Enum
 from typing import Mapping, NamedTuple, Optional
+from uuid import UUID
 
 from pydantic import BaseModel
 
@@ -14,13 +15,18 @@ class PairingBody(BaseModel):
     csr: str
 
 
+class PairingResponse(BaseModel):
+    root_cert: str
+    client_cert: str
+
+
 class RegistrationWithHNBody(BaseModel):
-    uuid: str
+    uuid: UUID
     host_name: str
 
 
 class RegistrationWithLabelsBody(BaseModel):
-    uuid: str
+    uuid: UUID
     agent_labels: Mapping[str, str]
 
 

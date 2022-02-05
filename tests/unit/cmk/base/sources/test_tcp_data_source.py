@@ -19,7 +19,10 @@ from cmk.base.sources.tcp import TCPSource
 def test_attribute_defaults(monkeypatch):
     ipaddress = "1.2.3.4"
     hostname = HostName("testhost")
-    Scenario().add_host(hostname).apply(monkeypatch)
+
+    ts = Scenario()
+    ts.add_host(hostname)
+    ts.apply(monkeypatch)
 
     source = TCPSource(hostname, ipaddress)
     monkeypatch.setattr(source, "file_cache_base_path", Path("/my/path/"))

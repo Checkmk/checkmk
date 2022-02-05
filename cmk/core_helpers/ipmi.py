@@ -25,7 +25,8 @@ from cmk.utils.exceptions import MKFetcherError
 from cmk.utils.log import VERBOSE
 from cmk.utils.type_defs import AgentRawData, HostAddress, SectionName
 
-from .agent import AgentFetcher, AgentHostSections, AgentSummarizer, DefaultAgentFileCache
+from .agent import AgentFetcher, AgentRawDataSection, AgentSummarizer, DefaultAgentFileCache
+from .host_sections import HostSections
 from .type_defs import Mode
 
 
@@ -287,14 +288,14 @@ class IPMIFetcher(AgentFetcher):
 class IPMISummarizer(AgentSummarizer):
     def summarize_success(
         self,
-        host_sections: AgentHostSections,
+        host_sections: HostSections[AgentRawDataSection],
         *,
         mode: Mode,
     ) -> Sequence[ActiveCheckResult]:
         return [ActiveCheckResult(0, f"Version: {self._get_ipmi_version(host_sections)}")]
 
     @staticmethod
-    def _get_ipmi_version(host_sections: Optional[AgentHostSections]) -> str:
+    def _get_ipmi_version(host_sections: Optional[HostSections[AgentRawDataSection]]) -> str:
         if host_sections is None:
             return "unknown"
 

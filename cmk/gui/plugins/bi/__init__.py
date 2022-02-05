@@ -4,13 +4,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.utils.bi.bi_lib import (  # noqa: F401 # pylint: disable=unused-import
-    ABCBIAction,
-    ABCBIAggregationFunction,
-    ABCBICompiledNode,
-    ABCBISearch,
-    bi_action_registry,
-    bi_aggregation_function_registry,
-    bi_search_registry,
-    replace_macros,
-)
+#
+#    This file (cmk.gui.plugins.bi.__init__.py) is only kept to make
+#    our dev tools (pylint & co) happy.
+#    It will not be deployed, as cmk.gui.plugins.bi is supposed to be a
+#    namespace that can be shadowed/extended using the local/
+#    hierarchy.
+#
+#    This file must not contain any code.
+#

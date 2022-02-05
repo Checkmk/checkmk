@@ -15,6 +15,7 @@ from pathlib import Path
 from typing import Any, Iterable, Iterator, List, Mapping, NamedTuple, Optional
 
 import cmk.utils.cleanup
+from cmk.utils.config_path import ConfigPath, VersionedConfigPath
 from cmk.utils.cpu_tracking import CPUTracker, Snapshot
 from cmk.utils.observer import ABCResourceObserver
 from cmk.utils.timeout import MKTimeout, Timeout
@@ -22,7 +23,6 @@ from cmk.utils.type_defs import HostName, result
 
 from . import Fetcher, FetcherType, protocol
 from .cache import MaxAge
-from .config_path import ConfigPath, VersionedConfigPath
 from .crash_reporting import create_fetcher_crash_dump
 from .snmp import SNMPFetcher, SNMPPluginStore
 from .type_defs import Mode

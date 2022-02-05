@@ -17,7 +17,6 @@ WARN: DELETE THIS FOR CMK 2.1, THIS ONLY migrates 1.6->2.0
 import logging
 import os
 import xml.etree.ElementTree as ET
-from pathlib import Path
 
 import cmk.utils  # for cmk.utils.pnp_cleanup
 import cmk.utils.debug
@@ -162,7 +161,7 @@ def drop_opt_prefix(path):
 def update_journal(rename_journal):
     if not rename_journal:
         return
-    journaldir = Path(cmk.utils.paths.omd_root, "var/rrdcached/")
+    journaldir = cmk.utils.paths.omd_root / "var/rrdcached/"
     for filepath in journaldir.iterdir():
         logger.info("- Updating journal file %s", filepath)
         new_file = filepath.with_suffix(filepath.suffix + ".new")
@@ -210,7 +209,7 @@ def update_service_info(config_cache, hostnames):
             if entry.check_plugin_name not in CHECKS_USING_DF_INCLUDE:
                 continue
 
-            description = config.service_description(hostname, entry.check_plugin_name, entry.item)
+            description = config.service_description(hostname, *entry.id())
 
             if cmc_capable:
                 update_files(hostname, description, entry.item, "cmc")

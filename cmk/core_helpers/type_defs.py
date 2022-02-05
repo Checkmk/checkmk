@@ -6,7 +6,7 @@
 """Package containing the fetchers to the data sources."""
 
 import enum
-from typing import Final, List, Sequence, Set, Union
+from typing import Final, Sequence, Set, Union
 
 from cmk.utils.type_defs import SectionName
 
@@ -25,7 +25,7 @@ class Mode(enum.Enum):
     FORCE_SECTIONS = enum.auto()
 
 
-# Note that the inner List[str] to AgentRawDataSection
+# Note that the inner Sequence[str] to AgentRawDataSection
 # is only **artificially** different from AgentRawData and
 # obtained approximatively with `raw_data.decode("utf-8").split()`!
 #
@@ -35,7 +35,7 @@ class Mode(enum.Enum):
 # analogous to SNMPRawData = Mapping[SectionName, SNMPRawDataSection],
 # that would generalize to `Mapping[SectionName, TRawDataContent]` or
 # `Mapping[SectionName, TRawData]` depending on which name we keep.
-AgentRawDataSection = List[Sequence[str]]
+AgentRawDataSection = Sequence[str]
 
 
 class SelectionType(enum.Enum):

@@ -8,24 +8,11 @@ from __future__ import annotations
 
 import abc
 import copy
-from typing import (
-    cast,
-    Final,
-    Generic,
-    List,
-    Mapping,
-    MutableMapping,
-    Optional,
-    Sequence,
-    Tuple,
-    TypeVar,
-)
+from typing import Final, Generic, List, Mapping, MutableMapping, Optional, Sequence, Tuple
 
 from cmk.utils.type_defs import HostName, SectionName
 
 from cmk.core_helpers.cache import TRawDataSection
-
-THostSections = TypeVar("THostSections", bound="HostSections")
 
 
 class HostSections(Generic[TRawDataSection], abc.ABC):
@@ -33,7 +20,7 @@ class HostSections(Generic[TRawDataSection], abc.ABC):
 
     def __init__(
         self,
-        sections: Optional[Mapping[SectionName, TRawDataSection]] = None,
+        sections: Optional[Mapping[SectionName, Sequence[TRawDataSection]]] = None,
         *,
         cache_info: Optional[Mapping[SectionName, Tuple[int, int]]] = None,
         # For `piggybacked_raw_data`, Sequence[bytes] is equivalent to AgentRawData.
@@ -52,13 +39,13 @@ class HostSections(Generic[TRawDataSection], abc.ABC):
             self.piggybacked_raw_data,
         )
 
-    def __add__(self, other: HostSections) -> HostSections:
+    def __add__(self, other: HostSections[TRawDataSection]) -> HostSections[TRawDataSection]:
         new_sections = copy.deepcopy(dict(self.sections))
         for section_name, section_content in other.sections.items():
-            new_sections.setdefault(
-                section_name,
-                cast(TRawDataSection, []),
-            ).extend(section_content)
+            s = new_sections.get(section_name)
+            new_sections[section_name] = (
+                (list(s) + list(section_content)) if s else list(section_content)
+            )
 
         new_piggybacked_raw_data: MutableMapping[HostName, List[bytes]] = {
             k: list(v) for k, v in self.piggybacked_raw_data.items()
@@ -74,7 +61,7 @@ class HostSections(Generic[TRawDataSection], abc.ABC):
         new_cache_info = dict(self.cache_info)
         new_cache_info.update(other.cache_info)
 
-        return HostSections(
+        return HostSections[TRawDataSection](
             new_sections,
             cache_info=new_cache_info,
             piggybacked_raw_data=new_piggybacked_raw_data,

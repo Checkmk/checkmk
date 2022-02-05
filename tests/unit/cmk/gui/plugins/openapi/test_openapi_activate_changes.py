@@ -6,11 +6,11 @@
 
 import pytest
 
+from tests.unit.cmk.gui.conftest import WebTestAppForCMK
+
 from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
 
 from cmk.gui.plugins.openapi.restful_objects import constructors
-
-from tests.unit.cmk.gui.conftest import WebTestAppForCMK
 
 CMK_WAIT_FOR_COMPLETION = "cmk/wait-for-completion"
 

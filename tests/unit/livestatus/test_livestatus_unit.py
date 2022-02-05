@@ -201,7 +201,7 @@ def test_create_socket_not_existing_ca_file():
 
 
 def test_create_socket_no_cert(tmp_path):
-    open(str(tmp_path / "z.pem"), "wb")
+    open(str(tmp_path / "z.pem"), "wb")  # pylint:disable=consider-using-with
     live = livestatus.SingleSiteConnection(
         "unix:/tmp/xyz", tls=True, verify=True, ca_file_path=str(tmp_path / "z.pem")
     )

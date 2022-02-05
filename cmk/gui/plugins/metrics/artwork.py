@@ -14,7 +14,8 @@ import cmk.utils.render
 
 from cmk.gui.globals import request, theme, user
 from cmk.gui.i18n import _
-from cmk.gui.plugins.metrics import rrd_fetch, timeseries, unit_info
+from cmk.gui.plugins.metrics import rrd_fetch, timeseries
+from cmk.gui.plugins.metrics.utils import unit_info
 
 Label = Tuple[int, Optional[str], int]
 

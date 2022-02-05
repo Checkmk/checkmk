@@ -26,11 +26,18 @@ from cmk.gui.hooks import request_memoize
 from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _
 from cmk.gui.plugins.metrics.utils import render_color_icon, TranslatedMetrics
-from cmk.gui.plugins.views import (
+from cmk.gui.plugins.views.graphs import cmk_time_graph_params, paint_time_graph_cmk
+from cmk.gui.plugins.views.icons.utils import (
+    get_icons,
+    IconEntry,
+    IconObjectType,
+    iconpainter_columns,
+    LegacyIconEntry,
+)
+from cmk.gui.plugins.views.utils import (
     Cell,
     format_plugin_output,
     get_label_sources,
-    get_labels,
     get_perfdata_nth_value,
     get_tag_groups,
     is_stale,
@@ -43,20 +50,10 @@ from cmk.gui.plugins.views import (
     painter_registry,
     PainterOption,
     render_cache_info,
-    render_labels,
     render_link_to_view,
-    render_tag_groups,
     replace_action_url_macros,
     transform_action_url,
     VisualLinkSpec,
-)
-from cmk.gui.plugins.views.graphs import cmk_time_graph_params, paint_time_graph_cmk
-from cmk.gui.plugins.views.icons import (
-    get_icons,
-    IconEntry,
-    IconObjectType,
-    iconpainter_columns,
-    LegacyIconEntry,
 )
 from cmk.gui.sites import get_site_config
 from cmk.gui.type_defs import ColumnName, Row, SorterName
@@ -76,7 +73,14 @@ from cmk.gui.valuespec import (
     Timerange,
     Transform,
 )
-from cmk.gui.view_utils import CellContent, CellSpec, CSSClass
+from cmk.gui.view_utils import (
+    CellContent,
+    CellSpec,
+    CSSClass,
+    get_labels,
+    render_labels,
+    render_tag_groups,
+)
 
 #   .--Painter Options-----------------------------------------------------.
 #   |                   ____       _       _                               |
@@ -995,6 +999,7 @@ def _paint_notification_postponement_reason(what: str, row: Row) -> CellSpec:
         "at least one parent is up, but no check is recent enough": _(
             "Last service check is not recent enough"
         ),
+        None: "",  # column is not available if the Nagios core is used
     }
 
     return (
@@ -1556,7 +1561,11 @@ def _paint_custom_notes(what: str, row: Row) -> CellSpec:
         )
 
     for f in files:
-        contents.append(replace_tags(io.open(f, encoding="utf8").read().strip()))
+        contents.append(
+            replace_tags(
+                io.open(f, encoding="utf8").read().strip()  # pylint:disable=consider-using-with
+            )
+        )
     return "", "<hr>".join(contents)
 
 
@@ -3392,7 +3401,7 @@ class PainterHostgroupHosts(Painter):
         return "hostgroup_hosts"
 
     def title(self, cell: Cell) -> str:
-        return _("Hosts colored according to state (Host Group)")
+        return _("Hosts colored according to state (host group)")
 
     def short_title(self, cell: Cell) -> str:
         return _("Hosts")
@@ -3423,7 +3432,7 @@ class PainterHgNumServices(Painter):
         return "hg_num_services"
 
     def title(self, cell: Cell) -> str:
-        return _("Number of services (Host Group)")
+        return _("Number of services (host group)")
 
     def short_title(self, cell: Cell) -> str:
         return ""
@@ -3443,7 +3452,7 @@ class PainterHgNumServicesOk(Painter):
         return "hg_num_services_ok"
 
     def title(self, cell: Cell) -> str:
-        return _("Number of services in state OK (Host Group)")
+        return _("Number of services in state OK (host group)")
 
     def short_title(self, cell: Cell) -> str:
         return _("O")
@@ -3466,7 +3475,7 @@ class PainterHgNumServicesWarn(Painter):
         return "hg_num_services_warn"
 
     def title(self, cell: Cell) -> str:
-        return _("Number of services in state WARN (Host Group)")
+        return _("Number of services in state WARN (host group)")
 
     def short_title(self, cell: Cell) -> str:
         return _("W")
@@ -3489,7 +3498,7 @@ class PainterHgNumServicesCrit(Painter):
         return "hg_num_services_crit"
 
     def title(self, cell: Cell) -> str:
-        return _("Number of services in state CRIT (Host Group)")
+        return _("Number of services in state CRIT (host group)")
 
     def short_title(self, cell: Cell) -> str:
         return _("C")
@@ -3512,7 +3521,7 @@ class PainterHgNumServicesUnknown(Painter):
         return "hg_num_services_unknown"
 
     def title(self, cell: Cell) -> str:
-        return _("Number of services in state UNKNOWN (Host Group)")
+        return _("Number of services in state UNKNOWN (host group)")
 
     def short_title(self, cell: Cell) -> str:
         return _("U")
@@ -3535,7 +3544,7 @@ class PainterHgNumServicesPending(Painter):
         return "hg_num_services_pending"
 
     def title(self, cell: Cell) -> str:
-        return _("Number of services in state PENDING (Host Group)")
+        return _("Number of services in state PENDING (host group)")
 
     def short_title(self, cell: Cell) -> str:
         return _("P")
@@ -3558,7 +3567,7 @@ class PainterHgNumHostsUp(Painter):
         return "hg_num_hosts_up"
 
     def title(self, cell: Cell) -> str:
-        return _("Number of hosts in state UP (Host Group)")
+        return _("Number of hosts in state UP (host group)")
 
     def short_title(self, cell: Cell) -> str:
         return _("Up")
@@ -3581,7 +3590,7 @@ class PainterHgNumHostsDown(Painter):
         return "hg_num_hosts_down"
 
     def title(self, cell: Cell) -> str:
-        return _("Number of hosts in state DOWN (Host Group)")
+        return _("Number of hosts in state DOWN (host group)")
 
     def short_title(self, cell: Cell) -> str:
         return _("Dw")
@@ -3604,7 +3613,7 @@ class PainterHgNumHostsUnreach(Painter):
         return "hg_num_hosts_unreach"
 
     def title(self, cell: Cell) -> str:
-        return _("Number of hosts in state UNREACH (Host Group)")
+        return _("Number of hosts in state UNREACH (host group)")
 
     def short_title(self, cell: Cell) -> str:
         return _("Un")
@@ -3627,7 +3636,7 @@ class PainterHgNumHostsPending(Painter):
         return "hg_num_hosts_pending"
 
     def title(self, cell: Cell) -> str:
-        return _("Number of hosts in state PENDING (Host Group)")
+        return _("Number of hosts in state PENDING (host group)")
 
     def short_title(self, cell: Cell) -> str:
         return _("Pd")
@@ -3650,7 +3659,7 @@ class PainterHgName(Painter):
         return "hg_name"
 
     def title(self, cell: Cell) -> str:
-        return _("Hostgroup name")
+        return _("Host group name")
 
     def short_title(self, cell: Cell) -> str:
         return _("Name")
@@ -3670,7 +3679,7 @@ class PainterHgAlias(Painter):
         return "hg_alias"
 
     def title(self, cell: Cell) -> str:
-        return _("Hostgroup alias")
+        return _("Host group alias")
 
     def short_title(self, cell: Cell) -> str:
         return _("Alias")
@@ -3698,7 +3707,7 @@ class PainterSgServices(Painter):
         return "sg_services"
 
     def title(self, cell: Cell) -> str:
-        return _("Services colored according to state (Service Group)")
+        return _("Services colored according to state (service group)")
 
     def short_title(self, cell: Cell) -> str:
         return _("Services")
@@ -3718,7 +3727,7 @@ class PainterSgNumServices(Painter):
         return "sg_num_services"
 
     def title(self, cell: Cell) -> str:
-        return _("Number of services (Service Group)")
+        return _("Number of services (service group)")
 
     def short_title(self, cell: Cell) -> str:
         return ""
@@ -3738,7 +3747,7 @@ class PainterSgNumServicesOk(Painter):
         return "sg_num_services_ok"
 
     def title(self, cell: Cell) -> str:
-        return _("Number of services in state OK (Service Group)")
+        return _("Number of services in state OK (service group)")
 
     def short_title(self, cell: Cell) -> str:
         return _("O")
@@ -3758,7 +3767,7 @@ class PainterSgNumServicesWarn(Painter):
         return "sg_num_services_warn"
 
     def title(self, cell: Cell) -> str:
-        return _("Number of services in state WARN (Service Group)")
+        return _("Number of services in state WARN (service group)")
 
     def short_title(self, cell: Cell) -> str:
         return _("W")
@@ -3778,7 +3787,7 @@ class PainterSgNumServicesCrit(Painter):
         return "sg_num_services_crit"
 
     def title(self, cell: Cell) -> str:
-        return _("Number of services in state CRIT (Service Group)")
+        return _("Number of services in state CRIT (service group)")
 
     def short_title(self, cell: Cell) -> str:
         return _("C")
@@ -3798,7 +3807,7 @@ class PainterSgNumServicesUnknown(Painter):
         return "sg_num_services_unknown"
 
     def title(self, cell: Cell) -> str:
-        return _("Number of services in state UNKNOWN (Service Group)")
+        return _("Number of services in state UNKNOWN (service group)")
 
     def short_title(self, cell: Cell) -> str:
         return _("U")
@@ -3818,7 +3827,7 @@ class PainterSgNumServicesPending(Painter):
         return "sg_num_services_pending"
 
     def title(self, cell: Cell) -> str:
-        return _("Number of services in state PENDING (Service Group)")
+        return _("Number of services in state PENDING (service group)")
 
     def short_title(self, cell: Cell) -> str:
         return _("P")
@@ -3838,7 +3847,7 @@ class PainterSgName(Painter):
         return "sg_name"
 
     def title(self, cell: Cell) -> str:
-        return _("Servicegroup name")
+        return _("Service group name")
 
     def short_title(self, cell: Cell) -> str:
         return _("Name")
@@ -3858,7 +3867,7 @@ class PainterSgAlias(Painter):
         return "sg_alias"
 
     def title(self, cell: Cell) -> str:
-        return _("Servicegroup alias")
+        return _("Service group alias")
 
     def short_title(self, cell: Cell) -> str:
         return _("Alias")
@@ -4578,20 +4587,20 @@ class PainterLogIcon(Painter):
 
         if log_type == "SERVICE ALERT":
             img = {0: "ok", 1: "warn", 2: "crit", 3: "unknown"}.get(row["log_state"])
-            title = _("Service Alert")
+            title = _("Service alert")
 
         elif log_type == "HOST ALERT":
             img = {0: "up", 1: "down", 2: "unreach"}.get(row["log_state"])
-            title = _("Host Alert")
+            title = _("Host alert")
 
         elif log_type.endswith("ALERT HANDLER STARTED"):
             img = "alert_handler_started"
-            title = _("Alert Handler Started")
+            title = _("Alert handler started")
 
         elif log_type.endswith("ALERT HANDLER STOPPED"):
             if log_state == 0:
                 img = "alert_handler_stopped"
-                title = _("Alert handler Stopped")
+                title = _("Alert handler stopped")
             else:
                 img = "alert_handler_failed"
                 title = _("Alert handler failed")

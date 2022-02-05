@@ -14,16 +14,17 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
 from cmk.gui.mkeventd import service_levels, syslog_facilities, syslog_priorities
 from cmk.gui.plugins.metrics.utils import MetricName
-from cmk.gui.plugins.wato import (
+from cmk.gui.plugins.wato.utils import (
     HostRulespec,
+    HTTPProxyReference,
     IndividualOrStoredPassword,
     monitoring_macro_help,
+    PasswordFromStore,
     rulespec_group_registry,
     rulespec_registry,
     RulespecGroup,
     RulespecSubGroup,
 )
-from cmk.gui.plugins.wato.utils import HTTPProxyReference, PasswordFromStore
 from cmk.gui.valuespec import (
     Age,
     Alternative,
@@ -721,18 +722,11 @@ def _valuespec_special_agents_kubernetes():
                 _filter_kubernetes_namespace_element(),
             ],
             optional_keys=["port", "url-prefix", "path-prefix", "namespace_include_patterns"],
-            title=_("Kubernetes"),
+            title=_("Kubernetes (deprecated)"),
             help=_(
-                "This rule selects the Kubernetes special agent for an existing Checkmk host. "
-                "If you want to monitor multiple Kubernetes clusters "
-                "we strongly recommend to set up "
-                '<a href="wato.py?mode=edit_ruleset&varname=piggyback_translation">Piggyback translation rules</a> '
-                "to avoid name collisions. Otherwise e.g. Pods with the same name in "
-                "different Kubernetes clusters cannot be distinguished.<br>"
-                "Please additionally keep in mind, that not every Kubernetes API is compatible with "
-                "every version of the official Kubernetes Python client. E.g. client v11 is only "
-                "with the API v1.15 fully compatible. Please check if the latest client version "
-                "supports your Kubernetes API version."
+                "This special agent is deprecated and will be removed in "
+                'Checkmk version 2.2.0. Please use the "Kubernetes" ruleset to '
+                "configure the new special agent for Kubernetes."
             ),
         ),
         forth=_special_agents_kubernetes_transform,
@@ -744,168 +738,162 @@ rulespec_registry.register(
         group=RulespecGroupVMCloudContainer,
         name="special_agents:kubernetes",
         valuespec=_valuespec_special_agents_kubernetes,
+        is_deprecated=True,
     )
 )
+
+
+def _ssl_verification():
+    return Alternative(
+        title=_("SSL certificate verification"),
+        elements=[
+            FixedValue(True, title=_("Verify the certificate"), totext=""),
+            FixedValue(False, title=_("Ignore certificate errors (unsecure)"), totext=""),
+        ],
+        default_value=False,
+    )
 
 
 def _valuespec_special_agents_kube():
     return Dictionary(
         elements=[
             (
+                "cluster-name",
+                Hostname(
+                    title=_("Cluster name"),
+                    allow_empty=False,
+                    help=_(
+                        "You must specify a name for your Kubernetes cluster. The provided name"
+                        " will be used to make the objects from your cluster unique in a "
+                        "multi-cluster setup."
+                    ),
+                ),
+            ),
+            (
+                "token",
+                IndividualOrStoredPassword(
+                    title=_("Token"),
+                    allow_empty=False,
+                ),
+            ),
+            (
                 "kubernetes-api-server",
                 Dictionary(
                     elements=[
                         (
                             "endpoint",
-                            CascadingDropdown(
-                                choices=[
-                                    (
-                                        "hostname",
-                                        _("Hostname"),
-                                        _kube_connection_elements(),
-                                    ),
-                                    (
-                                        "ipaddress",
-                                        _("IP address"),
-                                        _kube_connection_elements(),
-                                    ),
-                                    (
-                                        "url_custom",
-                                        _("Custom URL"),
-                                        TextInput(
-                                            allow_empty=False,
-                                            size=80,
-                                        ),
-                                    ),
-                                ],
-                                orientation="horizontal",
-                                title=_("Server endpoint"),
+                            TextInput(
+                                title=_("Endpoint"),
+                                allow_empty=False,
+                                default_value="https://<control plane ip>:443",
                                 help=_(
-                                    'The URL that will be contacted for Kubernetes API calls. If the "Hostname" '
-                                    'or the "IP Address" options are selected, the DNS hostname or IP address and '
-                                    "a secure protocol (HTTPS) are used."
+                                    "The full URL to the Kubernetes API server including the "
+                                    "protocol (http or https) and the port."
                                 ),
                             ),
                         ),
-                        (
-                            "token",
-                            IndividualOrStoredPassword(
-                                title=_("Token"),
-                                allow_empty=False,
-                            ),
-                        ),
+                        ("verify-cert", _ssl_verification()),
                     ],
+                    required_keys=["endpoint", "verify-cert"],
                     title=_("API server connection"),
-                    optional_keys=["token"],
                 ),
             ),
             (
-                "cluster-agent",  # TODO: adjust help texts depending on ingress inclusion
+                "cluster-collector",  # TODO: adjust help texts depending on ingress inclusion
                 Dictionary(
                     elements=[
                         (
-                            "node_ip",
+                            "endpoint",
                             TextInput(
-                                title=_("IP address of Kubernetes node"),
+                                title=_("Collector NodePort / Ingress endpoint"),
+                                allow_empty=False,
+                                default_value="https://<service url>:30035",
+                                help=_(
+                                    "The full URL to the Cluster Collector service including "
+                                    "the protocol (http or https) and the port. Depending on "
+                                    "the deployed configuration of the service this can "
+                                    "either be the NodePort or the Ingress endpoint."
+                                ),
+                            ),
+                        ),
+                        ("verify-cert", _ssl_verification()),
+                    ],
+                    required_keys=["endpoint", "verify-cert"],
+                    title=_("Get usage data via Checkmk Cluster Collector"),
+                ),
+            ),
+            (
+                "monitored-objects",
+                ListChoice(
+                    choices=[
+                        ("deployments", _("Deployments")),
+                        ("nodes", _("Nodes")),
+                        ("pods", _("Pods")),
+                    ],
+                    default_value=[
+                        "deployments",
+                        "nodes",
+                        "pods",
+                    ],
+                    allow_empty=False,
+                    title=_("Collect information about..."),
+                    help=_("Select the Kubernetes objects you would like to monitor."),
+                ),
+            ),
+            (
+                "namespaces",
+                CascadingDropdown(
+                    choices=[
+                        (
+                            "namespace-include-patterns",
+                            _("Monitor namespaces matching"),
+                            ListOf(
+                                RegExp(
+                                    mode=RegExp.complete,
+                                    title=_("Pattern"),
+                                    allow_empty=False,
+                                ),
+                                add_label=_("Add new pattern"),
                                 allow_empty=False,
                                 help=_(
-                                    "The IP address of any Kubernetes cluster node where a "
-                                    "kubelet is present. Valid nodes can be usually retrieved "
-                                    "using the 'kubectl get nodes -o wide' command."
+                                    "You can specify a list of regex patterns to monitor specific "
+                                    "namespaces. Only those that do match the predefined patterns "
+                                    "will be monitored."
                                 ),
                             ),
                         ),
                         (
-                            "connection_port",
-                            Integer(
-                                title=_("Port of Kubernetes' checkmk-external service"),
-                                default_value=30035,
-                                help=_("The service port of the running checkmk-external service"),
-                            ),
-                        ),
-                        (
-                            "protocol",
-                            DropdownChoice(
-                                title=_("Protocol"),
-                                choices=[
-                                    ("http", "HTTP"),
-                                    ("https", "HTTPS"),
-                                ],
-                                default_value="https",
+                            "namespace-exclude-patterns",
+                            _("Exclude namespaces matching"),
+                            ListOf(
+                                RegExp(
+                                    mode=RegExp.complete,
+                                    title=_("Pattern"),
+                                    allow_empty=False,
+                                ),
+                                add_label=_("Add new pattern"),
+                                allow_empty=False,
                                 help=_(
-                                    "The option should match the configured protocol of the "
-                                    "cluster agent."
+                                    "You can specify a list of regex patterns to exclude "
+                                    "namespaces. Only those that do not match the predefined "
+                                    "patterns are monitored."
                                 ),
                             ),
                         ),
                     ],
-                    title=_("Cluster agent connection"),
+                    orientation="horizontal",
+                    title=_("Monitor namespaces"),
                     help=_(
-                        "The Checkmk Kubernetes monitoring setup should be deployed in your "
-                        "Kubernetes cluster. Checkmk needs some additional information in order "
-                        "to query the deployed agent. A guide on how to retrieve this information "
-                        "can be found here https://github.com/tribe29/kubernetes/tree/main/kubernetes-agent"
+                        "If your cluster has multiple namespaces, you can filter specific ones "
+                        "to be monitored. Note that this concerns everything which is part of the "
+                        "selected namespaces such as pods for example."
                     ),
-                    optional_keys=[],
-                ),
-            ),
-            (
-                "verify-cert",
-                Alternative(
-                    title=_("SSL certificate verification"),
-                    elements=[
-                        FixedValue(True, title=_("Verify the certificate"), totext=""),
-                        FixedValue(
-                            False, title=_("Ignore certificate errors (unsecure)"), totext=""
-                        ),
-                    ],
-                    default_value=False,
                 ),
             ),
         ],
-        optional_keys=[],
-        title=_("Kubernetes 2.0"),
-    )
-
-
-def _kube_connection_elements():
-    return Dictionary(
-        elements=[
-            (
-                "port",
-                Integer(
-                    title=_("Port"),
-                    help=_("If no port is given, a default value of 6443 will be used."),
-                    default_value=6443,
-                ),
-            ),
-            (
-                "path-prefix",
-                TextInput(
-                    title=_("Custom path prefix"),
-                    help=_(
-                        "Specifies a URL path prefix, which is prepended to API calls "
-                        "to the Kubernetes API. This is a useful option for Rancher "
-                        "installations (more information can be found in the manual). "
-                        "If this option is not relevant for your installation, "
-                        "please leave it unchecked."
-                    ),
-                    allow_empty=False,
-                ),
-            ),
-            (
-                "protocol",
-                DropdownChoice(
-                    title=_("Protocol"),
-                    choices=[
-                        ("http", "HTTP"),
-                        ("https", "HTTPS"),
-                    ],
-                    default_value="https",
-                ),
-            ),
-        ],
-        optional_keys=["port", "path-prefix"],
+        optional_keys=["namespaces", "cluster-collector"],
+        default_keys=["cluster-collector"],
+        title=_("Kubernetes"),
     )
 
 
@@ -1782,7 +1770,7 @@ def _valuespec_special_agents_vsphere():
                     "skip_placeholder_vms",
                     Checkbox(
                         title=_("Placeholder VMs"),
-                        label=_("Do no monitor placeholder VMs"),
+                        label=_("Do not monitor placeholder VMs"),
                         default_value=True,
                         true_label=_("ignore"),
                         false_label=_("monitor"),
@@ -4208,6 +4196,32 @@ rulespec_registry.register(
 )
 
 
+def _valuespec_special_agents_gcp():
+    return Dictionary(
+        title=_("Google Cloud Platform"),
+        elements=[
+            ("project", TextInput(title=_("Project ID"), allow_empty=False, size=50)),
+            (
+                "credentials",
+                IndividualOrStoredPassword(
+                    title=_("json credentials for service accoun"), allow_empty=False
+                ),
+            ),
+        ],
+        optional_keys=[],
+    )
+
+
+rulespec_registry.register(
+    HostRulespec(
+        group=RulespecGroupVMCloudContainer,
+        name="special_agents:gcp",
+        title=lambda: _("Google Cloud Platform (GCP)"),
+        valuespec=_valuespec_special_agents_gcp,
+    )
+)
+
+
 def _factory_default_special_agents_vnx_quotas():
     # No default, do not use setting if no rule matches
     return watolib.Rulespec.FACTORY_DEFAULT_UNUSED
@@ -5401,5 +5415,77 @@ rulespec_registry.register(
         group=RulespecGroupDatasourceProgramsApps,
         name="special_agents:rabbitmq",
         valuespec=_valuespec_special_agents_rabbitmq,
+    )
+)
+
+
+def _valuespec_special_agents_smb_share():
+    return Dictionary(
+        elements=[
+            (
+                "hostname",
+                TextInput(
+                    title="Hostname",
+                    allow_empty=False,
+                    help=_(
+                        "<p>Usually Checkmk will use the hostname of the host it is attached to. "
+                        "With this option you can override this parameter.</p>"
+                    ),
+                ),
+            ),
+            (
+                "ip_address",
+                HostAddress(
+                    title=_("IP address"),
+                    allow_empty=False,
+                    allow_ipv6_address=False,
+                    help=_(
+                        "<p>Usually Checkmk will use the primary IP address of the host it is "
+                        "attached to. With this option you can override this parameter.</p>"
+                    ),
+                ),
+            ),
+            ("port", Integer(title=_("Port"), default_value=139)),
+            (
+                "authentication",
+                Tuple(
+                    title=_("Authentication"),
+                    elements=[
+                        TextInput(title=_("Username"), allow_empty=False),
+                        IndividualOrStoredPassword(title=_("Password"), allow_empty=False),
+                    ],
+                ),
+            ),
+            (
+                "patterns",
+                ListOfStrings(
+                    title=_("File patterns"),
+                    size=80,
+                    help=_(
+                        "<p>Here you can specify a list of filename patterns to be sent by the "
+                        "agent in the section <tt>fileinfo</tt>. UNC paths with globbing patterns "
+                        "are used here, e.g. <tt>\\\\hostname\\share name\\**\\foo\\*.log</tt>. "
+                        "Wildcards are not allowed in host or share names. "
+                        "Per default each found file will be monitored for size and age. "
+                        "By building groups you can alternatively monitor a collection "
+                        "of files as an entity and monitor the count, total size, the largest, "
+                        "smallest oldest or newest file. Note: if you specify more than one matching rule, then "
+                        "<b>all</b> matching rules will be used for defining pattern - not just the "
+                        " first one.</p>"
+                    ),
+                    valuespec=TextInput(size=80),
+                ),
+            ),
+        ],
+        optional_keys=["hostname", "ip_address", "authentication"],
+        title=_("SMB Share fileinfo"),
+    )
+
+
+rulespec_registry.register(
+    HostRulespec(
+        group=RulespecGroupDatasourceProgramsApps,
+        name="special_agents:smb_share",
+        valuespec=_valuespec_special_agents_smb_share,
     )
 )

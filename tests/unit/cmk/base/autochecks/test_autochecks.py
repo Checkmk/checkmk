@@ -13,12 +13,14 @@ import pytest
 from tests.testlib.base import Scenario
 
 import cmk.utils.paths
+from cmk.utils.parameters import TimespecificParameters
 from cmk.utils.type_defs import CheckPluginName, HostName
 
-import cmk.base.agent_based.discovery as discovery
 import cmk.base.autochecks as autochecks
 import cmk.base.config as config
-from cmk.base.check_utils import AutocheckService
+from cmk.base.check_utils import ConfiguredService
+
+_COMPUTED_PARAMETERS_SENTINEL = TimespecificParameters(())
 
 
 @pytest.fixture(autouse=True)
@@ -28,7 +30,8 @@ def autochecks_dir(monkeypatch, tmp_path):
 
 @pytest.fixture()
 def test_config(monkeypatch) -> config.ConfigCache:
-    ts = Scenario().add_host("host")
+    ts = Scenario()
+    ts.add_host("host")
     return ts.apply(monkeypatch)
 
 
@@ -42,21 +45,13 @@ def test_config(monkeypatch) -> config.ConfigCache:
   {'check_plugin_name': 'df', 'item': u'/', 'parameters': {}, 'service_labels': {}},
 ]""",
             [
-                discovery.Service(
-                    CheckPluginName("df"),
-                    "/",
-                    "",
-                    {
-                        "inodes_levels": (10.0, 5.0),
-                        "levels": (80.0, 90.0),
-                        "levels_low": (50.0, 60.0),
-                        "magic_normsize": 20,
-                        "show_inodes": "onlow",
-                        "show_levels": "onmagic",
-                        "show_reserved": False,
-                        "trend_perfdata": True,
-                        "trend_range": 24,
-                    },
+                ConfiguredService(
+                    check_plugin_name=CheckPluginName("df"),
+                    item="/",
+                    description="df-/",  # we pass a simple callback, not the real one!
+                    parameters=_COMPUTED_PARAMETERS_SENTINEL,
+                    discovered_parameters={},
+                    service_labels={},
                 ),
             ],
         ),
@@ -65,7 +60,7 @@ def test_config(monkeypatch) -> config.ConfigCache:
 def test_manager_get_autochecks_of(
     test_config: config.ConfigCache,
     autochecks_content: str,
-    expected_result: Sequence[discovery.Service],
+    expected_result: Sequence[ConfiguredService],
 ) -> None:
     autochecks_file = Path(cmk.utils.paths.autochecks_dir, "host.mk")
     with autochecks_file.open("w", encoding="utf-8") as f:
@@ -75,18 +70,16 @@ def test_manager_get_autochecks_of(
 
     result = manager.get_autochecks_of(
         HostName("host"),
-        config.compute_check_parameters,
-        config.service_description,
+        lambda *a: _COMPUTED_PARAMETERS_SENTINEL,
+        lambda _host, check, item: f"{check}-{item}",
         lambda hostname, _desc: hostname,
     )
     assert result == expected_result
+    # see that compute_check_parameters has been called:
+    assert result[0].parameters is _COMPUTED_PARAMETERS_SENTINEL
 
     # Check that the ConfigCache method also returns the correct data
     assert test_config.get_autochecks_of(HostName("host")) == result
-
-
-def _service(name: str, params: Optional[Dict[str, str]] = None) -> AutocheckService:
-    return AutocheckService(CheckPluginName(name), None, "", params or {})
 
 
 def _entry(name: str, params: Optional[Dict[str, str]] = None) -> autochecks.AutocheckEntry:
@@ -97,16 +90,16 @@ def test_consolidate_autochecks_of_real_hosts() -> None:
 
     new_services_with_nodes = [
         autochecks.AutocheckServiceWithNodes(  # found on node and new
-            _service("A"), [HostName("node"), HostName("othernode")]
+            _entry("A"), [HostName("node"), HostName("othernode")]
         ),
         autochecks.AutocheckServiceWithNodes(  # not found, not present (i.e. unrelated)
-            _service("B"), [HostName("othernode"), HostName("yetanothernode")]
+            _entry("B"), [HostName("othernode"), HostName("yetanothernode")]
         ),
         autochecks.AutocheckServiceWithNodes(  # found and preexistting
-            _service("C", {"params": "new"}), [HostName("node"), HostName("node2")]
+            _entry("C", {"params": "new"}), [HostName("node"), HostName("node2")]
         ),
         autochecks.AutocheckServiceWithNodes(  # not found but present
-            _service("D"), [HostName("othernode"), HostName("yetanothernode")]
+            _entry("D"), [HostName("othernode"), HostName("yetanothernode")]
         ),
     ]
     preexisting_entries = [

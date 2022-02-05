@@ -11,7 +11,7 @@ import cmk.utils.agent_simulator as agent_simulator
 import cmk.utils.paths
 from cmk.utils.exceptions import MKGeneralException, MKSNMPError
 from cmk.utils.log import console
-from cmk.utils.type_defs import AgentRawData, CheckPluginNameStr
+from cmk.utils.type_defs import AgentRawData, SectionName
 
 import cmk.snmplib.snmp_cache as snmp_cache
 from cmk.snmplib.type_defs import OID, SNMPBackend, SNMPContextName, SNMPRawValue, SNMPRowInfo
@@ -37,7 +37,7 @@ class StoredWalkSNMPBackend(SNMPBackend):
     def walk(
         self,
         oid: OID,
-        check_plugin_name: Optional[CheckPluginNameStr] = None,
+        section_name: Optional[SectionName] = None,
         table_base_oid: Optional[OID] = None,
         context_name: Optional[SNMPContextName] = None,
     ) -> SNMPRowInfo:

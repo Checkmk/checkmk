@@ -7,7 +7,12 @@
 from cmk.gui.globals import html, request, response
 from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _
-from cmk.gui.plugins.views import Layout, layout_registry, multisite_builtin_views, PainterOptions
+from cmk.gui.plugins.views.utils import (
+    Layout,
+    layout_registry,
+    multisite_builtin_views,
+    PainterOptions,
+)
 from cmk.gui.utils.mobile import is_mobile
 
 #   .--Views---------------------------------------------------------------.

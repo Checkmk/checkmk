@@ -6,7 +6,9 @@
 """Modes for creating and editing hosts"""
 
 import abc
-from typing import Iterator, Optional, overload, Tuple, Type
+from typing import Iterator, Optional, overload, Type
+
+import cmk.utils.tags
 
 import cmk.gui.forms as forms
 import cmk.gui.watolib as watolib
@@ -120,7 +122,15 @@ class ABCHostMode(WatoMode, abc.ABC):
         if len(cluster_nodes) < 1:
             raise MKUserError("nodes_0", _("The cluster must have at least one node"))
 
-        cluster_agent_ds_type, cluster_snmp_ds_type = self._get_cluster_ds_types()
+        # Fake a cluster host in order to get calculated tag groups via effective attributes...
+        cluster_computed_datasources = cmk.utils.tags.compute_datasources(
+            watolib.Host(
+                watolib.Folder.current(),
+                self._host.name(),
+                watolib.collect_attributes("cluster", new=False),
+                [],
+            ).tag_groups()
+        )
 
         for nr, cluster_node in enumerate(cluster_nodes):
             if cluster_node == self._host.name():
@@ -136,39 +146,43 @@ class ABCHostMode(WatoMode, abc.ABC):
                     % cluster_node,
                 )
 
-            cluster_host = watolib.Host.load_host(cluster_node)
-            node_agent_ds_type = cluster_host.tag_groups().get("agent")
-            node_snmp_ds_type = cluster_host.tag_groups().get("snmp_ds")
+            node_computed_datasources = cmk.utils.tags.compute_datasources(
+                watolib.Host.load_host(cluster_node).tag_groups()
+            )
 
-            if (
-                node_agent_ds_type != cluster_agent_ds_type
-                or node_snmp_ds_type != cluster_snmp_ds_type
+            if datasource_differences := cluster_computed_datasources.get_differences_to(
+                node_computed_datasources
             ):
                 raise MKUserError(
                     "nodes_%d" % nr,
-                    _(
-                        "Cluster and nodes must have the same "
-                        "datasource! The node <b>%s</b> has datasources "
-                        "<b>%s</b> and <b>%s</b> while the cluster has datasources "
-                        "<b>%s</b> and <b>%s</b>."
-                    )
-                    % (
-                        cluster_node,
-                        node_agent_ds_type,
-                        node_snmp_ds_type,
-                        cluster_agent_ds_type,
-                        cluster_snmp_ds_type,
-                    ),
+                    _("Cluster and nodes must have the same datasource. ")
+                    + self._format_datasource_differences(cluster_node, datasource_differences),
                 )
 
         return cluster_nodes
 
-    def _get_cluster_ds_types(self) -> Tuple[str, str]:
-        folder_attributes = watolib.Folder.current().attributes()
-        attributes = watolib.collect_attributes("cluster", new=False)
-        return (
-            attributes.get("tag_agent", folder_attributes.get("tag_agent", "cmk-agent")),
-            attributes.get("tag_snmp_ds", folder_attributes.get("tag_snmp_ds", "no-snmp")),
+    def _format_datasource_differences(
+        self,
+        node_name: str,
+        differences: cmk.utils.tags.DataSourceDifferences,
+    ) -> str:
+        def _get_is_or_is_not(is_ds: bool) -> str:
+            return _("is") if is_ds else _("is <b>not</b>")
+
+        return _("The cluster %s while the node <b>%s</b> %s") % (
+            ", ".join(
+                [
+                    "%s '%s'" % (_get_is_or_is_not(diff_ds.myself_is), diff_ds.name)
+                    for diff_ds in differences
+                ]
+            ),
+            node_name,
+            ", ".join(
+                [
+                    "%s '%s'" % (_get_is_or_is_not(diff_ds.other_is), diff_ds.name)
+                    for diff_ds in differences
+                ]
+            ),
         )
 
     # TODO: Extract cluster specific parts from this method

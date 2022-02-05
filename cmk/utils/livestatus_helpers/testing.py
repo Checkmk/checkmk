@@ -306,7 +306,20 @@ program_start num_hosts num_services core_pid'
         """Add the data of a table.
 
         This is desirable in tests, to isolate the individual tests from one another. It is not
-        recommended to use the global test-data for all the tests.
+        recommended using the global test-data for all the tests.
+
+        Args:
+            table_name:
+                The name of the Livestatus table.
+
+            table_data:
+                A list of dicts where each dict represents a row of the table. The keys of the
+                dicts represent the columns of the Livestatus table.
+
+            site:
+                Optionally a site where the table should be added. NOTE: When this is not given,
+                it defaults to the FIRST SITE configured.
+
         Examples:
 
             If a table is set, the table is replaced.
@@ -317,7 +330,7 @@ program_start num_hosts num_services core_pid'
 
                 >>> _ = live.add_table('hosts', host_list)
 
-            The table actually get's replaced, but only for this instance.
+            The table actually gets replaced, but only for this instance.
 
                 >>> live.tables['hosts']['local'] == host_list
                 True
@@ -340,14 +353,14 @@ program_start num_hosts num_services core_pid'
         query: Union[str, List[str]],
         match_type: MatchType = "strict",
         force_pos: Optional[int] = None,
-    ):
+    ) -> MockLiveStatusConnection:
         """Add a LiveStatus query to be expected by this class.
 
         This method is chainable, as it returns the instance again.
 
         Args:
             query:
-                The expected query. May be a `str` or a list of `str` which, in the list case, will
+                The expected query. Maybe a `str` or a list of `str` which, in the list case, will
                 be joined by newlines.
 
             match_type:
@@ -887,7 +900,7 @@ def evaluate_filter(query: str, result: ResultList) -> ResultList:
 
     The filters will be extracted from the query. And: and Or: directives are also supported.
 
-    Currently only standard "Filter:" directives are supported, not StatsFilter: etc.
+    Currently, only standard "Filter:" directives are supported, not StatsFilter: etc.
 
     Args:
         query:

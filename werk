@@ -15,7 +15,7 @@ import sys
 import termios
 import time
 import tty
-from typing import Dict, List, NoReturn, Optional, Set, Tuple, Union
+from typing import Dict, List, NoReturn, Optional, Sequence, Set, Tuple, Union
 
 Werk = Dict[str, str]
 
@@ -74,7 +74,7 @@ grep_colors = [
 ]
 
 
-def parse_arguments(argv: List[str]) -> argparse.Namespace:
+def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     subparsers = parser.add_subparsers(dest="command")
     subparsers.required = True
@@ -755,6 +755,7 @@ def main_new(args: argparse.Namespace) -> None:
     werk: Werk = {}
     werk["id"] = str(next_werk_id())
     werk["date"] = str(int(time.time()))
+    assert g_current_version
     werk["version"] = g_current_version
     werk["title"] = get_input("Title")
     if werk["title"] == "":
@@ -940,6 +941,7 @@ def werk_cherry_pick(commit_id: str, no_commit: bool) -> None:
     if werk_id is not None:
         # Change the werk's version before checking the pick return code.
         # Otherwise the dev may forget to change the version
+        assert g_current_version
         change_werk_version(werk_id, g_current_version)
         sys.stdout.write(
             "Changed version of werk %s to %s.\n" % (format_werk_id(werk_id), g_current_version)
@@ -989,13 +991,17 @@ def current_branch() -> str:
     return [l for l in os.popen("git branch") if l.startswith("*")][0].split()[-1]
 
 
+def current_repo() -> str:
+    return list(os.popen("git config --get remote.origin.url"))[0].strip().split("/")[-1]
+
+
 def main_fetch_ids(args: argparse.Namespace) -> None:
     if args.count is None:
         sys.stdout.write("You have %d reserved IDs.\n" % (len(get_werk_ids())))
         sys.exit(0)
 
-    if current_branch() != "master":
-        bail_out("It is not allowed to reserve IDs on any other branch than the master.")
+    if current_branch() != "master" or current_repo() != "check_mk":
+        bail_out("Werk IDs can only be reserved on the master branch of the check_mk repository.")
 
     # Get the start werk_id to reserve
     try:
@@ -1058,14 +1064,24 @@ levels: List[Tuple[str, str]] = []
 compatible: List[Tuple[str, str]] = []
 knowledge: List[Tuple[str, str]] = []
 online_url = ""
+current_version = None
 
 versions: Set[str] = set([])
-goto_werksdir()
-try_migrate_werk_ids()
-load_config()
-load_werks()
-g_current_version = load_current_version()
+g_current_version = None
+
+
+def main(argv: Optional[Sequence[str]] = None) -> None:
+    goto_werksdir()
+    try_migrate_werk_ids()
+    load_config()
+    load_werks()
+    global g_current_version
+    g_current_version = current_version or load_current_version()
+    if not g_current_version:
+        raise SystemExit("Unable to determine project version")
+    main_args = parse_arguments(argv or sys.argv[1:])
+    main_args.func(main_args)
+
 
 if __name__ == "__main__":
-    main_args = parse_arguments(sys.argv[1:])
-    sys.exit(main_args.func(main_args))
+    main()

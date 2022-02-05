@@ -136,7 +136,7 @@ def param_description(
 
     docstring = docstring_parser.parse(string)
     for param in docstring.params:
-        if param.arg_name == param_name:
+        if param.arg_name == param_name and param.description is not None:
             return param.description.replace("\n", " ")
     if errors == "raise":
         raise ValueError(f"Parameter {param_name!r} not found in docstring.")

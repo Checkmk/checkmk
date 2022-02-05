@@ -27,16 +27,16 @@ enum DataType {
 // must 4-byte length
 constexpr size_t kCarrierNameLength = 4;
 constexpr char kCarrierNameDelimiter = ':';
-constexpr const char* kCarrierMailslotName = "mail";
-constexpr const char* kCarrierGrpcName = "grpc";
-constexpr const char* kCarrierAsioName = "asio";
-constexpr const char* kCarrierRestName = "rest";
-constexpr const char* kCarrierNullName = "null";
-constexpr const char* kCarrierFileName = "file";
-constexpr const char* kCarrierDumpName = "dump";
+constexpr const char *kCarrierMailslotName = "mail";
+constexpr const char *kCarrierGrpcName = "grpc";
+constexpr const char *kCarrierAsioName = "asio";
+constexpr const char *kCarrierRestName = "rest";
+constexpr const char *kCarrierNullName = "null";
+constexpr const char *kCarrierFileName = "file";
+constexpr const char *kCarrierDumpName = "dump";
 
-inline std::string BuildPortName(const std::string& carrier_name,
-                                 const std::string& address) noexcept {
+inline std::string BuildPortName(const std::string &carrier_name,
+                                 const std::string &address) noexcept {
     return carrier_name + kCarrierNameDelimiter + address;
 }
 
@@ -51,14 +51,14 @@ struct CarrierDataHeader {
     static constexpr size_t kMaxNameLen{31};
 
     using ptr = std::unique_ptr<CarrierDataHeader,
-                                std::function<void(CarrierDataHeader*)>>;
+                                std::function<void(CarrierDataHeader *)>>;
 
     /// \brief returns unique ptr with custom deleter
     static CarrierDataHeader::ptr createPtr(
-        const char* provider_name,  // unique name of provider
+        const char *provider_name,  // unique name of provider
         uint64_t answer_id,         // timestamp of the answer to fill
         DataType data_type,         // DataType::
-        const void* data,           // data, nullptr is allowed
+        const void *data,           // data, nullptr is allowed
         uint64_t length             // data length
         ) noexcept {
         return CarrierDataHeader::ptr(
@@ -66,21 +66,21 @@ struct CarrierDataHeader {
             CarrierDataHeader::destroy);
     }
 
-    static void destroy(CarrierDataHeader* Cdh) {
-        if (Cdh) delete[] reinterpret_cast<char*>(Cdh);
+    static void destroy(CarrierDataHeader *Cdh) {
+        if (Cdh) delete[] reinterpret_cast<char *>(Cdh);
     }
 
-    const void* data() const {
-        auto p = reinterpret_cast<const char*>(this);
+    const void *data() const {
+        auto p = reinterpret_cast<const char *>(this);
 
-        return data_length_ ? static_cast<const void*>(p + sizeof(*this))
+        return data_length_ ? static_cast<const void *>(p + sizeof(*this))
                             : nullptr;
     }
 
     const std::string string() const {
-        auto p = reinterpret_cast<const char*>(this);
+        auto p = reinterpret_cast<const char *>(this);
 
-        auto str = data_length_ ? static_cast<const char*>(p + sizeof(*this))
+        auto str = data_length_ ? static_cast<const char *>(p + sizeof(*this))
                                 : nullptr;
         if (!str)
             return {};
@@ -97,11 +97,11 @@ struct CarrierDataHeader {
 
 private:
     /// \brief - requires ON_OUT_OF SCOPE
-    static CarrierDataHeader* createRaw(
-        const char* provider_name,  // unique name of provider
+    static CarrierDataHeader *createRaw(
+        const char *provider_name,  // unique name of provider
         uint64_t answer_id,         // timestamp of the answer
         DataType data_type,         // DataType::
-        const void* data,           // data, nullptr is allowed
+        const void *data,           // data, nullptr is allowed
         uint64_t data_length        // data length
         ) noexcept {
         if (::strlen(provider_name) > kMaxNameLen) {
@@ -113,7 +113,7 @@ private:
             // data payload
             auto block = new char[length + sizeof(CarrierDataHeader)];
             ::memset(block, 0, +sizeof(CarrierDataHeader));
-            auto cdh = reinterpret_cast<CarrierDataHeader*>(block);
+            auto cdh = reinterpret_cast<CarrierDataHeader *>(block);
             cdh->data_length_ = length;
             if (data && cdh->data()) {
                 memcpy(cdh->data(), data, length);
@@ -134,10 +134,10 @@ private:
         }
     }
 
-    void* data() {
-        auto p = const_cast<char*>(reinterpret_cast<const char*>(this));
+    void *data() {
+        auto p = const_cast<char *>(reinterpret_cast<const char *>(this));
 
-        return data_length_ ? static_cast<void*>(p + sizeof(*this)) : nullptr;
+        return data_length_ ? static_cast<void *>(p + sizeof(*this)) : nullptr;
     }
     // DATA IS STARTED HERE ****************************************
     char provider_id_[kMaxNameLen + 1];
@@ -164,10 +164,10 @@ public:
     virtual ~CoreCarrier() {}
 
     // BASE API
-    bool establishCommunication(const std::string& internal_port);
-    bool sendData(const std::string& peer_name, uint64_t answer_id,
-                  const void* data, size_t length);
-    bool sendLog(const std::string& peer_name, const void* data, size_t length);
+    bool establishCommunication(const std::string &internal_port);
+    bool sendData(const std::string &peer_name, uint64_t answer_id,
+                  const void *data, size_t length);
+    bool sendLog(const std::string &peer_name, const void *data, size_t length);
     bool sendCommand(std::string_view peer_name, std::string_view command);
     void shutdownCommunication();
 
@@ -177,10 +177,10 @@ public:
 
     // Helper API
     static inline bool FireSend(
-        const std::wstring& peer_name,  // assigned by caller
-        const std::wstring& port_name,  // standard format
-        const std::wstring& answer_id,  // identifies Answer
-        const void* data, size_t length) {
+        const std::wstring &peer_name,  // assigned by caller
+        const std::wstring &port_name,  // standard format
+        const std::wstring &answer_id,  // identifies Answer
+        const void *data, size_t length) {
         auto id = tools::ConvertToUint64(answer_id);
         if (id.has_value()) {
             auto port = wtools::ToUtf8(port_name);
@@ -198,8 +198,8 @@ public:
 
     // Helper API #TODO gtest
     template <typename T>
-    static bool FireCommand(const std::wstring& peer_name, const T& port_name,
-                            const void* data, size_t length) {
+    static bool FireCommand(const std::wstring &peer_name, const T &port_name,
+                            const void *data, size_t length) {
         CoreCarrier cc;
         auto port = wtools::ToUtf8(port_name);
         cc.establishCommunication(port);
@@ -211,8 +211,8 @@ public:
 
     // Helper API #TODO gtest
     template <typename T>
-    static bool FireLog(const std::wstring& peer_name, const T& port_name,
-                        const void* data, size_t length) {
+    static bool FireLog(const std::wstring &peer_name, const T &port_name,
+                        const void *data, size_t length) {
         CoreCarrier cc;
         auto port = wtools::ToUtf8(port_name);
         cc.establishCommunication(port);
@@ -223,19 +223,19 @@ public:
     }
 
 private:
-    bool sendDataDispatcher(DataType data_type, const std::string& peer_name,
-                            uint64_t answer_id, const void* data,
+    bool sendDataDispatcher(DataType data_type, const std::string &peer_name,
+                            uint64_t answer_id, const void *data,
                             size_t length);
-    bool mailSlotSend(DataType data_type, const std::string& peer_name,
-                      uint64_t answer_id, const void* data, size_t length);
-    bool dumpSlotSend(DataType type, const std::string& peer_name,
-                      uint64_t marker, const void* data_in, size_t length);
-    bool fileSlotSend(DataType data_type, const std::string& peer_name,
-                      uint64_t answer_id, const void* data, size_t length);
-    bool nullSlotSend(DataType data_type, const std::string& peer_name,
-                      uint64_t answer_id, const void* data, size_t length);
-    bool asioSlotSend(DataType data_type, const std::string& peer_name,
-                      uint64_t answer_id, const void* data, size_t length);
+    bool mailSlotSend(DataType data_type, const std::string &peer_name,
+                      uint64_t answer_id, const void *data, size_t length);
+    bool dumpSlotSend(DataType type, const std::string &peer_name,
+                      uint64_t marker, const void *data_in, size_t length);
+    bool fileSlotSend(DataType data_type, const std::string &peer_name,
+                      uint64_t answer_id, const void *data, size_t length);
+    bool nullSlotSend(DataType data_type, const std::string &peer_name,
+                      uint64_t answer_id, const void *data, size_t length);
+    bool asioSlotSend(DataType data_type, const std::string &peer_name,
+                      uint64_t answer_id, const void *data, size_t length);
 
     std::mutex lock_;
     std::string carrier_name_;
@@ -243,9 +243,9 @@ private:
 
     bool first_file_write_;  // used for a "file" carrier
 
-    std::function<bool(CoreCarrier* This, DataType data_type,
-                       const std::string& peer_name, uint64_t Marker,
-                       const void* data, size_t Length)>
+    std::function<bool(CoreCarrier *This, DataType data_type,
+                       const std::string &peer_name, uint64_t Marker,
+                       const void *data, size_t Length)>
         data_sender_ = nullptr;
 };
 void InformByMailSlot(std::string_view mail_slot, std::string_view cmd);

@@ -48,6 +48,11 @@ if [ -d "managed" ]; then
     PRUNE+=" -path $(realpath managed/cmk/gui/cme) -prune -o"                    # cmk/gui/cme symlink points here
     PRUNE+=" -path $(realpath managed/cmk/base/default_config/cme.py) -prune -o" # cmk/base/default_config/cme.py symlink points here
 fi
+if [ -d "plus" ]; then
+    SEARCH+=" plus/cmk"
+    PRUNE+=" -path $(realpath plus/cmk/base/cpe) -prune -o"                       # cmk/base/cpe symlink points here
+    PRUNE+=" -path $(realpath plus/cmk/gui/cpe) -prune -o"                        # cmk/gui/cpe symlink points here
+fi
 SEARCH+=" notifications"
 # Do not search whole omd/ because it may contain unpacked sub-packages
 SEARCH+=" omd/packages/appliance"

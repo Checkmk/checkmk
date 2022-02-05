@@ -125,7 +125,6 @@ def check_wmi_cpuload(
                 ),
             ),
             section.n_cores,
-            0,
             type=section.processor_type,
         ),
     )

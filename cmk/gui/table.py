@@ -7,6 +7,7 @@
 import json
 import re
 from contextlib import contextmanager, nullcontext
+from enum import auto, Enum
 from typing import (
     Any,
     ContextManager,
@@ -69,13 +70,19 @@ class GroupHeader(NamedTuple):
 TableRows = List[Union[TableRow, GroupHeader]]
 
 
+class Foldable(Enum):
+    NOT_FOLDABLE = auto()
+    FOLDABLE_SAVE_STATE = auto()
+    FOLDABLE_STATELESS = auto()
+
+
 @contextmanager
 def table_element(
     table_id: Optional[str] = None,
     title: Optional["HTMLContent"] = None,
     searchable: bool = True,
     sortable: bool = True,
-    foldable: bool = False,
+    foldable: Foldable = Foldable.NOT_FOLDABLE,
     limit: Union[None, int, Literal[False]] = None,
     output_format: str = "html",
     omit_if_empty: bool = False,
@@ -136,7 +143,7 @@ class Table:
         title: Optional["HTMLContent"] = None,
         searchable: bool = True,
         sortable: bool = True,
-        foldable: bool = False,
+        foldable: Foldable = Foldable.NOT_FOLDABLE,
         limit: Union[None, int, Literal[False]] = None,
         output_format: str = "html",
         omit_if_empty: bool = False,
@@ -309,7 +316,10 @@ class Table:
 
         container: ContextManager[bool] = nullcontext(False)
         if self.title:
-            if self.options["foldable"]:
+            if self.options["foldable"] in [
+                Foldable.FOLDABLE_SAVE_STATE,
+                Foldable.FOLDABLE_STATELESS,
+            ]:
                 html.open_div(class_="foldable_wrapper")
                 container = foldable_container(
                     treename="table",
@@ -317,6 +327,7 @@ class Table:
                     isopen=True,
                     indent=False,
                     title=html.render_h3(self.title, class_=["treeangle", "title"]),
+                    save_state=self.options["foldable"] == Foldable.FOLDABLE_SAVE_STATE,
                 )
             else:
                 html.h3(self.title, class_="table")
@@ -366,7 +377,10 @@ class Table:
                 rows, num_rows_unlimited, self._show_action_row(), actions_visible, search_term
             )
 
-        if self.title and self.options["foldable"]:
+        if self.title and self.options["foldable"] in [
+            Foldable.FOLDABLE_SAVE_STATE,
+            Foldable.FOLDABLE_STATELESS,
+        ]:
             html.close_div()
 
         return

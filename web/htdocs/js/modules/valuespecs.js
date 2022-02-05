@@ -745,25 +745,32 @@ function hook_select2_hint(elem, source_id) {
     source_field.on("change", () => set_select2_element(elem, source_field.val()));
 }
 
+function ajax_autocomplete_request(value, elem, ident, params) {
+    return (
+        "request=" +
+        encodeURIComponent(
+            JSON.stringify({
+                ident: ident,
+                params: params(elem),
+                value: value,
+            })
+        )
+    );
+}
+
 function select2_ajax_vs_autocomplete(elem, ident, params) {
+    let value = term =>
+        term.term !== undefined
+            ? term.term
+            : ["hostname", "service"].find(el => ident.includes(el))
+            ? elem.value
+            : "";
+
     return {
         url: "ajax_vs_autocomplete.py",
         delay: 250,
         type: "POST",
-        data: term =>
-            "request=" +
-            encodeURIComponent(
-                JSON.stringify({
-                    ident: ident,
-                    params: params(elem),
-                    value:
-                        term.term !== undefined
-                            ? term.term
-                            : ["hostname", "service"].find(el => ident.includes(el))
-                            ? elem.value
-                            : "",
-                })
-            ),
+        data: term => ajax_autocomplete_request(value(term), elem, ident, params),
         processResults: resp => ({
             results: resp.result.choices.map(x => ({
                 id: x[0],
@@ -777,17 +784,24 @@ function select2_ajax_vs_autocomplete(elem, ident, params) {
 function select2_vs_autocomplete(container, css_class, params) {
     let field_element =
         ["hostname", "service", "metric", "graph"].find(el => css_class.includes(el)) || "item";
+    let placeholder_title = `(Select ${field_element})`;
+    if (css_class === "wato_folder_choices") placeholder_title = "(Select target folder)";
     $(container)
-        .find("." + css_class)
+        .find("select." + css_class)
         .each((i, elem) => {
             $(elem)
                 .select2({
                     width: "style",
                     allowClear: true,
-                    placeholder: `(Select ${field_element})`,
+                    placeholder: placeholder_title,
                     ajax: select2_ajax_vs_autocomplete(elem, css_class, params),
                 })
                 .on("select2:open", () => {
+                    // TODO set focus on search_field
+                    // (jquery 3.6 focus security patch bugs auto search in select-2)
+                    // remove if not necessary any more
+                    let input_field = document.querySelector(".select2-search__field");
+                    input_field.focus();
                     if (["hostname", "service"].includes(field_element))
                         $(".select2-search input").val(elem.value);
                 });
@@ -806,12 +820,36 @@ function select2_vs_autocomplete(container, css_class, params) {
                     if (field_element === "hostname") $(metric_field_id + "_service_hint").empty();
                 });
             }
+
+            // Query set value. Horrible Select2 default options query
+            if (elem.value !== "") {
+                let dropdown = $(elem);
+                $.ajax({
+                    type: "POST",
+                    url: "ajax_vs_autocomplete.py",
+                    data: ajax_autocomplete_request(elem.value, elem, css_class, params),
+                }).then(data => {
+                    let pick = data.result.choices.find(el => el[0] === elem.value);
+                    if (pick) {
+                        let option = new Option(pick[1], pick[0], true, true);
+                        dropdown.empty().append(option).trigger("change");
+                    }
+                });
+            }
         });
 }
 
-function hostnames_autocompleter(css_class, container) {
+function single_autocompleter(css_class, container) {
     let params = elem => ({
         strict: elem.dataset.strict,
+    });
+    select2_vs_autocomplete(container, css_class, params);
+}
+
+function allgroups_autocompleter(css_class, container) {
+    let params = elem => ({
+        strict: elem.dataset.strict,
+        group_type: elem.id,
     });
     select2_vs_autocomplete(container, css_class, params);
 }
@@ -849,12 +887,29 @@ function autocompleter_with_host_service_hints(css_class, container) {
     select2_vs_autocomplete(container, css_class, params);
 }
 
+function tag_group_options_autocompleter(css_class, container) {
+    let params = elem => ({
+        strict: elem.dataset.strict,
+        group_id: document.getElementById(elem.id.replace(/_val$/, "_grp")).value,
+    });
+    select2_vs_autocomplete(container, css_class, params);
+}
+
 export function initialize_autocompleters(container) {
-    hostnames_autocompleter("monitored_hostname", container);
-    hostnames_autocompleter("config_hostname", container);
+    single_autocompleter("sites", container);
+    single_autocompleter("monitored_hostname", container);
+    single_autocompleter("config_hostname", container);
+    single_autocompleter("check_cmd", container);
+    single_autocompleter("syslog_facilities", container);
+    single_autocompleter("service_levels", container);
+    single_autocompleter("wato_folder_choices", container);
+    single_autocompleter("tag_groups", container);
+    tag_group_options_autocompleter("tag_groups_opt", container);
+
     service_desc_autocompleter("monitored_service_description", container);
     autocompleter_with_host_service_hints("monitored_metrics", container);
     autocompleter_with_host_service_hints("available_graphs", container);
+    allgroups_autocompleter("allgroups", container);
 }
 
 var vs_color_pickers = [];
@@ -933,4 +988,27 @@ export function update_unit_selector(selectbox, metric_prefix) {
     let metric_selector = $("#" + metric_prefix);
     change_unit_to_match_metric(metric_selector.val());
     metric_selector.on("change", event => change_unit_to_match_metric(event.target.value));
+}
+
+export function fetch_ca_from_server(varprefix) {
+    const address = document.querySelector(`input[name='${varprefix + "_address"}']`).value;
+    const port = document.querySelector(`input[name='${varprefix + "_port"}']`).value;
+
+    ajax.post_url(
+        "ajax_fetch_ca.py",
+        "address=" + encodeURIComponent(address) + "&port=" + encodeURIComponent(port),
+        (_data, ajax_response) => {
+            const response = JSON.parse(ajax_response);
+
+            const status = document.getElementById(varprefix + "_status");
+            const content = document.querySelector(`textarea[name='${varprefix}']`);
+            if (response.result_code !== 0) {
+                status.innerText = response.result;
+                content.value = "";
+            } else {
+                status.innerHTML = response.result.summary;
+                content.value = response.result.cert_pem;
+            }
+        }
+    );
 }

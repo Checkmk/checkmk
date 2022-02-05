@@ -48,7 +48,7 @@ def tmpfs_mounted(sitename: str) -> bool:
     # then in /proc/mounts the physical path will appear and be
     # different from tmp_path. We just check the suffix therefore.
     path_suffix = "sites/%s/tmp" % sitename
-    for line in open("/proc/mounts"):
+    for line in open("/proc/mounts"):  # pylint:disable=consider-using-with
         try:
             _device, mp, fstype, _options, _dump, _fsck = line.split()
             if mp.endswith(path_suffix) and fstype == "tmpfs":
@@ -83,10 +83,10 @@ def prepare_tmpfs(version_info: VersionInfo, site: SiteContext) -> None:
         os.mkdir(site.tmp_dir)
 
     mount_options = shlex.split(version_info.MOUNT_OPTIONS)
-    p = subprocess.Popen(
+    p = subprocess.Popen(  # pylint:disable=consider-using-with
         ["mount"] + mount_options + [site.tmp_dir],
         shell=False,
-        stdin=open(os.devnull),
+        stdin=open(os.devnull),  # pylint:disable=consider-using-with
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
         encoding="utf-8",
@@ -219,7 +219,7 @@ def add_to_fstab(site: SiteContext, tmpfs_size: Optional[str] = None) -> None:
         sizespec = ",size=%s" % tmpfs_size
 
     # Ensure the fstab has a newline char at it's end before appending
-    previous_fstab = open(fstab_path()).read()
+    previous_fstab = open(fstab_path()).read()  # pylint:disable=consider-using-with
     complete_last_line = previous_fstab and not previous_fstab.endswith("\n")
 
     with open(fstab_path(), "a+") as fstab:
@@ -238,8 +238,8 @@ def remove_from_fstab(site: SiteContext) -> None:
 
     mountpoint = site.tmp_dir
     sys.stdout.write("Removing %s from /etc/fstab..." % mountpoint)
-    newtab = open("/etc/fstab.new", "w")
-    for line in open("/etc/fstab"):
+    newtab = open("/etc/fstab.new", "w")  # pylint:disable=consider-using-with
+    for line in open("/etc/fstab"):  # pylint:disable=consider-using-with
         if "uid=%s," % site.name in line and mountpoint in line:
             continue
         newtab.write(line)
@@ -276,7 +276,9 @@ def restore_tmpfs_dump(site):
     Silently skipping over in case there is no dump available."""
     if not _tmpfs_dump_path(site).exists():
         return
-    tarfile.TarFile(_tmpfs_dump_path(site)).extractall(site.tmp_dir)
+    tarfile.TarFile(_tmpfs_dump_path(site)).extractall(  # pylint:disable=consider-using-with
+        site.tmp_dir
+    )
 
 
 def _tmpfs_dump_path(site):

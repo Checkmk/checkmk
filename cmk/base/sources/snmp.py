@@ -14,11 +14,11 @@ from cmk.snmplib.type_defs import BackendSNMPTree, SNMPDetectSpec, SNMPRawData, 
 
 from cmk.core_helpers import FetcherType, SNMPFetcher
 from cmk.core_helpers.cache import SectionStore
+from cmk.core_helpers.host_sections import HostSections
 from cmk.core_helpers.snmp import (
     SectionMeta,
     SNMPFileCache,
     SNMPFileCacheFactory,
-    SNMPHostSections,
     SNMPParser,
     SNMPPluginStore,
     SNMPPluginStoreItem,
@@ -60,7 +60,7 @@ def make_plugin_store() -> SNMPPluginStore:
     )
 
 
-class SNMPSource(Source[SNMPRawData, SNMPHostSections]):
+class SNMPSource(Source[SNMPRawData, SNMPRawDataSection]):
     def __init__(
         self,
         hostname: HostName,
@@ -82,7 +82,7 @@ class SNMPSource(Source[SNMPRawData, SNMPHostSections]):
             fetcher_type=FetcherType.SNMP,
             description=SNMPSource._make_description(source_type, hostname, ipaddress, title=title),
             default_raw_data={},
-            default_host_sections=SNMPHostSections(),
+            default_host_sections=HostSections[SNMPRawDataSection](),
             id_=id_,
             cache_dir=cache_dir,
             persisted_section_dir=persisted_section_dir,

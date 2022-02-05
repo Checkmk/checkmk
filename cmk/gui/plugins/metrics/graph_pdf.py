@@ -9,7 +9,7 @@ from typing import List, Optional
 
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
-from cmk.gui.plugins.metrics import darken_color, lighten_color, parse_color
+from cmk.gui.plugins.metrics.utils import darken_color, lighten_color, parse_color
 
 
 def render_graph_pdf(

@@ -298,8 +298,10 @@ class FetchAgentOutputBackgroundJob(watolib.WatoBackgroundJob):
         )
 
         button = html.render_icon_button(download_url, _("Download"), "agent_output")
-        job_interface.send_progress_update(_("Finished. Click on the icon to download the data."))
-        job_interface.send_result_message(_("%s Finished.") % button)
+        job_interface.send_progress_update("Job finished.")
+        job_interface.send_result_message(
+            _("%s Click on the icon to download the agent output.") % button
+        )
 
 
 @page_registry.register_page("download_agent_output")

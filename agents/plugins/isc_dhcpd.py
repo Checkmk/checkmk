@@ -42,10 +42,11 @@ def get_pid():
     # https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=926896
     lsb_path = "/etc/lsb-release"
     if os.path.exists(lsb_path):
-        for line in open(lsb_path):
-            if "buster" in line:
-                cmd = "ps aux | grep -w [d]hcpd | awk {'printf (\"%s \", $2)'}"
-                break
+        with open(lsb_path) as opened_file:
+            for line in opened_file:
+                if "buster" in line:
+                    cmd = "ps aux | grep -w [d]hcpd | awk {'printf (\"%s \", $2)'}"
+                    break
 
     return os.popen(cmd).read().strip()  # nosec
 
@@ -57,15 +58,16 @@ sys.stdout.write("[pools]\n")
 
 
 def parse_config(filename):
-    for l in open(filename):
-        line = l.strip()
-        if line.startswith("include"):
-            regex_result = re.search(r'include\s+"(.*)"', line)
-            if regex_result:
-                included_file = regex_result.group(1)
-            parse_config(included_file)
-        elif line.startswith("range"):
-            sys.stdout.write(line[5:].strip("\t ;") + "\n")
+    with open(filename) as opened_file:
+        for l in opened_file:
+            line = l.strip()
+            if line.startswith("include"):
+                regex_result = re.search(r'include\s+"(.*)"', line)
+                if regex_result:
+                    included_file = regex_result.group(1)
+                parse_config(included_file)
+            elif line.startswith("range"):
+                sys.stdout.write(line[5:].strip("\t ;") + "\n")
 
 
 parse_config(conf_file)
@@ -87,26 +89,27 @@ now = time.time()
 ip_address = None
 binding_state = None
 seen_addresses = set()
-for lease_line in open(leases_file):
-    parts = lease_line.strip().rstrip(";").split()
-    if not parts:
-        continue
+with open(leases_file) as file:
+    for lease_line in file:
+        parts = lease_line.strip().rstrip(";").split()
+        if not parts:
+            continue
 
-    if parts[0] == "lease":
-        ip_address = parts[1]
-    elif parts[0] == "ends":
-        if parts[1] != "never":
-            ends_date_string = parts[2] + " " + parts[3]
-            ends_date = calendar.timegm(time.strptime(ends_date_string, "%Y/%m/%d %H:%M:%S"))
-            if ends_date < now:
-                ip_address = None  # skip this address, this lease is outdated
+        if parts[0] == "lease":
+            ip_address = parts[1]
+        elif parts[0] == "ends":
+            if parts[1] != "never":
+                ends_date_string = parts[2] + " " + parts[3]
+                ends_date = calendar.timegm(time.strptime(ends_date_string, "%Y/%m/%d %H:%M:%S"))
+                if ends_date < now:
+                    ip_address = None  # skip this address, this lease is outdated
 
-    elif parts[0] == "binding" and parts[1] == "state":
-        binding_state = parts[2]
+        elif parts[0] == "binding" and parts[1] == "state":
+            binding_state = parts[2]
 
-    elif parts[0] == "}":
-        if ip_address and binding_state == "active" and ip_address not in seen_addresses:
-            sys.stdout.write("%s\n" % ip_address)
-            seen_addresses.add(ip_address)
-        ip_address = None
-        binding_state = None
+        elif parts[0] == "}":
+            if ip_address and binding_state == "active" and ip_address not in seen_addresses:
+                sys.stdout.write("%s\n" % ip_address)
+                seen_addresses.add(ip_address)
+            ip_address = None
+            binding_state = None

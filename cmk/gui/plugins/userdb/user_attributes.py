@@ -5,8 +5,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.plugins.userdb import user_attribute_registry, UserAttribute
-from cmk.gui.plugins.userdb.utils import show_mode_choices, validate_start_url
+from cmk.gui.plugins.userdb.utils import (
+    show_mode_choices,
+    user_attribute_registry,
+    UserAttribute,
+    validate_start_url,
+)
 from cmk.gui.utils.theme import theme_choices
 from cmk.gui.valuespec import (
     AbsoluteDate,
@@ -32,7 +36,7 @@ class ForceAuthUserUserAttribute(UserAttribute):
 
     def valuespec(self):
         return Checkbox(
-            title=_("Visibility of Hosts/Services"),
+            title=_("Visibility of hosts/services"),
             label=_("Only show hosts and services the user is a contact for"),
             help=_(
                 "When this option is checked, then the status GUI will only "
@@ -57,7 +61,7 @@ class DisableNotificationsUserAttribute(UserAttribute):
     def valuespec(self):
         return Transform(
             Dictionary(
-                title=_("Disable Notifications"),
+                title=_("Disable notifications"),
                 help=_(
                     "When this option is active you will not get <b>any</b> "
                     "alerts or other notifications via email, SMS or similar. "

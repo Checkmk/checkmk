@@ -8,13 +8,13 @@ import logging
 import shutil
 import socket
 from pathlib import Path
-from typing import Any, Mapping, NamedTuple
+from typing import Any, Mapping, NamedTuple, Iterable
 from unittest import mock
 
 import pytest
 from fakeredis import FakeRedis  # type: ignore[import]
 
-from tests.testlib import is_enterprise_repo, is_managed_repo
+from tests.testlib import is_enterprise_repo, is_managed_repo, is_plus_repo
 from tests.testlib.debug_utils import cmk_debug_enabled
 
 import livestatus
@@ -49,17 +49,19 @@ def fixture_umask():
         yield
 
 
-@pytest.fixture(name="edition_short", params=["cre", "cee", "cme"])
-def fixture_edition_short(monkeypatch, request):
+@pytest.fixture(name="edition", params=["cre", "cee", "cme", "cpe"])
+def fixture_edition(monkeypatch, request) -> Iterable[cmk_version.Edition]:
     edition_short = request.param
+    if edition_short == "cpe" and not is_plus_repo():
+        pytest.skip("Needed files are not available")
+
     if edition_short == "cme" and not is_managed_repo():
         pytest.skip("Needed files are not available")
 
     if edition_short == "cee" and not is_enterprise_repo():
         pytest.skip("Needed files are not available")
 
-    monkeypatch.setattr(cmk_version, "edition_short", lambda: edition_short)
-    yield edition_short
+    yield cmk_version.Edition[edition_short.upper()]
 
 
 @pytest.fixture(autouse=True)
@@ -74,16 +76,64 @@ def patch_omd_site(monkeypatch):
     store.makedirs(cmk.utils.paths.var_dir + "/wato/php-api")
     store.makedirs(cmk.utils.paths.var_dir + "/wato/auth")
     store.makedirs(cmk.utils.paths.tmp_dir + "/wato/activation")
-    store.makedirs(cmk.utils.paths.omd_root + "/var/log")
-    store.makedirs(cmk.utils.paths.omd_root + "/tmp/check_mk")
+    store.makedirs(cmk.utils.paths.omd_root / "var/log")
+    store.makedirs(cmk.utils.paths.omd_root / "tmp/check_mk")
     store.makedirs(cmk.utils.paths.default_config_dir + "/conf.d/wato")
     store.makedirs(cmk.utils.paths.default_config_dir + "/multisite.d/wato")
     store.makedirs(cmk.utils.paths.default_config_dir + "/mkeventd.d/wato")
     _touch(cmk.utils.paths.default_config_dir + "/mkeventd.mk")
     _touch(cmk.utils.paths.default_config_dir + "/multisite.mk")
 
+    omd_config_dir = "%s/etc/omd" % (cmk.utils.paths.omd_root,)
+    _dump(
+        omd_config_dir + "/site.conf",
+        """
+CONFIG_ADMIN_MAIL=''
+CONFIG_AGENT_RECEIVER='on'
+CONFIG_AGENT_RECEIVER_PORT='8000'
+CONFIG_APACHE_MODE='own'
+CONFIG_APACHE_TCP_ADDR='127.0.0.1'
+CONFIG_APACHE_TCP_PORT='5002'
+CONFIG_AUTOSTART='off'
+CONFIG_CORE='cmc'
+CONFIG_LIVEPROXYD='on'
+CONFIG_LIVESTATUS_TCP='off'
+CONFIG_LIVESTATUS_TCP_ONLY_FROM='0.0.0.0 ::/0'
+CONFIG_LIVESTATUS_TCP_PORT='6557'
+CONFIG_LIVESTATUS_TCP_TLS='on'
+CONFIG_MKEVENTD='on'
+CONFIG_MKEVENTD_SNMPTRAP='off'
+CONFIG_MKEVENTD_SYSLOG='on'
+CONFIG_MKEVENTD_SYSLOG_TCP='off'
+CONFIG_MULTISITE_AUTHORISATION='on'
+CONFIG_MULTISITE_COOKIE_AUTH='on'
+CONFIG_NAGIOS_THEME='classicui'
+CONFIG_NSCA='off'
+CONFIG_NSCA_TCP_PORT='5667'
+CONFIG_PNP4NAGIOS='on'
+CONFIG_TMPFS='on'
+    """,
+    )
+    _dump(
+        cmk.utils.paths.default_config_dir + "/mkeventd.d/wato/rules.mk",
+        r"""
+# Written by WATO
+# encoding: utf-8
+
+rule_packs += \
+[{'id': 'default', 'title': 'Default rule pack', 'rules': [], 'disabled': False, 'hits': 0}]
+""",
+    )
+
     yield
     omd_site.cache_clear()
+
+
+def _dump(path, data):
+    p = Path(path)
+    p.parent.mkdir(parents=True, exist_ok=True)
+    with open(path, "w") as f:
+        f.write(data)
 
 
 def _touch(path):
@@ -95,9 +145,13 @@ def _touch(path):
 def cleanup_after_test():
     yield
 
+    if cmk.utils.paths.omd_root == Path(""):
+        logger.warning("OMD_ROOT not set, skipping cleanup")
+        return
+
     # Ensure there is no file left over in the unit test fake site
     # to prevent tests involving eachother
-    for entry in Path(cmk.utils.paths.omd_root).iterdir():
+    for entry in cmk.utils.paths.omd_root.iterdir():
         # This randomly fails for some unclear reasons. Looks like a race condition, but I
         # currently have no idea which triggers this since the tests are not executed in
         # parallel at the moment. This is meant as quick hack, trying to reduce flaky results.
@@ -121,7 +175,7 @@ def _clear_caches():
     cmk.utils.caching.config_cache.clear()
     cmk.utils.caching.runtime_cache.clear()
 
-    cmk_version.edition_short.cache_clear()
+    cmk_version.edition.cache_clear()
 
 
 @pytest.fixture(autouse=True, scope="module")
@@ -330,7 +384,7 @@ def registry_reset():
             cmk.cee.dcd.plugins.connectors.connectors_api.v1.connector_config_registry
         )
         registries.append(cmk.cee.dcd.plugins.connectors.connectors_api.v1.connector_registry)
-    
+
     defaults_per_registry = [(registry, list(registry)) for registry in registries]  # type: ignore[call-overload]
     try:
         yield

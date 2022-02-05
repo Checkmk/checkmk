@@ -295,7 +295,8 @@ bool sinkProc(const cma::world::AsioSession::s_ptr &asio_session,
 // MAY BE RESTARTED if we have new port/ipv6 mode in config
 // OneShot - true, CMK way, connect, send data back, disconnect
 //         - false, accept send data back, no disconnect
-void ExternalPort::ioThreadProc(const cma::world::ReplyFunc &reply_func) {
+void ExternalPort::ioThreadProc(const ReplyFunc &reply_func,
+                                std::optional<uint16_t> port) {
     using namespace cma::cfg;
     XLOG::t(XLOG_FUNC + " started");
     // all threads must control exceptions
@@ -308,12 +309,13 @@ void ExternalPort::ioThreadProc(const cma::world::ReplyFunc &reply_func) {
             asio::io_context context;
 
             auto ipv6 = groups::global.ipv6();
-            auto port =
-                default_port_ == 0 ? groups::global.port() : default_port_;
+            uint16_t use_port = port            ? *port
+                                : default_port_ ? *default_port_
+                                                : groups::global.port();
 
             // server start
-            ExternalPort::server sock(context, ipv6, port);
-            XLOG::l.i("Starting IO ipv6:{}, used port:{}", ipv6, port);
+            ExternalPort::server sock(context, ipv6, use_port);
+            XLOG::l.i("Starting IO ipv6:{}, used port:{}", ipv6, use_port);
             sock.run_accept(sinkProc, this);
 
             registerContext(&context);
@@ -345,13 +347,17 @@ void ExternalPort::ioThreadProc(const cma::world::ReplyFunc &reply_func) {
 
 // runs thread
 // can fail when thread is already running
-bool ExternalPort::startIo(const ReplyFunc &reply_func) {
+bool ExternalPort::startIo(const ReplyFunc &reply_func,
+                           std::optional<uint16_t> port) {
     std::lock_guard lk(io_thread_lock_);
-    if (io_thread_.joinable()) return false;  // thread is in exec state
+    if (io_thread_.joinable()) {  // thread is in exec state
+        return false;
+    }
 
     shutdown_thread_ = false;  // reset potentially dropped flag
 
-    io_thread_ = std::thread(&ExternalPort::ioThreadProc, this, reply_func);
+    io_thread_ = std::thread(&ExternalPort::ioThreadProc, this, reply_func,
+                             std::optional<uint16_t>{});
     io_started_ = true;
     return true;
 }

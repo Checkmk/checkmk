@@ -51,7 +51,8 @@ def create_snapshot(comment):
     if comment:
         data["comment"] += _("Comment: %s") % comment
 
-    data["created_by"] = user.id
+    # with SuperUserContext the user.id is None; later this value will be encoded for tar
+    data["created_by"] = "" if user.id is None else user.id
     data["type"] = "automatic"
     data["snapshot_name"] = snapshot_name
 
@@ -88,7 +89,7 @@ def _do_create_snapshot(data):
             return tarinfo
 
         # Initialize the snapshot tar file and populate with initial information
-        tar_in_progress = tarfile.open(filename_work, "w")
+        tar_in_progress = tarfile.open(filename_work, "w")  # pylint:disable=consider-using-with
 
         for key in ["comment", "created_by", "type"]:
             tarinfo = get_basic_tarinfo(key)
@@ -117,7 +118,7 @@ def _do_create_snapshot(data):
                 prefix,
             ] + paths
 
-            proc_create = subprocess.Popen(
+            proc_create = subprocess.Popen(  # pylint:disable=consider-using-with
                 command,
                 stdin=None,
                 close_fds=True,
@@ -143,7 +144,7 @@ def _do_create_snapshot(data):
 
             # Append tar.gz subtar to snapshot
             command = ["tar", "--append", "--file=" + filename_work, filename_subtar]
-            proc_append = subprocess.Popen(
+            proc_append = subprocess.Popen(  # pylint:disable=consider-using-with
                 command,
                 cwd=work_dir,
                 close_fds=True,
@@ -161,7 +162,7 @@ def _do_create_snapshot(data):
         # each of the subtars
         info = "".join(["%s %s %s\n" % (k, v[0], v[1]) for k, v in subtar_info.items()]) + "\n"
 
-        tar_in_progress = tarfile.open(filename_work, "a")
+        tar_in_progress = tarfile.open(filename_work, "a")  # pylint:disable=consider-using-with
         tarinfo = get_basic_tarinfo("checksums")
         tarinfo.size = len(info)
         tar_in_progress.addfile(tarinfo, io.BytesIO(info.encode()))
@@ -262,7 +263,7 @@ def get_snapshot_status(snapshot, validate_checksums=False, check_correct_core=T
 
         cmk_tar = io.BytesIO(access_snapshot(lambda x: _get_file_content(x, "check_mk.tar.gz")))
         files = _list_tar_content(cmk_tar)
-        using_cmc = os.path.exists(cmk.utils.paths.omd_root + "/etc/check_mk/conf.d/microcore.mk")
+        using_cmc = (cmk.utils.paths.omd_root / "etc/check_mk/conf.d/microcore.mk").exists()
         snapshot_cmc = "conf.d/microcore.mk" in files
         if using_cmc and not snapshot_cmc:
             raise MKGeneralException(
@@ -399,7 +400,7 @@ def _list_tar_content(the_tarfile: Union[str, io.BytesIO]) -> Dict[str, Dict[str
             the_tarfile.seek(0)
             tar = tarfile.open("r", fileobj=the_tarfile)
         else:
-            tar = tarfile.open(the_tarfile, "r")
+            tar = tarfile.open(the_tarfile, "r")  # pylint:disable=consider-using-with
         for x in tar.getmembers():
             files.update({x.name: {"size": x.size}})
     except Exception:
@@ -412,7 +413,7 @@ def _get_file_content(the_tarfile: Union[str, io.BytesIO], filename: str) -> byt
         the_tarfile.seek(0)
         tar = tarfile.open("r", fileobj=the_tarfile)
     else:
-        tar = tarfile.open(the_tarfile, "r")
+        tar = tarfile.open(the_tarfile, "r")  # pylint:disable=consider-using-with
 
     obj = tar.extractfile(filename)
     if obj is None:
@@ -439,7 +440,7 @@ def _snapshot_secret() -> bytes:
             s = os.urandom(256)
         except NotImplementedError:
             s = str(sha256(str(time.time()).encode())).encode()
-        open(path, "wb").write(s)
+        open(path, "wb").write(s)  # pylint:disable=consider-using-with
         return s
 
 
@@ -480,7 +481,7 @@ def extract_snapshot(tar: tarfile.TarFile, domains: Dict[str, DomainSpec]) -> No
 
         # Older versions of python tarfile handle empty subtar archives :(
         # This won't work: subtar = tarfile.open("%s/%s" % (restore_dir, tar_member.name))
-        p = subprocess.Popen(
+        p = subprocess.Popen(  # pylint:disable=consider-using-with
             ["tar", "tzf", "%s/%s" % (restore_dir, tar_member.name)],
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
@@ -492,7 +493,7 @@ def extract_snapshot(tar: tarfile.TarFile, domains: Dict[str, DomainSpec]) -> No
             return errors
 
         for line in stdout:
-            full_path = prefix + "/" + line
+            full_path = str(prefix) + "/" + line
             path_tokens = full_path.split("/")
             check_exists_or_writable(path_tokens)
 
@@ -538,7 +539,7 @@ def extract_snapshot(tar: tarfile.TarFile, domains: Dict[str, DomainSpec]) -> No
             tar.extract(tar_member, restore_dir)
 
             command = ["tar", "xzf", "%s/%s" % (restore_dir, tar_member.name), "-C", target_dir]
-            p = subprocess.Popen(
+            p = subprocess.Popen(  # pylint:disable=consider-using-with
                 command,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,

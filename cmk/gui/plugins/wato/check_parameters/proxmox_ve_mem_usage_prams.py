@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.plugins.wato import (
+from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithoutItem,
     rulespec_registry,
     RulespecGroupCheckParametersOperatingSystem,
@@ -22,8 +22,8 @@ def _parameter_valuespec_proxmox_ve_mem_usage():
                 Tuple(
                     title=_("Levels"),
                     elements=[
-                        Percentage(title=_("Warning at"), default_value=70.0),
-                        Percentage(title=_("Critical at"), default_value=80.0),
+                        Percentage(title=_("Warning at"), default_value=80.0),
+                        Percentage(title=_("Critical at"), default_value=90.0),
                     ],
                 ),
             ),

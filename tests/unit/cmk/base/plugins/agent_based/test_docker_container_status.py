@@ -200,18 +200,15 @@ def test_discover_docker_container_status_health():
                 Result(
                     state=state.CRIT,
                     summary="Health status: Unhealthy",
-                    details="Health status: Unhealthy",
                 ),
                 Result(
                     state=state.OK,
                     summary="Last health report: mysqld is alive",
-                    details="Last health report: mysqld is alive",
                 ),
                 Result(state=state.CRIT, summary="Failing streak: 0"),
                 Result(
                     state=state.OK,
                     summary="Health test: CMD-SHELL /healthcheck.sh",
-                    details="Health test: CMD-SHELL /healthcheck.sh",
                 ),
             ],
         ),
@@ -221,11 +218,25 @@ def test_discover_docker_container_status_health():
                 IgnoreResults("Container is not running"),
             ],
         ),
+        # the health check is a script here:
+        (
+            {
+                "Health": {"Status": "healthy"},
+                "Healthcheck": {"Test": ["CMD-SHELL", "#!/bin/bash\n\nexit $(my_healthcheck)\n"]},
+                "Status": "running",
+            },
+            [
+                Result(state=state.OK, summary="Health status: Healthy"),
+                Result(state=state.WARN, summary="Last health report: no output"),
+                Result(
+                    state=state.OK,
+                    summary="Health test: CMD-SHELL",
+                    details="Health test: CMD-SHELL #!/bin/bash\n\nexit $(my_healthcheck)\n",
+                ),
+            ],
+        ),
     ],
 )
 def test_check_docker_container_status_health(section, expected):
-    import pprint as pp
-
-    pp.pprint(section)
     yielded_results = list(docker.check_docker_container_status_health(section))
-    assert repr(yielded_results) == repr(expected)
+    assert yielded_results == expected

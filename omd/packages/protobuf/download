@@ -1,1 +1,3 @@
-wget https://github.com/protocolbuffers/protobuf/releases/download/v3.17.3/protobuf-cpp-3.17.3.tar.gz
+#!/bin/bash
+
+wget https://github.com/protocolbuffers/protobuf/releases/download/v3.18.1/protobuf-python-3.18.1.tar.gz

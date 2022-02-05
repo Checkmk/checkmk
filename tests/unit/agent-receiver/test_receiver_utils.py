@@ -6,58 +6,46 @@
 
 import time
 from pathlib import Path
-from unittest import mock
+from uuid import UUID
 
-import pytest
+from agent_receiver import constants
 from agent_receiver.models import HostTypeEnum
 from agent_receiver.utils import Host, update_file_access_time
 
-from omdlib.certs import CertificateAuthority
 
-
-@pytest.fixture(autouse=True)
-def mock_paths(tmp_path: Path):
-    with mock.patch("agent_receiver.utils.AGENT_OUTPUT_DIR", tmp_path):
-        with mock.patch("agent_receiver.utils.REGISTRATION_REQUESTS", tmp_path):
-            yield
-
-
-@pytest.fixture
-def ca(tmp_path: Path) -> CertificateAuthority:
-    return CertificateAuthority(tmp_path / "ca", "test-ca")
-
-
-def test_host_not_registered(tmp_path: Path) -> None:
-    host = Host("1234")
+def test_host_not_registered(uuid: UUID) -> None:
+    host = Host(uuid)
 
     assert host.registered is False
     assert host.hostname is None
     assert host.host_type is None
 
 
-def test_pull_host_registered(tmp_path: Path) -> None:
-    source = tmp_path / "1234"
+def test_pull_host_registered(tmp_path: Path, uuid: UUID) -> None:
+    source = constants.AGENT_OUTPUT_DIR / str(uuid)
     target_dir = tmp_path / "hostname"
     source.symlink_to(target_dir)
 
-    host = Host("1234")
+    host = Host(uuid)
 
     assert host.registered is True
     assert host.hostname == "hostname"
     assert host.host_type is HostTypeEnum.PULL
+    assert host.source_path == source
 
 
-def test_push_host_registered(tmp_path: Path) -> None:
-    source = tmp_path / "1234"
+def test_push_host_registered(tmp_path: Path, uuid: UUID) -> None:
+    source = constants.AGENT_OUTPUT_DIR / str(uuid)
     target_dir = tmp_path / "hostname"
     target_dir.touch()
     source.symlink_to(target_dir)
 
-    host = Host("1234")
+    host = Host(uuid)
 
     assert host.registered is True
     assert host.hostname == "hostname"
     assert host.host_type is HostTypeEnum.PUSH
+    assert host.source_path == source
 
 
 def test_update_file_access_time_success(tmp_path: Path) -> None:

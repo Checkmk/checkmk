@@ -11,8 +11,9 @@ from typing import List, Optional, Tuple, TYPE_CHECKING
 import cmk.gui.utils as utils
 from cmk.gui.globals import config
 from cmk.gui.i18n import _
-from cmk.gui.plugins.views import (
+from cmk.gui.plugins.views.utils import (
     cmp_custom_variable,
+    cmp_insensitive_string,
     cmp_ip_address,
     cmp_num_split,
     cmp_service_name_equiv,
@@ -22,16 +23,16 @@ from cmk.gui.plugins.views import (
     compare_ips,
     declare_1to1_sorter,
     declare_simple_sorter,
-    get_labels,
+    DerivedColumnsSorter,
     get_perfdata_nth_value,
     get_tag_groups,
     Sorter,
     sorter_registry,
 )
-from cmk.gui.plugins.views.utils import cmp_insensitive_string, DerivedColumnsSorter
 from cmk.gui.sites import get_site_config
 from cmk.gui.type_defs import Row
 from cmk.gui.valuespec import Dictionary, DropdownChoice, ValueSpec
+from cmk.gui.view_utils import get_labels
 
 if TYPE_CHECKING:
     from cmk.gui.views import View
@@ -295,8 +296,8 @@ declare_simple_sorter("site", _("Site"), "site", cmp_simple_string)
 declare_simple_sorter(
     "stateage", _("Service state age"), "service_last_state_change", cmp_simple_number
 )
-declare_simple_sorter("servicegroup", _("Servicegroup"), "servicegroup_alias", cmp_simple_string)
-declare_simple_sorter("hostgroup", _("Hostgroup"), "hostgroup_alias", cmp_simple_string)
+declare_simple_sorter("servicegroup", _("Service group"), "servicegroup_alias", cmp_simple_string)
+declare_simple_sorter("hostgroup", _("Host group"), "hostgroup_alias", cmp_simple_string)
 
 # Alerts
 declare_1to1_sorter("alert_stats_crit", cmp_simple_number, reverse=True)
@@ -536,7 +537,7 @@ class SorterNumProblems(Sorter):
         )
 
 
-# Hostgroup
+# Host group
 declare_1to1_sorter("hg_num_services", cmp_simple_number)
 declare_1to1_sorter("hg_num_services_ok", cmp_simple_number)
 declare_1to1_sorter("hg_num_services_warn", cmp_simple_number)
@@ -550,7 +551,7 @@ declare_1to1_sorter("hg_num_hosts_pending", cmp_simple_number)
 declare_1to1_sorter("hg_name", cmp_simple_string)
 declare_1to1_sorter("hg_alias", cmp_simple_string)
 
-# Servicegroup
+# Service group
 declare_1to1_sorter("sg_num_services", cmp_simple_number)
 declare_1to1_sorter("sg_num_services_ok", cmp_simple_number)
 declare_1to1_sorter("sg_num_services_warn", cmp_simple_number)

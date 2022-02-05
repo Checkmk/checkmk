@@ -22,21 +22,21 @@ class Queue {
 public:
     using value_type = T;
     using size_type = typename Q::size_type;
-    using reference = T&;
-    using const_reference = const T&;
+    using reference = T &;
+    using const_reference = const T &;
 
     Queue() = default;
     explicit Queue(size_type limit);
-    Queue(const Queue&) = delete;
-    Queue& operator=(const Queue&) = delete;
-    Queue(Queue&&) noexcept = default;
-    Queue& operator=(Queue&&) noexcept = default;
+    Queue(const Queue &) = delete;
+    Queue &operator=(const Queue &) = delete;
+    Queue(Queue &&) noexcept = default;
+    Queue &operator=(Queue &&) noexcept = default;
     ~Queue();
     [[nodiscard]] size_type approx_size() const;
     [[nodiscard]] std::optional<size_type> limit() const;
     [[nodiscard]] queue_status push(const_reference elem,
                                     queue_overflow_strategy strategy);
-    [[nodiscard]] queue_status push(value_type&& elem,
+    [[nodiscard]] queue_status push(value_type &&elem,
                                     queue_overflow_strategy strategy);
     std::optional<value_type> try_pop();
     std::optional<value_type> pop();
@@ -108,7 +108,7 @@ queue_status Queue<T, Q>::push(const_reference elem,
 }
 
 template <typename T, typename Q>
-queue_status Queue<T, Q>::push(value_type&& elem,
+queue_status Queue<T, Q>::push(value_type &&elem,
                                queue_overflow_strategy strategy) {
     auto status{queue_status::ok};
     std::unique_lock<std::mutex> lock(mutex_);

@@ -5,6 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import os
 import typing
+from pathlib import Path
 
 import pytest
 
@@ -149,22 +150,22 @@ def test_legacy_webapi(wsgi_app, with_automation_user):
 
     finally:
 
-        def _remove(filename):
-            if os.path.exists(filename):
-                os.unlink(filename)
-
         # FIXME: Testing of delete_host can't be done until the local automation call doesn't call
         #        out to "check_mk" via subprocess anymore. In order to not break the subsequent
         #        test, we have to delete the host ourselves. This can and will actually break
         #        unit/cmk/base/test_config.py::test_get_config_file_paths_with_confd again if
         #        more files should be created by add_host in the future.
 
-        _remove(cmk.utils.paths.omd_root + "/etc/check_mk/conf.d/fs_cap.mk")
-        _remove(cmk.utils.paths.omd_root + "/etc/check_mk/conf.d/wato/global.mk")
-        _remove(cmk.utils.paths.omd_root + "/etc/check_mk/conf.d/wato/groups.mk")
-        _remove(cmk.utils.paths.omd_root + "/etc/check_mk/conf.d/wato/notifications.mk")
-        _remove(cmk.utils.paths.omd_root + "/etc/check_mk/conf.d/wato/tags.mk")
-        _remove(cmk.utils.paths.omd_root + "/etc/check_mk/conf.d/wato/eins/zwei/hosts.mk")
+        (Path(cmk.utils.paths.check_mk_config_dir) / "fs_cap.mk").unlink(missing_ok=True)
+        (Path(cmk.utils.paths.check_mk_config_dir) / "wato/global.mk").unlink(missing_ok=True)
+        (Path(cmk.utils.paths.check_mk_config_dir) / "wato/groups.mk").unlink(missing_ok=True)
+        (Path(cmk.utils.paths.check_mk_config_dir) / "wato/notifications.mk").unlink(
+            missing_ok=True
+        )
+        (Path(cmk.utils.paths.check_mk_config_dir) / "wato/tags.mk").unlink(missing_ok=True)
+        (Path(cmk.utils.paths.check_mk_config_dir) / "wato/eins/zwei/hosts.mk").unlink(
+            missing_ok=True
+        )
 
 
 def test_cmk_run_cron(wsgi_app):

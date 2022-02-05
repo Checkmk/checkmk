@@ -20,8 +20,9 @@ import cmk.gui.plugins.userdb.utils as userdb_utils
 from cmk.gui.exceptions import MKConfigError, MKUserError
 from cmk.gui.globals import config, request, user
 from cmk.gui.i18n import _
-from cmk.gui.plugins.views.icons import icon_and_action_registry
-from cmk.gui.plugins.wato import (
+from cmk.gui.plugins.views.icons.utils import icon_and_action_registry
+from cmk.gui.plugins.wato.omd_configuration import ConfigVariableGroupSiteManagement
+from cmk.gui.plugins.wato.utils import (
     BinaryHostRulespec,
     BinaryServiceRulespec,
     config_variable_group_registry,
@@ -30,9 +31,11 @@ from cmk.gui.plugins.wato import (
     ConfigDomainCore,
     ConfigDomainGUI,
     ConfigDomainOMD,
+    ConfigHostname,
     ConfigVariable,
     ConfigVariableGroup,
     ContactGroupSelection,
+    get_section_information,
     HostGroupSelection,
     HostnameTranslation,
     HostRulespec,
@@ -42,6 +45,8 @@ from cmk.gui.plugins.wato import (
     rulespec_group_registry,
     rulespec_registry,
     RulespecGroup,
+    RulespecGroupDiscoveryCheckParameters,
+    RulespecGroupMonitoringConfiguration,
     RulespecSubGroup,
     ServiceDescriptionTranslation,
     ServiceGroupSelection,
@@ -51,13 +56,6 @@ from cmk.gui.plugins.wato import (
     TimeperiodSelection,
     UserIconOrAction,
     valuespec_check_plugin_selection,
-)
-from cmk.gui.plugins.wato.omd_configuration import ConfigVariableGroupSiteManagement
-from cmk.gui.plugins.wato.utils import (
-    ConfigHostname,
-    get_section_information,
-    RulespecGroupDiscoveryCheckParameters,
-    RulespecGroupMonitoringConfiguration,
 )
 from cmk.gui.utils.theme import theme_choices
 from cmk.gui.utils.urls import makeuri_contextless
@@ -110,7 +108,7 @@ from cmk.gui.watolib.groups import load_contact_group_information
 @config_variable_group_registry.register
 class ConfigVariableGroupUserInterface(ConfigVariableGroup):
     def title(self):
-        return _("User Interface")
+        return _("User interface")
 
     def sort_index(self):
         return 20
@@ -182,9 +180,9 @@ def _slow_view_logging_help():
         " detect slow views you have to set"
         "<ul>"
         "<li>the log level to <b>DEBUG</b> at"
-        " <b>Setup > General > Global settings > User Interface > Log levels > Slow views</b>,</li>"
+        " <b>Setup > General > Global settings > User interface > Log levels > Slow views</b>,</li>"
         "<li>a threshold (in seconds) at"
-        " <b>Setup > General > Global settings > User Interface > Threshold for slow views</b>.</li>"
+        " <b>Setup > General > Global settings > User interface > Threshold for slow views</b>.</li>"
         "</ul>"
         "The logging is disable by default. The default threshold is set to 60 seconds."
         " If enabled one log entry per view rendering that exceeeds the configured threshold"
@@ -548,13 +546,13 @@ class ConfigVariableQuicksearchSearchOrder(ConfigVariable):
                         title=_("Search filter"),
                         choices=[
                             ("menu", _("Monitor menu entries")),
-                            ("h", _("Hostname")),
-                            ("al", _("Hostalias")),
-                            ("ad", _("Hostaddress")),
-                            ("tg", _("Hosttag")),
-                            ("hg", _("Hostgroup")),
-                            ("sg", _("Servicegroup")),
-                            ("s", _("Service Description")),
+                            ("h", _("Host name")),
+                            ("al", _("Host alias")),
+                            ("ad", _("Host address")),
+                            ("tg", _("Host tag")),
+                            ("hg", _("Host group")),
+                            ("sg", _("Service group")),
+                            ("s", _("Service description")),
                         ],
                     ),
                     DropdownChoice(
@@ -1873,7 +1871,7 @@ class RestAPIETagLocking(ConfigVariable):
 @config_variable_group_registry.register
 class ConfigVariableGroupWATO(ConfigVariableGroup):
     def title(self):
-        return _("Administration Tool (WATO)")
+        return _("Setup")
 
     def sort_index(self):
         return 25
@@ -2200,7 +2198,7 @@ class ConfigVariableWATOIconCategories(ConfigVariable):
 
 
 # .
-#   .--User Management-----------------------------------------------------.
+#   .--User management-----------------------------------------------------.
 #   |          _   _                 __  __                 _              |
 #   |         | | | |___  ___ _ __  |  \/  | __ _ _ __ ___ | |_            |
 #   |         | | | / __|/ _ \ '__| | |\/| |/ _` | '_ ` _ \| __|           |
@@ -2215,7 +2213,7 @@ class ConfigVariableWATOIconCategories(ConfigVariable):
 @config_variable_group_registry.register
 class ConfigVariableGroupUserManagement(ConfigVariableGroup):
     def title(self):
-        return _("User Management")
+        return _("User management")
 
     def sort_index(self):
         return 40
@@ -2444,7 +2442,7 @@ class ConfigVariableDefaultUserProfile(ConfigVariable):
                 (
                     "force_authuser",
                     Checkbox(
-                        title=_("Visibility of Hosts/Services"),
+                        title=_("Visibility of hosts/services"),
                         label=_("Only show hosts and services the user is a contact for"),
                         help=_("Specifiy the initial setting for an automatically created user."),
                         default_value=False,
@@ -4683,7 +4681,7 @@ rulespec_registry.register(
 )
 
 # .
-#   .--User Interface------------------------------------------------------.
+#   .--User interface------------------------------------------------------.
 #   |   _   _                 ___       _             __                   |
 #   |  | | | |___  ___ _ __  |_ _|_ __ | |_ ___ _ __ / _| __ _  ___ ___    |
 #   |  | | | / __|/ _ \ '__|  | || '_ \| __/ _ \ '__| |_ / _` |/ __/ _ \   |
@@ -4703,7 +4701,7 @@ def _valuespec_extra_host_conf_icon_image():
                 "You can assign icons to hosts for the status GUI. "
                 "Put your images into <tt>%s</tt>. "
             )
-            % (cmk.utils.paths.omd_root + "/local/share/check_mk/web/htdocs/images/icons"),
+            % str(cmk.utils.paths.omd_root / "local/share/check_mk/web/htdocs/images/icons"),
             with_emblem=False,
         ),
         forth=lambda v: v and (v.endswith(".png") and v[:-4]) or v if v is not None else "",
@@ -4727,7 +4725,7 @@ def _valuespec_extra_service_conf_icon_image():
                 "You can assign icons to services for the status GUI. "
                 "Put your images into <tt>%s</tt>. "
             )
-            % (cmk.utils.paths.omd_root + "/local/share/check_mk/web/htdocs/images/icons"),
+            % str(cmk.utils.paths.omd_root / "local/share/check_mk/web/htdocs/images/icons"),
             with_emblem=False,
         ),
         forth=lambda v: v and (v.endswith(".png") and v[:-4]) or v if v is not None else "",

@@ -5,7 +5,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.plugins.wato import register_check_parameters, RulespecGroupCheckParametersApplications
+from cmk.gui.plugins.wato.utils import (
+    register_check_parameters,
+    RulespecGroupCheckParametersApplications,
+)
 from cmk.gui.valuespec import Dictionary, MonitoringState, TextInput
 
 register_check_parameters(

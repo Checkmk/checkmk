@@ -44,6 +44,7 @@ QosClass = Literal["burstable", "besteffort", "guaranteed"]
 CreationTimestamp = NewType("CreationTimestamp", float)
 Namespace = NewType("Namespace", str)
 NodeName = NewType("NodeName", str)
+IpAddress = NewType("IpAddress", str)
 
 
 class MetaData(BaseModel):
@@ -51,16 +52,24 @@ class MetaData(BaseModel):
     namespace: Optional[Namespace] = None
     creation_timestamp: Optional[CreationTimestamp] = None
     labels: Optional[Labels] = None
-    prefix = ""
-    use_namespace = False
+
+
+class PodMetaData(MetaData):
+    namespace: Namespace
+
+
+class NodeConditionStatus(str, enum.Enum):
+    TRUE = "True"
+    FALSE = "False"
+    UNKNWON = "Unknown"
 
 
 class NodeConditions(BaseModel):
-    NetworkUnavailable: Optional[bool] = None
-    MemoryPressure: bool
-    DiskPressure: bool
-    PIDPressure: bool
-    Ready: bool
+    NetworkUnavailable: Optional[NodeConditionStatus] = None
+    MemoryPressure: NodeConditionStatus
+    DiskPressure: NodeConditionStatus
+    PIDPressure: NodeConditionStatus
+    Ready: NodeConditionStatus
 
 
 class NodeResources(BaseModel):
@@ -92,6 +101,8 @@ class NodeInfo(BaseModel):
     architecture: str
     kernel_version: str
     os_image: str
+    operating_system: str
+    container_runtime_version: str
 
 
 class NodeStatus(BaseModel):
@@ -107,7 +118,8 @@ class Node(BaseModel):
     kubelet_info: KubeletInfo
 
 
-class DeploymentReplicas(BaseModel):
+class Replicas(BaseModel):
+    replicas: int
     updated: int
     available: int
     ready: int
@@ -121,7 +133,6 @@ class ConditionStatus(str, enum.Enum):
 
 
 class DeploymentCondition(BaseModel):
-    type_: str
     status: ConditionStatus
     last_transition_time: float
     reason: str
@@ -130,19 +141,29 @@ class DeploymentCondition(BaseModel):
 
 class DeploymentStatus(BaseModel):
     # https://v1-18.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.18/#deploymentstatus-v1-apps
-    replicas: DeploymentReplicas
-    conditions: Sequence[DeploymentCondition]
+    replicas: Replicas
+    conditions: Mapping[str, DeploymentCondition]
+
+
+class RollingUpdate(BaseModel):
+    type_: Literal["RollingUpdate"] = Field("RollingUpdate", const=True)
+    max_surge: str
+    max_unavailable: str
+
+
+class Recreate(BaseModel):
+    type_: Literal["Recreate"] = Field("Recreate", const=True)
+
+
+class DeploymentSpec(BaseModel):
+    strategy: Union[Recreate, RollingUpdate] = Field(discriminator="type_")
 
 
 class Deployment(BaseModel):
     metadata: MetaData
+    spec: DeploymentSpec
     status: DeploymentStatus
     pods: Sequence[PodUID]
-
-
-class Resources(BaseModel):
-    limit: float = float("inf")
-    requests: float = 0.0
 
 
 class Phase(str, enum.Enum):
@@ -150,21 +171,35 @@ class Phase(str, enum.Enum):
     PENDING = "pending"
     SUCCEEDED = "succeeded"
     FAILED = "failed"
-    UNKNOWN = "unknown "
+    UNKNOWN = "unknown"
 
 
-class PodUsageResources(BaseModel):
-    cpu: Resources
-    memory: Resources
+class ResourcesRequirements(BaseModel):
+    memory: Optional[float] = None
+    cpu: Optional[float] = None
+
+
+class ContainerResources(BaseModel):
+    limits: ResourcesRequirements
+    requests: ResourcesRequirements
+
+
+ImagePullPolicy = Literal["Always", "Never", "IfNotPresent"]
+
+
+class ContainerSpec(BaseModel):
+    resources: ContainerResources
+    name: str
+    image_pull_policy: ImagePullPolicy
 
 
 class PodSpec(BaseModel):
     node: Optional[NodeName] = None
     host_network: Optional[str] = None
     dns_policy: Optional[str] = None
-    host_ip: Optional[str] = None
-    pod_ip: Optional[str] = None
-    qos_class: QosClass
+    restart_policy: RestartPolicy
+    containers: Sequence[ContainerSpec]
+    init_containers: Sequence[ContainerSpec]
 
 
 class ContainerRunningState(BaseModel):
@@ -188,7 +223,8 @@ class ContainerTerminatedState(BaseModel):
 
 
 class ContainerInfo(BaseModel):
-    id: Optional[str]  # id of non-ready container is None
+    container_id: Optional[str]  # container_id of non-ready container is None
+    image_id: str  # image_id of non-ready container is ""
     name: str
     image: str
     ready: bool
@@ -216,6 +252,7 @@ class PodCondition(BaseModel):
     custom_type: Optional[str]
     reason: Optional[str]
     detail: Optional[str]
+    last_transition_time: Optional[int]
 
     @validator("custom_type")
     @classmethod
@@ -228,16 +265,19 @@ class PodCondition(BaseModel):
 class PodStatus(BaseModel):
     conditions: List[PodCondition]
     phase: Phase
-    start_time: Optional[int]  # None if pod is faulty
+    start_time: Optional[Timestamp]  # None if pod is faulty
+    host_ip: Optional[IpAddress] = None
+    pod_ip: Optional[IpAddress] = None
+    qos_class: QosClass
 
 
 class Pod(BaseModel):
-    uid: str
-    metadata: MetaData
+    uid: PodUID
+    metadata: PodMetaData
     status: PodStatus
     spec: PodSpec
-    resources: PodUsageResources
     containers: Mapping[str, ContainerInfo]
+    init_containers: Mapping[str, ContainerInfo]
 
 
 class ClusterInfo(BaseModel):

@@ -6,8 +6,7 @@
 
 from typing import Dict
 
-from cmk.gui.plugins.metrics import check_metrics, KB, m, MB  # GB,; TB,
-from cmk.gui.plugins.metrics.utils import CheckMetricEntry
+from cmk.gui.plugins.metrics.utils import check_metrics, CheckMetricEntry, KB, m, MB
 
 # .
 #   .--Checks--------------------------------------------------------------.
@@ -473,6 +472,7 @@ check_metrics["check_mk-fjdarye200_pools"] = df_translation
 check_metrics["check_mk-dell_compellent_folder"] = df_translation
 check_metrics["check_mk-nimble_volumes"] = df_translation
 check_metrics["check_mk-ceph_df"] = df_translation
+check_metrics["check_mk-lvm_vgs"] = df_translation
 
 check_metrics["check_mk-netapp_api_volumes"] = {
     "fs_used": {"scale": MB},

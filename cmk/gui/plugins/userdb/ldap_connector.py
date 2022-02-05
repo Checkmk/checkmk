@@ -65,7 +65,6 @@ from cmk.gui.i18n import _
 from cmk.gui.plugins.userdb.utils import (
     add_internal_attributes,
     CheckCredentialsResult,
-    cleanup_connection_id,
     get_connection,
     get_user_attributes,
     load_cached_profile,
@@ -274,7 +273,7 @@ class LDAPUserConnector(UserConnector):
                 conn.set_option(ldap.OPT_REFERRALS, 0)
 
             if "use_ssl" in self._config:
-                conn.set_option(ldap.OPT_X_TLS_CACERTFILE, cmk.utils.paths.trusted_ca_file)
+                conn.set_option(ldap.OPT_X_TLS_CACERTFILE, str(cmk.utils.paths.trusted_ca_file))
 
                 # Caused trouble on older systems or systems with some special configuration or set of
                 # libraries. For example we saw a Ubuntu 17.10 system with libldap  2.4.45+dfsg-1ubuntu1 and
@@ -448,7 +447,7 @@ class LDAPUserConnector(UserConnector):
                 )
             )
 
-    def _bind(self, user_dn, password: _Tuple[str, str], catch=True, conn=None):
+    def _bind(self, user_dn, password: password_store.PasswordId, catch=True, conn=None):
         if conn is None:
             conn = self._ldap_obj
         self._logger.info("LDAP_BIND %s" % user_dn)
@@ -1233,7 +1232,7 @@ class LDAPUserConnector(UserConnector):
         # Remove users which are controlled by this connector but can not be found in
         # LDAP anymore
         for user_id, user in list(users.items()):
-            user_connection_id = cleanup_connection_id(user.get("connector"))
+            user_connection_id = user.get("connector")
             if (
                 user_connection_id == connection_id
                 and self._strip_suffix(user_id) not in ldap_users
@@ -1245,7 +1244,7 @@ class LDAPUserConnector(UserConnector):
         profiles_to_synchronize = {}
         for user_id, ldap_user in ldap_users.items():
             mode_create, user = load_user(user_id)
-            user_connection_id = cleanup_connection_id(user.get("connector"))
+            user_connection_id = user.get("connector")
 
             if self._create_users_only_on_login() and mode_create:
                 self._logger.info(
@@ -1265,7 +1264,7 @@ class LDAPUserConnector(UserConnector):
                 if self._has_suffix():
                     user_id = self._add_suffix(user_id)
                     mode_create, user = load_user(user_id)
-                    user_connection_id = cleanup_connection_id(user.get("connector"))
+                    user_connection_id = user.get("connector")
                     if user_connection_id != connection_id:
                         self._logger.info(
                             '  SKIP SYNC "%s" (name conflict after adding suffix '

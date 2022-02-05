@@ -52,7 +52,7 @@ from cmk.gui.utils.escaping import escape_html_permissive
 from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.popups import MethodAjax
 from cmk.gui.utils.urls import make_confirm_link, makeactionuri, makeuri, makeuri_contextless
-from cmk.gui.valuespec import DropdownChoice, TextInput, ValueSpec
+from cmk.gui.valuespec import DropdownChoice, TextInput, ValueSpec, WatoFolderChoices
 from cmk.gui.watolib.changes import make_object_audit_log_url
 from cmk.gui.watolib.groups import load_contact_group_information
 from cmk.gui.watolib.host_attributes import host_attribute_registry
@@ -1025,23 +1025,11 @@ class ModeFolder(WatoMode):
 
     def _render_bulk_move_form(self) -> HTML:
         with output_funnel.plugged():
-            choices = self._folder.choices_for_moving_host()
-            if not choices:
-                return HTML()
 
-            choices.insert(0, ("@", _("(select target folder)")))
-
-            html.dropdown(
-                "_bulk_moveto",
-                choices,
-                deflt="@",
-                label=_("Move to folder:"),
-                onchange="cmk.selection.update_bulk_moveto(this.value)",
-                class_="bulk_moveto",
-                form="form_hosts",
-            )
-            html.button("_bulk_move", _("Move"), form="form_hosts")
-
+            form_name = "form_hosts"
+            dropdown = WatoFolderChoices(html_attrs={"form": form_name})
+            dropdown.render_input("_bulk_moveto", None)
+            html.button("_bulk_move", _("Move"), form=form_name)
             return HTML(output_funnel.drain())
 
     def _move_to_imported_folders(self, host_names_to_move) -> None:

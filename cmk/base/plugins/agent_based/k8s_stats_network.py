@@ -21,6 +21,11 @@ from .agent_based_api.v1 import (
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
 from .utils.k8s import Interface, Section, to_interface
 
+###########################################################################
+# NOTE: This check (and associated special agent) is deprecated and will be
+#       removed in Checkmk version 2.2.
+###########################################################################
+
 
 def discover_k8s_stats_network(
     section_k8s_stats: Optional[Section],

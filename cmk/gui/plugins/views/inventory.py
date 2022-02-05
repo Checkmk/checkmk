@@ -9,7 +9,18 @@ from __future__ import annotations
 import abc
 import time
 from functools import partial
-from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, TYPE_CHECKING, Union
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    Iterable,
+    List,
+    Optional,
+    Sequence,
+    Tuple,
+    TYPE_CHECKING,
+    Union,
+)
 
 from livestatus import LivestatusResponse, OnlySites, SiteId
 
@@ -34,8 +45,7 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.globals import config, html, output_funnel, request, user_errors
 from cmk.gui.htmllib import foldable_container, HTML
 from cmk.gui.i18n import _
-from cmk.gui.inventory import InventoryDeltaData, InventoryRows
-from cmk.gui.plugins.views import (
+from cmk.gui.plugins.views.utils import (
     ABCDataSource,
     Cell,
     cmp_simple_number,
@@ -53,10 +63,8 @@ from cmk.gui.plugins.views import (
     PainterOptions,
     register_painter,
     register_sorter,
-    render_labels,
     RowTable,
 )
-from cmk.gui.plugins.visuals import filter_registry, visual_info_registry, VisualInfo
 from cmk.gui.plugins.visuals.inventory import (
     FilterInvBool,
     FilterInvFloat,
@@ -64,12 +72,18 @@ from cmk.gui.plugins.visuals.inventory import (
     FilterInvtableText,
     FilterInvText,
 )
-from cmk.gui.plugins.visuals.utils import get_livestatus_filter_headers
+from cmk.gui.plugins.visuals.utils import (
+    filter_registry,
+    get_livestatus_filter_headers,
+    parse_ranged_tables_literal,
+    visual_info_registry,
+    VisualInfo,
+)
 from cmk.gui.type_defs import ColumnName, FilterName, Icon, Row, Rows
 from cmk.gui.utils.escaping import escape_html, escape_text
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.valuespec import Checkbox, Dictionary
-from cmk.gui.view_utils import CellSpec
+from cmk.gui.view_utils import CellSpec, render_labels
 from cmk.gui.views.builtin_views import host_view_filters
 
 if TYPE_CHECKING:
@@ -80,7 +94,7 @@ PaintResult = Tuple[str, Union[str, HTML]]
 PaintFunction = Callable[[Any], PaintResult]
 
 
-def paint_host_inventory_tree(
+def _paint_host_inventory_tree(
     row: Row, invpath: SDRawPath = ".", column: str = "host_inventory"
 ) -> CellSpec:
     raw_hostname = row.get("host_name")
@@ -97,6 +111,7 @@ def paint_host_inventory_tree(
     struct_tree = row.get(column)
     if struct_tree is None:
         return "", ""
+
     assert isinstance(struct_tree, StructuredDataNode)
 
     tree_renderer = _get_tree_renderer(row, column, invpath)
@@ -134,10 +149,10 @@ def _get_sites_with_same_named_hosts(hostname: HostName) -> List[SiteId]:
         return [SiteId(r[0]) for r in sites.live().query(query_str)]
 
 
-def _get_tree_renderer(row: Row, column: str, invpath: SDRawPath) -> NodeRenderer:
+def _get_tree_renderer(row: Row, column: str, invpath: SDRawPath) -> ABCNodeRenderer:
     if column == "host_inventory":
         painter_options = PainterOptions.get_instance()
-        return AttributeRenderer(
+        return NodeRenderer(
             row["site"],
             row["host_name"],
             invpath,
@@ -163,16 +178,6 @@ def _get_filtered_attributes(
     return attributes.get_filtered_attributes(lambda key: key == keys[-1])
 
 
-def _inv_filter_info():
-    return {
-        "bytes": {"unit": _("MB"), "scale": 1024 * 1024},
-        "bytes_rounded": {"unit": _("MB"), "scale": 1024 * 1024},
-        "hz": {"unit": _("MHz"), "scale": 1000000},
-        "volt": {"unit": _("Volt")},
-        "timestamp": {"unit": _("secs")},
-    }
-
-
 def _declare_inv_column(
     invpath: SDRawPath,
     datatype: str,
@@ -187,7 +192,7 @@ def _declare_inv_column(
     else:
         name = "inv_" + invpath.replace(":", "_").replace(".", "_").strip("_")
 
-    is_leaf_node = invpath[-1] not in ":."
+    is_attribute = invpath[-1] not in ":."
 
     # Declare column painter
     painter_spec = {
@@ -207,20 +212,20 @@ def _declare_inv_column(
             ],
             required_keys=["use_short"],
         ),
-        # Only leaf nodes can be shown in reports. There is currently no way to render trees.
+        # Only attributes can be shown in reports. There is currently no way to render trees.
         # The HTML code would simply be stripped by the default rendering mechanism which does
         # not look good for the HW/SW inventory tree
-        "printable": is_leaf_node,
+        "printable": is_attribute,
         "load_inv": True,
-        "paint": lambda row: paint_host_inventory_tree(row, invpath),
+        "paint": lambda row: _paint_host_inventory_tree(row, invpath),
         "sorter": name,
     }
     if short:
         painter_spec["short"] = short
     register_painter(name, painter_spec)
 
-    # Sorters and Filters only for leaf nodes
-    if is_leaf_node:
+    # Sorters and Filters only for attributes
+    if is_attribute:
         # Declare sorter. It will detect numbers automatically
         register_sorter(
             name,
@@ -232,8 +237,6 @@ def _declare_inv_column(
                 "cmp": lambda self, a, b: _cmp_inventory_node(a, b, self._spec["_inv_path"]),
             },
         )
-
-        filter_info = _inv_filter_info().get(datatype, {})
 
         # Declare filter. Sync this with _declare_invtable_column()
         if datatype == "str":
@@ -255,6 +258,7 @@ def _declare_inv_column(
                 )
             )
         else:
+            filter_info = _inv_filter_info().get(datatype, {})
             filter_registry.register(
                 FilterInvFloat(
                     ident=name,
@@ -265,6 +269,16 @@ def _declare_inv_column(
                     is_show_more=is_show_more,
                 )
             )
+
+
+def _inv_filter_info():
+    return {
+        "bytes": {"unit": _("MB"), "scale": 1024 * 1024},
+        "bytes_rounded": {"unit": _("MB"), "scale": 1024 * 1024},
+        "hz": {"unit": _("MHz"), "scale": 1000000},
+        "volt": {"unit": _("Volt")},
+        "timestamp": {"unit": _("secs")},
+    }
 
 
 def _cmp_inventory_node(
@@ -336,7 +350,7 @@ class PainterInventoryTree(Painter):
         return True
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return paint_host_inventory_tree(row)
+        return _paint_host_inventory_tree(row)
 
 
 class ABCRowTable(RowTable):
@@ -676,7 +690,7 @@ def inv_paint_service_status(status: str) -> PaintResult:
 #   '----------------------------------------------------------------------'
 
 
-def _inv_display_hint(invpath: SDRawPath) -> InventoryHintSpec:
+def _get_display_hint(invpath: SDRawPath) -> InventoryHintSpec:
     """Generic access function to display hints
     Don't use other methods to access the hints!"""
     hint_id = _find_display_hint_id(invpath)
@@ -753,7 +767,7 @@ def _inv_titleinfo(
     invpath: SDRawPath,
     key: Optional[str] = None,
 ) -> Tuple[Optional[str], str]:
-    hint = _inv_display_hint(invpath)
+    hint = _get_display_hint(invpath)
     icon = hint.get("icon")
     if "title" in hint:
         title = hint["title"]
@@ -884,17 +898,29 @@ def _declare_invtable_column(
     filter_class = hint.get("filter")
     if not filter_class:
         if paint_name == "str":
-            filter_class = FilterInvtableText
+            filter_registry.register(
+                FilterInvtableText(
+                    inv_info=infoname,
+                    ident=infoname + "_" + name,
+                    title=topic + ": " + title,
+                )
+            )
         else:
-            filter_class = FilterInvtableIDRange
-
-    filter_registry.register(
-        filter_class(
-            inv_info=infoname,
-            ident=infoname + "_" + name,
-            title=topic + ": " + title,
+            filter_registry.register(
+                FilterInvtableIDRange(
+                    inv_info=parse_ranged_tables_literal(infoname),
+                    ident=infoname + "_" + name,
+                    title=topic + ": " + title,
+                )
+            )
+    else:
+        filter_registry.register(
+            filter_class(
+                inv_info=infoname,
+                ident=infoname + "_" + name,
+                title=topic + ": " + title,
+            )
         )
-    )
 
     register_painter(
         column,
@@ -922,7 +948,7 @@ class RowTableInventory(ABCRowTable):
         super().__init__([info_name], ["host_structured_status"])
         self._inventory_path = inventory_path
 
-    def _get_inv_data(self, hostrow: Row) -> InventoryRows:
+    def _get_inv_data(self, hostrow: Row) -> inventory.InventoryRows:
         try:
             merged_tree = inventory.load_filtered_and_merged_tree(hostrow)
         except inventory.LoadStructuredDataError:
@@ -943,7 +969,7 @@ class RowTableInventory(ABCRowTable):
             return []
         return table
 
-    def _prepare_rows(self, inv_data: InventoryRows) -> Iterable[Row]:
+    def _prepare_rows(self, inv_data: inventory.InventoryRows) -> Iterable[Row]:
         # TODO check: hopefully there's only a table as input arg
         info_name = self._info_names[0]
         entries = []
@@ -1010,7 +1036,7 @@ def declare_invtable_view(
     _declare_views(infoname, title_plural, painters, filters, [invpath], icon)
 
 
-InventorySourceRows = Tuple[str, InventoryRows]
+InventorySourceRows = Tuple[str, inventory.InventoryRows]
 
 
 class RowMultiTableInventory(ABCRowTable):
@@ -1161,7 +1187,7 @@ def _declare_views(
 ) -> None:
     is_show_more = True
     if len(invpaths) == 1:
-        hint = _inv_display_hint(invpaths[0])
+        hint = _get_display_hint(invpaths[0])
         is_show_more = hint.get("is_show_more", True)
 
     # Declare two views: one for searching globally. And one
@@ -1567,9 +1593,9 @@ class RowTableInventoryHistory(ABCRowTable):
         super().__init__(["invhist"], [])
         self._inventory_path = None
 
-    def _get_inv_data(self, hostrow: Row) -> List[Tuple[str, InventoryDeltaData]]:
+    def _get_inv_data(self, hostrow: Row) -> Sequence[inventory.HistoryEntry]:
         hostname: HostName = hostrow["host_name"]
-        history_deltas, corrupted_history_files = inventory.get_history_deltas(hostname)
+        history, corrupted_history_files = inventory.get_history(hostname)
         if corrupted_history_files:
             user_errors.add(
                 MKUserError(
@@ -1581,19 +1607,17 @@ class RowTableInventoryHistory(ABCRowTable):
                 )
             )
 
-        return history_deltas
+        return history
 
-    def _prepare_rows(self, inv_data: List[Tuple[str, InventoryDeltaData]]) -> Iterable[Row]:
-        for timestamp, delta_info in inv_data:
-            new, changed, removed, delta_tree = delta_info
-            newrow = {
-                "invhist_time": int(timestamp),
-                "invhist_delta": delta_tree,
-                "invhist_removed": removed,
-                "invhist_new": new,
-                "invhist_changed": changed,
+    def _prepare_rows(self, inv_data: Sequence[inventory.HistoryEntry]) -> Iterable[Row]:
+        for history_entry in inv_data:
+            yield {
+                "invhist_time": history_entry.timestamp,
+                "invhist_delta": history_entry.delta_tree,
+                "invhist_removed": history_entry.removed,
+                "invhist_new": history_entry.new,
+                "invhist_changed": history_entry.changed,
             }
-            yield newrow
 
 
 @data_source_registry.register
@@ -1658,13 +1682,13 @@ class PainterInvhistDelta(Painter):
 
     @property
     def columns(self) -> List[ColumnName]:
-        return ["invhist_deltainvhist_time"]
+        return ["invhist_delta", "invhist_time"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return paint_host_inventory_tree(row, column="invhist_delta")
+        return _paint_host_inventory_tree(row, column="invhist_delta")
 
 
-def paint_invhist_count(row: Row, what: str) -> CellSpec:
+def _paint_invhist_count(row: Row, what: str) -> CellSpec:
     number = row["invhist_" + what]
     if number:
         return "narrow number", str(number)
@@ -1688,7 +1712,7 @@ class PainterInvhistRemoved(Painter):
         return ["invhist_removed"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return paint_invhist_count(row, "removed")
+        return _paint_invhist_count(row, "removed")
 
 
 @painter_registry.register
@@ -1708,7 +1732,7 @@ class PainterInvhistNew(Painter):
         return ["invhist_new"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return paint_invhist_count(row, "new")
+        return _paint_invhist_count(row, "new")
 
 
 @painter_registry.register
@@ -1728,7 +1752,7 @@ class PainterInvhistChanged(Painter):
         return ["invhist_changed"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return paint_invhist_count(row, "changed")
+        return _paint_invhist_count(row, "changed")
 
 
 # sorters
@@ -1810,7 +1834,7 @@ def _sort_by_index(keyorder, item):
 TableTitles = List[Tuple[str, str, bool]]
 
 
-class NodeRenderer:
+class ABCNodeRenderer(abc.ABC):
     def __init__(
         self,
         site_id: SiteId,
@@ -1890,7 +1914,7 @@ class NodeRenderer:
         # FIXME these kind of paths are required for hints.
         # Clean this up one day.
         invpath = ".%s:" % self._get_raw_path(list(table.path))
-        hint = _inv_display_hint(invpath)
+        hint = _get_display_hint(invpath)
         keyorder = hint.get("keyorder", [])  # well known keys
 
         # Add titles for those keys
@@ -1898,7 +1922,7 @@ class NodeRenderer:
         for key in keyorder:
             sub_invpath = "%s0.%s" % (invpath, key)
             _icon, title = _inv_titleinfo(sub_invpath)
-            sub_hint = _inv_display_hint(sub_invpath)
+            sub_hint = _get_display_hint(sub_invpath)
             short_title = sub_hint.get("short", title)
             titles.append((short_title, key, key in table.key_columns))
 
@@ -1941,7 +1965,7 @@ class NodeRenderer:
             for title, key, _is_key_column in titles:
                 value = entry.get(key)
                 sub_invpath = "%s%d.%s" % (invpath, index, key)
-                hint = _inv_display_hint(sub_invpath)
+                hint = _get_display_hint(sub_invpath)
                 if "paint_function" in hint:
                     # FIXME At the moment  we need it to get tdclass
                     # Clean this up one day.
@@ -1961,6 +1985,7 @@ class NodeRenderer:
             html.close_tr()
         html.close_table()
 
+    @abc.abstractmethod
     def _show_table_value(
         self,
         value: Any,
@@ -1973,7 +1998,7 @@ class NodeRenderer:
 
     def show_attributes(self, attributes: Attributes) -> None:
         invpath = ".%s" % self._get_raw_path(list(attributes.path))
-        hint = _inv_display_hint(invpath)
+        hint = _get_display_hint(invpath)
 
         keyorder = hint.get("keyorder")
         if keyorder:
@@ -1989,7 +2014,7 @@ class NodeRenderer:
         for key, value in sorted(attributes.pairs.items(), key=sort_func):
             sub_invpath = "%s.%s" % (invpath, key)
             _icon, title = _inv_titleinfo(sub_invpath)
-            hint = _inv_display_hint(sub_invpath)
+            hint = _get_display_hint(sub_invpath)
 
             html.open_tr()
             html.th(self._get_header(title, key, "#DDD"), title=sub_invpath)
@@ -2003,6 +2028,7 @@ class NodeRenderer:
             html.close_tr()
         html.close_table()
 
+    @abc.abstractmethod
     def _show_attribute(
         self,
         value: Any,
@@ -2074,7 +2100,7 @@ class NodeRenderer:
         return html.render_span(_(" (outdated)"), style="color: darkred")
 
 
-class AttributeRenderer(NodeRenderer):
+class NodeRenderer(ABCNodeRenderer):
     def _show_table_value(
         self,
         value: Any,
@@ -2092,7 +2118,7 @@ class AttributeRenderer(NodeRenderer):
         self._show_child_value(value, hint, retention_intervals)
 
 
-class DeltaNodeRenderer(NodeRenderer):
+class DeltaNodeRenderer(ABCNodeRenderer):
     def _show_table_value(
         self,
         value: Any,
@@ -2158,7 +2184,7 @@ def ajax_inv_render_tree() -> None:
                 )
             )
             return
-        tree_renderer: NodeRenderer = DeltaNodeRenderer(
+        tree_renderer: ABCNodeRenderer = DeltaNodeRenderer(
             site_id,
             hostname,
             invpath,
@@ -2178,7 +2204,7 @@ def ajax_inv_render_tree() -> None:
                 )
             )
             return
-        tree_renderer = AttributeRenderer(
+        tree_renderer = NodeRenderer(
             site_id,
             hostname,
             invpath,

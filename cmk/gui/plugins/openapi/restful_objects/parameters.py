@@ -97,7 +97,7 @@ SERVICE_DESCRIPTION = {
 SITES = List(
     String(),
     description="Restrict the query to this particular site.",
-    missing=[],
+    load_default=[],
 )
 
 USERNAME = {

@@ -47,9 +47,9 @@ public:
                                 std::wstring_view user_name);
 
     // this is trash to access old Windows API
-    wchar_t* name() { return primary_dc_name_; }
+    wchar_t *name() { return primary_dc_name_; }
 
-    const wchar_t* name() const { return primary_dc_name_; }
+    const wchar_t *name() const { return primary_dc_name_; }
 
     static bool setAsSpecialUser(std::wstring_view user_name);
     static bool clearAsSpecialUser(std::wstring_view user_name);
@@ -60,7 +60,7 @@ public:
     }
 
 private:
-    wchar_t* primary_dc_name_ = nullptr;
+    wchar_t *primary_dc_name_ = nullptr;
 };
 
 }  // namespace wtools::uc

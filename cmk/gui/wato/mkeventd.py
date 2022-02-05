@@ -151,8 +151,8 @@ from cmk.gui.watolib.search import (
 )
 
 
-def _compiled_mibs_dir():
-    return cmk.utils.paths.omd_root + "/local/share/check_mk/compiled_mibs"
+def _compiled_mibs_dir() -> Path:
+    return cmk.utils.paths.omd_root / "local/share/check_mk/compiled_mibs"
 
 
 # .
@@ -1586,7 +1586,7 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
         yield PageMenuTopic(
             title=_("Setup"),
             entries=[
-                _page_menu_entry_settings(),
+                _page_menu_entry_settings(is_suggested=True),
                 _page_menu_entry_rulesets(),
                 _page_menu_entry_snmp_mibs(),
             ],
@@ -2885,7 +2885,7 @@ class ConfigVariableGroupEventConsoleGeneric(ConfigVariableGroupEventConsole):
 @config_variable_group_registry.register
 class ConfigVariableGroupEventConsoleLogging(ConfigVariableGroupEventConsole):
     def title(self):
-        return _("Event Console: Logging & Diagnose")
+        return _("Event Console: Logging & diagnose")
 
     def sort_index(self):
         return 19
@@ -2969,6 +2969,8 @@ class ModeEventConsoleMIBs(ABCEventConsoleMode):
                                             [("mode", "mkeventd_upload_mibs")],
                                         )
                                     ),
+                                    is_shortcut=True,
+                                    is_suggested=True,
                                 ),
                             ],
                         ),
@@ -3042,13 +3044,12 @@ class ModeEventConsoleMIBs(ABCEventConsoleMode):
         # Also delete the compiled files
         compiled_mibs_dir = _compiled_mibs_dir()
         for f in [
-            compiled_mibs_dir + "/" + mib_name + ".py",
-            compiled_mibs_dir + "/" + mib_name + ".pyc",
-            compiled_mibs_dir + "/" + filename.rsplit(".", 1)[0].upper() + ".py",
-            compiled_mibs_dir + "/" + filename.rsplit(".", 1)[0].upper() + ".pyc",
+            compiled_mibs_dir / mib_name + ".py",
+            compiled_mibs_dir / mib_name + ".pyc",
+            compiled_mibs_dir / filename.rsplit(".", 1)[0].upper() + ".py",
+            compiled_mibs_dir / filename.rsplit(".", 1)[0].upper() + ".pyc",
         ]:
-            if os.path.exists(f):
-                os.remove(f)
+            f.unlink(missing_ok=True)
 
     def page(self):
         self._verify_ec_enabled()
@@ -3214,13 +3215,13 @@ class ModeEventConsoleUploadMIBs(ABCEventConsoleMode):
     # their path.
     def _is_zipfile(self, fo):
         try:
-            zipfile.ZipFile(fo)
+            zipfile.ZipFile(fo)  # pylint:disable=consider-using-with
             return True
         except zipfile.BadZipfile:
             return False
 
     def _process_uploaded_zip_file(self, filename, content):
-        zip_obj = zipfile.ZipFile(io.BytesIO(content))
+        zip_obj = zipfile.ZipFile(io.BytesIO(content))  # pylint:disable=consider-using-with
         messages = []
         for entry in zip_obj.infolist():
             success, fail = 0, 0
@@ -3231,7 +3232,7 @@ class ModeEventConsoleUploadMIBs(ABCEventConsoleMode):
 
                 self._validate_mib_file_name(mib_file_name)
 
-                mib_obj = zip_obj.open(mib_file_name)
+                mib_obj = zip_obj.open(mib_file_name)  # pylint:disable=consider-using-with
                 messages.append(self._process_uploaded_mib_file(mib_file_name, mib_obj.read()))
                 success += 1
             except Exception as e:
@@ -3368,7 +3369,7 @@ def _page_menu_entries_related_ec(mode_name: str) -> Iterator[PageMenuEntry]:
         yield _page_menu_entry_status()
 
     if mode_name != "mkeventd_config" and user.may("mkeventd.config"):
-        yield _page_menu_entry_settings()
+        yield _page_menu_entry_settings(is_suggested=False)
 
     if mode_name != "mkeventd_mibs":
         yield _page_menu_entry_snmp_mibs()
@@ -3392,12 +3393,12 @@ def _page_menu_entry_status():
     )
 
 
-def _page_menu_entry_settings():
+def _page_menu_entry_settings(is_suggested):
     return PageMenuEntry(
         title=_("Settings"),
         icon_name="configuration",
-        is_shortcut=True,
-        is_suggested=True,
+        is_shortcut=is_suggested,
+        is_suggested=is_suggested,
         item=make_simple_link(makeuri_contextless(request, [("mode", "mkeventd_config")])),
     )
 

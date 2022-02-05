@@ -157,6 +157,9 @@ class UpdateResult(NamedTuple):
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
+# TODO cleanup store: better method names for saving/loading current tree,
+# archive files or delta caches.
+
 
 class StructuredDataStore:
     @staticmethod

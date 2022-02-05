@@ -995,6 +995,9 @@ class html(ABCHTMLGenerator):
         return self.render_div(HTML(help_text), class_="help", style=style)
 
     def resolve_help_text_macros(self, text: str) -> str:
+        # text = ".*[<page_name>#<anchor_name>|<link_title>].*"
+        # e.g. text = "[intro_setup#install|Welcome]" returns
+        #      <a href="https://docs.checkmk.com/master/en/intro_setup.html#install">Welcome</a>
         return re.sub(
             r"\[([a-z0-9_-]+)(#[a-z0-9_-]+|)\|([^\]]+)\]",
             '<a href="%s/\\1.html\\2" target="_blank">\\3</a>' % user.get_docs_base_url(),
@@ -1095,28 +1098,28 @@ class html(ABCHTMLGenerator):
     # c) load the minified javascript when not in debug mode
     def javascript_filename_for_browser(self, jsname: str) -> Optional[str]:
         filename_for_browser = None
-        rel_path = "/share/check_mk/web/htdocs/js"
+        rel_path = "share/check_mk/web/htdocs/js"
         if config.debug:
             min_parts = ["", "_min"]
         else:
             min_parts = ["_min", ""]
 
         for min_part in min_parts:
-            path_pattern = (
-                cmk.utils.paths.omd_root + "%s" + rel_path + "/" + jsname + min_part + ".js"
-            )
-            if os.path.exists(path_pattern % "") or os.path.exists(path_pattern % "/local"):
-                filename_for_browser = "js/%s%s-%s.js" % (jsname, min_part, cmk_version.__version__)
+            fname = f"{jsname}{min_part}.js"
+            if (cmk.utils.paths.omd_root / rel_path / fname).exists() or (
+                cmk.utils.paths.omd_root / "local" / rel_path / fname
+            ).exists():
+                filename_for_browser = f"js/{jsname}{min_part}-{cmk_version.__version__}.js"
                 break
 
         return filename_for_browser
 
     def _css_filename_for_browser(self, css: str) -> Optional[str]:
-        rel_path = "/share/check_mk/web/htdocs/" + css + ".css"
-        if os.path.exists(cmk.utils.paths.omd_root + rel_path) or os.path.exists(
-            cmk.utils.paths.omd_root + "/local" + rel_path
-        ):
-            return "%s-%s.css" % (css, cmk_version.__version__)
+        rel_path = f"share/check_mk/web/htdocs/{css}.css"
+        if (cmk.utils.paths.omd_root / rel_path).exists() or (
+            cmk.utils.paths.omd_root / "local" / rel_path
+        ).exists():
+            return f"{css}-{cmk_version.__version__}.css"
         return None
 
     def html_head(

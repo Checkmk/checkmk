@@ -166,7 +166,7 @@ def _consolidate_lines(string_table: StringTable) -> StringTable:
     consolidated_lines: List[List[str]] = []
 
     for line in iter_string_table:
-        if line[0].replace("'", "").strip().startswith("-"):
+        if line[0].replace("'", "").replace('"', "").strip().startswith("-"):
             # For some reason, some of the Windows process descriptions can contain a newline.
             # This leads to an extra line in string_table which is in fact a continuation
             # of the previus line. This seems to be the case when executables are called with

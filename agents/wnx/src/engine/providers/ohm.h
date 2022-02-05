@@ -1,6 +1,7 @@
 // Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
-// This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
-// conditions defined in the file COPYING, which is part of this source code package.
+// This file is part of Checkmk (https://checkmk.com). It is subject to the
+// terms and conditions defined in the file COPYING, which is part of this
+// source code package.
 
 // provides basic api to start and stop service
 
@@ -19,7 +20,7 @@
 
 namespace cma::provider {
 
-std::filesystem::path GetOhmCliPath(const std::filesystem::path& dir) noexcept;
+std::filesystem::path GetOhmCliPath(const std::filesystem::path &dir) noexcept;
 std::filesystem::path GetOhmCliPath() noexcept;
 
 namespace ohm {
@@ -33,7 +34,7 @@ constexpr std::wstring_view kResetCommand =
 // openhardwaremonitor:
 class OhmProvider : public Wmi {
 public:
-    OhmProvider(const std::string& Name, char Separator)
+    OhmProvider(const std::string &Name, char Separator)
         : Wmi(Name, Separator) {}
 
     virtual void loadConfig();

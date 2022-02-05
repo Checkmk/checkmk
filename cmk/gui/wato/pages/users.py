@@ -39,8 +39,8 @@ from cmk.gui.page_menu import (
     PageMenuTopic,
 )
 from cmk.gui.plugins.userdb.htpasswd import hash_password
-from cmk.gui.plugins.userdb.utils import cleanup_connection_id, get_connection, UserAttribute
-from cmk.gui.plugins.wato import (
+from cmk.gui.plugins.userdb.utils import get_connection, UserAttribute
+from cmk.gui.plugins.wato.utils import (
     flash,
     make_action_link,
     make_confirm_link,
@@ -87,6 +87,8 @@ class ModeUsers(WatoMode):
         return _("Users")
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+        # Remove the last breadcrumb entry here to avoid the breadcrumb "Users > Users"
+        del breadcrumb[-1]
         return PageMenu(
             dropdowns=[
                 PageMenuDropdown(
@@ -131,8 +133,8 @@ class ModeUsers(WatoMode):
                             entries=list(self._page_menu_entries_synchronized_users()),
                         ),
                         PageMenuTopic(
-                            title=_("Notify users"),
-                            entries=list(self._page_menu_entries_notify_users()),
+                            title=_("User messages"),
+                            entries=list(self._page_menu_entries_user_messages()),
                         ),
                         make_checkbox_selection_topic(self.name()),
                     ],
@@ -167,12 +169,12 @@ class ModeUsers(WatoMode):
                     item=make_simple_link(self._job.detail_url()),
                 )
 
-    def _page_menu_entries_notify_users(self) -> Iterator[PageMenuEntry]:
-        if user.may("general.notify"):
+    def _page_menu_entries_user_messages(self) -> Iterator[PageMenuEntry]:
+        if user.may("general.message"):
             yield PageMenuEntry(
-                title=_("Notify users"),
-                icon_name="notifications",
-                item=make_simple_link("notify.py"),
+                title=_("Send user messages"),
+                icon_name="message",
+                item=make_simple_link("message.py"),
             )
 
     def _page_menu_entries_related(self) -> Iterator[PageMenuEntry]:
@@ -341,7 +343,7 @@ class ModeUsers(WatoMode):
                 if uid != user.id:
                     html.checkbox("_c_user_%s" % base64.b64encode(uid.encode("utf-8")).decode())
 
-                user_connection_id = cleanup_connection_id(user_spec.get("connector"))
+                user_connection_id = user_spec.get("connector")
                 connection = get_connection(user_connection_id)
 
                 # Buttons
@@ -363,10 +365,10 @@ class ModeUsers(WatoMode):
                 )
                 html.icon_button(delete_url, _("Delete"), "delete")
 
-                notifications_url = watolib.folder_preserving_link(
-                    [("mode", "user_notifications"), ("user", uid)]
-                )
                 if rulebased_notifications_enabled():
+                    notifications_url = watolib.folder_preserving_link(
+                        [("mode", "user_notifications"), ("user", uid)]
+                    )
                     html.icon_button(
                         notifications_url,
                         _("Custom notification table of this user"),
@@ -423,6 +425,8 @@ class ModeUsers(WatoMode):
                     auth_method: Union[str, HTML] = _("Automation")
                 elif user_spec.get("password") or "password" in locked_attributes:
                     auth_method = _("Password")
+                    if _is_two_factor_enabled(user_spec):
+                        auth_method += " (+2FA)"
                 else:
                     auth_method = html.render_i(_("none"))
                 table.cell(_("Authentication"), auth_method)
@@ -661,8 +665,34 @@ class ModeEditUser(WatoMode):
                 ),
             )
 
+        if not self._is_new_user:
+            yield PageMenuEntry(
+                title=_("Disable two-factor authentication"),
+                icon_name="2fa",
+                item=make_simple_link(
+                    make_confirm_link(
+                        url=make_action_link(
+                            [
+                                ("mode", "edit_user"),
+                                ("user", self._user_id),
+                                ("_disable_two_factor", "1"),
+                            ]
+                        ),
+                        message=_(
+                            "Do you really want to disable the two-factor authentication of %s?"
+                        )
+                        % self._user_id,
+                    )
+                ),
+                is_enabled=_is_two_factor_enabled(self._user),
+            )
+
     def action(self) -> ActionResult:
         if not transactions.check_transaction():
+            return redirect(mode_url("users"))
+
+        if self._user_id is not None and request.has_var("_disable_two_factor"):
+            userdb.disable_two_factor_authentication(UserId(self._user_id))
             return redirect(mode_url("users"))
 
         if self._user_id is None:  # same as self._is_new_user
@@ -674,6 +704,9 @@ class ModeEditUser(WatoMode):
 
         # Full name
         user_attrs["alias"] = request.get_unicode_input_mandatory("alias").strip()
+
+        # Connector
+        user_attrs["connector"] = self._user.get("connector")
 
         # Locking
         user_attrs["locked"] = html.get_checkbox("locked")
@@ -690,9 +723,12 @@ class ModeEditUser(WatoMode):
         auth_method = request.var("authmethod")
         if auth_method == "secret":
             secret = request.get_str_input_mandatory("_auth_secret", "").strip()
-            user_attrs["automation_secret"] = secret
-            user_attrs["password"] = hash_password(secret)
-            increase_serial = True  # password changed, reflect in auth serial
+            if secret:
+                user_attrs["automation_secret"] = secret
+                user_attrs["password"] = hash_password(secret)
+                increase_serial = True  # password changed, reflect in auth serial
+            elif "automation_secret" not in user_attrs and "password" in user_attrs:
+                del user_attrs["password"]
 
         else:
             password = request.get_str_input_mandatory("_password_" + self._pw_suffix(), "").strip()
@@ -732,9 +768,7 @@ class ModeEditUser(WatoMode):
 
         idle_timeout = watolib.get_vs_user_idle_timeout().from_html_vars("idle_timeout")
         user_attrs["idle_timeout"] = idle_timeout
-        if idle_timeout is not None:
-            user_attrs["idle_timeout"] = idle_timeout
-        elif idle_timeout is None and "idle_timeout" in user_attrs:
+        if idle_timeout is None:
             del user_attrs["idle_timeout"]
 
         # Pager
@@ -967,9 +1001,10 @@ class ModeEditUser(WatoMode):
         html.open_ul()
         html.text_input(
             "_auth_secret",
-            self._user.get("automation_secret", ""),
+            "",
             size=30,
             id_="automation_secret",
+            placeholder="******" if "automation_secret" in self._user else "",
         )
         html.write_text(" ")
         html.open_b(style=["position: relative", "top: 4px;"])
@@ -1303,3 +1338,7 @@ def select_language(user_spec: UserSpec) -> None:
             target="_blank",
         )
     )
+
+
+def _is_two_factor_enabled(user_spec: UserSpec) -> bool:
+    return user_spec.get("two_factor_credentials", {}).get("webauthn_credentials")

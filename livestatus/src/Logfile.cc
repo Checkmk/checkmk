@@ -9,6 +9,7 @@
 
 #include <algorithm>
 #include <sstream>
+#include <stdexcept>
 #include <vector>
 
 #include "LogCache.h"
@@ -138,10 +139,11 @@ long Logfile::freeMessages(unsigned logclasses) {
 
 bool Logfile::processLogLine(size_t lineno, std::string line,
                              unsigned logclasses) {
-    auto entry = std::make_unique<LogEntry>(lineno, std::move(line));
-    // ignored invalid lines
-    if (entry->log_class() == LogEntry::Class::invalid) {
-        return false;
+    std::unique_ptr<LogEntry> entry;
+    try {
+        entry = std::make_unique<LogEntry>(lineno, std::move(line));
+    } catch (const std::invalid_argument &) {
+        return false;  // simply ignore invalid lines
     }
     if (((1U << static_cast<int>(entry->log_class())) & logclasses) == 0U) {
         return false;
@@ -161,4 +163,23 @@ const Logfile::map_type *Logfile::getEntriesFor(size_t max_lines_per_logfile,
     // make sure all messages are present
     load(max_lines_per_logfile, logclasses);
     return &_entries;
+}
+
+// static
+bool Logfile::processLogEntries(
+    const std::function<bool(const LogEntry &)> &process_log_entry,
+    const map_type *entries, const LogFilter &log_filter) {
+    auto it =
+        entries->upper_bound(Logfile::makeKey(log_filter.until, 999999999));
+    while (it != entries->begin()) {
+        --it;
+        const auto &entry = *it->second;
+        if (entry.time() < log_filter.since) {
+            return false;  // time limit exceeded
+        }
+        if (!process_log_entry(entry)) {
+            return false;
+        }
+    }
+    return true;
 }

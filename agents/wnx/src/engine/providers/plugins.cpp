@@ -47,8 +47,9 @@ static bool IsPluginRequiredType(const PluginEntry& plugin,
 int FindMaxTimeout(const cma::PluginMap& pm, PluginMode need_type) {
     int timeout = 0;
     for (const auto& [path, plugin] : pm) {
-        if (IsPluginRequiredType(plugin, need_type))
+        if (IsPluginRequiredType(plugin, need_type)) {
             timeout = std::max(timeout, plugin.timeout());
+        }
     }
 
     return timeout;
@@ -70,8 +71,9 @@ void PluginsProvider::updateTimeout() {
         return;
     }
 
-    if (timeout_ != 0)
+    if (timeout_ != 0) {
         XLOG::t("Timeout for '{}' is updated to [{}]", cfg_name_, timeout_);
+    }
 }
 
 static void LogExecuteExtensions(std::string_view title,
@@ -92,8 +94,9 @@ static void LogExecuteExtensions(std::string_view title,
 
 void PluginsProvider::updateCommandLine() {
     try {
-        if (getHostSp() == nullptr && !local_)
+        if (getHostSp() == nullptr && !local_) {
             XLOG::l("Plugins must have correctly set owner to use modules");
+        }
 
         UpdatePluginMapCmdLine(pm_, getHostSp());
     } catch (const std::exception& e) {
@@ -191,6 +194,12 @@ void PluginsProvider::loadConfig() {
     updateTimeout();
 }
 
+namespace {
+std::string ToString(const std::vector<char> &v) {
+    return std::string{v.begin(), v.end()};
+}
+}  // namespace
+
 void PluginsProvider::gatherAllData(std::string& out) {
     int last_count = 0;
     auto data_sync = RunSyncPlugins(pm_, last_count, timeout_);
@@ -199,8 +208,8 @@ void PluginsProvider::gatherAllData(std::string& out) {
     auto data_async = RunAsyncPlugins(pm_, last_count, true);
     last_count_ += last_count;
 
-    tools::AddString(out, data_sync);
-    tools::AddString(out, data_async);
+    out += ToString(data_sync);
+    out += ToString(data_async);
 }
 
 void PluginsProvider::preStart() {

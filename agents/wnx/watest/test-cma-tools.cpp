@@ -11,7 +11,7 @@
 
 namespace cma::tools {
 TEST(CmaTools, All) {
-    const wchar_t* t[] = {L"a.exe", L"b", L"c"};
+    const wchar_t *t[] = {L"a.exe", L"b", L"c"};
     EXPECT_FALSE(CheckArgvForValue(0, t, 0, "a.exe"))
         << "argc == 0 always returns false";
     EXPECT_FALSE(CheckArgvForValue(0, nullptr, 0, "a"))
@@ -32,21 +32,11 @@ TEST(CmaTools, AddVectorsStrings) {
     const std::vector<char> z = {'x', 'y', 'z'};
     const std::string s = "012";
 
-    {
-        auto op = c;
-        AddVector(op, z);
-        EXPECT_EQ(op.size(), c.size() + z.size());
-        auto expected = "abcxyz";
-        EXPECT_EQ(0, memcmp(op.data(), expected, op.size()));
-    }
-
-    {
-        auto str = s;
-        AddString(str, z);
-        EXPECT_EQ(str.size(), s.size() + z.size());
-        auto expected = "012xyz";
-        EXPECT_EQ(0, strcmp(str.c_str(), expected));
-    }
+    auto op = c;
+    AddVector(op, z);
+    EXPECT_EQ(op.size(), c.size() + z.size());
+    auto expected = "abcxyz";
+    EXPECT_EQ(0, memcmp(op.data(), expected, op.size()));
 }
 
 TEST(CmaTools, Matchers) {
@@ -433,13 +423,12 @@ TEST(Misc, WithEnv) {
         EXPECT_EQ(with_env.name(), env_var_name);
         auto w_e = std::move(with_env);
         EXPECT_EQ(GetEnv(env_var_name), env_var_value);
-        EXPECT_TRUE(with_env.name_.empty());
         EXPECT_TRUE(with_env.name().empty());
-        EXPECT_EQ(w_e.name_, env_var_name);
+        EXPECT_EQ(w_e.name(), env_var_name);
         auto w_e2(std::move(w_e));
         EXPECT_EQ(GetEnv(env_var_name), env_var_value);
-        EXPECT_TRUE(w_e.name_.empty());
-        EXPECT_EQ(w_e2.name_, env_var_name);
+        EXPECT_TRUE(w_e.name().empty());
+        EXPECT_EQ(w_e2.name(), env_var_name);
     }
     EXPECT_EQ(GetEnv(env_var_name), "");
 }

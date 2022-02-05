@@ -21,7 +21,7 @@ from typing import (
 
 import cmk.utils.debug
 import cmk.utils.version as cmk_version
-from cmk.utils.check_utils import ActiveCheckResult
+from cmk.utils.check_utils import ActiveCheckResult, ServiceCheckResult
 from cmk.utils.cpu_tracking import CPUTracker, Snapshot
 from cmk.utils.exceptions import MKTimeout, OnError
 from cmk.utils.log import console
@@ -36,7 +36,6 @@ from cmk.utils.type_defs import (
     HostName,
     MetricTuple,
     ParsedSectionName,
-    ServiceCheckResult,
     ServiceName,
     SourceType,
     state_markers,
@@ -65,16 +64,10 @@ from cmk.base.agent_based.utils import (
 from cmk.base.api.agent_based import checking_classes, value_store
 from cmk.base.api.agent_based.register.check_plugins_legacy import wrap_parameters
 from cmk.base.api.agent_based.type_defs import Parameters
-from cmk.base.check_utils import LegacyCheckParameters, Service
+from cmk.base.check_utils import ConfiguredService, LegacyCheckParameters
 
 from . import _cluster_modes, _submit_to_core
-from .utils import (
-    AggregatedResult,
-    CHECK_NOT_IMPLEMENTED,
-    cluster_received_no_data,
-    ITEM_NOT_FOUND,
-    RECEIVED_NO_DATA,
-)
+from .utils import AggregatedResult
 
 # .
 #   .--Checking------------------------------------------------------------.
@@ -304,7 +297,7 @@ def check_host_services(
     host_config: config.HostConfig,
     ipaddress: Optional[HostAddress],
     parsed_sections_broker: ParsedSectionsBroker,
-    services: Sequence[Service],
+    services: Sequence[ConfiguredService],
     run_plugin_names: Container[CheckPluginName],
     dry_run: bool,
     show_perfdata: bool,
@@ -346,20 +339,15 @@ def check_host_services(
 
 def _filter_services_to_check(
     *,
-    services: Sequence[Service],
+    services: Sequence[ConfiguredService],
     run_plugin_names: Container[CheckPluginName],
     config_cache: config.ConfigCache,
     host_name: HostName,
-) -> List[Service]:
-    """Filter list of services to check"""
-    if run_plugin_names is EVERYTHING:
-        return [
-            service
-            for service in services
-            if not service_outside_check_period(config_cache, host_name, service.description)
-        ]
+) -> List[ConfiguredService]:
+    """Filter list of services to check
 
-    # If check types are specified (e.g. via command line), drop all others
+    If check types are specified in `run_plugin_names` (e.g. via command line), drop all others
+    """
     return [
         service
         for service in services
@@ -385,7 +373,7 @@ def _execute_check(
     parsed_sections_broker: ParsedSectionsBroker,
     host_config: config.HostConfig,
     ipaddress: Optional[HostAddress],
-    service: Service,
+    service: ConfiguredService,
     *,
     dry_run: bool,
     show_perfdata: bool,
@@ -398,7 +386,6 @@ def _execute_check(
         ipaddress,
         service,
         plugin,
-        service.parameters,
         value_store_manager=value_store_manager,
         persist_value_store_changes=not dry_run,
     )
@@ -412,7 +399,7 @@ def _execute_check(
             show_perfdata=show_perfdata,
         )
     else:
-        console.verbose(f"{service.description:20} PEND - {submittable.result[1]}\n")
+        console.verbose(f"{service.description:20} PEND - {submittable.result.output}\n")
     return submittable.data_received
 
 
@@ -420,9 +407,8 @@ def get_aggregated_result(
     parsed_sections_broker: ParsedSectionsBroker,
     host_config: config.HostConfig,
     ipaddress: Optional[HostAddress],
-    service: Service,
+    service: ConfiguredService,
     plugin: Optional[checking_classes.CheckPlugin],
-    timespecific_parameters: Union[LegacyCheckParameters, TimespecificParameters],
     *,
     value_store_manager: value_store.ValueStoreManager,
     persist_value_store_changes: bool,
@@ -435,7 +421,7 @@ def get_aggregated_result(
         return AggregatedResult(
             submit=True,
             data_received=True,
-            result=CHECK_NOT_IMPLEMENTED,
+            result=ServiceCheckResult.check_not_implemented(),
             cache_info=None,
         )
 
@@ -474,12 +460,12 @@ def get_aggregated_result(
     params_kw = (
         {}
         if plugin.check_default_parameters is None
-        else {"params": _final_read_only_check_parameters(timespecific_parameters)}
+        else {"params": _final_read_only_check_parameters(service.parameters)}
     )
 
     try:
         with plugin_contexts.current_host(host_config.hostname), plugin_contexts.current_service(
-            service
+            service.check_plugin_name, service.description
         ), value_store_manager.namespace(service.id()):
             result = _aggregate_results(
                 check_function(
@@ -494,7 +480,7 @@ def get_aggregated_result(
         return AggregatedResult(
             submit=False,
             data_received=True,
-            result=(0, msg, []),
+            result=ServiceCheckResult(output=msg),
             cache_info=None,
         )
     except MKTimeout:
@@ -503,7 +489,7 @@ def get_aggregated_result(
         if cmk.utils.debug.enabled():
             raise
         table = check_table.get_check_table(host_config.hostname, skip_autochecks=True)
-        result = (
+        result = ServiceCheckResult(
             3,
             cmk.base.crash_reporting.create_check_crash_dump(
                 host_name=host_config.hostname,
@@ -512,7 +498,6 @@ def get_aggregated_result(
                 plugin_kwargs={**item_kw, **params_kw, **section_kws},
                 is_manual=service.id() in table,
             ),
-            [],
         )
 
     return AggregatedResult(
@@ -528,7 +513,7 @@ def _get_monitoring_data_kwargs_handle_pre20_services(
     host_config: config.HostConfig,
     config_cache: config.ConfigCache,
     ipaddress: Optional[HostAddress],
-    service: Service,
+    service: ConfiguredService,
     sections: Sequence[ParsedSectionName],
 ) -> Tuple[Mapping[str, object], ServiceCheckResult]:
     """Handle cases of missing data due to changed plugin names
@@ -564,7 +549,7 @@ def _get_monitoring_data_kwargs(
     host_config: config.HostConfig,
     config_cache: config.ConfigCache,
     ipaddress: Optional[HostAddress],
-    service: Service,
+    service: ConfiguredService,
     sections: Sequence[ParsedSectionName],
     source_type: Optional[SourceType] = None,
 ) -> Tuple[Mapping[str, object], ServiceCheckResult]:
@@ -587,7 +572,7 @@ def _get_monitoring_data_kwargs(
                 nodes,
                 sections,
             ),
-            cluster_received_no_data(nodes),
+            ServiceCheckResult.cluster_received_no_data(nodes),
         )
 
     return (
@@ -596,7 +581,7 @@ def _get_monitoring_data_kwargs(
             HostKey(host_config.hostname, ipaddress, source_type),
             sections,
         ),
-        RECEIVED_NO_DATA,
+        ServiceCheckResult.received_no_data(),
     )
 
 
@@ -648,7 +633,7 @@ def _aggregate_results(subresults: checking_classes.CheckResult) -> ServiceCheck
 
     # Empty list? Check returned nothing
     if not details:
-        return ITEM_NOT_FOUND
+        return ServiceCheckResult.item_not_found()
 
     if not summaries:
         count = len(details)
@@ -656,7 +641,7 @@ def _aggregate_results(subresults: checking_classes.CheckResult) -> ServiceCheck
             "Everything looks OK - %d detail%s available" % (count, "" if count == 1 else "s")
         )
     all_text = [", ".join(summaries)] + details
-    return int(status), "\n".join(all_text).strip(), perfdata
+    return ServiceCheckResult(int(status), "\n".join(all_text).strip(), perfdata)
 
 
 def _consume_and_dispatch_result_types(

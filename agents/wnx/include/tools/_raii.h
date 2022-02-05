@@ -3,7 +3,6 @@
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
 
-// C++ cross platform RAII support
 #pragma once
 #if !defined(___RAII_H)
 #define ___RAII_H
@@ -18,7 +17,6 @@
 // auto tmp_data  = new char[10000];
 // ON_OUT_OF_SCOPE( delete tmp_data; );
 // **********************************************************
-#if !defined ON_OUT_OF_SCOPE
 namespace {
 template <typename T>
 struct InternalScopeGuard {
@@ -35,6 +33,5 @@ struct InternalScopeGuard {
         scope_guard_, line)(UNI_NAME(deleter_lambda_, line));
 
 #define ON_OUT_OF_SCOPE(lambda_body) ON_OUT_OF_SCOPE_2(lambda_body, __LINE__)
-#endif
 
 #endif  // ___RAAI_H

@@ -58,7 +58,7 @@ from cmk.gui.permissions import (
 )
 from cmk.gui.table import init_rowselect, table_element
 from cmk.gui.type_defs import HTTPVariables, Icon, MegaMenu, TopicMenuItem, TopicMenuTopic
-from cmk.gui.utils import unique_default_name_suggestion
+from cmk.gui.utils import unique_default_name_suggestion, validate_id
 from cmk.gui.utils.flashed_messages import flash, get_flashed_messages
 from cmk.gui.utils.logged_in import save_user_file
 from cmk.gui.utils.ntop import is_ntop_configured
@@ -1285,9 +1285,10 @@ class Overridable(Base):
         else:
             page_name = request.get_str_input_mandatory("load_name")
             page = cls.find_foreign_page(owner_id, page_name)
-            page_dict = page.internal_representation()
             if page is None:
                 raise MKUserError(None, _("The requested %s does not exist") % cls.phrase("title"))
+
+            page_dict = page.internal_representation()
             if mode == "edit":
                 if not page.may_edit():
                     raise MKAuthException(
@@ -1317,21 +1318,15 @@ class Overridable(Base):
 
         parameters, keys_by_topic = cls._collect_parameters(mode)
 
-        def _validate_clone(page_dict, varprefix):
-            page_name = page_dict["name"]
-            if cls.find_foreign_page(owner_id, page_name) and mode == "clone":
-                raise MKUserError(
-                    varprefix + "_p_name",
-                    _("You already have an element with the ID <b>%s</b>") % page_dict["name"],
-                )
-
         vs = Dictionary(
             title=_("General Properties"),
             render="form",
             optional_keys=False,
             elements=parameters,
             headers=keys_by_topic,
-            validate=_validate_clone,
+            validate=validate_id(
+                mode, {p.name(): p for p in cls.permitted_instances_sorted() if p.is_mine()}
+            ),
         )
 
         varprefix = ""

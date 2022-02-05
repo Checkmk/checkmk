@@ -13,6 +13,7 @@ import os
 import random
 import sys
 import time
+from pathlib import Path
 
 
 def main(sys_argv=None):
@@ -29,7 +30,7 @@ def main(sys_argv=None):
         os.makedirs(state_dir)
     state_file = state_dir + hostname
     try:
-        history = ast.literal_eval(open(state_file).read())
+        history = ast.literal_eval(Path(state_file).read_text())
     except (OSError, SyntaxError, IOError):
         history = {}
 
@@ -74,4 +75,4 @@ def main(sys_argv=None):
             % (new_state, service.replace(" ", "_"), state_names[new_state], state_texts[new_state])
         )
 
-    open(state_file, "w").write("%r\n" % history)
+    Path(state_file).write_text("%r\n" % history)

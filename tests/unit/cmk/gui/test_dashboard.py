@@ -46,7 +46,7 @@ def test_dashlet_registry_plugins():
         "pnpgraph",
         "view",
         "linked_view",
-        "notify_users",
+        "user_messages",
         "nodata",
         "snapin",
     ]
@@ -85,7 +85,7 @@ def _expected_intervals():
         ("mk_logo", False),
         ("nodata", False),
         ("notify_failed_notifications", 60),
-        ("notify_users", False),
+        ("user_messages", False),
         ("overview", False),
         ("pnpgraph", 60),
         ("servicestats", False),

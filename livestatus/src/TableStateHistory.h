@@ -18,6 +18,7 @@
 #include "Table.h"
 #include "contact_fwd.h"
 class Column;
+class ColumnOffsets;
 class Filter;
 class HostServiceState;
 class LogEntry;
@@ -28,6 +29,8 @@ class Row;
 class TableStateHistory : public Table {
 public:
     TableStateHistory(MonitoringCore *mc, LogCache *log_cache);
+    static void addColumns(Table *table, const std::string &prefix,
+                           const ColumnOffsets &offsets);
 
     [[nodiscard]] std::string name() const override;
     [[nodiscard]] std::string namePrefix() const override;
@@ -37,23 +40,26 @@ public:
         std::string colname) const override;
     static std::unique_ptr<Filter> createPartialFilter(const Query &query);
 
-protected:
-    bool _abort_query;
-
 private:
     LogCache *_log_cache;
+    bool _abort_query;
 
+    enum class ModificationStatus { unchanged, changed };
+
+    void answerQueryInternal(Query *query, const LogFiles &log_files);
     const Logfile::map_type *getEntries(Logfile *logfile);
-    void getPreviousLogentry(LogCache::const_iterator &it_logs,
+    void getPreviousLogentry(const LogFiles &log_files,
+                             LogFiles::const_iterator &it_logs,
                              const Logfile::map_type *&entries,
                              Logfile::const_iterator &it_entries);
-    LogEntry *getNextLogentry(LogCache::const_iterator &it_logs,
+    LogEntry *getNextLogentry(const LogFiles &log_files,
+                              LogFiles::const_iterator &it_logs,
                               const Logfile::map_type *&entries,
                               Logfile::const_iterator &it_entries);
     void process(Query *query,
                  std::chrono::system_clock::duration query_timeframe,
                  HostServiceState *hs_state);
-    int updateHostServiceState(
+    ModificationStatus updateHostServiceState(
         Query *query, std::chrono::system_clock::duration query_timeframe,
         const LogEntry *entry, HostServiceState *hs_state, bool only_update,
         const std::map<std::string, int> &notification_periods);

@@ -24,11 +24,11 @@ from cmk.utils.type_defs import (
     HostAddress,
     HostKey,
     HostName,
-    LegacyCheckParameters,
     SectionName,
     SourceType,
 )
 
+from cmk.core_helpers.host_sections import HostSections
 from cmk.core_helpers.type_defs import NO_SELECTION
 
 import cmk.base.agent_based.discovery as discovery
@@ -42,58 +42,9 @@ from cmk.base.agent_based.data_provider import (
     SectionsParser,
 )
 from cmk.base.agent_based.discovery import _discovered_services
-from cmk.base.check_utils import AutocheckService, Service
-from cmk.base.discovered_labels import HostLabel, ServiceLabel
-from cmk.base.sources.agent import AgentHostSections
-from cmk.base.sources.snmp import SNMPHostSections
-
-
-def test_discovered_service_init() -> None:
-    ser = discovery.Service(CheckPluginName("abc"), "Item", "ABC Item", None)
-    assert ser.check_plugin_name == CheckPluginName("abc")
-    assert ser.item == "Item"
-    assert ser.description == "ABC Item"
-    assert ser.parameters is None
-    assert ser.service_labels == {}
-
-    ser = discovery.Service(
-        CheckPluginName("abc"),
-        "Item",
-        "ABC Item",
-        None,
-        {"läbel": ServiceLabel("läbel", "lübel")},
-    )
-
-    assert ser.service_labels == {"läbel": ServiceLabel("läbel", "lübel")}
-
-    with pytest.raises(AttributeError):
-        ser.xyz = "abc"  # type: ignore[attr-defined] # pylint: disable=assigning-non-slot
-
-
-def test_discovered_service_eq() -> None:
-    ser1: Service[LegacyCheckParameters] = Service(CheckPluginName("abc"), "Item", "ABC Item", None)
-    ser2: Service[LegacyCheckParameters] = Service(CheckPluginName("abc"), "Item", "ABC Item", None)
-    ser3: Service[LegacyCheckParameters] = Service(CheckPluginName("xyz"), "Item", "ABC Item", None)
-    ser4: Service[LegacyCheckParameters] = Service(CheckPluginName("abc"), "Xtem", "ABC Item", None)
-    ser5: Service[LegacyCheckParameters] = Service(CheckPluginName("abc"), "Item", "ABC Item", [""])
-
-    assert ser1 == ser1  # pylint: disable=comparison-with-itself
-    assert ser1 == ser2
-    assert ser1 != ser3
-    assert ser1 != ser4
-    assert ser1 == ser5
-
-    assert ser1 in [ser1]
-    assert ser1 in [ser2]
-    assert ser1 not in [ser3]
-    assert ser1 not in [ser4]
-    assert ser1 in [ser5]
-
-    assert ser1 in {ser1}
-    assert ser1 in {ser2}
-    assert ser1 not in {ser3}
-    assert ser1 not in {ser4}
-    assert ser1 in {ser5}
+from cmk.base.discovered_labels import HostLabel
+from cmk.base.sources.agent import AgentRawDataSection
+from cmk.base.sources.snmp import SNMPRawDataSection
 
 
 @pytest.fixture
@@ -101,7 +52,7 @@ def service_table() -> discovery.ServicesTable:
     return {
         (CheckPluginName("check_plugin_name"), "New Item 1"): (
             "new",
-            AutocheckService(
+            autochecks.AutocheckEntry(
                 CheckPluginName("check_plugin_name"),
                 "New Item 1",
                 "Test Description New Item 1",
@@ -111,7 +62,7 @@ def service_table() -> discovery.ServicesTable:
         ),
         (CheckPluginName("check_plugin_name"), "New Item 2"): (
             "new",
-            AutocheckService(
+            autochecks.AutocheckEntry(
                 CheckPluginName("check_plugin_name"),
                 "New Item 2",
                 "Test Description New Item 2",
@@ -121,7 +72,7 @@ def service_table() -> discovery.ServicesTable:
         ),
         (CheckPluginName("check_plugin_name"), "Vanished Item 1"): (
             "vanished",
-            AutocheckService(
+            autochecks.AutocheckEntry(
                 CheckPluginName("check_plugin_name"),
                 "Vanished Item 1",
                 "Test Description Vanished Item 1",
@@ -131,7 +82,7 @@ def service_table() -> discovery.ServicesTable:
         ),
         (CheckPluginName("check_plugin_name"), "Vanished Item 2"): (
             "vanished",
-            AutocheckService(
+            autochecks.AutocheckEntry(
                 CheckPluginName("check_plugin_name"),
                 "Vanished Item 2",
                 "Test Description Vanished Item 2",
@@ -147,7 +98,7 @@ def grouped_services() -> discovery.ServicesByTransition:
     return {
         "new": [
             autochecks.AutocheckServiceWithNodes(
-                AutocheckService(
+                autochecks.AutocheckEntry(
                     CheckPluginName("check_plugin_name"),
                     "New Item 1",
                     "Test Description New Item 1",
@@ -156,7 +107,7 @@ def grouped_services() -> discovery.ServicesByTransition:
                 [],
             ),
             autochecks.AutocheckServiceWithNodes(
-                AutocheckService(
+                autochecks.AutocheckEntry(
                     CheckPluginName("check_plugin_name"),
                     "New Item 2",
                     "Test Description New Item 2",
@@ -167,7 +118,7 @@ def grouped_services() -> discovery.ServicesByTransition:
         ],
         "vanished": [
             autochecks.AutocheckServiceWithNodes(
-                AutocheckService(
+                autochecks.AutocheckEntry(
                     CheckPluginName("check_plugin_name"),
                     "Vanished Item 1",
                     "Test Description Vanished Item 1",
@@ -176,7 +127,7 @@ def grouped_services() -> discovery.ServicesByTransition:
                 [],
             ),
             autochecks.AutocheckServiceWithNodes(
-                AutocheckService(
+                autochecks.AutocheckEntry(
                     CheckPluginName("check_plugin_name"),
                     "Vanished Item 2",
                     "Test Description Vanished Item 2",
@@ -737,7 +688,7 @@ def test__find_candidates() -> None:
                     ],
                 ),
                 SectionsParser(
-                    host_sections=AgentHostSections(
+                    host_sections=HostSections[AgentRawDataSection](
                         {
                             SectionName("kernel"): [],  # host only
                             SectionName("uptime"): [["123"]],  # host & mgmt
@@ -754,7 +705,7 @@ def test__find_candidates() -> None:
                     ],
                 ),
                 SectionsParser(
-                    host_sections=SNMPHostSections(
+                    host_sections=HostSections[SNMPRawDataSection](
                         {
                             # host & mgmt:
                             SectionName("uptime"): [["123"]],  # type: ignore[dict-item]
@@ -894,7 +845,8 @@ _expected_host_labels = {
 @pytest.mark.usefixtures("fix_register")
 def test_commandline_discovery(monkeypatch: MonkeyPatch) -> None:
     testhost = HostName("test-host")
-    ts = Scenario().add_host(testhost, ipaddress="127.0.0.1")
+    ts = Scenario()
+    ts.add_host(testhost, ipaddress="127.0.0.1")
     ts.fake_standard_linux_agent_output(testhost)
     ts.apply(monkeypatch)
 
@@ -907,7 +859,7 @@ def test_commandline_discovery(monkeypatch: MonkeyPatch) -> None:
         )
 
     entries = autochecks.AutochecksStore(testhost).read()
-    found = {(e.check_plugin_name, e.item): e.service_labels for e in entries}
+    found = {e.id(): e.service_labels for e in entries}
     assert found == _expected_services
 
     store = DiscoveredHostLabelsStore(testhost)
@@ -924,7 +876,8 @@ class RealHostScenario(NamedTuple):
 def _realhost_scenario(monkeypatch: MonkeyPatch) -> RealHostScenario:
     hostname = HostName("test-realhost")
     ipaddress = HostAddress("1.2.3.4")
-    ts = Scenario().add_host(hostname, ipaddress=ipaddress)
+    ts = Scenario()
+    ts.add_host(hostname, ipaddress=ipaddress)
     ts.set_ruleset(
         "inventory_df_rules",
         [
@@ -967,7 +920,7 @@ def _realhost_scenario(monkeypatch: MonkeyPatch) -> RealHostScenario:
                     ],
                 ),
                 SectionsParser(
-                    host_sections=AgentHostSections(
+                    host_sections=HostSections[AgentRawDataSection](
                         sections={
                             SectionName("labels"): [
                                 [
@@ -1075,7 +1028,7 @@ def _cluster_scenario(monkeypatch) -> ClusterScenario:
                     ],
                 ),
                 SectionsParser(
-                    host_sections=AgentHostSections(
+                    host_sections=HostSections[AgentRawDataSection](
                         sections={
                             SectionName("labels"): [
                                 [
@@ -1114,7 +1067,7 @@ def _cluster_scenario(monkeypatch) -> ClusterScenario:
                     ],
                 ),
                 SectionsParser(
-                    host_sections=AgentHostSections(
+                    host_sections=HostSections[AgentRawDataSection](
                         sections={
                             SectionName("labels"): [
                                 [
@@ -1516,7 +1469,7 @@ def test__discover_host_labels_and_services_on_realhost(
             run_plugin_names=EVERYTHING,
         )
 
-    services = {(s.check_plugin_name, s.item) for s in discovered_services}
+    services = {s.id() for s in discovered_services}
 
     assert services == discovery_test_case.expected_services
 
@@ -1626,11 +1579,11 @@ def test__perform_host_label_discovery_on_cluster(
 
 def test_get_node_services(monkeypatch: MonkeyPatch) -> None:
 
-    services: Mapping[str, Service[LegacyCheckParameters]] = {
-        discovery_status: Service(
+    entries: Mapping[str, autochecks.AutocheckEntry] = {
+        discovery_status: autochecks.AutocheckEntry(
             CheckPluginName(f"plugin_{discovery_status}"),
             None,
-            "description",
+            {},
             {},
         )
         for discovery_status in (
@@ -1644,8 +1597,8 @@ def test_get_node_services(monkeypatch: MonkeyPatch) -> None:
         autochecks.AutochecksStore,
         "read",
         lambda *args, **kwargs: [
-            services["old"],
-            services["vanished"],
+            entries["old"],
+            entries["vanished"],
         ],
     )
 
@@ -1653,8 +1606,8 @@ def test_get_node_services(monkeypatch: MonkeyPatch) -> None:
         _discovered_services,
         "_discover_services",
         lambda *args, **kwargs: [
-            services["old"],
-            services["new"],
+            entries["old"],
+            entries["new"],
         ],
     )
 
@@ -1665,12 +1618,12 @@ def test_get_node_services(monkeypatch: MonkeyPatch) -> None:
         OnError.RAISE,
         lambda hn, _svcdescr: hn,
     ) == {
-        (service.check_plugin_name, None): (
+        entry.id(): (
             discovery_status,
-            service,
+            entry,
             [HostName("horst")],
         )
-        for discovery_status, service in services.items()
+        for discovery_status, entry in entries.items()
     }
 
 

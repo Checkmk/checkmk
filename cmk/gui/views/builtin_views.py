@@ -893,7 +893,7 @@ builtin_views.update(
                 ("site", False),
                 ("site_host", False),
             ],
-            "title": _l("Host Group"),
+            "title": _l("Host group"),
         },
         "hostgroup_up": {
             "browser_reload": 30,
@@ -932,7 +932,7 @@ builtin_views.update(
                 ("site", False),
                 ("site_host", False),
             ],
-            "title": _l("Host Group of Up Hosts"),
+            "title": _l("Host group of up hosts"),
         },
         "hostgroup_down": {
             "browser_reload": 30,
@@ -971,7 +971,7 @@ builtin_views.update(
                 ("site", False),
                 ("site_host", False),
             ],
-            "title": _l("Host Group of Down Hosts"),
+            "title": _l("Host group of down hosts"),
         },
         "hostgroup_unreach": {
             "browser_reload": 30,
@@ -1010,7 +1010,7 @@ builtin_views.update(
                 ("site", False),
                 ("site_host", False),
             ],
-            "title": _l("Host Group of Unreachable Hosts"),
+            "title": _l("Host group of unreachable hosts"),
         },
         "hostgroup_pend": {
             "browser_reload": 30,
@@ -1049,13 +1049,13 @@ builtin_views.update(
                 ("site", False),
                 ("site_host", False),
             ],
-            "title": _l("Host Group of Pending"),
+            "title": _l("Host group of pending"),
         },
         "hostgroupservices": {
             "browser_reload": 90,
             "column_headers": "off",
             "datasource": "services",
-            "description": _l("All services of a certain hostgroup"),
+            "description": _l("All services of a certain host group"),
             "group_painters": [
                 ("sitealias", "sitehosts"),
                 ("host_with_state", "host"),
@@ -1115,13 +1115,13 @@ builtin_views.update(
                 ("site_host", False),
                 ("svcdescr", False),
             ],
-            "title": _l("Services of Hostgroup"),
+            "title": _l("Services of host group"),
         },
         "hostgroupservices_ok": {
             "browser_reload": 60,
             "column_headers": "off",
             "datasource": "services",
-            "description": _l("All ok services of a certain hostgroup"),
+            "description": _l("All ok services of a certain host group"),
             "group_painters": [
                 ("sitealias", "sitehosts"),
                 ("host_with_state", "host"),
@@ -1182,13 +1182,13 @@ builtin_views.update(
                 ("site_host", False),
                 ("svcdescr", False),
             ],
-            "title": _l("OK Services of Hostgroup"),
+            "title": _l("OK services of host group"),
         },
         "hostgroupservices_warn": {
             "browser_reload": 60,
             "column_headers": "off",
             "datasource": "services",
-            "description": _l("All warn services of a certain hostgroup"),
+            "description": _l("All warn services of a certain host group"),
             "group_painters": [
                 ("sitealias", "sitehosts"),
                 ("host_with_state", "host"),
@@ -1249,13 +1249,13 @@ builtin_views.update(
                 ("site_host", False),
                 ("svcdescr", False),
             ],
-            "title": _l("WARN Services of Hostgroup"),
+            "title": _l("WARN services of host group"),
         },
         "hostgroupservices_crit": {
             "browser_reload": 60,
             "column_headers": "off",
             "datasource": "services",
-            "description": _l("All crit services of a certain hostgroup"),
+            "description": _l("All crit services of a certain host group"),
             "group_painters": [
                 ("sitealias", "sitehosts"),
                 ("host_with_state", "host"),
@@ -1316,13 +1316,13 @@ builtin_views.update(
                 ("site_host", False),
                 ("svcdescr", False),
             ],
-            "title": _l("CRIT Services of Hostgroup"),
+            "title": _l("CRIT services of host group"),
         },
         "hostgroupservices_unknwn": {
             "browser_reload": 60,
             "column_headers": "off",
             "datasource": "services",
-            "description": _l("All unknown services of a certain hostgroup"),
+            "description": _l("All unknown services of a certain host group"),
             "group_painters": [
                 ("sitealias", "sitehosts"),
                 ("host_with_state", "host"),
@@ -1383,13 +1383,13 @@ builtin_views.update(
                 ("site_host", False),
                 ("svcdescr", False),
             ],
-            "title": _l("UNKNOWN Services of Hostgroup"),
+            "title": _l("UNKNOWN services of host group"),
         },
         "hostgroupservices_pend": {
             "browser_reload": 60,
             "column_headers": "off",
             "datasource": "services",
-            "description": _l("All pending services of a certain hostgroup"),
+            "description": _l("All pending services of a certain host group"),
             "group_painters": [
                 ("sitealias", "sitehosts"),
                 ("host_with_state", "host"),
@@ -1450,7 +1450,7 @@ builtin_views.update(
                 ("site_host", False),
                 ("svcdescr", False),
             ],
-            "title": _l("PEND Services of Hostgroup"),
+            "title": _l("PEND services of host group"),
         },
         "hostgroups": {
             "browser_reload": 30,
@@ -1857,7 +1857,7 @@ builtin_views.update(
                 ("site_host", False),
                 ("svcdescr", False),
             ],
-            "title": _l("Service Group"),
+            "title": _l("Service group"),
         },
         "sitehosts": {
             "browser_reload": 30,
@@ -3666,7 +3666,7 @@ builtin_views.update(
             "topic": "bi",
             "user_sortable": "on",
         },
-        # Hostgroup with boxed BIs for each host
+        # Host group with boxed BIs for each host
         "aggr_hostgroup_boxed": {
             "browser_reload": 0,
             "column_headers": "off",
@@ -3675,7 +3675,7 @@ builtin_views.update(
                 "hostregex": {"host_regex": ""},
             },
             "datasource": "bi_hostnamebygroup_aggregations",
-            "description": "Hostgroup with boxed BIs for each host\n",
+            "description": "Host group with boxed BIs for each host\n",
             "group_painters": [
                 ("site_icon", "", None),
                 ("sitealias", "sitehosts", None),
@@ -3699,7 +3699,7 @@ builtin_views.update(
                 ("site", False),
                 ("site_host", False),
             ],
-            "title": "Hostgroup with BI state",
+            "title": "Host group with BI state",
             "user_sortable": True,
         },
         #   +----------------------------------------------------------------------+
@@ -4425,7 +4425,8 @@ def cmk_sites_painters():
         ("invcmksites_num_hosts", None, None),
         ("invcmksites_num_services", None, None),
         ("invcmksites_check_helper_usage", None, None),
-        ("invcmksites_check_mk_helper_usage", None, None),
+        ("invcmksites_fetcher_helper_usage", None, None),
+        ("invcmksites_checker_helper_usage", None, None),
         ("invcmksites_livestatus_usage", None, None),
     ] + service_painters
 

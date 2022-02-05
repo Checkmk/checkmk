@@ -159,11 +159,11 @@ def do_snmptranslate(walk_filename: str) -> None:
         "-M+%s" % cmk.utils.paths.local_mib_dir,
         "-",
     ]
-    p = subprocess.Popen(
+    p = subprocess.Popen(  # pylint:disable=consider-using-with
         command,
         stdin=subprocess.PIPE,
         stdout=subprocess.PIPE,
-        stderr=open(os.devnull, "w"),
+        stderr=open(os.devnull, "w"),  # pylint:disable=consider-using-with
         close_fds=True,
     )
 

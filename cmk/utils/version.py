@@ -23,8 +23,7 @@ import sys
 import time
 from dataclasses import dataclass
 from functools import lru_cache
-from pathlib import Path
-from typing import Any, Dict, Tuple, Union
+from typing import Any, Dict, NamedTuple, Tuple, Union
 
 import livestatus
 
@@ -33,55 +32,57 @@ from cmk.utils.i18n import _
 from cmk.utils.type_defs._misc import assert_never
 
 
+class _EditionValue(NamedTuple):
+    short: str
+    title: str
+
+
+class Edition(_EditionValue, enum.Enum):
+    CRE = _EditionValue("cre", "Checkmk Raw Edition")
+    CEE = _EditionValue("cee", "Checkmk Enterprise Edition")
+    CPE = _EditionValue("cpe", "Checkmk Enterprise Plus Edition")
+    CME = _EditionValue("cme", "Checkmk Managed Services Edition")
+    CFE = _EditionValue("cfe", "Checkmk Free Edition")
+
+
 @lru_cache
 def omd_version() -> str:
-    version_link = Path(cmk.utils.paths.omd_root).joinpath("version")
+    version_link = cmk.utils.paths.omd_root / "version"
     return version_link.resolve().name
 
 
 @lru_cache
-def edition_short() -> str:
-    return str(omd_version().split(".")[-1])
+def edition() -> Edition:
+    try:
+        return Edition[omd_version().split(".")[-1].upper()]
+    except KeyError:
+        # Without this fallback CI jobs may fail.
+        # The last job known to fail was we the building of the sphinx documentation
+        return Edition.CRE
 
 
 def is_enterprise_edition() -> bool:
-    return edition_short() == "cee"
+    return edition() is Edition.CEE
+
+
+def is_plus_edition() -> bool:
+    return edition() is Edition.CPE
 
 
 def is_raw_edition() -> bool:
-    return edition_short() == "cre"
+    return edition() is Edition.CRE
 
 
 def is_managed_edition() -> bool:
-    return edition_short() == "cme"
+    return edition() is Edition.CME
 
 
 def is_free_edition() -> bool:
-    return edition_short() == "cfe"
+    return edition() is Edition.CFE
 
 
 def is_cma() -> bool:
     return os.path.exists("/etc/cma/cma.conf")
-
-
-def edition_title():
-    if is_enterprise_edition():
-        return "Checkmk Enterprise Edition"
-    if is_managed_edition():
-        return "Checkmk Managed Services Edition"
-    if is_free_edition():
-        return "Checkmk Free Edition"
-    return "Checkmk Raw Edition"
-
-
-def edition_title_acronym():
-    if is_enterprise_edition():
-        return "CEE"
-    if is_managed_edition():
-        return "CME"
-    if is_free_edition():
-        return "CFE"
-    return "CRE"
 
 
 class TrialState(enum.Enum):
@@ -529,7 +530,7 @@ def get_general_version_infos() -> Dict[str, Any]:
         "time": time.time(),
         "os": _get_os_info(),
         "version": __version__,
-        "edition": edition_short(),
+        "edition": edition().short,
         "core": _current_monitoring_core(),
         "python_version": sys.version,
         "python_paths": sys.path,
@@ -546,7 +547,7 @@ def _get_os_info() -> str:
     info = {}
     for f in ["/etc/os-release", "/etc/lsb-release"]:
         if os.path.exists(f):
-            for line in open(f).readlines():
+            for line in open(f).readlines():  # pylint:disable=consider-using-with
                 if "=" in line:
                     k, v = line.split("=", 1)
                     info[k.strip()] = v.strip().strip('"')
@@ -568,12 +569,12 @@ def _get_os_info() -> str:
 
 def _current_monitoring_core() -> str:
     try:
-        p = subprocess.Popen(
+        p = subprocess.Popen(  # pylint:disable=consider-using-with
             ["omd", "config", "show", "CORE"],
             close_fds=True,
-            stdin=open(os.devnull),
+            stdin=open(os.devnull),  # pylint:disable=consider-using-with
             stdout=subprocess.PIPE,
-            stderr=open(os.devnull, "w"),
+            stderr=open(os.devnull, "w"),  # pylint:disable=consider-using-with
             encoding="utf-8",
         )
         return p.communicate()[0].rstrip()

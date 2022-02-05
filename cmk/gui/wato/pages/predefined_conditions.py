@@ -11,7 +11,8 @@ import cmk.gui.userdb as userdb
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.globals import html, request, user
 from cmk.gui.i18n import _
-from cmk.gui.plugins.wato import (
+from cmk.gui.plugins.wato.check_mk_configuration import RulespecGroupMonitoringConfiguration
+from cmk.gui.plugins.wato.utils import (
     ConfigDomainCore,
     mode_registry,
     SimpleEditMode,
@@ -19,7 +20,6 @@ from cmk.gui.plugins.wato import (
     SimpleModeType,
     WatoMode,
 )
-from cmk.gui.plugins.wato.check_mk_configuration import RulespecGroupMonitoringConfiguration
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.valuespec import (
     Alternative,

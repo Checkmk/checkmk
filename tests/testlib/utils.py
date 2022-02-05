@@ -34,12 +34,20 @@ def cme_path():
     return repo_path() + "/managed"
 
 
+def cpe_path():
+    return repo_path() + "/plus"
+
+
 def is_enterprise_repo():
     return os.path.exists(cmc_path())
 
 
-def is_managed_repo():
+def is_managed_repo() -> bool:
     return os.path.exists(cme_path())
+
+
+def is_plus_repo() -> bool:
+    return os.path.exists(cpe_path())
 
 
 def virtualenv_path() -> Path:

@@ -1,4 +1,6 @@
-use crate::config::Connection;
+// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+// conditions defined in the file COPYING, which is part of this source code package.
 
 use super::config;
 use anyhow::{anyhow, Context, Result as AnyhowResult};
@@ -9,11 +11,11 @@ use rustls::{
     Stream as RustlsStream,
 };
 use rustls_pemfile::Item;
-use std::fs::File;
-use std::io::Result as IoResult;
-use std::io::{Read, Write};
-use std::os::unix::prelude::FromRawFd;
+use std::net::TcpStream;
 use std::sync::Arc;
+
+#[cfg(windows)]
+use std::io::{Read, Result as IoResult, Write};
 
 pub fn tls_connection<'a>(
     connections: impl Iterator<Item = &'a config::Connection>,
@@ -23,15 +25,15 @@ pub fn tls_connection<'a>(
 
 pub fn tls_stream<'a>(
     server_connection: &'a mut ServerConnection,
-    stream: &'a mut IoStream,
-) -> RustlsStream<'a, ServerConnection, IoStream> {
+    stream: &'a mut TcpStream,
+) -> RustlsStream<'a, ServerConnection, TcpStream> {
     RustlsStream::new(server_connection, stream)
 }
 
 fn tls_config<'a>(
     connections: impl Iterator<Item = &'a config::Connection>,
 ) -> AnyhowResult<Arc<ServerConfig>> {
-    let connections: Vec<&Connection> = connections.collect();
+    let connections: Vec<&config::Connection> = connections.collect();
     Ok(Arc::new(
         ServerConfig::builder()
             .with_safe_defaults()
@@ -55,7 +57,7 @@ fn root_cert_store<'a>(
 }
 
 fn sni_resolver<'a>(
-    connections: impl Iterator<Item = &'a Connection>,
+    connections: impl Iterator<Item = &'a config::Connection>,
 ) -> AnyhowResult<Arc<ResolvesServerCertUsingSni>> {
     let mut resolver = rustls::server::ResolvesServerCertUsingSni::new();
 
@@ -81,7 +83,7 @@ fn private_key(key_pem: &str) -> AnyhowResult<PrivateKey> {
     }
 }
 
-pub fn certificate(cert_pem: &str) -> AnyhowResult<Certificate> {
+fn certificate(cert_pem: &str) -> AnyhowResult<Certificate> {
     if let Item::X509Certificate(it) =
         rustls_pemfile::read_one(&mut cert_pem.to_owned().as_bytes())?
             .context("Could not load certificate")?
@@ -92,35 +94,30 @@ pub fn certificate(cert_pem: &str) -> AnyhowResult<Certificate> {
     }
 }
 
+#[cfg(windows)]
 pub struct IoStream {
-    reader: File,
-    writer: File,
+    // Windows Agent will not use stdio/stdin as a communication channel
+    // This is just temporary stub to keep API more or less in sync.
+    reader: std::io::Stdin,
+    writer: std::io::Stdout,
 }
 
-impl IoStream {
-    pub fn new() -> Self {
-        IoStream {
-            // Using File type from raw FDs here instead of
-            // io::StdIn/StdOut because the latter are buffered,
-            // and this is at some point incompatible to the TLS handshake
-            // (freezes in the middle)
-            reader: unsafe { File::from_raw_fd(0) },
-            writer: unsafe { File::from_raw_fd(1) },
-        }
-    }
-}
-
+#[cfg(windows)]
 impl Read for IoStream {
     fn read(&mut self, buf: &mut [u8]) -> IoResult<usize> {
-        self.reader.read(buf)
+        let mut handle = self.reader.lock();
+        handle.read(buf)
     }
 }
 
+#[cfg(windows)]
 impl Write for IoStream {
     fn write(&mut self, buf: &[u8]) -> IoResult<usize> {
-        self.writer.write(buf)
+        let mut handle = self.writer.lock();
+        handle.write(buf)
     }
     fn flush(&mut self) -> IoResult<()> {
-        self.writer.flush()
+        let mut handle = self.writer.lock();
+        handle.flush()
     }
 }

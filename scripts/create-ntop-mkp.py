@@ -40,7 +40,6 @@ NTOP_PACKAGE_INFO: packaging.PackageInfo = {
     "files": {
         "web": [ntop_file.replace(ENTERPRISE_PREFIX, "") for ntop_file in MKP_ABLE_NTOP_FILES]
     },
-    "git_hash_short": GIT_HASH_SHORT,
 }
 
 TARFILENAME = packaging.format_file_name(name="ntop", version=NTOP_PACKAGE_INFO["version"])

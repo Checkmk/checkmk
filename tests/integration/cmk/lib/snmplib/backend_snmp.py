@@ -5,11 +5,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import logging
-from typing import List, Optional, Tuple, Type
+from typing import List, Literal, Optional, Tuple, Type
 
 import pytest
 
-from cmk.utils.type_defs import HostName
+from cmk.utils.type_defs import HostName, SectionName
 
 from cmk.snmplib.type_defs import (
     OID,
@@ -259,7 +259,7 @@ def _create_configs_ipv4() -> List[SNMPHostConfig]:
             is_snmpv2or3_without_bulkwalk_host=False,
             bulk_walk_size_of=10,
             timing={},
-            oid_range_limits=[],
+            oid_range_limits={},
             snmpv3_contexts=[],
             character_encoding=None,
             is_usewalk_host=False,
@@ -275,7 +275,7 @@ def _create_configs_ipv4() -> List[SNMPHostConfig]:
             is_snmpv2or3_without_bulkwalk_host=False,
             bulk_walk_size_of=10,
             timing={},
-            oid_range_limits=[],
+            oid_range_limits={},
             snmpv3_contexts=[],
             character_encoding=None,
             is_usewalk_host=False,
@@ -298,7 +298,7 @@ def _create_configs_ipv4() -> List[SNMPHostConfig]:
             is_snmpv2or3_without_bulkwalk_host=False,
             bulk_walk_size_of=10,
             timing={},
-            oid_range_limits=[],
+            oid_range_limits={},
             snmpv3_contexts=[],
             character_encoding=None,
             is_usewalk_host=False,
@@ -319,7 +319,7 @@ def _create_configs_ipv6() -> List[SNMPHostConfig]:
             is_snmpv2or3_without_bulkwalk_host=False,
             bulk_walk_size_of=10,
             timing={},
-            oid_range_limits=[],
+            oid_range_limits={},
             snmpv3_contexts=[],
             character_encoding=None,
             is_usewalk_host=False,
@@ -335,7 +335,7 @@ def _create_configs_ipv6() -> List[SNMPHostConfig]:
             is_snmpv2or3_without_bulkwalk_host=False,
             bulk_walk_size_of=10,
             timing={},
-            oid_range_limits=[],
+            oid_range_limits={},
             snmpv3_contexts=[],
             character_encoding=None,
             is_usewalk_host=False,
@@ -358,7 +358,7 @@ def _create_configs_ipv6() -> List[SNMPHostConfig]:
             is_snmpv2or3_without_bulkwalk_host=False,
             bulk_walk_size_of=10,
             timing={},
-            oid_range_limits=[],
+            oid_range_limits={},
             snmpv3_contexts=[],
             character_encoding=None,
             is_usewalk_host=False,
@@ -382,7 +382,7 @@ def _create_configs_special_auth() -> List[SNMPHostConfig]:
             is_snmpv2or3_without_bulkwalk_host=False,
             bulk_walk_size_of=10,
             timing={},
-            oid_range_limits=[],
+            oid_range_limits={},
             snmpv3_contexts=[],
             character_encoding=None,
             is_usewalk_host=False,
@@ -403,7 +403,7 @@ def _create_configs_special_auth() -> List[SNMPHostConfig]:
             is_snmpv2or3_without_bulkwalk_host=False,
             bulk_walk_size_of=10,
             timing={},
-            oid_range_limits=[],
+            oid_range_limits={},
             snmpv3_contexts=[],
             character_encoding=None,
             is_usewalk_host=False,
@@ -412,7 +412,10 @@ def _create_configs_special_auth() -> List[SNMPHostConfig]:
     ]
 
 
-def _create_configs_oidranges():
+def _create_configs_oidranges() -> List:
+    first_str: Literal["first", "last"] = "first"
+    mid_str: Literal["mid"] = "mid"
+    last_str: Literal["first", "last"] = "last"
     return [
         SNMPHostConfig(
             is_ipv6_primary=False,
@@ -424,7 +427,7 @@ def _create_configs_oidranges():
             is_snmpv2or3_without_bulkwalk_host=False,
             bulk_walk_size_of=10,
             timing={},
-            oid_range_limits=[("if64", [("first", 3)])],
+            oid_range_limits={SectionName("if64"): [(first_str, 3)]},
             snmpv3_contexts=[],
             character_encoding=None,
             is_usewalk_host=False,
@@ -440,7 +443,7 @@ def _create_configs_oidranges():
             is_snmpv2or3_without_bulkwalk_host=False,
             bulk_walk_size_of=10,
             timing={},
-            oid_range_limits=[("if64", [("mid", (4, 2))])],
+            oid_range_limits={SectionName("if64"): [(mid_str, (4, 2))]},
             snmpv3_contexts=[],
             character_encoding=None,
             is_usewalk_host=False,
@@ -456,7 +459,7 @@ def _create_configs_oidranges():
             is_snmpv2or3_without_bulkwalk_host=False,
             bulk_walk_size_of=10,
             timing={},
-            oid_range_limits=[("if64", [("last", 3)])],
+            oid_range_limits={SectionName("if64"): [(last_str, 3)]},
             snmpv3_contexts=[],
             character_encoding=None,
             is_usewalk_host=False,
@@ -472,7 +475,9 @@ def _create_configs_oidranges():
             is_snmpv2or3_without_bulkwalk_host=False,
             bulk_walk_size_of=10,
             timing={},
-            oid_range_limits=[("if64", [("first", 1), ("mid", (3, 1)), ("last", 2)])],
+            oid_range_limits={
+                SectionName("if64"): [(first_str, 1), (mid_str, (3, 1)), (last_str, 2)]
+            },
             snmpv3_contexts=[],
             character_encoding=None,
             is_usewalk_host=False,

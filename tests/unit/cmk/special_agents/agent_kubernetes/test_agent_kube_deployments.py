@@ -46,5 +46,9 @@ class TestAPIDeployments:
             deployment = list(apps_client.list_deployment_for_all_namespaces().items)[0]
         conditions = deployment_conditions(deployment.status)
         assert len(conditions) == 2
-        assert isinstance(conditions[0], api.DeploymentCondition)
-        assert conditions[0].status == api.ConditionStatus.TRUE
+        assert all(
+            isinstance(condition, api.DeploymentCondition) for _, condition in conditions.items()
+        )
+        assert all(
+            condition.status == api.ConditionStatus.TRUE for _, condition in conditions.items()
+        )

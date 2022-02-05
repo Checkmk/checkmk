@@ -5,9 +5,7 @@
 
 #include "Store.h"
 
-#ifndef CMC
 #include <chrono>
-#endif
 #include <filesystem>
 #include <memory>
 #include <sstream>

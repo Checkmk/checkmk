@@ -1,3 +1,7 @@
+// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+// conditions defined in the file COPYING, which is part of this source code package.
+
 use anyhow::{Context, Result as AnyhowResult};
 use openssl::hash::MessageDigest;
 use openssl::nid::Nid;
@@ -30,11 +34,11 @@ pub fn make_csr(cn: &str) -> AnyhowResult<(String, String)> {
     ))
 }
 
-pub fn client(root_cert: Option<Vec<u8>>) -> AnyhowResult<Client> {
+pub fn client(root_cert: Option<&str>) -> AnyhowResult<Client> {
     let client_builder = ClientBuilder::new();
 
     let client_builder = if let Some(cert) = root_cert {
-        client_builder.add_root_certificate(Certificate::from_pem(&cert)?)
+        client_builder.add_root_certificate(Certificate::from_pem(cert.as_bytes())?)
     } else {
         client_builder.danger_accept_invalid_certs(true)
     };
@@ -44,7 +48,7 @@ pub fn client(root_cert: Option<Vec<u8>>) -> AnyhowResult<Client> {
         .build()?)
 }
 
-pub fn fetch_server_cert(address: &str) -> AnyhowResult<String> {
+pub fn fetch_server_cert_pem(address: &str) -> AnyhowResult<String> {
     let tcp_stream = TcpStream::connect(address)?;
     let mut ssl_connector_builder = SslConnector::builder(SslMethod::tls())?;
     ssl_connector_builder.set_verify(SslVerifyMode::NONE);
@@ -62,4 +66,19 @@ pub fn fetch_server_cert(address: &str) -> AnyhowResult<String> {
     ssl_stream.shutdown()?;
 
     Ok(String::from_utf8(server_cert)?)
+}
+
+pub fn parse_pem(cert: &str) -> AnyhowResult<x509_parser::pem::Pem> {
+    x509_parser::pem::Pem::iter_from_buffer(cert.as_bytes())
+        .next()
+        .context("Input data does not contain a PEM block")?
+        .context("PEM data invalid")
+}
+
+pub fn join_common_names(x509_name: &x509_parser::x509::X509Name) -> String {
+    x509_name
+        .iter_common_name()
+        .map(|cn| cn.as_str().unwrap_or("[unknown]"))
+        .collect::<Vec<&str>>()
+        .join(", ")
 }

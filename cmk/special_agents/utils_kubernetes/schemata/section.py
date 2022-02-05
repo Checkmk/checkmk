@@ -10,6 +10,8 @@ The schemas contained in this file are used to serialize data in the agent outpu
 This file should not contain any code and should not import from anywhere
 except the python standard library or pydantic.
 """
+
+import enum
 from typing import Mapping, NewType, Optional, Sequence
 
 from pydantic import BaseModel
@@ -22,24 +24,80 @@ PodSequence = Sequence[str]
 
 class PerformanceMetric(BaseModel):
     value: float
-    timestamp: int
+    timestamp: float
 
 
 class PerformanceContainer(BaseModel):
     name: ContainerName
 
 
+class CollectorState(enum.Enum):
+    OK = "ok"
+    ERROR = "error"
+
+
+class CollectorLog(BaseModel):
+    component: str
+    status: CollectorState
+    message: str
+    detail: Optional[str]
+
+
+class CollectorLogs(BaseModel):
+    """section: kube_collector_connection_v1"""
+
+    logs: Sequence[CollectorLog]
+
+
+class Resources(BaseModel):
+    """sections: "[kube_memory_resources_v1, kube_cpu_resources_v1]"""
+
+    request: float
+    limit: float
+    count_unspecified_requests: int
+    count_unspecified_limits: int
+    count_zeroed_limits: int
+    count_total: int
+
+
+class AllocatableResource(BaseModel):
+    """sections: [kube_allocatable_cpu_resource_v1, kube_allocatable_memory_resource_v1]"""
+
+    value: float
+
+
+class ControllerType(enum.Enum):
+    deployment = "deployment"
+
+    @staticmethod
+    def from_str(label):
+        if label == "deployment":
+            return ControllerType.deployment
+        raise ValueError(f"Unknown controller type {label} specified")
+
+
+class Controller(BaseModel):
+    type_: ControllerType
+    name: str
+
+
 class PodInfo(BaseModel):
     """section: kube_pod_info_v1"""
 
-    namespace: api.Namespace
-    creation_timestamp: api.CreationTimestamp
+    namespace: Optional[api.Namespace]
+    name: str
+    creation_timestamp: Optional[api.CreationTimestamp]
     labels: api.Labels  # used for host labels
     node: Optional[api.NodeName]  # this is optional, because there may be pods, which are not
     # scheduled on any node (e.g., no node with enough capacity is available).
+    host_network: Optional[str]
+    dns_policy: Optional[str]
+    host_ip: Optional[api.IpAddress]
+    pod_ip: Optional[api.IpAddress]
     qos_class: api.QosClass
     restart_policy: api.RestartPolicy
     uid: api.PodUID
+    controllers: Sequence[Controller] = []
 
 
 class PodResources(BaseModel):
@@ -52,8 +110,8 @@ class PodResources(BaseModel):
     unknown: PodSequence = []
 
 
-class PodResourcesWithCapacity(PodResources):
-    """section: kube_pod_resources_with_capacity_v1"""
+class AllocatablePods(BaseModel):
+    """section: kube_allocatable_pods_v1"""
 
     capacity: int
     allocatable: int
@@ -69,6 +127,7 @@ class PodCondition(BaseModel):
     status: bool
     reason: Optional[str]
     detail: Optional[str]
+    last_transition_time: Optional[int]
 
 
 class PodConditions(BaseModel):
@@ -86,16 +145,38 @@ class PodContainers(BaseModel):
     containers: Mapping[str, api.ContainerInfo]
 
 
+class ContainerSpec(BaseModel):
+    name: ContainerName
+    image_pull_policy: api.ImagePullPolicy
+
+
+class ContainerSpecs(BaseModel):
+    """section: kube_pod_container_specs_v1"""
+
+    containers: Mapping[ContainerName, ContainerSpec]
+
+
+class ReadyCount(BaseModel):
+    ready: int = 0
+    not_ready: int = 0
+
+    @property
+    def total(self) -> int:
+        return self.ready + self.not_ready
+
+
 class NodeCount(BaseModel):
     """section: kube_node_count_v1"""
 
-    worker: int = 0
-    control_plane: int = 0
+    worker: ReadyCount = ReadyCount()
+    control_plane: ReadyCount = ReadyCount()
 
 
 class NodeInfo(api.NodeInfo):
     """section: kube_node_info_v1"""
 
+    name: api.NodeName
+    creation_timestamp: api.CreationTimestamp
     labels: api.Labels
 
 
@@ -113,7 +194,9 @@ class DeploymentInfo(BaseModel):
 class DeploymentConditions(BaseModel):
     """section: kube_deployment_conditions_v1"""
 
-    conditions: Sequence[api.DeploymentCondition]
+    available: Optional[api.DeploymentCondition]
+    progressing: Optional[api.DeploymentCondition]
+    replicafailure: Optional[api.DeploymentCondition]
 
 
 class ContainerCount(BaseModel):
@@ -129,17 +212,12 @@ class ContainerCpuUsage(PerformanceContainer):
 
 
 class CpuUsage(BaseModel):
-    """section: k8s_live_cpu_usage_v1"""
+    """section: kube_performance_cpu_usage_v1"""
 
-    containers: Sequence[ContainerCpuUsage]
-
-
-class ContainerMemory(PerformanceContainer):
-    memory_usage_bytes: PerformanceMetric
-    memory_swap: PerformanceMetric
+    usage: float
 
 
 class Memory(BaseModel):
-    """section: k8s_live_memory_v1"""
+    """section: kube_performance_memory_v1"""
 
-    containers: Sequence[ContainerMemory]
+    memory_usage_bytes: float  # TODO: change naming

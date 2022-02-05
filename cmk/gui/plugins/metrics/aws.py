@@ -7,7 +7,7 @@
 from cmk.utils.aws_constants import AWSEC2InstFamilies, AWSEC2InstTypes
 
 from cmk.gui.i18n import _l
-from cmk.gui.plugins.metrics import graph_info, indexed_color, metric_info
+from cmk.gui.plugins.metrics.utils import graph_info, indexed_color, metric_info
 
 # .
 #   .--Metrics-------------------------------------------------------------.

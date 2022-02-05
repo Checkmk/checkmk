@@ -13,7 +13,7 @@ import cmk.gui.sites as sites
 import cmk.gui.visuals as visuals
 from cmk.gui.globals import request, user
 from cmk.gui.i18n import _
-from cmk.gui.plugins.dashboard import ABCFigureDashlet, dashlet_registry
+from cmk.gui.plugins.dashboard.utils import ABCFigureDashlet, dashlet_registry
 from cmk.gui.type_defs import HTTPVariables
 from cmk.gui.utils.urls import makeuri_contextless
 
@@ -258,7 +258,7 @@ class StatsDashletDataGenerator:
             ("view_name", cls._view_name()),
             ("filled_in", "filter"),
             ("search", "1"),
-            *visuals.get_context_uri_vars(context, single_infos),
+            *visuals.context_to_uri_vars(context),
         ]
 
 
@@ -391,7 +391,7 @@ class EventStatsDashletDataGenerator(StatsDashletDataGenerator):
         return [
             ("view_name", cls._view_name()),
             ("filled_in", "filter"),
-            *visuals.get_context_uri_vars(context, single_infos),
+            *visuals.context_to_uri_vars(context),
         ]
 
     @classmethod

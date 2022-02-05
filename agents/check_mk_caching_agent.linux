@@ -61,7 +61,7 @@ SEENFILE=$CACHEFILE.seenby.$REMOTE_HOST
 (
     flock --timeout 180 --exclusive 200 || exit 1
 
-    if [ ! -e "$CACHEFILE" -o -e "$SEENFILE" ]; then
+    if [ ! -e "$CACHEFILE" ] || [ -e "$SEENFILE" ]; then
         check_mk_agent >$CACHEFILE
         rm -f $CACHEFILE.seenby.*
     fi

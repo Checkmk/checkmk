@@ -7,12 +7,17 @@
 # NOTE: The rulesets in this file were deprecated in version 2.0.0p5
 
 from cmk.gui.i18n import _
-from cmk.gui.plugins.wato import (
+from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithoutItem,
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
 )
 from cmk.gui.valuespec import Dictionary, Filesize, Percentage, Tuple
+
+######################################################################
+# NOTE: This valuespec and associated check are deprecated and will be
+#       removed in Checkmk version 2.2.
+######################################################################
 
 
 def _parameter_valuespec_k8s_pods_cpu():

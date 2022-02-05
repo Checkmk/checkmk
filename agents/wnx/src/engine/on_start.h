@@ -23,12 +23,12 @@ constexpr const std::wstring_view auto_reload{L"CMA_AUTO_RELOAD"};
 
 AppType AppDefaultType();  // defined by main
 
-bool OnStart(AppType type, const std::wstring& config_file);
+bool OnStart(AppType type, const std::wstring &config_file);
 inline bool OnStart() { return OnStart(AppType::automatic, L""); }
 inline bool OnStart(AppType type) { return OnStart(type, L""); }
 
-bool LoadConfigFull(const std::wstring& ConfigFile);
-bool LoadConfigBase(const std::vector<std::wstring>& config_filenames,
+bool LoadConfigFull(const std::wstring &ConfigFile);
+bool LoadConfigBase(const std::vector<std::wstring> &config_filenames,
                     YamlCacheOp cache_op);
 bool ReloadConfig();
 inline bool OnStartApp() { return OnStart(AppType::automatic); }
@@ -43,10 +43,10 @@ bool ConfigLoaded();
 class UninstallAlert {
 public:
     UninstallAlert() = default;
-    UninstallAlert(const UninstallAlert&) = delete;
-    UninstallAlert(UninstallAlert&&) = delete;
-    UninstallAlert& operator=(const UninstallAlert&) = delete;
-    UninstallAlert& operator=(UninstallAlert&&) = delete;
+    UninstallAlert(const UninstallAlert &) = delete;
+    UninstallAlert(UninstallAlert &&) = delete;
+    UninstallAlert &operator=(const UninstallAlert &) = delete;
+    UninstallAlert &operator=(UninstallAlert &&) = delete;
     bool isSet() const noexcept {
         return set_;
     }                       // check during exit from the service

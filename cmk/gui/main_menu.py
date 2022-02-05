@@ -14,17 +14,11 @@ from datetime import timedelta
 from typing import List
 
 from cmk.utils.plugin_registry import Registry
-from cmk.utils.version import (
-    __version__,
-    edition_title_acronym,
-    get_age_trial,
-    is_expired_trial,
-    is_free_edition,
-)
+from cmk.utils.version import __version__, edition, get_age_trial, is_expired_trial, is_free_edition
 
-from cmk.gui.globals import user
 from cmk.gui.i18n import _, _l
 from cmk.gui.type_defs import MegaMenu, TopicMenuItem, TopicMenuTopic
+from cmk.gui.utils.urls import manual_reference_url
 
 
 def any_show_more_items(topics: List[TopicMenuTopic]) -> bool:
@@ -81,85 +75,124 @@ mega_menu_registry = MegaMenuRegistry()
 def _help_menu_topics() -> List[TopicMenuTopic]:
     return [
         TopicMenuTopic(
-            name="version",
-            title=_("Version"),
-            icon=None,
+            name="learning_checkmk",
+            title=_("Learning Checkmk"),
+            icon="learning_checkmk",
             items=[
                 TopicMenuItem(
-                    name="release_notes",
-                    title=_("Release notes"),
-                    url="version.py?major=1",
+                    name="beginners_guide",
+                    title=_("Beginner's guide"),
+                    url=manual_reference_url("intro_welcome"),
+                    target="_blank",
+                    sort_index=10,
+                    icon="learning_beginner",
+                ),
+                TopicMenuItem(
+                    name="user_manual",
+                    title=_("User manual"),
+                    url=manual_reference_url(),
+                    target="_blank",
+                    sort_index=20,
+                    icon="learning_guide",
+                ),
+                TopicMenuItem(
+                    name="video_tutorials",
+                    title=_("Video tutorials"),
+                    url="https://www.youtube.com/playlist?list=PL8DfRO2DvOK1slgjfTu0hMOnepf1F7ssh",
+                    target="_blank",
+                    sort_index=30,
+                    icon="learning_video_tutorials",
+                ),
+                TopicMenuItem(
+                    name="community_forum",
+                    title=_("Community forum"),
+                    url="https://forum.checkmk.com/",
+                    target="_blank",
+                    sort_index=40,
+                    icon="learning_forum",
+                ),
+            ],
+        ),
+        TopicMenuTopic(
+            name="developer_resources",
+            title=_("Developer resources"),
+            icon="developer_resources",
+            items=[
+                TopicMenuItem(
+                    name="plugin_api_introduction",
+                    title=_("Check plugin API introduction"),
+                    url=manual_reference_url("devel_check_plugins"),
+                    target="_blank",
+                    sort_index=10,
+                    icon={
+                        "icon": "services_green",
+                        "emblem": "api",
+                    },
+                ),
+                TopicMenuItem(
+                    name="plugin_api_reference",
+                    title=_("Check plugin API reference"),
+                    url="plugin-api/",
+                    target="_blank",
+                    sort_index=20,
+                    icon={
+                        "icon": "services_green",
+                        "emblem": "api",
+                    },
+                ),
+                TopicMenuItem(
+                    name="rest_api_introduction",
+                    title=_("REST API introduction"),
+                    url=manual_reference_url("rest_api"),
+                    target="_blank",
+                    sort_index=30,
+                    icon={
+                        "icon": "global_settings",
+                        "emblem": "api",
+                    },
+                ),
+                TopicMenuItem(
+                    name="rest_api_documentation",
+                    title=_("REST API documentation"),
+                    url="openapi/",
+                    target="_blank",
+                    sort_index=40,
+                    icon={
+                        "icon": "global_settings",
+                        "emblem": "api",
+                    },
+                ),
+                TopicMenuItem(
+                    name="rest_api_interactive_gui",
+                    title=_("REST API interactive GUI"),
+                    url="api/1.0/ui/",
+                    target="_blank",
+                    sort_index=50,
+                    icon={
+                        "icon": "global_settings",
+                        "emblem": "api",
+                    },
+                ),
+            ],
+        ),
+        TopicMenuTopic(
+            name="about_checkmk",
+            title=_("About Checkmk"),
+            icon="about_checkmk",
+            items=[
+                TopicMenuItem(
+                    name="info",
+                    title=_("Info"),
+                    url="info.py",
                     sort_index=10,
                     icon="tribe29",
                 ),
                 TopicMenuItem(
-                    name="release_notes",
-                    title=_("Change log"),
-                    url="version.py",
+                    name="change_log",
+                    title=_("Change log (Werks)"),
+                    url="change_log.py",
                     sort_index=20,
                     icon="tribe29",
-                ),
-            ],
-        ),
-        TopicMenuTopic(
-            name="apis",
-            title=_("APIs"),
-            icon=None,
-            items=[
-                TopicMenuItem(
-                    name="rest_api_redoc",
-                    title=_("REST API documentation"),
-                    url="openapi/",
-                    target="_blank",
-                    sort_index=30,
-                    icon=None,  # TODO(CMK-5773): add an icon
-                ),
-                TopicMenuItem(
-                    name="rest_api_swagger_ui",
-                    title=_("REST API interactive GUI"),
-                    url="api/1.0/ui/",
-                    target="_blank",
-                    sort_index=30,
-                    icon=None,  # TODO(CMK-5773): add an icon
-                ),
-                TopicMenuItem(
-                    name="plugin_api",
-                    title=_("Plugin API reference"),
-                    url="plugin-api/",
-                    target="_blank",
-                    sort_index=40,
-                    icon=None,  # TODO(CMK-5773): add an icon
-                ),
-            ],
-        ),
-        TopicMenuTopic(
-            name="external_help",
-            title=_("External"),
-            icon=None,  # TODO(CMK-5773): add an icon
-            items=[
-                TopicMenuItem(
-                    name="manual",
-                    title=_("User guide"),
-                    url=user.get_docs_base_url(),
-                    target="_blank",
-                    sort_index=30,
-                    icon=None,  # TODO(CMK-5773): add an icon
-                ),
-                TopicMenuItem(
-                    name="forum",
-                    title=_("Forum"),
-                    url="https://forum.checkmk.com/",
-                    target="_blank",
-                    sort_index=40,
-                    icon=None,  # TODO(CMK-5773): add an icon
-                ),
-                TopicMenuItem(
-                    name="youtube_channel",
-                    title=_("YouTube"),
-                    url="https://www.youtube.com/checkmk-channel",
-                    target="_blank",
-                    sort_index=50,
-                    icon=None,  # TODO(CMK-5773): add an icon
                 ),
             ],
         ),
@@ -173,7 +206,7 @@ mega_menu_registry.register(
         icon="main_help",
         sort_index=18,
         topics=_help_menu_topics,
-        info_line=lambda: f"{__version__} ({edition_title_acronym()}){free_edition_status()}",
+        info_line=lambda: f"{edition().title} {__version__}{free_edition_status()}",
     )
 )
 

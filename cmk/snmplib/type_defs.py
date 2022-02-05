@@ -29,7 +29,6 @@ from typing import (
 from six import ensure_str
 
 from cmk.utils.type_defs import AgentRawData as _AgentRawData
-from cmk.utils.type_defs import CheckPluginNameStr as _CheckPluginName
 from cmk.utils.type_defs import HostAddress as _HostAddress
 from cmk.utils.type_defs import HostName as _HostName
 from cmk.utils.type_defs import SectionName as _SectionName
@@ -40,7 +39,7 @@ SNMPDecodedString = str
 SNMPDecodedBinary = Sequence[int]
 SNMPDecodedValues = Union[SNMPDecodedString, SNMPDecodedBinary]
 SNMPValueEncoding = Literal["string", "binary"]
-SNMPTable = Sequence[Sequence[SNMPDecodedValues]]
+SNMPTable = Sequence[SNMPDecodedValues]
 SNMPContext = Optional[str]
 SNMPRawDataSection = Union[SNMPTable, Sequence[SNMPTable]]
 # The SNMPRawData type is not useful.  See comments to `AgentRawDataSection`.
@@ -48,11 +47,17 @@ SNMPRawDataSection = Union[SNMPTable, Sequence[SNMPTable]]
 #     **WE DO NOT WANT `NewType` HERE** because this prevents us to
 #     type some classes correctly.  The type should be *REMOVED* instead!
 #
-SNMPRawData = Mapping[_SectionName, SNMPRawDataSection]
+SNMPRawData = Mapping[_SectionName, Sequence[SNMPRawDataSection]]
 OID = str
 OIDFunction = Callable[
-    [OID, Optional[SNMPDecodedString], Optional[_CheckPluginName]], Optional[SNMPDecodedString]
+    [OID, Optional[SNMPDecodedString], Optional[_SectionName]], Optional[SNMPDecodedString]
 ]
+OIDRange = Tuple[int, int]
+RangeLimit = Union[
+    Tuple[Literal["first", "last"], int],
+    Tuple[Literal["mid"], OIDRange],
+]
+
 SNMPScanFunction = Callable[[OIDFunction], bool]
 SNMPRawValue = bytes
 SNMPRowInfo = List[Tuple[OID, SNMPRawValue]]
@@ -133,7 +138,7 @@ class SNMPHostConfig(
             ("is_snmpv2or3_without_bulkwalk_host", bool),
             ("bulk_walk_size_of", int),
             ("timing", SNMPTiming),
-            ("oid_range_limits", list),
+            ("oid_range_limits", Mapping[_SectionName, Sequence[RangeLimit]]),
             ("snmpv3_contexts", list),
             ("character_encoding", Optional[str]),
             ("is_usewalk_host", bool),
@@ -177,12 +182,18 @@ class SNMPHostConfig(
     def serialize(self):
         serialized = self._asdict()
         serialized["snmp_backend"] = serialized["snmp_backend"].serialize()
+        serialized["oid_range_limits"] = {
+            str(sn): rl for sn, rl in serialized["oid_range_limits"].items()
+        }
         return serialized
 
     @classmethod
     def deserialize(cls, serialized: Mapping[str, Any]) -> "SNMPHostConfig":
         serialized_ = copy.deepcopy(dict(serialized))
         serialized_["snmp_backend"] = SNMPBackendEnum.deserialize(serialized_["snmp_backend"])
+        serialized_["oid_range_limits"] = {
+            _SectionName(sn): rl for sn, rl in serialized_["oid_range_limits"].items()
+        }
         return cls(**serialized_)
 
 
@@ -214,7 +225,7 @@ class SNMPBackend(abc.ABC):
     def walk(
         self,
         oid: OID,
-        check_plugin_name: Optional[_CheckPluginName] = None,
+        section_name: Optional[_SectionName] = None,
         table_base_oid: Optional[OID] = None,
         context_name: Optional[SNMPContextName] = None,
     ) -> SNMPRowInfo:

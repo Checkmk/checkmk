@@ -8,6 +8,7 @@ import os
 from enum import Enum
 from http import HTTPStatus
 from typing import Any
+from uuid import UUID
 
 import requests
 from fastapi import HTTPException
@@ -119,13 +120,13 @@ def host_exists(
 def link_host_with_uuid(
     credentials: HTTPBasicCredentials,
     host_name: str,
-    uuid: str,
+    uuid: UUID,
 ) -> None:
     if (
         response := _forward_put(
             f"objects/host_config/{host_name}/actions/link_uuid/invoke",
             credentials,
-            {"uuid": uuid},
+            {"uuid": str(uuid)},
         )
     ).status_code != HTTPStatus.NO_CONTENT:
         raise HTTPException(

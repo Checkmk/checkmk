@@ -46,10 +46,10 @@ def test_registered_painter_options():
         "num_columns",
     ]
 
-    names = cmk.gui.plugins.views.painter_option_registry.keys()
+    names = cmk.gui.plugins.views.utils.painter_option_registry.keys()
     assert sorted(expected) == sorted(names)
 
-    for cls in cmk.gui.plugins.views.painter_option_registry.values():
+    for cls in cmk.gui.plugins.views.utils.painter_option_registry.values():
         vs = cls().valuespec
         assert isinstance(vs, ValueSpec)
 
@@ -67,7 +67,7 @@ def test_registered_layouts():
         'tiled',
     ]
 
-    names = cmk.gui.plugins.views.layout_registry.keys()
+    names = cmk.gui.plugins.views.utils.layout_registry.keys()
     assert sorted(expected) == sorted(names)
 
 
@@ -114,7 +114,7 @@ def test_layout_properties():
     }
 
     for ident, spec in expected.items():
-        plugin = cmk.gui.plugins.views.layout_registry[ident]()
+        plugin = cmk.gui.plugins.views.utils.layout_registry[ident]()
         assert isinstance(plugin.title, str)
         assert spec["title"] == plugin.title
         assert spec["checkboxes"] == plugin.can_display_checkboxes
@@ -122,7 +122,7 @@ def test_layout_properties():
 
 
 def test_get_layout_choices():
-    choices = cmk.gui.plugins.views.layout_registry.get_choices()
+    choices = cmk.gui.plugins.views.utils.layout_registry.get_choices()
     assert sorted(choices) == sorted([
         ('matrix', u'Matrix'),
         ('boxed_graph', u'Balanced graph boxes'),
@@ -146,7 +146,7 @@ def test_registered_exporters():
         'python',
         'python-raw',
     ]
-    names = cmk.gui.plugins.views.exporter_registry.keys()
+    names = cmk.gui.plugins.views.utils.exporter_registry.keys()
     assert sorted(expected) == sorted(names)
 
 
@@ -185,7 +185,7 @@ def test_registered_commands():
         'ec_custom_actions': {
             'permission': 'mkeventd.actions',
             'tables': ['event'],
-            'title': u'Custom Action'
+            'title': u'Custom action'
         },
         'remove_comments': {
             'permission': 'action.addcomment',
@@ -210,7 +210,7 @@ def test_registered_commands():
         'ec_change_state': {
             'permission': 'mkeventd.changestate',
             'tables': ['event'],
-            'title': u'Change State'
+            'title': u'Change state'
         },
         'clear_modified_attributes': {
             'permission': 'action.clearmodattr',
@@ -225,7 +225,7 @@ def test_registered_commands():
         'ec_archive_event': {
             'permission': 'mkeventd.delete',
             'tables': ['event'],
-            'title': u'Archive Event'
+            'title': u'Archive event'
         },
         'add_comment': {
             'permission': 'action.addcomment',
@@ -267,7 +267,7 @@ def test_registered_commands():
         'ec_update_event': {
             'permission': 'mkeventd.update',
             'tables': ['event'],
-            'title': u'Update & Acknowledge'
+            'title': u'Update & acknowledge'
         },
         'delete_crash_reports': {
             'permission': 'action.delete_crash_report',
@@ -284,7 +284,7 @@ def test_registered_commands():
         },
         })
 
-    names = cmk.gui.plugins.views.command_registry.keys()
+    names = cmk.gui.plugins.views.utils.command_registry.keys()
     assert sorted(expected.keys()) == sorted(names)
 
     for cmd_class in cmk.gui.plugins.views.utils.command_registry.values():
@@ -598,7 +598,7 @@ def test_registered_datasources():
             'keys': [],
             'table': ('tuple', ('query_ec_table', ['eventconsoleevents'])),
             'time_filters': ['event_first'],
-            'title': u'Event Console: Current Events'
+            'title': u'Event Console: Current events'
         },
         'mkeventd_history': {
             'auth_domain': 'ec',
@@ -607,7 +607,7 @@ def test_registered_datasources():
             'keys': [],
             'table': ('tuple', ('query_ec_table', ['eventconsolehistory'])),
             'time_filters': ['history_time'],
-            'title': u'Event Console: Event History'
+            'title': u'Event Console: Event history'
         },
         'service_discovery': {
             'add_columns': ['discovery_state', 'discovery_check', 'discovery_service'],
@@ -652,7 +652,7 @@ def test_registered_datasources():
         },
     }
 
-    names = cmk.gui.plugins.views.data_source_registry.keys()
+    names = cmk.gui.plugins.views.utils.data_source_registry.keys()
     assert sorted(expected.keys()) == sorted(names)
 
     for ds_class in cmk.gui.plugins.views.utils.data_source_registry.values():
@@ -1222,6 +1222,11 @@ def test_registered_sorters():
             'columns': ['host_inventory', 'host_structured_status'],
             'load_inv': True,
             'title': u'Inventory: Networking \u27a4 Ports'
+        },
+        'inv_networking_hostname': {
+            'columns': ['host_inventory', 'host_structured_status'],
+            'load_inv': True,
+            'title': u'Inventory: Networking \u27a4 Hostname'
         },
         'inv_networking_total_interfaces': {
             'columns': ['host_inventory', 'host_structured_status'],
@@ -2313,7 +2318,7 @@ def test_registered_sorters():
         },
     }
 
-    for sorter_class in cmk.gui.plugins.views.sorter_registry.values():
+    for sorter_class in cmk.gui.plugins.views.utils.sorter_registry.values():
         sorter = sorter_class()
         spec = expected[sorter.ident]
 
@@ -2694,6 +2699,7 @@ def test_registered_display_hints():
     '.networking.routes:*.target',
     '.networking.routes:*.type',
     '.networking.total_ethernet_ports',
+    '.networking.hostname',
     '.networking.total_interfaces',
     '.networking.tunnels:',
     '.networking.tunnels:*.index',
@@ -2825,6 +2831,14 @@ def test_registered_display_hints():
     '.software.applications.ibm_mq.queues:*.monq',
     '.software.applications.ibm_mq.queues:*.name',
     '.software.applications.ibm_mq.queues:*.qmgr',
+    '.software.applications.kube.',
+    '.software.applications.kube.deployment.',
+    '.software.applications.kube.deployment.name',
+    '.software.applications.kube.deployment.namespace',
+    '.software.applications.kube.deployment.strategy',
+    '.software.applications.kube.labels:',
+    '.software.applications.kube.labels:*.label_name',
+    '.software.applications.kube.labels:*.label_value',
     '.software.applications.kubernetes.assigned_pods:',
     '.software.applications.kubernetes.assigned_pods:*.name',
     '.software.applications.kubernetes.nodes:',
@@ -2970,11 +2984,11 @@ def test_registered_display_hints():
     '.software.packages:*.vendor',
     '.software.packages:*.version',]
 
-    assert sorted(expected) == sorted(cmk.gui.plugins.views.inventory_displayhints.keys())
+    assert sorted(expected) == sorted(cmk.gui.plugins.views.utils.inventory_displayhints.keys())
 
 
 def test_get_inventory_display_hint():
-    hint = cmk.gui.plugins.views.inventory_displayhints.get(".software.packages:*.summary")
+    hint = cmk.gui.plugins.views.utils.inventory_displayhints.get(".software.packages:*.summary")
     assert isinstance(hint, dict)
 
 

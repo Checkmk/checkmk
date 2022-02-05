@@ -3,7 +3,7 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
+import enum
 import json
 from dataclasses import dataclass
 from typing import Dict, List, Literal, Mapping, NewType, Optional, Sequence, TypedDict, Union
@@ -129,13 +129,6 @@ class PerformanceContainer(BaseModel):
     name: ContainerName
 
 
-class NodeCount(BaseModel):
-    """section: kube_node_count_v1"""
-
-    worker: int = 0
-    control_plane: int = 0
-
-
 class HealthZ(BaseModel):
     status_code: int
     response: str
@@ -150,17 +143,41 @@ class KubeletInfo(BaseModel):
     health: HealthZ
 
 
+class ControllerType(enum.Enum):
+    deployment = "deployment"
+
+    @staticmethod
+    def from_str(label):
+        if label == "deployment":
+            return ControllerType.deployment
+        raise ValueError(f"Unknown controller type: {label}")
+
+
+class Controller(BaseModel):
+    type_: ControllerType
+    name: str
+
+
+IpAddress = NewType("IpAddress", str)
+
+
 class PodInfo(BaseModel):
     """section: kube_pod_info_v1"""
 
-    namespace: Namespace
-    creation_timestamp: CreationTimestamp
+    namespace: Optional[Namespace]
+    name: str
+    creation_timestamp: Optional[CreationTimestamp]
     labels: Labels  # used for host labels
     node: Optional[NodeName]  # this is optional, because there may be pods, which are not
     # scheduled on any node (e.g., no node with enough capacity is available).
+    host_network: Optional[str]
+    dns_policy: Optional[str]
+    host_ip: Optional[IpAddress]
+    pod_ip: Optional[IpAddress]
     qos_class: QosClass
     restart_policy: RestartPolicy
     uid: PodUID
+    controllers: Sequence[Controller] = []
 
 
 class APIHealth(BaseModel):
@@ -184,8 +201,8 @@ class PodResources(BaseModel):
     unknown: PodSequence = []
 
 
-class PodResourcesWithCapacity(PodResources):
-    """section: kube_pod_resources_with_capacity_v1"""
+class AllocatablePods(BaseModel):
+    """section: kube_allocatable_pods_v1"""
 
     capacity: int
     allocatable: int
@@ -199,15 +216,10 @@ class ContainerCount(BaseModel):
     terminated: int = 0
 
 
-class ContainerMemory(PerformanceContainer):
-    memory_usage_bytes: PerformanceMetric
-    memory_swap: PerformanceMetric
-
-
 class Memory(BaseModel):
-    """section: k8s_live_memory_v1"""
+    """section: kube_performance_memory_v1"""
 
-    containers: Sequence[ContainerMemory]
+    memory_usage_bytes: float
 
 
 class NodeInfo(BaseModel):
@@ -216,12 +228,11 @@ class NodeInfo(BaseModel):
     architecture: str
     kernel_version: str
     os_image: str
+    operating_system: str
+    container_runtime_version: str
+    name: NodeName
+    creation_timestamp: CreationTimestamp
     labels: Labels
-
-
-class Resources(BaseModel):
-    limit: float = float("inf")
-    requests: float = 0.0
 
 
 class StartTime(BaseModel):
@@ -234,6 +245,7 @@ class PodCondition(BaseModel):
     status: bool
     reason: Optional[str]
     detail: Optional[str]
+    last_transition_time: Optional[int]
 
 
 class PodConditions(BaseModel):
@@ -266,7 +278,8 @@ class ContainerTerminatedState(BaseModel):
 
 
 class ContainerInfo(BaseModel):
-    id: Optional[str]  # id of non-ready container is None
+    container_id: Optional[str]  # container_id of non-ready container is None
+    image_id: str  # image_id of non-ready container is ""
     name: str
     image: str
     ready: bool
@@ -289,3 +302,25 @@ class PodContainers(BaseModel):
     """section: kube_pod_containers_v1"""
 
     containers: Mapping[str, ContainerInfo]
+
+
+class Replicas(BaseModel):
+    replicas: int
+    updated: int
+    available: int
+    ready: int
+    unavailable: int
+
+
+class RollingUpdate(BaseModel):
+    type_: Literal["RollingUpdate"] = Field("RollingUpdate", const=True)
+    max_surge: str
+    max_unavailable: str
+
+
+class Recreate(BaseModel):
+    type_: Literal["Recreate"] = Field("Recreate", const=True)
+
+
+class DeploymentSpec(BaseModel):
+    strategy: Union[Recreate, RollingUpdate] = Field(discriminator="type_")

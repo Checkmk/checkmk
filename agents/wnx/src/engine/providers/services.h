@@ -19,7 +19,7 @@ namespace provider {
 class Services : public Asynchronous {
 public:
     Services() : Asynchronous(cma::section::kServices) {}
-    Services(const std::string& name, char separator)
+    Services(const std::string &name, char separator)
         : Asynchronous(name, separator) {}
 
 private:

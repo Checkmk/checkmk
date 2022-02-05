@@ -1,39 +1,33 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
 def agent_kube_arguments(params, hostname, ipaddress):
-    args = []
+    args = ["--cluster", params["cluster-name"]]
+    args.extend(["--token", passwordstore_get_cmdline("%s", params["token"])])
 
-    api_server_params = params["kubernetes-api-server"]
+    args.append("--monitored-objects")
+    for monitored_object in params.get("monitored-objects", ["nodes", "deployments", "pods"]):
+        args.append(monitored_object)
 
-    if "token" in api_server_params:
-        args.extend(["--token", passwordstore_get_cmdline("%s", api_server_params["token"])])
+    if "namespaces" in params:
+        namespace_filter_option, filter_patterns = params["namespaces"]
+        for namespace_pattern in filter_patterns:
+            args.append(f"--{namespace_filter_option}")
+            args.append(namespace_pattern)
 
-    args.append("--api-server-endpoint")
-    configured_endpoint_name, configured_endpoint = api_server_params["endpoint"]
-    if configured_endpoint_name == "url_custom":
-        args.append(configured_endpoint)
-    else:
-        protocol = configured_endpoint["protocol"]
-        address = {
-            "hostname": hostname,
-            "ipaddress": ipaddress,
-        }[configured_endpoint_name]
-        port = f":{configured_endpoint['port']}" if "port" in configured_endpoint else ""
-        args.append(f"{protocol}://{address}{port}")
+    api_params = params["kubernetes-api-server"]
+    args.extend(["--api-server-endpoint", api_params["endpoint"]])
+    if api_params.get("verify-cert"):
+        args.append("--verify-cert-api")
 
-    agent_options = params["cluster-agent"]
-    args.append("--cluster-agent-endpoint")
-    args.append(
-        f'{agent_options["protocol"]}://{agent_options["node_ip"]}:{agent_options["connection_port"]}'
-    )
-
-    if params.get("verify-cert"):
-        args.append("--verify-cert")
+    if (collector_params := params.get("cluster-collector")) is not None:
+        args.extend(["--cluster-collector-endpoint", collector_params["endpoint"]])
+        if collector_params.get("verify-cert"):
+            args.append("--verify-cert-collector")
 
     return args
 

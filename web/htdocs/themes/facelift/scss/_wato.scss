@@ -220,12 +220,11 @@ div#fixall_container {
   overflow: hidden;
 
   img {
-    float: left;
-    margin: $spacing 0 0 $spacing;
+    margin-left: $spacing;
   }
 
   ul {
-    float: left;
+    display: inline-block;
     list-style: none;
     margin: 15px 0 15px 0;
     padding-left: $spacing;
@@ -239,6 +238,14 @@ div#fixall_container {
 
   li:last-child {
     border-right: none;
+  }
+
+  a {
+    text-decoration: none;
+
+    &:hover {
+      opacity: 0.5;
+    }
   }
 
   span {
@@ -875,14 +882,6 @@ div.filter_buttons {
   pointer-events: none;
 }
 
-.wato .pending_changes_header {
-  #row_info {
-    float: right;
-    padding-right: $spacing;
-    font-weight: $font-weight-default;
-  }
-}
-
 .wato table.changes {
   width: 100%;
 
@@ -941,7 +940,7 @@ div.filter_buttons {
       top: 4px;
       left: 0;
       z-index: 0;
-      width: 160px;
+      width: 0;
       height: 24px;
       padding-top: 10px;
       color: $font-color-black;
@@ -951,6 +950,7 @@ div.filter_buttons {
 
       &.in_progress {
         background: $repprogress-progress-bg-color;
+        transition: width 1s;
       }
 
       &.state_success {

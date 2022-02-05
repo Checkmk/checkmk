@@ -5,7 +5,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # type: ignore[list-item,import,assignment,misc,operator]  # TODO: see which are needed in this file
-from .cpu_load import check_cpu_load_generic
 
 #   .--Common--------------------------------------------------------------.
 #   |              ____                                                    |
@@ -71,29 +70,6 @@ def check_arbor_memory(no_item, params, parsed):
     ]
 
     return worst_status(ram_status, swap_status), infotext, perfdata
-
-
-# .
-#   .--CPU Load------------------------------------------------------------.
-#   |              ____ ____  _   _   _                    _               |
-#   |             / ___|  _ \| | | | | |    ___   __ _  __| |              |
-#   |            | |   | |_) | | | | | |   / _ \ / _` |/ _` |              |
-#   |            | |___|  __/| |_| | | |__| (_) | (_| | (_| |              |
-#   |             \____|_|    \___/  |_____\___/ \__,_|\__,_|              |
-#   |                                                                      |
-#   '----------------------------------------------------------------------'
-
-arbor_cpuload_default_levels = (5.0, 10.0)
-
-
-def inventory_arbor_cpu_load(parsed):
-    if "cpu_loads" in parsed:
-        return [(None, "arbor_cpuload_default_levels")]
-
-
-def check_arbor_cpu_load(no_item, params, parsed):
-    load = [float(x) / 100.0 for x in parsed["cpu_loads"]]
-    return check_cpu_load_generic(params, load, 1)
 
 
 # .

@@ -23,7 +23,6 @@ import urllib3  # type: ignore[import]
 
 from tests.testlib.compare_html import compare_html
 from tests.testlib.event_console import CMKEventConsole, CMKEventConsoleStatus
-from tests.testlib.fixtures import ec, web
 from tests.testlib.site import Site, SiteFactory
 from tests.testlib.utils import (
     add_python_paths,
@@ -35,6 +34,7 @@ from tests.testlib.utils import (
     get_standard_linux_agent_output,
     is_enterprise_repo,
     is_managed_repo,
+    is_plus_repo,
     is_running_as_site_user,
     repo_path,
     site_id,
@@ -80,6 +80,8 @@ def fake_version_and_paths():
 
     if is_managed_repo():
         edition_short = "cme"
+    elif is_plus_repo():
+        edition_short = "cpe"
     elif is_enterprise_repo():
         edition_short = "cee"
     else:
@@ -100,9 +102,13 @@ def fake_version_and_paths():
         "cmk.utils.paths.inventory_archive_dir",
         os.path.join(tmp_dir, "var/check_mk/inventory_archive"),
     )
+    monkeypatch.setattr(
+        "cmk.utils.paths.inventory_delta_cache_dir",
+        os.path.join(tmp_dir, "var/check_mk/inventory_delta_cache"),
+    )
     monkeypatch.setattr("cmk.utils.paths.check_manpages_dir", "%s/checkman" % cmk_path())
     monkeypatch.setattr("cmk.utils.paths.web_dir", "%s/web" % cmk_path())
-    monkeypatch.setattr("cmk.utils.paths.omd_root", tmp_dir)
+    monkeypatch.setattr("cmk.utils.paths.omd_root", Path(tmp_dir))
     monkeypatch.setattr("cmk.utils.paths.tmp_dir", os.path.join(tmp_dir, "tmp/check_mk"))
     monkeypatch.setattr(
         "cmk.utils.paths.counters_dir", os.path.join(tmp_dir, "tmp/check_mk/counters")
@@ -111,7 +117,7 @@ def fake_version_and_paths():
         "cmk.utils.paths.tcp_cache_dir", os.path.join(tmp_dir, "tmp/check_mk/cache")
     )
     monkeypatch.setattr(
-        "cmk.utils.paths.trusted_ca_file", os.path.join(tmp_dir, "var/ssl/ca-certificates.crt")
+        "cmk.utils.paths.trusted_ca_file", Path(tmp_dir, "var/ssl/ca-certificates.crt")
     )
     monkeypatch.setattr(
         "cmk.utils.paths.data_source_cache_dir",
@@ -200,9 +206,17 @@ def fake_version_and_paths():
         Path(tmp_dir, "var/check_mk/discovered_host_labels"),
     )
     monkeypatch.setattr("cmk.utils.paths.profile_dir", Path(cmk.utils.paths.var_dir, "web"))
+    monkeypatch.setattr("agent_receiver.constants.LOG_FILE", Path(tmp_dir, "agent-receiver.log"))
     monkeypatch.setattr(
-        "agent_receiver.constants.LOG_FILE", Path(os.path.join(tmp_dir, "agent-receiver.log"))
+        "agent_receiver.constants.AGENT_OUTPUT_DIR",
+        Path(tmp_dir, "agent_output_dir"),
     )
+    monkeypatch.setattr(
+        "agent_receiver.constants.REGISTRATION_REQUESTS",
+        Path(tmp_dir, "registration_request"),
+    )
+
+    # Agent registration paths
     monkeypatch.setattr(
         "cmk.utils.paths.received_outputs_dir",
         Path(cmk.utils.paths.var_dir, "agent-receiver/received-outputs"),
@@ -210,6 +224,34 @@ def fake_version_and_paths():
     monkeypatch.setattr(
         "cmk.utils.paths.data_source_push_agent_dir",
         Path(cmk.utils.paths.data_source_cache_dir, "push-agent"),
+    )
+    monkeypatch.setattr(
+        "cmk.utils.paths._r4r_base_dir",
+        Path(cmk.utils.paths.var_dir, "wato/requests-for-registration"),
+    )
+    monkeypatch.setattr(
+        "cmk.utils.paths.r4r_new_dir",
+        Path(cmk.utils.paths._r4r_base_dir, "NEW"),
+    )
+    monkeypatch.setattr(
+        "cmk.utils.paths.r4r_pending_dir",
+        Path(cmk.utils.paths._r4r_base_dir, "PENDING"),
+    )
+    monkeypatch.setattr(
+        "cmk.utils.paths.r4r_declined_dir",
+        Path(cmk.utils.paths._r4r_base_dir, "DECLINED"),
+    )
+    monkeypatch.setattr(
+        "cmk.utils.paths.r4r_declined_bundles_dir",
+        Path(cmk.utils.paths._r4r_base_dir, "DECLINED-BUNDLES"),
+    )
+    monkeypatch.setattr(
+        "cmk.utils.paths.r4r_ready_dir",
+        Path(cmk.utils.paths._r4r_base_dir, "READY"),
+    )
+    monkeypatch.setattr(
+        "cmk.utils.paths.r4r_discoverable_dir",
+        Path(cmk.utils.paths._r4r_base_dir, "DISCOVERABLE"),
     )
 
 
@@ -272,11 +314,11 @@ def wait_until_liveproxyd_ready(site: Site, site_ids):
 class WatchLog:
     """Small helper for integration tests: Watch a sites log file"""
 
-    def __init__(self, site: Site, log_path, default_timeout=5):
+    def __init__(self, site: Site, default_timeout: Optional[int] = None):
         self._site = site
-        self._log_path = log_path
+        self._log_path = site.core_history_log()
         self._log: Optional[TextIO] = None
-        self._default_timeout = default_timeout
+        self._default_timeout = default_timeout or site.core_history_log_timeout()
 
     def __enter__(self):
         if not self._site.file_exists(self._log_path):
@@ -330,10 +372,10 @@ class WatchLog:
         return False
 
 
-def create_linux_test_host(request, web_fixture, site: Site, hostname):
+def create_linux_test_host(request, site: Site, hostname):
     def finalizer():
-        web_fixture.delete_host(hostname)
-        web_fixture.activate_changes()
+        site.openapi.delete_host(hostname)
+        site.activate_changes_and_wait_for_core_reload()
 
         for path in [
             "var/check_mk/agent_output/%s" % hostname,
@@ -354,7 +396,7 @@ def create_linux_test_host(request, web_fixture, site: Site, hostname):
 
     request.addfinalizer(finalizer)
 
-    web_fixture.add_host(hostname, attributes={"ipaddress": "127.0.0.1"})
+    site.openapi.create_host(hostname, attributes={"ipaddress": "127.0.0.1"})
 
     site.write_text_file(
         "etc/check_mk/conf.d/linux_test_host_%s.mk" % hostname,

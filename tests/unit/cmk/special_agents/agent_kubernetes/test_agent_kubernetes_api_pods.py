@@ -12,10 +12,9 @@ from cmk.special_agents.agent_kube import Pod
 from cmk.special_agents.utils_kubernetes.schemata import api, section
 from cmk.special_agents.utils_kubernetes.transform import (
     convert_to_timestamp,
-    parse_pod_info,
     pod_conditions,
     pod_containers,
-    pod_resources,
+    pod_spec,
 )
 
 
@@ -31,6 +30,7 @@ class TestAPIPod:
                                 "status": "False",
                                 "reason": None,
                                 "message": None,
+                                "lastTransitionTime": "2021-10-08T07:39:10Z",
                             },
                         ],
                     },
@@ -84,7 +84,7 @@ class TestAPIPod:
         )
         with Mocketizer():
             pod = list(core_client.list_pod_for_all_namespaces().items)[0]
-        containers = pod_containers(pod)
+        containers = pod_containers(pod.status.container_statuses)
         assert len(containers) == 1
         assert "cadvisor" in containers
         assert containers["cadvisor"].ready is True
@@ -100,27 +100,7 @@ class TestPodWithNoNode(TestCase):
     Below, there is one test for each affected function.
     """
 
-    def test_pod_resources_pod_without_node(self) -> None:
-        pod = client.V1Pod(
-            spec=client.V1PodSpec(
-                containers=[
-                    client.V1Container(
-                        name="non_scheduled_container",
-                        resources=client.V1ResourceRequirements(limits=None, requests=None),
-                    ),
-                ],
-            ),
-        )
-
-        self.assertEqual(
-            pod_resources(pod),
-            api.PodUsageResources(
-                cpu=api.Resources(limit=float("inf"), requests=0.0),
-                memory=api.Resources(limit=float("inf"), requests=0.0),
-            ),
-        )
-
-    def test_parse_pod_info_pod_without_node(self) -> None:
+    def test_parse_pod_spec_pod_without_node(self) -> None:
         pod = client.V1Pod(
             spec=client.V1PodSpec(
                 host_network=None,
@@ -128,8 +108,10 @@ class TestPodWithNoNode(TestCase):
                 containers=[
                     client.V1Container(
                         name="non_scheduled_container",
+                        image_pull_policy="Always",
                     ),
                 ],
+                restart_policy="Always",
             ),
             status=client.V1PodStatus(
                 host_ip=None,
@@ -137,27 +119,21 @@ class TestPodWithNoNode(TestCase):
                 qos_class="BestEffort",
             ),
         )
-        pod_spec_api = parse_pod_info(pod)
+        pod_spec_api = pod_spec(pod)
 
-        assert pod_spec_api.pod_ip is None
         assert pod_spec_api.node is None
 
     def test_pod_containers_pod_without_node(self) -> None:
-        pod = client.V1Pod(
-            status=client.V1PodStatus(
-                container_statuses=None,
-            )
-        )
-
-        container_info_api_list = pod_containers(pod)
-
-        self.assertEqual(container_info_api_list, {})
+        """both initContainerStatuses and containerStatuses will be None, if a pod could not be
+        scheduled. In this case, the containers and init_containers of the api.Pod is empty"""
+        self.assertEqual(pod_containers(None), {})
 
     def test_pod_conditions_pod_without_node(self) -> None:
+        last_transition_time = datetime.datetime(2021, 10, 29, 9, 5, 52, tzinfo=tzutc())
         pod_condition_list = [
             client.V1PodCondition(
                 last_probe_time=None,
-                last_transition_time=datetime.datetime(2021, 10, 29, 9, 5, 52, tzinfo=tzutc()),
+                last_transition_time=last_transition_time,
                 message="0/1 nodes are available: 1 Too many pods.",
                 reason="Unschedulable",
                 status="False",
@@ -173,6 +149,7 @@ class TestPodWithNoNode(TestCase):
                     custom_type=None,
                     reason="Unschedulable",
                     detail="0/1 nodes are available: 1 Too many pods.",
+                    last_transition_time=convert_to_timestamp(last_transition_time),
                 )
             ],
         )
@@ -188,34 +165,31 @@ class TestPodStartUp(TestCase):
         """
         In this specific instance all of the fields expect for the scheduled field are missing.
         """
-        pod = client.V1Pod(
-            status=client.V1PodStatus(
-                container_statuses=[
-                    client.V1ContainerStatus(
-                        name="unready_container",
-                        ready=False,
-                        restart_count=0,
-                        container_id=None,
-                        image="gcr.io/kuar-demo/kuard-amd64:blue",
-                        image_id="",
-                        state=client.V1ContainerState(
-                            running=None,
-                            terminated=None,
-                            waiting=client.V1ContainerStateWaiting(
-                                message=None, reason="ContainerCreating"
-                            ),
-                        ),
-                    )
-                ],
-            ),
-        )
+        container_statuses = [
+            client.V1ContainerStatus(
+                name="unready_container",
+                ready=False,
+                restart_count=0,
+                container_id=None,
+                image="gcr.io/kuar-demo/kuard-amd64:blue",
+                image_id="",
+                state=client.V1ContainerState(
+                    running=None,
+                    terminated=None,
+                    waiting=client.V1ContainerStateWaiting(
+                        message=None, reason="ContainerCreating"
+                    ),
+                ),
+            )
+        ]
         self.assertEqual(
-            pod_containers(pod),
+            pod_containers(container_statuses),
             {
                 "unready_container": api.ContainerInfo(
                     id=None,
                     name="unready_container",
                     image="gcr.io/kuar-demo/kuard-amd64:blue",
+                    image_id="",
                     ready=False,
                     state=api.ContainerWaitingState(
                         type="waiting", reason="ContainerCreating", detail=None
@@ -264,14 +238,15 @@ class TestPodStartUp(TestCase):
                 ),
             ],
             phase=api.Phase.PENDING,
+            qos_class="burstable",
         )
         pod = Pod(
             uid=Mock(),
             status=pod_status,
             metadata=Mock(),
             spec=Mock(),
-            resources=Mock(),
             containers=Mock(),
+            init_containers=Mock(),
         )
         self.assertEqual(
             pod.conditions(),
@@ -311,11 +286,12 @@ class TestPodStartUp(TestCase):
                     )
                 ],
                 phase=api.Phase.PENDING,
+                qos_class="burstable",
             ),
             metadata=Mock(),
             spec=Mock(),
-            resources=Mock(),
             containers=Mock(),
+            init_containers=Mock(),
         )
 
         self.assertEqual(

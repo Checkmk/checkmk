@@ -32,7 +32,7 @@ from cmk.gui.page_menu import (
     PageMenuSearch,
     PageMenuTopic,
 )
-from cmk.gui.plugins.wato import get_search_expression, mode_registry, search_form, WatoMode
+from cmk.gui.plugins.wato.utils import get_search_expression, mode_registry, search_form, WatoMode
 from cmk.gui.plugins.wato.utils.main_menu import MainMenu, MenuItem
 from cmk.gui.table import table_element
 from cmk.gui.type_defs import PermissionName

@@ -5,15 +5,15 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.plugins.wato import (
-    CheckParameterRulespecWithItem,
-    rulespec_registry,
-    RulespecGroupCheckParametersStorage,
-)
 from cmk.gui.plugins.wato.check_parameters.utils import (
     get_free_used_dynamic_valuespec,
     match_dual_level_type,
     transform_filesystem_free,
+)
+from cmk.gui.plugins.wato.utils import (
+    CheckParameterRulespecWithItem,
+    rulespec_registry,
+    RulespecGroupCheckParametersStorage,
 )
 from cmk.gui.valuespec import Alternative, Dictionary, TextInput, Transform
 

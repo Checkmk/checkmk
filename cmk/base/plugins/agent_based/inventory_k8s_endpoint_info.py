@@ -11,6 +11,11 @@ from .agent_based_api.v1 import register, TableRow
 from .agent_based_api.v1.type_defs import InventoryResult
 from .utils.k8s import Subset
 
+########################################################################
+# NOTE: This inv plugin (and associated special agent) is deprecated and
+#       will be removed in Checkmk version 2.2.
+########################################################################
+
 #
 # There will be a new concept of kubernetes services which will
 # make this inventory obsolete, see CMK-2884

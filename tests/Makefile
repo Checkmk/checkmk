@@ -6,7 +6,7 @@ SHELL := /bin/bash -e
 SCRIPTS := ../scripts
 FIND_PYTHON_FILES := $(SCRIPTS)/find-python-files
 PIPENV := $(SCRIPTS)/run-pipenv
-PYTEST := $(PIPENV) run py.test -vv $(PYTEST_ARGS)
+PYTEST := $(PIPENV) run py.test $(PYTEST_ARGS)
 YAPF := $(PIPENV) run yapf
 BLACK  := $(SCRIPTS)/run-black
 THREE_TO_TWO := $(PIPENV) run 3to2
@@ -22,16 +22,16 @@ GCC_TOOLCHAIN := /opt/gcc-11.2.0
 AGENT_PLUGIN_UNIT_TEST_FILES := $(wildcard agent-plugin-unit/test_*.py)
 AGENT_PLUGIN_UNIT_TEST_FILES_PY2 := $(subst agent-plugin-unit,agent-plugin-unit/py2,$(AGENT_PLUGIN_UNIT_TEST_FILES))
 
-# TODO: Complete this list
-SHELL_FILES := \
-	agents/check_mk_agent.linux \
-	agents/check_mk_caching_agent.linux
+# TODO: this duplicity is silly.
+SHELL_FILES_ABS := $(shell realpath `grep -rl '^\#!/.*sh' ../{enterprise/,}agents 2>/dev/null`)
+SHELL_FILES_REL := $(shell cd ..; grep -rl '^\#!/.*sh' {enterprise/,}agents 2>/dev/null)
+
 
 # Due to https://github.com/pypa/pypi-support/issues/978, we need to disable Plugin tests for py2.6
 # until we have a feasible solution or we drop the support for 2.6 completly.
 PYTHON_VERSIONS := 2.7 3.3 3.4 3.5 3.6 3.7 3.8 3.9
 
-.PHONY: clean format-shell help prepare-node-modules prepare-protobuf-files prepare-playwright  bandit.ini \
+.PHONY: clean format-shell help prepare-protobuf-files prepare-playwright  bandit.ini \
 	$(foreach VERS,$(PYTHON_VERSIONS),test-agent-plugin-unit-py$(VERS)-docker) \
 	test-bandit test-composition test-composition-docker test-composition-docker-debug \
 	test-docker test-docker-docker test-format-python test-format-python-docker test-format-shell \
@@ -112,7 +112,7 @@ bandit.ini:
 	  echo ) > bandit.ini
 
 format-shell:
-	docker run --rm -v "$(realpath ..):/sh" -w /sh peterdavehello/shfmt shfmt -w -i 4 -ci $(SHELL_FILES)
+	docker run --rm -v "$(realpath ..):/sh" -w /sh peterdavehello/shfmt shfmt -w -i 4 -ci $(SHELL_FILES_REL)
 
 agent-plugin-unit/py2/test_%.py: agent-plugin-unit/test_%.py
 	mkdir -p "$(dir $@)"
@@ -151,9 +151,6 @@ test-bandit: bandit.ini
 # go and enable the medium/low checks.
 	$(BANDIT) -c ../bandit.yaml -r -lll --ini bandit.ini $(BANDIT_OUTPUT_ARGS)
 
-prepare-node-modules:
-	$(MAKE) -C .. node_modules/.bin/webpack
-
 prepare-protobuf-files:
 	$(MAKE) -C .. protobuf-files
 
@@ -161,13 +158,13 @@ prepare-playwright:
 	../scripts/run-pipenv run playwright install-deps chromium
 	../scripts/run-pipenv run playwright install chromium
 
-test-integration-docker-debug test-composition-docker-debug: prepare-node-modules
+test-integration-docker-debug test-composition-docker-debug:
 	$(PIPENV) run scripts/run-dockerized.py debug
 
 test-composition-docker:
 	$(PIPENV) run scripts/run-dockerized.py "test-composition"
 
-test-composition: prepare-node-modules
+test-composition:
 	$(PYTEST) -p no:cov -T composition $(realpath composition)
 
 test-docker-docker:
@@ -208,10 +205,13 @@ test-format-python-docker:
 	../scripts/run-in-docker.sh make --quiet test-format-python
 
 test-format-shell:
-	docker run --rm -v "$(realpath ..):/sh" -w /sh peterdavehello/shfmt shfmt -d -i 4 -ci $(SHELL_FILES)
+	docker run --rm -v "$(realpath ..):/sh" -w /sh peterdavehello/shfmt shfmt -d -i 4 -ci $(SHELL_FILES_REL)
 
 test-format-js:
 	cd ..; scripts/run-prettier --check --no-color --loglevel warn "{enterprise/web,web}/htdocs/js/**/*.js"
+
+test-type-js:
+	cd ..; npm run check-types
 
 test-format-js-docker:
 	../scripts/run-in-docker.sh make --quiet test-format-js
@@ -222,19 +222,19 @@ test-format-css:
 test-format-css-docker:
 	../scripts/run-in-docker.sh make --quiet test-format-css
 
-test-gui-crawl: prepare-node-modules prepare-playwright
+test-gui-crawl: prepare-playwright
 	$(PYTEST) -T gui_crawl --log-cli-level=INFO $(realpath gui_crawl/test_gui_crawl.py)
 
 test-gui-crawl-docker:
 	$(PIPENV) run scripts/run-dockerized.py "test-gui-crawl"
 
-test-xss-crawl: prepare-node-modules prepare-playwright
+test-xss-crawl: prepare-playwright
 	XSS_CRAWL=1 $(PYTEST) -T gui_crawl --log-cli-level=INFO $(realpath gui_crawl/test_gui_crawl.py)
 
 test-xss-crawl-docker:
 	$(PIPENV) run scripts/run-dockerized.py "test-xss-crawl"
 
-test-integration: prepare-node-modules
+test-integration:
 	CI=true $(PIPENV) run scripts/run-integration-test.py $(realpath integration)
 
 test-integration-docker:
@@ -247,7 +247,9 @@ test-mypy: prepare-protobuf-files
 	grep -v $$(realpath '../inventory') | \
 	`: files are only needed for pylint to understand the module hierarchy` \
 	grep -v $$(realpath -m '../enterprise/cmk/__init__.py') | \
-	grep -v $$(realpath -m '../enterprise/cmk/base/__init__.py') \
+	grep -v $$(realpath -m '../enterprise/cmk/base/__init__.py') | \
+	grep -v $$(realpath -m '../plus/cmk/__init__.py') | \
+	grep -v $$(realpath -m '../plus/cmk/base/__init__.py') \
 	) ; \
 	cd .. ; scripts/run-mypy $(MYPY_ADDOPTS) $(ADDITIONAL_MYPY_ARGS) $$PYTHON_FILES
 
@@ -270,12 +272,10 @@ test-pylint-docker:
 	../scripts/run-in-docker.sh make --quiet test-pylint
 
 test-shellcheck:
-	@CMK_DIR="$(realpath ..)" ; \
-	ENTERPRISE_DIR="$(realpath ../enterprise)" ; \
 	shellcheck \
+	        -P SCRIPTDIR \
 		$(SHELLCHECK_OUTPUT_ARGS) \
-		$$(grep -l '^#!/.*sh' $$CMK_DIR/agents/* $$CMK_DIR/agents/plugins/* $$CMK_DIR/agents/special/* 2>/dev/null) \
-		"$$ENTERPRISE_DIR/agents/mk-remote-alert-handler"
+		$(SHELL_FILES_ABS)
 
 test-unit: prepare-protobuf-files
 	$(PYTEST) \
@@ -285,6 +285,7 @@ test-unit: prepare-protobuf-files
 		../cmk/gui \
 		../cmk/special_agents \
 		../cmk/utils \
+		../agent-receiver \
 		unit
 
 test-unit-docker:
@@ -300,6 +301,7 @@ test-unit-resilience: prepare-protobuf-files
 		../cmk/gui \
 		../cmk/special_agents \
 		../cmk/utils \
+		../agent-receiver \
 	        -m "not non_resilient" \
 		unit
 
@@ -321,6 +323,7 @@ test-unit-coverage-html: prepare-protobuf-files
 		../cmk/gui \
 		../cmk/special_agents \
 		../cmk/utils \
+		../agent-receiver \
 		unit
 
 test-unit-sh:
@@ -360,13 +363,13 @@ test-unit-core:
 	cd ../enterprise/core/src && ./.f12
 
 test-cargo-check:
-	$(SCRIPTS)/run-cargo-command-in-projects check
+	$(SCRIPTS)/run-cargo-command-in-projects check --all-targets
 
 test-cargo-check-docker:
 	$(SCRIPTS)/run-in-docker.sh make test-cargo-check
 
 test-cargo-test:
-	$(SCRIPTS)/run-cargo-command-in-projects test
+	$(SCRIPTS)/run-cargo-command-in-projects test --all-targets
 
 test-cargo-test-docker:
 	$(SCRIPTS)/run-in-docker.sh make test-cargo-test
@@ -378,7 +381,7 @@ test-cargo-fmt-docker:
 	$(SCRIPTS)/run-in-docker.sh make test-cargo-fmt
 
 test-cargo-clippy:
-	$(SCRIPTS)/run-cargo-command-in-projects clippy
+	$(SCRIPTS)/run-cargo-command-in-projects clippy --all-targets
 
 test-cargo-clippy-docker:
 	$(SCRIPTS)/run-in-docker.sh make test-cargo-clippy

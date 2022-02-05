@@ -45,6 +45,7 @@ from typing import (
 import cmk.utils
 import cmk.utils.check_utils
 import cmk.utils.cleanup
+import cmk.utils.config_path
 import cmk.utils.debug
 import cmk.utils.migrated_check_variables
 import cmk.utils.paths
@@ -58,6 +59,7 @@ import cmk.utils.translations
 import cmk.utils.version as cmk_version
 from cmk.utils.caching import config_cache as _config_cache
 from cmk.utils.check_utils import maincheckify, section_name_of, unwrap_parameters
+from cmk.utils.config_path import ConfigPath, LATEST_CONFIG
 from cmk.utils.exceptions import MKGeneralException, MKIPAddressLookupError, MKTerminate
 from cmk.utils.http_proxy_config import http_proxy_config_from_user_setting, HTTPProxyConfig
 from cmk.utils.labels import LabelManager
@@ -108,8 +110,6 @@ from cmk.snmplib.type_defs import (  # noqa: F401 # pylint: disable=unused-impor
 )
 
 import cmk.core_helpers.cache as cache_file
-import cmk.core_helpers.config_path
-from cmk.core_helpers.config_path import ConfigPath, LATEST_CONFIG
 
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.autochecks as autochecks
@@ -151,6 +151,11 @@ ShadowHosts = Dict[HostName, Dict]
 AllClusters = Dict[HostName, List[HostName]]
 
 
+class ClusterCacheInfo(NamedTuple):
+    clusters_of: Dict[HostName, List[HostName]]
+    nodes_of: Dict[HostName, List[HostName]]
+
+
 class RRDConfig(TypedDict):
     """RRDConfig
     This typing might not be complete or even wrong, feel free to improve"""
@@ -169,7 +174,7 @@ DiscoveryCheckParameters = Dict
 
 class SpecialAgentConfiguration(NamedTuple):
     args: List[str]
-    # None makes the stdin of suprocess /dev/null
+    # None makes the stdin of subprocess /dev/null
     stdin: Optional[str]
 
 
@@ -182,11 +187,11 @@ SpecialAgentInfoFunction = Callable[
 HostCheckCommand = Union[None, str, Tuple[str, Union[int, str]]]
 PingLevels = Dict[str, Union[int, Tuple[float, float]]]
 
-# TODO: Improve this, the config generation uses it in a totally chaotic way.
+# TODO (sk): Make the type narrower: TypedDict isn't easy in the case - "too chaotic usage"(c) SP
 ObjectAttributes = Dict[str, Any]
 
 GroupDefinitions = Dict[str, str]
-RecurringDowntime = Dict[str, Union[int, str]]
+RecurringDowntime = Dict[str, Union[int, str]]  # TODO(sk): TypedDict here
 CheckInfo = Dict  # TODO: improve this type
 IPMICredentials = Dict[str, str]
 ManagementCredentials = Union[SNMPCredentials, IPMICredentials]
@@ -423,7 +428,7 @@ def _load_config(with_conf_d: bool, exclude_parents_mk: bool) -> None:
 
     host_storage_loaders = get_host_storage_loaders(config_storage_format)
     config_dir_path = Path(cmk.utils.paths.check_mk_config_dir)
-    for path in _get_config_file_paths(with_conf_d):
+    for path in get_config_file_paths(with_conf_d):
         # During parent scan mode we must not read in old version of parents.mk!
         if exclude_parents_mk and path.name == "parents.mk":
             continue
@@ -545,7 +550,7 @@ def _collect_parameter_rulesets_from_globals(global_dict: Dict[str, Any]) -> Non
 
 
 # Create list of all files to be included during configuration loading
-def _get_config_file_paths(with_conf_d: bool) -> List[Path]:
+def get_config_file_paths(with_conf_d: bool) -> List[Path]:
     list_of_files = [Path(cmk.utils.paths.main_config_file)]
     if with_conf_d:
         all_files = Path(cmk.utils.paths.check_mk_config_dir).rglob("*")
@@ -1180,7 +1185,10 @@ _old_active_check_service_descriptions = {
 
 
 def active_check_service_description(
-    hostname: HostName, active_check_name: ActiveCheckPluginName, params: Dict
+    hostname: HostName,
+    hostalias: str,
+    active_check_name: ActiveCheckPluginName,
+    params: Dict,
 ) -> ServiceName:
     if active_check_name not in active_check_info:
         return "Unimplemented check %s" % active_check_name
@@ -1194,7 +1202,7 @@ def active_check_service_description(
         act_info = active_check_info[active_check_name]
         description = act_info["service_description"](params)
 
-    description = description.replace("$HOSTNAME$", hostname)
+    description = description.replace("$HOSTNAME$", hostname).replace("$HOSTALIAS$", hostalias)
 
     return get_final_service_description(hostname, description)
 
@@ -1257,14 +1265,14 @@ def _checktype_ignored_for_host(
 def resolve_service_dependencies(
     *,
     host_name: HostName,
-    services: Sequence[cmk.base.check_utils.Service],
-) -> Sequence[cmk.base.check_utils.Service]:
+    services: Sequence[cmk.base.check_utils.ConfiguredService],
+) -> Sequence[cmk.base.check_utils.ConfiguredService]:
     if is_cmc():
         return services
 
     unresolved = [(s, set(service_depends_on(host_name, s.description))) for s in services]
 
-    resolved: List[cmk.base.check_utils.Service] = []
+    resolved: List[cmk.base.check_utils.ConfiguredService] = []
     while unresolved:
         resolved_descriptions = {service.description for service in resolved}
         newly_resolved = {
@@ -2002,8 +2010,10 @@ def convert_check_info() -> None:
         section_name = section_name_of(check_plugin_name)
 
         if not isinstance(info, dict):
-            # Convert check declaration from old style to new API
-            check_function, descr, has_perfdata, inventory_function = info
+            # Convert check declaration from old style to new API. We need some Kung Fu to
+            # explain this typing chaos to mypy, otherwise info has the funny type <nothing>.
+            old_skool_info: Any = info
+            check_function, descr, has_perfdata, inventory_function = old_skool_info
 
             scan_function = snmp_scan_functions.get(
                 check_plugin_name, snmp_scan_functions.get(section_name)
@@ -2423,9 +2433,11 @@ class HostConfig:
             self._config_cache.ruleset_matcher, hostname
         )
 
+        self.computed_datasources = cmk.utils.tags.compute_datasources(self.tag_groups)
+
         # Basic types
-        self.is_tcp_host: bool = self._config_cache.in_binary_hostlist(hostname, tcp_hosts)
-        self.is_snmp_host: bool = self._config_cache.in_binary_hostlist(hostname, snmp_hosts)
+        self.is_tcp_host: bool = self.computed_datasources.is_tcp
+        self.is_snmp_host: bool = self.computed_datasources.is_snmp
         self.is_usewalk_host: bool = self._config_cache.in_binary_hostlist(hostname, usewalk_hosts)
 
         if self.tag_groups["piggyback"] == "piggyback":
@@ -2444,8 +2456,8 @@ class HostConfig:
         )
 
         self.is_dual_host = self.is_tcp_host and self.is_snmp_host
-        self.is_all_agents_host = self.tag_groups["agent"] == "all-agents"
-        self.is_all_special_agents_host = self.tag_groups["agent"] == "special-agents"
+        self.is_all_agents_host = self.computed_datasources.is_all_agents_host
+        self.is_all_special_agents_host = self.computed_datasources.is_all_special_agents_host
 
         # IP addresses
         # Whether or not the given host is configured not to be monitored via IP
@@ -2603,12 +2615,12 @@ class HostConfig:
         return list(parent_candidates.intersection(self._config_cache.all_active_realhosts()))
 
     def agent_connection_mode(self) -> Literal["pull-agent", "push-agent"]:
-        mode = cmk_agent_connection.get(self.hostname, "pull-agent")
+        mode = self._explicit_host_attributes.get("cmk_agent_connection", "pull-agent")
         if mode == "pull-agent":
             return "pull-agent"
         if mode == "push-agent":
             return "push-agent"
-        raise NotImplementedError("unknown connection mode: {mode!r}")
+        raise NotImplementedError(f"unknown connection mode: {mode!r}")
 
     def snmp_config(self, ip_address: HostAddress) -> SNMPHostConfig:
         return SNMPHostConfig(
@@ -2623,9 +2635,12 @@ class HostConfig:
             ),
             bulk_walk_size_of=self._bulk_walk_size(),
             timing=self._snmp_timing(),
-            oid_range_limits=self._config_cache.host_extra_conf(
-                self.hostname, snmp_limit_oid_range
-            ),
+            oid_range_limits={
+                SectionName(name): rule
+                for name, rule in reversed(
+                    self._config_cache.host_extra_conf(self.hostname, snmp_limit_oid_range)
+                )
+            },
             snmpv3_contexts=self._config_cache.host_extra_conf(self.hostname, snmpv3_contexts),
             character_encoding=self._snmp_character_encoding(),
             is_usewalk_host=self.is_usewalk_host,
@@ -3031,7 +3046,7 @@ class HostConfig:
     @property
     def static_checks(
         self,
-    ) -> Sequence[Tuple[RulesetName, CheckPluginNameStr, Item, TimespecificParameterSet]]:
+    ) -> Sequence[Tuple[RulesetName, CheckPluginName, Item, TimespecificParameterSet]]:
         """Returns a table of all "manual checks" configured for this host"""
         matched = []
         for checkgroup_name in static_checks:
@@ -3047,7 +3062,7 @@ class HostConfig:
                 matched.append(
                     (
                         RulesetName(checkgroup_name),
-                        CheckPluginNameStr(checktype),
+                        CheckPluginName(maincheckify(checktype)),
                         None if item is None else str(item),
                         TimespecificParameterSet.from_parameters(params),
                     )
@@ -3163,9 +3178,12 @@ class HostConfig:
             ),
             bulk_walk_size_of=self._bulk_walk_size(),
             timing=self._snmp_timing(),
-            oid_range_limits=self._config_cache.host_extra_conf(
-                self.hostname, snmp_limit_oid_range
-            ),
+            oid_range_limits={
+                SectionName(name): rule
+                for name, rule in reversed(
+                    self._config_cache.host_extra_conf(self.hostname, snmp_limit_oid_range)
+                )
+            },
             snmpv3_contexts=self._config_cache.host_extra_conf(self.hostname, snmpv3_contexts),
             character_encoding=self._snmp_character_encoding(),
             is_usewalk_host=self.is_usewalk_host,
@@ -3443,7 +3461,9 @@ class ConfigCache:
         # Caches for nodes and clusters
         self._clusters_of_cache: Dict[HostName, List[HostName]] = {}
         self._nodes_of_cache: Dict[HostName, List[HostName]] = {}
+        self._initialize_host_config()
 
+    def _initialize_host_config(self) -> None:
         # Keep HostConfig instances created with the current configuration cache
         self._host_configs: Dict[HostName, HostConfig] = {}
 
@@ -3470,13 +3490,10 @@ class ConfigCache:
 
         It lazy initializes the host config object and caches the objects during the livetime
         of the ConfigCache."""
-        host_config = self._host_configs.get(hostname)
-        if host_config:
-            return host_config
+        with contextlib.suppress(KeyError):
+            return self._host_configs[hostname]
 
-        config_class = HostConfig if cmk_version.is_raw_edition() else CEEHostConfig
-        host_config = self._host_configs[hostname] = config_class(self, hostname)
-        return host_config
+        return self._host_configs.setdefault(hostname, HostConfig(self, hostname))
 
     def invalidate_host_config(self, hostname: HostName) -> None:
         try:
@@ -3818,7 +3835,7 @@ class ConfigCache:
 
     def get_autochecks_of(
         self, hostname: HostName
-    ) -> Sequence[cmk.base.check_utils.Service[TimespecificParameters]]:
+    ) -> Sequence[cmk.base.check_utils.ConfiguredService]:
         return self._autochecks_manager.get_autochecks_of(
             hostname,
             compute_check_parameters,
@@ -3943,6 +3960,9 @@ class ConfigCache:
             for name in hosts:
                 self._clusters_of_cache.setdefault(name, []).append(clustername)
             self._nodes_of_cache[clustername] = hosts
+
+    def get_cluster_cache_info(self) -> ClusterCacheInfo:
+        return ClusterCacheInfo(self._clusters_of_cache, self._nodes_of_cache)
 
     def clusters_of(self, hostname: HostName) -> List[HostName]:
         """Returns names of cluster hosts the host is a node of"""
@@ -4094,6 +4114,22 @@ def get_config_cache() -> ConfigCache:
 # configuration settings are not held in cmk.base.config namespace anymore.
 class CEEConfigCache(ConfigCache):
     """Encapsulates the CEE specific functionality"""
+
+    def _initialize_host_config(self) -> None:
+        # Keep HostConfig instances created with the current configuration cache
+        # This can be ignored for now -- it only is used privately as a cache, so the
+        # contravariance is not a problem here.
+        self._host_configs: Dict[HostName, "CEEHostConfig"] = {}  # type: ignore[assignment]
+
+    def get_host_config(self, hostname: HostName) -> "CEEHostConfig":
+        """Returns a HostConfig instance for the given host
+
+        It lazy initializes the host config object and caches the objects during the livetime
+        of the ConfigCache."""
+        with contextlib.suppress(KeyError):
+            return self._host_configs[hostname]
+
+        return self._host_configs.setdefault(hostname, CEEHostConfig(self, hostname))
 
     def rrd_config_of_service(
         self, hostname: HostName, description: ServiceName
@@ -4256,7 +4292,3 @@ class CEEHostConfig(HostConfig):
         return self._config_cache.host_extra_conf(
             self.hostname, agent_config.get("lnx_remote_alert_handlers", [])
         )
-
-
-def get_microcore_config_format() -> str:
-    return cmk.base.config.microcore_config_format

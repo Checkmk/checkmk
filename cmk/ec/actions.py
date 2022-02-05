@@ -217,7 +217,7 @@ def _send_email(config: Config, to: str, subject: str, body: str, logger: Logger
     if config["debug_rules"]:
         logger.info("  Executing: %s" % " ".join(x.decode("utf-8") for x in command_utf8))
 
-    p = subprocess.Popen(
+    p = subprocess.Popen(  # pylint:disable=consider-using-with
         command_utf8,
         close_fds=True,
         stdout=subprocess.PIPE,
@@ -250,7 +250,7 @@ def _execute_script(
 
     # Traps can contain 0-Bytes. We need to remove this from the script
     # body. Otherwise suprocess.Popen will crash.
-    p = subprocess.Popen(
+    p = subprocess.Popen(  # pylint:disable=consider-using-with
         ["/bin/bash"],
         stdin=subprocess.PIPE,
         stdout=subprocess.PIPE,
@@ -348,7 +348,7 @@ def do_notify(
         ["%s=%s\n" % (varname, value.replace("\n", "\\n")) for (varname, value) in context.items()]
     )
 
-    p = subprocess.Popen(
+    p = subprocess.Popen(  # pylint:disable=consider-using-with
         ["cmk", "--notify", "stdin"],
         stdin=subprocess.PIPE,
         stdout=subprocess.PIPE,

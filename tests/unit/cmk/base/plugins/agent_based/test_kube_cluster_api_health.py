@@ -45,6 +45,8 @@ from cmk.base.plugins.agent_based.utils.k8s import APIHealth, ClusterInfo, Healt
         ),
     ],
 )
-def test_check_k8s_node_count_default_params(cluster_details: ClusterInfo, expected_result) -> None:
+def test_check_kube_node_count_default_params(
+    cluster_details: ClusterInfo, expected_result
+) -> None:
     result = list(check(cluster_details))
     assert result == expected_result

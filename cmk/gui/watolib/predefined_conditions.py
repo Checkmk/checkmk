@@ -5,14 +5,18 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from pathlib import Path
+from typing import Any
 
 import cmk.gui.userdb as userdb
 from cmk.gui.globals import user
 from cmk.gui.watolib.simple_config_file import WatoSimpleConfigFile
 from cmk.gui.watolib.utils import wato_root_dir
 
+# TODO: Next replace with TypedDict
+PredefinedConditionSpec = dict[str, Any]
 
-class PredefinedConditionStore(WatoSimpleConfigFile):
+
+class PredefinedConditionStore(WatoSimpleConfigFile[PredefinedConditionSpec]):
     def __init__(self):
         super().__init__(
             config_file_path=Path(wato_root_dir()) / "predefined_conditions.mk",

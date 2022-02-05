@@ -67,6 +67,7 @@ test_neb_SOURCES = \
     test/test_RegExp.cc \
     test/test_StringColumn.cc \
     test/test_StringUtil.cc \
+    test/test_Table.cc \
     test/test_TimeColumn.cc \
     test/test_utilities.cc
 $(test_neb_SOURCES): $(ASIO_INCLUDE) $(GOOGLETEST_INCLUDE) $(RRDTOOL_VERSION)
@@ -192,14 +193,14 @@ $(liblivestatus_a_SOURCES): $(ASIO_INCLUDE) $(RRDTOOL_VERSION)
 all-packaging-local: Makefile $(bin_PROGRAMS) $(pkglib_LIBRARIES) all-local
 
 $(ASIO_INCLUDE): $(ASIO_VERSION)
-	mkdir -p $(ASIO_INCLUDE)
-	rsync -a --delete --exclude=Makefile.am --exclude=.gitignore $(ASIO_VERSION)/asio/include/ $(ASIO_INCLUDE)
-	patch -p0 < $(PACKAGE_ASIO)/asio.diff
+	mkdir -p $@
+	rsync -a --delete --exclude=Makefile.am --exclude=.gitignore $</asio/include/ $@
 	touch $@
 
-$(ASIO_VERSION): $(PACKAGE_ASIO)/$(ASIO_VERSION).tar.gz
+$(ASIO_VERSION): $(PACKAGE_ASIO)/$(ASIO_VERSION).tar.gz $(PACKAGE_ASIO)/asio.diff
 	$(RM) -r $@
 	tar xzf $<
+	patch -p0 < $(PACKAGE_ASIO)/asio.diff
 	touch $@
 
 $(RRDTOOL_VERSION):
@@ -216,7 +217,6 @@ $(RRDTOOL_VERSION):
 $(GOOGLETEST_INCLUDE): $(GOOGLETEST_VERSION)/Makefile
 # NOTE: We don't want the googletest files in our compile_commands.json!
 	$(MAKE) -C $(GOOGLETEST_VERSION) install > /dev/null
-	patch -p0 < $(PACKAGE_GOOGLETEST)/googletest.diff
 	touch $(GOOGLETEST_INCLUDE) $(LIBS_DIR)/libgmock.a $(LIBS_DIR)/libgmock_main.a $(LIBS_DIR)/libgtest.a $(LIBS_DIR)/libgtest_main.a
 # See: https://www.gnu.org/software/automake/manual/html_node/Multiple-Outputs.html
 $(LIBS_DIR)/libgmock.a: $(GOOGLETEST_INCLUDE)
@@ -233,9 +233,10 @@ $(GOOGLETEST_VERSION)/Makefile: $(GOOGLETEST_VERSION)/CMakeLists.txt
         .
 	touch $@
 
-$(GOOGLETEST_VERSION)/CMakeLists.txt: $(PACKAGE_GOOGLETEST)/$(GOOGLETEST_VERSION).tar.gz
+$(GOOGLETEST_VERSION)/CMakeLists.txt: $(PACKAGE_GOOGLETEST)/$(GOOGLETEST_VERSION).tar.gz $(PACKAGE_GOOGLETEST)/googletest.diff
 	$(RM) -r $(GOOGLETEST_VERSION)
 	tar xzf $<
+	patch -p0 < $(PACKAGE_GOOGLETEST)/googletest.diff
 	touch $@
 
 livestatus.o: $(liblivestatus_a_OBJECTS)

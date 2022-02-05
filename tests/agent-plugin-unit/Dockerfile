@@ -22,10 +22,8 @@ RUN : \
 COPY --from=python:3.9-slim /usr/local/lib/python3.9/distutils optional_file* /usr/lib/python3.9/distutils
 
 RUN \
-    if [ "$PYTHON_VERSION" = "2.7" ] || [ "$PYTHON_VERSION" = "2.6" ] || [ "$PYTHON_VERSION" = "3.4" ] || [ "$PYTHON_VERSION" = "3.3" ]; then \
-    GET_PIP_URL="https://bootstrap.pypa.io/pip/$PYTHON_VERSION/get-pip.py" ; \
-    elif [ "$PYTHON_VERSION" = "3.5" ]; then \
-    GET_PIP_URL="https://bootstrap.pypa.io/pip/3.4/get-pip.py" ; \
+    if [ "$PYTHON_VERSION" = "2.7" ] || [ "$PYTHON_VERSION" = "2.6" ] || [ "$PYTHON_VERSION" = "3.3" ] || [ "$PYTHON_VERSION" = "3.4" ] || [ "$PYTHON_VERSION" = "3.5" ] || [ "$PYTHON_VERSION" = "3.6" ]; then \
+        GET_PIP_URL="https://bootstrap.pypa.io/pip/$PYTHON_VERSION/get-pip.py" ; \
     else \
     GET_PIP_URL="https://bootstrap.pypa.io/get-pip.py" ; \
     fi && \

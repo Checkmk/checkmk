@@ -46,7 +46,7 @@ from cmk.gui.page_menu import (
     PageMenuTopic,
 )
 from cmk.gui.pages import Page, page_registry
-from cmk.gui.plugins.wato import mode_registry, redirect, WatoMode
+from cmk.gui.plugins.wato.utils import mode_registry, redirect, WatoMode
 from cmk.gui.sites import get_activation_site_choices, get_site_config, site_is_local
 from cmk.gui.type_defs import ActionResult
 from cmk.gui.utils.urls import makeuri, makeuri_contextless
@@ -89,7 +89,13 @@ class ModeDiagnostics(WatoMode):
 
     def _get_diagnostics_parameters(self) -> Optional[DiagnosticsParameters]:
         if self._collect_dump:
-            return self._vs_diagnostics().from_html_vars("diagnostics")
+            params = self._vs_diagnostics().from_html_vars("diagnostics")
+            return {
+                "site": params["site"],
+                "general": params["general"],
+                "opt_info": params["opt_info"],
+                "comp_specific": params["comp_specific"],
+            }
         return None
 
     def title(self) -> str:

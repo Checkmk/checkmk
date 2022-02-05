@@ -40,5 +40,12 @@ test_run_remote_plugins() {
     assertEquals "${expected}" "$(run_remote_plugins "${CONFIGFILE}")"
 }
 
+test__mrpe_get_interval(){
+    assertEquals "132" "$(_mrpe_get_interval "(interval=132) some command")"
+    assertEquals "132" "$(_mrpe_get_interval "(foo=true:interval=132:bar=no) some command")"
+    assertEquals "" "$(_mrpe_get_interval "(foobar=132) some command")"
+    assertEquals "" "$(_mrpe_get_interval "some command")"
+}
+
 # shellcheck disable=SC1090
 . "$UNIT_SH_SHUNIT2"

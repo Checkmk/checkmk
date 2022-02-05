@@ -5,7 +5,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.plugins.metrics import graph_info, metric_info
+from cmk.gui.plugins.metrics.utils import graph_info, metric_info
+
+###########################################################################
+# NOTE: These metrics (and associated special agent/checks) are deprecated and
+#       will be removed in Checkmk version 2.2.
+###########################################################################
+
 
 # .
 #   .--Metrics-------------------------------------------------------------.
@@ -26,42 +32,6 @@ metric_info["k8s_nodes"] = {  # legacy kubernetes checks
     "title": _("Nodes"),
     "unit": "count",
     "color": "11/a",
-}
-
-metric_info["k8s_node_count_worker"] = {
-    "title": _("Worker nodes"),
-    "unit": "count",
-    "color": "14/a",
-}
-
-metric_info["k8s_node_count_control_plane"] = {
-    "title": _("Control plane nodes"),
-    "unit": "count",
-    "color": "42/a",
-}
-
-metric_info["k8s_node_container_count_running"] = {
-    "title": _("Running node containers"),
-    "unit": "count",
-    "color": "35/a",
-}
-
-metric_info["k8s_node_container_count_waiting"] = {
-    "title": _("Waiting node containers"),
-    "unit": "count",
-    "color": "22/a",
-}
-
-metric_info["k8s_node_container_count_terminated"] = {
-    "title": _("Terminated node containers"),
-    "unit": "count",
-    "color": "15/a",
-}
-
-metric_info["k8s_node_container_count_total"] = {
-    "title": _("Total node containers"),
-    "unit": "count",
-    "color": "42/a",
 }
 
 metric_info["k8s_pods_request"] = {
@@ -232,6 +202,19 @@ metric_info["k8s_daemon_pods_unavailable"] = {
     "color": "14/a",
 }
 
+metric_info["ready_replicas"] = {
+    "title": _("Ready replicas"),
+    "unit": "",
+    "color": "21/a",
+}
+
+metric_info["total_replicas"] = {
+    "title": _("Total replicas"),
+    "unit": "",
+    "color": "35/a",
+}
+
+
 # .
 #   .--Graphs--------------------------------------------------------------.
 #   |                    ____                 _                            |
@@ -305,24 +288,14 @@ graph_info["k8s_pod_container"] = {
     ],
 }
 
-graph_info["k8s_node_count"] = {
-    "title": _("Nodes"),
-    "metrics": [
-        ("k8s_node_count_control_plane", "stack"),
-        ("k8s_node_count_worker", "stack"),
-    ],
-}
 
-graph_info["k8s_node_container_count"] = {
-    "title": _("Node Containers"),
+graph_info["replicas"] = {
+    "title": _("Replicas"),
     "metrics": [
-        ("k8s_node_container_count_running", "stack"),
-        ("k8s_node_container_count_waiting", "stack"),
-        ("k8s_node_container_count_terminated", "stack"),
-        ("k8s_node_container_count_total", "line"),
+        ("ready_replicas", "area"),
+        ("total_replicas", "line"),
     ],
     "scalars": [
-        "k8s_node_container_count_total:warn",
-        "k8s_node_container_count_total:crit",
+        "ready_replicas:crit",
     ],
 }

@@ -25,7 +25,7 @@ from cmk.gui.permissions import (
     permission_section_registry,
     PermissionSection,
 )
-from cmk.gui.plugins.views import (
+from cmk.gui.plugins.views.utils import (
     Command,
     command_group_registry,
     command_registry,
@@ -1000,7 +1000,7 @@ class CommandScheduleDowntimes(Command):
             html.button("_downrange__%s" % time_range["end"], _u(time_range["title"]))
         if what != "aggr" and user.may("action.remove_all_downtimes"):
             html.write_text(" &nbsp; - &nbsp;")
-            html.button("_down_remove", _("Remove all"))
+            html.button("_down_remove", _("Remove all"), formnovalidate=True)
         html.close_div()
 
         if self._adhoc_downtime_configured():

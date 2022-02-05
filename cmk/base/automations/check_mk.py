@@ -22,10 +22,9 @@ from typing import Any, cast, Dict, List, Mapping, Optional, Sequence, Tuple, Un
 import cmk.utils.debug
 import cmk.utils.log as log
 import cmk.utils.man_pages as man_pages
-from cmk.utils.check_utils import maincheckify
 from cmk.utils.diagnostics import deserialize_cl_parameters, DiagnosticsCLParameters
 from cmk.utils.encoding import ensure_str_with_fallback
-from cmk.utils.exceptions import MKBailOut, MKGeneralException, OnError
+from cmk.utils.exceptions import MKBailOut, MKGeneralException, MKSNMPError, OnError
 from cmk.utils.labels import DiscoveredHostLabelsStore
 from cmk.utils.macros import replace_macros_in_str
 from cmk.utils.parameters import TimespecificParameters
@@ -84,13 +83,12 @@ import cmk.base.notify as notify
 import cmk.base.parent_scan
 import cmk.base.plugin_contexts as plugin_contexts
 import cmk.base.sources as sources
-from cmk.base.autochecks import AutocheckServiceWithNodes
+from cmk.base.autochecks import AutocheckEntry, AutocheckServiceWithNodes
 from cmk.base.automations import Automation, automations, MKAutomationError
-from cmk.base.check_utils import AutocheckService
 from cmk.base.core import CoreAction, do_restart
 from cmk.base.core_factory import create_core
 from cmk.base.diagnostics import DiagnosticsDump
-from cmk.base.discovered_labels import HostLabel, ServiceLabel
+from cmk.base.discovered_labels import HostLabel
 
 HistoryFile = str
 HistoryFilePair = Tuple[HistoryFile, HistoryFile]
@@ -220,7 +218,9 @@ class AutomationTryDiscovery(Automation):
 
     def _execute_discovery(
         self, args: List[str]
-    ) -> Tuple[discovery.CheckPreviewTable, discovery.QualifiedDiscovery[HostLabel]]:
+    ) -> Tuple[
+        Sequence[automation_results.CheckPreviewEntry], discovery.QualifiedDiscovery[HostLabel]
+    ]:
 
         use_cached_snmp_data = False
         if args[0] == "@noscan":
@@ -278,20 +278,16 @@ class AutomationSetAutochecks(DiscoveryAutomation):
         # Fix data from version <2.0
         new_services: List[AutocheckServiceWithNodes] = []
         for (raw_check_plugin_name, item), (
-            descr,
+            _descr,
             params,
             raw_service_labels,
             found_on_nodes,
         ) in _transform_pre_20_items(new_items).items():
             check_plugin_name = CheckPluginName(raw_check_plugin_name)
 
-            service_labels = {
-                name: ServiceLabel(name, value) for name, value in raw_service_labels.items()
-            }
-
             new_services.append(
                 AutocheckServiceWithNodes(
-                    AutocheckService(check_plugin_name, item, descr, params, service_labels),
+                    AutocheckEntry(check_plugin_name, item, params, raw_service_labels),
                     found_on_nodes,
                 )
             )
@@ -505,33 +501,33 @@ class AutomationRenameHosts(Automation):
         actions = []
 
         # Temporarily stop processing of performance data
-        npcd_running = os.path.exists(omd_root + "/tmp/pnp4nagios/run/npcd.pid")
+        npcd_running = (omd_root / "tmp/pnp4nagios/run/npcd.pid").exists()
         if npcd_running:
             os.system("omd stop npcd >/dev/null 2>&1 </dev/null")
 
-        rrdcache_running = os.path.exists(omd_root + "/tmp/run/rrdcached.sock")
+        rrdcache_running = (omd_root / "tmp/run/rrdcached.sock").exists()
         if rrdcache_running:
             os.system("omd stop rrdcached >/dev/null 2>&1 </dev/null")
 
         try:
             # Fix pathnames in XML files
             self.rename_host_in_files(
-                os.path.join(omd_root, "var/pnp4nagios/perfdata", oldname, "*.xml"),
+                str(omd_root / "var/pnp4nagios/perfdata" / oldname / "*.xml"),
                 "/perfdata/%s/" % oldregex,
                 "/perfdata/%s/" % newname,
             )
 
             # RRD files
-            if self._rename_host_dir(omd_root + "/var/pnp4nagios/perfdata", oldname, newname):
+            if self._rename_host_dir(str(omd_root / "var/pnp4nagios/perfdata"), oldname, newname):
                 actions.append("rrd")
 
             # RRD files
-            if self._rename_host_dir(omd_root + "/var/check_mk/rrd", oldname, newname):
+            if self._rename_host_dir(str(omd_root / "var/check_mk/rrd"), oldname, newname):
                 actions.append("rrd")
 
             # entries of rrdcached journal
             if self.rename_host_in_files(
-                os.path.join(omd_root, "var/rrdcached/rrd.journal.*"),
+                str(omd_root / "var/rrdcached/rrd.journal.*"),
                 "/(perfdata|rrd)/%s/" % oldregex,
                 "/\\1/%s/" % newname,
                 extended_regex=True,
@@ -572,7 +568,9 @@ class AutomationRenameHosts(Automation):
             # Create a file "renamed_hosts" with the information about the
             # renaming of the hosts. The core will honor this file when it
             # reads the status file with the saved state.
-            open(var_dir + "/core/renamed_hosts", "w").write("%s\n%s\n" % (oldname, newname))
+            open(var_dir + "/core/renamed_hosts", "w").write(  # pylint:disable=consider-using-with
+                "%s\n%s\n" % (oldname, newname)
+            )
             actions.append("retention")
 
         # NagVis maps
@@ -636,10 +634,10 @@ s/(HOST|SERVICE) NOTIFICATION: ([^;]+);%(old)s;/\1 NOTIFICATION: \2;%(new)s;/
         handled_files: List[str] = []
 
         command = ["sed", "-ri", "--file=/dev/fd/0"]
-        p = subprocess.Popen(
+        p = subprocess.Popen(  # pylint:disable=consider-using-with
             command + file_paths,
             stdin=subprocess.PIPE,
-            stdout=open(os.devnull, "w"),
+            stdout=open(os.devnull, "w"),  # pylint:disable=consider-using-with
             stderr=subprocess.STDOUT,
             close_fds=True,
         )
@@ -659,7 +657,7 @@ s/(HOST|SERVICE) NOTIFICATION: ([^;]+);%(old)s;/\1 NOTIFICATION: \2;%(new)s;/
             extended = ["-r"] if extended_regex else []
             subprocess.call(
                 ["sed", "-i"] + extended + ["s@%s@%s@" % (old, new)] + paths,
-                stderr=open(os.devnull, "w"),
+                stderr=open(os.devnull, "w"),  # pylint:disable=consider-using-with
             )
             return True
 
@@ -714,15 +712,13 @@ class AutomationAnalyseServices(Automation):
         # 1. Manual checks
         # If we used the check table here, we would end up with the
         # *effective* parameters, these are the *configured* ones.
-        for checkgroup_name, checktype, item, params in host_config.static_checks:
-            # TODO (mo): centralize maincheckify: CMK-4295
-            check_plugin_name = CheckPluginName(maincheckify(checktype))
+        for checkgroup_name, check_plugin_name, item, params in host_config.static_checks:
             descr = config.service_description(hostname, check_plugin_name, item)
             if descr == servicedesc:
                 return {
                     "origin": "static",
                     "checkgroup": checkgroup_name,
-                    "checktype": checktype,
+                    "checktype": str(check_plugin_name),
                     "item": item,
                     "parameters": TimespecificParameters((params,)).preview(
                         cmk.base.core.timeperiod_active
@@ -754,7 +750,7 @@ class AutomationAnalyseServices(Automation):
             for plugin_name, entries in host_config.active_checks:
                 for active_check_params in entries:
                     description = config.active_check_service_description(
-                        hostname, plugin_name, active_check_params
+                        hostname, host_config.alias, plugin_name, active_check_params
                     )
                     if description == servicedesc:
                         return {
@@ -805,12 +801,7 @@ class AutomationAnalyseServices(Automation):
                 "checktype": str(plugin.name),
                 "checkgroup": str(plugin.check_ruleset_name),
                 "item": service.item,
-                # Putting service.parameters here is wrong.
-                # servce.parameters here contains the computed check parameters.
-                # Those may be timespecific, but not yet resolved.
-                # In order to show the "discovered" parameters here, we must have a
-                # *Autocheck*Service (not a general Service) instance.
-                "inv_parameters": "not available in this view",
+                "inv_parameters": service.discovered_parameters,
                 "factory_settings": plugin.check_default_parameters,
                 # effective parameters:
                 "parameters": service.parameters.preview(cmk.base.core.timeperiod_active),
@@ -953,13 +944,14 @@ class AutomationDeleteHostsKnownRemote(ABCDeleteHosts, Automation):
             "%s/%s" % (counters_dir, hostname),
             "%s/%s" % (tcp_cache_dir, hostname),
             "%s/persisted/%s" % (var_dir, hostname),
+            "%s/inventory/%s" % (var_dir, hostname),
+            "%s/inventory/%s.gz" % (var_dir, hostname),
         ]
 
     def _delete_host_files(self, hostname: HostName) -> None:
         """
         The following locations are skipped on local sites for hosts only known
         on remote sites:
-        - var/check_mk/inventory
         - var/check_mk/agent_deployment
         - var/check_mk/agents
         """
@@ -1023,14 +1015,14 @@ class AutomationRestart(Automation):
 
     def _time_of_last_core_restart(self) -> float:
         if config.monitoring_core == "cmc":
-            pidfile_path = omd_root + "/tmp/run/cmc.pid"
+            pidfile_path = omd_root / "tmp/run/cmc.pid"
         else:
-            pidfile_path = omd_root + "/tmp/lock/nagios.lock"
+            pidfile_path = omd_root / "tmp/lock/nagios.lock"
 
-        if os.path.exists(pidfile_path):
-            return os.stat(pidfile_path).st_mtime
-
-        return 0.0
+        try:
+            return pidfile_path.stat().st_mtime
+        except FileNotFoundError:
+            return 0.0
 
 
 automations.register(AutomationRestart())
@@ -1280,6 +1272,10 @@ class AutomationDiagHost(Automation):
                 )
 
             if test.startswith("snmp"):
+                if config.simulation_mode:
+                    raise MKSNMPError(
+                        "Simulation mode enabled. Not trying to contact snmp datasource"
+                    )
                 return automation_results.DiagHostResult(
                     *self._execute_snmp(
                         test,
@@ -1313,7 +1309,7 @@ class AutomationDiagHost(Automation):
 
     def _execute_ping(self, host_config: config.HostConfig, ipaddress: str) -> Tuple[int, str]:
         base_cmd = "ping6" if host_config.is_ipv6_primary else "ping"
-        p = subprocess.Popen(
+        p = subprocess.Popen(  # pylint:disable=consider-using-with
             [base_cmd, "-A", "-i", "0.2", "-c", "2", "-W", "5", ipaddress],
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
@@ -1370,7 +1366,7 @@ class AutomationDiagHost(Automation):
     ) -> Tuple[int, str]:
         family_flag = "-6" if host_config.is_ipv6_primary else "-4"
         try:
-            p = subprocess.Popen(
+            p = subprocess.Popen(  # pylint:disable=consider-using-with
                 ["traceroute", family_flag, "-n", ipaddress],
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
@@ -1542,7 +1538,9 @@ class AutomationActiveCheck(Automation):
         # (used e.g. by check_http)
         with plugin_contexts.current_host(hostname):
             for params in dict(host_config.active_checks).get(plugin, []):
-                description = config.active_check_service_description(hostname, plugin, params)
+                description = config.active_check_service_description(
+                    hostname, host_config.alias, plugin, params
+                )
                 if description != item:
                     continue
 
@@ -1562,7 +1560,7 @@ class AutomationActiveCheck(Automation):
 
     def _load_resource_file(self, macros: Dict[str, str]) -> None:
         try:
-            for line in open(omd_root + "/etc/nagios/resource.cfg"):
+            for line in (omd_root / "etc/nagios/resource.cfg").open():
                 line = line.strip()
                 if not line or line[0] == "#":
                     continue

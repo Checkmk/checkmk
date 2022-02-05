@@ -11,8 +11,7 @@
 # shellcheck disable=SC2034
 CMK_VERSION="2.1.0i1"
 
-if which omreport >/dev/null
-then
+if command -v omreport >/dev/null; then
     echo "<<<dell_om_vdisks>>>"
     omreport storage vdisk
 fi

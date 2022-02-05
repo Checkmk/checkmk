@@ -852,7 +852,6 @@ def get_graph_template(template_id: str) -> GraphTemplate:
 def generic_graph_template(metric_name: str) -> GraphTemplate:
     return {
         "id": "METRIC_" + metric_name,
-        "title": metric_name,
         "metrics": [
             (metric_name, "area"),
         ],

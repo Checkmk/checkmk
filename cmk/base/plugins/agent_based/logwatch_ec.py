@@ -407,9 +407,9 @@ def logwatch_forward_messages(
     syslog_messages: Sequence[SyslogMessage],
 ) -> LogwatchFordwardResult:
     if not method:
-        method = cmk.utils.paths.omd_root + "/tmp/run/mkeventd/eventsocket"
+        method = str(cmk.utils.paths.omd_root / "tmp/run/mkeventd/eventsocket")
     elif isinstance(method, str) and method == "spool:":
-        method += cmk.utils.paths.omd_root + "/var/mkeventd/spool"
+        method += str(cmk.utils.paths.omd_root / "var/mkeventd/spool")
 
     if isinstance(method, tuple):
         return logwatch_forward_tcp(method, syslog_messages, logwatch_spool_path())

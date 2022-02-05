@@ -4,6 +4,11 @@ catalog: containerization/kubernetes
 license: GPL
 distribution: check_mk
 description:
+ This check and the associated special agent (agent_kubernetes) are deprecated
+ and will be removed in Checkmk version 2.2.0.
+
+ Please configure the new special agent using the "Kubernetes" ruleset.
+
  This check monitors the pods' memory usage inside a namespace of a Kubernetes node.
 
 item:

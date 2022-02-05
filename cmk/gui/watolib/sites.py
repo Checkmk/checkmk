@@ -7,7 +7,6 @@
 import os
 import re
 import time
-from pathlib import Path
 from typing import Any, NamedTuple, Type
 
 from livestatus import SiteConfigurations, SiteId
@@ -722,7 +721,7 @@ def _update_distributed_wato_file(sites):
             distributed = True
         if site_is_local(siteid):
             cmk.gui.watolib.activate_changes.create_distributed_wato_files(
-                base_dir=Path(cmk.utils.paths.omd_root),
+                base_dir=cmk.utils.paths.omd_root,
                 site_id=siteid,
                 is_remote=False,
             )
@@ -792,7 +791,7 @@ class AutomationPushSnapshot(AutomationCommand):
             return cmk.gui.watolib.activate_changes.apply_pre_17_sync_snapshot(
                 api_request.site_id,
                 api_request.tar_content,
-                Path(cmk.utils.paths.omd_root),
+                cmk.utils.paths.omd_root,
                 cmk.gui.watolib.activate_changes.get_replication_paths(),
             )
 

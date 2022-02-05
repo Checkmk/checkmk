@@ -8,7 +8,7 @@
 
 from logging import getLogger
 
-from cmk.gui.modules import load_plugins
+from cmk.gui import main_modules
 from cmk.gui.utils.script_helpers import gui_context
 from cmk.gui.watolib.search import build_index_background
 
@@ -16,7 +16,7 @@ from cmk.gui.watolib.search import build_index_background
 def main():
     logger = getLogger("init-redis")
     try:
-        load_plugins()
+        main_modules.load_plugins()
         with gui_context():
             # the redis unix socket might not yet be open when the background process is launched, therefore, we allow
             # for several attempts (sleep up to 6 * 5s = 30s at most)

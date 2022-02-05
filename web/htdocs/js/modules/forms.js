@@ -69,7 +69,10 @@ function enable_label_input_fields(container) {
                 let label_key = add_label.value.split(":", 1)[0];
                 let key_error_msg = "Only one value per KEY can be used at a time.";
                 if (tagify.settings.maxTags == 1) {
-                    let existing_tags = document.querySelectorAll(".tagify__tag-text");
+                    let label_type = element.getAttribute("class");
+                    let existing_tags = document.querySelectorAll(
+                        `.tagify.${label_type.replace(" ", ".")} .tagify__tag-text`
+                    );
                     let existing_keys_array = Array.prototype.map.call(existing_tags, function (x) {
                         return x.textContent.split(":")[0];
                     });

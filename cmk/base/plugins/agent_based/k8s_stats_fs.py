@@ -12,6 +12,11 @@ from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
 from .utils.df import df_check_filesystem_single, FILESYSTEM_DEFAULT_LEVELS
 from .utils.k8s import Filesystem, Section, to_filesystem
 
+###########################################################################
+# NOTE: This check (and associated special agent) is deprecated and will be
+#       removed in Checkmk version 2.2.
+###########################################################################
+
 
 def discover_k8s_stats_fs(section: Section) -> DiscoveryResult:
     """

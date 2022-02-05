@@ -187,7 +187,7 @@ def backend_fixture(request, snmp_data_dir):
         is_snmpv2or3_without_bulkwalk_host=True,
         bulk_walk_size_of=10,
         timing={},
-        oid_range_limits=[],
+        oid_range_limits={},
         snmpv3_contexts=[],
         character_encoding=None,
         is_usewalk_host=backend is StoredWalkSNMPBackend,

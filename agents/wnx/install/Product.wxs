@@ -547,7 +547,17 @@ just to signal that real build script was not called -->
               DiskId="1" />
       </Component>
 
-      <Component Id="service32"
+        <Component Id="cmk_agent_ctl"
+                   Guid="{9279D3A4-FEE5-4598-95C0-96CA4400A1E9}">
+            <File Id="cmk_agent_ctl.exe"
+                  Source="..\..\..\artefacts\cmk-agent-ctl.exe"
+                  Name="cmk-agent-ctl.exe"
+                  KeyPath="yes"
+                  Checksum="yes"
+                  DiskId="1" />
+        </Component>
+
+        <Component Id="service32"
                  Guid="{3343809F-E2EF-4D9F-9FA5-AD1AC0968916}">
         <File Id="check_mk_svc32.exe"
               Source="..\build\check_mk_service\Win32\Release\check_mk_service32.exe"

@@ -272,7 +272,7 @@ class Status(Table):
 
     last_command_check = Column(
         'last_command_check',
-        col_type='int',
+        col_type='time',
         description='The time of the last check for a command as UNIX timestamp, also 0 for Check_MK Micro Core',
     )
     """The time of the last check for a command as UNIX timestamp, also 0 for Check_MK Micro Core"""
@@ -370,7 +370,7 @@ class Status(Table):
 
     mk_inventory_last = Column(
         'mk_inventory_last',
-        col_type='int',
+        col_type='time',
         description='The timestamp of the last time a host has been inventorized by Check_MK HW/SW-Inventory',
     )
     """The timestamp of the last time a host has been inventorized by Check_MK HW/SW-Inventory"""

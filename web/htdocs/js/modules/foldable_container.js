@@ -6,15 +6,15 @@ import * as utils from "utils";
 import * as ajax from "ajax";
 
 // fetch_url: dynamically load content of opened element.
-export function toggle(treename, id, fetch_url) {
+export function toggle(treename, id, fetch_url, save_state) {
     var img = document.getElementById("treeimg." + treename + "." + id);
     var box = document.getElementById("tree." + treename + "." + id);
 
-    toggle_tree_state(treename, id, box, fetch_url);
+    toggle_tree_state(treename, id, box, fetch_url, save_state);
     if (img) utils.toggle_folding(img, !utils.has_class(box, "closed"));
 }
 
-function toggle_tree_state(tree, name, oContainer, fetch_url) {
+function toggle_tree_state(tree, name, oContainer, fetch_url, save_state) {
     var outer_container = oContainer.parentNode;
     var state;
 
@@ -41,7 +41,7 @@ function toggle_tree_state(tree, name, oContainer, fetch_url) {
         state = "off";
     }
 
-    persist_tree_state(tree, name, state);
+    if (save_state) persist_tree_state(tree, name, state);
 }
 
 export function persist_tree_state(tree, name, state) {

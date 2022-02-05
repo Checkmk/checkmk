@@ -12,22 +12,20 @@ from cmk.gui.globals import config, html
 from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
-from cmk.gui.plugins.views import (
+from cmk.gui.plugins.views.graphs import cmk_graph_url
+from cmk.gui.plugins.views.perfometers.utils import perfometers, render_metricometer
+from cmk.gui.plugins.views.utils import (
     Cell,
     CellSpec,
     display_options,
     is_stale,
     Painter,
     painter_registry,
-    Perfdata,
-    PerfometerSpec,
     Row,
     Sorter,
     sorter_registry,
-    TranslatedMetrics,
 )
-from cmk.gui.plugins.views.graphs import cmk_graph_url
-from cmk.gui.plugins.views.perfometers import perfometers, render_metricometer
+from cmk.gui.type_defs import Perfdata, PerfometerSpec, TranslatedMetrics
 
 
 class Perfometer:

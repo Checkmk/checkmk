@@ -1369,6 +1369,7 @@ class ModeSiteLivestatusEncryption(WatoMode):
         return "state state0" if cert.verify_result.is_valid else "state state2"
 
     def _fetch_certificate_details(self) -> Iterable[CertificateDetails]:
+        user.need_permission("general.server_side_requests")
         family_spec, address_spec = self._site["socket"]
         address_family = socket.AF_INET if family_spec == "tcp" else socket.AF_INET6
         address = address_spec["address"]

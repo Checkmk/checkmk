@@ -7,7 +7,7 @@
 from cmk.gui.globals import html, request
 from cmk.gui.htmllib import foldable_container
 from cmk.gui.i18n import _
-from cmk.gui.plugins.sidebar import footnotelinks, SidebarSnapin, snapin_registry
+from cmk.gui.plugins.sidebar.utils import footnotelinks, SidebarSnapin, snapin_registry
 
 
 @snapin_registry.register

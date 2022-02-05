@@ -7,7 +7,7 @@
 import cmk.utils.render
 
 from cmk.gui.i18n import _
-from cmk.gui.plugins.metrics import (
+from cmk.gui.plugins.metrics.utils import (
     graph_info,
     indexed_color,
     MAX_NUMBER_HOPS,

@@ -400,7 +400,6 @@ class SingleSiteConnection(Helpers):
         self.allow_cache = allow_cache
         self.socketurl = socketurl
         self.socket: Optional[socket.socket] = None
-        self._socket_poller: select.poll = select.poll()
         self.timeout: Optional[int] = None
         self.successful_persistence = False
         self._output_format = LivestatusOutputFormat.PYTHON
@@ -441,7 +440,6 @@ class SingleSiteConnection(Helpers):
             if self.persist:
                 persistent_connections[self.socketurl] = site_socket
         self.socket = site_socket
-        self._socket_poller.register(self.socket, select.POLLIN)
 
     def _create_new_socket_connection(self) -> socket.socket:
         self.successful_persistence = False
@@ -522,9 +520,6 @@ class SingleSiteConnection(Helpers):
 
             self.socket = None
 
-        # Setup a new poller, instead of unregistering previous fd(s)
-        self._socket_poller = select.poll()
-
         if self.persist:
             self.successful_persistence = False
             try:
@@ -540,8 +535,7 @@ class SingleSiteConnection(Helpers):
         self.socket.settimeout(timeout)
         receive_start = time.time()
         while size > 0:
-            readylist = self._socket_poller.poll(1000)
-            if readylist or (isinstance(self.socket, ssl.SSLSocket) and self.socket.pending()):
+            if is_socket_readable(self.socket, 0.1):
                 packet = self.socket.recv(size)
                 if not packet:
                     raise MKLivestatusSocketClosed(
@@ -1209,3 +1203,13 @@ def _combine_query(query: str, headers: Union[str, List[str]]):
         return query
 
     return query + "\n" + headers
+
+
+def is_socket_readable(sock: socket.socket, select_timeout: float = 1.0) -> bool:
+    # SSL sockets may not return any fileno in the select, since the data lingers around in pending
+    # https://stackoverflow.com/questions/3187565/select-and-ssl-in-python
+    # https://stackoverflow.com/questions/40346619/behavior-of-pythons-select-with-partial-recv-on-ssl-socket/40347469#40347469
+    if isinstance(sock, ssl.SSLSocket) and sock.pending():
+        return True
+    fd_sets = select.select([sock], [], [], select_timeout)
+    return sock in fd_sets[0]

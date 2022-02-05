@@ -122,7 +122,7 @@ TEST(ServiceProcessorTest, Generate) {
     AsyncAnswer::DataBlock db;
     auto ret = sp.wrapResultWithStaticSections(db);
     ret.push_back(0);
-    std::string data = reinterpret_cast<const char*>(ret.data());
+    std::string data = reinterpret_cast<const char *>(ret.data());
     ASSERT_TRUE(ret.size() > 5);
     auto t = cma::tools::SplitString(data, "\n");
     EXPECT_EQ(t[0] + "\n", cma::section::MakeHeader(cma::section::kCheckMk));
@@ -139,7 +139,7 @@ TEST(ServiceProcessorTest, StartStopExe) {
     ASSERT_TRUE(temp_fs->loadContent(tst::GetFabricYmlContent()));
 
     auto processor =
-        new ServiceProcessor(100ms, [&counter](const void* Processor) {
+        new ServiceProcessor(100ms, [&counter](const void *Processor) {
             xlog::l("pip").print();
             counter++;
             return true;

@@ -259,16 +259,35 @@ def _check_auth_cookie(cookie_name: str) -> Optional[UserId]:
     # Once reached this the cookie is a good one. Renew it!
     _renew_cookie(cookie_name, username, session_id)
 
+    _redirect_for_password_change(username)
+    _redirect_for_two_factor_authentication(username)
+
+    # Return the authenticated username
+    return username
+
+
+def _redirect_for_password_change(user_id: UserId) -> None:
     if requested_file_name(request) != "user_change_pw":
-        result = userdb.need_to_change_pw(username)
+        result = userdb.need_to_change_pw(user_id)
         if result:
             raise HTTPRedirect(
                 "user_change_pw.py?_origtarget=%s&reason=%s"
                 % (urlencode(makeuri(request, [])), result)
             )
 
-    # Return the authenticated username
-    return username
+
+def _redirect_for_two_factor_authentication(user_id: UserId) -> None:
+    if requested_file_name(request) in (
+        "user_login_two_factor",
+        "user_webauthn_login_begin",
+        "user_webauthn_login_complete",
+    ):
+        return
+
+    if userdb.is_two_factor_login_enabled(user_id) and not userdb.is_two_factor_completed():
+        raise HTTPRedirect(
+            "user_login_two_factor.py?_origtarget=%s" % urlencode(makeuri(request, []))
+        )
 
 
 def _fetch_cookie(cookie_name: str) -> str:
@@ -522,6 +541,12 @@ class LoginPage(Page):
                         "user_change_pw.py?_origtarget=%s&reason=%s"
                         % (urlencode(origtarget), change_pw_result)
                     )
+
+                if userdb.is_two_factor_login_enabled(username):
+                    raise HTTPRedirect(
+                        "user_login_two_factor.py?_origtarget=%s" % urlencode(makeuri(request, []))
+                    )
+
                 raise HTTPRedirect(origtarget)
 
             userdb.on_failed_login(username)

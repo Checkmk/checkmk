@@ -32,9 +32,9 @@ InstallMode GetInstallMode();
 class ExecuteUpdate {
 public:
     ExecuteUpdate() { determineFilePaths(); }
-    void prepare(const std::filesystem::path& exe,
-                 const std::filesystem::path& msi,
-                 const std::filesystem::path& recover_msi,
+    void prepare(const std::filesystem::path &exe,
+                 const std::filesystem::path &msi,
+                 const std::filesystem::path &recover_msi,
                  bool validate_script_exists);
 
     bool copyScriptToTemp() const;
@@ -109,19 +109,19 @@ std::filesystem::path GenerateTempFileNameInTempPath(std::wstring_view Name);
 // Diagnostic is cma::install!
 
 // noexcept remove file
-bool RmFile(const std::filesystem::path& file_name) noexcept;
+bool RmFile(const std::filesystem::path &file_name) noexcept;
 
 // noexcept move file
-bool MvFile(const std::filesystem::path& source_file,
-            const std::filesystem::path& destination_file) noexcept;
+bool MvFile(const std::filesystem::path &source_file,
+            const std::filesystem::path &destination_file) noexcept;
 
 // noexcept backup file(if possible)
-void BackupFile(const std::filesystem::path& file_name,
-                const std::filesystem::path& backup_dir) noexcept;
+void BackupFile(const std::filesystem::path &file_name,
+                const std::filesystem::path &backup_dir) noexcept;
 
 // noexcept check whether incoming file is newer
-bool NeedInstall(const std::filesystem::path& incoming_file,
-                 const std::filesystem::path& backup_dir) noexcept;
+bool NeedInstall(const std::filesystem::path &incoming_file,
+                 const std::filesystem::path &backup_dir) noexcept;
 // ****************************************
 
 bool IsPostInstallRequired();

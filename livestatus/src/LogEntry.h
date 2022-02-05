@@ -10,7 +10,6 @@
 
 #include <chrono>
 #include <cstddef>
-#include <cstdint>
 #include <string>
 #include <string_view>
 #include <vector>
@@ -70,7 +69,8 @@ enum class LogEntryKind {
 
 class LogEntry {
 public:
-    // TODO(sp) Do we have to keep the values in sync with something?
+    // NOTE: We have to keep this enum in sync with the table in
+    // cmk.gui.plugins.visuals.filters.FilterLogClass on the Python side.
     enum class Class {
         info = 0,             // all messages not in any other class
         alert = 1,            // alerts: the change service/host state
@@ -81,11 +81,7 @@ public:
         state = 6,            // initial or current states
         // text = 7,          // specific text passages, seems to be unused
         alert_handlers = 8,  // Started and stopped alert handlers
-
-        // TODO(sp): This class sets different logclasses on match -> fix this
-        invalid = 0x7fffffff  // never stored
     };
-    static constexpr uint32_t all_classes = 0xffffU;
 
     // Constructed by Logfile::processLogLine(). All instances owned by
     // Logfile::_entries.

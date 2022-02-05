@@ -36,16 +36,8 @@ def test_load_group_information(tmp_path):
         f.write(
             """# encoding: utf-8
 
-if type(define_contactgroups) != dict:
-    define_contactgroups = {}
 define_contactgroups.update({'all': u'Everything'})
-
-if type(define_hostgroups) != dict:
-    define_hostgroups = {}
 define_hostgroups.update({'all_hosts': u'All hosts :-)'})
-
-if type(define_servicegroups) != dict:
-    define_servicegroups = {}
 define_servicegroups.update({'all_services': u'All särvices'})
 """
         )

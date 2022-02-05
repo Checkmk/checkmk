@@ -14,10 +14,12 @@ import re
 import urllib.parse
 import uuid
 from pathlib import Path
-from typing import Any, Dict, Iterable, List, Optional, Tuple, Union
+from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Union
 
 import cmk.utils.paths
+import cmk.utils.regex
 
+from cmk.gui.exceptions import MKUserError
 from cmk.gui.log import logger
 
 
@@ -47,22 +49,50 @@ def key_num_split(a: str) -> Tuple[Union[int, str], ...]:
     return num_split(a)
 
 
-def is_allowed_url(url: str) -> bool:
-    """Checks whether or not the given URL is a URL it is allowed to redirect the user to"""
-    # Also prevent using of "javascript:" URLs which could used to inject code
-    parsed = urllib.parse.urlparse(url)
+def is_allowed_url(
+    url: str, cross_domain: bool = False, schemes: Optional[list[str]] = None
+) -> bool:
+    """Check if url is allowed
 
-    # Don't allow the user to set a URL scheme
-    if parsed.scheme != "":
+    >>> is_allowed_url("http://checkmk.com/")
+    False
+    >>> is_allowed_url("http://checkmk.com/", cross_domain=True, schemes=["http", "https"])
+    True
+    >>> is_allowed_url("/checkmk/", cross_domain=True, schemes=["http", "https"])
+    True
+    >>> is_allowed_url("//checkmk.com/", cross_domain=True)
+    True
+    >>> is_allowed_url("/foobar")
+    True
+    >>> is_allowed_url("//user:password@domain/", cross_domain=True)
+    True
+    >>> is_allowed_url("javascript:alert(1)")
+    False
+    >>> is_allowed_url("javascript:alert(1)", cross_domain=True, schemes=["javascript"])
+    True
+    >>> is_allowed_url('someXSSAttempt?"><script>alert(1)</script>')
+    False
+    """
+
+    try:
+        parsed = urllib.parse.urlparse(url)
+    except ValueError:
         return False
 
-    # Don't allow the user to set a network location
-    if parsed.netloc != "":
+    if not cross_domain and parsed.netloc != "":
         return False
 
-    # Don't allow bad characters in path
-    if not re.match(r"[/a-zA-Z0-9_\.-]*$", parsed.path):
+    if schemes is None and parsed.scheme != "":
         return False
+    if schemes is not None and parsed.scheme and parsed.scheme not in schemes:
+        return False
+
+    urlchar_regex = cmk.utils.regex.regex(cmk.utils.regex.URL_CHAR_REGEX)
+    for part in parsed:
+        if not part:
+            continue
+        if not urlchar_regex.match(part):
+            return False
 
     return True
 
@@ -179,3 +209,21 @@ def unique_default_name_suggestion(template: str, used_names: Iterable[str]) -> 
         if suggestion not in used_names_set:
             return suggestion
         nr += 1
+
+
+def validate_id(
+    mode: str,
+    existing_entries: Dict[str, Any],
+) -> Callable[[Dict[str, Any], str], None,]:
+    """Validate ID of newly created or cloned pagetype or visual"""
+    from cmk.gui.i18n import _
+
+    def _validate(properties: Dict[str, Any], varprefix: str) -> None:
+        name = properties["name"]
+        if existing_entries.get(name) and mode in ["create", "clone"]:
+            raise MKUserError(
+                varprefix + "_p_name",
+                _("You already have an element with the ID <b>%s</b>") % name,
+            )
+
+    return _validate

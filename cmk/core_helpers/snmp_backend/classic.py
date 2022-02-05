@@ -12,6 +12,7 @@ from typing import List, Optional
 import cmk.utils.tty as tty
 from cmk.utils.exceptions import MKGeneralException, MKSNMPError, MKTimeout
 from cmk.utils.log import console
+from cmk.utils.type_defs import SectionName
 
 from cmk.snmplib.type_defs import OID, SNMPBackend, SNMPContextName, SNMPRawValue, SNMPRowInfo
 
@@ -47,7 +48,7 @@ class ClassicSNMPBackend(SNMPBackend):
 
         console.vverbose("Running '%s'\n" % subprocess.list2cmdline(command))
 
-        snmp_process = subprocess.Popen(
+        snmp_process = subprocess.Popen(  # pylint:disable=consider-using-with
             command,
             close_fds=True,
             stdout=subprocess.PIPE,
@@ -90,7 +91,7 @@ class ClassicSNMPBackend(SNMPBackend):
     def walk(
         self,
         oid: str,
-        check_plugin_name: Optional[str] = None,
+        section_name: Optional[SectionName] = None,
         table_base_oid: Optional[str] = None,
         context_name: Optional[str] = None,
     ) -> SNMPRowInfo:
@@ -109,10 +110,10 @@ class ClassicSNMPBackend(SNMPBackend):
         exitstatus = None
         rowinfo: SNMPRowInfo = []
         try:
-            snmp_process = subprocess.Popen(
+            snmp_process = subprocess.Popen(  # pylint:disable=consider-using-with
                 command,
                 close_fds=True,
-                stdin=open(os.devnull),
+                stdin=open(os.devnull),  # pylint:disable=consider-using-with
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
                 encoding="utf-8",

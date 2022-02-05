@@ -14,7 +14,7 @@ import cmk.gui.views
 if not cmk_version.is_raw_edition():
     import cmk.gui.cee.plugins.views.icons  # pylint: disable=no-name-in-module
 
-import cmk.gui.plugins.views.icons as icons
+from cmk.gui.plugins.views.icons.utils import get_multisite_icons
 
 
 def test_builtin_icons_and_actions():
@@ -61,7 +61,7 @@ def test_builtin_icons_and_actions():
         ]
 
     cmk.gui.views.transform_old_dict_based_icons()
-    builtin_icons = sorted(icons.get_multisite_icons().keys())
+    builtin_icons = sorted(get_multisite_icons().keys())
     assert builtin_icons == sorted(expected_icons_and_actions)
 
 
@@ -77,7 +77,7 @@ def test_legacy_icon_plugin(monkeypatch):
     monkeypatch.setitem(cmk.gui.views.multisite_icons_and_actions, "legacy", icon)
     cmk.gui.views.transform_old_dict_based_icons()
 
-    registered_icon = icons.get_multisite_icons()["legacy"]
+    registered_icon = get_multisite_icons()["legacy"]
     assert registered_icon.columns() == icon["columns"]
     assert registered_icon.host_columns() == icon["host_columns"]
     assert registered_icon.service_columns() == icon["service_columns"]
@@ -96,6 +96,6 @@ def test_legacy_icon_plugin_defaults(monkeypatch):
     monkeypatch.setitem(cmk.gui.views.multisite_icons_and_actions, "legacy", icon)
     cmk.gui.views.transform_old_dict_based_icons()
 
-    registered_icon = icons.get_multisite_icons()["legacy"]
+    registered_icon = get_multisite_icons()["legacy"]
     assert registered_icon.toplevel() is False
     assert registered_icon.sort_index() == 30

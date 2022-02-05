@@ -268,7 +268,7 @@ def main():
     else:
       subprocess.check_call(invocation)
   except:
-    print(f"Unable to run {' '.join(invocation)!r}.", file=sys.stderr)
+    print("Unable to run %r." % " ".join(invocation), file=sys.stderr)
     sys.exit(1)
 
   # Load the database and extract all files.

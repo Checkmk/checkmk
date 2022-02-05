@@ -91,7 +91,7 @@ def acknowledge_servicegroup_problem(
     user: str = "",
     comment: str = "",
 ):
-    """Acknowledge the problems of the current services of the servicegroup
+    """Acknowledge the problems of the current services of the service group
 
     When acknowledging a problem, further notifications for the respective services are disabled, as
     long as a specific service doesn't change state. At state change, notifications are re-enabled.
@@ -119,7 +119,7 @@ def acknowledge_servicegroup_problem(
 
     Raises:
         ValueError:
-            When the servicegroup could not be found.
+            When the service group could not be found.
 
     """
     with detailed_connection(connection) as conn:
@@ -223,7 +223,7 @@ def acknowledge_hostgroup_problem(
     user: str = "",
     comment: str = "",
 ):
-    """Acknowledge the problems of the current hosts of the hostgroup
+    """Acknowledge the problems of the current hosts of the host group
 
     When acknowledging a problem, further notifications for the respective services are disabled, as
     long as a specific service doesn't change state. At state change, notifications are re-enabled.
@@ -251,7 +251,7 @@ def acknowledge_hostgroup_problem(
 
     Raises:
         ValueError:
-            when the Hostgroup in question doesn't exist.
+            when the host group in question doesn't exist.
 
     """
     with detailed_connection(connection) as conn:

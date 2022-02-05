@@ -4,16 +4,25 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import ast
 import sys
-from typing import List
 
 import pytest
 
 from cmk.utils.python_printer import pformat
 
 
-def test_same_as_repr():
-    objs: List[object] = [
+def _test_pformat_explicit_and_literal_eval(
+    obj: object,
+    expected_result: str,
+) -> None:
+    pformat_res = pformat(obj)
+    assert pformat_res == expected_result
+    assert ast.literal_eval(pformat_res) == obj
+
+
+def test_same_as_repr() -> None:
+    objs: list[object] = [
         None,
         True,
         False,
@@ -48,14 +57,14 @@ def test_same_as_repr():
         ({(11, 22, (33, 44))}, "{(11, 22, (33, 44))}"),
     ],
 )
-def test_sets(obj, result):
-    assert pformat(obj) == result
+def test_sets(obj: object, result: str) -> None:
+    _test_pformat_explicit_and_literal_eval(obj, result)
 
 
 @pytest.mark.parametrize(
     "obj, result",
     [
-        (b"", "b''"),  #
+        (b"", "b''"),
         ("bläh".encode("utf-8"), "b'bl\\xc3\\xa4h'"),
         (((11,), (22, ("bläh".encode("utf-8"), -44))), "((11,), (22, (b'bl\\xc3\\xa4h', -44)))"),
         ([[], [11, ("blöh".encode("utf-8"), []), 3.5]], "[[], [11, (b'bl\\xc3\\xb6h', []), 3.5]]"),
@@ -69,8 +78,8 @@ def test_sets(obj, result):
         ),
     ],
 )
-def test_byte_strings_are_prefixed(obj, result):
-    assert pformat(obj) == result
+def test_byte_strings_are_prefixed(obj: object, result: str) -> None:
+    _test_pformat_explicit_and_literal_eval(obj, result)
 
 
 @pytest.mark.parametrize(
@@ -78,6 +87,7 @@ def test_byte_strings_are_prefixed(obj, result):
     [
         ("", "u''"),
         ("bläh", "u'bl\\xe4h'"),
+        ("I love it – 5 € only", "u'I love it \\u2013 5 \\u20ac only'"),
         (((11,), (22, ("bläh", -44))), "((11,), (22, (u'bl\\xe4h', -44)))"),
         ([[], [11, ("blöh", []), 3.5]], "[[], [11, (u'bl\\xf6h', []), 3.5]]"),
         (
@@ -89,8 +99,8 @@ def test_byte_strings_are_prefixed(obj, result):
         ),
     ],
 )
-def test_unicode_strings_are_prefixed(obj, result):
-    assert pformat(obj) == result
+def test_unicode_strings_are_prefixed(obj: object, result: str) -> None:
+    _test_pformat_explicit_and_literal_eval(obj, result)
 
 
 @pytest.mark.parametrize(
@@ -100,8 +110,8 @@ def test_unicode_strings_are_prefixed(obj, result):
         ("\"bl'ah", "u'\"bl\\'ah'"),
     ],
 )
-def test_unicode_strings_quote_escaping(obj, result):
-    assert pformat(obj) == result
+def test_unicode_strings_quote_escaping(obj: object, result: str) -> None:
+    _test_pformat_explicit_and_literal_eval(obj, result)
 
 
 @pytest.mark.parametrize(
@@ -113,8 +123,8 @@ def test_unicode_strings_quote_escaping(obj, result):
         ("bl\n\rah", "u'bl\\n\\rah'"),
     ],
 )
-def test_unicode_strings_newline_escaping(obj, result):
-    assert pformat(obj) == result
+def test_unicode_strings_newline_escaping(obj: object, result: str) -> None:
+    _test_pformat_explicit_and_literal_eval(obj, result)
 
 
 @pytest.mark.parametrize(
@@ -127,6 +137,6 @@ def test_unicode_strings_newline_escaping(obj, result):
         (type("Hurz", (), {}),),
     ],
 )
-def test_raise_when_unknown(obj):
+def test_raise_when_unknown(obj: object) -> None:
     with pytest.raises(ValueError):
         pformat(obj)

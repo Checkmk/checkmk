@@ -26,7 +26,7 @@ try:
         host="localhost",
         db="psa",
         user="admin",
-        passwd=open("/etc/psa/.psa.shadow").read().strip(),
+        passwd=open("/etc/psa/.psa.shadow").read().strip(),  # pylint:disable=consider-using-with
         charset="utf8",
     )
 except MySQLdb.Error as e:

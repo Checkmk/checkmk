@@ -9,7 +9,7 @@ import json
 import cmk.gui.sites as sites
 from cmk.gui.globals import html, request, response, transactions, user
 from cmk.gui.i18n import _
-from cmk.gui.plugins.sidebar import render_link, SidebarSnapin, snapin_registry
+from cmk.gui.plugins.sidebar.utils import render_link, SidebarSnapin, snapin_registry
 from cmk.gui.utils.escaping import escape_html_permissive
 from cmk.gui.utils.urls import makeactionuri_contextless
 

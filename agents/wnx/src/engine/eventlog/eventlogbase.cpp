@@ -43,29 +43,74 @@ std::pair<uint64_t, cma::cfg::EventLevels> ScanEventLog(
     return {last_pos, worst_state};
 }
 
+namespace {
+bool operator==(const EventLogRecordBase::ptr &lhs,
+                const EventLogRecordBase::ptr &rhs) {
+    if (lhs == nullptr && rhs == nullptr) {
+        return true;
+    }
+
+    if (lhs != nullptr && rhs != nullptr) {
+        return lhs->eventLevel() == rhs->eventLevel() &&
+               lhs->eventId() == rhs->eventId() &&
+               lhs->eventQualifiers() == rhs->eventQualifiers() &&
+               lhs->source() == rhs->source() &&
+               lhs->makeMessage() == rhs->makeMessage();
+    }
+
+    return false;
+}
+bool operator!=(const EventLogRecordBase::ptr &lhs,
+                const EventLogRecordBase::ptr &rhs) {
+    return !(lhs == rhs);
+}
+}  // namespace
+
 /// scans eventlog and applies processor to every entry.
 ///
 /// returns last scanned pos where processor returns false
 uint64_t PrintEventLog(EventLogBase &log, uint64_t from_pos,
                        cma::cfg::EventLevels level, bool hide_context,
+                       SkipDuplicatedRecords skip,
                        const EvlProcessor &processor) {
     // we must seek past the previously read event - if there was one
     log.seek(choosePos(from_pos));
 
     auto last_pos = from_pos;
 
+    EventLogRecordBase::ptr previous;
+    size_t duplicated_count = 0;
     while (true) {
         EventLogRecordBase::ptr record{log.readRecord()};
-
         if (!record) {
+            if (skip == SkipDuplicatedRecords::yes && duplicated_count) {
+                processor(fmt::format(kSkippedMessageFormat, duplicated_count));
+            }
             break;
         }
 
         last_pos = record->recordId();
-        auto str = record->stringize(level, hide_context);
-        if (!str.empty() && !processor(str)) {
-            // processor request to stop scanning
-            break;
+        if (skip == SkipDuplicatedRecords::yes) {
+            if (previous == record) {
+                ++duplicated_count;
+                continue;
+            }
+            if (duplicated_count) {
+                processor(fmt::format(kSkippedMessageFormat, duplicated_count));
+                duplicated_count = 0;
+            }
+            auto str = record->stringize(level, hide_context);
+            if (!str.empty() && !processor(str)) {
+                // processor request to stop scanning
+                break;
+            }
+            previous = std::move(record);
+        } else {
+            auto str = record->stringize(level, hide_context);
+            if (!str.empty() && !processor(str)) {
+                // processor request to stop scanning
+                break;
+            }
         }
     }
 

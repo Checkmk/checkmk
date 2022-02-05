@@ -5,13 +5,15 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import hashlib
-from pathlib import Path
+from contextlib import nullcontext
+from enum import Enum
 
 import pytest
 
 from tests.testlib import on_time
 
 import cmk.utils.paths
+from cmk.utils.encryption import Encrypter
 
 import cmk.gui.valuespec as vs
 from cmk.gui.exceptions import MKUserError
@@ -225,6 +227,19 @@ def test_timerange_value_to_json_conversion(request_context):
 
 
 @pytest.mark.parametrize(
+    "elements,value,expected",
+    [
+        ([], {}, {}),
+        ([], {"a": 1}, {}),
+        ([("a", vs.Integer())], {"a": 1}, {"a": 1}),
+        ([("a", vs.Tuple(elements=[]))], {"a": tuple()}, {"a": []}),
+    ],
+)
+def test_dictionary_value_to_json(elements, value, expected):
+    assert vs.Dictionary(elements=elements).value_to_json(value) == expected
+
+
+@pytest.mark.parametrize(
     "address",
     [
         "user@localhost",
@@ -376,7 +391,7 @@ def test_transform_value_and_json():
 
 @pytest.fixture()
 def fixture_auth_secret():
-    secret_path = Path(cmk.utils.paths.omd_root) / "etc" / "auth.secret"
+    secret_path = cmk.utils.paths.omd_root / "etc" / "auth.secret"
     secret_path.parent.mkdir(parents=True, exist_ok=True)
     with secret_path.open("wb") as f:
         f.write(b"auth-secret")
@@ -408,7 +423,7 @@ def test_password_from_html_vars_initial_pw(request_context):
 )
 @pytest.mark.usefixtures("fixture_auth_secret")
 def test_password_from_html_vars_unchanged_pw(request_context):
-    html.request.set_var("pw_orig", vs.ValueEncrypter.encrypt("abc"))
+    html.request.set_var("pw_orig", Encrypter.encrypt("abc"))
     html.request.set_var("pw", "")
     pw = vs.Password()
     assert pw.from_html_vars("pw") == "abc"
@@ -419,26 +434,131 @@ def test_password_from_html_vars_unchanged_pw(request_context):
 )
 @pytest.mark.usefixtures("fixture_auth_secret")
 def test_password_from_html_vars_change_pw(request_context):
-    html.request.set_var("pw_orig", vs.ValueEncrypter.encrypt("abc"))
+    html.request.set_var("pw_orig", Encrypter.encrypt("abc"))
     html.request.set_var("pw", "xyz")
     pw = vs.Password()
     assert pw.from_html_vars("pw") == "xyz"
 
 
-@pytest.mark.skipif(
-    not hasattr(hashlib, "scrypt"), reason="OpenSSL version too old, must be >= 1.1"
-)
-@pytest.mark.usefixtures("fixture_auth_secret")
-def test_value_encrypter_encrypt():
-    encrypted = vs.ValueEncrypter.encrypt("abc")
-    assert isinstance(encrypted, str)
-    assert encrypted != "abc"
+class ValueType(Enum):
+    name = "name"
+    ipv4 = "ipv4"
+    ipv6 = "ipv6"
+    none = "none"
 
 
-@pytest.mark.skipif(
-    not hasattr(hashlib, "scrypt"), reason="OpenSSL version too old, must be >= 1.1"
+@pytest.mark.parametrize(
+    "allow_host_name", (True, False), ids=["allow_host_name", "not allow_host_name"]
 )
-@pytest.mark.usefixtures("fixture_auth_secret")
-def test_value_encrypter_transparent():
-    enc = vs.ValueEncrypter
-    assert enc.decrypt(enc.encrypt("abc")) == "abc"
+@pytest.mark.parametrize(
+    "allow_ipv4_address", (True, False), ids=["allow_ipv4_address", "not allow_ipv4_address"]
+)
+@pytest.mark.parametrize(
+    "allow_ipv6_address", (True, False), ids=["allow_ipv6_address", "not allow_ipv6_address"]
+)
+@pytest.mark.parametrize(
+    "value_type,value",
+    [
+        (ValueType.name, "xyz"),
+        (ValueType.name, "xyz001_d3"),
+        (ValueType.name, "abc-def-ghi"),
+        (ValueType.name, "asd.abc"),
+        (ValueType.name, "asd.abc."),
+        (ValueType.ipv4, "10.10.123.234"),
+        (ValueType.ipv4, "10.10.123.234"),
+        (ValueType.ipv6, "2001:db8:3333:4444:5555:6666:7777:8888"),
+        (ValueType.ipv6, "::1234:5678"),
+        (ValueType.none, "999.10.123.234"),
+        (ValueType.none, "::&a:5678"),
+        (ValueType.none, "/asd/eee"),
+        (ValueType.none, "e/d/f"),
+        (ValueType.none, "a/../e"),
+        (ValueType.none, "-ding"),
+        (ValueType.none, "dong-"),
+        (ValueType.none, "01234567"),
+        (ValueType.none, "012.345.67"),
+        (ValueType.none, ""),
+    ],
+)
+def test_host_address_validate_value(
+    value_type: ValueType,
+    value: str,
+    allow_host_name: bool,
+    allow_ipv4_address: bool,
+    allow_ipv6_address: bool,
+) -> None:
+    expected_valid = (
+        (value_type is ValueType.name and allow_host_name)
+        or (value_type is ValueType.ipv4 and allow_ipv4_address)
+        or (value_type is ValueType.ipv6 and allow_ipv6_address)
+    )
+    # mypy is wrong about the nullcontext object type :-(
+    with pytest.raises(MKUserError) if not expected_valid else nullcontext():  # type: ignore[attr-defined]
+        vs.HostAddress(
+            allow_host_name=allow_host_name,
+            allow_ipv4_address=allow_ipv4_address,
+            allow_ipv6_address=allow_ipv6_address,
+            allow_empty=False,
+        ).validate_value(value, "varprefix")
+
+
+@pytest.mark.parametrize(
+    "choices,default_value,expected_default",
+    [
+        (
+            [("single_age", "Age", vs.Age(default_value=30))],
+            None,
+            ("single_age", 30),
+        ),
+        (
+            [("age_1", "Age", vs.Age()), ("age_2", "Age", vs.Age())],
+            "age_1",
+            ("age_1", 0),
+        ),
+        (
+            [("list_choice", "ListChoice", vs.ListChoice())],
+            None,
+            ("list_choice", []),
+        ),
+        ([("value", "Title")], None, "value"),
+        ([("value", "Title", None)], None, "value"),
+        ([], None, None),
+    ],
+)
+def test_default_value_in_cascading_dropdown(
+    choices,
+    default_value,
+    expected_default,
+):
+    assert vs.CascadingDropdown(choices=choices).default_value() == expected_default
+
+
+@pytest.mark.parametrize(
+    "choices,default_value,expected_canonical",
+    [
+        (
+            [("single_age", "Age", vs.Age(default_value=30))],
+            None,
+            ("single_age", 0),
+        ),
+        (
+            [("age_1", "Age", vs.Age()), ("age_2", "Age", vs.Age())],
+            "age_1",
+            ("age_1", 0),
+        ),
+        (
+            [("list_choice", "ListChoice", vs.ListChoice())],
+            None,
+            ("list_choice", []),
+        ),
+        ([], None, None),
+        ([("value", "Title")], None, "value"),
+        ([("value", "Title", None)], None, "value"),
+    ],
+)
+def test_canonical_value_in_cascading_dropdown(
+    choices,
+    default_value,
+    expected_canonical,
+):
+    assert vs.CascadingDropdown(choices=choices).canonical_value() == expected_canonical

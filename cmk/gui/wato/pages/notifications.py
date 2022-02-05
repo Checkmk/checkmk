@@ -17,7 +17,6 @@ import cmk.gui.forms as forms
 import cmk.gui.permissions as permissions
 import cmk.gui.userdb as userdb
 import cmk.gui.view_utils
-import cmk.gui.wato.user_profile
 import cmk.gui.watolib as watolib
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.exceptions import MKUserError
@@ -35,9 +34,10 @@ from cmk.gui.page_menu import (
     PageMenuSearch,
     PageMenuTopic,
 )
-from cmk.gui.plugins.wato import (
+from cmk.gui.plugins.wato.utils import (
     ABCEventsMode,
     add_change,
+    ContactGroupSelection,
     flash,
     make_action_link,
     make_confirm_link,
@@ -70,6 +70,8 @@ from cmk.gui.valuespec import (
     Transform,
     Tuple,
 )
+from cmk.gui.wato.pages.user_profile.async_replication import user_profile_async_replication_dialog
+from cmk.gui.wato.pages.user_profile.page_menu import page_menu_dropdown_user_related
 from cmk.gui.wato.pages.users import ModeEditUser
 from cmk.gui.watolib.check_mk_automations import (
     notification_analyse,
@@ -342,9 +344,10 @@ class ABCNotificationsMode(ABCEventsMode):
                 if not infos:
                     html.i(_("(no one)"))
                 else:
+                    html.open_ul()
                     for line in infos:
-                        html.write_text("&bullet; %s" % line)
-                        html.br()
+                        html.li(line)
+                    html.close_ul()
 
                 table.cell(_("Conditions"), css="rule_conditions")
                 num_conditions = len([key for key in rule if key.startswith("match_")])
@@ -945,7 +948,7 @@ class ABCUserNotificationsMode(ABCNotificationsMode):
 
     def page(self):
         if self._start_async_repl:
-            cmk.gui.wato.user_profile.user_profile_async_replication_dialog(
+            user_profile_async_replication_dialog(
                 sites=_get_notification_sync_sites(),
                 back_url=ModePersonalUserNotifications.mode_url(),
             )
@@ -1091,7 +1094,7 @@ class ModePersonalUserNotifications(ABCUserNotificationsMode):
                         )
                     ],
                 ),
-                cmk.gui.wato.user_profile.page_menu_dropdown_user_related("user_notifications_p"),
+                page_menu_dropdown_user_related("user_notifications_p"),
             ],
             breadcrumb=breadcrumb,
             inpage_search=PageMenuSearch(),
@@ -1234,7 +1237,7 @@ class ABCEditNotificationRuleMode(ABCNotificationsMode):
                 (
                     "contact_groups",
                     ListOf(
-                        cmk.gui.plugins.wato.ContactGroupSelection(),
+                        ContactGroupSelection(),
                         title=_("Members of contact groups"),
                         movable=False,
                     ),
@@ -1281,7 +1284,7 @@ class ABCEditNotificationRuleMode(ABCNotificationsMode):
                 (
                     "contact_match_groups",
                     ListOf(
-                        cmk.gui.plugins.wato.ContactGroupSelection(),
+                        ContactGroupSelection(),
                         title=_("Restrict by contact groups"),
                         help=_(
                             "Here you can <i>restrict</i> the list of contacts that has been "
@@ -1636,7 +1639,7 @@ class ABCEditNotificationRuleMode(ABCNotificationsMode):
 
     def page(self):
         if self._start_async_repl:
-            cmk.gui.wato.user_profile.user_profile_async_replication_dialog(
+            user_profile_async_replication_dialog(
                 sites=_get_notification_sync_sites(),
                 back_url=ModePersonalUserNotifications.mode_url(),
             )

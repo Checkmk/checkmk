@@ -35,6 +35,7 @@ from cmk.base.check_api import (
     host_extra_conf,
     host_name,
 )
+from cmk.base.plugins.agent_based.utils.diskstat import _METRICS_TO_BE_AVERAGED
 
 diskstat_inventory_mode = "rule"  # "summary", "single", "legacy"
 
@@ -410,7 +411,7 @@ def diskstat_select_disk(
 
             if num_averaged:
                 for key, value in summarized.items():
-                    if key.startswith("ave") or key in ("utilization", "latency", "queue_length"):
+                    if key.startswith("ave") or key in _METRICS_TO_BE_AVERAGED:
                         summarized[key] /= num_averaged
 
         return summarized

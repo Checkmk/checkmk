@@ -9,6 +9,7 @@ import urllib.parse
 from functools import lru_cache
 from typing import Mapping, Optional, Sequence, Tuple, Union
 
+from cmk.gui.globals import user
 from cmk.gui.http import Request
 from cmk.gui.type_defs import HTTPVariables
 from cmk.gui.utils.escaping import escape_text
@@ -169,3 +170,12 @@ def make_confirm_link(*, url: str, message: str) -> str:
 def file_name_and_query_vars_from_url(url: str) -> Tuple[str, QueryVars]:
     split_result = urllib.parse.urlsplit(url)
     return _file_name_from_path(split_result.path), urllib.parse.parse_qs(split_result.query)
+
+
+def manual_reference_url(
+    article_name: Optional[str] = None, anchor_name: Optional[str] = None
+) -> str:
+    if article_name is None:
+        return user.get_docs_base_url()
+    anchor: str = "" if anchor_name is None else ("#" + anchor_name)
+    return "%s/%s.html%s" % (user.get_docs_base_url(), article_name, anchor)

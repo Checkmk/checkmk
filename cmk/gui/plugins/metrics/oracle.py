@@ -13,7 +13,7 @@ from cmk.utils.oracle_constants import (
 )
 
 from cmk.gui.i18n import _
-from cmk.gui.plugins.metrics import graph_info, indexed_color, metric_info
+from cmk.gui.plugins.metrics.utils import graph_info, indexed_color, metric_info
 
 # .
 #   .--Metrics-------------------------------------------------------------.

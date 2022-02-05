@@ -7,23 +7,22 @@
 import os
 from enum import Enum
 from pathlib import Path
-from typing import Any, Dict, List, NamedTuple, Optional, Set, Tuple, TypedDict
+from typing import Any, Dict, List, Literal, NamedTuple, Optional, Set, Tuple, TypedDict
 
 import cmk.utils.paths
 
 DiagnosticsCLParameters = List[str]
 DiagnosticsModesParameters = Dict[str, Any]
 DiagnosticsOptionalParameters = Dict[str, Any]
-DiagnosticsParameters = TypedDict(
-    "DiagnosticsParameters",
-    {
-        "site": str,
-        "general": None,
-        "opt_info": Optional[DiagnosticsOptionalParameters],
-        "comp_specific": Optional[DiagnosticsOptionalParameters],
-    },
-)
 CheckmkFilesMap = Dict[str, Path]
+
+
+class DiagnosticsParameters(TypedDict):
+    site: str
+    general: Literal[True]
+    opt_info: Optional[DiagnosticsOptionalParameters]
+    comp_specific: Optional[DiagnosticsOptionalParameters]
+
 
 OPT_LOCAL_FILES = "local-files"
 OPT_OMD_CONFIG = "omd-config"

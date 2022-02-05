@@ -106,6 +106,7 @@ import cmk.gui.utils as utils
 import cmk.gui.view_utils
 import cmk.gui.wato.mkeventd
 import cmk.gui.wato.pages.fetch_agent_output
+import cmk.gui.wato.pages.user_profile
 import cmk.gui.wato.permissions
 import cmk.gui.watolib as watolib
 import cmk.gui.watolib.hosts_and_folders
@@ -230,7 +231,7 @@ syslog_facilities = cmk.gui.mkeventd.syslog_facilities
 ALL_HOSTS = watolib.ALL_HOSTS
 ALL_SERVICES = watolib.ALL_SERVICES
 NEGATE = watolib.NEGATE
-from cmk.gui.plugins.wato import (
+from cmk.gui.plugins.wato.utils import (
     get_hostnames_from_checkboxes,
     get_hosts_from_checkboxes,
     get_search_expression,
@@ -330,7 +331,8 @@ modes = {}
 
 
 def load_plugins() -> None:
-    """Plugin initialization hook (Called by cmk.gui.modules.call_load_plugins_hooks())"""
+    """Plugin initialization hook (Called by cmk.gui.main_modules.load_plugins())"""
+    _register_pre_21_plugin_api()
     # Initialize watolib things which are needed before loading the WATO plugins.
     # This also loads the watolib plugins.
     watolib.load_watolib_plugins()
@@ -342,3 +344,161 @@ def load_plugins() -> None:
             _("Deprecated WATO modes found: %r. " "They need to be refactored to new API.")
             % list(modes.keys())
         )
+
+
+def _register_pre_21_plugin_api() -> None:
+    """Register pre 2.1 "plugin API"
+
+    This was never an official API, but the names were used by builtin and also 3rd party plugins.
+
+    Our builtin plugin have been changed to directly import from the .utils module. We add these old
+    names to remain compatible with 3rd party plugins for now.
+
+    In the moment we define an official plugin API, we can drop this and require all plugins to
+    switch to the new API. Until then let's not bother the users with it.
+    """
+    # Needs to be a local import to not influence the regular plugin loading order
+    import cmk.gui.plugins.wato as api_module
+
+    for name in (
+        "ABCConfigDomain",
+        "ABCEventsMode",
+        "ABCHostAttributeNagiosText",
+        "ABCHostAttributeValueSpec",
+        "ABCMainModule",
+        "ac_test_registry",
+        "ACResult",
+        "ACResultCRIT",
+        "ACResultOK",
+        "ACResultWARN",
+        "ACTest",
+        "ACTestCategories",
+        "add_change",
+        "add_replication_paths",
+        "BinaryHostRulespec",
+        "BinaryServiceRulespec",
+        "CheckParameterRulespecWithItem",
+        "CheckParameterRulespecWithoutItem",
+        "config_domain_registry",
+        "config_variable_group_registry",
+        "config_variable_registry",
+        "ConfigDomainCACertificates",
+        "ConfigDomainCore",
+        "ConfigDomainEventConsole",
+        "ConfigDomainGUI",
+        "ConfigDomainOMD",
+        "ConfigHostname",
+        "ConfigVariable",
+        "ConfigVariableGroup",
+        "ContactGroupSelection",
+        "DictHostTagCondition",
+        "flash",
+        "folder_preserving_link",
+        "FullPathFolderChoice",
+        "get_check_information",
+        "get_hostnames_from_checkboxes",
+        "get_hosts_from_checkboxes",
+        "get_search_expression",
+        "host_attribute_registry",
+        "host_attribute_topic_registry",
+        "HostAttributeTopicAddress",
+        "HostAttributeTopicBasicSettings",
+        "HostAttributeTopicCustomAttributes",
+        "HostAttributeTopicDataSources",
+        "HostAttributeTopicHostTags",
+        "HostAttributeTopicManagementBoard",
+        "HostAttributeTopicMetaData",
+        "HostAttributeTopicNetworkScan",
+        "HostGroupSelection",
+        "HostnameTranslation",
+        "HostRulespec",
+        "HostTagCondition",
+        "HTTPProxyInput",
+        "HTTPProxyReference",
+        "IndividualOrStoredPassword",
+        "IPMIParameters",
+        "is_wato_slave_site",
+        "Levels",
+        "LivestatusViaTCP",
+        "main_module_registry",
+        "MainMenu",
+        "MainModuleTopic",
+        "MainModuleTopicAgents",
+        "MainModuleTopicBI",
+        "MainModuleTopicCustom",
+        "MainModuleTopicEvents",
+        "MainModuleTopicGeneral",
+        "MainModuleTopicHosts",
+        "MainModuleTopicMaintenance",
+        "MainModuleTopicServices",
+        "MainModuleTopicUsers",
+        "make_action_link",
+        "make_confirm_link",
+        "make_diff_text",
+        "ManualCheckParameterRulespec",
+        "MenuItem",
+        "mode_registry",
+        "mode_url",
+        "monitoring_macro_help",
+        "multifolder_host_rule_match_conditions",
+        "multisite_dir",
+        "notification_parameter_registry",
+        "NotificationParameter",
+        "PasswordFromStore",
+        "PermissionSectionWATO",
+        "PluginCommandLine",
+        "PredictiveLevels",
+        "redirect",
+        "register_check_parameters",
+        "register_configvar",
+        "register_hook",
+        "register_modules",
+        "register_notification_parameters",
+        "ReplicationPath",
+        "rule_option_elements",
+        "Rulespec",
+        "rulespec_group_registry",
+        "rulespec_registry",
+        "RulespecGroup",
+        "RulespecGroupCheckParametersApplications",
+        "RulespecGroupCheckParametersDiscovery",
+        "RulespecGroupCheckParametersEnvironment",
+        "RulespecGroupCheckParametersHardware",
+        "RulespecGroupCheckParametersNetworking",
+        "RulespecGroupCheckParametersOperatingSystem",
+        "RulespecGroupCheckParametersPrinters",
+        "RulespecGroupCheckParametersStorage",
+        "RulespecGroupCheckParametersVirtualization",
+        "RulespecGroupEnforcedServicesApplications",
+        "RulespecGroupEnforcedServicesEnvironment",
+        "RulespecGroupEnforcedServicesHardware",
+        "RulespecGroupEnforcedServicesNetworking",
+        "RulespecGroupEnforcedServicesOperatingSystem",
+        "RulespecGroupEnforcedServicesStorage",
+        "RulespecGroupEnforcedServicesVirtualization",
+        "RulespecSubGroup",
+        "sample_config_generator_registry",
+        "SampleConfigGenerator",
+        "search_form",
+        "ServiceDescriptionTranslation",
+        "ServiceGroupSelection",
+        "ServiceRulespec",
+        "SimpleEditMode",
+        "SimpleListMode",
+        "SimpleModeType",
+        "site_neutral_path",
+        "SiteBackupJobs",
+        "SNMPCredentials",
+        "sort_sites",
+        "TimeperiodSelection",
+        "transform_simple_to_multi_host_rule_match_conditions",
+        "user_script_choices",
+        "user_script_title",
+        "UserIconOrAction",
+        "valuespec_check_plugin_selection",
+        "wato_fileheader",
+        "wato_root_dir",
+        "WatoMode",
+        "WatoModule",
+    ):
+        api_module.__dict__[name] = cmk.gui.plugins.wato.utils.__dict__[name]

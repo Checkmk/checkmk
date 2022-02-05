@@ -14,7 +14,8 @@ import cmk.gui.sites as sites
 from cmk.gui.globals import html, request
 from cmk.gui.i18n import _, _l, ungettext
 from cmk.gui.permissions import Permission, permission_registry
-from cmk.gui.plugins.views import (
+from cmk.gui.plugins.views.commands import PermissionSectionAction
+from cmk.gui.plugins.views.utils import (
     cmp_simple_number,
     Command,
     command_registry,
@@ -28,7 +29,6 @@ from cmk.gui.plugins.views import (
     Sorter,
     sorter_registry,
 )
-from cmk.gui.plugins.views.commands import PermissionSectionAction
 from cmk.gui.utils.urls import makeuri_contextless
 
 
@@ -64,10 +64,15 @@ class CrashReportsRowTable(RowTable):
     def query(self, view, columns, headers, only_sites, limit, all_active_filters):
         rows = []
         for raw_row in self.get_crash_report_rows(only_sites, filter_headers=""):
-            if raw_row["crash_info"] is None:
+            crash_info = raw_row.get("crash_info")
+            if crash_info is None:
                 continue  # skip broken crash reports
 
-            crash_info_raw = json.loads(raw_row["crash_info"])
+            try:
+                crash_info_raw = json.loads(crash_info)
+            except json.JSONDecodeError:
+                continue  # skip broken crash infos like b'' or b'\n'
+
             rows.append(
                 {
                     "site": raw_row["site"],

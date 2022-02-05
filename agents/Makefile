@@ -12,12 +12,14 @@ RPM_TOPDIR := $$(pwd)/.rpm.topdir
 RPM_BUILDROOT := $$(pwd)/.rpm.buildroot
 RPM_PACKAGE := $(DISTNAME)-1.noarch.rpm
 DEB_PACKAGE := check-mk-agent_$(VERSION)-1_all.deb
+
 usage:
-	@echo "make waitmax  -- compile waitmax.c"
-	@echo "make build    -- create all files needed for \"make dist\" of Check_MK"
-	@echo "make rpm      -- create RPM package of Linux agent"
-	@echo "make deb      -- create DEB package of Linux agent"
-	@echo "make packages -- create RPM and DEB package of Linux agent"
+	@echo "make waitmax       -- compile waitmax.c"
+	@echo "make build         -- create all files needed for \"make dist\" of Check_MK"
+	@echo "make rpm           -- create RPM package of Linux agent"
+	@echo "make deb           -- create DEB package of Linux agent"
+	@echo "make packages      -- create RPM and DEB package of Linux agent"
+	@echo "make controller    -- build the agent controller binary"
 
 waitmax: waitmax.c
 	@if type diet >/dev/null ; then \
@@ -47,10 +49,11 @@ setversion:
 	sed -i 's/echo "Version: [0-9.a-z-]*"/echo "Version: $(NEW_VERSION)"/g' check_mk_agent.*
 	sed -i "s/^#define CMK_WIN_AGENT_VERSION .*/#define CMK_WIN_AGENT_VERSION \"$(NEW_VERSION)\"/" wnx/src/common/wnx_version.h
 
-build: $(DEB_PACKAGE) $(RPM_PACKAGE) $(WIN_PACKAGE)
-	pushd cmk-agent-ctl \
-	&& ../../scripts/run-cargo-command build --release \
-	&& popd \
+build: $(DEB_PACKAGE) $(RPM_PACKAGE) $(WIN_PACKAGE) controller
+
+controller:
+	rm -f linux/cmk-agent-ctl
+	(cd cmk-agent-ctl; ../../scripts/run-cargo-command build --release) \
 	&& mkdir -p linux \
 	&& cp cmk-agent-ctl/target/release/cmk-agent-ctl linux
 
@@ -60,7 +63,7 @@ deb: $(DEB_PACKAGE)
 
 rpm: $(RPM_PACKAGE)
 
-$(RPM_PACKAGE): waitmax
+$(RPM_PACKAGE): controller waitmax
 	rm -rf $(RPM_TOPDIR)
 	mkdir -p $(RPM_TOPDIR)/RPMS
 	mkdir -p $(RPM_TOPDIR)/SRPMS
@@ -71,17 +74,18 @@ $(RPM_PACKAGE): waitmax
 	    $(RPM_TOPDIR)/SOURCES/$(NAME)-$(VERSION).tar.gz \
 	    --transform='s@^@$(DISTNAME)/@' \
 	    cfg_examples \
+	    scripts \
 	    check_mk_agent.linux \
 	    check_mk_caching_agent.linux \
+	    linux/cmk-agent-ctl \
 	    waitmax \
 	    mk-job
-	sed "s/^Version:.*/Version: $(RPM_VERSION)/" $(NAME).spec > $(NAME)-$(VERSION).spec
 	rm -f *.rpm
 	rpmbuild -ba --buildroot "$(RPM_BUILDROOT)" \
 	    --define "_topdir $(RPM_TOPDIR)" \
 	    --define "_version $(VERSION)" \
-	    $(DISTNAME).spec
-	rm -f $(DISTNAME).spec
+	    --define "_rpm_version $(RPM_VERSION)" \
+	    $(NAME).spec
 	mv -v $(RPM_TOPDIR)/RPMS/*/* $(RPM_PACKAGE)
 	rm -rf $(RPM_TOPDIR) $(RPM_BUILDROOT)
 
@@ -118,4 +122,4 @@ $(DEB_PACKAGE): $(RPM_PACKAGE)
 	rm -rf deb-unpack
 
 clean:
-	rm -rf *~ waitmax *.rpm *.deb
+	rm -rf *~ waitmax *.rpm *.deb linux/cmk-agent-ctl

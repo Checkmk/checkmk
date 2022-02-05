@@ -7,7 +7,6 @@
 import os
 import subprocess
 import traceback
-from pathlib import Path
 from typing import Any, Dict
 from typing import Optional as _Optional
 
@@ -18,7 +17,7 @@ from cmk.utils.type_defs import ConfigurationWarnings
 
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
-from cmk.gui.plugins.wato import (
+from cmk.gui.plugins.wato.utils import (
     ABCConfigDomain,
     add_replication_paths,
     config_domain_registry,
@@ -50,7 +49,7 @@ from cmk.gui.valuespec import (
 @config_variable_group_registry.register
 class ConfigVariableGroupSiteManagement(ConfigVariableGroup):
     def title(self):
-        return _("Site Management")
+        return _("Site management")
 
     def sort_index(self):
         return 30
@@ -236,7 +235,7 @@ class ConfigVariableSiteNSCA(ConfigVariable):
 class ConfigDomainDiskspace(ABCConfigDomain):
     needs_sync = True
     needs_activation = False
-    diskspace_config = cmk.utils.paths.omd_root + "/etc/diskspace.conf"
+    diskspace_config = cmk.utils.paths.omd_root / "etc/diskspace.conf"
 
     @classmethod
     def ident(cls) -> ConfigDomainName:
@@ -295,7 +294,7 @@ class ConfigDomainDiskspace(ABCConfigDomain):
 
     def default_globals(self):
         diskspace_context: Dict[str, Any] = {}
-        filename = Path(cmk.utils.paths.omd_root, "bin", "diskspace")
+        filename = cmk.utils.paths.omd_root / "bin/diskspace"
         with filename.open(encoding="utf-8") as f:
             code = compile(f.read(), str(filename), "exec")
             exec(code, {}, diskspace_context)
@@ -405,7 +404,7 @@ add_replication_paths(
         ReplicationPath(
             "file",
             "diskspace",
-            os.path.relpath(ConfigDomainDiskspace.diskspace_config, cmk.utils.paths.omd_root),
+            str(ConfigDomainDiskspace.diskspace_config.relative_to(cmk.utils.paths.omd_root)),
             [],
         ),
     ]
@@ -440,9 +439,9 @@ class ConfigDomainApache(ABCConfigDomain):
         try:
             self._write_config_file()
 
-            p = subprocess.Popen(
+            p = subprocess.Popen(  # pylint:disable=consider-using-with
                 ["omd", "reload", "apache"],
-                stdin=open(os.devnull),
+                stdin=open(os.devnull),  # pylint:disable=consider-using-with
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
                 close_fds=True,
@@ -485,10 +484,8 @@ class ConfigDomainApache(ABCConfigDomain):
         }
 
     def _get_value_from_config(self, varname, conv_func, default_value):
-        config_files = [Path(cmk.utils.paths.omd_root).joinpath("etc/apache/apache.conf")]
-        config_files += sorted(
-            Path(cmk.utils.paths.omd_root).joinpath("etc/apache/conf.d").glob("*.conf")
-        )
+        config_files = [cmk.utils.paths.omd_root / "etc/apache/apache.conf"]
+        config_files += sorted((cmk.utils.paths.omd_root / "etc/apache/conf.d").glob("*.conf"))
 
         value = default_value
 
@@ -566,9 +563,9 @@ class ConfigDomainRRDCached(ABCConfigDomain):
         try:
             self._write_config_file()
 
-            p = subprocess.Popen(
+            p = subprocess.Popen(  # pylint:disable=consider-using-with
                 ["omd", "restart", "rrdcached"],
-                stdin=open(os.devnull),
+                stdin=open(os.devnull),  # pylint:disable=consider-using-with
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
                 close_fds=True,
@@ -612,10 +609,8 @@ class ConfigDomainRRDCached(ABCConfigDomain):
         }
 
     def _get_value_from_config(self, varname, conv_func, default_value):
-        config_files = [Path(cmk.utils.paths.omd_root).joinpath("etc/rrdcached.conf")]
-        config_files += sorted(
-            Path(cmk.utils.paths.omd_root).joinpath("etc/rrdcached.d").glob("*.conf")
-        )
+        config_files = [cmk.utils.paths.omd_root / "etc/rrdcached.conf"]
+        config_files += sorted((cmk.utils.paths.omd_root / "etc/rrdcached.d").glob("*.conf"))
 
         value = default_value
 

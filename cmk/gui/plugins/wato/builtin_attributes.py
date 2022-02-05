@@ -7,6 +7,7 @@ import time
 
 import cmk.utils.tags
 from cmk.utils.type_defs import HostName, List
+from cmk.utils.version import Edition, is_plus_edition
 
 import cmk.gui.hooks as hooks
 import cmk.gui.userdb as userdb
@@ -17,8 +18,9 @@ from cmk.gui.fields import validators
 from cmk.gui.globals import html, user
 from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _
-from cmk.gui.plugins.wato import (
+from cmk.gui.plugins.wato.utils import (
     ABCHostAttributeNagiosText,
+    ABCHostAttributeNagiosValueSpec,
     ABCHostAttributeValueSpec,
     ConfigHostname,
     host_attribute_registry,
@@ -286,13 +288,17 @@ class HostAttributeAdditionalIPv6Addresses(ABCHostAttributeValueSpec):
 
 
 @host_attribute_registry.register
-class HostAttributeAgentConnection(ABCHostAttributeValueSpec):
+class HostAttributeAgentConnection(ABCHostAttributeNagiosValueSpec):
     def topic(self):
         return HostAttributeTopicDataSources
 
     @classmethod
     def sort_index(cls):
         return 64  # after agent, before snmp
+
+    def is_show_more(self) -> bool:
+        # non plus edition currently only has one option
+        return not is_plus_edition()
 
     def name(self):
         return "cmk_agent_connection"
@@ -306,19 +312,31 @@ class HostAttributeAgentConnection(ABCHostAttributeValueSpec):
     def depends_on_tags(self):
         return ["checkmk-agent"]
 
+    def nagios_name(self) -> str:
+        return self.name()
+
+    def to_nagios(self, value: str) -> str:
+        return value
+
     def valuespec(self):
         return DropdownChoice(
             title=_("Checkmk agent connection mode"),
             choices=[
                 ("pull-agent", _("Pull: Checkmk server contacts the agent")),
-                ("push-agent", _("Push: Checkmk agent contacts the server")),
+                (
+                    "push-agent",
+                    _("Push: Checkmk agent contacts the server (%s only)")
+                    % Edition.CPE.short.upper(),
+                ),
             ],
-            help=_(  #
+            help=_(
                 "By default the server will try to contact the monitored host and pull the"
-                " data by initializing a TCP connection. You can configure a push"
-                " configuration, where the monitored host is expected to send the data to"
-                " the monitoring server without being actively triggered."
-            ),
+                " data by initializing a TCP connection. "
+                "On the %s you can configure a push configuration, where the monitored host is"
+                " expected to send the data to the monitoring server without being actively"
+                " triggered."
+            )
+            % Edition.CPE.title,
         )
 
     def openapi_field(self) -> fields.Field:
@@ -1103,7 +1121,7 @@ class LockedByValuespec(Tuple):
             title=_("Locked by"),
             help=_(
                 "The host is (partially) managed by an automatic data source like the "
-                "Dynamic Configuration."
+                "dynamic configuration."
             ),
         )
 

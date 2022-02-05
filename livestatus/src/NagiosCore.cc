@@ -6,6 +6,7 @@
 #include "NagiosCore.h"
 
 #include <cstdlib>
+#include <sstream>
 #include <utility>
 
 #include "Logger.h"
@@ -18,6 +19,7 @@ void NagiosPaths::dump(Logger *logger) const {
     Notice(logger) << "pnp path = '" << _pnp << "'";
     Notice(logger) << "inventory path = '" << _mk_inventory << "'";
     Notice(logger) << "structured status path = '" << _structured_status << "'";
+    Notice(logger) << "robotmk var path = '" << _robotmk_var_path << "'";
     Notice(logger) << "logwatch path = '" << _mk_logwatch << "'";
     Notice(logger) << "log file path = '" << _logfile << "'";
     Notice(logger) << "mkeventd socket path = '" << _mkeventd_socket << "'";
@@ -159,6 +161,10 @@ std::filesystem::path NagiosCore::mkInventoryPath() const {
 
 std::filesystem::path NagiosCore::structuredStatusPath() const {
     return _paths._structured_status;
+}
+
+std::filesystem::path NagiosCore::robotMkVarPath() const {
+    return _paths._robotmk_var_path;
 }
 
 std::filesystem::path NagiosCore::crashReportPath() const {

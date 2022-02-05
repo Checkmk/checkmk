@@ -15,7 +15,19 @@ import traceback
 from contextlib import suppress
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
-from typing import Any, Callable, cast, Dict, Iterable, List, Literal, Optional, Tuple, Union
+from typing import (
+    Any,
+    Callable,
+    cast,
+    Dict,
+    Iterable,
+    List,
+    Literal,
+    Optional,
+    Tuple,
+    TypedDict,
+    Union,
+)
 
 from six import ensure_str
 
@@ -71,8 +83,20 @@ auth_logger = logger.getChild("auth")
 Users = Dict[UserId, UserSpec]  # TODO: Improve this type
 
 
+class WebAuthnCredential(TypedDict):
+    credential_id: str
+    registered_at: int
+    alias: str
+    credential_data: bytes
+
+
+class TwoFactorCredentials(TypedDict):
+    webauthn_credentials: Dict[str, WebAuthnCredential]
+    backup_codes: List[str]
+
+
 def load_plugins() -> None:
-    """Plugin initialization hook (Called by cmk.gui.modules.call_load_plugins_hooks())"""
+    """Plugin initialization hook (Called by cmk.gui.main_modules.load_plugins())"""
     utils.load_web_plugins("userdb", globals())
 
 
@@ -232,6 +256,79 @@ def need_to_change_pw(username: UserId) -> Union[bool, str]:
         if time.time() - last_pw_change > max_pw_age:
             return "expired"
     return False
+
+
+def is_two_factor_login_enabled(user_id: UserId) -> bool:
+    """Whether or not 2FA is enabled for the given user"""
+    return bool(load_two_factor_credentials(user_id)["webauthn_credentials"])
+
+
+def disable_two_factor_authentication(user_id: UserId) -> None:
+    credentials = load_two_factor_credentials(user_id, lock=True)
+    credentials["webauthn_credentials"].clear()
+    save_two_factor_credentials(user_id, credentials)
+
+
+def is_two_factor_completed() -> bool:
+    """Whether or not the user has completed the 2FA challenge"""
+    return session.session_info.two_factor_completed
+
+
+def set_two_factor_completed() -> None:
+    session.session_info.two_factor_completed = True
+
+
+def load_two_factor_credentials(user_id: UserId, lock: bool = False) -> TwoFactorCredentials:
+    return load_custom_attr(
+        user_id,
+        "two_factor_credentials",
+        conv_func=ast.literal_eval,
+        default=TwoFactorCredentials(
+            {
+                "webauthn_credentials": {},
+                "backup_codes": [],
+            }
+        ),
+        lock=lock,
+    )
+
+
+def save_two_factor_credentials(user_id: UserId, credentials: TwoFactorCredentials) -> None:
+    save_custom_attr(user_id, "two_factor_credentials", repr(credentials))
+
+
+def make_two_factor_backup_codes() -> Tuple[List[str], List[str]]:
+    """Creates a set of new two factor backup codes
+
+    The codes are returned in plain form for displaying and in hashed+salted form for storage
+    """
+    display_codes = []
+    store_codes = []
+    for _index in range(10):
+        code = utils.get_random_string(10)
+        display_codes.append(code)
+        store_codes.append(cmk.gui.plugins.userdb.htpasswd.hash_password(code))
+    return display_codes, store_codes
+
+
+def is_two_factor_backup_code_valid(user_id: UserId, code: str) -> bool:
+    """Verifies whether or not the given backup code is valid and invalidates the code"""
+    credentials = load_two_factor_credentials(user_id)
+    matched_code = ""
+    for stored_code in credentials["backup_codes"]:
+        if cmk.gui.plugins.userdb.htpasswd.check_password(code, stored_code):
+            matched_code = stored_code
+            break
+
+    if not matched_code:
+        return False
+
+    # Invalidate the just used code
+    credentials = load_two_factor_credentials(user_id, lock=True)
+    credentials["backup_codes"].remove(matched_code)
+    save_two_factor_credentials(user_id, credentials)
+
+    return True
 
 
 def load_user(user_id: UserId) -> UserSpec:
@@ -429,6 +526,10 @@ class SessionInfo:
     started_at: int
     last_activity: int
     flashes: List[str] = field(default_factory=list)
+    # In case it is enabled: Was it already authenticated?
+    two_factor_completed: bool = False
+    # We don't care about the specific object, because it's internal to the fido2 library
+    webauthn_action_state: object = None
 
     def to_json(self) -> Dict:
         return asdict(self)
@@ -762,6 +863,7 @@ def load_users(lock: bool = False) -> Users:
                     "roles": roles_of_user(uid),
                     "password": password,
                     "locked": False,
+                    "connector": "htpasswd",
                 }
 
                 add_internal_attributes(new_user)
@@ -780,6 +882,18 @@ def load_users(lock: bool = False) -> Users:
             if user_id in result:
                 result[user_id]["serial"] = utils.saveint(serial)
 
+    attributes: List[Tuple[str, Callable]] = [
+        ("num_failed_logins", utils.saveint),
+        ("last_pw_change", utils.saveint),
+        ("enforce_pw_change", lambda x: bool(utils.saveint(x))),
+        ("idle_timeout", _convert_idle_timeout),
+        ("session_info", _convert_session_info),
+        ("start_url", _convert_start_url),
+        ("ui_theme", lambda x: x),
+        ("two_factor_credentials", ast.literal_eval),
+        ("ui_sidebar_position", lambda x: None if x == "None" else x),
+    ]
+
     # Now read the user specific files
     directory = cmk.utils.paths.var_dir + "/web/"
     for uid in os.listdir(directory):
@@ -787,16 +901,7 @@ def load_users(lock: bool = False) -> Users:
 
             # read special values from own files
             if uid in result:
-                for attr, conv_func in [
-                    ("num_failed_logins", utils.saveint),
-                    ("last_pw_change", utils.saveint),
-                    ("enforce_pw_change", lambda x: bool(utils.saveint(x))),
-                    ("idle_timeout", _convert_idle_timeout),
-                    ("session_info", _convert_session_info),
-                    ("start_url", _convert_start_url),
-                    ("ui_theme", lambda x: x),
-                    ("ui_sidebar_position", lambda x: None if x == "None" else x),
-                ]:
+                for attr, conv_func in attributes:
                     val = load_custom_attr(uid, attr, conv_func)
                     if val is not None:
                         result[uid][attr] = val
@@ -949,6 +1054,11 @@ def _save_user_profiles(updated_profiles: Users) -> None:
         else:
             remove_custom_attr(user_id, "start_url")
 
+        if user.get("two_factor_credentials") is not None:
+            save_two_factor_credentials(user_id, user["two_factor_credentials"])
+        else:
+            remove_custom_attr(user_id, "two_factor_credentials")
+
         # Is None on first load
         if user.get("ui_theme") is not None:
             save_custom_attr(user_id, "ui_theme", user["ui_theme"])
@@ -1068,6 +1178,7 @@ def _non_contact_keys() -> List[str]:
         "roles",
         "serial",
         "session_info",
+        "two_factor_credentials",
     ] + _get_multisite_custom_variable_names()
 
 
@@ -1124,6 +1235,7 @@ def create_cmk_automation_user() -> None:
         "pager": "",
         "notifications_enabled": False,
         "language": "en",
+        "connector": "htpasswd",
     }
     save_users(users)
 

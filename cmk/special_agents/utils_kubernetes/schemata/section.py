@@ -12,7 +12,7 @@ except the python standard library or pydantic.
 """
 
 import enum
-from typing import Mapping, NewType, Optional, Sequence
+from typing import Literal, Mapping, NewType, Optional, Sequence
 
 from pydantic import BaseModel
 
@@ -110,9 +110,13 @@ class PodResources(BaseModel):
     unknown: PodSequence = []
 
 
+AllocatableKubernetesObject = Literal["cluster", "node"]
+
+
 class AllocatablePods(BaseModel):
     """section: kube_allocatable_pods_v1"""
 
+    kubernetes_object: AllocatableKubernetesObject
     capacity: int
     allocatable: int
 

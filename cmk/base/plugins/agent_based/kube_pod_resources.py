@@ -60,10 +60,11 @@ register.agent_section(
 def parse_kube_allocatable_pods(string_table: StringTable):
     """
     >>> parse_kube_allocatable_pods([[
-    ...     '{"capacity": 110,'
-    ...     ' "allocatable": 110}'
+    ...     '{"kubernetes_object": "cluster",'
+    ...     '"capacity": 110,'
+    ...     '"allocatable": 110}'
     ... ]])
-    AllocatablePods(capacity=110, allocatable=110)
+    AllocatablePods(kubernetes_object='cluster', capacity=110, allocatable=110)
     """
     return AllocatablePods(**json.loads(string_table[0][0]))
 

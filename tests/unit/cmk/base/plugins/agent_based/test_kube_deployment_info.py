@@ -14,6 +14,7 @@ from cmk.base.plugins.agent_based.kube_deployment_info import (
     DeploymentInfo,
 )
 from cmk.base.plugins.agent_based.utils import kube_info
+from cmk.base.plugins.agent_based.utils.k8s import Selector
 
 
 @pytest.fixture(name="time")
@@ -33,6 +34,7 @@ def fixture_time(mocker):
                 name="oh-lord",
                 namespace="have-mercy",
                 labels={},
+                selector=Selector(match_labels={}, match_expressions=[]),
                 creation_timestamp=1600000000.0,
                 images=["i/name:0.5"],
                 containers=["name"],

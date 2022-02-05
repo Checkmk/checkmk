@@ -191,6 +191,7 @@ class DeploymentInfo(BaseModel):
     name: str
     namespace: api.Namespace
     labels: api.Labels
+    selector: api.Selector
     creation_timestamp: api.CreationTimestamp
     images: Sequence[str]
     containers: Sequence[str]

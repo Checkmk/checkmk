@@ -380,7 +380,7 @@ class Deployment:
         status: api.DeploymentStatus,
     ) -> None:
         self.metadata = metadata
-        self._spec = spec
+        self.spec = spec
         self.status = status
         self._pods: List[Pod] = []
         self.type_: str = "deployment"
@@ -413,6 +413,7 @@ class Deployment:
             namespace=self.metadata.namespace,
             creation_timestamp=self.metadata.creation_timestamp,
             labels=self.metadata.labels if self.metadata.labels else {},
+            selector=self.spec.selector,
             images=list(container_images),
             containers=container_names,
         )
@@ -442,7 +443,7 @@ class Deployment:
         return self.status.replicas
 
     def strategy(self) -> section.DeploymentStrategy:
-        return section.DeploymentStrategy(strategy=self._spec.strategy)
+        return section.DeploymentStrategy(strategy=self.spec.strategy)
 
 
 class Node:

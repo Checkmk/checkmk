@@ -303,12 +303,28 @@ class ContainerInfo(BaseModel):
     restart_count: int
 
 
+class MatchExpression(TypedDict):
+    key: LabelName
+    operator: Literal["In", "NotIn", "Exists", "DoesNotExist"]
+    values: Sequence[LabelValue]
+
+
+MatchLabels = Mapping[LabelName, LabelValue]
+MatchExpressions = Sequence[MatchExpression]
+
+
+class Selector(BaseModel):
+    match_labels: MatchLabels
+    match_expressions: MatchExpressions
+
+
 class DeploymentInfo(BaseModel):
     """section: kube_deployment_info_v1"""
 
     name: str
     namespace: Namespace
     labels: Labels
+    selector: Selector
     creation_timestamp: CreationTimestamp
     images: Sequence[str]
     containers: Sequence[str]

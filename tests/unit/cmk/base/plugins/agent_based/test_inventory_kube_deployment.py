@@ -16,6 +16,7 @@ from cmk.base.plugins.agent_based.utils.k8s import (
     Label,
     LabelName,
     RollingUpdate,
+    Selector,
 )
 
 
@@ -27,6 +28,7 @@ from cmk.base.plugins.agent_based.utils.k8s import (
                 name="oh-lord",
                 namespace="have-mercy",
                 labels={LabelName("app"): Label(name="app", value="checkmk-cluster-agent")},
+                selector=Selector(match_labels={}, match_expressions=[]),
                 creation_timestamp=1600000000.0,
                 images=["i/name:0.5"],
                 containers=["name"],

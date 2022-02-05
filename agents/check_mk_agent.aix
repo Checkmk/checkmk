@@ -463,14 +463,6 @@ section_mailqueue() {
 }
 
 section_uptime() {
-    # uptime formats
-    # 12:55pm  up 105 days, 21 hrs,  2 users, load average: 0.26, 0.26, 0.26 --> 9147600
-    # 1:41pm   up 105 days, 21:46,   2 users, load average: 0.28, 0.28, 0.27 --> 9150360
-    # 05:26PM  up           1:16,    1 user,  load average: 0.33, 0.21, 0.20 --> 4560
-    # 06:13PM  up           2:03,    1 user,  load average: 1.16, 1.07, 0.91 --> 7380
-    # 08:43AM  up 29 mins,           1 user,  load average: 0.09, 0.18, 0.21 --> 1740
-    # 08:47AM  up 66 days,  18:34,   1 user,  load average: 2.25, 2.43, 2.61 --> 5769240
-    # 08:45AM  up 76 days,  34 mins, 1 user,  load average: 2.25, 2.43, 2.61 --> 5769240
     echo '<<<uptime>>>'
     UPTIME=$(uptime | sed -e 's/^.*up//g' -e 's/[0-9]* user.*//g')
     case ${UPTIME} in

@@ -112,8 +112,8 @@ AttributeType = Tuple[str, str, Dict[str, Any], str]  # host attr, cmk.base var 
 
 
 class FolderMetaData:
-    """Stores meta information for one CREFolder. This information is fetched from Redis
-    and does not require complex instantation of a CREFolder Object"""
+    """Stores meta information for one CREFolder.
+    Usually this class is instantiated with data from Redis"""
 
     def __init__(
         self,
@@ -142,7 +142,6 @@ class FolderMetaData:
 
     @property
     def path_titles(self) -> List[str]:
-        # TODO: store path title in redis
         return self._path.split("/")
 
     @property
@@ -152,9 +151,14 @@ class FolderMetaData:
     @property
     def num_hosts_recursively(self) -> int:
         if self._num_hosts_recursively is None:
-            self._num_hosts_recursively = get_wato_redis_client().num_hosts_recursively_lua(
-                self._path
-            )
+            if may_use_redis():
+                self._num_hosts_recursively = get_wato_redis_client().num_hosts_recursively_lua(
+                    self._path
+                )
+            else:
+                self._num_hosts_recursively = Folder.folder(
+                    self._path.rstrip("/")
+                ).num_hosts_recursively()
         return self._num_hosts_recursively
 
 

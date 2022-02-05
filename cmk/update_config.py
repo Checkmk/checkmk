@@ -200,7 +200,8 @@ class UpdateConfig:
 
         main_modules.load_plugins()
 
-        with gui_context(), SuperUserContext():
+        # Note: Redis has to be disabled first, the other contexts depend on it
+        with cmk.gui.watolib.hosts_and_folders.disable_redis(), gui_context(), SuperUserContext():
             self._check_failed_gui_plugins()
             self._initialize_base_environment()
 

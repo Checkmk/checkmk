@@ -1192,22 +1192,6 @@ def _site_is_using_livestatus_proxy(site_id):
 
 
 @ac_test_registry.register
-class ACTestConnectivity(ACTest):
-    def category(self) -> str:
-        return ACTestCategories.connectivity
-
-    def title(self) -> str:
-        return _("Site connectivity")
-
-    def help(self) -> str:
-        return _("This check returns CRIT if the connection to the remote site failed.")
-
-    def is_relevant(self) -> bool:
-        # This test is always irrelevant :)
-        return False
-
-
-@ac_test_registry.register
 class ACTestUnexpectedAllowedIPRanges(ACTest):
     def category(self) -> str:
         return ACTestCategories.security

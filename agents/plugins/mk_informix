@@ -178,9 +178,8 @@ informix_logusage() {
 #       EXCLUDES="SECTION SECTION ..."
 #       EXCLUDES=ALL
 
-if [ -f "$MK_CONFDIR/informix.cfg" ]; then
-    . "$MK_CONFDIR/informix.cfg"
-fi
+# shellcheck source=agents/cfg_examples/informix.cfg
+. "$MK_CONFDIR/informix.cfg" 2>/dev/null
 
 if [ -z "$ONINIT_PATH" ] || [ ! -x "$ONINIT_PATH" ]; then
     ONINIT=$(UNIX95=true ps ax | grep oninit | grep -v grep | head -1 | awk '{print $1 " " $5}')

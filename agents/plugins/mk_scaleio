@@ -29,6 +29,7 @@ if [ ! "$MK_CONFDIR" ]; then
     exit 1
 fi
 
+# shellcheck source=agents/cfg_examples/mk_scaleio.cfg
 . "$MK_CONFDIR/mk_scaleio.cfg" || exit 1
 
 if [ -z "${SIO_USER}" ] || [ -z "${SIO_PASSWORD}" ]; then

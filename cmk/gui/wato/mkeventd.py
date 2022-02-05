@@ -67,8 +67,6 @@ from cmk.gui.permissions import Permission, permission_registry
 from cmk.gui.plugins.wato.check_mk_configuration import (
     ConfigVariableGroupUserInterface,
     ConfigVariableGroupWATO,
-    RulespecGroupHostsMonitoringRulesVarious,
-    RulespecGroupMonitoringConfigurationVarious,
 )
 from cmk.gui.plugins.wato.globals_notification import ConfigVariableGroupNotifications
 from cmk.gui.plugins.wato.utils import (
@@ -94,6 +92,8 @@ from cmk.gui.plugins.wato.utils import (
     rulespec_group_registry,
     rulespec_registry,
     RulespecGroup,
+    RulespecGroupHostsMonitoringRulesVarious,
+    RulespecGroupMonitoringConfigurationVarious,
     sample_config_generator_registry,
     SampleConfigGenerator,
     ServiceRulespec,

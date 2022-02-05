@@ -45,8 +45,15 @@ from cmk.gui.plugins.wato.utils import (
     rulespec_group_registry,
     rulespec_registry,
     RulespecGroup,
+    RulespecGroupAgentSNMP,
     RulespecGroupDiscoveryCheckParameters,
-    RulespecGroupMonitoringConfiguration,
+    RulespecGroupHostsMonitoringRulesHostChecks,
+    RulespecGroupHostsMonitoringRulesNotifications,
+    RulespecGroupHostsMonitoringRulesVarious,
+    RulespecGroupMonitoringAgentsGenericOptions,
+    RulespecGroupMonitoringConfigurationNotifications,
+    RulespecGroupMonitoringConfigurationServiceChecks,
+    RulespecGroupMonitoringConfigurationVarious,
     RulespecSubGroup,
     ServiceDescriptionTranslation,
     ServiceGroupSelection,
@@ -1444,36 +1451,6 @@ class ConfigVariableCustomServiceAttributes(ConfigVariable):
             seen_titles.append(entry["title"])
 
 
-@rulespec_group_registry.register
-class RulespecGroupHostsMonitoringRules(RulespecGroup):
-    @property
-    def name(self):
-        return "host_monconf"
-
-    @property
-    def title(self):
-        return _("Host monitoring rules")
-
-    @property
-    def help(self):
-        return _("Rules to configure the behaviour of monitored hosts.")
-
-
-@rulespec_group_registry.register
-class RulespecGroupMonitoringConfigurationServiceChecks(RulespecSubGroup):
-    @property
-    def main_group(self):
-        return RulespecGroupMonitoringConfiguration
-
-    @property
-    def sub_group_name(self):
-        return "service_checks"
-
-    @property
-    def title(self):
-        return _("Service Checks")
-
-
 def _custom_service_attributes_validate_unique_entries(value, varprefix):
     seen_ids = []
     for entry in value:
@@ -1514,21 +1491,6 @@ def _service_tag_rules_tag_group_choices():
             )
         )
     return sorted(choices, key=lambda x: x[1])
-
-
-@rulespec_group_registry.register
-class RulespecGroupHostsMonitoringRulesHostChecks(RulespecSubGroup):
-    @property
-    def main_group(self):
-        return RulespecGroupHostsMonitoringRules
-
-    @property
-    def sub_group_name(self):
-        return "host_checks"
-
-    @property
-    def title(self):
-        return _("Host checks")
 
 
 @config_variable_registry.register
@@ -3118,36 +3080,6 @@ class ConfigVariableInventoryCheckAutotrigger(ConfigVariable):
 #   '----------------------------------------------------------------------'
 
 
-@rulespec_group_registry.register
-class RulespecGroupHostsMonitoringRulesVarious(RulespecSubGroup):
-    @property
-    def main_group(self):
-        return RulespecGroupHostsMonitoringRules
-
-    @property
-    def sub_group_name(self):
-        return "host_various"
-
-    @property
-    def title(self):
-        return _("Various")
-
-
-@rulespec_group_registry.register
-class RulespecGroupMonitoringConfigurationVarious(RulespecSubGroup):
-    @property
-    def main_group(self):
-        return RulespecGroupMonitoringConfiguration
-
-    @property
-    def sub_group_name(self):
-        return "various"
-
-    @property
-    def title(self):
-        return _("Various")
-
-
 def _valuespec_host_groups():
     return HostGroupSelection(
         title=_("Assignment of hosts to host groups"),
@@ -3553,36 +3485,6 @@ rulespec_registry.register(
         valuespec=_valuespec_host_check_commands,
     )
 )
-
-
-@rulespec_group_registry.register
-class RulespecGroupMonitoringConfigurationNotifications(RulespecSubGroup):
-    @property
-    def main_group(self):
-        return RulespecGroupMonitoringConfiguration
-
-    @property
-    def sub_group_name(self):
-        return "notifications"
-
-    @property
-    def title(self):
-        return _("Notifications")
-
-
-@rulespec_group_registry.register
-class RulespecGroupHostsMonitoringRulesNotifications(RulespecSubGroup):
-    @property
-    def main_group(self):
-        return RulespecGroupHostsMonitoringRules
-
-    @property
-    def sub_group_name(self):
-        return "host_notifications"
-
-    @property
-    def title(self):
-        return _("Notifications")
 
 
 def _valuespec_extra_host_conf_notifications_enabled():
@@ -4916,21 +4818,6 @@ rulespec_registry.register(
 )
 
 
-@rulespec_group_registry.register
-class RulespecGroupAgentSNMP(RulespecGroup):
-    @property
-    def name(self):
-        return "snmp"
-
-    @property
-    def title(self):
-        return _("SNMP rules")
-
-    @property
-    def help(self):
-        return _("Configure SNMP related settings using rulesets")
-
-
 def _valuespec_snmp_communities():
     return SNMPCredentials(
         title=_("SNMP credentials of monitored hosts"),
@@ -5654,36 +5541,6 @@ rulespec_registry.register(
         is_deprecated=True,
     )
 )
-
-
-@rulespec_group_registry.register
-class RulespecGroupMonitoringAgents(RulespecGroup):
-    @property
-    def name(self):
-        return "agents"
-
-    @property
-    def title(self):
-        return _("Agent rules")
-
-    @property
-    def help(self):
-        return _("Configuration of monitoring agents for Linux, Windows and Unix")
-
-
-@rulespec_group_registry.register
-class RulespecGroupMonitoringAgentsGenericOptions(RulespecSubGroup):
-    @property
-    def main_group(self):
-        return RulespecGroupMonitoringAgents
-
-    @property
-    def sub_group_name(self):
-        return "generic_options"
-
-    @property
-    def title(self):
-        return _("Generic Options")
 
 
 def _valuespec_agent_config_only_from():

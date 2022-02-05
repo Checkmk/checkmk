@@ -203,7 +203,6 @@ from cmk.gui.watolib.rulespecs import (
     Rulespec,
     rulespec_group_registry,
     RulespecGroup,
-    RulespecGroupEnforcedServices,
     RulespecGroupRegistry,
     RulespecSubGroup,
 )

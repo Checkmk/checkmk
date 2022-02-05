@@ -183,6 +183,25 @@ from cmk.gui.watolib.host_attributes import (  # noqa: F401 # pylint: disable=un
     HostAttributeTopicNetworkScan,
 )
 from cmk.gui.watolib.password_store import PasswordStore
+from cmk.gui.watolib.rulespec_groups import (  # noqa: F401 # pylint: disable=unused-import
+    RulespecGroupAgentSNMP,
+    RulespecGroupEnforcedServicesApplications,
+    RulespecGroupEnforcedServicesEnvironment,
+    RulespecGroupEnforcedServicesHardware,
+    RulespecGroupEnforcedServicesNetworking,
+    RulespecGroupEnforcedServicesOperatingSystem,
+    RulespecGroupEnforcedServicesStorage,
+    RulespecGroupEnforcedServicesVirtualization,
+    RulespecGroupHostsMonitoringRulesHostChecks,
+    RulespecGroupHostsMonitoringRulesNotifications,
+    RulespecGroupHostsMonitoringRulesVarious,
+    RulespecGroupMonitoringAgents,
+    RulespecGroupMonitoringAgentsGenericOptions,
+    RulespecGroupMonitoringConfiguration,
+    RulespecGroupMonitoringConfigurationNotifications,
+    RulespecGroupMonitoringConfigurationServiceChecks,
+    RulespecGroupMonitoringConfigurationVarious,
+)
 from cmk.gui.watolib.rulespecs import (  # noqa: F401 # pylint: disable=unused-import
     BinaryHostRulespec,
     BinaryServiceRulespec,
@@ -194,13 +213,6 @@ from cmk.gui.watolib.rulespecs import (  # noqa: F401 # pylint: disable=unused-i
     rulespec_group_registry,
     rulespec_registry,
     RulespecGroup,
-    RulespecGroupEnforcedServicesApplications,
-    RulespecGroupEnforcedServicesEnvironment,
-    RulespecGroupEnforcedServicesHardware,
-    RulespecGroupEnforcedServicesNetworking,
-    RulespecGroupEnforcedServicesOperatingSystem,
-    RulespecGroupEnforcedServicesStorage,
-    RulespecGroupEnforcedServicesVirtualization,
     RulespecSubGroup,
     ServiceRulespec,
     TimeperiodValuespec,
@@ -884,26 +896,6 @@ def register_check_parameters(
             "check parameters is not supported anymore using the old API. "
             "Please register the manual check rulespec using the new API. "
             "Checkgroup: %s" % checkgroup
-        )
-
-
-@rulespec_group_registry.register
-class RulespecGroupMonitoringConfiguration(RulespecGroup):
-    @property
-    def name(self):
-        return "monconf"
-
-    @property
-    def title(self):
-        return _("Service monitoring rules")
-
-    @property
-    def help(self):
-        return _(
-            "Rules to configure existing services in the monitoring. For "
-            "example, threshold values can be set, the execution time for "
-            "active checks can be configured or attributes such as labels "
-            "or tags can be assigned to the services."
         )
 
 

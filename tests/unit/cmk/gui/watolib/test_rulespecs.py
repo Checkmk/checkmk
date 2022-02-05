@@ -16,6 +16,7 @@ from cmk.gui.exceptions import MKGeneralException, MKUserError
 from cmk.gui.plugins.wato.utils import register_check_parameters, TimeperiodValuespec
 from cmk.gui.valuespec import Dictionary, FixedValue, TextInput, Tuple, ValueSpec
 from cmk.gui.watolib.main_menu import main_module_registry
+from cmk.gui.watolib.rulespec_groups import RulespecGroupEnforcedServices
 from cmk.gui.watolib.rulespecs import (
     CheckTypeGroupSelection,
     HostRulespec,
@@ -25,7 +26,6 @@ from cmk.gui.watolib.rulespecs import (
     rulespec_group_registry,
     rulespec_registry,
     RulespecGroup,
-    RulespecGroupEnforcedServices,
     RulespecGroupRegistry,
     RulespecRegistry,
     RulespecSubGroup,

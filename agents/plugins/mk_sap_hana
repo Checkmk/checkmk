@@ -735,6 +735,11 @@ query_instance() {
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
+# We suppress the following:
+#  * Modification to PARAM is local (to subshell caused by pipeline).
+#  * PARAM was modified in a subshell. That change might be lost.
+# It is ok here, because we only ever enter one branch of the toplevel condition.
+# shellcheck disable=SC2030,SC2031
 if [ -n "$DBS" ]; then
     for d in "${DBS[@]}"; do
         cut -d "," -f1-2 <<<"${d}"

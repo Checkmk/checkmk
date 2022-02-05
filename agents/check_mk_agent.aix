@@ -466,7 +466,7 @@ section_uptime() {
     echo '<<<uptime>>>'
     UPTIME=$(uptime | sed -e 's/^.*up//g' -e 's/[0-9]* user.*//g')
     case ${UPTIME} in
-        *day*) DAYS=$(echo "${UPTIME}" | sed -e 's/days\{0,1\},.*//g') ;;
+        *day*) DAYS="${UPTIME%% day*}" ;;
         *) DAYS="0" ;;
     esac
 

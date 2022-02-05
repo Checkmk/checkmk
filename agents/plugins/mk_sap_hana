@@ -360,7 +360,8 @@ get_last_used_check_file() {
 
     # check if the old alerts_last_check file without tenant info is present,
     # hence script is running the first time since the version update
-    old_last_check_file=$(echo "${alerts_last_check_file}" | sed -e "s/${db_suffix}\././") # tenant and instance can be the same, hence replace only tenant followed with a dot
+    # tenant and instance can be the same, hence replace only tenant followed with a dot
+    old_last_check_file="${alerts_last_check_file//${db_suffix}./.}"
 
     if file_exists "$old_last_check_file"; then
         echo "$old_last_check_file"

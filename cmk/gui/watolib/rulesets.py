@@ -52,7 +52,7 @@ from cmk.gui.watolib.hosts_and_folders import (
     may_use_redis,
 )
 from cmk.gui.watolib.rulespecs import rulespec_group_registry, rulespec_registry
-from cmk.gui.watolib.utils import ALL_HOSTS, ALL_SERVICES, has_agent_bakery, NEGATE
+from cmk.gui.watolib.utils import ALL_HOSTS, ALL_SERVICES, has_agent_bakery, NEGATE, wato_root_dir
 
 # Make the GUI config module reset the base config to always get the latest state of the config
 register_post_config_load_hook(cmk.base.export.reset_config)
@@ -382,10 +382,36 @@ class AllRulesets(RulesetCollection):
     def _load_rulesets_recursively(
         self, folder: CREFolder, only_varname: Optional[RulesetName] = None
     ) -> None:
+
+        if may_use_redis():
+            self._load_rulesets_via_redis(folder, only_varname)
+            return
+
         for subfolder in folder.subfolders():
             self._load_rulesets_recursively(subfolder, only_varname)
 
         self._load_folder_rulesets(folder, only_varname)
+
+    def _load_rulesets_via_redis(
+        self, folder: CREFolder, only_varname: Optional[RulesetName] = None
+    ) -> None:
+        # Search relevant folders with rules.mk files
+        # Note: The sort order of the folders does not matter here
+        #       self._load_folder_rulesets ultimately puts each folder into a dict
+        #       and groups/sorts them later on with a different mechanism
+        all_folders = get_wato_redis_client().recursive_subfolders_for_path(
+            f"{folder.path()}/".lstrip("/")
+        )
+
+        root_dir = wato_root_dir()[:-1]
+        relevant_folders = []
+        for folder_path in all_folders:
+            if os.path.exists(f"{root_dir}/{folder_path}rules.mk"):
+                relevant_folders.append(folder_path)
+
+        for folder_path_with_slash in relevant_folders:
+            stripped_folder = folder_path_with_slash.strip("/")
+            self._load_folder_rulesets(Folder.folder(stripped_folder), only_varname)
 
     def load(self) -> None:
         """Load all rules of all folders"""

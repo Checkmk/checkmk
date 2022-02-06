@@ -317,6 +317,9 @@ class _RedisHelper:
             self._folder_paths = tuple(self._client.smembers("wato:folder_list"))
         return self._folder_paths
 
+    def recursive_subfolders_for_path(self, path: PathWithSlash) -> List[PathWithSlash]:
+        return [x for x in self.folder_paths if x.startswith(path)]
+
     @property
     def loaded_wato_folders(self) -> Optional[Mapping[str, CREFolder]]:
         return self._loaded_wato_folders

@@ -19,7 +19,7 @@ from cmk.utils.type_defs import ContactgroupName
 import cmk.gui.watolib as watolib
 import cmk.gui.watolib.hosts_and_folders as hosts_and_folders
 from cmk.gui import userdb
-from cmk.gui.globals import config
+from cmk.gui.globals import config, g
 from cmk.gui.watolib.search import MatchItem
 from cmk.gui.watolib.utils import has_agent_bakery
 
@@ -770,39 +770,41 @@ def _default_groups(configured_groups: List[ContactgroupName]):
     }
 
 
+group_tree_structure = _TreeStructure(
+    "",
+    _default_groups(["group1"]),
+    [
+        _TreeStructure(
+            "sub1.1",
+            {},
+            [
+                _TreeStructure(
+                    "sub2.1",
+                    _default_groups(["supersecret_group"]),
+                    [],
+                    100,
+                ),
+            ],
+            8,
+        ),
+        _TreeStructure(
+            "sub1.2",
+            _default_groups(["group2"]),
+            [],
+            3,
+        ),
+        _TreeStructure(
+            "sub1.3",
+            _default_groups(["group1", "group3"]),
+            [],
+            1,
+        ),
+    ],
+    5,
+)
+
 group_tree_test = (
-    _TreeStructure(
-        "",
-        _default_groups(["group1"]),
-        [
-            _TreeStructure(
-                "sub1.1",
-                {},
-                [
-                    _TreeStructure(
-                        "sub2.1",
-                        _default_groups(["supersecret_group"]),
-                        [],
-                        100,
-                    ),
-                ],
-                8,
-            ),
-            _TreeStructure(
-                "sub1.2",
-                _default_groups(["group2"]),
-                [],
-                3,
-            ),
-            _TreeStructure(
-                "sub1.3",
-                _default_groups(["group1", "group3"]),
-                [],
-                1,
-            ),
-        ],
-        5,
-    ),
+    group_tree_structure,
     [
         _UserTest([], True, 0, True),
         _UserTest(["nomatch"], True, 0, True),
@@ -917,3 +919,25 @@ class MockRedisClient:
             return lambda: self._fake_pipeline
 
         return lambda *args, **kwargs: lambda *args, **kwargs: None
+
+
+@pytest.mark.usefixtures("with_admin_login")
+def test_load_redis_folders_on_demand(monkeypatch):
+    wato_folder = make_monkeyfree_folder(group_tree_structure)
+    with get_fake_setup_redis_client(
+        monkeypatch, _convert_folder_tree_to_all_folders(wato_folder), []
+    ):
+        hosts_and_folders.CREFolder.all_folders()
+        # Check if wato_folders class matches
+        assert isinstance(g.wato_folders, hosts_and_folders.WATOFoldersOnDemand)
+        # Check if item is None
+        assert dict.__getitem__(g.wato_folders, "sub1.1") is None
+        # Check if item is generated on access
+        assert isinstance(g.wato_folders["sub1.1"], hosts_and_folders.CREFolder)
+        # Check if item is now set in dict
+        assert isinstance(dict.__getitem__(g.wato_folders, "sub1.1"), hosts_and_folders.CREFolder)
+
+        # Check if other folder is still None
+        assert dict.__getitem__(g.wato_folders, "sub1.2") is None
+        # Check if parent(main) folder got instantiated as well
+        assert isinstance(dict.__getitem__(g.wato_folders, ""), hosts_and_folders.CREFolder)

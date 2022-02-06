@@ -42,12 +42,9 @@ from cmk.utils.type_defs import HostName, ServiceName
 
 import cmk.gui.forms as forms
 import cmk.gui.i18n
-import cmk.gui.inventory as inventory
 import cmk.gui.log as log
 import cmk.gui.pages
 import cmk.gui.pagetypes as pagetypes
-import cmk.gui.plugins.views.availability
-import cmk.gui.plugins.views.inventory
 import cmk.gui.sites as sites
 import cmk.gui.utils as utils
 import cmk.gui.view_utils
@@ -73,6 +70,14 @@ from cmk.gui.globals import (
 # Needed for legacy (pre 1.6) plugins
 from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _, _u
+from cmk.gui.inventory import (
+    get_short_inventory_filepath,
+    get_status_data_via_livestatus,
+    load_filtered_and_merged_tree,
+    load_latest_delta_tree,
+    LoadStructuredDataError,
+    parse_tree_path,
+)
 from cmk.gui.main_menu import mega_menu_registry
 from cmk.gui.page_menu import (
     make_checkbox_selection_topic,
@@ -207,6 +212,7 @@ from cmk.gui.valuespec import (
 )
 from cmk.gui.view_utils import get_labels, render_labels, render_tag_groups
 from cmk.gui.views.builtin_views import builtin_views
+from cmk.gui.views.inventory import declare_inventory_columns, declare_invtable_views
 from cmk.gui.watolib.activate_changes import get_pending_changes_info, get_pending_changes_tooltip
 
 if not cmk_version.is_raw_edition():
@@ -232,6 +238,8 @@ from cmk.gui.type_defs import (
 from cmk.gui.utils.confirm_with_preview import confirm_with_preview
 from cmk.gui.utils.ntop import get_ntop_connection, is_ntop_configured
 from cmk.gui.utils.urls import makeuri, makeuri_contextless
+
+from . import availability
 
 # TODO: Kept for compatibility with pre 1.6 plugins. Plugins will not be used anymore, but an error
 # will be displayed.
@@ -335,7 +343,7 @@ def _has_inventory_tree(linking_view, rows, view, context_vars, invpath, is_hist
     # do we really need to load the whole tree?
     try:
         struct_tree = _get_struct_tree(is_history, hostname, context.get("site"))
-    except inventory.LoadStructuredDataError:
+    except LoadStructuredDataError:
         return False
 
     if not struct_tree:
@@ -352,7 +360,7 @@ def _has_inventory_tree(linking_view, rows, view, context_vars, invpath, is_hist
 
 
 def _has_children(struct_tree, invpath):
-    parsed_path, _attribute_keys = inventory.parse_tree_path(invpath)
+    parsed_path, _attribute_keys = parse_tree_path(invpath)
     if (node := struct_tree.get_node(parsed_path)) is None or node.is_empty():
         return False
     return True
@@ -365,10 +373,10 @@ def _get_struct_tree(is_history, hostname, site_id):
         return struct_tree_cache[cache_id]
 
     if is_history:
-        struct_tree = inventory.load_latest_delta_tree(hostname)
+        struct_tree = load_latest_delta_tree(hostname)
     else:
-        row = inventory.get_status_data_via_livestatus(site_id, hostname)
-        struct_tree = inventory.load_filtered_and_merged_tree(row)
+        row = get_status_data_via_livestatus(site_id, hostname)
+        struct_tree = load_filtered_and_merged_tree(row)
 
     struct_tree_cache[cache_id] = struct_tree
     return struct_tree
@@ -1259,8 +1267,8 @@ def load_plugins() -> None:
     multisite_builtin_views.update(builtin_views)
 
     # Needs to be executed after all plugins (builtin and local) are loaded
-    cmk.gui.plugins.views.inventory.declare_inventory_columns()
-    cmk.gui.plugins.views.inventory.declare_invtable_views()
+    declare_inventory_columns()
+    declare_invtable_views()
 
     # TODO: Kept for compatibility with pre 1.6 plugins
     for ident, spec in multisite_painters.items():
@@ -1297,7 +1305,7 @@ def _register_pre_21_plugin_api() -> None:
     switch to the new API. Until then let's not bother the users with it.
     """
     # Needs to be a local import to not influence the regular plugin loading order
-    import cmk.gui.plugins.views as api_module
+    import cmk.gui.plugins.views as api_module  # pylint: disable=cmk-module-layer-violation
     import cmk.gui.plugins.views.utils as plugin_utils
 
     for name in (
@@ -2294,15 +2302,13 @@ def _process_availability_view(view_renderer: ABCViewRenderer) -> None:
     if "aggr" not in view.datasource.infos or request.var("timeline_aggr"):
         filterheaders = "".join(get_livestatus_filter_headers(view.context, all_active_filters))
         # all 'amount_*', 'duration_fetch_rows' and 'duration_filter_rows' will be set in:
-        show_view_func = lambda: cmk.gui.plugins.views.availability.show_availability_page(
-            view, filterheaders
-        )
+        show_view_func = lambda: availability.show_availability_page(view, filterheaders)
     else:
         _unfiltered_amount_of_rows, rows = _get_view_rows(
             view, all_active_filters, only_count=False
         )
         # 'amount_rows_after_limit' will be set in:
-        show_view_func = lambda: cmk.gui.plugins.views.availability.show_bi_availability(view, rows)
+        show_view_func = lambda: availability.show_bi_availability(view, rows)
 
     with CPUTracker() as view_render_tracker:
         show_view_func()
@@ -2585,15 +2591,13 @@ def _add_inventory_data(rows: Rows) -> None:
             continue
 
         try:
-            row["host_inventory"] = inventory.load_filtered_and_merged_tree(row)
-        except inventory.LoadStructuredDataError:
+            row["host_inventory"] = load_filtered_and_merged_tree(row)
+        except LoadStructuredDataError:
             # The inventory row may be joined with other rows (perf-o-meter, ...).
             # Therefore we initialize the corrupt inventory tree with an empty tree
             # in order to display all other rows.
             row["host_inventory"] = StructuredDataNode()
-            corrupted_inventory_files.append(
-                str(inventory.get_short_inventory_filepath(row["host_name"]))
-            )
+            corrupted_inventory_files.append(str(get_short_inventory_filepath(row["host_name"])))
 
             if corrupted_inventory_files:
                 user_errors.add(

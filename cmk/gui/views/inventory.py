@@ -792,7 +792,7 @@ def _inv_titleinfo(
     return icon, title
 
 
-def _inv_titleinfo_long(invpath: SDRawPath) -> str:
+def inv_titleinfo_long(invpath: SDRawPath) -> str:
     """Return the titles of the last two path components of the node, e.g. "BIOS / Vendor"."""
     _icon, last_title = _inv_titleinfo(invpath)
     parent = _get_parent_from_invpath(invpath)
@@ -819,7 +819,7 @@ def declare_inventory_columns() -> None:
     for invpath, hint in inventory_displayhints.items():
         if "*" not in invpath:
             datatype = hint.get("paint", "str")
-            long_title = _inv_titleinfo_long(invpath)
+            long_title = inv_titleinfo_long(invpath)
             _declare_inv_column(
                 invpath,
                 datatype,

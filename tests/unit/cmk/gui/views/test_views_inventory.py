@@ -12,10 +12,10 @@ import pytest
 from cmk.utils.structured_data import StructuredDataNode
 
 import cmk.gui.inventory
-import cmk.gui.plugins.views.inventory as inventory
 import cmk.gui.utils
 from cmk.gui.plugins.visuals.inventory import FilterInvtableVersion
 from cmk.gui.views import View
+from cmk.gui.views.inventory import RowTableInventory, RowTableInventoryHistory
 
 RAW_ROWS = [("this_site", "this_hostname")]
 RAW_ROWS2 = [("this_site", "this_hostname", "foobar")]
@@ -99,7 +99,7 @@ EXPECTED_INV_MULTI_KEYS = [
 
 @pytest.mark.usefixtures("request_context")
 def test_query_row_table_inventory(monkeypatch):
-    row_table = inventory.RowTableInventory("invtesttable", ".foo.bar:")
+    row_table = RowTableInventory("invtesttable", ".foo.bar:")
     view = View("", {}, {})
     monkeypatch.setattr(row_table, "_get_raw_data", lambda only_sites, query: RAW_ROWS)
     monkeypatch.setattr(row_table, "_get_inv_data", lambda hostrow: INV_ROWS)
@@ -110,7 +110,7 @@ def test_query_row_table_inventory(monkeypatch):
 
 @pytest.mark.usefixtures("request_context")
 def test_query_row_table_inventory_unknown_columns(monkeypatch):
-    row_table = inventory.RowTableInventory("invtesttable", ".foo.bar:")
+    row_table = RowTableInventory("invtesttable", ".foo.bar:")
     view = View("", {}, {})
     monkeypatch.setattr(row_table, "_get_raw_data", lambda only_sites, query: RAW_ROWS)
     monkeypatch.setattr(row_table, "_get_inv_data", lambda hostrow: INV_ROWS)
@@ -121,7 +121,7 @@ def test_query_row_table_inventory_unknown_columns(monkeypatch):
 
 @pytest.mark.usefixtures("request_context")
 def test_query_row_table_inventory_add_columns(monkeypatch):
-    row_table = inventory.RowTableInventory("invtesttable", ".foo.bar:")
+    row_table = RowTableInventory("invtesttable", ".foo.bar:")
     view = View("", {}, {})
     monkeypatch.setattr(row_table, "_get_raw_data", lambda only_sites, query: RAW_ROWS2)
     monkeypatch.setattr(row_table, "_get_inv_data", lambda hostrow: INV_ROWS)
@@ -132,7 +132,7 @@ def test_query_row_table_inventory_add_columns(monkeypatch):
 
 @pytest.mark.usefixtures("request_context")
 def test_query_row_table_inventory_history(monkeypatch):
-    row_table = inventory.RowTableInventoryHistory()
+    row_table = RowTableInventoryHistory()
     view = View("", {}, {})
     monkeypatch.setattr(row_table, "_get_raw_data", lambda only_sites, query: RAW_ROWS)
     monkeypatch.setattr(row_table, "_get_inv_data", lambda hostrow: INV_HIST_ROWS)
@@ -143,7 +143,7 @@ def test_query_row_table_inventory_history(monkeypatch):
 
 @pytest.mark.usefixtures("request_context")
 def test_query_row_table_inventory_history_unknown_columns(monkeypatch):
-    row_table = inventory.RowTableInventoryHistory()
+    row_table = RowTableInventoryHistory()
     view = View("", {}, {})
     monkeypatch.setattr(row_table, "_get_raw_data", lambda only_sites, query: RAW_ROWS)
     monkeypatch.setattr(row_table, "_get_inv_data", lambda hostrow: INV_HIST_ROWS)
@@ -154,7 +154,7 @@ def test_query_row_table_inventory_history_unknown_columns(monkeypatch):
 
 @pytest.mark.usefixtures("request_context")
 def test_query_row_table_inventory_history_add_columns(monkeypatch):
-    row_table = inventory.RowTableInventoryHistory()
+    row_table = RowTableInventoryHistory()
     view = View("", {}, {})
     monkeypatch.setattr(row_table, "_get_raw_data", lambda only_sites, query: RAW_ROWS2)
     monkeypatch.setattr(row_table, "_get_inv_data", lambda hostrow: INV_HIST_ROWS)
@@ -166,7 +166,7 @@ def test_query_row_table_inventory_history_add_columns(monkeypatch):
 @pytest.mark.usefixtures("request_context")
 def test_query_row_multi_table_inventory(monkeypatch):
     sources = list(zip(["invtesttable1", "invtesttable2"], [".foo.bar:", "foo.baz:"]))
-    row_table = inventory.RowMultiTableInventory(sources, ["sid"], [])
+    row_table = cmk.gui.views.inventory.RowMultiTableInventory(sources, ["sid"], [])
     view = View("", {}, {})
     monkeypatch.setattr(row_table, "_get_raw_data", lambda only_sites, query: RAW_ROWS)
     monkeypatch.setattr(row_table, "_get_inv_data", lambda hostrow: INV_ROWS_MULTI)
@@ -178,7 +178,7 @@ def test_query_row_multi_table_inventory(monkeypatch):
 @pytest.mark.usefixtures("request_context")
 def test_query_row_multi_table_inventory_unknown_columns(monkeypatch):
     sources = list(zip(["invtesttable1", "invtesttable2"], [".foo.bar:", "foo.baz:"]))
-    row_table = inventory.RowMultiTableInventory(sources, ["sid"], [])
+    row_table = cmk.gui.views.inventory.RowMultiTableInventory(sources, ["sid"], [])
     view = View("", {}, {})
     monkeypatch.setattr(row_table, "_get_raw_data", lambda only_sites, query: RAW_ROWS)
     monkeypatch.setattr(row_table, "_get_inv_data", lambda hostrow: INV_ROWS_MULTI)
@@ -190,7 +190,7 @@ def test_query_row_multi_table_inventory_unknown_columns(monkeypatch):
 @pytest.mark.usefixtures("request_context")
 def test_query_row_multi_table_inventory_add_columns(monkeypatch):
     sources = list(zip(["invtesttable1", "invtesttable2"], [".foo.bar:", "foo.baz:"]))
-    row_table = inventory.RowMultiTableInventory(sources, ["sid"], [])
+    row_table = cmk.gui.views.inventory.RowMultiTableInventory(sources, ["sid"], [])
     view = View("", {}, {})
     monkeypatch.setattr(row_table, "_get_raw_data", lambda only_sites, query: RAW_ROWS2)
     monkeypatch.setattr(row_table, "_get_inv_data", lambda hostrow: INV_ROWS_MULTI)
@@ -213,7 +213,7 @@ def test_query_row_multi_table_inventory_add_columns(monkeypatch):
 def test__cmp_inventory_node(monkeypatch, val_a, val_b, result):
     monkeypatch.setattr(cmk.gui.inventory, "get_inventory_attribute", lambda val, path: val)
     assert (
-        inventory._cmp_inventory_node(
+        cmk.gui.views.inventory._cmp_inventory_node(
             {"host_inventory": val_a}, {"host_inventory": val_b}, "any-path"
         )
         == result
@@ -270,7 +270,7 @@ def test__cmp_inventory_node(monkeypatch, val_a, val_b, result):
             {
                 "title": "Maximum Speed",
                 "paint": "hz",
-                "paint_function": inventory.inv_paint_hz,
+                "paint_function": cmk.gui.views.inventory.inv_paint_hz,
             },
         ),
         # 'is_show_more'
@@ -333,4 +333,4 @@ def test__cmp_inventory_node(monkeypatch, val_a, val_b, result):
     ],
 )
 def test__get_display_hint(invpath: str, expected_hint: Mapping[str, Any]) -> None:
-    assert inventory._get_display_hint(invpath) == expected_hint
+    assert cmk.gui.views.inventory._get_display_hint(invpath) == expected_hint

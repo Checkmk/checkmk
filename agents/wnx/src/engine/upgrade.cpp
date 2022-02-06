@@ -459,37 +459,38 @@ bool StartWindowsService(const std::wstring &service_name) {
     return true;
 }
 
-bool WinServiceChangeStartType(const std::wstring Name, ServiceStartType Type) {
-    auto manager_handle = OpenSCManager(nullptr, nullptr, SC_MANAGER_CONNECT);
-    if (nullptr == manager_handle) {
+bool WinServiceChangeStartType(const std::wstring &name,
+                               ServiceStartType start_type) {
+    auto manager_handle = ::OpenSCManager(nullptr, nullptr, SC_MANAGER_CONNECT);
+    if (manager_handle == nullptr) {
         XLOG::l.crit("Cannot open SC MAnager {}", GetLastError());
         return false;
     }
-    ON_OUT_OF_SCOPE(CloseServiceHandle(manager_handle));
+    ON_OUT_OF_SCOPE(::CloseServiceHandle(manager_handle));
 
     auto handle =
-        OpenService(manager_handle, Name.c_str(), SERVICE_CHANGE_CONFIG);
-    if (nullptr == handle) {
+        ::OpenService(manager_handle, name.c_str(), SERVICE_CHANGE_CONFIG);
+    if (handle == nullptr) {
         XLOG::l.crit("Cannot open Service {}, error =  {}",
-                     wtools::ToUtf8(Name), GetLastError());
+                     wtools::ToUtf8(name), GetLastError());
         return false;
     }
-    ON_OUT_OF_SCOPE(CloseServiceHandle(handle));
+    ON_OUT_OF_SCOPE(::CloseServiceHandle(handle));
 
-    auto result =
-        ChangeServiceConfig(handle,             // handle of service
-                            SERVICE_NO_CHANGE,  // service type: no change
-                            static_cast<DWORD>(Type),  // service start type
-                            SERVICE_NO_CHANGE,  // error control: no change
-                            nullptr,            // binary path: no change
-                            nullptr,            // load order group: no change
-                            nullptr,            // tag ID: no change
-                            nullptr,            // dependencies: no change
-                            nullptr,            // account name: no change
-                            nullptr,            // password: no change
-                            nullptr);           // display name: no change
-    if (0 == result) {
-        XLOG::l("ChangeServiceConfig '{}' failed [{}]", wtools::ToUtf8(Name),
+    auto result = ::ChangeServiceConfig(
+        handle,                          // handle of service
+        SERVICE_NO_CHANGE,               // service type: no change
+        static_cast<DWORD>(start_type),  // service start type
+        SERVICE_NO_CHANGE,               // error control: no change
+        nullptr,                         // binary path: no change
+        nullptr,                         // load order group: no change
+        nullptr,                         // tag ID: no change
+        nullptr,                         // dependencies: no change
+        nullptr,                         // account name: no change
+        nullptr,                         // password: no change
+        nullptr);                        // display name: no change
+    if (result == 0) {
+        XLOG::l("ChangeServiceConfig '{}' failed [{}]", wtools::ToUtf8(name),
                 GetLastError());
         return false;
     }

@@ -43,7 +43,14 @@ from cmk.gui.log import logger
 from cmk.gui.utils.html import HTML
 from cmk.gui.valuespec import ValueSpec
 from cmk.gui.watolib.changes import add_change, make_diff_text, ObjectRef, ObjectRefType
-from cmk.gui.watolib.hosts_and_folders import CREFolder, CREHost, Folder, Host
+from cmk.gui.watolib.hosts_and_folders import (
+    CREFolder,
+    CREHost,
+    Folder,
+    get_wato_redis_client,
+    Host,
+    may_use_redis,
+)
 from cmk.gui.watolib.rulespecs import rulespec_group_registry, rulespec_registry
 from cmk.gui.watolib.utils import ALL_HOSTS, ALL_SERVICES, has_agent_bakery, NEGATE
 
@@ -314,18 +321,22 @@ class RulesetCollection:
             content += ruleset.to_config(folder)
 
         rules_file_path = folder.rules_file_path()
-        # Remove rules files if it has no content. This prevents needless reads
-        if not has_content:
-            if os.path.exists(rules_file_path):
-                os.unlink(rules_file_path)  # Do not keep empty rules.mk files
-            return
+        try:
+            # Remove rules files if it has no content. This prevents needless reads
+            if not has_content:
+                if os.path.exists(rules_file_path):
+                    os.unlink(rules_file_path)  # Do not keep empty rules.mk files
+                return
 
-        # Adding this instead of the full path makes it easy to move config
-        # files around. The real FOLDER_PATH will be added dynamically while
-        # loading the file in cmk.base.config
-        content = content.replace("'%s'" % _FOLDER_PATH_MACRO, "'/%s/' % FOLDER_PATH")
+            # Adding this instead of the full path makes it easy to move config
+            # files around. The real FOLDER_PATH will be added dynamically while
+            # loading the file in cmk.base.config
+            content = content.replace("'%s'" % _FOLDER_PATH_MACRO, "'/%s/' % FOLDER_PATH")
 
-        store.save_mk_file(rules_file_path, content, add_header=not config.wato_use_git)
+            store.save_mk_file(rules_file_path, content, add_header=not config.wato_use_git)
+        finally:
+            if may_use_redis():
+                get_wato_redis_client().folder_updated(folder.filesystem_path())
 
     def exists(self, name: RulesetName) -> bool:
         return name in self._rulesets

@@ -575,6 +575,18 @@ class _RedisHelper:
             ]
         )
 
+    def folder_updated(self, filesystem_path: str) -> None:
+        try:
+            folder_timestamp = self._timestamp_to_fixed_precision_str(
+                os.stat(filesystem_path).st_ctime
+            )
+        except FileNotFoundError:
+            return
+
+        pipeline = self._client.pipeline()
+        self._add_last_folder_update_to_pipeline(pipeline, folder_timestamp)
+        pipeline.execute()
+
     def save_folder_info(
         self,
         folder: CREFolder,
@@ -1503,6 +1515,9 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
                 host.drop_caches()
 
             self._save_hosts_file()
+            if may_use_redis():
+                # Inform redis that the changed-timestamp of the folder has been updated.
+                get_wato_redis_client().folder_updated(self.filesystem_path())
 
         call_hook_hosts_changed(self)
 

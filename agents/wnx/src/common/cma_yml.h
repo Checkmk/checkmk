@@ -26,9 +26,13 @@ std::optional<T> GetVal(YAML::Node yaml, const std::string &group_name,
 
     try {
         auto group = yaml[group_name];
-        if (!group.IsMap()) return {};
+        if (!group.IsMap()) {
+            return {};
+        }
         auto val = group[value_name];
-        if (val.IsScalar()) return val.as<T>();
+        if (val.IsDefined() && !val.IsNull()) {
+            return val.as<T>();
+        }
         return {};
     } catch (const std::exception &e) {
         LogException("Cannot get yml value {} with {}.{} code:{}", group_name,

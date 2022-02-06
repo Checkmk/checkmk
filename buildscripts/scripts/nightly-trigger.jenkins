@@ -86,16 +86,6 @@ node: {
     }
     if (RUN_TESTS) {
         parallel([
-            'Integration Test for Packages': {
-                stage('Integration Test for Packages') {
-                    build(job: "${FOLDER_ID}/nightly-${JOB_EDITION}/test-integration",
-                        parameters: [
-                            [$class: 'StringParameterValue', name: 'DISTROS', value: DISTROS],
-                            [$class: 'StringParameterValue', name: 'EDITION', value: EDITION]
-                        ]
-                    )
-                }
-            },
             'Integration Test for Docker Container': {
                 stage('Integration Test for Docker Container') {
                     build(job: "${FOLDER_ID}/nightly-${JOB_EDITION}/test-docker-integration",
@@ -117,5 +107,14 @@ node: {
                 }
             }
         ])
+
+        stage('Integration Test for Packages') {
+            build(job: "${FOLDER_ID}/nightly-${JOB_EDITION}/test-integration",
+                parameters: [
+                    [$class: 'StringParameterValue', name: 'DISTROS', value: DISTROS],
+                    [$class: 'StringParameterValue', name: 'EDITION', value: EDITION]
+                ]
+            )
+        }
     }
 }

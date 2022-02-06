@@ -1049,13 +1049,25 @@ class GUIViewRenderer(ABCViewRenderer):
         yield PageMenuEntry(
             title=_("Export CSV"),
             icon_name="download_csv",
-            item=make_simple_link(makeuri(request, [("output_format", "csv_export")])),
+            item=make_simple_link(
+                makeuri(
+                    request,
+                    [("output_format", "csv_export")],
+                    delvars=["show_checkboxes", "selection"],
+                )
+            ),
         )
 
         yield PageMenuEntry(
             title=_("Export JSON"),
             icon_name="download_json",
-            item=make_simple_link(makeuri(request, [("output_format", "json_export")])),
+            item=make_simple_link(
+                makeuri(
+                    request,
+                    [("output_format", "json_export")],
+                    delvars=["show_checkboxes", "selection"],
+                )
+            ),
         )
 
     def _page_menu_entries_export_reporting(self, rows: Rows) -> Iterator[PageMenuEntry]:
@@ -1068,7 +1080,14 @@ class GUIViewRenderer(ABCViewRenderer):
         yield PageMenuEntry(
             title=_("This view as PDF"),
             icon_name="report",
-            item=make_simple_link(makeuri(request, [], filename="report_instant.py")),
+            item=make_simple_link(
+                makeuri(
+                    request,
+                    [],
+                    filename="report_instant.py",
+                    delvars=["show_checkboxes", "selection"],
+                )
+            ),
         )
 
         # Link related reports
@@ -3094,7 +3113,9 @@ def _get_availability_entry(
     return PageMenuEntry(
         title=_("Availability"),
         icon_name="availability",
-        item=make_simple_link(makeuri(request, [("mode", "availability")])),
+        item=make_simple_link(
+            makeuri(request, [("mode", "availability")], delvars=["show_checkboxes", "selection"])
+        ),
         is_enabled=not view.missing_single_infos,
         disabled_tooltip=_("Missing required context information")
         if view.missing_single_infos
@@ -3132,7 +3153,9 @@ def _get_combined_graphs_entry(
         ("view_title", view_title(view.spec, view.context)),
     ]
 
-    url = makeuri(request, httpvars, filename="combined_graphs.py")
+    url = makeuri(
+        request, httpvars, filename="combined_graphs.py", delvars=["show_checkboxes", "selection"]
+    )
     return PageMenuEntry(
         title=_("All metrics of same type in one graph"),
         icon_name="graph",

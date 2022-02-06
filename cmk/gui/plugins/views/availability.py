@@ -393,7 +393,7 @@ def _page_menu_availability(
                             PageMenuEntry(
                                 title=_("Status view"),
                                 icon_name="status",
-                                item=make_simple_link(makeuri(request, [("mode", "status")])),
+                                item=make_simple_link(makeuri(request, [], delvars=["mode"])),
                             ),
                         ],
                     ),
@@ -437,7 +437,7 @@ def _page_menu_entries_av_mode(
             title=_("Availability"),
             icon_name="availability",
             item=make_simple_link(
-                makeuri(request, [("av_mode", "availability"), ("av_host", ""), ("av_aggr", "")])
+                makeuri(request, [("av_mode", "availability")], delvars=["av_host", "av_aggr"])
             ),
         )
         return

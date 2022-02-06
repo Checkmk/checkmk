@@ -26,6 +26,8 @@ pub fn push(registry: Arc<RwLock<config::Registry>>) -> AnyhowResult<()> {
         let registry_reader = registry.read().unwrap();
         let begin = Instant::now();
         info!("Handling registered push connections");
+        // TODO(sk): enable this for Windows when this will be ready to production
+        #[cfg(unix)]
         handle_push_cycle(&registry_reader)?;
         drop(registry_reader);
         thread::sleep(Duration::from_secs(60).saturating_sub(begin.elapsed()));

@@ -194,6 +194,10 @@ constexpr std::string_view kModulesPython = "python";  // string
 constexpr std::string_view kModulesQuickReinstall = "quick_reinstall";  // bool
 
 // group "system"
+constexpr const char *const kController = "controller";        // dictionary
+constexpr const char *const kControllerRun = "run";            // bool
+constexpr const char *const kControllerLegacyPull = "legacy";  // bool
+
 constexpr const char *const kFirewall = "firewall";  // dictionary
 constexpr const char *const kFirewallMode = "mode";  // string
 constexpr const char *const kFirewallPort = "port";  // string

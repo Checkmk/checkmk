@@ -6,11 +6,25 @@
 #include <filesystem>
 
 #include "cfg.h"
+#include "common/cfg_yaml.h"
+#include "common/cma_yml.h"
 #include "common/wtools.h"
 
 namespace fs = std::filesystem;
 
 namespace cma::ac {
+bool IsRunController(const YAML::Node &node) {
+    auto controller = cma::yml::GetNode(node, std::string{cfg::groups::kSystem},
+                                        std::string{cfg::vars::kController});
+    return cfg::GetVal(controller, cfg::vars::kControllerRun, false);
+}
+
+bool IsUseLegacyMode(const YAML::Node &node) {
+    auto controller = cma::yml::GetNode(node, std::string{cfg::groups::kSystem},
+                                        std::string{cfg::vars::kController});
+    return cfg::GetVal(controller, cfg::vars::kControllerLegacyPull, false);
+}
+
 bool StartAgentController(const fs::path &service) {
     if (!cma::IsService()) {
         return false;

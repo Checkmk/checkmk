@@ -8,9 +8,15 @@
 #define agent_controller_h__
 #include <filesystem>
 
+namespace YAML {
+class Node;
+}
+
 namespace cma::ac {
 bool StartAgentController(const std::filesystem::path &service);
 bool KillAgentController();
+bool IsRunController(const YAML::Node &node);
+bool IsUseLegacyMode(const YAML::Node &node);
 }  // namespace cma::ac
 
 #endif  // agent_controller_h__

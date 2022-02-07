@@ -61,7 +61,7 @@ def _metric_title_from_id(metric_or_graph_id: MetricName) -> str:
 # Sneak CMK 2.1 autocompleter endpoints to make the 2.0 connector usable on CMK 2.0 too.
 def _graph_choices_from_livestatus_row(row) -> Iterable[TupleType[str, str]]:
     def _graph_template_title(graph_template: Mapping) -> str:
-        return str(graph_template.get("title")) or _metric_title_from_id(graph_template["id"])
+        return str(graph_template.get("title", "")) or _metric_title_from_id(graph_template["id"])
 
     yield from ((
         template["id"],

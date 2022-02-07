@@ -235,7 +235,13 @@ class SitesCompleter(AjaxDropdownChoice):
 
     @classmethod
     def autocomplete_choices(cls, value: str, params: Dict) -> Choices:
-        return [v for v in config.sorted_sites() if value.lower() in v[1].lower()]
+        choices: Choices = [v for v in config.sorted_sites() if value.lower() in v[1].lower()]
+
+        # This part should not exists as the optional(not enforce) would better be not having the filter at all
+        if not params.get("strict"):
+            empty_choice: Choices = [("", "All Sites")]
+            choices = empty_choice + choices
+        return choices
 
 
 @autocompleter_registry.register

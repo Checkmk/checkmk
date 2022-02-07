@@ -247,10 +247,8 @@ def is_control_plane(labels: Optional[Mapping[LabelName, Label]]) -> bool:
     )
 
 
-def node_conditions(node: client.V1Node) -> Optional[api.NodeConditions]:
-    if not node.status:
-        return None
-    conditions = node.status.conditions
+def node_conditions(status: client.V1Status) -> Optional[api.NodeConditions]:
+    conditions = status.conditions
     if not conditions:
         return None
     result = api.NodeConditions(**{c.type: c.status for c in conditions})
@@ -359,9 +357,8 @@ def node_from_client(node: client.V1Node, kubelet_health: api.HealthZ) -> api.No
     metadata = parse_metadata(node.metadata)
     return api.Node(
         metadata=metadata,
-        conditions=node_conditions(node),
         status=api.NodeStatus(
-            conditions=node_conditions(node),
+            conditions=node_conditions(node.status),
             node_info=node_info(node),
             addresses=node_addresses_from_client(node.status.addresses),
         ),

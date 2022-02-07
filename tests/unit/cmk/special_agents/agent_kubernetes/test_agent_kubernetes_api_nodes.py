@@ -113,7 +113,31 @@ class TestAPINode:
         )
         with Mocketizer():
             node = list(core_client.list_node().items)[0]
-        conditions = node_conditions(node)
+        conditions = node_conditions(node.status)
         assert conditions is not None
         assert conditions.NetworkUnavailable is None
         assert conditions.Ready is api.NodeConditionStatus.TRUE
+
+    def test_parse_conditions_no_status(self, core_client, dummy_host):
+        node_with_conditions = {"items": [{"status": {}}]}  # type: ignore
+        Entry.single_register(
+            Entry.GET,
+            f"{dummy_host}/api/v1/nodes",
+            body=json.dumps(node_with_conditions),
+            headers={"content-type": "application/json"},
+        )
+        with Mocketizer():
+            node = list(core_client.list_node().items)[0]
+        assert node_conditions(node.status) is None
+
+    def test_parse_conditions_no_conditions(self, core_client, dummy_host):
+        node_with_conditions = {"items": [{"status": {"conditions": []}}]}  # type: ignore
+        Entry.single_register(
+            Entry.GET,
+            f"{dummy_host}/api/v1/nodes",
+            body=json.dumps(node_with_conditions),
+            headers={"content-type": "application/json"},
+        )
+        with Mocketizer():
+            node = list(core_client.list_node().items)[0]
+        assert node_conditions(node.status) is None

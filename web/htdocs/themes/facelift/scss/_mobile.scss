@@ -21,7 +21,7 @@ body.mobile {
 
   div.error {
     color: $font-color;
-    background-color: rgb(255, 204, 204);
+    background-color: $color-state-2-background;
   }
 
   div.command_group a {
@@ -35,7 +35,7 @@ body.mobile {
     td {
       padding: 2px 3px;
       overflow: hidden;
-      border: 1px solid rgb(221, 221, 221);
+      border: 1px solid $color-table-border;
     }
   }
 
@@ -49,7 +49,7 @@ body.mobile {
     > tbody > tr.data > td {
       padding: 4px 6px;
       font-size: 13px;
-      border: 1px solid rgb(170, 170, 170);
+      border: 1px solid $color-table-border;
       border-radius: 5px;
     }
   }

@@ -823,9 +823,9 @@ div.stats_dashlet {
     }
 
     &.warning {
-      fill: $hexagon-warning-color;
+      fill: $color-state-1-background;
       fill-opacity: 0.6;
-      stroke: $hexagon-warning-color;
+      stroke: $color-state-1-background;
     }
 
     &.downtime {
@@ -928,7 +928,7 @@ div.stats_dashlet {
         }
 
         &.warning {
-          background-color: $hexagon-warning-color;
+          background-color: $color-state-1-background;
         }
 
         &.downtime {

@@ -100,7 +100,7 @@
   td {
     padding: 2px 8px;
     margin: 2px;
-    background-color: rgb(255, 255, 0);
+    background-color: $color-state-1-background;
   }
 }
 
@@ -473,77 +473,6 @@ body.main .popup_menu .wato div.floatfolder div.title span,
   position: relative;
   top: 3px;
   float: right;
-}
-
-/* Special styles for configuration and rule editor */
-/* TODO: Reproduce these .rule elements */
-.wato div.rule {
-  position: relative;
-  top: 0;
-  left: 0;
-  width: 500px;
-  height: 140px;
-  margin-top: 10px;
-  background-color: rgba($white, 0.3);
-  border: 1px solid $white;
-  border-radius: 4px;
-
-  div.nr {
-    position: absolute;
-    top: 9px;
-    left: 9px;
-    width: 20px;
-    height: 20px;
-    color: $font-color-black;
-    text-align: center;
-    background-color: rgb(252, 211, 64);
-    border: 1px solid $white;
-    border-radius: 10px;
-
-    b {
-      position: relative;
-      top: 3px;
-    }
-  }
-
-  div.title {
-    position: absolute;
-    top: 12px;
-    font-weight: bold;
-    color: $font-color-white;
-
-    &.conditions {
-      left: 40px;
-    }
-  }
-
-  div.value.title {
-    left: 390px;
-  }
-
-  div.box {
-    position: absolute;
-    top: 30px;
-    height: 90px;
-    padding: 5px;
-    background-color: rgb(167, 190, 195);
-    border: 1px solid $white;
-    border-radius: 4px;
-
-    &.conditions {
-      left: 40px;
-      width: 330px;
-    }
-
-    &.value {
-      left: 390px;
-      width: 90px;
-    }
-  }
-
-  div.condition {
-    float: none;
-  }
 }
 
 .wato img.trans {
@@ -962,7 +891,7 @@ div.filter_buttons {
       }
 
       &.state_warning {
-        background: $yellow;
+        background: $color-state-1-background;
       }
     }
   }
@@ -1027,21 +956,6 @@ table.data tr.data.dcd_log_entries {
 
 .wato div.error pre {
   white-space: pre-wrap;
-}
-
-/* TODO: Reproduce this html element */
-.wato div.error div.err {
-  position: relative;
-  left: -8px;
-  float: left;
-  width: 100%;
-  padding: 2px 5px;
-  margin: 2px;
-  font-weight: bold;
-  color: $font-color-black;
-  background-color: rgb(255, 255, 0);
-  border-radius: 3px;
-  opacity: 0.9;
 }
 
 /* Logwatch pattern editor */

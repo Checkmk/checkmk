@@ -22,15 +22,17 @@ pub const WIN_AGENT_HOME_DIR: &str = "\\checkmk\\agent";
 
 const CONFIG_FILE: &str = "cmk-agent-ctl-config.json";
 const REGISTRY_FILE: &str = "registered_connections.json";
-const LOG_FILE: &str = "cmk-agent-ctl.log";
 const LEGACY_PULL_FILE: &str = "allow-legacy-pull";
+#[cfg(windows)]
+const LOG_FILE: &str = "cmk-agent-ctl.log";
 
 pub struct Paths {
     pub home_dir: PathBuf,
     pub config_path: PathBuf,
     pub registry_path: PathBuf,
-    pub log_path: PathBuf,
     pub legacy_pull_path: PathBuf,
+    #[cfg(windows)]
+    pub log_path: PathBuf,
 }
 
 impl Paths {
@@ -39,11 +41,9 @@ impl Paths {
             home_dir: std::path::PathBuf::from(home_dir),
             config_path: home_dir.join(Path::new(CONFIG_FILE)),
             registry_path: home_dir.join(Path::new(REGISTRY_FILE)),
-            #[cfg(unix)]
-            log_path: home_dir.join(Path::new(LOG_FILE)),
+            legacy_pull_path: home_dir.join(Path::new(LEGACY_PULL_FILE)),
             #[cfg(windows)]
             log_path: home_dir.join("log").join(Path::new(LOG_FILE)),
-            legacy_pull_path: home_dir.join(Path::new(LEGACY_PULL_FILE)),
         }
     }
 }

@@ -22,7 +22,6 @@ use log::error;
 #[cfg(unix)]
 use nix::unistd;
 use std::io::{self, Write};
-use std::path::Path;
 use std::sync::{mpsc, Arc, RwLock};
 use std::thread;
 use structopt::StructOpt;
@@ -49,15 +48,25 @@ fn daemon(registry: config::Registry, legacy_pull_marker: &std::path::Path) -> A
     rx.recv().unwrap()
 }
 
-fn init_logging(path: &Path) -> AnyhowResult<()> {
+#[cfg(unix)]
+fn init_logging() -> Result<flexi_logger::LoggerHandle, flexi_logger::FlexiLoggerError> {
+    // TODO: Change log level to "error" before first official release
+    flexi_logger::Logger::try_with_env_or_str("info")?
+        .log_to_stderr()
+        .format(flexi_logger::default_format)
+        .start()
+}
+
+#[cfg(windows)]
+fn init_logging(
+    path: &std::path::Path,
+) -> Result<flexi_logger::LoggerHandle, flexi_logger::FlexiLoggerError> {
     // TODO: Change log level to "error" before first official release
     flexi_logger::Logger::try_with_env_or_str("info")?
         .log_to_file(flexi_logger::FileSpec::try_from(path)?)
         .append()
         .format(flexi_logger::detailed_format)
         .start()
-        .unwrap();
-    Ok(())
 }
 
 #[cfg(unix)]
@@ -104,7 +113,12 @@ fn init() -> AnyhowResult<(cli::Args, constants::Paths)> {
 
     let paths = determine_paths(constants::CMK_AGENT_USER)?;
 
-    if let Err(error) = init_logging(&paths.log_path) {
+    #[cfg(unix)]
+    let logging_init_result = init_logging();
+    #[cfg(windows)]
+    let logging_init_result = init_logging(&paths.log_path);
+
+    if let Err(error) = logging_init_result {
         io::stderr()
             .write_all(format!("Failed to initialize logging: {:?}", error).as_bytes())
             .unwrap_or(());
@@ -152,8 +166,7 @@ fn main() -> AnyhowResult<()> {
     let (args, paths) = match init() {
         Ok(args) => args,
         Err(error) => {
-            // Do not log errors which occured for example when trying to become the cmk-agent user,
-            // otherwise, the log file ownership might be messed up
+            error!("{:?}", error);
             return Err(error);
         }
     };

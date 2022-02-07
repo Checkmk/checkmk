@@ -22,7 +22,24 @@ GCC_TOOLCHAIN := /opt/gcc-11.2.0
 AGENT_PLUGIN_UNIT_TEST_FILES := $(wildcard agent-plugin-unit/test_*.py)
 AGENT_PLUGIN_UNIT_TEST_FILES_PY2 := $(subst agent-plugin-unit,agent-plugin-unit/py2,$(AGENT_PLUGIN_UNIT_TEST_FILES))
 
-SHELL_FILES_REL := $(shell cd ..; grep -rl '^\#!/.*sh' {enterprise/,}agents 2>/dev/null)
+SHELL_FILES_REL := $(shell cd ..; grep -rl \
+    --exclude-dir="buildscripts" \
+    --exclude-dir="cmk" \
+    --exclude-dir="core" \
+    --exclude-dir="doc" \
+    --exclude-dir="livestatus" \
+    --exclude-dir="managed" \
+    --exclude-dir="node_modules" \
+    --exclude-dir="notifications" \
+    --exclude-dir="omd" \
+    --exclude-dir="plus" \
+    --exclude-dir="scripts" \
+    --exclude-dir="skel" \
+    --exclude-dir="tests" \
+    --exclude-dir="web" \
+    --exclude="LIVEPROXYD" \
+    --exclude="install-sh" \
+    '^\#!/.*sh' [^.]* 2>/dev/null)
 
 
 # Due to https://github.com/pypa/pypi-support/issues/978, we need to disable Plugin tests for py2.6

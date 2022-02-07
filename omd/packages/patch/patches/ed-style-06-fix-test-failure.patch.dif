@@ -1,0 +1,23 @@
+From: Bruno Haible <bruno@clisp.org>
+Date: Sat, 7 Apr 2018 12:34:03 +0200
+Subject: Fix 'ed-style' test failure
+Git-commit: 458ac51a05426c1af9aa6bf1342ecf60728c19b4
+Patch-mainline: yes
+References: bsc#1088420, savannah#53566, CVE-2018-1000156
+
+* tests/ed-style: Remove '?' line from expected output.
+---
+ tests/ed-style |    3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
+
+--- a/tests/ed-style
++++ b/tests/ed-style
+@@ -31,8 +31,7 @@ r !echo bar
+ ,p
+ EOF
+
+-check 'patch -e foo -i ed2.diff 2> /dev/null || echo "Status: $?"' <<EOF
+-?
++check 'patch -e foo -i ed2.diff > /dev/null 2> /dev/null || echo "Status: $?"' <<EOF
+ Status: 2
+ EOF

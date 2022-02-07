@@ -632,6 +632,15 @@ inventory_displayhints.update({
     ".software.applications.kube.deployment.match_labels": {"title": _l("matchLabels")},
     ".software.applications.kube.deployment.match_expressions": {"title": _l("matchExpressions")},
 
+    ".software.applications.kube.node.": { "title": _l("Node") },
+    ".software.applications.kube.node.name": {"title": _l("Name")},
+    ".software.applications.kube.node.operating_system": {"title": _l("Operating system")},
+    ".software.applications.kube.node.os_image": {"title": _l("OS image")},
+    ".software.applications.kube.node.kernel_version": {"title": _l("Kernel version")},
+    ".software.applications.kube.node.architecture": {"title": _l("Architecture")},
+    ".software.applications.kube.node.container_runtime_version": {"title": _l("Container runtime version")},
+    ".software.applications.kube.node.kubelet_version": {"title": _l("Kubelet version")},
+
     ".software.applications.citrix.": {"title": _l("Citrix")},
     ".software.applications.citrix.controller.": {"title": _l("Controller")},
     ".software.applications.citrix.controller.controller_version": {

@@ -127,7 +127,7 @@ TableStatus::TableStatus(MonitoringCore *mc) : Table(mc) {
         [](const TableStatus & /*r*/) { return process_performance_data; }));
     addColumn(std::make_unique<IntColumn<TableStatus>>(
         "enable_event_handlers",
-        "Whether event handlers are activated in general (0/1)", offsets,
+        "Whether alert handlers are activated in general (0/1)", offsets,
         [](const TableStatus & /*r*/) { return enable_event_handlers; }));
     addColumn(std::make_unique<IntColumn<TableStatus>>(
         "check_external_commands",
@@ -135,7 +135,8 @@ TableStatus::TableStatus(MonitoringCore *mc) : Table(mc) {
         offsets,
         [](const TableStatus & /*r*/) { return check_external_commands; }));
     addColumn(std::make_unique<TimeColumn<TableStatus>>(
-        "program_start", "The time of the last program start as UNIX timestamp",
+        "program_start",
+        "The time of the last program start or configuration reload as UNIX timestamp",
         offsets, [](const TableStatus & /*r*/) {
             return std::chrono::system_clock::from_time_t(program_start);
         }));
@@ -161,8 +162,8 @@ TableStatus::TableStatus(MonitoringCore *mc) : Table(mc) {
             return mc->last_logfile_rotation();
         }));
     addColumn(std::make_unique<IntColumn<TableStatus>>(
-        "interval_length", "The default interval length from nagios.cfg",
-        offsets, [](const TableStatus & /*r*/) { return interval_length; }));
+        "interval_length", "The default interval length", offsets,
+        [](const TableStatus & /*r*/) { return interval_length; }));
 
     addColumn(std::make_unique<IntColumn<TableStatus>>(
         "num_hosts", "The total number of hosts", offsets,
@@ -228,8 +229,7 @@ TableStatus::TableStatus(MonitoringCore *mc) : Table(mc) {
         }));
     addColumn(std::make_unique<IntColumn<TableStatus>>(
         "livestatus_queued_connections",
-        "The current number of queued connections to MK Livestatus (that wait for a free thread)",
-        offsets,
+        "The current number of queued connections to MK Livestatus", offsets,
         [](const TableStatus & /*r*/) { return g_num_queued_connections; }));
     addColumn(std::make_unique<IntColumn<TableStatus>>(
         "livestatus_threads",

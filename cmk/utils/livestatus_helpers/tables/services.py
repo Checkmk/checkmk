@@ -210,9 +210,9 @@ class Services(Table):
     display_name = Column(
         'display_name',
         col_type='string',
-        description='Optional display name of the host - not used by Nagios\' web interface',
+        description='Optional display name',
     )
-    """Optional display name of the host - not used by Nagios' web interface"""
+    """Optional display name"""
 
     downtimes = Column(
         'downtimes',
@@ -287,9 +287,9 @@ class Services(Table):
     hard_state = Column(
         'hard_state',
         col_type='int',
-        description='The effective hard state of the host (eliminates a problem in hard_state)',
+        description='The effective hard state of this object',
     )
-    """The effective hard state of the host (eliminates a problem in hard_state)"""
+    """The effective hard state of this object"""
 
     has_been_checked = Column(
         'has_been_checked',
@@ -504,9 +504,9 @@ class Services(Table):
     host_display_name = Column(
         'host_display_name',
         col_type='string',
-        description='Optional display name of the host - not used by Nagios\' web interface',
+        description='Optional display name',
     )
-    """Optional display name of the host - not used by Nagios' web interface"""
+    """Optional display name"""
 
     host_downtimes = Column(
         'host_downtimes',
@@ -588,9 +588,9 @@ class Services(Table):
     host_hard_state = Column(
         'host_hard_state',
         col_type='int',
-        description='The effective hard state of the host (eliminates a problem in hard_state)',
+        description='The effective hard state of this object',
     )
-    """The effective hard state of the host (eliminates a problem in hard_state)"""
+    """The effective hard state of this object"""
 
     host_has_been_checked = Column(
         'host_has_been_checked',

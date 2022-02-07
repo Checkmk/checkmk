@@ -120,9 +120,8 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
         prefix + "name", "Host name", offsets,
         [](const host &r) { return r.name == nullptr ? "" : r.name; }));
     table->addColumn(std::make_unique<StringColumn<host>>(
-        prefix + "display_name",
-        "Optional display name of the host - not used by Nagios' web interface",
-        offsets, [](const host &r) {
+        prefix + "display_name", "Optional display name", offsets,
+        [](const host &r) {
             return r.display_name == nullptr ? "" : r.display_name;
         }));
     table->addColumn(std::make_unique<StringColumn<host>>(
@@ -762,8 +761,7 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
                          ServiceListState::Type::num_hard_unknown}));
 
     table->addColumn(std::make_unique<IntColumn<host>>(
-        prefix + "hard_state",
-        "The effective hard state of the host (eliminates a problem in hard_state)",
+        prefix + "hard_state", "The effective hard state of this object",
         offsets, [](const host &hst) {
             if (hst.current_state == HOST_UP) {
                 return 0;

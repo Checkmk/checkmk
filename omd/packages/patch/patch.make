@@ -2,9 +2,10 @@ PATCH := patch
 PATCH_VERS := 2.7.6
 PATCH_DIR := $(PATCH)-$(PATCH_VERS)
 # Increase this to enforce a recreation of the build cache
-PATCH_BUILD_ID := 0
+PATCH_BUILD_ID := 1
 
 PATCH_UNPACK := $(BUILD_HELPER_DIR)/$(PATCH_DIR)-unpack
+PATCH_PATCHING := $(BUILD_HELPER_DIR)/$(PATCH_DIR)-patching
 PATCH_BUILD := $(BUILD_HELPER_DIR)/$(PATCH_DIR)-build
 PATCH_INTERMEDIATE_INSTALL := $(BUILD_HELPER_DIR)/$(PATCH_DIR)-install-intermediate
 PATCH_CACHE_PKG_PROCESS := $(BUILD_HELPER_DIR)/$(PATCH_DIR)-cache-pkg-process
@@ -24,7 +25,7 @@ $(PATCH_CACHE_PKG_PROCESS): $(PATCH_CACHE_PKG_PATH)
 	$(call upload_pkg_archive,$(PATCH_CACHE_PKG_PATH),$(PATCH_DIR),$(PATCH_BUILD_ID))
 	$(TOUCH) $@
 
-$(PATCH_BUILD): $(PATCH_UNPACK)
+$(PATCH_BUILD): $(PATCH_PATCHING)
 	cd $(PATCH_BUILD_DIR) && ./configure --prefix=""
 	$(MAKE) -C $(PATCH_BUILD_DIR)
 	$(TOUCH) $@

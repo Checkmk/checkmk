@@ -1,0 +1,95 @@
+From: Andreas Gruenbacher <agruen@gnu.org>
+Date: Fri, 6 Apr 2018 20:32:46 +0200
+Subject: Minor cleanups in do_ed_script
+Git-commit: 2a32bf09f5e9572da4be183bb0dbde8164351474
+Patch-mainline: yes
+References: bsc#1088420, savannah#53566, CVE-2018-1000156
+
+* src/pch.c (do_ed_script): Minor cleanups.
+
+Backporting notes: adjusted because we don't have commit ff1d3a67da1e
+("Use gnulib execute module") so the context is very different.
+---
+ src/pch.c |   56 +++++++++++++++++++++++++++-----------------------------
+ 1 file changed, 27 insertions(+), 29 deletions(-)
+
+--- a/src/pch.c
++++ b/src/pch.c
+@@ -2395,6 +2395,8 @@ do_ed_script (char const *inname, char c
+     char const *tmpname;
+     int tmpfd;
+     pid_t pid;
++    int exclusive = *outname_needs_removal ? 0 : O_EXCL;
++
+
+     if (! dry_run && ! skip_rest_of_patch)
+       {
+@@ -2442,7 +2444,7 @@ do_ed_script (char const *inname, char c
+ 	    break;
+ 	}
+     }
+-    if (!tmpfp)
++    if (dry_run || skip_rest_of_patch)
+       return;
+     if (fwrite ("w\nq\n", sizeof (char), (size_t) 4, tmpfp) == 0
+ 	|| fflush (tmpfp) != 0)
+@@ -2451,35 +2453,31 @@ do_ed_script (char const *inname, char c
+     if (lseek (tmpfd, 0, SEEK_SET) == -1)
+       pfatal ("Can't rewind to the beginning of file %s", quotearg (tmpname));
+
+-    if (! dry_run && ! skip_rest_of_patch) {
+-	int exclusive = *outname_needs_removal ? 0 : O_EXCL;
++    if (inerrno != ENOENT)
++      {
+ 	*outname_needs_removal = true;
+-	if (inerrno != ENOENT)
+-	  {
+-	    *outname_needs_removal = true;
+-	    copy_file (inname, outname, 0, exclusive, instat.st_mode, true);
+-	  }
+-	fflush (stdout);
+-
+-	pid = fork();
+-	if (pid == -1)
+-	  pfatal ("Can't fork");
+-	else if (pid == 0)
+-	  {
+-	    dup2 (tmpfd, 0);
+-	    assert (outname[0] != '!' && outname[0] != '-');
+-	    execlp (editor_program, editor_program, "-", outname, (char  *) NULL);
+-	    _exit (2);
+-	  }
+-	else
+-	  {
+-	    int wstatus;
+-	    if (waitpid (pid, &wstatus, 0) == -1
+-	        || ! WIFEXITED (wstatus)
+-		|| WEXITSTATUS (wstatus) != 0)
+-	      fatal ("%s FAILED", editor_program);
+-	  }
+-    }
++	copy_file (inname, outname, 0, exclusive, instat.st_mode, true);
++      }
++    fflush (stdout);
++
++    pid = fork();
++    if (pid == -1)
++      pfatal ("Can't fork");
++    else if (pid == 0)
++      {
++	dup2 (tmpfd, 0);
++	assert (outname[0] != '!' && outname[0] != '-');
++	execlp (editor_program, editor_program, "-", outname, (char  *) NULL);
++	_exit (2);
++      }
++    else
++      {
++	int wstatus;
++	if (waitpid (pid, &wstatus, 0) == -1
++	    || ! WIFEXITED (wstatus)
++	    || WEXITSTATUS (wstatus) != 0)
++	  fatal ("%s FAILED", editor_program);
++      }
+
+     fclose (tmpfp);
+     safe_unlink (tmpname);

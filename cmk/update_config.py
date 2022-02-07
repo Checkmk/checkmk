@@ -77,6 +77,7 @@ import cmk.gui.watolib.rulesets
 import cmk.gui.watolib.tags
 from cmk.gui import main_modules
 from cmk.gui.bi import BIManager
+from cmk.gui.log import logger as gui_logger
 from cmk.gui.plugins.dashboard.utils import (
     builtin_dashboards,
     get_all_dashboards,
@@ -187,6 +188,9 @@ class UpdateConfig:
             del log.logger.handlers[:]
             logging.getLogger().addHandler(console_handler)
         self._has_errors = False
+        gui_logger.setLevel(
+            _our_logging_level_to_gui_logging_level(self._logger.getEffectiveLevel())
+        )
 
     def run(self) -> bool:
         self._has_errors = False
@@ -1521,6 +1525,13 @@ def _cleanup_ldap_connector(
 
 def _id_from_title(title: str) -> str:
     return re.sub("[^-a-zA-Z0-9_]+", "", title.lower().replace(" ", "_"))
+
+
+def _our_logging_level_to_gui_logging_level(lvl: int) -> int:
+    """The default in cmk.gui is WARNING, whereas our default is INFO. Hence, our default
+    corresponds to INFO in cmk.gui, which results in too much logging.
+    """
+    return lvl + 10
 
 
 def main(args: List[str]) -> int:

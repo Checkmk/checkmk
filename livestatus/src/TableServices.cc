@@ -736,6 +736,18 @@ void TableServices::addColumns(Table *table, const std::string &prefix,
         prefix + "passive_check_period",
         "Time period in which this (passive) service will be checked.", offsets,
         [](const service & /*r*/) { return "24X7"; }));
+    table->addColumn(std::make_unique<DoubleColumn<service>>(
+        prefix + "flappiness",
+        "The current level of flappiness, this corresponds with the recent frequency of state changes",
+        offsets, [](const service &r) { return r.percent_state_change; }));
+    table->addColumn(std::make_unique<StringColumn<service>>(
+        prefix + "notification_postponement_reason",
+        "reason for postponing the pending notification, empty if nothing is postponed",
+        offsets, [](const service & /*r*/) { return ""; }));
+    table->addColumn(std::make_unique<IntColumn<service>>(
+        prefix + "previous_hard_state",
+        "Previous hard state (that hard state before the current/last hard state)",
+        offsets, [](const service & /*r*/) { return -1; }));
 }
 
 void TableServices::answerQuery(Query *query) {

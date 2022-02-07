@@ -484,9 +484,7 @@ static ColumnDefinitions hosts_and_services_columns() {
         {"execution_time", ColumnType::double_},
         {"first_notification_delay", ColumnType::double_},
         {"flap_detection_enabled", ColumnType::int_},
-#ifdef CMC
         {"flappiness", ColumnType::double_},
-#endif
         {"hard_state", ColumnType::int_},
         {"has_been_checked", ColumnType::int_},
         {"high_flap_threshold", ColumnType::double_},
@@ -527,17 +525,13 @@ static ColumnDefinitions hosts_and_services_columns() {
         {"notes_url_expanded", ColumnType::string},
         {"notification_interval", ColumnType::double_},
         {"notification_period", ColumnType::string},
-#ifdef CMC
         {"notification_postponement_reason", ColumnType::string},
-#endif
         {"notifications_enabled", ColumnType::int_},
         {"percent_state_change", ColumnType::double_},
         {"perf_data", ColumnType::string},
         {"plugin_output", ColumnType::string},
         {"pnpgraph_present", ColumnType::int_},
-#ifdef CMC
         {"previous_hard_state", ColumnType::int_},
-#endif
         {"process_performance_data", ColumnType::int_},
         {"retry_interval", ColumnType::double_},
         {"scheduled_downtime_depth", ColumnType::int_},

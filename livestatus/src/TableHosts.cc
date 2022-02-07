@@ -919,6 +919,18 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
             // Let's pretend the default. Or should we simply use 0?
             return static_cast<int32_t>(r.check_interval * 60000 * 2.5);
         }));
+    table->addColumn(std::make_unique<DoubleColumn<host>>(
+        prefix + "flappiness",
+        "The current level of flappiness, this corresponds with the recent frequency of state changes",
+        offsets, [](const host &r) { return r.percent_state_change; }));
+    table->addColumn(std::make_unique<StringColumn<host>>(
+        prefix + "notification_postponement_reason",
+        "reason for postponing the pending notification, empty if nothing is postponed",
+        offsets, [](const host & /*r*/) { return ""; }));
+    table->addColumn(std::make_unique<IntColumn<host>>(
+        prefix + "previous_hard_state",
+        "Previous hard state (that hard state before the current/last hard state)",
+        offsets, [](const host & /*r*/) { return -1; }));
 }
 
 void TableHosts::answerQuery(Query *query) {

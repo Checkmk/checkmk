@@ -1,0 +1,35 @@
+From: Jean Delvare <jdelvare@suse.de>
+Subject: Update tests/Makefile.in
+Patch-mainline: no, temporary integration
+References: bsc#1088420, savannah#53566, CVE-2018-1000156
+
+Previous patch modifies tests/Makefile.am. Mirror the changes to
+tests/Makefile.in so that we don't need automake.
+---
+ tests/Makefile.in |    8 ++++++++
+ 1 file changed, 8 insertions(+)
+
+--- a/tests/Makefile.in
++++ b/tests/Makefile.in
+@@ -1308,6 +1308,7 @@ TESTS = \
+ 	crlf-handling \
+ 	dash-o-append \
+ 	deep-directories \
++	ed-style \
+ 	empty-files \
+ 	false-match \
+ 	fifo \
+@@ -1638,6 +1639,13 @@ deep-directories.log: deep-directories
+ 	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+ 	--log-file $$b.log --trs-file $$b.trs \
+ 	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
++	"$$tst" $(AM_TESTS_FD_REDIRECT)
++ed-style.log: ed-style
++	@p='ed-style'; \
++	b='ed-style'; \
++	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
++	--log-file $$b.log --trs-file $$b.trs \
++	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+ 	"$$tst" $(AM_TESTS_FD_REDIRECT)
+ empty-files.log: empty-files
+ 	@p='empty-files'; \

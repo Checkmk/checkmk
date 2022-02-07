@@ -10,6 +10,7 @@ import ast
 import json
 import os
 import tarfile
+from dataclasses import asdict
 from typing import Dict, Iterator, List, NamedTuple, Optional, Tuple, Union
 
 from six import ensure_str
@@ -38,7 +39,7 @@ from cmk.gui.page_menu import (
 from cmk.gui.pages import AjaxPage, page_registry
 from cmk.gui.plugins.wato.utils import mode_registry, sort_sites
 from cmk.gui.plugins.wato.utils.base_modes import WatoMode
-from cmk.gui.plugins.watolib.utils import DomainRequests
+from cmk.gui.plugins.watolib.utils import DomainRequest, DomainRequests
 from cmk.gui.sites import activation_sites
 from cmk.gui.table import Foldable, init_rowselect, table_element
 from cmk.gui.type_defs import ActionResult
@@ -716,6 +717,10 @@ class AutomationActivateChanges(watolib.AutomationCommand):
             serialized_domain_requests = ast.literal_eval(
                 request.get_ascii_input_mandatory("domains")
             )
+            if serialized_domain_requests and isinstance(serialized_domain_requests[0], str):
+                serialized_domain_requests = [
+                    asdict(DomainRequest(x)) for x in serialized_domain_requests
+                ]
         except SyntaxError:
             raise watolib.MKAutomationException(
                 _("Invalid request: %r") % request.get_ascii_input_mandatory("domains")

@@ -3,6 +3,7 @@
 // conditions defined in the file COPYING, which is part of this source code package.
 
 use std::io::{Read, Result as IoResult, Write};
+#[cfg(windows)]
 use std::net::TcpStream;
 
 #[cfg(unix)]

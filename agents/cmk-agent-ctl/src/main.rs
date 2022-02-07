@@ -91,12 +91,9 @@ fn determine_paths(username: &str) -> AnyhowResult<constants::Paths> {
 }
 
 #[cfg(windows)]
-fn determine_default_paths() -> AnyhowResult<constants::Paths> {
-    let program_data_path: String;
-    match std::env::var(constants::ENV_PROGRAM_DATA) {
-        Ok(val) => program_data_path = val,
-        Err(_) => program_data_path = String::from("c:\\ProgramData"),
-    }
+fn determine_paths() -> AnyhowResult<constants::Paths> {
+    let program_data_path = std::env::var(constants::ENV_PROGRAM_DATA)
+        .unwrap_or_else(|_| String::from("c:\\ProgramData"));
     let home = std::path::PathBuf::from(program_data_path + constants::WIN_AGENT_HOME_DIR);
     Ok(constants::Paths::new(&home))
 }
@@ -105,17 +102,7 @@ fn init() -> AnyhowResult<(cli::Args, constants::Paths)> {
     // Parse args as first action to directly exit from --help or malformatted arguments
     let args = cli::Args::from_args();
 
-    #[cfg(unix)]
-    let paths = match determine_paths(constants::CMK_AGENT_USER) {
-        Ok(paths) => paths,
-        Err(err) => return Err(err),
-    };
-
-    #[cfg(windows)]
-    let paths = match determine_default_paths() {
-        Ok(paths) => paths,
-        Err(err) => return Err(err),
-    };
+    let paths = determine_paths(constants::CMK_AGENT_USER)?;
 
     if let Err(error) = init_logging(&paths.log_path) {
         io::stderr()
@@ -180,12 +167,12 @@ fn main() -> AnyhowResult<()> {
     result
 }
 
+#[cfg(windows)]
 #[cfg(test)]
 mod tests {
     use super::*;
 
-    #[test]
-    #[cfg(windows)]
+    #[cfg(test)]
     fn test_windows_paths() {
         let p = determine_default_paths().unwrap();
         let home = String::from("C:\\ProgramData") + constants::WIN_AGENT_HOME_DIR;

@@ -1037,35 +1037,38 @@ YAML::Node GetNodeFromSystem(std::string_view node) {
     auto os = cfg::GetNode(cfg, cfg::groups::kSystem);
     return cfg::GetNode(os, std::string(node));
 }
+
 }  // namespace
 
-void ProcessFirewallConfiguration(std::wstring_view app_name) {
+int GetFirewallPort() {
+    auto firewall = GetNodeFromSystem(cfg::vars::kFirewall);
+    auto port_mode = cfg::GetVal(firewall, cfg::vars::kFirewallPort,
+                                 std::string{cfg::values::kFirewallPortAuto});
+    if (port_mode == cfg::values::kFirewallPortAuto) {
+        return cfg::GetVal(cfg::groups::kGlobal, cfg::vars::kPort,
+                           cma::cfg::kMainPort);
+    }
+    return -1;  // all ports
+}
+
+void ProcessFirewallConfiguration(std::wstring_view app_name, int port,
+                                  std::wstring_view rule_name) {
     auto firewall = GetNodeFromSystem(cfg::vars::kFirewall);
 
     auto firewall_mode = cfg::GetVal(firewall, cfg::vars::kFirewallMode,
                                      std::string(cfg::values::kModeNone));
-    auto port_mode = cfg::GetVal(firewall, cfg::vars::kFirewallPort,
-                                 std::string{cfg::values::kFirewallPortAuto});
-
     if (tools::IsEqual(firewall_mode, cfg::values::kModeConfigure)) {
         XLOG::l.i("Firewall mode is set to configure, adding rule...");
         // remove all rules with the same name
-        while (fw::RemoveRule(kSrvFirewallRuleName, app_name))
+        while (fw::RemoveRule(rule_name, app_name))
             ;
 
-        int port = -1;  // all ports
-        if (port_mode == cfg::values::kFirewallPortAuto) {
-            port = cfg::GetVal(cfg::groups::kGlobal, cfg::vars::kPort,
-                               cma::cfg::kMainPort);
-        }
-
-        auto success =
-            cma::fw::CreateInboundRule(kSrvFirewallRuleName, app_name, port);
+        auto success = cma::fw::CreateInboundRule(rule_name, app_name, port);
 
         if (success)
             XLOG::l.i(
                 "Firewall rule '{}' had been added successfully for ports [{}]",
-                wtools::ToUtf8(kSrvFirewallRuleName), port);
+                wtools::ToUtf8(rule_name), port);
         return;
     }
 
@@ -1074,17 +1077,17 @@ void ProcessFirewallConfiguration(std::wstring_view app_name) {
 
         // remove all rules with the same name
         int count = 0;
-        while (fw::RemoveRule(kSrvFirewallRuleName, app_name)) {
+        while (fw::RemoveRule(rule_name, app_name)) {
             ++count;
         }
 
         if (count != 0)
             XLOG::l.i(
                 "Firewall rule '{}' had been removed successfully [{}] times",
-                wtools::ToUtf8(kSrvFirewallRuleName), count);
+                wtools::ToUtf8(rule_name), count);
         else
             XLOG::d.i("Firewall rule '{}' is absent, nothing to remove",
-                      wtools::ToUtf8(kSrvFirewallRuleName));
+                      wtools::ToUtf8(rule_name));
         return;
     }
 }

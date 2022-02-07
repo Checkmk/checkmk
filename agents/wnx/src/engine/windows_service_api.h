@@ -70,7 +70,11 @@ int ServiceAsService(std::wstring_view app_name,
                      const std::function<bool(const void *some_context)>
                          &internal_callback);  // service execution
 
-void ProcessFirewallConfiguration(std::wstring_view app_name);
+/// returns -1 for all ports
+int GetFirewallPort();
+
+void ProcessFirewallConfiguration(std::wstring_view app_name, int port,
+                                  std::wstring_view rule_name);
 [[maybe_unused]] bool ProcessServiceConfiguration(std::wstring_view app_name);
 
 // Converter API from YML language to wtools
@@ -89,7 +93,9 @@ constexpr const wchar_t *kServiceAccount = L"NT AUTHORITY\\LocalService";
 constexpr const wchar_t *kServicePassword = nullptr;
 
 constexpr std::wstring_view kSrvFirewallRuleName = L"Checkmk Agent";
+constexpr std::wstring_view kIntFirewallRuleName = L"Checkmk Agent Internal";
 constexpr std::wstring_view kAppFirewallRuleName = L"Checkmk Agent application";
+constexpr std::wstring_view kTstFirewallRuleName = L"Checkmk Agent TEST";
 
 // service configuration
 // main call

@@ -314,8 +314,8 @@ void ExternalPort::ioThreadProc(const ReplyFunc &reply_func,
                                                 : groups::global.port();
 
             // server start
-            ExternalPort::server sock(context, ipv6, use_port);
             XLOG::l.i("Starting IO ipv6:{}, used port:{}", ipv6, use_port);
+            ExternalPort::server sock(context, ipv6, use_port);
             sock.run_accept(sinkProc, this);
 
             registerContext(&context);
@@ -356,8 +356,8 @@ bool ExternalPort::startIo(const ReplyFunc &reply_func,
 
     shutdown_thread_ = false;  // reset potentially dropped flag
 
-    io_thread_ = std::thread(&ExternalPort::ioThreadProc, this, reply_func,
-                             std::optional<uint16_t>{});
+    io_thread_ =
+        std::thread(&ExternalPort::ioThreadProc, this, reply_func, port);
     io_started_ = true;
     return true;
 }

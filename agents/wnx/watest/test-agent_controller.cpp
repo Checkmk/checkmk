@@ -3,9 +3,13 @@
 //
 #include "pch.h"
 
+#include <filesystem>
+
 #include "agent_controller.h"
 #include "cfg.h"
 #include "test_tools.h"
+
+namespace fs = std::filesystem;
 
 namespace cma::ac {
 TEST(AgentController, StartAgent) {
@@ -33,4 +37,15 @@ TEST(AgentController, ConfigApiDefaults) {
     EXPECT_FALSE(ac::IsRunController(cfg));
     EXPECT_FALSE(ac::IsUseLegacyMode(cfg));
 }
+
+TEST(AgentController, EnableLegacyMode) {
+    auto temp_fs = tst::TempCfgFs::Create();
+    ASSERT_TRUE(temp_fs->loadFactoryConfig());
+    ASSERT_FALSE(fs::exists(temp_fs->data() / ac::kLegacyPullFile));
+    ac::EnableLegacyMode(true);
+    ASSERT_TRUE(fs::exists(temp_fs->data() / ac::kLegacyPullFile));
+    ac::EnableLegacyMode(false);
+    EXPECT_FALSE(fs::exists(temp_fs->data() / ac::kLegacyPullFile));
+}
+
 }  // namespace cma::ac

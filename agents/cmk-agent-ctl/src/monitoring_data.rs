@@ -2,6 +2,9 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
+#[cfg(windows)]
+use super::constants;
+
 use std::io::{Read, Result as IoResult, Write};
 #[cfg(windows)]
 use std::net::TcpStream;
@@ -19,7 +22,8 @@ fn collect_from_ip(agent_ip: &str) -> IoResult<Vec<u8>> {
 
 #[cfg(windows)]
 pub fn collect() -> IoResult<Vec<u8>> {
-    collect_from_ip("localhost:6556")
+    let peer = format!("localhost:{}", constants::WINDOWS_INTERNAL_PORT);
+    collect_from_ip(&peer)
 }
 
 #[cfg(unix)]

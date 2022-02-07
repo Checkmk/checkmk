@@ -4,6 +4,7 @@
 #include "agent_controller.h"
 
 #include <filesystem>
+#include <iosfwd>
 
 #include "cfg.h"
 #include "common/cfg_yaml.h"
@@ -25,13 +26,18 @@ bool IsUseLegacyMode(const YAML::Node &node) {
     return cfg::GetVal(controller, cfg::vars::kControllerLegacyPull, false);
 }
 
+fs::path GetController(const fs::path &service) {
+    auto controller = service;
+    controller.replace_filename(cfg::files::kAgentCtl);
+    return controller;
+}
+
 bool StartAgentController(const fs::path &service) {
     if (!cma::IsService()) {
         return false;
     }
 
-    auto controller = service;
-    controller.replace_filename(cfg::files::kAgentCtl);
+    auto controller = GetController(service);
     wtools::AppRunner ar;
     auto proc_id = ar.goExecAsDetached(controller.wstring() + L" daemon");
     if (proc_id != 0) {
@@ -49,6 +55,18 @@ bool KillAgentController() {
         return wtools::KillProcess(cfg::files::kAgentCtl, 1);
     }
     return false;
+}
+
+/// Creates/Deletes file in agent-user dir to satisfy controller requirements
+void EnableLegacyMode(bool enable) {
+    auto file_name = fs::path{cfg::GetUserDir()} / ac::kLegacyPullFile;
+    if (enable) {
+        std::ofstream ofs(file_name.u8string());
+        ofs << "Created by Windows agent";
+    } else {
+        std::error_code ec;
+        fs::remove(file_name, ec);
+    }
 }
 
 }  // namespace cma::ac

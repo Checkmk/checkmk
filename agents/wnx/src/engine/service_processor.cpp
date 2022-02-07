@@ -29,6 +29,7 @@
 
 using namespace std::chrono_literals;
 using namespace std::string_literals;
+namespace fs = std::filesystem;
 
 namespace cma::srv {
 extern bool
@@ -44,8 +45,6 @@ void ServiceProcessor::startService() {
 
     // service must reload config, because service may reconfigure itself
     ReloadConfig();
-
-    ProcessFirewallConfiguration(wtools::GetArgv(0));
 
     rm_lwa_thread_ = std::thread(&cfg::rm_lwa::Execute);
 
@@ -561,6 +560,33 @@ void WaitForNetwork(std::chrono::seconds period) {
         elapsed += delay;
     }
 }
+
+///  returns non empty port if controller had been started
+std::optional<uint16_t> OptionallyStartAgentController() {
+    std::optional<uint16_t> port;
+    if (ac ::IsRunController(cfg::GetLoadedConfig()) &&
+        ac::StartAgentController(wtools::GetArgv(0))) {
+        port = ac::windows_internal_port;
+        return port;
+    }
+    return {};
+}
+
+void OpenFirewall(bool controller) {
+    auto rule_name =
+        IsService() ? srv::kSrvFirewallRuleName : srv::kAppFirewallRuleName;
+    if (controller) {
+        XLOG::l.i("Controller has started: firewall to controller");
+        ProcessFirewallConfiguration(
+            ac::GetController(wtools::GetArgv(0)).wstring(), GetFirewallPort(),
+            rule_name);
+    } else {
+        XLOG::l.i("Controller has NOT started: firewall to agent");
+        ProcessFirewallConfiguration(wtools::GetArgv(0), GetFirewallPort(),
+                                     rule_name);
+    }
+}
+
 }  // namespace
 
 /// \brief <HOSTING THREAD>
@@ -568,19 +594,20 @@ void WaitForNetwork(std::chrono::seconds period) {
 /// makes a mail slot + starts IO on TCP
 /// Periodically checks if the service is stopping.
 void ServiceProcessor::mainThread(world::ExternalPort *ex_port) noexcept {
-    const auto *mailslot_name =
-        IsService() ? cfg::kServiceMailSlot : cfg::kTestingMailSlot;
-
     if (IsService()) {
         auto wait_period =
             cfg::GetVal(cfg::groups::kSystem, cfg::vars::kWaitNetwork,
                         cfg::defaults::kServiceWaitNetwork);
         WaitForNetwork(std::chrono::seconds{wait_period});
     }
-    ac::StartAgentController(wtools::GetArgv(0));
-    ON_OUT_OF_SCOPE(ac::KillAgentController());
 
-    MailSlot mailbox(mailslot_name, 0);
+    ac::EnableLegacyMode(ac::IsUseLegacyMode(cfg::GetLoadedConfig()));
+    auto port = OptionallyStartAgentController();
+    ON_OUT_OF_SCOPE(ac::KillAgentController());
+    OpenFirewall(port.has_value());
+
+    MailSlot mailbox(
+        IsService() ? cfg::kServiceMailSlot : cfg::kTestingMailSlot, 0);
     internal_port_ = carrier::BuildPortName(carrier::kCarrierMailslotName,
                                             mailbox.GetName());
     try {
@@ -622,7 +649,7 @@ void ServiceProcessor::mainThread(world::ExternalPort *ex_port) noexcept {
                               answer_.getId().time_since_epoch().count());
                     return generateAnswer(ip_addr);
                 },
-                {});
+                port);
             ON_OUT_OF_SCOPE({
                 ex_port->shutdownIo();
                 rt_device.stop();

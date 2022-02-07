@@ -91,7 +91,7 @@ fn determine_paths(username: &str) -> AnyhowResult<constants::Paths> {
 }
 
 #[cfg(windows)]
-fn determine_paths() -> AnyhowResult<constants::Paths> {
+fn determine_paths(_: &str) -> AnyhowResult<constants::Paths> {
     let program_data_path = std::env::var(constants::ENV_PROGRAM_DATA)
         .unwrap_or_else(|_| String::from("c:\\ProgramData"));
     let home = std::path::PathBuf::from(program_data_path + constants::WIN_AGENT_HOME_DIR);
@@ -174,7 +174,7 @@ mod tests {
 
     #[cfg(test)]
     fn test_windows_paths() {
-        let p = determine_default_paths().unwrap();
+        let p = determine_paths(constants::CMK_AGENT_USER).unwrap();
         let home = String::from("C:\\ProgramData") + constants::WIN_AGENT_HOME_DIR;
         assert_eq!(p.home_dir, std::path::PathBuf::from(&home));
         assert_eq!(

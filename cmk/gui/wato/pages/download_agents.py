@@ -211,6 +211,8 @@ class ModeDownloadAgentsOther(ABCModeDownloadAgents):
         exclude = super()._exclude_paths()
         exclude.add("/cfg_examples/systemd")
         exclude.add("/sap")
+        exclude.add("/scripts")
+        exclude.add("/linux")
         exclude.add("/windows")
         exclude.add("/windows/cfg_examples")
         exclude.add("/windows/mrpe")

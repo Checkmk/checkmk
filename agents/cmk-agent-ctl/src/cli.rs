@@ -5,6 +5,26 @@
 use structopt::StructOpt;
 
 #[derive(StructOpt)]
+pub struct LoggingOpts {
+    /// Enable verbose output. Use once (-v) for logging level INFO and twice (-vv) for logging
+    /// level DEBUG.
+    #[structopt(short, long, parse(from_occurrences))]
+    verbose: u8,
+}
+
+impl LoggingOpts {
+    fn logging_level(&self) -> String {
+        if self.verbose > 1 {
+            String::from("debug")
+        } else if self.verbose == 1 {
+            String::from("info")
+        } else {
+            String::from("warn")
+        }
+    }
+}
+
+#[derive(StructOpt)]
 pub struct RegistrationArgs {
     /// Checkmk site to register with
     #[structopt(long, short = "s", parse(from_str))]
@@ -25,6 +45,9 @@ pub struct RegistrationArgs {
     /// Blindly trust the server certificate of the Checkmk site
     #[structopt(long)]
     pub trust_server_cert: bool,
+
+    #[structopt(flatten)]
+    pub logging_opts: LoggingOpts,
 }
 
 #[derive(StructOpt)]
@@ -32,6 +55,9 @@ pub struct StatusArgs {
     /// Write output in JSON format
     #[structopt(long)]
     pub json: bool,
+
+    #[structopt(flatten)]
+    pub logging_opts: LoggingOpts,
 }
 
 #[derive(StructOpt)]
@@ -39,6 +65,9 @@ pub struct DeleteArgs {
     /// The connection to delete
     #[structopt(name = "CONNECTION")]
     pub connection: String,
+
+    #[structopt(flatten)]
+    pub logging_opts: LoggingOpts,
 }
 
 #[derive(StructOpt)]
@@ -47,9 +76,14 @@ pub struct ImportArgs {
     #[structopt(name = "CONNECTION_FILE")]
     pub conn_file: Option<std::path::PathBuf>,
 
-    /// Enable verbose output
-    #[structopt(long, short = "v")]
-    pub verbose: bool,
+    #[structopt(flatten)]
+    pub logging_opts: LoggingOpts,
+}
+
+#[derive(StructOpt)]
+pub struct SharedArgsOnly {
+    #[structopt(flatten)]
+    pub logging_opts: LoggingOpts,
 }
 
 #[derive(StructOpt)]
@@ -74,13 +108,13 @@ pub enum Args {
     /// This command will collect monitoring data, send them to all
     /// Checkmk site configured for 'push' and exit.
     #[structopt()]
-    Push {},
+    Push(SharedArgsOnly),
 
     /// Handle incoming connections from Checkmk sites collecting monitoring data
     ///
     /// This command will listen for incoming connections
     #[structopt()]
-    Pull {},
+    Pull(SharedArgsOnly),
 
     /// Run as daemon and handle all pull and push connections
     ///
@@ -88,11 +122,11 @@ pub enum Args {
     /// and send data to all Checkmk sites configured for 'push'
     /// (as the 'push' command does) once a minute.
     #[structopt()]
-    Daemon {},
+    Daemon(SharedArgsOnly),
 
     /// Collect monitoring data and write it to standard output
     #[structopt()]
-    Dump {},
+    Dump(SharedArgsOnly),
 
     /// Query the registration status of this host
     #[structopt()]
@@ -108,7 +142,7 @@ pub enum Args {
 
     /// Delete all connections to Checkmk sites
     #[structopt()]
-    DeleteAll {},
+    DeleteAll(SharedArgsOnly),
 
     /// Import a pull connection from file or standard input
     ///
@@ -116,4 +150,33 @@ pub enum Args {
     /// A compatible dataset can be created using the 'register-surrogate-pull' command.
     #[structopt()]
     Import(ImportArgs),
+}
+
+impl Args {
+    pub fn logging_level(&self) -> String {
+        match self {
+            Args::Register(args) => args.logging_opts.logging_level(),
+            Args::RegisterSurrogatePull(args) => args.logging_opts.logging_level(),
+            Args::Push(args) => args.logging_opts.logging_level(),
+            Args::Pull(args) => args.logging_opts.logging_level(),
+            Args::Daemon(args) => args.logging_opts.logging_level(),
+            Args::Dump(args) => args.logging_opts.logging_level(),
+            Args::Status(args) => args.logging_opts.logging_level(),
+            Args::Delete(args) => args.logging_opts.logging_level(),
+            Args::DeleteAll(args) => args.logging_opts.logging_level(),
+            Args::Import(args) => args.logging_opts.logging_level(),
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_logging_level() {
+        assert_eq!((LoggingOpts { verbose: 0 }).logging_level(), "warn");
+        assert_eq!((LoggingOpts { verbose: 1 }).logging_level(), "info");
+        assert_eq!((LoggingOpts { verbose: 2 }).logging_level(), "debug");
+    }
 }

@@ -32,19 +32,11 @@ impl JSONProvider for JSONFromStdin {
     }
 }
 
-fn _import(
-    registry: &mut config::Registry,
-    json_provider: impl JSONProvider,
-    verbose: bool,
-) -> AnyhowResult<()> {
+fn _import(registry: &mut config::Registry, json_provider: impl JSONProvider) -> AnyhowResult<()> {
     let json = json_provider.provide()?;
     registry.register_imported_connection(
         serde_json::from_str::<registration::SurrogatePullData>(&json)
-            .context(if verbose {
-                format!("Failed to deserialize JSON data:\n{}", &json)
-            } else {
-                String::from("Failed to deserialize JSON data")
-            })?
+            .context(format!("Failed to deserialize JSON data:\n{}", &json))?
             .connection,
     );
     registry.save()?;
@@ -58,9 +50,8 @@ pub fn import(registry: &mut config::Registry, import_args: &cli::ImportArgs) ->
             JSONFromFile {
                 path: std::path::PathBuf::from(path),
             },
-            import_args.verbose,
         ),
-        None => _import(registry, JSONFromStdin {}, import_args.verbose),
+        None => _import(registry, JSONFromStdin {}),
     }
 }
 
@@ -92,7 +83,7 @@ mod tests {
         .unwrap();
         assert!(reg.is_empty());
         assert!(!reg.path().exists());
-        assert!(_import(&mut reg, MockJSONProvider {}, false).is_ok());
+        assert!(_import(&mut reg, MockJSONProvider {}).is_ok());
         assert!(!reg.is_empty());
         assert!(reg.path().exists());
     }

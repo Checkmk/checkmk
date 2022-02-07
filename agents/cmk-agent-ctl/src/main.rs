@@ -49,9 +49,8 @@ fn daemon(registry: config::Registry, legacy_pull_marker: &std::path::Path) -> A
 }
 
 #[cfg(unix)]
-fn init_logging() -> Result<flexi_logger::LoggerHandle, flexi_logger::FlexiLoggerError> {
-    // TODO: Change log level to "error" before first official release
-    flexi_logger::Logger::try_with_env_or_str("info")?
+fn init_logging(level: &str) -> Result<flexi_logger::LoggerHandle, flexi_logger::FlexiLoggerError> {
+    flexi_logger::Logger::try_with_env_or_str(level)?
         .log_to_stderr()
         .format(flexi_logger::default_format)
         .start()
@@ -59,10 +58,10 @@ fn init_logging() -> Result<flexi_logger::LoggerHandle, flexi_logger::FlexiLogge
 
 #[cfg(windows)]
 fn init_logging(
+    level: &str,
     path: &std::path::Path,
 ) -> Result<flexi_logger::LoggerHandle, flexi_logger::FlexiLoggerError> {
-    // TODO: Change log level to "error" before first official release
-    flexi_logger::Logger::try_with_env_or_str("info")?
+    flexi_logger::Logger::try_with_env_or_str(level)?
         .log_to_file(flexi_logger::FileSpec::try_from(path)?)
         .append()
         .format(flexi_logger::detailed_format)
@@ -114,9 +113,9 @@ fn init() -> AnyhowResult<(cli::Args, constants::Paths)> {
     let paths = determine_paths(constants::CMK_AGENT_USER)?;
 
     #[cfg(unix)]
-    let logging_init_result = init_logging();
+    let logging_init_result = init_logging(&args.logging_level());
     #[cfg(windows)]
-    let logging_init_result = init_logging(&paths.log_path);
+    let logging_init_result = init_logging(&args.logging_level(), &paths.log_path);
 
     if let Err(error) = logging_init_result {
         io::stderr()

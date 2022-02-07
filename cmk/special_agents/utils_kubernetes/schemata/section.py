@@ -19,7 +19,13 @@ from pydantic import BaseModel, Field
 from cmk.special_agents.utils_kubernetes.schemata import api
 
 ContainerName = NewType("ContainerName", str)
+HostName = NewType("HostName", str)
 PodSequence = Sequence[str]
+NodeName = NewType("NodeName", str)
+OsName = NewType("OsName", str)
+PythonCompiler = NewType("PythonCompiler", str)
+Timestamp = NewType("Timestamp", float)
+Version = NewType("Version", str)
 
 
 class PerformanceMetric(BaseModel):
@@ -42,8 +48,72 @@ class CollectorHandlerLog(BaseModel):
     detail: Optional[str]
 
 
-class CollectorComponents(BaseModel):
-    """section: kube_collector_info_v1"""
+class PlatformMetadata(BaseModel):
+    os_name: OsName
+    os_version: Version
+    python_version: Version
+    python_compiler: PythonCompiler
+
+
+class CheckmkKubeAgentMetadata(BaseModel):
+    project_version: Version
+
+
+class CollectorMetadata(BaseModel):
+    node: NodeName
+    host_name: HostName  # This looks like the pod name, but it is not. It is
+    # possible to give the host an arbitrary host name, different from the pod
+    # name which is managed by Kubernetes.
+    container_platform: PlatformMetadata
+    checkmk_kube_agent: CheckmkKubeAgentMetadata
+
+
+class ClusterCollectorMetadata(CollectorMetadata):
+    pass
+
+
+class CollectorType(enum.Enum):
+    CONTAINER_METRICS = "Container Metrics"
+    MACHINE_SECTIONS = "Machine Sections"
+
+
+class Components(BaseModel):
+    cadvisor_version: Optional[Version]
+    checkmk_agent_version: Optional[Version]
+
+
+class NodeCollectorMetadata(CollectorMetadata):
+    collector_type: CollectorType
+    components: Components
+
+
+class Metadata(BaseModel):
+    cluster_collector_metadata: ClusterCollectorMetadata
+    node_collector_metadata: Sequence[NodeCollectorMetadata]
+
+
+class NodeComponent(BaseModel):
+    collector_type: CollectorType
+    checkmk_kube_agent: CheckmkKubeAgentMetadata
+    name: str
+    version: Version
+
+
+class NodeMetadata(BaseModel):
+    name: NodeName
+    components: Mapping[str, NodeComponent]
+
+
+class CollectorComponentsMetadata(BaseModel):
+    """section: kube_collector_metadata_v1"""
+
+    processing_log: CollectorHandlerLog
+    cluster_collector: Optional[ClusterCollectorMetadata]
+    nodes: Optional[Sequence[NodeMetadata]]
+
+
+class CollectorProcessingLogs(BaseModel):
+    """section: kube_collector_processing_logs_v1"""
 
     container: CollectorHandlerLog
     machine: CollectorHandlerLog

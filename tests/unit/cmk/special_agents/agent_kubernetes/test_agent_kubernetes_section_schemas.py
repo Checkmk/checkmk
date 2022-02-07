@@ -56,7 +56,8 @@ from cmk.special_agents.utils_kubernetes.schemata.section import Resources as Re
 
 def test_schemata_did_not_diverge() -> None:
     assert ClusterInfoA.schema() == ClusterInfoC.schema()
-    assert agent.CollectorComponents.schema() == check.CollectorComponents.schema()
+    assert agent.CollectorProcessingLogs.schema() == check.CollectorProcessingLogs.schema()
+    assert agent.CollectorComponentsMetadata.schema() == check.CollectorComponentsMetadata.schema()
     assert ContainerCountA.schema() == ContainerCountC.schema()
     assert ContainerRunningStateA.schema() == ContainerRunningStateC.schema()
     assert ContainerTerminatedStateA.schema() == ContainerTerminatedStateC.schema()

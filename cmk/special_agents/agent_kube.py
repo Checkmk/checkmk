@@ -1048,6 +1048,21 @@ def _write_performance_section(section_name: SectionName, section_output: BaseMo
         writer.append(section_output.json())
 
 
+def _supported_cluster_collector_major_version(
+    collector_version: str, supported_max_major_version: int
+) -> bool:
+    """Check if the collector version is supported
+
+    Examples:
+         >>> _supported_cluster_collector_major_version('1.1.2', 1)
+         True
+
+         >>> _supported_cluster_collector_major_version('2.2.1b2', 0)
+         False
+    """
+    return int(collector_version[0]) <= supported_max_major_version
+
+
 class ClusterConnectionError(Exception):
     pass
 
@@ -1485,6 +1500,62 @@ def write_sections_based_on_performance_pods(
     write_kube_object_performance_section(cluster, performance_pods)
 
 
+def _identify_unsupported_node_collector_components(
+    nodes: Sequence[section.NodeMetadata], supported_max_major_version: int
+):
+    invalid_nodes = []
+    for node in nodes:
+        unsupported_components = [
+            f"{component.collector_type.value}: {component.checkmk_kube_agent.project_version}"
+            for component in node.components.values()
+            if not _supported_cluster_collector_major_version(
+                component.checkmk_kube_agent.project_version,
+                supported_max_major_version=supported_max_major_version,
+            )
+        ]
+        if unsupported_components:
+            invalid_nodes.append(f"{node.name} ({', '.join(unsupported_components)})")
+    return invalid_nodes
+
+
+def _group_metadata_by_node(
+    node_collectors_metadata: Sequence[section.NodeCollectorMetadata],
+) -> Sequence[section.NodeMetadata]:
+
+    nodes_components: Dict[section.NodeName, Dict[str, section.NodeComponent]] = {}
+    for node_collector in node_collectors_metadata:
+        components = nodes_components.setdefault(node_collector.node, {})
+
+        for component, version in node_collector.components.dict().items():
+            if version is not None:
+                components[component] = section.NodeComponent(
+                    collector_type=node_collector.collector_type,
+                    checkmk_kube_agent=node_collector.checkmk_kube_agent,
+                    name=component,
+                    version=version,
+                )
+
+    return [
+        section.NodeMetadata(name=node_name, components=nodes_components[node_name])
+        for node_name in {node_collector.node for node_collector in node_collectors_metadata}
+    ]
+
+
+def write_cluster_collector_info_section(
+    processing_log: section.CollectorHandlerLog,
+    cluster_collector: Optional[section.ClusterCollectorMetadata] = None,
+    node_collectors_metadata: Optional[Sequence[section.NodeMetadata]] = None,
+):
+    with SectionWriter("kube_collectors_metadata_v1") as writer:
+        writer.append(
+            section.CollectorComponentsMetadata(
+                processing_log=processing_log,
+                cluster_collector=cluster_collector,
+                nodes=node_collectors_metadata,
+            ).json()
+        )
+
+
 class CollectorHandlingException(Exception):
     # This exception is used as report medium for the Cluster Collector service
     def __init__(self, title: str, detail: str):
@@ -1604,6 +1675,61 @@ def main(args: Optional[List[str]] = None) -> int:
                 read=arguments.cluster_collector_read_timeout,
             )
 
+            # Handling of any of the cluster components should not crash the special agent as this
+            # would discard all the API data. Special Agent failures of the Cluster Collector
+            # components will not be highlighted in the usual Checkmk service but in a separate
+            # service
+
+            collector_metadata_logs: List[section.CollectorHandlerLog] = []
+            with collector_exception_handler(logs=collector_metadata_logs, debug=arguments.debug):
+                metadata_response = request_cluster_collector(
+                    f"{arguments.cluster_collector_endpoint}/metadata",
+                    arguments.token,
+                    arguments.verify_cert_collector,
+                    cluster_collector_timeout,
+                    deserialize_http_proxy_config(arguments.cluster_collector_proxy),
+                )
+
+                metadata = section.Metadata(**metadata_response)
+                supported_collector_version = 1
+                if not _supported_cluster_collector_major_version(
+                    metadata.cluster_collector_metadata.checkmk_kube_agent.project_version,
+                    supported_max_major_version=supported_collector_version,
+                ):
+                    raise CollectorHandlingException(
+                        title="Version Error",
+                        detail=f"Cluster Collector version {metadata.cluster_collector_metadata.checkmk_kube_agent.project_version} is not supported",
+                    )
+
+                nodes_metadata = _group_metadata_by_node(metadata.node_collector_metadata)
+
+                if invalid_nodes := _identify_unsupported_node_collector_components(
+                    nodes_metadata,
+                    supported_max_major_version=supported_collector_version,
+                ):
+                    raise CollectorHandlingException(
+                        title="Version Error",
+                        detail=f"Following Nodes have unsupported components and should be "
+                        f"downgraded: {', '.join(invalid_nodes)}",
+                    )
+
+                collector_metadata_logs.append(
+                    section.CollectorHandlerLog(
+                        status=section.CollectorState.OK,
+                        title="Retrieved successfully",
+                    )
+                )
+
+            try:
+                write_cluster_collector_info_section(
+                    processing_log=collector_metadata_logs[-1],
+                    cluster_collector=metadata.cluster_collector_metadata,
+                    node_collectors_metadata=nodes_metadata,
+                )
+            except UnboundLocalError:
+                write_cluster_collector_info_section(processing_log=collector_metadata_logs[-1])
+                return 0
+
             collector_container_logs: List[section.CollectorHandlerLog] = []
             with collector_exception_handler(logs=collector_container_logs, debug=arguments.debug):
                 LOGGER.info("Collecting container metrics from cluster collector")
@@ -1687,9 +1813,9 @@ def main(args: Optional[List[str]] = None) -> int:
                     )
                 )
 
-            with SectionWriter("kube_collector_info_v1") as writer:
+            with SectionWriter("kube_processing_logs_v1") as writer:
                 writer.append(
-                    section.CollectorComponents(
+                    section.CollectorProcessingLogs(
                         container=collector_container_logs[-1],
                         machine=collector_machine_logs[-1],
                     ).json()

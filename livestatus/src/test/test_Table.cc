@@ -113,11 +113,9 @@ static ColumnDefinitions event_console_status_columns();
 static ColumnDefinitions service_groups_columns();
 static ColumnDefinitions host_groups_columns();
 static ColumnDefinitions hosts_and_services_columns();
-static ColumnDefinitions funny_hosts_columns();
 static ColumnDefinitions hosts_columns();
 static ColumnDefinitions log_columns();
 static ColumnDefinitions services_columns();
-static ColumnDefinitions funny_services_columns();
 static ColumnDefinitions state_history_columns();
 static ColumnDefinitions status_columns();
 static ColumnDefinitions timeperiods_columns();
@@ -128,10 +126,8 @@ static ColumnDefinitions all_state_history_columns() {
     return state_history_columns() +  //
            "current_host_" / hosts_columns() +
            "current_host_" / hosts_and_services_columns() +
-           "current_host_" / funny_hosts_columns() +
            "current_service_" / services_columns() +
-           "current_service_" / hosts_and_services_columns() +
-           "current_service_" / funny_services_columns();
+           "current_service_" / hosts_and_services_columns();
 }
 
 #ifdef CMC
@@ -187,10 +183,8 @@ TEST(TableComments, ColumnNamesAndTypes) {
     EXPECT_EQ(comments_columns() +             //
                   "host_" / hosts_columns() +  //
                   "host_" / hosts_and_services_columns() +
-                  "host_" / funny_hosts_columns() +
                   "service_" / services_columns() +
-                  "service_" / hosts_and_services_columns() +
-                  "service_" / funny_services_columns(),
+                  "service_" / hosts_and_services_columns(),
               ColumnDefinitions(TableComments{nullptr}));
 }
 
@@ -283,10 +277,8 @@ TEST(TableDowntimes, ColumnNamesAndTypes) {
     EXPECT_EQ(downtimes_columns() +            //
                   "host_" / hosts_columns() +  //
                   "host_" / hosts_and_services_columns() +
-                  "host_" / funny_hosts_columns() +
                   "service_" / services_columns() +
-                  "service_" / hosts_and_services_columns() +
-                  "service_" / funny_services_columns(),
+                  "service_" / hosts_and_services_columns(),
               ColumnDefinitions(TableDowntimes{nullptr}));
 }
 
@@ -320,8 +312,7 @@ static ColumnDefinitions event_console_events_columns() {
 TEST(TableEventConsoleEvents, ColumnNamesAndTypes) {
     EXPECT_EQ(event_console_events_columns() +  //
                   "host_" / hosts_columns() +
-                  "host_" / hosts_and_services_columns() +
-                  "host_" / funny_hosts_columns(),
+                  "host_" / hosts_and_services_columns(),
               ColumnDefinitions(TableEventConsoleEvents{nullptr}));
 }
 
@@ -339,8 +330,7 @@ TEST(TableEventConsoleHistory, ColumnNamesAndTypes) {
     EXPECT_EQ(event_console_history_columns() +     //
                   event_console_events_columns() +  //
                   "host_" / hosts_columns() +
-                  "host_" / hosts_and_services_columns() +
-                  "host_" / funny_hosts_columns(),
+                  "host_" / hosts_and_services_columns(),
               ColumnDefinitions(TableEventConsoleHistory{nullptr}));
 }
 
@@ -547,10 +537,6 @@ static ColumnDefinitions hosts_and_services_columns() {
     };
 }
 
-// TODO(sp) These columns should really live unconditionally in
-// hosts_and_services_columns.
-static ColumnDefinitions funny_hosts_columns() { return {}; }
-
 static ColumnDefinitions hosts_columns() {
     return {
         {"address", ColumnType::string},
@@ -597,16 +583,14 @@ static ColumnDefinitions hosts_columns() {
 }
 
 TEST(TableHosts, ColumnNamesAndTypes) {
-    EXPECT_EQ(hosts_columns() +                   //
-                  hosts_and_services_columns() +  //
-                  funny_hosts_columns(),
+    EXPECT_EQ(hosts_columns() +  //
+                  hosts_and_services_columns(),
               ColumnDefinitions(TableHosts{nullptr}));
 }
 
 TEST(TableHostsByGroup, ColumnNamesAndTypes) {
     EXPECT_EQ(hosts_columns() +                   //
                   hosts_and_services_columns() +  //
-                  funny_hosts_columns() +         //
                   "hostgroup_" / host_groups_columns() +
                   "hostgroup_" / service_groups_columns(),
               ColumnDefinitions(TableHostsByGroup{nullptr}));
@@ -638,10 +622,8 @@ TEST(TableLog, ColumnNamesAndTypes) {
     EXPECT_EQ(log_columns() +  //
                   "current_host_" / hosts_columns() +
                   "current_host_" / hosts_and_services_columns() +
-                  "current_host_" / funny_hosts_columns() +
                   "current_service_" / services_columns() +
                   "current_service_" / hosts_and_services_columns() +
-                  "current_service_" / funny_services_columns() +
                   "current_contact_" / contacts_columns() +
                   "current_command_" / commands_columns(),
               ColumnDefinitions(TableLog{nullptr, nullptr}));
@@ -672,31 +654,19 @@ static ColumnDefinitions services_columns() {
     };
 }
 
-static ColumnDefinitions funny_services_columns() {
-#ifdef CMC
-    return funny_hosts_columns();
-#else
-    return {};
-#endif
-}
-
 TEST(TableServices, ColumnNamesAndTypes) {
     EXPECT_EQ(services_columns() +                //
                   hosts_and_services_columns() +  //
-                  funny_services_columns() +      //
                   "host_" / hosts_columns() +
-                  "host_" / hosts_and_services_columns() +
-                  "host_" / funny_hosts_columns(),
+                  "host_" / hosts_and_services_columns(),
               ColumnDefinitions(TableServices{nullptr}));
 }
 
 TEST(TableServicesByGroup, ColumnNamesAndTypes) {
     EXPECT_EQ(services_columns() +                //
                   hosts_and_services_columns() +  //
-                  funny_services_columns() +      //
                   "host_" / hosts_columns() +
                   "host_" / hosts_and_services_columns() +
-                  "host_" / funny_hosts_columns() +
                   "servicegroup_" / service_groups_columns(),
               ColumnDefinitions(TableServicesByGroup{nullptr}));
 }
@@ -704,10 +674,8 @@ TEST(TableServicesByGroup, ColumnNamesAndTypes) {
 TEST(TableServicesByHostGroup, ColumnNamesAndTypes) {
     EXPECT_EQ(services_columns() +                //
                   hosts_and_services_columns() +  //
-                  funny_services_columns() +      //
                   "host_" / hosts_columns() +
                   "host_" / hosts_and_services_columns() +
-                  "host_" / funny_hosts_columns() +
                   "hostgroup_" / host_groups_columns() +
                   "hostgroup_" / service_groups_columns(),
               ColumnDefinitions(TableServicesByHostGroup{nullptr}));

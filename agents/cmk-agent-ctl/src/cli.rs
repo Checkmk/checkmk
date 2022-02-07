@@ -14,12 +14,10 @@ pub struct LoggingOpts {
 
 impl LoggingOpts {
     fn logging_level(&self) -> String {
-        if self.verbose > 1 {
-            String::from("debug")
-        } else if self.verbose == 1 {
-            String::from("info")
-        } else {
-            String::from("warn")
+        match self.verbose {
+            2.. => String::from("debug"),
+            1 => String::from("info"),
+            _ => String::from("warn"),
         }
     }
 }

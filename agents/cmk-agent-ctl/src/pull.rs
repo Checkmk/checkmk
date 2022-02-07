@@ -4,56 +4,90 @@
 
 use super::{config, constants, monitoring_data, tls_server};
 use anyhow::{Context, Result as AnyhowResult};
-use log::info;
-use std::io::Write;
-use std::net::{TcpListener, TcpStream};
+use log::{debug, info};
+use std::net::SocketAddr;
 use std::sync::{Arc, RwLock};
+use tokio::fs;
+use tokio::io::AsyncWriteExt;
+use tokio::net::{TcpListener, TcpStream};
+use tokio::runtime::Handle;
+use tokio_rustls::TlsAcceptor;
 
 const TLS_ID: &[u8] = b"16";
 const HEADER_VERSION: &[u8] = b"\x00\x00";
 
 pub fn pull(
+    runtime: Handle,
     registry: Arc<RwLock<config::Registry>>,
     legacy_pull_marker: &std::path::Path,
 ) -> AnyhowResult<()> {
-    let listener = TcpListener::bind(format!("0.0.0.0:{}", constants::AGENT_PORT))?;
+    runtime.block_on(async_pull(registry, legacy_pull_marker.to_owned()))?;
+    Ok(())
+}
+
+pub async fn async_pull(
+    registry: Arc<RwLock<config::Registry>>,
+    legacy_pull_marker: std::path::PathBuf,
+) -> AnyhowResult<()> {
+    let listener = TcpListener::bind(format!("0.0.0.0:{}", constants::AGENT_PORT)).await?;
     loop {
         let (stream, addr) = listener
             .accept()
+            .await
             .context("Failed accepting pull connection")?;
-        info!("PULL Handling pull request from {}", addr);
+        info!("{}: Handling pull request", addr);
         {
             let mut registry_writer = registry.write().unwrap();
             registry_writer.refresh()?;
         }
-        let registry_reader = registry.read().unwrap();
-        handle_pull_request(stream, &registry_reader, legacy_pull_marker)?;
+        let (tls_acceptor, legacy_pull) = {
+            let registry_reader = registry.read().unwrap();
+            (
+                tls_server::tls_acceptor(registry_reader.pull_connections())
+                    .context("Could not initialize TLS.")?,
+                is_legacy_pull(&registry_reader, &legacy_pull_marker),
+            )
+        };
+        tokio::spawn(handle_pull_request(
+            addr,
+            tls_acceptor,
+            stream,
+            legacy_pull,
+            legacy_pull_marker.to_owned(),
+        ));
     }
 }
 
-fn handle_pull_request(
+async fn handle_pull_request(
+    addr: SocketAddr,
+    tls_acceptor: TlsAcceptor,
     mut stream: TcpStream,
-    registry: &config::Registry,
-    legacy_pull_marker: &std::path::Path,
+    is_legacy_pull: bool,
+    legacy_pull_marker: std::path::PathBuf,
 ) -> AnyhowResult<()> {
-    let mon_data = monitoring_data::collect().context("Error collecting monitoring data.")?;
+    debug!("{:?}: Collecting monitoring data", addr);
+    let mon_data = monitoring_data::async_collect()
+        .await
+        .context("Error collecting monitoring data.")?;
 
-    if is_legacy_pull(registry, legacy_pull_marker) {
-        stream.write_all(&mon_data)?;
+    if is_legacy_pull {
+        stream.write_all(&mon_data).await?;
         return Ok(());
     }
 
-    stream.write_all(TLS_ID)?;
-    stream.flush()?;
+    stream.write_all(TLS_ID).await?;
+    stream.flush().await?;
 
-    let mut tls_connection = tls_server::tls_connection(registry.pull_connections())
-        .context("Could not initialize TLS.")?;
-    let mut tls_stream = tls_server::tls_stream(&mut tls_connection, &mut stream);
+    let mut tls_stream = tls_acceptor.accept(stream).await?;
 
-    tls_stream.write_all(&encode_data_for_transport(&mon_data)?)?;
-    tls_stream.flush()?;
+    debug!("{:?}: Sending", addr);
+    tls_stream
+        .write_all(&encode_data_for_transport(&mon_data)?)
+        .await?;
+    tls_stream.flush().await?;
+    debug!("{:?}: Done", addr);
 
-    disallow_legacy_pull(legacy_pull_marker).context("Just provided agent data via TLS, but legacy pull mode is still allowed, and could not delete marker")?;
+    async_disallow_legacy_pull(&legacy_pull_marker).await.context("Just provided agent data via TLS, but legacy pull mode is still allowed, and could not delete marker")?;
     Ok(())
 }
 
@@ -65,6 +99,16 @@ fn is_legacy_pull(registry: &config::Registry, legacy_pull_marker: &std::path::P
         return false;
     }
     true
+}
+
+pub async fn async_disallow_legacy_pull(
+    legacy_pull_marker: &std::path::Path,
+) -> std::io::Result<()> {
+    if !legacy_pull_marker.exists() {
+        return Ok(());
+    }
+
+    fs::remove_file(legacy_pull_marker).await
 }
 
 pub fn disallow_legacy_pull(legacy_pull_marker: &std::path::Path) -> std::io::Result<()> {

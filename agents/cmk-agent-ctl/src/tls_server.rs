@@ -4,30 +4,21 @@
 
 use super::config;
 use anyhow::{anyhow, Context, Result as AnyhowResult};
-use rustls::RootCertStore;
-use rustls::{
-    server::AllowAnyAuthenticatedClient, server::ResolvesServerCertUsingSni, sign::CertifiedKey,
-    sign::RsaSigningKey, Certificate, PrivateKey, ServerConfig, ServerConnection,
-    Stream as RustlsStream,
-};
 use rustls_pemfile::Item;
-use std::net::TcpStream;
 use std::sync::Arc;
+use tokio_rustls::rustls::{
+    server::AllowAnyAuthenticatedClient, server::ResolvesServerCertUsingSni, sign::CertifiedKey,
+    sign::RsaSigningKey, Certificate, PrivateKey, RootCertStore, ServerConfig,
+};
+use tokio_rustls::TlsAcceptor;
 
 #[cfg(windows)]
 use std::io::{Read, Result as IoResult, Write};
 
-pub fn tls_connection<'a>(
+pub fn tls_acceptor<'a>(
     connections: impl Iterator<Item = &'a config::Connection>,
-) -> AnyhowResult<ServerConnection> {
-    Ok(ServerConnection::new(tls_config(connections)?)?)
-}
-
-pub fn tls_stream<'a>(
-    server_connection: &'a mut ServerConnection,
-    stream: &'a mut TcpStream,
-) -> RustlsStream<'a, ServerConnection, TcpStream> {
-    RustlsStream::new(server_connection, stream)
+) -> AnyhowResult<TlsAcceptor> {
+    Ok(TlsAcceptor::from(tls_config(connections)?))
 }
 
 fn tls_config<'a>(

@@ -35,3 +35,5 @@ rand = { version = "*" }
 mockall = { version = "*" }
 mockall_double = { version = "*" }
 lazy_static = { version = "*" }
+tokio = { version = "1", features = ["full"] }
+tokio-rustls = { version = "*" }

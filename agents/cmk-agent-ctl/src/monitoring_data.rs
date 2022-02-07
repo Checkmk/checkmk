@@ -11,7 +11,10 @@ use std::net::TcpStream;
 
 #[cfg(unix)]
 use std::os::unix::net::UnixStream;
-
+#[cfg(unix)]
+use tokio::io::AsyncReadExt;
+#[cfg(unix)]
+use tokio::net::UnixStream as AsyncUnixStream;
 // TODO(sk): add logging and unit testing(using local server)
 #[cfg(windows)]
 fn collect_from_ip(agent_ip: &str) -> IoResult<Vec<u8>> {
@@ -24,6 +27,16 @@ fn collect_from_ip(agent_ip: &str) -> IoResult<Vec<u8>> {
 pub fn collect() -> IoResult<Vec<u8>> {
     let peer = format!("localhost:{}", constants::WINDOWS_INTERNAL_PORT);
     collect_from_ip(&peer)
+}
+
+#[cfg(unix)]
+pub async fn async_collect() -> IoResult<Vec<u8>> {
+    let mut mondata: Vec<u8> = vec![];
+    AsyncUnixStream::connect("/run/check-mk-agent.socket")
+        .await?
+        .read_to_end(&mut mondata)
+        .await?;
+    Ok(mondata)
 }
 
 #[cfg(unix)]

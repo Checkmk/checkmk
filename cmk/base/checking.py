@@ -637,6 +637,7 @@ def _execute_check_legacy_mode(
     section_name = legacy_check_plugin_name.split('.')[0]
 
     section_content = None
+    used_params = None
     mgmt_board_info = config.get_management_board_precedence(section_name, config.check_info)
     source_type = SourceType.MANAGEMENT if mgmt_board_info == LEGACY_MGMT_ONLY else SourceType.HOST
     try:

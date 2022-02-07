@@ -105,9 +105,18 @@ class NodeInfo(BaseModel):
     container_runtime_version: str
 
 
+class NodeAddress(BaseModel):
+    address: IpAddress
+    type_: Literal["Hostname", "ExternalIP", "InternalIP"]
+
+
+NodeAddresses = Sequence[NodeAddress]
+
+
 class NodeStatus(BaseModel):
     conditions: NodeConditions
     node_info: NodeInfo
+    addresses: NodeAddresses
 
 
 class Node(BaseModel):

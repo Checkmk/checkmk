@@ -27,9 +27,10 @@ def parse_kube_node_info(string_table: StringTable):
     ... '"operating_system": "linux",'
     ... '"creation_timestamp": "1640000000.0",'
     ... '"container_runtime_version": "docker://20.10.8",'
+    ... '"addresses": [],'
     ... '"labels": {}}'
     ... ]])
-    NodeInfo(architecture='amd64', kernel_version='5.13.0-27-generic', os_image='Ubuntu 20.04.2 LTS', operating_system='linux', container_runtime_version='docker://20.10.8', name='minikube', creation_timestamp=1640000000.0, labels={})
+    NodeInfo(architecture='amd64', kernel_version='5.13.0-27-generic', os_image='Ubuntu 20.04.2 LTS', operating_system='linux', container_runtime_version='docker://20.10.8', name='minikube', creation_timestamp=1640000000.0, labels={}, addresses=[])
     """
     return NodeInfo(**json.loads(string_table[0][0]))
 

@@ -182,6 +182,7 @@ class NodeInfo(api.NodeInfo):
     name: api.NodeName
     creation_timestamp: api.CreationTimestamp
     labels: api.Labels
+    addresses: api.NodeAddresses
 
 
 class DeploymentInfo(BaseModel):

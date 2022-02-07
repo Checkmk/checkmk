@@ -228,6 +228,14 @@ class Memory(BaseModel):
     memory_usage_bytes: float
 
 
+class NodeAddress(BaseModel):
+    address: IpAddress
+    type_: Literal["Hostname", "ExternalIP", "InternalIP"]
+
+
+NodeAddresses = Sequence[NodeAddress]
+
+
 class NodeInfo(BaseModel):
     """section: kube_node_info_v1"""
 
@@ -239,6 +247,7 @@ class NodeInfo(BaseModel):
     name: NodeName
     creation_timestamp: CreationTimestamp
     labels: Labels
+    addresses: NodeAddresses
 
 
 class StartTime(BaseModel):

@@ -341,6 +341,20 @@ def pod_from_client(pod: client.V1Pod) -> api.Pod:
     )
 
 
+def node_addresses_from_client(
+    node_addresses: Optional[Sequence[client.V1NodeAdresses]],
+) -> api.NodeAddresses:
+    if not node_addresses:
+        return []
+    return [
+        api.NodeAddress(
+            address=address.address,
+            type_=address.type,
+        )
+        for address in node_addresses
+    ]
+
+
 def node_from_client(node: client.V1Node, kubelet_health: api.HealthZ) -> api.Node:
     metadata = parse_metadata(node.metadata)
     return api.Node(
@@ -349,6 +363,7 @@ def node_from_client(node: client.V1Node, kubelet_health: api.HealthZ) -> api.No
         status=api.NodeStatus(
             conditions=node_conditions(node),
             node_info=node_info(node),
+            addresses=node_addresses_from_client(node.status.addresses),
         ),
         resources=parse_node_resources(node),
         control_plane=is_control_plane(metadata.labels),

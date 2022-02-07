@@ -492,6 +492,7 @@ class Node:
     def info(self) -> section.NodeInfo:
         return section.NodeInfo(
             labels=self.metadata.labels,
+            addresses=self.status.addresses,
             name=self.metadata.name,
             creation_timestamp=self.metadata.creation_timestamp,
             architecture=self.status.node_info.architecture,

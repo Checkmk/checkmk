@@ -381,7 +381,7 @@ test-cargo-fmt-docker:
 	$(SCRIPTS)/run-in-docker.sh make test-cargo-fmt
 
 test-cargo-clippy:
-	$(SCRIPTS)/run-cargo-command-in-projects clippy --all-targets
+	$(SCRIPTS)/run-cargo-command-in-projects clippy --all-targets -- -D warnings
 
 test-cargo-clippy-docker:
 	$(SCRIPTS)/run-in-docker.sh make test-cargo-clippy

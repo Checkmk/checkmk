@@ -32,7 +32,6 @@ from cmk.utils.livestatus_helpers.types import Column, Table
 from cmk.gui import sites, watolib
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.fields.base import BaseSchema, MultiNested, ValueTypedDictSchema
-from cmk.gui.fields.primitives import DateTime
 from cmk.gui.fields.utils import attr_openapi_schema, collect_attributes, ObjectContext, ObjectType
 from cmk.gui.globals import user
 from cmk.gui.groups import GroupName, GroupType, load_group_information
@@ -40,7 +39,7 @@ from cmk.gui.plugins.webapi.utils import validate_host_attributes
 from cmk.gui.sites import allsites
 from cmk.gui.watolib.passwords import contact_group_choices, password_exists
 
-from cmk.fields import base
+from cmk.fields import base, DateTime
 
 if version.is_managed_edition():
     import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module

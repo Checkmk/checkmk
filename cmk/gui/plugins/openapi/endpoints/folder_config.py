@@ -37,7 +37,8 @@ from typing import List
 
 from werkzeug.datastructures import ETags
 
-from cmk.gui import fields, watolib
+from cmk.gui import fields as gui_fields
+from cmk.gui import watolib
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.http import Response
 from cmk.gui.plugins.openapi.endpoints.host_config import host_collection
@@ -51,8 +52,10 @@ from cmk.gui.plugins.openapi.restful_objects import (
 from cmk.gui.plugins.openapi.utils import problem, ProblemException
 from cmk.gui.watolib import CREFolder
 
+from cmk import fields
+
 PATH_FOLDER_FIELD = {
-    "folder": fields.FolderField(
+    "folder": gui_fields.FolderField(
         description=(
             "The path of the folder being requested. Please be aware that slashes can't "
             "be used in the URL. Also, escaping the slashes via %2f will not work. Please "
@@ -257,7 +260,7 @@ def move(params):
             detail=exc.message,
             status=400,
         )
-    folder = fields.FolderField.load_folder(folder_id)
+    folder = gui_fields.FolderField.load_folder(folder_id)
     return _serve_folder(folder)
 
 
@@ -267,7 +270,7 @@ def move(params):
     method="get",
     query_params=[
         {
-            "parent": fields.FolderField(
+            "parent": gui_fields.FolderField(
                 description="Show all sub-folders of this folder. The default is the root-folder.",
                 example="/servers",
                 load_default=watolib.Folder.root_folder,  # because we can't load it too early.

@@ -21,9 +21,11 @@ from cmk.utils.type_defs import (
     TagConditionOR,
 )
 
-from cmk.gui import fields
+from cmk.gui import fields as gui_fields
 from cmk.gui.fields import base
 from cmk.gui.plugins.openapi.restful_objects import response_schemas
+
+from cmk import fields
 
 # Needed for cast()-ing. Do not move into typing.TYPE_CHECKING
 ApiExpressionValue = typing.Union[typing.List[str], str]
@@ -45,7 +47,7 @@ if typing.TYPE_CHECKING:
 
 
 RULE_ID = {
-    "rule_id": fields.String(
+    "rule_id": gui_fields.String(
         description="The ID of the rule.",
         required=True,
         example="0a168697-14a2-48d0-9c3c-ca65569a39e2",
@@ -80,15 +82,15 @@ class LabelConditionSchema(base.BaseSchema):
 
     cast_to_dict = True
 
-    key = fields.String(
+    key = gui_fields.String(
         required=True,
         description="The key of the label. e.g. 'os' in 'os:windows'",
     )
-    operator = fields.String(
+    operator = gui_fields.String(
         enum=["is", "is_not"],
         description="How the label should be matched.",
     )
-    value = fields.String(
+    value = gui_fields.String(
         required=True,
         description="The value of the label. e.g. 'windows' in 'os:windows'",
     )
@@ -150,7 +152,7 @@ class TagConditionSchemaBase(base.BaseSchema):
     allowed_operators: typing.Tuple[str, str]
     operator_type: str
 
-    key = fields.String(
+    key = gui_fields.String(
         description="The name of the tag.",
     )
 
@@ -249,11 +251,11 @@ class TagConditionScalarSchemaBase(TagConditionSchemaBase):
     operator_type = "scalar"
 
     # field defined in superclass
-    operator = fields.String(
+    operator = gui_fields.String(
         description="If the tag's value should match what is given under the field `value`.",
         enum=list(allowed_operators),  # Our serializer only wants to know lists.
     )
-    value = fields.String(
+    value = gui_fields.String(
         description="The value of a tag.",
     )
 
@@ -283,12 +285,12 @@ class TagConditionConditionSchemaBase(TagConditionSchemaBase):
     operator_type = "collection"
 
     # field defined in superclass
-    operator = fields.String(
+    operator = gui_fields.String(
         description="If the matched tag should be one of the given values, or not.",
         enum=list(allowed_operators),  # Our serializer only wants to know lists.
     )
-    value = fields.List(
-        fields.String(description="The value of a tag."),
+    value = gui_fields.List(
+        gui_fields.String(description="The value of a tag."),
         description="A list of values for the tag.",
     )
 
@@ -440,11 +442,11 @@ class HostOrServiceConditionSchema(base.BaseSchema):
 
     cast_to_dict = True
 
-    match_on = fields.List(
-        fields.String(),
+    match_on = gui_fields.List(
+        gui_fields.String(),
         description="A list of string matching regular expressions.",
     )
-    operator = fields.String(
+    operator = gui_fields.String(
         enum=["one_of", "none_of"],
         description=(
             "How the hosts or services should be matched.\n"
@@ -537,11 +539,11 @@ class HostOrServiceConditionSchema(base.BaseSchema):
 class RuleProperties(base.BaseSchema):
     cast_to_dict = True
 
-    description = fields.String(
+    description = gui_fields.String(
         description="A description for this rule to inform other users about its intent.",
         example="This rule is here to foo the bar hosts.",
     )
-    comment = fields.String(
+    comment = gui_fields.String(
         description="Any comment string.",
         example="Created yesterday due to foo hosts behaving weird.",
     )
@@ -560,7 +562,7 @@ class RuleProperties(base.BaseSchema):
 class RuleConditions(base.BaseSchema):
     cast_to_dict = True
 
-    host_name = fields.Nested(
+    host_name = gui_fields.Nested(
         HostOrServiceConditionSchema,
         many=False,
         description=(
@@ -574,7 +576,7 @@ class RuleConditions(base.BaseSchema):
         ),
         example={"match_on": ["host1", "host2"], "operator": "one_of"},
     )
-    host_tag = fields.Nested(
+    host_tag = gui_fields.Nested(
         TagConditionSchema,
         many=True,
         description=(
@@ -583,13 +585,13 @@ class RuleConditions(base.BaseSchema):
         ),
         example=[{"key": "criticality", "operator": "is", "value": "prod"}],
     )
-    host_label = fields.Nested(
+    host_label = gui_fields.Nested(
         LabelConditionSchema,
         many=True,
         description="Further restrict this rule by applying host label conditions.",
         example=[{"key": "os", "operator": "is", "value": "windows"}],
     )
-    service_label = fields.Nested(
+    service_label = gui_fields.Nested(
         LabelConditionSchema,
         many=True,
         description=(
@@ -597,7 +599,7 @@ class RuleConditions(base.BaseSchema):
         ),
         example=[{"key": "os", "operator": "is", "value": "windows"}],
     )
-    service_description = fields.Nested(
+    service_description = gui_fields.Nested(
         HostOrServiceConditionSchema(use_regex="always"),
         many=False,
         description=(
@@ -656,21 +658,21 @@ class RuleExtensions(base.BaseSchema):
 
     cast_to_dict = True
 
-    ruleset = fields.String(description="The name of the ruleset.")
-    folder = fields.FolderField(required=True, example="~router")
-    folder_index = fields.Integer(
+    ruleset = gui_fields.String(description="The name of the ruleset.")
+    folder = gui_fields.FolderField(required=True, example="~router")
+    folder_index = gui_fields.Integer(
         description="The position of this rule in the chain in this folder.",
     )
-    properties = fields.Nested(
+    properties = gui_fields.Nested(
         RuleProperties,
         description="Property values of this rule.",
         example={},
     )
-    value_raw = fields.PythonString(
+    value_raw = gui_fields.PythonString(
         description="The raw parameter value for this rule.",
         example='{"ignore_fs_types": ["tmpfs"]}',
     )
-    conditions = fields.Nested(
+    conditions = gui_fields.Nested(
         RuleConditions,
         description="Conditions.",
     )
@@ -687,7 +689,7 @@ class RuleObject(response_schemas.DomainObject):
         description="Domain type of this object.",
         example="rule",
     )
-    extensions = fields.Nested(
+    extensions = gui_fields.Nested(
         RuleExtensions,
         description="Attributes specific to rule objects.",
     )
@@ -698,7 +700,7 @@ class RuleCollection(response_schemas.DomainObjectCollection):
         "rule",
         description="Domain type of this object.",
     )
-    value: fields.Field = fields.Nested(
+    value: gui_fields.Field = gui_fields.Nested(
         RuleObject,
         description="The collection itself. Each entry in here is part of the collection.",
         many=True,
@@ -753,18 +755,18 @@ class InputRuleObject(base.BaseSchema):
 
     cast_to_dict = True
 
-    ruleset = fields.String(
+    ruleset = gui_fields.String(
         description="Name of rule set.",
         example="host_config",
         required=True,
     )
-    folder = fields.FolderField(required=True, example="~router")
-    properties = fields.Nested(
+    folder = gui_fields.FolderField(required=True, example="~router")
+    properties = gui_fields.Nested(
         RuleProperties,
         description="Configuration values for rules.",
         example={"disabled": False},
     )
-    value_raw = fields.PythonString(
+    value_raw = gui_fields.PythonString(
         description=(
             "The raw parameter value for this rule. To create the correct structure, for now use "
             "the 'export for API' menu item in the Rule Editor of the GUI. The value is expected "
@@ -772,7 +774,7 @@ class InputRuleObject(base.BaseSchema):
         ),
         example='{"ignore_fs_types": ["tmpfs"]}',
     )
-    conditions = fields.Nested(
+    conditions = gui_fields.Nested(
         RuleConditions,
         description="Conditions.",
         example={},
@@ -902,7 +904,7 @@ def _collection_value(
 
 
 class RuleSearchOptions(base.BaseSchema):
-    ruleset_name = fields.String(
+    ruleset_name = gui_fields.String(
         description="The name of the ruleset.",
         example="host_groups",
         required=True,

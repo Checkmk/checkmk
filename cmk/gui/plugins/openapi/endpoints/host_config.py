@@ -47,7 +47,8 @@ from urllib.parse import urlencode
 import cmk.utils.version as cmk_version
 
 import cmk.gui.watolib.activate_changes as activate_changes
-from cmk.gui import fields, watolib
+from cmk.gui import fields as gui_fields
+from cmk.gui import watolib
 from cmk.gui.exceptions import MKAuthException, MKUserError
 from cmk.gui.http import Response
 from cmk.gui.plugins.openapi.endpoints.utils import folder_slug
@@ -63,6 +64,8 @@ from cmk.gui.plugins.webapi.utils import check_hostname
 from cmk.gui.watolib import hosts_and_folders
 from cmk.gui.watolib.host_rename import perform_rename_hosts
 from cmk.gui.watolib.hosts_and_folders import CREFolder
+
+from cmk import fields
 
 BAKE_AGENT_PARAM_NAME = "bake_agent"
 BAKE_AGENT_PARAM = {
@@ -200,7 +203,7 @@ def host_collection(hosts: Iterable[watolib.CREHost]) -> Response:
     method="put",
     path_params=[
         {
-            "host_name": fields.HostField(
+            "host_name": gui_fields.HostField(
                 description="A cluster host.",
                 should_be_cluster=True,
             ),

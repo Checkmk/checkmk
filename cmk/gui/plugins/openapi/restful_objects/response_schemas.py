@@ -11,41 +11,43 @@ from marshmallow_oneofschema import OneOfSchema  # type: ignore[import]
 
 from cmk.utils.defines import weekday_ids
 
-from cmk.gui import fields
+from cmk.gui import fields as gui_fields
 from cmk.gui.fields.utils import BaseSchema
+
+from cmk import fields
 
 # TODO: Add Enum Field for http methods, action result types and similar fields which can only hold
 #       distinct values
 
 
 class ApiError(BaseSchema):
-    code = fields.Integer(
+    code = gui_fields.Integer(
         description="The HTTP status code.",
         required=True,
         example=404,
     )
-    message = fields.String(
+    message = gui_fields.String(
         description="Detailed information on what exactly went wrong.",
         required=True,
         example="The resource could not be found.",
     )
-    title = fields.String(
+    title = gui_fields.String(
         description="A summary of the problem.",
         required=True,
         example="Not found",
     )
     _fields = fields.Dict(
         data_key="fields",  # mypy
-        keys=fields.String(description="The field name"),
-        values=fields.List(fields.String(description="The error messages")),
+        keys=gui_fields.String(description="The field name"),
+        values=gui_fields.List(gui_fields.String(description="The error messages")),
         description="Detailed error messages on all fields failing validation.",
         required=False,
     )
 
 
 class UserSchema(BaseSchema):
-    id = fields.Integer(dump_only=True)
-    name = fields.String(description="The user's name")
+    id = gui_fields.Integer(dump_only=True)
+    name = gui_fields.String(description="The user's name")
     created = fields.DateTime(
         dump_only=True,
         format="iso8601",
@@ -58,7 +60,7 @@ class LinkSchema(BaseSchema):
     """A Link representation according to A-24 (2.7)"""
 
     domainType = fields.Constant("link", required=True)
-    rel = fields.String(
+    rel = gui_fields.String(
         description=(
             "Indicates the nature of the relationship of the related resource to the "
             "resource that generated this representation"
@@ -66,7 +68,7 @@ class LinkSchema(BaseSchema):
         required=True,
         example="self",
     )
-    href = fields.String(
+    href = gui_fields.String(
         description=(
             "The (absolute) address of the related resource. Any characters that are "
             "invalid in URLs must be URL encoded."
@@ -74,18 +76,18 @@ class LinkSchema(BaseSchema):
         required=True,
         example="https://.../api_resource",
     )
-    method = fields.String(
+    method = gui_fields.String(
         description="The HTTP method to use to traverse the link (get, post, put or delete)",
         required=True,
         pattern="GET|PUT|POST|DELETE",
         example="GET",
     )
-    type = fields.String(
+    type = gui_fields.String(
         description="The content-type that the linked resource will return",
         required=True,
         example="application/json",
     )
-    title = fields.String(
+    title = gui_fields.String(
         description=(
             "string that the consuming application may use to render the link without "
             "having to traverse the link in advance"
@@ -103,15 +105,15 @@ class LinkSchema(BaseSchema):
 
 
 class Linkable(BaseSchema):
-    links = fields.List(
-        fields.Nested(LinkSchema),
+    links = gui_fields.List(
+        gui_fields.Nested(LinkSchema),
         required=True,
         description="list of links to other resources.",
     )
 
 
 class Parameter(Linkable):
-    id = fields.String(
+    id = gui_fields.String(
         description=(
             "the Id of this action parameter (typically a concatenation of the parent "
             "action Id with the parameter name)"
@@ -119,44 +121,44 @@ class Parameter(Linkable):
         required=True,
         example="folder-move",
     )
-    number = fields.Integer(
+    number = gui_fields.Integer(
         description="the number of the parameter (starting from 0)", required=True, example=0
     )
-    name = fields.String(
+    name = gui_fields.String(
         description="the name of the parameter", required=True, example="destination"
     )
-    friendlyName = fields.String(
+    friendlyName = gui_fields.String(
         description="the action parameter name, formatted for rendering in a UI.",
         required=True,
         example="The destination folder id",
     )
-    description = fields.String(
+    description = gui_fields.String(
         description="a description of the action parameter, e.g. to render as a tooltip.",
         required=False,
         example="The destination",
     )
-    optional = fields.Bool(
+    optional = fields.Boolean(
         description="indicates whether the action parameter is optional",
         required=False,
         example=False,
     )
 
     # for string only
-    format = fields.String(
+    format = gui_fields.String(
         description=(
             "for action parameters requiring a string or number value, indicates how to"
             " interpret that value A2.5."
         ),
         required=False,
     )
-    maxLength = fields.Integer(
+    maxLength = gui_fields.Integer(
         description=(
             "for string action parameters, indicates the maximum allowable length. A "
             "value of 0 means unlimited."
         ),
         required=False,
     )
-    pattern = fields.String(
+    pattern = gui_fields.String(
         description=(
             "for string action parameters, indicates a regular expression for the "
             "property to match."
@@ -166,8 +168,8 @@ class Parameter(Linkable):
 
 
 class ObjectMemberBase(Linkable):
-    id = fields.String(required=True)
-    disabledReason = fields.String(
+    id = gui_fields.String(required=True)
+    disabledReason = gui_fields.String(
         description=(
             'Provides the reason (or the literal "disabled") why an object property or '
             "collection is un-modifiable, or, in the case of an action, unusable (and "
@@ -176,7 +178,7 @@ class ObjectMemberBase(Linkable):
         ),
         allow_none=True,
     )
-    invalidReason = fields.String(
+    invalidReason = gui_fields.String(
         description=(
             'Provides the reason (or the literal "invalid") why a proposed value for a '
             "property, collection or action argument is invalid. Appears within an "
@@ -185,7 +187,7 @@ class ObjectMemberBase(Linkable):
         example="invalid",
         allow_none=True,
     )
-    x_ro_invalidReason = fields.String(
+    x_ro_invalidReason = gui_fields.String(
         data_key="x-ro-invalidReason",
         description=(
             "Provides the reason why a SET OF proposed values for properties or arguments "
@@ -197,17 +199,19 @@ class ObjectMemberBase(Linkable):
 
 class ObjectCollectionMember(ObjectMemberBase):
     memberType = fields.Constant("collection")
-    value = fields.List(fields.Nested(LinkSchema()))
-    name = fields.String(example="important_values")
-    title = fields.String(
+    value = gui_fields.List(gui_fields.Nested(LinkSchema()))
+    name = gui_fields.String(example="important_values")
+    title = gui_fields.String(
         description="A human readable title of this object. Can be used for " "user interfaces.",
     )
 
 
 class ObjectProperty(Linkable):
-    id = fields.String(description="The unique name of this property, local to this domain type.")
-    value = fields.List(
-        fields.String(),
+    id = gui_fields.String(
+        description="The unique name of this property, local to this domain type."
+    )
+    value = gui_fields.List(
+        gui_fields.String(),
         description="The value of the property. In this case a list.",
     )
     extensions = fields.Dict(
@@ -217,9 +221,9 @@ class ObjectProperty(Linkable):
 
 class ObjectPropertyMember(ObjectMemberBase):
     memberType = fields.Constant("property")
-    name = fields.String(example="important")
-    value = fields.String(example="the value")
-    title = fields.String(
+    name = gui_fields.String(example="important")
+    value = gui_fields.String(example="the value")
+    title = gui_fields.String(
         description="A human readable title of this object. Can be used for " "user interfaces.",
     )
 
@@ -227,8 +231,8 @@ class ObjectPropertyMember(ObjectMemberBase):
 class ObjectActionMember(ObjectMemberBase):
     memberType = fields.Constant("action")
     parameters = fields.Dict()
-    name = fields.String(example="frobnicate_foo")
-    title = fields.String(
+    name = gui_fields.String(example="frobnicate_foo")
+    title = gui_fields.String(
         description="A human readable title of this object. Can be used for " "user interfaces.",
     )
 
@@ -243,7 +247,7 @@ class ObjectMember(OneOfSchema):
 
 
 class ActionResultBase(Linkable):
-    resultType: fields.Field = fields.String(
+    resultType: gui_fields.Field = gui_fields.String(
         enum=["object", "scalar"],
         description="The type of the result.",
     )
@@ -254,11 +258,11 @@ class ActionResultBase(Linkable):
 
 
 class ActionResultObject(ActionResultBase):
-    result = fields.Nested(
+    result = gui_fields.Nested(
         Schema.from_dict(
             {
-                "links": fields.List(
-                    fields.Nested(LinkSchema),
+                "links": gui_fields.List(
+                    gui_fields.Nested(LinkSchema),
                     required=True,
                 ),
                 "value": fields.Dict(
@@ -273,14 +277,14 @@ class ActionResultObject(ActionResultBase):
 
 
 class ActionResultScalar(ActionResultBase):
-    result = fields.Nested(
+    result = gui_fields.Nested(
         Schema.from_dict(
             {
-                "links": fields.List(
-                    fields.Nested(LinkSchema),
+                "links": gui_fields.List(
+                    gui_fields.Nested(LinkSchema),
                     required=True,
                 ),
-                "value": fields.String(
+                "value": gui_fields.String(
                     required=True,
                     example="Done.",
                 ),
@@ -300,28 +304,30 @@ class ActionResult(OneOfSchema):
 
 
 class DomainObject(Linkable):
-    domainType: fields.Field = fields.String(
+    domainType: gui_fields.Field = gui_fields.String(
         required=True,
         description='The "domain-type" of the object.',
     )
     # Generic things to ease development. Should be changed for more concrete schemas.
-    id = fields.String(
+    id = gui_fields.String(
         description="The unique identifier for this domain-object type.",
     )
-    title = fields.String(
+    title = gui_fields.String(
         description="A human readable title of this object. Can be used for " "user interfaces.",
     )
-    members: fields.Field = fields.Dict(
+    members: gui_fields.Field = fields.Dict(
         description="The container for external resources, like linked foreign objects or actions.",
     )
-    extensions: fields.Field = fields.Dict(description="All the attributes of the domain object.")
+    extensions: gui_fields.Field = fields.Dict(
+        description="All the attributes of the domain object."
+    )
 
 
 class HostExtensions(BaseSchema):
-    folder = fields.FolderField(
+    folder = gui_fields.FolderField(
         description="The folder, in which this host resides.",
     )
-    attributes = fields.attributes_field(
+    attributes = gui_fields.attributes_field(
         "host",
         "update",
         description="Attributes of this host.",
@@ -338,8 +344,8 @@ class HostExtensions(BaseSchema):
     is_offline = fields.Boolean(
         description="Whether the host is offline",
     )
-    cluster_nodes = fields.List(
-        fields.HostField(),
+    cluster_nodes = gui_fields.List(
+        gui_fields.HostField(),
         allow_none=True,
         load_default=None,
         description="In the case this is a cluster host, these are the cluster nodes.",
@@ -347,21 +353,21 @@ class HostExtensions(BaseSchema):
 
 
 class FolderMembers(BaseSchema):
-    hosts = fields.Nested(
+    hosts = gui_fields.Nested(
         ObjectCollectionMember(),
         description="A list of links pointing to the actual host-resources.",
     )
-    move = fields.Nested(
+    move = gui_fields.Nested(
         ObjectActionMember(),
         description="An action which triggers the move of this folder to another folder.",
     )
 
 
 class FolderExtensions(BaseSchema):
-    path = fields.String(
+    path = gui_fields.String(
         description="The full path of this folder, slash delimited.",
     )
-    attributes = fields.attributes_field(
+    attributes = gui_fields.attributes_field(
         "folder",
         "update",
         description=(
@@ -372,20 +378,20 @@ class FolderExtensions(BaseSchema):
 
 class FolderSchema(Linkable):
     domainType = fields.Constant("folder_config", description="The domain type of the object.")
-    id = fields.String(description="The full path of the folder, tilde-separated.")
-    title = fields.String(description="The human readable title for this folder.")
-    members = fields.Nested(
+    id = gui_fields.String(description="The full path of the folder, tilde-separated.")
+    title = gui_fields.String(description="The human readable title for this folder.")
+    members = gui_fields.Nested(
         FolderMembers(),
         description="Specific collections or actions applicable to this object.",
     )
-    extensions = fields.Nested(
+    extensions = gui_fields.Nested(
         FolderExtensions(),
         description="Data and Meta-Data of this object.",
     )
 
 
 class MoveFolder(BaseSchema):
-    destination = fields.String(
+    destination = gui_fields.String(
         description=(
             "The folder-id of the folder to which this folder shall be moved to. May "
             "be 'root' for the root-folder."
@@ -424,11 +430,11 @@ class SiteStateMembers(BaseSchema):
 
 class SiteState(Linkable):
     domainType = fields.Constant("site-state", required=True)
-    members = fields.Nested(SiteStateMembers, description="All the members of the host object.")
+    members = gui_fields.Nested(SiteStateMembers, description="All the members of the host object.")
 
 
 class HostMembers(BaseSchema):
-    folder_config = fields.Nested(
+    folder_config = gui_fields.Nested(
         FolderSchema(),
         description="The folder in which this host resides. It is represented by a hexadecimal "
         "identifier which is it's 'primary key'. The folder can be accessed via the "
@@ -440,15 +446,15 @@ class HostConfigSchema(DomainObject):
     domainType = fields.Constant(
         "host_config", required=True, description="The domain type of the object."
     )
-    members = fields.Nested(HostMembers, description="All the members of the host object.")
-    extensions = fields.Nested(
+    members = gui_fields.Nested(HostMembers, description="All the members of the host object.")
+    extensions = gui_fields.Nested(
         HostExtensions,
         description="All the data and metadata of this host.",
     )
 
 
 class ObjectAction(Linkable):
-    parameters = fields.Nested(Parameter)
+    parameters = gui_fields.Nested(Parameter)
 
 
 class TypeSchemas(dict):
@@ -476,17 +482,17 @@ class ConcreteHostTagGroup(DomainObject):
 
 
 class DomainObjectCollection(Linkable):
-    id = fields.String(
+    id = gui_fields.String(
         description="The name of this collection.",
         load_default="all",
     )
-    domainType: fields.Field = fields.String(
+    domainType: gui_fields.Field = gui_fields.String(
         description="The domain type of the objects in the collection."
     )
-    title = fields.String(
+    title = gui_fields.String(
         description="A human readable title of this object. Can be used for " "user interfaces.",
     )
-    value: fields.Field = fields.Nested(
+    value: gui_fields.Field = gui_fields.Nested(
         CollectionItem,
         description="The collection itself. Each entry in here is part of the collection.",
         many=True,
@@ -499,8 +505,8 @@ class HostConfigCollection(DomainObjectCollection):
         "host_config",
         description="The domain type of the objects in the collection.",
     )
-    value = fields.List(
-        fields.Nested(HostConfigSchema()),
+    value = gui_fields.List(
+        gui_fields.Nested(HostConfigSchema()),
         description="A list of host objects.",
     )
 
@@ -510,26 +516,26 @@ class FolderCollection(DomainObjectCollection):
         "folder_config",
         description="The domain type of the objects in the collection.",
     )
-    value = fields.List(
-        fields.Nested(FolderSchema()),
+    value = gui_fields.List(
+        gui_fields.Nested(FolderSchema()),
         description="A list of folder objects.",
     )
 
 
 class User(Linkable):
-    userName = fields.String(description="A unique user name.")
-    friendlyName = fields.String(
+    userName = gui_fields.String(description="A unique user name.")
+    friendlyName = gui_fields.String(
         required=True,
         description="The user's name in a form suitable to be rendered in a UI.",
     )
-    email = fields.String(description="(optional) the user's email address, if known.")
-    roles = fields.List(
-        fields.String(),
+    email = gui_fields.String(description="(optional) the user's email address, if known.")
+    roles = gui_fields.List(
+        gui_fields.String(),
         description="List of unique role names that apply to this user (can be empty).",
     )
 
 
-TIME_FIELD = fields.String(
+TIME_FIELD = gui_fields.String(
     example="14:00",
     format="time",
     description="The hour of the time period.",
@@ -542,73 +548,73 @@ class ConcreteTimeRange(BaseSchema):
 
 
 class ConcreteTimeRangeActive(BaseSchema):
-    day = fields.String(
+    day = gui_fields.String(
         description="The day for which the time ranges are specified",
         pattern=f"{'|'.join(weekday_ids())}",
     )
-    time_ranges = fields.List(fields.Nested(ConcreteTimeRange))
+    time_ranges = gui_fields.List(gui_fields.Nested(ConcreteTimeRange))
 
 
 class ConcreteTimePeriodException(BaseSchema):
-    date = fields.String(
+    date = gui_fields.String(
         example="2020-01-01",
         format="date",
         description="The date of the time period exception." "8601 profile",
     )
-    time_ranges = fields.List(
-        fields.Nested(ConcreteTimeRange),
+    time_ranges = gui_fields.List(
+        gui_fields.Nested(ConcreteTimeRange),
         example="[{'start': '14:00', 'end': '18:00'}]",
     )
 
 
 class ConcreteTimePeriod(BaseSchema):
-    alias = fields.String(description="The alias of the time period", example="alias")
-    active_time_ranges = fields.List(
-        fields.Nested(ConcreteTimeRangeActive),
+    alias = gui_fields.String(description="The alias of the time period", example="alias")
+    active_time_ranges = gui_fields.List(
+        gui_fields.Nested(ConcreteTimeRangeActive),
         description="The days for which time ranges were specified",
         example={"day": "all", "time_ranges": [{"start": "12:00", "end": "14:00"}]},
     )
-    exceptions = fields.List(
-        fields.Nested(ConcreteTimePeriodException),
+    exceptions = gui_fields.List(
+        gui_fields.Nested(ConcreteTimePeriodException),
         description="Specific day exclusions with their list of time ranges",
         example=[{"date": "2020-01-01", "time_ranges": [{"start": "14:00", "end": "18:00"}]}],
     )
-    exclude = fields.List(  # type: ignore[assignment]
-        fields.String(description="Name of excluding time period", example="holidays"),
+    exclude = gui_fields.List(  # type: ignore[assignment]
+        gui_fields.String(description="Name of excluding time period", example="holidays"),
         description="The collection of time period aliases whose periods are excluded",
     )
 
 
 class PasswordExtension(BaseSchema):
-    ident = fields.String(
+    ident = gui_fields.String(
         example="pass",
         description="The unique identifier for the password",
     )
-    title = fields.String(
+    title = gui_fields.String(
         example="Kubernetes login",
         description="The title for the password",
     )
-    comment = fields.String(
+    comment = gui_fields.String(
         example="Kommentar",
         description="A comment for the password",
     )
-    documentation_url = fields.String(
+    documentation_url = gui_fields.String(
         example="localhost",
         attribute="docu_url",
         description="The URL pointing to documentation or any other page.",
     )
-    password = fields.String(
+    password = gui_fields.String(
         required=True,
         example="password",
         description="The password string",
     )
-    owned_by = fields.String(
+    owned_by = gui_fields.String(
         example="admin",
         description="The owner of the password who is able to edit, delete and use existing passwords.",
     )
 
-    shared = fields.List(
-        fields.String(
+    shared = gui_fields.List(
+        gui_fields.String(
             example="all",
             description="The member the password is shared with",
         ),
@@ -616,7 +622,7 @@ class PasswordExtension(BaseSchema):
         attribute="shared_with",
         description="The list of members the password is shared with",
     )
-    customer = fields.customer_field(
+    customer = gui_fields.customer_field(
         required=True,
         should_exist=True,
     )
@@ -627,70 +633,70 @@ class PasswordObject(DomainObject):
         "password",
         description="The type of the domain-object.",
     )
-    extensions = fields.Nested(
+    extensions = gui_fields.Nested(
         PasswordExtension,
         description="All the attributes of the domain object.",
     )
 
 
 class InstalledVersions(BaseSchema):
-    site = fields.String(
+    site = gui_fields.String(
         description="The site where this API call was made on.", example="production"
     )
-    group = fields.String(
+    group = gui_fields.String(
         description="The Apache WSGI application group this call was made on.", example="de"
     )
     rest_api = fields.Dict(description="The REST-API version", example={"revision": "1.0.0"})
     versions = fields.Dict(description="Some version numbers", example={"checkmk": "1.8.0p1"})
-    edition = fields.String(description="The Checkmk edition.", example="raw")
-    demo = fields.Bool(description="Whether this is a demo version or not.", example=False)
+    edition = gui_fields.String(description="The Checkmk edition.", example="raw")
+    demo = fields.Boolean(description="Whether this is a demo version or not.", example=False)
 
 
 class VersionCapabilities(BaseSchema):
-    blobsClobs = fields.Bool(
+    blobsClobs = fields.Boolean(
         required=False,
         description="attachment support",
     )
-    deleteObjects = fields.Bool(
+    deleteObjects = fields.Boolean(
         required=False,
         description=(
             "deletion of persisted objects through the DELETE Object resource C14.3," " see A3.5"
         ),
     )
-    domainModel = fields.String(
+    domainModel = gui_fields.String(
         required=False,
         description=(
             'different domain metadata representations. A value of "selectable" means '
             "that the reserved x-domain-model query parameter is supported, see A3.1"
         ),
     )
-    protoPersistentObjects = fields.Bool()
-    validateOnly = fields.Bool(
+    protoPersistentObjects = fields.Boolean()
+    validateOnly = fields.Boolean(
         required=False,
         description="the reserved x-ro-validate-only query parameter, see A3.2",
     )
 
 
 class Version(LinkSchema):
-    specVersion = fields.Str(
+    specVersion = gui_fields.Str(
         description=(
             'The "major.minor" parts of the version of the spec supported by this '
             'implementation, e.g. "1.0"'
         ),
         required=False,
     )
-    implVersion = fields.Str(
+    implVersion = gui_fields.Str(
         description=(
             "(optional) Version of the implementation itself (format is specific to "
             "the implementation)"
         ),
         required=False,
     )
-    additionalCapabilities = fields.Nested(VersionCapabilities)
+    additionalCapabilities = gui_fields.Nested(VersionCapabilities)
 
 
 class X509PEM(BaseSchema):
-    cert = fields.Str(
+    cert = gui_fields.Str(
         required=True,
         description="PEM-encoded X.509 certificate.",
     )

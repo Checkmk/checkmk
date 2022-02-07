@@ -15,8 +15,9 @@ from cmk.gui import userdb
 from cmk.gui.fields.base import BaseSchema
 from cmk.gui.fields.definitions import GroupField, Integer, List, Nested, String, Timestamp
 from cmk.gui.fields.mixins import CheckmkTuple, Converter
-from cmk.gui.fields.primitives import Boolean, Constant, DateTime, Time
 from cmk.gui.fields.validators import IsValidRegexp, ValidateIPv4, ValidateIPv4Network
+
+from cmk.fields import Boolean, Constant, DateTime, Time
 
 # TODO: make wrong 'tuple_fields' entries fail at compile not, not at runtime.
 

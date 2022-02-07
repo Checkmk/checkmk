@@ -93,7 +93,7 @@ def sites_autocompleter(value: str, params: Dict) -> Choices:
 
     # This part should not exists as the optional(not enforce) would better be not having the filter at all
     if not params.get("strict"):
-        empty_choice: Choices = [("", "")]
+        empty_choice: Choices = [("", "All Sites")]
         choices = empty_choice + choices
     return choices
 
@@ -212,7 +212,7 @@ def _graph_choices_from_livestatus_row(row) -> Iterable[Tuple[str, str]]:
         return str(metric_info.get(metric_id, {}).get("title", metric_id))
 
     def _graph_template_title(graph_template: Mapping) -> str:
-        return str(graph_template.get("title")) or _metric_title_from_id(graph_template["id"])
+        return str(graph_template.get("title", "")) or _metric_title_from_id(graph_template["id"])
 
     yield from (
         (

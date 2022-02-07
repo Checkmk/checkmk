@@ -2845,6 +2845,7 @@ def test_registered_display_hints():
     '.software.applications.kube.node.architecture',
     '.software.applications.kube.node.container_runtime_version',
     '.software.applications.kube.node.kernel_version',
+    '.software.applications.kube.node.kube_proxy_version',
     '.software.applications.kube.node.kubelet_version',
     '.software.applications.kube.node.name',
     '.software.applications.kube.node.operating_system',

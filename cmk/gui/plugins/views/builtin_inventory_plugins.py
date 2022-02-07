@@ -640,6 +640,7 @@ inventory_displayhints.update({
     ".software.applications.kube.node.architecture": {"title": _l("Architecture")},
     ".software.applications.kube.node.container_runtime_version": {"title": _l("Container runtime version")},
     ".software.applications.kube.node.kubelet_version": {"title": _l("Kubelet version")},
+    ".software.applications.kube.node.kube_proxy_version": {"title": _l("Kube-proxy version")},
 
     ".software.applications.citrix.": {"title": _l("Citrix")},
     ".software.applications.citrix.controller.": {"title": _l("Controller")},

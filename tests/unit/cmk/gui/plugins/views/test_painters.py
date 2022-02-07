@@ -325,6 +325,7 @@ def test_registered_painters():
         "inv_software_applications_kube_node_architecture",
         "inv_software_applications_kube_node_container_runtime_version",
         "inv_software_applications_kube_node_kernel_version",
+        "inv_software_applications_kube_node_kube_proxy_version",
         "inv_software_applications_kube_node_kubelet_version",
         "inv_software_applications_kube_node_name",
         "inv_software_applications_kube_node_operating_system",

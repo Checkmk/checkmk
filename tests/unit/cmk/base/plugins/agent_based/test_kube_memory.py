@@ -192,9 +192,9 @@ def test_register_check_plugin_calls(check_plugin):
             ),
             None,
             (
-                Result(state=State.OK, summary="Request: 0 B (2/2 containers with requests)"),
+                Result(state=State.OK, summary="Requests: 0 B (2/2 containers with requests)"),
                 Metric("kube_memory_request", 0.0, boundaries=(0.0, None)),
-                Result(state=State.OK, summary="Limit: 26.8 MiB (2/2 containers with limits)"),
+                Result(state=State.OK, summary="Limits: 26.8 MiB (2/2 containers with limits)"),
                 Metric("kube_memory_limit", 28120704.0, boundaries=(0.0, None)),
                 Result(state=State.OK, summary="Allocatable: 34.3 MiB"),
                 Metric("kube_memory_allocatable", 35917989.0, boundaries=(0.0, None)),
@@ -214,9 +214,9 @@ def test_register_check_plugin_calls(check_plugin):
             (
                 Result(state=State.OK, summary="Usage: 17.3 MiB"),
                 Metric("kube_memory_usage", 18120704.0, boundaries=(0.0, None)),
-                Result(state=State.OK, summary="Request: 0 B (2/2 containers with requests)"),
+                Result(state=State.OK, summary="Requests: 0 B (2/2 containers with requests)"),
                 Metric("kube_memory_request", 0.0, boundaries=(0.0, None)),
-                Result(state=State.OK, summary="Limit: 0 B (0/2 containers with limits)"),
+                Result(state=State.OK, summary="Limits: 0 B (0/2 containers with limits)"),
                 Metric("kube_memory_limit", 0.0, boundaries=(0.0, None)),
                 Metric("kube_memory_allocatable", 35917989.0),
                 Result(state=State.OK, summary="Node utilization: 50.45% - 17.3 MiB of 34.3 MiB"),
@@ -242,12 +242,12 @@ def test_register_check_plugin_calls(check_plugin):
             (
                 Result(state=State.OK, summary="Usage: 17.3 MiB"),
                 Metric("kube_memory_usage", 18120704.0, boundaries=(0.0, None)),
-                Result(state=State.OK, summary="Request: 0 B (1/2 containers with requests)"),
+                Result(state=State.OK, summary="Requests: 0 B (1/2 containers with requests)"),
                 Metric("kube_memory_request", 0.0, boundaries=(0.0, None)),
                 Metric("kube_memory_limit", 28120704.0),
                 Result(
                     state=State.OK,
-                    summary="Limit utilization: 64.44% - 17.3 MiB of 26.8 MiB (1/2 containers with limits)",
+                    summary="Limits utilization: 64.44% - 17.3 MiB of 26.8 MiB (1/2 containers with limits)",
                 ),
                 Metric(
                     "kube_memory_limit_utilization",
@@ -281,13 +281,13 @@ def test_register_check_plugin_calls(check_plugin):
                 Metric("kube_memory_usage", 18120704.0, boundaries=(0.0, None)),
                 Result(
                     state=State.OK,
-                    summary="Request: 0 B (1/3 containers with requests)",
+                    summary="Requests: 0 B (1/3 containers with requests)",
                 ),
                 Metric("kube_memory_request", 0.0, boundaries=(0.0, None)),
                 Metric("kube_memory_limit", 28120704.0),
                 Result(
                     state=State.OK,
-                    summary="Limit utilization: 64.44% - 17.3 MiB of 26.8 MiB (1/3 containers with limits)",
+                    summary="Limits utilization: 64.44% - 17.3 MiB of 26.8 MiB (1/3 containers with limits)",
                 ),
                 Metric(
                     "kube_memory_limit_utilization",
@@ -322,7 +322,7 @@ def test_register_check_plugin_calls(check_plugin):
                 Metric("kube_memory_request", 13120704.0),
                 Result(
                     state=State.OK,
-                    summary="Request utilization: 138.11% - 17.3 MiB of 12.5 MiB (2/2 containers with requests)",
+                    summary="Requests utilization: 138.11% - 17.3 MiB of 12.5 MiB (2/2 containers with requests)",
                 ),
                 Metric(
                     "kube_memory_request_utilization", 138.10771129354035, boundaries=(0.0, None)
@@ -330,7 +330,7 @@ def test_register_check_plugin_calls(check_plugin):
                 Metric("kube_memory_limit", 28120704.0),
                 Result(
                     state=State.OK,
-                    summary="Limit utilization: 64.44% - 17.3 MiB of 26.8 MiB (2/2 containers with limits)",
+                    summary="Limits utilization: 64.44% - 17.3 MiB of 26.8 MiB (2/2 containers with limits)",
                 ),
                 Metric(
                     "kube_memory_limit_utilization",
@@ -365,7 +365,7 @@ def test_register_check_plugin_calls(check_plugin):
                 Metric("kube_memory_request", 13120704.0),
                 Result(
                     state=State.OK,
-                    summary="Request utilization: 206.70% - 25.9 MiB of 12.5 MiB (2/2 containers with requests)",
+                    summary="Requests utilization: 206.70% - 25.9 MiB of 12.5 MiB (2/2 containers with requests)",
                 ),
                 Metric(
                     "kube_memory_request_utilization", 206.70159162191297, boundaries=(0.0, None)
@@ -373,7 +373,7 @@ def test_register_check_plugin_calls(check_plugin):
                 Metric("kube_memory_limit", 28120704.0),
                 Result(
                     state=State.CRIT,
-                    summary="Limit utilization: 96.44% - 25.9 MiB of 26.8 MiB (warn/crit at 80.00%/90.00%) (2/2 containers with limits)",
+                    summary="Limits utilization: 96.44% - 25.9 MiB of 26.8 MiB (warn/crit at 80.00%/90.00%) (2/2 containers with limits)",
                 ),
                 Metric(
                     "kube_memory_limit_utilization",

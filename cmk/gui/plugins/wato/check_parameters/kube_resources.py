@@ -30,8 +30,8 @@ def valuespec_percentual(title: str) -> CascadingDropdown:
 def _parameter_valuespec_memory():
     return Dictionary(
         help=_(
-            "Here you can configure levels for usage, request "
-            "utilization, limit utilization and node utilization, respectively."
+            "Here you can configure levels for usage, requests "
+            "utilization, limits utilization and node utilization, respectively."
         ),
         title=_("Memory"),
         elements=[
@@ -43,11 +43,11 @@ def _parameter_valuespec_memory():
             ),
             (
                 "request",
-                valuespec_percentual(title=_("Upper levels for request utilization")),
+                valuespec_percentual(title=_("Upper levels for requests utilization")),
             ),
             (
                 "limit",
-                valuespec_percentual(title=_("Upper levels for limit utilization")),
+                valuespec_percentual(title=_("Upper levels for limits utilization")),
             ),
             (
                 "cluster",
@@ -75,8 +75,8 @@ rulespec_registry.register(
 def _parameter_valuespec_cpu():
     return Dictionary(
         help=_(
-            "Here you can configure levels for usage, request "
-            "utilization and limit utilization, respectively."
+            "Here you can configure levels for usage, requests "
+            "utilization and limits utilization, respectively."
         ),
         title=_("CPU"),
         elements=[
@@ -94,11 +94,11 @@ def _parameter_valuespec_cpu():
             ),
             (
                 "request",
-                valuespec_percentual(title=_("Upper levels for request utilization")),
+                valuespec_percentual(title=_("Upper levels for requests utilization")),
             ),
             (
                 "limit",
-                valuespec_percentual(title=_("Upper levels for limit utilization")),
+                valuespec_percentual(title=_("Upper levels for limits utilization")),
             ),
             (
                 "cluster",

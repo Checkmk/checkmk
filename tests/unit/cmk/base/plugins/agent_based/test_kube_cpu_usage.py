@@ -204,7 +204,7 @@ def test_check_yields_results(check_result):
 
 @pytest.mark.parametrize("usage_section", [None])
 def test_check_results_without_usage(check_result):
-    expected_beginnings = ["Request: 0.180", "Limit: 0.360"]
+    expected_beginnings = ["Requests: 0.180", "Limits: 0.360"]
     results = [r for r in check_result if isinstance(r, Result)]
     assert all(
         r.summary.startswith(beginning) for r, beginning in zip(results, expected_beginnings)
@@ -238,8 +238,8 @@ def test_check_beginning_of_summaries_with_all_sections_present(
 ):
     expected_beginnings = [
         f"Usage: {USAGE:0.3f}",
-        f"Request utilization: {render.percent(USAGE /  resources_request * 100)} - {USAGE:0.3f} of {resources_request:0.3f}",
-        f"Limit utilization: {render.percent(USAGE / resources_limit * 100)} - {USAGE:0.3f} of {resources_limit:0.3f}",
+        f"Requests utilization: {render.percent(USAGE /  resources_request * 100)} - {USAGE:0.3f} of {resources_request:0.3f}",
+        f"Limits utilization: {render.percent(USAGE / resources_limit * 100)} - {USAGE:0.3f} of {resources_limit:0.3f}",
     ]
     results = [r for r in check_result if isinstance(r, Result)]
     assert all(

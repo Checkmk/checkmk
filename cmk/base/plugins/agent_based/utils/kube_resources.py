@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
-from typing import Callable, Iterable, Literal, Optional, Tuple, TypedDict, Union
+from typing import Callable, Iterable, Literal, Mapping, Optional, Tuple, TypedDict, Union
 
 from pydantic import BaseModel
 
@@ -93,6 +93,20 @@ DEFAULT_PARAMS = Params(
 )
 
 
+utilization_title: Mapping[Union[RequirementType, AllocatableKubernetesObject], str] = {
+    "request": "Requests utilization",
+    "limit": "Limits utilization",
+    "node": "Node utilization",
+    "cluster": "Cluster utilization",
+}
+
+absolute_title: Mapping[Union[RequirementType, AllocatableKubernetesObject], str] = {
+    "request": "Requests",
+    "limit": "Limits",
+    "allocatable": "Allocatable",
+}
+
+
 def check_with_utilization(
     usage: float,
     resource_type: ResourceType,
@@ -107,11 +121,11 @@ def check_with_utilization(
         metric_name = f"kube_{resource_type}_{requirement_type}_utilization"
         assert requirement_type != "allocatable"
         param = params[requirement_type]
-        title = requirement_type.title()
+        title = utilization_title[requirement_type]
     else:
         metric_name = f"kube_{resource_type}_{kubernetes_object}_{requirement_type}_utilization"
         param = params[kubernetes_object]
-        title = kubernetes_object.title()
+        title = utilization_title[kubernetes_object]
     result, metric = check_levels(
         utilization,
         levels_upper=param[1] if param != "no_levels" else None,
@@ -124,9 +138,7 @@ def check_with_utilization(
     yield Result(
         state=result.state,
         summary=" ".join(
-            [
-                f"{title} utilization: {percentage} - {render_func(usage)} of {render_func(requirement_value)}"
-            ]
+            [f"{title}: {percentage} - {render_func(usage)} of {render_func(requirement_value)}"]
             + warn_crit
         ),
     )
@@ -177,7 +189,7 @@ def check_resource(
         else:  # requirements with no usage
             result, metric = check_levels(
                 requirement,
-                label=requirement_type.title(),
+                label=absolute_title[requirement_type],
                 metric_name=f"kube_{resource_type}_{requirement_type}",
                 render_func=render_func,
                 boundaries=(0.0, None),

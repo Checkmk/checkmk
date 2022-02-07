@@ -82,14 +82,14 @@ metric_info["kube_node_container_count_total"] = {
 }
 
 requirement_to_utilization_titles = {
-    "request": _("Request utilization"),
-    "limit": _("Limit utilization"),
+    "request": _("Requests utilization"),
+    "limit": _("Limits utilization"),
     "cluster_allocatable": _("Cluster utilization"),
     "node_allocatable": _("Node utilization"),
 }
 requirement_to_absolute_titles = {
-    "request": _("Request"),
-    "limit": _("Limit"),
+    "request": _("Requests"),
+    "limit": _("Limits"),
     "allocatable": _("Allocatable"),
 }
 

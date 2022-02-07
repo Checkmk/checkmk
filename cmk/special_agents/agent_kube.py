@@ -762,7 +762,7 @@ def write_pods_api_sections(
 
 def write_machine_sections(
     cluster: Cluster,
-    machine_sections: Dict[str, str],
+    machine_sections: Mapping[str, str],
     piggyback_formatter_node: Callable[[str], str],
 ) -> None:
     # make sure we only print sections for nodes currently visible via kubernetes api:
@@ -1498,7 +1498,7 @@ def main(args: Optional[List[str]] = None) -> int:
 
             # Sections based on cluster collector machine sections
             LOGGER.info("Collecting machine sections from cluster collector")
-            machine_sections: Optional[Dict[str, str]]
+            machine_sections: Optional[List[Mapping[str, str]]]
             connection_logs, machine_sections = request_cluster_collector(
                 "Machine Metrics",
                 f"{arguments.cluster_collector_endpoint}/machine_sections",
@@ -1509,7 +1509,11 @@ def main(args: Optional[List[str]] = None) -> int:
             collector_logs.extend(connection_logs)
 
             if machine_sections is not None:
-                write_machine_sections(cluster, machine_sections, piggyback_formatter_node)
+                write_machine_sections(
+                    cluster,
+                    {s["node_name"]: s["sections"] for s in machine_sections},
+                    piggyback_formatter_node,
+                )
                 collector_logs.append(
                     section.CollectorLog(
                         status=section.CollectorState.OK,

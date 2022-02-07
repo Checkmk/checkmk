@@ -211,6 +211,14 @@ class SNMPBackend(abc.ABC):
     def address(self) -> _HostAddress:
         return self.config.ipaddress
 
+    @property
+    def port(self) -> int:
+        return self.config.port
+
+    @port.setter
+    def port(self, new_port: int):
+        self.config = self.config._replace(port=new_port)
+
     @abc.abstractmethod
     def get(
         self, oid: OID, context_name: Optional[SNMPContextName] = None

@@ -61,6 +61,30 @@ def test_get_single_oid_snmpv3(backend):
     assert result == "Linux zeus 4.8.6.5-smp #2 SMP Sun Nov 13 14:58:11 CDT 2016 i686"
 
 
+def test_get_single_oid_snmpv3_higher_encryption(backend):
+    if backend.config.is_usewalk_host:
+        pytest.skip("Not relevant")
+
+    backend.config = backend.config.update(
+        credentials=(
+            "authPriv",
+            "SHA-512",
+            "authPrivUser",
+            "A_long_authKey",
+            "DES",
+            "A_long_privKey",
+        ),
+    )
+
+    # TODO: Reorganize snmp tests: at the moment we create *all* snmpsimd processes at setup
+    #  but with different ports. Those different processes are then used in test_snmp_modes.py and
+    #  backend_snmp.py...
+    backend.port = 1341
+
+    result = snmp_modes.get_single_oid(".1.3.6.1.2.1.1.1.0", backend=backend)
+    assert result == "Linux zeus 4.8.6.5-smp #2 SMP Sun Nov 13 14:58:11 CDT 2016 i686"
+
+
 def test_get_single_oid_wrong_credentials(backend):
     if backend.config.is_usewalk_host:
         pytest.skip("Not relevant")

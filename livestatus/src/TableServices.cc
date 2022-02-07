@@ -477,7 +477,7 @@ void TableServices::addColumns(Table *table, const std::string &prefix,
         }));
     table->addColumn(std::make_unique<IntColumn<service>>(
         prefix + "pnpgraph_present",
-        "Whether there is a PNP4Nagios graph present for this service (0/1)",
+        "Whether there is a PNP4Nagios graph present for this object (-1/0/1)",
         offsets, [mc](const service &svc) {
             return pnpgraph_present(mc, svc.host_ptr->name, svc.description);
         }));

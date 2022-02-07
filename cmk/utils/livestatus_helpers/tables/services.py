@@ -84,9 +84,9 @@ class Services(Table):
     check_flapping_recovery_notification = Column(
         'check_flapping_recovery_notification',
         col_type='int',
-        description='Whether to check to send a recovery notification when flapping stops (0/1), not supported by CMC',
+        description='Whether to check to send a recovery notification when flapping stops (0/1)',
     )
-    """Whether to check to send a recovery notification when flapping stops (0/1), not supported by CMC"""
+    """Whether to check to send a recovery notification when flapping stops (0/1)"""
 
     check_freshness = Column(
         'check_freshness',
@@ -105,9 +105,9 @@ class Services(Table):
     check_options = Column(
         'check_options',
         col_type='int',
-        description='The current check option, forced, normal, freshness (0-2), not supported by CMC',
+        description='The current check option, forced, normal, freshness (0-2)',
     )
-    """The current check option, forced, normal, freshness (0-2), not supported by CMC"""
+    """The current check option, forced, normal, freshness (0-2)"""
 
     check_period = Column(
         'check_period',
@@ -238,9 +238,9 @@ class Services(Table):
     event_handler = Column(
         'event_handler',
         col_type='string',
-        description='Event handler (always empty, not supported by CMC)',
+        description='Command used as event handler',
     )
-    """Event handler (always empty, not supported by CMC)"""
+    """Command used as event handler"""
 
     event_handler_enabled = Column(
         'event_handler_enabled',
@@ -301,9 +301,9 @@ class Services(Table):
     high_flap_threshold = Column(
         'high_flap_threshold',
         col_type='float',
-        description='High threshold of flap detection, not supported by CMC',
+        description='High threshold of flap detection',
     )
-    """High threshold of flap detection, not supported by CMC"""
+    """High threshold of flap detection"""
 
     host_accept_passive_checks = Column(
         'host_accept_passive_checks',
@@ -378,9 +378,9 @@ class Services(Table):
     host_check_flapping_recovery_notification = Column(
         'host_check_flapping_recovery_notification',
         col_type='int',
-        description='Whether to check to send a recovery notification when flapping stops (0/1), not supported by CMC',
+        description='Whether to check to send a recovery notification when flapping stops (0/1)',
     )
-    """Whether to check to send a recovery notification when flapping stops (0/1), not supported by CMC"""
+    """Whether to check to send a recovery notification when flapping stops (0/1)"""
 
     host_check_freshness = Column(
         'host_check_freshness',
@@ -399,9 +399,9 @@ class Services(Table):
     host_check_options = Column(
         'host_check_options',
         col_type='int',
-        description='The current check option, forced, normal, freshness (0-2), not supported by CMC',
+        description='The current check option, forced, normal, freshness (0-2)',
     )
-    """The current check option, forced, normal, freshness (0-2), not supported by CMC"""
+    """The current check option, forced, normal, freshness (0-2)"""
 
     host_check_period = Column(
         'host_check_period',
@@ -532,9 +532,9 @@ class Services(Table):
     host_event_handler = Column(
         'host_event_handler',
         col_type='string',
-        description='Event handler (always empty, not supported by CMC)',
+        description='Command used as event handler',
     )
-    """Event handler (always empty, not supported by CMC)"""
+    """Command used as event handler"""
 
     host_event_handler_enabled = Column(
         'host_event_handler_enabled',
@@ -602,9 +602,9 @@ class Services(Table):
     host_high_flap_threshold = Column(
         'host_high_flap_threshold',
         col_type='float',
-        description='High threshold of flap detection, not supported by CMC',
+        description='High threshold of flap detection',
     )
-    """High threshold of flap detection, not supported by CMC"""
+    """High threshold of flap detection"""
 
     host_icon_image = Column(
         'host_icon_image',
@@ -791,9 +791,9 @@ class Services(Table):
     host_low_flap_threshold = Column(
         'host_low_flap_threshold',
         col_type='float',
-        description='Low threshold of flap detection, not supported by CMC',
+        description='Low threshold of flap detection',
     )
-    """Low threshold of flap detection, not supported by CMC"""
+    """Low threshold of flap detection"""
 
     host_max_check_attempts = Column(
         'host_max_check_attempts',
@@ -875,9 +875,9 @@ class Services(Table):
     host_no_more_notifications = Column(
         'host_no_more_notifications',
         col_type='int',
-        description='Whether to stop sending notifications (0/1), not supported by CMC',
+        description='Whether to stop sending notifications (0/1)',
     )
-    """Whether to stop sending notifications (0/1), not supported by CMC"""
+    """Whether to stop sending notifications (0/1)"""
 
     host_notes = Column(
         'host_notes',
@@ -1022,9 +1022,9 @@ class Services(Table):
     host_obsess_over_host = Column(
         'host_obsess_over_host',
         col_type='int',
-        description='The current obsess_over_host setting (0/1), not supported by CMC',
+        description='The current obsess_over_host setting (0/1)',
     )
-    """The current obsess_over_host setting (0/1), not supported by CMC"""
+    """The current obsess_over_host setting (0/1)"""
 
     host_parents = Column(
         'host_parents',
@@ -1043,9 +1043,9 @@ class Services(Table):
     host_percent_state_change = Column(
         'host_percent_state_change',
         col_type='float',
-        description='Percent state change, not supported by CMC',
+        description='Percent state change',
     )
-    """Percent state change, not supported by CMC"""
+    """Percent state change"""
 
     host_perf_data = Column(
         'host_perf_data',
@@ -1064,9 +1064,9 @@ class Services(Table):
     host_pnpgraph_present = Column(
         'host_pnpgraph_present',
         col_type='int',
-        description='Whether there is a PNP4Nagios graph present for this host (0/1)',
+        description='Whether there is a PNP4Nagios graph present for this object (-1/0/1)',
     )
-    """Whether there is a PNP4Nagios graph present for this host (0/1)"""
+    """Whether there is a PNP4Nagios graph present for this object (-1/0/1)"""
 
     host_previous_hard_state = Column(
         'host_previous_hard_state',
@@ -1435,9 +1435,9 @@ class Services(Table):
     low_flap_threshold = Column(
         'low_flap_threshold',
         col_type='float',
-        description='Low threshold of flap detection, not supported by CMC',
+        description='Low threshold of flap detection',
     )
-    """Low threshold of flap detection, not supported by CMC"""
+    """Low threshold of flap detection"""
 
     max_check_attempts = Column(
         'max_check_attempts',
@@ -1484,9 +1484,9 @@ class Services(Table):
     no_more_notifications = Column(
         'no_more_notifications',
         col_type='int',
-        description='Whether to stop sending notifications (0/1), not supported by CMC',
+        description='Whether to stop sending notifications (0/1)',
     )
-    """Whether to stop sending notifications (0/1), not supported by CMC"""
+    """Whether to stop sending notifications (0/1)"""
 
     notes = Column(
         'notes',
@@ -1547,9 +1547,9 @@ class Services(Table):
     obsess_over_service = Column(
         'obsess_over_service',
         col_type='int',
-        description='The current obsess_over_service setting (0/1), not supported by CMC',
+        description='The current obsess_over_service setting (0/1)',
     )
-    """The current obsess_over_service setting (0/1), not supported by CMC"""
+    """The current obsess_over_service setting (0/1)"""
 
     passive_check_period = Column(
         'passive_check_period',
@@ -1568,9 +1568,9 @@ class Services(Table):
     percent_state_change = Column(
         'percent_state_change',
         col_type='float',
-        description='Percent state change, not supported by CMC',
+        description='Percent state change',
     )
-    """Percent state change, not supported by CMC"""
+    """Percent state change"""
 
     perf_data = Column(
         'perf_data',
@@ -1589,9 +1589,9 @@ class Services(Table):
     pnpgraph_present = Column(
         'pnpgraph_present',
         col_type='int',
-        description='Whether there is a PNP4Nagios graph present for this host (0/1)',
+        description='Whether there is a PNP4Nagios graph present for this object (-1/0/1)',
     )
-    """Whether there is a PNP4Nagios graph present for this host (0/1)"""
+    """Whether there is a PNP4Nagios graph present for this object (-1/0/1)"""
 
     previous_hard_state = Column(
         'previous_hard_state',

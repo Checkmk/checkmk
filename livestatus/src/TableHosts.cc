@@ -133,53 +133,52 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
         [](const host &r) { return r.address == nullptr ? "" : r.address; }));
 #ifdef NAGIOS4
     table->addColumn(std::make_unique<StringColumn<host>>(
-        prefix + "check_command",
-        "Nagios command for active host check of this host", offsets,
-        [](const host &r) {
+        prefix + "check_command", "Logical command name for active checks",
+        offsets, [](const host &r) {
             return r.check_command == nullptr ? "" : r.check_command;
         }));
     table->addColumn(std::make_unique<StringColumn<host>>(
         prefix + "check_command_expanded",
-        "Nagios command for active host check of this host with the macros expanded",
-        offsets, [mc](const host &r) {
+        "Logical command name for active checks, with macros expanded", offsets,
+        [mc](const host &r) {
             return HostMacroExpander::make(r, mc)->expandMacros(
                 r.check_command);
         }));
 #else
     table->addColumn(std::make_unique<StringColumn<host>>(
-        prefix + "check_command",
-        "Nagios command for active host check of this host", offsets,
-        [](const host &r) {
+        prefix + "check_command", "Logical command name for active checks",
+        offsets, [](const host &r) {
             return r.host_check_command == nullptr ? "" : r.host_check_command;
         }));
     table->addColumn(std::make_unique<StringColumn<host>>(
         prefix + "check_command_expanded",
-        "Nagios command for active host check of this host with the macros expanded",
-        offsets, [mc](const host &r) {
+        "Logical command name for active checks, with macros expanded", offsets,
+        [mc](const host &r) {
             return HostMacroExpander::make(r, mc)->expandMacros(
                 r.host_check_command);
         }));
 #endif
     table->addColumn(std::make_unique<StringColumn<host>>(
-        prefix + "event_handler", "Nagios command used as event handler",
-        offsets, [](const host &r) {
+        prefix + "event_handler", "Command used as event handler", offsets,
+        [](const host &r) {
             return r.event_handler == nullptr ? "" : r.event_handler;
         }));
     table->addColumn(std::make_unique<StringColumn<host>>(
         prefix + "notification_period",
-        "Time period in which problems of this host will be notified. If empty then notification will be always",
+        "Time period in which problems of this object will be notified. If empty then notification will be always",
         offsets, [](const host &r) {
             return r.notification_period == nullptr ? ""
                                                     : r.notification_period;
         }));
     table->addColumn(std::make_unique<StringColumn<host>>(
         prefix + "check_period",
-        "Time period in which this host will be checked. If empty then the host will always be checked.",
+        "Time period in which this object will be checked. If empty then the check will always be executed.",
         offsets, [](const host &r) {
             return r.check_period == nullptr ? "" : r.check_period;
         }));
     table->addColumn(std::make_unique<StringColumn<host>>(
-        prefix + "service_period", "The name of the service period of the host",
+        prefix + "service_period",
+        "Time period during which the object is expected to be available",
         offsets_custom_variables, [mc](const host &p) {
             auto attrs =
                 mc->customAttributes(&p, AttributeKind::custom_variables);
@@ -190,7 +189,8 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
             return ""s;
         }));
     table->addColumn(std::make_unique<StringColumn<host>>(
-        prefix + "notes", "Optional notes for this host", offsets,
+        prefix + "notes",
+        "Optional notes for this object, with macros not expanded", offsets,
         [](const host &r) { return r.notes == nullptr ? "" : r.notes; }));
     table->addColumn(std::make_unique<StringColumn<host>>(
         prefix + "notes_expanded",
@@ -200,7 +200,7 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
         }));
     table->addColumn(std::make_unique<StringColumn<host>>(
         prefix + "notes_url",
-        "An optional URL with further information about the host", offsets,
+        "An optional URL with further information about the object", offsets,
         [](const host &r) {
             return r.notes_url == nullptr ? "" : r.notes_url;
         }));
@@ -223,14 +223,13 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
             return HostMacroExpander::make(r, mc)->expandMacros(r.action_url);
         }));
     table->addColumn(std::make_unique<StringColumn<host>>(
-        prefix + "plugin_output", "Output of the last host check", offsets,
+        prefix + "plugin_output", "Output of the last check", offsets,
         [](const host &r) {
             return r.plugin_output == nullptr ? "" : r.plugin_output;
         }));
     table->addColumn(std::make_unique<StringColumnPerfData<host>>(
-        prefix + "perf_data",
-        "Optional performance data of the last host check", offsets,
-        [](const host &r) {
+        prefix + "perf_data", "Optional performance data of the last check",
+        offsets, [](const host &r) {
             return r.perf_data == nullptr ? "" : r.perf_data;
         }));
     table->addColumn(std::make_unique<StringColumn<host>>(
@@ -257,17 +256,17 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
             return r.statusmap_image == nullptr ? "" : r.statusmap_image;
         }));
     table->addColumn(std::make_unique<StringColumn<host>>(
-        prefix + "long_plugin_output", "Complete output from check plugin",
+        prefix + "long_plugin_output", "Long (extra) output of the last check",
         offsets, [](const host &r) {
             return r.long_plugin_output == nullptr ? "" : r.long_plugin_output;
         }));
 
     table->addColumn(std::make_unique<IntColumn<host>>(
-        prefix + "initial_state", "Initial host state", offsets,
+        prefix + "initial_state", "Initial state", offsets,
         [](const host &r) { return r.initial_state; }));
     table->addColumn(std::make_unique<IntColumn<host>>(
         prefix + "max_check_attempts",
-        "Max check attempts for active host checks", offsets,
+        "Maximum attempts for active checks before a hard state", offsets,
         [](const host &r) { return r.max_attempts; }));
     table->addColumn(std::make_unique<IntColumn<host>>(
         prefix + "flap_detection_enabled",
@@ -275,7 +274,7 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
         [](const host &r) { return r.flap_detection_enabled; }));
     table->addColumn(std::make_unique<IntColumn<host>>(
         prefix + "check_freshness",
-        "Whether freshness checks are activated (0/1)", offsets,
+        "Whether freshness checks are enabled (0/1)", offsets,
         [](const host &r) { return r.check_freshness; }));
     table->addColumn(std::make_unique<IntColumn<host>>(
         prefix + "process_performance_data",
@@ -349,14 +348,14 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
         }));
     table->addColumn(std::make_unique<TimeColumn<host>>(
         prefix + "last_hard_state_change",
-        "Time of the last hard state change (Unix timestamp)", offsets,
-        [](const host &r) {
+        "Time of the last hard state change - soft or hard (Unix timestamp)",
+        offsets, [](const host &r) {
             return std::chrono::system_clock::from_time_t(
                 r.last_hard_state_change);
         }));
     table->addColumn(std::make_unique<IntColumn<host>>(
         prefix + "has_been_checked",
-        "Whether the host has already been checked (0/1)", offsets,
+        "Whether a check has already been executed (0/1)", offsets,
         [](const host &r) { return r.has_been_checked; }));
     table->addColumn(std::make_unique<IntColumn<host>>(
         prefix + "current_notification_number",
@@ -373,7 +372,7 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
     // before...
     table->addColumn(std::make_unique<IntColumn<host>>(
         prefix + "checks_enabled",
-        "Whether checks of the host are enabled (0/1)", offsets,
+        "Whether checks of the object are enabled (0/1)", offsets,
         [](const host &r) { return r.checks_enabled; }));
     table->addColumn(std::make_unique<IntColumn<host>>(
         prefix + "notifications_enabled",
@@ -381,11 +380,11 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
         [](const host &r) { return r.notifications_enabled; }));
     table->addColumn(std::make_unique<IntColumn<host>>(
         prefix + "acknowledged",
-        "Whether the current host problem has been acknowledged (0/1)", offsets,
+        "Whether the current problem has been acknowledged (0/1)", offsets,
         [](const host &r) { return r.problem_has_been_acknowledged; }));
     table->addColumn(std::make_unique<IntColumn<host>>(
         prefix + "state",
-        "The current state of the host (0: up, 1: down, 2: unreachable)",
+        "The current state of the object, for hosts: 0/1/2 for UP/DOWN/UNREACH, for services: 0/1/2/3 for OK/WARN/CRIT/UNKNOWN",
         offsets, [](const host &r) { return r.current_state; }));
     table->addColumn(std::make_unique<IntColumn<host>>(
         prefix + "state_type", "Type of the current state (0: soft, 1: hard)",
@@ -432,33 +431,32 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
         }));
 
     table->addColumn(std::make_unique<IntColumn<host>>(
-        prefix + "is_flapping", "Whether the host state is flapping (0/1)",
-        offsets, [](const host &r) { return r.is_flapping; }));
+        prefix + "is_flapping", "Whether the state is flapping (0/1)", offsets,
+        [](const host &r) { return r.is_flapping; }));
     table->addColumn(std::make_unique<IntColumn<host>>(
         prefix + "scheduled_downtime_depth",
-        "The number of downtimes this host is currently in", offsets,
+        "The number of downtimes this object is currently in", offsets,
         [](const host &r) { return r.scheduled_downtime_depth; }));
     table->addColumn(std::make_unique<IntColumn<host>>(
-        prefix + "is_executing",
-        "is there a host check currently running... (0/1)", offsets,
-        [](const host &r) { return r.is_executing; }));
+        prefix + "is_executing", "is there a check currently running (0/1)",
+        offsets, [](const host &r) { return r.is_executing; }));
     table->addColumn(std::make_unique<IntColumn<host>>(
         prefix + "active_checks_enabled",
-        "Whether active checks are enabled for the host (0/1)", offsets,
+        "Whether active checks of the object are enabled (0/1)", offsets,
         [](const host &r) { return r.checks_enabled; }));
     table->addColumn(std::make_unique<IntColumn<host>>(
         prefix + "check_options",
-        "The current check option, forced, normal, freshness... (0-2)", offsets,
+        "The current check option, forced, normal, freshness (0-2)", offsets,
         [](const host &r) { return r.check_options; }));
 #ifndef NAGIOS4
     table->addColumn(std::make_unique<IntColumn<host>>(
         prefix + "obsess_over_host",
-        "The current obsess_over_host setting... (0/1)", offsets,
+        "The current obsess_over_host setting (0/1)", offsets,
         [](const host &r) { return r.obsess_over_host; }));
 #else
     table->addColumn(std::make_unique<IntColumn<host>>(
         prefix + "obsess_over_host",
-        "The current obsess_over_host setting... (0/1)", offsets,
+        "The current obsess_over_host setting (0/1)", offsets,
         [](const host &r) { return r.obsess; }));
 #endif  // NAGIOS4
     table->addColumn(std::make_unique<AttributeBitmaskColumn<host>>(
@@ -476,7 +474,7 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
     // columns of type double
     table->addColumn(std::make_unique<DoubleColumn<host>>(
         prefix + "check_interval",
-        "Number of basic interval lengths between two scheduled checks of the host",
+        "Number of basic interval lengths between two scheduled checks",
         offsets, [](const host &r) { return r.check_interval; }));
     table->addColumn(std::make_unique<DoubleColumn<host>>(
         prefix + "retry_interval",
@@ -484,7 +482,7 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
         offsets, [](const host &r) { return r.retry_interval; }));
     table->addColumn(std::make_unique<DoubleColumn<host>>(
         prefix + "notification_interval",
-        "Interval of periodic notification or 0 if its off", offsets,
+        "Interval of periodic notification in minutes or 0 if its off", offsets,
         [](const host &r) { return r.notification_interval; }));
     table->addColumn(std::make_unique<DoubleColumn<host>>(
         prefix + "first_notification_delay",
@@ -510,7 +508,7 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
         "Time difference between scheduled check time and actual check time",
         offsets, [](const host &r) { return r.latency; }));
     table->addColumn(std::make_unique<DoubleColumn<host>>(
-        prefix + "execution_time", "Time the host check needed for execution",
+        prefix + "execution_time", "Time the check needed for execution",
         offsets, [](const host &r) { return r.execution_time; }));
     table->addColumn(std::make_unique<DoubleColumn<host>>(
         prefix + "percent_state_change", "Percent state change", offsets,
@@ -518,19 +516,19 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
 
     table->addColumn(std::make_unique<BoolColumn<host, true>>(
         prefix + "in_notification_period",
-        "Whether this host is currently in its notification period (0/1)",
+        "Whether this object is currently in its notification period (0/1)",
         offsets, [](const host &r) {
             return g_timeperiods_cache->inTimeperiod(r.notification_period_ptr);
         }));
     table->addColumn(std::make_unique<BoolColumn<host, true>>(
         prefix + "in_check_period",
-        "Whether this host is currently in its check period (0/1)", offsets,
+        "Whether this object is currently in its check period (0/1)", offsets,
         [](const host &r) {
             return g_timeperiods_cache->inTimeperiod(r.check_period_ptr);
         }));
     table->addColumn(std::make_unique<BoolColumn<host, true>>(
         prefix + "in_service_period",
-        "Whether this host is currently in its service period (0/1)", offsets,
+        "Whether this object is currently in its service period (0/1)", offsets,
         [mc](const host &r) {
             auto attrs = mc->customAttributes(&r.custom_variables,
                                               AttributeKind::custom_variables);
@@ -540,9 +538,8 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
         }));
 
     table->addColumn(std::make_unique<ListColumn<host>>(
-        prefix + "contacts",
-        "A list of all contacts of this host, either direct or via a contact group",
-        offsets, [](const host &hst) {
+        prefix + "contacts", "A list of all contacts of this object", offsets,
+        [](const host &hst) {
             std::unordered_set<std::string> names;
             for (auto *cm = hst.contacts; cm != nullptr; cm = cm->next) {
                 names.insert(cm->contact_ptr->name);
@@ -558,7 +555,7 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
         }));
     table->addColumn(std::make_unique<ListColumn<host, DowntimeData>>(
         prefix + "downtimes",
-        "A list of the ids of all scheduled downtimes of this host", offsets,
+        "A list of the ids of all scheduled downtimes of this object", offsets,
         std::make_unique<DowntimeRenderer>(DowntimeRenderer::verbosity::none),
         [mc](const host &hst) {
             return mc->downtimes(
@@ -566,7 +563,7 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
         }));
     table->addColumn(std::make_unique<ListColumn<host, DowntimeData>>(
         prefix + "downtimes_with_info",
-        "A list of the scheduled downtimes of the host with id, author and comment",
+        "A list of the scheduled downtimes with id, author and comment",
         offsets,
         std::make_unique<DowntimeRenderer>(DowntimeRenderer::verbosity::medium),
         [mc](const host &hst) {
@@ -575,7 +572,7 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
         }));
     table->addColumn(std::make_unique<ListColumn<host, DowntimeData>>(
         prefix + "downtimes_with_extra_info",
-        "A list of the scheduled downtimes of the host with id, author, comment, origin, entry_time, start_time, end_time, fixed, duration, recurring and is_pending",
+        "A list of the scheduled downtimes with id, author, comment, origin, entry_time, start_time, end_time, fixed, duration, recurring and is_pending",
         offsets,
         std::make_unique<DowntimeRenderer>(DowntimeRenderer::verbosity::full),
         [mc](const host &hst) {
@@ -583,8 +580,7 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
                 reinterpret_cast<const MonitoringCore::Host *>(&hst));
         }));
     table->addColumn(std::make_unique<ListColumn<host, CommentData>>(
-        prefix + "comments", "A list of the ids of all comments of this host",
-        offsets,
+        prefix + "comments", "A list of the ids of all comments", offsets,
         std::make_unique<CommentRenderer>(CommentRenderer::verbosity::none),
         [mc](const host &hst) {
             return mc->comments(
@@ -592,8 +588,7 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
         }));
     table->addColumn(std::make_unique<ListColumn<host, CommentData>>(
         prefix + "comments_with_info",
-        "A list of all comments of the host with id, author and comment",
-        offsets,
+        "A list of all comments with id, author and comment", offsets,
         std::make_unique<CommentRenderer>(CommentRenderer::verbosity::medium),
         [mc](const host &hst) {
             return mc->comments(
@@ -601,7 +596,7 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
         }));
     table->addColumn(std::make_unique<ListColumn<host, CommentData>>(
         prefix + "comments_with_extra_info",
-        "A list of all comments of the host with id, author, comment, entry type and entry time",
+        "A list of all comments with id, author, comment, entry type and entry time",
         offsets,
         std::make_unique<CommentRenderer>(CommentRenderer::verbosity::full),
         [mc](const host &hst) {
@@ -778,7 +773,7 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
         }));
     table->addColumn(std::make_unique<IntColumn<host>>(
         prefix + "pnpgraph_present",
-        "Whether there is a PNP4Nagios graph present for this host (-1/0/1)",
+        "Whether there is a PNP4Nagios graph present for this object (-1/0/1)",
         offsets, [mc](const host &hst) {
             return pnpgraph_present(mc, hst.name, dummy_service_description());
         }));
@@ -831,7 +826,7 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
         }));
 
     table->addColumn(std::make_unique<DoubleColumn<host>>(
-        prefix + "staleness", "Staleness indicator for this host", offsets,
+        prefix + "staleness", "The staleness of this object", offsets,
         [](const host &hst) {
             auto now = std::chrono::system_clock::to_time_t(
                 std::chrono::system_clock::now());
@@ -841,8 +836,8 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
         }));
 
     table->addColumn(std::make_unique<ListColumn<host>>(
-        prefix + "groups", "A list of all host groups this host is in", offsets,
-        [mc](const host &hst, const contact *auth_user) {
+        prefix + "groups", "A list of all host groups this object is in",
+        offsets, [mc](const host &hst, const contact *auth_user) {
             std::vector<std::string> group_names;
             for (objectlist *list = hst.hostgroups_ptr; list != nullptr;
                  list = list->next) {
@@ -856,7 +851,7 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
         }));
     table->addColumn(std::make_unique<ListColumn<host>>(
         prefix + "contact_groups",
-        "A list of all contact groups this host is in", offsets,
+        "A list of all contact groups this object is in", offsets,
         [](const host &hst) {
             std::vector<std::string> names;
             for (const auto *cgm = hst.contact_groups; cgm != nullptr;

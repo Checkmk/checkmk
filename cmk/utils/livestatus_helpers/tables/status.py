@@ -427,16 +427,16 @@ class Status(Table):
     obsess_over_hosts = Column(
         'obsess_over_hosts',
         col_type='int',
-        description='Whether Nagios will obsess over host checks (0/1), always 0, not supported by CMC',
+        description='Whether Nagios will obsess over host checks (0/1), always 0',
     )
-    """Whether Nagios will obsess over host checks (0/1), always 0, not supported by CMC"""
+    """Whether Nagios will obsess over host checks (0/1), always 0"""
 
     obsess_over_services = Column(
         'obsess_over_services',
         col_type='int',
-        description='Whether Nagios will obsess over service checks and run the ocsp_command (0/1), not supported by CMC',
+        description='Whether Nagios will obsess over service checks and run the ocsp_command (0/1)',
     )
-    """Whether Nagios will obsess over service checks and run the ocsp_command (0/1), not supported by CMC"""
+    """Whether Nagios will obsess over service checks and run the ocsp_command (0/1)"""
 
     process_performance_data = Column(
         'process_performance_data',

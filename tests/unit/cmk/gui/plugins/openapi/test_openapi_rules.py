@@ -13,8 +13,8 @@ from cmk.utils.store import load_mk_file
 
 
 @pytest.fixture(scope="function", name="new_rule")
-def new_rule_fixture(logged_in_wsgi_app):
-    wsgi_app = logged_in_wsgi_app
+def new_rule_fixture(logged_in_admin_wsgi_app):
+    wsgi_app = logged_in_admin_wsgi_app
     base = "/NO_SITE/check_mk/api/1.0"
 
     values = {
@@ -54,8 +54,26 @@ def new_rule_fixture(logged_in_wsgi_app):
     return values, resp
 
 
-def test_openapi_create_rule_failure(logged_in_wsgi_app):
-    wsgi_app = logged_in_wsgi_app
+def test_openapi_create_rule_regression(logged_in_admin_wsgi_app):
+    wsgi_app = logged_in_admin_wsgi_app
+    base = "/NO_SITE/check_mk/api/1.0"
+    values = {
+        "ruleset": "checkgroup_parameters:filesystem",
+        "folder": "~",
+        "properties": {"disabled": False, "description": "API2I"},
+        "value_raw": '{"inodes_levels": (10.0, 5.0), "levels": [(0, (0, 0)), (0, (0.0, 0.0))], "magic": 0.8, "trend_perfdata": True}',
+        "conditions": {},
+    }
+    _ = wsgi_app.post(
+        base + "/domain-types/rule/collections/all",
+        headers={"Accept": "application/json", "Content-Type": "application/json"},
+        params=json.dumps(values),
+        status=200,
+    )
+
+
+def test_openapi_create_rule_failure(logged_in_admin_wsgi_app):
+    wsgi_app = logged_in_admin_wsgi_app
     base = "/NO_SITE/check_mk/api/1.0"
 
     values = {
@@ -80,8 +98,8 @@ def test_openapi_create_rule_failure(logged_in_wsgi_app):
     assert "You have not defined any host group yet" in resp.json["detail"]
 
 
-def test_openapi_create_rule(logged_in_wsgi_app, new_rule):
-    wsgi_app = logged_in_wsgi_app
+def test_openapi_create_rule(logged_in_admin_wsgi_app, new_rule):
+    wsgi_app = logged_in_admin_wsgi_app
     base = "/NO_SITE/check_mk/api/1.0"
 
     values, new_resp = new_rule
@@ -116,8 +134,8 @@ def test_openapi_create_rule(logged_in_wsgi_app, new_rule):
     assert stored_condition == expected_condition
 
 
-def test_openapi_list_rules(logged_in_wsgi_app, new_rule):
-    wsgi_app = logged_in_wsgi_app
+def test_openapi_list_rules(logged_in_admin_wsgi_app, new_rule):
+    wsgi_app = logged_in_admin_wsgi_app
     base = "/NO_SITE/check_mk/api/1.0"
 
     values, _ = new_rule
@@ -140,8 +158,8 @@ def test_openapi_list_rules(logged_in_wsgi_app, new_rule):
     assert stored["conditions"]["host_tag"] == values["conditions"]["host_tag"]
 
 
-def test_openapi_delete_rule(logged_in_wsgi_app, new_rule):
-    wsgi_app = logged_in_wsgi_app
+def test_openapi_delete_rule(logged_in_admin_wsgi_app, new_rule):
+    wsgi_app = logged_in_admin_wsgi_app
     base = "/NO_SITE/check_mk/api/1.0"
 
     values, resp = new_rule
@@ -173,8 +191,8 @@ def test_openapi_delete_rule(logged_in_wsgi_app, new_rule):
     )
 
 
-def test_openapi_show_ruleset(logged_in_wsgi_app):
-    wsgi_app = logged_in_wsgi_app
+def test_openapi_show_ruleset(logged_in_admin_wsgi_app):
+    wsgi_app = logged_in_admin_wsgi_app
     base = "/NO_SITE/check_mk/api/1.0"
     resp = wsgi_app.get(
         base + "/objects/ruleset/host_groups",
@@ -183,8 +201,8 @@ def test_openapi_show_ruleset(logged_in_wsgi_app):
     assert resp.json["extensions"]["name"] == "host_groups"
 
 
-def test_openapi_list_rulesets(logged_in_wsgi_app):
-    wsgi_app = logged_in_wsgi_app
+def test_openapi_list_rulesets(logged_in_admin_wsgi_app):
+    wsgi_app = logged_in_admin_wsgi_app
 
     base = "/NO_SITE/check_mk/api/1.0"
     resp = wsgi_app.get(

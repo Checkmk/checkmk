@@ -47,16 +47,20 @@ from cmk.gui.watolib.rulesets import RuleConditions
 def create_rule(param):
     """Create rule"""
     body = param["body"]
-    folder = body["folder"]
+    folder: watolib.CREFolder = body["folder"]
     value = body["value_raw"]
+    ruleset_name = body["ruleset"]
+
+    folder.need_permission("write")
+
     rulesets = watolib.FolderRulesets(folder)
     rulesets.load()
     try:
-        ruleset = rulesets.get(body["ruleset"])
+        ruleset = rulesets.get(ruleset_name)
     except KeyError:
         return problem(
             status=400,
-            detail=f"Ruleset {body['ruleset']!r} could not be found.",
+            detail=f"Ruleset {ruleset_name!r} could not be found.",
         )
 
     try:
@@ -65,7 +69,7 @@ def create_rule(param):
         if exc.varname is None:
             title = "A field has a problem"
         else:
-            field_name = exc.varname.replace("_p_", "")
+            field_name = strip_tags(exc.varname.replace("_p_", ""))
             title = f"Problem in (sub-)field {field_name!r}"
 
         return problem(
@@ -79,7 +83,7 @@ def create_rule(param):
         folder,
         ruleset,
         RuleConditions(
-            host_folder=folder,
+            host_folder=folder.path(),
             host_tags=body["conditions"].get("host_tag"),
             host_labels=body["conditions"].get("host_label"),
             host_name=body["conditions"].get("host_name"),
@@ -115,7 +119,16 @@ def list_rules(param):
     """List rules"""
     all_sets = watolib.AllRulesets()
     all_sets.load()
-    ruleset = all_sets.get(param["ruleset_name"].replace("-", ":"))
+    ruleset_name = param["ruleset_name"]
+
+    try:
+        ruleset = all_sets.get(ruleset_name.replace("-", ":"))
+    except KeyError:
+        return problem(
+            status=400,
+            title="Unknown ruleset.",
+            detail=f"The ruleset of name {ruleset_name!r} is not known.",
+        )
 
     result = []
     for folder, index, rule in ruleset.get_rules():
@@ -202,6 +215,7 @@ def _serialize_rule(
 ) -> DomainObject:
     return constructors.domain_object(
         domain_type="rule",
+        editable=False,
         identifier=rule.id,
         title=rule.description(),
         extensions={

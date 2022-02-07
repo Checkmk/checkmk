@@ -70,7 +70,9 @@ class RulesetSearchOptions(base.BaseSchema):
     cast_to_dict = True
 
     fulltext = gui_fields.String(
-        description="Search all keys for this text. Regex allowed.",
+        description=(
+            "Search all keys (like `name`, `title`, `help`, etc.) for this text. " "Regex allowed."
+        ),
     )
     folder = gui_fields.FolderField(
         description="The folder in which to search for rules.",

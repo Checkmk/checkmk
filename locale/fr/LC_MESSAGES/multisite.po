@@ -2825,23 +2825,8 @@ msgid ""
 "it intended to be a comprehensive state machine. For the pending pods, the "
 "check keeps track for how long they have been pending. If a tolerating time "
 "period is set, the service goes WARN/CRIT after any of the pods has been "
-"pending for longer than the set duration. This rule affects any Pod "
-"Resources service, except for those on the Nodes and the Clusters. The "
-"configuration for Clusters and Nodes can be done via the rule Kubernetes Pod "
-"Resources: Clusters, Nodes."
-msgstr ""
-
-msgid ""
-"According to the Kubernetes docs, the phase of a Pod is a simple, high-level "
-"summary of where the Pod is in its lifecycle. The phase is not intended to "
-"be a comprehensive rollup of observations of container or Pod state, nor is "
-"it intended to be a comprehensive state machine. For the pending pods, the "
-"check keeps track for how long they have been pending. If a tolerating time "
-"period is set, the service goes WARN/CRIT after any of the pods has been "
-"pending for longer than the set duration. This rule affects the Pod "
-"Resources services of Kubernetes Nodes and Kubernetes Clusters. The "
-"configuration of other Pod Resources services can be done via the rule "
-"Kubernetes Pod Resources: Deployments."
+"pending for longer than the set duration. For clusters and nodes one can "
+"define levels on the number of free pods."
 msgstr ""
 
 msgid "Ack"
@@ -9693,10 +9678,6 @@ msgid "Cluster Name"
 msgstr "Nom du cluster"
 
 #, fuzzy
-msgid "Cluster agent connection"
-msgstr "Version de l'agent Checkmk"
-
-#, fuzzy
 msgid "Cluster and nodes must have the same datasource. "
 msgstr "La date de fin doit être postérieure à la date de début"
 
@@ -9802,6 +9783,9 @@ msgstr "Taille de la collection"
 
 msgid "Collections"
 msgstr "Collections"
+
+msgid "Collector NodePort / Ingress endpoint"
+msgstr ""
 
 msgid "Color"
 msgstr "Couleur"
@@ -13111,6 +13095,10 @@ msgstr ""
 msgid "Define levels on the queue length."
 msgstr "Définir des niveaux sur la longueur de la file d'attente."
 
+#, fuzzy
+msgid "Define lower levels for free pods (clusters and nodes only)"
+msgstr "Nombre de conteneurs"
+
 msgid ""
 "Define patterns for excluding kernel configuration parameters from the "
 "inventory."
@@ -13812,6 +13800,10 @@ msgstr "Déployer les plugins plesk"
 #, fuzzy
 msgid "Deploy without authentication."
 msgstr "Autoriser l'authentification par mot de passe"
+
+#, fuzzy
+msgid "Deployment conditions"
+msgstr "Appliquer les conditions"
 
 #, python-format
 msgid ""
@@ -16968,6 +16960,10 @@ msgstr "Terminer immédiatement"
 msgid "Ending pre-emptivley"
 msgstr "Fin du droit de préemption"
 
+#, fuzzy
+msgid "Endpoint"
+msgstr "Points finaux"
+
 msgid "Endpoints"
 msgstr "Points finaux"
 
@@ -19795,6 +19791,9 @@ msgstr "Chaîne générique"
 msgid "Get file from SFTP server"
 msgstr "Obtenir un fichier du serveur SFTP"
 
+msgid "Get usage data via Checkmk Cluster Collector"
+msgstr ""
+
 msgid ""
 "Give FPGA utilization levels in percent. The possible range is from 0% to "
 "100%."
@@ -22569,10 +22568,6 @@ msgstr "Adresse IP"
 msgid "IP address family"
 msgstr "Famille d'adresses IP"
 
-#, fuzzy
-msgid "IP address of Kubernetes node"
-msgstr "Nœuds Kubernetes"
-
 msgid "IP address or FQDN of JVM webserver"
 msgstr "Adresse IP ou FQDN du serveur web de la JVM"
 
@@ -22977,11 +22972,6 @@ msgstr ""
 "intervalle par défaut."
 
 msgid "If no port is given, a default value of 443 will be used."
-msgstr ""
-"Si aucun port n'est indiqué, une valeur par défaut de 443 sera utilisée."
-
-#, fuzzy
-msgid "If no port is given, a default value of 6443 will be used."
 msgstr ""
 "Si aucun port n'est indiqué, une valeur par défaut de 443 sera utilisée."
 
@@ -26286,8 +26276,8 @@ msgid "Kubernetes"
 msgstr "Kubernetes"
 
 #, fuzzy
-msgid "Kubernetes 2.0"
-msgstr "Kubernetes"
+msgid "Kubernetes (deprecated)"
+msgstr "Ressources Kubernetes"
 
 #, fuzzy
 msgid "Kubernetes CPU resource utilization"
@@ -26305,14 +26295,6 @@ msgstr "Utilisation de la mémoire des pods de Kubernetes Namespaced"
 
 msgid "Kubernetes Network interfaces"
 msgstr "Kubernetes Interfaces réseau"
-
-#, fuzzy
-msgid "Kubernetes Pod Resources: Clusters, Nodes"
-msgstr "Ressources Kubernetes"
-
-#, fuzzy
-msgid "Kubernetes Pod Resources: Deployments"
-msgstr "Ressources Kubernetes"
 
 #, fuzzy
 msgid "Kubernetes Pod restarts"
@@ -26335,6 +26317,10 @@ msgstr "Nœuds Kubernetes"
 
 msgid "Kubernetes nodes"
 msgstr "Nœuds Kubernetes"
+
+#, fuzzy
+msgid "Kubernetes pod resources"
+msgstr "Ressources Kubernetes"
 
 #, fuzzy
 msgid "Kubernetes pod status"
@@ -36190,9 +36176,6 @@ msgstr "Numéro de port :"
 msgid "Port numbers"
 msgstr "Numéros de port"
 
-msgid "Port of Kubernetes' checkmk-external service"
-msgstr ""
-
 msgid "Port types to include in usage statistics"
 msgstr "Types de port à inclure dans les statistiques d'utilisation"
 
@@ -38086,6 +38069,10 @@ msgstr ""
 msgid "Renaming host(s) in rulesets..."
 msgstr "Hôte renommé dans %d rulesets du dossier %s"
 
+#, fuzzy
+msgid "Renaming host(s): Update UUID links..."
+msgstr "Agrégations d'hôtes uniques"
+
 #, python-format
 msgid "Renaming of %s"
 msgstr "Renommage de %s"
@@ -38195,6 +38182,9 @@ msgstr "États de réplication"
 #, fuzzy
 msgid "Replica update state"
 msgstr "États de réplication"
+
+msgid "Replicas"
+msgstr "Répliques"
 
 msgid "Replicate Event Console config"
 msgstr "Répliquer la configuration de la console d'événements"
@@ -40388,10 +40378,6 @@ msgstr "Nom du serveur"
 
 msgid "Server Time"
 msgstr "Heure du serveur"
-
-#, fuzzy
-msgid "Server endpoint"
-msgstr "Point de terminaison du serveur API"
 
 msgid "Server latency"
 msgstr "Latence du serveur"
@@ -45708,13 +45694,6 @@ msgstr ""
 "Cette règle peut être utilisée pour configurer l'agent afin qu'il exécute "
 "les plugins de votre choix en utilisant les arguments donnés."
 
-msgid ""
-"The Checkmk Kubernetes monitoring setup should be deployed in your "
-"Kubernetes cluster. Checkmk needs some additional information in order to "
-"query the deployed agent. A guide on how to retrieve this information can be "
-"found here https://github.com/tribe29/kubernetes/tree/main/kubernetes-agent"
-msgstr ""
-
 msgid "The Checkmk Micro Core"
 msgstr "Le micro noyau Checkmk"
 
@@ -45968,12 +45947,6 @@ msgstr ""
 "même titre mais une seule par nom de vue. Si vous créez une vue qui a le "
 "même nom qu'une vue intégrée, alors votre vue remplacera cette dernière (en "
 "l'imitant)."
-
-msgid ""
-"The IP address of any Kubernetes cluster node where a kubelet is present. "
-"Valid nodes can be usually retrieved using the 'kubectl get nodes -o wide' "
-"command."
-msgstr ""
 
 msgid ""
 "The IP of the other hostname needs to be the same IP as the host address"
@@ -47365,6 +47338,17 @@ msgstr "Les enfants des hôtes trouvés (avec filtrage des enfants)"
 msgid "The found hosts' parents"
 msgstr "Les parents des hôtes trouvés"
 
+msgid ""
+"The full URL to the Cluster Collector service including the protocol (http "
+"or https) and the port. Depending on the deployed configuration of the "
+"service this can either be the NodePort or the Ingress endpoint."
+msgstr ""
+
+msgid ""
+"The full URL to the Kubernetes API server including the protocol (http or "
+"https) and the port."
+msgstr ""
+
 #, python-format
 msgid "The function %s is not in the snapshotted functions."
 msgstr "La fonction %s n'est pas dans les fonctions snapshotées."
@@ -48448,9 +48432,6 @@ msgstr ""
 msgid "The operational transmit power"
 msgstr "La puissance d'émission opérationnelle"
 
-msgid "The option should match the configured protocol of the cluster agent."
-msgstr ""
-
 msgid ""
 "The option to use a custom command can only be configured with the "
 "permission \"Can add or modify executables\"."
@@ -49119,9 +49100,6 @@ msgstr ""
 
 msgid "The service name"
 msgstr "Le nom du service"
-
-msgid "The service port of the running checkmk-external service"
-msgstr ""
 
 msgid ""
 "The sidebar can be configured to regularly check for pending popup "
@@ -51640,6 +51618,10 @@ msgstr "Ce paquet n'existe pas."
 msgid "This package does not yet contain any rules."
 msgstr "Ce paquet ne contient pas encore de règles."
 
+#, fuzzy
+msgid "This package is missing or broken."
+msgstr "Ce paquet n'existe pas."
+
 msgid ""
 "This page can be used to generate a new timeperiod definition based on the "
 "appointments of an iCalendar (<tt>*.ics</tt>) file. This import is normally "
@@ -52694,30 +52676,6 @@ msgstr ""
 "des informations sur la configuration et l'état de la connexion."
 
 msgid ""
-"This rule selects the Kubernetes special agent for an existing Checkmk host. "
-"If you want to monitor multiple Kubernetes clusters we strongly recommend to "
-"set up <a href=\"wato.py?mode=edit_ruleset&varname=piggyback_translation"
-"\">Piggyback translation rules</a> to avoid name collisions. Otherwise e.g. "
-"Pods with the same name in different Kubernetes clusters cannot be "
-"distinguished.<br>Please additionally keep in mind, that not every "
-"Kubernetes API is compatible with every version of the official Kubernetes "
-"Python client. E.g. client v11 is only with the API v1.15 fully compatible. "
-"Please check if the latest client version supports your Kubernetes API "
-"version."
-msgstr ""
-"Cette règle sélectionne l'agent spécial Kubernetes pour un hôte Checkmk "
-"existant. Si vous souhaitez surveiller plusieurs clusters Kubernetes, nous "
-"vous recommandons vivement de mettre en place <a href=\"wato.py?"
-"mode=edit_ruleset&varname=piggyback_translation\">des règles de traduction "
-"Piggyback</a> pour éviter les collisions de noms. Sinon, par exemple, des "
-"Pods avec le même nom dans différents clusters Kubernetes ne peuvent pas "
-"être distingués.<br>Veuillez en outre garder à l'esprit, que toutes les API "
-"Kubernetes ne sont pas compatibles avec toutes les versions du client "
-"officiel Kubernetes Python. Par exemple, le client v11 n'est pleinement "
-"compatible qu'avec l'API v1.15. Veuillez vérifier si la dernière version du "
-"client supporte votre version de l'API Kubernetes."
-
-msgid ""
 "This rule selects the Siemens PLC agent instead of the normal Check_MK Agent "
 "and allows monitoring of Siemens PLC using the Snap7 API. You can configure "
 "your connection settings and values to fetch here."
@@ -53605,6 +53563,12 @@ msgstr ""
 "classifications de balises. Vous pouvez configurer les balises à utiliser "
 "dans vos paramètres globaux de Multisite."
 
+msgid ""
+"This special agent is deprecated and will be removed in Checkmk version "
+"2.2.0. Please use the \"Kubernetes\" ruleset to configure the new special "
+"agent for Kubernetes."
+msgstr ""
+
 msgid "This stored report does not exist."
 msgstr "Ce rapport stocké n'existe pas."
 
@@ -54235,6 +54199,18 @@ msgstr ""
 "Temps d'attente pour l'ouverture d'une connexion à une instance avant de "
 "passer à l'instance suivante. S'il n'est pas défini, la valeur par défaut "
 "d'ADO est utilisée."
+
+#, fuzzy
+msgid "Time until alert, if deployment in replica failure"
+msgstr "Définir une période de tolérance pour l'activation des services"
+
+#, fuzzy
+msgid "Time until alert, if deployment not available"
+msgstr "Définir une période de tolérance pour l'activation des services"
+
+#, fuzzy
+msgid "Time until alert, if deployment not in progressing"
+msgstr "Définir une période de tolérance pour l'activation des services"
 
 msgid "Time until alert, if pod not initialized"
 msgstr ""
@@ -54911,6 +54887,10 @@ msgstr "Total des pages imprimées"
 
 msgid "Total query timeout"
 msgstr "Délai total d'interrogation"
+
+#, fuzzy
+msgid "Total replicas"
+msgstr "Total des dispositifs"
 
 #, fuzzy
 msgid "Total restarts"
@@ -64468,6 +64448,66 @@ msgstr "z/OS"
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. Tous droits réservés."
 
+#, fuzzy
+#~| msgid "Checkmk Agent Version"
+#~ msgid "Cluster agent connection"
+#~ msgstr "Version de l'agent Checkmk"
+
+#, fuzzy
+#~| msgid "Kubernetes nodes"
+#~ msgid "IP address of Kubernetes node"
+#~ msgstr "Nœuds Kubernetes"
+
+#, fuzzy
+#~| msgid "If no port is given, a default value of 443 will be used."
+#~ msgid "If no port is given, a default value of 6443 will be used."
+#~ msgstr ""
+#~ "Si aucun port n'est indiqué, une valeur par défaut de 443 sera utilisée."
+
+#, fuzzy
+#~| msgid "API server endpoint"
+#~ msgid "Server endpoint"
+#~ msgstr "Point de terminaison du serveur API"
+
+#, fuzzy
+#~| msgid "Kubernetes"
+#~ msgid "Kubernetes 2.0"
+#~ msgstr "Kubernetes"
+
+#, fuzzy
+#~| msgid "Kubernetes resources"
+#~ msgid "Kubernetes Pod Resources: Clusters, Nodes"
+#~ msgstr "Ressources Kubernetes"
+
+#, fuzzy
+#~| msgid "Kubernetes resources"
+#~ msgid "Kubernetes Pod Resources: Deployments"
+#~ msgstr "Ressources Kubernetes"
+
+#~ msgid ""
+#~ "This rule selects the Kubernetes special agent for an existing Checkmk "
+#~ "host. If you want to monitor multiple Kubernetes clusters we strongly "
+#~ "recommend to set up <a href=\"wato.py?"
+#~ "mode=edit_ruleset&varname=piggyback_translation\">Piggyback translation "
+#~ "rules</a> to avoid name collisions. Otherwise e.g. Pods with the same "
+#~ "name in different Kubernetes clusters cannot be distinguished.<br>Please "
+#~ "additionally keep in mind, that not every Kubernetes API is compatible "
+#~ "with every version of the official Kubernetes Python client. E.g. client "
+#~ "v11 is only with the API v1.15 fully compatible. Please check if the "
+#~ "latest client version supports your Kubernetes API version."
+#~ msgstr ""
+#~ "Cette règle sélectionne l'agent spécial Kubernetes pour un hôte Checkmk "
+#~ "existant. Si vous souhaitez surveiller plusieurs clusters Kubernetes, "
+#~ "nous vous recommandons vivement de mettre en place <a href=\"wato.py?"
+#~ "mode=edit_ruleset&varname=piggyback_translation\">des règles de "
+#~ "traduction Piggyback</a> pour éviter les collisions de noms. Sinon, par "
+#~ "exemple, des Pods avec le même nom dans différents clusters Kubernetes ne "
+#~ "peuvent pas être distingués.<br>Veuillez en outre garder à l'esprit, que "
+#~ "toutes les API Kubernetes ne sont pas compatibles avec toutes les "
+#~ "versions du client officiel Kubernetes Python. Par exemple, le client v11 "
+#~ "n'est pleinement compatible qu'avec l'API v1.15. Veuillez vérifier si la "
+#~ "dernière version du client supporte votre version de l'API Kubernetes."
+
 #~ msgid "A matrix showing a colored square for each host"
 #~ msgstr "Une matrice montrant un carré coloré pour chaque hôte"
 
@@ -64562,11 +64602,6 @@ msgstr "© 2020 tribe29 GmbH. Tous droits réservés."
 
 #~ msgid "Click here to go to pending changes."
 #~ msgstr "Cliquez ici pour accéder aux modifications en cours."
-
-#, fuzzy
-#~| msgid "Number of containers"
-#~ msgid "Set lower levels of control plane nodes"
-#~ msgstr "Nombre de conteneurs"
 
 #, fuzzy
 #~| msgid "Number of retries"
@@ -66879,9 +66914,6 @@ msgstr "© 2020 tribe29 GmbH. Tous droits réservés."
 
 #~ msgid "Replica Lag"
 #~ msgstr "Réplique Lag"
-
-#~ msgid "Replicas"
-#~ msgstr "Répliques"
 
 #~ msgid "Replication Slot Disk Usage"
 #~ msgstr "Utilisation du disque de la fente de réplication"

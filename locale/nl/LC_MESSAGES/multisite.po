@@ -2792,23 +2792,8 @@ msgid ""
 "it intended to be a comprehensive state machine. For the pending pods, the "
 "check keeps track for how long they have been pending. If a tolerating time "
 "period is set, the service goes WARN/CRIT after any of the pods has been "
-"pending for longer than the set duration. This rule affects any Pod "
-"Resources service, except for those on the Nodes and the Clusters. The "
-"configuration for Clusters and Nodes can be done via the rule Kubernetes Pod "
-"Resources: Clusters, Nodes."
-msgstr ""
-
-msgid ""
-"According to the Kubernetes docs, the phase of a Pod is a simple, high-level "
-"summary of where the Pod is in its lifecycle. The phase is not intended to "
-"be a comprehensive rollup of observations of container or Pod state, nor is "
-"it intended to be a comprehensive state machine. For the pending pods, the "
-"check keeps track for how long they have been pending. If a tolerating time "
-"period is set, the service goes WARN/CRIT after any of the pods has been "
-"pending for longer than the set duration. This rule affects the Pod "
-"Resources services of Kubernetes Nodes and Kubernetes Clusters. The "
-"configuration of other Pod Resources services can be done via the rule "
-"Kubernetes Pod Resources: Deployments."
+"pending for longer than the set duration. For clusters and nodes one can "
+"define levels on the number of free pods."
 msgstr ""
 
 msgid "Ack"
@@ -9572,10 +9557,6 @@ msgid "Cluster Name"
 msgstr "Cluster Naam"
 
 #, fuzzy
-msgid "Cluster agent connection"
-msgstr "Checkmk Agent Versie"
-
-#, fuzzy
 msgid "Cluster and nodes must have the same datasource. "
 msgstr "De einddatum moet na de begindatum liggen"
 
@@ -9678,6 +9659,9 @@ msgstr "Collectie Omvang"
 
 msgid "Collections"
 msgstr "Collecties"
+
+msgid "Collector NodePort / Ingress endpoint"
+msgstr ""
 
 msgid "Color"
 msgstr "Kleur"
@@ -12947,6 +12931,10 @@ msgstr ""
 msgid "Define levels on the queue length."
 msgstr "Definieer niveaus op de lengte van de wachtrij."
 
+#, fuzzy
+msgid "Define lower levels for free pods (clusters and nodes only)"
+msgstr "Aantal containers"
+
 msgid ""
 "Define patterns for excluding kernel configuration parameters from the "
 "inventory."
@@ -13635,6 +13623,10 @@ msgstr "Implementeer de plesk plugins"
 #, fuzzy
 msgid "Deploy without authentication."
 msgstr "Wachtwoord verificatie toestaan"
+
+#, fuzzy
+msgid "Deployment conditions"
+msgstr "Voorwaarden toepassen"
 
 #, python-format
 msgid ""
@@ -16751,6 +16743,10 @@ msgstr "Onmiddellijk beëindigen"
 msgid "Ending pre-emptivley"
 msgstr "Beëindiging van vervroegde uittreding"
 
+#, fuzzy
+msgid "Endpoint"
+msgstr "Eindpunten"
+
 msgid "Endpoints"
 msgstr "Eindpunten"
 
@@ -19553,6 +19549,9 @@ msgstr "Generieke string"
 msgid "Get file from SFTP server"
 msgstr "Bestand van SFTP-server halen"
 
+msgid "Get usage data via Checkmk Cluster Collector"
+msgstr ""
+
 msgid ""
 "Give FPGA utilization levels in percent. The possible range is from 0% to "
 "100%."
@@ -22282,10 +22281,6 @@ msgstr "IP-adres"
 msgid "IP address family"
 msgstr "IP-adresfamilie"
 
-#, fuzzy
-msgid "IP address of Kubernetes node"
-msgstr "Kubernetes knooppunten"
-
 msgid "IP address or FQDN of JVM webserver"
 msgstr "IP-adres of FQDN van JVM webserver"
 
@@ -22686,12 +22681,6 @@ msgstr ""
 "in het rapport opgenomen."
 
 msgid "If no port is given, a default value of 443 will be used."
-msgstr ""
-"Indien geen poort wordt opgegeven, wordt een standaardwaarde van 443 "
-"gebruikt."
-
-#, fuzzy
-msgid "If no port is given, a default value of 6443 will be used."
 msgstr ""
 "Indien geen poort wordt opgegeven, wordt een standaardwaarde van 443 "
 "gebruikt."
@@ -25955,8 +25944,8 @@ msgid "Kubernetes"
 msgstr "Kubernetes"
 
 #, fuzzy
-msgid "Kubernetes 2.0"
-msgstr "Kubernetes"
+msgid "Kubernetes (deprecated)"
+msgstr "Kubernetes-bronnen"
 
 #, fuzzy
 msgid "Kubernetes CPU resource utilization"
@@ -25973,14 +25962,6 @@ msgstr "Kubernetes Namespaced pods geheugengebruik"
 
 msgid "Kubernetes Network interfaces"
 msgstr "Kubernetes Netwerk interfaces"
-
-#, fuzzy
-msgid "Kubernetes Pod Resources: Clusters, Nodes"
-msgstr "Kubernetes-bronnen"
-
-#, fuzzy
-msgid "Kubernetes Pod Resources: Deployments"
-msgstr "Kubernetes-bronnen"
 
 #, fuzzy
 msgid "Kubernetes Pod restarts"
@@ -26003,6 +25984,10 @@ msgstr "Kubernetes knooppunten"
 
 msgid "Kubernetes nodes"
 msgstr "Kubernetes knooppunten"
+
+#, fuzzy
+msgid "Kubernetes pod resources"
+msgstr "Kubernetes-bronnen"
 
 #, fuzzy
 msgid "Kubernetes pod status"
@@ -35726,9 +35711,6 @@ msgstr "Poortnummer:"
 msgid "Port numbers"
 msgstr "Poort nummers"
 
-msgid "Port of Kubernetes' checkmk-external service"
-msgstr ""
-
 msgid "Port types to include in usage statistics"
 msgstr "Poorttypes die in de gebruiksstatistieken moeten worden opgenomen"
 
@@ -37605,6 +37587,10 @@ msgstr ""
 msgid "Renaming host(s) in rulesets..."
 msgstr "Hernoemde host in %d regelsets van map %s"
 
+#, fuzzy
+msgid "Renaming host(s): Update UUID links..."
+msgstr "Aggregaties van afzonderlijke hosts"
+
 #, python-format
 msgid "Renaming of %s"
 msgstr "Hernoemen van %s"
@@ -37711,6 +37697,9 @@ msgstr "Replicatie Staten"
 #, fuzzy
 msgid "Replica update state"
 msgstr "Replicatie Staten"
+
+msgid "Replicas"
+msgstr "Replica's"
 
 msgid "Replicate Event Console config"
 msgstr "De configuratie van de gebeurtenissenconsole repliceren"
@@ -39879,10 +39868,6 @@ msgstr "Naam server"
 
 msgid "Server Time"
 msgstr "Server tijd"
-
-#, fuzzy
-msgid "Server endpoint"
-msgstr "API-server eindpunt"
 
 msgid "Server latency"
 msgstr "Serververtraging"
@@ -45134,13 +45119,6 @@ msgstr ""
 "gebruikt om de agent te configureren om plugins van uw keuze uit te voeren "
 "met de gegeven argumenten."
 
-msgid ""
-"The Checkmk Kubernetes monitoring setup should be deployed in your "
-"Kubernetes cluster. Checkmk needs some additional information in order to "
-"query the deployed agent. A guide on how to retrieve this information can be "
-"found here https://github.com/tribe29/kubernetes/tree/main/kubernetes-agent"
-msgstr ""
-
 msgid "The Checkmk Micro Core"
 msgstr "De Checkmk Micro Kern"
 
@@ -45389,12 +45367,6 @@ msgstr ""
 "maar slechts één per view naam. Als je een view maakt die dezelfde view naam "
 "heeft als een ingebouwde view, dan zal jouw view deze overschrijven "
 "(shadowing)."
-
-msgid ""
-"The IP address of any Kubernetes cluster node where a kubelet is present. "
-"Valid nodes can be usually retrieved using the 'kubectl get nodes -o wide' "
-"command."
-msgstr ""
 
 msgid ""
 "The IP of the other hostname needs to be the same IP as the host address"
@@ -46777,6 +46749,17 @@ msgstr "De gevonden hosts hun kinderen (met kind filtering)"
 msgid "The found hosts' parents"
 msgstr "De ouders van de gevonden gastheren"
 
+msgid ""
+"The full URL to the Cluster Collector service including the protocol (http "
+"or https) and the port. Depending on the deployed configuration of the "
+"service this can either be the NodePort or the Ingress endpoint."
+msgstr ""
+
+msgid ""
+"The full URL to the Kubernetes API server including the protocol (http or "
+"https) and the port."
+msgstr ""
+
 #, python-format
 msgid "The function %s is not in the snapshotted functions."
 msgstr "De functie %s staat niet in de snapshotted functies."
@@ -47831,9 +47814,6 @@ msgstr ""
 msgid "The operational transmit power"
 msgstr "Het operationele zendvermogen"
 
-msgid "The option should match the configured protocol of the cluster agent."
-msgstr ""
-
 msgid ""
 "The option to use a custom command can only be configured with the "
 "permission \"Can add or modify executables\"."
@@ -48499,9 +48479,6 @@ msgstr ""
 
 msgid "The service name"
 msgstr "De naam van de dienst"
-
-msgid "The service port of the running checkmk-external service"
-msgstr ""
 
 msgid ""
 "The sidebar can be configured to regularly check for pending popup "
@@ -50997,6 +50974,10 @@ msgstr "Dit pakket bestaat niet."
 msgid "This package does not yet contain any rules."
 msgstr "Dit pakket bevat nog geen regels."
 
+#, fuzzy
+msgid "This package is missing or broken."
+msgstr "Dit pakket bestaat niet."
+
 msgid ""
 "This page can be used to generate a new timeperiod definition based on the "
 "appointments of an iCalendar (<tt>*.ics</tt>) file. This import is normally "
@@ -52027,29 +52008,6 @@ msgstr ""
 "verzamelen over configuratie en verbindingsstatusinformatie."
 
 msgid ""
-"This rule selects the Kubernetes special agent for an existing Checkmk host. "
-"If you want to monitor multiple Kubernetes clusters we strongly recommend to "
-"set up <a href=\"wato.py?mode=edit_ruleset&varname=piggyback_translation"
-"\">Piggyback translation rules</a> to avoid name collisions. Otherwise e.g. "
-"Pods with the same name in different Kubernetes clusters cannot be "
-"distinguished.<br>Please additionally keep in mind, that not every "
-"Kubernetes API is compatible with every version of the official Kubernetes "
-"Python client. E.g. client v11 is only with the API v1.15 fully compatible. "
-"Please check if the latest client version supports your Kubernetes API "
-"version."
-msgstr ""
-"Deze regel selecteert de Kubernetes special agent voor een bestaande Checkmk "
-"host. Als u meerdere Kubernetes clusters wilt monitoren, raden wij u aan om "
-"<a href=\"wato.py?mode=edit_ruleset&varname=piggyback_translation"
-"\">Piggyback vertaal regels</a> op te zetten om naam botsingen te voorkomen. "
-"Anders kunnen bijvoorbeeld Pods met dezelfde naam in verschillende "
-"Kubernetes clusters niet van elkaar worden onderscheiden.<br>Bedenk ook dat "
-"niet elke Kubernetes API compatibel is met elke versie van de officiële "
-"Kubernetes Python client. Bijvoorbeeld, client v11 is alleen met de API "
-"v1.15 volledig compatibel. Controleer of de laatste versie van de client "
-"jouw Kubernetes API versie ondersteunt."
-
-msgid ""
 "This rule selects the Siemens PLC agent instead of the normal Check_MK Agent "
 "and allows monitoring of Siemens PLC using the Snap7 API. You can configure "
 "your connection settings and values to fetch here."
@@ -52920,6 +52878,12 @@ msgstr ""
 "classificaties. U kunt configureren welke tags te gebruiken in uw globale "
 "instellingen van Multisite."
 
+msgid ""
+"This special agent is deprecated and will be removed in Checkmk version "
+"2.2.0. Please use the \"Kubernetes\" ruleset to configure the new special "
+"agent for Kubernetes."
+msgstr ""
+
 msgid "This stored report does not exist."
 msgstr "Dit opgeslagen rapport bestaat niet."
 
@@ -53545,6 +53509,18 @@ msgstr ""
 "Tijd om te wachten tot een verbinding met een instantie is geopend voordat "
 "met de volgende instantie wordt begonnen. Indien niet ingesteld, wordt de "
 "standaardwaarde van ADO gebruikt."
+
+#, fuzzy
+msgid "Time until alert, if deployment in replica failure"
+msgstr "Definieer een tolerante periode voor het activeren van diensten"
+
+#, fuzzy
+msgid "Time until alert, if deployment not available"
+msgstr "Definieer een tolerante periode voor het activeren van diensten"
+
+#, fuzzy
+msgid "Time until alert, if deployment not in progressing"
+msgstr "Definieer een tolerante periode voor het activeren van diensten"
 
 msgid "Time until alert, if pod not initialized"
 msgstr ""
@@ -54223,6 +54199,10 @@ msgstr "Totaal afgedrukte pagina's"
 
 msgid "Total query timeout"
 msgstr "Totale query timeout"
+
+#, fuzzy
+msgid "Total replicas"
+msgstr "Totaal apparaten"
 
 #, fuzzy
 msgid "Total restarts"
@@ -63623,6 +63603,67 @@ msgstr "z/OS"
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. Alle rechten voorbehouden."
 
+#, fuzzy
+#~| msgid "Checkmk Agent Version"
+#~ msgid "Cluster agent connection"
+#~ msgstr "Checkmk Agent Versie"
+
+#, fuzzy
+#~| msgid "Kubernetes nodes"
+#~ msgid "IP address of Kubernetes node"
+#~ msgstr "Kubernetes knooppunten"
+
+#, fuzzy
+#~| msgid "If no port is given, a default value of 443 will be used."
+#~ msgid "If no port is given, a default value of 6443 will be used."
+#~ msgstr ""
+#~ "Indien geen poort wordt opgegeven, wordt een standaardwaarde van 443 "
+#~ "gebruikt."
+
+#, fuzzy
+#~| msgid "API server endpoint"
+#~ msgid "Server endpoint"
+#~ msgstr "API-server eindpunt"
+
+#, fuzzy
+#~| msgid "Kubernetes"
+#~ msgid "Kubernetes 2.0"
+#~ msgstr "Kubernetes"
+
+#, fuzzy
+#~| msgid "Kubernetes resources"
+#~ msgid "Kubernetes Pod Resources: Clusters, Nodes"
+#~ msgstr "Kubernetes-bronnen"
+
+#, fuzzy
+#~| msgid "Kubernetes resources"
+#~ msgid "Kubernetes Pod Resources: Deployments"
+#~ msgstr "Kubernetes-bronnen"
+
+#~ msgid ""
+#~ "This rule selects the Kubernetes special agent for an existing Checkmk "
+#~ "host. If you want to monitor multiple Kubernetes clusters we strongly "
+#~ "recommend to set up <a href=\"wato.py?"
+#~ "mode=edit_ruleset&varname=piggyback_translation\">Piggyback translation "
+#~ "rules</a> to avoid name collisions. Otherwise e.g. Pods with the same "
+#~ "name in different Kubernetes clusters cannot be distinguished.<br>Please "
+#~ "additionally keep in mind, that not every Kubernetes API is compatible "
+#~ "with every version of the official Kubernetes Python client. E.g. client "
+#~ "v11 is only with the API v1.15 fully compatible. Please check if the "
+#~ "latest client version supports your Kubernetes API version."
+#~ msgstr ""
+#~ "Deze regel selecteert de Kubernetes special agent voor een bestaande "
+#~ "Checkmk host. Als u meerdere Kubernetes clusters wilt monitoren, raden "
+#~ "wij u aan om <a href=\"wato.py?"
+#~ "mode=edit_ruleset&varname=piggyback_translation\">Piggyback vertaal "
+#~ "regels</a> op te zetten om naam botsingen te voorkomen. Anders kunnen "
+#~ "bijvoorbeeld Pods met dezelfde naam in verschillende Kubernetes clusters "
+#~ "niet van elkaar worden onderscheiden.<br>Bedenk ook dat niet elke "
+#~ "Kubernetes API compatibel is met elke versie van de officiële Kubernetes "
+#~ "Python client. Bijvoorbeeld, client v11 is alleen met de API v1.15 "
+#~ "volledig compatibel. Controleer of de laatste versie van de client jouw "
+#~ "Kubernetes API versie ondersteunt."
+
 #~ msgid "A matrix showing a colored square for each host"
 #~ msgstr "Een matrix met een gekleurd vierkant voor elke host"
 
@@ -63713,11 +63754,6 @@ msgstr "© 2020 tribe29 GmbH. Alle rechten voorbehouden."
 
 #~ msgid "Click here to go to pending changes."
 #~ msgstr "Klik hier om naar de hangende wijzigingen te gaan."
-
-#, fuzzy
-#~| msgid "Number of containers"
-#~ msgid "Set lower levels of control plane nodes"
-#~ msgstr "Aantal containers"
 
 #, fuzzy
 #~| msgid "Number of retries"
@@ -66012,9 +66048,6 @@ msgstr "© 2020 tribe29 GmbH. Alle rechten voorbehouden."
 
 #~ msgid "Replica Lag"
 #~ msgstr "Replica Lag"
-
-#~ msgid "Replicas"
-#~ msgstr "Replica's"
 
 #~ msgid "Replication Slot Disk Usage"
 #~ msgstr "Replicatie Slot Schijf Gebruik"

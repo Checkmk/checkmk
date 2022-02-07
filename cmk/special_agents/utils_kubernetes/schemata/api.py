@@ -72,7 +72,7 @@ class PodMetaData(MetaData):
 class NodeConditionStatus(str, enum.Enum):
     TRUE = "True"
     FALSE = "False"
-    UNKNWON = "Unknown"
+    UNKNOWN = "Unknown"
 
 
 class NodeConditions(BaseModel):

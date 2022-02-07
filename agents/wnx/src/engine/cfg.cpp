@@ -317,6 +317,7 @@ std::wstring GetSystemPluginsDir() noexcept {
 }
 
 std::wstring GetUserDir() noexcept { return GetCfg().getUserDir(); }
+std::wstring GetUserBinDir() noexcept { return GetCfg().getUserBinDir(); }
 
 std::wstring GetUpgradeProtocolDir() {
     auto dir = GetCfg().getUserDir() / dirs::kPluginConfig;

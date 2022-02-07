@@ -132,6 +132,7 @@ std::wstring GetRootDir() noexcept;
 std::wstring GetRootInstallDir() noexcept;  // for cap, ini and dat
 std::wstring GetRootUtilsDir() noexcept;
 std::wstring GetUserDir() noexcept;
+std::wstring GetUserBinDir() noexcept;
 std::wstring GetUpgradeProtocolDir();
 std::wstring GetBakeryDir() noexcept;
 std::wstring GetUserModulesDir() noexcept;

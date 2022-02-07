@@ -10,13 +10,18 @@
 #include "test_tools.h"
 
 namespace fs = std::filesystem;
+namespace cma::details {
+extern bool g_is_service;
+}
 
 namespace cma::ac {
 TEST(AgentController, StartAgent) {
     EXPECT_FALSE(ac::StartAgentController("cmd.exe"));
 }
 
-TEST(AgentController, KillAgent) { EXPECT_FALSE(ac::KillAgentController()); }
+TEST(AgentController, KillAgent) {
+    EXPECT_FALSE(ac::KillAgentController("anything"));
+}
 
 TEST(AgentController, FabricConfig) {
     auto temp_fs = tst::TempCfgFs::CreateNoIo();
@@ -48,4 +53,19 @@ TEST(AgentController, EnableLegacyMode) {
     EXPECT_FALSE(fs::exists(temp_fs->data() / ac::kLegacyPullFile));
 }
 
+TEST(AgentController, SimulationIntegration) {
+    details::g_is_service = true;
+    ON_OUT_OF_SCOPE(details::g_is_service = false;);
+    auto temp_fs = tst::TempCfgFs::Create();
+    ASSERT_TRUE(temp_fs->loadFactoryConfig());
+    fs::copy(fs::path{"c:\\windows\\system32\\whoami.exe"},
+             temp_fs->root() / cfg::files::kAgentCtl);
+    const auto service = fs::path{cfg::GetRootDir()} / "cmd.exe";
+    const auto expected =
+        fs::path{cfg::GetUserBinDir()} / cfg::files::kAgentCtl;
+    EXPECT_TRUE(ac::StartAgentController(service));
+    EXPECT_TRUE(fs::exists(expected));
+    EXPECT_TRUE(ac::KillAgentController(service));
+    EXPECT_FALSE(fs::exists(expected));
+}
 }  // namespace cma::ac

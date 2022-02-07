@@ -577,9 +577,8 @@ void OpenFirewall(bool controller) {
         IsService() ? srv::kSrvFirewallRuleName : srv::kAppFirewallRuleName;
     if (controller) {
         XLOG::l.i("Controller has started: firewall to controller");
-        ProcessFirewallConfiguration(
-            ac::GetController(wtools::GetArgv(0)).wstring(), GetFirewallPort(),
-            rule_name);
+        ProcessFirewallConfiguration(ac::GetWorkController().wstring(),
+                                     GetFirewallPort(), rule_name);
     } else {
         XLOG::l.i("Controller has NOT started: firewall to agent");
         ProcessFirewallConfiguration(wtools::GetArgv(0), GetFirewallPort(),
@@ -603,7 +602,7 @@ void ServiceProcessor::mainThread(world::ExternalPort *ex_port) noexcept {
 
     ac::EnableLegacyMode(ac::IsUseLegacyMode(cfg::GetLoadedConfig()));
     auto port = OptionallyStartAgentController();
-    ON_OUT_OF_SCOPE(ac::KillAgentController());
+    ON_OUT_OF_SCOPE(ac::KillAgentController(wtools::GetArgv(0)));
     OpenFirewall(port.has_value());
 
     MailSlot mailbox(

@@ -17,9 +17,10 @@ class Node;
 namespace cma::ac {
 constexpr std::string_view kLegacyPullFile{"allow-legacy-pull"};
 std::filesystem::path GetController(const std::filesystem::path &service);
+std::filesystem::path GetWorkController();
 constexpr uint16_t windows_internal_port{50001};  // must be synced with Rust
 bool StartAgentController(const std::filesystem::path &service);
-bool KillAgentController();
+bool KillAgentController(const std::filesystem::path &service);
 bool IsRunController(const YAML::Node &node);
 bool IsUseLegacyMode(const YAML::Node &node);
 /// Creates or deletes signal file in the user dir.

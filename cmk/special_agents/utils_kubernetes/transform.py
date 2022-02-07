@@ -369,6 +369,7 @@ def node_from_client(node: client.V1Node, kubelet_health: api.HealthZ) -> api.No
         control_plane=is_control_plane(metadata.labels),
         kubelet_info=api.KubeletInfo(
             version=node.status.node_info.kubelet_version,
+            proxy_version=node.status.node_info.kube_proxy_version,
             health=kubelet_health,
         ),
     )

@@ -16,6 +16,7 @@ from cmk.base.plugins.agent_based.utils.k8s import HealthZ, KubeletInfo
         pytest.param(
             KubeletInfo(
                 version="1.2.3",
+                proxy_version="1.2.3",
                 health=HealthZ(status_code=200, response="ok", verbose_response=None),
             ),
             [
@@ -27,6 +28,7 @@ from cmk.base.plugins.agent_based.utils.k8s import HealthZ, KubeletInfo
         pytest.param(
             KubeletInfo(
                 version="1.2.3",
+                proxy_version="1.2.3",
                 health=HealthZ(
                     status_code=500, response="bad", verbose_response="some\nlong\noutput\n"
                 ),

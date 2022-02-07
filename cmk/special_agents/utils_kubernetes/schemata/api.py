@@ -94,6 +94,7 @@ class KubeletInfo(BaseModel):
     """section: kube_node_kubelet_v1"""
 
     version: str
+    proxy_version: str
     health: HealthZ
 
 

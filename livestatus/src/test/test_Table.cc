@@ -459,6 +459,7 @@ static ColumnDefinitions hosts_and_services_columns() {
         {"active_checks_enabled", ColumnType::int_},
         {"check_command", ColumnType::string},
         {"check_command_expanded", ColumnType::string},
+        {"check_flapping_recovery_notification", ColumnType::int_},
         {"check_freshness", ColumnType::int_},
         {"check_interval", ColumnType::double_},
         {"check_options", ColumnType::int_},
@@ -527,6 +528,7 @@ static ColumnDefinitions hosts_and_services_columns() {
         {"notification_period", ColumnType::string},
         {"notification_postponement_reason", ColumnType::string},
         {"notifications_enabled", ColumnType::int_},
+        {"pending_flex_downtime", ColumnType::int_},
         {"percent_state_change", ColumnType::double_},
         {"perf_data", ColumnType::string},
         {"plugin_output", ColumnType::string},
@@ -547,12 +549,7 @@ static ColumnDefinitions hosts_and_services_columns() {
 
 // TODO(sp) These columns should really live unconditionally in
 // hosts_and_services_columns.
-static ColumnDefinitions funny_hosts_columns() {
-    return {
-        {"check_flapping_recovery_notification", ColumnType::int_},
-        {"pending_flex_downtime", ColumnType::int_},
-    };
-}
+static ColumnDefinitions funny_hosts_columns() { return {}; }
 
 static ColumnDefinitions hosts_columns() {
     return {

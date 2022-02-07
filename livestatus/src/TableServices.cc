@@ -748,6 +748,16 @@ void TableServices::addColumns(Table *table, const std::string &prefix,
         prefix + "previous_hard_state",
         "Previous hard state (that hard state before the current/last hard state)",
         offsets, [](const service & /*r*/) { return -1; }));
+    table->addColumn(std::make_unique<IntColumn<service>>(
+        prefix + "pending_flex_downtime",
+        "Number of pending flexible downtimes", offsets,
+        [](const service &r) { return r.pending_flex_downtime; }));
+    table->addColumn(std::make_unique<IntColumn<service>>(
+        prefix + "check_flapping_recovery_notification",
+        "Whether to check to send a recovery notification when flapping stops (0/1)",
+        offsets, [](const service &r) {
+            return r.check_flapping_recovery_notification;
+        }));
 }
 
 void TableServices::answerQuery(Query *query) {

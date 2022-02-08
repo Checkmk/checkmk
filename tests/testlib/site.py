@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import ast
 import glob
 import logging
 import os
@@ -1032,10 +1033,22 @@ class Site:
 
         logger.debug("Read replication changes of site")
         base_dir = site.path("var/check_mk/wato")
-        for site_changes_path in glob.glob(base_dir + "/replication_*"):
-            logger.debug("Replication changes of site: %r", site_changes_path)
-            if os.path.exists(site_changes_path):
-                logger.debug(site.read_file(base_dir + "/" + os.path.basename(site_changes_path)))
+        for path in glob.glob(base_dir + "/replication_*"):
+            logger.debug("Replication file: %r", path)
+            with suppress(FileNotFoundError):
+                logger.debug(site.read_file(base_dir + "/" + os.path.basename(path)))
+
+        # Ensure no previous activation is still running
+        for status_path in glob.glob(base_dir + "/replication_status_*"):
+            logger.debug("Replication status file: %r", status_path)
+            with suppress(FileNotFoundError):
+                changes = ast.literal_eval(
+                    site.read_file(base_dir + "/" + os.path.basename(status_path))
+                )
+                if changes.get("current_activation") is not None:
+                    raise RuntimeError(
+                        "A previous activation is still running. Does the wait work?"
+                    )
 
         changed = self.openapi.activate_changes_and_wait_for_completion(
             sites=[site.id], force_foreign_changes=allow_foreign_changes

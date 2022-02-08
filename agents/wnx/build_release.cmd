@@ -76,7 +76,7 @@ if not exist %msbuild% powershell Write-Host "Install Visual Studio 2019, please
 
 powershell Write-Host "[+] Found MSVC 2019" -Foreground Green
 powershell Write-Host "Building MSI..." -Foreground White
-powershell -ExecutionPolicy ByPass -File msb.ps1
+ptime powershell -ExecutionPolicy ByPass -File msb.ps1
 if not %errorlevel% == 0 powershell Write-Host "Failed Build" -Foreground Red && exit /b 7
 
 if not "%2" == "" (
@@ -86,7 +86,7 @@ powershell Write-Host "Signing Executables" -Foreground White
 @call sign_windows_exe c:\common\store\%1 %2 %arte_dir%\cmk-agent-ctl.exe
 )
 
-%msbuild% wamain.sln /t:install /p:Configuration=Release,Platform=x86
+ptime %msbuild% wamain.sln /t:install /p:Configuration=Release,Platform=x86
 if not %errorlevel% == 0 powershell Write-Host "Failed Install build" -Foreground Red && exit /b 8
 
 :: Patch Version Phase: Patch version value direct in the msi file

@@ -43,6 +43,11 @@ set pkg=7zip
 set version=
 call :process
 
+rem ptime, version is latest
+set pkg=ptime
+set version=
+call :process
+
 goto eof
 :process
 powershell Write-Host "Installing '%pkg%'..." -Foreground White

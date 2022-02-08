@@ -10,7 +10,7 @@ from dataclasses import dataclass, field
 from functools import cache
 from typing import Any, Callable, Dict, Iterable, List, Mapping, Optional, Sequence
 
-from google.cloud import monitoring_v3, storage  # type: ignore
+from google.cloud import functions, monitoring_v3, storage  # type: ignore
 from google.cloud.monitoring_v3 import Aggregation
 from google.cloud.monitoring_v3.types import TimeSeries
 
@@ -34,6 +34,10 @@ class Client:
     @cache
     def storage(self):
         return storage.Client.from_service_account_info(self.account_info)
+
+    @cache
+    def functions(self):
+        return functions.CloudFunctionsServiceClient.from_service_account_info(self.account_info)
 
 
 @dataclass(frozen=True)
@@ -88,15 +92,15 @@ def time_series(client: Client, service: GCPService) -> Iterable[Result]:
     for metric in service.metrics:
         # TODO: actually filter by service filter/labels
         filter_rule = f'metric.type = "{metric.name}"'
-        results = client.monitoring().list_time_series(
-            request={
-                "name": f"projects/{client.project}",
-                "filter": filter_rule,
-                "interval": interval,
-                "view": monitoring_v3.ListTimeSeriesRequest.TimeSeriesView.FULL,
-                "aggregation": monitoring_v3.Aggregation(metric.aggregation),
-            }
-        )
+
+        request = {
+            "name": f"projects/{client.project}",
+            "filter": filter_rule,
+            "interval": interval,
+            "view": monitoring_v3.ListTimeSeriesRequest.TimeSeriesView.FULL,
+            "aggregation": monitoring_v3.Aggregation(metric.aggregation),
+        }
+        results = client.monitoring().list_time_series(request=request)
         for ts in results:
             yield Result(ts=ts)
 
@@ -123,6 +127,7 @@ def parse_arguments(argv: Optional[Sequence[str]]) -> Args:
 def agent_gcp_main(args: Args) -> None:
     client = Client(json.loads(args.credentials), args.project)
     run(client, GCS)
+    run(client, FUNCTIONS)
 
 
 def main() -> None:
@@ -181,6 +186,76 @@ GCS = GCPService(
                 "alignment_period": {"seconds": 60},
                 "group_by_fields": ["resource.bucket_name"],
                 "per_series_aligner": Aligner.ALIGN_MEAN,
+                "cross_series_reducer": Reducer.REDUCE_SUM,
+            },
+        ),
+    ],
+)
+
+
+def discover_functions(client: Client) -> Iterable[Item]:
+    # https://cloud.google.com/python/docs/reference/cloudfunctions/latest/google.cloud.functions_v1.types.ListFunctionsRequest
+    # See docs why - is used as a location wild card
+    parent = f"projects/{client.project}/locations/-"
+    functions_info = client.functions().list_functions({"parent": parent})
+    return (Item(name=f.name.split("/")[-1]) for f in functions_info)
+
+
+FUNCTIONS = GCPService(
+    name="cloud_functions",
+    discover=discover_functions,
+    metrics=[
+        GCPMetric(
+            name="cloudfunctions.googleapis.com/function/execution_count",
+            aggregation={
+                "alignment_period": {"seconds": 60},
+                "group_by_fields": ["resource.function_name"],
+                "per_series_aligner": Aligner.ALIGN_RATE,
+                "cross_series_reducer": Reducer.REDUCE_SUM,
+            },
+        ),
+        GCPMetric(
+            name="cloudfunctions.googleapis.com/function/network_egress",
+            aggregation={
+                "alignment_period": {"seconds": 60},
+                "group_by_fields": ["resource.function_name"],
+                "per_series_aligner": Aligner.ALIGN_RATE,
+                "cross_series_reducer": Reducer.REDUCE_SUM,
+            },
+        ),
+        GCPMetric(
+            name="cloudfunctions.googleapis.com/function/user_memory_bytes",
+            aggregation={
+                "alignment_period": {"seconds": 60},
+                "group_by_fields": ["resource.function_name"],
+                "per_series_aligner": Aligner.ALIGN_PERCENTILE_99,
+                "cross_series_reducer": Reducer.REDUCE_SUM,
+            },
+        ),
+        GCPMetric(
+            name="cloudfunctions.googleapis.com/function/instance_count",
+            aggregation={
+                "alignment_period": {"seconds": 60},
+                "group_by_fields": ["resource.function_name"],
+                "per_series_aligner": Aligner.ALIGN_MAX,
+                "cross_series_reducer": Reducer.REDUCE_SUM,
+            },
+        ),
+        GCPMetric(
+            name="cloudfunctions.googleapis.com/function/execution_times",
+            aggregation={
+                "alignment_period": {"seconds": 60},
+                "group_by_fields": ["resource.function_name"],
+                "per_series_aligner": Aligner.ALIGN_PERCENTILE_99,
+                "cross_series_reducer": Reducer.REDUCE_SUM,
+            },
+        ),
+        GCPMetric(
+            name="cloudfunctions.googleapis.com/function/active_instances",
+            aggregation={
+                "alignment_period": {"seconds": 60},
+                "group_by_fields": ["resource.function_name"],
+                "per_series_aligner": Aligner.ALIGN_MAX,
                 "cross_series_reducer": Reducer.REDUCE_SUM,
             },
         ),

@@ -67,7 +67,8 @@ def discover(section: Section) -> DiscoveryResult:
 class MetricSpec:
     metric_type: str
     render_func: Callable
-    has_levels: bool = False
+    # TODO proper unit handling with an actual unit library!!!
+    scale: float = 1.0
 
 
 def _get_value(results: Sequence[GCPResult], metric_type: str) -> float:
@@ -87,7 +88,7 @@ def generic_check(
     for metric_name, metric_spec in metrics.items():
         value = _get_value(timeseries, metric_spec.metric_type)
         yield from check_levels(
-            value,
+            value * metric_spec.scale,
             metric_name=metric_name,
             render_func=metric_spec.render_func,
             levels_upper=params.get(metric_name),

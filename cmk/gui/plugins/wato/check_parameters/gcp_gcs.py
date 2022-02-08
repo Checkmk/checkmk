@@ -76,3 +76,66 @@ rulespec_registry.register(
         title=lambda: _("GCP/GCS Objects"),
     )
 )
+
+
+def _vs_function_instances() -> ValueSpec:
+    return Dictionary(
+        title=_("Levels on instances"),
+        elements=[
+            ("aws_lambda_provisioned_concurrent_executions", Levels(title=_("instances"))),
+            ("aws_lambda_concurrent_executions", Levels(title=_("active instances"))),
+        ],
+    )
+
+
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="gcp_function_instances",
+        group=RulespecGroupCheckParametersApplications,
+        match_type="dict",
+        parameter_valuespec=_vs_function_instances,
+        title=lambda: _("GCP/Function instances"),
+    )
+)
+
+
+def _vs_function_execution() -> ValueSpec:
+    return Dictionary(
+        title=_("Levels on performance"),
+        elements=[
+            ("execution_count", Levels(title=_("execution count"))),
+            ("aws_lambda_memory_size_absolute", Levels(title=_("memory"))),
+            ("aws_lambda_duration", Levels(title=_("execution time"))),
+        ],
+    )
+
+
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="gcp_function_execution",
+        group=RulespecGroupCheckParametersApplications,
+        match_type="dict",
+        parameter_valuespec=_vs_function_execution,
+        title=lambda: _("GCP/Function execution"),
+    )
+)
+
+
+def _vs_function_egress() -> ValueSpec:
+    return Dictionary(
+        title=_("Levels on network egress"),
+        elements=[
+            ("net_data_sent", Levels(title=_("instances"))),
+        ],
+    )
+
+
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="gcp_function_egress",
+        group=RulespecGroupCheckParametersApplications,
+        match_type="dict",
+        parameter_valuespec=_vs_function_egress,
+        title=lambda: _("GCP/Function egress"),
+    )
+)

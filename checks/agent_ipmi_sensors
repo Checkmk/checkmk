@@ -13,8 +13,8 @@ def agent_ipmi_sensors_arguments(params, hostname, ipaddress):
         ipaddress,
         options["username"],
         options["password"],
-        options["privilege_lvl"],
         ipmi_command,
+        options["privilege_lvl"],
         *chain.from_iterable(
             (
                 opt,

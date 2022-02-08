@@ -25,6 +25,13 @@ def _add_freeipmi_args(subparsers: _SubParsersAction) -> None:
         help="Use freeipmi",
     )
     parser_freeipmi.add_argument(
+        "privilege_lvl",
+        type=str,
+        metavar="PRIVILEGE-LEVEL",
+        help="Privilege level",
+        choices=("user", "operator", "admin"),
+    )
+    parser_freeipmi.add_argument(
         "--driver",
         type=str,
         metavar="DRIVER",
@@ -80,6 +87,13 @@ def _add_ipmitool_args(subparsers: _SubParsersAction) -> None:
         help="Use ipmitool",
     )
     parser_ipmitool.add_argument(
+        "privilege_lvl",
+        type=str,
+        metavar="PRIVILEGE-LEVEL",
+        help="Privilege level",
+        choices=("callback", "user", "operator", "administrator"),
+    )
+    parser_ipmitool.add_argument(
         "--intf",
         type=str,
         choices=("open", "imb", "lan", "lanplus"),
@@ -110,13 +124,6 @@ def _parse_arguments(argv: Optional[Sequence[str]]) -> Args:
         type=str,
         metavar="PASSWORD",
         help="Password",
-    )
-    parser.add_argument(
-        "privilege_lvl",
-        type=str,
-        metavar="PRIVILEGE-LEVEL",
-        help="Privilege level",
-        choices=("user", "operator", "admin"),
     )
     ipmi_cmd_subparsers = parser.add_subparsers(
         required=True,

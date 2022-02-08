@@ -109,17 +109,6 @@ agent service.
 EOF
 fi
 
-if [ "${super_server}" = "systemd" ] && { [ "${1}" = "upgrade" ] || [ "${1}" -ge 2 ] 2>/dev/null; }; then
-    mkdir -p /var/lib/cmk-agent
-    cat << EOF > /var/lib/cmk-agent/allow-legacy-pull
-This file has been placed as a marker for cmk-agent-ctl
-to allow unencrypted legacy agent pull mode.
-It will be removed automatically on first successful agent registration.
-You can remove it manually to disallow legacy mode, but note that
-for regular operation you need to register the agent anyway.
-EOF
-fi
-
 %post
 [ -f /etc/xinetd.d/check-mk-agent.rpmnew ] && rm /etc/xinetd.d/check-mk-agent.rpmnew
 
@@ -128,7 +117,13 @@ super_server='missing'
 which xinetd >/dev/null 2>&1 && super_server="xinetd"
 which systemctl >/dev/null 2>&1 && super_server="systemd"
 
-[ "${super_server}" = "systemd" ] && /var/lib/cmk-agent/scripts/cmk-agent-useradd.sh --create
+if [ "${super_server}" = "systemd" ]; then
+    if [ "$1" = "upgrade" ] || [ "$1" -ge 2 ] 2>/dev/null; then
+        /var/lib/cmk-agent/scripts/cmk-agent-useradd.sh upgrade
+    else
+        /var/lib/cmk-agent/scripts/cmk-agent-useradd.sh new
+    fi
+fi
 
 if which systemctl >/dev/null 2>&1; then
     rm -rf /etc/xinetd.d/check-mk-agent >/dev/null 2>&1

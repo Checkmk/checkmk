@@ -1861,7 +1861,10 @@ class BulkDeleteContactGroup(BaseSchema):
 
 class ActivateChanges(BaseSchema):
     redirect = fields.Boolean(
-        description="Redirect immediately to the 'Wait for completion' endpoint.",
+        description=(
+            "After starting the activation, redirect immediately to the 'Wait for completion' "
+            "endpoint instead of waiting for the completion."
+        ),
         required=False,
         load_default=False,
         example=False,

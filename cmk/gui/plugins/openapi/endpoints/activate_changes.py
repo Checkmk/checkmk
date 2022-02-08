@@ -46,7 +46,8 @@ ACTIVATION_ID = {
     status_descriptions={
         200: "The activation has been completed.",
         302: (
-            "The activation is still running. Redirecting to the " "'Wait for completion' endpoint."
+            "The activation has been started and is still running. Redirecting to the "
+            "'Wait for completion' endpoint."
         ),
         401: (
             "The API user may not activate another users changes, "
@@ -86,7 +87,7 @@ def _completion_link(activation_id: str) -> LinkType:
     )
 
 
-def _serve_activation_run(activation_id, is_running=False):
+def _serve_activation_run(activation_id: str, is_running: bool = False) -> Response:
     """Serialize the activation response"""
     links = []
     action = "has completed"

@@ -252,7 +252,7 @@ class ABCHTMLGenerator(abc.ABC):
         self.write_html(self.render_heading(content))
 
     def render_br(self) -> HTML:
-        return HTML("<br/>")
+        return HTML("<br />")
 
     def br(self) -> None:
         self.write_html(self.render_br())

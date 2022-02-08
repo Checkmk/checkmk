@@ -5,6 +5,7 @@
 
 #include <filesystem>
 #include <iosfwd>
+#include <iostream>
 
 #include "cfg.h"
 #include "common/cfg_yaml.h"
@@ -12,6 +13,7 @@
 #include "common/wtools.h"
 
 namespace fs = std::filesystem;
+using namespace std::chrono_literals;
 
 namespace cma::ac {
 bool IsRunController(const YAML::Node &node) {
@@ -68,15 +70,16 @@ fs::path CopyControllerToBin(const fs::path &service) {
     return {};
 }
 
-void DeleteControllerInBin(const fs::path &service) {
+/// returns true if controller files DOES NOT exist
+bool DeleteControllerInBin(const fs::path &service) {
     const auto [_, tgt] = ServiceName2TargetName(service);
     std::error_code ec;
-    if (fs::exists(tgt, ec)) {
-        fs::remove(tgt, ec);
-        if (ec.value() != 0) {
-            XLOG::l("error deleting controller", ec.value());
-        }
+    if (!fs::exists(tgt, ec)) {
+        return true;
     }
+
+    fs::remove(tgt, ec);
+    return !fs::exists(tgt, ec);
 }
 }  // namespace
 
@@ -106,7 +109,16 @@ bool StartAgentController(const fs::path &service) {
 bool KillAgentController(const fs::path &service) {
     if (cma::IsService()) {
         auto ret = wtools::KillProcess(cfg::files::kAgentCtl, 1);
-        DeleteControllerInBin(service);
+        // Idiotic loop below mirrors idiotic Windows architecture.
+        // MS: Even if process killed, the executable may be for some time busy.
+        // And can't be deleted.
+        for (int i = 0; i < 20; ++i) {
+            if (DeleteControllerInBin(service)) {
+                break;
+            }
+            XLOG::d("error deleting controller");
+            std::this_thread::sleep_for(200ms);
+        }
         return ret;
     }
     return false;

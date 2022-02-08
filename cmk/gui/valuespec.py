@@ -42,7 +42,6 @@ from typing import (
     Dict,
     Final,
     Generic,
-    ItemsView,
     Iterable,
     List,
     Literal,
@@ -5941,7 +5940,7 @@ class PageAutocompleteLabels(AjaxPage):
         return encode_labels_for_tagify(
             self._get_labels(Labels.World(request["world"]), request["search_label"]))
 
-    def _get_labels(self, world, search_label: str) -> ItemsView[str, str]:
+    def _get_labels(self, world, search_label: str) -> List[_Tuple[str, str]]:
         if world is Labels.World.CONFIG:
             return self._get_labels_from_config(search_label)
 
@@ -5950,17 +5949,15 @@ class PageAutocompleteLabels(AjaxPage):
 
         raise NotImplementedError()
 
-    def _get_labels_from_config(self, search_label: str) -> ItemsView[str, str]:
+    def _get_labels_from_config(self, search_label: str) -> List[_Tuple[str, str]]:
         # TODO: Until we have a config specific implementation we now use the labels known to the
         # core. This is not optimal, but better than doing nothing.
         # To implement a setup specific search, we need to decide which occurrences of labels we
         # want to search: hosts / folders, rules, ...?
         return self._get_labels_from_core(search_label)
 
-    def _get_labels_from_core(self, search_label: str) -> ItemsView[str, str]:
-        labels = get_labels_cache().get_labels()
-
-        return labels.items()
+    def _get_labels_from_core(self, search_label: str) -> List[_Tuple[str, str]]:
+        return get_labels_cache().get_labels_list()
 
 
 class IconSelector(ValueSpec):

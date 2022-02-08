@@ -6,7 +6,7 @@
 
 import time
 import abc
-from typing import Dict, List, Tuple, Union, Callable, Any
+from typing import Dict, List, Tuple, Union, Callable, Any, Sequence, Mapping
 from functools import partial
 
 from six import ensure_str
@@ -24,7 +24,7 @@ import cmk.gui.config as config
 import cmk.gui.sites as sites
 import cmk.gui.inventory as inventory
 from cmk.gui.i18n import _
-from cmk.gui.globals import html, request
+from cmk.gui.globals import g, html, request
 from cmk.gui.htmllib import HTML
 from cmk.gui.valuespec import Dictionary, Checkbox
 from cmk.gui.escaping import escape_text
@@ -69,8 +69,7 @@ PaintResult = Tuple[str, Union[str, HTML]]
 
 def paint_host_inventory_tree(row, invpath=".", column="host_inventory"):
     hostname = row.get("host_name")
-    sites_with_same_named_hosts = _get_sites_with_same_named_hosts(hostname)
-    if len(sites_with_same_named_hosts) > 1:
+    if len(sites_with_same_named_hosts := _get_sites_with_same_named_hosts(HostName(hostname))) > 1:
         html.show_error(
             _("Cannot display inventory tree of host '%s': Found this host on multiple sites: %s") %
             (hostname, ", ".join(sites_with_same_named_hosts)))
@@ -99,10 +98,20 @@ def paint_host_inventory_tree(row, invpath=".", column="host_inventory"):
                                             attribute_keys)
 
 
-def _get_sites_with_same_named_hosts(hostname: HostName) -> List[SiteId]:
-    query_str = "GET hosts\nColumns: host_name\nFilter: host_name = %s\n" % hostname
+def _get_sites_with_same_named_hosts(hostname: HostName) -> Sequence[SiteId]:
+    return _get_sites_with_same_named_hosts_cache().get(hostname, [])
+
+
+def _get_sites_with_same_named_hosts_cache() -> Mapping[HostName, Sequence[SiteId]]:
+    if "sites_with_same_named_hosts" in g:
+        return g.sites_with_same_named_hosts
+
+    cache = g.setdefault("sites_with_same_named_hosts", {})
+    query_str = "GET hosts\nColumns: host_name\n"
     with sites.prepend_site():
-        return [SiteId(r[0]) for r in sites.live().query(query_str)]
+        for row in sites.live().query(query_str):
+            cache.setdefault(HostName(row[1]), []).append(SiteId(row[0]))
+    return cache
 
 
 def _paint_host_inventory_tree_children(struct_tree, parsed_path, tree_renderer):

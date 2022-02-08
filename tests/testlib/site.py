@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import ast
 import glob
 import logging
 import os
@@ -1035,7 +1036,14 @@ class Site:
         for site_changes_path in glob.glob(base_dir + "/replication_*"):
             logger.debug("Replication changes of site: %r", site_changes_path)
             if os.path.exists(site_changes_path):
-                logger.debug(site.read_file(base_dir + "/" + os.path.basename(site_changes_path)))
+                raw_changes = site.read_file(base_dir + "/" + os.path.basename(site_changes_path))
+                logger.debug(raw_changes)
+
+                changes = ast.literal_eval(raw_changes)
+                if changes.get("current_activation") is not None:
+                    raise RuntimeError(
+                        "A previous activation is still running. Does the wait work?"
+                    )
 
         changed = self.openapi.activate_changes_and_wait_for_completion(
             sites=[site.id], force_foreign_changes=allow_foreign_changes

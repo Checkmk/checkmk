@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Dict, List, Mapping, NamedTuple
+from typing import Any, Dict, List, Mapping, NamedTuple, Optional
 
 from .agent_based_api.v1 import register, Result, Service, State, type_defs
 from .agent_based_api.v1.type_defs import CheckResult
@@ -36,7 +36,10 @@ state_mappings = {
 }
 
 
-def parse_zpool_status(string_table: type_defs.StringTable) -> Section:
+def parse_zpool_status(string_table: type_defs.StringTable) -> Optional[Section]:
+    if not string_table:
+        return None
+
     if " ".join(string_table[0]) == "all pools are healthy":
         return Section(message="All pools are healthy")
 

@@ -324,18 +324,18 @@ def test_write_file():
     packaging.write_file(package_info, mkp)
     mkp.seek(0)
 
-    with tarfile.open(fileobj=mkp, mode="r:gz") as tar:
-        assert sorted(tar.getnames()) == sorted(["info", "info.json", "checks.tar"])
+    tar = tarfile.open(fileobj=mkp, mode="r:gz")  # pylint:disable=consider-using-with
+    assert sorted(tar.getnames()) == sorted(["info", "info.json", "checks.tar"])
 
-        info_file = tar.extractfile("info")
-        assert info_file is not None
-        info = ast.literal_eval(info_file.read().decode())
-        assert info["name"] == "aaa"
+    info_file = tar.extractfile("info")
+    assert info_file is not None
+    info = ast.literal_eval(info_file.read().decode())
+    assert info["name"] == "aaa"
 
-        info_json_file = tar.extractfile("info.json")
-        assert info_json_file is not None
-        info2 = json.loads(info_json_file.read())
-        assert info2["name"] == "aaa"
+    info_json_file = tar.extractfile("info.json")
+    assert info_json_file is not None
+    info2 = json.loads(info_json_file.read())
+    assert info2["name"] == "aaa"
 
 
 def test_remove(build_setup_search_index):

@@ -144,7 +144,7 @@ def test_save_data_to_file_pretty(tmp_path, path_type):
         "5asdasaaaaaaaaaaaaaaaaaaaad": "asbbbbbbbbbbbbbbbbbbd",
     }
     store.save_object_to_file(path, data, pretty=True)
-    assert Path(path).read_text().count("\n") > 4
+    assert open(str(path)).read().count("\n") > 4  # pylint:disable=consider-using-with
     assert store.load_object_from_file(path, default=None) == data
 
 
@@ -161,7 +161,7 @@ def test_save_data_to_file_not_pretty(tmp_path, path_type):
         "5asdasaaaaaaaaaaaaaaaaaaaad": "asbbbbbbbbbbbbbbbbbbd",
     }
     store.save_object_to_file(path, data)
-    assert Path(path).read_text().count("\n") == 1
+    assert open(str(path)).read().count("\n") == 1  # pylint:disable=consider-using-with
     assert store.load_object_from_file(path, default=None) == data
 
 

@@ -566,8 +566,8 @@ def _copy_directory(
         tar_stream.write(chunk)
     tar_stream.seek(0)
 
-    with tarfile.TarFile(fileobj=tar_stream) as tar:
-        tar.extractall(str(dest_path))
+    tar = tarfile.TarFile(fileobj=tar_stream)  # pylint:disable=consider-using-with
+    tar.extractall(str(dest_path))
 
 
 def _prepare_git_overlay(container, lower_path, target_path):

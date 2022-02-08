@@ -66,7 +66,10 @@ def run_pylint(base_path, check_files):
         f"Running pylint in '{base_path}' with: {subprocess.list2cmdline(cmd)}"
         f" [{len(files)} files omitted]"
     )
-    exit_code = subprocess.run(cmd + files, shell=False, cwd=base_path, check=False).returncode
+    p = subprocess.Popen(  # pylint:disable=consider-using-with
+        cmd + files, shell=False, cwd=base_path
+    )
+    exit_code = p.wait()
     print(f"Finished with exit code: {exit_code}")
 
     return exit_code

@@ -329,18 +329,19 @@ class Site:
         sudo, site_id = ([], []) if self._is_running_as_site_user() else (["sudo"], [self.id])
         cmd = sudo + ["/usr/bin/omd", mode] + site_id + list(args)
         logger.info("Executing: %s", subprocess.list2cmdline(cmd))
-        completed_process = subprocess.run(
-            cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, encoding="utf-8", check=False
+        p = subprocess.Popen(  # pylint:disable=consider-using-with
+            cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, encoding="utf-8"
         )
+        stdout, _stderr = p.communicate()
 
-        log_level = logging.DEBUG if completed_process.returncode == 0 else logging.WARNING
-        logger.log(log_level, "Exit code: %d", completed_process.returncode)
-        if completed_process.stdout:
+        log_level = logging.DEBUG if p.returncode == 0 else logging.WARNING
+        logger.log(log_level, "Exit code: %d", p.returncode)
+        if stdout:
             logger.log(log_level, "Output:")
-        for line in completed_process.stdout.strip().split("\n"):
+        for line in stdout.strip().split("\n"):
             logger.log(log_level, "> %s", line)
 
-        return completed_process.returncode
+        return p.returncode
 
     def path(self, rel_path: str) -> str:
         return os.path.join(self.root, rel_path)
@@ -373,15 +374,17 @@ class Site:
 
     def write_text_file(self, rel_path: str, content: str) -> None:
         if not self._is_running_as_site_user():
-            with self.execute(
-                ["tee", self.path(rel_path)], stdin=subprocess.PIPE, stdout=open(os.devnull, "w")
-            ) as p:
-                # ? content seems to have the type str
-                p.communicate(content)
-                if p.stdin is not None:
-                    p.stdin.close()
-                if p.wait() != 0:
-                    raise Exception("Failed to write file %s. Exit-Code: %d" % (rel_path, p.wait()))
+            p = self.execute(
+                ["tee", self.path(rel_path)],
+                stdin=subprocess.PIPE,
+                stdout=open(os.devnull, "w"),  # pylint:disable=consider-using-with
+            )
+            # ? content seems to have the type str
+            p.communicate(content)
+            if p.stdin is not None:
+                p.stdin.close()
+            if p.wait() != 0:
+                raise Exception("Failed to write file %s. Exit-Code: %d" % (rel_path, p.wait()))
         else:
             file_path = Path(self.path(rel_path))
             file_path.parent.mkdir(parents=True, exist_ok=True)
@@ -390,17 +393,17 @@ class Site:
 
     def write_binary_file(self, rel_path: str, content: bytes) -> None:
         if not self._is_running_as_site_user():
-            with self.execute(
+            p = self.execute(
                 ["tee", self.path(rel_path)],
                 stdin=subprocess.PIPE,
-                stdout=open(os.devnull, "w"),
+                stdout=open(os.devnull, "w"),  # pylint:disable=consider-using-with
                 encoding=None,
-            ) as p:
-                p.communicate(content)
-                if p.stdin is not None:
-                    p.stdin.close()
-                if p.wait() != 0:
-                    raise Exception("Failed to write file %s. Exit-Code: %d" % (rel_path, p.wait()))
+            )
+            p.communicate(content)
+            if p.stdin is not None:
+                p.stdin.close()
+            if p.wait() != 0:
+                raise Exception("Failed to write file %s. Exit-Code: %d" % (rel_path, p.wait()))
         else:
             file_path = Path(self.path(rel_path))
             file_path.parent.mkdir(parents=True, exist_ok=True)
@@ -409,7 +412,7 @@ class Site:
 
     def create_rel_symlink(self, link_rel_target: str, rel_link_name: str) -> None:
         if not self._is_running_as_site_user():
-            p = self.execute(
+            p = self.execute(  # pylint:disable=consider-using-with
                 ["ln", "-s", link_rel_target, rel_link_name],
                 stdout=subprocess.PIPE,
                 stdin=subprocess.PIPE,
@@ -469,7 +472,7 @@ class Site:
 
         if not self.exists():
             logger.info("Creating site '%s'", self.id)
-            completed_process = subprocess.run(
+            p = subprocess.Popen(  # pylint:disable=consider-using-with
                 [
                     "/usr/bin/sudo",
                     "/usr/bin/omd",
@@ -480,10 +483,10 @@ class Site:
                     self.admin_password,
                     "--apache-reload",
                     self.id,
-                ],
-                check=False,
+                ]
             )
-            assert completed_process.returncode == 0
+            exit_code = p.wait()
+            assert exit_code == 0
             assert os.path.exists("/omd/sites/%s" % self.id)
 
             self._ensure_sample_config_is_present()
@@ -756,7 +759,7 @@ class Site:
     def rm(self, site_id: Optional[str] = None) -> None:
         # TODO: LM: Temporarily disabled until "omd rm" issue is fixed.
         # assert subprocess.Popen(["/usr/bin/sudo", "/usr/bin/omd",
-        subprocess.run(
+        subprocess.Popen(  # pylint:disable=consider-using-with
             [
                 "/usr/bin/sudo",
                 "/usr/bin/omd",
@@ -765,9 +768,8 @@ class Site:
                 "--apache-reload",
                 "--kill",
                 site_id or self.id,
-            ],
-            check=False,
-        )
+            ]
+        ).wait()
 
     def start(self) -> None:
         if not self.is_running():
@@ -958,12 +960,11 @@ class Site:
 
     def get_free_port_from(self, port: int) -> int:
         used_ports = set([])
-        for cfg_path in Path("/omd/sites").glob("*/etc/omd/site.conf"):
-            with cfg_path.open() as cfg_file:
-                for line in cfg_file:
-                    if line.startswith("CONFIG_LIVESTATUS_TCP_PORT="):
-                        port = int(line.strip().split("=", 1)[1].strip("'"))
-                        used_ports.add(port)
+        for cfg_path in glob.glob("/omd/sites/*/etc/omd/site.conf"):
+            for line in open(cfg_path):  # pylint:disable=consider-using-with
+                if line.startswith("CONFIG_LIVESTATUS_TCP_PORT="):
+                    port = int(line.strip().split("=", 1)[1].strip("'"))
+                    used_ports.add(port)
 
         while port in used_ports:
             port += 1

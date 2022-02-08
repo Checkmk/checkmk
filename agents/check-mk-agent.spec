@@ -141,6 +141,15 @@ if which xinetd >/dev/null 2>&1 ; then
     fi
 fi
 
+%posttrans
+
+# determine a suitable super server
+super_server='missing'
+which xinetd >/dev/null 2>&1 && super_server="xinetd"
+which systemctl >/dev/null 2>&1 && super_server="systemd"
+
+[ "${super_server}" = "systemd" ] && /var/lib/cmk-agent/scripts/cmk-agent-useradd.sh --create
+
 %postun
 
 if which xinetd >/dev/null 2>&1 ; then
@@ -152,14 +161,5 @@ if which xinetd >/dev/null 2>&1 ; then
         service xinetd start
     fi
 fi
-
-%posttrans
-
-# determine a suitable super server
-super_server='missing'
-which xinetd >/dev/null 2>&1 && super_server="xinetd"
-which systemctl >/dev/null 2>&1 && super_server="systemd"
-
-[ "${super_server}" = "systemd" ] && /var/lib/cmk-agent/scripts/cmk-agent-useradd.sh --create
 
 

@@ -24,9 +24,6 @@ if not cmk_version.is_raw_edition():
 
 if cmk_version.is_managed_edition():
     import cmk.gui.cme.plugins.main_modules  # noqa: F401 # pylint: disable=no-name-in-module,unused-import
-
-if cmk_version.is_plus_edition():
-    import cmk.gui.cpe.plugins.main_modules  # noqa: F401 # pylint: disable=no-name-in-module,unused-import
 # isort: on
 
 
@@ -97,9 +94,6 @@ def _plugin_package_names(main_module_name: str) -> Iterator[str]:
 
     if cmk_version.is_managed_edition():
         yield f"cmk.gui.cme.plugins.{main_module_name}"
-
-    if cmk_version.is_plus_edition():
-        yield f"cmk.gui.cpe.plugins.{main_module_name}"
 
 
 def _is_plugin_namespace(plugin_package_name: str) -> bool:

@@ -34,7 +34,7 @@ def parse_mssql_tablespaces(info):
     def to_bytes(value, uom):
         exponent = {"KB": 1, "MB": 2, "GB": 3, "TB": 4}.get(uom, 0)
         try:
-            return float(value) * (1024 ** exponent)
+            return float(value) * (1024**exponent)
         except ValueError:
             return None
 

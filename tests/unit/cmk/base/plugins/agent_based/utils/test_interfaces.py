@@ -1449,18 +1449,15 @@ def test_check_single_interface_group(
                 timestamp=0,
             )
         )
-    assert (
-        list(
-            interfaces.check_single_interface(
-                item,
-                params,
-                _create_interfaces(4000000)[int(item) - 1],
-                group_members=group_members,
-                timestamp=5,
-            )
+    assert list(
+        interfaces.check_single_interface(
+            item,
+            params,
+            _create_interfaces(4000000)[int(item) - 1],
+            group_members=group_members,
+            timestamp=5,
         )
-        == _add_group_info_to_results(result, "Members: [vboxnet0 (up), wlp2s0 (up)]")
-    )
+    ) == _add_group_info_to_results(result, "Members: [vboxnet0 (up), wlp2s0 (up)]")
 
 
 @pytest.mark.parametrize(
@@ -1541,17 +1538,14 @@ def test_check_single_interface_w_node(
                 timestamp=0,
             )
         )
-    assert (
-        list(
-            interfaces.check_single_interface(
-                item,
-                params,
-                _create_interfaces(4000000, node=node_name)[int(item) - 1],
-                timestamp=5,
-            )
+    assert list(
+        interfaces.check_single_interface(
+            item,
+            params,
+            _create_interfaces(4000000, node=node_name)[int(item) - 1],
+            timestamp=5,
         )
-        == _add_node_name_to_results(result, node_name)
-    )
+    ) == _add_node_name_to_results(result, node_name)
 
 
 @pytest.mark.parametrize("item, params, result", ITEM_PARAMS_RESULTS)
@@ -2122,17 +2116,14 @@ def test_check_multiple_interfaces_w_node(
                 timestamp=0,
             )
         )
-    assert (
-        list(
-            interfaces.check_multiple_interfaces(
-                item,
-                params,
-                _create_interfaces(4000000, node=node_name),
-                timestamp=5,
-            )
+    assert list(
+        interfaces.check_multiple_interfaces(
+            item,
+            params,
+            _create_interfaces(4000000, node=node_name),
+            timestamp=5,
         )
-        == _add_node_name_to_results(result, node_name)
-    )
+    ) == _add_node_name_to_results(result, node_name)
 
 
 @pytest.mark.parametrize("item, params, result", ITEM_PARAMS_RESULTS)
@@ -2155,20 +2146,17 @@ def test_check_multiple_interfaces_same_item_twice_cluster(
                 timestamp=0,
             )
         )
-    assert (
-        list(
-            interfaces.check_multiple_interfaces(
-                item,
-                params,
-                [
-                    *_create_interfaces(4000000, node=node_name_1),
-                    *_create_interfaces(4000000, node=node_name_2),
-                ],
-                timestamp=5,
-            )
+    assert list(
+        interfaces.check_multiple_interfaces(
+            item,
+            params,
+            [
+                *_create_interfaces(4000000, node=node_name_1),
+                *_create_interfaces(4000000, node=node_name_2),
+            ],
+            timestamp=5,
         )
-        == _add_node_name_to_results(result, node_name_1)
-    )
+    ) == _add_node_name_to_results(result, node_name_1)
 
 
 def test_check_multiple_interfaces_group_multiple_nodes() -> None:

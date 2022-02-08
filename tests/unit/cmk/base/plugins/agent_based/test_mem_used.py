@@ -26,7 +26,7 @@ state = State  # TODO: cleanup
 
 KILO = 1024
 
-MEGA = KILO ** 2
+MEGA = KILO**2
 
 
 def test_check_discovery_total_zero():
@@ -180,8 +180,8 @@ def test_check_discovery_total_zero():
         # different total label
         (
             "Longterm",
-            23 * 1024 ** 2,
-            42 * 1024 ** 2,
+            23 * 1024**2,
+            42 * 1024**2,
             ("perc_free", (60, 50)),
             {
                 "label_total": "Hirn",
@@ -749,10 +749,10 @@ def test_check_memory(params, meminfo, expected):
         pytest.param(
             {
                 "Cached": 1024,
-                "MemFree": 10 * 1024 ** 2,
-                "MemTotal": 20 * 1024 ** 2,
-                "SwapFree": 1 * 1024 ** 2,
-                "SwapTotal": 5 * 1024 ** 2,
+                "MemFree": 10 * 1024**2,
+                "MemTotal": 20 * 1024**2,
+                "SwapFree": 1 * 1024**2,
+                "SwapTotal": 5 * 1024**2,
             },
             [
                 Attributes(
@@ -771,8 +771,8 @@ def test_check_memory(params, meminfo, expected):
         pytest.param(
             {
                 "Cached": 0,
-                "MemFree": 10 * 1024 ** 2,
-                "MemTotal": 20 * 1024 ** 2,
+                "MemFree": 10 * 1024**2,
+                "MemTotal": 20 * 1024**2,
             },
             [
                 Attributes(

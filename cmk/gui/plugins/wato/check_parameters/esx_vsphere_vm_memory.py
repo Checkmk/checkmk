@@ -12,7 +12,7 @@ from cmk.gui.plugins.wato.utils import (
 )
 from cmk.gui.valuespec import Dictionary, Filesize, Tuple
 
-MEMORY_DEFAULT = 1024 ** 3
+MEMORY_DEFAULT = 1024**3
 
 
 def _memory_tuple(title):

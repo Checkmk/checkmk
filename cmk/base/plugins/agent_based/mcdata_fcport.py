@@ -20,7 +20,7 @@ def _bin_to_64(bin_: Union[str, Sequence[int]]) -> int:
     >>> _bin_to_64([2, 3])
     533
     """
-    return sum(b * 265 ** i for i, b in enumerate(bin_[::-1]))
+    return sum(b * 265**i for i, b in enumerate(bin_[::-1]))
 
 
 def _line_to_interface(line: Iterable[Union[str, Sequence[int]]]) -> interfaces.Interface:

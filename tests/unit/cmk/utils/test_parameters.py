@@ -67,41 +67,35 @@ class TestTimespecificParameterSet:
 
 class TestTimespecificParameters:
     def test_first_key_wins(self):
-        assert (
-            TimespecificParameters(
-                (
-                    TimespecificParameterSet(
-                        {"key": "I am only default, but the most specific rule!"}, ()
-                    ),
-                    TimespecificParameterSet(
-                        {"key": "default"},
-                        [
-                            (
-                                "active_tp",
-                                {
-                                    "key": "I am a specificly time-matching value, but from a more general rule!"
-                                },
-                            )
-                        ],
-                    ),
-                )
-            ).evaluate(lambda x: True)
-            == {"key": "I am only default, but the most specific rule!"}
-        )
+        assert TimespecificParameters(
+            (
+                TimespecificParameterSet(
+                    {"key": "I am only default, but the most specific rule!"}, ()
+                ),
+                TimespecificParameterSet(
+                    {"key": "default"},
+                    [
+                        (
+                            "active_tp",
+                            {
+                                "key": "I am a specificly time-matching value, but from a more general rule!"
+                            },
+                        )
+                    ],
+                ),
+            )
+        ).evaluate(lambda x: True) == {"key": "I am only default, but the most specific rule!"}
 
     def test_first_tuple_wins(self):
         tuple_1: List[Tuple[str, LegacyCheckParameters]] = [("tp3", (1, 1))]
         tuple_2: List[Tuple[str, LegacyCheckParameters]] = [("tp3", (2, 2))]
-        assert (
-            TimespecificParameters(
-                (
-                    TimespecificParameterSet(_default(), _tp_values()),
-                    TimespecificParameterSet(_default(), _tp_values() + tuple_1),
-                    TimespecificParameterSet(_default(), tuple_2 + _tp_values()),
-                )
-            ).evaluate(lambda x: True)
-            == (1, 1)
-        )
+        assert TimespecificParameters(
+            (
+                TimespecificParameterSet(_default(), _tp_values()),
+                TimespecificParameterSet(_default(), _tp_values() + tuple_1),
+                TimespecificParameterSet(_default(), tuple_2 + _tp_values()),
+            )
+        ).evaluate(lambda x: True) == (1, 1)
 
 
 def _all_dicts() -> Sequence[LegacyCheckParameters]:

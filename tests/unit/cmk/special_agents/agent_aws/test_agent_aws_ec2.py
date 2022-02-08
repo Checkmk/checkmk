@@ -168,20 +168,16 @@ def test_agent_aws_ec2_limits(get_ec2_sections, names, tags, found_ec2, found_ec
     for result in ec2_limits_results:
         assert result.piggyback_hostname == ""
         for limit in result.content:
-            assert (
-                limit.key
-                in [
-                    "vpc_elastic_ip_addresses",
-                    "elastic_ip_addresses",
-                    "spot_inst_requests",
-                    "active_spot_fleet_requests",
-                    "spot_fleet_total_target_capacity",
-                    "vpc_sec_group_rules",
-                    "vpc_sec_groups",
-                    "if_vpc_sec_group",
-                ]
-                or limit.key.startswith("running_ondemand_instances_")
-            )
+            assert limit.key in [
+                "vpc_elastic_ip_addresses",
+                "elastic_ip_addresses",
+                "spot_inst_requests",
+                "active_spot_fleet_requests",
+                "spot_fleet_total_target_capacity",
+                "vpc_sec_group_rules",
+                "vpc_sec_groups",
+                "if_vpc_sec_group",
+            ] or limit.key.startswith("running_ondemand_instances_")
 
 
 @pytest.mark.parametrize("names,tags,found_ec2,found_ec2_with_labels", ec2_params)

@@ -450,48 +450,57 @@ def test_redirects_work_with_standard_port(request, client):
     c = _start(request, client)
 
     # Use no explicit port
-    assert "Location: http://127.0.0.1/cmk/\r\n" in _exec_run(
-        c,
-        [
-            "curl",
-            "-D",
-            "-",
-            "-s",
-            "--connect-to",
-            "127.0.0.1:80:127.0.0.1:5000",
-            "http://127.0.0.1",
-        ],
-    )[-1]
+    assert (
+        "Location: http://127.0.0.1/cmk/\r\n"
+        in _exec_run(
+            c,
+            [
+                "curl",
+                "-D",
+                "-",
+                "-s",
+                "--connect-to",
+                "127.0.0.1:80:127.0.0.1:5000",
+                "http://127.0.0.1",
+            ],
+        )[-1]
+    )
 
     # Use explicit standard port
-    assert "Location: http://127.0.0.1/cmk/\r\n" in _exec_run(
-        c,
-        [
-            "curl",
-            "-D",
-            "-",
-            "-s",
-            "--connect-to",
-            "127.0.0.1:80:127.0.0.1:5000",
-            "http://127.0.0.1:80",
-        ],
-    )[-1]
+    assert (
+        "Location: http://127.0.0.1/cmk/\r\n"
+        in _exec_run(
+            c,
+            [
+                "curl",
+                "-D",
+                "-",
+                "-s",
+                "--connect-to",
+                "127.0.0.1:80:127.0.0.1:5000",
+                "http://127.0.0.1:80",
+            ],
+        )[-1]
+    )
 
     # Use explicit host header with standard port
-    assert "Location: http://127.0.0.1/cmk/\r\n" in _exec_run(
-        c,
-        [
-            "curl",
-            "-D",
-            "-",
-            "-s",
-            "-H",
-            "Host: 127.0.0.1:80",
-            "--connect-to",
-            "127.0.0.1:80:127.0.0.1:5000",
-            "http://127.0.0.1",
-        ],
-    )[-1]
+    assert (
+        "Location: http://127.0.0.1/cmk/\r\n"
+        in _exec_run(
+            c,
+            [
+                "curl",
+                "-D",
+                "-",
+                "-s",
+                "-H",
+                "Host: 127.0.0.1:80",
+                "--connect-to",
+                "127.0.0.1:80:127.0.0.1:5000",
+                "http://127.0.0.1",
+            ],
+        )[-1]
+    )
 
 
 def test_redirects_work_with_custom_port(request, client):
@@ -540,14 +549,20 @@ def test_redirects_work_with_custom_port(request, client):
 def test_http_access_login_screen(request, client):
     c = _start(request, client)
 
-    assert "Location: \r\n" not in _exec_run(
-        c,
-        ["curl", "-D", "-", "http://127.0.0.1:5000/cmk/check_mk/login.py?_origtarget=index.py"],
-    )[-1]
-    assert 'name="_login"' in _exec_run(
-        c,
-        ["curl", "-D", "-", "http://127.0.0.1:5000/cmk/check_mk/login.py?_origtarget=index.py"],
-    )[-1]
+    assert (
+        "Location: \r\n"
+        not in _exec_run(
+            c,
+            ["curl", "-D", "-", "http://127.0.0.1:5000/cmk/check_mk/login.py?_origtarget=index.py"],
+        )[-1]
+    )
+    assert (
+        'name="_login"'
+        in _exec_run(
+            c,
+            ["curl", "-D", "-", "http://127.0.0.1:5000/cmk/check_mk/login.py?_origtarget=index.py"],
+        )[-1]
+    )
 
 
 def test_container_agent(request, client):

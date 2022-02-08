@@ -97,7 +97,7 @@ def check_win_diskstat(item, params, info):
     return (
         0,
         "reading %.1f MB/s, writing %.1f MB/s"
-        % (read_per_sec / 1024.0 ** 2, write_per_sec / 1024.0 ** 2),
+        % (read_per_sec / 1024.0**2, write_per_sec / 1024.0**2),
         perfdata,
     )
 

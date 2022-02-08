@@ -213,7 +213,7 @@ def _ip_addresses_of_ranges(ip_ranges):
     return addresses
 
 
-_FULL_IPV4 = (2 ** 32) - 1
+_FULL_IPV4 = (2**32) - 1
 
 
 def _ip_addresses_of_range(spec):

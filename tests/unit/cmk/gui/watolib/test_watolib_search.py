@@ -113,15 +113,12 @@ def fake_rrdcached_default_globals(monkeypatch: MonkeyPatch) -> None:
 
 
 def test_match_item() -> None:
-    assert (
-        MatchItem(
-            "1",
-            "2",
-            "3",
-            ["ABC", "Some text", "df"],
-        ).match_texts
-        == ["abc", "some text", "df"]
-    )
+    assert MatchItem(
+        "1",
+        "2",
+        "3",
+        ["ABC", "Some text", "df"],
+    ).match_texts == ["abc", "some text", "df"]
 
 
 class MatchItemGeneratorLocDep(ABCMatchItemGenerator):

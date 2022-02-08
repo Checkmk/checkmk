@@ -358,8 +358,8 @@ def transform_trend_mb_to_trend_bytes(params: MutableMapping[str, Any]) -> Mutab
     transformed_params = {**params}
     if "trend_mb" in params and "trend_bytes" not in params:
         transformed_params["trend_bytes"] = (
-            transformed_params["trend_mb"][0] * 1024 ** 2,
-            transformed_params["trend_mb"][1] * 1024 ** 2,
+            transformed_params["trend_mb"][0] * 1024**2,
+            transformed_params["trend_mb"][1] * 1024**2,
         )
         del transformed_params["trend_mb"]
     return transformed_params
@@ -383,8 +383,8 @@ size_trend_elements = [
         Tuple(
             title=_("Levels on trends per time range"),
             elements=[
-                Filesize(title=_("Warning at"), default_value=100 * 1024 ** 2),
-                Filesize(title=_("Critical at"), default_value=200 * 1024 ** 2),
+                Filesize(title=_("Warning at"), default_value=100 * 1024**2),
+                Filesize(title=_("Critical at"), default_value=200 * 1024**2),
             ],
         ),
     ),
@@ -411,8 +411,8 @@ size_trend_elements = [
         Tuple(
             title=_("Levels on decreasing trends in MB per time range"),
             elements=[
-                Filesize(title=_("Warning at"), default_value=1 * 1024 ** 3),
-                Filesize(title=_("Critical at"), default_value=4 * 1024 ** 3),
+                Filesize(title=_("Warning at"), default_value=1 * 1024**3),
+                Filesize(title=_("Critical at"), default_value=4 * 1024**3),
             ],
         ),
     ),

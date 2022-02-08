@@ -90,7 +90,7 @@ def test_parse_perf_data2(request_context, monkeypatch):
         (
             "memused",
             "check_mk-hr_mem",
-            {"auto_graph": False, "name": "mem_lnx_total_used", "scale": 1024 ** 2},
+            {"auto_graph": False, "name": "mem_lnx_total_used", "scale": 1024**2},
         ),
         ("fake", "check_mk-imaginary", {"auto_graph": True, "name": "fake", "scale": 1.0}),
     ],
@@ -261,25 +261,19 @@ def test_evaluate():
     # This is a terrible metric from Nagios plugins. Test is for survival instead of correctness
     # The unit "percent" is lost on the way. Fixing this would imply also figuring out how to represent
     # graphs for active-icmp check when host has multiple addresses.
-    assert (
-        utils.evaluate(
-            "127.0.0.1pl",
-            utils.translate_metrics(
-                utils.parse_perf_data("127.0.0.1pl=5%;80;100;;")[0], "check_mk_active-icmp"
-            ),
-        )
-        == (5, utils.unit_info[""], "#cc00ff")
-    )
+    assert utils.evaluate(
+        "127.0.0.1pl",
+        utils.translate_metrics(
+            utils.parse_perf_data("127.0.0.1pl=5%;80;100;;")[0], "check_mk_active-icmp"
+        ),
+    ) == (5, utils.unit_info[""], "#cc00ff")
 
     # Here the user has a metrics that represent subnets, but the values look like floats
     # Test that evaluation recognizes the metric from the perf data
-    assert (
-        utils.evaluate(
-            "10.172",
-            utils.translate_metrics(utils.parse_perf_data("10.172=6")[0], "check_mk-local"),
-        )
-        == (6, utils.unit_info[""], "#cc00ff")
-    )
+    assert utils.evaluate(
+        "10.172",
+        utils.translate_metrics(utils.parse_perf_data("10.172=6")[0], "check_mk-local"),
+    ) == (6, utils.unit_info[""], "#cc00ff")
 
 
 @pytest.mark.parametrize(

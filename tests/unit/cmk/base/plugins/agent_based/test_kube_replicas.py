@@ -51,41 +51,35 @@ def test_parse_kube_replicas() -> None:
 
 
 def test_parse_kube_deployment_strategy() -> None:
-    assert (
-        parse_kube_deployment_strategy(
+    assert parse_kube_deployment_strategy(
+        [
             [
-                [
-                    json.dumps(
-                        {
-                            "strategy": {
-                                "type_": "RollingUpdate",
-                                "max_surge": "25%",
-                                "max_unavailable": "25%",
-                            }
+                json.dumps(
+                    {
+                        "strategy": {
+                            "type_": "RollingUpdate",
+                            "max_surge": "25%",
+                            "max_unavailable": "25%",
                         }
-                    )
-                ]
+                    }
+                )
             ]
-        )
-        == DeploymentStrategy(strategy=RollingUpdate(max_surge="25%", max_unavailable="25%"))
-    )
+        ]
+    ) == DeploymentStrategy(strategy=RollingUpdate(max_surge="25%", max_unavailable="25%"))
 
-    assert (
-        parse_kube_deployment_strategy(
+    assert parse_kube_deployment_strategy(
+        [
             [
-                [
-                    json.dumps(
-                        {
-                            "strategy": {
-                                "type_": "Recreate",
-                            },
-                        }
-                    )
-                ]
+                json.dumps(
+                    {
+                        "strategy": {
+                            "type_": "Recreate",
+                        },
+                    }
+                )
             ]
-        )
-        == DeploymentStrategy(strategy=Recreate())
-    )
+        ]
+    ) == DeploymentStrategy(strategy=Recreate())
 
 
 def test_discover_kube_replicas() -> None:

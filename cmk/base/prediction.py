@@ -208,7 +208,7 @@ def _std_dev(point_line: List[float], average: float) -> float:
     if samples == 1:
         return abs(average)
     return math.sqrt(
-        abs(sum(p ** 2 for p in point_line) - average ** 2 * samples) / float(samples - 1)
+        abs(sum(p**2 for p in point_line) - average**2 * samples) / float(samples - 1)
     )
 
 

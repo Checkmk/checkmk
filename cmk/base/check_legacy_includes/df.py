@@ -225,8 +225,8 @@ def df_check_filesystem_single_coroutine(
     levels = get_filesystem_levels(mountpoint, size_mb / 1024.0, params)
     warn_mb, crit_mb = levels["levels_mb"]
 
-    used_hr = get_bytes_human_readable(used_mb * 1024 ** 2)
-    used_max_hr = get_bytes_human_readable(used_max * 1024 ** 2)
+    used_hr = get_bytes_human_readable(used_mb * 1024**2)
+    used_max_hr = get_bytes_human_readable(used_max * 1024**2)
     used_perc_hr = get_percent_human_readable(100.0 * used_mb / used_max)
 
     # If both numbers end with the same unit, then drop the first one
@@ -258,7 +258,7 @@ def df_check_filesystem_single_coroutine(
 
     if show_reserved:
         reserved_perc_hr = get_percent_human_readable(100.0 * reserved_mb / size_mb)
-        reserved_hr = get_bytes_human_readable(reserved_mb * 1024 ** 2)
+        reserved_hr = get_bytes_human_readable(reserved_mb * 1024**2)
         infotext.append(
             "additionally reserved for root: %s" % reserved_hr  #
             if subtract_reserved

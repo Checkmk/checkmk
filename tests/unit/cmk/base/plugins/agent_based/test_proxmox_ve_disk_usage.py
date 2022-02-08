@@ -9,7 +9,7 @@ import pytest
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
 from cmk.base.plugins.agent_based.proxmox_ve_disk_usage import check_proxmox_ve_disk_usage
 
-DISK_DATA = {"disk": 1024 ** 4, "max_disk": 2 * 1024 ** 4}
+DISK_DATA = {"disk": 1024**4, "max_disk": 2 * 1024**4}
 
 
 @pytest.mark.parametrize(

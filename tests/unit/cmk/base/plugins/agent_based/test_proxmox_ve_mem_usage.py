@@ -9,7 +9,7 @@ import pytest
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
 from cmk.base.plugins.agent_based.proxmox_ve_mem_usage import check_proxmox_ve_mem_usage
 
-MEM_DATA = {"mem": 1024 ** 3, "max_mem": 2 * 1024 ** 3}
+MEM_DATA = {"mem": 1024**3, "max_mem": 2 * 1024**3}
 
 
 @pytest.mark.parametrize(

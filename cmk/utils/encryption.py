@@ -301,7 +301,7 @@ class Encrypter:
         """
         with cls._secret_key_path().open(mode="rb") as f:
             passphrase = f.read().strip()
-            return hashlib.scrypt(passphrase, salt=salt, n=2 ** 14, r=8, p=1, dklen=32)
+            return hashlib.scrypt(passphrase, salt=salt, n=2**14, r=8, p=1, dklen=32)
 
     @classmethod
     def _cipher(cls, salt: bytes, nonce: bytes):

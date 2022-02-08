@@ -908,7 +908,7 @@ class MKBackupStream:
             else:
                 percentile, backlog_sec = 0.50, 10
                 weight_per_sec = (1 - percentile) ** (1.0 / backlog_sec)
-                weight = weight_per_sec ** timedif
+                weight = weight_per_sec**timedif
                 bps = self._last_bps * weight + this_bps * (1 - weight)
 
             save_state({"bytes_per_second": bps})

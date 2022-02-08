@@ -359,7 +359,7 @@ def perfometer_bandwidth(in_traffic, out_traffic, in_bw, out_bw, unit="B"):
         ("out", out_traffic, out_bw, "#2af"),
     ]:
         rrate = bytes_ / bw  # fixed: true-division
-        drate = max(0.02, rrate ** 0.5 ** 0.5)
+        drate = max(0.02, rrate**0.5**0.5)
         rperc = 100 * rrate
         dperc = 100 * drate
         a = (dperc / 2.0, color)

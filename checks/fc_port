@@ -94,7 +94,7 @@ def fc_parse_counter(value):
     if len(value) == 23:
         # recover from "00 00 00 00 00 C0 FE FE"
         value = [int(chr(value[i]) + chr(value[i + 1]), 16) for i in range(0, 24, 3)]
-    return sum(b * 256 ** i for i, b in enumerate(value[::-1]))
+    return sum(b * 256**i for i, b in enumerate(value[::-1]))
 
 
 def inventory_fc_port(info):

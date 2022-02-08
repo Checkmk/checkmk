@@ -1118,13 +1118,13 @@ def _parameter_valuespec_aws_ebs_limits() -> Dictionary:
             (
                 "block_store_space_standard",
                 _vs_limits(
-                    _("Total Magnetic volumes space"), 300 * 1024 ** 4, vs_limit_cls=Filesize
+                    _("Total Magnetic volumes space"), 300 * 1024**4, vs_limit_cls=Filesize
                 ),
             ),
             (
                 "block_store_space_io1",
                 _vs_limits(
-                    _("Total Provisioned IOPS SSD space"), 300 * 1024 ** 4, vs_limit_cls=Filesize
+                    _("Total Provisioned IOPS SSD space"), 300 * 1024**4, vs_limit_cls=Filesize
                 ),
             ),
             (
@@ -1134,18 +1134,18 @@ def _parameter_valuespec_aws_ebs_limits() -> Dictionary:
             (
                 "block_store_space_gp2",
                 _vs_limits(
-                    _("Total General Purpose SSD space"), 300 * 1024 ** 4, vs_limit_cls=Filesize
+                    _("Total General Purpose SSD space"), 300 * 1024**4, vs_limit_cls=Filesize
                 ),
             ),
             (
                 "block_store_space_sc1",
-                _vs_limits(_("Total Cold HDD space"), 300 * 1024 ** 4, vs_limit_cls=Filesize),
+                _vs_limits(_("Total Cold HDD space"), 300 * 1024**4, vs_limit_cls=Filesize),
             ),
             (
                 "block_store_space_st1",
                 _vs_limits(
                     _("Total Throughput Optimized HDD space"),
-                    300 * 1024 ** 4,
+                    300 * 1024**4,
                     vs_limit_cls=Filesize,
                 ),
             ),
@@ -1325,7 +1325,7 @@ def _parameter_valuespec_aws_rds_limits() -> Dictionary:
             ("reserved_db_instances", _vs_limits(_("Reserved DB instances"), 40)),
             (
                 "allocated_storage",
-                _vs_limits(_("Allocated storage"), 100 * 1024 ** 4, vs_limit_cls=Filesize),
+                _vs_limits(_("Allocated storage"), 100 * 1024**4, vs_limit_cls=Filesize),
             ),
             ("db_security_groups", _vs_limits(_("DB security groups"), 25)),
             (

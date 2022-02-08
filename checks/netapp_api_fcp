@@ -179,7 +179,7 @@ def parse_netapp_api_fcp(info):
     for key, values in parsed.items():
         fcp_data = {"state": values.get("state"), "address": values.get("port_wwpn"), "now": now}
         fcp_data["total_ops"] = int(values.get("total_ops", 0))
-        speed = int(values.get("data-link-rate", 0)) * 1000 ** 3
+        speed = int(values.get("data-link-rate", 0)) * 1000**3
         if speed:
             fcp_data["speed"] = speed
 

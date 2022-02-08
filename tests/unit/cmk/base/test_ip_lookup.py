@@ -381,18 +381,13 @@ def test_update_dns_cache(monkeypatch: MonkeyPatch) -> None:
     ts.apply(monkeypatch)
 
     config_cache = config.get_config_cache()
-    assert (
-        ip_lookup.update_dns_cache(
-            host_configs=(
-                config_cache.get_host_config(hn) for hn in config_cache.all_active_hosts()
-            ),
-            configured_ipv4_addresses={},
-            configured_ipv6_addresses={},
-            simulation_mode=False,
-            override_dns=None,
-        )
-        == (3, ["dual"])
-    )
+    assert ip_lookup.update_dns_cache(
+        host_configs=(config_cache.get_host_config(hn) for hn in config_cache.all_active_hosts()),
+        configured_ipv4_addresses={},
+        configured_ipv6_addresses={},
+        simulation_mode=False,
+        override_dns=None,
+    ) == (3, ["dual"])
 
     # Check persisted data
     cache = ip_lookup.IPLookupCache({})

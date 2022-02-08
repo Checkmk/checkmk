@@ -107,7 +107,7 @@ def parse_netapp_api_if(string_table: type_defs.StringTable) -> Section:
                     ]
 
                     max_speed = 0
-                    min_speed = 1024 ** 5
+                    min_speed = 1024**5
                     for tmp_if, _ in mac_list:
                         if tmp_if == nic_name or "speed" not in ifaces[tmp_if]:
                             continue

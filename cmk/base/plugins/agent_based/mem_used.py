@@ -149,14 +149,14 @@ def check_mem_used(params: Mapping, section: memory.SectionMemUsed) -> CheckResu
         abs(crit),
         totalvirt.mb,
         _perc_total=memtotal.mb,
-        render_unit=1024 ** 2,
+        render_unit=1024**2,
     )
     assert warn_mb is not None and crit_mb is not None
     metrics.append(
         Metric(
             "mem_lnx_total_used",
             totalused.bytes,
-            levels=(warn_mb * 1024 ** 2, crit_mb * 1024 ** 2),
+            levels=(warn_mb * 1024**2, crit_mb * 1024**2),
             boundaries=(0, totalvirt.bytes),
         )
     )

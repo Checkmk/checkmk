@@ -107,9 +107,12 @@ def test_check_crash_report_from_exception(monkeypatch):
         assert key in crash.crash_info["details"]
         assert isinstance(  # pylint: disable= isinstance-second-argument-not-valid-type
             crash.crash_info["details"][key], ty
-        ), "Key %r has wrong type: %r" % (  # pylint: disable=isinstance-second-argument-not-valid-type
-            key,
-            type(crash.crash_info["details"][key]),
+        ), (
+            "Key %r has wrong type: %r"
+            % (  # pylint: disable=isinstance-second-argument-not-valid-type
+                key,
+                type(crash.crash_info["details"][key]),
+            )
         )
         assert crash.crash_info["details"][key] == value, "%r has invalid value" % key
 

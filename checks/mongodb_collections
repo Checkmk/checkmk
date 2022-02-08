@@ -62,7 +62,7 @@ def check_mongodb_collections(item, params, databases_dict):
         levels = params.get("levels_%s" % key)
 
         if levels and key in ["size", "storageSize"]:
-            levels = (levels[0] * 1024 ** 2, levels[1] * 1024 ** 2)  # MiB to bytes
+            levels = (levels[0] * 1024**2, levels[1] * 1024**2)  # MiB to bytes
         elif levels and key in ["totalIndexSize"]:
             levels = (levels[0] * 1024, levels[1] * 1024)  # KByte to bytes
 

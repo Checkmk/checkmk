@@ -536,7 +536,7 @@ class Filesize(Integer):
     _names = ["Byte", "KiB", "MiB", "GiB", "TiB"]
 
     def get_exponent(self, value: int) -> tuple[int, int]:
-        for exp, count in ((exp, 1024 ** exp) for exp in reversed(range(len(self._names)))):
+        for exp, count in ((exp, 1024**exp) for exp in reversed(range(len(self._names)))):
             if value == 0:
                 return 0, 0
             if value % count == 0:
@@ -4083,7 +4083,7 @@ class AbsoluteDate(ValueSpec):
 
     def _validate_value(self, value, varprefix):
         if (not self._allow_empty and value is None) or (
-            value is not None and (value < 0 or int(value) > (2 ** 31 - 1))
+            value is not None and (value < 0 or int(value) > (2**31 - 1))
         ):
             return MKUserError(varprefix, _("%s is not a valid UNIX timestamp") % value)
 

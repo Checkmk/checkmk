@@ -28,8 +28,8 @@ def test_size_trend_growing(monkeypatch: MonkeyPatch) -> None:
         {
             "trend_range": 1,
             "trend_perfdata": True,
-            "trend_bytes": (50 * 1024 ** 2, 100 * 1024 ** 2),
-            "trend_shrinking_bytes": (50 * 1024 ** 2, 100 * 1024 ** 2),
+            "trend_bytes": (50 * 1024**2, 100 * 1024**2),
+            "trend_shrinking_bytes": (50 * 1024**2, 100 * 1024**2),
             "trend_perc": (10, 20),
             "trend_shrinking_perc": (10, 20),
             "trend_timeleft": (72, 48),
@@ -62,8 +62,8 @@ def test_size_trend_shrinking(monkeypatch: MonkeyPatch) -> None:
         {
             "trend_range": 1,
             "trend_perfdata": True,
-            "trend_bytes": (50 * 1024 ** 2, 100 * 1024 ** 2),
-            "trend_shrinking_bytes": (50 * 1024 ** 2, 100 * 1024 ** 2),
+            "trend_bytes": (50 * 1024**2, 100 * 1024**2),
+            "trend_shrinking_bytes": (50 * 1024**2, 100 * 1024**2),
             "trend_perc": (10, 20),
             "trend_shrinking_perc": (10, 20),
             "trend_timeleft": (72, 48),

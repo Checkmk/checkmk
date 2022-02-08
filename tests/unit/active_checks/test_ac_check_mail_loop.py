@@ -90,7 +90,7 @@ def test_ac_check_mail_main_loop_failed_to_send_mail(check_mail_loop):
         ),
         (
             None,
-            2 ** 64,
+            2**64,
             {
                 "0-123": (0, 123),
             },
@@ -103,7 +103,7 @@ def test_ac_check_mail_main_loop_failed_to_send_mail(check_mail_loop):
         ),
         (
             None,
-            2 ** 64,
+            2**64,
             {
                 "0-123": (0, 123),
                 "0-Bar": (0, "Bar"),

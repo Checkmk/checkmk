@@ -37,15 +37,18 @@ def check_oracle_longactivesessions(item, params, info):
             sessioncount += 1
             _sid, sidnr, serial, machine, process, osuser, program, last_call_el, sql_id = line
 
-            longoutput = "Session (sid,serial,proc) %s %s %s active for %s from %s osuser %s program %s sql_id %s " % (
-                sidnr,
-                serial,
-                process,
-                get_age_human_readable(int(last_call_el)),
-                machine,
-                osuser,
-                program,
-                sql_id,
+            longoutput = (
+                "Session (sid,serial,proc) %s %s %s active for %s from %s osuser %s program %s sql_id %s "
+                % (
+                    sidnr,
+                    serial,
+                    process,
+                    get_age_human_readable(int(last_call_el)),
+                    machine,
+                    osuser,
+                    program,
+                    sql_id,
+                )
             )
 
     if itemfound:

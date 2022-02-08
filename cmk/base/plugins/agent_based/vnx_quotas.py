@@ -9,7 +9,7 @@ from .agent_based_api.v1 import get_value_store, regex, register, Result, Servic
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 from .utils.df import df_check_filesystem_single, FILESYSTEM_DEFAULT_LEVELS
 
-_MEGA = 1024.0 ** 2
+_MEGA = 1024.0**2
 
 
 class Quota(NamedTuple):

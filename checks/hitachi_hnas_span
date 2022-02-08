@@ -37,8 +37,8 @@ def check_hitachi_hnas_span(item, params, info):
     fslist = []
     for id_, label, total_upper, total_lower, used_upper, used_lower in info:
         if id_ + " " + label == item:
-            size_mb = (int(total_upper) * 2 ** 32 + int(total_lower)) / 1048576.0
-            used_mb = (int(used_upper) * 2 ** 32 + int(used_lower)) / 1048576.0
+            size_mb = (int(total_upper) * 2**32 + int(total_lower)) / 1048576.0
+            used_mb = (int(used_upper) * 2**32 + int(used_lower)) / 1048576.0
             avail_mb = size_mb - used_mb
             fslist.append((item, size_mb, avail_mb, 0))
 

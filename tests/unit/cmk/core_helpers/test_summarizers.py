@@ -111,26 +111,20 @@ class TestAgentSummarizerDefault_OnlyFrom:
         return Mode.CHECKING
 
     def test_allowed(self, summarizer, mode):
-        assert (
-            summarizer.summarize_check_mk_section(
-                [
-                    ["onlyfrom:", "deep_space"],
-                ],
-                mode=mode,
-            )
-            == [ActiveCheckResult(0, "Allowed IP ranges: deep_space")]
-        )
+        assert summarizer.summarize_check_mk_section(
+            [
+                ["onlyfrom:", "deep_space"],
+            ],
+            mode=mode,
+        ) == [ActiveCheckResult(0, "Allowed IP ranges: deep_space")]
 
     def test_exceeding(self, summarizer, mode):
-        assert (
-            summarizer.summarize_check_mk_section(
-                [
-                    ["onlyfrom:", "deep_space somewhere_else"],
-                ],
-                mode=mode,
-            )
-            == [ActiveCheckResult(1, "Unexpected allowed IP ranges (exceeding: somewhere_else)")]
-        )
+        assert summarizer.summarize_check_mk_section(
+            [
+                ["onlyfrom:", "deep_space somewhere_else"],
+            ],
+            mode=mode,
+        ) == [ActiveCheckResult(1, "Unexpected allowed IP ranges (exceeding: somewhere_else)")]
 
     def test_exceeding_missing(self, summarizer, mode):
         assert summarizer.summarize_check_mk_section(
@@ -228,18 +222,15 @@ class TestAgentSummarizerDefault_Fails:
         return Mode.CHECKING
 
     def test_update_agent_fail(self, summarizer, mode):
-        assert (
-            summarizer.summarize_check_mk_section(
-                [
-                    ["version:"],
-                    ["agentos:"],
-                    ["UpdateFailed:", "what"],
-                    ["UpdateRecoverAction:", "why"],
-                ],
-                mode=Mode.CHECKING,
-            )
-            == [ActiveCheckResult(1, "what why")]
-        )
+        assert summarizer.summarize_check_mk_section(
+            [
+                ["version:"],
+                ["agentos:"],
+                ["UpdateFailed:", "what"],
+                ["UpdateRecoverAction:", "why"],
+            ],
+            mode=Mode.CHECKING,
+        ) == [ActiveCheckResult(1, "what why")]
 
     def test_update_agent_success(self, summarizer, mode):
         assert not summarizer.summarize_check_mk_section(
@@ -271,16 +262,13 @@ class TestAgentSummarizerDefault_CheckVersion:
 
     @pytest.mark.parametrize("summarizer", ["42"], indirect=True)
     def test_match(self, summarizer, mode):
-        assert (
-            summarizer.summarize_check_mk_section(
-                [
-                    ["version:", "42"],
-                    ["agentos:"],
-                ],
-                mode=mode,
-            )
-            == [ActiveCheckResult(0, "Version: 42")]
-        )
+        assert summarizer.summarize_check_mk_section(
+            [
+                ["version:", "42"],
+                ["agentos:"],
+            ],
+            mode=mode,
+        ) == [ActiveCheckResult(0, "Version: 42")]
 
     @pytest.mark.parametrize("summarizer", ["42"], indirect=True)
     def test_mismatch(self, summarizer, mode):
@@ -306,29 +294,23 @@ class TestAgentSummarizerDefault_CheckVersion:
         indirect=True,
     )
     def test_at_least_str_success(self, summarizer, mode):
-        assert (
-            summarizer.summarize_check_mk_section(
-                [
-                    ["version:", "69"],
-                    ["agentos:"],
-                ],
-                mode=mode,
-            )
-            == [ActiveCheckResult(0, "Version: 69")]
-        )
+        assert summarizer.summarize_check_mk_section(
+            [
+                ["version:", "69"],
+                ["agentos:"],
+            ],
+            mode=mode,
+        ) == [ActiveCheckResult(0, "Version: 69")]
 
     @pytest.mark.parametrize("summarizer", [("at_least", {})], indirect=True)
     def test_at_least_dict_empty(self, summarizer, mode):
-        assert (
-            summarizer.summarize_check_mk_section(
-                [
-                    ["version:", "69"],
-                    ["agentos:"],
-                ],
-                mode=mode,
-            )
-            == [ActiveCheckResult(0, "Version: 69")]
-        )
+        assert summarizer.summarize_check_mk_section(
+            [
+                ["version:", "69"],
+                ["agentos:"],
+            ],
+            mode=mode,
+        ) == [ActiveCheckResult(0, "Version: 69")]
 
 
 class TestPiggybackSummarizer:
@@ -392,13 +374,10 @@ class TestPiggybackSummarizer:
     ):
         monkeypatch.setattr(summarizer, "always", True)
 
-        assert (
-            summarizer.summarize_success(
-                host_sections,
-                mode=Mode.CHECKING,
-            )
-            == [ActiveCheckResult(1, "Missing data")]
-        )
+        assert summarizer.summarize_success(
+            host_sections,
+            mode=Mode.CHECKING,
+        ) == [ActiveCheckResult(1, "Missing data")]
 
     def test_summarize_existing_data_with_always_option(
         self,

@@ -97,7 +97,7 @@ def check_mem_linux(_no_item, params, section):
         if name.startswith("DirectMap"):
             continue
         if (
-            name.startswith("Vmalloc") and section["VmallocTotal"] > 2 ** 40
+            name.startswith("Vmalloc") and section["VmallocTotal"] > 2**40
         ):  # useless on 64 Bit system
             continue
         if name.startswith("Huge"):
@@ -181,7 +181,7 @@ mem_extended_perfdata = None
 #   | nature of the page file.                                             |
 #   '----------------------------------------------------------------------'
 
-_MB = 1024 ** 2
+_MB = 1024**2
 
 # Special memory and page file check for Windows
 factory_settings["memory_win_default_levels"] = {
@@ -391,14 +391,14 @@ def inventory_mem_vmalloc(section):
     ):
         # Do not checks this on 64 Bit systems. They have almost
         # infinitive vmalloc
-        if section["VmallocTotal"] < 4 * 1024 ** 2:
+        if section["VmallocTotal"] < 4 * 1024**2:
             yield None, "mem_vmalloc_default_levels"
 
 
 def check_mem_vmalloc(_item, params, section):
-    total_mb = section["VmallocTotal"] / 1024.0 ** 2
-    used_mb = section["VmallocUsed"] / 1024.0 ** 2
-    chunk_mb = section["VmallocChunk"] / 1024.0 ** 2
+    total_mb = section["VmallocTotal"] / 1024.0**2
+    used_mb = section["VmallocUsed"] / 1024.0**2
+    chunk_mb = section["VmallocChunk"] / 1024.0**2
     warn, crit, warn_chunk, crit_chunk = params
 
     state = 0

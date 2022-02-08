@@ -213,8 +213,8 @@ def check_hp_msa_volume_df(item, params, parsed):
     if item in parsed:
         yield 0, "%s (%s)" % (parsed[item]["virtual-disk-name"], parsed[item]["raidtype"])
 
-        size_mb = (int(parsed[item]["total-size-numeric"]) * 512) // 1024 ** 2
-        alloc_mb = (int(parsed[item]["allocated-size-numeric"]) * 512) // 1024 ** 2
+        size_mb = (int(parsed[item]["total-size-numeric"]) * 512) // 1024**2
+        alloc_mb = (int(parsed[item]["allocated-size-numeric"]) * 512) // 1024**2
         avail_mb = size_mb - alloc_mb
 
         yield df_check_filesystem_single(item, size_mb, avail_mb, 0, None, None, params)

@@ -465,8 +465,8 @@ def compute_graph_v_axis(graph_recipe, graph_data_range, height_ex, layouted_cur
 
     # Both are in value ranges, not coordinates or similar. These are calculated later
     # by create_vertical_axis_labels().
-    label_distance = mantissa * (base ** exponent) * divide_by
-    sub_distance = submantissa * (base ** exponent) * divide_by
+    label_distance = mantissa * (base**exponent) * divide_by
+    sub_distance = submantissa * (base**exponent) * divide_by
 
     # We need to round the position of the labels. Otherwise some
     # strange things can happen due to internal precision limitation.
@@ -643,7 +643,7 @@ def create_vertical_axis_labels(min_value, max_value, unit, label_distance, sub_
         # Make sure that we increase position at least that much that it
         # will not fall back to its old value due to rounding! This once created
         # a nice endless loop.
-        pos += max(sub_distance, 10 ** -round_to)
+        pos += max(sub_distance, 10**-round_to)
 
     # Now render the single label values. When the unit has a function to calculate
     # a graph global unit, use it. Otherwise add units to all labels individually.

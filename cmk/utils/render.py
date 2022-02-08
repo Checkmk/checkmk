@@ -362,7 +362,7 @@ def calculate_physical_precision(v: float, precision: int) -> tuple[str, int, in
         places_before_comma = exponent + 1
         places_after_comma = precision - places_before_comma
 
-    return scale_symbols[scale], places_after_comma, 1000 ** scale
+    return scale_symbols[scale], places_after_comma, 1000**scale
 
 
 def fmt_nic_speed(speed: str) -> str:
@@ -394,7 +394,7 @@ def _frexp10(x: float) -> tuple[float, int]:
 
 def _frexpb(x: float, base: int) -> tuple[float, int]:
     exp = int(math.log(x, base))
-    mantissa = x / base ** exp
+    mantissa = x / base**exp
     if mantissa < 1:
         mantissa *= base
         exp -= 1

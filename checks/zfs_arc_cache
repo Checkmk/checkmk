@@ -239,7 +239,7 @@ def parse_zfs_arc_cache(info):
         factor = 1
         if len(line) == 4:
             if line[3].lower() == "mb":
-                factor = 1024 ** 2
+                factor = 1024**2
             elif line[3].lower() == "kb":
                 factor = 1024
         parsed[line[0]] = int(line[2]) * factor

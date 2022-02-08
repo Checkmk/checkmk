@@ -135,14 +135,11 @@ def test__util_counter():
 
     assert cpu_util._util_counter(cpu, {}) == cpu
 
-    assert (
-        cpu_util._util_counter(
-            cpu,
-            {
-                "cpu.util.user": 20,
-                "cpu.util.system": 10,
-                "cpu.util.idle": 5,
-            },
-        )
-        == cpu_util.CPUInfo("cpu-name", 80, 40, 50, 75, 50, 80, 30, 60, 20, 40)
-    )
+    assert cpu_util._util_counter(
+        cpu,
+        {
+            "cpu.util.user": 20,
+            "cpu.util.system": 10,
+            "cpu.util.idle": 5,
+        },
+    ) == cpu_util.CPUInfo("cpu-name", 80, 40, 50, 75, 50, 80, 30, 60, 20, 40)

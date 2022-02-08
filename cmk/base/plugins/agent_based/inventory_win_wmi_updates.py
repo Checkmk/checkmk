@@ -70,7 +70,7 @@ def _parse_install_date(install_date_str: str) -> Optional[float]:
     # Contains a 64-bit value representing the number of 100-nanosecond intervals
     # since January 1, 1601 (UTC).
     try:
-        return 1.0 * int(install_date_str, 16) / 10 ** 7
+        return 1.0 * int(install_date_str, 16) / 10**7
     except ValueError:
         pass
     return None

@@ -37,7 +37,7 @@ def get_tablespace_levels_in_bytes(size_bytes, params):
         if magic:
             normsize = params["magic_normsize"] * 1024 * 1024
             hbytes_size = size_bytes / float(normsize)
-            felt_size = hbytes_size ** magic
+            felt_size = hbytes_size**magic
             scale = felt_size / hbytes_size
             warn *= scale
             crit *= scale

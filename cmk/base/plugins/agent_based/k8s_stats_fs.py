@@ -73,8 +73,8 @@ def _check__k8s_stats_fs__core(
         yield from df_check_filesystem_single(
             value_store=value_store,
             mountpoint=item,
-            size_mb=disk["capacity"] / 1024 ** 2,
-            avail_mb=disk["available"] / 1024 ** 2,
+            size_mb=disk["capacity"] / 1024**2,
+            avail_mb=disk["available"] / 1024**2,
             reserved_mb=0,
             inodes_total=disk["inodes"],
             inodes_avail=disk["inodes_free"],

@@ -1120,14 +1120,10 @@ class DiscoveryPageRenderer:
             html.empty_icon()
             num_buttons += 1
 
-        if (
-            entry.check_source
-            not in [
-                DiscoveryState.UNDECIDED,
-                DiscoveryState.IGNORED,
-            ]
-            and user.may("wato.rulesets")
-        ):
+        if entry.check_source not in [
+            DiscoveryState.UNDECIDED,
+            DiscoveryState.IGNORED,
+        ] and user.may("wato.rulesets"):
             num_buttons += self._rulesets_button(entry.description)
             num_buttons += self._check_parameters_button(entry)
 

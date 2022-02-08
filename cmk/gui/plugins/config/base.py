@@ -12,6 +12,8 @@ from livestatus import SiteConfigurations
 
 from cmk.utils.type_defs import TagConfigSpec
 
+from cmk.gui.type_defs import UserSpec
+
 CustomLinkSpec = Tuple[str, bool, List[Tuple[str, str, Optional[str], str]]]
 
 # Links for everyone
@@ -54,12 +56,12 @@ custom_links_admin: List[CustomLinkSpec] = [
 ]
 
 
-def make_default_user_profile() -> Dict[str, Any]:
-    return {
-        "contactgroups": [],
-        "roles": ["user"],
-        "force_authuser": False,
-    }
+def make_default_user_profile() -> UserSpec:
+    return UserSpec(
+        contactgroups=[],
+        roles=["use"],
+        force_authuser=False,
+    )
 
 
 ActivateChangesCommentMode = Literal["enforce", "optional", "disabled"]
@@ -353,7 +355,7 @@ class CREConfig:
     # Holds dicts defining user connector instances and their properties
     user_connections: List = field(default_factory=list)
 
-    default_user_profile: Dict[str, Any] = field(default_factory=make_default_user_profile)
+    default_user_profile: UserSpec = field(default_factory=make_default_user_profile)
     log_logon_failures: bool = True
     lock_on_logon_failures: bool = False
     user_idle_timeout: int = 5400

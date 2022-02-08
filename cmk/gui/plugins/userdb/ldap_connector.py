@@ -38,7 +38,7 @@ import shutil
 import sys
 import time
 from pathlib import Path
-from typing import Dict, IO, Iterator, List, Optional, Set
+from typing import Dict, IO, Iterator, List, Literal, Optional, Set
 from typing import Tuple as _Tuple
 from typing import Type, Union
 
@@ -2304,7 +2304,7 @@ class LDAPAttributePluginGroupsToRoles(LDAPBuiltinAttributePlugin):
         user_id: str,
         ldap_user: dict,
         user: dict,
-    ) -> dict:
+    ) -> dict[Literal["roles"], list[str]]:
         ldap_groups = self.fetch_needed_groups_for_groups_to_roles(connection, params)
 
         # posixGroup objects use the memberUid attribute to specify the group
@@ -2312,7 +2312,7 @@ class LDAPAttributePluginGroupsToRoles(LDAPBuiltinAttributePlugin):
         # username needs to be used for filtering here.
         user_cmp_val = get_group_member_cmp_val(connection, user_id, ldap_user)
 
-        roles = set()
+        roles = []
 
         # Loop all roles mentioned in params (configured to be synchronized)
         for role_id, group_specs in params.items():
@@ -2330,14 +2330,14 @@ class LDAPAttributePluginGroupsToRoles(LDAPBuiltinAttributePlugin):
 
                 # if group could be found and user is a member, add the role
                 if dn in ldap_groups and user_cmp_val in ldap_groups[dn]["members"]:
-                    roles.add(role_id)
+                    roles.append(role_id)
 
         # Load default roles from default user profile when the user got no role
         # by the role sync plugin
         if not roles:
             roles = config.default_user_profile["roles"][:]
 
-        return {"roles": list(roles)}
+        return {"roles": roles}
 
     def fetch_needed_groups_for_groups_to_roles(self, connection, params):
         # Load the needed LDAP groups, which match the DNs mentioned in the role sync plugin config

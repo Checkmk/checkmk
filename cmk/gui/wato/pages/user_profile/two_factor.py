@@ -51,6 +51,7 @@ from cmk.gui.page_menu import (
 from cmk.gui.pages import Page, page_registry
 from cmk.gui.plugins.wato.utils.base_modes import redirect
 from cmk.gui.table import table_element
+from cmk.gui.type_defs import WebAuthnCredential
 from cmk.gui.userdb import (
     is_two_factor_backup_code_valid,
     is_two_factor_login_enabled,
@@ -58,7 +59,6 @@ from cmk.gui.userdb import (
     make_two_factor_backup_codes,
     save_two_factor_credentials,
     set_two_factor_completed,
-    WebAuthnCredential,
 )
 from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.urls import make_confirm_link, makeactionuri, makeuri_contextless

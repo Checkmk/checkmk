@@ -13,7 +13,7 @@ import shutil
 import time
 import traceback
 from contextlib import suppress
-from dataclasses import asdict, dataclass, field
+from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import (
     Any,
@@ -23,9 +23,9 @@ from typing import (
     Iterable,
     List,
     Literal,
+    Mapping,
     Optional,
     Tuple,
-    TypedDict,
     Union,
 )
 
@@ -63,9 +63,9 @@ from cmk.gui.plugins.userdb.utils import (
     user_sync_config,
     UserAttribute,
     UserConnector,
-    UserSpec,
 )
 from cmk.gui.sites import is_wato_slave_site
+from cmk.gui.type_defs import SessionInfo, TwoFactorCredentials, UserSpec
 from cmk.gui.utils.logged_in import LoggedInUser
 from cmk.gui.utils.roles import roles_of_user
 from cmk.gui.utils.urls import makeuri_contextless
@@ -81,18 +81,6 @@ from cmk.gui.valuespec import (
 auth_logger = logger.getChild("auth")
 
 Users = Dict[UserId, UserSpec]  # TODO: Improve this type
-
-
-class WebAuthnCredential(TypedDict):
-    credential_id: str
-    registered_at: int
-    alias: str
-    credential_data: bytes
-
-
-class TwoFactorCredentials(TypedDict):
-    webauthn_credentials: Dict[str, WebAuthnCredential]
-    backup_codes: List[str]
 
 
 def load_plugins() -> None:
@@ -521,21 +509,6 @@ def on_end_of_request(user_id: UserId) -> None:
 
 
 @dataclass
-class SessionInfo:
-    session_id: str
-    started_at: int
-    last_activity: int
-    flashes: List[str] = field(default_factory=list)
-    # In case it is enabled: Was it already authenticated?
-    two_factor_completed: bool = False
-    # We don't care about the specific object, because it's internal to the fido2 library
-    webauthn_action_state: object = None
-
-    def to_json(self) -> Dict:
-        return asdict(self)
-
-
-@dataclass
 class Session:
     """Container object for encapsulating the session of the currently logged in user"""
 
@@ -859,12 +832,12 @@ def load_users(lock: bool = False) -> Users:
                 result[uid]["locked"] = locked
             else:
                 # Create entry if this is an admin user
-                new_user = {
-                    "roles": roles_of_user(uid),
-                    "password": password,
-                    "locked": False,
-                    "connector": "htpasswd",
-                }
+                new_user = UserSpec(
+                    roles=roles_of_user(uid),
+                    password=password,
+                    locked=False,
+                    connector="htpasswd",
+                )
 
                 add_internal_attributes(new_user)
 
@@ -971,7 +944,7 @@ def get_last_activity(user: UserSpec) -> int:
     return max([s.last_activity for s in user.get("session_info", {}).values()] + [0])
 
 
-def split_dict(d: Dict[str, Any], keylist: List[str], positive: bool) -> Dict[str, Any]:
+def split_dict(d: Mapping[str, Any], keylist: List[str], positive: bool) -> Dict[str, Any]:
     return {k: v for k, v in d.items() if (k in keylist) == positive}
 
 
@@ -1011,7 +984,9 @@ def _add_custom_macro_attributes(profiles: Users) -> Users:
     for user in updated_profiles.keys():
         for macro in core_custom_macros:
             if macro in updated_profiles[user]:
-                updated_profiles[user]["_" + macro] = updated_profiles[user][macro]
+                # UserSpec is now a TypedDict, unfortunately not complete yet,
+                # thanks to such constructs.
+                updated_profiles[user]["_" + macro] = updated_profiles[user][macro]  # type: ignore[misc]
 
     return updated_profiles
 
@@ -1245,10 +1220,11 @@ def _save_cached_profile(
 ) -> None:
     # Only save contact AND multisite attributes to the profile. Not the
     # infos that are stored in the custom attribute files.
-    cache = {}
+    cache = UserSpec()
     for key in user.keys():
         if key in multisite_keys or key not in non_contact_keys:
-            cache[key] = user[key]
+            # UserSpec is now a TypedDict, unfortunately not complete yet, thanks to such constructs.
+            cache[key] = user[key]  # type: ignore[misc]
 
     save_cached_profile(user_id, cache)
 

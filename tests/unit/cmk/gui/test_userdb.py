@@ -25,6 +25,7 @@ import cmk.gui.plugins.userdb.utils as utils
 import cmk.gui.userdb as userdb
 from cmk.gui.exceptions import MKAuthException, MKUserError
 from cmk.gui.globals import config
+from cmk.gui.type_defs import WebAuthnCredential
 from cmk.gui.valuespec import Dictionary
 
 
@@ -722,13 +723,11 @@ def test_save_two_factor_credentials(user_id: UserId) -> None:
     credentials = userdb.TwoFactorCredentials(
         {
             "webauthn_credentials": {
-                "id": userdb.WebAuthnCredential(
-                    {
-                        "credential_id": "id",
-                        "registered_at": 1337,
-                        "alias": "Steckding",
-                        "credential_data": b"whatever",
-                    }
+                "id": WebAuthnCredential(
+                    credential_id="id",
+                    registered_at=1337,
+                    alias="Steckding",
+                    credential_data=b"whatever",
                 ),
             },
             "backup_codes": [
@@ -745,7 +744,7 @@ def test_disable_two_factor_authentication(user_id: UserId) -> None:
     credentials = userdb.TwoFactorCredentials(
         {
             "webauthn_credentials": {
-                "id": userdb.WebAuthnCredential(
+                "id": WebAuthnCredential(
                     {
                         "credential_id": "id",
                         "registered_at": 1337,

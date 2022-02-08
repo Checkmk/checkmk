@@ -21,6 +21,7 @@
 #include "logger.h"
 #include "providers/logwatch_event_details.h"
 #include "tools/_raii.h"
+namespace fs = std::filesystem;
 
 namespace cma::provider {
 
@@ -85,14 +86,14 @@ std::pair<std::string, std::string> ParseLine(std::string_view line) {
 }
 }  // namespace
 
-bool LogWatchEntry::loadFromMapNode(const YAML::Node& node) {
+bool LogWatchEntry::loadFromMapNode(const YAML::Node &node) {
     if (node.IsNull() || !node.IsDefined()) return false;
     if (!node.IsMap()) return false;
     try {
         YAML::Emitter emit;
         emit << node;
         return loadFrom(emit.c_str());
-    } catch (const std::exception& e) {
+    } catch (const std::exception &e) {
         XLOG::l(
             "Failed to load logwatch entry from Node exception: '{}' in file '{}'",
             e.what(), wtools::ToUtf8(cma::cfg::GetPathOfLoadedConfig()));
@@ -130,7 +131,7 @@ bool LogWatchEntry::loadFrom(std::string_view line) {
 
         init(std::string(name), level_string, context);
         return true;
-    } catch (const std::exception& e) {
+    } catch (const std::exception &e) {
         XLOG::l(
             "Failed to load logwatch entry '{}' exception: '{}' in file '{}'",
             std::string(line), e.what(),
@@ -206,7 +207,7 @@ void LogWatchEvent::loadConfig() {
 
         entries_.clear();
         bool default_found = false;
-        for (const auto& l : log_array) {
+        for (const auto &l : log_array) {
             entries_.push_back(LogWatchEntry());
             entries_.back().loadFromMapNode(l);
             if (entries_.back().loaded()) {
@@ -228,7 +229,7 @@ void LogWatchEvent::loadConfig() {
         }
         XLOG::l.t("Loaded [{}] entries in LogWatch", count);
 
-    } catch (const std::exception& e) {
+    } catch (const std::exception &e) {
         XLOG::l(
             "CONFIG for '{}.{}' is seriously not valid, skipping. Exception {}. Loaded {} entries",
             cfg::groups::kLogWatchEvent, cfg::vars::kLogWatchEventLogFile,
@@ -239,7 +240,7 @@ void LogWatchEvent::loadConfig() {
 namespace details {
 // Example: line = "System|1234" provides {"System", 1234}
 // gtest
-State ParseStateLine(const std::string& line) {
+State ParseStateLine(const std::string &line) {
     auto tbl = cma::tools::SplitString(line, "|");
 
     if (tbl.size() != 2 || tbl[0].empty() || tbl[1].empty()) {
@@ -255,9 +256,9 @@ State ParseStateLine(const std::string& line) {
 }
 
 // build big common state
-StateVector LoadEventlogOffsets(const PathVector& state_files,
+StateVector LoadEventlogOffsets(const PathVector &state_files,
                                 bool reset_pos_to_null) {
-    for (const auto& fname : state_files) {
+    for (const auto &fname : state_files) {
         StateVector states;
         std::ifstream ifs(fname);
         std::string line;
@@ -279,7 +280,7 @@ StateVector LoadEventlogOffsets(const PathVector& state_files,
         }
 
         std::sort(states.begin(), states.end(),
-                  [](const auto& s1, const auto& s2) {
+                  [](const auto &s1, const auto &s2) {
                       return cma::tools::IsLess(s1.name_, s2.name_);
                   });
 
@@ -291,8 +292,8 @@ StateVector LoadEventlogOffsets(const PathVector& state_files,
     return {};
 }
 
-void SaveEventlogOffsets(const std::string& file_name,
-                         const StateVector& states) {
+void SaveEventlogOffsets(const std::string &file_name,
+                         const StateVector &states) {
     {
         std::ofstream ofs(file_name);
 
@@ -302,7 +303,7 @@ void SaveEventlogOffsets(const std::string& file_name,
             return;
         }
 
-        for (const auto& state : states) {
+        for (const auto &state : states) {
             if (state.name_ == std::string("*")) continue;
 
             auto pos = state.pos_;
@@ -313,13 +314,13 @@ void SaveEventlogOffsets(const std::string& file_name,
 }
 }  // namespace details
 
-constexpr const char* g_event_log_reg_path =
+constexpr const char *g_event_log_reg_path =
     R"(SYSTEM\CurrentControlSet\Services\Eventlog)";
 
 // updates presented flag or add to the States
-void AddLogState(StateVector& states, bool from_config,
-                 const std::string& log_name, SendMode send_mode) {
-    for (auto& state : states) {
+void AddLogState(StateVector &states, bool from_config,
+                 const std::string &log_name, SendMode send_mode) {
+    for (auto &state : states) {
         if (cma::tools::IsEqual(state.name_, log_name)) {
             XLOG::t("Old event log '{}' found", log_name);
 
@@ -338,9 +339,9 @@ void AddLogState(StateVector& states, bool from_config,
 }
 
 // main API to add config entries to the engine
-void AddConfigEntry(StateVector& states, const LogWatchEntry& log_entry,
+void AddConfigEntry(StateVector &states, const LogWatchEntry &log_entry,
                     bool reset_to_null) {
-    for (auto& state : states) {
+    for (auto &state : states) {
         if (cma::tools::IsEqual(state.name_, log_entry.name())) {
             XLOG::t("Old event log '{}' found", log_entry.name());
 
@@ -365,9 +366,9 @@ void AddConfigEntry(StateVector& states, const LogWatchEntry& log_entry,
 // Update States vector with log entries and Send All flags
 // event logs are available
 // returns count of processed Logs entries
-int UpdateEventLogStates(StateVector& states, std::vector<std::string>& logs,
+int UpdateEventLogStates(StateVector &states, std::vector<std::string> &logs,
                          SendMode send_mode) {
-    for (const auto& log : logs) {
+    for (const auto &log : logs) {
         AddLogState(states, false, log, send_mode);
     };
 
@@ -381,7 +382,7 @@ std::vector<std::string> GatherEventLogEntriesFromRegistry() {
 bool IsEventLogInRegistry(std::string_view name) {
     auto regs = GatherEventLogEntriesFromRegistry();
     return std::ranges::any_of(
-        regs, [name](const std::string& r) { return r == name; });
+        regs, [name](const std::string &r) { return r == name; });
 }
 
 std::optional<uint64_t> GetLastPos(EvlType type, std::string_view name) {
@@ -397,15 +398,15 @@ std::optional<uint64_t> GetLastPos(EvlType type, std::string_view name) {
     return {};
 }
 
-std::pair<uint64_t, std::string> DumpEventLog(evl::EventLogBase& log,
-                                              const State& state,
+std::pair<uint64_t, std::string> DumpEventLog(evl::EventLogBase &log,
+                                              const State &state,
                                               LogWatchLimits lwl) {
     std::string out;
     int64_t count = 0;
     auto start = std::chrono::steady_clock::now();
     auto pos = cma::evl::PrintEventLog(
         log, state.pos_, state.level_, state.hide_context_, lwl.skip,
-        [&out, lwl, &count, start](const std::string& str) -> bool {
+        [&out, lwl, &count, start](const std::string &str) -> bool {
             if (lwl.max_line_length > 0 &&
                 static_cast<int64_t>(str.length()) >= lwl.max_line_length) {
                 out += str.substr(0, static_cast<size_t>(lwl.max_line_length));
@@ -435,7 +436,7 @@ std::pair<uint64_t, std::string> DumpEventLog(evl::EventLogBase& log,
     return {pos, out};
 }
 
-std::optional<std::string> ReadDataFromLog(EvlType type, State& state,
+std::optional<std::string> ReadDataFromLog(EvlType type, State &state,
                                            LogWatchLimits lwl) {
     if (type == EvlType::classic && !IsEventLogInRegistry(state.name_)) {
         // we have to check registry, Windows always return success for
@@ -481,8 +482,8 @@ std::optional<std::string> ReadDataFromLog(EvlType type, State& state,
 
 LogWatchEntry GenerateDefaultValue() { return LogWatchEntry().withDefault(); }
 
-bool LoadFromConfig(State& state, const LogWatchEntryVector& entries) noexcept {
-    for (const auto& config_entry : entries) {
+bool LoadFromConfig(State &state, const LogWatchEntryVector &entries) noexcept {
+    for (const auto &config_entry : entries) {
         if (cma::tools::IsEqual(state.name_, config_entry.name())) {
             // found, check that param is not off
             state.hide_context_ = !config_entry.context();
@@ -496,14 +497,14 @@ bool LoadFromConfig(State& state, const LogWatchEntryVector& entries) noexcept {
     return false;
 }
 
-void UpdateStatesByConfig(StateVector& states,
-                          const LogWatchEntryVector& entries,
-                          const LogWatchEntry* dflt) {
+void UpdateStatesByConfig(StateVector &states,
+                          const LogWatchEntryVector &entries,
+                          const LogWatchEntry *dflt) {
     LogWatchEntry default_entry =
         dflt != nullptr ? *dflt : GenerateDefaultValue();
 
     // filtering states
-    for (auto& s : states) {
+    for (auto &s : states) {
         if (LoadFromConfig(s, entries)) {
             continue;
         }
@@ -527,7 +528,7 @@ LogWatchLimits LogWatchEvent::getLogWatchLimits() const noexcept {
             .skip = skip_};
 }
 
-std::vector<std::filesystem::path> LogWatchEvent::makeStateFilesTable() const {
+std::vector<fs::path> LogWatchEvent::makeStateFilesTable() const {
     namespace fs = std::filesystem;
     std::vector<fs::path> statefiles;
     fs::path state_dir = cfg::GetStateDir();
@@ -535,7 +536,9 @@ std::vector<std::filesystem::path> LogWatchEvent::makeStateFilesTable() const {
     if (!ip_addr.empty()) {
         auto ip_fname = MakeStateFileName(kLogWatchEventStateFileName,
                                           kLogWatchEventStateFileExt, ip_addr);
-        if (!ip_fname.empty()) statefiles.push_back(state_dir / ip_fname);
+        if (!ip_fname.empty()) {
+            statefiles.push_back(state_dir / ip_fname);
+        }
     }
 
     auto normal_fname = MakeStateFileName(kLogWatchEventStateFileName,
@@ -545,10 +548,10 @@ std::vector<std::filesystem::path> LogWatchEvent::makeStateFilesTable() const {
     return statefiles;
 }
 
-std::string GenerateOutputFromStates(EvlType type, StateVector& states,
+std::string GenerateOutputFromStates(EvlType type, StateVector &states,
                                      LogWatchLimits lwl) {
     std::string out;
-    for (auto& state : states) {
+    for (auto &state : states) {
         switch (state.level_) {
             case cfg::EventLevels::kOff:
                 // updates position in state file for disabled log too
@@ -603,7 +606,7 @@ std::string LogWatchEvent::makeBody() {
     // 2) Register additional, configured logs that are not in registry.
     //    Note: only supported with vista API enabled.
     if (evl_type_ == EvlType::vista) {
-        for (auto& e : entries_) {
+        for (auto &e : entries_) {
             AddConfigEntry(states, e, send_all_);
         }
     }
@@ -619,7 +622,7 @@ std::string LogWatchEvent::makeBody() {
     // TCP/IP connection, this is the host-IP-specific statefile, and in
     // case of non-TCP (test / debug run etc.) the general
     // eventstate.txt.
-    const auto& statefile = statefiles.front();
+    const auto &statefile = statefiles.front();
     details::SaveEventlogOffsets(statefile.u8string(), states);
 
     return out;

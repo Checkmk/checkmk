@@ -2509,7 +2509,7 @@ TEST(PluginTest, HackingPiggyBack) {
         EXPECT_EQ(kFooter4Right, ">>>>");
     }
 
-    const std::string_view name = "Name";
+    constexpr std::string_view name{"Name"};
 
     {
         const auto normal = MakeHeader(kLeftBracket, kRightBracket, name);

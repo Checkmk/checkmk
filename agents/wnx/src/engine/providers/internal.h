@@ -26,34 +26,34 @@ class ServiceProcessor;
 namespace cma::provider {
 
 // simple creator valid state name
-inline std::string MakeStateFileName(const std::string &name,
-                                     const std::string &extension,
-                                     const std::string &ip_address) {
+inline std::string MakeStateFileName(std::string_view name,
+                                     std::string_view extension,
+                                     std::string_view ip_address) {
     if (name.empty() || extension.empty()) {
         XLOG::l("Invalid parameters to MakeStateFileName '{}' '{}'", name,
                 extension);
         return {};
     }
 
-    std::string ip = ip_address.empty() ? "" : " " + ip_address;
+    std::string ip = ip_address.empty() ? "" : " " + std::string{ip_address};
     std::transform(ip.cbegin(), ip.cend(), ip.begin(),
                    [](char c) { return std::isalnum(c) ? c : L'_'; });
 
-    auto out = name + ip + extension;
+    auto out = std::string{name} + ip + std::string{extension};
 
     return out;
 }
 
-inline std::string MakeStateFileName(const std::string &name,
-                                     const std::string &extension) {
+inline std::string MakeStateFileName(std::string_view name,
+                                     std::string_view extension) {
     return MakeStateFileName(name, extension, "");
 }
 
 class Basic {
 public:
-    Basic(const std::string_view &Name, char Separator = 0)
-        : uniq_name_{Name}
-        , separator_{Separator}
+    Basic(std::string_view name, char separator)
+        : uniq_name_{name}
+        , separator_{separator}
         , delay_on_fail_{0}
         , timeout_{0}
         , enabled_{true}
@@ -61,6 +61,7 @@ public:
         , error_count_{0} {
         allowed_from_time_ = std::chrono::steady_clock::now();
     }
+    Basic(std::string_view name) : Basic(name, '\0') {}
     virtual ~Basic() {}
 
     virtual bool startExecution(
@@ -72,7 +73,7 @@ public:
         const std::string &command_line  // anything here
         ) = 0;
 
-    virtual bool stop(bool Wait) = 0;
+    virtual bool stop(bool wait) = 0;
 
     std::string getUniqName() const { return uniq_name_; }
     const std::string ip() const { return ip_; }
@@ -80,13 +81,13 @@ public:
     // implemented only for very special providers which has to change
     // itself during generation of output(like plugins)
     virtual void updateSectionStatus() {}
-    std::string generateContent(const std::string_view &section_name,
+    std::string generateContent(std::string_view section_name,
                                 bool force_generation);
     std::string generateContent() {
         return generateContent(section::kUseEmbeddedName, false);
     }
 
-    std::string generateContent(const std::string_view &section_name) {
+    std::string generateContent(std::string_view section_name) {
         return generateContent(section_name, false);
     }
 
@@ -122,7 +123,7 @@ protected:
     void disableSectionTemporary();
 
     bool sendGatheredData(const std::string &command_line);
-    virtual std::string makeHeader(const std::string_view section_name) const {
+    virtual std::string makeHeader(std::string_view section_name) const {
         return section::MakeHeader(
             section_name == cma::section::kUseEmbeddedName
                 ? std::string_view(uniq_name_)
@@ -167,8 +168,8 @@ private:
 // use as a parent
 class Synchronous : public Basic {
 public:
-    Synchronous(const std::string_view &name) : Basic(name, 0) {}
-    Synchronous(const std::string_view &name, char separator)
+    Synchronous(std::string_view name) : Basic(name, 0) {}
+    Synchronous(std::string_view name, char separator)
         : Basic(name, separator) {}
     virtual ~Synchronous() = default;
 
@@ -184,8 +185,8 @@ public:
 // When you need choice, then  use this class
 class Asynchronous : public Basic {
 public:
-    Asynchronous(const std::string_view &name) : Basic(name, 0) {}
-    Asynchronous(const std::string_view &name, char separator)
+    Asynchronous(std::string_view name) : Basic(name, 0) {}
+    Asynchronous(std::string_view name, char separator)
         : Basic(name, separator) {}
     virtual ~Asynchronous() = default;
 

@@ -34,7 +34,7 @@ public:
         cfg_name_ = cfg::groups::kPlugins;
     }
 
-    PluginsProvider(const std::string_view &name, char separator)
+    PluginsProvider(std::string_view name, char separator)
         : Asynchronous(name, separator) {
         setHeaderless();
         timeout_ = 0;

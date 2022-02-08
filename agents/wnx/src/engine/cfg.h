@@ -631,7 +631,7 @@ public:
         return log_file_name_;
     }
 
-    auto allowedSection(const std::string_view Name) const {
+    auto allowedSection(std::string_view Name) const {
         std::lock_guard lk(lock_);
 
         // most important is disabled

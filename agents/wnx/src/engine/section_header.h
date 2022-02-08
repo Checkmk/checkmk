@@ -81,23 +81,22 @@ constexpr std::wstring_view kCommaSeparatorString = L",";
 // Build standard header with optional Separator
 // <<<sectionname>>>\n or
 // <<<sectionname:sep(9)>>>\n
-inline std::string MakeHeader(const std::string_view Name,
-                              const char Separator = 0) noexcept {
+inline std::string MakeHeader(std::string_view name, char separator) noexcept {
     using namespace cma::section;
     std::string s;
     s.reserve(32);  // reasonable
 
     s = kLeftBracket;
-    if (Name.empty()) {
+    if (name.empty()) {
         XLOG::l.crit(XLOG_FUNC + " supplied empty string to header");
         s += "nothing";
     } else
-        s += Name;
+        s += name;
 
     // separator part
-    if (Separator) {
+    if (separator) {
         s += kLeftSeparator;
-        s += std::to_string(Separator);
+        s += std::to_string(separator);
         s += kRightSeparator;
     }
 
@@ -107,19 +106,23 @@ inline std::string MakeHeader(const std::string_view Name,
     return s;
 }
 
+inline std::string MakeHeader(std::string_view name) noexcept {
+    return MakeHeader(name, '\0');
+}
+
 // gtest[+]
 // [subsectionname]
-inline std::string MakeSubSectionHeader(const std::string &Name) noexcept {
+inline std::string MakeSubSectionHeader(std::string_view name) noexcept {
     using namespace cma::section;
     std::string s;
     s.reserve(32);  // reasonable
 
     s = kLeftSubSectionBracket;
-    if (Name.empty()) {
+    if (name.empty()) {
         XLOG::l.crit(XLOG_FUNC + " supplied empty string to subheader");
         s += "nothing";
     } else
-        s += Name;
+        s += name;
 
     s += kRightSubSectionBracket;
     s += '\n';

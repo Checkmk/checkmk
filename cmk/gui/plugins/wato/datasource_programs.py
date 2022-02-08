@@ -4204,7 +4204,7 @@ def _valuespec_special_agents_gcp():
             (
                 "credentials",
                 IndividualOrStoredPassword(
-                    title=_("json credentials for service accoun"), allow_empty=False
+                    title=_("JSON credentials for service account"), allow_empty=False
                 ),
             ),
         ],

@@ -6,7 +6,6 @@ use super::{config, constants, monitoring_data, tls_server};
 use anyhow::{Context, Result as AnyhowResult};
 use log::{debug, info};
 use std::net::SocketAddr;
-use std::sync::{Arc, RwLock};
 use tokio::fs;
 use tokio::io::AsyncWriteExt;
 use tokio::net::{TcpListener, TcpStream};
@@ -18,7 +17,7 @@ const HEADER_VERSION: &[u8] = b"\x00\x00";
 
 pub fn pull(
     runtime: Handle,
-    registry: Arc<RwLock<config::Registry>>,
+    registry: config::Registry,
     legacy_pull_marker: &std::path::Path,
 ) -> AnyhowResult<()> {
     runtime.block_on(async_pull(
@@ -30,7 +29,7 @@ pub fn pull(
 }
 
 pub async fn async_pull(
-    registry: Arc<RwLock<config::Registry>>,
+    mut registry: config::Registry,
     legacy_pull_marker: std::path::PathBuf,
     port: &str,
 ) -> AnyhowResult<()> {
@@ -41,18 +40,10 @@ pub async fn async_pull(
             .await
             .context("Failed accepting pull connection")?;
         info!("{}: Handling pull request", addr);
-        {
-            let mut registry_writer = registry.write().unwrap();
-            registry_writer.refresh()?;
-        }
-        let (tls_acceptor, legacy_pull) = {
-            let registry_reader = registry.read().unwrap();
-            (
-                tls_server::tls_acceptor(registry_reader.pull_connections())
-                    .context("Could not initialize TLS.")?,
-                is_legacy_pull(&registry_reader, &legacy_pull_marker),
-            )
-        };
+        registry.refresh()?;
+        let tls_acceptor = tls_server::tls_acceptor(registry.pull_connections())
+            .context("Could not initialize TLS.")?;
+        let legacy_pull = is_legacy_pull(&registry, &legacy_pull_marker);
         tokio::spawn(handle_pull_request(
             addr,
             tls_acceptor,

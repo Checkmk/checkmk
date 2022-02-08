@@ -6,7 +6,6 @@ use super::{agent_receiver_api, config, monitoring_data};
 use anyhow::{Context, Result as AnyhowResult};
 use log::{debug, info};
 use rand::Rng;
-use std::sync::{Arc, RwLock};
 use std::thread;
 use std::time::{Duration, Instant};
 
@@ -16,20 +15,15 @@ fn sleep_randomly() {
     thread::sleep(Duration::from_secs(random_period));
 }
 
-pub fn push(registry: Arc<RwLock<config::Registry>>) -> AnyhowResult<()> {
+pub fn push(mut registry: config::Registry) -> AnyhowResult<()> {
     sleep_randomly();
     loop {
-        {
-            let mut registry_writer = registry.write().unwrap();
-            registry_writer.refresh()?;
-        }
-        let registry_reader = registry.read().unwrap();
+        registry.refresh()?;
         let begin = Instant::now();
         debug!("Handling registered push connections");
         // TODO(sk): enable this for Windows when this will be ready to production
         #[cfg(unix)]
-        handle_push_cycle(&registry_reader)?;
-        drop(registry_reader);
+        handle_push_cycle(&registry)?;
         thread::sleep(Duration::from_secs(60).saturating_sub(begin.elapsed()));
     }
 }

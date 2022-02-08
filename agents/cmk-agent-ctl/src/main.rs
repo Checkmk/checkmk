@@ -22,7 +22,7 @@ use log::error;
 #[cfg(unix)]
 use nix::unistd;
 use std::io::{self, Write};
-use std::sync::{mpsc, Arc, RwLock};
+use std::sync::mpsc;
 use std::thread;
 use structopt::StructOpt;
 use tokio::runtime::Handle;
@@ -32,8 +32,8 @@ fn daemon(
     registry: config::Registry,
     legacy_pull_marker: &std::path::Path,
 ) -> AnyhowResult<()> {
-    let registry_for_push = Arc::new(RwLock::new(registry));
-    let registry_for_pull = Arc::clone(&registry_for_push);
+    let registry_for_push = registry.clone();
+    let registry_for_pull = registry;
     let legacy_pull_marker = legacy_pull_marker.to_owned();
 
     let (tx_push, rx) = mpsc::channel();
@@ -152,11 +152,7 @@ async fn run_requested_mode(args: cli::Args, paths: constants::Paths) -> AnyhowR
             )?)
         }
         cli::Args::Push { .. } => push::handle_push_cycle(&registry),
-        cli::Args::Pull { .. } => pull::pull(
-            Handle::current(),
-            Arc::new(RwLock::new(registry)),
-            &paths.legacy_pull_path,
-        ),
+        cli::Args::Pull { .. } => pull::pull(Handle::current(), registry, &paths.legacy_pull_path),
         cli::Args::Daemon { .. } => daemon(Handle::current(), registry, &paths.legacy_pull_path),
         cli::Args::Dump { .. } => dump::dump(),
         cli::Args::Status(status_args) => status::status(registry, status_args.json),

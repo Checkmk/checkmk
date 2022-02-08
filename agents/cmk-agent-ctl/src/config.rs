@@ -112,7 +112,7 @@ impl RegistrationConfig {
     }
 }
 
-#[derive(Serialize, Deserialize, PartialEq, Debug)]
+#[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
 pub struct Connection {
     #[serde(default)]
     pub uuid: String,
@@ -127,7 +127,7 @@ pub struct Connection {
     pub root_cert: String,
 }
 
-#[derive(Serialize, Deserialize, PartialEq, Debug)]
+#[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
 pub struct RegisteredConnections {
     #[serde(default)]
     pub push: HashMap<String, Connection>,
@@ -148,7 +148,7 @@ fn mtime(path: &Path) -> AnyhowResult<Option<SystemTime>> {
         None
     })
 }
-#[derive(PartialEq, Debug)]
+#[derive(PartialEq, Debug, Clone)]
 pub struct Registry {
     connections: RegisteredConnections,
     path: PathBuf,

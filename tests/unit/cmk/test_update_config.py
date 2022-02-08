@@ -24,6 +24,7 @@ import cmk.utils.paths
 from cmk.utils import password_store, store
 from cmk.utils.type_defs import ContactgroupName, RulesetName, RuleSpec, RuleValue
 from cmk.utils.type_defs.pluginname import CheckPluginName
+from cmk.utils.version import is_raw_edition
 
 import cmk.gui.config
 from cmk.gui.utils.script_helpers import application_and_request_context
@@ -364,7 +365,7 @@ def test_remove_removed_check_plugins_from_ignored_checks(uc: update_config.Upda
                 "checkgroup_parameters:ntp_time": {
                     "ntp_levels": (10, 200.0, 500.0),
                 },
-                "extra_service_conf:_sla_config": "i am skipped",
+                **({} if is_raw_edition() else {"extra_service_conf:_sla_config": "i am skipped"}),
             },
             0,
             id="valid configuration",

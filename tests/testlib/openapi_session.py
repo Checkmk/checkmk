@@ -90,7 +90,7 @@ class CMKOpenApiSession(requests.Session):
         response = self.post(
             "/domain-types/activation_run/actions/activate-changes/invoke",
             json={
-                "redirect": False,
+                "redirect": True,
                 "sites": sites or [],
                 "force_foreign_changes": force_foreign_changes,
             },

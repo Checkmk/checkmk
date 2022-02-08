@@ -5,9 +5,14 @@
 #[cfg(windows)]
 use super::constants;
 
-use std::io::{Read, Result as IoResult, Write};
 #[cfg(windows)]
-use std::net::TcpStream;
+use async_std::net::TcpStream as AsyncTcpStream;
+#[cfg(windows)]
+use async_std::prelude::*;
+#[cfg(windows)]
+use std::net::TcpStream as StdTcpStream;
+
+use std::io::{Read, Result as IoResult, Write};
 
 #[cfg(unix)]
 use std::os::unix::net::UnixStream;
@@ -17,9 +22,25 @@ use tokio::io::AsyncReadExt;
 use tokio::net::UnixStream as AsyncUnixStream;
 // TODO(sk): add logging and unit testing(using local server)
 #[cfg(windows)]
+async fn async_collect_from_ip(agent_ip: &str) -> IoResult<Vec<u8>> {
+    let mut data: Vec<u8> = vec![];
+    AsyncTcpStream::connect(agent_ip)
+        .await?
+        .read_to_end(&mut data)
+        .await?;
+    Ok(data)
+}
+
+#[cfg(windows)]
+pub async fn async_collect() -> IoResult<Vec<u8>> {
+    let peer = format!("localhost:{}", constants::WINDOWS_INTERNAL_PORT);
+    async_collect_from_ip(&peer).await
+}
+
+#[cfg(windows)]
 fn collect_from_ip(agent_ip: &str) -> IoResult<Vec<u8>> {
     let mut data: Vec<u8> = vec![];
-    TcpStream::connect(agent_ip)?.read_to_end(&mut data)?;
+    StdTcpStream::connect(agent_ip)?.read_to_end(&mut data)?;
     Ok(data)
 }
 

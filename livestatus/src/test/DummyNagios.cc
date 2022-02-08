@@ -117,7 +117,9 @@ unsigned long event_broker_options;
 int execute_host_checks;
 // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 int execute_service_checks;
-#ifndef NAGIOS4
+#ifdef NAGIOS4
+// We have only dummy columns in this case.
+#else
 // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 circular_buffer external_command_buffer;
 #endif

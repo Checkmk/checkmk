@@ -10,9 +10,10 @@
 
 // This header is as collection of the "inofficial Nagios 3 API" we are using,
 // centralizing this hack a bit and keeping all the suppressions in one place.
-// Nagios 4 declares all the stuff we need in its headers.
 
-#ifndef NAGIOS4
+#ifdef NAGIOS4
+// Nagios 4 declares all the stuff we need in its headers.
+#else
 extern "C" {
 // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 extern int accept_passive_host_checks;

@@ -126,10 +126,10 @@ std::optional<std::string> HostMacroExpander::expand(
         return from_ptr(_hst->perf_data);
     }
     if (str == "HOSTCHECKCOMMAND") {
-#ifndef NAGIOS4
-        return from_ptr(_hst->host_check_command);
-#else
+#ifdef NAGIOS4
         return from_ptr(_hst->check_command);
+#else
+        return from_ptr(_hst->host_check_command);
 #endif  // NAGIOS4
     }
     return _cve.expand(str);
@@ -167,10 +167,10 @@ std::optional<std::string> ServiceMacroExpander::expand(
         return from_ptr(_svc->perf_data);
     }
     if (str == "SERVICECHECKCOMMAND") {
-#ifndef NAGIOS4
-        return from_ptr(_svc->service_check_command);
-#else
+#ifdef NAGIOS4
         return from_ptr(_svc->check_command);
+#else
+        return from_ptr(_svc->service_check_command);
 #endif  // NAGIOS4
     }
     return _cve.expand(str);

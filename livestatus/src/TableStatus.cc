@@ -140,20 +140,20 @@ TableStatus::TableStatus(MonitoringCore *mc) : Table(mc) {
         offsets, [](const TableStatus & /*r*/) {
             return std::chrono::system_clock::from_time_t(program_start);
         }));
-#ifndef NAGIOS4
-    addColumn(std::make_unique<TimeColumn<TableStatus>>(
-        "last_command_check",
-        "The time of the last check for a command as UNIX timestamp", offsets,
-        [](const TableStatus & /*r*/) {
-            return std::chrono::system_clock::from_time_t(last_command_check);
-        }));
-#else
+#ifdef NAGIOS4
     addColumn(std::make_unique<TimeColumn<TableStatus>>(
         "last_command_check",
         "The time of the last check for a command as UNIX timestamp (placeholder)",
         offsets, [](const TableStatus & /*r*/) {
             // TODO: check if this data is available in nagios_squeue
             return std::chrono::system_clock::time_point{};
+        }));
+#else
+    addColumn(std::make_unique<TimeColumn<TableStatus>>(
+        "last_command_check",
+        "The time of the last check for a command as UNIX timestamp", offsets,
+        [](const TableStatus & /*r*/) {
+            return std::chrono::system_clock::from_time_t(last_command_check);
         }));
 #endif  // NAGIOS4
     addColumn(std::make_unique<TimeColumn<TableStatus>>(
@@ -177,7 +177,20 @@ TableStatus::TableStatus(MonitoringCore *mc) : Table(mc) {
         [](const TableStatus & /*r*/) { return get_program_version(); }));
 
 // External command buffer
-#ifndef NAGIOS4
+#ifdef NAGIOS4
+    addColumn(std::make_unique<IntColumn<TableStatus>>(
+        "external_command_buffer_slots",
+        "The size of the buffer for the external commands (placeholder)",
+        offsets, [](const TableStatus & /*r*/) { return 0; }));
+    addColumn(std::make_unique<IntColumn<TableStatus>>(
+        "external_command_buffer_usage",
+        "The number of slots in use of the external command buffer (placeholder)",
+        offsets, [](const TableStatus & /*r*/) { return 0; }));
+    addColumn(std::make_unique<IntColumn<TableStatus>>(
+        "external_command_buffer_max",
+        "The maximum number of slots used in the external command buffer (placeholder)",
+        offsets, [](const TableStatus & /*r*/) { return 0; }));
+#else
     addColumn(std::make_unique<IntColumn<TableStatus>>(
         "external_command_buffer_slots",
         "The size of the buffer for the external commands", offsets,
@@ -196,19 +209,6 @@ TableStatus::TableStatus(MonitoringCore *mc) : Table(mc) {
         offsets, [](const TableStatus & /*r*/) {
             return external_command_buffer.high;
         }));
-#else
-    addColumn(std::make_unique<IntColumn<TableStatus>>(
-        "external_command_buffer_slots",
-        "The size of the buffer for the external commands (placeholder)",
-        offsets, [](const TableStatus & /*r*/) { return 0; }));
-    addColumn(std::make_unique<IntColumn<TableStatus>>(
-        "external_command_buffer_usage",
-        "The number of slots in use of the external command buffer (placeholder)",
-        offsets, [](const TableStatus & /*r*/) { return 0; }));
-    addColumn(std::make_unique<IntColumn<TableStatus>>(
-        "external_command_buffer_max",
-        "The maximum number of slots used in the external command buffer (placeholder)",
-        offsets, [](const TableStatus & /*r*/) { return 0; }));
 #endif  // NAGIOS4
 
     // Livestatus' own status

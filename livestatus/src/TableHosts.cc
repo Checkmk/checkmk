@@ -279,16 +279,16 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
         prefix + "process_performance_data",
         "Whether processing of performance data is enabled (0/1)", offsets,
         [](const host &r) { return r.process_performance_data; }));
-#ifndef NAGIOS4
-    table->addColumn(std::make_unique<IntColumn<host>>(
-        prefix + "accept_passive_checks",
-        "Whether passive host checks are accepted (0/1)", offsets,
-        [](const host &r) { return r.accept_passive_host_checks; }));
-#else
+#ifdef NAGIOS4
     table->addColumn(std::make_unique<IntColumn<host>>(
         prefix + "accept_passive_checks",
         "Whether passive host checks are accepted (0/1)", offsets,
         [](const host &r) { return r.accept_passive_checks; }));
+#else
+    table->addColumn(std::make_unique<IntColumn<host>>(
+        prefix + "accept_passive_checks",
+        "Whether passive host checks are accepted (0/1)", offsets,
+        [](const host &r) { return r.accept_passive_host_checks; }));
 #endif  // NAGIOS4
     table->addColumn(std::make_unique<IntColumn<host>>(
         prefix + "event_handler_enabled",
@@ -310,7 +310,20 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
     table->addColumn(std::make_unique<IntColumn<host>>(
         prefix + "current_attempt", "Number of the current check attempts",
         offsets, [](const host &r) { return r.current_attempt; }));
-#ifndef NAGIOS4
+#ifdef NAGIOS4
+    table->addColumn(std::make_unique<TimeColumn<host>>(
+        prefix + "last_notification",
+        "Time of the last notification (Unix timestamp)", offsets,
+        [](const host &r) {
+            return std::chrono::system_clock::from_time_t(r.last_notification);
+        }));
+    table->addColumn(std::make_unique<TimeColumn<host>>(
+        prefix + "next_notification",
+        "Time of the next notification (Unix timestamp)", offsets,
+        [](const host &r) {
+            return std::chrono::system_clock::from_time_t(r.next_notification);
+        }));
+#else
     table->addColumn(std::make_unique<TimeColumn<host>>(
         prefix + "last_notification",
         "Time of the last notification (Unix timestamp)", offsets,
@@ -324,19 +337,6 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
         [](const host &r) {
             return std::chrono::system_clock::from_time_t(
                 r.next_host_notification);
-        }));
-#else
-    table->addColumn(std::make_unique<TimeColumn<host>>(
-        prefix + "last_notification",
-        "Time of the last notification (Unix timestamp)", offsets,
-        [](const host &r) {
-            return std::chrono::system_clock::from_time_t(r.last_notification);
-        }));
-    table->addColumn(std::make_unique<TimeColumn<host>>(
-        prefix + "next_notification",
-        "Time of the next notification (Unix timestamp)", offsets,
-        [](const host &r) {
-            return std::chrono::system_clock::from_time_t(r.next_notification);
         }));
 #endif  // NAGIOS4
     table->addColumn(std::make_unique<TimeColumn<host>>(
@@ -447,16 +447,16 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
         prefix + "check_options",
         "The current check option, forced, normal, freshness (0-2)", offsets,
         [](const host &r) { return r.check_options; }));
-#ifndef NAGIOS4
-    table->addColumn(std::make_unique<IntColumn<host>>(
-        prefix + "obsess_over_host",
-        "The current obsess_over_host setting (0/1)", offsets,
-        [](const host &r) { return r.obsess_over_host; }));
-#else
+#ifdef NAGIOS4
     table->addColumn(std::make_unique<IntColumn<host>>(
         prefix + "obsess_over_host",
         "The current obsess_over_host setting (0/1)", offsets,
         [](const host &r) { return r.obsess; }));
+#else
+    table->addColumn(std::make_unique<IntColumn<host>>(
+        prefix + "obsess_over_host",
+        "The current obsess_over_host setting (0/1)", offsets,
+        [](const host &r) { return r.obsess_over_host; }));
 #endif  // NAGIOS4
     table->addColumn(std::make_unique<AttributeBitmaskColumn<host>>(
         prefix + "modified_attributes",

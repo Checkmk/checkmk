@@ -113,7 +113,20 @@ void TableServices::addColumns(Table *table, const std::string &prefix,
         [](const service &r) {
             return r.display_name == nullptr ? "" : r.display_name;
         }));
-#ifndef NAGIOS4
+#ifdef NAGIOS4
+    table->addColumn(std::make_unique<StringColumn<service>>(
+        prefix + "check_command", "Logical command name for active checks",
+        offsets, [](const service &r) {
+            return r.check_command == nullptr ? "" : r.check_command;
+        }));
+    table->addColumn(std::make_unique<StringColumn<service>>(
+        prefix + "check_command_expanded",
+        "Logical command name for active checks, with macros expanded", offsets,
+        [mc](const service &r) {
+            return ServiceMacroExpander::make(r, mc)->expandMacros(
+                r.check_command);
+        }));
+#else
     table->addColumn(std::make_unique<StringColumn<service>>(
         prefix + "check_command", "Logical command name for active checks",
         offsets, [](const service &r) {
@@ -126,19 +139,6 @@ void TableServices::addColumns(Table *table, const std::string &prefix,
         [mc](const service &r) {
             return ServiceMacroExpander::make(r, mc)->expandMacros(
                 r.service_check_command);
-        }));
-#else
-    table->addColumn(std::make_unique<StringColumn<service>>(
-        prefix + "check_command", "Logical command name for active checks",
-        offsets, [](const service &r) {
-            return r.check_command == nullptr ? "" : r.check_command;
-        }));
-    table->addColumn(std::make_unique<StringColumn<service>>(
-        prefix + "check_command_expanded",
-        "Logical command name for active checks, with macros expanded", offsets,
-        [mc](const service &r) {
-            return ServiceMacroExpander::make(r, mc)->expandMacros(
-                r.check_command);
         }));
 #endif
 
@@ -396,16 +396,16 @@ void TableServices::addColumns(Table *table, const std::string &prefix,
         prefix + "checks_enabled",
         "Whether checks of the object are enabled (0/1)", offsets,
         [](const service &r) { return r.checks_enabled; }));
-#ifndef NAGIOS4
-    table->addColumn(std::make_unique<IntColumn<service>>(
-        prefix + "accept_passive_checks",
-        "Whether passive host checks are accepted (0/1)", offsets,
-        [](const service &r) { return r.accept_passive_service_checks; }));
-#else
+#ifdef NAGIOS4
     table->addColumn(std::make_unique<IntColumn<service>>(
         prefix + "accept_passive_checks",
         "Whether passive host checks are accepted (0/1)", offsets,
         [](const service &r) { return r.accept_passive_checks; }));
+#else
+    table->addColumn(std::make_unique<IntColumn<service>>(
+        prefix + "accept_passive_checks",
+        "Whether passive host checks are accepted (0/1)", offsets,
+        [](const service &r) { return r.accept_passive_service_checks; }));
 #endif  // NAGIOS4
     table->addColumn(std::make_unique<IntColumn<service>>(
         prefix + "event_handler_enabled",
@@ -438,16 +438,16 @@ void TableServices::addColumns(Table *table, const std::string &prefix,
         prefix + "check_freshness",
         "Whether freshness checks are enabled (0/1)", offsets,
         [](const service &r) { return r.check_freshness; }));
-#ifndef NAGIOS4
-    table->addColumn(std::make_unique<IntColumn<service>>(
-        prefix + "obsess_over_service",
-        "The current obsess_over_service setting (0/1)", offsets,
-        [](const service &r) { return r.obsess_over_service; }));
-#else
+#ifdef NAGIOS4
     table->addColumn(std::make_unique<IntColumn<service>>(
         prefix + "obsess_over_service",
         "The current obsess_over_service setting (0/1)", offsets,
         [](const service &r) { return r.obsess; }));
+#else
+    table->addColumn(std::make_unique<IntColumn<service>>(
+        prefix + "obsess_over_service",
+        "The current obsess_over_service setting (0/1)", offsets,
+        [](const service &r) { return r.obsess_over_service; }));
 #endif  // NAGIOS4
     table->addColumn(std::make_unique<AttributeBitmaskColumn<service>>(
         prefix + "modified_attributes",

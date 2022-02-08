@@ -27,6 +27,7 @@ PYTHON3_MODULES_LIST :=
 
 PYTHON3_MODULES_LIST += setuptools_scm-4.1.2.tar.gz # needed by various setup.py
 PYTHON3_MODULES_LIST += setuptools-git-1.2.tar.gz # needed by various setup.py
+PYTHON3_MODULES_LIST += setuptools-60.8.1.tar.gz
 PYTHON3_MODULES_LIST += six-1.15.0.tar.gz # direct dependency + needed by bcrypt, cryptography, PyNaCl, python-dateutil, vcrpy, pyOpenSSL, python-active-directory
 PYTHON3_MODULES_LIST += python-dateutil-2.8.2.tar.gz # direct dependency
 
@@ -135,7 +136,10 @@ PYTHON3_MODULES_LIST += repoze.profile-2.3.tar.gz  # very minimal wsgi profiling
 PYTHON3_MODULES_LIST += pyparsing-2.4.7.tar.gz  # direct dependency
 PYTHON3_MODULES_LIST += ordered-set-4.0.2.tar.gz # needed by deepdiff
 PYTHON3_MODULES_LIST += deepdiff-5.0.2.tar.gz  # used for recording setup audit log
-PYTHON3_MODULES_LIST += redis-3.5.3.tar.gz  # needed by GUI (caching)
+
+PYTHON3_MODULES_LIST += packaging-21.3.tar.gz
+PYTHON3_MODULES_LIST += Deprecated-1.2.13.tar.gz
+PYTHON3_MODULES_LIST += redis-4.1.3.tar.gz  # needed by GUI (caching)
 
 PYTHON3_MODULES_LIST += tenacity-6.3.1.tar.gz # needed by opsgenie-sdk
 PYTHON3_MODULES_LIST += opsgenie-sdk-2.0.3.tar.gz # needed by opsgenie_issues

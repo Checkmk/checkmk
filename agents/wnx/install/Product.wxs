@@ -256,36 +256,6 @@ just to signal that real build script was not called -->
 
     <!-- Step 2: Add files to your installer package -->
     <DirectoryRef Id="providers">
-      <!--      
-      <Component Id="plugin_player32_" Guid="{4C951DF9-B8F2-4225-AD86-A637CDC8C4B6}">
-        <File Id="plugin_player32"
-              Source="..\build\plugin_player\Win32\Release\plugin_player.exe"
-              KeyPath="yes"
-              Checksum="yes"/>
-        <Condition>NOT VersionNT64</Condition>
-      </Component>
-      <Component Id="plugin_player64_" Guid="{CCBAB0F2-1D21-452F-9300-37CB052E5769}">
-        <File Id="plugin_player64"
-              Source="..\build\plugin_player\x64\Release\plugin_player.exe"
-              KeyPath="yes"
-              Checksum="yes"/>
-        <Condition>VersionNT64</Condition>
-      </Component>
-      <Component Id="perf_counters32_" Guid="{F79D76C9-B14C-40BE-9529-3BFFFD37D84D}">
-        <File Id="perf_counter32"
-              Source="..\build\providers\perf_counter\Win32\Release\perf_counter.exe"
-              KeyPath="yes"
-              Checksum="yes"/>
-        <Condition>NOT VersionNT64</Condition>
-      </Component>
-      <Component Id="perf_counters64_" Guid="{5562E078-3FB1-41C7-B0A0-B33820C76F41}">
-        <File Id="perf_counter64"
-              Source="..\build\providers\perf_counter\x64\Release\perf_counter.exe"
-              KeyPath="yes"
-              Checksum="yes"/>
-        <Condition>VersionNT64</Condition>
-      </Component>
-      -->
     </DirectoryRef>
     
     <DirectoryRef Id="install">

@@ -15,6 +15,7 @@ from typing import (
     Dict,
     Iterable,
     List,
+    Mapping,
     Optional,
     Sequence,
     Tuple,
@@ -43,6 +44,7 @@ import cmk.gui.pages
 import cmk.gui.sites as sites
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.globals import config, html, output_funnel, request, user_errors
+from cmk.gui.hooks import request_memoize
 from cmk.gui.htmllib import foldable_container, HTML
 from cmk.gui.i18n import _
 from cmk.gui.plugins.views.utils import (
@@ -100,8 +102,10 @@ def _paint_host_inventory_tree(
     raw_hostname = row.get("host_name")
     assert isinstance(raw_hostname, str)
 
-    sites_with_same_named_hosts = _get_sites_with_same_named_hosts(HostName(raw_hostname))
-    if len(sites_with_same_named_hosts) > 1:
+    if (
+        len(sites_with_same_named_hosts := _get_sites_with_same_named_hosts(HostName(raw_hostname)))
+        > 1
+    ):
         html.show_error(
             _("Cannot display inventory tree of host '%s': Found this host on multiple sites: %s")
             % (raw_hostname, ", ".join(sites_with_same_named_hosts))
@@ -143,10 +147,18 @@ def _paint_host_inventory_tree(
     return td_class, code
 
 
-def _get_sites_with_same_named_hosts(hostname: HostName) -> List[SiteId]:
-    query_str = "GET hosts\nColumns: host_name\nFilter: host_name = %s\n" % hostname
+def _get_sites_with_same_named_hosts(hostname: HostName) -> Sequence[SiteId]:
+    return _get_sites_with_same_named_hosts_cache().get(hostname, [])
+
+
+@request_memoize()
+def _get_sites_with_same_named_hosts_cache() -> Mapping[HostName, Sequence[SiteId]]:
+    cache: Dict[HostName, List[SiteId]] = {}
+    query_str = "GET hosts\nColumns: host_name\n"
     with sites.prepend_site():
-        return [SiteId(r[0]) for r in sites.live().query(query_str)]
+        for row in sites.live().query(query_str):
+            cache.setdefault(HostName(row[1]), []).append(SiteId(row[0]))
+    return cache
 
 
 def _get_tree_renderer(row: Row, column: str, invpath: SDRawPath) -> ABCNodeRenderer:

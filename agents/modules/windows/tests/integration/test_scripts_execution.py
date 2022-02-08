@@ -6,7 +6,7 @@
 
 import os
 from pathlib import Path
-from subprocess import PIPE, run
+from subprocess import PIPE, Popen
 from typing import Tuple
 
 import pytest  # type: ignore[import]
@@ -21,8 +21,11 @@ def run_script(work_python: Path, *, script: Path) -> Tuple[int, str, str]:
     assert exe.exists()
     assert script.exists()
 
-    process = run([exe, script], stdout=PIPE, stderr=PIPE, check=False)
-    return process.returncode, process.stdout.decode("utf-8"), process.stderr.decode("utf-8")
+    process = Popen([exe, script], stdout=PIPE, stderr=PIPE)  # pylint:disable=consider-using-with
+    pipe, err = process.communicate()
+    ret = process.wait()
+
+    return ret, pipe.decode("utf-8"), err.decode("utf-8")
 
 
 @pytest.mark.parametrize(

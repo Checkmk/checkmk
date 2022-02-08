@@ -10,7 +10,14 @@ import pytest
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Attributes, TableRow
 from cmk.base.plugins.agent_based.inventory_kube_node import inventory_kube_node
-from cmk.base.plugins.agent_based.utils.k8s import HealthZ, KubeletInfo, Label, LabelName, NodeInfo
+from cmk.base.plugins.agent_based.utils.k8s import (
+    HealthZ,
+    KubeletInfo,
+    Label,
+    LabelName,
+    NodeAddress,
+    NodeInfo,
+)
 
 
 @pytest.mark.parametrize(
@@ -26,7 +33,10 @@ from cmk.base.plugins.agent_based.utils.k8s import HealthZ, KubeletInfo, Label, 
                 name="minikube",
                 creation_timestamp=1640000000.0,
                 labels={LabelName("app"): Label(name="app", value="checkmk-cluster-agent")},
-                addresses=[],
+                addresses=[
+                    NodeAddress(type_="Hostname", address="k8-21"),
+                    NodeAddress(type_="ExternalIP", address="10.200.3.21"),
+                ],
             ),
             KubeletInfo(
                 version="1.2.3",
@@ -52,6 +62,18 @@ from cmk.base.plugins.agent_based.utils.k8s import HealthZ, KubeletInfo, Label, 
                     path=["software", "applications", "kube", "labels"],
                     key_columns={"label_name": "app"},
                     inventory_columns={"label_value": "checkmk-cluster-agent"},
+                    status_columns={},
+                ),
+                TableRow(
+                    path=["software", "applications", "kube", "network"],
+                    key_columns={"ip": "k8-21"},
+                    inventory_columns={"address_type": "Hostname"},
+                    status_columns={},
+                ),
+                TableRow(
+                    path=["software", "applications", "kube", "network"],
+                    key_columns={"ip": "10.200.3.21"},
+                    inventory_columns={"address_type": "ExternalIP"},
                     status_columns={},
                 ),
             ],

@@ -625,6 +625,17 @@ inventory_displayhints.update({
         "title": _l("Value"),
     },
 
+    ".software.applications.kube.network:": {
+        "title": _l("Network"),
+        "keyorder": ["label_name", "label_value"],
+    },
+    ".software.applications.kube.network:*.ip": {
+        "title": _l("IP address"),
+    },
+    ".software.applications.kube.network:*.address_type": {
+        "title": _l("Type"),
+    },
+
     ".software.applications.kube.deployment.": {"title": _l("Deployment")},
     ".software.applications.kube.deployment.name": {"title": _l("Name")},
     ".software.applications.kube.deployment.namespace": {"title": _l("Namespace")},

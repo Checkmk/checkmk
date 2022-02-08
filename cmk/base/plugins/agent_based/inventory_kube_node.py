@@ -37,6 +37,12 @@ def inventory_kube_node(
             key_columns={"label_name": label.name},
             inventory_columns={"label_value": label.value},
         )
+    for address in section_kube_node_info.addresses:
+        yield TableRow(
+            path=["software", "applications", "kube", "network"],
+            key_columns={"ip": address.address},
+            inventory_columns={"address_type": address.type_},
+        )
 
 
 register.inventory_plugin(

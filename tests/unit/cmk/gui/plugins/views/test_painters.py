@@ -321,6 +321,7 @@ def test_registered_painters():
         "inv_software_applications_kube_deployment_match_labels",
         "inv_software_applications_kube_deployment_match_expressions",
         "inv_software_applications_kube_labels",
+        "inv_software_applications_kube_network",
         "inv_software_applications_kube_node",
         "inv_software_applications_kube_node_architecture",
         "inv_software_applications_kube_node_container_runtime_version",

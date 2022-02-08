@@ -38,6 +38,8 @@ def parse_snmp_extended_info(string_table: List[StringTable]) -> List[SNMPExtend
 
 
 def host_label_snmp_extended_info(section: List[SNMPExtendedInfo]) -> HostLabelGenerator:
+    if not section:
+        return
     for device_type in SNMPDeviceType:
         if device_type.name in section[0].entPhysDescr.upper():
             if device_type is SNMPDeviceType.SWITCH and is_fibrechannel_switch(

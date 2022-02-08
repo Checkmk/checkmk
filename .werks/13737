@@ -1,0 +1,13 @@
+Title: Crash snmp_extended_info
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1644319148
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0p20
+
+The snmp_extended_info snmp section would crash when discovering
+host labels with an IndexError (list index out of range) when no
+parsed data was available.

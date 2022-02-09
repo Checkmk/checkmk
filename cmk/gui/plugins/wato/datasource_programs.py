@@ -758,6 +758,36 @@ def _ssl_verification():
     )
 
 
+def _tcp_timeouts():
+    return (
+        "timeout",
+        Dictionary(
+            title=_("TCP timeouts"),
+            elements=[
+                (
+                    "connect",
+                    Integer(
+                        title=_("Connect timeout"),
+                        help=_("Number of seconds to wait for a TCP connection"),
+                        default_value=10,
+                    ),
+                ),
+                (
+                    "read",
+                    Integer(
+                        title=_("Read timeout"),
+                        help=_(
+                            "Number of seconds to wait for a response from "
+                            "the API during a TCP connection"
+                        ),
+                        default_value=12,
+                    ),
+                ),
+            ],
+        ),
+    )
+
+
 def _valuespec_special_agents_kube():
     return Dictionary(
         elements=[
@@ -821,6 +851,7 @@ def _valuespec_special_agents_kube():
                             ),
                         ),
                         _ssl_verification(),
+                        _tcp_timeouts(),
                     ],
                     required_keys=["endpoint", "verify-cert"],
                     title=_("Get usage data via Checkmk Cluster Collector"),

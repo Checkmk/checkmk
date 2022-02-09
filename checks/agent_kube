@@ -28,6 +28,17 @@ def agent_kube_arguments(params, hostname, ipaddress):
         args.extend(["--cluster-collector-endpoint", collector_params["endpoint"]])
         if collector_params.get("verify-cert"):
             args.append("--verify-cert-collector")
+        if collector_timeouts := collector_params.get("timeout"):
+            args.extend(
+                ["--cluster-collector-connect-timeout", collector_timeouts["connect"]]
+                if "connect" in collector_timeouts
+                else []
+            )
+            args.extend(
+                ["--cluster-collector-read-timeout", collector_timeouts["read"]]
+                if "read" in collector_timeouts
+                else []
+            )
 
     return args
 

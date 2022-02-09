@@ -31,6 +31,7 @@ pytestmark = pytest.mark.checks
                 "cluster-collector": {
                     "endpoint": "https://11.211.3.32:20026",
                     "verify-cert": False,
+                    "timeout": {"connect": 10, "read": 12},
                 },
             },
             [
@@ -46,6 +47,10 @@ pytestmark = pytest.mark.checks
                 "https://11.211.3.32",
                 "--cluster-collector-endpoint",
                 "https://11.211.3.32:20026",
+                "--cluster-collector-connect-timeout",
+                10,
+                "--cluster-collector-read-timeout",
+                12,
             ],
         ),
         (

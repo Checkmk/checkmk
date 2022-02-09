@@ -44,7 +44,7 @@ function update_timer(seconds_left) {
     seconds_left -= 1;
 
     if (seconds_left <= 0) {
-        window.location.reload(false);
+        window.location.reload();
     } else {
         // update the pause counter
         var counter = document.getElementById("reload_pause_counter");
@@ -59,7 +59,7 @@ function update_timer(seconds_left) {
 }
 
 function draw_overlay(seconds) {
-    var container = document.getElementById("reload_pause");
+    var container = <HTMLAnchorElement> document.getElementById("reload_pause");
     var counter;
     if (container) {
         // only render once. Just update the counter.
@@ -68,7 +68,7 @@ function draw_overlay(seconds) {
         return;
     }
 
-    container = document.createElement("a");
+    container = <HTMLAnchorElement> document.createElement("a");
     container.setAttribute("id", "reload_pause");
     container.href = "javascript:window.location.reload(false)";
     // FIXME: Localize

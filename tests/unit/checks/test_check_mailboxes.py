@@ -15,19 +15,45 @@ pytestmark = pytest.mark.checks
     [
         (
             {
-                "imap_parameters": {
-                    "server": "foo",
-                    "ssl": (False, 143),
-                    "auth": ("hans", "wurst"),
-                }
+                "fetch": (
+                    "IMAP",
+                    {
+                        "server": "foo",
+                        "connection": {
+                            "disable_tls": True,
+                            "tcp_port": 143,
+                        },
+                        "auth": ("hans", "wurst"),
+                    },
+                )
             },
             [
+                "--fetch-protocol=IMAP",
                 "--fetch-server=foo",
                 "--fetch-port=143",
                 "--fetch-username=hans",
                 "--fetch-password=wurst",
             ],
-        )
+        ),
+        (
+            {
+                "fetch": (
+                    "EWS",
+                    {
+                        "server": "foo",
+                        "connection": {},
+                        "auth": ("hans", "wurst"),
+                    },
+                )
+            },
+            [
+                "--fetch-protocol=EWS",
+                "--fetch-server=foo",
+                "--fetch-tls",
+                "--fetch-username=hans",
+                "--fetch-password=wurst",
+            ],
+        ),
     ],
 )
 def test_check_mailboxes_argument_parsing(params, expected_args):

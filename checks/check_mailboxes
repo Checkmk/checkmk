@@ -5,19 +5,55 @@
 
 
 def check_mailboxes_arguments(params):
-    fetch_params = params["imap_parameters"]
+    """
+    >>> for l in check_mailboxes_arguments({  # v2.1.0 / EWS
+    ...     'service_description': 'SD',
+    ...     'fetch': ('EWS', {
+    ...       'server': 'srv', 'connection': {},
+    ...       'auth': ('usr', ('password', 'pw')),
+    ...       'connection': {'disable_tls': True, 'disable_cert_validation': False, 'tcp_port': 123}}),
+    ...     'age': (1, 2), 'age_newest': (3, 4), 'count': (5, 6),
+    ...     'mailboxes': ['abc', 'def']}):
+    ...   print(l)
+    --fetch-protocol=EWS
+    --fetch-server=srv
+    --fetch-port=123
+    --fetch-username=usr
+    --fetch-password=pw
+    --warn-age-oldest=1
+    --crit-age-oldest=2
+    --warn-age-newest=3
+    --crit-age-newest=4
+    --warn-count=5
+    --crit-count=6
+    --mailbox=abc
+    --mailbox=def
+    """
+    try:
+        fetch_protocol, fetch_params = params["fetch"]
+        connection_params = fetch_params["connection"]
+        username, password = fetch_params["auth"]
+    except KeyError as exc:
+        raise ValueError(
+            f"Params for check_mailboxes are faulty (missing {exc}), did you update the config?"
+        )
+
     args = [
+        f"--fetch-protocol={fetch_protocol}",
         f"--fetch-server={fetch_params.get('server', '$HOSTADDRESS$')}",
     ]
 
-    fetch_use_ssl, fetch_port = fetch_params["ssl"]
-    if fetch_use_ssl:
+    # NOTE: this argument will be turned into `--fetch-disable-tls` when
+    # refactoring all mailbox based active checks
+    if not connection_params.get("disable_tls"):
         args.append("--fetch-tls")
 
-    if fetch_port is not None:
+    if connection_params.get("disable_cert_validation"):
+        args.append("--fetch-disable-cert-validation")
+
+    if (fetch_port := connection_params.get("tcp_port")) is not None:
         args.append(f"--fetch-port={fetch_port}")
 
-    username, password = fetch_params["auth"]
     args.append(f"--fetch-username={username}")
     args.append(passwordstore_get_cmdline("--fetch-password=%s", password))
 

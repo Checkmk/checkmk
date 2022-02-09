@@ -12,10 +12,12 @@ from cmk.gui.valuespec import (
     Age,
     Alternative,
     CascadingDropdown,
+    Checkbox,
     Dictionary,
     DropdownChoice,
     EmailAddress,
     FixedValue,
+    HostAddress,
     Integer,
     ListOfStrings,
     Optional,
@@ -87,6 +89,66 @@ def _imap_parameters():
     )
 
 
+def _imap_parameters_check_mailboxes():
+    return Dictionary(
+        title="IMAP",
+        optional_keys=[],
+        elements=[
+            (
+                "server",
+                TextInput(
+                    title=_("IMAP Server"),
+                    allow_empty=False,
+                    help=_(
+                        "You can specify a hostname or IP address different from the IP address "
+                        "of the host this check will be assigned to."
+                    ),
+                ),
+            ),
+            (
+                "connection",
+                Dictionary(
+                    required_keys=[],
+                    title=_("Connection settings"),
+                    elements=[
+                        (
+                            "disable_tls",
+                            Checkbox(
+                                title=_("Disable TLS/SSL"),
+                                label=_("Force unencrypted communication"),
+                            ),
+                        ),
+                        (
+                            "disable_cert_validation",
+                            Checkbox(
+                                title=_("Disable certificate validation"),
+                                label=_("Ignore unsuccessful validation (in case of TLS/SSL)"),
+                            ),
+                        ),
+                        (
+                            "tcp_port",
+                            Integer(
+                                title=_("TCP Port"),
+                                label=_("(default is 143/993 for IMAP/SSL)"),
+                            ),
+                        ),
+                    ],
+                ),
+            ),
+            (
+                "auth",
+                Tuple(
+                    title=_("Authentication"),
+                    elements=[
+                        TextInput(title=_("Username"), allow_empty=False, size=24),
+                        IndividualOrStoredPassword(title=_("Password"), allow_empty=False, size=12),
+                    ],
+                ),
+            ),
+        ],
+    )
+
+
 def _pop3_parameters():
     return Dictionary(
         optional_keys=["server"],
@@ -128,6 +190,66 @@ def _pop3_parameters():
                                 ),
                                 title=_("TCP Port"),
                                 help=_("By default the standard POP3/SSL Port 995 is used."),
+                            ),
+                        ),
+                    ],
+                ),
+            ),
+            (
+                "auth",
+                Tuple(
+                    title=_("Authentication"),
+                    elements=[
+                        TextInput(title=_("Username"), allow_empty=False, size=24),
+                        IndividualOrStoredPassword(title=_("Password"), allow_empty=False, size=12),
+                    ],
+                ),
+            ),
+        ],
+    )
+
+
+def _ews_parameters():
+    return Dictionary(
+        title="Exchange Web Services - EWS",
+        optional_keys=[],
+        elements=[
+            (
+                "server",
+                HostAddress(
+                    title=_("EWS Serverr"),
+                    allow_empty=False,
+                    help=_(
+                        "You can specify a hostname or IP address different from the IP address "
+                        "of the host this check will be assigned to."
+                    ),
+                ),
+            ),
+            (
+                "connection",
+                Dictionary(
+                    required_keys=[],
+                    title=_("Connection settings"),
+                    elements=[
+                        (
+                            "disable_tls",
+                            Checkbox(
+                                title=_("Disable TLS/SSL"),
+                                label=_("Force unencrypted communication"),
+                            ),
+                        ),
+                        (
+                            "disable_cert_validation",
+                            Checkbox(
+                                title=_("Disable certificate validation"),
+                                label=_("Ignore unsuccessful validation (in case of TLS/SSL)"),
+                            ),
+                        ),
+                        (
+                            "tcp_port",
+                            Integer(
+                                title=_("TCP Port"),
+                                label=_("(default is 80/443 for HTTP(S))"),
                             ),
                         ),
                     ],
@@ -529,72 +651,179 @@ rulespec_registry.register(
 )
 
 
+def transform_check_mailbox_params(params):
+    """Transforms rule sets from 2.0 and below format to current (2.1 and up)
+    >>> for k, v in sorted(transform_check_mailbox_params({  # v2.0.0 / IMAP
+    ...     'service_description': 'SD',
+    ...     'imap_parameters': {
+    ...       'server': 'srv', 'ssl': (True, 7), 'auth': ('usr', ('password', 'pw'))},
+    ...     'age': (1, 2), 'age_newest': (3, 4), 'count': (5, 6),
+    ...     'mailboxes': ['abc', 'def']}).items()):
+    ...   print(f"{k}: {v}")
+    age: (1, 2)
+    age_newest: (3, 4)
+    count: (5, 6)
+    fetch: ('IMAP', {'server': 'srv', 'connection': {'disable_tls': False, 'tcp_port': 7}, 'auth': ('usr', ('password', 'pw'))})
+    mailboxes: ['abc', 'def']
+    service_description: SD
+    >>> for k, v in sorted(transform_check_mailbox_params({  # v2.1.0b / IMAP
+    ...     'service_description': 'SD',
+    ...     'fetch': ('IMAP', {
+    ...       'server': 'srv', 'ssl': (True, None), 'auth': ('usr', ('password', 'pw'))}),
+    ...     'age': (1, 2), 'age_newest': (3, 4), 'count': (5, 6),
+    ...     'mailboxes': ['abc', 'def']}).items()):
+    ...   print(f"{k}: {v}")
+    age: (1, 2)
+    age_newest: (3, 4)
+    count: (5, 6)
+    fetch: ('IMAP', {'server': 'srv', 'connection': {'disable_tls': False}, 'auth': ('usr', ('password', 'pw'))})
+    mailboxes: ['abc', 'def']
+    service_description: SD
+    >>> for k, v in sorted(transform_check_mailbox_params({  # v2.1.0 / EWS
+    ...     'service_description': 'SD',
+    ...     'fetch': ('EWS', {
+    ...       'server': 'srv', 'connection': {},
+    ...       'auth': ('usr', ('password', 'pw')),
+    ...       'connection': {'disable_tls': False, 'disable_cert_validation': False, 'tcp_port': 123}}),
+    ...     'age': (1, 2), 'age_newest': (3, 4), 'count': (5, 6),
+    ...     'mailboxes': ['abc', 'def']}).items()):
+    ...   print(f"{k}: {v}")
+    age: (1, 2)
+    age_newest: (3, 4)
+    count: (5, 6)
+    fetch: ('EWS', {'server': 'srv', 'connection': {'disable_tls': False, 'disable_cert_validation': False, 'tcp_port': 123}, 'auth': ('usr', ('password', 'pw'))})
+    mailboxes: ['abc', 'def']
+    service_description: SD
+    """
+
+    def apply_fetch(params, fetch_param):
+        return {
+            **{"fetch": fetch_param},
+            **{
+                k: v
+                for k, v in params.items()
+                if k in {"service_description", "age", "age_newest", "count", "mailboxes"}
+            },
+        }
+
+    def update_fetch(old_fetch):
+        return {
+            "server": old_fetch["server"],
+            "connection": {
+                k: (not v) if isinstance(v, bool) else v
+                for k, v in zip(("disable_tls", "tcp_port"), fetch_params["ssl"])
+                if v is not None
+            },
+            "auth": old_fetch["auth"],
+        }
+
+    if not params.keys() <= {
+        "imap_parameters",
+        "fetch",
+        "service_description",
+        "age",
+        "age_newest",
+        "count",
+        "mailboxes",
+    }:
+        raise ValueError(f"{params.keys()}")
+
+    if "fetch" in params:
+        fetch_protocol, fetch_params = params["fetch"]
+        if fetch_protocol in {"IMAP", "EWS"} and {"connection", "auth"} <= fetch_params.keys():
+            # newest schema (2.1 and up) - do nothing
+            return params
+        if fetch_protocol in {"IMAP"} and {"server", "ssl", "auth"} <= fetch_params.keys():
+            # temporary 2.1.0b format - just update the connection element
+            return apply_fetch(params, ("IMAP", update_fetch(fetch_params)))
+
+    if "imap_parameters" in params:
+        # v2.0.0 and below
+        fetch_params = params["imap_parameters"]
+        return apply_fetch(params, ("IMAP", update_fetch(fetch_params)))
+
+    # no known format recognized
+    raise ValueError(f"Cannot transform {params}")
+
+
 def _valuespec_active_checks_mailboxes():
-    return Dictionary(
-        title=_("Check IMAP Mailboxes"),
-        help=_("This check monitors count and age of mails in mailboxes."),
-        elements=[
-            (
-                "service_description",
-                TextInput(
-                    title=_("Service description"),
-                    help=_(
-                        "Please make sure that this is unique per host "
-                        "and does not collide with other services."
-                    ),
-                    allow_empty=False,
-                    default_value="Mailboxes",
-                ),
-            ),
-            ("imap_parameters", _imap_parameters()),
-            (
-                "connect_timeout",
-                Integer(
-                    title=_("Connect Timeout"),
-                    minvalue=1,
-                    default_value=10,
-                    unit=_("sec"),
-                ),
-            ),
-            (
-                "age",
-                Tuple(
-                    title=_("Message Age of oldest messages"),
-                    elements=[
-                        Age(title=_("Warning if older than")),
-                        Age(title=_("Critical if older than")),
-                    ],
-                ),
-            ),
-            (
-                "age_newest",
-                Tuple(
-                    title=_("Message Age of newest messages"),
-                    elements=[
-                        Age(title=_("Warning if older than")),
-                        Age(title=_("Critical if older than")),
-                    ],
-                ),
-            ),
-            (
-                "count",
-                Tuple(
-                    title=_("Message Count"),
-                    elements=[Integer(title=_("Warning at")), Integer(title=_("Critical at"))],
-                ),
-            ),
-            (
-                "mailboxes",
-                ListOfStrings(
-                    title=_("Check only the listed mailboxes"),
-                    help=_(
-                        "By default, all mailboxes are checked with these parameters. "
-                        "If you specify mailboxes here, only those are monitored."
+    return Transform(
+        valuespec=Dictionary(
+            title=_("Check IMAP/EWS Mailboxes"),
+            help=_("This check monitors count and age of mails in mailboxes."),
+            elements=[
+                (
+                    "service_description",
+                    TextInput(
+                        title=_("Service description"),
+                        help=_(
+                            "Please make sure that this is unique per host "
+                            "and does not collide with other services."
+                        ),
+                        allow_empty=False,
+                        default_value="Mailboxes",
                     ),
                 ),
-            ),
-        ],
-        required_keys=["service_description", "imap_parameters"],
+                (
+                    "fetch",
+                    CascadingDropdown(
+                        title=_("Mail Receiving"),
+                        choices=[
+                            ("IMAP", _("IMAP"), _imap_parameters_check_mailboxes()),
+                            ("EWS", _("EWS"), _ews_parameters()),
+                        ],
+                    ),
+                ),
+                (
+                    "connect_timeout",
+                    Integer(
+                        title=_("Connect Timeout"),
+                        minvalue=1,
+                        default_value=10,
+                        unit=_("sec"),
+                    ),
+                ),
+                (
+                    "age",
+                    Tuple(
+                        title=_("Message Age of oldest messages"),
+                        elements=[
+                            Age(title=_("Warning if older than")),
+                            Age(title=_("Critical if older than")),
+                        ],
+                    ),
+                ),
+                (
+                    "age_newest",
+                    Tuple(
+                        title=_("Message Age of newest messages"),
+                        elements=[
+                            Age(title=_("Warning if older than")),
+                            Age(title=_("Critical if older than")),
+                        ],
+                    ),
+                ),
+                (
+                    "count",
+                    Tuple(
+                        title=_("Message Count"),
+                        elements=[Integer(title=_("Warning at")), Integer(title=_("Critical at"))],
+                    ),
+                ),
+                (
+                    "mailboxes",
+                    ListOfStrings(
+                        title=_("Check only the listed mailboxes"),
+                        help=_(
+                            "By default, all mailboxes are checked with these parameters. "
+                            "If you specify mailboxes here, only those are monitored."
+                        ),
+                    ),
+                ),
+            ],
+            required_keys=["service_description", "fetch"],
+        ),
+        forth=transform_check_mailbox_params,
     )
 
 

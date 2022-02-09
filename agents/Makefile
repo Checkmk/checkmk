@@ -64,28 +64,33 @@ deb: $(DEB_PACKAGE)
 rpm: $(RPM_PACKAGE)
 
 $(RPM_PACKAGE): controller waitmax
-	rm -rf $(RPM_TOPDIR)
-	mkdir -p $(RPM_TOPDIR)/RPMS
-	mkdir -p $(RPM_TOPDIR)/SRPMS
-	mkdir -p $(RPM_TOPDIR)/SOURCES
-	mkdir -p $(RPM_TOPDIR)/BUILD
-	mkdir -p $(RPM_TOPDIR)/SPECS
-	tar czf \
-	    $(RPM_TOPDIR)/SOURCES/$(NAME)-$(VERSION).tar.gz \
-	    --transform='s@^@$(DISTNAME)/@' \
-	    scripts \
-	    check_mk_agent.linux \
-	    check_mk_caching_agent.linux \
-	    linux/cmk-agent-ctl \
-	    waitmax \
-	    mk-job
 	rm -f *.rpm
-	rpmbuild -ba --buildroot "$(RPM_BUILDROOT)" \
+	rm -rf "$(RPM_TOPDIR)" "$(RPM_BUILDROOT)"
+	#
+	# create build root (as tree would show it)
+	mkdir -p "$(RPM_BUILDROOT)/etc/check_mk"
+	mkdir -p "$(RPM_BUILDROOT)/usr/bin"
+	mkdir -p "$(RPM_BUILDROOT)/var/lib/cmk-agent"
+	install -m 755 check_mk_agent.linux "$(RPM_BUILDROOT)/usr/bin/check_mk_agent"
+	install -m 755 check_mk_caching_agent.linux "$(RPM_BUILDROOT)/usr/bin/check_mk_caching_agent"
+	install -m 755 linux/cmk-agent-ctl "$(RPM_BUILDROOT)/usr/bin/cmk-agent-ctl"
+	install -m 755 mk-job "$(RPM_BUILDROOT)/usr/bin/mk-job"
+	install -m 755 waitmax "$(RPM_BUILDROOT)/usr/bin/waitmax"
+	mkdir -p "$(RPM_BUILDROOT)/usr/lib/check_mk_agent/local"
+	mkdir -p "$(RPM_BUILDROOT)/usr/lib/check_mk_agent/plugins"
+	mkdir -p "$(RPM_BUILDROOT)/var/lib/check_mk_agent/cache"
+	mkdir -p "$(RPM_BUILDROOT)/var/lib/check_mk_agent/job"
+	mkdir -p "$(RPM_BUILDROOT)/var/lib/check_mk_agent/spool"
+	echo "# first available super server (default)" > "$(RPM_BUILDROOT)/etc/check_mk/super-server.cfg"
+	cp -r scripts "$(RPM_BUILDROOT)/var/lib/cmk-agent"
+	mv "$(RPM_BUILDROOT)/var/lib/cmk-agent/scripts/super-server/1_xinetd/check-mk-agent" "$(RPM_BUILDROOT)/etc/check_mk/xinetd-service-template.cfg"
+	# use this build root, and build
+	rpmbuild -bb --buildroot "$(RPM_BUILDROOT)" \
 	    --define "_topdir $(RPM_TOPDIR)" \
 	    --define "_version $(VERSION)" \
 	    --define "_rpm_version $(RPM_VERSION)" \
 	    $(NAME).spec
-	mv -v $(RPM_TOPDIR)/RPMS/*/* $(RPM_PACKAGE)
+	mv -v $(RPM_TOPDIR)/RPMS/*/* .
 	rm -rf $(RPM_TOPDIR) $(RPM_BUILDROOT)
 
 

@@ -26,49 +26,11 @@ Provides:  check_mk-agent check_mk_agent
 %global _python_bytecompile_errors_terminate_build 0
 %define _binaries_in_noarch_packages_terminate_build 0
 
-%prep
-%setup -n check-mk-agent-%{_version}
-
-%install
-
-R=$RPM_BUILD_ROOT
-H="${R}/var/lib/cmk-agent"
-rm -rf "${R}"
-
-# install agent
-mkdir -p "${R}/etc/check_mk"
-mkdir -p "${H}/scripts/super-server/0_systemd"
-mkdir -p "${H}/scripts/super-server/1_xinetd"
-echo "# first available super server (default)" > "${R}/etc/check_mk/super-server.cfg"
-install -m 751 "scripts/cmk-agent-useradd.sh" "${H}/scripts/cmk-agent-useradd.sh"
-install -m 751 "scripts/super-server/setup" "${H}/scripts/super-server/setup"
-
-# xinitd
-install -m 751 "scripts/super-server/1_xinetd/setup" "${H}/scripts/super-server/1_xinetd/"
-install -m 644 "scripts/super-server/1_xinetd/check-mk-agent" "${R}/etc/check_mk/xinetd-service-template.cfg"
-
-# Systemd
-install -m 751 "scripts/super-server/0_systemd/setup" "${H}/scripts/super-server/0_systemd/"
-install -m 666 "scripts/super-server/0_systemd/check-mk-agent@.service" "${H}/scripts/super-server/0_systemd/"
-install -m 666 "scripts/super-server/0_systemd/check-mk-agent.socket" "${H}/scripts/super-server/0_systemd/"
-install -m 666 "scripts/super-server/0_systemd/check-mk-agent-async.service" "${H}/scripts/super-server/0_systemd/"
-install -m 666 "scripts/super-server/0_systemd/cmk-agent-ctl-daemon.service" "${H}/scripts/super-server/0_systemd/"
-
-mkdir -p $R/etc/check_mk
-mkdir -p $R/usr/bin
-install -m 755 check_mk_agent.linux $R/usr/bin/check_mk_agent
-install -m 755 check_mk_caching_agent.linux $R/usr/bin/check_mk_caching_agent
-install -m 755 waitmax $R/usr/bin
-install -m 755 mk-job $R/usr/bin
-install -m 755 linux/cmk-agent-ctl $R/usr/bin
-mkdir -p $R/usr/lib/check_mk_agent/plugins
-mkdir -p $R/usr/lib/check_mk_agent/local
-mkdir -p $R/var/lib/check_mk_agent
-mkdir -p $R/var/lib/check_mk_agent/job
-mkdir -p $R/var/lib/check_mk_agent/spool
-
-%clean
-rm -rf $RPM_BUILD_ROOT
+# Override CentOS 6+ specific behaviour that the build root is erased before
+# building. This does not work very well with our way of preparing the files
+define __spec_install_pre %{___build_pre} &&\
+    mkdir -p `dirname "$RPM_BUILD_ROOT"` &&\
+    mkdir -p "$RPM_BUILD_ROOT"
 
 %files
 %defattr(-,root,root)

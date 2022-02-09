@@ -16,16 +16,33 @@ from cmk.base.plugins.agent_based.inventory_snmp_extended_info import (
 from .utils_inventory import sort_inventory_result
 
 
-def test_inventory_snmp_extended_info_host_labels():
-    section = parse_snmp_extended_info(
-        [
-            ["_", "fibrechannel switch", "_", "_", "_", "_", "_", "_", "_"],
-            ["_", "_", "_", "_", "_", "_", "_", "_", "_"],
-        ]
-    )
-    assert list(get_device_type_label(section)) == [
-        HostLabel("cmk/device_type", "fcswitch"),
-    ]
+@pytest.mark.parametrize(
+    "string_table, expected_result",
+    [
+        (
+            [
+                ["_", "fibrechannel switch", "_", "_", "_", "_", "_", "_", "_"],
+                ["_", "_", "_", "_", "_", "_", "_", "_", "_"],
+            ],
+            [HostLabel("cmk/device_type", "fcswitch")],
+        ),
+        (
+            [
+                ["_", "switch (fc1)", "_", "_", "_", "_", "_", "_", "_"],
+            ],
+            [HostLabel("cmk/device_type", "switch")],
+        ),
+        (
+            [
+                ["_", "fc switch", "_", "_", "_", "_", "_", "_", "_"],
+            ],
+            [HostLabel("cmk/device_type", "fcswitch")],
+        ),
+    ],
+)
+def test_inventory_snmp_extended_info_host_labels(string_table, expected_result):
+    section = parse_snmp_extended_info(string_table)
+    assert list(get_device_type_label(section)) == expected_result
 
 
 @pytest.mark.parametrize(

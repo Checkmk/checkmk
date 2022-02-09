@@ -1,0 +1,15 @@
+Title: Incorrect fcswitch host labels for Cisco IOS switches
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1644397015
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+Cisco IOS switches would discover the incorrect "fcswitch" host label
+since they use fc1 or fc2 designators.
+Now this special case is handled and the correct "switch" host label
+is discovered.

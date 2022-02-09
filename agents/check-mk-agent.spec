@@ -46,6 +46,7 @@ mkdir -p $R/usr/lib/systemd/system
 install -m 644 cfg_examples/systemd/check-mk-agent\@.service $R/usr/lib/systemd/system
 install -m 644 cfg_examples/systemd/check-mk-agent.socket $R/usr/lib/systemd/system
 install -m 644 cfg_examples/systemd/check-mk-agent-async.service $R/usr/lib/systemd/system
+install -m 644 cfg_examples/systemd/cmk-agent-ctl-daemon.service $R/usr/lib/systemd/system
 mkdir -p $R/etc/check_mk
 mkdir -p $R/usr/bin
 install -m 755 check_mk_agent.linux $R/usr/bin/check_mk_agent

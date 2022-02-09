@@ -114,7 +114,7 @@ def _parameter_valuespec_cpu():
 
 rulespec_registry.register(
     CheckParameterRulespecWithoutItem(
-        check_group_name="kube_cpu_usage",
+        check_group_name="kube_cpu",
         group=RulespecGroupCheckParametersApplications,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_cpu,

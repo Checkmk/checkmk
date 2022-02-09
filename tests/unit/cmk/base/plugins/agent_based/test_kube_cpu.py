@@ -11,7 +11,7 @@ import json
 
 import pytest
 
-from cmk.base.plugins.agent_based import kube_cpu_usage
+from cmk.base.plugins.agent_based import kube_cpu
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, render, Result, State
 from cmk.base.plugins.agent_based.utils import kube_resources
 
@@ -62,7 +62,7 @@ def params_node():
 
 @pytest.fixture
 def params(params_usage, params_request, params_limit, params_cluster, params_node):
-    return kube_cpu_usage.Params(
+    return kube_cpu.Params(
         usage=params_usage,
         request=params_request,
         limit=params_limit,
@@ -88,7 +88,7 @@ def usage_string_table(usage_string_table_element):
 
 @pytest.fixture
 def usage_section(usage_string_table):
-    return kube_cpu_usage.parse_kube_performance_cpu_v1(usage_string_table)
+    return kube_cpu.parse_kube_performance_cpu_v1(usage_string_table)
 
 
 @pytest.fixture
@@ -120,7 +120,7 @@ def resources_string_table(resources_string_table_element):
 
 @pytest.fixture
 def resources_section(resources_string_table):
-    return kube_cpu_usage.parse_resources(resources_string_table)
+    return kube_cpu.parse_resources(resources_string_table)
 
 
 @pytest.fixture
@@ -150,24 +150,24 @@ def allocatable_resource_string_table(allocatable_resource_string_table_element)
 
 @pytest.fixture
 def allocatable_resource_section(allocatable_resource_string_table):
-    return kube_cpu_usage.parse_allocatable_resource(allocatable_resource_string_table)
+    return kube_cpu.parse_allocatable_resource(allocatable_resource_string_table)
 
 
 @pytest.fixture
 def check_result(params, usage_section, resources_section, allocatable_resource_section):
-    return kube_cpu_usage.check_kube_cpu(
+    return kube_cpu.check_kube_cpu(
         params, usage_section, resources_section, allocatable_resource_section
     )
 
 
 def test_parse_resources(resources_string_table, resources_request, resources_limit):
-    resources_section = kube_cpu_usage.parse_resources(resources_string_table)
+    resources_section = kube_cpu.parse_resources(resources_string_table)
     assert resources_section.request == resources_request
     assert resources_section.limit == resources_limit
 
 
 def test_parse_allocatable_resource(allocatable_resource_string_table, allocatable_value):
-    allocatable_resource_section = kube_cpu_usage.parse_allocatable_resource(
+    allocatable_resource_section = kube_cpu.parse_allocatable_resource(
         allocatable_resource_string_table
     )
     assert allocatable_resource_section.value == allocatable_value
@@ -177,7 +177,7 @@ def test_discovery(usage_section, resources_section, allocatable_resource_sectio
     for s1, s2, s3 in itertools.product(
         (usage_section, None), (resources_section, None), (allocatable_resource_section, None)
     ):
-        assert len(list(kube_cpu_usage.discovery_kube_cpu(s1, s2, s3))) == 1
+        assert len(list(kube_cpu.discovery_kube_cpu(s1, s2, s3))) == 1
 
 
 @pytest.mark.parametrize("usage_section", [None])
@@ -225,7 +225,7 @@ def test_check_metrics_without_usage(check_result):
 
 @pytest.mark.parametrize("resources_section", [None])
 def test_check_if_no_resources(check_result):
-    """Crashing is expected, because section_kube_cpu_usage is only missing, if data from the api
+    """Crashing is expected, because section_kube_cpu is only missing, if data from the api
     server missing."""
     with pytest.raises(AssertionError):
         list(check_result)

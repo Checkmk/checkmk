@@ -75,10 +75,10 @@ register.agent_section(
 )
 
 register.check_plugin(
-    name="kube_cpu_usage",
+    name="kube_cpu",
     service_name="CPU resources",
     sections=["kube_performance_cpu", "kube_cpu_resources", "kube_allocatable_cpu_resource"],
-    check_ruleset_name="kube_cpu_usage",
+    check_ruleset_name="kube_cpu",
     discovery_function=discovery_kube_cpu,
     check_function=check_kube_cpu,
     check_default_parameters=DEFAULT_PARAMS,

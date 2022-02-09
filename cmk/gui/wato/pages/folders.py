@@ -1301,7 +1301,7 @@ class ModeCreateFolder(ABCFolderMode):
 
 
 # TODO: Move to Folder()?
-def _create_wato_foldername(title, in_folder=None):
+def _create_wato_foldername(title: str, in_folder=None) -> str:
     if in_folder is None:
         in_folder = Folder.current()
 
@@ -1317,7 +1317,16 @@ def _create_wato_foldername(title, in_folder=None):
 
 
 # TODO: Move to Folder()?
-def _convert_title_to_filename(title):
+def _convert_title_to_filename(title: str) -> str:
+    """lower(), replace german umlauts then everything except [-a-z0-9_] with '_'
+
+    >>> _convert_title_to_filename("abc")
+    'abc'
+    >>> _convert_title_to_filename("Äbc")
+    'aebc'
+    >>> _convert_title_to_filename("../Äbc")
+    '___aebc'
+    """
     converted = ""
     for c in title.lower():
         if c == "ä":
@@ -1332,7 +1341,7 @@ def _convert_title_to_filename(title):
             converted += c
         else:
             converted += "_"
-    return str(converted)
+    return converted
 
 
 @page_registry.register_page("ajax_set_foldertree")

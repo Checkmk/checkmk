@@ -9,7 +9,7 @@
 import copy
 import os
 from functools import partial
-from typing import Any, Dict, List, Optional, Set, Tuple
+from typing import Any, Dict, List, Mapping, Optional, Set, Tuple
 
 from six import ensure_str
 
@@ -1015,7 +1015,7 @@ class APICallSites(APICallCollection):
             },
         }
 
-    def _get(self, request):
+    def _get(self, request: Mapping[str, Any]) -> dict[str, Any]:
         site_mgmt = watolib.SiteManagementFactory().factory()
 
         all_sites = site_mgmt.load_sites()
@@ -1028,14 +1028,14 @@ class APICallSites(APICallCollection):
         sites_dict["configuration_hash"] = compute_config_hash(existing_site)
         return sites_dict
 
-    def _get_all(self, request):
+    def _get_all(self, request: Mapping[str, Any]) -> dict[str, Any]:
         site_mgmt = watolib.SiteManagementFactory().factory()
         all_sites = site_mgmt.load_sites()
-        sites_dict = {"sites": all_sites}
+        sites_dict: dict[str, Any] = {"sites": all_sites}
         sites_dict["configuration_hash"] = compute_config_hash(all_sites)
         return sites_dict
 
-    def _set(self, request):
+    def _set(self, request: Mapping[str, Any]) -> None:
         site_mgmt = watolib.SiteManagementFactory().factory()
 
         all_sites = site_mgmt.load_sites()
@@ -1050,7 +1050,7 @@ class APICallSites(APICallCollection):
         all_sites.update(sites)
         site_mgmt.save_sites(all_sites)
 
-    def _set_all(self, request):
+    def _set_all(self, request: Mapping[str, Any]) -> None:
         site_mgmt = watolib.SiteManagementFactory().factory()
 
         all_sites = site_mgmt.load_sites()
@@ -1062,7 +1062,7 @@ class APICallSites(APICallCollection):
 
         site_mgmt.save_sites(prepare_raw_site_config(request["sites"]))
 
-    def _delete(self, request):
+    def _delete(self, request: Mapping[str, Any]) -> None:
         site_mgmt = watolib.SiteManagementFactory().factory()
 
         all_sites = site_mgmt.load_sites()
@@ -1072,7 +1072,7 @@ class APICallSites(APICallCollection):
 
         site_mgmt.delete_site(request["site_id"])
 
-    def _login(self, request):
+    def _login(self, request: Mapping[str, Any]) -> None:
         site_mgmt = watolib.SiteManagementFactory().factory()
         all_sites = site_mgmt.load_sites()
         site = all_sites.get(request["site_id"])
@@ -1099,7 +1099,7 @@ class APICallSites(APICallCollection):
         site["secret"] = secret
         site_mgmt.save_sites(all_sites)
 
-    def _logout(self, request):
+    def _logout(self, request: Mapping[str, Any]) -> None:
         site_mgmt = watolib.SiteManagementFactory().factory()
         all_sites = site_mgmt.load_sites()
         site = all_sites.get(request["site_id"])

@@ -10,9 +10,10 @@
 import abc
 import json
 from hashlib import md5
-from typing import Optional, Type
+from typing import Any, Callable, Mapping, Optional, Type, TypedDict
 
 import cmk.utils.plugin_registry
+from cmk.utils.type_defs import HostName
 
 import cmk.gui.utils.escaping as escaping
 import cmk.gui.watolib as watolib
@@ -21,13 +22,26 @@ from cmk.gui.globals import config
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.sites import allsites
+from cmk.gui.type_defs import PermissionName
 from cmk.gui.valuespec import Hostname
 from cmk.gui.watolib.host_attributes import ABCHostAttribute, host_attribute_registry
 
 
+class APICallDefinitionDict(TypedDict, total=False):
+    handler: Callable[..., Any]
+    required_keys: list[str]
+    required_permissions: list[PermissionName]
+    optional_keys: list[str]
+    required_input_format: str
+    required_output_format: str
+
+
+APICallsDict = dict[str, APICallDefinitionDict]
+
+
 class APICallCollection(abc.ABC):
     @abc.abstractmethod
-    def get_api_calls(self):
+    def get_api_calls(self) -> APICallsDict:
         raise NotImplementedError("This API collection does not register any API call")
 
 
@@ -51,7 +65,7 @@ api_call_collection_registry = APICallCollectionRegistry()
 
 
 # TODO: Rename to validate_hostname to be in sync with other functions
-def check_hostname(hostname, should_exist=True):
+def check_hostname(hostname: HostName, should_exist=True) -> None:
     # Validate hostname with valuespec
     Hostname().validate_value(hostname, "hostname")
 
@@ -67,7 +81,7 @@ def check_hostname(hostname, should_exist=True):
             )
 
 
-def validate_config_hash(hash_value, entity):
+def validate_config_hash(hash_value: str, entity: Mapping) -> None:
     entity_hash = compute_config_hash(entity)
     if hash_value != entity_hash:
         raise MKUserError(
@@ -81,11 +95,11 @@ def validate_config_hash(hash_value, entity):
         )
 
 
-def add_configuration_hash(response, configuration_object):
+def add_configuration_hash(response: dict, configuration_object: dict) -> None:
     response["configuration_hash"] = compute_config_hash(configuration_object)
 
 
-def compute_config_hash(entity):
+def compute_config_hash(entity: Mapping) -> str:
     try:
         entity_encoded = json.dumps(entity, sort_keys=True)
         entity_hash = md5(entity_encoded.encode()).hexdigest()

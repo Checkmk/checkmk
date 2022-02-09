@@ -111,14 +111,16 @@ def do_core_action(action: CoreAction, quiet: bool = False) -> None:
     else:
         command = ["omd", action.value, "cmc"]
 
-    p = subprocess.run(
-        command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, close_fds=True, check=False
+    p = subprocess.Popen(  # pylint:disable=consider-using-with
+        command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, close_fds=True
     )
-    if p.returncode != 0:
+    result = p.wait()
+    if result != 0:
         assert p.stdout is not None
+        output = p.stdout.read()
         if not quiet:
-            out.output("ERROR: %r\n" % p.stdout)
-        raise MKGeneralException("Cannot %s the monitoring core: %r" % (action.value, p.stdout))
+            out.output("ERROR: %r\n" % output)
+        raise MKGeneralException("Cannot %s the monitoring core: %r" % (action.value, output))
     if not quiet:
         out.output(tty.ok + "\n")
 

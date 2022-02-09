@@ -9,15 +9,18 @@ from __future__ import annotations
 from typing import List
 
 from cmk.gui import watolib
+from cmk.gui.globals import user
 from cmk.gui.plugins.openapi.endpoints.ruleset.fields import (
     RULESET_NAME,
     RulesetCollection,
     RulesetObject,
     RulesetSearchOptions,
 )
-from cmk.gui.plugins.openapi.restful_objects import constructors, Endpoint
+from cmk.gui.plugins.openapi.restful_objects import constructors, Endpoint, permissions
 from cmk.gui.plugins.openapi.restful_objects.constructors import serve_json
 from cmk.gui.plugins.openapi.restful_objects.type_defs import DomainObject
+
+PERMISSIONS = permissions.Perm("wato.rulesets")
 
 
 @Endpoint(
@@ -26,9 +29,11 @@ from cmk.gui.plugins.openapi.restful_objects.type_defs import DomainObject
     method="get",
     query_params=[RulesetSearchOptions],
     response_schema=RulesetCollection,
+    permissions_required=PERMISSIONS,
 )
 def list_rulesets(param):
     """Search rule sets"""
+    user.need_permission("wato.rulesets")
     all_sets = (
         watolib.FolderRulesets(param["folder"]) if param.get("folder") else watolib.AllRulesets()
     )
@@ -64,10 +69,12 @@ def list_rulesets(param):
     etag="output",
     path_params=[RULESET_NAME],
     response_schema=RulesetObject,
+    permissions_required=PERMISSIONS,
 )
 def show_ruleset(param):
     """Show a ruleset"""
     ruleset_name = param["ruleset_name"]
+    user.need_permission("wato.rulesets")
     collection = watolib.SingleRulesetRecursively(ruleset_name)
     collection.load()
     ruleset = collection.get(ruleset_name)

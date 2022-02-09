@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from __future__ import annotations
+
 __version__ = "2.1.0i1"
 
 # TODO:
@@ -35,6 +37,7 @@ __version__ = "2.1.0i1"
 
 import ast
 import collections
+import contextlib
 import ctypes
 import ctypes.util
 import errno
@@ -55,6 +58,7 @@ import tempfile
 import threading
 import time
 import traceback
+from pathlib import Path
 from typing import Any, Dict, Iterable, List, NamedTuple, Optional, Tuple, Union
 
 import npyscreen  # type: ignore[import]  # pylint: disable=import-error
@@ -259,16 +263,16 @@ class Test:
     RESULT_FAILED = "failed"
 
     @classmethod
-    def data_dir(cls):
-        return os.path.join(omd_root(), "var/mkbench")
+    def data_dir(cls) -> Path:
+        return Path(omd_root(), "var/mkbench")
 
     @classmethod
-    def test_dir(cls, id_):
-        return os.path.join(cls.data_dir(), id_)
+    def test_dir(cls, id_) -> Path:
+        return cls.data_dir() / id_
 
     @classmethod
-    def exists(cls, id_):
-        return os.path.exists(cls.test_dir(id_))
+    def exists(cls, id_) -> bool:
+        return cls.test_dir(id_).exists()
 
     def __init__(self, id_=None):
         self._log = []
@@ -289,9 +293,7 @@ class Test:
             self.load()
 
     def load(self):
-        raw_state = ast.literal_eval(
-            open(os.path.join(self.dir(), "state")).read()  # pylint:disable=consider-using-with
-        )
+        raw_state = ast.literal_eval((self.dir() / "state").read_text())
         self.deserialize(raw_state)
         self.load_measurements()
 
@@ -353,7 +355,7 @@ class Test:
                 continue
 
             m = Measurement()
-            m.load(os.path.join(self.dir(), entry))
+            m.load(self.dir() / entry)
             self.add_measurement(m)
 
     def _get_test_id(self):
@@ -415,7 +417,7 @@ class Test:
     def log_to_stdout(self):
         self._log_to_stdout = True
 
-    def dir(self):
+    def dir(self) -> Path:
         return Test.test_dir(self.id_)
 
     def duration(self):
@@ -507,16 +509,16 @@ class TestRunner(threading.Thread):
         with open("%s/etc/rrdcached.conf" % omd_root(), "w") as f:
             f.write("TIMEOUT=300\n" "RANDOM_DELAY=10\n" "FLUSH_TIMEOUT=7200\n" "WRITE_THREADS=4\n")
 
-        p = subprocess.Popen(  # pylint:disable=consider-using-with
+        p = subprocess.run(
             ["omd", "restart", "rrdcached"],
             close_fds=True,
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
             encoding="utf-8",
+            check=False,
         )
-        stdout, _stderr = p.communicate()
         if p.returncode != 0:
-            raise MKGeneralException("Failed to restart rrdcached: %s" % stdout)
+            raise MKGeneralException("Failed to restart rrdcached: %s" % p.stdout)
 
     def _run_test(self):
         for test_case in self._generate_test_cases():
@@ -840,7 +842,7 @@ class SystemInfo:
         return os.path.basename(os.path.realpath("%s/version" % omd_root()))
 
     def _get_monitoring_core(self):
-        for l in open("%s/etc/omd/site.conf" % omd_root()):  # pylint:disable=consider-using-with
+        for l in Path(omd_root(), "etc/omd/site.conf").read_text().splitlines():
             if l.startswith("CONFIG_CORE="):
                 return l.strip().split("=", 1)[1].strip("'")
         return None
@@ -849,38 +851,39 @@ class SystemInfo:
         node: Dict[str, Any] = {}
         num_threads_total = 0
         sockets = set([])
-        for l in open("/proc/cpuinfo"):  # pylint:disable=consider-using-with
-            parts = l.split(": ", 1)
-            if len(parts) != 2:
-                continue
-            varname, value = parts[0].strip(), parts[1].strip()
+        with Path("/proc/cpuinfo").open() as cpu_info:
+            for l in cpu_info:
+                parts = l.split(": ", 1)
+                if len(parts) != 2:
+                    continue
+                varname, value = parts[0].strip(), parts[1].strip()
 
-            if varname == "cpu cores":
-                node["cores_per_cpu"] = int(value)
-            elif varname == "siblings":
-                node["threads_per_cpu"] = int(value)
-            elif varname == "vendor_id":
-                node["vendor"] = {
-                    "GenuineIntel": "intel",
-                    "AuthenticAMD": "amd",
-                }.get(value, value)
-            elif varname == "cache size":
-                node["cache_size"] = (
-                    int(value.split()[0]) * 1024
-                )  # everything is normalized to bytes!
-            elif varname == "model name":
-                node["model"] = value
-            # For the following two entries we assume that all
-            # entries are numbered in increasing order in /proc/cpuinfo.
-            elif varname == "processor":
-                num_threads_total = int(value) + 1
-            elif varname == "physical id":
-                sockets.add(int(value))
-            elif varname == "flags":
-                if re.search(" lm ", value):
-                    node["arch"] = "x86_64"
-                else:
-                    node["arch"] = "i386"
+                if varname == "cpu cores":
+                    node["cores_per_cpu"] = int(value)
+                elif varname == "siblings":
+                    node["threads_per_cpu"] = int(value)
+                elif varname == "vendor_id":
+                    node["vendor"] = {
+                        "GenuineIntel": "intel",
+                        "AuthenticAMD": "amd",
+                    }.get(value, value)
+                elif varname == "cache size":
+                    node["cache_size"] = (
+                        int(value.split()[0]) * 1024
+                    )  # everything is normalized to bytes!
+                elif varname == "model name":
+                    node["model"] = value
+                # For the following two entries we assume that all
+                # entries are numbered in increasing order in /proc/cpuinfo.
+                elif varname == "processor":
+                    num_threads_total = int(value) + 1
+                elif varname == "physical id":
+                    sockets.add(int(value))
+                elif varname == "flags":
+                    if re.search(" lm ", value):
+                        node["arch"] = "x86_64"
+                    else:
+                        node["arch"] = "i386"
 
         num_sockets = len(sockets)
 
@@ -968,9 +971,9 @@ class Measurement:
         self._get_site_state()
         self._get_site_stats()
 
-    def load(self, path):
+    def load(self, path: Path) -> None:
         try:
-            raw_data = ast.literal_eval(open(path).read())  # pylint:disable=consider-using-with
+            raw_data = ast.literal_eval(path.read_text())
             self.deserialize(raw_data)
         except Exception as e:
             if opt_debug:
@@ -1056,7 +1059,7 @@ class Measurement:
     def _get_site_state(self):
         self.site_state = subprocess.call(
             ["omd", "status", "--bare"],
-            stdout=open(os.devnull, "w"),  # pylint:disable=consider-using-with
+            stdout=subprocess.DEVNULL,
             close_fds=True,
         )
 
@@ -2713,26 +2716,21 @@ class TestAgentBasedStandardHosts(TestCase):
             shutil.copy(src_file, "%s/%s.mk" % (autochecks_dir, host_name))
 
     def _discover_services_of_host(self, host_name):
-        p = subprocess.Popen(  # pylint:disable=consider-using-with
-            ["cmk", "-II", host_name],
-            stdin=open(os.devnull),  # pylint:disable=consider-using-with
-            close_fds=True,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-            encoding="utf-8",
-        )
+        with contextlib.suppress(OSError):
+            completed_process = subprocess.run(
+                ["cmk", "-II", host_name],
+                stdin=subprocess.DEVNULL,
+                close_fds=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                encoding="utf-8",
+                check=False,
+            )
 
-        try:
-            stdout, _stderr = p.communicate()
-        except KeyboardInterrupt:
-            try:
-                p.terminate()
-            except OSError:
-                pass
-            raise
-
-        if p.returncode != 0:
-            raise MKGeneralException("'cmk -II %s' failed: %s" % (host_name, stdout))
+        if completed_process.returncode != 0:
+            raise MKGeneralException(
+                "'cmk -II %s' failed: %s" % (host_name, completed_process.stdout)
+            )
 
     # def _discover_services(self):
     #    self._test.info("  Discovering services")
@@ -2774,7 +2772,7 @@ class TestAgentBasedStandardHosts(TestCase):
             # b) Cached RRD info held by the core during runtime
             subprocess.call(
                 ["omd", "stop", "cmc"],
-                stdout=open(os.devnull, "w"),  # pylint:disable=consider-using-with
+                stdout=subprocess.DEVNULL,
                 close_fds=True,
             )
 
@@ -2798,13 +2796,14 @@ class TestAgentBasedStandardHosts(TestCase):
                         raise
 
                 # Replace the host name in the just copied info files
-                for f in glob.glob("%s/%s/*.info" % (rrd_dir, host_name)):
-                    new_content = open(f).readlines()  # pylint:disable=consider-using-with
-                    for index, line in enumerate(new_content):
-                        if line.startswith("HOST "):
-                            new_content[index] = "HOST %s\n" % host_name
+                for f in Path(rrd_dir, host_name).glob("*.info"):
+                    with f.open() as opened_file:
+                        new_content = opened_file.readlines()
+                        for index, line in enumerate(new_content):
+                            if line.startswith("HOST "):
+                                new_content[index] = "HOST %s\n" % host_name
 
-                    open(f, "w").write("".join(new_content))  # pylint:disable=consider-using-with
+                    f.write_text("".join(new_content))
         finally:
             self._activate_changes()
 
@@ -2812,26 +2811,21 @@ class TestAgentBasedStandardHosts(TestCase):
     def _create_rrds_of_host(self, host_name):
         # Do 2 iterations to initialize the rrds that base on counter values
         for _i in range(2):
-            p = subprocess.Popen(  # pylint:disable=consider-using-with
-                ["cmk", "-v", host_name],
-                stdin=open(os.devnull),  # pylint:disable=consider-using-with
-                close_fds=True,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.STDOUT,
-                encoding="utf-8",
-            )
+            with contextlib.suppress(OSError):
+                completed_process = subprocess.run(
+                    ["cmk", "-v", host_name],
+                    stdin=subprocess.DEVNULL,
+                    close_fds=True,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.STDOUT,
+                    encoding="utf-8",
+                    check=False,
+                )
 
-            try:
-                stdout, _stderr = p.communicate()
-            except KeyboardInterrupt:
-                try:
-                    p.terminate()
-                except OSError:
-                    pass
-                raise
-
-            if p.returncode != 0:
-                raise MKGeneralException("'cmk -v %s' failed: %s" % (host_name, stdout))
+            if completed_process.returncode != 0:
+                raise MKGeneralException(
+                    "'cmk -v %s' failed: %s" % (host_name, completed_process.stdout)
+                )
 
             time.sleep(2)
 
@@ -2855,25 +2849,19 @@ class TestAgentBasedStandardHosts(TestCase):
     def _activate_changes(self):
         if self._test:
             self._test.info("  Activating changes")
-        p = subprocess.Popen(  # pylint:disable=consider-using-with
-            ["cmk", "-R"],
-            close_fds=True,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-            encoding="utf-8",
-        )
 
-        try:
-            stdout, _stderr = p.communicate()
-        except KeyboardInterrupt:
-            try:
-                p.terminate()
-            except OSError:
-                pass
-            raise
+        with contextlib.suppress(OSError):
+            completed_process = subprocess.run(
+                ["cmk", "-R"],
+                close_fds=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                encoding="utf-8",
+                check=False,
+            )
 
-        if p.returncode != 0:
-            raise MKGeneralException("Failed to execute 'cmk -R': %s" % stdout)
+        if completed_process.returncode != 0:
+            raise MKGeneralException("Failed to execute 'cmk -R': %s" % completed_process.stdout)
 
         # Wait for livestatus socket to be available
         while (self._runner and not self._runner.shall_stop()) and not os.path.exists(
@@ -3322,7 +3310,7 @@ def verify_is_site():
 def verify_site_is_running():
     site_state = subprocess.call(
         ["omd", "status", "--bare"],
-        stdout=open(os.devnull, "w"),  # pylint:disable=consider-using-with
+        stdout=subprocess.DEVNULL,
         close_fds=True,
     )
     if site_state != 0:

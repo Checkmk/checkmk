@@ -21,12 +21,14 @@ except ImportError as e:
     )
     sys.exit(0)
 
+with open("/etc/psa/.psa.shadow") as pwd_file:
+    pwd = pwd_file.read().strip()
 try:
     db = MySQLdb.connect(
         host="localhost",
         db="psa",
         user="admin",
-        passwd=open("/etc/psa/.psa.shadow").read().strip(),  # pylint:disable=consider-using-with
+        passwd=pwd,
         charset="utf8",
     )
 except MySQLdb.Error as e:

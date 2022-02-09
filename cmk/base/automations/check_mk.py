@@ -568,9 +568,7 @@ class AutomationRenameHosts(Automation):
             # Create a file "renamed_hosts" with the information about the
             # renaming of the hosts. The core will honor this file when it
             # reads the status file with the saved state.
-            open(var_dir + "/core/renamed_hosts", "w").write(  # pylint:disable=consider-using-with
-                "%s\n%s\n" % (oldname, newname)
-            )
+            Path(var_dir, "core/renamed_hosts").write_text("%s\n%s\n" % (oldname, newname))
             actions.append("retention")
 
         # NagVis maps
@@ -633,15 +631,14 @@ s/(HOST|SERVICE) NOTIFICATION: ([^;]+);%(old)s;/\1 NOTIFICATION: \2;%(new)s;/
 
         handled_files: List[str] = []
 
-        command = ["sed", "-ri", "--file=/dev/fd/0"]
-        p = subprocess.Popen(  # pylint:disable=consider-using-with
-            command + file_paths,
-            stdin=subprocess.PIPE,
-            stdout=open(os.devnull, "w"),  # pylint:disable=consider-using-with
+        subprocess.run(
+            ["sed", "-ri", "--file=/dev/fd/0", *file_paths],
+            stdout=subprocess.DEVNULL,
             stderr=subprocess.STDOUT,
             close_fds=True,
+            input=sed_commands.encode("utf-8"),
+            check=False,
         )
-        p.communicate(input=sed_commands.encode("utf-8"))
         # TODO: error handling?
 
         handled_files += file_paths
@@ -1309,16 +1306,14 @@ class AutomationDiagHost(Automation):
 
     def _execute_ping(self, host_config: config.HostConfig, ipaddress: str) -> Tuple[int, str]:
         base_cmd = "ping6" if host_config.is_ipv6_primary else "ping"
-        p = subprocess.Popen(  # pylint:disable=consider-using-with
+        completed_process = subprocess.run(
             [base_cmd, "-A", "-i", "0.2", "-c", "2", "-W", "5", ipaddress],
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
             encoding="utf-8",
+            check=False,
         )
-        if p.stdout is None:
-            raise RuntimeError()
-        response = p.stdout.read()
-        return p.wait(), response
+        return completed_process.returncode, completed_process.stdout
 
     def _execute_agent(
         self,
@@ -1366,19 +1361,18 @@ class AutomationDiagHost(Automation):
     ) -> Tuple[int, str]:
         family_flag = "-6" if host_config.is_ipv6_primary else "-4"
         try:
-            p = subprocess.Popen(  # pylint:disable=consider-using-with
+            completed_process = subprocess.run(
                 ["traceroute", family_flag, "-n", ipaddress],
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
                 encoding="utf-8",
+                check=False,
             )
         except OSError as e:
             if e.errno == errno.ENOENT:
                 return 1, "Cannot find binary <tt>traceroute</tt>."
             raise
-        if p.stdout is None:
-            raise RuntimeError()
-        return p.wait(), p.stdout.read()
+        return completed_process.returncode, completed_process.stdout
 
     def _execute_snmp(
         self,

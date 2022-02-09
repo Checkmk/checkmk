@@ -82,7 +82,8 @@ ssl_ports = [
 ]
 
 if os.path.exists(config_file):
-    exec(open(config_file).read())  # pylint:disable=consider-using-with
+    with open(config_file) as open_config_file:
+        exec(open_config_file.read())
 
 
 def try_detect_servers():

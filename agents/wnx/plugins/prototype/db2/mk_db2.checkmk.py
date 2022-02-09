@@ -9,7 +9,7 @@ import os
 import platform
 import sys
 import time
-from subprocess import DEVNULL, PIPE, Popen
+from subprocess import DEVNULL, PIPE, Popen, run
 from typing import Dict, Iterable, List, Optional
 
 LISTER = "db2ilist.exe"
@@ -65,7 +65,7 @@ class Database:
 
     def list_instances(self) -> List[str]:
         try:
-            process = Popen(  # pylint:disable=consider-using-with
+            completed_process = run(
                 args=LISTER,
                 shell=False,
                 stdout=PIPE,
@@ -73,9 +73,9 @@ class Database:
                 stderr=DEVNULL,
                 close_fds=True,
                 encoding="utf-8",
+                check=False,
             )
-            stdout = process.communicate()[0]
-            return stdout.strip().split(sep="\n")
+            return completed_process.stdout.strip().split(sep="\n")
         except (OSError, ValueError) as e:
             if self.is_verbose():
                 print(
@@ -287,7 +287,7 @@ class Database:
     @staticmethod
     def shell_runner():
         if platform.system() == "Windows":
-            shell = Popen(  # pylint:disable=consider-using-with
+            with Popen(
                 ["cmd.exe"],
                 shell=False,
                 stdin=PIPE,
@@ -296,17 +296,16 @@ class Database:
                 universal_newlines=True,
                 close_fds=True,
                 bufsize=0,
-            )
-            if shell.stdin is None or shell.stdout is None:
-                raise Exception("Huh? stdin or stdout vanished...")
-            shell.stdin.write("@set DB2CLP=DB20FADE\n")
-            shell.stdin.write("@db2 connect to SAMPLE\n")
-            shell.stdin.write('@db2 -x "SELECT deadlocks from sysibmadm.snapdb"\n')
-            shell.stdin.write("@db2 connect reset\n")
-            shell.stdin.write("@exit\n")
-            shell.stdin.close()
-            for line in shell.stdout:
-                print(line.strip())
+            ) as shell:
+                if shell.stdin is None or shell.stdout is None:
+                    raise Exception("Huh? stdin or stdout vanished...")
+                shell.stdin.write("@set DB2CLP=DB20FADE\n")
+                shell.stdin.write("@db2 connect to SAMPLE\n")
+                shell.stdin.write('@db2 -x "SELECT deadlocks from sysibmadm.snapdb"\n')
+                shell.stdin.write("@db2 connect reset\n")
+                shell.stdin.write("@exit\n")
+                for line in shell.stdout:
+                    print(line.strip())
         else:
             raise SystemExit("Unsupported Platform")
 

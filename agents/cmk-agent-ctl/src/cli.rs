@@ -69,19 +69,9 @@ pub struct DeleteArgs {
 }
 
 #[derive(StructOpt)]
-pub struct DaemonArgs {
-    /// External port
-    #[structopt(long, short = "p", parse(from_str))]
-    pub port: Option<String>,
-
-    #[structopt(flatten)]
-    pub logging_opts: LoggingOpts,
-}
-
-#[derive(StructOpt)]
 pub struct PullArgs {
-    /// External port
-    #[structopt(long, short = "p", parse(from_str))]
+    /// TCP port to listen on for incoming pull connections
+    #[structopt(long, short = "P", parse(from_str))]
     pub port: Option<String>,
 
     #[structopt(flatten)]
@@ -140,7 +130,7 @@ pub enum Args {
     /// and send data to all Checkmk sites configured for 'push'
     /// (as the 'push' command does) once a minute.
     #[structopt()]
-    Daemon(DaemonArgs),
+    Daemon(PullArgs),
     /// Collect monitoring data and write it to standard output
     #[structopt()]
     Dump(SharedArgsOnly),

@@ -1,16 +1,11 @@
-# systemd socket definition file
 [Unit]
-Description=Check_MK Agent Socket
+Description=Local Checkmk agent socket
 
 [Socket]
-ListenStream=6556
+ListenStream=/run/check-mk-agent.socket
+SocketUser=cmk-agent
+SocketMode=0240
 Accept=true
-# To avoid intentional or unintentional overload due to too many parallel
-# queries from one source we set this parameter. It limits the number of
-# concurrent connections per source address. If you need more requests
-# per source system, you can of course increase or remove this value
-# (https://github.com/tribe29/checkmk/pull/157)
-MaxConnectionsPerSource=3
 
 [Install]
 WantedBy=sockets.target

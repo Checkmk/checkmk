@@ -145,6 +145,7 @@ class ParserState(abc.ABC):
         noop --> section: ""<<~<STR>>>""
         section --> section: ""<<~<STR>>>""
         section --> piggy: ""<<<~<STR>>>>""
+        section --> noop: ""<<<~<>>>>""
 
         noop -> piggy: ""<<<~<STR>>>>""
         piggy --> piggy: ""<<<~<>>>>""
@@ -474,7 +475,7 @@ class HostSectionParser(ParserState):
         return self.to_piggyback_parser(piggyback_header)
 
     def on_piggyback_footer(self, line: bytes) -> "ParserState":
-        return self.to_error(line)
+        return self.to_noop_parser()
 
     def on_section_header(self, line: bytes) -> "ParserState":
         return self.to_host_section_parser(SectionMarker.from_headerline(line))

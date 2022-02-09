@@ -197,6 +197,38 @@ class TestAgentParser:
         assert store.load() == {}
 
     @pytest.mark.usefixtures("scenario")
+    def test_closing_piggyback_out_of_piggyback_section_closes_section(self, parser, store):
+        raw_data = AgentRawData(
+            b"\n".join(
+                (
+                    b"<<<a_section>>>",
+                    b"first line",
+                    b"second line",
+                    b"<<<<>>>>",  # noop
+                    b"<<<<>>>>",  # noop
+                    b"<<<another_section>>>",
+                    b"a line",
+                    b"b line",
+                )
+            )
+        )
+
+        ahs = parser.parse(raw_data, selection=NO_SELECTION)
+        assert ahs.sections == {
+            SectionName("a_section"): [
+                ["first", "line"],
+                ["second", "line"],
+            ],
+            SectionName("another_section"): [
+                ["a", "line"],
+                ["b", "line"],
+            ],
+        }
+        assert ahs.cache_info == {}
+        assert ahs.piggybacked_raw_data == {}
+        assert store.load() == {}
+
+    @pytest.mark.usefixtures("scenario")
     def test_piggyback_populates_piggyback_raw_data(self, parser, store, monkeypatch):
         monkeypatch.setattr(time, "time", lambda c=itertools.count(1000, 50): next(c))
         monkeypatch.setattr(parser, "cache_piggybacked_data_for", 900)

@@ -99,56 +99,56 @@ def read_status():
     current_status = {}  # type: Dict[str, Dict[str, Any]]
     if not os.path.exists(status_filename):
         return current_status
-
-    for line in open(status_filename):  # pylint:disable=consider-using-with
-        try:
-            parts = line.split("|")
-            if len(parts) < 2:
-                sys.stdout.write("**ERROR** (BUG) Status has less than 2 parts:\n")
-                sys.stdout.write("%s\n" % parts)
-                continue
-            host = parts[0]
-            lasttime = int(parts[1])
-            current_status[host] = {"hops": {}, "lasttime": lasttime}
-            hops = int(parts[2])
-            for i in range(0, hops):
-                current_status[host]["hops"][i + 1] = {
-                    "hopname": parts[i * 8 + 3].rstrip(),
-                    "loss": parts[i * 8 + 4].rstrip(),
-                    "snt": parts[i * 8 + 5].rstrip(),
-                    "last": parts[i * 8 + 6].rstrip(),
-                    "avg": parts[i * 8 + 7].rstrip(),
-                    "best": parts[i * 8 + 8].rstrip(),
-                    "wrst": parts[i * 8 + 9].rstrip(),
-                    "stddev": parts[i * 8 + 10].rstrip(),
-                }
-        except Exception as e:
-            sys.stdout.write(
-                "*ERROR** (BUG) Could not parse status line: %s, reason: %s\n" % (line, repr(e))
-            )
+    with open(status_filename) as opened_file:
+        for line in opened_file:
+            try:
+                parts = line.split("|")
+                if len(parts) < 2:
+                    sys.stdout.write("**ERROR** (BUG) Status has less than 2 parts:\n")
+                    sys.stdout.write("%s\n" % parts)
+                    continue
+                host = parts[0]
+                lasttime = int(parts[1])
+                current_status[host] = {"hops": {}, "lasttime": lasttime}
+                hops = int(parts[2])
+                for i in range(0, hops):
+                    current_status[host]["hops"][i + 1] = {
+                        "hopname": parts[i * 8 + 3].rstrip(),
+                        "loss": parts[i * 8 + 4].rstrip(),
+                        "snt": parts[i * 8 + 5].rstrip(),
+                        "last": parts[i * 8 + 6].rstrip(),
+                        "avg": parts[i * 8 + 7].rstrip(),
+                        "best": parts[i * 8 + 8].rstrip(),
+                        "wrst": parts[i * 8 + 9].rstrip(),
+                        "stddev": parts[i * 8 + 10].rstrip(),
+                    }
+            except Exception as e:
+                sys.stdout.write(
+                    "*ERROR** (BUG) Could not parse status line: %s, reason: %s\n" % (line, repr(e))
+                )
     return current_status
 
 
 def save_status(current_status):
-    f = open(status_filename, "w")  # pylint:disable=consider-using-with
-    for host, hostdict in current_status.items():
-        hopnum = len(hostdict["hops"].keys())
-        lastreport = hostdict["lasttime"]
-        hoststring = "%s|%s|%s" % (host, lastreport, hopnum)
-        for hop in hostdict["hops"].keys():
-            hi = hostdict["hops"][hop]
-            hoststring += "|%s|%s|%s|%s|%s|%s|%s|%s" % (
-                hi["hopname"],
-                hi["loss"],
-                hi["snt"],
-                hi["last"],
-                hi["avg"],
-                hi["best"],
-                hi["wrst"],
-                hi["stddev"],
-            )
-        hoststring = hoststring.rstrip()
-        f.write("%s\n" % hoststring)
+    with open(status_filename, "w") as f:
+        for host, hostdict in current_status.items():
+            hopnum = len(hostdict["hops"].keys())
+            lastreport = hostdict["lasttime"]
+            hoststring = "%s|%s|%s" % (host, lastreport, hopnum)
+            for hop in hostdict["hops"].keys():
+                hi = hostdict["hops"][hop]
+                hoststring += "|%s|%s|%s|%s|%s|%s|%s|%s" % (
+                    hi["hopname"],
+                    hi["loss"],
+                    hi["snt"],
+                    hi["last"],
+                    hi["avg"],
+                    hi["best"],
+                    hi["wrst"],
+                    hi["stddev"],
+                )
+            hoststring = hoststring.rstrip()
+            f.write("%s\n" % hoststring)
 
 
 _punct_re = re.compile(r'[\t !"#$%&\'()*\-/<=>?@\[\\\]^_`{|},.:]+')
@@ -202,11 +202,8 @@ def parse_report(host, status):
     if os.path.exists(reportfile + ".pid"):
         # See if it's running
         try:
-            pid = int(
-                open(reportfile + ".pid", "r")  # pylint:disable=consider-using-with
-                .readline()
-                .rstrip()
-            )
+            with open(reportfile + ".pid", "r") as opened_file:
+                pid = int(opened_file.readline().rstrip())
             if check_mtr_pid(pid):
                 # Still running, we're done.
                 if not host in status.keys():
@@ -221,7 +218,8 @@ def parse_report(host, status):
         os.unlink(reportfile + ".pid")
 
     # Parse the existing report
-    lines = open(reportfile).readlines()  # pylint:disable=consider-using-with
+    with open(reportfile) as opened_file:
+        lines = opened_file.readlines()
     if len(lines) < 3:
         sys.stdout.write(
             "**ERROR** Report file %s has less than 3 lines, "
@@ -385,10 +383,10 @@ def start_mtr(host, mtr_binary, config, status):
         options, stdout=report, stderr=report
     )
     # Write pid to report.pid
-    pidfile = open(reportfile + ".pid", "w")  # pylint:disable=consider-using-with
-    pidfile.write("%d\n" % process.pid)
-    pidfile.flush()
-    pidfile.close()
+    with open(reportfile + ".pid", "w") as pidfile:
+        pidfile.write("%d\n" % process.pid)
+        pidfile.flush()
+
     os._exit(os.EX_OK)
 
 

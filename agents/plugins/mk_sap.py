@@ -156,7 +156,8 @@ config_file = MK_CONFDIR + "/sap.cfg"
 
 cfg = {}  # type: Union[List[Dict[Any, Any]], Dict[Any, Any]]
 if os.path.exists(config_file):
-    exec(open(config_file).read())  # pylint:disable=consider-using-with
+    with open(config_file) as opened_file:
+        exec(opened_file.read())
     if isinstance(cfg, dict):
         cfg = [cfg]
 else:
@@ -164,7 +165,8 @@ else:
 
 # Load the state file into memory
 try:
-    states = ast.literal_eval(open(STATE_FILE).read())  # pylint:disable=consider-using-with
+    with open(STATE_FILE) as opened_file:
+        states = ast.literal_eval(opened_file.read())
 except IOError:
     states = {}
 

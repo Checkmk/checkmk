@@ -56,16 +56,15 @@ def get_allnet_ip_sensoric_info(host_address, opt_debug):
 
     try:
         req = urllib.request.Request(url, None, headers)
-        handle = urllib.request.urlopen(req)  # pylint:disable=consider-using-with
+        with urllib.request.urlopen(req) as handle:
+            infos = handle.info()
+            contents = handle.read().decode("utf-8")
     except Exception:
         if opt_debug:
             sys.stdout.write("----------------------------\n")
             sys.stdout.write(traceback.format_exc())
             sys.stdout.write("============================\n")
         raise RequestError("Error during http call")
-
-    infos = handle.info()
-    contents = handle.read().decode("utf-8")
 
     if opt_debug:
         sys.stdout.write("----------------------------\n")

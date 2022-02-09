@@ -105,3 +105,13 @@ def test_obfuscate_with_own_secret() -> None:
 
     # Test encryption and decryption with new key
     assert password_store._deobfuscate(password_store._obfuscate(secret)) == secret
+
+
+def test_encrypt_decrypt_identity() -> None:
+    data = "some random data to be encrypted"
+    assert (
+        password_store._PasswordStoreObfuscater.decrypt(
+            password_store._PasswordStoreObfuscater.encrypt(data)
+        )
+        == data
+    )

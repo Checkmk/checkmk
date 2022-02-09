@@ -213,6 +213,7 @@ def _handle_job_type(data, new_dict, folder=""):
         if job_type.get("_class") and job_type["_class"] in [
             "com.cloudbees.hudson.plugins.folder.Folder",
             "org.jenkinsci.plugins.workflow.multibranch.WorkflowMultiBranchProject",
+            "jenkins.branch.OrganizationFolder",
         ]:
             item_name += "%s/" % job_type["name"]
             if job_type.get("jobs") is not None:

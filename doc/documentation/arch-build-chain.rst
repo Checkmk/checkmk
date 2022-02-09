@@ -36,7 +36,6 @@ SLES 15 SP3
 Ubuntu 16.04 (LTS)
 Ubuntu 18.04 (LTS)
 Ubuntu 20.04 (LTS)
-Ubuntu 21.04
 Ubuntu 21.10
 
 

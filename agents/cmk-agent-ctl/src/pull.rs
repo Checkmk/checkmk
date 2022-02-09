@@ -21,15 +21,20 @@ pub fn pull(
     registry: Arc<RwLock<config::Registry>>,
     legacy_pull_marker: &std::path::Path,
 ) -> AnyhowResult<()> {
-    runtime.block_on(async_pull(registry, legacy_pull_marker.to_owned()))?;
+    runtime.block_on(async_pull(
+        registry,
+        legacy_pull_marker.to_owned(),
+        constants::AGENT_PORT,
+    ))?;
     Ok(())
 }
 
 pub async fn async_pull(
     registry: Arc<RwLock<config::Registry>>,
     legacy_pull_marker: std::path::PathBuf,
+    port: &str,
 ) -> AnyhowResult<()> {
-    let listener = TcpListener::bind(format!("0.0.0.0:{}", constants::AGENT_PORT)).await?;
+    let listener = TcpListener::bind(format!("0.0.0.0:{}", port)).await?;
     loop {
         let (stream, addr) = listener
             .accept()

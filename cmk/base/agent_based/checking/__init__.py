@@ -578,7 +578,13 @@ def _get_monitoring_data_kwargs(
     return (
         get_section_kwargs(
             parsed_sections_broker,
-            HostKey(host_config.hostname, ipaddress, source_type),
+            HostKey(
+                host_config.hostname,
+                host_config.management_address
+                if source_type is SourceType.MANAGEMENT
+                else ipaddress,
+                source_type,
+            ),
             sections,
         ),
         ServiceCheckResult.received_no_data(),

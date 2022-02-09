@@ -4074,14 +4074,21 @@ class ConfigCache:
         service_descr: ServiceName,
     ) -> Sequence[HostKey]:
         """Returns the node keys if a service is clustered, otherwise an empty sequence"""
-        return [
-            HostKey(
-                nodename,
-                lookup_ip_address(self.get_host_config(nodename)),
-                source_type,
-            )
+        node_configs = [
+            self.get_host_config(nodename)
             for nodename in (host_config.nodes or ())
             if host_config.hostname == self.host_of_clustered_service(nodename, service_descr)
+        ]
+        return [
+            HostKey(
+                nc.hostname,
+                # I am not sure about management interfaces on clusters, but let's be consistent.
+                nc.management_address
+                if source_type is SourceType.MANAGEMENT
+                else lookup_ip_address(nc),
+                source_type,
+            )
+            for nc in node_configs
         ]
 
     def get_piggybacked_hosts_time_settings(

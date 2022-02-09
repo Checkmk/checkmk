@@ -5,7 +5,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """The WATO folders network scan for new hosts"""
 
-import os
 import re
 import socket
 import subprocess
@@ -346,7 +345,7 @@ def _ping(address: HostAddress) -> bool:
     return (
         subprocess.Popen(
             ["ping", "-c2", "-w2", address],
-            stdout=open(os.devnull, "a"),
+            stdout=subprocess.DEVNULL,
             stderr=subprocess.STDOUT,
             encoding="utf-8",
             close_fds=True,

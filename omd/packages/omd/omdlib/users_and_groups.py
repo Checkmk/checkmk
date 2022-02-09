@@ -55,7 +55,7 @@ def find_processes_of_user(username: str) -> List[str]:
     try:
         p = subprocess.Popen(  # pylint:disable=consider-using-with
             ["pgrep", "-u", username],
-            stdin=open(os.devnull, "r"),  # pylint:disable=consider-using-with
+            stdin=subprocess.DEVNULL,
             stdout=subprocess.PIPE,
             close_fds=True,
             encoding="utf-8",
@@ -71,8 +71,8 @@ def groupdel(groupname: str) -> None:
     try:
         p = subprocess.Popen(  # pylint:disable=consider-using-with
             ["groupdel", groupname],
-            stdin=open(os.devnull, "r"),  # pylint:disable=consider-using-with
-            stdout=open(os.devnull, "w"),  # pylint:disable=consider-using-with
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.DEVNULL,
             stderr=subprocess.PIPE,
             close_fds=True,
             encoding="utf-8",
@@ -130,7 +130,7 @@ def _groupadd(groupname: str, gid: Optional[str] = None) -> None:
         subprocess.Popen(  # pylint:disable=consider-using-with
             cmd,
             close_fds=True,
-            stdin=open(os.devnull, "r"),  # pylint:disable=consider-using-with
+            stdin=subprocess.DEVNULL,
         ).wait()
         != 0
     ):
@@ -147,8 +147,8 @@ def userdel(name: str) -> None:
         try:
             p = subprocess.Popen(  # pylint:disable=consider-using-with
                 ["userdel", "-r", name],
-                stdin=open(os.devnull, "r"),  # pylint:disable=consider-using-with
-                stdout=open(os.devnull, "w"),  # pylint:disable=consider-using-with
+                stdin=subprocess.DEVNULL,
+                stdout=subprocess.DEVNULL,
                 stderr=subprocess.PIPE,
                 close_fds=True,
                 encoding="utf-8",

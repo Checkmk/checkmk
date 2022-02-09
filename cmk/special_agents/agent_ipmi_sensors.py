@@ -261,19 +261,18 @@ def _main(args: Args) -> None:
         sys.stdout.write("<<<ipmi%s:sep(124)>>>\n" % section)
         try:
             try:
-                with open(os.devnull) as devnull:
-                    completed_process = subprocess.run(
-                        [
-                            *ipmi_cmd,
-                            *types,
-                        ],
-                        close_fds=True,
-                        stdin=devnull,
-                        stdout=subprocess.PIPE,
-                        stderr=subprocess.PIPE,
-                        encoding="utf-8",
-                        check=False,
-                    )
+                completed_process = subprocess.run(
+                    [
+                        *ipmi_cmd,
+                        *types,
+                    ],
+                    close_fds=True,
+                    stdin=subprocess.DEVNULL,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                    encoding="utf-8",
+                    check=False,
+                )
             except OSError as e:
                 if e.errno == errno.ENOENT:  # No such file or directory
                     raise Exception(

@@ -1133,7 +1133,7 @@ class CRESnapshotDataCollector(ABCSnapshotDataCollector):
                 ["cp", "-al", str(source_path), str(target_path.parent) + "/"],
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
-                stdin=open(os.devnull),  # pylint:disable=consider-using-with
+                stdin=subprocess.DEVNULL,
                 shell=False,
                 close_fds=True,
             )

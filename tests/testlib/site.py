@@ -377,19 +377,18 @@ class Site:
             shutil.rmtree(self.path(rel_path))
 
     def _call_tee(self, rel_target_path: str, content: Union[bytes, str]) -> None:
-        with open(os.devnull, "w") as stdout:
-            with self.execute(
-                ["tee", self.path(rel_target_path)],
-                stdin=subprocess.PIPE,
-                stdout=stdout,
-                encoding=None
-                if isinstance(
-                    content,
-                    bytes,
-                )
-                else "utf-8",
-            ) as p:
-                p.communicate(content)
+        with self.execute(
+            ["tee", self.path(rel_target_path)],
+            stdin=subprocess.PIPE,
+            stdout=subprocess.DEVNULL,
+            encoding=None
+            if isinstance(
+                content,
+                bytes,
+            )
+            else "utf-8",
+        ) as p:
+            p.communicate(content)
         if p.returncode != 0:
             raise Exception(
                 "Failed to write file %s. Exit-Code: %d"
@@ -839,7 +838,7 @@ class Site:
 
     def is_running(self) -> bool:
         return (
-            self.execute(["/usr/bin/omd", "status", "--bare"], stdout=open(os.devnull, "w")).wait()
+            self.execute(["/usr/bin/omd", "status", "--bare"], stdout=subprocess.DEVNULL).wait()
             == 0
         )
 
@@ -848,7 +847,7 @@ class Site:
         # 1 -> fully stopped
         # 2 -> partially running
         return (
-            self.execute(["/usr/bin/omd", "status", "--bare"], stdout=open(os.devnull, "w")).wait()
+            self.execute(["/usr/bin/omd", "status", "--bare"], stdout=subprocess.DEVNULL).wait()
             == 1
         )
 

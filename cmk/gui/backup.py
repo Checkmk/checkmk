@@ -294,7 +294,7 @@ class MKBackupJob:
             close_fds=True,
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
-            stdin=open(os.devnull),  # pylint:disable=consider-using-with
+            stdin=subprocess.DEVNULL,
             encoding="utf-8",
             env=env,
         )

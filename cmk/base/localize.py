@@ -143,7 +143,8 @@ def _check_binaries() -> None:
     for b in ["xgettext", "msgmerge", "msgfmt"]:
         if (
             subprocess.call(
-                ["which", b], stdout=open(os.devnull, "wb")  # pylint:disable=consider-using-with
+                ["which", b],
+                stdout=subprocess.DEVNULL,
             )
             != 0
         ):
@@ -160,7 +161,7 @@ def _localize_update_po(lang: LanguageName) -> None:
     if (
         subprocess.call(
             ["msgmerge", "-U", _po_file(lang), _pot_file()],
-            stdout=open(os.devnull, "wb"),  # pylint:disable=consider-using-with
+            stdout=subprocess.DEVNULL,
         )
         != 0
     ):
@@ -173,7 +174,7 @@ def _localize_init_po(lang: LanguageName) -> None:
     if (
         subprocess.call(
             ["msginit", "-i", _pot_file(), "--no-translator", "-l", lang, "-o", _po_file(lang)],
-            stdout=open(os.devnull, "wb"),  # pylint:disable=consider-using-with
+            stdout=subprocess.DEVNULL,
         )
         != 0
     ):
@@ -214,7 +215,7 @@ def _localize_sniff() -> None:
                 _pot_file(),
             ]
             + sniff_files,
-            stdout=open(os.devnull, "wb"),  # pylint:disable=consider-using-with
+            stdout=subprocess.DEVNULL,
         )
         != 0
     ):

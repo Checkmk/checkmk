@@ -654,7 +654,7 @@ s/(HOST|SERVICE) NOTIFICATION: ([^;]+);%(old)s;/\1 NOTIFICATION: \2;%(new)s;/
             extended = ["-r"] if extended_regex else []
             subprocess.call(
                 ["sed", "-i"] + extended + ["s@%s@%s@" % (old, new)] + paths,
-                stderr=open(os.devnull, "w"),  # pylint:disable=consider-using-with
+                stderr=subprocess.DEVNULL,
             )
             return True
 

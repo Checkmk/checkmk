@@ -163,7 +163,7 @@ def do_snmptranslate(walk_filename: str) -> None:
         command,
         stdin=subprocess.PIPE,
         stdout=subprocess.PIPE,
-        stderr=open(os.devnull, "w"),  # pylint:disable=consider-using-with
+        stderr=subprocess.DEVNULL,
         close_fds=True,
     )
 

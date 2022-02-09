@@ -815,12 +815,14 @@ def start_stop_site(site: str, command: str, expected_return_code: int) -> None:
     site_arg = [site] if is_root() else []
     omd_command(["omd", command] + site_arg)
     for _c in range(5):
-        with open(os.devnull, "wb") as f:
-            if (
-                subprocess.call(["omd", "status", "--bare"] + site_arg, stdout=f)
-                == expected_return_code
-            ):
-                return
+        if (
+            subprocess.call(
+                ["omd", "status", "--bare"] + site_arg,
+                stdout=subprocess.DEVNULL,
+            )
+            == expected_return_code
+        ):
+            return
     raise MKGeneralException("Failed to %s site" % command)
 
 

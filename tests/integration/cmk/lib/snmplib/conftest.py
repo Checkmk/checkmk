@@ -90,7 +90,7 @@ def _define_process(index, auth, tmp_path, snmp_data_dir):
             + auth,
             close_fds=True,
             # Silence the very noisy output. May be useful to enable this for debugging tests
-            # stdout=open(os.devnull, "w"),
+            # stdout=subprocess.DEVNULL,
             # stderr=subprocess.STDOUT,
         ),
     )

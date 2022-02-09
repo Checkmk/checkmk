@@ -86,7 +86,7 @@ def prepare_tmpfs(version_info: VersionInfo, site: SiteContext) -> None:
     p = subprocess.Popen(  # pylint:disable=consider-using-with
         ["mount"] + mount_options + [site.tmp_dir],
         shell=False,
-        stdin=open(os.devnull),  # pylint:disable=consider-using-with
+        stdin=subprocess.DEVNULL,
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
         encoding="utf-8",
@@ -201,7 +201,7 @@ def _tmpfs_is_managed_by_node(site: SiteContext) -> bool:
         return False
 
     return subprocess.call(
-        ["umount", site.tmp_dir], stdout=open(os.devnull, "w"), stderr=subprocess.STDOUT
+        ["umount", site.tmp_dir], stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT
     ) in [1, 32]
 
 

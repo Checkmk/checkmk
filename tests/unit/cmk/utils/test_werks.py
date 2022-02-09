@@ -159,7 +159,7 @@ def _git_tag_exists(tag):
     return (
         subprocess.Popen(
             ["git", "rev-list", tag],
-            stdout=open(os.devnull, "w"),
+            stdout=subprocess.DEVNULL,
             stderr=subprocess.STDOUT,
             cwd=testlib.cmk_path(),
         ).wait()

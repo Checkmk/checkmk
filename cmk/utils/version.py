@@ -572,9 +572,9 @@ def _current_monitoring_core() -> str:
         p = subprocess.Popen(  # pylint:disable=consider-using-with
             ["omd", "config", "show", "CORE"],
             close_fds=True,
-            stdin=open(os.devnull),  # pylint:disable=consider-using-with
+            stdin=subprocess.DEVNULL,
             stdout=subprocess.PIPE,
-            stderr=open(os.devnull, "w"),  # pylint:disable=consider-using-with
+            stderr=subprocess.DEVNULL,
             encoding="utf-8",
         )
         return p.communicate()[0].rstrip()

@@ -3114,7 +3114,7 @@ def main_init_action(
         bare_arg = ["--bare"] if bare else []
         p = subprocess.Popen(  # pylint:disable=consider-using-with
             [sys.argv[0], command] + bare_arg + [site.name] + args,
-            stdin=open(os.devnull, "r"),  # pylint:disable=consider-using-with
+            stdin=subprocess.DEVNULL,
             stdout=stdout,
             stderr=stderr,
             encoding="utf-8",
@@ -3542,7 +3542,7 @@ def site_user_processes(site: SiteContext, exclude_current_and_parents: bool) ->
     p = subprocess.Popen(  # pylint:disable=consider-using-with
         ["ps", "-U", site.name, "-o", "pid", "--no-headers"],
         close_fds=True,
-        stdin=open(os.devnull),  # pylint:disable=consider-using-with
+        stdin=subprocess.DEVNULL,
         stdout=subprocess.PIPE,
         encoding="utf-8",
     )
@@ -3693,7 +3693,7 @@ class PackageManager(abc.ABC):
             cmd,
             shell=False,
             close_fds=True,
-            stdin=open(os.devnull),
+            stdin=subprocess.DEVNULL,
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
             encoding="utf-8",

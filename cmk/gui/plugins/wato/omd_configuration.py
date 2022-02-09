@@ -441,7 +441,7 @@ class ConfigDomainApache(ABCConfigDomain):
 
             p = subprocess.Popen(  # pylint:disable=consider-using-with
                 ["omd", "reload", "apache"],
-                stdin=open(os.devnull),  # pylint:disable=consider-using-with
+                stdin=subprocess.DEVNULL,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
                 close_fds=True,
@@ -565,7 +565,7 @@ class ConfigDomainRRDCached(ABCConfigDomain):
 
             p = subprocess.Popen(  # pylint:disable=consider-using-with
                 ["omd", "restart", "rrdcached"],
-                stdin=open(os.devnull),  # pylint:disable=consider-using-with
+                stdin=subprocess.DEVNULL,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
                 close_fds=True,

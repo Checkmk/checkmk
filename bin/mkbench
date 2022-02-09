@@ -2734,7 +2734,7 @@ class TestAgentBasedStandardHosts(TestCase):
 
     # def _discover_services(self):
     #    self._test.info("  Discovering services")
-    #    p = subprocess.Popen(["cmk", "-II"], stdin=open(os.devnull),
+    #    p = subprocess.Popen(["cmk", "-II"], stdin=subprocess.DEVNULL,
     #            close_fds=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 
     #    try:

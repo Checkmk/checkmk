@@ -322,7 +322,7 @@ def gateway_reachable_via_ping(ip: HostAddress, probes: int) -> bool:
     return (
         subprocess.call(
             ["ping", "-q", "-i", "0.2", "-l", "3", "-c", "%d" % probes, "-W", "5", ip],
-            stdout=open(os.devnull, "w"),
+            stdout=subprocess.DEVNULL,
             stderr=subprocess.STDOUT,
             close_fds=True,
         )

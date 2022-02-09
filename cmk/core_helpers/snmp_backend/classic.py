@@ -113,7 +113,7 @@ class ClassicSNMPBackend(SNMPBackend):
             snmp_process = subprocess.Popen(  # pylint:disable=consider-using-with
                 command,
                 close_fds=True,
-                stdin=open(os.devnull),  # pylint:disable=consider-using-with
+                stdin=subprocess.DEVNULL,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
                 encoding="utf-8",

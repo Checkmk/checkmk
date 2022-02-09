@@ -18,7 +18,7 @@ const HEADER_VERSION: &[u8] = b"\x00\x00";
 pub async fn pull(
     mut registry: config::Registry,
     legacy_pull_marker: std::path::PathBuf,
-    port: &str,
+    port: String,
 ) -> AnyhowResult<()> {
     let listener = TcpListener::bind(format!("0.0.0.0:{}", port)).await?;
     loop {

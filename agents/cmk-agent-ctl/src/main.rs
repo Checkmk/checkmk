@@ -26,7 +26,11 @@ use std::sync::mpsc;
 use std::thread;
 use structopt::StructOpt;
 
-fn daemon(registry: config::Registry, legacy_pull_marker: std::path::PathBuf) -> AnyhowResult<()> {
+fn daemon(
+    registry: config::Registry,
+    legacy_pull_marker: std::path::PathBuf,
+    port: String,
+) -> AnyhowResult<()> {
     let registry_for_push = registry.clone();
     let registry_for_pull = registry;
 
@@ -38,11 +42,7 @@ fn daemon(registry: config::Registry, legacy_pull_marker: std::path::PathBuf) ->
     });
     thread::spawn(move || {
         tx_pull
-            .send(pull::pull(
-                registry_for_pull,
-                legacy_pull_marker,
-                constants::AGENT_PORT,
-            ))
+            .send(pull::pull(registry_for_pull, legacy_pull_marker, port))
             .unwrap();
     });
 
@@ -150,10 +150,20 @@ fn run_requested_mode(args: cli::Args, paths: constants::Paths) -> AnyhowResult<
             )?)
         }
         cli::Args::Push { .. } => push::handle_push_cycle(&registry),
-        cli::Args::Pull { .. } => {
-            pull::pull(registry, paths.legacy_pull_path, constants::AGENT_PORT)
-        }
-        cli::Args::Daemon { .. } => daemon(registry, paths.legacy_pull_path),
+        cli::Args::Pull(pull_args) => pull::pull(
+            registry,
+            paths.legacy_pull_path,
+            pull_args
+                .port
+                .unwrap_or_else(|| constants::AGENT_PORT.to_owned()),
+        ),
+        cli::Args::Daemon(daemon_args) => daemon(
+            registry,
+            paths.legacy_pull_path,
+            daemon_args
+                .port
+                .unwrap_or_else(|| constants::AGENT_PORT.to_owned()),
+        ),
         cli::Args::Dump { .. } => dump::dump(),
         cli::Args::Status(status_args) => status::status(registry, status_args.json),
         cli::Args::Delete(delete_args) => {
@@ -186,7 +196,7 @@ fn main() -> AnyhowResult<()> {
 mod tests {
     use super::*;
 
-    #[cfg(test)]
+    #[test]
     fn test_windows_paths() {
         let p = determine_paths(constants::CMK_AGENT_USER).unwrap();
         let home = String::from("C:\\ProgramData") + constants::WIN_AGENT_HOME_DIR;

@@ -24,6 +24,7 @@ from cmk.gui.http import Response
 from cmk.gui.plugins.openapi.restful_objects import (
     constructors,
     Endpoint,
+    permissions,
     request_schemas,
     response_schemas,
 )
@@ -43,6 +44,13 @@ from cmk.gui.watolib.tags import (
 )
 
 from cmk import fields
+
+PERMISSIONS = permissions.AllPerm(
+    [
+        permissions.Perm("wato.hosttags"),
+        permissions.Optional(permissions.Perm("wato.all_folders")),
+    ]
+)
 
 
 class HostTagGroupName(fields.String):
@@ -76,6 +84,7 @@ HOST_TAG_GROUP_NAME = {
     etag="output",
     request_schema=request_schemas.InputHostTagGroup,
     response_schema=response_schemas.DomainObject,
+    permissions_required=PERMISSIONS,
 )
 def create_host_tag_group(params):
     """Create a host tag group"""
@@ -91,6 +100,7 @@ def create_host_tag_group(params):
     etag="output",
     path_params=[HOST_TAG_GROUP_NAME],
     response_schema=response_schemas.ConcreteHostTagGroup,
+    permissions_required=permissions.Perm("wato.hosttags"),
 )
 def show_host_tag_group(params):
     """Show a host tag group"""
@@ -104,6 +114,7 @@ def show_host_tag_group(params):
     ".../collection",
     method="get",
     response_schema=response_schemas.DomainObjectCollection,
+    permissions_required=permissions.Perm("wato.hosttags"),
 )
 def list_host_tag_groups(params):
     """Show all host tag groups"""
@@ -133,6 +144,7 @@ def list_host_tag_groups(params):
     path_params=[HOST_TAG_GROUP_NAME],
     additional_status_codes=[401, 405],
     request_schema=request_schemas.UpdateHostTagGroup,
+    permissions_required=PERMISSIONS,
     response_schema=response_schemas.ConcreteHostTagGroup,
 )
 def update_host_tag_group(params):
@@ -174,6 +186,7 @@ def update_host_tag_group(params):
     path_params=[HOST_TAG_GROUP_NAME],
     additional_status_codes=[405],
     query_params=[request_schemas.DeleteHostTagGroup],
+    permissions_required=PERMISSIONS,
     output_empty=True,
 )
 def delete_host_tag_group(params):

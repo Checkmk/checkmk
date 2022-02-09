@@ -23,6 +23,7 @@ from cmk.utils.type_defs import TagConfigSpec
 import cmk.gui.watolib as watolib
 from cmk.gui.config import load_config
 from cmk.gui.exceptions import MKAuthException, MKGeneralException
+from cmk.gui.globals import user
 from cmk.gui.watolib.utils import multisite_dir, wato_root_dir
 
 
@@ -80,6 +81,10 @@ class TagConfigFile:
 
 def load_tag_config() -> TagConfig:
     """Load the tag config object based upon the most recently saved tag config file"""
+    # This sometimes gets called on import-time where we don't have a request-context yet, so we
+    # have to omit on checking the permissions there.
+    if user:
+        user.need_permission("wato.hosttags")  # see cmk.gui.wato.pages.tags
     tag_config = cmk.utils.tags.TagConfig.from_config(TagConfigFile().load_for_modification())
     return tag_config
 
@@ -93,6 +98,8 @@ def update_tag_config(tag_config: TagConfig):
             The tag config object to persist
 
     """
+    if user:
+        user.need_permission("wato.hosttags")
     TagConfigFile().save(tag_config.get_dict_format())
     _update_tag_dependencies()
 
@@ -126,6 +133,8 @@ def save_tag_group(tag_group: TagGroup):
 
 def is_builtin(ident: str) -> bool:
     """Verify if a tag group is a built-in"""
+    if user:
+        user.need_permission("wato.hosttags")
     tag_config = BuiltinTagConfig()
     return tag_config.tag_group_exists(ident)
 

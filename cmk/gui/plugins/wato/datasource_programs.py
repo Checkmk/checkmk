@@ -745,13 +745,16 @@ rulespec_registry.register(
 
 
 def _ssl_verification():
-    return Alternative(
-        title=_("SSL certificate verification"),
-        elements=[
-            FixedValue(True, title=_("Verify the certificate"), totext=""),
-            FixedValue(False, title=_("Ignore certificate errors (unsecure)"), totext=""),
-        ],
-        default_value=False,
+    return (
+        "verify-cert",
+        Alternative(
+            title=_("SSL certificate verification"),
+            elements=[
+                FixedValue(True, title=_("Verify the certificate"), totext=""),
+                FixedValue(False, title=_("Ignore certificate errors (unsecure)"), totext=""),
+            ],
+            default_value=False,
+        ),
     )
 
 
@@ -793,7 +796,7 @@ def _valuespec_special_agents_kube():
                                 ),
                             ),
                         ),
-                        ("verify-cert", _ssl_verification()),
+                        _ssl_verification(),
                     ],
                     required_keys=["endpoint", "verify-cert"],
                     title=_("API server connection"),
@@ -817,7 +820,7 @@ def _valuespec_special_agents_kube():
                                 ),
                             ),
                         ),
-                        ("verify-cert", _ssl_verification()),
+                        _ssl_verification(),
                     ],
                     required_keys=["endpoint", "verify-cert"],
                     title=_("Get usage data via Checkmk Cluster Collector"),

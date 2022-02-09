@@ -15,8 +15,6 @@ from typing import Sequence
 
 import pytest
 
-from tests.testlib.base import Scenario
-
 from cmk.utils.type_defs import AgentRawData, HostName, SectionName
 
 from cmk.snmplib.type_defs import SNMPRawData, SNMPRawDataSection
@@ -35,12 +33,6 @@ class TestAgentParser:
     @pytest.fixture
     def logger(self):
         return logging.getLogger("test")
-
-    @pytest.fixture
-    def scenario(self, hostname: HostName, monkeypatch):
-        ts = Scenario()
-        ts.add_host(hostname)
-        ts.apply(monkeypatch)
 
     @pytest.fixture
     def store_path(self, tmp_path):
@@ -63,7 +55,6 @@ class TestAgentParser:
             logger=logger,
         )
 
-    @pytest.mark.usefixtures("scenario")
     def test_missing_host_header(self, parser, store):
         raw_data = AgentRawData(
             b"\n".join(
@@ -81,7 +72,6 @@ class TestAgentParser:
         assert ahs.piggybacked_raw_data == {}
         assert store.load() == {}
 
-    @pytest.mark.usefixtures("scenario")
     def test_piggy_name_as_hostname_is_not_piggybacked(self, parser, store, hostname: HostName):
         host_name_bytes = str(hostname).encode("ascii")
         raw_data = AgentRawData(
@@ -101,7 +91,6 @@ class TestAgentParser:
         assert ahs.piggybacked_raw_data == {}
         assert store.load() == {}
 
-    @pytest.mark.usefixtures("scenario")
     def test_no_section_header_after_piggyback(self, parser, store):
         raw_data = AgentRawData(
             b"\n".join(
@@ -120,7 +109,6 @@ class TestAgentParser:
         assert ahs.piggybacked_raw_data == {HostName("piggy"): []}
         assert store.load() == {}
 
-    @pytest.mark.usefixtures("scenario")
     def test_raw_section_populates_sections(self, parser, store):
         raw_data = AgentRawData(
             b"\n".join(
@@ -147,7 +135,6 @@ class TestAgentParser:
         assert ahs.piggybacked_raw_data == {}
         assert store.load() == {}
 
-    @pytest.mark.usefixtures("scenario")
     def test_merge_split_raw_sections(self, parser, store):
         raw_data = AgentRawData(
             b"\n".join(
@@ -196,7 +183,6 @@ class TestAgentParser:
         assert ahs.piggybacked_raw_data == {}
         assert store.load() == {}
 
-    @pytest.mark.usefixtures("scenario")
     def test_closing_piggyback_out_of_piggyback_section_closes_section(self, parser, store):
         raw_data = AgentRawData(
             b"\n".join(
@@ -228,7 +214,6 @@ class TestAgentParser:
         assert ahs.piggybacked_raw_data == {}
         assert store.load() == {}
 
-    @pytest.mark.usefixtures("scenario")
     def test_piggyback_populates_piggyback_raw_data(self, parser, store, monkeypatch):
         monkeypatch.setattr(time, "time", lambda c=itertools.count(1000, 50): next(c))
         monkeypatch.setattr(parser, "cache_piggybacked_data_for", 900)
@@ -288,7 +273,6 @@ class TestAgentParser:
         }
         assert store.load() == {}
 
-    @pytest.mark.usefixtures("scenario")
     def test_merge_split_piggyback_sections(self, parser, store, monkeypatch):
         monkeypatch.setattr(time, "time", lambda c=itertools.count(1000, 50): next(c))
         monkeypatch.setattr(parser, "cache_piggybacked_data_for", 900)
@@ -335,7 +319,6 @@ class TestAgentParser:
         }
         assert store.load() == {}
 
-    @pytest.mark.usefixtures("scenario")
     def test_persist_option_populates_cache_info(self, parser, store, mocker, monkeypatch):
         monkeypatch.setattr(time, "time", lambda c=itertools.count(1000, 50): next(c))
 
@@ -360,7 +343,6 @@ class TestAgentParser:
             }
         )
 
-    @pytest.mark.usefixtures("scenario")
     def test_persist_option_and_persisted_sections(self, parser, store, mocker, monkeypatch):
         monkeypatch.setattr(time, "time", lambda c=itertools.count(1000, 50): next(c))
         monkeypatch.setattr(
@@ -574,12 +556,6 @@ class TestSNMPParser:
     @pytest.fixture
     def hostname(self):
         return "hostname"
-
-    @pytest.fixture(autouse=True)
-    def scenario_fixture(self, hostname, monkeypatch):
-        ts = Scenario()
-        ts.add_host(hostname)
-        ts.apply(monkeypatch)
 
     @pytest.fixture
     def parser(self, hostname):

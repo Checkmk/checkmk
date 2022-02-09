@@ -21,7 +21,7 @@ def kubernetes_api_client():
 
 @pytest.fixture(name="raw_api")
 def _raw_api():
-    return RawAPI(kubernetes_api_client())
+    return RawAPI(kubernetes_api_client(), timeout=(10, 10))
 
 
 def test_raw_api_get_healthz_ok(raw_api):

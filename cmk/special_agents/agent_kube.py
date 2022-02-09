@@ -226,6 +226,20 @@ def parse_arguments(args: List[str]) -> argparse.Namespace:
         help="The timeout in seconds the special agent will wait for a "
         "response from the cluster collector.",
     )
+    p.add_argument(
+        "--k8s-api-connect-timeout",
+        type=int,
+        default=10,
+        help="The timeout in seconds the special agent will wait for a "
+        "connection to the Kubernetes API.",
+    )
+    p.add_argument(
+        "--k8s-api-read-timeout",
+        type=int,
+        default=12,
+        help="The timeout in seconds the special agent will wait for a "
+        "response from the Kubernetes API.",
+    )
 
     arguments = p.parse_args(args)
     return arguments
@@ -1515,7 +1529,10 @@ def main(args: Optional[List[str]] = None) -> int:
             LOGGER.info("Collecting API data")
 
             try:
-                api_server = APIServer.from_kubernetes(api_client)
+                api_server = APIServer.from_kubernetes(
+                    api_client,
+                    timeout=(arguments.k8s_api_connect_timeout, arguments.k8s_api_read_timeout),
+                )
             except urllib3.exceptions.MaxRetryError as e:
                 raise ClusterConnectionError(
                     f"Failed to establish a connection to {e.pool.host}:{e.pool.port} "

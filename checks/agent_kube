@@ -7,6 +7,17 @@
 from typing import Any, Mapping, Optional, Sequence, Union
 
 
+def _timeouts(timeouts: Mapping[str, int], arg_prefix: str) -> Sequence[str]:
+    args = []
+    if (connect := timeouts.get("connect")) is not None:
+        args.append(f"--{arg_prefix}-connect-timeout")
+        args.append(str(connect))
+    if (read := timeouts.get("read")) is not None:
+        args.append(f"--{arg_prefix}-read-timeout")
+        args.append(str(read))
+    return args
+
+
 def agent_kube_arguments(
     params: Mapping[str, Any], hostname: str, ipaddress: Optional[str]
 ) -> Sequence[Union[str, tuple[str, str, str]]]:
@@ -28,22 +39,15 @@ def agent_kube_arguments(
     if api_params.get("verify-cert"):
         args.append("--verify-cert-api")
     args.extend(["--api-server-proxy", get_http_proxy(api_params["proxy"]).serialize()])
+    if api_timeouts := api_params.get("timeout"):
+        args.extend(_timeouts(api_timeouts, "k8s-api"))
 
     if (collector_params := params.get("cluster-collector")) is not None:
         args.extend(["--cluster-collector-endpoint", collector_params["endpoint"]])
         if collector_params.get("verify-cert"):
             args.append("--verify-cert-collector")
         if collector_timeouts := collector_params.get("timeout"):
-            args.extend(
-                ["--cluster-collector-connect-timeout", collector_timeouts["connect"]]
-                if "connect" in collector_timeouts
-                else []
-            )
-            args.extend(
-                ["--cluster-collector-read-timeout", collector_timeouts["read"]]
-                if "read" in collector_timeouts
-                else []
-            )
+            args.extend(_timeouts(collector_timeouts, "cluster-collector"))
         if proxy := collector_params.get("proxy"):
             args.extend(["--cluster-collector-proxy", get_http_proxy(proxy).serialize()])
 

@@ -19,14 +19,15 @@ from cmk.special_agents.utils_kubernetes.transform import (
 
 
 class BatchAPI:
-    def __init__(self, api_client: client.ApiClient) -> None:
+    def __init__(self, api_client: client.ApiClient, timeout) -> None:
         self.connection = client.BatchV1Api(api_client)
+        self.timeout = timeout
 
     def query_raw_cron_jobs(self) -> Iterator[client.V1CronJob]:
-        return self.connection.list_cron_job_for_all_namespaces().items
+        return self.connection.list_cron_job_for_all_namespaces(_request_timeout=self.timeout).items
 
     def query_raw_jobs(self) -> Iterator[client.V1Job]:
-        return self.connection.list_job_for_all_namespaces().items
+        return self.connection.list_job_for_all_namespaces(_request_timeout=self.timeout).items
 
 
 class CoreAPI:
@@ -34,14 +35,15 @@ class CoreAPI:
     Wrapper around CoreV1Api; Implementation detail of APIServer
     """
 
-    def __init__(self, api_client: client.ApiClient) -> None:
+    def __init__(self, api_client: client.ApiClient, timeout) -> None:
         self.connection = client.CoreV1Api(api_client)
+        self.timeout = timeout
         self._nodes: Dict[str, api.Node] = {}
         self._pods: Dict[str, api.Pod] = {}
         self._collect_objects()
 
     def nodes(self) -> Sequence[client.V1Node]:
-        return self.connection.list_node().items
+        return self.connection.list_node(_request_timeout=self.timeout).items
 
     def pods(self) -> Sequence[api.Pod]:
         return tuple(self._pods.values())
@@ -50,12 +52,12 @@ class CoreAPI:
         self, namespace: str, label_selector: str = ""
     ) -> Iterator[client.V1Pod]:
         for pod in self.connection.list_namespaced_pod(
-            namespace, label_selector=label_selector
+            namespace, label_selector=label_selector, _request_timeout=self.timeout
         ).items:
             yield pod
 
     def query_raw_pods(self) -> Iterator[client.V1Pod]:
-        return self.connection.list_pod_for_all_namespaces().items
+        return self.connection.list_pod_for_all_namespaces(_request_timeout=self.timeout).items
 
     def _collect_objects(self):
         self._collect_pods()
@@ -64,7 +66,9 @@ class CoreAPI:
         self._pods.update(
             {
                 pod.metadata.name: pod_from_client(pod)
-                for pod in self.connection.list_pod_for_all_namespaces().items
+                for pod in self.connection.list_pod_for_all_namespaces(
+                    _request_timeout=self.timeout
+                ).items
             }
         )
 
@@ -82,11 +86,14 @@ class AppsAPI:
     Wrapper around ExternalV1APi;
     """
 
-    def __init__(self, api_client: client.ApiClient) -> None:
+    def __init__(self, api_client: client.ApiClient, timeout) -> None:
         self.connection = client.AppsV1Api(api_client)
+        self.timeout = timeout
 
     def deployments(self) -> Iterator[client.V1Deployment]:
-        for deployment in self.connection.list_deployment_for_all_namespaces().items:
+        for deployment in self.connection.list_deployment_for_all_namespaces(
+            _request_timeout=self.timeout
+        ).items:
             yield deployment
 
     def owned_by_deployment(self, pod: client.V1Pod, deployment_uid: str) -> bool:
@@ -104,6 +111,7 @@ class AppsAPI:
                         # controlling
                         pod_controller.name,
                         pod.metadata.namespace,
+                        _request_timeout=self.timeout,
                     ).metadata.owner_references
                 )
                 for replica_controller in replica_controllers:
@@ -127,7 +135,8 @@ class RawAPI:
     readyz and livez is not part of the OpenAPI doc, so we have to query it directly.
     """
 
-    def __init__(self, api_client: client.ApiClient) -> None:
+    def __init__(self, api_client: client.ApiClient, timeout) -> None:
+        self.timeout = timeout
         self._api_client = api_client
 
     def _request(
@@ -146,6 +155,7 @@ class RawAPI:
             response_type=str,
             query_params=query_params,
             auth_settings=["BearerToken"],
+            _request_timeout=self.timeout,
         )
         return RawAPIResponse(response=response, status_code=status_code, headers=headers)
 
@@ -185,9 +195,12 @@ class APIServer:
     """
 
     @classmethod
-    def from_kubernetes(cls, api_client):
+    def from_kubernetes(cls, api_client, timeout):
         return cls(
-            BatchAPI(api_client), CoreAPI(api_client), RawAPI(api_client), AppsAPI(api_client)
+            BatchAPI(api_client, timeout),
+            CoreAPI(api_client, timeout),
+            RawAPI(api_client, timeout),
+            AppsAPI(api_client, timeout),
         )
 
     def __init__(

@@ -828,6 +828,7 @@ def _valuespec_special_agents_kube():
                             ),
                         ),
                         _ssl_verification(),
+                        _tcp_timeouts(),
                         (
                             "proxy",
                             HTTPProxyReference({"http", "https"}),

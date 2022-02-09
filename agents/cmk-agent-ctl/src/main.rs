@@ -25,16 +25,10 @@ use std::io::{self, Write};
 use std::sync::mpsc;
 use std::thread;
 use structopt::StructOpt;
-use tokio::runtime::Handle;
 
-fn daemon(
-    runtime: Handle,
-    registry: config::Registry,
-    legacy_pull_marker: &std::path::Path,
-) -> AnyhowResult<()> {
+fn daemon(registry: config::Registry, legacy_pull_marker: std::path::PathBuf) -> AnyhowResult<()> {
     let registry_for_push = registry.clone();
     let registry_for_pull = registry;
-    let legacy_pull_marker = legacy_pull_marker.to_owned();
 
     let (tx_push, rx) = mpsc::channel();
     let tx_pull = tx_push.clone();
@@ -44,7 +38,11 @@ fn daemon(
     });
     thread::spawn(move || {
         tx_pull
-            .send(pull::pull(runtime, registry_for_pull, &legacy_pull_marker))
+            .send(pull::pull(
+                registry_for_pull,
+                legacy_pull_marker,
+                constants::AGENT_PORT,
+            ))
             .unwrap();
     });
 
@@ -131,7 +129,7 @@ fn init() -> AnyhowResult<(cli::Args, constants::Paths)> {
     Ok((args, paths))
 }
 
-async fn run_requested_mode(args: cli::Args, paths: constants::Paths) -> AnyhowResult<()> {
+fn run_requested_mode(args: cli::Args, paths: constants::Paths) -> AnyhowResult<()> {
     let stored_config = config::ConfigFromDisk::load(&paths.config_path)?;
     let mut registry = config::Registry::from_file(&paths.registry_path)
         .context("Error while loading registered connections.")?;
@@ -152,8 +150,10 @@ async fn run_requested_mode(args: cli::Args, paths: constants::Paths) -> AnyhowR
             )?)
         }
         cli::Args::Push { .. } => push::handle_push_cycle(&registry),
-        cli::Args::Pull { .. } => pull::pull(Handle::current(), registry, &paths.legacy_pull_path),
-        cli::Args::Daemon { .. } => daemon(Handle::current(), registry, &paths.legacy_pull_path),
+        cli::Args::Pull { .. } => {
+            pull::pull(registry, paths.legacy_pull_path, constants::AGENT_PORT)
+        }
+        cli::Args::Daemon { .. } => daemon(registry, paths.legacy_pull_path),
         cli::Args::Dump { .. } => dump::dump(),
         cli::Args::Status(status_args) => status::status(registry, status_args.json),
         cli::Args::Delete(delete_args) => {
@@ -163,8 +163,7 @@ async fn run_requested_mode(args: cli::Args, paths: constants::Paths) -> AnyhowR
         cli::Args::Import(import_args) => import_connection::import(&mut registry, &import_args),
     }
 }
-#[tokio::main]
-async fn main() -> AnyhowResult<()> {
+fn main() -> AnyhowResult<()> {
     let (args, paths) = match init() {
         Ok(args) => args,
         Err(error) => {
@@ -173,7 +172,7 @@ async fn main() -> AnyhowResult<()> {
         }
     };
 
-    let result = run_requested_mode(args, paths).await;
+    let result = run_requested_mode(args, paths);
 
     if let Err(error) = &result {
         error!("{:?}", error)

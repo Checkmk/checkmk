@@ -2,33 +2,20 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
-use super::{config, constants, monitoring_data, tls_server};
+use super::{config, monitoring_data, tls_server};
 use anyhow::{Context, Result as AnyhowResult};
 use log::{debug, info};
 use std::net::SocketAddr;
 use tokio::fs;
 use tokio::io::AsyncWriteExt;
 use tokio::net::{TcpListener, TcpStream};
-use tokio::runtime::Handle;
 use tokio_rustls::TlsAcceptor;
 
 const TLS_ID: &[u8] = b"16";
 const HEADER_VERSION: &[u8] = b"\x00\x00";
 
-pub fn pull(
-    runtime: Handle,
-    registry: config::Registry,
-    legacy_pull_marker: &std::path::Path,
-) -> AnyhowResult<()> {
-    runtime.block_on(async_pull(
-        registry,
-        legacy_pull_marker.to_owned(),
-        constants::AGENT_PORT,
-    ))?;
-    Ok(())
-}
-
-pub async fn async_pull(
+#[tokio::main(flavor = "current_thread")]
+pub async fn pull(
     mut registry: config::Registry,
     legacy_pull_marker: std::path::PathBuf,
     port: &str,

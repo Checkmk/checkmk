@@ -382,7 +382,12 @@ class Site:
                 ["tee", self.path(rel_target_path)],
                 stdin=subprocess.PIPE,
                 stdout=stdout,
-                encoding=None,
+                encoding=None
+                if isinstance(
+                    content,
+                    bytes,
+                )
+                else "utf-8",
             ) as p:
                 p.communicate(content)
         if p.returncode != 0:

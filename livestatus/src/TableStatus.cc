@@ -18,7 +18,6 @@
 #include "DoubleColumn.h"
 #include "IntColumn.h"
 #include "MonitoringCore.h"
-#include "NagiosGlobals.h"
 #include "Query.h"
 #include "StringColumn.h"
 #include "TimeColumn.h"
@@ -144,12 +143,8 @@ TableStatus::TableStatus(MonitoringCore *mc) : Table(mc) {
         "last_command_check",
         "The time of the last check for a command as UNIX timestamp", offsets,
         [](const TableStatus & /*r*/) {
-#ifdef NAGIOS4
-            // TODO: check if this data is available in nagios_squeue
-            return std::chrono::system_clock::time_point{};
-#else
-            return std::chrono::system_clock::from_time_t(last_command_check);
-#endif
+            return std::chrono::system_clock::from_time_t(
+                nagios_compat_last_command_check());
         }));
     addColumn(std::make_unique<TimeColumn<TableStatus>>(
         "last_log_rotation", "Time time of the last log file rotation", offsets,
@@ -176,31 +171,19 @@ TableStatus::TableStatus(MonitoringCore *mc) : Table(mc) {
         "external_command_buffer_slots",
         "The size of the buffer for the external commands", offsets,
         [](const TableStatus & /*r*/) {
-#ifdef NAGIOS4
-            return 0;
-#else
-            return external_command_buffer_slots;
-#endif
+            return nagios_compat_external_command_buffer_slots();
         }));
     addColumn(std::make_unique<IntColumn<TableStatus>>(
         "external_command_buffer_usage",
         "The number of slots in use of the external command buffer", offsets,
         [](const TableStatus & /*r*/) {
-#ifdef NAGIOS4
-            return 0;
-#else
-            return external_command_buffer.items;
-#endif
+            return nagios_compat_external_command_buffer_items();
         }));
     addColumn(std::make_unique<IntColumn<TableStatus>>(
         "external_command_buffer_max",
         "The maximum number of slots used in the external command buffer",
         offsets, [](const TableStatus & /*r*/) {
-#ifdef NAGIOS4
-            return 0;
-#else
-            return external_command_buffer.high;
-#endif
+            return nagios_compat_external_command_buffer_high();
         }));
 
     // Livestatus' own status

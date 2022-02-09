@@ -40,7 +40,6 @@
 #include "MacroExpander.h"
 #include "Metric.h"
 #include "MonitoringCore.h"
-#include "NagiosGlobals.h"
 #include "Query.h"
 #include "RRDColumn.h"
 #include "ServiceListRenderer.h"
@@ -133,23 +132,15 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
     table->addColumn(std::make_unique<StringColumn<host>>(
         prefix + "check_command", "Logical command name for active checks",
         offsets, [](const host &r) {
-#ifdef NAGIOS4
-            return r.check_command == nullptr ? "" : r.check_command;
-#else
-            return r.host_check_command == nullptr ? "" : r.host_check_command;
-#endif
+            const auto *cc = nagios_compat_host_check_command(r);
+            return cc == nullptr ? "" : cc;
         }));
     table->addColumn(std::make_unique<StringColumn<host>>(
         prefix + "check_command_expanded",
         "Logical command name for active checks, with macros expanded", offsets,
         [mc](const host &r) {
-#ifdef NAGIOS4
             return HostMacroExpander::make(r, mc)->expandMacros(
-                r.check_command);
-#else
-            return HostMacroExpander::make(r, mc)->expandMacros(
-                r.host_check_command);
-#endif
+                nagios_compat_host_check_command(r));
         }));
     table->addColumn(std::make_unique<StringColumn<host>>(
         prefix + "event_handler", "Command used as event handler", offsets,
@@ -277,11 +268,7 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
         prefix + "accept_passive_checks",
         "Whether passive host checks are accepted (0/1)", offsets,
         [](const host &r) {
-#ifdef NAGIOS4
-            return r.accept_passive_checks;
-#else
-            return r.accept_passive_host_checks;
-#endif
+            return nagios_compat_accept_passive_host_checks(r);
         }));
     table->addColumn(std::make_unique<IntColumn<host>>(
         prefix + "event_handler_enabled",
@@ -307,23 +294,15 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
         prefix + "last_notification",
         "Time of the last notification (Unix timestamp)", offsets,
         [](const host &r) {
-#ifdef NAGIOS4
-            return std::chrono::system_clock::from_time_t(r.last_notification);
-#else
             return std::chrono::system_clock::from_time_t(
-                r.last_host_notification);
-#endif
+                nagios_compat_last_host_notification(r));
         }));
     table->addColumn(std::make_unique<TimeColumn<host>>(
         prefix + "next_notification",
         "Time of the next notification (Unix timestamp)", offsets,
         [](const host &r) {
-#ifdef NAGIOS4
-            return std::chrono::system_clock::from_time_t(r.next_notification);
-#else
             return std::chrono::system_clock::from_time_t(
-                r.next_host_notification);
-#endif
+                nagios_compat_next_host_notification(r));
         }));
     table->addColumn(std::make_unique<TimeColumn<host>>(
         prefix + "next_check",
@@ -436,13 +415,7 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
     table->addColumn(std::make_unique<IntColumn<host>>(
         prefix + "obsess_over_host",
         "The current obsess_over_host setting (0/1)", offsets,
-        [](const host &r) {
-#ifdef NAGIOS4
-            return r.obsess;
-#else
-            return r.obsess_over_host;
-#endif
-        }));
+        [](const host &r) { return nagios_compat_obsess_over_host(r); }));
     table->addColumn(std::make_unique<AttributeBitmaskColumn<host>>(
         prefix + "modified_attributes",
         "A bitmask specifying which attributes have been modified", offsets,

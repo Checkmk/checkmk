@@ -14,7 +14,6 @@
 #include "Column.h"
 #include "MacroExpander.h"
 #include "NagiosCore.h"
-#include "NagiosGlobals.h"
 #include "Row.h"
 #include "Store.h"
 #include "StringColumn.h"

@@ -12,7 +12,6 @@
 #include "Column.h"
 #include "IntColumn.h"
 #include "ListColumn.h"
-#include "NagiosGlobals.h"
 #include "Query.h"
 #include "Row.h"
 #include "StringColumn.h"

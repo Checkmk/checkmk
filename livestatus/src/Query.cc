@@ -30,10 +30,6 @@
 #include "opids.h"
 #include "strutil.h"
 
-#ifndef CMC
-#include "nagios.h"  // for contact
-#endif
-
 using namespace std::chrono_literals;
 
 namespace {

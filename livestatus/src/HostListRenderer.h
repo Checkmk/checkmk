@@ -15,14 +15,15 @@
 
 #include "ListColumn.h"
 #include "auth.h"
+#include "contact_fwd.h"
+
 #ifdef CMC
 #include <unordered_set>
-
-#include "contact_fwd.h"
 class Host;
 #else
 #include "nagios.h"
 #endif
+
 class ListRenderer;
 enum class HostState;
 

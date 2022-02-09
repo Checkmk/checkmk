@@ -16,16 +16,10 @@
 #include "ColumnFilter.h"
 #include "Filter.h"
 #include "MonitoringCore.h"
+#include "contact_fwd.h"
 #include "opids.h"
 class RegExp;
 class Row;
-
-#ifdef CMC
-#include "contact_fwd.h"
-#else
-// TODO(sp) Why on earth is "contact_fwd.h" not enough???
-#include "nagios.h"
-#endif
 
 class DictFilter : public ColumnFilter {
     // Elsewhere, `function_type` is a std::variant of functions but we

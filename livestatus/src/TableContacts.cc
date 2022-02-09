@@ -19,10 +19,10 @@
 #include "IntColumn.h"
 #include "ListColumn.h"
 #include "MonitoringCore.h"
-#include "NagiosGlobals.h"
 #include "Query.h"
 #include "StringColumn.h"
 #include "TimeperiodsCache.h"
+#include "contact_fwd.h"
 #include "nagios.h"
 
 // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)

@@ -41,7 +41,6 @@
 #include "InputBuffer.h"
 #include "Logger.h"
 #include "NagiosCore.h"
-#include "NagiosGlobals.h"
 #include "OutputBuffer.h"
 #include "Poller.h"
 #include "Queue.h"

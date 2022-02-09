@@ -12,7 +12,6 @@
 #include "IntColumn.h"
 #include "LogEntry.h"
 #include "MonitoringCore.h"
-#include "NagiosGlobals.h"
 #include "Query.h"
 #include "ServiceGroupMembersColumn.h"
 #include "ServiceListState.h"

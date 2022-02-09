@@ -350,7 +350,9 @@ def test_release_lock_already_closed(locked_file, path_type):
     store.aquire_lock(path)
     assert store.have_lock(path) is True
 
-    os.close(store._locks._get_lock(str(path)))  # pylint:disable=no-value-for-parameter
+    fd = store._locks._get_lock(str(path))
+    assert isinstance(fd, int)
+    os.close(fd)
 
     store.release_lock(path)
     assert store.have_lock(path) is False
@@ -387,7 +389,9 @@ def test_release_all_locks_already_closed(locked_file, path_type):
     store.aquire_lock(path)
     assert store.have_lock(path) is True
 
-    os.close(store._locks._get_lock(str(path)))  # pylint:disable=no-value-for-parameter
+    fd = store._locks._get_lock(str(path))
+    assert isinstance(fd, int)
+    os.close(fd)
 
     store.release_all_locks()
     assert store.have_lock(path) is False

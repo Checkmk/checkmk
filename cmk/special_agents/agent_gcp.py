@@ -68,7 +68,7 @@ class Result:
 def time_series(client: Client, service: GCPService) -> Iterable[Result]:
     now = time.time()
     seconds = int(now)
-    nanos = int((now - seconds) * 10 ** 9)
+    nanos = int((now - seconds) * 10**9)
     interval = monitoring_v3.TimeInterval(
         {
             "end_time": {"seconds": seconds, "nanos": nanos},

@@ -130,17 +130,17 @@ def parse_frac_prefix(value: str) -> float:
 
 def parse_memory(value: str) -> float:
     if value.endswith("Ki"):
-        return 1024 ** 1 * float(value[:-2])
+        return 1024**1 * float(value[:-2])
     if value.endswith("Mi"):
-        return 1024 ** 2 * float(value[:-2])
+        return 1024**2 * float(value[:-2])
     if value.endswith("Gi"):
-        return 1024 ** 3 * float(value[:-2])
+        return 1024**3 * float(value[:-2])
     if value.endswith("Ti"):
-        return 1024 ** 4 * float(value[:-2])
+        return 1024**4 * float(value[:-2])
     if value.endswith("Pi"):
-        return 1024 ** 5 * float(value[:-2])
+        return 1024**5 * float(value[:-2])
     if value.endswith("Ei"):
-        return 1024 ** 6 * float(value[:-2])
+        return 1024**6 * float(value[:-2])
 
     if value.endswith("K") or value.endswith("k"):
         return 1e3 * float(value[:-1])

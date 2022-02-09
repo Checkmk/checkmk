@@ -1492,10 +1492,10 @@ class PasswordSanitizer:
     _QUOTED_STRING = r"(\"(?:(?!(?<!\\)\").)*\"|'(?:(?!(?<!\\)').)*')"
 
     NEW_NESTED_PATTERN = re.compile(
-        fr"'login': \({_QUOTED_STRING}, {_QUOTED_STRING}, {_QUOTED_STRING}\)|"
-        fr"\('password', {_QUOTED_STRING}\)|"
-        fr"'(auth|authentication|basicauth|credentials)': \({_QUOTED_STRING}, {_QUOTED_STRING}\)|"
-        fr"'(auth|credentials)': \('(explicit|configured)', \({_QUOTED_STRING}, {_QUOTED_STRING}\)\)"
+        rf"'login': \({_QUOTED_STRING}, {_QUOTED_STRING}, {_QUOTED_STRING}\)|"
+        rf"\('password', {_QUOTED_STRING}\)|"
+        rf"'(auth|authentication|basicauth|credentials)': \({_QUOTED_STRING}, {_QUOTED_STRING}\)|"
+        rf"'(auth|credentials)': \('(explicit|configured)', \({_QUOTED_STRING}, {_QUOTED_STRING}\)\)"
     )
 
     NEW_DICT_ENTRY_PATTERN = (
@@ -1508,7 +1508,7 @@ class PasswordSanitizer:
         r"passwd|"
         r"password|"
         r"secret"
-        fr")': {_QUOTED_STRING}"
+        rf")': {_QUOTED_STRING}"
     )
 
     def replace_password(self, entry: AuditLogStore.Entry) -> AuditLogStore.Entry:

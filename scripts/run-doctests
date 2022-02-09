@@ -31,7 +31,7 @@ PIPENV="$REPO_PATH/scripts/run-pipenv"
 
 pushd $REPO_PATH > /dev/null
 
-$PIPENV run pytest --doctest-modules $FILES || (
+$PIPENV run python -m pytest --doctest-modules $FILES || (
 EXIT=$?
 if test $EXIT -eq 5 || test $EXIT -eq 4; then
     # This means no tests have been found.

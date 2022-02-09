@@ -21,7 +21,7 @@ export function create_graph(cid, ft, ut, vmi, vma) {
     // Keep important data as global variables, needed by
     // render_curve()
     canvas_id = cid;
-    var canvas = document.getElementById(canvas_id);
+    var canvas =<HTMLCanvasElement> document.getElementById(canvas_id);
     from_time = ft;
     until_time = ut;
     v_min = vmi;
@@ -65,7 +65,7 @@ var linec = "#bbbbbb";
 
 export function render_coordinates(v_scala, t_scala) {
     // Create canvas
-    var canvas = document.getElementById(canvas_id);
+    var canvas = <HTMLCanvasElement>document.getElementById(canvas_id);
     var c = canvas.getContext("2d");
     c.font = "20px sans-serif";
 
@@ -145,7 +145,7 @@ function line(c, t0, v0, t1, v1) {
 }
 
 export function render_point(t, v, color) {
-    var canvas = document.getElementById(canvas_id);
+    var canvas = <HTMLCanvasElement>document.getElementById(canvas_id);
     var c = canvas.getContext("2d");
     var p = point(t, v);
     c.beginPath();
@@ -159,7 +159,7 @@ export function render_point(t, v, color) {
 }
 
 export function render_curve(points, color, w, square) {
-    var canvas = document.getElementById(canvas_id);
+    var canvas = <HTMLCanvasElement>document.getElementById(canvas_id);
     var c = canvas.getContext("2d");
 
     c.beginPath();
@@ -197,7 +197,7 @@ export function render_area_reverse(points, color, alpha) {
 }
 
 export function render_dual_area(lower_points, upper_points, color, alpha) {
-    var canvas = document.getElementById(canvas_id);
+    var canvas = <HTMLCanvasElement>document.getElementById(canvas_id);
     var c = canvas.getContext("2d");
 
     c.fillStyle = color;

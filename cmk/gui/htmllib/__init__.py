@@ -2273,10 +2273,15 @@ class html(ABCHTMLGenerator):
         it = self.request.itervars() if vars_ is None else vars_.items()
         hover = "this.style.display='none';"
         self.open_table(class_=["debug_vars"], onmouseover=hover if hide_with_mouse else None)
-        self.tr(self.render_th(_("POST / GET Variables"), colspan="2"))
+        oddeven = "even"
+        self.tr(self.render_th(_("POST / GET Variables"), colspan="2"), class_=oddeven)
         for name, value in sorted(it):
+            oddeven = "even" if oddeven == "odd" else "odd"
             if name in ["_password", "password"]:
                 value = "***"
             if not prefix or name.startswith(prefix):
-                self.tr(self.render_td(name, class_="left") + self.render_td(value, class_="right"))
+                self.tr(
+                    self.render_td(name, class_="left") + self.render_td(value, class_="right"),
+                    class_=oddeven,
+                )
         self.close_table()

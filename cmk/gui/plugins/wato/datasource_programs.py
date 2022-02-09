@@ -29,6 +29,7 @@ from cmk.gui.valuespec import (
     CascadingDropdown,
     Checkbox,
     Dictionary,
+    DictionaryElements,
     DropdownChoice,
     FixedValue,
     Float,
@@ -1204,34 +1205,52 @@ rulespec_registry.register(
     ))
 
 
-def _special_agents_ipmi_sensors_vs_ipmi_common_elements():
+def _special_agents_ipmi_sensors_vs_ipmi_common_elements() -> DictionaryElements:
     return [
-        ("username", TextAscii(
-            title=_("Username"),
-            allow_empty=False,
-        )),
-        ("password", Password(
-            title=_("Password"),
-            allow_empty=False,
-        )),
-        ("privilege_lvl",
-         TextAscii(
-             title=_("Privilege Level"),
-             help=_("Possible are 'user', 'operator', 'admin'"),
-             allow_empty=False,
-         )),
+        (
+            "username",
+            TextAscii(
+                title=_("Username"),
+                allow_empty=False,
+            ),
+        ),
+        (
+            "password",
+            Password(
+                title=_("Password"),
+                allow_empty=False,
+            ),
+        ),
     ]
 
 
 def _special_agents_ipmi_sensors_transform_ipmi_sensors(params):
+    # Note that the key privilege_lvl was once a common element with free text as input and now it
+    # is tool-specific and a dropdown menu. However, we do not need a transform for this. Either
+    # the user anyway entered a valid choice or the special agent crashed. There is no good way of
+    # transforming an invalid choice to a valid choice. Instead, the user has to fix this manually
+    # by editing the rule.
     if isinstance(params, dict):
         return ("freeipmi", params)
     return params
 
 
-def _special_agents_ipmi_sensors_vs_freeipmi():
+def _special_agents_ipmi_sensors_vs_freeipmi() -> Dictionary:
     return Dictionary(
-        elements=_special_agents_ipmi_sensors_vs_ipmi_common_elements() + [
+        elements=[
+            *_special_agents_ipmi_sensors_vs_ipmi_common_elements(),
+            (
+                "privilege_lvl",
+                DropdownChoice(
+                    title=_("Privilege Level"),
+                    choices=[
+                        ("user", "USER"),
+                        ("operator", "OPERATOR"),
+                        ("admin", "ADMIN"),
+                    ],
+                    default_value="operator",
+                ),
+            ),
             (
                 "ipmi_driver",
                 TextInput(title=_("IPMI driver"),),
@@ -1314,10 +1333,23 @@ def _special_agents_ipmi_sensors_vs_freeipmi():
     )
 
 
-def _special_agents_ipmi_sensors_vs_ipmitool():
+def _special_agents_ipmi_sensors_vs_ipmitool() -> Dictionary:
     return Dictionary(
         elements=[
             *_special_agents_ipmi_sensors_vs_ipmi_common_elements(),
+            (
+                "privilege_lvl",
+                DropdownChoice(
+                    title=_("Privilege Level"),
+                    choices=[
+                        ("callback", "CALLBACK"),
+                        ("user", "USER"),
+                        ("operator", "OPERATOR"),
+                        ("administrator", "ADMINISTRATOR"),
+                    ],
+                    default_value="administrator",
+                ),
+            ),
             (
                 "intf",
                 DropdownChoice(
@@ -1340,7 +1372,7 @@ def _special_agents_ipmi_sensors_vs_ipmitool():
     )
 
 
-def _valuespec_special_agents_ipmi_sensors():
+def _valuespec_special_agents_ipmi_sensors() -> Transform:
     return Transform(
         CascadingDropdown(
             choices=[

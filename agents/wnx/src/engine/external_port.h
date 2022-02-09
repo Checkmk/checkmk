@@ -141,11 +141,6 @@ public:
         , owner_(owner)
         , wake_delay_(std::chrono::milliseconds(500)) {}
 
-    ExternalPort(wtools::BaseServiceProcessor *owner, uint16_t port)
-        : ExternalPort(owner) {
-        default_port_ = port;
-    }
-
     virtual ~ExternalPort() {}
 
     // no copy, no move
@@ -155,16 +150,12 @@ public:
     ExternalPort &operator=(ExternalPort &&) = delete;
 
     // Main API
-    bool startIo(const ReplyFunc &reply_func, std::optional<uint16_t> port);
+    bool startIo(const ReplyFunc &reply_func, uint16_t port);
     void shutdownIo();
 
     // Supplementary API
     void reloadConfig() {}
     bool isIoStarted() const noexcept { return io_started_; }
-
-    std::optional<uint16_t> defaultPort() const noexcept {
-        return default_port_;
-    }
 
     void putOnQueue(AsioSession::s_ptr asio_session);
     size_t sessionsInQueue();
@@ -274,10 +265,7 @@ protected:
         shutdown_thread_ = true;
     }
 
-    std::optional<uint16_t> default_port_;  // work port
-
-    void ioThreadProc(const cma::world::ReplyFunc &Reply,
-                      std::optional<uint16_t> port);
+    void ioThreadProc(const cma::world::ReplyFunc &Reply, uint16_t port);
 
     // probably overkill, but we want to restart and want to be sure that
     // everything is going smooth

@@ -95,7 +95,10 @@ bool StartAgentController(const fs::path &service) {
     }
 
     wtools::AppRunner ar;
-    auto proc_id = ar.goExecAsDetached(controller_name.wstring() + L" daemon");
+    auto port =
+        cfg::GetVal(cfg::groups::kGlobal, cfg::vars::kPort, cfg::kMainPort);
+    auto proc_id = ar.goExecAsDetached(controller_name.wstring() +
+                                       fmt::format(L" daemon -p {}", port));
     if (proc_id != 0) {
         XLOG::l.i("Agent controller '{}' started pid [{}]", controller_name,
                   proc_id);

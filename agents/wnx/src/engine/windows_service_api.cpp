@@ -276,13 +276,13 @@ int TestIo() {
             [](const std::string) -> std::vector<uint8_t> {
                 return std::vector<uint8_t>();
             },
-            {});  //
+            50555);  //
         XLOG::l.i("testing 10 seconds");
         std::this_thread::sleep_until(steady_clock::now() + 10000ms);
         port.shutdownIo();  //
 
     } catch (const std::exception &e) {
-        xlog::l("Exception is not allowed here %s", e.what());
+        XLOG::l("Exception is not allowed here {}", e.what());
     }
     return 0;
 }

@@ -604,6 +604,9 @@ void ServiceProcessor::mainThread(world::ExternalPort *ex_port) noexcept {
     auto port = OptionallyStartAgentController();
     ON_OUT_OF_SCOPE(ac::KillAgentController(wtools::GetArgv(0)));
     OpenFirewall(port.has_value());
+    uint16_t use_port = port ? *port
+                             : cfg::GetVal(cfg::groups::kGlobal,
+                                           cfg::vars::kPort, cfg::kMainPort);
 
     MailSlot mailbox(
         IsService() ? cfg::kServiceMailSlot : cfg::kTestingMailSlot, 0);
@@ -648,7 +651,7 @@ void ServiceProcessor::mainThread(world::ExternalPort *ex_port) noexcept {
                               answer_.getId().time_since_epoch().count());
                     return generateAnswer(ip_addr);
                 },
-                port);
+                use_port);
             ON_OUT_OF_SCOPE({
                 ex_port->shutdownIo();
                 rt_device.stop();

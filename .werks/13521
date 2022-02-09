@@ -1,0 +1,19 @@
+Title: <tt>mcafee_av_client</tt>: Fix <tt>ValueError (time data u'search:' ...)</tt>
+Knowledge: doc
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0p28
+Date: 1640074531
+
+The check plugin <tt>mcafee_av_client</tt>, which monitors the signature date
+of McAfee AV clients on Windows hosts, crashed with
+<tt>ValueError (time data u'search:' does not match format '%Y/%m/%d')</tt>
+on some systems.
+
+The reason for this was that the corresponding agent plugin (mcafee_av_client.bat)
+delivered wrong data on these systems. For this fix to apply, you have to update
+the agent on affected hosts.

@@ -21,7 +21,7 @@ $pswindow.buffersize = $newsize
 
 # Load Veeam Backup and Replication Powershell Snapin
 try {
-    Import-Module Veeam.Backup.PowerShell -ErrorAction Stop
+    Import-Module Veeam.Backup.PowerShell -ErrorAction Stop -DisableNameChecking
 }
 catch {
     try {

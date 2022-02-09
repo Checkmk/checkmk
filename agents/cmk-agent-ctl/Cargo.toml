@@ -25,7 +25,6 @@ anyhow = { version = "1.0", features = ["backtrace"]}
 nix = { version = "*" }
 base64 = { version = "*" }
 string_enum = { version = "*" }
-requestty = { version = "*" }
 x509-parser = { version = "*" }
 thiserror = { version = "*" }
 tempfile = { version = "*" }

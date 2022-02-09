@@ -17,14 +17,14 @@ impl InteractiveTrust {
         let x509 = pem.parse_x509()?;
         let validity = x509.validity();
 
-        println!(
+        eprintln!(
             "Attempting to register at {}. Server certificate details:\n",
             server
         );
-        println!("PEM-encoded certificate:\n{}", pem_str);
-        println!("Issued by:\n\t{}", certs::join_common_names(x509.issuer()));
-        println!("Issued to:\n\t{}", certs::join_common_names(x509.subject()));
-        println!(
+        eprintln!("PEM-encoded certificate:\n{}", pem_str);
+        eprintln!("Issued by:\n\t{}", certs::join_common_names(x509.issuer()));
+        eprintln!("Issued to:\n\t{}", certs::join_common_names(x509.subject()));
+        eprintln!(
             "Validity:\n\tFrom {}\n\tTo   {}",
             validity.not_before.to_rfc2822(),
             validity.not_after.to_rfc2822(),
@@ -34,28 +34,27 @@ impl InteractiveTrust {
 
     pub fn ask_for_trust(server: &str) -> AnyhowResult<()> {
         InteractiveTrust::display_cert(server)?;
-        println!();
-        match requestty::prompt_one(
-            requestty::Question::confirm("trust_server")
-                .message("Do you want to establish this connection?")
-                .build(),
-        ) {
-            Ok(requestty::Answer::Bool(yes_or_no)) => match yes_or_no {
-                true => Ok(()),
-                false => Err(anyhow!(format!(
-                    "Cannot continue without trusting {}",
-                    server
-                ))),
-            },
-            Ok(answer) => Err(anyhow!(format!(
-                "Asking if {} should be trusted failed, got answer: {:#?}",
-                server, answer,
-            ))),
-            Err(err) => Err(anyhow!(
-                "Asking if {} should be trusted failed: {:#?}",
-                server,
-                err,
-            )),
+        eprintln!();
+        eprintln!("\x1b[1mDo you want to establish this connection?\x1b[0m \x1b[90m(\x1b[0my\x1b[90mes/\x1b[0mn\x1b[90mo)\x1b[0m");
+        eprint!("> ");
+        loop {
+            let mut answer = String::new();
+            std::io::stdin()
+                .read_line(&mut answer)
+                .context("Failed to read answer from standard input")?;
+            match answer.to_lowercase().trim() {
+                "y" | "yes" => return Ok(()),
+                "n" | "no" => {
+                    return Err(anyhow!(format!(
+                        "Cannot continue without trusting {}",
+                        server
+                    )))
+                }
+                _ => {
+                    eprintln!("Please answer 'y' or 'n'");
+                    eprint!("> ");
+                }
+            }
         }
     }
 }

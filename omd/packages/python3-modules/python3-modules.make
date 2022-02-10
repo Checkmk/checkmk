@@ -98,17 +98,10 @@ $(PYTHON3_MODULES_CACHE_PKG_PATH):
 $(PYTHON3_MODULES_CACHE_PKG_PROCESS): $(PYTHON3_MODULES_CACHE_PKG_PATH)
 	$(call unpack_pkg_archive,$(PYTHON3_MODULES_CACHE_PKG_PATH),$(PYTHON3_MODULES_DIR))
 	$(call upload_pkg_archive,$(PYTHON3_MODULES_CACHE_PKG_PATH),$(PYTHON3_MODULES_DIR),$(PYTHON3_MODULES_BUILD_ID))
-# Ensure that the rpath of the python binary and dynamic libs always points to
-# the current version path to finde the dependencies we ship (e.g. openssl).
-#
-# However, there are .so files in /site-packages/<package>.libs/*.so which can
-# not simply be pointed to the sites library path because they need to load
-# other libraries from their <package>.libs path. numpy.libs is an example for
-# that.
+# Ensure that the rpath of the python binary and dynamic libs always points to the current version path
 	set -e ; for F in $$(find $(PYTHON3_MODULES_INSTALL_DIR) -name \*.so); do \
 	    RPATH=$$(patchelf --print-rpath $$F) ; \
-	    if echo "$$RPATH" | grep '^$$ORIGIN' >/dev/null 2>&1 \
-		|| [[ $$F == */numpy.libs/* ]] ; then \
+	    if echo "$$RPATH" | grep '^$$ORIGIN' >/dev/null 2>&1; then \
 		echo "Keep '$$RPATH' rpath of $$F" ; \
 		continue ; \
 	    fi ; \

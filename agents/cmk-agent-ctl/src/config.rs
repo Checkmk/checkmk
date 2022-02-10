@@ -179,26 +179,28 @@ impl Registry {
         })
     }
 
-    pub fn refresh(&mut self) -> AnyhowResult<()> {
+    pub fn refresh(&mut self) -> AnyhowResult<bool> {
         match (mtime(&self.path)?, self.last_reload) {
             (Some(now), Some(then)) => {
                 match now.duration_since(then) {
-                    Ok(time) => {
-                        if !time.is_zero() {
-                            self.reload()?;
-                        }
+                    Ok(time) if time.is_zero() => Ok(false),
+                    _ => {
+                        // This also covers Err(_), which means "negative time".
+                        // This may occur due to clock adjustments.
+                        // Force reload in this case.
+                        self.reload()?;
+                        Ok(true)
                     }
-                    // Error means "negative time". This may occur due to clock adjustments.
-                    // Force reload in this case.
-                    Err(_) => self.reload()?,
-                };
+                }
             }
 
-            (None, Some(_)) => self.reload()?,
+            (None, Some(_)) => {
+                self.reload()?;
+                Ok(true)
+            }
 
-            _ => {}
-        };
-        Ok(())
+            _ => Ok(false),
+        }
     }
 
     pub fn save(&self) -> io::Result<()> {

@@ -234,6 +234,23 @@ function update_site_progress(site_state) {
 function finish_activation(result) {
     utils.schedule_reload(utils.makeuri({_finished: "1"}), 1000);
 
+    // Handle special state "Locked" with a timeout to show the message to the
+    // user. We can only determine this state via warning state for now
+    var site_result = result.sites;
+    var is_warning = false;
+    for (let [site_id, site_keys] of Object.entries(site_result)) {
+        if (site_keys._state == "warning") {
+            is_warning = true;
+            break;
+        }
+    }
+
     // Trigger a reload of the sidebar (to update changes in WATO snapin)
-    utils.reload_whole_page();
+    if (is_warning == true) {
+        setTimeout(function () {
+            utils.reload_whole_page();
+        }, 1000);
+    } else {
+        utils.reload_whole_page();
+    }
 }

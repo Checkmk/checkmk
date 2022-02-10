@@ -489,7 +489,6 @@ class Node:
 
     def allocatable_pods(self) -> section.AllocatablePods:
         return section.AllocatablePods(
-            kubernetes_object="node",
             capacity=self.resources["capacity"].pods,
             allocatable=self.resources["allocatable"].pods,
         )
@@ -635,7 +634,6 @@ class Cluster:
 
     def allocatable_pods(self) -> section.AllocatablePods:
         return section.AllocatablePods(
-            kubernetes_object="cluster",
             capacity=sum(node.resources["capacity"].pods for node in self._nodes.values()),
             allocatable=sum(node.resources["allocatable"].pods for node in self._nodes.values()),
         )

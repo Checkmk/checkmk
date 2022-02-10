@@ -202,15 +202,9 @@ class PodResources(BaseModel):
     unknown: PodSequence = []
 
 
-AllocatableKubernetesObject = Literal["cluster", "node"]
-
-
-# TODO if the memory/cpu check merged, which uses AllocatableKubernetesObject as well, we should
-# unify the logic here.
 class AllocatablePods(BaseModel):
     """section: kube_allocatable_pods_v1"""
 
-    kubernetes_object: AllocatableKubernetesObject
     capacity: int
     allocatable: int
 

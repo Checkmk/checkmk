@@ -506,9 +506,7 @@ def test_check_kube_pod_resources_with_capacity_overall_look(
             check_kube_pod_resources(
                 params=params,
                 section_kube_pod_resources=PodResources(pending=pod_names),
-                section_kube_allocatable_pods=AllocatablePods(
-                    kubernetes_object="cluster", allocatable=110, capacity=110
-                ),
+                section_kube_allocatable_pods=AllocatablePods(allocatable=110, capacity=110),
             )
         )
     assert result == expected_result

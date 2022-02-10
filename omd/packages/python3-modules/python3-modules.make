@@ -100,11 +100,6 @@ $(PYTHON3_MODULES_CACHE_PKG_PROCESS): $(PYTHON3_MODULES_CACHE_PKG_PATH)
 	$(call upload_pkg_archive,$(PYTHON3_MODULES_CACHE_PKG_PATH),$(PYTHON3_MODULES_DIR),$(PYTHON3_MODULES_BUILD_ID))
 # Ensure that the rpath of the python binary and dynamic libs always points to the current version path
 	set -e ; for F in $$(find $(PYTHON3_MODULES_INSTALL_DIR) -name \*.so); do \
-	    RPATH=$$(patchelf --print-rpath $$F) ; \
-	    if echo "$$RPATH" | grep '^$$ORIGIN' >/dev/null 2>&1; then \
-		echo "Keep '$$RPATH' rpath of $$F" ; \
-		continue ; \
-	    fi ; \
 	    patchelf --set-rpath "$(OMD_ROOT)/lib" $$F; \
 	    echo -n "Test rpath of $$F..." ; \
 		if patchelf --print-rpath "$$F" | grep "$(OMD_ROOT)/lib" >/dev/null 2>&1; then \

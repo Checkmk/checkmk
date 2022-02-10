@@ -134,15 +134,10 @@ VSResultPercent = Union[
 
 class Params(TypedDict):
     pending: VSResultAge
-    free_node: VSResultPercent
-    free_cluster: VSResultPercent
+    free: VSResultPercent
 
 
-_DEFAULT_PARAMS = Params(
-    pending="no_levels",
-    free_node=("levels_perc", (10.0, 5.0)),
-    free_cluster=("levels_perc", (10.0, 5.0)),
-)
+_DEFAULT_PARAMS = Params(pending="no_levels", free=("levels_perc", (10.0, 5.0)))
 
 _POD_RESOURCES_FIELDS = ("running", "pending", "succeeded", "failed", "unknown")
 
@@ -230,16 +225,8 @@ def check_kube_pod_resources(
         state=State.OK,
         notice=_summary("capacity", section_kube_allocatable_pods.capacity),
     )
-    if section_kube_allocatable_pods.kubernetes_object == "cluster":
-        param = params["free_cluster"]
-    elif section_kube_allocatable_pods.kubernetes_object == "node":
-        param = params["free_node"]
-    else:
-        raise AssertionError("Unknown Kubernetes object with capacity.")
     yield from check_free_pods(
-        param,
-        section_kube_pod_resources,
-        section_kube_allocatable_pods.allocatable,
+        params["free"], section_kube_pod_resources, section_kube_allocatable_pods.allocatable
     )
     yield Metric(name="kube_pod_allocatable", value=section_kube_allocatable_pods.allocatable)
 

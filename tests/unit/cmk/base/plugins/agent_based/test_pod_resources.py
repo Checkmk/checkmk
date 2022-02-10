@@ -168,7 +168,7 @@ def test_check_phase_duration_with_different_pods(
 
     Here we focus on different sequences of pending pods.
     """
-    params = Params(pending=("levels", (60, 120)), free_node="no_levels", free_cluster="no_levels")
+    params = Params(pending=("levels", (60, 120)), free="no_levels")
     for pending_pods, expected_result in zip(
         pending_pods_in_each_check_call,
         expected_result_in_each_check_call,
@@ -187,13 +187,9 @@ def test_check_phase_duration_with_different_pods(
             # If the user deactivates a rule and then later activates it again, the phase duration
             # should be persistent.
             (
-                Params(
-                    pending=("levels", (60, 120)), free_node="no_levels", free_cluster="no_levels"
-                ),
-                Params(pending="no_levels", free_node="no_levels", free_cluster="no_levels"),
-                Params(
-                    pending=("levels", (60, 120)), free_node="no_levels", free_cluster="no_levels"
-                ),
+                Params(pending=("levels", (60, 120)), free="no_levels"),
+                Params(pending="no_levels", free="no_levels"),
+                Params(pending=("levels", (60, 120)), free="no_levels"),
             ),
             (
                 Result(state=State.OK, summary="Pending: 1"),
@@ -207,9 +203,9 @@ def test_check_phase_duration_with_different_pods(
         ),
         pytest.param(
             (
-                Params(pending="no_levels", free_node="no_levels", free_cluster="no_levels"),
-                Params(pending="no_levels", free_node="no_levels", free_cluster="no_levels"),
-                Params(pending="no_levels", free_node="no_levels", free_cluster="no_levels"),
+                Params(pending="no_levels", free="no_levels"),
+                Params(pending="no_levels", free="no_levels"),
+                Params(pending="no_levels", free="no_levels"),
             ),
             (
                 Result(state=State.OK, summary="Pending: 1"),
@@ -300,7 +296,7 @@ def test_check_bevaviour_if_there_are_unknown_pods(
         assert (
             tuple(
                 check_kube_pod_resources(
-                    Params(pending="no_levels", free_node="no_levels", free_cluster="no_levels"),
+                    Params(pending="no_levels", free="no_levels"),
                     PodResources(unknown=pending_pods),
                     None,
                 )
@@ -351,7 +347,7 @@ def test_check_bevaviour_if_there_are_unknown_pods(
                 ["pod_1", "pod_2"],
                 ["pod_1", "pod_2", "pod_3"],
             ),
-            ("levels_perc", (100.0, 50.0)),
+            ("levels_free", (100.0, 50.0)),
             [
                 Result(state=State.OK, notice="Free: 2"),
                 Result(state=State.WARN, notice="Free: 1 (warn/crit below 2/1)"),
@@ -383,13 +379,13 @@ def test_check_levels_free_pods(
     "param, expected_result",
     [
         pytest.param(
-            ("levels_perc", (50.1, 50.0)),
+            ("levels_free", (50.1, 50.0)),
             Result(state=State.WARN, notice="Free: 1 (warn/crit below 2/1)"),
             id="The number of allocatable pods is two, and therefore the number of free pods is "
             "below 50.1 if and only if it is below 2.",
         ),
         pytest.param(
-            ("levels_perc", (100.0, 50.0)),
+            ("levels_free", (100.0, 50.0)),
             Result(state=State.WARN, notice="Free: 1 (warn/crit below 2/1)"),
             id="The number of allocatable pods is two, and therefore the number of free pods is "
             "below 100.0 if and only if it is below 2.",
@@ -421,9 +417,9 @@ _PYTEST_PARAMS_OVER_ALL_LOOK = [
             ["pod"],
         ),
         (
-            Params(pending=("levels", (60, 120)), free_node="no_levels", free_cluster="no_levels"),
-            Params(pending=("levels", (60, 120)), free_node="no_levels", free_cluster="no_levels"),
-            Params(pending=("levels", (60, 120)), free_node="no_levels", free_cluster="no_levels"),
+            Params(pending=("levels", (60, 120)), free="no_levels"),
+            Params(pending=("levels", (60, 120)), free="no_levels"),
+            Params(pending=("levels", (60, 120)), free="no_levels"),
         ),
         (
             Result(state=State.OK, summary="Running: 0"),
@@ -449,7 +445,7 @@ _PYTEST_PARAMS_OVER_ALL_LOOK = [
     ),
     pytest.param(
         (["pod_1"],),
-        (Params(pending=("levels", (60, 120)), free_node="no_levels", free_cluster="no_levels"),),
+        (Params(pending=("levels", (60, 120)), free="no_levels"),),
         (
             Result(state=State.OK, summary="Running: 0"),
             Metric("kube_pod_running", 0.0),

@@ -14,36 +14,6 @@ from cmk.gui.plugins.wato.utils import (
 from cmk.gui.valuespec import CascadingDropdown, Dictionary, Integer, Percentage, Tuple
 
 
-def _parameter_valuespec_free_pods(title: str) -> CascadingDropdown:
-    return CascadingDropdown(
-        title=title,
-        choices=[
-            ("no_levels", _("No Levels")),
-            (
-                "levels_perc",
-                _("Percentual levels"),
-                Tuple(
-                    elements=[
-                        Percentage(title=_("Warning below"), default_value=10.0),
-                        Percentage(title=_("Critical below"), default_value=5.0),
-                    ]
-                ),
-            ),
-            (
-                "levels_abs",
-                _("Absolute levels"),
-                Tuple(
-                    elements=[
-                        Integer(title=_("Warning below"), default_value=10),
-                        Integer(title=_("Critical below"), default_value=5),
-                    ]
-                ),
-            ),
-        ],
-        default_value="levels_perc",
-    )
-
-
 def _parameter_valuespec_kube_pod_resources(help_text: str):
     return Dictionary(
         elements=[
@@ -52,13 +22,33 @@ def _parameter_valuespec_kube_pod_resources(help_text: str):
                 valuespec_age(title=_("Define levels for pending pods")),
             ),
             (
-                "free_node",
-                _parameter_valuespec_free_pods(_("Define lower levels for free pods (nodes only)")),
-            ),
-            (
-                "free_cluster",
-                _parameter_valuespec_free_pods(
-                    _("Define lower levels for free pods (clusters only)")
+                "free",
+                CascadingDropdown(
+                    title=_("Define lower levels for free pods (clusters and nodes only)"),
+                    choices=[
+                        ("no_levels", _("No Levels")),
+                        (
+                            "levels_perc",
+                            _("Percentual levels"),
+                            Tuple(
+                                elements=[
+                                    Percentage(title=_("Warning below"), default_value=10.0),
+                                    Percentage(title=_("Critical below"), default_value=5.0),
+                                ]
+                            ),
+                        ),
+                        (
+                            "levels_abs",
+                            _("Absolute levels"),
+                            Tuple(
+                                elements=[
+                                    Integer(title=_("Warning below"), default_value=10),
+                                    Integer(title=_("Critical below"), default_value=5),
+                                ]
+                            ),
+                        ),
+                    ],
+                    default_value="levels_perc",
                 ),
             ),
         ],

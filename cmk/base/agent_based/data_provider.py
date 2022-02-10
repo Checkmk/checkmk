@@ -212,6 +212,9 @@ class ParsedSectionsBroker:
         super().__init__()
         self._providers: Final = providers
 
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}(providers={self._providers!r})"
+
     def get_cache_info(
         self,
         parsed_section_names: List[ParsedSectionName],

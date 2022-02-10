@@ -55,11 +55,48 @@ class ReadyCount(BaseModel):
         return self.ready + self.not_ready
 
 
+class NodeConditionStatus(str, enum.Enum):
+    TRUE = "True"
+    FALSE = "False"
+    UNKNOWN = "Unknown"
+
+
 class NodeCount(BaseModel):
     """section: kube_node_count_v1"""
 
     worker: ReadyCount = ReadyCount()
     control_plane: ReadyCount = ReadyCount()
+
+
+class NodeCondition(BaseModel):
+    status: NodeConditionStatus
+    reason: Optional[str]
+    detail: Optional[str]
+    last_transition_time: Optional[int]
+
+
+class TruthyNodeCondition(NodeCondition):
+    """TruthyNodeCondition has an "OK" state when its status is True"""
+
+    def is_ok(self) -> bool:
+        return self.status == NodeConditionStatus.TRUE
+
+
+class FalsyNodeCondition(NodeCondition):
+    """FalsyNodeCondition has an "OK" state when its status is False"""
+
+    def is_ok(self) -> bool:
+        return self.status == NodeConditionStatus.FALSE
+
+
+class NodeConditions(BaseModel):
+    """section: k8s_node_conditions_v1"""
+
+    ready: TruthyNodeCondition
+    memorypressure: FalsyNodeCondition
+    diskpressure: FalsyNodeCondition
+    pidpressure: FalsyNodeCondition
+    networkunavailable: Optional[FalsyNodeCondition]
 
 
 class ConditionStatus(str, enum.Enum):

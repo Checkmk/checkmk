@@ -79,3 +79,4 @@ def test_schemata_did_not_diverge() -> None:
     assert PodInfoA.schema() == PodInfoC.schema()
     assert ReplicasA.schema() == ReplicasC.schema()
     assert agent.DeploymentStrategy.schema() == k8s_check.DeploymentStrategy.schema()
+    assert agent.NodeConditions.schema() == check.NodeConditions.schema()

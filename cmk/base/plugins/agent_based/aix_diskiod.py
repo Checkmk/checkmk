@@ -87,15 +87,17 @@ def check_aix_diskiod(
 def cluster_check_aix_diskiod(
     item: str,
     params: Mapping[str, Any],
-    section: Mapping[str, diskstat.Section],
+    section: Mapping[str, Optional[diskstat.Section]],
 ) -> type_defs.CheckResult:
+
+    present_sections = [section for section in section.values() if section is not None]
     if item == "SUMMARY":
         disk = diskstat.summarize_disks(
-            item for node_section in section.values() for item in node_section.items()
+            item for node_section in present_sections for item in node_section.items()
         )
     else:
         disk = diskstat.combine_disks(
-            node_section[item] for node_section in section.values() if item in node_section
+            node_section[item] for node_section in present_sections if item in node_section
         )
     yield from _check_disk(params, disk)
 

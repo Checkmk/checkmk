@@ -12,7 +12,10 @@ from cmk.special_agents.agent_kube import (
     ContainerName,
     CounterMetric,
     determine_rate_metrics,
+    map_lookup_name_to_piggyback_host_name,
     MetricName,
+    pod_lookup_from_api_pod,
+    PodLookupName,
 )
 
 
@@ -63,3 +66,14 @@ def test_determine_rate_metrics_for_containers_with_same_timestamp():
         {current_containers.name: current_containers}, {old_containers.name: old_containers}
     )
     assert len(containers_rate_metrics) == 0
+
+
+def test_map_lookup_name_to_piggyback_host_name(new_pod):
+    """Test that the namespace_name lookup name is used to find the piggyback host name"""
+    pod = new_pod()
+    pod_namespaced_name = PodLookupName(f"{pod.metadata.namespace}_{pod.metadata.name}")
+    lookup_name_piggyback_mappings = map_lookup_name_to_piggyback_host_name(
+        [pod], pod_lookup_from_api_pod
+    )
+    assert pod_namespaced_name in lookup_name_piggyback_mappings
+    assert lookup_name_piggyback_mappings[pod_namespaced_name] == pod.name(prepend_namespace=True)

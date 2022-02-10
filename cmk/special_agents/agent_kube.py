@@ -1342,13 +1342,18 @@ def write_sections_based_on_performance_pods(
     piggyback_formatter,
     piggyback_formatter_node,
 ):
-    lookup_name_piggyback_mappings = map_lookup_name_to_piggyback_host_name(
-        pods_from_namespaces(cluster.pods(), monitored_namespaces), pod_lookup_from_api_pod
-    )
 
     # Write performance sections
     if "pods" in monitored_objects:
         LOGGER.info("Write pod sections based on performance data")
+
+        running_pods = pods_from_namespaces(
+            cluster.pods(phase=api.Phase.RUNNING), monitored_namespaces
+        )
+        lookup_name_piggyback_mappings = map_lookup_name_to_piggyback_host_name(
+            running_pods, pod_lookup_from_api_pod
+        )
+
         for pod in filter_outdated_and_non_monitored_pods(
             list(performance_pods.values()), lookup_name_piggyback_mappings
         ):
@@ -1359,6 +1364,7 @@ def write_sections_based_on_performance_pods(
                 )
             ):
                 pod_performance_sections(pod)
+
     if "nodes" in monitored_objects:
         LOGGER.info("Write node sections based on performance data")
         for node in cluster.nodes():

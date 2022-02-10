@@ -39,7 +39,6 @@ file, there is the `extract` function which can be used like this:
   password = cmk.utils.password_store.extract("pw_id")
 
 """
-
 import secrets
 import shutil
 import string
@@ -136,11 +135,15 @@ def load() -> dict[str, str]:
 
 
 def _load(store_path: Path) -> dict[str, str]:
-    passwords = {}
+    passwords: dict[str, str] = {}
     with suppress(FileNotFoundError):
-        for line in _deobfuscate(store_path.read_bytes()).splitlines():
+        store_path_bytes: bytes = store_path.read_bytes()
+        if not store_path_bytes:
+            return passwords
+        for line in _deobfuscate(store_path_bytes).splitlines():
             ident, password = line.strip().split(":", 1)
             passwords[ident] = password
+
     return passwords
 
 

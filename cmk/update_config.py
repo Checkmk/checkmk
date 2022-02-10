@@ -404,7 +404,10 @@ class UpdateConfig:
 
     def _rewrite_password_store(self) -> None:
         """With 2.1 the password store format changed. Ensure all sites get the new format"""
-        if not password_store.password_store_path().exists():
+        if (
+            not password_store.password_store_path().exists()
+            or password_store.password_store_path().stat().st_size == 0
+        ):
             return
 
         # First of all update the stored_passwords file

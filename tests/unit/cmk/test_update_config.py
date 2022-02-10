@@ -7,6 +7,7 @@
 # pylint: disable=redefined-outer-name
 import argparse
 import io
+import os
 import sys
 from pathlib import Path
 from typing import Any, Iterator, Mapping, MutableMapping, Sequence, Tuple
@@ -900,3 +901,10 @@ def test_rewrite_password_store_skip_when_missing(uc: update_config.UpdateConfig
     assert not password_store.password_store_path().exists()
     uc._rewrite_password_store()
     assert not password_store.password_store_path().exists()
+
+
+def test_rewrite_password_store_skip_when_empty(uc: update_config.UpdateConfig) -> None:
+    store.save_text_to_file(password_store.password_store_path(), "")
+    assert os.path.getsize(password_store.password_store_path()) == 0
+    uc._rewrite_password_store()
+    assert os.path.getsize(password_store.password_store_path()) == 0

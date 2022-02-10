@@ -303,12 +303,6 @@ class Request(
     def get_ascii_input_mandatory(self, varname: str, deflt: Optional[str] = None) -> str:
         return mandatory_parameter(varname, self.get_ascii_input(varname, deflt))
 
-    def get_unicode_input(self, varname: str, deflt: Optional[str] = None) -> Optional[str]:
-        return self.get_str_input(varname, deflt)
-
-    def get_unicode_input_mandatory(self, varname, deflt=None) -> str:
-        return mandatory_parameter(varname, self.get_str_input_mandatory(varname, deflt))
-
     def get_binary_input(self, varname: str, deflt: Optional[bytes] = None) -> Optional[bytes]:
         val = self.var(varname, deflt.decode() if deflt is not None else None)
         if val is None:

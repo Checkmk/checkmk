@@ -1112,7 +1112,7 @@ class Overridable(Base):
         # Deletion
         delname = request.var("_delete")
         if delname and transactions.check_transaction():
-            owner = UserId(request.get_unicode_input_mandatory("_owner", user.id))
+            owner = UserId(request.get_str_input_mandatory("_owner", user.id))
             pagetype_title = cls.phrase("title")
 
             try:
@@ -1274,7 +1274,7 @@ class Overridable(Base):
         # "clone"  -> like new, but prefill form with values from existing page
         # "edit"   -> edit existing page
         mode = request.get_ascii_input_mandatory("mode", "edit")
-        owner_id = UserId(request.get_unicode_input_mandatory("owner", user.id))
+        owner_id = UserId(request.get_str_input_mandatory("owner", user.id))
         title = cls.phrase(mode)
         if mode == "create":
             page_name = ""
@@ -1734,7 +1734,7 @@ class OverridableContainer(Overridable, Container):
         page_type_name = request.get_ascii_input_mandatory("page_type")
         page_name = request.get_ascii_input_mandatory("page_name")
         element_type = request.get_ascii_input_mandatory("element_type")
-        create_info = json.loads(request.get_unicode_input_mandatory("create_info"))
+        create_info = json.loads(request.get_str_input_mandatory("create_info"))
 
         page_ty = page_types[page_type_name]
         target_page, need_sidebar_reload = page_ty.add_element_via_popup(

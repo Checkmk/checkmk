@@ -203,13 +203,13 @@ def show_availability_page(view: View, filterheaders: FilterHeader) -> None:
         av_object = (
             SiteId(request.get_str_input_mandatory("av_site")),
             HostName(request.get_str_input_mandatory("av_host")),
-            ServiceName(request.get_unicode_input_mandatory("av_service")),
+            ServiceName(request.get_str_input_mandatory("av_service")),
         )
         title += av_object[1]
         if av_object[2]:
             title += " - " + av_object[2]
     elif request.var("av_aggr"):
-        av_object = (None, None, request.get_unicode_input_mandatory("av_aggr"))
+        av_object = (None, None, request.get_str_input_mandatory("av_aggr"))
         title += av_object[2]
     else:
         title += view_title(view.spec, view.context)
@@ -798,7 +798,7 @@ def show_bi_availability(view: "View", aggr_rows: "Rows") -> None:
 
         av_object: AVObjectSpec = None
         if request.var("av_aggr"):
-            av_object = (None, None, request.get_unicode_input_mandatory("av_aggr"))
+            av_object = (None, None, request.get_str_input_mandatory("av_aggr"))
 
         # Dummy time_range, this is not needed for the BI
         page_menu = _page_menu_availability(

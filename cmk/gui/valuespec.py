@@ -1484,7 +1484,7 @@ class TextAreaUnicode(TextInput):
 
     # Overridden because we do not want to strip() here and remove '\r'
     def from_html_vars(self, varprefix: str) -> str:
-        text = request.get_unicode_input_mandatory(varprefix, "").replace("\r", "")
+        text = request.get_str_input_mandatory(varprefix, "").replace("\r", "")
         if text and not text.endswith("\n"):
             text += "\n"  # force newline at end
         return text
@@ -6094,7 +6094,7 @@ class Labels(ValueSpec):
         return {}
 
     def from_html_vars(self, varprefix):
-        value = html.request.get_unicode_input_mandatory(varprefix, "[]")
+        value = html.request.get_str_input_mandatory(varprefix, "[]")
         return self._from_html_vars(value, varprefix)
 
     def _from_html_vars(self, value: str, varprefix) -> dict[str, Any]:

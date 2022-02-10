@@ -2663,7 +2663,7 @@ def _single_folder_rule_match_condition():
 
 
 def get_search_expression():
-    search = request.get_unicode_input("search")
+    search = request.get_str_input("search")
     if search is not None:
         search = search.strip().lower()
     return search

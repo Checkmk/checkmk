@@ -1427,7 +1427,7 @@ class ModeAjaxExecuteCheck(AjaxPage):
         # TODO: Validate
         self._check_type = request.get_ascii_input_mandatory("checktype")
         # TODO: Validate
-        self._item = request.get_unicode_input_mandatory("item")
+        self._item = request.get_str_input_mandatory("item")
 
     def page(self):
         try:

@@ -728,7 +728,7 @@ def page_list(
     delname = request.var("_delete")
     if delname and transactions.check_transaction():
         if user.may("general.delete_foreign_%s" % what):
-            user_id_str = request.get_unicode_input("_user_id", user.id)
+            user_id_str = request.get_str_input("_user_id", user.id)
             user_id = None if user_id_str is None else UserId(user_id_str)
         else:
             user_id = user.id
@@ -1250,7 +1250,7 @@ def page_edit_visual(
         raise MKUserError(mode, _("The %s does not exist.") % visual_type.title)
 
     if visualname:
-        owner_id = UserId(request.get_unicode_input_mandatory("owner", user.id))
+        owner_id = UserId(request.get_str_input_mandatory("owner", user.id))
         visual = _get_visual(owner_id, mode)
 
         if mode == "edit" and owner_id != "":  # editing builtins requires copy

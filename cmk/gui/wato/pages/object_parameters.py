@@ -56,7 +56,7 @@ class ModeObjectParameters(WatoMode):
         self._host.need_permission("read")
 
         # TODO: Validate?
-        self._service = request.get_unicode_input("service")
+        self._service = request.get_str_input("service")
 
     def title(self):
         title = _("Effective parameters of") + " " + self._hostname

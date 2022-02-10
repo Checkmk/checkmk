@@ -159,8 +159,8 @@ class GUICrashReport(cmk.utils.crash_reporting.ABCCrashReport):
 class ABCCrashReportPage(cmk.gui.pages.Page, abc.ABC):
     def __init__(self):
         super().__init__()
-        self._crash_id = request.get_unicode_input_mandatory("crash_id")
-        self._site_id = request.get_unicode_input_mandatory("site")
+        self._crash_id = request.get_str_input_mandatory("crash_id")
+        self._site_id = request.get_str_input_mandatory("site")
 
     def _get_crash_info(self, row) -> CrashInfo:
         return json.loads(row["crash_info"])

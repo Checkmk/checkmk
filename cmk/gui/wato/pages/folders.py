@@ -554,7 +554,7 @@ class ModeFolder(WatoMode):
         if request.var("_bulk_delete"):
             return self._delete_hosts(selected_host_names)
 
-        search_text = request.get_unicode_input_mandatory("search", "")
+        search_text = request.get_str_input_mandatory("search", "")
         for request_var, mode_name in [
             ("_bulk_inventory", "bulkinventory"),
             ("_parentscan", "parentscan"),

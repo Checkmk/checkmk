@@ -233,7 +233,7 @@ class ABCModeEditGroup(WatoMode, abc.ABC):
         if not transactions.check_transaction():
             return redirect(mode_url("%s_groups" % self.type_name))
 
-        alias = request.get_unicode_input_mandatory("alias").strip()
+        alias = request.get_str_input_mandatory("alias").strip()
         self.group = {"alias": alias}
 
         self._determine_additional_group_data()

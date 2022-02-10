@@ -303,7 +303,7 @@ class ModeParentScan(WatoMode):
         # Ignored during initial form display
         self._settings = ParentScanSettings(
             where=request.get_ascii_input_mandatory("where", "subfolder"),
-            alias=request.get_unicode_input_mandatory("alias", "").strip(),
+            alias=request.get_str_input_mandatory("alias", "").strip(),
             recurse=html.get_checkbox("recurse") or False,
             select=request.get_ascii_input_mandatory("select", "noexplicit"),
             timeout=request.get_integer_input_mandatory("timeout", 8),

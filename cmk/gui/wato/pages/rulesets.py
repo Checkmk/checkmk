@@ -148,7 +148,7 @@ class ABCRulesetMode(WatoMode):
 
         # Transform the search argument to the "rule search" arguments
         if request.has_var("search"):
-            request.set_var("search_p_fulltext", request.get_unicode_input_mandatory("search"))
+            request.set_var("search_p_fulltext", request.get_str_input_mandatory("search"))
             request.set_var("search_p_fulltext_USE", "on")
             request.del_var("search")
 
@@ -711,7 +711,7 @@ class ModeEditRuleset(WatoMode):
                 self._name = "checkgroup_parameters:" + checks[check_command].get("group", "")
                 descr_pattern = checks[check_command]["service_description"].replace("%s", "(.*)")
                 matcher = re.search(
-                    descr_pattern, request.get_unicode_input_mandatory("service_description")
+                    descr_pattern, request.get_str_input_mandatory("service_description")
                 )
                 if matcher:
                     try:
@@ -1684,9 +1684,9 @@ class ABCEditRuleMode(WatoMode):
                 ("host", request.get_ascii_input_mandatory("host", "")),
             ]
             if request.has_var("item"):
-                var_list.append(("item", request.get_unicode_input_mandatory("item")))
+                var_list.append(("item", request.get_str_input_mandatory("item")))
             if request.has_var("service"):
-                var_list.append(("service", request.get_unicode_input_mandatory("service")))
+                var_list.append(("service", request.get_str_input_mandatory("service")))
             return watolib.folder_preserving_link(var_list)
 
         return watolib.folder_preserving_link(
@@ -2668,7 +2668,7 @@ class ModeNewRule(ABCEditRuleMode):
 
             if self._rulespec.item_type:
                 item = (
-                    watolib.mk_eval(request.get_unicode_input_mandatory("item"))
+                    watolib.mk_eval(request.get_str_input_mandatory("item"))
                     if request.has_var("item")
                     else None
                 )

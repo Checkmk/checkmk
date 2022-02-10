@@ -411,7 +411,7 @@ class Table:
             table_opts["actions_visible"] = actions_visible
 
         if self.options["searchable"]:
-            search_term = request.get_unicode_input_mandatory("search", "")
+            search_term = request.get_str_input_mandatory("search", "")
             # Search is always lower case -> case insensitive
             search_term = search_term.lower()
             if search_term:

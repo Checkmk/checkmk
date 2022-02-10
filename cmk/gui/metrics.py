@@ -728,7 +728,7 @@ class MetricometerRendererDual(MetricometerRenderer):
 def page_host_service_graph_popup() -> None:
     site_id = request.var("site")
     host_name = request.var("host_name")
-    service_description = request.get_unicode_input("service")
+    service_description = request.get_str_input("service")
     host_service_graph_popup_cmk(site_id, host_name, service_description)
 
 

@@ -72,8 +72,8 @@ class ModePatternEditor(WatoMode):
         self._vs_host().validate_value(self._hostname, "host")
 
         # TODO: validate all fields
-        self._item = request.get_unicode_input_mandatory("file", "")
-        self._match_txt = request.get_unicode_input_mandatory("match", "")
+        self._item = request.get_str_input_mandatory("file", "")
+        self._match_txt = request.get_str_input_mandatory("match", "")
 
         self._host = watolib.Folder.current().host(self._hostname)
 

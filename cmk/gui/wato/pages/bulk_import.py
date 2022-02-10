@@ -132,7 +132,7 @@ class ModeBulkImport(WatoMode):
 
     def _file_path(self, file_id: Optional[str] = None) -> Path:
         if file_id is None:
-            file_id = request.get_unicode_input_mandatory("file_id")
+            file_id = request.get_str_input_mandatory("file_id")
         if not file_id.isalnum():
             raise MKUserError("file_id", _("The file_id has to be alphanumeric."))
         return self._upload_tmp_path / ("%s.csv" % file_id)

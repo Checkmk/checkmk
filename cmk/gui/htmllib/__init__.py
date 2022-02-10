@@ -1349,7 +1349,7 @@ class html(ABCHTMLGenerator):
                 if var not in self.form_vars and (
                     var[0] != "_" or add_action_vars
                 ):  # and var != "filled_in":
-                    self.hidden_field(var, self.request.get_unicode_input(var))
+                    self.hidden_field(var, self.request.get_str_input(var))
 
     def hidden_field(
         self,
@@ -1584,7 +1584,7 @@ class html(ABCHTMLGenerator):
 
         # Model
         error = user_errors.get(varname)
-        value = self.request.get_unicode_input(varname, default_value)
+        value = self.request.get_str_input(varname, default_value)
         if not value:
             value = ""
         if error:
@@ -1741,7 +1741,7 @@ class html(ABCHTMLGenerator):
         **attrs: HTMLTagAttributeValue,
     ) -> None:
 
-        value = self.request.get_unicode_input(varname, deflt)
+        value = self.request.get_str_input(varname, deflt)
         error = user_errors.get(varname)
 
         self.form_vars.append(varname)
@@ -1790,7 +1790,7 @@ class html(ABCHTMLGenerator):
         read_only: bool = False,
         **attrs: HTMLTagAttributeValue,
     ) -> None:
-        current = self.request.get_unicode_input(varname, deflt)
+        current = self.request.get_str_input(varname, deflt)
         error = user_errors.get(varname)
         if varname:
             self.form_vars.append(varname)

@@ -492,7 +492,7 @@ class CommandFakeCheckResult(Command):
         for s in [0, 1, 2, 3]:
             statename = request.var("_fake_%d" % s)
             if statename:
-                pluginoutput = request.get_unicode_input_mandatory("_fake_output").strip()
+                pluginoutput = request.get_str_input_mandatory("_fake_output").strip()
                 if not pluginoutput:
                     pluginoutput = _("Manually set to %s by %s") % (
                         escaping.escape_attribute(statename),
@@ -597,7 +597,7 @@ class CommandCustomNotification(Command):
         self, cmdtag: str, spec: str, row: Row, row_index: int, num_rows: int
     ) -> CommandActionResult:
         if request.var("_customnotification"):
-            comment = request.get_unicode_input_mandatory("_cusnot_comment")
+            comment = request.get_str_input_mandatory("_cusnot_comment")
             broadcast = 1 if html.get_checkbox("_cusnot_broadcast") else 0
             forced = 2 if html.get_checkbox("_cusnot_forced") else 0
             command = "SEND_CUSTOM_%s_NOTIFICATION;%s;%s;%s;%s" % (
@@ -735,7 +735,7 @@ class CommandAcknowledge(Command):
                 specs.append((site, spec, cmdtag))
 
         if request.var("_acknowledge"):
-            comment = request.get_unicode_input("_ack_comment")
+            comment = request.get_str_input("_ack_comment")
             if not comment:
                 raise MKUserError("_ack_comment", _("You need to supply a comment."))
             if ";" in comment:
@@ -860,7 +860,7 @@ class CommandAddComment(Command):
         self, cmdtag: str, spec: str, row: Row, row_index: int, num_rows: int
     ) -> CommandActionResult:
         if request.var("_add_comment"):
-            comment = request.get_unicode_input("_comment")
+            comment = request.get_str_input("_comment")
             if not comment:
                 raise MKUserError("_comment", _("You need to supply a comment."))
             command = (
@@ -1162,7 +1162,7 @@ class CommandScheduleDowntimes(Command):
         comment = (
             config.adhoc_downtime.get("comment", "")
             if request.var("_down_adhoc")
-            else request.get_unicode_input("_down_comment")
+            else request.get_str_input("_down_comment")
         )
         if not comment:
             raise MKUserError("_down_comment", _("You need to supply a comment for your downtime."))

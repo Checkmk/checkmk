@@ -196,7 +196,7 @@ class ModeUsers(WatoMode):
             return redirect(self.mode_url())
 
         if request.var("_delete"):
-            delete_users([request.get_unicode_input("_delete")])
+            delete_users([request.get_str_input("_delete")])
             return redirect(self.mode_url())
 
         if request.var("_sync"):
@@ -602,7 +602,7 @@ class ModeEditUser(WatoMode):
 
     def _from_vars(self):
         # TODO: Should we turn the both fields below into Optional[UserId]?
-        self._user_id = request.get_unicode_input("edit")  # missing -> new user
+        self._user_id = request.get_str_input("edit")  # missing -> new user
         # This is needed for the breadcrumb computation:
         # When linking from user notification rules page the request variable is "user"
         # instead of "edit". We should also change that variable to "user" on this page,
@@ -610,7 +610,7 @@ class ModeEditUser(WatoMode):
         if not self._user_id and request.has_var("user"):
             self._user_id = request.get_str_input_mandatory("user")
 
-        self._cloneid = request.get_unicode_input("clone")  # Only needed in 'new' mode
+        self._cloneid = request.get_str_input("clone")  # Only needed in 'new' mode
         # TODO: Nuke the field below? It effectively hides facts about _user_id for mypy.
         self._is_new_user = self._user_id is None
         self._users = userdb.load_users(lock=transactions.is_transaction())
@@ -699,11 +699,11 @@ class ModeEditUser(WatoMode):
             self._user_id = UserID(allow_empty=False).from_html_vars("user_id")
             user_attrs = {}
         else:
-            self._user_id = request.get_unicode_input_mandatory("edit").strip()
+            self._user_id = request.get_str_input_mandatory("edit").strip()
             user_attrs = self._users[UserId(self._user_id)].copy()
 
         # Full name
-        user_attrs["alias"] = request.get_unicode_input_mandatory("alias").strip()
+        user_attrs["alias"] = request.get_str_input_mandatory("alias").strip()
 
         # Connector
         user_attrs["connector"] = self._user.get("connector")
@@ -799,7 +799,7 @@ class ModeEditUser(WatoMode):
             # see corresponding WATO rule
             ntop_username_attribute = ntop_connection.get("use_custom_attribute_as_ntop_username")
             if ntop_username_attribute:
-                user_attrs[ntop_username_attribute] = request.get_unicode_input_mandatory(
+                user_attrs[ntop_username_attribute] = request.get_str_input_mandatory(
                     ntop_username_attribute
                 )
 

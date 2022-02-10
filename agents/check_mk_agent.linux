@@ -138,10 +138,16 @@ set_up_remote() {
     # is being sent only once to each remote host.
     REMOTE="${REMOTE_HOST:-"${REMOTE_ADDR:-"${SSH_CLIENT%% *}"}"}"
 
+    # If none of the above are set *and* we are configured to, try to read it from stdin
+    [ -z "${REMOTE}" ] && [ "${MK_READ_REMOTE}" = "true" ] && read -t 0.1 -r REMOTE
+
+    export REMOTE
+}
+
+announce_remote() {
     # let RTCs know about this remote
     [ -d "${MK_VARDIR}/rtc_remotes" ] || mkdir "${MK_VARDIR}/rtc_remotes"
-    [ -n "${REMOTE}" ] && touch "${MK_VARDIR}/rtc_remotes/${REMOTE}"
-    export REMOTE
+    [ -n "${REMOTE}" ] && [ "${REMOTE}" != "push-connection" ] && touch "${MK_VARDIR}/rtc_remotes/${REMOTE}"
 }
 
 #
@@ -1891,6 +1897,8 @@ run_partially_asynchronous_sections() {
 
 main_setup() {
 
+    set_up_remote
+
     # close stdin and tempotarily disable stderr
     exec </dev/null 9>&2 2>/dev/null
 
@@ -1900,9 +1908,10 @@ main_setup() {
 
     set_variable_defaults
 
+    announce_remote # needs MK_VARDIR!
+
     set_up_path
 
-    set_up_remote
     set_up_profiling
     unset_locale
     detect_python

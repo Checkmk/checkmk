@@ -6,6 +6,7 @@ Description=Checkmk agent
 # but the unit is not set to failed.
 ExecStart=-/usr/bin/check_mk_agent
 Environment='MK_RUN_ASYNC_PARTS=false'
+Environment='MK_READ_REMOTE=true'
 Type=simple
 
 User=root

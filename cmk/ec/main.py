@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
@@ -32,10 +31,8 @@ from typing import (
     Any,
     AnyStr,
     Callable,
-    Dict,
     Iterable,
     Iterator,
-    List,
     Literal,
     Mapping,
     NamedTuple,
@@ -43,8 +40,6 @@ from typing import (
     Pattern,
     Protocol,
     Sequence,
-    Tuple,
-    Type,
     TypedDict,
     Union,
 )
@@ -277,7 +272,7 @@ def drain_pipe(pipe):
     while True:
         try:
             readable = select.select([pipe], [], [], 0.1)[0]
-        except select.error as e:
+        except OSError as e:
             if e.args[0] != errno.EINTR:
                 raise
             continue
@@ -296,7 +291,7 @@ def drain_pipe(pipe):
 
 TextPattern = Union[None, str, Pattern[str]]
 TextMatchResult = Union[bool, Sequence[str]]
-MatchGroups = Dict[str, TextMatchResult]
+MatchGroups = dict[str, TextMatchResult]
 
 
 def match(pattern: TextPattern, text: str, complete: bool) -> TextMatchResult:
@@ -350,7 +345,7 @@ def parse_ipv4_address(text: str) -> int:
     return (parts[0] << 24) + (parts[1] << 16) + (parts[2] << 8) + parts[3]
 
 
-def parse_ipv4_network(text: str) -> Tuple[int, int]:
+def parse_ipv4_network(text: str) -> tuple[int, int]:
     if "/" not in text:
         return parse_ipv4_address(text), 32
 
@@ -471,10 +466,10 @@ class Perfcounters:
 
         # Initialize counters
         self._counters = {n: 0 for n in self._counter_names}
-        self._old_counters: Dict[str, int] = {}
-        self._rates: Dict[str, float] = {}
-        self._average_rates: Dict[str, float] = {}
-        self._times: Dict[str, float] = {}
+        self._old_counters: dict[str, int] = {}
+        self._rates: dict[str, float] = {}
+        self._average_rates: dict[str, float] = {}
+        self._times: dict[str, float] = {}
         self._last_statistics: Optional[float] = None
 
         self._logger = logger.getChild("Perfcounters")
@@ -512,8 +507,8 @@ class Perfcounters:
             self._old_counters = self._counters.copy()
 
     @classmethod
-    def status_columns(cls: Type["Perfcounters"]) -> List[Tuple[str, float]]:
-        columns: List[Tuple[str, float]] = []
+    def status_columns(cls: type["Perfcounters"]) -> list[tuple[str, float]]:
+        columns: list[tuple[str, float]] = []
         # Please note: status_columns() and get_status() need to produce lists with exact same column order
         for name in cls._counter_names:
             columns.append(("status_" + name, 0))
@@ -525,9 +520,9 @@ class Perfcounters:
 
         return columns
 
-    def get_status(self) -> List[float]:
+    def get_status(self) -> list[float]:
         with self._lock:
-            row: List[float] = []
+            row: list[float] = []
             # Please note: status_columns() and get_status() need to produce lists with exact same column order
             for name in self._counter_names:
                 row.append(self._counters[name])
@@ -559,7 +554,7 @@ class MatchFailure:
 
 class MatchSuccess(NamedTuple):
     cancelling: bool
-    match_groups: Dict[str, Any]
+    match_groups: dict[str, Any]
 
 
 MatchResult = Union[MatchFailure, MatchSuccess]
@@ -576,7 +571,7 @@ class EventServer(ECServerThread):
         lock_configuration: ECLock,
         history: History,
         event_status: "EventStatus",
-        event_columns: List[Tuple[str, Any]],
+        event_columns: list[tuple[str, Any]],
         create_pipes_and_sockets: bool = True,
     ) -> None:
         super().__init__(
@@ -593,7 +588,7 @@ class EventServer(ECServerThread):
         self._snmptrap: Optional[socket.socket] = None
 
         # TODO: Improve type!
-        self._rules: List[Any] = []
+        self._rules: list[Any] = []
         self._hash_stats = []
         for _unused_facility in range(32):
             self._hash_stats.append([0] * 8)
@@ -622,7 +617,7 @@ class EventServer(ECServerThread):
         )
 
     @classmethod
-    def status_columns(cls) -> List[Tuple[str, Any]]:
+    def status_columns(cls) -> list[tuple[str, Any]]:
         columns = cls._general_columns()
         columns += Perfcounters.status_columns()
         columns += cls._replication_columns()
@@ -630,7 +625,7 @@ class EventServer(ECServerThread):
         return columns
 
     @classmethod
-    def _general_columns(cls) -> List[Tuple[str, Any]]:
+    def _general_columns(cls) -> list[tuple[str, Any]]:
         return [
             ("status_config_load_time", 0),
             ("status_num_open_events", 0),
@@ -638,7 +633,7 @@ class EventServer(ECServerThread):
         ]
 
     @classmethod
-    def _replication_columns(cls) -> List[Tuple[str, Any]]:
+    def _replication_columns(cls) -> list[tuple[str, Any]]:
         return [
             ("status_replication_slavemode", ""),
             ("status_replication_last_sync", 0.0),
@@ -646,7 +641,7 @@ class EventServer(ECServerThread):
         ]
 
     @classmethod
-    def _event_limit_columns(cls) -> List[Tuple[str, Any]]:
+    def _event_limit_columns(cls) -> list[tuple[str, Any]]:
         return [
             ("status_event_limit_host", 0),
             ("status_event_limit_rule", 0),
@@ -656,15 +651,15 @@ class EventServer(ECServerThread):
             ("status_event_limit_active_overall", False),
         ]
 
-    def get_status(self) -> List[List[Any]]:
-        row: List[Any] = []
+    def get_status(self) -> list[list[Any]]:
+        row: list[Any] = []
         row += self._add_general_status()
         row += self._perfcounters.get_status()
         row += self._add_replication_status()
         row += self._add_event_limit_status()
         return [row]
 
-    def _add_general_status(self) -> List[Any]:
+    def _add_general_status(self) -> list[Any]:
         return [
             self._config["last_reload"],
             self._event_status.num_existing_events,
@@ -675,7 +670,7 @@ class EventServer(ECServerThread):
         parts = open("/proc/self/stat").read().split()  # pylint:disable=consider-using-with
         return int(parts[22])  # in Bytes
 
-    def _add_replication_status(self) -> List[Any]:
+    def _add_replication_status(self) -> list[Any]:
         if is_replication_slave(self._config):
             return [
                 self._slave_status["mode"],
@@ -684,7 +679,7 @@ class EventServer(ECServerThread):
             ]
         return ["master", 0.0, False]
 
-    def _add_event_limit_status(self) -> List[Any]:
+    def _add_event_limit_status(self) -> list[Any]:
         return [
             self._config["event_limit"]["by_host"]["limit"],
             self._config["event_limit"]["by_rule"]["limit"],
@@ -783,13 +778,13 @@ class EventServer(ECServerThread):
         # http://www.outflux.net/blog/archives/2008/03/09/using-select-on-a-fifo/
         return os.open(str(self.settings.paths.event_pipe.value), os.O_RDWR | os.O_NONBLOCK)
 
-    def handle_snmptrap(self, trap: Iterable[Tuple[str, str]], ipaddress: str) -> None:
+    def handle_snmptrap(self, trap: Iterable[tuple[str, str]], ipaddress: str) -> None:
         self.process_event(create_event_from_trap(trap, ipaddress))
 
     def serve(self) -> None:
         pipe_fragment = b""
         pipe = self.open_pipe()
-        listen_list: List[FileDescriptorLike] = [pipe]
+        listen_list: list[FileDescriptorLike] = [pipe]
 
         # Wait for incoming syslog packets via UDP
         if self._syslog_udp is not None:
@@ -807,18 +802,18 @@ class EventServer(ECServerThread):
         if self._snmptrap is not None:
             listen_list.append(self._snmptrap)
 
-        client_sockets: Dict[FileDescr, Tuple[socket.socket, Optional[Tuple[str, int]], bytes]] = {}
+        client_sockets: dict[FileDescr, tuple[socket.socket, Optional[tuple[str, int]], bytes]] = {}
         select_timeout = 1
         while not self._terminate_event.is_set():
             try:
                 readable = select.select(
                     listen_list + list(client_sockets.keys()), [], [], select_timeout
                 )[0]
-            except select.error as e:
+            except OSError as e:
                 if e.args[0] != errno.EINTR:
                     raise
                 continue
-            address: Optional[Tuple[str, int]]  # host/port
+            address: Optional[tuple[str, int]]  # host/port
             data: Optional[bytes] = None
 
             # Accept new connection on event unix socket
@@ -827,7 +822,7 @@ class EventServer(ECServerThread):
                 # We have a AF_UNIX socket, so the remote address is a str, which is always ''.
                 if not (isinstance(remote_address, str) and remote_address == ""):
                     raise ValueError(
-                        "Invalid remote address '%r' for event socket" % (remote_address,)
+                        f"Invalid remote address '{remote_address!r}' for event socket"
                     )
                 client_sockets[client_socket.fileno()] = (client_socket, None, b"")
 
@@ -842,7 +837,7 @@ class EventServer(ECServerThread):
                     and isinstance(address[1], int)  #
                 ):
                     raise ValueError(
-                        "Invalid remote address '%r' for syslog socket (TCP)" % (address,)
+                        f"Invalid remote address '{address!r}' for syslog socket (TCP)"
                     )
                 client_sockets[client_socket.fileno()] = (client_socket, address, b"")
 
@@ -927,7 +922,7 @@ class EventServer(ECServerThread):
                     and isinstance(address[1], int)  #
                 ):
                     raise ValueError(
-                        "Invalid remote address '%r' for syslog socket (UDP)" % (address,)
+                        f"Invalid remote address '{address!r}' for syslog socket (UDP)"
                     )
                 self.process_raw_lines(message, address)
 
@@ -942,8 +937,8 @@ class EventServer(ECServerThread):
                         and isinstance(address[0], str)  #
                         and isinstance(address[1], int)  #
                     ):
-                        raise ValueError("Invalid remote address '%r' for SNMP trap" % (address,))
-                    addr: Tuple[str, int] = address  # for mypy's sake (bug!)
+                        raise ValueError(f"Invalid remote address '{address!r}' for SNMP trap")
+                    addr: tuple[str, int] = address  # for mypy's sake (bug!)
                     self.process_raw_data(
                         lambda: self._snmp_trap_engine.process_snmptrap(message, addr)
                     )
@@ -975,7 +970,7 @@ class EventServer(ECServerThread):
         self._perfcounters.count_time("processing", elapsed)
 
     # Takes several lines of messages, handles encoding and processes them separated
-    def process_raw_lines(self, data: bytes, address: Optional[Tuple[str, int]]) -> None:
+    def process_raw_lines(self, data: bytes, address: Optional[tuple[str, int]]) -> None:
         for line_bytes in data.splitlines():
             if line := scrub_and_decode(line_bytes.rstrip()):
                 try:
@@ -1001,7 +996,7 @@ class EventServer(ECServerThread):
     # whether or not it is still in downtime. In case the downtime has ended
     # archive the events that have been created in a downtime.
     def hk_cleanup_downtime_events(self) -> None:
-        host_downtimes: Dict[str, bool] = {}
+        host_downtimes: dict[str, bool] = {}
         for event in self._event_status.events():
             if not event["host_in_downtime"]:
                 continue  # only care about events created in downtime
@@ -1319,11 +1314,11 @@ class EventServer(ECServerThread):
         self.host_config = HostConfig(self._logger)
 
     # Precompile regular expressions and similar stuff.
-    def compile_rules(self, rule_packs: Iterable[Dict[str, Any]]) -> None:
+    def compile_rules(self, rule_packs: Iterable[dict[str, Any]]) -> None:
         self._rules = []
         self._rule_by_id = {}
         # Speedup-Hash for rule execution
-        self._rule_hash: Dict[int, Dict[int, Any]] = {}
+        self._rule_hash: dict[int, dict[int, Any]] = {}
         count_disabled = 0
         count_rules = 0
         count_unspecific = 0
@@ -1483,7 +1478,7 @@ class EventServer(ECServerThread):
                 )
             )
 
-    def process_line(self, line: str, address: Optional[Tuple[str, int]]) -> None:
+    def process_line(self, line: str, address: Optional[tuple[str, int]]) -> None:
         self.process_event(
             create_event_from_line(line, address, self._logger, verbose=self._config["debug_rules"])
         )
@@ -1797,7 +1792,9 @@ class EventServer(ECServerThread):
             event["host"] = self.translate_hostname(event["host"])
         except Exception as e:
             if self._config["debug_rules"]:
-                self._logger.exception('Unable to parse host "%s" (%s)' % (event.get("host"), e))
+                self._logger.exception(
+                    'Unable to parse host "{}" ({})'.format(event.get("host"), e)
+                )
             event["host"] = ""
 
     def log_message(self, event: Event) -> None:
@@ -1824,7 +1821,7 @@ class EventServer(ECServerThread):
             # diskspace and make things worse by logging that we could
             # not log.
 
-    def get_hosts_with_active_event_limit(self) -> List[str]:
+    def get_hosts_with_active_event_limit(self) -> list[str]:
         hosts = []
         for (hostname, core_host), count in self._event_status.num_existing_events_by_host.items():
             host_config = self.host_config.get_config_for_host(core_host) if core_host else None
@@ -1832,7 +1829,7 @@ class EventServer(ECServerThread):
                 hosts.append(hostname)
         return hosts
 
-    def get_rules_with_active_event_limit(self) -> List[str]:
+    def get_rules_with_active_event_limit(self) -> list[str]:
         rule_ids = []
         for rule_id, num_events in self._event_status.num_existing_events_by_rule.items():
             if rule_id is None:
@@ -1933,7 +1930,7 @@ class EventServer(ECServerThread):
     # protected by self._event_status.lock
     def _get_event_limit(
         self, ty: str, event: Event, host_config: Optional[HostInfo]
-    ) -> Tuple[int, str]:
+    ) -> tuple[int, str]:
         if ty == "overall":
             return self._get_overall_event_limit()
         if ty == "by_rule":
@@ -1942,13 +1939,13 @@ class EventServer(ECServerThread):
             return self._get_host_event_limit(host_config)
         raise NotImplementedError()
 
-    def _get_overall_event_limit(self) -> Tuple[int, str]:
+    def _get_overall_event_limit(self) -> tuple[int, str]:
         return (
             self._config["event_limit"]["overall"]["limit"],
             self._config["event_limit"]["overall"]["action"],
         )
 
-    def _get_rule_event_limit(self, rule_id) -> Tuple[int, str]:
+    def _get_rule_event_limit(self, rule_id) -> tuple[int, str]:
         """Prefer the rule individual limit for by_rule limit (in case there is some)"""
         rule_limit = self._rule_by_id.get(rule_id, {}).get("event_limit")
         if rule_limit:
@@ -1959,7 +1956,7 @@ class EventServer(ECServerThread):
             self._config["event_limit"]["by_rule"]["action"],
         )
 
-    def _get_host_event_limit(self, host_config: Optional[HostInfo]) -> Tuple[int, str]:
+    def _get_host_event_limit(self, host_config: Optional[HostInfo]) -> tuple[int, str]:
         """Prefer the host individual limit for by_host limit (in case there is some)"""
         host_limit = (
             None if host_config is None else host_config.custom_variables.get("EC_EVENT_LIMIT")
@@ -2043,7 +2040,7 @@ class EventServer(ECServerThread):
         return new_event
 
 
-def create_event_from_trap(trap: Iterable[Tuple[str, str]], ipaddress: str) -> Event:
+def create_event_from_trap(trap: Iterable[tuple[str, str]], ipaddress: str) -> Event:
     # Use the trap OID as the application.
     trapOIDs, other = partition(
         lambda binding: binding[0] in ("1.3.6.1.6.3.1.1.4.1.0", "SNMPv2-MIB::snmpTrapOID.0"), trap
@@ -2074,7 +2071,7 @@ class RuleMatcher:
 
     def event_rule_matches_non_inverted(self, rule: Rule, event: Event) -> MatchResult:
         if self._debug_rules:
-            self._logger.info("Trying rule %s/%s..." % (rule["pack"], rule["id"]))
+            self._logger.info("Trying rule {}/{}...".format(rule["pack"], rule["id"]))
             self._logger.info("  Text:   %s" % event["text"])
             self._logger.info("  Syslog: %d.%d" % (event["facility"], event["priority"]))
             self._logger.info("  Host:   %s" % event["host"])
@@ -2399,12 +2396,12 @@ class Queries:
 
 class StatusTable:
     prefix: Optional[str] = None
-    columns: List[Tuple[str, Any]] = []
+    columns: list[tuple[str, Any]] = []
 
     # Must return a enumerable type containing fully populated lists (rows) matching the
     # columns of the table
     @abc.abstractmethod
-    def _enumerate(self, query: QueryGET) -> Iterable[List[Any]]:
+    def _enumerate(self, query: QueryGET) -> Iterable[list[Any]]:
         raise NotImplementedError()
 
     def __init__(self, logger: Logger) -> None:
@@ -2415,7 +2412,7 @@ class StatusTable:
         self.column_types = {name: type(def_val) for name, def_val in self.columns}
         self.column_indices = {name: index for index, name in enumerate(self.column_names)}
 
-    def query(self, query: QueryGET) -> Iterable[List[Any]]:
+    def query(self, query: QueryGET) -> Iterable[list[Any]]:
         requested_column_indexes = query.requested_column_indexes()
 
         # Output the column headers
@@ -2433,8 +2430,8 @@ class StatusTable:
                 num_rows += 1
 
     def _build_result_row(
-        self, row: List[Any], requested_column_indexes: List[Optional[int]]
-    ) -> List[Any]:
+        self, row: list[Any], requested_column_indexes: list[Optional[int]]
+    ) -> list[Any]:
         return [(None if index is None else row[index]) for index in requested_column_indexes]  #
 
 
@@ -2472,7 +2469,7 @@ class StatusTableEvents(StatusTable):
         super().__init__(logger)
         self._event_status = event_status
 
-    def _enumerate(self, query: QueryGET) -> Iterable[List[Any]]:
+    def _enumerate(self, query: QueryGET) -> Iterable[list[Any]]:
         for event in self._event_status.get_events():
             # Optimize filters that are set by the check_mkevents active check. Since users
             # may have a lot of those checks running, it is a good idea to optimize this.
@@ -2504,7 +2501,7 @@ class StatusTableHistory(StatusTable):
         super().__init__(logger)
         self._history = history
 
-    def _enumerate(self, query: QueryGET) -> Iterable[List[Any]]:
+    def _enumerate(self, query: QueryGET) -> Iterable[list[Any]]:
         return self._history.get(query)
 
 
@@ -2519,7 +2516,7 @@ class StatusTableRules(StatusTable):
         super().__init__(logger)
         self._event_status = event_status
 
-    def _enumerate(self, query: QueryGET) -> Iterable[List[Any]]:
+    def _enumerate(self, query: QueryGET) -> Iterable[list[Any]]:
         return self._event_status.get_rule_stats()
 
 
@@ -2531,7 +2528,7 @@ class StatusTableStatus(StatusTable):
         super().__init__(logger)
         self._event_server = event_server
 
-    def _enumerate(self, query: QueryGET) -> Iterable[List[Any]]:
+    def _enumerate(self, query: QueryGET) -> Iterable[list[Any]]:
         return self._event_server.get_status()
 
 
@@ -2682,7 +2679,7 @@ class StatusServer(ECServerThread):
 
                 try:
                     readable = select.select(listen_list, [], [], 0.2)[0]
-                except select.error as e:
+                except OSError as e:
                     if e.args[0] != errno.EINTR:
                         raise
                     continue
@@ -2719,7 +2716,7 @@ class StatusServer(ECServerThread):
                     self._perfcounters.count_time("request", duration)
 
             except Exception as e:
-                msg = "Error handling client %s: %s" % (addr_info, e)
+                msg = f"Error handling client {addr_info}: {e}"
                 # Do not log a stack trace for client errors, they are not *our* fault.
                 if isinstance(e, MKClientError):
                     self._logger.error(msg)
@@ -2741,7 +2738,7 @@ class StatusServer(ECServerThread):
                 if query.method == "GET":
                     if not isinstance(query, QueryGET):
                         raise NotImplementedError()  # make mypy happy
-                    response: Optional[Iterable[List[Any]]] = self.table(query.table_name).query(
+                    response: Optional[Iterable[list[Any]]] = self.table(query.table_name).query(
                         query
                     )
 
@@ -2759,7 +2756,7 @@ class StatusServer(ECServerThread):
 
                 try:
                     self._answer_query(client_socket, query, response)
-                except socket.error as e:
+                except OSError as e:
                     if e.errno == errno.EPIPE:
                         pass
                     else:
@@ -2770,7 +2767,7 @@ class StatusServer(ECServerThread):
     # Only GET queries have customizable output formats. COMMAND is always
     # a dictionay and COMMAND is always None and always output as "python"
     def _answer_query(
-        self, client_socket: socket.socket, query: Query, response: Optional[Iterable[List[Any]]]
+        self, client_socket: socket.socket, query: Query, response: Optional[Iterable[list[Any]]]
     ) -> None:
         if query.method != "GET":
             self._answer_query_python(client_socket, response)
@@ -2829,13 +2826,13 @@ class StatusServer(ECServerThread):
         else:
             raise MKClientError("Unknown command %s" % command)
 
-    def handle_command_delete(self, arguments: List[str]) -> None:
+    def handle_command_delete(self, arguments: list[str]) -> None:
         if len(arguments) != 2:
             raise MKClientError("Wrong number of arguments for DELETE")
         event_id, user = arguments
         self._event_status.delete_event(int(event_id), user)
 
-    def handle_command_update(self, arguments: List[str]) -> None:
+    def handle_command_update(self, arguments: list[str]) -> None:
         event_id, user, acknowledged, comment, contact = arguments
         event = self._event_status.event(int(event_id))
         if not event:
@@ -2854,7 +2851,7 @@ class StatusServer(ECServerThread):
             event["owner"] = user
         self._history.add(event, "UPDATE", user)
 
-    def handle_command_create(self, arguments: List[str]) -> None:
+    def handle_command_create(self, arguments: list[str]) -> None:
         # Would rather use process_raw_line(), but we are already
         # holding self._event_status.lock and it's sub functions are setting
         # self._event_status.lock too. The lock can not be allocated twice.
@@ -2863,7 +2860,7 @@ class StatusServer(ECServerThread):
         with open(str(self.settings.paths.event_pipe.value), "wb") as pipe:
             pipe.write(("%s\n" % ";".join(arguments)).encode("utf-8"))
 
-    def handle_command_changestate(self, arguments: List[str]) -> None:
+    def handle_command_changestate(self, arguments: list[str]) -> None:
         event_id, user, newstate = arguments
         event = self._event_status.event(int(event_id))
         if not event:
@@ -2907,7 +2904,7 @@ class StatusServer(ECServerThread):
     def handle_command_sync(self) -> None:
         self._event_status.save_status()
 
-    def handle_command_resetcounters(self, arguments: List[str]) -> None:
+    def handle_command_resetcounters(self, arguments: list[str]) -> None:
         if arguments:
             self._logger.info("Resetting counters of rule " + arguments[0])
             self._event_status.reset_counters(arguments[0])
@@ -2915,7 +2912,7 @@ class StatusServer(ECServerThread):
             self._logger.info("Resetting all rule counters")
             self._event_status.reset_counters(None)
 
-    def handle_command_action(self, arguments: List[str]) -> None:
+    def handle_command_action(self, arguments: list[str]) -> None:
         event_id, user, action_id = arguments
         event = self._event_status.event(int(event_id))
         if user:
@@ -2947,7 +2944,7 @@ class StatusServer(ECServerThread):
                 user,
             )
 
-    def handle_command_switchmode(self, arguments: List[str]) -> None:
+    def handle_command_switchmode(self, arguments: list[str]) -> None:
         new_mode = arguments[0]
         if not is_replication_slave(self._config):
             raise MKClientError("Cannot switch replication mode: this is not a replication slave.")
@@ -3122,11 +3119,11 @@ class EventStatus:
 
     def flush(self) -> None:
         # TODO: Improve types!
-        self._events: List[Any] = []
+        self._events: list[Any] = []
         self._next_event_id = 1
-        self._rule_stats: Dict[str, int] = {}
+        self._rule_stats: dict[str, int] = {}
         # needed for expecting rules
-        self._interval_starts: Dict[str, int] = {}
+        self._interval_starts: dict[str, int] = {}
         self._initialize_event_limit_status()
 
         # TODO: might introduce some performance counters, like:
@@ -3134,7 +3131,7 @@ class EventStatus:
         # - number of rule hits
         # - number of rule misses
 
-    def events(self) -> List[Any]:
+    def events(self) -> list[Any]:
         # TODO: Improve type!
         return self._events
 
@@ -3230,7 +3227,7 @@ class EventStatus:
                 self._interval_starts = status.get("interval_starts", {})
                 self._logger.info("Loaded event state from %s." % path)
             except Exception as e:
-                self._logger.exception("Error loading event state from %s: %s" % (path, e))
+                self._logger.exception(f"Error loading event state from {path}: {e}")
                 raise
 
         # Add new columns and fix broken events
@@ -3253,7 +3250,7 @@ class EventStatus:
     def _initialize_event_limit_status(self):
         self.num_existing_events = len(self._events)
 
-        self.num_existing_events_by_host: Dict[Tuple[str, Optional[HostName]], int] = {}
+        self.num_existing_events_by_host: dict[tuple[str, Optional[HostName]], int] = {}
         self.num_existing_events_by_rule = {}
         for event in self._events:
             self._count_event_add(event)
@@ -3605,7 +3602,7 @@ def replication_allow_command(config: Config, command: str, slave_status: SlaveS
 
 def replication_send(
     config: Config, lock_configuration: ECLock, event_status: EventStatus, last_update: int
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     response = {}
     with lock_configuration:
         response["status"] = event_status.pack_status()
@@ -3722,7 +3719,7 @@ def replication_update_state(
     config: Config,
     event_status: EventStatus,
     event_server: EventServer,
-    new_state: Dict[str, Any],
+    new_state: dict[str, Any],
 ) -> None:
     # Keep a copy of the masters' rules and actions and also prepare using them
     if "rules" in new_state:
@@ -3734,7 +3731,7 @@ def replication_update_state(
     event_status.unpack_status(new_state["status"])
 
 
-def save_master_config(settings: Settings, new_state: Dict[str, Any]) -> None:
+def save_master_config(settings: Settings, new_state: dict[str, Any]) -> None:
     path = settings.paths.master_config_file.value
     path_new = path.parent / (path.name + ".new")
     path_new.write_text(
@@ -3791,7 +3788,7 @@ def get_state_from_master(config: Config, slave_status: SlaveStatus) -> Any:
     except SyntaxError:
         raise Exception("Invalid response from event daemon: <pre>%r</pre>" % response_text)
 
-    except IOError as e:
+    except OSError as e:
         raise Exception("Master not responding: %s" % e)
 
     except Exception as e:

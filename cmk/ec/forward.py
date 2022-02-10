@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
@@ -9,7 +8,7 @@ from abc import ABC, abstractmethod
 from codecs import BOM_UTF8
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Dict, Iterable, Literal, Optional, Union
+from typing import Iterable, Literal, Optional, Union
 
 from cmk.utils.paths import default_config_dir, omd_root
 
@@ -137,14 +136,14 @@ class StructuredDataValue:
         return value_escaped
 
 
-class StructuredDataParameters(Dict[StructuredDataName, StructuredDataValue]):
+class StructuredDataParameters(dict[StructuredDataName, StructuredDataValue]):
     """Represents SD-PARAMs of one SD-ELEMENT from https://tools.ietf.org/html/rfc5424"""
 
     def __repr__(self) -> str:
         return " ".join(f'{repr(name)}="{repr(value)}"' for name, value in self.items())
 
 
-class StructuredData(Dict[StructuredDataID, StructuredDataParameters]):
+class StructuredData(dict[StructuredDataID, StructuredDataParameters]):
     """Represents STRUCTURED-DATA from https://tools.ietf.org/html/rfc5424"""
 
     def __repr__(self) -> str:

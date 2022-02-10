@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
@@ -18,16 +17,13 @@ from pathlib import Path
 from typing import (
     Any,
     cast,
-    Dict,
     Iterable,
     Iterator,
     KeysView,
-    List,
     Mapping,
     MutableMapping,
     Optional,
     Sequence,
-    Tuple,
     Union,
 )
 
@@ -41,8 +37,8 @@ from .defaults import default_config, default_rule_pack
 from .settings import Settings
 from .settings import settings as create_settings
 
-ECRuleSpec = Dict[str, Any]
-ECRulePackSpec = Dict[str, Any]  # TODO: improve this type
+ECRuleSpec = dict[str, Any]
+ECRulePackSpec = dict[str, Any]  # TODO: improve this type
 ECRulePack = Union[ECRulePackSpec, "MkpRulePackProxy"]
 
 
@@ -85,13 +81,12 @@ class MkpRulePackProxy(MutableMapping[str, Any]):  # pylint: disable=too-many-an
         del self.rule_pack[key]
 
     def __repr__(self) -> str:
-        return '%s("%s")' % (self.__class__.__name__, self.id_)
+        return f'{self.__class__.__name__}("{self.id_}")'
 
     # __iter__ and __len__ are only defined as a workaround for a buggy entry
     # in the typeshed
     def __iter__(self) -> Iterator[str]:
-        for k in self.keys():
-            yield k
+        yield from self.keys()
 
     def __len__(self) -> int:
         return len(self.keys())
@@ -106,7 +101,7 @@ class MkpRulePackProxy(MutableMapping[str, Any]):  # pylint: disable=too-many-an
         """Binds this rule pack to the given MKP rule pack"""
         if self.id_ != mkp_rule_pack["id"]:
             raise MkpRulePackBindingError(
-                "The IDs of %s and %s cannot be different." % (self, mkp_rule_pack)
+                f"The IDs of {self} and {mkp_rule_pack} cannot be different."
             )
 
         self.rule_pack = mkp_rule_pack
@@ -139,7 +134,7 @@ class RulePackType(Enum):  # pylint: disable=too-few-public-methods
     modified_mkp = "modified, packaged"
 
     @staticmethod
-    def type_of(rule_pack: ECRulePack, id_to_mkp: Dict[Any, Any]) -> "RulePackType":
+    def type_of(rule_pack: ECRulePack, id_to_mkp: dict[Any, Any]) -> "RulePackType":
         """
         Returns the type of rule pack for a given rule pack ID to MKP mapping.
         """
@@ -205,7 +200,7 @@ def _bind_to_rule_pack_proxies(
 def load_config(settings: Settings) -> ConfigFromWATO:
     """Load event console configuration."""
     # TODO: Do not use exec and the funny MkpRulePackProxy Kung Fu, removing the need for the two casts below.
-    global_context = cast(Dict[str, Any], default_config())
+    global_context = cast(dict[str, Any], default_config())
     global_context["MkpRulePackProxy"] = MkpRulePackProxy
     for path in [settings.paths.main_config_file.value] + sorted(
         settings.paths.config_dir.value.glob("**/*.mk")
@@ -262,7 +257,7 @@ def load_config(settings: Settings) -> ConfigFromWATO:
     # Convert pre 1.4 hostname translation config
     translation = config["hostname_translation"]
     if isinstance(translation.get("regex"), tuple):
-        translation["regex"] = [cast(Tuple[str, str], translation.get("regex"))]
+        translation["regex"] = [cast(tuple[str, str], translation.get("regex"))]
 
     if config.get("translate_snmptraps") is True:  # type: ignore[comparison-overlap]
         config["translate_snmptraps"] = (True, {})  # convert from pre-1.6.0 format
@@ -336,7 +331,7 @@ def add_rule_pack_proxies(file_names: Iterable[str]) -> None:
     of file names. The file names without the file extension are used as
     the ID of the rule pack.
     """
-    rule_packs: List[ECRulePack] = []
+    rule_packs: list[ECRulePack] = []
     rule_packs += load_rule_packs()
     rule_pack_ids = {rp["id"]: i for i, rp in enumerate(rule_packs)}
     ids = [os.path.splitext(fn)[0] for fn in file_names]
@@ -349,7 +344,7 @@ def add_rule_pack_proxies(file_names: Iterable[str]) -> None:
     save_rule_packs(rule_packs)
 
 
-def override_rule_pack_proxy(rule_pack_nr: str, rule_packs: Dict[str, Any]) -> None:
+def override_rule_pack_proxy(rule_pack_nr: str, rule_packs: dict[str, Any]) -> None:
     """
     Replaces a MkpRulePackProxy by a working copy of the underlying rule pack.
     """
@@ -376,7 +371,7 @@ def release_packaged_rule_packs(file_names: Iterable[str]) -> None:
     if not file_names:
         return
 
-    rule_packs: List[ECRulePack] = []
+    rule_packs: list[ECRulePack] = []
     rule_packs += load_rule_packs()
     rule_pack_ids = [rp["id"] for rp in rule_packs]
     affected_ids = [os.path.splitext(fn)[0] for fn in file_names]

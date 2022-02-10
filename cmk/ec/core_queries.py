@@ -1,10 +1,9 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 # Copyright (C) 2021 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Iterable, List, Mapping, NamedTuple, Sequence, Set
+from typing import Any, Iterable, Mapping, NamedTuple, Sequence
 
 from livestatus import LocalConnection
 
@@ -21,14 +20,14 @@ from cmk.utils.type_defs import (
 
 
 # NOTE: This function is a polished copy of cmk/base/notify.py. :-/
-def query_contactgroups_members(group_names: Iterable[ContactgroupName]) -> Set[UserId]:
+def query_contactgroups_members(group_names: Iterable[ContactgroupName]) -> set[UserId]:
     query = "GET contactgroups\nColumns: members"
     num_group_names = 0
     for group_name in group_names:
         query += f"\nFilter: name = {group_name}"
         num_group_names += 1
     query += f"\nOr: {num_group_names}"
-    contact_lists: List[List[str]] = (
+    contact_lists: list[list[str]] = (
         LocalConnection().query_column(query) if num_group_names else []
     )
     return {UserId(contact) for contact_list in contact_lists for contact in contact_list}
@@ -42,8 +41,8 @@ class HostInfo(NamedTuple):
     alias: str
     address: HostAddress
     custom_variables: Mapping[str, str]
-    contacts: Set[UserId]
-    contact_groups: Set[ContactgroupName]
+    contacts: set[UserId]
+    contact_groups: set[ContactgroupName]
 
 
 def _create_host_info(row: Mapping[str, Any]) -> HostInfo:

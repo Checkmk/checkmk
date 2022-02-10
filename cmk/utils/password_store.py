@@ -236,6 +236,7 @@ class _PasswordStoreObfuscator(Encrypter):
 
     @classmethod
     def encrypt(cls, value: str) -> bytes:
+        # Header: version[2] + salt[block_size] + nonce[block_size] + tag[block_size]
         return cls.VERSION.to_bytes(cls.VERSION_BYTE_LENGTH, byteorder="big") + super().encrypt(
             value
         )

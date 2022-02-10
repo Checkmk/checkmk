@@ -56,7 +56,8 @@ $(PYTHON3_MODULES_BUILD): $(PYTHON_CACHE_PKG_PROCESS) $(OPENSSL_CACHE_PKG_PROCES
 	    export LD_LIBRARY_PATH="$(PACKAGE_PYTHON_LD_LIBRARY_PATH):$(PACKAGE_OPENSSL_LD_LIBRARY_PATH)" ; \
 	    export PATH="$(PACKAGE_PYTHON_BIN):$$PATH" ; \
 	    $(PACKAGE_PYTHON_EXECUTABLE) -m pip install \
-		`: do use precompiled things! ` \
+		`: dont use precompiled things, build with our build env ` \
+		--no-binary=":all:" \
 		--no-deps \
 		--compile \
 		--isolated \

@@ -77,10 +77,10 @@ def test_obfuscation() -> None:
     obfuscated = password_store._obfuscate(secret := "$ecret")
     assert (
         int.from_bytes(
-            obfuscated[: password_store._PasswordStoreObfuscater.VERSION_BYTE_LENGTH],
+            obfuscated[: password_store._PasswordStoreObfuscator.VERSION_BYTE_LENGTH],
             byteorder="big",
         )
-        == password_store._PasswordStoreObfuscater.VERSION
+        == password_store._PasswordStoreObfuscator.VERSION
     )
     assert password_store._deobfuscate(obfuscated) == secret
 
@@ -95,7 +95,7 @@ def test_obfuscate_with_own_secret() -> None:
     assert password_store._deobfuscate(obfuscated) == secret
 
     # The user may want to write some arbritary secret to the file.
-    key_path = password_store._PasswordStoreObfuscater()._secret_key_path()
+    key_path = password_store._PasswordStoreObfuscator()._secret_key_path()
     key_path.write_text(custom_key := "this_will_be_pretty_secure_now.not.")
 
     # Ensure we work with the right key file along the way
@@ -112,8 +112,8 @@ def test_obfuscate_with_own_secret() -> None:
 def test_encrypt_decrypt_identity() -> None:
     data = "some random data to be encrypted"
     assert (
-        password_store._PasswordStoreObfuscater.decrypt(
-            password_store._PasswordStoreObfuscater.encrypt(data)
+        password_store._PasswordStoreObfuscator.decrypt(
+            password_store._PasswordStoreObfuscator.encrypt(data)
         )
         == data
     )

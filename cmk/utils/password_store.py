@@ -175,7 +175,7 @@ def _helper_password_store_path(config_path: ConfigPath) -> Path:
     return Path(config_path) / "stored_passwords"
 
 
-class _PasswordStoreObfuscater(Encrypter):
+class _PasswordStoreObfuscator(Encrypter):
     """Encrypt the password store with the locally known password store key
 
     But why?
@@ -242,5 +242,5 @@ class _PasswordStoreObfuscater(Encrypter):
         return super().decrypt(raw[cls.VERSION_BYTE_LENGTH :])
 
 
-_obfuscate = _PasswordStoreObfuscater.encrypt
-_deobfuscate = _PasswordStoreObfuscater.decrypt
+_obfuscate = _PasswordStoreObfuscator.encrypt
+_deobfuscate = _PasswordStoreObfuscator.decrypt

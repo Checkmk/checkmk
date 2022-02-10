@@ -84,7 +84,6 @@ catalog_titles = {
     "cbl": "Communication by light (CBL)",
     "checkpoint": "Checkpoint",
     "cisco": "Cisco Systems (also IronPort)",
-    "ciena": "Ciena Corporation",
     "decru": "Decru",
     "dell": "DELL",
     "docsis": "DOCSIS",

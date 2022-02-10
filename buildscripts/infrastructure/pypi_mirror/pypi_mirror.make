@@ -2,11 +2,11 @@ EXTERNAL_PYPI_MIRROR := https://pypi.python.org
 
 INTERNAL_PYPI_MIRROR := https://artifacts.lan.tribe29.com/repository/pip-mirror-$(BRANCH_VERSION)
 
-ifeq (true,${USE_EXTERNAL_PIPENV_MIRROR})
+#ifeq (true,${USE_EXTERNAL_PIPENV_MIRROR})
 PIPENV_PYPI_MIRROR  := $(EXTERNAL_PYPI_MIRROR)
-else
-PIPENV_PYPI_MIRROR  := $(INTERNAL_PYPI_MIRROR)
-endif
+#else
+#PIPENV_PYPI_MIRROR  := $(INTERNAL_PYPI_MIRROR)
+#endif
 
 requirements.txt: Pipfile.lock
 	@( \

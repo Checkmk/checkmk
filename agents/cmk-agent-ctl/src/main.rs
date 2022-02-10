@@ -173,22 +173,32 @@ fn run_requested_mode(args: cli::Args, paths: constants::Paths) -> AnyhowResult<
         cli::Args::Import(import_args) => import_connection::import(&mut registry, &import_args),
     }
 }
-fn main() -> AnyhowResult<()> {
+
+fn exit_with_error(err: impl std::fmt::Debug) {
+    // In case of an error, we want a non-zero exit code, but we do not want to write the error to
+    // stderr (which happens if main returns an erroneous result), since Windows has issues with
+    // this. Instead, we log the error (which still goes to stderr under Unix).
+
+    // In the future, implementing std::process::Termination looks like the right thing to do.
+    // However, this trait is still experimental at the moment. See also
+    // https://www.joshmcguigan.com/blog/custom-exit-status-codes-rust/
+    error!("{:?}", err);
+    std::process::exit(1);
+}
+
+fn main() {
     let (args, paths) = match init() {
         Ok(args) => args,
         Err(error) => {
-            error!("{:?}", error);
-            return Err(error);
+            return exit_with_error(error);
         }
     };
 
     let result = run_requested_mode(args, paths);
 
     if let Err(error) = &result {
-        error!("{:?}", error)
+        exit_with_error(error)
     }
-
-    result
 }
 
 #[cfg(windows)]

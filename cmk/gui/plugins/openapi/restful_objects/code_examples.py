@@ -595,7 +595,7 @@ def to_param_dict(params: List[OpenAPIParameter]) -> Dict[str, OpenAPIParameter]
     return res
 
 
-@jinja2.contextfilter
+@jinja2.pass_context
 def fill_out_parameters(ctx: Dict[str, Any], val) -> str:
     """Fill out path parameters, either using the global parameter or the endpoint defined ones.
 

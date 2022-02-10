@@ -75,17 +75,19 @@ def test_extract_from_unknown_valuespec() -> None:
 
 def test_obfuscation() -> None:
     obfuscated = password_store._obfuscate(secret := "$ecret")
-    assert isinstance(obfuscated, str)
-    assert secret not in obfuscated
-    # File format header
-    assert int(obfuscated[:2]) == 0
-
+    assert (
+        int.from_bytes(
+            obfuscated[: password_store._PasswordStoreObfuscater.VERSION_BYTE_LENGTH],
+            byteorder="big",
+        )
+        == password_store._PasswordStoreObfuscater.VERSION
+    )
     assert password_store._deobfuscate(obfuscated) == secret
 
 
 def test_save_obfuscated() -> None:
-    password_store.save({"ding": "blablu"})
-    assert "blablu" not in password_store.password_store_path().read_text()
+    password_store.save(data := {"ding": "blablu"})
+    assert password_store.load() == data
 
 
 def test_obfuscate_with_own_secret() -> None:

@@ -5792,7 +5792,10 @@ class Password(TextInput):
             html.span(self._label, class_="vs_floating_text")
 
         if self._encrypt_value:
-            html.hidden_field(varprefix + "_orig", value=Encrypter.encrypt(value) if value else "")
+            html.hidden_field(
+                varprefix + "_orig",
+                value=base64.b64encode(Encrypter.encrypt(value)).decode("ascii") if value else "",
+            )
             default_value = ""
         else:
             default_value = value
@@ -5836,7 +5839,7 @@ class Password(TextInput):
         if not value:
             return value
 
-        return Encrypter.decrypt(value)
+        return Encrypter.decrypt(base64.b64decode(value.encode("ascii")))
 
 
 class PasswordSpec(Password):

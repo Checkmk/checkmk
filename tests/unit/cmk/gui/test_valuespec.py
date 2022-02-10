@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import base64
 import hashlib
 from contextlib import nullcontext
 from enum import Enum
@@ -423,7 +424,7 @@ def test_password_from_html_vars_initial_pw(request_context):
 )
 @pytest.mark.usefixtures("fixture_auth_secret")
 def test_password_from_html_vars_unchanged_pw(request_context):
-    html.request.set_var("pw_orig", Encrypter.encrypt("abc"))
+    html.request.set_var("pw_orig", base64.b64encode(Encrypter.encrypt("abc")).decode("ascii"))
     html.request.set_var("pw", "")
     pw = vs.Password()
     assert pw.from_html_vars("pw") == "abc"
@@ -434,7 +435,7 @@ def test_password_from_html_vars_unchanged_pw(request_context):
 )
 @pytest.mark.usefixtures("fixture_auth_secret")
 def test_password_from_html_vars_change_pw(request_context):
-    html.request.set_var("pw_orig", Encrypter.encrypt("abc"))
+    html.request.set_var("pw_orig", base64.b64encode(Encrypter.encrypt("abc")).decode("ascii"))
     html.request.set_var("pw", "xyz")
     pw = vs.Password()
     assert pw.from_html_vars("pw") == "xyz"

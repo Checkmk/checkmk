@@ -416,7 +416,15 @@ class UpdateConfig:
         store.save(store.load_for_modification())
 
     def _is_pre_2_1_password_store(self) -> bool:
-        return password_store.password_store_path().read_text()[:2] != "00"
+        return (
+            int.from_bytes(
+                password_store.password_store_path().read_bytes()[
+                    : password_store._PasswordStoreObfuscater.VERSION_BYTE_LENGTH
+                ],
+                byteorder="big",
+            )
+            != 0
+        )
 
     def _load_pre_2_1_password_store(self) -> dict[str, str]:
         passwords = {}

@@ -8,7 +8,6 @@ data within the Checkmk ecosystem."""
 
 from __future__ import annotations
 
-import base64
 import binascii
 import contextlib
 import enum
@@ -308,16 +307,15 @@ class Encrypter:
         return AES.new(cls._secret_key(salt), AES.MODE_GCM, nonce=nonce)
 
     @classmethod
-    def encrypt(cls, value: str) -> str:
+    def encrypt(cls, value: str) -> bytes:
         salt = os.urandom(AES.block_size)
         nonce = os.urandom(AES.block_size)
         cipher = cls._cipher(salt, nonce)
         encrypted, tag = cipher.encrypt_and_digest(value.encode("utf-8"))
-        return base64.b64encode(salt + nonce + tag + encrypted).decode("ascii")
+        return salt + nonce + tag + encrypted
 
     @classmethod
-    def decrypt(cls, value: str) -> str:
-        raw = base64.b64decode(value.encode("ascii"))
+    def decrypt(cls, raw: bytes) -> str:
         salt, rest = raw[: AES.block_size], raw[AES.block_size :]
         nonce, rest = rest[: AES.block_size], rest[AES.block_size :]
         tag, encrypted = rest[: AES.block_size], rest[AES.block_size :]

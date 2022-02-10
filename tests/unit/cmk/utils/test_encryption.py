@@ -24,15 +24,5 @@ def fixture_auth_secret():
     not hasattr(hashlib, "scrypt"), reason="OpenSSL version too old, must be >= 1.1"
 )
 @pytest.mark.usefixtures("fixture_auth_secret")
-def test_value_encrypter_encrypt():
-    encrypted = Encrypter.encrypt("abc")
-    assert isinstance(encrypted, str)
-    assert encrypted != "abc"
-
-
-@pytest.mark.skipif(
-    not hasattr(hashlib, "scrypt"), reason="OpenSSL version too old, must be >= 1.1"
-)
-@pytest.mark.usefixtures("fixture_auth_secret")
 def test_value_encrypter_transparent():
-    assert Encrypter.decrypt(Encrypter.encrypt("abc")) == "abc"
+    assert Encrypter.decrypt(Encrypter.encrypt(data := "abc")) == data

@@ -128,7 +128,7 @@ def save(stored_passwords: Mapping[str, str]) -> None:
     for ident, pw in stored_passwords.items():
         content += "%s:%s\n" % (ident, pw)
 
-    store.save_text_to_file(password_store_path(), _obfuscate(content))
+    store.save_bytes_to_file(password_store_path(), _obfuscate(content))
 
 
 def load() -> dict[str, str]:
@@ -138,7 +138,7 @@ def load() -> dict[str, str]:
 def _load(store_path: Path) -> dict[str, str]:
     passwords = {}
     with suppress(FileNotFoundError):
-        for line in _deobfuscate(store_path.read_text()).splitlines():
+        for line in _deobfuscate(store_path.read_bytes()).splitlines():
             ident, password = line.strip().split(":", 1)
             passwords[ident] = password
     return passwords
@@ -211,7 +211,8 @@ class _PasswordStoreObfuscater(Encrypter):
     very interested in learning from you.
     """
 
-    _VERSION_HEADER = "00"
+    VERSION = 0
+    VERSION_BYTE_LENGTH = 2
 
     @classmethod
     def _secret_key_path(cls) -> Path:
@@ -231,12 +232,14 @@ class _PasswordStoreObfuscater(Encrypter):
         )
 
     @classmethod
-    def encrypt(cls, value: str) -> str:
-        return cls._VERSION_HEADER + super().encrypt(value)
+    def encrypt(cls, value: str) -> bytes:
+        return cls.VERSION.to_bytes(cls.VERSION_BYTE_LENGTH, byteorder="big") + super().encrypt(
+            value
+        )
 
     @classmethod
-    def decrypt(cls, value: str) -> str:
-        return super().decrypt(value[len(cls._VERSION_HEADER) :])
+    def decrypt(cls, raw: bytes) -> str:
+        return super().decrypt(raw[cls.VERSION_BYTE_LENGTH :])
 
 
 _obfuscate = _PasswordStoreObfuscater.encrypt

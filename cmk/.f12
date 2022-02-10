@@ -22,6 +22,7 @@ PYTHON3_PATHS=(
     gui
     snmplib
     utils
+    fields
     ec
     notification_plugins
     special_agents

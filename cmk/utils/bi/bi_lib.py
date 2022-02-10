@@ -22,15 +22,15 @@ from typing import (
     Union,
 )
 
-from marshmallow.fields import Boolean, Constant
-from marshmallow.fields import Dict as MDict
-from marshmallow.fields import Integer
-from marshmallow.fields import List as MList
-from marshmallow.fields import Nested, String
-
 from livestatus import LivestatusOutputFormat, LivestatusResponse, SiteId
 
 from cmk.utils.bi.bi_schema import Schema
+
+from cmk.fields import Boolean, Constant
+from cmk.fields import Dict as MDict
+from cmk.fields import Integer
+from cmk.fields import List as MList
+from cmk.fields import Nested, String
 
 ReqList = partial(MList, required=True)
 ReqDict = partial(MDict, required=True)
@@ -217,7 +217,7 @@ def create_nested_schema(
     example = example_config or default_config
     return ReqNested(
         base_schema,
-        default=default_config,
+        dump_default=default_config,
         example=example,
         description="TODO: Hier muß Andreas noch etwas reinschreiben!",
     )
@@ -228,7 +228,7 @@ def get_schema_default_config(schema: Type[Schema], params=None) -> Dict[str, An
 
     >>> from marshmallow import fields
     >>> class Foo(Schema):
-    ...       field = fields.String(default="bar")
+    ...       field = fields.String(dump_default="bar")
 
     >>> get_schema_default_config(Foo)
     {'field': 'bar'}
@@ -272,9 +272,9 @@ class BIAggregationComputationOptions(ABCWithSchema):
 
 
 class BIAggregationComputationOptionsSchema(Schema):
-    disabled = ReqBoolean(default=False, example=False)
-    use_hard_states = ReqBoolean(default=False, example=False)
-    escalate_downtimes_as_warn = ReqBoolean(default=False, example=False)
+    disabled = ReqBoolean(dump_default=False, example=False)
+    use_hard_states = ReqBoolean(dump_default=False, example=False)
+    escalate_downtimes_as_warn = ReqBoolean(dump_default=False, example=False)
 
 
 class BIAggregationGroups(ABCWithSchema):
@@ -298,8 +298,8 @@ class BIAggregationGroups(ABCWithSchema):
 
 
 class BIAggregationGroupsSchema(Schema):
-    names = MList(ReqString(), default=[], example=["group1", "group2"])
-    paths = MList(MList(ReqString()), default=[], example=[["path", "of", "group1"]])
+    names = MList(ReqString(), dump_default=[], example=["group1", "group2"])
+    paths = MList(MList(ReqString()), dump_default=[], example=[["path", "of", "group1"]])
 
 
 class BIParams(ABCWithSchema):
@@ -320,7 +320,7 @@ class BIParams(ABCWithSchema):
 
 
 class BIParamsSchema(Schema):
-    arguments = ReqList(String, default=[], example=["testhostParams"])
+    arguments = ReqList(String, dump_default=[], example=["testhostParams"])
 
 
 T = TypeVar("T", str, dict, list)

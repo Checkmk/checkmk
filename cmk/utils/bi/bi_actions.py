@@ -86,9 +86,9 @@ class BICallARuleAction(ABCBIAction, ABCWithSchema):
 
 class BICallARuleActionSchema(Schema):
     type = ReqConstant(BICallARuleAction.type())
-    rule_id = ReqString(default="", example="test_rule_1")
+    rule_id = ReqString(dump_default="", example="test_rule_1")
     params = ReqNested(
-        BIParamsSchema, default=BIParamsSchema().dump({}), example=BIParamsSchema().dump({})
+        BIParamsSchema, dump_default=BIParamsSchema().dump({}), example=BIParamsSchema().dump({})
     )
 
 
@@ -138,7 +138,7 @@ class BIStateOfHostAction(ABCBIAction, ABCWithSchema):
 
 class BIStateOfHostActionSchema(Schema):
     type = ReqConstant(BIStateOfHostAction.type())
-    host_regex = ReqString(default="", example="testhost")
+    host_regex = ReqString(dump_default="", example="testhost")
 
 
 #   .--StateOfSvc----------------------------------------------------------.
@@ -207,8 +207,8 @@ class BIStateOfServiceAction(ABCBIAction, ABCWithSchema):
 
 class BIStateOfServiceActionSchema(Schema):
     type = ReqConstant(BIStateOfServiceAction.type())
-    host_regex = ReqString(default="", example="testhost")
-    service_regex = ReqString(default="", example="testservice")
+    host_regex = ReqString(dump_default="", example="testhost")
+    service_regex = ReqString(dump_default="", example="testservice")
 
 
 #   .--StateOfRmn----------------------------------------------------------.
@@ -257,7 +257,7 @@ class BIStateOfRemainingServicesAction(ABCBIAction, ABCWithSchema):
 
 class BIStateOfRemainingServicesActionSchema(Schema):
     type = ReqConstant(BIStateOfRemainingServicesAction.type())
-    host_regex = ReqString(default="", example="testhost")
+    host_regex = ReqString(dump_default="", example="testhost")
 
 
 #   .--Schemas-------------------------------------------------------------.

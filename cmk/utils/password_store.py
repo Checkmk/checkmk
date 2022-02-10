@@ -175,14 +175,6 @@ def _helper_password_store_path(config_path: ConfigPath) -> Path:
     return Path(config_path) / "stored_passwords"
 
 
-def _obfuscate(content: str) -> str:
-    return _PasswordStoreObfuscater().encrypt(content)
-
-
-def _deobfuscate(obfuscated: str) -> str:
-    return _PasswordStoreObfuscater.decrypt(obfuscated)
-
-
 class _PasswordStoreObfuscater(Encrypter):
     """Encrypt the password store with the locally known password store key
 
@@ -245,3 +237,7 @@ class _PasswordStoreObfuscater(Encrypter):
     @classmethod
     def decrypt(cls, value: str) -> str:
         return super().decrypt(value[len(cls._VERSION_HEADER) :])
+
+
+_obfuscate = _PasswordStoreObfuscater.encrypt
+_deobfuscate = _PasswordStoreObfuscater.decrypt

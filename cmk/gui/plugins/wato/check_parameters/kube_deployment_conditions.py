@@ -52,6 +52,6 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersApplications,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec,
-        title=lambda: _("Deployment conditions"),
+        title=lambda: _("Kubernetes deployment conditions"),
     )
 )

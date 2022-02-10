@@ -51,6 +51,6 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersApplications,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec,
-        title=lambda: _("Kubernetes Pod restarts"),
+        title=lambda: _("Kubernetes pod restarts"),
     )
 )

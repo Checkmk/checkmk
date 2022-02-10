@@ -49,4 +49,4 @@ def test_rulespec_registry_parameter_valuespec(rulespec):
 
 
 def test_rulespec_registry_title(rulespec):
-    assert rulespec.title == "Pod containers"
+    assert rulespec.title == "Kubernetes pod containers"

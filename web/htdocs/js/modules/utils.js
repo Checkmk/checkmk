@@ -109,6 +109,11 @@ export function remove_class(o, cn) {
     o.className = new_parts.join(" ");
 }
 
+export function remove_classes_by_prefix(o, prefix) {
+    const classes = o.className.split(" ").filter(c => !c.startsWith(prefix));
+    o.className = classes.join(" ").trim();
+}
+
 export function add_class(o, cn) {
     if (!has_class(o, cn)) o.className += " " + cn;
 }

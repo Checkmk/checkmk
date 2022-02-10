@@ -62,4 +62,4 @@ def test_rulespec_registry_parameter_valuespec(rulespec):
 
 
 def test_rulespec_registry_title(rulespec):
-    assert rulespec.title == "Kubernetes node container count"
+    assert rulespec.title == "Kubernetes node containers"

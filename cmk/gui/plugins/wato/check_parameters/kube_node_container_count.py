@@ -44,7 +44,7 @@ def __levels(title):
 def _parameter_valuespec():
     return Dictionary(
         help=_(
-            "Allows to define absolute levels for running, waiting, terminated and total  containers."
+            "Allows to define absolute levels for running, waiting, terminated and total containers."
         ),
         elements=[
             ("running", __levels(_("Number of running containers"))),
@@ -61,6 +61,6 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersApplications,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec,
-        title=lambda: _("Kubernetes node container count"),
+        title=lambda: _("Kubernetes node containers"),
     )
 )

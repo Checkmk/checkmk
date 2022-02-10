@@ -417,3 +417,21 @@ def deployment_from_client(
         ),
         pods=pod_uids,
     )
+
+
+def parse_cron_job_spec(spec: client.V1CronJobSpec) -> api.CronJobSpec:
+    return api.CronJobSpec(
+        concurrency_policy=api.ConcurrencyPolicy(spec.concurrency_policy), schedule=spec.schedule
+    )
+
+
+def cron_job_from_client(
+    cron_job: client.V1CronJob,
+    pod_uids: Sequence[api.PodUID],
+) -> api.CronJob:
+    return api.CronJob(
+        uid=api.CronJobUID(cron_job.metadata.uid),
+        metadata=parse_metadata(cron_job.metadata),
+        spec=parse_cron_job_spec(cron_job.spec),
+        pod_uids=pod_uids,
+    )

@@ -378,6 +378,24 @@ def aggregate_resources(
     )
 
 
+class CronJob:
+    def __init__(self, metadata: api.MetaData, spec: api.CronJobSpec):
+        self.metadata = metadata
+        self.spec = spec
+        self._pods: List[Pod] = []
+
+    def name(self, prepend_namespace: bool = True) -> str:
+        if not prepend_namespace:
+            return self.metadata.name
+        return f"{self.metadata.namespace}_{self.metadata.name}"
+
+    def pods(self) -> Sequence[Pod]:
+        return self._pods
+
+    def add_pod(self, pod: Pod) -> None:
+        self._pods.append(pod)
+
+
 # TODO: addition of test framework for output sections
 class Deployment:
     def __init__(
@@ -594,6 +612,9 @@ class Cluster:
                 Deployment(deployment.metadata, deployment.spec, deployment.status), deployment.pods
             )
 
+        for cron_job in api_server.cron_jobs():
+            cluster.add_cron_job(CronJob(cron_job.metadata, cron_job.spec), cron_job.pod_uids)
+
         LOGGER.debug(
             "Cluster composition: Nodes (%s), " "Deployments (%s), " "Pods (%s)",
             len(cluster.nodes()),
@@ -607,9 +628,18 @@ class Cluster:
         self._deployments: List[Deployment] = []
         self._pods: Dict[str, Pod] = {}
         self._cluster_details: Optional[api.ClusterInfo] = cluster_details
+        self._cron_jobs: List[CronJob] = []
 
     def add_node(self, node: Node) -> None:
         self._nodes[node.name] = node
+
+    def add_cron_job(self, cron_job: CronJob, pod_uids: Sequence[api.PodUID]) -> None:
+        for pod_uid in pod_uids:
+            try:
+                cron_job.add_pod(self._pods[pod_uid])
+            except KeyError:
+                raise KeyError(f"CronJob {cron_job.name} references unknown pod {pod_uid}")
+        self._cron_jobs.append(cron_job)
 
     def add_deployment(self, deployment: Deployment, pod_uids: Sequence[api.PodUID]) -> None:
         for pod_uid in pod_uids:
@@ -650,6 +680,9 @@ class Cluster:
 
     def nodes(self) -> Sequence[Node]:
         return list(self._nodes.values())
+
+    def cron_jobs(self) -> Sequence[CronJob]:
+        return self._cron_jobs
 
     def deployments(self) -> Sequence[Deployment]:
         return self._deployments
@@ -834,19 +867,19 @@ def pod_api_based_checkmk_sections(pod: Pod):
 
 def filter_outdated_and_non_monitored_pods(
     live_pods: Sequence[PerformancePod],
-    lookup_name_to_piggyback_mappings: Mapping[PodLookupName, PodNamespacedName],
+    lookup_name_to_piggyback_mappings: Set[PodLookupName],
 ) -> Sequence[PerformancePod]:
     """Filter out all performance data based pods that are not in the API data based lookup table
 
     Examples:
         >>> len(filter_outdated_and_non_monitored_pods(
         ... [PerformancePod(lookup_name=PodLookupName("foobar"), containers=[])],
-        ... {PodLookupName("foobar"): PodNamespacedName("space_foobar")}))
+        ... {PodLookupName("foobar")}))
         1
 
         >>> len(filter_outdated_and_non_monitored_pods(
         ... [PerformancePod(lookup_name=PodLookupName("foobar"), containers=[])],
-        ... {}))
+        ... set()))
         0
 
     """
@@ -1337,6 +1370,7 @@ def parse_and_group_containers_performance_metrics(
 def write_sections_based_on_performance_pods(
     performance_pods: Mapping[PodLookupName, PerformancePod],
     monitored_objects: Sequence[str],
+    monitored_pods: Set[PodLookupName],
     cluster: Cluster,
     monitored_namespaces: Set[api.Namespace],
     piggyback_formatter,
@@ -1353,9 +1387,12 @@ def write_sections_based_on_performance_pods(
         lookup_name_piggyback_mappings = map_lookup_name_to_piggyback_host_name(
             running_pods, pod_lookup_from_api_pod
         )
+        monitored_running_pods = monitored_pods.intersection(
+            {pod_lookup_from_api_pod(pod) for pod in running_pods}
+        )
 
         for pod in filter_outdated_and_non_monitored_pods(
-            list(performance_pods.values()), lookup_name_piggyback_mappings
+            list(performance_pods.values()), monitored_running_pods
         ):
             with ConditionalPiggybackSection(
                 piggyback_formatter(
@@ -1468,10 +1505,26 @@ def main(args: Optional[List[str]] = None) -> int:
                     piggyback_formatter=functools.partial(piggyback_formatter, "deployment"),
                 )
 
+            monitored_pods: Set[PodLookupName] = {
+                pod_lookup_from_api_pod(pod)
+                for pod in pods_from_namespaces(cluster.pods(), monitored_namespaces)
+            }
+            monitored_pods = monitored_pods.difference(
+                {
+                    pod_lookup_from_api_pod(pod)
+                    for cron_job in cluster.cron_jobs()
+                    for pod in cron_job.pods()
+                }
+            )
+
             if "pods" in arguments.monitored_objects:
                 LOGGER.info("Write pods sections based on API data")
                 write_pods_api_sections(
-                    pods_from_namespaces(cluster.pods(), monitored_namespaces),
+                    [
+                        pod
+                        for pod in cluster.pods()
+                        if pod_lookup_from_api_pod(pod) in monitored_pods
+                    ],
                     piggyback_formatter=functools.partial(piggyback_formatter, "pod"),
                 )
 
@@ -1511,6 +1564,7 @@ def main(args: Optional[List[str]] = None) -> int:
                     write_sections_based_on_performance_pods(
                         performance_pods=performance_pods,
                         cluster=cluster,
+                        monitored_pods=monitored_pods,
                         monitored_objects=arguments.monitored_objects,
                         monitored_namespaces=monitored_namespaces,
                         piggyback_formatter=piggyback_formatter,

@@ -31,6 +31,8 @@ from pydantic import BaseModel
 from pydantic.class_validators import validator
 from pydantic.fields import Field
 
+CronJobUID = NewType("CronJobUID", str)
+JobUID = NewType("JobUID", str)
 PodUID = NewType("PodUID", str)
 LabelName = NewType("LabelName", str)
 LabelValue = NewType("LabelValue", str)
@@ -319,6 +321,25 @@ class Pod(BaseModel):
     init_containers: Mapping[str, ContainerInfo]
 
 
+class ConcurrencyPolicy(enum.Enum):
+    # specifies how to treat concurrent executions of a Job.
+    Allow = "Allow"  # allows concurrently running jobs
+    Forbid = "Forbid"  # does not allow concurrent runs
+    Replace = "Replace"  # replaces the currently running job
+
+
+class CronJobSpec(BaseModel):
+    concurrency_policy: ConcurrencyPolicy
+    schedule: str
+
+
+class CronJob(BaseModel):
+    uid: CronJobUID
+    metadata: MetaData
+    spec: CronJobSpec
+    pod_uids: Sequence[PodUID]
+
+
 class ClusterInfo(BaseModel):
     """section: kube_cluster_details_v1"""
 
@@ -326,6 +347,9 @@ class ClusterInfo(BaseModel):
 
 
 class API(Protocol):
+    def cron_jobs(self) -> Sequence[CronJob]:
+        ...
+
     def nodes(self) -> Sequence[Node]:
         ...
 

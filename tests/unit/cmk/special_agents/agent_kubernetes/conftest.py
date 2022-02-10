@@ -18,6 +18,11 @@ def core_client():
 
 
 @pytest.fixture
+def batch_client():
+    return client.BatchV1Api(kubernetes_api_client())
+
+
+@pytest.fixture
 def apps_client():
     return client.AppsV1Api(kubernetes_api_client())
 

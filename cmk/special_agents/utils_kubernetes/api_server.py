@@ -5,16 +5,28 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from dataclasses import dataclass
-from typing import Dict, Generic, Iterator, Literal, Optional, Sequence, Tuple, Type, TypeVar
+from typing import Dict, Generic, Iterator, List, Literal, Optional, Sequence, Tuple, Type, TypeVar
 
 from kubernetes import client  # type: ignore[import] # pylint: disable=import-error
 
 from cmk.special_agents.utils_kubernetes.schemata import api
 from cmk.special_agents.utils_kubernetes.transform import (
+    cron_job_from_client,
     deployment_from_client,
     node_from_client,
     pod_from_client,
 )
+
+
+class BatchAPI:
+    def __init__(self, api_client: client.ApiClient) -> None:
+        self.connection = client.BatchV1Api(api_client)
+
+    def query_raw_cron_jobs(self) -> Iterator[client.V1CronJob]:
+        return self.connection.list_cron_job_for_all_namespaces().items
+
+    def query_raw_jobs(self) -> Iterator[client.V1Job]:
+        return self.connection.list_job_for_all_namespaces().items
 
 
 class CoreAPI:
@@ -41,6 +53,9 @@ class CoreAPI:
             namespace, label_selector=label_selector
         ).items:
             yield pod
+
+    def query_raw_pods(self) -> Iterator[client.V1Pod]:
+        return self.connection.list_pod_for_all_namespaces().items
 
     def _collect_objects(self):
         self._collect_pods()
@@ -171,17 +186,55 @@ class APIServer:
 
     @classmethod
     def from_kubernetes(cls, api_client):
-        return cls(CoreAPI(api_client), RawAPI(api_client), AppsAPI(api_client))
+        return cls(
+            BatchAPI(api_client), CoreAPI(api_client), RawAPI(api_client), AppsAPI(api_client)
+        )
 
     def __init__(
         self,
+        batch_api: BatchAPI,
         core_api: CoreAPI,
         raw_api: RawAPI,
         external_api: AppsAPI,
     ) -> None:
+        self.batch_api = batch_api
         self.core_api = core_api
         self.apps_api = external_api
         self.raw_api = raw_api
+
+    def cron_jobs(self) -> Sequence[api.CronJob]:
+        # CronJob -controls-> Job -controls-> Pod
+        cronjobs_controlling_jobs: Dict[api.CronJobUID, List[api.JobUID]] = {}
+        for job in self.batch_api.query_raw_jobs():
+            job_controllers = get_controllers(job.metadata.owner_references)
+            for job_controller in job_controllers:
+                if not job_controller.kind == "CronJob":
+                    continue
+                controlling_jobs = cronjobs_controlling_jobs.setdefault(
+                    api.CronJobUID(job_controller.uid), []
+                )
+                controlling_jobs.append(job.metadata.uid)
+
+        jobs_controlling_pods: Dict[api.JobUID, List[api.PodUID]] = {}
+        for pod in self.core_api.query_raw_pods():
+            pod_controllers = get_controllers(pod.metadata.owner_references)
+            for pod_controller in pod_controllers:
+                if not pod_controller.kind == "Job":
+                    continue
+                controlling_pods = jobs_controlling_pods.setdefault(
+                    api.JobUID(pod_controller.uid), []
+                )
+                controlling_pods.append(api.PodUID(pod.metadata.uid))
+
+        result = []
+        for cron_job in self.batch_api.query_raw_cron_jobs():
+            controlling_pods = [
+                pod_uid
+                for job in cronjobs_controlling_jobs.get(api.CronJobUID(cron_job.metadata.uid), [])
+                for pod_uid in jobs_controlling_pods.get(job, [])
+            ]
+            result.append(cron_job_from_client(cron_job, controlling_pods))
+        return result
 
     def deployments(self) -> Sequence[api.Deployment]:
         result = []

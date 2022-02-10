@@ -29,6 +29,7 @@ def _parameter_valuespec():
                 ),
             ),
         ],
+        required_keys=["failed_state"],
     )
 
 

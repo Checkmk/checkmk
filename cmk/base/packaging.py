@@ -139,8 +139,8 @@ def show_package_info(name: PackageName) -> None:
 def show_package(name: PackageName, show_info: bool = False) -> None:
     try:
         if name.endswith(PACKAGE_EXTENSION):
-            tar = tarfile.open(name, "r:gz")  # pylint:disable=consider-using-with
-            info = tar.extractfile("info")
+            with tarfile.open(name, "r:gz") as tar:
+                info = tar.extractfile("info")
             if info is None:
                 raise PackageException('Failed to extract "info"')
             package = parse_package_info(info.read().decode())

@@ -20,13 +20,26 @@ import io
 import logging
 import os
 import re
-import signal
 import subprocess
 import sys
 import time
 import traceback
 import uuid
-from typing import Any, cast, Dict, FrozenSet, List, Mapping, Optional, overload, Set, Tuple, Union
+from pathlib import Path
+from typing import (
+    Any,
+    cast,
+    Dict,
+    FrozenSet,
+    List,
+    Mapping,
+    Optional,
+    overload,
+    Sequence,
+    Set,
+    Tuple,
+    Union,
+)
 
 import livestatus
 
@@ -34,7 +47,7 @@ import cmk.utils.debug
 import cmk.utils.log as log
 import cmk.utils.paths
 import cmk.utils.store as store
-from cmk.utils.exceptions import MKException, MKGeneralException
+from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.log import console
 from cmk.utils.macros import replace_macros_in_str
 from cmk.utils.notify import (
@@ -46,6 +59,7 @@ from cmk.utils.notify import (
     NotificationResultCode,
 )
 from cmk.utils.regex import regex
+from cmk.utils.timeout import MKTimeout, Timeout
 from cmk.utils.type_defs import (
     ContactName,
     EventRule,
@@ -259,12 +273,13 @@ def do_notify(options: Dict[str, bool], args: List[str]) -> Optional[int]:
             notify_notify(raw_context_from_env(os.environ))
 
     except Exception:
-        crash_dir = cmk.utils.paths.var_dir + "/notify"
-        if not os.path.exists(crash_dir):
-            os.makedirs(crash_dir)
-        open(crash_dir + "/crash.log", "a").write(  # pylint:disable=consider-using-with
-            "CRASH (%s):\n%s\n" % (time.strftime("%Y-%m-%d %H:%M:%S"), format_exception())
-        )
+        crash_dir = Path(cmk.utils.paths.var_dir) / "notify"
+        if not crash_dir.exists():
+            crash_dir.mkdir(parents=True)
+        with (crash_dir / "crash.log").open(mode="a") as crash_file:
+            crash_file.write(
+                "CRASH (%s):\n%s\n" % (time.strftime("%Y-%m-%d %H:%M:%S"), format_exception())
+            )
     return None
 
 
@@ -1499,21 +1514,23 @@ def notify_via_email(plugin_context: PluginContext) -> int:
     logger.debug("Executing command: %s", command)
 
     # TODO: Cleanup this shell=True call!
-    p = subprocess.Popen(  # nosec # pylint:disable=consider-using-with
+    completed_process = subprocess.run(  # nosec
         command_utf8,
         shell=True,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
-        stdin=subprocess.PIPE,
         close_fds=True,
         encoding="utf-8",
+        check=False,
+        input=body,
     )
-    stdout, stderr = p.communicate(input=body)
-    exitcode = p.returncode
     os.putenv("LANG", old_lang)  # Important: do not destroy our environment
-    if exitcode != 0:
-        logger.info("ERROR: could not deliver mail. Exit code of command is %r", exitcode)
-        for line in (stdout + stderr).splitlines():
+    if completed_process.returncode:
+        logger.info(
+            "ERROR: could not deliver mail. Exit code of command is %r",
+            completed_process.returncode,
+        )
+        for line in (completed_process.stdout + completed_process.stderr).splitlines():
             logger.info("mail: %s", line.rstrip())
         return 2
 
@@ -1528,28 +1545,27 @@ def _ensure_utf8() -> None:
     # Our resultion in future: use /usr/sbin/sendmail directly.
     # Our resultion in the present: look with locale -a for an existing UTF encoding
     # and use that.
-    proc: subprocess.Popen = subprocess.Popen(  # pylint:disable=consider-using-with
+    completed_process = subprocess.run(
         ["locale", "-a"],
         close_fds=True,
         stdout=subprocess.PIPE,
         stderr=subprocess.DEVNULL,
+        check=False,
     )
-    locales_list: List[str] = []
-    std_out: bytes = proc.communicate()[0]
-    exit_code: int = proc.returncode
-    not_found_msg: str = (
-        "No UTF-8 encoding found in your locale -a! " "Please install appropriate locales."
-    )
-    if exit_code != 0:
+
+    not_found_msg = "No UTF-8 encoding found in your locale -a! Please install appropriate locales."
+
+    if completed_process.returncode:
         logger.info(
-            "Command 'locale -a' could not be executed " "Exit code of command was: %r", exit_code
+            "Command 'locale -a' could not be executed. Exit code of command was: %r",
+            completed_process.returncode,
         )
         logger.info(not_found_msg)
         return
 
-    locales_list = std_out.decode("utf-8", "ignore").split("\n")
+    locales_list = completed_process.stdout.decode("utf-8", "ignore").split("\n")
     for encoding in locales_list:
-        el: str = encoding.lower()
+        el = encoding.lower()
         if "utf8" in el or "utf-8" in el or "utf.8" in el:
             encoding = encoding.strip()
             os.putenv("LANG", encoding)
@@ -1648,46 +1664,41 @@ def call_notification_script(
         return 2
 
     plugin_log("executing %s" % path)
-    try:
-        set_notification_timeout()
-        p = subprocess.Popen(  # pylint:disable=consider-using-with
-            [path],
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-            env=notification_script_env(plugin_context),
-            encoding="utf-8",
-            close_fds=True,
-        )
 
-        stdout = p.stdout
+    with subprocess.Popen(
+        [path],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        env=notification_script_env(plugin_context),
+        encoding="utf-8",
+        close_fds=True,
+    ) as p:
         output_lines: List[str] = []
-        assert stdout is not None
-        while True:
-            # read and output stdout linewise to ensure we don't force python to produce
-            # one - potentially huge - memory buffer
-            line = stdout.readline()
-            if line != "":
-                output: str = line.rstrip()
-                plugin_log("Output: %s" % output)
-                output_lines.append(output)
-                if _log_to_stdout:
-                    out.output(line)
-            else:
-                break
-        # the stdout is closed but the return code may not be available just yet - wait for the
-        # process to actually finish
-        exitcode = p.wait()
-        clear_notification_timeout()
-    except NotificationTimeout:
-        plugin_log(
-            "Notification plugin did not finish within %d seconds. Terminating."
-            % config.notification_plugin_timeout
-        )
-        # p.kill() requires python 2.6!
-        os.kill(p.pid, signal.SIGTERM)
-        exitcode = 1
+        assert p.stdout is not None
 
-    if exitcode != 0:
+        with Timeout(
+            config.notification_plugin_timeout,
+            message="Notification plugin timed out",
+        ) as timeout_guard:
+            try:
+                while True:
+                    # read and output stdout linewise to ensure we don't force python to produce
+                    # one - potentially huge - memory buffer
+                    if not (line := p.stdout.readline()):
+                        break
+                    output = line.rstrip()
+                    plugin_log("Output: %s" % output)
+                    output_lines.append(output)
+                    if _log_to_stdout:
+                        out.output(line)
+            except MKTimeout:
+                plugin_log(
+                    "Notification plugin did not finish within %d seconds. Terminating."
+                    % config.notification_plugin_timeout
+                )
+                p.kill()
+
+    if exitcode := 1 if timeout_guard.signaled else p.returncode:
         plugin_log("Plugin exited with code %d" % exitcode)
 
     _log_to_history(
@@ -1729,23 +1740,6 @@ def notification_script_env(plugin_context: PluginContext) -> PluginContext:
     )
 
     return notify_env
-
-
-class NotificationTimeout(MKException):
-    pass
-
-
-def handle_notification_timeout(signum: int, frame: Any) -> None:
-    raise NotificationTimeout()
-
-
-def set_notification_timeout() -> None:
-    signal.signal(signal.SIGALRM, handle_notification_timeout)
-    signal.alarm(config.notification_plugin_timeout)
-
-
-def clear_notification_timeout() -> None:
-    signal.alarm(0)
 
 
 # .
@@ -1935,40 +1929,26 @@ def do_bulk_notify(
         )
 
     logger.info("    --> storing for bulk notification %s", "|".join(bulk_path))
-    bulk_dirname = create_bulk_dirname(bulk_path)
+    bulk_dir = create_bulk_dir(bulk_path)
     notify_uuid = fresh_uuid()
-    filename = bulk_dirname + "/" + notify_uuid
-    open(filename + ".new", "w").write(  # pylint:disable=consider-using-with
-        "%r\n" % ((params, plugin_context),)
-    )
-    os.rename(filename + ".new", filename)  # We need an atomic creation!
-    logger.info("        - stored in %s", filename)
+    filename_new = bulk_dir / f"{notify_uuid}.new"
+    filename_final = bulk_dir / notify_uuid
+    filename_new.write_text("%r\n" % ((params, plugin_context),))
+    filename_new.rename(filename_final)  # We need an atomic creation!
+    logger.info("        - stored in %s", filename_final)
 
 
-def create_bulk_dirname(bulk_path: List[str]) -> str:
-    dirname = os.path.join(
+def create_bulk_dir(bulk_path: Sequence[str]) -> Path:
+    bulk_dir = Path(
         notification_bulkdir,
         bulk_path[0],
         bulk_path[1],
         ",".join([b.replace("/", "\\") for b in bulk_path[2:]]),
     )
-
-    # Remove non-Ascii-characters by special %02x-syntax
-    try:
-        str(dirname)
-    except Exception:
-        new_dirname = ""
-        for char in dirname:
-            if ord(char) <= 0 or ord(char) > 127:
-                new_dirname += "%%%04x" % ord(char)
-            else:
-                new_dirname += char
-        dirname = new_dirname
-
-    if not os.path.exists(dirname):
-        os.makedirs(dirname)
-        logger.info("        - created bulk directory %s", dirname)
-    return dirname
+    if bulk_dir.exists():
+        bulk_dir.mkdir(parents=True)
+        logger.info("        - created bulk directory %s", bulk_dir)
+    return bulk_dir
 
 
 def bulk_parts(method_dir: str, bulk: str) -> Optional[Tuple[Optional[int], Optional[str], int]]:
@@ -2218,37 +2198,38 @@ def call_bulk_notification_script(
     if not path:
         raise MKGeneralException("Notification plugin %s not found" % plugin_name)
 
-    stdout = stderr = ""
-    try:
-        set_notification_timeout()
+    timed_out = False
+    # Protocol: The script gets the context on standard input and
+    # read until that is closed. It is being called with the parameter
+    # --bulk.
+    with subprocess.Popen(
+        [path, "--bulk"],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        stdin=subprocess.PIPE,
+        close_fds=True,
+        encoding="utf-8",
+    ) as p:
+        try:
+            stdout, stderr = p.communicate(
+                input="".join(context_lines),
+                timeout=config.notification_plugin_timeout,
+            )
+        except subprocess.TimeoutExpired:
+            logger.info(
+                "Notification plugin did not finish within %d seconds. Terminating.",
+                config.notification_plugin_timeout,
+            )
+            p.kill()
+            stdout, stderr = p.communicate()
+            timed_out = True
 
-        # Protocol: The script gets the context on standard input and
-        # read until that is closed. It is being called with the parameter
-        # --bulk.
-        p = subprocess.Popen(  # pylint:disable=consider-using-with
-            [path, "--bulk"],
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            stdin=subprocess.PIPE,
-            close_fds=True,
-            encoding="utf-8",
-        )
-
-        stdout, stderr = p.communicate(input="".join(context_lines))
-        exitcode = p.returncode
-
-        clear_notification_timeout()
-    except NotificationTimeout:
+    if exitcode := 1 if timed_out else p.returncode:
         logger.info(
-            "Notification plugin did not finish within %d seconds. Terminating.",
-            config.notification_plugin_timeout,
+            "ERROR: script %s --bulk returned with exit code %s",
+            path,
+            exitcode,
         )
-        # p.kill() requires python 2.6!
-        os.kill(p.pid, signal.SIGTERM)
-        exitcode = 1
-
-    if exitcode:
-        logger.info("ERROR: script %s --bulk returned with exit code %s", path, exitcode)
 
     output_lines = (stdout + stderr).splitlines()
     for line in output_lines:

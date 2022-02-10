@@ -583,27 +583,29 @@ def _parse_history_file(
     cmd = "tac %s" % quote_shell_string(str(path))
     if greptexts:
         cmd += " | egrep -i -e %s" % quote_shell_string(".*".join(greptexts))
-    grep = subprocess.Popen(  # nosec  # pylint:disable=consider-using-with
-        cmd, shell=True, close_fds=True, stdout=subprocess.PIPE
-    )
-    if grep.stdout is None:
-        raise Exception("Huh? stdout vanished...")
+    with subprocess.Popen(
+        cmd,
+        shell=True,
+        close_fds=True,
+        stdout=subprocess.PIPE,
+    ) as grep:  # nosec
+        if grep.stdout is None:
+            raise Exception("Huh? stdout vanished...")
 
-    for line in grep.stdout:
-        line_no += 1
-        if limit is not None and len(entries) > limit:
-            grep.kill()
-            grep.wait()
-            break
+        for line in grep.stdout:
+            line_no += 1
+            if limit is not None and len(entries) > limit:
+                grep.kill()
+                break
 
-        try:
-            parts: list[Any] = line.decode("utf-8").rstrip("\n").split("\t")
-            _convert_history_line(history, parts)
-            values = [line_no] + parts
-            if query.filter_row(values):
-                entries.append(values)
-        except Exception as e:
-            logger.exception(f"Invalid line '{line!r}' in history file {path}: {e}")
+            try:
+                parts: list[Any] = line.decode("utf-8").rstrip("\n").split("\t")
+                _convert_history_line(history, parts)
+                values = [line_no] + parts
+                if query.filter_row(values):
+                    entries.append(values)
+            except Exception as e:
+                logger.exception(f"Invalid line '{line!r}' in history file {path}: {e}")
 
     return entries
 

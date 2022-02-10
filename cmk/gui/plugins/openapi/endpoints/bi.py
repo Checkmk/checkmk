@@ -65,7 +65,7 @@ def _bailout_with_message(message):
 
 class BIRuleEndpointSchema(BIRuleSchema):
     pack_id = ReqString(
-        dump_default="",
+        default="",
         example="pack1",
         description="TODO: Hier muß Andreas noch etwas reinschreiben!",
     )
@@ -181,7 +181,7 @@ def delete_bi_rule(params):
 
 class BIAggregationEndpointSchema(BIAggregationSchema):
     pack_id = ReqString(
-        dump_default="",
+        default="",
         example="pack1",
         description="TODO: Hier muß Andreas noch etwas reinschreiben!",
     )
@@ -414,18 +414,18 @@ def delete_bi_pack(params):
 
 class BIPackEndpointSchema(Schema):
     title = ReqString(
-        dump_default="",
+        default="",
         example="BI Title",
         description="TODO: Hier muß Andreas noch etwas reinschreiben!",
     )
     contact_groups = ReqList(
         fields.String(),
-        dump_default=[],
+        default=[],
         example=["contact", "contactgroup_b"],
         description="TODO: Hier muß Andreas noch etwas reinschreiben!",
     )
     public = ReqBoolean(
-        dump_default=False,
+        default=False,
         example="false",
         description="TODO: Hier muß Andreas noch etwas reinschreiben!",
     )

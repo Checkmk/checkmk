@@ -1,0 +1,10 @@
+Title: Agent controller for Windows agent can be disabled in WATO
+Class: feature
+Compatible: compat
+Component: wato
+Date: 1644575104
+Edition: cee
+Knowledge: undoc
+Level: 1
+Version: 2.1.0i1
+

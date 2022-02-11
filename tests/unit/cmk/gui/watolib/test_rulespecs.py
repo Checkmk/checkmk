@@ -168,6 +168,7 @@ def test_grouped_rulespecs():
         "agents/windows_agent": [
             "agent_config:logging",
             "agent_config:firewall",
+            "agent_config:win_controller",
             "agent_config:win_clean_uninstall",
             "agent_config:win_exe_suffixes",
             "agent_config:win_agent_sections",

@@ -14,22 +14,25 @@ timeout(time: 12, unit: 'HOURS') {
         def WORKSPACE = pwd()
         def RESULTS = WORKSPACE + "/results"
         def issues = [];
+        def time_job_started = new Date();
+        def time_stage_started = time_job_started;
     
         try {
-            stage("Auschecken: Checkmk") {
+            stage("Check out: Checkmk") {
                 checkout(scm)
                 sh("rm -rf ${RESULTS}; mkdir ${RESULTS}")
                 test_gerrit_helper = load 'buildscripts/scripts/lib/gerrit_stages.groovy'
                 withCredentials([usernamePassword(credentialsId: 'nexus', passwordVariable: 'DOCKER_PASSPHRASE', usernameVariable: 'DOCKER_USERNAME')]) {
                     sh('echo  "${DOCKER_PASSPHRASE}" | docker login "${DOCKER_REGISTRY}" -u "${DOCKER_USERNAME}" --password-stdin')
                 }
+                time_stage_started = test_gerrit_helper.log_stage_duration(time_stage_started);
             }
     
             /// Add description to the build
             test_gerrit_helper.desc_init()
             test_gerrit_helper.desc_add_line(GERRIT_CHANGE_SUBJECT)
             test_gerrit_helper.desc_add_table()
-            test_gerrit_helper.desc_add_row('Stage', 'Status', 'Result Files')
+            test_gerrit_helper.desc_add_row('Stage', 'Duration', 'Status', 'Result files')
     
             /* Reason for the following try/catch block:
             * Jenkins will abort jobs (e.g. in case of a new patch set) with SIGKILL (at least this is what we think)
@@ -46,6 +49,8 @@ timeout(time: 12, unit: 'HOURS') {
                 sh("rm -rf .venv")
                 throw e
             }
+
+            time_stage_started = test_gerrit_helper.log_stage_duration(time_stage_started);
     
             /// Generate list of stages to be added - save them locally for reference
             sh("""scripts/run-in-docker.sh \
@@ -57,17 +62,24 @@ timeout(time: 12, unit: 'HOURS') {
                       --write-file=${RESULTS}/stages.json \
                       buildscripts/scripts/stages.yml
                """);
+
+            time_stage_started = test_gerrit_helper.log_stage_duration(time_stage_started);
+            test_gerrit_helper.desc_add_status_row("Preparation",
+                            groovy.time.TimeCategory.minus(new Date(), time_job_started), 0, '--');
+
             def stage_info = test_gerrit_helper.load_json("${RESULTS}/stages.json");
             def allStagesPassed = true;
             stage_info.STAGES.each { item ->
-                allStagesPassed = test_gerrit_helper.create_stage(item, issues) and allStagesPassed;
+                allStagesPassed = test_gerrit_helper.create_stage(item, issues, time_stage_started) and allStagesPassed;
                 sh("ls -alF ${RESULTS}");
+                time_stage_started = test_gerrit_helper.log_stage_duration(time_stage_started);
             }
             currentBuild.result = allStagesPassed ? "SUCCESS" : "FAILED";
         } catch (e) {
             currentBuild.result = "FAILED"
             throw e
         } finally {
+            test_gerrit_helper.desc_add_line("Executed on: " + NODE_NAME + " in " + WORKSPACE)
             stage("Analyse Issues") {
                 if (issues) {
                     publishIssues(
@@ -86,6 +98,7 @@ timeout(time: 12, unit: 'HOURS') {
     
                 archiveArtifacts(allowEmptyArchive: true, artifacts: 'results/*')
             }
+            time_stage_started = test_gerrit_helper.log_stage_duration(time_stage_started);
         }
     }
 }

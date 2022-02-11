@@ -9,6 +9,16 @@ def load_json(json_file) {
     (new groovy.json.JsonSlurperClassic()).parseText(cmd_stdout_result);
 }
 
+def log_stage_duration(last_stage_date) {
+    def this_stage_date = new Date();
+    def duration = groovy.time.TimeCategory.minus(
+        this_stage_date,
+        last_stage_date,
+    );
+    println("+ Stage duration: " + duration);
+    return this_stage_date;
+}
+
 // Creates a stage with provided properties. The created stage will be marked as
 // successful or failed if its command returns with non-zero and can thus be used
 // to implement tests.
@@ -19,11 +29,13 @@ def load_json(json_file) {
 // ENV_VARS: Array [] of environment variables needed for the test
 // COMMAND:  command that should be executed. It should be possible to use this exact
 //           command to reproduce the test locally in the coresponding DIR
-def create_stage(Map args, issues) {
+def create_stage(Map args, issues, time_stage_started) {
+    def duration;
     stage(args.NAME) {
         if (args.SKIPPED) {
             println("SKIPPED: ${args.SKIPPED}");
-            desc_add_status_row(args.NAME, 'skipped', '--');
+            duration = groovy.time.TimeCategory.minus(new Date(), time_stage_started);
+            desc_add_status_row(args.NAME, duration, 'skipped', '--');
             return true;
         }
 
@@ -35,7 +47,8 @@ def create_stage(Map args, issues) {
                 dir(args.DIR) {
                     cmd_status = sh(script: args.COMMAND, returnStatus: true);
                 }
-                desc_add_status_row(args.NAME, cmd_status, "${args.RESULT_CHECK_FILE_PATTERN}");
+                duration = groovy.time.TimeCategory.minus(new Date(), time_stage_started);
+                desc_add_status_row(args.NAME, duration, cmd_status, "${args.RESULT_CHECK_FILE_PATTERN}");
 
                 println("Check results: ${args.RESULT_CHECK_TYPE}");
                 if (args.RESULT_CHECK_TYPE) {
@@ -82,19 +95,19 @@ def desc_add_table() {
 def desc_rm_table_bottom() {
     currentBuild.description -= '</table>'
 }
-def desc_add_row(ITEM_1, ITEM_2, ITEM_3) {
+def desc_add_row(ITEM_1, ITEM_2, ITEM_3, ITEM_4) {
     desc_rm_table_bottom()
-    currentBuild.description += '<tr><td>' + ITEM_1 + '</td><td>' + ITEM_2 + '</td><td>' + ITEM_3 + '</td></tr>'
+    currentBuild.description += '<tr><td>' + ITEM_1 + '</td><td>' + ITEM_2 + '</td><td>' + ITEM_3 + '</td><td>' + ITEM_4 + '</td></tr>'
     desc_add_table_bottom()
 }
-def desc_add_status_row(STAGE, STATUS, PATTERN) {
+def desc_add_status_row(STAGE, DURATION, STATUS, PATTERN) {
     desc_rm_table_bottom()
     if (STATUS == 0) {
-        currentBuild.description += '<tr><td>' + STAGE + '</td><td style="color: green;">success</td><td>' + PATTERN + '</td></tr>'
+        currentBuild.description += '<tr><td>' + STAGE + '</td><td>' + DURATION + '</td><td style="color: green;">success</td><td>' + PATTERN + '</td></tr>'
     } else if (STATUS == 'skipped') {
-        currentBuild.description += '<tr><td>' + STAGE + '</td><td style="color: grey;">skipped</td><td>' + PATTERN + '</td></tr>'
+        currentBuild.description += '<tr><td>' + STAGE + '</td><td>' + DURATION + '</td><td style="color: grey;">skipped</td><td>' + PATTERN + '</td></tr>'
     } else {
-        currentBuild.description += '<tr><td>' + STAGE + '</td><td style="color: red;">failed</td><td>' + PATTERN + '</td></tr>'
+        currentBuild.description += '<tr><td>' + STAGE + '</td><td>' + DURATION + '</td><td style="color: red;">failed</td><td>' + PATTERN + '</td></tr>'
     }
     desc_add_table_bottom()
 }

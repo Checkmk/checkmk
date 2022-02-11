@@ -23,27 +23,36 @@ class GCPResult:
     ts: TimeSeries
 
     @classmethod
-    def deserialize(cls, data: str):
+    def deserialize(cls, data: str) -> "GCPResult":
         b = base64.b64decode(data.encode("utf-8"))
         ts = TimeSeries.deserialize(b)
         return cls(ts=ts)
 
 
 @dataclass(frozen=True)
-class Section:
+class SectionItem:
+    name: str
     rows: Sequence[GCPResult]
 
 
+Section = Mapping[str, SectionItem]
+
+
 def parse_gcp_gcs(string_table: StringTable) -> Section:
-    return Section([GCPResult.deserialize(row[0]) for row in string_table])
+    label_key = "bucket_name"
+    rows = [GCPResult.deserialize(row[0]) for row in string_table]
+    item_names = {r.ts.resource.labels[label_key] for r in rows}
+    return {
+        name: SectionItem(name, [r for r in rows if r.ts.resource.labels[label_key] == name])
+        for name in item_names
+    }
 
 
 register.agent_section(name="gcp_service_gcs", parse_function=parse_gcp_gcs)
 
 
 def discover(section: Section) -> DiscoveryResult:
-    buckets = {row.ts.resource.labels["bucket_name"] for row in section.rows}
-    for bucket in buckets:
+    for bucket in section:
         yield Service(item=f"{bucket}")
 
 
@@ -54,19 +63,19 @@ class MetricSpec:
     has_levels: bool = False
 
 
-def _get_value(timeseries: Sequence[TimeSeries], metric_type: str) -> float:
+def _get_value(results: Sequence[GCPResult], metric_type: str) -> float:
     # GCP does not always deliver all metrics. i.e. api/request_count only contains values if
     # api requests have occured. To ensure all metrics are displayed in check mk we default to
     # 0 in the absence of data.
     try:
-        ts = next(ts for ts in timeseries if ts.metric.type == metric_type)
-        return ts.points[0].value.double_value
+        result = next(r for r in results if r.ts.metric.type == metric_type)
+        return result.ts.points[0].value.double_value
     except StopIteration:
         return 0
 
 
 def _generic_check_gcs(
-    metrics: Mapping[str, MetricSpec], timeseries: Sequence[TimeSeries], params: Mapping[str, Any]
+    metrics: Mapping[str, MetricSpec], timeseries: Sequence[GCPResult], params: Mapping[str, Any]
 ) -> CheckResult:
     for metric_name, metric_spec in metrics.items():
         value = _get_value(timeseries, metric_spec.metric_type)
@@ -80,7 +89,7 @@ def _generic_check_gcs(
 
 def check_gcp_gcs_requests(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
     metrics = {"requests": MetricSpec("storage.googleapis.com/api/request_count", str)}
-    timeseries = [row.ts for row in section.rows if row.ts.resource.labels["bucket_name"] == item]
+    timeseries = section[item].rows
     yield from _generic_check_gcs(metrics, timeseries, params)
 
 
@@ -104,7 +113,7 @@ def check_gcp_gcs_network(item: str, params: Mapping[str, Any], section: Section
             "storage.googleapis.com/network/received_bytes_count", render.bytes
         ),
     }
-    timeseries = [row.ts for row in section.rows if row.ts.resource.labels["bucket_name"] == item]
+    timeseries = section[item].rows
     yield from _generic_check_gcs(metrics, timeseries, params)
 
 
@@ -124,7 +133,7 @@ def check_gcp_gcs_object(item: str, params: Mapping[str, Any], section: Section)
         "aws_bucket_size": MetricSpec("storage.googleapis.com/storage/total_bytes", render.bytes),
         "aws_num_objects": MetricSpec("storage.googleapis.com/storage/object_count", str),
     }
-    timeseries = [row.ts for row in section.rows if row.ts.resource.labels["bucket_name"] == item]
+    timeseries = section[item].rows
     yield from _generic_check_gcs(metrics, timeseries, params)
 
 

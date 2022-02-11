@@ -35,9 +35,9 @@ SECTION_TABLE = [
 
 
 def test_parse_gcp():
-    s = parse_gcp_gcs(SECTION_TABLE)
-    print(s)
-    assert len(s.rows) == len(SECTION_TABLE)
+    section = parse_gcp_gcs(SECTION_TABLE)
+    n_rows = sum(len(i.rows) for i in section.values())
+    assert n_rows == len(SECTION_TABLE)
 
 
 @pytest.fixture(name="section")

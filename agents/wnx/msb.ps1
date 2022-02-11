@@ -60,7 +60,7 @@ function RcvJob($j, $name){
 
 # Bases
 $msb = {
-& "C:\Program Files (x86)\Microsoft Visual Studio\2019\Professional\MSBuild\Current\Bin\msbuild.exe" $args 
+& "C:\Program Files\Microsoft Visual Studio\2022\Professional\MSBuild\Current\Bin\msbuild.exe" $args 
 if ($LASTEXITCODE -ne 0) {
     Write-Host "Error: " $LASTEXITCODE -foreground Red
     throw "Failed"

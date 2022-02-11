@@ -9,7 +9,7 @@ from unittest.mock import Mock
 import pytest
 
 from cmk.special_agents import agent_kube
-from cmk.special_agents.utils_kubernetes.schemata import section
+from cmk.special_agents.utils_kubernetes.schemata import api, section
 
 
 @pytest.mark.parametrize("node_pods", [0, 10, 20])
@@ -96,6 +96,22 @@ def test_conditions_respects_status_conditions(node):
         conditions_dict[condition.type_.lower()]["status"] == condition.status
         for condition in node.status.conditions
     )
+
+
+def test_conditions_truthy_vs_status(node):
+    truthy_conditions = [
+        c for _, c in node.conditions() if isinstance(c, section.TruthyNodeCondition)
+    ]
+    assert len(truthy_conditions) > 0
+    assert all(c.is_ok() is (c.status == api.NodeConditionStatus.TRUE) for c in truthy_conditions)
+
+
+def test_conditions_falsy_vs_status(node):
+    falsy_conditions = [
+        c for _, c in node.conditions() if isinstance(c, section.FalsyNodeCondition)
+    ]
+    assert len(falsy_conditions) > 0
+    assert all(c.is_ok() is (c.status == api.NodeConditionStatus.FALSE) for c in falsy_conditions)
 
 
 def test_conditions_with_status_conditions_none(node):

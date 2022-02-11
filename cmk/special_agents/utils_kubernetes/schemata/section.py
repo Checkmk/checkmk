@@ -189,14 +189,28 @@ class NodeCondition(BaseModel):
     last_transition_time: Optional[int]
 
 
+class TruthyNodeCondition(NodeCondition):
+    """TruthyNodeCondition has an "OK" state when its status is True"""
+
+    def is_ok(self) -> bool:
+        return self.status == api.NodeConditionStatus.TRUE
+
+
+class FalsyNodeCondition(NodeCondition):
+    """FalsyNodeCondition has an "OK" state when its status is False"""
+
+    def is_ok(self) -> bool:
+        return self.status == api.NodeConditionStatus.FALSE
+
+
 class NodeConditions(BaseModel):
     """section: k8s_node_conditions_v1"""
 
-    ready: NodeCondition
-    memorypressure: NodeCondition
-    diskpressure: NodeCondition
-    pidpressure: NodeCondition
-    networkunavailable: Optional[NodeCondition]
+    ready: TruthyNodeCondition
+    memorypressure: FalsyNodeCondition
+    diskpressure: FalsyNodeCondition
+    pidpressure: FalsyNodeCondition
+    networkunavailable: Optional[FalsyNodeCondition]
 
 
 class DeploymentInfo(BaseModel):

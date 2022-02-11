@@ -60,8 +60,6 @@ impl InteractiveTrust {
 }
 
 #[mockall_double::double]
-use super::agent_receiver_api::Api as AgentRecvApi;
-#[mockall_double::double]
 use InteractiveTrust as IactiveTrust;
 
 fn registration_server_cert(config: &config::RegistrationConfig) -> AnyhowResult<Option<&str>> {
@@ -84,24 +82,26 @@ fn registration_server_cert(config: &config::RegistrationConfig) -> AnyhowResult
     }
 }
 
-pub fn pair(
+fn pair(
     config: &config::RegistrationConfig,
+    agent_rec_api: &impl agent_receiver_api::Pairing,
 ) -> AnyhowResult<(String, String, agent_receiver_api::PairingResponse)> {
     let uuid = uuid::Uuid::new_v4().to_string();
     let (csr, private_key) = certs::make_csr(&uuid).context("Error creating CSR.")?;
     Ok((
         uuid,
         private_key,
-        AgentRecvApi::pairing(
-            &config.agent_receiver_address,
-            registration_server_cert(config)?,
-            csr,
-            &config.credentials,
-        )
-        .context(format!(
-            "Error pairing with {}",
-            &config.agent_receiver_address
-        ))?,
+        agent_rec_api
+            .pair(
+                &config.agent_receiver_address,
+                registration_server_cert(config)?,
+                csr,
+                &config.credentials,
+            )
+            .context(format!(
+                "Error pairing with {}",
+                &config.agent_receiver_address
+            ))?,
     ))
 }
 
@@ -110,9 +110,10 @@ fn post_registration_conn_type(
     root_cert: &str,
     uuid: &str,
     client_cert: &str,
+    agent_rec_api: &impl agent_receiver_api::Status,
 ) -> AnyhowResult<config::ConnectionType> {
     loop {
-        let status_resp = AgentRecvApi::status(server, root_cert, uuid, client_cert)?;
+        let status_resp = agent_rec_api.status(server, root_cert, uuid, client_cert)?;
         if let Some(agent_receiver_api::HostStatus::Declined) = status_resp.status {
             return Err(anyhow!(
                 "Registration declined by Checkmk instance, please check credentials"
@@ -126,39 +127,44 @@ fn post_registration_conn_type(
     }
 }
 
-pub fn register(
+fn _register(
     config: config::RegistrationConfig,
     registry: &mut config::Registry,
+    agent_rec_api: &(impl agent_receiver_api::Pairing
+          + agent_receiver_api::Registration
+          + agent_receiver_api::Status),
 ) -> AnyhowResult<()> {
     // TODO: what if registration_state.contains_key(agent_receiver_address) (already registered)?
-    let (uuid, private_key, pairing_response) = pair(&config)?;
+    let (uuid, private_key, pairing_response) = pair(&config, agent_rec_api)?;
 
     match config.host_reg_data {
         config::HostRegistrationData::Name(hn) => {
-            AgentRecvApi::register_with_hostname(
-                &config.agent_receiver_address,
-                &pairing_response.root_cert,
-                &config.credentials,
-                &uuid,
-                &hn,
-            )
-            .context(format!(
-                "Error registering with hostname at {}",
-                &config.agent_receiver_address,
-            ))?;
+            agent_rec_api
+                .register_with_hostname(
+                    &config.agent_receiver_address,
+                    &pairing_response.root_cert,
+                    &config.credentials,
+                    &uuid,
+                    &hn,
+                )
+                .context(format!(
+                    "Error registering with hostname at {}",
+                    &config.agent_receiver_address,
+                ))?;
         }
         config::HostRegistrationData::Labels(al) => {
-            AgentRecvApi::register_with_agent_labels(
-                &config.agent_receiver_address,
-                &pairing_response.root_cert,
-                &config.credentials,
-                &uuid,
-                &al,
-            )
-            .context(format!(
-                "Error registering with agent labels at {}",
-                &config.agent_receiver_address,
-            ))?;
+            agent_rec_api
+                .register_with_agent_labels(
+                    &config.agent_receiver_address,
+                    &pairing_response.root_cert,
+                    &config.credentials,
+                    &uuid,
+                    &al,
+                )
+                .context(format!(
+                    "Error registering with agent labels at {}",
+                    &config.agent_receiver_address,
+                ))?;
         }
     }
 
@@ -168,6 +174,7 @@ pub fn register(
             &pairing_response.root_cert,
             &uuid,
             &pairing_response.client_cert,
+            agent_rec_api,
         )?,
         &config.agent_receiver_address,
         config::Connection {
@@ -183,13 +190,23 @@ pub fn register(
     Ok(())
 }
 
+pub fn register(
+    config: config::RegistrationConfig,
+    registry: &mut config::Registry,
+) -> AnyhowResult<()> {
+    _register(config, registry, &agent_receiver_api::Api {})
+}
+
 #[derive(serde::Serialize, serde::Deserialize)]
 pub struct SurrogatePullData {
     pub agent_controller_version: String,
     pub connection: config::Connection,
 }
 
-pub fn register_surrogate_pull(config: config::RegistrationConfig) -> AnyhowResult<()> {
+fn _register_surrogate_pull(
+    config: config::RegistrationConfig,
+    agent_rec_api: &(impl agent_receiver_api::Pairing + agent_receiver_api::Registration),
+) -> AnyhowResult<()> {
     let hn = match &config.host_reg_data {
         config::HostRegistrationData::Name(hn) => hn,
         _ => {
@@ -198,19 +215,20 @@ pub fn register_surrogate_pull(config: config::RegistrationConfig) -> AnyhowResu
             ))
         }
     };
-    let (uuid, private_key, pairing_response) = pair(&config)?;
+    let (uuid, private_key, pairing_response) = pair(&config, agent_rec_api)?;
 
-    AgentRecvApi::register_with_hostname(
-        &config.agent_receiver_address,
-        &pairing_response.root_cert,
-        &config.credentials,
-        &uuid,
-        hn,
-    )
-    .context(format!(
-        "Error registering with hostname at {}",
-        &config.agent_receiver_address
-    ))?;
+    agent_rec_api
+        .register_with_hostname(
+            &config.agent_receiver_address,
+            &pairing_response.root_cert,
+            &config.credentials,
+            &uuid,
+            hn,
+        )
+        .context(format!(
+            "Error registering with hostname at {}",
+            &config.agent_receiver_address
+        ))?;
 
     println!(
         "{}",
@@ -227,10 +245,98 @@ pub fn register_surrogate_pull(config: config::RegistrationConfig) -> AnyhowResu
     Ok(())
 }
 
+pub fn register_surrogate_pull(config: config::RegistrationConfig) -> AnyhowResult<()> {
+    _register_surrogate_pull(config, &agent_receiver_api::Api {})
+}
+
 #[cfg(test)]
 mod tests {
     use super::super::config::JSONLoader;
     use super::*;
+
+    const SERVER_ADDRESS: &str = "server:8000";
+    const HOST_NAME: &str = "host";
+
+    enum RegistrationMethod {
+        HostName,
+        AgentLabels,
+    }
+
+    struct MockApi {
+        expect_root_cert_for_pairing: bool,
+        expected_registration_method: Option<RegistrationMethod>,
+    }
+
+    impl agent_receiver_api::Pairing for MockApi {
+        fn pair(
+            &self,
+            server_address: &str,
+            root_cert: Option<&str>,
+            _csr: String,
+            _credentials: &config::Credentials,
+        ) -> AnyhowResult<agent_receiver_api::PairingResponse> {
+            assert!(server_address == SERVER_ADDRESS);
+            assert!(root_cert.is_some() == self.expect_root_cert_for_pairing);
+            Ok(agent_receiver_api::PairingResponse {
+                root_cert: String::from("root_cert"),
+                client_cert: String::from("client_cert"),
+            })
+        }
+    }
+
+    impl agent_receiver_api::Registration for MockApi {
+        fn register_with_hostname(
+            &self,
+            server_address: &str,
+            _root_cert: &str,
+            _credentials: &config::Credentials,
+            _uuid: &str,
+            host_name: &str,
+        ) -> AnyhowResult<()> {
+            assert!(matches!(
+                self.expected_registration_method.as_ref().unwrap(),
+                RegistrationMethod::HostName
+            ));
+            assert!(server_address == SERVER_ADDRESS);
+            assert!(host_name == HOST_NAME);
+            Ok(())
+        }
+
+        fn register_with_agent_labels(
+            &self,
+            server_address: &str,
+            _root_cert: &str,
+            _credentials: &config::Credentials,
+            _uuid: &str,
+            ag_labels: &config::AgentLabels,
+        ) -> AnyhowResult<()> {
+            assert!(matches!(
+                self.expected_registration_method.as_ref().unwrap(),
+                RegistrationMethod::AgentLabels
+            ));
+            assert!(server_address == SERVER_ADDRESS);
+            assert!(ag_labels == &agent_labels());
+            Ok(())
+        }
+    }
+
+    impl agent_receiver_api::Status for MockApi {
+        fn status(
+            &self,
+            server_address: &str,
+            _root_cert: &str,
+            _uuid: &str,
+            _certificate: &str,
+        ) -> Result<agent_receiver_api::StatusResponse, agent_receiver_api::StatusError> {
+            assert!(server_address == SERVER_ADDRESS);
+            Ok(agent_receiver_api::StatusResponse {
+                hostname: Some(String::from(HOST_NAME)),
+                status: None,
+                connection_type: Some(config::ConnectionType::Pull),
+                message: None,
+            })
+        }
+    }
 
     lazy_static::lazy_static! {
         static ref MUTEX: std::sync::Mutex<()> = std::sync::Mutex::new(());
@@ -244,10 +350,10 @@ mod tests {
         .unwrap()
     }
 
-    fn agent_labels() -> config::HostRegistrationData {
+    fn agent_labels() -> config::AgentLabels {
         let mut al = std::collections::HashMap::new();
         al.insert(String::from("a"), String::from("b"));
-        config::HostRegistrationData::Labels(al)
+        al
     }
 
     fn registration_config(
@@ -256,7 +362,7 @@ mod tests {
         trust_server_cert: bool,
     ) -> config::RegistrationConfig {
         config::RegistrationConfig {
-            agent_receiver_address: String::from("server:8000"),
+            agent_receiver_address: String::from(SERVER_ADDRESS),
             credentials: config::Credentials {
                 username: String::from("user"),
                 password: String::from("password"),
@@ -267,111 +373,74 @@ mod tests {
         }
     }
 
-    fn pairing_expect_no_root_cert(
-        _server_address: &str,
-        root_cert: Option<&str>,
-        _csr: String,
-        _credentials: &config::Credentials,
-    ) -> AnyhowResult<agent_receiver_api::PairingResponse> {
-        if root_cert.is_none() {
-            return Ok(agent_receiver_api::PairingResponse {
-                root_cert: String::from("root_cert"),
-                client_cert: String::from("client_cert"),
-            });
-        }
-        panic!("No root certificate expected")
-    }
-
-    fn pairing_expect_root_cert(
-        _server_address: &str,
-        root_cert: Option<&str>,
-        _csr: String,
-        _credentials: &config::Credentials,
-    ) -> AnyhowResult<agent_receiver_api::PairingResponse> {
-        if root_cert.is_some() {
-            return Ok(agent_receiver_api::PairingResponse {
-                root_cert: String::from("root_cert"),
-                client_cert: String::from("client_cert"),
-            });
-        }
-        panic!("No root certificate expected")
-    }
-
     mod test_pair {
         use super::*;
 
         #[test]
         fn test_interactive_trust() {
             let _m = MUTEX.lock().unwrap();
-
             let ask_for_trust_ctx = IactiveTrust::ask_for_trust_context();
-            let pairing_ctx = AgentRecvApi::pairing_context();
-
             ask_for_trust_ctx.expect().times(1).returning(|_| Ok(()));
-            pairing_ctx
-                .expect()
-                .times(1)
-                .returning(pairing_expect_no_root_cert);
 
-            assert!(pair(&registration_config(
-                None,
-                config::HostRegistrationData::Name(String::from("host")),
-                false,
-            ))
+            assert!(pair(
+                &registration_config(
+                    None,
+                    config::HostRegistrationData::Name(String::from(HOST_NAME)),
+                    false,
+                ),
+                &MockApi {
+                    expect_root_cert_for_pairing: false,
+                    expected_registration_method: None,
+                },
+            )
             .is_ok());
         }
 
         #[test]
         fn test_blind_trust() {
-            let _m = MUTEX.lock().unwrap();
-
-            let pairing_ctx = AgentRecvApi::pairing_context();
-            pairing_ctx
-                .expect()
-                .times(1)
-                .returning(pairing_expect_no_root_cert);
-
-            assert!(pair(&registration_config(
-                None,
-                config::HostRegistrationData::Name(String::from("host")),
-                true,
-            ))
+            assert!(pair(
+                &registration_config(
+                    None,
+                    config::HostRegistrationData::Name(String::from(HOST_NAME)),
+                    true,
+                ),
+                &MockApi {
+                    expect_root_cert_for_pairing: false,
+                    expected_registration_method: None,
+                },
+            )
             .is_ok());
         }
 
         #[test]
         fn test_root_cert_from_config() {
-            let _m = MUTEX.lock().unwrap();
-
-            let pairing_ctx = AgentRecvApi::pairing_context();
-            pairing_ctx
-                .expect()
-                .times(1)
-                .returning(pairing_expect_root_cert);
-
-            assert!(pair(&registration_config(
-                Some(String::from("root_certificate")),
-                agent_labels(),
-                false,
-            ))
+            assert!(pair(
+                &registration_config(
+                    Some(String::from("root_certificate")),
+                    config::HostRegistrationData::Labels(agent_labels()),
+                    false,
+                ),
+                &MockApi {
+                    expect_root_cert_for_pairing: true,
+                    expected_registration_method: None,
+                },
+            )
             .is_ok());
         }
 
         #[test]
         fn test_root_cert_from_config_and_blind_trust() {
-            let _m = MUTEX.lock().unwrap();
-
-            let pairing_ctx = AgentRecvApi::pairing_context();
-            pairing_ctx
-                .expect()
-                .times(1)
-                .returning(pairing_expect_root_cert);
-
-            assert!(pair(&registration_config(
-                Some(String::from("root_certificate")),
-                agent_labels(),
-                true,
-            ))
+            assert!(pair(
+                &registration_config(
+                    Some(String::from("root_certificate")),
+                    config::HostRegistrationData::Labels(agent_labels()),
+                    true
+                ),
+                &MockApi {
+                    expect_root_cert_for_pairing: true,
+                    expected_registration_method: None,
+                },
+            )
             .is_ok());
         }
     }
@@ -382,38 +451,22 @@ mod tests {
         #[test]
         fn test_host_name() {
             let _m = MUTEX.lock().unwrap();
-
             let ask_for_trust_ctx = IactiveTrust::ask_for_trust_context();
-            let pairing_ctx = AgentRecvApi::pairing_context();
-            let register_with_hostname_ctx = AgentRecvApi::register_with_hostname_context();
-            let status_ctx = AgentRecvApi::status_context();
             ask_for_trust_ctx.expect().times(1).returning(|_| Ok(()));
-            pairing_ctx
-                .expect()
-                .times(1)
-                .returning(pairing_expect_no_root_cert);
-            register_with_hostname_ctx
-                .expect()
-                .times(1)
-                .returning(|_, _, _, _, _| Ok(()));
-            status_ctx.expect().times(1).returning(|_, _, _, _| {
-                Ok(agent_receiver_api::StatusResponse {
-                    hostname: Some(String::from("host")),
-                    status: None,
-                    connection_type: Some(config::ConnectionType::Pull),
-                    message: None,
-                })
-            });
 
             let mut registry = registry();
             assert!(!registry.path().exists());
-            assert!(register(
+            assert!(_register(
                 registration_config(
                     None,
-                    config::HostRegistrationData::Name(String::from("host")),
+                    config::HostRegistrationData::Name(String::from(HOST_NAME)),
                     false,
                 ),
                 &mut registry,
+                &MockApi {
+                    expect_root_cert_for_pairing: false,
+                    expected_registration_method: Some(RegistrationMethod::HostName),
+                },
             )
             .is_ok());
             assert!(!registry.is_empty());
@@ -422,37 +475,19 @@ mod tests {
 
         #[test]
         fn test_agent_labels() {
-            let _m = MUTEX.lock().unwrap();
-
-            let pairing_ctx = AgentRecvApi::pairing_context();
-            let register_with_agent_labels_ctx = AgentRecvApi::register_with_agent_labels_context();
-            let status_ctx = AgentRecvApi::status_context();
-            pairing_ctx
-                .expect()
-                .times(1)
-                .returning(pairing_expect_root_cert);
-            register_with_agent_labels_ctx
-                .expect()
-                .times(1)
-                .returning(|_, _, _, _, _| Ok(()));
-            status_ctx.expect().times(1).returning(|_, _, _, _| {
-                Ok(agent_receiver_api::StatusResponse {
-                    hostname: Some(String::from("host")),
-                    status: Some(agent_receiver_api::HostStatus::New),
-                    connection_type: Some(config::ConnectionType::Push),
-                    message: None,
-                })
-            });
-
             let mut registry = registry();
             assert!(!registry.path().exists());
-            assert!(register(
+            assert!(_register(
                 registration_config(
                     Some(String::from("root_certificate")),
-                    agent_labels(),
+                    config::HostRegistrationData::Labels(agent_labels()),
                     false,
                 ),
                 &mut registry,
+                &MockApi {
+                    expect_root_cert_for_pairing: true,
+                    expected_registration_method: Some(RegistrationMethod::AgentLabels),
+                },
             )
             .is_ok());
             assert!(!registry.is_empty());
@@ -465,32 +500,28 @@ mod tests {
 
         #[test]
         fn test_host_name() {
-            let _m = MUTEX.lock().unwrap();
-
-            let pairing_ctx = AgentRecvApi::pairing_context();
-            let register_with_hostname_ctx = AgentRecvApi::register_with_hostname_context();
-            pairing_ctx
-                .expect()
-                .times(1)
-                .returning(pairing_expect_no_root_cert);
-            register_with_hostname_ctx
-                .expect()
-                .times(1)
-                .returning(|_, _, _, _, _| Ok(()));
-
-            assert!(register_surrogate_pull(registration_config(
-                None,
-                config::HostRegistrationData::Name(String::from("host")),
-                true,
-            ))
+            assert!(_register_surrogate_pull(
+                registration_config(
+                    None,
+                    config::HostRegistrationData::Name(String::from(HOST_NAME)),
+                    true,
+                ),
+                &MockApi {
+                    expect_root_cert_for_pairing: false,
+                    expected_registration_method: Some(RegistrationMethod::HostName),
+                },
+            )
             .is_ok());
         }
 
         #[test]
         fn test_agent_labels() {
-            assert!(
-                register_surrogate_pull(registration_config(None, agent_labels(), true,)).is_err()
-            );
+            assert!(register_surrogate_pull(registration_config(
+                None,
+                config::HostRegistrationData::Labels(agent_labels()),
+                true,
+            ))
+            .is_err());
         }
     }
 }

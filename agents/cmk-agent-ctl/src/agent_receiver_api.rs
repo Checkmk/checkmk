@@ -2,8 +2,6 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
-#![cfg_attr(test, allow(dead_code))]
-
 use super::certs;
 use super::config;
 use anyhow::{anyhow, Context, Error as AnyhowError, Result as AnyhowResult};
@@ -91,13 +89,65 @@ fn encode_pem_cert_base64(cert: &str) -> AnyhowResult<String> {
     ))
 }
 
+pub trait Pairing {
+    fn pair(
+        &self,
+        server_address: &str,
+        root_cert: Option<&str>,
+        csr: String,
+        credentials: &config::Credentials,
+    ) -> AnyhowResult<PairingResponse>;
+}
+
+pub trait Registration {
+    fn register_with_hostname(
+        &self,
+        server_address: &str,
+        root_cert: &str,
+        credentials: &config::Credentials,
+        uuid: &str,
+        host_name: &str,
+    ) -> AnyhowResult<()>;
+
+    fn register_with_agent_labels(
+        &self,
+        server_address: &str,
+        root_cert: &str,
+        credentials: &config::Credentials,
+        uuid: &str,
+        agent_labels: &config::AgentLabels,
+    ) -> AnyhowResult<()>;
+}
+
+pub trait AgentData {
+    fn agent_data(
+        &self,
+        server_address: &str,
+        root_cert: &str,
+        uuid: &str,
+        certificate: &str,
+        compression_algorithm: &str,
+        monitoring_data: &[u8],
+    ) -> AnyhowResult<()>;
+}
+
+pub trait Status {
+    fn status(
+        &self,
+        server_address: &str,
+        root_cert: &str,
+        uuid: &str,
+        certificate: &str,
+    ) -> Result<StatusResponse, StatusError>;
+}
+
 pub struct Api {}
 
-#[mockall::automock]
-impl Api {
-    pub fn pairing<'a>(
+impl Pairing for Api {
+    fn pair(
+        &self,
         server_address: &str,
-        root_cert: Option<&'a str>,
+        root_cert: Option<&str>,
         csr: String,
         credentials: &config::Credentials,
     ) -> AnyhowResult<PairingResponse> {
@@ -118,8 +168,11 @@ impl Api {
             Err(anyhow!("Request failed with code {}: {}", status, body))
         }
     }
+}
 
-    pub fn register_with_hostname(
+impl Registration for Api {
+    fn register_with_hostname(
+        &self,
         server_address: &str,
         root_cert: &str,
         credentials: &config::Credentials,
@@ -138,7 +191,8 @@ impl Api {
         )
     }
 
-    pub fn register_with_agent_labels(
+    fn register_with_agent_labels(
+        &self,
         server_address: &str,
         root_cert: &str,
         credentials: &config::Credentials,
@@ -156,8 +210,11 @@ impl Api {
                 .send()?,
         )
     }
+}
 
-    pub fn agent_data(
+impl AgentData for Api {
+    fn agent_data(
+        &self,
         server_address: &str,
         root_cert: &str,
         uuid: &str,
@@ -182,8 +239,11 @@ impl Api {
                 .send()?,
         )
     }
+}
 
-    pub fn status(
+impl Status for Api {
+    fn status(
+        &self,
         server_address: &str,
         root_cert: &str,
         uuid: &str,

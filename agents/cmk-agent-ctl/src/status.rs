@@ -2,6 +2,7 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
+use super::agent_receiver_api::Status as StatusEndpoint;
 use super::{agent_receiver_api, certs, config};
 use anyhow::{Context, Result as AnyhowResult};
 
@@ -118,7 +119,7 @@ impl RemoteConnectionStatusResponse {
         server_address: &str,
         connection: &config::Connection,
     ) -> RemoteConnectionStatusResponse {
-        match agent_receiver_api::Api::status(
+        match (agent_receiver_api::Api {}).status(
             server_address,
             &connection.root_cert,
             &connection.uuid,

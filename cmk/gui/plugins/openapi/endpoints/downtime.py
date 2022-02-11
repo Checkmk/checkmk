@@ -283,7 +283,7 @@ def show_downtimes(param):
     method="get",
     path_params=[
         {
-            "downtime_id": gui_fields.Integer(
+            "downtime_id": fields.Integer(
                 description="The id of the downtime",
                 example="1",
             )

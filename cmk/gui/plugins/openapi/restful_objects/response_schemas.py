@@ -21,7 +21,7 @@ from cmk import fields
 
 
 class ApiError(BaseSchema):
-    code = gui_fields.Integer(
+    code = fields.Integer(
         description="The HTTP status code.",
         required=True,
         example=404,
@@ -46,7 +46,7 @@ class ApiError(BaseSchema):
 
 
 class UserSchema(BaseSchema):
-    id = gui_fields.Integer(dump_only=True)
+    id = fields.Integer(dump_only=True)
     name = fields.String(description="The user's name")
     created = fields.DateTime(
         dump_only=True,
@@ -121,7 +121,7 @@ class Parameter(Linkable):
         required=True,
         example="folder-move",
     )
-    number = gui_fields.Integer(
+    number = fields.Integer(
         description="the number of the parameter (starting from 0)", required=True, example=0
     )
     name = fields.String(
@@ -151,7 +151,7 @@ class Parameter(Linkable):
         ),
         required=False,
     )
-    maxLength = gui_fields.Integer(
+    maxLength = fields.Integer(
         description=(
             "for string action parameters, indicates the maximum allowable length. A "
             "value of 0 means unlimited."

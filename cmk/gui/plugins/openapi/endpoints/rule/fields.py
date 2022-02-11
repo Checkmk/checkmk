@@ -660,7 +660,7 @@ class RuleExtensions(base.BaseSchema):
 
     ruleset = fields.String(description="The name of the ruleset.")
     folder = gui_fields.FolderField(required=True, example="~router")
-    folder_index = gui_fields.Integer(
+    folder_index = fields.Integer(
         description="The position of this rule in the chain in this folder.",
     )
     properties = gui_fields.Nested(

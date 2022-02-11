@@ -11,7 +11,6 @@ from apispec import APISpec  # type: ignore[import]
 from marshmallow import post_load, Schema, ValidationError
 from marshmallow.base import SchemaABC
 
-from cmk.gui import fields as gui_fields
 from cmk.gui.fields.base import ValueTypedDictSchema
 from cmk.gui.fields.openapi import CheckmkMarshmallowPlugin
 
@@ -73,7 +72,7 @@ EXPECTED_MOVIES = {
 class MovieSchema(Schema):
     title = fields.String(required=True)
     director = fields.String(required=True)
-    year = gui_fields.Integer(required=True)
+    year = fields.Integer(required=True)
 
     @post_load
     def make_movie(self, data, **kwargs):
@@ -93,7 +92,7 @@ class CustomTagDictSchema(ValueTypedDictSchema):
 
 
 class IntegerDictSchema(ValueTypedDictSchema):
-    value_type = ValueTypedDictSchema.field(gui_fields.Integer())
+    value_type = ValueTypedDictSchema.field(fields.Integer())
 
 
 class EmailSchema(ValueTypedDictSchema):

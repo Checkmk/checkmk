@@ -575,7 +575,7 @@ class CreateDowntimeBase(BaseSchema):
         example="hour",
         load_default="fixed",
     )
-    duration = gui_fields.Integer(
+    duration = fields.Integer(
         required=False,
         description=param_description(schedule_host_downtime.__doc__, "duration"),
         example=3600,
@@ -777,14 +777,14 @@ class UpdateTimePeriod(BaseSchema):
 
 SERVICE_DESCRIPTION_FIELD = fields.String(required=False, example="CPU utilization")
 
-HOST_DURATION = gui_fields.Integer(
+HOST_DURATION = fields.Integer(
     required=False,
     description=param_description(schedule_host_downtime.__doc__, "duration"),
     example=3600,
     load_default=0,
 )
 
-SERVICE_DURATION = gui_fields.Integer(
+SERVICE_DURATION = fields.Integer(
     required=False,
     description=param_description(schedule_service_downtime.__doc__, "duration"),
     example=3600,
@@ -813,7 +813,7 @@ class CreateServiceDowntime(CreateServiceDowntimeBase):
         example=["CPU utilization", "Memory"],
         description=param_description(schedule_service_downtime.__doc__, "service_description"),
     )
-    duration = gui_fields.Integer(
+    duration = fields.Integer(
         required=False,
         description=param_description(schedule_service_downtime.__doc__, "duration"),
         example=3600,
@@ -1174,7 +1174,7 @@ class IdleOption(BaseSchema):
         enum=["global", "disable", "individual"],
         example=False,
     )
-    duration = gui_fields.Integer(
+    duration = fields.Integer(
         required=False,
         description="The duration in seconds of the individual idle timeout if individual is "
         "selected as idle timeout option.",
@@ -1795,7 +1795,7 @@ class BulkAcknowledgeServiceProblem(AcknowledgeServiceProblem):
 class BulkDeleteDowntime(BaseSchema):
     host_name = MONITORED_HOST
     entries = gui_fields.List(
-        gui_fields.Integer(
+        fields.Integer(
             required=True,
             description="The id for either a host downtime or service downtime",
             example=1120,

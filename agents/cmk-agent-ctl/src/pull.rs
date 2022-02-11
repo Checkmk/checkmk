@@ -2,11 +2,15 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
+use core::future::Future;
+use std::error::Error;
+
 use super::{config, monitoring_data, tls_server};
-use anyhow::{Context, Result as AnyhowResult};
-use log::info;
+use anyhow::{anyhow, Context, Result as AnyhowResult};
+use log::{info, warn};
 use tokio::io::AsyncWriteExt;
 use tokio::net::{TcpListener, TcpStream};
+use tokio::time::{timeout, Duration};
 use tokio_rustls::TlsAcceptor;
 
 const TLS_ID: &[u8] = b"16";
@@ -29,12 +33,15 @@ pub async fn pull(
         info!("{}: Handling pull request", addr);
 
         pull_config.refresh()?;
+        let tls_acceptor = pull_config.tls_acceptor();
 
-        tokio::spawn(handle_pull_request(
-            stream,
-            pull_config.legacy_pull,
-            pull_config.tls_acceptor(),
-        ));
+        tokio::spawn(async move {
+            if let Err(err) =
+                handle_pull_request(stream, pull_config.legacy_pull, tls_acceptor).await
+            {
+                warn!("PULL: Request from {} failed: {}", addr, err)
+            };
+        });
     }
 }
 
@@ -88,25 +95,53 @@ async fn handle_pull_request(
     is_legacy_pull: bool,
     tls_acceptor: TlsAcceptor,
 ) -> AnyhowResult<()> {
+    if is_legacy_pull {
+        return handle_legacy_pull_request(stream).await;
+    }
+
+    let mondata_fut = async move {
+        let mon_data = monitoring_data::async_collect()
+            .await
+            .context("Error collecting monitoring data.")?;
+        encode_data_for_transport(&mon_data)
+    };
+
+    let handshake_fut = with_timeout(
+        async move {
+            stream.write_all(TLS_ID).await?;
+            stream.flush().await?;
+            tls_acceptor.accept(stream).await
+        },
+        10,
+    );
+
+    let (mon_data, tls_stream) = tokio::join!(mondata_fut, handshake_fut);
+    let mon_data = mon_data?;
+    let mut tls_stream = tls_stream?;
+
+    with_timeout(
+        async move {
+            tls_stream.write_all(&mon_data).await?;
+            tls_stream.flush().await
+        },
+        20,
+    )
+    .await
+}
+
+async fn handle_legacy_pull_request(mut stream: TcpStream) -> AnyhowResult<()> {
     let mon_data = monitoring_data::async_collect()
         .await
         .context("Error collecting monitoring data.")?;
 
-    if is_legacy_pull {
-        stream.write_all(&mon_data).await?;
-        return Ok(());
-    }
-
-    stream.write_all(TLS_ID).await?;
-    stream.flush().await?;
-
-    let mut tls_stream = tls_acceptor.accept(stream).await?;
-
-    tls_stream
-        .write_all(&encode_data_for_transport(&mon_data)?)
-        .await?;
-    tls_stream.flush().await?;
-    Ok(())
+    with_timeout(
+        async move {
+            stream.write_all(&mon_data).await?;
+            stream.flush().await
+        },
+        20,
+    )
+    .await
 }
 
 pub fn disallow_legacy_pull(legacy_pull_marker: &std::path::Path) -> std::io::Result<()> {
@@ -125,6 +160,16 @@ fn encode_data_for_transport(raw_agent_output: &[u8]) -> AnyhowResult<Vec<u8>> {
             .context("Error compressing monitoring data")?,
     );
     Ok(encoded_data)
+}
+
+async fn with_timeout<T, E: 'static + Error + Send + Sync>(
+    fut: impl Future<Output = Result<T, E>>,
+    seconds: u64,
+) -> AnyhowResult<T> {
+    match timeout(Duration::from_secs(seconds), fut).await {
+        Ok(inner) => Ok(inner?),
+        Err(err) => Err(anyhow!(err)),
+    }
 }
 
 #[cfg(test)]

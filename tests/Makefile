@@ -294,6 +294,7 @@ test-unit: prepare-protobuf-files
 		-T unit \
 		--doctest-modules \
 		../cmk/base \
+		../cmk/fields \
 		../cmk/gui \
 		../cmk/special_agents \
 		../cmk/utils \
@@ -310,6 +311,7 @@ test-unit-resilience: prepare-protobuf-files
 		-T unit \
 		--doctest-modules \
 		../cmk/base \
+		../cmk/fields \
 		../cmk/gui \
 		../cmk/special_agents \
 		../cmk/utils \
@@ -332,6 +334,7 @@ test-unit-coverage-html: prepare-protobuf-files
 		--no-cov-on-fail \
 		--doctest-modules \
 		../cmk/base \
+		../cmk/fields \
 		../cmk/gui \
 		../cmk/special_agents \
 		../cmk/utils \

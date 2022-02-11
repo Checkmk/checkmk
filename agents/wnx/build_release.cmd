@@ -70,11 +70,11 @@ call %cur_dir%\scripts\clean_artifacts.cmd
 
 call scripts\unpack_packs.cmd
 
-powershell Write-Host "Looking for MSVC 2019..." -Foreground White
-set msbuild="C:\Program Files (x86)\Microsoft Visual Studio\2019\Professional\MSBuild\Current\Bin\msbuild.exe"
-if not exist %msbuild% powershell Write-Host "Install Visual Studio 2019, please" -Foreground Red && exit /b 8
+powershell Write-Host "Looking for MSVC 2022..." -Foreground White
+set msbuild="C:\Program Files\Microsoft Visual Studio\2022\Professional\MSBuild\Current\Bin\msbuild.exe"
+if not exist %msbuild% powershell Write-Host "Install Visual Studio 2022, please" -Foreground Red && exit /b 8
 
-powershell Write-Host "[+] Found MSVC 2019" -Foreground Green
+powershell Write-Host "[+] Found MSVC 2022" -Foreground Green
 powershell Write-Host "Building MSI..." -Foreground White
 ptime powershell -ExecutionPolicy ByPass -File msb.ps1
 if not %errorlevel% == 0 powershell Write-Host "Failed Build" -Foreground Red && exit /b 7

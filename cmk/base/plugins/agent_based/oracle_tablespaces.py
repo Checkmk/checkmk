@@ -337,13 +337,16 @@ def check_oracle_tablespaces(
 
 
 def cluster_check_oracle_tablespaces(
-    item, params, section: Mapping[str, oracle.SectionTableSpaces]
+    item, params, section: Mapping[str, Optional[oracle.SectionTableSpaces]]
 ) -> CheckResult:
     selected_tablespaces: oracle.SectionTableSpaces = {"tablespaces": {}, "error_sids": {}}
 
     # If there are more than one nodes per tablespace, then we select the node with the
     # most data files
     for tablespaces_per_node in section.values():
+        if tablespaces_per_node is None:
+            continue
+
         for (sid, ts_name), tablespace in tablespaces_per_node["tablespaces"].items():
             if (sid, ts_name) not in selected_tablespaces or len(
                 selected_tablespaces["tablespaces"][(sid, ts_name)]["datafiles"]

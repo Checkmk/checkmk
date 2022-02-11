@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Dict, Iterable, Mapping, Sequence, Tuple, Union
+from typing import Any, Dict, Iterable, Mapping, Optional, Sequence, Tuple, Union
 
 from .agent_based_api.v1 import register, TableRow, type_defs
 from .agent_based_api.v1.type_defs import InventoryResult
@@ -283,12 +283,16 @@ def check_lnx_if(
 def cluster_check_lnx_if(
     item: str,
     params: Mapping[str, Any],
-    section: Mapping[str, Section],
+    section: Mapping[str, Optional[Section]],
 ) -> type_defs.CheckResult:
     yield from interfaces.cluster_check(
         item,
         params,
-        {node: node_section[0] for node, node_section in section.items()},
+        {
+            node: node_section[0]
+            for node, node_section in section.items()
+            if node_section is not None
+        },
     )
 
 

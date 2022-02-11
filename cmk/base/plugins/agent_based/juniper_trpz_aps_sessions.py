@@ -13,7 +13,7 @@
 
 import time
 from contextlib import suppress
-from typing import Any, Dict, List, Mapping, MutableMapping, Tuple, TypedDict
+from typing import Any, Dict, List, Mapping, MutableMapping, Optional, Tuple, TypedDict
 
 from .agent_based_api.v1 import (
     any_of,
@@ -248,13 +248,13 @@ def check_juniper_trpz_aps_sessions(
 
 def cluster_check_juniper_trpz_aps_sessions(
     item: str,
-    section: Mapping[str, Section],
+    section: Mapping[str, Optional[Section]],
 ) -> CheckResult:
     yield from _check_common_juniper_trpz_aps_sessions(
         get_value_store(),
         time.time(),
         item,
-        section,
+        {k: v for k, v in section.items() if v is not None},
     )
 
 
@@ -270,20 +270,20 @@ register.snmp_section(
             base=".1.3.6.1.4.1.14525.4.5.1.1.2.1",
             oids=[
                 OIDEnd(),
-                "5",  #  trpzApStatApStatusMacApState         -> status of access point
-                "8",  #  trpzApStatApStatusMacApName          -> name of access point
+                "5",  # trpzApStatApStatusMacApState         -> status of access point
+                "8",  # trpzApStatApStatusMacApName          -> name of access point
             ],
         ),
         SNMPTree(
             base=".1.3.6.1.4.1.14525.4.5.1.1.10.1",
             oids=[
                 OIDEnd(),
-                "3",  #  trpzApStatRadioOpStatsTxUniPkt       -> unicast packets transmitted
-                "4",  #  trpzApStatRadioOpStatsTxUniOct       -> octets transmitted in unicast packets
-                "5",  #  trpzApStatRadioOpStatsTxMultiPkt     -> multicast packets transmitted
-                "6",  #  trpzApStatRadioOpStatsTxMultiOct     -> octets transmitted in multicast packets
-                "7",  #  trpzApStatRadioOpStatsRxPkt          -> packets received
-                "8",  #  trpzApStatRadioOpStatsRxOctet        -> octets received
+                "3",  # trpzApStatRadioOpStatsTxUniPkt       -> unicast packets transmitted
+                "4",  # trpzApStatRadioOpStatsTxUniOct       -> octets transmitted in unicast packets
+                "5",  # trpzApStatRadioOpStatsTxMultiPkt     -> multicast packets transmitted
+                "6",  # trpzApStatRadioOpStatsTxMultiOct     -> octets transmitted in multicast packets
+                "7",  # trpzApStatRadioOpStatsRxPkt          -> packets received
+                "8",  # trpzApStatRadioOpStatsRxOctet        -> octets received
                 "11",  # trpzApStatRadioOpStatsPhyErr         -> nr. physical errors occurred
                 "12",  # trpzApStatRadioOpStatsResetCount     -> nr. reset operations
                 "14",  # trpzApStatRadioOpStatsRxRetriesCount -> nr. transmission retries

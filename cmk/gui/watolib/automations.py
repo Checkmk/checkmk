@@ -92,51 +92,58 @@ def check_mk_local_automation_serialized(
     if command in ["restart", "reload"]:
         call_hook_pre_activate_changes()
 
+    # This debug output makes problems when doing bulk inventory, because
+    # it garbles the non-HTML response output
+    # if config.debug:
+    #     html.write_text("<div class=message>Running <tt>%s</tt></div>\n" % subprocess.list2cmdline(cmd))
+    auto_logger.info("RUN: %s" % subprocess.list2cmdline(cmd))
+    auto_logger.info("STDIN: %r" % stdin_data)
+
     try:
-        # This debug output makes problems when doing bulk inventory, because
-        # it garbles the non-HTML response output
-        # if config.debug:
-        #     html.write_text("<div class=message>Running <tt>%s</tt></div>\n" % subprocess.list2cmdline(cmd))
-        auto_logger.info("RUN: %s" % subprocess.list2cmdline(cmd))
-        p = subprocess.Popen(  # pylint:disable=consider-using-with
+        completed_process = subprocess.run(
             cmd,
-            stdin=subprocess.PIPE,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             close_fds=True,
             encoding="utf-8",
+            input=stdin_data,
+            check=False,
         )
     except Exception as e:
         raise local_automation_failure(command=command, cmdline=cmd, exc=e)
 
-    assert p.stdin is not None
-    assert p.stdout is not None
-    assert p.stderr is not None
+    auto_logger.info("FINISHED: %d" % completed_process.returncode)
+    auto_logger.debug("OUTPUT: %r" % completed_process.stdout)
 
-    auto_logger.info("STDIN: %r" % stdin_data)
-    p.stdin.write(stdin_data)
-    p.stdin.close()
-
-    outdata = p.stdout.read()
-    exitcode = p.wait()
-    auto_logger.info("FINISHED: %d" % exitcode)
-    auto_logger.debug("OUTPUT: %r" % outdata)
-    errdata = p.stderr.read()
-    if errdata:
-        auto_logger.warning("'%s' returned '%s'" % (" ".join(cmd), errdata))
-    if exitcode != 0:
+    if completed_process.stderr:
+        auto_logger.warning(
+            "'%s' returned '%s'"
+            % (
+                " ".join(cmd),
+                completed_process.stderr,
+            )
+        )
+    if completed_process.returncode:
         auto_logger.error(
-            "Error running %r (exit code %d)" % (subprocess.list2cmdline(cmd), exitcode)
+            "Error running %r (exit code %d)"
+            % (
+                subprocess.list2cmdline(cmd),
+                completed_process.returncode,
+            )
         )
         raise local_automation_failure(
-            command=command, cmdline=cmd, code=exitcode, out=outdata, err=errdata
+            command=command,
+            cmdline=cmd,
+            code=completed_process.returncode,
+            out=completed_process.stdout,
+            err=completed_process.stderr,
         )
 
     # On successful "restart" command execute the activate changes hook
     if command in ["restart", "reload"]:
         call_hook_activate_changes()
 
-    return cmd, SerializedResult(outdata)
+    return cmd, SerializedResult(completed_process.stdout)
 
 
 def local_automation_failure(

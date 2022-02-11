@@ -289,7 +289,7 @@ class MKBackupJob:
         )
 
     def start(self, env=None):
-        p = subprocess.Popen(  # pylint:disable=consider-using-with
+        completed_process = subprocess.run(
             self._start_command(),
             close_fds=True,
             stdout=subprocess.PIPE,
@@ -297,12 +297,10 @@ class MKBackupJob:
             stdin=subprocess.DEVNULL,
             encoding="utf-8",
             env=env,
+            check=False,
         )
-        if p.stdout is None:
-            raise Exception("cannot happen")
-        output = p.stdout.read()
-        if p.wait() != 0:
-            raise MKGeneralException(_("Failed to start the job: %s") % output)
+        if completed_process.returncode != 0:
+            raise MKGeneralException(_("Failed to start the job: %s") % completed_process.stdout)
 
     def _start_command(self):
         raise NotImplementedError()

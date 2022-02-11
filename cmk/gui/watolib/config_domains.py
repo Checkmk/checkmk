@@ -584,22 +584,28 @@ class OMDConfigChangeBackgroundJob(WatoBackgroundJob):
         job_interface.send_result_message(_("OMD config changes have been applied."))
 
     def _do_config_change(self, config_change_commands) -> None:
-        p = subprocess.Popen(  # pylint:disable=consider-using-with
+        completed_process = subprocess.run(
             ["omd", "config", "change"],
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
             stdin=subprocess.PIPE,
             close_fds=True,
             encoding="utf-8",
+            input="\n".join(config_change_commands),
+            check=False,
         )
-        stdout, _stderr = p.communicate(input="\n".join(config_change_commands))
-        self._logger.debug("  Exit code: %d" % p.returncode)
-        self._logger.debug("  Output: %r" % stdout)
-        if p.returncode != 0:
+
+        self._logger.debug("  Exit code: %d" % completed_process.returncode)
+        self._logger.debug("  Output: %r" % completed_process.stdout)
+        if completed_process.returncode:
             raise MKGeneralException(
                 _(
                     "Failed to activate changed site "
                     "configuration.\nExit code: %d\nConfig: %s\nOutput: %s"
                 )
-                % (p.returncode, config_change_commands, stdout)
+                % (
+                    completed_process.returncode,
+                    config_change_commands,
+                    completed_process.stdout,
+                )
             )

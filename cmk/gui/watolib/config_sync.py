@@ -205,21 +205,22 @@ class SnapshotCreationBase:
             if debug:
                 self._logger.debug(" ".join(command))
             try:
-                p = subprocess.Popen(  # pylint:disable=consider-using-with
+                completed_process = subprocess.run(
                     command,
                     stdin=subprocess.PIPE,
                     stdout=subprocess.PIPE,
                     stderr=subprocess.PIPE,
                     close_fds=True,
                     encoding="utf-8",
+                    check=False,
                 )
-                stdout, stderr = p.communicate()
-                if p.returncode != 0:
+
+                if completed_process.returncode:
                     raise MKGeneralException(
                         _(
                             "Activate changes error. Unable to prepare site snapshots. Failed command: %r; StdOut: %r; StdErr: %s"
                         )
-                        % (command, stdout, stderr)
+                        % (command, completed_process.stdout, completed_process.stderr)
                     )
             except OSError as e:
                 raise MKGeneralException(
@@ -239,10 +240,8 @@ class SnapshotCreationBase:
 
             if not os.path.exists(source_path):
                 # Create an empty tarfile for this component
-                tar = tarfile.open(  # pylint:disable=consider-using-with
-                    os.path.join(tarfile_dir, "%s.tar" % component.ident), "w"
-                )
-                tar.close()
+                with tarfile.open(os.path.join(tarfile_dir, "%s.tar" % component.ident), "w"):
+                    pass
                 continue
 
             base_dir = source_path if component.ty == "dir" else os.path.dirname(source_path)
@@ -406,10 +405,8 @@ class SnapshotCreator(SnapshotCreationBase):
                 )
             else:
                 # create an empty tarfile for this component
-                tar = tarfile.open(  # pylint:disable=consider-using-with
-                    os.path.join(self._tarfile_dir, "%s.tar" % component.ident), "w"
-                )
-                tar.close()
+                with tarfile.open(os.path.join(self._tarfile_dir, "%s.tar" % component.ident), "w"):
+                    pass
 
         self._execute_bash_commands(bash_commands)
         self._statistics_rsync.append(
@@ -425,9 +422,9 @@ def extract_from_buffer(buffer_: bytes, base_dir: Path, elements: List[Replicati
     stream = io.BytesIO()
     stream.write(buffer_)
     stream.seek(0)
-    _extract(
-        tarfile.open(None, "r", stream), base_dir, elements  # pylint:disable=consider-using-with
-    )
+
+    with tarfile.open(None, "r", stream) as tar:
+        _extract(tar, base_dir, elements)
 
 
 def _extract(tar: tarfile.TarFile, base_dir: Path, components: List[ReplicationPath]) -> None:
@@ -448,24 +445,24 @@ def _extract(tar: tarfile.TarFile, base_dir: Path, components: List[ReplicationP
                 target_dir = os.path.dirname(component_path)
 
             # Extract without use of temporary files
-            subtar = tarfile.open(fileobj=subtarstream)  # pylint:disable=consider-using-with
+            with tarfile.open(fileobj=subtarstream) as subtar:
 
-            # Remove old stuff
-            if os.path.exists(component_path):
-                if component.ident == "usersettings":
-                    _update_usersettings(component_path, subtar)
-                    continue
-                if component.ident == "check_mk":
-                    _update_check_mk(target_dir, subtar)
-                    continue
-                if component.ty == "dir":
-                    _wipe_directory(component_path)
-                else:
-                    os.remove(component_path)
-            elif component.ty == "dir":
-                os.makedirs(component_path)
+                # Remove old stuff
+                if os.path.exists(component_path):
+                    if component.ident == "usersettings":
+                        _update_usersettings(component_path, subtar)
+                        continue
+                    if component.ident == "check_mk":
+                        _update_check_mk(target_dir, subtar)
+                        continue
+                    if component.ty == "dir":
+                        _wipe_directory(component_path)
+                    else:
+                        os.remove(component_path)
+                elif component.ty == "dir":
+                    os.makedirs(component_path)
 
-            subtar.extractall(target_dir)
+                subtar.extractall(target_dir)
         except Exception:
             raise MKGeneralException(
                 "Failed to extract subtar %s: %s" % (component.ident, traceback.format_exc())

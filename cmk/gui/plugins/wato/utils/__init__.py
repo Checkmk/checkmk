@@ -2057,17 +2057,19 @@ class SiteBackupJobs(backup.Jobs):
         super().__init__(backup.site_config_path())
 
     def _apply_cron_config(self):
-        p = subprocess.Popen(  # pylint:disable=consider-using-with
+        completed_process = subprocess.run(
             ["omd", "restart", "crontab"],
             close_fds=True,
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
             encoding="utf-8",
             stdin=subprocess.DEVNULL,
+            check=False,
         )
-        if p.wait() != 0:
-            out = "Huh???" if p.stdout is None else p.stdout.read()
-            raise MKGeneralException(_("Failed to apply the cronjob config: %s") % out)
+        if completed_process.returncode:
+            raise MKGeneralException(
+                _("Failed to apply the cronjob config: %s") % completed_process.stdout
+            )
 
 
 # TODO: Kept for compatibility with pre-1.6 WATO plugins

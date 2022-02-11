@@ -61,11 +61,6 @@
     group: "{{ cmk_site }}"
     mode: "0660"
 
-- name: Install checkmk Agent
-  apt:
-    deb: /omd/sites/{{cmk_site}}/share/check_mk/agents/check-mk-agent_{{cmk_version}}-1_all.deb
-    state: present
-
 - name: Start {{cmk_site}} Site
   become: yes
   become_user: root

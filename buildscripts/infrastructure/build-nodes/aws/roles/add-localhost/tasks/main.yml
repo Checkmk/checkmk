@@ -1,15 +1,51 @@
 ---
-- name: Add localhost to Monitoring
-  template:
-    src: files/wato.conf.d.hosts.mk.j2
-    dest: /omd/sites/{{cmk_site}}/etc/check_mk/conf.d/wato/hosts.mk
-    owner: "{{cmk_site}}"
-    group: "{{cmk_site}}"
-    mode: "0644"
-
-- name: Save Change
-  become: true
-  become_method: sudo
-  become_user: root
+- name: Add localhost to monitoring
   shell: |
-    sudo su - {{cmk_site}} -c "cmk -vI;   cmk -R"
+    curl \
+    -X POST \
+    --header "Authorization: Bearer {{cmkadmin}} {{cmkadmin_pass}}" \
+    --header "Content-Type: application/json" \
+    --header "Accept: application/json" \
+    --data '{
+          "attributes": {
+            "ipaddress": "127.0.0.1"
+          },
+          "folder": "\/",
+          "host_name": "'"$(hostname)"'"
+        }' \
+    "http://localhost/{{cmk_site}}/check_mk/api/v0/domain-types/host_config/collections/all"
+  when: site_installed.stdout == "0"
+
+- name: Install Checkmk agent
+  apt:
+    deb: /omd/sites/{{cmk_site}}/share/check_mk/agents/check-mk-agent_{{cmk_version}}-1_all.deb
+    state: present
+
+- name: Register controller to {{cmk_site}} site
+  become: yes
+  become_user: root
+  become_method: sudo
+  shell: |
+      cmk-agent-ctl register --trust-server-cert -s localhost/{{cmk_site}} -H "$(hostname)" -u {{cmkadmin}} -p {{cmkadmin_pass}} 2>&1 || true
+
+- name: Discover services
+  shell: |
+    curl \
+    -X POST \
+    --header "Authorization: Bearer {{cmkadmin}} {{cmkadmin_pass}}" \
+    --header "Accept: application/json" \
+    "http://localhost/{{cmk_site}}/check_mk/api/v0/objects/host/$(hostname)/actions/discover-services/mode/tabula-rasa"
+
+- name: Activate changes
+  shell: |
+    curl \
+    -X POST \
+    --header "Authorization: Bearer {{cmkadmin}} {{cmkadmin_pass}}" \
+    --header "Accept: application/json" \
+    --data '{
+          "redirect": false,
+          "sites": [
+            "{{cmk_site}}"
+          ]
+        }' \
+    "http://localhost/{{cmk_site}}/check_mk/api/v0/domain-types/activation_run/actions/activate-changes/invoke"

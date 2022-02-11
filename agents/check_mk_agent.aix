@@ -845,6 +845,7 @@ main_setup() {
     exec </dev/null 9>&2 2>/dev/null
     set_up_process_commandline_arguments "$@"
     set_up_get_epoch
+    set_variable_defaults
     unset_locale
     preamble_1
     preamble_2

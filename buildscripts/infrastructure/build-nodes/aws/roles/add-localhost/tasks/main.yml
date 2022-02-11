@@ -3,7 +3,7 @@
   shell: |
     curl \
     -X POST \
-    --header "Authorization: Bearer {{cmkadmin}} {{cmkadmin_pass}}" \
+    --header "Authorization: Bearer {{ cmkadmin }} {{ cmkadmin_pass }}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json" \
     --data '{

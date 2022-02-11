@@ -17,6 +17,7 @@ distro: focal
 
 cmk_edition: "{{ lookup('env', 'EDITION') }}"
 cmk_version: "{{ lookup('env', 'CMK_VERS') }}"
+cmkadmin: cmk
 
 # AWS deploy EC2
 servers:

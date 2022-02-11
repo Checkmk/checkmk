@@ -27,13 +27,14 @@ fi
 if [ -z "$LANG" ]; then
     INSTALLED_LOCALES=$(locale -a)
     for i in "C.UTF-8" "C.utf8" "en_US.utf8" "C"; do
-        if echo $INSTALLED_LOCALES | grep -q -w -F "$i"; then
+        if echo "$INSTALLED_LOCALES" | grep -q -w -F "$i"; then
             export LANG="$i" LC_ALL="$i"
             break
         fi
     done
 fi
 
+# shellcheck disable=SC1007 # FIXME?: Remove space after = if trying to assign a value (for empty string, use var='' ... ).
 EXPECTED_PIPENV_VERSION="$(MFLAGs= MAKEFLAGS= make --silent --no-print-directory --file="${REPO_PATH}"/defines.make print-PIPENV_VERSION)"
 PIPENV_VERSION="$(PIPENV_COLORBLIND=true pipenv --version | awk '{ print $3 }')"
 if [ "$EXPECTED_PIPENV_VERSION" != "$PIPENV_VERSION" ]; then

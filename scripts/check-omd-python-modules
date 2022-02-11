@@ -21,8 +21,8 @@ PYTHON3_MODULES=$REPO_PATH/omd/packages/python3-modules
 
 STATUS=0
 
-
-CHECK_MISSING=$(cat - <<'EOF'
+CHECK_MISSING=$(
+    cat - <<'EOF'
 BEGIN {
     changed = 0
     cache_incremented = 0
@@ -54,9 +54,10 @@ END {
 EOF
 )
 
-pushd "$PYTHON3_MODULES" > /dev/null || exit 1
+pushd "$PYTHON3_MODULES" >/dev/null || exit 1
 awk "$CHECK_MISSING" python3-modules.make || STATUS=$?
+# shellcheck disable=SC2010 # FIXME: Don't use ls | grep. Use a glob or a for loop with a condition to allow non-alphanumeric filenames
 ls -1 src | grep -E -v "download|README" | xargs -n 1 -i{} awk '/^ *PYTHON3_MODULES_LIST *\+= *{}/ { found = 1 } END { if (!found) { print "{} not in python3-modules.make"; exit 1 } }' python3-modules.make || STATUS=$?
-popd > /dev/null || exit 1
+popd >/dev/null || exit 1
 
 exit $STATUS

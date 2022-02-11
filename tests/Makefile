@@ -33,7 +33,6 @@ SHELL_FILES_REL := $(shell cd ..; grep -rl \
     --exclude-dir="notifications" \
     --exclude-dir="omd" \
     --exclude-dir="plus" \
-    --exclude-dir="scripts" \
     --exclude-dir="skel" \
     --exclude-dir="tests" \
     --exclude-dir="web" \

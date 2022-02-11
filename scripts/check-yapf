@@ -7,12 +7,13 @@
 #
 set -e -o pipefail
 
-source "$(dirname $0)/lib-precommit"
+# shellcheck source=scripts/lib-precommit
+source "$(dirname "$0")/lib-precommit"
 
 REPO_PATH="$(git rev-parse --show-toplevel)"
 PIPENV="$REPO_PATH/scripts/run-pipenv"
 
-if [ $1 == "-i" ]; then
+if [ "$1" == "-i" ]; then
     ARGS=-i
     shift
 else
@@ -22,6 +23,7 @@ fi
 printf -v files " %s" "$@"
 PYTHON3_FILES=$(python_files 3 "$files")
 
-if [ ! -z "$PYTHON3_FILES" ]; then
-    $PIPENV run yapf --parallel --style $REPO_PATH/.style.yapf --verbose -i $ARGS $PYTHON3_FILES
+if [ -n "$PYTHON3_FILES" ]; then
+    # shellcheck disable=SC2086
+    $PIPENV run yapf --parallel --style "$REPO_PATH"/.style.yapf --verbose -i $ARGS $PYTHON3_FILES
 fi

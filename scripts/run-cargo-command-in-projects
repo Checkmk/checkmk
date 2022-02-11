@@ -1,20 +1,17 @@
 #!/bin/bash
 set -e
 
-COMMAND=$1
-shift
-COMMAND_OPTIONS=$*
 REPO_DIR=$(git rev-parse --show-toplevel)
 
 # find all cargo project files, not located in ".cargo" folders
 # We use ".cargo" instead of $CARGO_HOME in order to skip even multiple .cargo directories
-CARGO_PROJECTS=$(find ${REPO_DIR} -path "*/.cargo/*" -prune -o -name Cargo.toml -print | xargs dirname)
+CARGO_PROJECTS=$(find "${REPO_DIR}" -path "*/.cargo/*" -prune -o -name Cargo.toml -print0 | xargs dirname)
 
 result=0
 
 for project in ${CARGO_PROJECTS}; do
-    cd ${project}
-    ${REPO_DIR}/scripts/run-cargo-command ${COMMAND} ${COMMAND_OPTIONS} || result=1
+    cd "${project}"
+    "${REPO_DIR}"/scripts/run-cargo-command "$@" || result=1
     cd -
 done
 

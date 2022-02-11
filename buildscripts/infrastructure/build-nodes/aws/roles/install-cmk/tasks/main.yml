@@ -66,18 +66,6 @@
     deb: /omd/sites/{{cmk_site}}/share/check_mk/agents/check-mk-agent_{{cmk_version}}-1_all.deb
     state: present
 
-- name: checkmk agent should listen only on localhost
-  ansible.builtin.lineinfile:
-    path: /etc/xinetd.d/check-mk-agent
-    state: present
-    regexp: '^.*# *only_from      = 127.0.0.1 10.0.20.1 10.0.20.2'
-    line: 'bind            = 127.0.0.1'
-
-- name: restart xinetd
-  service:
-    name: xinetd
-    state: restarted
-
 - name: Start {{cmk_site}} Site
   become: yes
   become_user: root

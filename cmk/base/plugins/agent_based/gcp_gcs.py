@@ -14,7 +14,7 @@ from typing import Any, Callable, Mapping, Sequence
 
 from google.cloud.monitoring_v3.types import TimeSeries
 
-from .agent_based_api.v1 import check_levels, register, render, Service
+from .agent_based_api.v1 import check_levels, register, render, Service, ServiceLabel
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 
 
@@ -31,8 +31,13 @@ class GCPResult:
 
 @dataclass(frozen=True)
 class SectionItem:
-    name: str
     rows: Sequence[GCPResult]
+    labels: Sequence[ServiceLabel]
+
+    @classmethod
+    def from_results(cls, rows: Sequence[GCPResult]) -> "SectionItem":
+        labels = [ServiceLabel(f"gcp_{k}", v) for k, v in rows[0].ts.resource.labels.items()]
+        return cls(rows=rows, labels=labels)
 
 
 Section = Mapping[str, SectionItem]
@@ -43,7 +48,7 @@ def parse_gcp_gcs(string_table: StringTable) -> Section:
     rows = [GCPResult.deserialize(row[0]) for row in string_table]
     item_names = {r.ts.resource.labels[label_key] for r in rows}
     return {
-        name: SectionItem(name, [r for r in rows if r.ts.resource.labels[label_key] == name])
+        name: SectionItem.from_results([r for r in rows if r.ts.resource.labels[label_key] == name])
         for name in item_names
     }
 
@@ -52,8 +57,8 @@ register.agent_section(name="gcp_service_gcs", parse_function=parse_gcp_gcs)
 
 
 def discover(section: Section) -> DiscoveryResult:
-    for bucket in section:
-        yield Service(item=f"{bucket}")
+    for bucket, item in section.items():
+        yield Service(item=f"{bucket}", labels=list(item.labels))
 
 
 @dataclass(frozen=True)

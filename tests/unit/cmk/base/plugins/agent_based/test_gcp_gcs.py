@@ -9,6 +9,7 @@ from typing import Callable, Sequence
 
 import pytest
 
+from cmk.base.api.agent_based.checking_classes import Service, ServiceLabel
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
 from cmk.base.plugins.agent_based.gcp_gcs import (
     check_gcp_gcs_network,
@@ -48,6 +49,28 @@ def fixture_section():
 def test_discover(section):
     items = set(el.item for el in discover(section))
     assert items == {"lakjsdklasjd", "backup-home-ml-free"}
+
+
+@pytest.fixture(name="buckets")
+def fixture_buckets(section):
+    return sorted(list(discover(section)))
+
+
+def test_discover_two_buckets(buckets: Sequence[Service]):
+    assert len(buckets) == 2
+    assert {b.item for b in buckets} == {"backup-home-ml-free", "lakjsdklasjd"}
+
+
+def test_discover_project_labels(buckets: Sequence[Service]):
+    labels = buckets[0].labels
+    assert len(labels) == 2
+    assert ServiceLabel("gcp_project_id", "backup-255820") in labels
+
+
+def test_discover_bucket_labels(buckets: Sequence[Service]):
+    labels = buckets[0].labels
+    assert len(labels) == 2
+    assert ServiceLabel("gcp_bucket_name", "backup-home-ml-free") in labels
 
 
 @dataclass(frozen=True)

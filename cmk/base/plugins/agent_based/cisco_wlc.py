@@ -111,7 +111,7 @@ def check_cisco_wlc(item: str, params: Mapping[str, Any], section: Section) -> C
 def cluster_check_cisco_wlc(
     item: str,
     params: Mapping[str, Any],
-    section: Mapping[str, Section],
+    section: Mapping[str, Optional[Section]],
 ) -> CheckResult:
     """
     >>> list(cluster_check_cisco_wlc("AP19", {}, {"node1": {'AP19': '1', 'AP02': '1'}}))
@@ -120,7 +120,7 @@ def cluster_check_cisco_wlc(
     [Result(state=<State.CRIT: 2>, summary='Accesspoint not found')]
     """
     for node, node_section in section.items():
-        if item in node_section:
+        if node_section is not None and item in node_section:
             yield _ap_info(node, node_section[item])
             return
     yield _node_not_found(item, params)

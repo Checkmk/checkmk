@@ -103,10 +103,9 @@ bool StartAgentController(const fs::path &service) {
         XLOG::l.i("Agent controller '{}' started pid [{}]", controller_name,
                   proc_id);
         return true;
-    } else {
-        XLOG::l("Agent controller '{}' failed to start", controller_name);
-        return false;
     }
+    XLOG::l("Agent controller '{}' failed to start", controller_name);
+    return false;
 }
 
 bool KillAgentController(const fs::path &service) {

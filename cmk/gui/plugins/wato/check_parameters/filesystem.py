@@ -4,7 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Dict, List
+import copy
+from typing import Any, Dict, List, Mapping
 
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
@@ -58,22 +59,18 @@ def _validate_discovery_filesystem_params(value, varprefix):
         )
 
 
-def _transform_discovery_filesystem_params(params):
-    include_volume_name = params.pop("include_volume_name", None)
+def _transform_discovery_filesystem_params(params: Mapping[str, Any]) -> dict[str, Any]:
+    p: Dict[str, Any] = dict(copy.deepcopy(params))
+    include_volume_name = p.pop("include_volume_name", None)
 
     if isinstance(include_volume_name, tuple):
-        params["item_appearance"] = "volume_name_and_mountpoint"
-        params["grouping_behaviour"] = include_volume_name[1]
+        p["item_appearance"] = "volume_name_and_mountpoint"
+        p["grouping_behaviour"] = include_volume_name[1]
+    elif isinstance(include_volume_name, bool):
+        p["item_appearance"] = "volume_name_and_mountpoint" if include_volume_name else "mountpoint"
+        p["grouping_behaviour"] = "mountpoint"
 
-    if include_volume_name is True:
-        params["item_appearance"] = "volume_name_and_mountpoint"
-        params["grouping_behaviour"] = "mountpoint"
-
-    if include_volume_name is False:
-        params["item_appearance"] = "mountpoint"
-        params["grouping_behaviour"] = "mountpoint"
-
-    return params
+    return p
 
 
 def _valuespec_inventory_df_rules():

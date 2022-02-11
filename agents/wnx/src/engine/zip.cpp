@@ -133,7 +133,7 @@ zip::Type GetFileType(std::wstring_view name) noexcept {
     constexpr std::array<char, 2> cab_header{'M', 'S'};
     constexpr std::array<char, 2> zip_header{'P', 'K'};
     try {
-        std::ifstream f(name, std::ios::binary);
+        std::ifstream f(wtools::ToUtf8(name), std::ios::binary);
         if (!f.good()) {
             return zip::Type::unknown;
         }

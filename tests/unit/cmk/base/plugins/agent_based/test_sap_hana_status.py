@@ -19,6 +19,14 @@ SECTION_WARNING = {
     "Status %s" % ITEM: {"instance": ITEM, "message": "Yes", "state_name": "WARNING"},
     "Version %s" % ITEM: {"instance": ITEM, "version": "1.00.122.22.1543461992 (fa/hana1sp12)"},
 }
+SECTION_ERROR = {
+    "Status %s"
+    % ITEM: {
+        "instance": ITEM,
+        "message": "hdbsql ERROR: There was an error",
+        "state_name": "error",
+    },
+}
 
 
 @pytest.mark.parametrize(
@@ -50,7 +58,20 @@ SECTION_WARNING = {
             [
                 ["[[H62 10]]"],
             ],
-            {"Status H62 10": {}, "Version H62 10": {}},
+            {},
+        ),
+        (
+            [
+                ["[[H62 10]]"],
+                ["hdbsql ERROR: There was an error"],
+            ],
+            {
+                "Status H62 10": {
+                    "instance": "H62 10",
+                    "message": "hdbsql ERROR: There was an error",
+                    "state_name": "error",
+                },
+            },
         ),
     ],
 )
@@ -82,6 +103,13 @@ def test_sap_hana_status_discovery():
             SECTION_WARNING,
             "Status",
             Result(state=state.WARN, summary="Status: WARNING, Details: Yes"),
+        ),
+        (
+            SECTION_ERROR,
+            "Status",
+            Result(
+                state=state.CRIT, summary="Status: error, Details: hdbsql ERROR: There was an error"
+            ),
         ),
     ],
 )

@@ -66,6 +66,11 @@ while test -n "$1"; do
     esac
 done
 
+if [ ! "$MK_CONFDIR" ]; then
+    echo "MK_CONFDIR not set!" >&2
+    exit 1
+fi
+
 # Source the optional configuration file for this agent plugin
 if [ -e "$MK_CONFDIR/sap_hana.cfg" ]; then
     # shellcheck disable=SC1090
@@ -111,12 +116,16 @@ mk_hdbsql() {
     fi
 
     if [ "$RUNAS" = "agent" ]; then
-        result="$(${hdbsql_path} -C -F\; -x -a -n localhost -i "${instance}" "${database}" "${credentials}" "${ssloption}" "$query" 2>/dev/null)"
+        result="$(su -p -c "${hdbsql_path} -C -F\; -x -a -n localhost -i ${instance} ${database} ${credentials} ${ssloption} \"$query\"" 2>&1)"
     else
-        result="$(su - "${instance_user}" -c "${hdbsql_path} -C -F\; -x -a -n localhost -i ${instance} ${database} ${credentials} \"${ssloption}\" \"$query\"" 2>/dev/null)"
+        result="$(su - "${instance_user}" -c "${hdbsql_path} -C -F\; -x -a -n localhost -i ${instance} ${database} ${credentials} ${ssloption} \"$query\"" 2>&1)"
     fi
     rc=$?
-    echo "$result" | sed -e "s/^;//" -e "s/;$//"
+    if [ "$rc" != 0 ]; then
+        echo "hdbsql ERROR: ${result}"
+    else
+        echo "$result" | sed -e "s/^;//" -e "s/;$//"
+    fi
     return $rc
 }
 
@@ -130,10 +139,9 @@ mk_hdbsql() {
 #   |                     |_|                                              |
 #   '----------------------------------------------------------------------'
 
-query_sap_hana_status() {
+query_sap_hana_version() {
     cat <<QUERY
-SELECT Name, Status, Value FROM M_SYSTEM_OVERVIEW Where NAME='Version' or
-NAME='All Started'
+SELECT Name, Status, Value FROM M_SYSTEM_OVERVIEW Where NAME='Version'
 QUERY
 }
 
@@ -253,7 +261,7 @@ QUERY
 
 query_sap_hana_events_open() {
     cat <<QUERY
-select 'open_events', count(*) from m_events where acknowledged='FALSE'
+select 'open_events', count(*) from m_events where acknowledged='FALSE' and state!='INFO'
 QUERY
 }
 
@@ -555,14 +563,14 @@ set_sap_hana_version() {
 }
 
 get_credentials() {
-    local user=$1
-    local password=$2
-    local userstorekey=$3
+    local db_user=$1
+    local db_password=$2
+    local db_userstorekey=$3
 
-    if [ -n "$userstorekey" ]; then
-        credentials="-U ${userstorekey}"
+    if [ -n "$db_userstorekey" ]; then
+        credentials="-U ${db_userstorekey}"
     else
-        credentials="-u ${user} -p ${password}"
+        credentials="-u ${db_user} -p ${db_password}"
     fi
     echo "$credentials"
 }
@@ -574,6 +582,12 @@ get_instance_user() {
     instance_user=$(ps -efw | grep "${sid}/[H]DB${instance}/exe/sapstartsrv" | grep -Po "^\s*(\w+)")
     echo "$instance_user"
 
+}
+
+get_operation_mode() {
+    local instance_user="$1"
+    result="$(su - "${instance_user}" -c "hdbnsutil -sr_state")"
+    echo "$result" | grep "operation mode" | awk -F ' ' '{print $3}'
 }
 
 read_global_ini() {
@@ -626,10 +640,6 @@ get_sections() {
     mk_hdbsql "$sid" "$instance" "$instance_user" "$db" "$(query_sap_hana_backup_complete)" "$credentials" "$ssloption"
     mk_hdbsql "$sid" "$instance" "$instance_user" "$db" "$(query_sap_hana_backup_log)" "$credentials" "$ssloption"
 
-    echo "<<<sap_hana_diskusage:sep(59)>>>"
-    echo "$tenant_name"
-    mk_hdbsql "$sid" "$instance" "$instance_user" "$db" "$(query_sap_hana_diskusage)" "$credentials" "$ssloption"
-
     echo "<<<sap_hana_data_volume:sep(59)>>>"
     echo "$tenant_name"
     mk_hdbsql "$sid" "$instance" "$instance_user" "$db" "$(query_sap_hana_data_volume "$hostname")" "$credentials" "$ssloption"
@@ -651,10 +661,6 @@ get_sections() {
     echo "$tenant_name"
     mk_hdbsql "$sid" "$instance" "$instance_user" "$db" "$(query_sap_hana_ess_migration)" "$credentials" "$ssloption"
 
-    echo "<<<sap_hana_memrate:sep(59)>>>"
-    echo "$tenant_name"
-    mk_hdbsql "$sid" "$instance" "$instance_user" "$db" "$(query_sap_hana_memrate "$hostname")" "$credentials" "$ssloption"
-
     echo "<<<sap_hana_events:sep(59)>>>"
     echo "$tenant_name"
     mk_hdbsql "$sid" "$instance" "$instance_user" "$db" "$(query_sap_hana_events_open)" "$credentials" "$ssloption"
@@ -675,8 +681,49 @@ get_sections() {
     # mk_hdbsql "$sid" "$instance" "$instance_user" "$db" "$(query_sap_hana_threads_service_name "$hostname")" "$credentials" "$ssloption"
 
     echo "<<<logwatch>>>"
-    echo "[[[SAP HANA Alerts for ${tenant_name}]]]"
+    echo "[[[SAP HANA Alerts for ${sid} ${instance} ${db}]]]"
     sap_hana_check_alerts "$sid" "$instance" "$instance_user" "$db" "$credentials" "$ssloption"
+}
+
+get_empty_sections() {
+    local sid="$1"
+    local instance="$2"
+    local db="$3"
+    local instance_user="$4"
+    local credentials="$5"
+    local ssloption="$6"
+    local tenant_name="[[${sid} ${instance} ${db}]]"
+
+    echo "<<<sap_hana_db_status:sep(59)>>>"
+    echo "$tenant_name"
+    mk_hdbsql "$sid" "$instance" "$instance_user" "$db" "$(query_sap_hana_db_status)" "$credentials" "$ssloption"
+
+    echo "<<<sap_hana_backup:sep(59)>>>"
+    echo "$tenant_name"
+
+    echo "<<<sap_hana_data_volume:sep(59)>>>"
+    echo "$tenant_name"
+
+    echo "<<<sap_hana_license:sep(59)>>>"
+    echo "$tenant_name"
+
+    echo "<<<sap_hana_ess:sep(59)>>>"
+    echo "$tenant_name"
+
+    echo "<<<sap_hana_ess_migration:sep(59)>>>"
+    echo "$tenant_name"
+
+    echo "<<<sap_hana_events:sep(59)>>>"
+    echo "$tenant_name"
+
+    echo "<<<sap_hana_proc:sep(59)>>>"
+    echo "$tenant_name"
+
+    echo "<<<sap_hana_fileinfo:sep(59)>>>"
+    date +%s
+
+    echo "<<<logwatch>>>"
+    echo "[[[SAP HANA Alerts for ${sid} ${instance} ${db}]]]"
 }
 
 query_databases() {
@@ -691,7 +738,7 @@ query_databases() {
         get_sections "$sid" "$instance" "$instance_user" "" "$hostname" "$credentials"
     else
         for db in $(mk_hdbsql "$SID" "$INSTANCE" "$INSTANCE_USER" "SYSTEMDB" "$(query_instance_databases)" "$credentials" "$ssloption"); do
-            get_sections "$sid" "$instance" "$instance_user" "$db" "$hostname" "$credentials"
+            get_sections "$sid" "$instance" "$instance_user" "$db" "$hostname" "$credentials" "$ssloption"
         done
     fi
 }
@@ -702,13 +749,14 @@ query_instance() {
     local instance_user="$3"
     local hostname="$4"
     local sap_landscape="$5"
-    local instance_status="$6"
-
+    local db="$6"
+    local credentials="$7"
+    local ssloption="$8"
     local instance_name="[[${sid} ${instance}]]"
 
     echo "<<<sap_hana_status:sep(59)>>>"
     echo "$instance_name"
-    echo "$instance_status"
+    mk_hdbsql "$sid" "$instance" "$instance_user" "$db" "$(query_sap_hana_version)" "$credentials" "$ssloption"
 
     echo "<<<sap_hana_instance_status:sep(59)>>>"
     echo "$instance_name"
@@ -724,6 +772,24 @@ query_instance() {
         sap_hana_connect "$sid" "$instance" "$instance_user" "$hostname" "$sap_landscape"
     fi
 
+    echo "<<<sap_hana_diskusage:sep(59)>>>"
+    echo "$instance_name"
+    mk_hdbsql "$sid" "$instance" "$instance_user" "$db" "$(query_sap_hana_diskusage)" "$credentials" "$ssloption"
+
+    echo "<<<sap_hana_memrate:sep(59)>>>"
+    echo "$instance_name"
+    mk_hdbsql "$sid" "$instance" "$instance_user" "$db" "$(query_sap_hana_memrate "$hostname")" "$credentials" "$ssloption"
+}
+
+database_connected() {
+    local sid="$1"
+    local instance="$2"
+    local instance_user="$3"
+    local db="$4"
+    local credentials="$5"
+    local ssloption="$6"
+
+    mk_hdbsql "$sid" "$instance" "$instance_user" "$db" "$(query_sap_hana_db_status)" "$credentials" "$ssloption" >/dev/null
 }
 
 #.
@@ -736,11 +802,6 @@ query_instance() {
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-# We suppress the following:
-#  * Modification to PARAM is local (to subshell caused by pipeline).
-#  * PARAM was modified in a subshell. That change might be lost.
-# It is ok here, because we only ever enter one branch of the toplevel condition.
-# shellcheck disable=SC2030,SC2031
 if [ -n "$DBS" ]; then
     for d in "${DBS[@]}"; do
         cut -d "," -f1-2 <<<"${d}"
@@ -749,37 +810,51 @@ if [ -n "$DBS" ]; then
         while IFS="," read -r SID INSTANCE; do
 
             INSTANCE_USER=$(get_instance_user "$SID" "$INSTANCE")
-
-            for DB_DATA in ${DBS[*]}; do
-                IFS=',' read -r DB_SID DB_INSTANCE DB USER PASSWORD USERSTOREKEY <<<"${DB_DATA}"
-                if [ "$SID" == "$DB_SID" ] && [ "$INSTANCE" == "$DB_INSTANCE" ]; then
-                    continue
-                fi
-            done
-
-            SAP_LANDSCAPE=$(su - "${INSTANCE_USER}" -c "python /usr/sap/${SID}/HDB${INSTANCE}/exe/python_support/landscapeHostConfiguration.py")
-
-            if [ -z "$HOSTNAME" ]; then
-                HOSTNAME=$(sap_hana_host_from_landscape "$SAP_LANDSCAPE")
-            else
-                HOSTNAME=$(hostname)
-            fi
-
-            CREDENTIALS=$(get_credentials "${USER}" "${PASSWORD}" "${USERSTOREKEY}")
-            SSLOPTION=$(get_ssl_option "$SID" "$HOSTNAME")
-            INSTANCE_STATUS=$(mk_hdbsql "$SID" "$INSTANCE" "$INSTANCE_USER" "$DB" "$(query_sap_hana_status)" "$CREDENTIALS" "$SSLOPTION")
-
             set_sap_hana_version "$INSTANCE_USER"
 
-            query_instance "$SID" "$INSTANCE" "$INSTANCE_USER" "$HOSTNAME" "$SAP_LANDSCAPE" "$INSTANCE_STATUS" "$SSLOPTION"
+            replication_mode=$(get_operation_mode "$INSTANCE_USER")
+            if [ -z "$replication_mode" ] || [ "$replication_mode" = "primary" ] || [ "$replication_mode" = "logreplay_readaccess" ]; then
 
-            for DB_DATA in ${DBS[*]}; do
-                IFS=',' read -r DB_SID DB_INSTANCE DB USER PASSWORD USERSTOREKEY <<<"${DB_DATA}"
-                if [ "$SID" == "$DB_SID" ] && [ "$INSTANCE" == "$DB_INSTANCE" ]; then
-                    CREDENTIALS=$(get_credentials "${USER}" "${PASSWORD}" "${USERSTOREKEY}")
-                    get_sections "$SID" "$INSTANCE" "$INSTANCE_USER" "$DB" "$HOSTNAME" "$CREDENTIALS" "$SSLOPTION"
-                fi
-            done
+                SAP_LANDSCAPE=$(su - "${INSTANCE_USER}" -c "python /usr/sap/${SID}/HDB${INSTANCE}/exe/python_support/landscapeHostConfiguration.py")
+                HOSTNAME=$(sap_hana_host_from_landscape "$SAP_LANDSCAPE")
+                SSLOPTION=$(get_ssl_option "$SID" "$HOSTNAME")
+
+                # find the first db that is connected for queries that should be run per instance
+                for DB_DATA in ${DBS[*]}; do
+                    IFS=',' read -r db_sid db_instance db_name db_user db_password db_userstorekey <<<"${DB_DATA}"
+                    if [ "$SID" == "$db_sid" ] && [ "$INSTANCE" == "$db_instance" ]; then
+                        CREDENTIALS=$(get_credentials "${db_user}" "${db_password}" "${db_userstorekey}")
+                        if database_connected "$SID" "$INSTANCE" "$INSTANCE_USER" "$db_name" "$CREDENTIALS" "$SSLOPTION"; then
+                            break
+                        fi
+                    fi
+                done
+
+                query_instance "$SID" "$INSTANCE" "$INSTANCE_USER" "$HOSTNAME" "$SAP_LANDSCAPE" "$db_name" "$CREDENTIALS" "$SSLOPTION"
+
+                for DB_DATA in ${DBS[*]}; do
+                    IFS=',' read -r db_sid db_instance db_name db_user db_password db_userstorekey <<<"${DB_DATA}"
+                    if [ "$SID" == "$db_sid" ] && [ "$INSTANCE" == "$db_instance" ]; then
+                        CREDENTIALS=$(get_credentials "${db_user}" "${db_password}" "${db_userstorekey}")
+
+                        if database_connected "$SID" "$INSTANCE" "$INSTANCE_USER" "$db_name" "$CREDENTIALS" "$SSLOPTION"; then
+                            get_sections "$SID" "$INSTANCE" "$INSTANCE_USER" "$db_name" "$HOSTNAME" "$CREDENTIALS" "$SSLOPTION"
+                        else
+                            get_empty_sections "$SID" "$INSTANCE" "$db_name" "$INSTANCE_USER" "$CREDENTIALS" "$SSLOPTION"
+                        fi
+                    fi
+                done
+
+            elif [ "$replication_mode" = "logreplay" ] || [ "$replication_mode" = "delta_datashipping" ]; then
+                echo "<<<sap_hana_status:sep(59)>>>"
+                echo "[[${SID} ${INSTANCE}]]"
+                echo "all started;ok;HANA DB is in replication mode \"$replication_mode\" and cannot be connected to"
+
+            else
+                echo "<<<sap_hana_status:sep(59)>>>"
+                echo "[[${SID} ${INSTANCE}]]"
+                echo "all started;unknown;HANA DB is in replication mode \"$replication_mode\""
+            fi
         done
 else
 
@@ -801,26 +876,45 @@ else
             continue
         fi
 
-        SAP_LANDSCAPE=$(su - "${INSTANCE_USER}" -c "python /usr/sap/${SID}/HDB${INSTANCE}/exe/python_support/landscapeHostConfiguration.py")
+        replication_mode=$(get_operation_mode "$INSTANCE_USER")
+        if [ -z "$replication_mode" ] || [ "$replication_mode" = "primary" ] || [ "$replication_mode" = "logreplay_readaccess" ]; then
 
-        if [ -z "$HOSTNAME" ]; then
+            SAP_LANDSCAPE=$(su - "${INSTANCE_USER}" -c "python /usr/sap/${SID}/HDB${INSTANCE}/exe/python_support/landscapeHostConfiguration.py")
             HOSTNAME=$(sap_hana_host_from_landscape "$SAP_LANDSCAPE")
+            SSLOPTION=$(get_ssl_option "$SID" "$HOSTNAME")
+
+            CREDENTIALS=$(get_credentials "${USER}" "${PASSWORD}" "${USERSTOREKEY}")
+            INSTANCE_STATUS=$(mk_hdbsql "$SID" "$INSTANCE" "$INSTANCE_USER" "SYSTEMDB" "$(query_sap_hana_db_status)" "$CREDENTIALS" "$SSLOPTION")
+            rc=$?
+
+            if [ $rc != 0 ]; then
+                INSTANCE_STATUS_ERROR=$INSTANCE_STATUS
+                echo "$INSTANCE_STATUS_ERROR" 1>&2
+            fi
+
+            set_sap_hana_version "$INSTANCE_USER"
+
+            query_instance "$SID" "$INSTANCE" "$INSTANCE_USER" "$HOSTNAME" "$SAP_LANDSCAPE" "SYSTEMDB" "$CREDENTIALS" "$SSLOPTION"
+            # We only execute all SQL queries in case the SQL DB is open & responding.
+            # Otherwise only execute sections which are using other interfaces (e.g. python or odbcreg).
+            # This accelerates the plugin execution tremendously as we do not have to wait for all the sql timeouts.
+            if [ -z "$INSTANCE_STATUS_ERROR" ]; then
+                query_databases "$SID" "$INSTANCE" "$INSTANCE_USER" "$HOSTNAME" "$CREDENTIALS" "$SSLOPTION"
+            else
+                echo "<<<sap_hana_status:sep(59)>>>"
+                echo "[[${SID} ${INSTANCE}]]"
+                echo "$INSTANCE_STATUS_ERROR"
+            fi
+
+        elif [ "$replication_mode" = "logreplay" ]; then
+            echo "<<<sap_hana_status:sep(59)>>>"
+            echo "[[${SID} ${INSTANCE}]]"
+            echo "all started;ok;HANA DB is in replication mode logreplay and cannot be connected to"
+
         else
-            HOSTNAME=$(hostname)
-        fi
-
-        CREDENTIALS=$(get_credentials "${USER}" "${PASSWORD}" "${USERSTOREKEY}")
-        SSLOPTION=$(get_ssl_option "$SID" "$HOSTNAME")
-        INSTANCE_STATUS=$(mk_hdbsql "$SID" "$INSTANCE" "$INSTANCE_USER" "SYSTEMDB" "$(query_sap_hana_status)" "$CREDENTIALS" "$SSLOPTION")
-
-        set_sap_hana_version "$INSTANCE_USER"
-
-        query_instance "$SID" "$INSTANCE" "$INSTANCE_USER" "$HOSTNAME" "$SAP_LANDSCAPE" "$INSTANCE_STATUS" "$SSLOPTION"
-        # We only execute all SQL queries in case the SQL DB is open & responding.
-        # Otherwise only execute sections which are using other interfaces (e.g. python or odbcreg).
-        # This accelerates the plugin execution tremendously as we do not have to wait for all the sql timeouts.
-        if [ -n "$INSTANCE_STATUS" ]; then
-            query_databases "$SID" "$INSTANCE" "$INSTANCE_USER" "$HOSTNAME" "$CREDENTIALS" "$SSLOPTION"
+            echo "<<<sap_hana_status:sep(59)>>>"
+            echo "[[${SID} ${INSTANCE}]]"
+            echo "all started;unknown;HANA DB is in replication mode \"$replication_mode\""
         fi
     done
 fi

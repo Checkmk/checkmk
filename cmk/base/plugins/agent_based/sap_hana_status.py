@@ -15,11 +15,15 @@ from .utils import sap_hana
 def parse_sap_hana_status(string_table: StringTable) -> sap_hana.ParsedSection:
     section: sap_hana.ParsedSection = {}
     for sid_instance, lines in sap_hana.parse_sap_hana(string_table).items():
-        section.setdefault(f"Status {sid_instance}", {})
-        section.setdefault(f"Version {sid_instance}", {})
-
         for line in lines:
-            if line[0].lower() == "all started":
+            if line[0].startswith("hdbsql ERROR"):
+                item_name = "Status"
+                item_data = {
+                    "instance": sid_instance,
+                    "state_name": "error",
+                    "message": line[0],
+                }
+            elif line[0].lower() == "all started":
                 item_name = "Status"
                 item_data = {
                     "instance": sid_instance,
@@ -47,7 +51,7 @@ def _check_sap_hana_status_data(data):
     state_name = data["state_name"]
     if state_name.lower() == "ok":
         cur_state = state.OK
-    elif state_name.lower() == "unknown":
+    elif state_name.lower() in ["unknown", "error"]:
         cur_state = state.CRIT
     else:
         cur_state = state.WARN

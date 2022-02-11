@@ -1,0 +1,13 @@
+Title: Avoid unnecessary Liveproxy Daemon restarts upon "Activate changes"
+Class: fix
+Compatible: compat
+Component: liveproxy
+Date: 1644479743
+Edition: cee
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.0.0p20
+
+Depending on the configuration, the Liveproxy Daemon restarted upon every
+"Activate changes", even if there were no relevant configuration changes.

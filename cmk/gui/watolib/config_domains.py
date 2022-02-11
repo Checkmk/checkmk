@@ -262,7 +262,12 @@ class ConfigDomainCACertificates(ABCConfigDomain):
 
         trusted_cas += [ensure_binary(e) for e in current_config["trusted_cas"]]
 
-        store.save_bytes_to_file(self.trusted_cas_file, b"\n".join(trusted_cas))
+        store.save_bytes_to_file(
+            self.trusted_cas_file,
+            # we sort to have a deterministic output, s.t. for example liveproxyd can reliably check
+            # if the file changed
+            b"\n".join(sorted(trusted_cas)),
+        )
         return errors
 
     def _get_system_wide_trusted_ca_certificates(self) -> Tuple[List[bytes], List[str]]:

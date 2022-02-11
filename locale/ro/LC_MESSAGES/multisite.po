@@ -4531,7 +4531,7 @@ msgid ""
 msgstr ""
 
 msgid ""
-"Allows to define absolute levels for running, waiting, terminated and total  "
+"Allows to define absolute levels for running, waiting, terminated and total "
 "containers."
 msgstr ""
 
@@ -7464,10 +7464,6 @@ msgid ""
 "explicit recipient addresses are configured."
 msgstr ""
 
-#, python-format
-msgid "Cannot fetch URL '%s'"
-msgstr ""
-
 msgid "Cannot fetch data via Livestatus"
 msgstr ""
 
@@ -8998,6 +8994,10 @@ msgstr ""
 
 msgid "Cluster type"
 msgstr ""
+
+#, fuzzy
+msgid "Cluster utilization"
+msgstr "Dezactiveaza Notificarile"
 
 msgid "Cluster, Indices and Shard statistics"
 msgstr ""
@@ -13041,10 +13041,6 @@ msgstr ""
 msgid "Deploy without authentication."
 msgstr "Confirma Parola"
 
-#, fuzzy
-msgid "Deployment conditions"
-msgstr "(fără condiții)"
-
 #, python-format
 msgid ""
 "Deployment status of host %s is corrupted. Consider deleting the "
@@ -13325,9 +13321,6 @@ msgstr "Acțiune"
 msgid ""
 "Direct access to global reports, selection for the default reporting time "
 "range, link to report editor."
-msgstr ""
-
-msgid "Direct access to the setup menu"
 msgstr ""
 
 msgid "Direct and buffered I/O operations"
@@ -18189,9 +18182,6 @@ msgstr "Proprietatile Folderului"
 msgid "Folder: %s"
 msgstr "(altul: %s)"
 
-msgid "Folders"
-msgstr ""
-
 msgid ""
 "Folders group your hosts, can inherit attributes and can have permissions."
 msgstr ""
@@ -18615,7 +18605,7 @@ msgstr ""
 msgid "Found no rule packs."
 msgstr "Reguli"
 
-msgid "Found no services yet. To retry please execute a full scan."
+msgid "Found no services yet. To retry please execute a rescan."
 msgstr ""
 
 msgid ""
@@ -18788,6 +18778,17 @@ msgstr ""
 
 msgid "GByte/s"
 msgstr ""
+
+#, fuzzy
+msgid "GCP/GCS Network"
+msgstr "Adresă"
+
+msgid "GCP/GCS Objects"
+msgstr ""
+
+#, fuzzy
+msgid "GCP/GCS Requests"
+msgstr "cereri"
 
 msgid "GET/POST variables of this page"
 msgstr ""
@@ -19707,8 +19708,13 @@ msgid ""
 msgstr ""
 
 msgid ""
-"Here you can configure levels for usage, request utilization and limit "
+"Here you can configure levels for usage, requests utilization and limits "
 "utilization, respectively."
+msgstr ""
+
+msgid ""
+"Here you can configure levels for usage, requests utilization, limits "
+"utilization and node utilization, respectively."
 msgstr ""
 
 msgid ""
@@ -20976,6 +20982,10 @@ msgstr ""
 
 msgid "Hosts"
 msgstr ""
+
+#, fuzzy
+msgid "Hosts & services:"
+msgstr "(fără Nivel de serviciu)"
 
 msgid "Hosts Connected"
 msgstr ""
@@ -24103,6 +24113,10 @@ msgstr ""
 msgid "JQL query: "
 msgstr ""
 
+#, fuzzy
+msgid "JSON credentials for service account"
+msgstr "Conexiuni Active"
+
 msgid "JVM Execute Queue Count"
 msgstr ""
 
@@ -24390,19 +24404,19 @@ msgstr ""
 msgid "Kubernetes Network interfaces"
 msgstr ""
 
-#, fuzzy
-msgid "Kubernetes Pod restarts"
-msgstr "Adresă"
-
 msgid "Kubernetes Port"
 msgstr ""
+
+#, fuzzy
+msgid "Kubernetes deployment conditions"
+msgstr "(fără condiții)"
 
 #, fuzzy
 msgid "Kubernetes memory resource utilization"
 msgstr "Dezactiveaza Notificarile"
 
 #, fuzzy
-msgid "Kubernetes node container count"
+msgid "Kubernetes node containers"
 msgstr "Adresă"
 
 #, fuzzy
@@ -24413,11 +24427,27 @@ msgid "Kubernetes nodes"
 msgstr ""
 
 #, fuzzy
+msgid "Kubernetes pod conditions"
+msgstr "Adresă"
+
+#, fuzzy
+msgid "Kubernetes pod containers"
+msgstr "Adresă"
+
+#, fuzzy
 msgid "Kubernetes pod resources"
 msgstr "Adresă"
 
 #, fuzzy
+msgid "Kubernetes pod restarts"
+msgstr "Adresă"
+
+#, fuzzy
 msgid "Kubernetes pod status"
+msgstr "Adresă"
+
+#, fuzzy
+msgid "Kubernetes replicas"
 msgstr "Adresă"
 
 msgid "Kubernetes resources"
@@ -24425,10 +24455,6 @@ msgstr ""
 
 msgid "Kubernetes roles"
 msgstr ""
-
-#, fuzzy
-msgid "Kubernetes: Replicas"
-msgstr "Adresă"
 
 msgid "L2 cache hit ratio"
 msgstr ""
@@ -25546,12 +25572,12 @@ msgid "Limit to the following services"
 msgstr ""
 
 #, fuzzy
-msgid "Limit utilization"
-msgstr "Dezactiveaza Notificarile"
-
-#, fuzzy
 msgid "Limit width"
 msgstr "latime"
+
+#, fuzzy
+msgid "Limits"
+msgstr "Adaugă limite"
 
 #, fuzzy
 msgid "Limits and levels"
@@ -25559,6 +25585,10 @@ msgstr "doua nivele"
 
 msgid "Limits for the number of used states"
 msgstr ""
+
+#, fuzzy
+msgid "Limits utilization"
+msgstr "Dezactiveaza Notificarile"
 
 msgid "Line"
 msgstr ""
@@ -26735,9 +26765,6 @@ msgid "MTree name"
 msgstr "Nume nou"
 
 msgid "Ma."
-msgstr ""
-
-msgid "Macro Replacement"
 msgstr ""
 
 msgid "Macro name"
@@ -29975,7 +30002,7 @@ msgstr "% utilizare"
 msgid "No data available"
 msgstr ""
 
-msgid "No data for discovery available. Please perform a full scan."
+msgid "No data for discovery available. Please perform a rescan."
 msgstr ""
 
 msgid "No data from any site"
@@ -30002,7 +30029,7 @@ msgstr ""
 msgid "No discoverable hosts found"
 msgstr ""
 
-msgid "No discovery information available. Please perform a full scan."
+msgid "No discovery information available. Please perform a rescan."
 msgstr ""
 
 #, fuzzy
@@ -30023,7 +30050,7 @@ msgstr ""
 
 msgid ""
 "No fresh discovery information available. Using latest cached information. "
-"Please perform a full scan in case you want to discover the current state."
+"Please perform a rescan in case you want to discover the current state."
 msgstr ""
 
 #, python-format
@@ -30294,6 +30321,10 @@ msgstr ""
 
 msgid "Node statistics"
 msgstr ""
+
+#, fuzzy
+msgid "Node utilization"
+msgstr "Dezactiveaza Notificarile"
 
 msgid "Nodes"
 msgstr ""
@@ -32839,9 +32870,6 @@ msgstr ""
 msgid "Paragraph of text"
 msgstr ""
 
-msgid "Paragraph of text fetched via HTTP(s)"
-msgstr ""
-
 #, fuzzy
 msgid "Parallel connections"
 msgstr "Numarul maxim de conexiuni paralele"
@@ -32892,6 +32920,17 @@ msgstr ""
 msgid "Parameters for the Windows Update Check with WSUS"
 msgstr ""
 
+#, fuzzy
+msgid "Parameters for the bucket network io"
+msgstr " pe siteul de monitorizare: "
+
+msgid "Parameters for the bucket objects io"
+msgstr ""
+
+#, fuzzy
+msgid "Parameters for the bucket requests"
+msgstr "trei nivele"
+
 msgid "Parameters for this host"
 msgstr ""
 
@@ -32902,6 +32941,20 @@ msgid ""
 "Parameters must contain only A-Z, a-z, 0-9 and _ and must not begin with a "
 "digit."
 msgstr ""
+
+msgid "Parameters of bucket object counts"
+msgstr ""
+
+msgid "Parameters of total bucket size"
+msgstr ""
+
+#, fuzzy
+msgid "Parameters received bytes"
+msgstr "Sterge Elementul"
+
+#, fuzzy
+msgid "Parameters send bytes"
+msgstr "Numele Elementului"
 
 #, fuzzy
 msgid "Parameters:"
@@ -34182,14 +34235,6 @@ msgid "Pod Restarts"
 msgstr "Numele Elementului"
 
 #, fuzzy
-msgid "Pod conditions"
-msgstr "%d condiții"
-
-#, fuzzy
-msgid "Pod containers"
-msgstr "doua nivele"
-
-#, fuzzy
 msgid "Pod request"
 msgstr "cereri"
 
@@ -34283,9 +34328,6 @@ msgid "Positive match (Add matching hosts to the set)"
 msgstr ""
 
 msgid "Positive match (Add matching services to the set)"
-msgstr ""
-
-msgid "Possible are 'user', 'operator', 'admin'"
 msgstr ""
 
 msgid ""
@@ -36269,9 +36311,6 @@ msgstr ""
 msgid "Repetition change for item {diff_path}."
 msgstr ""
 
-msgid "Replace macros in fetched text body"
-msgstr ""
-
 msgid ""
 "Replace the application (syslog tag) with this text. If you have bracketed "
 "groups in the text to match, then you can use the placeholders <tt>\\1</tt>, "
@@ -36404,11 +36443,6 @@ msgstr ""
 msgid "Report generation started in background job <a href=\"%s\">%s</a>"
 msgstr ""
 
-msgid ""
-"Report macros such as <tt>$HOSTNAME$</tt> will be replaced if found in the "
-"URL. That way you can create dynamic URLs."
-msgstr ""
-
 msgid "Report of Host"
 msgstr ""
 
@@ -36469,12 +36503,12 @@ msgstr "cereri/sec"
 msgid "Request rate"
 msgstr "cereri/sec"
 
-#, fuzzy
-msgid "Request utilization"
-msgstr "Dezactiveaza Notificarile"
-
 msgid "Request wait time"
 msgstr ""
+
+#, fuzzy
+msgid "Requests"
+msgstr "cereri"
 
 msgid "Requests data about Elasticsearch clusters, nodes and indices."
 msgstr ""
@@ -36501,6 +36535,10 @@ msgstr "cereri/sec"
 #, fuzzy
 msgid "Requests per second"
 msgstr "cereri/sec"
+
+#, fuzzy
+msgid "Requests utilization"
+msgstr "Dezactiveaza Notificarile"
 
 #, fuzzy
 msgid "Require a comment"
@@ -38689,6 +38727,10 @@ msgid "Service discovery"
 msgstr ""
 
 #, fuzzy
+msgid "Service discovery details"
+msgstr "(fără Nivel de serviciu)"
+
+#, fuzzy
 msgid "Service discovery rules"
 msgstr "(fără Nivel de serviciu)"
 
@@ -38967,10 +39009,6 @@ msgid ""
 "that already exist will continued to be monitored but be marked as obsolete "
 "in the service list of a host."
 msgstr ""
-
-#, fuzzy
-msgid "Services/Host labels to fix"
-msgstr "Numele Elementului"
 
 #, python-format
 msgid "Services: %d total (%d added, %d removed, %d kept)"
@@ -43311,10 +43349,6 @@ msgid "Testing"
 msgstr "testare"
 
 msgid "Text"
-msgstr ""
-
-#, python-format
-msgid "Text from URL %s"
 msgstr ""
 
 msgid "Text groups from regular expression match, separated by spaces"
@@ -49166,12 +49200,6 @@ msgid ""
 msgstr ""
 
 msgid ""
-"This snapin shows the folders defined in WATO. It can be used to open views "
-"filtered by the WATO folder. This snapin interacts with the \"Views\" "
-"snapin, when both are enabled."
-msgstr ""
-
-msgid ""
 "This snapin shows tree views of your hosts based on their tag "
 "classifications. You can configure which tags to use in your global settings "
 "of Multisite."
@@ -50863,9 +50891,6 @@ msgstr ""
 msgid "URL to central site"
 msgstr "(Nu trimite site-ului de la distanță)"
 
-msgid "URL to fetch text from"
-msgstr ""
-
 msgid ""
 "URL under that the remote server is accessible from its monitored hosts, "
 "including the protocol (<tt>http://</tt> or <tt>https://</tt>) and </tt>/"
@@ -51865,6 +51890,10 @@ msgid "Upper levels for clients"
 msgstr "Nivel-urile absolute de licențe neutilizate"
 
 #, fuzzy
+msgid "Upper levels for cluster utilization"
+msgstr "Dezactiveaza Notificarile"
+
+#, fuzzy
 msgid "Upper levels for code size"
 msgstr "Nivel-urile absolute de licențe neutilizate"
 
@@ -51954,7 +51983,7 @@ msgid "Upper levels for license usage"
 msgstr "Nivel-urile absolute de licențe neutilizate"
 
 #, fuzzy
-msgid "Upper levels for limit utilization"
+msgid "Upper levels for limits utilization"
 msgstr "Dezactiveaza Notificarile"
 
 #, fuzzy
@@ -51972,6 +52001,10 @@ msgstr "trei nivele"
 #, fuzzy
 msgid "Upper levels for memory used in percent of the Lambda function limit"
 msgstr "Nivel-urile absolute de licențe neutilizate"
+
+#, fuzzy
+msgid "Upper levels for node utilization"
+msgstr "Dezactiveaza Notificarile"
 
 msgid "Upper levels for number of OSDs which are down"
 msgstr ""
@@ -52014,7 +52047,7 @@ msgid "Upper levels for rate of server errors"
 msgstr ""
 
 #, fuzzy
-msgid "Upper levels for request utilization"
+msgid "Upper levels for requests utilization"
 msgstr "Dezactiveaza Notificarile"
 
 #, fuzzy
@@ -57815,10 +57848,6 @@ msgstr ""
 msgid "jobs"
 msgstr ""
 
-#, fuzzy
-msgid "json credentials for service accoun"
-msgstr "Conexiuni Active"
-
 msgid "kW"
 msgstr ""
 
@@ -58857,6 +58886,23 @@ msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr ""
 
 #, fuzzy
+#~ msgid "Define lower levels for free pods (nodes only)"
+#~ msgstr "Numarul maxim de conexiuni"
+
+#, fuzzy
+#~| msgid "%d conditions"
+#~ msgid "Pod conditions"
+#~ msgstr "%d condiții"
+
+#, fuzzy
+#~ msgid "Pod containers"
+#~ msgstr "doua nivele"
+
+#, fuzzy
+#~ msgid "Services/Host labels to fix"
+#~ msgstr "Numele Elementului"
+
+#, fuzzy
 #~ msgid "Cluster agent connection"
 #~ msgstr "Perioada de timp Noua"
 
@@ -59432,10 +59478,6 @@ msgstr ""
 #~ msgstr "Output adițional de la Plugin"
 
 #, fuzzy
-#~ msgid "Host & service events"
-#~ msgstr "(fără Nivel de serviciu)"
-
-#, fuzzy
 #~ msgid "Host & service history"
 #~ msgstr "(fără Nivel de serviciu)"
 
@@ -59853,10 +59895,6 @@ msgstr ""
 #~ msgstr "trei nivele"
 
 #, fuzzy
-#~ msgid "Percentage of blocked requests"
-#~ msgstr "trei nivele"
-
-#, fuzzy
 #~ msgid "Physical CPU consumption"
 #~ msgstr "APC consum de Curent"
 
@@ -59887,10 +59925,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Problem aggregations"
 #~ msgstr "Agregare noua"
-
-#, fuzzy
-#~ msgid "Processed Bytes"
-#~ msgstr "Numele Elementului"
 
 #, fuzzy
 #~ msgid "Processes"
@@ -63253,10 +63287,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "New tag group"
 #~ msgstr "Adaugă group de model"
-
-#, fuzzy
-#~ msgid "POST Requests"
-#~ msgstr "cereri"
 
 #, fuzzy
 #~ msgid "SELECT Requests"

@@ -4612,7 +4612,7 @@ msgstr ""
 
 #, fuzzy
 msgid ""
-"Allows to define absolute levels for running, waiting, terminated and total  "
+"Allows to define absolute levels for running, waiting, terminated and total "
 "containers."
 msgstr ""
 "実行中、一時停止中、および停止中のすべてのコンテナーの絶対レベルを定義できま"
@@ -7654,10 +7654,6 @@ msgstr ""
 "レポートを電子メールで送信できません:所有者%sに電子メールアドレスがなく、明示"
 "的な受信者アドレスが構成されていません。"
 
-#, python-format
-msgid "Cannot fetch URL '%s'"
-msgstr "URL '%s'を取得できません"
-
 msgid "Cannot fetch data via Livestatus"
 msgstr "Livestatus経由でデータをフェッチできません"
 
@@ -9229,6 +9225,10 @@ msgstr "クラスタートラフィック統計"
 
 msgid "Cluster type"
 msgstr "クラスタータイプ"
+
+#, fuzzy
+msgid "Cluster utilization"
+msgstr "テープの使用率"
 
 msgid "Cluster, Indices and Shard statistics"
 msgstr "クラスター、インデックス、シャードの統計"
@@ -13162,10 +13162,6 @@ msgstr "pleskプラグインをデプロイする"
 msgid "Deploy without authentication."
 msgstr "パスワード認証を許可する"
 
-#, fuzzy
-msgid "Deployment conditions"
-msgstr "条件を適用する"
-
 #, python-format
 msgid ""
 "Deployment status of host %s is corrupted. Consider deleting the "
@@ -13444,9 +13440,6 @@ msgid ""
 msgstr ""
 "グローバルレポートへの直接アクセス、デフォルトのレポート時間範囲の選択、レ"
 "ポートエディタへのリンク。"
-
-msgid "Direct access to the setup menu"
-msgstr "セットアップメニューへの直接アクセス"
 
 msgid "Direct and buffered I/O operations"
 msgstr "直接およびバッファI/O操作"
@@ -18178,9 +18171,6 @@ msgstr "フォルダツリー"
 msgid "Folder: %s"
 msgstr "フォルダ: %s"
 
-msgid "Folders"
-msgstr "フォルダー"
-
 msgid ""
 "Folders group your hosts, can inherit attributes and can have permissions."
 msgstr ""
@@ -18654,7 +18644,8 @@ msgstr "一致する行が見つかりませんでした。別の検索語を試
 msgid "Found no rule packs."
 msgstr "ルールパックが見つかりませんでした。"
 
-msgid "Found no services yet. To retry please execute a full scan."
+#, fuzzy
+msgid "Found no services yet. To retry please execute a rescan."
 msgstr ""
 "まだサービスが見つかりません。再試行するには、フルスキャンを実行してくださ"
 "い。"
@@ -18830,6 +18821,18 @@ msgstr "GB"
 
 msgid "GByte/s"
 msgstr "ギガバイト/秒"
+
+#, fuzzy
+msgid "GCP/GCS Network"
+msgstr "IPネットワーク"
+
+#, fuzzy
+msgid "GCP/GCS Objects"
+msgstr "オブジェクト"
+
+#, fuzzy
+msgid "GCP/GCS Requests"
+msgstr "IPv6リクエスト"
 
 msgid "GET/POST variables of this page"
 msgstr ""
@@ -19751,8 +19754,14 @@ msgstr ""
 
 #, fuzzy
 msgid ""
-"Here you can configure levels for usage, request utilization and limit "
+"Here you can configure levels for usage, requests utilization and limits "
 "utilization, respectively."
+msgstr "ここでは、シングルコアのCPU使用率のレベルを設定できます"
+
+#, fuzzy
+msgid ""
+"Here you can configure levels for usage, requests utilization, limits "
+"utilization and node utilization, respectively."
 msgstr "ここでは、シングルコアのCPU使用率のレベルを設定できます"
 
 msgid ""
@@ -21121,6 +21130,10 @@ msgstr "解決するホスト名"
 
 msgid "Hosts"
 msgstr "ホスト"
+
+#, fuzzy
+msgid "Hosts & services:"
+msgstr "ホスト&サービスイベント"
 
 msgid "Hosts Connected"
 msgstr "接続されているホスト"
@@ -24711,6 +24724,10 @@ msgstr "Jolokiaを使用したJava JVMのJMXモニタリング"
 msgid "JQL query: "
 msgstr "JQLクエリ: "
 
+#, fuzzy
+msgid "JSON credentials for service account"
+msgstr "SNMP資格情報"
+
 msgid "JVM Execute Queue Count"
 msgstr "JVM実行キューカウント"
 
@@ -24986,19 +25003,19 @@ msgstr "Kubernetes名前空間Podのメモリ使用量"
 msgid "Kubernetes Network interfaces"
 msgstr "Kubernetesネットワークインターフェース"
 
-#, fuzzy
-msgid "Kubernetes Pod restarts"
-msgstr "Kubernetesポート"
-
 msgid "Kubernetes Port"
 msgstr "Kubernetesポート"
+
+#, fuzzy
+msgid "Kubernetes deployment conditions"
+msgstr "条件を適用する"
 
 #, fuzzy
 msgid "Kubernetes memory resource utilization"
 msgstr "Kubernetesリソース"
 
 #, fuzzy
-msgid "Kubernetes node container count"
+msgid "Kubernetes node containers"
 msgstr "Kubernetesノード"
 
 #, fuzzy
@@ -25009,22 +25026,34 @@ msgid "Kubernetes nodes"
 msgstr "Kubernetesノード"
 
 #, fuzzy
+msgid "Kubernetes pod conditions"
+msgstr "Kubernetesノード"
+
+#, fuzzy
+msgid "Kubernetes pod containers"
+msgstr "Kubernetesノード"
+
+#, fuzzy
 msgid "Kubernetes pod resources"
 msgstr "Kubernetesリソース"
 
 #, fuzzy
+msgid "Kubernetes pod restarts"
+msgstr "Kubernetesポート"
+
+#, fuzzy
 msgid "Kubernetes pod status"
 msgstr "Kubernetesポート"
+
+#, fuzzy
+msgid "Kubernetes replicas"
+msgstr "Kubernetesノード"
 
 msgid "Kubernetes resources"
 msgstr "Kubernetesリソース"
 
 msgid "Kubernetes roles"
 msgstr "Kubernetesの役割"
-
-#, fuzzy
-msgid "Kubernetes: Replicas"
-msgstr "Kubernetesノード"
 
 msgid "L2 cache hit ratio"
 msgstr "L2キャッシュヒット率"
@@ -26046,18 +26075,22 @@ msgstr "次のホストに制限する"
 msgid "Limit to the following services"
 msgstr "以下のサービスに限定する"
 
-#, fuzzy
-msgid "Limit utilization"
-msgstr "ディスク使用率"
-
 msgid "Limit width"
 msgstr "幅を制限する"
+
+#, fuzzy
+msgid "Limits"
+msgstr "制限"
 
 msgid "Limits and levels"
 msgstr "制限とレベル"
 
 msgid "Limits for the number of used states"
 msgstr ""
+
+#, fuzzy
+msgid "Limits utilization"
+msgstr "ディスク使用率"
 
 msgid "Line"
 msgstr "ライン"
@@ -27174,9 +27207,6 @@ msgstr "MTree名"
 
 msgid "Ma."
 msgstr "Ma."
-
-msgid "Macro Replacement"
-msgstr "マクロの置き換え"
 
 msgid "Macro name"
 msgstr "マクロ名"
@@ -30226,7 +30256,8 @@ msgstr "データなし"
 msgid "No data available"
 msgstr "データなし"
 
-msgid "No data for discovery available. Please perform a full scan."
+#, fuzzy
+msgid "No data for discovery available. Please perform a rescan."
 msgstr ""
 "利用可能な発見のためのデータがありません。フルスキャンを実行してください。"
 
@@ -30257,7 +30288,8 @@ msgstr ""
 msgid "No discoverable hosts found"
 msgstr "一致するホストが見つかりません。"
 
-msgid "No discovery information available. Please perform a full scan."
+#, fuzzy
+msgid "No discovery information available. Please perform a rescan."
 msgstr "利用可能な発見情報はありません。フルスキャンを実行してください。"
 
 msgid "No entries"
@@ -30275,9 +30307,10 @@ msgstr "明示的な資格情報はありません"
 msgid "No forwarding"
 msgstr "転送なし"
 
+#, fuzzy
 msgid ""
 "No fresh discovery information available. Using latest cached information. "
-"Please perform a full scan in case you want to discover the current state."
+"Please perform a rescan in case you want to discover the current state."
 msgstr ""
 "利用可能な新しい発見情報はありません。最新のキャッシュ情報を使用します。現在"
 "の状態を知りたい場合は、フルスキャンを実行してください。"
@@ -30536,6 +30569,10 @@ msgstr "ノードの状態: オフライン"
 
 msgid "Node statistics"
 msgstr "ノード統計"
+
+#, fuzzy
+msgid "Node utilization"
+msgstr "テープの使用率"
 
 msgid "Nodes"
 msgstr "ノード"
@@ -33031,9 +33068,6 @@ msgstr "紙の余白"
 msgid "Paragraph of text"
 msgstr "テキストの段落"
 
-msgid "Paragraph of text fetched via HTTP(s)"
-msgstr "HTTP(s)経由でフェッチされたテキストの段落"
-
 msgid "Parallel connections"
 msgstr "並列接続"
 
@@ -33088,6 +33122,18 @@ msgstr "スイッチポートインベントリのパラメータ"
 msgid "Parameters for the Windows Update Check with WSUS"
 msgstr "WSUSを使用したWindows Updateチェックのパラメーター"
 
+#, fuzzy
+msgid "Parameters for the bucket network io"
+msgstr "スイッチポートインベントリのパラメータ"
+
+#, fuzzy
+msgid "Parameters for the bucket objects io"
+msgstr "このホストのパラメーター"
+
+#, fuzzy
+msgid "Parameters for the bucket requests"
+msgstr "このホストのパラメーター"
+
 msgid "Parameters for this host"
 msgstr "このホストのパラメーター"
 
@@ -33100,6 +33146,21 @@ msgid ""
 msgstr ""
 "パラメータには、AZ、az、0〜9、および_のみを含める必要があり、数字で始めること"
 "はできません。"
+
+msgid "Parameters of bucket object counts"
+msgstr ""
+
+#, fuzzy
+msgid "Parameters of total bucket size"
+msgstr "最大バケットサイズ"
+
+#, fuzzy
+msgid "Parameters received bytes"
+msgstr "%sのパラメータ"
+
+#, fuzzy
+msgid "Parameters send bytes"
+msgstr "%sのパラメータ"
 
 msgid "Parameters:"
 msgstr "パラメーター:"
@@ -34423,14 +34484,6 @@ msgstr ""
 msgid "Pod Restarts"
 msgstr "再起動"
 
-#, fuzzy
-msgid "Pod conditions"
-msgstr "%d条件"
-
-#, fuzzy
-msgid "Pod containers"
-msgstr "一時停止したコンテナ"
-
 msgid "Pod request"
 msgstr "Podリクエスト"
 
@@ -34522,9 +34575,6 @@ msgstr "正の一致(一致するホストをセットに追加)"
 
 msgid "Positive match (Add matching services to the set)"
 msgstr "ポジティブマッチ(マッチングサービスをセットに追加)"
-
-msgid "Possible are 'user', 'operator', 'admin'"
-msgstr "可能なのは[user]、[operator]、[admin]です。"
 
 msgid ""
 "Possible values are the following: cpgs, volumes, hosts, capacity, system, "
@@ -36406,9 +36456,6 @@ msgstr "このダウンタイムを定期的に繰り返します"
 msgid "Repetition change for item {diff_path}."
 msgstr "アイテム {diff_path}の繰り返しの変更。"
 
-msgid "Replace macros in fetched text body"
-msgstr "フェッチされたテキスト本文のマクロを置き換える"
-
 msgid ""
 "Replace the application (syslog tag) with this text. If you have bracketed "
 "groups in the text to match, then you can use the placeholders <tt>\\1</tt>, "
@@ -36554,11 +36601,6 @@ msgid "Report generation started in background job <a href=\"%s\">%s</a>"
 msgstr ""
 "レポートの生成はバックグラウンドジョブ<ahref = \"%s\">%s </a>で開始されました"
 
-msgid ""
-"Report macros such as <tt>$HOSTNAME$</tt> will be replaced if found in the "
-"URL. That way you can create dynamic URLs."
-msgstr ""
-
 msgid "Report of Host"
 msgstr "ホストのレポート"
 
@@ -36611,12 +36653,12 @@ msgstr "メトリックを要求する"
 msgid "Request rate"
 msgstr "リクエストレート"
 
-#, fuzzy
-msgid "Request utilization"
-msgstr "テープの使用率"
-
 msgid "Request wait time"
 msgstr "待ち時間をリクエストする"
+
+#, fuzzy
+msgid "Requests"
+msgstr "リクエスト"
 
 msgid "Requests data about Elasticsearch clusters, nodes and indices."
 msgstr ""
@@ -36641,6 +36683,10 @@ msgstr "接続ごとのリクエスト"
 
 msgid "Requests per second"
 msgstr "1秒あたりのリクエスト数"
+
+#, fuzzy
+msgid "Requests utilization"
+msgstr "テープの使用率"
 
 msgid "Require a comment"
 msgstr "コメントが必要"
@@ -38749,6 +38795,10 @@ msgstr "サービスの説明"
 msgid "Service discovery"
 msgstr "サービスディスカバリ"
 
+#, fuzzy
+msgid "Service discovery details"
+msgstr "サービス検出ルール"
+
 msgid "Service discovery rules"
 msgstr "サービス検出ルール"
 
@@ -39004,9 +39054,6 @@ msgstr ""
 "このルールセットによって<u>無効</u>として宣言されたサービスは、検出(自動サー"
 "ビス検出)中にホストに追加されません。すでに存在するサービスは引き続き監視され"
 "ますが、ホストのサービスリストで廃止としてマークされます。"
-
-msgid "Services/Host labels to fix"
-msgstr "修正するサービス/ホストラベル"
 
 #, python-format
 msgid "Services: %d total (%d added, %d removed, %d kept)"
@@ -43370,10 +43417,6 @@ msgstr "テスト"
 
 msgid "Text"
 msgstr "テキスト"
-
-#, python-format
-msgid "Text from URL %s"
-msgstr "URL %s からのテキスト"
 
 msgid "Text groups from regular expression match, separated by spaces"
 msgstr "スペースで区切られた正規表現一致のテキストグループ"
@@ -50530,15 +50573,6 @@ msgid ""
 msgstr ""
 
 msgid ""
-"This snapin shows the folders defined in WATO. It can be used to open views "
-"filtered by the WATO folder. This snapin interacts with the \"Views\" "
-"snapin, when both are enabled."
-msgstr ""
-"このスナップインには、WATOで定義されているフォルダが表示されます。WATOフォル"
-"ダでフィルタリングされたビューを開くために使用できます。このスナップインは、"
-"両方が有効になっている場合、[ビュー]スナップインと相互作用します。"
-
-msgid ""
 "This snapin shows tree views of your hosts based on their tag "
 "classifications. You can configure which tags to use in your global settings "
 "of Multisite."
@@ -52261,9 +52295,6 @@ msgstr ""
 msgid "URL to central site"
 msgstr "中央サイトへのURL"
 
-msgid "URL to fetch text from"
-msgstr "テキストをフェッチするURL"
-
 msgid ""
 "URL under that the remote server is accessible from its monitored hosts, "
 "including the protocol (<tt>http://</tt> or <tt>https://</tt>) and </tt>/"
@@ -53232,6 +53263,10 @@ msgid "Upper levels for clients"
 msgstr "クライアントの上位レベル"
 
 #, fuzzy
+msgid "Upper levels for cluster utilization"
+msgstr "ディスク使用率の上位レベル"
+
+#, fuzzy
 msgid "Upper levels for code size"
 msgstr "サイズの上位レベル"
 
@@ -53315,7 +53350,7 @@ msgid "Upper levels for license usage"
 msgstr "ライセンス使用の上位レベル"
 
 #, fuzzy
-msgid "Upper levels for limit utilization"
+msgid "Upper levels for limits utilization"
 msgstr "ディスク使用率の上位レベル"
 
 msgid "Upper levels for load balancer capacity units"
@@ -53331,6 +53366,10 @@ msgstr "HTTPエラーの上位レベル"
 #, fuzzy
 msgid "Upper levels for memory used in percent of the Lambda function limit"
 msgstr "更新期間の上位レベル"
+
+#, fuzzy
+msgid "Upper levels for node utilization"
+msgstr "ディスク使用率の上位レベル"
 
 msgid "Upper levels for number of OSDs which are down"
 msgstr "ダウンしているOSDsの数の上位レベル"
@@ -53371,7 +53410,7 @@ msgid "Upper levels for rate of server errors"
 msgstr "サーバーエラー率の上位レベル"
 
 #, fuzzy
-msgid "Upper levels for request utilization"
+msgid "Upper levels for requests utilization"
 msgstr "ディスク使用率の上位レベル"
 
 msgid "Upper levels for reserved space"
@@ -59716,10 +59755,6 @@ msgstr "ジッター"
 msgid "jobs"
 msgstr "仕事"
 
-#, fuzzy
-msgid "json credentials for service accoun"
-msgstr "SNMP資格情報"
-
 msgid "kW"
 msgstr "kW"
 
@@ -60714,6 +60749,62 @@ msgstr "z/OS"
 #, fuzzy, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. All Rights Reserved."
+
+#, python-format
+#~ msgid "Cannot fetch URL '%s'"
+#~ msgstr "URL '%s'を取得できません"
+
+#, fuzzy
+#~| msgid "Number of containers"
+#~ msgid "Define lower levels for free pods (nodes only)"
+#~ msgstr "コンテナの数"
+
+#~ msgid "Macro Replacement"
+#~ msgstr "マクロの置き換え"
+
+#~ msgid "Paragraph of text fetched via HTTP(s)"
+#~ msgstr "HTTP(s)経由でフェッチされたテキストの段落"
+
+#, fuzzy
+#~| msgid "%d conditions"
+#~ msgid "Pod conditions"
+#~ msgstr "%d条件"
+
+#, fuzzy
+#~| msgid "Paused containers"
+#~ msgid "Pod containers"
+#~ msgstr "一時停止したコンテナ"
+
+#~ msgid "Replace macros in fetched text body"
+#~ msgstr "フェッチされたテキスト本文のマクロを置き換える"
+
+#, python-format
+#~ msgid "Text from URL %s"
+#~ msgstr "URL %s からのテキスト"
+
+#~ msgid "URL to fetch text from"
+#~ msgstr "テキストをフェッチするURL"
+
+#~ msgid "Possible are 'user', 'operator', 'admin'"
+#~ msgstr "可能なのは[user]、[operator]、[admin]です。"
+
+#~ msgid "Services/Host labels to fix"
+#~ msgstr "修正するサービス/ホストラベル"
+
+#~ msgid "Direct access to the setup menu"
+#~ msgstr "セットアップメニューへの直接アクセス"
+
+#~ msgid "Folders"
+#~ msgstr "フォルダー"
+
+#~ msgid ""
+#~ "This snapin shows the folders defined in WATO. It can be used to open "
+#~ "views filtered by the WATO folder. This snapin interacts with the \"Views"
+#~ "\" snapin, when both are enabled."
+#~ msgstr ""
+#~ "このスナップインには、WATOで定義されているフォルダが表示されます。WATOフォ"
+#~ "ルダでフィルタリングされたビューを開くために使用できます。このスナップイン"
+#~ "は、両方が有効になっている場合、[ビュー]スナップインと相互作用します。"
 
 #, fuzzy
 #~| msgid "Checkmk Agent Version"
@@ -62183,9 +62274,6 @@ msgstr "© 2020 tribe29 GmbH. All Rights Reserved."
 #~ msgid "Host %s"
 #~ msgstr "ホスト %s"
 
-#~ msgid "Host & service events"
-#~ msgstr "ホスト&サービスイベント"
-
 #~ msgid "Host & service history"
 #~ msgstr "ホストとサービスの履歴"
 
@@ -62266,9 +62354,6 @@ msgstr "© 2020 tribe29 GmbH. All Rights Reserved."
 
 #~ msgid "IPv6 Processed Bytes"
 #~ msgstr "IPv6処理バイト"
-
-#~ msgid "IPv6 Requests"
-#~ msgstr "IPv6リクエスト"
 
 #~ msgid "IPv6 Subnet"
 #~ msgstr "IPv6サブネット"
@@ -62383,9 +62468,6 @@ msgstr "© 2020 tribe29 GmbH. All Rights Reserved."
 
 #~ msgid "Large pool size"
 #~ msgstr "大きなプールサイズ"
-
-#~ msgid "Largest bucket size"
-#~ msgstr "最大バケットサイズ"
 
 #~ msgid "Largest vault size"
 #~ msgstr "最大のボールトサイズ"
@@ -62721,9 +62803,6 @@ msgstr "© 2020 tribe29 GmbH. All Rights Reserved."
 
 #~ msgid "OK services"
 #~ msgstr "OKサービス"
-
-#~ msgid "Objects"
-#~ msgstr "オブジェクト"
 
 #~ msgid "Offline hosts"
 #~ msgstr "オフラインホスト"

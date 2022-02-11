@@ -4811,7 +4811,7 @@ msgstr ""
 
 #, fuzzy
 msgid ""
-"Allows to define absolute levels for running, waiting, terminated and total  "
+"Allows to define absolute levels for running, waiting, terminated and total "
 "containers."
 msgstr ""
 "Permite definir niveles absolutos para todos los contenedores, en ejecución, "
@@ -8008,10 +8008,6 @@ msgstr ""
 "tiene una dirección de correo electrónico y no se han configurado "
 "direcciones de destinatarios explícitas."
 
-#, python-format
-msgid "Cannot fetch URL '%s'"
-msgstr "No se puede recuperar la URL '%s'"
-
 msgid "Cannot fetch data via Livestatus"
 msgstr "No se pueden obtener datos a través de Livestatus"
 
@@ -9655,6 +9651,10 @@ msgstr "Estadísticas de tráfico del clúster"
 
 msgid "Cluster type"
 msgstr "Tipo de racimo"
+
+#, fuzzy
+msgid "Cluster utilization"
+msgstr "Utilización de cintas"
 
 msgid "Cluster, Indices and Shard statistics"
 msgstr "Estadísticas de clústeres, índices y fragmentos"
@@ -13734,10 +13734,6 @@ msgstr "Desplegar los plugins de plesk"
 msgid "Deploy without authentication."
 msgstr "Permitir la autenticación con contraseña"
 
-#, fuzzy
-msgid "Deployment conditions"
-msgstr "Aplicar condiciones"
-
 #, python-format
 msgid ""
 "Deployment status of host %s is corrupted. Consider deleting the "
@@ -14030,9 +14026,6 @@ msgid ""
 msgstr ""
 "Acceso directo a los informes globales, selección del intervalo de tiempo de "
 "los informes por defecto, enlace al editor de informes."
-
-msgid "Direct access to the setup menu"
-msgstr "Acceso directo al menú de configuración"
 
 msgid "Direct and buffered I/O operations"
 msgstr "Operaciones de E/S directas y con búfer"
@@ -18883,9 +18876,6 @@ msgstr "Árbol plegable"
 msgid "Folder: %s"
 msgstr "Carpeta: %s"
 
-msgid "Folders"
-msgstr "Carpetas"
-
 msgid ""
 "Folders group your hosts, can inherit attributes and can have permissions."
 msgstr ""
@@ -19399,7 +19389,8 @@ msgstr ""
 msgid "Found no rule packs."
 msgstr "No he encontrado ningún paquete de reglas."
 
-msgid "Found no services yet. To retry please execute a full scan."
+#, fuzzy
+msgid "Found no services yet. To retry please execute a rescan."
 msgstr ""
 "Todavía no se ha encontrado ningún servicio. Para volver a intentarlo, "
 "ejecute un escaneo completo."
@@ -19580,6 +19571,18 @@ msgstr "GB"
 
 msgid "GByte/s"
 msgstr "GByte/s"
+
+#, fuzzy
+msgid "GCP/GCS Network"
+msgstr "Red IP"
+
+#, fuzzy
+msgid "GCP/GCS Objects"
+msgstr "Objetos"
+
+#, fuzzy
+msgid "GCP/GCS Requests"
+msgstr "Solicitudes de IPv6"
 
 msgid "GET/POST variables of this page"
 msgstr "Variables GET/POST de esta página"
@@ -20542,8 +20545,16 @@ msgstr ""
 
 #, fuzzy
 msgid ""
-"Here you can configure levels for usage, request utilization and limit "
+"Here you can configure levels for usage, requests utilization and limits "
 "utilization, respectively."
+msgstr ""
+"Aquí puede establecer los niveles de utilización de la CPU en los núcleos "
+"individuales"
+
+#, fuzzy
+msgid ""
+"Here you can configure levels for usage, requests utilization, limits "
+"utilization and node utilization, respectively."
 msgstr ""
 "Aquí puede establecer los niveles de utilización de la CPU en los núcleos "
 "individuales"
@@ -22012,6 +22023,10 @@ msgstr "Nombres de host para resolver"
 
 msgid "Hosts"
 msgstr "Anfitriones"
+
+#, fuzzy
+msgid "Hosts & services:"
+msgstr "Acogida y servicio de eventos"
 
 msgid "Hosts Connected"
 msgstr "Anfitriones conectados"
@@ -25887,6 +25902,10 @@ msgstr "Monitorización JMX de JVMs de Java con Jolokia"
 msgid "JQL query: "
 msgstr "Consulta JQL: "
 
+#, fuzzy
+msgid "JSON credentials for service account"
+msgstr "Credenciales SNMP"
+
 msgid "JVM Execute Queue Count"
 msgstr "Recuento de colas de ejecución de la JVM"
 
@@ -26164,19 +26183,19 @@ msgstr "Uso de la memoria de los pods Kubernetes Namespaced"
 msgid "Kubernetes Network interfaces"
 msgstr "Interfaces de red de Kubernetes"
 
-#, fuzzy
-msgid "Kubernetes Pod restarts"
-msgstr "Puerto Kubernetes"
-
 msgid "Kubernetes Port"
 msgstr "Puerto Kubernetes"
+
+#, fuzzy
+msgid "Kubernetes deployment conditions"
+msgstr "Aplicar condiciones"
 
 #, fuzzy
 msgid "Kubernetes memory resource utilization"
 msgstr "Recursos de Kubernetes"
 
 #, fuzzy
-msgid "Kubernetes node container count"
+msgid "Kubernetes node containers"
 msgstr "Nodos Kubernetes"
 
 #, fuzzy
@@ -26187,22 +26206,34 @@ msgid "Kubernetes nodes"
 msgstr "Nodos Kubernetes"
 
 #, fuzzy
+msgid "Kubernetes pod conditions"
+msgstr "Nodos Kubernetes"
+
+#, fuzzy
+msgid "Kubernetes pod containers"
+msgstr "Nodos Kubernetes"
+
+#, fuzzy
 msgid "Kubernetes pod resources"
 msgstr "Recursos de Kubernetes"
 
 #, fuzzy
+msgid "Kubernetes pod restarts"
+msgstr "Puerto Kubernetes"
+
+#, fuzzy
 msgid "Kubernetes pod status"
 msgstr "Puerto Kubernetes"
+
+#, fuzzy
+msgid "Kubernetes replicas"
+msgstr "Nodos Kubernetes"
 
 msgid "Kubernetes resources"
 msgstr "Recursos de Kubernetes"
 
 msgid "Kubernetes roles"
 msgstr "Roles de Kubernetes"
-
-#, fuzzy
-msgid "Kubernetes: Replicas"
-msgstr "Nodos Kubernetes"
 
 msgid "L2 cache hit ratio"
 msgstr "Índice de aciertos de la caché L2"
@@ -27252,18 +27283,22 @@ msgstr "Limitar a los siguientes anfitriones"
 msgid "Limit to the following services"
 msgstr "Limitar a los siguientes servicios"
 
-#, fuzzy
-msgid "Limit utilization"
-msgstr "Utilización del disco"
-
 msgid "Limit width"
 msgstr "Limitar la anchura"
+
+#, fuzzy
+msgid "Limits"
+msgstr "Limite"
 
 msgid "Limits and levels"
 msgstr "Límites y niveles"
 
 msgid "Limits for the number of used states"
 msgstr "Límites del número de estados utilizados"
+
+#, fuzzy
+msgid "Limits utilization"
+msgstr "Utilización del disco"
 
 msgid "Line"
 msgstr "Línea"
@@ -28408,9 +28443,6 @@ msgstr "Nombre del árbol MT"
 
 msgid "Ma."
 msgstr "Ma."
-
-msgid "Macro Replacement"
-msgstr "Sustitución de macros"
 
 msgid "Macro name"
 msgstr "Nombre de la macro"
@@ -31529,7 +31561,8 @@ msgstr "No hay datos"
 msgid "No data available"
 msgstr "No hay datos disponibles"
 
-msgid "No data for discovery available. Please perform a full scan."
+#, fuzzy
+msgid "No data for discovery available. Please perform a rescan."
 msgstr ""
 "No hay datos disponibles para el descubrimiento. Por favor, realice una "
 "exploración completa."
@@ -31562,7 +31595,8 @@ msgstr ""
 msgid "No discoverable hosts found"
 msgstr "No se han encontrado anfitriones que coincidan."
 
-msgid "No discovery information available. Please perform a full scan."
+#, fuzzy
+msgid "No discovery information available. Please perform a rescan."
 msgstr ""
 "No hay información de detección disponible. Por favor, realice un análisis "
 "completo."
@@ -31582,9 +31616,10 @@ msgstr "No hay credenciales explícitas"
 msgid "No forwarding"
 msgstr "No hay reenvío"
 
+#, fuzzy
 msgid ""
 "No fresh discovery information available. Using latest cached information. "
-"Please perform a full scan in case you want to discover the current state."
+"Please perform a rescan in case you want to discover the current state."
 msgstr ""
 "No se dispone de información fresca de descubrimiento. Se utiliza la última "
 "información almacenada en caché. Por favor, realice una exploración completa "
@@ -31848,6 +31883,10 @@ msgstr "Estado del nodo: Fuera de línea"
 
 msgid "Node statistics"
 msgstr "Estadísticas de los nodos"
+
+#, fuzzy
+msgid "Node utilization"
+msgstr "Utilización de la cinta"
 
 msgid "Nodes"
 msgstr "Nodos"
@@ -34439,9 +34478,6 @@ msgstr "Márgenes del papel"
 msgid "Paragraph of text"
 msgstr "Párrafo del texto"
 
-msgid "Paragraph of text fetched via HTTP(s)"
-msgstr "Párrafo del texto obtenido a través de HTTP(s)"
-
 msgid "Parallel connections"
 msgstr "Conexiones paralelas"
 
@@ -34497,6 +34533,18 @@ msgstr "Parámetros para el inventario de puertos de conmutación"
 msgid "Parameters for the Windows Update Check with WSUS"
 msgstr "Parámetros para la comprobación de Windows Update con WSUS"
 
+#, fuzzy
+msgid "Parameters for the bucket network io"
+msgstr "Parámetros para el inventario de puertos de conmutación"
+
+#, fuzzy
+msgid "Parameters for the bucket objects io"
+msgstr "Parámetros para este host"
+
+#, fuzzy
+msgid "Parameters for the bucket requests"
+msgstr "Parámetros para este host"
+
 msgid "Parameters for this host"
 msgstr "Parámetros para este host"
 
@@ -34509,6 +34557,21 @@ msgid ""
 msgstr ""
 "Los parámetros deben contener sólo A-Z, a-z, 0-9 y _ y no deben comenzar con "
 "un dígito."
+
+msgid "Parameters of bucket object counts"
+msgstr ""
+
+#, fuzzy
+msgid "Parameters of total bucket size"
+msgstr "Tamaño del cubo más grande"
+
+#, fuzzy
+msgid "Parameters received bytes"
+msgstr "Parámetros para %s"
+
+#, fuzzy
+msgid "Parameters send bytes"
+msgstr "Parámetros para %s"
 
 msgid "Parameters:"
 msgstr "Parámetros:"
@@ -35927,14 +35990,6 @@ msgstr "Pod - Muestra la información del nivel del pod"
 msgid "Pod Restarts"
 msgstr "Reiniciar"
 
-#, fuzzy
-msgid "Pod conditions"
-msgstr "%d condiciones"
-
-#, fuzzy
-msgid "Pod containers"
-msgstr "Contenedores en pausa"
-
 msgid "Pod request"
 msgstr "Petición de vainas"
 
@@ -36030,9 +36085,6 @@ msgstr "Coincidencia positiva (añadir los hosts coincidentes al conjunto)"
 
 msgid "Positive match (Add matching services to the set)"
 msgstr "Coincidencia positiva (Añadir servicios coincidentes al conjunto)"
-
-msgid "Possible are 'user', 'operator', 'admin'"
-msgstr "Las posibilidades son 'usuario', 'operador', 'administrador'"
 
 msgid ""
 "Possible values are the following: cpgs, volumes, hosts, capacity, system, "
@@ -37954,9 +38006,6 @@ msgstr "Repita este tiempo de inactividad de forma regular cada"
 msgid "Repetition change for item {diff_path}."
 msgstr "Cambio de repetición para el elemento {diff_path}."
 
-msgid "Replace macros in fetched text body"
-msgstr "Reemplazar macros en el cuerpo del texto obtenido"
-
 msgid ""
 "Replace the application (syslog tag) with this text. If you have bracketed "
 "groups in the text to match, then you can use the placeholders <tt>\\1</tt>, "
@@ -38112,13 +38161,6 @@ msgid "Report generation started in background job <a href=\"%s\">%s</a>"
 msgstr ""
 "Generación de informes iniciada en el trabajo de fondo <a href=\"%s\">%s</a>."
 
-msgid ""
-"Report macros such as <tt>$HOSTNAME$</tt> will be replaced if found in the "
-"URL. That way you can create dynamic URLs."
-msgstr ""
-"Las macros de informe como <tt>$HOSTNAME$</tt> serán reemplazadas si se "
-"encuentran en la URL. De esta manera se pueden crear URLs dinámicas."
-
 msgid "Report of Host"
 msgstr "Informe del anfitrión"
 
@@ -38171,12 +38213,12 @@ msgstr "Solicitar métricas"
 msgid "Request rate"
 msgstr "Solicitar tarifa"
 
-#, fuzzy
-msgid "Request utilization"
-msgstr "Utilización de cintas"
-
 msgid "Request wait time"
 msgstr "Tiempo de espera de la solicitud"
+
+#, fuzzy
+msgid "Requests"
+msgstr "Solicite"
 
 msgid "Requests data about Elasticsearch clusters, nodes and indices."
 msgstr "Solicita datos sobre los clusters, nodos e índices de Elasticsearch."
@@ -38202,6 +38244,10 @@ msgstr "Solicitudes por conexión"
 
 msgid "Requests per second"
 msgstr "Solicitudes por segundo"
+
+#, fuzzy
+msgid "Requests utilization"
+msgstr "Utilización de cintas"
 
 msgid "Require a comment"
 msgstr "Requiere un comentario"
@@ -40381,6 +40427,10 @@ msgstr "Descripciones de servicios"
 msgid "Service discovery"
 msgstr "Descubrimiento de servicios"
 
+#, fuzzy
+msgid "Service discovery details"
+msgstr "Reglas de descubrimiento de servicios"
+
 msgid "Service discovery rules"
 msgstr "Reglas de descubrimiento de servicios"
 
@@ -40643,9 +40693,6 @@ msgstr ""
 "reglas no se añadirán a un host durante la detección (detección automática "
 "de servicios). Los servicios que ya existen seguirán siendo supervisados "
 "pero se marcarán como obsoletos en la lista de servicios de un host."
-
-msgid "Services/Host labels to fix"
-msgstr "Etiquetas de servicios/hostings a arreglar"
 
 #, python-format
 msgid "Services: %d total (%d added, %d removed, %d kept)"
@@ -45241,10 +45288,6 @@ msgstr "Prueba"
 
 msgid "Text"
 msgstr "Texto"
-
-#, python-format
-msgid "Text from URL %s"
-msgstr "Texto de la URL %s"
 
 msgid "Text groups from regular expression match, separated by spaces"
 msgstr ""
@@ -53310,15 +53353,6 @@ msgstr ""
 "sin interacción con ningún otro snapin."
 
 msgid ""
-"This snapin shows the folders defined in WATO. It can be used to open views "
-"filtered by the WATO folder. This snapin interacts with the \"Views\" "
-"snapin, when both are enabled."
-msgstr ""
-"Este snapin muestra las carpetas definidas en WATO. Puede utilizarse para "
-"abrir vistas filtradas por la carpeta WATO. Este snapin interactúa con el "
-"snapin \"Vistas\", cuando ambos están activados."
-
-msgid ""
 "This snapin shows tree views of your hosts based on their tag "
 "classifications. You can configure which tags to use in your global settings "
 "of Multisite."
@@ -55112,9 +55146,6 @@ msgstr ""
 msgid "URL to central site"
 msgstr "URL del sitio central"
 
-msgid "URL to fetch text from"
-msgstr "URL para obtener el texto"
-
 msgid ""
 "URL under that the remote server is accessible from its monitored hosts, "
 "including the protocol (<tt>http://</tt> or <tt>https://</tt>) and </tt>/"
@@ -56114,6 +56145,10 @@ msgid "Upper levels for clients"
 msgstr "Niveles superiores para los clientes"
 
 #, fuzzy
+msgid "Upper levels for cluster utilization"
+msgstr "Niveles superiores de utilización del disco"
+
+#, fuzzy
 msgid "Upper levels for code size"
 msgstr "Niveles superiores para el tamaño"
 
@@ -56197,7 +56232,7 @@ msgid "Upper levels for license usage"
 msgstr "Niveles superiores para el uso de licencias"
 
 #, fuzzy
-msgid "Upper levels for limit utilization"
+msgid "Upper levels for limits utilization"
 msgstr "Niveles superiores de utilización del disco"
 
 msgid "Upper levels for load balancer capacity units"
@@ -56214,6 +56249,10 @@ msgstr "Niveles superiores para los errores HTTP"
 #, fuzzy
 msgid "Upper levels for memory used in percent of the Lambda function limit"
 msgstr "Niveles superiores en porcentaje del límite"
+
+#, fuzzy
+msgid "Upper levels for node utilization"
+msgstr "Niveles superiores de utilización del disco"
 
 msgid "Upper levels for number of OSDs which are down"
 msgstr "Niveles superiores para el número de OSDs que no funcionan"
@@ -56254,7 +56293,7 @@ msgid "Upper levels for rate of server errors"
 msgstr "Niveles superiores de la tasa de errores del servidor"
 
 #, fuzzy
-msgid "Upper levels for request utilization"
+msgid "Upper levels for requests utilization"
 msgstr "Niveles superiores de utilización del disco"
 
 msgid "Upper levels for reserved space"
@@ -63122,10 +63161,6 @@ msgstr "jitter"
 msgid "jobs"
 msgstr "empleos"
 
-#, fuzzy
-msgid "json credentials for service accoun"
-msgstr "Credenciales SNMP"
-
 msgid "kW"
 msgstr "kW"
 
@@ -64127,6 +64162,69 @@ msgstr "z/OS"
 #, fuzzy, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "2020 tribe29 GmbH. Todos los derechos reservados."
+
+#, python-format
+#~ msgid "Cannot fetch URL '%s'"
+#~ msgstr "No se puede recuperar la URL '%s'"
+
+#, fuzzy
+#~| msgid "Number of containers"
+#~ msgid "Define lower levels for free pods (nodes only)"
+#~ msgstr "Número de contenedores"
+
+#~ msgid "Macro Replacement"
+#~ msgstr "Sustitución de macros"
+
+#~ msgid "Paragraph of text fetched via HTTP(s)"
+#~ msgstr "Párrafo del texto obtenido a través de HTTP(s)"
+
+#, fuzzy
+#~| msgid "%d conditions"
+#~ msgid "Pod conditions"
+#~ msgstr "%d condiciones"
+
+#, fuzzy
+#~| msgid "Paused containers"
+#~ msgid "Pod containers"
+#~ msgstr "Contenedores en pausa"
+
+#~ msgid "Replace macros in fetched text body"
+#~ msgstr "Reemplazar macros en el cuerpo del texto obtenido"
+
+#~ msgid ""
+#~ "Report macros such as <tt>$HOSTNAME$</tt> will be replaced if found in "
+#~ "the URL. That way you can create dynamic URLs."
+#~ msgstr ""
+#~ "Las macros de informe como <tt>$HOSTNAME$</tt> serán reemplazadas si se "
+#~ "encuentran en la URL. De esta manera se pueden crear URLs dinámicas."
+
+#, python-format
+#~ msgid "Text from URL %s"
+#~ msgstr "Texto de la URL %s"
+
+#~ msgid "URL to fetch text from"
+#~ msgstr "URL para obtener el texto"
+
+#~ msgid "Possible are 'user', 'operator', 'admin'"
+#~ msgstr "Las posibilidades son 'usuario', 'operador', 'administrador'"
+
+#~ msgid "Services/Host labels to fix"
+#~ msgstr "Etiquetas de servicios/hostings a arreglar"
+
+#~ msgid "Direct access to the setup menu"
+#~ msgstr "Acceso directo al menú de configuración"
+
+#~ msgid "Folders"
+#~ msgstr "Carpetas"
+
+#~ msgid ""
+#~ "This snapin shows the folders defined in WATO. It can be used to open "
+#~ "views filtered by the WATO folder. This snapin interacts with the \"Views"
+#~ "\" snapin, when both are enabled."
+#~ msgstr ""
+#~ "Este snapin muestra las carpetas definidas en WATO. Puede utilizarse para "
+#~ "abrir vistas filtradas por la carpeta WATO. Este snapin interactúa con el "
+#~ "snapin \"Vistas\", cuando ambos están activados."
 
 #, fuzzy
 #~| msgid "Checkmk Agent Version"
@@ -65733,9 +65831,6 @@ msgstr "2020 tribe29 GmbH. Todos los derechos reservados."
 #~ msgid "Host %s"
 #~ msgstr "Anfitrión %s"
 
-#~ msgid "Host & service events"
-#~ msgstr "Acogida y servicio de eventos"
-
 #~ msgid "Host & service history"
 #~ msgstr "Anfitrión e historial de servicio"
 
@@ -65816,9 +65911,6 @@ msgstr "2020 tribe29 GmbH. Todos los derechos reservados."
 
 #~ msgid "IPv6 Processed Bytes"
 #~ msgstr "Bytes procesados de IPv6"
-
-#~ msgid "IPv6 Requests"
-#~ msgstr "Solicitudes de IPv6"
 
 #~ msgid "IPv6 Subnet"
 #~ msgstr "Subred IPv6"
@@ -65936,9 +66028,6 @@ msgstr "2020 tribe29 GmbH. Todos los derechos reservados."
 
 #~ msgid "Large pool size"
 #~ msgstr "Gran tamaño de la piscina"
-
-#~ msgid "Largest bucket size"
-#~ msgstr "Tamaño del cubo más grande"
 
 #~ msgid "Largest vault size"
 #~ msgstr "Mayor tamaño de la bóveda"
@@ -66304,9 +66393,6 @@ msgstr "2020 tribe29 GmbH. Todos los derechos reservados."
 
 #~ msgid "OK services"
 #~ msgstr "Servicios OK"
-
-#~ msgid "Objects"
-#~ msgstr "Objetos"
 
 #~ msgid "Offline hosts"
 #~ msgstr "Anfitriones fuera de línea"

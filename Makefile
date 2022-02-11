@@ -484,6 +484,7 @@ setup:
 	    CMD="" ; \
 	fi ; \
 	$$CMD pip3 install --user --upgrade \
+	    pip \
 	    pipenv=="$(PIPENV_VERSION)" \
 	    virtualenv=="$(VIRTUALENV_VERSION)" \
 	    wheel

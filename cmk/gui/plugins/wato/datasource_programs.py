@@ -824,6 +824,7 @@ def _valuespec_special_agents_kube():
                                     "The full URL to the Kubernetes API server including the "
                                     "protocol (http or https) and the port."
                                 ),
+                                size=80,
                             ),
                         ),
                         _ssl_verification(),
@@ -848,6 +849,7 @@ def _valuespec_special_agents_kube():
                                     "the deployed configuration of the service this can "
                                     "either be the NodePort or the Ingress endpoint."
                                 ),
+                                size=80,
                             ),
                         ),
                         _ssl_verification(),

@@ -3,27 +3,71 @@
 // conditions defined in the file COPYING, which is part of this source code package.
 
 use core::future::Future;
+use std::collections::HashMap;
 use std::error::Error;
+use std::sync::Arc;
 
 use super::{config, monitoring_data, tls_server};
 use anyhow::{anyhow, Context, Result as AnyhowResult};
 use log::{info, warn};
+use std::net::{IpAddr, SocketAddr};
 use tokio::io::AsyncWriteExt;
 use tokio::net::{TcpListener, TcpStream};
+use tokio::sync::{OwnedSemaphorePermit, Semaphore};
 use tokio::time::{timeout, Duration};
 use tokio_rustls::TlsAcceptor;
 
 const TLS_ID: &[u8] = b"16";
 const HEADER_VERSION: &[u8] = b"\x00\x00";
 
+struct MaxConnectionsGuard {
+    max_connections: usize,
+    active_connections: HashMap<IpAddr, Arc<Semaphore>>,
+}
+
+impl MaxConnectionsGuard {
+    pub fn new(max_connections: usize) -> Self {
+        MaxConnectionsGuard {
+            max_connections,
+            active_connections: HashMap::new(),
+        }
+    }
+
+    pub fn try_make_task_for_connection(
+        &mut self,
+        addr: SocketAddr,
+        stream: TcpStream,
+        is_legacy_pull: bool,
+        tls_acceptor: TlsAcceptor,
+    ) -> AnyhowResult<impl Future<Output = AnyhowResult<()>>> {
+        let ip_addr = addr.ip();
+        let sem = self
+            .active_connections
+            .entry(ip_addr)
+            .or_insert_with(|| Arc::new(Semaphore::new(self.max_connections)));
+        if let Ok(permit) = sem.clone().try_acquire_owned() {
+            Ok(handle_pull_request(
+                permit,
+                stream,
+                is_legacy_pull,
+                tls_acceptor,
+            ))
+        } else {
+            Err(anyhow!("Too many active connections"))
+        }
+    }
+}
+
 #[tokio::main(flavor = "current_thread")]
 pub async fn pull(
     registry: config::Registry,
     legacy_pull_marker: std::path::PathBuf,
     port: String,
+    max_connections: usize,
 ) -> AnyhowResult<()> {
     let listener = TcpListener::bind(format!("0.0.0.0:{}", port)).await?;
     let mut pull_config = PullConfiguration::new(registry, legacy_pull_marker)?;
+    let mut guard = MaxConnectionsGuard::new(max_connections);
 
     loop {
         let (stream, addr) = listener
@@ -33,15 +77,24 @@ pub async fn pull(
         info!("{}: Handling pull request", addr);
 
         pull_config.refresh()?;
-        let tls_acceptor = pull_config.tls_acceptor();
 
-        tokio::spawn(async move {
-            if let Err(err) =
-                handle_pull_request(stream, pull_config.legacy_pull, tls_acceptor).await
-            {
-                warn!("PULL: Request from {} failed: {}", addr, err)
-            };
-        });
+        match guard.try_make_task_for_connection(
+            addr,
+            stream,
+            pull_config.legacy_pull,
+            pull_config.tls_acceptor(),
+        ) {
+            Ok(connection_fut) => {
+                tokio::spawn(async move {
+                    if let Err(err) = connection_fut.await {
+                        warn!("PULL: Request from {} failed: {}", addr, err)
+                    };
+                });
+            }
+            Err(error) => {
+                warn!("PULL: Request from {} failed: {}", addr, error);
+            }
+        }
     }
 }
 
@@ -91,6 +144,7 @@ fn is_legacy_pull(registry: &config::Registry, legacy_pull_marker: &std::path::P
 }
 
 async fn handle_pull_request(
+    _permit: OwnedSemaphorePermit, // Just needed to be dropped
     mut stream: TcpStream,
     is_legacy_pull: bool,
     tls_acceptor: TlsAcceptor,

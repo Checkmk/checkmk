@@ -30,6 +30,7 @@ fn daemon(
     registry: config::Registry,
     legacy_pull_marker: std::path::PathBuf,
     port: String,
+    max_connections: usize,
 ) -> AnyhowResult<()> {
     let registry_for_push = registry.clone();
     let registry_for_pull = registry;
@@ -42,7 +43,12 @@ fn daemon(
     });
     thread::spawn(move || {
         tx_pull
-            .send(pull::pull(registry_for_pull, legacy_pull_marker, port))
+            .send(pull::pull(
+                registry_for_pull,
+                legacy_pull_marker,
+                port,
+                max_connections,
+            ))
             .unwrap();
     });
 
@@ -156,6 +162,7 @@ fn run_requested_mode(args: cli::Args, paths: constants::Paths) -> AnyhowResult<
             pull_args
                 .port
                 .unwrap_or_else(|| constants::AGENT_PORT.to_owned()),
+            constants::MAX_CONNECTIONS,
         ),
         cli::Args::Daemon(daemon_args) => daemon(
             registry,
@@ -163,6 +170,7 @@ fn run_requested_mode(args: cli::Args, paths: constants::Paths) -> AnyhowResult<
             daemon_args
                 .port
                 .unwrap_or_else(|| constants::AGENT_PORT.to_owned()),
+            constants::MAX_CONNECTIONS,
         ),
         cli::Args::Dump { .. } => dump::dump(),
         cli::Args::Status(status_args) => status::status(&registry, status_args.json),

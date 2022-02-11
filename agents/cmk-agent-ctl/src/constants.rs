@@ -9,6 +9,7 @@ pub const VERSION: &str = env!("CARGO_PKG_VERSION");
 pub const CMK_AGENT_USER: &str = "cmk-agent";
 //TODO: Pass agent port via cmdline(Windows/Linux) or config(Linux).
 pub const AGENT_PORT: &str = "6556";
+pub const MAX_CONNECTIONS: usize = 3;
 
 //TODO(sk): Pass internal  port via cmdline
 #[cfg(windows)]

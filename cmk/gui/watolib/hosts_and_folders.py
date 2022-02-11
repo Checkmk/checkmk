@@ -1119,31 +1119,6 @@ class WATOHosts(TypedDict):
     clusters: Dict[HostName, List[HostName]]
 
 
-class WATOFoldersOnDemand(dict):
-    def __getitem__(self, path_without_slash: PathWithoutSlash):
-        item: Optional[CREFolder] = super().__getitem__(path_without_slash)
-        if item is None:
-            item = self._create_folder(path_without_slash)
-            self.__setitem__(path_without_slash, item)
-        return item
-
-    def _create_folder(self, folder_path: PathWithoutSlash) -> CREFolder:
-        parent_folder = None
-        if folder_path != "":
-            parent_folder = self.__getitem__(str(Path(folder_path).parent).lstrip("."))
-
-        return Folder(os.path.basename(folder_path), folder_path, parent_folder)
-
-    def items(self):
-        for key, value in list(super().items()):
-            value = self.__getitem__(key)
-            yield key, value
-
-    def values(self):
-        for _key, value in self.items():
-            yield value
-
-
 _enforce_disabled_redis = False
 
 
@@ -2862,6 +2837,31 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
     @classmethod
     def _mapped_by_id(cls) -> "Dict[str, Type[CREFolder]]":
         return folders_by_id()
+
+
+class WATOFoldersOnDemand(Mapping[PathWithoutSlash, Optional[CREFolder]]):
+    def __init__(self, values: Dict[PathWithoutSlash, Optional[CREFolder]]):
+        self._raw_dict: Dict[PathWithoutSlash, Optional[CREFolder]] = values
+
+    def __getitem__(self, path_without_slash: PathWithoutSlash) -> CREFolder:
+        item: Optional[CREFolder] = self._raw_dict.get(path_without_slash)
+        if item is None:
+            item = self._create_folder(path_without_slash)
+            self._raw_dict.__setitem__(path_without_slash, item)
+        return item
+
+    def __iter__(self) -> Iterator[PathWithoutSlash]:
+        return iter(self._raw_dict)
+
+    def __len__(self) -> int:
+        return len(self._raw_dict)
+
+    def _create_folder(self, folder_path: PathWithoutSlash) -> CREFolder:
+        parent_folder = None
+        if folder_path != "":
+            parent_folder = self.__getitem__(str(Path(folder_path).parent).lstrip("."))
+
+        return Folder(os.path.basename(folder_path), folder_path, parent_folder)
 
 
 def validate_host_uniqueness(varname, host_name):

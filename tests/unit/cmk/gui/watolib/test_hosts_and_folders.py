@@ -931,13 +931,15 @@ def test_load_redis_folders_on_demand(monkeypatch):
         # Check if wato_folders class matches
         assert isinstance(g.wato_folders, hosts_and_folders.WATOFoldersOnDemand)
         # Check if item is None
-        assert dict.__getitem__(g.wato_folders, "sub1.1") is None
+        assert g.wato_folders._raw_dict.__getitem__("sub1.1") is None
         # Check if item is generated on access
         assert isinstance(g.wato_folders["sub1.1"], hosts_and_folders.CREFolder)
         # Check if item is now set in dict
-        assert isinstance(dict.__getitem__(g.wato_folders, "sub1.1"), hosts_and_folders.CREFolder)
+        assert isinstance(
+            g.wato_folders._raw_dict.__getitem__("sub1.1"), hosts_and_folders.CREFolder
+        )
 
         # Check if other folder is still None
-        assert dict.__getitem__(g.wato_folders, "sub1.2") is None
+        assert g.wato_folders._raw_dict.__getitem__("sub1.2") is None
         # Check if parent(main) folder got instantiated as well
-        assert isinstance(dict.__getitem__(g.wato_folders, ""), hosts_and_folders.CREFolder)
+        assert isinstance(g.wato_folders._raw_dict.__getitem__(""), hosts_and_folders.CREFolder)

@@ -2,14 +2,15 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
-#![cfg_attr(test, allow(dead_code))]
-
 use super::{agent_receiver_api, certs, config, constants};
 use anyhow::{anyhow, Context, Result as AnyhowResult};
 
+trait TrustEstablishing {
+    fn ask_for_trust(&self, server: &str) -> AnyhowResult<()>;
+}
+
 struct InteractiveTrust {}
 
-#[mockall::automock]
 impl InteractiveTrust {
     fn display_cert(server: &str) -> AnyhowResult<()> {
         let pem_str = certs::fetch_server_cert_pem(server)?;
@@ -31,8 +32,10 @@ impl InteractiveTrust {
         );
         Ok(())
     }
+}
 
-    pub fn ask_for_trust(server: &str) -> AnyhowResult<()> {
+impl TrustEstablishing for InteractiveTrust {
+    fn ask_for_trust(&self, server: &str) -> AnyhowResult<()> {
         InteractiveTrust::display_cert(server)?;
         eprintln!();
         eprintln!("\x1b[1mDo you want to establish this connection?\x1b[0m \x1b[90m(\x1b[0my\x1b[90mes/\x1b[0mn\x1b[90mo)\x1b[0m");
@@ -59,10 +62,10 @@ impl InteractiveTrust {
     }
 }
 
-#[mockall_double::double]
-use InteractiveTrust as IactiveTrust;
-
-fn registration_server_cert(config: &config::RegistrationConfig) -> AnyhowResult<Option<&str>> {
+fn registration_server_cert<'a>(
+    config: &'a config::RegistrationConfig,
+    trust_establisher: &impl TrustEstablishing,
+) -> AnyhowResult<Option<&'a str>> {
     match &config.root_certificate {
         Some(cert) => {
             if config.trust_server_cert {
@@ -75,7 +78,7 @@ fn registration_server_cert(config: &config::RegistrationConfig) -> AnyhowResult
         }
         None => {
             if !config.trust_server_cert {
-                IactiveTrust::ask_for_trust(&config.agent_receiver_address)?;
+                trust_establisher.ask_for_trust(&config.agent_receiver_address)?;
             }
             Ok(None)
         }
@@ -85,6 +88,7 @@ fn registration_server_cert(config: &config::RegistrationConfig) -> AnyhowResult
 fn pair(
     config: &config::RegistrationConfig,
     agent_rec_api: &impl agent_receiver_api::Pairing,
+    trust_establisher: &impl TrustEstablishing,
 ) -> AnyhowResult<(String, String, agent_receiver_api::PairingResponse)> {
     let uuid = uuid::Uuid::new_v4().to_string();
     let (csr, private_key) = certs::make_csr(&uuid).context("Error creating CSR.")?;
@@ -94,7 +98,7 @@ fn pair(
         agent_rec_api
             .pair(
                 &config.agent_receiver_address,
-                registration_server_cert(config)?,
+                registration_server_cert(config, trust_establisher)?,
                 csr,
                 &config.credentials,
             )
@@ -133,9 +137,10 @@ fn _register(
     agent_rec_api: &(impl agent_receiver_api::Pairing
           + agent_receiver_api::Registration
           + agent_receiver_api::Status),
+    trust_establisher: &impl TrustEstablishing,
 ) -> AnyhowResult<()> {
     // TODO: what if registration_state.contains_key(agent_receiver_address) (already registered)?
-    let (uuid, private_key, pairing_response) = pair(&config, agent_rec_api)?;
+    let (uuid, private_key, pairing_response) = pair(&config, agent_rec_api, trust_establisher)?;
 
     match config.host_reg_data {
         config::HostRegistrationData::Name(hn) => {
@@ -194,7 +199,12 @@ pub fn register(
     config: config::RegistrationConfig,
     registry: &mut config::Registry,
 ) -> AnyhowResult<()> {
-    _register(config, registry, &agent_receiver_api::Api {})
+    _register(
+        config,
+        registry,
+        &agent_receiver_api::Api {},
+        &InteractiveTrust {},
+    )
 }
 
 #[derive(serde::Serialize, serde::Deserialize)]
@@ -206,6 +216,7 @@ pub struct SurrogatePullData {
 fn _register_surrogate_pull(
     config: config::RegistrationConfig,
     agent_rec_api: &(impl agent_receiver_api::Pairing + agent_receiver_api::Registration),
+    trust_establisher: &impl TrustEstablishing,
 ) -> AnyhowResult<()> {
     let hn = match &config.host_reg_data {
         config::HostRegistrationData::Name(hn) => hn,
@@ -215,7 +226,7 @@ fn _register_surrogate_pull(
             ))
         }
     };
-    let (uuid, private_key, pairing_response) = pair(&config, agent_rec_api)?;
+    let (uuid, private_key, pairing_response) = pair(&config, agent_rec_api, trust_establisher)?;
 
     agent_rec_api
         .register_with_hostname(
@@ -246,7 +257,7 @@ fn _register_surrogate_pull(
 }
 
 pub fn register_surrogate_pull(config: config::RegistrationConfig) -> AnyhowResult<()> {
-    _register_surrogate_pull(config, &agent_receiver_api::Api {})
+    _register_surrogate_pull(config, &agent_receiver_api::Api {}, &InteractiveTrust {})
 }
 
 #[cfg(test)]
@@ -338,8 +349,13 @@ mod tests {
         }
     }
 
-    lazy_static::lazy_static! {
-        static ref MUTEX: std::sync::Mutex<()> = std::sync::Mutex::new(());
+    struct MockInteractiveTrust {}
+
+    impl TrustEstablishing for MockInteractiveTrust {
+        fn ask_for_trust(&self, server: &str) -> AnyhowResult<()> {
+            assert!(server == SERVER_ADDRESS);
+            Ok(())
+        }
     }
 
     fn registry() -> config::Registry {
@@ -378,10 +394,6 @@ mod tests {
 
         #[test]
         fn test_interactive_trust() {
-            let _m = MUTEX.lock().unwrap();
-            let ask_for_trust_ctx = IactiveTrust::ask_for_trust_context();
-            ask_for_trust_ctx.expect().times(1).returning(|_| Ok(()));
-
             assert!(pair(
                 &registration_config(
                     None,
@@ -392,6 +404,7 @@ mod tests {
                     expect_root_cert_for_pairing: false,
                     expected_registration_method: None,
                 },
+                &MockInteractiveTrust {},
             )
             .is_ok());
         }
@@ -408,6 +421,7 @@ mod tests {
                     expect_root_cert_for_pairing: false,
                     expected_registration_method: None,
                 },
+                &MockInteractiveTrust {},
             )
             .is_ok());
         }
@@ -424,6 +438,7 @@ mod tests {
                     expect_root_cert_for_pairing: true,
                     expected_registration_method: None,
                 },
+                &MockInteractiveTrust {},
             )
             .is_ok());
         }
@@ -440,6 +455,7 @@ mod tests {
                     expect_root_cert_for_pairing: true,
                     expected_registration_method: None,
                 },
+                &MockInteractiveTrust {},
             )
             .is_ok());
         }
@@ -450,10 +466,6 @@ mod tests {
 
         #[test]
         fn test_host_name() {
-            let _m = MUTEX.lock().unwrap();
-            let ask_for_trust_ctx = IactiveTrust::ask_for_trust_context();
-            ask_for_trust_ctx.expect().times(1).returning(|_| Ok(()));
-
             let mut registry = registry();
             assert!(!registry.path().exists());
             assert!(_register(
@@ -467,6 +479,7 @@ mod tests {
                     expect_root_cert_for_pairing: false,
                     expected_registration_method: Some(RegistrationMethod::HostName),
                 },
+                &MockInteractiveTrust {},
             )
             .is_ok());
             assert!(!registry.is_empty());
@@ -488,6 +501,7 @@ mod tests {
                     expect_root_cert_for_pairing: true,
                     expected_registration_method: Some(RegistrationMethod::AgentLabels),
                 },
+                &MockInteractiveTrust {},
             )
             .is_ok());
             assert!(!registry.is_empty());
@@ -510,6 +524,7 @@ mod tests {
                     expect_root_cert_for_pairing: false,
                     expected_registration_method: Some(RegistrationMethod::HostName),
                 },
+                &MockInteractiveTrust {},
             )
             .is_ok());
         }

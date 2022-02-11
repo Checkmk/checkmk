@@ -1,0 +1,134 @@
+#!/bin/sh
+# Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
+CONFIG="/var/lib/cmk-agent/config/super-server"
+
+MODULES_DIR="$(dirname "$(realpath "$0")")"
+
+usage() {
+    cat >&2 <<HERE
+Usage ${0} deploy|cleanup|trigger|getdeployed
+
+Commands:
+  deploy       Deploy the files for the (first available) conifgured
+               super server.
+  cleanup      Cleanup all super server files
+  trigger      Reload or start all super servers
+  getdeployed  Print the deployed super server
+HERE
+    exit 1
+}
+
+_all_failed() {
+    cat >&2 <<HERE
+---------------------------------------------
+WARNING
+
+This package comes with configuration files
+for the following super server(s):
+$(_available_modules '  ')
+It is configured to try these (in order of
+preference):
+$(_configured_modules '  ')
+None of these have been applicable.
+
+Hint: It's also possible to call the
+Checkmk agent via SSH without a running
+agent service.
+---------------------------------------------
+HERE
+}
+
+_module_subfolders() {
+    find "${MODULES_DIR}" -type d -name "*_*"
+}
+
+_available_modules() {
+    _module_subfolders | while read -r name; do
+        bname="$(basename "${name}")"
+        printf "%s%s\n" "$1" "${bname#*_}"
+    done
+}
+
+_configured_modules() {
+    lines="$(grep -v '^#' "${CONFIG}" 2>/dev/null)" || lines="auto"
+    case "$lines" in
+        *auto* | "")
+            _available_modules "$1"
+            ;;
+        *no_service*)
+            return
+            ;;
+        *)
+            for name in $lines; do
+                printf "%s%s\n" "$1" "${name}"
+            done
+            ;;
+    esac
+}
+
+cleanup() {
+    _module_subfolders | while read -r module; do
+        "${module:?}/setup" cleanup
+    done
+}
+
+deploy() {
+    _configured_modules | while read -r module; do
+        module_path="$(find "${MODULES_DIR}" -type d -name "*${module}" | head -n1)" || continue
+        "${module_path:?}/setup" deploy && {
+            echo "Deployed ${module}"
+            return 0
+        }
+    done || _all_failed
+}
+
+trigger() {
+    # first trigger not deployed ones, to free resources (e.g. port)
+    _module_subfolders | while read -r module; do
+        "${module:?}/setup" isdeployed || "${module}/setup" trigger
+    done
+    # then trigger deployed ones
+    _module_subfolders | while read -r module; do
+        "${module:?}/setup" isdeployed && "${module}/setup" trigger
+    done
+
+    return 0
+}
+
+getdeployed() {
+    _module_subfolders | while read -r module; do
+        "${module:?}/setup" isdeployed || continue
+        bname="$(basename "${module}")"
+        printf "%s\n" "${bname#*_}"
+    done
+}
+
+main() {
+    [ "$1" = "-v" ] && {
+        shift
+        set -x
+    }
+
+    case "$1" in
+        deploy)
+            deploy
+            ;;
+        cleanup)
+            cleanup
+            ;;
+        trigger)
+            trigger
+            ;;
+        getdeployed)
+            getdeployed
+            ;;
+        *)
+            usage
+            ;;
+    esac
+}
+
+[ -z "$MK_SOURCE_ONLY" ] && main "$@"

@@ -1,0 +1,132 @@
+#!/bin/sh
+# Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
+_usage() {
+    cat >&2 <<HERE
+$0 deploy|cleanup|trigger|isdeployed
+
+Manage the systemd units required for Checkmk agent setup.
+
+Commands:
+  deploy      Deploy the unit files found in ${RESOURCES} to ${DESTINATION}
+  cleanup     Disable and remove the systemd units
+  trigger     Enable or disable systemd units
+  isdeployed  Exit successfully if and only if files are deployed
+
+HERE
+    exit 1
+}
+
+RESOURCES="$(dirname "$(realpath "$0")")"
+DESTINATION="/usr/lib/systemd/system"
+
+_systemd_present() {
+    command -v systemctl >/dev/null && return
+    printf "systemd not found on this system\n" >&2
+    return 1
+}
+
+_systemd_version() {
+    systemctl --version | sed -n "s/systemd \\([0-9][0-9]*\\).*/\\1/p"
+}
+
+_need_exec_stop_post() {
+    grep -q '^ExecStopPost=' "${RESOURCES}/check-mk-agent@.service"
+}
+
+_systemd_sufficient() {
+    _systemd_present || return 1
+
+    if _need_exec_stop_post && [ "$(_systemd_version)" -eq 219 ]; then
+        cat >&2 <<HERE
+This package has a 'ExecStopPost' directive (for the agent updater),
+but the implementation of ExecStopPost is buggy in systemd version 219
+(see https://github.com/systemd/systemd/issues/1742).
+HERE
+        return 1
+    fi
+
+    return 0
+}
+
+_unit_files() {
+    printf "check-mk-agent.socket\n"
+    printf "check-mk-agent@.service\n"
+    printf "check-mk-agent-async.service\n"
+    printf "cmk-agent-ctl-daemon.service\n"
+}
+
+deploy() {
+    _systemd_sufficient || return
+
+    prefix="Deploying systemd units:"
+    for unit in $(_unit_files); do
+        printf "%s %s" "${prefix}" "${unit}"
+        cp "${RESOURCES}/${unit}" "${DESTINATION}" | return
+        prefix=","
+    done
+    printf "\n"
+}
+
+cleanup() {
+    prefix="Removing systemd units:"
+    for unit in $(_unit_files); do
+        [ -e "${DESTINATION}/${unit}" ] || continue
+        printf "%s %s" "${prefix}" "${unit}"
+        prefix=","
+        rm -f "${DESTINATION}/${unit}"
+    done
+    printf "\n"
+}
+
+trigger() {
+    _systemd_present || return 0
+
+    systemctl daemon-reload
+
+    for unit in $(_unit_files); do
+        # skip unit templates
+        [ "${unit}" = "${unit#*@}" ] || continue
+
+        if [ -e "${DESTINATION}/${unit}" ]; then
+            printf "Activating systemd unit '%s'...\n" "${unit}"
+            systemctl enable "${unit}"
+            systemctl restart "${unit}"
+        else
+            printf "Deactivating systemd unit '%s'...\n" "${unit}"
+            systemctl stop "${unit}" 2>/dev/null
+            systemctl disable "${unit}" 2>/dev/null
+        fi
+    done
+}
+
+isdeployed() {
+    for unit in $(_unit_files); do
+        [ -e "${DESTINATION}/${unit}" ] && return 0
+    done
+    return 1
+}
+
+main() {
+    case "$1" in
+        deploy)
+            deploy "$@"
+            ;;
+        cleanup)
+            cleanup "$@"
+            ;;
+        trigger)
+            trigger
+            ;;
+        isdeployed)
+            isdeployed
+            ;;
+        *)
+            _usage
+            ;;
+    esac
+}
+
+[ -z "${MK_SOURCE_ONLY}" ] && main "$@"

@@ -73,7 +73,6 @@ $(RPM_PACKAGE): controller waitmax
 	tar czf \
 	    $(RPM_TOPDIR)/SOURCES/$(NAME)-$(VERSION).tar.gz \
 	    --transform='s@^@$(DISTNAME)/@' \
-	    cfg_examples \
 	    scripts \
 	    check_mk_agent.linux \
 	    check_mk_caching_agent.linux \

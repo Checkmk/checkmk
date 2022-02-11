@@ -169,13 +169,15 @@ def check_windows_services(
 def cluster_check_windows_services(
     item: str,
     params: Mapping[str, Any],
-    section: Mapping[str, Section],
+    section: Mapping[str, Optional[Section]],
 ) -> CheckResult:
     # A service may appear more than once (due to clusters).
     # First make a list of all matching entries with their
     # states
     found = []
     for node, node_section in section.items():
+        if node_section is None:
+            continue
         results = list(check_windows_services_single(item, params, node_section))
         if results:
             found.append((node, results[0]))

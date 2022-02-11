@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Dict, List, Mapping
+from typing import Any, Dict, List, Mapping, Optional
 
 from .agent_based_api.v1 import check_levels, Metric, register, Result, Service
 from .agent_based_api.v1 import State as state
@@ -121,12 +121,12 @@ def check_tsm_stagingpools(
 def cluster_check_tsm_stagingspools(
     item: str,
     params: Mapping[str, Any],
-    section: Mapping[str, SECTION],
+    section: Mapping[str, Optional[SECTION]],
 ) -> type_defs.CheckResult:
 
     datasets, nodeinfos = [], []
     for node, data in section.items():
-        if item in data:
+        if data is not None and item in data:
             datasets.append(tuple(data[item]))
             nodeinfos.append(node)
 

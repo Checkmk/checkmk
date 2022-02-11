@@ -238,13 +238,13 @@ def check_winperf_phydisk(
 def cluster_check_winperf_phydisk(
     item: str,
     params: Mapping[str, Any],
-    section: Mapping[str, diskstat.Section],
+    section: Mapping[str, Optional[diskstat.Section]],
 ) -> type_defs.CheckResult:
     # We potentially overwrite a disk from an earlier section with a disk with the same name from a
     # later section
     disks_merged: Dict[str, diskstat.Disk] = {}
     for node_section in section.values():
-        disks_merged.update(node_section)
+        disks_merged.update(node_section or {})
 
     yield from check_winperf_phydisk(
         item,

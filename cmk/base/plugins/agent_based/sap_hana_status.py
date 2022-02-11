@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Dict
+from typing import Mapping, Optional
 
 from .agent_based_api.v1 import IgnoreResultsError, register, Result, Service
 from .agent_based_api.v1 import State as state
@@ -74,12 +74,12 @@ def check_sap_hana_status(item: str, section: sap_hana.ParsedSection) -> CheckRe
 
 def cluster_check_sap_hana_status(
     item: str,
-    section: Dict[str, sap_hana.ParsedSection],
+    section: Mapping[str, Optional[sap_hana.ParsedSection]],
 ) -> CheckResult:
 
     yield Result(state=state.OK, summary="Nodes: %s" % ", ".join(section.keys()))
     for node_section in section.values():
-        if item in node_section:
+        if node_section is not None and item in node_section:
             yield from check_sap_hana_status(item, node_section)
             return
 

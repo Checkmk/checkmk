@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Dict, Mapping
+from typing import Dict, Mapping, Optional
 
 from .agent_based_api.v1 import Metric, register, Result, Service
 from .agent_based_api.v1 import State as state
@@ -88,12 +88,14 @@ def check_site_object_counts(section: Section) -> type_defs.CheckResult:
     )
 
 
-def cluster_check_site_object_counts(section: Mapping[str, Section]) -> type_defs.CheckResult:
+def cluster_check_site_object_counts(
+    section: Mapping[str, Optional[Section]]
+) -> type_defs.CheckResult:
     yield from check_site_object_counts(
         {
             "%s/%s" % (site_name, node_name): site_counts
             for node_name, node_section in section.items()
-            for site_name, site_counts in node_section.items()
+            for site_name, site_counts in (node_section.items() if node_section is not None else ())
         }
     )
 

@@ -165,7 +165,7 @@ fn run_requested_mode(args: cli::Args, paths: constants::Paths) -> AnyhowResult<
                 .unwrap_or_else(|| constants::AGENT_PORT.to_owned()),
         ),
         cli::Args::Dump { .. } => dump::dump(),
-        cli::Args::Status(status_args) => status::status(registry, status_args.json),
+        cli::Args::Status(status_args) => status::status(&registry, status_args.json),
         cli::Args::Delete(delete_args) => {
             delete_connection::delete(&mut registry, &delete_args.connection)
         }

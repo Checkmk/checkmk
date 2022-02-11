@@ -2,7 +2,6 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
-use super::agent_receiver_api::Status as StatusEndpoint;
 use super::{agent_receiver_api, certs, config};
 use anyhow::{Context, Result as AnyhowResult};
 
@@ -118,8 +117,9 @@ impl RemoteConnectionStatusResponse {
     fn from(
         server_address: &str,
         connection: &config::Connection,
+        agent_rec_api: &impl agent_receiver_api::Status,
     ) -> RemoteConnectionStatusResponse {
-        match (agent_receiver_api::Api {}).status(
+        match agent_rec_api.status(
             server_address,
             &connection.root_cert,
             &connection.uuid,
@@ -142,6 +142,7 @@ impl ConnectionStatus {
         server: &str,
         conn: &config::Connection,
         conn_type: config::ConnectionType,
+        agent_rec_api: &impl agent_receiver_api::Status,
     ) -> ConnectionStatus {
         ConnectionStatus {
             connection: String::from(server),
@@ -150,7 +151,11 @@ impl ConnectionStatus {
                 connection_type: conn_type,
                 cert_info: CertParsingResult::from(&conn.certificate),
             },
-            remote: Some(RemoteConnectionStatusResponse::from(server, conn)),
+            remote: Some(RemoteConnectionStatusResponse::from(
+                server,
+                conn,
+                agent_rec_api,
+            )),
         }
     }
 
@@ -273,7 +278,10 @@ impl std::fmt::Display for ConnectionStatus {
 }
 
 impl Status {
-    fn from(registry: config::Registry) -> Status {
+    fn from(
+        registry: &config::Registry,
+        agent_rec_api: &impl agent_receiver_api::Status,
+    ) -> Status {
         let mut conn_stats = Vec::new();
 
         for (server, push_conn) in registry.push_connections() {
@@ -281,6 +289,7 @@ impl Status {
                 server,
                 push_conn,
                 config::ConnectionType::Push,
+                agent_rec_api,
             ));
         }
         for (server, pull_conn) in registry.standard_pull_connections() {
@@ -288,6 +297,7 @@ impl Status {
                 server,
                 pull_conn,
                 config::ConnectionType::Pull,
+                agent_rec_api,
             ));
         }
         for (idx, imp_pull_conn) in registry.imported_pull_connections().enumerate() {
@@ -337,8 +347,16 @@ fn fmt_option_to_str(op: &Option<impl std::fmt::Display>, none_str: &str) -> Str
     }
 }
 
-pub fn status(registry: config::Registry, json: bool) -> AnyhowResult<()> {
-    println!("{}", Status::from(registry).to_string(json)?);
+fn _status(
+    registry: &config::Registry,
+    json: bool,
+    agent_rec_api: &impl agent_receiver_api::Status,
+) -> AnyhowResult<String> {
+    Status::from(registry, agent_rec_api).to_string(json)
+}
+
+pub fn status(registry: &config::Registry, json: bool) -> AnyhowResult<()> {
+    println!("{}", _status(registry, json, &agent_receiver_api::Api {})?);
     Ok(())
 }
 
@@ -690,6 +708,60 @@ mod tests {
             .to_string(false)
             .unwrap(),
             "No connections"
+        );
+    }
+
+    struct MockApi {}
+
+    impl agent_receiver_api::Status for MockApi {
+        fn status(
+            &self,
+            _server_address: &str,
+            _root_cert: &str,
+            _uuid: &str,
+            _certificate: &str,
+        ) -> Result<agent_receiver_api::StatusResponse, agent_receiver_api::StatusError> {
+            Ok(agent_receiver_api::StatusResponse {
+                hostname: Some(String::from("host")),
+                status: None,
+                connection_type: Some(config::ConnectionType::Pull),
+                message: None,
+            })
+        }
+    }
+
+    #[test]
+    fn test_status_end_to_end() {
+        let mut push = std::collections::HashMap::new();
+        push.insert(
+            String::from("push_server:8000"),
+            config::Connection {
+                uuid: String::from("uuid-push"),
+                private_key: String::from("private_key"),
+                certificate: String::from("certificate"),
+                root_cert: String::from("root_cert"),
+            },
+        );
+        let registry = config::Registry::new(
+            config::RegisteredConnections {
+                push,
+                pull: std::collections::HashMap::new(),
+                pull_imported: vec![],
+            },
+            std::path::PathBuf::from(&tempfile::NamedTempFile::new().unwrap().into_temp_path()),
+        )
+        .unwrap();
+
+        assert_eq!(
+            _status(&registry, false, &MockApi {},).unwrap(),
+            "Connection: push_server:8000\n\tUUID: uuid-push\n\
+             \tLocal:\n\
+             \t\tConnection type: push-agent\n\
+             \t\tCertificate parsing failed (!!)\n\
+             \tRemote:\n\
+             \t\tConnection type: pull-agent (!!)\n\
+             \t\tRegistration state: operational\n\
+             \t\tHost name: host"
         );
     }
 }

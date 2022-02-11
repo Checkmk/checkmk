@@ -9,6 +9,7 @@ the case where only events are fetched. Without this plugin, no services would b
 case and the agent would not be executed regularly in the background.
 """
 import base64
+import json
 from dataclasses import dataclass
 from typing import Any, Callable, Mapping, Sequence
 
@@ -45,11 +46,13 @@ Section = Mapping[str, SectionItem]
 
 def parse_gcp_gcs(string_table: StringTable) -> Section:
     label_key = "bucket_name"
-    rows = [GCPResult.deserialize(row[0]) for row in string_table]
-    item_names = {r.ts.resource.labels[label_key] for r in rows}
+    rows = [GCPResult.deserialize(row[0]) for row in string_table[1:]]
+    raw_items = json.loads(string_table[0][0])
     return {
-        name: SectionItem.from_results([r for r in rows if r.ts.resource.labels[label_key] == name])
-        for name in item_names
+        item["name"]: SectionItem.from_results(
+            [r for r in rows if r.ts.resource.labels[label_key] == item["name"]]
+        )
+        for item in raw_items
     }
 
 

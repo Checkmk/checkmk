@@ -1,17 +1,17 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# Copyright (C) 2021 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import base64
 import json
 import time
 from dataclasses import dataclass
-from typing import Any, Dict, Iterable, List, Optional, Sequence
+from functools import cache
+from typing import Any, Callable, Dict, Iterable, List, Mapping, Optional, Sequence
 
-from google.cloud import monitoring_v3
+from google.cloud import monitoring_v3, storage  # type: ignore
 from google.cloud.monitoring_v3 import Aggregation
-from google.cloud.monitoring_v3.services.metric_service.pagers import ListTimeSeriesPager
 from google.cloud.monitoring_v3.types import TimeSeries
 
 # Those are enum classes defined in the Aggregation class. Not nice but works
@@ -24,17 +24,16 @@ from cmk.special_agents.utils.argument_parsing import Args, create_default_argum
 
 @dataclass()
 class Client:
-    client: monitoring_v3.MetricServiceClient
+    account_info: Dict[str, str]
     project: str
 
-    @classmethod
-    def from_service_account_info(cls, account_info: Dict[str, str], project: str):
-        c = monitoring_v3.MetricServiceClient.from_service_account_info(account_info)
-        return cls(c, project)
+    @cache
+    def monitoring(self):
+        return monitoring_v3.MetricServiceClient.from_service_account_info(self.account_info)
 
-    def list_time_series(self, request: Dict[str, Any]) -> ListTimeSeriesPager:
-        request["name"] = f"projects/{self.project}"
-        return self.client.list_time_series(request)
+    @cache
+    def storage(self):
+        return storage.Client.from_service_account_info(self.account_info)
 
 
 @dataclass(frozen=True)
@@ -44,8 +43,19 @@ class GCPMetric:
 
 
 @dataclass(frozen=True)
+class Item:
+    name: str
+
+    def to_dict(self) -> Mapping[str, str]:
+        return {"name": self.name}
+
+
+# Do not freeze this dataclass to work around a mypy bug. Just pretend it's frozen
+# https://github.com/python/mypy/issues/5485#issuecomment-888953325
+@dataclass
 class GCPService:
     metrics: List[GCPMetric]
+    discover: Callable[[Client], Iterable[Item]]
     name: str
 
 
@@ -78,8 +88,9 @@ def time_series(client: Client, service: GCPService) -> Iterable[Result]:
     for metric in service.metrics:
         # TODO: actually filter by service filter/labels
         filter_rule = f'metric.type = "{metric.name}"'
-        results = client.list_time_series(
+        results = client.monitoring().list_time_series(
             request={
+                "name": f"project/{client.project}",
                 "filter": filter_rule,
                 "interval": interval,
                 "view": monitoring_v3.ListTimeSeriesRequest.TimeSeriesView.FULL,
@@ -90,8 +101,14 @@ def time_series(client: Client, service: GCPService) -> Iterable[Result]:
             yield Result(ts=ts)
 
 
+def serialize_items(items: Iterable[Item]) -> str:
+    return json.dumps([i.to_dict() for i in items])
+
+
 def run(client: Client, s: GCPService) -> None:
     with SectionWriter(f"gcp_service_{s.name.lower()}") as w:
+        items = s.discover(client)
+        w.append(serialize_items(items))
         for result in time_series(client, s):
             w.append(Result.serialize(result))
 
@@ -104,7 +121,7 @@ def parse_arguments(argv: Optional[Sequence[str]]) -> Args:
 
 
 def agent_gcp_main(args: Args) -> None:
-    client = Client.from_service_account_info(json.loads(args.credentials), args.project)
+    client = Client(json.loads(args.credentials), args.project)
     run(client, GCS)
 
 
@@ -113,8 +130,14 @@ def main() -> None:
     special_agent_main(parse_arguments, agent_gcp_main)
 
 
+def discover_buckets(client: Client) -> Iterable[Item]:
+    buckets = list(client.storage().list_buckets())
+    return (Item(name=b.name) for b in buckets)
+
+
 GCS = GCPService(
     name="gcs",
+    discover=discover_buckets,
     metrics=[
         GCPMetric(
             name="storage.googleapis.com/api/request_count",

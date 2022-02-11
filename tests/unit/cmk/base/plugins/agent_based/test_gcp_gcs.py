@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -21,6 +21,9 @@ from cmk.base.plugins.agent_based.gcp_gcs import (
 
 SECTION_TABLE = [
     [
+        '[{"name":"backup-home-ml-free"},{"name":"lakjsdklasjd"}]',
+    ],
+    [
         "CiwaKnN0b3JhZ2UuZ29vZ2xlYXBpcy5jb20vc3RvcmFnZS90b3RhbF9ieXRlcxJNCgpnY3NfYnVja2V0EhsKCnByb2plY3RfaWQSDWJhY2t1cC0yNTU4MjASIgoLYnVja2V0X25hbWUSE2JhY2t1cC1ob21lLW1sLWZyZWUYASADKicKGgoLCIC9348GEMCd9FoSCwiAvd+PBhDAnfRaEgkZAAAACTTL5EEqJwoaCgsI1LrfjwYQwJ30WhILCNS6348GEMCd9FoSCRkAAAAJNMvkQSonChoKCwiouN+PBhDAnfRaEgsIqLjfjwYQwJ30WhIJGQAAAAk0y+RB"
     ],
     [
@@ -38,17 +41,13 @@ SECTION_TABLE = [
 def test_parse_gcp():
     section = parse_gcp_gcs(SECTION_TABLE)
     n_rows = sum(len(i.rows) for i in section.values())
-    assert n_rows == len(SECTION_TABLE)
+    # first row contains general section information and no metrocs
+    assert n_rows == len(SECTION_TABLE) - 1
 
 
 @pytest.fixture(name="section")
 def fixture_section():
     return parse_gcp_gcs(SECTION_TABLE)
-
-
-def test_discover(section):
-    items = set(el.item for el in discover(section))
-    assert items == {"lakjsdklasjd", "backup-home-ml-free"}
 
 
 @pytest.fixture(name="buckets")
@@ -58,13 +57,15 @@ def fixture_buckets(section):
 
 def test_discover_two_buckets(buckets: Sequence[Service]):
     assert len(buckets) == 2
-    assert {b.item for b in buckets} == {"backup-home-ml-free", "lakjsdklasjd"}
+    assert {b.item for b in buckets} == {
+        "backup-home-ml-free",
+        "lakjsdklasjd",
+    }
 
 
 def test_discover_project_labels(buckets: Sequence[Service]):
-    labels = buckets[0].labels
-    assert len(labels) == 2
-    assert ServiceLabel("gcp_project_id", "backup-255820") in labels
+    for bucket in buckets:
+        assert ServiceLabel("gcp_project_id", "backup-255820") in bucket.labels
 
 
 def test_discover_bucket_labels(buckets: Sequence[Service]):

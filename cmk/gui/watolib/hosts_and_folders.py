@@ -326,6 +326,7 @@ class _RedisHelper:
 
     def clear_cached_folders(self) -> None:
         self._loaded_wato_folders = None
+        self._folder_paths = None
 
     def choices_for_moving(self, path: PathWithoutSlash, move_type: _MoveType) -> Choices:
         self._fetch_all_metadata()

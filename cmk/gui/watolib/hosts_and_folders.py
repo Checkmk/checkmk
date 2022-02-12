@@ -562,7 +562,7 @@ class _RedisHelper:
             x for x in self._get_latest_timestamps_from_disk() if x not in allowed_timestamps
         ]
 
-        if remaining_timestamps[-1] > self._get_last_update_from_redis():
+        if remaining_timestamps and remaining_timestamps[-1] > self._get_last_update_from_redis():
             return False
 
         return True

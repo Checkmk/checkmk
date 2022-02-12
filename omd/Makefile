@@ -37,10 +37,6 @@ PACKAGES := \
     mod_fcgid \
     mod_wsgi \
     check_mk \
-    check_mysql_health \
-    check_oracle_health \
-    Webinject \
-    jmx4perl \
     mk-livestatus \
     stunnel \
     nagios \

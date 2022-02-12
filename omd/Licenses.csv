@@ -1,7 +1,5 @@
 Name,Version,License,Link License Text,Repository path,Comment,,,
 asio,1.18.2,BSL-1.0,https://opensource.org/licenses/BSL-1.0,omd/packages/asio/asio-asio-1-18-2.tar.gz,,,,
-check_mysql_health,2.2.2,GPL-2.0,https://opensource.org/licenses/GPL-2.0,omd/packages/check_mysql_health/check_mysql_health-2.2.2.tar.gz,,,,
-check_oracle_health,3.0.1,GPL-2.0,https://opensource.org/licenses/GPL-2.0,omd/packages/check_oracle_health/check_oracle_health-3.0.1.tar.gz,,,,
 cpp-httplib,0.8.9,MIT,https://opensource.org/licenses/MIT,omd/packages/httplib/cpp-httplib-0.8.9.tar.gz
 fmt-master,7.0.3,MIT,https://opensource.org/licenses/MIT,omd/packages/fmt/fmt-master-7.0.3.tar.gz,,,,
 FreeTDS,0.95.95,GPL-2.0,https://opensource.org/licenses/GPL-2.0,omd/packages/freetds/freetds-0.95.95.tar.gz,,,,
@@ -9,7 +7,6 @@ GNU patch,2.7.6,GPL-3.0,https://opensource.org/licenses/GPL-3.0,omd/packages/pat
 googletest,1.10.0,BSD-3-Clause,https://opensource.org/licenses/BSD-3-Clause,omd/packages/googletest/googletest-f3ef7e173f.tar.gz,,,,
 Heirloom Packaging Tools,070227,CDDL-1.0,https://opensource.org/licenses/CDDL-1.0,omd/packages/heirloom-pkgtools/heirloom-pkgtools-070227.tar.bz2,"Unless otherwise noted, all files in this distribution are released under the Common Development and Distribution License (CDDL), Version 1.0 only.  Exceptions are noted within the associated source files. BSD-4-Clause also partially applies",,,
 Heirloom-mailx,12.5,MPL-1.1,https://opensource.org/licenses/MPL-1.1,omd/packages/heirloom-mailx/heirloom-mailx-12.5.tar.gz,,,,
-jmx4perl,1.11,GPL-2.0,https://opensource.org/licenses/GPL-2.0,omd/packages/jmx4perl/jmx4perl-1.11.tar.gz,,,,
 Lasso,2.7.0,GPL-2.0,https://opensource.org/licenses/GPL-2.0,omd/packages/lasso/lasso-2.7.0.tar.gz
 lcab,1.0b12,GPL-2.0,https://opensource.org/licenses/GPL-2.0,omd/packages/msitools/lcab-1.0b12.tar.gz,,,,
 libgsf,1.14.44,GPL-2.0,https://opensource.org/licenses/GPL-2.0,omd/packages/libgsf/libgsf-1.14.44.tar.xz,,,,
@@ -261,7 +258,6 @@ sapnwrfc,0.19,LGPL-2.1,https://opensource.org/licenses/LGPL-2.1,agents/sap/sapnw
 SimpleIni,4.17,MIT,https://opensource.org/licenses/MIT,omd/packages/simpleini/simpleini-2af65fc.tar.gz,,,,
 Snap7,1.4.2,LGPL-3.0,https://opensource.org/licenses/LGPL-3.0,omd/packages/snap7/snap7-1.4.2.tar.gz,,,,
 stunnel,5.60,GPL-2.0,https://opensource.org/licenses/GPL-2.0,omd/packages/stunnel/stunnel-5.60.tar.gz
-Webinject,1.88,GPL-2.0,https://opensource.org/licenses/GPL-2.0,omd/packages/Webinject/Webinject-1.88.tar.gz,,,,
 yaml-cpp,0.6.3,MIT,https://opensource.org/licenses/MIT,omd/packages/yaml-cpp/yaml-cpp.9a362420.tar.gz,,,,
 ,,,,,,,,
 Icons,,,,,,,,

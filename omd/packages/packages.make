@@ -121,12 +121,9 @@ include \
     packages/mod_auth_mellon/mod_auth_mellon.make \
     packages/stunnel/stunnel.make \
     packages/check_mk/check_mk.make \
-    packages/check_mysql_health/check_mysql_health.make \
-    packages/check_oracle_health/check_oracle_health.make \
     packages/freetds/freetds.make \
     packages/heirloom-pkgtools/heirloom-pkgtools.make \
     packages/perl-modules/perl-modules.make \
-    packages/jmx4perl/jmx4perl.make \
     packages/libgsf/libgsf.make \
     packages/maintenance/maintenance.make \
     packages/mod_fcgid/mod_fcgid.make \
@@ -151,7 +148,6 @@ include \
     packages/rrdtool/rrdtool.make \
     packages/mk-livestatus/mk-livestatus.make \
     packages/snap7/snap7.make \
-    packages/Webinject/Webinject.make \
     packages/appliance/appliance.make
 
 ifeq ($(EDITION),enterprise)

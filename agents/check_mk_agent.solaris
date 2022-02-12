@@ -92,9 +92,9 @@ set_up_get_epoch() {
 #
 
 set_variable_defaults() {
-    : "${MK_LIBDIR:=/usr/lib/check_mk_agent}"
-    : "${MK_CONFDIR:=/etc/check_mk}"
-    : "${MK_VARDIR:=/var/lib/check_mk_agent}"
+    : "${MK_LIBDIR:="/usr/lib/check_mk_agent"}"
+    : "${MK_CONFDIR:="/etc/check_mk"}"
+    : "${MK_VARDIR:="/var/lib/check_mk_agent"}"
     : "${MK_LOGDIR:=/var/log/check_mk_agent}"
 
     # some 'booleans'

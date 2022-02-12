@@ -1307,7 +1307,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
         self._name = name
         self._parent = parent_folder
 
-        self._folder_path = folder_path
+        self._path_existing_folder = folder_path
         self._loaded_subfolders: Optional[Dict[PathWithoutSlash, CREFolder]] = None
 
         if attributes is None:
@@ -1323,7 +1323,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
         else:
             self._root_dir = wato_root_dir()
 
-        if folder_path is not None:
+        if self._path_existing_folder is not None:
             # Existing folder
             self._hosts = None
             self.load_instance()
@@ -1788,8 +1788,8 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
         return self.path()
 
     def path(self):
-        if may_use_redis():
-            return self._folder_path
+        if may_use_redis() and self._path_existing_folder is not None:
+            return self._path_existing_folder
 
         if self.parent() and not self.parent().is_root() and not self.is_root():
             return _ensure_trailing_slash(self.parent().path()) + self.name()

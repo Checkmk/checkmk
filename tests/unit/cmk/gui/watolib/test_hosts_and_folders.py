@@ -567,13 +567,13 @@ def make_monkeyfree_folder(tree_structure, parent=None) -> hosts_and_folders.CRE
 
     # Small monkeys :(
     new_folder._num_hosts = tree_structure.num_hosts
-    new_folder._folder_path = tree_structure.path
+    new_folder._path_existing_folder = tree_structure.path
 
     for subtree_structure in tree_structure.subfolders:
         new_folder._subfolders[subtree_structure.path] = make_monkeyfree_folder(
             subtree_structure, new_folder
         )
-        new_folder._folder_path = tree_structure.path
+        new_folder._path_existing_folder = tree_structure.path
 
     return new_folder
 

@@ -225,7 +225,9 @@ class Memory(BaseModel):
 
 class NodeAddress(BaseModel):
     address: IpAddress
-    type_: Literal["Hostname", "ExternalIP", "InternalIP"]
+    # according to the docs type_ is "Hostname", "ExternalIP", "InternalIP", but we also saw
+    # "InternalDNS" and "ExternalDNS" on an eks cluster
+    type_: str
 
 
 NodeAddresses = Sequence[NodeAddress]

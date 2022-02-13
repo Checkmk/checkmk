@@ -149,7 +149,7 @@ def parse_arguments(args: List[str]) -> argparse.Namespace:
     p.add_argument(
         "--cluster",
         required=True,
-        help="The name of the kubernetes cluster",
+        help="The name of the Kubernetes cluster",
     )
     p.add_argument("--token", help="Token for that user")
     p.add_argument(
@@ -802,7 +802,7 @@ def write_machine_sections(
     machine_sections: Mapping[str, str],
     piggyback_formatter_node: Callable[[str], str],
 ) -> None:
-    # make sure we only print sections for nodes currently visible via kubernetes api:
+    # make sure we only print sections for nodes currently visible via Kubernetes api:
     for node in cluster.nodes():
         if sections := machine_sections.get(str(node.name)):
             with ConditionalPiggybackSection(piggyback_formatter_node(node.name)):

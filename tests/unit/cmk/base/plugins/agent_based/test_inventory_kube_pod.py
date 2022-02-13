@@ -11,10 +11,10 @@ import pytest
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Attributes, TableRow
 from cmk.base.plugins.agent_based.inventory_kube_pod import _containers_to_table, inventory_kube_pod
 from cmk.base.plugins.agent_based.utils.k8s import (
-    ContainerInfo,
     ContainerRunningState,
     ContainerSpec,
     ContainerSpecs,
+    ContainerStatus,
     ContainerTerminatedState,
     ContainerWaitingState,
     PodContainers,
@@ -43,7 +43,7 @@ from cmk.base.plugins.agent_based.utils.k8s import (
             ),
             PodContainers(
                 containers={
-                    "busybox": ContainerInfo(
+                    "busybox": ContainerStatus(
                         container_id=None,
                         image_id="",
                         name="busybox",
@@ -58,7 +58,7 @@ from cmk.base.plugins.agent_based.utils.k8s import (
             ),
             PodContainers(
                 containers={
-                    "busybox-init": ContainerInfo(
+                    "busybox-init": ContainerStatus(
                         container_id="some-id",
                         image_id="somde-id",
                         name="busybox-init",
@@ -182,7 +182,7 @@ def test_inventory_kube_pod(
             ),
             PodContainers(
                 containers={
-                    "busybox": ContainerInfo(
+                    "busybox": ContainerStatus(
                         container_id=None,
                         image_id="",
                         name="busybox",
@@ -218,7 +218,7 @@ def test_inventory_kube_pod(
             ),
             PodContainers(
                 containers={
-                    "busybox": ContainerInfo(
+                    "busybox": ContainerStatus(
                         container_id="docker://1918700128d2badeaa720a2361546f9ad5ce35fb29d2fe5f96fb68b7f8e79d80",
                         image_id="docker-pullable://busybox@sha256:afcc7f1ac1b49db317a7196c902e61c6c3c4607d63599ee1a82d702d249a0ccb",
                         name="busybox",

@@ -289,7 +289,7 @@ class ContainerTerminatedState(BaseModel):
     detail: Optional[str]
 
 
-class ContainerInfo(BaseModel):
+class ContainerStatus(BaseModel):
     container_id: Optional[str]  # container_id of non-ready container is None
     image_id: str  # image_id of non-ready container is ""
     name: str
@@ -329,7 +329,7 @@ class DeploymentInfo(BaseModel):
 class PodContainers(BaseModel):
     """section: kube_pod_containers_v1"""
 
-    containers: Mapping[str, ContainerInfo]
+    containers: Mapping[str, ContainerStatus]
 
 
 class Replicas(BaseModel):

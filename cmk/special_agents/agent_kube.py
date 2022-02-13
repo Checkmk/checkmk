@@ -228,8 +228,8 @@ class Pod:
         metadata: api.PodMetaData,
         status: api.PodStatus,
         spec: api.PodSpec,
-        containers: Mapping[str, api.ContainerInfo],
-        init_containers: Mapping[str, api.ContainerInfo],
+        containers: Mapping[str, api.ContainerStatus],
+        init_containers: Mapping[str, api.ContainerStatus],
     ) -> None:
         self.uid = uid
         self.metadata = metadata
@@ -312,12 +312,12 @@ class Pod:
             }
         )
 
-    def containers_infos(self) -> Optional[section.PodContainers]:
+    def container_statuses(self) -> Optional[section.PodContainers]:
         if not self.containers:
             return None
         return section.PodContainers(containers=self.containers)
 
-    def init_containers_infos(self) -> Optional[section.PodContainers]:
+    def init_container_statuses(self) -> Optional[section.PodContainers]:
         if not self.init_containers:
             return None
         return section.PodContainers(containers=self.init_containers)
@@ -425,7 +425,7 @@ class Deployment:
         container_images = set()
         container_names = []
         for pod in self._pods:
-            if containers := pod.containers_infos():
+            if containers := pod.container_statuses():
                 container_images.update(
                     {container.image for container in containers.containers.values()}
                 )
@@ -845,9 +845,9 @@ def write_machine_sections(
 def pod_api_based_checkmk_sections(pod: Pod):
     sections = (
         ("kube_pod_conditions_v1", pod.conditions),
-        ("kube_pod_containers_v1", pod.containers_infos),
+        ("kube_pod_containers_v1", pod.container_statuses),
         ("kube_pod_container_specs_v1", pod.container_specs),
-        ("kube_pod_init_containers_v1", pod.init_containers_infos),
+        ("kube_pod_init_containers_v1", pod.init_container_statuses),
         ("kube_pod_init_container_specs_v1", pod.init_container_specs),
         ("kube_start_time_v1", pod.start_time),
         ("kube_pod_lifecycle_v1", pod.lifecycle_phase),

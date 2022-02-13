@@ -12,8 +12,8 @@ from cmk.base.plugins.agent_based import kube_pod_status
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, State
 from cmk.base.plugins.agent_based.kube_pod_status import check_kube_pod_status, DEFAULT_PARAMS
 from cmk.base.plugins.agent_based.utils.k8s import (
-    ContainerInfo,
     ContainerRunningState,
+    ContainerStatus,
     ContainerTerminatedState,
     ContainerWaitingState,
     PodContainers,
@@ -28,7 +28,7 @@ def _mocked_container_info_from_state(
 ):
     # The check only requires the state field to be populated, therefore all the other fields are
     # filled with some arbitrary values.
-    return ContainerInfo(
+    return ContainerStatus(
         container_id="some_id",
         image_id="some_other_id",
         name="some_name",

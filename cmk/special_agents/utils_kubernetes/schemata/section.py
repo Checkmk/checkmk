@@ -143,7 +143,7 @@ class PodConditions(BaseModel):
 class PodContainers(BaseModel):
     """section: kube_pod_containers_v1"""
 
-    containers: Mapping[str, api.ContainerInfo]
+    containers: Mapping[str, api.ContainerStatus]
 
 
 class ContainerSpec(BaseModel):

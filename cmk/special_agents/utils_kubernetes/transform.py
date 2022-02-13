@@ -170,8 +170,8 @@ def pod_status(pod: client.V1Pod) -> api.PodStatus:
 
 def pod_containers(
     container_statuses: Optional[Sequence[client.V1ContainerStatus]],
-) -> Dict[str, api.ContainerInfo]:
-    result: Dict[str, api.ContainerInfo] = {}
+) -> Dict[str, api.ContainerStatus]:
+    result: Dict[str, api.ContainerStatus] = {}
     if container_statuses is None:
         return {}
     for status in container_statuses:
@@ -201,7 +201,7 @@ def pod_containers(
         else:
             raise AssertionError(f"Unknown container state {status.state}")
 
-        result[status.name] = api.ContainerInfo(
+        result[status.name] = api.ContainerStatus(
             container_id=status.container_id,
             image_id=status.image_id,
             name=status.name,

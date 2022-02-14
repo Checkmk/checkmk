@@ -1,0 +1,11 @@
+Title: BI Special Agent: Fixed broken group path filtering
+Class: fix
+Compatible: compat
+Component: bi
+Date: 1644850961
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0p21
+
+Aggregations configured with a group path were not correctly detected by the filter mechanism.

@@ -286,6 +286,9 @@ class BIAggregationGroups(ABCWithSchema):
     def count(self) -> int:
         return len(self.names) + len(self.paths)
 
+    def combined_groups(self) -> Set[str]:
+        return set(self.names + ["/".join(x) for x in self.paths])
+
     @classmethod
     def schema(cls) -> Type["BIAggregationGroupsSchema"]:
         return BIAggregationGroupsSchema

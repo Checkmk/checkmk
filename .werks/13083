@@ -1,0 +1,23 @@
+Title: cleanup only very old activations
+Class: fix
+Compatible: compat
+Component: core
+Date: 1644838650
+Edition: cre
+Knowledge: doc
+Level: 2
+State: unknown
+Version: 2.1.0i1
+
+During the process of "activating changes" it was possible
+in certain situations that the activation-ID would disappear before
+the activation could have a chance to complete.
+
+Investigations showed that a cleanup job removed these activations
+before they even started. This could then manifest itself as the error:
+"Missing Activation ID" or a response with a 404 status in the REST API.
+
+This werk fixes this problem by changing the cleanup job to only consider
+activations which are at least an hour (3600 seconds) old.
+
+There are no further changes needed for this to take effect.

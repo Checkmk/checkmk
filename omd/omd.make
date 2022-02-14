@@ -135,3 +135,18 @@ PYTHON_ENABLE_OPTIMIZATIONS ?= --enable-optimizations --with-lto
 else
 PYTHON_ENABLE_OPTIMIZATIONS ?=
 endif
+
+# In our CI containers we always use our own compiler chain. This is mostly
+# useful for building the cmc on all platforms with the same compiler of our
+# choice. Since we link the cmc statically there is no compatibility issue with
+# the distro libraries.
+#
+# But there are 3rd party C++ components in Checkmk, like protobuf and grpc,
+# which are dynamically linked with the libstc++. To be compatible with the
+# target distros, we need to use the distros standard compiler to build them.
+# Only this way we can produce libraries which are compatible with the local
+# libstdc++.
+#
+# All this is specific to our build containers and only needs to have an effect there.
+# See buildscripts/infrastructure/build-nodes/scripts/install-gnu-toolchain.sh
+EXPORT_ORIG_GCC=if [ -e /usr/bin/gcc-orig ]; then export CC=/usr/bin/gcc-orig CXX=/usr/bin/g++-orig ; fi

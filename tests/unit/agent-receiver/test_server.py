@@ -18,9 +18,11 @@ import pytest
 from agent_receiver import constants
 from agent_receiver.checkmk_rest_api import CMKEdition
 from agent_receiver.models import HostTypeEnum
+from agent_receiver.server import agent_receiver_app, main_app
 from fastapi import HTTPException
 from fastapi.testclient import TestClient
 from pytest_mock import MockerFixture
+from starlette.routing import Mount
 
 
 @pytest.fixture(autouse=True)
@@ -396,3 +398,10 @@ def test_registration_status_pull_host(
         "type": HostTypeEnum.PULL.value,
         "message": "Host registered",
     }
+
+
+def test_main_app_structure() -> None:
+    # we only want one route, namely the one to the sub-app which is mounted under the site name
+    assert len(main_app.routes) == 1
+    assert isinstance(mount := main_app.routes[0], Mount)
+    assert mount.app is agent_receiver_app

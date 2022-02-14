@@ -10,7 +10,7 @@ from uuid import UUID, uuid4
 
 import pytest
 from agent_receiver import constants
-from agent_receiver.server import app
+from agent_receiver.server import agent_receiver_app
 from cryptography.hazmat.primitives.serialization import Encoding
 from cryptography.x509 import Certificate
 from fastapi.testclient import TestClient
@@ -27,7 +27,7 @@ def create_dirs() -> None:
 
 @pytest.fixture(name="client")
 def fixture_client() -> TestClient:
-    return TestClient(app)
+    return TestClient(agent_receiver_app)
 
 
 @pytest.fixture(name="ca")

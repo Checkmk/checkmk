@@ -30,7 +30,7 @@ from agent_receiver.models import (
     RegistrationWithHNBody,
     RegistrationWithLabelsBody,
 )
-from agent_receiver.utils import get_registration_status_from_file, Host
+from agent_receiver.utils import get_registration_status_from_file, Host, site_name_prefix
 from fastapi import APIRouter, Depends, FastAPI, File, Header, HTTPException, Response, UploadFile
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from starlette.status import (
@@ -40,12 +40,17 @@ from starlette.status import (
     HTTP_501_NOT_IMPLEMENTED,
 )
 
-app = FastAPI()
+main_app = FastAPI(
+    openapi_url=None,
+    docs_url=None,
+    redoc_url=None,
+)
+agent_receiver_app = FastAPI(title="Checkmk Agent Receiver")
 cert_validation_router = APIRouter(route_class=CertValidationRoute)
 security = HTTPBasic()
 
 
-@app.post("/pairing", response_model=PairingResponse)
+@agent_receiver_app.post("/pairing", response_model=PairingResponse)
 async def pairing(
     *,
     credentials: HTTPBasicCredentials = Depends(security),
@@ -94,7 +99,7 @@ async def pairing(
     )
 
 
-@app.post(
+@agent_receiver_app.post(
     "/register_with_hostname",
     status_code=HTTP_204_NO_CONTENT,
 )
@@ -149,7 +154,7 @@ def _write_registration_file(
     )
 
 
-@app.post(
+@agent_receiver_app.post(
     "/register_with_labels",
     status_code=HTTP_204_NO_CONTENT,
 )
@@ -303,4 +308,5 @@ async def registration_status(
     )
 
 
-app.include_router(cert_validation_router)
+agent_receiver_app.include_router(cert_validation_router)
+main_app.mount(site_name_prefix("agent-receiver"), agent_receiver_app)

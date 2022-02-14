@@ -866,6 +866,7 @@ def _valuespec_special_agents_kube():
                         ("deployments", _("Deployments")),
                         ("nodes", _("Nodes")),
                         ("pods", _("Pods")),
+                        ("cronjobs_pods", _("Pods of CronJobs")),
                     ],
                     default_value=[
                         "deployments",
@@ -874,7 +875,15 @@ def _valuespec_special_agents_kube():
                     ],
                     allow_empty=False,
                     title=_("Collect information about..."),
-                    help=_("Select the Kubernetes objects you would like to monitor."),
+                    help=_(
+                        "Select the Kubernetes objects you would like to monitor. Pods "
+                        "controlled by CronJobs are treated separately as they are usually "
+                        "quite short lived. Those pods will be monitored in the same "
+                        "manner as regular pods. Your Dynamic host management rule should "
+                        "be configured accordingly to avoid that the piggyback hosts for "
+                        "terminated CronJob pods are kept for too long. This 'Pods of CronJobs' "
+                        "option has no effect if Pods are not monitored"
+                    ),
                 ),
             ),
             (

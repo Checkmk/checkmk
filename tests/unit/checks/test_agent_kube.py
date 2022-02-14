@@ -139,6 +139,35 @@ def test_parse_arguments_with_no_cluster_endpoint():
     ]
 
 
+def test_cronjob_piggyback_option():
+    """Test the cronjob piggyback option"""
+    agent = SpecialAgent("agent_kube")
+    arguments = agent.argument_func(
+        {
+            "cluster-name": "cluster",
+            "token": ("password", "token"),
+            "kubernetes-api-server": {
+                "endpoint": "https://11.211.3.32",
+                "verify-cert": False,
+            },
+            "monitored-objects": ["pods", "cronjobs_pods"],
+        },
+        "host",
+        "11.211.3.32",
+    )
+    assert arguments == [
+        "--cluster",
+        "cluster",
+        "--token",
+        "token",
+        "--monitored-objects",
+        "pods",
+        "cronjobs_pods",
+        "--api-server-endpoint",
+        "https://11.211.3.32",
+    ]
+
+
 def test_parse_namespace_patterns():
     """Tests if all required arguments are present."""
     agent = SpecialAgent("agent_kube")

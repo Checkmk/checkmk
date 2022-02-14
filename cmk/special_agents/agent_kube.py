@@ -156,7 +156,8 @@ def parse_arguments(args: List[str]) -> argparse.Namespace:
         "--monitored-objects",
         nargs="+",
         default=["deployments", "nodes", "pods"],
-        help="The Kubernetes objects which are supposed to be monitored. Available objects: deployments, nodes, pods",
+        help="The Kubernetes objects which are supposed to be monitored. Available objects: "
+        "deployments, nodes, pods, cronjobs_pods",
     )
     p.add_argument(
         "--api-server-endpoint", required=True, help="API server endpoint for Kubernetes API calls"
@@ -1509,13 +1510,16 @@ def main(args: Optional[List[str]] = None) -> int:
                 pod_lookup_from_api_pod(pod)
                 for pod in pods_from_namespaces(cluster.pods(), monitored_namespaces)
             }
-            monitored_pods = monitored_pods.difference(
-                {
-                    pod_lookup_from_api_pod(pod)
-                    for cron_job in cluster.cron_jobs()
-                    for pod in cron_job.pods()
-                }
-            )
+
+            if "cronjobs_pods" not in arguments.monitored_objects:
+                # Ignore pods controlled by CronJobs
+                monitored_pods = monitored_pods.difference(
+                    {
+                        pod_lookup_from_api_pod(pod)
+                        for cron_job in cluster.cron_jobs()
+                        for pod in cron_job.pods()
+                    }
+                )
 
             if "pods" in arguments.monitored_objects:
                 LOGGER.info("Write pods sections based on API data")

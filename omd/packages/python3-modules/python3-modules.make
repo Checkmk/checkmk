@@ -6,7 +6,7 @@ PYTHON3_MODULES := python3-modules
 PYTHON3_MODULES_VERS := 1.1
 PYTHON3_MODULES_DIR := $(PYTHON3_MODULES)-$(PYTHON3_MODULES_VERS)
 # Increase the number before the "-" to enforce a recreation of the build cache
-PYTHON3_MODULES_BUILD_ID := 9-$(shell md5sum $(REPO_PATH)/Pipfile.lock | cut -d' ' -f1)
+PYTHON3_MODULES_BUILD_ID := 12-$(shell md5sum $(REPO_PATH)/Pipfile.lock | cut -d' ' -f1)
 
 PYTHON3_MODULES_UNPACK:= $(BUILD_HELPER_DIR)/$(PYTHON3_MODULES_DIR)-unpack
 PYTHON3_MODULES_PATCHING := $(BUILD_HELPER_DIR)/$(PYTHON3_MODULES_DIR)-patching
@@ -49,6 +49,8 @@ $(PYTHON3_MODULES_BUILD): $(PYTHON_CACHE_PKG_PROCESS) $(OPENSSL_CACHE_PKG_PROCES
 # by the final rpath
 	set -e ; cd $(PYTHON3_MODULES_BUILD_DIR) ; \
 	    unset DESTDIR MAKEFLAGS ; \
+	    `: Prevent gcc and distros libstc++ incompatibility ` \
+	    export GRPC_PYTHON_BUILD_WITH_STATIC_LIBSTDCXX=True ; \
 	    export PYTHONPATH="$$PYTHONPATH:$(PACKAGE_PYTHON3_MODULES_PYTHONPATH)" ; \
 	    export PYTHONPATH="$$PYTHONPATH:$(PACKAGE_PYTHON_PYTHONPATH)" ; \
 	    export CPATH="$(PACKAGE_FREETDS_DESTDIR)/include:$(PACKAGE_OPENSSL_INCLUDE_PATH)" ; \

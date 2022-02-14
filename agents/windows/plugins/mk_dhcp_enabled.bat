@@ -1,5 +1,5 @@
 @echo off
-set CMK_VERSION="2.0.0p20"
+set CMK_VERSION="2.0.0p21"
 echo ^<^<^<winperf_if^>^>^>
 echo [dhcp_start]
 wmic path Win32_NetworkAdapterConfiguration get Description, dhcpenabled

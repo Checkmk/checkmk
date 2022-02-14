@@ -9,7 +9,7 @@
 
 # Disable unused variable error (needed to keep track of version)
 # shellcheck disable=SC2034
-CMK_VERSION="2.0.0p20"
+CMK_VERSION="2.0.0p21"
 
 # Developed by Thorsten Bruhns from OPITZ CONSULTING Deutschland GmbH
 

@@ -6,7 +6,7 @@
 '----------------------------------------------------------------------------
 
 ' The entire argument block is currently not configurable via WATO
-Const CMK_VERSION = "2.0.0p20"
+Const CMK_VERSION = "2.0.0p21"
 SET Args = WScript.Arguments
 NameSpace = "root\cimv2"
 ClassName = "Win32_TSIssuedLicense"

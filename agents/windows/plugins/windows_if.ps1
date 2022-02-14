@@ -1,4 +1,4 @@
-$CMK_VERSION = "2.0.0p20"
+$CMK_VERSION = "2.0.0p21"
 ## Windows Teaming Interfaces
 ## runs on windows 2003 or newer
 if ([Environment]::OSVersion.Version.Major -ge "5"){

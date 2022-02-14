@@ -100,6 +100,13 @@ build_gdb() {
 
 set_symlinks() {
     log "Set symlink"
+
+    # Save distro executables under [name]-orig. It is used by some build steps
+    # later that need to use the distro original compiler. For some platforms
+    # we need this to fix the libstdc++ dependency (e.g. protobuf, grpc)
+    [ -e /usr/bin/gcc ] && mv /usr/bin/gcc /usr/bin/gcc-orig
+    [ -e /usr/bin/g++ ] && mv /usr/bin/g++ /usr/bin/g++-orig
+
     ln -sf ${PREFIX}/bin/* /usr/bin
     ln -sf ${PREFIX}/bin/gcc-${GCC_MAJOR} /usr/bin/gcc
     ln -sf ${PREFIX}/bin/g++-${GCC_MAJOR} /usr/bin/g++

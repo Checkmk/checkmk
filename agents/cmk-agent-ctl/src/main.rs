@@ -32,6 +32,7 @@ fn daemon(
     port: String,
     max_connections: usize,
     allowed_ip: Vec<String>,
+    timeout: u64,
 ) -> AnyhowResult<()> {
     let registry_for_push = registry.clone();
     let registry_for_pull = registry;
@@ -49,6 +50,7 @@ fn daemon(
                 port,
                 max_connections,
                 allowed_ip,
+                timeout,
             ))
             .unwrap();
     });
@@ -165,6 +167,7 @@ fn run_requested_mode(args: cli::Args, paths: constants::Paths) -> AnyhowResult<
                 .unwrap_or_else(|| constants::AGENT_PORT.to_owned()),
             constants::MAX_CONNECTIONS,
             pull_args.allowed_ip.unwrap_or_default(),
+            constants::CONNECTION_TIMEOUT,
         ),
         cli::Args::Daemon(daemon_args) => daemon(
             registry,
@@ -174,6 +177,7 @@ fn run_requested_mode(args: cli::Args, paths: constants::Paths) -> AnyhowResult<
                 .unwrap_or_else(|| constants::AGENT_PORT.to_owned()),
             constants::MAX_CONNECTIONS,
             daemon_args.allowed_ip.unwrap_or_default(),
+            constants::CONNECTION_TIMEOUT,
         ),
         cli::Args::Dump { .. } => dump::dump(),
         cli::Args::Status(status_args) => status::status(&registry, status_args.json),

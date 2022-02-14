@@ -39,6 +39,7 @@ impl MaxConnectionsGuard {
         stream: TcpStream,
         is_legacy_pull: bool,
         tls_acceptor: TlsAcceptor,
+        timeout: u64,
     ) -> AnyhowResult<impl Future<Output = AnyhowResult<()>>> {
         let ip_addr = addr.ip();
         let sem = self
@@ -51,6 +52,7 @@ impl MaxConnectionsGuard {
                 stream,
                 is_legacy_pull,
                 tls_acceptor,
+                timeout,
             ))
         } else {
             Err(anyhow!("Too many active connections"))
@@ -65,6 +67,7 @@ pub async fn pull(
     port: String,
     max_connections: usize,
     _allowed_ip: Vec<String>, // TODO: use this value!
+    timeout: u64,
 ) -> AnyhowResult<()> {
     let listener = TcpListener::bind(format!("0.0.0.0:{}", port)).await?;
     let mut pull_config = PullConfiguration::new(registry, legacy_pull_marker)?;
@@ -84,6 +87,7 @@ pub async fn pull(
             stream,
             pull_config.legacy_pull,
             pull_config.tls_acceptor(),
+            timeout,
         ) {
             Ok(connection_fut) => {
                 tokio::spawn(async move {
@@ -149,9 +153,10 @@ async fn handle_pull_request(
     mut stream: TcpStream,
     is_legacy_pull: bool,
     tls_acceptor: TlsAcceptor,
+    timeout: u64,
 ) -> AnyhowResult<()> {
     if is_legacy_pull {
-        return handle_legacy_pull_request(stream).await;
+        return handle_legacy_pull_request(stream, timeout).await;
     }
 
     let mondata_fut = async move {
@@ -167,7 +172,7 @@ async fn handle_pull_request(
             stream.flush().await?;
             tls_acceptor.accept(stream).await
         },
-        10,
+        timeout,
     );
 
     let (mon_data, tls_stream) = tokio::join!(mondata_fut, handshake_fut);
@@ -179,12 +184,12 @@ async fn handle_pull_request(
             tls_stream.write_all(&mon_data).await?;
             tls_stream.flush().await
         },
-        20,
+        timeout,
     )
     .await
 }
 
-async fn handle_legacy_pull_request(mut stream: TcpStream) -> AnyhowResult<()> {
+async fn handle_legacy_pull_request(mut stream: TcpStream, timeout: u64) -> AnyhowResult<()> {
     let mon_data = monitoring_data::async_collect()
         .await
         .context("Error collecting monitoring data.")?;
@@ -194,7 +199,7 @@ async fn handle_legacy_pull_request(mut stream: TcpStream) -> AnyhowResult<()> {
             stream.write_all(&mon_data).await?;
             stream.flush().await
         },
-        20,
+        timeout,
     )
     .await
 }

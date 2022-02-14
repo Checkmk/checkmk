@@ -25,9 +25,9 @@ impl LoggingOpts {
 
 #[derive(StructOpt)]
 pub struct RegistrationArgs {
-    /// Address of the Checkmk site in the form <server>:<agent receiver port>/<site>
+    /// Address of the Checkmk site in the format "<server>/<site>" or "<server>:<port>/<site>"
     #[structopt(long, short = "s", parse(try_from_str))]
-    pub site_address: Option<site_spec::Coordinates>,
+    pub site_address: Option<site_spec::SiteSpec>,
 
     /// API user to use for registration
     #[structopt(long, short = "u", requires = "password", parse(from_str))]

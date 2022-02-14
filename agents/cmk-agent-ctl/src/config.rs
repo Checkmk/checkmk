@@ -46,7 +46,7 @@ pub struct Credentials {
 #[derive(Deserialize)]
 pub struct ConfigFromDisk {
     #[serde(default)]
-    pub coordinates: Option<site_spec::Coordinates>,
+    pub site_spec: Option<site_spec::SiteSpec>,
 
     #[serde(default)]
     pub credentials: Option<Credentials>,
@@ -81,10 +81,17 @@ impl RegistrationConfig {
         config_from_disk: ConfigFromDisk,
         reg_args: cli::RegistrationArgs,
     ) -> AnyhowResult<RegistrationConfig> {
-        let coordinates = reg_args
+        let coordinates = match reg_args
             .site_address
-            .or(config_from_disk.coordinates)
-            .context("Site address not specified")?;
+            .or(config_from_disk.site_spec)
+            .context("Site address not specified")?
+        {
+            site_spec::SiteSpec::Complete(coord) => coord,
+            site_spec::SiteSpec::Incomplete(inc_coord) => {
+                site_spec::Coordinates::from_incomplete_coordinates(inc_coord)?
+            }
+        };
+
         let credentials =
             if let (Some(username), Some(password)) = (reg_args.user, reg_args.password) {
                 Credentials { username, password }

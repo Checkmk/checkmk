@@ -446,12 +446,11 @@ def _show_graph_legend(graph_artwork, graph_render_options) -> None:
             if scalar == "pin" and not show_pin_time(graph_artwork, graph_render_options):
                 continue
 
+            classes = ["scalar"]
             if inactive and graph_artwork["step"] != 60:
-                inactive_cls: Optional[str] = "inactive"
-            else:
-                inactive_cls = None
+                classes.append("inactive")
 
-            html.td(curve["scalars"][scalar][1], class_=inactive_cls, style=font_size_style)
+            html.td(curve["scalars"][scalar][1], class_=classes, style=font_size_style)
 
         html.close_tr()
 

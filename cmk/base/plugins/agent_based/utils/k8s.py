@@ -261,7 +261,7 @@ class PodCondition(BaseModel):
 
 
 class PodConditions(BaseModel):
-    """section: k8s_pod_conditions_v1"""
+    """section: kube_pod_conditions_v1"""
 
     initialized: Optional[PodCondition]
     scheduled: PodCondition

@@ -811,7 +811,7 @@ def write_machine_sections(
 
 def pod_api_based_checkmk_sections(pod: Pod):
     sections = (
-        ("k8s_pod_conditions_v1", pod.conditions),
+        ("kube_pod_conditions_v1", pod.conditions),
         ("kube_pod_containers_v1", pod.containers_infos),
         ("kube_pod_container_specs_v1", pod.container_specs),
         ("kube_pod_init_containers_v1", pod.init_containers_infos),

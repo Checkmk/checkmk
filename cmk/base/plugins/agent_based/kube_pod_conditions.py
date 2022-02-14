@@ -107,13 +107,13 @@ def check(params: Mapping[str, Any], section: PodConditions) -> CheckResult:
 
 
 register.agent_section(
-    name="k8s_pod_conditions_v1",
-    parsed_section_name="k8s_pod_conditions",
+    name="kube_pod_conditions_v1",
+    parsed_section_name="kube_pod_conditions",
     parse_function=parse,
 )
 
 register.check_plugin(
-    name="k8s_pod_conditions",
+    name="kube_pod_conditions",
     service_name="Condition",
     discovery_function=discovery,
     check_function=check,
@@ -123,5 +123,5 @@ register.check_plugin(
         containersready="no_levels",
         ready="no_levels",
     ),
-    check_ruleset_name="k8s_pod_conditions",
+    check_ruleset_name="kube_pod_conditions",
 )

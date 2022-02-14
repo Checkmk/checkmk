@@ -49,7 +49,7 @@ def _parameter_valuespec():
 
 rulespec_registry.register(
     CheckParameterRulespecWithoutItem(
-        check_group_name="k8s_pod_conditions",
+        check_group_name="kube_pod_conditions",
         group=RulespecGroupCheckParametersApplications,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec,

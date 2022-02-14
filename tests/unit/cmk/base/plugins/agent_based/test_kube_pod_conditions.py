@@ -11,7 +11,7 @@ import json
 import pytest
 from pydantic import ValidationError
 
-from cmk.base.plugins.agent_based import k8s_pod_conditions
+from cmk.base.plugins.agent_based import kube_pod_conditions
 from cmk.base.plugins.agent_based.agent_based_api.v1 import render, State
 
 MINUTE = 60
@@ -56,7 +56,7 @@ def time(mocker):
             timestamp += MINUTE
 
     time_mock = mocker.Mock(side_effect=time_side_effect())
-    mocker.patch.object(k8s_pod_conditions, "time", mocker.Mock(time=time_mock))
+    mocker.patch.object(kube_pod_conditions, "time", mocker.Mock(time=time_mock))
     return time_mock
 
 
@@ -144,7 +144,7 @@ def string_table(string_table_element):
 
 @pytest.fixture
 def section(string_table):
-    return k8s_pod_conditions.parse(string_table)
+    return kube_pod_conditions.parse(string_table)
 
 
 @pytest.fixture
@@ -159,13 +159,13 @@ def params():
 
 @pytest.fixture
 def check_result(params, section):
-    return k8s_pod_conditions.check(params, section)
+    return kube_pod_conditions.check(params, section)
 
 
 @pytest.fixture
 def agent_section(fix_register):
     for name, section in fix_register.agent_sections.items():
-        if str(name) == "k8s_pod_conditions_v1":
+        if str(name) == "kube_pod_conditions_v1":
             return section
     assert False, "Should be able to find the section"
 
@@ -173,13 +173,13 @@ def agent_section(fix_register):
 @pytest.fixture
 def check_plugin(fix_register):
     for name, plugin in fix_register.check_plugins.items():
-        if str(name) == "k8s_pod_conditions":
+        if str(name) == "kube_pod_conditions":
             return plugin
     assert False, "Should be able to find the plugin"
 
 
 def test_parse(string_table):
-    section = k8s_pod_conditions.parse(string_table)
+    section = kube_pod_conditions.parse(string_table)
     assert section.initialized == ready()
     assert section.scheduled == ready()
     assert section.containersready == ready()
@@ -215,7 +215,7 @@ def test_parse(string_table):
 def test_parse_multi(
     expected_initialized, expected_scheduled, expected_containersready, expected_ready, string_table
 ):
-    section = k8s_pod_conditions.parse(string_table)
+    section = kube_pod_conditions.parse(string_table)
     assert section.initialized == expected_initialized
     assert section.scheduled == expected_scheduled
     assert section.containersready == expected_containersready
@@ -229,16 +229,16 @@ def test_parse_multi(
 )
 def test_parse_fails_when_all_conditions_empty(string_table):
     with pytest.raises(ValidationError):
-        k8s_pod_conditions.parse(string_table)
+        kube_pod_conditions.parse(string_table)
 
 
 def test_discovery_returns_an_iterable(string_table):
-    parsed = k8s_pod_conditions.parse(string_table)
-    assert list(k8s_pod_conditions.discovery(parsed))
+    parsed = kube_pod_conditions.parse(string_table)
+    assert list(kube_pod_conditions.discovery(parsed))
 
 
 @pytest.mark.parametrize(
-    "status, expected_length", [(True, 1), (False, len(k8s_pod_conditions.LOGICAL_ORDER))]
+    "status, expected_length", [(True, 1), (False, len(kube_pod_conditions.LOGICAL_ORDER))]
 )
 def test_check_yields_check_results(check_result, expected_length):
     assert len(list(check_result)) == expected_length
@@ -257,8 +257,8 @@ def test_check_all_results_with_summary_status_true(status, check_result, sectio
 @pytest.mark.parametrize("status", [False])
 def test_check_all_results_with_summary_status_false(status, check_result, section):
     expected_summaries = [
-        f"{k8s_pod_conditions.ADDITIONAL_SERVICE_TEXT[k].not_passed} ({REASON}: {DETAIL}) for 0 seconds"
-        for k in k8s_pod_conditions.LOGICAL_ORDER
+        f"{kube_pod_conditions.ADDITIONAL_SERVICE_TEXT[k].not_passed} ({REASON}: {DETAIL}) for 0 seconds"
+        for k in kube_pod_conditions.LOGICAL_ORDER
     ]
     assert list(r.summary for r in check_result) == expected_summaries
 
@@ -307,8 +307,8 @@ def test_check_results_state_ok_when_status_false_and_no_params(check_result):
 def test_check_results_sets_summary_when_status_false(state, check_result):
     time_diff = render.timespan(state * MINUTE)
     expected_prefixes = [
-        f"{k8s_pod_conditions.ADDITIONAL_SERVICE_TEXT[k].not_passed} ({REASON}: {DETAIL}) for {time_diff}"
-        for k in k8s_pod_conditions.LOGICAL_ORDER
+        f"{kube_pod_conditions.ADDITIONAL_SERVICE_TEXT[k].not_passed} ({REASON}: {DETAIL}) for {time_diff}"
+        for k in kube_pod_conditions.LOGICAL_ORDER
     ]
     for expected_prefix, result in zip(expected_prefixes, check_result):
         assert result.summary.startswith(expected_prefix)
@@ -411,20 +411,20 @@ def test_check_all_results_with_summary_status_mixed(
 
 
 def test_register_agent_section_calls(agent_section):
-    assert str(agent_section.name) == "k8s_pod_conditions_v1"
-    assert str(agent_section.parsed_section_name) == "k8s_pod_conditions"
-    assert agent_section.parse_function == k8s_pod_conditions.parse
+    assert str(agent_section.name) == "kube_pod_conditions_v1"
+    assert str(agent_section.parsed_section_name) == "kube_pod_conditions"
+    assert agent_section.parse_function == kube_pod_conditions.parse
 
 
 def test_register_check_plugin_calls(check_plugin):
-    assert str(check_plugin.name) == "k8s_pod_conditions"
+    assert str(check_plugin.name) == "kube_pod_conditions"
     assert check_plugin.service_name == "Condition"
-    assert check_plugin.discovery_function.__wrapped__ == k8s_pod_conditions.discovery
-    assert check_plugin.check_function.__wrapped__ == k8s_pod_conditions.check
+    assert check_plugin.discovery_function.__wrapped__ == kube_pod_conditions.discovery
+    assert check_plugin.check_function.__wrapped__ == kube_pod_conditions.check
     assert check_plugin.check_default_parameters == dict(
         scheduled="no_levels",
         initialized="no_levels",
         containersready="no_levels",
         ready="no_levels",
     )
-    assert str(check_plugin.check_ruleset_name) == "k8s_pod_conditions"
+    assert str(check_plugin.check_ruleset_name) == "kube_pod_conditions"

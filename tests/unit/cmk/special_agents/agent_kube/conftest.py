@@ -36,8 +36,8 @@ class KubeletInfoFactory(ModelFactory):
     __model__ = api.KubeletInfo
 
 
-class MetaDataFactory(ModelFactory):
-    __model__ = api.MetaData
+class NodeMetaDataFactory(ModelFactory):
+    __model__ = api.NodeMetaData
 
 
 class NodeResourcesFactory(ModelFactory):
@@ -83,7 +83,7 @@ def node_resources_builder(node_allocatable_cpu, node_allocatable_memory):
 def new_node(node_resources_builder):
     def _new_node():
         return agent_kube.Node(
-            metadata=MetaDataFactory.build(),
+            metadata=NodeMetaDataFactory.build(),
             status=NodeStatusFactory.build(),
             resources=node_resources_builder(),
             control_plane=False,

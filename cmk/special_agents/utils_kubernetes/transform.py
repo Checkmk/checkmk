@@ -362,7 +362,7 @@ def node_addresses_from_client(
 
 
 def node_from_client(node: client.V1Node, kubelet_health: api.HealthZ) -> api.Node:
-    metadata = parse_metadata(node.metadata)
+    metadata = parse_metadata(node.metadata, model=api.NodeMetaData)
     return api.Node(
         metadata=metadata,
         status=api.NodeStatus(

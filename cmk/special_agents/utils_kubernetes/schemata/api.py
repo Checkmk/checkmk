@@ -67,6 +67,11 @@ class MetaData(BaseModel):
     labels: Optional[Labels] = None
 
 
+class NodeMetaData(MetaData):
+    creation_timestamp: CreationTimestamp
+    labels: Labels
+
+
 class PodMetaData(MetaData):
     namespace: Namespace
 
@@ -136,7 +141,7 @@ class NodeStatus(BaseModel):
 
 
 class Node(BaseModel):
-    metadata: MetaData
+    metadata: NodeMetaData
     status: NodeStatus
     control_plane: bool
     resources: Dict[str, NodeResources]

@@ -497,7 +497,7 @@ class Deployment:
 class Node:
     def __init__(
         self,
-        metadata: api.MetaData,
+        metadata: api.NodeMetaData,
         status: api.NodeStatus,
         resources: Dict[str, api.NodeResources],
         control_plane: bool,

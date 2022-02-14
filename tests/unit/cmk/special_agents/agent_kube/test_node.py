@@ -118,3 +118,10 @@ def test_conditions_with_status_conditions_none(node):
     node.status.conditions = None
     conditions = node.conditions()
     assert conditions is None
+
+
+def test_node_info_section(node):
+    info = node.info()
+    assert info.name == node.metadata.name
+    assert info.labels == node.metadata.labels
+    assert isinstance(info.creation_timestamp, float)

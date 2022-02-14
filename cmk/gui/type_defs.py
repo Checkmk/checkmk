@@ -12,6 +12,7 @@ from typing import (
     Dict,
     Iterable,
     List,
+    Literal,
     Mapping,
     NamedTuple,
     Optional,
@@ -44,7 +45,6 @@ class ChoiceGroup(NamedTuple):
 
 
 GroupedChoices = List[ChoiceGroup]
-# UserSpec = Dict[str, Any]  # TODO: Improve this type
 
 
 class WebAuthnCredential(TypedDict):
@@ -98,7 +98,7 @@ class UserSpec(TypedDict, total=False):
     customer: Optional[str]
     enforce_pw_change: bool  # gets serialized to int
     force_authuser: bool
-    idle_timeout: _TypingError
+    idle_timeout: dict[Literal["duration"], _TypingError]
     language: str
     locked: bool
     password: str
@@ -112,6 +112,7 @@ class UserSpec(TypedDict, total=False):
     ui_theme: _TypingError
     user_id: UserId
     user_scheme_serial: int
+    pager: _TypingError
 
 
 # Visual specific

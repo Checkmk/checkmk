@@ -2,7 +2,7 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
-use super::cli;
+use super::{cli, site_spec};
 use anyhow::{anyhow, Context, Result as AnyhowResult};
 use serde::de::DeserializeOwned;
 use serde::Deserialize;
@@ -46,7 +46,7 @@ pub struct Credentials {
 #[derive(Deserialize)]
 pub struct ConfigFromDisk {
     #[serde(default)]
-    pub agent_receiver_address: Option<String>,
+    pub coordinates: Option<site_spec::Coordinates>,
 
     #[serde(default)]
     pub credentials: Option<Credentials>,
@@ -69,7 +69,7 @@ pub enum HostRegistrationData {
 }
 
 pub struct RegistrationConfig {
-    pub agent_receiver_address: String,
+    pub coordinates: site_spec::Coordinates,
     pub credentials: Credentials,
     pub root_certificate: Option<String>,
     pub host_reg_data: HostRegistrationData,
@@ -81,10 +81,10 @@ impl RegistrationConfig {
         config_from_disk: ConfigFromDisk,
         reg_args: cli::RegistrationArgs,
     ) -> AnyhowResult<RegistrationConfig> {
-        let agent_receiver_address = reg_args
-            .server
-            .or(config_from_disk.agent_receiver_address)
-            .context("Missing server address")?;
+        let coordinates = reg_args
+            .site_address
+            .or(config_from_disk.coordinates)
+            .context("Site address not specified")?;
         let credentials =
             if let (Some(username), Some(password)) = (reg_args.user, reg_args.password) {
                 Credentials { username, password }
@@ -103,7 +103,7 @@ impl RegistrationConfig {
             .or_else(|| stored_agent_labels.map(HostRegistrationData::Labels))
             .context("Neither hostname nor agent labels found")?;
         Ok(RegistrationConfig {
-            agent_receiver_address,
+            coordinates,
             credentials,
             root_certificate,
             host_reg_data,
@@ -244,15 +244,15 @@ impl Registry {
     pub fn register_connection(
         &mut self,
         connection_type: ConnectionType,
-        address: &str,
+        site_address: &str,
         connection: Connection,
     ) {
         let (insert_connections, remove_connections) = match connection_type {
             ConnectionType::Push => (&mut self.connections.push, &mut self.connections.pull),
             ConnectionType::Pull => (&mut self.connections.pull, &mut self.connections.push),
         };
-        remove_connections.remove(address);
-        insert_connections.insert(String::from(address), connection);
+        remove_connections.remove(site_address);
+        insert_connections.insert(String::from(site_address), connection);
     }
 
     pub fn register_imported_connection(&mut self, connection: Connection) {
@@ -260,7 +260,9 @@ impl Registry {
     }
 
     pub fn delete_connection(&mut self, connection_id: &str) -> AnyhowResult<()> {
-        if self.delete_connection_by_server(connection_id).is_ok()
+        if self
+            .delete_connection_by_site_address(connection_id)
+            .is_ok()
             || self.delete_connection_by_uuid(connection_id).is_ok()
         {
             return Ok(());
@@ -291,16 +293,16 @@ impl Registry {
         Ok(())
     }
 
-    fn delete_connection_by_server(&mut self, server: &str) -> AnyhowResult<()> {
-        if self.connections.push.remove(server).is_some() {
-            println!("Deleted push connection '{}'", server);
+    fn delete_connection_by_site_address(&mut self, site_address: &str) -> AnyhowResult<()> {
+        if self.connections.push.remove(site_address).is_some() {
+            println!("Deleted push connection '{}'", site_address);
             return Ok(());
         }
-        if self.connections.pull.remove(server).is_some() {
-            println!("Deleted pull connection '{}'", server);
+        if self.connections.pull.remove(site_address).is_some() {
+            println!("Deleted pull connection '{}'", site_address);
             return Ok(());
         }
-        Err(anyhow!("Connection '{}' not found", server))
+        Err(anyhow!("Connection '{}' not found", site_address))
     }
 
     fn delete_by_uuid_from_standard_connections(&mut self, uuid: &str) -> AnyhowResult<()> {
@@ -359,7 +361,7 @@ mod test_registry {
         let mut pull = std::collections::HashMap::new();
 
         push.insert(
-            String::from("push_server:8000"),
+            String::from("server:8000/push-site"),
             Connection {
                 uuid: String::from("uuid-push"),
                 private_key: String::from("private_key"),
@@ -369,7 +371,7 @@ mod test_registry {
         );
 
         pull.insert(
-            String::from("pull_server:8000"),
+            String::from("server:8000/pull-site"),
             Connection {
                 uuid: String::from("uuid-pull"),
                 private_key: String::from("private_key"),
@@ -423,7 +425,11 @@ mod test_registry {
     #[test]
     fn test_register_push_connection_new() {
         let mut reg = registry();
-        reg.register_connection(ConnectionType::Push, "new_server:1234", connection());
+        reg.register_connection(
+            ConnectionType::Push,
+            "new_server:1234/new-site",
+            connection(),
+        );
         assert!(reg.connections.push.len() == 2);
         assert!(reg.connections.pull.len() == 1);
         assert!(reg.connections.pull_imported.len() == 1);
@@ -432,7 +438,7 @@ mod test_registry {
     #[test]
     fn test_register_push_connection_from_pull() {
         let mut reg = registry();
-        reg.register_connection(ConnectionType::Push, "pull_server:8000", connection());
+        reg.register_connection(ConnectionType::Push, "server:8000/pull-site", connection());
         assert!(reg.connections.push.len() == 2);
         assert!(reg.connections.pull.is_empty());
         assert!(reg.connections.pull_imported.len() == 1);
@@ -441,7 +447,11 @@ mod test_registry {
     #[test]
     fn test_register_pull_connection_new() {
         let mut reg = registry();
-        reg.register_connection(ConnectionType::Pull, "new_server:1234", connection());
+        reg.register_connection(
+            ConnectionType::Pull,
+            "new_server:1234/new-site",
+            connection(),
+        );
         assert!(reg.connections.push.len() == 1);
         assert!(reg.connections.pull.len() == 2);
         assert!(reg.connections.pull_imported.len() == 1);
@@ -450,7 +460,7 @@ mod test_registry {
     #[test]
     fn test_register_pull_connection_from_push() {
         let mut reg = registry();
-        reg.register_connection(ConnectionType::Pull, "push_server:8000", connection());
+        reg.register_connection(ConnectionType::Pull, "server:8000/push-site", connection());
         assert!(reg.connections.push.is_empty());
         assert!(reg.connections.pull.len() == 2);
         assert!(reg.connections.pull_imported.len() == 1);
@@ -489,7 +499,7 @@ mod test_registry {
 
     #[test]
     fn test_delete_push() {
-        for to_delete in ["push_server:8000", "uuid-push"] {
+        for to_delete in ["server:8000/push-site", "uuid-push"] {
             let mut reg = registry();
             assert!(reg.delete_connection(to_delete).is_ok());
             assert!(reg.connections.push.is_empty());
@@ -500,7 +510,7 @@ mod test_registry {
 
     #[test]
     fn test_delete_pull() {
-        for to_delete in ["pull_server:8000", "uuid-pull"] {
+        for to_delete in ["server:8000/pull-site", "uuid-pull"] {
             let mut reg = registry();
             assert!(reg.delete_connection(to_delete).is_ok());
             assert!(reg.connections.push.len() == 1);

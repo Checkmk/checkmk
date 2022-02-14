@@ -2,26 +2,22 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
-use super::{agent_receiver_api, certs, config, constants};
+use super::{agent_receiver_api, certs, config, constants, site_spec};
 use anyhow::{anyhow, Context, Result as AnyhowResult};
 
 trait TrustEstablishing {
-    fn ask_for_trust(&self, server: &str) -> AnyhowResult<()>;
+    fn ask_for_trust(&self, coordinates: &site_spec::Coordinates) -> AnyhowResult<()>;
 }
 
 struct InteractiveTrust {}
 
 impl InteractiveTrust {
-    fn display_cert(server: &str) -> AnyhowResult<()> {
-        let pem_str = certs::fetch_server_cert_pem(server)?;
+    fn display_cert(server: &str, port: usize) -> AnyhowResult<()> {
+        let pem_str = certs::fetch_server_cert_pem(server, port)?;
         let pem = certs::parse_pem(&pem_str)?;
         let x509 = pem.parse_x509()?;
         let validity = x509.validity();
 
-        eprintln!(
-            "Attempting to register at {}. Server certificate details:\n",
-            server
-        );
         eprintln!("PEM-encoded certificate:\n{}", pem_str);
         eprintln!("Issued by:\n\t{}", certs::join_common_names(x509.issuer()));
         eprintln!("Issued to:\n\t{}", certs::join_common_names(x509.subject()));
@@ -35,8 +31,12 @@ impl InteractiveTrust {
 }
 
 impl TrustEstablishing for InteractiveTrust {
-    fn ask_for_trust(&self, server: &str) -> AnyhowResult<()> {
-        InteractiveTrust::display_cert(server)?;
+    fn ask_for_trust(&self, coordinates: &site_spec::Coordinates) -> AnyhowResult<()> {
+        eprintln!(
+            "Attempting to register at {}. Server certificate details:\n",
+            coordinates,
+        );
+        InteractiveTrust::display_cert(&coordinates.server, coordinates.port)?;
         eprintln!();
         eprintln!("\x1b[1mDo you want to establish this connection?\x1b[0m \x1b[90m(\x1b[0my\x1b[90mes/\x1b[0mn\x1b[90mo)\x1b[0m");
         eprint!("> ");
@@ -50,7 +50,7 @@ impl TrustEstablishing for InteractiveTrust {
                 "n" | "no" => {
                     return Err(anyhow!(format!(
                         "Cannot continue without trusting {}",
-                        server
+                        coordinates
                     )))
                 }
                 _ => {
@@ -78,7 +78,7 @@ fn registration_server_cert<'a>(
         }
         None => {
             if !config.trust_server_cert {
-                trust_establisher.ask_for_trust(&config.agent_receiver_address)?;
+                trust_establisher.ask_for_trust(&config.coordinates)?;
             }
             Ok(None)
         }
@@ -97,27 +97,24 @@ fn pair(
         private_key,
         agent_rec_api
             .pair(
-                &config.agent_receiver_address,
+                &config.coordinates.to_string(),
                 registration_server_cert(config, trust_establisher)?,
                 csr,
                 &config.credentials,
             )
-            .context(format!(
-                "Error pairing with {}",
-                &config.agent_receiver_address
-            ))?,
+            .context(format!("Error pairing with {}", &config.coordinates))?,
     ))
 }
 
 fn post_registration_conn_type(
-    server: &str,
+    site_address: &str,
     root_cert: &str,
     uuid: &str,
     client_cert: &str,
     agent_rec_api: &impl agent_receiver_api::Status,
 ) -> AnyhowResult<config::ConnectionType> {
     loop {
-        let status_resp = agent_rec_api.status(server, root_cert, uuid, client_cert)?;
+        let status_resp = agent_rec_api.status(site_address, root_cert, uuid, client_cert)?;
         if let Some(agent_receiver_api::HostStatus::Declined) = status_resp.status {
             return Err(anyhow!(
                 "Registration declined by Checkmk instance, please check credentials"
@@ -142,46 +139,46 @@ fn _register(
     // TODO: what if registration_state.contains_key(agent_receiver_address) (already registered)?
     let (uuid, private_key, pairing_response) = pair(&config, agent_rec_api, trust_establisher)?;
 
-    match config.host_reg_data {
+    match &config.host_reg_data {
         config::HostRegistrationData::Name(hn) => {
             agent_rec_api
                 .register_with_hostname(
-                    &config.agent_receiver_address,
+                    &config.coordinates.to_string(),
                     &pairing_response.root_cert,
                     &config.credentials,
                     &uuid,
-                    &hn,
+                    hn,
                 )
                 .context(format!(
                     "Error registering with hostname at {}",
-                    &config.agent_receiver_address,
+                    &config.coordinates,
                 ))?;
         }
         config::HostRegistrationData::Labels(al) => {
             agent_rec_api
                 .register_with_agent_labels(
-                    &config.agent_receiver_address,
+                    &config.coordinates.to_string(),
                     &pairing_response.root_cert,
                     &config.credentials,
                     &uuid,
-                    &al,
+                    al,
                 )
                 .context(format!(
                     "Error registering with agent labels at {}",
-                    &config.agent_receiver_address,
+                    &config.coordinates,
                 ))?;
         }
     }
 
     registry.register_connection(
         post_registration_conn_type(
-            &config.agent_receiver_address,
+            &config.coordinates.to_string(),
             &pairing_response.root_cert,
             &uuid,
             &pairing_response.client_cert,
             agent_rec_api,
         )?,
-        &config.agent_receiver_address,
+        &config.coordinates.to_string(),
         config::Connection {
             uuid,
             private_key,
@@ -230,7 +227,7 @@ fn _register_surrogate_pull(
 
     agent_rec_api
         .register_with_hostname(
-            &config.agent_receiver_address,
+            &config.coordinates.to_string(),
             &pairing_response.root_cert,
             &config.credentials,
             &uuid,
@@ -238,7 +235,7 @@ fn _register_surrogate_pull(
         )
         .context(format!(
             "Error registering with hostname at {}",
-            &config.agent_receiver_address
+            &config.coordinates
         ))?;
 
     println!(
@@ -262,10 +259,12 @@ pub fn register_surrogate_pull(config: config::RegistrationConfig) -> AnyhowResu
 
 #[cfg(test)]
 mod tests {
+    use std::str::FromStr;
+
     use super::super::config::JSONLoader;
     use super::*;
 
-    const SERVER_ADDRESS: &str = "server:8000";
+    const SITE_ADDRESS: &str = "server:8000/host";
     const HOST_NAME: &str = "host";
 
     enum RegistrationMethod {
@@ -281,12 +280,12 @@ mod tests {
     impl agent_receiver_api::Pairing for MockApi {
         fn pair(
             &self,
-            server_address: &str,
+            site_address: &str,
             root_cert: Option<&str>,
             _csr: String,
             _credentials: &config::Credentials,
         ) -> AnyhowResult<agent_receiver_api::PairingResponse> {
-            assert!(server_address == SERVER_ADDRESS);
+            assert!(site_address == SITE_ADDRESS);
             assert!(root_cert.is_some() == self.expect_root_cert_for_pairing);
             Ok(agent_receiver_api::PairingResponse {
                 root_cert: String::from("root_cert"),
@@ -298,7 +297,7 @@ mod tests {
     impl agent_receiver_api::Registration for MockApi {
         fn register_with_hostname(
             &self,
-            server_address: &str,
+            site_address: &str,
             _root_cert: &str,
             _credentials: &config::Credentials,
             _uuid: &str,
@@ -308,14 +307,14 @@ mod tests {
                 self.expected_registration_method.as_ref().unwrap(),
                 RegistrationMethod::HostName
             ));
-            assert!(server_address == SERVER_ADDRESS);
+            assert!(site_address == SITE_ADDRESS);
             assert!(host_name == HOST_NAME);
             Ok(())
         }
 
         fn register_with_agent_labels(
             &self,
-            server_address: &str,
+            site_address: &str,
             _root_cert: &str,
             _credentials: &config::Credentials,
             _uuid: &str,
@@ -325,7 +324,7 @@ mod tests {
                 self.expected_registration_method.as_ref().unwrap(),
                 RegistrationMethod::AgentLabels
             ));
-            assert!(server_address == SERVER_ADDRESS);
+            assert!(site_address == SITE_ADDRESS);
             assert!(ag_labels == &agent_labels());
             Ok(())
         }
@@ -334,12 +333,12 @@ mod tests {
     impl agent_receiver_api::Status for MockApi {
         fn status(
             &self,
-            server_address: &str,
+            site_address: &str,
             _root_cert: &str,
             _uuid: &str,
             _certificate: &str,
         ) -> Result<agent_receiver_api::StatusResponse, agent_receiver_api::StatusError> {
-            assert!(server_address == SERVER_ADDRESS);
+            assert!(site_address == SITE_ADDRESS);
             Ok(agent_receiver_api::StatusResponse {
                 hostname: Some(String::from(HOST_NAME)),
                 status: None,
@@ -352,8 +351,8 @@ mod tests {
     struct MockInteractiveTrust {}
 
     impl TrustEstablishing for MockInteractiveTrust {
-        fn ask_for_trust(&self, server: &str) -> AnyhowResult<()> {
-            assert!(server == SERVER_ADDRESS);
+        fn ask_for_trust(&self, coordinates: &site_spec::Coordinates) -> AnyhowResult<()> {
+            assert!(coordinates.to_string() == SITE_ADDRESS);
             Ok(())
         }
     }
@@ -378,7 +377,7 @@ mod tests {
         trust_server_cert: bool,
     ) -> config::RegistrationConfig {
         config::RegistrationConfig {
-            agent_receiver_address: String::from(SERVER_ADDRESS),
+            coordinates: site_spec::Coordinates::from_str(SITE_ADDRESS).unwrap(),
             credentials: config::Credentials {
                 username: String::from("user"),
                 password: String::from("password"),

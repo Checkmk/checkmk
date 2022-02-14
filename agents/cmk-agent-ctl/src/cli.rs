@@ -2,6 +2,7 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
+use super::site_spec;
 use structopt::StructOpt;
 
 #[derive(StructOpt)]
@@ -24,9 +25,9 @@ impl LoggingOpts {
 
 #[derive(StructOpt)]
 pub struct RegistrationArgs {
-    /// Checkmk site to register with
-    #[structopt(long, short = "s", parse(from_str))]
-    pub server: Option<String>,
+    /// Address of the Checkmk site in the form <server>:<agent receiver port>/<site>
+    #[structopt(long, short = "s", parse(try_from_str))]
+    pub site_address: Option<site_spec::Coordinates>,
 
     /// API user to use for registration
     #[structopt(long, short = "u", requires = "password", parse(from_str))]
@@ -146,7 +147,7 @@ pub enum Args {
     /// Delete a connection to a Checkmk instance
     ///
     /// Connections can be specified either by their name or their UUID.
-    /// The connections name is '<servername>:<port>' or 'imported-<number>',
+    /// The connections name is '<servername>:<port>/<site>' or 'imported-<number>',
     /// see the output of the 'status' command.
     #[structopt()]
     Delete(DeleteArgs),

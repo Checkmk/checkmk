@@ -14,6 +14,7 @@ mod monitoring_data;
 mod pull;
 mod push;
 mod registration;
+mod site_spec;
 mod status;
 mod tls_server;
 use anyhow::{Context, Result as AnyhowResult};

@@ -115,12 +115,12 @@ impl std::fmt::Display for RemoteConnectionError {
 
 impl RemoteConnectionStatusResponse {
     fn from(
-        server_address: &str,
+        site_address: &str,
         connection: &config::Connection,
         agent_rec_api: &impl agent_receiver_api::Status,
     ) -> RemoteConnectionStatusResponse {
         match agent_rec_api.status(
-            server_address,
+            site_address,
             &connection.root_cert,
             &connection.uuid,
             &connection.certificate,
@@ -139,20 +139,20 @@ impl RemoteConnectionStatusResponse {
 
 impl ConnectionStatus {
     fn from_standard_conn(
-        server: &str,
+        site_address: &str,
         conn: &config::Connection,
         conn_type: config::ConnectionType,
         agent_rec_api: &impl agent_receiver_api::Status,
     ) -> ConnectionStatus {
         ConnectionStatus {
-            connection: String::from(server),
+            connection: String::from(site_address),
             uuid: String::from(&conn.uuid),
             local: LocalConnectionStatus {
                 connection_type: conn_type,
                 cert_info: CertParsingResult::from(&conn.certificate),
             },
             remote: Some(RemoteConnectionStatusResponse::from(
-                server,
+                site_address,
                 conn,
                 agent_rec_api,
             )),
@@ -284,17 +284,17 @@ impl Status {
     ) -> Status {
         let mut conn_stats = Vec::new();
 
-        for (server, push_conn) in registry.push_connections() {
+        for (site_address, push_conn) in registry.push_connections() {
             conn_stats.push(ConnectionStatus::from_standard_conn(
-                server,
+                site_address,
                 push_conn,
                 config::ConnectionType::Push,
                 agent_rec_api,
             ));
         }
-        for (server, pull_conn) in registry.standard_pull_connections() {
+        for (site_address, pull_conn) in registry.standard_pull_connections() {
             conn_stats.push(ConnectionStatus::from_standard_conn(
-                server,
+                site_address,
                 pull_conn,
                 config::ConnectionType::Pull,
                 agent_rec_api,
@@ -370,7 +370,7 @@ mod tests {
             format!(
                 "{}",
                 ConnectionStatus {
-                    connection: String::from("localhost:8000"),
+                    connection: String::from("localhost:8000/site"),
                     uuid: String::from("abc-123"),
                     local: LocalConnectionStatus {
                         connection_type: config::ConnectionType::Pull,
@@ -390,7 +390,7 @@ mod tests {
                 }
             ),
             String::from(
-                "Connection: localhost:8000\n\
+                "Connection: localhost:8000/site\n\
                  \tUUID: abc-123\n\
                  \tLocal:\n\
                  \t\tConnection type: pull-agent\n\
@@ -410,7 +410,7 @@ mod tests {
             format!(
                 "{}",
                 ConnectionStatus {
-                    connection: String::from("localhost:8000"),
+                    connection: String::from("localhost:8000/site"),
                     uuid: String::from("abc-123"),
                     local: LocalConnectionStatus {
                         connection_type: config::ConnectionType::Pull,
@@ -430,7 +430,7 @@ mod tests {
                 }
             ),
             String::from(
-                "Connection: localhost:8000\n\
+                "Connection: localhost:8000/site\n\
                  \tUUID: abc-123\n\
                  \tLocal:\n\
                  \t\tConnection type: pull-agent\n\
@@ -482,7 +482,7 @@ mod tests {
             format!(
                 "{}",
                 ConnectionStatus {
-                    connection: String::from("localhost:8000"),
+                    connection: String::from("localhost:8000/site"),
                     uuid: String::from("abc-123"),
                     local: LocalConnectionStatus {
                         connection_type: config::ConnectionType::Pull,
@@ -494,7 +494,7 @@ mod tests {
                 }
             ),
             String::from(
-                "Connection: localhost:8000\n\
+                "Connection: localhost:8000/site\n\
                  \tUUID: abc-123\n\
                  \tLocal:\n\
                  \t\tConnection type: pull-agent\n\
@@ -511,7 +511,7 @@ mod tests {
             format!(
                 "{}",
                 ConnectionStatus {
-                    connection: String::from("localhost:8000"),
+                    connection: String::from("localhost:8000/site"),
                     uuid: String::from("abc-123"),
                     local: LocalConnectionStatus {
                         connection_type: config::ConnectionType::Pull,
@@ -527,7 +527,7 @@ mod tests {
                 }
             ),
             String::from(
-                "Connection: localhost:8000\n\
+                "Connection: localhost:8000/site\n\
                  \tUUID: abc-123\n\
                  \tLocal:\n\
                  \t\tConnection type: pull-agent\n\
@@ -545,7 +545,7 @@ mod tests {
             format!(
                 "{}",
                 ConnectionStatus {
-                    connection: String::from("localhost:8000"),
+                    connection: String::from("localhost:8000/site"),
                     uuid: String::from("abc-123"),
                     local: LocalConnectionStatus {
                         connection_type: config::ConnectionType::Pull,
@@ -565,7 +565,7 @@ mod tests {
                 }
             ),
             String::from(
-                "Connection: localhost:8000\n\
+                "Connection: localhost:8000/site\n\
                  \tUUID: abc-123\n\
                  \tLocal:\n\
                  \t\tConnection type: pull-agent\n\
@@ -585,7 +585,7 @@ mod tests {
             format!(
                 "{}",
                 ConnectionStatus {
-                    connection: String::from("localhost:8000"),
+                    connection: String::from("localhost:8000/site"),
                     uuid: String::from("abc-123"),
                     local: LocalConnectionStatus {
                         connection_type: config::ConnectionType::Pull,
@@ -605,7 +605,7 @@ mod tests {
                 }
             ),
             String::from(
-                "Connection: localhost:8000\n\
+                "Connection: localhost:8000/site\n\
                  \tUUID: abc-123\n\
                  \tLocal:\n\
                  \t\tConnection type: pull-agent\n\
@@ -623,7 +623,7 @@ mod tests {
         Status {
             connections: vec![
                 ConnectionStatus {
-                    connection: String::from("localhost:8000"),
+                    connection: String::from("localhost:8000/site"),
                     uuid: String::from("abc-123"),
                     local: LocalConnectionStatus {
                         connection_type: config::ConnectionType::Pull,
@@ -642,7 +642,7 @@ mod tests {
                     )),
                 },
                 ConnectionStatus {
-                    connection: String::from("somehwere:8000"),
+                    connection: String::from("somehwere:8000/site2"),
                     uuid: String::from("ghghhfjdkgf123"),
                     local: LocalConnectionStatus {
                         connection_type: config::ConnectionType::Push,
@@ -668,7 +668,7 @@ mod tests {
     fn test_status_str_human_readable() {
         assert_eq!(
             build_status().to_string(false).unwrap(),
-            "Connection: localhost:8000\n\
+            "Connection: localhost:8000/site\n\
              \tUUID: abc-123\n\
              \tLocal:\n\
              \t\tConnection type: pull-agent\n\
@@ -678,7 +678,7 @@ mod tests {
              \t\tConnection type: pull-agent\n\
              \t\tRegistration state: operational\n\
              \t\tHost name: my-host\n\n\n\
-             Connection: somehwere:8000\n\
+             Connection: somehwere:8000/site2\n\
              \tUUID: ghghhfjdkgf123\n\
              \tLocal:\n\
              \t\tConnection type: push-agent\n\
@@ -716,7 +716,7 @@ mod tests {
     impl agent_receiver_api::Status for MockApi {
         fn status(
             &self,
-            _server_address: &str,
+            _site_address: &str,
             _root_cert: &str,
             _uuid: &str,
             _certificate: &str,
@@ -734,7 +734,7 @@ mod tests {
     fn test_status_end_to_end() {
         let mut push = std::collections::HashMap::new();
         push.insert(
-            String::from("push_server:8000"),
+            String::from("server:8000/push-site"),
             config::Connection {
                 uuid: String::from("uuid-push"),
                 private_key: String::from("private_key"),
@@ -754,7 +754,8 @@ mod tests {
 
         assert_eq!(
             _status(&registry, false, &MockApi {},).unwrap(),
-            "Connection: push_server:8000\n\tUUID: uuid-push\n\
+            "Connection: server:8000/push-site\n\
+             \tUUID: uuid-push\n\
              \tLocal:\n\
              \t\tConnection type: push-agent\n\
              \t\tCertificate parsing failed (!!)\n\

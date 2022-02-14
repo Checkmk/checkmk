@@ -39,20 +39,20 @@ pub fn handle_push_cycle(registry: &config::Registry) -> AnyhowResult<()> {
     )
     .context("Error compressing monitoring data")?;
 
-    for (agent_receiver_address, server_spec) in registry.push_connections() {
-        info!("Pushing monitoring data to {}", agent_receiver_address);
+    for (site_address, connection) in registry.push_connections() {
+        info!("Pushing monitoring data to {}", site_address);
         (agent_receiver_api::Api {})
             .agent_data(
-                agent_receiver_address,
-                &server_spec.root_cert,
-                &server_spec.uuid,
-                &server_spec.certificate,
+                site_address,
+                &connection.root_cert,
+                &connection.uuid,
+                &connection.certificate,
                 &monitoring_data::compression_header_info().push,
                 &compressed_mon_data,
             )
             .context(format!(
                 "Error pushing monitoring data to {}.",
-                agent_receiver_address
+                site_address
             ))?
     }
     Ok(())

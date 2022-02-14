@@ -92,7 +92,7 @@ fn encode_pem_cert_base64(cert: &str) -> AnyhowResult<String> {
 pub trait Pairing {
     fn pair(
         &self,
-        server_address: &str,
+        site_address: &str,
         root_cert: Option<&str>,
         csr: String,
         credentials: &config::Credentials,
@@ -102,7 +102,7 @@ pub trait Pairing {
 pub trait Registration {
     fn register_with_hostname(
         &self,
-        server_address: &str,
+        site_address: &str,
         root_cert: &str,
         credentials: &config::Credentials,
         uuid: &str,
@@ -111,7 +111,7 @@ pub trait Registration {
 
     fn register_with_agent_labels(
         &self,
-        server_address: &str,
+        site_address: &str,
         root_cert: &str,
         credentials: &config::Credentials,
         uuid: &str,
@@ -122,7 +122,7 @@ pub trait Registration {
 pub trait AgentData {
     fn agent_data(
         &self,
-        server_address: &str,
+        site_address: &str,
         root_cert: &str,
         uuid: &str,
         certificate: &str,
@@ -134,7 +134,7 @@ pub trait AgentData {
 pub trait Status {
     fn status(
         &self,
-        server_address: &str,
+        site_address: &str,
         root_cert: &str,
         uuid: &str,
         certificate: &str,
@@ -143,16 +143,22 @@ pub trait Status {
 
 pub struct Api {}
 
+impl Api {
+    fn endpoint_address(site_address: &str, endpoint: &str) -> String {
+        format!("https://{}/agent-receiver/{}", site_address, endpoint)
+    }
+}
+
 impl Pairing for Api {
     fn pair(
         &self,
-        server_address: &str,
+        site_address: &str,
         root_cert: Option<&str>,
         csr: String,
         credentials: &config::Credentials,
     ) -> AnyhowResult<PairingResponse> {
         let response = certs::client(root_cert)?
-            .post(format!("https://{}/pairing", server_address))
+            .post(Api::endpoint_address(site_address, "pairing"))
             .basic_auth(&credentials.username, Some(&credentials.password))
             .json(&PairingBody { csr })
             .send()?;
@@ -173,7 +179,7 @@ impl Pairing for Api {
 impl Registration for Api {
     fn register_with_hostname(
         &self,
-        server_address: &str,
+        site_address: &str,
         root_cert: &str,
         credentials: &config::Credentials,
         uuid: &str,
@@ -181,7 +187,10 @@ impl Registration for Api {
     ) -> AnyhowResult<()> {
         check_response_204(
             certs::client(Some(root_cert))?
-                .post(format!("https://{}/register_with_hostname", server_address))
+                .post(Api::endpoint_address(
+                    site_address,
+                    "register_with_hostname",
+                ))
                 .basic_auth(&credentials.username, Some(&credentials.password))
                 .json(&RegistrationWithHNBody {
                     uuid: String::from(uuid),
@@ -193,7 +202,7 @@ impl Registration for Api {
 
     fn register_with_agent_labels(
         &self,
-        server_address: &str,
+        site_address: &str,
         root_cert: &str,
         credentials: &config::Credentials,
         uuid: &str,
@@ -201,7 +210,7 @@ impl Registration for Api {
     ) -> AnyhowResult<()> {
         check_response_204(
             certs::client(Some(root_cert))?
-                .post(format!("https://{}/register_with_labels", server_address))
+                .post(Api::endpoint_address(site_address, "register_with_labels"))
                 .basic_auth(&credentials.username, Some(&credentials.password))
                 .json(&RegistrationWithALBody {
                     uuid: String::from(uuid),
@@ -215,7 +224,7 @@ impl Registration for Api {
 impl AgentData for Api {
     fn agent_data(
         &self,
-        server_address: &str,
+        site_address: &str,
         root_cert: &str,
         uuid: &str,
         certificate: &str,
@@ -224,7 +233,10 @@ impl AgentData for Api {
     ) -> AnyhowResult<()> {
         check_response_204(
             certs::client(Some(root_cert))?
-                .post(format!("https://{}/agent_data/{}", server_address, uuid,))
+                .post(Api::endpoint_address(
+                    site_address,
+                    &format!("agent_data/{}", uuid),
+                ))
                 .header("certificate", encode_pem_cert_base64(certificate)?)
                 .header("compression", compression_algorithm)
                 .multipart(
@@ -244,15 +256,15 @@ impl AgentData for Api {
 impl Status for Api {
     fn status(
         &self,
-        server_address: &str,
+        site_address: &str,
         root_cert: &str,
         uuid: &str,
         certificate: &str,
     ) -> Result<StatusResponse, StatusError> {
         let response = certs::client(Some(root_cert))?
-            .get(format!(
-                "https://{}/registration_status/{}",
-                server_address, uuid
+            .get(Api::endpoint_address(
+                site_address,
+                &format!("registration_status/{}", uuid),
             ))
             .header("certificate", encode_pem_cert_base64(certificate)?)
             .send()

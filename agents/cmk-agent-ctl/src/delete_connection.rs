@@ -43,7 +43,7 @@ mod tests {
     fn registry() -> config::Registry {
         let mut push = std::collections::HashMap::new();
         push.insert(
-            String::from("push_server:8000"),
+            String::from("server:8000/push-site"),
             config::Connection {
                 uuid: String::from("uuid-push"),
                 private_key: String::from("private_key"),
@@ -76,7 +76,7 @@ mod tests {
     fn test_imported_pull_conn_idx_to_delete_no_match() {
         for conn_id in [
             "imported-03",
-            "server:8000",
+            "server:8000/site",
             "504a3dae-343a-4374-a869-067c4a0e11de",
         ] {
             assert!(imported_pull_conn_idx_to_delete(conn_id).unwrap().is_none())
@@ -87,7 +87,7 @@ mod tests {
     fn test_delete_ok() {
         let mut reg = registry();
         assert!(!reg.path().exists());
-        assert!(delete(&mut reg, "push_server:8000").is_ok());
+        assert!(delete(&mut reg, "server:8000/push-site").is_ok());
         assert!(reg.path().exists());
     }
 

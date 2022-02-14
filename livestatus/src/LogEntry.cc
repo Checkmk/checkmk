@@ -332,11 +332,6 @@ void LogEntry::classifyLogMessage() {
         kind_ = LogEntryKind::core_stopping;
         return;
     }
-    if (textContains("restarting...")) {
-        class_ = Class::program;
-        kind_ = LogEntryKind::none;
-        return;
-    }
     class_ = Class::info;
     kind_ = LogEntryKind::none;
 }

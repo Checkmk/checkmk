@@ -5,27 +5,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
+from cmk.gui.plugins.wato.check_parameters.kube import age_levels_dropdown
 from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithoutItem,
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
 )
-from cmk.gui.valuespec import Age, CascadingDropdown, Dictionary, Tuple
-
-
-def __levels(title):
-    return CascadingDropdown(
-        title=title,
-        choices=[
-            ("no_levels", _("No levels"), None),
-            (
-                "levels",
-                _("Impose levels"),
-                Tuple(elements=[Age(title=_("Warning above")), Age(title=_("Critical above"))]),
-            ),
-        ],
-        default_value="no_levels",
-    )
+from cmk.gui.valuespec import Dictionary
 
 
 def _parameter_valuespec():
@@ -38,9 +24,15 @@ def _parameter_valuespec():
             )
         ),
         elements=[
-            ("progressing", __levels(_("Time until alert, if deployment not in progressing"))),
-            ("available", __levels(_("Time until alert, if deployment not available"))),
-            ("replicafailure", __levels(_("Time until alert, if deployment in replica failure"))),
+            (
+                "progressing",
+                age_levels_dropdown(_("Time until alert, if deployment not in progressing")),
+            ),
+            ("available", age_levels_dropdown(_("Time until alert, if deployment not available"))),
+            (
+                "replicafailure",
+                age_levels_dropdown(_("Time until alert, if deployment in replica failure")),
+            ),
         ],
         optional_keys=["progressing", "available", "replicafailure"],
     )

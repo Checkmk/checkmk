@@ -6,7 +6,7 @@
 
 import json
 import time
-from typing import Any, Mapping, Optional, Tuple
+from typing import Mapping, Optional, Tuple
 
 from .agent_based_api.v1 import (
     check_levels,
@@ -20,6 +20,7 @@ from .agent_based_api.v1 import (
 )
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 from .utils.k8s import DeploymentStrategy, Replicas
+from .utils.kube import VSResultAge
 from .utils.kube_deployment_strategy import strategy_text
 
 
@@ -70,14 +71,17 @@ def _check_duration(
     )
 
 
-def _levels(params: Mapping[str, Any], param_name: str) -> Optional[Tuple[int, int]]:
+def _levels(
+    params: Mapping[str, VSResultAge],
+    param_name: str,
+) -> Optional[Tuple[int, int]]:
     if (levels_upper := params.get(param_name, "no_levels")) == "no_levels":
         return None
     return levels_upper[1]
 
 
 def check_kube_replicas(
-    params: Mapping[str, Any],
+    params: Mapping[str, VSResultAge],
     section_kube_replicas: Optional[Replicas],
     section_kube_deployment_strategy: Optional[DeploymentStrategy],
 ) -> CheckResult:

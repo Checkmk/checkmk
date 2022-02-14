@@ -24,6 +24,7 @@ from cmk.base.plugins.agent_based.utils.k8s import (
     Replicas,
     RollingUpdate,
 )
+from cmk.base.plugins.agent_based.utils.kube import VSResultAge
 
 
 def test_parse_kube_replicas() -> None:
@@ -223,7 +224,7 @@ def test_check_kube_replicas() -> None:
     ],
 )
 def test_check_kube_replicas_outdated_replicas(
-    params: Mapping[str, Any],
+    params: Mapping[str, VSResultAge],
     replicas: Replicas,
     strategy: DeploymentStrategy,
     value_store: MutableMapping[str, Any],
@@ -311,7 +312,7 @@ def test_check_kube_replicas_outdated_replicas(
     ],
 )
 def test_check_kube_replicas_not_ready_replicas(
-    params: Mapping[str, Any],
+    params: Mapping[str, VSResultAge],
     replicas: Replicas,
     value_store: MutableMapping[str, Any],
     expected_check_result: Sequence[Union[Result, Metric]],
@@ -410,7 +411,7 @@ def test_check_kube_replicas_not_ready_replicas(
     ],
 )
 def test_check_kube_replicas_not_ready_and_outdated(
-    params: Mapping[str, Any],
+    params: Mapping[str, VSResultAge],
     replicas: Replicas,
     strategy: DeploymentStrategy,
     value_store: MutableMapping[str, Any],
@@ -487,7 +488,7 @@ def test_check_kube_replicas_not_ready_and_outdated(
     ],
 )
 def test_check_kube_replicas_value_store_reset(
-    params: Mapping[str, Any],
+    params: Mapping[str, VSResultAge],
     replicas: Replicas,
     value_store: MutableMapping[str, Any],
     expected_check_result: Sequence[Union[Result, Metric]],

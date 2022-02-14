@@ -7,7 +7,7 @@
 import json
 import time
 from dataclasses import dataclass
-from typing import Any, Mapping, Optional, Tuple
+from typing import Mapping, Optional, Tuple
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     check_levels,
@@ -23,6 +23,7 @@ from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
     StringTable,
 )
 from cmk.base.plugins.agent_based.utils.k8s import PodConditions
+from cmk.base.plugins.agent_based.utils.kube import VSResultAge
 
 
 def parse(string_table: StringTable) -> PodConditions:
@@ -50,7 +51,7 @@ ADDITIONAL_SERVICE_TEXT = {
 LOGICAL_ORDER = ["scheduled", "initialized", "containersready", "ready"]
 
 
-def get_levels_for(params: Mapping[str, Any], key: str) -> Optional[Tuple[int, int]]:
+def get_levels_for(params: Mapping[str, VSResultAge], key: str) -> Optional[Tuple[int, int]]:
     """Get the levels for the given key from the params
 
     Examples:
@@ -74,7 +75,7 @@ def get_levels_for(params: Mapping[str, Any], key: str) -> Optional[Tuple[int, i
     return levels[1]
 
 
-def check(params: Mapping[str, Any], section: PodConditions) -> CheckResult:
+def check(params: Mapping[str, VSResultAge], section: PodConditions) -> CheckResult:
     """Check every condition in the section. Return one result if all conditions
     passed. Otherwise, return four results if one or more conditions are faulty
     or missing, defining each state according to `last_transition_time` and the

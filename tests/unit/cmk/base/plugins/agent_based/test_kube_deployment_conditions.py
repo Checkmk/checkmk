@@ -14,7 +14,7 @@ import pytest
 from cmk.base.plugins.agent_based import kube_deployment_conditions
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, State
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult, StringTable
-from cmk.base.plugins.agent_based.utils.kube import DeploymentConditions
+from cmk.base.plugins.agent_based.utils.kube import DeploymentConditions, VSResultAge
 
 MINUTE = 60
 TIMESTAMP = 120
@@ -55,7 +55,7 @@ def time(mocker):
 
 
 @pytest.fixture
-def params() -> Mapping[str, Any]:
+def params() -> Mapping[str, VSResultAge]:
     return dict(
         progressing=("levels", (WARN * MINUTE, CRIT * MINUTE)),
         available=("levels", (WARN * MINUTE, CRIT * MINUTE)),
@@ -143,7 +143,7 @@ def section(string_table: StringTable) -> DeploymentConditions:
 
 
 @pytest.fixture
-def check_result(params: Mapping[str, Any], section: DeploymentConditions) -> CheckResult:
+def check_result(params: Mapping[str, VSResultAge], section: DeploymentConditions) -> CheckResult:
     return kube_deployment_conditions.check(params, section)
 
 

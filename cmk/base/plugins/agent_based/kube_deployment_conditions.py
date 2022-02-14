@@ -6,7 +6,7 @@
 
 import json
 import time
-from typing import Any, Mapping, Optional, Tuple
+from typing import Mapping, Optional, Tuple
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     check_levels,
@@ -21,7 +21,11 @@ from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
     DiscoveryResult,
     StringTable,
 )
-from cmk.base.plugins.agent_based.utils.kube import ConditionStatus, DeploymentConditions
+from cmk.base.plugins.agent_based.utils.kube import (
+    ConditionStatus,
+    DeploymentConditions,
+    VSResultAge,
+)
 
 CONDITIONS_OK_MAPPINGS = {
     "available": ConditionStatus.TRUE,
@@ -46,13 +50,15 @@ def discovery(section: DeploymentConditions) -> DiscoveryResult:
     yield Service()
 
 
-def condition_levels(params: Mapping[str, Any], condition: str) -> Optional[Tuple[int, int]]:
+def condition_levels(
+    params: Mapping[str, VSResultAge], condition: str
+) -> Optional[Tuple[int, int]]:
     if (levels := params.get(condition, "no_levels")) == "no_levels":
         return None
     return levels[1]
 
 
-def check(params: Mapping[str, Any], section: DeploymentConditions) -> CheckResult:
+def check(params: Mapping[str, VSResultAge], section: DeploymentConditions) -> CheckResult:
     conditions = section.dict()
     if all(
         condition["status"] is CONDITIONS_OK_MAPPINGS[name]

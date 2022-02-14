@@ -8,41 +8,34 @@
 from typing import Literal
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import Age, CascadingDropdown, Tuple
+from cmk.gui.valuespec import Age, CascadingDropdown, Tuple, ValueSpec
 
 
-def wrap_with_no_levels_dropdown(title, value_spec) -> CascadingDropdown:
+def wrap_with_no_levels_dropdown(
+    title: str,
+    value_spec: ValueSpec,
+    default_choice: Literal["levels", "no_levels"] = "no_levels",
+) -> CascadingDropdown:
     return CascadingDropdown(
         title=title,
         choices=[
             ("no_levels", _("No Levels")),
             ("levels", _("Impose levels"), value_spec),
         ],
-        default_value="no_levels",
+        default_value=default_choice,
     )
 
 
 def age_levels_dropdown(
     title: str, default_choice: Literal["levels", "no_levels"] = "no_levels"
 ) -> CascadingDropdown:
-    return CascadingDropdown(
+    return wrap_with_no_levels_dropdown(
         title=title,
-        choices=[
-            (
-                "no_levels",
-                _("No levels"),
-                None,
-            ),
-            (
-                "levels",
-                _("Impose levels"),
-                Tuple(
-                    elements=[
-                        Age(title=_("Warning after"), default_value=300),
-                        Age(title=_("Critical after"), default_value=600),
-                    ],
-                ),
-            ),
-        ],
-        default_value=default_choice,
+        value_spec=Tuple(
+            elements=[
+                Age(title=_("Warning after"), default_value=300),
+                Age(title=_("Critical after"), default_value=600),
+            ],
+        ),
+        default_choice=default_choice,
     )

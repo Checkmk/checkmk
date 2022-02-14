@@ -137,11 +137,10 @@ class BIComputer:
 
         # Filter aggregation group names
         # Note: Paths are also available as names
-        group_names = set(compiled_aggregation.groups.names +
-                          ["/".join(x) for x in compiled_aggregation.groups.paths])
-        if bi_aggregation_filter.group_names and len(
-                group_names.intersection(bi_aggregation_filter.group_names)) == 0:
-            return False
+        if bi_aggregation_filter.group_names:
+            if len(compiled_aggregation.groups.combined_groups().intersection(
+                    bi_aggregation_filter.group_names)) == 0:
+                return False
 
         # Filter aggregation group paths
         group_paths = compiled_aggregation.groups.paths

@@ -130,9 +130,7 @@ def api_get_aggregation_state(filter_names: Optional[List[str]] = None,
 
     aggregations = {}
     results = bi_manager.computer.compute_result_for_filter(bi_aggregation_filter)
-    for compiled_aggregation, node_result_bundles in results:
-        if filter_groups and not any(x in filter_groups for x in compiled_aggregation.groups.names):
-            continue
+    for _compiled_aggregation, node_result_bundles in results:
         for node_result_bundle in node_result_bundles:
             aggr_title = node_result_bundle.instance.properties.title
             required_hosts = [x[1] for x in node_result_bundle.instance.get_required_hosts()]

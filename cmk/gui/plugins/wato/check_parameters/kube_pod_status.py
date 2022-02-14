@@ -7,7 +7,7 @@
 from typing import List, Literal, NamedTuple, Sequence, Tuple
 
 from cmk.gui.i18n import _
-from cmk.gui.plugins.wato.check_parameters.kube import valuespec_age
+from cmk.gui.plugins.wato.check_parameters.kube import age_levels_dropdown
 from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithoutItem,
     rulespec_registry,
@@ -47,12 +47,13 @@ def _parameter_valuespec_kube_pod_status(sections: Sequence[Section]):
     elements: List[Tuple[str, CascadingDropdown]] = []
     for options, default_choice in sections:
         elements.extend(
-            (option, valuespec_age(option, default_choice=default_choice)) for option in options
+            (option, age_levels_dropdown(option, default_choice=default_choice))
+            for option in options
         )
     elements.append(
         (
             "other",
-            valuespec_age(title="Other", default_choice="no_levels"),
+            age_levels_dropdown(title="Other", default_choice="no_levels"),
         )
     )
 

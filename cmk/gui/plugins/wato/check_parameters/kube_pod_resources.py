@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.plugins.wato.check_parameters.kube import valuespec_age
+from cmk.gui.plugins.wato.check_parameters.kube import age_levels_dropdown
 from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithoutItem,
     rulespec_registry,
@@ -19,7 +19,7 @@ def _parameter_valuespec_kube_pod_resources(help_text: str):
         elements=[
             (
                 "pending",
-                valuespec_age(title=_("Define levels for pending pods")),
+                age_levels_dropdown(title=_("Define levels for pending pods")),
             ),
             (
                 "free",

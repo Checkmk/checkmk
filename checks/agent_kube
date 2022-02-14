@@ -43,6 +43,8 @@ def agent_kube_arguments(
                 if "read" in collector_timeouts
                 else []
             )
+        if proxy := collector_params.get("proxy"):
+            args.extend(["--cluster-collector-proxy", get_http_proxy(proxy).serialize()])
 
     return args
 

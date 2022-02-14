@@ -47,6 +47,7 @@ from pydantic import BaseModel
 import cmk.utils.password_store
 import cmk.utils.paths
 import cmk.utils.profile
+from cmk.utils.http_proxy_config import deserialize_http_proxy_config, HTTPProxyConfig
 
 from cmk.special_agents.utils import vcrtrace
 from cmk.special_agents.utils.agent_common import ConditionalPiggybackSection, SectionWriter
@@ -165,6 +166,16 @@ def parse_arguments(args: List[str]) -> argparse.Namespace:
     p.add_argument(
         "--cluster-collector-endpoint",
         help="Endpoint to query metrics from Kubernetes cluster agent",
+    )
+    p.add_argument(
+        "--cluster-collector-proxy",
+        type=str,
+        default=None,
+        metavar="PROXY",
+        help=(
+            "HTTP proxy used to connect to the Kubernetes cluster agent. If not set, the environment settings "
+            "will be used."
+        ),
     )
 
     p.add_argument("--verify-cert-api", action="store_true", help="Verify certificate")
@@ -1015,6 +1026,7 @@ def request_cluster_collector(
     token: str,
     verify: bool,
     timeout: TCPTimeout,
+    proxy: HTTPProxyConfig,
 ) -> Any:
     if not verify:
         LOGGER.info("Disabling SSL certificate verification")
@@ -1029,6 +1041,7 @@ def request_cluster_collector(
             headers={"Authorization": f"Bearer {token}"},
             verify=verify,
             timeout=(timeout.connect, timeout.read),
+            proxies=proxy.to_requests_proxies(),
         )
         cluster_resp.raise_for_status()
     except requests.HTTPError as e:
@@ -1550,6 +1563,7 @@ def main(args: Optional[List[str]] = None) -> int:
                     arguments.token,
                     arguments.verify_cert_collector,
                     cluster_collector_timeout,
+                    deserialize_http_proxy_config(arguments.cluster_collector_proxy),
                 )
 
                 try:
@@ -1599,6 +1613,7 @@ def main(args: Optional[List[str]] = None) -> int:
                     arguments.token,
                     arguments.verify_cert_collector,
                     cluster_collector_timeout,
+                    deserialize_http_proxy_config(arguments.cluster_collector_proxy),
                 )
 
                 try:

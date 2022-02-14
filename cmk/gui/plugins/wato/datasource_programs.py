@@ -853,6 +853,10 @@ def _valuespec_special_agents_kube():
                             ),
                         ),
                         _ssl_verification(),
+                        (
+                            "proxy",
+                            HTTPProxyReference(),
+                        ),
                         _tcp_timeouts(),
                     ],
                     required_keys=["endpoint", "verify-cert"],

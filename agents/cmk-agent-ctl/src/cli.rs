@@ -74,6 +74,10 @@ pub struct PullArgs {
     #[structopt(long, short = "P", parse(from_str))]
     pub port: Option<String>,
 
+    /// List of IP addresses & templates separated with ' '
+    #[structopt(long, short = "A", parse(from_str))]
+    pub allowed_ip: Option<Vec<String>>,
+
     #[structopt(flatten)]
     pub logging_opts: LoggingOpts,
 }

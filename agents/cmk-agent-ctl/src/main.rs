@@ -31,13 +31,13 @@ fn daemon(
     legacy_pull_marker: std::path::PathBuf,
     port: String,
     max_connections: usize,
+    allowed_ip: Vec<String>,
 ) -> AnyhowResult<()> {
     let registry_for_push = registry.clone();
     let registry_for_pull = registry;
 
     let (tx_push, rx) = mpsc::channel();
     let tx_pull = tx_push.clone();
-
     thread::spawn(move || {
         tx_push.send(push::push(registry_for_push)).unwrap();
     });
@@ -48,6 +48,7 @@ fn daemon(
                 legacy_pull_marker,
                 port,
                 max_connections,
+                allowed_ip,
             ))
             .unwrap();
     });
@@ -163,6 +164,7 @@ fn run_requested_mode(args: cli::Args, paths: constants::Paths) -> AnyhowResult<
                 .port
                 .unwrap_or_else(|| constants::AGENT_PORT.to_owned()),
             constants::MAX_CONNECTIONS,
+            pull_args.allowed_ip.unwrap_or_default(),
         ),
         cli::Args::Daemon(daemon_args) => daemon(
             registry,
@@ -171,6 +173,7 @@ fn run_requested_mode(args: cli::Args, paths: constants::Paths) -> AnyhowResult<
                 .port
                 .unwrap_or_else(|| constants::AGENT_PORT.to_owned()),
             constants::MAX_CONNECTIONS,
+            daemon_args.allowed_ip.unwrap_or_default(),
         ),
         cli::Args::Dump { .. } => dump::dump(),
         cli::Args::Status(status_args) => status::status(&registry, status_args.json),

@@ -64,6 +64,7 @@ pub async fn pull(
     legacy_pull_marker: std::path::PathBuf,
     port: String,
     max_connections: usize,
+    _allowed_ip: Vec<String>, // TODO: use this value!
 ) -> AnyhowResult<()> {
     let listener = TcpListener::bind(format!("0.0.0.0:{}", port)).await?;
     let mut pull_config = PullConfiguration::new(registry, legacy_pull_marker)?;

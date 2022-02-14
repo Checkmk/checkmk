@@ -43,7 +43,6 @@ import socket
 import sys
 import time
 from optparse import OptionParser  # pylint: disable=deprecated-module
-from pathlib import Path
 from typing import List
 
 DEFAULT_SETTINGS = {
@@ -232,7 +231,7 @@ def read_config(env):
     cfg_path = os.path.join(os.getenv("MK_CONFDIR", "/etc/check_mk"), "tinkerforge.cfg")
 
     if os.path.isfile(cfg_path):
-        exec(Path(cfg_path).read_text(), settings, settings)
+        exec(open(cfg_path).read(), settings, settings)  # pylint:disable=consider-using-with
     return settings
 
 

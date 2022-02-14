@@ -12,7 +12,6 @@ import getopt
 import os
 import subprocess
 import sys
-from pathlib import Path
 
 
 def usage():
@@ -221,24 +220,25 @@ def main(sys_argv=None):
     if opt_debug:
         sys.stderr.write("executing external command: %s\n" % cmd)
 
-    result = subprocess.run(  # nosec
+    result = subprocess.Popen(  # nosec  # pylint:disable=consider-using-with
         cmd,
         shell=True,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
         stdin=None,
         encoding="utf-8",
-        check=False,
     )
+    stdout, stderr = result.communicate()
+    exit_code = result.wait()
 
-    if result.returncode not in [0, 1]:
-        sys.stderr.write("Error connecting via ssh: %s\n" % result.stderr)
+    if exit_code not in [0, 1]:
+        sys.stderr.write("Error connecting via ssh: %s\n" % stderr)
         sys.exit(2)
 
-    lines = result.stdout.split("\n")
+    lines = stdout.split("\n")
 
     if lines[0].startswith("CMMVC7016E") or (len(lines) > 1 and lines[1].startswith("CMMVC7016E")):
-        sys.stderr.write(result.stdout)
+        sys.stderr.write(stdout)
         sys.exit(2)
 
     # Quite strange.. Why not simply print stdout?
@@ -248,7 +248,7 @@ def main(sys_argv=None):
     if g_profile:
         g_profile.dump_stats(g_profile_path)
         show_profile = os.path.join(os.path.dirname(g_profile_path), "show_profile.py")
-        Path(show_profile).write_text(
+        open(show_profile, "w").write(  # pylint:disable=consider-using-with
             "#!/usr/bin/python\n"
             "import pstats\n"
             "stats = pstats.Stats('%s')\n"

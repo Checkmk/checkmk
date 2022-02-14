@@ -459,13 +459,13 @@ def _dialog_menu(title, text, choices, defvalue, oktext, canceltext):
 
 def _run_dialog(args):
     env = {"TERM": os.getenv("TERM", "linux"), "LANG": "de_DE.UTF-8"}
-    completed_process = subprocess.run(
-        ["dialog", "--shadow"] + args, env=env, stderr=subprocess.PIPE, check=False
+    p = subprocess.Popen(  # pylint:disable=consider-using-with
+        ["dialog", "--shadow"] + args, env=env, stderr=subprocess.PIPE
     )
-    if completed_process.stderr is None:
+    if p.stderr is None:
         raise Exception()
-    response = completed_process.stderr
-    return completed_process.returncode == 0, response
+    response = p.stderr.read()
+    return os.waitpid(p.pid, 0)[1] == 0, response
 
 
 def _create_fallback_man_page(name, path, error_message):

@@ -182,3 +182,7 @@ def parse_container_memory(string_table: StringTable, cgroup: int = 1) -> Memory
         mem_usage=container_memory_usage,
         mem_cache=container_memory_total_inactive_file,
     )
+
+
+def is_string_table_heading(line: List[str]) -> bool:
+    return len(line) == 1 and line[0].startswith("[") and line[0].endswith("]")

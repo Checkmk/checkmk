@@ -422,7 +422,6 @@ class ErrorReporter:
         ("check", "ddn_s2a_stats_readhits", "checkgroup_parameters:read_hits"),
         ("check", "dell_idrac_fans", "checkgroup_parameters:hw_fans"),
         ("check", "dell_om_fans", "checkgroup_parameters:hw_fans"),
-        ("check", "docker_container_diskstat_cgroupv2", "checkgroup_parameters:diskstat"),
         ("check", "docsis_channels_upstream", "checkgroup_parameters:docsis_channels_upstream"),
         ("check", "domino_transactions", "checkgroup_parameters:domino_transactions"),
         ("check", "domino_users", "checkgroup_parameters:domino_users"),

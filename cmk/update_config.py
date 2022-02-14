@@ -145,6 +145,9 @@ REMOVED_CHECK_PLUGIN_MAP = {
     CheckPluginName("arbor_peakflow_sp_cpu_load"): CheckPluginName("cpu_loads"),
     CheckPluginName("arbor_peakflow_tms_cpu_load"): CheckPluginName("cpu_loads"),
     CheckPluginName("arbor_pravail_cpu_load"): CheckPluginName("cpu_loads"),
+    CheckPluginName("lxc_container_cpu"): CheckPluginName("cpu_utilization_os"),
+    CheckPluginName("docker_container_cpu"): CheckPluginName("cpu_utilization_os"),
+    CheckPluginName("docker_container_diskstat"): CheckPluginName("diskstat"),
 }
 
 # List[(old_config_name, new_config_name, replacement_dict{old: new})]

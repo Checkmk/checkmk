@@ -1,0 +1,12 @@
+Title: mk_docker.py: add cgroupv2 support: memory
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1638197126
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.1.0i1
+
+Add support for parsing mk_docker.py agent plugin output that runs on hosts
+with cgroup v2.

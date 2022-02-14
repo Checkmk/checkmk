@@ -1,0 +1,17 @@
+Title: mk_docker.py: diskstat: do not discovery devices without counters
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1640159769
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0i1
+
+Before this change the discovery behaviour of the diskstat check was dependent
+on the source of the data: When running an agent inside a docker container,
+devices without counters where not discovered, when running the mk_docker.py
+agent plugin those devices where discovered.
+
+With this Werk devices without counters are no longer discovered with
+mk_docker.py

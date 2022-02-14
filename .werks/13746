@@ -1,0 +1,13 @@
+Title: Support Diagnostics: Extend and improve functionality
+Class: feature
+Compatible: compat
+Component: wato
+Date: 1644819173
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.0.0p20
+
+The usage of the GUI was improved. There's a separate section "Checkmk Log files" now, the component "Business Intelligence" was added and the inline help now contains a description of each file.
+The sctructure of the tar.gz file was slightly changed and the following information is now always included in the dump: Checkmk performance data (number of helper processes, current core statistics), HW information (CPU and Memory), and the environment variables of the site user.

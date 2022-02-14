@@ -19,7 +19,7 @@ def wrap_with_no_levels_dropdown(
     return CascadingDropdown(
         title=title,
         choices=[
-            ("no_levels", _("No Levels")),
+            ("no_levels", _("Do not impose levels")),
             ("levels", _("Impose levels"), value_spec),
         ],
         default_value=default_choice,

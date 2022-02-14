@@ -26,7 +26,7 @@ def _parameter_valuespec_kube_pod_resources(help_text: str):
                 CascadingDropdown(
                     title=_("Define lower levels for free pods (clusters and nodes only)"),
                     choices=[
-                        ("no_levels", _("No Levels")),
+                        ("no_levels", _("Do not impose levels")),
                         (
                             "levels_perc",
                             _("Percentual levels"),

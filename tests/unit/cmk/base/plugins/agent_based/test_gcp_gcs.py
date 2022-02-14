@@ -41,7 +41,7 @@ SECTION_TABLE = [
 def test_parse_gcp():
     section = parse_gcp_gcs(SECTION_TABLE)
     n_rows = sum(len(i.rows) for i in section.values())
-    # first row contains general section information and no metrocs
+    # first row contains general section information and no metrics
     assert n_rows == len(SECTION_TABLE) - 1
 
 

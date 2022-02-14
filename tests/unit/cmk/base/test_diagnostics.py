@@ -4,17 +4,20 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import json
-from pathlib import Path
-import shutil
 import collections
-import requests
+import csv
+import json
+import shutil
+from pathlib import Path
+
 import pytest  # type: ignore[import]
+import requests
 
 import livestatus
 
-import cmk.utils.paths
 import cmk.utils.packaging as packaging
+import cmk.utils.paths
+from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
 
 import cmk.base.diagnostics as diagnostics
 
@@ -128,8 +131,84 @@ def test_diagnostics_element_general_content(tmp_path, _collectors):
     assert sorted(content.keys()) == sorted(info_keys)
 
 
-def test_diagnostics_element_local_files():
-    diagnostics_element = diagnostics.LocalFilesDiagnosticsElement()
+def test_diagnostics_element_perfdata():
+    diagnostics_element = diagnostics.PerfDataDiagnosticsElement()
+    assert diagnostics_element.ident == "perfdata"
+    assert diagnostics_element.title == "Performance Data"
+    assert diagnostics_element.description == (
+        "Performance Data related to sizing, e.g. number of helpers, hosts, services")
+
+
+def test_diagnostics_element_perfdata_content(tmp_path, _collectors, mock_livestatus):
+
+    test_columns = {
+        "cmc_check_helpers": 5,
+        "cmc_checker_helpers": 4,
+        "cmc_cmk_helpers": 10,
+        "cmc_fetcher_helpers": 13,
+        "cmc_real_time_helpers": 1,
+        "connections": 1253,
+        "livestatus_version": "2022.01.13",
+        "program_version": "Check_MK 2022.01.13",
+        "program_start": 1643262759,
+        "num_hosts": 1,
+        "num_services": 125,
+        "core_pid": 73181,
+        "license_usage_history": 12345,
+    }
+
+    live: MockLiveStatusConnection = mock_livestatus
+    live.set_sites(["local"])
+    live.add_table("status", [test_columns])
+    live.expect_query("GET status\nColumnHeaders: on\n")
+
+    with live(expect_status_query=False):
+        # response = live.result_of_next_query('GET status')
+        # assert len(response) == 1
+
+        diagnostics_element = diagnostics.PerfDataDiagnosticsElement()
+        tmppath = Path(tmp_path).joinpath("tmp")
+        filepath = next(diagnostics_element.add_or_get_files(tmppath, _collectors))
+
+        assert isinstance(filepath, Path)
+        assert filepath == tmppath.joinpath("perfdata.json")
+
+        content = json.loads(filepath.open().read())
+
+        del test_columns["license_usage_history"]
+        for info_key in test_columns:
+            assert info_key in content
+
+        assert "license_usage_history" not in content
+
+
+def test_diagnostics_element_hw_info():
+    diagnostics_element = diagnostics.HWDiagnosticsElement()
+    assert diagnostics_element.ident == "hwinfo"
+    assert diagnostics_element.title == "HW Information"
+    assert diagnostics_element.description == ("Hardware information of the Checkmk Server")
+
+
+def test_diagnostics_element_hw_info_content(tmp_path, _collectors):
+    diagnostics_element = diagnostics.HWDiagnosticsElement()
+    tmppath = Path(tmp_path).joinpath("tmp")
+    filepath = next(diagnostics_element.add_or_get_files(tmppath, _collectors))
+
+    assert isinstance(filepath, Path)
+    assert filepath == tmppath.joinpath("hwinfo.json")
+
+    info_keys = [
+        "cpuinfo",
+        "loadavg",
+        "meminfo",
+    ]
+    content = json.loads(filepath.open().read())
+
+    assert sorted(content.keys()) == sorted(info_keys)
+
+
+def test_diagnostics_element_local_files_json():
+    diagnostics_element = diagnostics.LocalFilesJSONDiagnosticsElement()
     assert diagnostics_element.ident == "local_files"
     assert diagnostics_element.title == "Local Files"
     assert diagnostics_element.description == (
@@ -137,8 +216,8 @@ def test_diagnostics_element_local_files():
         "This also includes information about installed MKPs.")
 
 
-def test_diagnostics_element_local_files_content(tmp_path, _collectors):
-    diagnostics_element = diagnostics.LocalFilesDiagnosticsElement()
+def test_diagnostics_element_local_files_json_content(tmp_path, _collectors):
+    diagnostics_element = diagnostics.LocalFilesJSONDiagnosticsElement()
 
     def create_test_package(name):
         check_dir = cmk.utils.paths.local_checks_dir
@@ -236,6 +315,104 @@ def test_diagnostics_element_local_files_content(tmp_path, _collectors):
     assert content["optional_packages"] == {}
 
     shutil.rmtree(str(packaging.package_dir()))
+
+
+def test_diagnostics_element_local_files_csv_content(tmp_path, _collectors):
+    diagnostics_element = diagnostics.LocalFilesCSVDiagnosticsElement()
+    check_dir = cmk.utils.paths.local_checks_dir
+
+    def create_test_package(name):
+        check_dir.mkdir(parents=True, exist_ok=True)
+
+        with check_dir.joinpath(name).open("w", encoding="utf-8") as f:
+            f.write("test-check\n")
+
+        package_info = packaging.get_initial_package_info(name)
+        package_info["files"] = {
+            "checks": [name],
+        }
+
+        packaging.create(package_info)
+
+    packaging.package_dir().mkdir(parents=True, exist_ok=True)
+    name = "test-package-csv"
+    create_test_package(name)
+
+    tmppath = Path(tmp_path).joinpath("tmp")
+    filepath = next(diagnostics_element.add_or_get_files(tmppath, _collectors))
+
+    assert isinstance(filepath, Path)
+    assert filepath == tmppath.joinpath("local_files.csv")
+
+    column_headers = [
+        "path",
+        "exists",
+        "package",
+        "author",
+        "description",
+        "download_url",
+        "name",
+        "title",
+        "version",
+        "version.min_required",
+        "version.packaged",
+        "version.usable_until",
+        "permissions",
+        "installed",
+        "optional_packages",
+        "unpackaged",
+    ]
+
+    with open(filepath, newline="") as csvfile:
+        csvreader = csv.DictReader(csvfile, delimiter=";", quotechar="'")
+        csvdata = {}
+        for row in csvreader:
+            csvdata[row["path"]] = row
+            last_row = row
+
+    assert sorted(last_row.keys()) == sorted(column_headers)
+
+    path = check_dir.joinpath(name)
+    assert str(path) in csvdata
+
+    #assert csvdata[str(path)] == {}
+    assert csvdata[str(path)]["permissions"] == "420"
+    assert csvdata[str(path)]["unpackaged"] == "N/A"
+    assert csvdata[str(path)]["exists"] == "file"
+    assert csvdata[str(path)]["installed"] == "YES"
+
+    shutil.rmtree(str(packaging.package_dir()))
+
+
+def test_diagnostics_element_environment():
+    diagnostics_element = diagnostics.EnvironmentDiagnosticsElement()
+    assert diagnostics_element.ident == "environment"
+    assert diagnostics_element.title == "Environment Variables"
+    assert diagnostics_element.description == ("Variables set in the site user's environment")
+
+
+def test_diagnostics_element_environment_content(monkeypatch, tmp_path, _collectors):
+
+    environment_vars = {"France": "Paris", "Italy": "Rome", "Germany": "Berlin"}
+
+    with monkeypatch.context() as m:
+        for key in environment_vars:
+            m.setenv(key, environment_vars[key])
+
+        diagnostics_element = diagnostics.EnvironmentDiagnosticsElement()
+        tmppath = Path(tmp_path).joinpath("tmp")
+        filepath = next(diagnostics_element.add_or_get_files(tmppath, _collectors))
+
+        assert isinstance(filepath, Path)
+        assert filepath == tmppath.joinpath("environment.json")
+
+        content = json.loads(filepath.open().read())
+        assert "France" in content
+
+        for key in environment_vars:
+            assert content[key] == environment_vars[key]
+
+        assert content["OMD_SITE"] == cmk.gui.config.omd_site()
 
 
 def test_diagnostics_element_omd_config():
@@ -517,13 +694,14 @@ def test_diagnostics_element_checkmk_files_content(tmp_path, _collectors, diag_e
     with test_conf_filepath.open("w", encoding="utf-8") as f:
         f.write("testvar = testvalue")
 
+    relative_path = str(Path(test_dir).relative_to(cmk.utils.paths.omd_root))
     short_test_conf_filepath = str(Path(test_conf_filepath).relative_to(test_dir))
     diagnostics_element = diag_elem([short_test_conf_filepath])
     tmppath = Path(tmp_path).joinpath("tmp")
     tmppath.mkdir(parents=True, exist_ok=True)
     filepath = next(diagnostics_element.add_or_get_files(tmppath, _collectors))
 
-    assert filepath == tmppath.joinpath("test-%s" % test_filename)
+    assert filepath == tmppath.joinpath("%s/test/%s" % (relative_path, test_filename))
 
     with filepath.open("r", encoding="utf-8") as f:
         content = f.read()

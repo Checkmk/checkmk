@@ -198,7 +198,7 @@ def test_diagnostics_get_checkmk_file_info_by_name(component, sensitivity_values
     ("mknotifyd.state", 1),
     ("notify.log", 1),
     ("rrdcached.log", 3),
-    ("web.log", 3),
+    ("web.log", 1),
 ])
 def test_diagnostics_file_info_of_comp_notifications(rel_filepath, sensitivity_value):
     assert diagnostics.get_checkmk_file_info(

@@ -16,11 +16,14 @@ from cmk.utils.diagnostics import (
     CheckmkFileSensitivity,
     DiagnosticsParameters,
     get_checkmk_config_files_map,
+    get_checkmk_file_description,
     get_checkmk_file_info,
     get_checkmk_file_sensitivity_for_humans,
     get_checkmk_log_files_map,
     OPT_CHECKMK_CONFIG_FILES,
+    OPT_CHECKMK_LOG_FILES,
     OPT_CHECKMK_OVERVIEW,
+    OPT_COMP_BUSINESS_INTELLIGENCE,
     OPT_COMP_GLOBAL_SETTINGS,
     OPT_COMP_HOSTS_AND_FOLDERS,
     OPT_COMP_NOTIFICATIONS,
@@ -147,6 +150,8 @@ class ModeDiagnostics(WatoMode):
         return Dictionary(
             title=_("Collect diagnostic dump"),
             render="form",
+            help="File Descriptions:<br>%s" %
+            "<br>".join([" - %s: %s" % (f, d) for (f, d) in get_checkmk_file_description()]),
             elements=[
                 ("site",
                  DropdownChoice(
@@ -204,6 +209,10 @@ class ModeDiagnostics(WatoMode):
                         "DCD, Liveproxyd, MKEventd, MKNotifyd, RRDCached "
                         "(Agent plugin mk_inventory needs to be installed)"),
              )),
+            (OPT_CHECKMK_LOG_FILES,
+             self._get_component_specific_checkmk_files_choices(
+                 "Checkmk Log files",
+                 [(f, get_checkmk_file_info(f)) for f in self._checkmk_log_files_map])),
             (OPT_CHECKMK_CONFIG_FILES,
              self._get_component_specific_checkmk_files_choices(
                  "Checkmk Configuration files",
@@ -251,6 +260,14 @@ class ModeDiagnostics(WatoMode):
                         _CHECKMK_FILES_NOTE),
                  elements=self._get_component_specific_checkmk_files_elements(
                      OPT_COMP_NOTIFICATIONS),
+                 default_keys=["config_files"],
+             )),
+            (OPT_COMP_BUSINESS_INTELLIGENCE,
+             Dictionary(
+                 title=_("Business Intelligence"),
+                 help=_("Configuration files ('*.bi') from etc/check_mk.%s" % _CHECKMK_FILES_NOTE),
+                 elements=self._get_component_specific_checkmk_files_elements(
+                     OPT_COMP_BUSINESS_INTELLIGENCE),
                  default_keys=["config_files"],
              )),
         ]

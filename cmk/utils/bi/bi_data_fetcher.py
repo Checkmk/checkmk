@@ -129,11 +129,19 @@ class BIStructureFetcher:
 
             # This data will be serialized to disc
             # Named tuples/dicts will be used later on when the data gets processed
+
+            # Remove hosts.mk suffix
+            cleaned_host_filename = host_filename[:-8] if host_filename.endswith(
+                "/hosts.mk") else host_filename
+            # Remove /wato prefix
+            cleaned_host_filename = cleaned_host_filename[6:] if cleaned_host_filename.startswith(
+                "/wato") else cleaned_host_filename
+
             site_data[site][host_name] = (
                 site,
                 set(host_tags.items()),
                 host_labels,
-                host_filename.rstrip("/hosts.mk"),
+                cleaned_host_filename,
                 services,
                 tuple(host_childs),
                 tuple(host_parents),

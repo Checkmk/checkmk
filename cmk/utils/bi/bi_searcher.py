@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Dict, List, Tuple
+from typing import Dict, List, Tuple, Iterable
 
 from cmk.utils.bi.bi_lib import ABCBISearcher, BIHostData, BIHostSearchMatch, BIServiceSearchMatch
 from cmk.utils.regex import regex
@@ -45,8 +45,9 @@ class BISearcher(ABCBISearcher):
         self._host_regex_miss_cache.clear()
 
     def search_hosts(self, conditions: Dict) -> List[BIHostSearchMatch]:
-        matched_hosts, matched_re_groups = self.filter_host_choice(list(self.hosts.values()),
-                                                                   conditions["host_choice"])
+        hosts, matched_re_groups = self.filter_host_choice(list(self.hosts.values()),
+                                                           conditions["host_choice"])
+        matched_hosts = self.filter_host_folder(hosts, conditions["host_folder"])
         matched_hosts = self.filter_host_tags(matched_hosts, conditions["host_tags"])
         matched_hosts = self.filter_host_labels(matched_hosts, conditions["host_labels"])
         return [BIHostSearchMatch(x, matched_re_groups[x.name]) for x in matched_hosts]
@@ -155,29 +156,36 @@ class BISearcher(ABCBISearcher):
         service_matches = self.filter_service_labels(service_matches, conditions["service_labels"])
         return service_matches
 
+    def filter_host_folder(
+        self,
+        hosts: Iterable[BIHostData],
+        folder_path: str,
+    ) -> Iterable[BIHostData]:
+        if not folder_path:
+            return hosts
+
+        folder_path = f"{folder_path}/"
+        return (x for x in hosts if x.folder.startswith(folder_path))
+
     def filter_host_tags(
         self,
-        hosts: List[BIHostData],
+        hosts: Iterable[BIHostData],
         tag_conditions: TaggroupIDToTagCondition,
-    ) -> List[BIHostData]:
-        return [
+    ) -> Iterable[BIHostData]:
+        return (
             host for host in hosts  #
             if all(
                 matches_tag_condition(
                     taggroup_id,
                     tag_condition,
                     host.tags,
-                ) for taggroup_id, tag_condition in tag_conditions.items())
-        ]
+                ) for taggroup_id, tag_condition in tag_conditions.items()))
 
-    def filter_host_labels(self, hosts: List[BIHostData], required_labels):
+    def filter_host_labels(self, hosts: Iterable[BIHostData],
+                           required_labels) -> Iterable[BIHostData]:
         if not required_labels:
             return hosts
-        matched_hosts = []
-        for host in hosts:
-            if matches_labels(host.labels, required_labels):
-                matched_hosts.append(host)
-        return matched_hosts
+        return (x for x in hosts if matches_labels(x.labels, required_labels))
 
     def filter_service_labels(self, services: List[BIServiceSearchMatch], required_labels):
         if not required_labels:

@@ -21,7 +21,7 @@ bi_structure_states = {
         {
             'cmk/check_mk_server': 'yes'
         },
-        "main_folder",
+        "",
         {
             'Check_MK Discovery': ({}, {
                 'cmk_is_discoverylabel': 'yes'
@@ -62,7 +62,7 @@ bi_structure_states = {
         {
             'cmk/check_mk_server': 'no'
         },
-        "main_folder/subfolder",
+        "subfolder/",
         {
             'Check_MK Discovery': ({}, {
                 'cmk_is_discoverylabel': 'yes'

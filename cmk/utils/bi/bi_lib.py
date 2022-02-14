@@ -388,15 +388,15 @@ class ABCBISearcher(metaclass=abc.ABCMeta):
 
     @abc.abstractmethod
     def filter_host_choice(self, hosts: List[BIHostData],
-                           condition: Dict) -> Tuple[List[BIHostData], Dict]:
+                           condition: Dict) -> Tuple[Iterable[BIHostData], Dict]:
         raise NotImplementedError()
 
     @abc.abstractmethod
     def filter_host_tags(
         self,
-        hosts: List[BIHostData],
+        hosts: Iterable[BIHostData],
         tag_conditions: TaggroupIDToTagCondition,
-    ) -> List[BIHostData]:
+    ) -> Iterable[BIHostData]:
         ...
 
 

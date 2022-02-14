@@ -68,6 +68,24 @@ def test_fixed_argument_search(config, num_expected_keys, expected_total_length,
     BIHostSearch,
     BIServiceSearch,
 ])
+@pytest.mark.parametrize("folder_name, expected_hostnames", [
+    pytest.param("subfolder", {"heute_clone"}, id="Match single host in subfolder"),
+    pytest.param("", {"heute", "heute_clone"}, id="Match all hosts in config"),
+    pytest.param("wrongfolder", set(), id="Match no host"),
+])
+def test_host_folder_search(search_class, bi_searcher_with_sample_config, folder_name,
+                            expected_hostnames):
+    schema_config = search_class.schema()().dump({"conditions": {"host_folder": folder_name}})
+    search = search_class(schema_config)
+    results = search.execute({}, bi_searcher_with_sample_config)
+    hostnames = {x["$HOSTNAME$"] for x in results}
+    assert hostnames == expected_hostnames
+
+
+@pytest.mark.parametrize("search_class", [
+    BIHostSearch,
+    BIServiceSearch,
+])
 def test_host_search(search_class, bi_searcher_with_sample_config):
     schema_config = search_class.schema()().dump({})
     search = search_class(schema_config)

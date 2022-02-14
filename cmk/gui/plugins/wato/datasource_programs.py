@@ -828,8 +828,12 @@ def _valuespec_special_agents_kube():
                             ),
                         ),
                         _ssl_verification(),
+                        (
+                            "proxy",
+                            HTTPProxyReference({"http", "https"}),
+                        ),
                     ],
-                    required_keys=["endpoint", "verify-cert"],
+                    required_keys=["endpoint", "verify-cert", "proxy"],
                     title=_("API server connection"),
                 ),
             ),

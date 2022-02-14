@@ -27,6 +27,7 @@ pytestmark = pytest.mark.checks
                 "kubernetes-api-server": {
                     "endpoint": "https://11.211.3.32",
                     "verify-cert": False,
+                    "proxy": ("no_proxy", "no_proxy"),
                 },
                 "cluster-collector": {
                     "endpoint": "https://11.211.3.32:20026",
@@ -45,6 +46,8 @@ pytestmark = pytest.mark.checks
                 "pods",
                 "--api-server-endpoint",
                 "https://11.211.3.32",
+                "--api-server-proxy",
+                "NO_PROXY",
                 "--cluster-collector-endpoint",
                 "https://11.211.3.32:20026",
                 "--cluster-collector-connect-timeout",
@@ -60,6 +63,7 @@ pytestmark = pytest.mark.checks
                 "kubernetes-api-server": {
                     "endpoint": "http://11.211.3.32:8080",
                     "verify-cert": False,
+                    "proxy": ("no_proxy", "no_proxy"),
                 },
                 "cluster-collector": {
                     "endpoint": "https://11.211.3.32:20026",
@@ -76,6 +80,8 @@ pytestmark = pytest.mark.checks
                 "pods",
                 "--api-server-endpoint",
                 "http://11.211.3.32:8080",
+                "--api-server-proxy",
+                "NO_PROXY",
                 "--cluster-collector-endpoint",
                 "https://11.211.3.32:20026",
                 "--verify-cert-collector",
@@ -88,6 +94,7 @@ pytestmark = pytest.mark.checks
                 "kubernetes-api-server": {
                     "endpoint": "http://localhost:8080",
                     "verify-cert": False,
+                    "proxy": ("no_proxy", "no_proxy"),
                 },
                 "cluster-collector": {
                     "endpoint": "https://11.211.3.32:20026",
@@ -104,6 +111,8 @@ pytestmark = pytest.mark.checks
                 "pods",
                 "--api-server-endpoint",
                 "http://localhost:8080",
+                "--api-server-proxy",
+                "NO_PROXY",
                 "--cluster-collector-endpoint",
                 "https://11.211.3.32:20026",
             ],
@@ -123,7 +132,11 @@ def test_parse_arguments_with_no_cluster_endpoint():
     params = {
         "cluster-name": "cluster",
         "token": ("password", "token"),
-        "kubernetes-api-server": {"endpoint": "https://127.0.0.1", "verify-cert": False},
+        "kubernetes-api-server": {
+            "endpoint": "https://127.0.0.1",
+            "verify-cert": False,
+            "proxy": ("no_proxy", "no_proxy"),
+        },
         "monitored-objects": ["pods"],
     }
     arguments = agent.argument_func(params, "host", "127.0.0.1")
@@ -136,6 +149,8 @@ def test_parse_arguments_with_no_cluster_endpoint():
         "pods",
         "--api-server-endpoint",
         "https://127.0.0.1",
+        "--api-server-proxy",
+        "NO_PROXY",
     ]
 
 
@@ -149,6 +164,7 @@ def test_cronjob_piggyback_option():
             "kubernetes-api-server": {
                 "endpoint": "https://11.211.3.32",
                 "verify-cert": False,
+                "proxy": ("no_proxy", "no_proxy"),
             },
             "monitored-objects": ["pods", "cronjobs_pods"],
         },
@@ -165,6 +181,8 @@ def test_cronjob_piggyback_option():
         "cronjobs_pods",
         "--api-server-endpoint",
         "https://11.211.3.32",
+        "--api-server-proxy",
+        "NO_PROXY",
     ]
 
 
@@ -178,6 +196,7 @@ def test_parse_namespace_patterns():
             "kubernetes-api-server": {
                 "endpoint": "https://11.211.3.32",
                 "verify-cert": False,
+                "proxy": ("no_proxy", "no_proxy"),
             },
             "cluster-collector": {
                 "endpoint": "https://11.211.3.32:20026",
@@ -203,6 +222,8 @@ def test_parse_namespace_patterns():
         "kube-system",
         "--api-server-endpoint",
         "https://11.211.3.32",
+        "--api-server-proxy",
+        "NO_PROXY",
         "--cluster-collector-endpoint",
         "https://11.211.3.32:20026",
     ]
@@ -218,6 +239,7 @@ def test_parse_namespace_patterns():
                 "kubernetes-api-server": {
                     "endpoint": "https://127.0.0.1",
                     "verify-cert": False,
+                    "proxy": ("no_proxy", "no_proxy"),
                 },
                 "cluster-collector": {
                     "endpoint": "https://127.0.0.1:20026",
@@ -233,6 +255,7 @@ def test_parse_namespace_patterns():
                 "kubernetes-api-server": {
                     "endpoint": "http://127.0.0.1:8080",
                     "verify-cert": False,
+                    "proxy": ("no_proxy", "no_proxy"),
                 },
                 "cluster-collector": {
                     "endpoint": "https://127.0.0.1:20026",
@@ -248,6 +271,7 @@ def test_parse_namespace_patterns():
                 "kubernetes-api-server": {
                     "endpoint": "http://localhost:8080",
                     "verify-cert": True,
+                    "proxy": ("no_proxy", "no_proxy"),
                 },
                 "cluster-collector": {
                     "endpoint": "https://127.0.0.1:20026",
@@ -271,3 +295,57 @@ def test_client_configuration_host(params: Mapping[str, Any], host) -> None:
 
     client = make_api_client(parse_arguments(arguments))
     assert client.configuration.host == host
+
+
+@pytest.mark.parametrize(
+    "params,expected_proxy_arg",
+    [
+        (
+            {
+                "cluster-name": "cluster",
+                "token": ("password", "cluster"),
+                "kubernetes-api-server": {
+                    "endpoint": "https://11.211.3.32",
+                    "verify-cert": False,
+                    "proxy": ("no_proxy", "no_proxy"),
+                },
+            },
+            "NO_PROXY",
+        ),
+        (
+            {
+                "cluster-name": "cluster",
+                "token": ("password", "cluster"),
+                "kubernetes-api-server": {
+                    "endpoint": "http://11.211.3.32:8080",
+                    "verify-cert": False,
+                    "proxy": ("environment", "environment"),
+                },
+                "monitored-objects": ["pods"],
+            },
+            "FROM_ENVIRONMENT",
+        ),
+        (
+            {
+                "cluster-name": "cluster",
+                "token": ("password", "randomtoken"),
+                "kubernetes-api-server": {
+                    "endpoint": "http://localhost:8001",
+                    "verify-cert": False,
+                    "proxy": ("url", "http://test:test@127.0.0.1:8080"),
+                },
+                "monitored-objects": ["pods"],
+            },
+            "http://test:test@127.0.0.1:8080",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("fix_register")
+def test_proxy_arguments(params, expected_proxy_arg):
+    agent = SpecialAgent("agent_kube")
+    arguments = agent.argument_func(params, "host", "11.211.3.32")
+    for argument, argument_after in zip(arguments[:-1], arguments[1:]):
+        if argument == "--api-server-proxy":
+            assert expected_proxy_arg == argument_after
+            return
+    assert False, "--api-server-proxy is missing"

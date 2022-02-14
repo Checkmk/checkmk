@@ -27,6 +27,7 @@ def agent_kube_arguments(
     args.extend(["--api-server-endpoint", api_params["endpoint"]])
     if api_params.get("verify-cert"):
         args.append("--verify-cert-api")
+    args.extend(["--api-server-proxy", get_http_proxy(api_params["proxy"]).serialize()])
 
     if (collector_params := params.get("cluster-collector")) is not None:
         args.extend(["--cluster-collector-endpoint", collector_params["endpoint"]])

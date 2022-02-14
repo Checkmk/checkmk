@@ -38,6 +38,7 @@ from typing import (
     Set,
     Union,
 )
+from urllib.parse import urlparse
 
 import requests
 import urllib3  # type: ignore[import]
@@ -162,6 +163,16 @@ def parse_arguments(args: List[str]) -> argparse.Namespace:
     )
     p.add_argument(
         "--api-server-endpoint", required=True, help="API server endpoint for Kubernetes API calls"
+    )
+    p.add_argument(
+        "--api-server-proxy",
+        type=str,
+        default=None,
+        metavar="PROXY",
+        help=(
+            "HTTP proxy used to connect to the Kubernetes api server. If not set, the environment settings "
+            "will be used."
+        ),
     )
     p.add_argument(
         "--cluster-collector-endpoint",
@@ -1076,6 +1087,21 @@ def make_api_client(arguments: argparse.Namespace) -> client.ApiClient:
     if arguments.token:
         config.api_key_prefix["authorization"] = "Bearer"
         config.api_key["authorization"] = arguments.token
+
+    http_proxy_config = deserialize_http_proxy_config(arguments.api_server_proxy)
+
+    # Mimick requests.get("GET", url=host, proxies=http_proxy_config.to_requests_proxies())
+    # function call, in order to obtain proxies in the same way as the requests library
+    with requests.Session() as session:
+        req = requests.models.Request(method="GET", url=host, data={}, params={})
+        prep = session.prepare_request(req)
+        proxies = http_proxy_config.to_requests_proxies() or {}
+        proxies = session.merge_environment_settings(
+            prep.url, proxies, session.stream, session.verify, session.cert
+        )["proxies"]
+
+    config.proxy = proxies.get(urlparse(host).scheme)
+    config.proxy_headers = requests.adapters.HTTPAdapter().proxy_headers(config.proxy)
 
     if arguments.verify_cert_api:
         config.ssl_ca_cert = os.environ.get("REQUESTS_CA_BUNDLE")

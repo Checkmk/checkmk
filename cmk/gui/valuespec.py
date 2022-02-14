@@ -35,7 +35,7 @@ from collections.abc import MutableMapping
 from collections.abc import Sequence as ABCSequence
 from enum import Enum
 from pathlib import Path
-from typing import Any, Callable, Final, Generic, Iterable, Literal, Mapping, NamedTuple
+from typing import Any, Callable, Collection, Final, Generic, Iterable, Literal, Mapping, NamedTuple
 from typing import Optional as _Optional
 from typing import Pattern, Protocol, Sequence, SupportsFloat, Type, TypeVar, Union
 
@@ -1257,7 +1257,7 @@ class Url(TextInput):
     def __init__(  # pylint: disable=redefined-builtin
         self,
         default_scheme: str,
-        allowed_schemes: list[str],
+        allowed_schemes: Collection[str],
         show_as_link: bool = False,
         target: _Optional[str] = None,
         # TextInput

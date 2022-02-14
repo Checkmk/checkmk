@@ -12,6 +12,7 @@ import json
 import os
 import re
 import subprocess
+import urllib.parse
 from contextlib import nullcontext
 from typing import Callable, cast, ContextManager, List, Mapping
 from typing import Optional as _Optional
@@ -759,13 +760,20 @@ def IndividualOrStoredPassword(  # pylint: disable=redefined-builtin
     )
 
 
-def HTTPProxyReference():
+_allowed_schemes = frozenset({"http", "https", "socks4", "socks4a", "socks5", "socks5h"})
+
+
+def HTTPProxyReference(allowed_schemes=_allowed_schemes):
     """Use this valuespec in case you want the user to configure a HTTP proxy
     The configured value is is used for preparing requests to work in a proxied environment."""
 
     def _global_proxy_choices():
         settings = watolib.ConfigDomainCore().load()
-        return [(p["ident"], p["title"]) for p in settings.get("http_proxies", {}).values()]
+        return [
+            (p["ident"], p["title"])
+            for p in settings.get("http_proxies", {}).values()
+            if urllib.parse.urlparse(p["proxy_url"]).scheme in allowed_schemes
+        ]
 
     return CascadingDropdown(
         title=_("HTTP proxy"),
@@ -804,18 +812,18 @@ def HTTPProxyReference():
                     sorted=True,
                 ),
             ),
-            ("url", _("Use explicit proxy settings"), HTTPProxyInput()),
+            ("url", _("Use explicit proxy settings"), HTTPProxyInput(allowed_schemes)),
         ],
         sorted=False,
     )
 
 
-def HTTPProxyInput():
+def HTTPProxyInput(allowed_schemes=_allowed_schemes):
     """Use this valuespec in case you want the user to input a HTTP proxy setting"""
     return Url(
         title=_("Proxy URL"),
         default_scheme="http",
-        allowed_schemes=["http", "https", "socks4", "socks4a", "socks5", "socks5h"],
+        allowed_schemes=allowed_schemes,
     )
 
 

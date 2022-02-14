@@ -1,0 +1,11 @@
+Title: BI configuration: Fixed broken host folder condition
+Class: fix
+Compatible: compat
+Component: bi
+Date: 1644847952
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0p21
+
+This filter never had any effect at all.

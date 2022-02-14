@@ -41,6 +41,7 @@ from cmk.utils.type_defs import (
     DiscoveryResult,
     EVERYTHING,
     HostAddress,
+    HostKey,
     HostName,
     RulesetName,
     ServiceName,
@@ -160,11 +161,10 @@ def commandline_discovery(
         host_config = config_cache.get_host_config(host_name)
         section.section_begin(host_name)
         try:
-            ipaddress = config.lookup_ip_address(host_config)
             parsed_sections_broker, _results = make_broker(
                 config_cache=config_cache,
                 host_config=host_config,
-                ip_address=ipaddress,
+                ip_address=config.lookup_ip_address(host_config),
                 mode=mode,
                 selected_sections=selected_sections,
                 file_cache_max_age=config.max_cachefile_age(),
@@ -173,11 +173,11 @@ def commandline_discovery(
                 on_scan_error=on_error,
             )
             _commandline_discovery_on_host(
-                host_name,
-                ipaddress,
-                parsed_sections_broker,
-                run_plugin_names,
-                arg_only_new,
+                host_key=host_config.host_key,
+                host_key_mgmt=host_config.host_key_mgmt,
+                parsed_sections_broker=parsed_sections_broker,
+                run_plugin_names=run_plugin_names,
+                only_new=arg_only_new,
                 load_labels=arg_only_new,
                 only_host_labels=only_host_labels,
                 on_error=on_error,
@@ -226,12 +226,12 @@ def _preprocess_hostnames(
 
 
 def _commandline_discovery_on_host(
-    host_name: HostName,
-    ipaddress: Optional[HostAddress],
+    *,
+    host_key: HostKey,
+    host_key_mgmt: HostKey,
     parsed_sections_broker: ParsedSectionsBroker,
     run_plugin_names: Container[CheckPluginName],
     only_new: bool,
-    *,
     load_labels: bool,
     only_host_labels: bool,
     on_error: OnError,
@@ -240,8 +240,8 @@ def _commandline_discovery_on_host(
     section.section_step("Analyse discovered host labels")
 
     host_labels = analyse_node_labels(
-        host_name=host_name,
-        ipaddress=ipaddress,
+        host_key=host_key,
+        host_key_mgmt=host_key_mgmt,
         parsed_sections_broker=parsed_sections_broker,
         load_labels=load_labels,
         save_labels=True,
@@ -257,8 +257,8 @@ def _commandline_discovery_on_host(
     section.section_step("Analyse discovered services")
 
     service_result = analyse_discovered_services(
-        host_name=host_name,
-        ipaddress=ipaddress,
+        host_key=host_key,
+        host_key_mgmt=host_key_mgmt,
         parsed_sections_broker=parsed_sections_broker,
         run_plugin_names=run_plugin_names,
         forget_existing=not only_new,
@@ -268,7 +268,7 @@ def _commandline_discovery_on_host(
 
     # TODO (mo): for the labels the corresponding code is in _host_labels.
     # We should put the persisting in one place.
-    autochecks.AutochecksStore(host_name).write(service_result.present)
+    autochecks.AutochecksStore(host_key.hostname).write(service_result.present)
 
     new_per_plugin = Counter(s.check_plugin_name for s in service_result.new)
     for name, count in sorted(new_per_plugin.items()):
@@ -337,7 +337,6 @@ def automation_discovery(
         if mode is not DiscoveryMode.REMOVE:
             host_labels = analyse_host_labels(
                 host_config=host_config,
-                ipaddress=ipaddress,
                 parsed_sections_broker=parsed_sections_broker,
                 load_labels=True,
                 save_labels=True,
@@ -556,7 +555,6 @@ def active_check_discovery(
 
     host_labels = analyse_host_labels(
         host_config=host_config,
-        ipaddress=ipaddress,
         parsed_sections_broker=parsed_sections_broker,
         load_labels=True,
         save_labels=False,
@@ -1002,11 +1000,11 @@ def _get_host_services(
     else:
         services = {
             **_get_node_services(
-                host_config.hostname,
-                ipaddress,
-                parsed_sections_broker,
-                on_error,
-                config.get_config_cache().host_of_clustered_service,
+                host_key=host_config.host_key,
+                host_key_mgmt=host_config.host_key_mgmt,
+                parsed_sections_broker=parsed_sections_broker,
+                on_error=on_error,
+                host_of_clustered_service=config.get_config_cache().host_of_clustered_service,
             )
         }
 
@@ -1019,16 +1017,16 @@ def _get_host_services(
 
 # Do the actual work for a non-cluster host or node
 def _get_node_services(
-    host_name: HostName,
-    ipaddress: Optional[HostAddress],
+    host_key: HostKey,
+    host_key_mgmt: HostKey,
     parsed_sections_broker: ParsedSectionsBroker,
     on_error: OnError,
     host_of_clustered_service: Callable[[HostName, ServiceName], HostName],
 ) -> ServicesTable[_Transition]:
 
     service_result = analyse_discovered_services(
-        host_name=host_name,
-        ipaddress=ipaddress,
+        host_key=host_key,
+        host_key_mgmt=host_key_mgmt,
         parsed_sections_broker=parsed_sections_broker,
         run_plugin_names=EVERYTHING,
         forget_existing=False,
@@ -1040,16 +1038,16 @@ def _get_node_services(
         entry.id(): (
             _node_service_source(
                 check_source=check_source,
-                host_name=host_name,
-                cluster_name=host_of_clustered_service(host_name, service_name),
+                host_name=host_key.hostname,
+                cluster_name=host_of_clustered_service(host_key.hostname, service_name),
                 check_plugin_name=entry.check_plugin_name,
                 service_name=service_name,
             ),
             entry,
-            [host_name],
+            [host_key.hostname],
         )
         for check_source, entry in service_result.chain_with_qualifier()
-        if (service_name := config.service_description(host_name, *entry.id()))
+        if (service_name := config.service_description(host_key.hostname, *entry.id()))
     }
 
 
@@ -1125,11 +1123,10 @@ def _get_cluster_services(
     # From the states and parameters of these we construct the final state per service.
     for node in host_config.nodes:
         node_config = config_cache.get_host_config(node)
-        node_ipaddress = config.lookup_ip_address(node_config)
 
         entries = analyse_discovered_services(
-            host_name=node,
-            ipaddress=node_ipaddress,
+            host_key=node_config.host_key,
+            host_key_mgmt=node_config.host_key_mgmt,
             parsed_sections_broker=parsed_sections_broker,
             run_plugin_names=EVERYTHING,
             forget_existing=False,
@@ -1219,7 +1216,6 @@ def get_check_preview(
 
     host_labels = analyse_host_labels(
         host_config=host_config,
-        ipaddress=ip_address,
         parsed_sections_broker=parsed_sections_broker,
         load_labels=True,
         save_labels=False,

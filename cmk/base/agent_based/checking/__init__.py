@@ -185,7 +185,6 @@ def _execute_checkmk_checks(
                 inventory.do_inventory_actions_during_checking_for(
                     config_cache,
                     host_config,
-                    ipaddress,
                     parsed_sections_broker=broker,
                 )
             timed_results = [
@@ -578,13 +577,9 @@ def _get_monitoring_data_kwargs(
     return (
         get_section_kwargs(
             parsed_sections_broker,
-            HostKey(
-                host_config.hostname,
-                host_config.management_address
-                if source_type is SourceType.MANAGEMENT
-                else ipaddress,
-                source_type,
-            ),
+            host_config.host_key_mgmt
+            if source_type is SourceType.MANAGEMENT
+            else host_config.host_key,
             sections,
         ),
         ServiceCheckResult.received_no_data(),

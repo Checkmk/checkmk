@@ -6,7 +6,7 @@ Date: 1644838650
 Edition: cre
 Knowledge: doc
 Level: 2
-Version: 2.0.0p21
+Version: 2.0.0p20
 
 During the process of "activating changes" it was possible
 in certain situations that the activation-ID would disappear before

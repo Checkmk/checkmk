@@ -53,7 +53,6 @@ test_types = collections.OrderedDict(
         ("agent-plugin-unit", ExecutionType.VirtualEnv),
         ("integration", ExecutionType.Site),
         ("gui_crawl", ExecutionType.VirtualEnv),
-        ("gui_e2e", ExecutionType.VirtualEnv),
         ("packaging", ExecutionType.VirtualEnv),
         ("composition", ExecutionType.VirtualEnv),
     ]

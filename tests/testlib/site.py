@@ -733,7 +733,7 @@ class Site:
         if platlib64.exists():
             self._copy_python_modules_from(platlib64)
 
-        for file_name in ["py.test", "pytest", "playwright"]:
+        for file_name in ["py.test", "pytest"]:
             assert (
                 os.system(  # nosec
                     "sudo rsync -a --chown %s:%s %s %s/local/bin"

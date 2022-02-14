@@ -221,6 +221,18 @@ def release(pacname: PackageName) -> None:
     _remove_package_info(pacname)
 
 
+def _create_tar_info(filename: str, size: int) -> tarfile.TarInfo:
+    info = tarfile.TarInfo()
+    info.mtime = int(time.time())
+    info.uid = 0
+    info.gid = 0
+    info.size = size
+    info.mode = 0o644
+    info.type = tarfile.REGTYPE
+    info.name = filename
+    return info
+
+
 def write_file(
     package: PackageInfo,
     file_object: Optional[BinaryIO] = None,
@@ -228,42 +240,32 @@ def write_file(
     config_parts: Callable = get_config_parts,
 ) -> None:
     package["version.packaged"] = cmk_version.__version__
-    tar = tarfile.open(fileobj=file_object, mode="w:gz")  # pylint:disable=consider-using-with
 
-    def create_tar_info(filename: str, size: int) -> tarfile.TarInfo:
-        info = tarfile.TarInfo()
-        info.mtime = int(time.time())
-        info.uid = 0
-        info.gid = 0
-        info.size = size
-        info.mode = 0o644
-        info.type = tarfile.REGTYPE
-        info.name = filename
-        return info
+    with tarfile.open(fileobj=file_object, mode="w:gz") as tar:
 
-    def add_file(filename: str, data: bytes) -> None:
-        info_file = BytesIO(data)
-        info = create_tar_info(filename, len(info_file.getvalue()))
-        tar.addfile(info, info_file)
+        def add_file(filename: str, data: bytes) -> None:
+            info_file = BytesIO(data)
+            info = _create_tar_info(filename, len(info_file.getvalue()))
+            tar.addfile(info, info_file)
 
-    # add the regular info file (Python format)
-    add_file("info", pprint.pformat(package).encode())
+        # add the regular info file (Python format)
+        add_file("info", pprint.pformat(package).encode())
 
-    # add the info file a second time (JSON format) for external tools
-    add_file("info.json", json.dumps(package).encode())
+        # add the info file a second time (JSON format) for external tools
+        add_file("info.json", json.dumps(package).encode())
 
-    # Now pack the actual files into sub tars
-    for part in package_parts() + config_parts():
-        filenames = package["files"].get(part.ident, [])
-        if len(filenames) > 0:
-            logger.log(VERBOSE, "  %s%s%s:", tty.bold, part.title, tty.normal)
-            for f in filenames:
-                logger.log(VERBOSE, "    %s", f)
-            subdata = subprocess.check_output(
-                ["tar", "cf", "-", "--dereference", "--force-local", "-C", part.path] + filenames
-            )
-            add_file(part.ident + ".tar", subdata)
-    tar.close()
+        # Now pack the actual files into sub tars
+        for part in package_parts() + config_parts():
+            filenames = package["files"].get(part.ident, [])
+            if len(filenames) > 0:
+                logger.log(VERBOSE, "  %s%s%s:", tty.bold, part.title, tty.normal)
+                for f in filenames:
+                    logger.log(VERBOSE, "    %s", f)
+                subdata = subprocess.check_output(
+                    ["tar", "cf", "-", "--dereference", "--force-local", "-C", part.path]
+                    + filenames
+                )
+                add_file(part.ident + ".tar", subdata)
 
 
 def get_initial_package_info(pacname: str) -> PackageInfo:
@@ -418,8 +420,6 @@ def install(file_object: BinaryIO) -> PackageInfo:
         logger.log(VERBOSE, "Installing %s version %s.", pacname, package["version"])
         update = False
 
-    tar = tarfile.open(fileobj=file_object, mode="r:gz")  # pylint:disable=consider-using-with
-
     # Before installing check for conflicts
     keep_files = {}
     for part in get_package_parts() + get_config_parts():
@@ -439,60 +439,58 @@ def install(file_object: BinaryIO) -> PackageInfo:
             elif os.path.exists(path):
                 raise PackageException("File conflict: %s already existing." % path)
 
-    # Now install files, but only unpack files explicitely listed
-    for part in get_package_parts() + get_config_parts():
-        filenames = package["files"].get(part.ident, [])
-        if len(filenames) > 0:
-            logger.log(VERBOSE, "  %s%s%s:", tty.bold, part.title, tty.normal)
-            for fn in filenames:
-                logger.log(VERBOSE, "    %s", fn)
+    with tarfile.open(fileobj=file_object, mode="r:gz") as tar:
+        # Now install files, but only unpack files explicitely listed
+        for part in get_package_parts() + get_config_parts():
+            filenames = package["files"].get(part.ident, [])
+            if len(filenames) > 0:
+                logger.log(VERBOSE, "  %s%s%s:", tty.bold, part.title, tty.normal)
+                for fn in filenames:
+                    logger.log(VERBOSE, "    %s", fn)
 
-            # make sure target directory exists
-            if not os.path.exists(part.path):
-                logger.log(VERBOSE, "    Creating directory %s", part.path)
-                os.makedirs(part.path)
+                # make sure target directory exists
+                if not os.path.exists(part.path):
+                    logger.log(VERBOSE, "    Creating directory %s", part.path)
+                    os.makedirs(part.path)
 
-            tarsource = tar.extractfile(part.ident + ".tar")
-            if tarsource is None:
-                raise PackageException("Failed to open %s.tar" % part.ident)
+                tarsource = tar.extractfile(part.ident + ".tar")
+                if tarsource is None:
+                    raise PackageException("Failed to open %s.tar" % part.ident)
 
-            # Important: Do not preserve the tared timestamp. Checkmk needs to know when the files
-            # been installed for cache invalidation.
-            tardest = subprocess.Popen(  # pylint:disable=consider-using-with
-                ["tar", "xf", "-", "--touch", "-C", part.path] + filenames,
-                stdin=subprocess.PIPE,
-                shell=False,
-                close_fds=True,
-            )
-            if tardest.stdin is None:
-                raise PackageException("Failed to open stdin")
+                # Important: Do not preserve the tared timestamp. Checkmk needs to know when the files
+                # been installed for cache invalidation.
+                with subprocess.Popen(
+                    ["tar", "xf", "-", "--touch", "-C", part.path] + filenames,
+                    stdin=subprocess.PIPE,
+                    shell=False,
+                    close_fds=True,
+                ) as tardest:
+                    if tardest.stdin is None:
+                        raise PackageException("Failed to open stdin")
 
-            while True:
-                data = tarsource.read(4096)
-                if not data:
-                    break
-                tardest.stdin.write(data)
+                    while True:
+                        data = tarsource.read(4096)
+                        if not data:
+                            break
+                        tardest.stdin.write(data)
 
-            tardest.stdin.close()
-            tardest.wait()
+                # Fix permissions of extracted files
+                for filename in filenames:
+                    path = os.path.join(part.path, filename)
+                    desired_perm = _get_permissions(path)
+                    has_perm = os.stat(path).st_mode & 0o7777
+                    if has_perm != desired_perm:
+                        logger.log(
+                            VERBOSE,
+                            "    Fixing permissions of %s: %04o -> %04o",
+                            path,
+                            has_perm,
+                            desired_perm,
+                        )
+                        os.chmod(path, desired_perm)
 
-            # Fix permissions of extracted files
-            for filename in filenames:
-                path = os.path.join(part.path, filename)
-                desired_perm = _get_permissions(path)
-                has_perm = os.stat(path).st_mode & 0o7777
-                if has_perm != desired_perm:
-                    logger.log(
-                        VERBOSE,
-                        "    Fixing permissions of %s: %04o -> %04o",
-                        path,
-                        has_perm,
-                        desired_perm,
-                    )
-                    os.chmod(path, desired_perm)
-
-            if part.ident == "ec_rule_packs":
-                ec.add_rule_pack_proxies(filenames)
+                if part.ident == "ec_rule_packs":
+                    ec.add_rule_pack_proxies(filenames)
 
     # In case of an update remove files from old_package not present in new one
     if update and old_package is not None:

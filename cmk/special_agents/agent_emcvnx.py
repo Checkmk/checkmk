@@ -23,6 +23,7 @@ import cProfile
 import getopt
 import os
 import sys
+from pathlib import Path
 from typing import Any, Dict
 
 
@@ -84,7 +85,6 @@ def main(sys_argv=None):
     _opt_timeout = 60
 
     g_profile = None
-    g_profile_path = "emcvnx_profile.out"
 
     host_address = None
     user = None
@@ -231,14 +231,16 @@ def main(sys_argv=None):
                     print(line, end=" ")
 
     if g_profile:
+        g_profile_path = Path("emcvnx_profile.out")
         g_profile.dump_stats(g_profile_path)
-        show_profile = os.path.join(os.path.dirname(g_profile_path), "show_profile.py")
-        open(show_profile, "w").write(  # pylint:disable=consider-using-with
+
+        show_profile = g_profile_path.parent / "show_profile.py"
+        show_profile.write_text(
             "#!/usr/bin/python\n"
             "import pstats\n"
             "stats = pstats.Stats('%s')\n"
             "stats.sort_stats('cumtime').print_stats()\n" % g_profile_path
         )
-        os.chmod(show_profile, 0o755)
+        show_profile.chmod(0o755)
 
         sys.stderr.write("Profile '%s' written. Please run %s.\n" % (g_profile_path, show_profile))

@@ -13,6 +13,7 @@ import os
 import random
 import sys
 import time
+from pathlib import Path
 
 
 def main(sys_argv=None):
@@ -24,12 +25,14 @@ def main(sys_argv=None):
     except IndexError:
         hostname = "unknown"
 
-    state_dir = os.getenv("OMD_ROOT", "") + "/tmp/check_mk/ds_random/"
-    if not os.path.exists(state_dir):
-        os.makedirs(state_dir)
-    state_file = state_dir + hostname
+    state_dir = Path(os.getenv("OMD_ROOT", "/"), "tmp/check_mk/ds_random/")
+    state_dir.mkdir(
+        parents=True,
+        exist_ok=True,
+    )
+    state_file = state_dir / hostname
     try:
-        history = ast.literal_eval(open(state_file).read())  # pylint:disable=consider-using-with
+        history = ast.literal_eval(state_file.read_text())
     except (OSError, SyntaxError, IOError):
         history = {}
 
@@ -74,4 +77,4 @@ def main(sys_argv=None):
             % (new_state, service.replace(" ", "_"), state_names[new_state], state_texts[new_state])
         )
 
-    open(state_file, "w").write("%r\n" % history)  # pylint:disable=consider-using-with
+    state_file.write_text("%r\n" % history)

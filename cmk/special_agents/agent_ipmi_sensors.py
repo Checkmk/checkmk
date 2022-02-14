@@ -261,7 +261,7 @@ def _main(args: Args) -> None:
         sys.stdout.write("<<<ipmi%s:sep(124)>>>\n" % section)
         try:
             try:
-                p = subprocess.Popen(  # pylint:disable=consider-using-with
+                completed_process = subprocess.run(
                     [
                         *ipmi_cmd,
                         *types,
@@ -271,6 +271,7 @@ def _main(args: Args) -> None:
                     stdout=subprocess.PIPE,
                     stderr=subprocess.PIPE,
                     encoding="utf-8",
+                    check=False,
                 )
             except OSError as e:
                 if e.errno == errno.ENOENT:  # No such file or directory
@@ -280,10 +281,9 @@ def _main(args: Args) -> None:
                     )
                 raise
 
-            stdout, stderr = p.communicate()
-            if stderr:
-                errors.append(stderr)
-            parse_data(stdout.splitlines(), excludes)
+            if completed_process.stderr:
+                errors.append(completed_process.stderr)
+            parse_data(completed_process.stdout.splitlines(), excludes)
         except Exception as e:
             errors.append(str(e))
 

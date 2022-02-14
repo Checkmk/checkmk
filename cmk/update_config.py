@@ -1196,17 +1196,21 @@ class UpdateConfig:
         ] + files
 
         self._logger.log(VERBOSE, "Executing: %s", subprocess.list2cmdline(cmd))
-        p = subprocess.Popen(  # pylint:disable=consider-using-with
+        completed_process = subprocess.run(
             cmd,
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
             shell=False,
+            check=False,
         )
-        output = p.communicate()[0]
-        if p.returncode != 0:
-            self._logger.error("Failed to run 2to3 (Exit code: %d): %s", p.returncode, output)
+        if completed_process.returncode != 0:
+            self._logger.error(
+                "Failed to run 2to3 (Exit code: %d): %s",
+                completed_process.returncode,
+                completed_process.stdout,
+            )
         self._logger.log(VERBOSE, "Finished.")
-        return p.returncode
+        return completed_process.returncode
 
     def _needs_to_be_converted(self, filepath: Path) -> Optional[Path]:
         with filepath.open(encoding="utf-8") as f:

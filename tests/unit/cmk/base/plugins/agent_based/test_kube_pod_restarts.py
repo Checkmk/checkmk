@@ -14,6 +14,8 @@ from cmk.base.plugins.agent_based import kube_pod_restarts
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
 from cmk.base.plugins.agent_based.utils.k8s import PodContainers
 
+from cmk.gui.plugins.wato.check_parameters.kube_pod_restarts import _parameter_valuespec
+
 ONE_MINUTE = 60
 ONE_HOUR = 60 * ONE_MINUTE
 TIMESTAMP = 359
@@ -78,10 +80,10 @@ def section(string_table):
 
 @pytest.fixture
 def params():
-    return {
-        "restart_count": RESTART_COUNT_LEVELS,
-        "restart_rate": RESTART_RATE_LEVELS,
-    }
+    return kube_pod_restarts.Params(
+        restart_count=("levels", RESTART_COUNT_LEVELS),
+        restart_rate=("levels", RESTART_RATE_LEVELS),
+    )
 
 
 @pytest.fixture
@@ -151,8 +153,8 @@ def test_check_result_summary(check_result):
 
 @pytest.mark.parametrize("restart_count", [WARN, CRIT])
 def test_check_result_summary_alert(restart_count, params, check_result):
-    warn_crit_count = "(warn/crit at {}/{})".format(*params["restart_count"])
-    warn_crit_rate = "(warn/crit at {}/{})".format(*params["restart_rate"])
+    warn_crit_count = "(warn/crit at {}/{})".format(*params["restart_count"][1])
+    warn_crit_rate = "(warn/crit at {}/{})".format(*params["restart_rate"][1])
     expected = [
         f"Total: {restart_count * NUMBER_OF_CONTAINERS} {warn_crit_count}",
         f"In last hour: {restart_count * NUMBER_OF_CONTAINERS * ONE_HOUR // ONE_MINUTE} {warn_crit_rate}",
@@ -216,3 +218,9 @@ def test_check_results_disregards_expired_values(value_store, check_result):
 def test_check_results_maintains_restart_count_list_sorted(value_store, check_result):
     list(check_result)
     assert value_store["restart_count_list"] == sorted(value_store["restart_count_list"])
+
+
+def test_valuespec_and_check_agree() -> None:
+    assert tuple(kube_pod_restarts._DEFAULT_PARAMS) == tuple(
+        element[0] for element in _parameter_valuespec()._get_elements()
+    )

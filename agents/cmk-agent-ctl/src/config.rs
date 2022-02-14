@@ -46,19 +46,19 @@ pub struct Credentials {
 #[derive(Deserialize)]
 pub struct ConfigFromDisk {
     #[serde(default)]
-    pub site_spec: Option<site_spec::SiteSpec>,
+    site_spec: Option<site_spec::SiteSpec>,
 
     #[serde(default)]
-    pub credentials: Option<Credentials>,
+    credentials: Option<Credentials>,
 
     #[serde(default)]
-    pub root_certificate: Option<String>,
+    root_certificate: Option<String>,
 
     #[serde(default)]
-    pub host_name: Option<String>,
+    host_name: Option<String>,
 
     #[serde(default)]
-    pub agent_labels: Option<AgentLabels>,
+    agent_labels: Option<AgentLabels>,
 }
 
 impl JSONLoader for ConfigFromDisk {}

@@ -550,13 +550,21 @@ class _RedisHelper:
 
     def _partial_data_update_possible(self, allowed_timestamps: List[str]) -> bool:
         """Checks whether a partial update is possible at all
-        Every time a .wato file is updated, the timestamp of the .wato file and its folder updates
-        To check whether a partial update is possible
-        - Determine allowed timestamps (.wato + folder)
+        It is important that the in memory cache does not deviate from the data on disk.
+        The fasted way to accomplish this (with a sufficient reliability) is to compare
+        the latest changed timestamps from disk with
+         - the latest known timestamp of the cache itself
+         - the allowed timestamps, which reflect the file timestamps of the latest changed
+           host/folder/rule files
+
+        For example. Every time a .wato file is updated, the timestamp of the .wato file and its
+        folder updates. To check whether a partial update is possible
+        - Determine allowed_timestamps (.wato + folder)
         - Get last_update from redis
-        - Get the last three timestamps from disk
-            - Filter out allowed timestamps
-            - The remaining newest timestamp must be equal or older than the last update from redis
+        - Get the latest few timestamps from disk and removed the allowed_timestamps from them
+        - The remaining newest timestamp must be equal or older than the last update from redis
+              If this condition is true, a partial update is possible since there were no
+              unobserved changes, again -> with a sufficient reliability.
         """
 
         remaining_timestamps = [
@@ -572,9 +580,9 @@ class _RedisHelper:
         wato_info_path = folder.wato_info_path()
         return sorted(
             [
-                self._timestamp_to_fixed_precision_str(os.stat(wato_info_path).st_ctime),
+                self._timestamp_to_fixed_precision_str(os.stat(wato_info_path).st_mtime),
                 self._timestamp_to_fixed_precision_str(
-                    os.stat(os.path.dirname(wato_info_path)).st_ctime
+                    os.stat(os.path.dirname(wato_info_path)).st_mtime
                 ),
             ]
         )
@@ -582,7 +590,7 @@ class _RedisHelper:
     def folder_updated(self, filesystem_path: str) -> None:
         try:
             folder_timestamp = self._timestamp_to_fixed_precision_str(
-                os.stat(filesystem_path).st_ctime
+                os.stat(filesystem_path).st_mtime
             )
         except FileNotFoundError:
             return
@@ -625,7 +633,7 @@ class _RedisHelper:
         find (+spawn process) -> 0.14 seconds
         """
         result = subprocess.run(
-            "find ~/etc/check_mk/conf.d/wato -type d -printf '%C@\n' -o -name .wato -printf '%C@\n' | sort -n | tail -6 | uniq",
+            "find ~/etc/check_mk/conf.d/wato -type d -printf '%T@\n' -o -name .wato -printf '%T@\n' | sort -n | tail -6 | uniq",
             shell=True,
             capture_output=True,
             check=True,
@@ -1495,7 +1503,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
 
             self._save_hosts_file()
             if may_use_redis():
-                # Inform redis that the changed-timestamp of the folder has been updated.
+                # Inform redis that the modified-timestamp of the folder has been updated.
                 get_wato_redis_client().folder_updated(self.filesystem_path())
 
         call_hook_hosts_changed(self)

@@ -32,28 +32,21 @@ Provides:  check_mk-agent check_mk_agent
 %install
 
 R=$RPM_BUILD_ROOT
-H="${R}/var/lib/cmk-agent"
-rm -rf "${R}"
+rm -rf $R
 
 # install agent
-mkdir -p "${R}/etc/check_mk"
-mkdir -p "${H}/scripts/super-server/0_systemd"
-mkdir -p "${H}/scripts/super-server/1_xinetd"
-echo "# first available super server (default)" > "${R}/etc/check_mk/super-server.cfg"
-install -m 751 "scripts/cmk-agent-useradd.sh" "${H}/scripts/cmk-agent-useradd.sh"
-install -m 751 "scripts/super-server/setup" "${H}/scripts/super-server/setup"
+mkdir -p "${R}/var/lib/cmk-agent/scripts"
+install -m 751 "scripts/cmk-agent-useradd.sh" "${R}/var/lib/cmk-agent/scripts/cmk-agent-useradd.sh"
 
 # xinitd
-install -m 751 "scripts/super-server/1_xinetd/setup" "${H}/scripts/super-server/1_xinetd/"
-install -m 644 "scripts/super-server/1_xinetd/check-mk-agent" "${R}/etc/check_mk/xinetd-service-template.cfg"
-
+mkdir -p $R/etc/xinetd.d
+install -m 644 cfg_examples/xinetd.conf $R/etc/xinetd.d/check-mk-agent
 # Systemd
-install -m 751 "scripts/super-server/0_systemd/setup" "${H}/scripts/super-server/0_systemd/"
-install -m 666 "scripts/super-server/0_systemd/check-mk-agent@.service" "${H}/scripts/super-server/0_systemd/"
-install -m 666 "scripts/super-server/0_systemd/check-mk-agent.socket" "${H}/scripts/super-server/0_systemd/"
-install -m 666 "scripts/super-server/0_systemd/check-mk-agent-async.service" "${H}/scripts/super-server/0_systemd/"
-install -m 666 "scripts/super-server/0_systemd/cmk-agent-ctl-daemon.service" "${H}/scripts/super-server/0_systemd/"
-
+mkdir -p $R/usr/lib/systemd/system
+install -m 644 cfg_examples/systemd/check-mk-agent\@.service $R/usr/lib/systemd/system
+install -m 644 cfg_examples/systemd/check-mk-agent.socket $R/usr/lib/systemd/system
+install -m 644 cfg_examples/systemd/check-mk-agent-async.service $R/usr/lib/systemd/system
+install -m 644 cfg_examples/systemd/cmk-agent-ctl-daemon.service $R/usr/lib/systemd/system
 mkdir -p $R/etc/check_mk
 mkdir -p $R/usr/bin
 install -m 755 check_mk_agent.linux $R/usr/bin/check_mk_agent
@@ -73,31 +66,59 @@ rm -rf $RPM_BUILD_ROOT
 %files
 %defattr(-,root,root)
 /etc/check_mk
-%config(noreplace) /etc/check_mk/super-server.cfg
-%config(noreplace) /etc/check_mk/xinetd-service-template.cfg
+%config(noreplace) /etc/xinetd.d/check-mk-agent
 /usr/bin/check_mk_agent
 /usr/bin/check_mk_caching_agent
 /usr/bin/cmk-agent-ctl
 /usr/bin/mk-job
 /usr/bin/waitmax
 /usr/lib/check_mk_agent
+/usr/lib/systemd/system/check-mk-agent-async.service
+/usr/lib/systemd/system/check-mk-agent.socket
+/usr/lib/systemd/system/check-mk-agent@.service
+/usr/lib/systemd/system/cmk-agent-ctl-daemon.service
 /var/lib/check_mk_agent
 /var/lib/cmk-agent/scripts/cmk-agent-useradd.sh
-/var/lib/cmk-agent/scripts/super-server/0_systemd/check-mk-agent-async.service
-/var/lib/cmk-agent/scripts/super-server/0_systemd/check-mk-agent.socket
-/var/lib/cmk-agent/scripts/super-server/0_systemd/check-mk-agent@.service
-/var/lib/cmk-agent/scripts/super-server/0_systemd/cmk-agent-ctl-daemon.service
-/var/lib/cmk-agent/scripts/super-server/0_systemd/setup
-/var/lib/cmk-agent/scripts/super-server/1_xinetd/setup
-/var/lib/cmk-agent/scripts/super-server/setup
+
+%pre
+
+# migrate old xinetd service (regardless of the current super server setting)
+if [ ! -e "/etc/xinetd.d/check-mk-agent" ] && [ -e "/etc/xinetd.d/check_mk" ]; then
+    printf "migrating old /etc/xinetd.d/check_mk ... "
+    sed 's/service check_mk/service check-mk-agent/' "/etc/xinetd.d/check_mk" >"/etc/xinetd.d/check-mk-agent" && rm "/etc/xinetd.d/check_mk" && printf "OK\n"
+fi
+
+# determine a suitable super server
+super_server='missing'
+which xinetd >/dev/null 2>&1 && super_server="xinetd"
+which systemctl >/dev/null 2>&1 && super_server="systemd"
+if [ "${super_server}" = "missing" ]; then
+    cat << EOF
+---------------------------------------------
+WARNING
+
+This package comes with configuration files
+for the following super server(s):
+  systemd (preferred)
+  xinetd (fallback)
+None of these have been found.
+Hint: It's also possible to call the
+Checkmk agent via SSH without a running
+agent service.
+---------------------------------------------
+
+EOF
+fi
 
 %post
+[ -f /etc/xinetd.d/check-mk-agent.rpmnew ] && rm /etc/xinetd.d/check-mk-agent.rpmnew
 
-/var/lib/cmk-agent/scripts/super-server/setup cleanup
-/var/lib/cmk-agent/scripts/super-server/setup deploy
-/var/lib/cmk-agent/scripts/super-server/setup trigger
+# determine a suitable super server
+super_server='missing'
+which xinetd >/dev/null 2>&1 && super_server="xinetd"
+which systemctl >/dev/null 2>&1 && super_server="systemd"
 
-if [ "$(/var/lib/cmk-agent/scripts/super-server/setup getdeployed)" = "systemd" ]; then
+if [ "${super_server}" = "systemd" ]; then
     if [ "$1" = "upgrade" ] || [ "$1" -ge 2 ] 2>/dev/null; then
         /var/lib/cmk-agent/scripts/cmk-agent-useradd.sh upgrade
     else
@@ -105,11 +126,51 @@ if [ "$(/var/lib/cmk-agent/scripts/super-server/setup getdeployed)" = "systemd" 
     fi
 fi
 
+if which systemctl >/dev/null 2>&1; then
+    rm -rf /etc/xinetd.d/check-mk-agent >/dev/null 2>&1
+
+    if which xinetd >/dev/null 2>&1 && pgrep -G 0 -x xinetd >/dev/null 2>&1 ; then
+        echo "Reloading xinetd..."
+        service xinetd reload
+    fi
+else
+
+    if which xinetd >/dev/null 2>&1 && which chkconfig >/dev/null 2>&1 ; then
+        echo "Activating startscript of xinetd"
+        chkconfig xinetd on
+    fi
+
+    if which xinetd >/dev/null 2>&1 ; then
+        if pgrep -G 0 -x xinetd >/dev/null 2>&1 ; then
+            echo "Reloading xinetd..."
+            service xinetd reload
+        else
+            echo "Starting xinetd..."
+            service xinetd start
+        fi
+    fi
+fi
+
+if which systemctl >/dev/null 2>&1; then
+    echo "Enable Checkmk agent in systemd..."
+    systemctl daemon-reload
+    systemctl enable check-mk-agent.socket check-mk-agent-async cmk-agent-ctl-daemon
+    systemctl restart check-mk-agent.socket check-mk-agent-async cmk-agent-ctl-daemon
+fi
+
 %preun
 
-case "$1" in
-    0|remove|purge)
-        /var/lib/cmk-agent/scripts/super-server/setup cleanup
-        /var/lib/cmk-agent/scripts/super-server/setup trigger
-    ;;
-esac
+if which systemctl >/dev/null 2>&1 ; then
+    echo "Disable Checkmk agent in systemd (if active)..."
+    systemctl stop check-mk-agent.socket check-mk-agent-async cmk-agent-ctl-daemon >/dev/null 2>&1
+    systemctl disable check-mk-agent.socket check-mk-agent-async cmk-agent-ctl-daemon >/dev/null 2>&1
+fi
+
+%postun
+
+if which xinetd >/dev/null 2>&1 && pgrep -G 0 -x xinetd >/dev/null 2>&1 ; then
+    echo "Reloading xinetd..."
+    service xinetd reload
+fi
+
+

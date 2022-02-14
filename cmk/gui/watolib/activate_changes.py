@@ -1815,7 +1815,8 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
         return configuration_warnings
 
     def _call_activate_changes_automation(self) -> ConfigWarnings:
-        domain_requests = self._get_domains_needing_activation()
+        omd_ident: ConfigDomainName = ConfigDomainOMD.ident()
+        domain_requests = self._get_domains_needing_activation(omd_ident)
 
         if site_is_local(self._site_id):
             return execute_activate_changes(domain_requests)
@@ -1837,7 +1838,6 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
                 )
             raise
 
-        omd_ident = ConfigDomainOMD.ident()
         if any(request.name == omd_ident for request in domain_requests):
             response.setdefault(omd_ident, []).extend(self._get_omd_domain_background_job_result())
 
@@ -1861,28 +1861,43 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
                 )
                 if not omd_response.job_status["is_active"]:
                     return omd_response.job_status["loginfo"]["JobException"]
+                time.sleep(0.5)
             except MKUserError as e:
                 if not (
                     e.message == "Site is not running" or e.message.startswith("HTTP Error - 502")
                 ):
                     return [e.message]
 
-    def _get_domains_needing_activation(self) -> DomainRequests:
+    def _get_domains_needing_activation(self, omd_ident: ConfigDomainName) -> DomainRequests:
         domain_settings: Dict[ConfigDomainName, List[SerializedSettings]] = {}
+        omd_domain_used: bool = False
         for change in self._site_changes:
             if change["need_restart"]:
                 for domain_name in change["domains"]:
+                    # ConfigDomainOMD needs a restart of the apache,
+                    # make sure it's executed at the end
+                    if domain_name == omd_ident:
+                        omd_domain_used = True
+                        omd_domain_change = change
+                        continue
                     domain_settings.setdefault(domain_name, []).append(
                         get_config_domain(domain_name).get_domain_settings(change)
                     )
 
-        return sorted(
+        domain_requests = sorted(
             (
                 get_config_domain(domain_name).get_domain_request(settings_list)
                 for (domain_name, settings_list) in domain_settings.items()
             ),
             key=lambda x: x.name,
         )
+
+        if omd_domain_used:
+            domain_requests.append(
+                get_config_domain(omd_ident).get_domain_request(omd_domain_change)
+            )
+
+        return domain_requests
 
     def _confirm_activated_changes(self):
         site_changes = SiteChanges(SiteChanges.make_path(self._site_id))

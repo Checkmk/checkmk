@@ -38,6 +38,7 @@ from cmk.gui.plugins.watolib.utils import (
     DomainRequest,
     SerializedSettings,
 )
+from cmk.gui.sites import is_wato_slave_site
 from cmk.gui.type_defs import ConfigDomainName
 from cmk.gui.watolib.changes import log_audit
 from cmk.gui.watolib.utils import liveproxyd_config_dir, multisite_dir, wato_root_dir
@@ -375,7 +376,7 @@ class ConfigDomainOMD(ABCConfigDomain):
 
     def __init__(self):
         super().__init__()
-        self._logger = logger.getChild("config.omd")
+        self._logger: logging.Logger = logger.getChild("config.omd")
 
     @classmethod
     def ident(cls) -> ConfigDomainName:
@@ -394,7 +395,7 @@ class ConfigDomainOMD(ABCConfigDomain):
         settings.update(self._to_omd_config(self.load()))
         settings.update(self._to_omd_config(self.load_site_globals()))
 
-        config_change_commands = []
+        config_change_commands: List[str] = []
         self._logger.debug("Set omd config: %r" % settings)
 
         for key, val in settings.items():
@@ -413,12 +414,20 @@ class ConfigDomainOMD(ABCConfigDomain):
         self._logger.debug('Executing "omd config change"')
         self._logger.debug("  Commands: %r" % config_change_commands)
 
-        job = OMDConfigChangeBackgroundJob()
-        if job.is_active():
-            raise MKUserError(None, _("Another omd config change job is already running."))
+        # We need a background job on remote sites to wait for the restart, so
+        # that the central site can gather the result of the activation.
+        # On a central site, the waiting for the end of the restart is already
+        # taken into account by the activate changes background job within
+        # async_progress.js. Just execute the omd config change command
+        if is_wato_slave_site():
+            job = OMDConfigChangeBackgroundJob()
+            if job.is_active():
+                raise MKUserError(None, _("Another omd config change job is already running."))
 
-        job.set_function(job.do_execute, config_change_commands)
-        job.start()
+            job.set_function(job.do_execute, config_change_commands)
+            job.start()
+        else:
+            _do_config_change(config_change_commands, self._logger)
 
         return []
 
@@ -579,33 +588,33 @@ class OMDConfigChangeBackgroundJob(WatoBackgroundJob):
             stoppable=False,
         )
 
-    def do_execute(self, config_change_commands, job_interface):
-        self._do_config_change(config_change_commands)
+    def do_execute(self, config_change_commands: List[str], job_interface):
+        _do_config_change(config_change_commands, self._logger)
         job_interface.send_result_message(_("OMD config changes have been applied."))
 
-    def _do_config_change(self, config_change_commands) -> None:
-        completed_process = subprocess.run(
-            ["omd", "config", "change"],
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-            stdin=subprocess.PIPE,
-            close_fds=True,
-            encoding="utf-8",
-            input="\n".join(config_change_commands),
-            check=False,
-        )
 
-        self._logger.debug("  Exit code: %d" % completed_process.returncode)
-        self._logger.debug("  Output: %r" % completed_process.stdout)
-        if completed_process.returncode:
-            raise MKGeneralException(
-                _(
-                    "Failed to activate changed site "
-                    "configuration.\nExit code: %d\nConfig: %s\nOutput: %s"
-                )
-                % (
-                    completed_process.returncode,
-                    config_change_commands,
-                    completed_process.stdout,
-                )
+def _do_config_change(config_change_commands: List[str], omd_logger: logging.Logger) -> None:
+    completed_process = subprocess.run(
+        ["omd", "config", "change"],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        close_fds=True,
+        encoding="utf-8",
+        input="\n".join(config_change_commands),
+        check=False,
+    )
+
+    omd_logger.debug("  Exit code: %d" % completed_process.returncode)
+    omd_logger.debug("  Output: %r" % completed_process.stdout)
+    if completed_process.returncode:
+        raise MKGeneralException(
+            _(
+                "Failed to activate changed site "
+                "configuration.\nExit code: %d\nConfig: %s\nOutput: %s"
             )
+            % (
+                completed_process.returncode,
+                config_change_commands,
+                completed_process.stdout,
+            )
+        )

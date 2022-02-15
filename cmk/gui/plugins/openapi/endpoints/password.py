@@ -186,7 +186,6 @@ def serialize_password(ident, details):
             in (
                 "comment",
                 "docu_url",
-                "password",
                 "owned_by",
                 "shared_with",
                 "customer",

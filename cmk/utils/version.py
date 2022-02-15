@@ -23,6 +23,7 @@ import sys
 import time
 from dataclasses import dataclass
 from functools import lru_cache
+from pathlib import Path
 from typing import Any, Dict, NamedTuple, Tuple, Union
 
 import livestatus
@@ -568,19 +569,22 @@ def get_general_version_infos() -> Dict[str, Any]:
 
 
 def _get_os_info() -> str:
-    if os.path.exists("/etc/redhat-release"):
-        return open("/etc/redhat-release").readline().strip()
-
-    if os.path.exists("/etc/SuSE-release"):
-        return open("/etc/SuSE-release").readline().strip()
+    for path_release_file in (
+        Path("/etc/redhat-release"),
+        Path("/etc/SuSE-release"),
+    ):
+        if path_release_file.exists():
+            with path_release_file.open() as release_file:
+                return release_file.readline().strip()
 
     info = {}
-    for f in ["/etc/os-release", "/etc/lsb-release"]:
-        if os.path.exists(f):
-            for line in open(f).readlines():  # pylint:disable=consider-using-with
-                if "=" in line:
-                    k, v = line.split("=", 1)
-                    info[k.strip()] = v.strip().strip('"')
+    for path in [Path("/etc/os-release"), Path("/etc/lsb-release")]:
+        if path.exists():
+            with path.open() as release_file:
+                for line in release_file.readlines():
+                    if "=" in line:
+                        k, v = line.split("=", 1)
+                        info[k.strip()] = v.strip().strip('"')
             break
 
     if "PRETTY_NAME" in info:
@@ -599,17 +603,18 @@ def _get_os_info() -> str:
 
 def _current_monitoring_core() -> str:
     try:
-        p = subprocess.Popen(  # pylint:disable=consider-using-with
+        completed_process = subprocess.run(
             ["omd", "config", "show", "CORE"],
             close_fds=True,
             stdin=subprocess.DEVNULL,
             stdout=subprocess.PIPE,
             stderr=subprocess.DEVNULL,
             encoding="utf-8",
+            check=False,
         )
-        return p.communicate()[0].rstrip()
     except OSError as e:
         # Allow running unit tests on systems without omd installed (e.g. on travis)
         if e.errno != errno.ENOENT:
             raise
         return "UNKNOWN"
+    return completed_process.stdout.rstrip()

@@ -759,6 +759,18 @@ def _contacts_filepath() -> str:
     return _root_dir() + "contacts.mk"
 
 
+def load_users_sanitized(lock: bool = False) -> Users:
+    """load users but do not return some UserSpec attributes"""
+
+    users = copy.deepcopy(load_users(lock=lock))
+    for user_spec in users.values():
+        user_spec.pop("automation_secret", None)
+        user_spec.pop("password", None)
+        user_spec.pop("session_info", None)
+        user_spec.pop("two_factor_credentials", None)
+    return users
+
+
 @request_memoize()
 def load_users(lock: bool = False) -> Users:
     if lock:

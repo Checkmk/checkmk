@@ -159,7 +159,7 @@ def parse_arguments(args: List[str]) -> argparse.Namespace:
         nargs="+",
         default=["deployments", "nodes", "pods"],
         help="The Kubernetes objects which are supposed to be monitored. Available objects: "
-        "deployments, nodes, pods, cronjobs_pods",
+        "deployments, nodes, pods, daemonsets, cronjobs_pods",
     )
     p.add_argument(
         "--api-server-endpoint", required=True, help="API server endpoint for Kubernetes API calls"
@@ -282,7 +282,7 @@ class Pod:
         self.status = status
         self.containers = containers
         self.init_containers = init_containers
-        self._controllers: List[Deployment] = []
+        self._controllers: List[Union[Deployment, DaemonSet]] = []
 
     @property
     def phase(self):
@@ -394,7 +394,7 @@ class Pod:
             return None
         return api.StartTime(start_time=self.status.start_time)
 
-    def add_controller(self, controller: Deployment) -> None:
+    def add_controller(self, controller: Union[Deployment, DaemonSet]) -> None:
         """Add a handling controller of the pod
 
         Kubernetes control objects manage pods based on their labels. As the API does not
@@ -513,6 +513,34 @@ class Deployment(PodOwner):
         return section.DeploymentStrategy(strategy=self.spec.strategy)
 
 
+class DaemonSet(PodOwner):
+    def __init__(self, metadata: api.MetaData) -> None:
+        super().__init__()
+        self.metadata = metadata
+        self.type_: str = "daemon_set"
+
+    def name(self, prepend_namespace: bool = False) -> str:
+        if not prepend_namespace:
+            return self.metadata.name
+
+        return f"{self.metadata.namespace}_{self.metadata.name}"
+
+    def pods(self, phase: Optional[api.Phase] = None) -> Sequence[Pod]:
+        if phase is None:
+            return self._pods
+        return [pod for pod in self._pods if pod.phase == phase]
+
+    def add_pod(self, pod: Pod) -> None:
+        super().add_pod(pod)
+        pod.add_controller(self)
+
+    def memory_resources(self) -> section.Resources:
+        return _collect_memory_resources(self._pods)
+
+    def cpu_resources(self) -> section.Resources:
+        return _collect_cpu_resources(self._pods)
+
+
 class Node(PodOwner):
     def __init__(
         self,
@@ -625,6 +653,7 @@ class Cluster:
         nodes: Sequence[api.Node],
         deployments: Optional[Sequence[api.Deployment]] = None,
         cron_jobs: Optional[Sequence[api.CronJob]] = None,
+        daemon_sets: Optional[Sequence[api.DaemonSet]] = None,
         cluster_details: Optional[api.ClusterInfo] = None,
     ) -> Cluster:
         """Creating and filling the Cluster with the Kubernetes Objects"""
@@ -664,6 +693,12 @@ class Cluster:
                 cluster.add_cron_job(cron_job)
                 _register_owner_for_pods(cron_job, api_cron_job.pod_uids)
 
+        if daemon_sets:
+            for api_daemon_set in daemon_sets:
+                daemon_set = DaemonSet(api_daemon_set.metadata)
+                cluster.add_daemon_set(daemon_set)
+                _register_owner_for_pods(daemon_set, api_daemon_set.pods)
+
         owned_pods = set(_pod_owners_mapping.keys())
         present_pods = set(pod.uid for pod in pods)
         if not owned_pods.issubset(present_pods):
@@ -702,6 +737,7 @@ class Cluster:
     def __init__(self, *, cluster_details: Optional[api.ClusterInfo] = None) -> None:
         self._cluster_details: Optional[api.ClusterInfo] = cluster_details
         self._cron_jobs: List[CronJob] = []
+        self._daemon_sets: List[DaemonSet] = []
         self._deployments: List[Deployment] = []
         self._nodes: Dict[api.NodeName, Node] = {}
         self._pods: Dict[str, Pod] = {}
@@ -714,6 +750,9 @@ class Cluster:
 
     def add_deployment(self, deployment: Deployment) -> None:
         self._deployments.append(deployment)
+
+    def add_daemon_set(self, daemon_set: DaemonSet) -> None:
+        self._daemon_sets.append(daemon_set)
 
     def add_pod(self, pod: Pod) -> None:
         self._pods[pod.uid] = pod
@@ -745,6 +784,9 @@ class Cluster:
 
     def cron_jobs(self) -> Sequence[CronJob]:
         return self._cron_jobs
+
+    def daemon_sets(self) -> Sequence[DaemonSet]:
+        return self._daemon_sets
 
     def deployments(self) -> Sequence[Deployment]:
         return self._deployments
@@ -878,6 +920,25 @@ def write_deployments_api_sections(
             piggyback_formatter(deployment.name(prepend_namespace=True))
         ):
             output_sections(deployment)
+
+
+def write_daemon_sets_api_sections(
+    api_daemon_sets: Sequence[DaemonSet], piggyback_formatter: Callable[[str], str]
+) -> None:
+    """Write the daemon set relevant sections based on k8 API information"""
+
+    def output_sections(cluster_daemon_set: DaemonSet) -> None:
+        sections = {
+            "kube_memory_resources_v1": cluster_daemon_set.memory_resources,
+            "kube_cpu_resources_v1": cluster_daemon_set.cpu_resources,
+        }
+        _write_sections(sections)
+
+    for daemon_set in api_daemon_sets:
+        with ConditionalPiggybackSection(
+            piggyback_formatter(daemon_set.name(prepend_namespace=True))
+        ):
+            output_sections(daemon_set)
 
 
 def write_pods_api_sections(
@@ -1150,7 +1211,7 @@ def make_api_client(arguments: argparse.Namespace) -> client.ApiClient:
 
     http_proxy_config = deserialize_http_proxy_config(arguments.api_server_proxy)
 
-    # Mimick requests.get("GET", url=host, proxies=http_proxy_config.to_requests_proxies())
+    # Mimic requests.get("GET", url=host, proxies=http_proxy_config.to_requests_proxies())
     # function call, in order to obtain proxies in the same way as the requests library
     with requests.Session() as session:
         req = requests.models.Request(method="GET", url=host, data={}, params={})
@@ -1367,6 +1428,12 @@ def deployments_from_namespaces(
     deployments: Sequence[Deployment], namespaces: Set[api.Namespace]
 ) -> Sequence[Deployment]:
     return [deployment for deployment in deployments if deployment.metadata.namespace in namespaces]
+
+
+def daemon_sets_from_namespaces(
+    daemon_sets: Sequence[DaemonSet], namespaces: Set[api.Namespace]
+) -> Sequence[DaemonSet]:
+    return [daemon_set for daemon_set in daemon_sets if daemon_set.metadata.namespace in namespaces]
 
 
 def filter_monitored_namespaces(
@@ -1640,6 +1707,7 @@ def main(args: Optional[List[str]] = None) -> int:
                 nodes=api_server.nodes(),
                 deployments=api_server.deployments(),
                 cron_jobs=api_server.cron_jobs(),
+                daemon_sets=api_server.daemon_sets(),
                 cluster_details=api_server.cluster_details(),
             )
 
@@ -1669,6 +1737,13 @@ def main(args: Optional[List[str]] = None) -> int:
                 write_deployments_api_sections(
                     deployments_from_namespaces(cluster.deployments(), monitored_namespaces),
                     piggyback_formatter=functools.partial(piggyback_formatter, "deployment"),
+                )
+
+            if "daemonsets" in arguments.monitored_objects:
+                LOGGER.info("Write daemon sets sections based on API data")
+                write_daemon_sets_api_sections(
+                    daemon_sets_from_namespaces(cluster.daemon_sets(), monitored_namespaces),
+                    piggyback_formatter=functools.partial(piggyback_formatter, "daemonset"),
                 )
 
             monitored_pods: Set[PodLookupName] = {

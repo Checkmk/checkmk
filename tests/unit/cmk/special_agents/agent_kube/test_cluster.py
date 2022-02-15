@@ -47,3 +47,9 @@ def test_write_cluster_api_sections_maps_section_names_to_callables(
 def test_node_count_returns_number_of_nodes_ready_not_ready(cluster_nodes, cluster):
     node_count = cluster.node_count()
     assert node_count.worker.ready + node_count.worker.not_ready == cluster_nodes
+
+
+@pytest.mark.parametrize("cluster_daemon_sets", [0, 10, 20])
+def test_daemon_sets_returns_daemon_sets_of_cluster(cluster_daemon_sets, cluster):
+    daemon_sets = cluster.daemon_sets()
+    assert len(daemon_sets) == cluster_daemon_sets

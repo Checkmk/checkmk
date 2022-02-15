@@ -435,3 +435,12 @@ def cron_job_from_client(
         spec=parse_cron_job_spec(cron_job.spec),
         pod_uids=pod_uids,
     )
+
+
+def daemon_set_from_client(
+    daemon_set: client.V1DaemonSet, pod_uids=Sequence[api.PodUID]
+) -> api.DaemonSet:
+    return api.DaemonSet(
+        metadata=parse_metadata(daemon_set.metadata),
+        pods=pod_uids,
+    )

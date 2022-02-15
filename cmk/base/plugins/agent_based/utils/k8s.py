@@ -146,11 +146,14 @@ class KubeletInfo(BaseModel):
 
 class ControllerType(enum.Enum):
     deployment = "deployment"
+    daemon_set = "daemon_set"
 
     @staticmethod
     def from_str(label):
         if label == "deployment":
             return ControllerType.deployment
+        if label == "daemon_set":
+            return ControllerType.daemon_set
         raise ValueError(f"Unknown controller type: {label}")
 
 

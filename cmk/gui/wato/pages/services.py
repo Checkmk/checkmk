@@ -1286,9 +1286,17 @@ class DiscoveryPageRenderer:
                 show_bulk_actions=False,
                 title=_("Vanished clustered services - located on cluster host"),
                 help_text=_(
-                    "These services have been found on this host and have been mapped to "
-                    "a cluster host by a rule in the set <i>Clustered services</i> but disappeared "
-                    "from this host."
+                    "These services are mapped to a cluster host by a rule in one of the rulesets "
+                    "<i>%s</i> or <i>%s</i>."
+                )
+                % (
+                    _("Clustered services"),
+                    _("Clustered services for overlapping clusters"),
+                )
+                + " "
+                + _(
+                    "They have been found on this host previously, but have now disappeared. "
+                    "Note that they may still be monitored on the cluster."
                 ),
             ),
             TableGroupEntry(
@@ -1353,8 +1361,12 @@ class DiscoveryPageRenderer:
                 show_bulk_actions=False,
                 title=_("Monitored clustered services - located on cluster host"),
                 help_text=_(
-                    "These services have been found on this host but have been mapped to "
-                    "a cluster host by a rule in the set <i>Clustered services</i>."
+                    "These services are mapped to a cluster host by a rule in one of the rulesets "
+                    "<i>%s</i> or <i>%s</i>."
+                )
+                % (
+                    _("Clustered services"),
+                    _("Clustered services for overlapping clusters"),
                 ),
             ),
             TableGroupEntry(
@@ -1362,11 +1374,15 @@ class DiscoveryPageRenderer:
                 show_bulk_actions=False,
                 title=_("Undecided clustered services"),
                 help_text=_(
-                    "These services have been found on this host and have been mapped to "
-                    "a cluster host by a rule in the set <i>Clustered services</i>, but are not "
-                    "yet added to the active monitoring. Please either add them or permanently disable "
-                    "them."
-                ),
+                    "These services are mapped to a cluster host by a rule in one of the rulesets "
+                    "<i>%s</i> or <i>%s</i>."
+                )
+                % (
+                    _("Clustered services"),
+                    _("Clustered services for overlapping clusters"),
+                )
+                + " "
+                + _("They appear to be new to this node, but may still be already monitored."),
             ),
             TableGroupEntry(
                 table_group=DiscoveryState.CLUSTERED_IGNORED,

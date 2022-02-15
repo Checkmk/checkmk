@@ -21,7 +21,7 @@ from cmk.base.plugins.agent_based.gcp_gcs import (
 
 SECTION_TABLE = [
     [
-        '[{"name":"backup-home-ml-free"},{"name":"lakjsdklasjd"}]',
+        '[{"name":"backup-home-ml-free"},{"name":"lakjsdklasjd"},{"name":"nodata"}]',
     ],
     [
         "CiwaKnN0b3JhZ2UuZ29vZ2xlYXBpcy5jb20vc3RvcmFnZS90b3RhbF9ieXRlcxJNCgpnY3NfYnVja2V0EhsKCnByb2plY3RfaWQSDWJhY2t1cC0yNTU4MjASIgoLYnVja2V0X25hbWUSE2JhY2t1cC1ob21lLW1sLWZyZWUYASADKicKGgoLCIC9348GEMCd9FoSCwiAvd+PBhDAnfRaEgkZAAAACTTL5EEqJwoaCgsI1LrfjwYQwJ30WhILCNS6348GEMCd9FoSCRkAAAAJNMvkQSonChoKCwiouN+PBhDAnfRaEgsIqLjfjwYQwJ30WhIJGQAAAAk0y+RB"
@@ -48,6 +48,12 @@ def test_parse_gcp():
 @pytest.fixture(name="section")
 def fixture_section():
     return parse_gcp_gcs(SECTION_TABLE)
+
+
+def test_item_without_data_is_invalid(section):
+    for name, item in section.items():
+        if name == "nodata":
+            assert not item.is_valid
 
 
 @pytest.fixture(name="buckets")

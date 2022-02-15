@@ -32,8 +32,15 @@ class SectionItem:
 
     @classmethod
     def from_results(cls, rows: Sequence[GCPResult]) -> "SectionItem":
-        labels = [ServiceLabel(f"gcp_{k}", v) for k, v in rows[0].ts.resource.labels.items()]
+        try:
+            labels = [ServiceLabel(f"gcp_{k}", v) for k, v in rows[0].ts.resource.labels.items()]
+        except IndexError:
+            labels = []
         return cls(rows=rows, labels=labels)
+
+    @property
+    def is_valid(self) -> bool:
+        return bool(self.rows)
 
 
 Section = Mapping[str, SectionItem]
@@ -52,7 +59,8 @@ def parse_gcp(string_table: StringTable, label_key: str) -> Section:
 
 def discover(section: Section) -> DiscoveryResult:
     for name, item in section.items():
-        yield Service(item=f"{name}", labels=list(item.labels))
+        if item.is_valid:
+            yield Service(item=f"{name}", labels=list(item.labels))
 
 
 @dataclass(frozen=True)

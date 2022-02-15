@@ -5,7 +5,7 @@
 
 MYSELF="$(realpath "$0")"
 TEMPLATE="/etc/check_mk/xinetd-service-template.cfg"
-DESTINATION="/etc/xinet.d"
+DESTINATION="/etc/xinetd.d"
 SERVICE_FILE="check-mk-agent"
 
 usage() {

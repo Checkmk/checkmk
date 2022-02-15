@@ -4,15 +4,16 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import Any, Mapping, Optional, Sequence
 
-def agent_allnet_ip_sensoric_arguments(params, hostname, ipaddress):
-    args = []
 
-    if "timeout" in params:
-        args += ["--timeout", "%d" % params["timeout"]]
-
-    args.append(ipaddress)
-    return args
+def agent_allnet_ip_sensoric_arguments(
+    params: Mapping[str, Any], hostname: str, ipaddress: Optional[str]
+) -> Sequence[str]:
+    return [
+        *(["--timeout", "%d" % params["timeout"]] if "timeout" in params else []),
+        ipaddress or hostname,
+    ]
 
 
 special_agent_info["allnet_ip_sensoric"] = agent_allnet_ip_sensoric_arguments

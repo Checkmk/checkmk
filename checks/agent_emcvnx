@@ -4,16 +4,20 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import Any, Mapping, Optional, Sequence
 
-def agent_emcvnx_arguments(params, hostname, ipaddress):
-    args = []
+
+def agent_emcvnx_arguments(
+    params: Mapping[str, Any], hostname: str, ipaddress: Optional[str]
+) -> Sequence[str]:
+    args: list[str] = []
     if params["user"] != "":
         args += ["-u", params["user"]]
     if params["password"] != "":
         args += ["-p", params["password"]]
     args += ["-i", ",".join(params["infos"])]
 
-    args.append(ipaddress)
+    args.append(ipaddress or hostname)
     return args
 
 

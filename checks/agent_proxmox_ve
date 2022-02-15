@@ -7,19 +7,23 @@
 # pylint: disable=undefined-variable
 # type: ignore[name-defined]
 
+from typing import Any, Mapping, Optional, Sequence, Union
 
-def agent_proxmox_ve_arguments(params, hostname, ipaddress):
+
+def agent_proxmox_ve_arguments(
+    params: Mapping[str, Any], hostname: str, ipaddress: Optional[str]
+) -> Sequence[Union[str, tuple[str, str, str]]]:
     return [
         elem
         for chunk in (
-            ("-u", params["username"]) if "username" in params else (),  #
-            ("-p", passwordstore_get_cmdline("%s", params["password"]))  #
+            ("-u", params["username"]) if "username" in params else (),
+            ("-p", passwordstore_get_cmdline("%s", params["password"]))
             if "password" in params
             else (),
-            ("--port", params["port"]) if "port" in params else (),  #
-            ("--no-cert-check",) if params.get("no-cert-check") else (),  #
-            ("--timeout", params["timeout"]) if "timeout" in params else (),  #
-            ("--log-cutoff-weeks", params["log-cutoff-weeks"])  #
+            ("--port", params["port"]) if "port" in params else (),
+            ("--no-cert-check",) if params.get("no-cert-check") else (),
+            ("--timeout", params["timeout"]) if "timeout" in params else (),
+            ("--log-cutoff-weeks", params["log-cutoff-weeks"])
             if "log-cutoff-weeks" in params
             else (),
             (hostname,),

@@ -4,6 +4,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/stat.h>
+#include <unistd.h>
 
 void cmk_bail_out(const char *reason)
 {
@@ -12,31 +14,78 @@ void cmk_bail_out(const char *reason)
 }
 
 
+/* outbuf is allocated on success */
+ssize_t cmk_read_file(const char *pathname, unsigned char **outbuf)
+{
+    struct stat statbuf;
+    if (stat(pathname, &statbuf) != 0) {
+        goto err;
+    }
+    size_t outlen = statbuf.st_size;
+
+    unsigned char *buf = malloc(outlen);
+    if (buf == NULL) {
+        goto err;
+    }
+
+    FILE *stream = fopen(pathname, "rb");
+    if (stream == NULL) {
+        goto err_buf;
+    }
+
+    outlen = fread(buf, sizeof(unsigned char), outlen, stream);
+    if (ferror(stream) != 0) {
+        goto err_file;
+    }
+
+    fclose(stream);
+    *outbuf = buf;
+    return outlen;
+
+err_file:
+    fclose(stream);
+
+err_buf:
+    free(buf);
+
+err:
+    return -1;
+}
+
+
 char *cmk_lookup_password(const char *pw_id)
 {
     const char *omd_root = getenv("OMD_ROOT");
-    if (!omd_root)
+    if (!omd_root) {
         cmk_bail_out("Environment variable OMD_ROOT is missing.");
+    }
 
-    char path[512];
-    snprintf(path, sizeof(path), "%s/var/check_mk/stored_passwords", omd_root);
-    FILE *file = fopen(path, "r");
-    if (!file)
-        cmk_bail_out("Cannot open stored_passwords file.");
+    char pwfilepath[4096];  /* PATH_MAX from <linux/limits.h> */
+    int ok = snprintf(
+        pwfilepath, sizeof pwfilepath,
+        "%s/var/check_mk/stored_passwords", omd_root);
+    if (ok < 0 || ok >= sizeof pwfilepath) {
+        cmk_bail_out("stored_passwords path too long");
+    }
+    unsigned char *pwfile = NULL;
+    ssize_t pwfilelen = cmk_read_file(pwfilepath, &pwfile);
+    if (pwfilelen == -1) {
+        cmk_bail_out("Cannot open stored_passwords file");
+    }
 
-    static char line[512];
-    while (NULL != fgets(line, sizeof(line), file)) {
+    // The strict aliasing rule has an exception for signed/unsigned types
+    // so the cast on the next line is OK.
+    char *line = strtok(strndup((const char *)pwfile, pwfilelen), "\n");
+    while (line) {
         if (strlen(line) == 0)
             cmk_bail_out("Invalid zero sized line in stored_passwords file.");
-        line[strlen(line)-1] = 0; /* Remove \n */
-        if (strncmp(line, pw_id, strlen(pw_id)))
-            continue;
-        if (line[strlen(pw_id)] != ':')
-            continue;
-        fclose(file);
-        return line + strlen(pw_id) + 1;
+        if (strncmp(line, pw_id, strlen(pw_id)) == 0 && line[strlen(pw_id)] == ':') {
+            free(pwfile);
+            return line + strlen(pw_id) + 1;
+        }
+        line = strtok(NULL, "\n");
     }
-    fclose(file);
+    free(pwfile);
     return NULL;
 }
 
@@ -63,7 +112,7 @@ char **cmk_replace_passwords(int *argc, char **argv)
     new_argv[*argc] = NULL;
     *argc = (*argc) - 1; /* first option was dropped */
 
-    /* Create copy of stuff afgter --pwstore=... so that we can strtok around there */
+    /* Create copy of stuff after --pwstore=... so that we can strtok around there */
     char *info = strdup(argv[1] + 10);
     char *p = info;
     char *saveptr;
@@ -102,4 +151,4 @@ char **cmk_replace_passwords(int *argc, char **argv)
 }
 
 
-#define CMK_REPLACE_PASSWORDS do { argv = cmk_replace_passwords(&argc, argv); } while (false);
+#define CMK_REPLACE_PASSWORDS do { argv = cmk_replace_passwords(&argc, argv); } while (false)

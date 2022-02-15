@@ -278,14 +278,16 @@ class BICompiledRule(ABCBICompiledNode):
             for node in self.nodes
             for res in node.compile_postprocess(bi_branch_root, services_of_host, bi_searcher)
         ]
+        # Clear required elements cache, since the number of nodes might have changed
+        self.required_elements.cache_clear()
         return [self]
-
-    def services_of_host(self, host_name: HostName) -> Set[ServiceName]:
-        return {result for node in self.nodes for result in node.services_of_host(host_name)}
 
     @instance_method_lru_cache()
     def required_elements(self) -> Set[RequiredBIElement]:
         return {result for node in self.nodes for result in node.required_elements()}
+
+    def services_of_host(self, host_name: HostName) -> Set[ServiceName]:
+        return {result for node in self.nodes for result in node.services_of_host(host_name)}
 
     def get_required_hosts(self) -> Set[BIHostSpec]:
         return {

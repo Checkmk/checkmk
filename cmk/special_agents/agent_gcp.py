@@ -6,7 +6,7 @@
 import base64
 import json
 import time
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from functools import cache
 from typing import Any, Callable, Dict, Iterable, List, Mapping, Optional, Sequence
 
@@ -22,9 +22,9 @@ from cmk.special_agents.utils.agent_common import SectionWriter, special_agent_m
 from cmk.special_agents.utils.argument_parsing import Args, create_default_argument_parser
 
 
-@dataclass()
+@dataclass(unsafe_hash=True)
 class Client:
-    account_info: Dict[str, str]
+    account_info: Dict[str, str] = field(compare=False)
     project: str
 
     @cache
@@ -90,7 +90,7 @@ def time_series(client: Client, service: GCPService) -> Iterable[Result]:
         filter_rule = f'metric.type = "{metric.name}"'
         results = client.monitoring().list_time_series(
             request={
-                "name": f"project/{client.project}",
+                "name": f"projects/{client.project}",
                 "filter": filter_rule,
                 "interval": interval,
                 "view": monitoring_v3.ListTimeSeriesRequest.TimeSeriesView.FULL,

@@ -117,3 +117,8 @@ def test_items_in_section(section):
 def test_agent_output_deserialization(section):
     for line in section[2:]:
         agent_gcp.Result.deserialize(line)
+
+
+def test_can_hash_client():
+    client = agent_gcp.Client({}, "test")
+    assert hash(client)

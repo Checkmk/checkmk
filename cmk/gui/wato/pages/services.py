@@ -694,6 +694,12 @@ class DiscoveryPageRenderer:
                 foldable=Foldable.FOLDABLE_STATELESS,
                 omit_update_header=False,
                 help=entry.help_text,
+                isopen=entry.table_group
+                not in (
+                    DiscoveryState.CLUSTERED_NEW,
+                    DiscoveryState.CLUSTERED_OLD,
+                    DiscoveryState.CLUSTERED_VANISHED,
+                ),
             ) as table:
                 for check in sorted(checks, key=lambda e: e.description.lower()):
                     self._show_check_row(

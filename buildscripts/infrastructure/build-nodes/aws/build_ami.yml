@@ -311,10 +311,3 @@
         tags:
           Name: "{{ cmk_edition }} {{ cmk_version }}"
           Service: checkmk
-
-    - name: Terminate instance after creating AMI
-      ec2:
-        state: 'absent'
-        region: "{{ ec2_region }}"
-        instance_id: "{{ ec2_instance[0][0].id }}"
-

@@ -96,13 +96,28 @@ node (NODE) {
                                     // HINT workaround 2): HOME=$WORKSPACE_TMP must be set before running the ansible playbook otherwise the following error occurs, because ansible scripts
                                     // access the environment variable HOME directly:
                                     // Unable to create local directories /home/$HOME/.ansible/cp
-                                    sh """
+                                    try {
+                                        sh """
                                         set &&
                                         cd ./aws/ &&
                                         export DEFAULT_LOCAL_TMP=$WORKSPACE_TMP &&
                                         export ANSIBLE_HOST_KEY_CHECKING=False &&
                                         HOME=$WORKSPACE_TMP AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY EC2_KEY=$EC2_KEY ANSIBLE_SSH_PRIVATE_KEY_FILE=$ANSIBLE_SSH_PRIVATE_KEY_FILE CMKADMIN_PASS=$CMKADMIN_PASS PACKAGE_DIR=/download EDITION=$EDITION CMK_VERS=$CMK_VERS ./build_ami.yml -vv
                                     """
+                                    }
+                                    catch (e) {
+                                        currentBuild.result = "FAILED"
+                                        throw e
+                                    }
+                                    finally {
+                                      sh """
+                                        set &&
+                                        cd ./aws/ &&
+                                        export DEFAULT_LOCAL_TMP=$WORKSPACE_TMP &&
+                                        export ANSIBLE_HOST_KEY_CHECKING=False &&
+                                        HOME=$WORKSPACE_TMP AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY EC2_KEY=$EC2_KEY ANSIBLE_SSH_PRIVATE_KEY_FILE=$ANSIBLE_SSH_PRIVATE_KEY_FILE CMKADMIN_PASS=$CMKADMIN_PASS PACKAGE_DIR=/download EDITION=$EDITION CMK_VERS=$CMK_VERS ./terminate_checkmk_ec2_instances.yml -vv
+                                    """
+                                    }
                             }
                         }
                     }

@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import logging
 import socket
 from contextlib import contextmanager
 from datetime import datetime, timezone
@@ -55,9 +56,6 @@ def parse_arguments(argv: Optional[Sequence[str]]) -> Args:
     )
 
     parser.add_argument(
-        "--port", type=int, metavar="PORT", help="Port to be used by SMB client", default=139
-    )
-    parser.add_argument(
         "--patterns",
         type=str,
         nargs="*",
@@ -71,29 +69,9 @@ def parse_arguments(argv: Optional[Sequence[str]]) -> Args:
     return parser.parse_args(argv)
 
 
-def get_child_dirs(
-    conn: SMBConnection, share_name: str, parent_dir: str
-) -> Generator[str, None, None]:
-    yield parent_dir
-
-    for shared_file in conn.listPath(share_name, parent_dir):
-        if shared_file.filename in (".", ".."):
-            continue
-
-        if shared_file.isDirectory:
-            relative_path = f"{parent_dir}{shared_file.filename}"
-            yield from get_child_dirs(conn, share_name, f"{relative_path}\\")
-
-
 def iter_shared_files(
     conn: SMBConnection, hostname: str, share_name: str, pattern: List[str], subdir: str = ""
 ) -> Generator[File, None, None]:
-
-    if pattern[0] == "**":
-        child_dirs = get_child_dirs(conn, share_name, subdir)
-        for child_dir in child_dirs:
-            yield from iter_shared_files(conn, hostname, share_name, pattern[1:], subdir=child_dir)
-        return
 
     for shared_file in conn.listPath(share_name, subdir):
         if shared_file.filename in (".", ".."):
@@ -120,7 +98,12 @@ def get_all_shared_files(
 ) -> Generator[Tuple[str, List[File]], None, None]:
     share_names = [s.name for s in conn.listShares()]
     for pattern_string in patterns:
-        pattern = pattern_string.replace("\\**\\**\\", "\\**\\").strip("\\").split("\\")
+        pattern = pattern_string.strip("\\").split("\\")
+        if len(pattern) < 3:
+            raise RuntimeError(
+                f"Invalid pattern {pattern_string}. Pattern has to consist of hostname, share and file matching pattern"
+            )
+
         if pattern[0] != hostname:
             raise RuntimeError(f"Pattern {pattern_string} doesn't match {hostname} hostname")
 
@@ -152,19 +135,23 @@ def write_section(all_files: Generator[Tuple[str, List[File]], None, None]) -> N
 
 @contextmanager
 def connect(
-    username: str, password: str, remote_name: str, ip_address: str, port: int
+    username: str, password: str, remote_name: str, ip_address: str
 ) -> Generator[SMBConnection, None, None]:
-    conn = SMBConnection(username, password, socket.gethostname(), remote_name)
+    logging.debug("Creating SMB connection")
+    conn = SMBConnection(username, password, socket.gethostname(), remote_name, is_direct_tcp=True)
 
     try:
-        success = conn.connect(ip_address, port)
+        logging.debug("Connecting to %s on port 445", ip_address)
+        success = conn.connect(ip_address, 445)
     except (OSError, NotConnectedError):
         raise RuntimeError(
-            "Could not connect to the remote host. Check your ip address, port and remote name."
+            "Could not connect to the remote host. Check your ip address and remote name."
         )
 
     if not success:
         raise RuntimeError("Connection to the remote host was declined. Check your credentials.")
+
+    logging.debug("Connection successfully established")
 
     try:
         yield conn
@@ -173,12 +160,15 @@ def connect(
 
 
 def smb_share_agent(args: Args) -> None:
-    with connect(args.username, args.password, args.hostname, args.ip_address, args.port) as conn:
+    with connect(args.username, args.password, args.hostname, args.ip_address) as conn:
         all_files = get_all_shared_files(conn, args.hostname, args.patterns)
         try:
+            logging.debug("Querying share files and writing fileinfo section")
             write_section(all_files)
         except OperationFailure as err:
             raise RuntimeError(err.args[0])
+
+    logging.debug("Agent finished successfully")
 
 
 def main() -> int:

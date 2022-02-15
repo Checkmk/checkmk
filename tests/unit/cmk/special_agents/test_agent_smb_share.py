@@ -34,9 +34,10 @@ class MockShare:
 
 
 class MockSMBConnection:
-    def __init__(self, *args, filesystem=None, shares=None):
+    def __init__(self, *args, filesystem=None, shares=None, is_direct_tcp=False):
         self.filesystem = filesystem
         self.shares = shares
+        self.is_direct_tcp = is_direct_tcp
 
     @staticmethod
     def connect(*args):
@@ -78,8 +79,6 @@ def test_parse_arguments() -> None:
             "username",
             "--password",
             "password",
-            "--port",
-            "139",
             "--patterns",
             "\\\\HOSTNAME\\Share Folder 1\\*.log",
             "\\\\HOSTNAME\\Share Folder 2\\file.txt",
@@ -89,7 +88,6 @@ def test_parse_arguments() -> None:
     assert args.ip_address == "127.0.0.1"
     assert args.username == "username"
     assert args.password == "password"
-    assert args.port == 139
     assert args.patterns == [
         "\\\\HOSTNAME\\Share Folder 1\\*.log",
         "\\\\HOSTNAME\\Share Folder 2\\file.txt",
@@ -199,7 +197,6 @@ def test_parse_arguments() -> None:
                     "Subfolder1\\Subfolder2\\": [
                         SharedFile(0, 0, 0, 0, 10, 0, 16, "", "Subfolder4"),
                         SharedFile(0, 0, 0, 0, 10, 0, 32, "", "some_file"),
-                        SharedFile(0, 0, 0, 0, 10, 0, 32, "", "some_file"),
                     ],
                     "Subfolder1\\Subfolder2\\Subfolder4\\": [
                         SharedFile(0, 0, 0, 0, 10, 0, 32, "", "some_file"),
@@ -214,11 +211,11 @@ def test_parse_arguments() -> None:
                 }
             },
             "My Shared Folder",
-            ["Subfolder1", "**", "Subfolder3", "**", "some_file"],
+            ["Subfolder1", "**", "some_file"],
             [
-                ("\\\\HOSTNAME\\My Shared Folder\\Subfolder1\\Subfolder3\\some_file", "some_file"),
+                ("\\\\HOSTNAME\\My Shared Folder\\Subfolder1\\Subfolder2\\some_file", "some_file"),
                 (
-                    "\\\\HOSTNAME\\My Shared Folder\\Subfolder1\\Subfolder3\\Subfolder5\\some_file",
+                    "\\\\HOSTNAME\\My Shared Folder\\Subfolder1\\Subfolder3\\some_file",
                     "some_file",
                 ),
             ],
@@ -338,8 +335,6 @@ def test_get_all_shared_files_errors(
                 "username",
                 "--password",
                 "password",
-                "--port",
-                "139",
                 "--patterns",
                 "\\Share Folder 1\\*.log",
                 "\\Share Folder 2\\file.txt",
@@ -396,7 +391,7 @@ def test_smb_share_agent_error():
         mock_connection.side_effect = NotConnectedError
         with pytest.raises(
             RuntimeError,
-            match="Could not connect to the remote host. Check your ip address, port and remote name.",
+            match="Could not connect to the remote host. Check your ip address and remote name.",
         ):
             smb_share_agent(args)
 
@@ -429,7 +424,7 @@ def test_smb_share_agent_operation_failure(mock_connect, mock_get_files, mock_wr
 @mock.patch("cmk.special_agents.agent_smb_share.SMBConnection.close")
 def test_connect_error(mock_close, mock_connect):
     with pytest.raises(Exception, match="Exception during usage of smb connection"):
-        with connect("username", "password", "hostname", "127.0.0.1", 139):
+        with connect("username", "password", "hostname", "127.0.0.1"):
             raise Exception("Exception during usage of smb connection")
 
     mock_close.assert_called_once()

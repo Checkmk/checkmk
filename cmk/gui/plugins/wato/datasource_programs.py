@@ -5504,7 +5504,6 @@ def _valuespec_special_agents_smb_share():
                     ),
                 ),
             ),
-            ("port", Integer(title=_("Port"), default_value=139)),
             (
                 "authentication",
                 Tuple(
@@ -5523,7 +5522,7 @@ def _valuespec_special_agents_smb_share():
                     help=_(
                         "<p>Here you can specify a list of filename patterns to be sent by the "
                         "agent in the section <tt>fileinfo</tt>. UNC paths with globbing patterns "
-                        "are used here, e.g. <tt>\\\\hostname\\share name\\**\\foo\\*.log</tt>. "
+                        "are used here, e.g. <tt>\\\\hostname\\share name\\*\\foo\\*.log</tt>. "
                         "Wildcards are not allowed in host or share names. "
                         "Per default each found file will be monitored for size and age. "
                         "By building groups you can alternatively monitor a collection "

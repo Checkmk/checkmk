@@ -63,6 +63,12 @@ BRANCH_VERSION     := 2.1.0
 SHELL              := /bin/bash
 CLANG_VERSION      := 12
 
+# In our CI we use this compiler, but we are not restricted to this exact version
+GCC_VERSION_MAJOR      := 11
+GCC_VERSION_MINOR      := 2
+GCC_VERSION_PATCHLEVEL := 0
+GCC_VERSION	       := "${GCC_VERSION_MAJOR}.${GCC_VERSION_MINOR}.${GCC_VERSION_PATCHLEVEL}"
+
 # When you update the Python version, you have to update the test expectations
 # in test_03_python_interpreter_version and test_03_pip_interpreter_version.
 # Update omd/Licenses.csv, too.

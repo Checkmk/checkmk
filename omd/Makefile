@@ -22,6 +22,7 @@ PACKAGES := \
     openssl \
     redis \
     libgsf \
+    cpp-libs \
     perl-modules \
     Python \
     freetds \

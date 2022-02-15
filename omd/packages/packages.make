@@ -124,6 +124,7 @@ include \
     packages/freetds/freetds.make \
     packages/heirloom-pkgtools/heirloom-pkgtools.make \
     packages/perl-modules/perl-modules.make \
+    packages/cpp-libs/cpp-libs.make \
     packages/libgsf/libgsf.make \
     packages/maintenance/maintenance.make \
     packages/mod_fcgid/mod_fcgid.make \

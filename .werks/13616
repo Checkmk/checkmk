@@ -1,0 +1,9 @@
+Title: Users with edit permissions for custom graphs can save their changes
+Class: fix
+Compatible: compat
+Component: metrics
+Date: 1644421468
+Edition: cee
+Knowledge: doc
+Level: 1
+Version: 2.0.0p21

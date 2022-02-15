@@ -1,0 +1,13 @@
+Title: jenkins_queue: Fix n/a metrics in case of missing data
+Class: fix
+Compatible: compat
+Component: core
+Date: 1644852982
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.0.0p21
+
+If no blocked, pending and stuck tasks were retrieved from jenkins, the metrics
+showed "n/a" in graphs instead of value 0.

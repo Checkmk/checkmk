@@ -303,14 +303,14 @@ class Encrypter:
             return hashlib.scrypt(passphrase, salt=salt, n=2**14, r=8, p=1, dklen=32)
 
     @classmethod
-    def _cipher(cls, salt: bytes, nonce: bytes):
-        return AES.new(cls._secret_key(salt), AES.MODE_GCM, nonce=nonce)
+    def _cipher(cls, key: bytes, nonce: bytes):
+        return AES.new(key, AES.MODE_GCM, nonce=nonce)
 
     @classmethod
     def encrypt(cls, value: str) -> bytes:
         salt = os.urandom(AES.block_size)
         nonce = os.urandom(AES.block_size)
-        cipher = cls._cipher(salt, nonce)
+        cipher = cls._cipher(cls._secret_key(salt), nonce)
         encrypted, tag = cipher.encrypt_and_digest(value.encode("utf-8"))
         return salt + nonce + tag + encrypted
 
@@ -320,4 +320,8 @@ class Encrypter:
         nonce, rest = rest[: AES.block_size], rest[AES.block_size :]
         tag, encrypted = rest[: AES.block_size], rest[AES.block_size :]
 
-        return cls._cipher(salt, nonce).decrypt_and_verify(encrypted, tag).decode("utf-8")
+        return (
+            cls._cipher(cls._secret_key(salt), nonce)
+            .decrypt_and_verify(encrypted, tag)
+            .decode("utf-8")
+        )

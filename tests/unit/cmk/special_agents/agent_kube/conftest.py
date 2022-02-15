@@ -27,10 +27,6 @@ class PodStatusFactory(ModelFactory):
     __model__ = api.PodStatus
 
 
-class PodSpecFactory(ModelFactory):
-    __model__ = api.PodSpec
-
-
 # Node Factories
 class KubeletInfoFactory(ModelFactory):
     __model__ = api.KubeletInfo
@@ -54,6 +50,68 @@ class NodeStatusFactory(ModelFactory):
     __model__ = api.NodeStatus
 
     conditions = Use(NodeConditionFactory.batch, size=len(agent_kube.NATIVE_NODE_CONDITION_TYPES))
+
+
+# Container Fixtures
+@pytest.fixture
+def pod_containers_count():
+    return 1
+
+
+@pytest.fixture
+def container_limit_cpu():
+    return 2.0
+
+
+@pytest.fixture
+def container_request_cpu():
+    return 1.0
+
+
+@pytest.fixture
+def container_limit_memory():
+    return 2.0 * ONE_MiB
+
+
+@pytest.fixture
+def container_request_memory():
+    return 1.0 * ONE_MiB
+
+
+@pytest.fixture
+def container_resources_requirements(
+    container_request_cpu, container_limit_cpu, container_request_memory, container_limit_memory
+):
+    return api.ContainerResources(
+        limits=api.ResourcesRequirements(
+            memory=container_limit_memory,
+            cpu=container_limit_cpu,
+        ),
+        requests=api.ResourcesRequirements(
+            memory=container_request_memory,
+            cpu=container_request_cpu,
+        ),
+    )
+
+
+@pytest.fixture
+def container_spec(container_resources_requirements):
+    class ContainerSpecFactory(ModelFactory):
+        __model__ = api.ContainerSpec
+
+        resources = container_resources_requirements
+
+    return ContainerSpecFactory.build()
+
+
+@pytest.fixture
+def pod_spec(container_spec, pod_containers_count):
+    class PodSpecFactory(ModelFactory):
+        __model__ = api.PodSpec
+
+        containers = [container_spec for _ in range(pod_containers_count)]
+
+    return PodSpecFactory.build()
 
 
 @pytest.fixture
@@ -115,7 +173,7 @@ def phase_generator(phases):
 
 
 @pytest.fixture
-def new_pod(phase_generator):
+def new_pod(phase_generator, pod_spec):
     phases = phase_generator()
 
     def _new_pod():
@@ -125,7 +183,7 @@ def new_pod(phase_generator):
             uid=api.PodUID("test-pod"),
             metadata=PodMetaDataFactory.build(),
             status=pod_status,
-            spec=PodSpecFactory.build(),
+            spec=pod_spec,
             containers={},
             init_containers={},
         )

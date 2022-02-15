@@ -125,3 +125,25 @@ def test_node_info_section(node):
     assert info.name == node.metadata.name
     assert info.labels == node.metadata.labels
     assert isinstance(info.creation_timestamp, float)
+
+
+def test_node_memory_resources(
+    new_node, new_pod, pod_containers_count, container_limit_memory, container_request_memory
+):
+    node = new_node()
+    node.append(new_pod())
+    memory_resources = node.memory_resources()
+    assert memory_resources.count_total == pod_containers_count
+    assert memory_resources.limit == pod_containers_count * container_limit_memory
+    assert memory_resources.request == pod_containers_count * container_request_memory
+
+
+def test_node_cpu_resources(
+    new_node, new_pod, pod_containers_count, container_limit_cpu, container_request_cpu
+):
+    node = new_node()
+    node.append(new_pod())
+    cpu_resources = node.cpu_resources()
+    assert cpu_resources.count_total == pod_containers_count
+    assert cpu_resources.limit == pod_containers_count * container_limit_cpu
+    assert cpu_resources.request == pod_containers_count * container_request_cpu

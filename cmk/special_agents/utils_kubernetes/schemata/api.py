@@ -201,6 +201,11 @@ class Deployment(BaseModel):
     pods: Sequence[PodUID]
 
 
+class DaemonSet(BaseModel):
+    metadata: MetaData
+    pods: Sequence[PodUID]
+
+
 class Phase(str, enum.Enum):
     RUNNING = "running"
     PENDING = "pending"
@@ -351,6 +356,9 @@ class API(Protocol):
         ...
 
     def deployments(self):
+        ...
+
+    def daemon_sets(self):
         ...
 
     def cluster_details(self) -> ClusterInfo:

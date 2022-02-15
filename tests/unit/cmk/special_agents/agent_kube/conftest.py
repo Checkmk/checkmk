@@ -4,8 +4,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=comparison-with-callable,redefined-outer-name
 import itertools
+
+# pylint: disable=comparison-with-callable,redefined-outer-name
+from typing import Callable
 
 import pytest
 from pydantic_factories import ModelFactory, Use
@@ -65,8 +67,8 @@ class NodeStatusFactory(ModelFactory):
     conditions = Use(NodeConditionFactory.batch, size=len(agent_kube.NATIVE_NODE_CONDITION_TYPES))
 
 
-# Deployment Factories
-class DeploymentMetaDataFactory(ModelFactory):
+# Deployment/DaemonSet Factories
+class MetaDataFactory(ModelFactory):
     __model__ = api.MetaData
 
 
@@ -263,6 +265,27 @@ def node_pods():
 
 
 @pytest.fixture
+def new_daemon_set() -> Callable[[], agent_kube.DaemonSet]:
+    def _new_daemon_set() -> agent_kube.DaemonSet:
+        return agent_kube.DaemonSet(metadata=MetaDataFactory.build())
+
+    return _new_daemon_set
+
+
+@pytest.fixture
+def daemon_set_pods() -> int:
+    return len(api.Phase)
+
+
+@pytest.fixture
+def daemon_set(new_daemon_set, daemon_set_pods, new_pod) -> agent_kube.DaemonSet:
+    daemon_set = new_daemon_set()
+    for _ in range(daemon_set_pods):
+        daemon_set.add_pod(new_pod())
+    return daemon_set
+
+
+@pytest.fixture
 def cluster_nodes():
     return 3
 
@@ -287,7 +310,7 @@ def deployment_status() -> api.DeploymentStatus:
 def new_deployment(deployment_spec: api.DeploymentSpec, deployment_status: api.DeploymentStatus):
     def _new_deployment() -> agent_kube.Deployment:
         return agent_kube.Deployment(
-            metadata=DeploymentMetaDataFactory.build(),
+            metadata=MetaDataFactory.build(),
             spec=deployment_spec,
             status=deployment_status,
         )
@@ -301,10 +324,17 @@ def deployment(new_deployment) -> agent_kube.Deployment:
 
 
 @pytest.fixture
-def cluster(new_node, cluster_nodes):
+def cluster_daemon_sets() -> int:
+    return 6
+
+
+@pytest.fixture
+def cluster(new_node, cluster_nodes, new_daemon_set, cluster_daemon_sets) -> agent_kube.Cluster:
     cluster = agent_kube.Cluster()
     for _ in range(cluster_nodes):
         cluster.add_node(new_node())
+    for _ in range(cluster_daemon_sets):
+        cluster.add_daemon_set(new_daemon_set())
     return cluster
 
 
@@ -335,6 +365,14 @@ def cluster_api_sections():
         "kube_cpu_resources_v1",
         "kube_allocatable_memory_resource_v1",
         "kube_allocatable_cpu_resource_v1",
+    ]
+
+
+@pytest.fixture
+def daemon_sets_api_sections():
+    return [
+        "kube_memory_resources_v1",
+        "kube_cpu_resources_v1",
     ]
 
 

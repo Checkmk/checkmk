@@ -121,24 +121,6 @@ def _drop_plugins_services(
     return [s for s in services if s.check_plugin_name not in plugin_names]
 
 
-# Create a table of autodiscovered services of a host. Do not save
-# this table anywhere. Do not read any previously discovered
-# services. The table has the following columns:
-# 1. Check type
-# 2. Item
-# 3. Parameter string (not evaluated)
-#
-# This function does not handle:
-# - clusters
-# - disabled services
-#
-# This function *does* handle:
-# - disabled check typess
-#
-# on_error is one of:
-# "ignore" -> silently ignore any exception
-# "warn"   -> output a warning on stderr
-# "raise"  -> let the exception come through
 def _discover_services(
     *,
     host_key: HostKey,

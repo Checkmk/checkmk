@@ -1,7 +1,9 @@
 /* Replace passwords in command line from Check_MK password store */
 
-#include <string.h>
+#include <stdbool.h>
+#include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 void cmk_bail_out(const char *reason)
 {

@@ -26,6 +26,30 @@ pub struct MaxConnectionsGuard {
     active_connections: HashMap<IpAddr, Arc<Semaphore>>,
 }
 
+fn is_addr_allowed(addr: &SocketAddr, allowed_ip: &[String]) -> bool {
+    if allowed_ip.is_empty() {
+        return true;
+    }
+    for ip in allowed_ip {
+        // Our list may contain both network, ip addresses and bad data(!)
+        // Examples: network - 192.168.1.14/24, address - 127.0.0.1
+        if let Ok(allowed_net) = ip.parse::<ipnet::IpNet>() {
+            if allowed_net.contains(&addr.ip()) {
+                return true;
+            }
+        }
+        if let Ok(allowed_addr) = ip.parse::<IpAddr>() {
+            if allowed_addr == addr.ip() {
+                return true;
+            }
+        }
+        // NOTE: no reporting about bad data here.
+        // We prefer to ignore error here: despite the possibility
+        // to have invalid settings we should check and report this once
+    }
+    false
+}
+
 impl MaxConnectionsGuard {
     pub fn new(max_connections: usize) -> Self {
         MaxConnectionsGuard {
@@ -61,7 +85,7 @@ pub fn pull(
     legacy_pull_marker: std::path::PathBuf,
     port: String,
     max_connections: usize,
-    _allowed_ip: Vec<String>, // TODO: use this value!
+    allowed_ip: Vec<String>,
 ) -> AnyhowResult<()> {
     let pull_config = PullConfigurationImpl::new(registry, legacy_pull_marker)?;
     let guard = MaxConnectionsGuard::new(max_connections);
@@ -106,6 +130,10 @@ where
         info!("{}: Handling pull request", addr);
 
         pull_config.refresh()?;
+        if !is_addr_allowed(&addr, &allowed_ip) {
+            warn!("PULL: Request from {} is not allowed", addr);
+            continue;
+        }
 
         let plain_mondata = collect_plain_mondata();
         let encoded_mondata = collect_encoded_mondata();
@@ -283,11 +311,67 @@ async fn with_timeout<T, E: 'static + Error + Send + Sync>(
 #[cfg(test)]
 mod tests {
     use super::*;
-
     #[test]
     fn test_encode_data_for_transport() {
         let mut expected_result = b"\x00\x00\x01".to_vec();
         expected_result.append(&mut monitoring_data::compress(b"abc").unwrap());
         assert_eq!(encode_data_for_transport(b"abc").unwrap(), expected_result);
+    }
+
+    mod allowed_ip {
+        use super::*;
+        fn args_good() -> Vec<String> {
+            vec![
+                "192.168.1.14/24".to_string(), // net
+                "::1".to_string(),
+                "127.0.0.1".to_string(),
+                "fd00::/17".to_string(), // net
+                "fd05::3".to_string(),
+            ]
+        }
+
+        fn args_bad() -> Vec<String> {
+            vec![
+                "192168114/24".to_string(), // invalid
+                "::1".to_string(),
+                "127.0.0.1".to_string(),
+                "fd00::/17".to_string(),
+            ]
+        }
+
+        fn to_sock_addr(addr: &str) -> SocketAddr {
+            format!("{}:80", addr).parse::<SocketAddr>().unwrap()
+        }
+
+        #[test]
+        fn test_empty_list() {
+            let args = &vec![];
+            assert!(is_addr_allowed(&to_sock_addr("127.0.0.2"), args));
+            assert!(is_addr_allowed(&to_sock_addr("127.0.0.1"), args));
+        }
+        #[test]
+        fn test_good_list_ipaddr() {
+            let args = &args_good();
+            assert!(is_addr_allowed(&to_sock_addr("127.0.0.1"), args));
+            assert!(!is_addr_allowed(&to_sock_addr("127.0.0.2"), args));
+            assert!(is_addr_allowed(&to_sock_addr("[::1]"), args));
+            assert!(!is_addr_allowed(&to_sock_addr("[::2]"), args));
+            assert!(is_addr_allowed(&to_sock_addr("[fd05::3]"), args));
+            assert!(!is_addr_allowed(&to_sock_addr("[fd05::9]"), args));
+        }
+        #[test]
+        fn test_bad_list_ipaddr() {
+            let args = &args_bad();
+            assert!(!is_addr_allowed(&to_sock_addr("127.0.0.2"), args));
+            assert!(is_addr_allowed(&to_sock_addr("127.0.0.1"), args));
+        }
+        #[test]
+        fn test_valid_list_net() {
+            let args = &args_good();
+            assert!(is_addr_allowed(&to_sock_addr("192.168.1.13"), args));
+            assert!(!is_addr_allowed(&to_sock_addr("172.168.1.13"), args));
+            assert!(is_addr_allowed(&to_sock_addr("[fd00::1]"), args));
+            assert!(!is_addr_allowed(&to_sock_addr("[fd01::1]"), args));
+        }
     }
 }

@@ -34,3 +34,4 @@ rand = { version = "*" }
 tokio = { version = "1", features = ["full"] }
 tokio-rustls = { version = "*" }
 async-std = { version = "*" }
+ipnet = { version = "*" }

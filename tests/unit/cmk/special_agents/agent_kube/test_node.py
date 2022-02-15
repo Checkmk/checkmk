@@ -54,6 +54,14 @@ def test_node_allocatable_cpu_resource(node_allocatable_cpu, node):
     assert actual == expected
 
 
+def test_node_alloctable_pods(node_allocatable_pods, node_capacity_pods, node):
+    expected = section.AllocatablePods(
+        capacity=node_capacity_pods, allocatable=node_allocatable_pods
+    )
+    actual = node.allocatable_pods()
+    assert actual == expected
+
+
 def test_write_nodes_api_sections_registers_sections_to_be_written(
     node, nodes_api_sections, write_sections_mock
 ):

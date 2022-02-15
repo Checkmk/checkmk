@@ -168,12 +168,22 @@ def node_allocatable_memory():
 
 
 @pytest.fixture
-def node_resources_builder(node_allocatable_cpu, node_allocatable_memory):
+def node_allocatable_pods():
+    return 1
+
+
+@pytest.fixture
+def node_capacity_pods():
+    return 1
+
+
+@pytest.fixture
+def node_resources_builder(node_allocatable_cpu, node_allocatable_memory, node_allocatable_pods, node_capacity_pods):
     def _node_resources_builder():
         return {
-            "capacity": NodeResourcesFactory.build(),
+            "capacity": NodeResourcesFactory.build(pods=node_capacity_pods),
             "allocatable": NodeResourcesFactory().build(
-                cpu=node_allocatable_cpu, memory=node_allocatable_memory
+                cpu=node_allocatable_cpu, memory=node_allocatable_memory, pods=node_allocatable_pods
             ),
         }
 

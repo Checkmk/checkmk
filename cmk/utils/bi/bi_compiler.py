@@ -287,18 +287,12 @@ class BICompiler:
         # Updates are done on the live data via pipeline, using transactions.
 
         # Fetch existing keys
-        cursor = 0
-        existing_keys = set()
-        while True:
-            cursor, matches = client.scan(cursor, "bi:aggregation_lookup:*", count=10000)
-            existing_keys.update(matches)
-            if cursor == 0:
-                break
+        existing_keys = set(client.scan_iter("bi:aggregation_lookup:*"))
 
         # Update keys
         pipeline = client.pipeline()
         for key, values in part_of_aggregation_map.items():
-            pipeline.lpush(key, *values)
+            pipeline.sadd(key, *values)
         pipeline.set("bi:aggregation_lookup", "1")
 
         # Remove obsolete keys

@@ -1748,8 +1748,8 @@ class ABCEditRuleMode(WatoMode):
 
     def _update_rule_from_vars(self) -> None:
         # Additional options
-        rule_options = self._vs_rule_options(self._rule.id).from_html_vars("options")
-        self._vs_rule_options(self._rule.id).validate_value(rule_options, "options")
+        rule_options = self._vs_rule_options(self._rule).from_html_vars("options")
+        self._vs_rule_options(self._rule).validate_value(rule_options, "options")
 
         self._rule.rule_options = RuleOptions(
             disabled=rule_options["disabled"],
@@ -1827,7 +1827,7 @@ class ABCEditRuleMode(WatoMode):
         html.begin_form("rule_editor", method="POST")
 
         # Additonal rule options
-        self._vs_rule_options(self._rule.id).render_input("options", self._rule.rule_options)
+        self._vs_rule_options(self._rule).render_input("options", self._rule.rule_options)
 
         # Value
         valuespec = self._ruleset.valuespec()
@@ -1862,7 +1862,7 @@ class ABCEditRuleMode(WatoMode):
         forms.end()
 
         html.hidden_fields()
-        self._vs_rule_options(self._rule.id).set_focus("options")
+        self._vs_rule_options(self._rule).set_focus("options")
         html.end_form()
 
     def _show_conditions(self) -> None:
@@ -1984,7 +1984,7 @@ class ABCEditRuleMode(WatoMode):
         html.close_table()
         html.close_center()
 
-    def _vs_rule_options(self, rule_id: str, disabling: bool = True) -> Dictionary:
+    def _vs_rule_options(self, rule: watolib.Rule, disabling: bool = True) -> Dictionary:
         return Dictionary(
             title=_("Rule Properties"),
             optional_keys=False,
@@ -1994,12 +1994,24 @@ class ABCEditRuleMode(WatoMode):
                 (
                     "id",
                     FixedValue(
-                        rule_id,
+                        rule.id,
                         title=_("Rule ID"),
                     ),
                 ),
+                (
+                    "_name",
+                    FixedValue(
+                        rule.ruleset.name,
+                        title=_("Ruleset name"),
+                        help=_(
+                            "The ruleset name is used to identify the ruleset within Checkmk. "
+                            "You may need it when working with the rule and ruleset related "
+                            "REST API calls."
+                        ),
+                    ),
+                ),
             ],
-            show_more_keys=["id"],
+            show_more_keys=["id", "_name"],
         )
 
 

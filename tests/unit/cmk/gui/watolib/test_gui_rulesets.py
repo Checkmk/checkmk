@@ -14,7 +14,7 @@ from cmk.utils.type_defs import RuleOptions, RuleOptionsSpec, RuleSpec
 import cmk.gui.utils
 
 # Triggers plugin loading of plugins.wato which registers all the plugins
-import cmk.gui.wato  # noqa: F401 # pylint: disable=unused-import
+import cmk.gui.wato
 import cmk.gui.watolib.hosts_and_folders as hosts_and_folders
 import cmk.gui.watolib.rulesets as rulesets
 from cmk.gui.exceptions import MKGeneralException

@@ -1333,7 +1333,7 @@ procs_blocked 0
 softirq 3526225 0 845354 2 177933 55525 0 6372 577174 0 1863865
 """
             % counters
-        )  # noqa: E501
+        )
 
         return section + cpu_output
 
@@ -2445,7 +2445,7 @@ thermal_zone1 - BAT0 35000
 
 
 class TestCase:
-    STATE_INITIALIZING = "initializing"  # noqa: E101
+    STATE_INITIALIZING = "initializing"
     STATE_RUNNING = "running"
     STATE_STOPPED = "stopped"
 

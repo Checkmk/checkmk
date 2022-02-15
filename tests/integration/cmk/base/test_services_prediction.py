@@ -23,9 +23,7 @@ from cmk.base import prediction
 
 
 @pytest.fixture(name="cfg_setup", scope="module")
-def cfg_setup_fixture(
-    request, web, site: Site
-):  # noqa: F811 # pylint: disable=redefined-outer-name
+def cfg_setup_fixture(request, web, site: Site):
     hostname = "test-prediction"
 
     # Enforce use of the pre-created RRD file from the git. The restart of the core

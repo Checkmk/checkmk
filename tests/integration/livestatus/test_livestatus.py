@@ -134,9 +134,7 @@ def test_usage_counters(site: Site) -> None:
 
 
 @pytest.fixture(name="configure_service_tags")
-def configure_service_tags_fixture(
-    site, web, default_cfg
-):  # noqa: F811 # pylint: disable=redefined-outer-name
+def configure_service_tags_fixture(site, web, default_cfg):
     web.set_ruleset(  # Replace with RestAPI, see CMK-9251
         "service_tag_rules",
         {

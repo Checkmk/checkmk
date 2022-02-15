@@ -28,9 +28,7 @@ def get_test_id(unreachable_enabled):
     params=[True, False],
     ids=get_test_id,
 )
-def unreachable_enabled_fixture(
-    request, web, site: Site
-):  # noqa: F811 # pylint: disable=redefined-outer-name
+def unreachable_enabled_fixture(request, web, site: Site):
     unreachable_enabled = request.param
 
     try:

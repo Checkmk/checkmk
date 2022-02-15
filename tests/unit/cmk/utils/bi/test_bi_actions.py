@@ -83,7 +83,6 @@ def test_state_of_service_execute(
 
 
 def test_call_a_rule_execute(dummy_bi_rule, bi_searcher_with_sample_config):
-    # noqa: F811 # pylint: disable=unused-import
     schema_config = BICallARuleAction.schema()().dump({"rule_id": dummy_bi_rule.id})
     action = BICallARuleAction(schema_config)
     results = list(action.execute_search_results([{}], {}, bi_searcher_with_sample_config))

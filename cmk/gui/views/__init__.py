@@ -71,7 +71,7 @@ from cmk.gui.globals import (
 )
 
 # Needed for legacy (pre 1.6) plugins
-from cmk.gui.htmllib import HTML  # noqa: F401 # pylint: disable=unused-import
+from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _, _u
 from cmk.gui.main_menu import mega_menu_registry
 from cmk.gui.page_menu import (

@@ -18,6 +18,7 @@ from cmk.utils.type_defs import HostName, ServiceName
 
 import cmk.gui.availability as availability
 import cmk.gui.bi as bi
+import cmk.gui.utils.escaping as escaping
 from cmk.gui.availability import (
     AVData,
     AVEntry,
@@ -304,7 +305,7 @@ def show_availability_page(view: View, filterheaders: FilterHeader) -> None:
         # If we abolish the limit we have to fetch the data again
         # with changed logrow_limit = 0, which means no limit
         if has_reached_logrow_limit:
-            text = (
+            text = escaping.escape_html_permissive(
                 _(
                     "Your query matched more than %d log entries. "
                     "<b>Note:</b> The number of shown rows does not necessarily reflect the "

@@ -767,7 +767,7 @@ def _tcp_timeouts():
                 (
                     "connect",
                     Integer(
-                        title=_("Connect timeout"),
+                        title=_("Connect timeout (seconds)"),
                         help=_("Number of seconds to wait for a TCP connection"),
                         default_value=10,
                     ),
@@ -775,7 +775,7 @@ def _tcp_timeouts():
                 (
                     "read",
                     Integer(
-                        title=_("Read timeout"),
+                        title=_("Read timeout (seconds)"),
                         help=_(
                             "Number of seconds to wait for a response from "
                             "the API during a TCP connection"

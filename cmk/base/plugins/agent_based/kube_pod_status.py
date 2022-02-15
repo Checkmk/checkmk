@@ -18,8 +18,8 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
 )
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
 from cmk.base.plugins.agent_based.utils.k8s import (
+    ContainerInfo,
     ContainerRunningState,
-    ContainerStatus,
     ContainerTerminatedState,
     ContainerWaitingState,
     PodContainers,
@@ -83,8 +83,8 @@ def _get_levels_from_params(status_message: str, params: Params) -> Optional[Lev
 
 
 def _erroneous_or_incomplete_containers(
-    containers: Sequence[ContainerStatus],
-) -> Sequence[ContainerStatus]:
+    containers: Sequence[ContainerInfo],
+) -> Sequence[ContainerInfo]:
     return [
         container
         for container in containers
@@ -95,7 +95,7 @@ def _erroneous_or_incomplete_containers(
     ]
 
 
-def _pod_container_message(pod_containers: Sequence[ContainerStatus]) -> Optional[str]:
+def _pod_container_message(pod_containers: Sequence[ContainerInfo]) -> Optional[str]:
     containers = _erroneous_or_incomplete_containers(pod_containers)
     for container in containers:
         if (
@@ -113,8 +113,8 @@ def _pod_container_message(pod_containers: Sequence[ContainerStatus]) -> Optiona
 
 
 def _pod_status_message(
-    pod_containers: Sequence[ContainerStatus],
-    pod_init_containers: Sequence[ContainerStatus],
+    pod_containers: Sequence[ContainerInfo],
+    pod_init_containers: Sequence[ContainerInfo],
     section_kube_pod_lifecycle: PodLifeCycle,
 ) -> str:
     if init_container_message := _pod_container_message(pod_init_containers):
@@ -124,7 +124,7 @@ def _pod_status_message(
     return section_kube_pod_lifecycle.phase.title()
 
 
-def _pod_containers(pod_containers: Optional[PodContainers]) -> Sequence[ContainerStatus]:
+def _pod_containers(pod_containers: Optional[PodContainers]) -> Sequence[ContainerInfo]:
     """Return a sequence of containers with their associated status information.
 
     Kubernetes populates the sequence of containers and container status
@@ -137,7 +137,7 @@ def _pod_containers(pod_containers: Optional[PodContainers]) -> Sequence[Contain
     return list(pod_containers.containers.values()) if pod_containers is not None else []
 
 
-def _container_status_details(containers: Sequence[ContainerStatus]) -> CheckResult:
+def _container_status_details(containers: Sequence[ContainerInfo]) -> CheckResult:
     """Show container status details for debugging purposes, if the container
     status is not running or not terminated successfully."""
     yield from (

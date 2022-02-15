@@ -9,6 +9,7 @@ from cmk.base.plugins.agent_based.utils import kube as check
 from cmk.base.plugins.agent_based.utils.k8s import AllocatablePods as AllocatablePodsC
 from cmk.base.plugins.agent_based.utils.k8s import ClusterInfo as ClusterInfoC
 from cmk.base.plugins.agent_based.utils.k8s import ContainerCount as ContainerCountC
+from cmk.base.plugins.agent_based.utils.k8s import ContainerInfo as ContainerInfoC
 from cmk.base.plugins.agent_based.utils.k8s import ContainerRunningState as ContainerRunningStateC
 from cmk.base.plugins.agent_based.utils.k8s import (
     ContainerTerminatedState as ContainerTerminatedStateC,
@@ -30,6 +31,7 @@ from cmk.base.plugins.agent_based.utils.kube_resources import Resources as Resou
 
 from cmk.special_agents.utils_kubernetes.schemata import section as agent
 from cmk.special_agents.utils_kubernetes.schemata.api import ClusterInfo as ClusterInfoA
+from cmk.special_agents.utils_kubernetes.schemata.api import ContainerInfo as ContainerInfoA
 from cmk.special_agents.utils_kubernetes.schemata.api import (
     ContainerRunningState as ContainerRunningStateA,
 )
@@ -60,6 +62,7 @@ def test_schemata_did_not_diverge() -> None:
     assert ClusterInfoA.schema() == ClusterInfoC.schema()
     assert agent.CollectorComponents.schema() == check.CollectorComponents.schema()
     assert ContainerCountA.schema() == ContainerCountC.schema()
+    assert ContainerInfoA.schema() == ContainerInfoC.schema()
     assert ContainerRunningStateA.schema() == ContainerRunningStateC.schema()
     assert ContainerTerminatedStateA.schema() == ContainerTerminatedStateC.schema()
     assert ContainerWaitingStateA.schema() == ContainerWaitingStateC.schema()

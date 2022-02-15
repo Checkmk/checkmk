@@ -185,7 +185,7 @@ class TestPodStartUp(TestCase):
         self.assertEqual(
             pod_containers(container_statuses),
             {
-                "unready_container": api.ContainerStatus(
+                "unready_container": api.ContainerInfo(
                     id=None,
                     name="unready_container",
                     image="gcr.io/kuar-demo/kuard-amd64:blue",

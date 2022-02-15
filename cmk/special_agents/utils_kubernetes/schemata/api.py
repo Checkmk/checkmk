@@ -263,7 +263,7 @@ class ContainerTerminatedState(BaseModel):
     detail: Optional[str]
 
 
-class ContainerStatus(BaseModel):
+class ContainerInfo(BaseModel):
     container_id: Optional[str]  # container_id of non-ready container is None
     image_id: str  # image_id of non-ready container is ""
     name: str
@@ -317,8 +317,8 @@ class Pod(BaseModel):
     metadata: PodMetaData
     status: PodStatus
     spec: PodSpec
-    containers: Mapping[str, ContainerStatus]
-    init_containers: Mapping[str, ContainerStatus]
+    containers: Mapping[str, ContainerInfo]
+    init_containers: Mapping[str, ContainerInfo]
 
 
 class ConcurrencyPolicy(enum.Enum):

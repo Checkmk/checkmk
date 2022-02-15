@@ -425,7 +425,6 @@ class Crawler:
     def check_logs(self, url: Url, logs: Iterable[str]):
         accepted_logs = [
             "Missing object for SimpleBar initiation.",
-            "Error with Feature-Policy header: Unrecognized feature:",
         ]
         for log in logs:
             if not any(accepted_log in log for accepted_log in accepted_logs):

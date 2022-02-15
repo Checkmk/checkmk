@@ -14,6 +14,7 @@ structopt = { version = "0.3", features = [ "paw" ] }
 reqwest = { version = "0.11.4", features = ["blocking", "json", "multipart", "native-tls", "__rustls"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = { version = "1.0.68" }
+serde_with = { version = "*" }
 uuid = { version = "0.8.2", features = ["v4"] }
 openssl = { version = "*", features = ["vendored"] }
 rustls = { version = "0.20.0" }

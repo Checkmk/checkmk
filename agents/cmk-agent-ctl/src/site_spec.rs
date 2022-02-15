@@ -6,7 +6,15 @@ use anyhow::{anyhow, Context, Error as AnyhowError, Result as AnyhowResult};
 use std::fmt::Display;
 use std::str::FromStr;
 
-#[derive(PartialEq, Debug, serde::Deserialize)]
+#[derive(
+    PartialEq,
+    std::cmp::Eq,
+    std::hash::Hash,
+    Debug,
+    Clone,
+    serde_with::SerializeDisplay,
+    serde_with::DeserializeFromStr,
+)]
 pub struct Coordinates {
     pub server: String,
     pub port: usize,

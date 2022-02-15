@@ -147,3 +147,18 @@ def test_node_cpu_resources(
     assert cpu_resources.count_total == pod_containers_count
     assert cpu_resources.limit == pod_containers_count * container_limit_cpu
     assert cpu_resources.request == pod_containers_count * container_request_cpu
+
+
+@pytest.mark.parametrize("pod_containers_count", [0, 5, 10])
+@pytest.mark.parametrize("container_status_state", ["running", "terminated", "waiting"])
+def test_node_container_count(container_status_state, new_node, new_pod, pod_containers_count):
+    node = new_node()
+    node.append(new_pod())
+    container_count = node.container_count()
+    assert isinstance(container_count, section.ContainerCount)
+    assert container_count.dict()[container_status_state] == pod_containers_count
+    assert all(
+        count == 0
+        for state, count in container_count.dict().items()
+        if state != container_status_state
+    )

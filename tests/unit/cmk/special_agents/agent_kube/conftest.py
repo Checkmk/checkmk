@@ -18,6 +18,19 @@ ONE_MiB = 1024 * ONE_KiB
 ONE_GiB = 1024 * ONE_MiB
 
 
+# Container Factories
+class ContainerRunningStateFactory(ModelFactory):
+    __model__ = api.ContainerRunningState
+
+
+class ContainerWaitingStateFactory(ModelFactory):
+    __model__ = api.ContainerWaitingState
+
+
+class ContainerTerminatedStateFactory(ModelFactory):
+    __model__ = api.ContainerTerminatedState
+
+
 # Pod Factories
 class PodMetaDataFactory(ModelFactory):
     __model__ = api.PodMetaData
@@ -50,6 +63,36 @@ class NodeStatusFactory(ModelFactory):
     __model__ = api.NodeStatus
 
     conditions = Use(NodeConditionFactory.batch, size=len(agent_kube.NATIVE_NODE_CONDITION_TYPES))
+
+
+# Container Status Fixtures
+@pytest.fixture
+def container_status_state() -> str:
+    return "running"
+
+
+@pytest.fixture
+def container_state(container_status_state):
+    if container_status_state == "running":
+        return ContainerRunningStateFactory.build()
+    if container_status_state == "waiting":
+        return ContainerWaitingStateFactory.build()
+    if container_status_state == "terminated":  # terminated
+        return ContainerTerminatedStateFactory.build()
+    raise ValueError(f"Unknown container state: {container_status_state}")
+
+
+@pytest.fixture
+def container_status(container_state):
+    def _container_status():
+        class ContainerStatusFactory(ModelFactory):
+            __model__ = api.ContainerStatus
+
+            state = container_state
+
+        return ContainerStatusFactory.build()
+
+    return _container_status
 
 
 # Container Fixtures
@@ -173,8 +216,9 @@ def phase_generator(phases):
 
 
 @pytest.fixture
-def new_pod(phase_generator, pod_spec):
+def new_pod(phase_generator, pod_spec, container_status, pod_containers_count):
     phases = phase_generator()
+    containers = [container_status() for _ in range(pod_containers_count)]
 
     def _new_pod():
         pod_status = PodStatusFactory.build()
@@ -184,7 +228,7 @@ def new_pod(phase_generator, pod_spec):
             metadata=PodMetaDataFactory.build(),
             status=pod_status,
             spec=pod_spec,
-            containers={},
+            containers={container.name: container for container in containers},
             init_containers={},
         )
 

@@ -80,7 +80,10 @@ def _prepare_package(version: testlib.CMKVersion):
 
     logger.info("Executed on CI: Preparing package %s", test_package_path)
 
-    if test_package_path.exists():
+    if (
+        test_package_path.exists()
+        and test_package_path.stat().st_mtime >= source_package_path.stat().st_mtime
+    ):
         logger.info("File already exists - Fine")
         return
 

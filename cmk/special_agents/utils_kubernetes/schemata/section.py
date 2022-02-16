@@ -241,14 +241,6 @@ class ContainerCount(BaseModel):
     terminated: int = 0
 
 
-class ContainerCpu(PerformanceContainer):
-    cpu_usage_seconds_total: PerformanceMetric
-
-
-class ContainerMemory(BaseModel):
-    memory_usage_bytes: float  # TODO: change naming
-
-
 class DeploymentStrategy(BaseModel):
     """section: kube_deployment_strategy_v1"""
 

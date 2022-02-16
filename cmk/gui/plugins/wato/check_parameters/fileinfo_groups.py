@@ -343,6 +343,9 @@ def get_fileinfo_groups_param_elements():
 def _parameter_valuespec_fileinfo_groups() -> Dictionary:
     return Dictionary(
         elements=get_fileinfo_groups_param_elements(),
+        # grouped_patterns is a key in the discovered parameters. We must explicitly ignore it here,
+        # otherwise, it will be dropped when transforming autochecks in cmk-update-config.
+        ignored_keys=["group_patterns"],
     )
 
 

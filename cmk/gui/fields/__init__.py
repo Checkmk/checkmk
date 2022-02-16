@@ -43,8 +43,6 @@ from cmk.gui.fields.definitions import (
     PythonString,
     query_field,
     SiteField,
-    Str,
-    String,
     Timestamp,
     X509ReqPEMField,
 )
@@ -82,8 +80,6 @@ __all__ = [
     "query_field",
     "SiteField",
     "SNMPCredentials",
-    "Str",
-    "String",
     "Timestamp",
     "ValidateAnyOfValidators",
     "ValidateIPv4",

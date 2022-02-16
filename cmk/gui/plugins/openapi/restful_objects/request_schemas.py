@@ -51,7 +51,7 @@ EXISTING_FOLDER = gui_fields.FolderField(
     required=True,
 )
 
-SERVICEGROUP_NAME = gui_fields.String(
+SERVICEGROUP_NAME = fields.String(
     required=True,
     description=param_description(
         schedule_servicegroup_service_downtime.__doc__, "servicegroup_name"
@@ -243,7 +243,7 @@ class InputHostGroup(InputGroup):
         should_exist=False,
         description="A name used as identifier",
     )
-    alias = gui_fields.String(
+    alias = fields.String(
         description="The name used for displaying in the GUI.",
         example="Windows Servers",
     )
@@ -266,7 +266,7 @@ class BulkInputHostGroup(BaseSchema):
 
 
 class UpdateGroup(BaseSchema):
-    alias = gui_fields.String(
+    alias = fields.String(
         example="Example Group",
         description="The name used for displaying in the GUI.",
         required=True,
@@ -305,12 +305,12 @@ class BulkUpdateHostGroup(BaseSchema):
 class InputContactGroup(InputGroup):
     """Creating a contact group"""
 
-    name = gui_fields.String(
+    name = fields.String(
         required=True,
         example="OnCall",
         description="The name of the contact group.",
     )
-    alias = gui_fields.String(
+    alias = fields.String(
         description="The name used for displaying in the GUI.", example="Not on Sundays."
     )
 
@@ -372,7 +372,7 @@ class InputServiceGroup(InputGroup):
         description="A name used as identifier",
         should_exist=False,
     )
-    alias = gui_fields.String(
+    alias = fields.String(
         description="The name used for displaying in the GUI.", example="Environment Sensors"
     )
 
@@ -435,7 +435,7 @@ class CreateFolder(BaseSchema):
         [Host Administration chapter of the user guide](https://docs.checkmk.com/master/en/wato_hosts.html#Introduction).
     """
 
-    name = gui_fields.String(
+    name = fields.String(
         description=(
             "The filesystem directory name (not path!) of the folder." " No slashes are allowed."
         ),
@@ -443,7 +443,7 @@ class CreateFolder(BaseSchema):
         pattern="[^/]+",
         example="production",
     )
-    title = gui_fields.String(
+    title = fields.String(
         required=True,
         description="The folder title as displayed in the user interface.",
         example="Production Hosts",
@@ -484,7 +484,7 @@ class BulkCreateFolder(BaseSchema):
 class UpdateFolder(BaseSchema):
     """Updating a folder"""
 
-    title = gui_fields.String(
+    title = fields.String(
         example="Virtual Servers.",
         required=False,
         description="The title of the folder. Used in the GUI.",
@@ -558,7 +558,7 @@ class CreateDowntimeBase(BaseSchema):
         description="The end datetime of the new downtime. The format has to conform to the ISO 8601 profile",
         format="iso8601",
     )
-    recur = gui_fields.String(
+    recur = fields.String(
         required=False,
         enum=[
             "fixed",
@@ -581,11 +581,11 @@ class CreateDowntimeBase(BaseSchema):
         example=3600,
         load_default=0,
     )
-    comment = gui_fields.String(required=False, example="Security updates")
+    comment = fields.String(required=False, example="Security updates")
 
 
 class CreateHostDowntimeBase(CreateDowntimeBase):
-    downtime_type = gui_fields.String(
+    downtime_type = fields.String(
         required=True,
         description="The type of downtime to create.",
         enum=["host", "hostgroup", "host_by_query"],
@@ -594,7 +594,7 @@ class CreateHostDowntimeBase(CreateDowntimeBase):
 
 
 class CreateServiceDowntimeBase(CreateDowntimeBase):
-    downtime_type = gui_fields.String(
+    downtime_type = fields.String(
         required=True,
         description="The type of downtime to create.",
         enum=["service", "servicegroup", "service_by_query"],
@@ -602,7 +602,7 @@ class CreateServiceDowntimeBase(CreateDowntimeBase):
     )
 
 
-class TimePeriodName(gui_fields.String):
+class TimePeriodName(fields.String):
     """A field representing a time_period name"""
 
     default_error_messages = {
@@ -636,7 +636,7 @@ class TimePeriodName(gui_fields.String):
             raise self.make_error("should_not_exist", name=value)
 
 
-class TimePeriodAlias(gui_fields.String):
+class TimePeriodAlias(fields.String):
     """A field representing a time_period name"""
 
     default_error_messages = {
@@ -673,13 +673,13 @@ class TimePeriodAlias(gui_fields.String):
 
 
 class TimeRange(BaseSchema):
-    start = gui_fields.String(
+    start = fields.String(
         required=True,
         format="time",
         example="14:00",
         description="The start time of the period's time range",
     )
-    end = gui_fields.String(
+    end = fields.String(
         required=True,
         format="time",
         example="16:00",
@@ -688,7 +688,7 @@ class TimeRange(BaseSchema):
 
 
 class TimeRangeActive(BaseSchema):
-    day = gui_fields.String(
+    day = fields.String(
         description="The day for which time ranges are to be specified. The 'all' "
         "option allows to specify time ranges for all days.",
         pattern=f"all|{'|'.join(weekday_ids())}",
@@ -697,7 +697,7 @@ class TimeRangeActive(BaseSchema):
 
 
 class TimePeriodException(BaseSchema):
-    date = gui_fields.String(
+    date = fields.String(
         required=True,
         example="2020-01-01",
         format="date",
@@ -775,7 +775,7 @@ class UpdateTimePeriod(BaseSchema):
     )
 
 
-SERVICE_DESCRIPTION_FIELD = gui_fields.String(required=False, example="CPU utilization")
+SERVICE_DESCRIPTION_FIELD = fields.String(required=False, example="CPU utilization")
 
 HOST_DURATION = gui_fields.Integer(
     required=False,
@@ -807,7 +807,7 @@ class CreateHostDowntime(CreateHostDowntimeBase):
 class CreateServiceDowntime(CreateServiceDowntimeBase):
     host_name = MONITORED_HOST
     service_descriptions = gui_fields.List(
-        gui_fields.String(),
+        fields.String(),
         uniqueItems=True,
         required=True,
         example=["CPU utilization", "Memory"],
@@ -875,7 +875,7 @@ class CreateServiceRelatedDowntime(OneOfSchema):
 
 
 class DeleteDowntimeBase(BaseSchema):
-    delete_type = gui_fields.String(
+    delete_type = fields.String(
         required=True,
         description="The option how to delete a downtime.",
         enum=["params", "query", "by_id"],
@@ -884,7 +884,7 @@ class DeleteDowntimeBase(BaseSchema):
 
 
 class DeleteDowntimeById(DeleteDowntimeBase):
-    downtime_id = gui_fields.String(
+    downtime_id = fields.String(
         description="The id of the downtime",
         example="54",
         required=True,
@@ -927,19 +927,19 @@ class InputPassword(BaseSchema):
         description="An unique identifier for the password",
         should_exist=False,
     )
-    title = gui_fields.String(
+    title = fields.String(
         required=True,
         example="Kubernetes login",
         description="A title for the password",
     )
-    comment = gui_fields.String(
+    comment = fields.String(
         required=False,
         example="Kommentar",
         description="A comment for the password",
         load_default="",
     )
 
-    documentation_url = gui_fields.String(
+    documentation_url = fields.String(
         required=False,
         attribute="docu_url",
         example="localhost",
@@ -947,7 +947,7 @@ class InputPassword(BaseSchema):
         load_default="",
     )
 
-    password = gui_fields.String(
+    password = fields.String(
         required=True,
         example="password",
         description="The password string",
@@ -979,26 +979,26 @@ class InputPassword(BaseSchema):
 
 
 class UpdatePassword(BaseSchema):
-    title = gui_fields.String(
+    title = fields.String(
         required=False,
         example="Kubernetes login",
         description="A title for the password",
     )
 
-    comment = gui_fields.String(
+    comment = fields.String(
         required=False,
         example="Kommentar",
         description="A comment for the password",
     )
 
-    documentation_url = gui_fields.String(
+    documentation_url = fields.String(
         required=False,
         attribute="docu_url",
         example="localhost",
         description="An optional URL pointing to documentation or any other page. You can use either global URLs (beginning with http://), absolute local urls (beginning with /) or relative URLs (that are relative to check_mk/).",
     )
 
-    password = gui_fields.String(
+    password = fields.String(
         required=False,
         example="password",
         description="The password string",
@@ -1029,7 +1029,7 @@ class UpdatePassword(BaseSchema):
     )
 
 
-class Username(gui_fields.String):
+class Username(fields.String):
     default_error_messages = {
         "should_exist": "Username missing: {username!r}",
         "should_not_exist": "Username {username!r} already exists",
@@ -1095,27 +1095,27 @@ class DisabledNotifications(BaseSchema):
     )
 
 
-AUTH_PASSWORD = gui_fields.String(
+AUTH_PASSWORD = fields.String(
     required=False,
     description="The password for login",
     example="password",
 )
 
-AUTH_SECRET = gui_fields.String(
+AUTH_SECRET = fields.String(
     required=False,
     description="For accounts used by automation processes (such as fetching data from views "
     "for further procession). This is the automation secret",
     example="DEYQEQQPYCFFBYH@AVMC",
 )
 
-AUTH_CREATE_TYPE = gui_fields.String(
+AUTH_CREATE_TYPE = fields.String(
     required=False,
     description="The authentication type",
     enum=["automation", "password"],
     example="password",
 )
 
-AUTH_UPDATE_TYPE = gui_fields.String(
+AUTH_UPDATE_TYPE = fields.String(
     required=True,
     description="The authentication type",
     enum=["automation", "password", "remove"],
@@ -1167,7 +1167,7 @@ class AuthUpdateOption(OneOfSchema):
 
 
 class IdleOption(BaseSchema):
-    option = gui_fields.String(
+    option = fields.String(
         required=True,
         description="Specify if the idle timeout should use the global configuration, be disabled "
         "or use an individual duration",
@@ -1184,7 +1184,7 @@ class IdleOption(BaseSchema):
 
 
 class UserContactOption(BaseSchema):
-    email = gui_fields.String(
+    email = fields.String(
         required=True,
         description="The mail address of the user. Required if the user is a monitoring"
         "contact and receives notifications via mail.",
@@ -1201,7 +1201,7 @@ class UserContactOption(BaseSchema):
 
 
 class UserContactUpdateOption(BaseSchema):
-    email = gui_fields.String(
+    email = fields.String(
         required=False,
         description="The mail address of the user. Required if the user is a monitoring"
         "contact and receives notifications via mail.",
@@ -1222,7 +1222,7 @@ class CreateUser(BaseSchema):
         description="An unique username for the user",
         example="cmkuser",
     )
-    fullname = gui_fields.String(
+    fullname = fields.String(
         required=True,
         description="The alias or full name of the user",
         example="Mathias Kettner",
@@ -1257,7 +1257,7 @@ class CreateUser(BaseSchema):
         load_default=lambda: {"email": "", "fallback_contact": False},
         example={"email": "user@example.com"},
     )
-    pager_address = gui_fields.String(
+    pager_address = fields.String(
         required=False,
         description="",
         example="",
@@ -1271,7 +1271,7 @@ class CreateUser(BaseSchema):
         example={"option": "global"},
     )
     roles = gui_fields.List(
-        gui_fields.String(
+        fields.String(
             required=True,
             description="A role of the user",
             enum=["user", "admin", "guest"],
@@ -1289,7 +1289,7 @@ class CreateUser(BaseSchema):
         required=False,
     )
     contactgroups = gui_fields.List(
-        gui_fields.String(
+        fields.String(
             description="Assign the user to one or multiple contact groups",
             required=True,
             example="all",
@@ -1309,7 +1309,7 @@ class CreateUser(BaseSchema):
         description="",
     )
     # default language is not setting a key in dict
-    language = gui_fields.String(
+    language = fields.String(
         required=False,
         description="Configure the language to be used by the user in the user interface. Omitting "
         "this will configure the default language.",
@@ -1319,7 +1319,7 @@ class CreateUser(BaseSchema):
 
 
 class UpdateUser(BaseSchema):
-    fullname = gui_fields.String(
+    fullname = fields.String(
         required=False,
         description="The alias or full name of the user",
         example="Mathias Kettner",
@@ -1355,7 +1355,7 @@ class UpdateUser(BaseSchema):
         description="Contact settings for the user",
         example={"email": "user@example.com"},
     )
-    pager_address = gui_fields.String(
+    pager_address = fields.String(
         required=False,
         description="",
         example="",
@@ -1368,7 +1368,7 @@ class UpdateUser(BaseSchema):
         example={},
     )
     roles = gui_fields.List(
-        gui_fields.String(
+        fields.String(
             required=False,
             description="A role of the user",
             enum=["user", "admin", "guest"],
@@ -1385,7 +1385,7 @@ class UpdateUser(BaseSchema):
         required=False,
     )
     contactgroups = gui_fields.List(
-        gui_fields.String(
+        fields.String(
             description="Assign the user to one or multiple contact groups",
             required=True,
             example="all",
@@ -1403,7 +1403,7 @@ class UpdateUser(BaseSchema):
         description="",
     )
     # default language is not setting a key in dict
-    language = gui_fields.String(
+    language = fields.String(
         required=False,
         description="Configure the language to be used by the user in the user interface. Omitting "
         "this will configure the default language",
@@ -1412,7 +1412,7 @@ class UpdateUser(BaseSchema):
     )
 
 
-class HostTagGroupId(gui_fields.String):
+class HostTagGroupId(fields.String):
     """A field representing a host tag group id"""
 
     default_error_messages = {
@@ -1479,7 +1479,7 @@ class Tags(gui_fields.List):
             seen_ids.add(tag_id)
 
 
-class AuxTag(gui_fields.String):
+class AuxTag(fields.String):
     default_error_messages = {
         "invalid": "The specified auxiliary tag id is not valid: {name!r}",
     }
@@ -1506,14 +1506,14 @@ class AuxTag(gui_fields.String):
 
 
 class HostTag(BaseSchema):
-    ident = gui_fields.String(
+    ident = fields.String(
         required=False,
         example="tag_id",
         description="An unique id for the tag",
         load_default=None,
         attribute="id",
     )
-    title = gui_fields.String(
+    title = fields.String(
         required=True,
         example="Tag",
         description="The title of the tag",
@@ -1538,18 +1538,18 @@ class InputHostTagGroup(BaseSchema):
         attribute="id",
         pattern="[a-zA-Z_]+[-0-9a-zA-Z_]*",
     )
-    title = gui_fields.String(
+    title = fields.String(
         required=True,
         example="Kubernetes",
         description="A title for the host tag",
     )
-    topic = gui_fields.String(
+    topic = fields.String(
         required=True,
         example="Data Sources",
         description="Different tags can be grouped in a topic",
     )
 
-    help = gui_fields.String(
+    help = fields.String(
         required=False,
         example="Kubernetes Pods",
         description="A help description for the tag group",
@@ -1573,18 +1573,18 @@ class DeleteHostTagGroup(BaseSchema):
 
 
 class UpdateHostTagGroup(BaseSchema):
-    title = gui_fields.String(
+    title = fields.String(
         required=False,
         example="Kubernetes",
         description="A title for the host tag",
     )
-    topic = gui_fields.String(
+    topic = fields.String(
         required=False,
         example="Data Sources",
         description="Different tags can be grouped in a topic",
     )
 
-    help = gui_fields.String(
+    help = fields.String(
         required=False,
         example="Kubernetes Pods",
         description="A help description for the tag group",
@@ -1604,7 +1604,7 @@ class UpdateHostTagGroup(BaseSchema):
 
 
 class AcknowledgeHostProblemBase(BaseSchema):
-    acknowledge_type = gui_fields.String(
+    acknowledge_type = fields.String(
         required=True,
         description="The acknowledge host selection type.",
         enum=["host", "hostgroup", "host_by_query"],
@@ -1631,7 +1631,7 @@ class AcknowledgeHostProblemBase(BaseSchema):
         description=param_description(acknowledge_host_problem.__doc__, "notify"),
     )
 
-    comment = gui_fields.String(
+    comment = fields.String(
         required=True,
         example="This was expected.",
         description=param_description(acknowledge_host_problem.__doc__, "comment"),
@@ -1674,7 +1674,7 @@ class AcknowledgeHostRelatedProblem(OneOfSchema):
 
 
 class AcknowledgeServiceProblemBase(BaseSchema):
-    acknowledge_type = gui_fields.String(
+    acknowledge_type = fields.String(
         required=True,
         description="The acknowledge service selection type.",
         enum=["service", "servicegroup", "service_by_query"],
@@ -1702,7 +1702,7 @@ class AcknowledgeServiceProblemBase(BaseSchema):
         description=param_description(acknowledge_service_problem.__doc__, "notify"),
     )
 
-    comment = gui_fields.String(
+    comment = fields.String(
         required=True,
         example="This was expected.",
         description=param_description(acknowledge_service_problem.__doc__, "comment"),
@@ -1715,7 +1715,7 @@ class AcknowledgeSpecificServiceProblem(AcknowledgeServiceProblemBase):
         should_be_monitored=True,
         required=True,
     )
-    service_description = gui_fields.String(
+    service_description = fields.String(
         description="The acknowledgement process will be applied to all matching service descriptions",
         example="CPU load",
         required=True,
@@ -1768,7 +1768,7 @@ SERVICE_NOTIFY_FIELD = fields.Boolean(
     description=param_description(acknowledge_service_problem.__doc__, "notify"),
 )
 
-SERVICE_COMMENT_FIELD = gui_fields.String(
+SERVICE_COMMENT_FIELD = fields.String(
     required=False,
     load_default="Acknowledged",
     example="This was expected.",
@@ -1825,7 +1825,7 @@ class BulkDeleteFolder(BaseSchema):
 
 class BulkDeleteHostGroup(BaseSchema):
     entries = gui_fields.List(
-        gui_fields.String(
+        fields.String(
             required=True,
             description="The name of the host group config",
             example="windows",
@@ -1838,7 +1838,7 @@ class BulkDeleteHostGroup(BaseSchema):
 
 class BulkDeleteServiceGroup(BaseSchema):
     entries = gui_fields.List(
-        gui_fields.String(
+        fields.String(
             required=True,
             description="The name of the service group config",
             example="windows",
@@ -1851,7 +1851,7 @@ class BulkDeleteServiceGroup(BaseSchema):
 
 class BulkDeleteContactGroup(BaseSchema):
     entries = gui_fields.List(
-        gui_fields.String(
+        fields.String(
             required=True,
             description="The name of the contact group config",
             example="windows",

@@ -3,6 +3,9 @@
 # Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+import re
+
+from marshmallow import fields
 
 
 class OpenAPIAttributes:
@@ -29,3 +32,116 @@ class OpenAPIAttributes:
                 metadata[key] = kwargs.pop(key)
 
         super().__init__(*args, **kwargs)
+
+
+class String(OpenAPIAttributes, fields.String):
+    """A string field which validates OpenAPI keys.
+
+    Examples:
+
+        It supports Enums:
+
+            >>> String(enum=["World"]).deserialize("Hello")
+            Traceback (most recent call last):
+            ...
+            marshmallow.exceptions.ValidationError: 'Hello' is not one of the enum values: ['World']
+
+        It supports patterns:
+
+            >>> String(pattern="World|Bob").deserialize("Bob")
+            'Bob'
+
+            >>> String(pattern="World|Bob").deserialize("orl")
+            Traceback (most recent call last):
+            ...
+            marshmallow.exceptions.ValidationError: 'orl' does not match pattern 'World|Bob'.
+
+            >>> String(pattern="World|Bob").deserialize("World!")
+            Traceback (most recent call last):
+            ...
+            marshmallow.exceptions.ValidationError: 'World!' does not match pattern 'World|Bob'.
+
+        It's safe to submit any UTF-8 character, be it encoded or not.
+
+            >>> String().deserialize("Ümläut")
+            'Ümläut'
+
+            >>> String().deserialize("Ümläut".encode('utf-8'))
+            'Ümläut'
+
+        minLength and maxLength:
+
+            >>> length = String(minLength=2, maxLength=3)
+            >>> length.deserialize('A')
+            Traceback (most recent call last):
+            ...
+            marshmallow.exceptions.ValidationError: string 'A' is too short. \
+The minimum length is 2.
+
+            >>> length.deserialize('AB')
+            'AB'
+            >>> length.deserialize('ABC')
+            'ABC'
+
+            >>> length.deserialize('ABCD')
+            Traceback (most recent call last):
+            ...
+            marshmallow.exceptions.ValidationError: string 'ABCD' is too long. \
+The maximum length is 3.
+
+        minimum and maximum are also supported (though not very useful for Strings):
+
+            >>> minmax = String(minimum="F", maximum="G")
+            >>> minmax.deserialize('E')
+            Traceback (most recent call last):
+            ...
+            marshmallow.exceptions.ValidationError: 'E' is smaller than the minimum (F).
+
+            >>> minmax.deserialize('F')
+            'F'
+            >>> minmax.deserialize('G')
+            'G'
+
+            >>> minmax.deserialize('H')
+            Traceback (most recent call last):
+            ...
+            marshmallow.exceptions.ValidationError: 'H' is bigger than the maximum (G).
+
+    """
+
+    default_error_messages = {
+        "enum": "{value!r} is not one of the enum values: {enum!r}",
+        "pattern": "{value!r} does not match pattern {pattern!r}.",
+        "maxLength": "string {value!r} is too long. The maximum length is {maxLength}.",
+        "minLength": "string {value!r} is too short. The minimum length is {minLength}.",
+        "maximum": "{value!r} is bigger than the maximum ({maximum}).",
+        "minimum": "{value!r} is smaller than the minimum ({minimum}).",
+    }
+
+    def _deserialize(self, value, attr, data, **kwargs):
+        value = super()._deserialize(value, attr, data)
+        enum = self.metadata.get("enum")
+        if enum and value not in enum:
+            raise self.make_error("enum", value=value, enum=enum)
+
+        pattern = self.metadata.get("pattern")
+        if pattern is not None and not re.match("^(:?" + pattern + ")$", value):
+            raise self.make_error("pattern", value=value, pattern=pattern)
+
+        max_length = self.metadata.get("maxLength")
+        if max_length is not None and len(value) > max_length:
+            raise self.make_error("maxLength", value=value, maxLength=max_length)
+
+        min_length = self.metadata.get("minLength")
+        if min_length is not None and len(value) < min_length:
+            raise self.make_error("minLength", value=value, minLength=min_length)
+
+        maximum = self.metadata.get("maximum")
+        if maximum is not None and value > maximum:
+            raise self.make_error("maximum", value=value, maximum=maximum)
+
+        minimum = self.metadata.get("minimum")
+        if minimum is not None and value < minimum:
+            raise self.make_error("minimum", value=value, minimum=minimum)
+
+        return value

@@ -39,7 +39,8 @@ from cmk.utils.livestatus_helpers.queries import detailed_connection, Query
 from cmk.utils.livestatus_helpers.tables import Hosts
 from cmk.utils.livestatus_helpers.tables.downtimes import Downtimes
 
-from cmk.gui import fields, sites
+from cmk.gui import fields as gui_fields
+from cmk.gui import sites
 from cmk.gui.fields.utils import BaseSchema
 from cmk.gui.globals import user
 from cmk.gui.http import Response
@@ -52,6 +53,8 @@ from cmk.gui.plugins.openapi.restful_objects import (
     response_schemas,
 )
 from cmk.gui.plugins.openapi.utils import problem
+
+from cmk import fields
 
 DowntimeType = Literal[
     "host", "service", "hostgroup", "servicegroup", "host_by_query", "service_by_query"
@@ -67,7 +70,7 @@ SERVICE_DESCRIPTION_SHOW = {
 }
 
 HOST_NAME_SHOW = {
-    "host_name": fields.HostField(
+    "host_name": gui_fields.HostField(
         description="The host name. No exception is raised when the specified host name does not exist",
         should_exist=None,  # we do not care
         example="example.com",
@@ -77,7 +80,7 @@ HOST_NAME_SHOW = {
 
 
 class DowntimeParameter(BaseSchema):
-    query = fields.query_field(Downtimes, required=False)
+    query = gui_fields.query_field(Downtimes, required=False)
 
 
 @Endpoint(
@@ -280,7 +283,7 @@ def show_downtimes(param):
     method="get",
     path_params=[
         {
-            "downtime_id": fields.Integer(
+            "downtime_id": gui_fields.Integer(
                 description="The id of the downtime",
                 example="1",
             )

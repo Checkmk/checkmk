@@ -15,10 +15,11 @@ You can find more about the agent bakery and automatic agent updates of checkmk 
 in [Agent Deployment](https://docs.checkmk.com/latest/en/agent_deployment.html).
 """
 
-from cmk.gui import fields
 from cmk.gui.http import Response
 from cmk.gui.plugins.openapi.restful_objects import constructors, Endpoint
 from cmk.gui.utils import agent
+
+from cmk import fields
 
 OS_TYPES_AVAILABLE_IN_RAW = ["linux_rpm", "linux_deb", "windows_msi"]
 

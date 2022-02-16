@@ -16,7 +16,7 @@ You can find an introduction to the configuration of Checkmk including activatio
 [Checkmk guide](https://docs.checkmk.com/latest/en/wato.html).
 """
 
-from cmk.gui import fields, watolib
+from cmk.gui import watolib
 from cmk.gui.exceptions import MKAuthException, MKUserError
 from cmk.gui.globals import request
 from cmk.gui.http import Response
@@ -29,6 +29,8 @@ from cmk.gui.plugins.openapi.restful_objects import (
 )
 from cmk.gui.plugins.openapi.restful_objects.type_defs import LinkType
 from cmk.gui.plugins.openapi.utils import ProblemException
+
+from cmk import fields
 
 ACTIVATION_ID = {
     "activation_id": fields.String(

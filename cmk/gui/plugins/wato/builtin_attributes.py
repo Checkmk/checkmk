@@ -100,7 +100,7 @@ class HostAttributeAlias(ABCHostAttributeNagiosText):
         return False
 
     def openapi_field(self) -> gui_fields.Field:
-        return gui_fields.String(description=self.help())
+        return fields.String(description=self.help())
 
 
 @host_attribute_registry.register
@@ -143,7 +143,7 @@ class HostAttributeIPv4Address(ABCHostAttributeValueSpec):
         )
 
     def openapi_field(self) -> gui_fields.Field:
-        return gui_fields.String(
+        return fields.String(
             description="An IPv4 address.",
             validate=validators.ValidateAnyOfValidators(
                 [
@@ -194,7 +194,7 @@ class HostAttributeIPv6Address(ABCHostAttributeValueSpec):
         )
 
     def openapi_field(self) -> gui_fields.Field:
-        return gui_fields.String(
+        return fields.String(
             description="An IPv6 address.",
             validate=gui_fields.ValidateIPv6(),
         )
@@ -236,7 +236,7 @@ class HostAttributeAdditionalIPv4Addresses(ABCHostAttributeValueSpec):
 
     def openapi_field(self) -> gui_fields.Field:
         return gui_fields.List(
-            gui_fields.String(
+            fields.String(
                 validate=validators.ValidateAnyOfValidators(
                     [
                         gui_fields.ValidateIPv4(),
@@ -284,7 +284,7 @@ class HostAttributeAdditionalIPv6Addresses(ABCHostAttributeValueSpec):
 
     def openapi_field(self) -> gui_fields.Field:
         return gui_fields.List(
-            gui_fields.String(validate=gui_fields.ValidateIPv6()),
+            fields.String(validate=gui_fields.ValidateIPv6()),
             description="A list of IPv6 addresses.",
         )
 
@@ -342,7 +342,7 @@ class HostAttributeAgentConnection(ABCHostAttributeNagiosValueSpec):
         )
 
     def openapi_field(self) -> gui_fields.Field:
-        return gui_fields.String(
+        return fields.String(
             enum=["pull-agent", "push-agent"],
             description=(
                 "This configures the communication direction of this host.\n"
@@ -890,7 +890,7 @@ class HostAttributeManagementAddress(ABCHostAttributeValueSpec):
         )
 
     def openapi_field(self) -> gui_fields.Field:
-        return gui_fields.String(
+        return fields.String(
             description="Address (IPv4 or IPv6) under which the management board can be reached.",
             validate=gui_fields.ValidateAnyOfValidators(
                 [
@@ -1175,7 +1175,7 @@ class HostAttributeLockedAttributes(ABCHostAttributeValueSpec):
 
     def openapi_field(self) -> gui_fields.Field:
         return gui_fields.List(
-            gui_fields.String(),
+            fields.String(),
             description="Attributes which are locked.",
         )
 

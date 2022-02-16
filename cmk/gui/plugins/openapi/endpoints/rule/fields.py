@@ -47,7 +47,7 @@ if typing.TYPE_CHECKING:
 
 
 RULE_ID = {
-    "rule_id": gui_fields.String(
+    "rule_id": fields.String(
         description="The ID of the rule.",
         required=True,
         example="0a168697-14a2-48d0-9c3c-ca65569a39e2",
@@ -82,15 +82,15 @@ class LabelConditionSchema(base.BaseSchema):
 
     cast_to_dict = True
 
-    key = gui_fields.String(
+    key = fields.String(
         required=True,
         description="The key of the label. e.g. 'os' in 'os:windows'",
     )
-    operator = gui_fields.String(
+    operator = fields.String(
         enum=["is", "is_not"],
         description="How the label should be matched.",
     )
-    value = gui_fields.String(
+    value = fields.String(
         required=True,
         description="The value of the label. e.g. 'windows' in 'os:windows'",
     )
@@ -152,7 +152,7 @@ class TagConditionSchemaBase(base.BaseSchema):
     allowed_operators: typing.Tuple[str, str]
     operator_type: str
 
-    key = gui_fields.String(
+    key = fields.String(
         description="The name of the tag.",
     )
 
@@ -251,11 +251,11 @@ class TagConditionScalarSchemaBase(TagConditionSchemaBase):
     operator_type = "scalar"
 
     # field defined in superclass
-    operator = gui_fields.String(
+    operator = fields.String(
         description="If the tag's value should match what is given under the field `value`.",
         enum=list(allowed_operators),  # Our serializer only wants to know lists.
     )
-    value = gui_fields.String(
+    value = fields.String(
         description="The value of a tag.",
     )
 
@@ -285,12 +285,12 @@ class TagConditionConditionSchemaBase(TagConditionSchemaBase):
     operator_type = "collection"
 
     # field defined in superclass
-    operator = gui_fields.String(
+    operator = fields.String(
         description="If the matched tag should be one of the given values, or not.",
         enum=list(allowed_operators),  # Our serializer only wants to know lists.
     )
     value = gui_fields.List(
-        gui_fields.String(description="The value of a tag."),
+        fields.String(description="The value of a tag."),
         description="A list of values for the tag.",
     )
 
@@ -443,10 +443,10 @@ class HostOrServiceConditionSchema(base.BaseSchema):
     cast_to_dict = True
 
     match_on = gui_fields.List(
-        gui_fields.String(),
+        fields.String(),
         description="A list of string matching regular expressions.",
     )
-    operator = gui_fields.String(
+    operator = fields.String(
         enum=["one_of", "none_of"],
         description=(
             "How the hosts or services should be matched.\n"
@@ -539,11 +539,11 @@ class HostOrServiceConditionSchema(base.BaseSchema):
 class RuleProperties(base.BaseSchema):
     cast_to_dict = True
 
-    description = gui_fields.String(
+    description = fields.String(
         description="A description for this rule to inform other users about its intent.",
         example="This rule is here to foo the bar hosts.",
     )
-    comment = gui_fields.String(
+    comment = fields.String(
         description="Any comment string.",
         example="Created yesterday due to foo hosts behaving weird.",
     )
@@ -658,7 +658,7 @@ class RuleExtensions(base.BaseSchema):
 
     cast_to_dict = True
 
-    ruleset = gui_fields.String(description="The name of the ruleset.")
+    ruleset = fields.String(description="The name of the ruleset.")
     folder = gui_fields.FolderField(required=True, example="~router")
     folder_index = gui_fields.Integer(
         description="The position of this rule in the chain in this folder.",
@@ -755,7 +755,7 @@ class InputRuleObject(base.BaseSchema):
 
     cast_to_dict = True
 
-    ruleset = gui_fields.String(
+    ruleset = fields.String(
         description="Name of rule set.",
         example="host_config",
         required=True,
@@ -904,7 +904,7 @@ def _collection_value(
 
 
 class RuleSearchOptions(base.BaseSchema):
-    ruleset_name = gui_fields.String(
+    ruleset_name = fields.String(
         description="The name of the ruleset.",
         example="host_groups",
         required=True,

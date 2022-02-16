@@ -12,7 +12,7 @@ from cmk.gui.plugins.openapi.restful_objects import response_schemas
 from cmk import fields
 
 RULESET_NAME = {
-    "ruleset_name": gui_fields.String(
+    "ruleset_name": fields.String(
         description="The name of the ruleset.",
         example="host_groups",
         required=True,
@@ -21,12 +21,12 @@ RULESET_NAME = {
 
 
 class RulesetExtensions(base.BaseSchema):
-    name = gui_fields.String(
+    name = fields.String(
         description="The name of the ruleset",
         example="host_groups",
     )
     folder = gui_fields.FolderField(required=True, example="~router")
-    number_of_rules = gui_fields.Integer(
+    number_of_rules = fields.Integer(
         description="The number of rules of this ruleset.",
         example=5,
     )
@@ -38,7 +38,7 @@ class RulesetObject(response_schemas.DomainObject):
         description="Domain type of this object.",
         example="ruleset",
     )
-    extensions = gui_fields.Nested(
+    extensions = fields.Nested(
         RulesetExtensions,
         description="Specific attributes related to rulesets.",
     )
@@ -69,7 +69,7 @@ class RulesetSearchOptions(base.BaseSchema):
 
     cast_to_dict = True
 
-    fulltext = gui_fields.String(
+    fulltext = fields.String(
         description=(
             "Search all keys (like `name`, `title`, `help`, etc.) for this text. " "Regex allowed."
         ),
@@ -77,19 +77,19 @@ class RulesetSearchOptions(base.BaseSchema):
     folder = gui_fields.FolderField(
         description="The folder in which to search for rules.",
     )
-    deprecated = gui_fields.String(
+    deprecated = fields.String(
         attribute="ruleset_deprecated",
         description="Also show deprecated rulesets. Defaults to False.",
     )
-    used = gui_fields.String(
+    used = fields.String(
         attribute="ruleset_used",
         description="Only show used rulesets. Defaults to True.",
     )
-    group = gui_fields.String(
+    group = fields.String(
         attribute="ruleset_group",
         description="The specific group to search for rules in.",
     )
-    name = gui_fields.String(
+    name = fields.String(
         attribute="ruleset_name",
         description="A regex of the name.",
     )

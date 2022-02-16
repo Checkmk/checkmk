@@ -7,7 +7,6 @@
 import ast
 import collections.abc
 import json
-import re
 import typing
 from datetime import datetime
 from typing import Any, Optional, Protocol, Tuple
@@ -45,123 +44,7 @@ if version.is_managed_edition():
     import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module
 
 
-class String(base.OpenAPIAttributes, _fields.String):
-    """A string field which validates OpenAPI keys.
-
-    Examples:
-
-        It supports Enums:
-
-            >>> String(enum=["World"]).deserialize("Hello")
-            Traceback (most recent call last):
-            ...
-            marshmallow.exceptions.ValidationError: 'Hello' is not one of the enum values: ['World']
-
-        It supports patterns:
-
-            >>> String(pattern="World|Bob").deserialize("Bob")
-            'Bob'
-
-            >>> String(pattern="World|Bob").deserialize("orl")
-            Traceback (most recent call last):
-            ...
-            marshmallow.exceptions.ValidationError: 'orl' does not match pattern 'World|Bob'.
-
-            >>> String(pattern="World|Bob").deserialize("World!")
-            Traceback (most recent call last):
-            ...
-            marshmallow.exceptions.ValidationError: 'World!' does not match pattern 'World|Bob'.
-
-        It's safe to submit any UTF-8 character, be it encoded or not.
-
-            >>> String().deserialize("Ümläut")
-            'Ümläut'
-
-            >>> String().deserialize("Ümläut".encode('utf-8'))
-            'Ümläut'
-
-        minLength and maxLength:
-
-            >>> length = String(minLength=2, maxLength=3)
-            >>> length.deserialize('A')
-            Traceback (most recent call last):
-            ...
-            marshmallow.exceptions.ValidationError: string 'A' is too short. \
-The minimum length is 2.
-
-            >>> length.deserialize('AB')
-            'AB'
-            >>> length.deserialize('ABC')
-            'ABC'
-
-            >>> length.deserialize('ABCD')
-            Traceback (most recent call last):
-            ...
-            marshmallow.exceptions.ValidationError: string 'ABCD' is too long. \
-The maximum length is 3.
-
-        minimum and maximum are also supported (though not very useful for Strings):
-
-            >>> minmax = String(minimum="F", maximum="G")
-            >>> minmax.deserialize('E')
-            Traceback (most recent call last):
-            ...
-            marshmallow.exceptions.ValidationError: 'E' is smaller than the minimum (F).
-
-            >>> minmax.deserialize('F')
-            'F'
-            >>> minmax.deserialize('G')
-            'G'
-
-            >>> minmax.deserialize('H')
-            Traceback (most recent call last):
-            ...
-            marshmallow.exceptions.ValidationError: 'H' is bigger than the maximum (G).
-
-    """
-
-    default_error_messages = {
-        "enum": "{value!r} is not one of the enum values: {enum!r}",
-        "pattern": "{value!r} does not match pattern {pattern!r}.",
-        "maxLength": "string {value!r} is too long. The maximum length is {maxLength}.",
-        "minLength": "string {value!r} is too short. The minimum length is {minLength}.",
-        "maximum": "{value!r} is bigger than the maximum ({maximum}).",
-        "minimum": "{value!r} is smaller than the minimum ({minimum}).",
-    }
-
-    def _deserialize(self, value, attr, data, **kwargs):
-        value = super()._deserialize(value, attr, data)
-        enum = self.metadata.get("enum")
-        if enum and value not in enum:
-            raise self.make_error("enum", value=value, enum=enum)
-
-        pattern = self.metadata.get("pattern")
-        if pattern is not None and not re.match("^(:?" + pattern + ")$", value):
-            raise self.make_error("pattern", value=value, pattern=pattern)
-
-        max_length = self.metadata.get("maxLength")
-        if max_length is not None and len(value) > max_length:
-            raise self.make_error("maxLength", value=value, maxLength=max_length)
-
-        min_length = self.metadata.get("minLength")
-        if min_length is not None and len(value) < min_length:
-            raise self.make_error("minLength", value=value, minLength=min_length)
-
-        maximum = self.metadata.get("maximum")
-        if maximum is not None and value > maximum:
-            raise self.make_error("maximum", value=value, maximum=maximum)
-
-        minimum = self.metadata.get("minimum")
-        if minimum is not None and value < minimum:
-            raise self.make_error("minimum", value=value, minimum=minimum)
-
-        return value
-
-
-Str = String
-
-
-class PythonString(String):
+class PythonString(base.String):
     """Represent a Python value expression.
 
     Any native Python datastructures like tuple, dict, set, etc. can be used.
@@ -407,9 +290,10 @@ class List(base.OpenAPIAttributes, _fields.List, UniqueFields):
         With scalar values:
 
             >>> from marshmallow import Schema
+            >>> from cmk.fields import String
             >>> class Foo(Schema):
             ...      id = String()
-            ...      lists = List(String(), uniqueItems=True)
+            ...      lists = List(base.String(), uniqueItems=True)
 
             >>> import pytest
             >>> from marshmallow import ValidationError
@@ -474,6 +358,7 @@ class Nested(base.OpenAPIAttributes, _fields.Nested, UniqueFields):
     Examples:
 
         >>> from marshmallow import Schema
+        >>> from cmk.fields import String
         >>> class Service(Schema):
         ...      host = String(required=True)
         ...      description = String(required=True)
@@ -530,7 +415,7 @@ class Nested(base.OpenAPIAttributes, _fields.Nested, UniqueFields):
 FOLDER_PATTERN = r"(?:(?:[~\\\/]|(?:[~\\\/][-_ a-zA-Z0-9.]+)+)|[0-9a-fA-F]{32})"
 
 
-class FolderField(String):
+class FolderField(base.String):
     """This field represents a WATO Folder.
 
     It will return a Folder instance, ready to use.
@@ -638,11 +523,11 @@ class BinaryExprSchema(BaseSchema):
 
     """
 
-    op = String(description="The operator.")
-    left = String(
+    op = base.String(description="The operator.")
+    left = base.String(
         description="The LiveStatus column name.", pattern=r"([a-z]+\.)?[_a-z]+", example="name"
     )
-    right = String(
+    right = base.String(
         description="The value to compare the column to."
     )  # should be AnyOf(all openapi types)
 
@@ -660,7 +545,7 @@ class NotExprSchema(BaseSchema):
 
     """
 
-    op = String(description="The operator. In this case `not`.")
+    op = base.String(description="The operator. In this case `not`.")
     expr = Nested(
         lambda: ExprSchema(),  # pylint: disable=unnecessary-lambda
         description="The query expression to negate.",
@@ -670,7 +555,7 @@ class NotExprSchema(BaseSchema):
 class LogicalExprSchema(BaseSchema):
     """Expression combining multiple other query expressions."""
 
-    op = String(description="The operator.")
+    op = base.String(description="The operator.")
     # many=True does not work here for some reason.
     expr = List(
         Nested(
@@ -900,7 +785,7 @@ class _ListOfColumns(List):
         return [getattr(self.table, col) for col in value]
 
 
-class _LiveStatusColumn(String):
+class _LiveStatusColumn(base.String):
     """Represents a LiveStatus column.
 
     Examples:
@@ -933,7 +818,7 @@ class _LiveStatusColumn(String):
 HOST_NAME_REGEXP = "[-0-9a-zA-Z_.]+"
 
 
-class HostField(String):
+class HostField(base.String):
     """A field representing a hostname."""
 
     default_error_messages = {
@@ -1022,7 +907,7 @@ def host_is_monitored(host_name: str) -> bool:
 
 class CustomHostAttributes(ValueTypedDictSchema):
     value_type = ValueTypedDictSchema.field(
-        String(description="Each tag is a mapping of string to string")
+        base.String(description="Each tag is a mapping of string to string")
     )
 
     @post_load
@@ -1035,7 +920,7 @@ class CustomHostAttributes(ValueTypedDictSchema):
 
 class CustomFolderAttributes(ValueTypedDictSchema):
     value_type = ValueTypedDictSchema.field(
-        String(description="Each tag is a mapping of string to string")
+        base.String(description="Each tag is a mapping of string to string")
     )
 
     @post_load
@@ -1114,7 +999,7 @@ def attributes_field(
             raise ValidationError(f"Unknown attribute: {value!r}")
 
     return List(
-        String(validate=validate),
+        base.String(validate=validate),
         description=description,
         example=example,
         load_default=load_default,
@@ -1122,7 +1007,7 @@ def attributes_field(
     )
 
 
-class SiteField(String):
+class SiteField(base.String):
     """A field representing a site name."""
 
     default_error_messages = {"unknown_site": "Unknown site {site!r}"}
@@ -1138,7 +1023,7 @@ def customer_field(**kw):
     return None
 
 
-class _CustomerField(String):
+class _CustomerField(base.String):
     """A field representing a customer"""
 
     default_error_messages = {
@@ -1192,7 +1077,7 @@ def verify_group_exists(group_type: GroupType, name: GroupName) -> bool:
     return name in specific_existing_groups
 
 
-class GroupField(String):
+class GroupField(base.String):
     """A field representing a group."""
 
     default_error_messages = {
@@ -1246,7 +1131,7 @@ class GroupField(String):
                 raise self.make_error("should_not_be_monitored", host_name=value)
 
 
-class PasswordIdent(String):
+class PasswordIdent(base.String):
     """A field representing a password identifier"""
 
     default_error_messages = {
@@ -1281,7 +1166,7 @@ class PasswordIdent(String):
             raise self.make_error("should_not_exist", name=value)
 
 
-class PasswordOwner(String):
+class PasswordOwner(base.String):
     """A field representing a password owner group"""
 
     default_error_messages = {
@@ -1317,7 +1202,7 @@ class PasswordOwner(String):
             raise self.make_error("invalid", name=value)
 
 
-class PasswordShare(String):
+class PasswordShare(base.String):
     """A field representing a password share group"""
 
     default_error_messages = {
@@ -1404,7 +1289,7 @@ class Timestamp(DateTime):
         return datetime.timestamp(val)
 
 
-class X509ReqPEMField(String):
+class X509ReqPEMField(base.String):
     default_error_messages = {
         "malformed": "Malformed CSR",
         "invalid": "Invalid CSR (signature and public key do not match)",
@@ -1451,8 +1336,6 @@ __all__ = [
     "PythonString",
     "query_field",
     "SiteField",
-    "String",
-    "Str",
     "Timestamp",
     "X509ReqPEMField",
 ]

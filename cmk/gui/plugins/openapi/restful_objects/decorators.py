@@ -924,8 +924,9 @@ def _verify_parameters(
 
         In case of success, this function will return nothing.
 
+          >>> from cmk.fields import String
           >>> class Params(Schema):
-          ...      bar = fields.String()
+          ...      bar = String()
 
           >>> _verify_parameters('/foo/{bar}', Params)
           >>> _verify_parameters('/foo', None)

@@ -172,6 +172,7 @@ main() {
 
     run_mrpe_plugins
 
+    return 0
 }
 
 main

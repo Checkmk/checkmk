@@ -804,7 +804,7 @@ main() {
 
         ) | optionally_encrypt "${PASSPHRASE}" ""
 
-        [ "${MK_LOOP_INTERVAL}" -gt 0 ] 2>/dev/null || return
+        [ "${MK_LOOP_INTERVAL}" -gt 0 ] 2>/dev/null || return 0
 
         sleep "${MK_LOOP_INTERVAL}"
 

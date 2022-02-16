@@ -597,7 +597,10 @@ class Endpoint:
                     "You may be able to query the central site.",
                 )
 
-            response = self.func(_params)
+            try:
+                response = self.func(_params)
+            except ValidationError as exc:
+                return _problem(exc, status_code=400)
 
             if self.output_empty and response.status_code < 400 and response.data:
                 return problem(

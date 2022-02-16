@@ -341,7 +341,6 @@ def _create_nagios_servicedefs(
     used_descriptions: Dict[ServiceName, AbstractServiceID] = {}
     for service in sorted(host_check_table.values(), key=lambda s: s.sort_key()):
 
-        # TODO (mo): This should be done by the service object, much earlier.
         if not service.description:
             core_config.warning(
                 "Skipping invalid service with empty description (plugin: %s) on host %s"

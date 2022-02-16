@@ -98,7 +98,7 @@ bool StartAgentController(const fs::path &service) {
     auto port =
         cfg::GetVal(cfg::groups::kGlobal, cfg::vars::kPort, cfg::kMainPort);
     auto proc_id = ar.goExecAsDetached(controller_name.wstring() +
-                                       fmt::format(L" daemon -p {}", port));
+                                       fmt::format(L" daemon -P {}", port));
     if (proc_id != 0) {
         XLOG::l.i("Agent controller '{}' started pid [{}]", controller_name,
                   proc_id);

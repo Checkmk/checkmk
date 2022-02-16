@@ -66,7 +66,7 @@ CLANG_VERSION      := 12
 # When you update the Python version, you have to update the test expectations
 # in test_03_python_interpreter_version and test_03_pip_interpreter_version.
 # Update omd/Licenses.csv, too.
-PYTHON_VERSION	   := 3.9.8
+PYTHON_VERSION	   := 3.9.10
 
 # convenience stuff derived from PYTHON_VERSION
 PY_ARRAY	       := $(subst ., ,$(PYTHON_VERSION))

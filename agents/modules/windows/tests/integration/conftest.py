@@ -15,7 +15,7 @@ import pytest  # type: ignore[import]
 
 
 def pytest_addoption(parser):
-    parser.addoption("--expected_version", action="store", default="3.9.8")
+    parser.addoption("--expected_version", action="store", default="3.9.10")
 
 
 tested_pythons = ["python-3.4.cab", "python-3.cab"]

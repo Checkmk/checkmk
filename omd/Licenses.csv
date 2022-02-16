@@ -108,7 +108,7 @@ Perl module: XML-Simple,2.20,GPL-3.0,https://opensource.org/licenses/GPL-3.0,omd
 Perl module: XML-Twig,3.48,GPL-3.0,https://opensource.org/licenses/GPL-3.0,omd/packages/perl-modules/src/XML-Twig-3.48.tar.gz,,,,
 Perl module: YAML-Tiny,1.67,GPL-3.0,https://opensource.org/licenses/GPL-3.0,omd/packages/perl-modules/src/YAML-Tiny-1.67.tar.gz,,,,
 pnp4nagios,0.6.26,GPL-2.0,https://opensource.org/licenses/GPL-2.0,omd/packages/pnp4nagios/pnp4nagios-0.6.26.tar.gz,,,,
-Python,3.9.8,Python-2.0,https://spdx.org/licenses/Python-2.0.html,omd/packages/Python/Python-3.9.8.tar.xz,,,,
+Python,3.9.10,Python-2.0,https://spdx.org/licenses/Python-2.0.html,omd/packages/Python/Python-3.9.10.tar.xz,,,,
 Python for Windows agent (PyWinAg),3.4,Python-2.0,https://spdx.org/licenses/Python-2.0.html,agents/windows/python-3.4.cab
 Python for Windows agent (PyWinAg),3.9,Python-2.0,https://spdx.org/licenses/Python-2.0.html,agents/windows/python-3.cab
 Python for Windows agent (PyWinAg),3.9,Python-2.0,https://spdx.org/licenses/Python-2.0.html,agents/wnx/install/resources/modules/python-3.cab

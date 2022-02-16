@@ -2001,7 +2001,7 @@ class ABCNodeRenderer(abc.ABC):
     def _show_table_value(
         self,
         value: Any,
-        hint: Dict,
+        hint: InventoryHintSpec,
         retention_intervals: Optional[RetentionIntervals] = None,
     ) -> None:
         raise NotImplementedError()
@@ -2044,7 +2044,7 @@ class ABCNodeRenderer(abc.ABC):
     def _show_attribute(
         self,
         value: Any,
-        hint: Dict,
+        hint: InventoryHintSpec,
         retention_intervals: Optional[RetentionIntervals] = None,
     ) -> None:
         raise NotImplementedError()
@@ -2072,7 +2072,7 @@ class ABCNodeRenderer(abc.ABC):
     def _show_child_value(
         self,
         value: Any,
-        hint: Dict,
+        hint: InventoryHintSpec,
         retention_intervals: Optional[RetentionIntervals] = None,
     ) -> None:
         if "paint_function" in hint:
@@ -2116,7 +2116,7 @@ class NodeRenderer(ABCNodeRenderer):
     def _show_table_value(
         self,
         value: Any,
-        hint: Dict,
+        hint: InventoryHintSpec,
         retention_intervals: Optional[RetentionIntervals] = None,
     ) -> None:
         self._show_child_value(value, hint, retention_intervals)
@@ -2124,7 +2124,7 @@ class NodeRenderer(ABCNodeRenderer):
     def _show_attribute(
         self,
         value: Any,
-        hint: Dict,
+        hint: InventoryHintSpec,
         retention_intervals: Optional[RetentionIntervals] = None,
     ) -> None:
         self._show_child_value(value, hint, retention_intervals)
@@ -2134,7 +2134,7 @@ class DeltaNodeRenderer(ABCNodeRenderer):
     def _show_table_value(
         self,
         value: Any,
-        hint: Dict,
+        hint: InventoryHintSpec,
         retention_intervals: Optional[RetentionIntervals] = None,
     ) -> None:
         self._show_delta_child_value(value, hint)
@@ -2142,12 +2142,12 @@ class DeltaNodeRenderer(ABCNodeRenderer):
     def _show_attribute(
         self,
         value: Any,
-        hint: Dict,
+        hint: InventoryHintSpec,
         retention_intervals: Optional[RetentionIntervals] = None,
     ) -> None:
         self._show_delta_child_value(value, hint)
 
-    def _show_delta_child_value(self, value: Any, hint: Dict) -> None:
+    def _show_delta_child_value(self, value: Any, hint: InventoryHintSpec) -> None:
         if value is None:
             value = (None, None)
 

@@ -90,7 +90,7 @@ $(RPM_PACKAGE): controller waitmax
 	    --define "_version $(VERSION)" \
 	    --define "_rpm_version $(RPM_VERSION)" \
 	    $(NAME).spec
-	mv -v $(RPM_TOPDIR)/RPMS/*/* .
+	mv -v $(RPM_TOPDIR)/RPMS/*/* $(RPM_PACKAGE)
 	rm -rf $(RPM_TOPDIR) $(RPM_BUILDROOT)
 
 

@@ -29,6 +29,8 @@
 #include "tools/_process.h"
 #include "upgrade.h"
 
+using namespace std::chrono_literals;
+
 // out of namespace
 bool g_skype_testing = false;
 
@@ -1038,6 +1040,24 @@ YAML::Node GetNodeFromSystem(std::string_view node) {
     return cfg::GetNode(os, std::string(node));
 }
 
+std::pair<bool, int> RemoveRuleWithTimeout(std::wstring_view name,
+                                           std::wstring_view raw_app_name,
+                                           std::chrono::milliseconds timeout) {
+    auto last = std::chrono::steady_clock::now() + timeout;
+    int count = 0;
+    XLOG::d.i("Removing all '{}' app: '{}'", wtools::ToUtf8(name),
+              wtools::ToUtf8(raw_app_name));
+    while (fw::RemoveRule(name, raw_app_name)) {
+        ++count;
+        if (std::chrono::steady_clock::now() > last) {
+            return {false, count};
+        }
+        XLOG::t.i("Removed!");
+    }
+
+    return {true, count};
+}
+
 }  // namespace
 
 int GetFirewallPort() {
@@ -1059,9 +1079,12 @@ void ProcessFirewallConfiguration(std::wstring_view app_name, int port,
                                      std::string(cfg::values::kModeNone));
     if (tools::IsEqual(firewall_mode, cfg::values::kModeConfigure)) {
         XLOG::l.i("Firewall mode is set to configure, adding rule...");
-        // remove all rules with the same name
-        while (fw::RemoveRule(rule_name, app_name))
-            ;
+        auto [ok, count] = RemoveRuleWithTimeout(rule_name, app_name, 5000ms);
+        if (ok) {
+            XLOG::l.i("Removed {} old rules.", count);
+        } else {
+            XLOG::l("Timeout hits! Removed {} old rules.", count);
+        }
 
         auto success = cma::fw::CreateInboundRule(rule_name, app_name, port);
 
@@ -1074,13 +1097,10 @@ void ProcessFirewallConfiguration(std::wstring_view app_name, int port,
 
     if (cma::tools::IsEqual(firewall_mode, cfg::values::kModeRemove)) {
         XLOG::l.i("Firewall mode is set to clear, removing rule...");
-
-        // remove all rules with the same name
-        int count = 0;
-        while (fw::RemoveRule(rule_name, app_name)) {
-            ++count;
+        auto [ok, count] = RemoveRuleWithTimeout(rule_name, app_name, 5000ms);
+        if (!ok) {
+            XLOG::l("Timeout hits!");
         }
-
         if (count != 0)
             XLOG::l.i(
                 "Firewall rule '{}' had been removed successfully [{}] times",

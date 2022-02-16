@@ -797,11 +797,6 @@ function select2_vs_autocomplete(container, css_class, params) {
                     ajax: select2_ajax_vs_autocomplete(elem, css_class, params),
                 })
                 .on("select2:open", () => {
-                    // TODO set focus on search_field
-                    // (jquery 3.6 focus security patch bugs auto search in select-2)
-                    // remove if not necessary any more
-                    let input_field = document.querySelector(".select2-search__field");
-                    input_field.focus();
                     if (["hostname", "service"].includes(field_element))
                         $(".select2-search input").val(elem.value);
                 });

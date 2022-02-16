@@ -30,6 +30,9 @@ export function enable_select2_dropdowns(container) {
         minimumResultsForSearch: 5,
     });
     initialize_autocompleters(container);
+
+    // workaround for select2-input not being in focus
+    $(document).on("select2:open", () => document.querySelector(".select2-search__field").focus());
 }
 
 function enable_label_input_fields(container) {

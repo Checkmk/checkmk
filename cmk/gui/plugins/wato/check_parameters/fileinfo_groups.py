@@ -340,10 +340,9 @@ def get_fileinfo_groups_param_elements():
     ]
 
 
-def _parameter_valuespec_fileinfo_groups():
+def _parameter_valuespec_fileinfo_groups() -> Dictionary:
     return Dictionary(
         elements=get_fileinfo_groups_param_elements(),
-        ignored_keys=["precompiled_patterns"],
     )
 
 

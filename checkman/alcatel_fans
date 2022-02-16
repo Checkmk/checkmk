@@ -1,7 +1,7 @@
 title: Alcatel Switches: Fan Status
 agents: snmp
 catalog: hw/network/alcatel
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors all fans on the following Alcatel switches

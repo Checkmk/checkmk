@@ -1,7 +1,7 @@
 title: ACME Devices: Realm
 agents: snmp
 catalog: hw/environment/acme
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the realms of ACME devices.

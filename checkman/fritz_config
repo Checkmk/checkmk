@@ -1,7 +1,7 @@
 title: AVM Fritz!Box: Configuration Info
 agents: fritzbox
 catalog: hw/network/avm
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  The check is always OK, it outputs information about the current DNS-Servers

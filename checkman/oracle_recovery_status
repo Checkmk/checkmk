@@ -1,7 +1,7 @@
 title: Oracle: Checkpoint and User Managed Backup State of Datafiles
 agents: linux, aix, hp/ux, Solaris
 catalog: app/oracle
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the Checkpoint and the online backup state
@@ -48,4 +48,3 @@ item:
 
 discovery:
  One service is created for each runnning database.
-

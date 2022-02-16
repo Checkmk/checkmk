@@ -1,7 +1,7 @@
 title: Virtual Machine under ESX: Mounted Devices
 agents: vsphere
 catalog: os/kernel
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  For a virtual machine running on ESX this check reviews the

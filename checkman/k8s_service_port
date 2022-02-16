@@ -1,7 +1,7 @@
 title: Kubernetes: Service Ports
 agents: kubernetes
 catalog: containerization/kubernetes
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check and the associated special agent (agent_kubernetes) are deprecated

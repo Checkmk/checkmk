@@ -1,7 +1,7 @@
 title: Wireless LAN Controller (WLC): Number of Wifi Connections
 agents: snmp
 catalog: hw/network/generic
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This checks display the number of connected clients in an wireless network.

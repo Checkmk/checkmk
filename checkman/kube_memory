@@ -1,7 +1,7 @@
 title: Kubernetes: Memory
 agents: kubernetes
 catalog: containerization/kubernetes
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check shows the memory usage of a Kubernetes object, its requests utilization and its limits

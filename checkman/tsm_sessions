@@ -1,11 +1,10 @@
 title: IBM Tivoli Storage Manager (TSM): Age of Sessions in RecvW or MediaW State
 agents: windows
 catalog: app/tsm
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the age of tsm sessions in state RecvW or MediaW.
 
 discovery:
  One service is created.
-

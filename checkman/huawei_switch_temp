@@ -1,7 +1,7 @@
 title: Huawei Switches: Temperature
 agents: snmp
 catalog: hw/network/huawei
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the temperature of Huawei switches.

@@ -1,7 +1,7 @@
 title: ZFS Arc L2 Cache: Hit Ratio and Size
 agents: solaris
 catalog: os/storage
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  Reports the L2 cache hit ratio and the L2 cache size of ZFS.

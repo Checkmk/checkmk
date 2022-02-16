@@ -1,7 +1,7 @@
 title: ICMP Echo Request (Ping)
 agents: active
 catalog: agentless
-license: GPL
+license: GPLv2
 distribution: check_mk
 
 item:
@@ -17,4 +17,3 @@ description:
  Returns {CRIT} if receiving ICMP Host unreachable messages.
 
  This check can be configured by Wato.
-

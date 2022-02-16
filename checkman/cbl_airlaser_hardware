@@ -1,7 +1,7 @@
 title: CBL Airlaser: General Status
 agents: snmp
 catalog: hw/network/cbl
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  The CBL Airlaser is a device to transparently transport Gigabit Ethernet
@@ -19,4 +19,3 @@ description:
 discovery:
  One service is created for each remote device
  if the CBL-AIRLASOR-IP1000 MIB is supported.
-

@@ -1,7 +1,7 @@
 title: McAfee Email Gateway: Spam Engine
 agents: snmp
 catalog: app/mcafee
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check reports the spam engine and rules version

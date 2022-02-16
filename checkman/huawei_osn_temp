@@ -1,7 +1,7 @@
 title: Huawei OSN: Board Temperature
 agents: snmp
 catalog: hw/network/huawei
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check measures the temperature of a laser board. The common ruleset for

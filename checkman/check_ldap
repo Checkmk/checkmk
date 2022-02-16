@@ -1,7 +1,7 @@
 title: LDAP/LDAPS Connection
 agents: active
 catalog: agentless
-license: GPL
+license: GPLv2
 distribution: check_mk
 
 item:
@@ -15,4 +15,3 @@ description:
  response time for {WARN} and {CRIT}.
 
  This check can be configured by Wato.
-

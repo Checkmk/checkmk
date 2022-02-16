@@ -1,7 +1,7 @@
 title: Generic UPS Device: Remaining Battery Capacity
 agents: snmp
 catalog: hw/power/generic
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This checks monitors a UPS that supports the generic UPS-MIB,

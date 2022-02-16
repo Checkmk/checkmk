@@ -1,7 +1,7 @@
 title: Casa CMTS: CPU Memory
 agents: snmp
 catalog: hw/network/casa
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check is used for the 10G and 3K series of the Casa Cable Modem Termination Systems (CMTS).

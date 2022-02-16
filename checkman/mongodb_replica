@@ -1,7 +1,7 @@
 title: MongoDB: Replica Info
 agents: linux
 catalog: app/mongodb
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check shows the primary, secondary and arbiter hosts from a MongoDB cluster.

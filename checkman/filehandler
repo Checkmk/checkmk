@@ -1,7 +1,7 @@
 title: Total and Used Filehandles on System
 agents: linux
 catalog: os/storage
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check measures the current used fileshandles and sets it

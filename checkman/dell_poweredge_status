@@ -1,7 +1,7 @@
 title: Dell PowerEdge Server: Global State
 agents: snmp
 catalog: hw/server/dell
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the global state of Dell PowerEdge Servers.

@@ -1,7 +1,7 @@
 title: Bluecat Adonis: Number of Threads
 agents: snmp
 catalog: hw/network/bluecat
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This Check monitors the number of currently running threads on a Blucat Adonis

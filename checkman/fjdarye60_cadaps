@@ -1,7 +1,7 @@
 title: Fujitsu ETERNUS DX Storage Systems: Status of Channel Adapters
 agents: snmp
 catalog: hw/storagehw/fujitsu
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the reported status of all installed channel

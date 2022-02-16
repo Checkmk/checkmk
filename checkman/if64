@@ -1,7 +1,7 @@
 title: Monitor Network Interfaces via Standard MIB Using 64-Bit Counters
 agents: snmp
 catalog: hw/network/generic
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check does the same as {interfaces} but uses 64-bit counters from

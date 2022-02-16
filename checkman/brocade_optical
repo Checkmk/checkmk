@@ -1,7 +1,7 @@
 title: Brocade Switches: Optical Signal Quality
 catalog: hw/storagehw/brocade
 agents: snmp
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This checks monitors the signal quality of the optical ports of Brocade switches.

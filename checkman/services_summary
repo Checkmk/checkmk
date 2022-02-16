@@ -1,7 +1,7 @@
 title: Windows: Services
 agents: windows
 catalog: os/services
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check gives a summary of the windows services and monitors

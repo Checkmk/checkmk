@@ -1,7 +1,7 @@
 title: Knürr RMS: Temperature
 agents: snmp
 catalog: hw/environment/knuerr
-license: GPL
+license: GPLv2
 distribution:
 description:
  This check monitors the temperature Sensor on a Knürr RMS Monitoring System. Levels for Warning and Critical can be specified.
@@ -11,4 +11,3 @@ item:
 
 discovery:
  One service is created.
-

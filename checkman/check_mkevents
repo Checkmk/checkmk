@@ -1,7 +1,7 @@
 title: Event Console Status for a Host or Application
 agents: active
 catalog: agentless
-license: GPL
+license: GPLv2
 distribution: check_mk
 
 item:
@@ -16,4 +16,3 @@ description:
  The service goes OK if all open events have OK state or if there are no open
  events. Otherwise the state will take the worst state of all open events. Optionally
  acknowledged events can be ignored.
-

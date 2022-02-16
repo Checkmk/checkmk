@@ -1,7 +1,7 @@
 title: MySQL: Status of Deamon
 agents: linux
 catalog: app/mysql
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check checks if the MySQL deamon is alive and a connection is possible.
@@ -19,4 +19,3 @@ item:
 discovery:
  One service is created for each instance on each host where the agent plugin
  {mk_mysql} is installed.
-

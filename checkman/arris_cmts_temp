@@ -1,7 +1,7 @@
 title: Arris CMTS: Temperature
 agents: snmp
 catalog: hw/network/arris
-license: GPL
+license: GPLv2
 distribution:
 description:
  This check monitors the Temperature information for several equipment parts in the Arris device.
@@ -17,4 +17,3 @@ item:
 
 discovery:
  One service is created for each card.
-

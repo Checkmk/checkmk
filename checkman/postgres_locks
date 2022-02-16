@@ -1,7 +1,7 @@
 title: PostgreSQL: Locks
 agents: linux
 catalog: app/postgresql
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check allows you to monitor the amount of shared access and exclusive
@@ -15,4 +15,3 @@ item:
 
 discovery:
  One service is created for each database.
-

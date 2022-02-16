@@ -1,7 +1,7 @@
 title: AWS EC2: Instance Disk IO
 agents: aws
 catalog: cloud/aws
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors

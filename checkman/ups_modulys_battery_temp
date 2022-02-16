@@ -1,7 +1,7 @@
 title: Socomec Modulys UPS Device: Battery Temperature
 agents: snmp
 catalog: hw/power/socomec
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  Monitors battery temperature. The temperature sensor on this device is optional
@@ -12,4 +12,3 @@ item:
 
 discovery:
  One service is created if the sensor is connected.
-

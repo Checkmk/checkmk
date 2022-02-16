@@ -1,7 +1,7 @@
 title: Fujitsu Siemens FSC: Fan Status
 agents: snmp
 catalog: hw/server/fujitsu
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  The check can be used to monitor the physical state of FANs in Fujitsu
@@ -19,4 +19,3 @@ item:
 
 discovery:
  One service is created for each fan.
-

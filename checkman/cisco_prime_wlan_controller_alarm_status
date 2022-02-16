@@ -1,7 +1,7 @@
 title: Cisco Prime WLAN Controller Alarm Status
 agents: agent_cisco_prime
 catalog: hw/network/cisco
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors cisco prime WLAN controller's alarm status.

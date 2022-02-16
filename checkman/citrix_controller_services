@@ -1,7 +1,7 @@
 title: Citrix XenApp Controller: Active Site Services
 agents: windows
 catalog: app/citrix
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check outputs the list of currently active services on a

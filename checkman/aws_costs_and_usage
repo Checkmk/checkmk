@@ -1,7 +1,7 @@
 title: AWS: Costs and Usage Summary
 agents: aws
 catalog: cloud/aws
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check gives an overview over the unblended costs of AWS accounts and

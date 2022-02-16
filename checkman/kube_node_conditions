@@ -1,7 +1,7 @@
 title: Kubernetes: Node Conditions
 agents: kubernetes
 catalog: containerization/kubernetes
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  A node's status depends on an array of NodeConditions, each with a status

@@ -1,7 +1,7 @@
 title: Checkmk Agent: Check IP Restriction
 agents: linux, windows
 catalog: app/cmk
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This checks makes sure that the Checkmk agent on the target system
@@ -14,4 +14,3 @@ discovery:
  One check is created per host, if {check_mk_only_from_default} is explicitely
  set in {main.mk} and the agent provides an {OnlyFrom:} header in the section
  {<<<check_mk>>>}.
-

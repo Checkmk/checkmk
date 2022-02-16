@@ -1,7 +1,7 @@
 title: Elasticsearch: Indices
 agents: elasticsearch
 catalog: app/elasticsearch
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check uses the special agent for elasticsearch. The document count and
@@ -15,4 +15,3 @@ discovery:
 
 item:
  The name of the index
-

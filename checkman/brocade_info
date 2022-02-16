@@ -1,7 +1,7 @@
 title: Brocade Switches: General Information
 agents: snmp
 catalog: hw/network/brocade
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check retrieves the {model name}, {soft serial number}, {firmware

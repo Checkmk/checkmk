@@ -1,7 +1,7 @@
 title: MS Exchange: Availability Performance
 agents: windows
 catalog: app/exchange
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the performance/load of the Availability service (management

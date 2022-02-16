@@ -1,7 +1,7 @@
 title: IBM Integrated Management Module (IMM): Temperature Sensors
 agents: snmp
 catalog: hw/server/ibm
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the data of temperature sensors
@@ -20,4 +20,3 @@ discovery:
 
 item:
  The name of the temperature sensor as extracted from the OID {tempDescr}
-

@@ -1,7 +1,7 @@
 title: Generic Entity Sensor: Power Presence
 agents: snmp
 catalog: hw/power/generic
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors whether power supply is turned on for devices that support

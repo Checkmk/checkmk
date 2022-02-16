@@ -1,7 +1,7 @@
 title: Oracle Clusterware: Cluster Resources
 agents: linux, aix, solaris, hpux
 catalog: app/oracle
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check needs the agent pluing mk_oracle_crs from our plugin directory.

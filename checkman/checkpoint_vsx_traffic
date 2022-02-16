@@ -1,7 +1,7 @@
 title: Checkpoint VSID: Traffic
 agents: snmp
 catalog: hw/network/checkpoint
-license: GPL
+license: GPLv2
 distribution: check_mk
 
 description:
@@ -14,4 +14,3 @@ item:
 
 discovery:
  One service {Checkpoint VSID VSID-NR Traffic} is created for each VSID.
-

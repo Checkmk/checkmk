@@ -1,7 +1,7 @@
 title: LSI RAID Controller: Status of a Disk
 agents: linux
 catalog: os/storage
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  Monitors the status of a single disk of an LSI RAID controller. The Linux
@@ -19,4 +19,3 @@ discovery:
  One service is created for each existing disk regardless of their states.
  The current state of a disk is used as target state.
  That way, you will be notified, even if a disk changes from state {HSP} to {ONL}.
-

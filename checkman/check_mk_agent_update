@@ -1,7 +1,7 @@
 title: Checkmk Agent: Automatic Agent Deployments
 agents: linux, windows
 catalog: app/cmk
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This plugin makes sure that the Checkmk agent deploy mechanism (if used)

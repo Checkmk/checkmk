@@ -1,7 +1,7 @@
 title: HP MSA 2040: Volume Disk Usage
 agents: linux
 catalog: hw/storagehw/hp
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the disk usage of each volume of a HP MSA 2040 storage system.

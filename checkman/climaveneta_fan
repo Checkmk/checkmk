@@ -1,7 +1,7 @@
 title: Climaveneta: Fans
 agents: snmp
 catalog: hw/environment/climaveneta
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the fan speeds on Climaveneta mc01_o4cv devices.
@@ -11,4 +11,3 @@ item:
 
 discovery:
  One service is created for each fan.
-

@@ -1,7 +1,7 @@
 title: PostgreSQL: Last Vacuum and Analyze for Tables
 agents: linux
 catalog: app/postgresql
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check allows you to monitor the last VACUUM and ANALYZE time for tables in
@@ -25,4 +25,3 @@ item:
 discovery:
  Two services are created for each database.
  One service for {{VACUUM}} and one for {{ANALYZE}}.
-

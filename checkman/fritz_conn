@@ -1,7 +1,7 @@
 title: AVM Fritz!Box: Connection State
 agents: fritzbox
 catalog: hw/network/avm
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check outputs the connection state of the Fritz!Box WAN connection.

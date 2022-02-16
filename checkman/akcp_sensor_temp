@@ -1,7 +1,7 @@
 title: AKCP sensorProbe: Temperature
 agents: snmp
 catalog: hw/environment/akcp
-license: GPL
+license: GPLv2
 distribution:
 description:
  This check monitors the temperature of sensors attached to AKCP SensorProbe.
@@ -27,4 +27,3 @@ item:
 
 discovery:
  One service is created for each available temperature sensor if the sensor is online.
-

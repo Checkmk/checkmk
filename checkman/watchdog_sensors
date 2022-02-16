@@ -1,7 +1,7 @@
 title: GEIST Watchdog: Status
 agents: snmp
 catalog: hw/network/geist
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the general status of the watchdog device. The state will change to {WARN} if the reported status is {{Partially Available}} and to {CRIT} if the status is {{Unavailable}}.

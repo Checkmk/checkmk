@@ -1,7 +1,7 @@
 title: Docker: Container Uptime
 agents: linux
 catalog: containerization/docker
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check outputs the uptime of the monitored containers
@@ -17,4 +17,3 @@ description:
 discovery:
  One service is created for each active container (running or restart policy 'always'),
  unless the {uptime} plugin has discovered a service.
-

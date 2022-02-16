@@ -1,7 +1,7 @@
 title: SAP HANA: Statistics Server
 agents: linux
 catalog: app/sap_hana
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the SAP HANA statistics server.

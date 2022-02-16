@@ -1,7 +1,7 @@
 title: Splunk: System Messages
 agents: splunk
 catalog: app/splunk
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the occurance of system messages in splunk. It outputs
@@ -12,4 +12,3 @@ description:
 
 discovery:
  One service is created.
-

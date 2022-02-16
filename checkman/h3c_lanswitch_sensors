@@ -1,7 +1,7 @@
 title: 3Com and H3C Switches: Fan and Power Supply
 agents: snmp
 catalog: hw/network/h3c
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
 

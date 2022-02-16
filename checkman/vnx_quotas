@@ -1,7 +1,7 @@
 title: EMC VNX NAS DBs: Quotas
 agents: vnx_quotas
 catalog: hw/storagehw/emc
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check measures the usage of quotas of VNX NAS DBs.

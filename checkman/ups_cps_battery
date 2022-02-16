@@ -1,7 +1,7 @@
 title: CPS UPS Device: Remaining Battery Capacity
 agents: snmp
 catalog: hw/power/cps
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  The check monitors the battery capacity (in percent), and the

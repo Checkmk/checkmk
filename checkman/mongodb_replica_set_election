@@ -1,7 +1,7 @@
 title: MongoDB Replica Set: Primary Election
 agents: linux
 catalog: app/mongodb
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors if the primary of a replica set changed.

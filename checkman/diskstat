@@ -1,7 +1,7 @@
 title: Disk Throughput
 agents: linux, freebsd
 catalog: os/storage
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
 
@@ -58,4 +58,3 @@ discovery:
 cluster:
   If configured for clustering, every service will sum up the measurements
   for disks with the same name.
-

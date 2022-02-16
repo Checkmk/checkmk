@@ -3,7 +3,7 @@ agents: linux
 catalog: os/storage
 distribution:
 author: Marius Pana <mp@spearhead.systems>
-license: GPL
+license: GPLv2
 description:
  This check monitors the performance of NFS mounts on client systems by way of
  the nfsiostat command. This requires the nfs-utils (Red Hat) or nfs-common

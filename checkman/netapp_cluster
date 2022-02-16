@@ -1,7 +1,7 @@
 title: NetApp Ontap Filer: MetroCluster Status
 agents: snmp
 catalog: hw/storagehw/netapp
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the status of NetAPP MetroCluster. It verifies the heartbeat interconnect status, the
@@ -15,4 +15,3 @@ discovery:
 
 item:
  The cluster partner.
-

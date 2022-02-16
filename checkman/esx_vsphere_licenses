@@ -1,7 +1,7 @@
 title: ESX VSphere: Licenses
 agents: vsphere
 catalog: os/misc
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the number of used licenses for ESX systems.
@@ -11,4 +11,3 @@ item:
 
 discovery:
  One service is created for each license type.
-

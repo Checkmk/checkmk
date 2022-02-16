@@ -1,7 +1,7 @@
 title: AppDynamics: Memory Usage
 agents: appdynamics
 catalog: app/java
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check measures the {Heap} and {Non-Heap} memory usage of applications

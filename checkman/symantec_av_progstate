@@ -1,7 +1,7 @@
 title: Symantec Antivirus: Program State
 agents: linux
 catalog: app/symantec
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check triggers a {CRITICAL} state if Symantec Antivirus isn't activated.

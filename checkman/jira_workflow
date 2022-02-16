@@ -1,7 +1,7 @@
 title: Jira: Workflow
 agents: jira
 catalog: app/jira
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  With this check you can monitor the number of Issues for given projects and

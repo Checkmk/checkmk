@@ -1,7 +1,7 @@
 title: AWS DynamoDB: Summary
 agents: aws
 catalog: cloud/aws
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check gives an overall summary of the tables managed by DynamoDB.

@@ -1,7 +1,7 @@
 title: UCS C-Series Rack Server: Health Status of Fans
 agents: agent_ucs_bladecenter
 catalog: hw/server/cisco
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check displays the information of fans of an UCS C-Series Rack Server.

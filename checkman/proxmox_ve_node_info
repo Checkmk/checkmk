@@ -1,7 +1,7 @@
 title: Proxmox VE: Node Info
 agents: proxmox_ve
 catalog: os/misc
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check is OK when a given Proxmox VE node's `status` and it's subscription 'status' match the
@@ -10,4 +10,3 @@ description:
 
 discovery:
  One service per system is created.
-

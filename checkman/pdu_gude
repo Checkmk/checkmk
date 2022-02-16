@@ -1,7 +1,7 @@
 title: GUDE PDU Units: Power and Voltage
 agents: snmp
 catalog: hw/power/gude
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  Monitors Power and Voltage on GUDE PDU Units.
@@ -11,4 +11,3 @@ item:
 
 discovery:
  One service is created for each phase.
-

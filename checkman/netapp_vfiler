@@ -1,7 +1,7 @@
 title: NetApp Ontap Filer: vFiler Status
 agents: snmp
 catalog: hw/storagehw/netapp
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the status of any vFiler instances on a NetAPP filer.
@@ -12,4 +12,3 @@ discovery:
 
 item:
  Name of the vFiler as defined on the Filer.
-

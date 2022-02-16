@@ -1,7 +1,7 @@
 title: EMC VNX NAS DBs: Version Info
 agents: vnx_quotas
 catalog: hw/storagehw/emc
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check displays the version and model information of VNX NAS DBs.

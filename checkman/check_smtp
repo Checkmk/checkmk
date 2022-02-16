@@ -1,7 +1,7 @@
 title: SMTP Connection
 agents: active
 catalog: agentless
-license: GPL
+license: GPLv2
 distribution: check_mk
 
 item:
@@ -21,4 +21,3 @@ description:
  within the next days.
 
  This check can be configured by Wato.
-

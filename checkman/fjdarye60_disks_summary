@@ -1,7 +1,7 @@
 title: Fujitsu ETERNUS DX Storage Systems: Summarized Status
 agents: snmp
 catalog: hw/storagehw/fujitsu
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the reported summary status of all installed
@@ -19,4 +19,3 @@ description:
 
 discovery:
  One service is created if at least one disk is found.
-

@@ -1,7 +1,7 @@
 title: AWS DynamoDB: Read Capacity
 agents: aws
 catalog: cloud/aws
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the read capacity of DynamoDB tables based on the

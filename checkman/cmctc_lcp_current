@@ -1,7 +1,7 @@
 title: Rittal CMC-TC LCP: Current
 agents: snmp
 catalog: hw/environment/rittal
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  Check the state of current sensors of a Rittal CMC-TC device.
@@ -17,4 +17,3 @@ item:
 
 discovery:
  One service is created for each available blower sensor.
-

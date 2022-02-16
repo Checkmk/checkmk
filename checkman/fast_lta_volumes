@@ -1,7 +1,7 @@
 title: FAST LTA Storage Systems: Capacity of Volumes
 agents: snmp
 catalog: hw/storagehw/fastlta
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  Displays the total / used capacity for volumes of FAST LTA Storage Systems.
@@ -16,4 +16,3 @@ item:
 
 discovery:
  One service is created for each volume on a FAST LTA Storage System.
-

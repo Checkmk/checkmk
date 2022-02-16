@@ -1,7 +1,7 @@
 title: IBM MQ: Availability of Command Line Tools
 agents: linux, solaris, aix, hpux
 catalog: app/ibm_mq
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check makes sure the essential {dspmq} and {runmqsc} IBM MQ tools are

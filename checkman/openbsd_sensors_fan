@@ -1,7 +1,7 @@
 title: OpenBSD Devices: Fan
 agents: snmp, openbsd
 catalog: os/hardware
-license: GPL
+license: GPLv2
 distribution: check_mk
 
 description:

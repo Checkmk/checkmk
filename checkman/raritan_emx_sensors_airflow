@@ -1,7 +1,7 @@
 title: Raritan EMX Devices External Sensors: Air Flow
 agents: snmp
 catalog: hw/environment/raritan
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors air flow sensors connected to a Raritan EMX device.
@@ -12,4 +12,3 @@ item:
 
 discovery:
  One service is created for each sensor.
-

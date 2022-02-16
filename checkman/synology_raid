@@ -1,7 +1,7 @@
 title: Synology NAS: RAID Status
 agents: snmp
 catalog: hw/storagehw/synology
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the health and current Status of
@@ -14,4 +14,3 @@ item:
 
 discovery:
  One service is created.
-

@@ -1,7 +1,7 @@
 title: Couchbase Nodes: Size of Spacial Views
 agents: special
 catalog: app/couchbase
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This service monitors the size of spacial views on a cluster node.

@@ -1,7 +1,7 @@
 title: Windows Processes: Resource Consumption
 agents: windows
 catalog: os/ps
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  Note: This check is obsolete. Do not install {wmicchecks.bat} anymore. Use

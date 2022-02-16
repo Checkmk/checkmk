@@ -1,7 +1,7 @@
 title: Bintec Routers: BRRP Status
 agents: snmp
 catalog: hw/network/bintec
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  Checks the Status of BRRP Connections of Bintec Routers.

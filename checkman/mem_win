@@ -1,7 +1,7 @@
 title: Memory Usage
 agents: windows
 catalog: os/kernel
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check measures the current usage of physical RAM and
@@ -38,4 +38,3 @@ discovery:
  One service is created for each host that provides data about the page file.
  If that information is missing, a Unix-like system is assumed and
  the check {mem.used} is creating one service instead.
-

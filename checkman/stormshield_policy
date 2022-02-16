@@ -1,7 +1,7 @@
 title: Stormshield: Policies Sync
 agents: snmp
 catalog: app/stormshield
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check uses the {STORMSHIELD-POLICY-MIB} for checking if the policies sync

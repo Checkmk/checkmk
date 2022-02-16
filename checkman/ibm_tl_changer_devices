@@ -1,7 +1,7 @@
 title: IBM Tape Library: Changer Devices
 agents: snmp
 catalog: hw/storagehw/ibm
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the availability and operational status of

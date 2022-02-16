@@ -1,7 +1,7 @@
 title: McAfee Email Gateway: SMTP Statistics
 agents: snmp
 catalog: app/mcafee
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check reports the some SMTP statistics such as

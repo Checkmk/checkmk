@@ -1,7 +1,7 @@
 title: IBM Blade Center: Chassis Blowers
 agents: snmp
 catalog: hw/server/ibm
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the state of the chassis blowers of an IBM blade
@@ -14,6 +14,3 @@ item:
  The item is a string of the format {"I/N"} where {I} is the number
  of the blower beginning from {1} and {N} is the number of blowers.
  Example item for the first of two blowers: {"1/2"}.
-
-
-

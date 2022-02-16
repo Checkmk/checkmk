@@ -1,7 +1,7 @@
 title: AppDynamics: Number of Sessions
 agents: appdynamics
 catalog: app/java
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check measures the amount of active / rejected sessions of applications

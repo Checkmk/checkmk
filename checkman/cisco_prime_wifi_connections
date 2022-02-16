@@ -1,7 +1,7 @@
 title: Cisco Prime WiFi connections
 agents: agent_cisco_prime
 catalog: hw/network/cisco
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check returns {{OK}} when the total number of client connections does not

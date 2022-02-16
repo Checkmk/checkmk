@@ -1,7 +1,7 @@
 title: Checkpoint Firewalls: Memory Usage
 agents: snmp
 catalog: hw/network/checkpoint
-license: GPL
+license: GPLv2
 distribution: check_mk
 
 description:

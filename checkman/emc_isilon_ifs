@@ -1,7 +1,7 @@
 title: EMC Isilon: Cluster Storage
 agents: snmp
 catalog: hw/storagehw/emc
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  Checks space on the cluster filesystem.
@@ -11,4 +11,3 @@ item:
 
 discovery:
  One service is created.
-

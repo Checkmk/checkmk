@@ -1,7 +1,7 @@
 title: Blue Coat Security Gateway: Disk and CPU Utilization
 agents: snmp
 catalog: hw/network/bluecoat
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
   The check checks CPU utilization and Disk usage on Blue Coat Security

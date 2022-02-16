@@ -1,7 +1,7 @@
 title: Primergy BX600 Blade Server: Temperature
 agents: snmp
 catalog: hw/server/fujitsu
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
   Checks temperature sensors in Primergy BX600 Blade Servers.
@@ -18,4 +18,3 @@ item:
 
 discovery:
  One service is created for each power module.
-

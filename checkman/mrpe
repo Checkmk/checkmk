@@ -1,7 +1,7 @@
 title: MRPE: MK's Remote Plugin Executor
 agents: linux, aix, solaris, hpux, macosx, netbsd, openbsd, freebsd
 catalog: generic
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  The MRPE is a simple and efficient way to use standard Nagios
@@ -30,4 +30,3 @@ item:
 
 discovery:
  One service is created for each plugins configured in {mrpe.cfg}.
-

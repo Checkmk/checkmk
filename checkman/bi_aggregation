@@ -1,7 +1,7 @@
 title: Checkmk: State of BI Aggregation
 agents: BI
 catalog: app/cmk
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check outputs the state of a BI aggregation.

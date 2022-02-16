@@ -1,7 +1,7 @@
 title: Hitachi HNAS: Usage of Spans (Storage Pools)
 agents: snmp
 catalog: hw/storagehw/hitachi
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  Checks the Usage of Spans (Storage Pools) in Hitachi HNAS storage systems.
@@ -14,4 +14,3 @@ item:
 
 discovery:
  One service is created for each Span.
-

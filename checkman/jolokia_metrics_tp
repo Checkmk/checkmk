@@ -1,6 +1,6 @@
 title: Java Virtual Machine: Tomcat Threads (deprecated)
 agents: linux
-license: GPL
+license: GPLv2
 catalog: app/java
 distribution: check_mk
 description:

@@ -1,7 +1,7 @@
 title: Genua: State of Packetfilter Engine
 agents: snmp
 catalog: hw/network/genua
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the state of the packetfilter engine of genuscreen
@@ -24,4 +24,3 @@ discovery:
  - has a valid pf state output
 
  - OID name contains "genuscreen", "genuscript" or "genubox" (case insensitive).
-

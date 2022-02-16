@@ -1,7 +1,7 @@
 title: Siemens PLC: Temperature Values
 agents: siemens_plc
 catalog: hw/server/siemens
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  The check monitors the state of the temperature values reported by Siemens PLC (SPS) devices.

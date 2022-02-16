@@ -1,7 +1,7 @@
 title: Couchbase Nodes: Caches
 agents: special
 catalog: app/couchbase
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This service reports on the nodes cache performance.

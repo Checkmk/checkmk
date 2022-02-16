@@ -1,7 +1,7 @@
 title: Bintec Routers: Voltage Sensors
 agents: snmp
 catalog: hw/environment/bintec
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  Displays the Voltage measured at different Voltage Sensors of Bintec Routers.

@@ -1,7 +1,7 @@
 title: VMWare ESX Host Systems: Disk Throughput
 agents: vsphere
 catalog: os/storage
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check measures the number of read and writes bytes
@@ -14,4 +14,3 @@ item:
 
 discovery:
  One service is created for each ESX host.
-

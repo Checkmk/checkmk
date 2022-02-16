@@ -1,6 +1,6 @@
 title: Java Virtual Machine: Tomcat Threads
 agents: linux
-license: GPL
+license: GPLv2
 catalog: app/java
 distribution: check_mk
 description:
@@ -17,4 +17,3 @@ item:
 
 discovery:
  One service is created for each thread pool sent by the Jolokia agent.
-

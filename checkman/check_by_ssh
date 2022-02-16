@@ -1,7 +1,7 @@
 title: SSH Connection to Execute Commands on a Remote Host
 agents: active
 catalog: agentless
-license: GPL
+license: GPLv2
 distribution: check_mk
 
 item:

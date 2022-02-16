@@ -1,7 +1,7 @@
 title: Extreme Networks Switch: Power Supply
 agents: snmp
 catalog: hw/network/netextreme
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the system power of a Extreme Networks Switch

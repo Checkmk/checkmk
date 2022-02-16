@@ -1,7 +1,7 @@
 title: DB2: Databases Bufferpool Hitratios
 agents: aix, linux
 catalog: app/db2
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the hitratios of the various bufferpools for a database.
@@ -17,4 +17,3 @@ item:
 discovery:
  One service is created for each bufferpool in a database.
  Bufferpools named IBMSYSTEMBP* are ignored.
-

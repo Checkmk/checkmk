@@ -1,7 +1,7 @@
 title: Rittal CMC-TC: General State
 agents: snmp
 catalog: hw/environment/rittal
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the overall status and the number of
@@ -11,4 +11,3 @@ description:
 
 discovery:
  One service is created for each host.
-

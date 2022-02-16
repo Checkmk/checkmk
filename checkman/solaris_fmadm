@@ -1,7 +1,7 @@
 title: Solaris: Fault Class
 agents: solaris
 catalog: os/services
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the name and severity of the fault class on Solaris systems using

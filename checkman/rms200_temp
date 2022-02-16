@@ -1,7 +1,7 @@
 title: RMS200 Unit: Temperatures
 agents: snmp
 catalog: hw/environment/infratec_plus
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This plugin polls the temperature of all connected sensors.
@@ -13,4 +13,3 @@ item:
 
 discovery:
  One service is created for each device.
-

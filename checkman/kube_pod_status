@@ -1,7 +1,7 @@
 title: Kubernetes: Pod Status
 agents: kubernetes
 catalog: containerization/kubernetes
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check provides the pod status. The status of a pod consist of a single word summarizing the

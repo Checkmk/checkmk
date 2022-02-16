@@ -1,7 +1,7 @@
 title: Microsoft Azure SQL Databases: Throughput Units
 agents: azure
 catalog: cloud/azure
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check reports the DTU in percent.
@@ -13,4 +13,3 @@ item:
 discovery:
  One service is creaed for each database if all required metrics
  (average_dtu_consumption_percent) are given.
-

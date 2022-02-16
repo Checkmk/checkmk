@@ -1,7 +1,7 @@
 title: Alertmanager: Rules
 agents: alertmanager
 catalog: app/alertmanager
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check shows the status of the alert rule depending on your configuration.

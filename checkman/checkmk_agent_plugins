@@ -1,7 +1,7 @@
 title: Checkmk agent plugins
 agents: solaris, aix, linux, freebsd, openwrt
 catalog: app/cmk
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the deployed agent plugins and local checks.

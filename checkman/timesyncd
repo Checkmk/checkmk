@@ -1,7 +1,7 @@
 title: Systemd Timesyncd
 agents: linux
 catalog: os/services
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check uses the output of {timedatectl timesync-status} as sent by the

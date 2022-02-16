@@ -1,7 +1,7 @@
 title: Symantec Antiivirus: Update Status
 agents: linux
 catalog: app/symantec
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check will trigger a warning state if the Antivirus updates are outdated.

@@ -1,7 +1,7 @@
 title: Heartbeat/Pacemaker Cluster: General Node Status
 agents: linux
 catalog: os/services
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check uses the output of the {crm_mon} command as sent by the Checkmk
@@ -20,4 +20,3 @@ description:
 discovery:
  One service is created for each node of the cluster
  if {naildown_dc} is set to {True} in {inventory_heartbeat_crm_rules}.
-

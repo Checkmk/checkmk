@@ -1,0 +1,15 @@
+Title: Fix syntax error if display name is used in notifications on appliances
+Class: fix
+Compatible: compat
+Component: notifications
+Date: 1645027084
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0p21
+
+This problem only occured on Checkmk appliances.
+
+If the option "From" - "Display name" was used in notifications, mails could
+not be sent. The mail log showed "Bad recipient address syntax" errors
+instead.

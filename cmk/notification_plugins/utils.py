@@ -11,7 +11,7 @@ import socket
 import subprocess
 import sys
 
-from email.utils import formataddr, formatdate
+from email.utils import formataddr, formatdate, parseaddr
 from html import escape as html_escape
 from http.client import responses as http_responses
 from quopri import encodestring
@@ -189,7 +189,19 @@ def set_mail_headers(target, subject, from_address, reply_to, mail):
 def send_mail_sendmail(m, target, from_address):
     cmd = [_sendmail_path()]
     if from_address:
-        cmd += ['-F', from_address, "-f", from_address]
+        # sendmail of the appliance can not handle "FULLNAME <my@mail.com>" format
+        # TODO Currently we only see problems on appliances, so we just change
+        # that handling for now.
+        # If we see problems on other nullmailer sendmail implementations, we
+        # could parse the man page for sendmail and see, if it contains "nullmailer" to
+        # determine if nullmailer is used
+        if cmk_version.is_cma():
+            sender_full_name, sender_address = parseaddr(from_address)
+            if sender_full_name:
+                cmd += ['-F', sender_full_name]
+            cmd += ["-f", sender_address]
+        else:
+            cmd += ['-F', from_address, "-f", from_address]
     cmd += ["-i", target]
 
     try:
@@ -212,6 +224,7 @@ def send_mail_sendmail(m, target, from_address):
 def _sendmail_path() -> str:
     # We normally don't deliver the sendmail command, but our notification integration tests
     # put some fake sendmail command into the site to prevent actual sending of mails.
+
     for path in [
             "%s/local/bin/sendmail" % cmk.utils.paths.omd_root,
             "/usr/sbin/sendmail",

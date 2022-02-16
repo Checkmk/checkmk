@@ -1029,7 +1029,7 @@ def request_cluster_collector(
             headers={"Authorization": f"Bearer {token}"},
             verify=verify,
             timeout=(timeout.connect, timeout.read),
-        )  # TODO: certificate validation
+        )
         cluster_resp.raise_for_status()
     except requests.HTTPError as e:
         raise CollectorHandlingException(

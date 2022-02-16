@@ -116,11 +116,10 @@ class TestAgentParser:
                     b"<<<a_section>>>",
                     b"first line",
                     b"second line",
-                    b"<<<>>>",
+                    b"<<<>>>",  # ignored
                     b"<<<another_section>>>",
                     b"first line",
                     b"second line",
-                    b"<<<>>>",
                 )
             )
         )
@@ -142,22 +141,18 @@ class TestAgentParser:
                     b"<<<a_section>>>",
                     b"first line",
                     b"second line",
-                    b"<<<>>>",
                     b"<<<another_section>>>",
                     b"a line",
                     b"b line",
                     b"<<<a_section>>>",
                     b"third line",
                     b"forth line",
-                    b"<<<>>>",
                     b"<<<another_section>>>",
                     b"c line",
                     b"d line",
-                    b"<<<>>>",
                     b"<<<a_section:sep(124)>>>",
                     b"fifth|line",
                     b"sixth|line",
-                    b"<<<>>>",
                 )
             )
         )
@@ -178,6 +173,35 @@ class TestAgentParser:
                 ["c", "line"],
                 ["d", "line"],
             ],
+        }
+        assert ahs.cache_info == {}
+        assert ahs.piggybacked_raw_data == {}
+        assert store.load() == {}
+
+    def test_nameless_sections_are_skipped(self, parser, store):
+        raw_data = AgentRawData(
+            b"\n".join(
+                (
+                    b"<<<a_section>>>",
+                    b"a first line",
+                    b"a second line",
+                    b"<<<:cached(10, 5)>>>",
+                    b"ignored first line",
+                    b"ignored second line",
+                    b"<<<b_section>>>",
+                    b"b first line",
+                    b"b second line",
+                    b"<<<>>>",
+                    b"ignored third line",
+                    b"ignored forth line",
+                )
+            )
+        )
+
+        ahs = parser.parse(raw_data, selection=NO_SELECTION)
+        assert ahs.sections == {
+            SectionName("a_section"): [["a", "first", "line"], ["a", "second", "line"]],
+            SectionName("b_section"): [["b", "first", "line"], ["b", "second", "line"]],
         }
         assert ahs.cache_info == {}
         assert ahs.piggybacked_raw_data == {}

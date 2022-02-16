@@ -74,7 +74,8 @@ class SectionMarker(NamedTuple):
 
     @staticmethod
     def is_footer(line: bytes) -> bool:
-        return line.strip() == b"<<<>>>"
+        # No footer.
+        return False
 
     @classmethod
     def default(cls, name: SectionName):

@@ -585,10 +585,10 @@ def _parse_history_file(
         cmd += " | egrep -i -e %s" % quote_shell_string(".*".join(greptexts))
     with subprocess.Popen(
         cmd,
-        shell=True,
+        shell=True,  # nosec
         close_fds=True,
         stdout=subprocess.PIPE,
-    ) as grep:  # nosec
+    ) as grep:
         if grep.stdout is None:
             raise Exception("Huh? stdout vanished...")
 

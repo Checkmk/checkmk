@@ -4771,7 +4771,7 @@ class Optional(ValueSpec):
             self._valuespec.validate_value(value, varprefix + "_value")
 
     def transform_value(self, value):
-        return self._valuespec.transform_value(value)
+        return value if value == self._none_value else self._valuespec.transform_value(value)
 
     def has_show_more(self) -> bool:
         return self._valuespec.has_show_more()

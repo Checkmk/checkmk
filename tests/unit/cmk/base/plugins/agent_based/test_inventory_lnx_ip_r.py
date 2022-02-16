@@ -66,6 +66,25 @@ from cmk.base.plugins.agent_based.inventory_lnx_ip_r import inventory_lnx_ip_r, 
                 ),
             ],
         ),
+        (
+            [
+                ["ident", "1.2.3.0/26", "proto", "bird"],
+            ],
+            [
+                TableRow(
+                    path=["networking", "routes"],
+                    key_columns={
+                        "target": "ident",
+                        "gateway": None,
+                    },
+                    inventory_columns={
+                        "type": None,
+                        "device": None,
+                    },
+                    status_columns={},
+                ),
+            ],
+        ),
     ],
 )
 def test_lnx_ip_r(string_table, expected_result):

@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
-from typing import Mapping
+from typing import Mapping, Optional, Union
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import register, Result, Service, State
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
@@ -13,7 +13,11 @@ from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
     DiscoveryResult,
     StringTable,
 )
-from cmk.base.plugins.agent_based.utils.kube import NodeConditions
+from cmk.base.plugins.agent_based.utils.kube import (
+    FalsyNodeCondition,
+    NodeConditions,
+    TruthyNodeCondition,
+)
 
 
 def parse(string_table: StringTable) -> NodeConditions:
@@ -26,6 +30,7 @@ def discovery(section: NodeConditions) -> DiscoveryResult:
 
 
 def check(params: Mapping[str, int], section: NodeConditions) -> CheckResult:
+    cond: Union[Optional[FalsyNodeCondition], FalsyNodeCondition, TruthyNodeCondition] = None
     if all(cond and cond.is_ok() for _, cond in section):
         details = "\n".join(
             f"{name.upper()}: {cond.status} ({cond.reason}: {cond.detail})"
@@ -34,13 +39,19 @@ def check(params: Mapping[str, int], section: NodeConditions) -> CheckResult:
         yield Result(state=State.OK, summary="Ready, all conditions passed", details=details)
         return
     for name, cond in section:
-        state = State.OK
-        summary = f"{name.upper()}: {cond.status}"
-        details = f"{summary} ({cond.reason}: {cond.detail})"
-        if not cond or not cond.is_ok():
-            state = State(params[name])
-            summary = details
-        yield Result(state=state, summary=summary, details=details)
+        if cond and cond.is_ok():
+            yield Result(
+                state=State.OK,
+                summary=f"{name.upper()}: {cond.status}",
+                details=f"{name.upper()}: {cond.status} ({cond.reason}: {cond.detail})",
+            )
+        elif cond is None:
+            yield Result(state=State(params[name]), summary=f"{name.upper()}: not available")
+        else:
+            yield Result(
+                state=State(params[name]),
+                summary=f"{name.upper()}: {cond.status} ({cond.reason}: {cond.detail})",
+            )
 
 
 register.agent_section(

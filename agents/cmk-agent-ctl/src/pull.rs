@@ -93,14 +93,15 @@ pub fn pull(
     let collect_plain_mondata = monitoring_data::async_collect;
     // Compressed monitoring data with internal protocol handler
     let collect_encoded_mondata = collect_and_encode_mondata;
+    let addr = format!("0.0.0.0:{}", port);
     _pull(
         pull_config,
         guard,
         collect_plain_mondata,
         collect_encoded_mondata,
-        "0.0.0.0",
-        &port,
+        &addr,
         constants::CONNECTION_TIMEOUT,
+        &allowed_ip,
     )
 }
 
@@ -110,17 +111,17 @@ pub async fn _pull<Fut1, Fut2>(
     mut guard: MaxConnectionsGuard,
     collect_plain_mondata: impl Fn() -> Fut1,
     collect_encoded_mondata: impl Fn() -> Fut2,
-    ipmask: &str,
-    port: &str,
+    addr: &str,
     timeout: u64,
+    allowed_ip: &[String],
 ) -> AnyhowResult<()>
 where
     // TODO: Unify these two types. However, they must still be
-    // specified seperately as they are two seperate opaque types for the Rust compiler.
+    // specified seper ately as they are two seperate opaque types for the Rust compiler.
     Fut1: Future<Output = IoResult<Vec<u8>>> + Send + 'static,
     Fut2: Future<Output = AnyhowResult<Vec<u8>>> + Send + 'static,
 {
-    let listener = TcpListener::bind(format!("{}:{}", ipmask, port)).await?;
+    let listener = TcpListener::bind(addr).await?;
 
     loop {
         let (stream, addr) = listener
@@ -130,7 +131,7 @@ where
         info!("{}: Handling pull request", addr);
 
         pull_config.refresh()?;
-        if !is_addr_allowed(&addr, &allowed_ip) {
+        if !is_addr_allowed(&addr, allowed_ip) {
             warn!("PULL: Request from {} is not allowed", addr);
             continue;
         }

@@ -59,7 +59,7 @@ define __spec_install_pre %{___build_pre} &&\
 /var/lib/cmk-agent/scripts/super-server/setup deploy
 
 if [ "$(/var/lib/cmk-agent/scripts/super-server/setup getdeployed)" = "systemd" ]; then
-    if [ "$1" = "upgrade" ] || [ "$1" -ge 2 ] 2>/dev/null; then
+    if { [ "$1" = "configure" ] && [ -n "$2" ]; } || [ "$1" -ge 2 ] 2>/dev/null; then
         /var/lib/cmk-agent/scripts/cmk-agent-useradd.sh upgrade
     else
         /var/lib/cmk-agent/scripts/cmk-agent-useradd.sh new

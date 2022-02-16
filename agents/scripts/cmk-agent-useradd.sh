@@ -15,7 +15,7 @@ HERE
 
 _allow_legacy_pull() {
     cat >"${HOMEDIR}/allow-legacy-pull" <<HERE
-This file has been placed as a marker for cmk-agent-ct
+This file has been placed as a marker for cmk-agent-ctl
 to allow unencrypted legacy agent pull mode.
 It will be removed automatically on first successful agent registration.
 You can remove it manually to disallow legacy mode, but note that
@@ -30,7 +30,7 @@ main() {
     esac
 
     # add cmk-agent system user
-    echo "Creating/updating cmk-agent user account..."
+    echo "Creating/updating cmk-agent user account ($1) ..."
     comment="Checkmk agent system user"
     usershell="/bin/false"
 

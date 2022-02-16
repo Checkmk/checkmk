@@ -57,7 +57,6 @@ define __spec_install_pre %{___build_pre} &&\
 
 /var/lib/cmk-agent/scripts/super-server/setup cleanup
 /var/lib/cmk-agent/scripts/super-server/setup deploy
-/var/lib/cmk-agent/scripts/super-server/setup trigger
 
 if [ "$(/var/lib/cmk-agent/scripts/super-server/setup getdeployed)" = "systemd" ]; then
     if [ "$1" = "upgrade" ] || [ "$1" -ge 2 ] 2>/dev/null; then
@@ -66,6 +65,8 @@ if [ "$(/var/lib/cmk-agent/scripts/super-server/setup getdeployed)" = "systemd" 
         /var/lib/cmk-agent/scripts/cmk-agent-useradd.sh new
     fi
 fi
+
+/var/lib/cmk-agent/scripts/super-server/setup trigger
 
 %preun
 

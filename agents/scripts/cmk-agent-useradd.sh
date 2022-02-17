@@ -52,6 +52,7 @@ main() {
             --system \
             --home-dir "${HOMEDIR}" \
             --no-create-home \
+            --user-group \
             --shell "${usershell}" \
             "cmk-agent" || exit 1
         user_is_new="yes"

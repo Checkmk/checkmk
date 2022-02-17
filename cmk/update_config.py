@@ -37,10 +37,14 @@ from typing import (
     Tuple,
 )
 
+from cryptography import x509
+
 import cmk.utils
+import cmk.utils.certs as certs
 import cmk.utils.debug
 import cmk.utils.log as log
 import cmk.utils.paths
+import cmk.utils.site
 import cmk.utils.tty as tty
 from cmk.utils import password_store
 from cmk.utils.bi.bi_legacy_config_converter import BILegacyPacksConverter
@@ -262,6 +266,7 @@ class UpdateConfig:
                 self._rewrite_servicenow_notification_config,
                 "Rewriting notification configuration for ServiceNow",
             ),
+            (self._renew_site_cert, "Renewing certificates without server name extension"),
             (self._add_site_ca_to_trusted_cas, "Adding site CA to trusted CAs"),
         ]
 
@@ -1432,6 +1437,35 @@ class UpdateConfig:
             notification_rules[index]["notify_plugin"] = (plugin_name, params)
 
         save_notification_rules(notification_rules)
+
+    def _renew_site_cert(self) -> None:
+        try:
+            cert, _priv = certs.load_cert_and_private_key(cmk.utils.paths.site_cert_file)
+        except OSError as exc:
+            self._logger.warning(f"Unable to load site certificate: {exc}")
+            return
+
+        if any(isinstance(e.value, x509.SubjectAlternativeName) for e in cert.extensions):
+            self._logger.log(VERBOSE, "Skipping (nothing to do)")
+            return
+
+        root_ca_path = certs.root_cert_path(certs.cert_dir(Path(cmk.utils.paths.omd_root)))
+        try:
+            root_ca = certs.RootCA.load(root_ca_path)
+        except OSError as exc:
+            self._logger.warning(f"Unable to load root CA: {exc}")
+            return
+
+        bak = Path(f"{cmk.utils.paths.site_cert_file}.bak")
+        self._logger.log(VERBOSE, f"Copy certificate to {bak}...")
+        bak.write_bytes(cmk.utils.paths.site_cert_file.read_bytes())
+
+        self._logger.log(VERBOSE, "Creating new certificate...")
+        root_ca.save_new_signed_cert(
+            cmk.utils.paths.site_cert_file,
+            cmk.utils.site.omd_site(),
+            days_valid=999 * 365,
+        )
 
     def _add_site_ca_to_trusted_cas(self) -> None:
         site_ca = (

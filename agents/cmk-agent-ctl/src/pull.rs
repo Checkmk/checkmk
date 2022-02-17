@@ -210,13 +210,7 @@ impl PullConfiguration for PullConfigurationImpl {
 }
 
 fn is_legacy_pull(registry: &config::Registry, legacy_pull_marker: &std::path::Path) -> bool {
-    if legacy_pull_marker.exists() {
-        return false;
-    }
-    if !registry.is_empty() {
-        return false;
-    }
-    true
+    legacy_pull_marker.exists() && registry.is_empty()
 }
 
 async fn handle_request(

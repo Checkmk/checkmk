@@ -1365,7 +1365,7 @@ msgstr ""
 msgid ""
 "<p>Here you can specify a list of filename patterns to be sent by the agent "
 "in the section <tt>fileinfo</tt>. UNC paths with globbing patterns are used "
-"here, e.g. <tt>\\\\hostname\\share name\\**\\foo\\*.log</tt>. Wildcards are "
+"here, e.g. <tt>\\\\hostname\\share name\\*\\foo\\*.log</tt>. Wildcards are "
 "not allowed in host or share names. Per default each found file will be "
 "monitored for size and age. By building groups you can alternatively monitor "
 "a collection of files as an entity and monitor the count, total size, the "
@@ -8324,9 +8324,11 @@ msgstr "Nivelurile maxime pentru voltaj"
 msgid "Checkmk config filename"
 msgstr "Activare Configurare"
 
-#, python-format
-msgid "Checkmk exception: %s"
-msgstr ""
+#, fuzzy, python-format
+msgid ""
+"Checkmk exception: %s\n"
+"%s"
+msgstr "Perioada de timp Noua"
 
 #, fuzzy
 msgid "Checkmk fetcher usage"
@@ -9751,6 +9753,10 @@ msgstr ""
 
 #, fuzzy
 msgid "Connect timeout"
+msgstr "Conexiune Noua"
+
+#, fuzzy
+msgid "Connect timeout (seconds)"
 msgstr "Conexiune Noua"
 
 msgid "Connect timeout to status socket of Event Console"
@@ -12359,6 +12365,22 @@ msgstr "Nivel-urile absolute de licențe neutilizate"
 msgid "Define lower levels for free pods (clusters and nodes only)"
 msgstr "Numarul maxim de conexiuni"
 
+#, fuzzy
+msgid "Define lower levels for number of running containers"
+msgstr "Numarul maxim de conexiuni"
+
+#, fuzzy
+msgid "Define lower levels for number of terminated containers"
+msgstr "Numarul maxim de conexiuni"
+
+#, fuzzy
+msgid "Define lower levels for number of total containers"
+msgstr "Nivel-urile absolute de licențe neutilizate"
+
+#, fuzzy
+msgid "Define lower levels for number of waiting containers"
+msgstr "Numarul maxim de conexiuni"
+
 msgid ""
 "Define patterns for excluding kernel configuration parameters from the "
 "inventory."
@@ -12368,6 +12390,22 @@ msgid ""
 "Define patterns for including kernel configuration parameters in the "
 "inventory."
 msgstr ""
+
+#, fuzzy
+msgid "Define upper levels for number of running containers"
+msgstr "Nivel-urile absolute de licențe neutilizate"
+
+#, fuzzy
+msgid "Define upper levels for number of terminated containers"
+msgstr "Numarul maxim de conexiuni"
+
+#, fuzzy
+msgid "Define upper levels for number of total containers"
+msgstr "Nivel-urile absolute de licențe neutilizate"
+
+#, fuzzy
+msgid "Define upper levels for number of waiting containers"
+msgstr "Nivel-urile absolute de licențe neutilizate"
 
 msgid ""
 "Define which monitoring state maps which input state. This applies for every "
@@ -18971,6 +19009,10 @@ msgstr ""
 #, python-format
 msgid "Global settings matching '%s'"
 msgstr ""
+
+#, fuzzy
+msgid "GlobalProtect Utilization"
+msgstr "Dezactiveaza Notificarile"
 
 #, fuzzy
 msgid "Globally enforced"
@@ -28897,6 +28939,27 @@ msgstr " pe siteul de monitorizare: "
 msgid "Monitoring state if task is not enabled"
 msgstr ""
 
+msgid ""
+"Monitoring state if the DISKPRESSURE condition is faulty or not available"
+msgstr ""
+
+msgid ""
+"Monitoring state if the MEMORYPRESSURE condition is faulty or not available"
+msgstr ""
+
+msgid ""
+"Monitoring state if the NETWORKUNAVAILABLE condition is faulty or not "
+"available"
+msgstr ""
+
+msgid ""
+"Monitoring state if the PIDPRESSURE condition is faulty or not available"
+msgstr ""
+
+#, fuzzy
+msgid "Monitoring state if the READY condition is faulty or not available"
+msgstr " pe siteul de monitorizare: "
+
 #, fuzzy
 msgid "Monitoring state if the wrong unit is active/standby"
 msgstr " pe siteul de monitorizare: "
@@ -30294,6 +30357,10 @@ msgid "Node Status"
 msgstr "Statusul Serverului"
 
 #, fuzzy
+msgid "Node conditions"
+msgstr "(fără condiții)"
+
+#, fuzzy
 msgid "Node name"
 msgstr "Nume nou"
 
@@ -30946,6 +31013,10 @@ msgstr ""
 msgid "Number of active sessions"
 msgstr ""
 
+#, fuzzy
+msgid "Number of active tunnels"
+msgstr "Numarul maxim de mesaje"
+
 #, python-format
 msgid "Number of agents that have registered for updates: %d"
 msgstr ""
@@ -31250,12 +31321,16 @@ msgid "Number of retries (not counting the initial regular run)"
 msgstr ""
 
 #, fuzzy
-msgid "Number of running containers"
-msgstr "Numarul maxim de conexiuni"
-
-#, fuzzy
 msgid "Number of search results"
 msgstr "Numarul maxim de mesaje"
+
+#, fuzzy
+msgid "Number of seconds to wait for a TCP connection"
+msgstr "Numarul maxim de conexiuni"
+
+msgid ""
+"Number of seconds to wait for a response from the API during a TCP connection"
+msgstr ""
 
 msgid "Number of send packets per report"
 msgstr ""
@@ -31351,10 +31426,6 @@ msgstr "Numarul maxim de mesaje"
 msgid "Number of tables"
 msgstr "Numarul maxim de mesaje"
 
-#, fuzzy
-msgid "Number of terminated containers"
-msgstr "Numarul maxim de conexiuni"
-
 msgid "Number of the Rack"
 msgstr ""
 
@@ -31372,10 +31443,6 @@ msgstr ""
 
 msgid "Number of total and running sessions"
 msgstr ""
-
-#, fuzzy
-msgid "Number of total containers"
-msgstr "Numarul maxim de conexiuni"
 
 msgid "Number of unassigned shards"
 msgstr ""
@@ -31407,10 +31474,6 @@ msgstr ""
 #, fuzzy
 msgid "Number of users"
 msgstr "Numarul maxim de mesaje"
-
-#, fuzzy
-msgid "Number of waiting containers"
-msgstr "Numarul maxim de conexiuni"
 
 msgid "Number of warnings"
 msgstr ""
@@ -34244,6 +34307,9 @@ msgstr ""
 msgid "Pods"
 msgstr ""
 
+msgid "Pods of CronJobs"
+msgstr ""
+
 msgid "Point-to-site bandwidth"
 msgstr ""
 
@@ -35508,6 +35574,10 @@ msgstr ""
 #, fuzzy
 msgid "Read throughput per second"
 msgstr "cereri/sec"
+
+#, fuzzy
+msgid "Read timeout (seconds)"
+msgstr "Nume tablespace"
 
 #, fuzzy
 msgid "Read wait"
@@ -37216,6 +37286,10 @@ msgstr ""
 msgid "Ruleset"
 msgstr ""
 
+#, fuzzy
+msgid "Ruleset name"
+msgstr "Nume nou"
+
 msgid "Rulesets"
 msgstr "Reguli"
 
@@ -38293,7 +38367,13 @@ msgstr "(selectează directorul)"
 msgid "Select specific object type"
 msgstr ""
 
-msgid "Select the Kubernetes objects you would like to monitor."
+msgid ""
+"Select the Kubernetes objects you would like to monitor. Pods controlled by "
+"CronJobs are treated separately as they are usually quite short lived. Those "
+"pods will be monitored in the same manner as regular pods. Your Dynamic host "
+"management rule should be configured accordingly to avoid that the piggyback "
+"hosts for terminated CronJob pods are kept for too long. This 'Pods of "
+"CronJobs' option has no effect if Pods are not monitored"
 msgstr ""
 
 msgid ""
@@ -42967,6 +43047,10 @@ msgstr "Numar port TCP pentru conexiune. Deobicei 139 sau 445."
 msgid "TCP port of Carbon line receiver"
 msgstr "Portul TCP pentru conexiune"
 
+#, fuzzy
+msgid "TCP timeouts"
+msgstr "Conexiune Noua"
+
 msgid "TCP-Port for Listener"
 msgstr "TCP-Port pentru Listener"
 
@@ -43985,6 +44069,14 @@ msgstr ""
 msgid ""
 "The age, in seconds, when the last message was retrieved from the queue. "
 "Calculated by subtracting LGETDATE/LGETTIME from current timestamp."
+msgstr ""
+
+msgid ""
+"The agent controller provides a safe channel for the communication between "
+"the monitoring site and the agent. It also provides the possibility to push "
+"monitoring data to the site (if applicable in your Checkmk edition). You may "
+"disable the controller if you experience problems with the controller. In "
+"this case, the Windows agent will work in legacy pull mode. "
 msgstr ""
 
 msgid ""
@@ -45988,6 +46080,11 @@ msgstr ""
 msgid "The ruleset \"%s\" does not exist."
 msgstr "Un utilizator cu id-ul \"%s\" nu există."
 
+msgid ""
+"The ruleset name is used to identify the ruleset within Checkmk. You may "
+"need it when working with the rule and ruleset related REST API calls."
+msgstr ""
+
 msgid "The schedule you are trying to clone does not exist."
 msgstr ""
 
@@ -46524,6 +46621,9 @@ msgstr ""
 msgid "The value for %s must be between %d and %d"
 msgstr ""
 
+msgid "The value is not of type dict."
+msgstr ""
+
 #, python-format
 msgid "The value must be of type dict, but it has type %s"
 msgstr ""
@@ -46786,6 +46886,12 @@ msgid ""
 "rule in the rule set <i>Disabled services</i> or <i>Disabled checks</i>."
 msgstr ""
 
+#, python-format
+msgid ""
+"These services are mapped to a cluster host by a rule in one of the rulesets "
+"<i>%s</i> or <i>%s</i>."
+msgstr ""
+
 msgid ""
 "These services do not use the Check_MK agent or Check_MK-SNMP engine but "
 "actively call a classical check plugin, that you have installed yourself."
@@ -46852,24 +46958,6 @@ msgid ""
 msgstr ""
 
 msgid ""
-"These services have been found on this host and have been mapped to a "
-"cluster host by a rule in the set <i>Clustered services</i> but disappeared "
-"from this host."
-msgstr ""
-
-msgid ""
-"These services have been found on this host and have been mapped to a "
-"cluster host by a rule in the set <i>Clustered services</i>, but are not yet "
-"added to the active monitoring. Please either add them or permanently "
-"disable them."
-msgstr ""
-
-msgid ""
-"These services have been found on this host but have been mapped to a "
-"cluster host by a rule in the set <i>Clustered services</i>."
-msgstr ""
-
-msgid ""
 "These services have not been found by the discovery but have been added "
 "manually by a Setup rule <i>Enforced services</i>."
 msgstr ""
@@ -46912,6 +47000,14 @@ msgstr ""
 msgid ""
 "These values can be configured in the <a href=\"%s\">subscription "
 "settings<a>."
+msgstr ""
+
+msgid "They appear to be new to this node, but may still be already monitored."
+msgstr ""
+
+msgid ""
+"They have been found on this host previously, but have now disappeared. Note "
+"that they may still be monitored on the cluster."
 msgstr ""
 
 #, fuzzy, python-format
@@ -52316,6 +52412,9 @@ msgstr ""
 msgid "Use Classic SNMP Backend"
 msgstr ""
 
+msgid "Use Controller"
+msgstr ""
+
 msgid "Use DNS lookup cache"
 msgstr ""
 
@@ -52436,6 +52535,9 @@ msgid "Use a namespace prefix"
 msgstr ""
 
 msgid "Use absolute width:"
+msgstr ""
+
+msgid "Use agent controller for Windows to provide TLS encrypted communication"
 msgstr ""
 
 #, fuzzy
@@ -53297,6 +53399,10 @@ msgid ""
 "Usually the check goes to WARN if a VM or host is powered off and OK "
 "otherwise. You can change this behaviour on a per-state-basis here."
 msgstr ""
+
+#, fuzzy
+msgid "Utilization"
+msgstr "Dezactiveaza Notificarile"
 
 msgid "V"
 msgstr ""
@@ -55076,6 +55182,10 @@ msgstr ""
 #, fuzzy
 msgid "Windows WMI Timeout"
 msgstr "(fără Nivel de serviciu)"
+
+#, fuzzy
+msgid "Windows agent controller"
+msgstr "trimite notificare"
 
 #, fuzzy
 msgid "Windows authentication"
@@ -58886,6 +58996,14 @@ msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr ""
 
 #, fuzzy
+#~ msgid "Number of total containers"
+#~ msgstr "Numarul maxim de conexiuni"
+
+#, fuzzy
+#~ msgid "Number of waiting containers"
+#~ msgstr "Numarul maxim de conexiuni"
+
+#, fuzzy
 #~ msgid "Define lower levels for free pods (nodes only)"
 #~ msgstr "Numarul maxim de conexiuni"
 
@@ -58984,10 +59102,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Organisation"
 #~ msgstr "Numele Aplicatiei"
-
-#, fuzzy
-#~ msgid "CPU Utilization"
-#~ msgstr "Dezactiveaza Notificarile"
 
 #, fuzzy
 #~ msgid "Container memory"
@@ -59746,10 +59860,6 @@ msgstr ""
 
 #, fuzzy
 #~ msgid "Number of Web ACLs"
-#~ msgstr "Numarul maxim de mesaje"
-
-#, fuzzy
-#~ msgid "Number of archives"
 #~ msgstr "Numarul maxim de mesaje"
 
 #, fuzzy

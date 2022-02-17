@@ -1384,7 +1384,7 @@ msgstr ""
 msgid ""
 "<p>Here you can specify a list of filename patterns to be sent by the agent "
 "in the section <tt>fileinfo</tt>. UNC paths with globbing patterns are used "
-"here, e.g. <tt>\\\\hostname\\share name\\**\\foo\\*.log</tt>. Wildcards are "
+"here, e.g. <tt>\\\\hostname\\share name\\*\\foo\\*.log</tt>. Wildcards are "
 "not allowed in host or share names. Per default each found file will be "
 "monitored for size and age. By building groups you can alternatively monitor "
 "a collection of files as an entity and monitor the count, total size, the "
@@ -8525,8 +8525,10 @@ msgstr "Checkmkチェッカーの使用法"
 msgid "Checkmk config filename"
 msgstr "Checkmk設定ファイル名"
 
-#, python-format
-msgid "Checkmk exception: %s"
+#, fuzzy, python-format
+msgid ""
+"Checkmk exception: %s\n"
+"%s"
 msgstr "Checkmk例外:%s"
 
 msgid "Checkmk fetcher usage"
@@ -10011,6 +10013,10 @@ msgstr "Livestatusプロキシなしで直接接続する"
 
 msgid "Connect timeout"
 msgstr "接続タイムアウト"
+
+#, fuzzy
+msgid "Connect timeout (seconds)"
+msgstr "秒単位の接続タイムアウト"
 
 msgid "Connect timeout to status socket of Event Console"
 msgstr "タイムアウトをイベントコンソールのステータスソケットに接続します"
@@ -12483,6 +12489,22 @@ msgstr ""
 msgid "Define lower levels for free pods (clusters and nodes only)"
 msgstr "コンテナの数"
 
+#, fuzzy
+msgid "Define lower levels for number of running containers"
+msgstr "コンテナの数"
+
+#, fuzzy
+msgid "Define lower levels for number of terminated containers"
+msgstr "コンテナの数"
+
+#, fuzzy
+msgid "Define lower levels for number of total containers"
+msgstr "アラート数の上位レベル"
+
+#, fuzzy
+msgid "Define lower levels for number of waiting containers"
+msgstr "Point-to-site接続の数の下位レベル"
+
 msgid ""
 "Define patterns for excluding kernel configuration parameters from the "
 "inventory."
@@ -12495,6 +12517,22 @@ msgid ""
 "inventory."
 msgstr ""
 "カーネル構成パラメーターをインベントリに含めるためのパターンを定義します。"
+
+#, fuzzy
+msgid "Define upper levels for number of running containers"
+msgstr "アラート数の上位レベル"
+
+#, fuzzy
+msgid "Define upper levels for number of terminated containers"
+msgstr "コンテナの数"
+
+#, fuzzy
+msgid "Define upper levels for number of total containers"
+msgstr "アラート数の上位レベル"
+
+#, fuzzy
+msgid "Define upper levels for number of waiting containers"
+msgstr "アラート数の上位レベル"
 
 msgid ""
 "Define which monitoring state maps which input state. This applies for every "
@@ -19010,6 +19048,10 @@ msgstr "Checkmk、マルチサイト、およびモニタリングコアのグ�
 #, python-format
 msgid "Global settings matching '%s'"
 msgstr "グローバル設定'%s'に一致する"
+
+#, fuzzy
+msgid "GlobalProtect Utilization"
+msgstr "ストレージプロセッサの使用率"
 
 msgid "Globally enforced"
 msgstr "グローバルに施行"
@@ -29213,6 +29255,27 @@ msgstr "サービスが非アクティブ場合、状態を監視する"
 msgid "Monitoring state if task is not enabled"
 msgstr "タスクが有効になっていない場合の状態の監視"
 
+msgid ""
+"Monitoring state if the DISKPRESSURE condition is faulty or not available"
+msgstr ""
+
+msgid ""
+"Monitoring state if the MEMORYPRESSURE condition is faulty or not available"
+msgstr ""
+
+msgid ""
+"Monitoring state if the NETWORKUNAVAILABLE condition is faulty or not "
+"available"
+msgstr ""
+
+msgid ""
+"Monitoring state if the PIDPRESSURE condition is faulty or not available"
+msgstr ""
+
+#, fuzzy
+msgid "Monitoring state if the READY condition is faulty or not available"
+msgstr "タスクが有効になっていない場合の状態の監視"
+
 msgid "Monitoring state if the wrong unit is active/standby"
 msgstr ""
 
@@ -30546,6 +30609,10 @@ msgstr "ノード統計"
 msgid "Node Status"
 msgstr "ノードステータス"
 
+#, fuzzy
+msgid "Node conditions"
+msgstr "条件なし"
+
 msgid "Node name"
 msgstr "ノード名"
 
@@ -31206,6 +31273,10 @@ msgstr "アクティブなパスの数"
 msgid "Number of active sessions"
 msgstr "アクティブなセッションの数"
 
+#, fuzzy
+msgid "Number of active tunnels"
+msgstr "アクティブなプラグの数"
+
 #, python-format
 msgid "Number of agents that have registered for updates: %d"
 msgstr "更新に登録したエージェントの数: %d"
@@ -31483,12 +31554,16 @@ msgstr "再試行回数"
 msgid "Number of retries (not counting the initial regular run)"
 msgstr "再試行回数(最初の通常の実行はカウントされません)"
 
-#, fuzzy
-msgid "Number of running containers"
-msgstr "コンテナの数"
-
 msgid "Number of search results"
 msgstr "検索結果の数"
+
+#, fuzzy
+msgid "Number of seconds to wait for a TCP connection"
+msgstr "現在の接続数"
+
+msgid ""
+"Number of seconds to wait for a response from the API during a TCP connection"
+msgstr ""
 
 msgid "Number of send packets per report"
 msgstr "レポートごとの送信パケット数"
@@ -31580,10 +31655,6 @@ msgstr "スタックしたタスクの数"
 msgid "Number of tables"
 msgstr "テーブルの数"
 
-#, fuzzy
-msgid "Number of terminated containers"
-msgstr "コンテナの数"
-
 msgid "Number of the Rack"
 msgstr "ラックの数"
 
@@ -31601,10 +31672,6 @@ msgstr "RRDファイルの書き込みに使用されるスレッドの数"
 
 msgid "Number of total and running sessions"
 msgstr "合計と実行中のセッション数"
-
-#, fuzzy
-msgid "Number of total containers"
-msgstr "コンテナの数"
 
 msgid "Number of unassigned shards"
 msgstr "割り当てられていないシャードの数"
@@ -31632,10 +31699,6 @@ msgstr "OpenBSD PFエンジンの使用状態の数"
 
 msgid "Number of users"
 msgstr "ユーザー数"
-
-#, fuzzy
-msgid "Number of waiting containers"
-msgstr "コンテナの数"
 
 msgid "Number of warnings"
 msgstr "警告の数"
@@ -34493,6 +34556,9 @@ msgstr "Podリソース"
 msgid "Pods"
 msgstr "Pod"
 
+msgid "Pods of CronJobs"
+msgstr ""
+
 msgid "Point-to-site bandwidth"
 msgstr "ポイントツーサイト帯域幅"
 
@@ -35676,6 +35742,10 @@ msgstr "読み取りスループット"
 
 msgid "Read throughput per second"
 msgstr "1秒あたりのスループットを読み取る"
+
+#, fuzzy
+msgid "Read timeout (seconds)"
+msgstr "アイドルタイムアウト"
 
 msgid "Read wait"
 msgstr "読む待機"
@@ -37340,6 +37410,10 @@ msgstr ""
 msgid "Ruleset"
 msgstr "ルールセット"
 
+#, fuzzy
+msgid "Ruleset name"
+msgstr "ルールセット"
+
 msgid "Rulesets"
 msgstr "ルールセット"
 
@@ -38380,9 +38454,14 @@ msgstr "サウンドを選択"
 msgid "Select specific object type"
 msgstr "特定のオブジェクトタイプを選択します"
 
-#, fuzzy
-msgid "Select the Kubernetes objects you would like to monitor."
-msgstr "表示したサイドバー要素を選択します。"
+msgid ""
+"Select the Kubernetes objects you would like to monitor. Pods controlled by "
+"CronJobs are treated separately as they are usually quite short lived. Those "
+"pods will be monitored in the same manner as regular pods. Your Dynamic host "
+"management rule should be configured accordingly to avoid that the piggyback "
+"hosts for terminated CronJob pods are kept for too long. This 'Pods of "
+"CronJobs' option has no effect if Pods are not monitored"
+msgstr ""
 
 msgid ""
 "Select the LDAP version the LDAP server is serving. Most modern servers use "
@@ -43042,6 +43121,10 @@ msgstr "接続するTCPポート番号。通常、139または445のいずれか
 msgid "TCP port of Carbon line receiver"
 msgstr "カーボンラインレシーバーのTCPポート"
 
+#, fuzzy
+msgid "TCP timeouts"
+msgstr "CTIOタイムアウト"
+
 msgid "TCP-Port for Listener"
 msgstr "リスナーのTCPポート"
 
@@ -44221,6 +44304,14 @@ msgid ""
 msgstr ""
 "最後のメッセージがキューから取得された経過時間(秒単位)。現在のタイムスタンプ"
 "からLGETDATE/LGETTIMEを引くことによって計算されます。"
+
+msgid ""
+"The agent controller provides a safe channel for the communication between "
+"the monitoring site and the agent. It also provides the possibility to push "
+"monitoring data to the site (if applicable in your Checkmk edition). You may "
+"disable the controller if you experience problems with the controller. In "
+"this case, the Windows agent will work in legacy pull mode. "
+msgstr ""
 
 msgid ""
 "The agent plugin <tt>mk_filestats</tt> monitors a configured set of files "
@@ -46535,6 +46626,11 @@ msgstr ""
 msgid "The ruleset \"%s\" does not exist."
 msgstr "ルールセット \"%s\" は存在しません。"
 
+msgid ""
+"The ruleset name is used to identify the ruleset within Checkmk. You may "
+"need it when working with the rule and ruleset related REST API calls."
+msgstr ""
+
 msgid "The schedule you are trying to clone does not exist."
 msgstr ""
 
@@ -47156,6 +47252,10 @@ msgstr "値%rの型は%sですが、型はintである必要があります"
 msgid "The value for %s must be between %d and %d"
 msgstr "%sの値は%dから%dの間でなければなりません"
 
+#, fuzzy
+msgid "The value is not of type dict."
+msgstr "値はdict型である必要がありますが、%s型です。"
+
 #, python-format
 msgid "The value must be of type dict, but it has type %s"
 msgstr "値はdict型である必要がありますが、%s型です。"
@@ -47485,6 +47585,14 @@ msgstr ""
 "これらのサービスは検出されていますが、ルールセット<i>無効なサービス</i>または"
 "<i>無効なチェック</i>でルールを作成することにより無効になっています。"
 
+#, fuzzy, python-format
+msgid ""
+"These services are mapped to a cluster host by a rule in one of the rulesets "
+"<i>%s</i> or <i>%s</i>."
+msgstr ""
+"これらのサービスはこのホストで見つかりましたが、セット<i>クラスター化された"
+"サービス</ i>のルールによってクラスターホストにマップされています。"
+
 msgid ""
 "These services do not use the Check_MK agent or Check_MK-SNMP engine but "
 "actively call a classical check plugin, that you have installed yourself."
@@ -47571,32 +47679,6 @@ msgid ""
 msgstr ""
 
 msgid ""
-"These services have been found on this host and have been mapped to a "
-"cluster host by a rule in the set <i>Clustered services</i> but disappeared "
-"from this host."
-msgstr ""
-"これらのサービスはこのホストで検出され、セット<i>クラスター化されたサービス</"
-"i>のルールによってクラスターホストにマップされましたが、このホストから消えま"
-"した。"
-
-msgid ""
-"These services have been found on this host and have been mapped to a "
-"cluster host by a rule in the set <i>Clustered services</i>, but are not yet "
-"added to the active monitoring. Please either add them or permanently "
-"disable them."
-msgstr ""
-"これらのサービスはこのホストで検出され、セット<i>クラスター化サービス</i>の"
-"ルールによってクラスターホストにマップされていますが、アクティブな監視にはま"
-"だ追加されていません。それらを追加するか、完全に無効にしてください。"
-
-msgid ""
-"These services have been found on this host but have been mapped to a "
-"cluster host by a rule in the set <i>Clustered services</i>."
-msgstr ""
-"これらのサービスはこのホストで見つかりましたが、セット<i>クラスター化された"
-"サービス</ i>のルールによってクラスターホストにマップされています。"
-
-msgid ""
 "These services have not been found by the discovery but have been added "
 "manually by a Setup rule <i>Enforced services</i>."
 msgstr ""
@@ -47658,6 +47740,17 @@ msgid ""
 "settings<a>."
 msgstr ""
 "これらの値は、 <a href=\"%s\">サブスクリプション設定<a>で構成できます。"
+
+msgid "They appear to be new to this node, but may still be already monitored."
+msgstr ""
+
+#, fuzzy
+msgid ""
+"They have been found on this host previously, but have now disappeared. Note "
+"that they may still be monitored on the cluster."
+msgstr ""
+"これらのサービスはこのホストで見つかりましたが、セット<i>クラスター化された"
+"サービス</ i>のルールによってクラスターホストにマップされています。"
 
 #, python-format
 msgid "This %s does not exist."
@@ -53655,6 +53748,10 @@ msgstr "クラシックバックエンドを使用する"
 msgid "Use Classic SNMP Backend"
 msgstr "クラシックSNMPバックエンドを使用する"
 
+#, fuzzy
+msgid "Use Controller"
+msgstr "コントローラ"
+
 msgid "Use DNS lookup cache"
 msgstr "DNSルックアップキャッシュを使用する"
 
@@ -53777,6 +53874,9 @@ msgstr "名前空間プレフィックスを使用する"
 
 msgid "Use absolute width:"
 msgstr "絶対幅を使用します"
+
+msgid "Use agent controller for Windows to provide TLS encrypted communication"
+msgstr ""
 
 msgid "Use alias"
 msgstr "エイリアスを使用する"
@@ -54693,6 +54793,9 @@ msgid ""
 "Usually the check goes to WARN if a VM or host is powered off and OK "
 "otherwise. You can change this behaviour on a per-state-basis here."
 msgstr ""
+
+msgid "Utilization"
+msgstr "利用"
 
 msgid "V"
 msgstr "V"
@@ -56698,6 +56801,10 @@ msgstr "Windows Updates"
 #, fuzzy
 msgid "Windows WMI Timeout"
 msgstr "Windowsモジュール"
+
+#, fuzzy
+msgid "Windows agent controller"
+msgstr "Windows認証"
 
 msgid "Windows authentication"
 msgstr "Windows認証"
@@ -60750,6 +60857,40 @@ msgstr "z/OS"
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. All Rights Reserved."
 
+#, fuzzy
+#~| msgid "Choose the sidebar element you would like to show."
+#~ msgid "Select the Kubernetes objects you would like to monitor."
+#~ msgstr "表示したサイドバー要素を選択します。"
+
+#~ msgid ""
+#~ "These services have been found on this host and have been mapped to a "
+#~ "cluster host by a rule in the set <i>Clustered services</i> but "
+#~ "disappeared from this host."
+#~ msgstr ""
+#~ "これらのサービスはこのホストで検出され、セット<i>クラスター化されたサービ"
+#~ "ス</i>のルールによってクラスターホストにマップされましたが、このホストから"
+#~ "消えました。"
+
+#~ msgid ""
+#~ "These services have been found on this host and have been mapped to a "
+#~ "cluster host by a rule in the set <i>Clustered services</i>, but are not "
+#~ "yet added to the active monitoring. Please either add them or permanently "
+#~ "disable them."
+#~ msgstr ""
+#~ "これらのサービスはこのホストで検出され、セット<i>クラスター化サービス</i>"
+#~ "のルールによってクラスターホストにマップされていますが、アクティブな監視に"
+#~ "はまだ追加されていません。それらを追加するか、完全に無効にしてください。"
+
+#, fuzzy
+#~| msgid "Number of containers"
+#~ msgid "Number of total containers"
+#~ msgstr "コンテナの数"
+
+#, fuzzy
+#~| msgid "Number of containers"
+#~ msgid "Number of waiting containers"
+#~ msgstr "コンテナの数"
+
 #, python-format
 #~ msgid "Cannot fetch URL '%s'"
 #~ msgstr "URL '%s'を取得できません"
@@ -61914,9 +62055,6 @@ msgstr "© 2020 tribe29 GmbH. All Rights Reserved."
 
 #~ msgid "Context switches"
 #~ msgstr "コンテキストスイッチ"
-
-#~ msgid "Controller"
-#~ msgstr "コントローラ"
 
 #~ msgid "Controller %d"
 #~ msgstr "コントローラー %d"
@@ -63523,9 +63661,6 @@ msgstr "© 2020 tribe29 GmbH. All Rights Reserved."
 
 #~ msgid "Used size"
 #~ msgstr "使用サイズ"
-
-#~ msgid "Utilization"
-#~ msgstr "利用"
 
 #~ msgid "Utilization Core %d"
 #~ msgstr "使用率コア %d"

@@ -1443,7 +1443,7 @@ msgstr ""
 msgid ""
 "<p>Here you can specify a list of filename patterns to be sent by the agent "
 "in the section <tt>fileinfo</tt>. UNC paths with globbing patterns are used "
-"here, e.g. <tt>\\\\hostname\\share name\\**\\foo\\*.log</tt>. Wildcards are "
+"here, e.g. <tt>\\\\hostname\\share name\\*\\foo\\*.log</tt>. Wildcards are "
 "not allowed in host or share names. Per default each found file will be "
 "monitored for size and age. By building groups you can alternatively monitor "
 "a collection of files as an entity and monitor the count, total size, the "
@@ -8856,8 +8856,10 @@ msgstr "Belegung Checkmk Checker"
 msgid "Checkmk config filename"
 msgstr "Checkmk Konfigurationsdateiname"
 
-#, python-format
-msgid "Checkmk exception: %s"
+#, fuzzy, python-format
+msgid ""
+"Checkmk exception: %s\n"
+"%s"
 msgstr "Checkmk Fehler: %s"
 
 msgid "Checkmk fetcher usage"
@@ -10438,6 +10440,10 @@ msgstr "Direkte Verbindung, ohne Livestatus-Proxy"
 
 msgid "Connect timeout"
 msgstr "Verbindungs-Timeout"
+
+#, fuzzy
+msgid "Connect timeout (seconds)"
+msgstr "Verbindungstimeout (Sek)"
 
 msgid "Connect timeout to status socket of Event Console"
 msgstr "Verbindungstimeout zum Statussocket der Eventkonsole"
@@ -12966,6 +12972,22 @@ msgstr "Schwellwerte für die Längen der Schlange"
 msgid "Define lower levels for free pods (clusters and nodes only)"
 msgstr "Anzahl der Container"
 
+#, fuzzy
+msgid "Define lower levels for number of running containers"
+msgstr "Anzahl der Container"
+
+#, fuzzy
+msgid "Define lower levels for number of terminated containers"
+msgstr "Anzahl der Container"
+
+#, fuzzy
+msgid "Define lower levels for number of total containers"
+msgstr "Obere Schwellen für die Anzahl der Vorfälle"
+
+#, fuzzy
+msgid "Define lower levels for number of waiting containers"
+msgstr "Untere Schwellen für die Anzahl der Pint-to-Site Verbindungen"
+
 msgid ""
 "Define patterns for excluding kernel configuration parameters from the "
 "inventory."
@@ -12979,6 +13001,22 @@ msgid ""
 msgstr ""
 "Definiere Muster um die Kernel Konfigurationsparameter bei der Inventur "
 "einzuschließen."
+
+#, fuzzy
+msgid "Define upper levels for number of running containers"
+msgstr "Obere Schwellen für die Anzahl der Vorfälle"
+
+#, fuzzy
+msgid "Define upper levels for number of terminated containers"
+msgstr "Anzahl der Container"
+
+#, fuzzy
+msgid "Define upper levels for number of total containers"
+msgstr "Obere Schwellen für die Anzahl der Vorfälle"
+
+#, fuzzy
+msgid "Define upper levels for number of waiting containers"
+msgstr "Obere Schwellen für die Anzahl der Vorfälle"
 
 msgid ""
 "Define which monitoring state maps which input state. This applies for every "
@@ -19671,6 +19709,10 @@ msgstr "Globale Einstellungen für Checkmk, Multisite und den Monitoring-Kern."
 #, python-format
 msgid "Global settings matching '%s'"
 msgstr "Globale Einstellungen zum Suchbegriff '%s'"
+
+#, fuzzy
+msgid "GlobalProtect Utilization"
+msgstr "Auslastung der Storageprozessors"
 
 msgid "Globally enforced"
 msgstr "Global erzwungen"
@@ -30322,6 +30364,27 @@ msgstr "Monitoring State falls der Service inaktiv ist"
 msgid "Monitoring state if task is not enabled"
 msgstr "Monitoring State falls der Task nicht aktiviert ist"
 
+msgid ""
+"Monitoring state if the DISKPRESSURE condition is faulty or not available"
+msgstr ""
+
+msgid ""
+"Monitoring state if the MEMORYPRESSURE condition is faulty or not available"
+msgstr ""
+
+msgid ""
+"Monitoring state if the NETWORKUNAVAILABLE condition is faulty or not "
+"available"
+msgstr ""
+
+msgid ""
+"Monitoring state if the PIDPRESSURE condition is faulty or not available"
+msgstr ""
+
+#, fuzzy
+msgid "Monitoring state if the READY condition is faulty or not available"
+msgstr "Monitoring State falls der Task nicht aktiviert ist"
+
 #, fuzzy
 msgid "Monitoring state if the wrong unit is active/standby"
 msgstr "Monitoring State falls der Service aktiv ist"
@@ -31671,6 +31734,10 @@ msgstr "Node-Statistiken"
 msgid "Node Status"
 msgstr "Node-Status"
 
+#, fuzzy
+msgid "Node conditions"
+msgstr "Keine Bedingungen"
+
 msgid "Node name"
 msgstr "Name des Knotens"
 
@@ -32363,6 +32430,10 @@ msgstr "Anzahl von aktiven Pfaden"
 msgid "Number of active sessions"
 msgstr "Anzahl aktiver Sitzungen"
 
+#, fuzzy
+msgid "Number of active tunnels"
+msgstr "Anzahl von aktiven Anschlüssen"
+
 #, python-format
 msgid "Number of agents that have registered for updates: %d"
 msgstr "Anzahl Agenten, die sich für Updates registiert haben: %d"
@@ -32647,12 +32718,16 @@ msgstr "Anzahl von Wiederholungen"
 msgid "Number of retries (not counting the initial regular run)"
 msgstr "Anzahl von Versuchen (ohne den ersten normalen Lauf)"
 
-#, fuzzy
-msgid "Number of running containers"
-msgstr "Anzahl der Container"
-
 msgid "Number of search results"
 msgstr "Anzahl der Suchergebnisse"
+
+#, fuzzy
+msgid "Number of seconds to wait for a TCP connection"
+msgstr "Anzahl aktueller Verbindungen"
+
+msgid ""
+"Number of seconds to wait for a response from the API during a TCP connection"
+msgstr ""
 
 msgid "Number of send packets per report"
 msgstr "Anzahl zu sendender Pakete pro Prüfung"
@@ -32744,10 +32819,6 @@ msgstr "Anzahl der hängengebliebenen Aufgaben"
 msgid "Number of tables"
 msgstr "Anzahl von Tabellen"
 
-#, fuzzy
-msgid "Number of terminated containers"
-msgstr "Anzahl der Container"
-
 msgid "Number of the Rack"
 msgstr "Nummer des Racks"
 
@@ -32765,10 +32836,6 @@ msgstr "Anzahl von Schreib-Threads für RRD Dateien"
 
 msgid "Number of total and running sessions"
 msgstr "Anzahl der gesamten und laufenden Sitzungen"
-
-#, fuzzy
-msgid "Number of total containers"
-msgstr "Anzahl der Container"
 
 msgid "Number of unassigned shards"
 msgstr "Anzahl nicht zugewiesener Shards"
@@ -32796,10 +32863,6 @@ msgstr "Anzahl der benutzten Zustände einer OpenBSD PF Engine"
 
 msgid "Number of users"
 msgstr "Anzahl von Nutzern"
-
-#, fuzzy
-msgid "Number of waiting containers"
-msgstr "Anzahl der Container"
 
 msgid "Number of warnings"
 msgstr "Anzahl von Warnings"
@@ -35785,6 +35848,9 @@ msgstr "Pod-Ressourcen"
 msgid "Pods"
 msgstr "Pods"
 
+msgid "Pods of CronJobs"
+msgstr ""
+
 msgid "Point-to-site bandwidth"
 msgstr "Point-to-Site Bandbreite"
 
@@ -36992,6 +37058,10 @@ msgstr "Lesedurchsatz"
 
 msgid "Read throughput per second"
 msgstr "Lesedurchsatz pro Sekunde"
+
+#, fuzzy
+msgid "Read timeout (seconds)"
+msgstr "Inaktivitätstimeout"
 
 msgid "Read wait"
 msgstr "Lesewartezeit"
@@ -38694,6 +38764,10 @@ msgstr ""
 msgid "Ruleset"
 msgstr "Regelsatz"
 
+#, fuzzy
+msgid "Ruleset name"
+msgstr "Regelsatz"
+
 msgid "Rulesets"
 msgstr "Regelsätze"
 
@@ -39748,9 +39822,14 @@ msgstr "Klang auswählen"
 msgid "Select specific object type"
 msgstr "Spezifischen Objekttyp auswählen"
 
-#, fuzzy
-msgid "Select the Kubernetes objects you would like to monitor."
-msgstr "Wählen Sie das Seitenleistenelement, das Sie anzeigen wollen."
+msgid ""
+"Select the Kubernetes objects you would like to monitor. Pods controlled by "
+"CronJobs are treated separately as they are usually quite short lived. Those "
+"pods will be monitored in the same manner as regular pods. Your Dynamic host "
+"management rule should be configured accordingly to avoid that the piggyback "
+"hosts for terminated CronJob pods are kept for too long. This 'Pods of "
+"CronJobs' option has no effect if Pods are not monitored"
+msgstr ""
 
 msgid ""
 "Select the LDAP version the LDAP server is serving. Most modern servers use "
@@ -44604,6 +44683,10 @@ msgstr ""
 msgid "TCP port of Carbon line receiver"
 msgstr "TCP-Port für den Empfang durch Carbone"
 
+#, fuzzy
+msgid "TCP timeouts"
+msgstr "CTIO-Timeouts"
+
 msgid "TCP-Port for Listener"
 msgstr "TCP-Port des Listeners"
 
@@ -45870,6 +45953,14 @@ msgstr ""
 "Das Alter in Sekunden, wann die letzte Nachricht aus der Warteschlange "
 "abgerufen wurde. Wird berechnet, indem LGETDATE/LGETTIME vom aktuellen "
 "Zeitstempel subtrahiert wird."
+
+msgid ""
+"The agent controller provides a safe channel for the communication between "
+"the monitoring site and the agent. It also provides the possibility to push "
+"monitoring data to the site (if applicable in your Checkmk edition). You may "
+"disable the controller if you experience problems with the controller. In "
+"this case, the Windows agent will work in legacy pull mode. "
+msgstr ""
 
 msgid ""
 "The agent plugin <tt>mk_filestats</tt> monitors a configured set of files "
@@ -48441,6 +48532,11 @@ msgstr ""
 msgid "The ruleset \"%s\" does not exist."
 msgstr "Der Regelsatz \"%s\" existiert nicht."
 
+msgid ""
+"The ruleset name is used to identify the ruleset within Checkmk. You may "
+"need it when working with the rule and ruleset related REST API calls."
+msgstr ""
+
 msgid "The schedule you are trying to clone does not exist."
 msgstr "Der Eintrag, den Sie klonen möchten, existiert nicht."
 
@@ -49106,6 +49202,10 @@ msgstr "Der Wert %r ist vom Typ %s, muss aber int sein"
 msgid "The value for %s must be between %d and %d"
 msgstr "Der Wert für %s muss zwischen %d und %d sein"
 
+#, fuzzy
+msgid "The value is not of type dict."
+msgstr "Der Wert muss vom Typ dict sein, hat aber den Typ %s"
+
 #, python-format
 msgid "The value must be of type dict, but it has type %s"
 msgstr "Der Wert muss vom Typ dict sein, hat aber den Typ %s"
@@ -49452,6 +49552,14 @@ msgstr ""
 "Regelsatz <i>Deaktivierte Services</i> oder <i>Deaktivierte Checks</i> "
 "deaktiviert worden."
 
+#, fuzzy, python-format
+msgid ""
+"These services are mapped to a cluster host by a rule in one of the rulesets "
+"<i>%s</i> or <i>%s</i>."
+msgstr ""
+"Diese Services wurden auf diesem Host gefunden aber mithilfe des Regelsatzes "
+"<i>Geclusterte Services</i> einem Cluster zugeordnet."
+
 msgid ""
 "These services do not use the Check_MK agent or Check_MK-SNMP engine but "
 "actively call a classical check plugin, that you have installed yourself."
@@ -49556,33 +49664,6 @@ msgstr ""
 "<i>Clustered services</i> auf einen Clusterhost abgebildet, aber über "
 "<i>Deaktivierte Services</i> oder <i>Deaktivierte Checks</i> deaktiviert."
 
-msgid ""
-"These services have been found on this host and have been mapped to a "
-"cluster host by a rule in the set <i>Clustered services</i> but disappeared "
-"from this host."
-msgstr ""
-"Diese Dienste wurden auf diesem Host gefunden und durch die Regel "
-"<i>Geclusterte Services</i> auf einen Cluster-Host abgebildet, sind aber von "
-"diesem Host verschwunden."
-
-msgid ""
-"These services have been found on this host and have been mapped to a "
-"cluster host by a rule in the set <i>Clustered services</i>, but are not yet "
-"added to the active monitoring. Please either add them or permanently "
-"disable them."
-msgstr ""
-"Diese Services wurden auf diesem Host gefunden und sind mit dem Regelsatz "
-"<i>Geclusterte Services</i> einem Cluster zugeordnet worden, aber noch nicht "
-"Teil des Monitorings. Bitte fügen Sie diese hinzu oder deaktivieren Sie sie "
-"permanent."
-
-msgid ""
-"These services have been found on this host but have been mapped to a "
-"cluster host by a rule in the set <i>Clustered services</i>."
-msgstr ""
-"Diese Services wurden auf diesem Host gefunden aber mithilfe des Regelsatzes "
-"<i>Geclusterte Services</i> einem Cluster zugeordnet."
-
 #, fuzzy
 msgid ""
 "These services have not been found by the discovery but have been added "
@@ -49657,6 +49738,17 @@ msgid ""
 msgstr ""
 "Diese Werte können in den <a href=\"%s\">Subskriptionseinstellungen</a> "
 "konfiguriert werden."
+
+msgid "They appear to be new to this node, but may still be already monitored."
+msgstr ""
+
+#, fuzzy
+msgid ""
+"They have been found on this host previously, but have now disappeared. Note "
+"that they may still be monitored on the cluster."
+msgstr ""
+"Diese Services wurden auf diesem Host gefunden aber mithilfe des Regelsatzes "
+"<i>Geclusterte Services</i> einem Cluster zugeordnet."
 
 #, python-format
 msgid "This %s does not exist."
@@ -56131,6 +56223,10 @@ msgstr "Klassisches Backend verwenden"
 msgid "Use Classic SNMP Backend"
 msgstr "Klassisches SNMP-Backend verwenden"
 
+#, fuzzy
+msgid "Use Controller"
+msgstr "Controller"
+
 msgid "Use DNS lookup cache"
 msgstr "Cache für DNS verwenden"
 
@@ -56255,6 +56351,9 @@ msgstr "Namensraum-Präfix verwenden"
 
 msgid "Use absolute width:"
 msgstr "Absolute Breite verwenden:"
+
+msgid "Use agent controller for Windows to provide TLS encrypted communication"
+msgstr ""
 
 msgid "Use alias"
 msgstr "Alias verwenden"
@@ -57250,6 +57349,9 @@ msgstr ""
 "Normalerweise geht der Service auf WARNUNG, wenn eine VM oder ein Host "
 "abgeschaltet ist, und sonst auf OK. Sie können dieses Verhalten hier pro "
 "möglichem Zustand einstellen."
+
+msgid "Utilization"
+msgstr "Auslastung"
 
 msgid "V"
 msgstr "V"
@@ -59392,6 +59494,10 @@ msgstr "Windows-Aktualisierungen"
 #, fuzzy
 msgid "Windows WMI Timeout"
 msgstr "Windows Module"
+
+#, fuzzy
+msgid "Windows agent controller"
+msgstr "Windows-Authentifizierung"
 
 msgid "Windows authentication"
 msgstr "Windows-Authentifizierung"
@@ -63682,6 +63788,41 @@ msgstr "z/OS"
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. Alle Rechte vorbehalten."
 
+#, fuzzy
+#~| msgid "Choose the sidebar element you would like to show."
+#~ msgid "Select the Kubernetes objects you would like to monitor."
+#~ msgstr "Wählen Sie das Seitenleistenelement, das Sie anzeigen wollen."
+
+#~ msgid ""
+#~ "These services have been found on this host and have been mapped to a "
+#~ "cluster host by a rule in the set <i>Clustered services</i> but "
+#~ "disappeared from this host."
+#~ msgstr ""
+#~ "Diese Dienste wurden auf diesem Host gefunden und durch die Regel "
+#~ "<i>Geclusterte Services</i> auf einen Cluster-Host abgebildet, sind aber "
+#~ "von diesem Host verschwunden."
+
+#~ msgid ""
+#~ "These services have been found on this host and have been mapped to a "
+#~ "cluster host by a rule in the set <i>Clustered services</i>, but are not "
+#~ "yet added to the active monitoring. Please either add them or permanently "
+#~ "disable them."
+#~ msgstr ""
+#~ "Diese Services wurden auf diesem Host gefunden und sind mit dem Regelsatz "
+#~ "<i>Geclusterte Services</i> einem Cluster zugeordnet worden, aber noch "
+#~ "nicht Teil des Monitorings. Bitte fügen Sie diese hinzu oder deaktivieren "
+#~ "Sie sie permanent."
+
+#, fuzzy
+#~| msgid "Number of containers"
+#~ msgid "Number of total containers"
+#~ msgstr "Anzahl der Container"
+
+#, fuzzy
+#~| msgid "Number of containers"
+#~ msgid "Number of waiting containers"
+#~ msgstr "Anzahl der Container"
+
 #, python-format
 #~ msgid "Cannot fetch URL '%s'"
 #~ msgstr "Kann URL '%s' nicht holen"
@@ -64950,9 +65091,6 @@ msgstr "© %s tribe29 GmbH. Alle Rechte vorbehalten."
 
 #~ msgid "Context switches"
 #~ msgstr "Kontextswitche"
-
-#~ msgid "Controller"
-#~ msgstr "Controller"
 
 #~ msgid "Controller %d"
 #~ msgstr "Controller %d"
@@ -66665,9 +66803,6 @@ msgstr "© %s tribe29 GmbH. Alle Rechte vorbehalten."
 
 #~ msgid "Used size"
 #~ msgstr "Benutzte Größe"
-
-#~ msgid "Utilization"
-#~ msgstr "Auslastung"
 
 #~ msgid "Utilization Core %d"
 #~ msgstr "Auslastung Kern %d"
@@ -74938,9 +75073,6 @@ msgstr "© %s tribe29 GmbH. Alle Rechte vorbehalten."
 
 #~ msgid "Configure thresholds for overprovisioning of datastores."
 #~ msgstr "Schwellwerte für die Überprovisionierung von Datastores einstellen"
-
-#~ msgid "Connect Timeout (sec)"
-#~ msgstr "Verbindungstimeout (Sek)"
 
 #~ msgid "Copyright Mathias Kettner 2012"
 #~ msgstr "Copyright Mathias Kettner 2012"

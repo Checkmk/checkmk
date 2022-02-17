@@ -439,7 +439,7 @@ def inventory_oracle_tablespaces(section: oracle.SectionTableSpaces) -> Inventor
 
 
 register.inventory_plugin(
-    name="inventory_oracle_tablespaces",
+    name="oracle_tablespaces",
     inventory_function=inventory_oracle_tablespaces,
     sections=["oracle_tablespaces"],
 )

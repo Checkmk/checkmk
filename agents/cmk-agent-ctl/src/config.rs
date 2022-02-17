@@ -86,7 +86,7 @@ impl RegistrationConfig {
         {
             site_spec::SiteSpec::Complete(coord) => coord,
             site_spec::SiteSpec::Incomplete(inc_coord) => {
-                site_spec::Coordinates::from_incomplete_coordinates(inc_coord)?
+                site_spec::Coordinates::try_from(inc_coord)?
             }
         };
 

@@ -50,10 +50,10 @@ impl Display for Coordinates {
     }
 }
 
-impl Coordinates {
-    pub fn from_incomplete_coordinates(
-        incomplete_coordinates: IncompleteCoordinates,
-    ) -> AnyhowResult<Coordinates> {
+impl std::convert::TryFrom<IncompleteCoordinates> for Coordinates {
+    type Error = AnyhowError;
+
+    fn try_from(incomplete_coordinates: IncompleteCoordinates) -> AnyhowResult<Self> {
         Ok(Coordinates {
             port: Coordinates::port_from_checkmk_rest_api(&incomplete_coordinates)
                 .context("Failed to query agent receiver port from Checkmk REST API")?,
@@ -61,7 +61,9 @@ impl Coordinates {
             site: incomplete_coordinates.site,
         })
     }
+}
 
+impl Coordinates {
     fn port_from_checkmk_rest_api(
         incomplete_coordinates: &IncompleteCoordinates,
     ) -> AnyhowResult<types::Port> {

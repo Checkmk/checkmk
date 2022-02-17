@@ -23,6 +23,32 @@ TEST(AgentController, KillAgent) {
     EXPECT_FALSE(ac::KillAgentController("anything"));
 }
 
+constexpr std::string_view port{"1111"};
+constexpr std::string_view allowed{"::1 111.11.11/11 8.8.8.8"};
+TEST(AgentController, BuildCommandLine) {
+    auto temp_fs = tst::TempCfgFs::CreateNoIo();
+    ASSERT_TRUE(
+        temp_fs->loadContent(fmt::format("global:\n"
+                                         "  enabled: yes\n"
+                                         "  only_from: \n"
+                                         "  port: {}\n",
+                                         port)));
+    EXPECT_EQ(wtools::ToUtf8(ac::BuildCommandLine(fs::path("x"))),
+              fmt::format("x daemon -P {}", port));
+}
+
+TEST(AgentController, BuildCommandLineAllowed) {
+    auto temp_fs = tst::TempCfgFs::CreateNoIo();
+    ASSERT_TRUE(
+        temp_fs->loadContent(fmt::format("global:\n"
+                                         "  enabled: yes\n"
+                                         "  only_from: {}\n"
+                                         "  port: {}\n",
+                                         allowed, port)));
+    EXPECT_EQ(wtools::ToUtf8(ac::BuildCommandLine(fs::path("x"))),
+              fmt::format("x daemon -P {} -A {}", port, allowed));
+}
+
 TEST(AgentController, FabricConfig) {
     auto temp_fs = tst::TempCfgFs::CreateNoIo();
     ASSERT_TRUE(temp_fs->loadFactoryConfig());

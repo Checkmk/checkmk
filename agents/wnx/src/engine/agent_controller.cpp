@@ -83,6 +83,24 @@ bool DeleteControllerInBin(const fs::path &service) {
 }
 }  // namespace
 
+std::wstring BuildCommandLine(const fs::path &controller) {
+    auto port =
+        cfg::GetVal(cfg::groups::kGlobal, cfg::vars::kPort, cfg::kMainPort);
+    auto only_from =
+        cfg::GetInternalArray(cfg::groups::kGlobal, cfg::vars::kOnlyFrom);
+    std::string allowed_ip;
+    if (!only_from.empty()) {
+        allowed_ip = " " + std::string{kCmdLineAllowedIp};
+        for (const auto &a : only_from) {
+            allowed_ip += " " + a;
+        }
+    }
+
+    return controller.wstring() +
+           wtools::ConvertToUTF16(fmt::format(" {} {} {}{}", kCmdLineAsDaemon,
+                                              kCmdLinePort, port, allowed_ip));
+}
+
 bool StartAgentController(const fs::path &service) {
     if (!cma::IsService()) {
         return false;
@@ -95,10 +113,7 @@ bool StartAgentController(const fs::path &service) {
     }
 
     wtools::AppRunner ar;
-    auto port =
-        cfg::GetVal(cfg::groups::kGlobal, cfg::vars::kPort, cfg::kMainPort);
-    auto proc_id = ar.goExecAsDetached(controller_name.wstring() +
-                                       fmt::format(L" daemon -P {}", port));
+    auto proc_id = ar.goExecAsDetached(BuildCommandLine(controller_name));
     if (proc_id != 0) {
         XLOG::l.i("Agent controller '{}' started pid [{}]", controller_name,
                   proc_id);

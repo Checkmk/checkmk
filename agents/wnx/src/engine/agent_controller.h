@@ -15,10 +15,17 @@ class Node;
 }
 
 namespace cma::ac {
+
+// Should be synchronized with Rust code of controller
 constexpr std::string_view kLegacyPullFile{"allow-legacy-pull"};
+constexpr std::string_view kCmdLineAsDaemon{"daemon"};
+constexpr std::string_view kCmdLinePort{"-P"};
+constexpr std::string_view kCmdLineAllowedIp{"-A"};
+constexpr uint16_t windows_internal_port{50001};
+
 std::filesystem::path GetController(const std::filesystem::path &service);
 std::filesystem::path GetWorkController();
-constexpr uint16_t windows_internal_port{50001};  // must be synced with Rust
+std::wstring BuildCommandLine(const std::filesystem::path &controller);
 bool StartAgentController(const std::filesystem::path &service);
 bool KillAgentController(const std::filesystem::path &service);
 bool IsRunController(const YAML::Node &node);

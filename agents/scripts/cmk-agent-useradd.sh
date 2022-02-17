@@ -42,8 +42,6 @@ main() {
         if [ "${existing}" != "${expected}" ]; then
             echo "cmk-agent user found:  expected '${expected}'" >&2
             echo "                      but found '${existing}'" >&2
-            echo "Refusing to install with unexpected user properties." >&2
-            exit 1
         fi
         unset existing expected
     else

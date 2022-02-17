@@ -37,6 +37,19 @@ withFolderProperties{
             BUILD_IMAGE = false
             BUILD_AMI_IMAGE = true
             break
+        case 'cpe':
+            DISTRO_LIST_DEFAULT = env.DISTRO_LIST_CPE
+            EDITION_DEFAULT = 'plus'
+            START_HOUR = '4'
+            // Enable this later when we have CPE specific integration tests.
+            // Until then it's similar to the CEE.
+            RUN_TESTS = false
+            // Do not publish anything, no docker and no AMI images. We only
+            // use the packages for our own tests - for now.
+            DEPLOY_TO_WEBSITE = false
+            BUILD_IMAGE = false
+            BUILD_AMI_IMAGE = false
+            break
         default:
             throw new Exception('unknown trigger job')
     }
@@ -48,7 +61,7 @@ properties([
     buildDiscarder(logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '', daysToKeepStr: '7', numToKeepStr: '14')),
     parameters([
         string(name: 'DISTROS', defaultValue: DISTRO_LIST_DEFAULT, description: 'List of targeted distros' ),
-        string(name: 'EDITION', defaultValue: EDITION_DEFAULT, description: 'Edition: raw, enterprise or managed' )
+        string(name: 'EDITION', defaultValue: EDITION_DEFAULT, description: 'Edition: raw, enterprise, managed or plus' )
     ]),
     pipelineTriggers(
         ENABLE_NIGHTLY_TRIGGER ? [cron("0 ${START_HOUR} * * *")] : []

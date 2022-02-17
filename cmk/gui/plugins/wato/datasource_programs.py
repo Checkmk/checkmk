@@ -828,13 +828,14 @@ def _valuespec_special_agents_kube():
                             ),
                         ),
                         _ssl_verification(),
-                        _tcp_timeouts(),
                         (
                             "proxy",
-                            HTTPProxyReference({"http", "https"}),
+                            HTTPProxyReference({"http", "https"}),  # Kubernetes client does not
+                            # support socks proxies.
                         ),
+                        _tcp_timeouts(),
                     ],
-                    required_keys=["endpoint", "verify-cert", "proxy"],
+                    required_keys=["endpoint", "verify-cert"],
                     title=_("API server connection"),
                 ),
             ),

@@ -30,6 +30,8 @@ multisite_builtin_views.update(
             "play_sounds": False,
             "public": True,
             "show_filters": [
+                "topology_max_nodes",
+                "topology_mesh_depth",
                 "hoststate",
                 "hostalias",
                 "siteopt",

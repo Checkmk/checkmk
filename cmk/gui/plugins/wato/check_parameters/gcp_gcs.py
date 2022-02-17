@@ -125,7 +125,7 @@ def _vs_function_egress() -> ValueSpec:
     return Dictionary(
         title=_("Levels on network egress"),
         elements=[
-            ("net_data_sent", Levels(title=_("instances"))),
+            ("net_data_sent", Levels(title=_("Data sent"), unit="bytes")),
         ],
     )
 
@@ -137,5 +137,89 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_vs_function_egress,
         title=lambda: _("GCP/Function egress"),
+    )
+)
+
+
+def _vs_run_network() -> ValueSpec:
+    return Dictionary(
+        title=_("Levels on network traffic"),
+        elements=[
+            ("net_data_sent", Levels(title=_("Data sent"), unit="bytes")),
+            ("net_data_recv", Levels(title=_("Data received"), unit="bytes")),
+        ],
+    )
+
+
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="gcp_run_network",
+        group=RulespecGroupCheckParametersApplications,
+        match_type="dict",
+        parameter_valuespec=_vs_run_network,
+        title=lambda: _("GCP/Cloud Run Network"),
+    )
+)
+
+
+def _vs_run_memory() -> ValueSpec:
+    return Dictionary(
+        title=_("Levels memory"),
+        elements=[
+            ("memory_util", Levels(title=_("Memory utilitzation"), unit="%")),
+        ],
+    )
+
+
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="gcp_run_memory",
+        group=RulespecGroupCheckParametersApplications,
+        match_type="dict",
+        parameter_valuespec=_vs_run_memory,
+        title=lambda: _("GCP/Cloud Run Memory"),
+    )
+)
+
+
+def _vs_run_cpu() -> ValueSpec:
+    return Dictionary(
+        title=_("Levels CPU"),
+        elements=[
+            ("util", Levels(title=_("CPU utilitzation"), unit="%")),
+        ],
+    )
+
+
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="gcp_run_cpu",
+        group=RulespecGroupCheckParametersApplications,
+        match_type="dict",
+        parameter_valuespec=_vs_run_cpu,
+        title=lambda: _("GCP/Cloud Run Cpu"),
+    )
+)
+
+
+def _vs_run_requests() -> ValueSpec:
+    return Dictionary(
+        title=_("Levels requests"),
+        elements=[
+            ("faas_total_instance_count", Levels(title=_("Number of running containers"))),
+            ("faas_execution_count", Levels(title=_("Number of requests"))),
+            ("gcp_billable_time", Levels(title=_("billable time"), unit="s/s")),
+            ("faas_execution_times", Levels(title=_("99th percentile request latency"), unit="s")),
+        ],
+    )
+
+
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="gcp_run_requests",
+        group=RulespecGroupCheckParametersApplications,
+        match_type="dict",
+        parameter_valuespec=_vs_run_requests,
+        title=lambda: _("GCP/Cloud Run Requests"),
     )
 )

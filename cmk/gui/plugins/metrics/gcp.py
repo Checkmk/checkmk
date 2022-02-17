@@ -45,3 +45,10 @@ metric_info["faas_execution_times"] = {
     "unit": "s",
     "color": "12/a",
 }
+
+
+metric_info["gcp_billable_time"] = {
+    "title": _l("Billable time"),
+    "unit": "s/s",
+    "color": "12/a",
+}

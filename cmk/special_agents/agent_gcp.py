@@ -12,6 +12,8 @@ from typing import Any, Callable, Dict, Iterable, List, Mapping, Optional, Seque
 from google.cloud import functions, monitoring_v3, storage  # type: ignore
 from google.cloud.monitoring_v3 import Aggregation
 from google.cloud.monitoring_v3.types import TimeSeries
+from google.oauth2 import service_account  # type: ignore
+from googleapiclient.discovery import build, Resource  # type: ignore
 
 # Those are enum classes defined in the Aggregation class. Not nice but works
 Aligner = Aggregation.Aligner
@@ -19,6 +21,24 @@ Reducer = Aggregation.Reducer
 
 from cmk.special_agents.utils.agent_common import SectionWriter, special_agent_main
 from cmk.special_agents.utils.argument_parsing import Args, create_default_argument_parser
+
+
+@dataclass(frozen=True)
+class CloudRunClient:
+    credentials: service_account.Credentials
+    service: Resource
+
+    @classmethod
+    def from_service_account_info(cls, account_info: Dict[str, str]) -> "CloudRunClient":
+        credentials = service_account.Credentials.from_service_account_info(account_info)
+        scopes = ["https://www.googleapis.com/auth/cloud-platform"]
+        scoped_credentials = credentials.with_scopes(list(scopes))
+        service = build("run", "v1", credentials=scoped_credentials)
+        return cls(scoped_credentials, service)
+
+    def list_services(self, parent: str) -> Mapping[str, Any]:
+        request = self.service.namespaces().services().list(parent=parent)
+        return request.execute()
 
 
 @dataclass(unsafe_hash=True)
@@ -37,6 +57,10 @@ class Client:
     @cache
     def functions(self):
         return functions.CloudFunctionsServiceClient.from_service_account_info(self.account_info)
+
+    @cache
+    def run(self) -> CloudRunClient:
+        return CloudRunClient.from_service_account_info(self.account_info)
 
 
 @dataclass(frozen=True)
@@ -97,7 +121,10 @@ def time_series(client: Client, service: GCPService) -> Iterable[Result]:
             "view": monitoring_v3.ListTimeSeriesRequest.TimeSeriesView.FULL,
             "aggregation": monitoring_v3.Aggregation(metric.aggregation),
         }
-        results = client.monitoring().list_time_series(request=request)
+        try:
+            results = client.monitoring().list_time_series(request=request)
+        except Exception as e:
+            raise RuntimeError(metric.name) from e
         for ts in results:
             yield Result(ts=ts)
 
@@ -125,11 +152,17 @@ def agent_gcp_main(args: Args) -> None:
     client = Client(json.loads(args.credentials), args.project)
     run(client, GCS)
     run(client, FUNCTIONS)
+    run(client, RUN)
 
 
 def main() -> None:
     """Main entry point to be used"""
     special_agent_main(parse_arguments, agent_gcp_main)
+
+
+#######################################################################
+# Configuration of which metrics we collect for a service starts here #
+#######################################################################
 
 
 def discover_buckets(client: Client) -> Iterable[Item]:
@@ -253,6 +286,94 @@ FUNCTIONS = GCPService(
                 "alignment_period": {"seconds": 60},
                 "group_by_fields": ["resource.function_name"],
                 "per_series_aligner": Aligner.ALIGN_MAX,
+                "cross_series_reducer": Reducer.REDUCE_SUM,
+            },
+        ),
+    ],
+)
+
+
+def discover_run_services(client: Client) -> Iterable[Item]:
+    # TODO: have to check how to enable this for ANTHOS
+    parent = f"namespaces/{client.project}"
+    services = client.run().list_services(parent=parent)
+    return (Item(name=s["metadata"]["name"]) for s in services["items"])
+
+
+RUN = GCPService(
+    name="cloud_run",
+    discover=discover_run_services,
+    metrics=[
+        GCPMetric(
+            name="run.googleapis.com/container/memory/utilizations",
+            aggregation={
+                "alignment_period": {"seconds": 60},
+                "group_by_fields": ["resource.service_name"],
+                "per_series_aligner": Aligner.ALIGN_PERCENTILE_99,
+                "cross_series_reducer": Reducer.REDUCE_MAX,
+            },
+        ),
+        GCPMetric(
+            name="run.googleapis.com/container/network/received_bytes_count",
+            aggregation={
+                "alignment_period": {"seconds": 60},
+                "group_by_fields": ["resource.service_name"],
+                "per_series_aligner": Aligner.ALIGN_RATE,
+                "cross_series_reducer": Reducer.REDUCE_SUM,
+            },
+        ),
+        GCPMetric(
+            name="run.googleapis.com/container/network/sent_bytes_count",
+            aggregation={
+                "alignment_period": {"seconds": 60},
+                "group_by_fields": ["resource.service_name"],
+                "per_series_aligner": Aligner.ALIGN_RATE,
+                "cross_series_reducer": Reducer.REDUCE_SUM,
+            },
+        ),
+        GCPMetric(
+            name="run.googleapis.com/request_count",
+            # TODO get by different status codes
+            aggregation={
+                "alignment_period": {"seconds": 60},
+                "group_by_fields": ["resource.service_name"],
+                "per_series_aligner": Aligner.ALIGN_MAX,
+                "cross_series_reducer": Reducer.REDUCE_SUM,
+            },
+        ),
+        GCPMetric(
+            name="run.googleapis.com/container/cpu/allocation_time",
+            aggregation={
+                "alignment_period": {"seconds": 60},
+                "group_by_fields": ["resource.service_name"],
+                "per_series_aligner": Aligner.ALIGN_MAX,
+                "cross_series_reducer": Reducer.REDUCE_SUM,
+            },
+        ),
+        GCPMetric(
+            name="run.googleapis.com/container/billable_instance_time",
+            aggregation={
+                "alignment_period": {"seconds": 60},
+                "group_by_fields": ["resource.service_name"],
+                "per_series_aligner": Aligner.ALIGN_RATE,
+                "cross_series_reducer": Reducer.REDUCE_SUM,
+            },
+        ),
+        GCPMetric(
+            name="run.googleapis.com/container/instance_count",
+            aggregation={
+                "alignment_period": {"seconds": 60},
+                "group_by_fields": ["resource.service_name"],
+                "per_series_aligner": Aligner.ALIGN_MAX,
+                "cross_series_reducer": Reducer.REDUCE_SUM,
+            },
+        ),
+        GCPMetric(
+            name="run.googleapis.com/request_latencies",
+            aggregation={
+                "alignment_period": {"seconds": 60},
+                "group_by_fields": ["resource.service_name"],
+                "per_series_aligner": Aligner.ALIGN_PERCENTILE_99,
                 "cross_series_reducer": Reducer.REDUCE_SUM,
             },
         ),

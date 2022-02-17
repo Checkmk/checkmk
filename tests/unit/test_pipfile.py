@@ -255,7 +255,6 @@ CEE_UNUSED_PACKAGES = [
     "defusedxml",
     "dnspython",
     "docutils",
-    "google-api-python-client",
     "gunicorn",
     "idna",
     "importlib_metadata",

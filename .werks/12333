@@ -1,0 +1,19 @@
+Title: Disabled  possibility to add too big files to the agent installer
+Knowledge: doc
+Level: 1
+Component: wato
+Class: fix
+Compatible: compat
+Edition: cee
+State: unknown
+Version: 1.6.0p28
+Date: 1635255554
+
+Previously, the limit of 20MB for any file packed by the bakery in the 
+installer could be enforced only during installation of the agent. This 
+could cause a serious problem during mass updating of multiple monitored 
+hosts: the agent installation process will fail on every host to be updated.
+
+Since this release Bakery forbids adding too big files to the agent installer 
+thus eliminating above mentioned problem with installation and update of the 
+agent.

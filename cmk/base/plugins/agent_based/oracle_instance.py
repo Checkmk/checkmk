@@ -171,7 +171,7 @@ def _parse_raw_db_creation_time(raw_str: Optional[str]) -> Optional[str]:
 def inventory_oracle_instance(section: Section) -> InventoryResult:
     path = ["software", "applications", "oracle", "instance"]
 
-    for item_data in sorted(section.values(), key=lambda v: v.sid):
+    for item_data in section.values():
         if isinstance(
             item_data,
             InvalidData,

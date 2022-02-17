@@ -19,6 +19,8 @@ from cmk.base.plugins.agent_based.utils.k8s import (
     NodeInfo,
 )
 
+from .utils_inventory import sort_inventory_result
+
 
 @pytest.mark.parametrize(
     "section_info, section_kubelet, expected_check_result",
@@ -86,4 +88,6 @@ def test_inventory_kube_node(
     section_kubelet: KubeletInfo,
     expected_check_result: Sequence[Union[TableRow, Attributes]],
 ) -> None:
-    assert list(inventory_kube_node(section_info, section_kubelet)) == expected_check_result
+    assert sort_inventory_result(
+        inventory_kube_node(section_info, section_kubelet)
+    ) == sort_inventory_result(expected_check_result)

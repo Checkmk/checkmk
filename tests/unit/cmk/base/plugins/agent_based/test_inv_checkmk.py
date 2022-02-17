@@ -3,12 +3,15 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
 from typing import Any, Dict
 
 import pytest
 
 from cmk.base.api.agent_based.inventory_classes import Attributes, TableRow
 from cmk.base.plugins.agent_based import inventory_checkmk_server as inv_checkmk
+
+from .utils_inventory import sort_inventory_result
 
 SECTION_LIVESTATUS_STATUS = {
     "heute": {
@@ -401,132 +404,134 @@ def test_merge_sections(monkeypatch, is_raw_edition, merged_sections):
 
 
 def test_inventory_checkmk():
-
-    yielded_inventory = list(inv_checkmk.generate_inventory(MERGED_SECTION_ENTERPRISE))
-    assert yielded_inventory == [
-        TableRow(
-            path=["software", "applications", "check_mk", "sites"],
-            key_columns={"site": "cisco"},
-            inventory_columns={"autostart": False, "used_version": "1.6.0p13.cee"},
-            status_columns={
-                "apache": "stopped",
-                "cmc": "stopped",
-                "crontab": "stopped",
-                "dcd": "stopped",
-                "liveproxyd": "stopped",
-                "mkeventd": "stopped",
-                "mknotifyd": "stopped",
-                "rrdcached": "stopped",
-                "stunnel": "not existent",
-                "xinetd": "not existent",
-            },
-        ),
-        TableRow(
-            path=["software", "applications", "check_mk", "sites"],
-            key_columns={"site": "heute"},
-            inventory_columns={"autostart": False, "used_version": "2020.08.20.cee"},
-            status_columns={
-                "apache": "running",
-                "check_helper_usage": 6.34573e-12,
-                "check_mk_helper_usage": 0.172541,
-                "fetcher_helper_usage": 0.172541,
-                "checker_helper_usage": 0.172541,
-                "cmc": "running",
-                "crontab": "running",
-                "dcd": "running",
-                "liveproxyd": "running",
-                "livestatus_usage": 0.0,
-                "mkeventd": "running",
-                "mknotifyd": "running",
-                "num_hosts": "1",
-                "num_services": "48",
-                "rrdcached": "running",
-                "stunnel": "not existent",
-                "xinetd": "not existent",
-            },
-        ),
-        TableRow(
-            path=["software", "applications", "check_mk", "sites"],
-            key_columns={"site": "stable"},
-            inventory_columns={"autostart": False, "used_version": "1.6.0-2020.08.18.cee"},
-            status_columns={
-                "apache": "running",
-                "check_helper_usage": 3.46e-321,
-                "check_mk_helper_usage": 0.377173,
-                "fetcher_helper_usage": 0.377173,
-                "checker_helper_usage": 0.377173,
-                "cmc": "running",
-                "crontab": "running",
-                "dcd": "running",
-                "liveproxyd": "running",
-                "livestatus_usage": 0.0,
-                "mkeventd": "running",
-                "mknotifyd": "running",
-                "num_hosts": "2",
-                "num_services": "103",
-                "rrdcached": "running",
-                "stunnel": "not existent",
-                "xinetd": "not existent",
-            },
-        ),
-        TableRow(
-            path=["software", "applications", "check_mk", "versions"],
-            key_columns={"version": "1.6.0-2020.08.18.cee"},
-            inventory_columns={
-                "demo": False,
-                "edition": "cee",
-                "num_sites": 1,
-                "number": "1.6.0-2020.08.18",
-            },
-            status_columns={},
-        ),
-        TableRow(
-            path=["software", "applications", "check_mk", "versions"],
-            key_columns={"version": "1.6.0p12.cee"},
-            inventory_columns={
-                "demo": False,
-                "edition": "cee",
-                "num_sites": 0,
-                "number": "1.6.0p12",
-            },
-            status_columns={},
-        ),
-        TableRow(
-            path=["software", "applications", "check_mk", "versions"],
-            key_columns={"version": "1.6.0p13.cee"},
-            inventory_columns={
-                "demo": False,
-                "edition": "cee",
-                "num_sites": 1,
-                "number": "1.6.0p13",
-            },
-            status_columns={},
-        ),
-        TableRow(
-            path=["software", "applications", "check_mk", "versions"],
-            key_columns={"version": "2020.08.13.cee"},
-            inventory_columns={
-                "demo": False,
-                "edition": "cee",
-                "num_sites": 0,
-                "number": "2020.08.13",
-            },
-            status_columns={},
-        ),
-        TableRow(
-            path=["software", "applications", "check_mk", "versions"],
-            key_columns={"version": "2020.08.20.cee"},
-            inventory_columns={
-                "demo": False,
-                "edition": "cee",
-                "num_sites": 1,
-                "number": "2020.08.20",
-            },
-            status_columns={},
-        ),
-        Attributes(
-            path=["software", "applications", "check_mk"],
-            inventory_attributes={"num_versions": 5, "num_sites": 3},
-            status_attributes={},
-        ),
-    ]
+    assert sort_inventory_result(
+        inv_checkmk.generate_inventory(MERGED_SECTION_ENTERPRISE)
+    ) == sort_inventory_result(
+        [
+            TableRow(
+                path=["software", "applications", "check_mk", "sites"],
+                key_columns={"site": "cisco"},
+                inventory_columns={"autostart": False, "used_version": "1.6.0p13.cee"},
+                status_columns={
+                    "apache": "stopped",
+                    "cmc": "stopped",
+                    "crontab": "stopped",
+                    "dcd": "stopped",
+                    "liveproxyd": "stopped",
+                    "mkeventd": "stopped",
+                    "mknotifyd": "stopped",
+                    "rrdcached": "stopped",
+                    "stunnel": "not existent",
+                    "xinetd": "not existent",
+                },
+            ),
+            TableRow(
+                path=["software", "applications", "check_mk", "sites"],
+                key_columns={"site": "heute"},
+                inventory_columns={"autostart": False, "used_version": "2020.08.20.cee"},
+                status_columns={
+                    "apache": "running",
+                    "check_helper_usage": 6.34573e-12,
+                    "check_mk_helper_usage": 0.172541,
+                    "fetcher_helper_usage": 0.172541,
+                    "checker_helper_usage": 0.172541,
+                    "cmc": "running",
+                    "crontab": "running",
+                    "dcd": "running",
+                    "liveproxyd": "running",
+                    "livestatus_usage": 0.0,
+                    "mkeventd": "running",
+                    "mknotifyd": "running",
+                    "num_hosts": "1",
+                    "num_services": "48",
+                    "rrdcached": "running",
+                    "stunnel": "not existent",
+                    "xinetd": "not existent",
+                },
+            ),
+            TableRow(
+                path=["software", "applications", "check_mk", "sites"],
+                key_columns={"site": "stable"},
+                inventory_columns={"autostart": False, "used_version": "1.6.0-2020.08.18.cee"},
+                status_columns={
+                    "apache": "running",
+                    "check_helper_usage": 3.46e-321,
+                    "check_mk_helper_usage": 0.377173,
+                    "fetcher_helper_usage": 0.377173,
+                    "checker_helper_usage": 0.377173,
+                    "cmc": "running",
+                    "crontab": "running",
+                    "dcd": "running",
+                    "liveproxyd": "running",
+                    "livestatus_usage": 0.0,
+                    "mkeventd": "running",
+                    "mknotifyd": "running",
+                    "num_hosts": "2",
+                    "num_services": "103",
+                    "rrdcached": "running",
+                    "stunnel": "not existent",
+                    "xinetd": "not existent",
+                },
+            ),
+            TableRow(
+                path=["software", "applications", "check_mk", "versions"],
+                key_columns={"version": "1.6.0-2020.08.18.cee"},
+                inventory_columns={
+                    "demo": False,
+                    "edition": "cee",
+                    "num_sites": 1,
+                    "number": "1.6.0-2020.08.18",
+                },
+                status_columns={},
+            ),
+            TableRow(
+                path=["software", "applications", "check_mk", "versions"],
+                key_columns={"version": "1.6.0p12.cee"},
+                inventory_columns={
+                    "demo": False,
+                    "edition": "cee",
+                    "num_sites": 0,
+                    "number": "1.6.0p12",
+                },
+                status_columns={},
+            ),
+            TableRow(
+                path=["software", "applications", "check_mk", "versions"],
+                key_columns={"version": "1.6.0p13.cee"},
+                inventory_columns={
+                    "demo": False,
+                    "edition": "cee",
+                    "num_sites": 1,
+                    "number": "1.6.0p13",
+                },
+                status_columns={},
+            ),
+            TableRow(
+                path=["software", "applications", "check_mk", "versions"],
+                key_columns={"version": "2020.08.13.cee"},
+                inventory_columns={
+                    "demo": False,
+                    "edition": "cee",
+                    "num_sites": 0,
+                    "number": "2020.08.13",
+                },
+                status_columns={},
+            ),
+            TableRow(
+                path=["software", "applications", "check_mk", "versions"],
+                key_columns={"version": "2020.08.20.cee"},
+                inventory_columns={
+                    "demo": False,
+                    "edition": "cee",
+                    "num_sites": 1,
+                    "number": "2020.08.20",
+                },
+                status_columns={},
+            ),
+            Attributes(
+                path=["software", "applications", "check_mk"],
+                inventory_attributes={"num_versions": 5, "num_sites": 3},
+                status_attributes={},
+            ),
+        ]
+    )

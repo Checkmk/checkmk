@@ -4,10 +4,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-
 from cmk.utils.type_defs import InventoryPluginName
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Attributes
+
+from .utils_inventory import sort_inventory_result
 
 INFO = [
     ["System Model", " IBM,8231-E2D"],
@@ -163,4 +164,4 @@ EXPECTED = [
 
 def test_inv_prtconf(fix_register):
     plugin = fix_register.inventory_plugins[InventoryPluginName("prtconf")]
-    assert list(plugin.inventory_function(INFO)) == EXPECTED
+    assert sort_inventory_result(plugin.inventory_function(INFO)) == sort_inventory_result(EXPECTED)

@@ -101,7 +101,7 @@ register.agent_section(
 
 def inventory_mssql_instance(section: Section) -> InventoryResult:
     path = ["software", "applications", "mssql", "instances"]
-    for instance_id, attrs in sorted(section.items(), key=lambda t: t[0]):
+    for instance_id, attrs in section.items():
         cluster_name = attrs.get("cluster_name")
         yield TableRow(
             path=path,

@@ -19,6 +19,8 @@ from cmk.base.plugins.agent_based.utils.k8s import (
     Selector,
 )
 
+from .utils_inventory import sort_inventory_result
+
 
 @pytest.mark.parametrize(
     "section_info, section_strategy, expected_check_result",
@@ -67,4 +69,6 @@ def test_inventory_kube_deployment(
     section_strategy: DeploymentStrategy,
     expected_check_result: Sequence[Any],
 ) -> None:
-    assert list(inventory_kube_deployment(section_info, section_strategy)) == expected_check_result
+    assert sort_inventory_result(
+        inventory_kube_deployment(section_info, section_strategy)
+    ) == sort_inventory_result(expected_check_result)

@@ -25,7 +25,7 @@ register.agent_section(
 
 def inventory_ibm_mq_channels(section: Section) -> InventoryResult:
     path = ["software", "applications", "ibm_mq", "channels"]
-    for item, attrs in sorted(section.items(), key=lambda t: t[0]):
+    for item, attrs in section.items():
         if ":" not in item:
             # Do not show queue manager in inventory
             continue

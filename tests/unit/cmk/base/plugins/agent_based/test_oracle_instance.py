@@ -20,6 +20,8 @@ from cmk.base.plugins.agent_based.oracle_instance import (
     parse_oracle_instance,
 )
 
+from .utils_inventory import sort_inventory_result
+
 
 def test_parse_oracle_instance() -> None:
     assert parse_oracle_instance(
@@ -674,4 +676,6 @@ def test_inv_oracle_instance_multiline() -> None:
         ),
     ]
 
-    assert list(inventory_oracle_instance(parse_oracle_instance(lines))) == expected_data
+    assert sort_inventory_result(
+        inventory_oracle_instance(parse_oracle_instance(lines))
+    ) == sort_inventory_result(expected_data)

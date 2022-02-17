@@ -14,6 +14,8 @@ from cmk.base.plugins.agent_based.inventory_statgrab_net import (
 )
 from cmk.base.plugins.agent_based.utils.interfaces import Interface, Section
 
+from .utils_inventory import sort_inventory_result
+
 _SECTION = [
     Interface(
         index="1",
@@ -208,4 +210,6 @@ def test_inventory_statgrab_net(
     section: Section,
     expected_result: InventoryResult,
 ) -> None:
-    assert list(inventory_statgrab_net(section)) == expected_result
+    assert sort_inventory_result(inventory_statgrab_net(section)) == sort_inventory_result(
+        expected_result
+    )

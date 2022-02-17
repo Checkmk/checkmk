@@ -11,6 +11,8 @@ from cmk.utils.type_defs import CheckPluginName
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State, TableRow
 from cmk.base.plugins.agent_based.oracle_recovery_area import inventory_oracle_recovery_area
 
+from .utils_inventory import sort_inventory_result
+
 _AGENT_OUTPUT = [
     ["AIMDWHD1", "300", "51235", "49000", "300"],
 ]
@@ -87,4 +89,6 @@ def test_check_oracle_recovery_area(fix_register, string_table, item, expected_r
     ],
 )
 def test_inventory_oracle_recovery_area(string_table, expected_result):
-    assert list(inventory_oracle_recovery_area(string_table)) == expected_result
+    assert sort_inventory_result(
+        inventory_oracle_recovery_area(string_table)
+    ) == sort_inventory_result(expected_result)

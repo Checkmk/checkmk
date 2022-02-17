@@ -12,6 +12,8 @@ from cmk.base.plugins.agent_based.inventory_k8s_daemon_pod_containers import (
     parse_k8s_daemon_pod_containers,
 )
 
+from .utils_inventory import sort_inventory_result
+
 
 @pytest.mark.parametrize(
     "raw_section, expected_result",
@@ -51,7 +53,6 @@ from cmk.base.plugins.agent_based.inventory_k8s_daemon_pod_containers import (
     ],
 )
 def test_k8s_daemon_pod_containers(raw_section, expected_result):
-    assert (
-        list(inventory_k8s_daemon_pod_containers(parse_k8s_daemon_pod_containers(raw_section)))
-        == expected_result
-    )
+    assert sort_inventory_result(
+        inventory_k8s_daemon_pod_containers(parse_k8s_daemon_pod_containers(raw_section))
+    ) == sort_inventory_result(expected_result)

@@ -394,7 +394,7 @@ register.check_plugin(
 def inventory_oracle_tablespaces(section: oracle.SectionTableSpaces) -> InventoryResult:
     path_tablespaces = ["software", "applications", "oracle", "tablespaces"]
     tablespaces = section["tablespaces"]
-    for tablespace in sorted(tablespaces):
+    for tablespace in tablespaces:
         sid, name = tablespace
         attrs = tablespaces[tablespace]
         db_version = attrs["db_version"]

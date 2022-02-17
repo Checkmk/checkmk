@@ -13,6 +13,8 @@ from cmk.base.plugins.agent_based.inventory_snmp_extended_info import (
     parse_snmp_extended_info,
 )
 
+from .utils_inventory import sort_inventory_result
+
 
 def test_inventory_snmp_extended_info_host_labels():
     section = parse_snmp_extended_info(
@@ -137,7 +139,6 @@ def test_inventory_snmp_extended_info_host_labels():
     ],
 )
 def test_inventory_snmp_extended_info(string_table, expected_result):
-    assert (
-        list(inventory_snmp_extended_info(parse_snmp_extended_info(string_table)))
-        == expected_result
-    )
+    assert sort_inventory_result(
+        inventory_snmp_extended_info(parse_snmp_extended_info(string_table))
+    ) == sort_inventory_result(expected_result)

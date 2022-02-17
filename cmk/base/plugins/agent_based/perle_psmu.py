@@ -88,7 +88,7 @@ register.snmp_section(
 
 
 def inventory_perle_psmu(section: Section) -> InventoryResult:
-    for psu_index, data in sorted(section.items()):
+    for psu_index, data in section.items():
         yield TableRow(
             path=["hardware", "components", "psus"],
             key_columns={

@@ -9,6 +9,8 @@ import pytest
 from cmk.base.plugins.agent_based.agent_based_api.v1 import TableRow
 from cmk.base.plugins.agent_based.inventory_k8s_assigned_pods import inventory_k8s_assigned_pods
 
+from .utils_inventory import sort_inventory_result
+
 
 @pytest.mark.parametrize(
     "raw_section, expected_result",
@@ -47,4 +49,6 @@ from cmk.base.plugins.agent_based.inventory_k8s_assigned_pods import inventory_k
     ],
 )
 def test_inventory_k8s_assigned_pods(raw_section, expected_result):
-    assert list(inventory_k8s_assigned_pods(raw_section)) == expected_result
+    assert sort_inventory_result(inventory_k8s_assigned_pods(raw_section)) == sort_inventory_result(
+        expected_result
+    )

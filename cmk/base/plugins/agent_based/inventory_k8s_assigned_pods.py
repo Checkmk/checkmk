@@ -26,7 +26,7 @@ register.agent_section(
 
 def inventory_k8s_assigned_pods(section: Section) -> InventoryResult:
     path = ["software", "applications", "kubernetes", "assigned_pods"]
-    for pod_name in sorted(section.get("names", [])):
+    for pod_name in section.get("names", []):
         # ONLY status data::little trick: key_columns and *_columns should not have common keys.
         # key_columns are used to identify a row.
         yield TableRow(

@@ -75,7 +75,7 @@ register.agent_section(
 
 def inventory_aix_packages(section: Section) -> InventoryResult:
     path = ["software", "packages"]
-    for row in sorted(section, key=lambda r: r.name):
+    for row in section:
         yield TableRow(
             path=path,
             key_columns={

@@ -41,7 +41,7 @@ register.agent_section(
 
 
 def inventory_oracle_performance(section: Section) -> InventoryResult:
-    for entry, entryinfo in sorted(section.items()):
+    for entry, entryinfo in section.items():
         if "SGA_info" in entryinfo:
             sga_data = entryinfo["SGA_info"]
             yield TableRow(

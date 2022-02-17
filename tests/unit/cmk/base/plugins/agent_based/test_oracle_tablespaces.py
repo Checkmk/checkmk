@@ -20,6 +20,8 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import TableRow
 from cmk.base.plugins.agent_based.oracle_tablespaces import inventory_oracle_tablespaces
 from cmk.base.plugins.agent_based.utils.oracle import OraErrors, SectionTableSpaces
 
+from .utils_inventory import sort_inventory_result
+
 StringTable = [
     ["line", "too", "short"],
     ["line", "too", "l", "o", "o", "o", "o", "o", "o", "o", "o", "o", "o", "o", "o", "o", "ong!"],
@@ -639,19 +641,20 @@ InvSection: SectionTableSpaces = {
 
 
 def test_inventory():
-    yielded_inventory = list(inventory_oracle_tablespaces(InvSection))
-    assert yielded_inventory == [
-        TableRow(
-            path=["software", "applications", "oracle", "tablespaces"],
-            key_columns={"sid": "CLUSTER", "name": "FOO"},
-            inventory_columns={"version": "", "type": "TEMPORARY", "autoextensible": "YES"},
-            status_columns={
-                "current_size": 37748736000,
-                "max_size": 41943040000,
-                "used_size": 22271754240,
-                "num_increments": 20,
-                "increment_size": 4194304000,
-                "free_space": 21768437760,
-            },
-        )
-    ]
+    assert sort_inventory_result(inventory_oracle_tablespaces(InvSection)) == sort_inventory_result(
+        [
+            TableRow(
+                path=["software", "applications", "oracle", "tablespaces"],
+                key_columns={"sid": "CLUSTER", "name": "FOO"},
+                inventory_columns={"version": "", "type": "TEMPORARY", "autoextensible": "YES"},
+                status_columns={
+                    "current_size": 37748736000,
+                    "max_size": 41943040000,
+                    "used_size": 22271754240,
+                    "num_increments": 20,
+                    "increment_size": 4194304000,
+                    "free_space": 21768437760,
+                },
+            )
+        ]
+    )

@@ -70,7 +70,7 @@ register.agent_section(
 
 def inventory_win_wmi_software(section: Section) -> InventoryResult:
     path = ["software", "packages"]
-    for package in sorted(section, key=lambda p: p.name):
+    for package in section:
         yield TableRow(
             path=path,
             key_columns={

@@ -22,6 +22,8 @@ from cmk.base.plugins.agent_based.mem_used import (
 )
 from cmk.base.plugins.agent_based.utils import memory
 
+from .utils_inventory import sort_inventory_result
+
 state = State  # TODO: cleanup
 
 KILO = 1024
@@ -789,4 +791,6 @@ def test_inventory_memory(
     section: memory.SectionMemUsed,
     expected_result: Sequence[Attributes],
 ) -> None:
-    assert list(inventory_mem_used(section)) == expected_result
+    assert sort_inventory_result(inventory_mem_used(section)) == sort_inventory_result(
+        expected_result
+    )

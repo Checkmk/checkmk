@@ -9,6 +9,8 @@ import pytest
 from cmk.base.plugins.agent_based.agent_based_api.v1 import TableRow
 from cmk.base.plugins.agent_based.ibm_mq_channels import inventory_ibm_mq_channels
 
+from .utils_inventory import sort_inventory_result
+
 
 @pytest.mark.parametrize(
     "parsed, expected_result",
@@ -62,4 +64,6 @@ from cmk.base.plugins.agent_based.ibm_mq_channels import inventory_ibm_mq_channe
     ],
 )
 def test_inv_aix_baselevel(parsed, expected_result):
-    assert list(inventory_ibm_mq_channels(parsed)) == expected_result
+    assert sort_inventory_result(inventory_ibm_mq_channels(parsed)) == sort_inventory_result(
+        expected_result
+    )

@@ -26,7 +26,7 @@ register.agent_section(
 
 def inventory_k8s_job_container(section: Section) -> InventoryResult:
     path = ["software", "applications", "kubernetes", "job_container"]
-    for container_name, container_data in sorted(section.items()):
+    for container_name, container_data in section.items():
         yield TableRow(
             path=path,
             key_columns={

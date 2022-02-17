@@ -9,6 +9,8 @@ import pytest
 from cmk.base.plugins.agent_based.agent_based_api.v1 import TableRow
 from cmk.base.plugins.agent_based.k8s_nodes import inventory_k8s_nodes
 
+from .utils_inventory import sort_inventory_result
+
 
 @pytest.mark.parametrize(
     "parsed, expected_result",
@@ -47,4 +49,6 @@ from cmk.base.plugins.agent_based.k8s_nodes import inventory_k8s_nodes
     ],
 )
 def test_k8s_nodes(parsed, expected_result):
-    assert list(inventory_k8s_nodes(parsed)) == expected_result
+    assert sort_inventory_result(inventory_k8s_nodes(parsed)) == sort_inventory_result(
+        expected_result
+    )

@@ -22,7 +22,7 @@ from .agent_based_api.v1.type_defs import InventoryResult
 
 def inventory_k8s_ingress_info(section: t.Any) -> InventoryResult:
     path = ["software", "applications", "kubernetes", "ingresses"]
-    for name, data in sorted(section.items()):
+    for name, data in section.items():
         for service_path, service_name, service_port in data["backends"]:
             yield TableRow(
                 path=path + [name, "backends"],

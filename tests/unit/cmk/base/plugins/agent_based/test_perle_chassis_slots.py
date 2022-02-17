@@ -9,6 +9,8 @@ import pytest
 from cmk.base.plugins.agent_based.agent_based_api.v1 import TableRow
 from cmk.base.plugins.agent_based.perle_chassis_slots import inventory_perle_chassis_slots
 
+from .utils_inventory import sort_inventory_result
+
 
 @pytest.mark.parametrize(
     "string_table, expected_result",
@@ -79,4 +81,6 @@ from cmk.base.plugins.agent_based.perle_chassis_slots import inventory_perle_cha
     ],
 )
 def test_inventory_perle_chassis_slots(string_table, expected_result):
-    assert list(inventory_perle_chassis_slots(string_table)) == expected_result
+    assert sort_inventory_result(
+        inventory_perle_chassis_slots(string_table)
+    ) == sort_inventory_result(expected_result)

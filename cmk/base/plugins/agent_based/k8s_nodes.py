@@ -64,7 +64,7 @@ register.check_plugin(
 
 def inventory_k8s_nodes(section: Section) -> InventoryResult:
     path = ["software", "applications", "kubernetes", "nodes"]
-    for k8s_node in sorted(section.get("nodes", [])):
+    for k8s_node in section.get("nodes", []):
         # ONLY status data::little trick: key_columns and *_columns should not have common keys.
         # key_columns are used to identify a row.
         yield TableRow(

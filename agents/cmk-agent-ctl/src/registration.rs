@@ -38,7 +38,7 @@ impl TrustEstablishing for InteractiveTrust {
         );
         InteractiveTrust::display_cert(&coordinates.server, &coordinates.port)?;
         eprintln!();
-        eprintln!("\x1b[1mDo you want to establish this connection?\x1b[0m \x1b[90m(\x1b[0my\x1b[90mes/\x1b[0mn\x1b[90mo)\x1b[0m");
+        eprintln!("Do you want to establish this connection? [Y/n]");
         eprint!("> ");
         loop {
             let mut answer = String::new();
@@ -46,8 +46,8 @@ impl TrustEstablishing for InteractiveTrust {
                 .read_line(&mut answer)
                 .context("Failed to read answer from standard input")?;
             match answer.to_lowercase().trim() {
-                "y" | "yes" => return Ok(()),
-                "n" | "no" => {
+                "y" | "" => return Ok(()),
+                "n" => {
                     return Err(anyhow!(format!(
                         "Cannot continue without trusting {}",
                         coordinates

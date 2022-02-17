@@ -112,14 +112,15 @@ std::optional<std::vector<char>> ReadFileData(std::ifstream &CapFile) {
     }
     XLOG::d.t("Processing {} bytes of data", length);
 
-    // ATTENTION: Value below must be in sync with cap.py::MAX_ALLOWED_SIZE
-    constexpr uint32_t max_allowed_size = 64 * 1024 * 1024;
+    // ATTENTION: Value below must be bigger than cap.py::MAX_ALLOWED_SIZE
+    // This limit is only to avoid RAM problems, real control should be
+    // performed by WATO.
+    constexpr uint32_t max_allowed_size = 1024 * 1024 * 1024;
     if (length > max_allowed_size) {
         XLOG::l.crit("Size of data is too big {} allowed {}", length,
                      max_allowed_size);
         return {};
     }
-
     size_t buffer_length = length;
     std::vector<char> dataBuffer(buffer_length, 0);
     CapFile.read(dataBuffer.data(), length);

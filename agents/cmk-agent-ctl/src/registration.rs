@@ -85,25 +85,32 @@ fn registration_server_cert<'a>(
     }
 }
 
-fn pair(
+fn prepare_registration(
     config: &config::RegistrationConfig,
     agent_rec_api: &impl agent_receiver_api::Pairing,
     trust_establisher: &impl TrustEstablishing,
-) -> AnyhowResult<(uuid::Uuid, String, agent_receiver_api::PairingResponse)> {
+) -> AnyhowResult<(types::Credentials, PairingResult)> {
     let uuid = uuid::Uuid::new_v4();
     let (csr, private_key) = certs::make_csr(&uuid.to_string()).context("Error creating CSR.")?;
+    let root_cert = registration_server_cert(config, trust_establisher)?;
+    let credentials = types::Credentials::try_from(config.opt_pwd_credentials.to_owned())?;
+    let pairing_response = agent_rec_api
+        .pair(&config.coordinates, root_cert, csr, &credentials)
+        .context(format!("Error pairing with {}", &config.coordinates))?;
     Ok((
-        uuid,
-        private_key,
-        agent_rec_api
-            .pair(
-                &config.coordinates,
-                registration_server_cert(config, trust_establisher)?,
-                csr,
-                &config.credentials,
-            )
-            .context(format!("Error pairing with {}", &config.coordinates))?,
+        credentials,
+        PairingResult {
+            uuid,
+            private_key,
+            pairing_response,
+        },
     ))
+}
+
+struct PairingResult {
+    uuid: uuid::Uuid,
+    private_key: String,
+    pairing_response: agent_receiver_api::PairingResponse,
 }
 
 fn post_registration_conn_type(
@@ -136,17 +143,17 @@ fn _register(
           + agent_receiver_api::Status),
     trust_establisher: &impl TrustEstablishing,
 ) -> AnyhowResult<()> {
-    // TODO: what if registration_state.contains_key(agent_receiver_address) (already registered)?
-    let (uuid, private_key, pairing_response) = pair(&config, agent_rec_api, trust_establisher)?;
+    let (credentials, pairing_result) =
+        prepare_registration(&config, agent_rec_api, trust_establisher)?;
 
     match &config.host_reg_data {
         config::HostRegistrationData::Name(hn) => {
             agent_rec_api
                 .register_with_hostname(
                     &config.coordinates,
-                    &pairing_response.root_cert,
-                    &config.credentials,
-                    &uuid,
+                    &pairing_result.pairing_response.root_cert,
+                    &credentials,
+                    &pairing_result.uuid,
                     hn,
                 )
                 .context(format!(
@@ -158,9 +165,9 @@ fn _register(
             agent_rec_api
                 .register_with_agent_labels(
                     &config.coordinates,
-                    &pairing_response.root_cert,
-                    &config.credentials,
-                    &uuid,
+                    &pairing_result.pairing_response.root_cert,
+                    &credentials,
+                    &pairing_result.uuid,
                     al,
                 )
                 .context(format!(
@@ -173,17 +180,17 @@ fn _register(
     registry.register_connection(
         post_registration_conn_type(
             &config.coordinates,
-            &pairing_response.root_cert,
-            &uuid,
-            &pairing_response.client_cert,
+            &pairing_result.pairing_response.root_cert,
+            &pairing_result.uuid,
+            &pairing_result.pairing_response.client_cert,
             agent_rec_api,
         )?,
         &config.coordinates,
         config::Connection {
-            uuid,
-            private_key,
-            certificate: pairing_response.client_cert,
-            root_cert: pairing_response.root_cert,
+            uuid: pairing_result.uuid,
+            private_key: pairing_result.private_key,
+            certificate: pairing_result.pairing_response.client_cert,
+            root_cert: pairing_result.pairing_response.root_cert,
         },
     );
 
@@ -223,14 +230,15 @@ fn _register_surrogate_pull(
             ))
         }
     };
-    let (uuid, private_key, pairing_response) = pair(&config, agent_rec_api, trust_establisher)?;
+    let (credentials, pairing_result) =
+        prepare_registration(&config, agent_rec_api, trust_establisher)?;
 
     agent_rec_api
         .register_with_hostname(
             &config.coordinates,
-            &pairing_response.root_cert,
-            &config.credentials,
-            &uuid,
+            &pairing_result.pairing_response.root_cert,
+            &credentials,
+            &pairing_result.uuid,
             hn,
         )
         .context(format!(
@@ -243,10 +251,10 @@ fn _register_surrogate_pull(
         serde_json::to_string(&SurrogatePullData {
             agent_controller_version: String::from(constants::VERSION),
             connection: config::Connection {
-                uuid,
-                private_key,
-                certificate: pairing_response.client_cert,
-                root_cert: pairing_response.root_cert,
+                uuid: pairing_result.uuid,
+                private_key: pairing_result.private_key,
+                certificate: pairing_result.pairing_response.client_cert,
+                root_cert: pairing_result.pairing_response.root_cert,
             }
         })?
     );
@@ -283,7 +291,7 @@ mod tests {
             coordinates: &site_spec::Coordinates,
             root_cert: Option<&str>,
             _csr: String,
-            _credentials: &config::Credentials,
+            _credentials: &types::Credentials,
         ) -> AnyhowResult<agent_receiver_api::PairingResponse> {
             assert!(coordinates.to_string() == SITE_ADDRESS);
             assert!(root_cert.is_some() == self.expect_root_cert_for_pairing);
@@ -299,7 +307,7 @@ mod tests {
             &self,
             coordinates: &site_spec::Coordinates,
             _root_cert: &str,
-            _credentials: &config::Credentials,
+            _credentials: &types::Credentials,
             _uuid: &uuid::Uuid,
             host_name: &str,
         ) -> AnyhowResult<()> {
@@ -316,7 +324,7 @@ mod tests {
             &self,
             coordinates: &site_spec::Coordinates,
             _root_cert: &str,
-            _credentials: &config::Credentials,
+            _credentials: &types::Credentials,
             _uuid: &uuid::Uuid,
             ag_labels: &types::AgentLabels,
         ) -> AnyhowResult<()> {
@@ -378,9 +386,9 @@ mod tests {
     ) -> config::RegistrationConfig {
         config::RegistrationConfig {
             coordinates: site_spec::Coordinates::from_str(SITE_ADDRESS).unwrap(),
-            credentials: config::Credentials {
+            opt_pwd_credentials: types::OptPwdCredentials {
                 username: String::from("user"),
-                password: String::from("password"),
+                password: Some(String::from("password")),
             },
             root_certificate,
             host_reg_data,
@@ -393,7 +401,7 @@ mod tests {
 
         #[test]
         fn test_interactive_trust() {
-            assert!(pair(
+            assert!(prepare_registration(
                 &registration_config(
                     None,
                     config::HostRegistrationData::Name(String::from(HOST_NAME)),
@@ -410,7 +418,7 @@ mod tests {
 
         #[test]
         fn test_blind_trust() {
-            assert!(pair(
+            assert!(prepare_registration(
                 &registration_config(
                     None,
                     config::HostRegistrationData::Name(String::from(HOST_NAME)),
@@ -427,7 +435,7 @@ mod tests {
 
         #[test]
         fn test_root_cert_from_config() {
-            assert!(pair(
+            assert!(prepare_registration(
                 &registration_config(
                     Some(String::from("root_certificate")),
                     config::HostRegistrationData::Labels(agent_labels()),
@@ -444,7 +452,7 @@ mod tests {
 
         #[test]
         fn test_root_cert_from_config_and_blind_trust() {
-            assert!(pair(
+            assert!(prepare_registration(
                 &registration_config(
                     Some(String::from("root_certificate")),
                     config::HostRegistrationData::Labels(agent_labels()),

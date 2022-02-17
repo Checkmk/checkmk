@@ -37,3 +37,4 @@ tokio-rustls = { version = "*" }
 async-std = { version = "*" }
 ipnet = { version = "*" }
 toml = { version = "*" }
+rpassword = { version = "*" }

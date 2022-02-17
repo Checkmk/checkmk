@@ -30,10 +30,10 @@ pub struct RegistrationArgs {
     pub site_address: Option<site_spec::SiteSpec>,
 
     /// API user to use for registration
-    #[structopt(long, short = "u", requires = "password", parse(from_str))]
+    #[structopt(long, short = "u", parse(from_str))]
     pub user: Option<String>,
 
-    /// Password for API user
+    /// Password for API user. Can also be entered interactively.
     #[structopt(long, short = "p", requires = "user", parse(from_str))]
     pub password: Option<String>,
 

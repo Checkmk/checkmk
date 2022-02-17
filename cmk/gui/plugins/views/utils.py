@@ -17,6 +17,7 @@ import re
 import time
 import traceback
 from contextlib import suppress
+from html import unescape
 from pathlib import Path
 from typing import (
     Any,
@@ -2246,7 +2247,7 @@ class Cell:
                 txt = escaping.strip_tags(str(txt))
 
             elif not isinstance(txt, tuple):
-                txt = escaping.unescape_attributes(txt)
+                txt = unescape(txt)
                 txt = escaping.strip_tags(txt)
 
             return css_classes, txt

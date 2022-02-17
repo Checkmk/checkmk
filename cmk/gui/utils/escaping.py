@@ -89,16 +89,6 @@ def escape_attribute(value: EscapableEntity) -> str:
     raise TypeError(f"Unsupported type {type(value)}")
 
 
-def unescape_attributes(value: str) -> str:
-    # In python3 use html.unescape
-    return (
-        value.replace("&amp;", "&")  #
-        .replace("&quot;", '"')  #
-        .replace("&lt;", "<")  #
-        .replace("&gt;", ">")
-    )
-
-
 def escape_text(text: EscapableEntity) -> str:
     """Escape HTML text
 

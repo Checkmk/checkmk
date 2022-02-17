@@ -28,14 +28,14 @@ _destination() {
     # applications get it wrong.
     # Follow the mainstream, and pick the most populated one.
     most_populated="$(for d in "/usr/lib/systemd/system" "/lib/systemd/system"; do
-        [ -d "${d}" ] && printf "%s %s\n" "$(find "${d}" -type f -print0 | wc -l)" "${d}"
+        [ -d "${ROOT}${d}" ] && printf "%s %s\n" "$(find "${ROOT}${d}" -type f | wc -l)" "${d}"
     done | sort -rn)"
 
     if [ -z "${most_populated}" ]; then
         cat >&2 <<HERE
 Unable to figure out where to put the systemd units.
-This package knows about $(_destination --all),
-but none of these are present.
+This package knows about /usr/lib/systemd/system and
+/lib/systemd/system, but none of these are present.
 HERE
         return 1
     fi
@@ -46,6 +46,8 @@ HERE
         echo "${most_populated}" | cut -d' ' -f2
     fi
 }
+
+ROOT=""
 
 _systemd_present() {
     command -v systemctl >/dev/null && return
@@ -58,7 +60,7 @@ _systemd_version() {
 }
 
 _need_exec_stop_post() {
-    grep -q '^ExecStopPost=' "${RESOURCES}/check-mk-agent@.service"
+    grep -q '^ExecStopPost=' "${ROOT}${RESOURCES}/check-mk-agent@.service"
 }
 
 _systemd_sufficient() {
@@ -92,7 +94,7 @@ deploy() {
     prefix="Deploying systemd units:"
     for unit in $(_unit_files); do
         printf "%s %s" "${prefix}" "${unit}"
-        cp "${RESOURCES}/${unit}" "${dest}/" | return
+        cp "${ROOT}${RESOURCES}/${unit}" "${ROOT}${dest}/" | return
         prefix=","
     done
     printf "\n"
@@ -102,10 +104,10 @@ cleanup() {
     prefix="Removing systemd units:"
     _destination --all | while read -r dest; do
         for unit in $(_unit_files); do
-            [ -e "${dest}/${unit}" ] || continue
+            [ -e "${ROOT}${dest}/${unit}" ] || continue
             printf "%s %s" "${prefix}" "${unit}"
             prefix=","
-            rm -f "${dest}/${unit}"
+            rm -f "${ROOT}${dest}/${unit}"
         done
     done
     printf "\n"
@@ -134,7 +136,7 @@ trigger() {
 
 _unit_deployed() {
     _destination --all | while read -r dest; do
-        [ -e "${dest}/${1}" ] && return 0
+        [ -e "${ROOT}${dest}/${1}" ] && return 0
     done
     return 1
 }

@@ -2,7 +2,7 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
-use super::{cli, site_spec};
+use super::{cli, site_spec, types};
 use anyhow::{anyhow, Context, Result as AnyhowResult};
 use serde::de::DeserializeOwned;
 use serde::Deserialize;
@@ -35,8 +35,6 @@ pub trait JSONLoader: DeserializeOwned {
     }
 }
 
-pub type AgentLabels = HashMap<String, String>;
-
 #[derive(Deserialize)]
 pub struct Credentials {
     pub username: String,
@@ -58,14 +56,14 @@ pub struct ConfigFromDisk {
     host_name: Option<String>,
 
     #[serde(default)]
-    agent_labels: Option<AgentLabels>,
+    agent_labels: Option<types::AgentLabels>,
 }
 
 impl JSONLoader for ConfigFromDisk {}
 
 pub enum HostRegistrationData {
     Name(String),
-    Labels(AgentLabels),
+    Labels(types::AgentLabels),
 }
 
 pub struct RegistrationConfig {

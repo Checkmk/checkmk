@@ -2,7 +2,7 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
-use super::{certs, config, site_spec};
+use super::{certs, config, site_spec, types};
 use anyhow::{anyhow, Context, Error as AnyhowError, Result as AnyhowResult};
 use http::StatusCode;
 use serde::{Deserialize, Serialize};
@@ -28,7 +28,7 @@ struct RegistrationWithHNBody {
 #[derive(Serialize)]
 struct RegistrationWithALBody {
     uuid: String,
-    agent_labels: config::AgentLabels,
+    agent_labels: types::AgentLabels,
 }
 
 #[derive(StringEnum)]
@@ -114,7 +114,7 @@ pub trait Registration {
         root_cert: &str,
         credentials: &config::Credentials,
         uuid: &str,
-        agent_labels: &config::AgentLabels,
+        agent_labels: &types::AgentLabels,
     ) -> AnyhowResult<()>;
 }
 
@@ -202,7 +202,7 @@ impl Registration for Api {
         root_cert: &str,
         credentials: &config::Credentials,
         uuid: &str,
-        agent_labels: &config::AgentLabels,
+        agent_labels: &types::AgentLabels,
     ) -> AnyhowResult<()> {
         check_response_204(
             certs::client(Some(root_cert))?

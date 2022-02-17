@@ -259,6 +259,7 @@ pub fn register_surrogate_pull(config: config::RegistrationConfig) -> AnyhowResu
 
 #[cfg(test)]
 mod tests {
+    use super::super::types;
     use std::str::FromStr;
 
     use super::super::config::JSONLoader;
@@ -318,7 +319,7 @@ mod tests {
             _root_cert: &str,
             _credentials: &config::Credentials,
             _uuid: &str,
-            ag_labels: &config::AgentLabels,
+            ag_labels: &types::AgentLabels,
         ) -> AnyhowResult<()> {
             assert!(matches!(
                 self.expected_registration_method.as_ref().unwrap(),
@@ -365,7 +366,7 @@ mod tests {
         .unwrap()
     }
 
-    fn agent_labels() -> config::AgentLabels {
+    fn agent_labels() -> types::AgentLabels {
         let mut al = std::collections::HashMap::new();
         al.insert(String::from("a"), String::from("b"));
         al

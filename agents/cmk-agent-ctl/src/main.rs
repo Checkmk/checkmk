@@ -17,6 +17,7 @@ mod registration;
 mod site_spec;
 mod status;
 mod tls_server;
+mod types;
 use anyhow::{Context, Result as AnyhowResult};
 use config::JSONLoader;
 use log::error;

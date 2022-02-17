@@ -58,7 +58,7 @@ fn sni_resolver<'a>(
 
         let certified_key = CertifiedKey::new(vec![cert], Arc::new(RsaSigningKey::new(&key)?));
 
-        resolver.add(&conn.uuid, certified_key)?;
+        resolver.add(&conn.uuid.to_string(), certified_key)?;
     }
 
     Ok(Arc::new(resolver))

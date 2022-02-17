@@ -63,9 +63,11 @@ mod tests {
     impl JSONProvider for MockJSONProvider {
         fn provide(&self) -> AnyhowResult<String> {
             Ok(String::from(
-                r#"{"agent_controller_version":"0.1.0","connection":{"uuid":"short-uuid",
-                  "private_key": "fake private key","certificate":"fake cert","root_cert":
-                  "fake root cert"}}"#,
+                r#"{"agent_controller_version":"0.1.0","connection":{
+                    "uuid":"2da53af5-5c06-4195-ab6f-668875710bec", 
+                    "private_key": "fake private key",
+                    "certificate":"fake cert",
+                    "root_cert": "fake root cert"}}"#,
             ))
         }
     }

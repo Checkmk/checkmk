@@ -4,6 +4,7 @@
 
 use super::{agent_receiver_api, certs, config, site_spec};
 use anyhow::{Context, Error as AnyhowError, Result as AnyhowResult};
+use serde_with::DisplayFromStr;
 
 #[derive(serde::Serialize)]
 struct CertInfo {
@@ -83,10 +84,12 @@ impl std::fmt::Display for ConnectionName {
     }
 }
 
+#[serde_with::serde_as]
 #[derive(serde::Serialize)]
 struct ConnectionStatus {
     connection: ConnectionName,
-    uuid: String,
+    #[serde_as(as = "DisplayFromStr")]
+    uuid: uuid::Uuid,
     local: LocalConnectionStatus,
     remote: Option<RemoteConnectionStatusResponse>,
 }
@@ -180,7 +183,7 @@ impl ConnectionStatus {
     ) -> ConnectionStatus {
         ConnectionStatus {
             connection: ConnectionName::Standard(coordinates.clone()),
-            uuid: String::from(&conn.uuid),
+            uuid: conn.uuid,
             local: LocalConnectionStatus {
                 connection_type: conn_type,
                 cert_info: CertParsingResult::from(&conn.certificate),
@@ -196,7 +199,7 @@ impl ConnectionStatus {
     fn from_imported_conn(conn: &config::Connection, idx: usize) -> ConnectionStatus {
         ConnectionStatus {
             connection: ConnectionName::Imported(idx),
-            uuid: String::from(&conn.uuid),
+            uuid: conn.uuid,
             local: LocalConnectionStatus {
                 connection_type: config::ConnectionType::Pull,
                 cert_info: CertParsingResult::from(&conn.certificate),
@@ -434,7 +437,7 @@ mod test_status {
                 "{}",
                 ConnectionStatus {
                     connection: ConnectionName::from_str("localhost:8000/site").unwrap(),
-                    uuid: String::from("abc-123"),
+                    uuid: uuid::Uuid::from_str("99f56bbc-5965-4b34-bc70-1959ad1d32d6").unwrap(),
                     local: LocalConnectionStatus {
                         connection_type: config::ConnectionType::Pull,
                         cert_info: CertParsingResult::Success(CertInfo {
@@ -454,7 +457,7 @@ mod test_status {
             ),
             String::from(
                 "Connection: localhost:8000/site\n\
-                 \tUUID: abc-123\n\
+                 \tUUID: 99f56bbc-5965-4b34-bc70-1959ad1d32d6\n\
                  \tLocal:\n\
                  \t\tConnection type: pull-agent\n\
                  \t\tCertificate issuer: Site 'site' local CA\n\
@@ -474,7 +477,7 @@ mod test_status {
                 "{}",
                 ConnectionStatus {
                     connection: ConnectionName::from_str("localhost:8000/site").unwrap(),
-                    uuid: String::from("abc-123"),
+                    uuid: uuid::Uuid::from_str("99f56bbc-5965-4b34-bc70-1959ad1d32d6").unwrap(),
                     local: LocalConnectionStatus {
                         connection_type: config::ConnectionType::Pull,
                         cert_info: CertParsingResult::Success(CertInfo {
@@ -494,7 +497,7 @@ mod test_status {
             ),
             String::from(
                 "Connection: localhost:8000/site\n\
-                 \tUUID: abc-123\n\
+                 \tUUID: 99f56bbc-5965-4b34-bc70-1959ad1d32d6\n\
                  \tLocal:\n\
                  \t\tConnection type: pull-agent\n\
                  \t\tCertificate issuer: Site 'site' local CA\n\
@@ -514,7 +517,7 @@ mod test_status {
                 "{}",
                 ConnectionStatus {
                     connection: ConnectionName::from_str("imported-1").unwrap(),
-                    uuid: String::from("abc-123"),
+                    uuid: uuid::Uuid::from_str("99f56bbc-5965-4b34-bc70-1959ad1d32d6").unwrap(),
                     local: LocalConnectionStatus {
                         connection_type: config::ConnectionType::Pull,
                         cert_info: CertParsingResult::Success(CertInfo {
@@ -528,7 +531,7 @@ mod test_status {
             ),
             String::from(
                 "Connection: imported-1\n\
-                 \tUUID: abc-123\n\
+                 \tUUID: 99f56bbc-5965-4b34-bc70-1959ad1d32d6\n\
                  \tLocal:\n\
                  \t\tConnection type: pull-agent\n\
                  \t\tCertificate issuer: Site 'site' local CA\n\
@@ -546,7 +549,7 @@ mod test_status {
                 "{}",
                 ConnectionStatus {
                     connection: ConnectionName::from_str("localhost:8000/site").unwrap(),
-                    uuid: String::from("abc-123"),
+                    uuid: uuid::Uuid::from_str("99f56bbc-5965-4b34-bc70-1959ad1d32d6").unwrap(),
                     local: LocalConnectionStatus {
                         connection_type: config::ConnectionType::Pull,
                         cert_info: CertParsingResult::Error(String::from("parsing_error"))
@@ -558,7 +561,7 @@ mod test_status {
             ),
             String::from(
                 "Connection: localhost:8000/site\n\
-                 \tUUID: abc-123\n\
+                 \tUUID: 99f56bbc-5965-4b34-bc70-1959ad1d32d6\n\
                  \tLocal:\n\
                  \t\tConnection type: pull-agent\n\
                  \t\tCertificate parsing failed (!!)\n\
@@ -575,7 +578,7 @@ mod test_status {
                 "{}",
                 ConnectionStatus {
                     connection: ConnectionName::from_str("localhost:8000/site").unwrap(),
-                    uuid: String::from("abc-123"),
+                    uuid: uuid::Uuid::from_str("99f56bbc-5965-4b34-bc70-1959ad1d32d6").unwrap(),
                     local: LocalConnectionStatus {
                         connection_type: config::ConnectionType::Pull,
                         cert_info: CertParsingResult::Success(CertInfo {
@@ -591,7 +594,7 @@ mod test_status {
             ),
             String::from(
                 "Connection: localhost:8000/site\n\
-                 \tUUID: abc-123\n\
+                 \tUUID: 99f56bbc-5965-4b34-bc70-1959ad1d32d6\n\
                  \tLocal:\n\
                  \t\tConnection type: pull-agent\n\
                  \t\tCertificate issuer: Site 'site' local CA\n\
@@ -609,7 +612,7 @@ mod test_status {
                 "{}",
                 ConnectionStatus {
                     connection: ConnectionName::from_str("localhost:8000/site").unwrap(),
-                    uuid: String::from("abc-123"),
+                    uuid: uuid::Uuid::from_str("99f56bbc-5965-4b34-bc70-1959ad1d32d6").unwrap(),
                     local: LocalConnectionStatus {
                         connection_type: config::ConnectionType::Pull,
                         cert_info: CertParsingResult::Success(CertInfo {
@@ -629,7 +632,7 @@ mod test_status {
             ),
             String::from(
                 "Connection: localhost:8000/site\n\
-                 \tUUID: abc-123\n\
+                 \tUUID: 99f56bbc-5965-4b34-bc70-1959ad1d32d6\n\
                  \tLocal:\n\
                  \t\tConnection type: pull-agent\n\
                  \t\tCertificate issuer: Site 'site' local CA\n\
@@ -649,7 +652,7 @@ mod test_status {
                 "{}",
                 ConnectionStatus {
                     connection: ConnectionName::from_str("localhost:8000/site").unwrap(),
-                    uuid: String::from("abc-123"),
+                    uuid: uuid::Uuid::from_str("99f56bbc-5965-4b34-bc70-1959ad1d32d6").unwrap(),
                     local: LocalConnectionStatus {
                         connection_type: config::ConnectionType::Pull,
                         cert_info: CertParsingResult::Success(CertInfo {
@@ -669,7 +672,7 @@ mod test_status {
             ),
             String::from(
                 "Connection: localhost:8000/site\n\
-                 \tUUID: abc-123\n\
+                 \tUUID: 99f56bbc-5965-4b34-bc70-1959ad1d32d6\n\
                  \tLocal:\n\
                  \t\tConnection type: pull-agent\n\
                  \t\tCertificate issuer: Site 'site' local CA\n\
@@ -687,7 +690,7 @@ mod test_status {
             connections: vec![
                 ConnectionStatus {
                     connection: ConnectionName::from_str("localhost:8000/site").unwrap(),
-                    uuid: String::from("abc-123"),
+                    uuid: uuid::Uuid::from_str("50611369-7a42-4c0b-927e-9a14330401fe").unwrap(),
                     local: LocalConnectionStatus {
                         connection_type: config::ConnectionType::Pull,
                         cert_info: CertParsingResult::Success(CertInfo {
@@ -706,7 +709,7 @@ mod test_status {
                 },
                 ConnectionStatus {
                     connection: ConnectionName::from_str("somehwere:8000/site2").unwrap(),
-                    uuid: String::from("ghghhfjdkgf123"),
+                    uuid: uuid::Uuid::from_str("3c87778b-8bb8-434d-bcc6-6d05f2668c80").unwrap(),
                     local: LocalConnectionStatus {
                         connection_type: config::ConnectionType::Push,
                         cert_info: CertParsingResult::Success(CertInfo {
@@ -732,7 +735,7 @@ mod test_status {
         assert_eq!(
             build_status().to_string(false).unwrap(),
             "Connection: localhost:8000/site\n\
-             \tUUID: abc-123\n\
+             \tUUID: 50611369-7a42-4c0b-927e-9a14330401fe\n\
              \tLocal:\n\
              \t\tConnection type: pull-agent\n\
              \t\tCertificate issuer: Site 'site' local CA\n\
@@ -742,7 +745,7 @@ mod test_status {
              \t\tRegistration state: operational\n\
              \t\tHost name: my-host\n\n\n\
              Connection: somehwere:8000/site2\n\
-             \tUUID: ghghhfjdkgf123\n\
+             \tUUID: 3c87778b-8bb8-434d-bcc6-6d05f2668c80\n\
              \tLocal:\n\
              \t\tConnection type: push-agent\n\
              \t\tCertificate issuer: Site 'site2' local CA\n\
@@ -781,7 +784,7 @@ mod test_status {
             &self,
             _coordinates: &site_spec::Coordinates,
             _root_cert: &str,
-            _uuid: &str,
+            _uuid: &uuid::Uuid,
             _certificate: &str,
         ) -> Result<agent_receiver_api::StatusResponse, agent_receiver_api::StatusError> {
             Ok(agent_receiver_api::StatusResponse {
@@ -799,7 +802,7 @@ mod test_status {
         push.insert(
             site_spec::Coordinates::from_str("server:8000/push-site").unwrap(),
             config::Connection {
-                uuid: String::from("uuid-push"),
+                uuid: uuid::Uuid::from_str("99f56bbc-5965-4b34-bc70-1959ad1d32d6").unwrap(),
                 private_key: String::from("private_key"),
                 certificate: String::from("certificate"),
                 root_cert: String::from("root_cert"),
@@ -818,7 +821,7 @@ mod test_status {
         assert_eq!(
             _status(&registry, false, &MockApi {},).unwrap(),
             "Connection: server:8000/push-site\n\
-             \tUUID: uuid-push\n\
+             \tUUID: 99f56bbc-5965-4b34-bc70-1959ad1d32d6\n\
              \tLocal:\n\
              \t\tConnection type: push-agent\n\
              \t\tCertificate parsing failed (!!)\n\

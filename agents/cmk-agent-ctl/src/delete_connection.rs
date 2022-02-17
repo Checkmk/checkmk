@@ -8,7 +8,7 @@ use super::{config, status};
 use anyhow::{anyhow, Context, Result as AnyhowResult};
 
 fn connection_name_from_uuid(
-    uuid: &str,
+    uuid: uuid::Uuid,
     registry: &config::Registry,
 ) -> AnyhowResult<status::ConnectionName> {
     for (coordinates, connection) in registry
@@ -28,9 +28,13 @@ fn connection_name_from_uuid(
 }
 
 pub fn delete(registry: &mut config::Registry, connection_id: &str) -> AnyhowResult<()> {
-    if let Err(err) = match status::ConnectionName::from_str(connection_id)
-        .or_else(|_| connection_name_from_uuid(connection_id, registry))?
-    {
+    if let Err(err) = match status::ConnectionName::from_str(connection_id).or_else(|_| {
+        connection_name_from_uuid(
+            uuid::Uuid::from_str(connection_id)
+                .context("Provided connection name is not a valid name and not a valid UUID")?,
+            registry,
+        )
+    })? {
         status::ConnectionName::Standard(coordinates) => {
             registry.delete_standard_connection(&coordinates)
         }
@@ -53,6 +57,10 @@ pub fn delete_all(registry: &mut config::Registry) -> AnyhowResult<()> {
 mod tests {
     use super::super::site_spec;
     use super::*;
+    const UUID_PUSH: &str = "0096abd7-83c9-42f8-8b3a-3ffba7ba959d";
+    const UUID_PULL: &str = "b3501e4d-2820-433c-8e9c-38c69ac20faa";
+    const UUID_PULL_IMP1: &str = "00c21714-5086-46d7-848e-5be72c715cfd";
+    const UUID_PULL_IMP2: &str = "3bf83706-8e47-4e38-beb6-b1ce83a4eee1";
 
     fn registry() -> config::Registry {
         let mut push = std::collections::HashMap::new();
@@ -60,7 +68,7 @@ mod tests {
         push.insert(
             site_spec::Coordinates::from_str("server:8000/push-site").unwrap(),
             config::Connection {
-                uuid: String::from("uuid-push"),
+                uuid: uuid::Uuid::from_str(UUID_PUSH).unwrap(),
                 private_key: String::from("private_key"),
                 certificate: String::from("certificate"),
                 root_cert: String::from("root_cert"),
@@ -69,7 +77,7 @@ mod tests {
         pull.insert(
             site_spec::Coordinates::from_str("server:8000/pull-site").unwrap(),
             config::Connection {
-                uuid: String::from("uuid-pull"),
+                uuid: uuid::Uuid::from_str(UUID_PULL).unwrap(),
                 private_key: String::from("private_key"),
                 certificate: String::from("certificate"),
                 root_cert: String::from("root_cert"),
@@ -81,13 +89,13 @@ mod tests {
                 pull,
                 pull_imported: vec![
                     config::Connection {
-                        uuid: String::from("uuid-imported-1"),
+                        uuid: uuid::Uuid::from_str(UUID_PULL_IMP1).unwrap(),
                         private_key: String::from("private_key"),
                         certificate: String::from("certificate"),
                         root_cert: String::from("root_cert"),
                     },
                     config::Connection {
-                        uuid: String::from("uuid-imported-2"),
+                        uuid: uuid::Uuid::from_str(UUID_PULL_IMP2).unwrap(),
                         private_key: String::from("private_key"),
                         certificate: String::from("certificate"),
                         root_cert: String::from("root_cert"),
@@ -102,7 +110,8 @@ mod tests {
     #[test]
     fn test_connection_name_from_uuid_push() {
         assert_eq!(
-            connection_name_from_uuid("uuid-push", &registry()).unwrap(),
+            connection_name_from_uuid(uuid::Uuid::from_str(UUID_PUSH).unwrap(), &registry())
+                .unwrap(),
             status::ConnectionName::from_str("server:8000/push-site").unwrap(),
         );
     }
@@ -110,7 +119,8 @@ mod tests {
     #[test]
     fn test_connection_name_from_uuid_pull() {
         assert_eq!(
-            connection_name_from_uuid("uuid-pull", &registry()).unwrap(),
+            connection_name_from_uuid(uuid::Uuid::from_str(UUID_PULL).unwrap(), &registry())
+                .unwrap(),
             status::ConnectionName::from_str("server:8000/pull-site").unwrap(),
         );
     }
@@ -118,14 +128,15 @@ mod tests {
     #[test]
     fn test_connection_name_from_uuid_imported_pull() {
         assert_eq!(
-            connection_name_from_uuid("uuid-imported-2", &registry()).unwrap(),
+            connection_name_from_uuid(uuid::Uuid::from_str(UUID_PULL_IMP2).unwrap(), &registry())
+                .unwrap(),
             status::ConnectionName::from_str("imported-2").unwrap(),
         );
     }
 
     #[test]
     fn test_connection_name_from_uuid_missing() {
-        assert!(connection_name_from_uuid("uuid-missing", &registry()).is_err());
+        assert!(connection_name_from_uuid(uuid::Uuid::new_v4(), &registry()).is_err());
     }
 
     #[test]
@@ -141,15 +152,44 @@ mod tests {
         let mut reg = registry();
         assert!(!reg.path().exists());
         assert!(delete(&mut reg, "imported-1").is_ok());
-        assert!(reg.imported_pull_connections().next().unwrap().uuid == "uuid-imported-2");
+        assert!(
+            reg.imported_pull_connections()
+                .next()
+                .unwrap()
+                .uuid
+                .to_string()
+                == UUID_PULL_IMP2
+        );
         assert!(reg.path().exists());
     }
 
     #[test]
-    fn test_delete_missing() {
+    fn test_delete_invalid() {
         assert_eq!(
             format!("{}", delete(&mut registry(), "wrong").unwrap_err()),
-            "No connection with UUID 'wrong'"
+            "Provided connection name is not a valid name and not a valid UUID"
+        );
+    }
+
+    #[test]
+    fn test_delete_by_name_missing() {
+        assert_eq!(
+            format!(
+                "{}",
+                delete(&mut registry(), "someserver:123/site").unwrap_err()
+            ),
+            "Connection 'someserver:123/site' not found"
+        );
+    }
+
+    #[test]
+    fn test_delete_by_uuid_missing() {
+        assert_eq!(
+            format!(
+                "{}",
+                delete(&mut registry(), "8046d9e4-127a-44e2-a281-30479c93e258").unwrap_err()
+            ),
+            "No connection with UUID '8046d9e4-127a-44e2-a281-30479c93e258'"
         );
     }
 

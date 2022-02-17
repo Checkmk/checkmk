@@ -89,9 +89,9 @@ fn pair(
     config: &config::RegistrationConfig,
     agent_rec_api: &impl agent_receiver_api::Pairing,
     trust_establisher: &impl TrustEstablishing,
-) -> AnyhowResult<(String, String, agent_receiver_api::PairingResponse)> {
-    let uuid = uuid::Uuid::new_v4().to_string();
-    let (csr, private_key) = certs::make_csr(&uuid).context("Error creating CSR.")?;
+) -> AnyhowResult<(uuid::Uuid, String, agent_receiver_api::PairingResponse)> {
+    let uuid = uuid::Uuid::new_v4();
+    let (csr, private_key) = certs::make_csr(&uuid.to_string()).context("Error creating CSR.")?;
     Ok((
         uuid,
         private_key,
@@ -109,7 +109,7 @@ fn pair(
 fn post_registration_conn_type(
     coordinates: &site_spec::Coordinates,
     root_cert: &str,
-    uuid: &str,
+    uuid: &uuid::Uuid,
     client_cert: &str,
     agent_rec_api: &impl agent_receiver_api::Status,
 ) -> AnyhowResult<config::ConnectionType> {
@@ -300,7 +300,7 @@ mod tests {
             coordinates: &site_spec::Coordinates,
             _root_cert: &str,
             _credentials: &config::Credentials,
-            _uuid: &str,
+            _uuid: &uuid::Uuid,
             host_name: &str,
         ) -> AnyhowResult<()> {
             assert!(matches!(
@@ -317,7 +317,7 @@ mod tests {
             coordinates: &site_spec::Coordinates,
             _root_cert: &str,
             _credentials: &config::Credentials,
-            _uuid: &str,
+            _uuid: &uuid::Uuid,
             ag_labels: &types::AgentLabels,
         ) -> AnyhowResult<()> {
             assert!(matches!(
@@ -335,7 +335,7 @@ mod tests {
             &self,
             coordinates: &site_spec::Coordinates,
             _root_cert: &str,
-            _uuid: &str,
+            _uuid: &uuid::Uuid,
             _certificate: &str,
         ) -> Result<agent_receiver_api::StatusResponse, agent_receiver_api::StatusError> {
             assert!(coordinates.to_string() == SITE_ADDRESS);

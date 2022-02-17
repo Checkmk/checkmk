@@ -1962,9 +1962,11 @@ class ABCNodeRenderer(abc.ABC):
                 class_="invtablelink",
             )
 
-        self._show_table_data(table, titles, invpath)
+        self._show_table_data(hint, table, titles, invpath)
 
-    def _show_table_data(self, table: Table, titles: TableTitles, invpath: SDRawPath) -> None:
+    def _show_table_data(
+        self, hint: InventoryHintSpec, table: Table, titles: TableTitles, invpath: SDRawPath
+    ) -> None:
         # TODO: Use table.open_table() below.
         html.open_table(class_="data")
         html.open_tr()
@@ -1972,7 +1974,8 @@ class ABCNodeRenderer(abc.ABC):
             html.th(self._get_header(title, key, "#DDD", is_key_column=is_key_column))
 
         html.close_tr()
-        for index, entry in enumerate(table.rows):
+
+        for index, entry in enumerate(self._sort_table_rows(hint, table)):
             html.open_tr(class_="even0")
             for title, key, _is_key_column in titles:
                 value = entry.get(key)
@@ -1996,6 +1999,13 @@ class ABCNodeRenderer(abc.ABC):
                 html.close_td()
             html.close_tr()
         html.close_table()
+
+    def _sort_table_rows(self, hint: InventoryHintSpec, table: Table) -> inventory.InventoryRows:
+        if (keyorder := hint.get("keyorder")) is None:
+            return table.rows
+
+        sorting_keys = tuple(k for k in keyorder if k in table.key_columns)
+        return sorted(table.rows, key=lambda r: tuple(r.get(k) or "" for k in sorting_keys))
 
     @abc.abstractmethod
     def _show_table_value(

@@ -8,8 +8,8 @@ import re
 from functools import lru_cache
 from html import escape as html_escape
 from typing import Union
-from urllib.parse import urlparse
 
+from cmk.gui.utils import is_allowed_url
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.speaklater import LazyString
 
@@ -30,8 +30,9 @@ from cmk.gui.utils.speaklater import LazyString
 EscapableEntity = Union[None, int, HTML, str, LazyString]
 
 _UNESCAPER_TEXT = re.compile(
-    r"&lt;(/?)(h1|h2|b|tt|i|u|br(?: /)?|nobr(?: /)?|pre|a|sup|p|li|ul|ol)&gt;"
+    r"&lt;(/?)(h1|h2|b|tt|i|u|br(?: /)?|nobr(?: /)?|pre|sup|p|li|ul|ol)&gt;"
 )
+_CLOSING_A = re.compile(r"&lt;/a&gt;")
 _A_HREF = re.compile(
     r"&lt;a href=(?:(?:&quot;|&#x27;)(.*?)(?:&quot;|&#x27;))(?: target=(?:(?:&quot;|&#x27;)(.*?)(?:&quot;|&#x27;)))?&gt;"
 )
@@ -45,9 +46,19 @@ def escape_html(value: str) -> HTML:
     return HTML(html_escape(value))
 
 
-def escape_html_permissive(value: str) -> HTML:
-    """Escape HTML in permissive mode (keep simple markup tags) and return as HTML object"""
-    return HTML(escape_text(value))
+def escape_html_permissive(value: str, escape_links: bool = False) -> HTML:
+    """Escape HTML in permissive mode (keep simple markup tags) and return as HTML object
+
+    >>> escape_html_permissive("Hello this is <b>dog</b>!")
+    HTML("Hello this is <b>dog</b>!")
+
+    >>> escape_html_permissive('<a href="mailto:security@checkmk.com">no closing a')
+    HTML("<a href="mailto:security@checkmk.com">no closing a")
+
+    >>> escape_html_permissive('<a href="mailto:security@checkmk.com">', escape_links=True)
+    HTML("&lt;a href=&quot;mailto:security@checkmk.com&quot;&gt;")
+    """
+    return HTML(escape_text(value, escape_links=escape_links))
 
 
 # TODO: Cleanup the accepted types!
@@ -89,7 +100,7 @@ def escape_attribute(value: EscapableEntity) -> str:
     raise TypeError(f"Unsupported type {type(value)}")
 
 
-def escape_text(text: EscapableEntity) -> str:
+def escape_text(text: EscapableEntity, escape_links: bool = False) -> str:
     """Escape HTML text
 
     We only strip some tags and allow some simple tags
@@ -107,22 +118,57 @@ def escape_text(text: EscapableEntity) -> str:
 
         This is lame.
 
-        >>> escape_text("Hello this <a href=\"\">is dog</a>!")
+        >>> escape_text(None)
+        ''
+
+        >>> text = "Hello this <a href=>is dog</a>!"
+        >>> escape_text(text, escape_links=False)
         'Hello this &lt;a href=&gt;is dog</a>!'
 
-    Returns:
+        >>> text = 'Hello this <a href="">is dog</a>!'
+        >>> escape_text(text, escape_links=False)
+        'Hello this &lt;a href=&quot;&quot;&gt;is dog</a>!'
 
+        >>> text = 'Hello this <a href="http://some.site">is dog</a>!'
+        >>> escape_text(text)
+        'Hello this <a href="http://some.site">is dog</a>!'
+
+        >>> text = 'Hello this <a href="http://some.site">is dog</a>!'
+        >>> escape_text(text, escape_links=False)
+        'Hello this <a href="http://some.site">is dog</a>!'
+        >>> escape_text(text, escape_links=True)
+        'Hello this &lt;a href=&quot;http://some.site&quot;&gt;is dog&lt;/a&gt;!'
     """
+
     if isinstance(text, HTML):
         return str(text)
 
     text = escape_attribute(text)
     text = _UNESCAPER_TEXT.sub(r"<\1\2>", text)
-    for a_href in _A_HREF.finditer(text):
+    if not escape_links:
+        text = _unescape_link(text)
+    return text.replace("&amp;nbsp;", "&nbsp;")
+
+
+def _unescape_link(escaped_str: str) -> str:
+    """helper for escape_text to unescape links
+
+    all `</a>` tags are unescaped, even the ones with no opening...
+
+    >>> _unescape_link('&lt;/a&gt;')
+    '</a>'
+    >>> _unescape_link('foo&lt;a href=&quot;&quot;&gt;bar&lt;/a&gt;foobar')
+    'foo&lt;a href=&quot;&quot;&gt;bar</a>foobar'
+    >>> _unescape_link('foo&lt;a href=&quot;mailto:security@checkmk.com&quot;&gt;bar')
+    'foo<a href="mailto:security@checkmk.com">bar'
+    """
+    escaped_str = _CLOSING_A.sub(r"</a>", escaped_str)
+    for a_href in _A_HREF.finditer(escaped_str):
         href = a_href.group(1)
 
-        parsed = urlparse(href)
-        if parsed.scheme != "" and parsed.scheme not in ["http", "https", "mailto"]:
+        if not href:
+            continue
+        if not is_allowed_url(href, cross_domain=True, schemes=["http", "https", "mailto"]):
             continue  # Do not unescape links containing disallowed URLs
 
         target = a_href.group(2)
@@ -132,8 +178,8 @@ def escape_text(text: EscapableEntity) -> str:
         else:
             unescaped_tag = '<a href="%s">' % href
 
-        text = text.replace(a_href.group(0), unescaped_tag)
-    return text.replace("&amp;nbsp;", "&nbsp;")
+        escaped_str = escaped_str.replace(a_href.group(0), unescaped_tag)
+    return escaped_str
 
 
 def strip_scripts(ht: str) -> str:

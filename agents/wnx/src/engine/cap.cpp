@@ -466,6 +466,12 @@ bool ReinstallYaml(const fs::path &bakery_yaml, const fs::path &target_yaml,
     // This is uninstall process
     details::UninstallYaml(bakery_yaml, target_yaml);
 
+    // In 1.6 target_yml was not presented
+    if (fs::exists(bakery_yaml, ec)) {
+        XLOG::d.i("Looks as 1.6 installation: remove '{}'", bakery_yaml);
+        fs::remove(bakery_yaml, ec);
+    }
+
     try {
         auto yaml = YAML::LoadFile(source_yaml.u8string());
         if (!yaml.IsDefined() || !yaml.IsMap()) {

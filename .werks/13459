@@ -1,0 +1,16 @@
+Title: Fix inline help in ps monitoring rule
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1645193883
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+'Include process arguments in long-output' parameter in ps monitoring
+rule previously falsely stated that first N arguments will be shown.
+This was never the case. First N characters of all arguments are
+shown in the long-output. Inline help text is therefore changed.
+

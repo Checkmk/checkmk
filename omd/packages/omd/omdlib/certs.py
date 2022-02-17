@@ -25,10 +25,9 @@
 """Management of the site local CA and certificates issued by it"""
 
 from pathlib import Path
-from typing import Iterable, Tuple
+from typing import Tuple
 
 from cryptography.hazmat.primitives.asymmetric.rsa import RSAPrivateKeyWithSerialization
-from cryptography.hazmat.primitives.serialization import Encoding, NoEncryption, PrivateFormat
 from cryptography.x509 import Certificate
 
 from cmk.utils.certs import (
@@ -38,6 +37,7 @@ from cmk.utils.certs import (
     make_root_certificate,
     make_subject_name,
     root_cert_path,
+    save_cert_chain,
     sign_csr,
 )
 
@@ -96,42 +96,13 @@ class CertificateAuthority:
             private_key,
         )
 
-    @staticmethod
-    def _serialize_certificate(certificate: Certificate) -> bytes:
-        return certificate.public_bytes(Encoding.PEM)
-
-    @staticmethod
-    def _serialize_private_key(private_key: RSAPrivateKeyWithSerialization) -> bytes:
-        return private_key.private_bytes(
-            Encoding.PEM,
-            PrivateFormat.PKCS8,
-            NoEncryption(),
-        )
-
-    def _write_cert_chain(
-        self,
-        path: Path,
-        certificate_chain: Iterable[Certificate],
-        key: RSAPrivateKeyWithSerialization,
-    ) -> None:
-        path.parent.mkdir(mode=0o770, parents=True, exist_ok=True)
-        with path.open(mode="wb") as f:
-            f.write(self._serialize_private_key(key))
-            for cert in certificate_chain:
-                f.write(self._serialize_certificate(cert))
-        path.chmod(mode=0o660)
-
     def _write_cert_and_root(
         self,
         path: Path,
         cert: Certificate,
         key: RSAPrivateKeyWithSerialization,
     ) -> None:
-        self._write_cert_chain(
-            path,
-            [cert, self._get_root_certificate()[0]],
-            key,
-        )
+        save_cert_chain(path, [cert, self._get_root_certificate()[0]], key)
 
     @property
     def is_initialized(self) -> bool:
@@ -149,7 +120,7 @@ class CertificateAuthority:
         if self.is_initialized:
             return
         root_cert, root_key = self._create_root_certificate()
-        self._write_cert_chain(self._root_cert_path, [root_cert], root_key)
+        save_cert_chain(self._root_cert_path, [root_cert], root_key)
 
     def create_site_certificate(self, site_id: str) -> None:
         """Creates the key / certificate for the given Check_MK site"""

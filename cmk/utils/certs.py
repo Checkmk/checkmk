@@ -6,7 +6,7 @@
 
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Tuple, Union
+from typing import Iterable, Tuple, Union
 
 from cryptography.hazmat.primitives.asymmetric.rsa import (
     generate_private_key,
@@ -14,7 +14,12 @@ from cryptography.hazmat.primitives.asymmetric.rsa import (
     RSAPublicKey,
 )
 from cryptography.hazmat.primitives.hashes import SHA256
-from cryptography.hazmat.primitives.serialization import load_pem_private_key
+from cryptography.hazmat.primitives.serialization import (
+    Encoding,
+    load_pem_private_key,
+    NoEncryption,
+    PrivateFormat,
+)
 from cryptography.x509 import (
     BasicConstraints,
     Certificate,
@@ -46,13 +51,26 @@ def root_cert_path(ca_dir: Path) -> Path:
 def load_cert_and_private_key(path_pem: Path) -> Tuple[Certificate, RSAPrivateKeyWithSerialization]:
     return (
         load_pem_x509_certificate(
-            pem_bytes := (path_pem).read_bytes(),
+            pem_bytes := path_pem.read_bytes(),
         ),
         load_pem_private_key(
             pem_bytes,
             None,
         ),
     )
+
+
+def save_cert_chain(
+    path_pem: Path,
+    certificate_chain: Iterable[Certificate],
+    key: RSAPrivateKeyWithSerialization,
+) -> None:
+    path_pem.parent.mkdir(mode=0o770, parents=True, exist_ok=True)
+    with path_pem.open(mode="wb") as f:
+        f.write(key.private_bytes(Encoding.PEM, PrivateFormat.PKCS8, NoEncryption()))
+        for cert in certificate_chain:
+            f.write(cert.public_bytes(Encoding.PEM))
+    path_pem.chmod(mode=0o660)
 
 
 def load_local_ca() -> Tuple[Certificate, RSAPrivateKeyWithSerialization]:

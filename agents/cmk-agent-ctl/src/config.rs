@@ -51,18 +51,12 @@ pub trait TOMLLoader: DeserializeOwned {
 }
 
 #[derive(Deserialize)]
-pub struct Credentials {
-    pub username: String,
-    pub password: String,
-}
-
-#[derive(Deserialize)]
 pub struct RegistrationPreset {
     #[serde(default)]
     site_spec: Option<site_spec::SiteSpec>,
 
     #[serde(default)]
-    credentials: Option<Credentials>,
+    credentials: Option<types::OptPwdCredentials>,
 
     #[serde(default)]
     root_certificate: Option<String>,
@@ -83,7 +77,7 @@ pub enum HostRegistrationData {
 
 pub struct RegistrationConfig {
     pub coordinates: site_spec::Coordinates,
-    pub credentials: Credentials,
+    pub opt_pwd_credentials: types::OptPwdCredentials,
     pub root_certificate: Option<String>,
     pub host_reg_data: HostRegistrationData,
     pub trust_server_cert: bool,
@@ -104,13 +98,13 @@ impl RegistrationConfig {
                 site_spec::Coordinates::try_from(inc_coord)?
             }
         };
-
-        let credentials =
-            if let (Some(username), Some(password)) = (reg_args.user, reg_args.password) {
-                Credentials { username, password }
-            } else {
-                preset.credentials.context("Missing credentials")?
-            };
+        let opt_pwd_credentials = match reg_args.user {
+            Some(username) => types::OptPwdCredentials {
+                username,
+                password: reg_args.password,
+            },
+            None => preset.credentials.context("Missing credentials")?,
+        };
         let root_certificate = preset.root_certificate;
         let stored_host_name = preset.host_name;
         let stored_agent_labels = preset.agent_labels;
@@ -122,7 +116,7 @@ impl RegistrationConfig {
             .context("Neither hostname nor agent labels found")?;
         Ok(RegistrationConfig {
             coordinates,
-            credentials,
+            opt_pwd_credentials,
             root_certificate,
             host_reg_data,
             trust_server_cert: reg_args.trust_server_cert,

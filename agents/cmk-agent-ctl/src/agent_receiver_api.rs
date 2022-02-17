@@ -99,7 +99,7 @@ pub trait Pairing {
         coordinates: &site_spec::Coordinates,
         root_cert: Option<&str>,
         csr: String,
-        credentials: &config::Credentials,
+        credentials: &types::Credentials,
     ) -> AnyhowResult<PairingResponse>;
 }
 
@@ -108,7 +108,7 @@ pub trait Registration {
         &self,
         coordinates: &site_spec::Coordinates,
         root_cert: &str,
-        credentials: &config::Credentials,
+        credentials: &types::Credentials,
         uuid: &uuid::Uuid,
         host_name: &str,
     ) -> AnyhowResult<()>;
@@ -117,7 +117,7 @@ pub trait Registration {
         &self,
         coordinates: &site_spec::Coordinates,
         root_cert: &str,
-        credentials: &config::Credentials,
+        credentials: &types::Credentials,
         uuid: &uuid::Uuid,
         agent_labels: &types::AgentLabels,
     ) -> AnyhowResult<()>;
@@ -159,7 +159,7 @@ impl Pairing for Api {
         coordinates: &site_spec::Coordinates,
         root_cert: Option<&str>,
         csr: String,
-        credentials: &config::Credentials,
+        credentials: &types::Credentials,
     ) -> AnyhowResult<PairingResponse> {
         let response = certs::client(root_cert)?
             .post(Api::endpoint_address(coordinates, "pairing"))
@@ -185,7 +185,7 @@ impl Registration for Api {
         &self,
         coordinates: &site_spec::Coordinates,
         root_cert: &str,
-        credentials: &config::Credentials,
+        credentials: &types::Credentials,
         uuid: &uuid::Uuid,
         host_name: &str,
     ) -> AnyhowResult<()> {
@@ -205,7 +205,7 @@ impl Registration for Api {
         &self,
         coordinates: &site_spec::Coordinates,
         root_cert: &str,
-        credentials: &config::Credentials,
+        credentials: &types::Credentials,
         uuid: &uuid::Uuid,
         agent_labels: &types::AgentLabels,
     ) -> AnyhowResult<()> {

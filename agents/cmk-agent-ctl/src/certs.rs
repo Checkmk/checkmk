@@ -2,6 +2,7 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
+use super::types;
 use anyhow::{Context, Result as AnyhowResult};
 use openssl::hash::MessageDigest;
 use openssl::nid::Nid;
@@ -48,7 +49,7 @@ pub fn client(root_cert: Option<&str>) -> AnyhowResult<Client> {
         .build()?)
 }
 
-pub fn fetch_server_cert_pem(server: &str, port: usize) -> AnyhowResult<String> {
+pub fn fetch_server_cert_pem(server: &str, port: &types::Port) -> AnyhowResult<String> {
     let tcp_stream = TcpStream::connect(format!("{}:{}", server, port))?;
     let mut ssl_connector_builder = SslConnector::builder(SslMethod::tls())?;
     ssl_connector_builder.set_verify(SslVerifyMode::NONE);

@@ -31,7 +31,7 @@ use structopt::StructOpt;
 fn daemon(
     registry: config::Registry,
     legacy_pull_marker: std::path::PathBuf,
-    port: String,
+    port: types::Port,
     max_connections: usize,
     allowed_ip: Vec<String>,
 ) -> AnyhowResult<()> {
@@ -162,18 +162,14 @@ fn run_requested_mode(args: cli::Args, paths: constants::Paths) -> AnyhowResult<
         cli::Args::Pull(pull_args) => pull::pull(
             registry,
             paths.legacy_pull_path,
-            pull_args
-                .port
-                .unwrap_or_else(|| constants::AGENT_PORT.to_owned()),
+            pull_args.port.unwrap_or(constants::agent_port()?),
             constants::MAX_CONNECTIONS,
             pull_args.allowed_ip.unwrap_or_default(),
         ),
         cli::Args::Daemon(daemon_args) => daemon(
             registry,
             paths.legacy_pull_path,
-            daemon_args
-                .port
-                .unwrap_or_else(|| constants::AGENT_PORT.to_owned()),
+            daemon_args.port.unwrap_or(constants::agent_port()?),
             constants::MAX_CONNECTIONS,
             daemon_args.allowed_ip.unwrap_or_default(),
         ),

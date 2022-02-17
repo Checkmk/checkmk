@@ -2,6 +2,7 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
+use super::types;
 use anyhow::{anyhow, Context, Error as AnyhowError, Result as AnyhowResult};
 use std::fmt::Display;
 use std::str::FromStr;
@@ -17,7 +18,7 @@ use std::str::FromStr;
 )]
 pub struct Coordinates {
     pub server: String,
-    pub port: usize,
+    pub port: types::Port,
     pub site: String,
 }
 
@@ -37,9 +38,7 @@ impl FromStr for Coordinates {
         }
         Ok(Coordinates {
             server: String::from(server_components[0]),
-            port: server_components[1]
-                .parse::<usize>()
-                .context("Port is not a non-negative integer")?,
+            port: server_components[1].parse::<types::Port>()?,
             site: String::from(outer_components[1]),
         })
     }
@@ -65,7 +64,7 @@ impl Coordinates {
 
     fn port_from_checkmk_rest_api(
         incomplete_coordinates: &IncompleteCoordinates,
-    ) -> AnyhowResult<usize> {
+    ) -> AnyhowResult<types::Port> {
         let url = format!(
             "http://{}/check_mk/api/1.0/domain-types/internal/actions/discover-receiver/invoke",
             incomplete_coordinates,
@@ -75,7 +74,7 @@ impl Coordinates {
             .context(error_msg.clone())?
             .text()
             .context(error_msg.clone())?
-            .parse::<usize>()
+            .parse::<types::Port>()
             .context(error_msg)
     }
 }
@@ -134,7 +133,7 @@ mod test_coordinates {
         assert_eq!(
             Coordinates {
                 server: String::from("my-server"),
-                port: 8002,
+                port: types::Port::from_str("8002").unwrap(),
                 site: String::from("my-site"),
             }
             .to_string(),
@@ -148,7 +147,7 @@ mod test_coordinates {
             Coordinates::from_str("checkmk.server.com:5678/awesome-site").unwrap(),
             Coordinates {
                 server: String::from("checkmk.server.com"),
-                port: 5678,
+                port: types::Port::from_str("5678").unwrap(),
                 site: String::from("awesome-site"),
             }
         )
@@ -214,7 +213,7 @@ mod test_site_spec {
             SiteSpec::from_str("server:8000/site").unwrap(),
             SiteSpec::Complete(Coordinates {
                 server: String::from("server"),
-                port: 8000,
+                port: types::Port::from_str("8000").unwrap(),
                 site: String::from("site"),
             })
         )

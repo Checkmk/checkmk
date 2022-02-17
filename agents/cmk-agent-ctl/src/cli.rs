@@ -2,7 +2,7 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
-use super::site_spec;
+use super::{site_spec, types};
 use structopt::StructOpt;
 
 #[derive(StructOpt)]
@@ -72,8 +72,8 @@ pub struct DeleteArgs {
 #[derive(StructOpt)]
 pub struct PullArgs {
     /// TCP port to listen on for incoming pull connections
-    #[structopt(long, short = "P", parse(from_str))]
-    pub port: Option<String>,
+    #[structopt(long, short = "P", parse(try_from_str))]
+    pub port: Option<types::Port>,
 
     /// List of IP addresses & templates separated with ' '
     #[structopt(long, short = "A", parse(from_str))]

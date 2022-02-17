@@ -8,7 +8,7 @@ use std::error::Error;
 use std::io::Result as IoResult;
 use std::sync::Arc;
 
-use super::{config, constants, monitoring_data, tls_server};
+use super::{config, constants, monitoring_data, tls_server, types};
 use anyhow::{anyhow, Context, Result as AnyhowResult};
 use log::{info, warn};
 use std::net::{IpAddr, SocketAddr};
@@ -83,7 +83,7 @@ impl MaxConnectionsGuard {
 pub fn pull(
     registry: config::Registry,
     legacy_pull_marker: std::path::PathBuf,
-    port: String,
+    port: types::Port,
     max_connections: usize,
     allowed_ip: Vec<String>,
 ) -> AnyhowResult<()> {

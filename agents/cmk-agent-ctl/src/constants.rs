@@ -2,7 +2,12 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
-use std::path::{Path, PathBuf};
+use super::types;
+use anyhow::Result as AnyhowResult;
+use std::{
+    path::{Path, PathBuf},
+    str::FromStr,
+};
 
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");
 
@@ -48,6 +53,10 @@ impl Paths {
             log_path: home_dir.join("log").join(Path::new(LOG_FILE)),
         }
     }
+}
+
+pub fn agent_port() -> AnyhowResult<types::Port> {
+    types::Port::from_str(AGENT_PORT)
 }
 
 #[cfg(test)]

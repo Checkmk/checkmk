@@ -2,7 +2,7 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
-use super::{agent_receiver_api, certs, config, constants, site_spec};
+use super::{agent_receiver_api, certs, config, constants, site_spec, types};
 use anyhow::{anyhow, Context, Result as AnyhowResult};
 
 trait TrustEstablishing {
@@ -12,7 +12,7 @@ trait TrustEstablishing {
 struct InteractiveTrust {}
 
 impl InteractiveTrust {
-    fn display_cert(server: &str, port: usize) -> AnyhowResult<()> {
+    fn display_cert(server: &str, port: &types::Port) -> AnyhowResult<()> {
         let pem_str = certs::fetch_server_cert_pem(server, port)?;
         let pem = certs::parse_pem(&pem_str)?;
         let x509 = pem.parse_x509()?;
@@ -36,7 +36,7 @@ impl TrustEstablishing for InteractiveTrust {
             "Attempting to register at {}. Server certificate details:\n",
             coordinates,
         );
-        InteractiveTrust::display_cert(&coordinates.server, coordinates.port)?;
+        InteractiveTrust::display_cert(&coordinates.server, &coordinates.port)?;
         eprintln!();
         eprintln!("\x1b[1mDo you want to establish this connection?\x1b[0m \x1b[90m(\x1b[0my\x1b[90mes/\x1b[0mn\x1b[90mo)\x1b[0m");
         eprint!("> ");
@@ -259,7 +259,6 @@ pub fn register_surrogate_pull(config: config::RegistrationConfig) -> AnyhowResu
 
 #[cfg(test)]
 mod tests {
-    use super::super::types;
     use std::str::FromStr;
 
     use super::super::config::JSONLoader;

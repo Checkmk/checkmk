@@ -6,7 +6,7 @@
 
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Iterable, Tuple, Union
+from typing import Final, Iterable, Tuple, Union
 
 from cryptography.hazmat.primitives.asymmetric.rsa import (
     generate_private_key,
@@ -38,6 +38,37 @@ from cryptography.x509 import (
 from cryptography.x509.oid import NameOID
 
 from cmk.utils.paths import omd_root
+
+
+class RootCA:
+    def __init__(self, path: Path, name: str, days_valid: int = 999 * 365) -> None:
+        try:
+            cert, rsa = load_cert_and_private_key(path)
+        except FileNotFoundError:
+            rsa = make_private_key()
+            cert = make_root_certificate(make_subject_name(name), days_valid, rsa)
+            save_cert_chain(path, [cert], rsa)
+
+        self.cert: Final = cert
+        self.rsa: Final = rsa
+        self.days_valid: Final = days_valid
+
+    def new_signed_cert(
+        self,
+        name: str,
+        days_valid: int,
+    ) -> Tuple[Certificate, RSAPrivateKeyWithSerialization]:
+        private_key = make_private_key()
+        cert = sign_csr(
+            make_csr(
+                make_subject_name(name),
+                private_key,
+            ),
+            days_valid,
+            self.cert,
+            self.rsa,
+        )
+        return cert, private_key
 
 
 def cert_dir(site_root_dir: Path) -> Path:

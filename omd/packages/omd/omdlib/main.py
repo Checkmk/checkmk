@@ -114,7 +114,7 @@ from omdlib.version_info import VersionInfo
 
 import cmk.utils.log
 import cmk.utils.tty as tty
-from cmk.utils.certs import cert_dir
+from cmk.utils.certs import cert_dir, root_cert_path
 from cmk.utils.exceptions import MKTerminate
 from cmk.utils.log import VERBOSE
 from cmk.utils.paths import mkbackup_lock_dir
@@ -1299,11 +1299,11 @@ def _instantiate_skel(site: SiteContext, path: str) -> bytes:
 def initialize_site_ca(site: SiteContext) -> None:
     """Initialize the site local CA and create the default site certificate
     This will be used e.g. for serving SSL secured livestatus"""
+    ca_path = cert_dir(Path(site.dir))
     ca = omdlib.certs.CertificateAuthority(
-        ca_path=cert_dir(Path(site.dir)),
-        ca_name="Site '%s' local CA" % site.name,
+        root_ca=omdlib.certs.RootCA(root_cert_path(ca_path), f"Site '{site.name}' local CA"),
+        ca_path=ca_path,
     )
-    ca.initialize()
     if not ca.site_certificate_exists(site.name):
         ca.create_site_certificate(site.name)
     if not ca.agent_receiver_certificate_exists:

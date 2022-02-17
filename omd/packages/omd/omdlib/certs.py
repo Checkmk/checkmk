@@ -25,21 +25,12 @@
 """Management of the site local CA and certificates issued by it"""
 
 from pathlib import Path
-from typing import Tuple
+from typing import Final
 
 from cryptography.hazmat.primitives.asymmetric.rsa import RSAPrivateKeyWithSerialization
 from cryptography.x509 import Certificate
 
-from cmk.utils.certs import (
-    load_cert_and_private_key,
-    make_csr,
-    make_private_key,
-    make_root_certificate,
-    make_subject_name,
-    root_cert_path,
-    save_cert_chain,
-    sign_csr,
-)
+from cmk.utils.certs import RootCA, save_cert_chain
 
 
 class CertificateAuthority:
@@ -47,54 +38,16 @@ class CertificateAuthority:
 
     def __init__(
         self,
+        root_ca: RootCA,
         ca_path: Path,
-        ca_name: str,
-        days_valid: int = 999 * 365,  # 999 years by default
     ) -> None:
         super().__init__()
+        self.root_ca: Final = root_ca
         self._ca_path = ca_path
-        self._ca_name = ca_name
         self._agent_receiver_cert_path = ca_path / "agent_receiver_cert.pem"
-        self._days_valid = days_valid
-
-    @property
-    def _root_cert_path(self) -> Path:
-        return root_cert_path(self._ca_path)
 
     def _site_certificate_path(self, site_id: str) -> Path:
         return (self._ca_path / "sites" / site_id).with_suffix(".pem")
-
-    def _create_root_certificate(self) -> Tuple[Certificate, RSAPrivateKeyWithSerialization]:
-        return (
-            make_root_certificate(
-                make_subject_name(self._ca_name),
-                self._days_valid,
-                private_key := make_private_key(),
-            ),
-            private_key,
-        )
-
-    def _get_root_certificate(self) -> Tuple[Certificate, RSAPrivateKeyWithSerialization]:
-        return load_cert_and_private_key(self._root_cert_path)
-
-    def _certificate_from_root(
-        self,
-        cn: str,
-    ) -> Tuple[Certificate, RSAPrivateKeyWithSerialization]:
-        if not self.is_initialized:
-            raise RuntimeError("Certificate authority is not initialized yet")
-        private_key = make_private_key()
-        return (
-            sign_csr(
-                make_csr(
-                    make_subject_name(cn),
-                    private_key,
-                ),
-                self._days_valid,
-                *self._get_root_certificate(),
-            ),
-            private_key,
-        )
 
     def _write_cert_and_root(
         self,
@@ -102,11 +55,7 @@ class CertificateAuthority:
         cert: Certificate,
         key: RSAPrivateKeyWithSerialization,
     ) -> None:
-        save_cert_chain(path, [cert, self._get_root_certificate()[0]], key)
-
-    @property
-    def is_initialized(self) -> bool:
-        return self._root_cert_path.exists()
+        save_cert_chain(path, [cert, self.root_ca.cert], key)
 
     def site_certificate_exists(self, site_id: str) -> bool:
         return self._site_certificate_path(site_id).exists()
@@ -115,23 +64,16 @@ class CertificateAuthority:
     def agent_receiver_certificate_exists(self) -> bool:
         return self._agent_receiver_cert_path.exists()
 
-    def initialize(self):
-        """Initialize the root CA key / certficate in case it does not exist yet"""
-        if self.is_initialized:
-            return
-        root_cert, root_key = self._create_root_certificate()
-        save_cert_chain(self._root_cert_path, [root_cert], root_key)
-
     def create_site_certificate(self, site_id: str) -> None:
         """Creates the key / certificate for the given Check_MK site"""
         self._write_cert_and_root(
             self._site_certificate_path(site_id),
-            *self._certificate_from_root(site_id),
+            *self.root_ca.new_signed_cert(site_id, self.root_ca.days_valid),
         )
 
     def create_agent_receiver_certificate(self) -> None:
         """Creates the key / certificate for agent-receiver server"""
         self._write_cert_and_root(
             self._agent_receiver_cert_path,
-            *self._certificate_from_root("localhost"),
+            *self.root_ca.new_signed_cert("localhost", self.root_ca.days_valid),
         )

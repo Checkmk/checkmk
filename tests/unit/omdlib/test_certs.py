@@ -18,40 +18,34 @@ from tests.testlib.certs import (
 
 import omdlib.certs as certs
 
-from cmk.utils.certs import load_cert_and_private_key, rsa_public_key_from_cert_or_csr
+from cmk.utils.certs import (
+    load_cert_and_private_key,
+    root_cert_path,
+    RootCA,
+    rsa_public_key_from_cert_or_csr,
+)
 
 CA_NAME = "test-ca"
 
 
 @pytest.fixture(name="ca")
 def fixture_ca(tmp_path: Path) -> certs.CertificateAuthority:
+    ca_path = tmp_path / "ca"
     return certs.CertificateAuthority(
-        tmp_path / "ca",
-        CA_NAME,
+        root_ca=RootCA(root_cert_path(ca_path), CA_NAME),
+        ca_path=ca_path,
     )
 
 
 def test_initialize(ca: certs.CertificateAuthority) -> None:
-    assert not ca.is_initialized
-    ca.initialize()
-    assert ca.is_initialized
-
-    cert, key = ca._get_root_certificate()
     assert check_cn(
-        cert,
+        ca.root_ca.cert,
         CA_NAME,
     )
     check_certificate_against_private_key(
-        cert,
-        key,
+        ca.root_ca.cert,
+        ca.root_ca.rsa,
     )
-
-
-def test_create_certificates_ca_not_initialized(ca: certs.CertificateAuthority) -> None:
-    with pytest.raises(RuntimeError, match="Certificate authority is not initialized yet"):
-        ca.create_site_certificate("xyz")
-    with pytest.raises(RuntimeError, match="Certificate authority is not initialized yet"):
-        ca.create_agent_receiver_certificate()
 
 
 def _file_permissions_is_660(path: Path) -> bool:
@@ -59,7 +53,6 @@ def _file_permissions_is_660(path: Path) -> bool:
 
 
 def test_create_site_certificate(ca: certs.CertificateAuthority) -> None:
-    ca.initialize()
     site_id = "xyz"
     assert not ca.site_certificate_exists(site_id)
 
@@ -78,12 +71,11 @@ def test_create_site_certificate(ca: certs.CertificateAuthority) -> None:
     )
     check_certificate_against_public_key(
         cert,
-        rsa_public_key_from_cert_or_csr(ca._get_root_certificate()[0]),
+        rsa_public_key_from_cert_or_csr(ca.root_ca.cert),
     )
 
 
 def test_write_agent_receiver_certificate(ca: certs.CertificateAuthority) -> None:
-    ca.initialize()
     assert not ca.agent_receiver_certificate_exists
 
     ca.create_agent_receiver_certificate()
@@ -101,5 +93,5 @@ def test_write_agent_receiver_certificate(ca: certs.CertificateAuthority) -> Non
     )
     check_certificate_against_public_key(
         cert,
-        rsa_public_key_from_cert_or_csr(ca._get_root_certificate()[0]),
+        rsa_public_key_from_cert_or_csr(ca.root_ca.cert),
     )

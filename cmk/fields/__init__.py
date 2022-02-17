@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from marshmallow.fields import Field
 
-from cmk.fields.base import Integer, String
+from cmk.fields.base import Integer, Nested, String
 from cmk.fields.primitives import (
     Boolean,
     Constant,
@@ -20,7 +20,6 @@ from cmk.fields.primitives import (
     IPv6,
     IPv6Interface,
     List,
-    Nested,
     Time,
     URL,
     UUID,

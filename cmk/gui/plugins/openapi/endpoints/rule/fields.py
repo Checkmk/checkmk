@@ -562,7 +562,7 @@ class RuleProperties(base.BaseSchema):
 class RuleConditions(base.BaseSchema):
     cast_to_dict = True
 
-    host_name = gui_fields.Nested(
+    host_name = fields.Nested(
         HostOrServiceConditionSchema,
         many=False,
         description=(
@@ -576,7 +576,7 @@ class RuleConditions(base.BaseSchema):
         ),
         example={"match_on": ["host1", "host2"], "operator": "one_of"},
     )
-    host_tag = gui_fields.Nested(
+    host_tag = fields.Nested(
         TagConditionSchema,
         many=True,
         description=(
@@ -585,13 +585,13 @@ class RuleConditions(base.BaseSchema):
         ),
         example=[{"key": "criticality", "operator": "is", "value": "prod"}],
     )
-    host_label = gui_fields.Nested(
+    host_label = fields.Nested(
         LabelConditionSchema,
         many=True,
         description="Further restrict this rule by applying host label conditions.",
         example=[{"key": "os", "operator": "is", "value": "windows"}],
     )
-    service_label = gui_fields.Nested(
+    service_label = fields.Nested(
         LabelConditionSchema,
         many=True,
         description=(
@@ -599,7 +599,7 @@ class RuleConditions(base.BaseSchema):
         ),
         example=[{"key": "os", "operator": "is", "value": "windows"}],
     )
-    service_description = gui_fields.Nested(
+    service_description = fields.Nested(
         HostOrServiceConditionSchema(use_regex="always"),
         many=False,
         description=(
@@ -663,7 +663,7 @@ class RuleExtensions(base.BaseSchema):
     folder_index = fields.Integer(
         description="The position of this rule in the chain in this folder.",
     )
-    properties = gui_fields.Nested(
+    properties = fields.Nested(
         RuleProperties,
         description="Property values of this rule.",
         example={},
@@ -672,7 +672,7 @@ class RuleExtensions(base.BaseSchema):
         description="The raw parameter value for this rule.",
         example='{"ignore_fs_types": ["tmpfs"]}',
     )
-    conditions = gui_fields.Nested(
+    conditions = fields.Nested(
         RuleConditions,
         description="Conditions.",
     )
@@ -689,7 +689,7 @@ class RuleObject(response_schemas.DomainObject):
         description="Domain type of this object.",
         example="rule",
     )
-    extensions = gui_fields.Nested(
+    extensions = fields.Nested(
         RuleExtensions,
         description="Attributes specific to rule objects.",
     )
@@ -700,7 +700,7 @@ class RuleCollection(response_schemas.DomainObjectCollection):
         "rule",
         description="Domain type of this object.",
     )
-    value: gui_fields.Field = gui_fields.Nested(
+    value: gui_fields.Field = fields.Nested(
         RuleObject,
         description="The collection itself. Each entry in here is part of the collection.",
         many=True,
@@ -761,7 +761,7 @@ class InputRuleObject(base.BaseSchema):
         required=True,
     )
     folder = gui_fields.FolderField(required=True, example="~router")
-    properties = gui_fields.Nested(
+    properties = fields.Nested(
         RuleProperties,
         description="Configuration values for rules.",
         example={"disabled": False},
@@ -774,7 +774,7 @@ class InputRuleObject(base.BaseSchema):
         ),
         example='{"ignore_fs_types": ["tmpfs"]}',
     )
-    conditions = gui_fields.Nested(
+    conditions = fields.Nested(
         RuleConditions,
         description="Conditions.",
         example={},

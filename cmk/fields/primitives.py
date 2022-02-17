@@ -24,10 +24,6 @@ class List(base.OpenAPIAttributes, fields.List):
     pass
 
 
-class Nested(base.OpenAPIAttributes, fields.Nested):
-    pass
-
-
 class Date(base.OpenAPIAttributes, fields.Date):
     pass
 

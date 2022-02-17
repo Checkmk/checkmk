@@ -5,11 +5,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """A few upgraded Fields which handle some OpenAPI validation internally."""
 import ast
-import collections.abc
 import json
 import typing
 from datetime import datetime
-from typing import Any, Optional, Protocol, Tuple
+from typing import Any, Optional
 
 import pytz
 from cryptography.x509 import load_pem_x509_csr
@@ -92,98 +91,7 @@ class PythonString(base.String):
             raise ValidationError(f"Not a Python data structure: {value!r}") from exc
 
 
-def _freeze(obj: Any, partial: Optional[Tuple[str, ...]] = None):
-    """Freeze all the things, so we can put them in a set.
-
-    Examples:
-
-        Note the different ordering of the keys. Even if Python3's dictionary order is based on
-        insert time, this still works.
-
-        >>> _freeze({'c': 'd', 'a': ['b']}) == _freeze({'a': ['b'], 'c': 'd'})
-        True
-
-        >>> _freeze({'c': 'd', 'a': ['b']}, partial=('a',)) == _freeze({'a': ['b'], 'c': 'd'})
-        False
-
-    Args:
-        obj:
-
-    Returns:
-
-    """
-    if isinstance(obj, collections.abc.Mapping):
-        return frozenset(
-            (_freeze(key), _freeze(value))
-            for key, value in obj.items()
-            if not partial or key in partial
-        )
-
-    if isinstance(obj, list):
-        return tuple(_freeze(entry) for entry in obj)
-
-    return obj
-
-
-class HasMakeError(Protocol):
-    def make_error(self, key: str, **kwargs: Any) -> ValidationError:
-        ...
-
-
-class UniqueFields:
-    """Mixin for collection fields to ensure uniqueness of containing elements
-
-    Currently supported Fields are `List` and `Nested(..., many=True, ...)`
-
-    """
-
-    default_error_messages = {
-        "duplicate": "Duplicate entry found at entry #{idx}: {entry!r}",
-        "duplicate_vary": (
-            "Duplicate entry found at entry #{idx}: {entry!r} " "(optional fields {optional!r})"
-        ),
-    }
-
-    def _verify_unique_schema_entries(self: HasMakeError, value, fields):
-        required_fields = tuple(name for name, field in fields.items() if field.required)
-        seen = set()
-        for idx, entry in enumerate(value, start=1):
-            # If some fields are required, we only freeze the required fields. This has the effect
-            # that duplications of required fields are detected, essentially like primary-keys.
-            # If this behaviour is somehow not desired in some circumstance (not known at the time
-            # of implementation) then this needs to be refactored to support changing this
-            # behaviour. Right now I don't see why we would need this though.
-            entry_hash = hash(_freeze(entry, partial=(required_fields or None)))
-            if entry_hash in seen:
-                has_optional_fields = len(entry) > len(required_fields)
-                if required_fields and has_optional_fields:
-                    optional_values = {}
-                    required_values = {}
-                    for key, _value in sorted(entry.items()):
-                        if key in required_fields:
-                            required_values[key] = _value
-                        else:
-                            optional_values[key] = _value
-
-                    raise self.make_error(
-                        "duplicate_vary", idx=idx, optional=optional_values, entry=required_values
-                    )
-                raise self.make_error("duplicate", idx=idx, entry=dict(sorted(entry.items())))
-
-            seen.add(entry_hash)
-
-    def _verify_unique_scalar_entries(self: HasMakeError, value):
-        # FIXME: Pretty sure that List(List(List(...))) will break this.
-        #        I have yet to see this use-case though.
-        seen = set()
-        for idx, entry in enumerate(value, start=1):
-            if entry in seen:
-                raise self.make_error("duplicate", idx=idx, entry=entry)
-
-            seen.add(entry)
-
-
-class List(base.OpenAPIAttributes, _fields.List, UniqueFields):
+class List(base.OpenAPIAttributes, _fields.List, base.UniqueFields):
     """A list field, composed with another `Field` class or instance.
 
     Honors the OpenAPI key `uniqueItems`.
@@ -207,6 +115,7 @@ class List(base.OpenAPIAttributes, _fields.List, UniqueFields):
 
         With nested schemas:
 
+            >>> from cmk.fields import Nested
             >>> class Bar(Schema):
             ...      entries = List(Nested(Foo), allow_none=False, required=True, uniqueItems=True)
 
@@ -245,70 +154,10 @@ class List(base.OpenAPIAttributes, _fields.List, UniqueFields):
     def _deserialize(self, value, attr, data, **kwargs):
         value = super()._deserialize(value, attr, data)
         if self.metadata.get("uniqueItems"):
-            if isinstance(self.inner, Nested):
+            if isinstance(self.inner, base.Nested):
                 self._verify_unique_schema_entries(value, self.inner.schema.fields)
             else:
                 self._verify_unique_scalar_entries(value)
-
-        return value
-
-
-class Nested(base.OpenAPIAttributes, _fields.Nested, UniqueFields):
-    """Allows you to nest a marshmallow Schema inside a field.
-
-    Honors the OpenAPI key `uniqueItems`.
-
-    Examples:
-
-        >>> from marshmallow import Schema
-        >>> from cmk.fields import String
-        >>> class Service(Schema):
-        ...      host = String(required=True)
-        ...      description = String(required=True)
-        ...      recur = String()
-
-        Setting the `many` param will turn this into a list:
-
-            >>> import pytest
-            >>> from marshmallow import ValidationError
-
-            >>> class Bulk(Schema):
-            ...      entries = Nested(Service,
-            ...                       many=True, uniqueItems=True,
-            ...                       required=False, load_default=lambda: [])
-
-            >>> entries = [
-            ...     {'host': 'example', 'description': 'CPU load', 'recur': 'week'},
-            ...     {'host': 'example', 'description': 'CPU load', 'recur': 'day'},
-            ...     {'host': 'host', 'description': 'CPU load'}
-            ... ]
-
-            >>> with pytest.raises(ValidationError) as exc:
-            ...     Bulk().load({'entries': entries})
-            >>> exc.value.messages
-            {'entries': ["Duplicate entry found at entry #2: \
-{'description': 'CPU load', 'host': 'example'} (optional fields {'recur': 'day'})"]}
-
-            >>> schema = Bulk()
-            >>> assert schema.fields['entries'].missing is not _fields.missing_
-            >>> schema.load({})
-            {'entries': []}
-
-    """
-
-    # NOTE:
-    # Sometimes, when using `missing` fields, a broken OpenAPI spec may be the result.
-    # In this situation, it should be sufficient to replace the `missing` parameter with
-    # a `lambda` which returns the same object, as callables are ignored by apispec.
-
-    def _deserialize(self, value, attr, data, partial=None, **kwargs):
-        self._validate_missing(value)
-        if value is _fields.missing_:
-            _miss = self.missing
-            value = _miss() if callable(_miss) else _miss
-        value = super()._deserialize(value, attr, data)
-        if self.many and self.metadata.get("uniqueItems"):
-            self._verify_unique_schema_entries(value, self.schema.fields)
 
         return value
 
@@ -449,7 +298,7 @@ class NotExprSchema(BaseSchema):
     """
 
     op = base.String(description="The operator. In this case `not`.")
-    expr = Nested(
+    expr = base.Nested(
         lambda: ExprSchema(),  # pylint: disable=unnecessary-lambda
         description="The query expression to negate.",
     )
@@ -461,7 +310,7 @@ class LogicalExprSchema(BaseSchema):
     op = base.String(description="The operator.")
     # many=True does not work here for some reason.
     expr = List(
-        Nested(
+        base.Nested(
             lambda *a, **kw: ExprSchema(*a, **kw),  # pylint: disable=unnecessary-lambda
             description="A list of query expressions to combine.",
         )
@@ -549,13 +398,13 @@ class ExprSchema(OneOfSchema):
         return super().load(data, many=many, partial=partial, unknown=unknown, **kwargs)
 
 
-class _ExprNested(Nested):
+class _ExprNested(base.Nested):
     def _load(self, value, data, partial=None):
         _data = super()._load(value, data, partial=partial)
         return tree_to_expr(_data, table=self.metadata["table"])
 
 
-def query_field(table: typing.Type[Table], required: bool = False, example=None) -> Nested:
+def query_field(table: typing.Type[Table], required: bool = False, example=None) -> base.Nested:
     """Returns a Nested ExprSchema Field which validates a Livestatus query.
 
     Args:
@@ -1230,7 +1079,6 @@ __all__ = [
     "HostField",
     "List",
     "MultiNested",
-    "Nested",
     "PasswordIdent",
     "PasswordOwner",
     "PasswordShare",

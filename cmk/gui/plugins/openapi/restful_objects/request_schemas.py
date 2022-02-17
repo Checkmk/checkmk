@@ -107,7 +107,7 @@ class CreateHost(BaseSchema):
 
 class BulkCreateHost(BaseSchema):
     entries = gui_fields.List(
-        gui_fields.Nested(CreateHost),
+        fields.Nested(CreateHost),
         example=[
             {
                 "host_name": "example.com",
@@ -185,7 +185,7 @@ class UpdateHostEntry(UpdateHost):
 
 class BulkUpdateHost(BaseSchema):
     entries = gui_fields.List(
-        gui_fields.Nested(UpdateHostEntry),
+        fields.Nested(UpdateHostEntry),
         example=[{"host_name": "example.com", "attributes": {}}],
         description="A list of host entries.",
     )
@@ -253,7 +253,7 @@ class BulkInputHostGroup(BaseSchema):
     """Bulk creating host groups"""
 
     entries = gui_fields.List(
-        gui_fields.Nested(InputHostGroup),
+        fields.Nested(InputHostGroup),
         example=[
             {
                 "name": "windows",
@@ -282,14 +282,14 @@ class UpdateHostGroup(BaseSchema):
     """Updating a host group"""
 
     name = EXISTING_HOST_GROUP_NAME
-    attributes = gui_fields.Nested(UpdateGroup)
+    attributes = fields.Nested(UpdateGroup)
 
 
 class BulkUpdateHostGroup(BaseSchema):
     """Bulk update host groups"""
 
     entries = gui_fields.List(
-        gui_fields.Nested(UpdateHostGroup),
+        fields.Nested(UpdateHostGroup),
         example=[
             {
                 "name": "windows",
@@ -320,7 +320,7 @@ class BulkInputContactGroup(BaseSchema):
 
     # TODO: add unique entries attribute
     entries = gui_fields.List(
-        gui_fields.Nested(InputContactGroup),
+        fields.Nested(InputContactGroup),
         example=[
             {
                 "name": "OnCall",
@@ -342,14 +342,14 @@ class UpdateContactGroup(BaseSchema):
         required=True,
         should_exist=True,
     )
-    attributes = gui_fields.Nested(UpdateGroup)
+    attributes = fields.Nested(UpdateGroup)
 
 
 class BulkUpdateContactGroup(BaseSchema):
     """Bulk update contact groups"""
 
     entries = gui_fields.List(
-        gui_fields.Nested(UpdateContactGroup),
+        fields.Nested(UpdateContactGroup),
         example=[
             {
                 "name": "OnCall",
@@ -381,7 +381,7 @@ class BulkInputServiceGroup(BaseSchema):
     """Bulk creating service groups"""
 
     entries = gui_fields.List(
-        gui_fields.Nested(InputServiceGroup),
+        fields.Nested(InputServiceGroup),
         example=[
             {
                 "name": "environment",
@@ -397,14 +397,14 @@ class UpdateServiceGroup(BaseSchema):
     """Updating a service group"""
 
     name = EXISTING_SERVICE_GROUP_NAME
-    attributes = gui_fields.Nested(UpdateGroup)
+    attributes = fields.Nested(UpdateGroup)
 
 
 class BulkUpdateServiceGroup(BaseSchema):
     """Bulk update service groups"""
 
     entries = gui_fields.List(
-        gui_fields.Nested(UpdateServiceGroup),
+        fields.Nested(UpdateServiceGroup),
         example=[
             {
                 "name": "windows",
@@ -469,7 +469,7 @@ class CreateFolder(BaseSchema):
 
 class BulkCreateFolder(BaseSchema):
     entries = gui_fields.List(
-        gui_fields.Nested(CreateFolder),
+        fields.Nested(CreateFolder),
         example=[
             {
                 "name": "production",
@@ -525,7 +525,7 @@ class UpdateFolderEntry(UpdateFolder):
 
 
 class BulkUpdateFolder(BaseSchema):
-    entries = gui_fields.Nested(
+    entries = fields.Nested(
         UpdateFolderEntry,
         many=True,
         example=[
@@ -693,7 +693,7 @@ class TimeRangeActive(BaseSchema):
         "option allows to specify time ranges for all days.",
         pattern=f"all|{'|'.join(weekday_ids())}",
     )
-    time_ranges = gui_fields.List(gui_fields.Nested(TimeRange))
+    time_ranges = gui_fields.List(fields.Nested(TimeRange))
 
 
 class TimePeriodException(BaseSchema):
@@ -704,7 +704,7 @@ class TimePeriodException(BaseSchema):
         description="The date of the time period exception." "8601 profile",
     )
     time_ranges = gui_fields.List(
-        gui_fields.Nested(TimeRange),
+        fields.Nested(TimeRange),
         required=False,
         example=[{"start": "14:00", "end": "18:00"}],
     )
@@ -724,13 +724,13 @@ class InputTimePeriod(BaseSchema):
         should_exist=False,
     )
     active_time_ranges = gui_fields.List(
-        gui_fields.Nested(TimeRangeActive),
+        fields.Nested(TimeRangeActive),
         example=[{"day": "monday", "time_ranges": [{"start": "12:00", "end": "14:00"}]}],
         description="The list of active time ranges.",
         required=True,
     )
     exceptions = gui_fields.List(
-        gui_fields.Nested(TimePeriodException),
+        fields.Nested(TimePeriodException),
         required=False,
         example=[{"date": "2020-01-01", "time_ranges": [{"start": "14:00", "end": "18:00"}]}],
         description="A list of additional time ranges to be added.",
@@ -757,7 +757,7 @@ class UpdateTimePeriod(BaseSchema):
         should_exist=False,
     )
     active_time_ranges = gui_fields.List(
-        gui_fields.Nested(TimeRangeActive),
+        fields.Nested(TimeRangeActive),
         example=[
             {
                 "day": "monday",
@@ -768,7 +768,7 @@ class UpdateTimePeriod(BaseSchema):
         required=False,
     )
     exceptions = gui_fields.List(
-        gui_fields.Nested(TimePeriodException),
+        fields.Nested(TimePeriodException),
         required=False,
         example=[{"date": "2020-01-01", "time_ranges": [{"start": "14:00", "end": "18:00"}]}],
         description="A list of additional time ranges to be added.",
@@ -1084,7 +1084,7 @@ class DisabledNotifications(BaseSchema):
         description="Option if all notifications should be temporarily disabled",
         example=False,
     )
-    timerange = gui_fields.Nested(
+    timerange = fields.Nested(
         CustomTimeRange,
         description="A custom timerange during which notifications are disabled",
         required=False,
@@ -1235,7 +1235,7 @@ class CreateUser(BaseSchema):
         description="By specifying a customer, you configure on which sites the user object will be available. "
         "'global' will make the object available on all sites.",
     )
-    auth_option = gui_fields.Nested(
+    auth_option = fields.Nested(
         AuthOption,
         required=False,
         description="Authentication option for the user",
@@ -1250,7 +1250,7 @@ class CreateUser(BaseSchema):
         example=False,
         attribute="locked",
     )
-    contact_options = gui_fields.Nested(
+    contact_options = fields.Nested(
         UserContactOption,
         required=False,
         description="Contact settings for the user",
@@ -1264,7 +1264,7 @@ class CreateUser(BaseSchema):
         load_default="",
         attribute="pager",
     )
-    idle_timeout = gui_fields.Nested(
+    idle_timeout = fields.Nested(
         IdleOption,
         required=False,
         description="Idle timeout for the user. Per default, the global configuration is used.",
@@ -1301,7 +1301,7 @@ class CreateUser(BaseSchema):
         "",
         example=["all"],
     )
-    disable_notifications = gui_fields.Nested(
+    disable_notifications = fields.Nested(
         DisabledNotifications,
         required=False,
         load_default=dict,
@@ -1329,7 +1329,7 @@ class UpdateUser(BaseSchema):
         required=False,
         should_exist=True,
     )
-    auth_option = gui_fields.Nested(
+    auth_option = fields.Nested(
         AuthUpdateOption,
         required=False,
         description="Authentication option for the user",
@@ -1349,7 +1349,7 @@ class UpdateUser(BaseSchema):
         example=False,
         attribute="locked",
     )
-    contact_options = gui_fields.Nested(
+    contact_options = fields.Nested(
         UserContactOption,
         required=False,
         description="Contact settings for the user",
@@ -1361,7 +1361,7 @@ class UpdateUser(BaseSchema):
         example="",
         attribute="pager",
     )
-    idle_timeout = gui_fields.Nested(
+    idle_timeout = fields.Nested(
         IdleOption,
         required=False,
         description="Idle timeout for the user",
@@ -1396,7 +1396,7 @@ class UpdateUser(BaseSchema):
         "",
         example=["all"],
     )
-    disable_notifications = gui_fields.Nested(
+    disable_notifications = fields.Nested(
         DisabledNotifications,
         required=False,
         example={"disabled": False},
@@ -1556,7 +1556,7 @@ class InputHostTagGroup(BaseSchema):
         load_default="",
     )
     tags = Tags(
-        gui_fields.Nested(HostTag),
+        fields.Nested(HostTag),
         required=True,
         example=[{"ident": "pod", "title": "Pod"}],
         description="A list of host tags belonging to the host tag group",
@@ -1590,7 +1590,7 @@ class UpdateHostTagGroup(BaseSchema):
         description="A help description for the tag group",
     )
     tags = Tags(
-        gui_fields.Nested(HostTag),
+        fields.Nested(HostTag),
         required=False,
         example=[{"ident": "pod", "title": "Pod"}],
         description="A list of host tags belonging to the host tag group",

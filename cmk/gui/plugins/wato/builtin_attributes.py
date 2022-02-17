@@ -386,7 +386,7 @@ class HostAttributeSNMPCommunity(ABCHostAttributeValueSpec):
         )
 
     def openapi_field(self) -> gui_fields.Field:
-        return gui_fields.Nested(
+        return fields.Nested(
             gui_fields.SNMPCredentials,
             description=(
                 "The SNMP access configuration. A configured SNMP v1/v2 community here "
@@ -549,7 +549,7 @@ class HostAttributeNetworkScan(ABCHostAttributeValueSpec):
         )
 
     def openapi_field(self) -> gui_fields.Field:
-        return gui_fields.Nested(
+        return fields.Nested(
             gui_fields.NetworkScan,
             description=(
                 "Configuration for automatic network scan. Pings will be"
@@ -784,7 +784,7 @@ class HostAttributeNetworkScanResult(ABCHostAttributeValueSpec):
         return False
 
     def openapi_field(self) -> gui_fields.Field:
-        return gui_fields.Nested(
+        return fields.Nested(
             gui_fields.NetworkScanResult, description="Read only access to the network scan result"
         )
 
@@ -960,7 +960,7 @@ class HostAttributeManagementSNMPCommunity(ABCHostAttributeValueSpec):
         )
 
     def openapi_field(self) -> gui_fields.Field:
-        return gui_fields.Nested(
+        return fields.Nested(
             gui_fields.SNMPCredentials,
             description="SNMP credentials",
             allow_none=True,
@@ -1005,7 +1005,7 @@ class HostAttributeManagementIPMICredentials(ABCHostAttributeValueSpec):
         )
 
     def openapi_field(self) -> gui_fields.Field:
-        return gui_fields.Nested(
+        return fields.Nested(
             gui_fields.IPMIParameters,
             description="IPMI credentials",
             required=False,
@@ -1256,7 +1256,7 @@ class HostAttributeMetaData(ABCHostAttributeValueSpec):
         )
 
     def openapi_field(self) -> gui_fields.Field:
-        return gui_fields.Nested(
+        return fields.Nested(
             gui_fields.MetaData, description="Read only access to configured metadata."
         )
 

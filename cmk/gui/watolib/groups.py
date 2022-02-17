@@ -658,9 +658,11 @@ class HostAttributeContactGroups(ABCHostAttribute):
 
     def openapi_field(self):
         # FIXME: due to cyclical imports which, when fixed, expose even more cyclical imports.
-        from cmk.gui import fields
+        from cmk.gui import fields as gui_fields
+
+        from cmk import fields
 
         return fields.Nested(
-            fields.HostContactGroup,
+            gui_fields.HostContactGroup,
             description=self.help(),
         )

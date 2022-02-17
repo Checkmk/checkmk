@@ -106,7 +106,7 @@ class LinkSchema(BaseSchema):
 
 class Linkable(BaseSchema):
     links = gui_fields.List(
-        gui_fields.Nested(LinkSchema),
+        fields.Nested(LinkSchema),
         required=True,
         description="list of links to other resources.",
     )
@@ -199,7 +199,7 @@ class ObjectMemberBase(Linkable):
 
 class ObjectCollectionMember(ObjectMemberBase):
     memberType = fields.Constant("collection")
-    value = gui_fields.List(gui_fields.Nested(LinkSchema()))
+    value = gui_fields.List(fields.Nested(LinkSchema()))
     name = fields.String(example="important_values")
     title = fields.String(
         description="A human readable title of this object. Can be used for " "user interfaces.",
@@ -256,11 +256,11 @@ class ActionResultBase(Linkable):
 
 
 class ActionResultObject(ActionResultBase):
-    result = gui_fields.Nested(
+    result = fields.Nested(
         Schema.from_dict(
             {
                 "links": gui_fields.List(
-                    gui_fields.Nested(LinkSchema),
+                    fields.Nested(LinkSchema),
                     required=True,
                 ),
                 "value": fields.Dict(
@@ -275,11 +275,11 @@ class ActionResultObject(ActionResultBase):
 
 
 class ActionResultScalar(ActionResultBase):
-    result = gui_fields.Nested(
+    result = fields.Nested(
         Schema.from_dict(
             {
                 "links": gui_fields.List(
-                    gui_fields.Nested(LinkSchema),
+                    fields.Nested(LinkSchema),
                     required=True,
                 ),
                 "value": fields.String(
@@ -351,11 +351,11 @@ class HostExtensions(BaseSchema):
 
 
 class FolderMembers(BaseSchema):
-    hosts = gui_fields.Nested(
+    hosts = fields.Nested(
         ObjectCollectionMember(),
         description="A list of links pointing to the actual host-resources.",
     )
-    move = gui_fields.Nested(
+    move = fields.Nested(
         ObjectActionMember(),
         description="An action which triggers the move of this folder to another folder.",
     )
@@ -378,11 +378,11 @@ class FolderSchema(Linkable):
     domainType = fields.Constant("folder_config", description="The domain type of the object.")
     id = fields.String(description="The full path of the folder, tilde-separated.")
     title = fields.String(description="The human readable title for this folder.")
-    members = gui_fields.Nested(
+    members = fields.Nested(
         FolderMembers(),
         description="Specific collections or actions applicable to this object.",
     )
-    extensions = gui_fields.Nested(
+    extensions = fields.Nested(
         FolderExtensions(),
         description="Data and Meta-Data of this object.",
     )
@@ -428,11 +428,11 @@ class SiteStateMembers(BaseSchema):
 
 class SiteState(Linkable):
     domainType = fields.Constant("site-state", required=True)
-    members = gui_fields.Nested(SiteStateMembers, description="All the members of the host object.")
+    members = fields.Nested(SiteStateMembers, description="All the members of the host object.")
 
 
 class HostMembers(BaseSchema):
-    folder_config = gui_fields.Nested(
+    folder_config = fields.Nested(
         FolderSchema(),
         description="The folder in which this host resides. It is represented by a hexadecimal "
         "identifier which is it's 'primary key'. The folder can be accessed via the "
@@ -444,15 +444,15 @@ class HostConfigSchema(DomainObject):
     domainType = fields.Constant(
         "host_config", required=True, description="The domain type of the object."
     )
-    members = gui_fields.Nested(HostMembers, description="All the members of the host object.")
-    extensions = gui_fields.Nested(
+    members = fields.Nested(HostMembers, description="All the members of the host object.")
+    extensions = fields.Nested(
         HostExtensions,
         description="All the data and metadata of this host.",
     )
 
 
 class ObjectAction(Linkable):
-    parameters = gui_fields.Nested(Parameter)
+    parameters = fields.Nested(Parameter)
 
 
 class TypeSchemas(dict):
@@ -490,7 +490,7 @@ class DomainObjectCollection(Linkable):
     title = fields.String(
         description="A human readable title of this object. Can be used for " "user interfaces.",
     )
-    value: gui_fields.Field = gui_fields.Nested(
+    value: gui_fields.Field = fields.Nested(
         CollectionItem,
         description="The collection itself. Each entry in here is part of the collection.",
         many=True,
@@ -504,7 +504,7 @@ class HostConfigCollection(DomainObjectCollection):
         description="The domain type of the objects in the collection.",
     )
     value = gui_fields.List(
-        gui_fields.Nested(HostConfigSchema()),
+        fields.Nested(HostConfigSchema()),
         description="A list of host objects.",
     )
 
@@ -515,7 +515,7 @@ class FolderCollection(DomainObjectCollection):
         description="The domain type of the objects in the collection.",
     )
     value = gui_fields.List(
-        gui_fields.Nested(FolderSchema()),
+        fields.Nested(FolderSchema()),
         description="A list of folder objects.",
     )
 
@@ -550,7 +550,7 @@ class ConcreteTimeRangeActive(BaseSchema):
         description="The day for which the time ranges are specified",
         pattern=f"{'|'.join(weekday_ids())}",
     )
-    time_ranges = gui_fields.List(gui_fields.Nested(ConcreteTimeRange))
+    time_ranges = gui_fields.List(fields.Nested(ConcreteTimeRange))
 
 
 class ConcreteTimePeriodException(BaseSchema):
@@ -560,7 +560,7 @@ class ConcreteTimePeriodException(BaseSchema):
         description="The date of the time period exception." "8601 profile",
     )
     time_ranges = gui_fields.List(
-        gui_fields.Nested(ConcreteTimeRange),
+        fields.Nested(ConcreteTimeRange),
         example="[{'start': '14:00', 'end': '18:00'}]",
     )
 
@@ -568,12 +568,12 @@ class ConcreteTimePeriodException(BaseSchema):
 class ConcreteTimePeriod(BaseSchema):
     alias = fields.String(description="The alias of the time period", example="alias")
     active_time_ranges = gui_fields.List(
-        gui_fields.Nested(ConcreteTimeRangeActive),
+        fields.Nested(ConcreteTimeRangeActive),
         description="The days for which time ranges were specified",
         example={"day": "all", "time_ranges": [{"start": "12:00", "end": "14:00"}]},
     )
     exceptions = gui_fields.List(
-        gui_fields.Nested(ConcreteTimePeriodException),
+        fields.Nested(ConcreteTimePeriodException),
         description="Specific day exclusions with their list of time ranges",
         example=[{"date": "2020-01-01", "time_ranges": [{"start": "14:00", "end": "18:00"}]}],
     )
@@ -631,7 +631,7 @@ class PasswordObject(DomainObject):
         "password",
         description="The type of the domain-object.",
     )
-    extensions = gui_fields.Nested(
+    extensions = fields.Nested(
         PasswordExtension,
         description="All the attributes of the domain object.",
     )
@@ -690,7 +690,7 @@ class Version(LinkSchema):
         ),
         required=False,
     )
-    additionalCapabilities = gui_fields.Nested(VersionCapabilities)
+    additionalCapabilities = fields.Nested(VersionCapabilities)
 
 
 class X509PEM(BaseSchema):

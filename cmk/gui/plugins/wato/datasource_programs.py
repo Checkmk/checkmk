@@ -816,7 +816,7 @@ def _valuespec_special_agents_kube():
                     elements=[
                         (
                             "endpoint",
-                            TextInput(
+                            HTTPUrl(
                                 title=_("Endpoint"),
                                 allow_empty=False,
                                 default_value="https://<control plane ip>:443",
@@ -844,7 +844,7 @@ def _valuespec_special_agents_kube():
                     elements=[
                         (
                             "endpoint",
-                            TextInput(
+                            HTTPUrl(
                                 title=_("Collector NodePort / Ingress endpoint"),
                                 allow_empty=False,
                                 default_value="https://<service url>:30035",

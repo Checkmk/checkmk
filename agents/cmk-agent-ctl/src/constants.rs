@@ -11,6 +11,7 @@ use std::{
 
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");
 
+#[cfg(unix)]
 pub const CMK_AGENT_USER: &str = "cmk-agent";
 //TODO: Pass agent port via cmdline(Windows/Linux) or config(Linux).
 pub const AGENT_PORT: &str = "6556";

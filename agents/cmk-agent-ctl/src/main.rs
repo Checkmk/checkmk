@@ -111,31 +111,39 @@ fn determine_paths(username: &str) -> AnyhowResult<constants::Paths> {
 }
 
 #[cfg(windows)]
-fn determine_paths(_: &str) -> AnyhowResult<constants::Paths> {
+fn determine_paths() -> AnyhowResult<constants::Paths> {
     let program_data_path = std::env::var(constants::ENV_PROGRAM_DATA)
         .unwrap_or_else(|_| String::from("c:\\ProgramData"));
     let home = std::path::PathBuf::from(program_data_path + constants::WIN_AGENT_HOME_DIR);
     Ok(constants::Paths::new(&home))
 }
 
+#[cfg(unix)]
+fn setup(logging_level: &str) -> AnyhowResult<constants::Paths> {
+    if let Err(err) = init_logging(logging_level) {
+        io::stderr()
+            .write_all(format!("Failed to initialize logging: {:?}", err).as_bytes())
+            .unwrap_or(());
+    }
+    determine_paths(constants::CMK_AGENT_USER)
+}
+
+#[cfg(windows)]
+fn setup(logging_level: &str) -> AnyhowResult<constants::Paths> {
+    let paths = determine_paths()?;
+    if let Err(err) = init_logging(&logging_level, &paths.log_path) {
+        io::stderr()
+            .write_all(format!("Failed to initialize logging: {:?}", err).as_bytes())
+            .unwrap_or(());
+    }
+    Ok(paths)
+}
+
 fn init() -> AnyhowResult<(cli::Args, constants::Paths)> {
     // Parse args as first action to directly exit from --help or malformatted arguments
     let args = cli::Args::from_args();
-
-    let paths = determine_paths(constants::CMK_AGENT_USER)?;
-
-    #[cfg(unix)]
-    let logging_init_result = init_logging(&args.logging_level());
-    #[cfg(windows)]
-    let logging_init_result = init_logging(&args.logging_level(), &paths.log_path);
-
-    if let Err(error) = logging_init_result {
-        io::stderr()
-            .write_all(format!("Failed to initialize logging: {:?}", error).as_bytes())
-            .unwrap_or(());
-    }
-
-    Ok((args, paths))
+    let logging_level = args.logging_level();
+    Ok((args, setup(&logging_level)?))
 }
 
 fn run_requested_mode(args: cli::Args, paths: constants::Paths) -> AnyhowResult<()> {
@@ -217,7 +225,7 @@ mod tests {
 
     #[test]
     fn test_windows_paths() {
-        let p = determine_paths(constants::CMK_AGENT_USER).unwrap();
+        let p = determine_paths().unwrap();
         let home = String::from("C:\\ProgramData") + constants::WIN_AGENT_HOME_DIR;
         assert_eq!(p.home_dir, std::path::PathBuf::from(&home));
         assert_eq!(

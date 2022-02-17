@@ -346,6 +346,22 @@ def test_transform_value_in_cascading_dropdown():
     assert valuespec.transform_value(("b", "AAA")) == ("b", "AAAaaa")
 
 
+class TestOptional:
+    def test_transform_value(self) -> None:
+        opt_vs = vs.Optional(
+            vs.Transform(
+                vs.Dictionary(elements=[
+                    ("a", vs.TextInput()),
+                    ("b", vs.Age()),
+                ]),
+                forth=lambda p: {k: v + 10 if k == "b" else v for k, v in p.items()},
+            ),
+            none_value="NONE_VALUE",
+        )
+        assert opt_vs.transform_value("NONE_VALUE") == "NONE_VALUE"
+        assert opt_vs.transform_value({"a": "text", "b": 10}) == {"a": "text", "b": 20}
+
+
 @pytest.fixture()
 def fixture_auth_secret():
     secret_path = Path(cmk.utils.paths.omd_root) / "etc" / "auth.secret"

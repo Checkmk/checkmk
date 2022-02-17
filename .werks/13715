@@ -1,0 +1,15 @@
+Title: Fix configuration update of MRPE agent ruleset
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1645029556
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.0.0p21
+
+When running <tt>cmk-update-config</tt> in the process of updating Checkmk,
+this error could occur:
+"Failed to transform rule: (Ruleset: agent_config:mrpe, ...):
+Dictionary.transform_value() got a non-dict: None"

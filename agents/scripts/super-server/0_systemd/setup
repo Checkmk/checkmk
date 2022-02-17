@@ -10,7 +10,8 @@ $0 deploy|cleanup|trigger|isdeployed
 Manage the systemd units required for Checkmk agent setup.
 
 Commands:
-  deploy      Deploy the unit files found in ${RESOURCES} to ${DESTINATION}
+  deploy      Deploy the unit files found in ${RESOURCES} to the
+              "most suitable" of: $(_destination --all)
   cleanup     Disable and remove the systemd units
   trigger     Enable or disable systemd units
   isdeployed  Exit successfully if and only if files are deployed
@@ -20,7 +21,31 @@ HERE
 }
 
 RESOURCES="$(dirname "$(realpath "$0")")"
-DESTINATION="/usr/lib/systemd/system"
+
+_destination() {
+    # Figure out where to put the unit files.
+    # It seems to vary from system to system, and some other
+    # applications get it wrong.
+    # Follow the mainstream, and pick the most populated one.
+    most_populated="$(for d in "/usr/lib/systemd/system" "/lib/systemd/system"; do
+        [ -d "${d}" ] && printf "%s %s\n" "$(find "${d}" -type f -print0 | wc -l)" "${d}"
+    done | sort -rn)"
+
+    if [ -z "${most_populated}" ]; then
+        cat >&2 <<HERE
+Unable to figure out where to put the systemd units.
+This package knows about $(_destination --all),
+but none of these are present.
+HERE
+        return 1
+    fi
+
+    if [ -z "${1}" ]; then
+        echo "${most_populated}" | head -n1 | cut -d' ' -f2
+    else
+        echo "${most_populated}" | cut -d' ' -f2
+    fi
+}
 
 _systemd_present() {
     command -v systemctl >/dev/null && return
@@ -38,6 +63,8 @@ _need_exec_stop_post() {
 
 _systemd_sufficient() {
     _systemd_present || return 1
+
+    _destination >/dev/null || return 1
 
     if _need_exec_stop_post && [ "$(_systemd_version)" -eq 219 ]; then
         cat >&2 <<HERE
@@ -61,10 +88,11 @@ _unit_files() {
 deploy() {
     _systemd_sufficient || return
 
+    dest="$(_destination)"
     prefix="Deploying systemd units:"
     for unit in $(_unit_files); do
         printf "%s %s" "${prefix}" "${unit}"
-        cp "${RESOURCES}/${unit}" "${DESTINATION}" | return
+        cp "${RESOURCES}/${unit}" "${dest}/" | return
         prefix=","
     done
     printf "\n"
@@ -72,11 +100,13 @@ deploy() {
 
 cleanup() {
     prefix="Removing systemd units:"
-    for unit in $(_unit_files); do
-        [ -e "${DESTINATION}/${unit}" ] || continue
-        printf "%s %s" "${prefix}" "${unit}"
-        prefix=","
-        rm -f "${DESTINATION}/${unit}"
+    _destination --all | while read -r dest; do
+        for unit in $(_unit_files); do
+            [ -e "${dest}/${unit}" ] || continue
+            printf "%s %s" "${prefix}" "${unit}"
+            prefix=","
+            rm -f "${dest}/${unit}"
+        done
     done
     printf "\n"
 }
@@ -90,7 +120,7 @@ trigger() {
         # skip unit templates
         [ "${unit}" = "${unit#*@}" ] || continue
 
-        if [ -e "${DESTINATION}/${unit}" ]; then
+        if _unit_deployed "${unit}"; then
             printf "Activating systemd unit '%s'...\n" "${unit}"
             systemctl enable "${unit}"
             systemctl restart "${unit}"
@@ -102,9 +132,16 @@ trigger() {
     done
 }
 
+_unit_deployed() {
+    _destination --all | while read -r dest; do
+        [ -e "${dest}/${1}" ] && return 0
+    done
+    return 1
+}
+
 isdeployed() {
     for unit in $(_unit_files); do
-        [ -e "${DESTINATION}/${unit}" ] && return 0
+        _unit_deployed "${unit}" && return 0
     done
     return 1
 }

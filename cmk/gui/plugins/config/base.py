@@ -59,7 +59,7 @@ custom_links_admin: List[CustomLinkSpec] = [
 def make_default_user_profile() -> UserSpec:
     return UserSpec(
         contactgroups=[],
-        roles=["use"],
+        roles=["user"],
         force_authuser=False,
     )
 

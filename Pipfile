@@ -174,6 +174,7 @@ pysmb = "==1.2"  # used by SMB share special agent
 google-cloud-monitoring = "==2.8.0"  # used by the gcp special agent
 google-cloud-storage = "==2.1.0"  # used by the gcp special agent
 google-cloud-functions = "==1.5.0"  # used by the gcp special agent
+google-api-python-client = "==2.37.0"  # used by the gcp special agent
 
 [requires]
 python_version = "3.9"

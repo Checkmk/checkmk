@@ -18,13 +18,13 @@ from tests.testlib.certs import (
 )
 
 from cmk.utils.certs import (
+    _make_csr,
+    _make_private_key,
+    _make_root_certificate,
+    _make_subject_name,
+    _rsa_public_key_from_cert_or_csr,
+    _sign_csr,
     load_cert_and_private_key,
-    make_csr,
-    make_private_key,
-    make_root_certificate,
-    make_subject_name,
-    rsa_public_key_from_cert_or_csr,
-    sign_csr,
     sign_csr_with_local_ca,
 )
 
@@ -188,14 +188,14 @@ def test_load_cert_and_private_key(
 
 
 def test_make_private_key() -> None:
-    assert make_private_key().key_size == 2048
+    assert _make_private_key().key_size == 2048
 
 
 def test_make_root_certificate() -> None:
-    key = make_private_key()
+    key = _make_private_key()
     with on_time(100, "UTC"):
-        cert = make_root_certificate(
-            make_subject_name("peter"),
+        cert = _make_root_certificate(
+            _make_subject_name("peter"),
             1,
             key,
         )
@@ -212,9 +212,9 @@ def test_make_root_certificate() -> None:
 
 
 def test_make_csr() -> None:
-    csr = make_csr(
-        make_subject_name("abc123"),
-        make_private_key(),
+    csr = _make_csr(
+        _make_subject_name("abc123"),
+        _make_private_key(),
     )
     assert csr.is_signature_valid
     assert check_cn(
@@ -224,19 +224,19 @@ def test_make_csr() -> None:
 
 
 def test_sign_csr() -> None:
-    root_key = make_private_key()
-    root_cert = make_root_certificate(
-        make_subject_name("peter"),
+    root_key = _make_private_key()
+    root_cert = _make_root_certificate(
+        _make_subject_name("peter"),
         1,
         root_key,
     )
-    key = make_private_key()
-    csr = make_csr(
-        make_subject_name("from_peter"),
+    key = _make_private_key()
+    csr = _make_csr(
+        _make_subject_name("from_peter"),
         key,
     )
     with on_time(100, "UTC"):
-        cert = sign_csr(
+        cert = _sign_csr(
             csr,
             2,
             root_cert,
@@ -256,14 +256,14 @@ def test_sign_csr() -> None:
     # ensure that 'from_peter' is indeed signed by 'peter'
     check_certificate_against_public_key(
         cert,
-        rsa_public_key_from_cert_or_csr(root_cert),
+        _rsa_public_key_from_cert_or_csr(root_cert),
     )
 
 
 def test_sign_csr_with_local_ca(mocker: MockerFixture) -> None:
-    root_key = make_private_key()
-    root_cert = make_root_certificate(
-        make_subject_name("peter"),
+    root_key = _make_private_key()
+    root_cert = _make_root_certificate(
+        _make_subject_name("peter"),
         1,
         root_key,
     )
@@ -274,9 +274,9 @@ def test_sign_csr_with_local_ca(mocker: MockerFixture) -> None:
             root_key,
         ),
     )
-    key = make_private_key()
-    csr = make_csr(
-        make_subject_name("from_peter"),
+    key = _make_private_key()
+    csr = _make_csr(
+        _make_subject_name("from_peter"),
         key,
     )
     with on_time(567892121, "UTC"):
@@ -298,5 +298,5 @@ def test_sign_csr_with_local_ca(mocker: MockerFixture) -> None:
     # ensure that 'from_peter' is indeed signed by 'peter'
     check_certificate_against_public_key(
         cert,
-        rsa_public_key_from_cert_or_csr(root_cert),
+        _rsa_public_key_from_cert_or_csr(root_cert),
     )

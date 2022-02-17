@@ -27,10 +27,7 @@
 from pathlib import Path
 from typing import Final
 
-from cryptography.hazmat.primitives.asymmetric.rsa import RSAPrivateKeyWithSerialization
-from cryptography.x509 import Certificate
-
-from cmk.utils.certs import RootCA, save_cert_chain
+from cmk.utils.certs import RootCA
 
 
 class CertificateAuthority:
@@ -49,14 +46,6 @@ class CertificateAuthority:
     def _site_certificate_path(self, site_id: str) -> Path:
         return (self._ca_path / "sites" / site_id).with_suffix(".pem")
 
-    def _write_cert_and_root(
-        self,
-        path: Path,
-        cert: Certificate,
-        key: RSAPrivateKeyWithSerialization,
-    ) -> None:
-        save_cert_chain(path, [cert, self.root_ca.cert], key)
-
     def site_certificate_exists(self, site_id: str) -> bool:
         return self._site_certificate_path(site_id).exists()
 
@@ -66,14 +55,12 @@ class CertificateAuthority:
 
     def create_site_certificate(self, site_id: str) -> None:
         """Creates the key / certificate for the given Check_MK site"""
-        self._write_cert_and_root(
-            self._site_certificate_path(site_id),
-            *self.root_ca.new_signed_cert(site_id, self.root_ca.days_valid),
+        self.root_ca.save_new_signed_cert(
+            self._site_certificate_path(site_id), site_id, self.root_ca.days_valid
         )
 
     def create_agent_receiver_certificate(self) -> None:
         """Creates the key / certificate for agent-receiver server"""
-        self._write_cert_and_root(
-            self._agent_receiver_cert_path,
-            *self.root_ca.new_signed_cert("localhost", self.root_ca.days_valid),
+        self.root_ca.save_new_signed_cert(
+            self._agent_receiver_cert_path, "localhost", self.root_ca.days_valid
         )

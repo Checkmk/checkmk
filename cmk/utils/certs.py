@@ -45,9 +45,9 @@ class RootCA:
         try:
             cert, rsa = load_cert_and_private_key(path)
         except FileNotFoundError:
-            rsa = make_private_key()
-            cert = make_root_certificate(make_subject_name(name), days_valid, rsa)
-            save_cert_chain(path, [cert], rsa)
+            rsa = _make_private_key()
+            cert = _make_root_certificate(_make_subject_name(name), days_valid, rsa)
+            _save_cert_chain(path, [cert], rsa)
 
         self.cert: Final = cert
         self.rsa: Final = rsa
@@ -58,10 +58,10 @@ class RootCA:
         name: str,
         days_valid: int,
     ) -> Tuple[Certificate, RSAPrivateKeyWithSerialization]:
-        private_key = make_private_key()
-        cert = sign_csr(
-            make_csr(
-                make_subject_name(name),
+        private_key = _make_private_key()
+        cert = _sign_csr(
+            _make_csr(
+                _make_subject_name(name),
                 private_key,
             ),
             days_valid,
@@ -69,6 +69,10 @@ class RootCA:
             self.rsa,
         )
         return cert, private_key
+
+    def save_new_signed_cert(self, path: Path, name: str, days_valid: int) -> None:
+        cert, private_key = self.new_signed_cert(name, days_valid)
+        _save_cert_chain(path, [cert, self.cert], private_key)
 
 
 def cert_dir(site_root_dir: Path) -> Path:
@@ -91,7 +95,7 @@ def load_cert_and_private_key(path_pem: Path) -> Tuple[Certificate, RSAPrivateKe
     )
 
 
-def save_cert_chain(
+def _save_cert_chain(
     path_pem: Path,
     certificate_chain: Iterable[Certificate],
     key: RSAPrivateKeyWithSerialization,
@@ -108,7 +112,7 @@ def load_local_ca() -> Tuple[Certificate, RSAPrivateKeyWithSerialization]:
     return load_cert_and_private_key(root_cert_path(cert_dir(Path(omd_root))))
 
 
-def make_private_key() -> RSAPrivateKeyWithSerialization:
+def _make_private_key() -> RSAPrivateKeyWithSerialization:
     return generate_private_key(
         public_exponent=65537,
         key_size=2048,
@@ -130,7 +134,7 @@ def _make_cert_builder(
     )
 
 
-def make_root_certificate(
+def _make_root_certificate(
     subject_name: Name,
     days_valid: int,
     private_key: RSAPrivateKeyWithSerialization,
@@ -174,7 +178,7 @@ def make_root_certificate(
     )
 
 
-def make_csr(
+def _make_csr(
     subject_name: Name,
     private_key: RSAPrivateKeyWithSerialization,
 ) -> CertificateSigningRequest:
@@ -188,7 +192,7 @@ def make_csr(
     )
 
 
-def sign_csr(
+def _sign_csr(
     csr: CertificateSigningRequest,
     days_valid: int,
     signing_cert: Certificate,
@@ -199,7 +203,7 @@ def sign_csr(
         _make_cert_builder(
             csr.subject,
             days_valid,
-            rsa_public_key_from_cert_or_csr(csr),
+            _rsa_public_key_from_cert_or_csr(csr),
         )
         .issuer_name(signing_cert.issuer)
         .add_extension(
@@ -224,14 +228,14 @@ def sign_csr_with_local_ca(
     csr: CertificateSigningRequest,
     days_valid: int,
 ) -> Certificate:
-    return sign_csr(
+    return _sign_csr(
         csr,
         days_valid,
         *load_local_ca(),
     )
 
 
-def make_subject_name(cn: str) -> Name:
+def _make_subject_name(cn: str) -> Name:
     return Name(
         [
             NameAttribute(
@@ -242,7 +246,7 @@ def make_subject_name(cn: str) -> Name:
     )
 
 
-def rsa_public_key_from_cert_or_csr(
+def _rsa_public_key_from_cert_or_csr(
     c: Union[Certificate, CertificateSigningRequest],
     /,
 ) -> RSAPublicKey:

@@ -19,10 +19,10 @@ from tests.testlib.certs import (
 import omdlib.certs as certs
 
 from cmk.utils.certs import (
+    _rsa_public_key_from_cert_or_csr,
     load_cert_and_private_key,
     root_cert_path,
     RootCA,
-    rsa_public_key_from_cert_or_csr,
 )
 
 CA_NAME = "test-ca"
@@ -71,7 +71,7 @@ def test_create_site_certificate(ca: certs.CertificateAuthority) -> None:
     )
     check_certificate_against_public_key(
         cert,
-        rsa_public_key_from_cert_or_csr(ca.root_ca.cert),
+        _rsa_public_key_from_cert_or_csr(ca.root_ca.cert),
     )
 
 
@@ -93,5 +93,5 @@ def test_write_agent_receiver_certificate(ca: certs.CertificateAuthority) -> Non
     )
     check_certificate_against_public_key(
         cert,
-        rsa_public_key_from_cert_or_csr(ca.root_ca.cert),
+        _rsa_public_key_from_cert_or_csr(ca.root_ca.cert),
     )

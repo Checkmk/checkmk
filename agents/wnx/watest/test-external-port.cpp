@@ -6,6 +6,7 @@
 
 #include <chrono>
 
+#include "agent_controller.h"
 #include "asio.h"
 #include "external_port.h"
 #include "test_tools.h"
@@ -222,6 +223,36 @@ TEST_F(ExternalPortTestFixture, MultiConnectIntegration) {
     }
 
     EXPECT_EQ(g_count, thread_count * 11);
+}
+
+namespace {
+const std::string base{
+    "controller:\n"
+    "  run: {}\n"};
+
+const std::pair<std::string, bool> ip_allowed[] = {
+    {"127.0.0.1", true},
+    {"::1", true},
+    {"127.0.0.2", false},
+};
+}  // namespace
+
+TEST(ExternalPortTest, IsIpAllowedAsExceptionYes) {
+    auto test_fs = tst::TempCfgFs::CreateNoIo();
+    cfg::GetLoadedConfig()[cfg::groups::kSystem] =
+        YAML::Load(fmt::format(base, "yes"));
+    for (const auto &t : ip_allowed) {
+        EXPECT_EQ(IsIpAllowedAsException(t.first), t.second);
+    }
+}
+
+TEST(ExternalPortTest, IsIpAllowedAsExceptionNo) {
+    auto test_fs = tst::TempCfgFs::CreateNoIo();
+    cfg::GetLoadedConfig()[cfg::groups::kSystem] =
+        YAML::Load(fmt::format(base, "no"));
+    for (const auto &t : ip_allowed) {
+        EXPECT_FALSE(IsIpAllowedAsException(t.first));
+    }
 }
 
 }  // namespace cma::world

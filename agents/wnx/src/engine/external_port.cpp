@@ -4,6 +4,7 @@
 
 #include <iostream>
 
+#include "agent_controller.h"
 #include "asio.h"
 #include "cfg.h"
 #include "encryption.h"
@@ -228,6 +229,11 @@ static void OverLoadMemory() {
 #endif
 }
 
+bool IsIpAllowedAsException(const std::string &ip) {
+    return ac::IsRunController(cfg::GetLoadedConfig()) &&
+           (ip == "127.0.0.1" || ip == "::1");
+}
+
 // singleton thread
 void ExternalPort::processQueue(const cma::world::ReplyFunc &reply) {
     for (;;) {
@@ -243,7 +249,9 @@ void ExternalPort::processQueue(const cma::world::ReplyFunc &reply) {
 
                     OverLoadMemory();  // do nothing
                     // only_from checking
-                    if (cma::cfg::groups::global.isIpAddressAllowed(ip)) {
+                    if (cma::cfg::groups::global.isIpAddressAllowed(ip) ||
+                        ip == "127.0.0.1" ||
+                        ip == "::1") {  // controller can contact us
                         as->start(reply);
 
                         // check memory block, terminate service if memory is

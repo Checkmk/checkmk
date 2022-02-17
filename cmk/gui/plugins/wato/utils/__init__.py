@@ -14,10 +14,10 @@ import re
 import subprocess
 import urllib.parse
 from contextlib import nullcontext
-from typing import Callable, cast, ContextManager, List, Mapping
+from typing import Any, Callable, cast, ContextManager, Dict, List, Mapping
 from typing import Optional as _Optional
 from typing import Tuple as _Tuple
-from typing import Type
+from typing import Type, Union
 
 from livestatus import SiteConfiguration, SiteConfigurations, SiteId
 
@@ -1064,9 +1064,11 @@ class RulespecGroupCheckParametersDiscovery(RulespecSubGroup):
 
 # The following function looks like a value spec and in fact
 # can be used like one (but take no parameters)
-def PredictiveLevels(**args):
-    dif = args.get("default_difference", (2.0, 4.0))
-    unitname = args.get("unit", "")
+def PredictiveLevels(
+    default_difference: _Tuple[float, float] = (2.0, 4.0), unit: str = ""
+) -> Dictionary:
+    dif = default_difference
+    unitname = unit
     if unitname:
         unitname += " "
 
@@ -1262,26 +1264,27 @@ def PredictiveLevels(**args):
 
 # To be used as ValueSpec for levels on numeric values, with
 # prediction
-def Levels(**kwargs):
-    def match_levels_alternative(v):
+def Levels(
+    help: _Optional[str] = None,  # pylint: disable=redefined-builtin
+    default_levels: _Tuple[float, float] = (0.0, 0.0),
+    default_difference: _Tuple[float, float] = (0.0, 0.0),
+    default_value: _Optional[_Tuple[float, float]] = None,
+    title: _Optional[str] = None,
+    unit: str = "",
+) -> Alternative:
+    def match_levels_alternative(v: Union[Dict[Any, Any], _Tuple[Any, Any]]) -> int:
         if isinstance(v, dict):
             return 2
         if isinstance(v, tuple) and v != (None, None):
             return 1
         return 0
 
-    help_txt = kwargs.get("help")
-    unit = kwargs.get("unit", "")
-    if not isinstance(unit, str):
-        raise Exception("illegal unit for Levels: %r" % (unit,))
-    title = kwargs.get("title")
-    default_levels = kwargs.get("default_levels", (0.0, 0.0))
-    default_difference = kwargs.get("default_difference", (0, 0))
-    default_value = kwargs.get("default_value", default_levels if default_levels else None)
+    if default_value is None:
+        default_value = default_levels
 
     return Alternative(
         title=title,
-        help=help_txt,
+        help=help,
         elements=[
             FixedValue(
                 None,

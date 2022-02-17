@@ -10,7 +10,9 @@ declare var XDomainRequest;
 //# '--------------------------------------------------------------------'
 
 export function submit_crash_report(url, post_data) {
-    document.getElementById("pending_msg").style.display = "block";
+
+
+    document.getElementById("pending_msg")!.style.display = "block";
 
     if (has_cross_domain_ajax_support()) {
         ajax.call_ajax(url, {
@@ -33,7 +35,7 @@ export function submit_crash_report(url, post_data) {
 }
 
 export function submit_license_usage_report(url, authorization, post_data) {
-    document.getElementById("pending_msg").style.display = "block";
+    document.getElementById("pending_msg")!.style.display = "block";
 
     if (has_cross_domain_ajax_support()) {
         ajax.call_ajax(url, {
@@ -42,14 +44,14 @@ export function submit_license_usage_report(url, authorization, post_data) {
             response_handler: function (_unused_data, response_msg) {
                 hide_report_processing_msg();
 
-                var success_container = document.getElementById("success_msg");
+                var success_container = document.getElementById("success_msg")!;
                 success_container.style.display = "block";
                 (success_container.children[0] as HTMLElement).innerText += " " + response_msg;
             },
             error_handler: function (_unused_data, _unused_status, _unused_error, response_msg) {
                 hide_report_processing_msg();
 
-                var fail_container = document.getElementById("fail_msg");
+                var fail_container = document.getElementById("fail_msg")!;
                 fail_container.style.display = "block";
                 (fail_container.children[0] as HTMLElement).innerText += " (" + response_msg + ")";
             },
@@ -93,11 +95,11 @@ function handle_report_response(handler_data, response_body) {
 
     if (response_body.substr(0, 2) == "OK") {
         var id = response_body.split(" ")[1];
-        var success_container = document.getElementById("success_msg");
+        var success_container = document.getElementById("success_msg")!;
         success_container.style.display = "block";
         success_container.innerHTML = success_container.innerHTML.replace(/###ID###/, id);
     } else {
-        var fail_container = document.getElementById("fail_msg");
+        var fail_container = document.getElementById("fail_msg")!;
         fail_container.style.display = "block";
         fail_container.children[0].innerHTML += " (" + response_body + ").";
     }
@@ -106,7 +108,7 @@ function handle_report_response(handler_data, response_body) {
 function handle_report_error(handler_data, status_code, error_msg) {
     hide_report_processing_msg();
 
-    var fail_container = document.getElementById("fail_msg");
+    var fail_container = document.getElementById("fail_msg")!;
     fail_container.style.display = "block";
     if (status_code) {
         fail_container.children[0].innerHTML += " (HTTP: " + status_code + ").";
@@ -121,8 +123,8 @@ function handle_report_error(handler_data, status_code, error_msg) {
 }
 
 function hide_report_processing_msg() {
-    var msg = document.getElementById("pending_msg");
-    msg.parentNode.removeChild(msg);
+    var msg = document.getElementById("pending_msg")!;
+    msg.parentNode?.removeChild(msg);
 }
 
 // Download function only for crash reports

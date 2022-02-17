@@ -7,6 +7,7 @@ use anyhow::{anyhow, Context, Result as AnyhowResult};
 use serde::de::DeserializeOwned;
 use serde::Deserialize;
 use serde::Serialize;
+use serde_with::DisplayFromStr;
 use std::collections::HashMap;
 use std::fs::{metadata, read_to_string, write};
 use std::io;
@@ -161,9 +162,12 @@ impl PullConfig {
         Ok(PullConfig { allowed_ip, port })
     }
 }
+
+#[serde_with::serde_as]
 #[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
 pub struct Connection {
-    pub uuid: String,
+    #[serde_as(as = "DisplayFromStr")]
+    pub uuid: uuid::Uuid,
     pub private_key: String,
     pub certificate: String,
     pub root_cert: String,
@@ -354,7 +358,7 @@ mod test_registry {
         push.insert(
             site_spec::Coordinates::from_str("server:8000/push-site").unwrap(),
             Connection {
-                uuid: String::from("uuid-push"),
+                uuid: uuid::Uuid::new_v4(),
                 private_key: String::from("private_key"),
                 certificate: String::from("certificate"),
                 root_cert: String::from("root_cert"),
@@ -364,7 +368,7 @@ mod test_registry {
         pull.insert(
             site_spec::Coordinates::from_str("server:8000/pull-site").unwrap(),
             Connection {
-                uuid: String::from("uuid-pull"),
+                uuid: uuid::Uuid::new_v4(),
                 private_key: String::from("private_key"),
                 certificate: String::from("certificate"),
                 root_cert: String::from("root_cert"),
@@ -379,7 +383,7 @@ mod test_registry {
                 push,
                 pull,
                 pull_imported: vec![Connection {
-                    uuid: String::from("uuid-imported"),
+                    uuid: uuid::Uuid::new_v4(),
                     private_key: String::from("private_key"),
                     certificate: String::from("certificate"),
                     root_cert: String::from("root_cert"),
@@ -392,7 +396,7 @@ mod test_registry {
 
     fn connection() -> Connection {
         Connection {
-            uuid: String::from("abc-123"),
+            uuid: uuid::Uuid::new_v4(),
             private_key: String::from("private_key"),
             certificate: String::from("certificate"),
             root_cert: String::from("root_cert"),
@@ -468,11 +472,13 @@ mod test_registry {
     #[test]
     fn test_register_imported_connection() {
         let mut reg = registry();
-        reg.register_imported_connection(connection());
+        let conn = connection();
+        let uuid = conn.uuid;
+        reg.register_imported_connection(conn);
         assert!(reg.connections.push.len() == 1);
         assert!(reg.connections.pull.len() == 1);
         assert!(reg.connections.pull_imported.len() == 2);
-        assert!(reg.connections.pull_imported[1].uuid == "abc-123");
+        assert!(reg.connections.pull_imported[1].uuid == uuid);
     }
 
     #[test]
@@ -492,8 +498,15 @@ mod test_registry {
         let reg = registry();
         let pull_conns: Vec<&Connection> = reg.pull_connections().collect();
         assert!(pull_conns.len() == 2);
-        assert!(pull_conns[0].uuid == "uuid-pull");
-        assert!(pull_conns[1].uuid == "uuid-imported");
+        assert!(
+            pull_conns[0]
+                == reg
+                    .connections
+                    .pull
+                    .get(&site_spec::Coordinates::from_str("server:8000/pull-site").unwrap())
+                    .unwrap()
+        );
+        assert!(pull_conns[1] == &reg.connections.pull_imported[0]);
     }
 
     #[test]
@@ -541,39 +554,30 @@ mod test_registry {
     }
 
     #[test]
-    fn test_delete_imported_connection_by_idx_ok() {
-        let path =
-            std::path::PathBuf::from(&tempfile::NamedTempFile::new().unwrap().into_temp_path());
-        let last_reload = mtime(&path).unwrap();
-        let mut reg = Registry {
-            connections: RegisteredConnections {
-                push: std::collections::HashMap::new(),
-                pull: std::collections::HashMap::new(),
-                pull_imported: vec![
-                    Connection {
-                        uuid: String::from("uuid-imported-1"),
-                        private_key: String::from("private_key"),
-                        certificate: String::from("certificate"),
-                        root_cert: String::from("root_cert"),
-                    },
-                    Connection {
-                        uuid: String::from("uuid-imported-2"),
-                        private_key: String::from("private_key"),
-                        certificate: String::from("certificate"),
-                        root_cert: String::from("root_cert"),
-                    },
-                ],
+    fn test_delete_imported_connection_ok() {
+        let uuid_first_imported = uuid::Uuid::new_v4();
+        let mut reg = registry();
+        reg.connections.pull_imported = vec![
+            Connection {
+                uuid: uuid_first_imported,
+                private_key: String::from("private_key"),
+                certificate: String::from("certificate"),
+                root_cert: String::from("root_cert"),
             },
-            path,
-            last_reload,
-        };
+            Connection {
+                uuid: uuid::Uuid::new_v4(),
+                private_key: String::from("private_key"),
+                certificate: String::from("certificate"),
+                root_cert: String::from("root_cert"),
+            },
+        ];
         assert!(reg.delete_imported_connection(1).is_ok());
         assert!(reg.connections.pull_imported.len() == 1);
-        assert!(reg.connections.pull_imported[0].uuid == "uuid-imported-1");
+        assert!(reg.connections.pull_imported[0].uuid == uuid_first_imported);
     }
 
     #[test]
-    fn test_delete_imported_connection_by_idx_err() {
+    fn test_delete_imported_connection_err() {
         let mut reg = registry();
         assert_eq!(
             format!("{}", reg.delete_imported_connection(1).unwrap_err()),

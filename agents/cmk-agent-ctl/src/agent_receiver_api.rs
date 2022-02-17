@@ -6,6 +6,7 @@ use super::{certs, config, site_spec, types};
 use anyhow::{anyhow, Context, Error as AnyhowError, Result as AnyhowResult};
 use http::StatusCode;
 use serde::{Deserialize, Serialize};
+use serde_with::DisplayFromStr;
 use string_enum::StringEnum;
 
 #[derive(Serialize)]
@@ -19,15 +20,19 @@ pub struct PairingResponse {
     pub client_cert: String,
 }
 
+#[serde_with::serde_as]
 #[derive(Serialize)]
 struct RegistrationWithHNBody {
-    uuid: String,
+    #[serde_as(as = "DisplayFromStr")]
+    uuid: uuid::Uuid,
     host_name: String,
 }
 
+#[serde_with::serde_as]
 #[derive(Serialize)]
 struct RegistrationWithALBody {
-    uuid: String,
+    #[serde_as(as = "DisplayFromStr")]
+    uuid: uuid::Uuid,
     agent_labels: types::AgentLabels,
 }
 
@@ -104,7 +109,7 @@ pub trait Registration {
         coordinates: &site_spec::Coordinates,
         root_cert: &str,
         credentials: &config::Credentials,
-        uuid: &str,
+        uuid: &uuid::Uuid,
         host_name: &str,
     ) -> AnyhowResult<()>;
 
@@ -113,7 +118,7 @@ pub trait Registration {
         coordinates: &site_spec::Coordinates,
         root_cert: &str,
         credentials: &config::Credentials,
-        uuid: &str,
+        uuid: &uuid::Uuid,
         agent_labels: &types::AgentLabels,
     ) -> AnyhowResult<()>;
 }
@@ -123,7 +128,7 @@ pub trait AgentData {
         &self,
         coordinates: &site_spec::Coordinates,
         root_cert: &str,
-        uuid: &str,
+        uuid: &uuid::Uuid,
         certificate: &str,
         compression_algorithm: &str,
         monitoring_data: &[u8],
@@ -135,7 +140,7 @@ pub trait Status {
         &self,
         coordinates: &site_spec::Coordinates,
         root_cert: &str,
-        uuid: &str,
+        uuid: &uuid::Uuid,
         certificate: &str,
     ) -> Result<StatusResponse, StatusError>;
 }
@@ -181,7 +186,7 @@ impl Registration for Api {
         coordinates: &site_spec::Coordinates,
         root_cert: &str,
         credentials: &config::Credentials,
-        uuid: &str,
+        uuid: &uuid::Uuid,
         host_name: &str,
     ) -> AnyhowResult<()> {
         check_response_204(
@@ -189,7 +194,7 @@ impl Registration for Api {
                 .post(Api::endpoint_address(coordinates, "register_with_hostname"))
                 .basic_auth(&credentials.username, Some(&credentials.password))
                 .json(&RegistrationWithHNBody {
-                    uuid: String::from(uuid),
+                    uuid: uuid.to_owned(),
                     host_name: String::from(host_name),
                 })
                 .send()?,
@@ -201,7 +206,7 @@ impl Registration for Api {
         coordinates: &site_spec::Coordinates,
         root_cert: &str,
         credentials: &config::Credentials,
-        uuid: &str,
+        uuid: &uuid::Uuid,
         agent_labels: &types::AgentLabels,
     ) -> AnyhowResult<()> {
         check_response_204(
@@ -209,7 +214,7 @@ impl Registration for Api {
                 .post(Api::endpoint_address(coordinates, "register_with_labels"))
                 .basic_auth(&credentials.username, Some(&credentials.password))
                 .json(&RegistrationWithALBody {
-                    uuid: String::from(uuid),
+                    uuid: uuid.to_owned(),
                     agent_labels: agent_labels.clone(),
                 })
                 .send()?,
@@ -222,7 +227,7 @@ impl AgentData for Api {
         &self,
         coordinates: &site_spec::Coordinates,
         root_cert: &str,
-        uuid: &str,
+        uuid: &uuid::Uuid,
         certificate: &str,
         compression_algorithm: &str,
         monitoring_data: &[u8],
@@ -254,7 +259,7 @@ impl Status for Api {
         &self,
         coordinates: &site_spec::Coordinates,
         root_cert: &str,
-        uuid: &str,
+        uuid: &uuid::Uuid,
         certificate: &str,
     ) -> Result<StatusResponse, StatusError> {
         let response = certs::client(Some(root_cert))?

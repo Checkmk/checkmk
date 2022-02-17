@@ -28,31 +28,49 @@ pub const ENV_PROGRAM_DATA: &str = "ProgramData";
 #[cfg(windows)]
 pub const WIN_AGENT_HOME_DIR: &str = "\\checkmk\\agent";
 
-const CONFIG_FILE: &str = "cmk-agent-ctl-config.json";
+const PAIRING_PRESET_FILE: &str = "cmk-agent-ctl-config.json";
 const REGISTRY_FILE: &str = "registered_connections.json";
 const LEGACY_PULL_FILE: &str = "allow-legacy-pull";
+#[cfg(unix)]
+const ETC_DIR: &str = "/etc/check_mk";
 #[cfg(windows)]
 const LOG_FILE: &str = "cmk-agent-ctl.log";
 
-pub struct Paths {
+pub struct PathResolver {
     pub home_dir: PathBuf,
-    pub config_path: PathBuf,
+    pub pairig_preset_path: PathBuf,
     pub registry_path: PathBuf,
     pub legacy_pull_path: PathBuf,
     #[cfg(windows)]
     pub log_path: PathBuf,
 }
 
-impl Paths {
-    pub fn new(home_dir: &Path) -> Paths {
-        Paths {
-            home_dir: std::path::PathBuf::from(home_dir),
-            config_path: home_dir.join(Path::new(CONFIG_FILE)),
+impl PathResolver {
+    pub fn new(home_dir: &Path) -> PathResolver {
+        #[cfg(unix)]
+        let etc_dir = PathBuf::from(ETC_DIR);
+        PathResolver {
+            home_dir: PathBuf::from(home_dir),
+            #[cfg(unix)]
+            pairig_preset_path: home_dir
+                .join(PAIRING_PRESET_FILE)
+                .exists_or(etc_dir.join(PAIRING_PRESET_FILE)),
+            #[cfg(windows)]
+            pairig_preset_path: home_dir.join(Path::new(PAIRING_PRESET_FILE)),
             registry_path: home_dir.join(Path::new(REGISTRY_FILE)),
             legacy_pull_path: home_dir.join(Path::new(LEGACY_PULL_FILE)),
             #[cfg(windows)]
             log_path: home_dir.join("log").join(Path::new(LOG_FILE)),
         }
+    }
+}
+trait ExistsOr {
+    fn exists_or(self, other_path: PathBuf) -> PathBuf;
+}
+
+impl ExistsOr for PathBuf {
+    fn exists_or(self, other_path: PathBuf) -> PathBuf {
+        self.exists().then(|| self).unwrap_or(other_path)
     }
 }
 
@@ -67,6 +85,6 @@ mod tests {
     #[test]
     fn test_paths() {
         let home_dir = std::path::Path::new("/a/b/c");
-        assert_eq!(Paths::new(home_dir).home_dir, home_dir);
+        assert_eq!(PathResolver::new(home_dir).home_dir, home_dir);
     }
 }

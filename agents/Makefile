@@ -78,6 +78,7 @@ $(RPM_PACKAGE): controller waitmax
 	#
 	# create build root (as tree would show it)
 	mkdir -p "$(RPM_BUILDROOT)/etc/check_mk"
+	install -m 644 "conffiles/super-server.cfg" $(RPM_BUILDROOT)/etc/check_mk/super-server.cfg"
 	mkdir -p "$(RPM_BUILDROOT)/usr/bin"
 	mkdir -p "$(RPM_BUILDROOT)/var/lib/cmk-agent"
 	install -m 755 check_mk_agent.linux "$(RPM_BUILDROOT)/usr/bin/check_mk_agent"
@@ -90,7 +91,6 @@ $(RPM_PACKAGE): controller waitmax
 	mkdir -p "$(RPM_BUILDROOT)/var/lib/check_mk_agent/cache"
 	mkdir -p "$(RPM_BUILDROOT)/var/lib/check_mk_agent/job"
 	mkdir -p "$(RPM_BUILDROOT)/var/lib/check_mk_agent/spool"
-	echo "# first available super server (default)" > "$(RPM_BUILDROOT)/etc/check_mk/super-server.cfg"
 	cp -r scripts "$(RPM_BUILDROOT)/var/lib/cmk-agent"
 	mv "$(RPM_BUILDROOT)/var/lib/cmk-agent/scripts/super-server/1_xinetd/check-mk-agent" "$(RPM_BUILDROOT)/etc/check_mk/xinetd-service-template.cfg"
 	# use this build root, and build

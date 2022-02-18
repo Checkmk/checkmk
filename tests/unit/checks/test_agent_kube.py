@@ -198,7 +198,6 @@ def test_cronjob_piggyback_option():
 
 
 def test_parse_namespace_patterns():
-    """Tests if all required arguments are present."""
     agent = SpecialAgent("agent_kube")
     arguments = agent.argument_func(
         {
@@ -208,10 +207,6 @@ def test_parse_namespace_patterns():
                 "endpoint": "https://11.211.3.32",
                 "verify-cert": False,
                 "proxy": ("no_proxy", "no_proxy"),
-            },
-            "cluster-collector": {
-                "endpoint": "https://11.211.3.32:20026",
-                "verify-cert": False,
             },
             "namespaces": ("namespace-include-patterns", ["default", "kube-system"]),
         },
@@ -235,10 +230,6 @@ def test_parse_namespace_patterns():
         "https://11.211.3.32",
         "--api-server-proxy",
         "NO_PROXY",
-        "--cluster-collector-endpoint",
-        "https://11.211.3.32:20026",
-        "--cluster-collector-proxy",
-        "FROM_ENVIRONMENT",
     ]
 
 

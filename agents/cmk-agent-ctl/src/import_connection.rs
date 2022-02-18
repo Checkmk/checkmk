@@ -78,7 +78,7 @@ mod tests {
             config::RegisteredConnections {
                 push: std::collections::HashMap::new(),
                 pull: std::collections::HashMap::new(),
-                pull_imported: vec![],
+                pull_imported: std::collections::HashSet::new(),
             },
             std::path::PathBuf::from(&tempfile::NamedTempFile::new().unwrap().into_temp_path()),
         )

@@ -22,7 +22,7 @@ import cmk.gui.permissions as permissions
 import cmk.gui.sites as sites
 from cmk.gui.config import builtin_role_ids
 from cmk.gui.exceptions import MKAuthException
-from cmk.gui.globals import config, local, request
+from cmk.gui.globals import config, endpoint, local, request
 from cmk.gui.i18n import _
 from cmk.gui.utils.roles import may_with_roles, roles_of_user
 from cmk.gui.utils.transaction_manager import TransactionManager
@@ -355,6 +355,21 @@ class LoggedInUser:
             return self._permissions[pname]
         they_may = may_with_roles(self.role_ids, pname)
         self._permissions[pname] = they_may
+
+        is_rest_api_call = bool(endpoint)  # we can't check if "is None" because it's a LocalProxy
+        if is_rest_api_call:
+            endpoint.remember_checked_permission(pname)
+            if (
+                endpoint.permissions_required is not None
+                and not endpoint.permissions_required.validate(list(endpoint._used_permissions))
+            ):
+                raise PermissionError(
+                    f"Required permissions not specified for endpoint.\n"
+                    f"Endpoint: {endpoint}\n"
+                    f"Required: {endpoint.permissions_required}\n"
+                    f"Triggered: {endpoint._used_permissions}\n",
+                )
+
         return they_may
 
     def need_permission(self, pname: str) -> None:

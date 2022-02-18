@@ -512,6 +512,36 @@ def is_daily_build_of_master(version: str) -> bool:
     return re.match(r"\d{4}.\d{2}.\d{2}$", version) is not None
 
 
+def is_same_major_version(this_version: str, other_version: str) -> bool:
+    """
+    Nightly branch builds e.g. 2.0.0-2022.01.01 are treated as 2.0.0.
+
+    >>> c = is_same_major_version
+    >>> c("2.0.0-2022.01.01", "2.0.0p3")
+    True
+    >>> c("2022.01.01", "2.0.0p3")
+    True
+    >>> c("2022.01.01", "1.6.0p3")
+    True
+    >>> c("1.6.0", "1.6.0p2")
+    True
+    >>> c("1.7.0", "1.6.0")
+    False
+    >>> c("1.6.0", "1.7.0")
+    False
+    >>> c("2.1.0i1", "2.1.0p2")
+    True
+    >>> c("2.1.0", "2.1.0")
+    True
+    """
+    # We can not decide which is the current base version of the master daily builds. For this
+    # reason we always treat them to be compatbile.
+    if is_daily_build_of_master(this_version) or is_daily_build_of_master(other_version):
+        return True
+
+    return base_version_parts(this_version)[:-1] == base_version_parts(other_version)[:-1]
+
+
 #   .--general infos-------------------------------------------------------.
 #   |                                      _   _        __                 |
 #   |       __ _  ___ _ __   ___ _ __ __ _| | (_)_ __  / _| ___  ___       |

@@ -23,7 +23,7 @@ import cmk.gui.wato.mkeventd
 import cmk.gui.watolib.activate_changes as activate_changes
 import cmk.gui.watolib.config_sync as config_sync
 import cmk.gui.watolib.utils as utils
-from cmk.gui.globals import config
+from cmk.gui.globals import config, request
 
 
 @pytest.fixture(name="mocked_responses")
@@ -544,6 +544,7 @@ def test_apply_pre_17_sync_snapshot(
         cmk_version, "is_managed_edition", lambda: edition is cmk_version.Edition.CME
     )
     monkeypatch.setattr(utils, "is_pre_17_remote_site", lambda s: is_pre_17_site)
+    monkeypatch.setattr(request, "headers", {"x-checkmk-version": "1.6.0p1"})
 
     activation_manager = _get_activation_manager(monkeypatch, remote_site)
     snapshot_settings = _create_sync_snapshot(

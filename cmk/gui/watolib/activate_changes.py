@@ -20,6 +20,7 @@ import ast
 import errno
 import hashlib
 import io
+import logging
 import multiprocessing
 import os
 import re
@@ -29,7 +30,6 @@ import time
 import traceback
 from dataclasses import asdict
 from itertools import filterfalse
-from logging import Logger
 from pathlib import Path
 from typing import Any, Callable, Dict, Iterable, List, NamedTuple, Optional, Set, Tuple, Union
 
@@ -2101,16 +2101,25 @@ def apply_pre_17_sync_snapshot(
         create_distributed_wato_files(cmk.utils.paths.omd_root, site_id, is_remote=True)
 
         _execute_post_config_sync_actions(site_id)
-        _execute_cmk_update_config()
     finally:
         timeout_manager.enable_timeout(html.request.request_timeout)
 
     return True
 
 
-def _execute_cmk_update_config():
+def _need_to_update_config_after_sync() -> bool:
+    if not (central_version := _request.headers.get("x-checkmk-version")):
+        raise ValueError("Request header x-checkmk-version is missing")
+    logger.debug("Local version: %s, Central version: %s", cmk_version.__version__, central_version)
+    return not cmk_version.is_same_major_version(
+        cmk_version.__version__,
+        central_version,
+    )
+
+
+def _execute_cmk_update_config() -> None:
     completed_process = subprocess.run(
-        "cmk-update-config",
+        ["cmk-update-config", "-v"],
         stdin=subprocess.DEVNULL,
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
@@ -2118,16 +2127,29 @@ def _execute_cmk_update_config():
         encoding="utf-8",
         check=False,
     )
+    logger.log(
+        logging.DEBUG if completed_process.returncode == 0 else logging.WARNING,
+        "'cmk-update-config -v' finished. Exit code: %s, Output: %s",
+        completed_process.returncode,
+        completed_process.stdout,
+    )
 
     if completed_process.returncode:
-        raise MKGeneralException(
-            _("Unable to convert configuration into 2.0 format\n%s") % completed_process.stdout
-        )
+        raise MKGeneralException(_("Configuration update failed\n%s") % completed_process.stdout)
 
 
-def _execute_post_config_sync_actions(site_id):
+def _execute_post_config_sync_actions(site_id: SiteId) -> None:
     try:
-        # pending changes are lost
+        # When receiving configuration from a central site that uses a previous major
+        # version, the config migration logic has to be executed to make the local
+        # configuration compatible with the local Checkmk version.
+        if _need_to_update_config_after_sync():
+            logger.debug("Executing cmk-update-config")
+            _execute_cmk_update_config()
+
+        # The local configuration has just been replaced. The pending changes are not
+        # relevant anymore. Confirm all of them to cleanup the inconsistency.
+        logger.debug("Confirming pending changes")
         confirm_all_local_changes()
 
         hooks.call("snapshot-pushed")
@@ -2142,7 +2164,8 @@ def _execute_post_config_sync_actions(site_id):
         )
 
     cmk.gui.watolib.changes.log_audit(
-        "replication", _("Synchronized with master (my site id is %s.)") % site_id
+        "replication",
+        _("Synchronized configuration from central site (local site ID is %s.)") % site_id,
     )
 
 
@@ -2337,7 +2360,7 @@ def _add_pre_17_sitespecific_excludes(paths: List[ReplicationPath]) -> List[Repl
 
 
 def get_file_names_to_sync(
-    site_logger: Logger,
+    site_logger: logging.Logger,
     central_file_infos: "Dict[str, ConfigSyncFileInfo]",
     remote_file_infos: "Dict[str, ConfigSyncFileInfo]",
     file_filter_func: Optional[Callable[[str], bool]],
@@ -2579,7 +2602,7 @@ class ReceiveConfigSyncRequest(NamedTuple):
 class AutomationReceiveConfigSync(AutomationCommand):
     """Called on remote site from a central site to update the Checkmk configuration
 
-    The central site hands over the a tar archive with the files to be written and a list of
+    The central site hands over a tar archive with the files to be written and a list of
     files to be deleted. The configuration generation is used to validate that no modification has
     been made between the two sync steps (get-config-sync-state and this autmoation).
     """
@@ -2609,9 +2632,13 @@ class AutomationReceiveConfigSync(AutomationCommand):
                     )
                 )
 
+            logger.debug("Updating configuration from sync snapshot")
             self._update_config_on_remote_site(api_request.sync_archive, api_request.to_delete)
 
+            logger.debug("Executing post sync actions")
             _execute_post_config_sync_actions(api_request.site_id)
+
+            logger.debug("Done")
             return True
 
     def _update_config_on_remote_site(self, sync_archive: bytes, to_delete: List[str]) -> None:

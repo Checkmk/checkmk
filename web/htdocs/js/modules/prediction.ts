@@ -66,7 +66,7 @@ var linec = "#bbbbbb";
 export function render_coordinates(v_scala, t_scala) {
     // Create canvas
     var canvas = <HTMLCanvasElement>document.getElementById(canvas_id);
-    var c = canvas.getContext("2d");
+    var c = canvas.getContext("2d")!;
     c.font = "20px sans-serif";
 
     // Convert the coordinate system in a way, that we can directly
@@ -146,7 +146,7 @@ function line(c, t0, v0, t1, v1) {
 
 export function render_point(t, v, color) {
     var canvas = <HTMLCanvasElement>document.getElementById(canvas_id);
-    var c = canvas.getContext("2d");
+    var c = canvas.getContext("2d")!;
     var p = point(t, v);
     c.beginPath();
     c.lineWidth = 4;
@@ -160,7 +160,7 @@ export function render_point(t, v, color) {
 
 export function render_curve(points, color, w, square) {
     var canvas = <HTMLCanvasElement>document.getElementById(canvas_id);
-    var c = canvas.getContext("2d");
+    var c = canvas.getContext("2d")!;
 
     c.beginPath();
     c.strokeStyle = color;
@@ -198,7 +198,7 @@ export function render_area_reverse(points, color, alpha) {
 
 export function render_dual_area(lower_points, upper_points, color, alpha) {
     var canvas = <HTMLCanvasElement>document.getElementById(canvas_id);
-    var c = canvas.getContext("2d");
+    var c = canvas.getContext("2d")!;
 
     c.fillStyle = color;
     c.globalAlpha = alpha;

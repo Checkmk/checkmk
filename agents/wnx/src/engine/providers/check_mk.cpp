@@ -15,6 +15,7 @@
 #include <asio/ip/network_v4.hpp>
 #include <asio/ip/network_v6.hpp>
 
+#include "agent_controller.h"
 #include "cfg.h"
 #include "check_mk.h"
 #include "common/version.h"
@@ -109,26 +110,10 @@ std::string MakeDirs() {
 
 }  // namespace
 
-// TODO(sk): make public API and replace all Trailing/trim with this one
-void TrimRight(std::string &s, std::string_view chars) {
-    auto end = s.find_last_not_of(chars);
-    if (end != std::string::npos) {
-        s.erase(end + 1);
-    }
-}
-
-std::string DetermineAgentCtlVersion() {
-    auto path_to_agent_ctl =
-        (fs::path{cfg::GetRootDir()} / cfg::files::kAgentCtl).wstring();
-    auto result = wtools::RunCommand(path_to_agent_ctl + L" -V"s);
-    TrimRight(result, "\n\r");
-    return result;
-}
-
 std::string CheckMk::makeBody() {
     auto out = MakeInfo();
     out += MakeDirs();
-    out += "AgentController: "s + DetermineAgentCtlVersion() + "\n";
+    out += "AgentController: "s + ac::DetermineAgentCtlVersion() + "\n";
     out += "OnlyFrom: "s + makeOnlyFrom() + "\n"s;
 
     if (install::GetLastInstallFailReason()) {

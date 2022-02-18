@@ -123,6 +123,28 @@ bool StartAgentController(const fs::path &service) {
     return false;
 }
 
+// TODO(sk): make public API and replace all Trailing/trim with this one
+void TrimRight(std::string &s, std::string_view chars) {
+    auto end = s.find_last_not_of(chars);
+    if (end != std::string::npos) {
+        s.erase(end + 1);
+    }
+}
+
+std::string DetermineAgentCtlVersion() {
+    auto work_controller = GetWorkController();
+    std::error_code ec;
+    if (!fs::exists(work_controller, ec)) {
+        XLOG::l("There is no controller '{}' ec=[{}]", work_controller,
+                ec.value());
+        return {};
+    }
+    auto result = wtools::RunCommand(work_controller.wstring() + L" " +
+                                     wtools::ConvertToUTF16(kCmdLineVersion));
+    TrimRight(result, "\n\r");
+    return result;
+}
+
 bool KillAgentController(const fs::path &service) {
     if (cma::IsService()) {
         auto ret = wtools::KillProcess(cfg::files::kAgentCtl, 1);

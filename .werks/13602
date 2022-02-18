@@ -1,0 +1,12 @@
+Title: Maximal size of a plugin for Windows agent is 64 MB
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1644838075
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.0.0p21
+
+Previously, the limit had been 20 MB

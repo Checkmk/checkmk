@@ -79,7 +79,7 @@ def password_exists(ident: str) -> bool:
 
 def load_passwords() -> dict[str, Password]:
     password_store = PasswordStore()
-    return password_store.load_for_reading()
+    return password_store.filter_usable_entries(password_store.load_for_reading())
 
 
 def load_password(password_id: str) -> Password:
@@ -88,7 +88,7 @@ def load_password(password_id: str) -> Password:
 
 def load_passwords_to_modify() -> dict[str, Password]:
     password_store = PasswordStore()
-    return password_store.load_for_modification()
+    return password_store.filter_editable_entries(password_store.load_for_modification())
 
 
 def load_password_to_modify(ident: str) -> Password:

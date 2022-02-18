@@ -31,6 +31,9 @@ set exe=target\%target%\release\%exe_name%
 
 del /Q %arte%\%exe_name% 2> nul
 
+powershell Write-Host "Run Rust clippy" -Foreground White
+cargo clippy --release --target %target% 2>&1
+if not "%errorlevel%" == "0" powershell Write-Host "Failed cargo clippy" -Foreground Red && exit /b 17
 powershell Write-Host "Building Rust executables" -Foreground White
 cargo build --release --target %target% 2>&1
 if not "%errorlevel%" == "0" powershell Write-Host "Failed cargo build" -Foreground Red && exit /b 18

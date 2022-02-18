@@ -12,13 +12,13 @@ import * as utils from "utils";
 import * as ajax from "ajax";
 import {initialize_autocompleters} from "valuespecs";
 
-export function enable_dynamic_form_elements(container = null) {
+export function enable_dynamic_form_elements(container: HTMLElement|null = null) {
     enable_select2_dropdowns(container);
     enable_label_input_fields(container);
 }
 
-var g_previous_timeout_id = null;
-var g_ajax_obj = null;
+var g_previous_timeout_id :number|null= null;
+var g_ajax_obj;
 
 export function enable_select2_dropdowns(container) {
     let elements;
@@ -32,7 +32,7 @@ export function enable_select2_dropdowns(container) {
     initialize_autocompleters(container);
 
     // workaround for select2-input not being in focus
-    $(document).on("select2:open", () => document.querySelector(".select2-search__field").focus());
+    $(document).on("select2:open", () => (document.querySelector(".select2-search__field")as HTMLSelectElement)?.focus());
 }
 
 function enable_label_input_fields(container) {
@@ -154,7 +154,7 @@ function enable_label_input_fields(container) {
             if (g_previous_timeout_id !== null) {
                 clearTimeout(g_previous_timeout_id);
             }
-            g_previous_timeout_id = setTimeout(function () {
+            g_previous_timeout_id = window.setTimeout(function () {
                 kill_previous_autocomplete_call();
                 ajax_call_autocomplete_labels(post_data, tagify, value, element);
             }, 300);
@@ -272,7 +272,7 @@ export function add_confirm_on_submit(form_id, message) {
         "submit",
         e => {
             confirm_dialog({html: message}, () => {
-                document.getElementById(form_id).submit();
+                (document.getElementById(form_id) as HTMLFormElement)?.submit();
             });
             return utils.prevent_default_events(e);
         },

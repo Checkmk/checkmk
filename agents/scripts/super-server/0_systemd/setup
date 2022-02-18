@@ -114,19 +114,19 @@ deploy() {
     printf "Deploying systemd units:"
 
     printf " check-mk-agent@.service"
-    cp "${ROOT}${RESOURCES}/check-mk-agent@.service" "${ROOT}${dest}/"
+    install -m 644 "${ROOT}${RESOURCES}/check-mk-agent@.service" "${ROOT}${dest}/"
 
     printf ", check-mk-agent-async.service"
-    cp "${ROOT}${RESOURCES}/check-mk-agent-async.service" "${ROOT}${dest}/"
+    install -m 644 "${ROOT}${RESOURCES}/check-mk-agent-async.service" "${ROOT}${dest}/"
 
     if _is_controller_setup; then
         printf ", check-mk-agent.socket"
-        cp "${ROOT}${RESOURCES}/check-mk-agent.socket" "${ROOT}${dest}/"
+        install -m 644 "${ROOT}${RESOURCES}/check-mk-agent.socket" "${ROOT}${dest}/"
         printf ", cmk-agent-ctl-daemon.service\n"
-        cp "${ROOT}${RESOURCES}/cmk-agent-ctl-daemon.service" "${ROOT}${dest}/"
+        install -m 644 "${ROOT}${RESOURCES}/cmk-agent-ctl-daemon.service" "${ROOT}${dest}/"
     else
         printf ", check-mk-agent.socket (TCP fallback)\n"
-        cp "${ROOT}${RESOURCES}/check-mk-agent.socket.fallback" "${ROOT}${dest}/check-mk-agent.socket"
+        install -m 644 "${ROOT}${RESOURCES}/check-mk-agent.socket.fallback" "${ROOT}${dest}/check-mk-agent.socket"
     fi
 
 }

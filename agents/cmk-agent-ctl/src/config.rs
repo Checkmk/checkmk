@@ -117,16 +117,9 @@ impl RegistrationConfig {
 
 #[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
 pub struct Connection {
-    #[serde(default)]
     pub uuid: String,
-
-    #[serde(default)]
     pub private_key: String,
-
-    #[serde(default)]
     pub certificate: String,
-
-    #[serde(default)]
     pub root_cert: String,
 }
 

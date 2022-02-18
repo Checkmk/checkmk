@@ -1,0 +1,12 @@
+Title: agent_splunk: Fix crash if a function has no features
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1645184630
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.0.0p21
+
+

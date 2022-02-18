@@ -46,7 +46,16 @@ setversion:
 	-e 's/^$$CMK_VERSION = ".*/$$CMK_VERSION = "$(NEW_VERSION)"/' \
 	$(shell find plugins/ -maxdepth 1 -type f ! -name \*_2.py ! -name \*.checksum) ; \
 	sed -i 's/say "Version: .*"/say "Version: $(NEW_VERSION)"/' check_mk_agent.openvms
-	sed -i 's/echo "Version: [0-9.a-z-]*"/echo "Version: $(NEW_VERSION)"/g' check_mk_agent.*
+	sed -i 's/^Version: .*/Version: $(NEW_VERSION)/' check_mk_agent.linux
+	sed -i 's/echo "Version: [0-9.a-z-]*"/echo "Version: $(NEW_VERSION)"/g' \
+	    check_mk_agent.aix \
+	    check_mk_agent.freebsd \
+	    check_mk_agent.hpux \
+	    check_mk_agent.macosx \
+	    check_mk_agent.netbsd \
+	    check_mk_agent.openbsd \
+	    check_mk_agent.openwrt \
+	    check_mk_agent.solaris
 	sed -i "s/^#define CMK_WIN_AGENT_VERSION .*/#define CMK_WIN_AGENT_VERSION \"$(NEW_VERSION)\"/" wnx/src/common/wnx_version.h
 
 build: $(DEB_PACKAGE) $(RPM_PACKAGE) $(WIN_PACKAGE) controller

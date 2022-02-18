@@ -20,7 +20,12 @@ from cmk.gui import fields as gui_fields
 from cmk.gui import watolib
 from cmk.gui.fields.utils import BaseSchema
 from cmk.gui.http import Response
-from cmk.gui.plugins.openapi.restful_objects import constructors, Endpoint, response_schemas
+from cmk.gui.plugins.openapi.restful_objects import (
+    constructors,
+    Endpoint,
+    permissions,
+    response_schemas,
+)
 from cmk.gui.plugins.openapi.restful_objects.constructors import (
     collection_href,
     domain_object,
@@ -159,6 +164,20 @@ class UpdateDiscoveryPhase(BaseSchema):
         404: "Host could not be found",
     },
     request_schema=UpdateDiscoveryPhase,
+    permissions_required=permissions.AnyPerm(
+        [
+            permissions.Optional(
+                permissions.AnyPerm(
+                    [
+                        permissions.Perm("wato.service_discovery_to_monitored"),
+                        permissions.Perm("wato.service_discovery_to_ignored"),
+                        permissions.Perm("wato.service_discovery_to_undecided"),
+                        permissions.Perm("wato.service_discovery_to_removed"),
+                    ]
+                )
+            ),
+        ]
+    ),
 )
 def update_service_phase(params):
     """Update the phase of a service"""

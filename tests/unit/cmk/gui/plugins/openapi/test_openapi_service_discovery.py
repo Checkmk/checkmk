@@ -827,23 +827,21 @@ def test_openapi_discovery(
         status=200,
     )
 
-    with mock_livestatus(expect_status_query=True):
-        aut_user_auth_wsgi_app.follow_link(
-            _resp,
-            "cmk/service.move-ignored",
-            json_data=_resp.json["members"]["df-/boot"],
-            headers={"Accept": "application/json"},
-            status=204,
-        )
+    aut_user_auth_wsgi_app.follow_link(
+        _resp,
+        "cmk/service.move-ignored",
+        json_data=_resp.json["members"]["df-/boot"],
+        headers={"Accept": "application/json"},
+        status=204,
+    )
 
-    with mock_livestatus(expect_status_query=True):
-        aut_user_auth_wsgi_app.follow_link(
-            _resp,
-            "cmk/service.move-monitored",
-            json_data=_resp.json["members"]["df-/boot"],
-            headers={"Accept": "application/json"},
-            status=204,
-        )
+    aut_user_auth_wsgi_app.follow_link(
+        _resp,
+        "cmk/service.move-monitored",
+        json_data=_resp.json["members"]["df-/boot"],
+        headers={"Accept": "application/json"},
+        status=204,
+    )
 
 
 @pytest.mark.usefixtures("inline_background_jobs")

@@ -20,6 +20,7 @@ from cmk.gui.plugins.openapi.endpoints.utils import complement_customer, update_
 from cmk.gui.plugins.openapi.restful_objects import (
     constructors,
     Endpoint,
+    permissions,
     request_schemas,
     response_schemas,
 )
@@ -34,6 +35,8 @@ from cmk.gui.watolib.passwords import (
     save_password,
 )
 
+PERMISSIONS = permissions.Perm("wato.edit_all_passwords")
+
 
 @Endpoint(
     constructors.collection_href("password"),
@@ -42,6 +45,7 @@ from cmk.gui.watolib.passwords import (
     request_schema=request_schemas.InputPassword,
     etag="output",
     response_schema=response_schemas.PasswordObject,
+    permissions_required=PERMISSIONS,
 )
 def create_password(params):
     """Create a password"""
@@ -75,6 +79,7 @@ def create_password(params):
     request_schema=request_schemas.UpdatePassword,
     etag="both",
     response_schema=response_schemas.PasswordObject,
+    permissions_required=PERMISSIONS,
 )
 def update_password(params):
     """Update a password"""
@@ -99,6 +104,7 @@ def update_password(params):
     method="delete",
     path_params=[NAME_FIELD],
     output_empty=True,
+    permissions_required=PERMISSIONS,
 )
 def delete_password(params):
     """Delete a password"""
@@ -119,6 +125,7 @@ def delete_password(params):
     method="get",
     path_params=[NAME_FIELD],
     response_schema=response_schemas.PasswordObject,
+    permissions_required=PERMISSIONS,
 )
 def show_password(params):
     """Show a password"""
@@ -139,6 +146,7 @@ def show_password(params):
     ".../collection",
     method="get",
     response_schema=response_schemas.DomainObjectCollection,
+    permissions_required=PERMISSIONS,
 )
 def list_passwords(params):
     """Show all passwords"""

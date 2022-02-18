@@ -14,11 +14,13 @@ from cmk.utils.type_defs import UserId
 import cmk.gui.plugins.userdb.htpasswd as htpasswd
 from cmk.gui import userdb
 from cmk.gui.exceptions import MKUserError
+from cmk.gui.globals import user
 from cmk.gui.http import Response
 from cmk.gui.plugins.openapi.endpoints.utils import complement_customer, update_customer_info
 from cmk.gui.plugins.openapi.restful_objects import (
     constructors,
     Endpoint,
+    permissions,
     request_schemas,
     response_schemas,
 )
@@ -46,6 +48,14 @@ class InternalInterfaceAttributes(TypedDict, total=False):
     show_mode: Optional[Literal["default_show_less", "default_show_more", "enforce_show_more"]]
 
 
+EDIT_PERMISSIONS = permissions.AllPerm(
+    [
+        permissions.Perm("wato.users"),
+        permissions.Perm("wato.edit"),
+    ]
+)
+
+
 @Endpoint(
     constructors.object_href("user_config", "{username}"),
     "cmk/show",
@@ -53,9 +63,11 @@ class InternalInterfaceAttributes(TypedDict, total=False):
     path_params=[USERNAME],
     etag="output",
     response_schema=response_schemas.UserObject,
+    permissions_required=permissions.Perm("wato.users"),
 )
 def show_user(params):
     """Show an user"""
+    user.need_permission("wato.users")
     username = params["username"]
     try:
         return serve_user(username)
@@ -72,9 +84,11 @@ def show_user(params):
     ".../collection",
     method="get",
     response_schema=response_schemas.UserCollection,
+    permissions_required=permissions.Perm("wato.users"),
 )
 def list_users(params):
     """Show all users"""
+    user.need_permission("wato.users")
     users = []
     for user_id, attrs in userdb.load_users(False).items():
         user_attributes = _internal_to_api_format(attrs)
@@ -92,6 +106,12 @@ def list_users(params):
     etag="output",
     request_schema=request_schemas.CreateUser,
     response_schema=response_schemas.UserObject,
+    permissions_required=permissions.AllPerm(
+        [
+            *EDIT_PERMISSIONS.perms,
+            permissions.Optional(permissions.Perm("wato.groups")),
+        ]
+    ),
 )
 def create_user(params):
     """Create a user"""
@@ -122,6 +142,7 @@ def create_user(params):
     method="delete",
     path_params=[USERNAME],
     output_empty=True,
+    permissions_required=EDIT_PERMISSIONS,
 )
 def delete_user(params):
     """Delete a user"""
@@ -145,6 +166,7 @@ def delete_user(params):
     etag="both",
     request_schema=request_schemas.UpdateUser,
     response_schema=response_schemas.UserObject,
+    permissions_required=EDIT_PERMISSIONS,
 )
 def edit_user(params):
     """Edit an user"""
@@ -567,11 +589,11 @@ def _notification_options_to_internal_format(
     notification_internal: Dict[str, Union[bool, TIMESTAMP_RANGE]],
     notification_api_details: NotificationDetails,
 ) -> Dict[str, Union[bool, TIMESTAMP_RANGE]]:
-    """Format the disable notifications information to be Checkmk compatible
+    """Format disable notifications information to be Checkmk compatible
 
     Args:
-        disable_notification_details:
-            user provided disable notifications details
+        notification_api_details:
+            user provided notifications details
 
     Returns:
         formatted disable notifications details for Checkmk user_attrs

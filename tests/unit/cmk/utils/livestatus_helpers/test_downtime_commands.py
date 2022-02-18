@@ -10,6 +10,12 @@ import pytz
 
 import cmk.gui.livestatus_utils.commands.downtimes as downtimes
 from cmk.gui import sites
+from cmk.gui.config import load_config
+
+# HACK: This is needed to populate the PermissionRegistry
+from cmk.gui.plugins.views import commands  # pylint: disable=unused-import
+from cmk.gui.utils.logged_in import SuperUserContext
+from cmk.gui.utils.script_helpers import application_and_request_context
 
 
 @pytest.fixture(name="dates")
@@ -23,7 +29,10 @@ def _dates():
 def test_host_downtime(mock_livestatus, with_request_context, dates):
     start_time, end_time = dates
 
-    with mock_livestatus(expect_status_query=True) as live:
+    with mock_livestatus(
+        expect_status_query=True
+    ) as live, application_and_request_context(), SuperUserContext():
+        load_config()
         live.expect_query("GET hosts\nColumns: name\nFilter: name = example.com")
         live.expect_query(
             "COMMAND [...] SCHEDULE_HOST_DOWNTIME;example.com;0;86400;12;0;120;;Going down",
@@ -43,7 +52,10 @@ def test_host_downtime(mock_livestatus, with_request_context, dates):
 def test_host_downtime_with_services(mock_livestatus, with_request_context, dates):
     start_time, end_time = dates
 
-    with mock_livestatus(expect_status_query=True) as live:
+    with mock_livestatus(
+        expect_status_query=True
+    ) as live, application_and_request_context(), SuperUserContext():
+        load_config()
         live.expect_query("GET hosts\nColumns: name\nFilter: name = example.com")
         live.expect_query(
             "COMMAND [...] SCHEDULE_HOST_DOWNTIME;example.com;0;86400;12;0;120;;Going down",
@@ -75,7 +87,10 @@ def test_host_downtime_with_services(mock_livestatus, with_request_context, date
 def test_hostgroup_host_downtime(mock_livestatus, with_request_context, dates):
     start_time, end_time = dates
 
-    with mock_livestatus(expect_status_query=True) as live:
+    with mock_livestatus(
+        expect_status_query=True
+    ) as live, application_and_request_context(), SuperUserContext():
+        load_config()
         live.expect_query(
             [
                 "GET hostgroups",
@@ -109,7 +124,10 @@ def test_hostgroup_host_downtime(mock_livestatus, with_request_context, dates):
 def test_hostgroup_host_downtime_with_services(mock_livestatus, with_request_context, dates):
     start_time, end_time = dates
 
-    with mock_livestatus(expect_status_query=True) as live:
+    with mock_livestatus(
+        expect_status_query=True
+    ) as live, application_and_request_context(), SuperUserContext():
+        load_config()
         live.expect_query(
             [
                 "GET hostgroups",
@@ -159,7 +177,10 @@ def test_hostgroup_host_downtime_with_services(mock_livestatus, with_request_con
 def test_servicegroup_service_downtime(mock_livestatus, with_request_context, dates):
     start_time, end_time = dates
 
-    with mock_livestatus(expect_status_query=True) as live:
+    with mock_livestatus(
+        expect_status_query=True
+    ) as live, application_and_request_context(), SuperUserContext():
+        load_config()
         live.expect_query(
             [
                 "GET servicegroups",
@@ -193,7 +214,10 @@ def test_servicegroup_service_downtime(mock_livestatus, with_request_context, da
 def test_servicegroup_service_downtime_and_hosts(mock_livestatus, with_request_context, dates):
     start_time, end_time = dates
 
-    with mock_livestatus(expect_status_query=True) as live:
+    with mock_livestatus(
+        expect_status_query=True
+    ) as live, application_and_request_context(), SuperUserContext():
+        load_config()
         live.expect_query(
             [
                 "GET servicegroups",

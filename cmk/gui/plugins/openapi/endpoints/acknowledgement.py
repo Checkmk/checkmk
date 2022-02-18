@@ -27,7 +27,12 @@ from cmk.gui.livestatus_utils.commands.acknowledgments import (
     acknowledge_service_problem,
     acknowledge_servicegroup_problem,
 )
-from cmk.gui.plugins.openapi.restful_objects import constructors, Endpoint, request_schemas
+from cmk.gui.plugins.openapi.restful_objects import (
+    constructors,
+    Endpoint,
+    permissions,
+    request_schemas,
+)
 from cmk.gui.plugins.openapi.utils import ProblemException
 
 from cmk import fields
@@ -38,6 +43,21 @@ SERVICE_DESCRIPTION = {
         example="Memory",
     )
 }
+
+RW_PERMISSIONS = permissions.AllPerm(
+    [
+        permissions.Perm("action.acknowledge"),
+        permissions.Ignore(
+            permissions.AnyPerm(
+                [
+                    permissions.Perm("general.see_all"),
+                    permissions.Perm("bi.see_all"),
+                    permissions.Perm("mkeventd.seeall"),
+                ]
+            )
+        ),
+    ]
+)
 
 
 @Endpoint(
@@ -52,6 +72,7 @@ SERVICE_DESCRIPTION = {
     },
     request_schema=request_schemas.AcknowledgeHostRelatedProblem,
     output_empty=True,
+    permissions_required=RW_PERMISSIONS,
     update_config_generation=False,
 )
 def set_acknowledgement_on_hosts(params):
@@ -141,6 +162,7 @@ def set_acknowledgement_on_hosts(params):
     },
     request_schema=request_schemas.AcknowledgeServiceRelatedProblem,
     output_empty=True,
+    permissions_required=RW_PERMISSIONS,
     update_config_generation=False,
 )
 def set_acknowledgement_on_services(params):
@@ -155,8 +177,8 @@ def set_acknowledgement_on_services(params):
     acknowledge_type = body["acknowledge_type"]
 
     if acknowledge_type == "service":
-        description = unquote(body["service_description"])
-        host_name = body["host_name"]
+        description: str = unquote(body["service_description"])
+        host_name: str = body["host_name"]
         service = Query(
             [Services.host_name, Services.description, Services.state],
             And(Services.host_name == host_name, Services.description == description),

@@ -36,6 +36,9 @@ const ETC_DIR: &str = "/etc/check_mk";
 #[cfg(windows)]
 const LOG_FILE: &str = "cmk-agent-ctl.log";
 
+#[cfg(unix)]
+pub const AGENT_SOCKET: &str = "/run/check-mk-agent.socket";
+
 pub struct PathResolver {
     pub home_dir: PathBuf,
     pub registration_preset_path: PathBuf,

@@ -2,7 +2,6 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
-#[cfg(windows)]
 use super::constants;
 
 #[cfg(windows)]
@@ -54,7 +53,7 @@ pub fn collect() -> IoResult<Vec<u8>> {
 #[cfg(unix)]
 pub async fn async_collect(remote_ip: std::net::IpAddr) -> IoResult<Vec<u8>> {
     let mut mondata: Vec<u8> = vec![];
-    let mut agent_stream = AsyncUnixStream::connect("/run/check-mk-agent.socket").await?;
+    let mut agent_stream = AsyncUnixStream::connect(constants::AGENT_SOCKET).await?;
     agent_stream
         .write_all(format!("{}\n", remote_ip).as_bytes())
         .await?;

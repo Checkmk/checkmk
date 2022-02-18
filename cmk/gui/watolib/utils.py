@@ -30,21 +30,21 @@ ALL_SERVICES = cmk.utils.rulesets.tuple_rulesets.ALL_SERVICES
 NEGATE = cmk.utils.rulesets.tuple_rulesets.NEGATE
 
 
-def wato_root_dir():
+def wato_root_dir() -> str:
     return cmk.utils.paths.check_mk_config_dir + "/wato/"
 
 
-def multisite_dir():
+def multisite_dir() -> str:
     return cmk.utils.paths.default_config_dir + "/multisite.d/wato/"
 
 
 # TODO: Move this to CEE specific code again
-def liveproxyd_config_dir():
+def liveproxyd_config_dir() -> str:
     return cmk.utils.paths.default_config_dir + "/liveproxyd.d/wato/"
 
 
 # TODO: Find a better place later
-def rename_host_in_list(thelist, oldname, newname):
+def rename_host_in_list(thelist: list[str], oldname: str, newname: str) -> bool:
     did_rename = False
     for nr, element in enumerate(thelist):
         if element == oldname:
@@ -125,7 +125,7 @@ def mk_eval(s: Union[bytes, str]) -> Any:
         )
 
 
-def has_agent_bakery():
+def has_agent_bakery() -> bool:
     return not cmk_version.is_raw_edition()
 
 

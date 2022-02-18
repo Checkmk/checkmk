@@ -46,6 +46,7 @@ from cmk.gui.plugins.openapi.endpoints.utils import folder_slug
 from cmk.gui.plugins.openapi.restful_objects import (
     constructors,
     Endpoint,
+    permissions,
     request_schemas,
     response_schemas,
 )
@@ -66,6 +67,20 @@ PATH_FOLDER_FIELD = {
     )
 }
 
+CREATE_DELETE_PERMISSIONS = permissions.AllPerm(
+    [
+        permissions.Perm("wato.manage_folders"),
+        permissions.Optional(permissions.Perm("wato.all_folders")),
+    ]
+)
+
+UPDATE_PERMISSIONS = permissions.AllPerm(
+    [
+        permissions.Perm("wato.edit_folders"),
+        permissions.Optional(permissions.Perm("wato.all_folders")),
+    ],
+)
+
 
 @Endpoint(
     constructors.collection_href("folder_config"),
@@ -74,6 +89,7 @@ PATH_FOLDER_FIELD = {
     etag="output",
     response_schema=response_schemas.FolderSchema,
     request_schema=request_schemas.CreateFolder,
+    permissions_required=CREATE_DELETE_PERMISSIONS,
 )
 def create(params):
     """Create a folder"""
@@ -101,10 +117,12 @@ def create(params):
     method="get",
     path_params=[PATH_FOLDER_FIELD],
     response_schema=response_schemas.HostConfigCollection,
+    permissions_required=permissions.Optional(permissions.Perm("wato.see_all_folders")),
 )
 def hosts_of_folder(params):
     """Show all hosts in a folder"""
     folder: watolib.CREFolder = params["folder"]
+    folder.need_permission("read")
     return host_collection(folder.hosts().values())
 
 
@@ -116,6 +134,7 @@ def hosts_of_folder(params):
     etag="both",
     response_schema=response_schemas.FolderSchema,
     request_schema=request_schemas.UpdateFolder,
+    permissions_required=UPDATE_PERMISSIONS,
 )
 def update(params):
     """Update a folder"""
@@ -165,6 +184,7 @@ def update(params):
     method="put",
     response_schema=response_schemas.FolderCollection,
     request_schema=request_schemas.BulkUpdateFolder,
+    permissions_required=UPDATE_PERMISSIONS,
 )
 def bulk_update(params):
     """Bulk update folders
@@ -225,6 +245,7 @@ def bulk_update(params):
     method="delete",
     path_params=[PATH_FOLDER_FIELD],
     output_empty=True,
+    permissions_required=CREATE_DELETE_PERMISSIONS,
 )
 def delete(params):
     """Delete a folder"""
@@ -242,6 +263,7 @@ def delete(params):
     response_schema=response_schemas.FolderSchema,
     request_schema=request_schemas.MoveFolder,
     etag="both",
+    permissions_required=CREATE_DELETE_PERMISSIONS,
 )
 def move(params):
     """Move a folder"""
@@ -292,13 +314,17 @@ def move(params):
         }
     ],
     response_schema=response_schemas.FolderCollection,
+    permissions_required=permissions.Optional(permissions.Perm("wato.see_all_folders")),
 )
 def list_folders(params):
     """Show all folders"""
+    parent: CREFolder = params["parent"]
     if params["recursive"]:
-        folders = params["parent"].all_folders_recursively()
+        parent.need_recursive_permission("read")
+        folders = parent.all_folders_recursively()
     else:
-        folders = params["parent"].subfolders()
+        parent.need_permission("read")
+        folders = parent.subfolders()
     return constructors.serve_json(_folders_collection(folders, params["show_hosts"]))
 
 
@@ -361,10 +387,12 @@ def _folders_collection(
         }
     ],
     path_params=[PATH_FOLDER_FIELD],
+    permissions_required=permissions.Optional(permissions.Perm("wato.see_all_folders")),
 )
 def show_folder(params):
     """Show a folder"""
-    folder = params["folder"]
+    folder: CREFolder = params["folder"]
+    folder.need_permission("read")
     return _serve_folder(folder, show_hosts=params["show_hosts"])
 
 

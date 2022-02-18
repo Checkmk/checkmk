@@ -16,7 +16,12 @@ from cmk.utils.type_defs import HostName
 from cmk.gui.exceptions import MKAuthException
 from cmk.gui.http import Response
 from cmk.gui.plugins.openapi.endpoints.utils import may_fail
-from cmk.gui.plugins.openapi.restful_objects import constructors, Endpoint, request_schemas
+from cmk.gui.plugins.openapi.restful_objects import (
+    constructors,
+    Endpoint,
+    permissions,
+    request_schemas,
+)
 from cmk.gui.plugins.openapi.restful_objects.parameters import HOST_NAME
 from cmk.gui.watolib.hosts_and_folders import CREHost, Host
 
@@ -55,6 +60,7 @@ def _link_with_uuid(
     },
     path_params=[HOST_NAME],
     request_schema=request_schemas.LinkHostUUID,
+    permissions_required=permissions.Perm("wato.all_folders"),
     output_empty=True,
 )
 def link_with_uuid(params) -> Response:

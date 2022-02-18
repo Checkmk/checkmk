@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import json
-from typing import Any, cast, Literal, Optional
+from typing import Any, cast, Iterable, Literal, Optional
 from urllib.parse import quote_plus
 
 import docstring_parser  # type: ignore[import]
@@ -71,10 +71,10 @@ class ProblemException(HTTPException):
         self.ext = ext
         self.fields = fields
 
-    def __call__(self, environ, start_response):
+    def __call__(self, environ, start_response) -> Iterable[bytes]:
         return self.to_problem()(environ, start_response)
 
-    def to_problem(self):
+    def to_problem(self) -> Response:
         return problem(
             status=self.code,
             title=self.description,  # same as title

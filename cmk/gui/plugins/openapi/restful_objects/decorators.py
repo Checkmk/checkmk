@@ -9,13 +9,17 @@ Decorating a function with `Endpoint` will result in a change of the SPEC object
 which then has to be dumped into the checkmk.yaml file.
 
 """
+from __future__ import annotations
+
 import functools
 import hashlib
 import http.client
 import json
+import typing
 from types import FunctionType
 from typing import (
     Any,
+    Callable,
     Dict,
     List,
     Literal,
@@ -40,6 +44,7 @@ from werkzeug.utils import import_string
 from cmk.utils import store
 
 from cmk.gui import fields
+from cmk.gui import http as cmk_http
 from cmk.gui.globals import config, request
 from cmk.gui.plugins.openapi.restful_objects.code_examples import code_samples
 from cmk.gui.plugins.openapi.restful_objects.endpoint_registry import ENDPOINT_REGISTRY
@@ -74,9 +79,29 @@ from cmk.gui.watolib.activate_changes import (
 )
 from cmk.gui.watolib.git import do_git_commit
 
+if typing.TYPE_CHECKING:
+    from cmk.gui.wsgi.type_defs import WSGIApplication
+
 _SEEN_ENDPOINTS: Set[FunctionType] = set()
 
 T = TypeVar("T")
+
+WrappedFunc = Callable[[typing.Mapping[str, Any]], cmk_http.Response]
+
+
+class WrappedEndpoint:
+    def __init__(
+        self,
+        endpoint: Endpoint,
+        func: WrappedFunc,
+    ) -> None:
+        self.endpoint: typing.Final = endpoint
+        self.path: typing.Final = endpoint.path
+        self.func: typing.Final = func
+
+    def __call__(self, param: typing.Mapping[str, Any]) -> cmk_http.Response:
+        return self.func(param)
+
 
 Version = str
 
@@ -306,9 +331,6 @@ class Endpoint:
         additional_status_codes: Optional[Sequence[StatusCodeInt]] = None,
         valid_from: Optional[Version] = None,
         valid_until: Optional[Version] = None,
-        func: Optional[FunctionType] = None,
-        operation_id: Optional[str] = None,
-        wrapped: Optional[Any] = None,
         update_config_generation: bool = True,
     ):
         self.path = path
@@ -332,9 +354,10 @@ class Endpoint:
         self.additional_status_codes = self._list(additional_status_codes)
         self.valid_from = valid_from
         self.valid_until = valid_until
-        self.func = func
-        self.operation_id = operation_id
-        self.wrapped = wrapped
+
+        self.operation_id: str
+        self.func: WrappedFunc
+        self.wrapped: Callable[[typing.Mapping[str, Any]], WSGIApplication]
         self.update_config_generation = update_config_generation
 
         self._expected_status_codes = self.additional_status_codes.copy()
@@ -395,7 +418,7 @@ class Endpoint:
     def _list(self, sequence: Optional[Sequence[T]]) -> List[T]:
         return list(sequence) if sequence is not None else []
 
-    def __call__(self, func):
+    def __call__(self, func: WrappedFunc) -> WrappedEndpoint:
         """This is the real decorator.
         Returns:
         A wrapped function. The wrapper does input and output validation.
@@ -423,7 +446,7 @@ class Endpoint:
 
         self.func = func
 
-        wrapped = self.wrap_with_validation(
+        wrapped = self.wrapped = self.wrap_with_validation(
             request_schema,
             response_schema,
             header_schema,
@@ -466,9 +489,7 @@ class Endpoint:
                 "'response_schema' may not be used."
             )
 
-        self.wrapped = wrapped
-        self.wrapped.path = self.path
-        return self.wrapped
+        return WrappedEndpoint(self, wrapped)
 
     def _is_expected_content_type(self, content_type_header: Optional[str]) -> None:
         if content_type_header is None:
@@ -499,7 +520,7 @@ class Endpoint:
         header_schema: Optional[Type[Schema]],
         path_schema: Optional[Type[Schema]],
         query_schema: Optional[Type[Schema]],
-    ):
+    ) -> WrappedFunc:
         """Wrap a function with schema validation logic.
 
         Args:
@@ -525,8 +546,11 @@ class Endpoint:
             raise RuntimeError("Decorating failure. function not set.")
 
         @functools.wraps(self.func)
-        def _validating_wrapper(param):
+        def _validating_wrapper(param: typing.Mapping[str, Any]) -> cmk_http.Response:
             # TODO: Better error messages, pointing to the location where variables are missing
+
+            _params = dict(param)
+            del param
 
             def _format_fields(_messages: Union[List, Dict]) -> str:
                 if isinstance(_messages, list):
@@ -559,16 +583,16 @@ class Endpoint:
 
             try:
                 if path_schema:
-                    param.update(path_schema().load(param))
+                    _params.update(path_schema().load(_params))
             except ValidationError as exc:
                 return _problem(exc, status_code=404)
 
             try:
                 if query_schema:
-                    param.update(query_schema().load(_from_multi_dict(request.args)))
+                    _params.update(query_schema().load(_from_multi_dict(request.args)))
 
                 if header_schema:
-                    param.update(header_schema().load(request.headers))
+                    _params.update(header_schema().load(request.headers))
 
                 if request_schema:
                     # Try to decode only when there is data. Decoding an empty string will fail.
@@ -576,7 +600,7 @@ class Endpoint:
                         json_data = request.json or {}
                     else:
                         json_data = {}
-                    param["body"] = request_schema().load(json_data)
+                    _params["body"] = request_schema().load(json_data)
             except ValidationError as exc:
                 return _problem(exc, status_code=400)
 
@@ -606,7 +630,7 @@ class Endpoint:
                 )
 
             try:
-                response = self.func(param)
+                response = self.func(_params)
             except ValidationError as exc:
                 response = _problem(exc, status_code=400)
 
@@ -619,7 +643,7 @@ class Endpoint:
                 )
 
             if self.output_empty:
-                response.content_type = None
+                response.content_type = ""
 
             if response.status_code not in self._expected_status_codes:
                 return problem(
@@ -694,13 +718,13 @@ class Endpoint:
             response.freeze()
             return response
 
-        def _wrap_with_wato_lock(func):
+        def _wrap_with_wato_lock(func: WrappedFunc) -> WrappedFunc:
             # We need to lock the whole of the validation process, not just the function itself.
             # This is necessary, because sometimes validation logic loads values which trigger
             # a cache-load, which - without locking - could become inconsistent. This is obviously
             # a deeper problem of those components which needs to be fixed as well.
             @functools.wraps(func)
-            def _wrapper(param):
+            def _wrapper(param: typing.Mapping[str, Any]) -> cmk_http.Response:
                 if not self.skip_locking and self.method != "get":
                     with store.lock_checkmk_configuration():
                         response = func(param)

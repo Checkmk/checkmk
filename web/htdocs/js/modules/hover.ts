@@ -8,7 +8,7 @@ import * as utils from "utils";
 //#   | Mouseover hover menu, used for performance graph popups            |
 //#   '--------------------------------------------------------------------'
 
-var g_hover_menu = null;
+var g_hover_menu;
 
 export function hide() {
     if (!g_hover_menu) {
@@ -17,7 +17,7 @@ export function hide() {
 
     const hover_menu = g_hover_menu;
     g_hover_menu = null;
-    hover_menu.parentNode.removeChild(hover_menu);
+    hover_menu.parentNode?.removeChild(hover_menu);
 }
 
 export function show(event_, code) {
@@ -88,7 +88,7 @@ export function update_position(event_) {
     const container_size = utils.content_wrapper_size();
     let covers_full_width = false;
 
-    if (hoverLeft + g_hover_menu.clientWidth > scrollLeft + container_size.width) {
+    if (hoverLeft + g_hover_menu.clientWidth > scrollLeft + container_size.width!) {
         // The hover menu runs out of screen horizontally
         if (g_hover_menu.clientWidth + hoverSpacer <= x) {
             // Put the hover menu to the left of the cursor
@@ -103,9 +103,9 @@ export function update_position(event_) {
     }
 
     let hoverTop = parseInt(g_hover_menu.style.top.replace("px", ""));
-    if (hoverTop + g_hover_menu.clientHeight > scrollTop + container_size.height) {
+    if (hoverTop + g_hover_menu.clientHeight > scrollTop + container_size.height!) {
         // The hover menu runs out of screen vertically
-        if (g_hover_menu.clientHeight + hoverSpacer <= container_size.height) {
+        if (g_hover_menu.clientHeight + hoverSpacer <= container_size.height!) {
             // The hover menu fits into the screen vertically
             if (covers_full_width && g_hover_menu.clientHeight + hoverSpacer < y) {
                 // Put the hover menu with full screen width above the cursor
@@ -115,7 +115,7 @@ export function update_position(event_) {
                 // Pull the hover menu as far to the top as needed
                 g_hover_menu.style.top =
                     scrollTop +
-                    container_size.height -
+                    container_size.height! -
                     g_hover_menu.clientHeight -
                     hoverSpacer +
                     "px";
@@ -131,8 +131,8 @@ export function update_position(event_) {
 }
 
 function stretch_to_full_width(hover_menu, container_size, scrollLeft, hoverSpacer) {
-    g_hover_menu.style.left = hoverSpacer + scrollLeft + "px";
-    g_hover_menu.style.width = container_size.width - 2 * hoverSpacer + "px";
+    g_hover_menu!.style.left = hoverSpacer + scrollLeft + "px";
+    g_hover_menu!.style.width = container_size.width - 2 * hoverSpacer + "px";
 }
 
 function hover_container() {

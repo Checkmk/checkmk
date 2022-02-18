@@ -11,6 +11,7 @@ import errno
 import operator
 import os
 import pickle
+import re
 import shutil
 import subprocess
 import time
@@ -48,7 +49,6 @@ from cmk.utils import store
 from cmk.utils.iterables import first
 from cmk.utils.memoize import MemoizeCache
 from cmk.utils.redis import get_redis_client, Pipeline
-from cmk.utils.regex import regex, WATO_FOLDER_PATH_NAME_CHARS, WATO_FOLDER_PATH_NAME_REGEX
 from cmk.utils.site import omd_site
 from cmk.utils.store import PickleSerializer
 from cmk.utils.store.host_storage import (
@@ -1222,10 +1222,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
         return folder_path.split("/")
 
     @staticmethod
-    def folder_exists(folder_path: str) -> bool:
-        # We need the slash '/' here
-        if regex(r"^[%s/]+$" % WATO_FOLDER_PATH_NAME_CHARS).match(folder_path) is None:
-            raise MKUserError("folder", "Folder name is not valid.")
+    def folder_exists(folder_path):
         return os.path.exists(wato_root_dir() + folder_path)
 
     @staticmethod
@@ -3899,7 +3896,7 @@ def get_folder_title_path(path, with_links=False):
     return cache[path]
 
 
-def get_folder_title(path: str) -> str:
+def get_folder_title(path):
     """Return the title of a folder - which is given as a string path"""
     folder = Folder.folder(path)
     if folder:
@@ -3908,14 +3905,14 @@ def get_folder_title(path: str) -> str:
 
 
 # TODO: Move to Folder()?
-def check_wato_foldername(htmlvarname: Optional[str], name: str, just_name: bool = False) -> None:
+def check_wato_foldername(htmlvarname, name, just_name=False):
     if not just_name and Folder.current().has_subfolder(name):
         raise MKUserError(htmlvarname, _("A folder with that name already exists."))
 
     if not name:
         raise MKUserError(htmlvarname, _("Please specify a name."))
 
-    if not regex(WATO_FOLDER_PATH_NAME_REGEX).match(name):
+    if not re.match("^[-a-z0-9A-Z_]*$", name):
         raise MKUserError(
             htmlvarname,
             _("Invalid folder name. Only the characters a-z, A-Z, 0-9, _ and - are allowed."),

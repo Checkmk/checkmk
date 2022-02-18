@@ -63,6 +63,14 @@ _need_exec_stop_post() {
     grep -q '^ExecStopPost=' "${ROOT}${RESOURCES}/check-mk-agent@.service"
 }
 
+_need_ip_access_list() {
+    grep -q '^IPAddressAllow=' "${ROOT}${RESOURCES}/check-mk-agent@.service"
+}
+
+_is_controller_setup() {
+    cmk-agent-ctl --version >/dev/null 2>&1
+}
+
 _systemd_sufficient() {
     _systemd_present || return 1
 
@@ -73,6 +81,18 @@ _systemd_sufficient() {
 This package has a 'ExecStopPost' directive (for the agent updater),
 but the implementation of ExecStopPost is buggy in systemd version 219
 (see https://github.com/systemd/systemd/issues/1742).
+HERE
+        return 1
+    fi
+
+    _is_controller_setup && return 0
+
+    # We're in the TCP socket fallback situation.
+    # If we need "only from", make sure we have at least version 235.
+    if _need_ip_access_list && [ "$(_systemd_version)" -lt 235 ]; then
+        cat <<HERE
+This package has an activated IP access limitation, that isn't applicable
+because your systemd version (< 235) does not support IP access lists.
 HERE
         return 1
     fi
@@ -91,13 +111,24 @@ deploy() {
     _systemd_sufficient || return
 
     dest="$(_destination)"
-    prefix="Deploying systemd units:"
-    for unit in $(_unit_files); do
-        printf "%s %s" "${prefix}" "${unit}"
-        cp "${ROOT}${RESOURCES}/${unit}" "${ROOT}${dest}/" | return
-        prefix=","
-    done
-    printf "\n"
+    printf "Deploying systemd units:"
+
+    printf " check-mk-agent@.service"
+    cp "${ROOT}${RESOURCES}/check-mk-agent@.service" "${ROOT}${dest}/"
+
+    printf ", check-mk-agent-async.service"
+    cp "${ROOT}${RESOURCES}/check-mk-agent-async.service" "${ROOT}${dest}/"
+
+    if _is_controller_setup; then
+        printf ", check-mk-agent.socket"
+        cp "${ROOT}${RESOURCES}/check-mk-agent.socket" "${ROOT}${dest}/"
+        printf ", cmk-agent-ctl-daemon.service\n"
+        cp "${ROOT}${RESOURCES}/cmk-agent-ctl-daemon.service" "${ROOT}${dest}/"
+    else
+        printf ", check-mk-agent.socket (TCP fallback)\n"
+        cp "${ROOT}${RESOURCES}/check-mk-agent.socket.fallback" "${ROOT}${dest}/check-mk-agent.socket"
+    fi
+
 }
 
 cleanup() {

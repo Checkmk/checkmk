@@ -47,6 +47,7 @@ define __spec_install_pre %{___build_pre} &&\
 /var/lib/cmk-agent/scripts/cmk-agent-useradd.sh
 /var/lib/cmk-agent/scripts/super-server/0_systemd/check-mk-agent-async.service
 /var/lib/cmk-agent/scripts/super-server/0_systemd/check-mk-agent.socket
+/var/lib/cmk-agent/scripts/super-server/0_systemd/check-mk-agent.socket.fallback
 /var/lib/cmk-agent/scripts/super-server/0_systemd/check-mk-agent@.service
 /var/lib/cmk-agent/scripts/super-server/0_systemd/cmk-agent-ctl-daemon.service
 /var/lib/cmk-agent/scripts/super-server/0_systemd/setup
@@ -58,7 +59,9 @@ define __spec_install_pre %{___build_pre} &&\
 /var/lib/cmk-agent/scripts/super-server/setup cleanup
 /var/lib/cmk-agent/scripts/super-server/setup deploy
 
-if [ "$(/var/lib/cmk-agent/scripts/super-server/setup getdeployed)" = "systemd" ]; then
+# Only create our dedicated user, if the controller is in place (and working)
+# Otherwise we can do without the user.
+if cmk-agent-ctl --version >/dev/null 2>&1; then
     if { [ "$1" = "configure" ] && [ -n "$2" ]; } || [ "$1" -ge 2 ] 2>/dev/null; then
         /var/lib/cmk-agent/scripts/cmk-agent-useradd.sh upgrade
     else

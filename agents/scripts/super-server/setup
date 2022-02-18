@@ -49,7 +49,7 @@ _available_modules() {
     _module_subfolders | while read -r name; do
         bname="$(basename "${name}")"
         printf "%s%s\n" "$1" "${bname#*_}"
-    done
+    done | sort -n
 }
 
 _configured_modules() {

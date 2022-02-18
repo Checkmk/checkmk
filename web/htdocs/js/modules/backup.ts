@@ -30,7 +30,7 @@ function handle_job_detail_response(handler_data, response_body) {
     var had_message = document.getElementById("job_detail_msg") ? true : false;
 
     var container = document.getElementById("job_details");
-    container.innerHTML = response_body;
+    container!.innerHTML = response_body;
 
     if (!had_message) {
         refresh_job_details(handler_data["url"], handler_data["ident"], handler_data["is_site"]);
@@ -47,7 +47,7 @@ function handle_job_detail_error(handler_data, status_code, error_msg) {
     var container = document.getElementById("job_details");
 
     var msg = document.createElement("div");
-    container.insertBefore(msg, container.children[0]);
+    container?.insertBefore(msg, container.children[0]);
     msg.setAttribute("id", "job_detail_msg");
     msg.className = "message";
 
@@ -67,5 +67,5 @@ function handle_job_detail_error(handler_data, status_code, error_msg) {
 
 function hide_job_detail_msg() {
     var msg = document.getElementById("job_detail_msg");
-    if (msg) msg.parentNode.removeChild(msg);
+    if (msg) msg.parentNode?.removeChild(msg);
 }

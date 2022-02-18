@@ -638,6 +638,7 @@ def render_timeline_legend(what: AVObjectType) -> None:
         html.div(html.render_span(_("H.Down")), class_="state hostdown")
 
     html.div(html.render_span(_("Downtime")), class_="state downtime")
+    html.div(html.render_span(_("Chaotic")), class_="state chaos")
     html.div(html.render_span(_("OO/Service")), class_="state ooservice")
     html.div(html.render_span(_("unmonitored")), class_="state unmonitored")
 

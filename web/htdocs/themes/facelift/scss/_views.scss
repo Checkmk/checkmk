@@ -679,63 +679,6 @@ input#try {
   float: left;
 }
 
-/*-------------------------------------------------------------------------.
-|       _     _     _            __         _                              |
-|      | |   (_)___| |_    ___  / _| __   _(_) _____      _____            |
-|      | |   | / __| __|  / _ \| |_  \ \ / / |/ _ \ \ /\ / / __|           |
-|      | |___| \__ \ |_  | (_) |  _|  \ V /| |  __/\ V  V /\__ \           |
-|      |_____|_|___/\__|  \___/|_|     \_/ |_|\___| \_/\_/ |___/           |
-|                                                                          |
-+--------------------------------------------------------------------------+
-| The table with the list of all views                                     |
-'-------------------------------------------------------------------------*/
-/* TODO: Check whether this list of views is deprecated
- * page_edit_views() in cmk.gui.views is never called
- */
-
-table.views {
-  margin-bottom: 1ex;
-  border-collapse: collapse;
-  empty-cells: show;
-
-  td,
-  th {
-    padding: 2px 1ex;
-    color: $font-color-white;
-    border: 1px solid $grey-3;
-  }
-
-  td {
-    height: 25px;
-    padding-top: 3px;
-
-    &.legend {
-      color: $font-color-white;
-      background-color: rgb(142, 174, 184);
-    }
-
-    &.content {
-      color: $font-color-white;
-      background-color: rgb(158, 190, 200);
-    }
-
-    &.edit {
-      text-align: center;
-      background-color: rgb(102, 170, 187);
-    }
-
-    &.buttons {
-      padding: 3px;
-      vertical-align: middle;
-      background-color: rgb(142, 174, 184);
-    }
-  }
-
-  th {
-    background-color: rgb(112, 154, 165);
-  }
-}
-
 /* Availability */
 table.data.availability {
   td.number {
@@ -1130,10 +1073,6 @@ table.data.headerleft.sla {
       opacity: 0.5;
     }
   }
-}
-
-div.sla_details {
-  background-color: rgb(115, 161, 180);
 }
 
 table.data tr.sla_horizontal_line > td.sla_horizontal_line {

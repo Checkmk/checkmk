@@ -25,6 +25,9 @@ if not %errorlevel% == 0 powershell Write-Host "Cargo not found, please install 
 
 set cur_dir=%cd%
 set arte=%cur_dir%\..\..\artefacts
+:: 64-bit
+::set target=x86_64-pc-windows-mscvc
+:: 32-bit
 set target=i686-pc-windows-msvc
 set exe_name=cmk-agent-ctl.exe
 set exe=target\%target%\release\%exe_name%

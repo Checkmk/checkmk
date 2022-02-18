@@ -136,9 +136,8 @@ trigger() {
 
 _unit_deployed() {
     _destination --all | while read -r dest; do
-        [ -e "${ROOT}${dest}/${1}" ] && return 0
+        [ -e "${ROOT}${dest}/${1}" ] && break
     done
-    return 1
 }
 
 isdeployed() {

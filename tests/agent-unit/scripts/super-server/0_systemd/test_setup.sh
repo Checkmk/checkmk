@@ -20,6 +20,16 @@ setUp() {
 }
 
 
+_populate_units() {
+    mkdir -p "${SHUNIT_TMPDIR}/usr/lib/systemd/system"
+    touch "${SHUNIT_TMPDIR}/usr/lib/systemd/system/unit_a"
+    touch "${SHUNIT_TMPDIR}/usr/lib/systemd/system/unit_b"
+    mkdir -p "${SHUNIT_TMPDIR}/lib/systemd/system"
+    touch "${SHUNIT_TMPDIR}/lib/systemd/system/unit_c"
+    touch "${SHUNIT_TMPDIR}/lib/systemd/system/unit_d"
+    touch "${SHUNIT_TMPDIR}/lib/systemd/system/unit_e"
+}
+
 test_destination_fail() {
     ERRMSG="$(_destination 2>&1)"
 
@@ -28,14 +38,7 @@ test_destination_fail() {
 }
 
 test_destination_ok() {
-    mkdir -p "${SHUNIT_TMPDIR}/usr/lib/systemd/system"
-    touch "${SHUNIT_TMPDIR}/usr/lib/systemd/system/1"
-    touch "${SHUNIT_TMPDIR}/usr/lib/systemd/system/2"
-    mkdir -p "${SHUNIT_TMPDIR}/lib/systemd/system"
-    touch "${SHUNIT_TMPDIR}/lib/systemd/system/1"
-    touch "${SHUNIT_TMPDIR}/lib/systemd/system/2"
-    touch "${SHUNIT_TMPDIR}/lib/systemd/system/3"
-
+    _populate_units
     assertEquals "/lib/systemd/system" "$(_destination)"
     assertEquals $'/lib/systemd/system\n/usr/lib/systemd/system' "$(_destination --all)"
 
@@ -74,6 +77,15 @@ test_systemd_sufficient_fail_for_219() {
     assertFalse "$?"
     assertContains "${ERRMSG}" "ExecStopPost is buggy in systemd version 219"
 }
+
+
+test__unit_deployed() {
+    _populate_units
+   assertTrue "_unit_deployed unit_a"
+   assertTrue "_unit_deployed unit_c"
+   assertFalse "_unit_deployed unit_x"
+}
+
 
 # shellcheck disable=SC1090
 . "$UNIT_SH_SHUNIT2"

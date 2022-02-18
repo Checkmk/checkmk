@@ -6,7 +6,7 @@ import * as utils from "utils";
 
 // Stores the reload pause timer object once the regular reload has
 // been paused e.g. by modifying a graphs timerange or vertical axis.
-var g_reload_pause_timer = null;
+var g_reload_pause_timer:number|null = null;
 
 // Sets the reload timer in pause mode for X seconds. This is shown to
 // the user with a pause overlay icon. The icon also shows the time when
@@ -35,7 +35,7 @@ export function stop() {
 }
 
 function set_timer(seconds) {
-    g_reload_pause_timer = setTimeout(function () {
+    g_reload_pause_timer = window.setTimeout(function () {
         update_timer(seconds);
     }, 1000);
 }
@@ -52,7 +52,7 @@ function update_timer(seconds_left) {
             counter.innerHTML = seconds_left;
         }
 
-        g_reload_pause_timer = setTimeout(function () {
+        g_reload_pause_timer = window.setTimeout(function () {
             update_timer(seconds_left);
         }, 1000);
     }

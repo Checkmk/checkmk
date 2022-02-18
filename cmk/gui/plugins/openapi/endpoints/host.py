@@ -39,14 +39,18 @@ To search for hosts with specific tags set on them:
     {'op': '~', 'left': 'tag_names', 'right': 'windows'}
 
 """
-
 from cmk.utils.livestatus_helpers.queries import Query
 from cmk.utils.livestatus_helpers.tables import Hosts
 
 from cmk.gui import fields as gui_fields
 from cmk.gui import sites
 from cmk.gui.fields.utils import BaseSchema
-from cmk.gui.plugins.openapi.restful_objects import constructors, Endpoint, response_schemas
+from cmk.gui.plugins.openapi.restful_objects import (
+    constructors,
+    Endpoint,
+    permissions,
+    response_schemas,
+)
 
 from cmk import fields
 
@@ -74,6 +78,17 @@ class HostParameters(BaseSchema):
     columns = gui_fields.column_field(Hosts, mandatory=[Hosts.name])
 
 
+PERMISSIONS = permissions.Ignore(
+    permissions.AnyPerm(
+        [
+            permissions.Perm("general.see_all"),
+            permissions.Perm("bi.see_all"),
+            permissions.Perm("mkeventd.seeall"),
+        ]
+    )
+)
+
+
 @Endpoint(
     constructors.collection_href("host"),
     ".../collection",
@@ -82,6 +97,7 @@ class HostParameters(BaseSchema):
     blacklist_in=["swagger-ui"],
     query_params=[HostParameters],
     response_schema=response_schemas.DomainObjectCollection,
+    permissions_required=PERMISSIONS,
 )
 def list_hosts(param):
     """Show hosts of specific condition"""

@@ -19,6 +19,7 @@ from cmk.utils.livestatus_helpers.tables.services import Services
 from cmk.gui.livestatus_utils.commands.lowlevel import send_command
 from cmk.gui.livestatus_utils.commands.type_defs import LivestatusCommand
 from cmk.gui.livestatus_utils.commands.utils import to_timestamp
+from cmk.gui.logged_in import user as _user
 
 # TODO: Test duration option
 
@@ -59,10 +60,18 @@ def del_host_downtime(
     Examples:
 
         >>> from cmk.gui.livestatus_utils.testing import simple_expect
-        >>> with simple_expect("COMMAND [...] DEL_HOST_DOWNTIME;1", match_type="ellipsis") as live:
+        >>> from cmk.gui.config import load_config
+        >>> from cmk.gui.utils.script_helpers import application_and_request_context
+        >>> from cmk.gui.logged_in import SuperUserContext
+
+        >>> expect = simple_expect("COMMAND [...] DEL_HOST_DOWNTIME;1", match_type="ellipsis")
+        >>> with expect as live, application_and_request_context(), SuperUserContext():
+        ...     load_config()
         ...     del_host_downtime(live, 1, "")
 
     """
+    _user.need_permission("action.downtimes")
+
     return send_command(connection, "DEL_HOST_DOWNTIME", [downtime_id], site_id)
 
 
@@ -86,10 +95,18 @@ def del_service_downtime(
     Examples:
 
         >>> from cmk.gui.livestatus_utils.testing import simple_expect
-        >>> with simple_expect("COMMAND [...] DEL_SVC_DOWNTIME;1", match_type="ellipsis") as live:
+        >>> from cmk.gui.config import load_config
+        >>> from cmk.gui.utils.script_helpers import application_and_request_context
+        >>> from cmk.gui.logged_in import SuperUserContext
+
+        >>> expect = simple_expect("COMMAND [...] DEL_SVC_DOWNTIME;1", match_type="ellipsis")
+        >>> with expect as live, application_and_request_context(), SuperUserContext():
+        ...     load_config()
         ...     del_service_downtime(live, 1, "")
 
     """
+    _user.need_permission("action.downtimes")
+
     return send_command(connection, "DEL_SVC_DOWNTIME", [downtime_id], site_id)
 
 
@@ -234,11 +251,16 @@ def schedule_service_downtime(
         >>> _end_time = dt.datetime(1970, 1, 2, tzinfo=pytz.timezone("UTC"))
 
         >>> from cmk.gui.livestatus_utils.testing import simple_expect
+        >>> from cmk.gui.config import load_config
+        >>> from cmk.gui.utils.script_helpers import application_and_request_context
+        >>> from cmk.gui.logged_in import SuperUserContext
+
         >>> cmd = "COMMAND [...] SCHEDULE_SVC_DOWNTIME;example.com;Memory;0;86400;16;0;120;;Boom"
-        >>> with simple_expect() as live:
+        >>> with simple_expect() as live, application_and_request_context(), SuperUserContext():
+        ...     load_config()
         ...     _ = live.expect_query(cmd, match_type="ellipsis")
         ...     schedule_service_downtime(live,
-        ...             'NO_SITE',
+        ...             SiteId('NO_SITE'),
         ...             'example.com',
         ...             'Memory',
         ...             _start_time,
@@ -566,8 +588,13 @@ def schedule_host_downtime(
         >>> _end_time = dt.datetime(1970, 1, 2, tzinfo=pytz.timezone("UTC"))
 
         >>> from cmk.gui.livestatus_utils.testing import simple_expect
+        >>> from cmk.gui.config import load_config
+        >>> from cmk.gui.utils.script_helpers import application_and_request_context
+        >>> from cmk.gui.logged_in import SuperUserContext
+
         >>> cmd = "COMMAND [...] SCHEDULE_HOST_DOWNTIME;example.com;0;86400;16;0;120;;Boom"
-        >>> with simple_expect() as live:
+        >>> with simple_expect() as live, application_and_request_context(), SuperUserContext():
+        ...     load_config()
         ...     _ = live.expect_query("GET hosts\\nColumns: name\\nFilter: name = example.com")
         ...     _ = live.expect_query(cmd, match_type="ellipsis")
         ...     schedule_host_downtime(live,
@@ -659,6 +686,7 @@ def _schedule_downtime(
      * schedule_service_downtime
     """
     # TODO: provide reference documents for recurring magic numbers
+    _user.need_permission("action.downtimes")
 
     recur_mode = _recur_mode(recur, duration)
 

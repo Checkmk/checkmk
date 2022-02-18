@@ -49,6 +49,7 @@ from cmk.gui.logged_in import user
 from cmk.gui.plugins.openapi.restful_objects import (
     constructors,
     Endpoint,
+    permissions,
     request_schemas,
     response_schemas,
 )
@@ -78,6 +79,24 @@ HOST_NAME_SHOW = {
     )
 }
 
+PERMISSIONS = permissions.Ignore(
+    permissions.AnyPerm(
+        [
+            permissions.Perm("general.see_all"),
+            permissions.Perm("bi.see_all"),
+            permissions.Perm("mkeventd.seeall"),
+        ]
+    )
+)
+
+
+RW_PERMISSIONS = permissions.AllPerm(
+    [
+        permissions.Perm("action.downtimes"),
+        PERMISSIONS,
+    ]
+)
+
 
 class DowntimeParameter(BaseSchema):
     query = gui_fields.query_field(Downtimes, required=False)
@@ -92,6 +111,7 @@ class DowntimeParameter(BaseSchema):
     request_schema=request_schemas.CreateHostRelatedDowntime,
     additional_status_codes=[422],
     output_empty=True,
+    permissions_required=RW_PERMISSIONS,
     update_config_generation=False,
 )
 def create_host_related_downtime(params):
@@ -161,6 +181,7 @@ def create_host_related_downtime(params):
     request_schema=request_schemas.CreateServiceRelatedDowntime,
     additional_status_codes=[422],
     output_empty=True,
+    permissions_required=RW_PERMISSIONS,
     update_config_generation=False,
 )
 def create_service_related_downtime(params):
@@ -241,6 +262,7 @@ def create_service_related_downtime(params):
         DowntimeParameter,
     ],
     response_schema=response_schemas.DomainObjectCollection,
+    permissions_required=PERMISSIONS,
 )
 def show_downtimes(param):
     """Show all scheduled downtimes"""
@@ -293,6 +315,7 @@ def show_downtimes(param):
         }
     ],
     response_schema=response_schemas.DomainObject,
+    permissions_required=PERMISSIONS,
 )
 def show_downtime(params):
     """Show downtime"""
@@ -339,6 +362,7 @@ def _serve_downtime(downtime_details):
     skip_locking=True,
     request_schema=request_schemas.DeleteDowntime,
     output_empty=True,
+    permissions_required=RW_PERMISSIONS,
     update_config_generation=False,
 )
 def delete_downtime(params):

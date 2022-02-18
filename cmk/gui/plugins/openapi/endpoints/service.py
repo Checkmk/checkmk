@@ -21,18 +21,35 @@ which you can look up in the Checkmk documentation.
 For a detailed list of columns have a look at the [services table](https://github.com/tribe29/checkmk/blob/master/cmk/gui/plugins/openapi/livestatus_helpers/tables/services.py)
 definition on GitHub.
 """
+import typing
+
 from cmk.utils.livestatus_helpers.expressions import And
 from cmk.utils.livestatus_helpers.queries import Query
 from cmk.utils.livestatus_helpers.tables import Services
 
 from cmk.gui import fields as gui_fields
 from cmk.gui import sites
-from cmk.gui.plugins.openapi.restful_objects import constructors, Endpoint, response_schemas
+from cmk.gui.plugins.openapi.restful_objects import (
+    constructors,
+    Endpoint,
+    permissions,
+    response_schemas,
+)
 from cmk.gui.plugins.openapi.restful_objects.constructors import object_action_href
 from cmk.gui.plugins.openapi.restful_objects.parameters import HOST_NAME, OPTIONAL_HOST_NAME
 from cmk.gui.plugins.openapi.utils import problem
 
 from cmk import fields
+
+PERMISSIONS = permissions.Ignore(
+    permissions.AnyPerm(
+        [
+            permissions.Perm("general.see_all"),
+            permissions.Perm("bi.see_all"),
+            permissions.Perm("mkeventd.seeall"),
+        ]
+    )
+)
 
 PARAMETERS = [
     {
@@ -72,6 +89,7 @@ PARAMETERS = [
     ],
     tag_group="Monitoring",
     response_schema=response_schemas.DomainObject,
+    permissions_required=PERMISSIONS,
 )
 def show_service(params):
     """Show the monitored service of a host"""
@@ -121,6 +139,7 @@ def show_service(params):
     tag_group="Monitoring",
     blacklist_in=["swagger-ui"],
     response_schema=response_schemas.DomainObjectCollection,
+    permissions_required=PERMISSIONS,
 )
 def _list_host_services(param):
     """Show the monitored services of a host
@@ -136,6 +155,7 @@ def _list_host_services(param):
     query_params=[OPTIONAL_HOST_NAME, *PARAMETERS],
     tag_group="Monitoring",
     response_schema=response_schemas.DomainObjectCollection,
+    permissions_required=PERMISSIONS,
 )
 def _list_all_services(param):
     """Show all monitored services
@@ -149,7 +169,7 @@ def _list_services(param):
 
     q = Query(param["columns"])
 
-    host_name = param.get("host_name")
+    host_name: typing.Optional[str] = param.get("host_name")
     if host_name is not None:
         q = q.filter(Services.host_name == host_name)
 

@@ -7,7 +7,8 @@
 #
 set -e
 
-source "$(dirname $0)/lib-precommit"
+# shellcheck source=scripts/lib-precommit
+source "$(dirname "$0")/lib-precommit"
 
 # We only care for unittests
 declare -a TESTFILES
@@ -15,8 +16,8 @@ declare -a TESTFILES
 for param in "$@"; do
     if [[ "$param" == tests* ]]; then
         if [[ "$param" == tests/unit/* ]]; then
-            TESTFILES+=($(readlink -f "$param"))
-        fi;
+            TESTFILES+=("$(readlink -f "$param")")
+        fi
         continue
     else
         # Check if we find a unittest for the file
@@ -25,7 +26,7 @@ for param in "$@"; do
         testfile="tests/unit/${dir}/test_${filename}"
         if [[ -f "${testfile}" ]]; then
             # We found a unittest
-            TESTFILES+=($(readlink -f "${testfile}"))
+            TESTFILES+=("$(readlink -f "${testfile}")")
         fi
     fi
 done
@@ -40,15 +41,15 @@ fi
 REPO_PATH="$(git rev-parse --show-toplevel)"
 PIPENV="$REPO_PATH/scripts/run-pipenv"
 
-pushd $REPO_PATH > /dev/null
+pushd "$REPO_PATH" >/dev/null
 
-$PIPENV run python -m pytest -T unit $TESTFILES || (
-EXIT=$?
-if test $EXIT -eq 5 || test $EXIT -eq 4; then
-    # This means no tests have been found.
-    exit 0
-else
-    exit $EXIT
-fi
+$PIPENV run python -m pytest -T unit "${FILES[@]}" || (
+    EXIT=$?
+    if test $EXIT -eq 5 || test $EXIT -eq 4; then
+        # This means no tests have been found.
+        exit 0
+    else
+        exit $EXIT
+    fi
 )
-popd > /dev/null
+popd >/dev/null

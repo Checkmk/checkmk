@@ -640,11 +640,9 @@ export class LayeredNodesLayer extends node_visualization_viewport_utils.Layered
             .data(visible_nodes, d => d.data.id);
 
         // Create new nodes
-        nodes_selection
-            .enter()
-            .each((node_data, idx, node_list) =>
-                this._create_node(node_data, d3.select(node_list[idx]))
-            );
+        nodes_selection.enter().each((node_data, idx, node_list) => {
+            this._create_node(node_data).render_into(d3.select(node_list[idx]));
+        });
         // Existing nodes: Update bound data in all nodes
         nodes_selection.each((node_data, idx, node_list) =>
             this._update_node(node_data, d3.select(node_list[idx]))
@@ -656,6 +654,7 @@ export class LayeredNodesLayer extends node_visualization_viewport_utils.Layered
             .classed("node_element", false)
             .transition()
             .attr("transform", node => {
+                // Move vanishing nodes, back to their parent nodes
                 if (node.parent) return node.parent.selection.attr("transform");
                 else return node.selection.attr("transform");
             })
@@ -680,13 +679,13 @@ export class LayeredNodesLayer extends node_visualization_viewport_utils.Layered
             .remove();
     }
 
-    _create_node(node_data, selection) {
+    _create_node(node_data) {
         let node_class = node_visualization_utils.node_type_class_registry.get_node_class(
             node_data.data.node_type
         );
         let new_node = new node_class(this, node_data);
         this.node_instances[new_node.id()] = new_node;
-        new_node.render_into(selection);
+        return new_node;
     }
 
     _update_node(node_data, selection) {

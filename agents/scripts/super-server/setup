@@ -5,7 +5,7 @@
 
 CONFIG="/var/lib/cmk-agent/config/super-server"
 
-MODULES_DIR="$(dirname "$(realpath "$0")")"
+MODULES_DIR="$(dirname "$(realpath -- "$0")")"
 
 usage() {
     cat >&2 <<HERE

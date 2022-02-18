@@ -20,7 +20,7 @@ HERE
     exit 1
 }
 
-RESOURCES="$(dirname "$(realpath "$0")")"
+RESOURCES="$(dirname "$(realpath -- "$0")")"
 
 _destination() {
     # Figure out where to put the unit files.

@@ -25,7 +25,7 @@ import cmk.utils.store as store
 import cmk.utils.version as cmk_version
 from cmk.utils.log import VERBOSE
 from cmk.utils.type_defs import UserId
-from cmk.utils.version import is_daily_build_of_master, major_version_parts, parse_check_mk_version
+from cmk.utils.version import base_version_parts, is_daily_build_of_master, parse_check_mk_version
 
 from cmk.automations.results import result_type_registry, SerializedResult
 
@@ -750,8 +750,8 @@ def compatible_with_central_site(
     if is_daily_build_of_master(central_version) or is_daily_build_of_master(remote_version):
         return True
 
-    central_parts = major_version_parts(central_version)
-    remote_parts = major_version_parts(remote_version)
+    central_parts = base_version_parts(central_version)
+    remote_parts = base_version_parts(remote_version)
 
     # Same major version is allowed
     if central_parts == remote_parts:

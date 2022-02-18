@@ -118,7 +118,7 @@ from cmk.utils.certs import cert_dir, root_cert_path
 from cmk.utils.exceptions import MKTerminate
 from cmk.utils.log import VERBOSE
 from cmk.utils.paths import mkbackup_lock_dir
-from cmk.utils.version import is_daily_build_of_master, major_version_parts
+from cmk.utils.version import base_version_parts, is_daily_build_of_master
 
 Arguments = List[str]
 ConfigChangeCommands = List[Tuple[str, str]]
@@ -2885,8 +2885,8 @@ def _is_version_update_allowed(from_version: str, to_version: str) -> bool:
     False
     """
 
-    from_parts = major_version_parts(from_version)
-    to_parts = major_version_parts(to_version)
+    from_parts = base_version_parts(from_version)
+    to_parts = base_version_parts(to_version)
 
     if is_daily_build_of_master(from_version) or is_daily_build_of_master(to_version):
         return True  # Don't know to which major master daily builds belong to -> always allow

@@ -491,7 +491,7 @@ def parse_check_mk_version(v: str) -> int:
     return int("%02d%02d%02d%05d" % (int(major), int(minor), sub, val))
 
 
-def major_version_parts(version: str) -> Tuple[int, int, int]:
+def base_version_parts(version: str) -> Tuple[int, int, int]:
     match = re.match(r"(\d+).(\d+).(\d+)", version)
     if not match or len(match.groups()) != 3:
         raise ValueError(_("Unable to parse version: %r") % version)

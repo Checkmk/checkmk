@@ -94,7 +94,7 @@ fn become_user(user: &unistd::User) -> AnyhowResult<()> {
 }
 
 #[cfg(unix)]
-fn determine_paths(username: &str) -> AnyhowResult<constants::PathResolver> {
+fn determine_paths(username: &str) -> AnyhowResult<constants::Paths> {
     let user = unistd::User::from_name(username)?.context(format!(
         "Could not find dedicated Checkmk agent user {}",
         username
@@ -107,19 +107,19 @@ fn determine_paths(username: &str) -> AnyhowResult<constants::PathResolver> {
         )));
     }
 
-    Ok(constants::PathResolver::new(&user.dir))
+    Ok(constants::Paths::new(&user.dir))
 }
 
 #[cfg(windows)]
-fn determine_paths() -> AnyhowResult<constants::PathResolver> {
+fn determine_paths() -> AnyhowResult<constants::Paths> {
     let program_data_path = std::env::var(constants::ENV_PROGRAM_DATA)
         .unwrap_or_else(|_| String::from("c:\\ProgramData"));
     let home = std::path::PathBuf::from(program_data_path + constants::WIN_AGENT_HOME_DIR);
-    Ok(constants::PathResolver::new(&home))
+    Ok(constants::Paths::new(&home))
 }
 
 #[cfg(unix)]
-fn setup(logging_level: &str) -> AnyhowResult<constants::PathResolver> {
+fn setup(logging_level: &str) -> AnyhowResult<constants::Paths> {
     if let Err(err) = init_logging(logging_level) {
         io::stderr()
             .write_all(format!("Failed to initialize logging: {:?}", err).as_bytes())
@@ -139,21 +139,21 @@ fn setup(logging_level: &str) -> AnyhowResult<constants::Paths> {
     Ok(paths)
 }
 
-fn init() -> AnyhowResult<(cli::Args, constants::PathResolver)> {
+fn init() -> AnyhowResult<(cli::Args, constants::Paths)> {
     // Parse args as first action to directly exit from --help or malformatted arguments
     let args = cli::Args::from_args();
     let logging_level = args.logging_level();
     Ok((args, setup(&logging_level)?))
 }
 
-fn run_requested_mode(args: cli::Args, paths: constants::PathResolver) -> AnyhowResult<()> {
-    let registration_preset = config::RegistrationPreset::load(&paths.pairig_preset_path)?;
+fn run_requested_mode(args: cli::Args, paths: constants::Paths) -> AnyhowResult<()> {
+    let stored_config = config::ConfigFromDisk::load(&paths.config_path)?;
     let mut registry = config::Registry::from_file(&paths.registry_path)
         .context("Error while loading registered connections.")?;
     match args {
         cli::Args::Register(reg_args) => {
             registration::register(
-                config::RegistrationConfig::new(registration_preset, reg_args)?,
+                config::RegistrationConfig::new(stored_config, reg_args)?,
                 &mut registry,
             )?;
             pull::disallow_legacy_pull(&paths.legacy_pull_path).context(
@@ -162,7 +162,7 @@ fn run_requested_mode(args: cli::Args, paths: constants::PathResolver) -> Anyhow
         }
         cli::Args::RegisterSurrogatePull(surr_pull_reg_args) => {
             registration::register_surrogate_pull(config::RegistrationConfig::new(
-                registration_preset,
+                stored_config,
                 surr_pull_reg_args,
             )?)
         }
@@ -229,7 +229,7 @@ mod tests {
         let home = String::from("C:\\ProgramData") + constants::WIN_AGENT_HOME_DIR;
         assert_eq!(p.home_dir, std::path::PathBuf::from(&home));
         assert_eq!(
-            p.registration_preset,
+            p.config_path,
             std::path::PathBuf::from(&home).join("cmk-agent-ctl-config.json")
         );
         assert_eq!(

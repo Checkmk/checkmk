@@ -42,7 +42,7 @@ pub struct Credentials {
 }
 
 #[derive(Deserialize)]
-pub struct RegistrationPreset {
+pub struct ConfigFromDisk {
     #[serde(default)]
     site_spec: Option<site_spec::SiteSpec>,
 
@@ -59,7 +59,7 @@ pub struct RegistrationPreset {
     agent_labels: Option<types::AgentLabels>,
 }
 
-impl JSONLoader for RegistrationPreset {}
+impl JSONLoader for ConfigFromDisk {}
 
 pub enum HostRegistrationData {
     Name(String),
@@ -76,12 +76,12 @@ pub struct RegistrationConfig {
 
 impl RegistrationConfig {
     pub fn new(
-        preset: RegistrationPreset,
+        config_from_disk: ConfigFromDisk,
         reg_args: cli::RegistrationArgs,
     ) -> AnyhowResult<RegistrationConfig> {
         let coordinates = match reg_args
             .site_address
-            .or(preset.site_spec)
+            .or(config_from_disk.site_spec)
             .context("Site address not specified")?
         {
             site_spec::SiteSpec::Complete(coord) => coord,
@@ -94,13 +94,13 @@ impl RegistrationConfig {
             if let (Some(username), Some(password)) = (reg_args.user, reg_args.password) {
                 Credentials { username, password }
             } else {
-                preset
+                config_from_disk
                     .credentials
                     .context("Missing credentials")?
             };
-        let root_certificate = preset.root_certificate;
-        let stored_host_name = preset.host_name;
-        let stored_agent_labels = preset.agent_labels;
+        let root_certificate = config_from_disk.root_certificate;
+        let stored_host_name = config_from_disk.host_name;
+        let stored_agent_labels = config_from_disk.agent_labels;
         let host_reg_data = reg_args
             .host_name
             .map(HostRegistrationData::Name)

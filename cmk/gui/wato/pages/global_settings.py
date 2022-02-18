@@ -41,7 +41,7 @@ from cmk.gui.plugins.watolib.utils import (
     ConfigVariableGroup,
 )
 from cmk.gui.type_defs import ActionResult
-from cmk.gui.utils.escaping import escape_html_permissive
+from cmk.gui.utils.escaping import escape_to_html
 from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.urls import makeactionuri, makeuri_contextless
 from cmk.gui.valuespec import Checkbox, Transform
@@ -197,8 +197,6 @@ class ABCGlobalSettingsMode(WatoMode):
 
                 try:
                     to_text = valuespec.value_to_html(value)
-                    if isinstance(to_text, str):
-                        to_text = escape_html_permissive(to_text)
                 except Exception:
                     logger.exception("error converting %r to text", value)
                     to_text = html.render_error(_("Failed to render value: %r") % value)
@@ -307,7 +305,7 @@ class ABCEditGlobalSettingMode(WatoMode):
             except KeyError:
                 pass
 
-            msg = escape_html_permissive(
+            msg = escape_to_html(
                 _("Resetted configuration variable %s to its default.") % self._varname
             )
         else:
@@ -422,7 +420,7 @@ class ModeEditGlobals(ABCGlobalSettingsMode):
 
     def title(self):
         if self._search:
-            return _("Global settings matching '%s'") % escape_html_permissive(self._search)
+            return _("Global settings matching '%s'") % escape_to_html(self._search)
         return _("Global settings")
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:

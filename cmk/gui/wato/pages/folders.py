@@ -48,7 +48,7 @@ from cmk.gui.plugins.wato.utils.context_buttons import make_folder_status_link
 from cmk.gui.plugins.wato.utils.main_menu import MainMenu, MenuItem
 from cmk.gui.table import init_rowselect, table_element
 from cmk.gui.type_defs import ActionResult, Choices
-from cmk.gui.utils.escaping import escape_html_permissive
+from cmk.gui.utils.escaping import escape_to_html_permissive
 from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.popups import MethodAjax
 from cmk.gui.utils.urls import make_confirm_link, makeactionuri, makeuri, makeuri_contextless
@@ -580,7 +580,7 @@ class ModeFolder(WatoMode):
             if reason:
                 html.show_message(
                     html.render_icon("autherr", cssclass="authicon")
-                    + escape_html_permissive(reason)
+                    + escape_to_html_permissive(reason)
                 )
 
         self._folder.show_locking_information()

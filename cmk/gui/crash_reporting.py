@@ -414,13 +414,13 @@ class PageCrash(ABCCrashReportPage):
                     files.append(filepath)
 
             if files:
-                warn_text = escaping.escape_html(
+                warn_text = escaping.escape_to_html(
                     _(
                         "The following files located in the local hierarchy of your site are involved in this exception:"
                     )
                 )
                 warn_text += html.render_ul(HTML("\n").join(map(html.render_li, files)))
-                warn_text += escaping.escape_html(
+                warn_text += escaping.escape_to_html(
                     _(
                         "Maybe these files are not compatible with your current Checkmk "
                         "version. Please verify and only report this crash when you think "
@@ -479,9 +479,7 @@ class PageCrash(ABCCrashReportPage):
         _crash_row(_("Core"), info.get("core", ""), True)
         _crash_row(_("Python Version"), info.get("python_version", _("Unknown")), False)
 
-        joined_paths = html.render_br().join(
-            [escaping.escape_html(p) for p in info.get("python_paths", [_("Unknown")])]
-        )
+        joined_paths = html.render_br().join(info.get("python_paths", [_("Unknown")]))
         _crash_row(_("Python Module Paths"), joined_paths, odd=False)
 
         html.close_table()

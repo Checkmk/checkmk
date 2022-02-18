@@ -48,7 +48,7 @@ from cmk.gui.page_menu import (
 )
 from cmk.gui.plugins.views.utils import display_options, format_plugin_output, view_title
 from cmk.gui.table import Table, table_element
-from cmk.gui.utils.escaping import escape_html_permissive
+from cmk.gui.utils.escaping import escape_to_html_permissive
 from cmk.gui.utils.urls import make_confirm_link, makeactionuri, makeuri, urlencode_vars
 from cmk.gui.valuespec import (
     AbsoluteDate,
@@ -305,7 +305,7 @@ def show_availability_page(view: View, filterheaders: FilterHeader) -> None:
         # If we abolish the limit we have to fetch the data again
         # with changed logrow_limit = 0, which means no limit
         if has_reached_logrow_limit:
-            text = escaping.escape_html_permissive(
+            text = escaping.escape_to_html_permissive(
                 _(
                     "Your query matched more than %d log entries. "
                     "<b>Note:</b> The number of shown rows does not necessarily reflect the "
@@ -1081,7 +1081,9 @@ def show_annotations(annotations, av_rawdata, what, avoptions, omit_service):
                     % service_state_name(recl_svc_state),
                 )
 
-            table.cell(_("Annotation"), escape_html_permissive(annotation["text"]))
+            table.cell(
+                _("Annotation"), escape_to_html_permissive(annotation["text"], escape_links=False)
+            )
             table.cell(_("Author"), annotation["author"])
             table.cell(_("Entry"), render_date(annotation["date"]), css="nobr narrow")
             if not cmk_version.is_raw_edition():

@@ -951,19 +951,22 @@ class html(ABCHTMLGenerator):
             if self._mobile:
                 return self.render_center(code)
             return code
-        return escaping.escape_html_permissive("%s: %s\n" % (prefix, escaping.strip_tags(msg)))
+        return escaping.escape_to_html_permissive(
+            "%s: %s\n" % (prefix, escaping.strip_tags(msg)), escape_links=False
+        )
 
     def show_localization_hint(self) -> None:
         url = "wato.py?mode=edit_configvar&varname=user_localizations"
         self.show_message(
             self.render_sup("*")
-            + escaping.escape_html_permissive(
+            + escaping.escape_to_html_permissive(
                 _(
                     "These texts may be localized depending on the users' "
                     "language. You can configure the localizations "
                     "<a href='%s'>in the global settings</a>."
                 )
-                % url
+                % url,
+                escape_links=False,
             )
         )
 
@@ -1554,7 +1557,8 @@ class html(ABCHTMLGenerator):
         if user_errors:
             self.show_error(
                 self.render_br().join(
-                    escaping.escape_html_permissive(s) for s in user_errors.values()
+                    escaping.escape_to_html_permissive(s, escape_links=False)
+                    for s in user_errors.values()
                 )
             )
 

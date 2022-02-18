@@ -41,22 +41,25 @@ _COMMENT_RE = re.compile("(<!--.*?-->)")
 _TAG_RE = re.compile(r"(<[^>]+?>)")
 
 
-def escape_html(value: str) -> HTML:
+def escape_to_html(value: str) -> HTML:
     """Escape HTML and return as HTML object"""
     return HTML(html_escape(value))
 
 
-def escape_html_permissive(value: str, escape_links: bool = False) -> HTML:
+def escape_to_html_permissive(value: str, escape_links: bool = True) -> HTML:
     """Escape HTML in permissive mode (keep simple markup tags) and return as HTML object
 
-    >>> escape_html_permissive("Hello this is <b>dog</b>!")
+    >>> escape_to_html_permissive("Hello this is <b>dog</b>!")
     HTML("Hello this is <b>dog</b>!")
 
-    >>> escape_html_permissive('<a href="mailto:security@checkmk.com">no closing a')
-    HTML("<a href="mailto:security@checkmk.com">no closing a")
-
-    >>> escape_html_permissive('<a href="mailto:security@checkmk.com">', escape_links=True)
+    >>> escape_to_html_permissive('<a href="mailto:security@checkmk.com">')
     HTML("&lt;a href=&quot;mailto:security@checkmk.com&quot;&gt;")
+
+    >>> escape_to_html_permissive('<a href="mailto:security@checkmk.com">', escape_links=True)
+    HTML("&lt;a href=&quot;mailto:security@checkmk.com&quot;&gt;")
+
+    >>> escape_to_html_permissive('<a href="mailto:security@checkmk.com">no closing a', escape_links=False)
+    HTML("<a href="mailto:security@checkmk.com">no closing a")
     """
     return HTML(escape_text(value, escape_links=escape_links))
 

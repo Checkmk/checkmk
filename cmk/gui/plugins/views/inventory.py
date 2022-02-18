@@ -82,7 +82,7 @@ from cmk.gui.plugins.visuals.utils import (
     VisualInfo,
 )
 from cmk.gui.type_defs import ColumnName, FilterName, Icon, Row, Rows
-from cmk.gui.utils.escaping import escape_html, escape_text
+from cmk.gui.utils.escaping import escape_text
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.valuespec import Checkbox, Dictionary
 from cmk.gui.view_utils import CellSpec, render_labels
@@ -654,7 +654,7 @@ def inv_paint_timestamp_as_age_days(timestamp: int) -> PaintResult:
 
 @decorate_inv_paint()
 def inv_paint_csv_labels(csv_list: str) -> PaintResult:
-    return "labels", html.render_br().join(map(escape_html, csv_list.split(",")))
+    return "labels", html.render_br().join(csv_list.split(","))
 
 
 @decorate_inv_paint()

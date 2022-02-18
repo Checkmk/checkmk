@@ -87,7 +87,7 @@ from cmk.gui.plugins.watolib.utils import (  # noqa: F401 # pylint: disable=unus
 )
 from cmk.gui.sites import get_activation_site_choices, get_site_config
 from cmk.gui.type_defs import Choices
-from cmk.gui.utils.escaping import escape_html
+from cmk.gui.utils.escaping import escape_to_html
 from cmk.gui.utils.flashed_messages import flash  # noqa: F401 # pylint: disable=unused-import
 from cmk.gui.utils.urls import make_confirm_link  # noqa: F401 # pylint: disable=unused-import
 from cmk.gui.valuespec import (  # noqa: F401 # pylint: disable=unused-import
@@ -1846,7 +1846,7 @@ def configure_attributes(
                 while container:
                     if attrname in container.attributes():
                         url = container.edit_url()
-                        inherited_from = escape_html(_("Inherited from ")) + html.render_a(
+                        inherited_from = escape_to_html(_("Inherited from ")) + html.render_a(
                             container.title(), href=url
                         )
 
@@ -1859,7 +1859,7 @@ def configure_attributes(
                     container = container.parent()
 
             if not container:  # We are the root folder - we inherit the default values
-                inherited_from = escape_html(_("Default value"))
+                inherited_from = escape_to_html(_("Default value"))
                 inherited_value = attr.default_value()
                 # Also add the default values to the inherited values dict
                 if attr.is_tag_attribute:
@@ -1993,7 +1993,9 @@ def configure_attributes(
                     explanation = HTML(" (") + inherited_from + HTML(")")
                     value = inherited_value
                 elif not unique:
-                    explanation = escape_html(_("This value differs between the selected hosts."))
+                    explanation = escape_to_html(
+                        _("This value differs between the selected hosts.")
+                    )
                 else:
                     value = values[0]
 

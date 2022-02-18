@@ -30,7 +30,7 @@ from cmk.gui.page_menu import (
 )
 from cmk.gui.plugins.wato.utils import ConfigHostname, mode_registry, WatoMode
 from cmk.gui.table import table_element
-from cmk.gui.utils.escaping import escape_html_permissive
+from cmk.gui.utils.escaping import escape_to_html
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.wato.pages.rulesets import ModeEditRuleset
 from cmk.gui.watolib.search import (
@@ -245,11 +245,11 @@ class ModePatternEditor(WatoMode):
                             match_start = matched.start()
                             match_end = matched.end()
                             disp_match_txt = (
-                                escape_html_permissive(self._match_txt[:match_start])
+                                escape_to_html(self._match_txt[:match_start])
                                 + html.render_span(
                                     self._match_txt[match_start:match_end], class_="match"
                                 )
-                                + escape_html_permissive(self._match_txt[match_end:])
+                                + escape_to_html(self._match_txt[match_end:])
                             )
 
                             if not already_matched:

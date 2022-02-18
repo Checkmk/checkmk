@@ -159,7 +159,7 @@ std::wstring GetFullPath(IWbemClassObject *wbem_object) {
     ON_OUT_OF_SCOPE(::LocalFree(argv));
     for (int i = 1; i < argc; ++i) {
         if (argv[i] != nullptr) {
-            process_name += std::wstring(L" ") + argv[i];
+            process_name += std::wstring(L"\t") + argv[i];
         }
     }
     return process_name;

@@ -58,7 +58,7 @@ private:
 
 constexpr std::wstring_view kDefaultMsiFileName{L"check_mk_agent.msi"};
 constexpr std::string_view kMsiLogFileName{"agent_msi.log"};
-constexpr std::wstring_view kAgentProductName{L"Check MK Agent 2.0"};
+constexpr std::wstring_view kAgentProductName{L"Check MK Agent 2.1"};
 
 namespace registry {
 // Names are from WIX Msi, please, check that they are in sync

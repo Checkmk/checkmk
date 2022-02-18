@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import typing
 
+from cmk.gui.globals import user
 from cmk.gui.plugins.openapi.restful_objects.datastructures import denilled
 
 if typing.TYPE_CHECKING:
@@ -24,7 +25,7 @@ from cmk.gui.plugins.openapi.endpoints.rule.fields import (
     RuleObject,
     RuleSearchOptions,
 )
-from cmk.gui.plugins.openapi.restful_objects import constructors, Endpoint
+from cmk.gui.plugins.openapi.restful_objects import constructors, Endpoint, permissions
 from cmk.gui.plugins.openapi.restful_objects.constructors import serve_json
 from cmk.gui.plugins.openapi.restful_objects.type_defs import DomainObject
 from cmk.gui.plugins.openapi.utils import problem
@@ -36,6 +37,14 @@ from cmk.gui.watolib.rulesets import RuleConditions
 # TODO: move a rule within a ruleset
 
 
+PERMISSIONS = permissions.AllPerm(
+    [
+        permissions.Perm("wato.rulesets"),
+        permissions.Optional(permissions.Perm("wato.all_folders")),
+    ]
+)
+
+
 @Endpoint(
     constructors.collection_href("rule"),
     "cmk/create",
@@ -43,9 +52,11 @@ from cmk.gui.watolib.rulesets import RuleConditions
     etag="output",
     request_schema=InputRuleObject,
     response_schema=RuleObject,
+    permissions_required=PERMISSIONS,
 )
 def create_rule(param):
     """Create rule"""
+    user.need_permission("wato.rulesets")
     body = param["body"]
     folder: watolib.CREFolder = body["folder"]
     value = body["value_raw"]
@@ -113,10 +124,12 @@ def create_rule(param):
     ".../collection",
     method="get",
     response_schema=RuleCollection,
+    permissions_required=permissions.Perm("wato.rulesets"),
     query_params=[RuleSearchOptions],
 )
 def list_rules(param):
     """List rules"""
+    user.need_permission("wato.rulesets")
     all_sets = watolib.AllRulesets()
     all_sets.load()
     ruleset_name = param["ruleset_name"]
@@ -151,10 +164,12 @@ def list_rules(param):
     method="get",
     response_schema=RuleObject,
     path_params=[RULE_ID],
+    permissions_required=permissions.Perm("wato.rulesets"),
 )
 def show_rule(param):
     """Show a rule"""
     rule: watolib.Rule
+    user.need_permission("wato.rulesets")
     _, folder, index, rule = _get_rule_by_id(param["rule_id"])
     return serve_json(_serialize_rule(folder, index, rule))
 
@@ -183,9 +198,11 @@ def _get_rule_by_id(rule_uuid: str) -> Tuple[watolib.Ruleset, watolib.CREFolder,
         204,
         404,
     ],
+    permissions_required=PERMISSIONS,
 )
 def delete_rule(param):
     """Delete a rule"""
+    user.need_permission("wato.rulesets")
     rule_id = param["rule_id"]
     rule: watolib.Rule
     all_sets = watolib.AllRulesets()

@@ -290,6 +290,9 @@ def _get_expected_paths(user_id, is_pre_17_site, with_local):
         if not cmk_version.is_raw_edition():
             expected_paths += ["etc/check_mk/dcd.d/wato/distributed.mk"]
 
+        if not cmk_version.is_managed_edition():
+            expected_paths += ["etc/omd/site.conf"]
+
     # TODO: The second condition should not be needed. Seems to be a subtle difference between the
     # CME and CRE/CEE snapshot logic
     if not cmk_version.is_managed_edition():
@@ -424,7 +427,6 @@ def test_generate_pre_17_site_snapshot(
         "mkeventd_mkp.tar",
         "mkeventd.tar",
         "multisite.tar",
-        "omd.tar",
         "sitespecific.tar",
         "usersettings.tar",
     ]
@@ -476,7 +478,7 @@ def test_generate_pre_17_site_snapshot(
         "auth.serials.tar": ["auth.serials"],
         "mknotify.tar": [],
         "diskspace.tar": [],
-        "omd.tar": [] if is_pre_17_site else ["sitespecific.mk"],
+        "omd.tar": [] if is_pre_17_site else ["sitespecific.mk", "global.mk"],
     }
 
     if config.sites[remote_site].get("replicate_mkps", False):

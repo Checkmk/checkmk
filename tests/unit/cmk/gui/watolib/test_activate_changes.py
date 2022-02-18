@@ -44,7 +44,6 @@ def _expected_replication_paths():
         ),
         ReplicationPath("dir", "mkps", "var/check_mk/packages", []),
         ReplicationPath("dir", "local", "local", []),
-        ReplicationPath("file", "omd", "etc/omd/sitespecific.mk", []),
     ]
 
     if not cmk_version.is_raw_edition():
@@ -164,6 +163,12 @@ def test_get_replication_components(
                 ident="distributed_wato",
                 site_path="etc/check_mk/conf.d/distributed_wato.mk",
                 excludes=[".*new*"],
+            ),
+            ReplicationPath(
+                ty="dir",
+                ident="omd",
+                site_path="etc/omd",
+                excludes=["allocated_ports", "site.conf", ".*new*"],
             ),
         ]
 

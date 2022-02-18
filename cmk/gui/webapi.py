@@ -32,6 +32,7 @@ from cmk.gui.plugins.wato.utils import PermissionSectionWATO
 from cmk.gui.plugins.webapi.utils import (  # noqa: F401 # pylint: disable=unused-import
     add_configuration_hash,
     api_call_collection_registry,
+    APICallDefinitionDict,
     check_hostname,
     validate_config_hash,
 )
@@ -73,7 +74,7 @@ _FORMATTERS: Dict[str, Tuple[Formatter, Formatter]] = {
 
 
 @cmk.gui.pages.register("webapi")
-def page_api():
+def page_api() -> None:
     try:
         if not request.has_var("output_format"):
             response.set_content_type("application/json")
@@ -129,8 +130,8 @@ def page_api():
 # below would be in methods of that class.
 
 
-def _get_api_call():
-    action = request.var("action")
+def _get_api_call() -> APICallDefinitionDict:
+    action = request.get_str_input_mandatory("action")
     for cls in api_call_collection_registry.values():
         api_call = cls().get_api_calls().get(action)
         if api_call:
@@ -138,7 +139,7 @@ def _get_api_call():
     raise MKUserError(None, "Unknown API action %s" % escaping.escape_attribute(action))
 
 
-def _check_permissions(api_call):
+def _check_permissions(api_call: APICallDefinitionDict) -> None:
     if not user.get_attribute("automation_secret"):
         raise MKAuthException("The API is only available for automation users")
 
@@ -149,14 +150,13 @@ def _check_permissions(api_call):
         user.need_permission(permission)
 
 
-def _get_request(api_call):
-    if api_call.get("dont_eval_request"):
-        req = request.var("request")
-        return {} if req is None else req
+def _get_request(api_call: APICallDefinitionDict) -> dict[str, Any]:
     return request.get_request(exclude_vars=["action", "pretty_print"])
 
 
-def _check_formats(output_format, api_call, request_object):
+def _check_formats(
+    output_format: str, api_call: APICallDefinitionDict, request_object: dict[str, Any]
+):
     required_input_format = api_call.get("required_input_format")
     if required_input_format and required_input_format != request_object["request_format"]:
         raise MKUserError(
@@ -170,11 +170,10 @@ def _check_formats(output_format, api_call, request_object):
         )
 
     # The request_format parameter is not forwarded into the API action
-    if "request_format" in request_object:
-        del request_object["request_format"]
+    request_object.pop("request_format", None)
 
 
-def _check_request_keys(api_call, request_object):
+def _check_request_keys(api_call: APICallDefinitionDict, request_object: dict[str, Any]) -> None:
     required_keys = set(api_call.get("required_keys", []))
     optional_keys = set(api_call.get("optional_keys", []))
     actual_keys = set(request_object.keys())
@@ -188,14 +187,18 @@ def _check_request_keys(api_call, request_object):
         raise MKUserError(None, _("Invalid key(s): %s") % ", ".join(invalid_keys))
 
 
-def _execute_action(api_call, request_object):
+def _execute_action(
+    api_call: APICallDefinitionDict, request_object: dict[str, Any]
+) -> dict[str, Any]:
     if api_call.get("locking", True):
         with store.lock_checkmk_configuration():
             return _execute_action_no_lock(api_call, request_object)
     return _execute_action_no_lock(api_call, request_object)
 
 
-def _execute_action_no_lock(api_call, request_object):
+def _execute_action_no_lock(
+    api_call: APICallDefinitionDict, request_object: dict[str, Any]
+) -> dict[str, Any]:
     if cmk.gui.watolib.read_only.is_enabled() and not cmk.gui.watolib.read_only.may_override():
         raise MKUserError(None, cmk.gui.watolib.read_only.message())
 

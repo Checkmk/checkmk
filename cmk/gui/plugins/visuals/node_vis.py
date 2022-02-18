@@ -73,7 +73,7 @@ class FilterTopologyMeshDepth(FilterRange):
         super().__init__(
             _FilterRangeConfig(
                 column="topology_mesh_depth",
-                title=_l("Topology Mesh Depth"),
+                title=_l("Topology mesh depth"),
                 step=1,
                 default=0,
                 min=0,
@@ -88,7 +88,7 @@ class FilterTopologyMaxNodes(FilterRange):
         super().__init__(
             _FilterRangeConfig(
                 column="topology_max_nodes",
-                title=_l("Topology Max Nodes"),
+                title=_l("Topology max nodes"),
                 step=100,
                 default=2000,
                 min=200,

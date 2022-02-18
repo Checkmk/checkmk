@@ -158,13 +158,33 @@ impl PullConfig {
 }
 
 #[serde_with::serde_as]
-#[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Connection {
     #[serde_as(as = "DisplayFromStr")]
     pub uuid: uuid::Uuid,
     pub private_key: String,
     pub certificate: String,
     pub root_cert: String,
+}
+
+impl std::cmp::PartialEq for Connection {
+    fn eq(&self, other: &Self) -> bool {
+        self.uuid == other.uuid
+    }
+}
+
+impl std::cmp::Eq for Connection {}
+
+impl std::hash::Hash for Connection {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        self.uuid.hash(state);
+    }
+}
+
+impl std::borrow::Borrow<uuid::Uuid> for Connection {
+    fn borrow(&self) -> &uuid::Uuid {
+        &self.uuid
+    }
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
@@ -176,7 +196,7 @@ pub struct RegisteredConnections {
     pub pull: HashMap<site_spec::Coordinates, Connection>,
 
     #[serde(default)]
-    pub pull_imported: Vec<Connection>,
+    pub pull_imported: std::collections::HashSet<Connection>,
 }
 
 impl JSONLoader for RegisteredConnections {}
@@ -259,8 +279,16 @@ impl Registry {
         )
     }
 
+    pub fn pull_standard_is_empty(&self) -> bool {
+        self.connections.pull.is_empty()
+    }
+
+    pub fn pull_imported_is_empty(&self) -> bool {
+        self.connections.pull_imported.is_empty()
+    }
+
     pub fn pull_is_empty(&self) -> bool {
-        self.connections.pull.is_empty() & self.connections.pull_imported.is_empty()
+        self.pull_standard_is_empty() & self.pull_imported_is_empty()
     }
 
     pub fn push_is_empty(&self) -> bool {
@@ -307,7 +335,7 @@ impl Registry {
     }
 
     pub fn register_imported_connection(&mut self, connection: Connection) {
-        self.connections.pull_imported.push(connection);
+        self.connections.pull_imported.insert(connection);
     }
 
     pub fn delete_standard_connection(
@@ -325,14 +353,14 @@ impl Registry {
         Err(anyhow!("Connection '{}' not found", coordinates))
     }
 
-    pub fn delete_imported_connection(&mut self, idx: usize) -> AnyhowResult<()> {
-        if self.connections.pull_imported.len() > idx {
-            self.connections.pull_imported.remove(idx);
+    pub fn delete_imported_connection(&mut self, uuid: &uuid::Uuid) -> AnyhowResult<()> {
+        if self.connections.pull_imported.remove(uuid) {
+            println!("Deleted imported connection '{}'", uuid);
             return Ok(());
-        }
+        };
         Err(anyhow!(
-            "Imported pull connection with index {} not found",
-            idx
+            "Imported pull connection with UUID {} not found",
+            uuid
         ))
     }
 
@@ -357,6 +385,7 @@ mod test_registry {
     fn registry() -> Registry {
         let mut push = std::collections::HashMap::new();
         let mut pull = std::collections::HashMap::new();
+        let mut pull_imported = std::collections::HashSet::new();
 
         push.insert(
             site_spec::Coordinates::from_str("server:8000/push-site").unwrap(),
@@ -378,6 +407,13 @@ mod test_registry {
             },
         );
 
+        pull_imported.insert(Connection {
+            uuid: uuid::Uuid::new_v4(),
+            private_key: String::from("private_key"),
+            certificate: String::from("certificate"),
+            root_cert: String::from("root_cert"),
+        });
+
         let path =
             std::path::PathBuf::from(&tempfile::NamedTempFile::new().unwrap().into_temp_path());
         let last_reload = mtime(&path).unwrap();
@@ -385,12 +421,7 @@ mod test_registry {
             connections: RegisteredConnections {
                 push,
                 pull,
-                pull_imported: vec![Connection {
-                    uuid: uuid::Uuid::new_v4(),
-                    private_key: String::from("private_key"),
-                    certificate: String::from("certificate"),
-                    root_cert: String::from("root_cert"),
-                }],
+                pull_imported,
             },
             path,
             last_reload,
@@ -481,7 +512,7 @@ mod test_registry {
         assert!(reg.connections.push.len() == 1);
         assert!(reg.connections.pull.len() == 1);
         assert!(reg.connections.pull_imported.len() == 2);
-        assert!(reg.connections.pull_imported[1].uuid == uuid);
+        assert!(reg.connections.pull_imported.contains(&uuid));
     }
 
     #[test]
@@ -509,7 +540,7 @@ mod test_registry {
                     .get(&site_spec::Coordinates::from_str("server:8000/pull-site").unwrap())
                     .unwrap()
         );
-        assert!(pull_conns[1] == &reg.connections.pull_imported[0]);
+        assert!(reg.connections.pull_imported.contains(pull_conns[1]));
     }
 
     #[test]
@@ -559,32 +590,36 @@ mod test_registry {
     #[test]
     fn test_delete_imported_connection_ok() {
         let uuid_first_imported = uuid::Uuid::new_v4();
+        let uuid_second_imported = uuid::Uuid::new_v4();
         let mut reg = registry();
-        reg.connections.pull_imported = vec![
-            Connection {
-                uuid: uuid_first_imported,
-                private_key: String::from("private_key"),
-                certificate: String::from("certificate"),
-                root_cert: String::from("root_cert"),
-            },
-            Connection {
-                uuid: uuid::Uuid::new_v4(),
-                private_key: String::from("private_key"),
-                certificate: String::from("certificate"),
-                root_cert: String::from("root_cert"),
-            },
-        ];
-        assert!(reg.delete_imported_connection(1).is_ok());
+        reg.connections.pull_imported.clear();
+        reg.register_imported_connection(Connection {
+            uuid: uuid_first_imported,
+            private_key: String::from("private_key"),
+            certificate: String::from("certificate"),
+            root_cert: String::from("root_cert"),
+        });
+        reg.register_imported_connection(Connection {
+            uuid: uuid_second_imported,
+            private_key: String::from("private_key"),
+            certificate: String::from("certificate"),
+            root_cert: String::from("root_cert"),
+        });
+        assert!(reg.delete_imported_connection(&uuid_first_imported).is_ok());
         assert!(reg.connections.pull_imported.len() == 1);
-        assert!(reg.connections.pull_imported[0].uuid == uuid_first_imported);
+        assert!(reg
+            .connections
+            .pull_imported
+            .contains(&uuid_second_imported));
     }
 
     #[test]
     fn test_delete_imported_connection_err() {
         let mut reg = registry();
+        let uuid = uuid::Uuid::new_v4();
         assert_eq!(
-            format!("{}", reg.delete_imported_connection(1).unwrap_err()),
-            "Imported pull connection with index 1 not found"
+            format!("{}", reg.delete_imported_connection(&uuid).unwrap_err()),
+            format!("Imported pull connection with UUID {} not found", uuid),
         );
         assert!(reg.connections.push.len() == 1);
         assert!(reg.connections.pull.len() == 1);

@@ -146,9 +146,9 @@ pub enum Args {
 
     /// Delete a connection to a Checkmk instance
     ///
-    /// Connections can be specified either by their name or their UUID.
-    /// The connections name is '<servername>:<port>/<site>' or 'imported-<number>',
-    /// see the output of the 'status' command.
+    /// Connections can be specified either by their site address or their UUID.
+    /// The site address is '<servername>:<port>/<site>', see the output of the
+    /// status command.
     #[structopt()]
     Delete(DeleteArgs),
 

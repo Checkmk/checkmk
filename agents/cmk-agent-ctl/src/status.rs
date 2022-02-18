@@ -3,7 +3,7 @@
 // conditions defined in the file COPYING, which is part of this source code package.
 
 use super::{agent_receiver_api, certs, config, site_spec};
-use anyhow::{Context, Error as AnyhowError, Result as AnyhowResult};
+use anyhow::{Context, Result as AnyhowResult};
 use serde_with::DisplayFromStr;
 
 #[derive(serde::Serialize)]
@@ -50,44 +50,10 @@ enum RemoteConnectionStatusResponse {
     Error(RemoteConnectionError),
 }
 
-#[derive(PartialEq, Debug, serde::Serialize)]
-#[serde(untagged)]
-pub enum ConnectionName {
-    Standard(site_spec::Coordinates),
-    Imported(usize),
-}
-
-impl std::str::FromStr for ConnectionName {
-    type Err = AnyhowError;
-
-    fn from_str(s: &str) -> AnyhowResult<ConnectionName> {
-        if regex::Regex::new("^imported-[1-9][0-9]*$")?.is_match(s) {
-            let idx_str = s.split('-').collect::<Vec<&str>>()[1];
-            return Ok(ConnectionName::Imported(idx_str.parse::<usize>()? - 1));
-        }
-        Ok(ConnectionName::Standard(site_spec::Coordinates::from_str(
-            s,
-        )?))
-    }
-}
-
-impl std::fmt::Display for ConnectionName {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(
-            f,
-            "{}",
-            match self {
-                ConnectionName::Standard(coordinates) => coordinates.to_string(),
-                ConnectionName::Imported(idx) => format!("imported-{}", idx + 1),
-            }
-        )
-    }
-}
-
 #[serde_with::serde_as]
 #[derive(serde::Serialize)]
 struct ConnectionStatus {
-    connection: ConnectionName,
+    coordinates: Option<site_spec::Coordinates>,
     #[serde_as(as = "DisplayFromStr")]
     uuid: uuid::Uuid,
     local: LocalConnectionStatus,
@@ -182,7 +148,7 @@ impl ConnectionStatus {
         agent_rec_api: &impl agent_receiver_api::Status,
     ) -> ConnectionStatus {
         ConnectionStatus {
-            connection: ConnectionName::Standard(coordinates.clone()),
+            coordinates: Some(coordinates.clone()),
             uuid: conn.uuid,
             local: LocalConnectionStatus {
                 connection_type: conn_type,
@@ -196,9 +162,9 @@ impl ConnectionStatus {
         }
     }
 
-    fn from_imported_conn(conn: &config::Connection, idx: usize) -> ConnectionStatus {
+    fn from_imported_conn(conn: &config::Connection) -> ConnectionStatus {
         ConnectionStatus {
-            connection: ConnectionName::Imported(idx),
+            coordinates: None,
             uuid: conn.uuid,
             local: LocalConnectionStatus {
                 connection_type: config::ConnectionType::Pull,
@@ -299,8 +265,11 @@ impl ConnectionStatus {
 
     fn to_human_readable(&self) -> String {
         format!(
-            "Connection: {}\n\tUUID: {}\n\tLocal:\n\t\t{}\n\tRemote:\n\t\t{}",
-            self.connection,
+            "{}\n\tUUID: {}\n\tLocal:\n\t\t{}\n\tRemote:\n\t\t{}",
+            match &self.coordinates {
+                Some(coord) => format!("Connection: {}", coord),
+                None => "Imported connection:".to_string(),
+            },
             self.uuid,
             self.local_lines_readable().join("\n\t\t"),
             self.remote_lines_readable().join("\n\t\t")
@@ -337,8 +306,8 @@ impl Status {
                 agent_rec_api,
             ));
         }
-        for (idx, imp_pull_conn) in registry.imported_pull_connections().enumerate() {
-            conn_stats.push(ConnectionStatus::from_imported_conn(imp_pull_conn, idx + 1));
+        for imp_pull_conn in registry.imported_pull_connections() {
+            conn_stats.push(ConnectionStatus::from_imported_conn(imp_pull_conn));
         }
 
         Status {
@@ -398,34 +367,6 @@ pub fn status(registry: &config::Registry, json: bool) -> AnyhowResult<()> {
 }
 
 #[cfg(test)]
-mod test_connection_name {
-    use std::str::FromStr;
-
-    use super::*;
-
-    #[test]
-    fn test_from_str_coordinates() {
-        assert_eq!(
-            ConnectionName::from_str("server:1/site").unwrap(),
-            ConnectionName::Standard(site_spec::Coordinates::from_str("server:1/site").unwrap()),
-        )
-    }
-
-    #[test]
-    fn test_from_str_imported() {
-        assert_eq!(
-            ConnectionName::from_str("imported-3").unwrap(),
-            ConnectionName::Imported(2),
-        )
-    }
-
-    #[test]
-    fn test_to_string_imported() {
-        assert_eq!(ConnectionName::Imported(2).to_string(), "imported-3")
-    }
-}
-
-#[cfg(test)]
 mod test_status {
     use super::*;
     use std::str::FromStr;
@@ -436,7 +377,7 @@ mod test_status {
             format!(
                 "{}",
                 ConnectionStatus {
-                    connection: ConnectionName::from_str("localhost:8000/site").unwrap(),
+                    coordinates: Some(site_spec::Coordinates::from_str("localhost:8000/site").unwrap()),
                     uuid: uuid::Uuid::from_str("99f56bbc-5965-4b34-bc70-1959ad1d32d6").unwrap(),
                     local: LocalConnectionStatus {
                         connection_type: config::ConnectionType::Pull,
@@ -476,7 +417,7 @@ mod test_status {
             format!(
                 "{}",
                 ConnectionStatus {
-                    connection: ConnectionName::from_str("localhost:8000/site").unwrap(),
+                    coordinates: Some(site_spec::Coordinates::from_str("localhost:8000/site").unwrap()),
                     uuid: uuid::Uuid::from_str("99f56bbc-5965-4b34-bc70-1959ad1d32d6").unwrap(),
                     local: LocalConnectionStatus {
                         connection_type: config::ConnectionType::Pull,
@@ -516,7 +457,7 @@ mod test_status {
             format!(
                 "{}",
                 ConnectionStatus {
-                    connection: ConnectionName::from_str("imported-1").unwrap(),
+                    coordinates: None,
                     uuid: uuid::Uuid::from_str("99f56bbc-5965-4b34-bc70-1959ad1d32d6").unwrap(),
                     local: LocalConnectionStatus {
                         connection_type: config::ConnectionType::Pull,
@@ -530,7 +471,7 @@ mod test_status {
                 }
             ),
             String::from(
-                "Connection: imported-1\n\
+                "Imported connection:\n\
                  \tUUID: 99f56bbc-5965-4b34-bc70-1959ad1d32d6\n\
                  \tLocal:\n\
                  \t\tConnection type: pull-agent\n\
@@ -548,7 +489,9 @@ mod test_status {
             format!(
                 "{}",
                 ConnectionStatus {
-                    connection: ConnectionName::from_str("localhost:8000/site").unwrap(),
+                    coordinates: Some(
+                        site_spec::Coordinates::from_str("localhost:8000/site").unwrap()
+                    ),
                     uuid: uuid::Uuid::from_str("99f56bbc-5965-4b34-bc70-1959ad1d32d6").unwrap(),
                     local: LocalConnectionStatus {
                         connection_type: config::ConnectionType::Pull,
@@ -577,7 +520,7 @@ mod test_status {
             format!(
                 "{}",
                 ConnectionStatus {
-                    connection: ConnectionName::from_str("localhost:8000/site").unwrap(),
+                    coordinates: Some(site_spec::Coordinates::from_str("localhost:8000/site").unwrap()),
                     uuid: uuid::Uuid::from_str("99f56bbc-5965-4b34-bc70-1959ad1d32d6").unwrap(),
                     local: LocalConnectionStatus {
                         connection_type: config::ConnectionType::Pull,
@@ -611,7 +554,7 @@ mod test_status {
             format!(
                 "{}",
                 ConnectionStatus {
-                    connection: ConnectionName::from_str("localhost:8000/site").unwrap(),
+                    coordinates: Some(site_spec::Coordinates::from_str("localhost:8000/site").unwrap()),
                     uuid: uuid::Uuid::from_str("99f56bbc-5965-4b34-bc70-1959ad1d32d6").unwrap(),
                     local: LocalConnectionStatus {
                         connection_type: config::ConnectionType::Pull,
@@ -651,7 +594,7 @@ mod test_status {
             format!(
                 "{}",
                 ConnectionStatus {
-                    connection: ConnectionName::from_str("localhost:8000/site").unwrap(),
+                    coordinates: Some(site_spec::Coordinates::from_str("localhost:8000/site").unwrap()),
                     uuid: uuid::Uuid::from_str("99f56bbc-5965-4b34-bc70-1959ad1d32d6").unwrap(),
                     local: LocalConnectionStatus {
                         connection_type: config::ConnectionType::Pull,
@@ -689,7 +632,9 @@ mod test_status {
         Status {
             connections: vec![
                 ConnectionStatus {
-                    connection: ConnectionName::from_str("localhost:8000/site").unwrap(),
+                    coordinates: Some(
+                        site_spec::Coordinates::from_str("localhost:8000/site").unwrap(),
+                    ),
                     uuid: uuid::Uuid::from_str("50611369-7a42-4c0b-927e-9a14330401fe").unwrap(),
                     local: LocalConnectionStatus {
                         connection_type: config::ConnectionType::Pull,
@@ -708,7 +653,9 @@ mod test_status {
                     )),
                 },
                 ConnectionStatus {
-                    connection: ConnectionName::from_str("somehwere:8000/site2").unwrap(),
+                    coordinates: Some(
+                        site_spec::Coordinates::from_str("somewhere:8000/site2").unwrap(),
+                    ),
                     uuid: uuid::Uuid::from_str("3c87778b-8bb8-434d-bcc6-6d05f2668c80").unwrap(),
                     local: LocalConnectionStatus {
                         connection_type: config::ConnectionType::Push,
@@ -744,7 +691,7 @@ mod test_status {
              \t\tConnection type: pull-agent\n\
              \t\tRegistration state: operational\n\
              \t\tHost name: my-host\n\n\n\
-             Connection: somehwere:8000/site2\n\
+             Connection: somewhere:8000/site2\n\
              \tUUID: 3c87778b-8bb8-434d-bcc6-6d05f2668c80\n\
              \tLocal:\n\
              \t\tConnection type: push-agent\n\
@@ -812,7 +759,7 @@ mod test_status {
             config::RegisteredConnections {
                 push,
                 pull: std::collections::HashMap::new(),
-                pull_imported: vec![],
+                pull_imported: std::collections::HashSet::new(),
             },
             std::path::PathBuf::from(&tempfile::NamedTempFile::new().unwrap().into_temp_path()),
         )

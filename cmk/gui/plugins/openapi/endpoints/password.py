@@ -160,7 +160,6 @@ def serialize_password(ident, details):
                                           if k in (
                                               "comment",
                                               "docu_url",
-                                              "password",
                                               "owned_by",
                                               "shared_with",
                                               "customer",

@@ -66,7 +66,6 @@ def test_openapi_password(wsgi_app, with_automation_user, suppress_automation_ca
     assert resp.json["extensions"] == {
         'comment': 'Something but nothing random',
         'documentation_url': '',
-        'password': 'tt',
         'owned_by': None,
         'shared_with': ['all'],
         'customer': 'global',

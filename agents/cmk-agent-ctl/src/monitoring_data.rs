@@ -17,7 +17,7 @@ use std::io::{Read, Result as IoResult, Write};
 #[cfg(unix)]
 use std::os::unix::net::UnixStream;
 #[cfg(unix)]
-use tokio::io::AsyncReadExt;
+use tokio::io::{AsyncReadExt, AsyncWriteExt};
 #[cfg(unix)]
 use tokio::net::UnixStream as AsyncUnixStream;
 // TODO(sk): add logging and unit testing(using local server)
@@ -31,8 +31,9 @@ async fn async_collect_from_ip(agent_ip: &str) -> IoResult<Vec<u8>> {
     Ok(data)
 }
 
+// TODO(sk): Deliver the remote ip to Windows agent to satisfy logwatch requirements
 #[cfg(windows)]
-pub async fn async_collect() -> IoResult<Vec<u8>> {
+pub async fn async_collect(_remote_ip: std::net::IpAddr) -> IoResult<Vec<u8>> {
     let peer = format!("localhost:{}", constants::WINDOWS_INTERNAL_PORT);
     async_collect_from_ip(&peer).await
 }
@@ -51,19 +52,22 @@ pub fn collect() -> IoResult<Vec<u8>> {
 }
 
 #[cfg(unix)]
-pub async fn async_collect() -> IoResult<Vec<u8>> {
+pub async fn async_collect(remote_ip: std::net::IpAddr) -> IoResult<Vec<u8>> {
     let mut mondata: Vec<u8> = vec![];
-    AsyncUnixStream::connect("/run/check-mk-agent.socket")
-        .await?
-        .read_to_end(&mut mondata)
+    let mut agent_stream = AsyncUnixStream::connect("/run/check-mk-agent.socket").await?;
+    agent_stream
+        .write_all(format!("{}\n", remote_ip).as_bytes())
         .await?;
+    agent_stream.read_to_end(&mut mondata).await?;
     Ok(mondata)
 }
 
 #[cfg(unix)]
 pub fn collect() -> IoResult<Vec<u8>> {
     let mut mondata: Vec<u8> = vec![];
-    UnixStream::connect("/run/check-mk-agent.socket")?.read_to_end(&mut mondata)?;
+    let mut agent_stream = UnixStream::connect("/run/check-mk-agent.socket")?;
+    agent_stream.write_all("\n".as_bytes())?; // No remote IP, signalize agent to continue and collect
+    agent_stream.read_to_end(&mut mondata)?;
     Ok(mondata)
 }
 

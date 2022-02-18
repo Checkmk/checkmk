@@ -109,8 +109,8 @@ pub fn pull(
 pub async fn _pull<Fut1, Fut2>(
     mut pull_config: impl PullConfiguration,
     mut guard: MaxConnectionsGuard,
-    collect_plain_mondata: impl Fn() -> Fut1,
-    collect_encoded_mondata: impl Fn() -> Fut2,
+    collect_plain_mondata: impl Fn(std::net::IpAddr) -> Fut1,
+    collect_encoded_mondata: impl Fn(std::net::IpAddr) -> Fut2,
     addr: &str,
     timeout: u64,
     allowed_ip: &[String],
@@ -124,20 +124,20 @@ where
     let listener = TcpListener::bind(addr).await?;
 
     loop {
-        let (stream, addr) = listener
+        let (stream, remote) = listener
             .accept()
             .await
             .context("Failed accepting pull connection")?;
-        info!("{}: Handling pull request", addr);
+        info!("{}: Handling pull request", remote);
 
         pull_config.refresh()?;
-        if !is_addr_allowed(&addr, allowed_ip) {
-            warn!("PULL: Request from {} is not allowed", addr);
+        if !is_addr_allowed(&remote, allowed_ip) {
+            warn!("PULL: Request from {} is not allowed", remote);
             continue;
         }
 
-        let plain_mondata = collect_plain_mondata();
-        let encoded_mondata = collect_encoded_mondata();
+        let plain_mondata = collect_plain_mondata(remote.ip());
+        let encoded_mondata = collect_encoded_mondata(remote.ip());
 
         let request_handler_fut = handle_request(
             stream,
@@ -148,16 +148,16 @@ where
             timeout,
         );
 
-        match guard.try_make_task_for_addr(addr, request_handler_fut) {
+        match guard.try_make_task_for_addr(remote, request_handler_fut) {
             Ok(connection_fut) => {
                 tokio::spawn(async move {
                     if let Err(err) = connection_fut.await {
-                        warn!("PULL: Request from {} failed: {}", addr, err)
+                        warn!("PULL: Request from {} failed: {}", remote, err)
                     };
                 });
             }
             Err(error) => {
-                warn!("PULL: Request from {} failed: {}", addr, error);
+                warn!("PULL: Request from {} failed: {}", remote, error);
             }
         }
     }
@@ -276,8 +276,8 @@ pub fn disallow_legacy_pull(legacy_pull_marker: &std::path::Path) -> std::io::Re
 }
 
 //TODO: Move this to monitoring_data.rs
-pub async fn collect_and_encode_mondata() -> AnyhowResult<Vec<u8>> {
-    let mon_data = monitoring_data::async_collect()
+pub async fn collect_and_encode_mondata(remote_ip: std::net::IpAddr) -> AnyhowResult<Vec<u8>> {
+    let mon_data = monitoring_data::async_collect(remote_ip)
         .await
         .context("Error collecting monitoring data.")?;
     encode_data_for_transport(&mon_data)

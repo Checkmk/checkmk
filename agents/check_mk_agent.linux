@@ -139,7 +139,7 @@ set_up_remote() {
     REMOTE="${REMOTE_HOST:-"${REMOTE_ADDR:-"${SSH_CLIENT%% *}"}"}"
 
     # If none of the above are set *and* we are configured to, try to read it from stdin
-    [ -z "${REMOTE}" ] && [ "${MK_READ_REMOTE}" = "true" ] && read -t 0.1 -r REMOTE
+    [ -z "${REMOTE}" ] && [ "${MK_READ_REMOTE}" = "true" ] && read -r REMOTE
 
     export REMOTE
 }

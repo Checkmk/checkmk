@@ -1279,6 +1279,9 @@ def Levels(
             return 1
         return 0
 
+    if not isinstance(unit, str):
+        raise ValueError(f"illegal unit for Levels: {unit}, expected a string")
+
     if default_value is None:
         default_value = default_levels
 

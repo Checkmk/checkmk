@@ -109,6 +109,7 @@ class Linkable(BaseSchema):
         fields.Nested(LinkSchema),
         required=True,
         description="list of links to other resources.",
+        example=None,
     )
 
 

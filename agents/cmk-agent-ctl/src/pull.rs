@@ -8,7 +8,7 @@ use std::error::Error;
 use std::io::Result as IoResult;
 use std::sync::Arc;
 
-use super::{config, constants, monitoring_data, tls_server, types};
+use super::{config, constants, monitoring_data, tls_server};
 use anyhow::{anyhow, Context, Result as AnyhowResult};
 use log::{info, warn};
 use std::net::{IpAddr, SocketAddr};
@@ -83,31 +83,30 @@ impl MaxConnectionsGuard {
 pub fn pull(
     registry: config::Registry,
     legacy_pull_marker: std::path::PathBuf,
-    port: types::Port,
+    pull_config: config::PullConfig,
     max_connections: usize,
-    allowed_ip: Vec<String>,
 ) -> AnyhowResult<()> {
-    let pull_config = PullConfigurationImpl::new(registry, legacy_pull_marker)?;
+    let pull_state = PullStateImpl::new(registry, legacy_pull_marker)?;
     let guard = MaxConnectionsGuard::new(max_connections);
     // Plain agent output for legacy handling only
     let collect_plain_mondata = monitoring_data::async_collect;
     // Compressed monitoring data with internal protocol handler
     let collect_encoded_mondata = collect_and_encode_mondata;
-    let addr = format!("0.0.0.0:{}", port);
+    let addr = format!("0.0.0.0:{}", pull_config.port);
     _pull(
-        pull_config,
+        pull_state,
         guard,
         collect_plain_mondata,
         collect_encoded_mondata,
         &addr,
         constants::CONNECTION_TIMEOUT,
-        &allowed_ip,
+        &pull_config.allowed_ip,
     )
 }
 
 #[tokio::main(flavor = "current_thread")]
 pub async fn _pull<Fut1, Fut2>(
-    mut pull_config: impl PullConfiguration,
+    mut pull_config: impl PullState,
     mut guard: MaxConnectionsGuard,
     collect_plain_mondata: impl Fn(std::net::IpAddr) -> Fut1,
     collect_encoded_mondata: impl Fn(std::net::IpAddr) -> Fut2,
@@ -163,24 +162,24 @@ where
     }
 }
 
-pub trait PullConfiguration {
+pub trait PullState {
     fn refresh(&mut self) -> AnyhowResult<()>;
     fn tls_acceptor(&self) -> TlsAcceptor;
     fn is_legacy_pull(&self) -> bool;
 }
-struct PullConfigurationImpl {
+struct PullStateImpl {
     legacy_pull: bool,
     tls_acceptor: TlsAcceptor,
     registry: config::Registry,
     legacy_pull_marker: std::path::PathBuf,
 }
 
-impl PullConfigurationImpl {
+impl PullStateImpl {
     pub fn new(
         registry: config::Registry,
         legacy_pull_marker: std::path::PathBuf,
     ) -> AnyhowResult<Self> {
-        Ok(PullConfigurationImpl {
+        Ok(PullStateImpl {
             legacy_pull: is_legacy_pull(&registry, &legacy_pull_marker),
             tls_acceptor: tls_server::tls_acceptor(registry.pull_connections())
                 .context("Could not initialize TLS.")?,
@@ -190,7 +189,7 @@ impl PullConfigurationImpl {
     }
 }
 
-impl PullConfiguration for PullConfigurationImpl {
+impl PullState for PullStateImpl {
     fn refresh(&mut self) -> AnyhowResult<()> {
         if self.registry.refresh()? {
             self.tls_acceptor = tls_server::tls_acceptor(self.registry.pull_connections())

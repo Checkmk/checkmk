@@ -2,19 +2,14 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
-use super::types;
-use anyhow::Result as AnyhowResult;
-use std::{
-    path::{Path, PathBuf},
-    str::FromStr,
-};
+use std::path::{Path, PathBuf};
 
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");
 
 #[cfg(unix)]
 pub const CMK_AGENT_USER: &str = "cmk-agent";
 //TODO: Pass agent port via cmdline(Windows/Linux) or config(Linux).
-pub const AGENT_PORT: &str = "6556";
+pub const DEFAULT_AGENT_PORT: &str = "6556";
 pub const MAX_CONNECTIONS: usize = 3;
 pub const CONNECTION_TIMEOUT: u64 = 20;
 
@@ -31,6 +26,7 @@ pub const WIN_AGENT_HOME_DIR: &str = "\\checkmk\\agent";
 const PAIRING_PRESET_FILE: &str = "cmk-agent-ctl-config.json";
 const REGISTRY_FILE: &str = "registered_connections.json";
 const LEGACY_PULL_FILE: &str = "allow-legacy-pull";
+const CONFIG_FILE: &str = "cmk-agent-ctl.toml";
 #[cfg(unix)]
 const ETC_DIR: &str = "/etc/check_mk";
 #[cfg(windows)]
@@ -41,6 +37,7 @@ pub const AGENT_SOCKET: &str = "/run/check-mk-agent.socket";
 
 pub struct PathResolver {
     pub home_dir: PathBuf,
+    pub config_path: PathBuf,
     pub registration_preset_path: PathBuf,
     pub registry_path: PathBuf,
     pub legacy_pull_path: PathBuf,
@@ -54,6 +51,12 @@ impl PathResolver {
         let etc_dir = PathBuf::from(ETC_DIR);
         PathResolver {
             home_dir: PathBuf::from(home_dir),
+            #[cfg(unix)]
+            config_path: home_dir
+                .join(CONFIG_FILE)
+                .exists_or(etc_dir.join(CONFIG_FILE)),
+            #[cfg(windows)]
+            config_path: home_dir.join(Path::new(CONFIG_FILE)),
             #[cfg(unix)]
             registration_preset_path: home_dir
                 .join(PAIRING_PRESET_FILE)
@@ -75,10 +78,6 @@ impl ExistsOr for PathBuf {
     fn exists_or(self, other_path: PathBuf) -> PathBuf {
         self.exists().then(|| self).unwrap_or(other_path)
     }
-}
-
-pub fn agent_port() -> AnyhowResult<types::Port> {
-    types::Port::from_str(AGENT_PORT)
 }
 
 #[cfg(test)]

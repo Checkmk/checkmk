@@ -3,10 +3,11 @@
 // conditions defined in the file COPYING, which is part of this source code package.
 
 use anyhow::{Context, Error as AnyhowError, Result as AnyhowResult};
+use serde::Deserialize;
 
 pub type AgentLabels = std::collections::HashMap<String, String>;
 
-#[derive(PartialEq, std::cmp::Eq, std::hash::Hash, Debug, Clone)]
+#[derive(PartialEq, std::cmp::Eq, std::hash::Hash, Debug, Clone, Deserialize)]
 pub struct Port(u16);
 
 impl std::str::FromStr for Port {

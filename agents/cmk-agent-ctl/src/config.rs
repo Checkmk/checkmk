@@ -2,7 +2,7 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
-use super::{cli, site_spec, types};
+use super::{cli, constants, site_spec, types};
 use anyhow::{anyhow, Context, Result as AnyhowResult};
 use serde::de::DeserializeOwned;
 use serde::Deserialize;
@@ -11,6 +11,7 @@ use std::collections::HashMap;
 use std::fs::{metadata, read_to_string, write};
 use std::io;
 use std::path::{Path, PathBuf};
+use std::str::FromStr;
 use std::time::SystemTime;
 use string_enum::StringEnum;
 
@@ -32,6 +33,19 @@ pub trait JSONLoader: DeserializeOwned {
             return Self::new();
         }
         Ok(serde_json::from_str(&read_to_string(path)?)?)
+    }
+}
+
+pub trait TOMLLoader: DeserializeOwned {
+    fn new() -> AnyhowResult<Self> {
+        Ok(toml::from_str("{}")?)
+    }
+
+    fn load(path: &Path) -> AnyhowResult<Self> {
+        if !path.exists() {
+            return Self::new();
+        }
+        Ok(toml::from_str(&read_to_string(path)?)?)
     }
 }
 
@@ -115,6 +129,38 @@ impl RegistrationConfig {
     }
 }
 
+#[derive(Deserialize)]
+pub struct ConfigFromDisk {
+    #[serde(default)]
+    allowed_ip: Option<Vec<String>>,
+
+    #[serde(default)]
+    pull_port: Option<types::Port>,
+}
+
+impl TOMLLoader for ConfigFromDisk {}
+
+pub struct PullConfig {
+    pub allowed_ip: Vec<String>,
+    pub port: types::Port,
+}
+
+impl PullConfig {
+    pub fn new(
+        config_from_disk: ConfigFromDisk,
+        pull_args: cli::PullArgs,
+    ) -> AnyhowResult<PullConfig> {
+        let allowed_ip = pull_args
+            .allowed_ip
+            .or(config_from_disk.allowed_ip)
+            .unwrap_or_default();
+        let port = pull_args
+            .port
+            .or(config_from_disk.pull_port)
+            .unwrap_or(types::Port::from_str(constants::DEFAULT_AGENT_PORT)?);
+        Ok(PullConfig { allowed_ip, port })
+    }
+}
 #[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
 pub struct Connection {
     pub uuid: String,

@@ -19,7 +19,7 @@ mod status;
 mod tls_server;
 mod types;
 use anyhow::{Context, Result as AnyhowResult};
-use config::JSONLoader;
+use config::{JSONLoader, TOMLLoader};
 use log::error;
 #[cfg(unix)]
 use nix::unistd;
@@ -31,9 +31,8 @@ use structopt::StructOpt;
 fn daemon(
     registry: config::Registry,
     legacy_pull_marker: std::path::PathBuf,
-    port: types::Port,
+    pull_config: config::PullConfig,
     max_connections: usize,
-    allowed_ip: Vec<String>,
 ) -> AnyhowResult<()> {
     let registry_for_push = registry.clone();
     let registry_for_pull = registry;
@@ -48,9 +47,8 @@ fn daemon(
             .send(pull::pull(
                 registry_for_pull,
                 legacy_pull_marker,
-                port,
+                pull_config,
                 max_connections,
-                allowed_ip,
             ))
             .unwrap();
     });
@@ -148,6 +146,7 @@ fn init() -> AnyhowResult<(cli::Args, constants::PathResolver)> {
 
 fn run_requested_mode(args: cli::Args, paths: constants::PathResolver) -> AnyhowResult<()> {
     let registration_preset = config::RegistrationPreset::load(&paths.registration_preset_path)?;
+    let config_from_disk = config::ConfigFromDisk::load(&paths.config_path)?;
     let mut registry = config::Registry::from_file(&paths.registry_path)
         .context("Error while loading registered connections.")?;
     match args {
@@ -170,16 +169,14 @@ fn run_requested_mode(args: cli::Args, paths: constants::PathResolver) -> Anyhow
         cli::Args::Pull(pull_args) => pull::pull(
             registry,
             paths.legacy_pull_path,
-            pull_args.port.unwrap_or(constants::agent_port()?),
+            config::PullConfig::new(config_from_disk, pull_args)?,
             constants::MAX_CONNECTIONS,
-            pull_args.allowed_ip.unwrap_or_default(),
         ),
         cli::Args::Daemon(daemon_args) => daemon(
             registry,
             paths.legacy_pull_path,
-            daemon_args.port.unwrap_or(constants::agent_port()?),
+            config::PullConfig::new(config_from_disk, daemon_args)?,
             constants::MAX_CONNECTIONS,
-            daemon_args.allowed_ip.unwrap_or_default(),
         ),
         cli::Args::Dump { .. } => dump::dump(),
         cli::Args::Status(status_args) => status::status(&registry, status_args.json),

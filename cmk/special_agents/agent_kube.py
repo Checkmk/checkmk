@@ -258,6 +258,14 @@ def setup_logging(verbosity: int) -> None:
     logging.basicConfig(level=lvl, format="%(asctime)s %(levelname)s %(message)s")
 
 
+class PodOwner:
+    def __init__(self):
+        self._pods: List[Pod] = []
+
+    def add_pod(self, pod: Pod) -> None:
+        self._pods.append(pod)
+
+
 class Pod:
     def __init__(
         self,
@@ -415,11 +423,11 @@ def aggregate_resources(
     )
 
 
-class CronJob:
+class CronJob(PodOwner):
     def __init__(self, metadata: api.MetaData, spec: api.CronJobSpec):
+        super().__init__()
         self.metadata = metadata
         self.spec = spec
-        self._pods: List[Pod] = []
 
     def name(self, prepend_namespace: bool = True) -> str:
         if not prepend_namespace:
@@ -429,23 +437,24 @@ class CronJob:
     def pods(self) -> Sequence[Pod]:
         return self._pods
 
-    def add_pod(self, pod: Pod) -> None:
-        self._pods.append(pod)
-
 
 # TODO: addition of test framework for output sections
-class Deployment:
+class Deployment(PodOwner):
     def __init__(
         self,
         metadata: api.MetaData,
         spec: api.DeploymentSpec,
         status: api.DeploymentStatus,
     ) -> None:
+        super().__init__()
         self.metadata = metadata
         self.spec = spec
         self.status = status
-        self._pods: List[Pod] = []
         self.type_: str = "deployment"
+
+    def add_pod(self, pod: Pod) -> None:
+        super().add_pod(pod)
+        pod.add_controller(self)
 
     def name(self, prepend_namespace: bool = False) -> str:
         if not prepend_namespace:
@@ -480,10 +489,6 @@ class Deployment:
             containers=container_names,
         )
 
-    def add_pod(self, pod: Pod) -> None:
-        self._pods.append(pod)
-        pod.add_controller(self)
-
     def pod_resources(self) -> section.PodResources:
         resources: DefaultDict[str, List[str]] = defaultdict(list)
         for pod in self._pods:
@@ -508,7 +513,7 @@ class Deployment:
         return section.DeploymentStrategy(strategy=self.spec.strategy)
 
 
-class Node:
+class Node(PodOwner):
     def __init__(
         self,
         metadata: api.NodeMetaData,
@@ -517,19 +522,16 @@ class Node:
         control_plane: bool,
         kubelet_info: api.KubeletInfo,
     ) -> None:
+        super().__init__()
         self.metadata = metadata
         self.status = status
         self.resources = resources
         self.control_plane = control_plane
         self.kubelet_info = kubelet_info
-        self._pods: List[Pod] = []
 
     @property
     def name(self) -> api.NodeName:
         return api.NodeName(self.metadata.name)
-
-    def append(self, pod: Pod) -> None:
-        self._pods.append(pod)
 
     def pods(self, phase: Optional[api.Phase] = None) -> Sequence[Pod]:
         if phase is None:
@@ -617,12 +619,27 @@ class Node:
 
 class Cluster:
     @classmethod
-    def from_api_server(cls, api_server: api.API) -> Cluster:
+    def from_api_resources(
+        cls,
+        pods: Sequence[api.Pod],
+        nodes: Sequence[api.Node],
+        deployments: Optional[Sequence[api.Deployment]] = None,
+        cron_jobs: Optional[Sequence[api.CronJob]] = None,
+        cluster_details: Optional[api.ClusterInfo] = None,
+    ) -> Cluster:
+        """Creating and filling the Cluster with the Kubernetes Objects"""
+
         LOGGER.debug("Constructing k8s objects based on collected API data")
-        cluster_details = api_server.cluster_details()
+
+        _pod_owners_mapping: Dict[str, List[PodOwner]] = {}
+        _nodes: Dict[api.NodeName, Node] = {}
+
+        def _register_owner_for_pods(pod_controller: PodOwner, pod_uids: Sequence[api.PodUID]):
+            for pod_uid in pod_uids:
+                _pod_owners_mapping.setdefault(pod_uid, []).append(pod_controller)
 
         cluster = cls(cluster_details=cluster_details)
-        for node_api in api_server.nodes():
+        for node_api in nodes:
             node = Node(
                 node_api.metadata,
                 node_api.status,
@@ -631,26 +648,45 @@ class Cluster:
                 node_api.kubelet_info,
             )
             cluster.add_node(node)
+            _nodes[node.name] = node
 
-        for pod in api_server.pods():
-            cluster.add_pod(
-                Pod(
-                    pod.uid,
-                    pod.metadata,
-                    pod.status,
-                    pod.spec,
-                    pod.containers,
-                    pod.init_containers,
+        if deployments:
+            for api_deployment in deployments:
+                deployment = Deployment(
+                    api_deployment.metadata, api_deployment.spec, api_deployment.status
                 )
+                cluster.add_deployment(deployment)
+                _register_owner_for_pods(deployment, api_deployment.pods)
+
+        if cron_jobs:
+            for api_cron_job in cron_jobs:
+                cron_job = CronJob(api_cron_job.metadata, api_cron_job.spec)
+                cluster.add_cron_job(cron_job)
+                _register_owner_for_pods(cron_job, api_cron_job.pod_uids)
+
+        owned_pods = set(_pod_owners_mapping.keys())
+        present_pods = set(pod.uid for pod in pods)
+        if not owned_pods.issubset(present_pods):
+            raise ValueError(
+                "The following owned pods are missing from the "
+                f"API data: {list(owned_pods.difference(present_pods))}"
             )
 
-        for deployment in api_server.deployments():
-            cluster.add_deployment(
-                Deployment(deployment.metadata, deployment.spec, deployment.status), deployment.pods
+        for api_pod in pods:
+            pod = Pod(
+                api_pod.uid,
+                api_pod.metadata,
+                api_pod.status,
+                api_pod.spec,
+                api_pod.containers,
+                api_pod.init_containers,
             )
-
-        for cron_job in api_server.cron_jobs():
-            cluster.add_cron_job(CronJob(cron_job.metadata, cron_job.spec), cron_job.pod_uids)
+            cluster.add_pod(pod)
+            if pod.node not in _nodes:
+                raise ValueError(f"Pod's ({api_pod.uid}) node is not present in the cluster")
+            _nodes[pod.node].add_pod(pod)
+            for pod_owner in _pod_owners_mapping.get(pod.uid, []):
+                pod_owner.add_pod(pod)
 
         LOGGER.debug(
             "Cluster composition: Nodes (%s), " "Deployments (%s), " "Pods (%s)",
@@ -661,36 +697,22 @@ class Cluster:
         return cluster
 
     def __init__(self, *, cluster_details: Optional[api.ClusterInfo] = None) -> None:
-        self._nodes: Dict[api.NodeName, Node] = {}
-        self._deployments: List[Deployment] = []
-        self._pods: Dict[str, Pod] = {}
         self._cluster_details: Optional[api.ClusterInfo] = cluster_details
         self._cron_jobs: List[CronJob] = []
+        self._deployments: List[Deployment] = []
+        self._nodes: Dict[api.NodeName, Node] = {}
+        self._pods: Dict[str, Pod] = {}
 
     def add_node(self, node: Node) -> None:
         self._nodes[node.name] = node
 
-    def add_cron_job(self, cron_job: CronJob, pod_uids: Sequence[api.PodUID]) -> None:
-        for pod_uid in pod_uids:
-            try:
-                cron_job.add_pod(self._pods[pod_uid])
-            except KeyError:
-                raise KeyError(f"CronJob {cron_job.name} references unknown pod {pod_uid}")
+    def add_cron_job(self, cron_job: CronJob) -> None:
         self._cron_jobs.append(cron_job)
 
-    def add_deployment(self, deployment: Deployment, pod_uids: Sequence[api.PodUID]) -> None:
-        for pod_uid in pod_uids:
-            try:
-                deployment.add_pod(self._pods[pod_uid])
-            except KeyError:
-                raise KeyError(f"Pod {pod_uid} for deployment {deployment.name()} does not exist")
+    def add_deployment(self, deployment: Deployment) -> None:
         self._deployments.append(deployment)
 
     def add_pod(self, pod: Pod) -> None:
-        if pod.node is not None:
-            if pod.node not in self._nodes:
-                raise KeyError(f"Node {pod.node} of {pod.name} was not listed in the API")
-            self._nodes[pod.node].append(pod)
         self._pods[pod.uid] = pod
 
     def pod_resources(self) -> section.PodResources:
@@ -1610,7 +1632,14 @@ def main(args: Optional[List[str]] = None) -> int:
                     f"at URL {e.url}"
                 )
 
-            cluster = Cluster.from_api_server(api_server)
+            cluster = Cluster.from_api_resources(
+                pods=api_server.pods(),
+                nodes=api_server.nodes(),
+                deployments=api_server.deployments(),
+                cron_jobs=api_server.cron_jobs(),
+                cluster_details=api_server.cluster_details(),
+            )
+
             # Sections based on API server data
             LOGGER.info("Write cluster sections based on API data")
             write_cluster_api_sections(cluster)

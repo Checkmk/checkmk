@@ -208,7 +208,7 @@ def new_node(node_resources_builder):
 def node(new_node, node_pods, new_pod):
     node = new_node()
     for _ in range(node_pods):
-        node.append(new_pod())
+        node.add_pod(new_pod())
     return node
 
 

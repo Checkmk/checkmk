@@ -14,18 +14,7 @@ except the python standard library or pydantic.
 """
 
 import enum
-from typing import (
-    Dict,
-    List,
-    Literal,
-    Mapping,
-    NewType,
-    Optional,
-    Protocol,
-    Sequence,
-    TypedDict,
-    Union,
-)
+from typing import Dict, List, Literal, Mapping, NewType, Optional, Protocol, Sequence, Union
 
 from pydantic import BaseModel
 from pydantic.class_validators import validator
@@ -175,7 +164,7 @@ class DeploymentStatus(BaseModel):
     conditions: Mapping[str, DeploymentCondition]
 
 
-class MatchExpression(TypedDict):
+class MatchExpression(BaseModel):
     key: LabelName
     operator: Literal["In", "NotIn", "Exists", "DoesNotExist"]
     values: Sequence[LabelValue]

@@ -19,6 +19,7 @@ from cmk.gui.plugins.openapi.endpoints.utils import may_fail
 from cmk.gui.plugins.openapi.restful_objects import (
     constructors,
     Endpoint,
+    permissions,
     request_schemas,
     response_schemas,
 )
@@ -60,6 +61,7 @@ def _link_with_uuid(
     },
     path_params=[HOST_NAME],
     request_schema=request_schemas.LinkHostUUID,
+    permissions_required=permissions.Perm("wato.all_folders"),
     output_empty=True,
 )
 def link_with_uuid(params) -> Response:

@@ -2548,6 +2548,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
 
     def edit(self, new_title, new_attributes):
         # 1. Check preconditions
+        user.need_permission("wato.edit_folders")
         self.need_permission("write")
         self.need_unlocked()
 

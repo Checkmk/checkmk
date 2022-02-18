@@ -472,14 +472,15 @@ def test_openapi_user_internal_auth_handling(monkeypatch, run_as_superuser):
             _load_user(name),
             {"auth_option": {"secret": "QWXWBFUCSUOXNCPJUMS@", "auth_type": "automation"}},
         )
-        edit_users(
-            {
-                name: {
-                    "attributes": updated_internal_attributes,
-                    "is_new_user": False,
+        with run_as_superuser():
+            edit_users(
+                {
+                    name: {
+                        "attributes": updated_internal_attributes,
+                        "is_new_user": False,
+                    }
                 }
-            }
-        )
+            )
 
     assert _load_internal_attributes(name) == {
         "alias": "Foo Bar",
@@ -504,14 +505,15 @@ def test_openapi_user_internal_auth_handling(monkeypatch, run_as_superuser):
         updated_internal_attributes = _api_to_internal_format(
             _load_user(name), {"auth_option": {"auth_type": "remove"}}
         )
-        edit_users(
-            {
-                name: {
-                    "attributes": updated_internal_attributes,
-                    "is_new_user": False,
+        with run_as_superuser():
+            edit_users(
+                {
+                    name: {
+                        "attributes": updated_internal_attributes,
+                        "is_new_user": False,
+                    }
                 }
-            }
-        )
+            )
     assert _load_internal_attributes(name) == {
         "alias": "Foo Bar",
         "customer": "provider",

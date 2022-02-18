@@ -282,6 +282,14 @@ def test_monitoring_user_permissions(mocker, monitoring_user):
         active_config,
         "roles",
         {
+            # The admin permissions are needed, otherwise the teardown code would not run due to
+            # missing permissions.
+            "admin": {
+                "permissions": {
+                    "wato.users": True,
+                    "wato.edit": True,
+                },
+            },
             "user": {
                 "permissions": {
                     "action.star": False,

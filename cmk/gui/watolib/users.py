@@ -47,6 +47,8 @@ from cmk.gui.watolib.user_scripts import (
 
 
 def delete_users(users_to_delete):
+    user.need_permission("wato.users")
+    user.need_permission("wato.edit")
     if user.id in users_to_delete:
         raise MKUserError(None, _("You cannot delete your own account!"))
 
@@ -72,6 +74,9 @@ def delete_users(users_to_delete):
 
 
 def edit_users(changed_users):
+    if user:
+        user.need_permission("wato.users")
+        user.need_permission("wato.edit")
     all_users = userdb.load_users(lock=True)
     new_users_info = []
     modified_users_info = []

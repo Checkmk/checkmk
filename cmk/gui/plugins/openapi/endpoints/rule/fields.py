@@ -289,7 +289,7 @@ class TagConditionConditionSchemaBase(TagConditionSchemaBase):
         description="If the matched tag should be one of the given values, or not.",
         enum=list(allowed_operators),  # Our serializer only wants to know lists.
     )
-    value = gui_fields.List(
+    value = fields.List(
         fields.String(description="The value of a tag."),
         description="A list of values for the tag.",
     )
@@ -442,7 +442,7 @@ class HostOrServiceConditionSchema(base.BaseSchema):
 
     cast_to_dict = True
 
-    match_on = gui_fields.List(
+    match_on = fields.List(
         fields.String(),
         description="A list of string matching regular expressions.",
     )

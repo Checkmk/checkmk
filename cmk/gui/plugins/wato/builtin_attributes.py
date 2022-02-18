@@ -235,7 +235,7 @@ class HostAttributeAdditionalIPv4Addresses(ABCHostAttributeValueSpec):
         )
 
     def openapi_field(self) -> gui_fields.Field:
-        return gui_fields.List(
+        return fields.List(
             fields.String(
                 validate=validators.ValidateAnyOfValidators(
                     [
@@ -283,7 +283,7 @@ class HostAttributeAdditionalIPv6Addresses(ABCHostAttributeValueSpec):
         )
 
     def openapi_field(self) -> gui_fields.Field:
-        return gui_fields.List(
+        return fields.List(
             fields.String(validate=gui_fields.ValidateIPv6()),
             description="A list of IPv6 addresses.",
         )
@@ -435,7 +435,7 @@ class HostAttributeParents(ABCHostAttributeValueSpec):
         )
 
     def openapi_field(self) -> gui_fields.Field:
-        return gui_fields.List(
+        return fields.List(
             gui_fields.HostField(should_exist=True),
             description="A list of parents of this host.",
         )
@@ -1102,7 +1102,7 @@ class HostAttributeLockedBy(ABCHostAttributeValueSpec):
             back=list,
         )
 
-    def openapi_field(self) -> gui_fields.Field:
+    def openapi_field(self) -> fields.Field:
         pass
 
 
@@ -1174,7 +1174,7 @@ class HostAttributeLockedAttributes(ABCHostAttributeValueSpec):
         )
 
     def openapi_field(self) -> gui_fields.Field:
-        return gui_fields.List(
+        return fields.List(
             fields.String(),
             description="Attributes which are locked.",
         )

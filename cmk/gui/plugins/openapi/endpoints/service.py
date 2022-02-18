@@ -36,7 +36,7 @@ from cmk import fields
 
 PARAMETERS = [
     {
-        "sites": gui_fields.List(
+        "sites": fields.List(
             gui_fields.SiteField(),
             description="Restrict the query to this particular site.",
             load_default=list,

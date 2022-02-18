@@ -91,77 +91,6 @@ class PythonString(base.String):
             raise ValidationError(f"Not a Python data structure: {value!r}") from exc
 
 
-class List(base.OpenAPIAttributes, _fields.List, base.UniqueFields):
-    """A list field, composed with another `Field` class or instance.
-
-    Honors the OpenAPI key `uniqueItems`.
-
-    Examples:
-
-        With scalar values:
-
-            >>> from marshmallow import Schema
-            >>> from cmk.fields import String
-            >>> class Foo(Schema):
-            ...      id = String()
-            ...      lists = List(base.String(), uniqueItems=True)
-
-            >>> import pytest
-            >>> from marshmallow import ValidationError
-            >>> with pytest.raises(ValidationError) as exc:
-            ...     Foo().load({'lists': ['2', '2']})
-            >>> exc.value.messages
-            {'lists': ["Duplicate entry found at entry #2: '2'"]}
-
-        With nested schemas:
-
-            >>> from cmk.fields import Nested
-            >>> class Bar(Schema):
-            ...      entries = List(Nested(Foo), allow_none=False, required=True, uniqueItems=True)
-
-            >>> with pytest.raises(ValidationError) as exc:
-            ...     Bar().load({'entries': [{'id': '1'}, {'id': '2'}, {'id': '2'}]})
-            >>> exc.value.messages
-            {'entries': ["Duplicate entry found at entry #3: {'id': '2'}"]}
-
-            >>> with pytest.raises(ValidationError) as exc:
-            ...     Bar().load({'entries': [{'lists': ['2']}, {'lists': ['2']}]})
-            >>> exc.value.messages
-            {'entries': ["Duplicate entry found at entry #2: {'lists': ['2']}"]}
-
-        Some more examples:
-
-            >>> class Service(Schema):
-            ...      host = String(required=True)
-            ...      description = String(required=True)
-            ...      recur = String()
-
-            >>> class Bulk(Schema):
-            ...      entries = List(Nested(Service), uniqueItems=True)
-
-            >>> with pytest.raises(ValidationError) as exc:
-            ...     Bulk().load({"entries": [
-            ...         {'host': 'example', 'description': 'CPU load', 'recur': 'week'},
-            ...         {'host': 'example', 'description': 'CPU load', 'recur': 'day'},
-            ...         {'host': 'host', 'description': 'CPU load'}
-            ...     ]})
-            >>> exc.value.messages
-            {'entries': ["Duplicate entry found at entry #2: \
-{'description': 'CPU load', 'host': 'example'} (optional fields {'recur': 'day'})"]}
-
-    """
-
-    def _deserialize(self, value, attr, data, **kwargs):
-        value = super()._deserialize(value, attr, data)
-        if self.metadata.get("uniqueItems"):
-            if isinstance(self.inner, base.Nested):
-                self._verify_unique_schema_entries(value, self.inner.schema.fields)
-            else:
-                self._verify_unique_scalar_entries(value)
-
-        return value
-
-
 # NOTE
 # All these non-capturing match groups are there to properly distinguish the alternatives.
 FOLDER_PATTERN = r"(?:(?:[~\\\/]|(?:[~\\\/][-_ a-zA-Z0-9.]+)+)|[0-9a-fA-F]{32})"
@@ -309,7 +238,7 @@ class LogicalExprSchema(BaseSchema):
 
     op = base.String(description="The operator.")
     # many=True does not work here for some reason.
-    expr = List(
+    expr = base.List(
         base.Nested(
             lambda *a, **kw: ExprSchema(*a, **kw),  # pylint: disable=unnecessary-lambda
             description="A list of query expressions to combine.",
@@ -472,7 +401,7 @@ def column_field(
     )
 
 
-class _ListOfColumns(List):
+class _ListOfColumns(base.List):
     """Manages a list of Livestatus columns and returns Column instances
 
     Examples:
@@ -750,7 +679,7 @@ def attributes_field(
         if value not in attrs:
             raise ValidationError(f"Unknown attribute: {value!r}")
 
-    return List(
+    return base.List(
         base.String(validate=validate),
         description=description,
         example=example,
@@ -1077,7 +1006,6 @@ __all__ = [
     "FOLDER_PATTERN",
     "GroupField",
     "HostField",
-    "List",
     "MultiNested",
     "PasswordIdent",
     "PasswordOwner",

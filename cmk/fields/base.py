@@ -392,3 +392,72 @@ class Nested(OpenAPIAttributes, fields.Nested, UniqueFields):
             self._verify_unique_schema_entries(value, self.schema.fields)
 
         return value
+
+
+class List(OpenAPIAttributes, fields.List, UniqueFields):
+    """A list field, composed with another `Field` class or instance.
+
+    Honors the OpenAPI key `uniqueItems`.
+
+    Examples:
+
+        With scalar values:
+
+            >>> from marshmallow import Schema
+            >>> class Foo(Schema):
+            ...      id = String()
+            ...      lists = List(String(), uniqueItems=True)
+
+            >>> import pytest
+            >>> from marshmallow import ValidationError
+            >>> with pytest.raises(ValidationError) as exc:
+            ...     Foo().load({'lists': ['2', '2']})
+            >>> exc.value.messages
+            {'lists': ["Duplicate entry found at entry #2: '2'"]}
+
+        With nested schemas:
+
+            >>> class Bar(Schema):
+            ...      entries = List(Nested(Foo), allow_none=False, required=True, uniqueItems=True)
+
+            >>> with pytest.raises(ValidationError) as exc:
+            ...     Bar().load({'entries': [{'id': '1'}, {'id': '2'}, {'id': '2'}]})
+            >>> exc.value.messages
+            {'entries': ["Duplicate entry found at entry #3: {'id': '2'}"]}
+
+            >>> with pytest.raises(ValidationError) as exc:
+            ...     Bar().load({'entries': [{'lists': ['2']}, {'lists': ['2']}]})
+            >>> exc.value.messages
+            {'entries': ["Duplicate entry found at entry #2: {'lists': ['2']}"]}
+
+        Some more examples:
+
+            >>> class Service(Schema):
+            ...      host = String(required=True)
+            ...      description = String(required=True)
+            ...      recur = String()
+
+            >>> class Bulk(Schema):
+            ...      entries = List(Nested(Service), uniqueItems=True)
+
+            >>> with pytest.raises(ValidationError) as exc:
+            ...     Bulk().load({"entries": [
+            ...         {'host': 'example', 'description': 'CPU load', 'recur': 'week'},
+            ...         {'host': 'example', 'description': 'CPU load', 'recur': 'day'},
+            ...         {'host': 'host', 'description': 'CPU load'}
+            ...     ]})
+            >>> exc.value.messages
+            {'entries': ["Duplicate entry found at entry #2: \
+{'description': 'CPU load', 'host': 'example'} (optional fields {'recur': 'day'})"]}
+
+    """
+
+    def _deserialize(self, value, attr, data, **kwargs):
+        value = super()._deserialize(value, attr, data)
+        if self.metadata.get("uniqueItems"):
+            if isinstance(self.inner, Nested):
+                self._verify_unique_schema_entries(value, self.inner.schema.fields)
+            else:
+                self._verify_unique_scalar_entries(value)
+
+        return value

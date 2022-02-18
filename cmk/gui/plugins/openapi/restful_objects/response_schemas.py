@@ -39,7 +39,7 @@ class ApiError(BaseSchema):
     _fields = fields.Dict(
         data_key="fields",  # mypy
         keys=fields.String(description="The field name"),
-        values=gui_fields.List(fields.String(description="The error messages")),
+        values=fields.List(fields.String(description="The error messages")),
         description="Detailed error messages on all fields failing validation.",
         required=False,
     )
@@ -105,7 +105,7 @@ class LinkSchema(BaseSchema):
 
 
 class Linkable(BaseSchema):
-    links = gui_fields.List(
+    links = fields.List(
         fields.Nested(LinkSchema),
         required=True,
         description="list of links to other resources.",
@@ -199,7 +199,7 @@ class ObjectMemberBase(Linkable):
 
 class ObjectCollectionMember(ObjectMemberBase):
     memberType = fields.Constant("collection")
-    value = gui_fields.List(fields.Nested(LinkSchema()))
+    value = fields.List(fields.Nested(LinkSchema()))
     name = fields.String(example="important_values")
     title = fields.String(
         description="A human readable title of this object. Can be used for " "user interfaces.",
@@ -208,7 +208,7 @@ class ObjectCollectionMember(ObjectMemberBase):
 
 class ObjectProperty(Linkable):
     id = fields.String(description="The unique name of this property, local to this domain type.")
-    value = gui_fields.List(
+    value = fields.List(
         fields.String(),
         description="The value of the property. In this case a list.",
     )
@@ -259,7 +259,7 @@ class ActionResultObject(ActionResultBase):
     result = fields.Nested(
         Schema.from_dict(
             {
-                "links": gui_fields.List(
+                "links": fields.List(
                     fields.Nested(LinkSchema),
                     required=True,
                 ),
@@ -278,7 +278,7 @@ class ActionResultScalar(ActionResultBase):
     result = fields.Nested(
         Schema.from_dict(
             {
-                "links": gui_fields.List(
+                "links": fields.List(
                     fields.Nested(LinkSchema),
                     required=True,
                 ),
@@ -503,7 +503,7 @@ class HostConfigCollection(DomainObjectCollection):
         "host_config",
         description="The domain type of the objects in the collection.",
     )
-    value = gui_fields.List(
+    value = fields.List(
         fields.Nested(HostConfigSchema()),
         description="A list of host objects.",
     )
@@ -514,7 +514,7 @@ class FolderCollection(DomainObjectCollection):
         "folder_config",
         description="The domain type of the objects in the collection.",
     )
-    value = gui_fields.List(
+    value = fields.List(
         fields.Nested(FolderSchema()),
         description="A list of folder objects.",
     )
@@ -527,7 +527,7 @@ class User(Linkable):
         description="The user's name in a form suitable to be rendered in a UI.",
     )
     email = fields.String(description="(optional) the user's email address, if known.")
-    roles = gui_fields.List(
+    roles = fields.List(
         fields.String(),
         description="List of unique role names that apply to this user (can be empty).",
     )
@@ -550,7 +550,7 @@ class ConcreteTimeRangeActive(BaseSchema):
         description="The day for which the time ranges are specified",
         pattern=f"{'|'.join(weekday_ids())}",
     )
-    time_ranges = gui_fields.List(fields.Nested(ConcreteTimeRange))
+    time_ranges = fields.List(fields.Nested(ConcreteTimeRange))
 
 
 class ConcreteTimePeriodException(BaseSchema):
@@ -559,7 +559,7 @@ class ConcreteTimePeriodException(BaseSchema):
         format="date",
         description="The date of the time period exception." "8601 profile",
     )
-    time_ranges = gui_fields.List(
+    time_ranges = fields.List(
         fields.Nested(ConcreteTimeRange),
         example="[{'start': '14:00', 'end': '18:00'}]",
     )
@@ -567,17 +567,17 @@ class ConcreteTimePeriodException(BaseSchema):
 
 class ConcreteTimePeriod(BaseSchema):
     alias = fields.String(description="The alias of the time period", example="alias")
-    active_time_ranges = gui_fields.List(
+    active_time_ranges = fields.List(
         fields.Nested(ConcreteTimeRangeActive),
         description="The days for which time ranges were specified",
         example={"day": "all", "time_ranges": [{"start": "12:00", "end": "14:00"}]},
     )
-    exceptions = gui_fields.List(
+    exceptions = fields.List(
         fields.Nested(ConcreteTimePeriodException),
         description="Specific day exclusions with their list of time ranges",
         example=[{"date": "2020-01-01", "time_ranges": [{"start": "14:00", "end": "18:00"}]}],
     )
-    exclude = gui_fields.List(  # type: ignore[assignment]
+    exclude = fields.List(  # type: ignore[assignment]
         fields.String(description="Name of excluding time period", example="holidays"),
         description="The collection of time period aliases whose periods are excluded",
     )
@@ -611,7 +611,7 @@ class PasswordExtension(BaseSchema):
         description="The owner of the password who is able to edit, delete and use existing passwords.",
     )
 
-    shared = gui_fields.List(
+    shared = fields.List(
         fields.String(
             example="all",
             description="The member the password is shared with",

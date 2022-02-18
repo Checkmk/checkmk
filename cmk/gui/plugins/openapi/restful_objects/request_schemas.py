@@ -73,7 +73,7 @@ class CreateClusterHost(BaseSchema):
         description="Attributes to set on the newly created host.",
         example={"ipaddress": "192.168.0.123"},
     )
-    nodes = gui_fields.List(
+    nodes = fields.List(
         EXISTING_HOST_NAME,
         description="Nodes where the newly created host should be the cluster-container of.",
         required=True,
@@ -82,7 +82,7 @@ class CreateClusterHost(BaseSchema):
 
 
 class UpdateNodes(BaseSchema):
-    nodes = gui_fields.List(
+    nodes = fields.List(
         gui_fields.HostField(should_be_cluster=False),
         description="Nodes where the newly created host should be the cluster-container of.",
         required=True,
@@ -106,7 +106,7 @@ class CreateHost(BaseSchema):
 
 
 class BulkCreateHost(BaseSchema):
-    entries = gui_fields.List(
+    entries = fields.List(
         fields.Nested(CreateHost),
         example=[
             {
@@ -184,7 +184,7 @@ class UpdateHostEntry(UpdateHost):
 
 
 class BulkUpdateHost(BaseSchema):
-    entries = gui_fields.List(
+    entries = fields.List(
         fields.Nested(UpdateHostEntry),
         example=[{"host_name": "example.com", "attributes": {}}],
         description="A list of host entries.",
@@ -252,7 +252,7 @@ class InputHostGroup(InputGroup):
 class BulkInputHostGroup(BaseSchema):
     """Bulk creating host groups"""
 
-    entries = gui_fields.List(
+    entries = fields.List(
         fields.Nested(InputHostGroup),
         example=[
             {
@@ -288,7 +288,7 @@ class UpdateHostGroup(BaseSchema):
 class BulkUpdateHostGroup(BaseSchema):
     """Bulk update host groups"""
 
-    entries = gui_fields.List(
+    entries = fields.List(
         fields.Nested(UpdateHostGroup),
         example=[
             {
@@ -319,7 +319,7 @@ class BulkInputContactGroup(BaseSchema):
     """Bulk creating contact groups"""
 
     # TODO: add unique entries attribute
-    entries = gui_fields.List(
+    entries = fields.List(
         fields.Nested(InputContactGroup),
         example=[
             {
@@ -348,7 +348,7 @@ class UpdateContactGroup(BaseSchema):
 class BulkUpdateContactGroup(BaseSchema):
     """Bulk update contact groups"""
 
-    entries = gui_fields.List(
+    entries = fields.List(
         fields.Nested(UpdateContactGroup),
         example=[
             {
@@ -380,7 +380,7 @@ class InputServiceGroup(InputGroup):
 class BulkInputServiceGroup(BaseSchema):
     """Bulk creating service groups"""
 
-    entries = gui_fields.List(
+    entries = fields.List(
         fields.Nested(InputServiceGroup),
         example=[
             {
@@ -403,7 +403,7 @@ class UpdateServiceGroup(BaseSchema):
 class BulkUpdateServiceGroup(BaseSchema):
     """Bulk update service groups"""
 
-    entries = gui_fields.List(
+    entries = fields.List(
         fields.Nested(UpdateServiceGroup),
         example=[
             {
@@ -468,7 +468,7 @@ class CreateFolder(BaseSchema):
 
 
 class BulkCreateFolder(BaseSchema):
-    entries = gui_fields.List(
+    entries = fields.List(
         fields.Nested(CreateFolder),
         example=[
             {
@@ -693,7 +693,7 @@ class TimeRangeActive(BaseSchema):
         "option allows to specify time ranges for all days.",
         pattern=f"all|{'|'.join(weekday_ids())}",
     )
-    time_ranges = gui_fields.List(fields.Nested(TimeRange))
+    time_ranges = fields.List(fields.Nested(TimeRange))
 
 
 class TimePeriodException(BaseSchema):
@@ -703,7 +703,7 @@ class TimePeriodException(BaseSchema):
         format="date",
         description="The date of the time period exception." "8601 profile",
     )
-    time_ranges = gui_fields.List(
+    time_ranges = fields.List(
         fields.Nested(TimeRange),
         required=False,
         example=[{"start": "14:00", "end": "18:00"}],
@@ -723,20 +723,20 @@ class InputTimePeriod(BaseSchema):
         required=True,
         should_exist=False,
     )
-    active_time_ranges = gui_fields.List(
+    active_time_ranges = fields.List(
         fields.Nested(TimeRangeActive),
         example=[{"day": "monday", "time_ranges": [{"start": "12:00", "end": "14:00"}]}],
         description="The list of active time ranges.",
         required=True,
     )
-    exceptions = gui_fields.List(
+    exceptions = fields.List(
         fields.Nested(TimePeriodException),
         required=False,
         example=[{"date": "2020-01-01", "time_ranges": [{"start": "14:00", "end": "18:00"}]}],
         description="A list of additional time ranges to be added.",
     )
 
-    exclude = gui_fields.List(  # type: ignore[assignment]
+    exclude = fields.List(  # type: ignore[assignment]
         TimePeriodAlias(
             example="alias",
             description="The alias for a time period.",
@@ -756,7 +756,7 @@ class UpdateTimePeriod(BaseSchema):
         required=False,
         should_exist=False,
     )
-    active_time_ranges = gui_fields.List(
+    active_time_ranges = fields.List(
         fields.Nested(TimeRangeActive),
         example=[
             {
@@ -767,7 +767,7 @@ class UpdateTimePeriod(BaseSchema):
         description="The list of active time ranges which replaces the existing list of time ranges",
         required=False,
     )
-    exceptions = gui_fields.List(
+    exceptions = fields.List(
         fields.Nested(TimePeriodException),
         required=False,
         example=[{"date": "2020-01-01", "time_ranges": [{"start": "14:00", "end": "18:00"}]}],
@@ -806,7 +806,7 @@ class CreateHostDowntime(CreateHostDowntimeBase):
 
 class CreateServiceDowntime(CreateServiceDowntimeBase):
     host_name = MONITORED_HOST
-    service_descriptions = gui_fields.List(
+    service_descriptions = fields.List(
         fields.String(),
         uniqueItems=True,
         required=True,
@@ -898,7 +898,7 @@ class DeleteDowntimeByName(DeleteDowntimeBase):
         description="If set alone, then all downtimes of the host will be removed.",
         example="example.com",
     )
-    service_descriptions = gui_fields.List(
+    service_descriptions = fields.List(
         SERVICE_DESCRIPTION_FIELD,
         description="If set, the downtimes of the listed services of the specified host will be "
         "removed. If a service has multiple downtimes then all will be removed",
@@ -960,7 +960,7 @@ class InputPassword(BaseSchema):
         attribute="owned_by",
     )
 
-    shared = gui_fields.List(
+    shared = fields.List(
         gui_fields.PasswordShare(
             example="all",
             description="By default only the members of the owner contact group are permitted to use a a configured password. It is possible to share a password with other groups of users to make them able to use a password in checks.",
@@ -1011,7 +1011,7 @@ class UpdatePassword(BaseSchema):
         attribute="owned_by",
     )
 
-    shared = gui_fields.List(
+    shared = fields.List(
         gui_fields.PasswordShare(
             example="all",
             description="By default only the members of the owner contact group are permitted to use a a configured password. "
@@ -1270,7 +1270,7 @@ class CreateUser(BaseSchema):
         description="Idle timeout for the user. Per default, the global configuration is used.",
         example={"option": "global"},
     )
-    roles = gui_fields.List(
+    roles = fields.List(
         fields.String(
             required=True,
             description="A role of the user",
@@ -1282,13 +1282,13 @@ class CreateUser(BaseSchema):
         description="The list of assigned roles to the user",
         example=["user"],
     )
-    authorized_sites = gui_fields.List(
+    authorized_sites = fields.List(
         gui_fields.SiteField(),
         description="The names of the sites the user is authorized to handle",
         example=["heute"],
         required=False,
     )
-    contactgroups = gui_fields.List(
+    contactgroups = fields.List(
         fields.String(
             description="Assign the user to one or multiple contact groups",
             required=True,
@@ -1367,7 +1367,7 @@ class UpdateUser(BaseSchema):
         description="Idle timeout for the user",
         example={},
     )
-    roles = gui_fields.List(
+    roles = fields.List(
         fields.String(
             required=False,
             description="A role of the user",
@@ -1378,13 +1378,13 @@ class UpdateUser(BaseSchema):
         description="The list of assigned roles to the user",
         example=["user"],
     )
-    authorized_sites = gui_fields.List(
+    authorized_sites = fields.List(
         gui_fields.SiteField(),
         description="The names of the sites the user is authorized to handle",
         example=["heute"],
         required=False,
     )
-    contactgroups = gui_fields.List(
+    contactgroups = fields.List(
         fields.String(
             description="Assign the user to one or multiple contact groups",
             required=True,
@@ -1426,7 +1426,7 @@ class HostTagGroupId(fields.String):
             raise self.make_error("invalid", name=value)
 
 
-class Tags(gui_fields.List):
+class Tags(fields.List):
     """A field representing a tags list"""
 
     default_error_messages = {
@@ -1518,7 +1518,7 @@ class HostTag(BaseSchema):
         example="Tag",
         description="The title of the tag",
     )
-    aux_tags = gui_fields.List(
+    aux_tags = fields.List(
         AuxTag(
             example="ip-v4",
             description="An auxiliary tag id",
@@ -1785,7 +1785,7 @@ class AcknowledgeServiceProblem(BaseSchema):
 
 class BulkAcknowledgeServiceProblem(AcknowledgeServiceProblem):
     host_name = MONITORED_HOST
-    entries = gui_fields.List(
+    entries = fields.List(
         SERVICE_DESCRIPTION_FIELD,
         required=True,
         example=["CPU utilization", "Memory"],
@@ -1794,7 +1794,7 @@ class BulkAcknowledgeServiceProblem(AcknowledgeServiceProblem):
 
 class BulkDeleteDowntime(BaseSchema):
     host_name = MONITORED_HOST
-    entries = gui_fields.List(
+    entries = fields.List(
         fields.Integer(
             required=True,
             description="The id for either a host downtime or service downtime",
@@ -1807,7 +1807,7 @@ class BulkDeleteDowntime(BaseSchema):
 
 
 class BulkDeleteHost(BaseSchema):
-    entries = gui_fields.List(
+    entries = fields.List(
         EXISTING_HOST_NAME,
         required=True,
         example=["example", "sample"],
@@ -1816,7 +1816,7 @@ class BulkDeleteHost(BaseSchema):
 
 
 class BulkDeleteFolder(BaseSchema):
-    entries = gui_fields.List(
+    entries = fields.List(
         EXISTING_FOLDER,
         required=True,
         example=["production", "secondproduction"],
@@ -1824,7 +1824,7 @@ class BulkDeleteFolder(BaseSchema):
 
 
 class BulkDeleteHostGroup(BaseSchema):
-    entries = gui_fields.List(
+    entries = fields.List(
         fields.String(
             required=True,
             description="The name of the host group config",
@@ -1837,7 +1837,7 @@ class BulkDeleteHostGroup(BaseSchema):
 
 
 class BulkDeleteServiceGroup(BaseSchema):
-    entries = gui_fields.List(
+    entries = fields.List(
         fields.String(
             required=True,
             description="The name of the service group config",
@@ -1850,7 +1850,7 @@ class BulkDeleteServiceGroup(BaseSchema):
 
 
 class BulkDeleteContactGroup(BaseSchema):
-    entries = gui_fields.List(
+    entries = fields.List(
         fields.String(
             required=True,
             description="The name of the contact group config",
@@ -1872,7 +1872,7 @@ class ActivateChanges(BaseSchema):
         load_default=False,
         example=False,
     )
-    sites = gui_fields.List(
+    sites = fields.List(
         gui_fields.SiteField(),
         description=(
             "The names of the sites on which the configuration shall be activated."

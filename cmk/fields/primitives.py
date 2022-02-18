@@ -20,10 +20,6 @@ class Dict(base.OpenAPIAttributes, fields.Dict):
     pass
 
 
-class List(base.OpenAPIAttributes, fields.List):
-    pass
-
-
 class Date(base.OpenAPIAttributes, fields.Date):
     pass
 

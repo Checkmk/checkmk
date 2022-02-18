@@ -59,10 +59,8 @@ main() {
     # Create home directory manually instead of doing this on user creation,
     # because it might already exist with wrong ownership
     mkdir -p ${HOMEDIR}
-    chown -R cmk-agent:cmk-agent ${HOMEDIR}
-
     [ "${user_is_new}" ] && [ "$1" = "upgrade" ] && _allow_legacy_pull
-
+    chown -R cmk-agent:cmk-agent ${HOMEDIR}
     unset homedir comment usershell
 
 }

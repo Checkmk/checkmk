@@ -79,7 +79,6 @@ from cmk.gui.http import UploadedFile
 from cmk.gui.i18n import _
 from cmk.gui.pages import AjaxPage, AjaxPageResult, page_registry
 from cmk.gui.type_defs import ChoiceGroup, ChoiceId, Choices, ChoiceText, GroupedChoices
-from cmk.gui.utils.escaping import escape_html_permissive
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.labels import (
     encode_labels_for_http,
@@ -851,7 +850,7 @@ class RegExp(TextInput):
         default_help_text = super().help()
         if default_help_text is not None:
             help_text.append(
-                escaping.escape_html_permissive(str(default_help_text))
+                escaping.escape_to_html_permissive(str(default_help_text), escape_links=False)
                 + html.render_br()
                 + html.render_br()
             )
@@ -4951,7 +4950,7 @@ class Alternative(ValueSpec):
         if vs:
             output = HTML()
             if self._show_alternative_title and vs.title():
-                output = escape_html_permissive(vs.title()) + html.render_br()
+                output = escaping.escape_to_html(vs.title()) + html.render_br()
             return output + vs.value_to_html(value)
         return _("invalid:") + " " + str(value)
 
@@ -6134,7 +6133,9 @@ class Labels(ValueSpec):
 
     def help(self) -> Union[str, HTML, None]:
         h = super().help()
-        return escaping.escape_html_permissive(("" if h is None else str(h)) + label_help_text())
+        return escaping.escape_to_html_permissive(
+            ("" if h is None else str(h)) + label_help_text(), escape_links=False
+        )
 
     def canonical_value(self) -> dict[str, Any]:
         return {}
@@ -6407,7 +6408,7 @@ class IconSelector(ValueSpec):
             selection_text = _("Choose another %s") % ("Emblem" if is_emblem else "Icon")
             content = self._render_icon(value, "", selection_text, id_=varprefix + "_img")
         else:
-            content = escaping.escape_html_permissive(_("Select an Icon"))
+            content = escaping.escape_to_html(_("Select an Icon"))
 
         html.popup_trigger(
             content,
@@ -6918,7 +6919,7 @@ class CAorCAChain(UploadOrPasteTextFile):
                     html.render_td("%s:" % title)
                     + html.render_td(
                         HTML().join(
-                            escaping.escape_html_permissive("%s: %s" % (title1, val))
+                            "%s: %s" % (title1, val)
                             for title1, val in sorted(cert_info[what].items())
                         )
                     )

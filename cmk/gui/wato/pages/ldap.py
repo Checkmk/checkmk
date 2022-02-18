@@ -53,7 +53,6 @@ from cmk.gui.plugins.wato.utils import (
 from cmk.gui.sites import get_login_sites
 from cmk.gui.table import table_element
 from cmk.gui.type_defs import ActionResult
-from cmk.gui.utils.escaping import escape_html_permissive
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.valuespec import (
     Age,
@@ -880,7 +879,7 @@ class ModeEditLDAPConnection(LDAPMode):
         if self._new:
             return _("Add LDAP connection")
         assert self._connection_id is not None
-        return _("Edit LDAP connection: %s") % escape_html_permissive(self._connection_id)
+        return _("Edit LDAP connection: %s") % self._connection_id
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
         menu = make_simple_form_page_menu(

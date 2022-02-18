@@ -11,18 +11,18 @@ from cmk.gui.utils.html import HTML
 from cmk.gui.utils.speaklater import LazyString
 
 
-def test_escape_html() -> None:
-    assert isinstance(escaping.escape_html(""), HTML)
-    assert str(escaping.escape_html("")) == ""
-    assert str(escaping.escape_html("<script>")) == "&lt;script&gt;"
-    assert str(escaping.escape_html("<b>")) == "&lt;b&gt;"
+def test_escape_to_html() -> None:
+    assert isinstance(escaping.escape_to_html(""), HTML)
+    assert str(escaping.escape_to_html("")) == ""
+    assert str(escaping.escape_to_html("<script>")) == "&lt;script&gt;"
+    assert str(escaping.escape_to_html("<b>")) == "&lt;b&gt;"
 
 
-def test_escape_html_permissive() -> None:
-    assert isinstance(escaping.escape_html_permissive(""), HTML)
-    assert str(escaping.escape_html_permissive("")) == ""
-    assert str(escaping.escape_html_permissive("<script>")) == "&lt;script&gt;"
-    assert str(escaping.escape_html_permissive("<b>")) == "<b>"
+def test_escape_to_html_permissive() -> None:
+    assert isinstance(escaping.escape_to_html_permissive(""), HTML)
+    assert str(escaping.escape_to_html_permissive("")) == ""
+    assert str(escaping.escape_to_html_permissive("<script>")) == "&lt;script&gt;"
+    assert str(escaping.escape_to_html_permissive("<b>")) == "<b>"
 
 
 def test_htmllib_integration():

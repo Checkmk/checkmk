@@ -12,7 +12,7 @@ import cmk.gui.sites as sites
 from cmk.gui.globals import html, request, response, transactions, user
 from cmk.gui.i18n import _
 from cmk.gui.plugins.sidebar.utils import render_link, SidebarSnapin, snapin_registry
-from cmk.gui.utils.escaping import escape_html_permissive
+from cmk.gui.utils.escaping import escape_to_html
 from cmk.gui.utils.urls import makeactionuri_contextless
 
 
@@ -50,12 +50,12 @@ class SiteStatus(SidebarSnapin):
             if state is None:
                 state = "missing"
                 switch = "missing"
-                text = escape_html_permissive(sitename)
+                text = escape_to_html(sitename)
 
             else:
                 if state == "disabled":
                     switch = "on"
-                    text = escape_html_permissive(site["alias"])
+                    text = escape_to_html(site["alias"])
                 else:
                     switch = "off"
                     text = render_link(

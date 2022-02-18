@@ -104,7 +104,7 @@ from cmk.gui.plugins.wato.utils import (
 from cmk.gui.sites import allsites, get_event_console_site_choices
 from cmk.gui.table import table_element
 from cmk.gui.type_defs import ActionResult, Choices
-from cmk.gui.utils.escaping import escape_html, escape_html_permissive
+from cmk.gui.utils.escaping import escape_to_html
 from cmk.gui.utils.urls import (
     make_confirm_link,
     makeuri_contextless,
@@ -204,7 +204,9 @@ def substitute_help():
     ]
 
     return (
-        escape_html(_("The following macros will be substituted by value from the actual event:"))
+        escape_to_html(
+            _("The following macros will be substituted by value from the actual event:")
+        )
         + html.render_br()
         + html.render_br()
         + html.render_table(HTML().join(_help_rows), class_="help")
@@ -1402,7 +1404,7 @@ class ABCEventConsoleMode(WatoMode, abc.ABC):
             raise MKUserError("event_p_host", _("Please specify a host name"))
         rfc = cmk.gui.mkeventd.send_event(event)
         flash(
-            escape_html(_("Test event generated and sent to Event Console."))
+            escape_to_html(_("Test event generated and sent to Event Console."))
             + html.render_br()
             + html.render_pre(rfc)
         )
@@ -2801,9 +2803,7 @@ class ModeEventConsoleSettings(ABCEventConsoleMode, ABCGlobalSettingsMode):
 
     def title(self):
         if self._search:
-            return escape_html_permissive(
-                _("Event Console configuration matching '%s'") % self._search
-            )
+            return escape_to_html(_("Event Console configuration matching '%s'") % self._search)
         return _("Event Console configuration")
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
@@ -3237,9 +3237,7 @@ class ModeEventConsoleUploadMIBs(ABCEventConsoleMode):
                         )
                     success += 1
                 except Exception as e:
-                    messages.append(
-                        _("Skipped %s: %s") % (escape_html_permissive(mib_file_name), e)
-                    )
+                    messages.append(_("Skipped %s: %s") % (mib_file_name, e))
                     fail += 1
 
         return "<br>\n".join(

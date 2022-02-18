@@ -50,7 +50,7 @@ from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.main import get_page_heading
 from cmk.gui.pages import Page, page_registry
-from cmk.gui.utils.escaping import escape_html
+from cmk.gui.utils.escaping import escape_to_html
 from cmk.gui.utils.language_cookie import del_language_cookie
 from cmk.gui.utils.logged_in import UserContext
 from cmk.gui.utils.mobile import is_mobile
@@ -621,7 +621,7 @@ class LoginPage(Page):
             footer.append(html.render_a(title, href=url, target=target))
 
         if "hide_version" not in config.login_screen:
-            footer.append(escape_html("Version: %s" % cmk_version.__version__))
+            footer.append(escape_to_html("Version: %s" % cmk_version.__version__))
 
         footer.append(
             HTML(

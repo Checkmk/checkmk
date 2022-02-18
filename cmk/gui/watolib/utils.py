@@ -22,7 +22,7 @@ from cmk.gui.exceptions import MKGeneralException
 from cmk.gui.globals import config, user
 from cmk.gui.i18n import _
 from cmk.gui.sites import SiteStatus
-from cmk.gui.utils.escaping import escape_html_permissive
+from cmk.gui.utils.escaping import escape_to_html
 
 # TODO: Clean up all call sites in the GUI and only use them in WATO config file loading code
 ALL_HOSTS = cmk.utils.rulesets.tuple_rulesets.ALL_HOSTS
@@ -120,9 +120,7 @@ def mk_eval(s: Union[bytes, str]) -> Any:
     try:
         return ast.literal_eval(base64.b64decode(s).decode())
     except Exception:
-        raise MKGeneralException(
-            _("Unable to parse provided data: %s") % escape_html_permissive(repr(s))
-        )
+        raise MKGeneralException(_("Unable to parse provided data: %s") % escape_to_html(repr(s)))
 
 
 def has_agent_bakery() -> bool:

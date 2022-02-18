@@ -72,7 +72,7 @@ from cmk.gui.plugins.wato.utils.main_menu import main_module_registry
 from cmk.gui.sites import wato_slave_sites
 from cmk.gui.table import Foldable, Table, table_element
 from cmk.gui.type_defs import ActionResult, HTTPVariables, PermissionName
-from cmk.gui.utils.escaping import escape_html_permissive, strip_tags
+from cmk.gui.utils.escaping import escape_to_html, escape_to_html_permissive, strip_tags
 from cmk.gui.utils.urls import makeuri, makeuri_contextless
 from cmk.gui.valuespec import (
     Checkbox,
@@ -1215,8 +1215,8 @@ class ModeEditRuleset(WatoMode):
 
             value_html = (
                 html.render_icon("alert")
-                + escape_html_permissive(_("The value of this rule is not valid. "))
-                + escape_html_permissive(reason)
+                + escape_to_html(_("The value of this rule is not valid. "))
+                + escape_to_html_permissive(reason)
             )
         html.write_text(value_html)
 
@@ -1933,6 +1933,28 @@ class ABCEditRuleMode(WatoMode):
     def _vs_explicit_conditions(self, **kwargs) -> VSExplicitConditions:
         return VSExplicitConditions(rulespec=self._rulespec, **kwargs)
 
+    def _show_rule_representation(self) -> None:
+        pretty_rule_config = pprint.pformat(self._rule.to_config()).replace("\n", "<br>")
+        content = escape_to_html_permissive(pretty_rule_config)
+
+        html.write_text(_("This rule representation can be used for Web API calls."))
+        html.br()
+        html.br()
+
+        html.open_center()
+        html.open_table(class_="progress")
+
+        html.open_tr()
+        html.th("Rule representation for Web API")
+        html.close_tr()
+
+        html.open_tr()
+        html.td(html.render_div(content, id_="rule_representation"), class_="log")
+        html.close_tr()
+
+        html.close_table()
+        html.close_center()
+
     def _vs_rule_options(self, rule: watolib.Rule, disabling: bool = True) -> Dictionary:
         return Dictionary(
             title=_("Rule Properties"),
@@ -2326,23 +2348,25 @@ class RuleConditionRenderer:
         if tag and tag.title:
             if isinstance(tag, GroupedTag):
                 if negate:
-                    return escape_html_permissive(
+                    return escape_to_html_permissive(
                         _("Host tag: %s is <b>not</b> <b>%s</b>") % (tag.group.title, tag.title)
                     )
-                return escape_html_permissive(
+                return escape_to_html_permissive(
                     _("Host tag: %s is <b>%s</b>") % (tag.group.title, tag.title)
                 )
 
             if negate:
-                return escape_html_permissive(_("Host does not have tag <b>%s</b>") % tag.title)
-            return escape_html_permissive(_("Host has tag <b>%s</b>") % tag.title)
+                return escape_to_html_permissive(_("Host does not have tag <b>%s</b>") % tag.title)
+            return escape_to_html_permissive(_("Host has tag <b>%s</b>") % tag.title)
 
         if negate:
-            return escape_html_permissive(
+            return escape_to_html_permissive(
                 _("Unknown tag: Host has <b>not</b> the tag <tt>%s</tt>") % str(tag_id)
             )
 
-        return escape_html_permissive(_("Unknown tag: Host has the tag <tt>%s</tt>") % str(tag_id))
+        return escape_to_html_permissive(
+            _("Unknown tag: Host has the tag <tt>%s</tt>") % str(tag_id)
+        )
 
     def _host_label_conditions(self, conditions: RuleConditions) -> Iterable[HTML]:
         return self._label_conditions(conditions.host_labels, "host", _("Host"))
@@ -2393,13 +2417,13 @@ class RuleConditionRenderer:
 
     def _render_host_condition_text(self, conditions: HostOrServiceConditions) -> HTML:
         if conditions == []:
-            return escape_html_permissive(
+            return escape_to_html_permissive(
                 _("This rule does <b>never</b> apply due to an empty list of explicit hosts!")
             )
 
         is_negate, host_name_conditions = ruleset_matcher.parse_negated_condition_list(conditions)
 
-        condition: List[HTML] = [escape_html_permissive(_("Host name"))]
+        condition: List[HTML] = [escape_to_html_permissive(_("Host name"))]
 
         regex_count = len(
             [x for x in host_name_conditions if isinstance(x, dict) and "$regex" in x]
@@ -2413,7 +2437,7 @@ class RuleConditionRenderer:
                 phrase = _("is not one of regex") if regex_count else _("is not one of")
             else:
                 phrase = _("matches one of regex") if regex_count else _("is")
-            condition.append(escape_html_permissive(phrase))
+            condition.append(escape_to_html(phrase))
 
             for host_spec in host_name_conditions:
                 if isinstance(host_spec, dict) and "$regex" in host_spec:
@@ -2438,8 +2462,7 @@ class RuleConditionRenderer:
                 if isinstance(host_spec, dict) and "$regex" in host_spec:
                     expression = _("does not match regex") if is_negate else _("matches regex")
                     text_list.append(
-                        escape_html_permissive(expression + " ")
-                        + html.render_b(host_spec["$regex"])
+                        escape_to_html(expression + " ") + html.render_b(host_spec["$regex"])
                     )
                 elif isinstance(host_spec, str):
                     expression = _("is not") if is_negate else _("is")
@@ -2451,12 +2474,12 @@ class RuleConditionRenderer:
                         and (host := watolib.Host.host(host_spec)) is not None
                     ):
                         text_list.append(
-                            escape_html_permissive(expression + " ")
+                            escape_to_html(expression + " ")
                             + html.render_b(html.render_a(host_spec, host.edit_url()))
                         )
                     else:
                         text_list.append(
-                            escape_html_permissive(expression + " ") + html.render_b(host_spec)
+                            escape_to_html_permissive(expression + " ") + html.render_b(host_spec)
                         )
                 else:
                     raise ValueError("Unsupported host spec")
@@ -2465,7 +2488,7 @@ class RuleConditionRenderer:
             condition.append(text_list[0])
         else:
             condition.append(HTML(", ").join(text_list[:-1]))
-            condition.append(escape_html_permissive(_("or ")) + text_list[-1])
+            condition.append(escape_to_html(_("or ")) + text_list[-1])
 
         return HTML(" ").join(condition)
 
@@ -2480,17 +2503,17 @@ class RuleConditionRenderer:
 
         is_negate, service_conditions = ruleset_matcher.parse_negated_condition_list(conditions)
         if not service_conditions:
-            yield escape_html_permissive(_("Does not match any service"))
+            yield escape_to_html(_("Does not match any service"))
             return
 
         condition = HTML()
         if item_type == "service":
-            condition = escape_html_permissive(_("Service name"))
+            condition = escape_to_html(_("Service name"))
         elif item_type == "item":
             if item_name is not None:
-                condition = escape_html_permissive(item_name)
+                condition = escape_to_html(item_name)
             else:
-                condition = escape_html_permissive(_("Item"))
+                condition = escape_to_html(_("Item"))
         condition += HTML(" ")
 
         exact_match_count = len(
@@ -2503,7 +2526,7 @@ class RuleConditionRenderer:
                 phrase = _("is not ") if exact_match_count else _("does not begin with ")
             else:
                 phrase = _("is ") if exact_match_count else _("begins with ")
-            condition += escape_html_permissive(phrase)
+            condition += escape_to_html(phrase)
 
             for item_spec in service_conditions:
                 if isinstance(item_spec, dict) and "$regex" in item_spec:
@@ -2526,15 +2549,13 @@ class RuleConditionRenderer:
                     expression = _("is not ") if is_exact else _("begins not with ")
                 else:
                     expression = _("is ") if is_exact else _("begins with ")
-                text_list.append(
-                    escape_html_permissive(expression) + html.render_b(spec.rstrip("$"))
-                )
+                text_list.append(escape_to_html(expression) + html.render_b(spec.rstrip("$")))
 
         if len(text_list) == 1:
             condition += text_list[0]
         else:
             condition += HTML(", ").join(text_list[:-1])
-            condition += escape_html_permissive(_(" or ")) + text_list[-1]
+            condition += escape_to_html(_(" or ")) + text_list[-1]
 
         if condition:
             yield condition

@@ -29,7 +29,7 @@ import cmk.gui.weblib as weblib
 from cmk.gui.globals import config, html, output_funnel, request, response, transactions, user
 from cmk.gui.htmllib import foldable_container, HTML
 from cmk.gui.i18n import _
-from cmk.gui.utils.escaping import escape_html_permissive
+from cmk.gui.utils.escaping import escape_to_html_permissive
 from cmk.gui.utils.urls import makeactionuri, makeuri, requested_file_name
 
 if TYPE_CHECKING:
@@ -279,7 +279,9 @@ class Table:
         if isinstance(text, HTML):
             content = text
         else:
-            content = escape_html_permissive(str(text) if not isinstance(text, str) else text)
+            content = escape_to_html_permissive(
+                str(text) if not isinstance(text, str) else text, escape_links=False
+            )
 
         htmlcode: HTML = content + HTML(output_funnel.drain())
 
@@ -288,8 +290,8 @@ class Table:
         else:
             if title is None:
                 title = ""
-            header_title = escape_html_permissive(
-                str(title) if not isinstance(title, str) else title
+            header_title = escape_to_html_permissive(
+                str(title) if not isinstance(title, str) else title, escape_links=False
             )
 
         if self.options["collect_headers"] is True:

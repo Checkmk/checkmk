@@ -42,7 +42,7 @@ from cmk.gui.page_menu import (
     PageMenuTopic,
 )
 from cmk.gui.table import table_element
-from cmk.gui.utils.escaping import escape_html, escape_html_permissive
+from cmk.gui.utils.escaping import escape_to_html, escape_to_html_permissive
 from cmk.gui.utils.flashed_messages import flash, get_flashed_messages
 from cmk.gui.utils.urls import make_confirm_link, makeactionuri, makeuri, makeuri_contextless
 from cmk.gui.valuespec import DropdownChoice, Integer, ListChoice, TextInput, Timerange, Tuple
@@ -66,7 +66,7 @@ class ModeAboutCheckmkPage(cmk.gui.pages.Page):
         )
 
         html.open_div(id_="info_title")
-        html.h1(escape_html(_("Your monitoring machine")))
+        html.h1(_("Your monitoring machine"))
         html.a(
             html.render_img(theme.url("images/tribe29.svg")), "https://tribe29.com", target="_blank"
         )
@@ -694,8 +694,8 @@ def render_werk_title(werk) -> HTML:
     # we link to the man pages of those checks
     if ":" in title:
         parts = title.split(":", 1)
-        return insert_manpage_links(parts[0]) + escape_html_permissive(":" + parts[1])
-    return escape_html_permissive(title)
+        return insert_manpage_links(parts[0]) + escape_to_html_permissive(":" + parts[1])
+    return escape_to_html_permissive(title)
 
 
 def render_werk_description(werk) -> HTML:
@@ -764,5 +764,5 @@ def insert_manpage_links(text: str) -> HTML:
             )
             new_parts.append(html.render_a(content=part, href=url))
         else:
-            new_parts.append(escape_html(part))
+            new_parts.append(escape_to_html(part))
     return HTML(" ").join(new_parts)

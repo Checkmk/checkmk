@@ -34,7 +34,7 @@ from cmk.gui.page_menu import (
     PageMenuTopic,
 )
 from cmk.gui.permissions import Permission, permission_registry
-from cmk.gui.utils.escaping import escape_html_permissive
+from cmk.gui.utils.escaping import escape_to_html
 from cmk.gui.valuespec import (
     AbsoluteDate,
     CascadingDropdown,
@@ -309,7 +309,7 @@ def _process_message_message(msg):
             except MKInternalError as e:
                 errors.setdefault(method, []).append((user_id, e))
 
-    message = escape_html_permissive(_("The message has successfully been sent..."))
+    message = escape_to_html(_("The message has successfully been sent..."))
     message += html.render_br()
 
     parts = []

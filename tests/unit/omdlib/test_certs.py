@@ -16,7 +16,7 @@ from tests.testlib.certs import (
     check_cn,
 )
 
-import omdlib.certs as certs
+from omdlib.certs import CertificateAuthority
 
 from cmk.utils.certs import (
     _rsa_public_key_from_cert_or_csr,
@@ -29,15 +29,15 @@ CA_NAME = "test-ca"
 
 
 @pytest.fixture(name="ca")
-def fixture_ca(tmp_path: Path) -> certs.CertificateAuthority:
+def fixture_ca(tmp_path: Path) -> CertificateAuthority:
     ca_path = tmp_path / "ca"
-    return certs.CertificateAuthority(
-        root_ca=RootCA(root_cert_path(ca_path), CA_NAME),
+    return CertificateAuthority(
+        root_ca=RootCA.load_or_create(root_cert_path(ca_path), CA_NAME),
         ca_path=ca_path,
     )
 
 
-def test_initialize(ca: certs.CertificateAuthority) -> None:
+def test_initialize(ca: CertificateAuthority) -> None:
     assert check_cn(
         ca.root_ca.cert,
         CA_NAME,
@@ -52,11 +52,11 @@ def _file_permissions_is_660(path: Path) -> bool:
     return oct(S_IMODE(path.stat().st_mode)) == "0o660"
 
 
-def test_create_site_certificate(ca: certs.CertificateAuthority) -> None:
+def test_create_site_certificate(ca: CertificateAuthority) -> None:
     site_id = "xyz"
     assert not ca.site_certificate_exists(site_id)
 
-    ca.create_site_certificate(site_id)
+    ca.create_site_certificate(site_id, days_valid=100)
     assert ca.site_certificate_exists(site_id)
     assert _file_permissions_is_660(ca._site_certificate_path(site_id))
 
@@ -75,10 +75,10 @@ def test_create_site_certificate(ca: certs.CertificateAuthority) -> None:
     )
 
 
-def test_write_agent_receiver_certificate(ca: certs.CertificateAuthority) -> None:
+def test_write_agent_receiver_certificate(ca: CertificateAuthority) -> None:
     assert not ca.agent_receiver_certificate_exists
 
-    ca.create_agent_receiver_certificate()
+    ca.create_agent_receiver_certificate(days_valid=100)
     assert ca.agent_receiver_certificate_exists
     assert _file_permissions_is_660(ca._agent_receiver_cert_path)
 

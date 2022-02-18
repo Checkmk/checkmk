@@ -6,7 +6,7 @@
 
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Final, Iterable, Tuple, Union
+from typing import Iterable, NamedTuple, Tuple, Union
 
 from cryptography.hazmat.primitives.asymmetric.rsa import (
     generate_private_key,
@@ -37,21 +37,31 @@ from cryptography.x509 import (
 )
 from cryptography.x509.oid import NameOID
 
-from cmk.utils.paths import omd_root
 
+class RootCA(NamedTuple):
+    cert: Certificate
+    rsa: RSAPrivateKeyWithSerialization
 
-class RootCA:
-    def __init__(self, path: Path, name: str, days_valid: int = 999 * 365) -> None:
+    @classmethod
+    def load(cls, path: Path) -> "RootCA":
+        return cls(*load_cert_and_private_key(path))
+
+    @classmethod
+    def load_or_create(cls, path: Path, name: str, days_valid: int = 999 * 365) -> "RootCA":
         try:
-            cert, rsa = load_cert_and_private_key(path)
+            return cls.load(path)
         except FileNotFoundError:
             rsa = _make_private_key()
             cert = _make_root_certificate(_make_subject_name(name), days_valid, rsa)
             _save_cert_chain(path, [cert], rsa)
+        return cls(cert, rsa)
 
-        self.cert: Final = cert
-        self.rsa: Final = rsa
-        self.days_valid: Final = days_valid
+    def sign_csr(
+        self,
+        csr: CertificateSigningRequest,
+        days_valid: int,
+    ) -> Certificate:
+        return _sign_csr(csr, days_valid, self.cert, self.rsa)
 
     def new_signed_cert(
         self,
@@ -106,10 +116,6 @@ def _save_cert_chain(
         for cert in certificate_chain:
             f.write(cert.public_bytes(Encoding.PEM))
     path_pem.chmod(mode=0o660)
-
-
-def load_local_ca() -> Tuple[Certificate, RSAPrivateKeyWithSerialization]:
-    return load_cert_and_private_key(root_cert_path(cert_dir(Path(omd_root))))
 
 
 def _make_private_key() -> RSAPrivateKeyWithSerialization:
@@ -221,17 +227,6 @@ def _sign_csr(
             signing_private_key,
             SHA256(),
         )
-    )
-
-
-def sign_csr_with_local_ca(
-    csr: CertificateSigningRequest,
-    days_valid: int,
-) -> Certificate:
-    return _sign_csr(
-        csr,
-        days_valid,
-        *load_local_ca(),
     )
 
 

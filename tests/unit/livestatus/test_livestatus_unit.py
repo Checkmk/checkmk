@@ -15,7 +15,7 @@ import pytest
 
 import livestatus
 
-import omdlib.certs as certs
+from omdlib.certs import CertificateAuthority
 
 from cmk.utils.certs import root_cert_path, RootCA
 
@@ -29,7 +29,9 @@ def prevent_livestatus_connect():
 @pytest.fixture
 def ca(tmp_path):
     p = tmp_path / "etc" / "ssl"
-    return certs.CertificateAuthority(root_ca=RootCA(root_cert_path(p), "ca-name"), ca_path=p)
+    return CertificateAuthority(
+        root_ca=RootCA.load_or_create(root_cert_path(p), "ca-name"), ca_path=p
+    )
 
 
 @pytest.fixture()

@@ -18,7 +18,7 @@ from pytest_mock import MockerFixture
 
 from omdlib.certs import CertificateAuthority, RootCA
 
-from cmk.utils.certs import RootCA  # TODO: cleanup this layer violation
+from cmk.utils.certs import RootCA
 
 
 @pytest.fixture(autouse=True)
@@ -39,7 +39,7 @@ def fixture_root_ca(
 ) -> RootCA:
     ca_path = tmp_path / "ca"
     mocker.patch("agent_receiver.certificates.ROOT_CERT", ca_path)
-    return RootCA(ca_path, "test-ca")
+    return RootCA.load_or_create(ca_path, "test-ca")
 
 
 @pytest.fixture(name="trusted_cert")
@@ -54,7 +54,7 @@ def fixture_trusted_cert_b64(trusted_cert: Certificate) -> str:
 
 @pytest.fixture(name="untrusted_cert")
 def fixture_untrusted_cert(tmp_path: Path) -> Certificate:
-    return RootCA(tmp_path / "ca-2", "test-ca-2").new_signed_cert("abc123", 100)[0]
+    return RootCA.load_or_create(tmp_path / "ca-2", "test-ca-2").new_signed_cert("abc123", 100)[0]
 
 
 @pytest.fixture(name="untrusted_cert_b64")

@@ -114,7 +114,7 @@ from omdlib.version_info import VersionInfo
 
 import cmk.utils.log
 import cmk.utils.tty as tty
-from cmk.utils.certs import cert_dir, root_cert_path
+from cmk.utils.certs import cert_dir, root_cert_path, RootCA
 from cmk.utils.exceptions import MKTerminate
 from cmk.utils.log import VERBOSE
 from cmk.utils.paths import mkbackup_lock_dir
@@ -1301,13 +1301,13 @@ def initialize_site_ca(site: SiteContext) -> None:
     This will be used e.g. for serving SSL secured livestatus"""
     ca_path = cert_dir(Path(site.dir))
     ca = omdlib.certs.CertificateAuthority(
-        root_ca=omdlib.certs.RootCA(root_cert_path(ca_path), f"Site '{site.name}' local CA"),
+        root_ca=RootCA.load_or_create(root_cert_path(ca_path), f"Site '{site.name}' local CA"),
         ca_path=ca_path,
     )
     if not ca.site_certificate_exists(site.name):
-        ca.create_site_certificate(site.name)
+        ca.create_site_certificate(site.name, days_valid=999 * 365)
     if not ca.agent_receiver_certificate_exists:
-        ca.create_agent_receiver_certificate()
+        ca.create_agent_receiver_certificate(days_valid=999 * 365)
 
 
 def config_change(version_info: VersionInfo, site: SiteContext, config_hooks: ConfigHooks) -> None:

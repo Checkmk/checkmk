@@ -25,7 +25,7 @@ from cmk.utils.certs import (
     _rsa_public_key_from_cert_or_csr,
     _sign_csr,
     load_cert_and_private_key,
-    sign_csr_with_local_ca,
+    RootCA,
 )
 
 _CA = b"""-----BEGIN PRIVATE KEY-----
@@ -260,30 +260,22 @@ def test_sign_csr() -> None:
     )
 
 
-def test_sign_csr_with_local_ca(mocker: MockerFixture) -> None:
+def test_sign_csr_with_local_ca() -> None:
     root_key = _make_private_key()
     root_cert = _make_root_certificate(
         _make_subject_name("peter"),
         1,
         root_key,
     )
-    mocker.patch(
-        "cmk.utils.certs.load_local_ca",
-        return_value=(
-            root_cert,
-            root_key,
-        ),
-    )
     key = _make_private_key()
     csr = _make_csr(
         _make_subject_name("from_peter"),
         key,
     )
+
+    root_ca = RootCA(root_cert, root_key)
     with on_time(567892121, "UTC"):
-        cert = sign_csr_with_local_ca(
-            csr,
-            100,
-        )
+        cert = root_ca.sign_csr(csr, 100)
 
     assert check_cn(
         cert,

@@ -205,6 +205,80 @@ class TestAgentSummarizerDefault_FailedPythonPlugins:
         )
 
 
+class TestAgentSummarizerDefault_Transport:
+    @pytest.fixture
+    def summarizer(self):
+        return AgentSummarizerDefault(
+            ExitSpec(),
+            is_cluster=False,
+            agent_min_version=0,
+            agent_target_version=None,
+            only_from=None,
+        )
+
+    @pytest.fixture
+    def mode(self):
+        # Only Mode.CHECKING triggers _check_transport
+        return Mode.CHECKING
+
+    def test_tls_ok(self, summarizer, mode):
+        assert (
+            summarizer.summarize_check_mk_section(
+                [
+                    ["AgentController:", "cmk-agent-ctl 0.1.0"],
+                    ["LegacyPullMode:", "no"],
+                    ["SSHClient:"],
+                ],
+                mode=mode,
+            )
+            == []
+        )
+
+    def test_tls_not_active(self, summarizer, mode):
+        assert summarizer.summarize_check_mk_section(
+            [
+                ["AgentController:", "cmk-agent-ctl 0.1.0"],
+                ["LegacyPullMode:", "yes"],
+                ["SSHClient:"],
+            ],
+            mode=mode,
+        ) == [
+            ActiveCheckResult(
+                1,
+                "TLS is not activated on monitored host (see details)",
+                (
+                    "The hosts agent supports TLS, but it is not being used.",
+                    "We strongly recommend to enable TLS by registering the host to the site"
+                    " (using the `cmk-agent-ctl register` command on the monitored host).",
+                    "However you can configure missing TLS to be OK in the setting"
+                    ' "State in case of available but not enabled TLS" of the ruleset'
+                    ' "Status of the Checkmk services".',
+                ),
+            )
+        ]
+
+    def test_controller_not_available(self, summarizer, mode):
+        assert (
+            summarizer.summarize_check_mk_section(
+                [
+                    ["AgentController:"],
+                ],
+                mode=mode,
+            )
+            == []
+        )
+
+    def test_no_tls_but_ssh(self, summarizer, mode):
+        assert summarizer.summarize_check_mk_section(
+            [
+                ["AgentController:", "cmk-agent-ctl 0.1.0"],
+                ["LegacyPullMode:", "yes"],
+                ["SSHClient:", "1.2.3.4"],
+            ],
+            mode=mode,
+        ) == [ActiveCheckResult(0, "Transport via SSH")]
+
+
 class TestAgentSummarizerDefault_Fails:
     @pytest.fixture
     def summarizer(self):

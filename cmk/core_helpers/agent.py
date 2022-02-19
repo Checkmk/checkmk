@@ -685,7 +685,9 @@ class AgentSummarizerDefault(AgentSummarizer):
                         agent_info.get("failedpythonplugins"), agent_info.get("failedpythonreason")
                     ),
                     self._check_transport(
-                        bool(agent_info.get("agentcontroller")), agent_info.get("legacypullmode")
+                        bool(agent_info.get("sshclient")),
+                        bool(agent_info.get("agentcontroller")),
+                        agent_info.get("legacypullmode"),
                     ),
                 ]
                 if r
@@ -852,9 +854,13 @@ class AgentSummarizerDefault(AgentSummarizer):
 
     def _check_transport(
         self,
+        ssh_transport: bool,
         controller_present: bool,
         legacy_pull_mode: Optional[str],
     ) -> Optional[ActiveCheckResult]:
+        if ssh_transport:
+            return ActiveCheckResult(0, "Transport via SSH")
+
         if not controller_present:
             return None
 

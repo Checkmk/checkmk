@@ -8,6 +8,7 @@ import ast
 import time
 
 import pytest
+from pytest_mock import MockerFixture
 
 from tests.testlib import on_time
 
@@ -15,6 +16,8 @@ from cmk.utils.type_defs import UserId
 
 from cmk.gui.htmllib import HTML
 from cmk.gui.watolib.changes import (
+    ActivateChangesWriter,
+    add_change,
     AuditLogStore,
     log_audit,
     make_diff_text,
@@ -254,3 +257,19 @@ def test_log_audit_with_html_message(request_context):
             diff_text=None,
         ),
     ]
+
+
+def test_disable_activate_changes_writer(mocker: MockerFixture) -> None:
+    add_to_site_mock = mocker.patch.object(ActivateChangesWriter, "_add_change_to_site")
+
+    add_change("ding", "dong", sites=["a"])
+    add_to_site_mock.assert_called_once()
+    add_to_site_mock.reset_mock()
+
+    with ActivateChangesWriter.disable():
+        add_change("ding", "dong", sites=["a"])
+    add_to_site_mock.assert_not_called()
+    add_to_site_mock.reset_mock()
+
+    add_change("ding", "dong", sites=["a"])
+    add_to_site_mock.assert_called_once()

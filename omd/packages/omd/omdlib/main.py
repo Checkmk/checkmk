@@ -2965,6 +2965,10 @@ def _get_edition(omd_version: str) -> str:
         return "enterprise"
     if edition_short == "cme":
         return "managed"
+    if edition_short == "cfe":
+        return "free"
+    if edition_short == "cpe":
+        return "plus"
     return "unknown"
 
 

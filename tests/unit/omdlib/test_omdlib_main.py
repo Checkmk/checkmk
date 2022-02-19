@@ -18,6 +18,8 @@ import omdlib.utils
 from omdlib.type_defs import CommandOptions
 from omdlib.version_info import VersionInfo
 
+from cmk.utils import version
+
 
 def _strip_ansi(s):
     ansi_escape = re.compile(r"\x1B[@-_][0-?]*[ -/]*[@-~]")
@@ -304,3 +306,8 @@ def test_get_orig_working_directory_not_existing(tmp_path):
         assert omdlib.main._get_orig_working_directory() == "/"
     finally:
         os.chdir(orig_wd)
+
+
+@pytest.mark.parametrize("edition", list(version.Edition))
+def test_get_edition(edition: version._EditionValue) -> None:
+    assert omdlib.main._get_edition(f"1.2.3.{edition.short}") != "unknown"

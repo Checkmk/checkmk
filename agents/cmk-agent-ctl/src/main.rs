@@ -79,7 +79,12 @@ fn init_logging(
 }
 
 #[cfg(unix)]
-fn become_user(user: &unistd::User) -> AnyhowResult<()> {
+fn become_user(username: &str) -> AnyhowResult<unistd::User> {
+    let user = unistd::User::from_name(username)?.context(format!(
+        "Could not find dedicated Checkmk agent user {}",
+        username
+    ))?;
+
     unistd::setgid(user.gid).context(format!(
         "Failed to set group id {} corresponding to user {}",
         user.gid, user.name,
@@ -88,23 +93,11 @@ fn become_user(user: &unistd::User) -> AnyhowResult<()> {
         "Failed to set user id {} corresponding to user {}",
         user.uid, user.name,
     ))?;
-    Ok(())
+    Ok(user)
 }
 
 #[cfg(unix)]
-fn determine_paths(username: &str) -> AnyhowResult<constants::PathResolver> {
-    let user = unistd::User::from_name(username)?.context(format!(
-        "Could not find dedicated Checkmk agent user {}",
-        username
-    ))?;
-
-    if let Err(error) = become_user(&user) {
-        return Err(error.context(format!(
-            "Failed to run as user '{}'. Please execute with sufficient permissions (maybe try 'sudo').",
-            user.name,
-        )));
-    }
-
+fn determine_paths(user: unistd::User) -> AnyhowResult<constants::PathResolver> {
     Ok(constants::PathResolver::new(&user.dir))
 }
 
@@ -123,7 +116,10 @@ fn setup(logging_level: &str) -> AnyhowResult<constants::PathResolver> {
             .write_all(format!("Failed to initialize logging: {:?}", err).as_bytes())
             .unwrap_or(());
     }
-    determine_paths(constants::CMK_AGENT_USER)
+    become_user(constants::CMK_AGENT_USER).context(format!(
+        "Failed to run as user '{}'. Please execute with sufficient permissions (maybe try 'sudo').",
+        constants::CMK_AGENT_USER,
+    )).and_then(determine_paths)
 }
 
 #[cfg(windows)]

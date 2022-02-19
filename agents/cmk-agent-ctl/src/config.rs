@@ -38,7 +38,7 @@ pub trait JSONLoader: DeserializeOwned {
 
 pub trait TOMLLoader: DeserializeOwned {
     fn new() -> AnyhowResult<Self> {
-        Ok(toml::from_str("{}")?)
+        Ok(toml::from_str("")?)
     }
 
     fn load(path: &Path) -> AnyhowResult<Self> {

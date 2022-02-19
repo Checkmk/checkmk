@@ -60,7 +60,7 @@ def _serialized_root_cert() -> str:
 
 
 def _serialized_signed_cert(csr: CertificateSigningRequest) -> str:
-    return _get_root_ca().sign_csr(csr, 999 * 365).public_bytes(Encoding.PEM).decode()
+    return _get_root_ca().sign_csr(csr).public_bytes(Encoding.PEM).decode()
 
 
 @Endpoint(

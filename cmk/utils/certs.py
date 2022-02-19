@@ -37,6 +37,8 @@ from cryptography.x509 import (
 )
 from cryptography.x509.oid import NameOID
 
+_DEFAULT_VALIDITY = 999 * 365
+
 
 class RootCA(NamedTuple):
     cert: Certificate
@@ -47,7 +49,7 @@ class RootCA(NamedTuple):
         return cls(*load_cert_and_private_key(path))
 
     @classmethod
-    def load_or_create(cls, path: Path, name: str, days_valid: int = 999 * 365) -> "RootCA":
+    def load_or_create(cls, path: Path, name: str, days_valid: int = _DEFAULT_VALIDITY) -> "RootCA":
         try:
             return cls.load(path)
         except FileNotFoundError:
@@ -59,14 +61,14 @@ class RootCA(NamedTuple):
     def sign_csr(
         self,
         csr: CertificateSigningRequest,
-        days_valid: int,
+        days_valid: int = _DEFAULT_VALIDITY,
     ) -> Certificate:
         return _sign_csr(csr, days_valid, self.cert, self.rsa)
 
     def new_signed_cert(
         self,
         name: str,
-        days_valid: int,
+        days_valid: int = _DEFAULT_VALIDITY,
     ) -> Tuple[Certificate, RSAPrivateKeyWithSerialization]:
         private_key = _make_private_key()
         cert = _sign_csr(
@@ -80,7 +82,9 @@ class RootCA(NamedTuple):
         )
         return cert, private_key
 
-    def save_new_signed_cert(self, path: Path, name: str, days_valid: int) -> None:
+    def save_new_signed_cert(
+        self, path: Path, name: str, days_valid: int = _DEFAULT_VALIDITY
+    ) -> None:
         cert, private_key = self.new_signed_cert(name, days_valid)
         _save_cert_chain(path, [cert, self.cert], private_key)
 

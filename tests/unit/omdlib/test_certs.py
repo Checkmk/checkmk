@@ -56,7 +56,7 @@ def test_create_site_certificate(ca: CertificateAuthority) -> None:
     site_id = "xyz"
     assert not ca.site_certificate_exists(site_id)
 
-    ca.create_site_certificate(site_id, days_valid=100)
+    ca.create_site_certificate(site_id)
     assert ca.site_certificate_exists(site_id)
     assert _file_permissions_is_660(ca._site_certificate_path(site_id))
 
@@ -78,7 +78,7 @@ def test_create_site_certificate(ca: CertificateAuthority) -> None:
 def test_write_agent_receiver_certificate(ca: CertificateAuthority) -> None:
     assert not ca.agent_receiver_certificate_exists
 
-    ca.create_agent_receiver_certificate(days_valid=100)
+    ca.create_agent_receiver_certificate()
     assert ca.agent_receiver_certificate_exists
     assert _file_permissions_is_660(ca._agent_receiver_cert_path)
 

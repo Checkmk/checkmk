@@ -1476,7 +1476,6 @@ class UpdateConfig:
         root_ca.save_new_signed_cert(
             cmk.utils.paths.site_cert_file,
             cmk.utils.site.omd_site(),
-            days_valid=999 * 365,
         )
 
     def _add_site_ca_to_trusted_cas(self) -> None:

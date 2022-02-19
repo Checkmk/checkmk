@@ -1305,9 +1305,9 @@ def initialize_site_ca(site: SiteContext) -> None:
         ca_path=ca_path,
     )
     if not ca.site_certificate_exists(site.name):
-        ca.create_site_certificate(site.name, days_valid=999 * 365)
+        ca.create_site_certificate(site.name)
     if not ca.agent_receiver_certificate_exists:
-        ca.create_agent_receiver_certificate(days_valid=999 * 365)
+        ca.create_agent_receiver_certificate()
 
 
 def config_change(version_info: VersionInfo, site: SiteContext, config_hooks: ConfigHooks) -> None:

@@ -22,24 +22,24 @@ fi
 if type zypper >/dev/null; then
     echo '<<<zypper:sep(124)>>>'
     if grep -E -q 'VERSION = 10|VERSION_ID="10' <$RELEASEFILE; then
-        ZYPPER='waitmax 50 zypper --no-gpg-checks --non-interactive --terse'
-        REFRESH="$("${ZYPPER}" refresh 2>&1)"
+        wzypper() { waitmax 50 zypper --no-gpg-checks --non-interactive --terse "$@"; }
+        REFRESH="$(wzypper refresh 2>&1)"
         if [ "${REFRESH}" ]; then
             echo "ERROR: ${REFRESH}"
         else
             {
-                "${ZYPPER}" pchk || { [ "$?" = 100 ] || [ "$?" = 101 ]; } && "${ZYPPER}" lu
+                wzypper pchk || { [ "$?" = 100 ] || [ "$?" = 101 ]; } && wzypper lu
             } | grep -E '(patches needed|\|)' | grep -v -E '^(#|Repository |Catalog )'
         fi
     else
-        ZYPPER='waitmax 50 zypper --no-gpg-checks --non-interactive --quiet'
-        REFRESH="$("${ZYPPER}" refresh 2>&1)"
+        wzypper() { waitmax 50 zypper --no-gpg-checks --non-interactive --quiet "$@"; }
+        REFRESH="$(wzypper refresh 2>&1)"
         if [ "${REFRESH}" ]; then
             echo "ERROR: ${REFRESH}"
         else
             {
-                { "${ZYPPER}" pchk || { [ "$?" = 100 ] || [ "$?" = 101 ]; } && "${ZYPPER}" lp; }
-                "${ZYPPER}" ll
+                { wzypper pchk || { [ "$?" = 100 ] || [ "$?" = 101 ]; } && wzypper lp; }
+                wzypper ll
             } | grep -E '(patches needed|\|)' | grep -v -E '^(#|Repository)'
         fi
     fi

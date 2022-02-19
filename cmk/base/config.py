@@ -829,7 +829,7 @@ def make_core_autochecks_dir(config_path: ConfigPath) -> Path:
 
 
 def make_core_autochecks_file(config_path: ConfigPath, hostname: HostName) -> Path:
-    return make_core_autochecks_dir(Path(config_path)) / f"%{hostname}.mk"
+    return make_core_autochecks_dir(Path(config_path)) / f"{hostname}.mk"
 
 
 @lru_cache
@@ -838,7 +838,7 @@ def make_core_discovered_host_labels_dir(config_path: ConfigPath) -> Path:
 
 
 def make_core_discovered_host_labels_file(config_path: ConfigPath, hostname: HostName) -> Path:
-    return make_core_discovered_host_labels_dir(config_path) / f"%{hostname}.mk"
+    return make_core_discovered_host_labels_dir(config_path) / f"{hostname}.mk"
 
 
 @contextlib.contextmanager

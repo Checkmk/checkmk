@@ -9721,6 +9721,12 @@ msgstr ""
 "致ルールが使用されます。ホストを作成するには、少なくとも1つのルールを指定する"
 "必要があります。"
 
+#, fuzzy, python-format
+msgid ""
+"Configuration update failed\n"
+"%s"
+msgstr "コンフィギュレーション"
+
 msgid "Configuration variable:"
 msgstr "構成変数:"
 
@@ -26259,6 +26265,10 @@ msgstr "Linuxボンディングインターフェースのステータス"
 msgid "Linux distributions"
 msgstr "Linuxディストリビューション"
 
+#, fuzzy
+msgid "Linux hosts"
+msgstr "(ホストなし)"
+
 msgid "Linux interfaces"
 msgstr "Linuxインターフェース"
 
@@ -40262,6 +40272,13 @@ msgstr "シングル"
 msgid "Single Bit (BOOL)"
 msgstr "シングルビット(BOOL)"
 
+msgid "Single Linux host"
+msgstr ""
+
+#, fuzzy
+msgid "Single Windows host"
+msgstr "ダウンホスト上"
+
 msgid "Single dataset"
 msgstr "単一のデータセット"
 
@@ -42922,12 +42939,12 @@ msgstr "ユーザーを同期する"
 msgid "Synchronized MKP with the modified rule pack %s"
 msgstr "変更されたルールパック %s と同期されたMKP"
 
+#, fuzzy, python-format
+msgid "Synchronized configuration from central site (local site ID is %s.)"
+msgstr "マスターと同期しました(私のサイトidは %s です)"
+
 msgid "Synchronized users"
 msgstr "同期されたユーザー"
-
-#, python-format
-msgid "Synchronized with master (my site id is %s.)"
-msgstr "マスターと同期しました(私のサイトidは %s です)"
 
 msgid "Synchronizes the email of the LDAP user account into Checkmk."
 msgstr "LDAPユーザーアカウントの電子メールをCheckmkに同期します。"
@@ -52537,12 +52554,6 @@ msgid ""
 msgstr ""
 "インスタンス %sに接続できません。グローバル設定で資格情報を確認してください。"
 
-#, python-format
-msgid ""
-"Unable to convert configuration into 2.0 format\n"
-"%s"
-msgstr ""
-
 msgid "Unable to create parent folder(s)."
 msgstr "親フォルダを作成できません"
 
@@ -56811,6 +56822,10 @@ msgstr "Windows認証"
 
 msgid "Windows files"
 msgstr "Windowsファイル"
+
+#, fuzzy
+msgid "Windows hosts"
+msgstr "Windowsタスク"
 
 msgid "Windows printers: number of open jobs"
 msgstr "Windowsプリンター: 開いているジョブの数"

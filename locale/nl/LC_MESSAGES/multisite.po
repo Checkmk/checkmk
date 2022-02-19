@@ -10087,6 +10087,12 @@ msgstr ""
 "overeenkomende regel wordt gebruikt. Je moet minstens één regel specificeren "
 "om hosts aan te maken."
 
+#, fuzzy, python-format
+msgid ""
+"Configuration update failed\n"
+"%s"
+msgstr "Configuratie"
+
 msgid "Configuration variable:"
 msgstr "Configuratie variabele:"
 
@@ -27260,6 +27266,10 @@ msgstr "Linux interface status"
 msgid "Linux distributions"
 msgstr "Linux distributies"
 
+#, fuzzy
+msgid "Linux hosts"
+msgstr "(geen hosts)"
+
 msgid "Linux interfaces"
 msgstr "Linux interfaces"
 
@@ -41622,6 +41632,13 @@ msgstr "Single"
 msgid "Single Bit (BOOL)"
 msgstr "Enkel Bit (BOOL)"
 
+msgid "Single Linux host"
+msgstr ""
+
+#, fuzzy
+msgid "Single Windows host"
+msgstr "Op down host"
+
 msgid "Single dataset"
 msgstr "Enkelvoudige dataset"
 
@@ -44389,12 +44406,12 @@ msgstr "Synchroniseer gebruikers"
 msgid "Synchronized MKP with the modified rule pack %s"
 msgstr "Gesynchroniseerde MKP met het gewijzigde regelpakket %s"
 
+#, fuzzy, python-format
+msgid "Synchronized configuration from central site (local site ID is %s.)"
+msgstr "Gesynchroniseerd met master (mijn site-id is %s.)"
+
 msgid "Synchronized users"
 msgstr "Gesynchroniseerde gebruikers"
-
-#, python-format
-msgid "Synchronized with master (my site id is %s.)"
-msgstr "Gesynchroniseerd met master (mijn site-id is %s.)"
 
 msgid "Synchronizes the email of the LDAP user account into Checkmk."
 msgstr "Synchroniseert de e-mail van de LDAP-gebruikersaccount in Checkmk."
@@ -54929,12 +54946,6 @@ msgstr ""
 "Kan geen verbinding maken met instantie %s. Controleer de credentials onder "
 "Global Settings."
 
-#, python-format
-msgid ""
-"Unable to convert configuration into 2.0 format\n"
-"%s"
-msgstr ""
-
 msgid "Unable to create parent folder(s)."
 msgstr "Kan geen bovenliggende map(pen) aanmaken."
 
@@ -59467,6 +59478,10 @@ msgstr "Windows-verificatie"
 
 msgid "Windows files"
 msgstr "Windows bestanden"
+
+#, fuzzy
+msgid "Windows hosts"
+msgstr "Windows Taken"
 
 msgid "Windows printers: number of open jobs"
 msgstr "Windows printers: aantal openstaande opdrachten"

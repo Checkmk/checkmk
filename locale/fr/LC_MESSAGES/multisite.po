@@ -10218,6 +10218,12 @@ msgstr ""
 "règle correspondante est utilisée. Vous devez spécifier au moins une règle "
 "pour créer des hôtes."
 
+#, fuzzy, python-format
+msgid ""
+"Configuration update failed\n"
+"%s"
+msgstr "Configuration"
+
 msgid "Configuration variable:"
 msgstr "Variable de configuration :"
 
@@ -27599,6 +27605,10 @@ msgstr "Statut de l'interface de liaison Linux"
 msgid "Linux distributions"
 msgstr "Distributions de Linux"
 
+#, fuzzy
+msgid "Linux hosts"
+msgstr "(pas d'hôtes)"
+
 msgid "Linux interfaces"
 msgstr "Interfaces Linux"
 
@@ -42152,6 +42162,13 @@ msgstr "Simple"
 msgid "Single Bit (BOOL)"
 msgstr "Bit unique (BOOL)"
 
+msgid "Single Linux host"
+msgstr ""
+
+#, fuzzy
+msgid "Single Windows host"
+msgstr "L'hôte en bas"
+
 msgid "Single dataset"
 msgstr "Ensemble de données unique"
 
@@ -44957,12 +44974,12 @@ msgstr "Synchroniser les utilisateurs"
 msgid "Synchronized MKP with the modified rule pack %s"
 msgstr "MKP synchronisé avec le paquet de règles modifié %s"
 
+#, fuzzy, python-format
+msgid "Synchronized configuration from central site (local site ID is %s.)"
+msgstr "Synchronisé avec le maître (mon identifiant de site est %s.)"
+
 msgid "Synchronized users"
 msgstr "Utilisateurs synchronisés"
-
-#, python-format
-msgid "Synchronized with master (my site id is %s.)"
-msgstr "Synchronisé avec le maître (mon identifiant de site est %s.)"
 
 msgid "Synchronizes the email of the LDAP user account into Checkmk."
 msgstr "Synchronise l'email du compte utilisateur LDAP dans Checkmk."
@@ -55625,12 +55642,6 @@ msgstr ""
 "Impossible de se connecter à l'instance %s. Veuillez vérifier les "
 "informations d'identification sous Global Settings."
 
-#, python-format
-msgid ""
-"Unable to convert configuration into 2.0 format\n"
-"%s"
-msgstr ""
-
 msgid "Unable to create parent folder(s)."
 msgstr "Impossible de créer le(s) dossier(s) parent(s)."
 
@@ -60236,6 +60247,10 @@ msgstr "Authentification Windows"
 
 msgid "Windows files"
 msgstr "Fichiers Windows"
+
+#, fuzzy
+msgid "Windows hosts"
+msgstr "Tâches de Windows"
 
 msgid "Windows printers: number of open jobs"
 msgstr "Imprimantes Windows : nombre de travaux ouverts"

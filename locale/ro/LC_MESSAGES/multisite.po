@@ -9482,6 +9482,12 @@ msgid ""
 "matching rule is used. You have to specify at least one rule to create hosts."
 msgstr ""
 
+#, fuzzy, python-format
+msgid ""
+"Configuration update failed\n"
+"%s"
+msgstr "Notificari"
+
 #, fuzzy
 msgid "Configuration variable:"
 msgstr "Notificari"
@@ -25758,6 +25764,10 @@ msgid "Linux distributions"
 msgstr ""
 
 #, fuzzy
+msgid "Linux hosts"
+msgstr "(fără elemente)"
+
+#, fuzzy
 msgid "Linux interfaces"
 msgstr "Adresă"
 
@@ -40242,6 +40252,13 @@ msgstr ""
 msgid "Single Bit (BOOL)"
 msgstr ""
 
+msgid "Single Linux host"
+msgstr ""
+
+#, fuzzy
+msgid "Single Windows host"
+msgstr "Probleme"
+
 msgid "Single dataset"
 msgstr ""
 
@@ -42824,13 +42841,13 @@ msgstr "utilizatori"
 msgid "Synchronized MKP with the modified rule pack %s"
 msgstr ""
 
+#, python-format
+msgid "Synchronized configuration from central site (local site ID is %s.)"
+msgstr ""
+
 #, fuzzy
 msgid "Synchronized users"
 msgstr "utilizatori"
-
-#, python-format
-msgid "Synchronized with master (my site id is %s.)"
-msgstr ""
 
 msgid "Synchronizes the email of the LDAP user account into Checkmk."
 msgstr ""
@@ -51128,12 +51145,6 @@ msgid ""
 "Settings."
 msgstr ""
 
-#, python-format
-msgid ""
-"Unable to convert configuration into 2.0 format\n"
-"%s"
-msgstr ""
-
 msgid "Unable to create parent folder(s)."
 msgstr ""
 
@@ -55193,6 +55204,10 @@ msgstr "trimite notificare"
 
 #, fuzzy
 msgid "Windows files"
+msgstr "(fără Nivel de serviciu)"
+
+#, fuzzy
+msgid "Windows hosts"
 msgstr "(fără Nivel de serviciu)"
 
 #, fuzzy
@@ -60156,10 +60171,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Single host aggregations"
 #~ msgstr "O agregare legată de un singur element"
-
-#, fuzzy
-#~ msgid "Single host problems"
-#~ msgstr "Probleme"
 
 #, fuzzy
 #~ msgid "Single-request consumption"

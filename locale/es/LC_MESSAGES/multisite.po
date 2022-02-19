@@ -10160,6 +10160,12 @@ msgstr ""
 "primera regla que coincida. Hay que especificar al menos una regla para "
 "crear hosts."
 
+#, fuzzy, python-format
+msgid ""
+"Configuration update failed\n"
+"%s"
+msgstr "Configuración"
+
 msgid "Configuration variable:"
 msgstr "Variable de configuración:"
 
@@ -27468,6 +27474,10 @@ msgstr "Estado de la interfaz de enlace de Linux"
 msgid "Linux distributions"
 msgstr "Distribuciones de Linux"
 
+#, fuzzy
+msgid "Linux hosts"
+msgstr "(sin hosts)"
+
 msgid "Linux interfaces"
 msgstr "Interfaces de Linux"
 
@@ -41979,6 +41989,13 @@ msgstr "Solo"
 msgid "Single Bit (BOOL)"
 msgstr "Un solo bit (BOOL)"
 
+msgid "Single Linux host"
+msgstr ""
+
+#, fuzzy
+msgid "Single Windows host"
+msgstr "En el anfitrión de abajo"
+
 msgid "Single dataset"
 msgstr "Conjunto de datos único"
 
@@ -44776,12 +44793,12 @@ msgstr "Sincronizar usuarios"
 msgid "Synchronized MKP with the modified rule pack %s"
 msgstr "MKP sincronizado con el paquete de reglas modificado %s"
 
+#, fuzzy, python-format
+msgid "Synchronized configuration from central site (local site ID is %s.)"
+msgstr "Sincronizado con el maestro (el id de mi sitio es %s.)"
+
 msgid "Synchronized users"
 msgstr "Usuarios sincronizados"
-
-#, python-format
-msgid "Synchronized with master (my site id is %s.)"
-msgstr "Sincronizado con el maestro (el id de mi sitio es %s.)"
 
 msgid "Synchronizes the email of the LDAP user account into Checkmk."
 msgstr ""
@@ -55393,12 +55410,6 @@ msgstr ""
 "No se puede conectar a la instancia %s. Por favor, compruebe las "
 "credenciales en la Configuración Global."
 
-#, python-format
-msgid ""
-"Unable to convert configuration into 2.0 format\n"
-"%s"
-msgstr ""
-
 msgid "Unable to create parent folder(s)."
 msgstr "No se ha podido crear la(s) carpeta(s) principal(es)."
 
@@ -59959,6 +59970,10 @@ msgstr "Autenticación de Windows"
 
 msgid "Windows files"
 msgstr "Archivos de Windows"
+
+#, fuzzy
+msgid "Windows hosts"
+msgstr "Tareas de Windows"
 
 msgid "Windows printers: number of open jobs"
 msgstr "Impresoras Windows: número de trabajos abiertos"

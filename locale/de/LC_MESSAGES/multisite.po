@@ -10100,6 +10100,12 @@ msgstr ""
 "greifende Regel wird verwendet. Es muss mindestens eine Regel geben um einen "
 "Host anzulegen."
 
+#, fuzzy, python-format
+msgid ""
+"Configuration update failed\n"
+"%s"
+msgstr "Einstellungen"
+
 msgid "Configuration variable:"
 msgstr "Konfigurationsvariable:"
 
@@ -27309,6 +27315,10 @@ msgstr "Status der Linux-Bonding-Schnittstelle"
 msgid "Linux distributions"
 msgstr "Linux-Distributionen"
 
+#, fuzzy
+msgid "Linux hosts"
+msgstr "(keine Hosts)"
+
 msgid "Linux interfaces"
 msgstr "Linux-Schnittstellen"
 
@@ -41712,6 +41722,13 @@ msgstr "Einzeln"
 msgid "Single Bit (BOOL)"
 msgstr "Einzelnes Bit (BOOL)"
 
+msgid "Single Linux host"
+msgstr ""
+
+#, fuzzy
+msgid "Single Windows host"
+msgstr "Bei Host DOWN"
+
 msgid "Single dataset"
 msgstr "Einzeldatensatz"
 
@@ -44483,12 +44500,12 @@ msgstr "Benutzer synchronisieren"
 msgid "Synchronized MKP with the modified rule pack %s"
 msgstr "Das MKP wurde mit dem Regelpaket %s synchronisiert"
 
+#, fuzzy, python-format
+msgid "Synchronized configuration from central site (local site ID is %s.)"
+msgstr "Synchronisiert mit Master (Instanz-ID ist %s.)"
+
 msgid "Synchronized users"
 msgstr "Synchronisierte Benutzer"
-
-#, python-format
-msgid "Synchronized with master (my site id is %s.)"
-msgstr "Synchronisiert mit Master (Instanz-ID ist %s.)"
 
 msgid "Synchronizes the email of the LDAP user account into Checkmk."
 msgstr "Synchronisiert E-Mails des LDAP Benutzerkontos nach Checkmk."
@@ -54981,12 +54998,6 @@ msgstr ""
 "Die Verbindung zur Instanz %s kann nicht hergestellt werden. Bitte "
 "überprüfen Sie die Anmeldedaten unter Globale Einstellungen."
 
-#, python-format
-msgid ""
-"Unable to convert configuration into 2.0 format\n"
-"%s"
-msgstr ""
-
 msgid "Unable to create parent folder(s)."
 msgstr "Kann den/die Parent Ordner nicht erstellen"
 
@@ -59504,6 +59515,10 @@ msgstr "Windows-Authentifizierung"
 
 msgid "Windows files"
 msgstr "Windows Dateien"
+
+#, fuzzy
+msgid "Windows hosts"
+msgstr "Windows Tasks"
 
 msgid "Windows printers: number of open jobs"
 msgstr "Windows-Drucker: Anzahl der offenen Aufträge"

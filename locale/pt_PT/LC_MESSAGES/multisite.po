@@ -10086,6 +10086,12 @@ msgstr ""
 "regra de correspondência é usada. É necessário especificar pelo menos uma "
 "regra para criar hospedeiros."
 
+#, fuzzy, python-format
+msgid ""
+"Configuration update failed\n"
+"%s"
+msgstr "Configuração"
+
 msgid "Configuration variable:"
 msgstr "Variável de configuração:"
 
@@ -27249,6 +27255,10 @@ msgstr "Status da interface Linux bonding"
 msgid "Linux distributions"
 msgstr "distribuições Linux"
 
+#, fuzzy
+msgid "Linux hosts"
+msgstr "(sem anfitriões)"
+
 msgid "Linux interfaces"
 msgstr "interfaces Linux"
 
@@ -41637,6 +41647,13 @@ msgstr "Individual"
 msgid "Single Bit (BOOL)"
 msgstr "Bit único (BOOL)"
 
+msgid "Single Linux host"
+msgstr ""
+
+#, fuzzy
+msgid "Single Windows host"
+msgstr "No anfitrião inferior"
+
 msgid "Single dataset"
 msgstr "Conjunto de dados único"
 
@@ -44407,12 +44424,12 @@ msgstr "Sincronizar usuários"
 msgid "Synchronized MKP with the modified rule pack %s"
 msgstr "MKP sincronizado com o pacote de regras modificado %s"
 
+#, fuzzy, python-format
+msgid "Synchronized configuration from central site (local site ID is %s.)"
+msgstr "Sincronizado com o master (o meu id do site é %s.)"
+
 msgid "Synchronized users"
 msgstr "Usuários sincronizados"
-
-#, python-format
-msgid "Synchronized with master (my site id is %s.)"
-msgstr "Sincronizado com o master (o meu id do site é %s.)"
 
 msgid "Synchronizes the email of the LDAP user account into Checkmk."
 msgstr "Sincroniza o e-mail da conta de usuário do LDAP com o Checkmk."
@@ -54878,12 +54895,6 @@ msgstr ""
 "Incapaz de se conectar a exemplo %s. Por favor verifique as credenciais em "
 "Global Settings."
 
-#, python-format
-msgid ""
-"Unable to convert configuration into 2.0 format\n"
-"%s"
-msgstr ""
-
 msgid "Unable to create parent folder(s)."
 msgstr "Impossível criar a(s) pasta(s) mãe(s)."
 
@@ -59407,6 +59418,10 @@ msgstr "autenticação do Windows"
 
 msgid "Windows files"
 msgstr "arquivos do Windows"
+
+#, fuzzy
+msgid "Windows hosts"
+msgstr "Tarefas do Windows"
 
 msgid "Windows printers: number of open jobs"
 msgstr "Impressoras Windows: número de trabalhos em aberto"

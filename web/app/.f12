@@ -8,24 +8,27 @@ ROOT=/omd/sites/$SITE
 echo "Update site $SITE..."
 
 echo "Copy CRE files..."
-sudo rsync -arxR *.wsgi $ROOT/share/check_mk/web/app/
+sudo rsync -arxR ./*.wsgi "$ROOT"/share/check_mk/web/app/
 
 # Also deploy all other directories of same type
-if [ ${ALL_EDITIONS:-1} != 0 ]; then
+if [ "${ALL_EDITIONS:-1}" != 0 ]; then
     for WHAT in enterprise managed; do
         if [ -e ../$WHAT/web/.f12 ]; then
-            (cd ../$WHAT/web ; ONLY_COPY=1 ALL_EDITIONS=0 bash .f12)
+            (
+                cd ../$WHAT/web
+                ONLY_COPY=1 ALL_EDITIONS=0 bash .f12
+            )
         fi
     done
 fi
 
 if [ "$KILL_SITE_APACHE" = "1" ]; then
     echo "KILLING site apache of $SITE"
-    sudo killall -9 -u $SITE apache2
+    sudo killall -9 -u "$SITE" apache2
 fi
 
-if [ -z $ONLY_COPY ]; then
-    if [ "$SITE" != - ] ; then
-        sudo omd reload $SITE apache
+if [ -z "$ONLY_COPY" ]; then
+    if [ "$SITE" != - ]; then
+        sudo omd reload "$SITE" apache
     fi
 fi

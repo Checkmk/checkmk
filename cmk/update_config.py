@@ -103,7 +103,13 @@ from cmk.gui.sites import is_wato_slave_site
 from cmk.gui.userdb import load_users, save_users, Users
 from cmk.gui.utils.logged_in import SuperUserContext
 from cmk.gui.utils.script_helpers import gui_context
-from cmk.gui.watolib.changes import add_change, AuditLogStore, ObjectRef, ObjectRefType
+from cmk.gui.watolib.changes import (
+    ActivateChangesWriter,
+    add_change,
+    AuditLogStore,
+    ObjectRef,
+    ObjectRefType,
+)
 from cmk.gui.watolib.global_settings import GlobalSettings
 from cmk.gui.watolib.notifications import load_notification_rules, save_notification_rules
 from cmk.gui.watolib.password_store import PasswordStore
@@ -222,7 +228,8 @@ class UpdateConfig:
             for count, (step_func, title) in enumerate(self._steps(), start=1):
                 self._logger.log(VERBOSE, " %i/%i %s..." % (count, total, title))
                 try:
-                    step_func()
+                    with ActivateChangesWriter.disable():
+                        step_func()
                 except Exception:
                     self._has_errors = True
                     self._logger.error(' + "%s" failed' % title, exc_info=True)

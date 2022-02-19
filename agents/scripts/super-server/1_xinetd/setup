@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-MYSELF="$(realpath -- "$0")"
+MYSELF="$(realpath -- "$0" || printf "%s" "$0")"
 TEMPLATE="/etc/check_mk/xinetd-service-template.cfg"
 DESTINATION="/etc/xinetd.d"
 SERVICE_FILE="check-mk-agent"

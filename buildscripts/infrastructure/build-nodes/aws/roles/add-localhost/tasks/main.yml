@@ -1,9 +1,22 @@
 ---
+- name: Get automation secret
+  become_user: root
+  become_method: sudo
+  shell: |
+      python3 -c 'g={"multisite_users": {}}; \
+      exec(open("/omd/sites/{{cmk_site}}/etc/check_mk/multisite.d/wato/users.mk").read(), g); \
+      print(g["multisite_users"]["automation"]["automation_secret"])'
+  register: python_output
+
+- name: Extract secret
+  set_fact:
+    automation_secret: "{{ python_output.stdout }}"
+
 - name: Add localhost to monitoring
   shell: |
     curl \
     -X POST \
-    --header "Authorization: Bearer {{ cmkadmin }} {{ cmkadmin_pass }}" \
+    --header "Authorization: Bearer automation {{ automation_secret }}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json" \
     --data '{
@@ -11,10 +24,9 @@
             "ipaddress": "127.0.0.1"
           },
           "folder": "\/",
-          "host_name": "'"$(hostname)"'"
+          "host_name": "localhost"
         }' \
-    "http://localhost/{{cmk_site}}/check_mk/api/v0/domain-types/host_config/collections/all"
-  when: site_installed.stdout == "0"
+    "{{ api_entrypoint }}/domain-types/host_config/collections/all"
 
 - name: Install Checkmk agent
   apt:
@@ -26,26 +38,30 @@
   become_user: root
   become_method: sudo
   shell: |
-      cmk-agent-ctl register --trust-server-cert -s localhost/{{cmk_site}} -H "$(hostname)" -u {{cmkadmin}} -p {{cmkadmin_pass}} 2>&1 || true
+      cmk-agent-ctl register --trust-server-cert -s localhost/{{cmk_site}} -H localhost -u automation -p {{ automation_secret }}
 
+# TODO: The service discovery via REST API is broken atm, we do not get the services even after an activate changes: CMK-7200
 - name: Discover services
   shell: |
     curl \
     -X POST \
-    --header "Authorization: Bearer {{cmkadmin}} {{cmkadmin_pass}}" \
+    --header "Authorization: Bearer automation {{ automation_secret }}" \
     --header "Accept: application/json" \
-    "http://localhost/{{cmk_site}}/check_mk/api/v0/objects/host/$(hostname)/actions/discover-services/mode/tabula-rasa"
+    --header "Content-Type: application/json" \
+    --data '{"mode": "refresh"}' \
+    "{{ api_entrypoint }}/objects/host/localhost/actions/discover_services/invoke"
 
 - name: Activate changes
   shell: |
     curl \
     -X POST \
-    --header "Authorization: Bearer {{cmkadmin}} {{cmkadmin_pass}}" \
+    --header "Authorization: Bearer automation {{ automation_secret }}" \
     --header "Accept: application/json" \
+    --header "Content-Type: application/json" \
     --data '{
           "redirect": false,
           "sites": [
             "{{cmk_site}}"
           ]
         }' \
-    "http://localhost/{{cmk_site}}/check_mk/api/v0/domain-types/activation_run/actions/activate-changes/invoke"
+    "{{ api_entrypoint }}/domain-types/activation_run/actions/activate-changes/invoke"

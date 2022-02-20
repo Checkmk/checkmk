@@ -430,9 +430,10 @@ class LDAPUserConnector(UserConnector):
     def _default_bind(self, conn):
         try:
             if "bind" in self._config:
+                bind_dn, password_id = self._config["bind"]
                 self._bind(
-                    self._replace_macros(self._config["bind"][0]),
-                    ("password", self._config["bind"][1][1]),
+                    self._replace_macros(bind_dn),
+                    password_id,
                     catch=False,
                     conn=conn,
                 )
@@ -447,7 +448,7 @@ class LDAPUserConnector(UserConnector):
                 )
             )
 
-    def _bind(self, user_dn, password: password_store.PasswordId, catch=True, conn=None):
+    def _bind(self, user_dn, password_id: password_store.PasswordId, catch=True, conn=None):
         if conn is None:
             conn = self._ldap_obj
         self._logger.info("LDAP_BIND %s" % user_dn)
@@ -455,7 +456,7 @@ class LDAPUserConnector(UserConnector):
             # ? user_dn seems to have the type str
             conn.simple_bind_s(
                 ensure_str(user_dn),  # pylint: disable= six-ensure-str-bin-call
-                password_store.extract(password),
+                password_store.extract(password_id),
             )
             self._logger.info("  SUCCESS")
         except (ldap.INVALID_CREDENTIALS, ldap.INAPPROPRIATE_AUTH):

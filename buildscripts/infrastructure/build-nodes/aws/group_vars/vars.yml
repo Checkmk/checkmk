@@ -18,13 +18,16 @@ distro: focal
 
 cmk_edition: "{{ lookup('env', 'EDITION') }}"
 cmk_version: "{{ lookup('env', 'CMK_VERS') }}"
+
 cmkadmin: cmk
+cmk_site: cmk
+api_entrypoint: "http://localhost/{{ cmk_site }}/check_mk/api/1.0"
 
 # AWS deploy EC2
 servers:
    checkmk:
       count: 1
-      cmk_site: cmk
+      cmk_site: "{{ cmk_site }}"
       vpc_subnet_id: subnet-1680ce6b
       instance_type: t2.medium
       disk_volume: 8

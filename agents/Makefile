@@ -8,8 +8,8 @@ RPM_VERSION := $(subst -,_,$(VERSION))
 NEW_VERSION_MAJOR := $(shell echo $(NEW_VERSION) | sed 's/\([0-9]*\.[0-9]*\)\.\(.*\)/\1/g')
 NAME := check-mk-agent
 DISTNAME := $(NAME)-$(VERSION)
+BUILDROOT := $$(pwd)/.buildroot
 RPM_TOPDIR := $$(pwd)/.rpm.topdir
-RPM_BUILDROOT := $$(pwd)/.rpm.buildroot
 RPM_PACKAGE := $(DISTNAME)-1.noarch.rpm
 DEB_PACKAGE := check-mk-agent_$(VERSION)-1_all.deb
 
@@ -60,6 +60,7 @@ setversion:
 
 build: $(DEB_PACKAGE) $(RPM_PACKAGE) $(WIN_PACKAGE) controller
 
+# If this is no longer phony, add the dependencies to the $(BUILDROOT) target!
 controller:
 	rm -f linux/cmk-agent-ctl
 	(cd cmk-agent-ctl; ../../scripts/run-cargo-command build --release) \
@@ -72,35 +73,40 @@ deb: $(DEB_PACKAGE)
 
 rpm: $(RPM_PACKAGE)
 
-$(RPM_PACKAGE): controller waitmax
+$(RPM_PACKAGE): $(BUILDROOT)
 	rm -f *.rpm
-	rm -rf "$(RPM_TOPDIR)" "$(RPM_BUILDROOT)"
-	#
-	# create build root (as tree would show it)
-	mkdir -p "$(RPM_BUILDROOT)/etc/check_mk"
-	install -m 644 "conffiles/super-server.cfg" "$(RPM_BUILDROOT)/etc/check_mk/super-server.cfg"
-	mkdir -p "$(RPM_BUILDROOT)/usr/bin"
-	mkdir -p "$(RPM_BUILDROOT)/var/lib/cmk-agent"
-	install -m 755 check_mk_agent.linux "$(RPM_BUILDROOT)/usr/bin/check_mk_agent"
-	install -m 755 check_mk_caching_agent.linux "$(RPM_BUILDROOT)/usr/bin/check_mk_caching_agent"
-	install -m 755 linux/cmk-agent-ctl "$(RPM_BUILDROOT)/usr/bin/cmk-agent-ctl"
-	install -m 755 mk-job "$(RPM_BUILDROOT)/usr/bin/mk-job"
-	install -m 755 waitmax "$(RPM_BUILDROOT)/usr/bin/waitmax"
-	mkdir -p "$(RPM_BUILDROOT)/usr/lib/check_mk_agent/local"
-	mkdir -p "$(RPM_BUILDROOT)/usr/lib/check_mk_agent/plugins"
-	mkdir -p "$(RPM_BUILDROOT)/var/lib/check_mk_agent/cache"
-	mkdir -p "$(RPM_BUILDROOT)/var/lib/check_mk_agent/job"
-	mkdir -p "$(RPM_BUILDROOT)/var/lib/check_mk_agent/spool"
-	cp -r scripts "$(RPM_BUILDROOT)/var/lib/cmk-agent"
-	mv "$(RPM_BUILDROOT)/var/lib/cmk-agent/scripts/super-server/1_xinetd/check-mk-agent" "$(RPM_BUILDROOT)/etc/check_mk/xinetd-service-template.cfg"
-	# use this build root, and build
-	rpmbuild -bb --buildroot "$(RPM_BUILDROOT)" \
+	rm -rf "$(RPM_TOPDIR)"
+	rpmbuild -bb --buildroot "$(BUILDROOT)" \
 	    --define "_topdir $(RPM_TOPDIR)" \
 	    --define "_version $(VERSION)" \
 	    --define "_rpm_version $(RPM_VERSION)" \
 	    $(NAME).spec
 	mv -v $(RPM_TOPDIR)/RPMS/*/* $(RPM_PACKAGE)
-	rm -rf $(RPM_TOPDIR) $(RPM_BUILDROOT)
+	rm -rf $(RPM_TOPDIR) $(BUILDROOT)
+
+
+# This is always built, because controller is phony.
+# If that changes, we have to properly add the dependencies here!
+$(BUILDROOT): controller waitmax
+	rm -rf "$(BUILDROOT)"
+	#
+	# create build root (as tree would show it)
+	mkdir -p "$(BUILDROOT)/etc/check_mk"
+	install -m 644 "conffiles/super-server.cfg" "$(BUILDROOT)/etc/check_mk/super-server.cfg"
+	mkdir -p "$(BUILDROOT)/usr/bin"
+	mkdir -p "$(BUILDROOT)/var/lib/cmk-agent"
+	install -m 755 check_mk_agent.linux "$(BUILDROOT)/usr/bin/check_mk_agent"
+	install -m 755 check_mk_caching_agent.linux "$(BUILDROOT)/usr/bin/check_mk_caching_agent"
+	install -m 755 linux/cmk-agent-ctl "$(BUILDROOT)/usr/bin/cmk-agent-ctl"
+	install -m 755 mk-job "$(BUILDROOT)/usr/bin/mk-job"
+	install -m 755 waitmax "$(BUILDROOT)/usr/bin/waitmax"
+	mkdir -p "$(BUILDROOT)/usr/lib/check_mk_agent/local"
+	mkdir -p "$(BUILDROOT)/usr/lib/check_mk_agent/plugins"
+	mkdir -p "$(BUILDROOT)/var/lib/check_mk_agent/cache"
+	mkdir -p "$(BUILDROOT)/var/lib/check_mk_agent/job"
+	mkdir -p "$(BUILDROOT)/var/lib/check_mk_agent/spool"
+	cp -r scripts "$(BUILDROOT)/var/lib/cmk-agent"
+	mv "$(BUILDROOT)/var/lib/cmk-agent/scripts/super-server/1_xinetd/check-mk-agent" "$(BUILDROOT)/etc/check_mk/xinetd-service-template.cfg"
 
 
 # TODO: Replace alien usage. Debian packages should be created just like the bakery does

@@ -99,7 +99,7 @@ inline void StringLower(std::string &str) {
     } else {
         // for windows doesn't work, for Linux probably too
         std::transform(str.begin(), str.end(), str.begin(),
-                       [](char ch) { return std::towlower(ch); });
+                       [](char ch) { return std::tolower(ch); });
     }
 }
 
@@ -111,7 +111,7 @@ inline void StringUpper(std::string &str) {
     } else {
         // for windows doesn't work, for Linux probably too
         std::transform(str.begin(), str.end(), str.begin(),
-                       [](char ch) { return std::towupper(ch); });
+                       [](char ch) { return std::toupper(ch); });
     }
 }
 

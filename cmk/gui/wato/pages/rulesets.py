@@ -12,6 +12,7 @@ import itertools
 import json
 import pprint
 import re
+from dataclasses import asdict
 from enum import auto, Enum
 from typing import Any, cast, Dict, Iterable, List, Optional, overload
 from typing import Tuple as _Tuple
@@ -1827,7 +1828,7 @@ class ABCEditRuleMode(WatoMode):
         html.begin_form("rule_editor", method="POST")
 
         # Additonal rule options
-        self._vs_rule_options(self._rule).render_input("options", self._rule.rule_options)
+        self._vs_rule_options(self._rule).render_input("options", asdict(self._rule.rule_options))
 
         # Value
         valuespec = self._ruleset.valuespec()

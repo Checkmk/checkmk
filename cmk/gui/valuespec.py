@@ -5164,13 +5164,16 @@ class Dictionary(ValueSpec[dict[str, Any]]):
     def _get_elements(self) -> DictionaryElements:
         yield from self._elements()
 
-    def render_input_as_form(self, varprefix, value):
+    # TODO: Optional has to be cleaned up to make the type signature compatible with the base class
+    def render_input_as_form(self, varprefix: str, value: _Optional[dict[str, Any]]) -> None:
         self._render_input(varprefix, value, "form")
 
-    def render_input(self, varprefix, value):
+    # TODO: Optional has to be cleaned up to make the type signature compatible with the base class
+    def render_input(self, varprefix: str, value: _Optional[dict[str, Any]]) -> None:
         self._render_input(varprefix, value, self._render)
 
-    def _render_input(self, varprefix, value, render):
+    # TODO: Optional has to be cleaned up to make the type signature compatible with the base class
+    def _render_input(self, varprefix: str, value: _Optional[dict[str, Any]], render: str) -> None:
         value = self.migrate(value)
         if not isinstance(value, MutableMapping):
             value = {}  # makes code simpler in complain phase
@@ -5182,7 +5185,9 @@ class Dictionary(ValueSpec[dict[str, Any]]):
         else:
             self._render_input_normal(varprefix, value, two_columns=self._columns == 2)
 
-    def _render_input_normal(self, varprefix, value, two_columns):
+    def _render_input_normal(
+        self, varprefix: str, value: dict[str, Any], two_columns: bool
+    ) -> None:
         html.open_table(class_=["dictionary"])
         for param, vs in self._get_elements():
             if param in self._hidden_keys:
@@ -5249,7 +5254,9 @@ class Dictionary(ValueSpec[dict[str, Any]]):
             html.close_tr()
         html.close_table()
 
-    def _render_input_form(self, varprefix, value, as_part=False):
+    def _render_input_form(
+        self, varprefix: str, value: dict[str, Any], as_part: bool = False
+    ) -> None:
         headers = self._headers or [(self.title() or _("Properties"), [])]
         for header, css, section_elements in map(self._normalize_header, headers):
             if not as_part:

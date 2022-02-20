@@ -66,7 +66,7 @@ TEST(AgentController, ConfigApi) {
 TEST(AgentController, ConfigApiDefaults) {
     auto cfg = YAML::Load("system:\n");
     EXPECT_FALSE(ac::IsRunController(cfg));
-    EXPECT_FALSE(ac::IsUseLegacyMode(cfg));
+    EXPECT_TRUE(ac::IsUseLegacyMode(cfg));
 }
 
 TEST(AgentController, EnableLegacyMode) {

@@ -1,0 +1,8 @@
+#!/bin/sh
+
+# In case of an upgrade, we must cleanup here.
+# 'preun' runs after the new scripts have been deployed
+# (too late cleanup files only deployed by the old package).
+if [ -x /var/lib/cmk-agent/scripts/super-server/setup ]; then
+    /var/lib/cmk-agent/scripts/super-server/setup cleanup
+fi

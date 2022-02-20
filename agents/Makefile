@@ -13,6 +13,9 @@ BUILDROOT := $(AGENTS_DIR)/.buildroot
 RPM_TOPDIR := $(AGENTS_DIR)/.rpm.topdir
 RPM_PACKAGE := $(DISTNAME)-1.noarch.rpm
 DEB_PACKAGE := check-mk-agent_$(VERSION)-1_all.deb
+DEB_TOPDIR := $(AGENTS_DIR)/debian
+DEB_BUILDDIR := $(AGENTS_DIR)/debian/.build
+
 
 usage:
 	@echo "make waitmax       -- compile waitmax.c"
@@ -83,8 +86,25 @@ $(RPM_PACKAGE): $(BUILDROOT)
 	    --define "_rpm_version $(RPM_VERSION)" \
 	    $(NAME).spec
 	mv -v $(RPM_TOPDIR)/RPMS/*/* $(RPM_PACKAGE)
-	rm -rf $(RPM_TOPDIR) $(BUILDROOT)
+	rm -rf $(RPM_TOPDIR)
 
+$(DEB_PACKAGE): $(BUILDROOT)
+	rm $(DEB_BUILDDIR) -rf
+	mkdir -p $(DEB_BUILDDIR)/control/usr/bin
+	cp -r $(DEB_TOPDIR)/control $(DEB_BUILDDIR)/
+	touch "$(DEB_BUILDDIR)/control/md5sum"
+	cd $(BUILDROOT); find . -type f | while read -r filename; do \
+	    md5sum "$${filename}" | sed 's|./||' >> "$(DEB_BUILDDIR)/control/md5sum"; \
+	done
+	sed \
+	    -e 's|\(Version:\).*|\1 $(VERSION)-1|' \
+	    -e 's|\(Installed-Size:\).*|\1 '"$$(du $(BUILDROOT) -s -B1024 | cut -f1)"'|' \
+	    "$(DEB_TOPDIR)/control/control" > "$(DEB_BUILDDIR)/control/control"
+	# gnu formatted tar
+	cd "$(BUILDROOT)"; tar czf "$(DEB_BUILDDIR)/data.tar.gz" *
+	cd "$(DEB_BUILDDIR)/control"; tar czf "$(DEB_BUILDDIR)/control.tar.gz" *
+	cd "$(DEB_TOPDIR)"; ar cr "$(AGENTS_DIR)/$(DEB_PACKAGE)" "control/debian-binary" "$(DEB_BUILDDIR)/control.tar.gz" "$(DEB_BUILDDIR)/data.tar.gz"
+	rm $(DEB_BUILDDIR) -rf
 
 # This is always built, because controller is phony.
 # If that changes, we have to properly add the dependencies here!
@@ -110,36 +130,5 @@ $(BUILDROOT): controller waitmax
 	mv "$(BUILDROOT)/var/lib/cmk-agent/scripts/super-server/1_xinetd/check-mk-agent" "$(BUILDROOT)/etc/check_mk/xinetd-service-template.cfg"
 
 
-# TODO: Replace alien usage. Debian packages should be created just like the bakery does
-#       Keep in mind that we still need to use gz compression by default for the agent
-#       packages.
-$(DEB_PACKAGE): $(RPM_PACKAGE)
-	@echo "Sorry. Debian packages currently via alien"
-	rm -f *.deb
-	set -e ; \
-	if [ -z "$$FAKEROOTKEY" ]; then \
-	    FAKEROOT=fakeroot ; \
-	else \
-	    FAKEROOT= ; \
-	fi ; \
-	$$FAKEROOT alien --scripts -k --to-deb $(RPM_PACKAGE)
-	DEB_PKG=$$(ls *.deb) ; \
-	echo "Repackaging $$DEB_PKG" ; \
-	rm -rf deb-unpack ; \
-	mkdir -p deb-unpack ; \
-	cd deb-unpack && \
-	ar x ../$$DEB_PKG && \
-	rm ../$$DEB_PKG && \
-	mkdir ctrl && \
-	tar xf control.tar.* -C ctrl && \
-	sed -i -e '/^Depends:/d' \
-	       -e 's/^Version:.*/Version: $(VERSION)-1/' \
-	       -e 's/^Maintainer:.*/Maintainer: feedback@checkmk.com/' ctrl/control && \
-	tar czf control.tar.gz $(TAROPTS) -C ctrl . && \
-	xz --decompress data.tar.xz && \
-	gzip data.tar && \
-	ar r ../$(DEB_PACKAGE) debian-binary control.tar.gz data.tar.gz
-	rm -rf deb-unpack
-
 clean:
-	rm -rf *~ waitmax *.rpm *.deb linux/cmk-agent-ctl
+	rm -rf *~ waitmax *.rpm *.deb linux/cmk-agent-ctl "$(BUILDROOT)" "$(DEB_BUILDDIR)"

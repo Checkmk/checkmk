@@ -1,0 +1,12 @@
+Package: check-mk-agent
+Version:
+Architecture: all
+Maintainer: tribe29 GmbH
+Installed-Size:
+Section: System/Monitoring
+Priority: extra
+Suggests: time
+Description: Checkmk Agent for Linux
+ The Checkmk Agent for Linux provides information about the system.
+ This can be used to monitor the host via Checkmk.
+

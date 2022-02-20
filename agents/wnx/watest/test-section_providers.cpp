@@ -115,7 +115,7 @@ TEST(SectionProviders, SystemTime) {
 
 class SectionProviderCheckMkFixture : public ::testing::Test {
 public:
-    static constexpr size_t core_lines_ = 19;
+    static constexpr size_t core_lines_ = 20;
     static constexpr size_t full_lines_ = core_lines_ + 3;
     static constexpr std::string_view names_[] = {
         "Version",          "BuildDate",       "AgentOS",
@@ -123,7 +123,8 @@ public:
         "ConfigFile",       "LocalConfigFile", "AgentDirectory",
         "PluginsDirectory", "StateDirectory",  "ConfigDirectory",
         "TempDirectory",    "LogDirectory",    "SpoolDirectory",
-        "LocalDirectory",   "AgentController", "OnlyFrom"};
+        "LocalDirectory",   "AgentController", "LegacyPullMode",
+        "OnlyFrom"};
 
     static constexpr std::pair<std::string_view, std::string_view>
         only_from_cases_[] = {
@@ -186,7 +187,8 @@ TEST_F(SectionProviderCheckMkFixture, Name) {
 }
 
 TEST_F(SectionProviderCheckMkFixture, ConstFields) {
-    auto cfg = getWorkingCfg();
+    createDataDir();
+    auto cfg = cfg::GetLoadedConfig();
     cfg[cfg::groups::kGlobal][cfg::vars::kOnlyFrom] = YAML::Load("127.0.0.1");
 
     auto result = getCoreResultAsTable();
@@ -204,15 +206,23 @@ TEST_F(SectionProviderCheckMkFixture, ConstFields) {
 }
 
 TEST_F(SectionProviderCheckMkFixture, AdvancedFields) {
+    createDataDir();
     auto result = getCoreResultAsTable();
     EXPECT_EQ(get_val(result[0]), CHECK_MK_VERSION);
     EXPECT_EQ(get_val(result[2]), "windows");
     EXPECT_EQ(get_val(result[3]), cfg::GetHostName());
     EXPECT_EQ(get_val(result[4]), tgt::Is64bit() ? "64bit" : "32bit");
+    EXPECT_EQ(result[16], "AgentController: ");
+    EXPECT_EQ(result[17], "LegacyPullMode: yes");
+    cfg::GetLoadedConfig()[cfg::groups::kSystem][cfg::vars::kController] =
+        YAML::Load("legacy: no");
+    result = getCoreResultAsTable();
+    EXPECT_EQ(result[17], "LegacyPullMode: no");
 }
 
 TEST_F(SectionProviderCheckMkFixture, OnlyFromField) {
-    auto cfg = getWorkingCfg();
+    createDataDir();
+    auto cfg = cfg::GetLoadedConfig();
 
     for (auto p : only_from_cases_) {
         cfg[cfg::groups::kGlobal][cfg::vars::kOnlyFrom] =

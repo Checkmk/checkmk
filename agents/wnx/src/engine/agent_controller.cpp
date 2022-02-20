@@ -25,7 +25,7 @@ bool IsRunController(const YAML::Node &node) {
 bool IsUseLegacyMode(const YAML::Node &node) {
     auto controller = cma::yml::GetNode(node, std::string{cfg::groups::kSystem},
                                         std::string{cfg::vars::kController});
-    return cfg::GetVal(controller, cfg::vars::kControllerLegacyPull, false);
+    return cfg::GetVal(controller, cfg::vars::kControllerLegacyPull, true);
 }
 
 fs::path GetController(const fs::path &service) {

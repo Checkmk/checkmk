@@ -159,6 +159,11 @@ fn run_requested_mode(args: cli::Args, paths: constants::PathResolver) -> Anyhow
                 "Registration successful, but could not delete marker for legacy pull mode",
             )
         }
+        cli::Args::Import(import_args) => {
+            import_connection::import(&mut registry, &import_args)?;
+            pull::disallow_legacy_pull(&paths.legacy_pull_path)
+                .context("Import successful, but could not delete marker for legacy pull mode")
+        }
         cli::Args::RegisterSurrogatePull(surr_pull_reg_args) => {
             registration::register_surrogate_pull(config::RegistrationConfig::new(
                 registration_preset,
@@ -184,7 +189,6 @@ fn run_requested_mode(args: cli::Args, paths: constants::PathResolver) -> Anyhow
             delete_connection::delete(&mut registry, &delete_args.connection)
         }
         cli::Args::DeleteAll { .. } => delete_connection::delete_all(&mut registry),
-        cli::Args::Import(import_args) => import_connection::import(&mut registry, &import_args),
     }
 }
 

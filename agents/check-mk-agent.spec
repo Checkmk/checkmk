@@ -54,6 +54,15 @@ define __spec_install_pre %{___build_pre} &&\
 /var/lib/cmk-agent/scripts/super-server/1_xinetd/setup
 /var/lib/cmk-agent/scripts/super-server/setup
 
+%pre
+
+# In case of an upgrade, we must cleanup here.
+# 'preun' runs after the new scripts have been deployed
+# (too late cleanup files only deployed by the old package).
+if [ -x /var/lib/cmk-agent/scripts/super-server/setup ]; then
+    /var/lib/cmk-agent/scripts/super-server/setup cleanup
+fi
+
 %post
 
 /var/lib/cmk-agent/scripts/super-server/setup cleanup
@@ -73,9 +82,9 @@ fi
 
 %preun
 
-/var/lib/cmk-agent/scripts/super-server/setup cleanup
 case "$1" in
     0|remove|purge)
+        /var/lib/cmk-agent/scripts/super-server/setup cleanup
         /var/lib/cmk-agent/scripts/super-server/setup trigger
     ;;
 esac

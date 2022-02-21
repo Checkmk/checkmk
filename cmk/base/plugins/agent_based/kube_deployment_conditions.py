@@ -65,7 +65,12 @@ def check(params: Mapping[str, VSResultAge], section: DeploymentConditions) -> C
         for name, condition in conditions.items()
         if condition is not None
     ):
-        yield Result(state=State.OK, summary="All conditions OK")
+        details = "\n".join(
+            f"{name.upper()}: {cond.status} ({cond.reason}: {cond.message})"
+            for name, cond in section
+            if cond is not None
+        )
+        yield Result(state=State.OK, summary="All conditions OK", details=details)
         return
 
     current_timestamp = time.time()
@@ -74,12 +79,12 @@ def check(params: Mapping[str, VSResultAge], section: DeploymentConditions) -> C
         if (condition := conditions[name]) is None:
             continue
 
-        condition_name = name.capitalize()
+        condition_name = name.upper()
         if (status := condition["status"]) is CONDITIONS_OK_MAPPINGS[name]:
             yield Result(
                 state=State.OK,
                 summary=f"{condition_name}: {status}",
-                details=f"{condition_name}: {status} " f"({condition['reason']})",
+                details=f"{condition_name}: {status} ({condition['reason']}: {condition['message']})",
             )
             continue
 

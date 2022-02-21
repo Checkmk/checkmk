@@ -10,7 +10,7 @@ does not offer stable APIs. The code may change at any time."""
 
 from __future__ import annotations
 
-__version__ = "2.1.0i1"
+__version__ = "2.1.0b1"
 
 import datetime
 import enum

@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 # type: ignore[import]
 
-__version__ = "2.1.0i1"
+__version__ = "2.1.0b1"
 
 ###################################################
 # plugin to retrieve data from tinkerforge devices.

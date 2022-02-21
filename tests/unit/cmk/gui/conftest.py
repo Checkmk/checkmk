@@ -217,7 +217,6 @@ class WebTestAppForCMK(webtest.TestApp):
         self.password = password
 
     def call_method(self, method: HTTPMethod, url, *args, **kw) -> webtest.TestResponse:
-        print(method, url, args, kw)
         return getattr(self, method.lower())(url, *args, **kw)
 
     def has_link(self, resp: webtest.TestResponse, rel) -> bool:

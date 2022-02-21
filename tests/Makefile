@@ -33,6 +33,7 @@ SHELL_FILES_REL := $(shell cd ..; grep -rl \
     --exclude-dir="omd" \
     --exclude-dir="skel" \
     --exclude-dir="tests" \
+    --exclude-dir="web" \
     --exclude="LIVEPROXYD" \
     --exclude="install-sh" \
     --exclude="code_examples.py" \

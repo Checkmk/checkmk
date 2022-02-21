@@ -52,6 +52,7 @@ SERVICE_DESCRIPTION = {
     },
     request_schema=request_schemas.AcknowledgeHostRelatedProblem,
     output_empty=True,
+    update_config_generation=False,
 )
 def set_acknowledgement_on_hosts(params):
     """Set acknowledgement on related hosts"""
@@ -140,6 +141,7 @@ def set_acknowledgement_on_hosts(params):
     },
     request_schema=request_schemas.AcknowledgeServiceRelatedProblem,
     output_empty=True,
+    update_config_generation=False,
 )
 def set_acknowledgement_on_services(params):
     """Set acknowledgement on related services"""

@@ -92,6 +92,7 @@ class DowntimeParameter(BaseSchema):
     request_schema=request_schemas.CreateHostRelatedDowntime,
     additional_status_codes=[422],
     output_empty=True,
+    update_config_generation=False,
 )
 def create_host_related_downtime(params):
     """Create a host related scheduled downtime"""
@@ -160,6 +161,7 @@ def create_host_related_downtime(params):
     request_schema=request_schemas.CreateServiceRelatedDowntime,
     additional_status_codes=[422],
     output_empty=True,
+    update_config_generation=False,
 )
 def create_service_related_downtime(params):
     """Create a service related scheduled downtime"""
@@ -336,6 +338,7 @@ def _serve_downtime(downtime_details):
     skip_locking=True,
     request_schema=request_schemas.DeleteDowntime,
     output_empty=True,
+    update_config_generation=False,
 )
 def delete_downtime(params):
     """Delete a scheduled downtime"""

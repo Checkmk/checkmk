@@ -72,7 +72,9 @@ from cmk.gui.plugins.openapi.restful_objects.type_defs import (
     StatusCodeInt,
 )
 from cmk.gui.plugins.openapi.utils import problem
-from cmk.gui.watolib.activate_changes import update_config_generation
+from cmk.gui.watolib.activate_changes import (
+    update_config_generation as activate_changes_update_config_generation,
+)
 from cmk.gui.watolib.git import do_git_commit
 
 if typing.TYPE_CHECKING:
@@ -285,6 +287,11 @@ class Endpoint:
             with the 'ETag' response header. When set to 'both', it will act as if set to
             'input' and 'output' at the same time.
 
+        update_config_generation:
+            Wether to generate a new configuration. All endpoints with methods other than `get`
+            normally trigger a regeneration of the configuration. This can be turned off by
+            setting `update_config_generation` to False.
+
         **options:
             Various keys which will be directly applied to the OpenAPI operation object.
 
@@ -312,6 +319,7 @@ class Endpoint:
         additional_status_codes: Optional[Sequence[StatusCodeInt]] = None,
         valid_from: Optional[Version] = None,
         valid_until: Optional[Version] = None,
+        update_config_generation: bool = True,
     ):
         self.path = path
         self.link_relation = link_relation
@@ -333,6 +341,7 @@ class Endpoint:
         self.additional_status_codes = self._list(additional_status_codes)
         self.valid_from = valid_from
         self.valid_until = valid_until
+        self.update_config_generation = update_config_generation
 
         self.operation_id: str
         self.func: WrappedFunc
@@ -624,10 +633,14 @@ class Endpoint:
             # We assume something has been modified and increase the config generation ID
             # by one. This is necessary to ensure a warning in the "Activate Changes" GUI
             # about there being new changes to activate can be given to the user.
-            if self.method != "get" and response.status_code < 300:
+            if (
+                self.method != "get"
+                and response.status_code < 300
+                and self.update_config_generation
+            ):
                 # We assume no configuration change on GET and no configuration change on
                 # non-ok responses.
-                update_config_generation()
+                activate_changes_update_config_generation()
                 if config.wato_use_git:
                     do_git_commit()
 

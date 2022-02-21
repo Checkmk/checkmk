@@ -1,0 +1,13 @@
+Title: agent_jenkins: Better error handling
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1645453861
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.2.0i1
+
+Connection errors resulted in a traceback. You will now get an error like "Could
+not fetch data from jenkins. Details: <Response [401]>".

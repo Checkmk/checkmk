@@ -866,7 +866,7 @@ def _valuespec_special_agents_kube():
                         _tcp_timeouts(),
                     ],
                     required_keys=["endpoint", "verify-cert"],
-                    title=_("Get usage data via Checkmk Cluster Collector"),
+                    title=_("Enrich with usage data from Checkmk Cluster Collector"),
                 ),
             ),
             (

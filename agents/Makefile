@@ -78,7 +78,7 @@ $(RPM_PACKAGE): controller waitmax
 	#
 	# create build root (as tree would show it)
 	mkdir -p "$(RPM_BUILDROOT)/etc/check_mk"
-	install -m 644 "conffiles/super-server.cfg" $(RPM_BUILDROOT)/etc/check_mk/super-server.cfg"
+	install -m 644 "conffiles/super-server.cfg" "$(RPM_BUILDROOT)/etc/check_mk/super-server.cfg"
 	mkdir -p "$(RPM_BUILDROOT)/usr/bin"
 	mkdir -p "$(RPM_BUILDROOT)/var/lib/cmk-agent"
 	install -m 755 check_mk_agent.linux "$(RPM_BUILDROOT)/usr/bin/check_mk_agent"

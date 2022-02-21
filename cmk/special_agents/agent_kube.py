@@ -167,7 +167,6 @@ def parse_arguments(args: List[str]) -> argparse.Namespace:
     p.add_argument(
         "--api-server-proxy",
         type=str,
-        default=None,
         metavar="PROXY",
         help=(
             "HTTP proxy used to connect to the Kubernetes api server. If not set, the environment settings "
@@ -181,7 +180,6 @@ def parse_arguments(args: List[str]) -> argparse.Namespace:
     p.add_argument(
         "--cluster-collector-proxy",
         type=str,
-        default=None,
         metavar="PROXY",
         help=(
             "HTTP proxy used to connect to the Kubernetes cluster agent. If not set, the environment settings "

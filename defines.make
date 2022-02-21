@@ -41,7 +41,7 @@ EDITION            := free
 EDITION_SHORT      := cfe
 endif
 
-VERSION            := 2.1.0i1
+VERSION            := 2.2.0i1
 OMD_VERSION        := $(VERSION).$(EDITION_SHORT)
 # Do not use the the ".c?e" EDITION_SHORT suffix, the edition is part of the package name
 PKG_VERSION        := $(VERSION)
@@ -50,7 +50,7 @@ PKG_VERSION        := $(VERSION)
 # the branch name, because we want to re-use a single cache also for derived sandbox
 # branches (1.7.0i1 -> 1.7.0).
 # This needs to be changed in the master branch every time a stable branch is forked.
-BRANCH_VERSION     := 2.1.0
+BRANCH_VERSION     := 2.2.0
 # This automatism did not work well in all cases. There were daily build jobs that used
 # e.g. 2020.02.08 as BRANCH_VERSION, even if they should use 1.7.0
 #BRANCH_VERSION := $(shell echo "$(VERSION)" | sed -E 's/^([0-9]+.[0-9]+.[0-9]+).*$$/\1/')

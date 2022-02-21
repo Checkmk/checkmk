@@ -21,7 +21,6 @@ pub fn push(mut registry: config::Registry) -> AnyhowResult<()> {
     loop {
         registry.refresh()?;
         let begin = Instant::now();
-        debug!("Handling registered push connections");
         // TODO(sk): enable this for Windows when this will be ready to production
         #[cfg(unix)]
         handle_push_cycle(&registry)?;
@@ -33,6 +32,8 @@ pub fn handle_push_cycle(registry: &config::Registry) -> AnyhowResult<()> {
     if registry.push_is_empty() {
         return Ok(());
     }
+
+    debug!("Handling registered push connections");
 
     let compressed_mon_data = monitoring_data::compress(
         &monitoring_data::collect().context("Error collecting monitoring data")?,

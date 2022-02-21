@@ -124,11 +124,11 @@ where
 {
     loop {
         if !pull_state.is_active() {
-            debug!("Found no registered pull connection. Suspending pull handling for one minute.");
             tokio::time::sleep(Duration::from_secs(ONE_MINUTE)).await;
             pull_state.refresh()?;
             continue;
         }
+        debug!("Start listening for incoming pull requests on {}", addr);
         _pull_cycle(
             &mut pull_state,
             &mut guard,
@@ -163,7 +163,7 @@ where
                 Ok(inner) => inner,
                 Err(_) => {
                     debug!(
-                        "Got no pull request within five minutes. Registration may have changed, thus restarting pull cycle."
+                        "Got no pull request within five minutes. Registration may have changed, thus restarting pull handling."
                     );
                     return Ok(());
                 }
@@ -171,7 +171,7 @@ where
             .context("Failed accepting pull connection")?;
 
         if !is_addr_allowed(&remote, allowed_ip) {
-            warn!("PULL: Request from {} is not allowed", remote);
+            warn!("{}: Request from IP is not allowed", remote);
             continue;
         }
 
@@ -180,7 +180,7 @@ where
 
         // Check if pull was deactivated meanwhile before actually handling the request.
         if !pull_state.is_active() {
-            debug!("Detected empty registry, closing current connection and aborting pull cycle.");
+            debug!("Detected empty registry, closing current connection and stop listening.");
             return Ok(());
         }
 
@@ -201,12 +201,12 @@ where
             Ok(connection_fut) => {
                 tokio::spawn(async move {
                     if let Err(err) = connection_fut.await {
-                        warn!("PULL: Request from {} failed: {}", remote, err)
+                        warn!("{}: Request failed: {}", remote, err)
                     };
                 });
             }
             Err(error) => {
-                warn!("PULL: Request from {} failed: {}", remote, error);
+                warn!("{}: Request failed: {}", remote, error);
             }
         }
     }

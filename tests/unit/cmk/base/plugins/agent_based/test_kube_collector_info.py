@@ -185,5 +185,5 @@ def test_check_with_errored_handled_component_section(collector_handling_logs):
         kube_collector_info._component_check("Container Metrics", collector_handling_logs.container)
     )
     assert len(result) == 1
-    assert result[0].state == State.CRIT
+    assert result[0].state == State.OK
     assert result[0].summary.startswith("Container Metrics: ")

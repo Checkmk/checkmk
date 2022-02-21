@@ -5,9 +5,14 @@ license: GPLv2
 distribution: check_mk
 description:
  The connection status to the Kubernetes API is implicitly reported by the
- Checkmk service. This check reports the connection status of the Cluster
- Collector deployed in the Kubernetes cluster. It also reports any problems
- which may arise during processing of the collected performance metrics.
+ Checkmk service. This service has a similar function in terms of the
+ connection to the Cluster Collector deployed to the Kubernetes cluster.
+
+ The service has two tasks. It reports on the metadata of the
+ collectors that are deployed to the Kubernetes cluster and also provides reports
+ on the data processing of the collected data. It displays additional information
+ in case a problem occurs during the data handling process within the agent.
+ The service reports an OK state regardless of the data process outcome.
 
 discovery:
  One service is created if the cluster collector option is configured.

@@ -31,11 +31,8 @@ bool StartAgentController(const std::filesystem::path &service);
 bool KillAgentController(const std::filesystem::path &service);
 std::string DetermineAgentCtlVersion();
 bool IsRunController(const YAML::Node &node);
-bool IsUseLegacyMode(const YAML::Node &node);
-/// Creates or deletes signal file in the user dir.
-///
-/// Must be in sync with Rust code
-void EnableLegacyMode(bool enable);
+bool IsInLegacyMode();
+void CreateLegacyModeFile();
 }  // namespace cma::ac
 
 #endif  // agent_controller_h__

@@ -600,7 +600,7 @@ void ServiceProcessor::mainThread(world::ExternalPort *ex_port) noexcept {
         WaitForNetwork(std::chrono::seconds{wait_period});
     }
 
-    ac::EnableLegacyMode(ac::IsUseLegacyMode(cfg::GetLoadedConfig()));
+    ac::CreateLegacyModeFile();
     auto port = OptionallyStartAgentController();
     ON_OUT_OF_SCOPE(ac::KillAgentController(wtools::GetArgv(0)));
     OpenFirewall(port.has_value());

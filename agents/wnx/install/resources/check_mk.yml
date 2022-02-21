@@ -278,7 +278,6 @@ system:
 
     controller:
         run: yes        # start controller if controller presented
-        legacy: yes     # if yes creates data/allow-legacy-pull, if not, deletes it
 
     firewall:
         mode: configure # allowed none, remove, configure

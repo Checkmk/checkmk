@@ -504,3 +504,20 @@ def test_check_kube_replicas_value_store_reset(
     monkeypatch.setattr(time, "time", mock_time)
 
     assert list(check_kube_replicas(params, replicas, None)) == expected_check_result
+
+
+def test_check_replicas_with_none_value():
+    check_result = list(
+        check_kube_replicas(
+            {},
+            Replicas(
+                replicas=None,
+                updated=0,
+                available=0,
+                ready=0,
+                unavailable=0,
+            ),
+            None,
+        )
+    )
+    assert len(check_result) == 0

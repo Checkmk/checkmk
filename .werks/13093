@@ -1,0 +1,29 @@
+Title: Limit various fields lengths when writing to the monitoring history.
+Class: fix
+Compatible: compat
+Component: cmc
+Date: 1645453906
+Edition: cee
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+To protect against very long fields coming e.g. from notification plugins
+and other external sources, the CMC will put limit to various fields which
+are written to the monitoring history.  If such a field is too long, it's
+simply truncated.  This is a simple protection against huge memory
+consumption of the CMC, which caches log lines for faster views and SLA
+computations.
+
+Limits (non-configurable for now):
+
+<ul>
+<li>Comment: 2000 bytes</li>
+<li>Plugin output: 1000 bytes</li>
+<li>Long plugin output: 2000 bytes</li>
+</ul>
+
+Note: For fields coming from the Python side (i.e. notifications),
+it's actually characters, not bytes.
+

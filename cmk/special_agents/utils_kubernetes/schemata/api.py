@@ -149,7 +149,7 @@ class Node(BaseModel):
 
 
 class Replicas(BaseModel):
-    replicas: int
+    replicas: Optional[int]  # TODO: further investigate this behaviour CMK-9791
     updated: int
     available: int
     ready: int

@@ -343,7 +343,7 @@ class PodContainers(BaseModel):
 
 
 class Replicas(BaseModel):
-    replicas: int
+    replicas: Optional[int]
     updated: int
     available: int
     ready: int

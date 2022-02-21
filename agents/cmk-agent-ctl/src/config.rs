@@ -223,23 +223,32 @@ impl Registry {
         match (mtime(&self.path)?, self.last_reload) {
             (Some(now), Some(then)) => {
                 match now.duration_since(then) {
-                    Ok(time) if time.is_zero() => Ok(false),
+                    Ok(time) if time.is_zero() => {
+                        // No change.
+                        Ok(false)
+                    }
                     _ => {
                         // This also covers Err(_), which means "negative time".
                         // This may occur due to clock adjustments.
                         // Force reload in this case.
+                        // Otherwise, we have a regular posive duration, which means
+                        // that our registration was touched.
                         self.reload()?;
                         Ok(true)
                     }
                 }
             }
 
-            (None, Some(_)) => {
+            (None, None) => {
+                // Still no file there -> No change.
+                Ok(false)
+            }
+
+            _ => {
+                // File was deleted or is new
                 self.reload()?;
                 Ok(true)
             }
-
-            _ => Ok(false),
         }
     }
 

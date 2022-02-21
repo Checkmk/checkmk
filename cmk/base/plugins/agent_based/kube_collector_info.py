@@ -93,10 +93,7 @@ def check(
     section_kube_collectors_metadata: Optional[CollectorComponentsMetadata],
     section_kube_collector_processing_logs: Optional[CollectorProcessingLogs],
 ) -> CheckResult:
-    if (
-        section_kube_collectors_metadata is None
-        or section_kube_collectors_metadata.cluster_collector is None
-    ):
+    if section_kube_collectors_metadata is None:
         return
 
     if section_kube_collectors_metadata.processing_log.status == CollectorState.ERROR:
@@ -108,6 +105,11 @@ def check(
             f"({section_kube_collectors_metadata.processing_log.detail})",
         )
         return
+
+    # TODO: improve metadata model to remove assert CMK-9793
+    # The combination where the metadata processing_log.status is OK but the cluster collector
+    # metadata is None is not possible and is verified on the Special Agent side
+    assert section_kube_collectors_metadata.cluster_collector is not None
 
     yield Result(
         state=State.OK,

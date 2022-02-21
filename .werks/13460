@@ -1,0 +1,14 @@
+Title: Fix crash in oracle_recovery_status
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1645456423
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.0.0p21
+
+In case of error during querying oracle_recovery_status
+in mk_oracle agent, the check would crash.
+Now, the check reports the error and assumes the state CRIT.

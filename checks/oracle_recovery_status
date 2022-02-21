@@ -53,6 +53,9 @@ def check_oracle_recovery_status(item, params, info):
                 _checkpoint_time, checkpoint_age, datafilestatus, _recovery, \
                 _fuzzy, _checkpoint_change, backup_state, backup_age = line
 
+            else:
+                return 2, ", ".join(line)
+
             if params.get("levels"):
                 warn, crit = params["levels"]
 

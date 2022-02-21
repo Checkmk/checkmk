@@ -183,9 +183,11 @@ SECTION_IPMI_DISCRETE = ipmi.parse_ipmi(
             " C8h ",
             " ok ",
             " 10.1 ",
-            " Presence detected, Failure detected     <= NOT OK !!",
+            " Presence detected, Failure detected",
         ],
         ["PS2 Status       ", " C9h ", " ok ", " 10.2 ", " Presence detected"],
+        ["Status       ", " C9h ", " ok ", " 10.2 ", " Presence detected"],
+        ["Drive 4          ", " 64h ", " ok  ", "  4.4 ", " Drive Present, Drive Fault"],
     ]
 )
 
@@ -294,6 +296,7 @@ def patch_discovery_params_retrieval(monkeypatch, rules):
                 Service(item="BMC_Watchdog", parameters={}, labels=[]),
                 Service(item="PS1_Status", parameters={}, labels=[]),
                 Service(item="PS2_Status", parameters={}, labels=[]),
+                Service(item="Drive_4", parameters={}, labels=[]),
                 Service(item="Ambient", parameters={}, labels=[]),
                 Service(item="Systemboard", parameters={}, labels=[]),
                 Service(item="CPU", parameters={}, labels=[]),
@@ -371,8 +374,7 @@ def test_regression_discovery(monkeypatch, discovery_params, discovery_results):
                 Metric("ambient_temp", 18.5),
                 Result(
                     state=state.CRIT,
-                    summary="146 sensors - 105 OK - 1 CRIT: PS1_Status (ok (Presence detected, Failure detected     <= NOT OK !!)) - 40 skipped",
-                    details="146 sensors - 105 OK - 1 CRIT: PS1_Status (ok (Presence detected, Failure detected     <= NOT OK !!)) - 40 skipped",
+                    summary="147 sensors - 105 OK - 2 CRIT: PS1_Status (ok (Presence detected, Failure detected)), Drive_4 (ok (Drive Present, Drive Fault)) - 40 skipped",
                 ),
             ],
         ),
@@ -859,8 +861,8 @@ def test_regression_discovery(monkeypatch, discovery_params, discovery_results):
             [
                 Result(
                     state=state.CRIT,
-                    summary="Status: ok (Presence detected, Failure detected     <= NOT OK !!)",
-                    details="Status: ok (Presence detected, Failure detected     <= NOT OK !!)",
+                    summary="Status: ok (Presence detected, Failure detected)",
+                    details="Status: ok (Presence detected, Failure detected)",
                 )
             ],
         ),
@@ -1192,6 +1194,16 @@ def test_regression_discovery(monkeypatch, discovery_params, discovery_results):
                 Result(state=state.OK, summary="Status: ok"),
                 Result(state=state.OK, summary="0.00 %"),
                 Metric("SEL_Level", 0.0, levels=(90.0, None)),
+            ],
+        ),
+        (
+            "Drive_4",
+            [
+                Result(
+                    state=state.CRIT,
+                    summary="Status: ok (Drive Present, Drive Fault)",
+                    details="Status: ok (Drive Present, Drive Fault)",
+                )
             ],
         ),
     ],

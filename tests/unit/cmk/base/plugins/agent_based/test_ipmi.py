@@ -214,7 +214,8 @@ SECTION_IPMI_DISCRETE = ipmi.parse_ipmi(
      [
          u'PS1 Status       ', u' C8h ', u' ok ', u' 10.1 ',
          u' Presence detected, Failure detected     <= NOT OK !!'
-     ], [u'PS2 Status       ', u' C9h ', u' ok ', u' 10.2 ', u' Presence detected']])
+     ], [u'PS2 Status       ', u' C9h ', u' ok ', u' 10.2 ', u' Presence detected'],
+     ["Drive 4          ", " 64h ", " ok  ", "  4.4 ", " Drive Present, Drive Fault"]])
 
 
 def patch_discovery_params_retrieval(monkeypatch, rules):
@@ -321,6 +322,7 @@ def patch_discovery_params_retrieval(monkeypatch, rules):
                 Service(item='BMC_Watchdog', parameters={}, labels=[]),
                 Service(item='PS1_Status', parameters={}, labels=[]),
                 Service(item='PS2_Status', parameters={}, labels=[]),
+                Service(item='Drive_4', parameters={}, labels=[]),
                 Service(item='Ambient', parameters={}, labels=[]),
                 Service(item='Systemboard', parameters={}, labels=[]),
                 Service(item='CPU', parameters={}, labels=[]),
@@ -389,9 +391,7 @@ def test_regression_discovery(monkeypatch, discovery_params, discovery_results):
         Result(
             state=State.CRIT,
             summary=
-            '146 sensors - 105 OK - 1 CRIT: PS1_Status (ok (Presence detected, Failure detected     <= NOT OK !!)) - 40 skipped',
-            details=
-            '146 sensors - 105 OK - 1 CRIT: PS1_Status (ok (Presence detected, Failure detected     <= NOT OK !!)) - 40 skipped'
+            '147 sensors - 105 OK - 2 CRIT: PS1_Status (ok (Presence detected, Failure detected     <= NOT OK !!)), Drive_4 (ok (Drive Present, Drive Fault)) - 40 skipped',
         )
     ]),
     ('CMOS_Battery', [Result(state=State.OK, summary='Status: ok')]),
@@ -851,6 +851,9 @@ def test_regression_discovery(monkeypatch, discovery_params, discovery_results):
         Result(state=State.OK, summary='Status: ok'),
         Result(state=State.OK, summary='0.00 %'),
         Metric('SEL_Level', 0.0, levels=(90.0, None))
+    ]),
+    ('Drive_4', [
+        Result(state=State.CRIT, summary='Status: ok (Drive Present, Drive Fault)'),
     ]),
 ])
 def test_regression_check(item, check_results):

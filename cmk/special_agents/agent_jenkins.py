@@ -73,6 +73,10 @@ def handle_request(args, sections):
             if args.debug:
                 raise
 
+        if response.status_code != 200:
+            sys.stderr.write("Could not fetch data from Jenkins. Details: %s\n" % response)
+            continue
+
         if section.name == "instance":
             value = response.json()
         else:

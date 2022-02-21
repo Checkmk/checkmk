@@ -10,7 +10,7 @@ use std::sync::Arc;
 
 use super::{config, constants, monitoring_data, tls_server};
 use anyhow::{anyhow, Context, Result as AnyhowResult};
-use log::{info, warn};
+use log::{debug, info, warn};
 use std::net::{IpAddr, SocketAddr};
 use tokio::io::AsyncWriteExt;
 use tokio::net::{TcpListener, TcpStream};
@@ -20,6 +20,8 @@ use tokio_rustls::TlsAcceptor;
 
 const TLS_ID: &[u8] = b"16";
 const HEADER_VERSION: &[u8] = b"\x00\x00";
+const ONE_MINUTE: u64 = 60;
+const FIVE_MINUTES: u64 = 300;
 
 pub struct MaxConnectionsGuard {
     max_connections: usize,
@@ -90,7 +92,7 @@ pub fn pull(
     let guard = MaxConnectionsGuard::new(max_connections);
     // Plain agent output for legacy handling only
     let collect_plain_mondata = monitoring_data::async_collect;
-    // Compressed monitoring data with internal protocol handler
+    // Compressed monitoring data with internal protocol header
     let collect_encoded_mondata = collect_and_encode_mondata;
     let addr = format!("0.0.0.0:{}", pull_config.port);
     _pull(
@@ -106,30 +108,70 @@ pub fn pull(
 
 #[tokio::main(flavor = "current_thread")]
 pub async fn _pull<Fut1, Fut2>(
-    mut pull_config: impl PullState,
+    mut pull_state: impl PullState,
     mut guard: MaxConnectionsGuard,
-    collect_plain_mondata: impl Fn(std::net::IpAddr) -> Fut1,
-    collect_encoded_mondata: impl Fn(std::net::IpAddr) -> Fut2,
+    collect_plain_mondata: impl Fn(IpAddr) -> Fut1,
+    collect_encoded_mondata: impl Fn(IpAddr) -> Fut2,
     addr: &str,
-    timeout: u64,
+    connection_timeout: u64,
     allowed_ip: &[String],
 ) -> AnyhowResult<()>
 where
     // TODO: Unify these two types. However, they must still be
-    // specified seper ately as they are two seperate opaque types for the Rust compiler.
+    // specified seperately as they are two seperate opaque types for the Rust compiler.
+    Fut1: Future<Output = IoResult<Vec<u8>>> + Send + 'static,
+    Fut2: Future<Output = AnyhowResult<Vec<u8>>> + Send + 'static,
+{
+    loop {
+        pull_state.refresh()?;
+        if pull_state.is_active() {
+            _pull_cycle(
+                &mut pull_state,
+                &mut guard,
+                &collect_plain_mondata,
+                &collect_encoded_mondata,
+                addr,
+                connection_timeout,
+                allowed_ip,
+            )
+            .await?;
+            continue;
+        }
+        debug!("Found no registered pull connection. Suspending pull handling for one minute.");
+        tokio::time::sleep(Duration::from_secs(ONE_MINUTE)).await;
+    }
+}
+
+pub async fn _pull_cycle<Fut1, Fut2>(
+    pull_state: &mut impl PullState,
+    guard: &mut MaxConnectionsGuard,
+    collect_plain_mondata: &impl Fn(IpAddr) -> Fut1,
+    collect_encoded_mondata: &impl Fn(IpAddr) -> Fut2,
+    addr: &str,
+    connection_timeout: u64,
+    allowed_ip: &[String],
+) -> AnyhowResult<()>
+where
     Fut1: Future<Output = IoResult<Vec<u8>>> + Send + 'static,
     Fut2: Future<Output = AnyhowResult<Vec<u8>>> + Send + 'static,
 {
     let listener = TcpListener::bind(addr).await?;
 
     loop {
-        let (stream, remote) = listener
-            .accept()
-            .await
+        let (stream, remote) =
+            match timeout(Duration::from_secs(FIVE_MINUTES), listener.accept()).await {
+                Ok(inner) => inner,
+                Err(_) => {
+                    debug!(
+                        "Got no pull request within five minutes. Registration may have changed, thus restarting pull cycle."
+                    );
+                    return Ok(());
+                }
+            }
             .context("Failed accepting pull connection")?;
         info!("{}: Handling pull request", remote);
 
-        pull_config.refresh()?;
+        pull_state.refresh()?;
         if !is_addr_allowed(&remote, allowed_ip) {
             warn!("PULL: Request from {} is not allowed", remote);
             continue;
@@ -142,9 +184,9 @@ where
             stream,
             plain_mondata,
             encoded_mondata,
-            pull_config.is_legacy_pull(),
-            pull_config.tls_acceptor(),
-            timeout,
+            pull_state.is_legacy_pull(),
+            pull_state.tls_acceptor(),
+            connection_timeout,
         );
 
         match guard.try_make_task_for_addr(remote, request_handler_fut) {
@@ -166,6 +208,7 @@ pub trait PullState {
     fn refresh(&mut self) -> AnyhowResult<()>;
     fn tls_acceptor(&self) -> TlsAcceptor;
     fn is_legacy_pull(&self) -> bool;
+    fn is_active(&self) -> bool;
 }
 struct PullStateImpl {
     legacy_pull: bool,
@@ -205,6 +248,10 @@ impl PullState for PullStateImpl {
 
     fn is_legacy_pull(&self) -> bool {
         self.legacy_pull
+    }
+
+    fn is_active(&self) -> bool {
+        self.legacy_pull || !self.registry.is_empty()
     }
 }
 

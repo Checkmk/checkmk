@@ -123,22 +123,22 @@ where
     Fut2: Future<Output = AnyhowResult<Vec<u8>>> + Send + 'static,
 {
     loop {
-        pull_state.refresh()?;
-        if pull_state.is_active() {
-            _pull_cycle(
-                &mut pull_state,
-                &mut guard,
-                &collect_plain_mondata,
-                &collect_encoded_mondata,
-                addr,
-                connection_timeout,
-                allowed_ip,
-            )
-            .await?;
+        if !pull_state.is_active() {
+            debug!("Found no registered pull connection. Suspending pull handling for one minute.");
+            tokio::time::sleep(Duration::from_secs(ONE_MINUTE)).await;
+            pull_state.refresh()?;
             continue;
         }
-        debug!("Found no registered pull connection. Suspending pull handling for one minute.");
-        tokio::time::sleep(Duration::from_secs(ONE_MINUTE)).await;
+        _pull_cycle(
+            &mut pull_state,
+            &mut guard,
+            &collect_plain_mondata,
+            &collect_encoded_mondata,
+            addr,
+            connection_timeout,
+            allowed_ip,
+        )
+        .await?;
     }
 }
 
@@ -169,17 +169,25 @@ where
                 }
             }
             .context("Failed accepting pull connection")?;
-        info!("{}: Handling pull request", remote);
 
-        pull_state.refresh()?;
         if !is_addr_allowed(&remote, allowed_ip) {
             warn!("PULL: Request from {} is not allowed", remote);
             continue;
         }
 
+        // Act on most recent registration data
+        pull_state.refresh()?;
+
+        // Check if pull was deactivated meanwhile before actually handling the request.
+        if !pull_state.is_active() {
+            debug!("Detected empty registry, closing current connection and aborting pull cycle.");
+            return Ok(());
+        }
+
+        info!("{}: Handling pull request", remote);
+
         let plain_mondata = collect_plain_mondata(remote.ip());
         let encoded_mondata = collect_encoded_mondata(remote.ip());
-
         let request_handler_fut = handle_request(
             stream,
             plain_mondata,

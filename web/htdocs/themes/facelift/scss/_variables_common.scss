@@ -18,6 +18,7 @@ $white: rgb(255, 255, 255);
 $black: rgb(0, 0, 0);
 $warning: rgb(255, 254, 68); // alt (more of an orange): rgb(255, 160, 66)
 $danger: rgb(255, 50, 50);
+$danger-dimmed: darken($danger, 25%);
 $success: rgb(19, 211, 137);
 $success-dimmed: darken($success, 5%);
 $success-dimmed-2: darken($success, 15%);
@@ -41,6 +42,8 @@ $flapping: rgb(255, 0, 255);
 $hostdown: rgb(0, 102, 170);
 $downtime: rgb(0, 170, 255);
 $chaos: rgb(136, 68, 255);
+$site-state-unknown: rgb(169, 99, 148);
+$site-state-partial: rgb(189, 138, 63);
 
 // -----------------------------------------------------------------------------
 // Fonts

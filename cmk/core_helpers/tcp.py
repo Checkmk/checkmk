@@ -132,7 +132,9 @@ class TCPFetcher(AgentFetcher):
         except socket.error as e:
             raise MKFetcherError(f"Communication failed: {e}") from e
 
-        protocol = self._detect_transport_protocol(raw_protocol)
+        protocol = self._detect_transport_protocol(
+            raw_protocol, empty_msg="Empty output from host %s:%d" % self.address
+        )
 
         self._validate_protocol(protocol)
 
@@ -143,17 +145,21 @@ class TCPFetcher(AgentFetcher):
                 agent_data = AgentCtlMessage.from_bytes(raw_agent_data).payload
             except ValueError as e:
                 raise MKFetcherError(f"Failed to deserialize versioned agent data: {e!r}") from e
-            return AgentRawData(agent_data[2:]), self._detect_transport_protocol(agent_data[:2])
+            return AgentRawData(agent_data[2:]), self._detect_transport_protocol(
+                agent_data[:2], empty_msg="Empty payload from controller at %s:%d" % self.address
+            )
 
         return AgentRawData(self._recvall(self._socket, socket.MSG_WAITALL)), protocol
 
-    def _detect_transport_protocol(self, raw_protocol: bytes) -> TransportProtocol:
+    def _detect_transport_protocol(self, raw_protocol: bytes, empty_msg: str) -> TransportProtocol:
         try:
             protocol = TransportProtocol(raw_protocol)
-            self._logger.debug("Detected transport protocol: {protocol} ({raw_protocol!r})")
+            self._logger.debug(f"Detected transport protocol: {protocol} ({raw_protocol!r})")
             return protocol
         except ValueError:
-            raise MKFetcherError(f"Unknown transport protocol: {raw_protocol!r}")
+            if raw_protocol:
+                raise MKFetcherError(f"Unknown transport protocol: {raw_protocol!r}")
+            raise MKFetcherError(empty_msg)
 
     def _validate_protocol(self, protocol: TransportProtocol) -> None:
         if protocol is TransportProtocol.TLS:
@@ -225,8 +231,8 @@ class TCPFetcher(AgentFetcher):
             raise MKFetcherError("Failed to decrypt agent output: %s" % e) from e
 
     def _validate_decrypted_data(self, output: AgentRawData) -> AgentRawData:
-        if not output:  # may be caused by xinetd not allowing our address
-            raise MKFetcherError("Empty output from agent at %s:%d" % self.address)
         if len(output) < 16:
-            raise MKFetcherError("Too short output from agent: %r" % output)
+            raise MKFetcherError(
+                f"Too short payload from agent at {self.address[0]}:{self.address[1]}: {output!r}"
+            )
         return output

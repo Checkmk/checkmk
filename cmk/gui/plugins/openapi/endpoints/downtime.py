@@ -78,14 +78,17 @@ class DowntimeParameter(BaseSchema):
     query = fields.query_field(Downtimes, required=False)
 
 
-@Endpoint(constructors.collection_href('downtime', 'host'),
-          'cmk/create_host',
-          method='post',
-          tag_group='Monitoring',
-          skip_locking=True,
-          request_schema=request_schemas.CreateHostRelatedDowntime,
-          additional_status_codes=[422],
-          output_empty=True)
+@Endpoint(
+    constructors.collection_href('downtime', 'host'),
+    'cmk/create_host',
+    method='post',
+    tag_group='Monitoring',
+    skip_locking=True,
+    request_schema=request_schemas.CreateHostRelatedDowntime,
+    additional_status_codes=[422],
+    output_empty=True,
+    update_config_generation=False,
+)
 def create_host_related_downtime(params):
     """Create a host related scheduled downtime"""
     body = params['body']
@@ -151,6 +154,7 @@ def create_host_related_downtime(params):
     request_schema=request_schemas.CreateServiceRelatedDowntime,
     additional_status_codes=[422],
     output_empty=True,
+    update_config_generation=False,
 )
 def create_service_related_downtime(params):
     """Create a service related scheduled downtime"""
@@ -310,13 +314,16 @@ def _serve_downtime(downtime_details):
     return response
 
 
-@Endpoint(constructors.domain_type_action_href('downtime', 'delete'),
-          '.../delete',
-          method='post',
-          tag_group='Monitoring',
-          skip_locking=True,
-          request_schema=request_schemas.DeleteDowntime,
-          output_empty=True)
+@Endpoint(
+    constructors.domain_type_action_href('downtime', 'delete'),
+    '.../delete',
+    method='post',
+    tag_group='Monitoring',
+    skip_locking=True,
+    request_schema=request_schemas.DeleteDowntime,
+    output_empty=True,
+    update_config_generation=False,
+)
 def delete_downtime(params):
     """Delete a scheduled downtime"""
     body = params['body']

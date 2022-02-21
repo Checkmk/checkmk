@@ -40,17 +40,20 @@ SERVICE_DESCRIPTION = {
 }
 
 
-@Endpoint(constructors.collection_href('acknowledge', 'host'),
-          'cmk/create',
-          method='post',
-          tag_group='Monitoring',
-          skip_locking=True,
-          additional_status_codes=[422],
-          status_descriptions={
-              422: 'The query yielded no result.',
-          },
-          request_schema=request_schemas.AcknowledgeHostRelatedProblem,
-          output_empty=True)
+@Endpoint(
+    constructors.collection_href('acknowledge', 'host'),
+    'cmk/create',
+    method='post',
+    tag_group='Monitoring',
+    skip_locking=True,
+    additional_status_codes=[422],
+    status_descriptions={
+        422: 'The query yielded no result.',
+    },
+    request_schema=request_schemas.AcknowledgeHostRelatedProblem,
+    output_empty=True,
+    update_config_generation=False,
+)
 def set_acknowledgement_on_hosts(params):
     """Set acknowledgement on related hosts"""
     body = params['body']
@@ -126,17 +129,20 @@ def set_acknowledgement_on_hosts(params):
     return http.Response(status=204)
 
 
-@Endpoint(constructors.collection_href('acknowledge', 'service'),
-          'cmk/create_service',
-          method='post',
-          tag_group='Monitoring',
-          skip_locking=True,
-          additional_status_codes=[422],
-          status_descriptions={
-              422: 'Service was not in a problem state.',
-          },
-          request_schema=request_schemas.AcknowledgeServiceRelatedProblem,
-          output_empty=True)
+@Endpoint(
+    constructors.collection_href('acknowledge', 'service'),
+    'cmk/create_service',
+    method='post',
+    tag_group='Monitoring',
+    skip_locking=True,
+    additional_status_codes=[422],
+    status_descriptions={
+        422: 'Service was not in a problem state.',
+    },
+    request_schema=request_schemas.AcknowledgeServiceRelatedProblem,
+    output_empty=True,
+    update_config_generation=False,
+)
 def set_acknowledgement_on_services(params):
     """Set acknowledgement on related services"""
     body = params['body']

@@ -1,0 +1,18 @@
+Title: RESTAPI: do not update config generation on certain post requests
+Class: fix
+Compatible: compat
+Component: omd
+Date: 1645441583
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0p21
+
+Before this change the following endpoints triggered a configuration rebuild:
+* /api/1.0/domain-types/acknowledge/collections/host
+* /api/1.0/domain-types/acknowledge/collections/service
+* /api/1.0/domain-types/downtime/collections/host
+* /api/1.0/domain-types/downtime/collections/service
+* /api/1.0/domain-types/downtime/actions/delete/invoke
+
+Those endpoints will no longer trigger a config rebuild.

@@ -4,9 +4,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import json
 import cmk.gui.plugins.openapi.restful_objects.decorators
 from cmk.gui.plugins.openapi.restful_objects import response_schemas
 from cmk.gui.plugins.openapi.restful_objects.type_defs import StatusCodeInt, StatusCode
+from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
 
 
 def test_domain_object():
@@ -94,7 +96,7 @@ def test_no_config_generation_on_get(
     mock = mocker.Mock()
     monkeypatch.setattr(
         cmk.gui.plugins.openapi.restful_objects.decorators,
-        "update_config_generation",
+        "activate_changes_update_config_generation",
         mock,
     )
 
@@ -115,3 +117,59 @@ def test_no_config_generation_on_get(
     )
     # we have a post request, so we expect update_config to be called
     mock.assert_called_once()
+
+
+def test_no_config_generation_on_certain_posts(
+    wsgi_app,
+    with_automation_user,
+    mock_livestatus,
+    with_host,
+    monkeypatch,
+    mocker,
+):
+    """
+    update_config_generation should not be called on certain posts: SUP-8793
+    """
+    live: MockLiveStatusConnection = mock_livestatus
+    username, secret = with_automation_user
+    wsgi_app.set_authorization(("Bearer", username + " " + secret))
+    base = "/NO_SITE/check_mk/api/1.0"
+
+    live.add_table('hosts', [
+        {
+            'name': 'heute',
+            'state': 1,
+        },
+    ], site='NO_SITE')
+
+    live.expect_query("GET hosts\nColumns: name\nFilter: name = heute")
+    live.expect_query("GET hosts\nColumns: state\nFilter: name = heute")
+    live.expect_query('GET hosts\nColumns: name\nFilter: name = heute')
+    live.expect_query(
+        'COMMAND [...] ACKNOWLEDGE_HOST_PROBLEM;heute;2;1;0;test123-...;unittesting',
+        match_type='ellipsis',
+        site_id='NO_SITE',
+    )
+
+    mock = mocker.Mock()
+    monkeypatch.setattr(
+        cmk.gui.plugins.openapi.restful_objects.decorators,
+        "activate_changes_update_config_generation",
+        mock,
+    )
+
+    with live:
+        wsgi_app.call_method(
+            "post",
+            base + "/domain-types/acknowledge/collections/host",
+            content_type="application/json",
+            params=json.dumps({
+                "acknowledge_type": "host",
+                "comment": "unittesting",
+                "host_name": "heute",
+            }),
+            status=204,
+        )
+    # we have a post request, but explitily said so in the endpoint to not update_config,
+    # so we expect update_config not to be called
+    mock.assert_not_called()

@@ -6,7 +6,7 @@ Date: 1643016958
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 Before this Werk, on the edit_user page the automation secret could be viewed.
 This could be abused by other vulnerabilities (e.g. XSS) to retrieve this

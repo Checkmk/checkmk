@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 Since checkmk version 2.0.0b7 the Checkmk update procedure (cmk-update-config) validates regexes.
 This validation failed with the error message "AttributeError: 'str' object has no attribute 'get'"

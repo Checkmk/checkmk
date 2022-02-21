@@ -6,7 +6,7 @@ Date: 1614005775
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 Previously, the default time thresholds were 1.5 and 2 hours for
 Warn and Crit respectively. These values should have covered the

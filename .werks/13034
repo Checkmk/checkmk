@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 In "Setup > Hosts" the "Network Scan" section of the folder properties contain
 a "Set criticality host tags" dropdown. The values of this dropdown are cached.

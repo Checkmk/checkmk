@@ -6,7 +6,7 @@ Date: 1613396269
 Edition: cee
 Knowledge: doc
 Level: 3
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 The "comment" and "downtime" WaitTriggers were not always triggered when a
 corresponding entity has been changed. This has been fixed.

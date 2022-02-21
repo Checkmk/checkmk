@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: undoc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 Previously, when showing the information of a folder or listing
 all folders, the hosts were not displayed due to performance reasons.

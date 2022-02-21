@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 The label completion of label input fields was not working. The label
 completion of the config now uses the labels known to the core to execute the

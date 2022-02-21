@@ -6,7 +6,7 @@ Date: 1614101708
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 The only possibility to update agent automatically is the python script <tt>cmk_update_agent.checkmk.py</tt>. 
 With this release <tt>cmk-update-agent.exe</tt> in the plugins directory will be ignored by Windows 

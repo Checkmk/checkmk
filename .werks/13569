@@ -7,7 +7,7 @@ Edition: cee
 Knowledge: undoc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 In the past, the ntopng integration could not deal with vlan aware ntopng instances.
 A Host in ntopng is in this case suffixed with its vlan id, e.g.: 10.1.2.3@4

@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 Plugins in the folder {{/usr/check_mk/lib/plugins/NUMBER}} are executed
 asynchronously. Since Checkmk version 2.0.0b4 it was broken because in ksh,

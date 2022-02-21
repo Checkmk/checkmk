@@ -6,7 +6,7 @@ Date: 1615392496
 Edition: cee
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 In some rare cases, the agent updater may fail on hosts that have a proxy environment
 configured. I.e., one of the environment variables <tt>HTTP_PROXY</tt>, <tt>HTTPS_PROXY</tt>,

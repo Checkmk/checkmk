@@ -6,7 +6,7 @@ Date: 1619087095
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 On SLES15SP2 server device names like {{/dev/sda1}} for btrfs filesystem may
 change after a reboot. Afterwards the filesystem service reports

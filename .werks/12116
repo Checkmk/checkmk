@@ -6,7 +6,7 @@ Date: 1613037995
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 In some cases it was possible that the result summary of a predictive level
 check contained '%.2f' instead of the measured value. Now the measured value

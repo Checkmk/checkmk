@@ -6,7 +6,7 @@ Date: 1641915804
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 Previously, apt service wouldn't be discovered if there was an ESM
 support warning indicating an outdated Linux distribution.

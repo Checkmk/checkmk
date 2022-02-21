@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 If you used the inpage search on the "Setup" - "Hosts" page and searched for
 pattern that matched other columns as "Hostname", e.g. "Monitored on site", all

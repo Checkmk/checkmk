@@ -6,7 +6,7 @@ Date: 1631885079
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 The undo/redo buttons and resizing via mouse drag were not functional
 in the layout designer. This is fixed.

@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 Default levels for memory usage have shown to be counter productive so this
 change disables them. There are no changes for already configured rules or the

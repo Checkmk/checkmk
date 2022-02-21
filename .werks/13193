@@ -6,7 +6,7 @@ Date: 1632465155
 Edition: cee
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 It was possible to Inject HTML code in various Content elments. This could also be used in shared reports.
 

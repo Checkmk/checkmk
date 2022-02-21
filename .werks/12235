@@ -6,7 +6,7 @@ Date: 1614154729
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 The Linux agent plugin for monitoring DB2 instances (<tt>mk_db2</tt>) had a
 permissions issue when being deployed via the agent bakery. The plugin tried

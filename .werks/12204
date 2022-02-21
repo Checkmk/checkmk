@@ -7,7 +7,7 @@ Edition: cee
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 The check plugin <tt>ibm_mq_queues</tt> crashed due to a bug in the output
 of the corresponding agent plugin <tt>ibm_mq</tt>. This has been fixed.

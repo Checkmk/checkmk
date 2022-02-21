@@ -6,7 +6,7 @@ Date: 1638876570
 Edition: cee
 Knowledge: undoc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 The configuration setting "Name of agent packages (Linux, UNIX)" no longer affects the service units names <b>included</b> in the package.
 

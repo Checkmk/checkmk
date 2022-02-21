@@ -6,7 +6,7 @@ Date: 1636713210
 Edition: cee
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 The MTR agent plugin spawns multiple subprocesses (one per
 target address). When running under systemd, these subprocesses

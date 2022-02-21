@@ -6,7 +6,7 @@ Date: 1631802557
 Edition: cee
 Knowledge: undoc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 With Checkmk 2.0 we have splitted the Microcore Checkmk helper
 processes into Fetcher and Checker helpers.  Since this split,

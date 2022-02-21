@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 During <tt>cmk-update-config</tt> some disabled services rules are being broken by introducing an undesired escaping.
 This werk reduces the number of cases in which this happens.

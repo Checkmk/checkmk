@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 The active check check_mail_loop crashed with the error "RuntimeError("Server responded b'+OK 1 messages:', [...]")"
 if the response from the server contained more characters than just "+OK". E.g. the result

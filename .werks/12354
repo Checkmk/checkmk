@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 During cmk-update-config we re-write the WATO rules.
 In case the transformation of a value of an individual rule failed,

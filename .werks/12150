@@ -6,7 +6,7 @@ Date: 1615365430
 Edition: cee
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 When configuring the entry "Proxy settings" and choosing the item "Provide
 proxy settings" at the "Agent updater" agent ruleset, the agent bakery

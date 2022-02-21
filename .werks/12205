@@ -7,7 +7,7 @@ Edition: cee
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 Sensor with a "non-critical" state was always in WARN, parametrization
 wasn't possible. Now, user can parametrize the Checkmk state for this case.

@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 The path for postgres instance "main" is called "data" and not "main" on some platforms.
 That could lead to the following error message:

@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 If graphs were viewed and the page reload was paused, even if you clicked on
 "stop the countdown", the page was reloaded after 60 seconds.

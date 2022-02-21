@@ -6,7 +6,7 @@ Date: 1621433666
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 The check returns {CRIT} in case of an error state reported by the device,
 and go to {WARN} if the SMART status is missing.

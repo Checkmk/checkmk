@@ -6,7 +6,7 @@ Date: 1612353097
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 The mk_postgres agent plugin crashed and did not produce any agent sections if run with python2.6.
 The following error message occured:

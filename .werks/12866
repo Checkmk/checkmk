@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: undoc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 You can now configure a proxy and disable ssl certificate verification for all
 of the mentioned notification plugins.

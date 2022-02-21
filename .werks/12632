@@ -6,7 +6,7 @@ Date: 1617096950
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 The check entity_sensors_temp monitors temperature sensors on devices mapped to
 the ENTITY-MIB. These sensors monitor the temperature of different hardware

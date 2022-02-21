@@ -6,7 +6,7 @@ Date: 1636540807
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1 
+Version: 2.1.0b1 
 
 Port mapping information provided by Lancom had been injected into the interface description
 which optionally can be used in the service name leading to altering service discovery results.

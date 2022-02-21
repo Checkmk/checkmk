@@ -6,7 +6,7 @@ Date: 1642494650
 Edition: cre
 Knowledge: undoc
 Level: 2
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 With this change the microcore and its helper processes are able to reuse parts of the previous configuration,
 without compiling everything anew. Only actually changed hosts will be fully recompiled.

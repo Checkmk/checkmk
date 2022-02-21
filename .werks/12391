@@ -6,7 +6,7 @@ Date: 1627043648
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 Previously table rows were compared successively (if tables had the same
 length) which might have led to unexpected delta tree results.

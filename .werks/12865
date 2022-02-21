@@ -6,7 +6,7 @@ Date: 1622034624
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 If a user with less permissions edited a duallist element (two lists with
 interchangable elements) like e.g. the "Match site" criteria in event console

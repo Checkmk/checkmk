@@ -6,7 +6,7 @@ Date: 1611150163
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 If you tried to delete a host on the host property page with the "Delete"
 option within the host dropdown, the confirmation dialog was blocked because

@@ -6,7 +6,7 @@ Date: 1634113670
 Edition: cee
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 Checkmk 1.6.0 introduced a small regression where log lines in cmc.log were
 missing a space when logging with microseconds was enabled. Lines like

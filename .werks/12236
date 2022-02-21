@@ -6,7 +6,7 @@ Date: 1614672374
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 The check plugin <tt>oracle_instance</tt>, which monitors the state of
 Oracle instances, now displayes more detailed version information if the

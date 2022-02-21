@@ -6,7 +6,7 @@ Date: 1643370630
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 For using password authentication, the Path to the pgpass file needs to be in
 the third argument of the INSTANCE Parameter in postgres.cfg:

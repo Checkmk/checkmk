@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 For auto-migrated check plugins the details view of the service could
 contain lots of empty lines, which looked broken, in particular if the

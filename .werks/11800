@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: undoc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 In case custom host attributes where containing special characters (e.g. "&"), they where stored escaped on disk
 and therfore also displayed escaped in the GUI.

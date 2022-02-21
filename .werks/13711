@@ -6,7 +6,7 @@ Date: 1643796083
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 The service discovery in the GUI was not able to handle certain
 non-ASCII characters in service names (non-ASCII characters with

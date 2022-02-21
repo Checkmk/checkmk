@@ -6,7 +6,7 @@ Date: 1633531034
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 When specifying a vSphere secret starting with a dash (a "-"), the vsphere
 special agent will run into an error, because the secret will get recognized

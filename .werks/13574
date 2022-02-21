@@ -6,7 +6,7 @@ Date: 1643989182
 Edition: cee
 Knowledge: doc
 Level: 2
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 We now ship omd with the net-snmp lib in version 5.9.1.
 This was motivated by several reasons:

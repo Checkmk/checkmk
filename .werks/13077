@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 The configuration option for the ETags, previously introduced in
 Werk 11938 did not show up in the global configuration setup GUI.

@@ -6,7 +6,7 @@ Date: 1611054031
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 The check "PostgreSQL Instance" supports now also multiple instances.
 The agent output section "postgres_instances" contains the information for only one single instance.

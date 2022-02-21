@@ -6,7 +6,7 @@ Date: 1640159769
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 Before this change the discovery behaviour of the diskstat check was dependent
 on the source of the data: When running an agent inside a docker container,

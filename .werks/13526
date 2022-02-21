@@ -6,7 +6,7 @@ Date: 1637587068
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 The system object ID of the models 'Cisco WLC 3504' start with the OID
 ".1.3.6.1.4.1.9.1.2427".  The check plugins cisco_wlc and cisco_wlc_clients now

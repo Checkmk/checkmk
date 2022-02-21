@@ -6,7 +6,7 @@ Date: 1614258090
 Edition: cee
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 This Werk fixes a misbehavior that was caused by the combination of the two features
 from Werks #11403 and #11248.

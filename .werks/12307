@@ -6,7 +6,7 @@ Date: 1615460421
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 The check_mk_agent executed inside a docker or lxc container on a host with
 cgroup v2 enabled can now report metrics for cpu, memory and diskstat.

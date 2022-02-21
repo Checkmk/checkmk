@@ -6,7 +6,7 @@ Date: 1620198069
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 If changes on files within "~/local/lib/check_mk/base/plugins/agent_based" were
 made, remote sites only took the changes into account after a manual core

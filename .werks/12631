@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 The logwatch check crashed when the option to reclassify error messages was
 used in combination with regular expressions that contain a special character

@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: undoc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 It was not possible to apply different thresholds to different services
 monitored by the watchdog_sensors check. This was due to the fact that all

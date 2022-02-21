@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 In versions 1.6.0p12 to 1.6.0p19 the 'capacity' metric was not produced if the
 correspinding devices were on main power supply.

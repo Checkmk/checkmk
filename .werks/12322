@@ -6,7 +6,7 @@ Date: 1620286495
 Edition: cre
 Knowledge: doc
 Level: 2
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 In the past we delivered in the shipped package few Windows exe files, which were either intended to be 
 installed on their own or should serve as an example. However some antivirus programs produced false positives 

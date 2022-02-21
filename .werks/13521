@@ -6,7 +6,7 @@ Date: 1640074531
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 The check plugin <tt>mcafee_av_client</tt>, which monitors the signature date
 of McAfee AV clients on Windows hosts, crashed with

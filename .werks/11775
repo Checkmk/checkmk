@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 Under certain timing conditions it could happen that services would
 vanish immediately after, or even during a full scan in the WATO

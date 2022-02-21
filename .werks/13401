@@ -6,7 +6,7 @@ Date: 1637657056
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 In previous versions the mk_mongodb.py agent plugin printed expected exceptions
 to stderr. This may confuse the user as they may think something is wrong with

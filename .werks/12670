@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 In the previous version, calling the 'Show all monitored services'
 endpoint returned a collection where the individual links to the

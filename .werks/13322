@@ -6,7 +6,7 @@ Date: 1639339710
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 Previously the web server was able to execute <tt>.php</tt> files from all
 locations that are callable by the user. With this change, we now limit the

@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 Label input fields like the filter "Host labels" or the label conditions field
 in rulesets only searched for labels matching the searched string at the

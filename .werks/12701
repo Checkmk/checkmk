@@ -6,7 +6,7 @@ Date: 1639562316
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 Add four columns to the services table in order to read
 Robotmk logs.  The columns are

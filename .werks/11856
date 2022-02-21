@@ -6,7 +6,7 @@ Date: 1615295902
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 Windows msiexec may request a reboot if some of the Windows agent's files(directories) were locked during installation procedure. 
 Such reboot is performed automatically and immediately when the installation is silent. And silent installation is a typical use 

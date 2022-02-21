@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 Since version 1.2.9 the real time check encryption did not work if
 the agent encryption was activated, as the agent also uses

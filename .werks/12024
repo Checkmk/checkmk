@@ -6,7 +6,7 @@ Date: 1612885431
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 This werk introduces the two new check plugins <tt>fortigate_antivirus</tt>
 and <tt>fortigate_ips</tt>. They monitor the detection and blocking rate of

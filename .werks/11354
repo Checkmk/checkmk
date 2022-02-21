@@ -7,6 +7,6 @@ Edition: cee
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 For interfaces which do not have an IP address, the service dropdown crashed in case ntop was configured. This is fixed now.

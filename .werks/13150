@@ -6,7 +6,7 @@ Date: 1630080393
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 In previous Checkmk versions fallback emails were sent in a predefined
 plain text format. The content of these emails was not configurable.

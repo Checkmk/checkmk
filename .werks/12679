@@ -7,7 +7,7 @@ Edition: cee
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 Previously, the agent updater expected a "Content-Length" HTTP header in responses
 from the Checkmk server, and crashed with error message<br>

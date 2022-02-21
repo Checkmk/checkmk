@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 If changes of global settings were logged to the audit log and you tried to filter for any
 search term afterwards, the error "TypeError (expected string or bytes-like object)"

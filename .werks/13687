@@ -6,7 +6,7 @@ Date: 1643014774
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 Some users may encounter the warning <i>"Duplicate service description
 (auto check) 'MSSQLBlocked Sessions'"</i>, when updating the services

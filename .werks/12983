@@ -6,7 +6,7 @@ Date: 1625067715
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 When installing, uninstalling, enabling or disabling an MKP, Checkmk
 will now automatically re-build the index used in the search function

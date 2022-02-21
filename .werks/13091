@@ -6,7 +6,7 @@ Date: 1640787437
 Edition: cre
 Knowledge: doc
 Level: 2
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 The event console contains logic to quickly skip history files which are not
 relevant for a given query. This logic was broken from day one, often

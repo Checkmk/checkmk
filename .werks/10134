@@ -6,7 +6,7 @@ Date: 1613390673
 Edition: cee
 Knowledge: doc
 Level: 3
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 Previously, the manual removal of persistent acknowledgements was not logged
 in the monitoring history, this has been fixed: Now all acknowledgement

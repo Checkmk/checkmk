@@ -6,7 +6,7 @@ Date: 1630923881
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 Metrics will only be available if a health check is configured.
 The metrics ConnectionTime and TimeToFirstByte will only be available the option "Latency graphs" for the health check is activated.

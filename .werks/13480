@@ -6,7 +6,7 @@ Date: 1640171533
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 Since Veeam 10 <tt>Get-VBRJob</tt> returns a warning which ends up in the agent output and confuses the <tt>veeam_tapejobs</tt> check.
 This werk silently discards this warning and makes the check compatible with Veeam 10.

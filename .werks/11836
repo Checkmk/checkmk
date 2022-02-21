@@ -6,7 +6,7 @@ Date: 1611743057
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 This werk introduces the new check plugin <tt>fortiauthenticator_auth_fail</tt>.
 This plugin monitors the number of authentication failures within the last 5

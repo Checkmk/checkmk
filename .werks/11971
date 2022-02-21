@@ -6,7 +6,7 @@ Date: 1612190072
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 This werk introduces some changes to the downtime endpoints. The delete downtime
 endpoint's params option is renamed to 'by_id' and the params type now offers

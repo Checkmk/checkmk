@@ -6,7 +6,7 @@ Date: 1618318395
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 The command depends on a configured rule "Check event state in Event Console"
 and can only be excecuted succesfully in service views.

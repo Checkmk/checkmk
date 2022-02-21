@@ -6,7 +6,7 @@ Date: 1643707210
 Edition: cee
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 NOTE: If you don't query some of the more esoteric Livestatus columns in
 your own scripts, plugins, etc., you don't have to do anything.  If you do,

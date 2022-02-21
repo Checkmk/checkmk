@@ -6,7 +6,7 @@ Date: 1613555593
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 This werk fixes a bug which made the Rittal CMC-III checks crash with the error message
 <tt>ValueError("invalid literal for int() with base 10: ''",)</tt>.

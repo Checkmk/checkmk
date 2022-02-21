@@ -6,7 +6,7 @@ Date: 1612945930
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 This werk introduces two new check plugins, <tt>fortisandbox_disk_usage</tt> and
 <tt>fortisandbox_mem_usage</tt>. They monitor the disk and memory usage of

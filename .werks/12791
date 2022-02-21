@@ -6,7 +6,7 @@ Date: 1624265308
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 Checkmk will now additionally discover the following services on Cisco WLC 9800
 devices:

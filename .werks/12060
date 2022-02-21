@@ -6,7 +6,7 @@ Date: 1612876283
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 To stay consistent, the new filter search form was added to all pages
 containing tables. Pages with already included filter options, e.g. views, were

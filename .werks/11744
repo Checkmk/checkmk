@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 Hosts are matched to events in the Event Console using different specification
 methods: hostname, IP address, and host alias. In the event that multiple

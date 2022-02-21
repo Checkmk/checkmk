@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 Splitting a message string containing instance and message results in an error if the message
 itself contains the delimiter (':'). This change will make sure the input string will be splitted

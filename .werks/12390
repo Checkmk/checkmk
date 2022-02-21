@@ -6,7 +6,7 @@ Date: 1625565106
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 Previously there was only a {{path}} and {{attributes}} field which was used
 for an extension of the HW/SW Inventory which will allow adding single values,

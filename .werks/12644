@@ -6,7 +6,7 @@ Date: 1617009852
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 The parsing function of dell_compellent_storage_disk was simplified by using the
 additional OID "DELL-STORAGE-SC-MIB::scDiskConfigNbr".

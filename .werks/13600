@@ -7,7 +7,7 @@ Edition: cee
 Knowledge: doc
 Level: 2
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 Previously, during <tt>update</tt> Windows agent always opened 
 default port, 6556, in the firewall, even if the TCP port had been 

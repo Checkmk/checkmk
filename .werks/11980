@@ -6,7 +6,7 @@ Date: 1614795415
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 If a mail could not be copied the resulting error was a raw Exception with the title: "Response from server: SERVER".
 This werk changes the Exception type to RuntimeError by reusing the function "verified_result".

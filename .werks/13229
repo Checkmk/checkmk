@@ -6,7 +6,7 @@ Date: 1634222992
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 This werk only affect users who have implemented their own pre Checkmk 2.0 check plugins (those in <tt>local/share/check_mk/checks</tt>) *and* where creating ServiceLabels.
 

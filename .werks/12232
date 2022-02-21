@@ -6,7 +6,7 @@ Date: 1613981967
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 There was a bug in the error reporting of the script <tt>treasures/downtime</tt>
 (used to set downtimes from the command prompt), which prevented the script from

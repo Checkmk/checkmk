@@ -6,7 +6,7 @@ Date: 1615462819
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 It's possible to have same-named hosts on different, connected sites. If the
 HW/SW Inventory is enabled on these hosts then the link to a host's inventory

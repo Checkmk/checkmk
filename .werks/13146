@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 The plugin now detects if the synchronization to the reference source
 is lost. Before, the plugin returned OK in this case. Now, WARN/CRIT is

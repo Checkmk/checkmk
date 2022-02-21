@@ -6,7 +6,7 @@ Date: 1625162472
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 If the management board address of a host has been provided
 as a name (not an IP address) Checkmks DNS lookup cache has

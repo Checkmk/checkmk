@@ -6,7 +6,7 @@ Date: 1627455835
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 It's now possible to use authentication with mk_mongodb.py
 You can choose the authMethod and specify a authSource other than admin.

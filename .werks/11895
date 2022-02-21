@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 Previously, the host label 'cmk/check_mk_server:yes' was set whenever `omd` was in the path.
 This a bit too general. We now only set the label, if at least one site is present.

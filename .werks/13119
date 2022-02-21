@@ -6,7 +6,7 @@ Date: 1628861738
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 The interface checks compare the current state and speed of the interfaces to
 the values which were found during the discovery phase (unless the user

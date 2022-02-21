@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 If a crash report was created but the crash info key was missing inside the
 file within ~/var/check_mk/crashes/CRASH_ID/crash.info, the crash report view

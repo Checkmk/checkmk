@@ -6,7 +6,7 @@ Date: 1607352012
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 In the previous version, the "Exclude specific agent sections" rule was listed in the Checkmk
 Agent section under the Monitoring Agents WATO page. This led to confusion as the option is only

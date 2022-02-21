@@ -6,7 +6,7 @@ Date: 1644393159
 Edition: cee
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 In previous versions one could add text from foreign websites into reports.
 <i>Paragraph of text fetched via HTTP(s)</i> The functionality was very

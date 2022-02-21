@@ -6,7 +6,7 @@ Date: 1619077263
 Edition: cre
 Knowledge: doc
 Level: 2
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 The event console message parser ignored subseconds and timezones in some
 RFC-like message formats, leading to incorrect timestamps in events.  This

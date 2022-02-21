@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: undoc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 With werk #11202 the option "Site custom field ID" was introduced. If you
 configured rules before that werk and tried to edit such rule in versions from

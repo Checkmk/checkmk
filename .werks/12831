@@ -7,7 +7,7 @@ Edition: cee
 Knowledge: doc
 Level: 2
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 This change fixes a layout problem of reports or PDF exports of views
 containing graph columns which fill multiple pages. Previous Checkmk versions

@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: undoc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 The rules that have been created from checkmk 2.0.0i1 to 2.0.0b5 will not work any more.
 The criticality for the version mismatch rule can be configured in WATO.

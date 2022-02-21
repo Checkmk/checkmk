@@ -7,7 +7,7 @@ Edition: cee
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 "Problem details" on "sla_details_general" page did not show a table.
 Also the mouseover effect on timeline elements to highlight the corresponding

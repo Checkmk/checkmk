@@ -6,7 +6,7 @@ Date: 1619418561
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 This werk fixes a bug in the NetApp special agent which caused the
 agent to crash with

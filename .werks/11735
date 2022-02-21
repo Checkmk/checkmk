@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 The check plugin <tt>arc_raid_status</tt>, which monitors Areca Raid Controllers,
 reported the monitoring state CRIT when the raid was in the state "Checking".

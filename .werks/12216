@@ -6,7 +6,7 @@ Date: 1614244559
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 The connection to an ESX with version 5.5 resulted in the error
 "Cannot login to vSphere Server (reason: [200] OK). Please check the

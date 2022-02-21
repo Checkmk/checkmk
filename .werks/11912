@@ -6,7 +6,7 @@ Date: 1610442894
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 If roles of LDAP users where edited, a KeyError "(locked)" was raised.
 Editing the roles of such users is now possible again.

@@ -6,7 +6,7 @@ Date: 1636032794
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 The documentation of the check plugin <tt>juniper_fru</tt>, which
 monitors the power supplies of Juniper Ethernet Switch Chassis,

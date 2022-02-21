@@ -6,7 +6,7 @@ Date: 1624010963
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 Previously, the REST API failed to acquire the WATO configuration lock
 before performing file system operations. This could lead to race conditions

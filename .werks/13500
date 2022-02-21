@@ -7,7 +7,7 @@ Edition: cme
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 Werk #13370 introduced the automatic setting of the customer user attribute on
 LDAP synchronization. This Werk did not keep in mind the option to change the

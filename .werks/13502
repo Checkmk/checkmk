@@ -7,7 +7,7 @@ Edition: cee
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 If views were exported via "This view as PDF", the title of the shown report
 showed the context of the report in the title twice, e.g. "Services of Host

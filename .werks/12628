@@ -6,7 +6,7 @@ Date: 1616632448
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 This werk introduces checks that support temperature, fan and power presence
 sensors on Cisco ASA devices that support the ENTITY-MIB (Cisco ASA firmware

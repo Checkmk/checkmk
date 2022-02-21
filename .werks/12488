@@ -6,7 +6,7 @@ Date: 1619013586
 Edition: cee
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 Some graph collections would present an exception im report "Cannot render
 graph: host, service description or regex not found in context". This is

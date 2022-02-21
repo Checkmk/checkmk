@@ -6,7 +6,7 @@ Date: 1635336349
 Edition: cee
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 Changing the default connection parameters of the liveproxy daemon
 (Global Settings > Livestatus Proxy default connection parameters)

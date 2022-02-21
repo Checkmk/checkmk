@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 When comparing the answer from DNS, check_dns always acts case-sensitive.
 That means, it marks answers as CRITICAL, when for instance the hostname in check-mk is lowercase and the answer comes as uppercase.

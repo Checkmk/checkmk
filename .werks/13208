@@ -6,7 +6,7 @@ Date: 1631619001
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 If the <tt>qmail-qstat</tt> binary is not in the PATH of the agent,
 no <tt>qmail_qstats</tt> section is produced. On some systems, the

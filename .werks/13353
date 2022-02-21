@@ -6,7 +6,7 @@ Date: 1635519169
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 On some systems, the linux agent tried to set invalid localisation
 settings. For example, when <tt>C.utf8</tt> is not available, but

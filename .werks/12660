@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: undoc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 Transfering large amounts of data (>50MB) through the different Checkmk daemons took a considerable amount of time.
 Corrections were made in livestatus, liveproxyd and general data parsing.

@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 The check "cisco_qos" evaulates the used bandwidth and number of dropped
 bits/bytes as a percentage relative to the interface's available bandwidth. In

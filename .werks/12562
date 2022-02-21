@@ -7,7 +7,7 @@ Edition: cee
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 When opening a folder in setup parts of the Checkmk configuration is loaded in
 background. While loading this configuration also old configuration formats are

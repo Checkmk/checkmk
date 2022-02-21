@@ -6,7 +6,7 @@ Date: 1623830978
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 The ipaddress host attribute allows hostnames. This will result in a
 non-cached lookup before use of the address. In the REST API setting

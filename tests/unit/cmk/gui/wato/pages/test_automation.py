@@ -110,8 +110,9 @@ class TestModeAutomation:
     @pytest.mark.parametrize(
         "incomp_version",
         [
-            "1.6.0p23",  # prepre major
-            "2.2.0",  # newer major
+            "2.0.0",  # prepre major
+            "2.1.0",  # pre major
+            "2.3.0",  # newer major
             "3.0.0",  # newer major
         ],
     )

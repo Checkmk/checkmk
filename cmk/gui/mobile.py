@@ -157,7 +157,9 @@ def jqm_page_index_topic_renderer(topic: str, items: Items) -> None:
     for top, href, title in items:
         if top == topic:
             html.open_li()
-            html.a(title, href=href, **{"data-ajax": "false", "data-transition": "flip"})
+            html.open_a(href=href, **{"data-ajax": "false", "data-transition": "flip"})
+            html.write_html(HTML(title))
+            html.close_a()
             html.close_li()
     html.close_ul()
 

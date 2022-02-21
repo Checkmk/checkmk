@@ -67,7 +67,7 @@ def _component_check(component: str, component_log: Optional[CollectorHandlerLog
     component_message = f"{component}: {component_log.title}"
     detail_message = f"({component_log.detail})" if component_log.detail else ""
     yield Result(
-        state=State.CRIT,
+        state=State.OK,
         summary=component_message,
         details=f"{component_message}{detail_message}",
     )

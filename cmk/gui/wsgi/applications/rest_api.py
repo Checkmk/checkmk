@@ -234,7 +234,11 @@ class Authenticate:
 
 
 @functools.lru_cache
-def serve_file(file_name: str, content: bytes) -> Response:
+def serve_file(
+    file_name: str,
+    content: bytes,
+    default_content_type="text/plain; charset=utf-8",
+) -> Response:
     """Construct and cache a Response from a static file."""
     content_type, _ = mimetypes.guess_type(file_name)
 
@@ -243,6 +247,8 @@ def serve_file(file_name: str, content: bytes) -> Response:
     resp.data = content
     if content_type is not None:
         resp.headers["Content-Type"] = content_type
+    else:
+        resp.headers["Content-Type"] = default_content_type
     resp.freeze()
     return resp
 

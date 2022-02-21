@@ -119,6 +119,7 @@ class TestModeAutomation:
         "result_type_registry",
         "check_mk_local_automation_serialized",
         "setup_request",
+        "patch_version",
     )
     def test_execute_cmk_automation_pre_pre_major(
         self, incomp_version: str, monkeypatch: pytest.MonkeyPatch

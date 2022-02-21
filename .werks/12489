@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 Some check-plugins delivered whitespace in their performance data for
 unknown values. This lead to failures in spearating the available metrics

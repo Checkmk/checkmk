@@ -6,7 +6,7 @@ Date: 1632325413
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 In the previous version, the prometheus_build check always
 expected a version associated with the connecting Prometheus

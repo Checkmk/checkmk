@@ -6,6 +6,6 @@ Date: 1617805637
 Edition: cee
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 Customgraph report elements cause an exception. This is now fixed

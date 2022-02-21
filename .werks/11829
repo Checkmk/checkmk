@@ -6,7 +6,7 @@ Date: 1607935468
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 The check plugin <tt>esx_vsphere_counters_diskio</tt>, which
 monitors the IO throughput of ESX host systems, displayed far

@@ -7,7 +7,7 @@ Edition: cee
 Knowledge: undoc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 When time periods are configured in the ruleset "Check period for passive
 Check_MK services", this made the cmc fail on start. The normal behaviour of

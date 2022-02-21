@@ -6,7 +6,7 @@ Date: 1608040417
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 Openlog did not display the logfile with the Error:<br>
 <b>Logfile does not exist</b><br>

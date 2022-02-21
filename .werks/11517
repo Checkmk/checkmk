@@ -6,7 +6,7 @@ Date: 1606903447
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 Some builtin or own views may take longer time than expected. In order to
 detect slow views you have to set

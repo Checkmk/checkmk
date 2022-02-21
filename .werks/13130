@@ -6,7 +6,7 @@ Date: 1638967519
 Edition: cee
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 When configuring one or more "ORACLE databases" agent rules and deactivating
 it with by setting "Activation" to "Do not deploy ORACLE databases plugin",

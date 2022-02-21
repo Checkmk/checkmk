@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 If hosts were imported with option "Import hosts via CSV file" and "Perform
 automatic service discovery" in a folder, no hosts were selected for service

@@ -6,7 +6,7 @@ Date: 1644832366
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 Previous to this Werk the <i>REST API</i> returned the password hashes when getting a user object. If the user was a automation user the password was returned in clear-text.
 

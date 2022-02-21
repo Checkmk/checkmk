@@ -6,7 +6,7 @@ Date: 1617965372
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 The FreeBSD agent checks for various executables, such as zpool or statgrab, to
 create monitoring data. If they are not detected, the corresponding sections are

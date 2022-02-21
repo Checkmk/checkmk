@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 During update from previous versions to Checkmk 2.0 some old global
 configuration settings are rewritten. This is now also done in the site

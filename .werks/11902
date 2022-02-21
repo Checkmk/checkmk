@@ -6,7 +6,7 @@ Date: 1612169271
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 Some entries (such as the ones for the blue LED) do not report their
 temperatures.  However, the missing temperature would crash the check.

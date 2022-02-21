@@ -6,7 +6,7 @@ Date: 1639388827
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 With the new option "Fetch certificate from server" in the global settings
 "Trusted certificate authorities for SSL" and "Connection to remote agent bakery"

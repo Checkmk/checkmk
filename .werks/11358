@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: undoc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 The button "Update DNS Cache" under a host settings was always visible and therfore ignoring the site specific global setting "Use DNS lookup cache".
 It's now not shown anymore if the DNS Cache is not used.

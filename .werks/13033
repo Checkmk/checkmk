@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 It's possible to disable all configuration modifications in WATO via 'Setup' ->
 'Distributed Monitoring' -> 'Disable remote configuration'. This option is now

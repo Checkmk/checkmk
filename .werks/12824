@@ -6,7 +6,7 @@ Date: 1629727360
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 In previous versions only the racks were shown and blades were ignored if racks and blades existed in
 the same ucs domain.

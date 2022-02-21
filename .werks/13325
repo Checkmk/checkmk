@@ -6,7 +6,7 @@ Date: 1640547957
 Edition: cre
 Knowledge: undoc
 Level: 2
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 With this change users of the Checkmk user interface can now configure Checkmk
 to ask for a second factor during user authentication.

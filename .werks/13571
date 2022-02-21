@@ -7,7 +7,7 @@ Edition: cee
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 This werk ships multiple fixes regarding the integration with a vlan aware ntop setup.
 You were affected by the fixed issues in case:

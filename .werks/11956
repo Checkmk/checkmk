@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: undoc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 A firmware update in the Vertiv Geist Watchdog 15 sensor required an update to
 the watchdog_sensors check, so that the services of this device could be

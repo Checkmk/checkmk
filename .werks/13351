@@ -6,7 +6,7 @@ Date: 1634647258
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 There were two bugs in the configuration of the special agent for IPMI sensors
 via freeipmi: The flags "Sensor threshold" and "Suppress not available

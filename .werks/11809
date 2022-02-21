@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: undoc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 The rule "Check IMAP Mailboxes" was missing the option to configure the thresholds for checking the age of the newest mails.
 This was added with this werk.

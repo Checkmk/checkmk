@@ -6,7 +6,7 @@ Date: 1624258397
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 On hosts with CDB and nonCDB databases, the check <tt>oracle_jobs</tt> crashed.
 This has been fixed.

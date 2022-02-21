@@ -6,7 +6,7 @@ Date: 1644852982
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 If no blocked, pending and stuck tasks were retrieved from jenkins, the metrics
 showed "n/a" in graphs instead of value 0.

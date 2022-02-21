@@ -6,7 +6,7 @@ Date: 1621580901
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 The Checkmk Raw Edition now allows service descriptions to use round brackets.
 Previously this was inconsistent with the Checkmk Enterprise Editions

@@ -6,7 +6,7 @@ Date: 1631185534
 Edition: cre
 Knowledge: undoc
 Level: 2
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 This werk only affects users using the Windows agent plugins
 'windows_if.ps1' or 'wmic_if.bat' (bakery ruleset 'Network

@@ -6,7 +6,7 @@ Date: 1615281931
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 This werk fixes a bug in the parsing of the agent section <tt>cmk_site_statistics</tt>.
 Before this werk, the corresponding parse function was not able to handle timeouts

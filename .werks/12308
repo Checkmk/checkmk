@@ -6,7 +6,7 @@ Date: 1615795909
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 Docker 20.10 changed the way how memory usage of docker containers is
 calculated, the docker check was adapted accordingly.

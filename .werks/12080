@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 This change turns two item formats from {{int}} to {{str}} making {{fjdarye100_disks}} and
 {{fjdarye100_sum}} usable again.

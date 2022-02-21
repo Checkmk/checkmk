@@ -6,7 +6,7 @@ Date: 1643743053
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 The REST API endpoints for creating hosts (Create a host, Create a cluster
 host, Bulk create hosts) were triggering and agent baking job for the new

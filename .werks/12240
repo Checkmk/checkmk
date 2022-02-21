@@ -6,7 +6,7 @@ Date: 1615304704
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 The agent plugin <tt>mk_cups_queues</tt>, which delivers data about printers
 in queues within the CUPS printing system, now accepts printer names which

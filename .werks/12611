@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: undoc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 For HW/SW inventory views the limit was calculated for the number of entries
 per row, not the number of rows, resulting in limit warnings even if the limit

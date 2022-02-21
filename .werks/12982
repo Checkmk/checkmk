@@ -6,7 +6,7 @@ Date: 1624260978
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 The Oracle agent plugin (both Linux and Windows) ignored offline datafiles
 for version 12.1 and above. This affected environments with physical standby

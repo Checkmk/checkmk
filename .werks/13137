@@ -6,7 +6,7 @@ Date: 1629104208
 Edition: cee
 Knowledge: undoc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 You can now configure a fixed range for x-axis limits in
 the Bar Chart Dashlet.

@@ -6,7 +6,7 @@ Date: 1629201936
 Edition: cee
 Knowledge: undoc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 Previously, only the unix-like operating systems did have a bakery plugin for baking a configuration for mk_oracle.
 Now the plugin also supports baking the configuration for the windows plugin (mk_oracle.ps1).

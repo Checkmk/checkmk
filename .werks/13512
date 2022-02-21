@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 If contact groups were edited and a large number of inventory paths or nagvis
 maps were added in the "Permissions" section, an "Request-URI Too Long" error

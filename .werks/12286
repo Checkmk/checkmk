@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 2
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 In distributed setups where one site has a connection problem, the number of
 open connections to other sites could stack up and lead to a 100% livestatus

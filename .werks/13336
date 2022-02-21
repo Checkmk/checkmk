@@ -6,7 +6,7 @@ Date: 1631620608
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 This Bug affects users, if they created the rule <i>Setup > Services > Service monitoring
 rules > Windows Services > New rule: Windows Services</i> with the following two properties:

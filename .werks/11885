@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 In Checkmk versions 2.0.0b1 to 2.0.0b3 hosts with an management board configured
 exhibitetd stale services if using the nagios core (i.E. CRE).

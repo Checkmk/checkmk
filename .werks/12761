@@ -6,7 +6,7 @@ Date: 1620311723
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 You can now use the discovery ruleset "Rittal CMC III discovery" to
 configure sensors to use the sensor description as an item. Additionally,

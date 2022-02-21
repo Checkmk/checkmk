@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 agent_aws crashed with the error message "KeyError: 'AvailabilityZone'" if the AvailabiltyZone is not available.
 If 'AvailabiltyZone' is not available the data will not be evaluated.

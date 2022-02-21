@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 When having a view open in an inactive browser tab for a longer time (several
 minutes or more) and then reopen the tab, the view produced too many AJAX calls

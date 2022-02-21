@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 Before checkmk 2.0.0 it was possible for users to configure the background,
 foreground and canvas color of the performance graphs. This was ralery useful

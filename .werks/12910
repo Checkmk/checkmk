@@ -6,7 +6,7 @@ Date: 1630500753
 Edition: cee
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 When using the inline SNMP backend a timeout of the "Check_MK" and
 "Check_MK Discovery" service would result in the service state UNKNOWN

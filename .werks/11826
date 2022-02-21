@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 Conjunctions which included oldest and newest age in the rule "Size, age and count of file groups" did not work as expected.
 The Service did not went {CRIT} when using them in a conjuction.

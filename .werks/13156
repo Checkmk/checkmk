@@ -6,7 +6,7 @@ Date: 1629104227
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 In the previous version, the Prometheus agent ignored any directory
 paths for the custom url connection option. This werk fixes this behaviour.

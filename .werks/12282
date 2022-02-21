@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 The ruleset page is showing a rule match analyzation in the moment it has
 contextual information about host name and service. The delete rule and move

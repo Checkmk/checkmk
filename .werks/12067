@@ -6,7 +6,7 @@ Date: 1613140260
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 Different pages, e.g. the "BI aggregations" page, wrote a "null.mk" file on row
 selection.

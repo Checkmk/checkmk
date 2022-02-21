@@ -6,7 +6,7 @@ Date: 1619100426
 Edition: cme
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 The new main dashboard was missing in CME. It is now the default main
 dashboard. The dashboard "Main overview" represents the previous problem

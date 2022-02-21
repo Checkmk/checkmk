@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 2
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 Previously, Windows agent tried to remove the legacy agent too early, i.e. before full config file from WATO
 had been deployed in the target system, thus ignoring the rule "Remove legacy agent".

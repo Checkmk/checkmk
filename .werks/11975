@@ -6,7 +6,7 @@ Date: 1613580429
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 Unfortunately Python 2 allowed to enter invalid regexes into arguments of BI rules.
 In Python 3 these values will lead to a crash when evaluating the service condition.

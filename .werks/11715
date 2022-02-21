@@ -6,7 +6,7 @@ Date: 1608213818
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 Windows paths include "\" as seperator but regex uses them as
 escape character. Windows path backslashes need to be escaped to "\\\\".

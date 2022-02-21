@@ -6,7 +6,7 @@ Date: 1606831828
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 This werk introduces a new service "Battery state", that monitors the following
 battery conditions for Eaton UPS devices:

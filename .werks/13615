@@ -7,7 +7,7 @@ Edition: cee
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 Some graphs like "bandwith" display the unit of the vertical axis on the top
 left coner of the graph instead of next to the values on the axis.

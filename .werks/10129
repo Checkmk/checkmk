@@ -6,7 +6,7 @@ Date: 1606982576
 Edition: cre
 Knowledge: doc
 Level: 3
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 There are 2 Livestatus tables consisting only of a single row:
 "status" and "eventconsolestatus".  You can't specify a WaitObject

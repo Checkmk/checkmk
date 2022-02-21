@@ -6,7 +6,7 @@ Date: 1642494849
 Edition: cee
 Knowledge: undoc
 Level: 2
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 Notification spooler (mknotifyd) connections communicated via a plain text procotol
 since its introduction. This is ok for local connections or in secure networks.

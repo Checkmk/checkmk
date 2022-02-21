@@ -6,7 +6,7 @@ Date: 1634825893
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 In the host configuration you can now configure "Additional IPv6 addresses" even if the "IP address family" is set to "IPv4" and vice versa.
 

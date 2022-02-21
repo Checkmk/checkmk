@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 The way 'local' splits it's input in order to be able to recognize (quoted) service names with
 spaces (namely shlex.split()) would stumble upon inconsistent input.

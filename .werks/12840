@@ -6,7 +6,7 @@ Date: 1625565998
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 The rulesets "Host labels" and "Service labels" can not use host or service
 labels as conditions.  However, previous Checkmk versions allowed it to refer

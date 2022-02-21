@@ -6,7 +6,7 @@ Date: 1613569393
 Edition: cee
 Knowledge: undoc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 New SNMP check for monitoring status of fan and power in HP HH3C switches, 
 hp_hh3c_fan and hp_hh3c_power.

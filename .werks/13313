@@ -6,7 +6,7 @@ Date: 1634845903
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 In distributed setups with sites using different Checkmk versions we can
 not ensure that all versions are compatible with each other. To clarify

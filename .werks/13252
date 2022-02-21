@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 netapp_api_vs_traffic used IO operation counter instead of time at some places which leads to PENDING
 services if those values do not change over time leading to a non-computable IO rate (and thus raising

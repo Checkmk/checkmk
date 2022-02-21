@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 Users with the "User" role which are able to manage a folder in "Hosts &
 folders" can add and remove permissions of contact groups on a folder. These

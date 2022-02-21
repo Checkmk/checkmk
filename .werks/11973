@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 Checkmk no longer ships '*.include' files in the 'checks/' directory
 (see <a href="https://checkmk.com/de/werk/11118">Werk #11118</a>).

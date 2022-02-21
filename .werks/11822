@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 In case the agent plugin mk_logwatch was started in debug mode, it was crashing due to the not-yet created state file.
 This is fixed now.

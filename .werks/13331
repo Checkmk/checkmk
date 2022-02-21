@@ -7,7 +7,7 @@ Edition: cee
 Knowledge: undoc
 Level: 2
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 This werk fixes some performance regressions in the mknotifyd and can increase
 (depending on the setup) the throughput of the mknotifyd. The changes are most

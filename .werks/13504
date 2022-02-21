@@ -6,7 +6,7 @@ Date: 1638275132
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 If you changed sitespecific settings for remote sites that depend on the "omd
 config" command (like "Start during system boot", "Access to Livestatus via

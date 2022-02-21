@@ -6,7 +6,7 @@ Date: 1633018379
 Edition: cre
 Knowledge: doc
 Level: 2
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 Beginning from version 2.0 passwords were written to the audit log
 in clear text when a rule with a password field was created/cloned

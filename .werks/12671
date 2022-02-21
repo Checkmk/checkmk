@@ -6,7 +6,7 @@ Date: 1617281168
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 The Linux agent provides a $REMOTE variable, that holds the IP address
 of the calling Checkmk site, that is evaluated by some plugins and

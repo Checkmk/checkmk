@@ -6,7 +6,7 @@ Date: 1610440103
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 In earlier versions user interactions, like collapsing nodes or root cause analysis, were
 discarded once the data of the visualization got updated. This has been fixed.

@@ -6,7 +6,7 @@ Date: 1625551224
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 In Oracle Dataguard environments where the archivelog only activated
 on the standby side, the services of the check plugin <tt>oracle_rman</tt>,

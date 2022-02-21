@@ -6,7 +6,7 @@ Date: 1632205303
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 For slow Oracle Databases with long running sysdate commands, the check
 plugin <tt>oracle_rman</tt> might have crashed with

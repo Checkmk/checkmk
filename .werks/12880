@@ -6,7 +6,7 @@ Date: 1621267592
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 A bug in the ruleset "JVM memory levels", which is used for defining levels
 on the memory usage of Java virtual machines, prevented the user from saving

@@ -6,7 +6,7 @@ Date: 1642066831
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 Checkmk now adds a change after a successful configuration update with
 cmk-update-config. cmk-update-config is e.g. executed during a Checkmk

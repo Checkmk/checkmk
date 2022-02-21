@@ -6,7 +6,7 @@ Date: 1644415649
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 After the update to Veeam v11 import of Veeam.Backup.PowerShell produced
 a warning that lead to bug in service discovery.

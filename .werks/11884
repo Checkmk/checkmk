@@ -6,7 +6,7 @@ Date: 1610451347
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 The pluigin printer_supply can no longer be configured using the config
 variable `printer_supply_some_remaining_status` in an .mk file.

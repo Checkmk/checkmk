@@ -6,7 +6,7 @@ Date: 1614328982
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 When editing views with an empty topic, the error message 'Element "" does not
 exist anymore' was shown.

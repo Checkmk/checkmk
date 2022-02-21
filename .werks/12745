@@ -6,7 +6,7 @@ Date: 1618842289
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 If you changed event console rules in a distributed setup with enabled event
 console on remote sites, the changes were not shown on the "Activate changes"

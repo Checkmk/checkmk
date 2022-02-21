@@ -6,7 +6,7 @@ Date: 1634024358
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 The installation of a systemd based agent package now creates a system user named <b>cmk-agent</b>.
 Failing to create (or find) such a user will cause the installation to fail.

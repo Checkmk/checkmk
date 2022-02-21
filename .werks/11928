@@ -6,7 +6,7 @@ Date: 1610623645
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 If the upper levels for a service are defined for example as (None, 50.0)
 and the service goes {CRIT} the service would crash because it cannot display None.

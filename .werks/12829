@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 The speed of status view loads has been improved with a larger number of users.
 Previous Checkmk versions were scanning the user profile directories multiple

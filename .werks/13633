@@ -6,7 +6,7 @@ Date: 1643612258
 Edition: cre
 Knowledge: undoc
 Level: 2
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 The password stores primary use is to centralize stored credentials. Instead of
 spreading the credentials in the whole configuration, we have this as a central

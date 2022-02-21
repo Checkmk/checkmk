@@ -6,7 +6,7 @@ Date: 1643296363
 Edition: cee
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 Users with permission "Manage all scheduled reports", usually admins, can edit
 scheduled reports. However, due to werk 12991, if the report itself is not

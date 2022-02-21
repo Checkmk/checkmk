@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: undoc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 Grouping for a single host custom attribute works now, before this fix the
 group was determined by all host custom attributes of the host.

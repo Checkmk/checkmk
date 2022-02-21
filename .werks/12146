@@ -6,7 +6,7 @@ Date: 1613384161
 Edition: cee
 Knowledge: undoc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 The form for the configuration "Activate update only on the selected hosts",
 that can be found at the "Automatic agent updates" page, undergoes two improvements:

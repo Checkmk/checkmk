@@ -6,7 +6,7 @@ Date: 1643367568
 Edition: cee
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 The sla painters <tt>Host/Services: SLA - Column specific</tt> and <tt>Host/Services: SLA - Service specific</tt> were
 broken, showing up not at all or displaying incorrect painter titles in the dropdown menu.

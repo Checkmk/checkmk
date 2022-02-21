@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: undoc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 For a better compatibility of sites being updated from previous version to 2.0,
 we now use the previous setting of "Maximum concurrent Checkmk checks" to

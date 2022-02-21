@@ -6,6 +6,6 @@ Date: 1615829300
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 The service "memory" will show the levels for warn/crit also in the metrics graphs.

@@ -6,7 +6,7 @@ Date: 1628689187
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 The check plugins <tt>sentry_pdu</tt> and <tt>raritan_pdu_plugs</tt> both
 monitor the status of PDUs. In the discovery phase, both plugins store the

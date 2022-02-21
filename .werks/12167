@@ -6,7 +6,7 @@ Date: 1613414150
 Edition: cee
 Knowledge: doc
 Level: 2
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 Previously, the expiration mechanism for acknowledgements ignored the
 "persistent" flag, so the corresponding comments always vanished after

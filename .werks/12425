@@ -6,7 +6,7 @@ Date: 1617288623
 Edition: cre
 Knowledge: doc
 Level: 2
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 The <tt>Full service scan</tt> functionality on the service discovery page of
 hosts showed vanished services as still monitored. The same applied to the

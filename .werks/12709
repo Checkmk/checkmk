@@ -6,7 +6,7 @@ Date: 1618323865
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 In case a backup job failed, unfinished VM backup logs do not contain `started_time`, which would
 result in unhandled KeyError('started_time') when sorting backup entries.

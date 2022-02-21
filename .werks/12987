@@ -6,7 +6,7 @@ Date: 1626712816
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 In Checkmk 1.6, when creating rules of the ruleset "JVM memory levels",
 users have to choose between absolute or percentual memory levels. In

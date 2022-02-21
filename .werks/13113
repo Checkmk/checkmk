@@ -7,7 +7,7 @@ Edition: cee
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 When viewing combined graphs or graph collections, the refresh interval was
 always 60 seconds without an option to modify.

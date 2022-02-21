@@ -6,7 +6,7 @@ Date: 1620978684
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 Multiple tags in different tag groups can have the same id. If
 this was the case, the column "Conditions" in the views showing

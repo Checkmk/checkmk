@@ -6,7 +6,7 @@ Date: 1643742329
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 As of Checkmk version 2.1.0, the special agent "agent_kubernetes" is deprecated
 and will be removed in Checkmk version 2.2.0. This also affects the associated

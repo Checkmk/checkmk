@@ -6,7 +6,7 @@ Date: 1613120599
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 In the previous version, the create and update endpoints for passwords returned
 a 204 status in case of a successful operation. This is changed to serve the password

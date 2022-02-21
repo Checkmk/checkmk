@@ -6,7 +6,7 @@ Date: 1619167987
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 The internal limit of maximum characters of the regular expression of
 check_http is now checked in the webinterface. If the regular expression is

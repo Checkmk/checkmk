@@ -6,7 +6,7 @@ Date: 1613653769
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 The "Subscription ID" is now optional when configuring the Microsoft Azure special agent
 in the WATO ruleset "Microsoft Azure".

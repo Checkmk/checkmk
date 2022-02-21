@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 Converting size information from backup logs had been using powers of 2 for
 both IEC and non-IEC units (so kB was 1024, instead of 1000, ..).

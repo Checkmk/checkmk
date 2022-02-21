@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 Before this werk, a clustered omd_status check may have crashed with
 <tt>KeyError (<i>sitename</i>)</tt>.

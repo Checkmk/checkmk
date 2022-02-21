@@ -6,7 +6,7 @@ Date: 1639409177
 Edition: cee
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 This Werk fixes a regression that was introduced with Checkmk 2.0.0. Only agent installations that need
 to call agent plugins with a non-root user are affected.

@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 If you entered exactly one year for the subscription period, e.g. 01.10.2021 -
 30.09.2021, the error "Invalid subscription period. Must be at least one year"

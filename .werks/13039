@@ -6,7 +6,7 @@ Date: 1631615434
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 Previously the mk_mongodb.py agent plugin crashed if there was at least one
 view defined.

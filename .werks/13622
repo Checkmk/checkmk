@@ -6,7 +6,7 @@ Date: 1643299434
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 A typo led into the problem, that the field "Hostname" in the network tree
 has never been filled.

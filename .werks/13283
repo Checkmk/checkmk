@@ -7,7 +7,7 @@ Edition: cme
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 The customized snapshot for the customer site did not always include the complete set of relevant
 aggregation rules a customers. This caused exceptions on various pages, even not BI related views.

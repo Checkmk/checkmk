@@ -7,7 +7,7 @@ Edition: cee
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 Checkmk 2.0 was not able to display values of rules created with previous
 Checkmk versions. The rules created with Checkmk 2.0 were also not displayed

@@ -6,7 +6,7 @@ Date: 1644322894
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 There was a bug in the command line arguments of the special agent for
 querying IPMI sensors. The valid choices for the privilege level were

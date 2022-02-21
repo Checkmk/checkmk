@@ -6,7 +6,7 @@ Date: 1635263185
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 Previously, Windows agent being started from command line without an argument 
 printed the help text incorrectly: the agent called asynchronously the internal 

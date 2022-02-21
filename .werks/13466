@@ -6,7 +6,7 @@ Date: 1634582875
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 The data for the NTP service "NTP Time" and "NTP Peer"
 had a cache validity intervall of 30 seconds, in order

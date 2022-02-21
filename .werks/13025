@@ -6,7 +6,7 @@ Date: 1626342728
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 Before this werk it was possible that <tt>cmk --snmptranslate</tt> would crash
 if the oids to translate where to long.

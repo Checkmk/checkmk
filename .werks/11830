@@ -6,7 +6,7 @@ Date: 1608036372
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 The check plugin <tt>timesyncd</tt> monitors the synchronization of linux hosts
 with time servers. One of the monitored quantities is the time passed since the

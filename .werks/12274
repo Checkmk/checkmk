@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: undoc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 The delete endpoint for host_config, service_group, host_group and
 contact_group required an etag to perform the action. This requirement

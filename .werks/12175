@@ -6,7 +6,7 @@ Date: 1626258306
 Edition: cee
 Knowledge: doc
 Level: 2
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 Even when a host is down, we can still receive check results for passive
 checks on that host, e.g. via the piggyback mechanism. Any notifications

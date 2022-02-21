@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 Unreachable/disabled remote sites tend to accumulate lots of pending changes.
 There was an performance impact, if these sites had 100+ changes and the

@@ -6,7 +6,7 @@ Date: 1620301627
 Edition: cee
 Knowledge: undoc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 The custom graph editor in a pursuit of convenience would save changes and
 refresh the page on every change. This convenience resulted in a high

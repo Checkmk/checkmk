@@ -6,7 +6,7 @@ Date: 1628853017
 Edition: cre
 Knowledge: undoc
 Level: 2
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 On heavy loaded systems the Windows WMI subsystem may not respond in 
 time thus some WMI based services will be switched into the stale state.

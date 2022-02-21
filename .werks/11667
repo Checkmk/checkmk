@@ -7,7 +7,7 @@ Edition: cee
 Knowledge: undoc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 You had to set up a unique ID on connection creation. In order to clear up
 ambiguity about what actually needs to be entered, we will set a standard in

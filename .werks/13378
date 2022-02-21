@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 The detection of the HTTP protocol, used in "Analyze configuration", "Crash
 reports" and to determine the shown default setting of "URL prefix for links to

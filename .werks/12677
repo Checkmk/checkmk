@@ -6,7 +6,7 @@ Date: 1621411715
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 The Linux agent now uses some advantages of current (&gt;= 1.1.1) OpenSSL versions
 and employs a safer encryption algorithm for the agent output on applicable systems.

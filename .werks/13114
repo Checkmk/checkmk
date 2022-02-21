@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 When using notification spooling option "Direct local delivery without
 spooling", the notification result was not added to the history log.

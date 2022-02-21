@@ -6,7 +6,7 @@ Date: 1627300122
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 The <tt>mk_inventory</tt> agent plugin collects static data like BIOS settings,
 information about the operation system, installed packages and others. The

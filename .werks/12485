@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: undoc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 Alert Statistics views and reports had an unconstrained query limit to
 accurately calculate results. Yet after resulting rows have been aggregated

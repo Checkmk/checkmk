@@ -6,7 +6,7 @@ Date: 1616171479
 Edition: cee
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 If you tried to add a metric in e.g. the custom graph designer, the metric
 dropdown showed no metrics after entering a hostname.

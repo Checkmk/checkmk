@@ -6,7 +6,7 @@ Date: 1613992120
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 Host/Service statistics dashlet:
 LI: Up hosts and OK services are now displayed in green again, not in grey as was recently implemented.

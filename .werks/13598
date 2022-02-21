@@ -6,7 +6,7 @@ Date: 1642519334
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 Previously WATO used invalid flag name <tt>send_all</tt>.
 Thus making impossible to set the flag using WATO.

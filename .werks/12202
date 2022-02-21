@@ -7,7 +7,7 @@ Edition: cee
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 Check f5_bigip_vserver crashed when invalid ip address was sent.
 Now, there is no crash and ip address is set as '-' (unknown).

@@ -6,7 +6,7 @@ Date: 1642756366
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 In case of a multiline container health test the service now reports the
 first line in the summary, and the full health test in the service details.

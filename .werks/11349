@@ -6,6 +6,6 @@ Date: 1606941242
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 Editing a user in the raw edition resulted in a crash as the ntop integration is not available there.

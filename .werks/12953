@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 In a previous Werk (12951) some endpoints have been switched over to be
 in line with the OpenAPI specification. This Werk switches all other endpoints

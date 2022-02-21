@@ -6,7 +6,7 @@ Date: 1643983890
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 If you used different labels with the same key, e.g. "foo:bar" and "foo:baz",
 the label search with filters in views and dropdown input fields in rules only

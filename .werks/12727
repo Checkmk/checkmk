@@ -6,7 +6,7 @@ Date: 1618209988
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 The diskspace cleanup script, which can be activated in the global settings,
 crashed with the following error under certain conditions:

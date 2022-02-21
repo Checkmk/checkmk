@@ -6,7 +6,7 @@ Date: 1612967988
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 In Checkmk versions 2.0.0i1 to 2.0.0b6 an error could occur when
 writing certain sets of discovered services in the cmk-update-config

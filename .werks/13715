@@ -6,7 +6,7 @@ Date: 1645029556
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 When running <tt>cmk-update-config</tt> in the process of updating Checkmk,
 this error could occur:

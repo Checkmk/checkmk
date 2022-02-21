@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 After changing the user profile in central sites of distributed setups the user
 profile is synchronized to remotes sites. This failed for all sites in previous

@@ -6,7 +6,7 @@ Date: 1644479743
 Edition: cee
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 Depending on the configuration, the Liveproxy Daemon restarted upon every
 "Activate changes", even if there were no relevant configuration changes.

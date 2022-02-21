@@ -6,7 +6,7 @@ Date: 1618465864
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 This only affects users who have developed their own check plugins and are
 using the <tt>clear_item_states_by_full_keys</tt> function of the <b>old</b>

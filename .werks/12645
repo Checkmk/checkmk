@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: undoc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 The text field "Type" in the enforced service rule "docker node disk usage" was changed to DropDownChoice
 in order to prevent wrong input.

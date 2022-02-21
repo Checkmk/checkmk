@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 When acknowledging a non existing service, a HTTP 404 was about
 to be triggered, but was not defined for this endpoint. This could

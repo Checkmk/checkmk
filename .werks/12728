@@ -6,7 +6,7 @@ Date: 1618211150
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 This werk improves the monitoring of Cisco ASA Failover setups (check
 plugin <tt>cisco_asa_failover</tt>).

@@ -6,7 +6,7 @@ Date: 1615453973
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 If you searched for hosts via "Search hosts", any bulk operation, like e.g.
 "Delete hosts", resulted in an error "No WATO folder //search".

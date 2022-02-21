@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 The internally used clean-up command <tt>cmk --automation delete-hosts {hostname}</tt> always loaded
 the complete host configuration and all checks. This information was never actually needed.

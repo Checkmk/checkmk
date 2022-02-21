@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 Loading of Veeam Powershell Snapin is not supported anymore so this fix tries to load the
 new module first and falls back to the Snapin if that didn't work.

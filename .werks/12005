@@ -6,7 +6,7 @@ Date: 1612531002
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 The speacial agent azure was unable to deal with responses
 containing more than 1000 resources, which could lead to

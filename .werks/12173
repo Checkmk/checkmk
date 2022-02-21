@@ -6,7 +6,7 @@ Date: 1619686384
 Edition: cee
 Knowledge: doc
 Level: 2
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 For some tables ("comments" / "log") and some aggregated columns (like
 "num_services" or "worst_service_state") in the tables "hosts" /

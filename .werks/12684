@@ -6,7 +6,7 @@ Date: 1620919300
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 The special agent for Kubernetes did not convert date and time strings received
 from the Kubernetes cluster correctly to timestamps. This has been fixed.

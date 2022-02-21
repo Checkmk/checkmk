@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 2
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 The Checkmk docker container image was previously based on the
 debian:stretch-slim image. The base image has now been updated to

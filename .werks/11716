@@ -6,7 +6,7 @@ Date: 1610352114
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 Clearing individual logs was not possible before. You could only clear all logs from
 a specific host. This happened because the path handling for clearing logfiles was not correct.

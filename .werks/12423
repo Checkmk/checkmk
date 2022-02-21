@@ -6,7 +6,7 @@ Date: 1617186125
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 This werk extends the functionality of the check plugin <tt>cisco_asa_failover</tt>,
 which monitors the status of Cisco ASA failover clusters. This plugin will now go

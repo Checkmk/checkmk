@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 2
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 When a view that requires a context (e.g. as host name) is opened without
 a "host" HTTP request variable, the view only showed an error message and

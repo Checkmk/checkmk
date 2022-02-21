@@ -6,7 +6,7 @@ Date: 1610981798
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 The option "Send hint to message inbox (bottom of sidebar)" on the "Notify
 users" page was non functional in previous 2.0 versions.

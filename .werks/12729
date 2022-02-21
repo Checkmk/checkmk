@@ -6,7 +6,7 @@ Date: 1618844001
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 There was a bug in the forwarding of logwatch messages to a remote
 host (both via TCP and UDP). The corresponding service went CRIT and

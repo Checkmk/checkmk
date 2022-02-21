@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: undoc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 A lot of interface checks did exactly the same thing. The new check API allows us to
 consolidate them into one check plugin {{interfaces}}, without affecting the user.

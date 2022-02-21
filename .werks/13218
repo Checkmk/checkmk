@@ -6,7 +6,7 @@ Date: 1631963081
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 A clustered service should only have the parameters from
 rules matching the cluster host applied.

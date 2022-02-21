@@ -6,7 +6,7 @@ Date: 1631607574
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 The previous default warn level for the last synchronisation period was
 deemed slightly too short. This werk increases this default value.

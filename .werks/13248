@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 The sidebar snapins "BI aggregation groups" and "BI aggregation groups tree"
 were previously empty, even if BI groups and/or trees were configured.

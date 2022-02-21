@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 Since version 2.0.0, if disabled service rules with negated service condition were used, these
 rules were wrongly converted with the next 2.0.0p update.

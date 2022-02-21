@@ -7,7 +7,7 @@ Edition: cme
 Knowledge: undoc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 CME remote sites needs to evaluate if the custom files for users need to be kept.
 This mechanism was quite slow and prone to quadratic complexity.

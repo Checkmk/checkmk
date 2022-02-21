@@ -6,7 +6,7 @@ Date: 1610441098
 Edition: cee
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 If you created a report scheduler for, e.g. "BI Availability", the section
 "Context/Search filters" was empty because of missing single info context in

@@ -6,7 +6,7 @@ Date: 1632140805
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 Nodes are now highlighted again, if the mouse hovers over entries in the
 dropdown of search results. Additionally, it is possible to select a node

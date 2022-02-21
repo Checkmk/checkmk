@@ -6,7 +6,7 @@ Date: 1627649999
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 This werk is incompatible if you have fileinfo_groups or sap_hana_fileinfo_groups
 enforced services. In that case you have to go to the enforced service parameters

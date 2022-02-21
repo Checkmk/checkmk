@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 The docker API will not allow parallel calls to its 'df' command.
 Since this command is notoriously long running, the section

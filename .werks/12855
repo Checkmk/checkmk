@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 With werk #10714 we replaced the old pnp4nagios based graphing system of the
 Checkmk Raw Edition. This change now removes some files that were left over

@@ -21,7 +21,7 @@ import re
 import shutil
 import subprocess
 import time
-from contextlib import contextmanager
+from contextlib import contextmanager, suppress
 from pathlib import Path, PureWindowsPath
 from typing import (
     Any,
@@ -1448,12 +1448,13 @@ class UpdateConfig:
     def _renew_site_cert(self) -> None:
         try:
             cert, _priv = certs.load_cert_and_private_key(cmk.utils.paths.site_cert_file)
+            if any(isinstance(e.value, x509.SubjectAlternativeName) for e in cert.extensions):
+                self._logger.log(VERBOSE, "Skipping (nothing to do)")
+                return
+        except FileNotFoundError:
+            self._logger.warning(f"No site certificate found at {cmk.utils.paths.site_cert_file}")
         except OSError as exc:
             self._logger.warning(f"Unable to load site certificate: {exc}")
-            return
-
-        if any(isinstance(e.value, x509.SubjectAlternativeName) for e in cert.extensions):
-            self._logger.log(VERBOSE, "Skipping (nothing to do)")
             return
 
         root_ca_path = certs.root_cert_path(certs.cert_dir(Path(cmk.utils.paths.omd_root)))
@@ -1464,8 +1465,9 @@ class UpdateConfig:
             return
 
         bak = Path(f"{cmk.utils.paths.site_cert_file}.bak")
-        self._logger.log(VERBOSE, f"Copy certificate to {bak}...")
-        bak.write_bytes(cmk.utils.paths.site_cert_file.read_bytes())
+        with suppress(FileNotFoundError):
+            bak.write_bytes(cmk.utils.paths.site_cert_file.read_bytes())
+            self._logger.log(VERBOSE, f"Copied certificate to {bak}")
 
         self._logger.log(VERBOSE, "Creating new certificate...")
         root_ca.save_new_signed_cert(

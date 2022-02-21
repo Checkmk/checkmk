@@ -59,6 +59,8 @@ pytestmark = pytest.mark.checks
                 "10",
                 "--cluster-collector-read-timeout",
                 "12",
+                "--cluster-collector-proxy",
+                "FROM_ENVIRONMENT",
             ],
         ),
         (
@@ -90,6 +92,8 @@ pytestmark = pytest.mark.checks
                 "--cluster-collector-endpoint",
                 "https://11.211.3.32:20026",
                 "--verify-cert-collector",
+                "--cluster-collector-proxy",
+                "FROM_ENVIRONMENT",
             ],
         ),
         (
@@ -120,6 +124,8 @@ pytestmark = pytest.mark.checks
                 "NO_PROXY",
                 "--cluster-collector-endpoint",
                 "https://11.211.3.32:20026",
+                "--cluster-collector-proxy",
+                "FROM_ENVIRONMENT",
             ],
         ),
     ],
@@ -231,6 +237,8 @@ def test_parse_namespace_patterns():
         "NO_PROXY",
         "--cluster-collector-endpoint",
         "https://11.211.3.32:20026",
+        "--cluster-collector-proxy",
+        "FROM_ENVIRONMENT",
     ]
 
 
@@ -342,6 +350,18 @@ def test_client_configuration_host(params: Mapping[str, Any], host) -> None:
                 "monitored-objects": ["pods"],
             },
             "http://test:test@127.0.0.1:8080",
+        ),
+        (
+            {
+                "cluster-name": "cluster",
+                "token": ("password", "randomtoken"),
+                "kubernetes-api-server": {
+                    "endpoint": "http://localhost:8001",
+                    "verify-cert": False,
+                },
+                "monitored-objects": ["pods"],
+            },
+            "FROM_ENVIRONMENT",
         ),
     ],
 )

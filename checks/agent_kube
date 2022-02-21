@@ -38,7 +38,12 @@ def agent_kube_arguments(
     args.extend(["--api-server-endpoint", api_params["endpoint"]])
     if api_params.get("verify-cert"):
         args.append("--verify-cert-api")
-    args.extend(["--api-server-proxy", get_http_proxy(api_params["proxy"]).serialize()])
+    args.extend(
+        [
+            "--api-server-proxy",
+            get_http_proxy(api_params.get("proxy", ("environment", "environment"))).serialize(),
+        ]
+    )
     if api_timeouts := api_params.get("timeout"):
         args.extend(_timeouts(api_timeouts, "k8s-api"))
 
@@ -50,8 +55,14 @@ def agent_kube_arguments(
         args.append("--verify-cert-collector")
     if collector_timeouts := collector_params.get("timeout"):
         args.extend(_timeouts(collector_timeouts, "cluster-collector"))
-    if proxy := collector_params.get("proxy"):
-        args.extend(["--cluster-collector-proxy", get_http_proxy(proxy).serialize()])
+    args.extend(
+        [
+            "--cluster-collector-proxy",
+            get_http_proxy(
+                collector_params.get("proxy", ("environment", "environment"))
+            ).serialize(),
+        ]
+    )
 
     return args
 

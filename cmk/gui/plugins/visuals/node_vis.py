@@ -36,6 +36,10 @@ class FilterRange(Filter):
         )
         self._filter_range_config = filter_range_config
 
+    @property
+    def range_config(self):
+        return self._filter_range_config
+
     def request_vars_from_row(self, row: Row) -> Dict[str, str]:
         return {self._filter_range_config.column: row[self._filter_range_config.column]}
 

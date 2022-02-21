@@ -63,7 +63,8 @@ def collector_handling_logs(component_handling_state: CollectorState) -> Collect
 
 @pytest.fixture
 def collectors_metadata(
-    metadata_collection_log: CollectorHandlerLog, collector_metadata_handling_state: CollectorState
+    metadata_collection_log: CollectorHandlerLog,
+    collector_metadata_handling_state: CollectorState,
 ) -> CollectorComponentsMetadata:
     return CollectorComponentsMetadata(
         processing_log=metadata_collection_log,

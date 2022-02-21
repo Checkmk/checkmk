@@ -520,124 +520,16 @@ class FolderCollection(DomainObjectCollection):
     )
 
 
-class DateTimeRange(BaseSchema):
-    start_time = gui_fields.Timestamp(
+class User(Linkable):
+    userName = fields.String(description="A unique user name.")
+    friendlyName = fields.String(
         required=True,
-        example="2017-07-21T17:32:28+00:00",
-        description="The start datetime of the time period. The format conforms to the ISO 8601 profile",
+        description="The user's name in a form suitable to be rendered in a UI.",
     )
-    end_time = gui_fields.Timestamp(
-        example="2017-07-21T17:32:28+00:00",
-        description="The end datetime of the time period. The format conforms to the ISO 8601 profile",
-        format="iso8601",
-    )
-
-
-class ConcreteDisabledNotifications(BaseSchema):
-    disable = fields.Boolean(
-        required=False,
-        description="Option if all notifications should be temporarily disabled",
-    )
-    timerange = fields.Nested(
-        DateTimeRange,
-        description="A custom timerange during which notifications are disabled",
-        required=False,
-    )
-
-
-class UserIdleOption(BaseSchema):
-    option = fields.String(
-        required=True,
-        description="This field indicates if the idle timeout uses the global configuration, is "
-        "disabled or uses an individual duration",
-        enum=["global", "disable", "individual"],
-    )
-    duration = fields.Integer(
-        required=False,
-        description="The duration in seconds of the individual idle timeout if individual is "
-        "selected as idle timeout option.",
-        example=3600,
-    )
-
-
-class ConcreteUserContactOption(BaseSchema):
-    email = fields.String(
-        required=True,
-        description="The mail address of the user.",
-        example="user@example.com",
-    )
-    fallback_contact = fields.Boolean(
-        description="In case none of the notification rules handle a certain event a notification "
-        "will be sent to the specified email",
-        required=False,
-    )
-
-
-class UserAttributes(BaseSchema):
-    fullname = fields.String(required=True, description="The alias or full name of the user.")
-    customer = gui_fields.customer_field(
-        required=True,
-        should_exist=True,
-    )
-    disable_login = fields.Boolean(
-        required=False,
-        description="This field indicates if the user is allowed to login to the monitoring.",
-    )
-    contact_options = fields.Nested(
-        ConcreteUserContactOption,
-        required=False,
-        description="Contact settings for the user",
-    )
-    idle_timeout = fields.Nested(
-        UserIdleOption,
-        required=False,
-        description="Idle timeout for the user. Per default, the global configuration is used.",
-        example={"option": "global"},
-    )
+    email = fields.String(description="(optional) the user's email address, if known.")
     roles = fields.List(
         fields.String(),
-        description="The list of assigned roles to the user",
-    )
-    authorized_sites = fields.List(
-        fields.String(),
-        description="The names of the sites that this user is authorized to handle",
-        required=False,
-    )
-    contactgroups = fields.List(
-        fields.String(),
-        description="The contact groups that this user is a member of",
-        required=False,
-    )
-    pager_address = fields.String(
-        required=False,
-        description="",
-    )
-    disable_notifications = fields.Nested(
-        ConcreteDisabledNotifications,
-        required=False,
-    )
-    language = fields.String(
-        required=False,
-        description="The language used by the user in the user interface",
-    )
-
-
-class UserObject(DomainObject):
-    domainType = fields.Constant(
-        "user_config",
-        description="The domain type of the object.",
-    )
-    extensions = fields.Nested(UserAttributes, description="The attributes of the user")
-
-
-class UserCollection(DomainObjectCollection):
-    domainType = fields.Constant(
-        "user_config",
-        description="The domain type of the objects in the collection.",
-    )
-    value = fields.List(
-        fields.Nested(UserObject()),
-        description="A list of user objects.",
+        description="List of unique role names that apply to this user (can be empty).",
     )
 
 

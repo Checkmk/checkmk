@@ -50,12 +50,12 @@ def test_openapi_customer(aut_user_auth_wsgi_app: WebTestAppForCMK, monkeypatch)
             status=200,
             content_type="application/json",
         )
-
-    assert resp.json_body["extensions"] == {
+    assert resp.json_body["extensions"]["attributes"] == {
         "fullname": "User Name",
         "customer": "global",
         "contactgroups": [],
         "disable_notifications": {},
+        "auth_option": {},
         "contact_options": {"email": "", "fallback_contact": False},
         "idle_timeout": {"option": "global"},
         "disable_login": False,
@@ -71,7 +71,7 @@ def test_openapi_customer(aut_user_auth_wsgi_app: WebTestAppForCMK, monkeypatch)
         status=200,
         content_type="application/json",
     )
-    assert resp.json_body["extensions"]["customer"] == "provider"
+    assert resp.json_body["extensions"]["attributes"]["customer"] == "provider"
 
 
 @managedtest
@@ -156,12 +156,15 @@ def test_openapi_user_minimal_password_settings(
             status=200,
             content_type="application/json",
         )
-    assert resp.json_body["extensions"] == {
+    assert resp.json_body["extensions"]["attributes"] == {
         "fullname": "User Name",
         "customer": "provider",
         "pager_address": "",
         "contactgroups": [],
         "idle_timeout": {"option": "global"},
+        "auth_option": {
+            "auth_type": "password",
+        },
         "contact_options": {
             "email": "",
             "fallback_contact": False,
@@ -188,13 +191,15 @@ def test_openapi_user_minimal_password_settings(
             headers={"Accept": "application/json", "If-Match": resp.headers["ETag"]},
             content_type="application/json",
         )
-
-    assert resp.json_body["extensions"] == {
+    assert resp.json_body["extensions"]["attributes"] == {
         "fullname": "User Name",
         "customer": "provider",
         "contact_options": {
             "email": "",
             "fallback_contact": False,
+        },
+        "auth_option": {
+            "auth_type": "automation",
         },
         "idle_timeout": {
             "option": "disable",
@@ -207,29 +212,8 @@ def test_openapi_user_minimal_password_settings(
     }
 
 
-def test_openapi_all_users(wsgi_app, with_automation_user):
-    username, secret = with_automation_user
-    wsgi_app.set_authorization(("Bearer", username + " " + secret))
-    base = "/NO_SITE/check_mk/api/1.0"
-
-    resp = wsgi_app.call_method(
-        "get",
-        base + "/domain-types/user_config/collections/all",
-        status=200,
-        headers={"Accept": "application/json"},
-    )
-    users = resp.json_body["value"]
-    assert len(users) == 1
-
-    _user_resp = wsgi_app.call_method(
-        "get", users[0]["links"][0]["href"], status=200, headers={"Accept": "application/json"}
-    )
-
-
 @managedtest
-def test_openapi_user_config(
-    aut_user_auth_wsgi_app: WebTestAppForCMK, with_automation_user, monkeypatch
-):
+def test_openapi_user_config(aut_user_auth_wsgi_app: WebTestAppForCMK, monkeypatch):
     monkeypatch.setattr(
         "cmk.gui.watolib.global_settings.rulebased_notifications_enabled", lambda: True
     )
@@ -241,6 +225,7 @@ def test_openapi_user_config(
         "username": name,
         "fullname": alias,
         "customer": "provider",
+        "auth_option": {"auth_type": "password", "password": "hello"},
         "disable_notifications": {
             "timerange": {"start_time": "2020-01-01T00:00:00Z", "end_time": "2020-01-02T00:00:00Z"}
         },
@@ -264,7 +249,10 @@ def test_openapi_user_config(
         status=200,
     )
 
-    assert resp.json_body["extensions"] == {
+    assert resp.json_body["extensions"]["attributes"] == {
+        "auth_option": {
+            "auth_type": "password",
+        },
         "contact_options": {"email": "", "fallback_contact": False},
         "disable_login": False,
         "fullname": "KPECYCq79E",
@@ -272,10 +260,7 @@ def test_openapi_user_config(
         "contactgroups": [],
         "customer": "provider",
         "disable_notifications": {
-            "timerange": {
-                "end_time": "2020-01-02T00:00:00+00:00",
-                "start_time": "2020-01-01T00:00:00+00:00",
-            }
+            "timerange": {"end_time": "2020-01-02T00:00:00Z", "start_time": "2020-01-01T00:00:00Z"}
         },
         "idle_timeout": {"option": "global"},
         "roles": [],
@@ -395,7 +380,10 @@ def test_openapi_user_edit_auth(aut_user_auth_wsgi_app: WebTestAppForCMK, monkey
             status=200,
             content_type="application/json",
         )
-    assert resp.json_body["extensions"] == {
+    assert resp.json_body["extensions"]["attributes"] == {
+        "auth_option": {
+            "auth_type": "password",
+        },
         "contact_options": {"email": "", "fallback_contact": False},
         "disable_login": False,
         "fullname": "Foo Bar",
@@ -420,8 +408,10 @@ def test_openapi_user_edit_auth(aut_user_auth_wsgi_app: WebTestAppForCMK, monkey
             headers={"Accept": "application/json", "If-Match": resp.headers["ETag"]},
             content_type="application/json",
         )
-
-    assert resp.json_body["extensions"] == {
+    assert resp.json_body["extensions"]["attributes"] == {
+        "auth_option": {
+            "auth_type": "automation",
+        },
         "contact_options": {"email": "", "fallback_contact": False},
         "disable_login": False,
         "fullname": "Foo Bar",
@@ -447,8 +437,8 @@ def test_openapi_user_edit_auth(aut_user_auth_wsgi_app: WebTestAppForCMK, monkey
             headers={"Accept": "application/json", "If-Match": resp.headers["ETag"]},
             content_type="application/json",
         )
-
-    assert resp.json_body["extensions"] == {
+    assert resp.json_body["extensions"]["attributes"] == {
+        "auth_option": {},
         "contact_options": {"email": "", "fallback_contact": False},
         "disable_login": False,
         "fullname": "Foo Bar",
@@ -605,8 +595,8 @@ def test_openapi_managed_global_edition(aut_user_auth_wsgi_app: WebTestAppForCMK
             status=200,
             content_type="application/json",
         )
-
-    assert resp.json_body["extensions"] == {
+    assert resp.json_body["extensions"]["attributes"] == {
+        "auth_option": {},
         "contact_options": {"email": "", "fallback_contact": False},
         "disable_login": False,
         "fullname": "User Name",
@@ -696,7 +686,10 @@ def test_global_full_configuration(aut_user_auth_wsgi_app: WebTestAppForCMK, mon
         status=200,
     )
 
-    assert resp.json_body["extensions"] == {
+    assert resp.json_body["extensions"]["attributes"] == {
+        "auth_option": {
+            "auth_type": "password",
+        },
         "contact_options": {"email": "user@example.com", "fallback_contact": False},
         "disable_login": False,
         "fullname": "Mathias Kettner",
@@ -794,11 +787,13 @@ def test_openapi_user_update_contact_options(
     resp = aut_user_auth_wsgi_app.call_method(
         "get",
         base + "/objects/user_config/cmkuser",
-        status=200,
         headers={"Accept": "application/json"},
+        status=200,
     )
-
-    assert resp.json_body["extensions"] == {
+    assert resp.json_body["extensions"]["attributes"] == {
+        "auth_option": {
+            "auth_type": "password",
+        },
         "contact_options": {"email": "", "fallback_contact": False},
         "disable_login": False,
         "fullname": "Mathias Kettner",
@@ -836,14 +831,14 @@ def test_openapi_user_disable_notifications(aut_user_auth_wsgi_app: WebTestAppFo
             status=200,
             content_type="application/json",
         )
-
     resp = aut_user_auth_wsgi_app.call_method(
         "get",
         base + "/objects/user_config/cmkuser",
-        status=200,
         headers={"Accept": "application/json"},
+        status=200,
     )
-    assert resp.json_body["extensions"] == {
+    assert resp.json_body["extensions"]["attributes"] == {
+        "auth_option": {},
         "contact_options": {"email": "", "fallback_contact": False},
         "disable_login": False,
         "fullname": "Mathias Kettner",
@@ -865,8 +860,8 @@ def test_openapi_user_disable_notifications(aut_user_auth_wsgi_app: WebTestAppFo
         headers={"Accept": "application/json", "If-Match": resp.headers["ETag"]},
         content_type="application/json",
     )
-
-    assert resp.json_body["extensions"] == {
+    assert resp.json_body["extensions"]["attributes"] == {
+        "auth_option": {},
         "contact_options": {"email": "", "fallback_contact": False},
         "disable_login": False,
         "fullname": "Mathias Kettner",

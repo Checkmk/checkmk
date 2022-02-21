@@ -42,9 +42,10 @@ from cmk.gui.page_menu import (
 from cmk.gui.pages import AjaxPage, AjaxPageResult, Page, page_registry, PageResult
 from cmk.gui.pagetypes import PagetypeTopics
 from cmk.gui.plugins.views.utils import get_permitted_views
+from cmk.gui.plugins.visuals.node_vis import FilterTopologyMaxNodes, FilterTopologyMeshDepth
 from cmk.gui.plugins.visuals.utils import Filter, get_livestatus_filter_headers
 from cmk.gui.plugins.wato import bi_valuespecs
-from cmk.gui.type_defs import FilterHeader
+from cmk.gui.type_defs import VisualContext
 from cmk.gui.views import ABCAjaxInitialFilters, View
 
 Mesh = Set[HostName]
@@ -65,8 +66,8 @@ class TopologySettings:
     growth_forbidden_nodes: Set[HostName] = field(default_factory=set)  # Growth stops here
     growth_continue_nodes: Set[HostName] = field(default_factory=set)  # Growth continues here
     display_mode: str = "parent_child"
-    max_nodes: int = 400
-    mesh_depth: int = 0
+    max_nodes: int = FilterTopologyMaxNodes().range_config.default
+    mesh_depth: int = FilterTopologyMeshDepth().range_config.default
     growth_auto_max_nodes: int = 400
     overlays_config: Dict[str, Dict[str, Any]] = field(default_factory=dict)
 
@@ -110,7 +111,7 @@ class ParentChildTopologyPage(Page):
         topology_settings = TopologySettings()
         if request.var("filled_in"):
             # Parameters from the check_mk filters
-            topology_settings.growth_root_nodes = self._get_hostnames_from_filters()
+            self._update_topology_settings_with_context(topology_settings)
         elif request.var("host_name"):
             # Explicit host_name. Used by icon linking to Topology
             topology_settings.growth_root_nodes = {
@@ -148,15 +149,36 @@ class ParentChildTopologyPage(Page):
 
         return hostnames
 
-    def _get_hostnames_from_filters(self) -> Set[HostName]:
-        # Determine hosts from filters
-        filter_headers = self._get_filter_headers()
+    def _update_topology_settings_with_context(self, topology_settings: TopologySettings) -> None:
+        view, filters = get_topology_view_and_filters()
+        context = cmk.gui.visuals.active_context_from_request(
+            view.datasource.infos, view.spec["context"]
+        )
+        topology_settings.growth_root_nodes = self._get_hostnames_from_filters(context, filters)
+
+        max_nodes_range_config = FilterTopologyMaxNodes().range_config
+        if value := context.get(max_nodes_range_config.column, {}).get(
+            max_nodes_range_config.column
+        ):
+            topology_settings.max_nodes = int(value)
+
+        mesh_depth_range_config = FilterTopologyMeshDepth().range_config
+        if value := context.get(mesh_depth_range_config.column, {}).get(
+            mesh_depth_range_config.column
+        ):
+            topology_settings.mesh_depth = int(value)
+
+    def _get_hostnames_from_filters(
+        self, context: VisualContext, filters: List[Filter]
+    ) -> Set[HostName]:
+        filter_headers = "".join(get_livestatus_filter_headers(context, filters))
+
         query = "GET hosts\nColumns: name"
         if filter_headers:
             query += "\n%s" % filter_headers
 
         with sites.only_sites(request.var("site")):
-            return {HostName(x[0]) for x in sites.live().query(query)}
+            return {HostName(x) for x in sites.live().query_column_unique(query)}
 
     def show_topology(self, topology_settings: TopologySettings) -> None:
         visual_spec = ParentChildTopologyPage.visual_spec()
@@ -184,10 +206,6 @@ class ParentChildTopologyPage(Page):
 
     def _get_overlays_config(self) -> List:
         return []
-
-    def _get_filter_headers(self) -> FilterHeader:
-        view, filters = get_topology_view_and_filters()
-        return "".join(get_livestatus_filter_headers(view.context, filters))
 
     def _extend_display_dropdown(self, menu: PageMenu, page_name: str) -> None:
         _view, show_filters = get_topology_view_and_filters()
@@ -218,6 +236,7 @@ class ParentChildTopologyPage(Page):
 
 def get_topology_view_and_filters() -> Tuple[View, List[Filter]]:
     view_name = "topology_filters"
+
     view_spec = get_permitted_views()[view_name]
     view = View(view_name, view_spec, view_spec.get("context", {}))
     filters = cmk.gui.visuals.filters_of_visual(

@@ -5,7 +5,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Module to hold shared code for check parameter module internals"""
 
-from typing import Any, List, MutableMapping
+import copy
+from typing import Any, Dict, List, Mapping
 from typing import Tuple as _Tuple
 from typing import Union
 
@@ -344,7 +345,7 @@ def _transform_trend_range_not_none(params):
     return TREND_RANGE_DEFAULT if params is None else params
 
 
-def transform_trend_mb_to_trend_bytes(params: MutableMapping[str, Any]) -> MutableMapping[str, Any]:
+def transform_trend_mb_to_trend_bytes(params: Mapping[str, Any]) -> Dict[str, Any]:
     """forth transform for trend_bytes and the former trend_mb
     when changing the trend_mb field to a Filesize field the name was also changed.
     Therefore the transform needs to be applied on several locations
@@ -355,7 +356,7 @@ def transform_trend_mb_to_trend_bytes(params: MutableMapping[str, Any]) -> Mutab
     >>> transform_trend_mb_to_trend_bytes({"foo": "bar"})
     {'foo': 'bar'}
     """
-    transformed_params = {**params}
+    transformed_params: Dict[str, Any] = dict(copy.deepcopy(params))
     if "trend_mb" in params and "trend_bytes" not in params:
         transformed_params["trend_bytes"] = (
             transformed_params["trend_mb"][0] * 1024**2,
@@ -484,7 +485,8 @@ filesystem_elements: List[_Tuple[str, ValueSpec]] = (
 )
 
 
-def _transform_discovered_filesystem_params(params):
+def _transform_discovered_filesystem_params(p: Mapping[str, Any]) -> Dict[str, Any]:
+    params: Dict[str, Any] = dict(copy.deepcopy(p))
     include_volume_name = params.pop("include_volume_name", None)
     if include_volume_name is True:
         params["item_appearance"] = "volume_name_and_mountpoint"
@@ -493,7 +495,7 @@ def _transform_discovered_filesystem_params(params):
     return params
 
 
-def _forth_transform_vs_filesystem(params: MutableMapping[str, Any]) -> MutableMapping[str, Any]:
+def _forth_transform_vs_filesystem(params: Mapping[str, Any]) -> Dict[str, Any]:
     """wrapper for all the transforms on vs_filesystem"""
     params = _transform_discovered_filesystem_params(params)
     params = transform_trend_mb_to_trend_bytes(params)

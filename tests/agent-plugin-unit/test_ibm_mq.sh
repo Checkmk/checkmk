@@ -73,10 +73,10 @@ test_is_qm_monitored_full_config() {
 test_monitored_qm() {
     ONLY_QM="BAR TEE"
     mock_dspmq="QMNAME(TEE)                                           STATUS(RUNNING)"
-    actual=$(. "$IBM_PLUGIN_PATH" | sed 's/NOW([^)]*)/NOW(timestamp)/')
+    actual=$(. "$IBM_PLUGIN_PATH" | sed 's/NOW([^)]*)/NOW(timestamp)/' | sed 's/version: .*/version: a_version/')
     expected="\
 <<<ibm_mq_plugin:sep(58)>>>
-version: 2.1.0i1
+version: a_version
 dspmq: OK
 runmqsc: OK
 <<<ibm_mq_channels:sep(10)>>>
@@ -94,10 +94,10 @@ QMNAME(TEE)                                           STATUS(RUNNING)"
 test_excluded_qm() {
     ONLY_QM="FOO BAR"
     mock_dspmq="QMNAME(TEE)                                           STATUS(RUNNING)"
-    actual=$(. "$IBM_PLUGIN_PATH" 2>&1)
+    actual=$(. "$IBM_PLUGIN_PATH" 2>&1 | sed 's/version: .*/version: a_version/' )
     expected="\
 <<<ibm_mq_plugin:sep(58)>>>
-version: 2.1.0i1
+version: a_version
 dspmq: OK
 runmqsc: OK
 TEE: Ignored because ONLY_QM: FOO BAR

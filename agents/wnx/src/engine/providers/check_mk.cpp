@@ -109,7 +109,7 @@ std::string MakeDirs() {
 }
 
 std::string GetLegacyPullMode() {
-    return ac::IsUseLegacyMode(cfg::GetLoadedConfig()) ? "yes" : "no";
+    return ac::IsInLegacyMode() ? "yes" : "no";
 }
 }  // namespace
 

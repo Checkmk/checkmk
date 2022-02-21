@@ -5,6 +5,7 @@
 
 #include "pch.h"
 
+#include "agent_controller.h"
 #include "cfg.h"
 #include "common/version.h"
 #include "common/wtools.h"
@@ -24,9 +25,9 @@
 #include "test_tools.h"
 #include "tools/_misc.h"
 #include "tools/_process.h"
+namespace fs = std::filesystem;
 
 namespace cma::provider {
-
 static const std::string section_name{cma::section::kUseEmbeddedName};
 
 class Empty : public Synchronous {
@@ -213,11 +214,11 @@ TEST_F(SectionProviderCheckMkFixture, AdvancedFields) {
     EXPECT_EQ(get_val(result[3]), cfg::GetHostName());
     EXPECT_EQ(get_val(result[4]), tgt::Is64bit() ? "64bit" : "32bit");
     EXPECT_EQ(result[16], "AgentController: ");
-    EXPECT_EQ(result[17], "LegacyPullMode: yes");
-    cfg::GetLoadedConfig()[cfg::groups::kSystem][cfg::vars::kController] =
-        YAML::Load("legacy: no");
-    result = getCoreResultAsTable();
     EXPECT_EQ(result[17], "LegacyPullMode: no");
+    tst::CreateTextFile(fs::path{cfg::GetUserDir()} / ac::kLegacyPullFile,
+                        "test");
+    result = getCoreResultAsTable();
+    EXPECT_EQ(result[17], "LegacyPullMode: yes");
 }
 
 TEST_F(SectionProviderCheckMkFixture, OnlyFromField) {
@@ -338,5 +339,4 @@ TEST(SectionHeaders, MakeEmptyHeader) {
 TEST(SectionHeaders, MakeLocalHeader) {
     EXPECT_EQ(section::MakeLocalHeader(), "<<<local:sep(0)>>>\n");
 }
-
 }  // namespace cma::provider

@@ -16,31 +16,14 @@ namespace fs = std::filesystem;
 using namespace std::chrono_literals;
 
 namespace cma::ac {
-bool IsRunController(const YAML::Node &node) {
-    auto controller = cma::yml::GetNode(node, std::string{cfg::groups::kSystem},
-                                        std::string{cfg::vars::kController});
-    return cfg::GetVal(controller, cfg::vars::kControllerRun, false);
-}
-
-bool IsUseLegacyMode(const YAML::Node &node) {
-    auto controller = cma::yml::GetNode(node, std::string{cfg::groups::kSystem},
-                                        std::string{cfg::vars::kController});
-    return cfg::GetVal(controller, cfg::vars::kControllerLegacyPull, true);
-}
-
-fs::path GetController(const fs::path &service) {
-    auto controller = service;
-    controller.replace_filename(cfg::files::kAgentCtl);
-    return controller;
-}
-
-fs::path GetWorkController() {
-    return fs::path{cfg::GetUserBinDir()} / cfg::files::kAgentCtl;
-}
 
 namespace {
 std::pair<fs::path, fs::path> ServiceName2TargetName(const fs::path &service) {
     return {GetController(service), GetWorkController()};
+}
+
+fs::path LegacyPullFile() {
+    return fs::path{cfg::GetUserDir()} / ac::kLegacyPullFile;
 }
 
 fs::path CopyControllerToBin(const fs::path &service) {
@@ -82,6 +65,27 @@ bool DeleteControllerInBin(const fs::path &service) {
     return !fs::exists(tgt, ec);
 }
 }  // namespace
+
+bool IsRunController(const YAML::Node &node) {
+    auto controller = cma::yml::GetNode(node, std::string{cfg::groups::kSystem},
+                                        std::string{cfg::vars::kController});
+    return cfg::GetVal(controller, cfg::vars::kControllerRun, false);
+}
+
+bool IsInLegacyMode() {
+    std::error_code ec;
+    return fs::exists(LegacyPullFile(), ec);
+}
+
+fs::path GetController(const fs::path &service) {
+    auto controller = service;
+    controller.replace_filename(cfg::files::kAgentCtl);
+    return controller;
+}
+
+fs::path GetWorkController() {
+    return fs::path{cfg::GetUserBinDir()} / cfg::files::kAgentCtl;
+}
 
 std::wstring BuildCommandLine(const fs::path &controller) {
     auto port =
@@ -164,15 +168,10 @@ bool KillAgentController(const fs::path &service) {
 }
 
 /// Creates/Deletes file in agent-user dir to satisfy controller requirements
-void EnableLegacyMode(bool enable) {
-    auto file_name = fs::path{cfg::GetUserDir()} / ac::kLegacyPullFile;
-    if (enable) {
-        std::ofstream ofs(file_name.u8string());
-        ofs << "Created by Windows agent";
-    } else {
-        std::error_code ec;
-        fs::remove(file_name, ec);
-    }
+void CreateLegacyModeFile() {
+    auto file_name = LegacyPullFile();
+    std::ofstream ofs(file_name.u8string());
+    ofs << "Created by Windows agent";
 }
 
 }  // namespace cma::ac

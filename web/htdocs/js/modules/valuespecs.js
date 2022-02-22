@@ -818,16 +818,16 @@ function select2_vs_autocomplete(container, css_class, params) {
 
             // Query set value. Horrible Select2 default options query
             if (elem.value !== "") {
-                let term = elem.value;
+                let dropdown = $(elem);
                 $.ajax({
                     type: "POST",
                     url: "ajax_vs_autocomplete.py",
-                    data: ajax_autocomplete_request(term, elem, css_class, params),
+                    data: ajax_autocomplete_request(elem.value, elem, css_class, params),
                 }).then(data => {
-                    let pick = data.result.choices.find(el => el[0] === term);
+                    let pick = data.result.choices.find(el => el[0] === elem.value);
                     if (pick) {
                         let option = new Option(pick[1], pick[0], true, true);
-                        elem.empty().append(option).trigger("change");
+                        dropdown.empty().append(option).trigger("change");
                     }
                 });
             }
@@ -854,7 +854,7 @@ function service_desc_autocompleter(css_class, container) {
         let host_id = elem.id.endsWith("_service_hint")
             ? `${elem.id.slice(0, -13)}_hostname_hint`
             : "context_host_p_host";
-        let val_or_empty = obj => (obj ? {host: {host: obj.value}} : {});
+        let val_or_empty = obj => (obj ? {host: obj.value} : {});
 
         return {
             context: val_or_empty(document.getElementById(host_id)),

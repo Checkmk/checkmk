@@ -4088,10 +4088,10 @@ class AbsoluteDate(ValueSpec):
             return MKUserError(varprefix, _("%s is not a valid UNIX timestamp") % value)
 
 
-TimeofdayValue = _Optional[tuple[int, int]]
+TimeofdayValue = tuple[int, int]
 
 
-class Timeofday(ValueSpec[TimeofdayValue]):
+class Timeofday(ValueSpec):
     """Valuespec for entering times like 00:35 or 16:17
 
     Currently no seconds are supported. But this could easily be added.  The
@@ -4106,7 +4106,7 @@ class Timeofday(ValueSpec[TimeofdayValue]):
         # ValueSpec
         title: _Optional[str] = None,
         help: _Optional[ValueSpecHelp] = None,
-        default_value: Union[Sentinel, TimeofdayValue] = DEF_VALUE,
+        default_value: Any = DEF_VALUE,
         validate: _Optional[ValueSpecValidateFunc] = None,
     ):
         super().__init__(title=title, help=help, default_value=default_value, validate=validate)
@@ -4116,21 +4116,21 @@ class Timeofday(ValueSpec[TimeofdayValue]):
     def allow_empty(self) -> bool:
         return self._allow_empty
 
-    def canonical_value(self) -> TimeofdayValue:
+    def canonical_value(self) -> _Optional[TimeofdayValue]:
         if self._allow_empty:
             return None
         return (0, 0)
 
-    def render_input(self, varprefix: str, value: TimeofdayValue) -> None:
+    def render_input(self, varprefix: str, value: _Optional[TimeofdayValue]) -> None:
         text = ("%02d:%02d" % value) if value else ""
         html.text_input(varprefix, text, size=5)
 
-    def value_to_html(self, value: TimeofdayValue) -> ValueSpecText:
+    def value_to_html(self, value: _Optional[TimeofdayValue]) -> ValueSpecText:
         if value is None:
             return ""
         return "%02d:%02d" % value
 
-    def from_html_vars(self, varprefix: str) -> TimeofdayValue:
+    def from_html_vars(self, varprefix: str) -> _Optional[TimeofdayValue]:
         # Fully specified
         text = request.get_str_input_mandatory(varprefix, "").strip()
         if not text:
@@ -4150,7 +4150,7 @@ class Timeofday(ValueSpec[TimeofdayValue]):
                 _("Invalid time format '<tt>%s</tt>', please use <tt>24:00</tt> format.") % text,
             )
 
-    def validate_datatype(self, value: TimeofdayValue, varprefix: str) -> None:
+    def validate_datatype(self, value: _Optional[TimeofdayValue], varprefix: str) -> None:
         if self._allow_empty and value is None:
             return
 
@@ -4171,7 +4171,7 @@ class Timeofday(ValueSpec[TimeofdayValue]):
                     _("All elements of the tuple must be of type int, you have %s") % _type_name(x),
                 )
 
-    def _validate_value(self, value: TimeofdayValue, varprefix: str) -> None:
+    def _validate_value(self, value: _Optional[TimeofdayValue], varprefix: str) -> None:
         if not self._allow_empty and value is None:
             raise MKUserError(varprefix, _("Please enter a time."))
 
@@ -4197,10 +4197,10 @@ class Timeofday(ValueSpec[TimeofdayValue]):
         return (json_value[0], json_value[1])
 
 
-TimeofdayRangeValue = _Optional[tuple[tuple[int, int], tuple[int, int]]]
+TimeofdayRangeValue = tuple[tuple[int, int], tuple[int, int]]
 
 
-class TimeofdayRange(ValueSpec[TimeofdayRangeValue]):
+class TimeofdayRange(ValueSpec):
     """Range like 00:15 - 18:30"""
 
     def __init__(  # pylint: disable=redefined-builtin
@@ -4209,7 +4209,7 @@ class TimeofdayRange(ValueSpec[TimeofdayRangeValue]):
         # ValueSpec
         title: _Optional[str] = None,
         help: _Optional[ValueSpecHelp] = None,
-        default_value: Union[Sentinel, TimeofdayRangeValue] = DEF_VALUE,
+        default_value: Any = DEF_VALUE,
         validate: _Optional[ValueSpecValidateFunc] = None,
     ):
         super().__init__(title=title, help=help, default_value=default_value, validate=validate)
@@ -4222,19 +4222,19 @@ class TimeofdayRange(ValueSpec[TimeofdayRangeValue]):
     def allow_empty(self) -> bool:
         return self._allow_empty
 
-    def canonical_value(self) -> TimeofdayRangeValue:
+    def canonical_value(self) -> _Optional[TimeofdayRangeValue]:
         if self._allow_empty:
             return None
         return (0, 0), (24, 0)
 
-    def render_input(self, varprefix: str, value: TimeofdayRangeValue) -> None:
+    def render_input(self, varprefix: str, value: _Optional[TimeofdayRangeValue]) -> None:
         self._bounds[0].render_input(varprefix + "_from", value[0] if value is not None else None)
         html.nbsp()
         html.write_text("-")
         html.nbsp()
         self._bounds[1].render_input(varprefix + "_until", value[1] if value is not None else None)
 
-    def value_to_html(self, value: TimeofdayRangeValue) -> ValueSpecText:
+    def value_to_html(self, value: _Optional[TimeofdayRangeValue]) -> ValueSpecText:
         if value is None:
             return ""
 
@@ -4242,7 +4242,7 @@ class TimeofdayRange(ValueSpec[TimeofdayRangeValue]):
             self._bounds[0].value_to_html(value[0]) + "-" + self._bounds[1].value_to_html(value[1])
         )
 
-    def from_html_vars(self, varprefix: str) -> TimeofdayRangeValue:
+    def from_html_vars(self, varprefix: str) -> _Optional[TimeofdayRangeValue]:
         from_value = self._bounds[0].from_html_vars(varprefix + "_from")
         until_value = self._bounds[1].from_html_vars(varprefix + "_until")
         if (from_value is None) != (until_value is None):
@@ -4256,7 +4256,7 @@ class TimeofdayRange(ValueSpec[TimeofdayRangeValue]):
             return None
         return (from_value, until_value)
 
-    def validate_datatype(self, value: TimeofdayRangeValue, varprefix: str) -> None:
+    def validate_datatype(self, value: _Optional[TimeofdayRangeValue], varprefix: str) -> None:
         if self._allow_empty and value is None:
             return
 
@@ -4273,7 +4273,7 @@ class TimeofdayRange(ValueSpec[TimeofdayRangeValue]):
         self._bounds[0].validate_datatype(value[0], varprefix + "_from")
         self._bounds[1].validate_datatype(value[1], varprefix + "_until")
 
-    def _validate_value(self, value: TimeofdayRangeValue, varprefix: str) -> None:
+    def _validate_value(self, value: _Optional[TimeofdayRangeValue], varprefix: str) -> None:
         if value is None:
             if self._allow_empty:
                 return
@@ -4287,17 +4287,13 @@ class TimeofdayRange(ValueSpec[TimeofdayRangeValue]):
                 _("The <i>from</i> time must not be later then the <i>until</i> time."),
             )
 
-    def value_to_json(self, value: TimeofdayRangeValue) -> JSONValue:
-        if value is None:
-            return None
+    def value_to_json(self, value: Any) -> list[Any]:
         return [
             self._bounds[0].value_to_json(value[0]),
             self._bounds[1].value_to_json(value[1]),
         ]
 
-    def value_from_json(self, json_value: JSONValue) -> TimeofdayRangeValue:
-        if json_value is None:
-            return None
+    def value_from_json(self, json_value: Any) -> tuple[Any, Any]:
         return (
             self._bounds[0].value_from_json(json_value[0]),
             self._bounds[1].value_from_json(json_value[1]),

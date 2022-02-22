@@ -16,6 +16,7 @@ RUN yum -y --enablerepo=extras install \
     gcc \
     gcc-c++ \
     git \
+    gmp \
     krb5-devel \
     make \
     openldap-devel \

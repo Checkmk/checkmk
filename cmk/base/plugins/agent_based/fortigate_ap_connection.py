@@ -6,7 +6,7 @@
 
 from typing import List, Mapping, NamedTuple, Tuple, TypedDict
 
-from .agent_based_api.v1 import check_levels, equals, register, Result, Service, SNMPTree, State
+from .agent_based_api.v1 import check_levels, startswith, register, Result, Service, SNMPTree, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 
 

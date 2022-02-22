@@ -72,9 +72,10 @@ fn init_logging(
     path: &std::path::Path,
 ) -> Result<flexi_logger::LoggerHandle, flexi_logger::FlexiLoggerError> {
     flexi_logger::Logger::try_with_env_or_str(level)?
-        .log_to_file(flexi_logger::FileSpec::try_from(path)?)
+        .log_to_file(flexi_logger::FileSpec::try_from(path)?) // critically important for daemon mode
         .append()
         .format(flexi_logger::detailed_format)
+        .duplicate_to_stderr(flexi_logger::Duplicate::All) // show message in interactive mode
         .start()
 }
 
@@ -189,9 +190,8 @@ fn run_requested_mode(args: cli::Args, paths: constants::PathResolver) -> Anyhow
 }
 
 fn exit_with_error(err: impl std::fmt::Debug) {
-    // In case of an error, we want a non-zero exit code, but we do not want to write the error to
-    // stderr (which happens if main returns an erroneous result), since Windows has issues with
-    // this. Instead, we log the error (which still goes to stderr under Unix).
+    // In case of an error, we want a non-zero exit code and log the error, which
+    // goes to stderr under Unix and to stderr and logfile under Windows.
 
     // In the future, implementing std::process::Termination looks like the right thing to do.
     // However, this trait is still experimental at the moment. See also

@@ -222,10 +222,11 @@ def process_level_elements():
          Integer(
              title=_("Include process arguments in long-output"),
              label=_("Include per-process arguments (security risk!)"),
-             help=_("If non-zero, the the list of all the matching processes and their details"
-                    " in the long-output will include up to the first N arguments of each"
-                    " processes. Please note this may include sensitive data like credentials,"
-                    " and is strongly discouraged."),
+             help=_(
+                 "If non-zero, the list of all the matching processes and their details in the"
+                 " long-output will include up to the first N characters of all arguments for each"
+                 " process. Please note this may include sensitive data like credentials,"
+                 " and is strongly discouraged."),
              default_value=0,
          )),
         ('icon',

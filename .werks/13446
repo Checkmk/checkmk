@@ -9,4 +9,4 @@ Level: 1
 Version: 2.1.0b1
 
 If SPOOLDIR wasn't set, agent would use the current working directory as SPOOLDIR
-which would result with a crash. Now, it defaults to /var/spool/check_mk_agent.
+which would result with a crash. Now, it defaults to /var/lib/check_mk_agent/spool

@@ -129,6 +129,10 @@ preamble_1() {
     # output inserted into the section <<<local>>>. Please refer
     # to online documentation for details.
     LOCALDIR=${MK_LIBDIR}/local
+
+    # All files in SPOOLDIR will simply be appended to the agent
+    # output if they are not outdated (see below)
+    SPOOLDIR=${MK_VARDIR}/spool
 }
 
 #

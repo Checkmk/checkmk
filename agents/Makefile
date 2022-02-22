@@ -4,12 +4,13 @@
 
 include ../defines.make
 
+AGENTS_DIR := $(REPO_PATH)/agents
 RPM_VERSION := $(subst -,_,$(VERSION))
 NEW_VERSION_MAJOR := $(shell echo $(NEW_VERSION) | sed 's/\([0-9]*\.[0-9]*\)\.\(.*\)/\1/g')
 NAME := check-mk-agent
 DISTNAME := $(NAME)-$(VERSION)
-BUILDROOT := $$(pwd)/.buildroot
-RPM_TOPDIR := $$(pwd)/.rpm.topdir
+BUILDROOT := $(AGENTS_DIR)/.buildroot
+RPM_TOPDIR := $(AGENTS_DIR)/.rpm.topdir
 RPM_PACKAGE := $(DISTNAME)-1.noarch.rpm
 DEB_PACKAGE := check-mk-agent_$(VERSION)-1_all.deb
 

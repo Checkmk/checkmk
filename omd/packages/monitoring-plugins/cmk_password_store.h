@@ -261,7 +261,7 @@ char *cmk_lookup_password(const char *pw_id)
     char *line = strtok(strndup((const char *)text, textlen), "\n");
     while (line) {
         if (strlen(line) == 0)
-            cmk_bail_out("Invalid zero sized line in stored_passwords file.");
+            continue;
         if (strncmp(line, pw_id, strlen(pw_id)) == 0 && line[strlen(pw_id)] == ':') {
             free(text);
             return line + strlen(pw_id) + 1;

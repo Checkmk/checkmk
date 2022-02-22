@@ -34,6 +34,7 @@ PACKAGES := \
     net-snmp \
     apache-omd \
     lasso \
+    xinetd \
     mod_auth_mellon \
     mod_fcgid \
     mod_wsgi \

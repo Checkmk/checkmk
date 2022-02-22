@@ -32,7 +32,6 @@ OS_PACKAGES    += rsync
 OS_PACKAGES    += samba-client
 OS_PACKAGES    += rpcbind
 OS_PACKAGES    += unzip
-OS_PACKAGES    += xinetd
 OS_PACKAGES    += xorg-x11-fonts
 OS_PACKAGES    += freeradius-client-libs
 OS_PACKAGES    += binutils # Needed by Checkmk Agent Bakery

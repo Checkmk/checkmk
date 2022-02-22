@@ -19,6 +19,7 @@ use std::os::unix::net::UnixStream;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 #[cfg(unix)]
 use tokio::net::UnixStream as AsyncUnixStream;
+
 // TODO(sk): add logging and unit testing(using local server)
 #[cfg(windows)]
 async fn async_collect_from_ip(agent_ip: &str) -> IoResult<Vec<u8>> {

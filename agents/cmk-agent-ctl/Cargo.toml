@@ -38,3 +38,4 @@ async-std = { version = "*" }
 ipnet = { version = "*" }
 toml = { version = "*" }
 rpassword = { version = "*" }
+async-trait = { version = "*" }

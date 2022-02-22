@@ -5,11 +5,11 @@
 use core::future::Future;
 use std::collections::HashMap;
 use std::error::Error;
-use std::io::Result as IoResult;
 use std::sync::Arc;
 
 use super::{config, constants, monitoring_data, tls_server};
 use anyhow::{anyhow, Context, Result as AnyhowResult};
+use async_trait::async_trait;
 use log::{debug, info, warn};
 use std::net::{IpAddr, SocketAddr};
 use tokio::io::AsyncWriteExt;
@@ -78,6 +78,40 @@ impl PullState for PullStateImpl {
     }
 }
 
+#[async_trait]
+trait AgentOutputCollector: std::clone::Clone + Sync + Send + 'static {
+    async fn plain_output(&self, remote_ip: std::net::IpAddr) -> AnyhowResult<Vec<u8>>;
+    async fn encoded_output(&self, remote_ip: std::net::IpAddr) -> AnyhowResult<Vec<u8>>;
+}
+
+#[derive(Clone)]
+struct AgentOutputCollectorImpl;
+
+impl AgentOutputCollectorImpl {
+    fn encode(&self, raw_agent_output: &[u8]) -> AnyhowResult<Vec<u8>> {
+        let mut encoded_data = HEADER_VERSION.to_vec();
+        encoded_data.append(&mut monitoring_data::compression_header_info().pull);
+        encoded_data.append(
+            &mut monitoring_data::compress(raw_agent_output)
+                .context("Error compressing monitoring data")?,
+        );
+        Ok(encoded_data)
+    }
+}
+
+#[async_trait]
+impl AgentOutputCollector for AgentOutputCollectorImpl {
+    async fn plain_output(&self, remote_ip: std::net::IpAddr) -> AnyhowResult<Vec<u8>> {
+        Ok(monitoring_data::async_collect(remote_ip).await?)
+    }
+
+    async fn encoded_output(&self, remote_ip: std::net::IpAddr) -> AnyhowResult<Vec<u8>> {
+        let mon_data = monitoring_data::async_collect(remote_ip)
+            .await
+            .context("Error collecting monitoring data.")?;
+        self.encode(&mon_data)
+    }
+}
 struct MaxConnectionsGuard {
     max_connections: usize,
     active_connections: HashMap<IpAddr, Arc<Semaphore>>,
@@ -121,16 +155,12 @@ pub fn pull(
 ) -> AnyhowResult<()> {
     let pull_state = PullStateImpl::new(registry, legacy_pull_marker)?;
     let guard = MaxConnectionsGuard::new(max_connections);
-    // Plain agent output for legacy handling only
-    let collect_plain_mondata = monitoring_data::async_collect;
-    // Compressed monitoring data with internal protocol header
-    let collect_encoded_mondata = collect_and_encode_mondata;
+    let agent_output_collector = AgentOutputCollectorImpl;
     let addr = format!("0.0.0.0:{}", pull_config.port);
     _pull(
         pull_state,
         guard,
-        collect_plain_mondata,
-        collect_encoded_mondata,
+        agent_output_collector,
         &addr,
         constants::CONNECTION_TIMEOUT,
         &pull_config.allowed_ip,
@@ -138,21 +168,14 @@ pub fn pull(
 }
 
 #[tokio::main(flavor = "current_thread")]
-async fn _pull<Fut1, Fut2>(
+async fn _pull(
     mut pull_state: impl PullState,
     mut guard: MaxConnectionsGuard,
-    collect_plain_mondata: impl Fn(IpAddr) -> Fut1,
-    collect_encoded_mondata: impl Fn(IpAddr) -> Fut2,
+    agent_output_collector: impl AgentOutputCollector,
     addr: &str,
     connection_timeout: u64,
     allowed_ip: &[String],
-) -> AnyhowResult<()>
-where
-    // TODO: Unify these two types. However, they must still be
-    // specified seperately as they are two seperate opaque types for the Rust compiler.
-    Fut1: Future<Output = IoResult<Vec<u8>>> + Send + 'static,
-    Fut2: Future<Output = AnyhowResult<Vec<u8>>> + Send + 'static,
-{
+) -> AnyhowResult<()> {
     loop {
         if !pull_state.is_active() {
             tokio::time::sleep(Duration::from_secs(ONE_MINUTE)).await;
@@ -163,8 +186,7 @@ where
         _pull_cycle(
             &mut pull_state,
             &mut guard,
-            &collect_plain_mondata,
-            &collect_encoded_mondata,
+            agent_output_collector.clone(),
             addr,
             connection_timeout,
             allowed_ip,
@@ -173,19 +195,14 @@ where
     }
 }
 
-async fn _pull_cycle<Fut1, Fut2>(
+async fn _pull_cycle(
     pull_state: &mut impl PullState,
     guard: &mut MaxConnectionsGuard,
-    collect_plain_mondata: &impl Fn(IpAddr) -> Fut1,
-    collect_encoded_mondata: &impl Fn(IpAddr) -> Fut2,
+    agent_output_collector: impl AgentOutputCollector,
     addr: &str,
     connection_timeout: u64,
     allowed_ip: &[String],
-) -> AnyhowResult<()>
-where
-    Fut1: Future<Output = IoResult<Vec<u8>>> + Send + 'static,
-    Fut2: Future<Output = AnyhowResult<Vec<u8>>> + Send + 'static,
-{
+) -> AnyhowResult<()> {
     let listener = TcpListener::bind(addr).await?;
 
     loop {
@@ -217,12 +234,10 @@ where
 
         info!("{}: Handling pull request", remote);
 
-        let plain_mondata = collect_plain_mondata(remote.ip());
-        let encoded_mondata = collect_encoded_mondata(remote.ip());
         let request_handler_fut = handle_request(
             stream,
-            plain_mondata,
-            encoded_mondata,
+            agent_output_collector.clone(),
+            remote.ip(),
             pull_state.is_legacy_pull(),
             pull_state.tls_acceptor(),
             connection_timeout,
@@ -269,14 +284,19 @@ fn is_addr_allowed(addr: &SocketAddr, allowed_ip: &[String]) -> bool {
 
 async fn handle_request(
     mut stream: TcpStream,
-    plain_mondata: impl Future<Output = IoResult<Vec<u8>>>,
-    encoded_modata: impl Future<Output = AnyhowResult<Vec<u8>>>,
+    agent_output_collector: impl AgentOutputCollector,
+    remote_ip: IpAddr,
     is_legacy_pull: bool,
     tls_acceptor: TlsAcceptor,
-    timeout: u64,
+    connection_timeout: u64,
 ) -> AnyhowResult<()> {
     if is_legacy_pull {
-        return handle_legacy_pull_request(stream, plain_mondata, timeout).await;
+        return handle_legacy_pull_request(
+            stream,
+            agent_output_collector.plain_output(remote_ip),
+            connection_timeout,
+        )
+        .await;
     }
 
     let handshake = with_timeout(
@@ -285,10 +305,12 @@ async fn handle_request(
             stream.flush().await?;
             tls_acceptor.accept(stream).await
         },
-        timeout,
+        connection_timeout,
     );
 
-    let (mon_data, tls_stream) = tokio::join!(encoded_modata, handshake);
+    let encoded_mondata = agent_output_collector.encoded_output(remote_ip);
+
+    let (mon_data, tls_stream) = tokio::join!(encoded_mondata, handshake);
     let mon_data = mon_data?;
     let mut tls_stream = tls_stream?;
 
@@ -297,15 +319,15 @@ async fn handle_request(
             tls_stream.write_all(&mon_data).await?;
             tls_stream.flush().await
         },
-        timeout,
+        connection_timeout,
     )
     .await
 }
 
 async fn handle_legacy_pull_request(
     mut stream: TcpStream,
-    plain_mondata: impl Future<Output = IoResult<Vec<u8>>>,
-    timeout: u64,
+    plain_mondata: impl Future<Output = AnyhowResult<Vec<u8>>>,
+    connection_timeout: u64,
 ) -> AnyhowResult<()> {
     let mon_data = plain_mondata
         .await
@@ -316,7 +338,7 @@ async fn handle_legacy_pull_request(
             stream.write_all(&mon_data).await?;
             stream.flush().await
         },
-        timeout,
+        connection_timeout,
     )
     .await
 }
@@ -329,24 +351,6 @@ async fn with_timeout<T, E: 'static + Error + Send + Sync>(
         Ok(inner) => Ok(inner?),
         Err(err) => Err(anyhow!(err)),
     }
-}
-
-// TODO: Move this to monitoring_data.rs
-async fn collect_and_encode_mondata(remote_ip: std::net::IpAddr) -> AnyhowResult<Vec<u8>> {
-    let mon_data = monitoring_data::async_collect(remote_ip)
-        .await
-        .context("Error collecting monitoring data.")?;
-    encode_data_for_transport(&mon_data)
-}
-
-fn encode_data_for_transport(raw_agent_output: &[u8]) -> AnyhowResult<Vec<u8>> {
-    let mut encoded_data = HEADER_VERSION.to_vec();
-    encoded_data.append(&mut monitoring_data::compression_header_info().pull);
-    encoded_data.append(
-        &mut monitoring_data::compress(raw_agent_output)
-            .context("Error compressing monitoring data")?,
-    );
-    Ok(encoded_data)
 }
 
 // TODO: This is only used in main.rs, but happens to belong to pull.
@@ -365,7 +369,8 @@ mod tests {
     fn test_encode_data_for_transport() {
         let mut expected_result = b"\x00\x00\x01".to_vec();
         expected_result.append(&mut monitoring_data::compress(b"abc").unwrap());
-        assert_eq!(encode_data_for_transport(b"abc").unwrap(), expected_result);
+        let agout = AgentOutputCollectorImpl;
+        assert_eq!(agout.encode(b"abc").unwrap(), expected_result);
     }
 
     mod allowed_ip {

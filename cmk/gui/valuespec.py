@@ -35,7 +35,18 @@ from collections.abc import MutableMapping
 from collections.abc import Sequence as ABCSequence
 from enum import Enum
 from pathlib import Path
-from typing import Any, Callable, Collection, Final, Generic, Iterable, Literal, Mapping, NamedTuple
+from typing import (
+    Any,
+    Callable,
+    cast,
+    Collection,
+    Final,
+    Generic,
+    Iterable,
+    Literal,
+    Mapping,
+    NamedTuple,
+)
 from typing import Optional as _Optional
 from typing import Pattern, Protocol, Sequence, SupportsFloat, Type, TypeVar, Union
 
@@ -1583,11 +1594,11 @@ class Filename(TextInput):
         # is the same, but for others not)
 
 
-class ListOfStrings(ValueSpec):
+class ListOfStrings(ValueSpec[Sequence[str]]):
     def __init__(  # pylint: disable=redefined-builtin
         self,
         # ListOfStrings
-        valuespec: _Optional[ValueSpec] = None,
+        valuespec: _Optional[ValueSpec[str]] = None,
         size: Union[str, int] = 25,
         orientation: str = "vertical",
         allow_empty: bool = True,
@@ -1599,12 +1610,12 @@ class ListOfStrings(ValueSpec):
         # ValueSpec
         title: _Optional[str] = None,
         help: _Optional[ValueSpecHelp] = None,
-        default_value: Union[Sentinel, list] = DEF_VALUE,
+        default_value: Union[Sentinel, Sequence[str]] = DEF_VALUE,
         validate: _Optional[ValueSpecValidateFunc] = None,
     ):
         super().__init__(title=title, help=help, default_value=default_value, validate=validate)
 
-        self._valuespec: ValueSpec = valuespec if valuespec is not None else TextInput(size=size)
+        self._valuespec = valuespec if valuespec is not None else TextInput(size=size)
         self._vertical = orientation == "vertical"
         self._allow_empty = allow_empty
         self._empty_text = empty_text
@@ -1636,7 +1647,7 @@ class ListOfStrings(ValueSpec):
     def allow_empty(self) -> bool:
         return self._allow_empty
 
-    def render_input(self, varprefix: str, value: list[str]) -> None:
+    def render_input(self, varprefix: str, value: Sequence[str]) -> None:
         # Form already submitted?
         if request.has_var(varprefix + "_0"):
             value = self.from_html_vars(varprefix)
@@ -1659,7 +1670,9 @@ class ListOfStrings(ValueSpec):
         elements.append(None)
         for nr, s in enumerate(elements):
             html.open_div()
-            self._valuespec.render_input(varprefix + "_%d" % nr, s)
+            # FIXME: Typing chaos ahead! TextInput.render_input *can* handle None as its
+            # 2nd argument, but this is not the case for a ValueSpec[str] in general!
+            self._valuespec.render_input(varprefix + "_%d" % nr, s)  # type: ignore[arg-type]
             if not self._vertical and self._separator:
                 html.nbsp()
                 html.write_text(self._separator)
@@ -1676,10 +1689,10 @@ class ListOfStrings(ValueSpec):
             )
         )
 
-    def canonical_value(self) -> list[_VT]:
+    def canonical_value(self) -> _Optional[Sequence[str]]:
         return []
 
-    def value_to_html(self, value: list[_VT]) -> ValueSpecText:
+    def value_to_html(self, value: Sequence[str]) -> ValueSpecText:
         if not value:
             return self._empty_text
 
@@ -1688,7 +1701,7 @@ class ListOfStrings(ValueSpec):
             return html.render_table(HTML().join(s))
         return HTML(", ").join(self._valuespec.value_to_html(v) for v in value)
 
-    def from_html_vars(self, varprefix: str) -> list[_VT]:
+    def from_html_vars(self, varprefix: str) -> Sequence[str]:
         list_prefix = varprefix + "_"
         return [
             self._valuespec.from_html_vars(varname)
@@ -1699,7 +1712,7 @@ class ListOfStrings(ValueSpec):
             and value.strip()
         ]
 
-    def validate_datatype(self, value: list[_VT], varprefix: str) -> None:
+    def validate_datatype(self, value: Sequence[str], varprefix: str) -> None:
         if not isinstance(value, list):
             raise MKUserError(
                 varprefix, _("Expected data type is list, but your type is %s.") % _type_name(value)
@@ -1707,7 +1720,7 @@ class ListOfStrings(ValueSpec):
         for nr, s in enumerate(value):
             self._valuespec.validate_datatype(s, varprefix + "_%d" % nr)
 
-    def _validate_value(self, value: list[_VT], varprefix: str) -> None:
+    def _validate_value(self, value: Sequence[str], varprefix: str) -> None:
         if len(value) == 0 and not self._allow_empty:
             if self._empty_text:
                 msg = self._empty_text
@@ -1728,16 +1741,16 @@ class ListOfStrings(ValueSpec):
     def has_show_more(self) -> bool:
         return self._valuespec.has_show_more()
 
-    def value_to_json(self, value: Any) -> list[Any]:
+    def value_to_json(self, value: Sequence[str]) -> JSONValue:
         return [self._valuespec.value_to_json(e) for e in value]
 
-    def value_from_json(self, json_value: Any) -> list[Any]:
+    def value_from_json(self, json_value: JSONValue) -> Sequence[str]:
         return [self._valuespec.value_from_json(e) for e in json_value]
 
-    def value_to_json_safe(self, value: Any) -> list[Any]:
+    def value_to_json_safe(self, value: Sequence[str]) -> JSONValue:
         return [self._valuespec.value_to_json_safe(e) for e in value]
 
-    def transform_value(self, value) -> list[str]:
+    def transform_value(self, value: Sequence[str]) -> Sequence[str]:
         return [self._valuespec.transform_value(v) for v in value]
 
 
@@ -1757,12 +1770,13 @@ def NetworkPort(  # pylint: disable=redefined-builtin
     )
 
 
+# FIXME: Using a ListOfStrings for a list of ints is fundamentally wrong! Perhaps we should use ListOf here.
 def ListOfNetworkPorts(title: _Optional[str], default_value: list[int]) -> ListOfStrings:
     return ListOfStrings(
-        valuespec=NetworkPort(title=_("Port")),
+        valuespec=cast(ValueSpec[str], NetworkPort(title=_("Port"))),
         title=title,
         orientation="horizontal",
-        default_value=default_value,
+        default_value=cast(Sequence[str], default_value),
     )
 
 
@@ -2669,6 +2683,7 @@ class DropdownChoice(ValueSpec):
         return all(value != val for val, _title in self.choices())
 
 
+# FIXME: This is effectively a ValueSpec[str], but this is not reflected in the type!
 class AjaxDropdownChoice(DropdownChoice):
     # This valuespec is a coodinate effort between the python
     # renderer. A JS component for the ajax query and the AJAX

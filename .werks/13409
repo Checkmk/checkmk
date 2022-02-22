@@ -9,10 +9,12 @@ Level: 1
 Version: 2.0.0p21
 
 Before this change the following endpoints triggered a configuration rebuild:
-* /api/1.0/domain-types/acknowledge/collections/host
-* /api/1.0/domain-types/acknowledge/collections/service
-* /api/1.0/domain-types/downtime/collections/host
-* /api/1.0/domain-types/downtime/collections/service
-* /api/1.0/domain-types/downtime/actions/delete/invoke
+<ul>
+<li>/api/1.0/domain-types/acknowledge/collections/host</li>
+<li>/api/1.0/domain-types/acknowledge/collections/service</li>
+<li>/api/1.0/domain-types/downtime/collections/host</li>
+<li>/api/1.0/domain-types/downtime/collections/service</li>
+<li>/api/1.0/domain-types/downtime/actions/delete/invoke</li>
+</ul>
 
 Those endpoints will no longer trigger a config rebuild.

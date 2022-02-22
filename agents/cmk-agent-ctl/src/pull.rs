@@ -23,33 +23,64 @@ const HEADER_VERSION: &[u8] = b"\x00\x00";
 const ONE_MINUTE: u64 = 60;
 const FIVE_MINUTES: u64 = 300;
 
-pub struct MaxConnectionsGuard {
-    max_connections: usize,
-    active_connections: HashMap<IpAddr, Arc<Semaphore>>,
+trait PullState {
+    fn refresh(&mut self) -> AnyhowResult<()>;
+    fn tls_acceptor(&self) -> TlsAcceptor;
+    fn is_legacy_pull(&self) -> bool;
+    fn is_active(&self) -> bool;
+}
+struct PullStateImpl {
+    legacy_pull: bool,
+    tls_acceptor: TlsAcceptor,
+    registry: config::Registry,
+    legacy_pull_marker: std::path::PathBuf,
 }
 
-fn is_addr_allowed(addr: &SocketAddr, allowed_ip: &[String]) -> bool {
-    if allowed_ip.is_empty() {
-        return true;
+impl PullStateImpl {
+    pub fn new(
+        registry: config::Registry,
+        legacy_pull_marker: std::path::PathBuf,
+    ) -> AnyhowResult<Self> {
+        Ok(PullStateImpl {
+            legacy_pull: Self::is_legacy_pull(&registry, &legacy_pull_marker),
+            tls_acceptor: tls_server::tls_acceptor(registry.pull_connections())
+                .context("Could not initialize TLS.")?,
+            registry,
+            legacy_pull_marker,
+        })
     }
-    for ip in allowed_ip {
-        // Our list may contain both network, ip addresses and bad data(!)
-        // Examples: network - 192.168.1.14/24, address - 127.0.0.1
-        if let Ok(allowed_net) = ip.parse::<ipnet::IpNet>() {
-            if allowed_net.contains(&addr.ip()) {
-                return true;
-            }
-        }
-        if let Ok(allowed_addr) = ip.parse::<IpAddr>() {
-            if allowed_addr == addr.ip() {
-                return true;
-            }
-        }
-        // NOTE: no reporting about bad data here.
-        // We prefer to ignore error here: despite the possibility
-        // to have invalid settings we should check and report this once
+
+    fn is_legacy_pull(registry: &config::Registry, legacy_pull_marker: &std::path::Path) -> bool {
+        legacy_pull_marker.exists() && registry.is_empty()
     }
-    false
+}
+
+impl PullState for PullStateImpl {
+    fn refresh(&mut self) -> AnyhowResult<()> {
+        if self.registry.refresh()? {
+            self.tls_acceptor = tls_server::tls_acceptor(self.registry.pull_connections())
+                .context("Could not initialize TLS.")?;
+            self.legacy_pull = Self::is_legacy_pull(&self.registry, &self.legacy_pull_marker);
+        };
+        Ok(())
+    }
+
+    fn tls_acceptor(&self) -> TlsAcceptor {
+        self.tls_acceptor.clone()
+    }
+
+    fn is_legacy_pull(&self) -> bool {
+        self.legacy_pull
+    }
+
+    fn is_active(&self) -> bool {
+        self.legacy_pull || !self.registry.is_empty()
+    }
+}
+
+struct MaxConnectionsGuard {
+    max_connections: usize,
+    active_connections: HashMap<IpAddr, Arc<Semaphore>>,
 }
 
 impl MaxConnectionsGuard {
@@ -107,7 +138,7 @@ pub fn pull(
 }
 
 #[tokio::main(flavor = "current_thread")]
-pub async fn _pull<Fut1, Fut2>(
+async fn _pull<Fut1, Fut2>(
     mut pull_state: impl PullState,
     mut guard: MaxConnectionsGuard,
     collect_plain_mondata: impl Fn(IpAddr) -> Fut1,
@@ -142,7 +173,7 @@ where
     }
 }
 
-pub async fn _pull_cycle<Fut1, Fut2>(
+async fn _pull_cycle<Fut1, Fut2>(
     pull_state: &mut impl PullState,
     guard: &mut MaxConnectionsGuard,
     collect_plain_mondata: &impl Fn(IpAddr) -> Fut1,
@@ -212,59 +243,28 @@ where
     }
 }
 
-pub trait PullState {
-    fn refresh(&mut self) -> AnyhowResult<()>;
-    fn tls_acceptor(&self) -> TlsAcceptor;
-    fn is_legacy_pull(&self) -> bool;
-    fn is_active(&self) -> bool;
-}
-struct PullStateImpl {
-    legacy_pull: bool,
-    tls_acceptor: TlsAcceptor,
-    registry: config::Registry,
-    legacy_pull_marker: std::path::PathBuf,
-}
-
-impl PullStateImpl {
-    pub fn new(
-        registry: config::Registry,
-        legacy_pull_marker: std::path::PathBuf,
-    ) -> AnyhowResult<Self> {
-        Ok(PullStateImpl {
-            legacy_pull: is_legacy_pull(&registry, &legacy_pull_marker),
-            tls_acceptor: tls_server::tls_acceptor(registry.pull_connections())
-                .context("Could not initialize TLS.")?,
-            registry,
-            legacy_pull_marker,
-        })
+fn is_addr_allowed(addr: &SocketAddr, allowed_ip: &[String]) -> bool {
+    if allowed_ip.is_empty() {
+        return true;
     }
-}
-
-impl PullState for PullStateImpl {
-    fn refresh(&mut self) -> AnyhowResult<()> {
-        if self.registry.refresh()? {
-            self.tls_acceptor = tls_server::tls_acceptor(self.registry.pull_connections())
-                .context("Could not initialize TLS.")?;
-            self.legacy_pull = is_legacy_pull(&self.registry, &self.legacy_pull_marker);
-        };
-        Ok(())
+    for ip in allowed_ip {
+        // Our list may contain both network, ip addresses and bad data(!)
+        // Examples: network - 192.168.1.14/24, address - 127.0.0.1
+        if let Ok(allowed_net) = ip.parse::<ipnet::IpNet>() {
+            if allowed_net.contains(&addr.ip()) {
+                return true;
+            }
+        }
+        if let Ok(allowed_addr) = ip.parse::<IpAddr>() {
+            if allowed_addr == addr.ip() {
+                return true;
+            }
+        }
+        // NOTE: no reporting about bad data here.
+        // We prefer to ignore error here: despite the possibility
+        // to have invalid settings we should check and report this once
     }
-
-    fn tls_acceptor(&self) -> TlsAcceptor {
-        self.tls_acceptor.clone()
-    }
-
-    fn is_legacy_pull(&self) -> bool {
-        self.legacy_pull
-    }
-
-    fn is_active(&self) -> bool {
-        self.legacy_pull || !self.registry.is_empty()
-    }
-}
-
-fn is_legacy_pull(registry: &config::Registry, legacy_pull_marker: &std::path::Path) -> bool {
-    legacy_pull_marker.exists() && registry.is_empty()
+    false
 }
 
 async fn handle_request(
@@ -321,16 +321,18 @@ async fn handle_legacy_pull_request(
     .await
 }
 
-pub fn disallow_legacy_pull(legacy_pull_marker: &std::path::Path) -> std::io::Result<()> {
-    if !legacy_pull_marker.exists() {
-        return Ok(());
+async fn with_timeout<T, E: 'static + Error + Send + Sync>(
+    fut: impl Future<Output = Result<T, E>>,
+    seconds: u64,
+) -> AnyhowResult<T> {
+    match timeout(Duration::from_secs(seconds), fut).await {
+        Ok(inner) => Ok(inner?),
+        Err(err) => Err(anyhow!(err)),
     }
-
-    std::fs::remove_file(legacy_pull_marker)
 }
 
-//TODO: Move this to monitoring_data.rs
-pub async fn collect_and_encode_mondata(remote_ip: std::net::IpAddr) -> AnyhowResult<Vec<u8>> {
+// TODO: Move this to monitoring_data.rs
+async fn collect_and_encode_mondata(remote_ip: std::net::IpAddr) -> AnyhowResult<Vec<u8>> {
     let mon_data = monitoring_data::async_collect(remote_ip)
         .await
         .context("Error collecting monitoring data.")?;
@@ -347,16 +349,15 @@ fn encode_data_for_transport(raw_agent_output: &[u8]) -> AnyhowResult<Vec<u8>> {
     Ok(encoded_data)
 }
 
-async fn with_timeout<T, E: 'static + Error + Send + Sync>(
-    fut: impl Future<Output = Result<T, E>>,
-    seconds: u64,
-) -> AnyhowResult<T> {
-    match timeout(Duration::from_secs(seconds), fut).await {
-        Ok(inner) => Ok(inner?),
-        Err(err) => Err(anyhow!(err)),
+// TODO: This is only used in main.rs, but happens to belong to pull.
+// Move this into a struct that can rightfully reside in this module.
+pub fn disallow_legacy_pull(legacy_pull_marker: &std::path::Path) -> std::io::Result<()> {
+    if !legacy_pull_marker.exists() {
+        return Ok(());
     }
-}
 
+    std::fs::remove_file(legacy_pull_marker)
+}
 #[cfg(test)]
 mod tests {
     use super::*;

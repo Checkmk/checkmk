@@ -167,7 +167,6 @@ def test_diagnostics_deserialize(cl_parameters, modes_parameters, expected_param
         (diagnostics.OPT_COMP_GLOBAL_SETTINGS, [0, 1, 3, 3, 3, 3]),
         (diagnostics.OPT_COMP_HOSTS_AND_FOLDERS, [3, 3, 2, 2, 1, 0]),
         (diagnostics.OPT_COMP_NOTIFICATIONS, [3, 3, 2, 2, 1, 0]),
-        (diagnostics.OPT_COMP_BUSINESS_INTELLIGENCE, [3, 3, 3, 3, 3, 3, 1]),
     ],
 )
 def test_diagnostics_get_checkmk_file_info_by_name(component, sensitivity_values):
@@ -178,7 +177,6 @@ def test_diagnostics_get_checkmk_file_info_by_name(component, sensitivity_values
         "path/to/rules.mk",
         "path/to/tags.mk",
         "path/to/.wato",
-        "multisite.d/wato/bi_config.bi",
     ]
     for rel_filepath, result in zip(rel_filepaths, sensitivity_values):
         assert (
@@ -236,7 +234,7 @@ def test_diagnostics_get_checkmk_file_info_by_name(component, sensitivity_values
         ("mknotifyd.state", 1),
         ("notify.log", 1),
         ("rrdcached.log", 3),
-        ("web.log", 1),
+        ("web.log", 3),
     ],
 )
 def test_diagnostics_file_info_of_comp_notifications(rel_filepath, sensitivity_value):

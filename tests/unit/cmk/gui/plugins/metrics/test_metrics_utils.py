@@ -189,7 +189,7 @@ def test_reverse_translation_metric_name(
         (
             ["util_average", "util", "wait", "user", "system", "guest"],
             "check_mk-kernel_util",
-            ["util_average_1", "cpu_utilization_6_guest_util"],
+            ["cpu_utilization_6_guest_util"],
         ),
         (
             ["user", "system", "io_wait", "guest", "steal"],

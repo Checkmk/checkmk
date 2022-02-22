@@ -9,7 +9,7 @@ description:
  FSC-SERVERCONTROL2-MIB.
 
  The check goes WARN or CRIT if the
- power consumption is higher or lower than the
+ temperature is higher or lower than the
  configurable levels or if it exceeds critical
  levels defined on the device.
 

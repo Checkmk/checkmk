@@ -42,12 +42,7 @@ from cmk.gui.fields.definitions import (
     Timestamp,
     X509ReqPEMField,
 )
-from cmk.gui.fields.validators import (
-    ValidateAnyOfValidators,
-    ValidateIPv4,
-    ValidateIPv4Network,
-    ValidateIPv6,
-)
+from cmk.gui.fields.validators import ValidateHostName
 
 __all__ = [
     "attributes_field",
@@ -73,9 +68,6 @@ __all__ = [
     "SiteField",
     "SNMPCredentials",
     "Timestamp",
-    "ValidateAnyOfValidators",
-    "ValidateIPv4",
-    "ValidateIPv4Network",
-    "ValidateIPv6",
     "X509ReqPEMField",
+    "ValidateHostName",
 ]

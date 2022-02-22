@@ -14,7 +14,6 @@ import cmk.gui.userdb as userdb
 import cmk.gui.watolib as watolib
 from cmk.gui import fields as gui_fields
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.fields import validators
 from cmk.gui.globals import html, user
 from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _
@@ -145,10 +144,10 @@ class HostAttributeIPv4Address(ABCHostAttributeValueSpec):
     def openapi_field(self) -> gui_fields.Field:
         return fields.String(
             description="An IPv4 address.",
-            validate=validators.ValidateAnyOfValidators(
+            validate=fields.ValidateAnyOfValidators(
                 [
-                    gui_fields.ValidateIPv4(),
-                    validators.ValidateHostName(),
+                    fields.ValidateIPv4(),
+                    gui_fields.ValidateHostName(),
                 ]
             ),
         )
@@ -196,7 +195,7 @@ class HostAttributeIPv6Address(ABCHostAttributeValueSpec):
     def openapi_field(self) -> gui_fields.Field:
         return fields.String(
             description="An IPv6 address.",
-            validate=gui_fields.ValidateIPv6(),
+            validate=fields.ValidateIPv6(),
         )
 
 
@@ -237,10 +236,10 @@ class HostAttributeAdditionalIPv4Addresses(ABCHostAttributeValueSpec):
     def openapi_field(self) -> gui_fields.Field:
         return fields.List(
             fields.String(
-                validate=validators.ValidateAnyOfValidators(
+                validate=fields.ValidateAnyOfValidators(
                     [
-                        gui_fields.ValidateIPv4(),
-                        validators.ValidateHostName(),
+                        fields.ValidateIPv4(),
+                        gui_fields.ValidateHostName(),
                     ]
                 )
             ),
@@ -284,7 +283,7 @@ class HostAttributeAdditionalIPv6Addresses(ABCHostAttributeValueSpec):
 
     def openapi_field(self) -> gui_fields.Field:
         return fields.List(
-            fields.String(validate=gui_fields.ValidateIPv6()),
+            fields.String(validate=fields.ValidateIPv6()),
             description="A list of IPv6 addresses.",
         )
 
@@ -892,10 +891,10 @@ class HostAttributeManagementAddress(ABCHostAttributeValueSpec):
     def openapi_field(self) -> gui_fields.Field:
         return fields.String(
             description="Address (IPv4 or IPv6) under which the management board can be reached.",
-            validate=gui_fields.ValidateAnyOfValidators(
+            validate=fields.ValidateAnyOfValidators(
                 [
-                    gui_fields.ValidateIPv4(),
-                    gui_fields.ValidateIPv6(),
+                    fields.ValidateIPv4(),
+                    fields.ValidateIPv6(),
                 ]
             ),
         )

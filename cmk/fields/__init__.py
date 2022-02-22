@@ -23,6 +23,13 @@ from cmk.fields.primitives import (
     URL,
     UUID,
 )
+from cmk.fields.validators import (
+    IsValidRegexp,
+    ValidateAnyOfValidators,
+    ValidateIPv4,
+    ValidateIPv4Network,
+    ValidateIPv6,
+)
 
 __all__ = [
     "Boolean",
@@ -47,4 +54,9 @@ __all__ = [
     "Nested",
     "String",
     "Integer",
+    "ValidateAnyOfValidators",
+    "ValidateIPv4",
+    "ValidateIPv4Network",
+    "ValidateIPv6",
+    "IsValidRegexp",
 ]

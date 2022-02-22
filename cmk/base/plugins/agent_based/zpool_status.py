@@ -102,6 +102,8 @@ def parse_zpool_status(string_table: type_defs.StringTable) -> Optional[Section]
 
 
 def discover_zpool_status(section: Section) -> type_defs.DiscoveryResult:
+    if not section or section.message == "No pools available":
+        return
     yield Service()
 
 
@@ -111,10 +113,6 @@ def check_zpool_status(params: Mapping[str, Any], section: Section) -> CheckResu
 
     if section.message == "All pools are healthy":
         state = State.OK
-        messages.append(section.message)
-
-    elif section.message == "No pools available":
-        state = State.UNKNOWN
         messages.append(section.message)
 
     for msg in section.state_messages:

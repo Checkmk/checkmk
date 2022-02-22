@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Optional
+from typing import Optional, Sequence
 
 import pytest
 
@@ -20,11 +20,17 @@ def test_zpool_status_parse(string_table: StringTable, expected_result: Optional
     assert section == expected_result
 
 
-@pytest.mark.parametrize("string_table", [None])
-def test_zpool_status_discover(string_table):
-    services = list(zpool_status.discover_zpool_status(string_table))
-    assert len(services) == 1
-    assert services[0] == Service()
+@pytest.mark.parametrize(
+    "section, expected_result",
+    [
+        (None, []),
+        (Section(message="No pools available"), []),
+        (Section(message="All pools are healthy"), [Service()]),
+    ],
+)
+def test_zpool_status_discover(section: Section, expected_result: Sequence[Service]) -> None:
+    services = list(zpool_status.discover_zpool_status(section))
+    assert services == expected_result
 
 
 @pytest.mark.parametrize(
@@ -35,12 +41,6 @@ def test_zpool_status_discover(string_table):
                 ["all", "pools", "are", "healthy"],
             ],
             Result(state=State.OK, summary="All pools are healthy"),
-        ),
-        (
-            [
-                ["no", "pools", "available"],
-            ],
-            Result(state=State.UNKNOWN, summary="No pools available"),
         ),
         (
             [

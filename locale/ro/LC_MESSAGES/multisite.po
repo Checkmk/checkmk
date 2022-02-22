@@ -16231,6 +16231,9 @@ msgstr ""
 msgid "English"
 msgstr ""
 
+msgid "Enrich with usage data from Checkmk Cluster Collector"
+msgstr ""
+
 msgid "Enter"
 msgstr ""
 
@@ -18824,6 +18827,18 @@ msgid "GByte/s"
 msgstr ""
 
 #, fuzzy
+msgid "GCP/Function egress"
+msgstr "Conexiune Noua"
+
+#, fuzzy
+msgid "GCP/Function execution"
+msgstr "Numarul maxim de conexiuni"
+
+#, fuzzy
+msgid "GCP/Function instances"
+msgstr "Adaugă instanță NGINX"
+
+#, fuzzy
 msgid "GCP/GCS Network"
 msgstr "Adresă"
 
@@ -18964,9 +18979,6 @@ msgid "Generic string"
 msgstr ""
 
 msgid "Get file from SFTP server"
-msgstr ""
-
-msgid "Get usage data via Checkmk Cluster Collector"
 msgstr ""
 
 msgid ""
@@ -21780,10 +21792,10 @@ msgid "If no port is given, a default value of 443 will be used."
 msgstr ""
 
 msgid ""
-"If non-zero, the the list of all the matching processes and their details in "
-"the long-output will include up to the first N arguments of each processes. "
-"Please note this may include sensitive data like credentials, and is "
-"strongly discouraged."
+"If non-zero, the list of all the matching processes and their details in the "
+"long-output will include up to the first N characters of all arguments for "
+"each process. Please note this may include sensitive data like credentials, "
+"and is strongly discouraged."
 msgstr ""
 
 msgid "If omitted then the IP address is being used."
@@ -25417,8 +25429,20 @@ msgid "Levels on ingress data in bytes"
 msgstr "Nivelurile maxime pentru voltaj"
 
 #, fuzzy
+msgid "Levels on instances"
+msgstr "Nivel-urile absolute de licențe neutilizate"
+
+#, fuzzy
 msgid "Levels on latency"
 msgstr "Nivelurile maxime pentru voltaj"
+
+#, fuzzy
+msgid "Levels on network egress"
+msgstr "Nivel-urile absolute de licențe neutilizate"
+
+#, fuzzy
+msgid "Levels on performance"
+msgstr "Acces la Consola de Evenimente"
 
 #, fuzzy
 msgid "Levels on read capacity"
@@ -57042,6 +57066,10 @@ msgstr "Verificări active"
 msgid "active hosts"
 msgstr "Verificări active"
 
+#, fuzzy
+msgid "active instances"
+msgstr "Adaugă instanță NGINX"
+
 msgid "add \"ISL\" to service description for interswitch links"
 msgstr ""
 
@@ -57563,6 +57591,14 @@ msgstr ""
 msgid "execute the action \"%s\""
 msgstr ""
 
+#, fuzzy
+msgid "execution count"
+msgstr "Verificări active"
+
+#, fuzzy
+msgid "execution time"
+msgstr "Verificări active"
+
 msgid "exists"
 msgstr ""
 
@@ -57917,6 +57953,10 @@ msgstr ""
 msgid "inodes"
 msgstr ""
 
+#, fuzzy
+msgid "instances"
+msgstr "Adaugă instanță NGINX"
+
 msgid "internal"
 msgstr ""
 
@@ -58075,6 +58115,10 @@ msgstr ""
 #, fuzzy
 msgid "maximum"
 msgstr "Vechimea maxima"
+
+#, fuzzy
+msgid "memory"
+msgstr "Nume nou"
 
 #, fuzzy
 msgid "message"
@@ -59459,10 +59503,6 @@ msgstr ""
 #~ msgstr "Nivelurile maxime pentru incarcare in procente"
 
 #, fuzzy
-#~ msgid "Concurrent executions"
-#~ msgstr "Numarul maxim de conexiuni"
-
-#, fuzzy
 #~ msgid "Concurrent executions in percent"
 #~ msgstr "Numarul maxim de conexiuni"
 
@@ -59706,10 +59746,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Is default"
 #~ msgstr "Reseteaza contoarele"
-
-#, fuzzy
-#~ msgid "Item memory"
-#~ msgstr "Nume nou"
 
 #, fuzzy
 #~ msgid "Iterator age"
@@ -62714,10 +62750,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Exact name of the user"
 #~ msgstr "Numele elementului pentru eveniment"
-
-#, fuzzy
-#~ msgid "Execution time"
-#~ msgstr "Verificări active"
 
 #, fuzzy
 #~ msgid "Explicit date..."

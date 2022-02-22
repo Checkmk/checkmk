@@ -16299,6 +16299,9 @@ msgstr "エンジンIDs(SNMPv3にのみ必要)"
 msgid "English"
 msgstr "English"
 
+msgid "Enrich with usage data from Checkmk Cluster Collector"
+msgstr ""
+
 msgid "Enter"
 msgstr "入る"
 
@@ -18867,6 +18870,18 @@ msgid "GByte/s"
 msgstr "ギガバイト/秒"
 
 #, fuzzy
+msgid "GCP/Function egress"
+msgstr "接続テスト"
+
+#, fuzzy
+msgid "GCP/Function execution"
+msgstr "最大同時実行"
+
+#, fuzzy
+msgid "GCP/Function instances"
+msgstr "インスタンスの自動検出"
+
+#, fuzzy
 msgid "GCP/GCS Network"
 msgstr "IPネットワーク"
 
@@ -19001,9 +19016,6 @@ msgstr "一般的な文字列"
 
 msgid "Get file from SFTP server"
 msgstr "SFTPサーバーからファイルを取得する"
-
-msgid "Get usage data via Checkmk Cluster Collector"
-msgstr ""
 
 msgid ""
 "Give FPGA utilization levels in percent. The possible range is from 0% to "
@@ -21986,11 +21998,12 @@ msgstr ""
 msgid "If no port is given, a default value of 443 will be used."
 msgstr "ポートが指定されていない場合、デフォルト値の443が使用されます。"
 
+#, fuzzy
 msgid ""
-"If non-zero, the the list of all the matching processes and their details in "
-"the long-output will include up to the first N arguments of each processes. "
-"Please note this may include sensitive data like credentials, and is "
-"strongly discouraged."
+"If non-zero, the list of all the matching processes and their details in the "
+"long-output will include up to the first N characters of all arguments for "
+"each process. Please note this may include sensitive data like credentials, "
+"and is strongly discouraged."
 msgstr ""
 "ゼロ以外の場合、一致するすべてのプロセスのリストとlong-outputの詳細には、各プ"
 "ロセスの最初のN個までの引数が含まれます。これには資格情報などの機密データが含"
@@ -25933,8 +25946,20 @@ msgstr "ヘルス状態のスコアレベル(パーセント)"
 msgid "Levels on ingress data in bytes"
 msgstr "入力データのレベル(バイト単位)"
 
+#, fuzzy
+msgid "Levels on instances"
+msgstr "シングルコアのレベル"
+
 msgid "Levels on latency"
 msgstr "遅延のレベル"
+
+#, fuzzy
+msgid "Levels on network egress"
+msgstr "シングルコアのレベル"
+
+#, fuzzy
+msgid "Levels on performance"
+msgstr "サーバーのパフォーマンス"
 
 #, fuzzy
 msgid "Levels on read capacity"
@@ -58986,6 +59011,10 @@ msgstr "アクティブ/スタンバイ"
 msgid "active hosts"
 msgstr "アクティブなホスト"
 
+#, fuzzy
+msgid "active instances"
+msgstr "Oracleインスタンス"
+
 msgid "add \"ISL\" to service description for interswitch links"
 msgstr "スイッチ間リンクのサービスの説明に\"ISL\"を追加"
 
@@ -59489,6 +59518,14 @@ msgstr "除外"
 msgid "execute the action \"%s\""
 msgstr "アクション \"%s\"を実行します"
 
+#, fuzzy
+msgid "execution count"
+msgstr "実行モード"
+
+#, fuzzy
+msgid "execution time"
+msgstr "接続時間"
+
 msgid "exists"
 msgstr "存在する"
 
@@ -59821,6 +59858,10 @@ msgstr "初期化"
 msgid "inodes"
 msgstr "inodes"
 
+#, fuzzy
+msgid "instances"
+msgstr "インスタンス"
+
 msgid "internal"
 msgstr "内部"
 
@@ -59975,6 +60016,10 @@ msgstr "最大期間"
 
 msgid "maximum"
 msgstr "最大"
+
+#, fuzzy
+msgid "memory"
+msgstr "記憶"
 
 msgid "message"
 msgid_plural "messages"
@@ -62039,11 +62084,6 @@ msgstr "© 2020 tribe29 GmbH. All Rights Reserved."
 
 #~ msgid "Comments of service"
 #~ msgstr "サービスのコメント"
-
-#, fuzzy
-#~| msgid "Maximum concurrent executions"
-#~ msgid "Concurrent executions"
-#~ msgstr "最大同時実行"
 
 #, fuzzy
 #~| msgid "Maximum concurrent executions"

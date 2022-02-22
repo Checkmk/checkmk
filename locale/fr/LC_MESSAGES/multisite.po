@@ -5,10 +5,10 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
+"Report-Msgid-Bugs-To: faye.tandog@tribe29.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2022-02-01 07:00+0000\n"
-"Last-Translator: Fabrice Dupré <duprefm@gmail.com>\n"
+"PO-Revision-Date: 2022-02-22 13:25+0000\n"
+"Last-Translator: aztazt <007@free.fr>\n"
 "Language-Team: French <https://translate.checkmk.com/projects/checkmk/"
 "software/fr/>\n"
 "Language: fr\n"
@@ -140,7 +140,7 @@ msgstr " et le %s '%s'."
 
 #, python-format
 msgid " for %d of %d recipients."
-msgstr ""
+msgstr " pour %d destinataire sur %d."
 
 #, python-format
 msgid " for a period of %s"
@@ -1314,6 +1314,11 @@ msgid ""
 "using environment variables like OMD_SITE) to make the individual program "
 "call run correctly in all execution contexts (UI and console)."
 msgstr ""
+"<br> AIDE: Le programme individuel est appelé depuis le répertoire courant. "
+"Vous devez néanmoins spécifier le chemin absolu dans les noms de fichiers "
+"dans les scripts (en utilisant les variables d'environnement comme OMD_SITE) "
+"pour permettre le lancement correct du programme dans tous les contextes "
+"d'exécution (UI et console)."
 
 #, python-format
 msgid "<br><b>Note</b>: this key has created by user <b>%s</b>"
@@ -17043,6 +17048,9 @@ msgstr "IDs de moteur (seulement nécessaire pour SNMPv3)"
 msgid "English"
 msgstr "Anglais"
 
+msgid "Enrich with usage data from Checkmk Cluster Collector"
+msgstr ""
+
 msgid "Enter"
 msgstr "Entrez"
 
@@ -19701,6 +19709,18 @@ msgid "GByte/s"
 msgstr "GByte/s"
 
 #, fuzzy
+msgid "GCP/Function egress"
+msgstr "Tests de connexion"
+
+#, fuzzy
+msgid "GCP/Function execution"
+msgstr "Nombre maximum d'exécutions simultanées"
+
+#, fuzzy
+msgid "GCP/Function instances"
+msgstr "Autodétection des instances"
+
+#, fuzzy
 msgid "GCP/GCS Network"
 msgstr "Réseau IP"
 
@@ -19837,9 +19857,6 @@ msgstr "Chaîne générique"
 
 msgid "Get file from SFTP server"
 msgstr "Obtenir un fichier du serveur SFTP"
-
-msgid "Get usage data via Checkmk Cluster Collector"
-msgstr ""
 
 msgid ""
 "Give FPGA utilization levels in percent. The possible range is from 0% to "
@@ -23038,11 +23055,12 @@ msgid "If no port is given, a default value of 443 will be used."
 msgstr ""
 "Si aucun port n'est indiqué, une valeur par défaut de 443 sera utilisée."
 
+#, fuzzy
 msgid ""
-"If non-zero, the the list of all the matching processes and their details in "
-"the long-output will include up to the first N arguments of each processes. "
-"Please note this may include sensitive data like credentials, and is "
-"strongly discouraged."
+"If non-zero, the list of all the matching processes and their details in the "
+"long-output will include up to the first N characters of all arguments for "
+"each process. Please note this may include sensitive data like credentials, "
+"and is strongly discouraged."
 msgstr ""
 "S'il est différent de zéro, la liste de tous les processus correspondants et "
 "leurs détails dans la sortie longue comprendra jusqu'aux N premiers "
@@ -27261,8 +27279,20 @@ msgstr "Niveaux du score de l'état de santé en pourcentage"
 msgid "Levels on ingress data in bytes"
 msgstr "Niveaux sur les données d'entrée en octets"
 
+#, fuzzy
+msgid "Levels on instances"
+msgstr "Niveaux sur des cœurs uniques"
+
 msgid "Levels on latency"
 msgstr "Niveaux de latence"
+
+#, fuzzy
+msgid "Levels on network egress"
+msgstr "Niveaux sur des cœurs uniques"
+
+#, fuzzy
+msgid "Levels on performance"
+msgstr "Performance du serveur"
 
 #, fuzzy
 msgid "Levels on read capacity"
@@ -62703,6 +62733,10 @@ msgstr "actif / veille"
 msgid "active hosts"
 msgstr "hôtes actifs"
 
+#, fuzzy
+msgid "active instances"
+msgstr "Instances Oracle"
+
 msgid "add \"ISL\" to service description for interswitch links"
 msgstr ""
 "ajouter \"ISL\" à la description du service pour les liaisons inter-"
@@ -63210,6 +63244,14 @@ msgstr "exclu"
 msgid "execute the action \"%s\""
 msgstr "exécuter l'action \"%s\""
 
+#, fuzzy
+msgid "execution count"
+msgstr "Mode d'exécution"
+
+#, fuzzy
+msgid "execution time"
+msgstr "Temps d'exécution total"
+
 msgid "exists"
 msgstr "existe"
 
@@ -63545,6 +63587,10 @@ msgstr "init"
 msgid "inodes"
 msgstr "inodes"
 
+#, fuzzy
+msgid "instances"
+msgstr "Instances"
+
 msgid "internal"
 msgstr "interne"
 
@@ -63699,6 +63745,10 @@ msgstr "durée max."
 
 msgid "maximum"
 msgstr "maximum"
+
+#, fuzzy
+msgid "memory"
+msgstr "Mémoire"
 
 msgid "message"
 msgid_plural "messages"
@@ -65890,11 +65940,6 @@ msgstr "© 2020 tribe29 GmbH. Tous droits réservés."
 
 #, fuzzy
 #~| msgid "Maximum concurrent executions"
-#~ msgid "Concurrent executions"
-#~ msgstr "Nombre maximum d'exécutions simultanées"
-
-#, fuzzy
-#~| msgid "Maximum concurrent executions"
 #~ msgid "Concurrent executions in percent"
 #~ msgstr "Nombre maximum d'exécutions simultanées"
 
@@ -67513,9 +67558,6 @@ msgstr "© 2020 tribe29 GmbH. Tous droits réservés."
 
 #~ msgid "Total PGA used for manual workareas"
 #~ msgstr "PGA totale utilisée pour les zones de travail manuel"
-
-#~ msgid "Total execution time"
-#~ msgstr "Temps d'exécution total"
 
 #~ msgid "Total freeable PGA memory"
 #~ msgstr "Mémoire PGA totale libérable"

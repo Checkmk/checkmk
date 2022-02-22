@@ -16873,6 +16873,9 @@ msgstr "ID del motore (necessario solo per SNMPv3)"
 msgid "English"
 msgstr "Inglese"
 
+msgid "Enrich with usage data from Checkmk Cluster Collector"
+msgstr ""
+
 msgid "Enter"
 msgstr "Inserire"
 
@@ -19513,6 +19516,18 @@ msgid "GByte/s"
 msgstr "GByte/s"
 
 #, fuzzy
+msgid "GCP/Function egress"
+msgstr "Test di connessione"
+
+#, fuzzy
+msgid "GCP/Function execution"
+msgstr "Massimo di esecuzioni simultanee"
+
+#, fuzzy
+msgid "GCP/Function instances"
+msgstr "Rilevare automaticamente le istanze"
+
+#, fuzzy
 msgid "GCP/GCS Network"
 msgstr "Rete IP"
 
@@ -19649,9 +19664,6 @@ msgstr "Stringa generica"
 
 msgid "Get file from SFTP server"
 msgstr "Ottenere file dal server SFTP"
-
-msgid "Get usage data via Checkmk Cluster Collector"
-msgstr ""
 
 msgid ""
 "Give FPGA utilization levels in percent. The possible range is from 0% to "
@@ -22802,11 +22814,12 @@ msgid "If no port is given, a default value of 443 will be used."
 msgstr ""
 "Se non viene data alcuna porta, verrà usato un valore predefinito di 443."
 
+#, fuzzy
 msgid ""
-"If non-zero, the the list of all the matching processes and their details in "
-"the long-output will include up to the first N arguments of each processes. "
-"Please note this may include sensitive data like credentials, and is "
-"strongly discouraged."
+"If non-zero, the list of all the matching processes and their details in the "
+"long-output will include up to the first N characters of all arguments for "
+"each process. Please note this may include sensitive data like credentials, "
+"and is strongly discouraged."
 msgstr ""
 "Se non è zero, l'elenco di tutti i processi corrispondenti e i loro dettagli "
 "nel long-output includerà fino ai primi N argomenti di ogni processo. Si "
@@ -26975,8 +26988,20 @@ msgstr "Livelli sul punteggio dello stato di salute in percentuale"
 msgid "Levels on ingress data in bytes"
 msgstr "Livelli di dati in ingresso in byte"
 
+#, fuzzy
+msgid "Levels on instances"
+msgstr "Livelli su singoli core"
+
 msgid "Levels on latency"
 msgstr "Livelli di latenza"
+
+#, fuzzy
+msgid "Levels on network egress"
+msgstr "Livelli su singoli core"
+
+#, fuzzy
+msgid "Levels on performance"
+msgstr "Prestazioni del server"
 
 #, fuzzy
 msgid "Levels on read capacity"
@@ -61986,6 +62011,10 @@ msgstr "attivo / standby"
 msgid "active hosts"
 msgstr "ospiti attivi"
 
+#, fuzzy
+msgid "active instances"
+msgstr "Istanze Oracle"
+
 msgid "add \"ISL\" to service description for interswitch links"
 msgstr ""
 "aggiungere \"ISL\" alla descrizione del servizio per i collegamenti "
@@ -62493,6 +62522,14 @@ msgstr "escluso"
 msgid "execute the action \"%s\""
 msgstr "eseguire l'azione \"%s\""
 
+#, fuzzy
+msgid "execution count"
+msgstr "Modalità di esecuzione"
+
+#, fuzzy
+msgid "execution time"
+msgstr "Tempo di esecuzione totale"
+
 msgid "exists"
 msgstr "esiste"
 
@@ -62826,6 +62863,10 @@ msgstr "init"
 msgid "inodes"
 msgstr "inodes"
 
+#, fuzzy
+msgid "instances"
+msgstr "Istanze"
+
 msgid "internal"
 msgstr "interno"
 
@@ -62980,6 +63021,10 @@ msgstr "durata massima"
 
 msgid "maximum"
 msgstr "massimo"
+
+#, fuzzy
+msgid "memory"
+msgstr "Memoria"
 
 msgid "message"
 msgid_plural "messages"
@@ -65163,11 +65208,6 @@ msgstr "© 2020 tribe29 GmbH. Tutti i diritti riservati."
 
 #, fuzzy
 #~| msgid "Maximum concurrent executions"
-#~ msgid "Concurrent executions"
-#~ msgstr "Massimo di esecuzioni simultanee"
-
-#, fuzzy
-#~| msgid "Maximum concurrent executions"
 #~ msgid "Concurrent executions in percent"
 #~ msgstr "Massimo di esecuzioni simultanee"
 
@@ -66786,9 +66826,6 @@ msgstr "© 2020 tribe29 GmbH. Tutti i diritti riservati."
 
 #~ msgid "Total PGA used for manual workareas"
 #~ msgstr "PGA totale utilizzato per le aree di lavoro manuale"
-
-#~ msgid "Total execution time"
-#~ msgstr "Tempo di esecuzione totale"
 
 #~ msgid "Total freeable PGA memory"
 #~ msgstr "Memoria PGA totale liberabile"

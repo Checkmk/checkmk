@@ -16826,6 +16826,9 @@ msgstr "Engine ID's (alleen nodig voor SNMPv3)"
 msgid "English"
 msgstr "Engels"
 
+msgid "Enrich with usage data from Checkmk Cluster Collector"
+msgstr ""
+
 msgid "Enter"
 msgstr "Ga naar"
 
@@ -19461,6 +19464,18 @@ msgid "GByte/s"
 msgstr "GByte/s"
 
 #, fuzzy
+msgid "GCP/Function egress"
+msgstr "Verbindingstests"
+
+#, fuzzy
+msgid "GCP/Function execution"
+msgstr "Maximaal aantal gelijktijdige uitvoeringen"
+
+#, fuzzy
+msgid "GCP/Function instances"
+msgstr "Autodetect instanties"
+
+#, fuzzy
 msgid "GCP/GCS Network"
 msgstr "IP-netwerk"
 
@@ -19595,9 +19610,6 @@ msgstr "Generieke string"
 
 msgid "Get file from SFTP server"
 msgstr "Bestand van SFTP-server halen"
-
-msgid "Get usage data via Checkmk Cluster Collector"
-msgstr ""
 
 msgid ""
 "Give FPGA utilization levels in percent. The possible range is from 0% to "
@@ -22746,11 +22758,12 @@ msgstr ""
 "Indien geen poort wordt opgegeven, wordt een standaardwaarde van 443 "
 "gebruikt."
 
+#, fuzzy
 msgid ""
-"If non-zero, the the list of all the matching processes and their details in "
-"the long-output will include up to the first N arguments of each processes. "
-"Please note this may include sensitive data like credentials, and is "
-"strongly discouraged."
+"If non-zero, the list of all the matching processes and their details in the "
+"long-output will include up to the first N characters of all arguments for "
+"each process. Please note this may include sensitive data like credentials, "
+"and is strongly discouraged."
 msgstr ""
 "Indien niet nul, dan zal de lijst van alle overeenkomende processen en hun "
 "details in de long-output tot de eerste N argumenten van elk proces "
@@ -26924,8 +26937,20 @@ msgstr "Niveaus op score gezondheidstoestand in procenten"
 msgid "Levels on ingress data in bytes"
 msgstr "Niveaus op ingangsgegevens in bytes"
 
+#, fuzzy
+msgid "Levels on instances"
+msgstr "Niveaus op enkele kernen"
+
 msgid "Levels on latency"
 msgstr "Niveaus op latentie"
+
+#, fuzzy
+msgid "Levels on network egress"
+msgstr "Niveaus op enkele kernen"
+
+#, fuzzy
+msgid "Levels on performance"
+msgstr "Serverprestaties"
 
 #, fuzzy
 msgid "Levels on read capacity"
@@ -61862,6 +61887,10 @@ msgstr "actief / stand-by"
 msgid "active hosts"
 msgstr "actieve gastheren"
 
+#, fuzzy
+msgid "active instances"
+msgstr "Oracle gevallen"
+
 msgid "add \"ISL\" to service description for interswitch links"
 msgstr "ISL\" toevoegen aan dienstbeschrijving voor interswitch links"
 
@@ -62367,6 +62396,14 @@ msgstr "uitgesloten"
 msgid "execute the action \"%s\""
 msgstr "voer de actie \"%s\" uit"
 
+#, fuzzy
+msgid "execution count"
+msgstr "Uitvoeringsmodus"
+
+#, fuzzy
+msgid "execution time"
+msgstr "Totale uitvoeringstijd"
+
 msgid "exists"
 msgstr "bestaat"
 
@@ -62700,6 +62737,10 @@ msgstr "init"
 msgid "inodes"
 msgstr "inodes"
 
+#, fuzzy
+msgid "instances"
+msgstr "Instanties"
+
 msgid "internal"
 msgstr "intern"
 
@@ -62854,6 +62895,10 @@ msgstr "max. duur"
 
 msgid "maximum"
 msgstr "maximum"
+
+#, fuzzy
+msgid "memory"
+msgstr "Geheugen"
 
 msgid "message"
 msgid_plural "messages"
@@ -65027,11 +65072,6 @@ msgstr "© 2020 tribe29 GmbH. Alle rechten voorbehouden."
 
 #, fuzzy
 #~| msgid "Maximum concurrent executions"
-#~ msgid "Concurrent executions"
-#~ msgstr "Maximaal aantal gelijktijdige uitvoeringen"
-
-#, fuzzy
-#~| msgid "Maximum concurrent executions"
 #~ msgid "Concurrent executions in percent"
 #~ msgstr "Maximaal aantal gelijktijdige uitvoeringen"
 
@@ -66643,9 +66683,6 @@ msgstr "© 2020 tribe29 GmbH. Alle rechten voorbehouden."
 
 #~ msgid "Total PGA used for manual workareas"
 #~ msgstr "Totaal PGA gebruikt voor manuele werkgebieden"
-
-#~ msgid "Total execution time"
-#~ msgstr "Totale uitvoeringstijd"
 
 #~ msgid "Total freeable PGA memory"
 #~ msgstr "Totaal vrij te maken PGA-geheugen"

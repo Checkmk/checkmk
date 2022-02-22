@@ -16871,6 +16871,9 @@ msgstr "Engine-IDs (nur für SNMPv3 benötigt)"
 msgid "English"
 msgstr "Englisch"
 
+msgid "Enrich with usage data from Checkmk Cluster Collector"
+msgstr ""
+
 msgid "Enter"
 msgstr "OK"
 
@@ -19524,6 +19527,18 @@ msgid "GByte/s"
 msgstr "GB/Sek."
 
 #, fuzzy
+msgid "GCP/Function egress"
+msgstr "Verbindungstests"
+
+#, fuzzy
+msgid "GCP/Function execution"
+msgstr "Maximal gleichzeitige Ausführungen"
+
+#, fuzzy
+msgid "GCP/Function instances"
+msgstr "Orracle-Instanz"
+
+#, fuzzy
 msgid "GCP/GCS Network"
 msgstr "IP-Netzwerk"
 
@@ -19659,9 +19674,6 @@ msgstr "Generischer String"
 
 msgid "Get file from SFTP server"
 msgstr "Datei von SFTP-Server holen"
-
-msgid "Get usage data via Checkmk Cluster Collector"
-msgstr ""
 
 msgid ""
 "Give FPGA utilization levels in percent. The possible range is from 0% to "
@@ -22820,11 +22832,12 @@ msgstr ""
 msgid "If no port is given, a default value of 443 will be used."
 msgstr "Wenn kein Port angegeben ist, wird ein Standardwert von 443 verwendet."
 
+#, fuzzy
 msgid ""
-"If non-zero, the the list of all the matching processes and their details in "
-"the long-output will include up to the first N arguments of each processes. "
-"Please note this may include sensitive data like credentials, and is "
-"strongly discouraged."
+"If non-zero, the list of all the matching processes and their details in the "
+"long-output will include up to the first N characters of all arguments for "
+"each process. Please note this may include sensitive data like credentials, "
+"and is strongly discouraged."
 msgstr ""
 "Wenn Objekte vorhanden sind, enthält die Liste aller übereinstimmenden "
 "Prozesse und deren Details in der ganzen Ausgabe bis zu den ersten N "
@@ -26973,8 +26986,20 @@ msgstr "Werte für den Gesundheitszustand in Prozent"
 msgid "Levels on ingress data in bytes"
 msgstr "Schwellwerte für die Eingangscontroller-Daten in Bytes"
 
+#, fuzzy
+msgid "Levels on instances"
+msgstr "Schwellen für die einzelne Kerne"
+
 msgid "Levels on latency"
 msgstr "Schwellwerte für die Latenzzeit"
+
+#, fuzzy
+msgid "Levels on network egress"
+msgstr "Schwellen für die einzelne Kerne"
+
+#, fuzzy
+msgid "Levels on performance"
+msgstr "Serverperformance"
 
 msgid "Levels on read capacity"
 msgstr "Schwellwerte für die Lesekapazität"
@@ -61906,6 +61931,10 @@ msgstr "aktiv / standby"
 msgid "active hosts"
 msgstr "aktiven Hosts"
 
+#, fuzzy
+msgid "active instances"
+msgstr "Oracle-Instanzen"
+
 msgid "add \"ISL\" to service description for interswitch links"
 msgstr "Bei Links zwischen zwei Switchen das Kürzel \"ISL\" hinzufügen"
 
@@ -62410,6 +62439,14 @@ msgstr "ausgeschlossen"
 msgid "execute the action \"%s\""
 msgstr "Aktion \"%s\" ausführen"
 
+#, fuzzy
+msgid "execution count"
+msgstr "Ausführungsmodus"
+
+#, fuzzy
+msgid "execution time"
+msgstr "Gesamte Ausführungszeit"
+
 msgid "exists"
 msgstr "existiert"
 
@@ -62743,6 +62780,10 @@ msgstr "initialisiere"
 msgid "inodes"
 msgstr "Inodes"
 
+#, fuzzy
+msgid "instances"
+msgstr "Instanzen"
+
 msgid "internal"
 msgstr "intern"
 
@@ -62899,6 +62940,10 @@ msgstr "max. Dauer"
 
 msgid "maximum"
 msgstr "Maximum"
+
+#, fuzzy
+msgid "memory"
+msgstr "Arbeitsspeicher (RAM)"
 
 msgid "message"
 msgid_plural "messages"
@@ -65078,11 +65123,6 @@ msgstr "© %s tribe29 GmbH. Alle Rechte vorbehalten."
 
 #, fuzzy
 #~| msgid "Maximum concurrent executions"
-#~ msgid "Concurrent executions"
-#~ msgstr "Maximal gleichzeitige Ausführungen"
-
-#, fuzzy
-#~| msgid "Maximum concurrent executions"
 #~ msgid "Concurrent executions in percent"
 #~ msgstr "Maximal gleichzeitige Ausführungen"
 
@@ -66703,9 +66743,6 @@ msgstr "© %s tribe29 GmbH. Alle Rechte vorbehalten."
 
 #~ msgid "Total PGA used for manual workareas"
 #~ msgstr "Gesamte PGA benutzt für manuelle Arbeitsbereiche"
-
-#~ msgid "Total execution time"
-#~ msgstr "Gesamte Ausführungszeit"
 
 #~ msgid "Total freeable PGA memory"
 #~ msgstr "Insgesamt frei verfügbarer PGA-Speicher"
@@ -71813,10 +71850,6 @@ msgstr "© %s tribe29 GmbH. Alle Rechte vorbehalten."
 
 #~ msgid "Hours left until full"
 #~ msgstr "Anzahl der Stunden bis das Dateisystem voll läuft"
-
-#, fuzzy
-#~ msgid "Jenkins instance"
-#~ msgstr "Orracle-Instanz"
 
 #~ msgid "Livestatus-data not found"
 #~ msgstr "Livestatusdaten nicht gefunden"

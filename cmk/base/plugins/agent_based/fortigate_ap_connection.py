@@ -6,7 +6,7 @@
 
 from typing import List, Mapping, NamedTuple, Tuple, TypedDict
 
-from .agent_based_api.v1 import check_levels, equals, register, Result, Service, SNMPTree, State
+from .agent_based_api.v1 import check_levels, register, Result, Service, SNMPTree, startswith, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 
 
@@ -91,9 +91,9 @@ register.snmp_section(
             ],
         ),
     ],
-    detect=equals(
+    detect=startswith(
         ".1.3.6.1.2.1.1.2.0",
-        ".1.3.6.1.4.1.12356.101.1.10006",
+        ".1.3.6.1.4.1.12356.101.1",
     ),
 )
 

@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-SITE=${SITE:-$(until [ $PWD == / ]; do if [ -e .site ]; then
+SITE=${SITE:-$(until [ "${PWD}" = / ]; do if [ -e .site ]; then
     cat .site
     break
 else cd ..; fi; done)}
@@ -17,25 +17,27 @@ THEME_IMAGE_DIRS=$(for theme in $THEMES; do echo "web/htdocs/themes/${theme}/ima
 THEME_RESOURCES="${THEME_CSS_FILES} ${THEME_JSON_FILES} ${THEME_IMAGE_DIRS}"
 
 echo "Updating compiled JS/CSS files..."
-make -C .. WEBPACK_MODE=${WEBPACK_MODE:-development} ${JAVASCRIPT_MINI} ${THEME_CSS_FILES}
+# shellcheck disable=SC2086
+make -C .. WEBPACK_MODE="${WEBPACK_MODE:-development}" ${JAVASCRIPT_MINI} ${THEME_CSS_FILES}
 
 echo "Update site $SITE..."
 
 echo "Copy CRE files..."
+# shellcheck disable=SC2046
 sudo rsync -arxR \
     app \
     htdocs/css \
     htdocs/images \
     htdocs/jquery \
     htdocs/openapi \
-    $(for i in ${JAVASCRIPT_MINI}; do echo ${i#web/}; done) \
-    $(for i in ${JAVASCRIPT_MINI}; do echo ${i#web/}.map; done) \
+    $(for i in ${JAVASCRIPT_MINI}; do echo "${i#web/}"; done) \
+    $(for i in ${JAVASCRIPT_MINI}; do echo "${i#web/}".map; done) \
     htdocs/sounds \
-    $(for i in ${THEME_RESOURCES}; do echo ${i#web/}; done) \
-    $ROOT/share/check_mk/web/
+    $(for i in ${THEME_RESOURCES}; do echo "${i#web/}"; done) \
+    "$ROOT/share/check_mk/web/"
 
 # Also deploy all other directories of same type
-if [ ${ALL_EDITIONS:-1} != 0 ]; then
+if [ "${ALL_EDITIONS:-1}" != 0 ]; then
     for WHAT in enterprise managed; do
         if [ -e ../$WHAT/web/.f12 ]; then
             (
@@ -48,14 +50,14 @@ fi
 
 if [ "$KILL_SITE_APACHE" = "1" ]; then
     echo "KILLING site apache of $SITE"
-    sudo killall -9 -u $SITE apache2
+    sudo killall -9 -u "$SITE" apache2
 fi
 
-if [ -z $ONLY_COPY ]; then
+if [ -z "$ONLY_COPY" ]; then
     if [ "$SITE" != - ]; then
-        sudo omd reload $SITE apache
+        sudo omd reload "$SITE" apache
     fi
 fi
 
 # Gecache PNP-Schablonen entfernen
-sudo rm -f $ROOT/var/check_mk/pnp_template_cache/*
+sudo rm -f "$ROOT/var/check_mk/pnp_template_cache/"*

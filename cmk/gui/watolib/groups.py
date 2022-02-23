@@ -617,7 +617,7 @@ class HostAttributeContactGroups(ABCHostAttribute):
         self._loaded_at = id(html)
         self._contactgroups = load_contact_group_information()
 
-    def from_html_vars(self, varprefix: str) -> Any:
+    def from_html_vars(self, varprefix: str) -> dict[str, Any]:
         self.load_data()
 
         cgs = self._vs_contactgroups().from_html_vars(varprefix + self.name())

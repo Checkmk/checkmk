@@ -3448,7 +3448,7 @@ class ListChoice(ValueSpec):
 
         return html.render_table(html.render_tr(html.render_td(html.render_br().join(texts))))
 
-    def from_html_vars(self, varprefix: str) -> Any:
+    def from_html_vars(self, varprefix: str) -> Sequence[Any]:
         self.load_elements()
         return [
             key  #
@@ -3663,7 +3663,7 @@ class DualListChoice(ListChoice):
         all_elements: list[ChoiceId] = list(dict(self._elements).keys()) + self._locked_choices
         return all(value != val for val in all_elements)
 
-    def from_html_vars(self, varprefix: str) -> Any:
+    def from_html_vars(self, varprefix: str) -> list[Any]:
         self.load_elements()
         value: list = []
         selection_str = request.var(varprefix, "")
@@ -3814,11 +3814,11 @@ class OptionalDropdownChoice(DropdownChoice):
         self._explicit.validate_datatype(value, varprefix + "_ex")
 
 
-def round_date(t):
+def round_date(t: float) -> int:
     return int(int(t) / seconds_per_day) * seconds_per_day
 
 
-def today():
+def today() -> int:
     return round_date(time.time())
 
 
@@ -3833,7 +3833,7 @@ class RelativeDate(OptionalDropdownChoice):
     Useful for example for alarms. The date is represented by a UNIX timestamp
     where the seconds are silently ignored."""
 
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs) -> None:
         choices = [
             (0, _("today")),
             (1, _("tomorrow")),
@@ -3857,18 +3857,18 @@ class RelativeDate(OptionalDropdownChoice):
         super().__init__(**kwargs)
 
         if "default_days" in kwargs:
-            self._default_value = kwargs["default_days"] * seconds_per_day + today()
+            self._default_value: int = kwargs["default_days"] * seconds_per_day + today()
         else:
             self._default_value = today()
 
-    def canonical_value(self):
+    def canonical_value(self) -> int:
         return self._default_value
 
-    def render_input(self, varprefix, value):
+    def render_input(self, varprefix: str, value: int) -> None:
         reldays = int((round_date(value) - today()) / seconds_per_day)  # fixed: true-division
         super().render_input(varprefix, reldays)
 
-    def value_to_html(self, value) -> ValueSpecText:
+    def value_to_html(self, value: int) -> ValueSpecText:
         reldays = int((round_date(value) - today()) / seconds_per_day)  # fixed: true-division
         if reldays == -1:
             return _("yesterday")
@@ -3881,11 +3881,11 @@ class RelativeDate(OptionalDropdownChoice):
             return choices[reldays][1]
         return _("in %d days") % reldays
 
-    def from_html_vars(self, varprefix: str) -> Any:
+    def from_html_vars(self, varprefix: str) -> int:
         reldays = super().from_html_vars(varprefix)
         return today() + reldays * seconds_per_day
 
-    def validate_datatype(self, value, varprefix):
+    def validate_datatype(self, value: int, varprefix: str) -> None:
         if not isinstance(value, (int, float)):
             raise MKUserError(varprefix, _("Date must be a number value"))
 
@@ -5085,7 +5085,7 @@ class Tuple(ValueSpec):
     def value_to_json_safe(self, value: Any) -> list[Any]:
         return [el.value_to_json_safe(val) for _, el, val in self._iter_value(value)]
 
-    def from_html_vars(self, varprefix: str) -> Any:
+    def from_html_vars(self, varprefix: str) -> tuple[Any, ...]:
         return tuple(e.from_html_vars(f"{varprefix}_{idx}") for idx, e in enumerate(self._elements))
 
     def _validate_value(self, value, varprefix):
@@ -5540,7 +5540,7 @@ class ElementSelection(ValueSpec):
     def value_from_json(self, json_value: Any) -> Any:
         return json_value
 
-    def from_html_vars(self, varprefix: str) -> Any:
+    def from_html_vars(self, varprefix: str) -> _Optional[str]:
         return request.var(varprefix)
 
     def _validate_value(self, value, varprefix):
@@ -6119,7 +6119,7 @@ class Labels(ValueSpec):
     def canonical_value(self):
         return {}
 
-    def from_html_vars(self, varprefix: str) -> Any:
+    def from_html_vars(self, varprefix: str) -> dict[str, Any]:
         value = html.request.get_str_input_mandatory(varprefix, "[]")
         return self._from_html_vars(value, varprefix)
 
@@ -6359,7 +6359,7 @@ class IconSelector(ValueSpec):
 
         return icon_tag
 
-    def _transform_icon_str(self, value):
+    def _transform_icon_str(self, value: str) -> dict[str, _Optional[str]]:
         if isinstance(value, dict):
             return value
         return {"icon": value, "emblem": None}
@@ -6480,7 +6480,7 @@ class IconSelector(ValueSpec):
 
         html.close_div()
 
-    def from_html_vars(self, varprefix: str) -> Any:
+    def from_html_vars(self, varprefix: str) -> Union[_Optional[str], dict[str, _Optional[str]]]:
         icon = self._from_html_vars(varprefix)
         if not self._with_emblem:
             return icon
@@ -6491,7 +6491,7 @@ class IconSelector(ValueSpec):
 
         return {"icon": icon, "emblem": emblem}
 
-    def _from_html_vars(self, varprefix):
+    def _from_html_vars(self, varprefix: str) -> _Optional[str]:
         icon = request.var(varprefix + "_value")
         if icon == "empty":
             return None
@@ -6594,7 +6594,7 @@ class Color(ValueSpec):
             onclose=self._on_change,
         )
 
-    def from_html_vars(self, varprefix: str) -> Any:
+    def from_html_vars(self, varprefix: str) -> _Optional[str]:
         color = request.var(varprefix + "_value")
         if color == "":
             return None

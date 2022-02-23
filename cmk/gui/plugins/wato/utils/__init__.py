@@ -9,13 +9,13 @@
 
 import abc
 import json
-import os
 import re
 import subprocess
 import urllib.parse
 from contextlib import nullcontext
 from typing import Any, Callable, cast, ContextManager, Dict, List, Mapping
 from typing import Optional as _Optional
+from typing import Sequence
 from typing import Tuple as _Tuple
 from typing import Type, Union
 
@@ -2335,10 +2335,10 @@ class HostTagCondition(ValueSpec):
     def render_input(self, varprefix, value):
         self._render_condition_editor(varprefix, value)
 
-    def from_html_vars(self, varprefix: str) -> Any:
+    def from_html_vars(self, varprefix: str) -> Sequence[str]:
         return self._get_tag_conditions(varprefix)
 
-    def _get_tag_conditions(self, varprefix):
+    def _get_tag_conditions(self, varprefix: str) -> Sequence[str]:
         """Retrieve current tag condition settings from HTML variables"""
         if varprefix:
             varprefix += "_"

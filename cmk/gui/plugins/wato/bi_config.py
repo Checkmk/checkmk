@@ -1510,7 +1510,7 @@ class NodeVisualizationLayoutStyle(ValueSpec):
     def value_to_html(self, value) -> str:
         return ""
 
-    def from_html_vars(self, varprefix: str) -> Any:
+    def from_html_vars(self, varprefix: str) -> dict[str, Any]:
         value = self.default_value()
         for key, val in request.itervars():
             if key.startswith(varprefix):

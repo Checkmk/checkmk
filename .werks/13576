@@ -1,0 +1,18 @@
+Title: Quoting of mk_redis commandline arguments
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1645619631
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+The section of the agent plugin mk_redis may contain the following error message:
+
+<<<redis_info:sep(58)>>>
+[[[127.0.0.1;6379|127.0.0.1|6379]]]
+Unrecognized option or bad number of args
+
+This was caused by invalid quoting of the command line arguments and is fixed now.

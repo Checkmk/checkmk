@@ -1969,13 +1969,13 @@ class VisualFilter(ValueSpec):
         # A filter can not be used twice on a page, because the varprefix is not used
         return self._filter.value()
 
-    def validate_datatype(self, value, varprefix):
+    def validate_datatype(self, value: Any, varprefix: str) -> None:
         if not isinstance(value, dict):
             raise MKUserError(
                 varprefix, _("The value must be of type dict, but it has type %s") % type(value)
             )
 
-    def validate_value(self, value, varprefix):
+    def validate_value(self, value: FilterHTTPVariables, varprefix: str) -> None:
         self._filter.validate_value(value)
 
     def value_to_html(self, value):

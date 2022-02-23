@@ -2374,7 +2374,7 @@ class HostTagCondition(ValueSpec):
     def value_to_html(self, value: list[str]) -> ValueSpecText:
         return "|".join(value)
 
-    def validate_datatype(self, value, varprefix):
+    def validate_datatype(self, value: Any, varprefix: str) -> None:
         if not isinstance(value, list):
             raise MKUserError(
                 varprefix, _("The list of host tags must be a list, but " "is %r") % type(value)

@@ -883,7 +883,7 @@ class RegExp(TextInput):
 
         return " ".join(classes)
 
-    def _validate_value(self, value, varprefix):
+    def _validate_value(self, value: Any, varprefix: str) -> None:
         super()._validate_value(value, varprefix)
 
         # Check if the string is a valid regex
@@ -3811,11 +3811,11 @@ class OptionalDropdownChoice(DropdownChoice):
                 return val
         return choices[0][0]  # can only happen if user garbled URL
 
-    def _validate_value(self, value, varprefix):
+    def _validate_value(self, value: Any, varprefix: str) -> None:
         if self.value_is_explicit(value):
             self._explicit.validate_value(value, varprefix)
 
-    def validate_datatype(self, value, varprefix):
+    def validate_datatype(self, value: Any, varprefix: str) -> None:
         for val, _title in self.choices():
             if val == value:
                 return
@@ -4103,7 +4103,7 @@ class AbsoluteDate(ValueSpec[_Optional[float]]):
             )
         )
 
-    def validate_datatype(self, value, varprefix):
+    def validate_datatype(self, value: Any, varprefix: str) -> None:
         if value is None and self._allow_empty:
             return
         if not isinstance(value, (int, float)):
@@ -4797,11 +4797,11 @@ class Optional(ValueSpec):
             return self._valuespec.from_html_vars(varprefix + "_value")
         return self._none_value
 
-    def validate_datatype(self, value, varprefix):
+    def validate_datatype(self, value: Any, varprefix: str) -> None:
         if value != self._none_value:
             self._valuespec.validate_datatype(value, varprefix + "_value")
 
-    def _validate_value(self, value, varprefix):
+    def _validate_value(self, value: Any, varprefix: str) -> None:
         if value != self._none_value:
             self._valuespec.validate_value(value, varprefix + "_value")
 
@@ -4973,7 +4973,7 @@ class Alternative(ValueSpec):
         vs = self._elements[nr]
         return vs.from_html_vars(varprefix + "_%d" % nr)
 
-    def validate_datatype(self, value, varprefix):
+    def validate_datatype(self, value: Any, varprefix: str) -> None:
         for vs in self._elements:
             try:
                 vs.validate_datatype(value, "")
@@ -4985,7 +4985,7 @@ class Alternative(ValueSpec):
             _("The data type of the value does not match any of the " "allowed alternatives."),
         )
 
-    def _validate_value(self, value, varprefix):
+    def _validate_value(self, value: Any, varprefix: str) -> None:
         vs, value = self.matching_alternative(value)
         for nr, v in enumerate(self._elements):
             if vs == v:
@@ -5104,11 +5104,11 @@ class Tuple(ValueSpec):
     def from_html_vars(self, varprefix: str) -> tuple[Any, ...]:
         return tuple(e.from_html_vars(f"{varprefix}_{idx}") for idx, e in enumerate(self._elements))
 
-    def _validate_value(self, value, varprefix):
+    def _validate_value(self, value: Any, varprefix: str) -> None:
         for idx, el, val in self._iter_value(value):
             el.validate_value(val, f"{varprefix}_{idx}")
 
-    def validate_datatype(self, value, varprefix):
+    def validate_datatype(self, value: Any, varprefix: str) -> None:
         if not isinstance(value, tuple):
             raise MKUserError(
                 varprefix, _("The datatype must be a tuple, but is %s") % _type_name(value)
@@ -5441,7 +5441,7 @@ class Dictionary(ValueSpec[dict[str, Any]]):
             )
         }
 
-    def validate_datatype(self, value, varprefix):
+    def validate_datatype(self, value: Any, varprefix: str) -> None:
         value = self.migrate(value)
 
         if not isinstance(value, dict):
@@ -5470,7 +5470,7 @@ class Dictionary(ValueSpec[dict[str, Any]]):
                     % (param, ", ".join(allowed_keys)),
                 )
 
-    def _validate_value(self, value, varprefix):
+    def _validate_value(self, value: Any, varprefix: str) -> None:
         value = self.migrate(value)
 
         for param, vs in self._get_elements():
@@ -5560,7 +5560,7 @@ class ElementSelection(ValueSpec):
     def from_html_vars(self, varprefix: str) -> _Optional[str]:
         return request.var(varprefix)
 
-    def _validate_value(self, value, varprefix):
+    def _validate_value(self, value: Any, varprefix: str) -> None:
         self.load_elements()
         if len(self._elements) == 0:
             raise MKUserError(varprefix, _("You cannot save this rule.") + " " + self._empty_text)
@@ -5569,7 +5569,7 @@ class ElementSelection(ValueSpec):
                 varprefix, _("%s is not an existing element in this selection.") % (value,)
             )
 
-    def validate_datatype(self, value, varprefix):
+    def validate_datatype(self, value: Any, varprefix: str) -> None:
         self.load_elements()
         # When no elements exists the default value is None and e.g. in wato.mode_edit_rule()
         # handed over to validate_datatype() before rendering the input form. Disable the
@@ -6163,7 +6163,7 @@ class Labels(ValueSpec):
 
         return labels
 
-    def _validate_value(self, value, varprefix):
+    def _validate_value(self, value: Any, varprefix: str) -> None:
         if not isinstance(value, dict):
             raise MKUserError(
                 varprefix,
@@ -6523,7 +6523,7 @@ class IconSelector(ValueSpec):
     def value_from_json(self, json_value: Any) -> Any:
         return json_value
 
-    def validate_datatype(self, value, varprefix):
+    def validate_datatype(self, value: Any, varprefix: str) -> None:
         if self._with_emblem and not isinstance(value, (str, dict)):
             raise MKUserError(varprefix, "The type is %s, but should be str or dict" % type(value))
         if not self._with_emblem and not isinstance(value, str):
@@ -6539,7 +6539,7 @@ class IconSelector(ValueSpec):
                 varprefix, _("The emblem type is %s, but should be str") % type(value["emblem"])
             )
 
-    def _validate_value(self, value, varprefix):
+    def _validate_value(self, value: Any, varprefix: str) -> None:
         value = self._transform_icon_str(value)
 
         if not self._allow_empty and not value["icon"]:
@@ -6626,11 +6626,11 @@ class Color(ValueSpec):
     def value_from_json(self, json_value: Any) -> Any:
         return json_value
 
-    def validate_datatype(self, value, varprefix):
+    def validate_datatype(self, value: Any, varprefix: str) -> None:
         if value is not None and not isinstance(value, str):
             raise MKUserError(varprefix, _("The type is %s, but should be str") % type(value))
 
-    def _validate_value(self, value, varprefix):
+    def _validate_value(self, value: Any, varprefix: str) -> None:
         if not self._allow_empty and not value:
             raise MKUserError(varprefix, _("You need to select a color."))
 
@@ -6853,7 +6853,7 @@ class CAorCAChain(UploadOrPasteTextFile):
         )
         super().__init__(**args)
 
-    def _validate_value(self, value, varprefix):
+    def _validate_value(self, value: Any, varprefix: str) -> None:
         try:
             self.analyse_cert(value)
         except Exception as e:

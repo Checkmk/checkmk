@@ -1208,7 +1208,7 @@ class TimeperiodValuespec(ValueSpec):
     def canonical_value(self):
         return self._enclosed_valuespec.canonical_value()
 
-    def _validate_value(self, value, varprefix):
+    def _validate_value(self, value: Any, varprefix: str) -> None:
         super()._validate_value(value, varprefix)
         self._get_used_valuespec(value).validate_value(value, varprefix)
 

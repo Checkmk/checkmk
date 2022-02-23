@@ -59,10 +59,6 @@ _systemd_version() {
     systemctl --version | sed -n "s/systemd \\([0-9][0-9]*\\).*/\\1/p"
 }
 
-_need_exec_stop_post() {
-    grep -q '^ExecStopPost=' "${ROOT}${RESOURCES}/check-mk-agent@.service"
-}
-
 _need_ip_access_list() {
     grep -q '^IPAddressAllow=' "${ROOT}${RESOURCES}/check-mk-agent@.service"
 }
@@ -76,11 +72,14 @@ _systemd_sufficient() {
 
     _destination >/dev/null || return 1
 
-    if _need_exec_stop_post && [ "$(_systemd_version)" -eq 219 ]; then
+    if [ "$(_systemd_version)" -lt 220 ]; then
+        # REMOTE_ADDR is only available from 220 onwards
+        # ExecStopPost is buggy in 219: https://github.com/systemd/systemd/issues/1742
+        # => we just support 220 onwards.
         cat >&2 <<HERE
-This package has a 'ExecStopPost' directive (for the agent updater),
-but the implementation of ExecStopPost is buggy in systemd version 219
-(see https://github.com/systemd/systemd/issues/1742).
+The Checkmk agent may require features that are either buggy,
+or not even supported in systemd versions prior to 220.
+We recommend using xinetd on such old systems.
 HERE
         return 1
     fi

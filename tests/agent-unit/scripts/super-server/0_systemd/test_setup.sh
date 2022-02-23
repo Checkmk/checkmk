@@ -56,26 +56,15 @@ HERE
     assertEquals "245" "$(_systemd_version)"
 }
 
-test_need_exec_stop_post_yes() {
-    echo "ExecStopPost=/usr/bin/agent-updater-for-example" > "${SHUNIT_TMPDIR}${RESOURCES}/check-mk-agent@.service"
-    assertTrue "_need_exec_stop_post"
-}
-
-test_need_exec_stop_post_no() {
-    echo "something else" > "${SHUNIT_TMPDIR}${RESOURCES}/check-mk-agent@.service"
-    assertFalse "_need_exec_stop_post"
-}
-
 test_systemd_sufficient_fail_for_219() {
     systemctl() { echo "systemd 219 (foobar)"; }
-    echo "ExecStopPost=/usr/bin/agent-updater-for-example" > "${SHUNIT_TMPDIR}${RESOURCES}/check-mk-agent@.service"
     _systemd_present() { :; }
     _destination() { :; }
 
     ERRMSG=$(_systemd_sufficient 2>&1)
 
     assertFalse "$?"
-    assertContains "${ERRMSG}" "ExecStopPost is buggy in systemd version 219"
+    assertContains "${ERRMSG}" $'The Checkmk agent may require features that are either buggy,\nor not even supported in systemd versions prior to 220.'
 }
 
 

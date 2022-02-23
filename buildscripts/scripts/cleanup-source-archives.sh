@@ -8,14 +8,13 @@
 
 set -e -o pipefail
 
-SRC_PATHS=$@
-if [ -z "$SRC_PATHS" ]; then
+if [ -z "$*" ]; then
     echo "$0 PACKAGE..."
     echo "Example: $0 /path/to/package.tar.gz"
     exit 1
 fi
 
-for SRC_PATH in $SRC_PATHS; do
+for SRC_PATH in "$@"; do
     FILENAME="${SRC_PATH##*/}"
     DIRNAME="${FILENAME%.tar.gz}"
     REMOVE_DIRS=""
@@ -42,7 +41,7 @@ for SRC_PATH in $SRC_PATHS; do
     fi
 
     echo "Removing$REMOVE_DIRS..."
-    gunzip -c "$SRC_PATH" | tar -v --wildcards --delete$REMOVE_DIRS | gzip >"$SRC_PATH.new"
+    gunzip -c "$SRC_PATH" | tar -v --wildcards --delete"$REMOVE_DIRS" | gzip >"$SRC_PATH.new"
     mv "$SRC_PATH.new" "$SRC_PATH"
 
     echo "Checking for remaining CEE/CME/CPE files..."

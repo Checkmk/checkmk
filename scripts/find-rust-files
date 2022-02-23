@@ -12,4 +12,5 @@ for project in ${CARGO_PROJECTS}; do
     find "${project}"/tests -type f -name "*.rs"
     find "${project}" -type f -name "Cargo.toml"
     find "${project}" -type f -name "Cargo.lock"
+    find "${project}"/.cargo -type f -name "config.toml"
 done

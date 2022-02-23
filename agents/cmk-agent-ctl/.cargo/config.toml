@@ -1,3 +1,7 @@
+[target.'cfg(unix)']
+[build]
+target = "x86_64-unknown-linux-musl"
+
 # Options below are to provide static linking
 [target.'cfg(all(windows, target_env = "msvc"))']
 rustflags = [

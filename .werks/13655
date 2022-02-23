@@ -1,0 +1,15 @@
+Title: REST API host_config: fix the create and update endpoints when including a host attribute
+Class: fix
+Compatible: compat
+Component: rest-api
+Date: 1645614660
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b3
+
+In the previous version, the create and update host endpoints returned
+a 500 error when the user tried to register or modify a host with attributes.
+This werk fixes this behaviour and returns a 400 error when an invalid
+attribute is included.

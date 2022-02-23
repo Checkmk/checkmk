@@ -919,3 +919,31 @@ def test_openapi_create_host_with_contact_group(aut_user_auth_wsgi_app: WebTestA
         content_type="application/json",
         headers={"Accept": "application/json"},
     )
+
+
+@managedtest
+def test_openapi_create_host_with_custom_attributes(
+    aut_user_auth_wsgi_app: WebTestAppForCMK, monkeypatch
+):
+    # TODO: remove mock verification once custom attributes can be set via the REST API
+    monkeypatch.setattr(
+        "cmk.gui.watolib.host_attributes._retrieve_host_attributes", lambda: ["ipaddress", "custom"]
+    )
+    base = "/NO_SITE/check_mk/api/1.0"
+
+    json_data = {
+        "folder": "/",
+        "host_name": "example.com",
+        "attributes": {
+            "ipaddress": "192.168.0.123",
+            "custom": "abc",
+        },
+    }
+    aut_user_auth_wsgi_app.call_method(
+        "post",
+        base + "/domain-types/host_config/collections/all",
+        params=json.dumps(json_data),
+        status=200,
+        content_type="application/json",
+        headers={"Accept": "application/json"},
+    )

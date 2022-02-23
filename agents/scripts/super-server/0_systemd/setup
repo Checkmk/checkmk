@@ -60,7 +60,7 @@ _systemd_version() {
 }
 
 _need_ip_access_list() {
-    grep -q '^IPAddressAllow=' "${ROOT}${RESOURCES}/check-mk-agent@.service"
+    grep -q '^IPAddressAllow=' "${ROOT}${RESOURCES}/check-mk-agent.socket.fallback"
 }
 
 _is_controller_setup() {

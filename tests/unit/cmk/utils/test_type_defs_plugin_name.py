@@ -4,6 +4,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import copy
+import pickle
+
 import pytest
 
 from cmk.utils.type_defs import CheckPluginName, SectionName
@@ -29,6 +32,13 @@ def test_plugin_name_equal():
     assert CheckPluginName("Stuart") == CheckPluginName("Stuart")
     with pytest.raises(TypeError):
         _ = CheckPluginName("Stuart") == "Stuart"
+
+
+def test_copyability():
+    section_name = SectionName("SectionName")
+    assert section_name == copy.copy(section_name)
+    assert section_name == copy.deepcopy(section_name)
+    assert section_name == pickle.loads(pickle.dumps(section_name))
 
 
 def test_plugin_name_as_key():

@@ -78,7 +78,7 @@ from cmk.gui.htmllib.foldable_container import foldable_container
 from cmk.gui.http import UploadedFile
 from cmk.gui.i18n import _
 from cmk.gui.pages import AjaxPage, AjaxPageResult, page_registry
-from cmk.gui.type_defs import ChoiceGroup, ChoiceId, Choices, ChoiceText, GroupedChoices
+from cmk.gui.type_defs import ChoiceGroup, Choices, ChoiceText, GroupedChoices
 from cmk.gui.utils.escaping import escape_html_permissive
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.labels import (
@@ -3326,34 +3326,38 @@ class CascadingDropdown(ValueSpec[CascadingDropdownChoiceValue]):
         return any(vs.has_show_more() for _name, _title, vs in self.choices() if vs is not None)
 
 
-ListChoiceChoiceValue = Union[str, int]
-ListChoiceChoicePairs = Sequence[tuple[ListChoiceChoiceValue, str]]
+# TODO: Can we clean up the int type here?
+ListChoiceChoiceIdent = Union[str, int]
+ListChoiceChoice = tuple[ListChoiceChoiceIdent, str]
 ListChoiceChoices = Union[
     None,
-    ListChoiceChoicePairs,
-    Callable[[], ListChoiceChoicePairs],
-    dict[ListChoiceChoiceValue, str],
+    Sequence[ListChoiceChoice],
+    Callable[[], Sequence[ListChoiceChoice]],
+    dict[ListChoiceChoiceIdent, str],
 ]
 
 
-class ListChoice(ValueSpec):
+class ListChoice(ValueSpec[Sequence[ListChoiceChoiceIdent]]):
     """A list of checkboxes representing a list of values"""
 
     @staticmethod
-    def dict_choices(choices):
+    def dict_choices(choices: dict[ListChoiceChoiceIdent, str]) -> list[tuple[str, str]]:
         return [
-            ("%s" % type_id, "%d - %s" % (type_id, type_name))
+            (str(type_id), f"{type_id} - {type_name}")
             for (type_id, type_name) in sorted(choices.items())
         ]
 
     def __init__(  # pylint: disable=redefined-builtin
         self,
         # ListChoice
+        # TODO: This None works together with get_elements which are implemented in the specific sub
+        # classes. This should beter be cleaned up to work like other valuespecs, e.g.
+        # CascadingDropdown where you can hand over a generator that creates choices dynamically.
         choices: ListChoiceChoices = None,
         columns: int = 1,
         allow_empty: bool = True,
         empty_text: _Optional[str] = None,
-        render_function: _Optional[Callable[[str, str], str]] = None,
+        render_function: _Optional[Callable[[ListChoiceChoiceIdent, str], str]] = None,
         toggle_all: bool = False,
         # TODO: Rename to "orientation" to be in line with other valuespecs
         render_orientation: str = "horizontal",
@@ -3361,7 +3365,7 @@ class ListChoice(ValueSpec):
         # ValueSpec
         title: _Optional[str] = None,
         help: _Optional[ValueSpecHelp] = None,
-        default_value: Any = DEF_VALUE,
+        default_value: Union[Sentinel, Sequence[ListChoiceChoiceIdent]] = DEF_VALUE,
         validate: _Optional[ValueSpecValidateFunc] = None,
     ):
         super().__init__(title=title, help=help, default_value=default_value, validate=validate)
@@ -3380,12 +3384,13 @@ class ListChoice(ValueSpec):
             if no_elements_text is not None
             else _("There are no elements defined for this selection")
         )
+        self._elements: Sequence[tuple[ListChoiceChoiceIdent, str]] = []
 
     def allow_empty(self) -> bool:
         return self._allow_empty
 
     # In case of overloaded functions with dynamic elements
-    def load_elements(self):
+    def load_elements(self) -> None:
         if self._choices is None:
             if self._loaded_at != id(html):
                 self._elements = self.get_elements()
@@ -3399,13 +3404,15 @@ class ListChoice(ValueSpec):
         else:
             raise ValueError("illegal type for choices")
 
-    def get_elements(self):
+    def get_elements(self) -> list[tuple[ListChoiceChoiceIdent, str]]:
         raise NotImplementedError()
 
-    def canonical_value(self):
+    def canonical_value(self) -> list:
         return []
 
-    def _draw_listchoice(self, varprefix, value, elements, columns, toggle_all):
+    def _draw_listchoice(
+        self, varprefix: str, value: Sequence[ListChoiceChoiceIdent], elements, columns, toggle_all
+    ) -> None:
 
         if self._toggle_all:
             html.a(
@@ -3425,7 +3432,7 @@ class ListChoice(ValueSpec):
         html.close_tr()
         html.close_table()
 
-    def render_input(self, varprefix, value):
+    def render_input(self, varprefix: str, value: Sequence[ListChoiceChoiceIdent]) -> None:
         self.load_elements()
         if not self._elements:
             html.write_text(self._no_elements_text)
@@ -3436,19 +3443,19 @@ class ListChoice(ValueSpec):
         # Make sure that at least one variable with the prefix is present
         html.hidden_field(varprefix, "1", add_var=True)
 
-    def value_to_html(self, value) -> ValueSpecText:
+    def value_to_html(self, value: Sequence[ListChoiceChoiceIdent]) -> ValueSpecText:
         if not value:
             return self._empty_text
 
         self.load_elements()
         d = dict(self._elements)
-        texts = [self._render_function(v, d.get(v, v)) for v in value]
+        texts = [self._render_function(v, d.get(v, str(v))) for v in value]
         if self._render_orientation == "horizontal":
             return ", ".join(texts)
 
         return html.render_table(html.render_tr(html.render_td(html.render_br().join(texts))))
 
-    def from_html_vars(self, varprefix: str) -> Sequence[Any]:
+    def from_html_vars(self, varprefix: str) -> list[ListChoiceChoiceIdent]:
         self.load_elements()
         return [
             key  #
@@ -3456,19 +3463,19 @@ class ListChoice(ValueSpec):
             if html.get_checkbox("%s_%d" % (varprefix, nr))
         ]
 
-    def value_to_json(self, value):
+    def value_to_json(self, value: Sequence[ListChoiceChoiceIdent]) -> JSONValue:
         return value
 
-    def value_from_json(self, json_value):
+    def value_from_json(self, json_value: JSONValue) -> list[ListChoiceChoiceIdent]:
         return json_value
 
-    def validate_datatype(self, value, varprefix):
+    def validate_datatype(self, value: Sequence[ListChoiceChoiceIdent], varprefix: str) -> None:
         if not isinstance(value, list):
             raise MKUserError(
                 varprefix, _("The datatype must be list, but is %s") % _type_name(value)
             )
 
-    def _validate_value(self, value, varprefix):
+    def _validate_value(self, value: Sequence[ListChoiceChoiceIdent], varprefix: str) -> None:
         if not self._allow_empty and not value:
             raise MKUserError(varprefix, _("You have to select at least one element."))
         self.load_elements()
@@ -3476,7 +3483,7 @@ class ListChoice(ValueSpec):
             if self._value_is_invalid(v):
                 raise MKUserError(varprefix, _("%s is not an allowed value") % v)
 
-    def _value_is_invalid(self, value: ListChoiceChoiceValue) -> bool:
+    def _value_is_invalid(self, value: ListChoiceChoiceIdent) -> bool:
         return all(value != val for val, _title in self._elements)
 
 
@@ -3508,7 +3515,7 @@ class DualListChoice(ListChoice):
         columns: int = 1,
         allow_empty: bool = True,
         empty_text: _Optional[str] = None,
-        render_function: _Optional[Callable[[str, str], str]] = None,
+        render_function: _Optional[Callable[[ListChoiceChoiceIdent, str], str]] = None,
         toggle_all: bool = False,
         # TODO: Rename to "orientation" to be in line with other valuespecs
         render_orientation: str = "horizontal",
@@ -3516,9 +3523,9 @@ class DualListChoice(ListChoice):
         # ValueSpec
         title: _Optional[str] = None,
         help: _Optional[ValueSpecHelp] = None,
-        default_value: Any = DEF_VALUE,
+        default_value: Union[Sentinel, Sequence[ListChoiceChoiceIdent]] = DEF_VALUE,
         validate: _Optional[ValueSpecValidateFunc] = None,
-        locked_choices: _Optional[list[ChoiceId]] = None,
+        locked_choices: _Optional[Sequence[str]] = None,
         locked_choices_text_singular: _Optional[ChoiceText] = None,
         locked_choices_text_plural: _Optional[ChoiceText] = None,
     ):
@@ -3546,7 +3553,7 @@ class DualListChoice(ListChoice):
         else:
             self._rows = 5
         self._size = size  # Total width in ex
-        self._locked_choices = [] if locked_choices is None else locked_choices
+        self._locked_choices: Sequence[str] = [] if locked_choices is None else locked_choices
         self._locked_choices_text_singular = (
             locked_choices_text_singular
             if locked_choices_text_singular is not None
@@ -3558,7 +3565,7 @@ class DualListChoice(ListChoice):
             else _("%%d locked elements")
         )
 
-    def render_input(self, varprefix, value):
+    def render_input(self, varprefix: str, value: Sequence[ListChoiceChoiceIdent]) -> None:
         self.load_elements()
         if not self._elements:
             html.write_text(_("There are no elements for selection."))
@@ -3631,7 +3638,7 @@ class DualListChoice(ListChoice):
             html.open_td()
             html.dropdown(
                 "%s_%s" % (varprefix, suffix),
-                choices,
+                [(str(k), v) for k, v in choices],
                 deflt="",
                 ordered=self._custom_order,
                 multiple="multiple",
@@ -3646,10 +3653,10 @@ class DualListChoice(ListChoice):
 
         html.close_table()
         html.hidden_field(
-            varprefix, "|".join([k for k, v in selected]), id_=varprefix, add_var=True
+            varprefix, "|".join([str(k) for k, v in selected]), id_=varprefix, add_var=True
         )
 
-    def _locked_choice_text(self, value: Any) -> _Optional[ChoiceText]:
+    def _locked_choice_text(self, value: Sequence[ListChoiceChoiceIdent]) -> _Optional[ChoiceText]:
         num_locked_choices = sum(1 for choice_id in value if choice_id in self._locked_choices)
         return (  #
             self._locked_choices_text_singular % num_locked_choices
@@ -3659,11 +3666,12 @@ class DualListChoice(ListChoice):
             else None
         )
 
-    def _value_is_invalid(self, value: ListChoiceChoiceValue) -> bool:
-        all_elements: list[ChoiceId] = list(dict(self._elements).keys()) + self._locked_choices
+    def _value_is_invalid(self, value: ListChoiceChoiceIdent) -> bool:
+        all_elements = [k for k, v in self._elements]
+        all_elements.extend(self._locked_choices)
         return all(value != val for val in all_elements)
 
-    def from_html_vars(self, varprefix: str) -> list[Any]:
+    def from_html_vars(self, varprefix: str) -> list[ListChoiceChoiceIdent]:
         self.load_elements()
         value: list = []
         selection_str = request.var(varprefix, "")
@@ -3814,12 +3822,12 @@ class OptionalDropdownChoice(DropdownChoice):
         self._explicit.validate_datatype(value, varprefix + "_ex")
 
 
-def round_date(t: float) -> int:
+def _round_date(t: float) -> int:
     return int(int(t) / seconds_per_day) * seconds_per_day
 
 
-def today() -> int:
-    return round_date(time.time())
+def _today() -> int:
+    return _round_date(time.time())
 
 
 # TODO: Cleanup kwargs
@@ -3838,7 +3846,7 @@ class RelativeDate(OptionalDropdownChoice):
             (0, _("today")),
             (1, _("tomorrow")),
         ]
-        weekday = time.localtime(today()).tm_wday
+        weekday = time.localtime(_today()).tm_wday
         for w in range(2, 7):
             wd = (weekday + w) % 7
             choices.append((w, defines.weekday_name(wd)))
@@ -3857,19 +3865,19 @@ class RelativeDate(OptionalDropdownChoice):
         super().__init__(**kwargs)
 
         if "default_days" in kwargs:
-            self._default_value: int = kwargs["default_days"] * seconds_per_day + today()
+            self._default_value: int = kwargs["default_days"] * seconds_per_day + _today()
         else:
-            self._default_value = today()
+            self._default_value = _today()
 
     def canonical_value(self) -> int:
         return self._default_value
 
     def render_input(self, varprefix: str, value: int) -> None:
-        reldays = int((round_date(value) - today()) / seconds_per_day)  # fixed: true-division
+        reldays = int((_round_date(value) - _today()) / seconds_per_day)  # fixed: true-division
         super().render_input(varprefix, reldays)
 
     def value_to_html(self, value: int) -> ValueSpecText:
-        reldays = int((round_date(value) - today()) / seconds_per_day)  # fixed: true-division
+        reldays = int((_round_date(value) - _today()) / seconds_per_day)  # fixed: true-division
         if reldays == -1:
             return _("yesterday")
         if reldays == -2:
@@ -3883,7 +3891,7 @@ class RelativeDate(OptionalDropdownChoice):
 
     def from_html_vars(self, varprefix: str) -> int:
         reldays = super().from_html_vars(varprefix)
-        return today() + reldays * seconds_per_day
+        return _today() + reldays * seconds_per_day
 
     def validate_datatype(self, value: int, varprefix: str) -> None:
         if not isinstance(value, (int, float)):
@@ -3924,7 +3932,7 @@ class AbsoluteDate(ValueSpec):
 
         if self._include_time:
             return time.time()
-        return today()
+        return _today()
 
     def canonical_value(self):
         return self.default_value()
@@ -5512,15 +5520,16 @@ class ElementSelection(ValueSpec):
             self._elements = self.get_elements()
             self._loaded_at = id(html)  # unique for each query!
 
-    def get_elements(self):
+    def get_elements(self) -> dict[str, str]:
         raise NotImplementedError()
 
-    def canonical_value(self):
+    def canonical_value(self) -> _Optional[str]:
         self.load_elements()
-        if len(self._elements) > 0:
+        if self._elements:
             return list(self._elements.keys())[0]
+        return None
 
-    def render_input(self, varprefix, value):
+    def render_input(self, varprefix: str, value: str) -> None:
         self.load_elements()
         if len(self._elements) == 0:
             html.write_text(self._empty_text)
@@ -5529,7 +5538,7 @@ class ElementSelection(ValueSpec):
                 html.span(self._label, class_="vs_floating_text")
             html.dropdown(varprefix, self._elements.items(), deflt=value, ordered=True)
 
-    def value_to_html(self, value) -> ValueSpecText:
+    def value_to_text(self, value: str) -> ValueSpecText:
         self.load_elements()
         return self._elements.get(value, value)
 

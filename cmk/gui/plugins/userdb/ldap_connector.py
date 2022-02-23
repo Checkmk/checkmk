@@ -1728,7 +1728,6 @@ def _group_membership_parameters():
                     "situation and really need it. The current connection is always used."
                 ),
                 choices=lambda: get_connection_choices(add_this=False),
-                default_value=[None],
             ),
         ),
     ]

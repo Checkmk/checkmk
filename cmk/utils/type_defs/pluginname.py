@@ -27,31 +27,40 @@ class ABCName(abc.ABC):
 
     VALID_CHARACTERS = string.ascii_letters + "_" + string.digits
 
-    @property
+    @classmethod
     @abc.abstractmethod
-    def _legacy_naming_exceptions(self) -> Set[str]:
+    def _legacy_naming_exceptions(cls) -> Set[str]:
         """we allow to maintain a list of exceptions"""
         return set()
 
-    def __init__(self, plugin_name: str) -> None:
-        self._value = self._parse_valid(plugin_name)
-        self._hash = hash(type(self).__name__ + self._value)
-
-    def _parse_valid(self, plugin_name: str) -> str:
-        if plugin_name in self._legacy_naming_exceptions:
+    @classmethod
+    def _validate_args(cls, plugin_name: str) -> str:
+        if plugin_name in cls._legacy_naming_exceptions():
             return plugin_name
 
         if not isinstance(plugin_name, str):
-            raise TypeError(f"{self.__class__.__name__} must initialized from str")
+            raise TypeError(f"{cls.__name__} must initialized from str")
         if not plugin_name:
-            raise ValueError(f"{self.__class__.__name__} initializer must not be empty")
+            raise ValueError(f"{cls.__name__} initializer must not be empty")
 
-        if any(c not in self.VALID_CHARACTERS for c in plugin_name):
-            invalid = "".join((c for c in plugin_name if c not in self.VALID_CHARACTERS))
-            class_ = self.__class__.__name__
-            raise ValueError(f"Invalid characters in {plugin_name!r} for {class_}: {invalid!r}")
+        if any(c not in cls.VALID_CHARACTERS for c in plugin_name):
+            invalid = "".join((c for c in plugin_name if c not in cls.VALID_CHARACTERS))
+            raise ValueError(
+                f"Invalid characters in {plugin_name!r} for {cls.__name__}: {invalid!r}"
+            )
 
         return plugin_name
+
+    def __getnewargs__(self):
+        return (str(self),)
+
+    def __new__(cls, plugin_name: str):
+        cls._validate_args(plugin_name)
+        return super().__new__(cls)
+
+    def __init__(self, plugin_name: str) -> None:
+        self._value = plugin_name
+        self._hash = hash(type(self).__name__ + self._value)
 
     def __repr__(self) -> str:
         return "%s(%r)" % (self.__class__.__name__, self._value)
@@ -83,20 +92,20 @@ class ABCName(abc.ABC):
 
 
 class ParsedSectionName(ABCName):
-    @property
-    def _legacy_naming_exceptions(self) -> Set[str]:
+    @classmethod
+    def _legacy_naming_exceptions(cls) -> Set[str]:
         return set()
 
 
 class SectionName(ABCName):
-    @property
-    def _legacy_naming_exceptions(self) -> Set[str]:
+    @classmethod
+    def _legacy_naming_exceptions(cls) -> Set[str]:
         return set()
 
 
 class RuleSetName(ABCName):
-    @property
-    def _legacy_naming_exceptions(self) -> Set[str]:
+    @classmethod
+    def _legacy_naming_exceptions(cls) -> Set[str]:
         """
         allow these names
 
@@ -121,8 +130,8 @@ class RuleSetName(ABCName):
 class CheckPluginName(ABCName):
     MANAGEMENT_PREFIX = "mgmt_"
 
-    @property
-    def _legacy_naming_exceptions(self) -> Set[str]:
+    @classmethod
+    def _legacy_naming_exceptions(cls) -> Set[str]:
         return set()
 
     def is_management_name(self) -> bool:
@@ -140,6 +149,6 @@ class CheckPluginName(ABCName):
 
 
 class InventoryPluginName(ABCName):
-    @property
-    def _legacy_naming_exceptions(self) -> Set[str]:
+    @classmethod
+    def _legacy_naming_exceptions(cls) -> Set[str]:
         return set()

@@ -3898,7 +3898,7 @@ class RelativeDate(OptionalDropdownChoice):
             raise MKUserError(varprefix, _("Date must be a number value"))
 
 
-class AbsoluteDate(ValueSpec):
+class AbsoluteDate(ValueSpec[_Optional[float]]):
     """A ValueSpec for editing a date
 
     The date is represented as a UNIX timestamp x where x % seconds_per_day is
@@ -3923,19 +3923,27 @@ class AbsoluteDate(ValueSpec):
     def allow_empty(self) -> bool:
         return self._allow_empty
 
-    def default_value(self):
-        if self._default_value is not None:
-            return self._default_value
-
+    def default_value(self) -> _Optional[_Optional[float]]:
+        # TODO: Remove the copy-n-paste with ValueSpec.
+        if callable(self._default_value):
+            try:
+                value = self._default_value()
+            except Exception:
+                value = DEF_VALUE
+        else:
+            value = self._default_value
+        if isinstance(value, Sentinel):
+            value = None
+        if value is not None:
+            return value
         if self._allow_empty:
             return None
-
         if self._include_time:
             return time.time()
         return _today()
 
-    def canonical_value(self):
-        return self.default_value()
+    def canonical_value(self) -> _Optional[_Optional[float]]:
+        return self.default_value()  # TODO: Hmmm...
 
     def split_date(
         self, value: _Optional[float]
@@ -3952,7 +3960,7 @@ class AbsoluteDate(ValueSpec):
         lt = time.localtime(value)
         return lt.tm_year, lt.tm_mon, lt.tm_mday, lt.tm_hour, lt.tm_min, lt.tm_sec
 
-    def render_input(self, varprefix: Any, value: Any) -> None:
+    def render_input(self, varprefix: str, value: _Optional[float]) -> None:
         if self._label:
             html.span(self._label, class_="vs_floating_text")
 
@@ -4015,16 +4023,16 @@ class AbsoluteDate(ValueSpec):
                         submit=self._submit_form_name,
                     )
 
-    def set_focus(self, varprefix):
+    def set_focus(self, varprefix: str) -> None:
         html.set_focus(varprefix + "_year")
 
-    def value_to_html(self, value: float) -> ValueSpecText:
+    def value_to_html(self, value: _Optional[float]) -> ValueSpecText:
         return time.strftime(self._format, time.localtime(value))
 
-    def value_to_json(self, value):
+    def value_to_json(self, value: _Optional[float]) -> JSONValue:
         return value
 
-    def value_from_json(self, json_value):
+    def value_from_json(self, json_value: JSONValue) -> _Optional[float]:
         return json_value
 
     # TODO: allow_empty is a *very* bad idea typing-wise! We are poisoned by Optional... :-P
@@ -4104,11 +4112,12 @@ class AbsoluteDate(ValueSpec):
                 _("The type of the timestamp must be int or float, but is %s") % _type_name(value),
             )
 
-    def _validate_value(self, value, varprefix):
+    def _validate_value(self, value: _Optional[float], varprefix: str) -> None:
         if (not self._allow_empty and value is None) or (
             value is not None and (value < 0 or int(value) > (2**31 - 1))
         ):
-            return MKUserError(varprefix, _("%s is not a valid UNIX timestamp") % value)
+            # FIXME: Bug, will be fixed in an upcoming commit.
+            return MKUserError(varprefix, _("%s is not a valid UNIX timestamp") % value)  # type: ignore
 
 
 TimeofdayValue = _Optional[tuple[int, int]]

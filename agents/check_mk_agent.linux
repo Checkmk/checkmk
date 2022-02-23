@@ -1989,7 +1989,7 @@ main() {
 
             ${MK_RUN_SYNC_PARTS} && main_finalize_sync
 
-        ) | optionally_encrypt "${PASSPHRASE}" ""
+        ) | { if ${MK_RUN_SYNC_PARTS}; then optionally_encrypt "${PASSPHRASE}" ""; else cat; fi; }
 
         [ "${MK_LOOP_INTERVAL}" -gt 0 ] 2>/dev/null || return 0
 

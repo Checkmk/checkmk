@@ -83,8 +83,8 @@ fi
 %preun
 
 case "$1" in
-    0|remove|purge)
+    0 | remove | purge)
         /var/lib/cmk-agent/scripts/super-server/setup cleanup
         /var/lib/cmk-agent/scripts/super-server/setup trigger
-    ;;
+        ;;
 esac

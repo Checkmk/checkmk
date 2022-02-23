@@ -6,18 +6,17 @@
 set -e -o pipefail
 
 case "$DISTRO" in
-ubuntu-*)
-    echo "Installing for Ubuntu"
+    ubuntu-*)
+        echo "Installing for Ubuntu"
 
-    apt-get update
-    apt-get install -y shellcheck
-    rm -rf /var/lib/apt/lists/*
+        apt-get update
+        apt-get install -y shellcheck
+        rm -rf /var/lib/apt/lists/*
 
-    exit 0
-    ;;
-*)
-    echo "ERROR: Unhandled DISTRO: $DISTRO"
-    exit 1
-    ;;
+        exit 0
+        ;;
+    *)
+        echo "ERROR: Unhandled DISTRO: $DISTRO"
+        exit 1
+        ;;
 esac
-

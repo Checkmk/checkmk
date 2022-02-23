@@ -6,10 +6,11 @@
 set -e -o pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
+# shellcheck source=buildscripts/infrastructure/build-nodes/scripts/build_lib.sh
 . "${SCRIPT_DIR}/build_lib.sh"
 
 failure() {
-    echo "$(basename $0):" "$@" >&2
+    echo "$(basename "$0"):" "$@" >&2
     exit 1
 }
 

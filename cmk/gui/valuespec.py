@@ -3448,7 +3448,7 @@ class ListChoice(ValueSpec):
 
         return html.render_table(html.render_tr(html.render_td(html.render_br().join(texts))))
 
-    def from_html_vars(self, varprefix):
+    def from_html_vars(self, varprefix: str) -> Any:
         self.load_elements()
         return [
             key  #
@@ -3663,7 +3663,7 @@ class DualListChoice(ListChoice):
         all_elements: list[ChoiceId] = list(dict(self._elements).keys()) + self._locked_choices
         return all(value != val for val in all_elements)
 
-    def from_html_vars(self, varprefix):
+    def from_html_vars(self, varprefix: str) -> Any:
         self.load_elements()
         value: list = []
         selection_str = request.var(varprefix, "")
@@ -3792,7 +3792,7 @@ class OptionalDropdownChoice(DropdownChoice):
                 return title
         return self._explicit.value_to_html(value)
 
-    def from_html_vars(self, varprefix):
+    def from_html_vars(self, varprefix: str) -> Any:
         choices = self.choices()
         sel = request.var(varprefix)
         if sel == "other":
@@ -3881,7 +3881,7 @@ class RelativeDate(OptionalDropdownChoice):
             return choices[reldays][1]
         return _("in %d days") % reldays
 
-    def from_html_vars(self, varprefix):
+    def from_html_vars(self, varprefix: str) -> Any:
         reldays = super().from_html_vars(varprefix)
         return today() + reldays * seconds_per_day
 
@@ -4775,7 +4775,7 @@ class Optional(ValueSpec):
             return self._none_label
         return self._valuespec.value_to_html(value)
 
-    def from_html_vars(self, varprefix):
+    def from_html_vars(self, varprefix: str) -> Any:
         checkbox_checked = html.get_checkbox(varprefix + "_use") is True  # not None or False
         if checkbox_checked != self._negate:
             return self._valuespec.from_html_vars(varprefix + "_value")
@@ -4952,7 +4952,7 @@ class Alternative(ValueSpec):
         vs, match_value = self.matching_alternative(value)
         return vs.value_to_json_safe(match_value)
 
-    def from_html_vars(self, varprefix):
+    def from_html_vars(self, varprefix: str) -> Any:
         nr = request.get_integer_input_mandatory(varprefix + "_use")
         vs = self._elements[nr]
         return vs.from_html_vars(varprefix + "_%d" % nr)
@@ -5085,7 +5085,7 @@ class Tuple(ValueSpec):
     def value_to_json_safe(self, value: Any) -> list[Any]:
         return [el.value_to_json_safe(val) for _, el, val in self._iter_value(value)]
 
-    def from_html_vars(self, varprefix):
+    def from_html_vars(self, varprefix: str) -> Any:
         return tuple(e.from_html_vars(f"{varprefix}_{idx}") for idx, e in enumerate(self._elements))
 
     def _validate_value(self, value, varprefix):
@@ -5414,7 +5414,7 @@ class Dictionary(ValueSpec[dict[str, Any]]):
             if param in value
         }
 
-    def from_html_vars(self, varprefix) -> dict[str, Any]:
+    def from_html_vars(self, varprefix: str) -> dict[str, Any]:
         return {
             param: vs.from_html_vars(f"{varprefix}_p_{param}")
             for param, vs in self._get_elements()
@@ -5540,7 +5540,7 @@ class ElementSelection(ValueSpec):
     def value_from_json(self, json_value: Any) -> Any:
         return json_value
 
-    def from_html_vars(self, varprefix):
+    def from_html_vars(self, varprefix: str) -> Any:
         return request.var(varprefix)
 
     def _validate_value(self, value, varprefix):
@@ -6119,7 +6119,7 @@ class Labels(ValueSpec):
     def canonical_value(self):
         return {}
 
-    def from_html_vars(self, varprefix):
+    def from_html_vars(self, varprefix: str) -> Any:
         value = html.request.get_str_input_mandatory(varprefix, "[]")
         return self._from_html_vars(value, varprefix)
 
@@ -6480,7 +6480,7 @@ class IconSelector(ValueSpec):
 
         html.close_div()
 
-    def from_html_vars(self, varprefix):
+    def from_html_vars(self, varprefix: str) -> Any:
         icon = self._from_html_vars(varprefix)
         if not self._with_emblem:
             return icon
@@ -6594,7 +6594,7 @@ class Color(ValueSpec):
             onclose=self._on_change,
         )
 
-    def from_html_vars(self, varprefix):
+    def from_html_vars(self, varprefix: str) -> Any:
         color = request.var(varprefix + "_value")
         if color == "":
             return None

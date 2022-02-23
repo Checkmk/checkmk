@@ -857,7 +857,7 @@ class ABCHostAttributeValueSpec(ABCHostAttribute):
     def render_input(self, varprefix: str, value: Any) -> None:
         self.valuespec().render_input(varprefix + self.name(), value)
 
-    def from_html_vars(self, varprefix) -> Any:
+    def from_html_vars(self, varprefix: str) -> Any:
         return self.valuespec().from_html_vars(varprefix + self.name())
 
     def validate_input(self, value: Any, varprefix: str) -> None:

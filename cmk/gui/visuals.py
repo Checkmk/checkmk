@@ -1965,7 +1965,7 @@ class VisualFilter(ValueSpec):
         # A filter can not be used twice on a page, because the varprefix is not used
         show_filter(self._filter, value)
 
-    def from_html_vars(self, varprefix) -> FilterHTTPVariables:
+    def from_html_vars(self, varprefix: str) -> FilterHTTPVariables:
         # A filter can not be used twice on a page, because the varprefix is not used
         return self._filter.value()
 

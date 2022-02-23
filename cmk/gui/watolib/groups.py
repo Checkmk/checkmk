@@ -6,7 +6,7 @@
 
 import copy
 import re
-from typing import Dict, get_args, List, Literal, Optional, Tuple, Type, Union
+from typing import Any, Dict, get_args, List, Literal, Optional, Tuple, Type, Union
 
 import cmk.utils.paths
 import cmk.utils.store as store
@@ -617,7 +617,7 @@ class HostAttributeContactGroups(ABCHostAttribute):
         self._loaded_at = id(html)
         self._contactgroups = load_contact_group_information()
 
-    def from_html_vars(self, varprefix):
+    def from_html_vars(self, varprefix: str) -> Any:
         self.load_data()
 
         cgs = self._vs_contactgroups().from_html_vars(varprefix + self.name())

@@ -1192,7 +1192,7 @@ class TimeperiodValuespec(ValueSpec):
     def value_to_html(self, value) -> ValueSpecText:
         return self._get_used_valuespec(value).value_to_html(value)
 
-    def from_html_vars(self, varprefix):
+    def from_html_vars(self, varprefix: str) -> Any:
         if request.var(self.tp_current_mode) == "1":
             # Fetch the timespecific settings
             parameters = self._get_timeperiod_valuespec().from_html_vars(varprefix)

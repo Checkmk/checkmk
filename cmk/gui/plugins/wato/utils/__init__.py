@@ -2335,7 +2335,7 @@ class HostTagCondition(ValueSpec):
     def render_input(self, varprefix, value):
         self._render_condition_editor(varprefix, value)
 
-    def from_html_vars(self, varprefix):
+    def from_html_vars(self, varprefix: str) -> Any:
         return self._get_tag_conditions(varprefix)
 
     def _get_tag_conditions(self, varprefix):

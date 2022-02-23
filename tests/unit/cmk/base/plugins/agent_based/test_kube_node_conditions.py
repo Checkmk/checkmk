@@ -97,7 +97,31 @@ def test_check_with_falsy_condition_yields_one_crit_among_others_ok(
     assert len([result for result in results if result.state == State.OK]) == len(list(section)) - 1
 
 
-def test_check_with_one_missing_condition_yields_one_crit_result(params, section):
+def test_check_ignores_missing_network_unavailable_when_all_conditions_pass(params, section):
     section.networkunavailable = None
     results = [r for r in kube_node_conditions.check(params, section) if isinstance(r, Result)]
-    assert len([result for result in results if result.state == State.CRIT]) >= 1
+    assert len(results) == 1
+
+
+@pytest.mark.parametrize(
+    "disk_pressure_status",
+    [
+        NodeConditionStatus.TRUE,
+        NodeConditionStatus.UNKNOWN,
+    ],
+)
+def test_check_ignores_missing_network_unavailable_when_a_condition_does_not_pass(
+    disk_pressure_status, params, section
+):
+    section.networkunavailable = None
+    section.diskpressure.status = disk_pressure_status
+    results = [r for r in kube_node_conditions.check(params, section) if isinstance(r, Result)]
+    assert len([result for result in results if result.state == State.CRIT]) == 1
+    assert len([result for result in results if result.state == State.OK]) == len(list(section)) - 2
+
+
+def test_check_with_missing_network_unavailable_all_states_ok(params, section):
+    results = list(kube_node_conditions.check(params, section))
+    section.networkunavailable = None
+    assert isinstance(results[0], Result)
+    assert results[0].state == State.OK

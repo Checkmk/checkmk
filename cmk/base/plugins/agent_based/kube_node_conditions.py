@@ -31,22 +31,23 @@ def discovery(section: NodeConditions) -> DiscoveryResult:
 
 def check(params: Mapping[str, int], section: NodeConditions) -> CheckResult:
     cond: Union[Optional[FalsyNodeCondition], FalsyNodeCondition, TruthyNodeCondition] = None
-    if all(cond and cond.is_ok() for _, cond in section):
+    if all(cond.is_ok() for _, cond in section if cond):
         details = "\n".join(
             f"{name.upper()}: {cond.status} ({cond.reason}: {cond.detail})"
             for name, cond in section
+            if cond
         )
         yield Result(state=State.OK, summary="Ready, all conditions passed", details=details)
         return
     for name, cond in section:
-        if cond and cond.is_ok():
+        if not cond:
+            continue
+        if cond.is_ok():
             yield Result(
                 state=State.OK,
                 summary=f"{name.upper()}: {cond.status}",
                 details=f"{name.upper()}: {cond.status} ({cond.reason}: {cond.detail})",
             )
-        elif cond is None:
-            yield Result(state=State(params[name]), summary=f"{name.upper()}: not available")
         else:
             yield Result(
                 state=State(params[name]),

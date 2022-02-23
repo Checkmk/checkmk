@@ -15,14 +15,23 @@ from typing import Sequence
 
 import pytest
 
+import cmk.utils.debug
 from cmk.utils.type_defs import AgentRawData, HostName, SectionName
 
 from cmk.snmplib.type_defs import SNMPRawData, SNMPRawDataSection
 
-from cmk.core_helpers.agent import AgentParser, SectionMarker
+from cmk.core_helpers.agent import AgentParser, PiggybackMarker, SectionMarker
 from cmk.core_helpers.cache import PersistedSections, SectionStore
 from cmk.core_helpers.snmp import SNMPParser
 from cmk.core_helpers.type_defs import AgentRawDataSection, NO_SELECTION
+
+
+@pytest.fixture(autouse=True)
+def enable_debug_fixture():
+    debug_mode = cmk.utils.debug.debug_mode
+    cmk.utils.debug.enable()
+    yield
+    cmk.utils.debug.debug_mode = debug_mode
 
 
 class TestAgentParser:
@@ -194,6 +203,9 @@ class TestAgentParser:
                     b"<<<>>>",
                     b"ignored third line",
                     b"ignored forth line",
+                    b"<<<c_section>>>",
+                    b"c first line",
+                    b"c second line",
                 )
             )
         )
@@ -202,9 +214,51 @@ class TestAgentParser:
         assert ahs.sections == {
             SectionName("a_section"): [["a", "first", "line"], ["a", "second", "line"]],
             SectionName("b_section"): [["b", "first", "line"], ["b", "second", "line"]],
+            SectionName("c_section"): [["c", "first", "line"], ["c", "second", "line"]],
         }
         assert ahs.cache_info == {}
         assert ahs.piggybacked_raw_data == {}
+        assert store.load() == {}
+
+    def test_nameless_piggybacked_sections_are_skipped(self, parser, store, monkeypatch):
+        monkeypatch.setattr(time, "time", lambda c=itertools.count(1000, 50): next(c))
+        monkeypatch.setattr(parser, "cache_piggybacked_data_for", 900)
+
+        raw_data = AgentRawData(
+            b"\n".join(
+                (
+                    b"<<<<piggyback header>>>>",
+                    b"<<<a_section>>>",
+                    b"a first line",
+                    b"a second line",
+                    b"<<<:cached(10, 5)>>>",
+                    b"ignored first line",
+                    b"ignored second line",
+                    b"<<<>>>",
+                    b"ignored third line",
+                    b"ignored forth line",
+                    b"<<<b_section>>>",
+                    b"b first line",
+                    b"b second line",
+                    b"<<<>>>",
+                    b"ignored fifth line",
+                    b"ignored sixth line",
+                )
+            )
+        )
+        ahs = parser.parse(raw_data, selection=NO_SELECTION)
+        assert ahs.sections == {}
+        assert ahs.cache_info == {}
+        assert ahs.piggybacked_raw_data == {
+            "piggyback_header": [
+                b"<<<a_section:cached(1000,900)>>>",
+                b"a first line",
+                b"a second line",
+                b"<<<b_section:cached(1000,900)>>>",
+                b"b first line",
+                b"b second line",
+            ]
+        }
         assert store.load() == {}
 
     def test_closing_piggyback_out_of_piggyback_section_closes_section(self, parser, store):
@@ -1107,3 +1161,33 @@ class TestSNMPPersistedSectionHandling:
                 SectionName("section"): (1000, 1042, [["old"]]),
             }
         )
+
+
+class TestMarkers:
+    @pytest.mark.parametrize("line", [b"<<<x>>>", b"<<<x:cached(10, 5)>>>"])
+    def test_section_header(self, line):
+        assert SectionMarker.is_header(line) is True
+        assert SectionMarker.is_footer(line) is False
+        assert PiggybackMarker.is_header(line) is False
+        assert PiggybackMarker.is_footer(line) is False
+
+    @pytest.mark.parametrize("line", [b"<<<>>>", b"<<<:cached(10, 5)>>>"])
+    def test_section_footer(self, line):
+        assert SectionMarker.is_header(line) is False
+        assert SectionMarker.is_footer(line) is True
+        assert PiggybackMarker.is_header(line) is False
+        assert PiggybackMarker.is_footer(line) is False
+
+    def test_piggybacked_host_header(self):
+        line = b"<<<<x>>>>"
+        assert SectionMarker.is_header(line) is False
+        assert SectionMarker.is_footer(line) is False
+        assert PiggybackMarker.is_header(line) is True
+        assert PiggybackMarker.is_footer(line) is False
+
+    def test_piggybacked_host_footer(self):
+        line = b"<<<<>>>>"
+        assert SectionMarker.is_header(line) is False
+        assert SectionMarker.is_footer(line) is False
+        assert PiggybackMarker.is_header(line) is False
+        assert PiggybackMarker.is_footer(line) is True

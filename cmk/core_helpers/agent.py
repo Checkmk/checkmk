@@ -135,30 +135,33 @@ class ParserState(abc.ABC):
 
     .. uml::
 
-        state FSM {
-
-        state "NOOPState" as noop
-        state "PiggybackParser" as piggy
-        state "PiggybackSectionParser" as psection
-        state "SectionParser" as section
-
-        noop --> section: ""<<~<STR>>>""
-        section --> section: ""<<~<STR>>>""
-        section --> piggy: ""<<<~<STR>>>>""
-        section --> noop: ""<<<~<>>>>""
-
-        noop -> piggy: ""<<<~<STR>>>>""
-        piggy --> piggy: ""<<<~<>>>>""
-        piggy --> psection: ""<<~<STR>>>""
-
-        psection --> piggy: ""<<<~<STR>>>>""
-        psection --> psection: ""<<~<STR>>>""
-        psection --> noop: ""<<<~<>>>>""
-
+        state Host {
+            state "NOOP" as hnoop
+            state "Host Section" as hsection
+            [*] --> hnoop
         }
 
-        [*] --> noop
-        FSM -> noop: ERROR
+        state PiggybackedHost {
+            state "Piggybacked Host" as phost
+            state "Piggybacked Host NOOP" as pnoop
+            state "Piggybacked Host Section" as psection
+            [*] --> phost
+        }
+
+        [*] --> Host
+        hnoop --> hsection : ""<<~<SECTION_NAME>>>""
+        hsection --> hsection : ""<<~<SECTION_NAME>>>""
+        hsection --> hnoop : ""<<~<>>>""
+
+        phost --> pnoop : ""<<~<>>>""
+        phost --> psection : ""<<~<SECTION_NAME>>>""
+        psection --> psection : ""<<~<SECTION_NAME>>>""
+        psection --> pnoop : ""<<~<>>>""
+
+        Host --> PiggybackedHost : ""<<<~<HOSTNAME>>>>""
+        PiggybackedHost --> Host : ""<<<~<>>>>""
+        Host --> Host : ""<<<~<>>>>""
+        PiggybackedHost --> PiggybackedHost : ""<<<~<HOSTNAME>>>>""
 
     See Also:
         Gamma, Helm, Johnson, Vlissides (1995) Design Patterns "State pattern"
@@ -279,6 +282,20 @@ class ParserState(abc.ABC):
             logger=self._logger,
         )
 
+    def to_piggyback_noop_parser(
+        self,
+        current_host: PiggybackMarker,
+    ) -> "PiggybackNOOPParser":
+        return PiggybackNOOPParser(
+            self.hostname,
+            self.sections,
+            self.piggyback_sections,
+            current_host=current_host,
+            translation=self.translation,
+            encoding_fallback=self.encoding_fallback,
+            logger=self._logger,
+        )
+
     def to_error(self, line: bytes) -> "ParserState":
         self._logger.warning(
             "%s: Ignoring invalid data %r",
@@ -304,6 +321,8 @@ class ParserState(abc.ABC):
                 return self.on_section_footer(line)
             return self.do_action(line)
         except Exception:
+            if cmk.utils.debug.enabled():
+                raise
             return self.to_error(line)
 
         return self
@@ -331,7 +350,8 @@ class NOOPParser(ParserState):
         return self.to_host_section_parser(SectionMarker.from_headerline(line))
 
     def on_section_footer(self, line: bytes) -> "ParserState":
-        return self.to_error(line)
+        # Optional
+        return self.to_noop_parser()
 
 
 class PiggybackParser(ParserState):
@@ -381,7 +401,8 @@ class PiggybackParser(ParserState):
         )
 
     def on_section_footer(self, line: bytes) -> "ParserState":
-        return self.to_error(line)
+        # Optional
+        return self.to_piggyback_noop_parser(self.current_host)
 
 
 class PiggybackSectionParser(ParserState):
@@ -431,7 +452,57 @@ class PiggybackSectionParser(ParserState):
 
     def on_section_footer(self, line: bytes) -> "ParserState":
         # Optional
+        return self.to_piggyback_noop_parser(self.current_host)
+
+
+class PiggybackNOOPParser(ParserState):
+    def __init__(
+        self,
+        hostname: HostName,
+        sections: MutableSection,
+        piggyback_sections: MutableMapping[PiggybackMarker, MutableSection],
+        *,
+        current_host: PiggybackMarker,
+        translation: TranslationOptions,
+        encoding_fallback: str,
+        logger: logging.Logger,
+    ) -> None:
+        super().__init__(
+            hostname,
+            sections,
+            piggyback_sections,
+            translation=translation,
+            encoding_fallback=encoding_fallback,
+            logger=logger,
+        )
+        self.current_host: Final = current_host
+
+    def do_action(self, line: bytes) -> "PiggybackNOOPParser":
         return self
+
+    def on_piggyback_header(self, line: bytes) -> "ParserState":
+        piggyback_header = PiggybackMarker.from_headerline(
+            line,
+            self.translation,
+            encoding_fallback=self.encoding_fallback,
+        )
+        if piggyback_header.hostname == self.hostname:
+            # Unpiggybacked "normal" host
+            return self.to_noop_parser()
+        return self.to_piggyback_parser(piggyback_header)
+
+    def on_piggyback_footer(self, line: bytes) -> "ParserState":
+        return self.to_noop_parser()
+
+    def on_section_header(self, line: bytes) -> "ParserState":
+        return self.to_piggyback_section_parser(
+            self.current_host,
+            SectionMarker.from_headerline(line),
+        )
+
+    def on_section_footer(self, line: bytes) -> "ParserState":
+        # Optional
+        return self.to_piggyback_noop_parser(self.current_host)
 
 
 class HostSectionParser(ParserState):
@@ -482,7 +553,7 @@ class HostSectionParser(ParserState):
 
     def on_section_footer(self, line: bytes) -> "ParserState":
         # Optional
-        return self
+        return self.to_noop_parser()
 
 
 class AgentParser(Parser[AgentRawData, AgentRawDataSection]):

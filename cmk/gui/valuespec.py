@@ -4698,7 +4698,6 @@ class Optional(ValueSpec):
         none_value: Any = None,
         sameline: bool = False,
         indent: bool = True,
-        allow_empty: bool = True,
         # ValueSpec
         title: _Optional[str] = None,
         help: _Optional[ValueSpecHelp] = None,

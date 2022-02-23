@@ -152,16 +152,21 @@ def parse_enviromux(info):
 
         sensor_type = sensor_type_names.get(line[1], "unknown")
         sensor_status = sensor_status_names.get(line[8], "unknown")
-        # Observed in the wild: "power" may actually be a voltage m(
-        if sensor_type in ["temperature", "power", "current"]:
-            # The MIB specifies that currents, voltages and temperatures have a scaling factor 10
-            sensor_value = int(line[5]) / 10.0
-            sensor_min = int(line[9]) / 10.0
-            sensor_max = int(line[10]) / 10.0
-        else:
+        try:
             sensor_value = int(line[5])
             sensor_min = int(line[9])
             sensor_max = int(line[10])
+            # Sensors without value have "Not configured" and can't be int casted
+            # skip the parse
+        except ValueError:
+            continue
+
+        # Observed in the wild: "power" may actually be a voltage m(
+        if sensor_type in ["temperature", "power", "current"]:
+            # The MIB specifies that currents, voltages and temperatures have a scaling factor 10
+            sensor_value /= 10.0
+            sensor_min /= 10.0
+            sensor_max /= 10.0
 
         parsed[item] = {
             "sensor_type": sensor_type,

@@ -4116,8 +4116,7 @@ class AbsoluteDate(ValueSpec[_Optional[float]]):
         if (not self._allow_empty and value is None) or (
             value is not None and (value < 0 or int(value) > (2**31 - 1))
         ):
-            # FIXME: Bug, will be fixed in an upcoming commit.
-            return MKUserError(varprefix, _("%s is not a valid UNIX timestamp") % value)  # type: ignore
+            raise MKUserError(varprefix, _("%s is not a valid UNIX timestamp") % value)
 
 
 TimeofdayValue = _Optional[tuple[int, int]]
@@ -5596,7 +5595,7 @@ class AutoTimestamp(FixedValue[float]):
 
     def validate_datatype(self, value: float, varprefix: str) -> None:
         if not isinstance(value, (int, float)):
-            return MKUserError(varprefix, _("Invalid datatype of timestamp: must be int or float."))
+            raise MKUserError(varprefix, _("Invalid datatype of timestamp: must be int or float."))
 
 
 class Foldable(ValueSpec):

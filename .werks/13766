@@ -1,0 +1,15 @@
+Title: REST API: fix code example for endpoints which use booleans in their query params
+Class: fix
+Compatible: compat
+Component: rest-api
+Date: 1645625973
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.0.0p22
+
+In the previous version, boolean based query params were excluded from the
+examples in the REST API documentation. This led to confusion as the params
+were effectively empty for some endpoints. This werk fixes this and ensures
+that all query params are shown in the python examples.

@@ -38,7 +38,8 @@ CODE_TEMPLATE_MACROS = """
 {%- endmacro %}
 
 {%- macro list_params(params, indent=8) -%}
-{%- for param in params %}{% if not (param.example is defined and param.example) %}{% continue %}{% endif %}
+{%- for param in params %}{% if not (param.example is defined and (param.example is true or
+param.example is false or param.example)) %}{% continue %}{% endif %}
 {{ " " * indent }}"{{ param.name }}": {{
             param.example | repr }},{% if param.description is defined and param.description %}  #
         {%- if param.required %} (required){% endif %} {{

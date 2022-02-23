@@ -40,10 +40,9 @@ fi
 
 REPO_PATH="$(git rev-parse --show-toplevel)"
 PIPENV="$REPO_PATH/scripts/run-pipenv"
-
 pushd "$REPO_PATH" >/dev/null
 
-$PIPENV run python -m pytest -T unit "${FILES[@]}" || (
+$PIPENV run python -m pytest -T unit "${TESTFILES[@]}" || (
     EXIT=$?
     if test $EXIT -eq 5 || test $EXIT -eq 4; then
         # This means no tests have been found.

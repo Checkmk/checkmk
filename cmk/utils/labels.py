@@ -5,10 +5,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Helper functions for dealing with Checkmk labels of all kind"""
 
-import abc
 import os
-from pathlib import Path
-from typing import Callable, Dict, List, Mapping, Tuple
+from typing import Callable, Dict, Final, List, Mapping, Tuple
 
 import cmk.utils.paths
 import cmk.utils.store as store
@@ -128,13 +126,12 @@ class LabelManager:
         )
 
 
-class ABCDiscoveredLabelsStore(abc.ABC):
-    """Managing persistance of discovered labels"""
+class DiscoveredHostLabelsStore:
+    """Managing persistence of discovered labels"""
 
-    @property
-    @abc.abstractmethod
-    def file_path(self) -> Path:
-        raise NotImplementedError()
+    def __init__(self, hostname: HostName) -> None:
+        self.hostname: Final = hostname
+        self.file_path: Final = cmk.utils.paths.discovered_host_labels_dir / f"{hostname}.mk"
 
     def load(self) -> Mapping[str, HostLabelValueDict]:
         # Skip labels discovered by the previous HW/SW inventory approach
@@ -156,16 +153,6 @@ class ABCDiscoveredLabelsStore(abc.ABC):
 
         self.file_path.parent.mkdir(parents=True, exist_ok=True)
         store.save_object_to_file(str(self.file_path), labels)
-
-
-class DiscoveredHostLabelsStore(ABCDiscoveredLabelsStore):
-    def __init__(self, hostname: HostName) -> None:
-        super().__init__()
-        self._hostname = hostname
-
-    @property
-    def file_path(self) -> Path:
-        return cmk.utils.paths.discovered_host_labels_dir / f"{self._hostname}.mk"
 
 
 class BuiltinHostLabelsStore:

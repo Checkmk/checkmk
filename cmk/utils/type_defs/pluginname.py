@@ -31,7 +31,7 @@ class ABCName(abc.ABC):
     @abc.abstractmethod
     def _legacy_naming_exceptions(cls) -> Set[str]:
         """we allow to maintain a list of exceptions"""
-        return set()
+        raise NotImplementedError()
 
     @classmethod
     def _validate_args(cls, plugin_name: str) -> str:

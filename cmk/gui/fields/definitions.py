@@ -595,6 +595,7 @@ class CustomHostAttributes(ValueTypedDictSchema):
     def _valid(self, data, **kwargs):
         try:
             validate_host_attributes(data, new=self.context["object_context"])
+            return data
         except MKUserError as exc:
             raise ValidationError(str(exc))
 
@@ -608,6 +609,7 @@ class CustomFolderAttributes(ValueTypedDictSchema):
     def _valid(self, data, **kwargs):
         try:
             validate_host_attributes(data, new=self.context["object_context"])
+            return data
         except MKUserError as exc:
             raise ValidationError(str(exc))
 

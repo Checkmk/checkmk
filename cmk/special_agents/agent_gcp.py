@@ -3,7 +3,6 @@
 # Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-import base64
 import json
 import time
 from dataclasses import dataclass, field
@@ -69,13 +68,11 @@ class Result:
 
     @staticmethod
     def serialize(obj):
-        b = TimeSeries.serialize(obj.ts)
-        return base64.b64encode(b).decode("utf-8")
+        return json.dumps(TimeSeries.to_dict(obj.ts))
 
     @classmethod
     def deserialize(cls, data: str):
-        b = base64.b64decode(data.encode("utf-8"))
-        ts = TimeSeries.deserialize(b)
+        ts = TimeSeries.from_json(data)
         return cls(ts=ts)
 
 

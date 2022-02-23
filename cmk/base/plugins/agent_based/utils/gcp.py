@@ -3,7 +3,6 @@
 # Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-import base64
 import json
 from dataclasses import dataclass
 from typing import Any, Callable, Mapping, Sequence
@@ -20,8 +19,7 @@ class GCPResult:
 
     @classmethod
     def deserialize(cls, data: str) -> "GCPResult":
-        b = base64.b64decode(data.encode("utf-8"))
-        ts = TimeSeries.deserialize(b)
+        ts = TimeSeries.from_json(data)
         return cls(ts=ts)
 
 

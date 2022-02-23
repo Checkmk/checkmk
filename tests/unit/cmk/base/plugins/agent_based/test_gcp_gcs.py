@@ -21,19 +21,31 @@ from cmk.base.plugins.agent_based.gcp_gcs import (
 
 SECTION_TABLE = [
     [
-        '[{"name":"backup-home-ml-free"},{"name":"lakjsdklasjd"},{"name":"nodata"}]',
+        '[{"name":"backup-home-ml-free"},{"name":"gcf-sources-360989076580-us-central1"},{"name":"lakjsdklasjd"},{"name":"us.artifacts.backup-255820.appspot.com"}]'
     ],
     [
-        "CiwaKnN0b3JhZ2UuZ29vZ2xlYXBpcy5jb20vc3RvcmFnZS90b3RhbF9ieXRlcxJNCgpnY3NfYnVja2V0EhsKCnByb2plY3RfaWQSDWJhY2t1cC0yNTU4MjASIgoLYnVja2V0X25hbWUSE2JhY2t1cC1ob21lLW1sLWZyZWUYASADKicKGgoLCIC9348GEMCd9FoSCwiAvd+PBhDAnfRaEgkZAAAACTTL5EEqJwoaCgsI1LrfjwYQwJ30WhILCNS6348GEMCd9FoSCRkAAAAJNMvkQSonChoKCwiouN+PBhDAnfRaEgsIqLjfjwYQwJ30WhIJGQAAAAk0y+RB"
+        '{"metric":{"type":"storage.googleapis.com/storage/total_bytes","labels":{}},"resource":{"type":"gcs_bucket","labels":{"bucket_name":"backup-home-ml-free","project_id":"backup-255820"}},"metricKind":1,"valueType":3,"points":[{"interval":{"startTime":"2022-02-23T12:20:54.726496Z","endTime":"2022-02-23T12:20:54.726496Z"},"value":{"doubleValue":3298633360.0}},{"interval":{"startTime":"2022-02-23T12:15:54.726496Z","endTime":"2022-02-23T12:15:54.726496Z"},"value":{"doubleValue":3298633360.0}},{"interval":{"startTime":"2022-02-23T12:10:54.726496Z","endTime":"2022-02-23T12:10:54.726496Z"},"value":{"doubleValue":3298633360.0}}],"unit":""}'
     ],
     [
-        "CiwaKnN0b3JhZ2UuZ29vZ2xlYXBpcy5jb20vc3RvcmFnZS90b3RhbF9ieXRlcxJGCgpnY3NfYnVja2V0EhsKCnByb2plY3RfaWQSDWJhY2t1cC0yNTU4MjASGwoLYnVja2V0X25hbWUSDGxha2pzZGtsYXNqZBgBIAMqJwoaCgsIgL3fjwYQwJ30WhILCIC9348GEMCd9FoSCRkAAIB5aKLjQSonChoKCwjUut+PBhDAnfRaEgsI1LrfjwYQwJ30WhIJGQAAgHloouNBKicKGgoLCKi4348GEMCd9FoSCwiouN+PBhDAnfRaEgkZAACAeWii40E="
+        '{"metric":{"type":"storage.googleapis.com/storage/total_bytes","labels":{}},"resource":{"type":"gcs_bucket","labels":{"bucket_name":"gcf-sources-360989076580-us-central1","project_id":"backup-255820"}},"metricKind":1,"valueType":3,"points":[{"interval":{"startTime":"2022-02-23T12:20:54.726496Z","endTime":"2022-02-23T12:20:54.726496Z"},"value":{"doubleValue":2075.0}},{"interval":{"startTime":"2022-02-23T12:15:54.726496Z","endTime":"2022-02-23T12:15:54.726496Z"},"value":{"doubleValue":2075.0}},{"interval":{"startTime":"2022-02-23T12:10:54.726496Z","endTime":"2022-02-23T12:10:54.726496Z"},"value":{"doubleValue":2075.0}}],"unit":""}'
     ],
     [
-        "Ci0aK3N0b3JhZ2UuZ29vZ2xlYXBpcy5jb20vc3RvcmFnZS9vYmplY3RfY291bnQSTQoKZ2NzX2J1Y2tldBIbCgpwcm9qZWN0X2lkEg1iYWNrdXAtMjU1ODIwEiIKC2J1Y2tldF9uYW1lEhNiYWNrdXAtaG9tZS1tbC1mcmVlGAEgAyonChoKCwiAvd+PBhDAnfRaEgsIgL3fjwYQwJ30WhIJGQAAAAAAAAhAKicKGgoLCNS6348GEMCd9FoSCwjUut+PBhDAnfRaEgkZAAAAAAAACEAqJwoaCgsIqLjfjwYQwJ30WhILCKi4348GEMCd9FoSCRkAAAAAAAAIQA=="
+        '{"metric":{"type":"storage.googleapis.com/storage/total_bytes","labels":{}},"resource":{"type":"gcs_bucket","labels":{"bucket_name":"lakjsdklasjd","project_id":"backup-255820"}},"metricKind":1,"valueType":3,"points":[{"interval":{"startTime":"2022-02-23T12:20:54.726496Z","endTime":"2022-02-23T12:20:54.726496Z"},"value":{"doubleValue":2635285452.0}},{"interval":{"startTime":"2022-02-23T12:15:54.726496Z","endTime":"2022-02-23T12:15:54.726496Z"},"value":{"doubleValue":2635285452.0}},{"interval":{"startTime":"2022-02-23T12:10:54.726496Z","endTime":"2022-02-23T12:10:54.726496Z"},"value":{"doubleValue":2635285452.0}}],"unit":""}'
     ],
     [
-        "Ci0aK3N0b3JhZ2UuZ29vZ2xlYXBpcy5jb20vc3RvcmFnZS9vYmplY3RfY291bnQSRgoKZ2NzX2J1Y2tldBIbCgpwcm9qZWN0X2lkEg1iYWNrdXAtMjU1ODIwEhsKC2J1Y2tldF9uYW1lEgxsYWtqc2RrbGFzamQYASADKicKGgoLCIC9348GEMCd9FoSCwiAvd+PBhDAnfRaEgkZAAAAAAAAAEAqJwoaCgsI1LrfjwYQwJ30WhILCNS6348GEMCd9FoSCRkAAAAAAAAAQConChoKCwiouN+PBhDAnfRaEgsIqLjfjwYQwJ30WhIJGQAAAAAAAABA"
+        '{"metric":{"type":"storage.googleapis.com/storage/total_bytes","labels":{}},"resource":{"type":"gcs_bucket","labels":{"project_id":"backup-255820","bucket_name":"us.artifacts.backup-255820.appspot.com"}},"metricKind":1,"valueType":3,"points":[{"interval":{"startTime":"2022-02-23T12:20:54.726496Z","endTime":"2022-02-23T12:20:54.726496Z"},"value":{"doubleValue":1138733197.0}},{"interval":{"startTime":"2022-02-23T12:15:54.726496Z","endTime":"2022-02-23T12:15:54.726496Z"},"value":{"doubleValue":1138733197.0}},{"interval":{"startTime":"2022-02-23T12:10:54.726496Z","endTime":"2022-02-23T12:10:54.726496Z"},"value":{"doubleValue":1138733197.0}}],"unit":""}'
+    ],
+    [
+        '{"metric":{"type":"storage.googleapis.com/storage/object_count","labels":{}},"resource":{"type":"gcs_bucket","labels":{"bucket_name":"backup-home-ml-free","project_id":"backup-255820"}},"metricKind":1,"valueType":3,"points":[{"interval":{"startTime":"2022-02-23T12:20:54.726496Z","endTime":"2022-02-23T12:20:54.726496Z"},"value":{"doubleValue":4.0}},{"interval":{"startTime":"2022-02-23T12:15:54.726496Z","endTime":"2022-02-23T12:15:54.726496Z"},"value":{"doubleValue":4.0}},{"interval":{"startTime":"2022-02-23T12:10:54.726496Z","endTime":"2022-02-23T12:10:54.726496Z"},"value":{"doubleValue":4.0}}],"unit":""}'
+    ],
+    [
+        '{"metric":{"type":"storage.googleapis.com/storage/object_count","labels":{}},"resource":{"type":"gcs_bucket","labels":{"bucket_name":"gcf-sources-360989076580-us-central1","project_id":"backup-255820"}},"metricKind":1,"valueType":3,"points":[{"interval":{"startTime":"2022-02-23T12:20:54.726496Z","endTime":"2022-02-23T12:20:54.726496Z"},"value":{"doubleValue":4.0}},{"interval":{"startTime":"2022-02-23T12:15:54.726496Z","endTime":"2022-02-23T12:15:54.726496Z"},"value":{"doubleValue":4.0}},{"interval":{"startTime":"2022-02-23T12:10:54.726496Z","endTime":"2022-02-23T12:10:54.726496Z"},"value":{"doubleValue":4.0}}],"unit":""}'
+    ],
+    [
+        '{"metric":{"type":"storage.googleapis.com/storage/object_count","labels":{}},"resource":{"type":"gcs_bucket","labels":{"bucket_name":"lakjsdklasjd","project_id":"backup-255820"}},"metricKind":1,"valueType":3,"points":[{"interval":{"startTime":"2022-02-23T12:20:54.726496Z","endTime":"2022-02-23T12:20:54.726496Z"},"value":{"doubleValue":2.0}},{"interval":{"startTime":"2022-02-23T12:15:54.726496Z","endTime":"2022-02-23T12:15:54.726496Z"},"value":{"doubleValue":2.0}},{"interval":{"startTime":"2022-02-23T12:10:54.726496Z","endTime":"2022-02-23T12:10:54.726496Z"},"value":{"doubleValue":2.0}}],"unit":""}'
+    ],
+    [
+        '{"metric":{"type":"storage.googleapis.com/storage/object_count","labels":{}},"resource":{"type":"gcs_bucket","labels":{"project_id":"backup-255820","bucket_name":"us.artifacts.backup-255820.appspot.com"}},"metricKind":1,"valueType":3,"points":[{"interval":{"startTime":"2022-02-23T12:20:54.726496Z","endTime":"2022-02-23T12:20:54.726496Z"},"value":{"doubleValue":88.0}},{"interval":{"startTime":"2022-02-23T12:15:54.726496Z","endTime":"2022-02-23T12:15:54.726496Z"},"value":{"doubleValue":88.0}},{"interval":{"startTime":"2022-02-23T12:10:54.726496Z","endTime":"2022-02-23T12:10:54.726496Z"},"value":{"doubleValue":88.0}}],"unit":""}'
     ],
 ]
 
@@ -62,10 +74,12 @@ def fixture_buckets(section):
 
 
 def test_discover_two_buckets(buckets: Sequence[Service]):
-    assert len(buckets) == 2
+    assert len(buckets) == 4
     assert {b.item for b in buckets} == {
         "backup-home-ml-free",
         "lakjsdklasjd",
+        "gcf-sources-360989076580-us-central1",
+        "us.artifacts.backup-255820.appspot.com",
     }
 
 

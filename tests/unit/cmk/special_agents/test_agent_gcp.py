@@ -6,7 +6,7 @@
 import datetime
 import json
 from dataclasses import dataclass
-from typing import Any, Iterable
+from typing import Any, Iterable, List
 
 import pytest
 from google.cloud import monitoring_v3
@@ -79,42 +79,43 @@ class FakeMonitoringClient:
         yield SERIES2
 
 
-@dataclass
+@dataclass(frozen=True)
 class FakeBucket:
     name: str
 
 
 class FakeStorageClient:
-    def list_buckets(self):
+    def list_buckets(self) -> List[FakeBucket]:
         return [FakeBucket("Fake"), FakeBucket("Almost Real")]
 
 
-@pytest.fixture(name="client")
-def fake_client(mocker: MockerFixture):
+@pytest.fixture(name="section")
+def fixture_section(mocker: MockerFixture, capsys) -> List[str]:
     client = agent_gcp.Client({}, "test")
     mocker.patch.object(client, "monitoring", FakeMonitoringClient)
     mocker.patch.object(client, "storage", FakeStorageClient)
-    return client
-
-
-@pytest.fixture(name="section")
-def fixture_section(client, capsys):
     agent_gcp.run(client, agent_gcp.GCS)
     captured = capsys.readouterr()
-    section = captured.out.split("\n")
+    # strip trailing new lines
+    section = captured.out.rstrip().split("\n")
     return section
 
 
-def test_section_header(section):
+def test_section_header(section: List[str]):
     assert section[0] == "<<<gcp_service_gcs:sep(0)>>>"
 
 
-def test_items_in_section(section):
+def test_items_in_section(section: List[str]):
     items = json.loads(section[1])
     assert items == [{"name": "Fake"}, {"name": "Almost Real"}]
 
 
-def test_agent_output_deserialization(section):
+def test_agent_output_is_json(section: List[str]):
+    for line in section[2:]:
+        json.loads(line)
+
+
+def test_agent_output_deserialization(section: List[str]):
     for line in section[2:]:
         agent_gcp.Result.deserialize(line)
 

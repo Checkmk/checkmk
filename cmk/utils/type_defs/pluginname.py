@@ -6,7 +6,7 @@
 
 import abc
 import string
-from typing import Any, Set
+from typing import Any, Final, Set
 
 __all__ = [
     "ABCName",
@@ -59,8 +59,8 @@ class ABCName(abc.ABC):
         return super().__new__(cls)
 
     def __init__(self, plugin_name: str) -> None:
-        self._value = plugin_name
-        self._hash = hash(type(self).__name__ + self._value)
+        self._value: Final = plugin_name
+        self._hash: Final = hash(type(self).__name__ + self._value)
 
     def __repr__(self) -> str:
         return "%s(%r)" % (self.__class__.__name__, self._value)

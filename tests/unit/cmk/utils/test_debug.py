@@ -4,21 +4,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import pytest
-
 import cmk.utils.debug
 
 
-@pytest.mark.skip("CMK-9861")
-def test_default():
-    assert cmk.utils.debug.enabled() is False
-
-
-@pytest.mark.skip("CMK-9861")
 def test_toggle():
-    assert cmk.utils.debug.enabled() is False
-    assert cmk.utils.debug.disabled() is True
-
     cmk.utils.debug.enable()
 
     assert cmk.utils.debug.enabled() is True

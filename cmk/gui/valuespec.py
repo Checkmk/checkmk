@@ -2053,7 +2053,7 @@ class ListOf(ValueSpec):
     def value_to_json(self, value: list[Any]) -> JSONValue:
         return [self._valuespec.value_to_json(e) for e in value]
 
-    def value_from_json(self, json_value: Any) -> list[Any]:
+    def value_from_json(self, json_value: JSONValue) -> list[Any]:
         return [self._valuespec.value_from_json(e) for e in json_value]
 
     def value_to_json_safe(self, value: Any) -> list[Any]:
@@ -2229,7 +2229,7 @@ class ListOfMultiple(ValueSpec):
     def value_to_json(self, value: dict[str, Any]) -> JSONValue:
         return {ident: self._choice_dict[ident].value_to_json(val) for ident, val in value.items()}
 
-    def value_from_json(self, json_value: dict[str, Any]) -> dict[str, Any]:
+    def value_from_json(self, json_value: JSONValue) -> dict[str, Any]:
         return {
             ident: self._choice_dict[ident].value_from_json(val)
             for ident, val in json_value.items()
@@ -2337,7 +2337,7 @@ class Float(ValueSpec[float]):
     def value_to_json(self, value: float) -> JSONValue:
         return value
 
-    def value_from_json(self, json_value: float) -> float:
+    def value_from_json(self, json_value: JSONValue) -> float:
         return json_value
 
     def validate_datatype(self, value: float, varprefix: str) -> None:
@@ -2438,7 +2438,7 @@ class Checkbox(ValueSpec[bool]):
     def value_to_json(self, value: bool) -> JSONValue:
         return value
 
-    def value_from_json(self, json_value: bool) -> bool:
+    def value_from_json(self, json_value: JSONValue) -> bool:
         return json_value
 
     def from_html_vars(self, varprefix: str) -> bool:
@@ -2633,7 +2633,7 @@ class DropdownChoice(ValueSpec):
     def value_to_json(self, value: DropdownChoiceValue) -> JSONValue:
         return value
 
-    def value_from_json(self, json_value):
+    def value_from_json(self, json_value: JSONValue) -> DropdownChoiceValue:
         return json_value
 
     def from_html_vars(self, varprefix: str) -> DropdownChoiceValue:
@@ -3224,7 +3224,7 @@ class CascadingDropdown(ValueSpec[CascadingDropdownChoiceValue]):
         except Exception:  # TODO: fix exc
             return
 
-    def value_from_json(self, json_value) -> CascadingDropdownChoiceValue:
+    def value_from_json(self, json_value: JSONValue) -> CascadingDropdownChoiceValue:
         value_ident = json_value[0] if isinstance(json_value, list) else json_value
         choice = self._choice_from_ident(value_ident)
         if not choice:
@@ -4224,7 +4224,7 @@ class Timeofday(ValueSpec[TimeofdayValue]):
     def value_to_json(self, value: TimeofdayValue) -> JSONValue:
         return None if value is None else [value[0], value[1]]
 
-    def value_from_json(self, json_value: Any) -> tuple[Any, Any]:
+    def value_from_json(self, json_value: JSONValue) -> tuple[Any, Any]:
         return (json_value[0], json_value[1])
 
 
@@ -4531,7 +4531,7 @@ class Timerange(CascadingDropdown):
             value = ("age", value)
         return super().value_to_json(value)
 
-    def value_from_json(self, json_value):
+    def value_from_json(self, json_value: JSONValue) -> CascadingDropdownChoiceValue:
         value = super().value_from_json(json_value)
         # Handle default graph_timeranges
         for ident, _title, _vs in self._get_graph_timeranges():
@@ -4817,7 +4817,7 @@ class Optional(ValueSpec):
             return list(value)
         return value
 
-    def value_from_json(self, json_value: Any) -> Any:
+    def value_from_json(self, json_value: JSONValue) -> Any:
         if json_value != self._none_value:
             return self._valuespec.value_from_json(json_value)
         if isinstance(json_value, list):
@@ -4956,7 +4956,7 @@ class Alternative(ValueSpec):
         vs, match_value = self.matching_alternative(value)
         return vs.value_to_json(match_value)
 
-    def value_from_json(self, json_value: Any) -> Any:
+    def value_from_json(self, json_value: JSONValue) -> Any:
         # FIXME: This is wrong! value_to_json transforms tuples to lists. json_value could
         # contain a list that should be a tuple at ANY level. So we would need to run
         # self.matching_value(json_value) with every permutation from list to tuple
@@ -5094,7 +5094,7 @@ class Tuple(ValueSpec):
     def value_to_json(self, value: tuple[Any, ...]) -> JSONValue:
         return [el.value_to_json(val) for _, el, val in self._iter_value(value)]
 
-    def value_from_json(self, json_value: Any) -> tuple[Any, ...]:
+    def value_from_json(self, json_value: JSONValue) -> tuple[Any, ...]:
         return tuple(el.value_from_json(val) for _, el, val in self._iter_value(json_value))
 
     def value_to_json_safe(self, value: Any) -> list[Any]:
@@ -5415,7 +5415,7 @@ class Dictionary(ValueSpec[dict[str, Any]]):
             if param in value
         }
 
-    def value_from_json(self, json_value):
+    def value_from_json(self, json_value: JSONValue) -> dict[str, Any]:
         return {
             param: vs.value_from_json(json_value[param])
             for param, vs in self._get_elements()
@@ -5553,7 +5553,7 @@ class ElementSelection(ValueSpec):
     def value_to_json(self, value: str) -> JSONValue:
         return value
 
-    def value_from_json(self, json_value: Any) -> Any:
+    def value_from_json(self, json_value: JSONValue) -> str:
         return json_value
 
     def from_html_vars(self, varprefix: str) -> _Optional[str]:
@@ -5654,7 +5654,7 @@ class Foldable(ValueSpec):
     def value_to_json(self, value: Any) -> JSONValue:
         return self._valuespec.value_to_json(value)
 
-    def value_from_json(self, json_value: Any) -> Any:
+    def value_from_json(self, json_value: JSONValue) -> Any:
         return self._valuespec.value_from_json(json_value)
 
     def value_to_json_safe(self, value: Any) -> Any:
@@ -5759,7 +5759,7 @@ class Transform(ValueSpec):
     def value_to_json(self, value: Any) -> JSONValue:
         return self._valuespec.value_to_json(self.forth(value))
 
-    def value_from_json(self, json_value):
+    def value_from_json(self, json_value: JSONValue) -> Any:
         return self.back(self._valuespec.value_from_json(json_value))
 
     def value_to_json_safe(self, value: Any) -> Any:
@@ -5960,7 +5960,7 @@ class FileUpload(ValueSpec):
     def value_to_json(self, value: Any) -> JSONValue:
         return value
 
-    def value_from_json(self, json_value: Any) -> Any:
+    def value_from_json(self, json_value: JSONValue) -> Any:
         return json_value
 
     def value_to_html(self, value: _Optional[bytes]) -> ValueSpecText:
@@ -6199,7 +6199,7 @@ class Labels(ValueSpec):
     def value_to_json(self, value: dict[str, Any]) -> JSONValue:
         return value
 
-    def value_from_json(self, json_value: Any) -> Any:
+    def value_from_json(self, json_value: JSONValue) -> dict[str, Any]:
         return json_value
 
 
@@ -6519,7 +6519,7 @@ class IconSelector(ValueSpec):
     def value_to_json(self, value: Any) -> JSONValue:
         return value
 
-    def value_from_json(self, json_value: Any) -> Any:
+    def value_from_json(self, json_value: JSONValue) -> Any:
         return json_value
 
     def validate_datatype(self, value: Any, varprefix: str) -> None:
@@ -6622,7 +6622,7 @@ class Color(ValueSpec):
     def value_to_json(self, value: str) -> JSONValue:
         return value
 
-    def value_from_json(self, json_value: Any) -> Any:
+    def value_from_json(self, json_value: JSONValue) -> str:
         return json_value
 
     def validate_datatype(self, value: Any, varprefix: str) -> None:
@@ -6692,7 +6692,7 @@ class SSHKeyPair(ValueSpec):
     def value_to_json(self, value: SSHKeyPairValue) -> JSONValue:
         return [value[0], value[1]]
 
-    def value_from_json(self, json_value: Any) -> tuple[Any, Any]:
+    def value_from_json(self, json_value: JSONValue) -> SSHKeyPairValue:
         return (json_value[0], json_value[1])
 
     def value_to_json_safe(self, value: Any) -> str:

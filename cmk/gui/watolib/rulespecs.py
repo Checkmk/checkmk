@@ -1282,7 +1282,7 @@ class TimeperiodValuespec(ValueSpec):
     def value_to_json(self, value: dict[str, Any]) -> JSONValue:
         return self._get_used_valuespec(value).value_to_json(value)
 
-    def value_from_json(self, json_value: Any) -> Any:
+    def value_from_json(self, json_value: JSONValue) -> dict[str, Any]:
         return self._get_used_valuespec(json_value).value_from_json(json_value)
 
     def value_to_json_safe(self, value: Any) -> Any:

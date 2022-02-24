@@ -1986,7 +1986,7 @@ class VisualFilter(ValueSpec):
     def value_to_json(self, value: FilterHTTPVariables) -> JSONValue:
         raise NotImplementedError()  # FIXME! Violates LSP!
 
-    def value_from_json(self, json_value):
+    def value_from_json(self, json_value: JSONValue) -> FilterHTTPVariables:
         raise NotImplementedError()  # FIXME! Violates LSP!
 
 

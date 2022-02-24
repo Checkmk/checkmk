@@ -31,7 +31,10 @@ withFolderProperties{
         case 'cfe':
             DISTRO_LIST_DEFAULT = env.DISTRO_LIST_CFE
             EDITION_DEFAULT = 'free'
-            START_HOUR = '4'
+            // TODO (tbc): As we're now building AMI in 2.1.0 *and* master, we may start two EC2 instances at the same
+            // time.
+            // Workaround: move the trigger in master two hours later so that we avoid the situation and fix it in CMK-9862
+            START_HOUR = '6'
             RUN_TESTS = false // CFE is basically a CEE, so we do not need to test it
             DEPLOY_TO_WEBSITE = false
             BUILD_IMAGE = false

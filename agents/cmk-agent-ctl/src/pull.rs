@@ -7,8 +7,8 @@ use std::collections::HashMap;
 use std::error::Error;
 use std::sync::Arc;
 
-use super::{config, constants, monitoring_data, tls_server};
-use anyhow::{anyhow, Context, Result as AnyhowResult};
+use super::{config, monitoring_data, tls_server};
+use anyhow::{anyhow, Context, Error as AnyhowError, Result as AnyhowResult};
 use async_trait::async_trait;
 use log::{debug, info, warn};
 use std::net::{IpAddr, SocketAddr};
@@ -26,42 +26,38 @@ const FIVE_MINUTES: u64 = 300;
 trait PullState {
     fn refresh(&mut self) -> AnyhowResult<()>;
     fn tls_acceptor(&self) -> TlsAcceptor;
-    fn is_legacy_pull(&self) -> bool;
+    fn allow_legacy_pull(&self) -> bool;
     fn is_active(&self) -> bool;
+    fn ip_allowlist(&self) -> &[String];
+    fn listening_address(&self) -> String;
+    fn connection_timeout(&self) -> u64;
 }
 struct PullStateImpl {
-    legacy_pull: bool,
+    allow_legacy_pull: bool,
     tls_acceptor: TlsAcceptor,
-    registry: config::Registry,
-    legacy_pull_marker: std::path::PathBuf,
+    config: config::PullConfig,
 }
 
-impl PullStateImpl {
-    pub fn new(
-        registry: config::Registry,
-        legacy_pull_marker: std::path::PathBuf,
-    ) -> AnyhowResult<Self> {
-        Ok(PullStateImpl {
-            legacy_pull: Self::is_legacy_pull(&registry, &legacy_pull_marker),
-            tls_acceptor: tls_server::tls_acceptor(registry.pull_connections())
-                .context("Could not initialize TLS.")?,
-            registry,
-            legacy_pull_marker,
-        })
-    }
+impl std::convert::TryFrom<config::PullConfig> for PullStateImpl {
+    type Error = AnyhowError;
 
-    fn is_legacy_pull(registry: &config::Registry, legacy_pull_marker: &std::path::Path) -> bool {
-        legacy_pull_marker.exists() && registry.is_empty()
+    fn try_from(config: config::PullConfig) -> AnyhowResult<Self> {
+        Ok(Self {
+            allow_legacy_pull: config.allow_legacy_pull(),
+            tls_acceptor: tls_server::tls_acceptor(config.connections())
+                .context("Could not initialize TLS.")?,
+            config,
+        })
     }
 }
 
 impl PullState for PullStateImpl {
     fn refresh(&mut self) -> AnyhowResult<()> {
-        if self.registry.refresh()? {
-            self.tls_acceptor = tls_server::tls_acceptor(self.registry.pull_connections())
+        if self.config.refresh()? {
+            self.tls_acceptor = tls_server::tls_acceptor(self.config.connections())
                 .context("Could not initialize TLS.")?;
         };
-        self.legacy_pull = Self::is_legacy_pull(&self.registry, &self.legacy_pull_marker);
+        self.allow_legacy_pull = self.config.allow_legacy_pull();
         Ok(())
     }
 
@@ -69,12 +65,24 @@ impl PullState for PullStateImpl {
         self.tls_acceptor.clone()
     }
 
-    fn is_legacy_pull(&self) -> bool {
-        self.legacy_pull
+    fn allow_legacy_pull(&self) -> bool {
+        self.allow_legacy_pull
     }
 
     fn is_active(&self) -> bool {
-        self.legacy_pull || !self.registry.is_empty()
+        self.allow_legacy_pull || self.config.has_connections()
+    }
+
+    fn ip_allowlist(&self) -> &[String] {
+        &self.config.allowed_ip
+    }
+
+    fn listening_address(&self) -> String {
+        format!("0.0.0.0:{}", &self.config.port)
+    }
+
+    fn connection_timeout(&self) -> u64 {
+        self.config.connection_timeout
     }
 }
 
@@ -149,24 +157,11 @@ impl MaxConnectionsGuard {
     }
 }
 
-pub fn pull(
-    registry: config::Registry,
-    legacy_pull_marker: std::path::PathBuf,
-    pull_config: config::PullConfig,
-    max_connections: usize,
-) -> AnyhowResult<()> {
-    let pull_state = PullStateImpl::new(registry, legacy_pull_marker)?;
-    let guard = MaxConnectionsGuard::new(max_connections);
+pub fn pull(pull_config: config::PullConfig) -> AnyhowResult<()> {
+    let guard = MaxConnectionsGuard::new(pull_config.max_connections);
+    let pull_state = PullStateImpl::try_from(pull_config)?;
     let agent_output_collector = AgentOutputCollectorImpl;
-    let addr = format!("0.0.0.0:{}", pull_config.port);
-    _pull(
-        pull_state,
-        guard,
-        agent_output_collector,
-        &addr,
-        constants::CONNECTION_TIMEOUT,
-        &pull_config.allowed_ip,
-    )
+    _pull(pull_state, guard, agent_output_collector)
 }
 
 #[tokio::main(flavor = "current_thread")]
@@ -174,9 +169,6 @@ async fn _pull(
     mut pull_state: impl PullState,
     mut guard: MaxConnectionsGuard,
     agent_output_collector: impl AgentOutputCollector,
-    addr: &str,
-    connection_timeout: u64,
-    allowed_ip: &[String],
 ) -> AnyhowResult<()> {
     loop {
         if !pull_state.is_active() {
@@ -184,16 +176,11 @@ async fn _pull(
             pull_state.refresh()?;
             continue;
         }
-        debug!("Start listening for incoming pull requests on {}", addr);
-        _pull_cycle(
-            &mut pull_state,
-            &mut guard,
-            agent_output_collector.clone(),
-            addr,
-            connection_timeout,
-            allowed_ip,
-        )
-        .await?;
+        debug!(
+            "Start listening for incoming pull requests on {}",
+            pull_state.listening_address()
+        );
+        _pull_cycle(&mut pull_state, &mut guard, agent_output_collector.clone()).await?;
     }
 }
 
@@ -201,11 +188,8 @@ async fn _pull_cycle(
     pull_state: &mut impl PullState,
     guard: &mut MaxConnectionsGuard,
     agent_output_collector: impl AgentOutputCollector,
-    addr: &str,
-    connection_timeout: u64,
-    allowed_ip: &[String],
 ) -> AnyhowResult<()> {
-    let listener = TcpListener::bind(addr).await?;
+    let listener = TcpListener::bind(pull_state.listening_address()).await?;
 
     loop {
         let (stream, remote) =
@@ -220,7 +204,7 @@ async fn _pull_cycle(
             }
             .context("Failed accepting pull connection")?;
 
-        if !is_addr_allowed(&remote, allowed_ip) {
+        if !is_addr_allowed(&remote, pull_state.ip_allowlist()) {
             warn!("{}: Request from IP is not allowed", remote);
             continue;
         }
@@ -240,9 +224,9 @@ async fn _pull_cycle(
             stream,
             agent_output_collector.clone(),
             remote.ip(),
-            pull_state.is_legacy_pull(),
+            pull_state.allow_legacy_pull(),
             pull_state.tls_acceptor(),
-            connection_timeout,
+            pull_state.connection_timeout(),
         );
         debug!("{}: Handling pull request DONE", remote);
 
@@ -357,15 +341,6 @@ async fn with_timeout<T, E: 'static + Error + Send + Sync>(
     }
 }
 
-// TODO: This is only used in main.rs, but happens to belong to pull.
-// Move this into a struct that can rightfully reside in this module.
-pub fn disallow_legacy_pull(legacy_pull_marker: &std::path::Path) -> std::io::Result<()> {
-    if !legacy_pull_marker.exists() {
-        return Ok(());
-    }
-
-    std::fs::remove_file(legacy_pull_marker)
-}
 #[cfg(test)]
 mod tests {
     use super::*;

@@ -135,15 +135,41 @@ pub struct ConfigFromDisk {
 
 impl TOMLLoader for ConfigFromDisk {}
 
+pub struct LegacyPullMarker(std::path::PathBuf);
+
+impl LegacyPullMarker {
+    pub fn new(path: &Path) -> Self {
+        Self(path.to_path_buf())
+    }
+
+    pub fn exists(&self) -> bool {
+        self.0.exists()
+    }
+
+    pub fn remove(&self) -> std::io::Result<()> {
+        if !&self.exists() {
+            return Ok(());
+        }
+
+        std::fs::remove_file(&self.0)
+    }
+}
+
 pub struct PullConfig {
     pub allowed_ip: Vec<String>,
     pub port: types::Port,
+    pub max_connections: usize,
+    pub connection_timeout: u64,
+    legacy_pull_marker: LegacyPullMarker,
+    registry: Registry,
 }
 
 impl PullConfig {
     pub fn new(
         config_from_disk: ConfigFromDisk,
         pull_args: cli::PullArgs,
+        legacy_pull_marker: LegacyPullMarker,
+        registry: Registry,
     ) -> AnyhowResult<PullConfig> {
         let allowed_ip = pull_args
             .allowed_ip
@@ -153,7 +179,30 @@ impl PullConfig {
             .port
             .or(config_from_disk.pull_port)
             .unwrap_or(types::Port::from_str(constants::DEFAULT_AGENT_PORT)?);
-        Ok(PullConfig { allowed_ip, port })
+        Ok(PullConfig {
+            allowed_ip,
+            port,
+            max_connections: constants::MAX_CONNECTIONS,
+            connection_timeout: constants::CONNECTION_TIMEOUT,
+            legacy_pull_marker,
+            registry,
+        })
+    }
+
+    pub fn refresh(&mut self) -> AnyhowResult<bool> {
+        self.registry.refresh()
+    }
+
+    pub fn allow_legacy_pull(&self) -> bool {
+        self.registry.is_empty() && self.legacy_pull_marker.exists()
+    }
+
+    pub fn connections(&self) -> impl Iterator<Item = &Connection> {
+        self.registry.pull_connections()
+    }
+
+    pub fn has_connections(&self) -> bool {
+        !self.registry.pull_is_empty()
     }
 }
 

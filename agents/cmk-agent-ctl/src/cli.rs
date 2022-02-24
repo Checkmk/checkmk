@@ -69,6 +69,7 @@ pub struct DeleteArgs {
     pub logging_opts: LoggingOpts,
 }
 
+// TODO (sk): Remove port and allowed_ip and instead read from a toml file, as is done under unix
 #[derive(StructOpt)]
 pub struct PullArgs {
     /// TCP port to listen on for incoming pull connections

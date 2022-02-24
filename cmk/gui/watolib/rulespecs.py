@@ -1147,7 +1147,7 @@ class TimeperiodValuespec(ValueSpec):
         )
         self._enclosed_valuespec = valuespec
 
-    def default_value(self):
+    def default_value(self) -> Any:
         # If nothing is configured, simply return the default value of the enclosed valuespec
         return self._enclosed_valuespec.default_value()
 

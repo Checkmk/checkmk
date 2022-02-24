@@ -515,7 +515,7 @@ class HostAttributeContactGroups(ABCHostAttribute):
     def show_in_folder(self) -> bool:
         return True
 
-    def default_value(self):
+    def default_value(self) -> Any:
         return (True, [])
 
     def paint(self, value, hostname):

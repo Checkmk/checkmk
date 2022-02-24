@@ -1523,7 +1523,7 @@ class NodeVisualizationLayoutStyle(ValueSpec):
                     value["style_config"][clean_key[15:]] = val == "on"
         return value
 
-    def default_value(self):
+    def default_value(self) -> dict[str, Any]:
         return {"type": "none", "style_config": {}}
 
     def value_to_json(self, value):

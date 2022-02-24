@@ -4930,7 +4930,7 @@ class Alternative(ValueSpec):
     def canonical_value(self) -> Any:
         return self._elements[0].canonical_value()
 
-    def default_value(self):
+    def default_value(self) -> Any:
         if callable(self._default_value):
             try:
                 value = self._default_value()
@@ -5019,7 +5019,7 @@ class Tuple(ValueSpec):
     def canonical_value(self) -> tuple[Any, ...]:
         return tuple(x.canonical_value() for x in self._elements)
 
-    def default_value(self):
+    def default_value(self) -> tuple[Any, ...]:
         return tuple(x.default_value() for x in self._elements)
 
     def render_input(self, varprefix: str, value: Any) -> None:
@@ -5380,7 +5380,7 @@ class Dictionary(ValueSpec[dict[str, Any]]):
             if name in self._required_keys or not self._optional_keys
         }
 
-    def default_value(self):
+    def default_value(self) -> dict[str, Any]:
         return {
             name: vs.default_value()
             for name, vs in self._get_elements()

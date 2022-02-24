@@ -274,6 +274,8 @@ class ValueSpec(abc.ABC, Generic[_VT]):
         if self._validate:
             self._validate(value, varprefix)
 
+    # TODO: Better signature: def (value: object, varprefix: builtins.str) -> _VT
+    # Remember: Parse, don't validate!
     def validate_datatype(self, value: _VT, varprefix: str) -> None:
         """Check if a given value matches the datatype of described by this class."""
 

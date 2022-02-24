@@ -172,7 +172,21 @@ fn run_requested_mode(args: cli::Args, paths: constants::PathResolver) -> Anyhow
             config::PullConfig::new(config_from_disk, daemon_args, legacy_pull_marker, registry)?,
         ),
         cli::Args::Dump { .. } => dump::dump(),
-        cli::Args::Status(status_args) => status::status(&registry, status_args.json),
+        cli::Args::Status(status_args) => status::status(
+            &registry,
+            &config::PullConfig::new(
+                config_from_disk,
+                // this will vanish once the Windows agent also uses the toml config
+                cli::PullArgs {
+                    port: None,
+                    allowed_ip: None,
+                    logging_opts: status_args.logging_opts,
+                },
+                legacy_pull_marker,
+                registry.clone(),
+            )?,
+            status_args.json,
+        ),
         cli::Args::Delete(delete_args) => {
             delete_connection::delete(&mut registry, &delete_args.connection)
         }

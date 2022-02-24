@@ -65,6 +65,11 @@ class NodeStatusFactory(ModelFactory):
     conditions = Use(NodeConditionFactory.batch, size=len(agent_kube.NATIVE_NODE_CONDITION_TYPES))
 
 
+# Deployment Factories
+class DeploymentMetaDataFactory(ModelFactory):
+    __model__ = api.MetaData
+
+
 # Container Status Fixtures
 @pytest.fixture
 def container_status_state() -> str:
@@ -178,7 +183,9 @@ def node_capacity_pods():
 
 
 @pytest.fixture
-def node_resources_builder(node_allocatable_cpu, node_allocatable_memory, node_allocatable_pods, node_capacity_pods):
+def node_resources_builder(
+    node_allocatable_cpu, node_allocatable_memory, node_allocatable_pods, node_capacity_pods
+):
     def _node_resources_builder():
         return {
             "capacity": NodeResourcesFactory.build(pods=node_capacity_pods),
@@ -246,6 +253,11 @@ def new_pod(phase_generator, pod_spec, container_status, pod_containers_count):
 
 
 @pytest.fixture
+def pod(new_pod) -> agent_kube.Pod:
+    return new_pod()
+
+
+@pytest.fixture
 def node_pods():
     return len(api.Phase)
 
@@ -253,6 +265,39 @@ def node_pods():
 @pytest.fixture
 def cluster_nodes():
     return 3
+
+
+@pytest.fixture
+def deployment_spec() -> api.DeploymentSpec:
+    class DeploymentSpecFactory(ModelFactory):
+        __model__ = api.DeploymentSpec
+
+    return DeploymentSpecFactory.build()
+
+
+@pytest.fixture
+def deployment_status() -> api.DeploymentStatus:
+    class DeploymentStatusFactory(ModelFactory):
+        __model__ = api.DeploymentStatus
+
+    return DeploymentStatusFactory.build()
+
+
+@pytest.fixture
+def new_deployment(deployment_spec: api.DeploymentSpec, deployment_status: api.DeploymentStatus):
+    def _new_deployment() -> agent_kube.Deployment:
+        return agent_kube.Deployment(
+            metadata=DeploymentMetaDataFactory.build(),
+            spec=deployment_spec,
+            status=deployment_status,
+        )
+
+    return _new_deployment
+
+
+@pytest.fixture
+def deployment(new_deployment) -> agent_kube.Deployment:
+    return new_deployment()
 
 
 @pytest.fixture

@@ -1,0 +1,21 @@
+Title: Dedicated agent updater systemd units
+Class: fix
+Compatible: compat
+Component: agents
+Date: 1645734175
+Edition: cee
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b2
+
+In case the linux agent is managed by systemd, the agent
+updater now comes with dedicated systemd units to trigger
+the update.
+
+This was required by the new agent conroller architecture,
+but it also has the advantage that the agent update is
+triggered indenpendently from the monitoring data transport.
+
+A misconfigured agent transport no longer locks you out of
+the host.

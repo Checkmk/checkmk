@@ -18,6 +18,7 @@ RUN zypper addrepo -G ${ARTIFACT_STORAGE}/repository/sles15sp3 sles15sp3 \
     gcc-c++ \
     git \
     krb5-devel \
+    libmariadb-devel \
     make \
     nodejs14 \
     npm14 \

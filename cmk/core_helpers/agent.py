@@ -5,6 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import abc
+import json
 import logging
 import os
 import time
@@ -18,6 +19,7 @@ from typing import (
     List,
     Mapping,
     MutableMapping,
+    NamedTuple,
     Optional,
     Sequence,
     Tuple,
@@ -699,6 +701,11 @@ class AgentSummarizer(Summarizer[AgentRawDataSection]):
     pass
 
 
+class _ControllerInfo(NamedTuple):
+    version: str
+    allow_legacy_pull: bool
+
+
 class AgentSummarizerDefault(AgentSummarizer):
     # TODO: refactor
     def __init__(
@@ -734,6 +741,10 @@ class AgentSummarizerDefault(AgentSummarizer):
         mode: Mode,
     ) -> Sequence[ActiveCheckResult]:
         agent_info = self._get_agent_info(cmk_section)
+        controller_info = self._get_controller_info(
+            agent_info.get("agentcontroller") or "",
+            agent_info.get("agentcontrollerstatus") or "",
+        )
 
         subresults = []
 
@@ -755,11 +766,7 @@ class AgentSummarizerDefault(AgentSummarizer):
                     self._check_python_plugins(
                         agent_info.get("failedpythonplugins"), agent_info.get("failedpythonreason")
                     ),
-                    self._check_transport(
-                        bool(agent_info.get("sshclient")),
-                        bool(agent_info.get("agentcontroller")),
-                        agent_info.get("legacypullmode"),
-                    ),
+                    self._check_transport(bool(agent_info.get("sshclient")), controller_info),
                 ]
                 if r
             )
@@ -778,6 +785,19 @@ class AgentSummarizerDefault(AgentSummarizer):
             section[key] = f"{section.get(key) or ''} {val}".strip() if len(line) > 1 else None
 
         return {"version": None, "agentos": None, **section}
+
+    @staticmethod
+    def _get_controller_info(
+        controller_version: str,
+        raw_string: str,
+    ) -> Optional[_ControllerInfo]:
+        if not controller_version:
+            return None
+        loaded = json.loads(raw_string)
+        return _ControllerInfo(
+            version=controller_version,
+            allow_legacy_pull=loaded["allow_legacy_pull"],
+        )
 
     def _check_version(self, agent_version: Optional[str]) -> Optional[ActiveCheckResult]:
         expected_version = self.agent_target_version
@@ -926,16 +946,15 @@ class AgentSummarizerDefault(AgentSummarizer):
     def _check_transport(
         self,
         ssh_transport: bool,
-        controller_present: bool,
-        legacy_pull_mode: Optional[str],
+        controller_info: Optional[_ControllerInfo],
     ) -> Optional[ActiveCheckResult]:
         if ssh_transport:
             return ActiveCheckResult(0, "Transport via SSH")
 
-        if not controller_present:
+        if not controller_info:
             return None
 
-        if not legacy_pull_mode or legacy_pull_mode == "no":
+        if not controller_info.allow_legacy_pull:
             return None
 
         return ActiveCheckResult(

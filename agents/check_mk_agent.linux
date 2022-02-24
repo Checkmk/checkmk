@@ -358,13 +358,8 @@ SpoolDirectory: ${SPOOLDIR}
 PluginsDirectory: ${PLUGINSDIR}
 LocalDirectory: ${LOCALDIR}
 AgentController: $(cmk-agent-ctl --version 2>/dev/null)
+AgentControllerStatus: $(cmk-agent-ctl status --json 2>/dev/null)
 HERE
-
-    if id cmk-agent >/dev/null && [ -f ~cmk-agent/"allow-legacy-pull" ]; then
-        printf "LegacyPullMode: yes\n"
-    else
-        printf "LegacyPullMode: no\n"
-    fi
 
     # try to find only_from configuration
     if [ -n "${REMOTE_HOST}" ]; then # xinetd

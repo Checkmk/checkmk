@@ -4,6 +4,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 # pylint: disable=undefined-variable
+import json
+from typing import Final
+
 import pytest
 
 from cmk.utils.check_utils import ActiveCheckResult
@@ -16,6 +19,22 @@ from cmk.core_helpers.agent import AgentRawDataSection, AgentSummarizer, AgentSu
 from cmk.core_helpers.host_sections import HostSections
 from cmk.core_helpers.piggyback import PiggybackSummarizer
 from cmk.core_helpers.type_defs import Mode
+
+CONTROLLER_STATUS_LEGACY: Final = json.dumps(
+    {
+        "allow_legacy_pull": True,
+        "connections": [],
+    }
+).split()
+
+CONTROLLER_STATUS_REGISTERED: Final = json.dumps(
+    {
+        "allow_legacy_pull": False,
+        "connections": [
+            {"connection": "localhost:8000/heute"},  # shortened for readability
+        ],
+    }
+).split()
 
 
 class Summarizer(AgentSummarizer):
@@ -225,8 +244,8 @@ class TestAgentSummarizerDefault_Transport:
         assert (
             summarizer.summarize_check_mk_section(
                 [
-                    ["AgentController:", "cmk-agent-ctl 0.1.0"],
-                    ["LegacyPullMode:", "no"],
+                    ["AgentController:", "cmk-agent-ctl", "0.1.0"],
+                    ["AgentControllerStatus:", *CONTROLLER_STATUS_REGISTERED],
                     ["SSHClient:"],
                 ],
                 mode=mode,
@@ -237,8 +256,8 @@ class TestAgentSummarizerDefault_Transport:
     def test_tls_not_active(self, summarizer, mode):
         assert summarizer.summarize_check_mk_section(
             [
-                ["AgentController:", "cmk-agent-ctl 0.1.0"],
-                ["LegacyPullMode:", "yes"],
+                ["AgentController:", "cmk-agent-ctl", "0.1.0"],
+                ["AgentControllerStatus:", *CONTROLLER_STATUS_LEGACY],
                 ["SSHClient:"],
             ],
             mode=mode,
@@ -271,8 +290,8 @@ class TestAgentSummarizerDefault_Transport:
     def test_no_tls_but_ssh(self, summarizer, mode):
         assert summarizer.summarize_check_mk_section(
             [
-                ["AgentController:", "cmk-agent-ctl 0.1.0"],
-                ["LegacyPullMode:", "yes"],
+                ["AgentController:", "cmk-agent-ctl", "0.1.0"],
+                ["AgentControllerStatus:", *CONTROLLER_STATUS_LEGACY],
                 ["SSHClient:", "1.2.3.4"],
             ],
             mode=mode,

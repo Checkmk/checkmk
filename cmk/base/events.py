@@ -178,6 +178,8 @@ def pipe_decode_raw_context(raw_context: EventContext) -> None:
 def raw_context_from_string(data: str) -> EventContext:
     # Context is line-by-line in g_notify_readahead_buffer
     context: EventContext = {}
+    if not data:
+        return context
     try:
         for line in data.split("\n"):
             varname, value = line.strip().split("=", 1)

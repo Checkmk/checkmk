@@ -11,8 +11,6 @@ from tests.testlib.base import Scenario
 import cmk.utils.crash_reporting
 from cmk.utils.type_defs import HostName
 
-import cmk.base.check_api as check_api
-import cmk.base.config as config
 import cmk.base.crash_reporting as crash_reporting
 
 
@@ -139,11 +137,6 @@ def test_check_crash_report_save(monkeypatch):
 
 def test_check_crash_report_read_agent_output(monkeypatch):
     Scenario().apply(monkeypatch)
-    config.load_checks(
-        check_api.get_check_api_context,
-        ["%s/uptime" % cmk.utils.paths.checks_dir, "%s/snmp_uptime" % cmk.utils.paths.checks_dir],
-    )
-
     cache_path = Path(cmk.utils.paths.tcp_cache_dir, "testhost")
     cache_path.parent.mkdir(parents=True, exist_ok=True)
     with cache_path.open("w", encoding="utf-8") as f:
@@ -168,11 +161,6 @@ def test_check_crash_report_read_agent_output(monkeypatch):
 
 def test_check_crash_report_read_snmp_info(monkeypatch):
     Scenario().apply(monkeypatch)
-    config.load_checks(
-        check_api.get_check_api_context,
-        ["%s/uptime" % cmk.utils.paths.checks_dir, "%s/snmp_uptime" % cmk.utils.paths.checks_dir],
-    )
-
     cache_path = Path(cmk.utils.paths.data_source_cache_dir, "snmp", "testhost")
     cache_path.parent.mkdir(parents=True, exist_ok=True)
     with cache_path.open("w", encoding="utf-8") as f:

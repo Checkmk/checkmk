@@ -377,7 +377,10 @@ def update_dns_cache(
                 # We should be more specific with the exception handler below, then we
                 # could drop this special handling here
                 raise
-
+            except MKIPAddressLookupError as e:
+                failed.append(host_config.hostname)
+                console.verbose("lookup failed: %s\n" % e)
+                continue
             except Exception as e:
                 failed.append(host_config.hostname)
                 console.verbose("lookup failed: %s\n" % e)

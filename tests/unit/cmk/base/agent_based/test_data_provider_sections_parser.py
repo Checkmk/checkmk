@@ -8,6 +8,7 @@ from typing import Callable
 
 import pytest
 
+import cmk.utils.debug
 from cmk.utils.type_defs import SectionName
 
 from cmk.core_helpers.host_sections import HostSections
@@ -58,7 +59,8 @@ class TestSectionsParser:
             "create_section_crash_dump",
             lambda **kw: "crash dump msg",
         )
-
+        # Debug mode raises instead of creating the crash report that we want here.
+        cmk.utils.debug.disable()
         section = _section("one", lambda x: 1 / 0)
 
         assert sections_parser.parse(section) is None

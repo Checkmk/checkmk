@@ -275,7 +275,8 @@ class TestIPLookupCache:
             f.write("{...")
 
         cache = ip_lookup.IPLookupCache({})
-        cache.load_persisted()
+        with pytest.raises(SyntaxError):
+            cache.load_persisted()
         assert not cache
 
     def test_update_empty_file(self, tmp_path: Path) -> None:

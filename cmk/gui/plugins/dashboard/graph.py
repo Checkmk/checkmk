@@ -76,11 +76,7 @@ class AvailableGraphs(DropdownChoiceWithHostAndServiceHints):
         }
         super().__init__(**kwargs_with_defaults)
 
-    def _validate_value(
-        self,
-        value: DropdownChoiceValue,
-        varprefix: str,
-    ) -> None:
+    def _validate_value(self, value: DropdownChoiceValue, varprefix: str) -> None:
         if not value or value == self._MARKER_DEPRECATED_CHOICE:
             raise MKUserError(varprefix, _("Please select a graph."))
 

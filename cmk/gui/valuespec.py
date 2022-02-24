@@ -885,7 +885,7 @@ class RegExp(TextInput):
 
         return " ".join(classes)
 
-    def _validate_value(self, value: Any, varprefix: str) -> None:
+    def _validate_value(self, value: str, varprefix: str) -> None:
         super()._validate_value(value, varprefix)
 
         # Check if the string is a valid regex
@@ -5101,7 +5101,7 @@ class Tuple(ValueSpec):
     def from_html_vars(self, varprefix: str) -> tuple[Any, ...]:
         return tuple(e.from_html_vars(f"{varprefix}_{idx}") for idx, e in enumerate(self._elements))
 
-    def _validate_value(self, value: Any, varprefix: str) -> None:
+    def _validate_value(self, value: tuple[Any, ...], varprefix: str) -> None:
         for idx, el, val in self._iter_value(value):
             el.validate_value(val, f"{varprefix}_{idx}")
 
@@ -5467,7 +5467,7 @@ class Dictionary(ValueSpec[dict[str, Any]]):
                     % (param, ", ".join(allowed_keys)),
                 )
 
-    def _validate_value(self, value: Any, varprefix: str) -> None:
+    def _validate_value(self, value: dict[str, Any], varprefix: str) -> None:
         value = self.migrate(value)
 
         for param, vs in self._get_elements():
@@ -5557,7 +5557,7 @@ class ElementSelection(ValueSpec):
     def from_html_vars(self, varprefix: str) -> _Optional[str]:
         return request.var(varprefix)
 
-    def _validate_value(self, value: Any, varprefix: str) -> None:
+    def _validate_value(self, value: str, varprefix: str) -> None:
         self.load_elements()
         if len(self._elements) == 0:
             raise MKUserError(varprefix, _("You cannot save this rule.") + " " + self._empty_text)
@@ -6160,7 +6160,7 @@ class Labels(ValueSpec):
 
         return labels
 
-    def _validate_value(self, value: Any, varprefix: str) -> None:
+    def _validate_value(self, value: dict[str, Any], varprefix: str) -> None:
         if not isinstance(value, dict):
             raise MKUserError(
                 varprefix,
@@ -6627,7 +6627,7 @@ class Color(ValueSpec):
         if value is not None and not isinstance(value, str):
             raise MKUserError(varprefix, _("The type is %s, but should be str") % type(value))
 
-    def _validate_value(self, value: Any, varprefix: str) -> None:
+    def _validate_value(self, value: str, varprefix: str) -> None:
         if not self._allow_empty and not value:
             raise MKUserError(varprefix, _("You need to select a color."))
 

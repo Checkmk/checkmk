@@ -24,9 +24,10 @@ pytestmark = pytest.mark.checks
                 ["No.", "of", "pending", "offers", "=", "0."],
             ],
             [
-                (0, 'free: 10 leases (55.6%)', [('free_dhcp_leases', 10, None, None, 0, 18)]),
-                (0, 'used: 8 leases (44.4%)', [('used_dhcp_leases', 8, None, None, 0, 18)]),
-                (0, '0 leases pending', [('pending_dhcp_leases', 0, None, None, 0, 18)]),
+                (0, 'Average free: 10 leases (55.6%)', [('free_dhcp_leases', 10, None, None, 0, 18)
+                                                       ]),
+                (0, 'Average used: 8 leases (44.4%)', [('used_dhcp_leases', 8, None, None, 0, 18)]),
+                (0, 'Average 0 leases pending', [('pending_dhcp_leases', 0, None, None, 0, 18)]),
             ],
             id="Check results of a used Windows DHCP pool",
         ),

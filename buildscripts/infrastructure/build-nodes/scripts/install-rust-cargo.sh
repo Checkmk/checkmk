@@ -44,7 +44,7 @@ build_package() {
     mirrored_download "rustup-init.sh" "https://sh.rustup.rs"
     chmod +x rustup-init.sh
     ./rustup-init.sh -y --no-modify-path --default-toolchain "$DEFAULT_TOOLCHAIN"
-    ${CARGO_HOME}/rustup target add x86_64-unknown-linux-musl
+    ${CARGO_HOME}/bin/rustup target add x86_64-unknown-linux-musl
     # saves space
     rm -rf "$RUSTUP_HOME/toolchains/$DEFAULT_TOOLCHAIN/share/doc/"
 }

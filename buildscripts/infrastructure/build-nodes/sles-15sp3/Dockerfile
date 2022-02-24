@@ -1,4 +1,6 @@
-FROM registry.suse.com/suse/sle15:15.3
+#Use same pinned image as 2.0.0 branch uses to be in sync with mirror
+#FROM registry.suse.com/suse/sle15:15.3
+FROM artifacts.lan.tribe29.com:4000/sle15@sha256:64284bcccbda0781a4986348fd41d2f44c925848a8c8cdf82eb9fb0dde3db1cb
 
 SHELL ["/bin/bash", "-c"]
 ENV PATH="/opt/bin:${PATH}"
@@ -14,14 +16,12 @@ RUN zypper addrepo -G ${ARTIFACT_STORAGE}/repository/sles15sp3 sles15sp3 \
     enchant-devel \
     git \
     krb5-devel \
-    libmysqlclient-devel \
     make \
-    nodejs10 \
-    npm10 \
+    nodejs14 \
+    npm14 \
     openldap2-devel \
     python \
     python-devel \
-    python-pyOpenSSL \
     python-xml \
     rrdtool-devel \
     sudo \
@@ -53,7 +53,7 @@ RUN zypper ref -s \
     libgnutls-devel \
     libjpeg62-devel \
     libltdl7 \
-    libmysqlclient-devel \
+    libmariadb-devel \
     libopenssl-devel \
     libpcap-devel \
     libpng16-devel \
@@ -63,7 +63,7 @@ RUN zypper ref -s \
     libvpx-devel \
     libxml2-devel \
     make \
-    mysql \
+    mariadb-client \
     openldap2-devel \
     openssh \
     pango-devel \

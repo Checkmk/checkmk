@@ -84,8 +84,12 @@ trigger() {
 
     isdeployed || return 0
 
-    echo "Activating start script of xinetd"
-    chkconfig xinetd on
+    if command -v chkconfig >/dev/null 2>&1; then
+        echo "Activating start script of xinetd"
+        chkconfig xinetd on
+    else
+        echo "Not activating start script of xinetd (chkconfig is not available)"
+    fi
 
     echo "Starting xinetd"
     service xinetd start

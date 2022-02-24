@@ -34,7 +34,7 @@ TEST(AgentController, BuildCommandLine) {
                                          "  port: {}\n",
                                          port)));
     EXPECT_EQ(wtools::ToUtf8(ac::BuildCommandLine(fs::path("x"))),
-              fmt::format("x daemon -P {}", port));
+              fmt::format("x daemon -P {} -vv", port));
 }
 
 TEST(AgentController, BuildCommandLineAllowed) {
@@ -46,7 +46,7 @@ TEST(AgentController, BuildCommandLineAllowed) {
                                          "  port: {}\n",
                                          allowed, port)));
     EXPECT_EQ(wtools::ToUtf8(ac::BuildCommandLine(fs::path("x"))),
-              fmt::format("x daemon -P {} -A {}", port, allowed));
+              fmt::format("x daemon -P {} -A {} -vv", port, allowed));
 }
 
 TEST(AgentController, LegacyMode) {

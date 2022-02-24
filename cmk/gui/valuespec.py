@@ -286,6 +286,7 @@ class ValueSpec(abc.ABC, Generic[_VT]):
         it has been returned by from_html_vars() or because it has been checked
         with validate_datatype())."""
 
+    # FIXME: The signature seem to be utter nonsense...
     def transform_value(self, value: _VT) -> _VT:
         """Transform the given value with the valuespecs transform logic and give it back"""
         return value
@@ -2061,7 +2062,7 @@ class ListOf(ValueSpec):
     def value_to_json_safe(self, value: list[Any]) -> JSONValue:
         return [self._valuespec.value_to_json_safe(e) for e in value]
 
-    def transform_value(self, value) -> list[Any]:
+    def transform_value(self, value: list[Any]) -> list[Any]:
         return [self._valuespec.transform_value(v) for v in value]
 
 
@@ -4802,7 +4803,7 @@ class Optional(ValueSpec):
         if value != self._none_value:
             self._valuespec.validate_value(value, varprefix + "_value")
 
-    def transform_value(self, value):
+    def transform_value(self, value: Any) -> Any:
         return value if value == self._none_value else self._valuespec.transform_value(value)
 
     def has_show_more(self) -> bool:
@@ -5664,7 +5665,7 @@ class Foldable(ValueSpec):
     def _validate_value(self, value: Any, varprefix: str) -> None:
         self._valuespec.validate_value(value, varprefix)
 
-    def transform_value(self, value):
+    def transform_value(self, value: Any) -> Any:
         return self._valuespec.transform_value(value)
 
     def has_show_more(self) -> bool:

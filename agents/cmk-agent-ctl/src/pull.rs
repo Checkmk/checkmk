@@ -139,9 +139,11 @@ impl MaxConnectionsGuard {
             Ok(async move {
                 let res = fut.await;
                 drop(permit);
+                debug!("processed task!");
                 res
             })
         } else {
+            debug!("Too many active connections");
             Err(anyhow!("Too many active connections"))
         }
     }
@@ -242,6 +244,7 @@ async fn _pull_cycle(
             pull_state.tls_acceptor(),
             connection_timeout,
         );
+        debug!("{}: Handling pull request DONE", remote);
 
         match guard.try_make_task_for_addr(remote, request_handler_fut) {
             Ok(connection_fut) => {
@@ -298,6 +301,7 @@ async fn handle_request(
         )
         .await;
     }
+    debug!("handle_request starts");
 
     let handshake = with_timeout(
         async move {
@@ -313,7 +317,7 @@ async fn handle_request(
     let (mon_data, tls_stream) = tokio::join!(encoded_mondata, handshake);
     let mon_data = mon_data?;
     let mut tls_stream = tls_stream?;
-
+    debug!("data to be send");
     with_timeout(
         async move {
             tls_stream.write_all(&mon_data).await?;

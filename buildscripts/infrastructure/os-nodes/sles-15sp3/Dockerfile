@@ -33,14 +33,13 @@ RUN curl https://bootstrap.pypa.io/pip/2.7/get-pip.py -o get-pip.py \
     && python get-pip.py
 RUN pip install --upgrade setuptools \
     && pip install git+https://github.com/pypa/pipenv.git@v2020.6.2 \
-    && zypper -n --no-gpg-checks in --replacefiles \
+    && zypper -n --no-gpg-checks in --replacefiles --force-resolution \
     $PACKAGES \
     && zypper clean -a
 
 # New packages that are not needed for the build toolchain above should be added here.
 # We avoid rebuild of the whole previous steps this way
 RUN zypper -n in -y --force-resolution \
-    joe \
     iputils \
     vim \
     && zypper clean -a

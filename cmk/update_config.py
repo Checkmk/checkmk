@@ -53,6 +53,7 @@ from cmk.utils.encryption import raw_certificates_from_file
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.log import VERBOSE
 from cmk.utils.regex import unescape
+from cmk.utils.store import load_from_mk_file, save_mk_file
 from cmk.utils.type_defs import (
     CheckPluginName,
     ContactgroupName,
@@ -99,7 +100,7 @@ from cmk.gui.plugins.userdb.utils import (
 from cmk.gui.plugins.views.utils import get_all_views
 from cmk.gui.plugins.wato.utils import config_variable_registry
 from cmk.gui.plugins.watolib.utils import filter_unknown_settings
-from cmk.gui.sites import is_wato_slave_site
+from cmk.gui.sites import has_wato_slave_sites, is_wato_slave_site
 from cmk.gui.userdb import load_users, save_users, Users
 from cmk.gui.utils.logged_in import SuperUserContext
 from cmk.gui.utils.script_helpers import gui_context
@@ -275,6 +276,7 @@ class UpdateConfig:
             ),
             (self._renew_site_cert, "Renewing certificates without server name extension"),
             (self._add_site_ca_to_trusted_cas, "Adding site CA to trusted CAs"),
+            (self._update_mknotifyd, "Rewrite mknotifyd config for central site"),
         ]
 
     def _initialize_base_environment(self) -> None:
@@ -1499,6 +1501,38 @@ class UpdateConfig:
 
         cert_settings["trusted_cas"].append(site_ca)
         cmk.gui.watolib.global_settings.save_global_settings(global_config)
+
+    def _update_mknotifyd(self) -> None:
+        """
+        Update the sitespecific mknotifyd config file on central site because
+        this is not handled by the global or sitespecific updates.
+        The encryption key is missing on update from 2.0 to 2.1.
+        """
+        if is_wato_slave_site() or not has_wato_slave_sites():
+            return
+
+        sitespecific_file_path: Path = Path(
+            cmk.utils.paths.default_config_dir, "mknotifyd.d", "wato", "sitespecific.mk"
+        )
+        if not sitespecific_file_path.exists():
+            return
+
+        mknotifyd_config: Dict[str, Any] = load_from_mk_file(
+            sitespecific_file_path, "notification_spooler_config", {}
+        )
+        if not mknotifyd_config:
+            return
+
+        for key, value in mknotifyd_config.items():
+            if key not in ["incoming", "outgoing"]:
+                continue
+            if key == "incoming":
+                value.setdefault("encryption", "unencrypted")
+            if key == "outgoing":
+                for outgoing in value:
+                    outgoing.setdefault("encryption", "upgradable")
+
+        save_mk_file(sitespecific_file_path, "notification_spooler_config = %s" % mknotifyd_config)
 
 
 class PasswordSanitizer:

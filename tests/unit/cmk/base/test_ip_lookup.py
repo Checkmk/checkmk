@@ -270,13 +270,13 @@ class TestIPLookupCache:
     def test_repr(self) -> None:
         assert isinstance(repr(ip_lookup.IPLookupCache({})), str)
 
-    @pytest.mark.skip("CMK-9861")
     def test_load_invalid_syntax(self, tmp_path: Path) -> None:
         with ip_lookup.IPLookupCache.PATH.open(mode="w", encoding="utf-8") as f:
             f.write("{...")
 
         cache = ip_lookup.IPLookupCache({})
-        cache.load_persisted()
+        with pytest.raises(SyntaxError):
+            cache.load_persisted()
         assert not cache
 
     def test_update_empty_file(self, tmp_path: Path) -> None:
@@ -363,7 +363,6 @@ class TestIPLookupCache:
         assert not ip_lookup_cache
 
 
-@pytest.mark.skip("CMK-9861")
 def test_update_dns_cache(monkeypatch: MonkeyPatch) -> None:
     def _getaddrinfo(host, port, family=None, socktype=None, proto=None, flags=None):
         # Needs to return [(family, type, proto, canonname, sockaddr)] but only

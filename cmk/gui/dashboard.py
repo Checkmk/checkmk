@@ -536,7 +536,7 @@ def _get_default_dashboard_name() -> str:
     """
     if cmk_version.is_raw_edition():
         return "main"  # problems = main in raw edition
-    return "main" if user.may("general.see_all") else "problems"
+    return "main" if user.may("general.see_all") and user.may("dashboard.main") else "problems"
 
 
 def _load_dashboard_with_cloning(

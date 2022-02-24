@@ -307,7 +307,7 @@ class Pod:
             controllers.append(
                 section.Controller(
                     type_=section.ControllerType.from_str(controller.type_),
-                    name=controller.name(prepend_namespace=True),
+                    name=controller.name(),
                 )
             )
 

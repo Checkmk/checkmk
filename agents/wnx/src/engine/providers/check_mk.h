@@ -23,12 +23,6 @@ namespace cma::provider {
 /// On error returns empty string
 std::string AddressToCheckMkString(std::string_view entry);
 
-/// \b returns version of the 'cmk-agent-ctl' if present else empty<summary>
-///
-/// This is public API because exists probability that we will run
-/// this function asynchronously
-std::string DetermineAgentCtlVersion();
-
 class CheckMk : public Synchronous {
 public:
     explicit CheckMk() : Synchronous(section::kCheckMk) {}

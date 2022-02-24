@@ -278,6 +278,9 @@ graph_info["kube_pod_restarts"] = {
         ("kube_pod_restart_count", "line"),
         ("kube_pod_restart_rate", "line"),
     ],
+    "optional_metrics": [
+        "kube_pod_restart_rate",
+    ],
 }
 
 

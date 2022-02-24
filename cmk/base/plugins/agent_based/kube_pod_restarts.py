@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import time
-from typing import Literal, Tuple, TypedDict, Union
+from typing import Literal, Optional, Tuple, TypedDict, Union
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     check_levels,
@@ -44,16 +44,20 @@ def check(params: Params, section: PodContainers) -> CheckResult:
         render_func=str,
         label="Total",
     )
-    yield from check_levels(
-        _calc_restart_rate_in_last_hour(restart_count),
-        levels_upper=params["restart_rate"][1] if params["restart_rate"] != "no_levels" else None,
-        metric_name="kube_pod_restart_rate",
-        render_func=str,
-        label="In last hour",
-    )
+    restart_rate = _calc_restart_rate_in_last_hour(restart_count)
+    if restart_rate is not None:
+        yield from check_levels(
+            restart_rate,
+            levels_upper=params["restart_rate"][1]
+            if params["restart_rate"] != "no_levels"
+            else None,
+            metric_name="kube_pod_restart_rate",
+            render_func=str,
+            label="In last hour",
+        )
 
 
-def _calc_restart_rate_in_last_hour(restart_count: int) -> int:
+def _calc_restart_rate_in_last_hour(restart_count: int) -> Optional[int]:
     curr_timestamp_seconds = int(time.time())
     host_value_store = get_value_store()
     restart_count_list = host_value_store.setdefault("restart_count_list", [])
@@ -62,7 +66,7 @@ def _calc_restart_rate_in_last_hour(restart_count: int) -> int:
     restart_count_list.append((curr_timestamp_seconds, restart_count))
     if len(restart_count_list) > 1:
         return restart_count - restart_count_list[0][1]
-    return restart_count
+    return None
 
 
 register.check_plugin(

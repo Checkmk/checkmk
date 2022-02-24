@@ -186,9 +186,17 @@ def test_check_result_state_mixed(expected_states, check_result):
 
 
 @pytest.mark.parametrize("expired_values", [0, 10, 30, 50, 59])
-@pytest.mark.parametrize("current_values", [0, 10, 30, 50, 59])
+@pytest.mark.parametrize("current_values", [10, 30, 50, 59])
 def test_check_results_considers_only_current_values(current_values, check_result):
     expected = [OK * NUMBER_OF_CONTAINERS, OK * NUMBER_OF_CONTAINERS * (current_values + 1)]
+    actual = [int(m.value) for m in check_result if isinstance(m, Metric)]
+    assert actual == expected
+
+
+@pytest.mark.parametrize("expired_values", [0, 10, 30, 50, 59])
+@pytest.mark.parametrize("current_values", [0])
+def test_check_yields_single_result_when_no_current_values(current_values, check_result):
+    expected = [OK * NUMBER_OF_CONTAINERS]
     actual = [int(m.value) for m in check_result if isinstance(m, Metric)]
     assert actual == expected
 

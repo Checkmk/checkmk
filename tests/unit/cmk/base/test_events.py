@@ -9,6 +9,7 @@ import pytest
 from cmk.base.events import add_to_event_context, EventContext, raw_context_from_string
 
 
+@pytest.mark.skip("CMK-9861")
 @pytest.mark.parametrize(
     "context,expected",
     [

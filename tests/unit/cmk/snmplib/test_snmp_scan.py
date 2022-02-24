@@ -225,6 +225,7 @@ def test_snmp_scan_fake_description_object__success(backend):
     assert snmp_cache.single_oid_cache()[snmp_scan.OID_SYS_OBJ] == ""
 
 
+@pytest.mark.skip("CMK-9861")
 @pytest.mark.usefixtures("scenario")
 @pytest.mark.usefixtures("cache_oids")
 def test_snmp_scan_find_plugins__success(backend):
@@ -240,6 +241,7 @@ def test_snmp_scan_find_plugins__success(backend):
     assert len(sections) > len(found)
 
 
+@pytest.mark.skip("CMK-9861")
 @pytest.mark.usefixtures("scenario")
 @pytest.mark.usefixtures("cache_oids")
 def test_gather_available_raw_section_names_defaults(backend, mocker):

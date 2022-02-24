@@ -6,6 +6,8 @@
 
 from pathlib import Path
 
+import pytest
+
 from tests.testlib.base import Scenario
 
 import cmk.utils.crash_reporting
@@ -137,6 +139,7 @@ def test_check_crash_report_save(monkeypatch):
     assert crash2.crash_info["exc_value"] == "DING"
 
 
+@pytest.mark.skip("CMK-9861")
 def test_check_crash_report_read_agent_output(monkeypatch):
     Scenario().apply(monkeypatch)
     config.load_checks(
@@ -166,6 +169,7 @@ def test_check_crash_report_read_agent_output(monkeypatch):
     assert crash.snmp_info is None
 
 
+@pytest.mark.skip("CMK-9861")
 def test_check_crash_report_read_snmp_info(monkeypatch):
     Scenario().apply(monkeypatch)
     config.load_checks(

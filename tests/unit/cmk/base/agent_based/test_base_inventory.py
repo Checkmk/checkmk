@@ -21,6 +21,7 @@ from cmk.base.agent_based.inventory._retentions import (
 from cmk.base.api.agent_based.inventory_classes import Attributes, TableRow
 
 
+@pytest.mark.skip("CMK-9861")
 def test_aggregator_raises_collision():
     inventory_items: List[Union[Attributes, TableRow]] = [
         Attributes(path=["a", "b", "c"], status_attributes={"foo": "bar"}),

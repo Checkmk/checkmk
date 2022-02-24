@@ -50,6 +50,7 @@ class TestSectionsParser:
         assert parsing_result is not None
         assert parsing_result.data == 1
 
+    @pytest.mark.skip("CMK-9861")
     @staticmethod
     def test_parsing_errors(monkeypatch, sections_parser: SectionsParser) -> None:
 

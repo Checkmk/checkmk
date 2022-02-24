@@ -98,6 +98,7 @@ def test_load_data_from_file_locking(tmp_path, path_type):
     assert store.have_lock(path_type(locked_file)) is True
 
 
+@pytest.mark.skip("CMK-9861")
 @pytest.mark.parametrize("path_type", [str, Path])
 def test_load_data_from_not_permitted_file(tmp_path, path_type):
     locked_file = tmp_path / "test"

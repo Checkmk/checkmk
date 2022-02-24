@@ -8,7 +8,7 @@ import logging
 import shutil
 import socket
 from pathlib import Path
-from typing import Any, Mapping, NamedTuple, Iterable
+from typing import Any, Iterable, Mapping, NamedTuple
 from unittest import mock
 
 import pytest
@@ -20,6 +20,7 @@ from tests.testlib.debug_utils import cmk_debug_enabled
 import livestatus
 
 import cmk.utils.caching
+import cmk.utils.debug
 import cmk.utils.paths
 import cmk.utils.redis as redis
 import cmk.utils.store as store
@@ -40,6 +41,14 @@ if is_enterprise_repo():
     import cmk.cee.dcd.plugins.connectors.connectors_api.v1
 
 logger = logging.getLogger(__name__)
+
+
+@pytest.fixture(autouse=True)
+def enable_debug_fixture():
+    debug_mode = cmk.utils.debug.debug_mode
+    cmk.utils.debug.enable()
+    yield
+    cmk.utils.debug.debug_mode = debug_mode
 
 
 @pytest.fixture(autouse=True)

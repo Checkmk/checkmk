@@ -116,6 +116,7 @@ from cmk.gui.valuespec import (
     GroupedListOfMultipleChoices,
     IconSelector,
     Integer,
+    JSONValue,
     ListOfMultiple,
     ListOfMultipleChoiceGroup,
     TextAreaUnicode,
@@ -1982,7 +1983,7 @@ class VisualFilter(ValueSpec):
     def value_to_html(self, value: FilterHTTPVariables) -> ValueSpecText:
         raise NotImplementedError()  # FIXME! Violates LSP!
 
-    def value_to_json(self, value):
+    def value_to_json(self, value: FilterHTTPVariables) -> JSONValue:
         raise NotImplementedError()  # FIXME! Violates LSP!
 
     def value_from_json(self, json_value):

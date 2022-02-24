@@ -2050,7 +2050,7 @@ class ListOf(ValueSpec):
     def has_show_more(self) -> bool:
         return self._valuespec.has_show_more()
 
-    def value_to_json(self, value: Any) -> list[Any]:
+    def value_to_json(self, value: list[Any]) -> JSONValue:
         return [self._valuespec.value_to_json(e) for e in value]
 
     def value_from_json(self, json_value: Any) -> list[Any]:
@@ -2226,7 +2226,7 @@ class ListOfMultiple(ValueSpec):
             )
         return html.render_table(table_content)
 
-    def value_to_json(self, value: dict[str, Any]) -> dict[str, Any]:
+    def value_to_json(self, value: dict[str, Any]) -> JSONValue:
         return {ident: self._choice_dict[ident].value_to_json(val) for ident, val in value.items()}
 
     def value_from_json(self, json_value: dict[str, Any]) -> dict[str, Any]:
@@ -2334,7 +2334,7 @@ class Float(ValueSpec[float]):
         txt = self._renderer.format_text(self._render_value(value))
         return txt.replace(".", self._decimal_separator)
 
-    def value_to_json(self, value: float) -> float:
+    def value_to_json(self, value: float) -> JSONValue:
         return value
 
     def value_from_json(self, json_value: float) -> float:
@@ -2435,7 +2435,7 @@ class Checkbox(ValueSpec[bool]):
     def value_to_html(self, value: bool) -> ValueSpecText:
         return self._true_label if value else self._false_label
 
-    def value_to_json(self, value: bool) -> bool:
+    def value_to_json(self, value: bool) -> JSONValue:
         return value
 
     def value_from_json(self, json_value: bool) -> bool:
@@ -2630,7 +2630,7 @@ class DropdownChoice(ValueSpec):
                 return title
         return self._get_invalid_choice_text(self._invalid_choice_title, value)
 
-    def value_to_json(self, value):
+    def value_to_json(self, value: DropdownChoiceValue) -> JSONValue:
         return value
 
     def value_from_json(self, json_value):
@@ -3207,7 +3207,7 @@ class CascadingDropdown(ValueSpec[CascadingDropdownChoiceValue]):
             + rendered_value
         )
 
-    def value_to_json(self, value: CascadingDropdownChoiceValue):
+    def value_to_json(self, value: CascadingDropdownChoiceValue) -> JSONValue:
         choice = self._choice_from_value(value)
         if not choice:
             return None  # just by passes should be considered a bug, value_to_json is not guarantied to return a value
@@ -4221,8 +4221,8 @@ class Timeofday(ValueSpec[TimeofdayValue]):
         if value[0] < 0 or value[1] < 0 or value[0] > 24 or value[1] > 59:
             raise MKUserError(varprefix, _("Hours/Minutes out of range"))
 
-    def value_to_json(self, value: Any) -> list[Any]:
-        return [value[0], value[1]]
+    def value_to_json(self, value: TimeofdayValue) -> JSONValue:
+        return None if value is None else [value[0], value[1]]
 
     def value_from_json(self, json_value: Any) -> tuple[Any, Any]:
         return (json_value[0], json_value[1])
@@ -4526,7 +4526,7 @@ class Timerange(CascadingDropdown):
 
         return super().value_to_html(value)
 
-    def value_to_json(self, value: CascadingDropdownChoiceValue):
+    def value_to_json(self, value: CascadingDropdownChoiceValue) -> JSONValue:
         if isinstance(value, int):  # Handle default graph_timeranges
             value = ("age", value)
         return super().value_to_json(value)
@@ -4810,7 +4810,7 @@ class Optional(ValueSpec):
     def has_show_more(self) -> bool:
         return self._valuespec.has_show_more()
 
-    def value_to_json(self, value: Any) -> Any:
+    def value_to_json(self, value: Any) -> JSONValue:
         if value != self._none_value:
             return self._valuespec.value_to_json(value)
         if isinstance(value, tuple):
@@ -4952,7 +4952,7 @@ class Alternative(ValueSpec):
             return output + vs.value_to_html(value)
         return _("invalid:") + " " + str(value)
 
-    def value_to_json(self, value: Any) -> Any:
+    def value_to_json(self, value: Any) -> JSONValue:
         vs, match_value = self.matching_alternative(value)
         return vs.value_to_json(match_value)
 
@@ -5091,7 +5091,7 @@ class Tuple(ValueSpec):
     def value_to_html(self, value: tuple[Any, ...]) -> ValueSpecText:
         return HTML(", ").join(el.value_to_html(val) for _, el, val in self._iter_value(value))
 
-    def value_to_json(self, value: Any) -> list[Any]:
+    def value_to_json(self, value: tuple[Any, ...]) -> JSONValue:
         return [el.value_to_json(val) for _, el, val in self._iter_value(value)]
 
     def value_from_json(self, json_value: Any) -> tuple[Any, ...]:
@@ -5408,7 +5408,7 @@ class Dictionary(ValueSpec[dict[str, Any]]):
                 )
         return html.render_table(s)
 
-    def value_to_json(self, value):
+    def value_to_json(self, value: dict[str, Any]) -> JSONValue:
         return {
             param: vs.value_to_json(value[param])
             for param, vs in self._get_elements()
@@ -5550,7 +5550,7 @@ class ElementSelection(ValueSpec):
         self.load_elements()
         return self._elements.get(value, value)
 
-    def value_to_json(self, value: Any) -> Any:
+    def value_to_json(self, value: str) -> JSONValue:
         return value
 
     def value_from_json(self, json_value: Any) -> Any:
@@ -5651,7 +5651,7 @@ class Foldable(ValueSpec):
     def from_html_vars(self, varprefix: str) -> Any:
         return self._valuespec.from_html_vars(varprefix)
 
-    def value_to_json(self, value: Any) -> Any:
+    def value_to_json(self, value: Any) -> JSONValue:
         return self._valuespec.value_to_json(value)
 
     def value_from_json(self, json_value: Any) -> Any:
@@ -5756,7 +5756,7 @@ class Transform(ValueSpec):
     def has_show_more(self) -> bool:
         return self._valuespec.has_show_more()
 
-    def value_to_json(self, value):
+    def value_to_json(self, value: Any) -> JSONValue:
         return self._valuespec.value_to_json(self.forth(value))
 
     def value_from_json(self, json_value):
@@ -5957,7 +5957,7 @@ class FileUpload(ValueSpec):
     def from_html_vars(self, varprefix: str) -> UploadedFile:
         return request.uploaded_file(varprefix)
 
-    def value_to_json(self, value: Any) -> Any:
+    def value_to_json(self, value: Any) -> JSONValue:
         return value
 
     def value_from_json(self, json_value: Any) -> Any:
@@ -6196,7 +6196,7 @@ class Labels(ValueSpec):
             data_max_labels=self._max_labels,
         )
 
-    def value_to_json(self, value: Any) -> Any:
+    def value_to_json(self, value: dict[str, Any]) -> JSONValue:
         return value
 
     def value_from_json(self, json_value: Any) -> Any:
@@ -6516,7 +6516,7 @@ class IconSelector(ValueSpec):
     def value_to_html(self, value: Any) -> ValueSpecText:
         return self._render_icon(value["icon"] if isinstance(value, dict) else value)
 
-    def value_to_json(self, value: Any) -> Any:
+    def value_to_json(self, value: Any) -> JSONValue:
         return value
 
     def value_from_json(self, json_value: Any) -> Any:
@@ -6619,7 +6619,7 @@ class Color(ValueSpec):
     def value_to_html(self, value: str) -> ValueSpecText:
         return value
 
-    def value_to_json(self, value: Any) -> Any:
+    def value_to_json(self, value: str) -> JSONValue:
         return value
 
     def value_from_json(self, json_value: Any) -> Any:
@@ -6689,7 +6689,7 @@ class SSHKeyPair(ValueSpec):
     def value_to_html(self, value: SSHKeyPairValue) -> ValueSpecText:
         return self._get_key_fingerprint(value)
 
-    def value_to_json(self, value: Any) -> list[Any]:
+    def value_to_json(self, value: SSHKeyPairValue) -> JSONValue:
         return [value[0], value[1]]
 
     def value_from_json(self, json_value: Any) -> tuple[Any, Any]:

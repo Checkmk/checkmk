@@ -93,6 +93,7 @@ from cmk.gui.valuespec import (
     FixedValue,
     IconSelector,
     ID,
+    JSONValue,
     ListOf,
     ListOfStrings,
     Optional,
@@ -1527,11 +1528,11 @@ class NodeVisualizationLayoutStyle(ValueSpec):
     def default_value(self) -> dict[str, Any]:
         return {"type": "none", "style_config": {}}
 
-    def value_to_json(self, value):
-        raise NotImplementedError()
+    def value_to_json(self, value: dict[str, Any]) -> JSONValue:
+        raise NotImplementedError()  # FIXME! Violates LSP!
 
     def value_from_json(self, json_value):
-        raise NotImplementedError()
+        raise NotImplementedError()  # FIXME! Violates LSP!
 
 
 # .

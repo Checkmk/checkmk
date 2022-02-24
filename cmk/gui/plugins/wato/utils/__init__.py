@@ -103,6 +103,7 @@ from cmk.gui.valuespec import (  # noqa: F401 # pylint: disable=unused-import
     FixedValue,
     Float,
     Integer,
+    JSONValue,
     Labels,
     ListChoice,
     ListOf,
@@ -2495,11 +2496,11 @@ class HostTagCondition(ValueSpec):
             style="display: none;" if not div_is_open else None,
         )
 
-    def value_to_json(self, value):
-        raise NotImplementedError()
+    def value_to_json(self, value: Sequence[str]) -> JSONValue:
+        raise NotImplementedError()  # FIXME! Violates LSP!
 
     def value_from_json(self, json_value):
-        raise NotImplementedError()
+        raise NotImplementedError()  # FIXME! Violates LSP!
 
 
 class LabelCondition(Transform):

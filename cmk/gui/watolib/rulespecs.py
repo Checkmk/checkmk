@@ -24,6 +24,7 @@ from cmk.gui.valuespec import (
     DropdownChoice,
     ElementSelection,
     FixedValue,
+    JSONValue,
     ListOf,
     OptionalDropdownChoice,
     Transform,
@@ -1278,7 +1279,7 @@ class TimeperiodValuespec(ValueSpec):
     def transform_value(self, value: Any) -> Any:
         return self._get_used_valuespec(value).transform_value(value)
 
-    def value_to_json(self, value: Any) -> Any:
+    def value_to_json(self, value: dict[str, Any]) -> JSONValue:
         return self._get_used_valuespec(value).value_to_json(value)
 
     def value_from_json(self, json_value: Any) -> Any:

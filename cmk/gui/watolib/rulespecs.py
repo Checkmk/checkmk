@@ -1205,7 +1205,7 @@ class TimeperiodValuespec(ValueSpec):
         # Fetch the data from the enclosed valuespec
         return self._enclosed_valuespec.from_html_vars(varprefix)
 
-    def canonical_value(self):
+    def canonical_value(self) -> dict[str, Any]:
         return self._enclosed_valuespec.canonical_value()
 
     def _validate_value(self, value: Any, varprefix: str) -> None:

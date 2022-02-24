@@ -2368,7 +2368,7 @@ class HostTagCondition(ValueSpec):
 
         return tag_list
 
-    def canonical_value(self):
+    def canonical_value(self) -> Sequence[str]:
         return []
 
     def value_to_html(self, value: list[str]) -> ValueSpecText:

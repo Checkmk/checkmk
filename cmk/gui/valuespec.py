@@ -309,7 +309,7 @@ class FixedValue(ValueSpec[_VT]):
         self._value = value
         self._totext = totext
 
-    def canonical_value(self) -> Any:
+    def canonical_value(self) -> _VT:
         return self._value
 
     def render_input(self, varprefix: str, value: _VT) -> None:
@@ -3753,7 +3753,7 @@ class OptionalDropdownChoice(DropdownChoice):
         self._explicit = explicit
         self._otherlabel = otherlabel if otherlabel is not None else _("Other")
 
-    def canonical_value(self):
+    def canonical_value(self) -> Any:
         return self._explicit.canonical_value()
 
     def value_is_explicit(self, value):
@@ -4729,7 +4729,7 @@ class Optional(ValueSpec):
         self._sameline = sameline
         self._indent = indent
 
-    def canonical_value(self):
+    def canonical_value(self) -> Any:
         return self._none_value
 
     def render_input(self, varprefix: str, value: Any) -> None:
@@ -4927,7 +4927,7 @@ class Alternative(ValueSpec):
         # TODO: Set focus to currently active option
         pass
 
-    def canonical_value(self):
+    def canonical_value(self) -> Any:
         return self._elements[0].canonical_value()
 
     def default_value(self):
@@ -5016,7 +5016,7 @@ class Tuple(ValueSpec):
     def allow_empty(self) -> bool:
         return all(vs.allow_empty() for vs in self._elements)
 
-    def canonical_value(self):
+    def canonical_value(self) -> tuple[Any, ...]:
         return tuple(x.canonical_value() for x in self._elements)
 
     def default_value(self):
@@ -5373,7 +5373,7 @@ class Dictionary(ValueSpec[dict[str, Any]]):
         if first_element:
             first_element[1].set_focus(varprefix + "_p_" + first_element[0])
 
-    def canonical_value(self):
+    def canonical_value(self) -> dict[str, Any]:
         return {
             name: vs.canonical_value()
             for (name, vs) in self._get_elements()
@@ -6132,7 +6132,7 @@ class Labels(ValueSpec):
         h = super().help()
         return escaping.escape_html_permissive(("" if h is None else str(h)) + label_help_text())
 
-    def canonical_value(self):
+    def canonical_value(self) -> dict[str, Any]:
         return {}
 
     def from_html_vars(self, varprefix: str) -> dict[str, Any]:

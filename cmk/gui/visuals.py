@@ -1958,7 +1958,7 @@ class VisualFilter(ValueSpec):
     def title(self):
         return self._filter.title
 
-    def canonical_value(self):
+    def canonical_value(self) -> FilterHTTPVariables:
         return {}
 
     def render_input(self, varprefix: str, value: FilterHTTPVariables) -> None:

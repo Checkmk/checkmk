@@ -1,4 +1,6 @@
-FROM registry.suse.com/suse/sle15:15.3
+#Use same pinned image as 2.0.0 branch uses to be in sync with mirror
+#FROM registry.suse.com/suse/sle15:15.3
+FROM artifacts.lan.tribe29.com:4000/sle15@sha256:64284bcccbda0781a4986348fd41d2f44c925848a8c8cdf82eb9fb0dde3db1cb
 
 SHELL ["/bin/bash", "-c"]
 
@@ -6,6 +8,7 @@ ARG ARTIFACT_STORAGE
 ARG PACKAGES
 
 RUN zypper addrepo -G ${ARTIFACT_STORAGE}/repository/sles15sp3 sles15sp3 \
+    && zypper ref -s \
     && zypper -n --no-gpg-checks in --replacefiles \
     gawk \
     && zypper -n --no-gpg-checks in --replacefiles --force-resolution \
@@ -36,8 +39,7 @@ RUN pip install --upgrade setuptools \
 
 # New packages that are not needed for the build toolchain above should be added here.
 # We avoid rebuild of the whole previous steps this way
-RUN zypper ref \
-    && zypper -n in -y --force-resolution \
+RUN zypper -n in -y --force-resolution \
     joe \
     iputils \
     vim \

@@ -22,6 +22,7 @@ constexpr std::string_view kCmdLineAsDaemon{"daemon"};
 constexpr std::string_view kCmdLinePort{"-P"};
 constexpr std::string_view kCmdLineAllowedIp{"-A"};
 constexpr std::string_view kCmdLineVersion{"-V"};
+constexpr std::string_view kCmdLineStatus{"status --json"};
 constexpr uint16_t windows_internal_port{50001};
 
 std::filesystem::path GetController(const std::filesystem::path &service);
@@ -30,6 +31,7 @@ std::wstring BuildCommandLine(const std::filesystem::path &controller);
 bool StartAgentController(const std::filesystem::path &service);
 bool KillAgentController(const std::filesystem::path &service);
 std::string DetermineAgentCtlVersion();
+std::string DetermineAgentCtlStatus();
 bool IsRunController(const YAML::Node &node);
 bool IsInLegacyMode();
 void CreateLegacyModeFile();

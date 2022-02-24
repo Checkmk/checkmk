@@ -124,7 +124,7 @@ public:
         "ConfigFile",       "LocalConfigFile", "AgentDirectory",
         "PluginsDirectory", "StateDirectory",  "ConfigDirectory",
         "TempDirectory",    "LogDirectory",    "SpoolDirectory",
-        "LocalDirectory",   "AgentController", "LegacyPullMode",
+        "LocalDirectory",   "AgentController", "AgentControllerStatus",
         "OnlyFrom"};
 
     static constexpr std::pair<std::string_view, std::string_view>
@@ -214,11 +214,11 @@ TEST_F(SectionProviderCheckMkFixture, AdvancedFields) {
     EXPECT_EQ(get_val(result[3]), cfg::GetHostName());
     EXPECT_EQ(get_val(result[4]), tgt::Is64bit() ? "64bit" : "32bit");
     EXPECT_EQ(result[16], "AgentController: ");
-    EXPECT_EQ(result[17], "LegacyPullMode: no");
+    EXPECT_TRUE(result[17].starts_with("AgentControllerStatus: no"));
     tst::CreateTextFile(fs::path{cfg::GetUserDir()} / ac::kLegacyPullFile,
                         "test");
     result = getCoreResultAsTable();
-    EXPECT_EQ(result[17], "LegacyPullMode: yes");
+    EXPECT_EQ(result[17].starts_with("AgentControllerStatus: "));
 }
 
 TEST_F(SectionProviderCheckMkFixture, OnlyFromField) {

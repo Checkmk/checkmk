@@ -135,7 +135,8 @@ void TrimRight(std::string &s, std::string_view chars) {
     }
 }
 
-std::string DetermineAgentCtlVersion() {
+namespace {
+std::string RunAgentControllerWithParam(std::string_view param) {
     auto work_controller = GetWorkController();
     std::error_code ec;
     if (!fs::exists(work_controller, ec)) {
@@ -144,9 +145,18 @@ std::string DetermineAgentCtlVersion() {
         return {};
     }
     auto result = wtools::RunCommand(work_controller.wstring() + L" " +
-                                     wtools::ConvertToUTF16(kCmdLineVersion));
+                                     wtools::ConvertToUTF16(param));
     TrimRight(result, "\n\r");
     return result;
+}
+}  // namespace
+
+std::string DetermineAgentCtlVersion() {
+    return RunAgentControllerWithParam(kCmdLineVersion);
+}
+
+std::string DetermineAgentCtlStatus() {
+    return RunAgentControllerWithParam(kCmdLineStatus);
 }
 
 bool KillAgentController(const fs::path &service) {

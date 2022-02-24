@@ -108,16 +108,14 @@ std::string MakeDirs() {
     return out;
 }
 
-std::string GetLegacyPullMode() {
-    return ac::IsInLegacyMode() ? "yes" : "no";
-}
+std::string GetLegacyPullMode() { return ac::IsInLegacyMode() ? "yes" : "no"; }
 }  // namespace
 
 std::string CheckMk::makeBody() {
     auto out = MakeInfo();
     out += MakeDirs();
     out += "AgentController: "s + ac::DetermineAgentCtlVersion() + "\n";
-    out += "LegacyPullMode: " + GetLegacyPullMode() + "\n";
+    out += "AgentControllerStatus: "s + ac::DetermineAgentCtlStatus() + "\n";
     out += "OnlyFrom: "s + makeOnlyFrom() + "\n"s;
 
     if (install::GetLastInstallFailReason()) {

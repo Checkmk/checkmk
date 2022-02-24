@@ -1028,7 +1028,7 @@ class ModeFolder(WatoMode):
 
             form_name = "form_hosts"
             dropdown = WatoFolderChoices(html_attrs={"form": form_name})
-            dropdown.render_input("_bulk_moveto", None)
+            dropdown.render_input("_bulk_moveto", "")
             html.button("_bulk_move", _("Move"), form=form_name)
             return HTML(output_funnel.drain())
 

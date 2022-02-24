@@ -2861,7 +2861,7 @@ class DropdownChoiceWithHostAndServiceHints(AjaxDropdownChoice):
             strict="True",
         )
         html.br()
-        vs_host.render_input(varprefix + "_hostname_hint", None)
+        vs_host.render_input(varprefix + "_hostname_hint", "")
 
         vs_service = MonitoredServiceDescription(
             label=_("Filter %s selection by service: ") % self._hint_label,
@@ -2869,7 +2869,7 @@ class DropdownChoiceWithHostAndServiceHints(AjaxDropdownChoice):
             strict="True",
         )
         html.br()
-        vs_service.render_input(varprefix + "_service_hint", None)
+        vs_service.render_input(varprefix + "_service_hint", "")
 
 
 # TODO: Rename to ServiceState() or something like this

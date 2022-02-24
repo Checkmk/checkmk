@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import Any, Iterable, Mapping, Tuple
+
 #   .--only_from-----------------------------------------------------------.
 #   |                       _            __                                |
 #   |            ___  _ __ | |_   _     / _|_ __ ___  _ __ ___             |
@@ -55,87 +57,76 @@ check_info["check_mk.only_from"] = {
 # AgentUpdate: last_check 1447777834.22 last_update 1447776761.52 aghash e33d0cebcf7404d9 error None
 
 
-def _get_error_deployment_globally_disabled_state(params, error_text):
-    default_state = 1
-    if (
-        error_text == "Agent Bakery: Agent deployment is currently globally disabled on the "
-        "deployment server."
-    ):
-        return params.get("error_deployment_globally_disabled", default_state)
-    return default_state
-
-
-def inventory_cmk_agent_update(section):
+def discover_cmk_agent_update(section):
     if section.get("agentupdate") is not None:
         return [(None, {})]
 
 
-def check_cmk_agent_update(_no_item, params, section):
-    if section.get("agentupdate") is None:
+def _get_error_result(raw_string: str, params: Mapping[str, Any]) -> Iterable[Tuple[int, str]]:
+    if "error" not in raw_string:
         return
 
-    parsed = {}
-    parts = section["agentupdate"].split()
-    while parts:
-        key = parts[0]
-        if key == "error":
-            value = " ".join(parts[1:])
-            parts = []
-        else:
-            value = parts[1]
-            if value == "None":
-                value = None
-            parts = parts[2:]
-        parsed[key] = value
+    error = raw_string.split("error", 1)[1].strip()
 
-    now = time.time()
+    # Sometimes we get duplicate output. Until we find out why, fix the error message:
+    if "last_check" in error and "last_update" in error and "error" in error:
+        error = error.split("error", 1)[1].strip()
 
-    if parsed["error"] != "None":
-        error_state = _get_error_deployment_globally_disabled_state(params, parsed["error"])
-        yield error_state, "Error: %s" % parsed["error"]
+    if error == "None":
+        return
+
+    default_state = 1
+    if "deployment is currently globally disabled" in error:
+        yield int(params.get("error_deployment_globally_disabled", default_state)), error
     else:
-        yield 0, "No errors"
+        yield default_state, f"Error: {error}"
 
-    if parsed["last_check"]:
-        try:
-            last_check = float(parsed["last_check"])
-            age = now - last_check
-            # Currently there is no crit level
-            warn = 2 * 3600 * 24
-            if age > warn:
-                state = 1
-            else:
-                state = 0
-            if state:
-                levels_text = " (warn at %s)" % (get_age_human_readable(warn))
-            else:
-                levels_text = ""
-            yield state, "Last update check: " + get_timestamp_human_readable(
-                parsed["last_check"]
-            ) + levels_text
-        except Exception:
-            yield 1, "No successful connect to server yet"
 
-    if parsed["last_update"]:
-        yield 0, "Last agent update: %s" % get_timestamp_human_readable(parsed["last_update"])
+def check_cmk_agent_update(_no_item, params, section):
+    if not (raw_string := section.get("agentupdate")):
+        return
 
-    if parsed.get("update_url"):
+    yield from _get_error_result(raw_string, params)
+
+    parts = iter(raw_string.split("error", 1)[0].split())
+    parsed = {k: v for k, v in zip(parts, parts) if v != "None"}
+
+    try:
+        last_check = float(parsed.get("last_check"))
+    except (ValueError, TypeError):
+        yield 1, "No successful connect to server yet"
+    else:
+        result = check_levels(
+            time.time() - last_check,
+            None,  # no metric
+            (2 * 3600 * 24, None),
+            human_readable_func=get_age_human_readable,
+            infoname="Time since last update check",
+        )
+        if result[0]:
+            yield result  # on migration make this a notice.
+        yield 0, "Last update check: " + get_timestamp_human_readable(last_check)
+
+    if last_update := parsed.get("last_update"):
+        yield 0, "Last agent update: %s" % get_timestamp_human_readable(last_update)
+
+    if update_url := parsed.get("update_url"):
         # Note: Transformation of URLs from this check (check_mk-check_mk_agent_update) to icons
         # is disabled explicitly in cmk.gui.view_utils:format_plugin_output
-        yield 0, "Update URL: %s" % parsed["update_url"]
+        yield 0, f"Update URL: {update_url}"
 
-    if parsed["aghash"]:
-        yield 0, "Agent configuration: %s" % parsed["aghash"][:8]
+    if aghash := parsed.get("aghash"):
+        yield 0, f"Agent configuration: {aghash[:8]}"
 
-    if parsed.get("pending_hash"):
-        yield 0, "Pending installation: %s" % parsed["pending_hash"][:8]
+    if pending := parsed.get("pending_hash"):
+        yield 0, f"Pending installation: {pending[:8]}"
 
     return
 
 
 check_info["check_mk.agent_update"] = {
     "check_function": check_cmk_agent_update,
-    "inventory_function": inventory_cmk_agent_update,
+    "inventory_function": discover_cmk_agent_update,
     "service_description": "Check_MK Agent",
     "group": "agent_update",
 }

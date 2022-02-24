@@ -1,0 +1,49 @@
+Title: win_dhcp_pools: Free or used leases statistics are average values not absolute
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1645715325
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b1
+
+Via the command {{netsh dhcp server show mibinfo}} in the agent plugin
+{{win_dhcp_pools.bat}} the collected statistics about free or used leases are
+average and not absolute values. These average values refer to the last
+execution interval, see also the official docs in {{DHCP Service POG.docx}}:
+<br>
+Task: Capture DHCP services scope usage statistics
+<br>
+Purpose
+<br>
+The following activity captures empirical data on DHCP service utilization.
+This data, which is collected daily (or multiple times a day) should be
+reviewed weekly. It will also be used to create monthly reports that are
+reviewed quarterly for SLA/OLA compliance. Service utilization statistics are
+different from system performance in that they measure the usage
+characteristics of the DHCP service, not the underlying infrastructure such as
+disk, memory, or processor.
+<br>
+Procedure Option 2: Capture DHCP services scope usage statistics using Netsh
+command line utility
+<br>
+This collection should be performed on a consistent schedule, during key times
+of the day, such as 08:00, 12:00, and 17:00. The information should be recorded
+in a log file with the date appended to the name, such as
+“DHCPScopeStats_200305.csv” (indicates a comma separated log for the month of
+May 2003). Enterprise environments with many DHCP servers can adopt this option
+into a parsing script feeding a SQL Server database.
+<br>
+1. Open a command shell by clicking the Start menu. Click Run, type cmd and click OK.
+2. Type the netsh command: Netsh DHCP Server \\<servername> show mibinfo where
+you replace <servername> with the name of an authorized DHCP server.
+3. Open the month’s csv log using WordPad and manually record the data as follows:
+<br>
+“DATE TIME”,”DHCPServer Name”,”Scope IP”,”Total Addresses”,”IPs in Use”, “IPs Available”
+<br>
+For example:
+<br>
+05/24/2003 16:58:00.000,sea_dhcpsvr01,192.168.12.0,200,140,60
+05/24/2003 16:59:00.000,sea_dhcpsvr02,192.168.13.0,200,10,190

@@ -143,8 +143,11 @@ def check_win_dhcp_pools(item, params, info):
             yield 3, "DHCP Pool contains no IP addresses / is deactivated"
             return
 
-        for check_result in check_dhcp_pools_levels(free, used, pending, size, params):
-            yield check_result
+        for state, infotext, perfdata in check_dhcp_pools_levels(free, used, pending, size, params):
+            # The Windows DHCP plugin collects statistics, not real-time
+            # measurements. "Average" is pre-pended in order to clarify this. See
+            # SUP-9126
+            yield state, f"Average {infotext}", perfdata
 
     else:
         yield 3, "Pool information not found"

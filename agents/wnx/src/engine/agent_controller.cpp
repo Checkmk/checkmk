@@ -100,9 +100,9 @@ std::wstring BuildCommandLine(const fs::path &controller) {
         }
     }
 
-    return controller.wstring() +
-           wtools::ConvertToUTF16(fmt::format(" {} {} {}{}", kCmdLineAsDaemon,
-                                              kCmdLinePort, port, allowed_ip));
+    return controller.wstring() + wtools::ConvertToUTF16(fmt::format(
+                                      " {} {} {}{} -vv", kCmdLineAsDaemon,
+                                      kCmdLinePort, port, allowed_ip));
 }
 
 bool StartAgentController(const fs::path &service) {

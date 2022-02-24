@@ -20,7 +20,7 @@ mod tls_server;
 mod types;
 use anyhow::{Context, Result as AnyhowResult};
 use config::{JSONLoader, TOMLLoader};
-use log::error;
+use log::{error, info};
 #[cfg(unix)]
 use nix::unistd;
 use std::io::{self, Write};
@@ -214,6 +214,7 @@ fn main() {
         }
     };
 
+    info!("starting");
     let result = run_requested_mode(args, paths);
 
     if let Err(error) = &result {

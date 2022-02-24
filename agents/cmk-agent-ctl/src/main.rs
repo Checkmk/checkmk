@@ -70,12 +70,13 @@ fn init_logging(level: &str) -> Result<flexi_logger::LoggerHandle, flexi_logger:
 fn init_logging(
     level: &str,
     path: &std::path::Path,
+    duplicate_level: flexi_logger::Duplicate,
 ) -> Result<flexi_logger::LoggerHandle, flexi_logger::FlexiLoggerError> {
     flexi_logger::Logger::try_with_env_or_str(level)?
         .log_to_file(flexi_logger::FileSpec::try_from(path)?) // critically important for daemon mode
         .append()
         .format(flexi_logger::detailed_format)
-        .duplicate_to_stderr(flexi_logger::Duplicate::All) // show message in interactive mode
+        .duplicate_to_stderr(duplicate_level)
         .start()
 }
 
@@ -111,8 +112,8 @@ fn determine_paths() -> AnyhowResult<constants::PathResolver> {
 }
 
 #[cfg(unix)]
-fn setup(logging_level: &str) -> AnyhowResult<constants::PathResolver> {
-    if let Err(err) = init_logging(logging_level) {
+fn setup(args: &cli::Args) -> AnyhowResult<constants::PathResolver> {
+    if let Err(err) = init_logging(&args.logging_level()) {
         io::stderr()
             .write_all(format!("Failed to initialize logging: {:?}", err).as_bytes())
             .unwrap_or(());
@@ -124,9 +125,14 @@ fn setup(logging_level: &str) -> AnyhowResult<constants::PathResolver> {
 }
 
 #[cfg(windows)]
-fn setup(logging_level: &str) -> AnyhowResult<constants::PathResolver> {
+fn setup(args: &cli::Args) -> AnyhowResult<constants::PathResolver> {
     let paths = determine_paths()?;
-    if let Err(err) = init_logging(&logging_level, &paths.log_path) {
+    let duplicate_level = if let cli::Args::Daemon(_) = args {
+        flexi_logger::Duplicate::None
+    } else {
+        flexi_logger::Duplicate::All
+    };
+    if let Err(err) = init_logging(&args.logging_level(), &paths.log_path, duplicate_level) {
         io::stderr()
             .write_all(format!("Failed to initialize logging: {:?}", err).as_bytes())
             .unwrap_or(());
@@ -137,8 +143,8 @@ fn setup(logging_level: &str) -> AnyhowResult<constants::PathResolver> {
 fn init() -> AnyhowResult<(cli::Args, constants::PathResolver)> {
     // Parse args as first action to directly exit from --help or malformatted arguments
     let args = cli::Args::from_args();
-    let logging_level = args.logging_level();
-    Ok((args, setup(&logging_level)?))
+    let paths = setup(&args)?;
+    Ok((args, paths))
 }
 
 fn run_requested_mode(args: cli::Args, paths: constants::PathResolver) -> AnyhowResult<()> {

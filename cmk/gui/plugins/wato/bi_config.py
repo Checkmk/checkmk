@@ -100,6 +100,7 @@ from cmk.gui.valuespec import (
     TextInput,
     Transform,
     ValueSpec,
+    ValueSpecText,
 )
 from cmk.gui.watolib.groups import load_contact_group_information
 
@@ -1507,7 +1508,7 @@ class NodeVisualizationLayoutStyle(ValueSpec):
             "example.create_example(%s)" % (json.dumps(varprefix), json.dumps(value))
         )
 
-    def value_to_html(self, value) -> str:
+    def value_to_html(self, value: dict[str, Any]) -> ValueSpecText:
         return ""
 
     def from_html_vars(self, varprefix: str) -> dict[str, Any]:

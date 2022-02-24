@@ -2217,7 +2217,7 @@ class ListOfMultiple(ValueSpec):
     def canonical_value(self) -> dict[str, Any]:
         return {}
 
-    def value_to_html(self, value: dict[str, Any]) -> HTML:
+    def value_to_html(self, value: dict[str, Any]) -> ValueSpecText:
         table_content = HTML()
         for ident, val in value.items():
             vs = self._choice_dict[ident]
@@ -2742,7 +2742,7 @@ class AjaxDropdownChoice(DropdownChoice):
         if value and self._regex and not self._regex.match(value):
             raise MKUserError(varprefix, self._regex_error)
 
-    def value_to_html(self, value) -> ValueSpecText:
+    def value_to_html(self, value: str) -> ValueSpecText:
         return super().value_to_html(value) if self.choices() else str(value)
 
     def render_input(self, varprefix: str, value: str) -> None:
@@ -3794,7 +3794,7 @@ class OptionalDropdownChoice(DropdownChoice):
         self._explicit.render_input(varprefix + "_ex", input_value)
         html.close_span()
 
-    def value_to_html(self, value) -> ValueSpecText:
+    def value_to_html(self, value: Any) -> ValueSpecText:
         for val, title in self.choices():
             if val == value:
                 return title
@@ -4785,7 +4785,7 @@ class Optional(ValueSpec):
             return _(" Ignore this option")
         return _(" Activate this option")
 
-    def value_to_html(self, value) -> ValueSpecText:
+    def value_to_html(self, value: Any) -> ValueSpecText:
         if value == self._none_value:
             return self._none_label
         return self._valuespec.value_to_html(value)
@@ -4943,7 +4943,7 @@ class Alternative(ValueSpec):
             return self._elements[0].default_value()
         return value
 
-    def value_to_html(self, value) -> ValueSpecText:
+    def value_to_html(self, value: Any) -> ValueSpecText:
         vs, value = self.matching_alternative(value)
         if vs:
             output = HTML()
@@ -5088,7 +5088,7 @@ class Tuple(ValueSpec):
         for idx, element in enumerate(self._elements):
             yield idx, element, value[idx]
 
-    def value_to_html(self, value) -> ValueSpecText:
+    def value_to_html(self, value: tuple[Any, ...]) -> ValueSpecText:
         return HTML(", ").join(el.value_to_html(val) for _, el, val in self._iter_value(value))
 
     def value_to_json(self, value: Any) -> list[Any]:
@@ -5387,7 +5387,7 @@ class Dictionary(ValueSpec[dict[str, Any]]):
             if name in self._required_keys or not self._optional_keys or name in self._default_keys
         }
 
-    def value_to_html(self, value) -> ValueSpecText:
+    def value_to_html(self, value: dict[str, Any]) -> ValueSpecText:
         value = self.migrate(value)
         if not value:
             return self._empty_text
@@ -5860,7 +5860,7 @@ class Password(TextInput):
                 )
             )
 
-    def value_to_html(self, value: _Optional[str]) -> str:
+    def value_to_html(self, value: _Optional[str]) -> ValueSpecText:
         if value is None:
             return _("none")
         return "******"
@@ -5963,8 +5963,8 @@ class FileUpload(ValueSpec):
     def value_from_json(self, json_value: Any) -> Any:
         return json_value
 
-    def value_to_html(self, value) -> ValueSpecText:
-        raise NotImplementedError()
+    def value_to_html(self, value: _Optional[bytes]) -> ValueSpecText:
+        raise NotImplementedError()  # FIXME! Violates LSP!
 
 
 class ImageUpload(FileUpload):
@@ -6180,7 +6180,7 @@ class Labels(ValueSpec):
                     _("The label value %r is of type %s, but should be %s") % (k, type(v), str),
                 )
 
-    def value_to_html(self, value) -> ValueSpecText:
+    def value_to_html(self, value: dict[str, Any]) -> ValueSpecText:
         label_sources = {k: self._label_source.value for k in value} if self._label_source else {}
         return render_labels(value, "host", with_links=False, label_sources=label_sources)
 
@@ -6513,7 +6513,7 @@ class IconSelector(ValueSpec):
             return None
         return icon
 
-    def value_to_html(self, value) -> ValueSpecText:
+    def value_to_html(self, value: Any) -> ValueSpecText:
         return self._render_icon(value["icon"] if isinstance(value, dict) else value)
 
     def value_to_json(self, value: Any) -> Any:
@@ -6882,7 +6882,7 @@ class CAorCAChain(UploadOrPasteTextFile):
                     cert_info[what][titles[key]] = raw_val.decode("utf-8")
         return cert_info
 
-    def value_to_html(self, value) -> ValueSpecText:
+    def value_to_html(self, value: Any) -> ValueSpecText:
         cert_info = self.analyse_cert(value)
 
         rows = []

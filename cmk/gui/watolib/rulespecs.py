@@ -1125,7 +1125,7 @@ class CheckTypeGroupSelection(ElementSelection):
         }
         return elements
 
-    def value_to_html(self, value) -> ValueSpecText:
+    def value_to_html(self, value: str) -> ValueSpecText:
         return html.render_tt(value)
 
 
@@ -1189,7 +1189,7 @@ class TimeperiodValuespec(ValueSpec):
             )
             return r
 
-    def value_to_html(self, value) -> ValueSpecText:
+    def value_to_html(self, value: Any) -> ValueSpecText:
         return self._get_used_valuespec(value).value_to_html(value)
 
     def from_html_vars(self, varprefix: str) -> dict[str, Any]:

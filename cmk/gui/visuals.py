@@ -122,6 +122,7 @@ from cmk.gui.valuespec import (
     TextInput,
     Transform,
     ValueSpec,
+    ValueSpecText,
 )
 
 CustomUserVisuals = Dict[Tuple[UserId, VisualName], Dict]
@@ -1978,14 +1979,14 @@ class VisualFilter(ValueSpec):
     def validate_value(self, value: FilterHTTPVariables, varprefix: str) -> None:
         self._filter.validate_value(value)
 
-    def value_to_html(self, value):
-        raise NotImplementedError()
+    def value_to_html(self, value: FilterHTTPVariables) -> ValueSpecText:
+        raise NotImplementedError()  # FIXME! Violates LSP!
 
     def value_to_json(self, value):
-        raise NotImplementedError()
+        raise NotImplementedError()  # FIXME! Violates LSP!
 
     def value_from_json(self, json_value):
-        raise NotImplementedError()
+        raise NotImplementedError()  # FIXME! Violates LSP!
 
 
 def _single_info_selection_forth(restrictions: Sequence[str]) -> Tuple[str, Sequence[str]]:

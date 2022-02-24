@@ -394,7 +394,7 @@ class UserSelection(DropdownChoice):
 
         return lambda: get_wato_users(none_value)
 
-    def value_to_html(self, value) -> ValueSpecText:
+    def value_to_html(self, value: Any) -> ValueSpecText:
         return str(super().value_to_html(value)).rsplit(" - ", 1)[-1]
 
 

@@ -87,6 +87,7 @@ from cmk.gui.valuespec import (
     Transform,
     Tuple,
     ValueSpec,
+    ValueSpecText,
 )
 from cmk.gui.watolib.changes import make_object_audit_log_url
 from cmk.gui.watolib.check_mk_automations import get_check_information
@@ -2227,7 +2228,7 @@ class VSExplicitConditions(Transform):
         if value.startswith("!"):
             raise MKUserError(varprefix, _('It\'s not allowed to use a leading "!" here.'))
 
-    def value_to_html(self, value: RuleConditions) -> HTML:
+    def value_to_html(self, value: RuleConditions) -> ValueSpecText:
         with output_funnel.plugged():
             html.open_ul(class_="conditions")
             renderer = RuleConditionRenderer()

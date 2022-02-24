@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import time
+from typing import Any
 
 import cmk.utils.tags
 from cmk.utils.type_defs import HostName, List
@@ -1126,7 +1127,7 @@ class LockedByValuespec(Tuple):
             ),
         )
 
-    def value_to_html(self, value) -> ValueSpecText:
+    def value_to_html(self, value: tuple[Any, ...]) -> ValueSpecText:
         if not value or not value[1] or not value[2]:
             return _("Not locked")
         return super().value_to_html(value)

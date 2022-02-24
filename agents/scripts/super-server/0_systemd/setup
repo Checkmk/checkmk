@@ -100,33 +100,34 @@ HERE
 }
 
 _unit_files() {
-    printf "check-mk-agent.socket\n"
-    printf "check-mk-agent@.service\n"
-    printf "check-mk-agent-async.service\n"
-    printf "cmk-agent-ctl-daemon.service\n"
+    find "${ROOT}${RESOURCES}" -name '*.socket' -o -name '*.service' -o -name '*.timer' | sed 's|.*/||'
 }
 
 deploy() {
     _systemd_sufficient || return
 
-    dest="$(_destination)"
+    if _is_controller_setup; then
+        fallback=""
+    else
+        fallback=".fallback"
+    fi
+
+    dest="${ROOT}$(_destination)"
     printf "Deploying systemd units:"
 
-    printf " check-mk-agent@.service"
-    install -m 644 "${ROOT}${RESOURCES}/check-mk-agent@.service" "${ROOT}${dest}/"
+    for unit in $(_unit_files); do
 
-    printf ", check-mk-agent-async.service"
-    install -m 644 "${ROOT}${RESOURCES}/check-mk-agent-async.service" "${ROOT}${dest}/"
+        src="${ROOT}${RESOURCES}/${unit}"
 
-    if _is_controller_setup; then
-        printf ", check-mk-agent.socket"
-        install -m 644 "${ROOT}${RESOURCES}/check-mk-agent.socket" "${ROOT}${dest}/"
-        printf ", cmk-agent-ctl-daemon.service\n"
-        install -m 644 "${ROOT}${RESOURCES}/cmk-agent-ctl-daemon.service" "${ROOT}${dest}/"
-    else
-        printf ", check-mk-agent.socket (TCP fallback)\n"
-        install -m 644 "${ROOT}${RESOURCES}/check-mk-agent.socket.fallback" "${ROOT}${dest}/check-mk-agent.socket"
-    fi
+        printf " %s" "${unit}"
+        if [ -e "${src}${fallback}" ]; then
+            install -m 644 "${src}${fallback}" "${dest}/${unit}"
+        else
+            install -m 644 "${src}" "${dest}/${unit}"
+        fi
+
+    done
+    printf "\n"
 
 }
 
@@ -149,8 +150,9 @@ trigger() {
     systemctl daemon-reload
 
     for unit in $(_unit_files); do
-        # skip unit templates
-        [ "${unit}" = "${unit#*@}" ] || continue
+
+        # skip unit templates + timer activated units
+        grep -q '\[Install\]' "${ROOT}${RESOURCES}/${unit}" || continue
 
         if _unit_deployed "${unit}"; then
             printf "Activating systemd unit '%s'...\n" "${unit}"

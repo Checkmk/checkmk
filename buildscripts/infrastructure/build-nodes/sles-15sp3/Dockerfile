@@ -5,14 +5,7 @@ ENV PATH="/opt/bin:${PATH}"
 
 ARG ARTIFACT_STORAGE
 
-# Need to install older version of multiple libs, since base image was updated
 RUN zypper addrepo -G ${ARTIFACT_STORAGE}/repository/sles15sp3 sles15sp3 \
-    && zypper in -f -y \
-    libglib-2_0-0-2.62.5-1.26 \
-    libmount1-2.33.1-4.5.1 \
-    libpcre1-8.41-4.20 \
-    libblkid1-2.33.1-4.5.1 \
-    libuuid1-2.33.1-4.5.1 \
     && zypper -n --no-gpg-checks in --replacefiles \
     gawk \
     && zypper -n --no-gpg-checks in --replacefiles \

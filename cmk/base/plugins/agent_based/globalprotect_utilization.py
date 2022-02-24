@@ -4,11 +4,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Mapping, NamedTuple, Optional
+from typing import Any, Callable, Mapping, NamedTuple, Optional, Tuple
 
 from .agent_based_api.v1 import (
     all_of,
     check_levels,
+    check_levels_predictive,
     exists,
     register,
     render,
@@ -60,8 +61,36 @@ def discover_globalprotect_utilization(section: Section) -> DiscoveryResult:
     yield Service()
 
 
+def _check_levels(
+    value: float,
+    levels_upper: Any,
+    boundaries: Tuple[float, float],
+    metric_name: str,
+    label: str,
+    render_func: Optional[Callable] = None,
+) -> CheckResult:
+    if isinstance(levels_upper, dict):
+        yield from check_levels_predictive(
+            value=value,
+            levels=levels_upper,
+            boundaries=boundaries,
+            metric_name=metric_name,
+            render_func=render_func,
+            label=label,
+        )
+    else:
+        yield from check_levels(
+            value=value,
+            levels_upper=levels_upper,
+            boundaries=boundaries,
+            metric_name=metric_name,
+            render_func=render_func,
+            label=label,
+        )
+
+
 def check_globalprotect_utilization(params: Mapping[str, Any], section: Section) -> CheckResult:
-    yield from check_levels(
+    yield from _check_levels(
         value=section.utilization,
         levels_upper=params.get("utilization"),
         boundaries=(0.0, 100.0),
@@ -70,7 +99,7 @@ def check_globalprotect_utilization(params: Mapping[str, Any], section: Section)
         label="Utilization",
     )
 
-    yield from check_levels(
+    yield from _check_levels(
         value=section.active_tunnels,
         levels_upper=params.get("active_tunnels"),
         boundaries=(0, section.max_tunnels),

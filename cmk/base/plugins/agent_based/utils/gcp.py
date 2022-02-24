@@ -9,7 +9,7 @@ from typing import Any, Callable, Mapping, Sequence
 
 from google.cloud.monitoring_v3.types import TimeSeries
 
-from ..agent_based_api.v1 import check_levels, Service, ServiceLabel
+from ..agent_based_api.v1 import check_levels, check_levels_predictive, Service, ServiceLabel
 from ..agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 
 
@@ -69,13 +69,13 @@ class MetricSpec:
     scale: float = 1.0
 
 
-def _get_value(results: Sequence[GCPResult], metric_type: str) -> float:
+def _get_value(results: Sequence[GCPResult], metric_type: str, scale: float) -> float:
     # GCP does not always deliver all metrics. i.e. api/request_count only contains values if
     # api requests have occured. To ensure all metrics are displayed in check mk we default to
     # 0 in the absence of data.
     try:
         result = next(r for r in results if r.ts.metric.type == metric_type)
-        return result.ts.points[0].value.double_value
+        return result.ts.points[0].value.double_value * scale
     except StopIteration:
         return 0
 
@@ -84,10 +84,19 @@ def generic_check(
     metrics: Mapping[str, MetricSpec], timeseries: Sequence[GCPResult], params: Mapping[str, Any]
 ) -> CheckResult:
     for metric_name, metric_spec in metrics.items():
-        value = _get_value(timeseries, metric_spec.metric_type)
-        yield from check_levels(
-            value * metric_spec.scale,
-            metric_name=metric_name,
-            render_func=metric_spec.render_func,
-            levels_upper=params.get(metric_name),
-        )
+        value = _get_value(timeseries, metric_spec.metric_type, metric_spec.scale)
+        levels_upper = params.get(metric_name)
+        if isinstance(levels_upper, dict):
+            yield from check_levels_predictive(
+                value,
+                metric_name=metric_name,
+                render_func=metric_spec.render_func,
+                levels=levels_upper,
+            )
+        else:
+            yield from check_levels(
+                value,
+                metric_name=metric_name,
+                render_func=metric_spec.render_func,
+                levels_upper=levels_upper,
+            )

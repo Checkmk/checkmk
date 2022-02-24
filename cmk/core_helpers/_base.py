@@ -9,7 +9,6 @@ import logging
 from types import TracebackType
 from typing import Any, final, Final, Generic, Literal, Mapping, Optional, Sequence, Type, TypeVar
 
-import cmk.utils
 from cmk.utils.check_utils import ActiveCheckResult
 from cmk.utils.exceptions import (
     MKAgentError,
@@ -73,8 +72,6 @@ class Fetcher(Generic[TRawData], abc.ABC):
         except MKFetcherError:
             raise
         except Exception as exc:
-            if cmk.utils.debug.enabled():
-                raise
             raise MKFetcherError(repr(exc) if any(exc.args) else type(exc).__name__) from exc
         return self
 
@@ -106,8 +103,6 @@ class Fetcher(Generic[TRawData], abc.ABC):
         try:
             return result.OK(self._fetch(mode))
         except Exception as exc:
-            if cmk.utils.debug.enabled():
-                raise
             return result.Error(exc)
 
     def _fetch(self, mode: Mode) -> TRawData:

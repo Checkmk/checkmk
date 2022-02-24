@@ -247,7 +247,6 @@ class TestIPMIFetcher:
         assert other.username == fetcher.username
         assert other.password == fetcher.password
 
-    @pytest.mark.skip("CMK-9861")
     def test_command_raises_IpmiException_handling(
         self, file_cache: DefaultAgentFileCache, monkeypatch: MonkeyPatch
     ) -> None:

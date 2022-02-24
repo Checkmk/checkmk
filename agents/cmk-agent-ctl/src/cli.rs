@@ -7,10 +7,13 @@ use structopt::StructOpt;
 
 #[derive(StructOpt)]
 pub struct LoggingOpts {
+    // TODO (jh): make this field private again once the Windows agent reads its pull configuration
+    // from a file instead of from the command line. Currently, we need this to be public for
+    // testing.
     /// Enable verbose output. Use once (-v) for logging level INFO and twice (-vv) for logging
     /// level DEBUG.
     #[structopt(short, long, parse(from_occurrences))]
-    verbose: u8,
+    pub verbose: u8,
 }
 
 impl LoggingOpts {

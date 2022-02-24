@@ -62,6 +62,8 @@ struct ConnectionStatus {
 
 #[derive(serde::Serialize)]
 struct Status {
+    ip_allowlist: Vec<String>,
+    allow_legacy_pull: bool,
     connections: Vec<ConnectionStatus>,
 }
 
@@ -286,6 +288,8 @@ impl std::fmt::Display for ConnectionStatus {
 impl Status {
     fn from(
         registry: &config::Registry,
+        ip_allowlist: Vec<String>,
+        allow_legacy_pull: bool,
         agent_rec_api: &impl agent_receiver_api::Status,
     ) -> Status {
         let mut conn_stats = Vec::new();
@@ -311,6 +315,8 @@ impl Status {
         }
 
         Status {
+            ip_allowlist,
+            allow_legacy_pull,
             connections: conn_stats,
         }
     }
@@ -332,15 +338,26 @@ impl std::fmt::Display for Status {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         write!(
             f,
-            "{}",
+            "IP allowlist: {}{}{}",
+            match self.ip_allowlist.is_empty() {
+                true => String::from("any"),
+                false => self.ip_allowlist.join(" "),
+            },
+            match self.allow_legacy_pull {
+                true => "\nLegacy mode: enabled",
+                false => "",
+            },
             if self.connections.is_empty() {
-                String::from("No connections")
+                String::from("\nNo connections")
             } else {
-                self.connections
-                    .iter()
-                    .map(|conn_stat| format!("{}", conn_stat))
-                    .collect::<Vec<String>>()
-                    .join("\n\n\n")
+                format!(
+                    "\n\n\n{}",
+                    self.connections
+                        .iter()
+                        .map(|conn_stat| format!("{}", conn_stat))
+                        .collect::<Vec<String>>()
+                        .join("\n\n\n"),
+                )
             }
         )
     }
@@ -355,19 +372,35 @@ fn fmt_option_to_str(op: &Option<impl std::fmt::Display>, none_str: &str) -> Str
 
 fn _status(
     registry: &config::Registry,
+    pull_config: &config::PullConfig,
     json: bool,
     agent_rec_api: &impl agent_receiver_api::Status,
 ) -> AnyhowResult<String> {
-    Status::from(registry, agent_rec_api).to_string(json)
+    Status::from(
+        registry,
+        pull_config.allowed_ip.to_vec(),
+        pull_config.allow_legacy_pull(),
+        agent_rec_api,
+    )
+    .to_string(json)
 }
 
-pub fn status(registry: &config::Registry, json: bool) -> AnyhowResult<()> {
-    println!("{}", _status(registry, json, &agent_receiver_api::Api {})?);
+pub fn status(
+    registry: &config::Registry,
+    pull_config: &config::PullConfig,
+    json: bool,
+) -> AnyhowResult<()> {
+    println!(
+        "{}",
+        _status(registry, pull_config, json, &agent_receiver_api::Api {})?
+    );
     Ok(())
 }
 
 #[cfg(test)]
 mod test_status {
+    use super::super::cli;
+    use super::super::config::TOMLLoader;
     use super::*;
     use std::str::FromStr;
 
@@ -630,6 +663,8 @@ mod test_status {
 
     fn build_status() -> Status {
         Status {
+            ip_allowlist: vec![String::from("192.168.1.13"), String::from("[::1]")],
+            allow_legacy_pull: false,
             connections: vec![
                 ConnectionStatus {
                     coordinates: Some(
@@ -681,7 +716,8 @@ mod test_status {
     fn test_status_str_human_readable() {
         assert_eq!(
             build_status().to_string(false).unwrap(),
-            "Connection: localhost:8000/site\n\
+            "IP allowlist: 192.168.1.13 [::1]\n\n\n\
+             Connection: localhost:8000/site\n\
              \tUUID: 50611369-7a42-4c0b-927e-9a14330401fe\n\
              \tLocal:\n\
              \t\tConnection type: pull-agent\n\
@@ -716,11 +752,15 @@ mod test_status {
     fn test_status_str_empty() {
         assert_eq!(
             Status {
+                ip_allowlist: vec![],
+                allow_legacy_pull: true,
                 connections: vec![],
             }
             .to_string(false)
             .unwrap(),
-            "No connections"
+            "IP allowlist: any\n\
+             Legacy mode: enabled\n\
+             No connections"
         );
     }
 
@@ -766,8 +806,27 @@ mod test_status {
         .unwrap();
 
         assert_eq!(
-            _status(&registry, false, &MockApi {},).unwrap(),
-            "Connection: server:8000/push-site\n\
+            _status(
+                &registry,
+                &config::PullConfig::new(
+                    config::ConfigFromDisk::new().unwrap(),
+                    cli::PullArgs {
+                        port: None,
+                        allowed_ip: None,
+                        logging_opts: cli::LoggingOpts { verbose: 0 },
+                    },
+                    config::LegacyPullMarker::new(&std::path::PathBuf::from(
+                        &tempfile::NamedTempFile::new().unwrap().into_temp_path()
+                    )),
+                    registry.clone()
+                )
+                .unwrap(),
+                false,
+                &MockApi {},
+            )
+            .unwrap(),
+            "IP allowlist: any\n\n\n\
+             Connection: server:8000/push-site\n\
              \tUUID: 99f56bbc-5965-4b34-bc70-1959ad1d32d6\n\
              \tLocal:\n\
              \t\tConnection type: push-agent\n\

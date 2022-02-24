@@ -45,6 +45,9 @@ class TreeAggregator:
         try:
             table_rows, attributes = self._dispatch(inventory_generator)
         except Exception as exc:
+            # TODO(ml): Returning the error is one possibly valid way to
+            #           handle it.  What is the `if cmk.utils.debug.enabled()`
+            #           actually good for?
             if cmk.utils.debug.enabled():
                 raise
             return exc

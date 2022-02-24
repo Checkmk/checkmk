@@ -546,7 +546,7 @@ class HostAttributeContactGroups(ABCHostAttribute):
             )
         return "", result
 
-    def render_input(self, varprefix, value):
+    def render_input(self, varprefix: str, value: Any) -> None:
         value = convert_cgroups_from_tuple(value)
 
         # If we're just editing a host, then some of the checkboxes will be missing.

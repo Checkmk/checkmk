@@ -2332,7 +2332,7 @@ class DictHostTagCondition(Transform):
 class HostTagCondition(ValueSpec):
     """ValueSpec for editing a tag-condition"""
 
-    def render_input(self, varprefix, value):
+    def render_input(self, varprefix: str, value: Any) -> None:
         self._render_condition_editor(varprefix, value)
 
     def from_html_vars(self, varprefix: str) -> Sequence[str]:

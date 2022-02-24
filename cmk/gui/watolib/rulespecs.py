@@ -1151,7 +1151,7 @@ class TimeperiodValuespec(ValueSpec):
         # If nothing is configured, simply return the default value of the enclosed valuespec
         return self._enclosed_valuespec.default_value()
 
-    def render_input(self, varprefix, value):
+    def render_input(self, varprefix: str, value: Any) -> None:
         # The display mode differs when the valuespec is activated
         vars_copy = dict(request.itervars())
 

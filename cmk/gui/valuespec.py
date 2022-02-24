@@ -451,10 +451,10 @@ class NumericRenderer:
             style="text-align: right;" if self._align == "right" else "",
         )
 
-    def render_input(self, varprefix: str, text: str) -> None:
+    def render_input(self, varprefix: str, value: str) -> None:
         if self._label:
             html.span(self._label, class_="vs_floating_text")
-        self.text_input(varprefix, text)
+        self.text_input(varprefix, value)
         if self._unit:
             html.span(self._unit, class_="vs_floating_text")
 
@@ -2745,7 +2745,7 @@ class AjaxDropdownChoice(DropdownChoice):
     def value_to_html(self, value) -> ValueSpecText:
         return super().value_to_html(value) if self.choices() else str(value)
 
-    def render_input(self, varprefix: str, value) -> None:
+    def render_input(self, varprefix: str, value: str) -> None:
         if self._label:
             html.write_text(self._label)
 
@@ -3759,7 +3759,7 @@ class OptionalDropdownChoice(DropdownChoice):
     def value_is_explicit(self, value):
         return value not in [c[0] for c in self.choices()]
 
-    def render_input(self, varprefix, value):
+    def render_input(self, varprefix: str, value: Any) -> None:
         defval = "other"
         options: list[tuple[_Optional[str], str]] = []
         for n, (val, title) in enumerate(self.choices()):
@@ -4732,7 +4732,7 @@ class Optional(ValueSpec):
     def canonical_value(self):
         return self._none_value
 
-    def render_input(self, varprefix, value):
+    def render_input(self, varprefix: str, value: Any) -> None:
         div_id = "option_" + varprefix
         checked = html.get_checkbox(varprefix + "_use")
         if checked is None:
@@ -4877,7 +4877,7 @@ class Alternative(ValueSpec):
 
         return None, value
 
-    def render_input(self, varprefix, value):
+    def render_input(self, varprefix: str, value: Any) -> None:
         mvs, value = self.matching_alternative(value)
         options: list[tuple[_Optional[str], str]] = []
         sel_option = request.var(varprefix + "_use")
@@ -5022,7 +5022,7 @@ class Tuple(ValueSpec):
     def default_value(self):
         return tuple(x.default_value() for x in self._elements)
 
-    def render_input(self, varprefix, value):
+    def render_input(self, varprefix: str, value: Any) -> None:
         if self._orientation != "float":
             html.open_table(class_=["valuespec_tuple", self._orientation])
             if self._orientation == "horizontal":
@@ -6184,7 +6184,7 @@ class Labels(ValueSpec):
         label_sources = {k: self._label_source.value for k in value} if self._label_source else {}
         return render_labels(value, "host", with_links=False, label_sources=label_sources)
 
-    def render_input(self, varprefix, value):
+    def render_input(self, varprefix: str, value: Any) -> None:
         html.help(self.help())
         label_type = "host_label" if "host_labels" in varprefix else "service_label"
         html.text_input(
@@ -6380,7 +6380,7 @@ class IconSelector(ValueSpec):
             return value
         return {"icon": value, "emblem": None}
 
-    def render_input(self, varprefix, value):
+    def render_input(self, varprefix: str, value: Any) -> None:
         value = self._transform_icon_str(value)
 
         self._render_input(varprefix, value["icon"])
@@ -6588,7 +6588,7 @@ class Color(ValueSpec):
     def allow_empty(self) -> bool:
         return self._allow_empty
 
-    def render_input(self, varprefix, value):
+    def render_input(self, varprefix: str, value: Any) -> None:
         if not value:
             value = "#FFFFFF"
 
@@ -6679,7 +6679,7 @@ SSHKeyPairValue = tuple[str, str]
 
 
 class SSHKeyPair(ValueSpec):
-    def render_input(self, varprefix: str, value: _Optional[SSHKeyPairValue]):
+    def render_input(self, varprefix: str, value: _Optional[SSHKeyPairValue]) -> None:
         if value:
             html.write_text(_("Fingerprint: %s") % self.value_to_html(value))
             html.hidden_field(varprefix, self._encode_key_for_url(value), add_var=True)

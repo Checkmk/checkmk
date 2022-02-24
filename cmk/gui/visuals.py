@@ -1961,7 +1961,7 @@ class VisualFilter(ValueSpec):
     def canonical_value(self):
         return {}
 
-    def render_input(self, varprefix: str, value: FilterHTTPVariables):
+    def render_input(self, varprefix: str, value: FilterHTTPVariables) -> None:
         # A filter can not be used twice on a page, because the varprefix is not used
         show_filter(self._filter, value)
 

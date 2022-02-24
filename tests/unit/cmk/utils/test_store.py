@@ -17,6 +17,7 @@ import pytest
 
 from tests.testlib import import_module, wait_until
 
+import cmk.utils.debug
 import cmk.utils.store as store
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.store.host_storage import (
@@ -98,21 +99,26 @@ def test_load_data_from_file_locking(tmp_path, path_type):
     assert store.have_lock(path_type(locked_file)) is True
 
 
-@pytest.mark.skip("CMK-9861")
 @pytest.mark.parametrize("path_type", [str, Path])
 def test_load_data_from_not_permitted_file(tmp_path, path_type):
+    # Note: The code is actually a lot more expressive in debug mode.
+    cmk.utils.debug.disable()
+
     locked_file = tmp_path / "test"
     locked_file.write_text("[1, 2]", encoding="utf-8")
     os.chmod(str(locked_file), 0o200)
 
     with pytest.raises(MKGeneralException) as e:
         store.load_object_from_file(path_type(locked_file), default=None)
-    assert str(locked_file) in "%s" % e
-    assert "Permission denied" in "%s" % e
+    assert str(locked_file) in f"{e!s}"
+    assert "Permission denied" in f"{e!s}"
 
 
 @pytest.mark.parametrize("path_type", [str, Path])
 def test_load_data_from_file_dict(tmp_path, path_type):
+    # Note: The code is actually a lot more expressive in debug mode.
+    cmk.utils.debug.disable()
+
     locked_file = tmp_path / "test"
     locked_file.write_bytes(repr({"1": 2, "ä": "ß"}).encode())
 

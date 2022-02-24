@@ -60,8 +60,8 @@ impl PullState for PullStateImpl {
         if self.registry.refresh()? {
             self.tls_acceptor = tls_server::tls_acceptor(self.registry.pull_connections())
                 .context("Could not initialize TLS.")?;
-            self.legacy_pull = Self::is_legacy_pull(&self.registry, &self.legacy_pull_marker);
         };
+        self.legacy_pull = Self::is_legacy_pull(&self.registry, &self.legacy_pull_marker);
         Ok(())
     }
 

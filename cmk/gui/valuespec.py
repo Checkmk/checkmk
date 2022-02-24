@@ -3323,7 +3323,7 @@ class CascadingDropdown(ValueSpec[CascadingDropdownChoiceValue]):
 
         return (value[0], vs.transform_value(value[1]))
 
-    def has_show_more(self):
+    def has_show_more(self) -> bool:
         return any(vs.has_show_more() for _name, _title, vs in self.choices() if vs is not None)
 
 

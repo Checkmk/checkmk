@@ -198,7 +198,7 @@ TEST_F(SectionProviderCheckMkFixture, ConstFields) {
     for (const auto &r : result) {
         auto values = tools::SplitString(r, ": ");
         EXPECT_EQ(values[0], std::string{*expected_name++});
-        if (values[0] == "AgentController") {
+        if (values[0].starts_with("AgentController")) {
             EXPECT_EQ(values.size(), 1);
         } else {
             EXPECT_EQ(values.size(), 2);
@@ -214,11 +214,11 @@ TEST_F(SectionProviderCheckMkFixture, AdvancedFields) {
     EXPECT_EQ(get_val(result[3]), cfg::GetHostName());
     EXPECT_EQ(get_val(result[4]), tgt::Is64bit() ? "64bit" : "32bit");
     EXPECT_EQ(result[16], "AgentController: ");
-    EXPECT_TRUE(result[17].starts_with("AgentControllerStatus: no"));
+    EXPECT_TRUE(result[17].starts_with("AgentControllerStatus: "));
     tst::CreateTextFile(fs::path{cfg::GetUserDir()} / ac::kLegacyPullFile,
                         "test");
     result = getCoreResultAsTable();
-    EXPECT_EQ(result[17].starts_with("AgentControllerStatus: "));
+    EXPECT_TRUE(result[17].starts_with("AgentControllerStatus: "));
 }
 
 TEST_F(SectionProviderCheckMkFixture, OnlyFromField) {

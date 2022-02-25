@@ -1,0 +1,15 @@
+Title: Oracle agent plugin configuration: Fix transformation during update from Checkmk 1.6.0
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1645808830
+Edition: cee
+Knowledge: doc
+Level: 1
+Version: 2.0.0p21
+
+After updating from Checkmk 1.6 to 2.0, any rules for the Oracle agent plugin
+("ORACLE databases (Linux, Solaris, AIX, Windows)") from before the update
+where unreadable in the GUI if the option
+"Sections - data to collect"
+was configured.

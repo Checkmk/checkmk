@@ -118,7 +118,7 @@ def expected_items() -> Dict[str, List[str]]:
     }
 
     if not cmk_version.is_raw_edition():
-        expected_items_dict.update({"misc": ["influxdb_connections"]})
+        expected_items_dict.update({"exporter": ["influxdb_connections"]})
 
     return expected_items_dict
 

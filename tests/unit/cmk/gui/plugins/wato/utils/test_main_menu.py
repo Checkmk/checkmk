@@ -31,4 +31,4 @@ def test_register_modules(monkeypatch):
     assert registered.sort_index == 100
     assert registered.icon == "icons"
     assert registered.is_show_more is False
-    assert registered.topic == main_menu.MainModuleTopicMisc
+    assert registered.topic == main_menu.MainModuleTopicExporter

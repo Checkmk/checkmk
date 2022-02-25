@@ -58,7 +58,7 @@ def register_modules(*args):
             (ABCMainModule,),
             {
                 "mode_or_url": wato_module.mode_or_url,
-                "topic": MainModuleTopicMisc,
+                "topic": MainModuleTopicExporter,
                 "title": wato_module.title,
                 "icon": wato_module.icon,
                 "permission": wato_module.permission,
@@ -162,11 +162,11 @@ MainModuleTopicMaintenance = main_module_topic_registry.register(
     )
 )
 
-MainModuleTopicMisc = main_module_topic_registry.register(
+MainModuleTopicExporter = main_module_topic_registry.register(
     MainModuleTopic(
-        name="misc",
-        title=_l("Miscellaneous"),
-        icon_name="topic_miscellaneous",
+        name="exporter",
+        title=_l("Exporter"),
+        icon_name="topic_exporter",
         sort_index=150,
     )
 )

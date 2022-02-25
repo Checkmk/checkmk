@@ -14,4 +14,7 @@ if [ -e "/opt/rust/rustup" ]; then
     export CARGO_HOME
 fi
 
+if [[ -f cargo_env ]]; then
+    source cargo_env
+fi
 cargo "$@"

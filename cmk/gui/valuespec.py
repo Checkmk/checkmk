@@ -141,10 +141,10 @@ class Bounds(Generic[C]):
             )
 
 
-_VT = TypeVar("_VT")
+T = TypeVar("T")
 
 
-class ValueSpec(abc.ABC, Generic[_VT]):
+class ValueSpec(abc.ABC, Generic[T]):
     """Abstract base class of all value declaration classes"""
 
     # TODO: Remove **kwargs once all valuespecs have been changed
@@ -153,7 +153,7 @@ class ValueSpec(abc.ABC, Generic[_VT]):
         self,
         title: _Optional[str] = None,
         help: _Optional[ValueSpecHelp] = None,
-        default_value: Union[Sentinel, _VT, Callable[[], Union[Sentinel, _VT]]] = DEF_VALUE,
+        default_value: Union[Sentinel, T, Callable[[], Union[Sentinel, T]]] = DEF_VALUE,
         validate: _Optional[ValueSpecValidateFunc] = None,
         **kwargs,
     ):
@@ -186,7 +186,7 @@ class ValueSpec(abc.ABC, Generic[_VT]):
         """Whether the valuespec is allowed to be left empty."""
         return True
 
-    def render_input(self, varprefix: str, value: _VT) -> None:
+    def render_input(self, varprefix: str, value: T) -> None:
         """Create HTML-form elements that represent a given
         value and let the user edit that value
 
@@ -201,12 +201,12 @@ class ValueSpec(abc.ABC, Generic[_VT]):
         html.set_focus(varprefix)
 
     # TODO: Investigate: The Optional here does not really fit the doc string. What to do with this?
-    def canonical_value(self) -> _Optional[_VT]:
+    def canonical_value(self) -> _Optional[T]:
         """Create a canonical, minimal, default value that matches the datatype
         of the value specification and fulfills also data validation."""
         return None
 
-    def default_value(self) -> _Optional[_VT]:
+    def default_value(self) -> _Optional[T]:
         """Return a default value for this variable
 
         This is optional and only used in the value editor for same cases where
@@ -223,7 +223,7 @@ class ValueSpec(abc.ABC, Generic[_VT]):
             return self.canonical_value()
         return value
 
-    def value_to_html(self, value: _VT) -> ValueSpecText:
+    def value_to_html(self, value: T) -> ValueSpecText:
         """Creates a HTML-representation of the value that can be
         used in tables and other contextes
 
@@ -232,26 +232,26 @@ class ValueSpec(abc.ABC, Generic[_VT]):
         return repr(value)
 
     @abc.abstractmethod
-    def value_to_json(self, value: _VT) -> JSONValue:
+    def value_to_json(self, value: T) -> JSONValue:
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def value_from_json(self, json_value: JSONValue) -> _VT:
+    def value_from_json(self, json_value: JSONValue) -> T:
         raise NotImplementedError()
 
-    def value_to_json_safe(self, value: _VT) -> JSONValue:
+    def value_to_json_safe(self, value: T) -> JSONValue:
         """Return a JSON compatible format without sensitive information like passwords"""
         return self.value_to_json(value)
 
     @abc.abstractmethod
-    def from_html_vars(self, varprefix: str) -> _VT:
+    def from_html_vars(self, varprefix: str) -> T:
         """Create a value from the current settings of the HTML variables
 
         This function must also check the validity and may raise a MKUserError
         in case of invalid set variables."""
         raise NotImplementedError()
 
-    def validate_value(self, value: _VT, varprefix: str) -> None:
+    def validate_value(self, value: T, varprefix: str) -> None:
         """Check if a given value is a valid structure for the current valuespec
 
         The validation is done in 3 phases:
@@ -276,10 +276,10 @@ class ValueSpec(abc.ABC, Generic[_VT]):
 
     # TODO: Better signature: def (value: object, varprefix: builtins.str) -> _VT
     # Remember: Parse, don't validate!
-    def validate_datatype(self, value: _VT, varprefix: str) -> None:
+    def validate_datatype(self, value: T, varprefix: str) -> None:
         """Check if a given value matches the datatype of described by this class."""
 
-    def _validate_value(self, value: _VT, varprefix: str) -> None:
+    def _validate_value(self, value: T, varprefix: str) -> None:
         """Override this method to implement custom validation functions for sub-valuespec types
 
         This function should assume that the data type is valid (either because
@@ -287,7 +287,7 @@ class ValueSpec(abc.ABC, Generic[_VT]):
         with validate_datatype())."""
 
     # FIXME: The signature seem to be utter nonsense...
-    def transform_value(self, value: _VT) -> _VT:
+    def transform_value(self, value: T) -> T:
         """Transform the given value with the valuespecs transform logic and give it back"""
         return value
 
@@ -296,12 +296,12 @@ class ValueSpec(abc.ABC, Generic[_VT]):
         return False
 
 
-class FixedValue(ValueSpec[_VT]):
+class FixedValue(ValueSpec[T]):
     """A fixed non-editable value, e.g. to be used in 'Alternative'"""
 
     def __init__(  # pylint: disable=redefined-builtin
         self,
-        value: _VT,
+        value: T,
         totext: _Optional[str] = None,
         title: _Optional[str] = None,
         help: _Optional[ValueSpecHelp] = None,
@@ -312,29 +312,29 @@ class FixedValue(ValueSpec[_VT]):
         self._value = value
         self._totext = totext
 
-    def canonical_value(self) -> _VT:
+    def canonical_value(self) -> T:
         return self._value
 
-    def render_input(self, varprefix: str, value: _VT) -> None:
+    def render_input(self, varprefix: str, value: T) -> None:
         html.write_text(self.value_to_html(value))
 
-    def value_to_html(self, value: _VT) -> ValueSpecText:
+    def value_to_html(self, value: T) -> ValueSpecText:
         if self._totext is not None:
             return self._totext
         if isinstance(value, str):
             return value
         return str(value)
 
-    def value_to_json(self, value: _VT) -> JSONValue:
+    def value_to_json(self, value: T) -> JSONValue:
         return value
 
-    def value_from_json(self, json_value: JSONValue) -> _VT:
+    def value_from_json(self, json_value: JSONValue) -> T:
         return json_value
 
-    def from_html_vars(self, varprefix: str) -> _VT:
+    def from_html_vars(self, varprefix: str) -> T:
         return self._value
 
-    def validate_datatype(self, value: _VT, varprefix: str) -> None:
+    def validate_datatype(self, value: T, varprefix: str) -> None:
         if not self._value == value:
             raise MKUserError(
                 varprefix, _("Invalid value, must be '%r' but is '%r'") % (self._value, value)

@@ -687,10 +687,18 @@ def _process_notifications(
                     else:
                         call_notification_script(plugin_name, context)
 
-            except Exception:
+            except Exception as e:
                 if cmk.utils.debug.enabled():
                     raise
                 logger.exception("    ERROR:")
+                _log_to_history(
+                    notification_result_message(
+                        NotificationPluginName(plugin_name),
+                        NotificationContext(plugin_context),
+                        NotificationResultCode(2),
+                        [str(e)],
+                    )
+                )
 
     return plugin_info
 

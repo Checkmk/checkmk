@@ -72,11 +72,12 @@ def check_icmp_description(params):
         return params["description"]
 
     description = "PING"
-    target = params.get("address", "address")
-    if target[0] == "indexed_ipv4address":
-        description += " IPv4/%s" % target[1]
-    elif target[0] == "indexed_ipv6address":
-        description += " IPv6/%s" % target[1]
+    if target := params.get("address"):
+        for v in ("4", "6"):
+            if target == f"all_ipv{v}addresses":
+                description += f" all IPv{v} Addresses"
+            if target[0] == f"indexed_ipv{v}address":
+                description += f" IPv{v}/{target[1]}"
     return description
 
 

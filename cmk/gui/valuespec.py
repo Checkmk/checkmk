@@ -1783,7 +1783,10 @@ def ListOfNetworkPorts(title: _Optional[str], default_value: list[int]) -> ListO
     )
 
 
-class ListOf(ValueSpec):
+ListOfModel = Sequence[T]
+
+
+class ListOf(ValueSpec[ListOfModel[T]]):
     """Generic list-of-valuespec ValueSpec with Javascript-based add/delete/move"""
 
     class Style(Enum):
@@ -1792,7 +1795,7 @@ class ListOf(ValueSpec):
 
     def __init__(  # pylint: disable=redefined-builtin
         self,
-        valuespec: ValueSpec,
+        valuespec: ValueSpec[T],
         magic: str = "@!@",
         add_label: _Optional[str] = None,
         del_label: _Optional[str] = None,
@@ -1805,8 +1808,8 @@ class ListOf(ValueSpec):
         sort_by: _Optional[int] = None,
         title: _Optional[str] = None,
         help: _Optional[ValueSpecHelp] = None,
-        default_value: ValueSpecDefault[Sequence[Any]] = DEF_VALUE,
-        validate: _Optional[ValueSpecValidateFunc[list[Any]]] = None,
+        default_value: ValueSpecDefault[ListOfModel[T]] = DEF_VALUE,
+        validate: _Optional[ValueSpecValidateFunc[ListOfModel[T]]] = None,
     ):
         super().__init__(title=title, help=help, default_value=default_value, validate=validate)
         self._valuespec = valuespec
@@ -1837,7 +1840,7 @@ class ListOf(ValueSpec):
     # of entry, while beginning with 1 (this makes visual
     # numbering in labels, etc. possible). The current number
     # of entries is stored in the hidden variable 'varprefix'
-    def render_input(self, varprefix: str, value: list[Any]) -> None:
+    def render_input(self, varprefix: str, value: ListOfModel[T]) -> None:
         html.open_div(class_=["valuespec_listof", self._style.value])
 
         # Beware: the 'value' is only the default value in case the form
@@ -1848,14 +1851,16 @@ class ListOf(ValueSpec):
         # a wrong user input.
 
         # Render reference element for cloning
-        self._show_reference_entry(varprefix, self._magic, self._valuespec.default_value())
+        # FIXME: self._valuespec.default_value() can be None!
+        self._show_reference_entry(varprefix, self._magic, self._valuespec.default_value())  # type: ignore[arg-type]
 
         # In the 'complain' phase, where the user already saved the
         # form but the validation failed, we must not display the
         # original 'value' but take the value from the HTML variables.
         if request.has_var("%s_count" % varprefix):
             count = len(self.get_indexes(varprefix))
-            value = [None] * count  # dummy for the loop
+            # FIXME: Using None here is completely wrong!
+            value = [None] * count  # type: ignore[list-item]  # dummy for the loop
         else:
             count = len(value)
 
@@ -1870,7 +1875,7 @@ class ListOf(ValueSpec):
         if count:
             html.javascript("cmk.valuespecs.listof_update_indices(%s)" % json.dumps(varprefix))
 
-    def _show_entries(self, varprefix: str, value: list[Any]) -> None:
+    def _show_entries(self, varprefix: str, value: ListOfModel[T]) -> None:
         if self._style == ListOf.Style.REGULAR:
             self._show_current_entries(varprefix, value)
             html.br()
@@ -1909,7 +1914,7 @@ class ListOf(ValueSpec):
                 % (json.dumps(varprefix), json.dumps(self._magic), json.dumps(self._sort_by)),
             )
 
-    def _show_reference_entry(self, varprefix: str, index: str, value: Any) -> None:
+    def _show_reference_entry(self, varprefix: str, index: str, value: T) -> None:
         if self._style == ListOf.Style.REGULAR:
             html.open_table(style="display:none;")
             html.open_tbody(id_="%s_prototype" % varprefix, class_="vlof_prototype")
@@ -1931,7 +1936,7 @@ class ListOf(ValueSpec):
         else:
             raise NotImplementedError()
 
-    def _show_current_entries(self, varprefix: str, value: Any) -> None:
+    def _show_current_entries(self, varprefix: str, value: ListOfModel[T]) -> None:
         if self._style == ListOf.Style.REGULAR:
             html.open_table(class_=["valuespec_listof"])
             html.open_tbody(id_="%s_container" % varprefix)
@@ -1955,7 +1960,7 @@ class ListOf(ValueSpec):
         else:
             raise NotImplementedError()
 
-    def _show_entry(self, varprefix: str, index: str, value: Any) -> None:
+    def _show_entry(self, varprefix: str, index: str, value: T) -> None:
         entry_id = "%s_entry_%s" % (varprefix, index)
 
         if self._style == ListOf.Style.REGULAR:
@@ -1975,7 +1980,7 @@ class ListOf(ValueSpec):
         else:
             raise NotImplementedError()
 
-    def _show_entry_cell(self, varprefix: str, index: str, value: Any) -> None:
+    def _show_entry_cell(self, varprefix: str, index: str, value: T) -> None:
         html.open_td(class_="vlof_buttons")
 
         html.hidden_field(
@@ -2000,10 +2005,10 @@ class ListOf(ValueSpec):
         js = "cmk.valuespecs.listof_delete(%s, %s)" % (json.dumps(vp), json.dumps(nr))
         html.icon_button("#", self._del_label, "close", onclick=js, class_="delete_button")
 
-    def canonical_value(self) -> list[Any]:
+    def canonical_value(self) -> ListOfModel[T]:
         return []
 
-    def value_to_html(self, value: list[Any]) -> ValueSpecText:
+    def value_to_html(self, value: ListOfModel[T]) -> ValueSpecText:
         if self._totext:
             if "%d" in self._totext:
                 return self._totext % len(value)
@@ -2029,7 +2034,7 @@ class ListOf(ValueSpec):
             n += 1
         return indexes
 
-    def from_html_vars(self, varprefix: str) -> list[Any]:
+    def from_html_vars(self, varprefix: str) -> ListOfModel[T]:
         indexes = self.get_indexes(varprefix)
         value = []
         k = sorted(indexes.keys())
@@ -2038,13 +2043,13 @@ class ListOf(ValueSpec):
             value.append(val)
         return value
 
-    def validate_datatype(self, value: list[Any], varprefix: str) -> None:
+    def validate_datatype(self, value: ListOfModel[T], varprefix: str) -> None:
         if not isinstance(value, list):
             raise MKUserError(varprefix, _("The type must be list, but is %s") % _type_name(value))
         for n, v in enumerate(value):
             self._valuespec.validate_datatype(v, varprefix + "_%d" % (n + 1))
 
-    def _validate_value(self, value: list[Any], varprefix: str) -> None:
+    def _validate_value(self, value: ListOfModel[T], varprefix: str) -> None:
         if not self._allow_empty and len(value) == 0:
             raise MKUserError(varprefix, self._empty_text)
         for n, v in enumerate(value):
@@ -2053,16 +2058,16 @@ class ListOf(ValueSpec):
     def has_show_more(self) -> bool:
         return self._valuespec.has_show_more()
 
-    def value_to_json(self, value: list[Any]) -> JSONValue:
+    def value_to_json(self, value: ListOfModel[T]) -> JSONValue:
         return [self._valuespec.value_to_json(e) for e in value]
 
-    def value_from_json(self, json_value: JSONValue) -> list[Any]:
+    def value_from_json(self, json_value: JSONValue) -> ListOfModel[T]:
         return [self._valuespec.value_from_json(e) for e in json_value]
 
-    def value_to_json_safe(self, value: list[Any]) -> JSONValue:
+    def value_to_json_safe(self, value: ListOfModel[T]) -> JSONValue:
         return [self._valuespec.value_to_json_safe(e) for e in value]
 
-    def transform_value(self, value: list[Any]) -> list[Any]:
+    def transform_value(self, value: ListOfModel[T]) -> ListOfModel[T]:
         return [self._valuespec.transform_value(v) for v in value]
 
 

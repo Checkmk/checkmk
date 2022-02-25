@@ -1742,7 +1742,7 @@ class BIModeEditAggregation(ABCBIMode):
                         ),
                     ],
                 ),
-                default_value={},
+                default_value=[],
                 title=_("Aggregation groups"),
                 allow_empty=False,
                 empty_text=_("Please define at least one aggregation group"),

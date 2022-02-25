@@ -122,6 +122,7 @@ from cmk.gui.valuespec import (  # noqa: F401 # pylint: disable=unused-import
     Tuple,
     Url,
     ValueSpec,
+    ValueSpecDefault,
     ValueSpecHelp,
     ValueSpecText,
 )

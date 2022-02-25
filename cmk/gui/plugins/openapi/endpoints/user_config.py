@@ -215,8 +215,10 @@ def _internal_to_api_format(internal_attrs: UserSpec) -> dict[str, Any]:
     api_attrs: dict[str, Any] = {}
     api_attrs.update(_idle_options_to_api_format(internal_attrs))
     api_attrs.update(_auth_options_to_api_format(internal_attrs))
-    api_attrs.update(_contact_options_to_api_format(internal_attrs))
     api_attrs.update(_notification_options_to_api_format(internal_attrs))
+
+    if "email" in internal_attrs:
+        api_attrs.update(_contact_options_to_api_format(internal_attrs))
 
     if "locked" in internal_attrs:
         api_attrs["disable_login"] = internal_attrs["locked"]

@@ -7,7 +7,7 @@
 import datetime as dt
 import json
 import time
-from typing import Any, Dict, Literal, Optional, Tuple, TypedDict, Union
+from typing import Any, Dict, Literal, Mapping, Optional, Sequence, Tuple, TypedDict, Union
 
 from cmk.utils.type_defs import UserId
 
@@ -36,7 +36,7 @@ TIMESTAMP_RANGE = Tuple[float, float]
     method="get",
     path_params=[USERNAME],
     etag="output",
-    response_schema=response_schemas.DomainObject,
+    response_schema=response_schemas.UserObject,
 )
 def show_user(params):
     """Show an user"""
@@ -55,24 +55,18 @@ def show_user(params):
     constructors.collection_href("user_config"),
     ".../collection",
     method="get",
-    response_schema=response_schemas.DomainObjectCollection,
+    response_schema=response_schemas.UserCollection,
 )
 def list_users(params):
     """Show all users"""
-    user_collection = {
-        "id": "user",
-        "domainType": "user_config",
-        "value": [
-            constructors.collection_item(
-                domain_type="user_config",
-                title=attrs["alias"],
-                identifier=user_id,
-            )
-            for user_id, attrs in userdb.load_users(False).items()
-        ],
-        "links": [constructors.link_rel("self", constructors.collection_href("user_config"))],
-    }
-    return constructors.serve_json(user_collection)
+    users = []
+    for user_id, attrs in userdb.load_users(False).items():
+        user_attributes = _internal_to_api_format(attrs)
+        users.append(serialize_user(user_id, complement_customer(user_attributes)))
+
+    return constructors.serve_json(
+        constructors.collection_object(domain_type="user_config", value=users)
+    )
 
 
 @Endpoint(
@@ -81,7 +75,7 @@ def list_users(params):
     method="post",
     etag="output",
     request_schema=request_schemas.CreateUser,
-    response_schema=response_schemas.DomainObject,
+    response_schema=response_schemas.UserObject,
 )
 def create_user(params):
     """Create a user"""
@@ -140,7 +134,7 @@ def delete_user(params):
     path_params=[USERNAME],
     etag="both",
     request_schema=request_schemas.UpdateUser,
-    response_schema=response_schemas.DomainObject,
+    response_schema=response_schemas.UserObject,
 )
 def edit_user(params):
     """Edit an user"""
@@ -180,9 +174,7 @@ def serialize_user(user_id, attributes):
         domain_type="user_config",
         identifier=user_id,
         title=attributes["fullname"],
-        extensions={
-            "attributes": attributes,
-        },
+        extensions=_filter_keys(attributes, response_schemas.UserAttributes._declared_fields),
     )
 
 
@@ -282,7 +274,7 @@ def _contact_options_to_api_format(internal_attributes):
     return {
         "contact_options": {
             "email": internal_attributes["email"],
-            "fallback_contact": internal_attributes["fallback_contact"],
+            "fallback_contact": internal_attributes.get("fallback_contact", False),
         }
     }
 
@@ -292,20 +284,10 @@ def _notification_options_to_api_format(internal_attributes):
     if not internal_notification_options:
         return {"disable_notifications": {}}
 
-    def _datetime_range(timestamp):
-        return dt.datetime.fromtimestamp(timestamp, dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
-
     options = {}
     if "timerange" in internal_notification_options:
         timerange = internal_notification_options["timerange"]
-        options.update(
-            {
-                "timerange": {
-                    "start_time": _datetime_range(timerange[0]),
-                    "end_time": _datetime_range(timerange[1]),
-                }
-            }
-        )
+        options.update({"timerange": {"start_time": timerange[0], "end_time": timerange[1]}})
 
     if "disable" in internal_notification_options:
         options["disable"] = internal_notification_options["disable"]
@@ -524,3 +506,9 @@ def _time_stamp_range(datetime_range: TimeRange) -> TIMESTAMP_RANGE:
         return dt.datetime.timestamp(date_time.replace(tzinfo=dt.timezone.utc))
 
     return timestamp(datetime_range["start_time"]), timestamp(datetime_range["end_time"])
+
+
+def _filter_keys(
+    dict_: Dict[str, Any], included_keys: Union[Sequence[str], Mapping[str, Any]]
+) -> Dict[str, Any]:
+    return {key: value for key, value in dict_.items() if key in included_keys}

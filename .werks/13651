@@ -1,0 +1,22 @@
+Title: API: fix user config show endpoints to include user attributes
+Class: fix
+Compatible: incomp
+Component: rest-api
+Date: 1641982281
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b3
+
+In the previous version, both the show user and show all users
+endpoints did not behave as intended hiding the user attributes.
+This werk changes this behaviour and also introduces proper field
+definitions for the response schema. The response of the user
+endpoint has also changed. Every attribute which was previously
+returned under "extensions.attributes", will now be returned
+directly under "extensions". You may have to change your scripts
+accordingly. The affected endpoints are:
+
+*/objects/user_config/user (get & put)
+*/domain-types/user_config/collections/all (get & post)

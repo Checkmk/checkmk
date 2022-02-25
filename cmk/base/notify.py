@@ -1945,7 +1945,7 @@ def create_bulk_dir(bulk_path: Sequence[str]) -> Path:
         bulk_path[1],
         ",".join([b.replace("/", "\\") for b in bulk_path[2:]]),
     )
-    if bulk_dir.exists():
+    if not bulk_dir.exists():
         bulk_dir.mkdir(parents=True)
         logger.info("        - created bulk directory %s", bulk_dir)
     return bulk_dir

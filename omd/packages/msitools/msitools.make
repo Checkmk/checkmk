@@ -17,7 +17,7 @@ MSITOOLS_PATCHING := $(BUILD_HELPER_DIR)/$(MSITOOLS_DIR)-patching
 # packages. People need to upgrade to a more modern platform
 # for that.
 
-ifneq ($(filter $(DISTRO_CODE),sles15 sles15sp1 sles15sp2),)
+ifneq ($(filter $(DISTRO_CODE),sles15 sles15sp1 sles15sp2 sles15sp3),)
 GSF_CONFIGURE_VARS := GSF_LIBS="$(PACKAGE_LIBGSF_LDFLAGS)" GSF_CFLAGS="$(PACKAGE_LIBGSF_CFLAGS)"
 else
 GSF_CONFIGURE_VARS :=

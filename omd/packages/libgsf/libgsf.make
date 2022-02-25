@@ -13,7 +13,7 @@ $(LIBGSF): $(LIBGSF_BUILD)
 $(LIBGSF)-install: $(LIBGSF_INSTALL)
 
 
-ifneq ($(filter $(DISTRO_CODE),sles15 sles15sp1 sles15sp2),)
+ifneq ($(filter $(DISTRO_CODE),sles15 sles15sp1 sles15sp2 sles15sp3),)
 $(LIBGSF_BUILD): $(LIBGSF_UNPACK)
 	cd $(LIBGSF_DIR) && ./configure --prefix=$(OMD_ROOT)
 	$(MAKE) -C $(LIBGSF_DIR)
@@ -27,7 +27,7 @@ $(LIBGSF_BUILD):
 endif
 
 $(LIBGSF_INSTALL): $(LIBGSF_BUILD)
-ifneq ($(filter $(DISTRO_CODE),sles15 sles15sp1 sles15sp2),)
+ifneq ($(filter $(DISTRO_CODE),sles15 sles15sp1 sles15sp2 sles15sp3),)
 	$(MAKE) DESTDIR=$(DESTDIR) -C $(LIBGSF_DIR) install
 endif
 	$(TOUCH) $@

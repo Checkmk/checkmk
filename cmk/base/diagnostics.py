@@ -7,6 +7,7 @@
 import abc
 import errno
 import json
+import os
 import platform
 import shutil
 import tarfile
@@ -17,13 +18,12 @@ import urllib.parse
 import uuid
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, Iterator, List, Optional
+from typing import Any, Dict, List, Mapping, Optional
 
 import requests
 
 import livestatus
 
-import cmk.utils.packaging as packaging
 import cmk.utils.paths
 import cmk.utils.site as site
 import cmk.utils.store as store
@@ -31,9 +31,14 @@ import cmk.utils.tty as tty
 import cmk.utils.version as cmk_version
 from cmk.utils.diagnostics import (
     CheckmkFilesMap,
+    DiagnosticsElementCSVResult,
+    DiagnosticsElementFilepaths,
+    DiagnosticsElementJSONResult,
     DiagnosticsOptionalParameters,
+    get_all_package_infos,
     get_checkmk_config_files_map,
     get_checkmk_log_files_map,
+    get_local_files_csv,
     OPT_CHECKMK_CONFIG_FILES,
     OPT_CHECKMK_LOG_FILES,
     OPT_CHECKMK_OVERVIEW,
@@ -49,8 +54,15 @@ from cmk.utils.type_defs import HostName
 
 import cmk.base.section as section
 
-DiagnosticsElementJSONResult = Dict[str, Any]
-DiagnosticsElementFilepaths = Iterator[Path]
+if cmk_version.is_enterprise_edition():
+    from cmk.base.cee.diagnostics import (
+        cmc_specific_attrs,  # type: ignore  # pylint: disable=no-name-in-module
+    )
+else:
+
+    def cmc_specific_attrs() -> Mapping[str, int]:
+        return {}
+
 
 SUFFIX = ".tar.gz"
 
@@ -128,6 +140,9 @@ class DiagnosticsDump:
     def _get_fixed_elements(self) -> "List[ABCDiagnosticsElement]":
         return [
             GeneralDiagnosticsElement(),
+            PerfDataDiagnosticsElement(),
+            HWDiagnosticsElement(),
+            EnvironmentDiagnosticsElement(),
         ]
 
     def _get_optional_elements(
@@ -138,7 +153,8 @@ class DiagnosticsDump:
 
         optional_elements: List[ABCDiagnosticsElement] = []
         if parameters.get(OPT_LOCAL_FILES):
-            optional_elements.append(LocalFilesDiagnosticsElement())
+            optional_elements.append(LocalFilesJSONDiagnosticsElement())
+            optional_elements.append(LocalFilesCSVDiagnosticsElement())
 
         if parameters.get(OPT_OMD_CONFIG):
             optional_elements.append(OMDConfigDiagnosticsElement())
@@ -174,7 +190,8 @@ class DiagnosticsDump:
             dir=self.dump_folder
         ) as tmp_dump_folder:
             for filepath in self._get_filepaths(Path(tmp_dump_folder)):
-                tar.add(str(filepath), arcname=filepath.name)
+                rel_path = str(filepath).replace(str(tmp_dump_folder), "")
+                tar.add(str(filepath), arcname=rel_path)
                 self.tarfile_created = True
 
     def _get_filepaths(self, tmp_dump_folder: Path) -> List[Path]:
@@ -341,6 +358,47 @@ class ABCDiagnosticsElementJSONDump(ABCDiagnosticsElement):
         raise NotImplementedError()
 
 
+class ABCDiagnosticsElementCSVDump(ABCDiagnosticsElement):
+    def add_or_get_files(
+        self, tmp_dump_folder: Path, collectors: Collectors
+    ) -> DiagnosticsElementFilepaths:
+        infos = self._collect_infos(collectors)
+        if not infos:
+            raise DiagnosticsElementError("No information")
+
+        filepath = tmp_dump_folder.joinpath(self.ident).with_suffix(".csv")
+        store.save_text_to_file(filepath, infos)
+        yield filepath
+
+    @abc.abstractmethod
+    def _collect_infos(self, collectors: Collectors) -> DiagnosticsElementCSVResult:
+        raise NotImplementedError()
+
+
+#   ---csv dumps-----------------------------------------------------------
+
+
+class LocalFilesCSVDiagnosticsElement(ABCDiagnosticsElementCSVDump):
+    @property
+    def ident(self) -> str:
+        return "local_files"
+
+    @property
+    def title(self) -> str:
+        return _("Local Files")
+
+    @property
+    def description(self) -> str:
+        return _(
+            "List of installed, unpacked, optional files below $OMD_ROOT/local. "
+            "This also includes information about installed MKPs."
+        )
+
+    def _collect_infos(self, collectors: Collectors) -> DiagnosticsElementCSVResult:
+        package_infos = get_all_package_infos()
+        return get_local_files_csv(package_infos)
+
+
 #   ---json dumps-----------------------------------------------------------
 
 
@@ -367,7 +425,154 @@ class GeneralDiagnosticsElement(ABCDiagnosticsElementJSONDump):
         return version_infos
 
 
-class LocalFilesDiagnosticsElement(ABCDiagnosticsElementJSONDump):
+class PerfDataDiagnosticsElement(ABCDiagnosticsElementJSONDump):
+    @property
+    def ident(self) -> str:
+        return "perfdata"
+
+    @property
+    def title(self) -> str:
+        return _("Performance Data")
+
+    @property
+    def description(self) -> str:
+        return _("Performance Data related to sizing, e.g. number of helpers, hosts, services")
+
+    def _collect_infos(self, collectors: Collectors) -> DiagnosticsElementJSONResult:
+        # Get the runtime performance data from livestatus
+        query = "GET status\nColumnHeaders: on"
+        result = livestatus.LocalConnection().query(query)
+        performance_data = {
+            key: result[1][i]
+            for i in range(0, len(result[0]))
+            if (key := result[0][i]) not in ["license_usage_history"]
+        }
+
+        performance_data.update(cmc_specific_attrs())
+
+        return performance_data
+
+
+class HWDiagnosticsElement(ABCDiagnosticsElementJSONDump):
+    @property
+    def ident(self) -> str:
+        return "hwinfo"
+
+    @property
+    def title(self) -> str:
+        return _("HW Information")
+
+    @property
+    def description(self) -> str:
+        return _("Hardware information of the Checkmk Server")
+
+    def _collect_infos(self, collectors: Collectors) -> DiagnosticsElementJSONResult:
+        # Get the information from the proc files
+
+        hw_info: DiagnosticsElementJSONResult = {}
+
+        for procfile, parser in [
+            ("meminfo", self._meminfo_proc_parser),
+            ("loadavg", self._load_avg_proc_parser),
+            ("cpuinfo", self._cpuinfo_proc_parser),
+        ]:
+            filepath = Path("/proc").joinpath(procfile)
+            try:
+                content = self._get_proc_content(filepath)
+            except FileNotFoundError:
+                continue
+
+            hw_info[procfile] = parser(content)
+
+        return hw_info
+
+    def _get_proc_content(self, filepath: Path) -> List[str]:
+        with open(filepath) as f:
+            return f.read().splitlines()
+
+    def _meminfo_proc_parser(self, content: List[str]) -> Dict[str, str]:
+        info: Dict[str, str] = {}
+
+        for line in content:
+            if line == "":
+                continue
+
+            key, value = [w.strip() for w in line.split(":", 1)]
+            info[key.replace(" ", "_")] = value
+
+        return info
+
+    def _cpuinfo_proc_parser(self, content: List[str]) -> Dict[str, str]:
+        cpu_info: Dict[str, Any] = {}
+        num_processors = 0
+
+        # Example lines from /proc/cpuinfo output:
+        # >>> pprint.pprint(content)
+        # ['processor\t: 0',
+        #  'cpu family\t: 6',
+        #  'cpu MHz\t\t: 2837.021',
+        #  'core id\t\t: 0',
+        #  'power management:',
+        # ...
+        #  '',
+        #  'processor\t: 1',
+        #  'cpu family\t: 6',
+        #  'cpu MHz\t\t: 2100.000',
+        #  'core id\t\t: 1',
+        #  'power management:',
+        #  '',
+        # ...
+
+        # Keys that have different values for each processor
+        _KEYS_TO_IGNORE = [
+            "apicid",
+            "core_id",
+            "cpu_MHz",
+            "initial_apicid",
+            "processor",
+        ]
+
+        # Remove empty keys, empty values and ignore some keys
+        for line in content:
+            if line == "":
+                continue
+
+            key, value = [w.strip() for w in line.split(":", 1)]
+            key = key.replace(" ", "_")
+
+            if key not in _KEYS_TO_IGNORE:
+                cpu_info[key] = value
+
+            if key == "processor":
+                num_processors += 1
+
+        cpu_info["num_processors"] = str(num_processors)
+        return cpu_info
+
+    def _load_avg_proc_parser(self, content: List[str]) -> Dict[str, str]:
+        return dict(zip(["loadavg_1", "loadavg_5", "loadavg_15"], content[0].split()))
+
+
+class EnvironmentDiagnosticsElement(ABCDiagnosticsElementJSONDump):
+    @property
+    def ident(self) -> str:
+        return "environment"
+
+    @property
+    def title(self) -> str:
+        return _("Environment Variables")
+
+    @property
+    def description(self) -> str:
+        return _("Variables set in the site user's environment")
+
+    def _collect_infos(self, collectors: Collectors) -> DiagnosticsElementJSONResult:
+        # Get the environment variables
+
+        return dict(os.environ)
+
+
+class LocalFilesJSONDiagnosticsElement(ABCDiagnosticsElementJSONDump):
     @property
     def ident(self) -> str:
         return "local_files"
@@ -384,13 +589,7 @@ class LocalFilesDiagnosticsElement(ABCDiagnosticsElementJSONDump):
         )
 
     def _collect_infos(self, collectors: Collectors) -> DiagnosticsElementJSONResult:
-        return {
-            "installed": packaging.get_installed_package_infos(),
-            "unpackaged": packaging.get_unpackaged_files(),
-            "parts": packaging.package_part_info(),
-            "optional_packages": packaging.get_optional_package_infos(),
-            "disabled_packages": packaging.get_disabled_package_infos(),
-        }
+        return get_all_package_infos()
 
 
 class OMDConfigDiagnosticsElement(ABCDiagnosticsElementJSONDump):
@@ -487,19 +686,17 @@ class ABCCheckmkFilesDiagnosticsElement(ABCDiagnosticsElement):
                 continue
 
             # Respect file path (2), otherwise the paths of same named files are forgotten (1).
-            # Moreover we do not want to pack a folder hierarchy.
-            # Example:
-            # - apache.d/wato/global.mk
-            # - conf.d/wato/global.mk
-            # => tar.gz (1):
-            #    - global.mk
-            #    - global.mk
-            # We give these files a new name:
-            # => tar.gz (2):
-            #    - apache.d-wato-global.mk
-            #    - conf.d-wato-global.mk
-            new_filename = "-".join(Path(rel_filepath).parts)
-            tmp_filepath = shutil.copy(str(filepath), str(tmp_dump_folder.joinpath(new_filename)))
+            # We want to pack a folder hierarchy.
+
+            filename = Path(filepath).name
+            subfolder = Path(str(filepath).replace(str(cmk.utils.paths.omd_root) + "/", "")).parent
+
+            # Create relative path in tmp tree
+            tmp_folder = tmp_dump_folder.joinpath(subfolder)
+            tmp_folder.mkdir(parents=True, exist_ok=True)
+
+            tmp_filepath = shutil.copy(str(filepath), str(tmp_folder.joinpath(filename)))
+
             yield Path(tmp_filepath)
 
         if unknown_files:

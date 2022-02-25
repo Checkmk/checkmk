@@ -1129,6 +1129,7 @@ class UpdateConfig:
                         "custom_graph",
                         "combined_graph",
                         "problem_graph",
+                        "pnpgraph",
                     ):
                         transform_timerange_dashlet(dashlet)
                         affected_user.add(owner)

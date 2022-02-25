@@ -198,7 +198,7 @@ TEST_F(SectionProviderCheckMkFixture, ConstFields) {
     for (const auto &r : result) {
         auto values = tools::SplitString(r, ": ");
         EXPECT_EQ(values[0], std::string{*expected_name++});
-        if (values[0] == "AgentController") {
+        if (values[0].starts_with("AgentController")) {
             EXPECT_EQ(values.size(), 1);
         } else {
             EXPECT_EQ(values.size(), 2);

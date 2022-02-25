@@ -83,7 +83,7 @@ class CREConfig:
     roles: Dict[str, Any] = field(default_factory=dict)
 
     # define default values for all settings
-    sites: SiteConfigurations = field(default_factory=dict)
+    sites: SiteConfigurations = field(default_factory=lambda: SiteConfigurations({}))
     debug: bool = False
     screenshotmode: bool = False
     profile: Union[bool, str] = False

@@ -18,14 +18,10 @@ from enum import Enum
 from io import BytesIO
 from typing import Any, AnyStr, Dict, List, NewType, Optional, Pattern, Set, Tuple, Type, Union
 
-# TODO: Find a better solution for this issue. Astroid 2.x bug prevents us from using NewType :(
-# (https://github.com/PyCQA/pylint/issues/2296)
-UserId = str  # NewType("UserId", str)
-SiteId = str  # NewType("SiteId", str)
-SiteConfiguration = Dict[str, Any]  # NewType("SiteConfiguration", Dict[str, Any])
-SiteConfigurations = Dict[
-    SiteId, SiteConfiguration
-]  # NewType("SiteConfigurations", Dict[SiteId, SiteConfiguration])
+UserId = NewType("UserId", str)
+SiteId = NewType("SiteId", str)
+SiteConfiguration = NewType("SiteConfiguration", Dict[str, Any])
+SiteConfigurations = NewType("SiteConfigurations", Dict[SiteId, SiteConfiguration])
 
 LivestatusColumn = Any
 LivestatusRow = NewType("LivestatusRow", List[LivestatusColumn])
@@ -379,7 +375,7 @@ class SingleSiteConnection(Helpers):
     def __init__(
         self,
         socketurl: str,
-        site_name: Optional[str] = None,
+        site_name: Optional[SiteId] = None,
         persist: bool = False,
         allow_cache: bool = False,
         tls: bool = False,
@@ -778,7 +774,7 @@ class MultiSiteConnection(Helpers):
         self, sites: SiteConfigurations, disabled_sites: Optional[SiteConfigurations] = None
     ) -> None:
         if disabled_sites is None:
-            disabled_sites = {}
+            disabled_sites = SiteConfigurations({})
 
         self.sites = sites
         self.connections: List[Tuple[SiteId, SiteConfiguration, SingleSiteConnection]] = []
@@ -1145,7 +1141,7 @@ class LocalConnection(SingleSiteConnection):
             raise MKLivestatusConfigError(
                 "OMD_ROOT is not set. You are not running in OMD context."
             )
-        super().__init__("unix:" + omd_root + "/tmp/run/live", "local", *args, **kwargs)
+        super().__init__("unix:" + omd_root + "/tmp/run/live", SiteId("local"), *args, **kwargs)
 
 
 def _combine_query(query: str, headers: Union[str, List[str]]):

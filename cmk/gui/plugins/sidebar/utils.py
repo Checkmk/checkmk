@@ -314,7 +314,7 @@ def footnotelinks(links: List[Tuple[str, str]]) -> None:
     end_footnote_links()
 
 
-def snapin_site_choice(ident: SiteId, choices: List[Tuple[SiteId, str]]) -> Optional[List[SiteId]]:
+def snapin_site_choice(ident: str, choices: List[Tuple[SiteId, str]]) -> Optional[List[SiteId]]:
     sites = user.load_file("sidebar_sites", {})
     available_site_choices = filter_available_site_choices(choices)
     site = sites.get(ident, "")

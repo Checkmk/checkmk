@@ -13,6 +13,8 @@ import pytest
 
 from tests.testlib import is_enterprise_repo, is_managed_repo
 
+from livestatus import SiteConfigurations, SiteId
+
 import cmk.utils.paths
 import cmk.utils.version as cmk_version
 
@@ -1088,7 +1090,9 @@ def test_permission_sorting(do_sort, result):
     ],
 )
 def test_migrate_old_site_config(site, result):
-    assert cmk.gui.config.prepare_raw_site_config({"mysite": site}) == {"mysite": result}
+    assert cmk.gui.config.prepare_raw_site_config(SiteConfigurations({SiteId("mysite"): site})) == {
+        "mysite": result
+    }
 
 
 @pytest.mark.usefixtures("load_config")

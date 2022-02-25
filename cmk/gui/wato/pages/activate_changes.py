@@ -15,6 +15,8 @@ from typing import Dict, Iterator, List, NamedTuple, Optional, Tuple, Union
 
 from six import ensure_str
 
+from livestatus import SiteId
+
 import cmk.utils.render as render
 
 import cmk.gui.forms as forms
@@ -649,7 +651,7 @@ class ModeAjaxStartActivation(AjaxPage):
         if not affected_sites_request:
             affected_sites = manager.dirty_and_active_activation_sites()
         else:
-            affected_sites = affected_sites_request.split(",")
+            affected_sites = [SiteId(s) for s in affected_sites_request.split(",")]
 
         comment: Optional[str] = api_request.get("comment", "").strip()
 
@@ -699,7 +701,7 @@ class ModeAjaxActivationState(AjaxPage):
 
 
 class ActivateChangesRequest(NamedTuple):
-    site_id: str
+    site_id: SiteId
     domains: DomainRequests
 
 
@@ -709,7 +711,7 @@ class AutomationActivateChanges(watolib.AutomationCommand):
         return "activate-changes"
 
     def get_request(self):
-        site_id = request.get_ascii_input_mandatory("site_id")
+        site_id = SiteId(request.get_ascii_input_mandatory("site_id"))
         activate_changes.verify_remote_site_config(site_id)
 
         try:

@@ -259,11 +259,13 @@ class LabelsCache:
 
         for site_id, last_program_start in last_program_starts.items():
 
+            # How can last_program_start be None if it is a Dict[str, str]?
+            # Perhaps _redis_get_last_program_starts() should return something like an Optional[Mapping[SiteId, Optional[int]].
             if last_program_start is None or (
-                int(last_program_start) != self._livestatus_get_last_program_start(site_id)
+                int(last_program_start) != self._livestatus_get_last_program_start(SiteId(site_id))
             ):
 
-                self._sites_to_update.update([site_id])
+                self._sites_to_update.update([SiteId(site_id)])
 
         if self._sites_to_update:
             return IntegrityCheckResponse.UPDATE

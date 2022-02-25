@@ -22,6 +22,8 @@ from typing import (
     Type,
 )
 
+from livestatus import SiteId
+
 import cmk.utils.render
 from cmk.utils.check_utils import ServiceCheckResult
 from cmk.utils.defines import short_service_state_name
@@ -1436,7 +1438,7 @@ class DiscoveryPageRenderer:
 @page_registry.register_page("wato_ajax_execute_check")
 class ModeAjaxExecuteCheck(AjaxPage):
     def _from_vars(self):
-        self._site = request.get_ascii_input_mandatory("site")
+        self._site = SiteId(request.get_ascii_input_mandatory("site"))
         if self._site not in sitenames():
             raise MKUserError("site", _("You called this page with an invalid site."))
 

@@ -9,6 +9,8 @@ import uuid
 from pathlib import Path
 from typing import List, Optional, Tuple
 
+from livestatus import SiteId
+
 import cmk.utils.paths
 import cmk.utils.version as cmk_version
 from cmk.utils.diagnostics import (
@@ -534,7 +536,7 @@ class PageDownloadDiagnosticsDump(Page):
                 _("Sorry, you lack the permission for downloading diagnostics dumps.")
             )
 
-        site = request.get_ascii_input_mandatory("site")
+        site = SiteId(request.get_ascii_input_mandatory("site"))
         tarfile_name = request.get_ascii_input_mandatory("tarfile_name")
         file_content = self._get_diagnostics_dump_file(site, tarfile_name)
 
@@ -542,7 +544,7 @@ class PageDownloadDiagnosticsDump(Page):
         response.headers["Content-Disposition"] = "Attachment; filename=%s" % tarfile_name
         response.set_data(file_content)
 
-    def _get_diagnostics_dump_file(self, site: str, tarfile_name: str) -> bytes:
+    def _get_diagnostics_dump_file(self, site: SiteId, tarfile_name: str) -> bytes:
         if site_is_local(site):
             return _get_diagnostics_dump_file(tarfile_name)
 

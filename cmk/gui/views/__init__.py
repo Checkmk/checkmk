@@ -3712,7 +3712,7 @@ def query_action_data(
 
 @cmk.gui.pages.register("ajax_popup_action_menu")
 def ajax_popup_action_menu() -> None:
-    site = request.get_ascii_input_mandatory("site")
+    site = SiteId(request.get_ascii_input_mandatory("site"))
     host = HostName(request.get_ascii_input_mandatory("host"))
     svcdesc = request.get_str_input("service")
     what: IconObjectType = "service" if svcdesc else "host"

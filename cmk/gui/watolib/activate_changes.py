@@ -367,6 +367,8 @@ class ActivateChanges:
         self._changes_by_site = {}
         changes = {}
 
+        # Astroid 2.x bug prevents us from using NewType https://github.com/PyCQA/pylint/issues/2296
+        # pylint: disable=not-an-iterable
         for site_id in activation_sites():
             site_changes = SiteChanges(SiteChanges.make_path(site_id)).read()
             self._changes_by_site[site_id] = site_changes
@@ -392,6 +394,8 @@ class ActivateChanges:
 
     def get_changes_estimate(self) -> Optional[str]:
         changes_counter = 0
+        # Astroid 2.x bug prevents us from using NewType https://github.com/PyCQA/pylint/issues/2296
+        # pylint: disable=not-an-iterable
         for site_id in activation_sites():
             changes_counter += len(SiteChanges(SiteChanges.make_path(site_id)).read())
             if changes_counter > 10:
@@ -2251,7 +2255,7 @@ def create_site_globals_file(
     store.save_object_to_file(os.path.join(site_globals_dir, "sitespecific.mk"), site_globals)
 
 
-def get_site_globals(site_id: SiteId, site_config: SiteConfiguration) -> Dict:
+def get_site_globals(site_id: SiteId, site_config: SiteConfiguration) -> SiteConfiguration:
     site_globals = site_config.get("globals", {}).copy()
     site_globals.update(
         {

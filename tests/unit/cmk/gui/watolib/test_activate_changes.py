@@ -13,6 +13,8 @@ import pytest
 
 import tests.testlib as testlib
 
+from livestatus import SiteConfiguration, SiteId
+
 import cmk.utils.paths
 import cmk.utils.version as cmk_version
 
@@ -117,7 +119,9 @@ def test_get_replication_paths_defaults(edition, monkeypatch):
 def test_get_replication_components(
     edition, monkeypatch, replicate_ec, replicate_mkps, is_pre_17_remote_site
 ):
-    partial_site_config = {}
+    partial_site_config = SiteConfiguration({})
+    # Astroid 2.x bug prevents us from using NewType https://github.com/PyCQA/pylint/issues/2296
+    # pylint: disable=unsupported-assignment-operation
     if replicate_ec is not None:
         partial_site_config["replicate_ec"] = replicate_ec
     if replicate_mkps is not None:
@@ -619,7 +623,7 @@ def test_automation_receive_config_sync(monkeypatch, tmp_path):
     automation = activate_changes.AutomationReceiveConfigSync()
     automation.execute(
         activate_changes.ReceiveConfigSyncRequest(
-            site_id="remote",
+            site_id=SiteId("remote"),
             sync_archive=_get_test_sync_archive(tmp_path.joinpath("central")),
             to_delete=[
                 "to_delete",

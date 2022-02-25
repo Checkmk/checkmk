@@ -6,6 +6,8 @@
 
 import json
 
+from livestatus import SiteId
+
 import cmk.gui.sites as sites
 from cmk.gui.globals import html, request, response, transactions, user
 from cmk.gui.i18n import _
@@ -104,7 +106,8 @@ class SiteStatus(SidebarSnapin):
         switch_var = request.var("_site_switch")
         if switch_var:
             for info in switch_var.split(","):
-                sitename, onoff = info.split(":")
+                sitename_str, onoff = info.split(":")
+                sitename = SiteId(sitename_str)
                 if sitename not in sites.sitenames():
                     continue
 

@@ -16,6 +16,8 @@ import responses  # type: ignore[import]
 
 from tests.testlib.utils import is_enterprise_repo
 
+from livestatus import SiteId
+
 import cmk.utils.paths
 import cmk.utils.version as cmk_version
 
@@ -724,7 +726,10 @@ def test_synchronize_site(
     )
 
     site_activation = activate_changes.ActivateChangesSite(
-        "unit_remote_1", snapshot_settings, activation_manager._activation_id, prevent_activate=True
+        SiteId("unit_remote_1"),
+        snapshot_settings,
+        activation_manager._activation_id,
+        prevent_activate=True,
     )
 
     site_activation._time_started = time.time()
@@ -759,7 +764,10 @@ def test_synchronize_pre_17_site(monkeypatch, edition: cmk_version.Edition, tmp_
     )
 
     site_activation = activate_changes.ActivateChangesSite(
-        "unit_remote_1", snapshot_settings, activation_manager._activation_id, prevent_activate=True
+        SiteId("unit_remote_1"),
+        snapshot_settings,
+        activation_manager._activation_id,
+        prevent_activate=True,
     )
 
     # Could be better to mock requests instead of our own code

@@ -5,6 +5,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """This module contains helpers to trigger acknowledgments.
 """
+from livestatus import SiteId
+
 from cmk.utils.livestatus_helpers import tables
 from cmk.utils.livestatus_helpers.queries import detailed_connection, Query
 from cmk.utils.livestatus_helpers.tables import Hosts
@@ -279,9 +281,9 @@ def acknowledge_hostgroup_problem(
             )
 
 
-def _query_site(connection, host_name: str) -> str:
+def _query_site(connection, host_name: str) -> SiteId:
     with detailed_connection(connection) as conn:
         site_id = Query([Hosts.name], Hosts.name.equals(host_name)).first_value(conn)
         if not isinstance(site_id, str):
             raise QueryException
-    return site_id
+    return SiteId(site_id)

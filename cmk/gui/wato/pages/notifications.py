@@ -964,7 +964,9 @@ class ABCUserNotificationsMode(ABCNotificationsMode):
 
 
 def _get_notification_sync_sites():
-    return sorted(site_id for site_id in wato_slave_sites() if not site_is_local(site_id))  #
+    # Astroid 2.x bug prevents us from using NewType https://github.com/PyCQA/pylint/issues/2296
+    # pylint: disable=not-an-iterable
+    return sorted(site_id for site_id in wato_slave_sites() if not site_is_local(site_id))
 
 
 @mode_registry.register

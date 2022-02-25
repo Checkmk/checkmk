@@ -676,7 +676,7 @@ class DualListFilter(Filter):
 
 def filter_cre_heading_info(value: FilterHTTPVariables) -> Optional[str]:
     current_value = value.get("site")
-    return get_site_config(current_value)["alias"] if current_value else None
+    return get_site_config(SiteId(current_value))["alias"] if current_value else None
 
 
 class FilterRegistry(cmk.utils.plugin_registry.Registry[Filter]):

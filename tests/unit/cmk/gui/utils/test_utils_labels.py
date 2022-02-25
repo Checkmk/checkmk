@@ -6,6 +6,8 @@
 
 import pytest
 
+from livestatus import SiteId
+
 from cmk.utils.type_defs import Dict, List, Mapping, Tuple
 
 from cmk.gui.utils.labels import LabelsCache
@@ -127,7 +129,7 @@ SINGLE_SETUP_ROWS: List[Tuple[str, Dict[str, str], Dict[str, str]]] = [
     ],
 )
 def test_collect_labels_from_livestatus_rows(
-    rows: List[Tuple[str, Dict[str, str], Dict[str, str]]],
+    rows: List[Tuple[SiteId, Dict[str, str], Dict[str, str]]],
     expected: Tuple[Mapping[str, Mapping[str, str]], Mapping[str, Mapping[str, str]]],
 ):
     assert LabelsCache()._collect_labels_from_livestatus_rows(rows) == expected

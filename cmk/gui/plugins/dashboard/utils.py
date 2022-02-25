@@ -29,7 +29,7 @@ from typing import (
     Union,
 )
 
-from livestatus import LivestatusColumn, LivestatusResponse
+from livestatus import LivestatusColumn, LivestatusResponse, SiteId
 
 import cmk.utils.plugin_registry
 from cmk.utils.macros import MacroMapping, replace_macros_in_str
@@ -116,7 +116,7 @@ def macro_mapping_from_context(
 
     if "$HOST_ALIAS$" in title and "$HOST_NAME$" in macro_mapping:
         macro_mapping["$HOST_ALIAS$"] = get_alias_of_host(
-            additional_macros.get("$SITE$"),
+            SiteId(additional_macros.get("$SITE$", "")),
             macro_mapping["$HOST_NAME$"],
         )
 

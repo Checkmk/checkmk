@@ -13,6 +13,8 @@ from typing import Any, Dict, List, Mapping, Optional, Set, Tuple
 
 from six import ensure_str
 
+from livestatus import SiteConfigurations
+
 import cmk.utils.rulesets.ruleset_matcher as ruleset_matcher
 import cmk.utils.tags
 import cmk.utils.version as cmk_version
@@ -1045,7 +1047,9 @@ class APICallSites(APICallCollection):
 
         site_mgmt.validate_configuration(request["site_id"], request["site_config"], all_sites)
 
-        sites = prepare_raw_site_config({request["site_id"]: request["site_config"]})
+        sites = prepare_raw_site_config(
+            SiteConfigurations({request["site_id"]: request["site_config"]})
+        )
 
         all_sites.update(sites)
         site_mgmt.save_sites(all_sites)

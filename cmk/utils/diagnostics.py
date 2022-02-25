@@ -9,6 +9,8 @@ from enum import Enum
 from pathlib import Path
 from typing import Any, Dict, List, Literal, NamedTuple, Optional, Set, Tuple, TypedDict
 
+from livestatus import SiteId
+
 import cmk.utils.paths
 
 DiagnosticsCLParameters = List[str]
@@ -18,7 +20,7 @@ CheckmkFilesMap = Dict[str, Path]
 
 
 class DiagnosticsParameters(TypedDict):
-    site: str
+    site: SiteId
     general: Literal[True]
     opt_info: Optional[DiagnosticsOptionalParameters]
     comp_specific: Optional[DiagnosticsOptionalParameters]

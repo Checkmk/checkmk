@@ -12,6 +12,8 @@ import traceback
 from enum import Enum
 from typing import Any, Dict, List, Optional, Tuple, Type, TYPE_CHECKING, Union
 
+from livestatus import SiteId
+
 import cmk.utils.paths
 
 import cmk.gui.i18n
@@ -913,7 +915,7 @@ def ajax_set_snapin_site():
         raise MKUserError(None, _("Invalid ident"))
 
     site = request.var("site")
-    site_choices = dict([("", _("All sites"))] + sites.get_configured_site_choices())
+    site_choices = dict([(SiteId(""), _("All sites"))] + sites.get_configured_site_choices())
 
     if site not in site_choices:
         raise MKUserError(None, _("Invalid site"))

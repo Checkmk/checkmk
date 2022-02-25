@@ -8,7 +8,7 @@ import marshal
 import os
 import time
 from pathlib import Path
-from typing import Dict, List, Optional, Set, Tuple
+from typing import Dict, List, Mapping, Optional, Set, Tuple
 
 from livestatus import LivestatusColumn, LivestatusOutputFormat, LivestatusResponse, SiteId
 
@@ -228,7 +228,7 @@ class BIStructureFetcher:
 
         self._have_sites.add(site_id)
 
-    def cleanup_orphaned_files(self, known_sites: Dict[str, int]) -> None:
+    def cleanup_orphaned_files(self, known_sites: Mapping[SiteId, int]) -> None:
         for path_object, (site_id, timestamp) in self._get_site_data_files():
             try:
                 if known_sites.get(site_id) == timestamp:
@@ -257,7 +257,7 @@ class BIStructureFetcher:
                 path_object.unlink(missing_ok=True)
                 continue
 
-            data_files.append((path_object, (site_id, int(timestamp))))
+            data_files.append((path_object, (SiteId(site_id), int(timestamp))))
         return data_files
 
     def _marshal_save_data(self, filepath, data) -> None:

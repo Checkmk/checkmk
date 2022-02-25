@@ -2185,7 +2185,7 @@ class DeltaNodeRenderer(ABCNodeRenderer):
 # Ajax call for fetching parts of the tree
 @cmk.gui.pages.register("ajax_inv_render_tree")
 def ajax_inv_render_tree() -> None:
-    site_id = request.get_ascii_input_mandatory("site")
+    site_id = SiteId(request.get_ascii_input_mandatory("site"))
     hostname = HostName(request.get_ascii_input_mandatory("host"))
     inventory.verify_permission(hostname, site_id)
 

@@ -11,6 +11,7 @@ from dataclasses import asdict, dataclass, field
 from typing import Any, Dict, List, Literal, Optional, Set, Tuple, Type, TypedDict
 
 import livestatus
+from livestatus import SiteId
 
 from cmk.utils.bi.bi_aggregation_functions import BIAggregationFunctionSchema
 from cmk.utils.bi.bi_computer import BIAggregationFilter
@@ -137,7 +138,8 @@ class ParentChildTopologyPage(Page):
     def _get_default_view_hostnames(self, max_nodes: int) -> Set[HostName]:
         """Returns all hosts without any parents"""
         query = "GET hosts\nColumns: name\nFilter: parents ="
-        with sites.prepend_site(), sites.only_sites(request.var("site")):
+        site = request.var("site")
+        with sites.prepend_site(), sites.only_sites(None if site is None else SiteId(site)):
             hosts = [(x[0], x[1]) for x in sites.live().query(query)]
 
         # If no explicit site is set and the number of initially displayed hosts
@@ -177,7 +179,8 @@ class ParentChildTopologyPage(Page):
         if filter_headers:
             query += "\n%s" % filter_headers
 
-        with sites.only_sites(request.var("site")):
+        site = request.var("site")
+        with sites.only_sites(None if site is None else SiteId(site)):
             return {HostName(x) for x in sites.live().query_column_unique(query)}
 
     def show_topology(self, topology_settings: TopologySettings) -> None:

@@ -102,7 +102,7 @@ class SimpleModeType(Generic[_T], abc.ABC):
         """The mode name of the WATO edit mode of this object type"""
         return "edit_%s" % self.mode_ident()
 
-    def affected_sites(self, entry: _T) -> Optional[List[str]]:
+    def affected_sites(self, entry: _T) -> Optional[List[SiteId]]:
         """Sites that are affected by changes to objects of this type
 
         Returns either a list of sites affected by a change or None.

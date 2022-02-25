@@ -965,7 +965,8 @@ def get_availability_rawdata(
             tl_host,
             tl_service,
         )
-        only_sites = [SiteId(tl_site)]
+        assert tl_site is not None
+        only_sites = [tl_site]
     elif what == "service":
         av_filter += "Filter: service_description !=\n"
     else:

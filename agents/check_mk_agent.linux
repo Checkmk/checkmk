@@ -1210,11 +1210,18 @@ section_thermal() {
         echo '<<<lnx_thermal:sep(124)>>>'
         for F in /sys/class/thermal/thermal_zone*; do
             line="${F##*/}"
-            if [ ! -e "${F}/mode" ]; then line="${line}|-"; else line="${line}|$(cat "${F}"/mode)"; fi
-            line="${line}|$(cat "${F}/type" "${F}/temp" | tr \\n "|")"
-            for G in "${F}"/trip_point_*_temp "${F}"/trip_point_*_type; do
-                line="${line}$(tr <"${G}" \\n "|")"
+            if [ ! -e "${F}/mode" ]; then
+                line="${line}|-"
+            else
+                line="${line}|$(cat "${F}"/mode)"
+            fi
+
+            line="${line}|$(cat "${F}/type")|$(cat "${F}/temp")"
+
+            for G in "${F}"/trip_point_*_temp; do
+                line="${line}|$(cat "$G")|$(cat "${G/%temp/type}")"
             done
+
             echo "${line%?}"
         done
     fi

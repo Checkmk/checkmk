@@ -50,3 +50,15 @@ def test_check_icmp_argument_parsing(
     """Tests if all required arguments are present."""
     active_check = ActiveCheck("check_icmp")
     assert active_check.run_argument_function(params) == expected_args
+
+
+@pytest.mark.parametrize(
+    "params, expected_description",
+    [
+        ({"address": ("indexed_ipv4address", "1")}, "PING IPv4/1"),
+        ({"address": ("indexed_ipv6address", "3")}, "PING IPv6/3"),
+    ],
+)
+def test_check_icmp_description(params, expected_description):
+    active_check = ActiveCheck("check_icmp")
+    assert active_check.run_service_description(params) == expected_description

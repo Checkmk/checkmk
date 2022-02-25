@@ -1,0 +1,10 @@
+Title: Backport support for SLES 15 SP3
+Level: 1
+Component: distros
+Compatible: compat
+Edition: cre
+Version: 1.6.0p28
+Date: 1645783573
+Class: feature
+
+

@@ -214,11 +214,11 @@ TEST_F(SectionProviderCheckMkFixture, AdvancedFields) {
     EXPECT_EQ(get_val(result[3]), cfg::GetHostName());
     EXPECT_EQ(get_val(result[4]), tgt::Is64bit() ? "64bit" : "32bit");
     EXPECT_EQ(result[16], "AgentController: ");
-    EXPECT_TRUE(result[17].starts_with("AgentControllerStatus: no"));
+    EXPECT_TRUE(result[17].starts_with("AgentControllerStatus: "));
     tst::CreateTextFile(fs::path{cfg::GetUserDir()} / ac::kLegacyPullFile,
                         "test");
     result = getCoreResultAsTable();
-    EXPECT_EQ(result[17].starts_with("AgentControllerStatus: "));
+    EXPECT_TRUE(result[17].starts_with("AgentControllerStatus: "));
 }
 
 TEST_F(SectionProviderCheckMkFixture, OnlyFromField) {

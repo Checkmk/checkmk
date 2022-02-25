@@ -917,6 +917,45 @@ def test_openapi_user_disable_notifications(wsgi_app, with_automation_user, monk
     }
 
 
+@managedtest
+def test_show_all_users_with_no_email(wsgi_app, with_automation_user, monkeypatch):
+    """Test a user which has no email internally similar to the internal cmkadmin user"""
+    monkeypatch.setattr("cmk.gui.watolib.global_settings.rulebased_notifications_enabled",
+                        lambda: True)
+
+    username, secret = with_automation_user
+    wsgi_app.set_authorization(('Bearer', username + " " + secret))
+    user_detail = {
+        "username": "internal_user",
+        "fullname": "Internal",
+        "customer": "global",
+    }
+
+    base = "/NO_SITE/check_mk/api/1.0"
+    _resp = wsgi_app.call_method(
+        "post",
+        base + "/domain-types/user_config/collections/all",
+        params=json.dumps(user_detail),
+        headers={"Accept": "application/json"},
+        status=200,
+        content_type="application/json",
+    )
+
+    # We remove all the contact information to mimic the no email case
+    monkeypatch.setattr(
+        "cmk.gui.userdb.load_contacts",
+        lambda: {},
+    )
+    resp = wsgi_app.call_method(
+        "get",
+        base + "/domain-types/user_config/collections/all",
+        headers={"Accept": "application/json"},
+        status=200,
+    )
+    assert len(resp.json["value"]) == 2
+    assert all(("contact_options" not in user["extensions"] for user in resp.json["value"]))
+
+
 def _random_string(size):
     return ''.join(random.choice(string.ascii_letters + string.digits) for _ in range(size))
 

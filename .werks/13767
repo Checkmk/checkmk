@@ -1,0 +1,17 @@
+Title: API: fix show all users endpoint call when users have no emails
+Class: fix
+Compatible: compat
+Component: rest-api
+Date: 1645774764
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.0.0p22
+
+In the previous version, the show all users endpoint returned an error
+if one of the users had no email present in its contact information.
+This werk fixes this behaviour. It should be noted that this case is only
+relevant for internal users. Users created through the REST-API or the UI
+will always have an email placeholder field even if an email was not
+specified.

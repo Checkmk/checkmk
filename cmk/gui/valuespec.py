@@ -102,7 +102,9 @@ class Sentinel:
 # Some arbitrary object for checking whether or not default_value was set
 DEF_VALUE = Sentinel()
 
-ValueSpecValidateFunc = Callable[[Any, str], None]
+T = TypeVar("T")
+
+ValueSpecValidateFunc = Callable[[T, str], None]
 ValueSpecHelp = Union[str, HTML, Callable[[], Union[str, HTML]]]
 ValueSpecText = Union[str, HTML]
 JSONValue = Any
@@ -141,9 +143,6 @@ class Bounds(Generic[C]):
             )
 
 
-T = TypeVar("T")
-
-
 class ValueSpec(abc.ABC, Generic[T]):
     """Abstract base class of all value declaration classes"""
 
@@ -154,7 +153,7 @@ class ValueSpec(abc.ABC, Generic[T]):
         title: _Optional[str] = None,
         help: _Optional[ValueSpecHelp] = None,
         default_value: Union[Sentinel, T, Callable[[], Union[Sentinel, T]]] = DEF_VALUE,
-        validate: _Optional[ValueSpecValidateFunc] = None,
+        validate: _Optional[ValueSpecValidateFunc[T]] = None,
         **kwargs,
     ):
         super().__init__()
@@ -306,7 +305,7 @@ class FixedValue(ValueSpec[T]):
         title: _Optional[str] = None,
         help: _Optional[ValueSpecHelp] = None,
         default_value: Any = DEF_VALUE,
-        validate: _Optional[ValueSpecValidateFunc] = None,
+        validate: _Optional[ValueSpecValidateFunc[T]] = None,
     ):
         super().__init__(title=title, help=help, default_value=default_value, validate=validate)
         self._value = value
@@ -353,7 +352,7 @@ class Age(ValueSpec[Seconds]):
         title: _Optional[str] = None,
         help: _Optional[ValueSpecHelp] = None,
         default_value: Any = DEF_VALUE,
-        validate: _Optional[ValueSpecValidateFunc] = None,
+        validate: _Optional[ValueSpecValidateFunc[Seconds]] = None,
         cssclass: _Optional[str] = None,
     ):
         super().__init__(title=title, help=help, default_value=default_value, validate=validate)
@@ -489,7 +488,7 @@ class Integer(ValueSpec[int]):
         title: _Optional[str] = None,
         help: _Optional[ValueSpecHelp] = None,
         default_value: Union[Sentinel, int] = DEF_VALUE,
-        validate: _Optional[ValueSpecValidateFunc] = None,
+        validate: _Optional[ValueSpecValidateFunc[int]] = None,
     ):
         super().__init__(title=title, help=help, default_value=default_value, validate=validate)
         self._bounds = Bounds[int](minvalue, maxvalue)
@@ -612,7 +611,7 @@ class TextInput(ValueSpec[str]):
         title: _Optional[str] = None,
         help: _Optional[ValueSpecHelp] = None,
         default_value: Union[Sentinel, str, Callable[[], str]] = DEF_VALUE,
-        validate: _Optional[ValueSpecValidateFunc] = None,
+        validate: _Optional[ValueSpecValidateFunc[str]] = None,
     ):
         super().__init__(title=title, help=help, default_value=default_value, validate=validate)
         self._label = label
@@ -795,7 +794,7 @@ class RegExp(TextInput):
         title: _Optional[str] = None,
         help: _Optional[ValueSpecHelp] = None,
         default_value: Any = DEF_VALUE,
-        validate: _Optional[ValueSpecValidateFunc] = None,
+        validate: _Optional[ValueSpecValidateFunc[str]] = None,
     ):
         super().__init__(
             label=label,
@@ -942,7 +941,7 @@ class EmailAddress(TextInput):
         title: _Optional[str] = None,
         help: _Optional[ValueSpecHelp] = None,
         default_value: Any = DEF_VALUE,
-        validate: _Optional[ValueSpecValidateFunc] = None,
+        validate: _Optional[ValueSpecValidateFunc[str]] = None,
     ):
         super().__init__(
             label=label,
@@ -1141,7 +1140,7 @@ class HostAddress(TextInput):
         title: _Optional[str] = None,
         help: _Optional[ValueSpecHelp] = None,
         default_value: Union[Sentinel, str] = DEF_VALUE,
-        validate: _Optional[ValueSpecValidateFunc] = None,
+        validate: _Optional[ValueSpecValidateFunc[str]] = None,
     ):
         super().__init__(
             label=label,
@@ -1253,7 +1252,7 @@ def AbsoluteDirname(  # pylint: disable=redefined-builtin
     title: _Optional[str] = None,
     help: _Optional[ValueSpecHelp] = None,
     default_value: Union[Sentinel, str] = DEF_VALUE,
-    validate: _Optional[ValueSpecValidateFunc] = None,
+    validate: _Optional[ValueSpecValidateFunc[str]] = None,
 ) -> TextInput:
     return TextInput(
         regex=re.compile("^(/|(/[^/]+)+)$"),
@@ -1295,7 +1294,7 @@ class Url(TextInput):
         title: _Optional[str] = None,
         help: _Optional[ValueSpecHelp] = None,
         default_value: Union[Sentinel, str] = DEF_VALUE,
-        validate: _Optional[ValueSpecValidateFunc] = None,
+        validate: _Optional[ValueSpecValidateFunc[str]] = None,
     ):
         super().__init__(
             label=label,
@@ -1438,7 +1437,7 @@ class TextAreaUnicode(TextInput):
         title: _Optional[str] = None,
         help: _Optional[ValueSpecHelp] = None,
         default_value: Union[Sentinel, str] = DEF_VALUE,
-        validate: _Optional[ValueSpecValidateFunc] = None,
+        validate: _Optional[ValueSpecValidateFunc[str]] = None,
     ):
         super().__init__(
             label=label,
@@ -1535,7 +1534,7 @@ class Filename(TextInput):
         title: _Optional[str] = None,
         help: _Optional[ValueSpecHelp] = None,
         default_value: Union[Sentinel, str] = DEF_VALUE,
-        validate: _Optional[ValueSpecValidateFunc] = None,
+        validate: _Optional[ValueSpecValidateFunc[str]] = None,
     ):
         super().__init__(
             label=label,
@@ -1614,7 +1613,7 @@ class ListOfStrings(ValueSpec[Sequence[str]]):
         title: _Optional[str] = None,
         help: _Optional[ValueSpecHelp] = None,
         default_value: Union[Sentinel, Sequence[str]] = DEF_VALUE,
-        validate: _Optional[ValueSpecValidateFunc] = None,
+        validate: _Optional[ValueSpecValidateFunc[Sequence[str]]] = None,
     ):
         super().__init__(title=title, help=help, default_value=default_value, validate=validate)
 
@@ -1806,7 +1805,7 @@ class ListOf(ValueSpec):
         title: _Optional[str] = None,
         help: _Optional[ValueSpecHelp] = None,
         default_value: Any = DEF_VALUE,
-        validate: _Optional[ValueSpecValidateFunc] = None,
+        validate: _Optional[ValueSpecValidateFunc[list[Any]]] = None,
     ):
         super().__init__(title=title, help=help, default_value=default_value, validate=validate)
         self._valuespec = valuespec
@@ -2094,7 +2093,7 @@ class ListOfMultiple(ValueSpec):
         title: _Optional[str] = None,
         help: _Optional[ValueSpecHelp] = None,
         default_value: Any = DEF_VALUE,
-        validate: _Optional[ValueSpecValidateFunc] = None,
+        validate: _Optional[ValueSpecValidateFunc[Mapping[str, Any]]] = None,
         allow_empty: bool = True,
     ):
         super().__init__(title=title, help=help, default_value=default_value, validate=validate)
@@ -2305,7 +2304,7 @@ class Float(ValueSpec[float]):
         title: _Optional[str] = None,
         help: _Optional[ValueSpecHelp] = None,
         default_value: Union[Sentinel, float, Callable[[], Union[Sentinel, float]]] = DEF_VALUE,
-        validate: _Optional[ValueSpecValidateFunc] = None,
+        validate: _Optional[ValueSpecValidateFunc[float]] = None,
     ):
         super().__init__(title=title, help=help, default_value=default_value, validate=validate)
         self._bounds = Bounds[float](minvalue, maxvalue)
@@ -2377,7 +2376,7 @@ class Percentage(Float):
         title: _Optional[str] = None,
         help: _Optional[ValueSpecHelp] = None,
         default_value: Union[Sentinel, float] = DEF_VALUE,
-        validate: _Optional[ValueSpecValidateFunc] = None,
+        validate: _Optional[ValueSpecValidateFunc[float]] = None,
     ):
         super().__init__(
             decimal_separator=decimal_separator,
@@ -2421,7 +2420,7 @@ class Checkbox(ValueSpec[bool]):
         title: _Optional[str] = None,
         help: _Optional[ValueSpecHelp] = None,
         default_value: Union[Sentinel, bool, Callable[[], Union[Sentinel, bool]]] = DEF_VALUE,
-        validate: _Optional[ValueSpecValidateFunc] = None,
+        validate: _Optional[ValueSpecValidateFunc[bool]] = None,
     ):
         super().__init__(title=title, help=help, default_value=default_value, validate=validate)
         self._label = label
@@ -2497,7 +2496,7 @@ class DropdownChoice(ValueSpec):
         title: _Optional[str] = None,
         help: _Optional[ValueSpecHelp] = None,
         default_value: Any = DEF_VALUE,
-        validate: _Optional[ValueSpecValidateFunc] = None,
+        validate: _Optional[ValueSpecValidateFunc[DropdownChoiceValue]] = None,
         deprecated_choices: Sequence[DropdownChoiceValue] = (),
     ):
 
@@ -2707,7 +2706,7 @@ class AjaxDropdownChoice(DropdownChoice):
         title: _Optional[str] = None,
         help: _Optional[ValueSpecHelp] = None,
         default_value: Any = DEF_VALUE,
-        validate: _Optional[ValueSpecValidateFunc] = None,
+        validate: _Optional[ValueSpecValidateFunc[str]] = None,
     ):
         super().__init__(
             label=label,
@@ -2969,7 +2968,7 @@ class CascadingDropdown(ValueSpec[CascadingDropdownChoiceValue]):
         title: _Optional[str] = None,
         help: _Optional[ValueSpecHelp] = None,
         default_value: Union[Sentinel, CascadingDropdownChoiceValue] = DEF_VALUE,
-        validate: _Optional[ValueSpecValidateFunc] = None,
+        validate: _Optional[ValueSpecValidateFunc[CascadingDropdownChoiceValue]] = None,
     ):
         super().__init__(title=title, help=help, default_value=default_value, validate=validate)
 
@@ -3367,7 +3366,7 @@ class ListChoice(ValueSpec[Sequence[ListChoiceChoiceIdent]]):
         title: _Optional[str] = None,
         help: _Optional[ValueSpecHelp] = None,
         default_value: Union[Sentinel, Sequence[ListChoiceChoiceIdent]] = DEF_VALUE,
-        validate: _Optional[ValueSpecValidateFunc] = None,
+        validate: _Optional[ValueSpecValidateFunc[Sequence[ListChoiceChoiceIdent]]] = None,
     ):
         super().__init__(title=title, help=help, default_value=default_value, validate=validate)
         self._choices = choices
@@ -3525,7 +3524,7 @@ class DualListChoice(ListChoice):
         title: _Optional[str] = None,
         help: _Optional[ValueSpecHelp] = None,
         default_value: Union[Sentinel, Sequence[ListChoiceChoiceIdent]] = DEF_VALUE,
-        validate: _Optional[ValueSpecValidateFunc] = None,
+        validate: _Optional[ValueSpecValidateFunc[Sequence[ListChoiceChoiceIdent]]] = None,
         locked_choices: _Optional[Sequence[str]] = None,
         locked_choices_text_singular: _Optional[ChoiceText] = None,
         locked_choices_text_plural: _Optional[ChoiceText] = None,
@@ -3726,7 +3725,7 @@ class OptionalDropdownChoice(DropdownChoice):
         title: _Optional[str] = None,
         help: _Optional[ValueSpecHelp] = None,
         default_value: Any = DEF_VALUE,
-        validate: _Optional[ValueSpecValidateFunc] = None,
+        validate: _Optional[ValueSpecValidateFunc[DropdownChoiceValue]] = None,
     ):
         super().__init__(
             choices=choices,
@@ -4139,7 +4138,7 @@ class Timeofday(ValueSpec[TimeofdayValue]):
         title: _Optional[str] = None,
         help: _Optional[ValueSpecHelp] = None,
         default_value: Union[Sentinel, TimeofdayValue] = DEF_VALUE,
-        validate: _Optional[ValueSpecValidateFunc] = None,
+        validate: _Optional[ValueSpecValidateFunc[TimeofdayValue]] = None,
     ):
         super().__init__(title=title, help=help, default_value=default_value, validate=validate)
         self._allow_24_00 = allow_24_00
@@ -4242,7 +4241,7 @@ class TimeofdayRange(ValueSpec[TimeofdayRangeValue]):
         title: _Optional[str] = None,
         help: _Optional[ValueSpecHelp] = None,
         default_value: Union[Sentinel, TimeofdayRangeValue] = DEF_VALUE,
-        validate: _Optional[ValueSpecValidateFunc] = None,
+        validate: _Optional[ValueSpecValidateFunc[TimeofdayRangeValue]] = None,
     ):
         super().__init__(title=title, help=help, default_value=default_value, validate=validate)
         self._allow_empty = allow_empty
@@ -4408,7 +4407,7 @@ class Timerange(CascadingDropdown):
         title: _Optional[str] = None,
         help: _Optional[ValueSpecHelp] = None,
         default_value: Any = DEF_VALUE,
-        validate: _Optional[ValueSpecValidateFunc] = None,
+        validate: _Optional[ValueSpecValidateFunc[CascadingDropdownChoiceValue]] = None,
     ):
         super().__init__(
             choices=self._prepare_choices,
@@ -4717,7 +4716,7 @@ class Optional(ValueSpec):
         title: _Optional[str] = None,
         help: _Optional[ValueSpecHelp] = None,
         default_value: Any = DEF_VALUE,
-        validate: _Optional[ValueSpecValidateFunc] = None,
+        validate: _Optional[ValueSpecValidateFunc[Any]] = None,
     ):
         super().__init__(title=title, help=help, default_value=default_value, validate=validate)
         self._valuespec = valuespec
@@ -4849,7 +4848,7 @@ class Alternative(ValueSpec):
         title: _Optional[str] = None,
         help: _Optional[ValueSpecHelp] = None,
         default_value: Any = DEF_VALUE,
-        validate: _Optional[ValueSpecValidateFunc] = None,
+        validate: _Optional[ValueSpecValidateFunc[Any]] = None,
     ):
         super().__init__(title=title, help=help, default_value=default_value, validate=validate)
         self._elements = elements
@@ -5003,7 +5002,7 @@ class Tuple(ValueSpec):
         title: _Optional[str] = None,
         help: _Optional[ValueSpecHelp] = None,
         default_value: Any = DEF_VALUE,
-        validate: _Optional[ValueSpecValidateFunc] = None,
+        validate: _Optional[ValueSpecValidateFunc[tuple[Any, ...]]] = None,
     ):
         super().__init__(title=title, help=help, default_value=default_value, validate=validate)
         self._elements = elements
@@ -5155,7 +5154,7 @@ class Dictionary(ValueSpec[dict[str, Any]]):
         title: _Optional[str] = None,
         help: _Optional[ValueSpecHelp] = None,
         default_value: Any = DEF_VALUE,
-        validate: _Optional[ValueSpecValidateFunc] = None,
+        validate: _Optional[ValueSpecValidateFunc[dict[str, Any]]] = None,
     ):
         super().__init__(title=title, help=help, default_value=default_value, validate=validate)
         if callable(elements):
@@ -5511,7 +5510,7 @@ class ElementSelection(ValueSpec):
         title: _Optional[str] = None,
         help: _Optional[ValueSpecHelp] = None,
         default_value: Any = DEF_VALUE,
-        validate: _Optional[ValueSpecValidateFunc] = None,
+        validate: _Optional[ValueSpecValidateFunc[str]] = None,
     ):
         super().__init__(title=title, help=help, default_value=default_value, validate=validate)
         self._loaded_at: _Optional[int] = None
@@ -5689,7 +5688,7 @@ class Transform(ValueSpec):
         title: _Optional[str] = None,
         help: _Optional[ValueSpecHelp] = None,
         default_value: Any = DEF_VALUE,
-        validate: _Optional[ValueSpecValidateFunc] = None,
+        validate: _Optional[ValueSpecValidateFunc[Any]] = None,
     ):
         super().__init__(title=title, help=help, default_value=default_value, validate=validate)
         self._valuespec = valuespec
@@ -6118,7 +6117,7 @@ class Labels(ValueSpec):
         title: _Optional[str] = None,
         help: _Optional[ValueSpecHelp] = None,
         default_value: Any = DEF_VALUE,
-        validate: _Optional[ValueSpecValidateFunc] = None,
+        validate: _Optional[ValueSpecValidateFunc[dict[str, Any]]] = None,
     ):
         super().__init__(title=title, help=help, default_value=default_value, validate=validate)
         self._world = world

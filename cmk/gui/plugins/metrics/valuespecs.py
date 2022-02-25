@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
-from typing import List, Optional, TypedDict
+from typing import Any, List, Optional, TypedDict
 
 from cmk.gui.globals import html
 from cmk.gui.i18n import _
@@ -224,7 +224,7 @@ class ValuesWithUnits(CascadingDropdown):
         vs_name: str,
         metric_vs_name: str,
         elements: List[ValueWithUnitElement],
-        validate_value_elemets: Optional[ValueSpecValidateFunc] = None,
+        validate_value_elemets: Optional[ValueSpecValidateFunc[tuple[Any, ...]]] = None,
         help: Optional[ValueSpecHelp] = None,
     ):
         super().__init__(choices=self._unit_choices, help=help)

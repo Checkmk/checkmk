@@ -225,7 +225,7 @@ class Dashlet(abc.ABC):
         return False
 
     @classmethod
-    def validate_parameters_func(cls) -> Optional[ValueSpecValidateFunc]:
+    def validate_parameters_func(cls) -> Optional[ValueSpecValidateFunc[Any]]:
         """Optional validation function in case vs_parameters() returns a list"""
         return None
 

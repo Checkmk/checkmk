@@ -10,6 +10,7 @@ import time
 from contextlib import contextmanager
 from dataclasses import dataclass
 from typing import (
+    Any,
     Callable,
     Dict,
     Iterable,
@@ -411,7 +412,7 @@ class LegacyDashlet(IFrameDashlet):
         return cls._spec.get("opt_params", False)
 
     @classmethod
-    def validate_parameters_func(cls) -> Optional[ValueSpecValidateFunc]:
+    def validate_parameters_func(cls) -> Optional[ValueSpecValidateFunc[Any]]:
         """Optional validation function in case vs_parameters() returns a list"""
         return cls._spec.get("validate_params")
 

@@ -1,0 +1,14 @@
+Title: Service creation when pinging all IPv4/v6
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1645786464
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b2
+
+When using the rule "Check hosts with PING (ICMP Echo Request)" in combination with
+"Ping all IPv4/6 addresses", only a service for the first matching rule was created.
+As a result, only one protocol on a dual-stack host was monitored. This is fixed now.

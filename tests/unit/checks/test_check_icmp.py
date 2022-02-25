@@ -57,6 +57,8 @@ def test_check_icmp_argument_parsing(
     [
         ({"address": ("indexed_ipv4address", "1")}, "PING IPv4/1"),
         ({"address": ("indexed_ipv6address", "3")}, "PING IPv6/3"),
+        ({"address": "all_ipv4addresses"}, "PING all IPv4 Addresses"),
+        ({"address": "all_ipv6addresses"}, "PING all IPv6 Addresses"),
     ],
 )
 def test_check_icmp_description(params, expected_description):

@@ -33,6 +33,7 @@ CONTAINER_STATUSES = [
     "CrashLoopBackOff",
     "ImagePullBackOff",
     "OOMKilled",
+    "InvalidImageName",
 ]
 
 INIT_STATUSES = [f"Init:{status}" for status in CONTAINER_STATUSES]

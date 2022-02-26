@@ -1212,7 +1212,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy):
         "ceph_status.pgs",
         "ceph_status.mgrs",
         "check_mk.only_from",
-        "check_mk.agent_update",
         "checkpoint_fan",
         "checkpoint_firewall",
         "checkpoint_ha_problems",

@@ -7876,6 +7876,9 @@ msgstr "Dezactiveaza Notificarile"
 msgid "Channels"
 msgstr "Nici o schimbare"
 
+msgid "Chaotic"
+msgstr ""
+
 msgid "Characters"
 msgstr ""
 
@@ -10208,6 +10211,9 @@ msgstr "(fără elemente)"
 #, fuzzy
 msgid "Copy of existing view"
 msgstr "(fără elemente)"
+
+msgid "Copy rule representation to clipboard"
+msgstr ""
 
 #, python-format
 msgid "Copy rule: %s"
@@ -17180,7 +17186,7 @@ msgid ""
 msgstr ""
 
 #, fuzzy
-msgid "Export for API"
+msgid "Export this rule for API"
 msgstr "rapoarte"
 
 msgid "Extend downtimes by..."
@@ -25386,6 +25392,10 @@ msgstr ""
 #, python-format
 msgid "Levels on %s single-request consumption"
 msgstr ""
+
+#, fuzzy
+msgid "Levels on CPU load"
+msgstr "Nivelurile maxime pentru voltaj"
 
 msgid "Levels on CPU utilization of a single process"
 msgstr ""
@@ -37231,6 +37241,13 @@ msgstr "Proprietatile Folderului"
 msgid "Rule packs"
 msgstr "Reguli"
 
+msgid "Rule representation for web API"
+msgstr ""
+
+#, fuzzy, python-format
+msgid "Rule representation: %s"
+msgstr "Numele Elementului"
+
 #, fuzzy
 msgid "Rule search"
 msgstr "Cautare noua"
@@ -42600,6 +42617,9 @@ msgstr "Parola"
 #, fuzzy
 msgid "Successfully changed the credential."
 msgstr "Parola"
+
+msgid "Successfully copied rule representation to the clipboard."
+msgstr ""
 
 #, python-format
 msgid ""
@@ -48733,9 +48753,6 @@ msgstr ""
 
 #, python-format
 msgid "This rule pack is provided via the MKP %s."
-msgstr ""
-
-msgid "This rule representation can be used for Web API calls."
 msgstr ""
 
 msgid ""

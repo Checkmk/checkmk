@@ -8435,6 +8435,10 @@ msgstr "Utilización de canales en la banda de 5 GHz"
 msgid "Channels"
 msgstr "Canales"
 
+#, fuzzy
+msgid "Chaotic"
+msgstr "Aviso"
+
 msgid "Characters"
 msgstr "Personajes"
 
@@ -10943,6 +10947,9 @@ msgstr "Copiar la vista existente"
 
 msgid "Copy of existing view"
 msgstr "Copia de la vista existente"
+
+msgid "Copy rule representation to clipboard"
+msgstr ""
 
 #, python-format
 msgid "Copy rule: %s"
@@ -17874,7 +17881,8 @@ msgstr ""
 "Archivo de exportación para crear, que contiene <tt>&lt;HOST&gt;</tt> para "
 "el nombre de host"
 
-msgid "Export for API"
+#, fuzzy
+msgid "Export this rule for API"
 msgstr "Exportación para API"
 
 msgid "Extend downtimes by..."
@@ -27106,6 +27114,10 @@ msgstr "Niveles de carpetas a crear"
 #, python-format
 msgid "Levels on %s single-request consumption"
 msgstr "Niveles en %s de consumo de una sola petición"
+
+#, fuzzy
+msgid "Levels on CPU load"
+msgstr "Niveles de latencia"
 
 msgid "Levels on CPU utilization of a single process"
 msgstr "Niveles de utilización de la CPU de un solo proceso"
@@ -38928,6 +38940,16 @@ msgstr "Propiedades del paquete de reglas"
 msgid "Rule packs"
 msgstr "Paquetes de reglas"
 
+#, fuzzy
+msgid "Rule representation for web API"
+msgstr ""
+"Esta representación de reglas puede utilizarse para las llamadas a la API de "
+"la web."
+
+#, fuzzy, python-format
+msgid "Rule representation: %s"
+msgstr "Presentaciones"
+
 msgid "Rule search"
 msgstr "Búsqueda de reglas"
 
@@ -44564,6 +44586,9 @@ msgstr "Se ha cambiado la contraseña con éxito."
 #, fuzzy
 msgid "Successfully changed the credential."
 msgstr "Se ha cambiado la contraseña con éxito."
+
+msgid "Successfully copied rule representation to the clipboard."
+msgstr ""
 
 #, python-format
 msgid ""
@@ -52574,11 +52599,6 @@ msgstr ""
 #, python-format
 msgid "This rule pack is provided via the MKP %s."
 msgstr "Este paquete de reglas se proporciona a través del MKP %s."
-
-msgid "This rule representation can be used for Web API calls."
-msgstr ""
-"Esta representación de reglas puede utilizarse para las llamadas a la API de "
-"la web."
 
 msgid ""
 "This rule selects the ALLNET IP Sensoric agent, which fetches /xml/"

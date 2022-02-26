@@ -7,8 +7,8 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2021-12-07 07:00+0000\n"
-"Last-Translator: Sebastian Kirchmeyer <sebastian.kirchmeyer@tribe29.com>\n"
+"PO-Revision-Date: 2022-02-24 07:00+0000\n"
+"Last-Translator: Weblate Admin <marketing@tribe29.com>\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/"
 "software/de/>\n"
 "Language: de\n"
@@ -8389,6 +8389,10 @@ msgstr "Channel Auslastung für das 5GHz Band"
 msgid "Channels"
 msgstr "Channels"
 
+#, fuzzy
+msgid "Chaotic"
+msgstr "Hinweise"
+
 msgid "Characters"
 msgstr "Zeichen"
 
@@ -10881,6 +10885,9 @@ msgstr "Vorhandene Ansicht kopieren"
 
 msgid "Copy of existing view"
 msgstr "Kopie der bestehenden Ansicht"
+
+msgid "Copy rule representation to clipboard"
+msgstr ""
 
 #, python-format
 msgid "Copy rule: %s"
@@ -17783,7 +17790,8 @@ msgstr ""
 "Zu erstellende Exportdatei enthält, die <tt>&lt;HOST&gt;</tt> für den "
 "Hostnamen"
 
-msgid "Export for API"
+#, fuzzy
+msgid "Export this rule for API"
 msgstr "Exportiere für API"
 
 msgid "Extend downtimes by..."
@@ -26951,6 +26959,10 @@ msgstr "Anzulegende Ordner-Ebenen"
 #, python-format
 msgid "Levels on %s single-request consumption"
 msgstr "Schwellwerte für den %s Verbrauch einzelner Anfragen"
+
+#, fuzzy
+msgid "Levels on CPU load"
+msgstr "Schwellwerte für die Latenzzeit"
 
 msgid "Levels on CPU utilization of a single process"
 msgstr "Schwellwerte für die CPU Auslastung eines einzelnen Prozesses"
@@ -38691,6 +38703,14 @@ msgstr "Regelpaket-Eigenschaften"
 msgid "Rule packs"
 msgstr "Regelpakete"
 
+#, fuzzy
+msgid "Rule representation for web API"
+msgstr "Die Regeldarstellung kann in Web-API-Aufrufen verwendet werden."
+
+#, fuzzy, python-format
+msgid "Rule representation: %s"
+msgstr "Präsentationen"
+
 msgid "Rule search"
 msgstr "Regelsuche"
 
@@ -44277,6 +44297,9 @@ msgstr "Das Passwort wurde erfolgreich geändert."
 #, fuzzy
 msgid "Successfully changed the credential."
 msgstr "Das Passwort wurde erfolgreich geändert."
+
+msgid "Successfully copied rule representation to the clipboard."
+msgstr ""
 
 #, python-format
 msgid ""
@@ -52181,9 +52204,6 @@ msgstr ""
 msgid "This rule pack is provided via the MKP %s."
 msgstr "Dieses Regelpaket wird über das MKP %s bereitgestellt."
 
-msgid "This rule representation can be used for Web API calls."
-msgstr "Die Regeldarstellung kann in Web-API-Aufrufen verwendet werden."
-
 msgid ""
 "This rule selects the ALLNET IP Sensoric agent, which fetches /xml/"
 "sensordata.xml from the device by HTTP and extracts the needed monitoring "
@@ -58255,7 +58275,7 @@ msgstr ""
 "müssen im Bedingungsfeld 'Explizite Hosts' gesetzt werden."
 
 msgid "Web"
-msgstr "Web"
+msgstr "web"
 
 msgid "Web ACL capacity units (WCUs)"
 msgstr "Web-ACL Kapazitätseinheiten (WCUs)"

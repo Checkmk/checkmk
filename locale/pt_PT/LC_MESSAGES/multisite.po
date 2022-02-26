@@ -8377,6 +8377,10 @@ msgstr "Utilização de canais para a banda de 5GHz"
 msgid "Channels"
 msgstr "Canais"
 
+#, fuzzy
+msgid "Chaotic"
+msgstr "Aviso"
+
 msgid "Characters"
 msgstr "Personagens"
 
@@ -10860,6 +10864,9 @@ msgstr "Copiar visão existente"
 
 msgid "Copy of existing view"
 msgstr "Cópia da visão existente"
+
+msgid "Copy rule representation to clipboard"
+msgstr ""
 
 #, python-format
 msgid "Copy rule: %s"
@@ -17726,7 +17733,8 @@ msgstr ""
 "Exportar arquivo para criar, contendo <tt>&lt;HOST&gt;</tt> para o nome da "
 "hostname"
 
-msgid "Export for API"
+#, fuzzy
+msgid "Export this rule for API"
 msgstr "Exportação para API"
 
 msgid "Extend downtimes by..."
@@ -26885,6 +26893,10 @@ msgstr "Níveis de pastas a criar"
 #, python-format
 msgid "Levels on %s single-request consumption"
 msgstr "Níveis de consumo em %s de pedido único"
+
+#, fuzzy
+msgid "Levels on CPU load"
+msgstr "Níveis de latência"
 
 msgid "Levels on CPU utilization of a single process"
 msgstr "Níveis de utilização da CPU de um único processo"
@@ -38620,6 +38632,14 @@ msgstr "Propriedades do pacote de regras"
 msgid "Rule packs"
 msgstr "Pacotes de regras"
 
+#, fuzzy
+msgid "Rule representation for web API"
+msgstr "Esta representação de regras pode ser usada para chamadas Web API."
+
+#, fuzzy, python-format
+msgid "Rule representation: %s"
+msgstr "Apresentações"
+
 msgid "Rule search"
 msgstr "Pesquisa de regras"
 
@@ -44197,6 +44217,9 @@ msgstr "Mudança de senha com sucesso."
 #, fuzzy
 msgid "Successfully changed the credential."
 msgstr "Mudança de senha com sucesso."
+
+msgid "Successfully copied rule representation to the clipboard."
+msgstr ""
 
 #, python-format
 msgid ""
@@ -52090,9 +52113,6 @@ msgstr ""
 #, python-format
 msgid "This rule pack is provided via the MKP %s."
 msgstr "Este pacote de regras é fornecido através do MKP %s."
-
-msgid "This rule representation can be used for Web API calls."
-msgstr "Esta representação de regras pode ser usada para chamadas Web API."
 
 msgid ""
 "This rule selects the ALLNET IP Sensoric agent, which fetches /xml/"

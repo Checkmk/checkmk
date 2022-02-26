@@ -8378,6 +8378,10 @@ msgstr "Kanaalgebruik voor 5GHz-band"
 msgid "Channels"
 msgstr "Kanalen"
 
+#, fuzzy
+msgid "Chaotic"
+msgstr "Bericht"
+
 msgid "Characters"
 msgstr "Personages"
 
@@ -10864,6 +10868,9 @@ msgstr "Bestaand uitzicht kopiëren"
 
 msgid "Copy of existing view"
 msgstr "Kopie van bestaand beeld"
+
+msgid "Copy rule representation to clipboard"
+msgstr ""
 
 #, python-format
 msgid "Copy rule: %s"
@@ -17728,7 +17735,8 @@ msgid ""
 "Export file to create, containing <tt>&lt;HOST&gt;</tt> for the hostname"
 msgstr "Exportbestand aan te maken, met <tt>&lt;HOST&gt;</tt> voor de hostnaam"
 
-msgid "Export for API"
+#, fuzzy
+msgid "Export this rule for API"
 msgstr "Exporteren voor API"
 
 msgid "Extend downtimes by..."
@@ -26902,6 +26910,10 @@ msgstr "Niveaus van te maken mappen"
 #, python-format
 msgid "Levels on %s single-request consumption"
 msgstr "Niveaus op %s enkelvoudig-verzoek verbruik"
+
+#, fuzzy
+msgid "Levels on CPU load"
+msgstr "Niveaus op latentie"
 
 msgid "Levels on CPU utilization of a single process"
 msgstr "Niveaus op CPU-gebruik van een enkel proces"
@@ -38596,6 +38608,14 @@ msgstr "Eigenschappen regelpakket"
 msgid "Rule packs"
 msgstr "Regel pakken"
 
+#, fuzzy
+msgid "Rule representation for web API"
+msgstr "Deze regelweergave kan worden gebruikt voor Web API-oproepen."
+
+#, fuzzy, python-format
+msgid "Rule representation: %s"
+msgstr "Presentaties"
+
 msgid "Rule search"
 msgstr "Regel zoeken"
 
@@ -44183,6 +44203,9 @@ msgstr "Wachtwoord succesvol gewijzigd."
 #, fuzzy
 msgid "Successfully changed the credential."
 msgstr "Wachtwoord succesvol gewijzigd."
+
+msgid "Successfully copied rule representation to the clipboard."
+msgstr ""
 
 #, python-format
 msgid ""
@@ -52128,9 +52151,6 @@ msgstr ""
 #, python-format
 msgid "This rule pack is provided via the MKP %s."
 msgstr "Dit regelpakket wordt geleverd via de MKP %s."
-
-msgid "This rule representation can be used for Web API calls."
-msgstr "Deze regelweergave kan worden gebruikt voor Web API-oproepen."
 
 msgid ""
 "This rule selects the ALLNET IP Sensoric agent, which fetches /xml/"

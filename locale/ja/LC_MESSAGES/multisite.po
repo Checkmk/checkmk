@@ -8063,6 +8063,10 @@ msgstr "5GHz帯域のチャネル使用率"
 msgid "Channels"
 msgstr "チャンネル"
 
+#, fuzzy
+msgid "Chaotic"
+msgstr "通知"
+
 msgid "Characters"
 msgstr "キャラクター"
 
@@ -10442,6 +10446,9 @@ msgstr "既存のビューをコピーする"
 
 msgid "Copy of existing view"
 msgstr "既存のビューのコピー"
+
+msgid "Copy rule representation to clipboard"
+msgstr ""
 
 #, python-format
 msgid "Copy rule: %s"
@@ -17189,7 +17196,8 @@ msgid ""
 "Export file to create, containing <tt>&lt;HOST&gt;</tt> for the hostname"
 msgstr ""
 
-msgid "Export for API"
+#, fuzzy
+msgid "Export this rule for API"
 msgstr "API用にエクスポート"
 
 msgid "Extend downtimes by..."
@@ -25911,6 +25919,10 @@ msgstr "作成するフォルダーのレベル"
 #, python-format
 msgid "Levels on %s single-request consumption"
 msgstr "%s シングルリクエスト消費のレベル"
+
+#, fuzzy
+msgid "Levels on CPU load"
+msgstr "遅延のレベル"
 
 msgid "Levels on CPU utilization of a single process"
 msgstr "単一プロセスのCPU使用率のレベル"
@@ -37352,6 +37364,14 @@ msgstr "ルールパックのプロパティ"
 msgid "Rule packs"
 msgstr "ルールパック"
 
+#, fuzzy
+msgid "Rule representation for web API"
+msgstr "このルール表現は、Web API呼び出しに使用できます。"
+
+#, fuzzy, python-format
+msgid "Rule representation: %s"
+msgstr "プレゼンテーション"
+
 msgid "Rule search"
 msgstr "ルール検索"
 
@@ -42719,6 +42739,9 @@ msgstr "パスワードが正常に変更されました。"
 #, fuzzy
 msgid "Successfully changed the credential."
 msgstr "パスワードが正常に変更されました。"
+
+msgid "Successfully copied rule representation to the clipboard."
+msgstr ""
 
 #, python-format
 msgid ""
@@ -49907,9 +49930,6 @@ msgstr "このルールパックが変更されました元々はMKP %s を介�
 #, python-format
 msgid "This rule pack is provided via the MKP %s."
 msgstr "このルールパックは、MKP%sを介して提供されます。"
-
-msgid "This rule representation can be used for Web API calls."
-msgstr "このルール表現は、Web API呼び出しに使用できます。"
 
 msgid ""
 "This rule selects the ALLNET IP Sensoric agent, which fetches /xml/"

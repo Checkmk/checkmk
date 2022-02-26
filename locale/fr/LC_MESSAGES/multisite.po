@@ -5,7 +5,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: faye.tandog@tribe29.com\n"
+"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
 "PO-Revision-Date: 2022-02-22 13:25+0000\n"
 "Last-Translator: aztazt <007@free.fr>\n"
@@ -8486,6 +8486,10 @@ msgstr "Utilisation des canaux pour la bande 5GHz"
 msgid "Channels"
 msgstr "Chaînes"
 
+#, fuzzy
+msgid "Chaotic"
+msgstr "Avis"
+
 msgid "Characters"
 msgstr "Personnages"
 
@@ -11009,6 +11013,9 @@ msgstr "Copier la vue existante"
 
 msgid "Copy of existing view"
 msgstr "Copie de la vue existante"
+
+msgid "Copy rule representation to clipboard"
+msgstr ""
 
 #, python-format
 msgid "Copy rule: %s"
@@ -17959,7 +17966,8 @@ msgstr ""
 "Fichier d'exportation à créer, contenant <tt>&lt;HOST&gt;</tt> pour le nom "
 "d'hôte."
 
-msgid "Export for API"
+#, fuzzy
+msgid "Export this rule for API"
 msgstr "Exportation pour l'API"
 
 msgid "Extend downtimes by..."
@@ -27244,6 +27252,10 @@ msgstr "Niveaux de dossiers à créer"
 #, python-format
 msgid "Levels on %s single-request consumption"
 msgstr "Niveaux de consommation à la demande unique de %s"
+
+#, fuzzy
+msgid "Levels on CPU load"
+msgstr "Niveaux de latence"
 
 msgid "Levels on CPU utilization of a single process"
 msgstr "Niveaux d'utilisation du CPU d'un seul processus"
@@ -39099,6 +39111,15 @@ msgstr "Propriétés du pack de règles"
 msgid "Rule packs"
 msgstr "Paquets de règles"
 
+#, fuzzy
+msgid "Rule representation for web API"
+msgstr ""
+"Cette représentation des règles peut être utilisée pour les appels d'API Web."
+
+#, fuzzy, python-format
+msgid "Rule representation: %s"
+msgstr "Présentations"
+
 msgid "Rule search"
 msgstr "Recherche de règles"
 
@@ -44749,6 +44770,9 @@ msgstr "Le mot de passe a été changé avec succès."
 #, fuzzy
 msgid "Successfully changed the credential."
 msgstr "Le mot de passe a été changé avec succès."
+
+msgid "Successfully copied rule representation to the clipboard."
+msgstr ""
 
 #, python-format
 msgid ""
@@ -52802,10 +52826,6 @@ msgstr ""
 #, python-format
 msgid "This rule pack is provided via the MKP %s."
 msgstr "Ce pack de règles est fourni par le MKP %s."
-
-msgid "This rule representation can be used for Web API calls."
-msgstr ""
-"Cette représentation des règles peut être utilisée pour les appels d'API Web."
 
 msgid ""
 "This rule selects the ALLNET IP Sensoric agent, which fetches /xml/"

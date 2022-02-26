@@ -8401,6 +8401,10 @@ msgstr "Utilizzo dei canali per la banda 5GHz"
 msgid "Channels"
 msgstr "Canali"
 
+#, fuzzy
+msgid "Chaotic"
+msgstr "Avviso"
+
 msgid "Characters"
 msgstr "Personaggi"
 
@@ -10892,6 +10896,9 @@ msgstr "Copiare la vista esistente"
 
 msgid "Copy of existing view"
 msgstr "Copia della vista esistente"
+
+msgid "Copy rule representation to clipboard"
+msgstr ""
 
 #, python-format
 msgid "Copy rule: %s"
@@ -17782,7 +17789,8 @@ msgstr ""
 "File di esportazione da creare, contenente <tt>&lt;HOST&gt;</tt> per "
 "l'hostname"
 
-msgid "Export for API"
+#, fuzzy
+msgid "Export this rule for API"
 msgstr "Esportazione per API"
 
 msgid "Extend downtimes by..."
@@ -26953,6 +26961,10 @@ msgstr "Livelli di cartelle da creare"
 #, python-format
 msgid "Levels on %s single-request consumption"
 msgstr "Livelli su %s di consumo a richiesta singola"
+
+#, fuzzy
+msgid "Levels on CPU load"
+msgstr "Livelli di latenza"
 
 msgid "Levels on CPU utilization of a single process"
 msgstr "Livelli di utilizzo della CPU di un singolo processo"
@@ -38714,6 +38726,15 @@ msgstr "Proprietà del pacchetto di regole"
 msgid "Rule packs"
 msgstr "Pacchetti di regole"
 
+#, fuzzy
+msgid "Rule representation for web API"
+msgstr ""
+"Questa rappresentazione di regole può essere usata per le chiamate Web API."
+
+#, fuzzy, python-format
+msgid "Rule representation: %s"
+msgstr "Presentazioni"
+
 msgid "Rule search"
 msgstr "Ricerca delle regole"
 
@@ -44300,6 +44321,9 @@ msgstr "Password cambiata con successo."
 #, fuzzy
 msgid "Successfully changed the credential."
 msgstr "Password cambiata con successo."
+
+msgid "Successfully copied rule representation to the clipboard."
+msgstr ""
 
 #, python-format
 msgid ""
@@ -52249,10 +52273,6 @@ msgstr ""
 #, python-format
 msgid "This rule pack is provided via the MKP %s."
 msgstr "Questo pacchetto di regole è fornito tramite il MKP %s."
-
-msgid "This rule representation can be used for Web API calls."
-msgstr ""
-"Questa rappresentazione di regole può essere usata per le chiamate Web API."
 
 msgid ""
 "This rule selects the ALLNET IP Sensoric agent, which fetches /xml/"

@@ -24,7 +24,7 @@ repos:
             types: [file]
           - id: check-yaml
           - id: end-of-file-fixer
-            exclude: .werks/*
+            exclude: .werks/.*
     - repo: local
       hooks:
           - id: isort

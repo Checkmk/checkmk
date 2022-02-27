@@ -22,7 +22,8 @@ GCC_TOOLCHAIN := /opt/gcc-11.2.0
 AGENT_PLUGIN_UNIT_TEST_FILES := $(wildcard agent-plugin-unit/test_*.py)
 AGENT_PLUGIN_UNIT_TEST_FILES_PY2 := $(subst agent-plugin-unit,agent-plugin-unit/py2,$(AGENT_PLUGIN_UNIT_TEST_FILES))
 
-SHELL_FILES_REL := $(shell cd ..; grep -rl \
+# evaluate this only if needed, it slows down tab expansion otherwise.
+SHELL_FILES_REL = $(shell cd ..; grep -rl \
     --exclude-dir="buildscripts" \
     --exclude-dir="core" \
     --exclude-dir="doc" \

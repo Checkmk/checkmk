@@ -46,7 +46,7 @@ class OraErrors:
 
         if line[0].startswith('ORA-'):
             self.has_error = True
-            self.error_text = 'Found error in agent output "%s"' % ' '.join(line)
+            self.error_text = _error_summary_text(" ".join(line))
             self.error_severity = state.UNKNOWN
             return
 
@@ -66,9 +66,13 @@ class OraErrors:
             return
         if line[1].startswith('ORA-'):
             self.has_error = True
-            self.error_text = 'Found error in agent output "%s"' % ' '.join(line[1:])
+            self.error_text = _error_summary_text(" ".join(line[1:]))
             self.error_severity = state.UNKNOWN
             return
+
+
+def _error_summary_text(agent_output_string: str) -> str:
+    return f'Found error in agent output "{agent_output_string}"'
 
 
 DataFiles = TypedDict(

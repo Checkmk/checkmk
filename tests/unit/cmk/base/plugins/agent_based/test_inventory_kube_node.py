@@ -39,6 +39,7 @@ from .utils_inventory import sort_inventory_result
                     NodeAddress(type_="Hostname", address="k8-21"),
                     NodeAddress(type_="ExternalIP", address="10.200.3.21"),
                 ],
+                cluster="cluster",
             ),
             KubeletInfo(
                 version="1.2.3",

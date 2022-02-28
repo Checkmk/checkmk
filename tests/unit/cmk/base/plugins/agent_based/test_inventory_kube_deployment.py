@@ -34,6 +34,7 @@ from .utils_inventory import sort_inventory_result
                 creation_timestamp=1600000000.0,
                 images=["i/name:0.5"],
                 containers=["name"],
+                cluster="cluster",
             ),
             DeploymentStrategy(
                 strategy=RollingUpdate(

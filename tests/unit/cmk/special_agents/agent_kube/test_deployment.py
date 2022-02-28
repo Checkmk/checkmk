@@ -8,6 +8,6 @@ from cmk.special_agents import agent_kube
 
 def test_pod_deployment_controller_name(pod: agent_kube.Pod, deployment: agent_kube.Deployment):
     pod.add_controller(deployment)
-    pod_info = pod.info()
+    pod_info = pod.info("cluster")
     assert len(pod_info.controllers) == 1
     assert pod_info.controllers[0].name == deployment.name()

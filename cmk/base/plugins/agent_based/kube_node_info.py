@@ -29,9 +29,10 @@ def parse_kube_node_info(string_table: StringTable):
     ... '"creation_timestamp": "1640000000.0",'
     ... '"container_runtime_version": "docker://20.10.8",'
     ... '"addresses": [],'
+    ... '"cluster": "cluster",'
     ... '"labels": {}}'
     ... ]])
-    NodeInfo(architecture='amd64', kernel_version='5.13.0-27-generic', os_image='Ubuntu 20.04.2 LTS', operating_system='linux', container_runtime_version='docker://20.10.8', name='minikube', creation_timestamp=1640000000.0, labels={}, addresses=[])
+    NodeInfo(architecture='amd64', kernel_version='5.13.0-27-generic', os_image='Ubuntu 20.04.2 LTS', operating_system='linux', container_runtime_version='docker://20.10.8', name='minikube', creation_timestamp=1640000000.0, labels={}, addresses=[], cluster='cluster')
     """
     return NodeInfo(**json.loads(string_table[0][0]))
 
@@ -43,12 +44,16 @@ def host_labels(section: NodeInfo) -> HostLabelGenerator:
         cmk/kubernetes/object:
             This label is set to the Kubernetes object type.
 
+        cmk/kubernetes/cluster:
+            This label is set to the given Kubernetes cluster name.
+
         cmk/os_family:
             This label is set to the operating system as reported by the agent
             as "AgentOS" (such as "windows" or "linux").
 
     """
     yield HostLabel("cmk/kubernetes/object", "node")
+    yield HostLabel("cmk/kubernetes/cluster", section.cluster)
     yield HostLabel("cmk/os_family", section.operating_system)
     yield from kube_labels_to_cmk_labels(section.labels)
 

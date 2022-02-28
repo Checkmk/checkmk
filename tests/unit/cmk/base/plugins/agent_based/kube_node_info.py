@@ -36,6 +36,7 @@ def fixture_time(mocker):
                 creation_timestamp=1600000000.0,
                 labels={},
                 addresses=[],
+                cluster="cluster",
             ),
             [
                 Result(state=State.OK, summary="Name: minikube"),

@@ -182,6 +182,7 @@ class PodInfo(BaseModel):
     restart_policy: RestartPolicy
     uid: PodUID
     controllers: Sequence[Controller] = []
+    cluster: str
 
 
 class APIHealth(BaseModel):
@@ -258,6 +259,7 @@ class NodeInfo(BaseModel):
     creation_timestamp: CreationTimestamp
     labels: Labels
     addresses: NodeAddresses
+    cluster: str
 
 
 class StartTime(BaseModel):
@@ -337,6 +339,7 @@ class DeploymentInfo(BaseModel):
     creation_timestamp: CreationTimestamp
     images: Sequence[str]
     containers: Sequence[str]
+    cluster: str
 
 
 class PodContainers(BaseModel):

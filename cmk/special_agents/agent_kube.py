@@ -301,7 +301,8 @@ class Pod:
 
         return f"{self.metadata.namespace}_{self.metadata.name}"
 
-    def info(self) -> section.PodInfo:
+    # TODO: Extract this method in order to remove the double linking to the controller
+    def info(self, cluster_name: str) -> section.PodInfo:
         controllers = []
         for controller in self._controllers:
             controllers.append(
@@ -325,6 +326,7 @@ class Pod:
             restart_policy=self.spec.restart_policy,
             uid=self.uid,
             controllers=controllers,
+            cluster=cluster_name,
         )
 
     def container_cpu_limits(self) -> Sequence[Optional[float]]:
@@ -467,7 +469,7 @@ class Deployment(PodOwner):
             return self._pods
         return [pod for pod in self._pods if pod.phase == phase]
 
-    def info(self) -> section.DeploymentInfo:
+    def info(self, cluster_name: str) -> section.DeploymentInfo:
         container_images = set()
         container_names = []
         for pod in self._pods:
@@ -487,6 +489,7 @@ class Deployment(PodOwner):
             selector=self.spec.selector,
             images=list(container_images),
             containers=container_names,
+            cluster=cluster_name,
         )
 
     def pod_resources(self) -> section.PodResources:
@@ -581,7 +584,7 @@ class Node(PodOwner):
     def kubelet(self) -> api.KubeletInfo:
         return self.kubelet_info
 
-    def info(self) -> section.NodeInfo:
+    def info(self, cluster_name: str) -> section.NodeInfo:
         return section.NodeInfo(
             labels=self.metadata.labels,
             addresses=self.status.addresses,
@@ -592,6 +595,7 @@ class Node(PodOwner):
             os_image=self.status.node_info.os_image,
             operating_system=self.status.node_info.operating_system,
             container_runtime_version=self.status.node_info.container_runtime_version,
+            cluster=cluster_name,
         )
 
     def container_count(self) -> section.ContainerCount:
@@ -876,7 +880,7 @@ def write_cluster_api_sections(cluster: Cluster) -> None:
 
 
 def write_nodes_api_sections(
-    api_nodes: Sequence[Node], piggyback_formatter: Callable[[str], str]
+    cluster_name: str, api_nodes: Sequence[Node], piggyback_formatter: Callable[[str], str]
 ) -> None:
     def output_sections(cluster_node: Node) -> None:
         sections = {
@@ -884,7 +888,7 @@ def write_nodes_api_sections(
             "kube_node_kubelet_v1": cluster_node.kubelet,
             "kube_pod_resources_v1": cluster_node.pod_resources,
             "kube_allocatable_pods_v1": cluster_node.allocatable_pods,
-            "kube_node_info_v1": cluster_node.info,
+            "kube_node_info_v1": lambda: cluster_node.info(cluster_name),
             "kube_cpu_resources_v1": cluster_node.cpu_resources,
             "kube_memory_resources_v1": cluster_node.memory_resources,
             "kube_allocatable_cpu_resource_v1": cluster_node.allocatable_cpu_resource,
@@ -899,7 +903,9 @@ def write_nodes_api_sections(
 
 
 def write_deployments_api_sections(
-    api_deployments: Sequence[Deployment], piggyback_formatter: Callable[[str], str]
+    cluster_name: str,
+    api_deployments: Sequence[Deployment],
+    piggyback_formatter: Callable[[str], str],
 ) -> None:
     """Write the deployment relevant sections based on k8 API information"""
 
@@ -907,7 +913,7 @@ def write_deployments_api_sections(
         sections = {
             "kube_pod_resources_v1": cluster_deployment.pod_resources,
             "kube_memory_resources_v1": cluster_deployment.memory_resources,
-            "kube_deployment_info_v1": cluster_deployment.info,
+            "kube_deployment_info_v1": lambda: cluster_deployment.info(cluster_name),
             "kube_deployment_conditions_v1": cluster_deployment.conditions,
             "kube_cpu_resources_v1": cluster_deployment.cpu_resources,
             "kube_replicas_v1": cluster_deployment.replicas,
@@ -942,11 +948,11 @@ def write_daemon_sets_api_sections(
 
 
 def write_pods_api_sections(
-    api_pods: Sequence[Pod], piggyback_formatter: Callable[[str], str]
+    cluster_name: str, api_pods: Sequence[Pod], piggyback_formatter: Callable[[str], str]
 ) -> None:
     for pod in api_pods:
         with ConditionalPiggybackSection(piggyback_formatter(pod.name(prepend_namespace=True))):
-            for section_name, section_content in pod_api_based_checkmk_sections(pod):
+            for section_name, section_content in pod_api_based_checkmk_sections(cluster_name, pod):
                 if section_content is None:
                     continue
                 with SectionWriter(section_name) as writer:
@@ -965,7 +971,7 @@ def write_machine_sections(
                 sys.stdout.write(sections)
 
 
-def pod_api_based_checkmk_sections(pod: Pod):
+def pod_api_based_checkmk_sections(cluster_name: str, pod: Pod):
     sections = (
         ("kube_pod_conditions_v1", pod.conditions),
         ("kube_pod_containers_v1", pod.container_statuses),
@@ -974,7 +980,7 @@ def pod_api_based_checkmk_sections(pod: Pod):
         ("kube_pod_init_container_specs_v1", pod.init_container_specs),
         ("kube_start_time_v1", pod.start_time),
         ("kube_pod_lifecycle_v1", pod.lifecycle_phase),
-        ("kube_pod_info_v1", pod.info),
+        ("kube_pod_info_v1", lambda: pod.info(cluster_name)),
         (
             "kube_cpu_resources_v1",
             lambda: _collect_cpu_resources([pod]),
@@ -1728,6 +1734,7 @@ def main(args: Optional[List[str]] = None) -> int:
             if "nodes" in arguments.monitored_objects:
                 LOGGER.info("Write nodes sections based on API data")
                 write_nodes_api_sections(
+                    arguments.cluster,
                     cluster.nodes(),
                     piggyback_formatter=piggyback_formatter_node,
                 )
@@ -1735,6 +1742,7 @@ def main(args: Optional[List[str]] = None) -> int:
             if "deployments" in arguments.monitored_objects:
                 LOGGER.info("Write deployments sections based on API data")
                 write_deployments_api_sections(
+                    arguments.cluster,
                     deployments_from_namespaces(cluster.deployments(), monitored_namespaces),
                     piggyback_formatter=functools.partial(piggyback_formatter, "deployment"),
                 )
@@ -1764,6 +1772,7 @@ def main(args: Optional[List[str]] = None) -> int:
             if "pods" in arguments.monitored_objects:
                 LOGGER.info("Write pods sections based on API data")
                 write_pods_api_sections(
+                    arguments.cluster,
                     [
                         pod
                         for pod in cluster.pods()

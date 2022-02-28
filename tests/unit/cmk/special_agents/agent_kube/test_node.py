@@ -65,14 +65,14 @@ def test_node_alloctable_pods(node_allocatable_pods, node_capacity_pods, node):
 def test_write_nodes_api_sections_registers_sections_to_be_written(
     node, nodes_api_sections, write_sections_mock
 ):
-    agent_kube.write_nodes_api_sections([node], Mock())
+    agent_kube.write_nodes_api_sections("cluster", [node], Mock())
     assert list(write_sections_mock.call_args[0][0]) == nodes_api_sections
 
 
 def test_write_nodes_api_sections_maps_section_names_to_callables(
     node, nodes_api_sections, write_sections_mock
 ):
-    agent_kube.write_nodes_api_sections([node], Mock())
+    agent_kube.write_nodes_api_sections("cluster", [node], Mock())
     assert all(
         callable(write_sections_mock.call_args[0][0][section_name])
         for section_name in nodes_api_sections
@@ -82,7 +82,9 @@ def test_write_nodes_api_sections_maps_section_names_to_callables(
 def test_write_nodes_api_sections_calls_write_sections_for_each_node(
     new_node, cluster_nodes, write_sections_mock
 ):
-    agent_kube.write_nodes_api_sections([new_node() for _ in range(cluster_nodes)], Mock())
+    agent_kube.write_nodes_api_sections(
+        "cluster", [new_node() for _ in range(cluster_nodes)], Mock()
+    )
     assert write_sections_mock.call_count == cluster_nodes
 
 
@@ -129,7 +131,7 @@ def test_conditions_with_status_conditions_none(node):
 
 
 def test_node_info_section(node):
-    info = node.info()
+    info = node.info("cluster")
     assert info.name == node.metadata.name
     assert info.labels == node.metadata.labels
     assert isinstance(info.creation_timestamp, float)

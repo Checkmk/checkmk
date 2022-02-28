@@ -39,6 +39,7 @@ def fixture_time(mocker):
                 pod_ip="172.17.0.2",
                 restart_policy="Always",
                 uid="dd1019ca-c429-46af-b6b7-8aad47b6081a",
+                cluster="cluster",
             ),
             (
                 Result(state=State.OK, summary="Name: mypod"),

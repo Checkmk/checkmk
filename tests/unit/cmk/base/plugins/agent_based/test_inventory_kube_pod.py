@@ -40,6 +40,7 @@ from cmk.base.plugins.agent_based.utils.k8s import (
                 restart_policy="Never",
                 uid="3336928e-b9e1-4774-a5c4-bf45b8f9f24e",
                 controllers=[],
+                cluster="cluster",
             ),
             PodContainers(
                 containers={

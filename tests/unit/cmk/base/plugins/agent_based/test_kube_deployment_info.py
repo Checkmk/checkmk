@@ -38,6 +38,7 @@ def fixture_time(mocker):
                 creation_timestamp=1600000000.0,
                 images=["i/name:0.5"],
                 containers=["name"],
+                cluster="cluster",
             ),
             (
                 Result(state=State.OK, summary="Name: oh-lord"),

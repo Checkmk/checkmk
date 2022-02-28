@@ -14,6 +14,7 @@ mod monitoring_data;
 mod pull;
 mod push;
 mod registration;
+mod setup;
 mod site_spec;
 mod status;
 mod tls_server;
@@ -21,12 +22,8 @@ mod types;
 use anyhow::{Context, Result as AnyhowResult};
 use config::{JSONLoader, TOMLLoader};
 use log::{error, info};
-#[cfg(unix)]
-use nix::unistd;
-use std::io::{self, Write};
 use std::sync::mpsc;
 use std::thread;
-use structopt::StructOpt;
 
 fn daemon(registry: config::Registry, pull_config: config::PullConfig) -> AnyhowResult<()> {
     let (tx_push, rx) = mpsc::channel();
@@ -43,96 +40,7 @@ fn daemon(registry: config::Registry, pull_config: config::PullConfig) -> Anyhow
     rx.recv().unwrap()
 }
 
-#[cfg(unix)]
-fn init_logging(level: &str) -> Result<flexi_logger::LoggerHandle, flexi_logger::FlexiLoggerError> {
-    flexi_logger::Logger::try_with_env_or_str(level)?
-        .log_to_stderr()
-        .format(flexi_logger::default_format)
-        .start()
-}
-
-#[cfg(windows)]
-fn init_logging(
-    level: &str,
-    path: &std::path::Path,
-    duplicate_level: flexi_logger::Duplicate,
-) -> Result<flexi_logger::LoggerHandle, flexi_logger::FlexiLoggerError> {
-    flexi_logger::Logger::try_with_env_or_str(level)?
-        .log_to_file(flexi_logger::FileSpec::try_from(path)?) // critically important for daemon mode
-        .append()
-        .format(flexi_logger::detailed_format)
-        .duplicate_to_stderr(duplicate_level)
-        .start()
-}
-
-#[cfg(unix)]
-fn become_user(username: &str) -> AnyhowResult<unistd::User> {
-    let user = unistd::User::from_name(username)?.context(format!(
-        "Could not find dedicated Checkmk agent user {}",
-        username
-    ))?;
-
-    unistd::setgid(user.gid).context(format!(
-        "Failed to set group id {} corresponding to user {}",
-        user.gid, user.name,
-    ))?;
-    unistd::setuid(user.uid).context(format!(
-        "Failed to set user id {} corresponding to user {}",
-        user.uid, user.name,
-    ))?;
-    Ok(user)
-}
-
-#[cfg(unix)]
-fn determine_paths(user: unistd::User) -> AnyhowResult<constants::PathResolver> {
-    Ok(constants::PathResolver::new(&user.dir))
-}
-
-#[cfg(windows)]
-fn determine_paths() -> AnyhowResult<constants::PathResolver> {
-    let program_data_path = std::env::var(constants::ENV_PROGRAM_DATA)
-        .unwrap_or_else(|_| String::from("c:\\ProgramData"));
-    let home = std::path::PathBuf::from(program_data_path + constants::WIN_AGENT_HOME_DIR);
-    Ok(constants::PathResolver::new(&home))
-}
-
-#[cfg(unix)]
-fn setup(args: &cli::Args) -> AnyhowResult<constants::PathResolver> {
-    if let Err(err) = init_logging(&args.logging_level()) {
-        io::stderr()
-            .write_all(format!("Failed to initialize logging: {:?}", err).as_bytes())
-            .unwrap_or(());
-    }
-    become_user(constants::CMK_AGENT_USER).context(format!(
-        "Failed to run as user '{}'. Please execute with sufficient permissions (maybe try 'sudo').",
-        constants::CMK_AGENT_USER,
-    )).and_then(determine_paths)
-}
-
-#[cfg(windows)]
-fn setup(args: &cli::Args) -> AnyhowResult<constants::PathResolver> {
-    let paths = determine_paths()?;
-    let duplicate_level = if let cli::Args::Daemon(_) = args {
-        flexi_logger::Duplicate::None
-    } else {
-        flexi_logger::Duplicate::All
-    };
-    if let Err(err) = init_logging(&args.logging_level(), &paths.log_path, duplicate_level) {
-        io::stderr()
-            .write_all(format!("Failed to initialize logging: {:?}", err).as_bytes())
-            .unwrap_or(());
-    }
-    Ok(paths)
-}
-
-fn init() -> AnyhowResult<(cli::Args, constants::PathResolver)> {
-    // Parse args as first action to directly exit from --help or malformatted arguments
-    let args = cli::Args::from_args();
-    let paths = setup(&args)?;
-    Ok((args, paths))
-}
-
-fn run_requested_mode(args: cli::Args, paths: constants::PathResolver) -> AnyhowResult<()> {
+fn run_requested_mode(args: cli::Args, paths: setup::PathResolver) -> AnyhowResult<()> {
     let registration_preset = config::RegistrationPreset::load(&paths.registration_preset_path)?;
     let config_from_disk = config::ConfigFromDisk::load(&paths.config_path)?;
     let mut registry = config::Registry::from_file(&paths.registry_path)
@@ -206,7 +114,7 @@ fn exit_with_error(err: impl std::fmt::Debug) {
 }
 
 fn main() {
-    let (args, paths) = match init() {
+    let (args, paths) = match setup::init() {
         Ok(args) => args,
         Err(error) => {
             return exit_with_error(error);
@@ -218,36 +126,5 @@ fn main() {
 
     if let Err(error) = &result {
         exit_with_error(error)
-    }
-}
-
-#[cfg(windows)]
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_windows_paths() {
-        let p = determine_paths().unwrap();
-        let home = String::from("C:\\ProgramData") + constants::WIN_AGENT_HOME_DIR;
-        assert_eq!(p.home_dir, std::path::PathBuf::from(&home));
-        assert_eq!(
-            p.registration_preset_path,
-            std::path::PathBuf::from(&home).join("cmk-agent-ctl-config.json")
-        );
-        assert_eq!(
-            p.registry_path,
-            std::path::PathBuf::from(&home).join("registered_connections.json")
-        );
-        assert_eq!(
-            p.log_path,
-            std::path::PathBuf::from(&home)
-                .join("log")
-                .join("cmk-agent-ctl.log")
-        );
-        assert_eq!(
-            p.legacy_pull_path,
-            std::path::PathBuf::from(&home).join("allow-legacy-pull")
-        );
     }
 }

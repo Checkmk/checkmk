@@ -4,7 +4,7 @@
 
 use super::constants;
 #[cfg(windows)]
-use log;
+use log::debug;
 
 #[cfg(windows)]
 use async_std::net::TcpStream as AsyncTcpStream;
@@ -26,11 +26,11 @@ use tokio::net::UnixStream as AsyncUnixStream;
 #[cfg(windows)]
 async fn async_collect_from_ip(agent_ip: &str) -> IoResult<Vec<u8>> {
     let mut data: Vec<u8> = vec![];
-    log::debug!("connect to {}", agent_ip);
+    debug!("connect to {}", agent_ip);
     let mut stream = AsyncTcpStream::connect(agent_ip).await?;
     stream.read_to_end(&mut data).await?;
     stream.shutdown(std::net::Shutdown::Both)?;
-    log::debug!("obtained from win-agent {} bytes", data.len());
+    debug!("obtained from win-agent {} bytes", data.len());
     Ok(data)
 }
 

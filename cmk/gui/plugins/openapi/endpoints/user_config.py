@@ -91,7 +91,6 @@ def create_user(params):
         "show_mode": None,
         "start_url": None,
         "force_authuser": False,
-        "enforce_pw_change": False,
     }
 
     internal_attrs = _api_to_internal_format(internal_attrs, api_attrs, new_user=True)
@@ -229,6 +228,9 @@ def _internal_to_api_format(internal_attrs: UserSpec) -> dict[str, Any]:
     if "pager" in internal_attrs:
         api_attrs["pager_address"] = internal_attrs["pager"]
 
+    if "enforce_pw_change" in internal_attrs:
+        api_attrs["enforce_password_change"] = internal_attrs["enforce_pw_change"]
+
     api_attrs.update(
         {
             k: v
@@ -341,6 +343,7 @@ AuthOptions = TypedDict(
         "auth_type": Literal["remove", "automation", "password"],
         "password": str,
         "secret": str,
+        "enforce_password_change": bool,
     },
     total=False,
 )
@@ -354,22 +357,20 @@ def _update_auth_options(internal_attrs, auth_options: AuthOptions, new_user=Fal
         internal_attrs.pop("automation_secret", None)
         internal_attrs.pop("password", None)
     else:
-        internal_auth_attrs = _auth_options_to_internal_format(
-            auth_options, enforce_pw_change=new_user
-        )
+        internal_auth_attrs = _auth_options_to_internal_format(auth_options, new_user)
         if internal_auth_attrs:
             if "automation_secret" not in internal_auth_attrs:  # new password
                 internal_attrs.pop("automation_secret", None)
             # Note: changing from password to automation secret leaves enforce_pw_change
             internal_attrs.update(internal_auth_attrs)
 
-            if new_user:
+            if internal_auth_attrs.get("enforce_password_change"):
                 internal_attrs["serial"] = 1
     return internal_attrs
 
 
 def _auth_options_to_internal_format(
-    auth_details: AuthOptions, enforce_pw_change: bool = False
+    auth_details: AuthOptions, new_user: bool = False
 ) -> Dict[str, Union[int, str, bool]]:
     """Format the authentication information to be Checkmk compatible
 
@@ -384,26 +385,26 @@ def _auth_options_to_internal_format(
     >>> _auth_options_to_internal_format({"auth_type": "automation", "secret": "TNBJCkwane3$cfn0XLf6p6a"})  # doctest:+ELLIPSIS
     {'automation_secret': 'TNBJCkwane3$cfn0XLf6p6a', 'password': ...}
 
-    >>> _auth_options_to_internal_format({"auth_type": "password", "password": "password"}, enforce_pw_change=True)  # doctest:+ELLIPSIS
-    {'password': ..., 'last_pw_change': ..., 'enforce_pw_change': True}
+    >>> _auth_options_to_internal_format({"auth_type": "password", "password": "password"})  # doctest:+ELLIPSIS
+    {'password': ..., 'last_pw_change': ...}
     """
-    auth_options: Dict[str, Union[str, bool, int]] = {}
+    internal_options: Dict[str, Union[str, bool, int]] = {}
     if not auth_details:
-        return auth_options
+        return internal_options
 
     if auth_details["auth_type"] == "automation":
         secret = auth_details["secret"]
-        auth_options["automation_secret"] = secret
-        auth_options["password"] = htpasswd.hash_password(secret)
+        internal_options["automation_secret"] = secret
+        internal_options["password"] = htpasswd.hash_password(secret)
     else:  # password
-        auth_options["password"] = htpasswd.hash_password(auth_details["password"])
-        auth_options["last_pw_change"] = int(time.time())
+        if new_user or "password" in auth_details:
+            internal_options["password"] = htpasswd.hash_password(auth_details["password"])
+            internal_options["last_pw_change"] = int(time.time())
 
-        # this can be configured in WATO but we enforce this here
-        if enforce_pw_change:
-            auth_options["enforce_pw_change"] = True
+        if "enforce_password_change" in auth_details:
+            internal_options["enforce_pw_change"] = auth_details["enforce_password_change"]
 
-    return auth_options
+    return internal_options
 
 
 IdleDetails = TypedDict(

@@ -1108,6 +1108,14 @@ AUTH_SECRET = fields.String(
     example="DEYQEQQPYCFFBYH@AVMC",
 )
 
+AUTH_ENFORCE_PASSWORD_CHANGE = fields.Boolean(
+    required=False,
+    description="If set to True, the user will be forced to change his password on the next "
+    "login or access. Defaults to False",
+    example=False,
+    load_default=False,
+)
+
 AUTH_CREATE_TYPE = fields.String(
     required=False,
     description="The authentication type",
@@ -1131,6 +1139,13 @@ class AuthSecret(BaseSchema):
 class AuthPassword(BaseSchema):
     auth_type = AUTH_CREATE_TYPE
     password = AUTH_PASSWORD
+    enforce_password_change = fields.Boolean(
+        required=False,
+        description="If set to True, the user will be forced to change his password on the next "
+        "login or access. Defaults to False",
+        example=False,
+        load_default=False,
+    )
 
 
 class AuthUpdateSecret(BaseSchema):
@@ -1141,6 +1156,12 @@ class AuthUpdateSecret(BaseSchema):
 class AuthUpdatePassword(BaseSchema):
     auth_type = AUTH_UPDATE_TYPE
     password = AUTH_PASSWORD
+    enforce_password_change = fields.Boolean(
+        required=False,
+        description="If set to True, the user will be forced to change his password on the next "
+        "login or access",
+        example=False,
+    )
 
 
 class AuthUpdateRemove(BaseSchema):
@@ -1335,12 +1356,6 @@ class UpdateUser(BaseSchema):
         description="Authentication option for the user",
         example={"auth_type": "password", "password": "password"},
         load_default=dict,
-    )
-    enforce_password_change = fields.Boolean(
-        required=False,
-        description="Enforce the password change on next login. This has no effect if you remove "
-        "the authentication option",
-        example=True,
     )
     disable_login = fields.Boolean(
         required=False,

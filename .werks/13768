@@ -1,0 +1,15 @@
+Title: API: addition of enforce password change as configurable option for user create endpoint and moving the option in for the update endpoint
+Class: feature
+Compatible: incomp
+Component: rest-api
+Date: 1646045187
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.1.0b3
+
+In the previous version, the enforce_password_change option was always set to True
+when creating a new user with a password and was not a configurable option. This werk
+changes this and introduces this as a configurable option defaulting to False. In
+addition, this werk also moves this option to the auth password details for the update endpoint.

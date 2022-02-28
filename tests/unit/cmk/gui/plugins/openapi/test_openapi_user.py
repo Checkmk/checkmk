@@ -61,6 +61,7 @@ def test_openapi_customer(aut_user_auth_wsgi_app: WebTestAppForCMK, monkeypatch)
         "disable_login": False,
         "pager_address": "",
         "roles": [],
+        "enforce_password_change": False,
     }
 
     resp = aut_user_auth_wsgi_app.call_method(
@@ -143,6 +144,7 @@ def test_openapi_user_minimal_password_settings(
         "auth_option": {
             "auth_type": "password",
             "password": "password",
+            "enforce_password_change": True,
         },
     }
 
@@ -169,6 +171,7 @@ def test_openapi_user_minimal_password_settings(
         "disable_notifications": {},
         "disable_login": False,
         "roles": [],
+        "enforce_password_change": True,
     }
 
     edit_details = {
@@ -204,6 +207,7 @@ def test_openapi_user_minimal_password_settings(
         "contactgroups": [],
         "disable_notifications": {},
         "roles": ["user"],
+        "enforce_password_change": True,
     }
 
 
@@ -279,6 +283,7 @@ def test_openapi_user_config(
         },
         "idle_timeout": {"option": "global"},
         "roles": [],
+        "enforce_password_change": False,
     }
 
     collection_resp = aut_user_auth_wsgi_app.call_method(
@@ -405,6 +410,7 @@ def test_openapi_user_edit_auth(aut_user_auth_wsgi_app: WebTestAppForCMK, monkey
         "disable_notifications": {},
         "idle_timeout": {"option": "global"},
         "roles": ["user"],
+        "enforce_password_change": False,
     }
 
     edit_details = {
@@ -431,6 +437,7 @@ def test_openapi_user_edit_auth(aut_user_auth_wsgi_app: WebTestAppForCMK, monkey
         "disable_notifications": {},
         "idle_timeout": {"option": "global"},
         "roles": ["user"],
+        "enforce_password_change": False,
     }
 
     remove_details = {
@@ -458,6 +465,7 @@ def test_openapi_user_edit_auth(aut_user_auth_wsgi_app: WebTestAppForCMK, monkey
         "disable_notifications": {},
         "idle_timeout": {"option": "global"},
         "roles": ["user"],
+        "enforce_password_change": False,
     }
 
 
@@ -616,6 +624,7 @@ def test_openapi_managed_global_edition(aut_user_auth_wsgi_app: WebTestAppForCMK
         "disable_notifications": {},
         "idle_timeout": {"option": "global"},
         "roles": [],
+        "enforce_password_change": False,
     }
 
 
@@ -707,6 +716,7 @@ def test_global_full_configuration(aut_user_auth_wsgi_app: WebTestAppForCMK, mon
         "customer": "global",
         "idle_timeout": {"option": "global"},
         "disable_notifications": {},
+        "enforce_password_change": False,
     }
 
 
@@ -809,6 +819,7 @@ def test_openapi_user_update_contact_options(
         "language": "en",
         "customer": "global",
         "disable_notifications": {},
+        "enforce_password_change": False,
     }
 
 
@@ -855,6 +866,7 @@ def test_openapi_user_disable_notifications(aut_user_auth_wsgi_app: WebTestAppFo
         "disable_notifications": {
             "disable": True,
         },
+        "enforce_password_change": False,
     }
 
     resp = aut_user_auth_wsgi_app.call_method(
@@ -876,6 +888,7 @@ def test_openapi_user_disable_notifications(aut_user_auth_wsgi_app: WebTestAppFo
         "contactgroups": [],
         "customer": "global",
         "disable_notifications": {},
+        "enforce_password_change": False,
     }
 
 
@@ -914,6 +927,51 @@ def test_show_all_users_with_no_email(aut_user_auth_wsgi_app: WebTestAppForCMK, 
     )
     assert len(resp.json["value"]) == 2
     assert all(("contact_options" not in user["extensions"] for user in resp.json["value"]))
+
+
+def test_user_enforce_password_change_option(aut_user_auth_wsgi_app: WebTestAppForCMK, monkeypatch):
+    """Test enforce password change option for create and update endpoints"""
+    monkeypatch.setattr(
+        "cmk.gui.watolib.global_settings.rulebased_notifications_enabled", lambda: True
+    )
+
+    user_detail = {
+        "username": "cmkuser",
+        "fullname": "Mathias Kettner",
+        "customer": "global",
+        "auth_option": {
+            "auth_type": "password",
+            "password": "password",
+            "enforce_password_change": True,
+        },
+    }
+
+    base = "/NO_SITE/check_mk/api/1.0"
+    resp = aut_user_auth_wsgi_app.call_method(
+        "post",
+        base + "/domain-types/user_config/collections/all",
+        params=json.dumps(user_detail),
+        headers={"Accept": "application/json"},
+        status=200,
+        content_type="application/json",
+    )
+    assert resp.json["extensions"]["enforce_password_change"] is True
+
+    edit_details = {
+        "auth_option": {
+            "auth_type": "password",
+            "enforce_password_change": False,
+        }
+    }
+    update_resp = aut_user_auth_wsgi_app.call_method(
+        "put",
+        base + "/objects/user_config/cmkuser",
+        params=json.dumps(edit_details),
+        headers={"Accept": "application/json"},
+        status=200,
+        content_type="application/json",
+    )
+    assert update_resp.json_body["extensions"]["enforce_password_change"] is False
 
 
 def _random_string(size):

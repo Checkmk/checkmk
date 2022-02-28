@@ -41,7 +41,7 @@ def parse_lnx_thermal(info):
     parsed = {}
     for line in info:
         temperature, trip_points = _parse_temp_value_str(line)
-        if temperature is None and trip_points is None:
+        if temperature is None:
             continue
 
         zone_identifier = 0
@@ -58,6 +58,7 @@ def parse_lnx_thermal(info):
             else:
                 # ignore trip point types not supported yet
                 pass
+
     return parsed
 
 
@@ -69,13 +70,20 @@ def _parse_temp_value_str(line):
     ]:
         try:
             temp = int(line[temp_idx]) / temperature_factor  # fixed: true-division
+        except (IndexError, ValueError):
+            continue
+
+        try:
             trip_point_keys = line[trip_point_key_idx::2]
             trip_point_values = [
                 int(x) / temperature_factor for x in line[trip_point_value_idx::2]
             ]  # fixed: true-division
-            return temp, dict(zip(trip_point_keys, trip_point_values))
+            trip_points = dict(zip(trip_point_keys, trip_point_values))
         except (IndexError, ValueError):
-            pass
+            trip_points = {}
+
+        return temp, trip_points
+
     return None, None
 
 

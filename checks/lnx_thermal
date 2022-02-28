@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import Mapping, NamedTuple, Optional, Sequence, Tuple
+
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables from the check-context which are necessary for
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
@@ -27,6 +29,14 @@ factory_settings["lnx_thermal_default_levels"] = {
 }
 
 
+class Thermal(NamedTuple):
+    enabled: bool
+    temperature: float
+    passive: Optional[float]
+    critical: Optional[float]
+    hot: Optional[float]
+
+
 def parse_lnx_thermal(info):
     """
     Supported format:
@@ -38,62 +48,74 @@ def parse_lnx_thermal(info):
     """
     if not info:
         return {}
+
     parsed = {}
     for line in info:
-        temperature, trip_points = _parse_temp_value_str(line)
-        if temperature is None:
+        if (thermal_info := _get_thermal_info(line)) is None:
             continue
 
-        zone_identifier = 0
-        zone_raw = line[zone_identifier]
-        zone_formatted = zone_raw.replace("thermal_zone", "Zone ")
-        parsed[zone_formatted] = {}
-        temperature_and_trip_points = ("temperature", "passive", "critical", "hot")
-        for key in temperature_and_trip_points:
-            parsed[zone_formatted].setdefault(key, None)
-        parsed[zone_formatted]["temperature"] = temperature
-        for tp_name, tp_value in trip_points.items():
-            if tp_name in trip_points and tp_value > 0:
-                parsed[zone_formatted][tp_name] = tp_value
-            else:
-                # ignore trip point types not supported yet
-                pass
+        thermal_type, unscaled_temp, raw_trip_points = thermal_info
 
-    return parsed
-
-
-def _parse_temp_value_str(line):
-    for type_idx, temp_idx, trip_point_key_idx, trip_point_value_idx in [
-        (1, 2, 4, 3),  # missing mode
-        (2, 3, 5, 4),
-    ]:
-        try:
-            unscaled_temp = int(line[temp_idx])
-        except (IndexError, ValueError):
-            continue
-
-        # From kernel docs (sysfs-api): unit is milli-degrees
-        # but on SunXI the unit is degree (may be a BUG)
-        if line[type_idx] == "sunxi-therm":
+        if thermal_type["type"] == "sunxi-therm":
+            # From kernel docs (sysfs-api): unit is milli-degrees
+            # but on SunXI the unit is degree (may be a BUG)
             factor = 1.0
         else:
             factor = 1000.0
 
+        trip_points = _get_trip_points(factor, raw_trip_points)
+
+        parsed[_format_item_name(line[0])] = Thermal(
+            enabled=_is_enabled(thermal_type),
+            temperature=unscaled_temp / factor,
+            passive=trip_points.get("passive"),
+            critical=trip_points.get("critical"),
+            hot=trip_points.get("hot"),
+        )
+
+    return parsed
+
+
+def _get_thermal_info(
+    line: Sequence[str],
+) -> Optional[Tuple[Mapping[str, str], int, Sequence[str]]]:
+    for temp_idx, header in (
+        (2, ["name", "type"]),
+        (3, ["name", "mode", "type"]),
+    ):
         try:
-            trip_point_keys = line[trip_point_key_idx::2]
-            trip_point_values = [int(x) / factor for x in line[trip_point_value_idx::2]]
-            trip_points = dict(zip(trip_point_keys, trip_point_values))
+            unscaled_temp = int(line[temp_idx])
+            return dict(zip(header, line[:temp_idx])), unscaled_temp, line[temp_idx + 1 :]
         except (IndexError, ValueError):
-            trip_points = {}
+            pass
+    return None
 
-        return unscaled_temp / factor, trip_points
 
-    return None, None
+def _format_item_name(raw_name: str) -> str:
+    return raw_name.replace("thermal_zone", "Zone ")
+
+
+def _is_enabled(thermal_type: Mapping) -> bool:
+    return thermal_type["mode"] in ["-", "enabled"] if "mode" in thermal_type else True
+
+
+def _get_trip_points(factor: float, raw_trip_points: Sequence[str]) -> Mapping[str, float]:
+    try:
+        trip_point_keys = raw_trip_points[1::2]
+        trip_point_values = [int(x) / factor for x in raw_trip_points[::2]]  # fixed: true-division
+        return {
+            tp_name: tp_value
+            for tp_name, tp_value in dict(zip(trip_point_keys, trip_point_values)).items()
+            if tp_value > 0
+        }
+    except (IndexError, ValueError):
+        return {}
 
 
 def inventory_lnx_thermal(parsed):
-    for item in parsed:
-        yield item, {}
+    for item, thermal in parsed.items():
+        if thermal.enabled:
+            yield item, {}
 
 
 @get_parsed_item_data
@@ -106,10 +128,10 @@ def check_lnx_thermal(item, params, data):
       is considered for the device crit level.
     - Trip point temperatures are provided via performance data.
     """
-    temperature = data.get("temperature")
-    warn_level = data.get("passive")
-    hot_value = data.get("hot")
-    critical_value = data.get("critical")
+    temperature = data.temperature
+    warn_level = data.passive
+    hot_value = data.hot
+    critical_value = data.critical
 
     if temperature is None:
         return

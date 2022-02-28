@@ -4,8 +4,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import re
 import time
-from typing import Mapping, NamedTuple, Optional, Sequence
+from typing import Optional, Sequence, Tuple, TypedDict
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     check_levels,
@@ -26,69 +27,37 @@ from cmk.base.plugins.agent_based.utils.k8s import (
 )
 from cmk.base.plugins.agent_based.utils.kube import PodLifeCycle, VSResultAge
 
-CONTAINER_STATUSES = [
-    "CreateContainerConfigError",
-    "ErrImagePull",
-    "Error",
-    "CrashLoopBackOff",
-    "ImagePullBackOff",
-    "OOMKilled",
-    "InvalidImageName",
-    "PreCreateHookError",
-    "CreateContainerError",
-    "PreStartHookError",
-    "PostStartHookError",
-    "RunContainerError",
-    "ImageInspectError",
-    "ErrImageNeverPull",
-    "RegistryUnavailable",
-]
-
-INIT_STATUSES = [f"Init:{status}" for status in CONTAINER_STATUSES]
-
 DESIRED_PHASE = [
     "Running",
-    "Succeded",
+    "Succeeded",
 ]
 
-UNDESIRED_PHASE = [
-    "Pending",
-    "Failed",
-    "Unknown",
-]
+Group = Tuple[VSResultAge, Sequence[str]]
 
 
-Params = Mapping[str, VSResultAge]
-
-DEFAULT_PARAMS: Params = {
-    **{
-        status: ("levels", (300, 600))
-        for status in CONTAINER_STATUSES + INIT_STATUSES + UNDESIRED_PHASE
-    },
-    **{status: "no_levels" for status in DESIRED_PHASE},
-    "other": "no_levels",
-}
+class Params(TypedDict):
+    groups: Sequence[Group]
 
 
-class Levels(NamedTuple):
-    warn: int
-    crit: int
+DEFAULT_PARAMS = Params(
+    groups=[
+        (
+            "no_levels",
+            DESIRED_PHASE,
+        ),
+        (
+            ("levels", (300, 600)),
+            [".*"],
+        ),
+    ]
+)
 
 
-def _is_other(status_message: str) -> bool:
-    return (
-        status_message.removeprefix("Init:") not in CONTAINER_STATUSES
-        and status_message not in DESIRED_PHASE
-        and status_message not in UNDESIRED_PHASE
-    )
-
-
-def _get_levels_from_params(status_message: str, params: Params) -> Optional[Levels]:
-    if _is_other(status_message):
-        param = params["other"]
-    else:
-        param = params.get(status_message, "no_levels")
-    return Levels(*param[1]) if param != "no_levels" else None
+def _get_group_from_params(status_message: str, params: Params) -> Group:
+    for group in params["groups"]:
+        if any(re.match(status_regex, status_message) for status_regex in group[1]):
+            return group
+    return "no_levels", []
 
 
 def _erroneous_or_incomplete_containers(
@@ -187,20 +156,35 @@ def check_kube_pod_status(
 
     now = time.time()
     value_store = get_value_store()
-    if status_message not in value_store:
-        value_store.clear()
-        value_store[status_message] = now
+    group_levels, group_statuses = _get_group_from_params(status_message, params)
+    if value_store.get("group") != group_statuses:
+        value_store["group"] = group_statuses
+        value_store["duration_per_status"] = {status_message: 0.0}
+    else:
+        previous_status = value_store["previous_status"]
+        value_store["duration_per_status"][previous_status] += now - value_store["previous_time"]
+        value_store["duration_per_status"].setdefault(status_message, 0.0)
 
-    levels = _get_levels_from_params(status_message, params)
+    value_store["previous_time"] = now
+    value_store["previous_status"] = status_message
+
+    levels = None if group_levels == "no_levels" else group_levels[1]
+
     if levels is None:
         yield Result(state=State.OK, summary=status_message)
     else:
         for result in check_levels(
-            now - value_store[status_message],
+            sum(time for time in value_store["duration_per_status"].values()),
             render_func=render.timespan,
             levels_upper=levels,
         ):
             yield Result(state=result.state, summary=f"{status_message}: since {result.summary}")
+            if len(value_store["duration_per_status"]) > 1:
+                seen_statuses = ", ".join(
+                    f"{s} ({render.timespan(t)})"
+                    for s, t in value_store["duration_per_status"].items()
+                )
+                yield Result(state=State.OK, notice=f"Seen: {seen_statuses}")
 
     yield from _container_status_details(pod_init_containers)
     yield from _container_status_details(pod_containers)

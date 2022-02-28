@@ -5,14 +5,14 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from typing import Literal
+from typing import Literal, Optional
 
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import Age, CascadingDropdown, Tuple, ValueSpec
 
 
 def wrap_with_no_levels_dropdown(
-    title: str,
+    title: Optional[str],
     value_spec: ValueSpec,
     default_choice: Literal["levels", "no_levels"] = "no_levels",
 ) -> CascadingDropdown:
@@ -27,7 +27,7 @@ def wrap_with_no_levels_dropdown(
 
 
 def age_levels_dropdown(
-    title: str, default_choice: Literal["levels", "no_levels"] = "no_levels"
+    title: Optional[str] = None, default_choice: Literal["levels", "no_levels"] = "no_levels"
 ) -> CascadingDropdown:
     return wrap_with_no_levels_dropdown(
         title=title,

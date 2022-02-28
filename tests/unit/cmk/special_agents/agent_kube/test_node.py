@@ -99,13 +99,31 @@ def test_conditions_returns_all_native_conditions(node):
 
 
 def test_conditions_respects_status_conditions(node):
+    native_conditions = [
+        cond
+        for cond in node.status.conditions
+        if cond.type_ in agent_kube.NATIVE_NODE_CONDITION_TYPES
+    ]
     conditions = node.conditions()
     conditions_dict = conditions.dict()
-    assert len(conditions_dict) == len(node.status.conditions)
+    assert len(conditions_dict) == len(native_conditions)
     assert all(
         conditions_dict[condition.type_.lower()]["status"] == condition.status
-        for condition in node.status.conditions
+        for condition in native_conditions
     )
+
+
+def test_custom_conditions_respects_status_conditions(node):
+    npd_conditions_status = [
+        cond.status
+        for cond in sorted(node.status.conditions, key=lambda cond: cond.type_)
+        if cond.type_ not in agent_kube.NATIVE_NODE_CONDITION_TYPES
+    ]
+    custom_conditions_status = [
+        cond.status
+        for cond in sorted(node.custom_conditions().custom_conditions, key=lambda cond: cond.type_)
+    ]
+    assert npd_conditions_status == custom_conditions_status
 
 
 def test_conditions_truthy_vs_status(node):

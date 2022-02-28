@@ -55,16 +55,30 @@ class NodeResourcesFactory(ModelFactory):
     __model__ = api.NodeResources
 
 
+NPD_NODE_CONDITION_TYPES = [
+    "KernelDeadlock",
+    "ReadonlyFilesystem",
+    "FrequentKubeletRestart",
+    "FrequentDockerRestart",
+    "FrequentContainerdRestart",
+]
+
+
 class NodeConditionFactory(ModelFactory):
     __model__ = api.NodeCondition
 
-    type_ = Use(next, itertools.cycle(agent_kube.NATIVE_NODE_CONDITION_TYPES))
+    type_ = Use(
+        next, itertools.cycle(agent_kube.NATIVE_NODE_CONDITION_TYPES + NPD_NODE_CONDITION_TYPES)
+    )
 
 
 class NodeStatusFactory(ModelFactory):
     __model__ = api.NodeStatus
 
-    conditions = Use(NodeConditionFactory.batch, size=len(agent_kube.NATIVE_NODE_CONDITION_TYPES))
+    conditions = Use(
+        NodeConditionFactory.batch,
+        size=len(agent_kube.NATIVE_NODE_CONDITION_TYPES) + len(NPD_NODE_CONDITION_TYPES),
+    )
 
 
 # Deployment/DaemonSet Factories
@@ -362,6 +376,7 @@ def nodes_api_sections():
         "kube_allocatable_cpu_resource_v1",
         "kube_allocatable_memory_resource_v1",
         "kube_node_conditions_v1",
+        "kube_node_custom_conditions_v1",
     ]
 
 

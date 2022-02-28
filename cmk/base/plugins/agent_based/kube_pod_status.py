@@ -34,6 +34,14 @@ CONTAINER_STATUSES = [
     "ImagePullBackOff",
     "OOMKilled",
     "InvalidImageName",
+    "PreCreateHookError",
+    "CreateContainerError",
+    "PreStartHookError",
+    "PostStartHookError",
+    "RunContainerError",
+    "ImageInspectError",
+    "ErrImageNeverPull",
+    "RegistryUnavailable",
 ]
 
 INIT_STATUSES = [f"Init:{status}" for status in CONTAINER_STATUSES]

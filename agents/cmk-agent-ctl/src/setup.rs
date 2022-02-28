@@ -7,8 +7,10 @@ use super::constants;
 #[cfg(unix)]
 use anyhow::Context;
 use anyhow::Result as AnyhowResult;
+use log::debug;
 #[cfg(unix)]
 use nix::unistd;
+use std::env;
 use std::io::{self, Write};
 use std::path::{Path, PathBuf};
 use structopt::StructOpt;
@@ -64,6 +66,55 @@ impl ExistsOr for PathBuf {
     }
 }
 
+pub fn connection_timeout() -> u64 {
+    match env::var(constants::ENV_CONNECTION_TIMEOUT) {
+        Err(_) => constants::CONNECTION_TIMEOUT,
+        Ok(timeout) => {
+            let max = timeout.parse().unwrap();
+            debug!("Using debug value for CONNECTION_TIMEOUT: {}", max);
+            max
+        }
+    }
+}
+
+pub fn max_connections() -> usize {
+    match env::var(constants::ENV_MAX_CONNECTIONS) {
+        Err(_) => constants::MAX_CONNECTIONS,
+        Ok(max) => {
+            let max = max.parse().unwrap();
+            debug!("Using debug value for MAX_CONNECTIONS: {}", max);
+            max
+        }
+    }
+}
+
+#[cfg(unix)]
+pub fn agent_socket() -> PathBuf {
+    match env::var(constants::ENV_HOME_DIR) {
+        Err(_) => PathBuf::from(String::from(constants::UNIX_AGENT_SOCKET)),
+        Ok(home_dir) => {
+            let sock = PathBuf::from(home_dir).join(
+                PathBuf::from(constants::UNIX_AGENT_SOCKET)
+                    .strip_prefix("/")
+                    .unwrap(),
+            );
+            debug!("Using debug UNIX socket: {:?}", &sock);
+            sock
+        }
+    }
+}
+
+#[cfg(windows)]
+pub fn agent_port() -> String {
+    match env::var(constants::ENV_WINDOWS_INTERNAL_PORT) {
+        Err(_) => String::from(constants::WINDOWS_INTERNAL_PORT),
+        Ok(port) => {
+            debug!("Using debug WINDOWS_INTERNAL_PORT: {}", port);
+            port
+        }
+    }
+}
+
 #[cfg(unix)]
 fn init_logging(level: &str) -> Result<flexi_logger::LoggerHandle, flexi_logger::FlexiLoggerError> {
     flexi_logger::Logger::try_with_env_or_str(level)?
@@ -111,9 +162,16 @@ fn determine_paths(user: unistd::User) -> AnyhowResult<PathResolver> {
 
 #[cfg(windows)]
 fn determine_paths() -> AnyhowResult<PathResolver> {
+    // Alternative home dir can be passed for testing/debug reasons
+    if let Ok(debug_home_dir) = std::env::var(constants::ENV_HOME_DIR) {
+        debug!("Using debug HOME_DIR: {}", debug_home_dir);
+        return Ok(PathResolver::new(&PathBuf::from(debug_home_dir)));
+    }
+
+    // Normal/prod home dir
     let program_data_path = std::env::var(constants::ENV_PROGRAM_DATA)
         .unwrap_or_else(|_| String::from("c:\\ProgramData"));
-    let home = std::path::PathBuf::from(program_data_path + constants::WIN_AGENT_HOME_DIR);
+    let home = PathBuf::from(program_data_path + constants::WIN_AGENT_HOME_DIR);
     Ok(PathResolver::new(&home))
 }
 
@@ -124,10 +182,19 @@ fn setup(args: &cli::Args) -> AnyhowResult<PathResolver> {
             .write_all(format!("Failed to initialize logging: {:?}", err).as_bytes())
             .unwrap_or(());
     }
-    become_user(constants::CMK_AGENT_USER).context(format!(
-        "Failed to run as user '{}'. Please execute with sufficient permissions (maybe try 'sudo').",
-        constants::CMK_AGENT_USER,
-    )).and_then(determine_paths)
+
+    match env::var(constants::ENV_HOME_DIR) {
+        // Alternative home dir can be passed for testing/debug reasons
+        Ok(debug_home_dir) => {
+            debug!("Skipping to change user and using debug HOME_DIR: {}", debug_home_dir);
+            Ok(PathResolver::new(Path::new(&debug_home_dir)))
+        },
+        // Normal/prod home dir
+        Err(_) => become_user(constants::CMK_AGENT_USER).context(format!(
+                "Failed to run as user '{}'. Please execute with sufficient permissions (maybe try 'sudo').",
+                constants::CMK_AGENT_USER,
+            )).and_then(determine_paths),
+    }
 }
 
 #[cfg(windows)]

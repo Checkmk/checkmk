@@ -111,12 +111,12 @@ def check_kube_replicas(
 
     all_ready = section_kube_replicas.ready == section_kube_replicas.replicas
     not_ready_started_ts = (
-        None if all_ready else value_store.get("not_ready_started_timestamp", now)
+        None if all_ready else value_store.get("not_ready_started_timestamp") or now
     )
     value_store["not_ready_started_timestamp"] = not_ready_started_ts
 
     all_updated = section_kube_replicas.updated == section_kube_replicas.replicas
-    update_started_ts = None if all_updated else value_store.get("update_started_timestamp", now)
+    update_started_ts = None if all_updated else value_store.get("update_started_timestamp") or now
     value_store["update_started_timestamp"] = update_started_ts
 
     if all_ready and all_updated:

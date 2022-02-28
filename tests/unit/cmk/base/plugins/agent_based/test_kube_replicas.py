@@ -485,6 +485,50 @@ def test_check_kube_replicas_not_ready_and_outdated(
             ],
             id="Restored up-to-date condition resets value store and leads to OK check result",
         ),
+        pytest.param(
+            {},
+            Replicas(
+                replicas=3,
+                updated=3,
+                available=3,
+                ready=0,
+                unavailable=0,
+            ),
+            {"not_ready_started_timestamp": None, "update_started_timestamp": None},
+            [
+                Result(state=State.OK, summary="Ready: 0/3"),
+                Result(state=State.OK, summary="Up-to-date: 3/3"),
+                Metric("kube_desired_replicas", 3.0, boundaries=(0.0, 3.0)),
+                Metric("kube_ready_replicas", 0.0, boundaries=(0.0, 3.0)),
+                Metric("kube_updated_replicas", 3.0, boundaries=(0.0, 3.0)),
+                Result(state=State.OK, summary="Not ready for: 0 seconds"),
+            ],
+            id="Counter is started once the deployment has transitioned from a "
+            "previously ready to a not ready replica state. Note that in this "
+            "case, the value store is pre-populated with 'None'.",
+        ),
+        pytest.param(
+            {},
+            Replicas(
+                replicas=3,
+                updated=0,
+                available=3,
+                ready=3,
+                unavailable=0,
+            ),
+            {"not_ready_started_timestamp": None, "update_started_timestamp": None},
+            [
+                Result(state=State.OK, summary="Ready: 3/3"),
+                Result(state=State.OK, summary="Up-to-date: 0/3"),
+                Metric("kube_desired_replicas", 3.0, boundaries=(0.0, 3.0)),
+                Metric("kube_ready_replicas", 3.0, boundaries=(0.0, 3.0)),
+                Metric("kube_updated_replicas", 0.0, boundaries=(0.0, 3.0)),
+                Result(state=State.OK, summary="Not updated for: 0 seconds"),
+            ],
+            id="Counter is started once the deployment has transitioned from a "
+            "previously updated to a not updated replica state. Note that in this "
+            "case, the value store is pre-populated with 'None'.",
+        ),
     ],
 )
 def test_check_kube_replicas_value_store_reset(

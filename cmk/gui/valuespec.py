@@ -104,10 +104,23 @@ DEF_VALUE = Sentinel()
 
 T = TypeVar("T")
 
+# A value which can be delayed.
+# NOTE: Due to the use of Union below, we can't have Callables as values.
+# NOTE: No caching, so it's different from e.g. Scheme's delay/force.
+Promise = Union[T, Callable[[], T]]
+
+
+# NOTE: This helper function should be used everywhere instead of dispatching on
+# callable() all over the place, but there is currently a bug in mypy, which would
+# result in a return type of "object". :-/ https://github.com/python/mypy/issues/6751
+def force(p: Promise[T]) -> T:
+    return p() if callable(p) else p
+
+
 ValueSpecValidateFunc = Callable[[T, str], None]
-ValueSpecDefault = Union[Sentinel, T, Callable[[], Union[Sentinel, T]]]
-ValueSpecHelp = Union[str, HTML, Callable[[], Union[str, HTML]]]
+ValueSpecDefault = Promise[Union[Sentinel, T]]
 ValueSpecText = Union[str, HTML]
+ValueSpecHelp = Promise[ValueSpecText]
 JSONValue = Any
 
 C = TypeVar("C", bound="Comparable")
@@ -2463,7 +2476,7 @@ class Checkbox(ValueSpec[bool]):
 
 DropdownChoiceValue = Any  # TODO: Can we be more specific?
 DropdownChoiceEntry = tuple[DropdownChoiceValue, str]
-DropdownChoices = Union[list[DropdownChoiceEntry], Callable[[], list[DropdownChoiceEntry]]]
+DropdownChoices = Promise[list[DropdownChoiceEntry]]
 
 
 class DropdownChoice(ValueSpec):
@@ -2914,9 +2927,7 @@ CascadingDropdownChoiceValue = Union[
 CascadingDropdownCleanChoice = tuple[CascadingDropdownChoiceIdent, str, _Optional[ValueSpec]]
 CascadingDropdownShortChoice = tuple[CascadingDropdownChoiceIdent, str]
 CascadingDropdownChoice = Union[CascadingDropdownShortChoice, CascadingDropdownCleanChoice]
-CascadingDropdownChoices = Union[
-    Sequence[CascadingDropdownChoice], Callable[[], Sequence[CascadingDropdownChoice]]
-]
+CascadingDropdownChoices = Promise[Sequence[CascadingDropdownChoice]]
 
 
 def _normalize_choices(
@@ -3337,8 +3348,7 @@ ListChoiceChoiceIdent = Union[str, int]
 ListChoiceChoice = tuple[ListChoiceChoiceIdent, str]
 ListChoiceChoices = Union[
     None,
-    Sequence[ListChoiceChoice],
-    Callable[[], Sequence[ListChoiceChoice]],
+    Promise[Sequence[ListChoiceChoice]],
     dict[ListChoiceChoiceIdent, str],
 ]
 
@@ -4392,9 +4402,7 @@ class Timerange(CascadingDropdown):
     def __init__(  # pylint: disable=redefined-builtin
         self,
         include_time: bool = False,
-        choices: Union[
-            None, list[CascadingDropdownChoice], Callable[[], list[CascadingDropdownChoice]]
-        ] = None,
+        choices: _Optional[Promise[list[CascadingDropdownChoice]]] = None,
         # CascadingDropdown
         # TODO: Make this more specific
         label: _Optional[str] = None,
@@ -5132,8 +5140,7 @@ class Tuple(ValueSpec):
 
 DictionaryEntry = tuple[str, ValueSpec]
 DictionaryElements = Iterable[DictionaryEntry]
-DictionaryElementsThunk = Callable[[], DictionaryElements]
-DictionaryElementsRaw = Union[DictionaryElements, DictionaryElementsThunk]
+DictionaryElementsRaw = Promise[DictionaryElements]
 
 
 class Dictionary(ValueSpec[dict[str, Any]]):

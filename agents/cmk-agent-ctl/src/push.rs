@@ -5,7 +5,7 @@
 use super::agent_receiver_api::AgentData;
 use super::{agent_receiver_api, config, monitoring_data};
 use anyhow::{Context, Result as AnyhowResult};
-use log::{debug, info};
+use log::{debug, info, warn};
 use rand::Rng;
 use std::thread;
 use std::time::{Duration, Instant};
@@ -23,7 +23,9 @@ pub fn push(mut registry: config::Registry) -> AnyhowResult<()> {
         let begin = Instant::now();
         // TODO(sk): enable this for Windows when this will be ready to production
         #[cfg(unix)]
-        handle_push_cycle(&registry)?;
+        if let Err(error) = handle_push_cycle(&registry) {
+            warn!("Error running push cycle. ({})", error);
+        };
         thread::sleep(Duration::from_secs(60).saturating_sub(begin.elapsed()));
     }
 }
@@ -33,25 +35,25 @@ pub fn handle_push_cycle(registry: &config::Registry) -> AnyhowResult<()> {
         return Ok(());
     }
 
-    debug!("Handling registered push connections");
+    debug!("Handling registered push connections.");
 
     let compressed_mon_data = monitoring_data::compress(
-        &monitoring_data::collect().context("Error collecting monitoring data")?,
+        &monitoring_data::collect().context("Error collecting agent output")?,
     )
-    .context("Error compressing monitoring data")?;
+    .context("Error compressing agent output")?;
 
     for (coordinates, connection) in registry.push_connections() {
-        info!("Pushing monitoring data to {}", coordinates);
-        (agent_receiver_api::Api {})
-            .agent_data(
-                coordinates,
-                &connection.root_cert,
-                &connection.uuid,
-                &connection.certificate,
-                &monitoring_data::compression_header_info().push,
-                &compressed_mon_data,
-            )
-            .context(format!("Error pushing monitoring data to {}.", coordinates))?
+        info!("{}: Pushing agent output", coordinates);
+        if let Err(error) = (agent_receiver_api::Api {}).agent_data(
+            coordinates,
+            &connection.root_cert,
+            &connection.uuid,
+            &connection.certificate,
+            &monitoring_data::compression_header_info().push,
+            &compressed_mon_data,
+        ) {
+            warn!("{}: Error pushing agent output. ({})", coordinates, error);
+        };
     }
     Ok(())
 }

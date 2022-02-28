@@ -31,9 +31,13 @@ test_load_config() {
 
 test_redis_args() {
     redis_args LOCAL
-    assertEquals "-s $REDIS_HOST_LOCAL info" "$REDIS_ARGS"
+    assertEquals "-s $REDIS_HOST_LOCAL info" "${REDIS_ARGS[*]}"
     redis_args IPHOST
-    assertEquals "-h $REDIS_HOST_IPHOST -p $REDIS_PORT_IPHOST -a $REDIS_PASSWORD_IPHOST info" "$REDIS_ARGS"
+    assertEquals "-h $REDIS_HOST_IPHOST -p $REDIS_PORT_IPHOST -a $REDIS_PASSWORD_IPHOST info" "${REDIS_ARGS[*]}"
+
+    assertEquals "-h" "${REDIS_ARGS[0]}"
+    assertEquals "$REDIS_PASSWORD_IPHOST" "${REDIS_ARGS[5]}"
+
 }
 
 . "$UNIT_SH_SHUNIT2"

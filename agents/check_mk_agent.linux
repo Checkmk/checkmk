@@ -1217,7 +1217,7 @@ section_thermal() {
                 line="${line}|$(cat "$G")|$(cat "${G/%temp/type}")"
             done
 
-            echo "${line%?}"
+            echo "$line"
         done
     fi
 }

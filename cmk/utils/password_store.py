@@ -39,6 +39,8 @@ file, there is the `extract` function which can be used like this:
   password = cmk.utils.password_store.extract("pw_id")
 
 """
+import hashlib
+import os
 import secrets
 import shutil
 import string
@@ -47,10 +49,11 @@ from contextlib import suppress
 from pathlib import Path
 from typing import Literal, Mapping, NoReturn, Optional, TypedDict, Union
 
+from Cryptodome.Cipher import AES
+
 import cmk.utils.paths
 import cmk.utils.store as store
 from cmk.utils.config_path import ConfigPath, LATEST_CONFIG
-from cmk.utils.encryption import Encrypter
 from cmk.utils.exceptions import MKGeneralException
 
 PasswordLookupType = Literal["password", "store"]
@@ -178,7 +181,7 @@ def _helper_password_store_path(config_path: ConfigPath) -> Path:
     return Path(config_path) / "stored_passwords"
 
 
-class _PasswordStoreObfuscator(Encrypter):
+class _PasswordStoreObfuscator:
     """Encrypt the password store with the locally known password store key
 
     But why?
@@ -226,6 +229,24 @@ class _PasswordStoreObfuscator(Encrypter):
         return path
 
     @classmethod
+    def _passphrase(cls) -> bytes:
+        with cls._secret_key_path().open(mode="rb") as f:
+            return f.read().strip()
+
+    @classmethod
+    def _cipher(cls, key: bytes, nonce: bytes):
+        return AES.new(key, AES.MODE_GCM, nonce=nonce)
+
+    @classmethod
+    def _secret_key(cls, passphrase: bytes, salt: bytes) -> bytes:
+        """Build some secret for the encryption
+
+        Use the sites auth.secret for encryption. This secret is only known to the current site
+        and other distributed sites.
+        """
+        return hashlib.scrypt(passphrase, salt=salt, n=2**14, r=8, p=1, dklen=32)
+
+    @classmethod
     def _create_secret_key(cls, path: Path) -> None:
         path.parent.mkdir(parents=True, exist_ok=True)
         path.touch()
@@ -236,13 +257,30 @@ class _PasswordStoreObfuscator(Encrypter):
 
     @classmethod
     def encrypt(cls, value: str) -> bytes:
-        return cls.VERSION.to_bytes(cls.VERSION_BYTE_LENGTH, byteorder="big") + super().encrypt(
-            value
+        salt = os.urandom(AES.block_size)
+        nonce = os.urandom(AES.block_size)
+        cipher = cls._cipher(cls._secret_key(cls._passphrase(), salt), nonce)
+        encrypted, tag = cipher.encrypt_and_digest(value.encode("utf-8"))
+        return (
+            cls.VERSION.to_bytes(cls.VERSION_BYTE_LENGTH, byteorder="big")
+            + salt
+            + nonce
+            + tag
+            + encrypted
         )
 
     @classmethod
     def decrypt(cls, raw: bytes) -> str:
-        return super().decrypt(raw[cls.VERSION_BYTE_LENGTH :])
+        _version, rest = raw[: cls.VERSION_BYTE_LENGTH], raw[cls.VERSION_BYTE_LENGTH :]
+        salt, rest = rest[: AES.block_size], rest[AES.block_size :]
+        nonce, rest = rest[: AES.block_size], rest[AES.block_size :]
+        tag, encrypted = rest[: AES.block_size], rest[AES.block_size :]
+
+        return (
+            cls._cipher(cls._secret_key(cls._passphrase(), salt), nonce)
+            .decrypt_and_verify(encrypted, tag)
+            .decode("utf-8")
+        )
 
 
 _obfuscate = _PasswordStoreObfuscator.encrypt

@@ -40,7 +40,7 @@ from cmk.gui.permissions import (
 from cmk.gui.plugins.visuals.utils import Filter, get_livestatus_filter_headers
 from cmk.gui.type_defs import ColumnName, VisualContext
 from cmk.gui.utils.urls import makeuri_contextless, urlencode_vars
-from cmk.gui.valuespec import DropdownChoiceEntry
+from cmk.gui.valuespec import DropdownChoiceEntries
 
 
 @permission_section_registry.register
@@ -85,7 +85,7 @@ def get_aggregation_group_trees():
     return get_cached_bi_packs().get_aggregation_group_trees()
 
 
-def aggregation_group_choices() -> List[DropdownChoiceEntry]:
+def aggregation_group_choices() -> DropdownChoiceEntries:
     """Returns a sorted list of aggregation group names"""
     return get_cached_bi_packs().get_aggregation_group_choices()
 

@@ -22,6 +22,7 @@ from cmk.gui.utils.urls import makeuri, makeuri_contextless, makeuri_contextless
 from cmk.gui.valuespec import (
     Dictionary,
     DropdownChoice,
+    DropdownChoiceEntries,
     ElementSelection,
     FixedValue,
     JSONValue,
@@ -509,7 +510,7 @@ class Rulespec(abc.ABC):
         return None
 
     @property
-    def item_enum(self) -> Optional[List[_Tuple[str, str]]]:
+    def item_enum(self) -> Optional[DropdownChoiceEntries]:
         item_spec = self.item_spec
         if item_spec is None:
             return None

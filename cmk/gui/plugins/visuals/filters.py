@@ -1808,7 +1808,7 @@ class FilterAggrGroup(Filter):
     @staticmethod
     def _options() -> Choices:
         empty_choices: Choices = [("", "")]
-        return empty_choices + bi.aggregation_group_choices()
+        return empty_choices + list(bi.aggregation_group_choices())
 
     def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
         value = context.get(self.ident, {})

@@ -36,7 +36,7 @@ CSSSpec = Union[None, str, List[str], List[Optional[str]], str]
 ChoiceText = str
 ChoiceId = Optional[str]
 Choice = Tuple[ChoiceId, ChoiceText]
-Choices = List[Choice]
+Choices = List[Choice]  # TODO: Change to Sequence, perhaps DropdownChoiceEntries[str]
 
 
 class ChoiceGroup(NamedTuple):

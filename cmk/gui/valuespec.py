@@ -2477,7 +2477,8 @@ class Checkbox(ValueSpec[bool]):
 
 DropdownChoiceModel = Any  # TODO: Can we be more specific?
 DropdownChoiceEntry = tuple[DropdownChoiceModel, str]
-DropdownChoices = Promise[list[DropdownChoiceEntry]]
+DropdownChoiceEntries = Sequence[DropdownChoiceEntry]
+DropdownChoices = Promise[DropdownChoiceEntries]
 
 
 class DropdownChoice(ValueSpec[DropdownChoiceModel]):
@@ -2564,14 +2565,10 @@ class DropdownChoice(ValueSpec[DropdownChoiceModel]):
     def allow_empty(self) -> bool:
         return self._read_only or not self._no_preselect
 
-    def choices(self) -> list[DropdownChoiceEntry]:
-        if callable(self._choices):
-            result = self._choices()
-        else:
-            result = self._choices
-        if self._no_preselect:
-            return [(self._no_preselect_value, self._no_preselect_title)] + result
-        return result
+    def choices(self) -> DropdownChoiceEntries:
+        result = self._choices() if callable(self._choices) else self._choices
+        pre = [(self._no_preselect_value, self._no_preselect_title)] if self._no_preselect else []
+        return pre + list(result)
 
     def canonical_value(self) -> _Optional[DropdownChoiceModel]:
         choices = self.choices()
@@ -2684,7 +2681,7 @@ class DropdownChoice(ValueSpec[DropdownChoiceModel]):
         return value
 
     def _options_for_html(
-        self, orig_options: list[DropdownChoiceEntry]
+        self, orig_options: DropdownChoiceEntries
     ) -> list[tuple[DropdownChoiceModel, str]]:
         return [(self._option_for_html(val), title) for val, title in orig_options]
 

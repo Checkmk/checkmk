@@ -64,7 +64,7 @@ from cmk.gui.valuespec import (
     Dictionary,
     DictionaryElements,
     DropdownChoice,
-    DropdownChoiceEntry,
+    DropdownChoiceEntries,
     Integer,
     ListChoice,
     ListChoiceChoices,
@@ -1733,7 +1733,7 @@ class ABCPainterCustomVariable(Painter, abc.ABC):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def _custom_attribute_choices(self) -> List[DropdownChoiceEntry]:
+    def _custom_attribute_choices(self) -> DropdownChoiceEntries:
         raise NotImplementedError()
 
     @property
@@ -1775,7 +1775,7 @@ class PainterServiceCustomVariable(ABCPainterCustomVariable):
     def _object_type(self) -> str:
         return "service"
 
-    def _custom_attribute_choices(self) -> List[DropdownChoiceEntry]:
+    def _custom_attribute_choices(self) -> DropdownChoiceEntries:
         choices = []
         for ident, attr_spec in config.custom_service_attributes.items():
             choices.append((ident, attr_spec["title"]))
@@ -1813,7 +1813,7 @@ class PainterHostCustomVariable(ABCPainterCustomVariable):
     def _object_type(self) -> str:
         return "host"
 
-    def _custom_attribute_choices(self) -> List[DropdownChoiceEntry]:
+    def _custom_attribute_choices(self) -> DropdownChoiceEntries:
         choices = []
         for attr_spec in config.wato_host_attrs:
             choices.append((attr_spec["name"], attr_spec["title"]))

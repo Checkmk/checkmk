@@ -1362,7 +1362,7 @@ class MetricName(DropdownChoiceWithHostAndServiceHints):
 
     def _choices_from_value(self, value: DropdownChoiceModel) -> Choices:
         if value is None:
-            return self.choices()
+            return list(self.choices())
         # Need to create an on the fly metric option
         return [
             next(

@@ -192,6 +192,7 @@ from cmk.gui.valuespec import (
     CascadingDropdownChoice,
     Dictionary,
     DropdownChoice,
+    DropdownChoiceEntries,
     DropdownChoiceEntry,
     FixedValue,
     Hostname,
@@ -1755,7 +1756,7 @@ def view_editor_column_spec(ident, title, ds_name):
         empty_text = _("Please add at least one column to your view.")
 
     def column_elements(_painters, painter_type):
-        empty_choices: List[DropdownChoiceEntry] = [(None, "")]
+        empty_choices: DropdownChoiceEntries = [(None, "")]
         elements = [
             CascadingDropdown(
                 title=_("Column"),
@@ -1774,7 +1775,7 @@ def view_editor_column_spec(ident, title, ds_name):
             ),
             DropdownChoice(
                 title=_("Tooltip"),
-                choices=empty_choices + painter_choices(_painters),
+                choices=list(empty_choices) + list(painter_choices(_painters)),
             ),
         ]
         if painter_type == "join_painter":
@@ -3395,7 +3396,7 @@ def infos_needed_by_plugin(
     return {c.split("_", 1)[0] for c in plugin.columns if c != "site" and c not in add_columns}
 
 
-def painter_choices(painters: Dict[str, Painter]) -> List[DropdownChoiceEntry]:
+def painter_choices(painters: Dict[str, Painter]) -> DropdownChoiceEntries:
     return [(c[0], c[1]) for c in painter_choices_with_params(painters)]
 
 

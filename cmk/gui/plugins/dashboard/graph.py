@@ -82,7 +82,7 @@ class AvailableGraphs(DropdownChoiceWithHostAndServiceHints):
 
     def _choices_from_value(self, value: DropdownChoiceModel) -> Choices:
         if not value:
-            return self.choices()
+            return list(self.choices())
         return [
             next(
                 (

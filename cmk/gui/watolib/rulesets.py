@@ -41,7 +41,7 @@ from cmk.gui.globals import config, html
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.utils.html import HTML
-from cmk.gui.valuespec import ValueSpec
+from cmk.gui.valuespec import DropdownChoiceEntries, ValueSpec
 from cmk.gui.watolib.changes import add_change, make_diff_text, ObjectRef, ObjectRefType
 from cmk.gui.watolib.hosts_and_folders import (
     CREFolder,
@@ -788,7 +788,7 @@ class Ruleset:
     def item_help(self) -> Union[None, str, HTML]:
         return self.rulespec.item_help
 
-    def item_enum(self) -> Optional[List[Tuple[str, str]]]:
+    def item_enum(self) -> Optional[DropdownChoiceEntries]:
         return self.rulespec.item_enum
 
     def match_type(self) -> str:

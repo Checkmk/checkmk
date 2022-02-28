@@ -66,7 +66,6 @@ RUN apt-get update \
     openssh-client \
     patch \
     rpcbind \
-    silversearcher-ag \
     smbclient \
     texinfo \
     tk-dev \

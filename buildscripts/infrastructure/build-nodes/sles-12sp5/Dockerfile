@@ -80,7 +80,6 @@ RUN zypper ref -s \
     sqlite3-devel \
     tar \
     texinfo \
-    the_silver_searcher \
     tk-devel \
     unzip \
     wget \

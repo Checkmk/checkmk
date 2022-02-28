@@ -77,7 +77,6 @@ RUN apt-get update \
     patch \
     rpcbind \
     rsync \
-    silversearcher-ag \
     smbclient \
     software-properties-common \
     texinfo \

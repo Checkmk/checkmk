@@ -73,7 +73,6 @@ RUN sed -i -re 's/([a-z]{2}\.)?archive.ubuntu.com|security.ubuntu.com/old-releas
     patch \
     rpcbind \
     rsync \
-    silversearcher-ag \
     smbclient \
     texinfo \
     tk-dev \

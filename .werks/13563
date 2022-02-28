@@ -1,0 +1,14 @@
+Title: kube_replicas: alert when replicas are not ready/not updated
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1646077157
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b2
+
+The check kube_replicas did not alert in the event that the number of ready or
+updated replicas transitioned from an OK state to a not ready or not updated
+state. This has been fixed.

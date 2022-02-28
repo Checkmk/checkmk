@@ -39,6 +39,7 @@ ipnet = { version = "*" }
 toml = { version = "*" }
 rpassword = { version = "*" }
 async-trait = { version = "*" }
+os_info = { version = "*" }
 
 [dev-dependencies]
 assert_cmd = { version = "*" }

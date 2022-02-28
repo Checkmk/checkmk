@@ -2,7 +2,7 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
-use super::{cli, constants, site_spec, types};
+use super::{cli, constants, setup, site_spec, types};
 use anyhow::{anyhow, Context, Result as AnyhowResult};
 use serde::de::DeserializeOwned;
 use serde::Deserialize;
@@ -178,12 +178,12 @@ impl PullConfig {
         let port = pull_args
             .port
             .or(config_from_disk.pull_port)
-            .unwrap_or(types::Port::from_str(constants::DEFAULT_AGENT_PORT)?);
+            .unwrap_or(types::Port::from_str(constants::DEFAULT_PULL_PORT)?);
         Ok(PullConfig {
             allowed_ip,
             port,
-            max_connections: constants::MAX_CONNECTIONS,
-            connection_timeout: constants::CONNECTION_TIMEOUT,
+            max_connections: setup::max_connections(),
+            connection_timeout: setup::connection_timeout(),
             legacy_pull_marker,
             registry,
         })

@@ -70,3 +70,97 @@ def test_check_functions_perfdata(info, discovered, checked):
     parsed = check.run_parse(info)
     for (item, _params), result in zip(discovered, checked):
         assert check.run_check(item, {}, parsed) == result
+
+
+@pytest.mark.parametrize(
+    "line, item",
+    [
+        (
+            [
+                "thermal_zone0",
+                "enabled",
+                "acpitz",
+                "27800",
+                "105000",
+                "critical",
+                "80000",
+                "active",
+                "55000",
+                "active",
+                "500",
+                "00",
+                "active",
+                "45000",
+                "active",
+                "40000",
+                "active",
+            ],
+            "Zone 0",
+        ),
+        (
+            [
+                "thermal_zone1",
+                "enabled",
+                "acpitz",
+                "29800",
+                "105000",
+                "critical",
+                "108000",
+                "passive",
+            ],
+            "Zone 1",
+        ),
+    ],
+)
+def test_parse_and_discovery_function_2(line, item):
+    check = Check("lnx_thermal")
+    parsed = check.run_parse([line])
+    assert DiscoveryResult(check.run_discovery(parsed)) == DiscoveryResult([(item, {})])
+
+
+@pytest.mark.parametrize(
+    "line, item, result",
+    [
+        (
+            [
+                "thermal_zone0",
+                "enabled",
+                "acpitz",
+                "27800",
+                "105000",
+                "critical",
+                "80000",
+                "active",
+                "55000",
+                "active",
+                "500",
+                "00",
+                "active",
+                "45000",
+                "active",
+                "40000",
+                "active",
+            ],
+            "Zone 0",
+            (0, "27.8 \xb0C", [("temp", 27.8, None, None)]),
+        ),
+        (
+            [
+                "thermal_zone1",
+                "enabled",
+                "acpitz",
+                "29800",
+                "105000",
+                "critical",
+                "108000",
+                "passive",
+            ],
+            "Zone 1",
+            (0, "29.8 \xb0C", [("temp", 29.8, 108.0, 105.0)]),
+        ),
+    ],
+)
+def test_check_functions_perfdata_2(line, item, result):
+    check = Check("lnx_thermal")
+    parsed = check.run_parse([line])
+    assert check.run_check(item, {}, parsed) == result

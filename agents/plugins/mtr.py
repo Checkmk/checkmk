@@ -376,12 +376,12 @@ def start_mtr(host, mtr_binary, config, status):
     reportfile = report_filepre + host_to_filename(host)
     if os.path.exists(reportfile):
         os.unlink(reportfile)
-    report = open(reportfile, "a+")  # pylint:disable=consider-using-with
-    report.write(str(int(time.time())) + "\n")
-    report.flush()
-    process = subprocess.Popen(  # pylint:disable=consider-using-with
-        options, stdout=report, stderr=report
-    )
+    with open(reportfile, "a+") as report:
+        report.write(str(int(time.time())) + "\n")
+        report.flush()
+        process = subprocess.Popen(  # pylint:disable=consider-using-with
+            options, stdout=report, stderr=report
+        )
     # Write pid to report.pid
     with open(reportfile + ".pid", "w") as pidfile:
         pidfile.write("%d\n" % process.pid)

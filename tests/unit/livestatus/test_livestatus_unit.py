@@ -10,6 +10,7 @@ import errno
 import socket
 import ssl
 from contextlib import closing
+from pathlib import Path
 
 import pytest
 
@@ -204,14 +205,14 @@ def test_create_socket_not_existing_ca_file():
 
 
 def test_create_socket_no_cert(tmp_path):
-    open(str(tmp_path / "z.pem"), "wb")  # pylint:disable=consider-using-with
-    live = livestatus.SingleSiteConnection(
-        "unix:/tmp/xyz", tls=True, verify=True, ca_file_path=str(tmp_path / "z.pem")
-    )
-    with pytest.raises(
-        livestatus.MKLivestatusConfigError, match="(unknown error|no certificate or crl found)"
-    ):
-        live._create_socket(socket.AF_INET)
+    with Path(tmp_path, "z.pem").open("wb"):
+        live = livestatus.SingleSiteConnection(
+            "unix:/tmp/xyz", tls=True, verify=True, ca_file_path=str(tmp_path / "z.pem")
+        )
+        with pytest.raises(
+            livestatus.MKLivestatusConfigError, match="(unknown error|no certificate or crl found)"
+        ):
+            live._create_socket(socket.AF_INET)
 
 
 def test_local_connection(mock_livestatus):

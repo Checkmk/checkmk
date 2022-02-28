@@ -2409,7 +2409,7 @@ def get_file_names_to_sync(
 
 def _get_sync_archive(to_sync: List[str], base_dir: Path) -> bytes:
     # Use native tar instead of python tarfile for performance reasons
-    p = subprocess.Popen(  # pylint:disable=consider-using-with
+    completed_process = subprocess.run(
         [
             "tar",
             "-c",
@@ -2422,27 +2422,28 @@ def _get_sync_archive(to_sync: List[str], base_dir: Path) -> bytes:
             "-",
             "--preserve-permissions",
         ],
-        stdin=subprocess.PIPE,
+        input=b"\0".join(f.encode() for f in to_sync),
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
         close_fds=True,
         shell=False,
+        check=False,
     )
 
     # Since we don't stream the archive to the remote site (we could probably do this) it should be
     # no problem to buffer it in memory for the moment
-    archive, stderr = p.communicate(b"\0".join(f.encode() for f in to_sync))
 
-    if p.returncode != 0:
+    if completed_process.returncode:
         raise MKGeneralException(
-            _("Failed to create sync archive [%d]: %s") % (p.returncode, stderr.decode())
+            _("Failed to create sync archive [%d]: %s")
+            % (completed_process.returncode, completed_process.stderr.decode())
         )
 
-    return archive
+    return completed_process.stdout
 
 
 def _unpack_sync_archive(sync_archive: bytes, base_dir: Path) -> None:
-    p = subprocess.Popen(  # pylint:disable=consider-using-with
+    completed_process = subprocess.run(
         [
             "tar",
             "-x",
@@ -2454,20 +2455,18 @@ def _unpack_sync_archive(sync_archive: bytes, base_dir: Path) -> None:
             "--recursive-unlink",
             "--preserve-permissions",
         ],
-        stdin=subprocess.PIPE,
+        input=sync_archive,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
         close_fds=True,
         shell=False,
+        check=False,
     )
-    assert p.stdin is not None
-    assert p.stdout is not None
-    assert p.stderr is not None
 
-    stderr = p.communicate(sync_archive)[1]
-    if p.returncode != 0:
+    if completed_process.returncode:
         raise MKGeneralException(
-            _("Failed to create sync archive [%d]: %s") % (p.returncode, stderr.decode())
+            _("Failed to create sync archive [%d]: %s")
+            % (completed_process.returncode, completed_process.stderr.decode())
         )
 
 

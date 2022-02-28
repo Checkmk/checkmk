@@ -6,11 +6,9 @@
 
 from typing import Mapping, NamedTuple, Optional, Sequence, Tuple
 
-# NOTE: Careful when replacing the *-import below with a more specific import. This can cause
-# problems because it might remove variables from the check-context which are necessary for
-# resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
-# it might also remove variables needed for accessing discovery rulesets.
-from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from .agent_based_api.v1 import get_value_store, register, Service
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
+from .utils.temperature import check_temperature, TempParamDict, TempParamType
 
 # <<<lnx_thermal>>>
 # thermal_zone0 enabled acpitz 57000 127000 critical
@@ -23,11 +21,6 @@ from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wild
 # thermal_zone0 enabled acpitz 38000 98000 critical
 # thermal_zone1 pkg-temp-0  44000 0 passive 0 passive
 
-factory_settings["lnx_thermal_default_levels"] = {
-    "levels": (70.0, 80.0),
-    "device_levels_handling": "devdefault",
-}
-
 
 class Thermal(NamedTuple):
     enabled: bool
@@ -37,7 +30,10 @@ class Thermal(NamedTuple):
     hot: Optional[float]
 
 
-def parse_lnx_thermal(info):
+Section = Mapping[str, Thermal]
+
+
+def parse_lnx_thermal(string_table: StringTable) -> Section:
     """
     Supported format:
     - Temperature is either the 3rd or 4th element in an info row.
@@ -46,11 +42,11 @@ def parse_lnx_thermal(info):
     - A known, not considered trip point is active.
     - In case trip point values are 0 or negative (known default values) they are ignored.
     """
-    if not info:
+    if not string_table:
         return {}
 
     parsed = {}
-    for line in info:
+    for line in string_table:
         if (thermal_info := _get_thermal_info(line)) is None:
             continue
 
@@ -112,14 +108,19 @@ def _get_trip_points(factor: float, raw_trip_points: Sequence[str]) -> Mapping[s
         return {}
 
 
-def inventory_lnx_thermal(parsed):
-    for item, thermal in parsed.items():
+register.agent_section(
+    name="lnx_thermal",
+    parse_function=parse_lnx_thermal,
+)
+
+
+def discover_lnx_thermal(section: Section) -> DiscoveryResult:
+    for item, thermal in section.items():
         if thermal.enabled:
-            yield item, {}
+            yield Service(item=item)
 
 
-@get_parsed_item_data
-def check_lnx_thermal(item, params, data):
+def check_lnx_thermal(item: str, params: TempParamType, section: Section) -> CheckResult:
     """
     - Trip points hot and critical are considered for the device crit level. In case both trip
       points are given the lower value is considered for the device crit level.
@@ -128,37 +129,49 @@ def check_lnx_thermal(item, params, data):
       is considered for the device crit level.
     - Trip point temperatures are provided via performance data.
     """
-    temperature = data.temperature
-    warn_level = data.passive
-    hot_value = data.hot
-    critical_value = data.critical
-
-    if temperature is None:
+    if (data := section.get(item)) is None:
         return
 
-    if hot_value and critical_value:
-        crit_level = min(hot_value, critical_value)
-    else:
-        crit_level = hot_value or critical_value
-
-    if not crit_level or not warn_level:
-        crit_level = crit_level or warn_level
-        warn_level = warn_level or crit_level
-
-    if warn_level and crit_level:
-        levels = (warn_level, crit_level)
-    else:
-        levels = None
-
-    return check_temperature(temperature, params, "lnx_thermal_%s" % item, dev_levels=levels)
+    yield from check_temperature(
+        reading=data.temperature,
+        params=params,
+        dev_levels=_get_levels(data),
+        unique_name=item,
+        value_store=get_value_store(),
+    )
 
 
-check_info["lnx_thermal"] = {
-    "parse_function": parse_lnx_thermal,
-    "inventory_function": inventory_lnx_thermal,
-    "check_function": check_lnx_thermal,
-    "service_description": "Temperature %s",
-    "has_perfdata": True,
-    "group": "temperature",
-    "default_levels_variable": "lnx_thermal_default_levels",
-}
+def _get_levels(data: Thermal) -> Optional[Tuple[float, float]]:
+    crit = _get_crit_level(data.hot, data.critical)
+    warn = data.passive
+
+    if warn is None:
+        return None if crit is None else (crit, crit)
+
+    if crit is None:
+        return None if warn is None else (warn, warn)
+
+    return (warn, crit)
+
+
+def _get_crit_level(level0: Optional[float], level1: Optional[float]) -> Optional[float]:
+    if level0 is None:
+        return level1
+
+    if level1 is None:
+        return level0
+
+    return min(level0, level1)
+
+
+register.check_plugin(
+    name="lnx_thermal",
+    service_name="Temperature %s",
+    discovery_function=discover_lnx_thermal,
+    check_function=check_lnx_thermal,
+    check_ruleset_name="temperature",
+    check_default_parameters=TempParamDict(
+        levels=(70.0, 80.0),
+        device_levels_handling="devdefault",
+    ),
+)

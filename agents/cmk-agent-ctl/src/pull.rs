@@ -173,11 +173,13 @@ async fn _pull(
     loop {
         if !pull_state.is_active() {
             tokio::time::sleep(Duration::from_secs(ONE_MINUTE)).await;
+            // Allow a crash due to a failing registry reload. It's not likely to recover
+            // here without action taken, and it's vital for all connections.
             pull_state.refresh()?;
             continue;
         }
-        debug!(
-            "Start listening for incoming pull requests on {}",
+        info!(
+            "Start listening for incoming pull requests on {} .",
             pull_state.listening_address()
         );
         _pull_cycle(&mut pull_state, &mut guard, agent_output_collector.clone()).await?;
@@ -192,20 +194,32 @@ async fn _pull_cycle(
     let listener = TcpListener::bind(pull_state.listening_address()).await?;
 
     loop {
-        let (stream, remote) =
-            match timeout(Duration::from_secs(FIVE_MINUTES), listener.accept()).await {
-                Ok(inner) => inner,
-                Err(_) => {
-                    debug!(
+        let (stream, remote) = match match timeout(
+            Duration::from_secs(FIVE_MINUTES),
+            listener.accept(),
+        )
+        .await
+        {
+            Ok(accepted_result) => accepted_result,
+            Err(_) => {
+                debug!(
                         "Got no pull request within five minutes. Registration may have changed, thus restarting pull handling."
                     );
-                    return Ok(());
-                }
+                return Ok(());
             }
-            .context("Failed accepting pull connection")?;
+        } {
+            Ok(accepted) => accepted,
+            Err(error) => {
+                warn!("Failed accepting pull connection. ({})", error);
+                continue;
+            }
+        };
 
         if !is_addr_allowed(&remote, pull_state.ip_allowlist()) {
-            warn!("{}: Request from IP is not allowed", remote);
+            warn!(
+                "{}: Rejecting pull request - connection from IP is not allowed.",
+                remote
+            );
             continue;
         }
 
@@ -214,11 +228,11 @@ async fn _pull_cycle(
 
         // Check if pull was deactivated meanwhile before actually handling the request.
         if !pull_state.is_active() {
-            debug!("Detected empty registry, closing current connection and stop listening.");
+            info!("Detected empty registry, closing current connection and stop listening.");
             return Ok(());
         }
 
-        info!("{}: Handling pull request", remote);
+        info!("{}: Handling pull request.", remote);
 
         let request_handler_fut = handle_request(
             stream,
@@ -228,20 +242,20 @@ async fn _pull_cycle(
             pull_state.tls_acceptor(),
             pull_state.connection_timeout(),
         );
-        debug!("{}: Handling pull request DONE", remote);
 
         match guard.try_make_task_for_addr(remote, request_handler_fut) {
             Ok(connection_fut) => {
                 tokio::spawn(async move {
                     if let Err(err) = connection_fut.await {
-                        warn!("{}: Request failed: {}", remote, err)
+                        warn!("{}: Request failed. ({})", remote, err)
                     };
                 });
             }
             Err(error) => {
-                warn!("{}: Request failed: {}", remote, error);
+                warn!("{}: Request failed. ({})", remote, error);
             }
         }
+        debug!("{}: Handling pull request DONE.", remote);
     }
 }
 

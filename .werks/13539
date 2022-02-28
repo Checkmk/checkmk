@@ -1,0 +1,14 @@
+Title: lnx_thermal: Fix wrong temperature scaling and flapping vanished/new services
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1646046684
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0b2
+
+From kernel docs: on Linux the temperature is reported in milli degrees. On
+SunXI the temperature value is measured in degrees.
+Moreover the temperature services were seen as vanished if related trip points
+were missing. This has also been fixed.

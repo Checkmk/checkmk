@@ -83,10 +83,14 @@ class AppsAPI:
         ).items
 
     def _query_raw_daemon_sets(self) -> Sequence[client.V1DaemonSet]:
-        return self.connection.list_daemon_set_for_all_namespaces().items
+        return self.connection.list_daemon_set_for_all_namespaces(
+            _request_timeout=self.timeout
+        ).items
 
     def _query_raw_replica_sets(self) -> Sequence[client.V1ReplicaSet]:
-        return self.connection.list_replica_set_for_all_namespaces().items
+        return self.connection.list_replica_set_for_all_namespaces(
+            _request_timeout=self.timeout
+        ).items
 
 
 T = TypeVar("T")

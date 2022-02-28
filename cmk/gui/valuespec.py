@@ -2093,9 +2093,10 @@ class ListOfMultipleChoiceGroup(NamedTuple):
 
 
 GroupedListOfMultipleChoices = list[ListOfMultipleChoiceGroup]
+ListOfMultipleModel = Mapping[str, Any]
 
 
-class ListOfMultiple(ValueSpec):
+class ListOfMultiple(ValueSpec[ListOfMultipleModel]):
     """A generic valuespec where the user can choose from a list of sub-valuespecs.
     Each sub-valuespec can be added only once
     """
@@ -2145,7 +2146,7 @@ class ListOfMultiple(ValueSpec):
         )
         html.icon_button("#", self._del_label, "close", onclick=js, class_="delete_button")
 
-    def render_input(self, varprefix: str, value: Mapping[str, Any]) -> None:
+    def render_input(self, varprefix: str, value: ListOfMultipleModel) -> None:
         # Beware: the 'value' is only the default value in case the form
         # has not yet been filled in. In the complain phase we must
         # ignore 'value' but reuse the input from the HTML variables -
@@ -2216,14 +2217,14 @@ class ListOfMultiple(ValueSpec):
             ),
         )
 
-    def show_choice_row(self, varprefix: str, ident: str, value: Mapping[str, Any]) -> None:
+    def show_choice_row(self, varprefix: str, ident: str, value: ListOfMultipleModel) -> None:
         prefix = varprefix + "_" + ident
         html.open_tr(id_="%s_row" % prefix)
         self._show_del_button(varprefix, ident)
         self._show_content(varprefix, ident, value)
         html.close_tr()
 
-    def _show_content(self, varprefix: str, ident: str, value: Mapping[str, Any]) -> None:
+    def _show_content(self, varprefix: str, ident: str, value: ListOfMultipleModel) -> None:
         prefix = varprefix + "_" + ident
         html.open_td(class_=["vlof_content"])
         vs = self._choice_dict[ident]
@@ -2235,10 +2236,10 @@ class ListOfMultiple(ValueSpec):
         self.del_button(varprefix, ident)
         html.close_td()
 
-    def canonical_value(self) -> dict[str, Any]:
+    def canonical_value(self) -> ListOfMultipleModel:
         return {}
 
-    def value_to_html(self, value: dict[str, Any]) -> ValueSpecText:
+    def value_to_html(self, value: ListOfMultipleModel) -> ValueSpecText:
         table_content = HTML()
         for ident, val in value.items():
             vs = self._choice_dict[ident]
@@ -2247,21 +2248,21 @@ class ListOfMultiple(ValueSpec):
             )
         return html.render_table(table_content)
 
-    def value_to_json(self, value: dict[str, Any]) -> JSONValue:
+    def value_to_json(self, value: ListOfMultipleModel) -> JSONValue:
         return {ident: self._choice_dict[ident].value_to_json(val) for ident, val in value.items()}
 
-    def value_from_json(self, json_value: JSONValue) -> dict[str, Any]:
+    def value_from_json(self, json_value: JSONValue) -> ListOfMultipleModel:
         return {
             ident: self._choice_dict[ident].value_from_json(val)
             for ident, val in json_value.items()
         }
 
-    def value_to_json_safe(self, value: dict[str, Any]) -> JSONValue:
+    def value_to_json_safe(self, value: ListOfMultipleModel) -> JSONValue:
         return {
             ident: self._choice_dict[ident].value_to_json_safe(val) for ident, val in value.items()
         }
 
-    def from_html_vars(self, varprefix: str) -> Mapping[str, Any]:
+    def from_html_vars(self, varprefix: str) -> ListOfMultipleModel:
         value: dict[str, Any] = {}
         active = request.get_str_input_mandatory("%s_active" % varprefix, "").strip()
         if not active:
@@ -2272,13 +2273,13 @@ class ListOfMultiple(ValueSpec):
             value[ident] = vs.from_html_vars(varprefix + "_" + ident)
         return value
 
-    def validate_datatype(self, value: dict[str, Any], varprefix: str) -> None:
+    def validate_datatype(self, value: ListOfMultipleModel, varprefix: str) -> None:
         if not isinstance(value, dict):
             raise MKUserError(varprefix, _("The type must be dict, but is %s") % _type_name(value))
         for ident, val in value.items():
             self._choice_dict[ident].validate_datatype(val, varprefix + "_" + ident)
 
-    def _validate_value(self, value: dict[str, Any], varprefix: str) -> None:
+    def _validate_value(self, value: ListOfMultipleModel, varprefix: str) -> None:
         if not self._allow_empty and not value:
             raise MKUserError(varprefix, _("You must specify at least one element."))
         for ident, val in value.items():

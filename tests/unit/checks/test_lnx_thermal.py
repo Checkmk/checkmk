@@ -27,12 +27,12 @@ thermal_zone5 pkg-temp-0  44000 0 passive 0 passive"""),
 thermal_zone3|-|pch_skylake|45000|115000|critical
 thermal_zone4|-|INT3400 Thermal|20000
 thermal_zone5|-|x86_pkg_temp|48000|0|passive|0|passive
-thermal_zone6|-|B0D4|61000|127000|critical|127000|hot|99000|passive|99000|active|94000|active""",
-        '|')
+thermal_zone6|-|B0D4|61000|127000|critical|127000|hot|99000|passive|99000|active|94000|active
+thermal_zone8|-|sunxi-therm|61|127|critical|127|hot|99|passive|99|active|94|active""", '|')
 ]
 result_discovery = [  # type: ignore
     [('Zone %s' % i, {}) for i in [0, 1, 3, 5]],
-    [('Zone %s' % i, {}) for i in [0, 3, 4, 5, 6]],
+    [('Zone %s' % i, {}) for i in [0, 3, 4, 5, 6, 8]],
 ]
 
 
@@ -57,6 +57,7 @@ result_check = [
         (0, '45.0 °C', [('temp', 45.0, 115.0, 115.0)]),
         (0, '20.0 °C', [('temp', 20.0, None, None)]),
         (0, '48.0 °C', [('temp', 48.0, None, None)]),
+        (0, '61.0 °C', [('temp', 61.0, 99.0, 127.0)]),
         (0, '61.0 °C', [('temp', 61.0, 99.0, 127.0)]),
     ],
 ]

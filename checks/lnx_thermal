@@ -62,26 +62,30 @@ def parse_lnx_thermal(info):
 
 
 def _parse_temp_value_str(line):
-    temperature_factor = 1000.0
-    for temp_idx, trip_point_key_idx, trip_point_value_idx in [
-        (2, 4, 3),
-        (3, 5, 4),
+    for type_idx, temp_idx, trip_point_key_idx, trip_point_value_idx in [
+        (1, 2, 4, 3),  # missing mode
+        (2, 3, 5, 4),
     ]:
         try:
-            temp = int(line[temp_idx]) / temperature_factor  # fixed: true-division
+            unscaled_temp = int(line[temp_idx])
         except (IndexError, ValueError):
             continue
 
+        # From kernel docs (sysfs-api): unit is milli-degrees
+        # but on SunXI the unit is degree (may be a BUG)
+        if line[type_idx] == "sunxi-therm":
+            factor = 1.0
+        else:
+            factor = 1000.0
+
         try:
             trip_point_keys = line[trip_point_key_idx::2]
-            trip_point_values = [
-                int(x) / temperature_factor for x in line[trip_point_value_idx::2]
-            ]  # fixed: true-division
+            trip_point_values = [int(x) / factor for x in line[trip_point_value_idx::2]]
             trip_points = dict(zip(trip_point_keys, trip_point_values))
         except (IndexError, ValueError):
             trip_points = {}
 
-        return temp, trip_points
+        return unscaled_temp / factor, trip_points
 
     return None, None
 

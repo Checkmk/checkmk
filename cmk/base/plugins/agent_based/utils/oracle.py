@@ -15,7 +15,7 @@ class DatafilesException(RuntimeError):
 class OraErrors:
     """
     >>> for line in ([""], ["", "FAILURE","ORA-", "foo"], ["", "FAILURE","ORA-"], ["", "FAILURE"],
-    ... ["", "select"], ["", "ORA-bar"], ["ORA-bar", "some", "data"]):
+    ... ["", "select"], ["", "ORA-bar"], ["ORA-bar", "some", "data"], ["Error", "Message:", "Hello"]):
     ...     [OraErrors(line).ignore,OraErrors(line).has_error,
     ...     OraErrors(line).error_text,OraErrors(line).error_severity]
     [False, False, '', <State.OK: 0>]
@@ -25,6 +25,7 @@ class OraErrors:
     [True, False, '', <State.OK: 0>]
     [False, True, 'Found error in agent output "ORA-bar"', <State.UNKNOWN: 3>]
     [False, True, 'Found error in agent output "ORA-bar some data"', <State.UNKNOWN: 3>]
+    [False, True, 'Found error in agent output "Message: Hello"', <State.UNKNOWN: 3>]
     """
     def __init__(self, line: List[str]):
         # Default values
@@ -65,6 +66,13 @@ class OraErrors:
             self.ignore = True
             return
         if line[1].startswith('ORA-'):
+            self.has_error = True
+            self.error_text = _error_summary_text(" ".join(line[1:]))
+            self.error_severity = state.UNKNOWN
+            return
+
+        # Handle error output from 1.6 solaris agent, see SUP-9521
+        if line[0] == "Error":
             self.has_error = True
             self.error_text = _error_summary_text(" ".join(line[1:]))
             self.error_severity = state.UNKNOWN

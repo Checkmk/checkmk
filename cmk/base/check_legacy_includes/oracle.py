@@ -62,6 +62,10 @@ def oracle_handle_legacy_ora_errors(line):
     if line[0].startswith('ORA-'):
         return (3, 'Found error in agent output "%s"' % ' '.join(line))
 
+    # Handle error output from 1.6 solaris agent, see SUP-9521
+    if line[0] == "Error":
+        return (3, 'Found error in agent output "%s"' % " ".join(line[1:]))
+
 
 # Fully prevent creation of services when an error is found.
 def oracle_handle_ora_errors_discovery(info):

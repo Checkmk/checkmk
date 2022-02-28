@@ -62,6 +62,15 @@ def test_discover_oracle_processes(
             ],
             id="WARN oracle process",
         ),
+        pytest.param(
+            [["Error", "Message:"], ["Error", "Message:"]],
+            "Error",
+            [
+                3,
+                'Found error in agent output "Message:"',
+            ],
+            id="UNKNOWN on error from 1.6 solaris agent plugin output",
+        ),
     ],
 )
 @pytest.mark.usefixtures("config_load_all_checks")

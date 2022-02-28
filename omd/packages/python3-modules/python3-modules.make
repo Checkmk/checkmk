@@ -72,6 +72,8 @@ $(PYTHON3_MODULES_BUILD): $(PYTHON_CACHE_PKG_PROCESS) $(OPENSSL_CACHE_PKG_PROCES
 # These files break the integration tests on the CI server. Don't know exactly
 # why this happens only there, but should be a working fix.
 	$(RM) -r $(PYTHON3_MODULES_INSTALL_DIR)/snmpsim
+# Cleanup unneeded test files of numpy
+	$(RM) -r $(PYTHON3_MODULES_INSTALL_DIR)/lib/python$(PYTHON_MAJOR_DOT_MINOR)/site-packages/numpy/*/tests
 # Fix python interpreter for kept scripts
 	$(SED) -i '1s|^#!.*/python3$$|#!/usr/bin/env python3|' $(PYTHON3_MODULES_INSTALL_DIR)/bin/[!_]*
 # pip is using pip._vendor.distlib.scripts.ScriptMaker._build_shebang() to

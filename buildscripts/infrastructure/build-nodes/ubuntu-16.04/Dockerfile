@@ -71,6 +71,7 @@ RUN apt-get update \
     rpcbind \
     rsync \
     smbclient \
+    silversearcher-ag \
     texinfo \
     tk-dev \
     uuid-dev \

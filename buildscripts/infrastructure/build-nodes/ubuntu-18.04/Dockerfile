@@ -71,6 +71,7 @@ RUN apt-get update \
     patch \
     rpcbind \
     rsync \
+    silversearcher-ag \
     smbclient \
     texinfo \
     tk-dev \

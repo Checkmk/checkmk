@@ -56,6 +56,7 @@ RUN zypper addrepo -G ${ARTIFACT_STORAGE}/repository/sles15 sles15 \
     samba-client \
     sqlite3-devel \
     tar \
+    the_silver_searcher \
     texinfo \
     tk-devel \
     unzip \

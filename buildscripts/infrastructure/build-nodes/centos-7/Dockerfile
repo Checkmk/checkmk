@@ -83,6 +83,7 @@ RUN yum -y makecache \
     samba-client \
     sqlite-devel \
     texinfo \
+    the_silver_searcher \
     tk-devel \
     vim \
     wget \

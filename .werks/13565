@@ -1,0 +1,12 @@
+Title: cmciii_lcp_water: crashed when water flow measurements are missing
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1646084444
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b2
+
+The cmciii_lcp_water check crashed when water flow measurements were missing with the error message "UnboundLocalError: local variable 'unit_lines' referenced before assignment". This has been fixed.

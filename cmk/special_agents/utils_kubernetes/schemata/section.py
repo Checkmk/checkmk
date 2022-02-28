@@ -284,6 +284,13 @@ class FalsyNodeCondition(NodeCondition):
         return self.status == api.NodeConditionStatus.FALSE
 
 
+class FalsyNodeCustomCondition(FalsyNodeCondition):
+    """FalsyNodeCustomCondition mainly come from Node Problem Detector.
+    Its type can be user-defined, hence it being a string."""
+
+    type_: str
+
+
 class NodeConditions(BaseModel):
     """section: k8s_node_conditions_v1"""
 
@@ -292,6 +299,12 @@ class NodeConditions(BaseModel):
     diskpressure: FalsyNodeCondition
     pidpressure: FalsyNodeCondition
     networkunavailable: Optional[FalsyNodeCondition]
+
+
+class NodeCustomConditions(BaseModel):
+    """section: k8s_node_custom_conditions_v1"""
+
+    custom_conditions: Sequence[FalsyNodeCustomCondition]
 
 
 class DeploymentInfo(BaseModel):

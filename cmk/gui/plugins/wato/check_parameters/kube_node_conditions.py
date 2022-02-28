@@ -13,6 +13,7 @@ from cmk.gui.plugins.wato.utils import (
 from cmk.gui.valuespec import Dictionary, MonitoringState
 
 
+# TODO: change valuespec in a way to support user-defined type-to-state mappings
 def _parameter_valuespec():
     return Dictionary(
         elements=[

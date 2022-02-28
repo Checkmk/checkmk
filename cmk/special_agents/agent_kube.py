@@ -649,8 +649,6 @@ class Node(PodOwner):
         if not self.status.conditions:
             return None
 
-        # TODO: separate section for custom conditions and/or conditions added with NPD
-        # http://www.github.com/kubernetes/node-problem-detector
         return section.NodeConditions(
             **{
                 condition.type_.lower(): section.NodeCondition(
@@ -662,6 +660,24 @@ class Node(PodOwner):
                 for condition in self.status.conditions
                 if condition.type_ in NATIVE_NODE_CONDITION_TYPES
             }
+        )
+
+    def custom_conditions(self) -> Optional[section.NodeCustomConditions]:
+        if not self.status.conditions:
+            return None
+
+        return section.NodeCustomConditions(
+            custom_conditions=[
+                section.FalsyNodeCustomCondition(
+                    type_=condition.type_,
+                    status=condition.status,
+                    reason=condition.reason,
+                    detail=condition.detail,
+                    last_transition_time=condition.last_transition_time,
+                )
+                for condition in self.status.conditions
+                if condition.type_ not in NATIVE_NODE_CONDITION_TYPES
+            ]
         )
 
 
@@ -908,6 +924,7 @@ def write_nodes_api_sections(
             "kube_allocatable_cpu_resource_v1": cluster_node.allocatable_cpu_resource,
             "kube_allocatable_memory_resource_v1": cluster_node.allocatable_memory_resource,
             "kube_node_conditions_v1": cluster_node.conditions,
+            "kube_node_custom_conditions_v1": cluster_node.custom_conditions,
         }
         _write_sections(sections)
 

@@ -9,7 +9,7 @@
 
 # Disable unused variable error (needed to keep track of version)
 # shellcheck disable=SC2034
-CMK_VERSION="2.1.0b1"
+CMK_VERSION="2.1.0b2"
 
 # Monitor status of LUNs on HP-UX
 # Put this file into /usr/lib/check_mk_agent/plugins. Then

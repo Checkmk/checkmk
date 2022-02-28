@@ -9,7 +9,7 @@
 
 # Disable unused variable error (needed to keep track of version)
 # shellcheck disable=SC2034
-CMK_VERSION="2.1.0b1"
+CMK_VERSION="2.1.0b2"
 
 # This plugin allows to execute mrpe, local and plugin skripts with a different user context
 # It is configured with in the file $MK_CONFDIR/runas.cfg

@@ -2475,12 +2475,12 @@ class Checkbox(ValueSpec[bool]):
             )
 
 
-DropdownChoiceValue = Any  # TODO: Can we be more specific?
-DropdownChoiceEntry = tuple[DropdownChoiceValue, str]
+DropdownChoiceModel = Any  # TODO: Can we be more specific?
+DropdownChoiceEntry = tuple[DropdownChoiceModel, str]
 DropdownChoices = Promise[list[DropdownChoiceEntry]]
 
 
-class DropdownChoice(ValueSpec):
+class DropdownChoice(ValueSpec[DropdownChoiceModel]):
     """A type-safe dropdown choice
 
     Parameters:
@@ -2515,9 +2515,9 @@ class DropdownChoice(ValueSpec):
         # ValueSpec
         title: _Optional[str] = None,
         help: _Optional[ValueSpecHelp] = None,
-        default_value: ValueSpecDefault[DropdownChoiceValue] = DEF_VALUE,
-        validate: _Optional[ValueSpecValidateFunc[DropdownChoiceValue]] = None,
-        deprecated_choices: Sequence[DropdownChoiceValue] = (),
+        default_value: ValueSpecDefault[DropdownChoiceModel] = DEF_VALUE,
+        validate: _Optional[ValueSpecValidateFunc[DropdownChoiceModel]] = None,
+        deprecated_choices: Sequence[DropdownChoiceModel] = (),
     ):
 
         super().__init__(
@@ -2573,13 +2573,13 @@ class DropdownChoice(ValueSpec):
             return [(self._no_preselect_value, self._no_preselect_title)] + result
         return result
 
-    def canonical_value(self) -> DropdownChoiceValue:
+    def canonical_value(self) -> _Optional[DropdownChoiceModel]:
         choices = self.choices()
         if len(choices) > 0:
             return choices[0][0]
         return None
 
-    def render_input(self, varprefix: str, value: DropdownChoiceValue) -> None:
+    def render_input(self, varprefix: str, value: DropdownChoiceModel) -> None:
         if self._label:
             html.span(self._label, class_="vs_floating_text")
 
@@ -2627,7 +2627,7 @@ class DropdownChoice(ValueSpec):
             **self._html_attrs,
         )
 
-    def validate_datatype(self, value: Any, varprefix: str) -> None:
+    def validate_datatype(self, value: DropdownChoiceModel, varprefix: str) -> None:
         if (
             any(isinstance(value, type(choice[0])) for choice in self.choices())
             or value in self._deprecated_choices
@@ -2639,12 +2639,12 @@ class DropdownChoice(ValueSpec):
             % (value, _type_name(value)),
         )
 
-    def _get_invalid_choice_text(self, tmpl: str, value: DropdownChoiceValue) -> str:
+    def _get_invalid_choice_text(self, tmpl: str, value: DropdownChoiceModel) -> str:
         if "%s" in tmpl or "%r" in tmpl:
             return tmpl % (value,)
         return tmpl
 
-    def value_to_html(self, value: DropdownChoiceValue) -> ValueSpecText:
+    def value_to_html(self, value: DropdownChoiceModel) -> ValueSpecText:
         for val, title in self.choices():
             if value == val:
                 if self._help_separator:
@@ -2652,13 +2652,13 @@ class DropdownChoice(ValueSpec):
                 return title
         return self._get_invalid_choice_text(self._invalid_choice_title, value)
 
-    def value_to_json(self, value: DropdownChoiceValue) -> JSONValue:
+    def value_to_json(self, value: DropdownChoiceModel) -> JSONValue:
         return value
 
-    def value_from_json(self, json_value: JSONValue) -> DropdownChoiceValue:
+    def value_from_json(self, json_value: JSONValue) -> DropdownChoiceModel:
         return json_value
 
-    def from_html_vars(self, varprefix: str) -> DropdownChoiceValue:
+    def from_html_vars(self, varprefix: str) -> DropdownChoiceModel:
         choices = self.choices()
 
         for val, _title in choices:
@@ -2674,25 +2674,25 @@ class DropdownChoice(ValueSpec):
             self._get_invalid_choice_text(self._invalid_choice_error, request.var(varprefix)),
         )
 
-    def _is_selected_option_from_html(self, varprefix: str, val: DropdownChoiceValue) -> bool:
+    def _is_selected_option_from_html(self, varprefix: str, val: DropdownChoiceModel) -> bool:
         selected_value = request.var(varprefix)
         return selected_value == self._option_for_html(val)
 
-    def _option_for_html(self, value: DropdownChoiceValue) -> DropdownChoiceValue:
+    def _option_for_html(self, value: DropdownChoiceModel) -> DropdownChoiceModel:
         if self._encode_value:
             return self.option_id(value)
         return value
 
     def _options_for_html(
         self, orig_options: list[DropdownChoiceEntry]
-    ) -> list[tuple[DropdownChoiceValue, str]]:
+    ) -> list[tuple[DropdownChoiceModel, str]]:
         return [(self._option_for_html(val), title) for val, title in orig_options]
 
     @staticmethod
     def option_id(val) -> str:
         return "%s" % hashlib.sha256(repr(val).encode()).hexdigest()
 
-    def _validate_value(self, value: DropdownChoiceValue, varprefix: str) -> None:
+    def _validate_value(self, value: DropdownChoiceModel, varprefix: str) -> None:
         if self._no_preselect and value == self._no_preselect_value:
             raise MKUserError(varprefix, self._no_preselect_error)
 
@@ -2701,7 +2701,7 @@ class DropdownChoice(ValueSpec):
                 raise MKUserError(varprefix, self._invalid_choice_error)
             raise MKUserError(varprefix, self._empty_text)
 
-    def _value_is_invalid(self, value: DropdownChoiceValue) -> bool:
+    def _value_is_invalid(self, value: DropdownChoiceModel) -> bool:
         return all(value != val for val, _title in self.choices())
 
 
@@ -2861,10 +2861,10 @@ class DropdownChoiceWithHostAndServiceHints(AjaxDropdownChoice):
         self._css_spec = css_spec
         self._hint_label = hint_label
 
-    def _choices_from_value(self, value: DropdownChoiceValue) -> Choices:
+    def _choices_from_value(self, value: DropdownChoiceModel) -> Choices:
         raise NotImplementedError()
 
-    def render_input(self, varprefix: str, value: DropdownChoiceValue) -> None:
+    def render_input(self, varprefix: str, value: DropdownChoiceModel) -> None:
         if self._label:
             html.span(self._label, class_="vs_floating_text")
 
@@ -3741,8 +3741,8 @@ class OptionalDropdownChoice(DropdownChoice):
         # ValueSpec
         title: _Optional[str] = None,
         help: _Optional[ValueSpecHelp] = None,
-        default_value: ValueSpecDefault[DropdownChoiceValue] = DEF_VALUE,
-        validate: _Optional[ValueSpecValidateFunc[DropdownChoiceValue]] = None,
+        default_value: ValueSpecDefault[DropdownChoiceModel] = DEF_VALUE,
+        validate: _Optional[ValueSpecValidateFunc[DropdownChoiceModel]] = None,
     ):
         super().__init__(
             choices=choices,

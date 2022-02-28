@@ -72,7 +72,7 @@ from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.valuespec import (
     DEF_VALUE,
     DropdownChoice,
-    DropdownChoiceValue,
+    DropdownChoiceModel,
     TextInput,
     ValueSpec,
     ValueSpecDefault,
@@ -364,7 +364,7 @@ class UserSelection(DropdownChoice):
         # ValueSpec
         title: Optional[str] = None,
         help: Optional[ValueSpecHelp] = None,
-        default_value: ValueSpecDefault[DropdownChoiceValue] = DEF_VALUE,
+        default_value: ValueSpecDefault[DropdownChoiceModel] = DEF_VALUE,
     ) -> None:
         DropdownChoice.__init__(
             self,

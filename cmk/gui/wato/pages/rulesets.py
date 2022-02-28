@@ -78,7 +78,7 @@ from cmk.gui.valuespec import (
     Checkbox,
     Dictionary,
     DropdownChoice,
-    DropdownChoiceValue,
+    DropdownChoiceModel,
     FixedValue,
     ListChoice,
     ListOfStrings,
@@ -1747,7 +1747,7 @@ class ABCEditRuleMode(WatoMode):
         self._ruleset.valuespec().validate_value(value, "ve")
         self._rule.value = value
 
-    def _get_condition_type_from_vars(self) -> DropdownChoiceValue:
+    def _get_condition_type_from_vars(self) -> DropdownChoiceModel:
         condition_type = self._vs_condition_type().from_html_vars("condition_type")
         self._vs_condition_type().validate_value(condition_type, "condition_type")
         return condition_type

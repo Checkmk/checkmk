@@ -12,10 +12,9 @@ description:
  A container is considered faulty, if it is waiting for a reason other than ContainerCreating or
  if it has terminated with a non-zero exit code.
 
- Moreover, the check provides the age of the status. If a pod remains in an undesired status for
- longer than 5/10 minutes the service goes {WARN}/{CRIT}. This can be configured via the rule
- Kubernetes pod status. Note, the age of the status depends on the time the status was first
- seen by checkmk, not on data provided by the Kubernetes API.
+ If a pod does not achieve the status Running or Succeeced for longer than 5/10 minutes the service
+ goes {WARN}/{CRIT}. This can be configured via the rule Kubernetes pod status. Note, the timer
+ begins with the first time a status is seen by checkmk, not on data provided by the Kubernetes API.
 
  The check requires that the special agent kube is configured.
 discovery:

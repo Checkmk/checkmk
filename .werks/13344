@@ -1,0 +1,15 @@
+Title: KUBE: kube_pod_status updated rule set
+Class: feature
+Compatible: incomp
+Component: checks
+Date: 1646582185
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.1.0b2
+
+The status of a pod with an erronous container will often change. This happens even if there is
+no meaningful change in the underlying problem. Previously, the kube_pod_status check would alert
+if a specific status would persist for too long. However, changes of status would reset the
+corresponding timer. The new rule set allows configuring a timer for a group of statuses.

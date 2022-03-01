@@ -30,6 +30,22 @@ from cmk.gui.watolib.users import delete_users, edit_users
 TIMESTAMP_RANGE = Tuple[float, float]
 
 
+class ApiInterfaceAttributes(TypedDict, total=False):
+    interface_theme: Literal["default", "dark", "light"]
+    sidebar_position: Literal["left", "right"]
+    navigation_bar_icons: Literal["show", "hide"]
+    mega_menu_icons: Literal["topic", "entry"]
+    show_mode: Literal["default", "default_show_less", "default_show_more", "enforce_show_more"]
+
+
+class InternalInterfaceAttributes(TypedDict, total=False):
+    ui_theme: Optional[Literal["modern-dark", "facelift"]]
+    ui_sidebar_position: Optional[Literal["left"]]
+    nav_hide_icons_title: Optional[Literal["hide"]]
+    icons_per_item: Optional[Literal["entry"]]
+    show_mode: Optional[Literal["default_show_less", "default_show_more", "enforce_show_more"]]
+
+
 @Endpoint(
     constructors.object_href("user_config", "{username}"),
     "cmk/show",
@@ -84,11 +100,6 @@ def create_user(params):
 
     # The interface options must be set for a new user but we restrict the setting through the API
     internal_attrs: Dict[str, Any] = {
-        "ui_theme": None,
-        "ui_sidebar_position": None,
-        "nav_hide_icons_title": None,
-        "icons_per_item": None,
-        "show_mode": None,
         "start_url": None,
         "force_authuser": False,
     }
@@ -186,6 +197,7 @@ def _api_to_internal_format(internal_attrs, api_configurations, new_user=False):
             "auth_option",
             "idle_timeout",
             "disable_notifications",
+            "interface_options",
         ):
             continue
         internal_attrs[attr] = value
@@ -195,6 +207,9 @@ def _api_to_internal_format(internal_attrs, api_configurations, new_user=False):
             internal_attrs, api_configurations["customer"], remove_provider=True
         )
 
+    internal_attrs.update(
+        _interface_options_to_internal_format(api_configurations.get("interface_options", {}))
+    )
     internal_attrs.update(
         _contact_options_to_internal_format(
             api_configurations.get("contact_options"), internal_attrs.get("email")
@@ -215,6 +230,22 @@ def _internal_to_api_format(internal_attrs: UserSpec) -> dict[str, Any]:
     api_attrs.update(_idle_options_to_api_format(internal_attrs))
     api_attrs.update(_auth_options_to_api_format(internal_attrs))
     api_attrs.update(_notification_options_to_api_format(internal_attrs))
+    interface_options = _interface_options_to_api_format(
+        {  # type: ignore
+            k: v
+            for k, v in internal_attrs.items()
+            if k
+            in [
+                "ui_theme",
+                "ui_sidebar_position",
+                "nav_hide_icons_title",
+                "icons_per_item",
+                "show_mode",
+            ]
+        }
+    )
+    if interface_options:
+        api_attrs["interface_options"] = interface_options
 
     if "email" in internal_attrs:
         api_attrs.update(_contact_options_to_api_format(internal_attrs))
@@ -429,6 +460,73 @@ def _update_idle_options(internal_attrs, idle_details: IdleDetails):
     else:  # global configuration, only for update
         internal_attrs.pop("idle_timeout", None)
     return internal_attrs
+
+
+def _interface_options_to_internal_format(
+    api_interface_options: ApiInterfaceAttributes,
+) -> InternalInterfaceAttributes:
+    internal_inteface_options = InternalInterfaceAttributes()
+    if theme := api_interface_options.get("interface_theme"):
+        internal_inteface_options["ui_theme"] = {
+            "default": None,
+            "dark": "modern-dark",
+            "light": "facelift",
+        }[theme]
+    if sidebar_position := api_interface_options.get("sidebar_position"):
+        internal_inteface_options["ui_sidebar_position"] = {"right": None, "left": "left"}[
+            sidebar_position
+        ]
+    if show_icon_titles := api_interface_options.get("navigation_bar_icons"):
+        internal_inteface_options["nav_hide_icons_title"] = {"show": None, "hide": "hide"}[
+            show_icon_titles
+        ]
+    if mega_menu_icons := api_interface_options.get("mega_menu_icons"):
+        internal_inteface_options["icons_per_item"] = {"topic": None, "entry": "entry"}[
+            mega_menu_icons
+        ]
+    if show_mode := api_interface_options.get("show_mode"):
+        internal_inteface_options["show_mode"] = {
+            "default": None,
+            "default_show_less": "default_show_less",
+            "default_show_more": "default_show_more",
+            "enforce_show_more": "enforce_show_more",
+        }[show_mode]
+    return internal_inteface_options
+
+
+def _interface_options_to_api_format(
+    internal_interface_options: InternalInterfaceAttributes,
+) -> ApiInterfaceAttributes:
+    attributes = ApiInterfaceAttributes()
+    if "ui_sidebar_position" not in internal_interface_options:
+        attributes["sidebar_position"] = "right"
+    else:
+        attributes["sidebar_position"] = "left"
+
+    if "nav_hide_icons_title" in internal_interface_options:
+        attributes["navigation_bar_icons"] = (
+            "show" if internal_interface_options["nav_hide_icons_title"] is None else "hide"
+        )
+
+    if "icons_per_item" in internal_interface_options:
+        attributes["mega_menu_icons"] = (
+            "topic" if internal_interface_options["icons_per_item"] is None else "entry"
+        )
+
+    if "show_mode" in internal_interface_options:
+        attributes["show_mode"] = (
+            "default"
+            if internal_interface_options["show_mode"] is None
+            else internal_interface_options["show_mode"]
+        )
+
+    if "ui_theme" not in internal_interface_options:
+        attributes["interface_theme"] = "default"
+    else:
+        attributes["interface_theme"] = {"modern-dark": "dark", "facelift": "light"}[
+            internal_interface_options["ui_theme"]  # type: ignore
+        ]
+    return attributes
 
 
 def _load_user(username: UserId) -> UserSpec:

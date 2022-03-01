@@ -1,0 +1,18 @@
+Title: API: addition of option to configure interface related attributes for user endpoints
+Class: feature
+Compatible: compat
+Component: rest-api
+Date: 1646224623
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.1.0b3
+
+This werk introduces the possibility to configure interface related attributes
+for the user during the creation and update process. The options are described
+under the following endpoints:
+    * Create an user
+    * Edit an user
+
+The options are set by default for the create endpoint.

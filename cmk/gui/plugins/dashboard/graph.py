@@ -191,6 +191,8 @@ class GraphDashlet(Dashlet):
             raise
         except livestatus.MKLivestatusNotFoundError:
             raise make_mk_missing_data_error()
+        except MKUserError as e:
+            raise MKGeneralException(_("Failed to calculate a graph recipe. (%s)") % str(e))
         except Exception:
             raise MKGeneralException(_("Failed to calculate a graph recipe."))
 

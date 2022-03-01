@@ -32,7 +32,7 @@ import time
 import livestatus
 
 # These variable will be substituted at 'make dist' time
-__version__ = "1.6.0p28"
+__version__ = "1.6.0p29"
 
 
 def dump_templates():

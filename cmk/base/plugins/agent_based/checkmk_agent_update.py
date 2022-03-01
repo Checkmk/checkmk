@@ -19,17 +19,12 @@ def discover_cmk_agent_update(section: Section) -> DiscoveryResult:
         yield Service()
 
 
-def _get_error_result(raw_string: str, params: Mapping[str, Any]) -> CheckResult:
-    if "error" not in raw_string:
-        return
-
-    error = raw_string.split("error", 1)[1].strip()
-
+def _get_error_result(error: str, params: Mapping[str, Any]) -> CheckResult:
     # Sometimes we get duplicate output. Until we find out why, fix the error message:
     if "last_check" in error and "last_update" in error and "error" in error:
         error = error.split("error", 1)[1].strip()
 
-    if error == "None":
+    if error == "None" or not error:
         return
 
     default_state = State.WARN
@@ -46,9 +41,13 @@ def check_cmk_agent_update(params: Mapping[str, Any], section: Section) -> Check
     if not (raw_string := section.get("agentupdate")):
         return
 
-    yield from _get_error_result(raw_string, params)
+    if "error" in raw_string:
+        non_error_part, error = raw_string.split("error", 1)
+        yield from _get_error_result(error.strip(), params)
+    else:
+        non_error_part = raw_string
 
-    parts = iter(raw_string.split("error", 1)[0].split())
+    parts = iter(non_error_part.split())
     parsed = {k: v for k, v in zip(parts, parts) if v != "None"}
 
     try:

@@ -1,0 +1,23 @@
+Title: proxmox backup time calculation
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1648142392
+Edition: cee
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b5
+
+Fix proxmox backup time calculation
+
+CMK-9277
+
+The proxmox backup time now shows the timezone also.
+
+This helps with handling correctly cases
+where the CMK server is not in the same timezone
+as proxmox server.
+The backup start time is now displayed in proxmox
+server timezone. This avoids a user confusion
+between the age of the backup and backup start time.

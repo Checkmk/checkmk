@@ -2507,7 +2507,6 @@ class DropdownChoice(ValueSpec[DropdownChoiceModel]):
         invalid_choice_error: _Optional[str] = None,
         no_preselect: bool = False,
         no_preselect_title: str = "",
-        no_preselect_error: _Optional[str] = None,
         on_change: _Optional[str] = None,
         read_only: bool = False,
         encode_value: bool = True,
@@ -2551,9 +2550,6 @@ class DropdownChoice(ValueSpec[DropdownChoiceModel]):
         )
         self._no_preselect = no_preselect
         self._no_preselect_title = no_preselect_title
-        self._no_preselect_error = (
-            no_preselect_error if no_preselect_error is not None else _("Please make a selection")
-        )
         self._on_change = on_change
         self._read_only = read_only
         self._encode_value = encode_value
@@ -2689,7 +2685,7 @@ class DropdownChoice(ValueSpec[DropdownChoiceModel]):
 
     def _validate_value(self, value: DropdownChoiceModel, varprefix: str) -> None:
         if self._no_preselect and value is None:
-            raise MKUserError(varprefix, self._no_preselect_error)
+            raise MKUserError(varprefix, _("Please make a selection"))
 
         if self._invalid_choice == "complain" and self._value_is_invalid(value):
             if value is not None:
@@ -2973,7 +2969,6 @@ class CascadingDropdown(ValueSpec[CascadingDropdownChoiceValue]):
         no_elements_text: _Optional[str] = None,
         no_preselect: bool = False,
         no_preselect_title: str = "",
-        no_preselect_error: _Optional[str] = None,
         render_sub_vs_page_name: _Optional[str] = None,
         render_sub_vs_request_vars: _Optional[dict] = None,
         # ValueSpec
@@ -3004,9 +2999,6 @@ class CascadingDropdown(ValueSpec[CascadingDropdownChoiceValue]):
 
         self._no_preselect = no_preselect
         self._no_preselect_title = no_preselect_title  # if not preselected
-        self._no_preselect_error = (
-            no_preselect_error if no_preselect_error is not None else _("Please make a selection")
-        )
         self._preselected = (
             _normalize_choices([(None, self._no_preselect_title)]) if self._no_preselect else []
         )
@@ -3307,7 +3299,7 @@ class CascadingDropdown(ValueSpec[CascadingDropdownChoiceValue]):
 
     def _validate_value(self, value: CascadingDropdownChoiceValue, varprefix: str) -> None:
         if self._no_preselect and value is None:
-            raise MKUserError(varprefix + "_sel", self._no_preselect_error)
+            raise MKUserError(varprefix + "_sel", _("Please make a selection"))
 
         choices = self.choices()
         for nr, (val, _title, vs) in enumerate(choices):
@@ -3724,7 +3716,6 @@ class OptionalDropdownChoice(DropdownChoice):
         invalid_choice_error: _Optional[str] = None,
         no_preselect: bool = False,
         no_preselect_title: str = "",
-        no_preselect_error: _Optional[str] = None,
         on_change: _Optional[str] = None,
         read_only: bool = False,
         encode_value: bool = True,
@@ -3746,7 +3737,6 @@ class OptionalDropdownChoice(DropdownChoice):
             invalid_choice_error=invalid_choice_error,
             no_preselect=no_preselect,
             no_preselect_title=no_preselect_title,
-            no_preselect_error=no_preselect_error,
             on_change=on_change,
             read_only=read_only,
             encode_value=encode_value,
@@ -4403,7 +4393,6 @@ class Timerange(CascadingDropdown):
         no_elements_text: _Optional[str] = None,
         no_preselect: bool = False,
         no_preselect_title: str = "",
-        no_preselect_error: _Optional[str] = None,
         render_sub_vs_page_name: _Optional[str] = None,
         render_sub_vs_request_vars: _Optional[dict] = None,
         # ValueSpec
@@ -4422,7 +4411,6 @@ class Timerange(CascadingDropdown):
             no_elements_text=no_elements_text,
             no_preselect=no_preselect,
             no_preselect_title=no_preselect_title,
-            no_preselect_error=no_preselect_error,
             render_sub_vs_page_name=render_sub_vs_page_name,
             render_sub_vs_request_vars=render_sub_vs_request_vars,
             title=title,

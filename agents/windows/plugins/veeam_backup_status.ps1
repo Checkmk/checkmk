@@ -49,9 +49,16 @@ foreach ($tapeJob in $tapeJobs)
     }
 
 
-$myCdpJobsText = "<<<veeam_cdp_jobs:sep(124)>>>`n"
-
+try {
 $cdpjobs = Get-VBRCDPPolicy | select-Object Name,NextRun,PolicyState
+}
+catch {
+write-host "CDP jobs not supported"
+$cdpjobs = $false
+}
+
+if ( $cdpjobs ) {
+$myCdpJobsText = "<<<veeam_cdp_jobs:sep(124)>>>`n"
 
 foreach ($mycdpjobs in $cdpjobs)
 	{
@@ -66,6 +73,7 @@ foreach ($mycdpjobs in $cdpjobs)
 	}
 
 write-host $myCdpJobsText
+}
 
 $myJobsText = "<<<veeam_jobs:sep(9)>>>`n"
 $myTaskText = ""

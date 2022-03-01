@@ -86,7 +86,7 @@ def check_kube_replicas(
     section_kube_deployment_strategy: Optional[DeploymentStrategy],
 ) -> CheckResult:
 
-    if section_kube_replicas is None or section_kube_replicas.replicas is None:
+    if section_kube_replicas is None:
         return
 
     yield Result(

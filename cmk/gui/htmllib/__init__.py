@@ -26,7 +26,6 @@ import json
 # - change naming of escaping.escape_attribute() to html.render()
 #
 # - Unify CSS classes attribute to "class_"
-import os
 import pprint
 import re
 from pathlib import Path
@@ -51,7 +50,15 @@ from cmk.gui.page_menu import (
     PageMenuRenderer,
 )
 from cmk.gui.page_state import PageState, PageStateRenderer
-from cmk.gui.type_defs import Choice, ChoiceGroup, ChoiceText, CSSSpec, GroupedChoices, Icon
+from cmk.gui.type_defs import (
+    Choice,
+    ChoiceGroup,
+    ChoiceId,
+    ChoiceText,
+    CSSSpec,
+    GroupedChoices,
+    Icon,
+)
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.mobile import is_mobile
 from cmk.gui.utils.popups import PopupMethod
@@ -73,7 +80,6 @@ if TYPE_CHECKING:
     from cmk.gui.valuespec import ValueSpec
 
 HTMLMessageInput = Union[HTML, str]
-DefaultChoice = str
 
 # .
 #   .--HTML Generator------------------------------------------------------.
@@ -1782,7 +1788,7 @@ class html(ABCHTMLGenerator):
         varname: str,
         choices: Union[Iterable[Choice], Iterable[ChoiceGroup]],
         locked_choice: Optional[ChoiceText] = None,
-        deflt: DefaultChoice = "",
+        deflt: ChoiceId = "",
         ordered: bool = False,
         label: Optional[str] = None,
         class_: CSSSpec = None,

@@ -78,7 +78,7 @@ from cmk.gui.htmllib.foldable_container import foldable_container
 from cmk.gui.http import UploadedFile
 from cmk.gui.i18n import _
 from cmk.gui.pages import AjaxPage, AjaxPageResult, page_registry
-from cmk.gui.type_defs import ChoiceGroup, Choices, ChoiceText, GroupedChoices
+from cmk.gui.type_defs import ChoiceGroup, ChoiceId, Choices, ChoiceText, GroupedChoices
 from cmk.gui.utils.escaping import escape_html_permissive
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.labels import (
@@ -2667,14 +2667,12 @@ class DropdownChoice(ValueSpec[DropdownChoiceModel]):
         selected_value = request.var(varprefix)
         return selected_value == self._option_for_html(val)
 
-    def _option_for_html(self, value: DropdownChoiceModel) -> DropdownChoiceModel:
+    def _option_for_html(self, value: DropdownChoiceModel) -> ChoiceId:
         if self._encode_value:
             return self.option_id(value)
         return value
 
-    def _options_for_html(
-        self, orig_options: DropdownChoiceEntries
-    ) -> list[tuple[DropdownChoiceModel, str]]:
+    def _options_for_html(self, orig_options: DropdownChoiceEntries) -> Choices:
         return [(self._option_for_html(val), title) for val, title in orig_options]
 
     @staticmethod

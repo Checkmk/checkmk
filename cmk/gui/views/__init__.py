@@ -1762,6 +1762,7 @@ def view_editor_column_spec(ident, title, ds_name):
                 title=_("Column"),
                 choices=painter_choices_with_params(_painters),
                 no_preselect=True,
+                no_preselect_title="",
                 render_sub_vs_page_name="ajax_cascading_render_painer_parameters",
                 render_sub_vs_request_vars={
                     "ds_name": ds_name,
@@ -1916,6 +1917,7 @@ def view_editor_sorter_specs(view: ViewSpec) -> _Tuple[str, Dictionary]:
                                     choices=list(_sorter_choices(view)),
                                     sorted=True,
                                     no_preselect=True,
+                                    no_preselect_title="",
                                 ),
                                 DropdownChoice(
                                     title=_("Order"),

@@ -75,6 +75,7 @@ class ModeIcons(WatoMode):
                         title=_("Category"),
                         choices=config.wato_icon_categories,
                         no_preselect=True,
+                        no_preselect_title="",
                     ),
                 ),
             ],

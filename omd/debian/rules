@@ -114,7 +114,8 @@ binary-arch:
 #	dh_undocumented
 	dh_installman
 	dh_link
-	dh_strip --exclude=wkhtmltopdf --exclude=cmc --exclude=waitmax --exclude agent_modbus
+# Is done by "omd/strip_binaries" script for all package types just like dh_strip would do
+#	dh_strip --exclude=wkhtmltopdf --exclude=cmc --exclude=waitmax --exclude agent_modbus
 	dh_compress
 	dh_fixperms
 #	dh_perl

@@ -71,6 +71,7 @@ PACKAGES += enterprise
 PACKAGES += plus
 endif
 
+PIPENV := ../scripts/run-pipenv
 BUILD_TARGET_VARS := $(call package_target_prefix,$(PACKAGES))
 INSTALL_TARGETS := $(foreach package,$(addsuffix _INSTALL,$(BUILD_TARGET_VARS)),$($(package)))
 INSTALL_LOG_TARGETS := $(foreach package,$(INSTALL_TARGETS),$(addsuffix -log,$(package)))
@@ -125,6 +126,7 @@ BOM := bill-of-materials.json
 
 # Called while building the .rpm/.deb packages
 install: $(INSTALL_GLOBAL)
+	$(PIPENV) run ./strip_binaries --exclude cmc --exclude waitmax --exclude agent_modbus $(DESTDIR)$(OMD_ROOT)/
 
 # Called by our release system to build appliance packages
 cma: $(CMA_PACKAGE)

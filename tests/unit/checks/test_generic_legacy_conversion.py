@@ -783,7 +783,6 @@ def test_all_check_variables_present(fix_plugin_legacy):
         "route_type_mapping",
         "rstcli_states",
         "ruckus_spot_ap_bands",
-        "ruckus_spot_ap_default_levels",
         "safenet_hsm_default_levels",
         "safenet_hsm_events_default_levels",
         "sansymphony_alerts_default_values",

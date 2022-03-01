@@ -45,12 +45,8 @@ def _get_check_function(plugin):
 
 def test_discovery(discover_ruckus_spot_ap) -> None:
     assert [*discover_ruckus_spot_ap(SECTION)] == [
-        Service(
-            item="2.4 GHz", parameters={"auto-migration-wrapper-key": ((None, None), (None, None))}
-        ),
-        Service(
-            item="5 GHz", parameters={"auto-migration-wrapper-key": ((None, None), (None, None))}
-        ),
+        Service(item="2.4 GHz"),
+        Service(item="5 GHz"),
     ]
 
 
@@ -59,7 +55,7 @@ def test_check_no_data(check_ruckus_spot_ap) -> None:
 
 
 def test_check(check_ruckus_spot_ap) -> None:
-    params = {"auto-migration-wrapper-key": ((0, 1), (2, 3))}
+    params = {"levels_drifted": (0, 1), "levels_not_responding": (2, 3)}
     assert [*check_ruckus_spot_ap("5 GHz", params, SECTION)] == [
         Result(state=State.OK, summary="Devices: 2"),
         Metric("ap_devices_total", 2.0),

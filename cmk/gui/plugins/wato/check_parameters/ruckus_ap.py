@@ -3,6 +3,7 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from typing import Union
 
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import (
@@ -10,7 +11,15 @@ from cmk.gui.plugins.wato.utils import (
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
 )
-from cmk.gui.valuespec import Integer, Optional, TextInput, Tuple
+from cmk.gui.valuespec import (
+    Alternative,
+    Dictionary,
+    FixedValue,
+    Integer,
+    TextInput,
+    Transform,
+    Tuple,
+)
 
 
 def _item_spec_ruckus_ap():
@@ -20,34 +29,79 @@ def _item_spec_ruckus_ap():
     )
 
 
+def _transform_forth(params: Union[tuple, dict]) -> dict:
+    if isinstance(params, dict):
+        return params
+    drifted, not_responding = params
+    return {
+        "levels_drifted": None if drifted == (None, None) else drifted,
+        "levels_not_responding": None if not_responding == (None, None) else not_responding,
+    }
+
+
 def _parameter_valuespec_ruckus_ap():
-    return Tuple(
-        elements=[
-            Optional(
-                Tuple(
-                    elements=[
-                        Integer(title=_("Warning at"), default_value=1, unit=_("devices")),
-                        Integer(title=_("Critical at"), default_value=1, unit=_("devices")),
-                    ],
+    return Transform(
+        Dictionary(
+            elements=[
+                (
+                    "levels_drifted",
+                    Alternative(
+                        title=_("Upper levels for drifted access points"),
+                        elements=[
+                            FixedValue(
+                                title=_("Do not impose levels"),
+                                value=None,
+                                totext="no levels (always OK)",
+                            ),
+                            Tuple(
+                                elements=[
+                                    Integer(
+                                        title=_("Warning at"),
+                                        default_value=1,
+                                        unit=_("devices"),
+                                    ),
+                                    Integer(
+                                        title=_("Critical at"),
+                                        default_value=1,
+                                        unit=_("devices"),
+                                    ),
+                                ],
+                                title=_("Upper levels"),
+                            ),
+                        ],
+                    ),
                 ),
-                sameline=True,
-                label=_("Levels for <i>device time drifted</i>"),
-                none_label=_("No levels set"),
-                none_value=(None, None),
-            ),
-            Optional(
-                Tuple(
-                    elements=[
-                        Integer(title=_("Warning at"), default_value=1, unit=_("devices")),
-                        Integer(title=_("Critical at"), default_value=1, unit=_("devices")),
-                    ],
+                (
+                    "levels_not_responding",
+                    Alternative(
+                        title=_("Upper levels for unresponsive access points"),
+                        elements=[
+                            FixedValue(
+                                title=_("Do not impose levels"),
+                                value=None,
+                                totext="no levels (always OK)",
+                            ),
+                            Tuple(
+                                elements=[
+                                    Integer(
+                                        title=_("Warning at"),
+                                        default_value=1,
+                                        unit=_("devices"),
+                                    ),
+                                    Integer(
+                                        title=_("Critical at"),
+                                        default_value=1,
+                                        unit=_("devices"),
+                                    ),
+                                ],
+                                title=_("Upper levels"),
+                            ),
+                        ],
+                    ),
                 ),
-                sameline=True,
-                label=_("Levels for <i>device not responding</i>"),
-                none_label=_("No levels set"),
-                none_value=(None, None),
-            ),
-        ],
+            ]
+        ),
+        forth=_transform_forth,
     )
 
 

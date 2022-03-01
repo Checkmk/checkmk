@@ -525,7 +525,6 @@ class ErrorReporter:
         ("check", "raritan_pdu_outletcount", "checkgroup_parameters:plug_count"),
         ("check", "rds_licenses", "checkgroup_parameters:rds_licenses"),
         ("check", "redis_info_persistence", "checkgroup_parameters:redis_info_persistence"),
-        ("check", "ruckus_spot_ap", "checkgroup_parameters:ruckus_ap"),
         ("check", "safenet_ntls_clients", "checkgroup_parameters:safenet_ntls_clients"),
         ("check", "safenet_ntls_links", "checkgroup_parameters:safenet_ntls_links"),
         ("check", "sansymphony_alerts", "checkgroup_parameters:sansymphony_alerts"),

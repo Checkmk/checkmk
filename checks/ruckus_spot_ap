@@ -8,7 +8,8 @@ ruckus_spot_ap_bands = {
     "1": "2.4 GHz",
     "2": "5 GHz",
 }
-ruckus_spot_ap_default_levels = ((None, None), (None, None))
+
+factory_settings["ruckus_spot_ap"] = {}
 
 
 def parse_ruckus_spot_ap(info):
@@ -28,7 +29,7 @@ def parse_ruckus_spot_ap(info):
 def inventory_ruckus_spot_ap(parsed):
     for band in parsed:
         if band in ruckus_spot_ap_bands:
-            yield ruckus_spot_ap_bands[band], "ruckus_spot_ap_default_levels"
+            yield ruckus_spot_ap_bands[band], {}
 
 
 def check_ruckus_spot_ap(item, params, parsed):
@@ -40,9 +41,9 @@ def check_ruckus_spot_ap(item, params, parsed):
     dev_count = len(band)
     yield 0, f"Devices: {dev_count}", [("ap_devices_total", dev_count)]
 
-    for what, ap_state, levels in [
-        ("drifted", 2, params[0]),
-        ("not responding", 0, params[1]),
+    for what, ap_state, key in [
+        ("drifted", 2, "levels_drifted"),
+        ("not responding", 0, "levels_not_responding"),
     ]:
         problems = len([x for x in band if x[1] == ap_state])
 
@@ -50,7 +51,7 @@ def check_ruckus_spot_ap(item, params, parsed):
         state, text, metric = check_levels(
             problems,
             "ap_devices_%s" % what.replace(" ", "_"),
-            levels,
+            params.get(key),
             human_readable_func=lambda x: str(int(x)),
             infoname=what.capitalize(),
         )
@@ -64,6 +65,7 @@ check_info["ruckus_spot_ap"] = {
     "inventory_function": inventory_ruckus_spot_ap,
     "check_function": check_ruckus_spot_ap,
     "service_description": "Ruckus Spot Access Points %s",
+    "default_levels_variable": "ruckus_spot_ap",
     "group": "ruckus_ap",
     "has_perfdata": True,
 }

@@ -32,6 +32,8 @@ ntp_default_levels = (10, 200.0, 500.0)  # stratum, ms sys_time_offset_offset
 # hr_mem (amongst others)
 memused_default_levels = (150.0, 200.0)
 
+ruckus_spot_ap_default_levels: dict = {}
+
 fortigate_memory_base_default_levels = {
     "levels": (70.0, 80.0),
 }

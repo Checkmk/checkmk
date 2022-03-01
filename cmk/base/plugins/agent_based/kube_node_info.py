@@ -14,6 +14,7 @@ from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
     StringTable,
 )
 from cmk.base.plugins.agent_based.utils.k8s import NodeInfo
+from cmk.base.plugins.agent_based.utils.kube import kube_labels_to_cmk_labels
 from cmk.base.plugins.agent_based.utils.kube_info import check_info
 
 
@@ -49,8 +50,7 @@ def host_labels(section: NodeInfo) -> HostLabelGenerator:
     """
     yield HostLabel("cmk/kubernetes/object", "node")
     yield HostLabel("cmk/os_family", section.operating_system)
-    for label in section.labels.values():
-        yield HostLabel(label.name, label.value)
+    yield from kube_labels_to_cmk_labels(section.labels)
 
 
 register.agent_section(

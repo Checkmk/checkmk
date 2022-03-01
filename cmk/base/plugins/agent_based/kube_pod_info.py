@@ -14,7 +14,7 @@ from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
     StringTable,
 )
 from cmk.base.plugins.agent_based.utils.k8s import PodInfo
-from cmk.base.plugins.agent_based.utils.kube import KubernetesError
+from cmk.base.plugins.agent_based.utils.kube import kube_labels_to_cmk_labels, KubernetesError
 from cmk.base.plugins.agent_based.utils.kube_info import check_info
 
 
@@ -63,8 +63,7 @@ def host_labels(section: PodInfo) -> HostLabelGenerator:
     for controller in section.controllers:
         yield HostLabel(f"cmk/kubernetes/{controller.type_.value}", controller.name)
 
-    for label in section.labels.values():
-        yield HostLabel(label.name, label.value)
+    yield from kube_labels_to_cmk_labels(section.labels)
 
 
 register.agent_section(

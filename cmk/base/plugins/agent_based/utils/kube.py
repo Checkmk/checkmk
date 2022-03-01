@@ -9,12 +9,24 @@ from typing import Literal, Mapping, NewType, Optional, Sequence, Tuple, Union
 
 from pydantic import BaseModel
 
+from cmk.base.plugins.agent_based.agent_based_api.v1 import HostLabel
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import HostLabelGenerator
+
+from .k8s import Labels, LabelValue
+
 HostName = NewType("HostName", str)
 NodeName = NewType("NodeName", str)
 OsName = NewType("OsName", str)
 PythonCompiler = NewType("PythonCompiler", str)
 Timestamp = NewType("Timestamp", float)
 Version = NewType("Version", str)
+
+
+def kube_labels_to_cmk_labels(labels: Labels) -> HostLabelGenerator:
+    for label in labels.values():
+        if (value := label.value) == "":
+            value = LabelValue("true")
+        yield HostLabel(label.name, value)
 
 
 class KubernetesError(Exception):

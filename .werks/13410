@@ -1,0 +1,16 @@
+Title: KUBE: Adapt kubernetes labels to Checkmk's labelling requirements
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1646139663
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0b2
+
+Kubernetes labels can have empty strings as values for labels (for
+example <tt>node-role.kubernetes.io/control-plane:</tt>).
+In checkmk labels can not have an empty value.
+
+In order to have valid labels in checkmk, empty labels values are replaced
+with <tt>true</tt>.

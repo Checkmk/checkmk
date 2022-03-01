@@ -2628,10 +2628,8 @@ class DropdownChoice(ValueSpec[DropdownChoiceModel]):
             % (value, _type_name(value)),
         )
 
-    def _get_invalid_choice_text(self, tmpl: str, value: DropdownChoiceModel) -> str:
-        if "%s" in tmpl or "%r" in tmpl:
-            return tmpl % (value,)
-        return tmpl
+    def _get_invalid_choice_text(self, tmpl: str, value: object) -> str:
+        return tmpl % (value,) if "%s" in tmpl or "%r" in tmpl else tmpl
 
     def value_to_html(self, value: DropdownChoiceModel) -> ValueSpecText:
         for val, title in self.choices():

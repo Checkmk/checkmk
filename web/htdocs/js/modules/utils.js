@@ -457,11 +457,12 @@ export function schedule_reload(url, remaining_ms) {
 function update_page_state_reload_indicator(remaining_ms) {
     const icon = document.getElementById("page_state_icon");
     if (!icon) return; // Not present, no update needed
+    const div = icon.closest(".page_state.reload");
+    if (!div) return; // Not a reload page state, no update
 
     let perc = (remaining_ms / (g_reload_interval * 1000)) * 100;
 
     icon.style.clipPath = get_clip_path_polygon(perc);
-    const div = icon.closest(".page_state.default");
     if (div) {
         div.title = div.title.replace(/\d+/, remaining_ms / 1000);
     }

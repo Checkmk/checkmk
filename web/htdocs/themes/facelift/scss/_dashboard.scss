@@ -236,7 +236,7 @@ div.dashlet.edit {
     height: 100%;
     cursor: auto;
     background-color: rgba($dashlet-inner-bg-color, 0.8);
-    border: 1px dashed #4e5d69;
+    border: 1px dashed $dashlet-editor-controls-color;
 
     &:hover {
       cursor: move;
@@ -314,7 +314,7 @@ div.dashlet.edit {
     &.anchor0 {
       top: 0;
       left: 0;
-      border-top: $dashlet-anchor-size solid $dashlet-editor-free;
+      border-top: $dashlet-anchor-size solid $dashlet-editor-controls-color;
       border-right: $dashlet-anchor-size solid transparent;
 
       &.on {
@@ -338,7 +338,7 @@ div.dashlet.edit {
     &.anchor1 {
       top: 0;
       right: 0;
-      border-top: $dashlet-anchor-size solid $dashlet-editor-free;
+      border-top: $dashlet-anchor-size solid $dashlet-editor-controls-color;
       border-left: $dashlet-anchor-size solid transparent;
 
       &.on {
@@ -362,7 +362,7 @@ div.dashlet.edit {
     &.anchor2 {
       right: 0;
       bottom: 0;
-      border-bottom: $dashlet-anchor-size solid $dashlet-editor-free;
+      border-bottom: $dashlet-anchor-size solid $dashlet-editor-controls-color;
       border-left: $dashlet-anchor-size solid transparent;
 
       &.on {
@@ -386,7 +386,7 @@ div.dashlet.edit {
       bottom: 0;
       left: 0;
       border-right: $dashlet-anchor-size solid transparent;
-      border-bottom: $dashlet-anchor-size solid $dashlet-editor-free;
+      border-bottom: $dashlet-anchor-size solid $dashlet-editor-controls-color;
 
       &.on {
         border-right: $dashlet-anchor-on-size solid transparent;
@@ -465,12 +465,12 @@ div#dashboard.grid {
 
   &.max {
     color: $font-color-red;
-    background-color: $dashlet-editor-free;
+    background-color: $dashlet-editor-controls-color;
   }
 
   &.grow {
     color: $font-color-white;
-    background-color: $dashlet-editor-free;
+    background-color: $dashlet-editor-controls-color;
   }
 
   &.abs {
@@ -503,8 +503,8 @@ div#dashboard.grid {
   bottom: 0;
   height: 100%;
   margin: auto;
-  background-color: #13d389;
-  border: 1px solid #13d389;
+  background-color: $color-state-success-background;
+  border: 1px solid $color-state-success-background;
   border-top: none;
   border-bottom: none;
 
@@ -554,8 +554,8 @@ div#dashboard.grid {
   left: 0;
   width: 100%;
   margin: auto;
-  background-color: #13d389;
-  border: 1px solid #13d389;
+  background-color: $color-state-success-background;
+  border: 1px solid $color-state-success-background;
   border-right: none;
   border-left: none;
 
@@ -684,7 +684,7 @@ svg.renderer {
   }
 
   g.grid line {
-    stroke: #8097b1;
+    stroke: $dashlet-figures-grid-color;
     stroke-opacity: 0.61;
     stroke-width: 0.5px;
   }
@@ -722,23 +722,23 @@ div.stats_dashlet {
       width: 10px;
 
       &.critical {
-        background-color: #f00;
+        background-color: $hexagon-critical-color;
       }
 
       &.unknown {
-        background-color: #f80;
+        background-color: $hexagon-unknown-color;
       }
 
       &.warning {
-        background-color: #ff0;
+        background-color: $color-state-1-background;
       }
 
       &.downtime {
-        background-color: #0af;
+        background-color: $hexagon-downtime-color;
       }
 
       &.ok {
-        background-color: #262f38;
+        background-color: $hexagon-default-color;
       }
     }
 
@@ -750,7 +750,7 @@ div.stats_dashlet {
   }
 
   path.hexagon.hexagon_0 {
-    stroke: #404a55;
+    stroke: $grey-3;
   }
 
   path.hexagon {
@@ -814,9 +814,9 @@ div.stats_dashlet {
   }
 
   path.icon_element {
-    fill: #262f38;
+    fill: $headline-color;
     stroke-dasharray: 3, 3;
-    stroke: #404a55;
+    stroke: $grey-3;
   }
 }
 

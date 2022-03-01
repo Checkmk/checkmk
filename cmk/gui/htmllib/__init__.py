@@ -29,7 +29,19 @@ import json
 import pprint
 import re
 from pathlib import Path
-from typing import Any, cast, Dict, Iterable, List, Optional, Set, Tuple, TYPE_CHECKING, Union
+from typing import (
+    Any,
+    Callable,
+    cast,
+    Dict,
+    Iterable,
+    List,
+    Optional,
+    Set,
+    Tuple,
+    TYPE_CHECKING,
+    Union,
+)
 
 import cmk.utils.paths
 import cmk.utils.version as cmk_version
@@ -77,7 +89,6 @@ from ._tag_rendering import (
 if TYPE_CHECKING:
     from cmk.gui.http import Request, Response
     from cmk.gui.utils.output_funnel import OutputFunnel
-    from cmk.gui.valuespec import ValueSpec
 
 HTMLMessageInput = Union[HTML, str]
 
@@ -1977,12 +1988,16 @@ class html(ABCHTMLGenerator):
     #
 
     def render_floating_option(
-        self, name: str, height: str, varprefix: str, valuespec: "ValueSpec", value: Any
+        self,
+        name: str,
+        height: str,
+        title: Optional[str],
+        renderer: Callable[[], None],
     ) -> None:
         self.open_div(class_=["floatfilter", height, name])
-        self.div(valuespec.title(), class_=["legend"])
+        self.div(title, class_=["legend"])
         self.open_div(class_=["content"])
-        valuespec.render_input(varprefix + name, value)
+        renderer()
         self.close_div()
         self.close_div()
 

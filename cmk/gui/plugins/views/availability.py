@@ -114,7 +114,11 @@ def _show_availability_options(
         html.show_user_errors()
 
     for name, height, _show_in_reporting, vs in valuespecs:
-        html.render_floating_option(name, height, "avo_", vs, avoptions.get(name))
+
+        def renderer(name=name, vs=vs, avoptions=avoptions) -> None:
+            vs.render_input("avo_" + name, avoptions.get(name))
+
+        html.render_floating_option(name, height, vs.title(), renderer)
     html.close_div()
 
     html.hidden_fields()

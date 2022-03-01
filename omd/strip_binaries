@@ -1,0 +1,160 @@
+#!/usr/bin/env python3
+"""Searches a tree for binaries and libraries to strip and strips them.
+
+Inspired by debhelpers dh_strip which is doing a good job stripping
+executables, shared libraries and some static libraries during packaging of
+deb packages.
+
+It allows us to strip all binaries and libraries except some we want to
+exclude from stripping. For example bin/cmc is a binary we want to have debug
+symbols for.
+
+We also need the stripping for our CMA packages and RPM packages. We could
+use dh_strip for the CMA package since it's available in the debian distro we
+use. The RPM packages also has a stripping, but it does not provide the
+option to exclude some files from stripping.
+"""
+
+import argparse
+import stat
+import struct
+import subprocess  # nosec
+import sys
+from pathlib import Path
+from typing import Iterator, Sequence
+
+
+def parse_arguments(args: Sequence[str]) -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("path", help="Search PATH for files to be stripped")
+    parser.add_argument(
+        "--exclude",
+        action="append",
+        help=(
+            "Exclude files that contain the given string anywhere in their "
+            "path from being stripped. You may use this option multiple "
+            "times."
+        ),
+    )
+    return parser.parse_args(args)
+
+
+def iter_files(base_dir: Path) -> Iterator[Path]:
+    yield from (p for p in Path(base_dir).glob("**/*") if p.is_file() and not p.is_symlink())
+
+
+def filter_excludes(paths: Iterator[Path], excludes: Sequence[str]) -> Iterator[Path]:
+    if not excludes:
+        yield from paths
+
+    def exclude(p: str) -> bool:
+        for e in excludes:
+            if e in p:
+                return True
+        return False
+
+    yield from (p for p in paths if not exclude(str(p)))
+
+
+# The ELF header is at least 0x32 bytes (32bit); any filer shorter than that is
+# not an ELF file
+ELF_MIN_LENGTH = 32
+ELF_MAGIC = b"\x7FELF"
+ELF_ENDIAN_LE = b"\x01"
+ELF_ENDIAN_BE = b"\x02"
+ELF_VERSION = 1
+ELF_TYPE_EXECUTABLE = 2
+ELF_TYPE_SHARED_OBJECT = 3
+
+
+def is_so_or_exec_elf_file(file: Path) -> bool:
+    with file.open("rb") as f:
+        head = f.read(ELF_MIN_LENGTH)
+
+    if len(head) != ELF_MIN_LENGTH:
+        return False
+
+    if head[:4] != ELF_MAGIC:
+        return False
+
+    endian = struct.unpack_from("c", head, 0x05)[0]
+    if endian == ELF_ENDIAN_BE:
+        long_format = ">L"
+        short_format = ">H"
+    elif endian == ELF_ENDIAN_LE:
+        long_format = "<L"
+        short_format = "<H"
+    else:
+        return False
+
+    elf_type = struct.unpack_from(short_format, head, 0x10)[0]
+    vers = struct.unpack_from(long_format, head, 0x14)[0]
+    if vers != ELF_VERSION:
+        return False
+
+    if elf_type not in (ELF_TYPE_EXECUTABLE, ELF_TYPE_SHARED_OBJECT):
+        return False
+
+    return True
+
+
+def is_static_library(file: Path) -> bool:
+    return file.name.startswith("lib") and file.name.endswith(".a")
+
+
+def is_executable(file: Path) -> bool:
+    return file.stat().st_mode & stat.S_IEXEC == stat.S_IEXEC
+
+
+def strip_binary(file: Path) -> None:
+    # Arguments taken from debhelper dh_strip (Ubuntu 20.04)
+    strip(["--remove-section=.comment", "--remove-section=.note"], file)
+
+
+def strip_shared_library(file: Path) -> None:
+    # Arguments taken from debhelper dh_strip (Ubuntu 20.04)
+    strip(["--remove-section=.comment", "--remove-section=.note", "--strip-unneeded"], file)
+
+
+def strip_static_library(file: Path) -> None:
+    # Arguments taken from debhelper dh_strip (Ubuntu 20.04)
+    strip(
+        [
+            "--strip-debug",
+            "--remove-section=.comment",
+            "--remove-section=.note",
+            "--enable-deterministic-archives",
+            "-R",
+            ".gnu.lto_*",
+            "-R",
+            ".gnu.debuglto_*",
+            "-N",
+            "__gnu_lto_slim",
+            "-N",
+            "__gnu_lto_v1",
+        ],
+        file,
+    )
+
+
+def strip(args: list[str], file: Path) -> None:
+    subprocess.run(["strip"] + args + [str(file)], check=True)  # nosec
+
+
+def main(args: Sequence[str]) -> int:
+    config = parse_arguments(args)
+
+    for file in filter_excludes(iter_files(config.path), config.exclude or []):
+        if is_so_or_exec_elf_file(file):
+            if is_executable(file):
+                strip_binary(file)
+            else:
+                strip_shared_library(file)
+
+        elif is_static_library(file):
+            strip_static_library(file)
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv[1:]))

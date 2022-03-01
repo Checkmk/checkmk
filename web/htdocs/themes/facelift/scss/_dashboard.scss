@@ -125,60 +125,6 @@ div.dashlet {
     transform-origin: center;
   }
 
-  table.hoststats {
-    position: absolute;
-    top: -1px;
-    right: 10px;
-    width: 135px;
-    height: 142px;
-    margin-top: 0;
-    border-collapse: collapse;
-    border-spacing: 0;
-
-    &.narrow {
-      /* TODO: Remove this style after decoupling from classic theme */
-      margin-top: 0;
-
-      th,
-      td {
-        font-weight: normal;
-      }
-    }
-
-    th,
-    td {
-      padding: 0 4px;
-      vertical-align: middle;
-      border-color: rgb(73, 138, 166);
-      border-style: solid none;
-      border-width: 1px;
-
-      &.color {
-        width: 4px;
-        padding: 0;
-      }
-    }
-
-    th {
-      text-align: left;
-      background-color: transparent;
-    }
-
-    td {
-      text-align: right;
-      background-color: rgb(149, 187, 205);
-    }
-
-    a {
-      color: $font-color-black;
-      text-decoration: none;
-
-      &:hover {
-        text-decoration: underline;
-      }
-    }
-  }
-
   div.graph > div.v_axis_label {
     position: absolute;
     top: 50%;

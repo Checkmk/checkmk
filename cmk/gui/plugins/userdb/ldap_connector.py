@@ -38,7 +38,7 @@ import shutil
 import sys
 import time
 from pathlib import Path
-from typing import Dict, IO, Iterator, List, Literal, Optional, Set
+from typing import Dict, IO, Iterator, List, Literal, Optional, Sequence, Set
 from typing import Tuple as _Tuple
 from typing import Type, Union
 
@@ -79,6 +79,7 @@ from cmk.gui.plugins.userdb.utils import (
 from cmk.gui.sites import has_wato_slave_sites
 from cmk.gui.valuespec import (
     CascadingDropdown,
+    CascadingDropdownChoice,
     Dictionary,
     DictionaryEntry,
     DropdownChoice,
@@ -1572,7 +1573,7 @@ def ldap_attribute_plugins_elements(connection):
     return elements
 
 
-def register_user_attribute_sync_plugins():
+def register_user_attribute_sync_plugins() -> None:
     """Register sync plugins for all custom user attributes (assuming simple data types)"""
     # Remove old user attribute plugins
     for ident, plugin_class in list(ldap_attribute_plugin_registry.items()):
@@ -2252,7 +2253,7 @@ class LDAPAttributePluginGroupAttributes(LDAPBuiltinAttributePlugin):
             required_keys=["groups"],
         )
 
-    def _get_user_attribute_choices(self):
+    def _get_user_attribute_choices(self) -> Sequence[CascadingDropdownChoice]:
         return [
             (name, attr.valuespec().title(), attr.valuespec())
             for name, attr in get_user_attributes()

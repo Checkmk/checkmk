@@ -306,7 +306,7 @@ class ModeUsers(WatoMode):
         job_manager.show_job_details_from_snapshot(job_snapshot=self._job_snapshot)
         html.br()
 
-    def _show_user_list(self):
+    def _show_user_list(self) -> None:
         visible_custom_attrs = [
             (name, attr) for name, attr in userdb.get_user_attributes() if attr.show_in_table()
         ]
@@ -854,7 +854,7 @@ class ModeEditUser(WatoMode):
         edit_users(user_object)
         return redirect(mode_url("users"))
 
-    def page(self):
+    def page(self) -> None:
         # Let exceptions from loading notification scripts happen now
         watolib.load_notification_scripts()
 

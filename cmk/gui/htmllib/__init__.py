@@ -1252,7 +1252,7 @@ class html(ABCHTMLGenerator):
         return PageState(
             text=self.render_span("%d" % self.browser_reload),
             icon_name="trans",
-            css_classes=["default"],
+            css_classes=["reload"],
             url="javascript:document.location.reload()",
             tooltip_text=_("Automatic page reload in %d seconds.") % self.browser_reload
             + "\n"

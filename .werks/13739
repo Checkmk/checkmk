@@ -1,0 +1,15 @@
+Title: jenkins_nodes: Allow negative timespan for Clock difference
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1646119051
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0b2
+
+The Clock difference of a Jenkins node can be negative
+if the node's time is running ahead.
+In this case the check would crash because negative values
+cannot be rendered as a timespan.
+Now the absolute value of the time is used and displayed.

@@ -2506,7 +2506,6 @@ class DropdownChoice(ValueSpec[DropdownChoiceModel]):
         invalid_choice_title: _Optional[str] = None,
         invalid_choice_error: _Optional[str] = None,
         no_preselect: bool = False,
-        no_preselect_value: Any = None,
         no_preselect_title: str = "",
         no_preselect_error: _Optional[str] = None,
         on_change: _Optional[str] = None,
@@ -2551,7 +2550,6 @@ class DropdownChoice(ValueSpec[DropdownChoiceModel]):
             )
         )
         self._no_preselect = no_preselect
-        self._no_preselect_value = no_preselect_value
         self._no_preselect_title = no_preselect_title
         self._no_preselect_error = (
             no_preselect_error if no_preselect_error is not None else _("Please make a selection")
@@ -2567,7 +2565,7 @@ class DropdownChoice(ValueSpec[DropdownChoiceModel]):
 
     def choices(self) -> DropdownChoiceEntries:
         result = self._choices() if callable(self._choices) else self._choices
-        pre = [(self._no_preselect_value, self._no_preselect_title)] if self._no_preselect else []
+        pre = [(None, self._no_preselect_title)] if self._no_preselect else []
         return pre + list(result)
 
     def canonical_value(self) -> _Optional[DropdownChoiceModel]:
@@ -2690,7 +2688,7 @@ class DropdownChoice(ValueSpec[DropdownChoiceModel]):
         return "%s" % hashlib.sha256(repr(val).encode()).hexdigest()
 
     def _validate_value(self, value: DropdownChoiceModel, varprefix: str) -> None:
-        if self._no_preselect and value == self._no_preselect_value:
+        if self._no_preselect and value is None:
             raise MKUserError(varprefix, self._no_preselect_error)
 
         if self._invalid_choice == "complain" and self._value_is_invalid(value):
@@ -2974,7 +2972,6 @@ class CascadingDropdown(ValueSpec[CascadingDropdownChoiceValue]):
         render: "_Optional[CascadingDropdown.Render]" = None,
         no_elements_text: _Optional[str] = None,
         no_preselect: bool = False,
-        no_preselect_value: CascadingDropdownChoiceIdent = None,
         no_preselect_title: str = "",
         no_preselect_error: _Optional[str] = None,
         render_sub_vs_page_name: _Optional[str] = None,
@@ -3006,15 +3003,12 @@ class CascadingDropdown(ValueSpec[CascadingDropdownChoiceValue]):
         )
 
         self._no_preselect = no_preselect
-        self._no_preselect_value = no_preselect_value
         self._no_preselect_title = no_preselect_title  # if not preselected
         self._no_preselect_error = (
             no_preselect_error if no_preselect_error is not None else _("Please make a selection")
         )
         self._preselected = (
-            _normalize_choices([(self._no_preselect_value, self._no_preselect_title)])
-            if self._no_preselect
-            else []
+            _normalize_choices([(None, self._no_preselect_title)]) if self._no_preselect else []
         )
 
         # When given, this ajax page is called to render the input fields of a cascaded valuespec
@@ -3312,7 +3306,7 @@ class CascadingDropdown(ValueSpec[CascadingDropdownChoiceValue]):
         raise MKUserError(varprefix + "_sel", _("Value %r is not allowed here.") % value)
 
     def _validate_value(self, value: CascadingDropdownChoiceValue, varprefix: str) -> None:
-        if self._no_preselect and value == self._no_preselect_value:
+        if self._no_preselect and value is None:
             raise MKUserError(varprefix + "_sel", self._no_preselect_error)
 
         choices = self.choices()
@@ -3729,7 +3723,6 @@ class OptionalDropdownChoice(DropdownChoice):
         invalid_choice_title: _Optional[str] = None,
         invalid_choice_error: _Optional[str] = None,
         no_preselect: bool = False,
-        no_preselect_value: Any = None,
         no_preselect_title: str = "",
         no_preselect_error: _Optional[str] = None,
         on_change: _Optional[str] = None,
@@ -3752,7 +3745,6 @@ class OptionalDropdownChoice(DropdownChoice):
             invalid_choice_title=invalid_choice_title,
             invalid_choice_error=invalid_choice_error,
             no_preselect=no_preselect,
-            no_preselect_value=no_preselect_value,
             no_preselect_title=no_preselect_title,
             no_preselect_error=no_preselect_error,
             on_change=on_change,
@@ -4410,7 +4402,6 @@ class Timerange(CascadingDropdown):
         render: _Optional[CascadingDropdown.Render] = None,
         no_elements_text: _Optional[str] = None,
         no_preselect: bool = False,
-        no_preselect_value: _Optional[Any] = None,
         no_preselect_title: str = "",
         no_preselect_error: _Optional[str] = None,
         render_sub_vs_page_name: _Optional[str] = None,
@@ -4430,7 +4421,6 @@ class Timerange(CascadingDropdown):
             render=render,
             no_elements_text=no_elements_text,
             no_preselect=no_preselect,
-            no_preselect_value=no_preselect_value,
             no_preselect_title=no_preselect_title,
             no_preselect_error=no_preselect_error,
             render_sub_vs_page_name=render_sub_vs_page_name,

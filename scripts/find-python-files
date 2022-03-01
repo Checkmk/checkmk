@@ -83,7 +83,6 @@ find -L \
     -name run-clang-tidy.py -prune -o \
     -name iwyu_tool.py -prune -o \
     -name chroot -prune -o \
-    -name conftest.py -prune -o \
     -name py2 -prune -o \
     -name types_pb2.py -prune -o \
     $PRUNE \

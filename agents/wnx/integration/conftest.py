@@ -4,13 +4,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import subprocess
+import telnetlib  # nosec
+import time
+
 import pytest  # type: ignore
 import yaml
-import subprocess
-import time
-import telnetlib  # nosec
 
-from .local import (DEFAULT_CONFIG, port, user_yaml_config, run_agent, main_exe, host)
+from .local import DEFAULT_CONFIG, host, main_exe, port, run_agent, user_yaml_config
 
 
 @pytest.fixture
@@ -21,7 +22,7 @@ def make_yaml_config():
 
 @pytest.fixture(name="write_config")
 def write_config_engine(testconfig):
-    with open(user_yaml_config, 'wt') as yaml_file:
+    with open(user_yaml_config, "wt") as yaml_file:
         ret = yaml.dump(testconfig)
         yaml_file.write(ret)
     yield
@@ -57,7 +58,7 @@ def actual_output_engine(write_config, wait_agent):
         if telnet is None:
             raise ConnectionRefusedError("can't connect")
 
-        result = telnet.read_all().decode(encoding='cp1252')
+        result = telnet.read_all().decode(encoding="cp1252")
 
         yield result.splitlines()
     finally:

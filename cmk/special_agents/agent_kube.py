@@ -1858,6 +1858,12 @@ def main(args: Optional[List[str]] = None) -> int:
                     deserialize_http_proxy_config(arguments.cluster_collector_proxy),
                 )
 
+                if not container_metrics:
+                    raise CollectorHandlingException(
+                        title="No data",
+                        detail="No container metrics were collected from the cluster collector",
+                    )
+
                 try:
                     performance_pods = parse_and_group_containers_performance_metrics(
                         cluster_name=arguments.cluster,
@@ -1907,6 +1913,12 @@ def main(args: Optional[List[str]] = None) -> int:
                     cluster_collector_timeout,
                     deserialize_http_proxy_config(arguments.cluster_collector_proxy),
                 )
+
+                if not machine_sections:
+                    raise CollectorHandlingException(
+                        title="No data",
+                        detail="No machine sections were collected from the cluster collector",
+                    )
 
                 try:
                     write_machine_sections(

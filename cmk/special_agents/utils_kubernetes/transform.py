@@ -311,14 +311,18 @@ def node_resources(capacity, allocatable) -> Dict[str, api.NodeResources]:
     return resources
 
 
-def deployment_replicas(status: client.V1DeploymentStatus) -> api.Replicas:
+def deployment_replicas(
+    status: client.V1DeploymentStatus, spec: client.V1DeploymentSpec
+) -> api.Replicas:
     # A deployment always has at least 1 replica. It is not possible to deploy
     # a deployment that has 0 replicas. On the other hand, it is possible to have
     # 0 available/unavailable/updated/ready replicas. This is shown as 'null'
     # (i.e. None) in the source data, but the interpretation is that the number
     # of the replicas in this case is 0.
+    # Under certain conditions, the status.replicas can report a 'null' value, therefore
+    # the spec.replicas is taken as base value since this reflects the desired value
     return api.Replicas(
-        replicas=status.replicas,
+        replicas=spec.replicas,
         available=status.available_replicas or 0,
         unavailable=status.unavailable_replicas or 0,
         updated=status.updated_replicas or 0,
@@ -417,7 +421,7 @@ def deployment_from_client(
         spec=parse_deployment_spec(deployment.spec),
         status=api.DeploymentStatus(
             conditions=deployment_conditions(deployment.status),
-            replicas=deployment_replicas(deployment.status),
+            replicas=deployment_replicas(deployment.status, deployment.spec),
         ),
         pods=pod_uids,
     )

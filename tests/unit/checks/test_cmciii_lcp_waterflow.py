@@ -16,7 +16,7 @@ pytestmark = pytest.mark.checks
 
 
 @pytest.mark.parametrize(
-    "string_table, discovered_item",
+    "string_table, section",
     [
         pytest.param(
             [
@@ -36,8 +36,8 @@ pytestmark = pytest.mark.checks
                     "OK",
                 ],
             ],
-            [(None, None)],
-            id="Waterflow sensor is discovered within OID range.",
+            ["Waterflow", "0.0 l/min", "130.0 l/min", "0.0 l/min", "OK"],
+            id="Waterflow measurements are parsed correctly",
         ),
         pytest.param(
             [
@@ -51,8 +51,28 @@ pytestmark = pytest.mark.checks
                     "OK",
                 ],
             ],
-            [(None, None)],
-            id="Waterflow sensor is discovered even though there are no measurements for it.",
+            [],
+            id="Waterflow measurements are parsed correctly",
+        ),
+    ],
+)
+def test_parse_cmciii_lcp_waterflow(string_table: StringTable, section: StringTable):
+    check = Check("cmciii_lcp_waterflow")
+    assert list(check.run_parse(string_table)) == section
+
+
+@pytest.mark.parametrize(
+    "string_table, discovered_item",
+    [
+        pytest.param(
+            ["Waterflow", "0.0 l/min", "130.0 l/min", "0.0 l/min", "OK"],
+            [(None, {})],
+            id="Waterflow sensor is discovered within OID range.",
+        ),
+        pytest.param(
+            [],
+            [],
+            id="Waterflow sensor is not discovered when there are no measurements for it.",
         ),
     ],
 )
@@ -65,23 +85,7 @@ def test_discover_cmciii_lcp_waterflow(string_table: StringTable, discovered_ite
     "string_table, check_results",
     [
         pytest.param(
-            [
-                [
-                    "Waterflow",
-                    "0.0 l/min",
-                    "130.0 l/min",
-                    "0.0 l/min",
-                    "OK",
-                    "2",
-                    "Control-Valve",
-                    "32 %",
-                    "OK",
-                    "2",
-                    "Cooling-Capacity",
-                    "0 W",
-                    "OK",
-                ],
-            ],
+            ["Waterflow", "0.0 l/min", "130.0 l/min", "0.0 l/min", "OK"],
             [
                 0,
                 "Waterflow Status: OK Flow: 0.0, MinFlow: 0.0, MaxFLow: 130.0",
@@ -89,23 +93,13 @@ def test_discover_cmciii_lcp_waterflow(string_table: StringTable, discovered_ite
             ],
             id="Check results of waterflow sensor measurements",
         ),
-        pytest.param(
-            [
-                [
-                    "Control-Valve",
-                    "32 %",
-                    "OK",
-                    "2",
-                    "Cooling-Capacity",
-                    "0 W",
-                    "OK",
-                ],
-            ],
-            [3, "Waterflow information not found"],
-            id="Check result when waterflow sensor measurements are missing.",
-        ),
     ],
 )
 def test_check_cmciii_lcp_waterflow(string_table: StringTable, check_results: Sequence):
     check = Check("cmciii_lcp_waterflow")
     assert list(check.run_check("item not relevant", {}, string_table)) == check_results
+
+
+def test_check_cmciii_lcp_waterflow_empty_section():
+    check = Check("cmciii_lcp_waterflow")
+    assert check.run_check("item not relevant", {}, []) is None

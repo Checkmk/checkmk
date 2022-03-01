@@ -1095,6 +1095,75 @@ class DisabledNotifications(BaseSchema):
     )
 
 
+class UserInterfaceAttributes(BaseSchema):
+    interface_theme = fields.String(
+        required=False,
+        description="The theme of the interface",
+        enum=["default", "dark", "light"],
+        load_default="default",
+    )
+    sidebar_position = fields.String(
+        required=False,
+        description="The position of the sidebar",
+        enum=["left", "right"],
+        load_default="right",
+    )
+    navigation_bar_icons = fields.String(
+        required=False,
+        description="This option decides if icons in the navigation bar should show/hide the "
+        "respective titles",
+        enum=["hide", "show"],
+        load_default="hide",
+    )
+    mega_menu_icons = fields.String(
+        required=False,
+        description="This option decides if colored icon should be shown foe every entry in the "
+        "mega menus or alternatively only for the headlines (the 'topics')",
+        enum=["topic", "entry"],
+        load_default="topic",
+    )
+    show_mode = fields.String(
+        required=False,
+        description="This option decides what show mode should be used for unvisited menus."
+        " Alternatively, this option can also be used to enforce show more removing the three dots "
+        "for all menus.",
+        enum=["default", "default_show_less", "default_show_more", "enforce_show_more"],
+        load_default="default",
+    )
+
+
+class UserInterfaceUpdateAttributes(BaseSchema):
+    interface_theme = fields.String(
+        required=False,
+        description="The theme of the interface",
+        enum=["default", "dark", "light"],
+    )
+    sidebar_position = fields.String(
+        required=False,
+        description="The position of the sidebar",
+        enum=["left", "right"],
+    )
+    navigation_bar_icons = fields.String(
+        required=False,
+        description="This option decides if icons in the navigation bar should show/hide the "
+        "respective titles",
+        enum=["hide", "show"],
+    )
+    mega_menu_icons = fields.String(
+        required=False,
+        description="This option decides if colored icon should be shown foe every entry in the "
+        "mega menus or alternatively only for the headlines (the 'topics')",
+        enum=["topic", "entry"],
+    )
+    show_mode = fields.String(
+        required=False,
+        description="This option decides what show mode should be used for unvisited menus."
+        " Alternatively, this option can also be used to enforce show more removing the three dots "
+        "for all menus.",
+        enum=["default", "default_show_less", "default_show_more", "enforce_show_more"],
+    )
+
+
 AUTH_PASSWORD = fields.String(
     required=False,
     description="The password for login",
@@ -1337,6 +1406,19 @@ class CreateUser(BaseSchema):
         example="en",
         enum=["de", "en", "ro"],
     )
+    interface_options = fields.Nested(
+        UserInterfaceAttributes,
+        required=False,
+        load_default={
+            "interface_theme": "default",
+            "sidebar_position": "right",
+            "navigation_bar_icons": "hide",
+            "mega_menu_icons": "topic",
+            "show_mode": "default",
+        },
+        example={"interface_theme": "dark"},
+        description="",
+    )
 
 
 class UpdateUser(BaseSchema):
@@ -1424,6 +1506,12 @@ class UpdateUser(BaseSchema):
         "this will configure the default language",
         example="en",
         enum=["de", "en", "ro"],
+    )
+    interface_options = fields.Nested(
+        UserInterfaceUpdateAttributes,
+        required=False,
+        example={"interface_theme": "dark"},
+        description="",
     )
 
 

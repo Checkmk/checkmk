@@ -546,6 +546,43 @@ class ConcreteDisabledNotifications(BaseSchema):
     )
 
 
+class ConcreteUserInterfaceAttributes(BaseSchema):
+    interface_theme = fields.String(
+        required=False,
+        description="The theme of the interface",
+        enum=["default", "dark", "light"],
+        example="default",
+    )
+    sidebar_position = fields.String(
+        required=False,
+        description="The position of the sidebar",
+        enum=["left", "right"],
+        example="right",
+    )
+    navigation_bar_icons = fields.String(
+        required=False,
+        description="This option decides if icons in the navigation bar should show/hide the "
+        "respective titles",
+        enum=["hide", "show"],
+        example="hide",
+    )
+    mega_menu_icons = fields.String(
+        required=False,
+        description="This option decides if colored icon should be shown foe every entry in the "
+        "mega menus or alternatively only for the headlines (the 'topics')",
+        enum=["topic", "entry"],
+        example="topic",
+    )
+    show_mode = fields.String(
+        required=False,
+        description="This option decides what show mode should be used for unvisited menus."
+        " Alternatively, this option can also be used to enforce show more removing the three dots "
+        "for all menus.",
+        enum=["default", "default_show_less", "default_show_more", "enforce_show_more"],
+        example="default",
+    )
+
+
 class UserIdleOption(BaseSchema):
     option = fields.String(
         required=True,
@@ -625,6 +662,10 @@ class UserAttributes(BaseSchema):
         required=False,
         description="This field indicates if the user is forced to change the password on the "
         "next login or access.",
+    )
+    interface_options = fields.Nested(
+        ConcreteUserInterfaceAttributes,
+        required=False,
     )
 
 

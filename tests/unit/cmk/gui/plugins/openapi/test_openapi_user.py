@@ -62,6 +62,13 @@ def test_openapi_customer(aut_user_auth_wsgi_app: WebTestAppForCMK, monkeypatch)
         "pager_address": "",
         "roles": [],
         "enforce_password_change": False,
+        "interface_options": {
+            "interface_theme": "default",
+            "mega_menu_icons": "topic",
+            "navigation_bar_icons": "hide",
+            "show_mode": "default",
+            "sidebar_position": "right",
+        },
     }
 
     resp = aut_user_auth_wsgi_app.call_method(
@@ -640,6 +647,13 @@ def test_global_full_configuration(aut_user_auth_wsgi_app: WebTestAppForCMK, mon
         "idle_timeout": {"option": "global"},
         "disable_notifications": {},
         "enforce_password_change": False,
+        "interface_options": {
+            "interface_theme": "default",
+            "mega_menu_icons": "topic",
+            "navigation_bar_icons": "hide",
+            "show_mode": "default",
+            "sidebar_position": "right",
+        },
     }
 
 
@@ -743,6 +757,13 @@ def test_openapi_user_update_contact_options(
         "customer": "global",
         "disable_notifications": {},
         "enforce_password_change": False,
+        "interface_options": {
+            "interface_theme": "default",
+            "mega_menu_icons": "topic",
+            "navigation_bar_icons": "hide",
+            "show_mode": "default",
+            "sidebar_position": "right",
+        },
     }
 
 
@@ -873,6 +894,52 @@ def test_user_enforce_password_change_option(aut_user_auth_wsgi_app: WebTestAppF
         content_type="application/json",
     )
     assert update_resp.json_body["extensions"]["enforce_password_change"] is False
+
+
+@managedtest
+def test_user_interface_settings(aut_user_auth_wsgi_app: WebTestAppForCMK, monkeypatch):
+    """Test enforce password change option for create and update endpoints"""
+    monkeypatch.setattr(
+        "cmk.gui.watolib.global_settings.rulebased_notifications_enabled", lambda: True
+    )
+    user_detail = {
+        "username": "cmkuser",
+        "fullname": "Mathias Kettner",
+        "customer": "global",
+        "interface_options": {
+            "interface_theme": "dark",
+            "sidebar_position": "left",
+            "navigation_bar_icons": "show",
+            "mega_menu_icons": "entry",
+            "show_mode": "enforce_show_more",
+        },
+    }
+
+    base = "/NO_SITE/check_mk/api/1.0"
+    resp = aut_user_auth_wsgi_app.call_method(
+        "post",
+        base + "/domain-types/user_config/collections/all",
+        params=json.dumps(user_detail),
+        headers={"Accept": "application/json"},
+        status=200,
+        content_type="application/json",
+    )
+    interface_options = resp.json["extensions"]["interface_options"]
+    assert interface_options["interface_theme"] == "dark"
+    assert interface_options["sidebar_position"] == "left"
+    assert interface_options["navigation_bar_icons"] == "show"
+    assert interface_options["mega_menu_icons"] == "entry"
+    assert interface_options["show_mode"] == "enforce_show_more"
+
+    resp = aut_user_auth_wsgi_app.call_method(
+        "put",
+        base + "/objects/user_config/cmkuser",
+        params=json.dumps({"interface_options": {"interface_theme": "light"}}),
+        headers={"Accept": "application/json", "If-Match": resp.headers["ETag"]},
+        status=200,
+        content_type="application/json",
+    )
+    assert resp.json["extensions"]["interface_options"]["interface_theme"] == "light"
 
 
 def _random_string(size):

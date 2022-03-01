@@ -221,7 +221,7 @@ body.main .popup_menu #side_header > span {
     margin-left: 2px;
     color: $font-color;
     cursor: pointer;
-    background-color: rgb(255, 0, 0);
+    background-color: $danger;
     border-radius: 6px;
   }
 }
@@ -588,7 +588,7 @@ div.popup_msg {
   left: 20px;
   width: 200px;
   padding: 3px;
-  background-color: rgb(36, 68, 82);
+  background-color: $headline-color;
 
   .close {
     display: block;

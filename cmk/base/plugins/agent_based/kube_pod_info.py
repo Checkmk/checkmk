@@ -56,7 +56,9 @@ def host_labels(section: PodInfo) -> HostLabelGenerator:
     yield HostLabel("cmk/kubernetes/object", "pod")
     if section.node is not None:
         yield HostLabel("cmk/kubernetes/node", section.node)
-    yield HostLabel("cmk/kubernetes/namespace", section.namespace)
+
+    if section.namespace:
+        yield HostLabel("cmk/kubernetes/namespace", section.namespace)
 
     for controller in section.controllers:
         yield HostLabel(f"cmk/kubernetes/{controller.type_.value}", controller.name)

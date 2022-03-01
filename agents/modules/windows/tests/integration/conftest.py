@@ -9,7 +9,7 @@ import shutil
 import tempfile
 from pathlib import Path
 from subprocess import PIPE, Popen
-from typing import List
+from typing import List, Optional
 
 import pytest  # type: ignore[import]
 
@@ -23,8 +23,8 @@ tested_pythons = ["python-3.4.cab", "python-3.cab"]
 artifact_location = Path("..\\..\\..\\..\\..\\artefacts")
 
 
-@pytest.fixture(scope="session")
-def expected_version(pytestconfig):
+@pytest.fixture(scope="session", name="expected_version")
+def fixture_expected_version(pytestconfig):
     return pytestconfig.getoption("expected_version")
 
 
@@ -34,27 +34,29 @@ def expected_version(pytestconfig):
 # 2. Change pyvenv.cfg so that we could test our scripts: replace ProgramData with temp
 # Above mentioned things must be done in fixture, while decompression process is quite expensive.
 # Also this give possibility to test literally everything
-@pytest.fixture(scope="session")
-def regression_data(expected_version):
+@pytest.fixture(scope="session", name="regression_data")
+def fixture_regression_data(expected_version):
     return {
-        "python-3.cab": b"".join([
-            b"home = C:\\ProgramData\\checkmk\\agent\\modules\\python-3\r\n",
-            b"version_info = ",
-            expected_version.encode(),
-            b"\r\n",
-            b"include-system-site-packages = false\r\n",
-        ]),
+        "python-3.cab": b"".join(
+            [
+                b"home = C:\\ProgramData\\checkmk\\agent\\modules\\python-3\r\n",
+                b"version_info = ",
+                expected_version.encode(),
+                b"\r\n",
+                b"include-system-site-packages = false\r\n",
+            ]
+        ),
         "python-3.4.cab": b"home = C:\\ProgramData\\checkmk\\agent\\modules\\python-3\r\n"
-                          b"version_info = 3.4.4\r\n"
-                          b"include-system-site-packages = false\r\n"
+        b"version_info = 3.4.4\r\n"
+        b"include-system-site-packages = false\r\n",
     }
 
 
 client_module_root = b"C:\\ProgramData\\checkmk\\agent\\modules\\python-3"
 
 
-@pytest.fixture(scope="session", autouse=True)
-def python_subdir():
+@pytest.fixture(scope="session", autouse=True, name="python_subdir")
+def fixture_python_subdir():
     tmpdir = tempfile.mkdtemp()
     subdir = os.path.join(tmpdir, "modules")
     os.makedirs(subdir)
@@ -62,18 +64,20 @@ def python_subdir():
     shutil.rmtree(tmpdir)
 
 
-def run_proc(command: List[str], *, cwd: Path = None):
-    process = Popen(command, stdout=PIPE, stderr=PIPE, cwd=cwd)
-    pipe, err = process.communicate()
-    ret = process.wait()
-    assert ret == 0, f"Code {ret}\n" + \
-        f"Pipe:\n{pipe.decode('utf-8') if pipe else ''}\n" + \
-        f"Err\n{err.decode('utf-8') if err else ''}"
+def run_proc(command: List[str], *, cwd: Optional[Path] = None):
+    with Popen(command, stdout=PIPE, stderr=PIPE, cwd=cwd) as process:
+        pipe, err = process.communicate()
+        ret = process.wait()
+    assert ret == 0, (
+        f"Code {ret}\n"
+        + f"Pipe:\n{pipe.decode('utf-8') if pipe else ''}\n"
+        + f"Err\n{err.decode('utf-8') if err else ''}"
+    )
 
 
 @pytest.fixture(scope="session", autouse=True)
 def python_to_test(python_subdir, regression_data) -> Path:
-    """ This is quite complicated simulator to verify python module and prepare the module for
+    """This is quite complicated simulator to verify python module and prepare the module for
     testing. During deployment every step will be validated, not because it is required(this method
     also contradicts a bit to the TDD philosophy), but to prevent extremely strange errors during
     testing phase.

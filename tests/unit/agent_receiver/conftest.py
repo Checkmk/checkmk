@@ -16,8 +16,6 @@ from cryptography.x509 import Certificate
 from fastapi.testclient import TestClient
 from pytest_mock import MockerFixture
 
-from omdlib.certs import CertificateAuthority, RootCA
-
 from cmk.utils.certs import RootCA
 
 

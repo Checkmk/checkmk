@@ -11,7 +11,7 @@ def build(Map args) {
             versioning = load 'buildscripts/scripts/lib/versioning.groovy'
             upload = load 'buildscripts/scripts/lib/upload_artifacts.groovy'
             def CMK_VERSION = versioning.get_cmk_version(scm, args.VERSION)
-            def IMAGE_VERSION = args.VERSION == "git" ? versioning.get_date() : CMK_VERSION
+            def IMAGE_VERSION = args.VERSION == "git" ? versioning.get_cmk_version(scm, "daily") : CMK_VERSION
 
             sh("rm -rf \"${WORKSPACE}/packages\"")
             if(args.DISTRO_LIST == ["ubuntu-20.04"]) {

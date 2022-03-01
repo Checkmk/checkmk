@@ -48,6 +48,11 @@ def get_branch(scm) {
 }
 
 def get_cmk_version(scm, VERSION) {
+
+    // NOTE: In jenkins we *need* to set the branch without wildcards in
+    // order to get it working:
+    // - Branch Specifier (blank for 'any'): */2.1.0 --> NOT OK!
+    // - Branch Specifier (blank for 'any'): 2.1.0 --> OK!
     def BRANCH = get_branch(scm)
 
     if (BRANCH == 'master' && VERSION == 'daily') {

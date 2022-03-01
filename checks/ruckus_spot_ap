@@ -4,7 +4,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-ruckus_spot_ap_bands = {
+from typing import Final
+
+_BANDS_MAP: Final = {
     "1": "2.4 GHz",
     "2": "5 GHz",
 }
@@ -18,23 +20,21 @@ def parse_ruckus_spot_ap(info):
     data = json.loads(info[0][0])
     bands = {}
     for band_info in data:
-        band_id = str(band_info["band"])
-        bands.setdefault(band_id, [])
+        band = _BANDS_MAP[str(band_info["band"])]
+        bands.setdefault(band, [])
         for ap_dict in band_info.get("access_points"):
-            bands[band_id].append([ap_dict["name"], ap_dict["status"]])
+            bands[band].append([ap_dict["name"], ap_dict["status"]])
 
     return bands
 
 
 def inventory_ruckus_spot_ap(parsed):
     for band in parsed:
-        if band in ruckus_spot_ap_bands:
-            yield ruckus_spot_ap_bands[band], {}
+        yield band, {}
 
 
 def check_ruckus_spot_ap(item, params, parsed):
-    inverse_map = {v: k for k, v in ruckus_spot_ap_bands.items()}
-    band = parsed.get(inverse_map.get(item))
+    band = parsed.get(item)
     if not band:
         return
 

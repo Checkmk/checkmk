@@ -2505,8 +2505,7 @@ class DropdownChoice(ValueSpec[DropdownChoiceModel]):
         invalid_choice: _Optional[str] = "complain",
         invalid_choice_title: _Optional[str] = None,
         invalid_choice_error: _Optional[str] = None,
-        no_preselect: bool = False,
-        no_preselect_title: str = "",
+        no_preselect_title: _Optional[str] = None,
         on_change: _Optional[str] = None,
         read_only: bool = False,
         encode_value: bool = True,
@@ -2548,7 +2547,6 @@ class DropdownChoice(ValueSpec[DropdownChoiceModel]):
                 "The selected element '%r' is not longer available. Please select something else."
             )
         )
-        self._no_preselect = no_preselect
         self._no_preselect_title = no_preselect_title
         self._on_change = on_change
         self._read_only = read_only
@@ -2557,11 +2555,11 @@ class DropdownChoice(ValueSpec[DropdownChoiceModel]):
         self._html_attrs: HTMLTagAttributes = {} if html_attrs is None else html_attrs
 
     def allow_empty(self) -> bool:
-        return self._read_only or not self._no_preselect
+        return self._read_only or self._no_preselect_title is None
 
     def choices(self) -> DropdownChoiceEntries:
         result = self._choices() if callable(self._choices) else self._choices
-        pre = [(None, self._no_preselect_title)] if self._no_preselect else []
+        pre = [] if self._no_preselect_title is None else [(None, self._no_preselect_title)]
         return pre + list(result)
 
     def canonical_value(self) -> _Optional[DropdownChoiceModel]:
@@ -2684,7 +2682,7 @@ class DropdownChoice(ValueSpec[DropdownChoiceModel]):
         return "%s" % hashlib.sha256(repr(val).encode()).hexdigest()
 
     def _validate_value(self, value: DropdownChoiceModel, varprefix: str) -> None:
-        if self._no_preselect and value is None:
+        if self._no_preselect_title is not None and value is None:
             raise MKUserError(varprefix, _("Please make a selection"))
 
         if self._invalid_choice == "complain" and self._value_is_invalid(value):
@@ -2967,8 +2965,7 @@ class CascadingDropdown(ValueSpec[CascadingDropdownChoiceValue]):
         orientation: str = "vertical",
         render: "_Optional[CascadingDropdown.Render]" = None,
         no_elements_text: _Optional[str] = None,
-        no_preselect: bool = False,
-        no_preselect_title: str = "",
+        no_preselect_title: _Optional[str] = None,
         render_sub_vs_page_name: _Optional[str] = None,
         render_sub_vs_request_vars: _Optional[dict] = None,
         # ValueSpec
@@ -2997,10 +2994,11 @@ class CascadingDropdown(ValueSpec[CascadingDropdownChoiceValue]):
             else _("There are no elements defined for this selection")
         )
 
-        self._no_preselect = no_preselect
-        self._no_preselect_title = no_preselect_title  # if not preselected
+        self._no_preselect_title = no_preselect_title
         self._preselected = (
-            _normalize_choices([(None, self._no_preselect_title)]) if self._no_preselect else []
+            []
+            if self._no_preselect_title is None
+            else _normalize_choices([(None, self._no_preselect_title)])
         )
 
         # When given, this ajax page is called to render the input fields of a cascaded valuespec
@@ -3009,7 +3007,7 @@ class CascadingDropdown(ValueSpec[CascadingDropdownChoiceValue]):
         self._render_sub_vs_request_vars = render_sub_vs_request_vars or {}
 
     def allow_empty(self) -> bool:
-        return not self._no_preselect
+        return self._no_preselect_title is None
 
     def choices(self) -> Sequence[CascadingDropdownCleanChoice]:
         return list(itertools.chain(self._preselected, self._choices()))
@@ -3298,7 +3296,7 @@ class CascadingDropdown(ValueSpec[CascadingDropdownChoiceValue]):
         raise MKUserError(varprefix + "_sel", _("Value %r is not allowed here.") % value)
 
     def _validate_value(self, value: CascadingDropdownChoiceValue, varprefix: str) -> None:
-        if self._no_preselect and value is None:
+        if self._no_preselect_title is not None and value is None:
             raise MKUserError(varprefix + "_sel", _("Please make a selection"))
 
         choices = self.choices()
@@ -3714,8 +3712,7 @@ class OptionalDropdownChoice(DropdownChoice):
         invalid_choice: _Optional[str] = "complain",
         invalid_choice_title: _Optional[str] = None,
         invalid_choice_error: _Optional[str] = None,
-        no_preselect: bool = False,
-        no_preselect_title: str = "",
+        no_preselect_title: _Optional[str] = None,
         on_change: _Optional[str] = None,
         read_only: bool = False,
         encode_value: bool = True,
@@ -3735,7 +3732,6 @@ class OptionalDropdownChoice(DropdownChoice):
             invalid_choice=invalid_choice,
             invalid_choice_title=invalid_choice_title,
             invalid_choice_error=invalid_choice_error,
-            no_preselect=no_preselect,
             no_preselect_title=no_preselect_title,
             on_change=on_change,
             read_only=read_only,
@@ -3880,7 +3876,7 @@ class RelativeDate(OptionalDropdownChoice):
             return _("two days ago")
         if reldays < 0:
             return _("%d days ago") % -reldays
-        choices = self.choices()  # TODO: Is this correct with no_preselect?
+        choices = self.choices()  # TODO: Is this correct when no_preselect_title is not None?
         if reldays < len(choices):
             return choices[reldays][1]
         return _("in %d days") % reldays
@@ -4391,8 +4387,7 @@ class Timerange(CascadingDropdown):
         orientation: str = "vertical",
         render: _Optional[CascadingDropdown.Render] = None,
         no_elements_text: _Optional[str] = None,
-        no_preselect: bool = False,
-        no_preselect_title: str = "",
+        no_preselect_title: _Optional[str] = None,
         render_sub_vs_page_name: _Optional[str] = None,
         render_sub_vs_request_vars: _Optional[dict] = None,
         # ValueSpec
@@ -4409,7 +4404,6 @@ class Timerange(CascadingDropdown):
             orientation=orientation,
             render=render,
             no_elements_text=no_elements_text,
-            no_preselect=no_preselect,
             no_preselect_title=no_preselect_title,
             render_sub_vs_page_name=render_sub_vs_page_name,
             render_sub_vs_request_vars=render_sub_vs_request_vars,

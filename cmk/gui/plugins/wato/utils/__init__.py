@@ -1678,8 +1678,6 @@ class ABCEventsMode(WatoMode, abc.ABC):
                         "Match this rule only during times where the selected timeperiod from the monitoring "
                         "system is active."
                     ),
-                    no_preselect=True,
-                    no_preselect_title=_("Select a timeperiod"),
                 ),
             ),
         ]

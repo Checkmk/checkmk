@@ -1858,7 +1858,6 @@ def choose_view(name: DashboardName, title: str, create_dashlet_spec_func: Calla
         title=_("View name"),
         choices=lambda: views.view_choices(allow_empty=False),
         sorted=True,
-        no_preselect=True,
         no_preselect_title="",
     )
 

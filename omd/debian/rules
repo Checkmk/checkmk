@@ -114,7 +114,7 @@ binary-arch:
 #	dh_undocumented
 	dh_installman
 	dh_link
-	dh_strip --exclude=wkhtmltopdf --exclude=cmc --exclude=waitmax --exclude agent_modbus --exclude=/site-packages/
+	dh_strip --exclude=wkhtmltopdf --exclude=cmc --exclude=waitmax --exclude agent_modbus
 	dh_compress
 	dh_fixperms
 #	dh_perl

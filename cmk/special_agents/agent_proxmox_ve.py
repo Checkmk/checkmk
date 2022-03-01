@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 # Copyright (C) 2021 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
@@ -22,14 +21,14 @@ information about VMs and nodes:
 # - https://pve.proxmox.com/pve-docs/api-viewer/apidoc.js
 # - https://pypi.org/project/proxmoxer/
 """
-# pylint: disable=isinstance-second-argument-not-valid-type
 
 import logging
 import re
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Any, Dict, Iterable, Mapping, Optional, Sequence, Tuple, Union
+from typing import Any, Dict, Iterable, Mapping, MutableMapping, Optional, Sequence, Tuple, Union
 
+import pytz
 import requests
 
 from cmk.utils.paths import tmp_dir
@@ -46,7 +45,7 @@ LOGGER = logging.getLogger("agent_proxmox_ve")
 
 RequestStructure = Union[Sequence[Mapping[str, Any]], Mapping[str, Any]]
 TaskInfo = Mapping[str, Any]
-BackupInfo = Mapping[str, Any]
+BackupInfo = MutableMapping[str, Any]
 LogData = Iterable[Mapping[str, Any]]  # [{"d": int, "t": str}, {}, ..]
 
 LogCacheFilePath = Path(tmp_dir) / "special_agents" / "agent_proxmox_ve"
@@ -485,6 +484,7 @@ def agent_proxmox_ve_main(args: Args) -> None:
                                 }
                             ],
                             "version": {},
+                            "time": {},
                         },
                     }
                 ],
@@ -519,14 +519,32 @@ def agent_proxmox_ve_main(args: Args) -> None:
         "logged_vmids": logged_backup_data,
     }
 
+    node_timezones = {}  # Timezones on nodes can be potentially different
     snapshot_data = {}
 
     for node in data["nodes"]:
+        node_timezones[node["node"]] = node["time"]["timezone"]
         # only lxc and qemu can have snapshots
         for vm in node.get("lxc", []) + node.get("qemu", []):
             snapshot_data[str(vm["vmid"])] = {
                 "snaptimes": [x["snaptime"] for x in vm["snapshot"] if "snaptime" in x],
             }
+
+    def date_to_utc(naive_string: str, tz: str) -> str:
+        """
+        Adds timezone information to a date string.
+        Returns a timezone-aware string
+        """
+        local_tz = pytz.timezone(tz)
+        timezone_unaware = datetime.strptime(naive_string, "%Y-%m-%d %H:%M:%S")
+        timezone_aware = local_tz.localize(timezone_unaware)
+        return timezone_aware.strftime("%Y-%m-%d %H:%M:%S%z")
+
+    #  overwrite all the start time strings with timezone aware start strings
+    for vmid in logged_backup_data:
+        logged_backup_data[vmid]["started_time"] = date_to_utc(
+            logged_backup_data[vmid]["started_time"], node_timezones[all_vms[vmid]["node"]]
+        )
 
     LOGGER.info("all VMs:          %r", backup_data["vmids"])
     LOGGER.info("expected backups: %r", backup_data["scheduled_vmids"])
@@ -545,6 +563,7 @@ def agent_proxmox_ve_main(args: Args) -> None:
                         "lxc": [vmid for vmid in all_vms if all_vms[vmid]["type"] == "lxc"],
                         "qemu": [vmid for vmid in all_vms if all_vms[vmid]["type"] == "qemu"],
                         "proxmox_ve_version": node["version"],
+                        "time_info": node["time"],
                         "subscription": {
                             key: value
                             for key, value in node["subscription"].items()

@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Sequence
+from typing import NamedTuple, Sequence
 
 import pytest
 
@@ -13,6 +13,15 @@ from tests.testlib import Check
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
 
 pytestmark = pytest.mark.checks
+
+
+class WaterflowReading(NamedTuple):
+    name: str
+    status: str
+    unit: str
+    flow: float
+    minflow: float
+    maxflow: float
 
 
 @pytest.mark.parametrize(
@@ -36,41 +45,35 @@ pytestmark = pytest.mark.checks
                     "OK",
                 ],
             ],
-            ["Waterflow", "0.0 l/min", "130.0 l/min", "0.0 l/min", "OK"],
-            id="Waterflow measurements are parsed correctly",
-        ),
-        pytest.param(
-            [
-                [
-                    "Control-Valve",
-                    "32 %",
-                    "OK",
-                    "2",
-                    "Cooling-Capacity",
-                    "0 W",
-                    "OK",
-                ],
-            ],
-            [],
+            WaterflowReading(
+                name="Waterflow", flow=0.0, unit="l/min", maxflow=130.0, minflow=0.0, status="OK"
+            ),
             id="Waterflow measurements are parsed correctly",
         ),
     ],
 )
 def test_parse_cmciii_lcp_waterflow(string_table: StringTable, section: StringTable):
     check = Check("cmciii_lcp_waterflow")
-    assert list(check.run_parse(string_table)) == section
+    assert check.run_parse(string_table) == section
+
+
+def test_parse_cmciii_lcp_waterflow_empty_section():
+    check = Check("cmciii_lcp_waterflow")
+    assert check.run_parse([]) is None
 
 
 @pytest.mark.parametrize(
     "string_table, discovered_item",
     [
         pytest.param(
-            ["Waterflow", "0.0 l/min", "130.0 l/min", "0.0 l/min", "OK"],
+            WaterflowReading(
+                name="Waterflow", flow=0.0, unit="l/min", maxflow=130.0, minflow=0.0, status="OK"
+            ),
             [(None, {})],
             id="Waterflow sensor is discovered within OID range.",
         ),
         pytest.param(
-            [],
+            None,
             [],
             id="Waterflow sensor is not discovered when there are no measurements for it.",
         ),
@@ -85,7 +88,9 @@ def test_discover_cmciii_lcp_waterflow(string_table: StringTable, discovered_ite
     "string_table, check_results",
     [
         pytest.param(
-            ["Waterflow", "0.0 l/min", "130.0 l/min", "0.0 l/min", "OK"],
+            WaterflowReading(
+                name="Waterflow", flow=0.0, unit="l/min", maxflow=130.0, minflow=0.0, status="OK"
+            ),
             [
                 0,
                 "Waterflow Status: OK Flow: 0.0, MinFlow: 0.0, MaxFLow: 130.0",
@@ -102,4 +107,4 @@ def test_check_cmciii_lcp_waterflow(string_table: StringTable, check_results: Se
 
 def test_check_cmciii_lcp_waterflow_empty_section():
     check = Check("cmciii_lcp_waterflow")
-    assert check.run_check("item not relevant", {}, []) is None
+    assert check.run_check("item not relevant", {}, None) is None

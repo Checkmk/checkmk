@@ -4,17 +4,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import (
-    Any,
-    Mapping,
-    Optional,
-)
-from .agent_based_api.v1 import (
-    register,
-    Service,
-    State as state,
-    type_defs,
-)
+from typing import Any, Mapping, Optional
+
+from .agent_based_api.v1 import register, Service, State, type_defs
 from .utils import ipmi
 
 # Example of output from ipmi:
@@ -255,15 +247,15 @@ def discover_ipmi(
             yield Service(item=sensor_name)
 
 
-def ipmi_status_txt_mapping(status_txt: str) -> state:
+def ipmi_status_txt_mapping(status_txt: str) -> State:
     status_txt_lower = status_txt.lower()
     if status_txt.startswith('ok') and not ("failure detected" in status_txt_lower or
                                             "in critical array" in status_txt_lower or
                                             "drive fault" in status_txt_lower):
-        return state.OK
+        return State.OK
     if status_txt.startswith('nc'):
-        return state.WARN
-    return state.CRIT
+        return State.WARN
+    return State.CRIT
 
 
 def check_ipmi(

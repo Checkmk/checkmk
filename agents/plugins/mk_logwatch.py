@@ -54,6 +54,10 @@ if sys.version_info[0] >= 3:
     )
     old_stdout, sys.stdout = sys.stdout, new_stdout
 
+DEFAULT_LOG_LEVEL = "."
+
+DUPLICATE_LINE_MESSAGE_FMT = "[the above message was repeated %d times]"
+
 MK_VARDIR = os.getenv("LOGWATCH_DIR") or os.getenv("MK_VARDIR") or os.getenv("MK_STATEDIR") or "."
 
 MK_CONFDIR = os.getenv("LOGWATCH_DIR") or os.getenv("MK_CONFDIR") or "."
@@ -511,6 +515,21 @@ def is_inode_capable(path):
     return system == "Linux"
 
 
+def get_formatted_line(line, level):
+    formatted_line = "%s %s" % (level, line)
+    if sys.stdout.isatty():
+        formatted_line = "%s%s%s" % (
+            TTY_COLORS[level],
+            formatted_line.replace("\1", "\nCONT:"),
+            TTY_COLORS["normal"],
+        )
+    return formatted_line
+
+
+def should_log_line_with_level(level, nocontext):
+    return not (nocontext and level == ".")
+
+
 def process_logfile(section, filestate, debug):
     """
     Returns tuple of (
@@ -616,7 +635,7 @@ def process_logfile(section, filestate, debug):
                 log_iter.skip_remaining()
                 break
 
-            level = "."
+            level = DEFAULT_LOG_LEVEL
             for lev, pattern, cont_patterns, replacements in section.compiled_patterns:
 
                 matches = pattern.search(line[:-1])
@@ -659,16 +678,10 @@ def process_logfile(section, filestate, debug):
 
             if level == "I":
                 level = "."
-            if section.options.nocontext and level == ".":
+            if not should_log_line_with_level(level, section.options.nocontext):
                 continue
 
-            out_line = "%s %s" % (level, line[:-1])
-            if sys.stdout.isatty():
-                out_line = "%s%s%s" % (
-                    TTY_COLORS[level],
-                    out_line.replace("\1", "\nCONT:"),
-                    TTY_COLORS["normal"],
-                )
+            out_line = get_formatted_line(line[:-1], level)
             warnings_and_errors.append("%s\n" % out_line)
 
         new_offset = log_iter.get_position()
@@ -714,6 +727,7 @@ class Options(object):  # pylint: disable=useless-object-inheritance
         "maxcontextlines": None,
         "maxoutputsize": 500000,  # same as logwatch_max_filesize in check plugin
         "fromstart": False,
+        "skipconsecutiveduplicated": False,
     }
 
     def __init__(self):
@@ -763,6 +777,10 @@ class Options(object):  # pylint: disable=useless-object-inheritance
     def fromstart(self):
         return self._attr_or_default("fromstart")
 
+    @property
+    def skipconsecutiveduplicated(self):
+        return self._attr_or_default("skipconsecutiveduplicated")
+
     def _attr_or_default(self, key):
         if key in self.values:
             return self.values[key]
@@ -798,7 +816,7 @@ class Options(object):  # pylint: disable=useless-object-inheritance
             elif key in ("regex", "iregex"):
                 flags = (re.IGNORECASE if key.startswith("i") else 0) | re.UNICODE
                 self.values["regex"] = re.compile(value, flags)
-            elif key in ("nocontext", "fromstart"):
+            elif key in ("nocontext", "fromstart", "skipconsecutiveduplicated"):
                 if value.lower() not in Options.MAP_BOOL:
                     raise ValueError(
                         "Invalid %s: %r (choose from %r)"
@@ -1054,12 +1072,49 @@ def _filter_maxcontextlines(lines_list, before, after):
             yield lines_list[idx]
 
 
+def _filter_consecutive_duplicates(lines, nocontext):
+    """
+    Filters out consecutive duplicated lines and adds a context line (if nocontext=False) with the
+    number of removed lines for every chunk of removed lines
+    """
+
+    lines = iter(lines)
+
+    counter = 0
+    current_line = next(lines, None)
+    next_line = None
+
+    while True:
+        if current_line is None:
+            return
+
+        next_line = next(lines, None)
+
+        if counter == 0:
+            yield current_line
+
+        if current_line == next_line:
+            counter += 1
+            continue
+
+        if counter > 0 and should_log_line_with_level(DEFAULT_LOG_LEVEL, nocontext):
+            unformatted_msg = DUPLICATE_LINE_MESSAGE_FMT % (counter)
+            duplicate_line_msg = get_formatted_line(unformatted_msg, DEFAULT_LOG_LEVEL)
+            yield "%s\n" % duplicate_line_msg
+
+        counter = 0
+        current_line = next_line
+
+
 def write_output(header, lines, options):
 
     if options.maxcontextlines:
         lines = _filter_maxcontextlines(lines, *options.maxcontextlines)
 
     lines = _filter_maxoutputsize(lines, options.maxoutputsize)
+
+    if options.skipconsecutiveduplicated:
+        lines = _filter_consecutive_duplicates(lines, options.nocontext)
 
     sys.stdout.write(header)
     sys.stdout.writelines(map(ensure_str, lines))

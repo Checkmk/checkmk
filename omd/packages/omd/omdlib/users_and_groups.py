@@ -53,37 +53,38 @@ from cmk.utils.exceptions import MKTerminate
 
 def find_processes_of_user(username: str) -> List[str]:
     try:
-        p = subprocess.Popen(  # pylint:disable=consider-using-with
+        completed_process = subprocess.run(
             ["pgrep", "-u", username],
             stdin=subprocess.DEVNULL,
             stdout=subprocess.PIPE,
             close_fds=True,
             encoding="utf-8",
+            check=False,
         )
-        if p.stdout is None:
-            raise Exception()
-        return p.stdout.read().split()
+        return completed_process.stdout.split()
     except Exception:
         return []
 
 
 def groupdel(groupname: str) -> None:
     try:
-        p = subprocess.Popen(  # pylint:disable=consider-using-with
+        completed_process = subprocess.run(
             ["groupdel", groupname],
             stdin=subprocess.DEVNULL,
             stdout=subprocess.DEVNULL,
             stderr=subprocess.PIPE,
             close_fds=True,
             encoding="utf-8",
+            check=False,
         )
     except OSError as e:
         raise MKTerminate("\n" + tty.error + ": Failed to delete group '%s': %s" % (groupname, e))
 
-    stderr = p.communicate()[1]
-    if p.returncode != 0:
+    if completed_process.returncode:
         raise MKTerminate(
-            "\n" + tty.error + ": Failed to delete group '%s': %s" % (groupname, stderr)
+            "\n"
+            + tty.error
+            + ": Failed to delete group '%s': %s" % (groupname, completed_process.stderr)
         )
 
 
@@ -125,15 +126,7 @@ def _groupadd(groupname: str, gid: Optional[str] = None) -> None:
     if gid is not None:
         cmd += ["-g", "%d" % int(gid)]
     cmd.append(groupname)
-
-    if (
-        subprocess.Popen(  # pylint:disable=consider-using-with
-            cmd,
-            close_fds=True,
-            stdin=subprocess.DEVNULL,
-        ).wait()
-        != 0
-    ):
+    if subprocess.run(cmd, close_fds=True, stdin=subprocess.DEVNULL, check=False).returncode:
         raise MKTerminate("Cannot create group for site user.")
 
 
@@ -145,21 +138,23 @@ def _add_user_to_group(version_info: "VersionInfo", user: str, group: str) -> bo
 def userdel(name: str) -> None:
     if user_exists(name):
         try:
-            p = subprocess.Popen(  # pylint:disable=consider-using-with
+            completed_process = subprocess.run(
                 ["userdel", "-r", name],
                 stdin=subprocess.DEVNULL,
                 stdout=subprocess.DEVNULL,
                 stderr=subprocess.PIPE,
                 close_fds=True,
                 encoding="utf-8",
+                check=False,
             )
         except OSError as e:
             raise MKTerminate("\n" + tty.error + ": Failed to delete user '%s': %s" % (name, e))
 
-        stderr = p.communicate()[1]
-        if p.returncode != 0:
+        if completed_process.returncode:
             raise MKTerminate(
-                "\n" + tty.error + ": Failed to delete user '%s': %s" % (name, stderr)
+                "\n"
+                + tty.error
+                + ": Failed to delete user '%s': %s" % (name, completed_process.stderr)
             )
 
     # On some OSes (e.g. debian) the group is automatically removed if

@@ -1,0 +1,13 @@
+Title: KUBE: Conversion of timestamps
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1646214768
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b2
+
+Previously, when converting a timestamp from the Kubernetes client, the UTC format
+would not be taken into account properly.

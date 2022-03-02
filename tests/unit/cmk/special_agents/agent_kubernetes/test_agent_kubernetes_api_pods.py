@@ -205,7 +205,11 @@ class TestPodStartUp(TestCase):
         """
         pod_status = api.PodStatus(
             start_time=int(
-                convert_to_timestamp(datetime.datetime(2021, 11, 22, 16, 11, 38, 710257))
+                convert_to_timestamp(
+                    datetime.datetime(
+                        2021, 11, 22, 16, 11, 38, 710257, tzinfo=datetime.timezone.utc
+                    )
+                )
             ),
             conditions=[
                 api.PodCondition(
@@ -274,7 +278,11 @@ class TestPodStartUp(TestCase):
             uid=Mock(),
             status=api.PodStatus(
                 start_time=int(
-                    convert_to_timestamp(datetime.datetime(2021, 11, 22, 16, 11, 38, 710257))
+                    convert_to_timestamp(
+                        datetime.datetime(
+                            2021, 11, 22, 16, 11, 38, 710257, tzinfo=datetime.timezone.utc
+                        )
+                    )
                 ),
                 conditions=[
                     api.PodCondition(

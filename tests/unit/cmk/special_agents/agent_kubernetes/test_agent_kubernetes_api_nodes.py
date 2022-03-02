@@ -24,7 +24,7 @@ class TestAPINode:
             "name": "k8",
             "creation_timestamp": datetime.datetime.strptime(
                 "2021-05-04T09:01:13Z", "%Y-%m-%dT%H:%M:%SZ"
-            ),
+            ).replace(tzinfo=datetime.timezone.utc),
             "uid": "42c82288-5524-49cb-af75-065e73fedc88",
             "labels": labels,
         }
@@ -34,7 +34,7 @@ class TestAPINode:
         assert metadata.namespace is None
 
     def test_parse_metadata_datetime(self):
-        now = datetime.datetime(2021, 10, 11, 13, 53, 10)
+        now = datetime.datetime(2021, 10, 11, 13, 53, 10, tzinfo=datetime.timezone.utc)
         node_raw_metadata = {
             "name": "unittest",
             "creation_timestamp": now,

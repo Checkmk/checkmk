@@ -562,13 +562,23 @@ void WaitForNetwork(std::chrono::seconds period) {
 }
 
 ///  returns non empty port if controller had been started
-std::optional<uint16_t> OptionallyStartAgentController() {
-    std::optional<uint16_t> port;
-    if (ac ::IsRunController(cfg::GetLoadedConfig()) &&
-        ac::StartAgentController(wtools::GetArgv(0))) {
-        port = ac::windows_internal_port;
-        return port;
+std::optional<uint16_t> OptionallyStartAgentController(
+    std::chrono::milliseconds validate_process_delay) {
+    if (!ac ::IsRunController(cfg::GetLoadedConfig())) {
+        return {};
     }
+
+    if (auto pid = ac::StartAgentController(wtools::GetArgv(0))) {
+        std::this_thread::sleep_for(validate_process_delay);
+        if (wtools::GetProcessPath(*pid).empty()) {
+            XLOG::l("Controller process pid={} died in {}ms", *pid,
+                    validate_process_delay.count());
+            ac::DeleteControllerInBin(wtools::GetArgv(0));
+            return {};
+        }
+        return ac::windows_internal_port;
+    }
+
     return {};
 }
 
@@ -601,7 +611,7 @@ void ServiceProcessor::mainThread(world::ExternalPort *ex_port) noexcept {
     }
 
     ac::CreateLegacyModeFile();
-    auto port = OptionallyStartAgentController();
+    auto port = OptionallyStartAgentController(1000ms);
     ON_OUT_OF_SCOPE(ac::KillAgentController(wtools::GetArgv(0)));
     OpenFirewall(port.has_value());
     uint16_t use_port = port ? *port

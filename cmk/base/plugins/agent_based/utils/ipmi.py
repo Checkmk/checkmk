@@ -18,9 +18,7 @@ from typing import (
     Union,
 )
 
-from ..agent_based_api.v1 import check_levels, Metric, Result
-from ..agent_based_api.v1 import State as state
-from ..agent_based_api.v1 import type_defs
+from ..agent_based_api.v1 import check_levels, Metric, Result, State, type_defs
 
 # TODO: Cleanup the whole status text mapping in utils/ipmi.py, ipmi_sensors.include, ipmi.py
 
@@ -38,7 +36,7 @@ class Sensor:
 
 Section = Dict[str, Sensor]
 IgnoreParams = Mapping[str, Sequence[str]]
-StatusTxtMapping = Callable[[str], state]
+StatusTxtMapping = Callable[[str], State]
 
 
 class DiscoveryParams(TypedDict):
@@ -187,12 +185,12 @@ def check_ipmi_detailed(
 
     for wato_status_txt, wato_status in params.get("sensor_states", []):
         if sensor.status_txt.startswith(wato_status_txt):
-            yield Result(state=state(wato_status), summary="User-defined state")
+            yield Result(state=State(wato_status), summary="User-defined state")
             break
 
     # Sensor reports 'nc' ('non critical'), so we set the state to WARNING
     if sensor.status_txt.startswith("nc"):
-        yield Result(state=state.WARN, summary="Sensor is non-critical")
+        yield Result(state=State.WARN, summary="Sensor is non-critical")
 
 
 def check_ipmi_summarized(
@@ -200,7 +198,7 @@ def check_ipmi_summarized(
     section: Section,
     status_txt_mapping: StatusTxtMapping,
 ) -> type_defs.CheckResult:
-    states = [state.OK]
+    states = [State.OK]
     warn_texts = []
     crit_texts = []
     ok_texts = []
@@ -220,7 +218,7 @@ def check_ipmi_summarized(
         sensor_state = status_txt_mapping(sensor.status_txt)
         for wato_status_txt, wato_status in params.get("sensor_states", []):
             if sensor.status_txt.startswith(wato_status_txt):
-                sensor_state = state(wato_status)
+                sensor_state = State(wato_status)
                 break
 
         if sensor.value is not None:
@@ -231,16 +229,16 @@ def check_ipmi_summarized(
                 sensor.unit,
             )
             if sensor_result:
-                sensor_state = state.worst(sensor_state, sensor_result.state)
+                sensor_state = State.worst(sensor_state, sensor_result.state)
                 txt = sensor_result.summary
 
             if "amb" in sensor_name or "Ambient" in sensor_name:
                 ambient_count += 1
                 ambient_sum += sensor.value
 
-        if sensor_state is state.WARN:
+        if sensor_state is State.WARN:
             warn_texts.append(txt)
-        elif sensor_state is state.CRIT:
+        elif sensor_state is State.CRIT:
             crit_texts.append(txt)
         else:
             ok_texts.append(txt)
@@ -254,25 +252,25 @@ def check_ipmi_summarized(
 
     infotexts = ["%d sensors" % len(section)]
     for title, texts, text_state in [
-        ("OK", ok_texts, state.OK),
-        ("WARN", warn_texts, state.WARN),
-        ("CRIT", crit_texts, state.CRIT),
-        ("skipped", skipped_texts, state.OK),
+        ("OK", ok_texts, State.OK),
+        ("WARN", warn_texts, State.WARN),
+        ("CRIT", crit_texts, State.CRIT),
+        ("skipped", skipped_texts, State.OK),
     ]:
         if len(section) == len(texts):
             infotext = "%d sensors %s" % (len(section), title)
-            if text_state is not state.OK:
+            if text_state is not State.OK:
                 infotext += ": %s" % ", ".join(texts)
             yield Result(state=text_state, summary=infotext)
             return
 
         if texts:
             infotext = "%d %s" % (len(texts), title)
-            if text_state is not state.OK:
+            if text_state is not State.OK:
                 infotext += ": %s" % ", ".join(texts)
             infotexts.append(infotext)
 
     yield Result(
-        state=state.worst(*states),
+        state=State.worst(*states),
         summary=" - ".join(infotexts),
     )

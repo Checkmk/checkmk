@@ -29,14 +29,14 @@ def test_cluster_allocatable_cpu_resource(node_allocatable_cpu, cluster_nodes, c
 def test_write_cluster_api_sections_registers_sections_to_be_written(
     cluster, cluster_api_sections, write_sections_mock
 ):
-    agent_kube.write_cluster_api_sections(cluster)
+    agent_kube.write_cluster_api_sections("cluster", cluster)
     assert list(write_sections_mock.call_args[0][0]) == cluster_api_sections
 
 
 def test_write_cluster_api_sections_maps_section_names_to_callables(
     cluster, cluster_api_sections, write_sections_mock
 ):
-    agent_kube.write_cluster_api_sections(cluster)
+    agent_kube.write_cluster_api_sections("cluster", cluster)
     assert all(
         callable(write_sections_mock.call_args[0][0][section_name])
         for section_name in cluster_api_sections

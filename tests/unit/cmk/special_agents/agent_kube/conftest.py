@@ -365,6 +365,7 @@ def cluster_api_sections():
         "kube_cpu_resources_v1",
         "kube_allocatable_memory_resource_v1",
         "kube_allocatable_cpu_resource_v1",
+        "kube_cluster_info_v1",
     ]
 
 

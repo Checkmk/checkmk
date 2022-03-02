@@ -344,3 +344,9 @@ class PerformanceUsage(BaseModel):
     """section: [kube_performance_cpu_v1, kube_performance_memory_v1]"""
 
     resource: Union[Cpu, Memory] = Field(discriminator="type_")
+
+
+class ClusterInfo(BaseModel):
+    """section: kube_cluster_info_v1"""
+
+    name: str

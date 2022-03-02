@@ -865,7 +865,7 @@ def _write_sections(sections: Mapping[str, Callable[[], Optional[JsonProtocol]]]
             writer.append(section_output.json())
 
 
-def write_cluster_api_sections(cluster: Cluster) -> None:
+def write_cluster_api_sections(cluster_name: str, cluster: Cluster) -> None:
     sections = {
         "kube_pod_resources_v1": cluster.pod_resources,
         "kube_allocatable_pods_v1": cluster.allocatable_pods,
@@ -875,6 +875,7 @@ def write_cluster_api_sections(cluster: Cluster) -> None:
         "kube_cpu_resources_v1": cluster.cpu_resources,
         "kube_allocatable_memory_resource_v1": cluster.allocatable_memory_resource,
         "kube_allocatable_cpu_resource_v1": cluster.allocatable_cpu_resource,
+        "kube_cluster_info_v1": lambda: section.ClusterInfo(name=cluster_name),
     }
     _write_sections(sections)
 
@@ -1719,7 +1720,7 @@ def main(args: Optional[List[str]] = None) -> int:
 
             # Sections based on API server data
             LOGGER.info("Write cluster sections based on API data")
-            write_cluster_api_sections(cluster)
+            write_cluster_api_sections(arguments.cluster, cluster)
 
             monitored_namespaces = filter_monitored_namespaces(
                 cluster.namespaces(),

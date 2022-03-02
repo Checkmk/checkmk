@@ -193,4 +193,10 @@ class DeploymentConditions(BaseModel):
     replicafailure: Optional[DeploymentCondition]
 
 
+class ClusterInfo(BaseModel):
+    """section: kube_cluster_info_v1"""
+
+    name: str
+
+
 VSResultAge = Union[Tuple[Literal["levels"], Tuple[int, int]], Literal["no_levels"]]

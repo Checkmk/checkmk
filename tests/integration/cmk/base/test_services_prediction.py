@@ -8,6 +8,7 @@ import json
 import time
 from dataclasses import asdict
 from datetime import datetime
+from pathlib import Path
 
 import pytest
 
@@ -31,16 +32,16 @@ def cfg_setup_fixture(request, web, site: Site):
     site.makedirs("var/check_mk/rrd/test-prediction")
     with open(site.path("var/check_mk/rrd/test-prediction/CPU_load.rrd"), "wb") as f:
         f.write(
-            open(  # pylint:disable=consider-using-with
-                "%s/tests/integration/cmk/base/test-files/CPU_load.rrd" % repo_path(), "rb"
-            ).read()
+            Path(
+                repo_path(), "tests", "integration", "cmk", "base", "test-files", "CPU_load.rrd"
+            ).read_bytes()
         )
 
     site.write_text_file(
         "var/check_mk/rrd/test-prediction/CPU_load.info",
-        open(  # pylint:disable=consider-using-with
-            "%s/tests/integration/cmk/base/test-files/CPU_load.info" % repo_path()
-        ).read(),
+        Path(
+            repo_path(), "tests", "integration", "cmk", "base", "test-files", "CPU_load.info"
+        ).read_text(),
     )
 
     site.restart_core()

@@ -4,14 +4,16 @@ catalog: containerization/kubernetes
 license: GPLv2
 distribution: check_mk
 description:
- This check provides an informational overview of a Kubernetes Pod
+ This check provides an informational overview of a Kubernetes pod
  by displaying
 
  - Node, if present
 
  - Namespace
 
- - Age, base on the creationTimestamp
+ - Age, based on the creationTimestamp
+
+ - Controlled by
 
  - QoS class
 
@@ -24,4 +26,4 @@ description:
  It requires that the special agent kube is configured.
 
 discovery:
- One service is created for each Pod.
+ One service is created for each pod.

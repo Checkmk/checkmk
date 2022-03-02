@@ -102,6 +102,7 @@ def check_kube_pod_info(section: PodInfo) -> CheckResult:
             "qos_class": section.qos_class,
             "uid": section.uid,
             "restart_policy": section.restart_policy,
+            "control_chain": section.controllers,
         }
     )
 

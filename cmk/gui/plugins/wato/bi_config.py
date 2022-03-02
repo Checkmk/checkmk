@@ -1509,6 +1509,9 @@ class NodeVisualizationLayoutStyle(ValueSpec):
             "example.create_example(%s)" % (json.dumps(varprefix), json.dumps(value))
         )
 
+    def canonical_value(self) -> _Optional[dict[str, Any]]:
+        return None
+
     def value_to_html(self, value: dict[str, Any]) -> ValueSpecText:
         return ""
 

@@ -214,10 +214,11 @@ class ValueSpec(abc.ABC, Generic[T]):
         html.set_focus(varprefix)
 
     # TODO: Investigate: The Optional here does not really fit the doc string. What to do with this?
+    @abc.abstractmethod
     def canonical_value(self) -> _Optional[T]:
         """Create a canonical, minimal, default value that matches the datatype
         of the value specification and fulfills also data validation."""
-        return None
+        raise NotImplementedError()
 
     def default_value(self) -> _Optional[T]:
         """Return a default value for this variable
@@ -6473,6 +6474,9 @@ class IconSelector(ValueSpec):
 
         html.close_div()
 
+    def canonical_value(self) -> _Optional[str]:
+        return None
+
     def from_html_vars(self, varprefix: str) -> Union[_Optional[str], dict[str, _Optional[str]]]:
         icon = self._from_html_vars(varprefix)
         if not self._with_emblem:
@@ -6587,6 +6591,9 @@ class Color(ValueSpec):
             onclose=self._on_change,
         )
 
+    def canonical_value(self) -> _Optional[str]:
+        return None
+
     def from_html_vars(self, varprefix: str) -> _Optional[str]:
         color = request.var(varprefix + "_value")
         if color == "":
@@ -6662,6 +6669,9 @@ class SSHKeyPair(ValueSpec):
             html.hidden_field(varprefix, self._encode_key_for_url(value), add_var=True)
         else:
             html.write_text(_("Key pair will be generated when you save."))
+
+    def canonical_value(self) -> _Optional[SSHKeyPairValue]:
+        return None
 
     def value_to_html(self, value: SSHKeyPairValue) -> ValueSpecText:
         return self._get_key_fingerprint(value)
@@ -6756,6 +6766,9 @@ class _CAInput(ValueSpec[tuple[str, int, bytes]]):
         )
         html.div(None, id_=varprefix + "_status")
         html.text_area(varprefix, content.decode("ascii"), cols=80, readonly="")
+
+    def canonical_value(self) -> _Optional[tuple[str, int, bytes]]:
+        return None
 
     def value_to_json(self, value: tuple[str, int, bytes]) -> JSONValue:
         return [value[0], value[1], value[2].decode("ascii")]

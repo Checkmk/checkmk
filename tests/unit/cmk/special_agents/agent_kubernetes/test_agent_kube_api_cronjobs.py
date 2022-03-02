@@ -16,7 +16,7 @@ class TestAPICronJob:
             "namespace": "default",
             "creation_timestamp": datetime.datetime.strptime(
                 "2021-05-04T09:01:13Z", "%Y-%m-%dT%H:%M:%SZ"
-            ),
+            ).replace(tzinfo=datetime.timezone.utc),
             "uid": "uid",
         }
         metadata_obj = client.V1ObjectMeta(**node_raw_metadata)

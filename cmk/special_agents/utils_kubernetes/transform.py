@@ -12,7 +12,6 @@ data structures to version independent data structured defined in schemata.api
 from __future__ import annotations
 
 import datetime
-import time
 from typing import Dict, List, Mapping, Optional, Sequence, Type, Union
 
 from kubernetes import client  # type: ignore[import] # pylint: disable=import-error
@@ -76,14 +75,19 @@ def parse_memory(value: str) -> float:
 # TODO: change to Timestamp type
 def convert_to_timestamp(k8s_date_time: Union[str, datetime.datetime]) -> float:
     if isinstance(k8s_date_time, str):
-        date_time = datetime.datetime.strptime(k8s_date_time, "%Y-%m-%dT%H:%M:%SZ")
+        date_time = datetime.datetime.strptime(k8s_date_time, "%Y-%m-%dT%H:%M:%SZ").replace(
+            tzinfo=datetime.timezone.utc
+        )
     elif isinstance(k8s_date_time, datetime.datetime):
         date_time = k8s_date_time
+        if date_time.tzinfo is None:
+            raise ValueError(f"Can not convert to timestamp: '{k8s_date_time}' is missing tzinfo")
     else:
         raise TypeError(
             f"Can not convert to timestamp: '{k8s_date_time}' of type {type(k8s_date_time)}"
         )
-    return time.mktime(date_time.timetuple())
+
+    return date_time.timestamp()
 
 
 def parse_labels(labels: Mapping[str, str]) -> Optional[Mapping[LabelName, Label]]:

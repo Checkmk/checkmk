@@ -1,0 +1,13 @@
+Title: KUBE: kube_node_conditions handling of missing node conditions
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1646221158
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0b2
+
+The available conditions are specific to the cluster setup. Previously,
+the check always expected that all conditions are present which led to a crash.
+This werk changes this behaviour by omitting non-present conditions.

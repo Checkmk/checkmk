@@ -9,6 +9,8 @@ import pytest
 from cmk.base.plugins.agent_based import ipmi
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service
 from cmk.base.plugins.agent_based.agent_based_api.v1 import State as state
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
+from cmk.base.plugins.agent_based.utils import ipmi as ipmi_utils
 
 SECTION_IPMI = ipmi.parse_ipmi(
     [
@@ -192,45 +194,20 @@ SECTION_IPMI_DISCRETE = ipmi.parse_ipmi(
 )
 
 
-def patch_discovery_params_retrieval(monkeypatch, rules):
-    class ConfigCache:
-        def __init__(self, rules):
-            self.rules = rules
-
-        def host_extra_conf(self, *_):
-            return self.rules
-
-    monkeypatch.setattr(
-        ipmi,
-        "get_discovery_ruleset",
-        lambda *_: rules,
-    )
-    monkeypatch.setattr(
-        ipmi,
-        "get_config_cache",
-        lambda: ConfigCache(rules),
-    )
-    monkeypatch.setattr(
-        ipmi,
-        "host_name",
-        lambda: None,
-    )
-
-
 @pytest.mark.parametrize(
     "discovery_params, discovery_results",
     [
         (
-            [],
+            {"discovery_mode": ("summarize", {})},
             [Service(item="Summary", parameters={}, labels=[])],
         ),
         (
-            [
-                (
+            {
+                "discovery_mode": (
                     "single",
                     {"ignored_sensors": ["VR_1.2V_CPU2", "Riser_Config"]},
-                )
-            ],  # legacy-style params
+                ),
+            },
             [
                 Service(item="CMOS_Battery", parameters={}, labels=[]),
                 Service(item="ROMB_Battery", parameters={}, labels=[]),
@@ -340,23 +317,24 @@ def patch_discovery_params_retrieval(monkeypatch, rules):
             ],
         ),
         (
-            [
-                {
-                    "discovery_mode": (
-                        "single",
-                        {"ignored_sensorstates": ["ok", "ns"]},
-                    )
-                }
-            ],
+            {
+                "discovery_mode": (
+                    "single",
+                    {"ignored_sensorstates": ["ok", "ns"]},
+                )
+            },
             [],
         ),
     ],
 )
-def test_regression_discovery(monkeypatch, discovery_params, discovery_results):
-    patch_discovery_params_retrieval(monkeypatch, discovery_params)
+def test_regression_discovery(
+    discovery_params: ipmi_utils.DiscoveryParams,
+    discovery_results: DiscoveryResult,
+) -> None:
     assert (
         list(
             ipmi.discover_ipmi(
+                discovery_params,
                 SECTION_IPMI,
                 SECTION_IPMI_DISCRETE,
             )
@@ -1208,7 +1186,10 @@ def test_regression_discovery(monkeypatch, discovery_params, discovery_results):
         ),
     ],
 )
-def test_regression_check(item, check_results):
+def test_regression_check(
+    item: str,
+    check_results: CheckResult,
+) -> None:
     assert (
         list(
             ipmi.check_ipmi(

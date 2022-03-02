@@ -5,7 +5,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 # type: ignore[list-item,import,assignment,misc,operator,attr-defined]  # TODO: see which are needed in this file
 
-import cmk.base.plugins.agent_based.utils.ipmi as ipmi
 from cmk.base.check_api import host_extra_conf, host_name
 
 from .ipmi_common import check_ipmi_common, ipmi_ignore_entry
@@ -193,7 +192,7 @@ inventory_ipmi_rules = []
 def inventory_freeipmi(parsed):
     rules = host_extra_conf(host_name(), inventory_ipmi_rules)
     if rules:
-        mode, ignore_params = ipmi.transform_discovery_ruleset(rules[0])
+        mode, ignore_params = rules[0]["discovery_mode"]
     else:
         mode, ignore_params = "single", {}
 

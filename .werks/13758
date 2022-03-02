@@ -1,0 +1,17 @@
+Title: ipmi_sensors: Fix crash due to incomplete IPMI data
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1646657815
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b2
+
+The check plugin <tt>ipmi_sensors</tt> crashed with
+<tt>AttributeError ('NoneType' object has no attribute 'startswith')</tt>
+in case the IPMI datasource started to deliver incomplete data. This can
+happen for example due to bugs in IPMI firmwares related to SDR caching.
+
+With this werk, the corresponding services go stale instead of a crash.

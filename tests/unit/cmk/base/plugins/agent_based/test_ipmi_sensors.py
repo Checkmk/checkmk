@@ -8,19 +8,14 @@ from typing import Any, Mapping
 
 import pytest
 
-from tests.testlib import Check
-
-from tests.unit.checks.checktestlib import MockHostExtraConf
-from tests.unit.conftest import FixRegister
-
-from cmk.utils.type_defs import CheckPluginName, SectionName
-
+from cmk.base.plugins.agent_based import ipmi_sensors
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
     CheckResult,
     DiscoveryResult,
     StringTable,
 )
+from cmk.base.plugins.agent_based.utils import ipmi as ipmi_utils
 
 _STRING_TABLES = [
     [
@@ -83,407 +78,271 @@ _STRING_TABLES = [
 ]
 
 _SECTIONS = [
+    {},
     {
-        "CPU_Temp": {
-            "crit_high": None,
-            "crit_low": None,
-            "status_txt": None,
-            "unit": "C",
-            "unrec_high": None,
-            "unrec_low": None,
-            "value": None,
-            "warn_high": None,
-            "warn_low": None,
-        },
-        "PS1_Status": {
-            "crit_high": None,
-            "crit_low": None,
-            "status_txt": None,
-            "unit": None,
-            "unrec_high": None,
-            "unrec_low": None,
-            "value": None,
-            "warn_high": None,
-            "warn_low": None,
-        },
-        "PS2_Status": {
-            "crit_high": None,
-            "crit_low": None,
-            "status_txt": None,
-            "unit": None,
-            "unrec_high": None,
-            "unrec_low": None,
-            "value": None,
-            "warn_high": None,
-            "warn_low": None,
-        },
-        "Peripheral_Temp": {
-            "crit_high": None,
-            "crit_low": None,
-            "status_txt": None,
-            "unit": "C",
-            "unrec_high": None,
-            "unrec_low": None,
-            "value": None,
-            "warn_high": None,
-            "warn_low": None,
-        },
-        "System_Temp": {
-            "crit_high": None,
-            "crit_low": None,
-            "status_txt": None,
-            "unit": "C",
-            "unrec_high": None,
-            "unrec_low": None,
-            "value": None,
-            "warn_high": None,
-            "warn_low": None,
-        },
+        "Fan_FAN1": ipmi_utils.Sensor(
+            status_txt="OK",
+            unit="RPM",
+            value=6800.0,
+            crit_low=600.0,
+            warn_low=None,
+            warn_high=None,
+            crit_high=25400.0,
+        ),
+        "Fan_FAN2": ipmi_utils.Sensor(
+            status_txt="OK",
+            unit="RPM",
+            value=6700.0,
+            crit_low=600.0,
+            warn_low=None,
+            warn_high=None,
+            crit_high=25400.0,
+        ),
+        "Physical_Security_Chassis_Intru": ipmi_utils.Sensor(
+            status_txt="General Chassis Intrusion",
+            unit="",
+            value=None,
+            crit_low=None,
+            warn_low=None,
+            warn_high=None,
+            crit_high=None,
+        ),
+        "Power_Supply_PS1_Status": ipmi_utils.Sensor(
+            status_txt="Presence detected",
+            unit="",
+            value=None,
+            crit_low=None,
+            warn_low=None,
+            warn_high=None,
+            crit_high=None,
+        ),
+        "Power_Supply_PS2_Status": ipmi_utils.Sensor(
+            status_txt="Presence detected",
+            unit="",
+            value=None,
+            crit_low=None,
+            warn_low=None,
+            warn_high=None,
+            crit_high=None,
+        ),
+        "Temperature_CPU_Temp": ipmi_utils.Sensor(
+            status_txt="OK",
+            unit="C",
+            value=36.0,
+            crit_low=0.0,
+            warn_low=None,
+            warn_high=None,
+            crit_high=100.0,
+        ),
+        "Temperature_DIMMA1_Temp": ipmi_utils.Sensor(
+            status_txt="OK",
+            unit="C",
+            value=22.0,
+            crit_low=2.0,
+            warn_low=None,
+            warn_high=None,
+            crit_high=85.0,
+        ),
+        "Temperature_DIMMA2_Temp": ipmi_utils.Sensor(
+            status_txt="OK",
+            unit="C",
+            value=24.0,
+            crit_low=2.0,
+            warn_low=None,
+            warn_high=None,
+            crit_high=85.0,
+        ),
+        "Temperature_Peripheral_Temp": ipmi_utils.Sensor(
+            status_txt="OK",
+            unit="C",
+            value=27.0,
+            crit_low=-7.0,
+            warn_low=None,
+            warn_high=None,
+            crit_high=85.0,
+        ),
+        "Temperature_System_Temp": ipmi_utils.Sensor(
+            status_txt="OK",
+            unit="C",
+            value=18.0,
+            crit_low=-7.0,
+            warn_low=None,
+            warn_high=None,
+            crit_high=85.0,
+        ),
+        "Voltage_12V": ipmi_utils.Sensor(
+            status_txt="OK",
+            unit="V",
+            value=11.95,
+            crit_low=10.52,
+            warn_low=None,
+            warn_high=None,
+            crit_high=13.22,
+        ),
+        "Voltage_AVCC": ipmi_utils.Sensor(
+            status_txt="OK",
+            unit="V",
+            value=3.37,
+            crit_low=2.49,
+            warn_low=None,
+            warn_high=None,
+            crit_high=3.6,
+        ),
+        "Voltage_VDIMM": ipmi_utils.Sensor(
+            status_txt="OK",
+            unit="V",
+            value=1.46,
+            crit_low=1.12,
+            warn_low=None,
+            warn_high=None,
+            crit_high=1.72,
+        ),
+        "Voltage_VSB": ipmi_utils.Sensor(
+            status_txt="OK",
+            unit="V",
+            value=3.3,
+            crit_low=2.49,
+            warn_low=None,
+            warn_high=None,
+            crit_high=3.6,
+        ),
+        "Voltage_Vcpu": ipmi_utils.Sensor(
+            status_txt="OK",
+            unit="V",
+            value=1.78,
+            crit_low=1.26,
+            warn_low=None,
+            warn_high=None,
+            crit_high=2.09,
+        ),
     },
     {
-        "Fan_FAN1": {
-            "crit_high": 25400.0,
-            "crit_low": 600.0,
-            "status_txt": "OK",
-            "unit": "RPM",
-            "unrec_high": None,
-            "unrec_low": None,
-            "value": 6800.0,
-            "warn_high": None,
-            "warn_low": None,
-        },
-        "Fan_FAN2": {
-            "crit_high": 25400.0,
-            "crit_low": 600.0,
-            "status_txt": "OK",
-            "unit": "RPM",
-            "unrec_high": None,
-            "unrec_low": None,
-            "value": 6700.0,
-            "warn_high": None,
-            "warn_low": None,
-        },
-        "Physical_Security_Chassis_Intru": {
-            "crit_high": None,
-            "crit_low": None,
-            "status_txt": "General Chassis Intrusion",
-            "unit": None,
-            "unrec_high": None,
-            "unrec_low": None,
-            "value": None,
-            "warn_high": None,
-            "warn_low": None,
-        },
-        "Power_Supply_PS1_Status": {
-            "crit_high": None,
-            "crit_low": None,
-            "status_txt": "Presence detected",
-            "unit": None,
-            "unrec_high": None,
-            "unrec_low": None,
-            "value": None,
-            "warn_high": None,
-            "warn_low": None,
-        },
-        "Power_Supply_PS2_Status": {
-            "crit_high": None,
-            "crit_low": None,
-            "status_txt": "Presence detected",
-            "unit": None,
-            "unrec_high": None,
-            "unrec_low": None,
-            "value": None,
-            "warn_high": None,
-            "warn_low": None,
-        },
-        "Temperature_CPU_Temp": {
-            "crit_high": 100.0,
-            "crit_low": 0.0,
-            "status_txt": "OK",
-            "unit": "C",
-            "unrec_high": None,
-            "unrec_low": None,
-            "value": 36.0,
-            "warn_high": None,
-            "warn_low": None,
-        },
-        "Temperature_DIMMA1_Temp": {
-            "crit_high": 85.0,
-            "crit_low": 2.0,
-            "status_txt": "OK",
-            "unit": "C",
-            "unrec_high": None,
-            "unrec_low": None,
-            "value": 22.0,
-            "warn_high": None,
-            "warn_low": None,
-        },
-        "Temperature_DIMMA2_Temp": {
-            "crit_high": 85.0,
-            "crit_low": 2.0,
-            "status_txt": "OK",
-            "unit": "C",
-            "unrec_high": None,
-            "unrec_low": None,
-            "value": 24.0,
-            "warn_high": None,
-            "warn_low": None,
-        },
-        "Temperature_Peripheral_Temp": {
-            "crit_high": 85.0,
-            "crit_low": -7.0,
-            "status_txt": "OK",
-            "unit": "C",
-            "unrec_high": None,
-            "unrec_low": None,
-            "value": 27.0,
-            "warn_high": None,
-            "warn_low": None,
-        },
-        "Temperature_System_Temp": {
-            "crit_high": 85.0,
-            "crit_low": -7.0,
-            "status_txt": "OK",
-            "unit": "C",
-            "unrec_high": None,
-            "unrec_low": None,
-            "value": 18.0,
-            "warn_high": None,
-            "warn_low": None,
-        },
-        "Voltage_12V": {
-            "crit_high": 13.22,
-            "crit_low": 10.52,
-            "status_txt": "OK",
-            "unit": "V",
-            "unrec_high": None,
-            "unrec_low": None,
-            "value": 11.95,
-            "warn_high": None,
-            "warn_low": None,
-        },
-        "Voltage_AVCC": {
-            "crit_high": 3.6,
-            "crit_low": 2.49,
-            "status_txt": "OK",
-            "unit": "V",
-            "unrec_high": None,
-            "unrec_low": None,
-            "value": 3.37,
-            "warn_high": None,
-            "warn_low": None,
-        },
-        "Voltage_VDIMM": {
-            "crit_high": 1.72,
-            "crit_low": 1.12,
-            "status_txt": "OK",
-            "unit": "V",
-            "unrec_high": None,
-            "unrec_low": None,
-            "value": 1.46,
-            "warn_high": None,
-            "warn_low": None,
-        },
-        "Voltage_VSB": {
-            "crit_high": 3.6,
-            "crit_low": 2.49,
-            "status_txt": "OK",
-            "unit": "V",
-            "unrec_high": None,
-            "unrec_low": None,
-            "value": 3.3,
-            "warn_high": None,
-            "warn_low": None,
-        },
-        "Voltage_Vcpu": {
-            "crit_high": 2.09,
-            "crit_low": 1.26,
-            "status_txt": "OK",
-            "unit": "V",
-            "unrec_high": None,
-            "unrec_low": None,
-            "value": 1.78,
-            "warn_high": None,
-            "warn_low": None,
-        },
-    },
-    {
-        "01-Inlet_Ambient": {
-            "crit_high": None,
-            "crit_low": None,
-            "status_txt": "OK",
-            "unit": "C",
-            "unrec_high": None,
-            "unrec_low": None,
-            "value": 24.0,
-            "warn_high": None,
-            "warn_low": None,
-        },
-        "CPU_Utilization": {
-            "crit_high": None,
-            "crit_low": None,
-            "status_txt": "OK",
-            "unit": "",
-            "unrec_high": None,
-            "unrec_low": None,
-            "value": 68.0,
-            "warn_high": None,
-            "warn_low": None,
-        },
-        "Fan_FAN1_F_Speed": {
-            "crit_high": None,
-            "crit_low": None,
-            "status_txt": "OK",
-            "unit": "RPM",
-            "unrec_high": None,
-            "unrec_low": None,
-            "value": 7200.0,
-            "warn_high": None,
-            "warn_low": None,
-        },
-        "Intrusion": {
-            "crit_high": None,
-            "crit_low": None,
-            "status_txt": "OK",
-            "unit": "",
-            "unrec_high": None,
-            "unrec_low": None,
-            "value": None,
-            "warn_high": None,
-            "warn_low": None,
-        },
-        "M2_Temp0(PCIe1)_(Temperature)": {
-            "crit_high": 79.0,
-            "crit_low": None,
-            "status_txt": "OK",
-            "unit": "C",
-            "unrec_high": None,
-            "unrec_low": None,
-            "value": 41.0,
-            "warn_high": None,
-            "warn_low": None,
-        },
-        "Megacell_Status": {
-            "crit_high": None,
-            "crit_low": None,
-            "status_txt": "OK",
-            "unit": "",
-            "unrec_high": None,
-            "unrec_low": None,
-            "value": None,
-            "warn_high": None,
-            "warn_low": None,
-        },
-        "Memory_Status": {
-            "crit_high": None,
-            "crit_low": None,
-            "status_txt": "OK",
-            "unit": "error",
-            "unrec_high": None,
-            "unrec_low": None,
-            "value": None,
-            "warn_high": None,
-            "warn_low": None,
-        },
-        "OEM_Reserved_CPU_Temp": {
-            "crit_high": None,
-            "crit_low": None,
-            "status_txt": None,
-            "unit": None,
-            "unrec_high": None,
-            "unrec_low": None,
-            "value": None,
-            "warn_high": None,
-            "warn_low": None,
-        },
-        "Power_Meter": {
-            "crit_high": None,
-            "crit_low": None,
-            "status_txt": "OK",
-            "unit": "W",
-            "unrec_high": None,
-            "unrec_low": None,
-            "value": 260.0,
-            "warn_high": None,
-            "warn_low": None,
-        },
-        "Power_Supply_PS_Status": {
-            "crit_high": None,
-            "crit_low": None,
-            "status_txt": "Presence detected",
-            "unit": None,
-            "unrec_high": None,
-            "unrec_low": None,
-            "value": None,
-            "warn_high": None,
-            "warn_low": None,
-        },
-        "Power_Unit_PSU": {
-            "crit_high": None,
-            "crit_low": None,
-            "status_txt": "Redundancy Lost",
-            "unit": None,
-            "unrec_high": None,
-            "unrec_low": None,
-            "value": None,
-            "warn_high": None,
-            "warn_low": None,
-        },
-        "SysHealth_Stat": {
-            "crit_high": None,
-            "crit_low": None,
-            "status_txt": "OK",
-            "unit": "",
-            "unrec_high": None,
-            "unrec_low": None,
-            "value": None,
-            "warn_high": None,
-            "warn_low": None,
-        },
-        "Temperature_Ambient": {
-            "crit_high": 42.0,
-            "crit_low": 1.0,
-            "status_txt": "OK",
-            "unit": "C",
-            "unrec_high": None,
-            "unrec_low": None,
-            "value": 20.0,
-            "warn_high": None,
-            "warn_low": None,
-        },
-        "Temperature_DIMM-2A": {
-            "crit_high": 115.0,
-            "crit_low": None,
-            "status_txt": None,
-            "unit": None,
-            "unrec_high": None,
-            "unrec_low": None,
-            "value": None,
-            "warn_high": None,
-            "warn_low": None,
-        },
-        "Temperature_Inlet_Temp": {
-            "crit_high": 48.0,
-            "crit_low": None,
-            "status_txt": "OK",
-            "unit": "C",
-            "unrec_high": None,
-            "unrec_low": None,
-            "value": 21.0,
-            "warn_high": None,
-            "warn_low": None,
-        },
-        "UID": {
-            "crit_high": None,
-            "crit_low": None,
-            "status_txt": "no state reported",
-            "unit": "",
-            "unrec_high": None,
-            "unrec_low": None,
-            "value": None,
-            "warn_high": None,
-            "warn_low": None,
-        },
+        "01-Inlet_Ambient": ipmi_utils.Sensor(
+            status_txt="OK",
+            unit="C",
+            value=24.0,
+            crit_low=None,
+            warn_low=None,
+            warn_high=None,
+            crit_high=None,
+        ),
+        "CPU_Utilization": ipmi_utils.Sensor(
+            status_txt="OK",
+            unit="",
+            value=68.0,
+            crit_low=None,
+            warn_low=None,
+            warn_high=None,
+            crit_high=None,
+        ),
+        "Fan_FAN1_F_Speed": ipmi_utils.Sensor(
+            status_txt="OK",
+            unit="RPM",
+            value=7200.0,
+            crit_low=None,
+            warn_low=None,
+            warn_high=None,
+            crit_high=None,
+        ),
+        "Intrusion": ipmi_utils.Sensor(
+            status_txt="OK",
+            unit="",
+            value=None,
+            crit_low=None,
+            warn_low=None,
+            warn_high=None,
+            crit_high=None,
+        ),
+        "M2_Temp0(PCIe1)_(Temperature)": ipmi_utils.Sensor(
+            status_txt="OK",
+            unit="C",
+            value=41.0,
+            crit_low=None,
+            warn_low=None,
+            warn_high=None,
+            crit_high=79.0,
+        ),
+        "Megacell_Status": ipmi_utils.Sensor(
+            status_txt="OK",
+            unit="",
+            value=None,
+            crit_low=None,
+            warn_low=None,
+            warn_high=None,
+            crit_high=None,
+        ),
+        "Memory_Status": ipmi_utils.Sensor(
+            status_txt="OK",
+            unit="error",
+            value=None,
+            crit_low=None,
+            warn_low=None,
+            warn_high=None,
+            crit_high=None,
+        ),
+        "Power_Meter": ipmi_utils.Sensor(
+            status_txt="OK",
+            unit="W",
+            value=260.0,
+            crit_low=None,
+            warn_low=None,
+            warn_high=None,
+            crit_high=None,
+        ),
+        "Power_Supply_PS_Status": ipmi_utils.Sensor(
+            status_txt="Presence detected",
+            unit="",
+            value=None,
+            crit_low=None,
+            warn_low=None,
+            warn_high=None,
+            crit_high=None,
+        ),
+        "Power_Unit_PSU": ipmi_utils.Sensor(
+            status_txt="Redundancy Lost",
+            unit="",
+            value=None,
+            crit_low=None,
+            warn_low=None,
+            warn_high=None,
+            crit_high=None,
+        ),
+        "SysHealth_Stat": ipmi_utils.Sensor(
+            status_txt="OK",
+            unit="",
+            value=None,
+            crit_low=None,
+            warn_low=None,
+            warn_high=None,
+            crit_high=None,
+        ),
+        "Temperature_Ambient": ipmi_utils.Sensor(
+            status_txt="OK",
+            unit="C",
+            value=20.0,
+            crit_low=1.0,
+            warn_low=None,
+            warn_high=None,
+            crit_high=42.0,
+        ),
+        "Temperature_Inlet_Temp": ipmi_utils.Sensor(
+            status_txt="OK",
+            unit="C",
+            value=21.0,
+            crit_low=None,
+            warn_low=None,
+            warn_high=None,
+            crit_high=48.0,
+        ),
+        "UID": ipmi_utils.Sensor(
+            status_txt="no state reported",
+            unit="",
+            value=None,
+            crit_low=None,
+            warn_low=None,
+            warn_high=None,
+            crit_high=None,
+        ),
     },
 ]
 
@@ -496,14 +355,10 @@ _SECTIONS = [
     list(zip(_STRING_TABLES, _SECTIONS)),
 )
 def test_parse_ipmi_sensors(
-    fix_register: FixRegister,
     string_table: StringTable,
-    expected_result,
+    expected_result: ipmi_utils.Section,
 ) -> None:
-    assert (
-        fix_register.agent_sections[SectionName("ipmi_sensors")].parse_function(string_table)
-        == expected_result
-    )
+    assert ipmi_sensors.parse_ipmi_sensors(string_table) == expected_result
 
 
 @pytest.mark.parametrize(
@@ -515,12 +370,16 @@ def test_parse_ipmi_sensors(
     [
         pytest.param(
             _SECTIONS[0],
-            [],
+            {
+                "discovery_mode": ("single", {}),
+            },
             [],
         ),
         pytest.param(
             _SECTIONS[1],
-            [],
+            {
+                "discovery_mode": ("single", {}),
+            },
             [
                 Service(item="Fan_FAN1"),
                 Service(item="Fan_FAN2"),
@@ -541,17 +400,15 @@ def test_parse_ipmi_sensors(
         ),
         pytest.param(
             _SECTIONS[2],
-            [
-                {
-                    "discovery_mode": (
-                        "single",
-                        {
-                            "ignored_sensors": ["UID", "Temperature_Inlet_Temp"],
-                            "ignored_sensorstates": ["Redundancy Lost"],
-                        },
-                    )
-                }
-            ],
+            {
+                "discovery_mode": (
+                    "single",
+                    {
+                        "ignored_sensors": ["UID", "Temperature_Inlet_Temp"],
+                        "ignored_sensorstates": ["Redundancy Lost"],
+                    },
+                )
+            },
             [
                 Service(item="01-Inlet_Ambient"),
                 Service(item="CPU_Utilization"),
@@ -568,14 +425,12 @@ def test_parse_ipmi_sensors(
         ),
         pytest.param(
             _SECTIONS[2],
-            [
-                {
-                    "discovery_mode": (
-                        "summarize",
-                        {},
-                    )
-                }
-            ],
+            {
+                "discovery_mode": (
+                    "summarize",
+                    {},
+                )
+            },
             [
                 Service(item="Summary FreeIPMI"),
             ],
@@ -583,23 +438,19 @@ def test_parse_ipmi_sensors(
     ],
 )
 def test_discover_ipmi_sensors(
-    fix_register: FixRegister,
-    section,
-    params,
+    section: ipmi_utils.Section,
+    params: ipmi_utils.DiscoveryParams,
     expected_result: DiscoveryResult,
 ) -> None:
-    with MockHostExtraConf(
-        Check("ipmi_sensors"),
-        params,
-    ):
-        assert (
-            list(
-                fix_register.check_plugins[CheckPluginName("ipmi_sensors")].discovery_function(
-                    section
-                )
+    assert (
+        list(
+            ipmi_sensors.discover_ipmi_sensors(
+                params,
+                section,
             )
-            == expected_result
         )
+        == expected_result
+    )
 
 
 @pytest.mark.parametrize(
@@ -629,7 +480,8 @@ def test_discover_ipmi_sensors(
             },
             _SECTIONS[1],
             [
-                Result(state=State.UNKNOWN, summary="Status: Presence detected"),
+                Result(state=State.OK, summary="Status: Presence detected"),
+                Result(state=State.UNKNOWN, summary="User-defined state"),
             ],
         ),
         pytest.param(
@@ -656,18 +508,17 @@ def test_discover_ipmi_sensors(
     ],
 )
 def test_check_ipmi_sensors(
-    fix_register: FixRegister,
     item: str,
     params: Mapping[str, Any],
-    section,
+    section: ipmi_utils.Section,
     expected_result: CheckResult,
 ) -> None:
     assert (
         list(
-            fix_register.check_plugins[CheckPluginName("ipmi_sensors")].check_function(
-                item=item,
-                params=params,
-                section=section,
+            ipmi_sensors.check_ipmi_sensors(
+                item,
+                params,
+                section,
             )
         )
         == expected_result

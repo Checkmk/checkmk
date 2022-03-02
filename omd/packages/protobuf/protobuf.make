@@ -122,7 +122,19 @@ $(PROTOBUF_INTERMEDIATE_INSTALL_PYTHON): $(PROTOBUF_BUILD_PYTHON)
 $(PROTOBUF_INSTALL): $(PROTOBUF_INSTALL_LIBRARY) $(PROTOBUF_INSTALL_PYTHON)
 
 $(PROTOBUF_INSTALL_LIBRARY): $(PROTOBUF_CACHE_PKG_PROCESS_LIBRARY)
-	$(RSYNC) $(PROTOBUF_INSTALL_DIR_LIBRARY)/ $(DESTDIR)$(OMD_ROOT)/
+# Only install the libraries we really need in run time environment. The
+# PROTOBUF_INTERMEDIATE_INSTALL_LIBRARY step above installs the libprotobuf.a
+# for building the cmc. However, this is not needed later in runtime environment.
+# Also the libprotobuf-lite and libprotoc are not needed. We would normally exclude
+# the files from being added to the intermediate package, but since we have the
+# requirement for cmc and also want to use the build cache for that step, we need
+# to do the filtering here. See CMK-9913.
+	$(RSYNC) \
+	    --exclude 'libprotobuf.a' \
+	    --exclude 'libprotoc*' \
+	    --exclude 'libprotobuf-lite.*' \
+	    --exclude 'protobuf-lite.pc' \
+	    $(PROTOBUF_INSTALL_DIR_LIBRARY)/ $(DESTDIR)$(OMD_ROOT)/
 	$(TOUCH) $@
 
 

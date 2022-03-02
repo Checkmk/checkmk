@@ -2333,7 +2333,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy):
         "rms200_temp",
         "rstcli",
         "rstcli.pdisks",
-        "ruckus_spot_ap",
         "safenet_hsm.events",
         "safenet_hsm",
         "safenet_ntls.connrate",

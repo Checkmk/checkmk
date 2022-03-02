@@ -1,0 +1,16 @@
+Title: Agent deployment: Don't try to activate incompatible units
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1646227780
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0b2
+
+On Linux systems where the agent controller <tt>cmk-agent-ctl</tt>
+won't work (or is not even deployed), the systemd service unit
+<tt>cmk-agent-ctl-daemon</tt> has been activated and would then fail.
+
+The unit is not needed in that scenario, and is no longer deployed.
+

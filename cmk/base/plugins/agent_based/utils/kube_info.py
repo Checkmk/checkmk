@@ -9,7 +9,7 @@ from typing import Any, Callable, Literal, Mapping
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import render, Result, State
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult
-from cmk.base.plugins.agent_based.utils.k8s import CreationTimestamp
+from cmk.base.plugins.agent_based.utils.k8s import ControlChain, CreationTimestamp
 
 
 def result_simple(display_name: str, notice_only=False):
@@ -28,12 +28,27 @@ def result_from_age(value: CreationTimestamp) -> Result:
     )
 
 
+def result_from_control_chain(control_chain: ControlChain) -> Result:
+    """
+    >>> from cmk.base.plugins.agent_based.utils.k8s import ControllerType, Controller
+    >>> result_from_control_chain([])
+    Result(state=<State.OK: 0>, summary='Controlled by: None')
+    >>> result_from_control_chain([Controller(type_=ControllerType.daemon_set, name="kube-proxy")])
+    Result(state=<State.OK: 0>, summary='Controlled by: daemon_set/kube-proxy')
+    """
+    chain_display = " <- ".join(f"{c.type_.value}/{c.name}" for c in control_chain)
+    return Result(
+        state=State.OK, summary=f"Controlled by: {chain_display if chain_display else None}"
+    )
+
+
 InfoTypes = Literal[
     "name",
     "node",
     "namespace",
     "os_image",
     "container_runtime_version",
+    "control_chain",
     "creation_timestamp",
     "qos_class",
     "uid",
@@ -50,6 +65,7 @@ _RESULT_FUNC: Mapping[InfoTypes, Callable[[Any], Result]] = {
     "creation_timestamp": result_from_age,
     "os_image": result_simple("OS"),
     "container_runtime_version": result_simple("Container runtime"),
+    "control_chain": result_from_control_chain,
     "qos_class": result_simple("QoS class", notice_only=True),
     "uid": result_simple("UID", notice_only=True),
     "restart_policy": result_simple("Restart policy", notice_only=True),

@@ -162,6 +162,11 @@ class Controller(BaseModel):
     name: str
 
 
+# A sequence of controllers, e.g. deployment -> replica set. For two adjacent elements, the first
+# one controls the second one. The final element controls the pod (but this is not implemented yet).
+# Control chains may be incomplete.
+ControlChain = Sequence[Controller]
+
 IpAddress = NewType("IpAddress", str)
 
 
@@ -181,7 +186,8 @@ class PodInfo(BaseModel):
     qos_class: QosClass
     restart_policy: RestartPolicy
     uid: PodUID
-    controllers: Sequence[Controller] = []
+    # TODO: see CMK-9901
+    controllers: ControlChain = []
     cluster: str
 
 

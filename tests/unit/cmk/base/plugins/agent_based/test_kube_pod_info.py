@@ -46,6 +46,7 @@ def fixture_time(mocker):
                 Result(state=State.OK, summary="Node: None"),
                 Result(state=State.OK, summary="Namespace: default"),
                 Result(state=State.OK, summary="Age: 1 second"),
+                Result(state=State.OK, summary="Controlled by: None"),
                 Result(state=State.OK, notice="QoS class: burstable"),
                 Result(state=State.OK, notice="UID: dd1019ca-c429-46af-b6b7-8aad47b6081a"),
                 Result(state=State.OK, notice="Restart policy: Always"),

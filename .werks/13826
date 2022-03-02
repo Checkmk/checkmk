@@ -1,0 +1,35 @@
+Title: logwatch plugin - Add the option to filter out consecutive duplicate lines
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1646745460
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.1.0b3
+
+This werk extends the logwatch agent plugin with an option to filter out consecutive duplicate messages in the agent output.
+
+If the option is enabled, identical consecutive messages will be filtered out.
+As soon as a different message comes in between, the filter will be reset.
+
+Example:
+
+Without filtering:
+
+Message_Itself
+
+Message_Itself
+
+Message_Itself
+
+Message_Again
+
+With filtering:
+
+Message_Itself
+
+[the above message was repeated 2 times]
+
+Message_Again

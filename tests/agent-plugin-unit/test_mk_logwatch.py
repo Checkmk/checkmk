@@ -53,7 +53,8 @@ def mk_logwatch():
 def test_options_defaults(mk_logwatch):
     opt = mk_logwatch.Options()
     for attribute in ('encoding', 'maxfilesize', 'maxlines', 'maxtime', 'maxlinesize', 'regex',
-                      'overflow', 'nocontext', 'maxcontextlines', 'maxoutputsize'):
+                      'overflow', 'nocontext', 'maxcontextlines', 'maxoutputsize',
+                      'skipconsecutiveduplicated'):
         assert getattr(opt, attribute) == mk_logwatch.Options.DEFAULTS[attribute]
 
 
@@ -72,6 +73,8 @@ def test_options_defaults(mk_logwatch):
     ("fromstart=0", 'fromstart', False),
     ("fromstart=no", 'fromstart', False),
     ("maxoutputsize=1024", 'maxoutputsize', 1024),
+    ("skipconsecutiveduplicated=False", 'skipconsecutiveduplicated', False),
+    ("skipconsecutiveduplicated=True", 'skipconsecutiveduplicated', True),
 ])
 def test_options_setter(mk_logwatch, option_string, key, expected_value):
     opt = mk_logwatch.Options()
@@ -614,6 +617,28 @@ def test_process_logfile(mk_logwatch, monkeypatch, logfile, patterns, opt_raw, s
 def test_filter_maxcontextlines(mk_logwatch, input_lines, before, after, expected_output):
 
     assert expected_output == list(mk_logwatch._filter_maxcontextlines(input_lines, before, after))
+
+
+@pytest.mark.parametrize("input_lines, nocontext, expected_output",
+                         [([], False, []),
+                          ([], True, []),
+                          (["ln", "ln2", "ln2", "ln2", "ln3", "ln3", "ln"],
+                           True,
+                           ["ln", "ln2", "ln3", "ln"]),
+                          (["ln", "ln2", "ln2", "ln2", "ln3", "ln3", "ln"],
+                           False,
+                           ["ln", "ln2", ". [the above message was repeated 2 times]\n",
+                           "ln3", ". [the above message was repeated 1 times]\n", "ln"]),
+                           (["ln", "ln"],
+                            False,
+                            ["ln", ". [the above message was repeated 1 times]\n"]),
+                           ((str(i) for i in range(3)),
+                           False,
+                           ["0", "1", "2"])])
+def test_filter_consecutive_duplicates(mk_logwatch, input_lines, nocontext, expected_output):
+    assert expected_output == list(
+        mk_logwatch._filter_consecutive_duplicates(input_lines, nocontext)
+    )
 
 
 @pytest.fixture

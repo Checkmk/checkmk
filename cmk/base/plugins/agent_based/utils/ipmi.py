@@ -4,16 +4,18 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from contextlib import suppress
 from dataclasses import dataclass
 from typing import (
     Any,
     Callable,
     Dict,
+    Literal,
     Mapping,
     Optional,
     Sequence,
     Tuple,
+    TypedDict,
+    Union,
 )
 from ..agent_based_api.v1 import (
     check_levels,
@@ -42,16 +44,9 @@ IgnoreParams = Mapping[str, Sequence[str]]
 StatusTxtMapping = Callable[[str], state]
 
 
-def transform_discovery_ruleset(rule: Any) -> Tuple[str, IgnoreParams]:
-    with suppress(TypeError, AttributeError):
-        if "discovery_mode" in rule:
-            return rule["discovery_mode"]
-        if rule.get("summarize", True):
-            return "summarize", {}
-        return "single", {"ignored_sensors": rule.get("ignored_sensors", [])}
-    if rule == "summarize":
-        return "summarize", {}
-    return rule
+class DiscoveryParams(TypedDict):
+    discovery_mode: Union[Tuple[Literal["summarize"], IgnoreParams], Tuple[Literal["single"],
+                                                                           IgnoreParams],]
 
 
 def _check_ignores(

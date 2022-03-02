@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import pytest  # type: ignore[import]
+import pytest
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     Metric,
     Result,
@@ -12,6 +12,9 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     State,
 )
 from cmk.base.plugins.agent_based import ipmi
+
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
+from cmk.base.plugins.agent_based.utils import ipmi as ipmi_utils
 
 SECTION_IPMI = ipmi.parse_ipmi(
     [[
@@ -218,171 +221,151 @@ SECTION_IPMI_DISCRETE = ipmi.parse_ipmi(
      ["Drive 4          ", " 64h ", " ok  ", "  4.4 ", " Drive Present, Drive Fault"]])
 
 
-def patch_discovery_params_retrieval(monkeypatch, rules):
-    class ConfigCache:
-        def __init__(self, rules):
-            self.rules = rules
-
-        def host_extra_conf(self, *_):
-            return self.rules
-
-    monkeypatch.setattr(
-        ipmi,
-        "get_discovery_ruleset",
-        lambda *_: rules,
-    )
-    monkeypatch.setattr(
-        ipmi,
-        "get_config_cache",
-        lambda: ConfigCache(rules),
-    )
-    monkeypatch.setattr(
-        ipmi,
-        "host_name",
-        lambda: None,
-    )
-
-
-@pytest.mark.parametrize(
-    'discovery_params, discovery_results',
-    [
-        (
-            [],
-            [Service(item='Summary', parameters={}, labels=[])],
-        ),
-        (
-            [(
-                'single',
+@pytest.mark.parametrize('discovery_params, discovery_results', [
+    (
+        {
+            "discovery_mode": ("summarize", {})
+        },
+        [Service(item='Summary', parameters={}, labels=[])],
+    ),
+    (
+        {
+            "discovery_mode": (
+                "single",
                 {
-                    "ignored_sensors": ['VR_1.2V_CPU2', 'Riser_Config']
+                    "ignored_sensors": ["VR_1.2V_CPU2", "Riser_Config"]
                 },
-            )],  # legacy-style params
-            [
-                Service(item='CMOS_Battery', parameters={}, labels=[]),
-                Service(item='ROMB_Battery', parameters={}, labels=[]),
-                Service(item='VCORE', parameters={}, labels=[]),
-                Service(item='1.2V_VDDR', parameters={}, labels=[]),
-                Service(item='VR_1.8V_AUX_PG', parameters={}, labels=[]),
-                Service(item='VR_1.2V_AUX_PG', parameters={}, labels=[]),
-                Service(item='1.2V_LOM_PG', parameters={}, labels=[]),
-                Service(item='8V_PG', parameters={}, labels=[]),
-                Service(item='1.2V_AUX_LOM_PG', parameters={}, labels=[]),
-                Service(item='5V_IO_PG', parameters={}, labels=[]),
-                Service(item='5V_CPU_PG', parameters={}, labels=[]),
-                Service(item='3.3V_PG', parameters={}, labels=[]),
-                Service(item='1.8V_PG', parameters={}, labels=[]),
-                Service(item='1.1V_PG', parameters={}, labels=[]),
-                Service(item='Mem1_0.75V_PG', parameters={}, labels=[]),
-                Service(item='Mem2_0.75V_PG', parameters={}, labels=[]),
-                Service(item='Mem3_0.75V_PG', parameters={}, labels=[]),
-                Service(item='Mem4_0.75V_PG', parameters={}, labels=[]),
-                Service(item='Mem5_0.75V_PG', parameters={}, labels=[]),
-                Service(item='Mem6_0.75V_PG', parameters={}, labels=[]),
-                Service(item='Mem7_0.75V_PG', parameters={}, labels=[]),
-                Service(item='Mem8_0.75V_PG', parameters={}, labels=[]),
-                Service(item='VR_PLX_PG', parameters={}, labels=[]),
-                Service(item='VR_1.2V_NBSB_PG', parameters={}, labels=[]),
-                Service(item='VR_2.5V_CPU1', parameters={}, labels=[]),
-                Service(item='VR_2.5V_CPU2', parameters={}, labels=[]),
-                Service(item='VR_2.5V_CPU3', parameters={}, labels=[]),
-                Service(item='VR_2.5V_CPU4', parameters={}, labels=[]),
-                Service(item='VR_1.2V_CPU1', parameters={}, labels=[]),
-                Service(item='VR_1.2V_CPU3', parameters={}, labels=[]),
-                Service(item='VR_1.2V_CPU4', parameters={}, labels=[]),
-                Service(item='VR_1.5V_MEM1', parameters={}, labels=[]),
-                Service(item='VR_1.5V_MEM2', parameters={}, labels=[]),
-                Service(item='VR_1.5V_MEM3', parameters={}, labels=[]),
-                Service(item='VR_1.5V_MEM4', parameters={}, labels=[]),
-                Service(item='VR_PSI_MEM1', parameters={}, labels=[]),
-                Service(item='VR_PSI_MEM2', parameters={}, labels=[]),
-                Service(item='VR_PSI_MEM3', parameters={}, labels=[]),
-                Service(item='VR_PSI_MEM4', parameters={}, labels=[]),
-                Service(item='Heatsink_Pres', parameters={}, labels=[]),
-                Service(item='iDRAC6_Ent_Pres', parameters={}, labels=[]),
-                Service(item='USB_Cable_Pres', parameters={}, labels=[]),
-                Service(item='Stor_Adapt_Pres', parameters={}, labels=[]),
-                Service(item='C_Riser_Pres', parameters={}, labels=[]),
-                Service(item='L_Riser_Pres', parameters={}, labels=[]),
-                Service(item='Presence', parameters={}, labels=[]),
-                Service(item='Status', parameters={}, labels=[]),
-                Service(item='OS_Watchdog', parameters={}, labels=[]),
-                Service(item='Intrusion', parameters={}, labels=[]),
-                Service(item='PS_Redundancy', parameters={}, labels=[]),
-                Service(item='Fan_Redundancy', parameters={}, labels=[]),
-                Service(item='Power_Optimized', parameters={}, labels=[]),
-                Service(item='Drive', parameters={}, labels=[]),
-                Service(item='Cable_SAS_A', parameters={}, labels=[]),
-                Service(item='Cable_SAS_B', parameters={}, labels=[]),
-                Service(item='DKM_Status', parameters={}, labels=[]),
-                Service(item='VFlash', parameters={}, labels=[]),
-                Service(item='PS3_Status', parameters={}, labels=[]),
-                Service(item='PS4_Status', parameters={}, labels=[]),
-                Service(item='Pwr_Unit_Stat', parameters={}, labels=[]),
-                Service(item='Power_Redundancy', parameters={}, labels=[]),
-                Service(item='BMC_Watchdog', parameters={}, labels=[]),
-                Service(item='PS1_Status', parameters={}, labels=[]),
-                Service(item='PS2_Status', parameters={}, labels=[]),
-                Service(item='Drive_4', parameters={}, labels=[]),
-                Service(item='Ambient', parameters={}, labels=[]),
-                Service(item='Systemboard', parameters={}, labels=[]),
-                Service(item='CPU', parameters={}, labels=[]),
-                Service(item='MEM_A', parameters={}, labels=[]),
-                Service(item='MEM_B', parameters={}, labels=[]),
-                Service(item='PSU1_Inlet', parameters={}, labels=[]),
-                Service(item='PSU2_Inlet', parameters={}, labels=[]),
-                Service(item='PSU1', parameters={}, labels=[]),
-                Service(item='PSU2', parameters={}, labels=[]),
-                Service(item='BATT_3.0V', parameters={}, labels=[]),
-                Service(item='STBY_3.3V', parameters={}, labels=[]),
-                Service(item='iRMC_1.8V_STBY', parameters={}, labels=[]),
-                Service(item='iRMC_1.5V_STBY', parameters={}, labels=[]),
-                Service(item='iRMC_1.0V_STBY', parameters={}, labels=[]),
-                Service(item='MAIN_12V', parameters={}, labels=[]),
-                Service(item='MAIN_5V', parameters={}, labels=[]),
-                Service(item='MAIN_3.3V', parameters={}, labels=[]),
-                Service(item='MEM_1.35V', parameters={}, labels=[]),
-                Service(item='PCH_1.05V', parameters={}, labels=[]),
-                Service(item='MEM_VTT_0.68V', parameters={}, labels=[]),
-                Service(item='FAN1_SYS', parameters={}, labels=[]),
-                Service(item='FAN2_SYS', parameters={}, labels=[]),
-                Service(item='FAN3_SYS', parameters={}, labels=[]),
-                Service(item='FAN4_SYS', parameters={}, labels=[]),
-                Service(item='FAN5_SYS', parameters={}, labels=[]),
-                Service(item='FAN_PSU1', parameters={}, labels=[]),
-                Service(item='FAN_PSU2', parameters={}, labels=[]),
-                Service(item='PSU1_Power', parameters={}, labels=[]),
-                Service(item='PSU2_Power', parameters={}, labels=[]),
-                Service(item='Total_Power', parameters={}, labels=[]),
-                Service(item='Total_Power_Out', parameters={}, labels=[]),
-                Service(item='I2C1_error_ratio', parameters={}, labels=[]),
-                Service(item='I2C2_error_ratio', parameters={}, labels=[]),
-                Service(item='I2C3_error_ratio', parameters={}, labels=[]),
-                Service(item='I2C4_error_ratio', parameters={}, labels=[]),
-                Service(item='I2C5_error_ratio', parameters={}, labels=[]),
-                Service(item='I2C6_error_ratio', parameters={}, labels=[]),
-                Service(item='I2C7_error_ratio', parameters={}, labels=[]),
-                Service(item='I2C8_error_ratio', parameters={}, labels=[]),
-                Service(item='SEL_Level', parameters={}, labels=[]),
-            ],
-        ),
-        (
-            [{
-                "discovery_mode": (
-                    "single",
-                    {
-                        "ignored_sensorstates": ["ok", "ns"]
-                    },
-                )
-            }],
-            [],
-        ),
-    ])
-def test_regression_discovery(monkeypatch, discovery_params, discovery_results):
-    patch_discovery_params_retrieval(monkeypatch, discovery_params)
-    assert list(ipmi.discover_ipmi(
+            ),
+        },
+        [
+            Service(item='CMOS_Battery', parameters={}, labels=[]),
+            Service(item='ROMB_Battery', parameters={}, labels=[]),
+            Service(item='VCORE', parameters={}, labels=[]),
+            Service(item='1.2V_VDDR', parameters={}, labels=[]),
+            Service(item='VR_1.8V_AUX_PG', parameters={}, labels=[]),
+            Service(item='VR_1.2V_AUX_PG', parameters={}, labels=[]),
+            Service(item='1.2V_LOM_PG', parameters={}, labels=[]),
+            Service(item='8V_PG', parameters={}, labels=[]),
+            Service(item='1.2V_AUX_LOM_PG', parameters={}, labels=[]),
+            Service(item='5V_IO_PG', parameters={}, labels=[]),
+            Service(item='5V_CPU_PG', parameters={}, labels=[]),
+            Service(item='3.3V_PG', parameters={}, labels=[]),
+            Service(item='1.8V_PG', parameters={}, labels=[]),
+            Service(item='1.1V_PG', parameters={}, labels=[]),
+            Service(item='Mem1_0.75V_PG', parameters={}, labels=[]),
+            Service(item='Mem2_0.75V_PG', parameters={}, labels=[]),
+            Service(item='Mem3_0.75V_PG', parameters={}, labels=[]),
+            Service(item='Mem4_0.75V_PG', parameters={}, labels=[]),
+            Service(item='Mem5_0.75V_PG', parameters={}, labels=[]),
+            Service(item='Mem6_0.75V_PG', parameters={}, labels=[]),
+            Service(item='Mem7_0.75V_PG', parameters={}, labels=[]),
+            Service(item='Mem8_0.75V_PG', parameters={}, labels=[]),
+            Service(item='VR_PLX_PG', parameters={}, labels=[]),
+            Service(item='VR_1.2V_NBSB_PG', parameters={}, labels=[]),
+            Service(item='VR_2.5V_CPU1', parameters={}, labels=[]),
+            Service(item='VR_2.5V_CPU2', parameters={}, labels=[]),
+            Service(item='VR_2.5V_CPU3', parameters={}, labels=[]),
+            Service(item='VR_2.5V_CPU4', parameters={}, labels=[]),
+            Service(item='VR_1.2V_CPU1', parameters={}, labels=[]),
+            Service(item='VR_1.2V_CPU3', parameters={}, labels=[]),
+            Service(item='VR_1.2V_CPU4', parameters={}, labels=[]),
+            Service(item='VR_1.5V_MEM1', parameters={}, labels=[]),
+            Service(item='VR_1.5V_MEM2', parameters={}, labels=[]),
+            Service(item='VR_1.5V_MEM3', parameters={}, labels=[]),
+            Service(item='VR_1.5V_MEM4', parameters={}, labels=[]),
+            Service(item='VR_PSI_MEM1', parameters={}, labels=[]),
+            Service(item='VR_PSI_MEM2', parameters={}, labels=[]),
+            Service(item='VR_PSI_MEM3', parameters={}, labels=[]),
+            Service(item='VR_PSI_MEM4', parameters={}, labels=[]),
+            Service(item='Heatsink_Pres', parameters={}, labels=[]),
+            Service(item='iDRAC6_Ent_Pres', parameters={}, labels=[]),
+            Service(item='USB_Cable_Pres', parameters={}, labels=[]),
+            Service(item='Stor_Adapt_Pres', parameters={}, labels=[]),
+            Service(item='C_Riser_Pres', parameters={}, labels=[]),
+            Service(item='L_Riser_Pres', parameters={}, labels=[]),
+            Service(item='Presence', parameters={}, labels=[]),
+            Service(item='Status', parameters={}, labels=[]),
+            Service(item='OS_Watchdog', parameters={}, labels=[]),
+            Service(item='Intrusion', parameters={}, labels=[]),
+            Service(item='PS_Redundancy', parameters={}, labels=[]),
+            Service(item='Fan_Redundancy', parameters={}, labels=[]),
+            Service(item='Power_Optimized', parameters={}, labels=[]),
+            Service(item='Drive', parameters={}, labels=[]),
+            Service(item='Cable_SAS_A', parameters={}, labels=[]),
+            Service(item='Cable_SAS_B', parameters={}, labels=[]),
+            Service(item='DKM_Status', parameters={}, labels=[]),
+            Service(item='VFlash', parameters={}, labels=[]),
+            Service(item='PS3_Status', parameters={}, labels=[]),
+            Service(item='PS4_Status', parameters={}, labels=[]),
+            Service(item='Pwr_Unit_Stat', parameters={}, labels=[]),
+            Service(item='Power_Redundancy', parameters={}, labels=[]),
+            Service(item='BMC_Watchdog', parameters={}, labels=[]),
+            Service(item='PS1_Status', parameters={}, labels=[]),
+            Service(item='PS2_Status', parameters={}, labels=[]),
+            Service(item='Drive_4', parameters={}, labels=[]),
+            Service(item='Ambient', parameters={}, labels=[]),
+            Service(item='Systemboard', parameters={}, labels=[]),
+            Service(item='CPU', parameters={}, labels=[]),
+            Service(item='MEM_A', parameters={}, labels=[]),
+            Service(item='MEM_B', parameters={}, labels=[]),
+            Service(item='PSU1_Inlet', parameters={}, labels=[]),
+            Service(item='PSU2_Inlet', parameters={}, labels=[]),
+            Service(item='PSU1', parameters={}, labels=[]),
+            Service(item='PSU2', parameters={}, labels=[]),
+            Service(item='BATT_3.0V', parameters={}, labels=[]),
+            Service(item='STBY_3.3V', parameters={}, labels=[]),
+            Service(item='iRMC_1.8V_STBY', parameters={}, labels=[]),
+            Service(item='iRMC_1.5V_STBY', parameters={}, labels=[]),
+            Service(item='iRMC_1.0V_STBY', parameters={}, labels=[]),
+            Service(item='MAIN_12V', parameters={}, labels=[]),
+            Service(item='MAIN_5V', parameters={}, labels=[]),
+            Service(item='MAIN_3.3V', parameters={}, labels=[]),
+            Service(item='MEM_1.35V', parameters={}, labels=[]),
+            Service(item='PCH_1.05V', parameters={}, labels=[]),
+            Service(item='MEM_VTT_0.68V', parameters={}, labels=[]),
+            Service(item='FAN1_SYS', parameters={}, labels=[]),
+            Service(item='FAN2_SYS', parameters={}, labels=[]),
+            Service(item='FAN3_SYS', parameters={}, labels=[]),
+            Service(item='FAN4_SYS', parameters={}, labels=[]),
+            Service(item='FAN5_SYS', parameters={}, labels=[]),
+            Service(item='FAN_PSU1', parameters={}, labels=[]),
+            Service(item='FAN_PSU2', parameters={}, labels=[]),
+            Service(item='PSU1_Power', parameters={}, labels=[]),
+            Service(item='PSU2_Power', parameters={}, labels=[]),
+            Service(item='Total_Power', parameters={}, labels=[]),
+            Service(item='Total_Power_Out', parameters={}, labels=[]),
+            Service(item='I2C1_error_ratio', parameters={}, labels=[]),
+            Service(item='I2C2_error_ratio', parameters={}, labels=[]),
+            Service(item='I2C3_error_ratio', parameters={}, labels=[]),
+            Service(item='I2C4_error_ratio', parameters={}, labels=[]),
+            Service(item='I2C5_error_ratio', parameters={}, labels=[]),
+            Service(item='I2C6_error_ratio', parameters={}, labels=[]),
+            Service(item='I2C7_error_ratio', parameters={}, labels=[]),
+            Service(item='I2C8_error_ratio', parameters={}, labels=[]),
+            Service(item='SEL_Level', parameters={}, labels=[]),
+        ],
+    ),
+    (
+        {
+            "discovery_mode": (
+                "single",
+                {
+                    "ignored_sensorstates": ["ok", "ns"]
+                },
+            )
+        },
+        [],
+    ),
+])
+def test_regression_discovery(
+    discovery_params: ipmi_utils.DiscoveryParams,
+    discovery_results: DiscoveryResult,
+) -> None:
+    assert (list(ipmi.discover_ipmi(
+        discovery_params,
         SECTION_IPMI,
         SECTION_IPMI_DISCRETE,
-    )) == discovery_results
+    )) == discovery_results)
 
 
 @pytest.mark.parametrize('item, check_results', [
@@ -856,7 +839,10 @@ def test_regression_discovery(monkeypatch, discovery_params, discovery_results):
         Result(state=State.CRIT, summary='Status: ok (Drive Present, Drive Fault)'),
     ]),
 ])
-def test_regression_check(item, check_results):
+def test_regression_check(
+    item: str,
+    check_results: CheckResult,
+) -> None:
     assert list(
         ipmi.check_ipmi(
             item,

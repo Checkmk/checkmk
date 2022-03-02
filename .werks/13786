@@ -1,0 +1,13 @@
+Title: KUBE: kube_pod_restarts handling of missing restart rates
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1646222238
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0b2
+
+In some instances, the restart rate of a pod cannot be determined.
+Previously, the rate would then be substituted by the restart count.
+It is now omitted instead.

@@ -659,7 +659,7 @@ inventory_displayhints.update({
 
     ".software.applications.kube.network:": {
         "title": _l("Network"),
-        "keyorder": ["label_name", "label_value"],
+        "keyorder": ["ip", "address_type"],
     },
     ".software.applications.kube.network:*.ip": {
         "title": _l("IP address"),

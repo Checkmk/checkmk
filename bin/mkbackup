@@ -1690,8 +1690,10 @@ def do_site_restore(opts, info, site=None):
             except IOError as e:
                 log("Error while sending data to restore process: %s" % e)
 
-    if p.returncode != 0:
-        log(ensure_str(p.stderr.read()))  # pylint: disable= six-ensure-str-bin-call
+        _stdout, stderr = p.communicate()
+
+    if p.returncode:
+        log(stderr.decode(encoding="utf-8", errors="strict"))
         raise MKGeneralException("Site restore failed")
 
     if not is_root():

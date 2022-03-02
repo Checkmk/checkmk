@@ -117,12 +117,15 @@ deploy() {
 
     for unit in $(_unit_files); do
 
+        [ -n "${fallback}" ] && [ -z "${unit##*cmk-agent-ctl*}" ] && continue
+
         src="${ROOT}${RESOURCES}/${unit}"
 
-        printf " %s" "${unit}"
         if [ -e "${src}${fallback}" ]; then
+            printf " %s" "${unit}${fallback}"
             install -m 644 "${src}${fallback}" "${dest}/${unit}"
         else
+            printf " %s" "${unit}"
             install -m 644 "${src}" "${dest}/${unit}"
         fi
 

@@ -25,6 +25,8 @@ from cmk.base.check_legacy_includes.mysql import *  # pylint: disable=wildcard-i
 # mysql   665902  292
 # performance_schema      0       0
 # test 409255936       54525952
+from cmk.base.check_legacy_includes.size_trend import *
+from cmk.base.check_legacy_includes.mysql import *
 
 
 @mysql_parse_per_item
@@ -63,8 +65,13 @@ def check_mysql_size(item, params, parsed):
 
     # size and avail are given as bytes
     yield check_levels(
-        size, "database_size", params, human_readable_func=get_bytes_human_readable, infoname="Size"
+        size, "database_size", params.get('mysql_size'), human_readable_func=get_bytes_human_readable, infoname="Size"
     )
+
+    if 'trend_range' in params:
+        size_mb = size / (1024.0 ** 2)
+        status, infotext, perf_data = size_trend('mysql_capacity', item, "mysql database", params, size_mb, size_mb)
+        yield status, infotext.replace(', ', '', 1), perf_data
 
 
 check_info["mysql_capacity"] = {

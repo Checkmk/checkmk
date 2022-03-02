@@ -215,12 +215,12 @@ class ValueSpec(abc.ABC, Generic[T]):
 
     # TODO: Investigate: The Optional here does not really fit the doc string. What to do with this?
     @abc.abstractmethod
-    def canonical_value(self) -> _Optional[T]:
+    def canonical_value(self) -> T:
         """Create a canonical, minimal, default value that matches the datatype
         of the value specification and fulfills also data validation."""
         raise NotImplementedError()
 
-    def default_value(self) -> _Optional[T]:
+    def default_value(self) -> T:
         """Return a default value for this variable
 
         This is optional and only used in the value editor for same cases where

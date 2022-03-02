@@ -1,0 +1,17 @@
+Title: Adapt commandline interface of agent controller
+Class: fix
+Compatible: incomp
+Component: checks
+Date: 1646248717
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b2
+
+This change only affects users who scripted the registration
+command of the new agent controller <tt>cmk-agent-ctl register</tt>
+using the first beta release.
+
+The options of the command are now consistent with the options to
+the similar updater command <tt>cmk-update-agent register</tt>.

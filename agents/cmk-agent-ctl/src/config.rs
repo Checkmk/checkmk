@@ -88,11 +88,17 @@ impl RegistrationConfig {
         preset: RegistrationPreset,
         reg_args: cli::RegistrationArgs,
     ) -> AnyhowResult<RegistrationConfig> {
-        let coordinates = match reg_args
-            .site_address
-            .or(preset.site_spec)
-            .context("Site address not specified")?
-        {
+        let used_site = if reg_args.site.is_some() {
+            site_spec::SiteSpec::from_str(&format!(
+                "{}/{}",
+                reg_args.server.unwrap(),
+                reg_args.site.unwrap(),
+            ))?
+        } else {
+            preset.site_spec.context("Site address not specified")?
+        };
+
+        let coordinates = match used_site {
             site_spec::SiteSpec::Complete(coord) => coord,
             site_spec::SiteSpec::Incomplete(inc_coord) => {
                 site_spec::Coordinates::try_from(inc_coord)?

@@ -2,7 +2,7 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
-use super::{site_spec, types};
+use super::types;
 use structopt::StructOpt;
 
 #[derive(StructOpt)]
@@ -28,24 +28,30 @@ impl LoggingOpts {
 
 #[derive(StructOpt)]
 pub struct RegistrationArgs {
-    /// Address of the Checkmk site in the format "<server>/<site>" or "<server>:<port>/<site>"
-    #[structopt(long, short = "s", parse(try_from_str))]
-    pub site_address: Option<site_spec::SiteSpec>,
+    /// Address of the Checkmk site in the format "<server>" or "<server>:<port>"
+    #[structopt(long, short = "s", requires = "site", parse(from_str))]
+    pub server: Option<String>,
+
+    /// Name of the Checkmk site
+    #[structopt(long, short = "i", requires = "server", parse(from_str))]
+    pub site: Option<String>,
 
     /// API user to use for registration
-    #[structopt(long, short = "u", parse(from_str))]
+    #[structopt(long, short = "U", parse(from_str))]
     pub user: Option<String>,
 
     /// Password for API user. Can also be entered interactively.
-    #[structopt(long, short = "p", requires = "user", parse(from_str))]
+    #[structopt(long, short = "P", requires = "user", parse(from_str))]
     pub password: Option<String>,
 
     /// Name of this host in the monitoring site
-    #[structopt(long, short = "H", parse(from_str))]
+    // We are consistent with agent updater, which uses "hostname", not "host-name".
+    #[structopt(long, short = "H", long = "hostname", parse(from_str))]
     pub host_name: Option<String>,
 
     /// Blindly trust the server certificate of the Checkmk site
-    #[structopt(long)]
+    // We are consistent with agent updater, which uses "trust-cert"
+    #[structopt(long = "trust-cert")]
     pub trust_server_cert: bool,
 
     #[structopt(flatten)]

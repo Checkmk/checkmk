@@ -1,5 +1,5 @@
 from typing import Any, Dict, List, Mapping, Optional, Tuple, TypedDict
-from ..agent_based_api.v1 import State as state, type_defs
+from ..agent_based_api.v1 import State as state
 
 
 class DatafilesException(RuntimeError):

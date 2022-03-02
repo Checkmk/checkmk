@@ -1706,7 +1706,7 @@ class ListOfStrings(ValueSpec[Sequence[str]]):
             )
         )
 
-    def canonical_value(self) -> _Optional[Sequence[str]]:
+    def canonical_value(self) -> Sequence[str]:
         return []
 
     def value_to_html(self, value: Sequence[str]) -> ValueSpecText:
@@ -6744,7 +6744,10 @@ def SchedulePeriod(from_end=True, **kwargs):
     )
 
 
-class _CAInput(ValueSpec[tuple[str, int, bytes]]):
+_CAInputModel = _Optional[tuple[str, int, bytes]]
+
+
+class _CAInput(ValueSpec[_CAInputModel]):
     """Allows users to fetch CAs interactively so that they don't have to upload files or
     paste text manually."""
 
@@ -6753,7 +6756,7 @@ class _CAInput(ValueSpec[tuple[str, int, bytes]]):
         self.address = HostAddress()
         self.port = NetworkPort(title=None)
 
-    def render_input(self, varprefix: str, value: _Optional[tuple[str, int, bytes]]) -> None:
+    def render_input(self, varprefix: str, value: _CAInputModel) -> None:
         address, port, content = value or ("", 443, b"")
 
         self.address.render_input(varprefix + "_address", address)
@@ -6767,16 +6770,20 @@ class _CAInput(ValueSpec[tuple[str, int, bytes]]):
         html.div(None, id_=varprefix + "_status")
         html.text_area(varprefix, content.decode("ascii"), cols=80, readonly="")
 
-    def canonical_value(self) -> _Optional[tuple[str, int, bytes]]:
+    def canonical_value(self) -> _CAInputModel:
         return None
 
-    def value_to_json(self, value: tuple[str, int, bytes]) -> JSONValue:
-        return [value[0], value[1], value[2].decode("ascii")]
+    def value_to_json(self, value: _CAInputModel) -> JSONValue:
+        return None if value is None else [value[0], value[1], value[2].decode("ascii")]
 
-    def value_from_json(self, json_value: JSONValue) -> tuple[str, int, bytes]:
-        return (json_value[0], json_value[1], json_value[2].encode("ascii"))
+    def value_from_json(self, json_value: JSONValue) -> _CAInputModel:
+        return (
+            None
+            if json_value is None
+            else (json_value[0], json_value[1], json_value[2].encode("ascii"))
+        )
 
-    def from_html_vars(self, varprefix: str) -> tuple[str, int, bytes]:
+    def from_html_vars(self, varprefix: str) -> _CAInputModel:
         address = self.address.from_html_vars(varprefix + "_address")
         port = self.port.from_html_vars(varprefix + "_port")
         content = html.request.get_binary_input_mandatory(varprefix)

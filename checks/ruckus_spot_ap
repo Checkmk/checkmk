@@ -4,48 +4,58 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Final
+import json
+from typing import Any, Final, Mapping, NamedTuple, Sequence
+
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
+
+
+class _Device(NamedTuple):
+    name: str
+    status: int
+
+
+Section = Mapping[str, Sequence[_Device]]
 
 _BANDS_MAP: Final = {
     "1": "2.4 GHz",
     "2": "5 GHz",
 }
 
-factory_settings["ruckus_spot_ap"] = {}
 
+def parse_ruckus_spot_ap(string_table: StringTable) -> Section:
 
-def parse_ruckus_spot_ap(info):
-    import json
-
-    data = json.loads(info[0][0])
-    bands = {}
-    for band_info in data:
+    bands: dict[str, list[_Device]] = {}
+    for band_info in json.loads(string_table[0][0]):
         band = _BANDS_MAP[str(band_info["band"])]
-        bands.setdefault(band, [])
-        for ap_dict in band_info.get("access_points"):
-            bands[band].append([ap_dict["name"], ap_dict["status"]])
+        bands.setdefault(band, []).extend(
+            _Device(str(ap["name"]), int(ap["status"])) for ap in band_info["access_points"]
+        )
 
     return bands
 
 
-def inventory_ruckus_spot_ap(parsed):
-    for band in parsed:
-        yield band, {}
+def discover_ruckus_spot_ap(section: Section):
+    yield from ((band, {}) for band in section)
 
 
-def check_ruckus_spot_ap(item, params, parsed):
-    band = parsed.get(item)
-    if not band:
+def check_ruckus_spot_ap(item: str, params: Mapping[str, Any], section: Section):
+    if not (devices := section.get(item)):
         return
 
-    dev_count = len(band)
-    yield 0, f"Devices: {dev_count}", [("ap_devices_total", dev_count)]
+    yield check_levels(
+        len(devices),
+        "ap_devices_total",
+        None,
+        human_readable_func=lambda x: str(int(x)),
+        infoname="Devices",
+    )
 
     for what, ap_state, key in [
         ("drifted", 2, "levels_drifted"),
         ("not responding", 0, "levels_not_responding"),
     ]:
-        problems = len([x for x in band if x[1] == ap_state])
+        problems = sum(dev.status == ap_state for dev in devices)
 
         # make this notice_only upon migration
         state, text, metric = check_levels(
@@ -60,9 +70,12 @@ def check_ruckus_spot_ap(item, params, parsed):
             yield state, text
 
 
+factory_settings["ruckus_spot_ap"] = {}
+
+
 check_info["ruckus_spot_ap"] = {
     "parse_function": parse_ruckus_spot_ap,
-    "inventory_function": inventory_ruckus_spot_ap,
+    "inventory_function": discover_ruckus_spot_ap,
     "check_function": check_ruckus_spot_ap,
     "service_description": "Ruckus Spot Access Points %s",
     "default_levels_variable": "ruckus_spot_ap",

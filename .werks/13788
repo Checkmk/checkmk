@@ -1,0 +1,20 @@
+Title: KUBE: New workload resource: DaemonSets
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1646223408
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.2.0i1
+
+This werk introduces DaemonSets to the Kubernetes agent. Similar to the
+other Kubernetes objects, Checkmk creates a piggyback host for each
+DaemonSet. A DaemonSet host supports
+
+- Pod resources
+- Memory resources
+- CPU resources
+- Info
+- HW/SW inventory

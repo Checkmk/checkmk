@@ -440,7 +440,7 @@ class UpdateConfig:
         return (
             int.from_bytes(
                 password_store.password_store_path().read_bytes()[
-                    : password_store._PasswordStoreObfuscator.VERSION_BYTE_LENGTH
+                    : password_store.PasswordStore.VERSION_BYTE_LENGTH
                 ],
                 byteorder="big",
             )

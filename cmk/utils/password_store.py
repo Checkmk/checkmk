@@ -181,7 +181,7 @@ def _helper_password_store_path(config_path: ConfigPath) -> Path:
     return Path(config_path) / "stored_passwords"
 
 
-class _PasswordStoreObfuscator:
+class PasswordStore:
     """Encrypt the password store with the locally known password store key
 
     But why?
@@ -220,25 +220,25 @@ class _PasswordStoreObfuscator:
     VERSION = 0
     VERSION_BYTE_LENGTH = 2
 
-    @classmethod
-    def _secret_key_path(cls) -> Path:
+    @staticmethod
+    def _secret_key_path() -> Path:
         path = cmk.utils.paths.omd_root / "etc" / "password_store.secret"
         if not path.exists():
             # Initialize the password store encryption key in case it does not exist
-            cls._create_secret_key(path)
+            PasswordStore._create_secret_key(path)
         return path
 
-    @classmethod
-    def _passphrase(cls) -> bytes:
-        with cls._secret_key_path().open(mode="rb") as f:
+    @staticmethod
+    def _passphrase() -> bytes:
+        with PasswordStore._secret_key_path().open(mode="rb") as f:
             return f.read().strip()
 
-    @classmethod
-    def _cipher(cls, key: bytes, nonce: bytes):
+    @staticmethod
+    def _cipher(key: bytes, nonce: bytes):
         return AES.new(key, AES.MODE_GCM, nonce=nonce)
 
-    @classmethod
-    def _secret_key(cls, passphrase: bytes, salt: bytes) -> bytes:
+    @staticmethod
+    def _secret_key(passphrase: bytes, salt: bytes) -> bytes:
         """Build some secret for the encryption
 
         Use the sites auth.secret for encryption. This secret is only known to the current site
@@ -246,8 +246,8 @@ class _PasswordStoreObfuscator:
         """
         return hashlib.scrypt(passphrase, salt=salt, n=2**14, r=8, p=1, dklen=32)
 
-    @classmethod
-    def _create_secret_key(cls, path: Path) -> None:
+    @staticmethod
+    def _create_secret_key(path: Path) -> None:
         path.parent.mkdir(parents=True, exist_ok=True)
         path.touch()
         path.chmod(0o660)
@@ -255,33 +255,42 @@ class _PasswordStoreObfuscator:
             "".join(secrets.choice(string.ascii_uppercase + string.digits) for i in range(256))
         )
 
-    @classmethod
-    def encrypt(cls, value: str) -> bytes:
+    @staticmethod
+    def encrypt(value: str) -> bytes:
         salt = os.urandom(AES.block_size)
         nonce = os.urandom(AES.block_size)
-        cipher = cls._cipher(cls._secret_key(cls._passphrase(), salt), nonce)
+        cipher = PasswordStore._cipher(
+            PasswordStore._secret_key(PasswordStore._passphrase(), salt),
+            nonce,
+        )
         encrypted, tag = cipher.encrypt_and_digest(value.encode("utf-8"))
         return (
-            cls.VERSION.to_bytes(cls.VERSION_BYTE_LENGTH, byteorder="big")
+            PasswordStore.VERSION.to_bytes(PasswordStore.VERSION_BYTE_LENGTH, byteorder="big")
             + salt
             + nonce
             + tag
             + encrypted
         )
 
-    @classmethod
-    def decrypt(cls, raw: bytes) -> str:
-        _version, rest = raw[: cls.VERSION_BYTE_LENGTH], raw[cls.VERSION_BYTE_LENGTH :]
+    @staticmethod
+    def decrypt(raw: bytes) -> str:
+        _version, rest = (
+            raw[: PasswordStore.VERSION_BYTE_LENGTH],
+            raw[PasswordStore.VERSION_BYTE_LENGTH :],
+        )
         salt, rest = rest[: AES.block_size], rest[AES.block_size :]
         nonce, rest = rest[: AES.block_size], rest[AES.block_size :]
         tag, encrypted = rest[: AES.block_size], rest[AES.block_size :]
 
         return (
-            cls._cipher(cls._secret_key(cls._passphrase(), salt), nonce)
+            PasswordStore._cipher(
+                PasswordStore._secret_key(PasswordStore._passphrase(), salt),
+                nonce,
+            )
             .decrypt_and_verify(encrypted, tag)
             .decode("utf-8")
         )
 
 
-_obfuscate = _PasswordStoreObfuscator.encrypt
-_deobfuscate = _PasswordStoreObfuscator.decrypt
+_obfuscate = PasswordStore.encrypt
+_deobfuscate = PasswordStore.decrypt

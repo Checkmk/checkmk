@@ -287,17 +287,17 @@ class Encrypter:
     configured sites. The encrypted values are base64 encoded for easier processing.
     """
 
-    @classmethod
-    def _secret_key_path(cls) -> Path:
+    @staticmethod
+    def _secret_key_path() -> Path:
         return cmk.utils.paths.omd_root / "etc" / "auth.secret"
 
-    @classmethod
-    def _passphrase(cls) -> bytes:
-        with cls._secret_key_path().open(mode="rb") as f:
+    @staticmethod
+    def _passphrase() -> bytes:
+        with Encrypter._secret_key_path().open(mode="rb") as f:
             return f.read().strip()
 
-    @classmethod
-    def _secret_key(cls, passphrase: bytes, salt: bytes) -> bytes:
+    @staticmethod
+    def _secret_key(passphrase: bytes, salt: bytes) -> bytes:
         """Build some secret for the encryption
 
         Use the sites auth.secret for encryption. This secret is only known to the current site
@@ -305,26 +305,26 @@ class Encrypter:
         """
         return hashlib.scrypt(passphrase, salt=salt, n=2**14, r=8, p=1, dklen=32)
 
-    @classmethod
-    def _cipher(cls, key: bytes, nonce: bytes):
+    @staticmethod
+    def _cipher(key: bytes, nonce: bytes):
         return AES.new(key, AES.MODE_GCM, nonce=nonce)
 
-    @classmethod
-    def encrypt(cls, value: str) -> bytes:
+    @staticmethod
+    def encrypt(value: str) -> bytes:
         salt = os.urandom(AES.block_size)
         nonce = os.urandom(AES.block_size)
-        cipher = cls._cipher(cls._secret_key(cls._passphrase(), salt), nonce)
+        cipher = Encrypter._cipher(Encrypter._secret_key(Encrypter._passphrase(), salt), nonce)
         encrypted, tag = cipher.encrypt_and_digest(value.encode("utf-8"))
         return salt + nonce + tag + encrypted
 
-    @classmethod
-    def decrypt(cls, raw: bytes) -> str:
+    @staticmethod
+    def decrypt(raw: bytes) -> str:
         salt, rest = raw[: AES.block_size], raw[AES.block_size :]
         nonce, rest = rest[: AES.block_size], rest[AES.block_size :]
         tag, encrypted = rest[: AES.block_size], rest[AES.block_size :]
 
         return (
-            cls._cipher(cls._secret_key(cls._passphrase(), salt), nonce)
+            Encrypter._cipher(Encrypter._secret_key(Encrypter._passphrase(), salt), nonce)
             .decrypt_and_verify(encrypted, tag)
             .decode("utf-8")
         )

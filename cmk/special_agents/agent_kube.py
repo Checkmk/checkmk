@@ -537,6 +537,12 @@ class DaemonSet(PodOwner):
         super().add_pod(pod)
         pod.add_controller(self)
 
+    def pod_resources(self) -> section.PodResources:
+        resources: DefaultDict[str, List[str]] = defaultdict(list)
+        for pod in self._pods:
+            resources[pod.phase].append(pod.name())
+        return section.PodResources(**resources)
+
     def memory_resources(self) -> section.Resources:
         return _collect_memory_resources(self._pods)
 
@@ -936,6 +942,7 @@ def write_daemon_sets_api_sections(
 
     def output_sections(cluster_daemon_set: DaemonSet) -> None:
         sections = {
+            "kube_pod_resources_v1": cluster_daemon_set.pod_resources,
             "kube_memory_resources_v1": cluster_daemon_set.memory_resources,
             "kube_cpu_resources_v1": cluster_daemon_set.cpu_resources,
         }

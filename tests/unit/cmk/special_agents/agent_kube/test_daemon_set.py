@@ -9,22 +9,7 @@ from unittest.mock import Mock
 import pytest
 
 from cmk.special_agents import agent_kube
-
-
-@pytest.mark.parametrize(
-    "phases", [["running"], ["pending"], ["succeeded"], ["failed"], ["unknown"]]
-)
-def test_daemon_set_pod_resources_pods_in_phase(daemon_set, phases, daemon_set_pods):
-    pods = daemon_set.pods(phases[0])
-    assert len(pods) == daemon_set_pods
-
-
-@pytest.mark.parametrize(
-    "phases", [["running"], ["pending"], ["succeeded"], ["failed"], ["unknown"]]
-)
-def test_daemon_set_pod_resources_pods_in_phase_no_phase_param(daemon_set, daemon_set_pods):
-    pods = daemon_set.pods()
-    assert len(pods) == daemon_set_pods
+from cmk.special_agents.utils_kubernetes.schemata import section
 
 
 def test_write_daemon_sets_api_sections_registers_sections_to_be_written(
@@ -49,6 +34,36 @@ def test_write_daemon_sets_api_sections_calls_write_sections_for_each_daemon_set
 ):
     agent_kube.write_daemon_sets_api_sections([new_daemon_set() for _ in range(3)], Mock())
     assert write_sections_mock.call_count == 3
+
+
+@pytest.mark.parametrize("daemon_set_pods", [0, 10, 20])
+def test_daemon_set_pod_resources_returns_all_pods(daemon_set, daemon_set_pods):
+    resources = dict(daemon_set.pod_resources())
+    pod_resources = section.PodResources(**resources)
+    assert sum(len(pods) for _, pods in pod_resources) == daemon_set_pods
+
+
+def test_daemon_set_pod_resources_one_pod_per_phase(daemon_set):
+    resources = dict(daemon_set.pod_resources())
+    pod_resources = section.PodResources(**resources)
+    for _phase, pods in pod_resources:
+        assert len(pods) == 1
+
+
+@pytest.mark.parametrize(
+    "phases", [["running"], ["pending"], ["succeeded"], ["failed"], ["unknown"]]
+)
+def test_daemon_set_pod_resources_pods_in_phase(daemon_set, phases, daemon_set_pods):
+    pods = daemon_set.pods(phases[0])
+    assert len(pods) == daemon_set_pods
+
+
+@pytest.mark.parametrize(
+    "phases", [["running"], ["pending"], ["succeeded"], ["failed"], ["unknown"]]
+)
+def test_daemon_set_pod_resources_pods_in_phase_no_phase_param(daemon_set, daemon_set_pods):
+    pods = daemon_set.pods()
+    assert len(pods) == daemon_set_pods
 
 
 def test_daemon_set_memory_resources(

@@ -372,6 +372,7 @@ def cluster_api_sections():
 @pytest.fixture
 def daemon_sets_api_sections():
     return [
+        "kube_pod_resources_v1",
         "kube_memory_resources_v1",
         "kube_cpu_resources_v1",
     ]

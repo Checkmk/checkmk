@@ -141,25 +141,6 @@ def run(client: Client, s: GCPService) -> None:
             w.append(Result.serialize(result))
 
 
-def parse_arguments(argv: Optional[Sequence[str]]) -> Args:
-    parser = create_default_argument_parser(description=__doc__)
-    parser.add_argument("--project", type=str, help="Global ID of Project")
-    parser.add_argument("--credentials", type=str, help="JSON credentials for service account")
-    return parser.parse_args(argv)
-
-
-def agent_gcp_main(args: Args) -> None:
-    client = Client(json.loads(args.credentials), args.project)
-    run(client, GCS)
-    run(client, FUNCTIONS)
-    run(client, RUN)
-
-
-def main() -> None:
-    """Main entry point to be used"""
-    special_agent_main(parse_arguments, agent_gcp_main)
-
-
 #######################################################################
 # Configuration of which metrics we collect for a service starts here #
 #######################################################################
@@ -379,3 +360,33 @@ RUN = GCPService(
         ),
     ],
 )
+
+SERVICES = {s.name: s for s in [GCS, FUNCTIONS, RUN]}
+
+
+def parse_arguments(argv: Optional[Sequence[str]]) -> Args:
+    parser = create_default_argument_parser(description=__doc__)
+    parser.add_argument("--project", type=str, help="Global ID of Project", required=True)
+    parser.add_argument(
+        "--credentials", type=str, help="JSON credentials for service account", required=True
+    )
+    parser.add_argument(
+        "--services",
+        nargs="+",
+        action="extend",
+        help=f"implemented services: {','.join(list(SERVICES))}",
+        choices=list(SERVICES),
+        required=True,
+    )
+    return parser.parse_args(argv)
+
+
+def agent_gcp_main(args: Args) -> None:
+    client = Client(json.loads(args.credentials), args.project)
+    for s in args.services:
+        run(client, SERVICES[s])
+
+
+def main() -> None:
+    """Main entry point to be used"""
+    special_agent_main(parse_arguments, agent_gcp_main)

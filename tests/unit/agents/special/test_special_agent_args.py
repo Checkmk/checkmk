@@ -136,7 +136,7 @@ REQUIRED_ARGUMENTS: Dict[str, List[str]] = {
         "REMOTE_NAME",
         "ADDRESS",
     ],
-    "agent_gcp": [],
+    "agent_gcp": ["--project", "a", "--credentials", "foo", "--services", "gcs"],
 }
 
 

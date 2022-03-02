@@ -17,11 +17,16 @@ pytestmark = pytest.mark.checks
     "params, expected_result",
     [
         pytest.param(
-            {
-                "project": "test",
-                "credentials": "definitely some json",
-            },
-            ["--project", "test", "--credentials", "definitely some json"],
+            {"project": "test", "credentials": "definitely some json", "services": ["gcs", "run"]},
+            [
+                "--project",
+                "test",
+                "--credentials",
+                "definitely some json",
+                "--services",
+                "gcs",
+                "run",
+            ],
             id="minimal case",
         ),
     ],

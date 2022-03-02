@@ -11,12 +11,16 @@ def agent_gcp_arguments(
     params: Mapping[str, Any], hostname: str, ipaddress: Optional[str]
 ) -> Sequence[Union[str, tuple[str, str, str]]]:
 
-    return [
+    args = [
         "--project",
         params["project"],
         "--credentials",
         passwordstore_get_cmdline("%s", params["credentials"]),
     ]
+    if len(params["services"]) > 0:
+        args.append("--services")
+        args.extend(params["services"])
+    return args
 
 
 special_agent_info["gcp"] = agent_gcp_arguments

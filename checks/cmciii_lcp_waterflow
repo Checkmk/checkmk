@@ -4,62 +4,88 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import NamedTuple, Optional
 
-def parse_cmciii_lcp_waterflow(info):
-    parsed = []
 
+class WaterflowReading(NamedTuple):
+    name: str
+    status: str
+    unit: str
+    flow: float
+    minflow: float
+    maxflow: float
+
+
+Section = Optional[WaterflowReading]
+
+
+def parse_cmciii_lcp_waterflow(info) -> Section:
     if not info:
-        return parsed
+        return None
 
     # We have a list of values where no item has a fixed index. We
     # try to detect the starting index for the needed values now.
     iter_info = iter(info[0])
+    name = None
     for line in iter_info:
-        if line != "Waterflow":
-            continue
-        parsed.append(line)
-        for i in range(4):
-            parsed.append(next(iter_info))
-        break
+        if line == "Waterflow":
+            name = line
+            break
 
-    return parsed
+    if name is None:
+        return None
+
+    flow, unit = next(iter_info).split(" ", 1)
+    maxflow = next(iter_info).split(" ", 1)[0]
+    minflow = next(iter_info).split(" ", 1)[0]
+    status = next(iter_info)
+
+    return WaterflowReading(
+        name=name,
+        status=status,
+        unit=unit,
+        flow=float(flow),
+        minflow=float(minflow),
+        maxflow=float(maxflow),
+    )
 
 
-def inventory_cmciii_lcp_waterflow(section):
+def inventory_cmciii_lcp_waterflow(section: Section):
     if section:
         yield None, {}
 
 
-def check_cmciii_lcp_waterflow(item, params, parsed):
-    if not parsed:
+def check_cmciii_lcp_waterflow(item, params, section: Section):
+    if not section:
         return
-
-    name, flow, maxflow, minflow, status = parsed
-
-    unit = flow.split(" ", 1)[1]
-    flow = float(flow.split(" ", 1)[0])
-    minflow = float(minflow.split(" ", 1)[0])
-    maxflow = float(maxflow.split(" ", 1)[0])
 
     sym = ""
     state = 0
-    if status != "OK":
+    if section.status != "OK":
         state = 2
         sym = "(!!)"
-    elif flow < minflow or flow > maxflow:
+    elif section.flow < section.minflow or section.flow > section.maxflow:
         state = 1
         sym = "(!)"
 
     info_text = "%s Status: %s Flow: %.1f%s, MinFlow: %.1f, MaxFLow: %.1f" % (
-        name,
-        status,
-        flow,
+        section.name,
+        section.status,
+        section.flow,
         sym,
-        minflow,
-        maxflow,
+        section.minflow,
+        section.maxflow,
     )
 
-    perfdata = [("flow", str(flow) + unit, str(minflow) + ":" + str(maxflow), 0, 0)]
+    perfdata = [
+        (
+            "flow",
+            str(section.flow) + section.unit,
+            str(section.minflow) + ":" + str(section.maxflow),
+            0,
+            0,
+        )
+    ]
 
     return state, info_text, perfdata
 

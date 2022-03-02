@@ -158,21 +158,11 @@ def test_openapi_user_minimal_password_settings(
             status=200,
             content_type="application/json",
         )
-    assert resp.json_body["extensions"] == {
-        "fullname": "User Name",
-        "customer": "provider",
-        "pager_address": "",
-        "contactgroups": [],
-        "idle_timeout": {"option": "global"},
-        "contact_options": {
-            "email": "",
-            "fallback_contact": False,
-        },
-        "disable_notifications": {},
-        "disable_login": False,
-        "roles": [],
-        "enforce_password_change": True,
-    }
+    extensions = resp.json_body["extensions"]
+    assert extensions["customer"] == "provider"
+    assert extensions["enforce_password_change"] is True
+    assert "last_pw_change" not in extensions
+    assert "password" not in extensions
 
     edit_details = {
         "auth_option": {
@@ -192,23 +182,10 @@ def test_openapi_user_minimal_password_settings(
             content_type="application/json",
         )
 
-    assert resp.json_body["extensions"] == {
-        "fullname": "User Name",
-        "customer": "provider",
-        "contact_options": {
-            "email": "",
-            "fallback_contact": False,
-        },
-        "idle_timeout": {
-            "option": "disable",
-        },
-        "pager_address": "",
-        "disable_login": False,
-        "contactgroups": [],
-        "disable_notifications": {},
-        "roles": ["user"],
-        "enforce_password_change": True,
-    }
+    extensions = resp.json_body["extensions"]
+    assert extensions["enforce_password_change"] is True
+    assert extensions["idle_timeout"]["option"] == "disable"
+    assert extensions["roles"] == ["user"]
 
 
 def test_openapi_all_users(wsgi_app, with_automation_user):
@@ -268,22 +245,12 @@ def test_openapi_user_config(
         status=200,
     )
 
-    assert resp.json_body["extensions"] == {
-        "contact_options": {"email": "", "fallback_contact": False},
-        "disable_login": False,
-        "fullname": "KPECYCq79E",
-        "pager_address": "",
-        "contactgroups": [],
-        "customer": "provider",
-        "disable_notifications": {
-            "timerange": {
-                "end_time": "2020-01-02T00:00:00+00:00",
-                "start_time": "2020-01-01T00:00:00+00:00",
-            }
-        },
-        "idle_timeout": {"option": "global"},
-        "roles": [],
-        "enforce_password_change": False,
+    extensions = resp.json_body["extensions"]
+    assert extensions["disable_notifications"] == {
+        "timerange": {
+            "end_time": "2020-01-02T00:00:00+00:00",
+            "start_time": "2020-01-01T00:00:00+00:00",
+        }
     }
 
     collection_resp = aut_user_auth_wsgi_app.call_method(
@@ -400,18 +367,9 @@ def test_openapi_user_edit_auth(aut_user_auth_wsgi_app: WebTestAppForCMK, monkey
             status=200,
             content_type="application/json",
         )
-    assert resp.json_body["extensions"] == {
-        "contact_options": {"email": "", "fallback_contact": False},
-        "disable_login": False,
-        "fullname": "Foo Bar",
-        "pager_address": "",
-        "customer": "provider",
-        "contactgroups": [],
-        "disable_notifications": {},
-        "idle_timeout": {"option": "global"},
-        "roles": ["user"],
-        "enforce_password_change": False,
-    }
+    extensions = resp.json_body["extensions"]
+    assert extensions["customer"] == "provider"
+    assert extensions["enforce_password_change"] is False
 
     edit_details = {
         "auth_option": {"auth_type": "automation", "secret": "QWXWBFUCSUOXNCPJUMS@"},
@@ -427,26 +385,13 @@ def test_openapi_user_edit_auth(aut_user_auth_wsgi_app: WebTestAppForCMK, monkey
             content_type="application/json",
         )
 
-    assert resp.json_body["extensions"] == {
-        "contact_options": {"email": "", "fallback_contact": False},
-        "disable_login": False,
-        "fullname": "Foo Bar",
-        "pager_address": "",
-        "customer": "provider",
-        "contactgroups": [],
-        "disable_notifications": {},
-        "idle_timeout": {"option": "global"},
-        "roles": ["user"],
-        "enforce_password_change": False,
-    }
-
     remove_details = {
         "auth_option": {
             "auth_type": "remove",
         },
     }
     with freeze_time("2010-02-01 09:00:00"):
-        resp = aut_user_auth_wsgi_app.call_method(
+        _resp = aut_user_auth_wsgi_app.call_method(
             "put",
             base + "/objects/user_config/foo",
             params=json.dumps(remove_details),
@@ -454,19 +399,6 @@ def test_openapi_user_edit_auth(aut_user_auth_wsgi_app: WebTestAppForCMK, monkey
             headers={"Accept": "application/json", "If-Match": resp.headers["ETag"]},
             content_type="application/json",
         )
-
-    assert resp.json_body["extensions"] == {
-        "contact_options": {"email": "", "fallback_contact": False},
-        "disable_login": False,
-        "fullname": "Foo Bar",
-        "pager_address": "",
-        "customer": "provider",
-        "contactgroups": [],
-        "disable_notifications": {},
-        "idle_timeout": {"option": "global"},
-        "roles": ["user"],
-        "enforce_password_change": False,
-    }
 
 
 @managedtest
@@ -614,18 +546,9 @@ def test_openapi_managed_global_edition(aut_user_auth_wsgi_app: WebTestAppForCMK
             content_type="application/json",
         )
 
-    assert resp.json_body["extensions"] == {
-        "contact_options": {"email": "", "fallback_contact": False},
-        "disable_login": False,
-        "fullname": "User Name",
-        "pager_address": "",
-        "customer": "global",
-        "contactgroups": [],
-        "disable_notifications": {},
-        "idle_timeout": {"option": "global"},
-        "roles": [],
-        "enforce_password_change": False,
-    }
+    extensions = resp.json["extensions"]
+    assert extensions["customer"] == "global"
+    assert extensions["idle_timeout"] == {"option": "global"}
 
 
 @managedtest
@@ -854,19 +777,8 @@ def test_openapi_user_disable_notifications(aut_user_auth_wsgi_app: WebTestAppFo
         status=200,
         headers={"Accept": "application/json"},
     )
-    assert resp.json_body["extensions"] == {
-        "contact_options": {"email": "", "fallback_contact": False},
-        "disable_login": False,
-        "fullname": "Mathias Kettner",
-        "idle_timeout": {"option": "global"},
-        "pager_address": "",
-        "roles": [],
-        "contactgroups": [],
-        "customer": "global",
-        "disable_notifications": {
-            "disable": True,
-        },
-        "enforce_password_change": False,
+    assert resp.json_body["extensions"]["disable_notifications"] == {
+        "disable": True,
     }
 
     resp = aut_user_auth_wsgi_app.call_method(
@@ -877,19 +789,7 @@ def test_openapi_user_disable_notifications(aut_user_auth_wsgi_app: WebTestAppFo
         headers={"Accept": "application/json", "If-Match": resp.headers["ETag"]},
         content_type="application/json",
     )
-
-    assert resp.json_body["extensions"] == {
-        "contact_options": {"email": "", "fallback_contact": False},
-        "disable_login": False,
-        "fullname": "Mathias Kettner",
-        "idle_timeout": {"option": "global"},
-        "pager_address": "",
-        "roles": [],
-        "contactgroups": [],
-        "customer": "global",
-        "disable_notifications": {},
-        "enforce_password_change": False,
-    }
+    assert resp.json_body["extensions"]["disable_notifications"] == {}
 
 
 @managedtest

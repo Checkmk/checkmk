@@ -275,5 +275,5 @@ class APIServer:
     def pods(self) -> Sequence[api.Pod]:
         return [pod_from_client(pod) for pod in self._core_api.raw_pods]
 
-    def cluster_details(self) -> api.ClusterInfo:
-        return api.ClusterInfo(api_health=self.api_health)
+    def cluster_details(self) -> api.ClusterDetails:
+        return api.ClusterDetails(api_health=self.api_health)

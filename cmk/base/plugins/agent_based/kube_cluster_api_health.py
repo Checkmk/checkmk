@@ -7,18 +7,18 @@ import json
 
 from .agent_based_api.v1 import register, Result, Service, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
-from .utils.k8s import ClusterInfo
+from .utils.k8s import ClusterDetails
 
 
-def parse(string_table: StringTable) -> ClusterInfo:
-    return ClusterInfo(**json.loads(string_table[0][0]))
+def parse(string_table: StringTable) -> ClusterDetails:
+    return ClusterDetails(**json.loads(string_table[0][0]))
 
 
-def discovery(section: ClusterInfo) -> DiscoveryResult:
+def discovery(section: ClusterDetails) -> DiscoveryResult:
     yield Service()
 
 
-def check(section: ClusterInfo) -> CheckResult:
+def check(section: ClusterDetails) -> CheckResult:
     api_health = section.api_health
     name_and_health = [("live", api_health.live), ("ready", api_health.ready)]
     for name, health in name_and_health:

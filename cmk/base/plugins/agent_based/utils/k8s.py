@@ -196,7 +196,7 @@ class APIHealth(BaseModel):
     live: HealthZ
 
 
-class ClusterInfo(BaseModel):
+class ClusterDetails(BaseModel):
     """section: kube_cluster_details_v1"""
 
     api_health: APIHealth

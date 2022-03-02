@@ -339,7 +339,7 @@ class CronJob(BaseModel):
     pod_uids: Sequence[PodUID]
 
 
-class ClusterInfo(BaseModel):
+class ClusterDetails(BaseModel):
     """section: kube_cluster_details_v1"""
 
     api_health: APIHealth
@@ -361,5 +361,5 @@ class API(Protocol):
     def daemon_sets(self):
         ...
 
-    def cluster_details(self) -> ClusterInfo:
+    def cluster_details(self) -> ClusterDetails:
         ...

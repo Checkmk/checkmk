@@ -664,7 +664,7 @@ class Cluster:
         deployments: Optional[Sequence[api.Deployment]] = None,
         cron_jobs: Optional[Sequence[api.CronJob]] = None,
         daemon_sets: Optional[Sequence[api.DaemonSet]] = None,
-        cluster_details: Optional[api.ClusterInfo] = None,
+        cluster_details: Optional[api.ClusterDetails] = None,
     ) -> Cluster:
         """Creating and filling the Cluster with the Kubernetes Objects"""
 
@@ -744,8 +744,8 @@ class Cluster:
         )
         return cluster
 
-    def __init__(self, *, cluster_details: Optional[api.ClusterInfo] = None) -> None:
-        self._cluster_details: Optional[api.ClusterInfo] = cluster_details
+    def __init__(self, *, cluster_details: Optional[api.ClusterDetails] = None) -> None:
+        self._cluster_details: Optional[api.ClusterDetails] = cluster_details
         self._cron_jobs: List[CronJob] = []
         self._daemon_sets: List[DaemonSet] = []
         self._deployments: List[Deployment] = []
@@ -819,7 +819,7 @@ class Cluster:
                     node_count.worker.not_ready += 1
         return node_count
 
-    def cluster_details(self) -> api.ClusterInfo:
+    def cluster_details(self) -> api.ClusterDetails:
         if self._cluster_details is None:
             raise AttributeError("cluster_details was not provided")
         return self._cluster_details

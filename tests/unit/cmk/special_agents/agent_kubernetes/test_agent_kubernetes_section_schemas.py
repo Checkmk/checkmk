@@ -7,7 +7,7 @@
 from cmk.base.plugins.agent_based.utils import k8s as k8s_check
 from cmk.base.plugins.agent_based.utils import kube as check
 from cmk.base.plugins.agent_based.utils.k8s import AllocatablePods as AllocatablePodsC
-from cmk.base.plugins.agent_based.utils.k8s import ClusterInfo as ClusterInfoC
+from cmk.base.plugins.agent_based.utils.k8s import ClusterDetails as ClusterDetailsC
 from cmk.base.plugins.agent_based.utils.k8s import ContainerCount as ContainerCountC
 from cmk.base.plugins.agent_based.utils.k8s import ContainerRunningState as ContainerRunningStateC
 from cmk.base.plugins.agent_based.utils.k8s import (
@@ -28,7 +28,7 @@ from cmk.base.plugins.agent_based.utils.kube import PodLifeCycle as PodLifeCycle
 from cmk.base.plugins.agent_based.utils.kube_resources import Resources as ResourcesC
 
 from cmk.special_agents.utils_kubernetes.schemata import section as agent
-from cmk.special_agents.utils_kubernetes.schemata.api import ClusterInfo as ClusterInfoA
+from cmk.special_agents.utils_kubernetes.schemata.api import ClusterDetails as ClusterDetailsA
 from cmk.special_agents.utils_kubernetes.schemata.api import (
     ContainerRunningState as ContainerRunningStateA,
 )
@@ -55,7 +55,7 @@ from cmk.special_agents.utils_kubernetes.schemata.section import Resources as Re
 
 
 def test_schemata_did_not_diverge() -> None:
-    assert ClusterInfoA.schema() == ClusterInfoC.schema()
+    assert ClusterDetailsA.schema() == ClusterDetailsC.schema()
     assert agent.CollectorProcessingLogs.schema() == check.CollectorProcessingLogs.schema()
     assert agent.CollectorComponentsMetadata.schema() == check.CollectorComponentsMetadata.schema()
     assert ContainerCountA.schema() == ContainerCountC.schema()

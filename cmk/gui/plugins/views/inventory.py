@@ -9,7 +9,19 @@ from __future__ import annotations
 import abc
 import time
 from functools import partial
-from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, TYPE_CHECKING, Union
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    Iterable,
+    List,
+    Mapping,
+    Optional,
+    Sequence,
+    Tuple,
+    TYPE_CHECKING,
+    Union,
+)
 
 from livestatus import LivestatusResponse, OnlySites, SiteId
 
@@ -32,9 +44,9 @@ import cmk.gui.pages
 import cmk.gui.sites as sites
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.globals import config, html, output_funnel, request, user_errors
+from cmk.gui.hooks import request_memoize
 from cmk.gui.htmllib import foldable_container, HTML
 from cmk.gui.i18n import _
-from cmk.gui.inventory import InventoryDeltaData, InventoryRows
 from cmk.gui.plugins.views.utils import (
     ABCDataSource,
     Cell,
@@ -90,8 +102,10 @@ def _paint_host_inventory_tree(
     raw_hostname = row.get("host_name")
     assert isinstance(raw_hostname, str)
 
-    sites_with_same_named_hosts = _get_sites_with_same_named_hosts(HostName(raw_hostname))
-    if len(sites_with_same_named_hosts) > 1:
+    if (
+        len(sites_with_same_named_hosts := _get_sites_with_same_named_hosts(HostName(raw_hostname)))
+        > 1
+    ):
         html.show_error(
             _("Cannot display inventory tree of host '%s': Found this host on multiple sites: %s")
             % (raw_hostname, ", ".join(sites_with_same_named_hosts))
@@ -133,10 +147,18 @@ def _paint_host_inventory_tree(
     return td_class, code
 
 
-def _get_sites_with_same_named_hosts(hostname: HostName) -> List[SiteId]:
-    query_str = "GET hosts\nColumns: host_name\nFilter: host_name = %s\n" % hostname
+def _get_sites_with_same_named_hosts(hostname: HostName) -> Sequence[SiteId]:
+    return _get_sites_with_same_named_hosts_cache().get(hostname, [])
+
+
+@request_memoize()
+def _get_sites_with_same_named_hosts_cache() -> Mapping[HostName, Sequence[SiteId]]:
+    cache: Dict[HostName, List[SiteId]] = {}
+    query_str = "GET hosts\nColumns: host_name\n"
     with sites.prepend_site():
-        return [SiteId(r[0]) for r in sites.live().query(query_str)]
+        for row in sites.live().query(query_str):
+            cache.setdefault(HostName(row[1]), []).append(SiteId(row[0]))
+    return cache
 
 
 def _get_tree_renderer(row: Row, column: str, invpath: SDRawPath) -> ABCNodeRenderer:
@@ -938,7 +960,7 @@ class RowTableInventory(ABCRowTable):
         super().__init__([info_name], ["host_structured_status"])
         self._inventory_path = inventory_path
 
-    def _get_inv_data(self, hostrow: Row) -> InventoryRows:
+    def _get_inv_data(self, hostrow: Row) -> inventory.InventoryRows:
         try:
             merged_tree = inventory.load_filtered_and_merged_tree(hostrow)
         except inventory.LoadStructuredDataError:
@@ -959,7 +981,7 @@ class RowTableInventory(ABCRowTable):
             return []
         return table
 
-    def _prepare_rows(self, inv_data: InventoryRows) -> Iterable[Row]:
+    def _prepare_rows(self, inv_data: inventory.InventoryRows) -> Iterable[Row]:
         # TODO check: hopefully there's only a table as input arg
         info_name = self._info_names[0]
         entries = []
@@ -1026,7 +1048,7 @@ def declare_invtable_view(
     _declare_views(infoname, title_plural, painters, filters, [invpath], icon)
 
 
-InventorySourceRows = Tuple[str, InventoryRows]
+InventorySourceRows = Tuple[str, inventory.InventoryRows]
 
 
 class RowMultiTableInventory(ABCRowTable):
@@ -1583,9 +1605,9 @@ class RowTableInventoryHistory(ABCRowTable):
         super().__init__(["invhist"], [])
         self._inventory_path = None
 
-    def _get_inv_data(self, hostrow: Row) -> List[Tuple[str, InventoryDeltaData]]:
+    def _get_inv_data(self, hostrow: Row) -> Sequence[inventory.HistoryEntry]:
         hostname: HostName = hostrow["host_name"]
-        history_deltas, corrupted_history_files = inventory.get_history_deltas(hostname)
+        history, corrupted_history_files = inventory.get_history(hostname)
         if corrupted_history_files:
             user_errors.add(
                 MKUserError(
@@ -1597,19 +1619,17 @@ class RowTableInventoryHistory(ABCRowTable):
                 )
             )
 
-        return history_deltas
+        return history
 
-    def _prepare_rows(self, inv_data: List[Tuple[str, InventoryDeltaData]]) -> Iterable[Row]:
-        for timestamp, delta_info in inv_data:
-            new, changed, removed, delta_tree = delta_info
-            newrow = {
-                "invhist_time": int(timestamp),
-                "invhist_delta": delta_tree,
-                "invhist_removed": removed,
-                "invhist_new": new,
-                "invhist_changed": changed,
+    def _prepare_rows(self, inv_data: Sequence[inventory.HistoryEntry]) -> Iterable[Row]:
+        for history_entry in inv_data:
+            yield {
+                "invhist_time": history_entry.timestamp,
+                "invhist_delta": history_entry.delta_tree,
+                "invhist_removed": history_entry.removed,
+                "invhist_new": history_entry.new,
+                "invhist_changed": history_entry.changed,
             }
-            yield newrow
 
 
 @data_source_registry.register
@@ -1942,9 +1962,11 @@ class ABCNodeRenderer(abc.ABC):
                 class_="invtablelink",
             )
 
-        self._show_table_data(table, titles, invpath)
+        self._show_table_data(hint, table, titles, invpath)
 
-    def _show_table_data(self, table: Table, titles: TableTitles, invpath: SDRawPath) -> None:
+    def _show_table_data(
+        self, hint: InventoryHintSpec, table: Table, titles: TableTitles, invpath: SDRawPath
+    ) -> None:
         # TODO: Use table.open_table() below.
         html.open_table(class_="data")
         html.open_tr()
@@ -1952,7 +1974,8 @@ class ABCNodeRenderer(abc.ABC):
             html.th(self._get_header(title, key, "#DDD", is_key_column=is_key_column))
 
         html.close_tr()
-        for index, entry in enumerate(table.rows):
+
+        for index, entry in enumerate(self._sort_table_rows(hint, table)):
             html.open_tr(class_="even0")
             for title, key, _is_key_column in titles:
                 value = entry.get(key)
@@ -1977,11 +2000,18 @@ class ABCNodeRenderer(abc.ABC):
             html.close_tr()
         html.close_table()
 
+    def _sort_table_rows(self, hint: InventoryHintSpec, table: Table) -> inventory.InventoryRows:
+        if (keyorder := hint.get("keyorder")) is None:
+            return table.rows
+
+        sorting_keys = tuple(k for k in keyorder if k in table.key_columns)
+        return sorted(table.rows, key=lambda r: tuple(r.get(k) or "" for k in sorting_keys))
+
     @abc.abstractmethod
     def _show_table_value(
         self,
         value: Any,
-        hint: Dict,
+        hint: InventoryHintSpec,
         retention_intervals: Optional[RetentionIntervals] = None,
     ) -> None:
         raise NotImplementedError()
@@ -2024,7 +2054,7 @@ class ABCNodeRenderer(abc.ABC):
     def _show_attribute(
         self,
         value: Any,
-        hint: Dict,
+        hint: InventoryHintSpec,
         retention_intervals: Optional[RetentionIntervals] = None,
     ) -> None:
         raise NotImplementedError()
@@ -2052,7 +2082,7 @@ class ABCNodeRenderer(abc.ABC):
     def _show_child_value(
         self,
         value: Any,
-        hint: Dict,
+        hint: InventoryHintSpec,
         retention_intervals: Optional[RetentionIntervals] = None,
     ) -> None:
         if "paint_function" in hint:
@@ -2096,7 +2126,7 @@ class NodeRenderer(ABCNodeRenderer):
     def _show_table_value(
         self,
         value: Any,
-        hint: Dict,
+        hint: InventoryHintSpec,
         retention_intervals: Optional[RetentionIntervals] = None,
     ) -> None:
         self._show_child_value(value, hint, retention_intervals)
@@ -2104,7 +2134,7 @@ class NodeRenderer(ABCNodeRenderer):
     def _show_attribute(
         self,
         value: Any,
-        hint: Dict,
+        hint: InventoryHintSpec,
         retention_intervals: Optional[RetentionIntervals] = None,
     ) -> None:
         self._show_child_value(value, hint, retention_intervals)
@@ -2114,7 +2144,7 @@ class DeltaNodeRenderer(ABCNodeRenderer):
     def _show_table_value(
         self,
         value: Any,
-        hint: Dict,
+        hint: InventoryHintSpec,
         retention_intervals: Optional[RetentionIntervals] = None,
     ) -> None:
         self._show_delta_child_value(value, hint)
@@ -2122,12 +2152,12 @@ class DeltaNodeRenderer(ABCNodeRenderer):
     def _show_attribute(
         self,
         value: Any,
-        hint: Dict,
+        hint: InventoryHintSpec,
         retention_intervals: Optional[RetentionIntervals] = None,
     ) -> None:
         self._show_delta_child_value(value, hint)
 
-    def _show_delta_child_value(self, value: Any, hint: Dict) -> None:
+    def _show_delta_child_value(self, value: Any, hint: InventoryHintSpec) -> None:
         if value is None:
             value = (None, None)
 

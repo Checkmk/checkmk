@@ -1,7 +1,7 @@
 title: Cisco Nexus Supervisor: Memory
 agents: snmp
 catalog: hw/network/cisco
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the average utilization of memory on the active supervisor

@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 In Python version 2 the agent plugin 'unitrends_replication' crashed with the error message:
 Traceback (most recent call last):

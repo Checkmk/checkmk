@@ -9,6 +9,8 @@ import pytest
 from cmk.base.plugins.agent_based.agent_based_api.v1 import TableRow
 from cmk.base.plugins.agent_based.inventory_k8s_job_container import inventory_k8s_job_container
 
+from .utils_inventory import sort_inventory_result
+
 
 @pytest.mark.parametrize(
     "parsed, expected_result",
@@ -38,4 +40,6 @@ from cmk.base.plugins.agent_based.inventory_k8s_job_container import inventory_k
     ],
 )
 def test_k8s_job_container(parsed, expected_result):
-    assert list(inventory_k8s_job_container(parsed)) == expected_result
+    assert sort_inventory_result(inventory_k8s_job_container(parsed)) == sort_inventory_result(
+        expected_result
+    )

@@ -6,7 +6,7 @@ Date: 1610450374
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 If the option "Create separate notification bulks..." in section "Notification
 Bulking" of notification rules was used for service notifications, the bulk

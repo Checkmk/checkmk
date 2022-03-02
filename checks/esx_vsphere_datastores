@@ -57,7 +57,7 @@ def check_esx_vsphere_datastores(item, params, data):
     if not data["accessible"]:
         yield 2, "inaccessible"
 
-    mib = 1024.0 ** 2
+    mib = 1024.0**2
     size_bytes = data.get("capacity")
     avail_bytes = data.get("freeSpace")
     if size_bytes is None or size_bytes == 0 or avail_bytes is None:

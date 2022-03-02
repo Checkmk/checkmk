@@ -6,7 +6,7 @@ Date: 1637333647
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 Parameters for upper and lower voltage levels added to brocade_sfp check.
 

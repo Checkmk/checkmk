@@ -6,7 +6,7 @@ Date: 1617179249
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 The check ups_cps_battery crashed with the error "ValueError (invalid literal for int() with base 10:'NULL')"
 if the value for the OID "upsAdvanceBatteryTemperature" is equal to 'NULL'.

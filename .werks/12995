@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 Some users name in local checks metrics that represent Network subnets, by the
 subnet numbers, eg. "10.172". Although it could be considered a poor naming

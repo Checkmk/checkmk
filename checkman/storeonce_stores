@@ -1,7 +1,7 @@
 title: HPE StoreOnce: Stores
 agents: storeonce
 catalog: hw/storagehw/hpe
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check displays the state of a store. The states reported by the appliance

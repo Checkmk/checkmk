@@ -6,7 +6,7 @@
 
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Tuple, Union
+from typing import Iterable, NamedTuple, Tuple, Union
 
 from cryptography.hazmat.primitives.asymmetric.rsa import (
     generate_private_key,
@@ -14,7 +14,12 @@ from cryptography.hazmat.primitives.asymmetric.rsa import (
     RSAPublicKey,
 )
 from cryptography.hazmat.primitives.hashes import SHA256
-from cryptography.hazmat.primitives.serialization import load_pem_private_key
+from cryptography.hazmat.primitives.serialization import (
+    Encoding,
+    load_pem_private_key,
+    NoEncryption,
+    PrivateFormat,
+)
 from cryptography.x509 import (
     BasicConstraints,
     Certificate,
@@ -32,7 +37,56 @@ from cryptography.x509 import (
 )
 from cryptography.x509.oid import NameOID
 
-from cmk.utils.paths import omd_root
+_DEFAULT_VALIDITY = 999 * 365
+
+
+class RootCA(NamedTuple):
+    cert: Certificate
+    rsa: RSAPrivateKeyWithSerialization
+
+    @classmethod
+    def load(cls, path: Path) -> "RootCA":
+        return cls(*load_cert_and_private_key(path))
+
+    @classmethod
+    def load_or_create(cls, path: Path, name: str, days_valid: int = _DEFAULT_VALIDITY) -> "RootCA":
+        try:
+            return cls.load(path)
+        except FileNotFoundError:
+            rsa = _make_private_key()
+            cert = _make_root_certificate(_make_subject_name(name), days_valid, rsa)
+            _save_cert_chain(path, [cert], rsa)
+        return cls(cert, rsa)
+
+    def sign_csr(
+        self,
+        csr: CertificateSigningRequest,
+        days_valid: int = _DEFAULT_VALIDITY,
+    ) -> Certificate:
+        return _sign_csr(csr, days_valid, self.cert, self.rsa)
+
+    def new_signed_cert(
+        self,
+        name: str,
+        days_valid: int = _DEFAULT_VALIDITY,
+    ) -> Tuple[Certificate, RSAPrivateKeyWithSerialization]:
+        private_key = _make_private_key()
+        cert = _sign_csr(
+            _make_csr(
+                _make_subject_name(name),
+                private_key,
+            ),
+            days_valid,
+            self.cert,
+            self.rsa,
+        )
+        return cert, private_key
+
+    def save_new_signed_cert(
+        self, path: Path, name: str, days_valid: int = _DEFAULT_VALIDITY
+    ) -> None:
+        cert, private_key = self.new_signed_cert(name, days_valid)
+        _save_cert_chain(path, [cert, self.cert], private_key)
 
 
 def cert_dir(site_root_dir: Path) -> Path:
@@ -46,7 +100,7 @@ def root_cert_path(ca_dir: Path) -> Path:
 def load_cert_and_private_key(path_pem: Path) -> Tuple[Certificate, RSAPrivateKeyWithSerialization]:
     return (
         load_pem_x509_certificate(
-            pem_bytes := (path_pem).read_bytes(),
+            pem_bytes := path_pem.read_bytes(),
         ),
         load_pem_private_key(
             pem_bytes,
@@ -55,11 +109,20 @@ def load_cert_and_private_key(path_pem: Path) -> Tuple[Certificate, RSAPrivateKe
     )
 
 
-def load_local_ca() -> Tuple[Certificate, RSAPrivateKeyWithSerialization]:
-    return load_cert_and_private_key(root_cert_path(cert_dir(Path(omd_root))))
+def _save_cert_chain(
+    path_pem: Path,
+    certificate_chain: Iterable[Certificate],
+    key: RSAPrivateKeyWithSerialization,
+) -> None:
+    path_pem.parent.mkdir(mode=0o770, parents=True, exist_ok=True)
+    with path_pem.open(mode="wb") as f:
+        f.write(key.private_bytes(Encoding.PEM, PrivateFormat.PKCS8, NoEncryption()))
+        for cert in certificate_chain:
+            f.write(cert.public_bytes(Encoding.PEM))
+    path_pem.chmod(mode=0o660)
 
 
-def make_private_key() -> RSAPrivateKeyWithSerialization:
+def _make_private_key() -> RSAPrivateKeyWithSerialization:
     return generate_private_key(
         public_exponent=65537,
         key_size=2048,
@@ -81,7 +144,7 @@ def _make_cert_builder(
     )
 
 
-def make_root_certificate(
+def _make_root_certificate(
     subject_name: Name,
     days_valid: int,
     private_key: RSAPrivateKeyWithSerialization,
@@ -125,7 +188,7 @@ def make_root_certificate(
     )
 
 
-def make_csr(
+def _make_csr(
     subject_name: Name,
     private_key: RSAPrivateKeyWithSerialization,
 ) -> CertificateSigningRequest:
@@ -139,7 +202,7 @@ def make_csr(
     )
 
 
-def sign_csr(
+def _sign_csr(
     csr: CertificateSigningRequest,
     days_valid: int,
     signing_cert: Certificate,
@@ -150,7 +213,7 @@ def sign_csr(
         _make_cert_builder(
             csr.subject,
             days_valid,
-            rsa_public_key_from_cert_or_csr(csr),
+            _rsa_public_key_from_cert_or_csr(csr),
         )
         .issuer_name(signing_cert.issuer)
         .add_extension(
@@ -171,18 +234,7 @@ def sign_csr(
     )
 
 
-def sign_csr_with_local_ca(
-    csr: CertificateSigningRequest,
-    days_valid: int,
-) -> Certificate:
-    return sign_csr(
-        csr,
-        days_valid,
-        *load_local_ca(),
-    )
-
-
-def make_subject_name(cn: str) -> Name:
+def _make_subject_name(cn: str) -> Name:
     return Name(
         [
             NameAttribute(
@@ -193,7 +245,7 @@ def make_subject_name(cn: str) -> Name:
     )
 
 
-def rsa_public_key_from_cert_or_csr(
+def _rsa_public_key_from_cert_or_csr(
     c: Union[Certificate, CertificateSigningRequest],
     /,
 ) -> RSAPublicKey:

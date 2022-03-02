@@ -328,10 +328,10 @@ def _check_auth(req: Request) -> Optional[UserId]:
     if req.var("_secret"):
         user_id = _check_auth_automation()
 
-    elif config.auth_by_http_header:
+    elif auth_by_http_header := config.auth_by_http_header:
         if not config.user_login:
             return None
-        user_id = _check_auth_http_header()
+        user_id = _check_auth_http_header(auth_by_http_header)
 
     if user_id is None:
         if not config.user_login:
@@ -367,7 +367,7 @@ def verify_automation_secret(user_id: UserId, secret: str) -> bool:
 
 def _check_auth_automation() -> UserId:
     secret = request.get_str_input_mandatory("_secret", "").strip()
-    user_id = request.get_unicode_input_mandatory("_username", "")
+    user_id = request.get_str_input_mandatory("_username", "")
 
     user_id = UserId(user_id.strip())
     request.del_var_from_env("_username")
@@ -381,10 +381,9 @@ def _check_auth_automation() -> UserId:
     raise MKAuthException(_("Invalid automation secret for user %s") % user_id)
 
 
-def _check_auth_http_header() -> Optional[UserId]:
+def _check_auth_http_header(auth_by_http_header: str) -> Optional[UserId]:
     """When http header auth is enabled, try to read the user_id from the var"""
-    assert isinstance(config.auth_by_http_header, str)
-    user_id = request.get_request_header(config.auth_by_http_header)
+    user_id = request.get_request_header(auth_by_http_header)
     if not user_id:
         return None
 
@@ -496,7 +495,7 @@ class LoginPage(Page):
             if not config.user_login:
                 raise MKUserError(None, _("Login is not allowed on this site."))
 
-            username_var = request.get_unicode_input("_username", "")
+            username_var = request.get_str_input("_username", "")
             assert username_var is not None
             username = UserId(username_var.rstrip())
             if not username:

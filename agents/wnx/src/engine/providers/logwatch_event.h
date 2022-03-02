@@ -22,39 +22,38 @@
 namespace cma {
 
 namespace provider {
-const std::string kLogWatchEventStateFileName = "eventstate";
-const std::string kLogWatchEventStateFileExt = ".txt";
+constexpr std::string_view kLogWatchEventStateFileName{"eventstate"};
+constexpr std::string_view kLogWatchEventStateFileExt{".txt"};
 
 struct LogWatchLimits {
     int64_t max_size;
     int64_t max_line_length;
     int64_t max_entries;
     int64_t timeout;
-    cma::evl::SkipDuplicatedRecords skip;
+    evl::SkipDuplicatedRecords skip;
 };
 
 // simple data structure to keep states internally
 // name, value and new or not
 struct State {
-    State() : name_(""), pos_(0), presented_(false), in_config_(false) {
+    State(const std::string &name, uint64_t pos, bool new_found)
+        : name_(name), pos_(pos), presented_(new_found), in_config_(false) {
         setDefaults();
     }
-    State(const std::string &Name, uint64_t Pos = 0, bool NewFound = true)
-        : name_(Name), pos_(Pos), presented_(NewFound), in_config_(false) {
-        setDefaults();
-    }
+    State() : State("", 0, false) {}
+    State(const std::string &name) : State(name, 0, true) {}
 
     // #IMPORTANT default set of the level and context set MINIMAL
     void setDefaults() {
-        level_ = cma::cfg::EventLevels::kCrit;  // #IMPORTANT
-        hide_context_ = true;                   // #IMPORTANT
+        level_ = cfg::EventLevels::kCrit;  // #IMPORTANT
+        hide_context_ = true;              // #IMPORTANT
     }
     std::string name_;
     uint64_t pos_;
     bool presented_;  // either in registry or in config
     bool in_config_;  // config described
 
-    cma::cfg::EventLevels level_ = cma::cfg::EventLevels::kAll;
+    cfg::EventLevels level_{cfg::EventLevels::kAll};
     bool hide_context_ = false;
 };
 
@@ -64,9 +63,7 @@ using StateVector = std::vector<State>;
 struct LogWatchEntry {
 public:
     LogWatchEntry()
-        : loaded_(false)
-        , context_(false)
-        , level_(cma::cfg::EventLevels::kOff) {}
+        : loaded_(false), context_(false), level_(cfg::EventLevels::kOff) {}
 
     LogWatchEntry(const LogWatchEntry &Rhs)
         : loaded_(Rhs.loaded_)
@@ -101,11 +98,11 @@ public:
     }
     const bool context() const noexcept { return context_; }
     const bool loaded() const noexcept { return loaded_; }
-    const cma::cfg::EventLevels level() const noexcept { return level_; }
+    const cfg::EventLevels level() const noexcept { return level_; }
 
 private:
     std::string name_;
-    cma::cfg::EventLevels level_;
+    cfg::EventLevels level_;
     bool context_;
     bool loaded_;
 };
@@ -133,10 +130,9 @@ public:
     std::vector<std::filesystem::path> makeStateFilesTable() const;
 
     bool sendAll() const { return send_all_; }
-    LogWatchLimits lwl;
+    EvlType evlType() const { return evl_type_; }
     LogWatchLimits getLogWatchLimits() const noexcept;
 
-protected:
     std::string makeBody() override;
 
 private:
@@ -147,15 +143,12 @@ private:
     evl::SkipDuplicatedRecords skip_{evl::SkipDuplicatedRecords::no};
 
     // limits block
-    int64_t max_size_ = cma::cfg::logwatch::kMaxSize;
-    int64_t max_line_length_ = cma::cfg::logwatch::kMaxLineLength;
-    int64_t max_entries_ = cma::cfg::logwatch::kMaxEntries;
-    int64_t timeout_ = cma::cfg::logwatch::kTimeout;
+    int64_t max_size_ = cfg::logwatch::kMaxSize;
+    int64_t max_line_length_ = cfg::logwatch::kMaxLineLength;
+    int64_t max_entries_ = cfg::logwatch::kMaxEntries;
+    int64_t timeout_ = cfg::logwatch::kTimeout;
 #if defined(GTEST_INCLUDE_GTEST_GTEST_H_)
-    friend class LogWatchEventTest;
-    FRIEND_TEST(LogWatchEventTest, ConfigLoad);
     FRIEND_TEST(LogWatchEventTest, TestDefaultEntry);
-    FRIEND_TEST(LogWatchEventTest, CheckMakeBody);
 #endif
 };
 
@@ -207,13 +200,13 @@ std::string GenerateOutputFromStates(
 // used to check presence of some logs in registry
 bool IsEventLogInRegistry(std::string_view name);
 
-cma::cfg::EventLevels LabelToEventLevel(std::string_view required_level);
+cfg::EventLevels LabelToEventLevel(std::string_view required_level);
 
 // used for a testing /analyzing
 struct RawLogWatchData {
     bool loaded_;
     std::string_view name_;
-    cma::cfg::EventLevels level_;
+    cfg::EventLevels level_;
     bool context_;
 };
 

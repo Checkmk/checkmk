@@ -92,9 +92,7 @@ class ProgramFetcher(AgentFetcher):
             self._process = subprocess.Popen(  # nosec
                 self.cmdline,
                 shell=True,
-                stdin=subprocess.PIPE
-                if self.stdin
-                else open(os.devnull),  # pylint:disable=consider-using-with
+                stdin=subprocess.PIPE if self.stdin else subprocess.DEVNULL,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
                 start_new_session=True,
@@ -107,9 +105,7 @@ class ProgramFetcher(AgentFetcher):
             self._process = subprocess.Popen(  # nosec # pylint:disable=consider-using-with
                 self.cmdline,
                 shell=True,
-                stdin=subprocess.PIPE
-                if self.stdin
-                else open(os.devnull),  # pylint:disable=consider-using-with
+                stdin=subprocess.PIPE if self.stdin else subprocess.DEVNULL,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
                 close_fds=True,

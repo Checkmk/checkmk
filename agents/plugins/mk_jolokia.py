@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-__version__ = "2.1.0i1"
+__version__ = "2.2.0i1"
 
 # this file has to work with both Python 2 and 3
 # pylint: disable=super-with-arguments
@@ -719,7 +719,8 @@ def load_config(custom_config):
 
     conffile = os.path.join(os.getenv("MK_CONFDIR", "/etc/check_mk"), "jolokia.cfg")
     if os.path.exists(conffile):
-        exec(open(conffile).read(), {}, custom_config)  # pylint:disable=consider-using-with
+        with open(conffile) as conf:
+            exec(conf.read(), {}, custom_config)
     return custom_config
 
 

@@ -18,6 +18,7 @@ from cmk.utils.type_defs import HostName, ServiceName
 
 import cmk.gui.availability as availability
 import cmk.gui.bi as bi
+import cmk.gui.utils.escaping as escaping
 from cmk.gui.availability import (
     AVData,
     AVEntry,
@@ -113,7 +114,11 @@ def _show_availability_options(
         html.show_user_errors()
 
     for name, height, _show_in_reporting, vs in valuespecs:
-        html.render_floating_option(name, height, "avo_", vs, avoptions.get(name))
+
+        def renderer(name=name, vs=vs, avoptions=avoptions) -> None:
+            vs.render_input("avo_" + name, avoptions.get(name))
+
+        html.render_floating_option(name, height, vs.title(), renderer)
     html.close_div()
 
     html.hidden_fields()
@@ -203,13 +208,13 @@ def show_availability_page(view: View, filterheaders: FilterHeader) -> None:
         av_object = (
             SiteId(request.get_str_input_mandatory("av_site")),
             HostName(request.get_str_input_mandatory("av_host")),
-            ServiceName(request.get_unicode_input_mandatory("av_service")),
+            ServiceName(request.get_str_input_mandatory("av_service")),
         )
         title += av_object[1]
         if av_object[2]:
             title += " - " + av_object[2]
     elif request.var("av_aggr"):
-        av_object = (None, None, request.get_unicode_input_mandatory("av_aggr"))
+        av_object = (None, None, request.get_str_input_mandatory("av_aggr"))
         title += av_object[2]
     else:
         title += view_title(view.spec, view.context)
@@ -304,7 +309,7 @@ def show_availability_page(view: View, filterheaders: FilterHeader) -> None:
         # If we abolish the limit we have to fetch the data again
         # with changed logrow_limit = 0, which means no limit
         if has_reached_logrow_limit:
-            text = (
+            text = escaping.escape_html_permissive(
                 _(
                     "Your query matched more than %d log entries. "
                     "<b>Note:</b> The number of shown rows does not necessarily reflect the "
@@ -393,7 +398,7 @@ def _page_menu_availability(
                             PageMenuEntry(
                                 title=_("Status view"),
                                 icon_name="status",
-                                item=make_simple_link(makeuri(request, [("mode", "status")])),
+                                item=make_simple_link(makeuri(request, [], delvars=["mode"])),
                             ),
                         ],
                     ),
@@ -437,7 +442,7 @@ def _page_menu_entries_av_mode(
             title=_("Availability"),
             icon_name="availability",
             item=make_simple_link(
-                makeuri(request, [("av_mode", "availability"), ("av_host", ""), ("av_aggr", "")])
+                makeuri(request, [("av_mode", "availability")], delvars=["av_host", "av_aggr"])
             ),
         )
         return
@@ -638,6 +643,7 @@ def render_timeline_legend(what: AVObjectType) -> None:
         html.div(html.render_span(_("H.Down")), class_="state hostdown")
 
     html.div(html.render_span(_("Downtime")), class_="state downtime")
+    html.div(html.render_span(_("Chaotic")), class_="state chaos")
     html.div(html.render_span(_("OO/Service")), class_="state ooservice")
     html.div(html.render_span(_("unmonitored")), class_="state unmonitored")
 
@@ -798,7 +804,7 @@ def show_bi_availability(view: "View", aggr_rows: "Rows") -> None:
 
         av_object: AVObjectSpec = None
         if request.var("av_aggr"):
-            av_object = (None, None, request.get_unicode_input_mandatory("av_aggr"))
+            av_object = (None, None, request.get_str_input_mandatory("av_aggr"))
 
         # Dummy time_range, this is not needed for the BI
         page_menu = _page_menu_availability(

@@ -81,8 +81,8 @@ def check_domino_tasks(
 def cluster_check_domino_tasks(
     item: str,
     params: Mapping[str, Any],
-    section_domino_tasks: Dict[str, Optional[ps.Section]],
-    section_mem: Dict[str, Optional[memory.SectionMem]],
+    section_domino_tasks: Mapping[str, Optional[ps.Section]],
+    section_mem: Mapping[str, Optional[memory.SectionMem]],
 ) -> CheckResult:
 
     iter_non_trivial_sections = (

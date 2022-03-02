@@ -7,6 +7,7 @@
 # pylint: disable=redefined-outer-name
 import argparse
 import io
+import os
 import sys
 from pathlib import Path
 from typing import Any, Iterator, Mapping, MutableMapping, Sequence, Tuple
@@ -21,12 +22,16 @@ from tests.unit.cmk.gui.conftest import load_plugins  # noqa: F401 # pylint: dis
 
 import cmk.utils.log
 import cmk.utils.paths
+from cmk.utils import password_store, store
 from cmk.utils.type_defs import ContactgroupName, RulesetName, RuleSpec, RuleValue
+from cmk.utils.type_defs.pluginname import CheckPluginName
+from cmk.utils.version import is_raw_edition
 
 import cmk.gui.config
 from cmk.gui.utils.script_helpers import application_and_request_context
 from cmk.gui.watolib.changes import AuditLogStore, ObjectRef, ObjectRefType
 from cmk.gui.watolib.hosts_and_folders import Folder
+from cmk.gui.watolib.password_store import PasswordStore
 from cmk.gui.watolib.rulesets import Rule, Ruleset, RulesetCollection
 
 import cmk.update_config as update_config
@@ -282,6 +287,117 @@ def test__transform_discovery_disabled_services(
     assert [r.to_config() for r in folder_rules] == expected_ruleset
 
 
+@pytest.mark.usefixtures("request_context")
+def test_remove_removed_check_plugins_from_ignored_checks(uc: update_config.UpdateConfig) -> None:
+    ruleset = Ruleset("ignored_checks", {})
+    ruleset.from_config(
+        Folder(""),
+        [
+            {
+                "id": "1",
+                "condition": {},
+                "options": {"disabled": False},
+                "value": ["a", "b", "mgmt_c"],
+            },
+            {
+                "id": "2",
+                "condition": {},
+                "options": {"disabled": False},
+                "value": ["d", "e"],
+            },
+            {
+                "id": "3",
+                "condition": {},
+                "options": {"disabled": False},
+                "value": ["mgmt_f"],
+            },
+            {
+                "id": "4",
+                "condition": {},
+                "options": {"disabled": False},
+                "value": ["a", "g"],
+            },
+        ],
+    )
+    rulesets = RulesetCollection()
+    rulesets.set_rulesets({"ignored_checks": ruleset})
+    uc._remove_removed_check_plugins_from_ignored_checks(
+        rulesets,
+        {
+            CheckPluginName("b"),
+            CheckPluginName("d"),
+            CheckPluginName("e"),
+            CheckPluginName("f"),
+        },
+    )
+    leftover_rules = [rule for (_folder, idx, rule) in rulesets.get("ignored_checks").get_rules()]
+    assert len(leftover_rules) == 2
+    assert leftover_rules[0].id == "1"
+    assert leftover_rules[1].id == "4"
+    assert leftover_rules[0].value == ["a", "mgmt_c"]
+    assert leftover_rules[1].value == ["a", "g"]
+
+
+@pytest.mark.parametrize(
+    ["rulesets", "n_expected_warnings"],
+    [
+        pytest.param(
+            {
+                "logwatch_rules": {
+                    "reclassify_patterns": [
+                        ("C", "\\\\x\\\\y\\\\z", "some comment"),
+                        ("W", "\\H", "invalid_regex"),
+                    ]
+                },
+                "checkgroup_parameters:ntp_time": {
+                    "ntp_levels": (10, 200.0, 500.0),
+                },
+            },
+            2,
+            id="invalid configuration",
+        ),
+        pytest.param(
+            {
+                "logwatch_rules": {
+                    "reclassify_patterns": [
+                        ("C", "\\\\x\\\\y\\\\z", "some comment"),
+                    ]
+                },
+                "checkgroup_parameters:ntp_time": {
+                    "ntp_levels": (10, 200.0, 500.0),
+                },
+                **({} if is_raw_edition() else {"extra_service_conf:_sla_config": "i am skipped"}),
+            },
+            0,
+            id="valid configuration",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("request_context")
+def test_validate_rule_values(
+    mocker: MockerFixture,
+    uc: update_config.UpdateConfig,
+    rulesets: Mapping[RulesetName, RuleValue],
+    n_expected_warnings: int,
+) -> None:
+    all_rulesets = RulesetCollection()
+    all_rulesets.set_rulesets(
+        {
+            ruleset_name: _instantiate_ruleset(
+                ruleset_name,
+                rule_value,
+            )
+            for ruleset_name, rule_value in rulesets.items()
+        }
+    )
+    mock_warner = mocker.patch.object(
+        uc._logger,
+        "warning",
+    )
+    uc._validate_rule_values(all_rulesets)
+    assert mock_warner.call_count == n_expected_warnings
+
+
 @pytest.fixture(name="old_path")
 def fixture_old_path() -> Path:
     return Path(cmk.utils.paths.var_dir, "wato", "log", "audit.log")
@@ -323,8 +439,8 @@ def test__migrate_pre_2_0_audit_log(
     assert not old_audit_log.exists()
 
     # Now try to parse the migrated log with the new logic
-    store = AuditLogStore(new_path)
-    assert store.read() == [
+    log_store = AuditLogStore(new_path)
+    assert log_store.read() == [
         AuditLogStore.Entry(
             time=1604991356,
             object_ref=None,
@@ -729,3 +845,66 @@ def test_update_global_config(
         "new_global_a": 1,
         "new_global_b": 15,
     }
+
+
+@pytest.fixture()
+def fixture_pre_2_1_password_store():
+    with password_store.password_store_path().open("w") as f:
+        f.write("ding:dong\n")
+
+    passwords_mk = Path(cmk.utils.paths.check_mk_config_dir, "wato", "passwords.mk")
+    with passwords_mk.open("w") as f:
+        f.write(
+            "stored_passwords.update(%r)"
+            % {
+                "ding": {
+                    "title": "asd",
+                    "comment": "asd\n",
+                    "docu_url": "",
+                    "password": "dong",
+                    "owned_by": None,
+                    "shared_with": [],
+                }
+            }
+        )
+
+
+def _read_passwords_mk() -> dict[str, password_store.Password]:
+    return store.load_from_mk_file(
+        Path(cmk.utils.paths.check_mk_config_dir, "wato", "passwords.mk"),
+        key="stored_passwords",
+        default={},
+    )
+
+
+@pytest.mark.usefixtures("fixture_pre_2_1_password_store")
+def test_rewrite_password_store_migrate(uc: update_config.UpdateConfig) -> None:
+    with pytest.raises(ValueError):
+        assert password_store.load()
+
+    with pytest.raises(ValueError):
+        assert PasswordStore().load_for_reading()
+
+    assert _read_passwords_mk()["ding"]["password"] == "dong"
+
+    uc._rewrite_password_store()
+
+    assert password_store.load()["ding"] == "dong"
+    assert _read_passwords_mk()["ding"]["password"] == ""
+    assert PasswordStore().load_for_reading()["ding"]["password"] == "dong"
+
+    # Once we have the new format, a second execution must not fail
+    uc._rewrite_password_store()
+
+
+def test_rewrite_password_store_skip_when_missing(uc: update_config.UpdateConfig) -> None:
+    assert not password_store.password_store_path().exists()
+    uc._rewrite_password_store()
+    assert not password_store.password_store_path().exists()
+
+
+def test_rewrite_password_store_skip_when_empty(uc: update_config.UpdateConfig) -> None:
+    store.save_text_to_file(password_store.password_store_path(), "")
+    assert os.path.getsize(password_store.password_store_path()) == 0
+    uc._rewrite_password_store()
+    assert os.path.getsize(password_store.password_store_path()) == 0

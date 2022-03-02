@@ -6,7 +6,7 @@ Date: 1619508224
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 We now cache the data fetched from SNMP discovery and
 checking in different databases.  This should improve

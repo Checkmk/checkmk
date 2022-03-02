@@ -6,7 +6,7 @@ Date: 1614499169
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 This change only affects hosts that are monitored using
 SNMP data <b>and</b> data provided by the Checkmk agent

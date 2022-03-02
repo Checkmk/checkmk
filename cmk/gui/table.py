@@ -12,6 +12,7 @@ from typing import (
     Any,
     ContextManager,
     Dict,
+    Final,
     Iterator,
     List,
     Literal,
@@ -92,6 +93,7 @@ def table_element(
     empty_text: Optional[str] = None,
     help: Optional[str] = None,  # pylint: disable=redefined-builtin
     css: Optional[str] = None,
+    isopen: bool = True,
 ) -> Iterator["Table"]:
     with output_funnel.plugged():
         table = Table(
@@ -109,6 +111,7 @@ def table_element(
             empty_text=empty_text,
             help=help,
             css=css,
+            isopen=isopen,
         )
         try:
             yield table
@@ -153,6 +156,7 @@ class Table:
         empty_text: Optional[str] = None,
         help: Optional[str] = None,  # pylint: disable=redefined-builtin
         css: Optional[str] = None,
+        isopen: bool = True,
     ):
         super().__init__()
         self.next_func = lambda: None
@@ -191,6 +195,7 @@ class Table:
         self.help = help
         self.css = css
         self.mode = "row"
+        self.isopen: Final = isopen
 
     def row(
         self,
@@ -324,7 +329,7 @@ class Table:
                 container = foldable_container(
                     treename="table",
                     id_=self.id,
-                    isopen=True,
+                    isopen=self.isopen,
                     indent=False,
                     title=html.render_h3(self.title, class_=["treeangle", "title"]),
                     save_state=self.options["foldable"] == Foldable.FOLDABLE_SAVE_STATE,
@@ -411,7 +416,7 @@ class Table:
             table_opts["actions_visible"] = actions_visible
 
         if self.options["searchable"]:
-            search_term = request.get_unicode_input_mandatory("search", "")
+            search_term = request.get_str_input_mandatory("search", "")
             # Search is always lower case -> case insensitive
             search_term = search_term.lower()
             if search_term:

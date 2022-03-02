@@ -6,7 +6,7 @@ Date: 1612346356
 Edition: cee
 Knowledge: doc
 Level: 3
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 The acknowledgement type of shadow hosts/services was always "none", even
 when the corresponding host/service is actually acknowledged.  Now we report

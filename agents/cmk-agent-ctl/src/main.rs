@@ -12,161 +12,119 @@ mod dump;
 mod import_connection;
 mod monitoring_data;
 mod pull;
+mod push;
 mod registration;
+mod setup;
+mod site_spec;
 mod status;
 mod tls_server;
+mod types;
 use anyhow::{Context, Result as AnyhowResult};
-use config::JSONLoader;
-use log::error;
-#[cfg(unix)]
-use nix::unistd;
-use std::io::{self, Write};
-use std::path::Path;
-use structopt::StructOpt;
+use config::{JSONLoader, TOMLLoader};
+use log::{error, info};
+use std::sync::mpsc;
+use std::thread;
 
-fn push(registry: config::Registry) -> AnyhowResult<()> {
-    let compressed_mon_data = monitoring_data::compress(
-        &monitoring_data::collect().context("Error collecting monitoring data")?,
-    )
-    .context("Error compressing monitoring data")?;
+fn daemon(registry: config::Registry, pull_config: config::PullConfig) -> AnyhowResult<()> {
+    let (tx_push, rx) = mpsc::channel();
+    let tx_pull = tx_push.clone();
+    thread::spawn(move || {
+        tx_push.send(push::push(registry)).unwrap();
+    });
+    thread::spawn(move || {
+        tx_pull.send(pull::pull(pull_config)).unwrap();
+    });
 
-    for (agent_receiver_address, server_spec) in registry.push_connections() {
-        agent_receiver_api::Api::agent_data(
-            agent_receiver_address,
-            &server_spec.root_cert,
-            &server_spec.uuid,
-            &server_spec.certificate,
-            &monitoring_data::compression_header_info().push,
-            &compressed_mon_data,
-        )
-        .context(format!(
-            "Error pushing monitoring data to {}.",
-            agent_receiver_address
-        ))?
-    }
-
-    Ok(())
+    // We should never receive anything here, unless one of the threads crashed.
+    // In that case, this will contain an error that should be propagated.
+    rx.recv().unwrap()
 }
 
-fn init_logging(path: &Path) -> AnyhowResult<()> {
-    flexi_logger::Logger::try_with_env_or_str("error")?
-        .log_to_file(flexi_logger::FileSpec::try_from(path)?)
-        .append()
-        .format(flexi_logger::detailed_format)
-        .start()
-        .unwrap();
-    Ok(())
-}
-
-#[cfg(unix)]
-fn become_user(user: &unistd::User) -> AnyhowResult<()> {
-    unistd::setgid(user.gid).context(format!(
-        "Failed to set group id {} corresponding to user {}",
-        user.gid, user.name,
-    ))?;
-    unistd::setuid(user.uid).context(format!(
-        "Failed to set user id {} corresponding to user {}",
-        user.uid, user.name,
-    ))?;
-    Ok(())
-}
-
-#[cfg(unix)]
-fn determine_paths(username: &str) -> AnyhowResult<constants::Paths> {
-    let user = unistd::User::from_name(username)?.context(format!(
-        "Could not find dedicated Checkmk agent user {}",
-        username
-    ))?;
-
-    if let Err(error) = become_user(&user) {
-        return Err(error.context(format!(
-            "Failed to become dedicated Checkmk agent user {}",
-            user.name,
-        )));
-    }
-
-    Ok(constants::Paths::new(&user.dir))
-}
-
-#[cfg(windows)]
-fn determine_default_paths() -> AnyhowResult<constants::Paths> {
-    // TODO(sk): replace with windows get env
-    let home = std::path::PathBuf::from("c:\\ProgramData\\checkmk\\agent");
-    Ok(constants::Paths::new(&home))
-}
-
-fn init() -> AnyhowResult<(cli::Args, constants::Paths)> {
-    // Parse args as first action to directly exit from --help or malformatted arguments
-    let args = cli::Args::from_args();
-
-    #[cfg(unix)]
-    let paths = match determine_paths(constants::CMK_AGENT_USER) {
-        Ok(paths) => paths,
-        Err(err) => return Err(err),
-    };
-
-    #[cfg(windows)]
-    let paths = match determine_default_paths() {
-        Ok(paths) => paths,
-        Err(err) => return Err(err),
-    };
-
-    if let Err(error) = init_logging(&paths.log_path) {
-        io::stderr()
-            .write_all(format!("Failed to initialize logging: {:?}", error).as_bytes())
-            .unwrap_or(());
-    }
-
-    Ok((args, paths))
-}
-
-fn run_requested_mode(args: cli::Args, paths: constants::Paths) -> AnyhowResult<()> {
-    let stored_config = config::ConfigFromDisk::load(&paths.config_path)?;
+fn run_requested_mode(args: cli::Args, paths: setup::PathResolver) -> AnyhowResult<()> {
+    let registration_preset = config::RegistrationPreset::load(&paths.registration_preset_path)?;
+    let config_from_disk = config::ConfigFromDisk::load(&paths.config_path)?;
     let mut registry = config::Registry::from_file(&paths.registry_path)
         .context("Error while loading registered connections.")?;
+    let legacy_pull_marker = config::LegacyPullMarker::new(&paths.legacy_pull_path);
     match args {
         cli::Args::Register(reg_args) => {
             registration::register(
-                config::RegistrationConfig::new(stored_config, reg_args)?,
+                config::RegistrationConfig::new(registration_preset, reg_args)?,
                 &mut registry,
             )?;
-            pull::disallow_legacy_pull(&paths.legacy_pull_path).context(
+            legacy_pull_marker.remove().context(
                 "Registration successful, but could not delete marker for legacy pull mode",
             )
         }
+        cli::Args::Import(import_args) => {
+            import_connection::import(&mut registry, &import_args)?;
+            legacy_pull_marker
+                .remove()
+                .context("Import successful, but could not delete marker for legacy pull mode")
+        }
         cli::Args::RegisterSurrogatePull(surr_pull_reg_args) => {
             registration::register_surrogate_pull(config::RegistrationConfig::new(
-                stored_config,
+                registration_preset,
                 surr_pull_reg_args,
             )?)
         }
-        cli::Args::Push { .. } => push(registry),
-        cli::Args::Pull { .. } => pull::pull(&registry, &paths.legacy_pull_path),
+        cli::Args::Push { .. } => push::handle_push_cycle(&registry),
+        cli::Args::Pull(pull_args) => pull::pull(config::PullConfig::new(
+            config_from_disk,
+            pull_args,
+            legacy_pull_marker,
+            registry,
+        )?),
+        cli::Args::Daemon(daemon_args) => daemon(
+            registry.clone(),
+            config::PullConfig::new(config_from_disk, daemon_args, legacy_pull_marker, registry)?,
+        ),
         cli::Args::Dump { .. } => dump::dump(),
-        cli::Args::Status(status_args) => status::status(registry, status_args.json),
+        cli::Args::Status(status_args) => status::status(
+            &registry,
+            &config::PullConfig::new(
+                config_from_disk,
+                // this will vanish once the Windows agent also uses the toml config
+                cli::PullArgs {
+                    port: None,
+                    allowed_ip: None,
+                    logging_opts: status_args.logging_opts,
+                },
+                legacy_pull_marker,
+                registry.clone(),
+            )?,
+            status_args.json,
+        ),
         cli::Args::Delete(delete_args) => {
             delete_connection::delete(&mut registry, &delete_args.connection)
         }
         cli::Args::DeleteAll { .. } => delete_connection::delete_all(&mut registry),
-        cli::Args::Import(import_args) => import_connection::import(&mut registry, &import_args),
     }
 }
 
-fn main() -> AnyhowResult<()> {
-    let (args, paths) = match init() {
+fn exit_with_error(err: impl std::fmt::Debug) {
+    // In case of an error, we want a non-zero exit code and log the error, which
+    // goes to stderr under Unix and to stderr and logfile under Windows.
+
+    // In the future, implementing std::process::Termination looks like the right thing to do.
+    // However, this trait is still experimental at the moment. See also
+    // https://www.joshmcguigan.com/blog/custom-exit-status-codes-rust/
+    error!("{:?}", err);
+    std::process::exit(1);
+}
+
+fn main() {
+    let (args, paths) = match setup::init() {
         Ok(args) => args,
         Err(error) => {
-            // Do not log errors which occured for example when trying to become the cmk-agent user,
-            // otherwise, the log file ownership might be messed up
-            return Err(error);
+            return exit_with_error(error);
         }
     };
 
+    info!("starting");
     let result = run_requested_mode(args, paths);
 
     if let Err(error) = &result {
-        error!("{:?}", error)
+        exit_with_error(error)
     }
-
-    result
 }

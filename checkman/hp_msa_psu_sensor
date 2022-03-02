@@ -1,7 +1,7 @@
 title: HP MSA 2040: Power Supply Voltage
 agents: hp_msa
 catalog: hw/storagehw/hp
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the voltage of the power supplies of a HP MSA 2040 storage system.

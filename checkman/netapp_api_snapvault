@@ -1,7 +1,7 @@
 title: NetApp Filer: Snapvault/Snapmirror Lag-time
 agents: netapp
 catalog: hw/storagehw/netapp
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  The check monitors the lag-time of snapvault volumes.

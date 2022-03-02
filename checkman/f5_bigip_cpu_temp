@@ -1,7 +1,7 @@
 title: F5 Big-IP: CPU Temperature
 agents: snmp
 catalog: hw/network/f5
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the CPU temperature of
@@ -12,4 +12,3 @@ item:
 
 discovery:
  One service is created for each available temperature sensor.
-

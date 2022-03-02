@@ -6,7 +6,7 @@ Date: 1613575351
 Edition: cee
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 The computation of the length of SNMP payloads is now consistent
 with improperly escaped JSON strings.

@@ -32,19 +32,11 @@ impl JSONProvider for JSONFromStdin {
     }
 }
 
-fn _import(
-    registry: &mut config::Registry,
-    json_provider: impl JSONProvider,
-    verbose: bool,
-) -> AnyhowResult<()> {
+fn _import(registry: &mut config::Registry, json_provider: impl JSONProvider) -> AnyhowResult<()> {
     let json = json_provider.provide()?;
     registry.register_imported_connection(
         serde_json::from_str::<registration::SurrogatePullData>(&json)
-            .context(if verbose {
-                format!("Failed to deserialize JSON data:\n{}", &json)
-            } else {
-                String::from("Failed to deserialize JSON data")
-            })?
+            .context(format!("Failed to deserialize JSON data:\n{}", &json))?
             .connection,
     );
     registry.save()?;
@@ -58,9 +50,8 @@ pub fn import(registry: &mut config::Registry, import_args: &cli::ImportArgs) ->
             JSONFromFile {
                 path: std::path::PathBuf::from(path),
             },
-            import_args.verbose,
         ),
-        None => _import(registry, JSONFromStdin {}, import_args.verbose),
+        None => _import(registry, JSONFromStdin {}),
     }
 }
 
@@ -72,9 +63,11 @@ mod tests {
     impl JSONProvider for MockJSONProvider {
         fn provide(&self) -> AnyhowResult<String> {
             Ok(String::from(
-                r#"{"agent_controller_version":"0.1.0","connection":{"uuid":"short-uuid",
-                  "private_key": "fake private key","certificate":"fake cert","root_cert":
-                  "fake root cert"}}"#,
+                r#"{"agent_controller_version":"0.1.0","connection":{
+                    "uuid":"2da53af5-5c06-4195-ab6f-668875710bec", 
+                    "private_key": "fake private key",
+                    "certificate":"fake cert",
+                    "root_cert": "fake root cert"}}"#,
             ))
         }
     }
@@ -85,13 +78,14 @@ mod tests {
             config::RegisteredConnections {
                 push: std::collections::HashMap::new(),
                 pull: std::collections::HashMap::new(),
-                pull_imported: vec![],
+                pull_imported: std::collections::HashSet::new(),
             },
             std::path::PathBuf::from(&tempfile::NamedTempFile::new().unwrap().into_temp_path()),
-        );
+        )
+        .unwrap();
         assert!(reg.is_empty());
         assert!(!reg.path().exists());
-        assert!(_import(&mut reg, MockJSONProvider {}, false).is_ok());
+        assert!(_import(&mut reg, MockJSONProvider {}).is_ok());
         assert!(!reg.is_empty());
         assert!(reg.path().exists());
     }

@@ -7,6 +7,6 @@ Edition: cme
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 Due to a filename naming error, remote site always received the complete BI configuration for all customers.

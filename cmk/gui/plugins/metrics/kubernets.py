@@ -7,6 +7,12 @@
 from cmk.gui.i18n import _
 from cmk.gui.plugins.metrics.utils import graph_info, metric_info
 
+###########################################################################
+# NOTE: These metrics (and associated special agent/checks) are deprecated and
+#       will be removed in Checkmk version 2.2.
+###########################################################################
+
+
 # .
 #   .--Metrics-------------------------------------------------------------.
 #   |                   __  __      _        _                             |
@@ -196,6 +202,19 @@ metric_info["k8s_daemon_pods_unavailable"] = {
     "color": "14/a",
 }
 
+metric_info["ready_replicas"] = {
+    "title": _("Ready replicas"),
+    "unit": "",
+    "color": "21/a",
+}
+
+metric_info["total_replicas"] = {
+    "title": _("Total replicas"),
+    "unit": "",
+    "color": "35/a",
+}
+
+
 # .
 #   .--Graphs--------------------------------------------------------------.
 #   |                    ____                 _                            |
@@ -266,5 +285,17 @@ graph_info["k8s_pod_container"] = {
     "metrics": [
         ("docker_all_containers", "line"),
         ("ready_containers", "area"),
+    ],
+}
+
+
+graph_info["replicas"] = {
+    "title": _("Replicas"),
+    "metrics": [
+        ("ready_replicas", "area"),
+        ("total_replicas", "line"),
+    ],
+    "scalars": [
+        "ready_replicas:crit",
     ],
 }

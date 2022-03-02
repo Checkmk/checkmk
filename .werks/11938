@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: undoc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 When multiple HTTP clients want to update an object at the same time,
 it can happen that the slower client will overwrite changes by the faster one.

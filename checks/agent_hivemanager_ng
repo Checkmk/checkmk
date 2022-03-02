@@ -13,8 +13,12 @@
 #     'redirect_url': 'https://www.getpostman.com/oauth2/callback'
 # }
 
+from typing import Any, Mapping, Optional, Sequence
 
-def agent_hivemanager_ng_arguments(params, hostname, ipaddress):
+
+def agent_hivemanager_ng_arguments(
+    params: Mapping[str, Any], hostname: str, ipaddress: Optional[str]
+) -> Sequence[str]:
     return [
         params["url"],
         params["vhm_id"],

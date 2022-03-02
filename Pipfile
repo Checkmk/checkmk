@@ -8,7 +8,7 @@ name = "pypi"
 [dev-packages]
 astroid = "*"  # used by testlib.pylint_checker_localization
 bandit = "*"  # used by test/Makefile's test-bandit target
-black = "==21.12b0"  # used in our CI and in the LSP-integration. The black maintainers stubbornly refuse to release a non-prerelease version, so we have to pin this. See: https://github.com/psf/black/issues/517
+black = "*"  # used in our CI and in the LSP-integration.
 "beautifulsoup4" = "*"  # used by the GUI crawler and various tests
 bson = "*"  # used by test_mk_mongodb unit test
 compiledb = "*"  # used by the Livestatus/CMC Makefiles for building compile_command.json
@@ -132,7 +132,7 @@ reportlab = "==3.5.66"  # needed by GUI (reporting)
 PyPDF3 = "==1.0.5"  # needed by GUI (reporting)
 roman = "==3.2"  # needed by GUI (reporting)
 cachetools = "==4.1.1"  # needed by kubernetes
-google-auth = "==1.21.3"  # needed by kubernetes
+google-auth = "==2.3.3"  # needed by kubernetes
 rsa = "==4.7.2"  # needed by kubernetes
 websocket_client = "==0.57.0"  # needed by kubernetes
 kubernetes = "==21.7.0"  # needed by kubernetes
@@ -171,6 +171,10 @@ uvicorn = "==0.16.0"  # used for running agent-receiver server
 gunicorn= "==20.1.0" # used for running agent-receiver server
 agent-receiver = {editable = true, path = "./agent-receiver"}
 pysmb = "==1.2"  # used by SMB share special agent
+google-cloud-monitoring = "==2.8.0"  # used by the gcp special agent
+google-cloud-storage = "==2.1.0"  # used by the gcp special agent
+google-cloud-functions = "==1.5.0"  # used by the gcp special agent
+google-api-python-client = "==2.37.0"  # used by the gcp special agent
 
 [requires]
 python_version = "3.9"

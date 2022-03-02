@@ -6,7 +6,7 @@ Date: 1613739094
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 This werk rewrites the downtime script to make all calls use
 endpoints of the REST API. The user can set and remove downtimes

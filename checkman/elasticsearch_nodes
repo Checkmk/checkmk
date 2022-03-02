@@ -1,7 +1,7 @@
 title: Elasticsearch: Nodes
 agents: elasticsearch
 catalog: app/elasticsearch
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the state of elasticsearch nodes.

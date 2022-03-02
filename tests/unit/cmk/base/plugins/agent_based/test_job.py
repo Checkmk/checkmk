@@ -132,7 +132,7 @@ def _modify_start_time(
     [
         ("0:00.00", 0.0),
         ("1:02.00", 62.0),
-        ("35:30:2.12", 35 * 60 ** 2 + 30 * 60 + 2.12),
+        ("35:30:2.12", 35 * 60**2 + 30 * 60 + 2.12),
     ],
 )
 def test_job_parse_real_time(timestr, expected_result):
@@ -358,16 +358,13 @@ def test_process_job_stats(
     expected_results,
 ):
     with on_time(*TIME):
-        assert (
-            list(
-                job._process_job_stats(
-                    job_data,
-                    age_levels,
-                    exit_code_to_state_map,
-                )
+        assert list(
+            job._process_job_stats(
+                job_data,
+                age_levels,
+                exit_code_to_state_map,
             )
-            == list(expected_results)
-        )
+        ) == list(expected_results)
 
 
 @pytest.mark.parametrize(

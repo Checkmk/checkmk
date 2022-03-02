@@ -4,18 +4,22 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import json
+import os
 
 import pytest
 
+from cmk.utils import paths
+from cmk.utils.store import load_mk_file
+
 
 @pytest.fixture(scope="function", name="new_rule")
-def new_rule_fixture(logged_in_wsgi_app):
-    wsgi_app = logged_in_wsgi_app
+def new_rule_fixture(logged_in_admin_wsgi_app):
+    wsgi_app = logged_in_admin_wsgi_app
     base = "/NO_SITE/check_mk/api/1.0"
 
     values = {
         "ruleset": "inventory_df_rules",
-        "folder": "~",
+        "folder": "/",
         "properties": {
             "description": "This is my title for this very important rule.",
             "comment": "They made me do it!",
@@ -43,15 +47,33 @@ def new_rule_fixture(logged_in_wsgi_app):
         },
     }
     resp = wsgi_app.post(
-        base + "/domain-types/ruleset/collections/all",
+        base + "/domain-types/rule/collections/all",
         headers={"Accept": "application/json", "Content-Type": "application/json"},
         params=json.dumps(values),
     )
     return values, resp
 
 
-def test_openapi_create_rule_failure(logged_in_wsgi_app):
-    wsgi_app = logged_in_wsgi_app
+def test_openapi_create_rule_regression(logged_in_admin_wsgi_app):
+    wsgi_app = logged_in_admin_wsgi_app
+    base = "/NO_SITE/check_mk/api/1.0"
+    values = {
+        "ruleset": "checkgroup_parameters:filesystem",
+        "folder": "~",
+        "properties": {"disabled": False, "description": "API2I"},
+        "value_raw": '{"inodes_levels": (10.0, 5.0), "levels": [(0, (0, 0)), (0, (0.0, 0.0))], "magic": 0.8, "trend_perfdata": True}',
+        "conditions": {},
+    }
+    _ = wsgi_app.post(
+        base + "/domain-types/rule/collections/all",
+        headers={"Accept": "application/json", "Content-Type": "application/json"},
+        params=json.dumps(values),
+        status=200,
+    )
+
+
+def test_openapi_create_rule_failure(logged_in_admin_wsgi_app):
+    wsgi_app = logged_in_admin_wsgi_app
     base = "/NO_SITE/check_mk/api/1.0"
 
     values = {
@@ -67,36 +89,60 @@ def test_openapi_create_rule_failure(logged_in_wsgi_app):
         "conditions": {},
     }
     resp = wsgi_app.post(
-        base + "/domain-types/ruleset/collections/all",
+        base + "/domain-types/rule/collections/all",
         headers={"Accept": "application/json", "Content-Type": "application/json"},
         params=json.dumps(values),
         status=400,
     )
-    assert "You have not defined any host group yet." in resp.json["detail"]
+    # Its not really important that this text is in the response, just that this call failed.
+    assert "You have not defined any host group yet" in resp.json["detail"]
 
 
-def test_openapi_create_rule(logged_in_wsgi_app, new_rule):
-    wsgi_app = logged_in_wsgi_app
+def test_openapi_create_rule(logged_in_admin_wsgi_app, new_rule):
+    wsgi_app = logged_in_admin_wsgi_app
     base = "/NO_SITE/check_mk/api/1.0"
 
-    values, _ = new_rule
+    values, new_resp = new_rule
 
     resp = wsgi_app.get(
         base + f"/objects/ruleset/{values['ruleset']}",
         headers={"Accept": "application/json"},
+        status=200,
     )
     assert resp.json["extensions"]["number_of_rules"] == 1
 
+    # Also fetch the newly created rule and check if it's actually persisted.
+    resp = wsgi_app.get(
+        base + f"/objects/rule/{new_resp.json['id']}",
+        headers={"Accept": "application/json"},
+        status=200,
+    )
+    ext = resp.json["extensions"]
+    assert ext["ruleset"] == values["ruleset"]
+    assert ext["folder"] == values["folder"]
+    assert ext["properties"] == values["properties"]
+    assert ext["conditions"].items() >= values["conditions"].items()
 
-def test_openapi_list_rules(logged_in_wsgi_app, new_rule):
-    wsgi_app = logged_in_wsgi_app
+    # Check that the format on disk is as expected.
+    rules_mk = os.path.join(paths.omd_root, "etc", "check_mk", "conf.d", "wato", "rules.mk")
+    environ = load_mk_file(rules_mk, default={})
+    stored_condition = environ[values["ruleset"]][0]["condition"]
+    expected_condition = {
+        "host_tags": {"criticality": "prod", "networking": {"$ne": "wan"}},
+        "host_labels": {"os": "windows"},
+    }
+    assert stored_condition == expected_condition
+
+
+def test_openapi_list_rules(logged_in_admin_wsgi_app, new_rule):
+    wsgi_app = logged_in_admin_wsgi_app
     base = "/NO_SITE/check_mk/api/1.0"
 
     values, _ = new_rule
     rule_set = values["ruleset"]
 
     resp = wsgi_app.get(
-        base + f"/domain-types/rule/collections/{rule_set}",
+        base + f"/domain-types/rule/collections/all?ruleset_name={rule_set}",
         headers={"Accept": "application/json"},
         status=200,
     )
@@ -112,8 +158,8 @@ def test_openapi_list_rules(logged_in_wsgi_app, new_rule):
     assert stored["conditions"]["host_tag"] == values["conditions"]["host_tag"]
 
 
-def test_openapi_delete_rule(logged_in_wsgi_app, new_rule):
-    wsgi_app = logged_in_wsgi_app
+def test_openapi_delete_rule(logged_in_admin_wsgi_app, new_rule):
+    wsgi_app = logged_in_admin_wsgi_app
     base = "/NO_SITE/check_mk/api/1.0"
 
     values, resp = new_rule
@@ -145,8 +191,8 @@ def test_openapi_delete_rule(logged_in_wsgi_app, new_rule):
     )
 
 
-def test_openapi_show_ruleset(logged_in_wsgi_app):
-    wsgi_app = logged_in_wsgi_app
+def test_openapi_show_ruleset(logged_in_admin_wsgi_app):
+    wsgi_app = logged_in_admin_wsgi_app
     base = "/NO_SITE/check_mk/api/1.0"
     resp = wsgi_app.get(
         base + "/objects/ruleset/host_groups",
@@ -155,8 +201,8 @@ def test_openapi_show_ruleset(logged_in_wsgi_app):
     assert resp.json["extensions"]["name"] == "host_groups"
 
 
-def test_openapi_list_rulesets(logged_in_wsgi_app):
-    wsgi_app = logged_in_wsgi_app
+def test_openapi_list_rulesets(logged_in_admin_wsgi_app):
+    wsgi_app = logged_in_admin_wsgi_app
 
     base = "/NO_SITE/check_mk/api/1.0"
     resp = wsgi_app.get(

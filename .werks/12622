@@ -6,7 +6,7 @@ Date: 1617787749
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 If show mode was set to "Default to show more" or "Enforce show more mode" the
 filters declared as "show more" were not shown in the filter popup within "Add

@@ -18,6 +18,8 @@ from cmk.base.plugins.agent_based.utils.inventory_interfaces import (
     InventoryParams,
 )
 
+from ..utils_inventory import sort_inventory_result
+
 
 @pytest.mark.parametrize(
     "params, interfaces, n_total, uptime_sec, expected_result",
@@ -404,14 +406,11 @@ def test_inventorize_interfaces(
     expected_result: InventoryResult,
 ) -> None:
     with on_time(500000, "UTC"):
-        assert (
-            list(
-                inventorize_interfaces(
-                    params,
-                    interfaces,
-                    n_total,
-                    uptime_sec,
-                )
+        assert sort_inventory_result(
+            inventorize_interfaces(
+                params,
+                interfaces,
+                n_total,
+                uptime_sec,
             )
-            == expected_result
-        )
+        ) == sort_inventory_result(expected_result)

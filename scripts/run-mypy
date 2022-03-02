@@ -7,7 +7,7 @@
 # tell mypy about the relevant paths using the MYPYPATH environment variable
 set -e
 
-REPO_PATH=$(dirname $(dirname $(realpath "$0")))
+REPO_PATH="$(dirname "$(dirname "$(realpath "$0")")")"
 
 # --no-print-directory prevents make dir change messages in the output
 PYTHON_MAJOR_DOT_MINOR=$(make --no-print-directory -f "$REPO_PATH/defines.make" print-PYTHON_MAJOR_DOT_MINOR)
@@ -30,12 +30,13 @@ fi
 
 # NOTE: We should NOT run this in "$REPO_PATH", otherwise mypy will make paths
 # in messages relative, which will confuse e.g. Emacs' flycheck mode.
+# shellcheck disable=SC2086
 MYPYPATH="$REPO_PATH:\
 $REPO_PATH/livestatus/api/python:\
 $REPO_PATH/omd/packages/omd:\
 $REPO_PATH/agent-receiver" \
     exec "$REPO_PATH/scripts/run-pipenv" run mypy \
-    --python-version ${PYTHON_MAJOR_DOT_MINOR} \
+    --python-version "${PYTHON_MAJOR_DOT_MINOR}" \
     --scripts-are-modules \
     --show-error-codes \
     --check-untyped-defs \

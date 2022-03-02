@@ -5,11 +5,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from pathlib import Path
-from typing import Dict, Tuple
+from typing import Dict
 
 import pytest
 
 import cmk.utils
+from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.structured_data import StructuredDataNode
 
 import cmk.gui.inventory
@@ -91,13 +92,13 @@ def test_get_history_empty():
         "inv-host",
         "/inv-host",
     ]:
-        delta_history, corrupted_history_files = cmk.gui.inventory.get_history_deltas(hostname)
+        history, corrupted_history_files = cmk.gui.inventory.get_history(hostname)
 
-        assert len(delta_history) == 0
+        assert len(history) == 0
         assert len(corrupted_history_files) == 0
 
 
-def test_get_history_empty_but_inv_tree():
+def test_get_history_archive_but_no_inv_tree():
     hostname = "inv-host"
 
     # history
@@ -106,9 +107,9 @@ def test_get_history_empty_but_inv_tree():
         StructuredDataNode.deserialize({"inv": "attr-0"}).serialize(),
     )
 
-    delta_history, corrupted_history_files = cmk.gui.inventory.get_history_deltas(hostname)
+    history, corrupted_history_files = cmk.gui.inventory.get_history(hostname)
 
-    assert len(delta_history) == 0
+    assert len(history) == 1
     assert len(corrupted_history_files) == 0
 
 
@@ -141,7 +142,7 @@ def _create_inventory_history() -> None:
 
 
 @pytest.mark.usefixtures("create_inventory_history")
-def test_get_history_deltas() -> None:
+def test_get_history() -> None:
     hostname = "inv-host"
     expected_results = [
         (1, 0, 0),
@@ -151,17 +152,16 @@ def test_get_history_deltas() -> None:
         (0, 1, 0),
     ]
 
-    delta_history, corrupted_history_files = cmk.gui.inventory.get_history_deltas(hostname)
+    history, corrupted_history_files = cmk.gui.inventory.get_history(hostname)
 
-    assert len(delta_history) == 5
+    assert len(history) == 5
 
-    for entry, expected_result in zip(delta_history, expected_results):
-        ts, (new, changed, removed, _tree) = entry
+    for entry, expected_result in zip(history, expected_results):
         e_new, e_changed, e_removed = expected_result
-        assert isinstance(ts, str)
-        assert new == e_new
-        assert changed == e_changed
-        assert removed == e_removed
+        assert isinstance(entry.timestamp, int)
+        assert entry.new == e_new
+        assert entry.changed == e_changed
+        assert entry.removed == e_removed
 
     assert len(corrupted_history_files) == 0
 
@@ -187,39 +187,6 @@ def test_get_history_deltas() -> None:
         ),
     ):
         assert delta_cache_filename == expected_delta_cache_filename
-
-
-@pytest.mark.usefixtures("create_inventory_history")
-@pytest.mark.parametrize(
-    "search_timestamp, expected_result",
-    [
-        ("0", (1, 0, 0)),
-        ("1", (0, 1, 0)),
-        ("2", (1, 0, 1)),
-        ("3", (1, 0, 1)),
-    ],
-)
-def test_get_history_deltas_search_timestamp(
-    search_timestamp: str,
-    expected_result: Tuple[int, int, int],
-) -> None:
-    hostname = "inv-host"
-
-    delta_history, corrupted_history_files = cmk.gui.inventory.get_history_deltas(
-        hostname,
-        search_timestamp,
-    )
-
-    assert len(delta_history) == 1
-
-    ts, (new, changed, removed, _tree) = delta_history[0]
-    e_new, e_changed, e_removed = expected_result
-    assert isinstance(ts, str)
-    assert new == e_new
-    assert changed == e_changed
-    assert removed == e_removed
-
-    assert len(corrupted_history_files) == 0
 
 
 @pytest.mark.usefixtures("create_inventory_history")
@@ -250,6 +217,14 @@ def test_load_delta_tree(
 
 
 @pytest.mark.usefixtures("create_inventory_history")
+def test_load_delta_tree_no_such_timestamp():
+    hostname = "inv-host"
+    with pytest.raises(MKGeneralException) as e:
+        cmk.gui.inventory.load_delta_tree(hostname, -1)
+    assert "Found no history entry at the time of '-1' for the host 'inv-host'" == str(e.value)
+
+
+@pytest.mark.usefixtures("create_inventory_history")
 def test_load_latest_delta_tree() -> None:
     hostname = "inv-host"
     expected_delta_tree = StructuredDataNode.deserialize({"inv": ("attr-3", "attr")})
@@ -263,3 +238,60 @@ def test_load_latest_delta_tree() -> None:
     assert delta_tree is not None
     assert delta_tree.is_equal(expected_delta_tree)
     assert len(corrupted_history_files) == 0
+
+    delta_tree_2 = cmk.gui.inventory.load_latest_delta_tree(hostname)
+
+    assert delta_tree_2 is not None
+    assert delta_tree_2.is_equal(expected_delta_tree)
+
+
+def test_load_latest_delta_tree_no_archive_and_inv_tree() -> None:
+    hostname = "inv-host"
+
+    # current tree
+    cmk.utils.store.save_object_to_file(
+        Path(cmk.utils.paths.inventory_output_dir, hostname),
+        StructuredDataNode.deserialize({"inv": "attr"}).serialize(),
+    )
+
+    delta_tree = cmk.gui.inventory.load_latest_delta_tree(hostname)
+
+    assert delta_tree is None
+
+
+def test_load_latest_delta_tree_one_archive_and_inv_tree() -> None:
+    hostname = "inv-host"
+    expected_delta_tree = StructuredDataNode.deserialize({"inv": ("attr-0", "attr")})
+
+    # history
+    cmk.utils.store.save_object_to_file(
+        Path(cmk.utils.paths.inventory_archive_dir, hostname, "0"),
+        StructuredDataNode.deserialize({"inv": "attr-0"}).serialize(),
+    )
+
+    # current tree
+    cmk.utils.store.save_object_to_file(
+        Path(cmk.utils.paths.inventory_output_dir, hostname),
+        StructuredDataNode.deserialize({"inv": "attr"}).serialize(),
+    )
+
+    delta_tree = cmk.gui.inventory.load_latest_delta_tree(hostname)
+
+    assert delta_tree is not None
+    assert delta_tree.is_equal(expected_delta_tree)
+
+
+def test_load_latest_delta_tree_one_archive_and_no_inv_tree() -> None:
+    hostname = "inv-host"
+    expected_delta_tree = StructuredDataNode.deserialize({"inv": (None, "attr-0")})
+
+    # history
+    cmk.utils.store.save_object_to_file(
+        Path(cmk.utils.paths.inventory_archive_dir, hostname, "0"),
+        StructuredDataNode.deserialize({"inv": "attr-0"}).serialize(),
+    )
+
+    delta_tree = cmk.gui.inventory.load_latest_delta_tree(hostname)
+
+    assert delta_tree is not None
+    assert delta_tree.is_equal(expected_delta_tree)

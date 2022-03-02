@@ -1487,6 +1487,77 @@ TEST(PluginTest, AsyncStartSimulation_Integration) {
     }
 }
 
+class PluginExecuteFixture : public ::testing::Test {
+public:
+    void SetUp() override {
+        files_ = prepareFilesAndStructures(plugins_, R"(@echo xxx&& exit 0)");
+        UpdatePluginMap(pm_, false, files_, exes_, true);
+        for (const auto &f : files_) {
+            auto ready = GetEntrySafe(pm_, f.u8string());
+            ready->getResultsAsync(true);
+        }
+    }
+    void TearDown() override {}
+    PluginMap pm_;
+    PathVector files_;
+
+    bool waitForAllProcesses(std::chrono::milliseconds) {
+        constexpr std::chrono::milliseconds wait_max{5000ms};
+        std::chrono::milliseconds waiting{0ms};
+        for (const auto &f : files_) {
+            auto ready = GetEntrySafe(pm_, f.u8string());
+            while (ready->running()) {
+                std::this_thread::sleep_for(50ms);
+                waiting += 50ms;
+                if (waiting > wait_max) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+private:
+    [[nodiscard]] PathVector prepareFilesAndStructures(
+        const PluginDescVector &plugin_desc_arr, std::string_view code) {
+        fs::path temp_folder =
+            tst::GetTempDir() /
+            ::testing::UnitTest::GetInstance()->current_test_info()->name();
+        fs::create_directories(temp_folder);
+        PathVector pv;
+        for (auto &pd : plugin_desc_arr) {
+            pv.emplace_back(temp_folder / pd.file_name_);
+            std::ofstream ofs(pv.back().u8string());
+            ofs << code << "\n";
+        }
+        return pv;
+    }
+    inline static PluginDescVector plugins_{{1, "async_1.cmd", "async"}};
+
+    inline static std::vector<cma::cfg::Plugins::ExeUnit> exes_{
+        {"*.cmd",
+         "async: yes\ntimeout: 10\ncache_age: 120\nretry_count: 0\nrun: yes\n"},
+        {"*", "run: no"},
+    };
+    PathVector pv_;
+};
+
+TEST_F(PluginExecuteFixture, AsyncPluginSingle) {
+    ASSERT_TRUE(waitForAllProcesses(2000ms));
+    // async part should provide nothing
+    for (const auto &f : files_) {
+        auto ready = GetEntrySafe(pm_, f.u8string());
+        ASSERT_NE(nullptr, ready);
+
+        auto accu = ready->getResultsAsync(false);
+        auto a = std::string(accu.begin(), accu.end());
+        ASSERT_TRUE(!a.empty());
+
+        auto base_table = tools::SplitString(a, G_EndOfString);
+        ASSERT_TRUE(base_table.size() == 1);
+        EXPECT_EQ(base_table[0], "xxx");
+    }
+}
 TEST(PluginTest, AsyncStartSimulation_Long) {
     using namespace cma::cfg;
     using namespace wtools;
@@ -2438,7 +2509,7 @@ TEST(PluginTest, HackingPiggyBack) {
         EXPECT_EQ(kFooter4Right, ">>>>");
     }
 
-    const std::string_view name = "Name";
+    constexpr std::string_view name{"Name"};
 
     {
         const auto normal = MakeHeader(kLeftBracket, kRightBracket, name);

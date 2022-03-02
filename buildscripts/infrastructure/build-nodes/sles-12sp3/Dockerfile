@@ -79,7 +79,6 @@ RUN zypper ref -s \
     unzip \
     wget \
     which \
-    chrpath \
     joe \
     iputils \
     vim \
@@ -110,11 +109,9 @@ RUN /opt/install-valgrind.sh
 RUN /opt/install-cmake.sh
 RUN /opt/install-protobuf-cpp.sh
 RUN /opt/install-openssl.sh
-RUN /opt/install-python2.sh
 RUN /opt/install-python.sh
 RUN /opt/install-pipenv.sh
 RUN /opt/install-freetds.sh
-RUN /opt/install-rust-cargo.sh
 RUN /opt/install-cmk-dependencies.sh
 RUN /opt/install-patchelf.sh
 

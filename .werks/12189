@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 Inventory inv_if crashed when there was no admin_status data.
 Now, it returns a table with empty Admin field.

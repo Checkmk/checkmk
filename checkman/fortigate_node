@@ -1,11 +1,10 @@
 title: FortiGate Firewall Cluster Monitoring: Info
 agents: snmp
 catalog: hw/network/fortinet
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check displays general information (name and mode) of a FortiGate High-Availability cluster
 
 discovery:
  One service is created.
-

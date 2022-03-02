@@ -6,7 +6,7 @@ Date: 1610970419
 Edition: cee
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 Adding of graphs to custom graphs or graph collections was not possible on some
 browser. Furthermore, if you added a graph to custom graphs, the landing page

@@ -6,7 +6,7 @@ Date: 1642518146
 Edition: cee
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 This Werk fixes a regression that got introduced with Checkmk 2.0.0p18.
 

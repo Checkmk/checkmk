@@ -4,14 +4,17 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from __future__ import annotations
+
 import ast
 import json
 import os
 import shutil
 import time
 import xml.dom.minidom  # type: ignore[import]
+from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Dict, List, Literal, Optional, Tuple, Union
+from typing import Callable, Dict, List, Literal, NamedTuple, Optional, Sequence, Set, Tuple, Union
 
 import dicttoxml  # type: ignore[import]
 
@@ -49,7 +52,6 @@ from cmk.gui.valuespec import TextInput, ValueSpec
 # => Should be unified one day.
 
 InventoryValue = Union[None, str, int, float]
-InventoryDeltaData = Tuple[int, int, int, StructuredDataNode]
 InventoryRows = List[SDRow]
 
 
@@ -100,11 +102,6 @@ def parse_tree_path(raw_path: SDRawPath) -> Tuple[SDPath, Optional[SDKeys]]:
     )
 
 
-def load_filtered_inventory_tree(hostname: Optional[HostName]) -> Optional[StructuredDataNode]:
-    """Loads the host inventory tree from the current file and returns the filtered tree"""
-    return _filter_tree(_load_structured_data_tree("inventory", hostname))
-
-
 def load_filtered_and_merged_tree(row: Row) -> Optional[StructuredDataNode]:
     """Load inventory tree from file, status data tree from row,
     merge these trees and returns the filtered tree"""
@@ -133,136 +130,10 @@ def get_status_data_via_livestatus(site: Optional[livestatus.SiteId], hostname: 
     return row
 
 
-def load_delta_tree(
-    hostname: HostName,
-    timestamp: int,
-) -> Tuple[Optional[StructuredDataNode], List[str]]:
-    """Load inventory history and compute delta tree of a specific timestamp"""
-    # Timestamp is timestamp of the younger of both trees. For the oldest
-    # tree we will just return the complete tree - without any delta
-    # computation.
-    delta_history, corrupted_history_files = get_history_deltas(
-        hostname,
-        search_timestamp=str(timestamp),
-    )
-    if not delta_history:
-        return None, []
-    return delta_history[0][1][3], corrupted_history_files
-
-
-def get_history_deltas(
-    hostname: HostName,
-    search_timestamp: Optional[str] = None,
-) -> Tuple[List[Tuple[str, InventoryDeltaData]], List[str]]:
-    if "/" in hostname:
-        return [], []  # just for security reasons
-
-    inventory_path = "%s/%s" % (cmk.utils.paths.inventory_output_dir, hostname)
-    if not os.path.exists(inventory_path):
-        return [], []
-
-    latest_timestamp = str(int(os.stat(inventory_path).st_mtime))
-    inventory_archive_dir = "%s/%s" % (cmk.utils.paths.inventory_archive_dir, hostname)
-    try:
-        archived_timestamps = sorted(os.listdir(inventory_archive_dir))
-    except OSError:
-        return [], []
-
-    all_timestamps: List[str] = archived_timestamps + [latest_timestamp]
-    previous_timestamp: Optional[str] = None
-
-    if not search_timestamp:
-        required_timestamps = all_timestamps
-    else:
-        new_timestamp_idx = all_timestamps.index(search_timestamp)
-        if new_timestamp_idx == 0:
-            required_timestamps = [search_timestamp]
-        else:
-            previous_timestamp = all_timestamps[new_timestamp_idx - 1]
-            required_timestamps = [search_timestamp]
-
-    tree_lookup: Dict[str, Any] = {}
-
-    def get_tree(timestamp: Optional[str]) -> StructuredDataNode:
-        if timestamp is None:
-            return StructuredDataNode()
-
-        if timestamp in tree_lookup:
-            return tree_lookup[timestamp]
-
-        if timestamp == latest_timestamp:
-            inventory_tree = load_filtered_inventory_tree(hostname)
-            if inventory_tree is None:
-                raise LoadStructuredDataError()
-            tree_lookup[timestamp] = inventory_tree
-        else:
-            inventory_archive_path = Path(inventory_archive_dir, timestamp)
-            tree_lookup[timestamp] = _filter_tree(
-                StructuredDataStore.load_file(inventory_archive_path)
-            )
-        return tree_lookup[timestamp]
-
-    corrupted_history_files = []
-    delta_history: List[Tuple[str, InventoryDeltaData]] = []
-    for _idx, timestamp in enumerate(required_timestamps):
-        cached_delta_path = os.path.join(
-            cmk.utils.paths.inventory_delta_cache_dir,
-            hostname,
-            "%s_%s" % (previous_timestamp, timestamp),
-        )
-
-        cached_data = None
-        try:
-            cached_data = store.load_object_from_file(cached_delta_path, default=None)
-        except MKGeneralException:
-            pass
-
-        if cached_data:
-            new, changed, removed, delta_tree_data = cached_data
-            delta_tree = StructuredDataNode.deserialize(delta_tree_data)
-            delta_history.append((timestamp, (new, changed, removed, delta_tree)))
-            previous_timestamp = timestamp
-            continue
-
-        try:
-            previous_tree = get_tree(previous_timestamp)
-            current_tree = get_tree(timestamp)
-            delta_result = current_tree.compare_with(previous_tree)
-            delta_data = (
-                delta_result.counter["new"],
-                delta_result.counter["changed"],
-                delta_result.counter["removed"],
-                delta_result.delta,
-            )
-            new, changed, removed, delta_tree = delta_data
-            if new or changed or removed:
-                store.save_text_to_file(
-                    cached_delta_path,
-                    repr((new, changed, removed, delta_tree.serialize())),
-                )
-                delta_history.append((timestamp, delta_data))
-        except LoadStructuredDataError:
-            corrupted_history_files.append(
-                str(get_short_inventory_history_filepath(hostname, timestamp))
-            )
-
-        previous_timestamp = timestamp
-
-    return delta_history, corrupted_history_files
-
-
 def get_short_inventory_filepath(hostname: HostName) -> Path:
     return (
         Path(cmk.utils.paths.inventory_output_dir)
         .joinpath(hostname)
-        .relative_to(cmk.utils.paths.omd_root)
-    )
-
-
-def get_short_inventory_history_filepath(hostname: HostName, timestamp: str) -> Path:
-    return (
-        Path(cmk.utils.paths.inventory_archive_dir)
-        .joinpath("%s/%s" % (hostname, timestamp))
         .relative_to(cmk.utils.paths.omd_root)
     )
 
@@ -290,6 +161,282 @@ def vs_inventory_path_or_keys_help():
         ' <a href="https://docs.checkmk.com/latest/de/inventory.html">HW/SW Inventory</a>.'
         " for more details about the HW/SW Inventory system."
     )
+
+
+# .
+#   .--history-------------------------------------------------------------.
+#   |                   _     _     _                                      |
+#   |                  | |__ (_)___| |_ ___  _ __ _   _                    |
+#   |                  | '_ \| / __| __/ _ \| '__| | | |                   |
+#   |                  | | | | \__ \ || (_) | |  | |_| |                   |
+#   |                  |_| |_|_|___/\__\___/|_|   \__, |                   |
+#   |                                             |___/                    |
+#   '----------------------------------------------------------------------'
+
+
+_DEFAULT_PATH_TO_TREE = Path()
+
+
+class TreePath(NamedTuple):
+    path: Path
+    timestamp: Optional[int]
+
+    @classmethod
+    def default(cls) -> TreePath:
+        return TreePath(
+            path=_DEFAULT_PATH_TO_TREE,
+            timestamp=None,
+        )
+
+    @property
+    def short(self) -> Path:
+        return self.path.relative_to(cmk.utils.paths.omd_root)
+
+
+class HistoryEntry(NamedTuple):
+    timestamp: Optional[int]
+    new: int
+    changed: int
+    removed: int
+    delta_tree: StructuredDataNode
+
+
+class FilteredTreePaths(NamedTuple):
+    start_tree_path: TreePath
+    tree_paths: Sequence[TreePath]
+
+
+class FilterTreePathsError(Exception):
+    pass
+
+
+def load_latest_delta_tree(hostname: HostName) -> Optional[StructuredDataNode]:
+    def _get_latest_timestamps(tree_paths: Sequence[TreePath]) -> FilteredTreePaths:
+        if len(tree_paths) == 0:
+            raise FilterTreePathsError()
+        return FilteredTreePaths(
+            start_tree_path=TreePath.default() if len(tree_paths) == 1 else tree_paths[-2],
+            tree_paths=[tree_paths[-1]],
+        )
+
+    delta_history, _corrupted_history_files = _get_history(
+        hostname,
+        filter_tree_paths=_get_latest_timestamps,
+    )
+    if not delta_history:
+        return None
+    return delta_history[0].delta_tree
+
+
+def load_delta_tree(
+    hostname: HostName,
+    timestamp: int,
+) -> Tuple[Optional[StructuredDataNode], Sequence[str]]:
+    """Load inventory history and compute delta tree of a specific timestamp"""
+    # Timestamp is timestamp of the younger of both trees. For the oldest
+    # tree we will just return the complete tree - without any delta
+    # computation.
+
+    def _search_timestamps(tree_paths: Sequence[TreePath], timestamp: int) -> FilteredTreePaths:
+        for idx, tree_path in enumerate(tree_paths):
+            if tree_path.timestamp == timestamp:
+                if idx == 0:
+                    return FilteredTreePaths(
+                        start_tree_path=TreePath.default(),
+                        tree_paths=[tree_path],
+                    )
+                return FilteredTreePaths(
+                    start_tree_path=tree_paths[idx - 1],
+                    tree_paths=[tree_path],
+                )
+        raise MKGeneralException(
+            _("Found no history entry at the time of '%s' for the host '%s'")
+            % (timestamp, hostname)
+        )
+
+    delta_history, corrupted_history_files = _get_history(
+        hostname,
+        filter_tree_paths=lambda filter_tree_paths: _search_timestamps(
+            filter_tree_paths, timestamp
+        ),
+    )
+    if not delta_history:
+        return None, []
+    return delta_history[0].delta_tree, corrupted_history_files
+
+
+def get_history(hostname: HostName) -> Tuple[Sequence[HistoryEntry], Sequence[str]]:
+    return _get_history(
+        hostname,
+        filter_tree_paths=lambda tree_paths: FilteredTreePaths(
+            start_tree_path=TreePath.default(),
+            tree_paths=tree_paths,
+        ),
+    )
+
+
+def _get_history(
+    hostname: HostName,
+    *,
+    filter_tree_paths: Callable[[Sequence[TreePath]], FilteredTreePaths],
+) -> Tuple[Sequence[HistoryEntry], Sequence[str]]:
+    if "/" in hostname:
+        return [], []  # just for security reasons
+
+    if not (tree_paths := _get_tree_paths(hostname)):
+        return [], []
+
+    try:
+        filtered_tree_paths = filter_tree_paths(tree_paths)
+    except FilterTreePathsError:
+        return [], []
+
+    cached_tree_loader = _CachedTreeLoader()
+    corrupted_history_files: Set[Path] = set()
+    history: List[HistoryEntry] = []
+
+    for previous, current in _get_pairs(filtered_tree_paths):
+        if current.timestamp is None:
+            continue
+
+        cached_delta_tree_loader = _CachedDeltaTreeLoader(
+            hostname,
+            previous.timestamp,
+            current.timestamp,
+        )
+
+        if (cached_history_entry := cached_delta_tree_loader.get_cached_entry()) is not None:
+            history.append(cached_history_entry)
+            continue
+
+        try:
+            previous_tree = cached_tree_loader.get_tree(previous.path)
+            current_tree = cached_tree_loader.get_tree(current.path)
+        except LoadStructuredDataError:
+            corrupted_history_files.add(current.short)
+            continue
+
+        if (
+            history_entry := cached_delta_tree_loader.get_calculated_or_store_entry(
+                previous_tree, current_tree
+            )
+        ) is not None:
+            history.append(history_entry)
+
+    return history, sorted([str(path) for path in corrupted_history_files])
+
+
+def _get_tree_paths(hostname: HostName) -> Sequence[TreePath]:
+    inventory_path = Path(cmk.utils.paths.inventory_output_dir, hostname)
+    inventory_archive_dir = Path(cmk.utils.paths.inventory_archive_dir, hostname)
+
+    try:
+        archived_tree_paths = [
+            TreePath(
+                path=filepath,
+                timestamp=int(filepath.name),
+            )
+            for filepath in sorted(inventory_archive_dir.iterdir())
+        ]
+    except FileNotFoundError:
+        return []
+
+    try:
+        archived_tree_paths.append(
+            TreePath(
+                path=inventory_path,
+                timestamp=int(inventory_path.stat().st_mtime),
+            )
+        )
+    except FileNotFoundError:
+        pass
+
+    return archived_tree_paths
+
+
+def _get_pairs(filtered_tree_paths: FilteredTreePaths) -> Sequence[Tuple[TreePath, TreePath]]:
+    start_tree_path = filtered_tree_paths.start_tree_path
+
+    pairs: List[Tuple[TreePath, TreePath]] = []
+    for tree_path in filtered_tree_paths.tree_paths:
+        pairs.append((start_tree_path, tree_path))
+        start_tree_path = tree_path
+
+    return pairs
+
+
+@dataclass(frozen=True)
+class _CachedTreeLoader:
+    _lookup: Dict[Path, StructuredDataNode] = field(default_factory=dict)
+
+    def get_tree(self, filepath: Path) -> StructuredDataNode:
+        if filepath == _DEFAULT_PATH_TO_TREE:
+            return StructuredDataNode()
+
+        if filepath in self._lookup:
+            return self._lookup[filepath]
+
+        return self._lookup.setdefault(filepath, self._load_tree_from_file(filepath))
+
+    def _load_tree_from_file(self, filepath: Path) -> StructuredDataNode:
+        try:
+            tree = _filter_tree(StructuredDataStore.load_file(filepath))
+        except FileNotFoundError:
+            raise LoadStructuredDataError()
+
+        if tree is None or tree.is_empty():
+            # load_file may return an empty tree
+            raise LoadStructuredDataError()
+
+        return tree
+
+
+@dataclass(frozen=True)
+class _CachedDeltaTreeLoader:
+    hostname: HostName
+    previous_timestamp: Optional[int]
+    current_timestamp: int
+
+    @property
+    def _path(self) -> Path:
+        return Path(
+            cmk.utils.paths.inventory_delta_cache_dir,
+            self.hostname,
+            "%s_%s" % (self.previous_timestamp, self.current_timestamp),
+        )
+
+    def get_cached_entry(self) -> Optional[HistoryEntry]:
+        try:
+            cached_data = store.load_object_from_file(self._path, default=None)
+        except MKGeneralException:
+            return None
+
+        if cached_data is None:
+            return None
+
+        new, changed, removed, delta_tree_data = cached_data
+        delta_tree = StructuredDataNode.deserialize(delta_tree_data)
+        return HistoryEntry(self.current_timestamp, new, changed, removed, delta_tree)
+
+    def get_calculated_or_store_entry(
+        self,
+        previous_tree: StructuredDataNode,
+        current_tree: StructuredDataNode,
+    ) -> Optional[HistoryEntry]:
+        delta_result = current_tree.compare_with(previous_tree)
+        new, changed, removed, delta_tree = (
+            delta_result.counter["new"],
+            delta_result.counter["changed"],
+            delta_result.counter["removed"],
+            delta_result.delta,
+        )
+        if new or changed or removed:
+            store.save_text_to_file(
+                self._path,
+                repr((new, changed, removed, delta_tree.serialize())),
+            )
+            return HistoryEntry(self.current_timestamp, new, changed, removed, delta_tree)
+        return None
 
 
 # .

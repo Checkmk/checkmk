@@ -5,6 +5,7 @@
 
 #include "pch.h"
 
+#include "agent_controller.h"
 #include "cfg.h"
 #include "common/version.h"
 #include "common/wtools.h"
@@ -24,9 +25,9 @@
 #include "test_tools.h"
 #include "tools/_misc.h"
 #include "tools/_process.h"
+namespace fs = std::filesystem;
 
 namespace cma::provider {
-
 static const std::string section_name{cma::section::kUseEmbeddedName};
 
 class Empty : public Synchronous {
@@ -115,7 +116,7 @@ TEST(SectionProviders, SystemTime) {
 
 class SectionProviderCheckMkFixture : public ::testing::Test {
 public:
-    static constexpr size_t core_lines_ = 18;
+    static constexpr size_t core_lines_ = 20;
     static constexpr size_t full_lines_ = core_lines_ + 3;
     static constexpr std::string_view names_[] = {
         "Version",          "BuildDate",       "AgentOS",
@@ -123,7 +124,8 @@ public:
         "ConfigFile",       "LocalConfigFile", "AgentDirectory",
         "PluginsDirectory", "StateDirectory",  "ConfigDirectory",
         "TempDirectory",    "LogDirectory",    "SpoolDirectory",
-        "LocalDirectory",   "OnlyFrom"};
+        "LocalDirectory",   "AgentController", "AgentControllerStatus",
+        "OnlyFrom"};
 
     static constexpr std::pair<std::string_view, std::string_view>
         only_from_cases_[] = {
@@ -186,7 +188,8 @@ TEST_F(SectionProviderCheckMkFixture, Name) {
 }
 
 TEST_F(SectionProviderCheckMkFixture, ConstFields) {
-    auto cfg = getWorkingCfg();
+    createDataDir();
+    auto cfg = cfg::GetLoadedConfig();
     cfg[cfg::groups::kGlobal][cfg::vars::kOnlyFrom] = YAML::Load("127.0.0.1");
 
     auto result = getCoreResultAsTable();
@@ -194,22 +197,33 @@ TEST_F(SectionProviderCheckMkFixture, ConstFields) {
     const auto *expected_name = names_;
     for (const auto &r : result) {
         auto values = tools::SplitString(r, ": ");
-        EXPECT_EQ(values.size(), 2);
         EXPECT_EQ(values[0], std::string{*expected_name++});
-        EXPECT_FALSE(values[1].empty());
+        if (values[0].starts_with("AgentController")) {
+            EXPECT_EQ(values.size(), 1);
+        } else {
+            EXPECT_EQ(values.size(), 2);
+        }
     }
 }
 
 TEST_F(SectionProviderCheckMkFixture, AdvancedFields) {
+    createDataDir();
     auto result = getCoreResultAsTable();
     EXPECT_EQ(get_val(result[0]), CHECK_MK_VERSION);
     EXPECT_EQ(get_val(result[2]), "windows");
     EXPECT_EQ(get_val(result[3]), cfg::GetHostName());
     EXPECT_EQ(get_val(result[4]), tgt::Is64bit() ? "64bit" : "32bit");
+    EXPECT_EQ(result[16], "AgentController: ");
+    EXPECT_TRUE(result[17].starts_with("AgentControllerStatus: "));
+    tst::CreateTextFile(fs::path{cfg::GetUserDir()} / ac::kLegacyPullFile,
+                        "test");
+    result = getCoreResultAsTable();
+    EXPECT_TRUE(result[17].starts_with("AgentControllerStatus: "));
 }
 
 TEST_F(SectionProviderCheckMkFixture, OnlyFromField) {
-    auto cfg = getWorkingCfg();
+    createDataDir();
+    auto cfg = cfg::GetLoadedConfig();
 
     for (auto p : only_from_cases_) {
         cfg[cfg::groups::kGlobal][cfg::vars::kOnlyFrom] =
@@ -325,5 +339,4 @@ TEST(SectionHeaders, MakeEmptyHeader) {
 TEST(SectionHeaders, MakeLocalHeader) {
     EXPECT_EQ(section::MakeLocalHeader(), "<<<local:sep(0)>>>\n");
 }
-
 }  // namespace cma::provider

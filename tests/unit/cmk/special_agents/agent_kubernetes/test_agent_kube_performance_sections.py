@@ -48,7 +48,8 @@ def test_group_metrics_by_containers():
             "pod_name": "pod",
             "pod_uid": "pod",
             "metric_name": "container_memory_usage_bytes_total",
-            "metric_value_string": "0 1637672238173",
+            "metric_value_string": "0",
+            "timestamp": "1637672238.173",
             "namespace": "default",
         },
         {
@@ -56,7 +57,8 @@ def test_group_metrics_by_containers():
             "pod_uid": "pod",
             "pod_name": "pod",
             "metric_name": "container_memory_swap",
-            "metric_value_string": "0 1637672238173",
+            "metric_value_string": "0",
+            "timestamp": "1637672238.173",
             "namespace": "default",
         },
     ]

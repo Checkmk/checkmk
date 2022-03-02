@@ -45,23 +45,24 @@ def test_binary_capability(site, rel_path, expected_capability):
     if getcap_bin is None:
         raise Exception("Unable to find getcap")
 
-    p = subprocess.Popen(  # pylint:disable=consider-using-with
-        [getcap_bin, path], stdout=subprocess.PIPE, encoding="utf-8"
+    completed_process = subprocess.run(
+        [getcap_bin, path], stdout=subprocess.PIPE, encoding="utf-8", check=False
     )
-    assert p.stdout
-    stdout = p.stdout.read()
 
     assert oct(stat.S_IMODE(os.stat(path).st_mode)) == "0o750"
 
     # getcap 2.41 introduced a new output format. As long as we have distros with newer and older
     # versions, we need to support both formats.
-    if "%s =" % path in stdout:
+    if "%s =" % path in completed_process.stdout:
         # pre 2.41 format:
         # > getcap test
         # test = cap_net_raw+ep
-        assert stdout == "%s = %s\n" % (path, expected_capability.replace("=", "+"))
+        assert completed_process.stdout == "%s = %s\n" % (
+            path,
+            expected_capability.replace("=", "+"),
+        )
     else:
         # 2.41 format:
         # > getcap test
         # test cap_net_raw=ep
-        assert stdout == "%s %s\n" % (path, expected_capability)
+        assert completed_process.stdout == "%s %s\n" % (path, expected_capability)

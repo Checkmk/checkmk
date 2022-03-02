@@ -64,7 +64,7 @@ def inventory_lnx_ip_r(section: Section) -> InventoryResult:
                 "gateway": route.get("gateway"),
             },
             inventory_columns={
-                "type": route["type"],
+                "type": route.get("type"),
                 "device": route.get("device"),
             },
             status_columns={},

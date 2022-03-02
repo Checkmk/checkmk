@@ -10,7 +10,7 @@ fi
 REPO_PATH="$(git rev-parse --show-toplevel)"
 PIPENV=pipenv
 
-pushd $REPO_PATH/tests > /dev/null
+pushd "$REPO_PATH"/tests >/dev/null
 PIPENV_VENV_IN_PROJECT=true \
     PIPENV_NOSPIN=true \
     PIPENV_HIDE_EMOJIS=true \
@@ -19,4 +19,4 @@ PIPENV_VENV_IN_PROJECT=true \
     PIPENV_IGNORE_VIRTUALENVS=1 \
     PYTEST_ARGS=--testmon \
     $PIPENV run make test-unit
-popd > /dev/null
+popd >/dev/null

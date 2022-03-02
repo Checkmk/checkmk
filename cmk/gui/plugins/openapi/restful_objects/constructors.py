@@ -833,14 +833,22 @@ def link_endpoint(
 
 def collection_item(
     domain_type: DomainType,
-    obj: Dict[str, str],
+    identifier: str,
+    title: str,
     collection_name: str = "all",
 ) -> CollectionItem:
     """A link for use in a collection object.
 
     Args:
         domain_type:
-        obj:
+            The domain type of the object in the collection.
+
+        identifier:
+            The unique identifer which is able to identify this object.
+
+        title:
+            A human-readable description or title of the object.
+
         collection_name:
             The name of the collection. Domain types can have multiple collections, this enables
             us to link to the correct one properly.
@@ -856,7 +864,7 @@ def collection_item(
         ...     'type': 'application/json;profile="urn:org.restfulobjects:rels/object"',
         ... }
         >>> with _request_context():
-        ...     res = collection_item('folder_config', {'title': 'Foo', 'id': '3'})
+        ...     res = collection_item('folder_config', identifier="3", title='Foo')
         >>> assert res == expected, res
 
     Returns:
@@ -866,10 +874,10 @@ def collection_item(
     return link_rel(
         rel=".../value",
         parameters={"collection": collection_name},
-        href=object_href(domain_type, obj["id"]),
+        href=object_href(domain_type, identifier),
         profile=".../object",
         method="get",
-        title=obj["title"],
+        title=title,
     )
 
 

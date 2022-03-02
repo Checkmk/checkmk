@@ -129,7 +129,7 @@ class Vcs(NamedTuple):
 
 SubSection = MutableMapping[str, List[Vcs]]
 Section = MutableMapping[str, SubSection]
-ClusterSection = Mapping[str, Section]
+ClusterSection = Mapping[str, Optional[Section]]
 
 
 class ClusterNodeResults(NamedTuple):
@@ -340,7 +340,11 @@ def cluster_check_veritas_vcs(
     yield from cluster_check_veritas_vcs_subsection(
         item,
         params,
-        {node_name: node_section.get("cluster", {}) for node_name, node_section in section.items()},
+        {
+            node_name: node_section.get("cluster", {})
+            for node_name, node_section in section.items()
+            if node_section is not None
+        },
     )
 
 
@@ -390,7 +394,11 @@ def cluster_check_veritas_vcs_system(
     yield from cluster_check_veritas_vcs_subsection(
         item,
         params,
-        {node_name: node_section.get("system", {}) for node_name, node_section in section.items()},
+        {
+            node_name: node_section.get("system", {})
+            for node_name, node_section in section.items()
+            if node_section is not None
+        },
     )
 
 
@@ -440,7 +448,11 @@ def cluster_check_veritas_vcs_group(
     yield from cluster_check_veritas_vcs_subsection(
         item,
         params,
-        {node_name: node_section.get("group", {}) for node_name, node_section in section.items()},
+        {
+            node_name: node_section.get("group", {})
+            for node_name, node_section in section.items()
+            if node_section is not None
+        },
     )
 
 
@@ -493,6 +505,7 @@ def cluster_check_veritas_vcs_resource(
         {
             node_name: node_section.get("resource", {})
             for node_name, node_section in section.items()
+            if node_section is not None
         },
     )
 

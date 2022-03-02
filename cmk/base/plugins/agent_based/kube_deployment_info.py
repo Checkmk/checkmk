@@ -23,11 +23,13 @@ def parse(string_table: StringTable) -> DeploymentInfo:
     ... '{"name": "oh-lord",'
     ... '"namespace": "have-mercy",'
     ... '"labels": {},'
+    ... '"selector": {"match_labels": {}, "match_expressions": [{"key": "app", "operator": "In", "values": ["sleep"]}]},'
     ... '"creation_timestamp": 1638798546.0,'
     ... '"images": ["i/name:0.5"],'
-    ... '"containers": ["name"]}'
+    ... '"containers": ["name"],'
+    ... '"cluster": "cluster"}'
     ... ]])
-    DeploymentInfo(name='oh-lord', namespace='have-mercy', labels={}, creation_timestamp=1638798546.0, images=['i/name:0.5'], containers=['name'])
+    DeploymentInfo(name='oh-lord', namespace='have-mercy', labels={}, selector=Selector(match_labels={}, match_expressions=[{'key': 'app', 'operator': 'In', 'values': ['sleep']}]), creation_timestamp=1638798546.0, images=['i/name:0.5'], containers=['name'], cluster='cluster')
     """
     return DeploymentInfo(**json.loads(string_table[0][0]))
 
@@ -38,6 +40,9 @@ def host_labels(section: DeploymentInfo) -> HostLabelGenerator:
     Labels:
         cmk/kubernetes/object:
             This label is set to the Kubernetes object type.
+
+        cmk/kubernetes/cluster:
+            This label is set to the given Kubernetes cluster name.
 
         cmk/kubernetes/namespace:
             This label is set to the namespace of the deployment.
@@ -57,6 +62,7 @@ def host_labels(section: DeploymentInfo) -> HostLabelGenerator:
         return
 
     yield HostLabel("cmk/kubernetes/object", "deployment")
+    yield HostLabel("cmk/kubernetes/cluster", section.cluster)
     yield HostLabel("cmk/kubernetes/namespace", section.namespace)
     yield HostLabel("cmk/kubernetes/deployment", section.name)
 

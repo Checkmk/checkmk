@@ -1,7 +1,7 @@
 title: Hitachi HNAS: Status of Quorum Device
 agents: snmp
 catalog: hw/storagehw/hitachi
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  Checks the status of the quorum device in Hitachi HNAS storage systems.
@@ -14,4 +14,3 @@ description:
 
 discovery:
  One service is created on each HNAS having a Quorum Device.
-

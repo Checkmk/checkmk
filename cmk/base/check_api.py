@@ -135,8 +135,8 @@ import cmk.base.prediction as _prediction
 from cmk.base.api.agent_based.section_classes import OIDBytes as _OIDBytes
 from cmk.base.api.agent_based.section_classes import OIDCached as _OIDCached
 from cmk.base.plugin_contexts import check_type
-from cmk.base.plugin_contexts import (  # noqa: F401 # pylint: disable=unused-import
-    host_name as _internal_host_name,
+from cmk.base.plugin_contexts import (
+    host_name as _internal_host_name,  # pylint: disable=unused-import
 )
 from cmk.base.plugin_contexts import service_description
 

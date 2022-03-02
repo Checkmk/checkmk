@@ -1,7 +1,7 @@
 title: STE2 Ethernet Thermometer: Humidity
 agents: snmp
 catalog: hw/environment/hwg
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors humidity via an accessory humidity sensor attached to
@@ -12,4 +12,3 @@ item:
 
 discovery:
  One service is created for each available humidity sensor.
-

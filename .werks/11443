@@ -6,7 +6,7 @@ Date: 1607932981
 Edition: cee
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 The liveproxy garbage collection was broken if a channel had no client.
 This could lead to a hanging liveproxyd, consequently a hanging GUI.

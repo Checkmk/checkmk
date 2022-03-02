@@ -192,8 +192,9 @@ def get_check_table(
     config_cache = config.get_config_cache()
     host_config = config_cache.get_host_config(hostname)
 
-    # TODO (mo): find out why skip_ignored is ignored here. That seems wrong to me.
-    cache_key = (host_config.hostname, filter_mode, skip_autochecks) if use_cache else None
+    cache_key = (
+        (host_config.hostname, filter_mode, skip_autochecks, skip_ignored) if use_cache else None
+    )
 
     if cache_key:
         with suppress(KeyError):

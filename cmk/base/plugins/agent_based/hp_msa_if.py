@@ -108,7 +108,7 @@ def parse_hp_msa_if(string_table: type_defs.StringTable) -> interfaces.Section:
     parsed = []
     for idx, (_key, values) in enumerate(sorted(hp_msa.parse_hp_msa(string_table).items())):
         try:
-            speed = int(values["actual-speed"].replace("Gb", "")) * 10 ** 9
+            speed = int(values["actual-speed"].replace("Gb", "")) * 10**9
         except ValueError:
             speed = 0
 

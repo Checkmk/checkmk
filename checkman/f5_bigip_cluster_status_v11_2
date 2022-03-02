@@ -1,7 +1,7 @@
 title: F5 Big-IP: Active/Active or Passive/Active Cluster Status (> V11.2)
 agents: snmp
 catalog: hw/network/f5
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  The check queries the MIB tables of F5 BIG-IP loadbalancers (local traffic managers) to identify

@@ -437,7 +437,11 @@ class ModeAuditLog(WatoMode):
         html.show_user_errors()
 
         for name, vs in self._audit_log_options():
-            html.render_floating_option(name, "single", "options_", vs, self._options[name])
+
+            def renderer(name=name, vs=vs) -> None:
+                vs.render_input("options_" + name, self._options[name])
+
+            html.render_floating_option(name, "single", vs.title(), renderer)
 
         html.close_div()
 

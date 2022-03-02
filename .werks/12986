@@ -6,7 +6,7 @@ Date: 1626420898
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 Newer versions of the Linux command <tt>apt</tt> display something like
 "10 standard security updates" or "3 esm-infra security updates" if security

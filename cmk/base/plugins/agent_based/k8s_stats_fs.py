@@ -12,6 +12,11 @@ from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
 from .utils.df import df_check_filesystem_single, FILESYSTEM_DEFAULT_LEVELS
 from .utils.k8s import Filesystem, Section, to_filesystem
 
+###########################################################################
+# NOTE: This check (and associated special agent) is deprecated and will be
+#       removed in Checkmk version 2.2.
+###########################################################################
+
 
 def discover_k8s_stats_fs(section: Section) -> DiscoveryResult:
     """
@@ -68,8 +73,8 @@ def _check__k8s_stats_fs__core(
         yield from df_check_filesystem_single(
             value_store=value_store,
             mountpoint=item,
-            size_mb=disk["capacity"] / 1024 ** 2,
-            avail_mb=disk["available"] / 1024 ** 2,
+            size_mb=disk["capacity"] / 1024**2,
+            avail_mb=disk["available"] / 1024**2,
             reserved_mb=0,
             inodes_total=disk["inodes"],
             inodes_avail=disk["inodes_free"],

@@ -1,7 +1,7 @@
 title: Hitachi HNAS: Usage and Status of Virtual Volumes
 agents: snmp
 catalog: hw/storagehw/hitachi
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  Checks the Usage and Status of Virtual Volumes on Hitachi HNAS storage systems.
@@ -18,4 +18,3 @@ item:
 
 discovery:
  One service is created for each virtual volume.
-

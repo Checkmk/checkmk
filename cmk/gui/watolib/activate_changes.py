@@ -20,6 +20,7 @@ import ast
 import errno
 import hashlib
 import io
+import logging
 import multiprocessing
 import os
 import re
@@ -29,7 +30,6 @@ import time
 import traceback
 from dataclasses import asdict
 from itertools import filterfalse
-from logging import Logger
 from pathlib import Path
 from typing import Any, Callable, Dict, Iterable, List, NamedTuple, Optional, Set, Tuple, Union
 
@@ -207,6 +207,15 @@ def get_replication_paths() -> List[ReplicationPath]:
         ),
         ReplicationPath(
             "file",
+            "password_store.secret",
+            os.path.relpath(
+                "%s/password_store.secret" % os.path.dirname(cmk.utils.paths.htpasswd_file),
+                cmk.utils.paths.omd_root,
+            ),
+            [],
+        ),
+        ReplicationPath(
+            "file",
             "auth.serials",
             os.path.relpath(
                 "%s/auth.serials" % os.path.dirname(cmk.utils.paths.htpasswd_file),
@@ -233,12 +242,6 @@ def get_replication_paths() -> List[ReplicationPath]:
             "dir",
             "local",
             "local",
-            [],
-        ),
-        ReplicationPath(
-            "file",
-            "omd",
-            "etc/omd/sitespecific.mk",
             [],
         ),
     ]
@@ -1120,18 +1123,22 @@ class CRESnapshotDataCollector(ABCSnapshotDataCollector):
             # With Python 3 we could use "shutil.copytree(src, dst, copy_function=os.link)", but
             # please have a look at the performance before switching over...
             # shutil.copytree(source_path, str(target_path.parent) + "/", copy_function=os.link)
-            p = subprocess.Popen(  # pylint:disable=consider-using-with
+
+            completed_process = subprocess.run(
                 ["cp", "-al", str(source_path), str(target_path.parent) + "/"],
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
-                stdin=open(os.devnull),  # pylint:disable=consider-using-with
+                stdin=subprocess.DEVNULL,
                 shell=False,
                 close_fds=True,
+                check=False,
             )
-            stdout = p.communicate()[0]
-            if p.returncode != 0:
+            if completed_process.returncode:
                 self._logger.error(
-                    "Failed to clone files from %s to %s: %s", source_path, str(target_path), stdout
+                    "Failed to clone files from %s to %s: %s",
+                    source_path,
+                    str(target_path),
+                    completed_process.stdout,
                 )
                 raise MKGeneralException("Failed to create site config directory")
 
@@ -1149,13 +1156,14 @@ class CRESnapshotDataCollector(ABCSnapshotDataCollector):
             if os.path.exists(snapshot_settings.work_dir):
                 shutil.rmtree(snapshot_settings.work_dir)
 
-            p = subprocess.Popen(  # pylint:disable=consider-using-with
+            completed_process = subprocess.run(
                 ["cp", "-al", origin_site_work_dir, snapshot_settings.work_dir],
                 shell=False,
                 close_fds=True,
+                check=False,
             )
-            p.wait()
-            assert p.returncode == 0
+
+            assert completed_process.returncode == 0
             self._logger.debug("Finished site")
 
     def get_generic_components(self) -> List[ReplicationPath]:
@@ -1228,15 +1236,28 @@ class ActivationCleanupBackgroundJob(WatoBackgroundJob):
                 if not delete:
                     continue
 
+                # Because the heuristic to detect if an activation is or isn't running is not
+                # very reliable (stated politely) we need to make sure that we don't accidentally
+                # delete activations WHICH HAVE NOT BEEN STARTED YET. To make sure this is not the
+                # case we wait for a very long time and only delete very old activations.
+                # As there is no way to determine how long an activation will actually take,
+                # because the load on the server and the size of the activations vary by a huge
+                # margin, we make the definition of "very old" configurable.
                 for base_dir in (
                     str(cmk.utils.paths.site_config_dir),
                     ActivateChangesManager.activation_tmp_base_dir,
                 ):
                     activation_dir = os.path.join(base_dir, activation_id)
+                    if not os.path.isdir(activation_dir):
+                        continue
+
+                    # Hardcoded to 1h for now. Seems reasonable.
+                    dir_stat = os.stat(activation_dir)
+                    if time.time() - dir_stat.st_mtime < 3600:
+                        continue
+
                     try:
                         shutil.rmtree(activation_dir)
-                    except FileNotFoundError:
-                        pass
                     except Exception:
                         self._logger.error(
                             "  Failed to delete the activation directory '%s'" % activation_dir,
@@ -1788,7 +1809,8 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
         return configuration_warnings
 
     def _call_activate_changes_automation(self) -> ConfigWarnings:
-        domain_requests = self._get_domains_needing_activation()
+        omd_ident: ConfigDomainName = ConfigDomainOMD.ident()
+        domain_requests = self._get_domains_needing_activation(omd_ident)
 
         if site_is_local(self._site_id):
             return execute_activate_changes(domain_requests)
@@ -1810,7 +1832,6 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
                 )
             raise
 
-        omd_ident = ConfigDomainOMD.ident()
         if any(request.name == omd_ident for request in domain_requests):
             response.setdefault(omd_ident, []).extend(self._get_omd_domain_background_job_result())
 
@@ -1834,28 +1855,43 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
                 )
                 if not omd_response.job_status["is_active"]:
                     return omd_response.job_status["loginfo"]["JobException"]
+                time.sleep(0.5)
             except MKUserError as e:
                 if not (
                     e.message == "Site is not running" or e.message.startswith("HTTP Error - 502")
                 ):
                     return [e.message]
 
-    def _get_domains_needing_activation(self) -> DomainRequests:
+    def _get_domains_needing_activation(self, omd_ident: ConfigDomainName) -> DomainRequests:
         domain_settings: Dict[ConfigDomainName, List[SerializedSettings]] = {}
+        omd_domain_used: bool = False
         for change in self._site_changes:
             if change["need_restart"]:
                 for domain_name in change["domains"]:
+                    # ConfigDomainOMD needs a restart of the apache,
+                    # make sure it's executed at the end
+                    if domain_name == omd_ident:
+                        omd_domain_used = True
+                        omd_domain_change = change
+                        continue
                     domain_settings.setdefault(domain_name, []).append(
                         get_config_domain(domain_name).get_domain_settings(change)
                     )
 
-        return sorted(
+        domain_requests = sorted(
             (
                 get_config_domain(domain_name).get_domain_request(settings_list)
                 for (domain_name, settings_list) in domain_settings.items()
             ),
             key=lambda x: x.name,
         )
+
+        if omd_domain_used:
+            domain_requests.append(
+                get_config_domain(omd_ident).get_domain_request(omd_domain_change)
+            )
+
+        return domain_requests
 
     def _confirm_activated_changes(self):
         site_changes = SiteChanges(SiteChanges.make_path(self._site_id))
@@ -2059,30 +2095,55 @@ def apply_pre_17_sync_snapshot(
         create_distributed_wato_files(cmk.utils.paths.omd_root, site_id, is_remote=True)
 
         _execute_post_config_sync_actions(site_id)
-        _execute_cmk_update_config()
     finally:
         timeout_manager.enable_timeout(html.request.request_timeout)
 
     return True
 
 
-def _execute_cmk_update_config():
-    p = subprocess.Popen(  # pylint:disable=consider-using-with
-        "cmk-update-config",
+def _need_to_update_config_after_sync() -> bool:
+    if not (central_version := _request.headers.get("x-checkmk-version")):
+        raise ValueError("Request header x-checkmk-version is missing")
+    logger.debug("Local version: %s, Central version: %s", cmk_version.__version__, central_version)
+    return not cmk_version.is_same_major_version(
+        cmk_version.__version__,
+        central_version,
+    )
+
+
+def _execute_cmk_update_config() -> None:
+    completed_process = subprocess.run(
+        ["cmk-update-config", "-v"],
         stdin=subprocess.DEVNULL,
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
         close_fds=True,
         encoding="utf-8",
+        check=False,
     )
-    stdout, _stderr = p.communicate()
-    if p.returncode != 0:
-        raise MKGeneralException(_("Unable to convert configuration into 2.0 format\n%s") % stdout)
+    logger.log(
+        logging.DEBUG if completed_process.returncode == 0 else logging.WARNING,
+        "'cmk-update-config -v' finished. Exit code: %s, Output: %s",
+        completed_process.returncode,
+        completed_process.stdout,
+    )
+
+    if completed_process.returncode:
+        raise MKGeneralException(_("Configuration update failed\n%s") % completed_process.stdout)
 
 
-def _execute_post_config_sync_actions(site_id):
+def _execute_post_config_sync_actions(site_id: SiteId) -> None:
     try:
-        # pending changes are lost
+        # When receiving configuration from a central site that uses a previous major
+        # version, the config migration logic has to be executed to make the local
+        # configuration compatible with the local Checkmk version.
+        if _need_to_update_config_after_sync():
+            logger.debug("Executing cmk-update-config")
+            _execute_cmk_update_config()
+
+        # The local configuration has just been replaced. The pending changes are not
+        # relevant anymore. Confirm all of them to cleanup the inconsistency.
+        logger.debug("Confirming pending changes")
         confirm_all_local_changes()
 
         hooks.call("snapshot-pushed")
@@ -2097,7 +2158,8 @@ def _execute_post_config_sync_actions(site_id):
         )
 
     cmk.gui.watolib.changes.log_audit(
-        "replication", _("Synchronized with master (my site id is %s.)") % site_id
+        "replication",
+        _("Synchronized configuration from central site (local site ID is %s.)") % site_id,
     )
 
 
@@ -2259,14 +2321,22 @@ def _get_replication_components(
 
     # Add distributed_wato.mk
     if not is_pre_17_site:
-        paths.append(
+        # OMD replication path needs sitepecific.mk and global.mk, so we have
+        # to deal with excludes here
+        paths += [
             ReplicationPath(
                 ty="file",
                 ident="distributed_wato",
                 site_path="etc/check_mk/conf.d/distributed_wato.mk",
                 excludes=[],
-            )
-        )
+            ),
+            ReplicationPath(
+                ty="dir",
+                ident="omd",
+                site_path="etc/omd",
+                excludes=["allocated_ports", "site.conf"],
+            ),
+        ]
 
     return paths
 
@@ -2292,7 +2362,7 @@ def _add_pre_17_sitespecific_excludes(paths: List[ReplicationPath]) -> List[Repl
 
 
 def get_file_names_to_sync(
-    site_logger: Logger,
+    site_logger: logging.Logger,
     central_file_infos: "Dict[str, ConfigSyncFileInfo]",
     remote_file_infos: "Dict[str, ConfigSyncFileInfo]",
     file_filter_func: Optional[Callable[[str], bool]],
@@ -2534,7 +2604,7 @@ class ReceiveConfigSyncRequest(NamedTuple):
 class AutomationReceiveConfigSync(AutomationCommand):
     """Called on remote site from a central site to update the Checkmk configuration
 
-    The central site hands over the a tar archive with the files to be written and a list of
+    The central site hands over a tar archive with the files to be written and a list of
     files to be deleted. The configuration generation is used to validate that no modification has
     been made between the two sync steps (get-config-sync-state and this autmoation).
     """
@@ -2564,9 +2634,13 @@ class AutomationReceiveConfigSync(AutomationCommand):
                     )
                 )
 
+            logger.debug("Updating configuration from sync snapshot")
             self._update_config_on_remote_site(api_request.sync_archive, api_request.to_delete)
 
+            logger.debug("Executing post sync actions")
             _execute_post_config_sync_actions(api_request.site_id)
+
+            logger.debug("Done")
             return True
 
     def _update_config_on_remote_site(self, sync_archive: bytes, to_delete: List[str]) -> None:

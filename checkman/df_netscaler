@@ -1,7 +1,7 @@
 title: Citrix Netscaler: Used Space in Filesystems
 agents: snmp
 catalog: app/netscaler
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the filesystem usage on Citrix Netscaler appliances.
@@ -17,4 +17,3 @@ discovery:
 
 item:
  The mount point of the filesystem on the netscaler device.
-

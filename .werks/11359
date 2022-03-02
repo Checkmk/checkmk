@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 <tt>omd restore</tt> is now able to restore <b>all</b> hard links.
 Previously, this was restricted to some special directories.

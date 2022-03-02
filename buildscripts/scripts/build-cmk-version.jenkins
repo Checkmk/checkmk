@@ -5,6 +5,7 @@ def EDITION_DEFAULT = 'enterprise'
 def NODE = ''
 def DOCKER_TAG_DEFAULT
 def USE_OMD_PACKAGE_CACHE_DEFAULT
+def UPLOAD_PATH = ""
 withFolderProperties{
     if(JOB_BASE_NAME == 'build-cmk-packages') {
         DISTRO_LIST_DEFAULT = env.DISTRO_LIST
@@ -12,6 +13,8 @@ withFolderProperties{
     } else {
         DISTRO_LIST_DEFAULT = env.DISTRO_LIST_TESTBUILD
         USE_OMD_PACKAGE_CACHE_DEFAULT = false
+        // We don't want to mixup the daily test builds with the regular version builds
+        UPLOAD_PATH = "testbuild/"
     }
 
     if(JOB_BASE_NAME == 'testbuild-cre') {
@@ -23,6 +26,8 @@ withFolderProperties{
     NODE = env.BUILD_NODE
     DOCKER_TAG_DEFAULT = env.DOCKER_TAG_FOLDER
 }
+
+def INTERNAL_UPLOAD_DEST = INTERNAL_DEPLOY_DEST + UPLOAD_PATH
 
 properties([
   buildDiscarder(logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '', daysToKeepStr: '7', numToKeepStr: '14')),
@@ -183,7 +188,7 @@ timeout(time: 12, unit: 'HOURS') {
                     FILE_PATH: FINAL_SOURCE_PACKAGE_PATH,
                     FILE_NAME: SOURCE_PACKAGE_NAME,
                     CMK_VERS: CMK_VERS,
-                    UPLOAD_DEST: INTERNAL_DEPLOY_DEST,
+                    UPLOAD_DEST: INTERNAL_UPLOAD_DEST,
                     PORT: INTERNAL_DEPLOY_PORT,
                 )
             }
@@ -229,7 +234,7 @@ timeout(time: 12, unit: 'HOURS') {
                                     FILE_PATH: FINAL_PACKAGE_PATH,
                                     FILE_NAME: PACKAGE_NAME,
                                     CMK_VERS: CMK_VERS,
-                                    UPLOAD_DEST: INTERNAL_DEPLOY_DEST,
+                                    UPLOAD_DEST: INTERNAL_UPLOAD_DEST,
                                     PORT: INTERNAL_DEPLOY_PORT,
                                 )
     
@@ -242,11 +247,11 @@ timeout(time: 12, unit: 'HOURS') {
         } catch(Exception e) {
             notify.notify_error(e)
         }finally {
-            currentBuild.description = currentBuild.description + "<p><a href='${INTERNAL_DEPLOY_URL}/${CMK_VERS}'>Download Artifacts</a></p>"
+            currentBuild.description = currentBuild.description + "<p><a href='${INTERNAL_DEPLOY_URL}/${UPLOAD_PATH}${CMK_VERS}'>Download Artifacts</a></p>"
             docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
                 def BUILD_IMAGE = docker.build("build-image:${env.BUILD_ID}", "--pull ${WORKSPACE}/git/buildscripts/docker_image_aliases/IMAGE_TESTING")
                 BUILD_IMAGE.inside(DOCKER_ARGS) {
-                    upload_artifacts.download_version_dir(INTERNAL_DEPLOY_DEST, INTERNAL_DEPLOY_PORT, CMK_VERS, get_versions_dir(WORKSPACE, CMK_VERS))
+                    upload_artifacts.download_version_dir(INTERNAL_UPLOAD_DEST, INTERNAL_DEPLOY_PORT, CMK_VERS, get_versions_dir(WORKSPACE, CMK_VERS))
                     upload_artifacts.create_hashes(get_versions_dir(WORKSPACE, CMK_VERS))
                     upload_artifacts.upload_version_dir(get_versions_dir(WORKSPACE, CMK_VERS), WEB_DEPLOY_DEST, WEB_DEPLOY_PORT)
                     if(params.DEPLOY_TO_WEBSITE) {

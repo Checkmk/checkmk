@@ -2,33 +2,49 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
-use super::config;
-use anyhow::{anyhow, Context, Result as AnyhowResult};
+use std::str::FromStr;
 
-fn imported_pull_conn_idx_to_delete(connection_id: &str) -> AnyhowResult<Option<usize>> {
-    if regex::Regex::new("^imported-[1-9][0-9]*$")?.is_match(connection_id) {
-        let idx_str = connection_id.split('-').collect::<Vec<&str>>()[1];
-        return Ok(Some(idx_str.parse::<usize>()?));
+use super::{config, site_spec};
+use anyhow::{Context, Result as AnyhowResult};
+
+fn retrieve_standard_connection_by_uuid(
+    uuid: &uuid::Uuid,
+    registry: &config::Registry,
+) -> Option<site_spec::Coordinates> {
+    for (coordinates, connection) in registry
+        .push_connections()
+        .chain(registry.standard_pull_connections())
+    {
+        if &connection.uuid == uuid {
+            return Some(coordinates.clone());
+        }
     }
-    Ok(None)
+    None
+}
+
+fn delete_by_uuid(uuid: &uuid::Uuid, registry: &mut config::Registry) -> AnyhowResult<()> {
+    match retrieve_standard_connection_by_uuid(uuid, registry) {
+        Some(coordinates) => registry.delete_standard_connection(&coordinates),
+        None => registry
+            .delete_imported_connection(uuid)
+            .context(format!("No connection with UUID '{}'", uuid)),
+    }
 }
 
 pub fn delete(registry: &mut config::Registry, connection_id: &str) -> AnyhowResult<()> {
-    if let Some(pull_conn_idx) = imported_pull_conn_idx_to_delete(connection_id)? {
-        registry
-            .delete_imported_connection_by_idx(pull_conn_idx - 1)
-            .context(format!(
-                "Imported pull connection '{}' not found",
-                connection_id
-            ))?;
-        registry.save()?;
-        return Ok(());
+    if let Err(err) = match site_spec::Coordinates::from_str(connection_id) {
+        Ok(coordinates) => registry.delete_standard_connection(&coordinates),
+        Err(_) => delete_by_uuid(
+            &uuid::Uuid::from_str(connection_id).context(
+                "Provided connection identifier is neither a valid site address nor a valid UUID",
+            )?,
+            registry,
+        ),
+    } {
+        return Err(err);
     }
-    if registry.delete_connection(connection_id).is_ok() {
-        registry.save()?;
-        return Ok(());
-    }
-    Err(anyhow!("Connection '{}' not found", connection_id))
+    registry.save()?;
+    Ok(())
 }
 
 pub fn delete_all(registry: &mut config::Registry) -> AnyhowResult<()> {
@@ -38,100 +54,112 @@ pub fn delete_all(registry: &mut config::Registry) -> AnyhowResult<()> {
 
 #[cfg(test)]
 mod tests {
+    use super::super::site_spec;
     use super::*;
+    const UUID_PUSH: &str = "0096abd7-83c9-42f8-8b3a-3ffba7ba959d";
+    const UUID_PULL: &str = "b3501e4d-2820-433c-8e9c-38c69ac20faa";
+    const UUID_PULL_IMP1: &str = "00c21714-5086-46d7-848e-5be72c715cfd";
+    const UUID_PULL_IMP2: &str = "3bf83706-8e47-4e38-beb6-b1ce83a4eee1";
 
     fn registry() -> config::Registry {
         let mut push = std::collections::HashMap::new();
+        let mut pull = std::collections::HashMap::new();
+        let mut pull_imported = std::collections::HashSet::new();
         push.insert(
-            String::from("push_server:8000"),
+            site_spec::Coordinates::from_str("server:8000/push-site").unwrap(),
             config::Connection {
-                uuid: String::from("uuid-push"),
+                uuid: uuid::Uuid::from_str(UUID_PUSH).unwrap(),
                 private_key: String::from("private_key"),
                 certificate: String::from("certificate"),
                 root_cert: String::from("root_cert"),
             },
         );
+        pull.insert(
+            site_spec::Coordinates::from_str("server:8000/pull-site").unwrap(),
+            config::Connection {
+                uuid: uuid::Uuid::from_str(UUID_PULL).unwrap(),
+                private_key: String::from("private_key"),
+                certificate: String::from("certificate"),
+                root_cert: String::from("root_cert"),
+            },
+        );
+        pull_imported.insert(config::Connection {
+            uuid: uuid::Uuid::from_str(UUID_PULL_IMP1).unwrap(),
+            private_key: String::from("private_key"),
+            certificate: String::from("certificate"),
+            root_cert: String::from("root_cert"),
+        });
+        pull_imported.insert(config::Connection {
+            uuid: uuid::Uuid::from_str(UUID_PULL_IMP2).unwrap(),
+            private_key: String::from("private_key"),
+            certificate: String::from("certificate"),
+            root_cert: String::from("root_cert"),
+        });
         config::Registry::new(
             config::RegisteredConnections {
                 push,
-                pull: std::collections::HashMap::new(),
-                pull_imported: vec![],
+                pull,
+                pull_imported,
             },
             std::path::PathBuf::from(&tempfile::NamedTempFile::new().unwrap().into_temp_path()),
         )
+        .unwrap()
     }
 
     #[test]
-    fn test_imported_pull_conn_idx_to_delete_match() {
-        assert!(
-            imported_pull_conn_idx_to_delete("imported-2")
-                .unwrap()
-                .unwrap()
-                == 2
-        )
-    }
-
-    #[test]
-    fn test_imported_pull_conn_idx_to_delete_no_match() {
-        for conn_id in [
-            "imported-03",
-            "server:8000",
-            "504a3dae-343a-4374-a869-067c4a0e11de",
-        ] {
-            assert!(imported_pull_conn_idx_to_delete(conn_id).unwrap().is_none())
-        }
-    }
-
-    #[test]
-    fn test_delete_ok() {
+    fn test_delete_by_coordinates_ok() {
         let mut reg = registry();
         assert!(!reg.path().exists());
-        assert!(delete(&mut reg, "push_server:8000").is_ok());
+        assert!(delete(&mut reg, "server:8000/push-site").is_ok());
         assert!(reg.path().exists());
     }
 
     #[test]
-    fn test_imported_pull_conn_by_idx_ok() {
-        let mut reg = config::Registry::new(
-            config::RegisteredConnections {
-                push: std::collections::HashMap::new(),
-                pull: std::collections::HashMap::new(),
-                pull_imported: vec![
-                    config::Connection {
-                        uuid: String::from("uuid-imported-1"),
-                        private_key: String::from("private_key"),
-                        certificate: String::from("certificate"),
-                        root_cert: String::from("root_cert"),
-                    },
-                    config::Connection {
-                        uuid: String::from("uuid-imported-2"),
-                        private_key: String::from("private_key"),
-                        certificate: String::from("certificate"),
-                        root_cert: String::from("root_cert"),
-                    },
-                ],
-            },
-            std::path::PathBuf::from(&tempfile::NamedTempFile::new().unwrap().into_temp_path()),
+    fn test_delete_by_coordinates_missing() {
+        assert_eq!(
+            format!(
+                "{}",
+                delete(&mut registry(), "someserver:123/site").unwrap_err()
+            ),
+            "Connection 'someserver:123/site' not found"
         );
+    }
+
+    #[test]
+    fn test_delete_pull_by_uuid_ok() {
+        let mut reg = registry();
         assert!(!reg.path().exists());
-        assert!(delete(&mut reg, "imported-1").is_ok());
-        assert!(reg.imported_pull_connections().next().unwrap().uuid == "uuid-imported-2");
+        assert!(delete(&mut reg, UUID_PULL).is_ok());
+        assert!(reg.pull_standard_is_empty());
         assert!(reg.path().exists());
     }
 
     #[test]
-    fn test_delete_missing() {
-        assert_eq!(
-            format!("{}", delete(&mut registry(), "wrong").unwrap_err()),
-            "Connection 'wrong' not found"
-        );
+    fn test_delete_push_by_uuid_ok() {
+        let mut reg = registry();
+        assert!(!reg.path().exists());
+        assert!(delete(&mut reg, UUID_PUSH).is_ok());
+        assert!(reg.push_is_empty());
+        assert!(reg.path().exists());
     }
 
     #[test]
-    fn test_delete_imported_pull_conn_by_idx_missing() {
+    fn test_delete_pull_imported_ok() {
+        let mut reg = registry();
+        assert!(!reg.path().exists());
+        assert!(delete(&mut reg, UUID_PULL_IMP1).is_ok());
+        assert!(reg.path().exists());
+    }
+
+    #[test]
+    fn test_delete_by_uuid_missing() {
+        let uuid = uuid::Uuid::new_v4();
         assert_eq!(
-            format!("{}", delete(&mut registry(), "imported-4").unwrap_err()),
-            "Imported pull connection 'imported-4' not found"
+            format!(
+                "{}",
+                delete(&mut registry(), &uuid.to_string()).unwrap_err()
+            ),
+            format!("No connection with UUID '{}'", &uuid),
         );
     }
 

@@ -25,6 +25,7 @@ import cmk.gui.plugins.userdb.utils as utils
 import cmk.gui.userdb as userdb
 from cmk.gui.exceptions import MKAuthException, MKUserError
 from cmk.gui.globals import config
+from cmk.gui.type_defs import WebAuthnCredential
 from cmk.gui.valuespec import Dictionary
 
 
@@ -364,27 +365,24 @@ def test_cleanup_old_sessions_no_existing(request_context: None) -> None:
 
 
 def test_cleanup_old_sessions_remove_outdated(request_context: None) -> None:
-    assert (
-        list(
-            userdb._cleanup_old_sessions(
-                {
-                    "outdated": userdb.SessionInfo(
-                        session_id="outdated",
-                        started_at=int(time.time()) - (86400 * 10),
-                        last_activity=int(time.time()) - (86400 * 8),
-                        flashes=[],
-                    ),
-                    "keep": userdb.SessionInfo(
-                        session_id="keep",
-                        started_at=int(time.time()) - (86400 * 10),
-                        last_activity=int(time.time()) - (86400 * 5),
-                        flashes=[],
-                    ),
-                }
-            ).keys()
-        )
-        == ["keep"]
-    )
+    assert list(
+        userdb._cleanup_old_sessions(
+            {
+                "outdated": userdb.SessionInfo(
+                    session_id="outdated",
+                    started_at=int(time.time()) - (86400 * 10),
+                    last_activity=int(time.time()) - (86400 * 8),
+                    flashes=[],
+                ),
+                "keep": userdb.SessionInfo(
+                    session_id="keep",
+                    started_at=int(time.time()) - (86400 * 10),
+                    last_activity=int(time.time()) - (86400 * 5),
+                    flashes=[],
+                ),
+            }
+        ).keys()
+    ) == ["keep"]
 
 
 def test_cleanup_old_sessions_too_many(request_context: None) -> None:
@@ -398,33 +396,30 @@ def test_cleanup_old_sessions_too_many(request_context: None) -> None:
         for num in range(21)
     }
 
-    assert (
-        sorted(
-            [
-                "keep_1",
-                "keep_2",
-                "keep_3",
-                "keep_4",
-                "keep_5",
-                "keep_6",
-                "keep_7",
-                "keep_8",
-                "keep_9",
-                "keep_10",
-                "keep_11",
-                "keep_12",
-                "keep_13",
-                "keep_14",
-                "keep_15",
-                "keep_16",
-                "keep_17",
-                "keep_18",
-                "keep_19",
-                "keep_20",
-            ]
-        )
-        == sorted(userdb._cleanup_old_sessions(sessions).keys())
-    )
+    assert sorted(
+        [
+            "keep_1",
+            "keep_2",
+            "keep_3",
+            "keep_4",
+            "keep_5",
+            "keep_6",
+            "keep_7",
+            "keep_8",
+            "keep_9",
+            "keep_10",
+            "keep_11",
+            "keep_12",
+            "keep_13",
+            "keep_14",
+            "keep_15",
+            "keep_16",
+            "keep_17",
+            "keep_18",
+            "keep_19",
+            "keep_20",
+        ]
+    ) == sorted(userdb._cleanup_old_sessions(sessions).keys())
 
 
 def test_create_session_id_is_correct_type() -> None:
@@ -728,13 +723,11 @@ def test_save_two_factor_credentials(user_id: UserId) -> None:
     credentials = userdb.TwoFactorCredentials(
         {
             "webauthn_credentials": {
-                "id": userdb.WebAuthnCredential(
-                    {
-                        "credential_id": "id",
-                        "registered_at": 1337,
-                        "alias": "Steckding",
-                        "credential_data": b"whatever",
-                    }
+                "id": WebAuthnCredential(
+                    credential_id="id",
+                    registered_at=1337,
+                    alias="Steckding",
+                    credential_data=b"whatever",
                 ),
             },
             "backup_codes": [
@@ -751,7 +744,7 @@ def test_disable_two_factor_authentication(user_id: UserId) -> None:
     credentials = userdb.TwoFactorCredentials(
         {
             "webauthn_credentials": {
-                "id": userdb.WebAuthnCredential(
+                "id": WebAuthnCredential(
                     {
                         "credential_id": "id",
                         "registered_at": 1337,

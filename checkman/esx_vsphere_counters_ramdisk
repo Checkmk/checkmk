@@ -1,7 +1,7 @@
 title: VMWare ESX Host Systems: Ramdisks
 agents: vsphere
 catalog: os/kernel
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the usage of ramdisks used by the operating system

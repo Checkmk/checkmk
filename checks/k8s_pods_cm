@@ -6,6 +6,11 @@
 
 # NOTE: The plugins in this file were deprecated in version 2.0.0p5
 
+###########################################################################
+# NOTE: This check (and associated special agent) is deprecated and will be
+#       removed in Checkmk version 2.2.
+###########################################################################
+
 
 def check_deprecated(_no_item, _no_params, _no_info):
     return 1, "This check is deprecated. Please rediscover the services of this host."

@@ -11,12 +11,12 @@ This module exposes three functions:
  * analyse_host_labels (dispatching to one of the above based on host_config.is_cluster)
 
 """
-from typing import Dict, Mapping, Optional, Sequence
+from typing import Dict, Mapping, Sequence
 
 from cmk.utils.exceptions import MKGeneralException, MKTimeout, OnError
 from cmk.utils.labels import DiscoveredHostLabelsStore
 from cmk.utils.log import console
-from cmk.utils.type_defs import HostAddress, HostKey, HostName, SourceType
+from cmk.utils.type_defs import HostKey, HostName
 
 import cmk.base.config as config
 from cmk.base.agent_based.data_provider import ParsedSectionsBroker
@@ -28,7 +28,6 @@ from .utils import QualifiedDiscovery
 def analyse_host_labels(
     *,
     host_config: config.HostConfig,
-    ipaddress: Optional[HostAddress],
     load_labels: bool,
     save_labels: bool,
     parsed_sections_broker: ParsedSectionsBroker,
@@ -37,7 +36,6 @@ def analyse_host_labels(
     return (
         analyse_cluster_labels(
             host_config=host_config,
-            ipaddress=ipaddress,
             parsed_sections_broker=parsed_sections_broker,
             load_labels=load_labels,
             save_labels=save_labels,
@@ -45,8 +43,8 @@ def analyse_host_labels(
         )
         if host_config.is_cluster
         else analyse_node_labels(
-            host_name=host_config.hostname,
-            ipaddress=ipaddress,
+            host_key=host_config.host_key,
+            host_key_mgmt=host_config.host_key_mgmt,
             parsed_sections_broker=parsed_sections_broker,
             load_labels=load_labels,
             save_labels=save_labels,
@@ -57,8 +55,8 @@ def analyse_host_labels(
 
 def analyse_node_labels(
     *,
-    host_name: HostName,
-    ipaddress: Optional[HostAddress],
+    host_key: HostKey,
+    host_key_mgmt: HostKey,
     parsed_sections_broker: ParsedSectionsBroker,
     load_labels: bool,
     save_labels: bool,
@@ -77,14 +75,14 @@ def analyse_node_labels(
     optimizer caches have to be cleared if new host labels are found.
     """
     return _analyse_host_labels(
-        host_name=host_name,
+        host_name=host_key.hostname,
         discovered_host_labels=_discover_host_labels(
-            host_name=host_name,
-            ipaddress=ipaddress,
+            host_key=host_key,
+            host_key_mgmt=host_key_mgmt,
             parsed_sections_broker=parsed_sections_broker,
             on_error=on_error,
         ),
-        existing_host_labels=_load_existing_host_labels(host_name) if load_labels else (),
+        existing_host_labels=_load_existing_host_labels(host_key.hostname) if load_labels else (),
         save_labels=save_labels,
     )
 
@@ -92,7 +90,6 @@ def analyse_node_labels(
 def analyse_cluster_labels(
     *,
     host_config: config.HostConfig,
-    ipaddress: Optional[str],
     parsed_sections_broker: ParsedSectionsBroker,
     load_labels: bool,
     save_labels: bool,
@@ -118,11 +115,10 @@ def analyse_cluster_labels(
 
     for node in host_config.nodes:
         node_config = config_cache.get_host_config(node)
-        node_ipaddress = config.lookup_ip_address(node_config)
 
         node_result = analyse_node_labels(
-            host_name=node,
-            ipaddress=node_ipaddress,
+            host_key=node_config.host_key,
+            host_key_mgmt=node_config.host_key_mgmt,
             parsed_sections_broker=parsed_sections_broker,
             load_labels=load_labels,
             save_labels=save_labels,
@@ -207,8 +203,8 @@ def _load_existing_host_labels(host_name: HostName) -> Sequence[HostLabel]:
 
 def _discover_host_labels(
     *,
-    host_name: HostName,
-    ipaddress: Optional[HostAddress],
+    host_key: HostKey,
+    host_key_mgmt: HostKey,
     parsed_sections_broker: ParsedSectionsBroker,
     on_error: OnError,
 ) -> Sequence[HostLabel]:
@@ -216,12 +212,12 @@ def _discover_host_labels(
     # make names unique
     labels_by_name = {
         **_discover_host_labels_for_source_type(
-            host_key=HostKey(host_name, ipaddress, SourceType.HOST),
+            host_key=host_key,
             parsed_sections_broker=parsed_sections_broker,
             on_error=on_error,
         ),
         **_discover_host_labels_for_source_type(
-            host_key=HostKey(host_name, ipaddress, SourceType.MANAGEMENT),
+            host_key=host_key_mgmt,
             parsed_sections_broker=parsed_sections_broker,
             on_error=on_error,
         ),

@@ -1,7 +1,7 @@
 title: Arbor Peakflow SP: Flows
 agents: snmp
 catalog: hw/network/arbor
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  Monitors accumulative flow count on Arbor Peakflow SP devices.
@@ -14,4 +14,3 @@ description:
 
 discovery:
  One service is created.
-

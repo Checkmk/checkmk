@@ -11,11 +11,8 @@
 #include <string>
 
 #include "TableEventConsole.h"
-#ifdef CMC
 #include "contact_fwd.h"
-#else
-#include "nagios.h"
-#endif
+
 class MonitoringCore;
 class Row;
 class Table;

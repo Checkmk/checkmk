@@ -6,7 +6,7 @@ Date: 1621500153
 Edition: cre
 Knowledge: doc
 Level: 2
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 Up to now, the matching of host tags against rule conditions was based solely on
 on the tag ids. The ids of the tag groups were not taken into account. However,

@@ -1,7 +1,7 @@
 title: Usage of Vmalloc Address Space
 agents: linux
 catalog: os/kernel
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  The linux kernel keeps a part of the available address
@@ -24,4 +24,3 @@ discovery:
  This is generally only possible for 32 bit architectures.
 
  Please add {mem.vmalloc} to {ignored_checktypes} if you do not need this check.
-

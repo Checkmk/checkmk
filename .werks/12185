@@ -6,7 +6,7 @@ Date: 1614923716
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 Local checks will now automatically show their metrics in the service output.
 This means you can simplify your local checks from outputting e.g.

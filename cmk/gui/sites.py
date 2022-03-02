@@ -172,7 +172,7 @@ def _ensure_connected(user: Optional[LoggedInUser], force_authuser: Optional[Use
         user = global_user
 
     if force_authuser is None:
-        request_force_authuser = request.get_unicode_input("force_authuser")
+        request_force_authuser = request.get_str_input("force_authuser")
         force_authuser = UserId(request_force_authuser) if request_force_authuser else None
 
     logger.debug(

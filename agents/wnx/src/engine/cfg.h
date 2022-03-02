@@ -132,6 +132,7 @@ std::wstring GetRootDir() noexcept;
 std::wstring GetRootInstallDir() noexcept;  // for cap, ini and dat
 std::wstring GetRootUtilsDir() noexcept;
 std::wstring GetUserDir() noexcept;
+std::wstring GetUserBinDir() noexcept;
 std::wstring GetUpgradeProtocolDir();
 std::wstring GetBakeryDir() noexcept;
 std::wstring GetUserModulesDir() noexcept;
@@ -630,7 +631,7 @@ public:
         return log_file_name_;
     }
 
-    auto allowedSection(const std::string_view Name) const {
+    auto allowedSection(std::string_view Name) const {
         std::lock_guard lk(lock_);
 
         // most important is disabled

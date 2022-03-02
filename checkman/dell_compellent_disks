@@ -1,7 +1,7 @@
 title: Dell Compellent: Disks
 agents: snmp
 catalog: hw/storagehw/dell
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check displays the status, location, and serial number of a disk. The

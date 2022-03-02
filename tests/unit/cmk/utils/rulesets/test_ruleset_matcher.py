@@ -201,26 +201,20 @@ def test_basic_get_host_ruleset_values(monkeypatch: MonkeyPatch) -> None:
         )
         == []
     )
-    assert (
-        list(
-            matcher.get_host_ruleset_values(
-                RulesetMatchObject(host_name=HostName("host1"), service_description=None),
-                ruleset=ruleset,
-                is_binary=False,
-            )
+    assert list(
+        matcher.get_host_ruleset_values(
+            RulesetMatchObject(host_name=HostName("host1"), service_description=None),
+            ruleset=ruleset,
+            is_binary=False,
         )
-        == ["BLA", "BLUB"]
-    )
-    assert (
-        list(
-            matcher.get_host_ruleset_values(
-                RulesetMatchObject(host_name=HostName("host2"), service_description=None),
-                ruleset=ruleset,
-                is_binary=False,
-            )
+    ) == ["BLA", "BLUB"]
+    assert list(
+        matcher.get_host_ruleset_values(
+            RulesetMatchObject(host_name=HostName("host2"), service_description=None),
+            ruleset=ruleset,
+            is_binary=False,
         )
-        == ["BLUB"]
-    )
+    ) == ["BLUB"]
 
 
 def test_basic_get_host_ruleset_values_subfolders(monkeypatch: MonkeyPatch) -> None:
@@ -243,26 +237,20 @@ def test_basic_get_host_ruleset_values_subfolders(monkeypatch: MonkeyPatch) -> N
         )
         == []
     )
-    assert (
-        list(
-            matcher.get_host_ruleset_values(
-                RulesetMatchObject(host_name=HostName("lvl1"), service_description=None),
-                ruleset=ruleset,
-                is_binary=False,
-            )
+    assert list(
+        matcher.get_host_ruleset_values(
+            RulesetMatchObject(host_name=HostName("lvl1"), service_description=None),
+            ruleset=ruleset,
+            is_binary=False,
         )
-        == ["LEVEL1"]
-    )
-    assert (
-        list(
-            matcher.get_host_ruleset_values(
-                RulesetMatchObject(host_name=HostName("lvl2"), service_description=None),
-                ruleset=ruleset,
-                is_binary=False,
-            )
+    ) == ["LEVEL1"]
+    assert list(
+        matcher.get_host_ruleset_values(
+            RulesetMatchObject(host_name=HostName("lvl2"), service_description=None),
+            ruleset=ruleset,
+            is_binary=False,
         )
-        == ["LEVEL1", "LEVEL2"]
-    )
+    ) == ["LEVEL1", "LEVEL2"]
     assert (
         list(
             matcher.get_host_ruleset_values(

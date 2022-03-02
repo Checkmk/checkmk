@@ -9,8 +9,8 @@ SETLOCAL EnableDelayedExpansion
 set error=0
 
 rem python, version is latest
-set pkg=python3 
-set version=
+set pkg=python
+set version=--version 3.10.2
 call :process
 
 rem make, version is latest
@@ -40,6 +40,11 @@ call :process
 
 rem 7zip, version is latest
 set pkg=7zip
+set version=
+call :process
+
+rem ptime, version is latest
+set pkg=ptime
 set version=
 call :process
 

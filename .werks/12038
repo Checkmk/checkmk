@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 Previous 2.0.0 versions could not display host related time series graphs on
 the dashboard. The new context validation mechanism, that expects a service

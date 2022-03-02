@@ -1,0 +1,13 @@
+Title: <tt>cmk-update-config</tt>: Drop removed check plugins from ruleset "Disabled checks"
+Class: feature
+Compatible: compat
+Component: wato
+Date: 1643879780
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.1.0b1
+
+The Checkmk update procedure (<tt>cmk-update-config</tt>) now drops removed check
+plugins (which have been replaced by other plugins) from the ruleset "Disabled
+checks".

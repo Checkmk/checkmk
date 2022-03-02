@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 Network interfaces that provide multiline descriptions would crash their
 corresponding service. In case that the rule "Network interface and switch port

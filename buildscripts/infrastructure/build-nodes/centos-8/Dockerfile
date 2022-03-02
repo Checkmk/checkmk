@@ -5,6 +5,10 @@ FROM ${IMAGE_CENTOS_8}
 SHELL ["/bin/bash", "-c"]
 ENV LC_ALL=C.UTF-8 LANG=C.UTF-8 PATH="/opt/bin:${PATH}"
 
+# Centos-8 is EOL, therfor we switch to the vault repos
+RUN sed -i 's/^mirrorlist/#mirrorlist/' /etc/yum.repos.d/* \
+    && sed -i 's/^#baseurl\(.*\)mirror\(.*\)/baseurl\1vault\2/' /etc/yum.repos.d/*
+
 RUN yum -y --enablerepo=powertools --allowerasing install \
     epel-release \
     && yum -y --enablerepo=powertools --allowerasing install \
@@ -17,8 +21,6 @@ RUN yum -y --enablerepo=powertools --allowerasing install \
     make \
     openldap-devel \
     postfix \
-    python2-devel \
-    python27 \
     graphviz-gd \
     rrdtool-devel \
     strace \
@@ -109,7 +111,6 @@ RUN yum -y makecache \
 # --nogpgcheck: Workaround for failing installation, not locally reproducable
 RUN yum -y makecache \
     && yum -y --enablerepo=powertools install \
-    chrpath \
     joe \
     iputils \
     vim \
@@ -141,11 +142,9 @@ RUN /opt/install-valgrind.sh
 RUN /opt/install-cmake.sh
 RUN /opt/install-protobuf-cpp.sh
 RUN /opt/install-openssl.sh
-RUN /opt/install-python2.sh
 RUN /opt/install-python.sh
 RUN /opt/install-pipenv.sh
 RUN /opt/install-freetds.sh
-RUN /opt/install-rust-cargo.sh
 RUN /opt/install-cmk-dependencies.sh
 RUN /opt/install-patchelf.sh
 

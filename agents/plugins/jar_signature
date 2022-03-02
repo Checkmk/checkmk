@@ -9,7 +9,7 @@
 
 # Disable unused variable error (needed to keep track of version)
 # shellcheck disable=SC2034
-CMK_VERSION="2.1.0i1"
+CMK_VERSION="2.2.0i1"
 
 # This agent uses the program "jarsigner" to read ssl certificate
 # information of jar files and outputs the information to stdout
@@ -21,13 +21,14 @@ JAVA_HOME=/home/oracle/bin/jdk_latest_version
 JAR_PATH="/home/oracle/fmw/11gR2/as_1/forms/java/*.jar"
 
 # Let user override these defaults in a configuration file
-[ -e "${MK_CONFDIR}/jar_signature.cfg" ] && . "${MK_CONFDIR}/jar_signature.cfg"
+# shellcheck source=agents/cfg_examples/jar_signature.cfg
+. "${MK_CONFDIR}/jar_signature.cfg" 2>/dev/null
 
 PATH=$JAVA_HOME/bin:$PATH
 
 echo "<<<jar_signature>>>"
 for JAR in $JAR_PATH; do
-    if [ -e "$JAR" ] ; then # avoid entry for '*.jar'
+    if [ -e "$JAR" ]; then # avoid entry for '*.jar'
         echo "[[[${JAR##*/}]]]"
         OUTPUT=$(jarsigner -verify -verbose -certs "$JAR")
         LINE=$(echo "$OUTPUT" | grep -n ^s | tail -n1 | cut -d: -f1)

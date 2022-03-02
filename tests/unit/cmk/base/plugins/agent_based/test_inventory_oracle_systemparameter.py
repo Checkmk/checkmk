@@ -12,6 +12,8 @@ from cmk.base.plugins.agent_based.inventory_oracle_systemparameter import (
     parse_oracle_systemparameter,
 )
 
+from .utils_inventory import sort_inventory_result
+
 
 @pytest.mark.parametrize(
     "string_table, expected_result",
@@ -81,7 +83,6 @@ from cmk.base.plugins.agent_based.inventory_oracle_systemparameter import (
     ],
 )
 def test_inventory_oracle_systemparameter(string_table, expected_result):
-    assert (
-        list(inventory_oracle_systemparameter(parse_oracle_systemparameter(string_table)))
-        == expected_result
-    )
+    assert sort_inventory_result(
+        inventory_oracle_systemparameter(parse_oracle_systemparameter(string_table))
+    ) == sort_inventory_result(expected_result)

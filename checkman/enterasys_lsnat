@@ -1,7 +1,7 @@
 title: Enterasys: LSNAT Bindings
 agents: snmp
 catalog: hw/network/enterasys
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the number of current LSNAT bindings if the feature is activated
@@ -9,4 +9,3 @@ description:
 
 discovery:
  One service is created for each Enterasys device.
-

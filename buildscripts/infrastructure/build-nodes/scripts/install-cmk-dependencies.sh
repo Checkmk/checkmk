@@ -12,10 +12,10 @@ echo "Add Check_MK-pubkey.gpg to gpg"
 gpg --import /opt/Check_MK-pubkey.gpg
 
 case "$DISTRO" in
-centos-* | sles-*)
-    echo "Add Check_MK-pubkey.gpg to RPM"
-    rpm --import /opt/Check_MK-pubkey.gpg
-    ;;
+    centos-* | sles-*)
+        echo "Add Check_MK-pubkey.gpg to RPM"
+        rpm --import /opt/Check_MK-pubkey.gpg
+        ;;
 esac
 
 # TODO: Install distro specific dependencies of Checkmk to make building of

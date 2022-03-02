@@ -2,7 +2,7 @@
 
 set -e
 
-SITE=${SITE:-$(until [ $PWD == / ]; do if [ -e .site ]; then
+SITE=${SITE:-$(until [ "$PWD" == / ]; do if [ -e .site ]; then
     cat .site
     break
 else cd ..; fi; done)}
@@ -14,17 +14,17 @@ echo "Update site $SITE..."
 
 echo "Copy CRE files..."
 sudo rsync \
-  --exclude="__pycache__" \
-  --exclude="*.pyc" \
-  --exclude="flycheck*" \
-  --exclude="cee" \
-  --exclude="cpe" \
-  --exclude="cme" \
-  -a * "$DESTDIR"
+    --exclude="__pycache__" \
+    --exclude="*.pyc" \
+    --exclude="flycheck*" \
+    --exclude="cee" \
+    --exclude="cpe" \
+    --exclude="cme" \
+    -a ./* "$DESTDIR"
 
 # Also deploy all other directories of same type
-if [ ${ALL_EDITIONS:-1} != 0 ]; then
-    for WHAT in enterprise managed; do
+if [ "${ALL_EDITIONS:-1}" != 0 ]; then
+    for WHAT in enterprise managed plus; do
         if [ -e ../../$WHAT/cmk/core_helpers/.f12 ]; then
             (
                 cd ../../$WHAT/cmk/core_helpers
@@ -36,5 +36,5 @@ fi
 
 echo "Compile Python file in site..."
 if [ -z "$ONLY_COPY" ]; then
-    sudo $ROOT/bin/python3 -m compileall -qq "$DESTDIR"
+    sudo "$ROOT"/bin/python3 -m compileall -qq "$DESTDIR"
 fi

@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 Removing a host or folder attribute via the REST API did not work before this
 werk. The return HTTP-Status code was 200, and the response reflected the

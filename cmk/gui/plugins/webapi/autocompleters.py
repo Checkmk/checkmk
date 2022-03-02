@@ -14,6 +14,7 @@ import cmk.gui.mkeventd as mkeventd
 import cmk.gui.sites as sites
 import cmk.gui.watolib as watolib
 from cmk.gui.exceptions import MKUserError
+from cmk.gui.globals import config
 from cmk.gui.i18n import _
 from cmk.gui.pages import AjaxPage, page_registry
 from cmk.gui.plugins.metrics.utils import (
@@ -92,7 +93,7 @@ def sites_autocompleter(value: str, params: Dict) -> Choices:
 
     # This part should not exists as the optional(not enforce) would better be not having the filter at all
     if not params.get("strict"):
-        empty_choice: Choices = [("", "")]
+        empty_choice: Choices = [("", "All Sites")]
         choices = empty_choice + choices
     return choices
 
@@ -162,6 +163,11 @@ def monitored_service_description_autocompleter(value: str, params: Dict) -> Cho
     return _sorted_unique_lq(query, 200, value, params)
 
 
+@autocompleter_registry.register_expression("wato_folder_choices")
+def wato_folder_choices_autocompleter(value: str, params: Dict) -> Choices:
+    return watolib.Folder.folder_choices_fulltitle()
+
+
 @autocompleter_registry.register_expression("monitored_metrics")
 def metrics_autocompleter(value: str, params: Dict) -> Choices:
     context = params.get("context", {})
@@ -178,13 +184,35 @@ def metrics_autocompleter(value: str, params: Dict) -> Choices:
     return sorted((v for v in metrics if value.lower() in v[1].lower()), key=lambda a: a[1].lower())
 
 
+@autocompleter_registry.register_expression("tag_groups")
+def tag_group_autocompleter(value: str, params: Dict) -> Choices:
+    return sorted(
+        (v for v in config.tags.get_tag_group_choices() if value.lower() in v[1].lower()),
+        key=lambda a: a[1].lower(),
+    )
+
+
+@autocompleter_registry.register_expression("tag_groups_opt")
+def tag_group_opt_autocompleter(value: str, params: Dict) -> Choices:
+    grouped: Choices = []
+
+    for tag_group in config.tags.tag_groups:
+        if tag_group.id == params["group_id"]:
+            grouped.append(("", ""))
+            for grouped_tag in tag_group.tags:
+                tag_id = "" if grouped_tag.id is None else grouped_tag.id
+                if value.lower() in grouped_tag.title:
+                    grouped.append((tag_id, grouped_tag.title))
+    return grouped
+
+
 def _graph_choices_from_livestatus_row(row) -> Iterable[Tuple[str, str]]:
     def _metric_title_from_id(metric_or_graph_id: MetricName) -> str:
         metric_id = metric_or_graph_id.replace("METRIC_", "")
         return str(metric_info.get(metric_id, {}).get("title", metric_id))
 
     def _graph_template_title(graph_template: Mapping) -> str:
-        return str(graph_template.get("title")) or _metric_title_from_id(graph_template["id"])
+        return str(graph_template.get("title", "")) or _metric_title_from_id(graph_template["id"])
 
     yield from (
         (
@@ -240,6 +268,10 @@ def validate_autocompleter_data(api_request):
     if value is None:
         raise MKUserError("params", _('You need to set the "%s" parameter.') % "value")
 
+    ident = api_request.get("ident")
+    if ident is None:
+        raise MKUserError("ident", _('You need to set the "%s" parameter.') % "ident")
+
 
 @page_registry.register_page("ajax_vs_autocomplete")
 class PageVsAutocomplete(AjaxPage):
@@ -247,8 +279,6 @@ class PageVsAutocomplete(AjaxPage):
         api_request = self.webapi_request()
         validate_autocompleter_data(api_request)
         ident = api_request["ident"]
-        if not ident:
-            raise MKUserError("ident", _('You need to set the "%s" parameter.') % "ident")
 
         completer = autocompleter_registry.get(ident)
         if completer is None:

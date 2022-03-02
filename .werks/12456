@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 Changing the tag configuration via the Web API triggered an error
 <tt>The following tags are still used but are not listed in the updated configuration: test:None</tt>.

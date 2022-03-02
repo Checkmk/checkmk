@@ -1,7 +1,7 @@
 title: DOCSIS: Upstream Channels
 agents: snmp
 catalog: hw/network/docsis
-license: GPL
+license: GPLv2
 distribution:
 description:
  This check monitors the signal/noise ratio, the corrected and
@@ -13,4 +13,3 @@ item:
 
 discovery:
  One service is created for each channel.
-

@@ -51,9 +51,7 @@ def parse_aws_route53_health_checks(string_table: StringTable) -> Route53HealthC
         json.loads("".join(string_table[0])) if string_table else []
     )
     return {
-        health_check["Id"]: HealthCheckConfig.from_health_check(
-            health_check["HealthCheckConfig"]
-        )
+        health_check["Id"]: HealthCheckConfig.from_health_check(health_check["HealthCheckConfig"])
         for health_check in health_check
     }
 
@@ -131,8 +129,10 @@ def check_aws_route53(
     section_aws_route53_cloudwatch: Optional[Route53CloudwatchSection],
 ):
     if not (
-        section_aws_route53_health_checks and (health_check_config := section_aws_route53_health_checks.get(item))
-        and section_aws_route53_cloudwatch and (metrics := section_aws_route53_cloudwatch.get(item))
+        section_aws_route53_health_checks
+        and (health_check_config := section_aws_route53_health_checks.get(item))
+        and section_aws_route53_cloudwatch
+        and (metrics := section_aws_route53_cloudwatch.get(item))
     ):
         return
 
@@ -155,8 +155,10 @@ def check_aws_route53(
         )
 
     if metrics.HealthCheckStatus is not None:
-        yield Result(state=State.OK if metrics.HealthCheckStatus == 1 else State.CRIT,
-         summary=f"Health check status: {'OK' if metrics.HealthCheckStatus == 1 else 'CRIT'}")
+        yield Result(
+            state=State.OK if metrics.HealthCheckStatus == 1 else State.CRIT,
+            summary=f"Health check status: {'OK' if metrics.HealthCheckStatus == 1 else 'CRIT'}",
+        )
 
     if metrics.HealthCheckPercentageHealthy is not None:
         yield from check_levels(

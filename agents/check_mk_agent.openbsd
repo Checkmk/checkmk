@@ -9,6 +9,12 @@
 
 # NOTE: This agent has been adapted from the Checkmk FreeBSD agent.
 
+inpath() {
+    # replace "if type [somecmd]" idiom
+    # 'command -v' tends to be more robust vs 'which' and 'type' based tests
+    command -v "${1:?No command to test}" >/dev/null 2>&1
+}
+
 get_epoch() {
     date +%s 2>/dev/null ||
         perl -e 'print($^T."\n");'
@@ -37,7 +43,6 @@ PLUGINSDIR=$MK_LIBDIR/plugins
 # to online documentation for details.
 LOCALDIR=$MK_LIBDIR/local
 
-
 # close standard input (for security reasons) and stderr
 if [ "$1" = -d ]; then
     set -xv
@@ -45,9 +50,12 @@ else
     exec </dev/null 2>/dev/null
 fi
 
+# We're suppressing this, so we can enable the shellchecker.
+# TODO: Find out if this is working, and why. Are we implicitily assuming a specific shell?
+# shellcheck disable=SC2039 # In POSIX sh, set flag -A is undefined.
 section_misc_sections() {
     echo "<<<check_mk>>>"
-    echo "Version: 2.1.0i1"
+    echo "Version: 2.2.0i1"
     echo "AgentOS: openbsd"
     echo "Hostname: $(hostname)"
     echo "AgentDirectory: $MK_CONFDIR"
@@ -85,10 +93,10 @@ section_misc_sections() {
         SWAP_TOTAL=0
     fi
 
-    echo "MemTotal:\t $MEM_TOTAL kB"
-    echo "MemFree:\t $MEM_FREE kB"
-    echo "SwapTotal:\t $SWAP_TOTAL kB"
-    echo "SwapFree:\t $SWAP_FREE kB"
+    printf "MemTotal:\t %s kB\n" "$MEM_TOTAL"
+    printf "MemFree:\t %s kB\n" "$MEM_FREE"
+    printf "SwapTotal:\t %s kB\n" "$SWAP_TOTAL"
+    printf "SwapFree:\t %s kB\n" "$SWAP_FREE"
 
     echo '<<<lnx_if:sep(58)>>>'
     # MC= MAC address
@@ -123,7 +131,7 @@ section_misc_sections() {
     '
     # collect netstat values and interface number
     for NS in $NETSTAT_OUTPUT; do
-        NI=$((NI+1))
+        NI=$((NI + 1))
         INTERFACES[$NI]=$(echo "$NS" | awk '{ print $1 }')
         MC[$NI]=$(echo "$NS" | awk '{ print $4 }')
         PI[$NI]=$(echo "$NS" | awk '{ print $5 }')
@@ -136,7 +144,7 @@ section_misc_sections() {
     # need NIC counter again for byte values - reset it
     NI=0
     for NS in $NETSTAT_OUTPUT_BYTES; do
-        NI=$((NI+1))
+        NI=$((NI + 1))
         BI[$NI]=$(echo "$NS" | awk '{ print $5 }')
         BO[$NI]=$(echo "$NS" | awk '{ print $6 }')
     done
@@ -161,24 +169,24 @@ section_misc_sections() {
             fi
             # Detect duplexity - in reality only available for physical devices but
             # virtual ones like CARP devices will get at least a half duplex
-            if [ "$(echo "$IO" | grep -E "media:.*full-duplex")" ]; then
-                echo "\tDuplex: Full"
-            elif [ "$(echo "$IO" | grep "media:" | grep -v "full-duplex")" ]; then
-                echo "\tDuplex: Half"
+            if echo "$IO" | grep -q -E "media:.*full-duplex"; then
+                printf "\tDuplex: Full\n"
+            elif echo "$IO" | grep "media:" | grep -q -v "full-duplex"; then
+                printf "\tDuplex: Half\n"
             fi
             # Auto-negotiation
-            if [ "$(echo "$IO" | grep -E "media:.*autoselect")" ]; then
-                echo "\tAuto-negotiation: on"
-            elif [ "$(echo "$IO" | grep "media:" | grep -v "autoselect")" ]; then
-                echo "\tAuto-negotiation: off"
+            if echo "$IO" | grep -q -E "media:.*autoselect"; then
+                printf "\tAuto-negotiation: on\n"
+            elif echo "$IO" | grep "media:" | grep -q -v "autoselect"; then
+                printf "\tAuto-negotiation: off\n"
             fi
             # Detect detected link
-            if [ "$(echo "$IO" | grep "status:" | grep -E "active|backup|master")" ]; then
-                echo "\tLink detected: yes"
+            if echo "$IO" | grep "status:" | grep -q -E "active|backup|master"; then
+                printf "\tLink detected: yes\n"
             fi
         done
 
-        echo "\tAddress: ${MC[$IF]}"
+        printf "\tAddress: %s\n" "${MC[$IF]}"
 
     done
 
@@ -187,18 +195,18 @@ section_misc_sections() {
 
     # IPMI-Data (Fans, CPU, temperature, etc)
     # needs the sysutils/ipmitool and kldload ipmi.ko
-    if which ipmitool >/dev/null; then
+    if inpath ipmitool; then
         echo '<<<ipmi>>>'
-        ipmitool sensor list \
-            | grep -v 'command failed' \
-            | sed -e 's/ *| */|/g' -e "s/ /_/g" -e 's/_*$//' -e 's/|/ /g' \
-            | grep -v -E '^[^ ]+ na ' \
-            | grep -v ' discrete '
+        ipmitool sensor list |
+            grep -v 'command failed' |
+            sed -e 's/ *| */|/g' -e "s/ /_/g" -e 's/_*$//' -e 's/|/ /g' |
+            grep -v -E '^[^ ]+ na ' |
+            grep -v ' discrete '
     fi
 
-    if which mailq >/dev/null 2>&1 && getent passwd postfix >/dev/null 2>&1; then
-      echo '<<<postfix_mailq>>>'
-      mailq | tail -n 6
+    if inpath mailq && getent passwd postfix >/dev/null 2>&1; then
+        echo '<<<postfix_mailq>>>'
+        mailq | tail -n 6
     fi
 }
 
@@ -221,16 +229,22 @@ run_local_checks() {
     )
 }
 
+# TODO: sync with linux agent
 run_mrpe_plugins() {
     if [ -e "$MK_CONFDIR/mrpe.cfg" ]; then
         echo '<<<mrpe>>>'
-        grep -Ev '^[[:space:]]*($|#)' "$MK_CONFDIR/mrpe.cfg" | \
-        while read descr cmdline; do
-            PLUGIN=${cmdline%% *}
-            OUTPUT=$(eval "$cmdline")
-            echo -n "(${PLUGIN##*/}) $descr $? $OUTPUT" | tr \\n \\1
-            echo
-        done
+        # SC2162: read without -r will mangle backslashes.
+        # We suppress it here for compatibility (curretly backslashes e.g. before spaces are dropped).
+        # Since escaping of field seperators is not relevant when reading into one variable, we probably
+        # would have wanted "read -r".
+        # shellcheck disable=SC2162
+        grep -Ev '^[[:space:]]*($|#)' "$MK_CONFDIR/mrpe.cfg" |
+            while read descr cmdline; do
+                PLUGIN=${cmdline%% *}
+                OUTPUT=$(eval "$cmdline")
+                printf "(%s) %s %s %s" "${PLUGIN##*/}" "$descr" "$?" "$OUTPUT" | tr \\n \\1
+                echo
+            done
     fi
 }
 
@@ -244,6 +258,7 @@ main() {
 
     run_mrpe_plugins
 
+    return 0
 }
 
 main

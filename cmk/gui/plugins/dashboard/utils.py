@@ -225,7 +225,7 @@ class Dashlet(abc.ABC):
         return False
 
     @classmethod
-    def validate_parameters_func(cls) -> Optional[ValueSpecValidateFunc]:
+    def validate_parameters_func(cls) -> Optional[ValueSpecValidateFunc[Any]]:
         """Optional validation function in case vs_parameters() returns a list"""
         return None
 
@@ -382,7 +382,7 @@ class Dashlet(abc.ABC):
         return urllib.parse.urlunparse(tuple(parts[:4] + (new_qs,) + parts[5:]))
 
     def _dashlet_context_vars(self) -> HTTPVariables:
-        return visuals.get_context_uri_vars(self.context, self.single_infos())
+        return visuals.context_to_uri_vars(self.context)
 
     def unconfigured_single_infos(self) -> Set[str]:
         """Returns infos that are not set by the dashlet config"""

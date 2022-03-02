@@ -351,10 +351,10 @@ class ModeAjaxServiceDiscovery(AjaxPage):
             if self._is_active(discovery_result):
                 return _("Initializing discovery...")
             if not cmk_check_entries:
-                return _("No discovery information available. Please perform a full scan.")
+                return _("No discovery information available. Please perform a rescan.")
             return _(
                 "No fresh discovery information available. Using latest cached information. "
-                "Please perform a full scan in case you want to discover the current state."
+                "Please perform a rescan in case you want to discover the current state."
             )
 
         job_title = discovery_result.job_status.get("title", _("Service discovery"))
@@ -389,9 +389,9 @@ class ModeAjaxServiceDiscovery(AjaxPage):
                 for e in cmk_check_entries
             )
             if no_data:
-                messages.append(_("No data for discovery available. Please perform a full scan."))
+                messages.append(_("No data for discovery available. Please perform a rescan."))
         else:
-            messages.append(_("Found no services yet. To retry please execute a full scan."))
+            messages.append(_("Found no services yet. To retry please execute a rescan."))
 
         progress_update_log = discovery_result.job_status["loginfo"]["JobProgressUpdate"]
         warnings = [f"<br>{line}" for line in progress_update_log if line.startswith("WARNING")]
@@ -694,6 +694,12 @@ class DiscoveryPageRenderer:
                 foldable=Foldable.FOLDABLE_STATELESS,
                 omit_update_header=False,
                 help=entry.help_text,
+                isopen=entry.table_group
+                not in (
+                    DiscoveryState.CLUSTERED_NEW,
+                    DiscoveryState.CLUSTERED_OLD,
+                    DiscoveryState.CLUSTERED_VANISHED,
+                ),
             ) as table:
                 for check in sorted(checks, key=lambda e: e.description.lower()):
                     self._show_check_row(
@@ -755,7 +761,7 @@ class DiscoveryPageRenderer:
         ):
             return
 
-        html.icon("fixall", _("Services/Host labels to fix"))
+        html.icon("fixall", _("Service discovery details"))
 
         html.open_ul()
         self._render_fix_all_element(
@@ -1120,14 +1126,10 @@ class DiscoveryPageRenderer:
             html.empty_icon()
             num_buttons += 1
 
-        if (
-            entry.check_source
-            not in [
-                DiscoveryState.UNDECIDED,
-                DiscoveryState.IGNORED,
-            ]
-            and user.may("wato.rulesets")
-        ):
+        if entry.check_source not in [
+            DiscoveryState.UNDECIDED,
+            DiscoveryState.IGNORED,
+        ] and user.may("wato.rulesets"):
             num_buttons += self._rulesets_button(entry.description)
             num_buttons += self._check_parameters_button(entry)
 
@@ -1284,9 +1286,17 @@ class DiscoveryPageRenderer:
                 show_bulk_actions=False,
                 title=_("Vanished clustered services - located on cluster host"),
                 help_text=_(
-                    "These services have been found on this host and have been mapped to "
-                    "a cluster host by a rule in the set <i>Clustered services</i> but disappeared "
-                    "from this host."
+                    "These services are mapped to a cluster host by a rule in one of the rulesets "
+                    "<i>%s</i> or <i>%s</i>."
+                )
+                % (
+                    _("Clustered services"),
+                    _("Clustered services for overlapping clusters"),
+                )
+                + " "
+                + _(
+                    "They have been found on this host previously, but have now disappeared. "
+                    "Note that they may still be monitored on the cluster."
                 ),
             ),
             TableGroupEntry(
@@ -1351,8 +1361,12 @@ class DiscoveryPageRenderer:
                 show_bulk_actions=False,
                 title=_("Monitored clustered services - located on cluster host"),
                 help_text=_(
-                    "These services have been found on this host but have been mapped to "
-                    "a cluster host by a rule in the set <i>Clustered services</i>."
+                    "These services are mapped to a cluster host by a rule in one of the rulesets "
+                    "<i>%s</i> or <i>%s</i>."
+                )
+                % (
+                    _("Clustered services"),
+                    _("Clustered services for overlapping clusters"),
                 ),
             ),
             TableGroupEntry(
@@ -1360,11 +1374,15 @@ class DiscoveryPageRenderer:
                 show_bulk_actions=False,
                 title=_("Undecided clustered services"),
                 help_text=_(
-                    "These services have been found on this host and have been mapped to "
-                    "a cluster host by a rule in the set <i>Clustered services</i>, but are not "
-                    "yet added to the active monitoring. Please either add them or permanently disable "
-                    "them."
-                ),
+                    "These services are mapped to a cluster host by a rule in one of the rulesets "
+                    "<i>%s</i> or <i>%s</i>."
+                )
+                % (
+                    _("Clustered services"),
+                    _("Clustered services for overlapping clusters"),
+                )
+                + " "
+                + _("They appear to be new to this node, but may still be already monitored."),
             ),
             TableGroupEntry(
                 table_group=DiscoveryState.CLUSTERED_IGNORED,
@@ -1431,7 +1449,7 @@ class ModeAjaxExecuteCheck(AjaxPage):
         # TODO: Validate
         self._check_type = request.get_ascii_input_mandatory("checktype")
         # TODO: Validate
-        self._item = request.get_unicode_input_mandatory("item")
+        self._item = request.get_str_input_mandatory("item")
 
     def page(self):
         try:

@@ -1,7 +1,7 @@
 title: Rittal CMC-III LCP: Water In/Out Temperature
 agents: snmp
 catalog: hw/environment/rittal
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  Note: This check is obsolete. The same sensors are handled by cmciii.temp

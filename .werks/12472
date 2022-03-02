@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 Distributed setups with a 1.6 central and 2.0 remote version had communication issues during service discovery
 and "Activate changes".

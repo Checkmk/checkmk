@@ -9,11 +9,11 @@ import re
 import socket
 import subprocess
 import sys
-from email.utils import formataddr, formatdate
+from email.utils import formataddr, formatdate, parseaddr
 from html import escape as html_escape
 from http.client import responses as http_responses
 from quopri import encodestring
-from typing import Dict, List, NamedTuple, Tuple
+from typing import Dict, List, NamedTuple, Optional, Tuple
 
 import requests
 
@@ -191,21 +191,28 @@ def set_mail_headers(target, subject, from_address, reply_to, mail):
 def send_mail_sendmail(m, target, from_address):
     cmd = [_sendmail_path()]
     if from_address:
-        cmd += ["-F", from_address, "-f", from_address]
+        # sendmail of the appliance can not handle "FULLNAME <my@mail.com>" format
+        # TODO Currently we only see problems on appliances, so we just change
+        # that handling for now.
+        # If we see problems on other nullmailer sendmail implementations, we
+        # could parse the man page for sendmail and see, if it contains "nullmailer" to
+        # determine if nullmailer is used
+        if cmk_version.is_cma():
+            sender_full_name, sender_address = parseaddr(from_address)
+            if sender_full_name:
+                cmd += ["-F", sender_full_name]
+            cmd += ["-f", sender_address]
+        else:
+            cmd += ["-F", from_address, "-f", from_address]
     cmd += ["-i", target]
 
     try:
-        p = subprocess.Popen(  # pylint:disable=consider-using-with
-            cmd,
-            stdin=subprocess.PIPE,
-            encoding="utf-8",
-        )
+        completed_process = subprocess.run(cmd, encoding="utf-8", check=False, input=m.as_string())
     except OSError:
         raise Exception("Failed to send the mail: /usr/sbin/sendmail is missing")
 
-    p.communicate(input=m.as_string())
-    if p.returncode != 0:
-        raise Exception("sendmail returned with exit code: %d" % p.returncode)
+    if completed_process.returncode:
+        raise Exception("sendmail returned with exit code: %d" % completed_process.returncode)
 
     sys.stdout.write("Spooled mail to local mail transmission agent\n")
     return 0
@@ -214,6 +221,7 @@ def send_mail_sendmail(m, target, from_address):
 def _sendmail_path() -> str:
     # We normally don't deliver the sendmail command, but our notification integration tests
     # put some fake sendmail command into the site to prevent actual sending of mails.
+
     for path in [
         "%s/local/bin/sendmail" % cmk.utils.paths.omd_root,
         "/usr/sbin/sendmail",
@@ -378,3 +386,49 @@ def process_by_result_map(
 
     sys.stderr.write(f"Details for Status Code are not defined\n{summary}\n")
     sys.exit(3)
+
+
+# TODO this will be used by the smstools and the sms via IP scripts later
+def get_sms_message_from_context(raw_context: Dict[str, str]) -> str:
+    notification_type = raw_context["NOTIFICATIONTYPE"]
+    max_len = 160
+    message = raw_context["HOSTNAME"] + " "
+    if raw_context["WHAT"] == "SERVICE":
+        if notification_type in ["PROBLEM", "RECOVERY"]:
+            message += raw_context["SERVICESTATE"][:2] + " "
+            avail_len = max_len - len(message)
+            message += raw_context["SERVICEDESC"][:avail_len] + " "
+            avail_len = max_len - len(message)
+            message += raw_context["SERVICEOUTPUT"][:avail_len]
+        else:
+            message += raw_context["SERVICEDESC"]
+    else:
+        if notification_type in ["PROBLEM", "RECOVERY"]:
+            message += "is " + raw_context["HOSTSTATE"]
+
+    if notification_type.startswith("FLAP"):
+        if "START" in notification_type:
+            message += " Started Flapping"
+        else:
+            message += " Stopped Flapping"
+
+    elif notification_type.startswith("DOWNTIME"):
+        what = notification_type[8:].title()
+        message += " Downtime " + what
+        message += " " + raw_context["NOTIFICATIONCOMMENT"]
+
+    elif notification_type == "ACKNOWLEDGEMENT":
+        message += " Acknowledged"
+        message += " " + raw_context["NOTIFICATIONCOMMENT"]
+
+    elif notification_type == "CUSTOM":
+        message += " Custom Notification"
+        message += " " + raw_context["NOTIFICATIONCOMMENT"]
+
+    return message
+
+
+def quote_message(message: str, max_length: Optional[int] = None):
+    if max_length:
+        return "'" + message.replace("'", "'\"'\"'")[: max_length - 2] + "'"
+    return "'" + message.replace("'", "'\"'\"'") + "'"

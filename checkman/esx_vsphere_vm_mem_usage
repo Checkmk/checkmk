@@ -1,7 +1,7 @@
 title: Virtual Machine under ESX: Used Memory (RAM)
 agents: vsphere
 catalog: os/kernel
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  The check reports used memory (RAM) for {host}, {guest}, {ballooned}, {private}

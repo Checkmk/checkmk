@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 Checkmk 2.0.0b1 to 2.0.0b5 chrashed with an unhandled permission error in
 case <tt>/etc/ssl/certs/localhost.crt</tt> was encountered and not readable

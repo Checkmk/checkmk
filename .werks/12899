@@ -6,7 +6,7 @@ Date: 1623604430
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 Previously, the Checkmk services would go to UNKNOWN if a parse function
 crashed. This is no longer the case.

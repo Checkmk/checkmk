@@ -9,14 +9,14 @@
 
 # Disable unused variable error (needed to keep track of version)
 # shellcheck disable=SC2034
-CMK_VERSION="2.1.0i1"
+CMK_VERSION="2.2.0i1"
 
 # Agent plugin to monitor DB/2 databases on Linux.
 
 function compare_version_greater_equal {
     local greater_one
     greater_one=$(echo "$1 $2" | awk "{if ($1 >= $2) print $1; else print $2}")
-    if [ "$greater_one" == "$1" ] ; then
+    if [ "$greater_one" == "$1" ]; then
         return 0
     else
         return 1
@@ -25,7 +25,7 @@ function compare_version_greater_equal {
 }
 
 function get_sections_for_single_db {
-    if [ ! -f "$HOME"/sqllib/db2profile ] ; then
+    if [ ! -f "$HOME"/sqllib/db2profile ]; then
         exit 0
     fi
 
@@ -41,7 +41,7 @@ function get_sections_for_single_db {
     millis_before=$(date +"%s%3N")
     if db2 +o connect to "$db"; then
         millis_after=$(date +"%s%3N")
-        millis_diff=$(( millis_after - millis_before ))
+        millis_diff=$((millis_after - millis_before))
 
         echo "<<<db2_connections>>>"
         echo "[[[$instance:$db]]]"
@@ -69,7 +69,7 @@ function get_sections_for_single_db {
         echo "[[[$instance:$db]]]"
         echo "usedspace " | tr -d '\n'
         db2 -x "SELECT total_log_used from sysibmadm.snapdb" | tr -d ' '
-        db2 -x "SELECT NAME, VALUE FROM SYSIBMADM.DBCFG WHERE NAME IN ('logfilsiz','logprimary','logsecond')"| awk '{print $1" "$2}'
+        db2 -x "SELECT NAME, VALUE FROM SYSIBMADM.DBCFG WHERE NAME IN ('logfilsiz','logprimary','logsecond')" | awk '{print $1" "$2}'
 
         echo "<<<db2_bp_hitratios>>>"
         echo "[[[$instance:$db]]]"
@@ -82,22 +82,22 @@ function get_sections_for_single_db {
         echo "<<<db2_backup>>>"
         echo "[[[$instance:$db]]]"
         if compare_version_greater_equal "$version_number" 10.5; then
-          # MON_GET_DATBASE(-2) gets information of all active members
-          db2 -x "select LAST_BACKUP from TABLE (MON_GET_DATABASE(-2))" | grep -v "selected." | tail -n 1
+            # MON_GET_DATBASE(-2) gets information of all active members
+            db2 -x "select LAST_BACKUP from TABLE (MON_GET_DATABASE(-2))" | grep -v "selected." | tail -n 1
         else
-          db2 -x "select SQLM_ELM_LAST_BACKUP from table(SNAPSHOT_DATABASE( cast( null as VARCHAR(255)), cast(null as int))) as ref" | grep -v "selected." | tail -n 1
+            db2 -x "select SQLM_ELM_LAST_BACKUP from table(SNAPSHOT_DATABASE( cast( null as VARCHAR(255)), cast(null as int))) as ref" | grep -v "selected." | tail -n 1
         fi
 
         # disconnect from database
-        db2 connect reset > /dev/null
+        db2 connect reset >/dev/null
     fi
 }
 
 export -f compare_version_greater_equal
 export -f get_sections_for_single_db
 
-if type timeout >/dev/null 2>&1 ; then
-    function waitmax () {
+if type timeout >/dev/null 2>&1; then
+    function waitmax() {
         timeout "$@"
     }
 fi
@@ -111,17 +111,17 @@ for INSTANCE in $INSTANCES; do
     echo '<<<db2_version:sep(1)>>>'
     DBVERSION=$(su - "${INSTANCE}" -c "db2 get snapshot for dbm" | grep -e 'Product name' -e 'Service level' | awk -v FS='=' '{print $2}' | sed 'N;s/\n/,/g' | sed 's/ //g')
     echo "$INSTANCE" "$DBVERSION"
-    VERSION_NUMBER=$(echo "$DBVERSION" | sed  -e 's/DB2v\(.*\),.*/\1/' | awk -v FS="." '{print $1"."$2}')
+    VERSION_NUMBER=$(echo "$DBVERSION" | sed -e 's/DB2v\(.*\),.*/\1/' | awk -v FS="." '{print $1"."$2}')
 
     DBS=$(su - "${INSTANCE}" -c "db2 list db directory" | grep -B6 -i 'indirect\|home' | grep 'Database name' | awk '{ print $NF }')
 
     DB_PORT='port 0'
     GET_PORT=1
     for DB in $DBS; do
-        if [ 1 -eq $GET_PORT ] ; then
+        if [ 1 -eq $GET_PORT ]; then
             # Each database in an instance has the same port information
             db2_tcp_service=$(su - "${INSTANCE}" -c "db2 -x get dbm cfg" | grep "TCP/IP Service" | awk -v FS='=' '{print $2}' | tr -d ' ')
-            if ( grep "$db2_tcp_service" /etc/services | grep -q "^$db2_tcp_service " ); then
+            if (grep "$db2_tcp_service" /etc/services | grep -q "^$db2_tcp_service "); then
                 DB_PORT='port '$(grep "$db2_tcp_service" /etc/services | grep "^$db2_tcp_service " | awk '{print $2}' | awk -v FS="/" '{print $1}')
             fi
             GET_PORT=0

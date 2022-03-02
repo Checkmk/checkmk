@@ -1,7 +1,7 @@
 title: IBM SVC / Storwize V3700 / V7000: Status of Hosts Connected
 agents: ibm_svc
 catalog: hw/storagehw/ibm
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  Checks the status of hosts on IBM SVC / Storwize V3700 / V7000 presents volumes to.

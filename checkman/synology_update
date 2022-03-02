@@ -1,7 +1,7 @@
 title: Synology NAS: Update Status
 agents: snmp
 catalog: hw/storagehw/synology
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check reports if the DSM Version is out of Date or if there
@@ -11,4 +11,3 @@ description:
 
 discovery:
  One service is created.
-

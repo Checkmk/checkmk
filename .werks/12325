@@ -6,7 +6,7 @@ Date: 1626074913
 Edition: cre
 Knowledge: doc
 Level: 2
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 Previously, Windows agent supplied as working directory the current one.
 This may lead to failure if the starting plugin in RunAs mode had being 

@@ -1,4 +1,4 @@
-Title: Oracle agent plugin: Handle non-running Oracle monitoring process on target host
+Title: Oracle agent plugin: Fix handling of unresponsive databases and login failures
 Class: fix
 Compatible: compat
 Component: checks
@@ -6,9 +6,10 @@ Date: 1634568157
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
-The Oracle agent plugin now handles cases where the Oracle monitoring background
-process (<tt>ora_pmon</tt> on Unix systems) is not running correctly. In such cases,
-the agent plugin now prints out empty sections, s.t. the corresponding services on
-the Checkmk server go UNKNOWN.
+By default, the Oracle agent plugin is supposed to always output all sections,
+even if they are empty. This ensures a proper handling of unresponsive databases
+and login failures on the Checkmk server. Only when explicitly requesting
+sections via the command line (<tt>--sections ...</tt>), no empty sections are
+produced. This behavior was broken and has been fixed.

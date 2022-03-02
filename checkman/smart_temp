@@ -1,7 +1,7 @@
 title: Temperature of HDDs Using S.M.A.R.T
 agents: linux
 catalog: os/hardware
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the temperature of HDDs using the information reported by
@@ -20,4 +20,3 @@ discovery:
 
 item:
  The name of the disk. Example: {/dev/sda}
-

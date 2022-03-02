@@ -6,7 +6,7 @@ Date: 1611234916
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 The default postgres installation database for Linux and Windows can be monitored simply by
 adding the rule "PostgreSQL database and sessions (Linux, Windows)" to the agent.

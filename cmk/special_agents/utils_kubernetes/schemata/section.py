@@ -14,12 +14,18 @@ except the python standard library or pydantic.
 import enum
 from typing import Literal, Mapping, NewType, Optional, Sequence, Union
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from cmk.special_agents.utils_kubernetes.schemata import api
 
 ContainerName = NewType("ContainerName", str)
+HostName = NewType("HostName", str)
 PodSequence = Sequence[str]
+NodeName = NewType("NodeName", str)
+OsName = NewType("OsName", str)
+PythonCompiler = NewType("PythonCompiler", str)
+Timestamp = NewType("Timestamp", float)
+Version = NewType("Version", str)
 
 
 class PerformanceMetric(BaseModel):
@@ -31,56 +37,116 @@ class PerformanceContainer(BaseModel):
     name: ContainerName
 
 
-class ExceptionalResource(str, enum.Enum):
-    """
-    Kubernetes allows omitting the limits and/or requests field for a container. This enum allows us
-    to take this into account, when aggregating containers accross a Kubernetes object.
-    """
-
-    unspecified = "unspecified"
-    """
-    We return this value if there is at least one container, where the limit/request was omitted.
-    """
-    zero = "zero"
-    # Kubernetes allows setting the limit field of a container to zero. According to this issue,
-    # https://github.com/kubernetes/kubernetes/issues/86244
-    # this means the container with limit 0 has unlimited resources. Our understanding is that this
-    # is connected to the behaviour of Docker: Kubernetes passes the Docker runtime the limit value.
-    # Docker then assigns all the memory on the host machine. It therefore means that github issues
-    # might be inaccurate: If there is a container runtime, which uses the limit differently, then
-    # the cluster may behave differently.
-    """
-    Because limit=0 means unlimited rather than zero, we cannot simply add a limit of 0.
-    We return this value if there is at least one container, where the limit field was set to zero.
-    """
-    zero_unspecified = "zero_unspecified"
-    """
-    If both of the above conditions apply to a limit, we use this value.
-    """
+class CollectorState(enum.Enum):
+    OK = "ok"
+    ERROR = "error"
 
 
-AggregatedLimit = Union[ExceptionalResource, float]
-AggregatedRequest = Union[Literal[ExceptionalResource.unspecified], float]
+class CollectorHandlerLog(BaseModel):
+    status: CollectorState
+    title: str
+    detail: Optional[str]
+
+
+class PlatformMetadata(BaseModel):
+    os_name: OsName
+    os_version: Version
+    python_version: Version
+    python_compiler: PythonCompiler
+
+
+class CheckmkKubeAgentMetadata(BaseModel):
+    project_version: Version
+
+
+class CollectorMetadata(BaseModel):
+    node: NodeName
+    host_name: HostName  # This looks like the pod name, but it is not. It is
+    # possible to give the host an arbitrary host name, different from the pod
+    # name which is managed by Kubernetes.
+    container_platform: PlatformMetadata
+    checkmk_kube_agent: CheckmkKubeAgentMetadata
+
+
+class ClusterCollectorMetadata(CollectorMetadata):
+    pass
+
+
+class CollectorType(enum.Enum):
+    CONTAINER_METRICS = "Container Metrics"
+    MACHINE_SECTIONS = "Machine Sections"
+
+
+class Components(BaseModel):
+    cadvisor_version: Optional[Version]
+    checkmk_agent_version: Optional[Version]
+
+
+class NodeCollectorMetadata(CollectorMetadata):
+    collector_type: CollectorType
+    components: Components
+
+
+class Metadata(BaseModel):
+    cluster_collector_metadata: ClusterCollectorMetadata
+    node_collector_metadata: Sequence[NodeCollectorMetadata]
+
+
+class NodeComponent(BaseModel):
+    collector_type: CollectorType
+    checkmk_kube_agent: CheckmkKubeAgentMetadata
+    name: str
+    version: Version
+
+
+class NodeMetadata(BaseModel):
+    name: NodeName
+    components: Mapping[str, NodeComponent]
+
+
+class CollectorComponentsMetadata(BaseModel):
+    """section: kube_collector_metadata_v1"""
+
+    processing_log: CollectorHandlerLog
+    cluster_collector: Optional[ClusterCollectorMetadata]
+    nodes: Optional[Sequence[NodeMetadata]]
+
+
+class CollectorProcessingLogs(BaseModel):
+    """section: kube_collector_processing_logs_v1"""
+
+    container: CollectorHandlerLog
+    machine: CollectorHandlerLog
 
 
 class Resources(BaseModel):
-    request: AggregatedRequest
-    limit: AggregatedLimit
+    """sections: "[kube_memory_resources_v1, kube_cpu_resources_v1]"""
+
+    request: float
+    limit: float
+    count_unspecified_requests: int
+    count_unspecified_limits: int
+    count_zeroed_limits: int
+    count_total: int
 
 
 class AllocatableResource(BaseModel):
     """sections: [kube_allocatable_cpu_resource_v1, kube_allocatable_memory_resource_v1]"""
 
+    context: Literal["cluster", "node"]
     value: float
 
 
 class ControllerType(enum.Enum):
     deployment = "deployment"
+    daemon_set = "daemon_set"
 
     @staticmethod
     def from_str(label):
         if label == "deployment":
             return ControllerType.deployment
+        if label == "daemon_set":
+            return ControllerType.daemon_set
         raise ValueError(f"Unknown controller type {label} specified")
 
 
@@ -98,10 +164,15 @@ class PodInfo(BaseModel):
     labels: api.Labels  # used for host labels
     node: Optional[api.NodeName]  # this is optional, because there may be pods, which are not
     # scheduled on any node (e.g., no node with enough capacity is available).
+    host_network: Optional[str]
+    dns_policy: Optional[str]
+    host_ip: Optional[api.IpAddress]
+    pod_ip: Optional[api.IpAddress]
     qos_class: api.QosClass
     restart_policy: api.RestartPolicy
     uid: api.PodUID
     controllers: Sequence[Controller] = []
+    cluster: str
 
 
 class PodResources(BaseModel):
@@ -114,8 +185,8 @@ class PodResources(BaseModel):
     unknown: PodSequence = []
 
 
-class PodResourcesWithCapacity(PodResources):
-    """section: kube_pod_resources_with_capacity_v1"""
+class AllocatablePods(BaseModel):
+    """section: kube_allocatable_pods_v1"""
 
     capacity: int
     allocatable: int
@@ -135,7 +206,7 @@ class PodCondition(BaseModel):
 
 
 class PodConditions(BaseModel):
-    """section: k8s_pod_conditions_v1"""
+    """section: kube_pod_conditions_v1"""
 
     initialized: Optional[PodCondition]
     scheduled: PodCondition
@@ -146,7 +217,18 @@ class PodConditions(BaseModel):
 class PodContainers(BaseModel):
     """section: kube_pod_containers_v1"""
 
-    containers: Mapping[str, api.ContainerInfo]
+    containers: Mapping[str, api.ContainerStatus]
+
+
+class ContainerSpec(BaseModel):
+    name: ContainerName
+    image_pull_policy: api.ImagePullPolicy
+
+
+class ContainerSpecs(BaseModel):
+    """section: kube_pod_container_specs_v1"""
+
+    containers: Mapping[ContainerName, ContainerSpec]
 
 
 class ReadyCount(BaseModel):
@@ -168,7 +250,42 @@ class NodeCount(BaseModel):
 class NodeInfo(api.NodeInfo):
     """section: kube_node_info_v1"""
 
+    name: api.NodeName
+    creation_timestamp: api.CreationTimestamp
     labels: api.Labels
+    addresses: api.NodeAddresses
+    cluster: str
+
+
+class NodeCondition(BaseModel):
+    status: api.NodeConditionStatus
+    reason: Optional[str]
+    detail: Optional[str]
+    last_transition_time: Optional[int]
+
+
+class TruthyNodeCondition(NodeCondition):
+    """TruthyNodeCondition has an "OK" state when its status is True"""
+
+    def is_ok(self) -> bool:
+        return self.status == api.NodeConditionStatus.TRUE
+
+
+class FalsyNodeCondition(NodeCondition):
+    """FalsyNodeCondition has an "OK" state when its status is False"""
+
+    def is_ok(self) -> bool:
+        return self.status == api.NodeConditionStatus.FALSE
+
+
+class NodeConditions(BaseModel):
+    """section: k8s_node_conditions_v1"""
+
+    ready: TruthyNodeCondition
+    memorypressure: FalsyNodeCondition
+    diskpressure: FalsyNodeCondition
+    pidpressure: FalsyNodeCondition
+    networkunavailable: Optional[FalsyNodeCondition]
 
 
 class DeploymentInfo(BaseModel):
@@ -177,15 +294,19 @@ class DeploymentInfo(BaseModel):
     name: str
     namespace: api.Namespace
     labels: api.Labels
+    selector: api.Selector
     creation_timestamp: api.CreationTimestamp
     images: Sequence[str]
     containers: Sequence[str]
+    cluster: str
 
 
 class DeploymentConditions(BaseModel):
     """section: kube_deployment_conditions_v1"""
 
-    conditions: Sequence[api.DeploymentCondition]
+    available: Optional[api.DeploymentCondition]
+    progressing: Optional[api.DeploymentCondition]
+    replicafailure: Optional[api.DeploymentCondition]
 
 
 class ContainerCount(BaseModel):
@@ -196,17 +317,23 @@ class ContainerCount(BaseModel):
     terminated: int = 0
 
 
-class ContainerCpuUsage(PerformanceContainer):
-    cpu_usage_seconds_total: PerformanceMetric
+class DeploymentStrategy(BaseModel):
+    """section: kube_deployment_strategy_v1"""
 
-
-class CpuUsage(BaseModel):
-    """section: kube_performance_cpu_usage_v1"""
-
-    usage: float
+    strategy: Union[api.Recreate, api.RollingUpdate] = Field(discriminator="type_")
 
 
 class Memory(BaseModel):
-    """section: kube_performance_memory_v1"""
+    type_: Literal["memory"] = Field("memory", const=True)
+    usage: float
 
-    memory_usage_bytes: float  # TODO: change naming
+
+class Cpu(BaseModel):
+    type_: Literal["cpu"] = Field("cpu", const=True)
+    usage: float
+
+
+class PerformanceUsage(BaseModel):
+    """section: [kube_performance_cpu_v1, kube_performance_memory_v1]"""
+
+    resource: Union[Cpu, Memory] = Field(discriminator="type_")

@@ -97,7 +97,7 @@ REQUIRED_ARGUMENTS: Dict[str, List[str]] = {
         "TOKEN",
         "--api-server-endpoint",
         "ENDPOINT",
-        "--cluster-agent-endpoint",
+        "--cluster-collector-endpoint",
         "ENDPOINT",
     ],
     "agent_prometheus": [],
@@ -135,10 +135,8 @@ REQUIRED_ARGUMENTS: Dict[str, List[str]] = {
     "agent_smb_share": [
         "REMOTE_NAME",
         "ADDRESS",
-        "USERNAME",
-        "PASSWORD",
-        "Shared folder",
     ],
+    "agent_gcp": [],
 }
 
 

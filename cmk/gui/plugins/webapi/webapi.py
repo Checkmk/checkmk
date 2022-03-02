@@ -576,7 +576,7 @@ class APICallUsers(APICallCollection):
         }
 
     def _get_all_users(self, request):
-        return userdb.load_users(lock=False)
+        return userdb.load_users_sanitized(lock=False)
 
     def _delete_users(self, request):
         cmk.gui.watolib.users.delete_users(request.get("users"))

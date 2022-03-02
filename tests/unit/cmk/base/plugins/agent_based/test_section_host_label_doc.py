@@ -27,6 +27,7 @@ ALL_DOCUMENTED_BUILTIN_HOST_LABELS: Final = {
     "cmk/kubernetes/namespace",
     "cmk/kubernetes/node",
     "cmk/kubernetes/object",
+    "cmk/kubernetes/cluster",
     "cmk/os_family",
     "cmk/vsphere_object",
 }

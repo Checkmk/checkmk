@@ -1,7 +1,7 @@
 title: Alcatel Switches (>=AOS7): Fan Status
 agents: snmp
 catalog: hw/network/alcatel
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
 

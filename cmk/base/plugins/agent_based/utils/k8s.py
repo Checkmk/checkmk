@@ -140,22 +140,29 @@ class KubeletInfo(BaseModel):
     """section: kube_node_kubelet_v1"""
 
     version: str
+    proxy_version: str
     health: HealthZ
 
 
 class ControllerType(enum.Enum):
     deployment = "deployment"
+    daemon_set = "daemon_set"
 
     @staticmethod
     def from_str(label):
         if label == "deployment":
             return ControllerType.deployment
+        if label == "daemon_set":
+            return ControllerType.daemon_set
         raise ValueError(f"Unknown controller type: {label}")
 
 
 class Controller(BaseModel):
     type_: ControllerType
     name: str
+
+
+IpAddress = NewType("IpAddress", str)
 
 
 class PodInfo(BaseModel):
@@ -167,10 +174,15 @@ class PodInfo(BaseModel):
     labels: Labels  # used for host labels
     node: Optional[NodeName]  # this is optional, because there may be pods, which are not
     # scheduled on any node (e.g., no node with enough capacity is available).
+    host_network: Optional[str]
+    dns_policy: Optional[str]
+    host_ip: Optional[IpAddress]
+    pod_ip: Optional[IpAddress]
     qos_class: QosClass
     restart_policy: RestartPolicy
     uid: PodUID
     controllers: Sequence[Controller] = []
+    cluster: str
 
 
 class APIHealth(BaseModel):
@@ -194,8 +206,8 @@ class PodResources(BaseModel):
     unknown: PodSequence = []
 
 
-class PodResourcesWithCapacity(PodResources):
-    """section: kube_pod_resources_with_capacity_v1"""
+class AllocatablePods(BaseModel):
+    """section: kube_allocatable_pods_v1"""
 
     capacity: int
     allocatable: int
@@ -210,9 +222,29 @@ class ContainerCount(BaseModel):
 
 
 class Memory(BaseModel):
-    """section: kube_performance_memory_v1"""
+    type_: Literal["memory"] = Field("memory", const=True)
+    usage: float
 
-    memory_usage_bytes: float
+
+class Cpu(BaseModel):
+    type_: Literal["cpu"] = Field("cpu", const=True)
+    usage: float
+
+
+class PerformanceUsage(BaseModel):
+    """section: [kube_performance_cpu_v1, kube_performance_memory_v1]"""
+
+    resource: Union[Cpu, Memory] = Field(discriminator="type_")
+
+
+class NodeAddress(BaseModel):
+    address: IpAddress
+    # according to the docs type_ is "Hostname", "ExternalIP", "InternalIP", but we also saw
+    # "InternalDNS" and "ExternalDNS" on an eks cluster
+    type_: str
+
+
+NodeAddresses = Sequence[NodeAddress]
 
 
 class NodeInfo(BaseModel):
@@ -221,7 +253,13 @@ class NodeInfo(BaseModel):
     architecture: str
     kernel_version: str
     os_image: str
+    operating_system: str
+    container_runtime_version: str
+    name: NodeName
+    creation_timestamp: CreationTimestamp
     labels: Labels
+    addresses: NodeAddresses
+    cluster: str
 
 
 class StartTime(BaseModel):
@@ -238,7 +276,7 @@ class PodCondition(BaseModel):
 
 
 class PodConditions(BaseModel):
-    """section: k8s_pod_conditions_v1"""
+    """section: kube_pod_conditions_v1"""
 
     initialized: Optional[PodCondition]
     scheduled: PodCondition
@@ -266,13 +304,29 @@ class ContainerTerminatedState(BaseModel):
     detail: Optional[str]
 
 
-class ContainerInfo(BaseModel):
-    id: Optional[str]  # id of non-ready container is None
+class ContainerStatus(BaseModel):
+    container_id: Optional[str]  # container_id of non-ready container is None
+    image_id: str  # image_id of non-ready container is ""
     name: str
     image: str
     ready: bool
     state: Union[ContainerTerminatedState, ContainerWaitingState, ContainerRunningState]
     restart_count: int
+
+
+class MatchExpression(TypedDict):
+    key: LabelName
+    operator: Literal["In", "NotIn", "Exists", "DoesNotExist"]
+    values: Sequence[LabelValue]
+
+
+MatchLabels = Mapping[LabelName, LabelValue]
+MatchExpressions = Sequence[MatchExpression]
+
+
+class Selector(BaseModel):
+    match_labels: MatchLabels
+    match_expressions: MatchExpressions
 
 
 class DeploymentInfo(BaseModel):
@@ -281,19 +335,21 @@ class DeploymentInfo(BaseModel):
     name: str
     namespace: Namespace
     labels: Labels
+    selector: Selector
     creation_timestamp: CreationTimestamp
     images: Sequence[str]
     containers: Sequence[str]
+    cluster: str
 
 
 class PodContainers(BaseModel):
     """section: kube_pod_containers_v1"""
 
-    containers: Mapping[str, ContainerInfo]
+    containers: Mapping[str, ContainerStatus]
 
 
 class Replicas(BaseModel):
-    replicas: int
+    replicas: Optional[int]
     updated: int
     available: int
     ready: int
@@ -301,17 +357,30 @@ class Replicas(BaseModel):
 
 
 class RollingUpdate(BaseModel):
+    type_: Literal["RollingUpdate"] = Field("RollingUpdate", const=True)
     max_surge: str
     max_unavailable: str
 
 
-# TODO: see how typing can be improved here:
-# rolling_udpate is only populated when type is
-# RollingUpdate
-class UpdateStrategy(BaseModel):
-    type_: Literal["RollingUpdate", "Recreate"]
-    rolling_update: Optional[RollingUpdate]
+class Recreate(BaseModel):
+    type_: Literal["Recreate"] = Field("Recreate", const=True)
 
 
-class DeploymentSpec(BaseModel):
-    strategy: UpdateStrategy
+class DeploymentStrategy(BaseModel):
+    """section: kube_deployment_strategy_v1"""
+
+    strategy: Union[Recreate, RollingUpdate] = Field(discriminator="type_")
+
+
+ImagePullPolicy = Literal["Always", "Never", "IfNotPresent"]
+
+
+class ContainerSpec(BaseModel):
+    name: ContainerName
+    image_pull_policy: ImagePullPolicy
+
+
+class ContainerSpecs(BaseModel):
+    """section: kube_pod_container_specs_v1"""
+
+    containers: Mapping[ContainerName, ContainerSpec]

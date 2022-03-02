@@ -4,7 +4,7 @@
 
 ### Source
 
-PYTHON 3.9.8, provided as source tarball by standard Checkmk development process
+PYTHON 3.9.10, provided as source tarball by standard Checkmk development process
 PYTHON 3.4.4, downloaded as msi installer from the python.org
 
 ### Changing or Updating the Python

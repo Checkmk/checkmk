@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 The absolute levels on memory usage were off by a factor of 1024^2.
 With regards to configured WATO rules this is now fixed.

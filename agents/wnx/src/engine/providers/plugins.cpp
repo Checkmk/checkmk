@@ -194,6 +194,12 @@ void PluginsProvider::loadConfig() {
     updateTimeout();
 }
 
+namespace {
+std::string ToString(const std::vector<char> &v) {
+    return std::string{v.begin(), v.end()};
+}
+}  // namespace
+
 void PluginsProvider::gatherAllData(std::string& out) {
     int last_count = 0;
     auto data_sync = RunSyncPlugins(pm_, last_count, timeout_);
@@ -202,12 +208,8 @@ void PluginsProvider::gatherAllData(std::string& out) {
     auto data_async = RunAsyncPlugins(pm_, last_count, true);
     last_count_ += last_count;
 
-    if (!data_sync.empty()) {
-        out += data_sync.data();
-    }
-    if (!data_async.empty()) {
-        out += data_async.data();
-    }
+    out += ToString(data_sync);
+    out += ToString(data_async);
 }
 
 void PluginsProvider::preStart() {

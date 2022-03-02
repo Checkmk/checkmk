@@ -92,7 +92,7 @@ from cmk.gui.type_defs import (
     VisualName,
     VisualTypeName,
 )
-from cmk.gui.utils import unique_default_name_suggestion
+from cmk.gui.utils import unique_default_name_suggestion, validate_id
 from cmk.gui.utils.flashed_messages import flash, get_flashed_messages
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.logged_in import save_user_file
@@ -116,12 +116,14 @@ from cmk.gui.valuespec import (
     GroupedListOfMultipleChoices,
     IconSelector,
     Integer,
+    JSONValue,
     ListOfMultiple,
     ListOfMultipleChoiceGroup,
     TextAreaUnicode,
     TextInput,
     Transform,
     ValueSpec,
+    ValueSpecText,
 )
 
 CustomUserVisuals = Dict[Tuple[UserId, VisualName], Dict]
@@ -728,7 +730,7 @@ def page_list(
     delname = request.var("_delete")
     if delname and transactions.check_transaction():
         if user.may("general.delete_foreign_%s" % what):
-            user_id_str = request.get_unicode_input("_user_id", user.id)
+            user_id_str = request.get_str_input("_user_id", user.id)
             user_id = None if user_id_str is None else UserId(user_id_str)
         else:
             user_id = user.id
@@ -1089,7 +1091,15 @@ def render_context_specs(
         spec.render_input(ident, value)
 
 
-def _vs_general(single_infos, default_id, visual_type, visibility_elements):
+def _vs_general(
+    single_infos,
+    default_id,
+    visual_type,
+    visibility_elements,
+    all_visuals: Dict[Tuple[UserId, VisualName], Visual],
+    mode: str,
+    what: str,
+):
     return Dictionary(
         title=_("General Properties"),
         render="form",
@@ -1202,12 +1212,16 @@ def _vs_general(single_infos, default_id, visual_type, visibility_elements):
                 ),
             ),
         ],
+        validate=validate_id(
+            mode,
+            {k: v for k, v in available(what, all_visuals).items() if v["owner"] == user.id},
+        ),
     )
 
 
 def page_edit_visual(
     what: Literal["dashboards", "views", "reports"],
-    all_visuals: Dict[Any, Dict[str, Any]],
+    all_visuals: Dict[Tuple[UserId, VisualName], Visual],
     custom_field_handler=None,
     create_handler=None,
     load_handler=None,
@@ -1238,7 +1252,7 @@ def page_edit_visual(
         raise MKUserError(mode, _("The %s does not exist.") % visual_type.title)
 
     if visualname:
-        owner_id = UserId(request.get_unicode_input_mandatory("owner", user.id))
+        owner_id = UserId(request.get_str_input_mandatory("owner", user.id))
         visual = _get_visual(owner_id, mode)
 
         if mode == "edit" and owner_id != "":  # editing builtins requires copy
@@ -1346,6 +1360,9 @@ def page_edit_visual(
         ),
         visual_type,
         visibility_elements,
+        all_visuals,
+        mode,
+        what,
     )
     context_specs = get_context_specs(visual, info_handler)
 
@@ -1422,6 +1439,7 @@ def page_edit_visual(
                     )
 
                 if transactions.check_transaction():
+                    assert owner_user_id is not None
                     all_visuals[(owner_user_id, visual["name"])] = visual
                     # Handle renaming of visuals
                     if oldname and oldname != visual["name"]:
@@ -1609,23 +1627,15 @@ def visible_filters_of_visual(visual: Visual, use_filters: List[Filter]) -> List
     return show_filters
 
 
-def get_context_uri_vars(context: VisualContext, single_infos: SingleInfos) -> HTTPVariables:
+def context_to_uri_vars(context: VisualContext) -> HTTPVariables:
     """Produce key/value tuples for HTTP variables from the visual context"""
+    # return list(chain.from_iterable(filter_vars.items() for filter_vars in context.values()))
+    # During CMK 2.1 beta look for things to break. If no bugs are found use line above
     uri_vars: HTTPVariables = []
-    single_info_keys = get_single_info_keys(single_infos)
-
-    for filter_name, filter_vars in context.items():
-        # Enforce the single context variables that are available in the visual context
-        if filter_name in single_info_keys:
-            uri_vars.append((filter_name, str(filter_vars)))
-
-        if not isinstance(filter_vars, dict):
-            continue  # Skip invalid filter values
-
-        # This is a multi-context filter
+    for filter_vars in context.values():
         for uri_varname, value in filter_vars.items():
-            uri_vars.append((uri_varname, "%s" % value))
-
+            assert isinstance(value, str)
+            uri_vars.append((uri_varname, value))
     return uri_vars
 
 
@@ -1950,34 +1960,34 @@ class VisualFilter(ValueSpec):
     def title(self):
         return self._filter.title
 
-    def canonical_value(self):
+    def canonical_value(self) -> FilterHTTPVariables:
         return {}
 
-    def render_input(self, varprefix: str, value: FilterHTTPVariables):
+    def render_input(self, varprefix: str, value: FilterHTTPVariables) -> None:
         # A filter can not be used twice on a page, because the varprefix is not used
         show_filter(self._filter, value)
 
-    def from_html_vars(self, varprefix) -> FilterHTTPVariables:
+    def from_html_vars(self, varprefix: str) -> FilterHTTPVariables:
         # A filter can not be used twice on a page, because the varprefix is not used
         return self._filter.value()
 
-    def validate_datatype(self, value, varprefix):
+    def validate_datatype(self, value: Any, varprefix: str) -> None:
         if not isinstance(value, dict):
             raise MKUserError(
                 varprefix, _("The value must be of type dict, but it has type %s") % type(value)
             )
 
-    def validate_value(self, value, varprefix):
+    def validate_value(self, value: FilterHTTPVariables, varprefix: str) -> None:
         self._filter.validate_value(value)
 
-    def value_to_html(self, value):
-        raise NotImplementedError()
+    def value_to_html(self, value: FilterHTTPVariables) -> ValueSpecText:
+        raise NotImplementedError()  # FIXME! Violates LSP!
 
-    def value_to_json(self, value):
-        raise NotImplementedError()
+    def value_to_json(self, value: FilterHTTPVariables) -> JSONValue:
+        raise NotImplementedError()  # FIXME! Violates LSP!
 
-    def value_from_json(self, json_value):
-        raise NotImplementedError()
+    def value_from_json(self, json_value: JSONValue) -> FilterHTTPVariables:
+        raise NotImplementedError()  # FIXME! Violates LSP!
 
 
 def _single_info_selection_forth(restrictions: Sequence[str]) -> Tuple[str, Sequence[str]]:
@@ -2203,13 +2213,25 @@ def get_single_info_keys(single_infos: SingleInfos) -> Set[FilterName]:
 
 
 def get_singlecontext_vars(context: VisualContext, single_infos: SingleInfos) -> Dict[str, str]:
+    # Link filters only happen when switching from (host/service)group
+    # datasource to host/service datasource. As this function is datasource
+    # unaware we optionally test for this posibility when (host/service)group
+    # is a single info.
+    link_filters = {
+        "hostgroup": "opthostgroup",
+        "servicegroup": "optservicegroup",
+    }
+
     def var_value(filter_name: FilterName) -> str:
         if filter_vars := context.get(filter_name):
             if filt := filter_registry.get(filter_name):
                 return filter_vars.get(filt.htmlvars[0], "")
         return ""
 
-    return {key: var_value(key) for key in get_single_info_keys(single_infos)}
+    return {
+        key: var_value(key) or var_value(link_filters.get(key, ""))
+        for key in get_single_info_keys(single_infos)
+    }
 
 
 def may_add_site_hint(

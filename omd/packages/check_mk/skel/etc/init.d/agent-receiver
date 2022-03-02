@@ -26,8 +26,8 @@ case "$1" in
                 --access-logfile $OMD_ROOT/var/log/agent-receiver/access.log \
                 --keyfile "$KEY_AND_CERT_FILE" \
                 --certfile "$KEY_AND_CERT_FILE" \
-                -b 127.0.0.1:$CONFIG_AGENT_RECEIVER_PORT \
-                -k uvicorn.workers.UvicornWorker agent_receiver.server:app
+                -b 0.0.0.0:$CONFIG_AGENT_RECEIVER_PORT \
+                -k uvicorn.workers.UvicornWorker agent_receiver.server:main_app
         if [ $? -eq 0 ]; then
             echo "OK"
             exit 0

@@ -88,7 +88,7 @@ register.agent_section(
 
 def inventory_solaris_pkginfo(section: Section) -> InventoryResult:
     path = ["software", "packages"]
-    for package in sorted(section, key=lambda r: r.get("name", "")):
+    for package in section:
         yield TableRow(
             path=path,
             key_columns={

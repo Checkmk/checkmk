@@ -1,7 +1,7 @@
 title: NTI Enviromux 16D: Auxiliary Sensor Temperature
 agents: snmp
 catalog: hw/environment/nti
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the temperature of aux sensors attached to
@@ -15,4 +15,3 @@ perfdata:
 
 discovery:
  One service is created for each available aux temperature sensor.
-

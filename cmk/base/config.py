@@ -45,6 +45,7 @@ from typing import (
 import cmk.utils
 import cmk.utils.check_utils
 import cmk.utils.cleanup
+import cmk.utils.config_path
 import cmk.utils.debug
 import cmk.utils.migrated_check_variables
 import cmk.utils.paths
@@ -58,6 +59,7 @@ import cmk.utils.translations
 import cmk.utils.version as cmk_version
 from cmk.utils.caching import config_cache as _config_cache
 from cmk.utils.check_utils import maincheckify, section_name_of, unwrap_parameters
+from cmk.utils.config_path import ConfigPath, LATEST_CONFIG
 from cmk.utils.exceptions import MKGeneralException, MKIPAddressLookupError, MKTerminate
 from cmk.utils.http_proxy_config import http_proxy_config_from_user_setting, HTTPProxyConfig
 from cmk.utils.labels import LabelManager
@@ -99,7 +101,7 @@ from cmk.utils.type_defs import (
     TimeperiodName,
 )
 
-from cmk.snmplib.type_defs import (  # noqa: F401 # pylint: disable=unused-import; # these are required in the modules' namespace to load the configuration!
+from cmk.snmplib.type_defs import (  # these are required in the modules' namespace to load the configuration!
     SNMPBackendEnum,
     SNMPCredentials,
     SNMPHostConfig,
@@ -108,8 +110,6 @@ from cmk.snmplib.type_defs import (  # noqa: F401 # pylint: disable=unused-impor
 )
 
 import cmk.core_helpers.cache as cache_file
-import cmk.core_helpers.config_path
-from cmk.core_helpers.config_path import ConfigPath, LATEST_CONFIG
 
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.autochecks as autochecks
@@ -829,7 +829,7 @@ def make_core_autochecks_dir(config_path: ConfigPath) -> Path:
 
 
 def make_core_autochecks_file(config_path: ConfigPath, hostname: HostName) -> Path:
-    return make_core_autochecks_dir(Path(config_path)) / f"%{hostname}.mk"
+    return make_core_autochecks_dir(Path(config_path)) / f"{hostname}.mk"
 
 
 @lru_cache
@@ -838,7 +838,7 @@ def make_core_discovered_host_labels_dir(config_path: ConfigPath) -> Path:
 
 
 def make_core_discovered_host_labels_file(config_path: ConfigPath, hostname: HostName) -> Path:
-    return make_core_discovered_host_labels_dir(config_path) / f"%{hostname}.mk"
+    return make_core_discovered_host_labels_dir(config_path) / f"{hostname}.mk"
 
 
 @contextlib.contextmanager
@@ -2433,9 +2433,11 @@ class HostConfig:
             self._config_cache.ruleset_matcher, hostname
         )
 
+        self.computed_datasources = cmk.utils.tags.compute_datasources(self.tag_groups)
+
         # Basic types
-        self.is_tcp_host: bool = self._config_cache.in_binary_hostlist(hostname, tcp_hosts)
-        self.is_snmp_host: bool = self._config_cache.in_binary_hostlist(hostname, snmp_hosts)
+        self.is_tcp_host: bool = self.computed_datasources.is_tcp
+        self.is_snmp_host: bool = self.computed_datasources.is_snmp
         self.is_usewalk_host: bool = self._config_cache.in_binary_hostlist(hostname, usewalk_hosts)
 
         if self.tag_groups["piggyback"] == "piggyback":
@@ -2454,8 +2456,8 @@ class HostConfig:
         )
 
         self.is_dual_host = self.is_tcp_host and self.is_snmp_host
-        self.is_all_agents_host = self.tag_groups["agent"] == "all-agents"
-        self.is_all_special_agents_host = self.tag_groups["agent"] == "special-agents"
+        self.is_all_agents_host = self.computed_datasources.is_all_agents_host
+        self.is_all_special_agents_host = self.computed_datasources.is_all_special_agents_host
 
         # IP addresses
         # Whether or not the given host is configured not to be monitored via IP
@@ -3187,6 +3189,14 @@ class HostConfig:
             is_usewalk_host=self.is_usewalk_host,
             snmp_backend=self._get_snmp_backend(),
         )
+
+    @property
+    def host_key(self) -> HostKey:
+        return HostKey(self.hostname, lookup_ip_address(self), SourceType.HOST)
+
+    @property
+    def host_key_mgmt(self) -> HostKey:
+        return HostKey(self.hostname, self.management_address, SourceType.MANAGEMENT)
 
     @property
     def additional_ipaddresses(self) -> Tuple[List[HostAddress], List[HostAddress]]:
@@ -4072,14 +4082,21 @@ class ConfigCache:
         service_descr: ServiceName,
     ) -> Sequence[HostKey]:
         """Returns the node keys if a service is clustered, otherwise an empty sequence"""
-        return [
-            HostKey(
-                nodename,
-                lookup_ip_address(self.get_host_config(nodename)),
-                source_type,
-            )
+        node_configs = [
+            self.get_host_config(nodename)
             for nodename in (host_config.nodes or ())
             if host_config.hostname == self.host_of_clustered_service(nodename, service_descr)
+        ]
+        return [
+            HostKey(
+                nc.hostname,
+                # I am not sure about management interfaces on clusters, but let's be consistent.
+                nc.management_address
+                if source_type is SourceType.MANAGEMENT
+                else lookup_ip_address(nc),
+                source_type,
+            )
+            for nc in node_configs
         ]
 
     def get_piggybacked_hosts_time_settings(

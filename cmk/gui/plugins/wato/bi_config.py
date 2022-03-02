@@ -93,6 +93,7 @@ from cmk.gui.valuespec import (
     FixedValue,
     IconSelector,
     ID,
+    JSONValue,
     ListOf,
     ListOfStrings,
     Optional,
@@ -100,6 +101,7 @@ from cmk.gui.valuespec import (
     TextInput,
     Transform,
     ValueSpec,
+    ValueSpecText,
 )
 from cmk.gui.watolib.groups import load_contact_group_information
 
@@ -285,6 +287,7 @@ class ModeBIEditPack(ABCBIMode):
             self._vs_pack().validate_value(vs_config, "bi_pack")
             if self._bi_pack:
                 self.bi_pack.title = vs_config["title"]
+                self.bi_pack.comment = vs_config["comment"]
                 self.bi_pack.contact_groups = vs_config["contact_groups"]
                 self.bi_pack.public = vs_config["public"]
                 self._add_change("bi-edit-pack", _("Modified BI pack %s") % self.bi_pack.id)
@@ -317,6 +320,7 @@ class ModeBIEditPack(ABCBIMode):
             vs_config = {
                 "id": self.bi_pack.id,
                 "title": self.bi_pack.title,
+                "comment": self.bi_pack.comment,
                 "contact_groups": self.bi_pack.contact_groups,
                 "public": self.bi_pack.public,
             }
@@ -1403,13 +1407,13 @@ class ModeBIEditRule(ABCBIMode):
 
 
 class BIRuleForm(Dictionary):
-    def render_input(self, varprefix, value):
+    def render_input(self, varprefix: str, value: Any) -> None:
         super().render_input(varprefix, value)
         html.javascript("new cmk.bi.BIRulePreview('#form_birule', '%s')" % (varprefix))
 
 
 class BIAggregationForm(Dictionary):
-    def render_input(self, varprefix, value):
+    def render_input(self, varprefix: str, value: Any) -> None:
         super().render_input(varprefix, value)
         html.javascript("new cmk.bi.BIAggregationPreview('#form_biaggr', '%s')" % (varprefix))
 
@@ -1498,17 +1502,20 @@ class NodeVisualizationLayoutStyle(ValueSpec):
         super().__init__(**kwargs)
         self._style_type = kwargs.get("type", "hierarchy")
 
-    def render_input(self, varprefix, value):
+    def render_input(self, varprefix: str, value: Any) -> None:
         html.div("", id_=varprefix)
         html.javascript(
             "let example = new cmk.node_visualization_layout_styles.LayoutStyleExampleGenerator(%s);"
             "example.create_example(%s)" % (json.dumps(varprefix), json.dumps(value))
         )
 
-    def value_to_html(self, value) -> str:
+    def canonical_value(self) -> _Optional[dict[str, Any]]:
+        return None
+
+    def value_to_html(self, value: dict[str, Any]) -> ValueSpecText:
         return ""
 
-    def from_html_vars(self, varprefix):
+    def from_html_vars(self, varprefix: str) -> dict[str, Any]:
         value = self.default_value()
         for key, val in request.itervars():
             if key.startswith(varprefix):
@@ -1521,14 +1528,14 @@ class NodeVisualizationLayoutStyle(ValueSpec):
                     value["style_config"][clean_key[15:]] = val == "on"
         return value
 
-    def default_value(self):
+    def default_value(self) -> dict[str, Any]:
         return {"type": "none", "style_config": {}}
 
-    def value_to_json(self, value):
-        raise NotImplementedError()
+    def value_to_json(self, value: dict[str, Any]) -> JSONValue:
+        raise NotImplementedError()  # FIXME! Violates LSP!
 
-    def value_from_json(self, json_value):
-        raise NotImplementedError()
+    def value_from_json(self, json_value: JSONValue) -> dict[str, Any]:
+        raise NotImplementedError()  # FIXME! Violates LSP!
 
 
 # .
@@ -1738,7 +1745,7 @@ class BIModeEditAggregation(ABCBIMode):
                         ),
                     ],
                 ),
-                default_value={},
+                default_value=[],
                 title=_("Aggregation groups"),
                 allow_empty=False,
                 empty_text=_("Please define at least one aggregation group"),

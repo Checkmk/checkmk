@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import ast
 import glob
 import logging
 import os
@@ -16,7 +17,7 @@ import time
 import urllib.parse
 from contextlib import suppress
 from pathlib import Path
-from typing import List, Mapping, MutableMapping, Optional
+from typing import List, Literal, Mapping, MutableMapping, Optional, Union
 
 import pytest
 
@@ -330,13 +331,20 @@ class Site:
         cmd = sudo + ["/usr/bin/omd", mode] + site_id + list(args)
         logger.info("Executing: %s", subprocess.list2cmdline(cmd))
         completed_process = subprocess.run(
-            cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, encoding="utf-8", check=False
+            cmd,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            encoding="utf-8",
+            check=False,
         )
-        logger.debug("Exit code: %d", completed_process.returncode)
+
+        log_level = logging.DEBUG if completed_process.returncode == 0 else logging.WARNING
+        logger.log(log_level, "Exit code: %d", completed_process.returncode)
         if completed_process.stdout:
-            logger.debug("Output:")
+            logger.log(log_level, "Output:")
         for line in completed_process.stdout.strip().split("\n"):
-            logger.debug("> %s", line)
+            logger.log(log_level, "> %s", line)
+
         return completed_process.returncode
 
     def path(self, rel_path: str) -> str:
@@ -368,17 +376,31 @@ class Site:
         else:
             shutil.rmtree(self.path(rel_path))
 
+    def _call_tee(self, rel_target_path: str, content: Union[bytes, str]) -> None:
+        with self.execute(
+            ["tee", self.path(rel_target_path)],
+            stdin=subprocess.PIPE,
+            stdout=subprocess.DEVNULL,
+            encoding=None
+            if isinstance(
+                content,
+                bytes,
+            )
+            else "utf-8",
+        ) as p:
+            p.communicate(content)
+        if p.returncode != 0:
+            raise Exception(
+                "Failed to write file %s. Exit-Code: %d"
+                % (
+                    rel_target_path,
+                    p.returncode,
+                )
+            )
+
     def write_text_file(self, rel_path: str, content: str) -> None:
         if not self._is_running_as_site_user():
-            with self.execute(
-                ["tee", self.path(rel_path)], stdin=subprocess.PIPE, stdout=open(os.devnull, "w")
-            ) as p:
-                # ? content seems to have the type str
-                p.communicate(content)
-                if p.stdin is not None:
-                    p.stdin.close()
-                if p.wait() != 0:
-                    raise Exception("Failed to write file %s. Exit-Code: %d" % (rel_path, p.wait()))
+            self._call_tee(rel_path, content)
         else:
             file_path = Path(self.path(rel_path))
             file_path.parent.mkdir(parents=True, exist_ok=True)
@@ -387,17 +409,7 @@ class Site:
 
     def write_binary_file(self, rel_path: str, content: bytes) -> None:
         if not self._is_running_as_site_user():
-            with self.execute(
-                ["tee", self.path(rel_path)],
-                stdin=subprocess.PIPE,
-                stdout=open(os.devnull, "w"),
-                encoding=None,
-            ) as p:
-                p.communicate(content)
-                if p.stdin is not None:
-                    p.stdin.close()
-                if p.wait() != 0:
-                    raise Exception("Failed to write file %s. Exit-Code: %d" % (rel_path, p.wait()))
+            self._call_tee(rel_path, content)
         else:
             file_path = Path(self.path(rel_path))
             file_path.parent.mkdir(parents=True, exist_ok=True)
@@ -406,16 +418,16 @@ class Site:
 
     def create_rel_symlink(self, link_rel_target: str, rel_link_name: str) -> None:
         if not self._is_running_as_site_user():
-            p = self.execute(
+            with self.execute(
                 ["ln", "-s", link_rel_target, rel_link_name],
                 stdout=subprocess.PIPE,
                 stdin=subprocess.PIPE,
-            )
-            p.communicate()
-            if p.wait() != 0:
+            ) as p:
+                p.wait()
+            if p.returncode != 0:
                 raise Exception(
                     "Failed to create symlink from %s to ./%s. Exit-Code: %d"
-                    % (rel_link_name, link_rel_target, p.wait())
+                    % (rel_link_name, link_rel_target, p.returncode)
                 )
         else:
             os.symlink(link_rel_target, os.path.join(self.root, rel_link_name))
@@ -538,14 +550,12 @@ class Site:
     def _update_with_f12_files(self) -> None:
         paths = [
             cmk_path() + "/omd/packages/omd",
-            cmk_path() + "/livestatus",
             cmk_path() + "/livestatus/api/python",
             cmk_path() + "/bin",
             cmk_path() + "/agents/special",
             cmk_path() + "/agents/plugins",
             cmk_path() + "/agents/windows/plugins",
             cmk_path() + "/agents",
-            cmk_path() + "/modules",
             cmk_path() + "/cmk/base",
             cmk_path() + "/cmk",
             cmk_path() + "/checks",
@@ -555,6 +565,12 @@ class Site:
             cmk_path() + "/notifications",
             cmk_path() + "/.werks",
         ]
+
+        if self.version.is_raw_edition():
+            # The module is only used in CRE
+            paths += [
+                cmk_path() + "/livestatus",
+            ]
 
         if os.path.exists(cmc_path()) and not self.version.is_raw_edition():
             paths += [
@@ -580,7 +596,7 @@ class Site:
 
         for path in paths:
             if os.path.exists("%s/.f12" % path):
-                print('Executing .f12 in "%s"...' % path)
+                logger.info('Executing .f12 in "%s"...', path)
                 assert (
                     os.system(  # nosec
                         'cd "%s" ; '
@@ -591,8 +607,7 @@ class Site:
                     >> 8
                     == 0
                 )
-                print('Executing .f12 in "%s" DONE' % path)
-                sys.stdout.flush()
+                logger.info('Executing .f12 in "%s" DONE', path)
 
     def _update_cmk_core_config(self) -> None:
         logger.info("Updating core configuration...")
@@ -823,7 +838,7 @@ class Site:
 
     def is_running(self) -> bool:
         return (
-            self.execute(["/usr/bin/omd", "status", "--bare"], stdout=open(os.devnull, "w")).wait()
+            self.execute(["/usr/bin/omd", "status", "--bare"], stdout=subprocess.DEVNULL).wait()
             == 0
         )
 
@@ -832,7 +847,7 @@ class Site:
         # 1 -> fully stopped
         # 2 -> partially running
         return (
-            self.execute(["/usr/bin/omd", "status", "--bare"], stdout=open(os.devnull, "w")).wait()
+            self.execute(["/usr/bin/omd", "status", "--bare"], stdout=subprocess.DEVNULL).wait()
             == 1
         )
 
@@ -852,9 +867,6 @@ class Site:
             self.start()
             logger.debug("Started site")
 
-    def set_core(self, core: str) -> None:
-        self.set_config("CORE", core, with_restart=True)
-
     def get_config(self, key: str) -> str:
         p = self.execute(
             ["omd", "config", "show", key], stdout=subprocess.PIPE, stderr=subprocess.PIPE
@@ -864,6 +876,20 @@ class Site:
         if stderr:
             logger.error(stderr)
         return stdout.strip()
+
+    def core_name(self) -> Literal["cmc", "nagios"]:
+        return "nagios" if self.version.is_raw_edition() else "cmc"
+
+    def core_history_log(self) -> str:
+        core = self.core_name()
+        if core == "nagios":
+            return "var/log/nagios.log"
+        if core == "cmc":
+            return "var/check_mk/core/history"
+        raise ValueError(f"Unhandled core: {core}")
+
+    def core_history_log_timeout(self) -> int:
+        return 10 if self.core_name() == "cmc" else 30
 
     # These things are needed to make the site basically being setup. So this
     # is checked during site initialization instead of a dedicated test.
@@ -975,8 +1001,14 @@ class Site:
         for nagios_log_path in glob.glob(self.path("var/nagios/*.log")):
             shutil.copy(nagios_log_path, "%s/logs" % self.result_dir())
 
+        cmc_dir = "%s/cmc" % self.result_dir()
+        os.makedirs(cmc_dir, exist_ok=True)
+
         with suppress(FileNotFoundError):
-            shutil.copy(self.path("var/check_mk/core/core"), "%s/cmc_core_dump" % self.result_dir())
+            shutil.copy(self.path("var/check_mk/core/history"), "%s/history" % cmc_dir)
+
+        with suppress(FileNotFoundError):
+            shutil.copy(self.path("var/check_mk/core/core"), "%s/core_dump" % cmc_dir)
 
         with suppress(FileNotFoundError):
             shutil.copytree(
@@ -1008,10 +1040,22 @@ class Site:
 
         logger.debug("Read replication changes of site")
         base_dir = site.path("var/check_mk/wato")
-        for site_changes_path in glob.glob(base_dir + "/replication_*"):
-            logger.debug("Replication changes of site: %r", site_changes_path)
-            if os.path.exists(site_changes_path):
-                logger.debug(site.read_file(base_dir + "/" + os.path.basename(site_changes_path)))
+        for path in glob.glob(base_dir + "/replication_*"):
+            logger.debug("Replication file: %r", path)
+            with suppress(FileNotFoundError):
+                logger.debug(site.read_file(base_dir + "/" + os.path.basename(path)))
+
+        # Ensure no previous activation is still running
+        for status_path in glob.glob(base_dir + "/replication_status_*"):
+            logger.debug("Replication status file: %r", status_path)
+            with suppress(FileNotFoundError):
+                changes = ast.literal_eval(
+                    site.read_file(base_dir + "/" + os.path.basename(status_path))
+                )
+                if changes.get("current_activation") is not None:
+                    raise RuntimeError(
+                        "A previous activation is still running. Does the wait work?"
+                    )
 
         changed = self.openapi.activate_changes_and_wait_for_completion(
             sites=[site.id], force_foreign_changes=allow_foreign_changes

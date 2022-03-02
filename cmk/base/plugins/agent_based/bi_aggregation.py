@@ -4,14 +4,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import ast
-from typing import Any, Dict
+from typing import Any, Mapping
 
 from cmk.utils.type_defs import state_markers  # pylint: disable=cmk-module-layer-violation
 
 from .agent_based_api.v1 import register, Result, Service, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 
-Section = Dict[str, Any]
+Section = Mapping[str, Any]
 
 
 def parse_bi_aggregation(string_table: StringTable) -> Section:
@@ -57,8 +57,7 @@ def render_bi_infos(infos):
 
 
 def check_bi_aggregation(item: str, section: Section) -> CheckResult:
-    bi_data = section.get(item)
-    if not bi_data:
+    if not (bi_data := section.get(item)):
         return
 
     overall_state = bi_data["state_computed_by_agent"]

@@ -80,12 +80,12 @@ public:
     };
 
     const EVT_VARIANT &getValByType(int index) const {
-        auto values = reinterpret_cast<const EVT_VARIANT *>(&buffer_[0]);
+        const auto *values = reinterpret_cast<const EVT_VARIANT *>(&buffer_[0]);
 
         return values[index];
     }
 
-    virtual uint16_t eventId() const override {
+    uint16_t eventId() const override {
         // I believe type is always UInt16 but since MS can't do documentation
         // I'm not sure
         auto val = getValByType(kEventId);
@@ -99,7 +99,7 @@ public:
         }
     }
 
-    virtual uint16_t eventQualifiers() const override {
+    uint16_t eventQualifiers() const override {
         auto val = getValByType(kEventQualifiers);
         switch (val.Type) {
             case EvtVarTypeUInt16:
@@ -111,22 +111,22 @@ public:
         }
     }
 
-    virtual uint64_t recordId() const override {
+    uint64_t recordId() const override {
         return getValByType(kRecordId).UInt64Val;
     }
 
-    virtual time_t timeGenerated() const override {
+    time_t timeGenerated() const override {
         auto val = getValByType(kTimeGenerated);
         auto ullTimeStamp = val.FileTimeVal;
         constexpr ULONGLONG time_offset = 116444736000000000;
         return (ullTimeStamp - time_offset) / 10000000;
     }
 
-    virtual std::wstring source() const override {
+    std::wstring source() const override {
         return getValByType(kSource).StringVal;
     }
 
-    virtual Level eventLevel() const override {
+    Level eventLevel() const override {
         auto val = getValByType(kLevel);
         auto b = static_cast<WinEventLevel>(val.ByteVal);
         switch (b) {
@@ -146,7 +146,7 @@ public:
         }
     }
 
-    virtual std::wstring makeMessage() const override {
+    std::wstring makeMessage() const override {
         if (g_evt.formatMessage == nullptr) {
             XLOG::l("EvtFormatMessage function not found in wevtapi.dll");
             return L"bad_message 1";
@@ -165,15 +165,17 @@ public:
 
         if (publisher_meta) {
             ON_OUT_OF_SCOPE(g_evt.close(publisher_meta));
-            for (;;) {
-                DWORD required;
+            while (true) {
+                DWORD required{0};
                 if (g_evt.formatMessage(publisher_meta, event_handle_, 0, 0,
                                         nullptr, EvtFormatMessageEvent,
                                         static_cast<DWORD>(result.size()),
-                                        &result[0], &required)) {
+                                        &result[0], &required) == TRUE) {
                     result.resize(required);
                     break;
-                } else if (GetLastError() == ERROR_INSUFFICIENT_BUFFER) {
+                }
+
+                if (GetLastError() == ERROR_INSUFFICIENT_BUFFER) {
                     result.resize(required);
                 } else {
                     result.resize(0);
@@ -210,7 +212,7 @@ public:
 private:
     // ultra-legacy code from 1.5
     std::wstring eventData() const {
-        auto values = reinterpret_cast<const EVT_VARIANT *>(&buffer_[0]);
+        const auto *values = reinterpret_cast<const EVT_VARIANT *>(&buffer_[0]);
         constexpr size_t IDX = 6;  // ??? what ???
 
         std::wstring result;
@@ -270,8 +272,8 @@ EvtFunctionMap::~EvtFunctionMap() {
     }
 }
 
-EventLogVista::EventLogVista(const std::wstring &LogName)
-    : log_name_(LogName), subscription_handle_(nullptr) {
+EventLogVista::EventLogVista(const std::wstring &path)
+    : log_name_(path), subscription_handle_(nullptr) {
     event_signal_ = CreateEvent(nullptr, TRUE, TRUE, nullptr);
     event_table_.reserve(EVENT_BLOCK_SIZE);
     render_context_ = EventLogRecordVista::createRenderContext();
@@ -294,10 +296,12 @@ std::wstring EventLogVista::renderBookmark(EVT_HANDLE bookmark) const {
         if (g_evt.render(nullptr, bookmark, EvtRenderBookmark,
                          static_cast<DWORD>(buffer.size() * sizeof(wchar_t)),
                          reinterpret_cast<void *>(&buffer[0]), &required,
-                         &count)) {
+                         &count) == TRUE) {
             buffer.resize(required);
             break;
-        } else if (GetLastError() == ERROR_INSUFFICIENT_BUFFER) {
+        }
+
+        if (GetLastError() == ERROR_INSUFFICIENT_BUFFER) {
             buffer.resize(required);
         } else {
             XLOG::l("failed to render bookmark");
@@ -315,10 +319,10 @@ EVT_HANDLE CreateLogHandle(EVT_QUERY_FLAGS flags, const std::wstring &path) {
         return nullptr;
     }
 
-    auto handle =
+    auto *handle =
         g_evt.query(nullptr, path.c_str(), L"*", flags | EvtQueryChannelPath);
 
-    if (handle) {
+    if (handle != nullptr) {
         return handle;
     }
 
@@ -350,11 +354,11 @@ void EventLogVista::seek(uint64_t record_id) {
                 ? EvtQueryReverseDirection
                 : EvtQueryForwardDirection;
 
-        auto log_handle = CreateLogHandle(flags, log_name_);
+        auto *log_handle = CreateLogHandle(flags, log_name_);
         ON_OUT_OF_SCOPE(if (log_handle) g_evt.close(log_handle));
 
         DWORD num_events = 0;
-        if (g_evt.next) {
+        if (g_evt.next != nullptr) {
             EVT_HANDLE event_handle = nullptr;
             g_evt.next(log_handle, 1, &event_handle, INFINITE, 0, &num_events);
             if (event_handle == nullptr) {
@@ -368,8 +372,9 @@ void EventLogVista::seek(uint64_t record_id) {
             if ((record_id < record.recordId()) ||
                 (record_id == std::numeric_limits<uint64_t>::max())) {
                 record_id = record.recordId();
-            } else
-                record_id--;
+            } else {
+                --record_id;
+            }
         } else {
             // We expect an ERROR_NO_MORE_ITEMS!
             // I've experienced a TIMEOUT_ERROR before, which totally broke the
@@ -387,7 +392,7 @@ void EventLogVista::seek(uint64_t record_id) {
         L"' RecordId='" + std::to_wstring(record_id) +
         L"' IsCurrent='true'/></BookmarkList>";
 
-    auto bookmark_handle = g_evt.createBookmark(bookmark_xml.c_str());
+    auto *bookmark_handle = g_evt.createBookmark(bookmark_xml.c_str());
     ON_OUT_OF_SCOPE(if (bookmark_handle) g_evt.close(bookmark_handle));
 
     if (subscription_handle_ != nullptr) {
@@ -418,8 +423,8 @@ EventLogRecordBase *EventLogVista::readRecord() {
 
 // open/close to see what happens
 bool EventLogVista::isLogValid() const {
-    auto handle = CreateLogHandle(EvtQueryReverseDirection, log_name_);
-    if (!handle) {
+    auto *handle = CreateLogHandle(EvtQueryReverseDirection, log_name_);
+    if (handle == nullptr) {
         return false;
     }
     g_evt.close(handle);
@@ -427,22 +432,23 @@ bool EventLogVista::isLogValid() const {
 }
 
 uint64_t EventLogVista::getLastRecordId() {
-    if (!g_evt.next || !g_evt.close) {
+    if (g_evt.next == nullptr || g_evt.close == nullptr) {
         XLOG::l("SHOT in the HEAD ERROR ERROR 1");
         return 0;
     }
 
     auto handle = CreateLogHandle(EvtQueryReverseDirection, log_name_);
-    if (!handle) {
+    if (handle == nullptr) {
         XLOG::d("SHOT in the HEAD ERROR ERROR 2 '{}'",
                 wtools::ToUtf8(log_name_));
         return 0;
     }
-    ON_OUT_OF_SCOPE(if (handle) g_evt.close(handle));
+    ON_OUT_OF_SCOPE(if (handle != nullptr) { g_evt.close(handle); });
 
     EVT_HANDLE event_handle = nullptr;
     DWORD num_events = 0;
-    if (!g_evt.next(handle, 1, &event_handle, INFINITE, 0, &num_events)) {
+    if (g_evt.next(handle, 1, &event_handle, INFINITE, 0, &num_events) ==
+        FALSE) {
         return 0;
     }
 
@@ -467,7 +473,7 @@ bool EventLogVista::fillBuffer() {
         DWORD num_events = 0;
         BOOL success = g_evt.next(subscription_handle_, EVENT_BLOCK_SIZE,
                                   events, INFINITE, 0, &num_events);
-        if (!success) {
+        if (success == FALSE) {
             auto error = GetLastError();
             if (error != ERROR_NO_MORE_ITEMS) {
                 XLOG::d("failed to enumerate events '{}' error = {}",

@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 Fixed race condition which led to a missing monitoring core configuration.
 If several components needed a new configuration at the same time, there was a chance that the configuration for the

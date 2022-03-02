@@ -1,7 +1,7 @@
 title: Cisco Devices (old): CPU Utilization
 agents: snmp
 catalog: hw/network/cisco
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the CPU utilization of old Cisco devices

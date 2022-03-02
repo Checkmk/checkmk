@@ -6,7 +6,7 @@ Date: 1618834792
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 If you used adhoc downtimes in previous 2.0 versions, the downtime could not be
 send, because the comment field was stated as required after using the button

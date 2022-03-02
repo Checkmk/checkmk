@@ -1,7 +1,7 @@
 title: Hitachi HNAS: Status and Measured Value of Temperature Sensors
 agents: snmp
 catalog: hw/storagehw/hitachi
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  Checks the status of temperature sensors in an Hitachi HNAS storage system.

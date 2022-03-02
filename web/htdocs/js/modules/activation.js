@@ -59,6 +59,7 @@ export function activate_changes(mode, site_id) {
     if (foreign_checkbox && foreign_checkbox.checked) activate_foreign = 1;
 
     start_activation(sites, activate_until.value, comment, activate_foreign);
+    initialize_site_progresses(sites);
 }
 
 function start_activation(sites, activate_until, comment, activate_foreign) {
@@ -151,6 +152,16 @@ function is_activation_progress_finished(response) {
     return true;
 }
 
+function initialize_site_progresses(sites) {
+    for (const site_id of sites) {
+        var progress = document.getElementById("site_" + site_id + "_progress");
+        // Temporarily disable the transition for the reset
+        progress.style.transition = "none";
+        progress.style.width = "0px";
+        progress.style.transition = "";
+    }
+}
+
 function update_activation_state(_unused_handler_data, response) {
     for (var site_id in response["sites"]) {
         // skip loop if the property is from prototype
@@ -184,6 +195,7 @@ export function update_site_activation_state(site_state) {
         utils.remove_class(msg, "in_progress");
         utils.add_class(msg, "state_" + site_state["_state"]);
     } else {
+        utils.remove_classes_by_prefix(msg, "state_");
         utils.add_class(msg, "in_progress");
     }
 
@@ -215,10 +227,15 @@ function update_site_progress(site_state) {
         utils.add_class(progress, "state_" + site_state["_state"]);
         return;
     } else {
+        utils.remove_classes_by_prefix(progress, "state_");
         utils.add_class(progress, "in_progress");
     }
 
     // TODO: Visualize overdue
+
+    if (site_state["_time_started"] === null) {
+        return; // Do not update width in case it was not started yet
+    }
 
     var duration = parseFloat(utils.time() - site_state["_time_started"]);
 
@@ -234,6 +251,23 @@ function update_site_progress(site_state) {
 function finish_activation(result) {
     utils.schedule_reload(utils.makeuri({_finished: "1"}), 1000);
 
+    // Handle special state "Locked" with a timeout to show the message to the
+    // user. We can only determine this state via warning state for now
+    var site_result = result.sites;
+    var is_warning = false;
+    for (let [site_id, site_keys] of Object.entries(site_result)) {
+        if (site_keys._state == "warning") {
+            is_warning = true;
+            break;
+        }
+    }
+
     // Trigger a reload of the sidebar (to update changes in WATO snapin)
-    utils.reload_whole_page();
+    if (is_warning == true) {
+        setTimeout(function () {
+            utils.reload_whole_page();
+        }, 1000);
+    } else {
+        utils.reload_whole_page();
+    }
 }

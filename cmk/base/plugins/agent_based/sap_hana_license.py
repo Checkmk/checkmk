@@ -122,11 +122,11 @@ def _check_product_usage(size, limit, params):
 
 
 def cluster_check_sap_hana_license(
-    item: str, params: Mapping[str, Any], section: Mapping[str, sap_hana.ParsedSection]
+    item: str, params: Mapping[str, Any], section: Mapping[str, Optional[sap_hana.ParsedSection]]
 ) -> CheckResult:
     yield Result(state=state.OK, summary="Nodes: %s" % ", ".join(section.keys()))
     for node_section in section.values():
-        if item in node_section:
+        if node_section is not None and item in node_section:
             yield from check_sap_hana_license(item, params, node_section)
             return
 

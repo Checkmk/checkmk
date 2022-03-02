@@ -10,7 +10,8 @@ from uuid import UUID
 
 from agent_receiver import constants
 from agent_receiver.models import HostTypeEnum
-from agent_receiver.utils import Host, update_file_access_time
+from agent_receiver.utils import Host, site_name_prefix, update_file_access_time
+from pytest_mock import MockerFixture
 
 
 def test_host_not_registered(uuid: UUID) -> None:
@@ -62,3 +63,9 @@ def test_update_file_access_time_success(tmp_path: Path) -> None:
 
 def test_update_file_access_time_no_file(tmp_path: Path) -> None:
     update_file_access_time(tmp_path / "my_file")
+
+
+def test_site_name_prefix(mocker: MockerFixture) -> None:
+    assert site_name_prefix("my_app") == "/NO_SITE/my_app"
+    mocker.patch("os.getenv", return_value=None)
+    assert site_name_prefix("my_app") == "/my_app"

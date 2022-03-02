@@ -12,6 +12,11 @@ from cmk.gui.plugins.wato.utils import (
 )
 from cmk.gui.valuespec import Dictionary, Percentage, Tuple
 
+######################################################################
+# NOTE: This valuespec and associated check are deprecated and will be
+#       removed in Checkmk version 2.2.
+######################################################################
+
 
 def _parameter_valuespec_k8s_resources():
     return Dictionary(
@@ -60,5 +65,6 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_k8s_resources,
         title=lambda: _("Kubernetes resources"),
+        is_deprecated=True,
     )
 )

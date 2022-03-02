@@ -1,7 +1,7 @@
 title: OpenVMS: Interactively Logged in Users
 agents: openvms
 catalog: os/misc
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check is always OK and lists all interactively logged in users

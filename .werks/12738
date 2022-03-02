@@ -6,7 +6,7 @@ Date: 1618221953
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 If values were missing for some hosts and this kind of value was selected in
 preview, e.g. "IPv4 address", importing was not possible because of a

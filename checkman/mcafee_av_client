@@ -1,7 +1,7 @@
 title: McAfee Anti-Virus: Signature Date
 agents: windows
 catalog: app/mcafee
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the signature date of a windows system using
@@ -14,4 +14,3 @@ description:
 
 discovery:
  One service is created for each windows host.
-

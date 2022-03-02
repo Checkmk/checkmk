@@ -1,0 +1,19 @@
+Title: Service discovery with non-ASCII service names
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1643796083
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+The service discovery in the GUI was not able to handle certain
+non-ASCII characters in service names (non-ASCII characters with
+Unicode code points larger than 255). Such characters were by
+mistake replaced by other characaters. As a result, affected
+services were continously displayed as unmonitored, even after
+adding them to the list of monitored services.
+
+Note that this issue did not affect the service discovery via the
+command line (<tt>cmk -I</tt> / <tt>cmk -II</tt>).

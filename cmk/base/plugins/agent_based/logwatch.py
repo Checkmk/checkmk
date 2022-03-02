@@ -181,6 +181,12 @@ def check_logwatch(
     )
 
 
+def cluster_check_logwatch(
+    item: str, section: Mapping[str, Optional[logwatch.Section]]
+) -> CheckResult:
+    yield from check_logwatch(item, {k: v for k, v in section.items() if v is not None})
+
+
 register.check_plugin(
     name="logwatch",
     service_name="Log %s",
@@ -193,7 +199,7 @@ register.check_plugin(
     # There *are* already check parameters, they're just bypassing the official API.
     # Make sure to give the check ruleset a general name, so we can (maybe, someday)
     # incorporate those.
-    cluster_check_function=check_logwatch,
+    cluster_check_function=cluster_check_logwatch,
 )
 
 # .
@@ -316,6 +322,16 @@ def check_logwatch_groups(
     )
 
 
+def cluster_check_logwatch_groups(
+    item: str,
+    params: DiscoveredGroupParams,
+    section: Mapping[str, Optional[logwatch.Section]],
+) -> CheckResult:
+    yield from check_logwatch_groups(
+        item, params, {k: v for k, v in section.items() if v is not None}
+    )
+
+
 register.check_plugin(
     name="logwatch_groups",
     service_name="Log %s",
@@ -326,7 +342,7 @@ register.check_plugin(
     discovery_default_parameters={},
     check_function=check_logwatch_groups_node,
     check_default_parameters={"group_patterns": []},
-    cluster_check_function=check_logwatch_groups,
+    cluster_check_function=cluster_check_logwatch_groups,
 )
 
 

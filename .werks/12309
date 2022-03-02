@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 This only applies to the raw edition with nagios core: If a new style
 check plugin is interested in multiple sections, and one section is a

@@ -11,20 +11,33 @@ from unittest import mock
 import freezegun
 import pytest
 from smb.base import NotConnectedError, SharedFile  # type: ignore[import]
+from smb.smb_structs import OperationFailure  # type: ignore[import]
 
 from cmk.special_agents.agent_smb_share import (
     connect,
     File,
     get_all_shared_files,
     iter_shared_files,
+    main,
     parse_arguments,
     smb_share_agent,
 )
 
 
+class MockShare:
+    def __init__(self, name):
+        self._name = name
+
+    @property
+    def name(self):
+        return self._name
+
+
 class MockSMBConnection:
-    def __init__(self, *args, filesystem=None):
+    def __init__(self, *args, filesystem=None, shares=None, is_direct_tcp=False):
         self.filesystem = filesystem
+        self.shares = shares
+        self.is_direct_tcp = is_direct_tcp
 
     @staticmethod
     def connect(*args):
@@ -34,6 +47,11 @@ class MockSMBConnection:
         if shared_folder not in self.filesystem:
             return []
         return self.filesystem[shared_folder].get(path)
+
+    def listShares(self) -> List[MockShare]:
+        if not self.shares:
+            return []
+        return [MockShare(s) for s in self.shares]
 
     def close(self):
         pass
@@ -57,30 +75,27 @@ def test_parse_arguments() -> None:
         [
             "hostname",
             "127.0.0.1",
-            "Share Folder 1",
-            "Share Folder 2",
             "--username",
             "username",
             "--password",
             "password",
-            "--port",
-            "139",
             "--patterns",
-            "\\Share Folder 1\\*.log",
-            "\\Share Folder 2\\file.txt",
+            "\\\\HOSTNAME\\Share Folder 1\\*.log",
+            "\\\\HOSTNAME\\Share Folder 2\\file.txt",
         ]
     )
     assert args.hostname == "hostname"
     assert args.ip_address == "127.0.0.1"
     assert args.username == "username"
     assert args.password == "password"
-    assert args.share_names == ["Share Folder 1", "Share Folder 2"]
-    assert args.port == 139
-    assert args.patterns == ["\\Share Folder 1\\*.log", "\\Share Folder 2\\file.txt"]
+    assert args.patterns == [
+        "\\\\HOSTNAME\\Share Folder 1\\*.log",
+        "\\\\HOSTNAME\\Share Folder 2\\file.txt",
+    ]
 
 
 @pytest.mark.parametrize(
-    "filesystem, shared_folder, path, pattern, expected_file_data",
+    "filesystem, shared_folder, pattern, expected_file_data",
     [
         (
             {
@@ -93,9 +108,8 @@ def test_parse_arguments() -> None:
                 }
             },
             "My Shared Folder",
-            "",
-            "\\My Shared Folder\\Subfolder1\\My File",
-            [("\\My Shared Folder\\Subfolder1\\My File", "My File")],
+            ["Subfolder1", "My File"],
+            [("\\\\HOSTNAME\\My Shared Folder\\Subfolder1\\My File", "My File")],
         ),
         (
             {
@@ -106,20 +120,104 @@ def test_parse_arguments() -> None:
                     ],
                     "Subfolder1\\": [
                         SharedFile(0, 0, 0, 0, 10, 0, 16, "", "Subfolder2"),
+                        SharedFile(0, 0, 0, 0, 10, 0, 16, "", "Subfolder3"),
                         SharedFile(0, 0, 0, 0, 10, 0, 32, "", "file2"),
                     ],
                     "Subfolder1\\Subfolder2\\": [
                         SharedFile(0, 0, 0, 0, 10, 0, 32, "", "file3"),
                         SharedFile(0, 0, 0, 0, 10, 0, 32, "", "file4"),
                     ],
+                    "Subfolder1\\Subfolder3\\": [
+                        SharedFile(0, 0, 0, 0, 10, 0, 32, "", "file5"),
+                    ],
                 }
             },
             "My Shared Folder",
-            "",
-            "\\My Shared Folder\\Subfolder1\\Subfolder2\\*ile*",
+            ["Subfolder1", "*folder*", "*ile*"],
             [
-                ("\\My Shared Folder\\Subfolder1\\Subfolder2\\file3", "file3"),
-                ("\\My Shared Folder\\Subfolder1\\Subfolder2\\file4", "file4"),
+                ("\\\\HOSTNAME\\My Shared Folder\\Subfolder1\\Subfolder2\\file3", "file3"),
+                ("\\\\HOSTNAME\\My Shared Folder\\Subfolder1\\Subfolder2\\file4", "file4"),
+                ("\\\\HOSTNAME\\My Shared Folder\\Subfolder1\\Subfolder3\\file5", "file5"),
+            ],
+        ),
+        (
+            {
+                "My Shared Folder": {
+                    "": [
+                        SharedFile(0, 0, 0, 0, 10, 0, 16, "", "Subfolder1"),
+                        SharedFile(0, 0, 0, 0, 10, 0, 32, "", "some_file"),
+                    ],
+                    "Subfolder1\\": [
+                        SharedFile(0, 0, 0, 0, 10, 0, 16, "", "Subfolder2"),
+                        SharedFile(0, 0, 0, 0, 10, 0, 16, "", "Subfolder3"),
+                        SharedFile(0, 0, 0, 0, 10, 0, 32, "", "some_file"),
+                    ],
+                    "Subfolder1\\Subfolder2\\": [
+                        SharedFile(0, 0, 0, 0, 10, 0, 16, "", "Subfolder4"),
+                        SharedFile(0, 0, 0, 0, 10, 0, 32, "", "some_file"),
+                        SharedFile(0, 0, 0, 0, 10, 0, 32, "", "some_file"),
+                    ],
+                    "Subfolder1\\Subfolder2\\Subfolder4\\": [
+                        SharedFile(0, 0, 0, 0, 10, 0, 32, "", "some_file"),
+                    ],
+                    "Subfolder1\\Subfolder3\\": [
+                        SharedFile(0, 0, 0, 0, 10, 0, 16, "", "Subfolder5"),
+                        SharedFile(0, 0, 0, 0, 10, 0, 32, "", "some_file"),
+                    ],
+                    "Subfolder1\\Subfolder3\\Subfolder5\\": [
+                        SharedFile(0, 0, 0, 0, 10, 0, 32, "", "some_file"),
+                    ],
+                }
+            },
+            "My Shared Folder",
+            ["Subfolder1", "*", "*", "some_file"],
+            [
+                (
+                    "\\\\HOSTNAME\\My Shared Folder\\Subfolder1\\Subfolder2\\Subfolder4\\some_file",
+                    "some_file",
+                ),
+                (
+                    "\\\\HOSTNAME\\My Shared Folder\\Subfolder1\\Subfolder3\\Subfolder5\\some_file",
+                    "some_file",
+                ),
+            ],
+        ),
+        (
+            {
+                "My Shared Folder": {
+                    "": [
+                        SharedFile(0, 0, 0, 0, 10, 0, 16, "", "Subfolder1"),
+                        SharedFile(0, 0, 0, 0, 10, 0, 32, "", "some_file"),
+                    ],
+                    "Subfolder1\\": [
+                        SharedFile(0, 0, 0, 0, 10, 0, 16, "", "Subfolder2"),
+                        SharedFile(0, 0, 0, 0, 10, 0, 16, "", "Subfolder3"),
+                        SharedFile(0, 0, 0, 0, 10, 0, 32, "", "some_file"),
+                    ],
+                    "Subfolder1\\Subfolder2\\": [
+                        SharedFile(0, 0, 0, 0, 10, 0, 16, "", "Subfolder4"),
+                        SharedFile(0, 0, 0, 0, 10, 0, 32, "", "some_file"),
+                    ],
+                    "Subfolder1\\Subfolder2\\Subfolder4\\": [
+                        SharedFile(0, 0, 0, 0, 10, 0, 32, "", "some_file"),
+                    ],
+                    "Subfolder1\\Subfolder3\\": [
+                        SharedFile(0, 0, 0, 0, 10, 0, 16, "", "Subfolder5"),
+                        SharedFile(0, 0, 0, 0, 10, 0, 32, "", "some_file"),
+                    ],
+                    "Subfolder1\\Subfolder3\\Subfolder5\\": [
+                        SharedFile(0, 0, 0, 0, 10, 0, 32, "", "some_file"),
+                    ],
+                }
+            },
+            "My Shared Folder",
+            ["Subfolder1", "**", "some_file"],
+            [
+                ("\\\\HOSTNAME\\My Shared Folder\\Subfolder1\\Subfolder2\\some_file", "some_file"),
+                (
+                    "\\\\HOSTNAME\\My Shared Folder\\Subfolder1\\Subfolder3\\some_file",
+                    "some_file",
+                ),
             ],
         ),
         (
@@ -133,11 +231,10 @@ def test_parse_arguments() -> None:
                 }
             },
             "My Shared Folder",
-            "",
-            "\\My Shared Folder\\*",
+            ["*"],
             [
-                ("\\My Shared Folder\\file1", "file1"),
-                ("\\My Shared Folder\\file2", "file2"),
+                ("\\\\HOSTNAME\\My Shared Folder\\file1", "file1"),
+                ("\\\\HOSTNAME\\My Shared Folder\\file2", "file2"),
             ],
         ),
         (
@@ -151,8 +248,7 @@ def test_parse_arguments() -> None:
                 }
             },
             "My Shared Folder",
-            "",
-            "\\My Shared Folder\\..\\file",
+            ["..", "file"],
             [],
         ),
     ],
@@ -160,42 +256,31 @@ def test_parse_arguments() -> None:
 def test_iter_shared_files(
     filesystem: Dict,
     shared_folder: str,
-    path: str,
-    pattern: str,
+    pattern: List[str],
     expected_file_data: List[Tuple[str, str]],
 ) -> None:
     conn = MockSMBConnection(filesystem=filesystem)
-    files = list(iter_shared_files(conn, shared_folder, pattern, subdir=path))
+    files = list(iter_shared_files(conn, "HOSTNAME", shared_folder, pattern))
     file_data = [(f.path, f.file.filename) for f in files]
 
     assert file_data == expected_file_data
 
 
 @pytest.mark.parametrize(
-    "share_folders, patterns, file_data, expected_file_data",
+    "patterns, file_data, expected_file_data",
     [
         (
-            ["SharedFolder1", "SharedFolder2"],
-            ["\\SharedFolder1\\Subfolder1\\File1", "\\SharedFolder2\\Subfolder2\\File2"],
+            [
+                "\\\\HOSTNAME\\SharedFolder1\\Subfolder1\\File1",
+            ],
             [
                 ("path1", "file1"),
                 ("path2", "file2"),
             ],
             [
                 (
-                    "\\SharedFolder1\\Subfolder1\\File1",
+                    "\\\\HOSTNAME\\SharedFolder1\\Subfolder1\\File1",
                     [
-                        ("path1", "file1"),
-                        ("path2", "file2"),
-                        ("path1", "file1"),
-                        ("path2", "file2"),
-                    ],
-                ),
-                (
-                    "\\SharedFolder2\\Subfolder2\\File2",
-                    [
-                        ("path1", "file1"),
-                        ("path2", "file2"),
                         ("path1", "file1"),
                         ("path2", "file2"),
                     ],
@@ -205,14 +290,38 @@ def test_iter_shared_files(
     ],
 )
 def test_get_all_shared_files(
-    share_folders: List[str],
     patterns: List[str],
     file_data: List[Tuple[str, str]],
     expected_file_data: List[Tuple[str, List[Tuple[str, str]]]],
 ):
     with mock.patch("cmk.special_agents.agent_smb_share.iter_shared_files", return_value=file_data):
-        files_per_pattern = get_all_shared_files(None, share_folders, patterns)
-        assert list(files_per_pattern) == expected_file_data
+        conn = MockSMBConnection(shares=["SharedFolder1", "SharedFolder2"])
+        files_per_pattern = [
+            (p, list(f)) for p, f in get_all_shared_files(conn, "HOSTNAME", patterns)
+        ]
+        assert files_per_pattern == expected_file_data
+
+
+@pytest.mark.parametrize(
+    "patterns, expected_error_message",
+    [
+        (
+            ["\\\\INCORRECT_HOSTNAME\\SharedFolder1\\Subfolder1\\File1"],
+            r"Pattern \\\\INCORRECT_HOSTNAME\\SharedFolder1\\Subfolder1\\File1 doesn't match HOSTNAME hostname",
+        ),
+        (
+            ["\\\\HOSTNAME\\SharedFolder1\\Subfolder1\\File1"],
+            "Share SharedFolder1 doesn't exist on host HOSTNAME",
+        ),
+    ],
+)
+def test_get_all_shared_files_errors(
+    patterns: List[str],
+    expected_error_message: str,
+):
+    conn = MockSMBConnection()
+    with pytest.raises(RuntimeError, match=expected_error_message):
+        dict(get_all_shared_files(conn, "HOSTNAME", patterns))
 
 
 @pytest.mark.parametrize(
@@ -222,11 +331,10 @@ def test_get_all_shared_files(
             [
                 "hostname",
                 "127.0.0.1",
+                "--username",
                 "username",
+                "--password",
                 "password",
-                "Share Folder 1",
-                "--port",
-                "139",
                 "--patterns",
                 "\\Share Folder 1\\*.log",
                 "\\Share Folder 2\\file.txt",
@@ -276,20 +384,14 @@ def test_smb_share_agent(arg_list, files, expected_result):
 
 def test_smb_share_agent_error():
     args = parse_arguments(
-        [
-            "hostname",
-            "127.0.0.1",
-            "username",
-            "password",
-            "Share Folder 1",
-        ],
+        ["hostname", "127.0.0.1", "--username", "username", "--password", "password"],
     )
 
     with mock.patch("cmk.special_agents.agent_smb_share.SMBConnection.connect") as mock_connection:
         mock_connection.side_effect = NotConnectedError
         with pytest.raises(
             RuntimeError,
-            match="Could not connect to the remote host. Check your ip address, port and remote name.",
+            match="Could not connect to the remote host. Check your ip address and remote name.",
         ):
             smb_share_agent(args)
 
@@ -297,13 +399,7 @@ def test_smb_share_agent_error():
 @mock.patch("cmk.special_agents.agent_smb_share.SMBConnection.connect", return_value=False)
 def test_smb_share_agent_unsuccessful_connect(mock_connect):
     args = parse_arguments(
-        [
-            "hostname",
-            "127.0.0.1",
-            "username",
-            "password",
-            "Share Folder 1",
-        ],
+        ["hostname", "127.0.0.1", "--username", "username", "--password", "password"],
     )
 
     with pytest.raises(
@@ -312,11 +408,28 @@ def test_smb_share_agent_unsuccessful_connect(mock_connect):
         smb_share_agent(args)
 
 
+@mock.patch("cmk.special_agents.agent_smb_share.connect")
+@mock.patch("cmk.special_agents.agent_smb_share.get_all_shared_files")
+@mock.patch("cmk.special_agents.agent_smb_share.write_section")
+def test_smb_share_agent_operation_failure(mock_connect, mock_get_files, mock_write_section):
+    mock_write_section.side_effect = OperationFailure("Operation failure happened", [])
+    args = parse_arguments(
+        ["hostname", "127.0.0.1", "--username", "username", "--password", "password"],
+    )
+    with pytest.raises(OperationFailure, match="Operation failure happened"):
+        smb_share_agent(args)
+
+
 @mock.patch("cmk.special_agents.agent_smb_share.SMBConnection.connect", return_value=True)
 @mock.patch("cmk.special_agents.agent_smb_share.SMBConnection.close")
-def test_smb_share_agent_connect(mock_close, mock_connect):
+def test_connect_error(mock_close, mock_connect):
     with pytest.raises(Exception, match="Exception during usage of smb connection"):
-        with connect("username", "password", "hostname", "127.0.0.1", 139):
+        with connect("username", "password", "hostname", "127.0.0.1"):
             raise Exception("Exception during usage of smb connection")
 
     mock_close.assert_called_once()
+
+
+@mock.patch("cmk.special_agents.agent_smb_share.special_agent_main")
+def test_main(mock_agent):
+    assert main() == 0

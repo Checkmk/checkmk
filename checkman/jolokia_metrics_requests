@@ -1,7 +1,7 @@
 title: BEA Weblogic: Requests to JVM Instances
 agents: linux
 catalog: app/java
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check allows to track the number and rate of incoming requests to

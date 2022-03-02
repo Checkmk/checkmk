@@ -5,13 +5,14 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import typing
 from abc import ABC, abstractmethod
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass, field
 from typing import (
     Any,
     Callable,
     Dict,
     Iterable,
     List,
+    Literal,
     Mapping,
     NamedTuple,
     Optional,
@@ -22,7 +23,7 @@ from typing import (
 )
 
 from cmk.utils.cpu_tracking import Snapshot
-from cmk.utils.type_defs import UserId
+from cmk.utils.type_defs import ContactgroupName, UserId
 
 from cmk.gui.exceptions import FinalizeRequest
 from cmk.gui.utils.speaklater import LazyString
@@ -35,7 +36,7 @@ CSSSpec = Union[None, str, List[str], List[Optional[str]], str]
 ChoiceText = str
 ChoiceId = Optional[str]
 Choice = Tuple[ChoiceId, ChoiceText]
-Choices = List[Choice]
+Choices = List[Choice]  # TODO: Change to Sequence, perhaps DropdownChoiceEntries[str]
 
 
 class ChoiceGroup(NamedTuple):
@@ -44,7 +45,75 @@ class ChoiceGroup(NamedTuple):
 
 
 GroupedChoices = List[ChoiceGroup]
-UserSpec = Dict[str, Any]  # TODO: Improve this type
+
+
+class WebAuthnCredential(TypedDict):
+    credential_id: str
+    registered_at: int
+    alias: str
+    credential_data: bytes
+
+
+class TwoFactorCredentials(TypedDict):
+    webauthn_credentials: Dict[str, WebAuthnCredential]
+    backup_codes: List[str]
+
+
+SessionId = str
+
+
+@dataclass
+class SessionInfo:
+    session_id: SessionId
+    started_at: int
+    last_activity: int
+    flashes: List[str] = field(default_factory=list)
+    # In case it is enabled: Was it already authenticated?
+    two_factor_completed: bool = False
+    # We don't care about the specific object, because it's internal to the fido2 library
+    webauthn_action_state: object = None
+
+    def to_json(self) -> dict:
+        # We assume here that asdict() does the right thing for the
+        # webauthn_action_state field. This can be the case, but it's not very
+        # obvious.
+        return asdict(self)
+
+
+class _TypingError:
+    """Provoke typing error to find call-sites with mypy"""
+
+
+class UserSpec(TypedDict, total=False):
+    """This is not complete, but they don't yet...  Also we have a
+    user_attribute_registry (cmk/gui/plugins/userdb/utils.py)
+
+    I ignored two mypy findings in cmk/gui/userdb.py grep for ignore[misc]
+    """
+
+    alias: str
+    automation_secret: str
+    connector: str
+    contactgroups: list[ContactgroupName]
+    customer: Optional[str]
+    enforce_pw_change: bool  # gets serialized to int
+    force_authuser: bool
+    idle_timeout: dict[Literal["duration"], _TypingError]
+    language: str
+    locked: bool
+    password: str
+    roles: list[str]
+    serial: int
+    session_info: dict[SessionId, SessionInfo]
+    show_mode: str
+    start_url: str
+    two_factor_credentials: TwoFactorCredentials
+    ui_sidebar_position: _TypingError
+    ui_theme: _TypingError
+    user_id: UserId
+    user_scheme_serial: int
+    pager: _TypingError
+
 
 # Visual specific
 FilterName = str

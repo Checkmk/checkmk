@@ -9,10 +9,9 @@
 
 # Disable unused variable error (needed to keep track of version)
 # shellcheck disable=SC2034
-CMK_VERSION="2.1.0i1"
+CMK_VERSION="2.2.0i1"
 
-if [ -f /opt/Symantec/symantec_antivirus/sav ]
-then
+if [ -f /opt/Symantec/symantec_antivirus/sav ]; then
     echo "<<<symantec_av_updates>>>"
     /opt/Symantec/symantec_antivirus/sav info -d
 
@@ -22,4 +21,3 @@ then
     echo "<<<symantec_av_quarantine>>>"
     /opt/Symantec/symantec_antivirus/sav quarantine -l
 fi
-

@@ -6,7 +6,7 @@ Date: 1620402343
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 Each user that is able to log into the Checkmk GUI gets a user profile
 directory created below <tt>var/check_mk/web/[user_id]</tt>.

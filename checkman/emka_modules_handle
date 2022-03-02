@@ -1,7 +1,7 @@
 title: EMKA Electronic Locking & Monitoring: Handles
 agents: snmp
 catalog: hw/environment/emka
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the handles of EMKA devices which

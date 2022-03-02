@@ -1,7 +1,7 @@
 title: Barracuda SPAM Firewall: System CPU Utilization
 agents: snmp
 catalog: app/barracuda
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the system cpu utilization of a Barracuda SPAM Firewall.

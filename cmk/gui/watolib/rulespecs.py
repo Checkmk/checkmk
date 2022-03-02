@@ -22,8 +22,10 @@ from cmk.gui.utils.urls import makeuri, makeuri_contextless, makeuri_contextless
 from cmk.gui.valuespec import (
     Dictionary,
     DropdownChoice,
+    DropdownChoiceEntries,
     ElementSelection,
     FixedValue,
+    JSONValue,
     ListOf,
     OptionalDropdownChoice,
     Transform,
@@ -166,12 +168,14 @@ class RulespecGroupRegistry(cmk.utils.plugin_registry.Registry[Type[RulespecBase
 
         return [name for name in self._entries if name == group_name]
 
-    def get_host_rulespec_group_names(self) -> List[str]:
+    def get_host_rulespec_group_names(self, for_host: bool) -> List[str]:
         """Collect all rulesets that apply to hosts, except those specifying new active or static
         checks and except all server monitoring rulesets. Usually, the needed context for service
         monitoring rulesets is not given when the host rulesets are requested."""
         names: List[str] = []
-        hidden_groups = ("static", "activechecks", "monconf")
+        hidden_groups: _Tuple[str, ...] = ("static", "activechecks")
+        if for_host:
+            hidden_groups = hidden_groups + ("monconf",)
         hidden_main_groups = ("host_monconf", "monconf", "agents", "agent")
         for g_class in self.values():
             group = g_class()
@@ -506,7 +510,7 @@ class Rulespec(abc.ABC):
         return None
 
     @property
-    def item_enum(self) -> Optional[List[_Tuple[str, str]]]:
+    def item_enum(self) -> Optional[DropdownChoiceEntries]:
         item_spec = self.item_spec
         if item_spec is None:
             return None
@@ -1123,7 +1127,7 @@ class CheckTypeGroupSelection(ElementSelection):
         }
         return elements
 
-    def value_to_html(self, value) -> ValueSpecText:
+    def value_to_html(self, value: str) -> ValueSpecText:
         return html.render_tt(value)
 
 
@@ -1145,11 +1149,11 @@ class TimeperiodValuespec(ValueSpec):
         )
         self._enclosed_valuespec = valuespec
 
-    def default_value(self):
+    def default_value(self) -> Any:
         # If nothing is configured, simply return the default value of the enclosed valuespec
         return self._enclosed_valuespec.default_value()
 
-    def render_input(self, varprefix, value):
+    def render_input(self, varprefix: str, value: Any) -> None:
         # The display mode differs when the valuespec is activated
         vars_copy = dict(request.itervars())
 
@@ -1187,10 +1191,10 @@ class TimeperiodValuespec(ValueSpec):
             )
             return r
 
-    def value_to_html(self, value) -> ValueSpecText:
+    def value_to_html(self, value: Any) -> ValueSpecText:
         return self._get_used_valuespec(value).value_to_html(value)
 
-    def from_html_vars(self, varprefix):
+    def from_html_vars(self, varprefix: str) -> dict[str, Any]:
         if request.var(self.tp_current_mode) == "1":
             # Fetch the timespecific settings
             parameters = self._get_timeperiod_valuespec().from_html_vars(varprefix)
@@ -1203,10 +1207,10 @@ class TimeperiodValuespec(ValueSpec):
         # Fetch the data from the enclosed valuespec
         return self._enclosed_valuespec.from_html_vars(varprefix)
 
-    def canonical_value(self):
+    def canonical_value(self) -> dict[str, Any]:
         return self._enclosed_valuespec.canonical_value()
 
-    def _validate_value(self, value, varprefix):
+    def _validate_value(self, value: dict[str, Any], varprefix: str) -> None:
         super()._validate_value(value, varprefix)
         self._get_used_valuespec(value).validate_value(value, varprefix)
 
@@ -1276,13 +1280,13 @@ class TimeperiodValuespec(ValueSpec):
     def transform_value(self, value: Any) -> Any:
         return self._get_used_valuespec(value).transform_value(value)
 
-    def value_to_json(self, value: Any) -> Any:
+    def value_to_json(self, value: dict[str, Any]) -> JSONValue:
         return self._get_used_valuespec(value).value_to_json(value)
 
-    def value_from_json(self, json_value: Any) -> Any:
+    def value_from_json(self, json_value: JSONValue) -> dict[str, Any]:
         return self._get_used_valuespec(json_value).value_from_json(json_value)
 
-    def value_to_json_safe(self, value: Any) -> Any:
+    def value_to_json_safe(self, value: dict[str, Any]) -> JSONValue:
         return self._get_used_valuespec(value).value_to_json_safe(value)
 
 

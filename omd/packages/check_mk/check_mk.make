@@ -34,7 +34,7 @@ $(CHECK_MK_BUILD): $(REPO_PATH)/$(CHECK_MK_DIR).tar.gz
 	  $(MAKE)
 	$(TOUCH) $@
 
-$(CHECK_MK_INSTALL): $(CHECK_MK_BUILD) $(PYTHON_CACHE_PKG_PROCESS)
+$(CHECK_MK_INSTALL): $(CHECK_MK_BUILD) $(PACKAGE_PYTHON3_MODULES_PYTHON_DEPS)
 	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/share/check_mk
 
 	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/share/check_mk/werks
@@ -104,7 +104,9 @@ $(CHECK_MK_INSTALL): $(CHECK_MK_BUILD) $(PYTHON_CACHE_PKG_PROCESS)
 	    $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/gui/plugins/metrics/__init__.py \
 	    $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/gui/plugins/wato/__init__.py \
 	    $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/gui/plugins/wato/check_parameters/__init__.py
-	$(PACKAGE_PYTHON_COMMAND) -m compileall $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk
+
+	# After installing all python modules, ensure they are compiled
+	$(PACKAGE_PYTHON3_MODULES_PYTHON) -m compileall $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk
 
 	# Provide the externally documented paths for Checkmk plugins
 	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/lib

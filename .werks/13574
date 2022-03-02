@@ -1,0 +1,14 @@
+Title: Update net-snmp lib to 5.9.1
+Class: fix
+Compatible: compat
+Component: inline-snmp
+Date: 1643989182
+Edition: cee
+Knowledge: doc
+Level: 2
+Version: 2.1.0b1
+
+We now ship omd with the net-snmp lib in version 5.9.1.
+This was motivated by several reasons:
+* The previously used net-snmp lib had a bug in the python C binding which caused any higher auth protocol then SHA/MD5 not working. (e.g. SHA256, SHA512 etc.). This affected the inline SNMP mode in checkmk only.
+* The net-snmp project had a long time no releases. So we now want to go for the latest release.

@@ -82,12 +82,23 @@ metric_info["kube_node_container_count_total"] = {
 }
 
 requirement_to_utilization_titles = {
-    "request": _("Request utilization"),
-    "limit": _("Limit utilization"),
+    "request": _("Requests utilization"),
+    "limit": _("Limits utilization"),
+    "cluster_allocatable": _("Cluster utilization"),
+    "node_allocatable": _("Node utilization"),
 }
 requirement_to_absolute_titles = {
-    "request": _("Request"),
-    "limit": _("Limit"),
+    "request": _("Requests"),
+    "limit": _("Limits"),
+    "allocatable": _("Allocatable"),
+}
+
+requirement_colors = {
+    "request": "42/a",
+    "limit": "42/b",
+    "allocatable": "46/a",
+    "cluster_allocatable": "46/a",
+    "node_allocatable": "46/a",
 }
 
 for resource, usage_unit in zip(["memory", "cpu"], ["bytes", ""]):
@@ -96,18 +107,17 @@ for resource, usage_unit in zip(["memory", "cpu"], ["bytes", ""]):
         "unit": usage_unit,
         "color": "31/a",
     }
-
-    for requirement, color in {"request": "42/a", "limit": "42/b"}.items():
-        metric_info[f"kube_{resource}_{requirement}"] = {
-            "title": requirement_to_absolute_titles[requirement],
+    for req, title in requirement_to_absolute_titles.items():
+        metric_info[f"kube_{resource}_{req}"] = {
+            "title": title,
             "unit": usage_unit,
-            "color": color,
+            "color": requirement_colors[req],
         }
-
-        metric_info[f"kube_{resource}_{requirement}_utilization"] = {
-            "title": requirement_to_utilization_titles[requirement],
+    for req, title in requirement_to_utilization_titles.items():
+        metric_info[f"kube_{resource}_{req}_utilization"] = {
+            "title": title,
             "unit": "%",
-            "color": color,
+            "color": requirement_colors[req],
         }
 
 metric_info["kube_node_count_worker_ready"] = {
@@ -198,7 +208,7 @@ graph_info["kube_pod_resources"] = {
         ("kube_pod_free", "stack"),
         ("kube_pod_allocatable", "line"),
     ],
-    "optional_metrics": ["kube_pod_allocatable", "kube_pod_free"],
+    "optional_metrics": ["kube_pod_free", "kube_pod_allocatable"],
 }
 
 graph_info["kube_resources_terminated"] = {
@@ -230,31 +240,19 @@ for resource, usage_title in zip(["memory", "cpu"], [_("Memory"), _("CPU")]):
             (f"kube_{resource}_request", "line"),
             (f"kube_{resource}_limit", "line"),
             (f"kube_{resource}_usage", "area"),
+            (f"kube_{resource}_allocatable", "line"),
         ],
         "optional_metrics": [
             f"kube_{resource}_request",
             f"kube_{resource}_limit",
             f"kube_{resource}_usage",
+            f"kube_{resource}_allocatable",
         ],
         "scalars": [
             f"kube_{resource}_usage:warn",
             f"kube_{resource}_usage:crit",
         ],
     }
-
-    for requirement, utilization_title in requirement_to_utilization_titles.items():
-        metric_name = f"kube_{resource}_{requirement}_utilization"
-        graph_info[metric_name] = {
-            "title": utilization_title,
-            "metrics": [
-                (metric_name, "area"),
-            ],
-            "scalars": [
-                f"{metric_name}:warn",
-                f"{metric_name}:crit",
-            ],
-        }
-
 
 graph_info["kube_node_count_worker"] = {
     "title": _("Worker nodes"),
@@ -279,6 +277,9 @@ graph_info["kube_pod_restarts"] = {
     "metrics": [
         ("kube_pod_restart_count", "line"),
         ("kube_pod_restart_rate", "line"),
+    ],
+    "optional_metrics": [
+        "kube_pod_restart_rate",
     ],
 }
 

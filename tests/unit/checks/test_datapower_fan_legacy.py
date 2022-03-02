@@ -79,13 +79,10 @@ def test_check_datapower_fan(
     item: str,
     expected_result: Result,
 ) -> None:
-    assert (
-        list(
-            datapower_fan_plugin.check_function(
-                item=item,
-                params={},
-                section=_SECTION,
-            )
+    assert list(
+        datapower_fan_plugin.check_function(
+            item=item,
+            params={},
+            section=_SECTION,
         )
-        == [expected_result]
-    )
+    ) == [expected_result]

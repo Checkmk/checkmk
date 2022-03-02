@@ -23,6 +23,7 @@ exec_hook() {
 
 exec_hook pre-entrypoint
 
+# shellcheck disable=SC1083
 bash /home/{{ ansible_ssh_user }}/create_certificate.sh
 
 echo "### Checking if updating is required..."
@@ -33,8 +34,8 @@ echo "### Checking if updating is required..."
 # to life.
 if [ ! -e "/omd/sites/{{cmk_site}}/version" ]; then
     trap 'omd stop '"{{cmk_site}}"'; exit 0' SIGTERM SIGHUP SIGINT
-    echo whoami: $(whoami)
-    echo pwd: $(pwd)
+    echo "whoami: $(whoami)"
+    echo "pwd: $(pwd)"
 
     echo "### UPDATING SITE"
     exec_hook pre-update

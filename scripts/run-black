@@ -5,5 +5,5 @@
 
 set -e
 
-REPO_PATH=$(dirname $(dirname $(realpath "$0")))
+REPO_PATH="$(dirname "$(dirname "$(realpath "$0")")")"
 exec "$REPO_PATH/scripts/run-pipenv" run black --line-length=100 "$@"

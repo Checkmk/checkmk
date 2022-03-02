@@ -29,6 +29,7 @@ def _parameter_valuespec():
                 ),
             ),
         ],
+        required_keys=["failed_state"],
     )
 
 
@@ -39,6 +40,6 @@ rulespec_registry.register(
         item_spec=lambda: TextInput(title=_("Name of the container")),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec,
-        title=lambda: _("Pod containers"),
+        title=lambda: _("Kubernetes pod containers"),
     )
 )

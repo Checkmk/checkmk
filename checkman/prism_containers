@@ -1,7 +1,7 @@
 title: Nutanix Prism: Containers
 agents: nutanix
 catalog: os/storage
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the remaining space on containers in a nutanix cluster.

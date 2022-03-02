@@ -6,7 +6,7 @@ Date: 1616151895
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 Failed notification were not deleted on confirm. Furthermore, the main
 dashboard was opened after confirm.

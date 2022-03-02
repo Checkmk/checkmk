@@ -1,18 +1,15 @@
 import datetime
 import json
-from typing import Mapping, Optional, Sequence
 from unittest import TestCase
 from unittest.mock import Mock
 
-import pytest
 from dateutil.tz import tzutc
 from kubernetes import client  # type: ignore[import] # pylint: disable=import-error
 from mocket import Mocketizer  # type: ignore[import]
 from mocket.mockhttp import Entry  # type: ignore[import]
 
-from cmk.special_agents.agent_kube import _collect_memory_resources, Pod
+from cmk.special_agents.agent_kube import Pod
 from cmk.special_agents.utils_kubernetes.schemata import api, section
-from cmk.special_agents.utils_kubernetes.schemata.section import ExceptionalResource
 from cmk.special_agents.utils_kubernetes.transform import (
     convert_to_timestamp,
     pod_conditions,
@@ -111,6 +108,7 @@ class TestPodWithNoNode(TestCase):
                 containers=[
                     client.V1Container(
                         name="non_scheduled_container",
+                        image_pull_policy="Always",
                     ),
                 ],
                 restart_policy="Always",
@@ -187,10 +185,11 @@ class TestPodStartUp(TestCase):
         self.assertEqual(
             pod_containers(container_statuses),
             {
-                "unready_container": api.ContainerInfo(
+                "unready_container": api.ContainerStatus(
                     id=None,
                     name="unready_container",
                     image="gcr.io/kuar-demo/kuard-amd64:blue",
+                    image_id="",
                     ready=False,
                     state=api.ContainerWaitingState(
                         type="waiting", reason="ContainerCreating", detail=None
@@ -304,195 +303,3 @@ class TestPodStartUp(TestCase):
                 ready=None,
             ),
         )
-
-
-def _other_requirement(requirement: str) -> str:
-    return "requests" if requirement == "limits" else "limits"
-
-
-def _pod_from_container_values(
-    container_values: Sequence[Optional[float]],
-    requirement: str,
-    resource: str,
-) -> Pod:
-    spec = api.PodSpec(
-        restart_policy="Always",
-        containers=[
-            api.ContainerSpec(
-                resources=api.ContainerResources(
-                    **{
-                        requirement: api.ResourcesRequirements(**{resource: value}),
-                        _other_requirement(requirement): api.ResourcesRequirements(),
-                    }
-                ),
-                name=f"{resource}{i}",
-            )
-            for i, value in enumerate(container_values)
-        ],
-    )
-    return Pod(
-        uid=Mock(),
-        metadata=Mock(),
-        status=Mock(),
-        spec=spec,
-        containers=Mock(),
-        init_containers=Mock(),
-    )
-
-
-_CONTAINER_VALUES: Mapping[str, Sequence[Optional[float]]] = {
-    "only_zero": [0.0],
-    "only_normal": [1.0],
-    "all_exceptional": [None, 0.0],
-    "all_values": [0.0, 1.0, None],
-    "one_zero": [1.0, 0.0],
-    "one_unspecified": [None, 1.0],
-    "only_unspecified": [None],
-}
-
-
-@pytest.mark.parametrize(
-    """
-        requirement,
-        expected_result,
-        container_values_names,
-    """,
-    [
-        (
-            "requests",
-            ExceptionalResource.unspecified,
-            (
-                "all_exceptional",
-                "one_unspecified",
-                "only_unspecified",
-                "all_values",
-            ),
-        ),
-        ("requests", 0.0, ("only_zero",)),
-        (
-            "requests",
-            1.0,
-            (
-                "only_normal",
-                "one_zero",
-            ),
-        ),
-        (
-            "limits",
-            ExceptionalResource.zero,
-            (
-                "one_zero",
-                "only_zero",
-            ),
-        ),
-        (
-            "limits",
-            ExceptionalResource.unspecified,
-            (
-                "only_unspecified",
-                "one_unspecified",
-            ),
-        ),
-        (
-            "limits",
-            1.0,
-            ("only_normal",),
-        ),
-        (
-            "limits",
-            ExceptionalResource.zero_unspecified,
-            (
-                "all_exceptional",
-                "all_values",
-            ),
-        ),
-    ],
-)
-def test_aggregate_via_pod(requirement, expected_result, container_values_names) -> None:
-    """
-    Aggregation needs to be done on the agent-side rather than the check-side, in order to
-    deduplicate container metrics (a container may belong to several Kubernetes objects).
-
-    We test the aggregation as done by the pod.
-    """
-    for resource in ("memory", "cpu"):
-        for name in container_values_names:
-            pod = _pod_from_container_values(_CONTAINER_VALUES[name], requirement, resource)
-            aggregater = getattr(pod, f"{resource}_{requirement[:-1]}")
-            assert aggregater() == expected_result
-
-
-@pytest.mark.parametrize(
-    """
-        requirement,
-        expected_result,
-        possible_values_per_pod,
-    """,
-    [
-        (
-            "requests",
-            ExceptionalResource.unspecified,
-            (
-                ["one_unspecified"],
-                ["only_unspecified"],
-                ["all_exceptional", "only_normal"],
-                ["all_values", "only_normal"],
-            ),
-        ),
-        (
-            "requests",
-            1.0,
-            (
-                ["only_normal"],
-                ["one_zero"],
-                ["one_zero", "only_zero"],
-            ),
-        ),
-        (
-            "limits",
-            ExceptionalResource.zero,
-            (
-                ["only_normal", "one_zero"],
-                ["one_zero"],
-                ["only_zero"],
-            ),
-        ),
-        (
-            "limits",
-            ExceptionalResource.unspecified,
-            (
-                ["one_unspecified"],
-                ["only_unspecified"],
-                ["one_unspecified", "only_normal"],
-            ),
-        ),
-        (
-            "limits",
-            ExceptionalResource.zero_unspecified,
-            (
-                ["one_unspecified", "only_zero"],
-                ["only_unspecified", "only_zero", "only_normal"],
-                ["all_values"],
-            ),
-        ),
-        (
-            "limits",
-            1.0,
-            (["only_normal"],),
-        ),
-    ],
-)
-def test_collect_memory_resources(requirement, expected_result, possible_values_per_pod) -> None:
-    """
-    Aggregation needs to be done on the agent-side rather than the check-side, in order to
-    deduplicate container metrics (a container may belong to several Kubernetes objects).
-
-    We test the aggregation of the memory resources as done by clusters, deployments, nodes.
-    """
-    for values_per_pod in possible_values_per_pod:
-        pod_seq = [
-            _pod_from_container_values(_CONTAINER_VALUES[values], requirement, "memory")
-            for values in values_per_pod
-        ]
-        result = getattr(_collect_memory_resources(pod_seq), requirement[:-1])
-        assert expected_result == result

@@ -1,7 +1,7 @@
 title: Arbor Peakflow SP: Disk Usage
 agents: snmp
 catalog: hw/network/arbor
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  Monitors disk usage on Arbor Peakflow SP devices.
@@ -25,4 +25,3 @@ discovery:
 
 item:
  The sole item is named "/".
-

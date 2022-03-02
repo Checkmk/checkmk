@@ -6,7 +6,7 @@ Date: 1610654123
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 Missing checks of check plugins with manual page lead to an undefined error message.
 If such an error occurs now, a meaningful error message is displayed.

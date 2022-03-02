@@ -25,25 +25,28 @@ from cmk.utils.livestatus_helpers.expressions import And
 from cmk.utils.livestatus_helpers.queries import Query
 from cmk.utils.livestatus_helpers.tables import Services
 
-from cmk.gui import fields, sites
+from cmk.gui import fields as gui_fields
+from cmk.gui import sites
 from cmk.gui.plugins.openapi.restful_objects import constructors, Endpoint, response_schemas
 from cmk.gui.plugins.openapi.restful_objects.constructors import object_action_href
 from cmk.gui.plugins.openapi.restful_objects.parameters import HOST_NAME, OPTIONAL_HOST_NAME
 from cmk.gui.plugins.openapi.utils import problem
 
+from cmk import fields
+
 PARAMETERS = [
     {
         "sites": fields.List(
-            fields.SiteField(),
+            gui_fields.SiteField(),
             description="Restrict the query to this particular site.",
             load_default=list,
         ),
-        "query": fields.query_field(
+        "query": gui_fields.query_field(
             Services,
             required=False,
             example='{"op": "=", "left": "host_name", "right": "example.com"}',
         ),
-        "columns": fields.column_field(
+        "columns": gui_fields.column_field(
             Services,
             mandatory=[
                 Services.host_name,

@@ -1,0 +1,10 @@
+title: Cisco IE: Temperature
+agents: snmp
+catalog: hw/network/cisco
+license: GPLv2
+distribution: check_mk
+description:
+ This check monitors the temperature of Cisco IE devices.
+
+discovery:
+ One service is created for each sensor on the device.

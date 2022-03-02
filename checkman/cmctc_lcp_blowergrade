@@ -1,7 +1,7 @@
 title: Rittal CMC-TC LCP: Blower Total State
 agents: snmp
 catalog: hw/environment/rittal
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  Check the state of blowers of a Rittal CMC-TC LCP.
@@ -17,4 +17,3 @@ item:
 
 discovery:
  One service is created for each LCP.
-

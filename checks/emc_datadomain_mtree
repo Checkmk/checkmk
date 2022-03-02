@@ -17,7 +17,7 @@ factory_settings["emc_datadomain_mtree_default_levels"] = {
 
 def parse_emc_datadomain_mtree(info):
     return {
-        line[0]: {"precompiled": int(float(line[1]) * 1024 ** 3), "status_code": line[2]}
+        line[0]: {"precompiled": int(float(line[1]) * 1024**3), "status_code": line[2]}
         for line in info
     }
 

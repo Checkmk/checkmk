@@ -1,0 +1,11 @@
+Title: Liveproxyd: Fixed connection problems when number of configured sites exceeds 250
+Class: fix
+Compatible: compat
+Component: liveproxy
+Date: 1645008651
+Edition: cee
+Knowledge: doc
+Level: 1
+Version: 2.0.0p21
+
+If you had more than 250 sites configured, the sites' worker processes could fail because the number of filedescriptors exceeded a critical limit.

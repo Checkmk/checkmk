@@ -29,6 +29,8 @@
 #include "tools/_process.h"
 #include "upgrade.h"
 
+using namespace std::chrono_literals;
+
 // out of namespace
 bool g_skype_testing = false;
 
@@ -272,15 +274,17 @@ int TestIo() {
         XLOG::setup::DuplicateOnStdio(true);
         XLOG::setup::ColoredOutputOnStdio(true);
         cma::world::ExternalPort port(nullptr);
-        port.startIo([](const std::string Ip) -> std::vector<uint8_t> {
-            return std::vector<uint8_t>();
-        });  //
+        port.startIo(
+            [](const std::string) -> std::vector<uint8_t> {
+                return std::vector<uint8_t>();
+            },
+            50555);  //
         XLOG::l.i("testing 10 seconds");
         std::this_thread::sleep_until(steady_clock::now() + 10000ms);
         port.shutdownIo();  //
 
     } catch (const std::exception &e) {
-        xlog::l("Exception is not allowed here %s", e.what());
+        XLOG::l("Exception is not allowed here {}", e.what());
     }
     return 0;
 }
@@ -1035,54 +1039,75 @@ YAML::Node GetNodeFromSystem(std::string_view node) {
     auto os = cfg::GetNode(cfg, cfg::groups::kSystem);
     return cfg::GetNode(os, std::string(node));
 }
+
+std::pair<bool, int> RemoveRuleWithTimeout(std::wstring_view name,
+                                           std::wstring_view raw_app_name,
+                                           std::chrono::milliseconds timeout) {
+    auto last = std::chrono::steady_clock::now() + timeout;
+    int count = 0;
+    XLOG::d.i("Removing all '{}' app: '{}'", wtools::ToUtf8(name),
+              wtools::ToUtf8(raw_app_name));
+    while (fw::RemoveRule(name, raw_app_name)) {
+        ++count;
+        if (std::chrono::steady_clock::now() > last) {
+            return {false, count};
+        }
+        XLOG::t.i("Removed!");
+    }
+
+    return {true, count};
+}
+
 }  // namespace
 
-void ProcessFirewallConfiguration(std::wstring_view app_name) {
+int GetFirewallPort() {
+    auto firewall = GetNodeFromSystem(cfg::vars::kFirewall);
+    auto port_mode = cfg::GetVal(firewall, cfg::vars::kFirewallPort,
+                                 std::string{cfg::values::kFirewallPortAuto});
+    if (port_mode == cfg::values::kFirewallPortAuto) {
+        return cfg::GetVal(cfg::groups::kGlobal, cfg::vars::kPort,
+                           cma::cfg::kMainPort);
+    }
+    return -1;  // all ports
+}
+
+void ProcessFirewallConfiguration(std::wstring_view app_name, int port,
+                                  std::wstring_view rule_name) {
     auto firewall = GetNodeFromSystem(cfg::vars::kFirewall);
 
     auto firewall_mode = cfg::GetVal(firewall, cfg::vars::kFirewallMode,
                                      std::string(cfg::values::kModeNone));
-    auto port_mode = cfg::GetVal(firewall, cfg::vars::kFirewallPort,
-                                 std::string{cfg::values::kFirewallPortAuto});
-
     if (tools::IsEqual(firewall_mode, cfg::values::kModeConfigure)) {
         XLOG::l.i("Firewall mode is set to configure, adding rule...");
-        // remove all rules with the same name
-        while (fw::RemoveRule(kSrvFirewallRuleName, app_name))
-            ;
-
-        int port = -1;  // all ports
-        if (port_mode == cfg::values::kFirewallPortAuto) {
-            port = cfg::GetVal(cfg::groups::kGlobal, cfg::vars::kPort,
-                               cma::cfg::kMainPort);
+        auto [ok, count] = RemoveRuleWithTimeout(rule_name, app_name, 5000ms);
+        if (ok) {
+            XLOG::l.i("Removed {} old rules.", count);
+        } else {
+            XLOG::l("Timeout hits! Removed {} old rules.", count);
         }
 
-        auto success =
-            cma::fw::CreateInboundRule(kSrvFirewallRuleName, app_name, port);
+        auto success = cma::fw::CreateInboundRule(rule_name, app_name, port);
 
         if (success)
             XLOG::l.i(
                 "Firewall rule '{}' had been added successfully for ports [{}]",
-                wtools::ToUtf8(kSrvFirewallRuleName), port);
+                wtools::ToUtf8(rule_name), port);
         return;
     }
 
     if (cma::tools::IsEqual(firewall_mode, cfg::values::kModeRemove)) {
         XLOG::l.i("Firewall mode is set to clear, removing rule...");
-
-        // remove all rules with the same name
-        int count = 0;
-        while (fw::RemoveRule(kSrvFirewallRuleName, app_name)) {
-            ++count;
+        auto [ok, count] = RemoveRuleWithTimeout(rule_name, app_name, 5000ms);
+        if (!ok) {
+            XLOG::l("Timeout hits!");
         }
-
         if (count != 0)
             XLOG::l.i(
                 "Firewall rule '{}' had been removed successfully [{}] times",
-                wtools::ToUtf8(kSrvFirewallRuleName), count);
+                wtools::ToUtf8(rule_name), count);
         else
             XLOG::d.i("Firewall rule '{}' is absent, nothing to remove",
-                      wtools::ToUtf8(kSrvFirewallRuleName));
+                      wtools::ToUtf8(rule_name));
         return;
     }
 }
@@ -1178,8 +1203,6 @@ int ServiceAsService(
     ON_OUT_OF_SCOPE(cma::OnExit());
 
     SelfConfigure();
-
-    ProcessFirewallConfiguration(app_name);
 
     // infinite loop to protect from exception in future SEH too
     while (true) {

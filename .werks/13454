@@ -6,7 +6,7 @@ Date: 1640765131
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 SMB share special agent can be configured by creating a rule in
 Setup > Agents > Other integrations. Multiple shared folders can

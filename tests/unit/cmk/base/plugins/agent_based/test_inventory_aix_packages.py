@@ -12,6 +12,8 @@ from cmk.base.plugins.agent_based.inventory_aix_packages import (
     parse_aix_packages,
 )
 
+from .utils_inventory import sort_inventory_result
+
 # Note: package_type is faked
 
 
@@ -135,4 +137,6 @@ from cmk.base.plugins.agent_based.inventory_aix_packages import (
     ],
 )
 def test_inv_aix_packages(raw_section, expected_result):
-    assert list(inventory_aix_packages(parse_aix_packages(raw_section))) == expected_result
+    assert sort_inventory_result(
+        inventory_aix_packages(parse_aix_packages(raw_section))
+    ) == sort_inventory_result(expected_result)

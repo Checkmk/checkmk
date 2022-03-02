@@ -58,7 +58,7 @@ import cmk.utils.store as store
 from cmk.utils.exceptions import MKGeneralException, MKTerminate
 from cmk.utils.paths import mkbackup_lock_dir
 
-VERSION = "2.1.0i1"
+VERSION = "2.2.0i1"
 
 # Some typed wrappers around OpenSSL.crypto, there are only Python 2 interface
 # files available... :-/
@@ -211,23 +211,24 @@ def get_needed_lock_files(opts) -> List[Path]:
     return lock_files
 
 
-def _open_lock_file(lock_file_path: Path) -> IO[bytes]:
+def _ensure_lock_file(lock_file_path: Path) -> None:
     # Create the file (but ensure that the target file always has the
     # correct permissions). The current lock implementation assumes the file is
     # kept after the process frees the lock (terminates). The pure existence of
     # the lock file is not locking anything. We work with fcntl.flock to realize
     # the locking.
-    if not lock_file_path.exists():
-        try:
-            backup_lock = tempfile.NamedTemporaryFile(  # pylint:disable=consider-using-with
-                mode="ab+", dir=str(lock_file_path.parent), delete=False
-            )
+    if lock_file_path.exists():
+        return
+    try:
+        with tempfile.NamedTemporaryFile(
+            mode="ab+",
+            dir=str(lock_file_path.parent),
+            delete=False,
+        ) as backup_lock:
             set_permissions(backup_lock.name, -1, grp.getgrnam("omd").gr_gid, 0o660)
             os.rename(backup_lock.name, lock_file_path)
-            return backup_lock
-        except (IOError, OSError) as e:
-            raise MKGeneralException('Failed to open lock file "%s": %s' % (lock_file_path, e))
-    return lock_file_path.open("ab")
+    except (IOError, OSError) as e:
+        raise MKGeneralException('Failed to open lock file "%s": %s' % (lock_file_path, e))
 
 
 @contextmanager
@@ -248,8 +249,9 @@ def acquire_single_lock(lock_file_path: Path) -> Generator[IO[bytes], None, None
         https://forum.checkmk.com/t/backup-schlagt-fehl/21630/7
         https://unix.stackexchange.com/a/503169
     """
+    _ensure_lock_file(lock_file_path)
 
-    with _open_lock_file(lock_file_path) as backup_lock:
+    with lock_file_path.open("ab") as backup_lock:
         try:
             fcntl.flock(backup_lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
         except IOError:
@@ -747,25 +749,28 @@ def do_site_backup(opts, site=None, try_stop=True):
     makedirs(os.path.dirname(backup_path), group="omd", mode=0o775)
 
     verbose("Command: %s" % " ".join(cmd))
-    p = subprocess.Popen(  # pylint:disable=consider-using-with
+    with subprocess.Popen(
         cmd,
         close_fds=True,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
-        stdin=open(os.devnull),  # pylint:disable=consider-using-with
-    )
-    assert p.stdout is not None
-    assert p.stderr is not None
+        stdin=subprocess.DEVNULL,
+    ) as p:
+        assert p.stdout is not None
+        assert p.stderr is not None
 
-    with open(backup_path, "wb") as backup_file:
-        s = BackupStream(
-            stream=p.stdout, is_alive=lambda: p.poll() is None, key_ident=g_job_config["encrypt"]
-        )
-        for chunk in s.process():
-            backup_file.write(chunk)
+        with open(backup_path, "wb") as backup_file:
+            s = BackupStream(
+                stream=p.stdout,
+                is_alive=lambda: p.poll() is None,
+                key_ident=g_job_config["encrypt"],
+            )
+            for chunk in s.process():
+                backup_file.write(chunk)
 
-    if p.returncode != 0:
         err = p.stderr.read().decode()
+
+    if p.returncode:
         if not compress_archives() and "Invalid option '--no-compression'" in err:
             err = (
                 "The Check_MK version of this site does not support uncompressed backups. "
@@ -810,30 +815,33 @@ def start_stop_site(site: str, command: str, expected_return_code: int) -> None:
     site_arg = [site] if is_root() else []
     omd_command(["omd", command] + site_arg)
     for _c in range(5):
-        with open(os.devnull, "wb") as f:
-            if (
-                subprocess.call(["omd", "status", "--bare"] + site_arg, stdout=f)
-                == expected_return_code
-            ):
-                return
+        if (
+            subprocess.call(
+                ["omd", "status", "--bare"] + site_arg,
+                stdout=subprocess.DEVNULL,
+            )
+            == expected_return_code
+        ):
+            return
     raise MKGeneralException("Failed to %s site" % command)
 
 
 def omd_command(cmd: List[str]) -> None:
     verbose("Command: %s" % " ".join(cmd))
-    with open(os.devnull, "r") as f:
-        p = subprocess.Popen(  # pylint:disable=consider-using-with
-            cmd,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-            stdin=f,
-            close_fds=True,
-            encoding="utf-8",
+    completed_process = subprocess.run(
+        cmd,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        stdin=subprocess.DEVNULL,
+        close_fds=True,
+        encoding="utf-8",
+        check=False,
+    )
+    verbose(completed_process.stdout)
+    if completed_process.returncode != 0:
+        raise MKGeneralException(
+            "Failed to run <tt>%s</tt>: %s" % (" ".join(cmd), completed_process.stdout)
         )
-        stdout, _stderr = p.communicate()
-    verbose(stdout)
-    if p.returncode != 0:
-        raise MKGeneralException("Failed to run <tt>%s</tt>: %s" % (" ".join(cmd), stdout))
 
 
 # Using RSA directly to encrypt the whole backup is a bad idea. So we use the RSA
@@ -908,7 +916,7 @@ class MKBackupStream:
             else:
                 percentile, backlog_sec = 0.50, 10
                 weight_per_sec = (1 - percentile) ** (1.0 / backlog_sec)
-                weight = weight_per_sec ** timedif
+                weight = weight_per_sec**timedif
                 bps = self._last_bps * weight + this_bps * (1 - weight)
 
             save_state({"bytes_per_second": bps})
@@ -927,13 +935,13 @@ class MKBackupStream:
     # TODO: The return type is a bit questionable...
     def _load_backup_keys(self) -> Dict[str, Dict[str, bytes]]:
         if is_root():
-            path = "/etc/cma/backup_keys.conf"
+            path = Path("/etc/cma/backup_keys.conf")
         else:
-            path = "%s/etc/check_mk/backup_keys.mk" % os.environ["OMD_ROOT"]
+            path = Path(os.environ["OMD_ROOT"], "etc/check_mk/backup_keys.mk")
 
         variables: Dict[str, Dict[str, Any]] = {"keys": {}}
-        if os.path.exists(path):
-            exec(open(path).read(), variables, variables)  # pylint:disable=consider-using-with
+        if path.exists():
+            exec(path.read_text(), variables, variables)
         # TODO: Verify value of keys.
         return variables["keys"]
 
@@ -1363,17 +1371,15 @@ def backup_files_to_tarfile(fobj: IO[bytes], base_path: str, exclude_patterns: L
 
     tar_mode = "w|gz" if compress_archives() else "w|"
     try:
-        tar = TarFile.open(fileobj=fobj, mode=tar_mode)  # pylint:disable=consider-using-with
+        with TarFile.open(fileobj=fobj, mode=tar_mode) as tar:
+            # Don't add base path itself
+            for f in os.listdir(base_path):
+                tar.add(base_path + "/" + f, filter=filter_files)
     except IOError as e:
         if not opt_debug and e.errno == errno.ESPIPE:
             log("Failed to init backup to tarfile: %s" % e)
             return
         raise
-
-    # Don't add base path itself
-    for f in os.listdir(base_path):
-        tar.add(base_path + "/" + f, filter=filter_files)
-    tar.close()
 
 
 def complete_backup():
@@ -1490,7 +1496,7 @@ g_state = None
 def load_state():
     global g_state
     if g_state is None:
-        g_state = json.load(open(state_path()))  # pylint:disable=consider-using-with
+        g_state = json.loads(state_path().read_text())
 
     return g_state
 
@@ -1507,7 +1513,7 @@ def save_state(new_attrs, update=True):
     )
 
 
-def state_path():
+def state_path() -> Path:
     if is_root():
         path = "/var/lib/mkbackup"
     else:
@@ -1528,7 +1534,7 @@ def state_path():
         else:
             name = "restore-%s" % current_site_id()
 
-    return "%s/%s.state" % (path, name)
+    return Path(path, f"{name}.state")
 
 
 def cleanup_backup_job_states():
@@ -1658,39 +1664,36 @@ def do_site_restore(opts, info, site=None):
 
     backup_path = site_backup_archive_path(site)
 
-    p = subprocess.Popen(  # pylint:disable=consider-using-with
-        cmd, close_fds=True, stderr=subprocess.PIPE, stdin=subprocess.PIPE
-    )
-    assert p.stdin is not None
-    assert p.stderr is not None
+    with subprocess.Popen(cmd, close_fds=True, stderr=subprocess.PIPE, stdin=subprocess.PIPE) as p:
+        assert p.stdin is not None
+        assert p.stderr is not None
 
-    with open(backup_path, "rb") as backup_file:
-        s = RestoreStream(
-            stream=backup_file, is_alive=lambda: False, key_ident=g_job_config["encrypt"]
-        )
-        try:
-            archive_started = False
-            for chunk in s.process():
-                # Hack for all handling of site backups created with Checkmk
-                # versions < 2016-03-16 and till 1.2.8p6:
-                # When a site was just stopped, the next "omd backup" unmounts the sites
-                # tmpfs. In this case the output "Unmounting temporary filesystem...OK" was
-                # produced which broke the restore of the site on the local system. Skip to
-                # the beginning of the archive
-                if not archive_started:
-                    if chunk.startswith(b"Unmounting temporary filesystem"):
-                        chunk = chunk[37:]
-                    archive_started = True
+        with open(backup_path, "rb") as backup_file:
+            s = RestoreStream(
+                stream=backup_file, is_alive=lambda: False, key_ident=g_job_config["encrypt"]
+            )
+            try:
+                archive_started = False
+                for chunk in s.process():
+                    # Hack for all handling of site backups created with Checkmk
+                    # versions < 2016-03-16 and till 1.2.8p6:
+                    # When a site was just stopped, the next "omd backup" unmounts the sites
+                    # tmpfs. In this case the output "Unmounting temporary filesystem...OK" was
+                    # produced which broke the restore of the site on the local system. Skip to
+                    # the beginning of the archive
+                    if not archive_started:
+                        if chunk.startswith(b"Unmounting temporary filesystem"):
+                            chunk = chunk[37:]
+                        archive_started = True
 
-                p.stdin.write(chunk)
-        except IOError as e:
-            log("Error while sending data to restore process: %s" % e)
+                    p.stdin.write(chunk)
+            except IOError as e:
+                log("Error while sending data to restore process: %s" % e)
 
-        # s.process() ends when backup_file is processed. Then end the restore process.
-        p.stdin.close()
+        _stdout, stderr = p.communicate()
 
-    if p.wait() != 0:
-        log(ensure_str(p.stderr.read()))  # pylint: disable= six-ensure-str-bin-call
+    if p.returncode:
+        log(stderr.decode(encoding="utf-8", errors="strict"))
         raise MKGeneralException("Site restore failed")
 
     if not is_root():

@@ -11,7 +11,7 @@ diff --git a/python/setup.py b/python/setup.py
 index bdd9878..8d48cfb 100644
 --- a/python/setup.py
 +++ b/python/setup.py
-@@ -45,5 +45,6 @@ setup(
+@@ -41,5 +44,6 @@ setup(
                   library_dirs=libdirs,
                   include_dirs=incdirs,
                   libraries=libs )
@@ -19,6 +19,6 @@ index bdd9878..8d48cfb 100644
 +       ],
 +    zip_safe = False
      )
--- 
+--
 2.7.4
 

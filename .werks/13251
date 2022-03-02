@@ -6,7 +6,7 @@ Date: 1631179899
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 The check function assumes there's a key 'temp-sensor-current-temperature' for every `netapp_api_temp`
 section element and runs into a KeyError if that isn't the case.

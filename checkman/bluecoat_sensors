@@ -1,7 +1,7 @@
 title: Blue Coat Security Gateway: Hardware Sensors
 agents: snmp
 catalog: hw/network/bluecoat
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
   Checks by SNMP the hardware sensors of Blue Coat Security Gateways, such as

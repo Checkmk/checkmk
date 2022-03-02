@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: undoc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 We see a lot of crashes of oracle_asm_diskgroup plugin with the following Exception:
 <tt>File "/omd/sites/SITE/share/check_mk/checks/oracle_asm_diskgroup", line 157, in parse_oracle_asm_diskgroup

@@ -12,6 +12,11 @@ from .agent_based_api.v1.type_defs import HostLabelGenerator, StringTable
 from .utils import k8s
 from .utils.k8s import Address, Port, Subset
 
+###########################################################################
+# NOTE: This check (and associated special agent) is deprecated and will be
+#       removed in Checkmk version 2.2.
+###########################################################################
+
 
 def host_labels(section: Sequence[k8s.Subset]) -> HostLabelGenerator:
     """Host label function

@@ -1,7 +1,7 @@
 title: Veritas VxVM: Enclosures
 agents: hpux, linux
 catalog: os/storage
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check verifies status of disk enclosures or arrays
@@ -22,4 +22,3 @@ item:
 
 discovery:
  One service is created for each VxVM disk enclosure.
-

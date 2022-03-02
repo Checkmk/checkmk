@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 If management boards where not configured as a separate host, but as
 an additional data source for a regular host, the data provided by them

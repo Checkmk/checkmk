@@ -7,6 +7,6 @@ Edition: cee
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 TopTalkers Dashboard: In case no top talkers were found for the given interface, the graphs (Application and interface traffic) vanished. This is fixed now.

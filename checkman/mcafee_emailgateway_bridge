@@ -1,7 +1,7 @@
 title: McAfee Email Gateway: Bridge Status and Traffic
 agents: snmp
 catalog: app/mcafee
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check reports the bridge states, TCP, UDP and ICMP statistics

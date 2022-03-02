@@ -319,10 +319,6 @@ msgid "%d actions"
 msgstr "%d acțiuni"
 
 #, python-format
-msgid "%d changes"
-msgstr "%d schimbări"
-
-#, python-format
 msgid "%d chaotic state changes from %s until %s (%s)"
 msgstr "%d schimbări de stare haotică de la %s până la %s (%s)"
 
@@ -380,13 +376,17 @@ msgstr ""
 
 #, python-format
 msgid ""
-"%d of %d the configured maximum of processes are started. This is a usage of "
-"%0.2f %%."
+"%d of the configured maximum of %d processes have been started. This is a "
+"usage of %0.2f %%."
 msgstr ""
 
 #, python-format
 msgid "%d open incompatible werks"
 msgstr ""
+
+#, fuzzy, python-format
+msgid "%d pending changes"
+msgstr "Activare Schimbări!"
 
 #, python-format
 msgid "%d rows"
@@ -641,9 +641,25 @@ msgstr ""
 msgid "%s: Download agent output"
 msgstr ""
 
+#, fuzzy, python-format
+msgid "%s: No discovery result"
+msgstr "Inventariere in masa"
+
+#, python-format
+msgid "%s: No such agent output"
+msgstr ""
+
 #, python-format
 msgid "%s: Not using SSL. Consider enabling it in the connection settings."
 msgstr ""
+
+#, fuzzy, python-format
+msgid "%s: Service discovery: Permission denied"
+msgstr "(fără Nivel de serviciu)"
+
+#, fuzzy, python-format
+msgid "%s: Services: %s, Host Labels: %s"
+msgstr "Numele Elementului"
 
 #, python-format
 msgid "%s: Uses SSL"
@@ -882,8 +898,9 @@ msgstr ""
 msgid "1 Host"
 msgstr "1 Element"
 
-msgid "1 change"
-msgstr ""
+#, fuzzy
+msgid "1 pending change"
+msgstr "Activare Schimbări!"
 
 #, fuzzy
 msgid "1 row"
@@ -906,8 +923,9 @@ msgstr ""
 msgid "10 seconds"
 msgstr "10 secunde"
 
-msgid "10+ changes"
-msgstr ""
+#, fuzzy
+msgid "10+ pending changes"
+msgstr "Activare Schimbări!"
 
 msgid "10.0 - 20.0 ms"
 msgstr ""
@@ -1346,6 +1364,18 @@ msgstr ""
 
 msgid ""
 "<p>Here you can specify a list of filename patterns to be sent by the agent "
+"in the section <tt>fileinfo</tt>. UNC paths with globbing patterns are used "
+"here, e.g. <tt>\\\\hostname\\share name\\*\\foo\\*.log</tt>. Wildcards are "
+"not allowed in host or share names. Per default each found file will be "
+"monitored for size and age. By building groups you can alternatively monitor "
+"a collection of files as an entity and monitor the count, total size, the "
+"largest, smallest oldest or newest file. Note: if you specify more than one "
+"matching rule, then <b>all</b> matching rules will be used for defining "
+"pattern - not just the  first one.</p>"
+msgstr ""
+
+msgid ""
+"<p>Here you can specify a list of filename patterns to be sent by the agent "
 "in the section <tt>fileinfo</tt>. Use globbing patterns like <tt>C:\\foo\\*."
 "log</tt> or <tt>/var/*/*.log</tt> here. Per default each found file will be "
 "monitored for size and age. By building groups you can alternatively monitor "
@@ -1362,18 +1392,6 @@ msgid ""
 "the Option Only check during the following times of the day should be set. "
 "Otherwise a warning may be displayed if the file for the current day is not "
 "present yet.</p>"
-msgstr ""
-
-msgid ""
-"<p>Here you can specify a list of filename patterns to be sent by the agent "
-"in the section <tt>fileinfo</tt>. Use patterns like <tt>\\Share folder\\foo"
-"\\*.log</tt> here. Wildcards are only allowed in thefilename part, not in "
-"the directory path. Per default each found file will be monitored for size "
-"and age. By building groups you can alternatively monitor a collection of "
-"files as an entity and monitor the count, total size, the largest, smallest "
-"oldest or newest file. Note: if you specify more than one matching rule, "
-"then <b>all</b> matching rules will be used for defining pattern - not just "
-"the  first one.</p>"
 msgstr ""
 
 msgid ""
@@ -1401,11 +1419,26 @@ msgid ""
 "<p>Livestatus is used by several components, for example the GUI, to gather "
 "information about the monitored objects from the monitoring core. It is very "
 "important for the overall performance of the monitoring system that "
-"livestatus is a reliable and performant.</p><p>There should always be enough "
+"livestatus is reliable and performant.</p><p>There should always be enough "
 "free livestatus slots to serve new incoming queries.</p><p>You should never "
-"reach a livestatus usage of 100% for a longer time. Consider increasing "
+"reach a livestatus usage of 100% for a longer time. Consider increasing the "
 "number of parallel livestatus connections or track down the clients to check "
 "whether or not you can reduce the usage somehow.</p>"
+msgstr ""
+
+msgid ""
+"<p>The Apache has a number of maximum processes it may start in case of high "
+"load situations. These Apache processes may use a decent amount of memory, "
+"so you need to configure them in a way that your system can handle them "
+"without reaching out of memory situations.</p><p>Please note that this value "
+"is only a rough estimation, because the memory usage of the Apache processes "
+"may vary with the requests being processed.</p><p>Possible actions:"
+"<ul><li>Change the <a href=\"wato.py?"
+"mode=edit_configvar&varname=apache_process_tuning\">number of Apache "
+"processes</a></li></ul></p><p>Once you have verified your settings, you can "
+"acknowledge this test. The test will not automatically turn to OK, because "
+"it can not exactly estimate the required memory needed by the Apache "
+"processes.</p>"
 msgstr ""
 
 #, no-python-format
@@ -1480,21 +1513,6 @@ msgid ""
 "li><li>Increase the <a href=\"wato.py?"
 "mode=edit_configvar&varname=cmc_check_helpers\">number of check helpers</a></"
 "li></ul></p>"
-msgstr ""
-
-msgid ""
-"<p>The apache has a number maximum processes it can start in case of high "
-"load situations. These apache processes may use a decent amount of memory, "
-"so you need to configure them in a way that you system can handle them "
-"without reaching out of memory situations.</p><p>Please note that this value "
-"is only a rough estimation, because the memory usage of the apache processes "
-"may vary with the requests being processed.</p><p>Possible actions:"
-"<ul><li>Change the <a href=\"wato.py?"
-"mode=edit_configvar&varname=apache_process_tuning\">number of apache "
-"processes</a></li></ul></p><p>Once you have verified your settings, you can "
-"acknowledge this test. The test will not automatically turn to OK, because "
-"it can not exactly estimate the required memory needed by the apache "
-"processes.</p>"
 msgstr ""
 
 #, python-format
@@ -1761,9 +1779,6 @@ msgstr ""
 msgid "A list of specific users"
 msgstr "O listă cu utilizatori specifici"
 
-msgid "A matrix showing a colored square for each host"
-msgstr "O matrice care arată un pătrat colorat pentru fiecare element"
-
 msgid "A ntopng user which belongs to the group 'Administrator' in ntopng."
 msgstr ""
 
@@ -1864,15 +1879,6 @@ msgid "A string-combination of servername and port, e.g. 127.0.0.1:5000."
 msgstr ""
 
 msgid "A string-combination of servername and port, e.g. 127.0.0.1:80."
-msgstr ""
-
-msgid ""
-"A summary state of all hosts that have a problem, with links to problems of "
-"those hosts"
-msgstr ""
-
-msgid ""
-"A summary state of each host with a link to the view showing its services"
 msgstr ""
 
 msgid ""
@@ -2464,25 +2470,8 @@ msgid ""
 "it intended to be a comprehensive state machine. For the pending pods, the "
 "check keeps track for how long they have been pending. If a tolerating time "
 "period is set, the service goes WARN/CRIT after any of the pods has been "
-"pending for longer than the set duration. If there is at least one unknown "
-"pod, the service goes UNKNOWN by default. The state the service goes can be "
-"configured. This rule affects any Pod Resources service, except for those on "
-"the Nodes and the Clusters. The configuration for Clusters and Nodes can be "
-"done via the rule Kubernetes Pod Resources: Clusters, Nodes."
-msgstr ""
-
-msgid ""
-"According to the Kubernetes docs, the phase of a Pod is a simple, high-level "
-"summary of where the Pod is in its lifecycle. The phase is not intended to "
-"be a comprehensive rollup of observations of container or Pod state, nor is "
-"it intended to be a comprehensive state machine. For the pending pods, the "
-"check keeps track for how long they have been pending. If a tolerating time "
-"period is set, the service goes WARN/CRIT after any of the pods has been "
-"pending for longer than the set duration. If there is at least one unknown "
-"pod, the service goes UNKNOWN by default. The state the service goes can be "
-"configured. This rule affects the PodResources services of Kubernetes Nodes "
-"and Kubernetes Clusters. The configuration of other Pod Resources services "
-"can be done via the rule Kubernetes Pod Resources: Deployments."
+"pending for longer than the set duration. For clusters and nodes one can "
+"define levels on the number of free pods."
 msgstr ""
 
 msgid "Ack"
@@ -4542,7 +4531,7 @@ msgid ""
 msgstr ""
 
 msgid ""
-"Allows to define absolute levels for running, waiting, terminated and total  "
+"Allows to define absolute levels for running, waiting, terminated and total "
 "containers."
 msgstr ""
 
@@ -6954,9 +6943,9 @@ msgid ""
 "you want to display the HTML output produced by a specific check plugin."
 "Disabling the escaping also allows the plugin to execute not only HTML, but "
 "also Javascript code in the context of your browser. This makes it possible "
-"to execute arbritary Javascript, even for injection attacks.<br>For this "
+"to execute arbitrary Javascript, even for injection attacks.<br>For this "
 "reason, you should only disable this for a small, very specific number of "
-"services, to be sure that not every random check plugin can make produce "
+"services, to be sure that not every random check plugin is able to produce "
 "code which your browser interprets."
 msgstr ""
 
@@ -7475,10 +7464,6 @@ msgid ""
 "explicit recipient addresses are configured."
 msgstr ""
 
-#, python-format
-msgid "Cannot fetch URL '%s'"
-msgstr ""
-
 msgid "Cannot fetch data via Livestatus"
 msgstr ""
 
@@ -7890,6 +7875,9 @@ msgstr "Dezactiveaza Notificarile"
 #, fuzzy
 msgid "Channels"
 msgstr "Nici o schimbare"
+
+msgid "Chaotic"
+msgstr ""
 
 msgid "Characters"
 msgstr ""
@@ -8339,9 +8327,11 @@ msgstr "Nivelurile maxime pentru voltaj"
 msgid "Checkmk config filename"
 msgstr "Activare Configurare"
 
-#, python-format
-msgid "Checkmk exception: %s"
-msgstr ""
+#, fuzzy, python-format
+msgid ""
+"Checkmk exception: %s\n"
+"%s"
+msgstr "Perioada de timp Noua"
 
 #, fuzzy
 msgid "Checkmk fetcher usage"
@@ -8620,6 +8610,10 @@ msgid ""
 msgstr ""
 
 msgid ""
+"Choose what modem is used. Currently supported is only Teltonika-TRB140."
+msgstr ""
+
+msgid ""
 "Choose whether this rule gets prioritized over cache times that are "
 "configured in the plugin's dedicated rules. Please choose \"override\" only "
 "if you know what you're doing, because some plugins have minimum cache times "
@@ -8790,13 +8784,13 @@ msgstr ""
 msgid "Click for instant reload."
 msgstr ""
 
+#, fuzzy
+msgid "Click here for details."
+msgstr "servicii"
+
 #, python-format
 msgid "Click here to change the graphs consolidation function to \"%s\"."
 msgstr ""
-
-#, fuzzy
-msgid "Click here to go to pending changes."
-msgstr "Renunț la modificări."
 
 msgid "Click here to see the activation status per site."
 msgstr ""
@@ -8971,15 +8965,7 @@ msgstr ""
 msgid "Cluster Name"
 msgstr "Numele Elementului"
 
-#, fuzzy
-msgid "Cluster agent connection"
-msgstr "Perioada de timp Noua"
-
-#, python-format
-msgid ""
-"Cluster and nodes must have the same datasource! The node <b>%s</b> has "
-"datasources <b>%s</b> and <b>%s</b> while the cluster has datasources <b>%s</"
-"b> and <b>%s</b>."
+msgid "Cluster and nodes must have the same datasource. "
 msgstr ""
 
 msgid "Cluster behaviour"
@@ -9013,6 +8999,10 @@ msgstr ""
 
 msgid "Cluster type"
 msgstr ""
+
+#, fuzzy
+msgid "Cluster utilization"
+msgstr "Dezactiveaza Notificarile"
 
 msgid "Cluster, Indices and Shard statistics"
 msgstr ""
@@ -9085,6 +9075,9 @@ msgstr "Numele Aplicatiei"
 #, fuzzy
 msgid "Collections"
 msgstr "Conexiuni Active"
+
+msgid "Collector NodePort / Ingress endpoint"
+msgstr ""
 
 msgid "Color"
 msgstr ""
@@ -9492,6 +9485,12 @@ msgid ""
 "matching rule is used. You have to specify at least one rule to create hosts."
 msgstr ""
 
+#, fuzzy, python-format
+msgid ""
+"Configuration update failed\n"
+"%s"
+msgstr "Notificari"
+
 #, fuzzy
 msgid "Configuration variable:"
 msgstr "Notificari"
@@ -9666,6 +9665,9 @@ msgstr ""
 msgid "Configure your ServiceNow URL here (eg. https://myservicenow.com)."
 msgstr ""
 
+msgid "Configure your modem URL here (eg. https://mymodem.mydomain.example)."
+msgstr ""
+
 #, fuzzy
 msgid "Configured API integrations and Checkmk agent"
 msgstr "TCP port pentru conexiunile la agentul Check_MK"
@@ -9760,6 +9762,10 @@ msgstr ""
 
 #, fuzzy
 msgid "Connect timeout"
+msgstr "Conexiune Noua"
+
+#, fuzzy
+msgid "Connect timeout (seconds)"
 msgstr "Conexiune Noua"
 
 msgid "Connect timeout to status socket of Event Console"
@@ -10205,6 +10211,9 @@ msgstr "(fără elemente)"
 #, fuzzy
 msgid "Copy of existing view"
 msgstr "(fără elemente)"
+
+msgid "Copy rule representation to clipboard"
+msgstr ""
 
 #, python-format
 msgid "Copy rule: %s"
@@ -11212,18 +11221,19 @@ msgstr ""
 msgid "Currently running processes"
 msgstr ""
 
-#, python-format
-msgid "Currently there are %s to activate."
-msgstr ""
-
 msgid "Currently there are no changes to activate."
 msgstr ""
 
 msgid "Currently there are no unsent notification bulks pending."
 msgstr ""
 
-msgid "Currently there is one change to activate."
-msgstr ""
+#, fuzzy, python-format
+msgid "Currently, there are %s not yet activated."
+msgstr "%d schimbări"
+
+#, fuzzy
+msgid "Currently, there is one pending change not yet activated."
+msgstr "%d schimbări"
 
 msgid "Custom Action"
 msgstr ""
@@ -11353,10 +11363,6 @@ msgstr "Atribute personalizate"
 
 #, fuzzy
 msgid "Custom limit"
-msgstr "Atribute personalizate"
-
-#, fuzzy
-msgid "Custom links"
 msgstr "Atribute personalizate"
 
 msgid "Custom localizations"
@@ -12367,6 +12373,26 @@ msgstr ""
 msgid "Define levels on the queue length."
 msgstr "Nivel-urile absolute de licențe neutilizate"
 
+#, fuzzy
+msgid "Define lower levels for free pods (clusters and nodes only)"
+msgstr "Numarul maxim de conexiuni"
+
+#, fuzzy
+msgid "Define lower levels for number of running containers"
+msgstr "Numarul maxim de conexiuni"
+
+#, fuzzy
+msgid "Define lower levels for number of terminated containers"
+msgstr "Numarul maxim de conexiuni"
+
+#, fuzzy
+msgid "Define lower levels for number of total containers"
+msgstr "Nivel-urile absolute de licențe neutilizate"
+
+#, fuzzy
+msgid "Define lower levels for number of waiting containers"
+msgstr "Numarul maxim de conexiuni"
+
 msgid ""
 "Define patterns for excluding kernel configuration parameters from the "
 "inventory."
@@ -12376,6 +12402,22 @@ msgid ""
 "Define patterns for including kernel configuration parameters in the "
 "inventory."
 msgstr ""
+
+#, fuzzy
+msgid "Define upper levels for number of running containers"
+msgstr "Nivel-urile absolute de licențe neutilizate"
+
+#, fuzzy
+msgid "Define upper levels for number of terminated containers"
+msgstr "Numarul maxim de conexiuni"
+
+#, fuzzy
+msgid "Define upper levels for number of total containers"
+msgstr "Nivel-urile absolute de licențe neutilizate"
+
+#, fuzzy
+msgid "Define upper levels for number of waiting containers"
+msgstr "Nivel-urile absolute de licențe neutilizate"
 
 msgid ""
 "Define which monitoring state maps which input state. This applies for every "
@@ -13329,9 +13371,6 @@ msgstr "Acțiune"
 msgid ""
 "Direct access to global reports, selection for the default reporting time "
 "range, link to report editor."
-msgstr ""
-
-msgid "Direct access to the setup menu"
 msgstr ""
 
 msgid "Direct and buffered I/O operations"
@@ -14745,9 +14784,6 @@ msgstr "doua nivele"
 msgid "Document count growth per minute"
 msgstr ""
 
-msgid "Documentation"
-msgstr ""
-
 #, fuzzy
 msgid "Documentation URL"
 msgstr "Acțiune"
@@ -15645,7 +15681,7 @@ msgstr ""
 
 msgid ""
 "Either disable persistent connections or carefully review maximum number of "
-"apache processes and possible livestatus connections."
+"Apache processes and possible livestatus connections."
 msgstr ""
 
 msgid ""
@@ -16152,6 +16188,10 @@ msgstr ""
 msgid "Ending pre-emptivley"
 msgstr ""
 
+#, fuzzy
+msgid "Endpoint"
+msgstr "Numele Elementului"
+
 msgid "Endpoints"
 msgstr ""
 
@@ -16195,6 +16235,9 @@ msgid "Engine IDs (only needed for SNMPv3)"
 msgstr ""
 
 msgid "English"
+msgstr ""
+
+msgid "Enrich with usage data from Checkmk Cluster Collector"
 msgstr ""
 
 msgid "Enter"
@@ -16555,6 +16598,11 @@ msgstr ""
 #, fuzzy
 msgid "Event history entry"
 msgstr "Adaungă un nou element"
+
+# georgem ##############
+#, fuzzy
+msgid "Event history icons"
+msgstr "Grup nou"
 
 msgid "Event history lifetime"
 msgstr ""
@@ -17138,7 +17186,7 @@ msgid ""
 msgstr ""
 
 #, fuzzy
-msgid "Export for API"
+msgid "Export this rule for API"
 msgstr "rapoarte"
 
 msgid "Extend downtimes by..."
@@ -17358,7 +17406,7 @@ msgstr ""
 msgid "Failed to discover %s: %s"
 msgstr ""
 
-msgid "Failed to estimate the apache process size"
+msgid "Failed to estimate the Apache process size"
 msgstr ""
 
 #, python-format
@@ -17428,7 +17476,7 @@ msgstr ""
 msgid "Failed to process your MIB file (%s): %s"
 msgstr ""
 
-msgid "Failed to read the apache process ID"
+msgid "Failed to read the Apache process ID"
 msgstr ""
 
 msgid ""
@@ -17478,9 +17526,10 @@ msgstr ""
 
 #, python-format
 msgid ""
-"Failed to submit the license usage report to the Checkmk license server '%s'."
-"<br>Please download it manually and upload it in the <a href=\"https://"
-"customer.checkmk.com\">Checkmk user portal<a> or send it to sales@tribe29.com"
+"Failed to submit the license usage report to the Checkmk license server "
+"'%s'. Please download it manually and upload it in the <a href=\"https://"
+"customer.checkmk.com\">Checkmk user portal<a>. If this also does not work, "
+"please open a support ticket or send an email to sales@tribe29.com."
 msgstr ""
 
 #, python-format
@@ -18186,9 +18235,6 @@ msgstr "Proprietatile Folderului"
 msgid "Folder: %s"
 msgstr "(altul: %s)"
 
-msgid "Folders"
-msgstr ""
-
 msgid ""
 "Folders group your hosts, can inherit attributes and can have permissions."
 msgstr ""
@@ -18595,6 +18641,10 @@ msgid ""
 "Found no group object for synchronization. Please check your filter settings."
 msgstr ""
 
+#, python-format
+msgid "Found no history entry at the time of '%s' for the host '%s'"
+msgstr ""
+
 msgid "Found no inventory data for this host."
 msgstr ""
 
@@ -18608,7 +18658,7 @@ msgstr ""
 msgid "Found no rule packs."
 msgstr "Reguli"
 
-msgid "Found no services yet. To retry please execute a full scan."
+msgid "Found no services yet. To retry please execute a rescan."
 msgstr ""
 
 msgid ""
@@ -18781,6 +18831,29 @@ msgstr ""
 
 msgid "GByte/s"
 msgstr ""
+
+#, fuzzy
+msgid "GCP/Function egress"
+msgstr "Conexiune Noua"
+
+#, fuzzy
+msgid "GCP/Function execution"
+msgstr "Numarul maxim de conexiuni"
+
+#, fuzzy
+msgid "GCP/Function instances"
+msgstr "Adaugă instanță NGINX"
+
+#, fuzzy
+msgid "GCP/GCS Network"
+msgstr "Adresă"
+
+msgid "GCP/GCS Objects"
+msgstr ""
+
+#, fuzzy
+msgid "GCP/GCS Requests"
+msgstr "cereri"
 
 msgid "GET/POST variables of this page"
 msgstr ""
@@ -18962,6 +19035,10 @@ msgid "Global settings matching '%s'"
 msgstr ""
 
 #, fuzzy
+msgid "GlobalProtect Utilization"
+msgstr "Dezactiveaza Notificarile"
+
+#, fuzzy
 msgid "Globally enforced"
 msgstr "rapoarte"
 
@@ -18989,6 +19066,12 @@ msgstr ""
 
 #, python-format
 msgid "Going to update %d sites"
+msgstr ""
+
+msgid "Google Cloud Platform"
+msgstr ""
+
+msgid "Google Cloud Platform (GCP)"
 msgstr ""
 
 #, fuzzy
@@ -19691,8 +19774,13 @@ msgid ""
 msgstr ""
 
 msgid ""
-"Here you can configure levels for usage, request utilization and limit "
+"Here you can configure levels for usage, requests utilization and limits "
 "utilization, respectively."
+msgstr ""
+
+msgid ""
+"Here you can configure levels for usage, requests utilization, limits "
+"utilization and node utilization, respectively."
 msgstr ""
 
 msgid ""
@@ -20328,9 +20416,6 @@ msgstr ""
 msgid "Hivemanager Devices"
 msgstr ""
 
-msgid "Homepage"
-msgstr ""
-
 msgid "Homepage / Download - URL of this package"
 msgstr ""
 
@@ -20705,10 +20790,6 @@ msgid "Host match list"
 msgstr ""
 
 #, fuzzy
-msgid "Host matrix"
-msgstr "serviciu"
-
-#, fuzzy
 msgid "Host memory usage"
 msgstr "Nivelurile maxime pentru voltaj"
 
@@ -20967,6 +21048,10 @@ msgstr ""
 
 msgid "Hosts"
 msgstr ""
+
+#, fuzzy
+msgid "Hosts & services:"
+msgstr "(fără Nivel de serviciu)"
 
 msgid "Hosts Connected"
 msgstr ""
@@ -21391,10 +21476,6 @@ msgstr ""
 msgid "IP address family"
 msgstr "Adresă"
 
-#, fuzzy
-msgid "IP address of Kubernetes node"
-msgstr "Adresă"
-
 msgid "IP address or FQDN of JVM webserver"
 msgstr ""
 
@@ -21716,14 +21797,11 @@ msgstr ""
 msgid "If no port is given, a default value of 443 will be used."
 msgstr ""
 
-msgid "If no port is given, a default value of 6443 will be used."
-msgstr ""
-
 msgid ""
-"If non-zero, the the list of all the matching processes and their details in "
-"the long-output will include up to the first N arguments of each processes. "
-"Please note this may include sensitive data like credentials, and is "
-"strongly discouraged."
+"If non-zero, the list of all the matching processes and their details in the "
+"long-output will include up to the first N characters of all arguments for "
+"each process. Please note this may include sensitive data like credentials, "
+"and is strongly discouraged."
 msgstr ""
 
 msgid "If omitted then the IP address is being used."
@@ -23463,6 +23541,9 @@ msgstr ""
 msgid "Interpretation of failover cluster state"
 msgstr ""
 
+msgid "Interpretation of pod status"
+msgstr ""
+
 msgid "Interpretation of the device's own temperature status"
 msgstr ""
 
@@ -24098,6 +24179,10 @@ msgstr ""
 msgid "JQL query: "
 msgstr ""
 
+#, fuzzy
+msgid "JSON credentials for service account"
+msgstr "Conexiuni Active"
+
 msgid "JVM Execute Queue Count"
 msgstr ""
 
@@ -24365,8 +24450,9 @@ msgstr "cereri/sec"
 msgid "Kubernetes"
 msgstr ""
 
-msgid "Kubernetes 2.0"
-msgstr ""
+#, fuzzy
+msgid "Kubernetes (deprecated)"
+msgstr "Adresă"
 
 #, fuzzy
 msgid "Kubernetes CPU resource utilization"
@@ -24384,26 +24470,19 @@ msgstr ""
 msgid "Kubernetes Network interfaces"
 msgstr ""
 
-msgid "Kubernetes Pod Resources: Clusters, Nodes"
-msgstr ""
-
-#, fuzzy
-msgid "Kubernetes Pod Resources: Deployments"
-msgstr "Adresă"
-
-#, fuzzy
-msgid "Kubernetes Pod restarts"
-msgstr "Adresă"
-
 msgid "Kubernetes Port"
 msgstr ""
+
+#, fuzzy
+msgid "Kubernetes deployment conditions"
+msgstr "(fără condiții)"
 
 #, fuzzy
 msgid "Kubernetes memory resource utilization"
 msgstr "Dezactiveaza Notificarile"
 
 #, fuzzy
-msgid "Kubernetes node container count"
+msgid "Kubernetes node containers"
 msgstr "Adresă"
 
 #, fuzzy
@@ -24413,15 +24492,35 @@ msgstr "Adresă"
 msgid "Kubernetes nodes"
 msgstr ""
 
+#, fuzzy
+msgid "Kubernetes pod conditions"
+msgstr "Adresă"
+
+#, fuzzy
+msgid "Kubernetes pod containers"
+msgstr "Adresă"
+
+#, fuzzy
+msgid "Kubernetes pod resources"
+msgstr "Adresă"
+
+#, fuzzy
+msgid "Kubernetes pod restarts"
+msgstr "Adresă"
+
+#, fuzzy
+msgid "Kubernetes pod status"
+msgstr "Adresă"
+
+#, fuzzy
+msgid "Kubernetes replicas"
+msgstr "Adresă"
+
 msgid "Kubernetes resources"
 msgstr ""
 
 msgid "Kubernetes roles"
 msgstr ""
-
-#, fuzzy
-msgid "Kubernetes: Replicas"
-msgstr "Adresă"
 
 msgid "L2 cache hit ratio"
 msgstr ""
@@ -25294,6 +25393,10 @@ msgstr ""
 msgid "Levels on %s single-request consumption"
 msgstr ""
 
+#, fuzzy
+msgid "Levels on CPU load"
+msgstr "Nivelurile maxime pentru voltaj"
+
 msgid "Levels on CPU utilization of a single process"
 msgstr ""
 
@@ -25336,8 +25439,20 @@ msgid "Levels on ingress data in bytes"
 msgstr "Nivelurile maxime pentru voltaj"
 
 #, fuzzy
+msgid "Levels on instances"
+msgstr "Nivel-urile absolute de licențe neutilizate"
+
+#, fuzzy
 msgid "Levels on latency"
 msgstr "Nivelurile maxime pentru voltaj"
+
+#, fuzzy
+msgid "Levels on network egress"
+msgstr "Nivel-urile absolute de licențe neutilizate"
+
+#, fuzzy
+msgid "Levels on performance"
+msgstr "Acces la Consola de Evenimente"
 
 #, fuzzy
 msgid "Levels on read capacity"
@@ -25539,12 +25654,12 @@ msgid "Limit to the following services"
 msgstr ""
 
 #, fuzzy
-msgid "Limit utilization"
-msgstr "Dezactiveaza Notificarile"
-
-#, fuzzy
 msgid "Limit width"
 msgstr "latime"
+
+#, fuzzy
+msgid "Limits"
+msgstr "Adaugă limite"
 
 #, fuzzy
 msgid "Limits and levels"
@@ -25552,6 +25667,10 @@ msgstr "doua nivele"
 
 msgid "Limits for the number of used states"
 msgstr ""
+
+#, fuzzy
+msgid "Limits utilization"
+msgstr "Dezactiveaza Notificarile"
 
 msgid "Line"
 msgstr ""
@@ -25660,9 +25779,6 @@ msgstr ""
 msgid "Links to global views and dashboards"
 msgstr ""
 
-msgid "Links to webpage, documentation and download of Checkmk"
-msgstr ""
-
 msgid "Linux"
 msgstr ""
 
@@ -25680,6 +25796,10 @@ msgstr ""
 
 msgid "Linux distributions"
 msgstr ""
+
+#, fuzzy
+msgid "Linux hosts"
+msgstr "(fără elemente)"
 
 #, fuzzy
 msgid "Linux interfaces"
@@ -26733,9 +26853,6 @@ msgstr "Nume nou"
 msgid "Ma."
 msgstr ""
 
-msgid "Macro Replacement"
-msgstr ""
-
 msgid "Macro name"
 msgstr ""
 
@@ -27116,6 +27233,12 @@ msgstr ""
 #, fuzzy
 msgid "Map systemd states to monitoring states"
 msgstr " pe siteul de monitorizare: "
+
+msgid ""
+"Map the Kubernetes pod status shown in the summary to an upper level of its "
+"age. In order the configure pod statuses not within the list below, use the "
+"'Other' option."
+msgstr ""
 
 #, fuzzy
 msgid "Map the admin state (<tt>ifAdminStatus</tt>) to a monitoring state."
@@ -27693,6 +27816,14 @@ msgstr ""
 
 msgid "Maximum number of parsed lines per log file"
 msgstr "Numarul maxim de linii parsate per fisier de loguri"
+
+#, fuzzy
+msgid "Maximum number of ready control plane nodes"
+msgstr "Numarul maxim de conexiuni"
+
+#, fuzzy
+msgid "Maximum number of ready worker nodes"
+msgstr "Numarul maxim de mesaje"
 
 #, fuzzy
 msgid "Maximum number of service outages"
@@ -28300,6 +28431,14 @@ msgstr "Numarum maxim de biti pentru primire"
 msgid "Minimum number of pool members"
 msgstr ""
 
+#, fuzzy
+msgid "Minimum number of ready control plane nodes"
+msgstr "Numarul maxim de conexiuni"
+
+#, fuzzy
+msgid "Minimum number of ready worker nodes"
+msgstr "Numarul maxim de mesaje"
+
 msgid "Minimum password length"
 msgstr ""
 
@@ -28491,6 +28630,13 @@ msgstr ""
 
 msgid "Modem States that lead to a critical state"
 msgstr ""
+
+msgid "Modem URL"
+msgstr ""
+
+#, fuzzy
+msgid "Modem type"
+msgstr "Numele Elementului"
 
 msgid "Modems"
 msgstr ""
@@ -28837,6 +28983,27 @@ msgstr " pe siteul de monitorizare: "
 msgid "Monitoring state if task is not enabled"
 msgstr ""
 
+msgid ""
+"Monitoring state if the DISKPRESSURE condition is faulty or not available"
+msgstr ""
+
+msgid ""
+"Monitoring state if the MEMORYPRESSURE condition is faulty or not available"
+msgstr ""
+
+msgid ""
+"Monitoring state if the NETWORKUNAVAILABLE condition is faulty or not "
+"available"
+msgstr ""
+
+msgid ""
+"Monitoring state if the PIDPRESSURE condition is faulty or not available"
+msgstr ""
+
+#, fuzzy
+msgid "Monitoring state if the READY condition is faulty or not available"
+msgstr " pe siteul de monitorizare: "
+
 #, fuzzy
 msgid "Monitoring state if the wrong unit is active/standby"
 msgstr " pe siteul de monitorizare: "
@@ -28956,10 +29123,6 @@ msgstr ""
 #, python-format
 msgid "Move to %s services"
 msgstr ""
-
-#, fuzzy
-msgid "Move to folder:"
-msgstr "Folder nou"
 
 #, fuzzy
 msgid "Move to other folder"
@@ -29886,9 +30049,6 @@ msgstr ""
 msgid "No agent labels present."
 msgstr ""
 
-msgid "No agent outputs for discoverable hosts found"
-msgstr ""
-
 msgid "No agent registration requests processed"
 msgstr ""
 
@@ -29949,7 +30109,7 @@ msgstr "% utilizare"
 msgid "No data available"
 msgstr ""
 
-msgid "No data for discovery available. Please perform a full scan."
+msgid "No data for discovery available. Please perform a rescan."
 msgstr ""
 
 msgid "No data from any site"
@@ -29976,7 +30136,7 @@ msgstr ""
 msgid "No discoverable hosts found"
 msgstr ""
 
-msgid "No discovery information available. Please perform a full scan."
+msgid "No discovery information available. Please perform a rescan."
 msgstr ""
 
 #, fuzzy
@@ -29997,7 +30157,7 @@ msgstr ""
 
 msgid ""
 "No fresh discovery information available. Using latest cached information. "
-"Please perform a full scan in case you want to discover the current state."
+"Please perform a rescan in case you want to discover the current state."
 msgstr ""
 
 #, python-format
@@ -30018,6 +30178,10 @@ msgid ""
 "No historic metrics recorded but performance data is available. Maybe "
 "performance data processing is disabled."
 msgstr ""
+
+#, fuzzy
+msgid "No hosts discovered"
+msgstr "Inventariere in masa"
 
 msgid "No hosts/services found."
 msgstr ""
@@ -30237,6 +30401,10 @@ msgid "Node Status"
 msgstr "Statusul Serverului"
 
 #, fuzzy
+msgid "Node conditions"
+msgstr "(fără condiții)"
+
+#, fuzzy
 msgid "Node name"
 msgstr "Nume nou"
 
@@ -30264,6 +30432,10 @@ msgstr ""
 
 msgid "Node statistics"
 msgstr ""
+
+#, fuzzy
+msgid "Node utilization"
+msgstr "Dezactiveaza Notificarile"
 
 msgid "Nodes"
 msgstr ""
@@ -30885,6 +31057,10 @@ msgstr ""
 msgid "Number of active sessions"
 msgstr ""
 
+#, fuzzy
+msgid "Number of active tunnels"
+msgstr "Numarul maxim de mesaje"
+
 #, python-format
 msgid "Number of agents that have registered for updates: %d"
 msgstr ""
@@ -31189,12 +31365,16 @@ msgid "Number of retries (not counting the initial regular run)"
 msgstr ""
 
 #, fuzzy
-msgid "Number of running containers"
-msgstr "Numarul maxim de conexiuni"
-
-#, fuzzy
 msgid "Number of search results"
 msgstr "Numarul maxim de mesaje"
+
+#, fuzzy
+msgid "Number of seconds to wait for a TCP connection"
+msgstr "Numarul maxim de conexiuni"
+
+msgid ""
+"Number of seconds to wait for a response from the API during a TCP connection"
+msgstr ""
 
 msgid "Number of send packets per report"
 msgstr ""
@@ -31290,10 +31470,6 @@ msgstr "Numarul maxim de mesaje"
 msgid "Number of tables"
 msgstr "Numarul maxim de mesaje"
 
-#, fuzzy
-msgid "Number of terminated containers"
-msgstr "Numarul maxim de conexiuni"
-
 msgid "Number of the Rack"
 msgstr ""
 
@@ -31311,10 +31487,6 @@ msgstr ""
 
 msgid "Number of total and running sessions"
 msgstr ""
-
-#, fuzzy
-msgid "Number of total containers"
-msgstr "Numarul maxim de conexiuni"
 
 msgid "Number of unassigned shards"
 msgstr ""
@@ -31346,10 +31518,6 @@ msgstr ""
 #, fuzzy
 msgid "Number of users"
 msgstr "Numarul maxim de mesaje"
-
-#, fuzzy
-msgid "Number of waiting containers"
-msgstr "Numarul maxim de conexiuni"
 
 msgid "Number of warnings"
 msgstr ""
@@ -32809,9 +32977,6 @@ msgstr ""
 msgid "Paragraph of text"
 msgstr ""
 
-msgid "Paragraph of text fetched via HTTP(s)"
-msgstr ""
-
 #, fuzzy
 msgid "Parallel connections"
 msgstr "Numarul maxim de conexiuni paralele"
@@ -32862,6 +33027,17 @@ msgstr ""
 msgid "Parameters for the Windows Update Check with WSUS"
 msgstr ""
 
+#, fuzzy
+msgid "Parameters for the bucket network io"
+msgstr " pe siteul de monitorizare: "
+
+msgid "Parameters for the bucket objects io"
+msgstr ""
+
+#, fuzzy
+msgid "Parameters for the bucket requests"
+msgstr "trei nivele"
+
 msgid "Parameters for this host"
 msgstr ""
 
@@ -32872,6 +33048,20 @@ msgid ""
 "Parameters must contain only A-Z, a-z, 0-9 and _ and must not begin with a "
 "digit."
 msgstr ""
+
+msgid "Parameters of bucket object counts"
+msgstr ""
+
+msgid "Parameters of total bucket size"
+msgstr ""
+
+#, fuzzy
+msgid "Parameters received bytes"
+msgstr "Sterge Elementul"
+
+#, fuzzy
+msgid "Parameters send bytes"
+msgstr "Numele Elementului"
 
 #, fuzzy
 msgid "Parameters:"
@@ -33486,11 +33676,11 @@ msgid ""
 "Persistent connections may be a configuration to improve the performance of "
 "the GUI, but be aware that you really need to tune your system to make it "
 "work properly. When you have enabled persistent connections, the single GUI "
-"pages may use already established connections of the apache process. This "
+"pages may use already established connections of the Apache process. This "
 "saves the time that is needed for establishing the Livestatus connections. "
-"But you need to be aware that each apache process that is running is keeping "
+"But you need to be aware that each Apache process that is running is keeping "
 "a persistent connection to each configured site via Livestatus open. This "
-"means you need to balance the maximum apache processes with the maximum "
+"means you need to balance the maximum Apache processes with the maximum "
 "parallel livestatus connections. Otherwise livestatus requests will be "
 "blocked by existing and possibly idle connections."
 msgstr ""
@@ -33755,12 +33945,6 @@ msgid ""
 "i> of the name."
 msgstr ""
 
-#, python-format
-msgid ""
-"Please edit <tt>%s</tt> in order to configure which links are shown in this "
-"snapin."
-msgstr ""
-
 msgid "Please enter <tt>Drives</tt>, <tt>Mdisks</tt> or <tt>VDisks</tt> here."
 msgstr ""
 
@@ -33852,7 +34036,7 @@ msgstr ""
 
 msgid ""
 "Please note that you have to set <tt>RequestHeader set X-Forwarded-Proto "
-"\"https\"</tt> in your system apache configuration to tell the Checkmk GUI "
+"\"https\"</tt> in your system Apache configuration to tell the Checkmk GUI "
 "about the SSL setup."
 msgstr ""
 
@@ -34158,14 +34342,6 @@ msgid "Pod Restarts"
 msgstr "Numele Elementului"
 
 #, fuzzy
-msgid "Pod conditions"
-msgstr "%d condiții"
-
-#, fuzzy
-msgid "Pod containers"
-msgstr "doua nivele"
-
-#, fuzzy
 msgid "Pod request"
 msgstr "cereri"
 
@@ -34173,6 +34349,9 @@ msgid "Pod resources"
 msgstr ""
 
 msgid "Pods"
+msgstr ""
+
+msgid "Pods of CronJobs"
 msgstr ""
 
 msgid "Point-to-site bandwidth"
@@ -34240,9 +34419,6 @@ msgstr ""
 msgid "Port numbers"
 msgstr "Portul TCO"
 
-msgid "Port of Kubernetes' checkmk-external service"
-msgstr ""
-
 msgid "Port types to include in usage statistics"
 msgstr ""
 
@@ -34262,9 +34438,6 @@ msgid "Positive match (Add matching hosts to the set)"
 msgstr ""
 
 msgid "Positive match (Add matching services to the set)"
-msgstr ""
-
-msgid "Possible are 'user', 'operator', 'admin'"
 msgstr ""
 
 msgid ""
@@ -34589,10 +34762,6 @@ msgstr "Probleme"
 
 #, fuzzy
 msgid "Problem details"
-msgstr "Probleme"
-
-#, fuzzy
-msgid "Problem hosts"
 msgstr "Probleme"
 
 msgid "Problem is acknowledged, but is configured to be periodic"
@@ -35451,6 +35620,10 @@ msgid "Read throughput per second"
 msgstr "cereri/sec"
 
 #, fuzzy
+msgid "Read timeout (seconds)"
+msgstr "Nume tablespace"
+
+#, fuzzy
 msgid "Read wait"
 msgstr "Perioada de timp Noua"
 
@@ -36199,6 +36372,10 @@ msgstr "trimite notificare"
 msgid "Renaming host(s) in rulesets..."
 msgstr "trimite notificare"
 
+#, fuzzy
+msgid "Renaming host(s): Update UUID links..."
+msgstr "trimite notificare"
+
 #, fuzzy, python-format
 msgid "Renaming of %s"
 msgstr ", rulează pe %s"
@@ -36248,9 +36425,6 @@ msgstr ""
 msgid "Repetition change for item {diff_path}."
 msgstr ""
 
-msgid "Replace macros in fetched text body"
-msgstr ""
-
 msgid ""
 "Replace the application (syslog tag) with this text. If you have bracketed "
 "groups in the text to match, then you can use the placeholders <tt>\\1</tt>, "
@@ -36295,6 +36469,10 @@ msgstr "Numele Aplicatiei"
 #, fuzzy
 msgid "Replica update state"
 msgstr "Stare adiministrativă"
+
+#, fuzzy
+msgid "Replicas"
+msgstr "Numele Aplicatiei"
 
 #, fuzzy
 msgid "Replicate Event Console config"
@@ -36379,11 +36557,6 @@ msgstr ""
 msgid "Report generation started in background job <a href=\"%s\">%s</a>"
 msgstr ""
 
-msgid ""
-"Report macros such as <tt>$HOSTNAME$</tt> will be replaced if found in the "
-"URL. That way you can create dynamic URLs."
-msgstr ""
-
 msgid "Report of Host"
 msgstr ""
 
@@ -36444,12 +36617,12 @@ msgstr "cereri/sec"
 msgid "Request rate"
 msgstr "cereri/sec"
 
-#, fuzzy
-msgid "Request utilization"
-msgstr "Dezactiveaza Notificarile"
-
 msgid "Request wait time"
 msgstr ""
+
+#, fuzzy
+msgid "Requests"
+msgstr "cereri"
 
 msgid "Requests data about Elasticsearch clusters, nodes and indices."
 msgstr ""
@@ -36476,6 +36649,10 @@ msgstr "cereri/sec"
 #, fuzzy
 msgid "Requests per second"
 msgstr "cereri/sec"
+
+#, fuzzy
+msgid "Requests utilization"
+msgstr "Dezactiveaza Notificarile"
 
 #, fuzzy
 msgid "Require a comment"
@@ -37064,6 +37241,13 @@ msgstr "Proprietatile Folderului"
 msgid "Rule packs"
 msgstr "Reguli"
 
+msgid "Rule representation for web API"
+msgstr ""
+
+#, fuzzy, python-format
+msgid "Rule representation: %s"
+msgstr "Numele Elementului"
+
 #, fuzzy
 msgid "Rule search"
 msgstr "Cautare noua"
@@ -37152,6 +37336,10 @@ msgstr ""
 
 msgid "Ruleset"
 msgstr ""
+
+#, fuzzy
+msgid "Ruleset name"
+msgstr "Nume nou"
 
 msgid "Rulesets"
 msgstr "Reguli"
@@ -37454,7 +37642,7 @@ msgstr ""
 msgid "SMART harddisk monitoring (Linux)"
 msgstr ""
 
-msgid "SMB Share"
+msgid "SMB Share fileinfo"
 msgstr ""
 
 msgid "SMB share to check"
@@ -38025,10 +38213,6 @@ msgstr ""
 msgid "Sec."
 msgstr ""
 
-#, python-format
-msgid "Second part of tuple must be list or string, not %s\n"
-msgstr ""
-
 msgid "Secondary - Attaching"
 msgstr ""
 
@@ -38234,7 +38418,13 @@ msgstr "(selectează directorul)"
 msgid "Select specific object type"
 msgstr ""
 
-msgid "Select the Kubernetes objects you would like to monitor."
+msgid ""
+"Select the Kubernetes objects you would like to monitor. Pods controlled by "
+"CronJobs are treated separately as they are usually quite short lived. Those "
+"pods will be monitored in the same manner as regular pods. Your Dynamic host "
+"management rule should be configured accordingly to avoid that the piggyback "
+"hosts for terminated CronJob pods are kept for too long. This 'Pods of "
+"CronJobs' option has no effect if Pods are not monitored"
 msgstr ""
 
 msgid ""
@@ -38474,10 +38664,6 @@ msgid "Server Time"
 msgstr "Numele Elementului"
 
 #, fuzzy
-msgid "Server endpoint"
-msgstr "Numele Elementului"
-
-#, fuzzy
 msgid "Server latency"
 msgstr "Statusul Serverului"
 
@@ -38672,6 +38858,10 @@ msgid "Service discovery"
 msgstr ""
 
 #, fuzzy
+msgid "Service discovery details"
+msgstr "(fără Nivel de serviciu)"
+
+#, fuzzy
 msgid "Service discovery rules"
 msgstr "(fără Nivel de serviciu)"
 
@@ -38690,10 +38880,6 @@ msgstr "(fără Nivel de serviciu)"
 
 msgid "Service discovery: Check type"
 msgstr ""
-
-#, fuzzy
-msgid "Service discovery: Permission denied"
-msgstr "(fără Nivel de serviciu)"
 
 msgid "Service discovery: Service description"
 msgstr ""
@@ -38955,17 +39141,9 @@ msgid ""
 "in the service list of a host."
 msgstr ""
 
-#, fuzzy
-msgid "Services/Host labels to fix"
-msgstr "Numele Elementului"
-
 #, python-format
 msgid "Services: %d total (%d added, %d removed, %d kept)"
 msgstr ""
-
-#, fuzzy, python-format
-msgid "Services: %s, Host labels: %s"
-msgstr "Numele Elementului"
 
 #, fuzzy
 msgid "Session Rate"
@@ -39118,14 +39296,6 @@ msgstr "doua nivele"
 msgid "Set lower and upper levels for numerical sensors"
 msgstr ""
 
-#, fuzzy
-msgid "Set lower levels of control plane nodes"
-msgstr "Numarul maxim de conexiuni"
-
-#, fuzzy
-msgid "Set lower levels of worker nodes"
-msgstr "Numarul maxim de conexiuni"
-
 msgid ""
 "Set lower levels on the age of the process (not the consumed CPU time, but "
 "the real time)."
@@ -39141,6 +39311,10 @@ msgstr "TCP port pentru conexiunile la agentul Check_MK"
 
 #, fuzzy
 msgid "Set optional timeout for connections to ServiceNow"
+msgstr "TCP port pentru conexiunile la agentul Check_MK"
+
+#, fuzzy
+msgid "Set optional timeout for connections to the modem."
 msgstr "TCP port pentru conexiunile la agentul Check_MK"
 
 msgid "Set period how long outdated piggyback data is treated as valid"
@@ -39192,9 +39366,6 @@ msgid ""
 "vanished services automatically. If you set both this and 'Don't remove "
 "matching vanished services', both rules have to apply for a service to be "
 "removed."
-msgstr ""
-
-msgid "Set state for unknown pods"
 msgstr ""
 
 msgid "Set state to"
@@ -39304,14 +39475,6 @@ msgid ""
 "Set upper levels of active sessions relative to max. number of sessions. "
 "This is optional."
 msgstr ""
-
-#, fuzzy
-msgid "Set upper levels of control plane nodes"
-msgstr "Numarul maxim de conexiuni"
-
-#, fuzzy
-msgid "Set upper levels of worker nodes"
-msgstr "Nivel-urile absolute de licențe neutilizate"
 
 msgid ""
 "Set upper levels on the age of the process (not the consumed CPU time, but "
@@ -40130,6 +40293,13 @@ msgstr ""
 msgid "Single Bit (BOOL)"
 msgstr ""
 
+msgid "Single Linux host"
+msgstr ""
+
+#, fuzzy
+msgid "Single Windows host"
+msgstr "Probleme"
+
 msgid "Single dataset"
 msgstr ""
 
@@ -40590,9 +40760,6 @@ msgstr "Dezactiveaza Notificarile"
 #, fuzzy
 msgid "Sophos Memory utilization"
 msgstr "Dezactiveaza Notificarile"
-
-msgid "Sorry, I will not display more than 900 hosts."
-msgstr ""
 
 msgid ""
 "Sorry, but your unlimited 30-day trial of Checkmk has ended. The Checkmk "
@@ -41365,6 +41532,10 @@ msgstr ""
 
 msgid "Started"
 msgstr ""
+
+#, fuzzy, python-format
+msgid "Started activate changes: %s"
+msgstr "Activare schimbări"
 
 #, python-format
 msgid "Started activation of site %s"
@@ -42447,6 +42618,9 @@ msgstr "Parola"
 msgid "Successfully changed the credential."
 msgstr "Parola"
 
+msgid "Successfully copied rule representation to the clipboard."
+msgstr ""
+
 #, python-format
 msgid ""
 "Successfully created the host. Now you should do a <a href=\"%s\">service "
@@ -42711,13 +42885,13 @@ msgstr "utilizatori"
 msgid "Synchronized MKP with the modified rule pack %s"
 msgstr ""
 
+#, python-format
+msgid "Synchronized configuration from central site (local site ID is %s.)"
+msgstr ""
+
 #, fuzzy
 msgid "Synchronized users"
 msgstr "utilizatori"
-
-#, python-format
-msgid "Synchronized with master (my site id is %s.)"
-msgstr ""
 
 msgid "Synchronizes the email of the LDAP user account into Checkmk."
 msgstr ""
@@ -42933,6 +43107,10 @@ msgstr "Numar port TCP pentru conexiune. Deobicei 139 sau 445."
 #, fuzzy
 msgid "TCP port of Carbon line receiver"
 msgstr "Portul TCP pentru conexiune"
+
+#, fuzzy
+msgid "TCP timeouts"
+msgstr "Conexiune Noua"
 
 msgid "TCP-Port for Listener"
 msgstr "TCP-Port pentru Listener"
@@ -43198,6 +43376,9 @@ msgid ""
 "has to wait between chunks of data it receives."
 msgstr ""
 
+msgid "Teltonika-TRB140"
+msgstr ""
+
 msgid "Temperature"
 msgstr ""
 
@@ -43313,10 +43494,6 @@ msgid "Testing"
 msgstr "testare"
 
 msgid "Text"
-msgstr ""
-
-#, python-format
-msgid "Text from URL %s"
 msgstr ""
 
 msgid "Text groups from regular expression match, separated by spaces"
@@ -43436,6 +43613,21 @@ msgstr ""
 msgid "The Amazon Resource Name (ARN) of the role to assume."
 msgstr ""
 
+msgid ""
+"The Apache has a number maximum processes it can start in case of high load "
+"situations. The usage of these processes should not be too high in normal "
+"situations. Otherwise, if all processes are in use, the users of the GUI "
+"might have to wait too long for a free process, which would result in a slow "
+"GUI."
+msgstr ""
+
+#, python-format
+msgid ""
+"The Apache may start up to %d processes while the current average process "
+"size is %s. With these process limits the Apache may use up to %s RAM. "
+"Please ensure that your system is able to handle this."
+msgstr ""
+
 msgid "The Area"
 msgstr ""
 
@@ -43496,13 +43688,6 @@ msgid ""
 "arguments."
 msgstr ""
 
-msgid ""
-"The Checkmk Kubernetes monitoring setup should be deployed in your "
-"Kubernetes cluster. Checkmk needs some additional information in order to "
-"query the deployed agent. A guide on how to retrieve this information can be "
-"found here https://github.com/tribe29/kubernetes/tree/main/kubernetes-agent"
-msgstr ""
-
 msgid "The Checkmk Micro Core"
 msgstr ""
 
@@ -43511,7 +43696,7 @@ msgid ""
 "from the Checkmk fetchers. Since the checker processes are not IO bound, "
 "they are most effective when each checker gets a dedicated CPU. Configuring "
 "more checkers than the number of available CPUs has a negative effect, "
-"because it increases the the amount of context switches."
+"because it increases the amount of context switches."
 msgstr ""
 
 msgid ""
@@ -43677,12 +43862,6 @@ msgid ""
 "identifying a view. You can create several views with the same title but "
 "only one per view name. If you create a view that has the same view name as "
 "a builtin view, then your view will override that (shadowing it)."
-msgstr ""
-
-msgid ""
-"The IP address of any Kubernetes cluster node where a kubelet is present. "
-"Valid nodes can be usually retrieved using the 'kubectl get nodes -o wide' "
-"command."
 msgstr ""
 
 msgid ""
@@ -43954,6 +44133,14 @@ msgid ""
 msgstr ""
 
 msgid ""
+"The agent controller provides a safe channel for the communication between "
+"the monitoring site and the agent. It also provides the possibility to push "
+"monitoring data to the site (if applicable in your Checkmk edition). You may "
+"disable the controller if you experience problems with the controller. In "
+"this case, the Windows agent will work in legacy pull mode. "
+msgstr ""
+
+msgid ""
 "The agent plugin <tt>mk_filestats</tt> monitors a configured set of files "
 "for their number, size and age. Files are grouped according to the "
 "configured section. Also a single file can be monitored."
@@ -44004,21 +44191,6 @@ msgstr ""
 msgid ""
 "The aggregation titles are not unique. \"%s\" is created by aggregation <b>"
 "%s</b> and <b>%s</b>"
-msgstr ""
-
-msgid ""
-"The apache has a number maximum processes it can start in case of high load "
-"situations. The usage of these processes should not be too high in normal "
-"situations. Otherwise, if all processes are in use, the users of the GUI "
-"might have to wait too long for a free process, which would result in a slow "
-"GUI."
-msgstr ""
-
-#, python-format
-msgid ""
-"The apache may start up to %d processes while the current average process "
-"size is %s. With this numbers the apache may use up to %s RAM. Please ensure "
-"that your system is able to handle this."
 msgstr ""
 
 msgid "The application (syslog tag) does not match"
@@ -44195,6 +44367,10 @@ msgid ""
 "expression specified here"
 msgstr ""
 
+#, python-format
+msgid "The cluster %s while the node <b>%s</b> %s"
+msgstr ""
+
 msgid "The cluster can not be a node of it's own"
 msgstr ""
 
@@ -44265,6 +44441,10 @@ msgid ""
 "The configured ldap user filter group could not be found. Please check <a "
 "href=\"%s\">your configuration</a>."
 msgstr ""
+
+#, fuzzy
+msgid "The configured password does not exist"
+msgstr "Un utilizator cu id-ul \"%s\" nu există."
 
 msgid ""
 "The configured password has either be removed or you are not permitted to "
@@ -44380,7 +44560,7 @@ msgstr ""
 
 #, python-format
 msgid ""
-"The current checker usage is %.2f%%, The checks have an average check "
+"The current checker usage is %.2f%%. The checks have an average check "
 "latency of %.3fs."
 msgstr ""
 
@@ -44700,6 +44880,17 @@ msgid "The found hosts' childs (with child filtering)"
 msgstr ""
 
 msgid "The found hosts' parents"
+msgstr ""
+
+msgid ""
+"The full URL to the Cluster Collector service including the protocol (http "
+"or https) and the port. Depending on the deployed configuration of the "
+"service this can either be the NodePort or the Ingress endpoint."
+msgstr ""
+
+msgid ""
+"The full URL to the Kubernetes API server including the protocol (http or "
+"https) and the port."
 msgstr ""
 
 #, python-format
@@ -45550,9 +45741,6 @@ msgstr ""
 msgid "The operational transmit power"
 msgstr ""
 
-msgid "The option should match the configured protocol of the cluster agent."
-msgstr ""
-
 msgid ""
 "The option to use a custom command can only be configured with the "
 "permission \"Can add or modify executables\"."
@@ -45953,6 +46141,11 @@ msgstr ""
 msgid "The ruleset \"%s\" does not exist."
 msgstr "Un utilizator cu id-ul \"%s\" nu există."
 
+msgid ""
+"The ruleset name is used to identify the ruleset within Checkmk. You may "
+"need it when working with the rule and ruleset related REST API calls."
+msgstr ""
+
 msgid "The schedule you are trying to clone does not exist."
 msgstr ""
 
@@ -46063,9 +46256,6 @@ msgstr ""
 #, fuzzy
 msgid "The service name"
 msgstr "Numele Elementului"
-
-msgid "The service port of the running checkmk-external service"
-msgstr ""
 
 msgid ""
 "The sidebar can be configured to regularly check for pending popup "
@@ -46431,6 +46621,10 @@ msgid ""
 "The user, used for login, has to have at least the role 'itil' in ServiceNow."
 msgstr ""
 
+#, fuzzy
+msgid "The user, used for login."
+msgstr "trimite notificare"
+
 #, python-format
 msgid "The username returned by the %s connector is not of type string (%r)."
 msgstr ""
@@ -46486,6 +46680,9 @@ msgstr ""
 
 #, python-format
 msgid "The value for %s must be between %d and %d"
+msgstr ""
+
+msgid "The value is not of type dict."
 msgstr ""
 
 #, python-format
@@ -46750,6 +46947,12 @@ msgid ""
 "rule in the rule set <i>Disabled services</i> or <i>Disabled checks</i>."
 msgstr ""
 
+#, python-format
+msgid ""
+"These services are mapped to a cluster host by a rule in one of the rulesets "
+"<i>%s</i> or <i>%s</i>."
+msgstr ""
+
 msgid ""
 "These services do not use the Check_MK agent or Check_MK-SNMP engine but "
 "actively call a classical check plugin, that you have installed yourself."
@@ -46816,24 +47019,6 @@ msgid ""
 msgstr ""
 
 msgid ""
-"These services have been found on this host and have been mapped to a "
-"cluster host by a rule in the set <i>Clustered services</i> but disappeared "
-"from this host."
-msgstr ""
-
-msgid ""
-"These services have been found on this host and have been mapped to a "
-"cluster host by a rule in the set <i>Clustered services</i>, but are not yet "
-"added to the active monitoring. Please either add them or permanently "
-"disable them."
-msgstr ""
-
-msgid ""
-"These services have been found on this host but have been mapped to a "
-"cluster host by a rule in the set <i>Clustered services</i>."
-msgstr ""
-
-msgid ""
 "These services have not been found by the discovery but have been added "
 "manually by a Setup rule <i>Enforced services</i>."
 msgstr ""
@@ -46876,6 +47061,14 @@ msgstr ""
 msgid ""
 "These values can be configured in the <a href=\"%s\">subscription "
 "settings<a>."
+msgstr ""
+
+msgid "They appear to be new to this node, but may still be already monitored."
+msgstr ""
+
+msgid ""
+"They have been found on this host previously, but have now disappeared. Note "
+"that they may still be monitored on the cluster."
 msgstr ""
 
 #, fuzzy, python-format
@@ -47883,6 +48076,9 @@ msgstr ""
 msgid "This package does not yet contain any rules."
 msgstr ""
 
+msgid "This package is missing or broken."
+msgstr ""
+
 msgid ""
 "This page can be used to generate a new timeperiod definition based on the "
 "appointments of an iCalendar (<tt>*.ics</tt>) file. This import is normally "
@@ -48559,9 +48755,6 @@ msgstr ""
 msgid "This rule pack is provided via the MKP %s."
 msgstr ""
 
-msgid "This rule representation can be used for Web API calls."
-msgstr ""
-
 msgid ""
 "This rule selects the ALLNET IP Sensoric agent, which fetches /xml/"
 "sensordata.xml from the device by HTTP and extracts the needed monitoring "
@@ -48593,19 +48786,6 @@ msgstr ""
 msgid ""
 "This rule selects the Fritz!Box agent, which uses UPNP to gather information "
 "about configuration and connection status information."
-msgstr ""
-
-msgid ""
-"This rule selects the Kubernetes special agent for an existing Checkmk host. "
-"If you want to monitor multiple Kubernetes clusters we strongly recommend to "
-"set up <a href=\"wato.py?mode=edit_ruleset&varname=piggyback_translation"
-"\">Piggyback translation rules</a> to avoid name collisions. Otherwise e.g. "
-"Pods with the same name in different Kubernetes clusters cannot be "
-"distinguished.<br>Please additionally keep in mind, that not every "
-"Kubernetes API is compatible with every version of the official Kubernetes "
-"Python client. E.g. client v11 is only with the API v1.15 fully compatible. "
-"Please check if the latest client version supports your Kubernetes API "
-"version."
 msgstr ""
 
 msgid ""
@@ -49168,26 +49348,21 @@ msgid "This site needs a restart for activating the changes. Start it now."
 msgstr ""
 
 msgid ""
-"This snapin contains custom links which can be configured via the "
-"configuration variable <tt>custom_links</tt> in <tt>multisite.mk</tt>"
-msgstr ""
-
-msgid ""
 "This snapin shows the folders defined in WATO. It can be used to open views "
 "filtered by the WATO folder. It works standalone, without interaction with "
 "any other snapin."
 msgstr ""
 
 msgid ""
-"This snapin shows the folders defined in WATO. It can be used to open views "
-"filtered by the WATO folder. This snapin interacts with the \"Views\" "
-"snapin, when both are enabled."
-msgstr ""
-
-msgid ""
 "This snapin shows tree views of your hosts based on their tag "
 "classifications. You can configure which tags to use in your global settings "
 "of Multisite."
+msgstr ""
+
+msgid ""
+"This special agent is deprecated and will be removed in Checkmk version "
+"2.2.0. Please use the \"Kubernetes\" ruleset to configure the new special "
+"agent for Kubernetes."
 msgstr ""
 
 msgid "This stored report does not exist."
@@ -49700,6 +49875,15 @@ msgstr ""
 msgid ""
 "Time to wait for a connection to an instance to open before continuing with "
 "the next instance. If unset, the default value from ADO is used."
+msgstr ""
+
+msgid "Time until alert, if deployment in replica failure"
+msgstr ""
+
+msgid "Time until alert, if deployment not available"
+msgstr ""
+
+msgid "Time until alert, if deployment not in progressing"
 msgstr ""
 
 msgid "Time until alert, if pod not initialized"
@@ -50402,6 +50586,10 @@ msgid "Total query timeout"
 msgstr ""
 
 #, fuzzy
+msgid "Total replicas"
+msgstr "sesiuni"
+
+#, fuzzy
 msgid "Total restarts"
 msgstr "sesiuni"
 
@@ -50857,9 +51045,6 @@ msgstr ""
 msgid "URL to central site"
 msgstr "(Nu trimite site-ului de la distanță)"
 
-msgid "URL to fetch text from"
-msgstr ""
-
 msgid ""
 "URL under that the remote server is accessible from its monitored hosts, "
 "including the protocol (<tt>http://</tt> or <tt>https://</tt>) and </tt>/"
@@ -50999,12 +51184,6 @@ msgstr ""
 msgid ""
 "Unable to connect to instance %s. Please check the credentials under Global "
 "Settings."
-msgstr ""
-
-#, python-format
-msgid ""
-"Unable to convert configuration into 2.0 format\n"
-"%s"
 msgstr ""
 
 msgid "Unable to create parent folder(s)."
@@ -51859,6 +52038,10 @@ msgid "Upper levels for clients"
 msgstr "Nivel-urile absolute de licențe neutilizate"
 
 #, fuzzy
+msgid "Upper levels for cluster utilization"
+msgstr "Dezactiveaza Notificarile"
+
+#, fuzzy
 msgid "Upper levels for code size"
 msgstr "Nivel-urile absolute de licențe neutilizate"
 
@@ -51948,7 +52131,7 @@ msgid "Upper levels for license usage"
 msgstr "Nivel-urile absolute de licențe neutilizate"
 
 #, fuzzy
-msgid "Upper levels for limit utilization"
+msgid "Upper levels for limits utilization"
 msgstr "Dezactiveaza Notificarile"
 
 #, fuzzy
@@ -51966,6 +52149,10 @@ msgstr "trei nivele"
 #, fuzzy
 msgid "Upper levels for memory used in percent of the Lambda function limit"
 msgstr "Nivel-urile absolute de licențe neutilizate"
+
+#, fuzzy
+msgid "Upper levels for node utilization"
+msgstr "Dezactiveaza Notificarile"
 
 msgid "Upper levels for number of OSDs which are down"
 msgstr ""
@@ -52008,7 +52195,7 @@ msgid "Upper levels for rate of server errors"
 msgstr ""
 
 #, fuzzy
-msgid "Upper levels for request utilization"
+msgid "Upper levels for requests utilization"
 msgstr "Dezactiveaza Notificarile"
 
 #, fuzzy
@@ -52277,6 +52464,9 @@ msgstr ""
 msgid "Use Classic SNMP Backend"
 msgstr ""
 
+msgid "Use Controller"
+msgstr ""
+
 msgid "Use DNS lookup cache"
 msgstr ""
 
@@ -52397,6 +52587,9 @@ msgid "Use a namespace prefix"
 msgstr ""
 
 msgid "Use absolute width:"
+msgstr ""
+
+msgid "Use agent controller for Windows to provide TLS encrypted communication"
 msgstr ""
 
 #, fuzzy
@@ -53259,6 +53452,10 @@ msgid ""
 "otherwise. You can change this behaviour on a per-state-basis here."
 msgstr ""
 
+#, fuzzy
+msgid "Utilization"
+msgstr "Dezactiveaza Notificarile"
+
 msgid "V"
 msgstr ""
 
@@ -53653,10 +53850,6 @@ msgstr "Matrice"
 #, fuzzy
 msgid "View name"
 msgstr "Nume nou"
-
-#, fuzzy
-msgid "View pending changes"
-msgstr "Activare Schimbări!"
 
 msgid "View the rule based effective parameters of this host"
 msgstr ""
@@ -55043,11 +55236,19 @@ msgid "Windows WMI Timeout"
 msgstr "(fără Nivel de serviciu)"
 
 #, fuzzy
+msgid "Windows agent controller"
+msgstr "trimite notificare"
+
+#, fuzzy
 msgid "Windows authentication"
 msgstr "trimite notificare"
 
 #, fuzzy
 msgid "Windows files"
+msgstr "(fără Nivel de serviciu)"
+
+#, fuzzy
+msgid "Windows hosts"
 msgstr "(fără Nivel de serviciu)"
 
 #, fuzzy
@@ -56305,10 +56506,6 @@ msgid ""
 "configured in Checkmk."
 msgstr ""
 
-#, python-format
-msgid "You have a connection overflow rate of %.2f/s"
-msgstr ""
-
 msgid ""
 "You have an agent updater rule configured that enables use of plain text "
 "HTTP. Consider enabling HTTPS."
@@ -56886,6 +57083,10 @@ msgstr "Verificări active"
 msgid "active hosts"
 msgstr "Verificări active"
 
+#, fuzzy
+msgid "active instances"
+msgstr "Adaugă instanță NGINX"
+
 msgid "add \"ISL\" to service description for interswitch links"
 msgstr ""
 
@@ -56900,6 +57101,10 @@ msgstr ""
 
 msgid "alerts"
 msgstr ""
+
+#, fuzzy
+msgid "all agents"
+msgstr "Acces la Agenți"
 
 msgid "all contacts of the notified object"
 msgstr ""
@@ -56916,6 +57121,10 @@ msgstr " pentru hostul %s"
 
 msgid "all logfiles on all hosts"
 msgstr ""
+
+#, fuzzy
+msgid "all special agents"
+msgstr "Acces la Agenți"
 
 #, fuzzy
 msgid "all states"
@@ -57399,6 +57608,14 @@ msgstr ""
 msgid "execute the action \"%s\""
 msgstr ""
 
+#, fuzzy
+msgid "execution count"
+msgstr "Verificări active"
+
+#, fuzzy
+msgid "execution time"
+msgstr "Verificări active"
+
 msgid "exists"
 msgstr ""
 
@@ -57753,6 +57970,10 @@ msgstr ""
 msgid "inodes"
 msgstr ""
 
+#, fuzzy
+msgid "instances"
+msgstr "Adaugă instanță NGINX"
+
 msgid "internal"
 msgstr ""
 
@@ -57763,10 +57984,6 @@ msgstr ""
 msgid "intrusion"
 msgstr "sesiuni"
 
-#, python-format
-msgid "invalid entry %s: %s<br>\n"
-msgstr ""
-
 msgid "invalid:"
 msgstr ""
 
@@ -57774,6 +57991,9 @@ msgid "is"
 msgstr ""
 
 msgid "is "
+msgstr ""
+
+msgid "is <b>not</b>"
 msgstr ""
 
 #, fuzzy
@@ -57912,6 +58132,10 @@ msgstr ""
 #, fuzzy
 msgid "maximum"
 msgstr "Vechimea maxima"
+
+#, fuzzy
+msgid "memory"
+msgstr "Nume nou"
 
 #, fuzzy
 msgid "message"
@@ -58836,12 +59060,92 @@ msgstr "da"
 msgid "yesterday"
 msgstr "ieri"
 
+#, python-format
+msgid "you have a connection overflow rate of %.2f/s"
+msgstr ""
+
 msgid "z/OS"
 msgstr "z/OS"
 
 #, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr ""
+
+#, fuzzy
+#~ msgid "Number of total containers"
+#~ msgstr "Numarul maxim de conexiuni"
+
+#, fuzzy
+#~ msgid "Number of waiting containers"
+#~ msgstr "Numarul maxim de conexiuni"
+
+#, fuzzy
+#~ msgid "Define lower levels for free pods (nodes only)"
+#~ msgstr "Numarul maxim de conexiuni"
+
+#, fuzzy
+#~| msgid "%d conditions"
+#~ msgid "Pod conditions"
+#~ msgstr "%d condiții"
+
+#, fuzzy
+#~ msgid "Pod containers"
+#~ msgstr "doua nivele"
+
+#, fuzzy
+#~ msgid "Services/Host labels to fix"
+#~ msgstr "Numele Elementului"
+
+#, fuzzy
+#~ msgid "Cluster agent connection"
+#~ msgstr "Perioada de timp Noua"
+
+#, fuzzy
+#~ msgid "IP address of Kubernetes node"
+#~ msgstr "Adresă"
+
+#, fuzzy
+#~ msgid "Kubernetes Pod Resources: Deployments"
+#~ msgstr "Adresă"
+
+#~ msgid "A matrix showing a colored square for each host"
+#~ msgstr "O matrice care arată un pătrat colorat pentru fiecare element"
+
+#, fuzzy
+#~ msgid "Custom links"
+#~ msgstr "Atribute personalizate"
+
+#, fuzzy
+#~ msgid "Host matrix"
+#~ msgstr "serviciu"
+
+#, fuzzy
+#~ msgid "Problem hosts"
+#~ msgstr "Probleme"
+
+#, fuzzy
+#~ msgid "Move to folder:"
+#~ msgstr "Folder nou"
+
+#, python-format
+#~ msgid "%d changes"
+#~ msgstr "%d schimbări"
+
+#, fuzzy
+#~ msgid "Click here to go to pending changes."
+#~ msgstr "Renunț la modificări."
+
+#, fuzzy
+#~ msgid "Set lower levels of worker nodes"
+#~ msgstr "Numarul maxim de conexiuni"
+
+#, fuzzy
+#~ msgid "Set upper levels of control plane nodes"
+#~ msgstr "Numarul maxim de conexiuni"
+
+#, fuzzy
+#~ msgid "Set upper levels of worker nodes"
+#~ msgstr "Nivel-urile absolute de licențe neutilizate"
 
 #, fuzzy
 #~ msgid "Deploy in minutes"
@@ -58876,10 +59180,6 @@ msgstr ""
 #~ msgstr "Numele Aplicatiei"
 
 #, fuzzy
-#~ msgid "CPU Utilization"
-#~ msgstr "Dezactiveaza Notificarile"
-
-#, fuzzy
 #~ msgid "Container memory"
 #~ msgstr "Numele Elementului"
 
@@ -58898,10 +59198,6 @@ msgstr ""
 #, fuzzy
 #~| msgid "%d changes"
 #~ msgid "Apply changes"
-#~ msgstr "%d schimbări"
-
-#, fuzzy, python-format
-#~ msgid "Currently there are %d changes to activate."
 #~ msgstr "%d schimbări"
 
 #, fuzzy
@@ -59224,10 +59520,6 @@ msgstr ""
 #~ msgstr "Nivelurile maxime pentru incarcare in procente"
 
 #, fuzzy
-#~ msgid "Concurrent executions"
-#~ msgstr "Numarul maxim de conexiuni"
-
-#, fuzzy
 #~ msgid "Concurrent executions in percent"
 #~ msgstr "Numarul maxim de conexiuni"
 
@@ -59372,10 +59664,6 @@ msgstr ""
 #~ msgstr "Output adițional de la Plugin"
 
 #, fuzzy
-#~ msgid "Host & service events"
-#~ msgstr "(fără Nivel de serviciu)"
-
-#, fuzzy
 #~ msgid "Host & service history"
 #~ msgstr "(fără Nivel de serviciu)"
 
@@ -59477,10 +59765,6 @@ msgstr ""
 #~ msgstr "Reseteaza contoarele"
 
 #, fuzzy
-#~ msgid "Item memory"
-#~ msgstr "Nume nou"
-
-#, fuzzy
 #~ msgid "Iterator age"
 #~ msgstr "Nume Administrator:"
 
@@ -59575,10 +59859,6 @@ msgstr ""
 #~ msgstr "Vechimea maxima a backup-urilor"
 
 #, fuzzy
-#~ msgid "Maximum number of threads"
-#~ msgstr "Numarul maxim de mesaje"
-
-#, fuzzy
 #~ msgid "Maximum single-request consumption"
 #~ msgstr "Numarul maxim de conexiuni"
 
@@ -59648,10 +59928,6 @@ msgstr ""
 
 #, fuzzy
 #~ msgid "Number of Web ACLs"
-#~ msgstr "Numarul maxim de mesaje"
-
-#, fuzzy
-#~ msgid "Number of archives"
 #~ msgstr "Numarul maxim de mesaje"
 
 #, fuzzy
@@ -59797,10 +60073,6 @@ msgstr ""
 #~ msgstr "trei nivele"
 
 #, fuzzy
-#~ msgid "Percentage of blocked requests"
-#~ msgstr "trei nivele"
-
-#, fuzzy
 #~ msgid "Physical CPU consumption"
 #~ msgstr "APC consum de Curent"
 
@@ -59831,10 +60103,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Problem aggregations"
 #~ msgstr "Agregare noua"
-
-#, fuzzy
-#~ msgid "Processed Bytes"
-#~ msgstr "Numele Elementului"
 
 #, fuzzy
 #~ msgid "Processes"
@@ -59956,10 +60224,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Single host aggregations"
 #~ msgstr "O agregare legată de un singur element"
-
-#, fuzzy
-#~ msgid "Single host problems"
-#~ msgstr "Probleme"
 
 #, fuzzy
 #~ msgid "Single-request consumption"
@@ -61835,10 +62099,6 @@ msgstr ""
 #~ msgstr "Arata regulile de utilizator"
 
 #, fuzzy
-#~ msgid "Sign all agents"
-#~ msgstr "Acces la Agenți"
-
-#, fuzzy
 #~ msgid "Specify explicit host names"
 #~ msgstr "Verificări active"
 
@@ -62507,10 +62767,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Exact name of the user"
 #~ msgstr "Numele elementului pentru eveniment"
-
-#, fuzzy
-#~ msgid "Execution time"
-#~ msgstr "Verificări active"
 
 #, fuzzy
 #~ msgid "Explicit date..."
@@ -63201,10 +63457,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "New tag group"
 #~ msgstr "Adaugă group de model"
-
-#, fuzzy
-#~ msgid "POST Requests"
-#~ msgstr "cereri"
 
 #, fuzzy
 #~ msgid "SELECT Requests"

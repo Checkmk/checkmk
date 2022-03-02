@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: undoc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 The endpoint show all host tags is renamed to show all host tag groups
 to avoid confusion. In addition, all built-in groups are now also

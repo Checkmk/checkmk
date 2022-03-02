@@ -1,7 +1,7 @@
 title: NetApp Filer: Fibre Channel IOPS
 agents: snmp
 catalog: hw/storagehw/netapp
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  Reports Fibre Channel IOPS on NetApp filers.
@@ -12,4 +12,3 @@ description:
 
 discovery:
  One service is created on each filer.
-

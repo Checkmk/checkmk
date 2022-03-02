@@ -1,7 +1,7 @@
 title: NetApp Filer: Overall System Health
 agents: netapp
 catalog: hw/storagehw/netapp
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the overall system health, which can have the following values
@@ -10,4 +10,3 @@ description:
 
 discovery:
  One service is created.
-

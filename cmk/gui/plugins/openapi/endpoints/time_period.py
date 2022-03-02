@@ -152,7 +152,8 @@ def list_time_periods(params):
         time_periods.append(
             constructors.collection_item(
                 domain_type="time_period",
-                obj={"title": alias, "id": time_period_id},
+                title=alias,
+                identifier=time_period_id,
             )
         )
     time_period_collection = {

@@ -1,7 +1,7 @@
 title: Brocade FibreChannel Switches: Memory
 catalog: hw/storagehw/brocade
 agents: snmp
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This checks monitors the main memory usage in percent. Absolute values are not available.

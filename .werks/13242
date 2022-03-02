@@ -6,7 +6,7 @@ Date: 1631545042
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 Files and directories for hosts that existed on central sites and that were
 later moved to a remote site, were not properly cleaned up by the diskspace

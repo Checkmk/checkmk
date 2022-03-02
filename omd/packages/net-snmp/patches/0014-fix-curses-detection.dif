@@ -1,0 +1,12 @@
+--- a/configure.d/config_os_libs2
++++ b/configure.d/config_os_libs2-patched
+@@ -585,6 +585,9 @@ NETSNMP_SEARCH_LIBS([endwin], [curses ncurses], [
+   [HAVE_LIBCURSES=FALSE],,
+   [LIBCURSES])
+ AC_SUBST([HAVE_LIBCURSES])
++if test -n "$LIBCURSES"; then
++  NETSNMP_SEARCH_LIBS([halfdelay], [tinfo], [LIBCURSES="$LIBCURSES $LIBTINFO"],,,[LIBTINFO])
++fi
+ AC_SUBST([LIBCURSES])
+
+ #   libm for ceil

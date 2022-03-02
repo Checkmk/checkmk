@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: undoc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 The "omd backup" could be terminated during backup by issues of the rrdcached.
 The backup communicates with the rrdcached to pause updates to the RRD files

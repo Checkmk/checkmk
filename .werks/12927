@@ -6,7 +6,7 @@ Date: 1625831794
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 Previously fileinfo and fileinfo_groups were used for monitoring
 SAP HANA files and file groups.

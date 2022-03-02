@@ -89,7 +89,7 @@ check_info["mongodb_cluster"] = {
 # .
 
 # description: [([interval for total number of chunks[, number of chunks threshold),...]
-BALANCE_THRESHOLDS = [((0, 20), 2), ((21, 79), 4), ((80, 2 ** 31 - 1), 8)]
+BALANCE_THRESHOLDS = [((0, 20), 2), ((21, 79), 4), ((80, 2**31 - 1), 8)]
 
 
 def inventory_mongodb_cluster_shards(databases_dict):

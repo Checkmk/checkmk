@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: undoc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 Some OIDs have been fetched multiple times during a run of the SNMP data source.
 These are now only fetched once, which leads to significant speed improvement

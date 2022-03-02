@@ -238,7 +238,11 @@ def _render_werk_options_form(werk_table_options: Dict[str, Any]) -> HTML:
 
         html.open_div(class_="side_popup_content")
         for name, height, vs, _default_value in _werk_table_option_entries():
-            html.render_floating_option(name, height, "wo_", vs, werk_table_options[name])
+
+            def renderer(name=name, vs=vs, werk_table_options=werk_table_options) -> None:
+                vs.render_input("wo_" + name, werk_table_options[name])
+
+            html.render_floating_option(name, height, vs.title(), renderer)
         html.close_div()
 
         html.hidden_fields()

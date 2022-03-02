@@ -13,6 +13,12 @@ from cmk.gui.valuespec import Dictionary
 
 SECTION_ELEMENTS = "running", "waiting", "terminated", "total"
 
+OPTIONS = [
+    f"{container_state}_{level_type}"
+    for container_state in SECTION_ELEMENTS
+    for level_type in ["upper", "lower"]
+]
+
 
 def test_parameter_valuespec_returns_a_dictionary():
     parameters = kube_node_container_count._parameter_valuespec()
@@ -26,22 +32,13 @@ def test_parameter_valuespec_has_help():
 
 def test_parameter_valuespec_has_as_much_elements_as_section_elements():
     parameters = kube_node_container_count._parameter_valuespec()
-    assert len(parameters._elements()) == len(SECTION_ELEMENTS)
+    assert len(parameters._elements()) == len(OPTIONS)
 
 
-@pytest.mark.parametrize("section_element", SECTION_ELEMENTS)
+@pytest.mark.parametrize("section_element", OPTIONS)
 def test_parameter_valuespec_has_element_for_section_element(section_element):
     parameters = kube_node_container_count._parameter_valuespec()
     assert any(title == section_element for title, _ in parameters._elements())
-
-
-@pytest.mark.parametrize("levels", ["levels_upper", "levels_lower"])
-def test_parameter_valuespec_has_element_with_levels(levels):
-    parameters = kube_node_container_count._parameter_valuespec()
-    assert all(
-        any(tittle == levels for tittle, _ in element._elements())
-        for _, element in parameters._elements()
-    )
 
 
 @pytest.fixture
@@ -62,4 +59,4 @@ def test_rulespec_registry_parameter_valuespec(rulespec):
 
 
 def test_rulespec_registry_title(rulespec):
-    assert rulespec.title == "Kubernetes node container count"
+    assert rulespec.title == "Kubernetes node containers"

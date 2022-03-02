@@ -66,11 +66,14 @@ def check_logwatch_ec(params: Mapping[str, Any], section: logwatch.Section) -> C
     )
 
 
-def cluster_check_logwatch_ec(params: Mapping[str, Any], section: ClusterSection) -> CheckResult:
+def cluster_check_logwatch_ec(
+    params: Mapping[str, Any],
+    section: Mapping[str, Optional[logwatch.Section]],
+) -> CheckResult:
     yield from check_logwatch_ec_common(
         None,
         params,
-        section,
+        {k: v for k, v in section.items() if v is not None},
         service_level=_get_effective_service_level(CheckPluginName("logwatch_ec"), None),
     )
 
@@ -110,13 +113,13 @@ def check_logwatch_ec_single(
 def cluster_check_logwatch_ec_single(
     item: str,
     params: Mapping[str, Any],
-    section: ClusterSection,
+    section: Mapping[str, Optional[logwatch.Section]],
 ) -> CheckResult:
     # fall back to the cluster case with None as node name.
     yield from check_logwatch_ec_common(
         item,
         params,
-        section,
+        {k: v for k, v in section.items() if v is not None},
         service_level=_get_effective_service_level(CheckPluginName("logwatch_ec_single"), item),
     )
 

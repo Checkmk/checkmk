@@ -1,7 +1,7 @@
 title: HTTP Accelerator Statistics via Varnishstat on Linux: Backend
 agents: linux
 catalog: os/networking
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the backend information of Varnish Server provided by 'varnishstat -1'.

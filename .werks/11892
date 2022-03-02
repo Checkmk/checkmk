@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 The plugin <i>mk_errpt.aix</i> created an error message related to the <tt>mv</tt>
 option <tt>--no-clobber</tt> which is not available on the standart AIX <tt>mv</tt>

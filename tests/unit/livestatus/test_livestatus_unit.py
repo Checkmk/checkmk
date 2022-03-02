@@ -15,7 +15,9 @@ import pytest
 
 import livestatus
 
-import omdlib.certs as certs
+from omdlib.certs import CertificateAuthority
+
+from cmk.utils.certs import root_cert_path, RootCA
 
 
 # Override top level fixture to make livestatus connects possible here
@@ -27,7 +29,9 @@ def prevent_livestatus_connect():
 @pytest.fixture
 def ca(tmp_path):
     p = tmp_path / "etc" / "ssl"
-    return certs.CertificateAuthority(p, "ca-name")
+    return CertificateAuthority(
+        root_ca=RootCA.load_or_create(root_cert_path(p), "ca-name"), ca_path=p
+    )
 
 
 @pytest.fixture()
@@ -160,7 +164,6 @@ def test_single_site_connection_socketurl(socket_url, result, monkeypatch):
 @pytest.mark.parametrize("verify", [True, False])
 @pytest.mark.parametrize("ca_file_path", ["ca.pem", None])
 def test_create_socket(tls, verify, ca, ca_file_path, monkeypatch, tmp_path):
-    ca.initialize()
 
     ssl_dir = tmp_path / "var/ssl"
     ssl_dir.mkdir(parents=True)

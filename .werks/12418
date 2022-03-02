@@ -6,7 +6,7 @@ Date: 1616135220
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 This werk enables the monitoring of InsightPower UPS (Uninterruptible
 Power Supply) appliances from Delta Power Solutions via SNMP. Checkmk

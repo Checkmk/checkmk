@@ -1,7 +1,7 @@
 title: HPE 3PAR: CPGs
 agents: 3par
 catalog: hw/storagehw/hpe
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check shows the amount of virtual volumes (VVs) in a CPG.

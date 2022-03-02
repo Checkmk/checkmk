@@ -9,7 +9,7 @@
 
 # Disable unused variable error (needed to keep track of version)
 # shellcheck disable=SC2034
-CMK_VERSION="2.1.0i1"
+CMK_VERSION="2.2.0i1"
 
 # Check for APT updates (Debian, Ubuntu)
 # TODO:
@@ -28,21 +28,19 @@ CMK_VERSION="2.1.0i1"
 UPGRADE=upgrade
 DO_UPDATE=yes
 
-
 check_apt_update() {
-    if [ "$DO_UPDATE" = yes ] ; then
+    if [ "$DO_UPDATE" = yes ]; then
         # NOTE: Even with -qq, apt-get update can output several lines to
         # stderr, e.g.:
         #
         # W: There is no public key available for the following key IDs:
         # 1397BC53640DB551
-        apt-get update -qq 2> /dev/null
+        apt-get update -qq 2>/dev/null
     fi
     apt-get -o 'Debug::NoLocking=true' -o 'APT::Get::Show-User-Simulation-Note=false' -s -qq "$UPGRADE" | grep -v '^Conf'
 }
 
-
-if type apt-get > /dev/null ; then
+if type apt-get >/dev/null; then
     echo '<<<apt:sep(0)>>>'
     out=$(check_apt_update)
     if [ -z "$out" ]; then

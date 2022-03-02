@@ -6,7 +6,7 @@ Date: 1638516462
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 This werk adds the feature of inventorizing and monitoring the plugins and local checks that are deployed on the monitored host.
 

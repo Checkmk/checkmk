@@ -290,9 +290,9 @@ class SorterPerfometer(Sorter):
 
     def cmp(self, r1, r2):
         try:
-            p1 = Perfometer(r1)
-            p2 = Perfometer(r2)
-            return (p1.sort_value() > p2.sort_value()) - (p1.sort_value() < p2.sort_value())
+            v1 = tuple(-float("inf") if s is None else s for s in Perfometer(r1).sort_value())
+            v2 = tuple(-float("inf") if s is None else s for s in Perfometer(r2).sort_value())
+            return (v1 > v2) - (v1 < v2)
         except Exception:
             logger.exception("error sorting perfometer values")
             if config.debug:

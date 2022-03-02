@@ -58,7 +58,7 @@ from cmk.gui.permissions import (
 )
 from cmk.gui.table import init_rowselect, table_element
 from cmk.gui.type_defs import HTTPVariables, Icon, MegaMenu, TopicMenuItem, TopicMenuTopic
-from cmk.gui.utils import unique_default_name_suggestion
+from cmk.gui.utils import unique_default_name_suggestion, validate_id
 from cmk.gui.utils.flashed_messages import flash, get_flashed_messages
 from cmk.gui.utils.logged_in import save_user_file
 from cmk.gui.utils.ntop import is_ntop_configured
@@ -1112,7 +1112,7 @@ class Overridable(Base):
         # Deletion
         delname = request.var("_delete")
         if delname and transactions.check_transaction():
-            owner = UserId(request.get_unicode_input_mandatory("_owner", user.id))
+            owner = UserId(request.get_str_input_mandatory("_owner", user.id))
             pagetype_title = cls.phrase("title")
 
             try:
@@ -1274,7 +1274,7 @@ class Overridable(Base):
         # "clone"  -> like new, but prefill form with values from existing page
         # "edit"   -> edit existing page
         mode = request.get_ascii_input_mandatory("mode", "edit")
-        owner_id = UserId(request.get_unicode_input_mandatory("owner", user.id))
+        owner_id = UserId(request.get_str_input_mandatory("owner", user.id))
         title = cls.phrase(mode)
         if mode == "create":
             page_name = ""
@@ -1318,21 +1318,15 @@ class Overridable(Base):
 
         parameters, keys_by_topic = cls._collect_parameters(mode)
 
-        def _validate_clone(page_dict, varprefix):
-            page_name = page_dict["name"]
-            if cls.find_foreign_page(owner_id, page_name) and mode == "clone":
-                raise MKUserError(
-                    varprefix + "_p_name",
-                    _("You already have an element with the ID <b>%s</b>") % page_dict["name"],
-                )
-
         vs = Dictionary(
             title=_("General Properties"),
             render="form",
             optional_keys=False,
             elements=parameters,
             headers=keys_by_topic,
-            validate=_validate_clone,
+            validate=validate_id(
+                mode, {p.name(): p for p in cls.permitted_instances_sorted() if p.is_mine()}
+            ),
         )
 
         varprefix = ""
@@ -1740,7 +1734,7 @@ class OverridableContainer(Overridable, Container):
         page_type_name = request.get_ascii_input_mandatory("page_type")
         page_name = request.get_ascii_input_mandatory("page_name")
         element_type = request.get_ascii_input_mandatory("element_type")
-        create_info = json.loads(request.get_unicode_input_mandatory("create_info"))
+        create_info = json.loads(request.get_str_input_mandatory("create_info"))
 
         page_ty = page_types[page_type_name]
         target_page, need_sidebar_reload = page_ty.add_element_via_popup(

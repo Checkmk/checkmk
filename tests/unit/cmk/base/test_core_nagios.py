@@ -20,9 +20,8 @@ from _pytest.monkeypatch import MonkeyPatch
 from tests.testlib.base import Scenario
 
 import cmk.utils.version as cmk_version
+from cmk.utils.config_path import VersionedConfigPath
 from cmk.utils.type_defs import CheckPluginName, HostName
-
-from cmk.core_helpers.config_path import VersionedConfigPath
 
 import cmk.base.config as config
 import cmk.base.core_config as core_config
@@ -409,7 +408,10 @@ def test_compile_delayed_host_check(
     # But this is no problem for our test, we only want to see the result of the compilation.
     assert (
         subprocess.run(
-            ["python3", str(compiled_file)], shell=False, close_fds=True, check=False
+            ["python3", str(compiled_file)],
+            shell=False,
+            close_fds=True,
+            check=False,
         ).returncode
         == 1
     )

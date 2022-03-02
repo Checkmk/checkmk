@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
@@ -12,7 +11,7 @@
 import sys
 from argparse import ArgumentParser, ArgumentTypeError, RawDescriptionHelpFormatter
 from pathlib import Path
-from typing import List, NamedTuple, Optional, Union
+from typing import NamedTuple, Optional, Union
 
 
 class AnnotatedPath(NamedTuple):
@@ -124,7 +123,7 @@ class ECArgumentParser(ArgumentParser):
 
     @staticmethod
     def _epilog(paths: Paths) -> str:
-        width = max([len(p.description) for p in paths]) + 1  # for colon
+        width = max(len(p.description) for p in paths) + 1  # for colon
         return "Paths used by the event console:\n\n" + "\n".join(
             "  {:<{width}} {}".format(p.description + ":", p.value, width=width) for p in paths
         )
@@ -236,7 +235,7 @@ class Settings(NamedTuple):
     options: Options
 
 
-def settings(version: str, omd_root: Path, default_config_dir: Path, argv: List[str]) -> Settings:
+def settings(version: str, omd_root: Path, default_config_dir: Path, argv: list[str]) -> Settings:
     """Returns all event console settings"""
     paths = _default_paths(omd_root, default_config_dir)
     port_numbers = _default_port_numbers()

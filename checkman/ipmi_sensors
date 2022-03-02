@@ -1,7 +1,7 @@
 title: Freeimpmi: IPMI Sensors
 agents: linux
 catalog: os/hardware
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check uses the information of the utility {ipmi-sensors}

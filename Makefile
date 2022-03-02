@@ -217,6 +217,7 @@ $(DISTNAME).tar.gz: omd/packages/mk-livestatus/mk-livestatus-$(VERSION).tar.gz .
 		cfg_examples \
 		plugins \
 		sap \
+		scripts \
 		special \
 		z_os \
 		check-mk-agent_*.deb \
@@ -439,9 +440,6 @@ buildclean:
 setup:
 # librrd-dev is still needed by the python rrd package we build in our virtual environment
 	sudo apt-get install \
-	    aptitude \
-	    autoconf \
-	    bear \
 	    build-essential \
 	    clang-$(CLANG_VERSION) \
 	    clang-format-$(CLANG_VERSION) \
@@ -449,44 +447,51 @@ setup:
 	    clang-tools-$(CLANG_VERSION) \
 	    clangd-$(CLANG_VERSION) \
 	    cmake \
-	    lld-$(CLANG_VERSION) \
-	    lldb-$(CLANG_VERSION) \
-	    libclang-$(CLANG_VERSION)-dev \
 	    curl \
-	    libjpeg-dev \
+	    direnv \
 	    doxygen \
 	    figlet \
-	    g++ \
-		gdebi \
+	    gawk \
+	    gdebi \
+	    git \
+	    git-svn \
+	    gitk \
+	    ksh \
+	    libclang-$(CLANG_VERSION)-dev \
+	    libjpeg-dev \
+	    libkrb5-dev \
+	    libldap2-dev \
+	    libmariadb-dev-compat \
+	    libpango1.0-dev \
 	    libpcap-dev \
 	    librrd-dev \
-	    libxml2-dev \
-	    libpango1.0-dev \
 	    libsasl2-dev \
-	    libldap2-dev \
-	    libkrb5-dev \
-	    libmariadb-dev-compat \
-	    pngcrush \
-	    valgrind \
-	    shellcheck \
-	    direnv \
-	    python3-pip \
-	    python3.9-dev \
-	    python-setuptools \
-	    chrpath \
-	    enchant-2 \
-	    ksh \
+	    libtool-bin \
+	    libxml2-dev \
+	    lld-$(CLANG_VERSION) \
+	    lldb-$(CLANG_VERSION) \
+	    musl-tools \
 	    p7zip-full \
+	    patchelf \
+	    pngcrush \
+	    python3-pip \
+	    python3-venv \
+	    shellcheck \
+	    valgrind \
 	    zlib1g-dev
 	if type pyenv >/dev/null 2>&1 && pyenv shims --short | grep '^pipenv$$'; then \
 	    CMD="pyenv exec" ; \
 	else \
-	    CMD="sudo -H" ; \
+	    CMD="" ; \
 	fi ; \
-	$$CMD pip3 install -U \
+	$$CMD pip3 install --user --upgrade \
+	    pip \
 	    pipenv=="$(PIPENV_VERSION)" \
 	    virtualenv=="$(VIRTUALENV_VERSION)" \
 	    wheel
+	curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+	source $$HOME/.cargo/env
+	rustup target add x86_64-unknown-linux-musl
 	$(MAKE) -C web setup
 	$(MAKE) -C omd setup
 	$(MAKE) -C omd openhardwaremonitor-setup
@@ -656,7 +661,7 @@ Pipfile.lock: Pipfile
 	) $(LOCK_FD)>$(LOCK_PATH)
 
 # Remake .venv everytime Pipfile or Pipfile.lock are updated. Using the 'sync'
-# mode installs the dependencies exactly as speciefied in the Pipfile.lock.
+# mode installs the dependencies exactly as specified in the Pipfile.lock.
 # This is extremely fast since the dependencies do not have to be resolved.
 # Cleanup partially created pipenv. This makes us able to automatically repair
 # broken virtual environments which may have been caused by network issues.
@@ -665,7 +670,7 @@ Pipfile.lock: Pipfile
 	    echo "Creating .venv..." ; \
 	    flock $(LOCK_FD); \
 	    $(RM) -r .venv; \
-	    ( SKIP_MAKEFILE_CALL=1 $(PIPENV) sync --dev && touch .venv ) || ( $(RM) -r .venv ; exit 1 ) \
+	    ( PIPENV_COLORBLIND=1 SKIP_MAKEFILE_CALL=1 VIRTUAL_ENV="" $(PIPENV) sync --dev && touch .venv ) || ( $(RM) -r .venv ; exit 1 ) \
 	) $(LOCK_FD)>$(LOCK_PATH)
 
 # This dummy rule is called from subdirectories whenever one of the

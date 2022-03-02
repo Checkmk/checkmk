@@ -9,6 +9,8 @@ import json
 import time
 from typing import Any, Dict, Literal, Optional, Tuple, TypedDict, Union
 
+from cmk.utils.type_defs import UserId
+
 import cmk.gui.plugins.userdb.htpasswd as htpasswd
 from cmk.gui import userdb
 from cmk.gui.exceptions import MKUserError
@@ -22,6 +24,7 @@ from cmk.gui.plugins.openapi.restful_objects import (
 )
 from cmk.gui.plugins.openapi.restful_objects.parameters import USERNAME
 from cmk.gui.plugins.openapi.utils import problem, ProblemException
+from cmk.gui.type_defs import UserSpec
 from cmk.gui.watolib.users import delete_users, edit_users
 
 TIMESTAMP_RANGE = Tuple[float, float]
@@ -62,7 +65,8 @@ def list_users(params):
         "value": [
             constructors.collection_item(
                 domain_type="user_config",
-                obj={"title": attrs["alias"], "id": user_id},
+                title=attrs["alias"],
+                identifier=user_id,
             )
             for user_id, attrs in userdb.load_users(False).items()
         ],
@@ -215,8 +219,8 @@ def _api_to_internal_format(internal_attrs, api_configurations, new_user=False):
     return internal_attrs
 
 
-def _internal_to_api_format(internal_attrs):
-    api_attrs = {}
+def _internal_to_api_format(internal_attrs: UserSpec) -> dict[str, Any]:
+    api_attrs: dict[str, Any] = {}
     api_attrs.update(_idle_options_to_api_format(internal_attrs))
     api_attrs.update(_auth_options_to_api_format(internal_attrs))
     api_attrs.update(_contact_options_to_api_format(internal_attrs))
@@ -247,7 +251,7 @@ def _internal_to_api_format(internal_attrs):
     return api_attrs
 
 
-def _idle_options_to_api_format(internal_attributes):
+def _idle_options_to_api_format(internal_attributes: UserSpec) -> dict[str, dict[str, Any]]:
     if "idle_timeout" in internal_attributes:
         idle_option = internal_attributes["idle_timeout"]
         if idle_option:
@@ -260,19 +264,16 @@ def _idle_options_to_api_format(internal_attributes):
     return {"idle_timeout": idle_details}
 
 
-def _auth_options_to_api_format(internal_attributes):
+def _auth_options_to_api_format(internal_attributes: UserSpec) -> dict[str, dict[str, str]]:
     if "automation_secret" in internal_attributes:
         return {
             "auth_option": {
                 "auth_type": "automation",
-                "secret": internal_attributes["automation_secret"],
             }
         }
 
     if "password" in internal_attributes:
-        return {
-            "auth_option": {"auth_type": "password", "password": internal_attributes["password"]}
-        }
+        return {"auth_option": {"auth_type": "password"}}
 
     return {"auth_option": {}}
 
@@ -445,7 +446,11 @@ def _update_idle_options(internal_attrs, idle_details: IdleDetails):
     return internal_attrs
 
 
-def _load_user(username):
+def _load_user(username: UserId) -> UserSpec:
+    """return UserSpec for username
+
+    CAUTION: the UserSpec contains sensitive data like password hashes"""
+
     # TODO: verify additional edge cases
     return userdb.load_users(lock=False)[username]
 

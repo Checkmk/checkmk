@@ -6,7 +6,7 @@ Date: 1626340862
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 As stated in the <a href="https://docs.checkmk.com/latest/en/localchecks.html">documentation</a>,
 min/max values are optional in the output of local checks. However, this

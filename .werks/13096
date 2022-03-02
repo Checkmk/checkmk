@@ -6,7 +6,7 @@ Date: 1626868319
 Edition: cee
 Knowledge: undoc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 Until now, only the creation of incidents was supported. With this werk, the
 notification rule for Servicenow receives an option to use the management type

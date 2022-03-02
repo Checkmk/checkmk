@@ -1,7 +1,7 @@
 title: IBM SVC / Storwize V3700 / V7000: Power Consumption of Enclosures
 agents: ibm_svc
 catalog: hw/storagehw/ibm
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  Displays the power consumption of enclosures of an IBM SVC / Storwize V3700 / V7000
@@ -19,4 +19,3 @@ item:
 
 discovery:
  One service is created for each enclosure.
-

@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 In the previous version, the show endpoint of the time period failed
 when a time period had no exclude configured. This werk fixes this

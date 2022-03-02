@@ -1,19 +1,18 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """Defaults for rule pack and configuration"""
 
 import logging
-from typing import Any, Dict, Iterable
+from typing import Any, Iterable
 
 from cmk.utils.i18n import _
 
 from .config import ConfigFromWATO, Rule, SNMPCredential
 
 
-def default_rule_pack(rules: Iterable[Rule]) -> Dict[str, Any]:
+def default_rule_pack(rules: Iterable[Rule]) -> dict[str, Any]:
     """Returns the default rule pack"""
     return {
         "id": "default",

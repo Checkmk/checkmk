@@ -21,7 +21,7 @@ class SpoolProvider : public Asynchronous {
 public:
     SpoolProvider() : Asynchronous(cma::section::kSpool) {}
 
-    SpoolProvider(const std::string_view &name, char separator)
+    SpoolProvider(std::string_view name, char separator)
         : Asynchronous(name, separator) {}
 
     void loadConfig() override;

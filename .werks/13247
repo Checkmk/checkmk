@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 If users were logged in on a remote site and the central site activated
 changes, the users on the remote site were logged out.

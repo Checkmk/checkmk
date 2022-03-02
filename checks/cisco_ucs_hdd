@@ -35,7 +35,7 @@ def parse_cisco_ucs_hdd(string_table) -> Section:
             model,
             *map_operability[r_operability],
             serial,
-            int(r_size or 0) * 1024 ** 2,
+            int(r_size or 0) * 1024**2,
             vendor,
             int(drive_status),
         )

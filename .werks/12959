@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 Previously, the contact_group attribute could not be set, because it
 lead to an error. This has been fixed and it can now be set. The REST

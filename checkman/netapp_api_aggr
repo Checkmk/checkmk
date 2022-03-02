@@ -1,7 +1,7 @@
 title: NetApp Filer: Used Space of Aggregations
 agents: netapp
 catalog: hw/storagehw/netapp
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check measures the usage of aggregations. The usage
@@ -30,4 +30,3 @@ item:
 
 discovery:
  One service is created for each {local} aggregation.
-

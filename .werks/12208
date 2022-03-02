@@ -6,7 +6,7 @@ Date: 1614167179
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 In the previous version all namespaces were automatically monitored
 for cAdvisor and kube-state-metrics. This werk introduces the feature

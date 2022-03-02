@@ -153,7 +153,7 @@ def get_filesystem_levels(size_gb: float, params: Mapping[str, Any]) -> Dict[str
 
         normsize = levels["magic_normsize"]
         hgb_size = size_gb / float(normsize)
-        felt_size = hgb_size ** magic
+        felt_size = hgb_size**magic
         scale = felt_size / hgb_size
         warn_scaled = 100 - ((100 - warn) * scale)
         crit_scaled = 100 - ((100 - crit) * scale)
@@ -378,8 +378,8 @@ def df_check_filesystem_single(
     levels = get_filesystem_levels(size_mb / 1024.0, params)
     warn_mb, crit_mb = levels["levels_mb"]
 
-    used_hr = render.bytes(used_mb * 1024 ** 2)
-    used_max_hr = render.bytes(used_max * 1024 ** 2)
+    used_hr = render.bytes(used_mb * 1024**2)
+    used_max_hr = render.bytes(used_max * 1024**2)
     used_perc_hr = render.percent(100.0 * used_mb / used_max)
 
     # If both strings end with the same unit, then drop the first one
@@ -416,7 +416,7 @@ def df_check_filesystem_single(
 
     if show_reserved:
         reserved_perc_hr = render.percent(100.0 * reserved_mb / size_mb)
-        reserved_hr = render.bytes(reserved_mb * 1024 ** 2)
+        reserved_hr = render.bytes(reserved_mb * 1024**2)
         yield Result(
             state=status,
             summary="additionally reserved for root: %s" % reserved_hr  #

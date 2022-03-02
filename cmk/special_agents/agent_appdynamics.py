@@ -10,6 +10,7 @@ import socket
 import sys
 from base64 import b64encode
 from http.client import HTTPConnection
+from pathlib import Path
 from typing import Any, Dict
 
 
@@ -104,7 +105,7 @@ def main(sys_argv=None):  # pylint: disable=too-many-branches
 
     if opt_filename:
         try:
-            data = json.loads(open(opt_filename).read())  # pylint:disable=consider-using-with
+            data = json.loads(Path(opt_filename).read_text())
         except Exception as e:
             sys.stderr.write("Cannot read JSON data from file %s: %s\n" % (opt_filename, e))
             if opt_debug:

@@ -236,10 +236,6 @@ function generate_menu(container, resizable) {
 
     if (resizable) {
         utils.add_class(menu, "resizable");
-        // Add a handle because we can not customize the styling of the default resize handle using css
-        const resize = document.createElement("div");
-        resize.className = "resizer";
-        wrapper.appendChild(resize);
     }
 
     container.appendChild(menu);

@@ -11,7 +11,7 @@ from .utils.df import FSBlocks
 
 
 def str_to_mebibyte(value: int) -> float:
-    return value / (1024.0 ** 2)
+    return value / (1024.0**2)
 
 
 def parse_ceph_df_json(string_table: StringTable) -> FSBlocks:

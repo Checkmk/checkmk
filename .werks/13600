@@ -1,0 +1,16 @@
+Title: Custom Windows agent port was not respected during update
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1643962527
+Edition: cee
+Knowledge: doc
+Level: 2
+State: unknown
+Version: 2.1.0b1
+
+Previously, during <tt>update</tt> Windows agent always opened 
+default port, 6556, in the firewall, even if the TCP port had been 
+changed by WATO
+
+With this release the problem had been eliminated.

@@ -1,0 +1,20 @@
+Title: Drop outdated and rarely used packages (jmx4perl, Webinject, check_mysql_health, check_oracle_health)
+Class: fix
+Compatible: compat
+Component: packages
+Date: 1644685722
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+These Nagios plugins are not or at least rarely used by Checkmk customers.
+Since Checkmk has own monitoring mechanism for Jolokia, MySQL and oracle we
+don't need these plugins.
+
+These plugins have been added to Checkmk in the early days of OMD and were not
+maintained in our Checkmk packages anymore since years.
+
+If you currently use these plugins in your environment, you may either switch
+to the monitoring mechanism Checkmk offers or install the plugins on your own
+to the <tt>local/lib/nagios/plugins</tt> directory of your site.

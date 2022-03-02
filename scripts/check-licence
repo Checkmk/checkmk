@@ -14,12 +14,12 @@ for param in "$@"; do
         continue
     fi
     if [[ "$param" == enterprise* || "$param" == managed* ]]; then
-        if ! head -30 $param|grep -c -E "C[ME]E|Checkmk Enterprise License" > /dev/null; then
-            fails+=($param)
+        if ! head -30 "$param" | grep -c -E "C[ME]E|Checkmk Enterprise License" >/dev/null; then
+            fails+=("$param")
         fi
     else
-        if ! head -25 $param|grep -c -E "GNU General Public" > /dev/null; then
-            fails+=($param)
+        if ! head -25 "$param" | grep -c -E "GNU General Public" >/dev/null; then
+            fails+=("$param")
         fi
     fi
 done
@@ -30,7 +30,7 @@ log() {
 
 if [ ${#fails[*]} -ne 0 ]; then
     log "These files are missing licence headers:"
-    log ${fails[@]}
+    log "${fails[@]}"
     log
     exit 1
 fi

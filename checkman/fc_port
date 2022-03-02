@@ -1,7 +1,7 @@
 title: Dell Fibre Channel Switches: Port Status
 catalog: hw/storagehw/dell
 agents: snmp
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This checks monitors fibre channel ports of devices supporting the fibre
@@ -43,4 +43,3 @@ discovery:
   if the administrativ state is not 1 (unknown) or 3 (offline).
   It can be configured (see CONFIGURATION VARIABLES)
   how operational ports are defined.
-

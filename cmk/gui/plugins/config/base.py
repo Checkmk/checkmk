@@ -12,6 +12,8 @@ from livestatus import SiteConfigurations
 
 from cmk.utils.type_defs import TagConfigSpec
 
+from cmk.gui.type_defs import UserSpec
+
 CustomLinkSpec = Tuple[str, bool, List[Tuple[str, str, Optional[str], str]]]
 
 # Links for everyone
@@ -54,12 +56,12 @@ custom_links_admin: List[CustomLinkSpec] = [
 ]
 
 
-def make_default_user_profile() -> Dict[str, Any]:
-    return {
-        "contactgroups": [],
-        "roles": ["user"],
-        "force_authuser": False,
-    }
+def make_default_user_profile() -> UserSpec:
+    return UserSpec(
+        contactgroups=[],
+        roles=["user"],
+        force_authuser=False,
+    )
 
 
 ActivateChangesCommentMode = Literal["enforce", "optional", "disabled"]
@@ -279,7 +281,7 @@ class CREConfig:
     selection_livetime: int = 3600
 
     # Configure HTTP header to read usernames from
-    auth_by_http_header: bool = False
+    auth_by_http_header: Union[Literal[False], str] = False
 
     # Number of rows to display by default in tables rendered with
     # the table.py module
@@ -353,9 +355,9 @@ class CREConfig:
     # Holds dicts defining user connector instances and their properties
     user_connections: List = field(default_factory=list)
 
-    default_user_profile: Dict[str, Any] = field(default_factory=make_default_user_profile)
+    default_user_profile: UserSpec = field(default_factory=make_default_user_profile)
     log_logon_failures: bool = True
-    lock_on_logon_failures: bool = False
+    lock_on_logon_failures: Union[Literal[False], int] = False
     user_idle_timeout: int = 5400
     single_user_session: Optional[int] = None
     password_policy: Dict = field(default_factory=dict)

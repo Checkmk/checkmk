@@ -1,7 +1,7 @@
 title: Splunk: License
 agents: splunk
 catalog: app/splunk
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the state of splunk licenses.

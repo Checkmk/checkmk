@@ -6,7 +6,7 @@ Date: 1614000640
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 Wenn using the grafana connector to a RAW edition site the graph modes
 predefined(graphs with metrics aggregated like in the service views) and

@@ -733,4 +733,9 @@ TEST(Wtools, ExecuteCommandsAsync) {
     EXPECT_EQ(output[0], "x");
 }
 
+TEST(Wtools, RunCommandCheck) {
+    auto s = RunCommand(L"icacls.exe /?");
+    EXPECT_FALSE(s.empty());
+}
+
 }  // namespace wtools

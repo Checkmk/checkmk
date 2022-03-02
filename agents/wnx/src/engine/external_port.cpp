@@ -4,6 +4,7 @@
 
 #include <iostream>
 
+#include "agent_controller.h"
 #include "asio.h"
 #include "cfg.h"
 #include "encryption.h"
@@ -228,6 +229,11 @@ static void OverLoadMemory() {
 #endif
 }
 
+bool IsIpAllowedAsException(const std::string &ip) {
+    return ac::IsRunController(cfg::GetLoadedConfig()) &&
+           (ip == "127.0.0.1" || ip == "::1");
+}
+
 // singleton thread
 void ExternalPort::processQueue(const cma::world::ReplyFunc &reply) {
     for (;;) {
@@ -243,7 +249,9 @@ void ExternalPort::processQueue(const cma::world::ReplyFunc &reply) {
 
                     OverLoadMemory();  // do nothing
                     // only_from checking
-                    if (cma::cfg::groups::global.isIpAddressAllowed(ip)) {
+                    if (cma::cfg::groups::global.isIpAddressAllowed(ip) ||
+                        ip == "127.0.0.1" ||
+                        ip == "::1") {  // controller can contact us
                         as->start(reply);
 
                         // check memory block, terminate service if memory is
@@ -295,7 +303,7 @@ bool sinkProc(const cma::world::AsioSession::s_ptr &asio_session,
 // MAY BE RESTARTED if we have new port/ipv6 mode in config
 // OneShot - true, CMK way, connect, send data back, disconnect
 //         - false, accept send data back, no disconnect
-void ExternalPort::ioThreadProc(const cma::world::ReplyFunc &reply_func) {
+void ExternalPort::ioThreadProc(const ReplyFunc &reply_func, uint16_t port) {
     using namespace cma::cfg;
     XLOG::t(XLOG_FUNC + " started");
     // all threads must control exceptions
@@ -308,12 +316,10 @@ void ExternalPort::ioThreadProc(const cma::world::ReplyFunc &reply_func) {
             asio::io_context context;
 
             auto ipv6 = groups::global.ipv6();
-            auto port =
-                default_port_ == 0 ? groups::global.port() : default_port_;
 
             // server start
-            ExternalPort::server sock(context, ipv6, port);
             XLOG::l.i("Starting IO ipv6:{}, used port:{}", ipv6, port);
+            ExternalPort::server sock(context, ipv6, port);
             sock.run_accept(sinkProc, this);
 
             registerContext(&context);
@@ -345,13 +351,16 @@ void ExternalPort::ioThreadProc(const cma::world::ReplyFunc &reply_func) {
 
 // runs thread
 // can fail when thread is already running
-bool ExternalPort::startIo(const ReplyFunc &reply_func) {
+bool ExternalPort::startIo(const ReplyFunc &reply_func, uint16_t port) {
     std::lock_guard lk(io_thread_lock_);
-    if (io_thread_.joinable()) return false;  // thread is in exec state
+    if (io_thread_.joinable()) {  // thread is in exec state
+        return false;
+    }
 
     shutdown_thread_ = false;  // reset potentially dropped flag
 
-    io_thread_ = std::thread(&ExternalPort::ioThreadProc, this, reply_func);
+    io_thread_ =
+        std::thread(&ExternalPort::ioThreadProc, this, reply_func, port);
     io_started_ = true;
     return true;
 }

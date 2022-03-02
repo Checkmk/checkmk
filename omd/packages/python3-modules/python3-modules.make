@@ -6,7 +6,7 @@ PYTHON3_MODULES := python3-modules
 PYTHON3_MODULES_VERS := 1.1
 PYTHON3_MODULES_DIR := $(PYTHON3_MODULES)-$(PYTHON3_MODULES_VERS)
 # Increase the number before the "-" to enforce a recreation of the build cache
-PYTHON3_MODULES_BUILD_ID := 6-$(shell md5sum $(REPO_PATH)/Pipfile.lock | cut -d' ' -f1)
+PYTHON3_MODULES_BUILD_ID := 15-$(shell md5sum $(REPO_PATH)/Pipfile.lock | cut -d' ' -f1)
 
 PYTHON3_MODULES_UNPACK:= $(BUILD_HELPER_DIR)/$(PYTHON3_MODULES_DIR)-unpack
 PYTHON3_MODULES_PATCHING := $(BUILD_HELPER_DIR)/$(PYTHON3_MODULES_DIR)-patching
@@ -52,11 +52,13 @@ $(PYTHON3_MODULES_BUILD): $(PYTHON_CACHE_PKG_PROCESS) $(OPENSSL_CACHE_PKG_PROCES
 	    export PYTHONPATH="$$PYTHONPATH:$(PACKAGE_PYTHON3_MODULES_PYTHONPATH)" ; \
 	    export PYTHONPATH="$$PYTHONPATH:$(PACKAGE_PYTHON_PYTHONPATH)" ; \
 	    export CPATH="$(PACKAGE_FREETDS_DESTDIR)/include:$(PACKAGE_OPENSSL_INCLUDE_PATH)" ; \
-	    export LDFLAGS="-Wl,--rpath,/omd/versions/xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx/lib $(PACKAGE_PYTHON_LDFLAGS) $(PACKAGE_FREETDS_LDFLAGS) $(PACKAGE_OPENSSL_LDFLAGS)" ; \
+	    `: -Wl,--strip-debug - Shrink the built libraries` \
+	    export LDFLAGS="-Wl,--strip-debug -Wl,--rpath,/omd/versions/xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx/lib $(PACKAGE_PYTHON_LDFLAGS) $(PACKAGE_FREETDS_LDFLAGS) $(PACKAGE_OPENSSL_LDFLAGS)" ; \
 	    export LD_LIBRARY_PATH="$(PACKAGE_PYTHON_LD_LIBRARY_PATH):$(PACKAGE_OPENSSL_LD_LIBRARY_PATH)" ; \
 	    export PATH="$(PACKAGE_PYTHON_BIN):$$PATH" ; \
 	    $(PACKAGE_PYTHON_EXECUTABLE) -m pip install \
-		`: do use precompiled things! ` \
+		`: dont use precompiled things, build with our build env ` \
+		--no-binary=":all:" \
 		--no-deps \
 		--compile \
 		--isolated \
@@ -71,8 +73,16 @@ $(PYTHON3_MODULES_BUILD): $(PYTHON_CACHE_PKG_PROCESS) $(OPENSSL_CACHE_PKG_PROCES
 # These files break the integration tests on the CI server. Don't know exactly
 # why this happens only there, but should be a working fix.
 	$(RM) -r $(PYTHON3_MODULES_INSTALL_DIR)/snmpsim
+# Cleanup unneeded test files of numpy
+	$(RM) -r $(PYTHON3_MODULES_INSTALL_DIR)/lib/python$(PYTHON_MAJOR_DOT_MINOR)/site-packages/numpy/*/tests
 # Fix python interpreter for kept scripts
 	$(SED) -i '1s|^#!.*/python3$$|#!/usr/bin/env python3|' $(PYTHON3_MODULES_INSTALL_DIR)/bin/[!_]*
+# pip is using pip._vendor.distlib.scripts.ScriptMaker._build_shebang() to
+# build the shebang of the scripts installed to bin. When executed via our CI
+# containers, the shebang exceeds the max_shebang_length of 127 bytes. For this
+# case, it adds a #!/bin/sh wrapper in front of the python code o_O to make it
+# fit into the shebang. Let's also cleanup this case.
+	$(SED) -i -z "s|^#\!/bin/sh\n'''exec.*python3 \"\$$0\" \"\$$@\"\n' '''|#\!/usr/bin/env python3|" $(PYTHON3_MODULES_INSTALL_DIR)/bin/[!_]*
 	$(TOUCH) $@
 
 $(PYTHON3_MODULES_PATCHING): $(PYTHON3_MODULES_UNPACK)

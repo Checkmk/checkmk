@@ -18,12 +18,7 @@ node ('windows') {
     }
 
     stage('build') {
-        withCredentials([usernamePassword(credentialsId: 'win_sign', passwordVariable: 'WIN_SIGN_PASSWORD', usernameVariable: '')]) {
-            windows.build(
-                TARGET: 'cmk_agent_ctl_with_sign',
-                PASSWORD: WIN_SIGN_PASSWORD,
-            )
-        }
+        windows.build(TARGET: 'cmk_agent_ctl_no_sign' )
     }
 }
 

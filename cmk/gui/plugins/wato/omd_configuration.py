@@ -439,18 +439,18 @@ class ConfigDomainApache(ABCConfigDomain):
         try:
             self._write_config_file()
 
-            p = subprocess.Popen(  # pylint:disable=consider-using-with
+            completed_process = subprocess.run(
                 ["omd", "reload", "apache"],
-                stdin=open(os.devnull),  # pylint:disable=consider-using-with
+                stdin=subprocess.DEVNULL,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
                 close_fds=True,
                 encoding="utf-8",
+                check=False,
             )
 
-            stdout, _stderr = p.communicate()
-            if p.returncode != 0:
-                raise Exception(stdout)
+            if completed_process.returncode:
+                raise Exception(completed_process.stdout)
 
             return []
         except Exception:
@@ -563,18 +563,18 @@ class ConfigDomainRRDCached(ABCConfigDomain):
         try:
             self._write_config_file()
 
-            p = subprocess.Popen(  # pylint:disable=consider-using-with
+            completed_process = subprocess.run(
                 ["omd", "restart", "rrdcached"],
-                stdin=open(os.devnull),  # pylint:disable=consider-using-with
+                stdin=subprocess.DEVNULL,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
                 close_fds=True,
                 encoding="utf-8",
+                check=False,
             )
 
-            stdout, _stderr = p.communicate()
-            if p.returncode != 0:
-                raise Exception(stdout)
+            if completed_process.returncode:
+                raise Exception(completed_process.stdout)
 
             return []
         except Exception:

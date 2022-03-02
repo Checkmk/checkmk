@@ -1,7 +1,7 @@
 title: AWS S3: SELECT Object
 agents: aws
 catalog: cloud/aws
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the rate of bytes of data scanned or
@@ -20,4 +20,3 @@ item:
 discovery:
  One service is created for each bucket if all required metrics
  (SelectBytesScanned, SelectBytesReturned) are given.
-

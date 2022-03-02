@@ -27,8 +27,8 @@ def inventory_lvm_vgs(info):
 def check_lvm_vgs(item, params, info):
     vglist = []
     for vg, _pvs, _lvs, _sns, _attr, size, free in info:
-        size_mb = int(size) // 1024 ** 2
-        avail_mb = int(free) // 1024 ** 2
+        size_mb = int(size) // 1024**2
+        avail_mb = int(free) // 1024**2
         vglist.append((vg, size_mb, avail_mb, 0))
     return df_check_filesystem_list(item, params, vglist)
 

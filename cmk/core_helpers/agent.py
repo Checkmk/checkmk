@@ -5,6 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import abc
+import json
 import logging
 import os
 import time
@@ -18,6 +19,7 @@ from typing import (
     List,
     Mapping,
     MutableMapping,
+    NamedTuple,
     Optional,
     Sequence,
     Tuple,
@@ -135,29 +137,33 @@ class ParserState(abc.ABC):
 
     .. uml::
 
-        state FSM {
-
-        state "NOOPState" as noop
-        state "PiggybackParser" as piggy
-        state "PiggybackSectionParser" as psection
-        state "SectionParser" as section
-
-        noop --> section: ""<<~<STR>>>""
-        section --> section: ""<<~<STR>>>""
-        section --> piggy: ""<<<~<STR>>>>""
-
-        noop -> piggy: ""<<<~<STR>>>>""
-        piggy --> piggy: ""<<<~<>>>>""
-        piggy --> psection: ""<<~<STR>>>""
-
-        psection --> piggy: ""<<<~<STR>>>>""
-        psection --> psection: ""<<~<STR>>>""
-        psection --> noop: ""<<<~<>>>>""
-
+        state Host {
+            state "NOOP" as hnoop
+            state "Host Section" as hsection
+            [*] --> hnoop
         }
 
-        [*] --> noop
-        FSM -> noop: ERROR
+        state PiggybackedHost {
+            state "Piggybacked Host" as phost
+            state "Piggybacked Host NOOP" as pnoop
+            state "Piggybacked Host Section" as psection
+            [*] --> phost
+        }
+
+        [*] --> Host
+        hnoop --> hsection : ""<<~<SECTION_NAME>>>""
+        hsection --> hsection : ""<<~<SECTION_NAME>>>""
+        hsection --> hnoop : ""<<~<>>>""
+
+        phost --> pnoop : ""<<~<>>>""
+        phost --> psection : ""<<~<SECTION_NAME>>>""
+        psection --> psection : ""<<~<SECTION_NAME>>>""
+        psection --> pnoop : ""<<~<>>>""
+
+        Host --> PiggybackedHost : ""<<<~<HOSTNAME>>>>""
+        PiggybackedHost --> Host : ""<<<~<>>>>""
+        Host --> Host : ""<<<~<>>>>""
+        PiggybackedHost --> PiggybackedHost : ""<<<~<HOSTNAME>>>>""
 
     See Also:
         Gamma, Helm, Johnson, Vlissides (1995) Design Patterns "State pattern"
@@ -278,6 +284,20 @@ class ParserState(abc.ABC):
             logger=self._logger,
         )
 
+    def to_piggyback_noop_parser(
+        self,
+        current_host: PiggybackMarker,
+    ) -> "PiggybackNOOPParser":
+        return PiggybackNOOPParser(
+            self.hostname,
+            self.sections,
+            self.piggyback_sections,
+            current_host=current_host,
+            translation=self.translation,
+            encoding_fallback=self.encoding_fallback,
+            logger=self._logger,
+        )
+
     def to_error(self, line: bytes) -> "ParserState":
         self._logger.warning(
             "%s: Ignoring invalid data %r",
@@ -303,6 +323,8 @@ class ParserState(abc.ABC):
                 return self.on_section_footer(line)
             return self.do_action(line)
         except Exception:
+            if cmk.utils.debug.enabled():
+                raise
             return self.to_error(line)
 
         return self
@@ -330,7 +352,8 @@ class NOOPParser(ParserState):
         return self.to_host_section_parser(SectionMarker.from_headerline(line))
 
     def on_section_footer(self, line: bytes) -> "ParserState":
-        return self.to_error(line)
+        # Optional
+        return self.to_noop_parser()
 
 
 class PiggybackParser(ParserState):
@@ -380,7 +403,8 @@ class PiggybackParser(ParserState):
         )
 
     def on_section_footer(self, line: bytes) -> "ParserState":
-        return self.to_error(line)
+        # Optional
+        return self.to_piggyback_noop_parser(self.current_host)
 
 
 class PiggybackSectionParser(ParserState):
@@ -430,7 +454,57 @@ class PiggybackSectionParser(ParserState):
 
     def on_section_footer(self, line: bytes) -> "ParserState":
         # Optional
+        return self.to_piggyback_noop_parser(self.current_host)
+
+
+class PiggybackNOOPParser(ParserState):
+    def __init__(
+        self,
+        hostname: HostName,
+        sections: MutableSection,
+        piggyback_sections: MutableMapping[PiggybackMarker, MutableSection],
+        *,
+        current_host: PiggybackMarker,
+        translation: TranslationOptions,
+        encoding_fallback: str,
+        logger: logging.Logger,
+    ) -> None:
+        super().__init__(
+            hostname,
+            sections,
+            piggyback_sections,
+            translation=translation,
+            encoding_fallback=encoding_fallback,
+            logger=logger,
+        )
+        self.current_host: Final = current_host
+
+    def do_action(self, line: bytes) -> "PiggybackNOOPParser":
         return self
+
+    def on_piggyback_header(self, line: bytes) -> "ParserState":
+        piggyback_header = PiggybackMarker.from_headerline(
+            line,
+            self.translation,
+            encoding_fallback=self.encoding_fallback,
+        )
+        if piggyback_header.hostname == self.hostname:
+            # Unpiggybacked "normal" host
+            return self.to_noop_parser()
+        return self.to_piggyback_parser(piggyback_header)
+
+    def on_piggyback_footer(self, line: bytes) -> "ParserState":
+        return self.to_noop_parser()
+
+    def on_section_header(self, line: bytes) -> "ParserState":
+        return self.to_piggyback_section_parser(
+            self.current_host,
+            SectionMarker.from_headerline(line),
+        )
+
+    def on_section_footer(self, line: bytes) -> "ParserState":
+        # Optional
+        return self.to_piggyback_noop_parser(self.current_host)
 
 
 class HostSectionParser(ParserState):
@@ -474,14 +548,14 @@ class HostSectionParser(ParserState):
         return self.to_piggyback_parser(piggyback_header)
 
     def on_piggyback_footer(self, line: bytes) -> "ParserState":
-        return self.to_error(line)
+        return self.to_noop_parser()
 
     def on_section_header(self, line: bytes) -> "ParserState":
         return self.to_host_section_parser(SectionMarker.from_headerline(line))
 
     def on_section_footer(self, line: bytes) -> "ParserState":
         # Optional
-        return self
+        return self.to_noop_parser()
 
 
 class AgentParser(Parser[AgentRawData, AgentRawDataSection]):
@@ -627,6 +701,11 @@ class AgentSummarizer(Summarizer[AgentRawDataSection]):
     pass
 
 
+class _ControllerInfo(NamedTuple):
+    version: str
+    allow_legacy_pull: bool
+
+
 class AgentSummarizerDefault(AgentSummarizer):
     # TODO: refactor
     def __init__(
@@ -662,6 +741,10 @@ class AgentSummarizerDefault(AgentSummarizer):
         mode: Mode,
     ) -> Sequence[ActiveCheckResult]:
         agent_info = self._get_agent_info(cmk_section)
+        controller_info = self._get_controller_info(
+            agent_info.get("agentcontroller") or "",
+            agent_info.get("agentcontrollerstatus") or "",
+        )
 
         subresults = []
 
@@ -683,9 +766,7 @@ class AgentSummarizerDefault(AgentSummarizer):
                     self._check_python_plugins(
                         agent_info.get("failedpythonplugins"), agent_info.get("failedpythonreason")
                     ),
-                    self._check_transport(
-                        bool(agent_info.get("agentcontroller")), agent_info.get("legacypullmode")
-                    ),
+                    self._check_transport(bool(agent_info.get("sshclient")), controller_info),
                 ]
                 if r
             )
@@ -704,6 +785,19 @@ class AgentSummarizerDefault(AgentSummarizer):
             section[key] = f"{section.get(key) or ''} {val}".strip() if len(line) > 1 else None
 
         return {"version": None, "agentos": None, **section}
+
+    @staticmethod
+    def _get_controller_info(
+        controller_version: str,
+        raw_string: str,
+    ) -> Optional[_ControllerInfo]:
+        if not controller_version:
+            return None
+        loaded = json.loads(raw_string)
+        return _ControllerInfo(
+            version=controller_version,
+            allow_legacy_pull=loaded["allow_legacy_pull"],
+        )
 
     def _check_version(self, agent_version: Optional[str]) -> Optional[ActiveCheckResult]:
         expected_version = self.agent_target_version
@@ -851,13 +945,16 @@ class AgentSummarizerDefault(AgentSummarizer):
 
     def _check_transport(
         self,
-        controller_present: bool,
-        legacy_pull_mode: Optional[str],
+        ssh_transport: bool,
+        controller_info: Optional[_ControllerInfo],
     ) -> Optional[ActiveCheckResult]:
-        if not controller_present:
+        if ssh_transport:
+            return ActiveCheckResult(0, "Transport via SSH")
+
+        if not controller_info:
             return None
 
-        if not legacy_pull_mode or legacy_pull_mode == "no":
+        if not controller_info.allow_legacy_pull:
             return None
 
         return ActiveCheckResult(
@@ -867,6 +964,8 @@ class AgentSummarizerDefault(AgentSummarizer):
                 "The hosts agent supports TLS, but it is not being used.",
                 "We strongly recommend to enable TLS by registering the host to the site "
                 "(using the `cmk-agent-ctl register` command on the monitored host).",
-                "However you can configure missing TLS to be OK in the settings of this service.",
+                "However you can configure missing TLS to be OK in the setting "
+                '"State in case of available but not enabled TLS" of the ruleset '
+                '"Status of the Checkmk services".',
             ),
         )

@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 If locales with non UTF-8 characters were used, fallback notifications
 could fail with an error like "UnicodeDecodeError: 'utf-8' codec can't decode

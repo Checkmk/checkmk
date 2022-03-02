@@ -52,7 +52,7 @@ INSTANTIATE_TEST_SUITE_P(UnboundedQueueTests, UnboundedQueueTest,
 
 class BoundedQueueTest : public ::testing::Test {
 public:
-    Queue<int> queue{5};
+    Queue<int> queue{queue_join_strategy::shutdown_push_pop, 5};
 };
 
 TEST_F(BoundedQueueTest, LimitIsSet) {

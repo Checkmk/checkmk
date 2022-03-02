@@ -201,7 +201,7 @@ def parse_solaris_mem(string_table: type_defs.StringTable) -> Optional[SectionMe
     if not string_table:
         return None
 
-    units = {"G": 1024 ** 3, "M": 1024 ** 2, "K": 1024}
+    units = {"G": 1024**3, "M": 1024**2, "K": 1024}
 
     values = []
     mem_tokens = " ".join(string_table[0][1:]).split(",")

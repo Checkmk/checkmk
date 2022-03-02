@@ -8,7 +8,7 @@
 #include <utility>
 
 #include "Logger.h"
-#include "NagiosGlobals.h"
+#include "nagios.h"
 
 using namespace std::chrono_literals;
 

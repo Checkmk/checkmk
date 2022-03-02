@@ -1,7 +1,7 @@
 title: IBM Tivoli Storage Manager (TSM): Paths
 agents: linux, windows
 catalog: app/tsm
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check checks the overall state of tsm paths.
@@ -10,4 +10,3 @@ description:
 
 discovery:
  One service is created.
-

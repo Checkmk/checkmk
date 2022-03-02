@@ -148,36 +148,7 @@ STAGES:
     - NAME: 'Shell check'
       DIR: 'tests'
       ENV_VARS:
-        SHELLCHECK_OUTPUT_ARGS: -e SC1001
-            -e SC1090
-            -e SC1091
-            -e SC2001
-            -e SC2002
-            -e SC2003
-            -e SC2004
-            -e SC2005
-            -e SC2006
-            -e SC2009
-            -e SC2012
-            -e SC2013
-            -e SC2015
-            -e SC2016
-            -e SC2018
-            -e SC2019
-            -e SC2028
-            -e SC2030
-            -e SC2031
-            -e SC2034
-            -e SC2035
-            -e SC2039
-            -e SC2116
-            -e SC2126
-            -e SC2143
-            -e SC2162
-            -e SC2181
-            -e SC2197
-            -e SC2230
-            -e SC2236
+        SHELLCHECK_OUTPUT_ARGS: -e SC1091
       COMMAND: "make test-shellcheck &> ${RESULTS}/shellcheck.txt"
       RESULT_CHECK_TYPE: "GCC"
       RESULT_CHECK_FILE_PATTERN: "results/shellcheck.txt"

@@ -11,6 +11,8 @@ from cmk.utils.type_defs import InventoryPluginName
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Attributes
 from cmk.base.plugins.agent_based.utils.docker import AgentOutputMalformatted
 
+from .utils_inventory import sort_inventory_result
+
 AGENT_OUTPUT = """@docker_version_info\0{"PluginVersion": "0.1", "DockerPyVersion": "4.1.0", "ApiVersion": "1.41"}
 {"NodeName": "klappben"}"""
 
@@ -18,13 +20,15 @@ AGENT_OUTPUT = """@docker_version_info\0{"PluginVersion": "0.1", "DockerPyVersio
 def test_inv_docker_container_node_name(fix_register):
     info = [line.split("\0") for line in AGENT_OUTPUT.split("\n")]
     plugin = fix_register.inventory_plugins[InventoryPluginName("docker_container_node_name")]
-    assert list(plugin.inventory_function(info)) == [
-        Attributes(
-            path=["software", "applications", "docker", "container"],
-            inventory_attributes={"node_name": "klappben"},
-            status_attributes={},
-        )
-    ]
+    assert sort_inventory_result(plugin.inventory_function(info)) == sort_inventory_result(
+        [
+            Attributes(
+                path=["software", "applications", "docker", "container"],
+                inventory_attributes={"node_name": "klappben"},
+                status_attributes={},
+            )
+        ]
+    )
 
 
 def test_inv_docker_container_node_name_legacy_agent_output(fix_register):

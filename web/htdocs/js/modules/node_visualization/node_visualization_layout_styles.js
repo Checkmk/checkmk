@@ -493,6 +493,8 @@ class ForceSimulation {
         this._simulation.alpha(0);
         this._simulation.alphaMin(0.1);
         this._simulation.on("tick", () => this.tick_called());
+        this._simulation.on("end", () => this._simulation_end());
+        this._last_gui_update_duration = 0;
         this._setup_forces();
         this._all_nodes = {};
         this._all_links = {};
@@ -504,18 +506,32 @@ class ForceSimulation {
     }
 
     tick_called() {
-        if (!this._viewport) {
+        if (!this._viewport) return;
+
+        // GUI updates with hundreds of nodes might cause rendering stress
+        // The laggy_rendering_limit (ms) throttles the visual update to a reasonable amount
+        // When the simulation is finished, a final visual update is started anyway.
+        const laggy_rendering_limit = 10;
+        if (this._last_gui_update_duration > laggy_rendering_limit) {
+            this._last_gui_update_duration -= laggy_rendering_limit;
             return;
         }
+        this._last_gui_update_duration = this._update_gui();
+    }
 
+    _simulation_end() {
+        if (!this._viewport) return;
+        this._update_gui();
+    }
+
+    _update_gui() {
         let update_start = window.performance.now();
         this._enforce_free_float_styles_retranslation();
-
         this._viewport.layout_manager.compute_node_positions_from_list_of_nodes(
             this._get_force_nodes()
         );
         this._viewport.update_gui_of_layers();
-        tick_duration = window.performance.now() - update_start;
+        return window.performance.now() - update_start;
     }
 
     _get_force_nodes() {
@@ -736,16 +752,7 @@ export class LayoutStyleForce extends AbstractLayoutStyle {
             },
         ];
     }
-
-    tick_called() {
-        let update_start = window.performance.now();
-        this._layout_manager.viewport.update_gui_of_layers();
-        tick_duration = window.performance.now() - update_start;
-    }
 }
-
-export let tick_count = 0;
-export let tick_duration = 0;
 
 //#.
 //#   .-Hierarchy----------------------------------------------------------.

@@ -71,7 +71,7 @@ from cmk.gui.globals import (
 )
 
 # Needed for legacy (pre 1.6) plugins
-from cmk.gui.htmllib import HTML  # noqa: F401 # pylint: disable=unused-import
+from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _, _u
 from cmk.gui.main_menu import mega_menu_registry
 from cmk.gui.page_menu import (
@@ -192,6 +192,7 @@ from cmk.gui.valuespec import (
     CascadingDropdownChoice,
     Dictionary,
     DropdownChoice,
+    DropdownChoiceEntries,
     DropdownChoiceEntry,
     FixedValue,
     Hostname,
@@ -364,7 +365,7 @@ def _get_struct_tree(is_history, hostname, site_id):
         return struct_tree_cache[cache_id]
 
     if is_history:
-        struct_tree = inventory.load_filtered_inventory_tree(hostname)
+        struct_tree = inventory.load_latest_delta_tree(hostname)
     else:
         row = inventory.get_status_data_via_livestatus(site_id, hostname)
         struct_tree = inventory.load_filtered_and_merged_tree(row)
@@ -690,6 +691,15 @@ class View:
             return set()
 
         return missing_single_infos
+
+
+class DummyView(View):
+    """Represents an empty view hull, not intended to be displayed
+    This view can be used as surrogate where a view-ish like object is needed
+    """
+
+    def __init__(self):
+        super().__init__("dummy_view", {}, {})
 
 
 class ABCViewRenderer(abc.ABC):
@@ -1040,13 +1050,25 @@ class GUIViewRenderer(ABCViewRenderer):
         yield PageMenuEntry(
             title=_("Export CSV"),
             icon_name="download_csv",
-            item=make_simple_link(makeuri(request, [("output_format", "csv_export")])),
+            item=make_simple_link(
+                makeuri(
+                    request,
+                    [("output_format", "csv_export")],
+                    delvars=["show_checkboxes", "selection"],
+                )
+            ),
         )
 
         yield PageMenuEntry(
             title=_("Export JSON"),
             icon_name="download_json",
-            item=make_simple_link(makeuri(request, [("output_format", "json_export")])),
+            item=make_simple_link(
+                makeuri(
+                    request,
+                    [("output_format", "json_export")],
+                    delvars=["show_checkboxes", "selection"],
+                )
+            ),
         )
 
     def _page_menu_entries_export_reporting(self, rows: Rows) -> Iterator[PageMenuEntry]:
@@ -1059,7 +1081,14 @@ class GUIViewRenderer(ABCViewRenderer):
         yield PageMenuEntry(
             title=_("This view as PDF"),
             icon_name="report",
-            item=make_simple_link(makeuri(request, [], filename="report_instant.py")),
+            item=make_simple_link(
+                makeuri(
+                    request,
+                    [],
+                    filename="report_instant.py",
+                    delvars=["show_checkboxes", "selection"],
+                )
+            ),
         )
 
         # Link related reports
@@ -1727,12 +1756,12 @@ def view_editor_column_spec(ident, title, ds_name):
         empty_text = _("Please add at least one column to your view.")
 
     def column_elements(_painters, painter_type):
-        empty_choices: List[DropdownChoiceEntry] = [(None, "")]
+        empty_choices: DropdownChoiceEntries = [(None, "")]
         elements = [
             CascadingDropdown(
                 title=_("Column"),
                 choices=painter_choices_with_params(_painters),
-                no_preselect=True,
+                no_preselect_title="",
                 render_sub_vs_page_name="ajax_cascading_render_painer_parameters",
                 render_sub_vs_request_vars={
                     "ds_name": ds_name,
@@ -1746,7 +1775,7 @@ def view_editor_column_spec(ident, title, ds_name):
             ),
             DropdownChoice(
                 title=_("Tooltip"),
-                choices=empty_choices + painter_choices(_painters),
+                choices=list(empty_choices) + list(painter_choices(_painters)),
             ),
         ]
         if painter_type == "join_painter":
@@ -1886,7 +1915,7 @@ def view_editor_sorter_specs(view: ViewSpec) -> _Tuple[str, Dictionary]:
                                     title=_("Column"),
                                     choices=list(_sorter_choices(view)),
                                     sorted=True,
-                                    no_preselect=True,
+                                    no_preselect_title="",
                                 ),
                                 DropdownChoice(
                                     title=_("Order"),
@@ -3085,7 +3114,9 @@ def _get_availability_entry(
     return PageMenuEntry(
         title=_("Availability"),
         icon_name="availability",
-        item=make_simple_link(makeuri(request, [("mode", "availability")])),
+        item=make_simple_link(
+            makeuri(request, [("mode", "availability")], delvars=["show_checkboxes", "selection"])
+        ),
         is_enabled=not view.missing_single_infos,
         disabled_tooltip=_("Missing required context information")
         if view.missing_single_infos
@@ -3123,7 +3154,9 @@ def _get_combined_graphs_entry(
         ("view_title", view_title(view.spec, view.context)),
     ]
 
-    url = makeuri(request, httpvars, filename="combined_graphs.py")
+    url = makeuri(
+        request, httpvars, filename="combined_graphs.py", delvars=["show_checkboxes", "selection"]
+    )
     return PageMenuEntry(
         title=_("All metrics of same type in one graph"),
         icon_name="graph",
@@ -3363,7 +3396,7 @@ def infos_needed_by_plugin(
     return {c.split("_", 1)[0] for c in plugin.columns if c != "site" and c not in add_columns}
 
 
-def painter_choices(painters: Dict[str, Painter]) -> List[DropdownChoiceEntry]:
+def painter_choices(painters: Dict[str, Painter]) -> DropdownChoiceEntries:
     return [(c[0], c[1]) for c in painter_choices_with_params(painters)]
 
 

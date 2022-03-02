@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 If a notification rule contained conditions for "Match hosts", a message like
 "Element 'my_host' does not exist anymore" was shown within the conditions

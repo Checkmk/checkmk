@@ -1,7 +1,7 @@
 title: Dell PowerConnect Switches: Temperature Sensors
 agents: snmp
 catalog: hw/network/dell
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the temperature inside Dell PowerConnect Switches which support the
@@ -33,4 +33,3 @@ item:
 discovery:
  One service is created for the Temperature sensor if the MIB
  defined above is supported on the switch.
-

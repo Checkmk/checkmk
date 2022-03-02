@@ -1,7 +1,7 @@
 title: Juniper/Trapeze: CPU Utilization of the Last Few Seconds and 1/5 Minutes
 agents: snmp
 catalog: hw/network/juniper
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  Check CPU utilization of the last few seconds and 1/5 minutes in percent on Trapeze (Juniper) devices.
@@ -9,4 +9,3 @@ description:
 
 discovery:
  One service is created for the first CPU.
-

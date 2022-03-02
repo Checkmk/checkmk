@@ -1,7 +1,7 @@
 title: Oracle Tablespaces: Perfomance Data
 agents: linux, hpux, solaris, windows
 catalog: app/oracle
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the DB time statistics, buffer pool statistics,

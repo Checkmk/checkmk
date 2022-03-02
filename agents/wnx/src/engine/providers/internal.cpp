@@ -73,7 +73,7 @@ std::tuple<uint64_t, std::string, std::string> ParseCommandLine(
 
 void Basic::registerOwner(cma::srv::ServiceProcessor *sp) { host_sp_ = sp; }
 
-std::string Basic::generateContent(const std::string_view &section_name,
+std::string Basic::generateContent(std::string_view section_name,
                                    bool force_generation) {
     auto real_name =
         section_name == section::kUseEmbeddedName ? uniq_name_ : section_name;

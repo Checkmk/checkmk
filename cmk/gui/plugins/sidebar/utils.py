@@ -272,11 +272,6 @@ def link(
     html.write_html(render_link(text, url, target=target, onclick=onclick))
 
 
-def simplelink(text: Union[str, HTML], url: str, target: str = "main") -> None:
-    link(text, url, target)
-    html.br()
-
-
 def bulletlink(text: str, url: str, target: str = "main", onclick: Optional[str] = None) -> None:
     html.open_li(class_="sidebar")
     link(text, url, target, onclick)

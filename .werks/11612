@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 An API call to the endpoint bulk_discovery_start could fail in case the bulk_size
 parameter was given as string (via URL or request body). A TypeError was raised

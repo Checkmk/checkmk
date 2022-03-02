@@ -1,7 +1,7 @@
 title: IBM Datapower: Raid Battery
 agents: snmp
 catalog: hw/network/ibm
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the state of the battery of the RAID controller of IBMs

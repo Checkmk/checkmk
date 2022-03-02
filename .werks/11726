@@ -6,7 +6,7 @@ Date: 1612519179
 Edition: cee
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 After an (automatic) windows agent update took place,
 the agent updater checks for a correct agent hash on the next call.

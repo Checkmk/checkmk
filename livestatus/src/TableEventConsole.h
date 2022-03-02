@@ -18,11 +18,7 @@
 #include "ListColumn.h"
 #include "MonitoringCore.h"
 #include "Table.h"
-#ifdef CMC
 #include "contact_fwd.h"
-#else
-#include "nagios.h"
-#endif
 
 class ColumnOffsets;
 template <class T>

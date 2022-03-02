@@ -6,7 +6,7 @@ Date: 1613987949
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 This werk will make the ceph plugin more resilient against subtle
 output changes in future versions of the ceph command line tool.

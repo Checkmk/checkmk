@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 In Checkmk version 2.0.0i1 to 2.0.0b7 the IPMI services prefixed with "Management Interface:"
 did not receive any data and went to {{UNKNOWN}}.

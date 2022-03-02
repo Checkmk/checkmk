@@ -1,0 +1,30 @@
+Title: mk_postgres: Fix Bug with password authentication method on Linux
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1643370630
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+For using password authentication, the Path to the pgpass file needs to be in
+the third argument of the INSTANCE Parameter in postgres.cfg:
+INSTANCE=/opt/cmk/etc/pgsql-12.env:checkmk:/var/lib/pgsql/12/data/.checkmk_pgpass
+
+In pg_hba.conf, password authentication needs to be set for the checkmk user:
+local all checkmk password
+
+With these setting, the current version of the Plugin asks for the password of
+the checkmk postgres user when it is executes manually.
+
+The PGPASSFILE is read correctly from the config, and it may work on Windows,
+but on Linux we are using "su -" to change to the postgres OS user and we are
+loosing all environment variables which are set to the Popen function via
+self.my_env.
+
+This change will add the PGPASSFILE correctly after switching the user. This is
+tested successfully on Linux with a PostgresSQL 12 DB.
+
+It will also cause no issue when not using the password authentication, since
+the variable is empty and is not used.

@@ -235,12 +235,14 @@ def check_oracle_rman(
 
 
 def cluster_check_oracle_rman(
-    item: str, params: Mapping[str, Any], section: Mapping[str, SectionOracleRman]
+    item: str, params: Mapping[str, Any], section: Mapping[str, Optional[SectionOracleRman]]
 ) -> CheckResult:
 
     youngest_backup_age: Optional[int] = None
     # take the most current backupage in clustered environments
     for node_data in section.values():
+        if node_data is None:
+            continue
         if item not in node_data:
             continue
         backupage = node_data[item]["backupage"]
@@ -255,7 +257,7 @@ def cluster_check_oracle_rman(
 
     # Check only first found item
     for node_data in section.values():
-        if item not in node_data:
+        if node_data is None or item not in node_data:
             continue
         if isinstance(youngest_backup_age, int):
             node_data[item].update({"backupage": youngest_backup_age})

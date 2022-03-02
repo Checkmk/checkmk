@@ -1,7 +1,7 @@
 title: TP-LINK Switches: Power over Ethernet Power Consumption
 agents: snmp
 catalog: hw/network/tplink
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This Check monitors the power consumption in Watt if Power over Ethernet is used for the device. Levels can be set in Wato.

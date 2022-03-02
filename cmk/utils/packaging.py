@@ -15,7 +15,19 @@ import time
 from contextlib import suppress
 from io import BytesIO
 from pathlib import Path
-from typing import Any, BinaryIO, Callable, cast, Dict, Final, Iterable, List, NamedTuple, Optional
+from typing import (
+    Any,
+    BinaryIO,
+    Callable,
+    cast,
+    Dict,
+    Final,
+    Iterable,
+    List,
+    NamedTuple,
+    Optional,
+    TypedDict,
+)
 
 import cmk.utils.debug
 import cmk.utils.misc
@@ -81,6 +93,8 @@ def _get_permissions(path: str) -> int:
 PackageName = str
 PartName = str
 PartPath = str
+PartFiles = List[str]
+PackageFiles = Dict[PartName, PartFiles]
 
 
 class PackagePart(NamedTuple):
@@ -89,10 +103,26 @@ class PackagePart(NamedTuple):
     path: PartPath
 
 
-PackageInfo = Dict
+# Would like to use class declaration here, but that is not compatible with the dots in the keys
+# below.
+PackageInfo = TypedDict(
+    "PackageInfo",
+    {
+        "title": str,
+        "name": str,
+        "description": str,
+        "version": str,
+        "version.packaged": str,
+        "version.min_required": str,
+        "version.usable_until": Optional[str],
+        "author": str,
+        "download_url": str,
+        "files": PackageFiles,
+    },
+)
+
+
 Packages = Dict[PackageName, PackageInfo]
-PartFiles = List[str]
-PackageFiles = Dict[PartName, PartFiles]
 PackagePartInfo = Dict[PartName, Any]
 
 package_ignored_files = {
@@ -191,6 +221,18 @@ def release(pacname: PackageName) -> None:
     _remove_package_info(pacname)
 
 
+def _create_tar_info(filename: str, size: int) -> tarfile.TarInfo:
+    info = tarfile.TarInfo()
+    info.mtime = int(time.time())
+    info.uid = 0
+    info.gid = 0
+    info.size = size
+    info.mode = 0o644
+    info.type = tarfile.REGTYPE
+    info.name = filename
+    return info
+
+
 def write_file(
     package: PackageInfo,
     file_object: Optional[BinaryIO] = None,
@@ -198,42 +240,32 @@ def write_file(
     config_parts: Callable = get_config_parts,
 ) -> None:
     package["version.packaged"] = cmk_version.__version__
-    tar = tarfile.open(fileobj=file_object, mode="w:gz")  # pylint:disable=consider-using-with
 
-    def create_tar_info(filename: str, size: int) -> tarfile.TarInfo:
-        info = tarfile.TarInfo()
-        info.mtime = int(time.time())
-        info.uid = 0
-        info.gid = 0
-        info.size = size
-        info.mode = 0o644
-        info.type = tarfile.REGTYPE
-        info.name = filename
-        return info
+    with tarfile.open(fileobj=file_object, mode="w:gz") as tar:
 
-    def add_file(filename: str, data: bytes) -> None:
-        info_file = BytesIO(data)
-        info = create_tar_info(filename, len(info_file.getvalue()))
-        tar.addfile(info, info_file)
+        def add_file(filename: str, data: bytes) -> None:
+            info_file = BytesIO(data)
+            info = _create_tar_info(filename, len(info_file.getvalue()))
+            tar.addfile(info, info_file)
 
-    # add the regular info file (Python format)
-    add_file("info", pprint.pformat(package).encode())
+        # add the regular info file (Python format)
+        add_file("info", pprint.pformat(package).encode())
 
-    # add the info file a second time (JSON format) for external tools
-    add_file("info.json", json.dumps(package).encode())
+        # add the info file a second time (JSON format) for external tools
+        add_file("info.json", json.dumps(package).encode())
 
-    # Now pack the actual files into sub tars
-    for part in package_parts() + config_parts():
-        filenames = package["files"].get(part.ident, [])
-        if len(filenames) > 0:
-            logger.log(VERBOSE, "  %s%s%s:", tty.bold, part.title, tty.normal)
-            for f in filenames:
-                logger.log(VERBOSE, "    %s", f)
-            subdata = subprocess.check_output(
-                ["tar", "cf", "-", "--dereference", "--force-local", "-C", part.path] + filenames
-            )
-            add_file(part.ident + ".tar", subdata)
-    tar.close()
+        # Now pack the actual files into sub tars
+        for part in package_parts() + config_parts():
+            filenames = package["files"].get(part.ident, [])
+            if len(filenames) > 0:
+                logger.log(VERBOSE, "  %s%s%s:", tty.bold, part.title, tty.normal)
+                for f in filenames:
+                    logger.log(VERBOSE, "    %s", f)
+                subdata = subprocess.check_output(
+                    ["tar", "cf", "-", "--dereference", "--force-local", "-C", part.path]
+                    + filenames
+                )
+                add_file(part.ident + ".tar", subdata)
 
 
 def get_initial_package_info(pacname: str) -> PackageInfo:
@@ -272,7 +304,7 @@ def remove(package: PackageInfo) -> None:
 
     (package_dir() / package["name"]).unlink()
 
-    _build_setup_search_index_background()
+    _execute_post_package_change_actions(package)
 
 
 def disable(package_name: PackageName, package_info: PackageInfo) -> None:
@@ -388,8 +420,6 @@ def install(file_object: BinaryIO) -> PackageInfo:
         logger.log(VERBOSE, "Installing %s version %s.", pacname, package["version"])
         update = False
 
-    tar = tarfile.open(fileobj=file_object, mode="r:gz")  # pylint:disable=consider-using-with
-
     # Before installing check for conflicts
     keep_files = {}
     for part in get_package_parts() + get_config_parts():
@@ -409,60 +439,58 @@ def install(file_object: BinaryIO) -> PackageInfo:
             elif os.path.exists(path):
                 raise PackageException("File conflict: %s already existing." % path)
 
-    # Now install files, but only unpack files explicitely listed
-    for part in get_package_parts() + get_config_parts():
-        filenames = package["files"].get(part.ident, [])
-        if len(filenames) > 0:
-            logger.log(VERBOSE, "  %s%s%s:", tty.bold, part.title, tty.normal)
-            for fn in filenames:
-                logger.log(VERBOSE, "    %s", fn)
+    with tarfile.open(fileobj=file_object, mode="r:gz") as tar:
+        # Now install files, but only unpack files explicitely listed
+        for part in get_package_parts() + get_config_parts():
+            filenames = package["files"].get(part.ident, [])
+            if len(filenames) > 0:
+                logger.log(VERBOSE, "  %s%s%s:", tty.bold, part.title, tty.normal)
+                for fn in filenames:
+                    logger.log(VERBOSE, "    %s", fn)
 
-            # make sure target directory exists
-            if not os.path.exists(part.path):
-                logger.log(VERBOSE, "    Creating directory %s", part.path)
-                os.makedirs(part.path)
+                # make sure target directory exists
+                if not os.path.exists(part.path):
+                    logger.log(VERBOSE, "    Creating directory %s", part.path)
+                    os.makedirs(part.path)
 
-            tarsource = tar.extractfile(part.ident + ".tar")
-            if tarsource is None:
-                raise PackageException("Failed to open %s.tar" % part.ident)
+                tarsource = tar.extractfile(part.ident + ".tar")
+                if tarsource is None:
+                    raise PackageException("Failed to open %s.tar" % part.ident)
 
-            # Important: Do not preserve the tared timestamp. Checkmk needs to know when the files
-            # been installed for cache invalidation.
-            tardest = subprocess.Popen(  # pylint:disable=consider-using-with
-                ["tar", "xf", "-", "--touch", "-C", part.path] + filenames,
-                stdin=subprocess.PIPE,
-                shell=False,
-                close_fds=True,
-            )
-            if tardest.stdin is None:
-                raise PackageException("Failed to open stdin")
+                # Important: Do not preserve the tared timestamp. Checkmk needs to know when the files
+                # been installed for cache invalidation.
+                with subprocess.Popen(
+                    ["tar", "xf", "-", "--touch", "-C", part.path] + filenames,
+                    stdin=subprocess.PIPE,
+                    shell=False,
+                    close_fds=True,
+                ) as tardest:
+                    if tardest.stdin is None:
+                        raise PackageException("Failed to open stdin")
 
-            while True:
-                data = tarsource.read(4096)
-                if not data:
-                    break
-                tardest.stdin.write(data)
+                    while True:
+                        data = tarsource.read(4096)
+                        if not data:
+                            break
+                        tardest.stdin.write(data)
 
-            tardest.stdin.close()
-            tardest.wait()
+                # Fix permissions of extracted files
+                for filename in filenames:
+                    path = os.path.join(part.path, filename)
+                    desired_perm = _get_permissions(path)
+                    has_perm = os.stat(path).st_mode & 0o7777
+                    if has_perm != desired_perm:
+                        logger.log(
+                            VERBOSE,
+                            "    Fixing permissions of %s: %04o -> %04o",
+                            path,
+                            has_perm,
+                            desired_perm,
+                        )
+                        os.chmod(path, desired_perm)
 
-            # Fix permissions of extracted files
-            for filename in filenames:
-                path = os.path.join(part.path, filename)
-                desired_perm = _get_permissions(path)
-                has_perm = os.stat(path).st_mode & 0o7777
-                if has_perm != desired_perm:
-                    logger.log(
-                        VERBOSE,
-                        "    Fixing permissions of %s: %04o -> %04o",
-                        path,
-                        has_perm,
-                        desired_perm,
-                    )
-                    os.chmod(path, desired_perm)
-
-            if part.ident == "ec_rule_packs":
-                ec.add_rule_pack_proxies(filenames)
+                if part.ident == "ec_rule_packs":
+                    ec.add_rule_pack_proxies(filenames)
 
     # In case of an update remove files from old_package not present in new one
     if update and old_package is not None:
@@ -486,7 +514,7 @@ def install(file_object: BinaryIO) -> PackageInfo:
     # Last but not least install package file
     write_package_info(package)
 
-    _build_setup_search_index_background()
+    _execute_post_package_change_actions(package)
 
     return package
 
@@ -608,18 +636,12 @@ def _normalize_daily_version(version: str) -> str:
     return version
 
 
-def get_all_package_infos() -> Packages:
-    packages = {}
-    for package_name in installed_names():
-        packages[package_name] = read_package_info(package_name)
+def get_unpackaged_files() -> Dict[str, List[str]]:
+    return {part.ident: files for part, files in unpackaged_files().items()}
 
-    return {
-        "installed": packages,
-        "unpackaged": {part.ident: files for part, files in unpackaged_files().items()},
-        "parts": package_part_info(),
-        "optional_packages": get_optional_package_infos(),
-        "disabled_packages": get_disabled_package_infos(),
-    }
+
+def get_installed_package_infos() -> Dict[PackageName, Optional[PackageInfo]]:
+    return {name: read_package_info(name) for name in installed_names()}
 
 
 def get_optional_package_infos() -> Dict[str, PackageInfo]:
@@ -688,8 +710,6 @@ def read_package_info(pacname: PackageName) -> Optional[PackageInfo]:
         with pkg_info_path.open("r", encoding="utf-8") as f:
             package = parse_package_info(f.read())
         package["name"] = pacname  # do not trust package content
-        num_files = sum([len(fl) for fl in package["files"].values()])
-        package["num_files"] = num_files
         return package
     except IOError:
         return None
@@ -702,6 +722,10 @@ def read_package_info(pacname: PackageName) -> Optional[PackageInfo]:
             e,
         )
         return None
+
+
+def package_num_files(package: PackageInfo) -> int:
+    return sum([len(fl) for fl in package["files"].values()])
 
 
 def _files_in_dir(part: str, directory: str, prefix: str = "") -> List[str]:
@@ -778,16 +802,15 @@ def rule_pack_id_to_mkp() -> Dict[str, Any]:
     Every rule pack is contained exactly once in this mapping. If no corresponding
     MKP exists, the value of that mapping is None.
     """
-    package_info = get_all_package_infos()
 
     def mkp_of(rule_pack_file: str) -> Any:
         """Find the MKP for the given file"""
-        for mkp, content in package_info.get("installed", {}).items():
-            if rule_pack_file in content.get("files", {}).get("ec_rule_packs", []):
-                return mkp
+        for package_name, package in get_installed_package_infos().items():
+            if package and rule_pack_file in package.get("files", {}).get("ec_rule_packs", []):
+                return package_name
         return None
 
-    exported_rule_packs = package_info["parts"]["ec_rule_packs"]["files"]
+    exported_rule_packs = package_part_info()["ec_rule_packs"]["files"]
 
     return {os.path.splitext(file_)[0]: mkp_of(file_) for file_ in exported_rule_packs}
 
@@ -937,8 +960,30 @@ def _is_16_feature_pack_package(package_name: PackageName, package_info: Package
     return package_info.get("version", "").startswith("1.")
 
 
+def _execute_post_package_change_actions(package: PackageInfo) -> None:
+    _build_setup_search_index_background()
+
+    if _package_contains_gui_files(package):
+        _reload_apache()
+
+
 def _build_setup_search_index_background() -> None:
     subprocess.run(
         ["init-redis"],
         check=False,
     )
+
+
+def _package_contains_gui_files(package: PackageInfo) -> bool:
+    return "gui" in package["files"] or "web" in package["files"]
+
+
+def _reload_apache() -> None:
+    try:
+        subprocess.run(
+            ["omd", "reload", "apache"],
+            capture_output=True,
+            check=True,
+        )
+    except subprocess.CalledProcessError:
+        logger.error("Error reloading apache", exc_info=True)

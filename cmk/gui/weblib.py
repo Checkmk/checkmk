@@ -16,7 +16,7 @@ from cmk.gui.i18n import _
 @cmk.gui.pages.register("tree_openclose")
 def ajax_tree_openclose() -> None:
     tree = request.get_str_input_mandatory("tree")
-    name = request.get_unicode_input_mandatory("name")
+    name = request.get_str_input_mandatory("name")
 
     user.set_tree_state(tree, name, request.get_str_input("state"))
     user.save_tree_states()

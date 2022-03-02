@@ -37,12 +37,6 @@ table.data td.perfometer.stale div.title {
   color: $font-color-dimmed;
 }
 
-table.data tr.data td.stale.state2,
-table.data tr.data td.stale.hstate1 {
-  color: $font-color-light-grey !important;
-  text-shadow: 0.8px 0.8px 0.8px rgb(255, 136, 136);
-}
-
 tr.groupheader .state span {
   padding: 2px 4px 0;
   border-radius: $theme-border-radius;
@@ -94,7 +88,9 @@ td.fillbackground.state0,
 .state0 span,
 .hstate0 span,
 .timeline .state0,
-.hostmatrix .state0 {
+.hostmatrix .state0,
+div.statea,
+div.stated {
   &,
   a {
     color: $font-color-black !important;
@@ -184,8 +180,8 @@ svg {
   .svcstate,
   .hoststate {
     // Undefined state (e.g. if no metric is available in the gauge dashlet)
-    fill: rgb(0, 142, 255) !important;
-    stroke: rgb(0, 142, 255) !important;
+    fill: $downtime !important;
+    stroke: $downtime !important;
   }
 
   .state0,
@@ -292,11 +288,11 @@ img.pluginurl {
   }
 
   &.dead {
-    background-color: rgb(185, 30, 29);
+    background-color: $danger-dimmed;
   }
 
   &.down {
-    background-color: rgb(246, 0, 0);
+    background-color: $danger;
   }
 
   &.online {
@@ -305,19 +301,19 @@ img.pluginurl {
   }
 
   &.partial {
-    background-color: rgb(189, 138, 63);
+    background-color: $site-state-partial;
   }
 
   &.unknown {
-    background-color: rgb(169, 99, 148);
+    background-color: $site-state-unknown;
   }
 
   &.unreach {
-    background-color: rgb(239, 123, 8);
+    background-color: $orange-2;
   }
 
   &.waiting {
-    background-color: rgb(53, 116, 194);
+    background-color: $hostdown;
   }
 }
 
@@ -409,7 +405,6 @@ td.perfometer {
     height: 24px;
     padding: 0;
     margin: 0;
-    border: 1px solid rgb(170, 170, 170);
     border-spacing: 0;
   }
 }
@@ -478,7 +473,7 @@ table.data {
 
 td.badflag span {
   font-weight: bold;
-  background-color: rgb(255, 102, 68);
+  background-color: $orange-2;
 }
 
 td.goodflag {
@@ -523,10 +518,12 @@ table.data div.objectlist div {
  Sites can be represented by small icons with a size of 24x24 px.
  This is the styling for these icons.
  */
+/* TODO: Reproduce this html element. Is cmk.gui.plugins.views.py:PainterSiteIcon ever rendered?
+ *       The painter is used e.g. in the host group view. */
 img.siteicon {
   width: 24px;
   height: 24px;
-  border: 1px solid rgb(102, 102, 102);
+  border: 1px solid $bi-box-border-color;
 }
 
 /* TODO: Reproduce table.customvars */
@@ -540,7 +537,7 @@ table.data tr.data td table.customvars td {
 
   &:last-child {
     padding-left: 5px;
-    border-left: 1px solid rgb(187, 187, 187);
+    border-left: 1px solid $grey-2;
   }
 }
 

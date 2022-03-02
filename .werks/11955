@@ -6,7 +6,7 @@ Date: 1613724871
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 The ruleset "Kubernetes" that is used to set up the Kubernetes special agent
 can be found in Setup > Agents > VM, Cloud, Container. This ruleset now has

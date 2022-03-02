@@ -1,0 +1,13 @@
+[Unit]
+Description=Checkmk agent controller daemon
+After=network.target
+
+[Service]
+ExecStart=/usr/bin/cmk-agent-ctl daemon
+Type=simple
+Restart=on-failure
+
+User=cmk-agent
+
+[Install]
+WantedBy=multi-user.target

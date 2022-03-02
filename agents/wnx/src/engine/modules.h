@@ -111,8 +111,8 @@ public:
     static bool IsQuickReinstallAllowed();
 
     void prepareToWork();
-    bool isModuleScript(const std::string_view filename);
-    std::wstring buildCommandLine(const std::string_view filename);
+    bool isModuleScript(std::string_view filename);
+    std::wstring buildCommandLine(std::string_view filename);
 
     int findModuleFiles(const std::filesystem::path &root);
     void installModules(const std::filesystem::path &root,

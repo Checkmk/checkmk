@@ -76,6 +76,9 @@ def parse_mknotifyd(info):
             parsed["sites"][site] = site_entry
         elif ":" in line[0]:
             varname, value = line[0].split(":", 1)
+            if varname in ("Site", "Encryption"):
+                # We do not use this data yet...
+                continue
             value = value.strip()
 
             if varname == "Spool":

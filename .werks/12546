@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 When changing the tag id of an already used tag and choose "Fix affected
 folders, hosts and rules" when saving those changes, the following exception

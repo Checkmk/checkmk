@@ -9,14 +9,15 @@
 
 import abc
 import json
-import os
 import re
 import subprocess
+import urllib.parse
 from contextlib import nullcontext
-from typing import Callable, cast, ContextManager, List, Mapping
+from typing import Any, Callable, cast, ContextManager, Dict, List, Mapping
 from typing import Optional as _Optional
+from typing import Sequence
 from typing import Tuple as _Tuple
-from typing import Type
+from typing import Type, Union
 
 from livestatus import SiteConfiguration, SiteConfigurations, SiteId
 
@@ -59,11 +60,11 @@ from cmk.gui.plugins.wato.utils.main_menu import (  # noqa: F401 # pylint: disab
     MainModuleTopic,
     MainModuleTopicAgents,
     MainModuleTopicBI,
-    MainModuleTopicCustom,
     MainModuleTopicEvents,
     MainModuleTopicGeneral,
     MainModuleTopicHosts,
     MainModuleTopicMaintenance,
+    MainModuleTopicMisc,
     MainModuleTopicServices,
     MainModuleTopicUsers,
     MenuItem,
@@ -102,6 +103,7 @@ from cmk.gui.valuespec import (  # noqa: F401 # pylint: disable=unused-import
     FixedValue,
     Float,
     Integer,
+    JSONValue,
     Labels,
     ListChoice,
     ListOf,
@@ -120,6 +122,7 @@ from cmk.gui.valuespec import (  # noqa: F401 # pylint: disable=unused-import
     Tuple,
     Url,
     ValueSpec,
+    ValueSpecDefault,
     ValueSpecHelp,
     ValueSpecText,
 )
@@ -759,13 +762,20 @@ def IndividualOrStoredPassword(  # pylint: disable=redefined-builtin
     )
 
 
-def HTTPProxyReference():
+_allowed_schemes = frozenset({"http", "https", "socks4", "socks4a", "socks5", "socks5h"})
+
+
+def HTTPProxyReference(allowed_schemes=_allowed_schemes):
     """Use this valuespec in case you want the user to configure a HTTP proxy
     The configured value is is used for preparing requests to work in a proxied environment."""
 
     def _global_proxy_choices():
         settings = watolib.ConfigDomainCore().load()
-        return [(p["ident"], p["title"]) for p in settings.get("http_proxies", {}).values()]
+        return [
+            (p["ident"], p["title"])
+            for p in settings.get("http_proxies", {}).values()
+            if urllib.parse.urlparse(p["proxy_url"]).scheme in allowed_schemes
+        ]
 
     return CascadingDropdown(
         title=_("HTTP proxy"),
@@ -804,18 +814,18 @@ def HTTPProxyReference():
                     sorted=True,
                 ),
             ),
-            ("url", _("Use explicit proxy settings"), HTTPProxyInput()),
+            ("url", _("Use explicit proxy settings"), HTTPProxyInput(allowed_schemes)),
         ],
         sorted=False,
     )
 
 
-def HTTPProxyInput():
+def HTTPProxyInput(allowed_schemes=_allowed_schemes):
     """Use this valuespec in case you want the user to input a HTTP proxy setting"""
     return Url(
         title=_("Proxy URL"),
         default_scheme="http",
-        allowed_schemes=["http", "https", "socks4", "socks4a", "socks5", "socks5h"],
+        allowed_schemes=allowed_schemes,
     )
 
 
@@ -1056,9 +1066,11 @@ class RulespecGroupCheckParametersDiscovery(RulespecSubGroup):
 
 # The following function looks like a value spec and in fact
 # can be used like one (but take no parameters)
-def PredictiveLevels(**args):
-    dif = args.get("default_difference", (2.0, 4.0))
-    unitname = args.get("unit", "")
+def PredictiveLevels(
+    default_difference: _Tuple[float, float] = (2.0, 4.0), unit: str = ""
+) -> Dictionary:
+    dif = default_difference
+    unitname = unit
     if unitname:
         unitname += " "
 
@@ -1254,26 +1266,30 @@ def PredictiveLevels(**args):
 
 # To be used as ValueSpec for levels on numeric values, with
 # prediction
-def Levels(**kwargs):
-    def match_levels_alternative(v):
+def Levels(
+    help: _Optional[str] = None,  # pylint: disable=redefined-builtin
+    default_levels: _Tuple[float, float] = (0.0, 0.0),
+    default_difference: _Tuple[float, float] = (0.0, 0.0),
+    default_value: _Optional[_Tuple[float, float]] = None,
+    title: _Optional[str] = None,
+    unit: str = "",
+) -> Alternative:
+    def match_levels_alternative(v: Union[Dict[Any, Any], _Tuple[Any, Any]]) -> int:
         if isinstance(v, dict):
             return 2
         if isinstance(v, tuple) and v != (None, None):
             return 1
         return 0
 
-    help_txt = kwargs.get("help")
-    unit = kwargs.get("unit", "")
     if not isinstance(unit, str):
-        raise Exception("illegal unit for Levels: %r" % (unit,))
-    title = kwargs.get("title")
-    default_levels = kwargs.get("default_levels", (0.0, 0.0))
-    default_difference = kwargs.get("default_difference", (0, 0))
-    default_value = kwargs.get("default_value", default_levels if default_levels else None)
+        raise ValueError(f"illegal unit for Levels: {unit}, expected a string")
+
+    if default_value is None:
+        default_value = default_levels
 
     return Alternative(
         title=title,
-        help=help_txt,
+        help=help,
         elements=[
             FixedValue(
                 None,
@@ -1662,8 +1678,6 @@ class ABCEventsMode(WatoMode, abc.ABC):
                         "Match this rule only during times where the selected timeperiod from the monitoring "
                         "system is active."
                     ),
-                    no_preselect=True,
-                    no_preselect_title=_("Select a timeperiod"),
                 ),
             ),
         ]
@@ -2057,17 +2071,19 @@ class SiteBackupJobs(backup.Jobs):
         super().__init__(backup.site_config_path())
 
     def _apply_cron_config(self):
-        p = subprocess.Popen(  # pylint:disable=consider-using-with
+        completed_process = subprocess.run(
             ["omd", "restart", "crontab"],
             close_fds=True,
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
             encoding="utf-8",
-            stdin=open(os.devnull),  # pylint:disable=consider-using-with
+            stdin=subprocess.DEVNULL,
+            check=False,
         )
-        if p.wait() != 0:
-            out = "Huh???" if p.stdout is None else p.stdout.read()
-            raise MKGeneralException(_("Failed to apply the cronjob config: %s") % out)
+        if completed_process.returncode:
+            raise MKGeneralException(
+                _("Failed to apply the cronjob config: %s") % completed_process.stdout
+            )
 
 
 # TODO: Kept for compatibility with pre-1.6 WATO plugins
@@ -2316,13 +2332,13 @@ class DictHostTagCondition(Transform):
 class HostTagCondition(ValueSpec):
     """ValueSpec for editing a tag-condition"""
 
-    def render_input(self, varprefix, value):
+    def render_input(self, varprefix: str, value: Any) -> None:
         self._render_condition_editor(varprefix, value)
 
-    def from_html_vars(self, varprefix):
+    def from_html_vars(self, varprefix: str) -> Sequence[str]:
         return self._get_tag_conditions(varprefix)
 
-    def _get_tag_conditions(self, varprefix):
+    def _get_tag_conditions(self, varprefix: str) -> Sequence[str]:
         """Retrieve current tag condition settings from HTML variables"""
         if varprefix:
             varprefix += "_"
@@ -2352,13 +2368,13 @@ class HostTagCondition(ValueSpec):
 
         return tag_list
 
-    def canonical_value(self):
+    def canonical_value(self) -> Sequence[str]:
         return []
 
     def value_to_html(self, value: list[str]) -> ValueSpecText:
         return "|".join(value)
 
-    def validate_datatype(self, value, varprefix):
+    def validate_datatype(self, value: Any, varprefix: str) -> None:
         if not isinstance(value, list):
             raise MKUserError(
                 varprefix, _("The list of host tags must be a list, but " "is %r") % type(value)
@@ -2479,11 +2495,11 @@ class HostTagCondition(ValueSpec):
             style="display: none;" if not div_is_open else None,
         )
 
-    def value_to_json(self, value):
-        raise NotImplementedError()
+    def value_to_json(self, value: Sequence[str]) -> JSONValue:
+        raise NotImplementedError()  # FIXME! Violates LSP!
 
-    def value_from_json(self, json_value):
-        raise NotImplementedError()
+    def value_from_json(self, json_value: JSONValue) -> Sequence[str]:
+        raise NotImplementedError()  # FIXME! Violates LSP!
 
 
 class LabelCondition(Transform):
@@ -2663,7 +2679,7 @@ def _single_folder_rule_match_condition():
 
 
 def get_search_expression():
-    search = request.get_unicode_input("search")
+    search = request.get_str_input("search")
     if search is not None:
         search = search.strip().lower()
     return search

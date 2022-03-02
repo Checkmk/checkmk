@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 Fed with input different from what the `md` check is made for it tries to access non-existent
 input elements and crashes with unhandled IndexError exception.

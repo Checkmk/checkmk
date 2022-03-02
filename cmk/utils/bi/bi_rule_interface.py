@@ -23,11 +23,11 @@ from cmk.utils.bi.bi_schema import Schema
 
 
 class BIRulePropertiesSchema(Schema):
-    title = ReqString(default="", example="Rule title")
-    comment = ReqString(default="", example="Rule comment")
-    docu_url = ReqString(default="", example="Rule documentation")
-    icon = ReqString(default="", example="icon1.png")
-    state_messages = ReqDict(default={}, example={})
+    title = ReqString(dump_default="", example="Rule title")
+    comment = ReqString(dump_default="", example="Rule comment")
+    docu_url = ReqString(dump_default="", example="Rule documentation")
+    icon = ReqString(dump_default="", example="icon1.png")
+    state_messages = ReqDict(dump_default={}, example={})
 
 
 class BIRuleProperties(ABCWithSchema):
@@ -54,7 +54,7 @@ class BIRuleProperties(ABCWithSchema):
 
 
 class BIRuleComputationOptionsSchema(Schema):
-    disabled = ReqBoolean(default=False, example=False)
+    disabled = ReqBoolean(dump_default=False, example=False)
 
 
 class BIRuleComputationOptions(ABCWithSchema):

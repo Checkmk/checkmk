@@ -30,10 +30,14 @@ class PoeValues(NamedTuple):
 def check_poe_data(params, poe_data):
     # data sanity-check
     if poe_data.poe_max < 0 or poe_data.poe_used < 0 or poe_data.poe_status not in range(1, 4):
-        return 3, "Device returned faulty data: nominal power: %s, power consumption: %s, operational status: %s" % (
-            str(poe_data.poe_max),
-            str(poe_data.poe_used),
-            str(poe_data.poe_status),
+        return (
+            3,
+            "Device returned faulty data: nominal power: %s, power consumption: %s, operational status: %s"
+            % (
+                str(poe_data.poe_max),
+                str(poe_data.poe_used),
+                str(poe_data.poe_status),
+            ),
         )
 
     # PoE on device is turned ON

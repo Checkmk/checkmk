@@ -36,7 +36,7 @@ $(document).bind("mobileinit", function () {
 // Never allow the mobile page to be opened in an iframe. Redirect top page to the current content page.
 // This will result in a full screen mobile interface page.
 if (top != self) {
-    window.top.location.href = location.toString();
+    window.top!.location.href = location.toString();
 }
 
 $(document).ready(function () {

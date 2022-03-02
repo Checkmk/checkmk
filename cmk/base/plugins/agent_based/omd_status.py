@@ -160,8 +160,8 @@ def check_omd_status(
 
 def cluster_check_omd_status(
     item: str,
-    section_omd_status: Mapping[str, Section],
-    section_omd_info: Mapping[str, Section],
+    section_omd_status: Mapping[str, Optional[Section]],
+    section_omd_info: Mapping[str, Optional[Section]],
 ) -> CheckResult:
     """
     >>> for result in cluster_check_omd_status(
@@ -179,11 +179,11 @@ def cluster_check_omd_status(
     any_running = any(
         section[item]["overall"] != "stopped"
         for section in section_omd_status.values()
-        if item in section
+        if section is not None and item in section
     )
 
     for node, section in section_omd_status.items():
-        if item not in section:
+        if section is None or item not in section:
             continue
         yield from _check_omd_status(item, section[item], any_running, " on %s" % node)
 

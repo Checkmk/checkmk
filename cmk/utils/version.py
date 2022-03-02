@@ -10,7 +10,7 @@ does not offer stable APIs. The code may change at any time."""
 
 from __future__ import annotations
 
-__version__ = "2.1.0i1"
+__version__ = "2.2.0i1"
 
 import datetime
 import enum
@@ -23,6 +23,7 @@ import sys
 import time
 from dataclasses import dataclass
 from functools import lru_cache
+from pathlib import Path
 from typing import Any, Dict, NamedTuple, Tuple, Union
 
 import livestatus
@@ -491,7 +492,7 @@ def parse_check_mk_version(v: str) -> int:
     return int("%02d%02d%02d%05d" % (int(major), int(minor), sub, val))
 
 
-def major_version_parts(version: str) -> Tuple[int, int, int]:
+def base_version_parts(version: str) -> Tuple[int, int, int]:
     match = re.match(r"(\d+).(\d+).(\d+)", version)
     if not match or len(match.groups()) != 3:
         raise ValueError(_("Unable to parse version: %r") % version)
@@ -510,6 +511,36 @@ def is_daily_build_of_master(version: str) -> bool:
     False
     """
     return re.match(r"\d{4}.\d{2}.\d{2}$", version) is not None
+
+
+def is_same_major_version(this_version: str, other_version: str) -> bool:
+    """
+    Nightly branch builds e.g. 2.0.0-2022.01.01 are treated as 2.0.0.
+
+    >>> c = is_same_major_version
+    >>> c("2.0.0-2022.01.01", "2.0.0p3")
+    True
+    >>> c("2022.01.01", "2.0.0p3")
+    True
+    >>> c("2022.01.01", "1.6.0p3")
+    True
+    >>> c("1.6.0", "1.6.0p2")
+    True
+    >>> c("1.7.0", "1.6.0")
+    False
+    >>> c("1.6.0", "1.7.0")
+    False
+    >>> c("2.1.0i1", "2.1.0p2")
+    True
+    >>> c("2.1.0", "2.1.0")
+    True
+    """
+    # We can not decide which is the current base version of the master daily builds. For this
+    # reason we always treat them to be compatbile.
+    if is_daily_build_of_master(this_version) or is_daily_build_of_master(other_version):
+        return True
+
+    return base_version_parts(this_version)[:-1] == base_version_parts(other_version)[:-1]
 
 
 #   .--general infos-------------------------------------------------------.
@@ -538,19 +569,22 @@ def get_general_version_infos() -> Dict[str, Any]:
 
 
 def _get_os_info() -> str:
-    if os.path.exists("/etc/redhat-release"):
-        return open("/etc/redhat-release").readline().strip()
-
-    if os.path.exists("/etc/SuSE-release"):
-        return open("/etc/SuSE-release").readline().strip()
+    for path_release_file in (
+        Path("/etc/redhat-release"),
+        Path("/etc/SuSE-release"),
+    ):
+        if path_release_file.exists():
+            with path_release_file.open() as release_file:
+                return release_file.readline().strip()
 
     info = {}
-    for f in ["/etc/os-release", "/etc/lsb-release"]:
-        if os.path.exists(f):
-            for line in open(f).readlines():  # pylint:disable=consider-using-with
-                if "=" in line:
-                    k, v = line.split("=", 1)
-                    info[k.strip()] = v.strip().strip('"')
+    for path in [Path("/etc/os-release"), Path("/etc/lsb-release")]:
+        if path.exists():
+            with path.open() as release_file:
+                for line in release_file.readlines():
+                    if "=" in line:
+                        k, v = line.split("=", 1)
+                        info[k.strip()] = v.strip().strip('"')
             break
 
     if "PRETTY_NAME" in info:
@@ -569,17 +603,18 @@ def _get_os_info() -> str:
 
 def _current_monitoring_core() -> str:
     try:
-        p = subprocess.Popen(  # pylint:disable=consider-using-with
+        completed_process = subprocess.run(
             ["omd", "config", "show", "CORE"],
             close_fds=True,
-            stdin=open(os.devnull),  # pylint:disable=consider-using-with
+            stdin=subprocess.DEVNULL,
             stdout=subprocess.PIPE,
-            stderr=open(os.devnull, "w"),  # pylint:disable=consider-using-with
+            stderr=subprocess.DEVNULL,
             encoding="utf-8",
+            check=False,
         )
-        return p.communicate()[0].rstrip()
     except OSError as e:
         # Allow running unit tests on systems without omd installed (e.g. on travis)
         if e.errno != errno.ENOENT:
             raise
         return "UNKNOWN"
+    return completed_process.stdout.rstrip()

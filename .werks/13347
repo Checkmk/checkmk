@@ -6,7 +6,7 @@ Date: 1632996269
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 The active check <tt>check_sftp</tt> claimed to accept <tt>--private-key</tt>
 as a command line argument for specifying a private key to be used for the

@@ -14,6 +14,8 @@ from cmk.base.plugins.agent_based.inventory_solaris_pkginfo import (
     parse_solaris_pkginfo,
 )
 
+from .utils_inventory import sort_inventory_result
+
 _INSTALLED_DATE = 123
 
 
@@ -83,4 +85,6 @@ _INSTALLED_DATE = 123
 )
 def test_inventory_solaris_pkginfo(monkeypatch, string_table, expected_result):
     monkeypatch.setattr(time, "mktime", lambda s: _INSTALLED_DATE)
-    assert list(inventory_solaris_pkginfo(parse_solaris_pkginfo(string_table))) == expected_result
+    assert sort_inventory_result(
+        inventory_solaris_pkginfo(parse_solaris_pkginfo(string_table))
+    ) == sort_inventory_result(expected_result)

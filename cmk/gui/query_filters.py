@@ -667,12 +667,12 @@ class TagsQuery(Query):
         # via an URL, e.g. from the virtual host tree snapin
         num = 0
         column = livestatus.lqencode(self.object_type) + "_tags"
-        while value.get("%s%d_op" % (self.var_prefix, num)):
+        while value.get("%s%d_grp" % (self.var_prefix, num)):
             prefix = "%s%d" % (self.var_prefix, num)
             num += 1
 
             op = value.get(prefix + "_op")
-            tag_group = config.tags.get_tag_group(value[prefix + "_grp"])
+            tag_group = config.tags.get_tag_group(value.get(prefix + "_grp", ""))
             tag = value.get(prefix + "_val", "")
 
             if not tag_group or not op:

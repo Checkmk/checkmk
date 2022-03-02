@@ -14,8 +14,8 @@ from _pytest.monkeypatch import (
 )
 
 from cmk.special_agents.agent_aws import (
+    _create_lamdba_sections,
     AWSConfig,
-    create_lamdba_sections,
     LambdaCloudwatch,
     LambdaCloudwatchInsights,
     LambdaProvisionedConcurrency,
@@ -93,7 +93,7 @@ def get_lambda_sections(
     LambdaCloudwatch,
     LambdaCloudwatchInsights,
 ]:
-    return create_lamdba_sections(
+    return _create_lamdba_sections(
         FakeLambdaClient(False),
         FakeCloudwatchClient(),
         FakeCloudwatchClientLogsClient(),

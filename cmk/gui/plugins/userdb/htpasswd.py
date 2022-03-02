@@ -89,7 +89,7 @@ class Htpasswd:
 def hash_password(password: str) -> str:
     # The rounds aka workfactor should be more than 10
     # it defaults to 12 anyways, but I prefer explicity
-    return bcrypt.hash(password, rounds=12)
+    return bcrypt.using(rounds=12).hash(password)
 
 
 def check_password(password: str, pwhash: str) -> bool:

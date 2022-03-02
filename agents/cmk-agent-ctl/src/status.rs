@@ -2,8 +2,9 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
-use super::{agent_receiver_api, certs, config};
+use super::{agent_receiver_api, certs, config, site_spec};
 use anyhow::{Context, Result as AnyhowResult};
+use serde_with::DisplayFromStr;
 
 #[derive(serde::Serialize)]
 struct CertInfo {
@@ -49,16 +50,20 @@ enum RemoteConnectionStatusResponse {
     Error(RemoteConnectionError),
 }
 
+#[serde_with::serde_as]
 #[derive(serde::Serialize)]
 struct ConnectionStatus {
-    connection: String,
-    uuid: String,
+    coordinates: Option<site_spec::Coordinates>,
+    #[serde_as(as = "DisplayFromStr")]
+    uuid: uuid::Uuid,
     local: LocalConnectionStatus,
     remote: Option<RemoteConnectionStatusResponse>,
 }
 
 #[derive(serde::Serialize)]
 struct Status {
+    ip_allowlist: Vec<String>,
+    allow_legacy_pull: bool,
     connections: Vec<ConnectionStatus>,
 }
 
@@ -115,11 +120,12 @@ impl std::fmt::Display for RemoteConnectionError {
 
 impl RemoteConnectionStatusResponse {
     fn from(
-        server_address: &str,
+        coordinates: &site_spec::Coordinates,
         connection: &config::Connection,
+        agent_rec_api: &impl agent_receiver_api::Status,
     ) -> RemoteConnectionStatusResponse {
-        match agent_receiver_api::Api::status(
-            server_address,
+        match agent_rec_api.status(
+            coordinates,
             &connection.root_cert,
             &connection.uuid,
             &connection.certificate,
@@ -138,25 +144,30 @@ impl RemoteConnectionStatusResponse {
 
 impl ConnectionStatus {
     fn from_standard_conn(
-        server: &str,
+        coordinates: &site_spec::Coordinates,
         conn: &config::Connection,
         conn_type: config::ConnectionType,
+        agent_rec_api: &impl agent_receiver_api::Status,
     ) -> ConnectionStatus {
         ConnectionStatus {
-            connection: String::from(server),
-            uuid: String::from(&conn.uuid),
+            coordinates: Some(coordinates.clone()),
+            uuid: conn.uuid,
             local: LocalConnectionStatus {
                 connection_type: conn_type,
                 cert_info: CertParsingResult::from(&conn.certificate),
             },
-            remote: Some(RemoteConnectionStatusResponse::from(server, conn)),
+            remote: Some(RemoteConnectionStatusResponse::from(
+                coordinates,
+                conn,
+                agent_rec_api,
+            )),
         }
     }
 
-    fn from_imported_conn(conn: &config::Connection, idx: usize) -> ConnectionStatus {
+    fn from_imported_conn(conn: &config::Connection) -> ConnectionStatus {
         ConnectionStatus {
-            connection: format!("imported-{}", idx),
-            uuid: String::from(&conn.uuid),
+            coordinates: None,
+            uuid: conn.uuid,
             local: LocalConnectionStatus {
                 connection_type: config::ConnectionType::Pull,
                 cert_info: CertParsingResult::from(&conn.certificate),
@@ -256,11 +267,14 @@ impl ConnectionStatus {
 
     fn to_human_readable(&self) -> String {
         format!(
-            "Connection: {}\nUUID: {}\nLocal:\n\t{}\nRemote:\n\t{}",
-            self.connection,
+            "{}\n\tUUID: {}\n\tLocal:\n\t\t{}\n\tRemote:\n\t\t{}",
+            match &self.coordinates {
+                Some(coord) => format!("Connection: {}", coord),
+                None => "Imported connection:".to_string(),
+            },
             self.uuid,
-            self.local_lines_readable().join("\n\t"),
-            self.remote_lines_readable().join("\n\t")
+            self.local_lines_readable().join("\n\t\t"),
+            self.remote_lines_readable().join("\n\t\t")
         )
     }
 }
@@ -272,28 +286,37 @@ impl std::fmt::Display for ConnectionStatus {
 }
 
 impl Status {
-    fn from(registry: config::Registry) -> Status {
+    fn from(
+        registry: &config::Registry,
+        ip_allowlist: Vec<String>,
+        allow_legacy_pull: bool,
+        agent_rec_api: &impl agent_receiver_api::Status,
+    ) -> Status {
         let mut conn_stats = Vec::new();
 
-        for (server, push_conn) in registry.push_connections() {
+        for (coordinates, push_conn) in registry.push_connections() {
             conn_stats.push(ConnectionStatus::from_standard_conn(
-                server,
+                coordinates,
                 push_conn,
                 config::ConnectionType::Push,
+                agent_rec_api,
             ));
         }
-        for (server, pull_conn) in registry.standard_pull_connections() {
+        for (coordinates, pull_conn) in registry.standard_pull_connections() {
             conn_stats.push(ConnectionStatus::from_standard_conn(
-                server,
+                coordinates,
                 pull_conn,
                 config::ConnectionType::Pull,
+                agent_rec_api,
             ));
         }
-        for (idx, imp_pull_conn) in registry.imported_pull_connections().enumerate() {
-            conn_stats.push(ConnectionStatus::from_imported_conn(imp_pull_conn, idx + 1));
+        for imp_pull_conn in registry.imported_pull_connections() {
+            conn_stats.push(ConnectionStatus::from_imported_conn(imp_pull_conn));
         }
 
         Status {
+            ip_allowlist,
+            allow_legacy_pull,
             connections: conn_stats,
         }
     }
@@ -315,15 +338,26 @@ impl std::fmt::Display for Status {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         write!(
             f,
-            "{}",
+            "IP allowlist: {}{}{}",
+            match self.ip_allowlist.is_empty() {
+                true => String::from("any"),
+                false => self.ip_allowlist.join(" "),
+            },
+            match self.allow_legacy_pull {
+                true => "\nLegacy mode: enabled",
+                false => "",
+            },
             if self.connections.is_empty() {
-                String::from("No connections")
+                String::from("\nNo connections")
             } else {
-                self.connections
-                    .iter()
-                    .map(|conn_stat| format!("{}", conn_stat))
-                    .collect::<Vec<String>>()
-                    .join("\n\n\n")
+                format!(
+                    "\n\n\n{}",
+                    self.connections
+                        .iter()
+                        .map(|conn_stat| format!("{}", conn_stat))
+                        .collect::<Vec<String>>()
+                        .join("\n\n\n"),
+                )
             }
         )
     }
@@ -336,14 +370,39 @@ fn fmt_option_to_str(op: &Option<impl std::fmt::Display>, none_str: &str) -> Str
     }
 }
 
-pub fn status(registry: config::Registry, json: bool) -> AnyhowResult<()> {
-    println!("{}", Status::from(registry).to_string(json)?);
+fn _status(
+    registry: &config::Registry,
+    pull_config: &config::PullConfig,
+    json: bool,
+    agent_rec_api: &impl agent_receiver_api::Status,
+) -> AnyhowResult<String> {
+    Status::from(
+        registry,
+        pull_config.allowed_ip.to_vec(),
+        pull_config.allow_legacy_pull(),
+        agent_rec_api,
+    )
+    .to_string(json)
+}
+
+pub fn status(
+    registry: &config::Registry,
+    pull_config: &config::PullConfig,
+    json: bool,
+) -> AnyhowResult<()> {
+    println!(
+        "{}",
+        _status(registry, pull_config, json, &agent_receiver_api::Api {})?
+    );
     Ok(())
 }
 
 #[cfg(test)]
-mod tests {
+mod test_status {
+    use super::super::cli;
+    use super::super::config::TOMLLoader;
     use super::*;
+    use std::str::FromStr;
 
     #[test]
     fn test_connection_status_fmt_normal() {
@@ -351,8 +410,8 @@ mod tests {
             format!(
                 "{}",
                 ConnectionStatus {
-                    connection: String::from("localhost:8000"),
-                    uuid: String::from("abc-123"),
+                    coordinates: Some(site_spec::Coordinates::from_str("localhost:8000/site").unwrap()),
+                    uuid: uuid::Uuid::from_str("99f56bbc-5965-4b34-bc70-1959ad1d32d6").unwrap(),
                     local: LocalConnectionStatus {
                         connection_type: config::ConnectionType::Pull,
                         cert_info: CertParsingResult::Success(CertInfo {
@@ -371,16 +430,16 @@ mod tests {
                 }
             ),
             String::from(
-                "Connection: localhost:8000\n\
-                 UUID: abc-123\n\
-                 Local:\n\
-                 \tConnection type: pull-agent\n\
-                 \tCertificate issuer: Site 'site' local CA\n\
-                 \tCertificate validity: Thu, 16 Dec 2021 08:18:41 +0000 - Tue, 18 Apr 3020 08:18:41 +0000\n\
-                 Remote:\n\
-                 \tConnection type: pull-agent\n\
-                 \tRegistration state: operational\n\
-                 \tHost name: my-host"
+                "Connection: localhost:8000/site\n\
+                 \tUUID: 99f56bbc-5965-4b34-bc70-1959ad1d32d6\n\
+                 \tLocal:\n\
+                 \t\tConnection type: pull-agent\n\
+                 \t\tCertificate issuer: Site 'site' local CA\n\
+                 \t\tCertificate validity: Thu, 16 Dec 2021 08:18:41 +0000 - Tue, 18 Apr 3020 08:18:41 +0000\n\
+                 \tRemote:\n\
+                 \t\tConnection type: pull-agent\n\
+                 \t\tRegistration state: operational\n\
+                 \t\tHost name: my-host"
             )
         );
     }
@@ -391,8 +450,8 @@ mod tests {
             format!(
                 "{}",
                 ConnectionStatus {
-                    connection: String::from("localhost:8000"),
-                    uuid: String::from("abc-123"),
+                    coordinates: Some(site_spec::Coordinates::from_str("localhost:8000/site").unwrap()),
+                    uuid: uuid::Uuid::from_str("99f56bbc-5965-4b34-bc70-1959ad1d32d6").unwrap(),
                     local: LocalConnectionStatus {
                         connection_type: config::ConnectionType::Pull,
                         cert_info: CertParsingResult::Success(CertInfo {
@@ -411,16 +470,16 @@ mod tests {
                 }
             ),
             String::from(
-                "Connection: localhost:8000\n\
-                 UUID: abc-123\n\
-                 Local:\n\
-                 \tConnection type: pull-agent\n\
-                 \tCertificate issuer: Site 'site' local CA\n\
-                 \tCertificate validity: Thu, 16 Dec 2021 08:18:41 +0000 - Tue, 18 Apr 3020 08:18:41 +0000\n\
-                 Remote:\n\
-                 \tConnection type: pull-agent\n\
-                 \tRegistration state: discoverable\n\
-                 \tHost name: my-host"
+                "Connection: localhost:8000/site\n\
+                 \tUUID: 99f56bbc-5965-4b34-bc70-1959ad1d32d6\n\
+                 \tLocal:\n\
+                 \t\tConnection type: pull-agent\n\
+                 \t\tCertificate issuer: Site 'site' local CA\n\
+                 \t\tCertificate validity: Thu, 16 Dec 2021 08:18:41 +0000 - Tue, 18 Apr 3020 08:18:41 +0000\n\
+                 \tRemote:\n\
+                 \t\tConnection type: pull-agent\n\
+                 \t\tRegistration state: discoverable\n\
+                 \t\tHost name: my-host"
             )
         );
     }
@@ -431,8 +490,8 @@ mod tests {
             format!(
                 "{}",
                 ConnectionStatus {
-                    connection: String::from("imported-1"),
-                    uuid: String::from("abc-123"),
+                    coordinates: None,
+                    uuid: uuid::Uuid::from_str("99f56bbc-5965-4b34-bc70-1959ad1d32d6").unwrap(),
                     local: LocalConnectionStatus {
                         connection_type: config::ConnectionType::Pull,
                         cert_info: CertParsingResult::Success(CertInfo {
@@ -445,14 +504,14 @@ mod tests {
                 }
             ),
             String::from(
-                "Connection: imported-1\n\
-                 UUID: abc-123\n\
-                 Local:\n\
-                 \tConnection type: pull-agent\n\
-                 \tCertificate issuer: Site 'site' local CA\n\
-                 \tCertificate validity: Thu, 16 Dec 2021 08:18:41 +0000 - Tue, 18 Apr 3020 08:18:41 +0000\n\
-                 Remote:\n\
-                 \tNo remote address (imported connection)"
+                "Imported connection:\n\
+                 \tUUID: 99f56bbc-5965-4b34-bc70-1959ad1d32d6\n\
+                 \tLocal:\n\
+                 \t\tConnection type: pull-agent\n\
+                 \t\tCertificate issuer: Site 'site' local CA\n\
+                 \t\tCertificate validity: Thu, 16 Dec 2021 08:18:41 +0000 - Tue, 18 Apr 3020 08:18:41 +0000\n\
+                 \tRemote:\n\
+                 \t\tNo remote address (imported connection)"
             )
         );
     }
@@ -463,8 +522,10 @@ mod tests {
             format!(
                 "{}",
                 ConnectionStatus {
-                    connection: String::from("localhost:8000"),
-                    uuid: String::from("abc-123"),
+                    coordinates: Some(
+                        site_spec::Coordinates::from_str("localhost:8000/site").unwrap()
+                    ),
+                    uuid: uuid::Uuid::from_str("99f56bbc-5965-4b34-bc70-1959ad1d32d6").unwrap(),
                     local: LocalConnectionStatus {
                         connection_type: config::ConnectionType::Pull,
                         cert_info: CertParsingResult::Error(String::from("parsing_error"))
@@ -475,13 +536,13 @@ mod tests {
                 }
             ),
             String::from(
-                "Connection: localhost:8000\n\
-                 UUID: abc-123\n\
-                 Local:\n\
-                 \tConnection type: pull-agent\n\
-                 \tCertificate parsing failed (!!)\n\
-                 Remote:\n\
-                 \tConnection error: unspecified error (!!)"
+                "Connection: localhost:8000/site\n\
+                 \tUUID: 99f56bbc-5965-4b34-bc70-1959ad1d32d6\n\
+                 \tLocal:\n\
+                 \t\tConnection type: pull-agent\n\
+                 \t\tCertificate parsing failed (!!)\n\
+                 \tRemote:\n\
+                 \t\tConnection error: unspecified error (!!)"
             )
         );
     }
@@ -492,8 +553,8 @@ mod tests {
             format!(
                 "{}",
                 ConnectionStatus {
-                    connection: String::from("localhost:8000"),
-                    uuid: String::from("abc-123"),
+                    coordinates: Some(site_spec::Coordinates::from_str("localhost:8000/site").unwrap()),
+                    uuid: uuid::Uuid::from_str("99f56bbc-5965-4b34-bc70-1959ad1d32d6").unwrap(),
                     local: LocalConnectionStatus {
                         connection_type: config::ConnectionType::Pull,
                         cert_info: CertParsingResult::Success(CertInfo {
@@ -508,14 +569,14 @@ mod tests {
                 }
             ),
             String::from(
-                "Connection: localhost:8000\n\
-                 UUID: abc-123\n\
-                 Local:\n\
-                 \tConnection type: pull-agent\n\
-                 \tCertificate issuer: Site 'site' local CA\n\
-                 \tCertificate validity: Thu, 16 Dec 2021 08:18:41 +0000 - Tue, 18 Apr 3020 08:18:41 +0000\n\
-                 Remote:\n\
-                 \tConnection error: refused (!!)"
+                "Connection: localhost:8000/site\n\
+                 \tUUID: 99f56bbc-5965-4b34-bc70-1959ad1d32d6\n\
+                 \tLocal:\n\
+                 \t\tConnection type: pull-agent\n\
+                 \t\tCertificate issuer: Site 'site' local CA\n\
+                 \t\tCertificate validity: Thu, 16 Dec 2021 08:18:41 +0000 - Tue, 18 Apr 3020 08:18:41 +0000\n\
+                 \tRemote:\n\
+                 \t\tConnection error: refused (!!)"
             )
         );
     }
@@ -526,8 +587,8 @@ mod tests {
             format!(
                 "{}",
                 ConnectionStatus {
-                    connection: String::from("localhost:8000"),
-                    uuid: String::from("abc-123"),
+                    coordinates: Some(site_spec::Coordinates::from_str("localhost:8000/site").unwrap()),
+                    uuid: uuid::Uuid::from_str("99f56bbc-5965-4b34-bc70-1959ad1d32d6").unwrap(),
                     local: LocalConnectionStatus {
                         connection_type: config::ConnectionType::Pull,
                         cert_info: CertParsingResult::Success(CertInfo {
@@ -546,16 +607,16 @@ mod tests {
                 }
             ),
             String::from(
-                "Connection: localhost:8000\n\
-                 UUID: abc-123\n\
-                 Local:\n\
-                 \tConnection type: pull-agent\n\
-                 \tCertificate issuer: Site 'site' local CA\n\
-                 \tCertificate validity: Thu, 16 Dec 2021 08:18:41 +0000 - Tue, 18 Apr 3020 08:18:41 +0000\n\
-                 Remote:\n\
-                 \tConnection type: push-agent (!!)\n\
-                 \tRegistration state: operational\n\
-                 \tHost name: my-host"
+                "Connection: localhost:8000/site\n\
+                 \tUUID: 99f56bbc-5965-4b34-bc70-1959ad1d32d6\n\
+                 \tLocal:\n\
+                 \t\tConnection type: pull-agent\n\
+                 \t\tCertificate issuer: Site 'site' local CA\n\
+                 \t\tCertificate validity: Thu, 16 Dec 2021 08:18:41 +0000 - Tue, 18 Apr 3020 08:18:41 +0000\n\
+                 \tRemote:\n\
+                 \t\tConnection type: push-agent (!!)\n\
+                 \t\tRegistration state: operational\n\
+                 \t\tHost name: my-host"
             )
         );
     }
@@ -566,8 +627,8 @@ mod tests {
             format!(
                 "{}",
                 ConnectionStatus {
-                    connection: String::from("localhost:8000"),
-                    uuid: String::from("abc-123"),
+                    coordinates: Some(site_spec::Coordinates::from_str("localhost:8000/site").unwrap()),
+                    uuid: uuid::Uuid::from_str("99f56bbc-5965-4b34-bc70-1959ad1d32d6").unwrap(),
                     local: LocalConnectionStatus {
                         connection_type: config::ConnectionType::Pull,
                         cert_info: CertParsingResult::Success(CertInfo {
@@ -586,26 +647,30 @@ mod tests {
                 }
             ),
             String::from(
-                "Connection: localhost:8000\n\
-                 UUID: abc-123\n\
-                 Local:\n\
-                 \tConnection type: pull-agent\n\
-                 \tCertificate issuer: Site 'site' local CA\n\
-                 \tCertificate validity: Thu, 16 Dec 2021 08:18:41 +0000 - Tue, 18 Apr 3020 08:18:41 +0000\n\
-                 Remote:\n\
-                 \tConnection type: pull-agent\n\
-                 \tRegistration state: unknown (!!)\n\
-                 \tHost name: unknown"
+                "Connection: localhost:8000/site\n\
+                 \tUUID: 99f56bbc-5965-4b34-bc70-1959ad1d32d6\n\
+                 \tLocal:\n\
+                 \t\tConnection type: pull-agent\n\
+                 \t\tCertificate issuer: Site 'site' local CA\n\
+                 \t\tCertificate validity: Thu, 16 Dec 2021 08:18:41 +0000 - Tue, 18 Apr 3020 08:18:41 +0000\n\
+                 \tRemote:\n\
+                 \t\tConnection type: pull-agent\n\
+                 \t\tRegistration state: unknown (!!)\n\
+                 \t\tHost name: unknown"
             )
         );
     }
 
     fn build_status() -> Status {
         Status {
+            ip_allowlist: vec![String::from("192.168.1.13"), String::from("[::1]")],
+            allow_legacy_pull: false,
             connections: vec![
                 ConnectionStatus {
-                    connection: String::from("localhost:8000"),
-                    uuid: String::from("abc-123"),
+                    coordinates: Some(
+                        site_spec::Coordinates::from_str("localhost:8000/site").unwrap(),
+                    ),
+                    uuid: uuid::Uuid::from_str("50611369-7a42-4c0b-927e-9a14330401fe").unwrap(),
                     local: LocalConnectionStatus {
                         connection_type: config::ConnectionType::Pull,
                         cert_info: CertParsingResult::Success(CertInfo {
@@ -623,8 +688,10 @@ mod tests {
                     )),
                 },
                 ConnectionStatus {
-                    connection: String::from("somehwere:8000"),
-                    uuid: String::from("ghghhfjdkgf123"),
+                    coordinates: Some(
+                        site_spec::Coordinates::from_str("somewhere:8000/site2").unwrap(),
+                    ),
+                    uuid: uuid::Uuid::from_str("3c87778b-8bb8-434d-bcc6-6d05f2668c80").unwrap(),
                     local: LocalConnectionStatus {
                         connection_type: config::ConnectionType::Push,
                         cert_info: CertParsingResult::Success(CertInfo {
@@ -649,25 +716,27 @@ mod tests {
     fn test_status_str_human_readable() {
         assert_eq!(
             build_status().to_string(false).unwrap(),
-            "Connection: localhost:8000\n\
-             UUID: abc-123\n\
-             Local:\n\
-             \tConnection type: pull-agent\n\
-             \tCertificate issuer: Site 'site' local CA\n\
-             \tCertificate validity: Thu, 16 Dec 2021 08:18:41 +0000 - Tue, 18 Apr 3020 08:18:41 +0000\n\
-             Remote:\n\
-             \tConnection type: pull-agent\n\
-             \tRegistration state: operational\n\
-             \tHost name: my-host\n\n\n\
-             Connection: somehwere:8000\n\
-             UUID: ghghhfjdkgf123\nLocal:\n\
-             \tConnection type: push-agent\n\
-             \tCertificate issuer: Site 'site2' local CA\n\
-             \tCertificate validity: Thu, 16 Dec 2021 08:18:41 +0000 - Tue, 18 Apr 3020 08:18:41 +0000\n\
-             Remote:\n\
-             \tConnection type: push-agent\n\
-             \tRegistration state: operational\n\
-             \tHost name: my-host2"
+            "IP allowlist: 192.168.1.13 [::1]\n\n\n\
+             Connection: localhost:8000/site\n\
+             \tUUID: 50611369-7a42-4c0b-927e-9a14330401fe\n\
+             \tLocal:\n\
+             \t\tConnection type: pull-agent\n\
+             \t\tCertificate issuer: Site 'site' local CA\n\
+             \t\tCertificate validity: Thu, 16 Dec 2021 08:18:41 +0000 - Tue, 18 Apr 3020 08:18:41 +0000\n\
+             \tRemote:\n\
+             \t\tConnection type: pull-agent\n\
+             \t\tRegistration state: operational\n\
+             \t\tHost name: my-host\n\n\n\
+             Connection: somewhere:8000/site2\n\
+             \tUUID: 3c87778b-8bb8-434d-bcc6-6d05f2668c80\n\
+             \tLocal:\n\
+             \t\tConnection type: push-agent\n\
+             \t\tCertificate issuer: Site 'site2' local CA\n\
+             \t\tCertificate validity: Thu, 16 Dec 2021 08:18:41 +0000 - Tue, 18 Apr 3020 08:18:41 +0000\n\
+             \tRemote:\n\
+             \t\tConnection type: push-agent\n\
+             \t\tRegistration state: operational\n\
+             \t\tHost name: my-host2"
         );
     }
 
@@ -683,11 +752,89 @@ mod tests {
     fn test_status_str_empty() {
         assert_eq!(
             Status {
+                ip_allowlist: vec![],
+                allow_legacy_pull: true,
                 connections: vec![],
             }
             .to_string(false)
             .unwrap(),
-            "No connections"
+            "IP allowlist: any\n\
+             Legacy mode: enabled\n\
+             No connections"
+        );
+    }
+
+    struct MockApi {}
+
+    impl agent_receiver_api::Status for MockApi {
+        fn status(
+            &self,
+            _coordinates: &site_spec::Coordinates,
+            _root_cert: &str,
+            _uuid: &uuid::Uuid,
+            _certificate: &str,
+        ) -> Result<agent_receiver_api::StatusResponse, agent_receiver_api::StatusError> {
+            Ok(agent_receiver_api::StatusResponse {
+                hostname: Some(String::from("host")),
+                status: None,
+                connection_type: Some(config::ConnectionType::Pull),
+                message: None,
+            })
+        }
+    }
+
+    #[test]
+    fn test_status_end_to_end() {
+        let mut push = std::collections::HashMap::new();
+        push.insert(
+            site_spec::Coordinates::from_str("server:8000/push-site").unwrap(),
+            config::Connection {
+                uuid: uuid::Uuid::from_str("99f56bbc-5965-4b34-bc70-1959ad1d32d6").unwrap(),
+                private_key: String::from("private_key"),
+                certificate: String::from("certificate"),
+                root_cert: String::from("root_cert"),
+            },
+        );
+        let registry = config::Registry::new(
+            config::RegisteredConnections {
+                push,
+                pull: std::collections::HashMap::new(),
+                pull_imported: std::collections::HashSet::new(),
+            },
+            std::path::PathBuf::from(&tempfile::NamedTempFile::new().unwrap().into_temp_path()),
+        )
+        .unwrap();
+
+        assert_eq!(
+            _status(
+                &registry,
+                &config::PullConfig::new(
+                    config::ConfigFromDisk::new().unwrap(),
+                    cli::PullArgs {
+                        port: None,
+                        allowed_ip: None,
+                        logging_opts: cli::LoggingOpts { verbose: 0 },
+                    },
+                    config::LegacyPullMarker::new(&std::path::PathBuf::from(
+                        &tempfile::NamedTempFile::new().unwrap().into_temp_path()
+                    )),
+                    registry.clone()
+                )
+                .unwrap(),
+                false,
+                &MockApi {},
+            )
+            .unwrap(),
+            "IP allowlist: any\n\n\n\
+             Connection: server:8000/push-site\n\
+             \tUUID: 99f56bbc-5965-4b34-bc70-1959ad1d32d6\n\
+             \tLocal:\n\
+             \t\tConnection type: push-agent\n\
+             \t\tCertificate parsing failed (!!)\n\
+             \tRemote:\n\
+             \t\tConnection type: pull-agent (!!)\n\
+             \t\tRegistration state: operational\n\
+             \t\tHost name: host"
         );
     }
 }

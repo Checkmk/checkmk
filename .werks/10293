@@ -6,7 +6,7 @@ Date: 1610375536
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 The host_config GET REST API endpoint now accepts an "effective_attributes" query, parameter. When
 this parameter is set, all the parameters of the host and all it's parent folders are combined and

@@ -17,7 +17,7 @@ from omdlib.utils import delete_directory_contents
 @pytest.fixture(name="tmp_fstab")
 def fixture_tmp_fstab(tmp_path, monkeypatch):
     fstab_path = tmp_path / "fstab"
-    monkeypatch.setattr(omdlib.tmpfs, "fstab_path", lambda: str(fstab_path))
+    monkeypatch.setattr(omdlib.tmpfs, "fstab_path", lambda: fstab_path)
     return fstab_path
 
 

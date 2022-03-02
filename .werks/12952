@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 Some endpoints of host_config and folder_config had the unspecific endpoint-type of
 DomainObject and DomainObjectCollection. These have now been upgraded to HostConfigCollection,

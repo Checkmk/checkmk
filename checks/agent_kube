@@ -1,20 +1,31 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import Any, Mapping, Optional, Sequence, Union
 
-def agent_kube_arguments(params, hostname, ipaddress):
+
+def _timeouts(timeouts: Mapping[str, int], arg_prefix: str) -> Sequence[str]:
+    args = []
+    if (connect := timeouts.get("connect")) is not None:
+        args.append(f"--{arg_prefix}-connect-timeout")
+        args.append(str(connect))
+    if (read := timeouts.get("read")) is not None:
+        args.append(f"--{arg_prefix}-read-timeout")
+        args.append(str(read))
+    return args
+
+
+def agent_kube_arguments(
+    params: Mapping[str, Any], hostname: str, ipaddress: Optional[str]
+) -> Sequence[Union[str, tuple[str, str, str]]]:
     args = ["--cluster", params["cluster-name"]]
-
-    api_server_params = params["kubernetes-api-server"]
-
-    if "token" in api_server_params:
-        args.extend(["--token", passwordstore_get_cmdline("%s", api_server_params["token"])])
+    args.extend(["--token", passwordstore_get_cmdline("%s", params["token"])])
 
     args.append("--monitored-objects")
-    for monitored_object in params.get("monitored_objects", ["nodes", "deployments", "pods"]):
+    for monitored_object in params.get("monitored-objects", ["nodes", "deployments", "pods"]):
         args.append(monitored_object)
 
     if "namespaces" in params:
@@ -23,27 +34,35 @@ def agent_kube_arguments(params, hostname, ipaddress):
             args.append(f"--{namespace_filter_option}")
             args.append(namespace_pattern)
 
-    args.append("--api-server-endpoint")
-    configured_endpoint_name, configured_endpoint = api_server_params["endpoint"]
-    if configured_endpoint_name == "url_custom":
-        args.append(configured_endpoint)
-    else:
-        protocol = configured_endpoint["protocol"]
-        address = {
-            "hostname": hostname,
-            "ipaddress": ipaddress,
-        }[configured_endpoint_name]
-        port = f":{configured_endpoint['port']}" if "port" in configured_endpoint else ""
-        args.append(f"{protocol}://{address}{port}")
-
-    agent_options = params["cluster-agent"]
-    args.append("--cluster-agent-endpoint")
-    args.append(
-        f'{agent_options["protocol"]}://{agent_options["node_ip"]}:{agent_options["connection_port"]}'
+    api_params = params["kubernetes-api-server"]
+    args.extend(["--api-server-endpoint", api_params["endpoint"]])
+    if api_params.get("verify-cert"):
+        args.append("--verify-cert-api")
+    args.extend(
+        [
+            "--api-server-proxy",
+            get_http_proxy(api_params.get("proxy", ("environment", "environment"))).serialize(),
+        ]
     )
+    if api_timeouts := api_params.get("timeout"):
+        args.extend(_timeouts(api_timeouts, "k8s-api"))
 
-    if params.get("verify-cert"):
-        args.append("--verify-cert")
+    if (collector_params := params.get("cluster-collector")) is None:
+        return args
+
+    args.extend(["--cluster-collector-endpoint", collector_params["endpoint"]])
+    if collector_params.get("verify-cert"):
+        args.append("--verify-cert-collector")
+    if collector_timeouts := collector_params.get("timeout"):
+        args.extend(_timeouts(collector_timeouts, "cluster-collector"))
+    args.extend(
+        [
+            "--cluster-collector-proxy",
+            get_http_proxy(
+                collector_params.get("proxy", ("environment", "environment"))
+            ).serialize(),
+        ]
+    )
 
     return args
 

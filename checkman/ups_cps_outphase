@@ -1,7 +1,7 @@
 title: CPS UPS Device: Output Phase
 agents: snmp
 catalog: hw/power/cps
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  The check monitors the voltage, frequency, current and load

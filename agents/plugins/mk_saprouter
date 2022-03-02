@@ -9,19 +9,15 @@
 
 # Disable unused variable error (needed to keep track of version)
 # shellcheck disable=SC2034
-CMK_VERSION="2.1.0i1"
+CMK_VERSION="2.2.0i1"
 
 # Plugin for SAP router
 
-
-# shellcheck source=../cfg_example/saprouter.cfg
+# shellcheck source=agents/cfg_examples/saprouter.cfg
 . "$MK_CONFDIR/saprouter.cfg" || exit 1
 
-
-if [ ! -z "$SAPROUTER_USER" ] && [ ! -z "$SAPGENPSE_PATH" ]
-then
-    if type "${SAPGENPSE_PATH}/sapgenpse" > /dev/null
-    then
+if [ -n "$SAPROUTER_USER" ] && [ -n "$SAPGENPSE_PATH" ]; then
+    if type "${SAPGENPSE_PATH}/sapgenpse" >/dev/null; then
         echo "<<<saprouter_cert>>>"
         su - "$SAPROUTER_USER" -c "${SAPGENPSE_PATH}/sapgenpse get_my_name -n validity 2>&1"
     fi

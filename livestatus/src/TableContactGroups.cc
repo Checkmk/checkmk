@@ -11,7 +11,6 @@
 #include "Column.h"
 #include "ListColumn.h"
 #include "MonitoringCore.h"
-#include "NagiosGlobals.h"
 #include "Query.h"
 #include "StringColumn.h"
 #include "nagios.h"
@@ -19,12 +18,12 @@
 TableContactGroups::TableContactGroups(MonitoringCore *mc) : Table(mc) {
     ColumnOffsets offsets{};
     addColumn(std::make_unique<StringColumn<contactgroup>>(
-        "name", "The name of the contactgroup", offsets,
+        "name", "Name of the contact group", offsets,
         [](const contactgroup &r) {
             return r.group_name == nullptr ? "" : r.group_name;
         }));
     addColumn(std::make_unique<StringColumn<contactgroup>>(
-        "alias", "The alias of the contactgroup", offsets,
+        "alias", "An alias of the contact group", offsets,
         [](const contactgroup &r) {
             return r.alias == nullptr ? "" : r.alias;
         }));

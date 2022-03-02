@@ -9,17 +9,17 @@
 
 set -e
 
-COMMAND=$*
 REPO_DIR="$(git rev-parse --show-toplevel)"
 
 # in case of worktrees $REPO_DIR might not contain the actual repository clone
-GIT_COMMON_DIR="$(realpath $(git rev-parse --git-common-dir))"
+GIT_COMMON_DIR="$(realpath "$(git rev-parse --git-common-dir)")"
 
 : "${IMAGE_ALIAS:=IMAGE_TESTING}"
-: "${IMAGE_ID:="$(${REPO_DIR}/buildscripts/docker_image_aliases/resolve.sh ${IMAGE_ALIAS})"}"
+: "${IMAGE_ID:="$("${REPO_DIR}"/buildscripts/docker_image_aliases/resolve.sh "${IMAGE_ALIAS}")"}"
 
 echo "Running in Docker container from image ${IMAGE_ID} (workdir=${PWD})"
 
+# shellcheck disable=SC2086
 docker run -t -a stdout -a stderr \
     --rm \
     --init \
@@ -27,7 +27,7 @@ docker run -t -a stdout -a stderr \
     -v "${REPO_DIR}:${REPO_DIR}" \
     -v "${GIT_COMMON_DIR}:${GIT_COMMON_DIR}" \
     -v "/var/run/docker.sock:/var/run/docker.sock" \
-    --group-add=$(getent group docker | cut -d: -f3) \
+    --group-add="$(getent group docker | cut -d: -f3)" \
     -w "${PWD}" \
     -e JUNIT_XML \
     -e PYLINT_ARGS \
@@ -39,5 +39,4 @@ docker run -t -a stdout -a stderr \
     -e WORKDIR \
     ${DOCKER_RUN_ADDOPTS} \
     "${IMAGE_ID}" \
-    ${COMMAND}
-
+    "$@"

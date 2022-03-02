@@ -1,7 +1,7 @@
 title: SAP R/3: Single Value Groups
 agents: linux
 catalog: app/sap
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  Please refer to  {sap.value} for details.

@@ -44,14 +44,14 @@ TEST(PsTest, Integration) {
             fmt::format("'{}'", use_full_path ? "Full path" : "Short path"));
         auto out = ProducePsWmi(use_full_path);
         EXPECT_EQ(use_full_path,
-                  out.find("svchost.exe -k") != std::string::npos);
+                  out.find("svchost.exe\t-k") != std::string::npos);
         auto all = cma::tools::SplitString(out, "\n");
         EXPECT_TRUE(all.size() > 10);
         for (auto &in : all) {
             auto by_tab = cma::tools::SplitString(in, "\t");
             SCOPED_TRACE(fmt::format("'{}'", in));
 
-            ASSERT_EQ(by_tab.size(), 2);
+            EXPECT_GE(by_tab.size(), 2U);
             ASSERT_EQ(by_tab[0].back(), ')');
             ASSERT_EQ(by_tab[0][0], '(');
             EXPECT_TRUE(by_tab[1].size() > 0);

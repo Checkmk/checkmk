@@ -1,7 +1,7 @@
 title: Kubernetes: Pod Phase
 agents: kubernetes
 catalog: containerization/kubernetes
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check shows the phase of a Pod, which Kubernetes defines to be a simple, high-level summary of

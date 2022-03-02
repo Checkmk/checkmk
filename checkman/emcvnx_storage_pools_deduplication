@@ -1,7 +1,7 @@
 title: EMC VNX Storage: Storage Pools Deduplication
 agents: emc
 catalog: hw/storagehw/emc
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  The check reports deduplication states, efficieny savings,

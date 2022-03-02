@@ -6,7 +6,7 @@ Date: 1615554314
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 If a dashboard contained a dashlet type that is not known, a KeyError occurred.
 Now a static dashlet is rendered instead, showing a message to remove the

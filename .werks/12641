@@ -6,7 +6,7 @@ Date: 1616410084
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 The service description for Dell compellent storage disks contained the internal disk number,
 which unfortunately can change between multiple SNMP-requests.

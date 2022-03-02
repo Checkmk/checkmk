@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 2
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 The response format of some host_config and folder_config endpoints
 did not fully conform to the OpenAPI spec. This has now been fixed, but

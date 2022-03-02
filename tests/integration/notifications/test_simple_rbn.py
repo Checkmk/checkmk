@@ -6,17 +6,16 @@
 
 import os
 import time
+from typing import Iterator
 
 import pytest
 
 from tests.testlib import WatchLog
 from tests.testlib.site import Site
 
-from cmk.utils import version as cmk_version
-
 
 @pytest.fixture(name="fake_sendmail")
-def fake_sendmail_fixture(site: Site):
+def fake_sendmail_fixture(site: Site) -> Iterator[None]:
     site.write_text_file(
         "local/bin/sendmail", "#!/bin/bash\n" "set -e\n" 'echo "sendmail called with: $@"\n'
     )
@@ -25,22 +24,8 @@ def fake_sendmail_fixture(site: Site):
     site.delete_file("local/bin/sendmail")
 
 
-@pytest.fixture(
-    name="test_log",
-    params=[
-        ("nagios", "var/log/nagios.log"),
-        pytest.param(
-            ("cmc", "var/check_mk/core/history"),
-            marks=pytest.mark.skipif(
-                cmk_version.is_raw_edition(), reason="CMC not supported on CRE"
-            ),
-        ),
-    ],
-)
-def test_log_fixture(request, site: Site, fake_sendmail):
-    core, log = request.param
-    site.set_config("CORE", core, with_restart=True)
-
+@pytest.fixture(name="test_log")
+def test_log_fixture(site: Site, fake_sendmail) -> Iterator[WatchLog]:
     users = {
         "hh": {
             "fullname": "Harry Hirsch",
@@ -69,7 +54,7 @@ def test_log_fixture(request, site: Site, fake_sendmail):
     )
     site.activate_changes_and_wait_for_core_reload()
 
-    with WatchLog(site, log, default_timeout=20) as l:
+    with WatchLog(site, default_timeout=20) as l:
         yield l
 
     site.live.command("[%d] START_EXECUTING_HOST_CHECKS" % time.time())
@@ -81,7 +66,7 @@ def test_log_fixture(request, site: Site, fake_sendmail):
     site.activate_changes_and_wait_for_core_reload()
 
 
-def test_simple_rbn_host_notification(test_log, site: Site):
+def test_simple_rbn_host_notification(test_log: WatchLog, site: Site) -> None:
     site.send_host_check_result("notify-test", 1, "FAKE DOWN", expected_state=1)
 
     # NOTE: "] " is necessary to get the actual log line and not the external command execution
@@ -94,7 +79,7 @@ def test_simple_rbn_host_notification(test_log, site: Site):
     )
 
 
-def test_simple_rbn_service_notification(test_log, site: Site):
+def test_simple_rbn_service_notification(test_log: WatchLog, site: Site) -> None:
     site.send_service_check_result("notify-test", "PING", 2, "FAKE CRIT")
 
     # NOTE: "] " is necessary to get the actual log line and not the external command execution

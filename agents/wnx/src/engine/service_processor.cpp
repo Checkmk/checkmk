@@ -12,6 +12,7 @@
 #include <cstdint>  // wchar_t when compiler options set weird
 #include <ranges>
 
+#include "agent_controller.h"
 #include "commander.h"
 #include "common/mailslot_transport.h"
 #include "common/wtools.h"
@@ -28,6 +29,7 @@
 
 using namespace std::chrono_literals;
 using namespace std::string_literals;
+namespace fs = std::filesystem;
 
 namespace cma::srv {
 extern bool
@@ -75,7 +77,7 @@ void KillProcessesInUserFolder() {
     }
 }
 
-void TryCleanOnExit(cfg::modules::ModuleCommander& mc) {
+void TryCleanOnExit(cfg::modules::ModuleCommander &mc) {
     namespace details = cfg::details;
 
     KillProcessesInUserFolder();
@@ -170,7 +172,7 @@ std::string FindWinPerfExe() {
         names.emplace_back(f / "check_mk_service32.exe");
 
         exe_name.clear();
-        for (const auto& name : names) {
+        for (const auto &name : names) {
             std::error_code ec;
             if (fs::exists(name, ec)) {
                 exe_name = name.u8string();
@@ -197,7 +199,7 @@ std::wstring GetWinPerfLogFile() {
 }  // namespace
 
 void ServiceProcessor::kickWinPerf(AnswerId answer_id,
-                                   const std::string& ip_addr) {
+                                   const std::string &ip_addr) {
     using cfg::groups::winperf;
 
     auto cmd_line = winperf.buildCmdLine();
@@ -239,7 +241,7 @@ void ServiceProcessor::kickWinPerf(AnswerId answer_id,
 // usually called from the main entry point after connect came to us
 // according to spec, we have to update stop time point and parameters from the
 // config file
-void ServiceProcessor::informDevice(rt::Device& rt_device,
+void ServiceProcessor::informDevice(rt::Device &rt_device,
                                     std::string_view ip_addr) const noexcept {
     if (!rt_device.started()) {
         XLOG::l("RT Device is not started");
@@ -291,19 +293,19 @@ void ServiceProcessor::preStartBinaries() {
     cfg::SetupPluginEnvironment();
     ohm_started_ = conditionallyStartOhm();
 
-    auto& plugins = plugins_provider_.getEngine();
+    auto &plugins = plugins_provider_.getEngine();
     plugins.registerOwner(this);
     plugins.preStart();
     plugins.detachedStart();
 
-    auto& local = local_provider_.getEngine();
+    auto &local = local_provider_.getEngine();
     local.preStart();
     XLOG::d.i("Pre Start actions ended");
 }
 
 void ServiceProcessor::detachedPluginsStart() {
     XLOG::t.i("Detached Start");
-    auto& plugins = plugins_provider_.getEngine();
+    auto &plugins = plugins_provider_.getEngine();
     plugins.detachedStart();
 }
 
@@ -341,7 +343,7 @@ bool ServiceProcessor::stopRunningOhmProcess() noexcept {
 // conditions are: yml + exists(ohm) + elevated
 // true on successful start or if OHM is already started
 bool ServiceProcessor::conditionallyStartOhm() noexcept {
-    auto& ohm_engine = ohm_provider_.getEngine();
+    auto &ohm_engine = ohm_provider_.getEngine();
     if (!ohm_engine.isAllowedByCurrentConfig()) {
         XLOG::t.i("OHM starting skipped due to config");
         stopRunningOhmProcess();
@@ -389,7 +391,7 @@ bool ServiceProcessor::conditionallyStartOhm() noexcept {
 // This is relative simple function which kicks to call
 // different providers
 int ServiceProcessor::startProviders(AnswerId answer_id,
-                                     const std::string& ip_addr) {
+                                     const std::string &ip_addr) {
     vf_.clear();
     max_wait_time_ = 0;
 
@@ -445,8 +447,8 @@ void ServiceProcessor::sendDebugData() {
 }
 
 /// \brief called before every answer to execute routine tasks
-void ServiceProcessor::prepareAnswer(const std::string& ip_from,
-                                     rt::Device& rt_device) {
+void ServiceProcessor::prepareAnswer(const std::string &ip_from,
+                                     rt::Device &rt_device) {
     auto value = tools::win::GetEnv(env::auto_reload);
 
     if (cfg::ReloadConfigAutomatically() || tools::IsEqual(value, L"yes"))
@@ -461,7 +463,7 @@ void ServiceProcessor::prepareAnswer(const std::string& ip_from,
 }
 
 // main data source function of the agent
-ByteVector ServiceProcessor::generateAnswer(const std::string& ip_from) {
+ByteVector ServiceProcessor::generateAnswer(const std::string &ip_from) {
     auto tp = openAnswer(ip_from);
     if (tp) {
         XLOG::d.i("Id is [{}] ", AnswerIdToNumber(tp.value()));
@@ -474,7 +476,7 @@ ByteVector ServiceProcessor::generateAnswer(const std::string& ip_from) {
     return makeTestString("No Answer");
 }
 
-bool ServiceProcessor::restartBinariesIfCfgChanged(uint64_t& last_cfg_id) {
+bool ServiceProcessor::restartBinariesIfCfgChanged(uint64_t &last_cfg_id) {
     // this may race condition, still probability is zero
     // Config Reload is for manual usage
     auto new_cfg_id = cfg::GetCfg().uniqId();
@@ -499,7 +501,7 @@ ServiceProcessor::Signal ServiceProcessor::mainWaitLoop() {
 
     // Perform main service function here...
     while (true) {
-        if (!callback_(static_cast<const void*>(this))) {
+        if (!callback_(static_cast<const void *>(this))) {
             break;  // special case when thread is one time run
         }
 
@@ -558,16 +560,39 @@ void WaitForNetwork(std::chrono::seconds period) {
         elapsed += delay;
     }
 }
+
+///  returns non empty port if controller had been started
+std::optional<uint16_t> OptionallyStartAgentController() {
+    std::optional<uint16_t> port;
+    if (ac ::IsRunController(cfg::GetLoadedConfig()) &&
+        ac::StartAgentController(wtools::GetArgv(0))) {
+        port = ac::windows_internal_port;
+        return port;
+    }
+    return {};
+}
+
+void OpenFirewall(bool controller) {
+    auto rule_name =
+        IsService() ? srv::kSrvFirewallRuleName : srv::kAppFirewallRuleName;
+    if (controller) {
+        XLOG::l.i("Controller has started: firewall to controller");
+        ProcessFirewallConfiguration(ac::GetWorkController().wstring(),
+                                     GetFirewallPort(), rule_name);
+    } else {
+        XLOG::l.i("Controller has NOT started: firewall to agent");
+        ProcessFirewallConfiguration(wtools::GetArgv(0), GetFirewallPort(),
+                                     rule_name);
+    }
+}
+
 }  // namespace
 
 /// \brief <HOSTING THREAD>
 /// ex_port may be nullptr(command line test, for example)
 /// makes a mail slot + starts IO on TCP
 /// Periodically checks if the service is stopping.
-void ServiceProcessor::mainThread(world::ExternalPort* ex_port) noexcept {
-    const auto* mailslot_name =
-        IsService() ? cfg::kServiceMailSlot : cfg::kTestingMailSlot;
-
+void ServiceProcessor::mainThread(world::ExternalPort *ex_port) noexcept {
     if (IsService()) {
         auto wait_period =
             cfg::GetVal(cfg::groups::kSystem, cfg::vars::kWaitNetwork,
@@ -575,7 +600,16 @@ void ServiceProcessor::mainThread(world::ExternalPort* ex_port) noexcept {
         WaitForNetwork(std::chrono::seconds{wait_period});
     }
 
-    MailSlot mailbox(mailslot_name, 0);
+    ac::CreateLegacyModeFile();
+    auto port = OptionallyStartAgentController();
+    ON_OUT_OF_SCOPE(ac::KillAgentController(wtools::GetArgv(0)));
+    OpenFirewall(port.has_value());
+    uint16_t use_port = port ? *port
+                             : cfg::GetVal(cfg::groups::kGlobal,
+                                           cfg::vars::kPort, cfg::kMainPort);
+
+    MailSlot mailbox(
+        IsService() ? cfg::kServiceMailSlot : cfg::kTestingMailSlot, 0);
     internal_port_ = carrier::BuildPortName(carrier::kCarrierMailslotName,
                                             mailbox.GetName());
     try {
@@ -606,7 +640,7 @@ void ServiceProcessor::mainThread(world::ExternalPort* ex_port) noexcept {
             rt_device.start();
             auto io_started = ex_port->startIo(
                 [this, &rt_device](
-                    const std::string& ip_addr) -> std::vector<uint8_t> {
+                    const std::string &ip_addr) -> std::vector<uint8_t> {
                     //
                     // most important entry point for external port io
                     // this is internal implementation of the io_context
@@ -616,7 +650,8 @@ void ServiceProcessor::mainThread(world::ExternalPort* ex_port) noexcept {
                     XLOG::d.i("Generating answer with id [{}]",
                               answer_.getId().time_since_epoch().count());
                     return generateAnswer(ip_addr);
-                });
+                },
+                use_port);
             ON_OUT_OF_SCOPE({
                 ex_port->shutdownIo();
                 rt_device.stop();
@@ -636,7 +671,7 @@ void ServiceProcessor::mainThread(world::ExternalPort* ex_port) noexcept {
 
         // the end of the fun
         XLOG::l.i("Thread is stopped");
-    } catch (const std::exception& e) {
+    } catch (const std::exception &e) {
         XLOG::l.crit("Not expected exception '{}'. Fix it!", e.what());
     } catch (...) {
         XLOG::l.bp("Not expected exception. Fix it!");
@@ -657,15 +692,15 @@ void ServiceProcessor::startTestingMainThread() {
 // Implementation of the Windows signals
 // ---------------- END ----------------
 
-bool SystemMailboxCallback(const MailSlot* /*nothing*/, const void* data,
-                           int len, void* context) {
-    auto* processor = static_cast<srv::ServiceProcessor*>(context);
+bool SystemMailboxCallback(const MailSlot * /*nothing*/, const void *data,
+                           int len, void *context) {
+    auto *processor = static_cast<srv::ServiceProcessor *>(context);
     if (processor == nullptr) {
         XLOG::l("error in param");
         return false;
     }
 
-    const auto* dt = static_cast<const carrier::CarrierDataHeader*>(data);
+    const auto *dt = static_cast<const carrier::CarrierDataHeader *>(data);
     XLOG::d.i("Received [{}] bytes from '{}'\n", len, dt->providerId());
     switch (dt->type()) {
         case carrier::DataType::kLog:
@@ -673,7 +708,7 @@ bool SystemMailboxCallback(const MailSlot* /*nothing*/, const void* data,
             // Receive data for Logging to file
             if (dt->data() != nullptr) {
                 std::string to_log;
-                const auto* data = static_cast<const char*>(dt->data());
+                const auto *data = static_cast<const char *>(dt->data());
                 to_log.assign(data, data + dt->length());
                 XLOG::l(XLOG::kNoPrefix)("{} : {}", dt->providerId(), to_log);
             } else
@@ -687,9 +722,9 @@ bool SystemMailboxCallback(const MailSlot* /*nothing*/, const void* data,
                 std::chrono::nanoseconds duration_since_epoch{dt->answerId()};
                 std::chrono::time_point<std::chrono::steady_clock> tp(
                     duration_since_epoch);
-                const auto* data_source =
-                    static_cast<const uint8_t*>(dt->data());
-                const auto* data_end = data_source + dt->length();
+                const auto *data_source =
+                    static_cast<const uint8_t *>(dt->data());
+                const auto *data_end = data_source + dt->length();
                 AsyncAnswer::DataBlock vectorized_data(data_source, data_end);
 
                 if (!vectorized_data.empty() && vectorized_data.back() == 0) {
@@ -709,7 +744,7 @@ bool SystemMailboxCallback(const MailSlot* /*nothing*/, const void* data,
         case carrier::DataType::kCommand: {
             auto rcp = commander::ObtainRunCommandProcessor();
             if (rcp != nullptr) {
-                std::string cmd(static_cast<const char*>(dt->data()),
+                std::string cmd(static_cast<const char *>(dt->data()),
                                 static_cast<size_t>(dt->length()));
                 std::string peer(commander::kMainPeer);
 
@@ -731,7 +766,7 @@ HANDLE CreateDevNull() {
                          OPEN_EXISTING, 0, nullptr);
 }
 
-bool TheMiniProcess::start(const std::wstring& exe_name) {
+bool TheMiniProcess::start(const std::wstring &exe_name) {
     std::unique_lock lk(lock_);
     if (!wtools::IsInvalidHandle(process_handle_)) {
         // check status and reset handle if required
@@ -748,7 +783,7 @@ bool TheMiniProcess::start(const std::wstring& exe_name) {
     }
 
     if (wtools::IsInvalidHandle(process_handle_)) {
-        auto* null_handle = CreateDevNull();
+        auto *null_handle = CreateDevNull();
         STARTUPINFO si{0};
         si.cb = sizeof(STARTUPINFO);
         si.dwFlags |= STARTF_USESTDHANDLES;
@@ -782,7 +817,7 @@ bool TheMiniProcess::stop() {
 
     auto name = process_name_;
     auto pid = process_id_;
-    auto* handle = process_handle_;
+    auto *handle = process_handle_;
 
     process_id_ = 0;
     process_name_.clear();

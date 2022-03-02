@@ -25,18 +25,31 @@ if not %errorlevel% == 0 powershell Write-Host "Cargo not found, please install 
 
 set cur_dir=%cd%
 set arte=%cur_dir%\..\..\artefacts
+:: 64-bit
+::set target=x86_64-pc-windows-mscvc
+:: 32-bit
 set target=i686-pc-windows-msvc
 set exe_name=cmk-agent-ctl.exe
 set exe=target\%target%\release\%exe_name%
 
-powershell Write-Host "Building Executables" -Foreground White
-cargo build --release --target %target%
-if not %errorlevel% == 0 powershell Write-Host "Failed cargo build" -Foreground Red && exit /b 8
+del /Q %arte%\%exe_name% 2> nul
+
+powershell Write-Host "Run Rust clippy" -Foreground White
+cargo clippy --release --target %target% 2>&1
+if not "%errorlevel%" == "0" powershell Write-Host "Failed cargo clippy" -Foreground Red && exit /b 17
+powershell Write-Host "Building Rust executables" -Foreground White
+cargo build --release --target %target% 2>&1
+if not "%errorlevel%" == "0" powershell Write-Host "Failed cargo build" -Foreground Red && exit /b 18
+powershell Write-Host "Building Rust SUCCESS" -Foreground Green
+powershell Write-Host "Testing Rust executables" -Foreground White
+cargo test --release --target %target% -- --test-threads=4 2>&1
+if not "%errorlevel%" == "0" powershell Write-Host "Failed cargo build" -Foreground Red && exit /b 19
+powershell Write-Host "Testing Rust SUCCESS" -Foreground Green
 
 if not "%2" == "" (
-powershell Write-Host "Signing Executables" -Foreground White
+powershell Write-Host "Signing Rust executables" -Foreground White
 @call ..\wnx\sign_windows_exe c:\common\store\%1 %2 %exe%
-if not %errorlevel% == 0 powershell Write-Host "Failed signing %exe%" -Foreground Red && exit /b 9
+if not %errorlevel% == 0 powershell Write-Host "Failed signing %exe%" -Foreground Red && exit /b 20
 )
 
 powershell Write-Host "Uploading artifacts: [ %exe% ] ..." -Foreground White

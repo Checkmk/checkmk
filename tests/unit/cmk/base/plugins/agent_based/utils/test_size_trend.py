@@ -65,7 +65,7 @@ def test_size_trend_growing(args: ArgsDict) -> None:
     args["levels"] = {
         "trend_range": 1,
         "trend_perfdata": True,
-        "trend_bytes": (150 * 1024 ** 2, 250 * 1024 ** 2),
+        "trend_bytes": (150 * 1024**2, 250 * 1024**2),
         "trend_perc": (5.0, 15.0),
     }
     args.update({"used_mb": 200, "timestamp": 1801.0})
@@ -92,7 +92,7 @@ def test_size_trend_shrinking_ok(args: ArgsDict) -> None:
     args["levels"] = {
         "trend_range": 1,
         "trend_perfdata": True,
-        "trend_shrinking_bytes": (100 * 1024 ** 2, 200 * 1024 ** 2),
+        "trend_shrinking_bytes": (100 * 1024**2, 200 * 1024**2),
         "trend_shrinking_perc": (5.0, 10.0),
     }
     args.update(
@@ -117,7 +117,7 @@ def test_size_trend_shrinking_warn(args: ArgsDict) -> None:
     args["levels"] = {
         "trend_range": 1,
         "trend_perfdata": True,
-        "trend_shrinking_bytes": (100 * 1024 ** 2, 200 * 1024 ** 2),
+        "trend_shrinking_bytes": (100 * 1024**2, 200 * 1024**2),
         "trend_shrinking_perc": (5.0, 10.0),
     }
     args.update(

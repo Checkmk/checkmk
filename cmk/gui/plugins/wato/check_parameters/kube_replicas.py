@@ -5,32 +5,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
+from cmk.gui.plugins.wato.check_parameters.kube import age_levels_dropdown
 from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithoutItem,
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
 )
-from cmk.gui.valuespec import Age, CascadingDropdown, Dictionary, Tuple
-
-
-def _levels(title_text: str):
-    return CascadingDropdown(
-        title=title_text,
-        choices=[
-            ("no_levels", _("No levels"), None),
-            (
-                "levels",
-                _("Impose levels"),
-                Tuple(
-                    elements=[
-                        Age(title=_("Warning above")),
-                        Age(title=_("Critical above")),
-                    ]
-                ),
-            ),
-        ],
-        default_value="no_levels",
-    )
+from cmk.gui.valuespec import Dictionary
 
 
 def _parameter_valuespec():
@@ -46,8 +27,8 @@ def _parameter_valuespec():
             )
         ),
         elements=[
-            ("update_duration", _levels(_("Update duration"))),
-            ("not_ready_duration", _levels(_("Not ready duration"))),
+            ("update_duration", age_levels_dropdown(_("Update duration"))),
+            ("not_ready_duration", age_levels_dropdown(_("Not ready duration"))),
         ],
     )
 
@@ -58,6 +39,6 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersApplications,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec,
-        title=lambda: _("Kubernetes: Replicas"),
+        title=lambda: _("Kubernetes replicas"),
     )
 )

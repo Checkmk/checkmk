@@ -1,7 +1,7 @@
 title: Cisco Unified Survivable Remote Site Telephony (SRST): Registered Phones
 agents: snmp
 catalog: hw/network/cisco
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the registered phones of a Cisco device which supports

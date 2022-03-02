@@ -58,7 +58,7 @@
 
 
 def parse_arcserve_backup(info):
-    unit_factor = {"kb": 1024, "mb": 1024 ** 2, "gb": 1024 ** 3, "tb": 1024 ** 4}
+    unit_factor = {"kb": 1024, "mb": 1024**2, "gb": 1024**3, "tb": 1024**4}
     parsed = {}
     for line in info:
         if line[0] == "Beschreibung:":

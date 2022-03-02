@@ -1,7 +1,7 @@
 title: Hitachi HUS DKC: Hardware State
 agents: snmp
 catalog: hw/storagehw/hitachi
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
 

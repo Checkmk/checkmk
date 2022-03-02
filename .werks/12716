@@ -6,7 +6,7 @@ Date: 1621424553
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 A backup log line of form "^INFO: (.*): had to backup (.*) of (.*) \(compressed (.*)\) in (.*)s"
 had not been recognized yet which leaded to missing keys in the backup info.

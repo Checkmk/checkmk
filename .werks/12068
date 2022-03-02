@@ -6,7 +6,7 @@ Date: 1613302641
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 The options in the section "On selected hosts "within the "Hosts" Dropdown were
 always enabled and had no effect if there was no host in the current folder.

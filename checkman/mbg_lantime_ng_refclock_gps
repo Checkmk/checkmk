@@ -1,7 +1,7 @@
 title: Meinberg LANTIME Devices: GPS Refclock State (NG MIB)
 agents: snmp
 catalog: hw/time/meinberg
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
 
@@ -26,4 +26,3 @@ discovery:
 
 item:
  The index number of the refclock.
-

@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 2
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 Previously the outbound structure of host and folder attributes was not defined. The internal
 structure of the values were directly passed through. This was confusing because the inbound

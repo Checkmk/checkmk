@@ -6,7 +6,7 @@ Date: 1627033386
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 Hitachi volume plugin was to the new plugins API.
 The mount point groupings are working correctly now.

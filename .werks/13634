@@ -1,0 +1,24 @@
+Title: REST API: Creating hosts via API does not trigger agent baking by default anymore
+Class: fix
+Compatible: incomp
+Component: rest-api
+Date: 1643743053
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+The REST API endpoints for creating hosts (Create a host, Create a cluster
+host, Bulk create hosts) were triggering and agent baking job for the new
+hosts after configuring the hosts.
+
+This may be useful in some cases, but in the most cases it is not intended to
+do it. Since the job needs some resources for the baking and also holds locks
+during baking, the job might slow down subsequent API calls.
+
+To address both needs we now added an optional query parameter
+<tt>?bake_agent=[1|0]</tt> to the API calls mentioned above.
+
+The default behaviour has been changed: If you don't specify the parameter, the
+agents are not baked anymore. Only when you call the endpoints with
+<tt>?bake_agent=1</tt>, the agent baking job will be started.

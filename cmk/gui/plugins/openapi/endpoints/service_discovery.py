@@ -16,7 +16,8 @@ from typing import List, Optional, Sequence
 
 from cmk.automations.results import CheckPreviewEntry
 
-from cmk.gui import fields, watolib
+from cmk.gui import fields as gui_fields
+from cmk.gui import watolib
 from cmk.gui.fields.utils import BaseSchema
 from cmk.gui.http import Response
 from cmk.gui.plugins.openapi.restful_objects import constructors, Endpoint, response_schemas
@@ -35,6 +36,8 @@ from cmk.gui.watolib.services import (
     get_check_table,
     StartDiscoveryRequest,
 )
+
+from cmk import fields
 
 SERVICE_DISCOVERY_PHASES = {
     "undecided": "new",
@@ -73,7 +76,7 @@ DISCOVERY_ACTION = {
     tag_group="Setup",
     query_params=[
         {
-            "host_name": fields.HostField(
+            "host_name": gui_fields.HostField(
                 description="The host of the discovered services.",
                 example="example.com",
                 required=True,
@@ -138,7 +141,7 @@ class UpdateDiscoveryPhase(BaseSchema):
     tag_group="Setup",
     path_params=[
         {
-            "host_name": fields.HostField(
+            "host_name": gui_fields.HostField(
                 description="The host of the service which shall be updated.",
                 example="example.com",
             ),

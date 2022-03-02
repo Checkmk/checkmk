@@ -1,0 +1,19 @@
+Title: Validate configured rules when updating configuration
+Class: feature
+Compatible: compat
+Component: wato
+Date: 1641839531
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.1.0b1
+
+The Checkmk update procedure (<tt>cmk-update-config</tt>) now validates most of the configured
+rules and logs "WARNING: Invalid rule configuration detected" in case of an error. If you
+encounter such errors, your configuration contains rules that need to be corrected. We
+recommend to open the affected rules in the GUI. Upon attempting to save them, any problematic
+field will be highlighted.
+
+Invalid rule values can for example originate from invalid regular expressions, which were
+unfortunately still allowed in Python 2 but are forbidden in Python 3, see also
+https://checkmk.com/de/werk/11974.

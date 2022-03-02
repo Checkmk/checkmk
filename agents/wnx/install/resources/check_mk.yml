@@ -276,6 +276,9 @@ modules:
 system:
     enabled: yes
 
+    controller:
+        run: yes        # start controller if controller presented
+
     firewall:
         mode: configure # allowed none, remove, configure
         port: auto      # allowed all or auto

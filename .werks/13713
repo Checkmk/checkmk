@@ -1,0 +1,23 @@
+Title: Special agent for IPMI sensors: Fix privilege level configuration
+Class: fix
+Compatible: incomp
+Component: wato
+Date: 1644322894
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+There was a bug in the command line arguments of the special agent for
+querying IPMI sensors. The valid choices for the privilege level were
+"user", "operator", "admin". These choices are valid for FreeIPMI, but
+not for IPMItool, which accepts "callback", "user", "operator",
+"administrator". Now, the valid choices for the privilege level depend
+on the chosen tool, as described above.
+
+Furthermore, the rule for configuring the special agent has been
+adjusted accordingly. Previously, the privilege level was configurable
+via free text input. Now, there is a dropdown menu with tool-dependent
+choices. Rules with now invalid choices have to be corrected manually.
+However, note that such rules anyway crashed the special agent
+(independently of this werk).

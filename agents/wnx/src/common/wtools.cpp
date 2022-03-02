@@ -30,6 +30,7 @@
 #include "tools/_raii.h"
 #include "upgrade.h"
 namespace fs = std::filesystem;
+using namespace std::chrono_literals;
 
 namespace wtools {
 bool ChangeAccessRights(
@@ -1993,7 +1994,7 @@ bool KillProcess(uint32_t pid, int code) noexcept {
 }
 
 // process terminator
-// used to kill OpenHardwareMonitor
+// used to kill OpenHardwareMonitor or Agent controller
 bool KillProcess(std::wstring_view process_name, int exit_code) noexcept {
     auto *snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPALL, NULL);
     if (snapshot == nullptr) return false;
@@ -2918,6 +2919,83 @@ std::wstring SidToName(std::wstring_view sid, const SID_NAME_USE &sid_type) {
         return name;
     }
     return {};
+}
+
+namespace {
+
+std::pair<size_t, bool> ReadHandle(std::span<char> buffer, HANDLE h) {
+    auto store = buffer.data();
+    DWORD read_in_fact = 0;
+    auto count = static_cast<DWORD>(buffer.size());
+    return {read_in_fact, ::ReadFile(h, store, count, &read_in_fact, nullptr)};
+}
+
+// add content of file to the buffer
+bool AppendHandleContent(std::vector<char> &buffer, HANDLE h,
+                         size_t count) noexcept {
+    auto buf_size = buffer.size();
+    try {
+        buffer.resize(buf_size + count);
+    } catch (const std::exception &e) {
+        XLOG::l(" exception: '{}'", e.what());
+        return false;
+    }
+    auto [read_in_fact, success] =
+        ReadHandle(std::span{buffer.data() + buf_size, count}, h);
+    if (!success) {
+        return false;
+    }
+
+    if (read_in_fact != count) {
+        buffer.resize(buf_size + read_in_fact);
+    }
+
+    return true;
+}
+}  // namespace
+
+std::vector<char> ReadFromHandle(HANDLE handle) {
+    std::vector<char> buf;
+    while (true) {
+        auto read_count = wtools::DataCountOnHandle(handle);
+        if (read_count == 0) {  // no data or error
+            break;
+        }
+        if (!AppendHandleContent(buf, handle, read_count)) {
+            break;
+        }
+    }
+    return buf;
+}
+
+std::string RunCommand(std::wstring_view cmd) {
+    wtools::AppRunner ar;
+    auto ret = ar.goExecAsJob(cmd);
+    if (ret == 0) {
+        XLOG::d("Failed to run '{}'", ToUtf8(cmd));
+        return {};
+    }
+    auto pid = ar.processId();
+    auto timeout = 20'000ms;
+    constexpr auto grane = 50ms;
+    std::string r;
+    while (true) {
+        auto [code, error] = GetProcessExitCode(pid);
+        if (code != 0 && code != STATUS_PENDING) {
+            XLOG::l.i("RunCommand '{}' fails with code [{}] and error [{}]",
+                      ToUtf8(cmd), code, error);
+            break;
+        }
+        auto result = ReadFromHandle(ar.getStdioRead());
+        r += std::string{result.begin(), result.end()};
+        std::this_thread::sleep_for(grane);
+        timeout = timeout - grane;
+        if (timeout <= 0s || code == 0) {
+            break;
+        }
+    }
+
+    return r;
 }
 
 #if 0

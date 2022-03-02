@@ -1,7 +1,7 @@
 title: Rittal CMC-TC: Temperature
 agents: snmp
 catalog: hw/environment/rittal
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check polls the state of temperature sensors
@@ -18,4 +18,3 @@ item:
 
 discovery:
  One service is created for each available temperature sensor.
-

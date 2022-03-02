@@ -6,6 +6,6 @@ Date: 1607615019
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 The ruleset page now renders considerably faster on setups with thousands of hosts.

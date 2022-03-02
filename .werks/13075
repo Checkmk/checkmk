@@ -6,7 +6,7 @@ Date: 1629101053
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 In the previous version, the Prometheus Web Port option was only
 relevant for the host name and ip address connection options. This

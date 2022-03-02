@@ -46,7 +46,7 @@ def _transform_legacy_parameters_jvm_memory(
         float: "perc",
     }
     type_to_transform: Mapping[Type, Callable[[float], float]] = {
-        int: lambda v: v * 1024 ** 2,
+        int: lambda v: v * 1024**2,
         float: lambda v: v,
     }
 

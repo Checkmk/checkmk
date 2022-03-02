@@ -69,7 +69,8 @@ def string_table_element(container_name, container_state_dict, num_of_containers
     return {
         "containers": {
             container_name.format(i): {
-                "id": "docker://fcde010771eafc68bb644d180808d0f3f3f93c04a627a7cc53cb255efad99c5a",
+                "container_id": "docker://fcde010771eafc68bb644d180808d0f3f3f93c04a627a7cc53cb255efad99c5a",
+                "image_id": "some-id",
                 "name": container_name.format(i),
                 "image": "tribe29/worker_agent:0.4",
                 "ready": True,
@@ -146,7 +147,7 @@ def test_check_result_state_ok(check_result):
 
 def test_check_result_summary_status(check_result):
     result, _, _ = check_result
-    assert result.summary == "Status: Running for: 0 seconds"
+    assert result.summary == "Status: Running for 0 seconds"
 
 
 def test_check_result_summary_image(container_name, string_table_element, check_result):
@@ -167,7 +168,7 @@ def test_check_result_summary_restart_count(container_name, string_table_element
 def test_check_result_summary_start_time(timespan, check_result):
     expected_timespan = render.timespan(timespan)
     result, _, _ = check_result
-    assert result.summary == f"Status: Running for: {expected_timespan}"
+    assert result.summary == f"Status: Running for {expected_timespan}"
 
 
 @pytest.mark.parametrize("container_state", ["waiting"])

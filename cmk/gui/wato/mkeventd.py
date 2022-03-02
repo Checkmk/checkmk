@@ -3215,29 +3215,32 @@ class ModeEventConsoleUploadMIBs(ABCEventConsoleMode):
     # their path.
     def _is_zipfile(self, fo):
         try:
-            zipfile.ZipFile(fo)  # pylint:disable=consider-using-with
+            with zipfile.ZipFile(fo) as _opened_file:
+                pass
             return True
         except zipfile.BadZipfile:
             return False
 
     def _process_uploaded_zip_file(self, filename, content):
-        zip_obj = zipfile.ZipFile(io.BytesIO(content))  # pylint:disable=consider-using-with
-        messages = []
-        for entry in zip_obj.infolist():
-            success, fail = 0, 0
-            try:
-                mib_file_name = entry.filename
-                if mib_file_name[-1] == "/":
-                    continue  # silently skip directories
-
-                self._validate_mib_file_name(mib_file_name)
-
-                mib_obj = zip_obj.open(mib_file_name)  # pylint:disable=consider-using-with
-                messages.append(self._process_uploaded_mib_file(mib_file_name, mib_obj.read()))
-                success += 1
-            except Exception as e:
-                messages.append(_("Skipped %s: %s") % (escape_html_permissive(mib_file_name), e))
-                fail += 1
+        with zipfile.ZipFile(io.BytesIO(content)) as zip_obj:
+            messages = []
+            for entry in zip_obj.infolist():
+                success, fail = 0, 0
+                try:
+                    mib_file_name = entry.filename
+                    if mib_file_name[-1] == "/":
+                        continue  # silently skip directories
+                    self._validate_mib_file_name(mib_file_name)
+                    with zip_obj.open(mib_file_name) as mib_obj:
+                        messages.append(
+                            self._process_uploaded_mib_file(mib_file_name, mib_obj.read())
+                        )
+                    success += 1
+                except Exception as e:
+                    messages.append(
+                        _("Skipped %s: %s") % (escape_html_permissive(mib_file_name), e)
+                    )
+                    fail += 1
 
         return "<br>\n".join(
             messages

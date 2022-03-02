@@ -9,7 +9,7 @@ This is a Check_MK Agent plugin. If configured, it will be called by the
 agent without any arguments.
 """
 
-__version__ = "2.1.0i1"
+__version__ = "2.2.0i1"
 
 import abc
 import io
@@ -92,6 +92,7 @@ class PostgresBase:
         self.pg_user = instance["pg_user"]
         self.pg_port = instance["pg_port"]
         self.pg_database = instance["pg_database"]
+        self.pg_passfile = instance.get("pg_passfile", "")
         self.my_env = os.environ.copy()
         self.my_env["PGPASSFILE"] = instance.get("pg_passfile", "")
         self.sep = os.sep
@@ -364,7 +365,6 @@ class PostgresWin(PostgresBase):
                 self.db_user,
                 sql_cmd,
             )
-
         proc = subprocess.Popen(  # pylint:disable=consider-using-with
             cmd_str,
             env=self.my_env,
@@ -644,7 +644,7 @@ class PostgresLinux(PostgresBase):
         self, sql_cmd, extra_args="", field_sep=";", quiet=True, rows_only=True, mixed_cmd=False
     ):
         # type: (str, str, str, bool, bool, bool) -> str
-        base_cmd_list = ["su", "-", self.db_user, "-c", r"""%s -X %s -A -F'%s'%s"""]
+        base_cmd_list = ["su", "-", self.db_user, "-c", r"""PGPASSFILE=%s %s -X %s -A -F'%s'%s"""]
         extra_args += " -U %s" % self.pg_user
         extra_args += " -d %s" % self.pg_database
         extra_args += " -p %s" % self.pg_port
@@ -661,7 +661,13 @@ class PostgresLinux(PostgresBase):
             cmd_to_pipe = subprocess.Popen(  # pylint:disable=consider-using-with
                 ["echo", sql_cmd], stdout=subprocess.PIPE
             )
-            base_cmd_list[-1] = base_cmd_list[-1] % (self.psql, extra_args, field_sep, "")
+            base_cmd_list[-1] = base_cmd_list[-1] % (
+                self.pg_passfile,
+                self.psql,
+                extra_args,
+                field_sep,
+                "",
+            )
 
             receiving_pipe = subprocess.Popen(  # pylint:disable=consider-using-with
                 base_cmd_list, stdin=cmd_to_pipe.stdout, stdout=subprocess.PIPE, env=self.my_env
@@ -670,6 +676,7 @@ class PostgresLinux(PostgresBase):
 
         else:
             base_cmd_list[-1] = base_cmd_list[-1] % (
+                self.pg_passfile,
                 self.psql,
                 extra_args,
                 field_sep,
@@ -677,7 +684,7 @@ class PostgresLinux(PostgresBase):
             )
             proc = subprocess.Popen(  # pylint:disable=consider-using-with
                 base_cmd_list, env=self.my_env, stdout=subprocess.PIPE
-            )  # pylint:disable=consider-using-with
+            )
             out = ensure_str(proc.communicate()[0])
 
         return out.rstrip()
@@ -687,7 +694,7 @@ class PostgresLinux(PostgresBase):
         try:
             proc = subprocess.Popen(  # pylint:disable=consider-using-with
                 ["which", "psql"], stdout=subprocess.PIPE
-            )  # pylint:disable=consider-using-with
+            )
             out = ensure_str(proc.communicate()[0])
         except subprocess.CalledProcessError:
             raise RuntimeError("Could not determine psql executable.")
@@ -1054,7 +1061,8 @@ def main(argv=None):
     instances = []
     try:
         postgres_cfg_path = os.path.join(os.getenv("MK_CONFDIR", default_path), "postgres.cfg")
-        postgres_cfg = open(postgres_cfg_path).readlines()  # pylint:disable=consider-using-with
+        with open(postgres_cfg_path) as opened_file:
+            postgres_cfg = opened_file.readlines()
         dbuser, instances = parse_postgres_cfg(postgres_cfg)
     except Exception:
         _, e = sys.exc_info()[:2]  # python2 and python3 compatible exception logging

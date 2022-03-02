@@ -12,7 +12,6 @@ import pytest
 from _pytest.monkeypatch import MonkeyPatch
 
 from tests.testlib.base import Scenario
-from tests.testlib.debug_utils import cmk_debug_enabled
 
 from cmk.utils.check_utils import ActiveCheckResult
 from cmk.utils.exceptions import OnError
@@ -850,13 +849,12 @@ def test_commandline_discovery(monkeypatch: MonkeyPatch) -> None:
     ts.fake_standard_linux_agent_output(testhost)
     ts.apply(monkeypatch)
 
-    with cmk_debug_enabled():
-        discovery.commandline_discovery(
-            arg_hostnames={testhost},
-            selected_sections=NO_SELECTION,
-            run_plugin_names=EVERYTHING,
-            arg_only_new=False,
-        )
+    discovery.commandline_discovery(
+        arg_hostnames={testhost},
+        selected_sections=NO_SELECTION,
+        run_plugin_names=EVERYTHING,
+        arg_only_new=False,
+    )
 
     entries = autochecks.AutochecksStore(testhost).read()
     found = {e.id(): e.service_labels for e in entries}
@@ -870,6 +868,14 @@ class RealHostScenario(NamedTuple):
     hostname: HostName
     ipaddress: str
     parsed_sections_broker: ParsedSectionsBroker
+
+    @property
+    def host_key(self) -> HostKey:
+        return HostKey(self.hostname, self.ipaddress, SourceType.HOST)
+
+    @property
+    def host_key_mgmt(self) -> HostKey:
+        return HostKey(self.hostname, None, SourceType.MANAGEMENT)
 
 
 @pytest.fixture(name="realhost_scenario")
@@ -1452,22 +1458,21 @@ def test__discover_host_labels_and_services_on_realhost(
 
     # we're depending on the changed host labels:
     _ = discovery.analyse_node_labels(
-        host_name=scenario.hostname,
-        ipaddress=scenario.ipaddress,
+        host_key=scenario.host_key,
+        host_key_mgmt=scenario.host_key_mgmt,
         parsed_sections_broker=scenario.parsed_sections_broker,
         load_labels=discovery_test_case.load_labels,
         save_labels=discovery_test_case.save_labels,
         on_error=OnError.RAISE,
     )
 
-    with cmk_debug_enabled():
-        discovered_services = discovery._discovered_services._discover_services(
-            host_name=scenario.hostname,
-            ipaddress=scenario.ipaddress,
-            parsed_sections_broker=scenario.parsed_sections_broker,
-            on_error=OnError.RAISE,
-            run_plugin_names=EVERYTHING,
-        )
+    discovered_services = discovery._discovered_services._discover_services(
+        host_key=scenario.host_key,
+        host_key_mgmt=scenario.host_key_mgmt,
+        parsed_sections_broker=scenario.parsed_sections_broker,
+        on_error=OnError.RAISE,
+        run_plugin_names=EVERYTHING,
+    )
 
     services = {s.id() for s in discovered_services}
 
@@ -1481,15 +1486,14 @@ def test__perform_host_label_discovery_on_realhost(
 ) -> None:
     scenario = realhost_scenario
 
-    with cmk_debug_enabled():
-        host_label_result = discovery.analyse_node_labels(
-            host_name=scenario.hostname,
-            ipaddress=scenario.ipaddress,
-            parsed_sections_broker=scenario.parsed_sections_broker,
-            load_labels=discovery_test_case.load_labels,
-            save_labels=discovery_test_case.save_labels,
-            on_error=OnError.RAISE,
-        )
+    host_label_result = discovery.analyse_node_labels(
+        host_key=scenario.host_key,
+        host_key_mgmt=scenario.host_key_mgmt,
+        parsed_sections_broker=scenario.parsed_sections_broker,
+        load_labels=discovery_test_case.load_labels,
+        save_labels=discovery_test_case.save_labels,
+        on_error=OnError.RAISE,
+    )
 
     assert (
         host_label_result.vanished == discovery_test_case.on_realhost.expected_vanished_host_labels
@@ -1518,20 +1522,18 @@ def test__discover_services_on_cluster(
     # we need the sideeffects of this call. TODO: guess what.
     _ = discovery._host_labels.analyse_cluster_labels(
         host_config=scenario.host_config,
-        ipaddress=scenario.ipaddress,
         parsed_sections_broker=scenario.parsed_sections_broker,
         load_labels=discovery_test_case.load_labels,
         save_labels=discovery_test_case.save_labels,
         on_error=OnError.RAISE,
     )
 
-    with cmk_debug_enabled():
-        discovered_services = discovery._get_cluster_services(
-            scenario.host_config,
-            scenario.ipaddress,
-            scenario.parsed_sections_broker,
-            OnError.RAISE,
-        )
+    discovered_services = discovery._get_cluster_services(
+        scenario.host_config,
+        scenario.ipaddress,
+        scenario.parsed_sections_broker,
+        OnError.RAISE,
+    )
 
     services = set(discovered_services)
 
@@ -1545,15 +1547,13 @@ def test__perform_host_label_discovery_on_cluster(
 ) -> None:
     scenario = cluster_scenario
 
-    with cmk_debug_enabled():
-        host_label_result = discovery._host_labels.analyse_cluster_labels(
-            host_config=scenario.host_config,
-            ipaddress=scenario.ipaddress,
-            parsed_sections_broker=scenario.parsed_sections_broker,
-            load_labels=discovery_test_case.load_labels,
-            save_labels=discovery_test_case.save_labels,
-            on_error=OnError.RAISE,
-        )
+    host_label_result = discovery._host_labels.analyse_cluster_labels(
+        host_config=scenario.host_config,
+        parsed_sections_broker=scenario.parsed_sections_broker,
+        load_labels=discovery_test_case.load_labels,
+        save_labels=discovery_test_case.save_labels,
+        on_error=OnError.RAISE,
+    )
 
     assert (
         host_label_result.vanished == discovery_test_case.on_cluster.expected_vanished_host_labels
@@ -1612,8 +1612,8 @@ def test_get_node_services(monkeypatch: MonkeyPatch) -> None:
     )
 
     assert discovery._get_node_services(
-        HostName("horst"),
-        None,
+        HostKey(HostName("horst"), None, SourceType.HOST),
+        HostKey(HostName("horst"), None, SourceType.MANAGEMENT),
         ParsedSectionsBroker({}),
         OnError.RAISE,
         lambda hn, _svcdescr: hn,

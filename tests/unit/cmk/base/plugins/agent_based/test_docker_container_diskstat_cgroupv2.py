@@ -4,16 +4,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Dict
-
 import pytest
 
 from cmk.base.api.agent_based.checking_classes import IgnoreResultsError
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
+from cmk.base.plugins.agent_based.diskstat import check_diskstat
 from cmk.base.plugins.agent_based.docker_container_diskstat_cgroupv2 import (
-    _check_docker_container_diskstat_cgroupv2,
-    Device,
     parse_docker_container_diskstat_cgroupv2,
 )
 from cmk.base.plugins.agent_based.utils.df import FILESYSTEM_DEFAULT_LEVELS
@@ -102,63 +99,66 @@ def _split(string: str) -> StringTable:
 
 
 def test_docker_container_diskstat_cgroupv2() -> None:
-    value_store: Dict[str, Any] = {}
     with pytest.raises(IgnoreResultsError):
         # no rate metrics yet
         _ = list(
-            _check_docker_container_diskstat_cgroupv2(  # type: ignore[private_usage]
-                "dm-0",
+            check_diskstat(  # type: ignore[private_usage]
+                "nvme0n1",
                 FILESYSTEM_DEFAULT_LEVELS,
                 parse_docker_container_diskstat_cgroupv2(_split(AGENT_OUTPUT_0_SEC)),
-                value_store,
+                None,
             )
         )
     result = list(
-        _check_docker_container_diskstat_cgroupv2(  # type: ignore[private_usage]
-            "dm-0",
+        check_diskstat(  # type: ignore[private_usage]
+            "nvme0n1",
             FILESYSTEM_DEFAULT_LEVELS,
             parse_docker_container_diskstat_cgroupv2(_split(AGENT_OUTPUT_59_SEC)),
-            value_store,
+            None,
         )
     )
 
     assert result == [
         Result(state=State.OK, summary="Read: 5.00 kB/s"),
         Metric("disk_read_throughput", 4998.5084745762715),
-        Result(state=State.OK, summary="Write: 700 MB/s"),
-        Metric("disk_write_throughput", 699557853.2881356),
+        Result(state=State.OK, summary="Write: 0.00 B/s"),
+        Metric("disk_write_throughput", 0.0),
         Result(state=State.OK, notice="Read operations: 1.22/s"),
         Metric("disk_read_ios", 1.2203389830508475),
-        Result(state=State.OK, notice="Write operations: 766.49/s"),
-        Metric("disk_write_ios", 766.4915254237288),
+        Result(state=State.OK, notice="Write operations: 3.14/s"),
+        Metric("disk_write_ios", 3.135593220338983),
     ]
 
 
 def test_parse_docker_container_diskstat_cgroupv2() -> None:
     string_table = _split(AGENT_OUTPUT)
     assert parse_docker_container_diskstat_cgroupv2(string_table) == {
-        "dm-0": Device(
+        "dm-0": dict(
             read_ios=353,
             read_throughput=7094272,
             write_ios=2166,
             write_throughput=95592448,
+            timestamp=1614786439,
         ),
-        "dm-1": Device(
+        "dm-1": dict(
             read_ios=352,
             read_throughput=7090176,
             write_ios=2122,
             write_throughput=95543296,
+            timestamp=1614786439,
         ),
-        "dm-2": Device(
+        "dm-2": dict(
             read_ios=1,
             read_throughput=4096,
             write_ios=12,
             write_throughput=49152,
+            timestamp=1614786439,
         ),
-        "nvme0n1": Device(
+        "nvme0n1": dict(
             read_ios=353,
             read_throughput=7094272,
             write_ios=1,
             write_throughput=0,
+            timestamp=1614786439,
         ),
     }

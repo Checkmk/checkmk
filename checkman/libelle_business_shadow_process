@@ -1,7 +1,7 @@
 title: Libelle Business Shadow: Active Process
 agents: linux, aix, solaris, hpux
 catalog: app/libelle
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  Checks for an active trdrecover or trdarchive process at Libelle Business

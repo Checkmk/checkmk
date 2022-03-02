@@ -1,7 +1,7 @@
 title: Arcserve: Backup
 agents: windows
 catalog: os/services
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  Checks if Backup Jobs did finish successfully on an Arcserve Backup System.

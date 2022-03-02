@@ -31,11 +31,27 @@ withFolderProperties{
         case 'cfe':
             DISTRO_LIST_DEFAULT = env.DISTRO_LIST_CFE
             EDITION_DEFAULT = 'free'
-            START_HOUR = '4'
+            // TODO (tbc): As we're now building AMI in 2.1.0 *and* master, we may start two EC2 instances at the same
+            // time.
+            // Workaround: move the trigger in master two hours later so that we avoid the situation and fix it in CMK-9862
+            START_HOUR = '6'
             RUN_TESTS = false // CFE is basically a CEE, so we do not need to test it
             DEPLOY_TO_WEBSITE = false
             BUILD_IMAGE = false
             BUILD_AMI_IMAGE = true
+            break
+        case 'cpe':
+            DISTRO_LIST_DEFAULT = env.DISTRO_LIST_CPE
+            EDITION_DEFAULT = 'plus'
+            START_HOUR = '4'
+            // Enable this later when we have CPE specific integration tests.
+            // Until then it's similar to the CEE.
+            RUN_TESTS = false
+            // Do not publish anything, no docker and no AMI images. We only
+            // use the packages for our own tests - for now.
+            DEPLOY_TO_WEBSITE = false
+            BUILD_IMAGE = false
+            BUILD_AMI_IMAGE = false
             break
         default:
             throw new Exception('unknown trigger job')
@@ -48,7 +64,7 @@ properties([
     buildDiscarder(logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '', daysToKeepStr: '7', numToKeepStr: '14')),
     parameters([
         string(name: 'DISTROS', defaultValue: DISTRO_LIST_DEFAULT, description: 'List of targeted distros' ),
-        string(name: 'EDITION', defaultValue: EDITION_DEFAULT, description: 'Edition: raw, enterprise or managed' )
+        string(name: 'EDITION', defaultValue: EDITION_DEFAULT, description: 'Edition: raw, enterprise, managed or plus' )
     ]),
     pipelineTriggers(
         ENABLE_NIGHTLY_TRIGGER ? [cron("0 ${START_HOUR} * * *")] : []
@@ -86,16 +102,6 @@ node: {
     }
     if (RUN_TESTS) {
         parallel([
-            'Integration Test for Packages': {
-                stage('Integration Test for Packages') {
-                    build(job: "${FOLDER_ID}/nightly-${JOB_EDITION}/test-integration",
-                        parameters: [
-                            [$class: 'StringParameterValue', name: 'DISTROS', value: DISTROS],
-                            [$class: 'StringParameterValue', name: 'EDITION', value: EDITION]
-                        ]
-                    )
-                }
-            },
             'Integration Test for Docker Container': {
                 stage('Integration Test for Docker Container') {
                     build(job: "${FOLDER_ID}/nightly-${JOB_EDITION}/test-docker-integration",
@@ -117,5 +123,14 @@ node: {
                 }
             }
         ])
+
+        stage('Integration Test for Packages') {
+            build(job: "${FOLDER_ID}/nightly-${JOB_EDITION}/test-integration",
+                parameters: [
+                    [$class: 'StringParameterValue', name: 'DISTROS', value: DISTROS],
+                    [$class: 'StringParameterValue', name: 'EDITION', value: EDITION]
+                ]
+            )
+        }
     }
 }

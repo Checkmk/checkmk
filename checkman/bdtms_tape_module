@@ -1,7 +1,7 @@
 title: BDTMS Tape Library: Modules
 agents: snmp
 catalog: hw/storagehw/bdt
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check displays the status of the different modules

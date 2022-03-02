@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 Dependant options in "omd config" were not immediately toggled
 after changing the parent option. For example LIVESTATUS_TCP_PORT

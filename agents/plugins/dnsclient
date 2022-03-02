@@ -9,7 +9,7 @@
 
 # Disable unused variable error (needed to keep track of version)
 # shellcheck disable=SC2034
-CMK_VERSION="2.1.0i1"
+CMK_VERSION="2.2.0i1"
 
 # This check can be used to test the name resolution of a given host
 # address using the local resolver of the system this script is
@@ -17,15 +17,13 @@ CMK_VERSION="2.1.0i1"
 
 HOSTADDRESSES=mathias-kettner.de
 
-if [ -e "$MK_CONFDIR/dnsclient.cfg" ] ; then
-    . "$MK_CONFDIR/dnsclient.cfg"
-fi
+# shellcheck source=agents/cfg_examples/dnsclient.cfg
+. "$MK_CONFDIR/dnsclient.cfg" 2>/dev/null
 
 echo "<<<mrpe>>>"
-for HOSTADDRESS in $HOSTADDRESSES
-do
-    ADDRESSES=`nslookup $HOSTADDRESS | sed -n -e 1,3d -e '/^Address: *\(.*\)$/s//\1/p'`
-    if [ ! "$ADDRESSES" ] ; then
+for HOSTADDRESS in $HOSTADDRESSES; do
+    ADDRESSES=$(nslookup "$HOSTADDRESS" | sed -n -e 1,3d -e '/^Address: *\(.*\)$/s//\1/p')
+    if [ ! "$ADDRESSES" ]; then
         STATE=2
         OUTPUT="CRIT - $HOSTADDRESS could not be resolved"
     else

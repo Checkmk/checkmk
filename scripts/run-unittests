@@ -1,0 +1,54 @@
+#!/bin/bash
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
+# This file is for execution by the pre-commit framework.
+#
+set -e
+
+# shellcheck source=scripts/lib-precommit
+source "$(dirname "$0")/lib-precommit"
+
+# We only care for unittests
+declare -a TESTFILES
+
+for param in "$@"; do
+    if [[ "$param" == tests* ]]; then
+        if [[ "$param" == tests/unit/* ]]; then
+            TESTFILES+=("$(readlink -f "$param")")
+        fi
+        continue
+    else
+        # Check if we find a unittest for the file
+        dir=$(dirname "${param}")
+        filename=$(basename "${param}")
+        testfile="tests/unit/${dir}/test_${filename}"
+        if [[ -f "${testfile}" ]]; then
+            # We found a unittest
+            TESTFILES+=("$(readlink -f "${testfile}")")
+        fi
+    fi
+done
+
+NUM_PARAM=${#TESTFILES[@]}
+
+if [ "$NUM_PARAM" == "0" ]; then
+    echo No tests. >&2
+    exit 0
+fi
+
+REPO_PATH="$(git rev-parse --show-toplevel)"
+PIPENV="$REPO_PATH/scripts/run-pipenv"
+pushd "$REPO_PATH" >/dev/null
+
+$PIPENV run python -m pytest -T unit "${TESTFILES[@]}" || (
+    EXIT=$?
+    if test $EXIT -eq 5 || test $EXIT -eq 4; then
+        # This means no tests have been found.
+        exit 0
+    else
+        exit $EXIT
+    fi
+)
+popd >/dev/null

@@ -1,7 +1,7 @@
 title: SAP R/3: Single Value
 agents: linux
 catalog: app/sap
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check uses the data provided by the {mk_sap} agent plugin, which uses
@@ -30,4 +30,3 @@ discovery:
  node found on the target host.
  If an entry matches one service is created according to the entry
  (if it's not already existing).
-

@@ -1304,6 +1304,15 @@ expected_filters: Dict[str, Dict[str, Any]] = {
         'sort_index': 800,
         'title': u'Networking \u27a4 Ports'
     },
+    'inv_networking_hostname': {
+        'comment': None,
+        'filter_class': 'FilterInvText',
+        'htmlvars': ['inv_networking_hostname_from', 'inv_networking_hostname_to'],
+        'info': 'host',
+        'link_columns': [],
+        'sort_index': 800,
+        'title': u'Networking \u27a4 Hostname'
+    },
     'inv_networking_total_interfaces': {
         'comment': None,
         'filter_class': 'FilterInvFloat',
@@ -3705,27 +3714,24 @@ def test_registered_info_attributes():
         assert info.single_site == spec.get("single_site", True)
 
 
-@pytest.mark.parametrize("visual,expected_vars", [
-    # No single context, no filter
-    ({"single_infos": [], "context": {}}, []),
-    # No single context, ignore single filter
-    ({"single_infos": [], "context": {"aaa": "uuu"}}, []),
-    # No single context, use multi filter
-    ({"single_infos": [], "context": {"filter_name": {"filter_var": "eee"}}}, [('filter_var', 'eee')]),
-    # No single context, use multi filter
-    ({"single_infos": [], "context": {"filter_name": {"filter_var": "eee"}}}, [('filter_var', 'eee')]),
-    # Single host context
-    ({"single_infos": ["host"], "context": {"host": "abc"}}, [("host", "abc")]),
-    # Single host context, and other filters
-    ({"single_infos": ["host"], "context": {"host": "abc", "bla": {"blub": "ble"}}}, [('blub', 'ble'), ('host', 'abc')]),
-    # Single host context, missing filter -> no failure
-    ({"single_infos": ["host"], "context": {}}, []),
-    # Single host + service context
-    ({"single_infos": ["host", "service"], "context": {"host": "abc", "service": u"äää"}},
-        [("host", "abc"), ("service", u"äää")]),
-])
-def test_get_context_uri_vars(request_context, visual, expected_vars):
-    context_vars = visuals.get_context_uri_vars(visual["context"], visual["single_infos"])
+@pytest.mark.parametrize(
+    "context,expected_vars",
+    [
+        # No single context, use multi filter
+        ({"filter_name": {"filter_var": "eee"}}, [('filter_var', 'eee')]),
+        # Single host context
+        ({"host": {"host": "abc"}}, [("host", "abc")]),
+        # Single host context, and other filters
+        ({"host": {"host": "abc"}, "bla": {"blub": "ble"}},
+         [('blub', 'ble'), ('host', 'abc')]),
+        # Single host context, missing filter -> no failure
+        ({}, []),
+        # Single host + service context
+        ({"host": {"host": "abc"}, "service": {"service": "äää"}},
+         [("host", "abc"), ("service", u"äää")]),
+    ])
+def test_context_to_uri_vars(context, expected_vars):
+    context_vars = visuals.context_to_uri_vars(context)
     assert sorted(context_vars) == sorted(expected_vars)
 
 

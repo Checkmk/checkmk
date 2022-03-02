@@ -6,6 +6,6 @@ Date: 1629898736
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 Fixed UNKNOWN for newer versions of the rack class id "faultinst".

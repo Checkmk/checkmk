@@ -639,7 +639,7 @@ class ModeDistributedMonitoring(WatoMode):
         error = None
         # Fetch name/password of admin account
         if request.has_var("_name"):
-            name = UserId(request.get_unicode_input_mandatory("_name", "").strip())
+            name = UserId(request.get_str_input_mandatory("_name", "").strip())
             passwd = request.get_ascii_input_mandatory("_passwd", "").strip()
             try:
                 if not html.get_checkbox("_confirm"):

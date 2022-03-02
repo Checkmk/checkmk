@@ -12,7 +12,6 @@
 #include "IntColumn.h"
 #include "LogEntry.h"
 #include "MonitoringCore.h"
-#include "NagiosGlobals.h"
 #include "Query.h"
 #include "ServiceGroupMembersColumn.h"
 #include "ServiceListState.h"
@@ -58,12 +57,12 @@ std::string TableServiceGroups::namePrefix() const { return "servicegroup_"; }
 void TableServiceGroups::addColumns(Table *table, const std::string &prefix,
                                     const ColumnOffsets &offsets) {
     table->addColumn(std::make_unique<StringColumn<servicegroup>>(
-        prefix + "name", "The name of the service group", offsets,
+        prefix + "name", "Name of the servicegroup", offsets,
         [](const servicegroup &r) {
             return r.group_name == nullptr ? "" : r.group_name;
         }));
     table->addColumn(std::make_unique<StringColumn<servicegroup>>(
-        prefix + "alias", "An alias of the service group", offsets,
+        prefix + "alias", "An alias of the servicegroup", offsets,
         [](const servicegroup &r) {
             return r.alias == nullptr ? "" : r.alias;
         }));

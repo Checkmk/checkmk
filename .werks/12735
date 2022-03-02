@@ -6,7 +6,7 @@ Date: 1620118947
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 The SMART agent plugin now attempts to exclude devices which
 can read CDs. Such devices do not support SMART and not

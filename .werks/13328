@@ -6,7 +6,7 @@ Date: 1632385024
 Edition: cee
 Knowledge: undoc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 The global setting "Notification spooler insecure messages" is removed.
 It was only relevant in distributed setups with versions 1.4.0 and 1.5.0

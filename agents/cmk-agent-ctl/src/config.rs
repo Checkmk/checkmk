@@ -2,15 +2,18 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
-use super::cli;
+use super::{cli, constants, setup, site_spec, types};
 use anyhow::{anyhow, Context, Result as AnyhowResult};
 use serde::de::DeserializeOwned;
 use serde::Deserialize;
 use serde::Serialize;
+use serde_with::DisplayFromStr;
 use std::collections::HashMap;
-use std::fs::{read_to_string, write};
+use std::fs::{metadata, read_to_string, write};
 use std::io;
 use std::path::{Path, PathBuf};
+use std::str::FromStr;
+use std::time::SystemTime;
 use string_enum::StringEnum;
 
 #[derive(StringEnum, PartialEq)]
@@ -34,42 +37,47 @@ pub trait JSONLoader: DeserializeOwned {
     }
 }
 
-pub type AgentLabels = HashMap<String, String>;
+pub trait TOMLLoader: DeserializeOwned {
+    fn new() -> AnyhowResult<Self> {
+        Ok(toml::from_str("")?)
+    }
 
-#[derive(Deserialize)]
-pub struct Credentials {
-    pub username: String,
-    pub password: String,
+    fn load(path: &Path) -> AnyhowResult<Self> {
+        if !path.exists() {
+            return Self::new();
+        }
+        Ok(toml::from_str(&read_to_string(path)?)?)
+    }
 }
 
 #[derive(Deserialize)]
-pub struct ConfigFromDisk {
+pub struct RegistrationPreset {
     #[serde(default)]
-    pub agent_receiver_address: Option<String>,
+    site_spec: Option<site_spec::SiteSpec>,
 
     #[serde(default)]
-    pub credentials: Option<Credentials>,
+    credentials: Option<types::OptPwdCredentials>,
 
     #[serde(default)]
-    pub root_certificate: Option<String>,
+    root_certificate: Option<String>,
 
     #[serde(default)]
-    pub host_name: Option<String>,
+    host_name: Option<String>,
 
     #[serde(default)]
-    pub agent_labels: Option<AgentLabels>,
+    agent_labels: Option<types::AgentLabels>,
 }
 
-impl JSONLoader for ConfigFromDisk {}
+impl JSONLoader for RegistrationPreset {}
 
 pub enum HostRegistrationData {
     Name(String),
-    Labels(AgentLabels),
+    Labels(types::AgentLabels),
 }
 
 pub struct RegistrationConfig {
-    pub agent_receiver_address: String,
-    pub credentials: Credentials,
+    pub coordinates: site_spec::Coordinates,
+    pub opt_pwd_credentials: types::OptPwdCredentials,
     pub root_certificate: Option<String>,
     pub host_reg_data: HostRegistrationData,
     pub trust_server_cert: bool,
@@ -77,24 +85,29 @@ pub struct RegistrationConfig {
 
 impl RegistrationConfig {
     pub fn new(
-        config_from_disk: ConfigFromDisk,
+        preset: RegistrationPreset,
         reg_args: cli::RegistrationArgs,
     ) -> AnyhowResult<RegistrationConfig> {
-        let agent_receiver_address = reg_args
-            .server
-            .or(config_from_disk.agent_receiver_address)
-            .context("Missing server address")?;
-        let credentials =
-            if let (Some(username), Some(password)) = (reg_args.user, reg_args.password) {
-                Credentials { username, password }
-            } else {
-                config_from_disk
-                    .credentials
-                    .context("Missing credentials")?
-            };
-        let root_certificate = config_from_disk.root_certificate;
-        let stored_host_name = config_from_disk.host_name;
-        let stored_agent_labels = config_from_disk.agent_labels;
+        let coordinates = match reg_args
+            .site_address
+            .or(preset.site_spec)
+            .context("Site address not specified")?
+        {
+            site_spec::SiteSpec::Complete(coord) => coord,
+            site_spec::SiteSpec::Incomplete(inc_coord) => {
+                site_spec::Coordinates::try_from(inc_coord)?
+            }
+        };
+        let opt_pwd_credentials = match reg_args.user {
+            Some(username) => types::OptPwdCredentials {
+                username,
+                password: reg_args.password,
+            },
+            None => preset.credentials.context("Missing credentials")?,
+        };
+        let root_certificate = preset.root_certificate;
+        let stored_host_name = preset.host_name;
+        let stored_agent_labels = preset.agent_labels;
         let host_reg_data = reg_args
             .host_name
             .map(HostRegistrationData::Name)
@@ -102,8 +115,8 @@ impl RegistrationConfig {
             .or_else(|| stored_agent_labels.map(HostRegistrationData::Labels))
             .context("Neither hostname nor agent labels found")?;
         Ok(RegistrationConfig {
-            agent_receiver_address,
-            credentials,
+            coordinates,
+            opt_pwd_credentials,
             root_certificate,
             host_reg_data,
             trust_server_cert: reg_args.trust_server_cert,
@@ -111,45 +124,155 @@ impl RegistrationConfig {
     }
 }
 
-#[derive(Serialize, Deserialize, PartialEq, Debug)]
+#[derive(Deserialize)]
+pub struct ConfigFromDisk {
+    #[serde(default)]
+    allowed_ip: Option<Vec<String>>,
+
+    #[serde(default)]
+    pull_port: Option<types::Port>,
+}
+
+impl TOMLLoader for ConfigFromDisk {}
+
+pub struct LegacyPullMarker(std::path::PathBuf);
+
+impl LegacyPullMarker {
+    pub fn new(path: &Path) -> Self {
+        Self(path.to_path_buf())
+    }
+
+    pub fn exists(&self) -> bool {
+        self.0.exists()
+    }
+
+    pub fn remove(&self) -> std::io::Result<()> {
+        if !&self.exists() {
+            return Ok(());
+        }
+
+        std::fs::remove_file(&self.0)
+    }
+}
+
+pub struct PullConfig {
+    pub allowed_ip: Vec<String>,
+    pub port: types::Port,
+    pub max_connections: usize,
+    pub connection_timeout: u64,
+    legacy_pull_marker: LegacyPullMarker,
+    registry: Registry,
+}
+
+impl PullConfig {
+    pub fn new(
+        config_from_disk: ConfigFromDisk,
+        pull_args: cli::PullArgs,
+        legacy_pull_marker: LegacyPullMarker,
+        registry: Registry,
+    ) -> AnyhowResult<PullConfig> {
+        let allowed_ip = pull_args
+            .allowed_ip
+            .or(config_from_disk.allowed_ip)
+            .unwrap_or_default();
+        let port = pull_args
+            .port
+            .or(config_from_disk.pull_port)
+            .unwrap_or(types::Port::from_str(constants::DEFAULT_PULL_PORT)?);
+        Ok(PullConfig {
+            allowed_ip,
+            port,
+            max_connections: setup::max_connections(),
+            connection_timeout: setup::connection_timeout(),
+            legacy_pull_marker,
+            registry,
+        })
+    }
+
+    pub fn refresh(&mut self) -> AnyhowResult<bool> {
+        self.registry.refresh()
+    }
+
+    pub fn allow_legacy_pull(&self) -> bool {
+        self.registry.is_empty() && self.legacy_pull_marker.exists()
+    }
+
+    pub fn connections(&self) -> impl Iterator<Item = &Connection> {
+        self.registry.pull_connections()
+    }
+
+    pub fn has_connections(&self) -> bool {
+        !self.registry.pull_is_empty()
+    }
+}
+
+#[serde_with::serde_as]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Connection {
-    #[serde(default)]
-    pub uuid: String,
-
-    #[serde(default)]
+    #[serde_as(as = "DisplayFromStr")]
+    pub uuid: uuid::Uuid,
     pub private_key: String,
-
-    #[serde(default)]
     pub certificate: String,
-
-    #[serde(default)]
     pub root_cert: String,
 }
 
-#[derive(Serialize, Deserialize, PartialEq, Debug)]
+impl std::cmp::PartialEq for Connection {
+    fn eq(&self, other: &Self) -> bool {
+        self.uuid == other.uuid
+    }
+}
+
+impl std::cmp::Eq for Connection {}
+
+impl std::hash::Hash for Connection {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        self.uuid.hash(state);
+    }
+}
+
+impl std::borrow::Borrow<uuid::Uuid> for Connection {
+    fn borrow(&self) -> &uuid::Uuid {
+        &self.uuid
+    }
+}
+
+#[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
 pub struct RegisteredConnections {
     #[serde(default)]
-    pub push: HashMap<String, Connection>,
+    pub push: HashMap<site_spec::Coordinates, Connection>,
 
     #[serde(default)]
-    pub pull: HashMap<String, Connection>,
+    pub pull: HashMap<site_spec::Coordinates, Connection>,
 
     #[serde(default)]
-    pub pull_imported: Vec<Connection>,
+    pub pull_imported: std::collections::HashSet<Connection>,
 }
 
 impl JSONLoader for RegisteredConnections {}
 
-#[derive(PartialEq, Debug)]
+fn mtime(path: &Path) -> AnyhowResult<Option<SystemTime>> {
+    Ok(if path.exists() {
+        Some(metadata(&path)?.modified()?)
+    } else {
+        None
+    })
+}
+#[derive(PartialEq, Debug, Clone)]
 pub struct Registry {
     connections: RegisteredConnections,
     path: PathBuf,
+    last_reload: Option<SystemTime>,
 }
 
 impl Registry {
     #[cfg(test)]
-    pub fn new(connections: RegisteredConnections, path: PathBuf) -> Registry {
-        Registry { connections, path }
+    pub fn new(connections: RegisteredConnections, path: PathBuf) -> AnyhowResult<Registry> {
+        let last_reload = mtime(&path)?;
+        Ok(Registry {
+            connections,
+            path,
+            last_reload,
+        })
     }
 
     #[cfg(test)]
@@ -161,7 +284,41 @@ impl Registry {
         Ok(Registry {
             connections: RegisteredConnections::load(path)?,
             path: PathBuf::from(path),
+            last_reload: mtime(path)?,
         })
+    }
+
+    pub fn refresh(&mut self) -> AnyhowResult<bool> {
+        match (mtime(&self.path)?, self.last_reload) {
+            (Some(now), Some(then)) => {
+                match now.duration_since(then) {
+                    Ok(time) if time.is_zero() => {
+                        // No change.
+                        Ok(false)
+                    }
+                    _ => {
+                        // This also covers Err(_), which means "negative time".
+                        // This may occur due to clock adjustments.
+                        // Force reload in this case.
+                        // Otherwise, we have a regular posive duration, which means
+                        // that our registration was touched.
+                        self.reload()?;
+                        Ok(true)
+                    }
+                }
+            }
+
+            (None, None) => {
+                // Still no file there -> No change.
+                Ok(false)
+            }
+
+            _ => {
+                // File was deleted or is new
+                self.reload()?;
+                Ok(true)
+            }
+        }
     }
 
     pub fn save(&self) -> io::Result<()> {
@@ -171,13 +328,29 @@ impl Registry {
         )
     }
 
-    pub fn is_empty(&self) -> bool {
-        self.connections.push.is_empty()
-            & self.connections.pull.is_empty()
-            & self.connections.pull_imported.is_empty()
+    pub fn pull_standard_is_empty(&self) -> bool {
+        self.connections.pull.is_empty()
     }
 
-    pub fn standard_pull_connections(&self) -> impl Iterator<Item = (&String, &Connection)> {
+    pub fn pull_imported_is_empty(&self) -> bool {
+        self.connections.pull_imported.is_empty()
+    }
+
+    pub fn pull_is_empty(&self) -> bool {
+        self.pull_standard_is_empty() & self.pull_imported_is_empty()
+    }
+
+    pub fn push_is_empty(&self) -> bool {
+        self.connections.push.is_empty()
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.push_is_empty() & self.pull_is_empty()
+    }
+
+    pub fn standard_pull_connections(
+        &self,
+    ) -> impl Iterator<Item = (&site_spec::Coordinates, &Connection)> {
         self.connections.pull.iter()
     }
 
@@ -192,45 +365,51 @@ impl Registry {
             .chain(self.connections.pull_imported.iter())
     }
 
-    pub fn push_connections(&self) -> impl Iterator<Item = (&String, &Connection)> {
+    pub fn push_connections(&self) -> impl Iterator<Item = (&site_spec::Coordinates, &Connection)> {
         self.connections.push.iter()
     }
 
     pub fn register_connection(
         &mut self,
         connection_type: ConnectionType,
-        address: &str,
+        coordinates: &site_spec::Coordinates,
         connection: Connection,
     ) {
         let (insert_connections, remove_connections) = match connection_type {
             ConnectionType::Push => (&mut self.connections.push, &mut self.connections.pull),
             ConnectionType::Pull => (&mut self.connections.pull, &mut self.connections.push),
         };
-        remove_connections.remove(address);
-        insert_connections.insert(String::from(address), connection);
+        remove_connections.remove(coordinates);
+        insert_connections.insert(coordinates.clone(), connection);
     }
 
     pub fn register_imported_connection(&mut self, connection: Connection) {
-        self.connections.pull_imported.push(connection);
+        self.connections.pull_imported.insert(connection);
     }
 
-    pub fn delete_connection(&mut self, connection_id: &str) -> AnyhowResult<()> {
-        if self.delete_connection_by_server(connection_id).is_ok()
-            || self.delete_connection_by_uuid(connection_id).is_ok()
-        {
+    pub fn delete_standard_connection(
+        &mut self,
+        coordinates: &site_spec::Coordinates,
+    ) -> AnyhowResult<()> {
+        if self.connections.push.remove(coordinates).is_some() {
+            println!("Deleted push connection '{}'", coordinates);
             return Ok(());
         }
-        Err(anyhow!("Connection '{}' not found", connection_id))
+        if self.connections.pull.remove(coordinates).is_some() {
+            println!("Deleted pull connection '{}'", coordinates);
+            return Ok(());
+        }
+        Err(anyhow!("Connection '{}' not found", coordinates))
     }
 
-    pub fn delete_imported_connection_by_idx(&mut self, idx: usize) -> AnyhowResult<()> {
-        if self.connections.pull_imported.len() > idx {
-            self.connections.pull_imported.remove(idx);
+    pub fn delete_imported_connection(&mut self, uuid: &uuid::Uuid) -> AnyhowResult<()> {
+        if self.connections.pull_imported.remove(uuid) {
+            println!("Deleted imported connection '{}'", uuid);
             return Ok(());
-        }
+        };
         Err(anyhow!(
-            "Imported pull connection with index '{}' not found",
-            idx
+            "Imported pull connection with UUID {} not found",
+            uuid
         ))
     }
 
@@ -240,77 +419,27 @@ impl Registry {
         self.connections.pull_imported.clear();
     }
 
-    fn delete_connection_by_server(&mut self, server: &str) -> AnyhowResult<()> {
-        if self.connections.push.remove(server).is_some() {
-            println!("Deleted push connection '{}'", server);
-            return Ok(());
-        }
-        if self.connections.pull.remove(server).is_some() {
-            println!("Deleted pull connection '{}'", server);
-            return Ok(());
-        }
-        Err(anyhow!("Connection '{}' not found", server))
-    }
-
-    fn delete_by_uuid_from_standard_connections(&mut self, uuid: &str) -> AnyhowResult<()> {
-        for (conn_type, connections) in vec![
-            ("push", &mut self.connections.push),
-            ("pull", &mut self.connections.pull),
-        ] {
-            let mut address_to_delete: Option<String> = None;
-            for (address, conn) in connections.iter() {
-                if conn.uuid == uuid {
-                    address_to_delete = Some(String::from(address));
-                    break;
-                }
-            }
-            if let Some(addr) = address_to_delete {
-                connections.remove(&addr);
-                println!("Deleted {} connection '{}'", conn_type, uuid);
-                return Ok(());
-            }
-        }
-        Err(anyhow!("Connection '{}' not found", uuid))
-    }
-
-    fn delete_by_uuid_from_imported_connections(&mut self, uuid: &str) -> AnyhowResult<()> {
-        let mut idx_to_delete: Option<usize> = None;
-        for (idx, imp_pull_conn) in self.imported_pull_connections().enumerate() {
-            if imp_pull_conn.uuid == uuid {
-                idx_to_delete = Some(idx);
-                break;
-            }
-        }
-        if let Some(idx) = idx_to_delete {
-            self.connections.pull_imported.remove(idx);
-            println!("Deleted imported pull connection '{}'", uuid);
-            return Ok(());
-        }
-        Err(anyhow!("Connection '{}' not found", uuid))
-    }
-
-    fn delete_connection_by_uuid(&mut self, uuid: &str) -> AnyhowResult<()> {
-        if self.delete_by_uuid_from_standard_connections(uuid).is_ok()
-            || self.delete_by_uuid_from_imported_connections(uuid).is_ok()
-        {
-            return Ok(());
-        }
-        Err(anyhow!("Connection '{}' not found", uuid))
+    fn reload(&mut self) -> AnyhowResult<()> {
+        self.connections = RegisteredConnections::load(&self.path)?;
+        self.last_reload = mtime(&self.path)?;
+        Ok(())
     }
 }
 
 #[cfg(test)]
 mod test_registry {
     use super::*;
+    use std::str::FromStr;
 
     fn registry() -> Registry {
         let mut push = std::collections::HashMap::new();
         let mut pull = std::collections::HashMap::new();
+        let mut pull_imported = std::collections::HashSet::new();
 
         push.insert(
-            String::from("push_server:8000"),
+            site_spec::Coordinates::from_str("server:8000/push-site").unwrap(),
             Connection {
-                uuid: String::from("uuid-push"),
+                uuid: uuid::Uuid::new_v4(),
                 private_key: String::from("private_key"),
                 certificate: String::from("certificate"),
                 root_cert: String::from("root_cert"),
@@ -318,35 +447,39 @@ mod test_registry {
         );
 
         pull.insert(
-            String::from("pull_server:8000"),
+            site_spec::Coordinates::from_str("server:8000/pull-site").unwrap(),
             Connection {
-                uuid: String::from("uuid-pull"),
+                uuid: uuid::Uuid::new_v4(),
                 private_key: String::from("private_key"),
                 certificate: String::from("certificate"),
                 root_cert: String::from("root_cert"),
             },
         );
 
+        pull_imported.insert(Connection {
+            uuid: uuid::Uuid::new_v4(),
+            private_key: String::from("private_key"),
+            certificate: String::from("certificate"),
+            root_cert: String::from("root_cert"),
+        });
+
+        let path =
+            std::path::PathBuf::from(&tempfile::NamedTempFile::new().unwrap().into_temp_path());
+        let last_reload = mtime(&path).unwrap();
         Registry {
             connections: RegisteredConnections {
                 push,
                 pull,
-                pull_imported: vec![Connection {
-                    uuid: String::from("uuid-imported"),
-                    private_key: String::from("private_key"),
-                    certificate: String::from("certificate"),
-                    root_cert: String::from("root_cert"),
-                }],
+                pull_imported,
             },
-            path: std::path::PathBuf::from(
-                &tempfile::NamedTempFile::new().unwrap().into_temp_path(),
-            ),
+            path,
+            last_reload,
         }
     }
 
     fn connection() -> Connection {
         Connection {
-            uuid: String::from("abc-123"),
+            uuid: uuid::Uuid::new_v4(),
             private_key: String::from("private_key"),
             certificate: String::from("certificate"),
             root_cert: String::from("root_cert"),
@@ -357,15 +490,24 @@ mod test_registry {
     fn test_io() {
         let reg = registry();
         assert!(!reg.path.exists());
+        assert!(reg.last_reload.is_none());
+
         reg.save().unwrap();
         assert!(reg.path.exists());
-        assert_eq!(reg, Registry::from_file(&reg.path).unwrap());
+        let new_reg = Registry::from_file(&reg.path).unwrap();
+        assert_eq!(reg.connections, new_reg.connections);
+        assert_eq!(reg.path, new_reg.path);
+        assert!(new_reg.last_reload.is_some());
     }
 
     #[test]
     fn test_register_push_connection_new() {
         let mut reg = registry();
-        reg.register_connection(ConnectionType::Push, "new_server:1234", connection());
+        reg.register_connection(
+            ConnectionType::Push,
+            &site_spec::Coordinates::from_str("new_server:1234/new-site").unwrap(),
+            connection(),
+        );
         assert!(reg.connections.push.len() == 2);
         assert!(reg.connections.pull.len() == 1);
         assert!(reg.connections.pull_imported.len() == 1);
@@ -374,7 +516,11 @@ mod test_registry {
     #[test]
     fn test_register_push_connection_from_pull() {
         let mut reg = registry();
-        reg.register_connection(ConnectionType::Push, "pull_server:8000", connection());
+        reg.register_connection(
+            ConnectionType::Push,
+            &site_spec::Coordinates::from_str("server:8000/pull-site").unwrap(),
+            connection(),
+        );
         assert!(reg.connections.push.len() == 2);
         assert!(reg.connections.pull.is_empty());
         assert!(reg.connections.pull_imported.len() == 1);
@@ -383,7 +529,11 @@ mod test_registry {
     #[test]
     fn test_register_pull_connection_new() {
         let mut reg = registry();
-        reg.register_connection(ConnectionType::Pull, "new_server:1234", connection());
+        reg.register_connection(
+            ConnectionType::Pull,
+            &site_spec::Coordinates::from_str("new_server:1234/new-site").unwrap(),
+            connection(),
+        );
         assert!(reg.connections.push.len() == 1);
         assert!(reg.connections.pull.len() == 2);
         assert!(reg.connections.pull_imported.len() == 1);
@@ -392,7 +542,11 @@ mod test_registry {
     #[test]
     fn test_register_pull_connection_from_push() {
         let mut reg = registry();
-        reg.register_connection(ConnectionType::Pull, "push_server:8000", connection());
+        reg.register_connection(
+            ConnectionType::Pull,
+            &site_spec::Coordinates::from_str("server:8000/push-site").unwrap(),
+            connection(),
+        );
         assert!(reg.connections.push.is_empty());
         assert!(reg.connections.pull.len() == 2);
         assert!(reg.connections.pull_imported.len() == 1);
@@ -401,11 +555,13 @@ mod test_registry {
     #[test]
     fn test_register_imported_connection() {
         let mut reg = registry();
-        reg.register_imported_connection(connection());
+        let conn = connection();
+        let uuid = conn.uuid;
+        reg.register_imported_connection(conn);
         assert!(reg.connections.push.len() == 1);
         assert!(reg.connections.pull.len() == 1);
         assert!(reg.connections.pull_imported.len() == 2);
-        assert!(reg.connections.pull_imported[1].uuid == "abc-123");
+        assert!(reg.connections.pull_imported.contains(&uuid));
     }
 
     #[test]
@@ -425,47 +581,55 @@ mod test_registry {
         let reg = registry();
         let pull_conns: Vec<&Connection> = reg.pull_connections().collect();
         assert!(pull_conns.len() == 2);
-        assert!(pull_conns[0].uuid == "uuid-pull");
-        assert!(pull_conns[1].uuid == "uuid-imported");
+        assert!(
+            pull_conns[0]
+                == reg
+                    .connections
+                    .pull
+                    .get(&site_spec::Coordinates::from_str("server:8000/pull-site").unwrap())
+                    .unwrap()
+        );
+        assert!(reg.connections.pull_imported.contains(pull_conns[1]));
     }
 
     #[test]
     fn test_delete_push() {
-        for to_delete in ["push_server:8000", "uuid-push"] {
-            let mut reg = registry();
-            assert!(reg.delete_connection(to_delete).is_ok());
-            assert!(reg.connections.push.is_empty());
-            assert!(reg.connections.pull.len() == 1);
-            assert!(reg.connections.pull_imported.len() == 1);
-        }
+        let mut reg = registry();
+        assert!(reg
+            .delete_standard_connection(
+                &site_spec::Coordinates::from_str("server:8000/push-site").unwrap()
+            )
+            .is_ok());
+        assert!(reg.connections.push.is_empty());
+        assert!(reg.connections.pull.len() == 1);
+        assert!(reg.connections.pull_imported.len() == 1);
     }
 
     #[test]
     fn test_delete_pull() {
-        for to_delete in ["pull_server:8000", "uuid-pull"] {
-            let mut reg = registry();
-            assert!(reg.delete_connection(to_delete).is_ok());
-            assert!(reg.connections.push.len() == 1);
-            assert!(reg.connections.pull.is_empty());
-            assert!(reg.connections.pull_imported.len() == 1);
-        }
-    }
-
-    #[test]
-    fn test_delete_pull_imported() {
         let mut reg = registry();
-        assert!(reg.delete_connection("uuid-imported").is_ok());
+        assert!(reg
+            .delete_standard_connection(
+                &site_spec::Coordinates::from_str("server:8000/pull-site").unwrap()
+            )
+            .is_ok());
         assert!(reg.connections.push.len() == 1);
-        assert!(reg.connections.pull.len() == 1);
-        assert!(reg.connections.pull_imported.is_empty());
+        assert!(reg.connections.pull.is_empty());
+        assert!(reg.connections.pull_imported.len() == 1);
     }
 
     #[test]
     fn test_delete_missing() {
         let mut reg = registry();
         assert_eq!(
-            format!("{}", reg.delete_connection("wiener_schnitzel").unwrap_err()),
-            "Connection 'wiener_schnitzel' not found"
+            format!(
+                "{}",
+                reg.delete_standard_connection(
+                    &site_spec::Coordinates::from_str("wiener_schnitzel:8000/pommes").unwrap()
+                )
+                .unwrap_err()
+            ),
+            "Connection 'wiener_schnitzel:8000/pommes' not found"
         );
         assert!(reg.connections.push.len() == 1);
         assert!(reg.connections.pull.len() == 1);
@@ -473,41 +637,38 @@ mod test_registry {
     }
 
     #[test]
-    fn test_delete_delete_imported_connection_by_idx_ok() {
-        let mut reg = Registry {
-            connections: RegisteredConnections {
-                push: std::collections::HashMap::new(),
-                pull: std::collections::HashMap::new(),
-                pull_imported: vec![
-                    Connection {
-                        uuid: String::from("uuid-imported-1"),
-                        private_key: String::from("private_key"),
-                        certificate: String::from("certificate"),
-                        root_cert: String::from("root_cert"),
-                    },
-                    Connection {
-                        uuid: String::from("uuid-imported-2"),
-                        private_key: String::from("private_key"),
-                        certificate: String::from("certificate"),
-                        root_cert: String::from("root_cert"),
-                    },
-                ],
-            },
-            path: std::path::PathBuf::from(
-                &tempfile::NamedTempFile::new().unwrap().into_temp_path(),
-            ),
-        };
-        assert!(reg.delete_imported_connection_by_idx(1).is_ok());
+    fn test_delete_imported_connection_ok() {
+        let uuid_first_imported = uuid::Uuid::new_v4();
+        let uuid_second_imported = uuid::Uuid::new_v4();
+        let mut reg = registry();
+        reg.connections.pull_imported.clear();
+        reg.register_imported_connection(Connection {
+            uuid: uuid_first_imported,
+            private_key: String::from("private_key"),
+            certificate: String::from("certificate"),
+            root_cert: String::from("root_cert"),
+        });
+        reg.register_imported_connection(Connection {
+            uuid: uuid_second_imported,
+            private_key: String::from("private_key"),
+            certificate: String::from("certificate"),
+            root_cert: String::from("root_cert"),
+        });
+        assert!(reg.delete_imported_connection(&uuid_first_imported).is_ok());
         assert!(reg.connections.pull_imported.len() == 1);
-        assert!(reg.connections.pull_imported[0].uuid == "uuid-imported-1");
+        assert!(reg
+            .connections
+            .pull_imported
+            .contains(&uuid_second_imported));
     }
 
     #[test]
-    fn test_delete_delete_imported_connection_by_idx_err() {
+    fn test_delete_imported_connection_err() {
         let mut reg = registry();
+        let uuid = uuid::Uuid::new_v4();
         assert_eq!(
-            format!("{}", reg.delete_imported_connection_by_idx(1).unwrap_err()),
-            "Imported pull connection with index '1' not found"
+            format!("{}", reg.delete_imported_connection(&uuid).unwrap_err()),
+            format!("Imported pull connection with UUID {} not found", uuid),
         );
         assert!(reg.connections.push.len() == 1);
         assert!(reg.connections.pull.len() == 1);

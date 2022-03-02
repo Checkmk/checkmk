@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
-from typing import Tuple, TypedDict
+from typing import Mapping, Tuple
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import check_levels, register, Service
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
@@ -15,17 +15,7 @@ from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
 )
 from cmk.base.plugins.agent_based.utils.k8s import ContainerCount
 
-
-class LevelsUpperLower(TypedDict, total=False):
-    levels_upper: Tuple[int, int]
-    levels_lower: Tuple[int, int]
-
-
-class K8sContainersLevelsUpperLower(TypedDict, total=False):
-    running: LevelsUpperLower
-    waiting: LevelsUpperLower
-    terminated: LevelsUpperLower
-    total: LevelsUpperLower
+KubeContainersLevelsUpperLower = Mapping[str, Tuple[int, int]]
 
 
 def parse(string_table: StringTable) -> ContainerCount:
@@ -37,18 +27,16 @@ def discovery(section: ContainerCount) -> DiscoveryResult:
     yield Service()
 
 
-def check(params: K8sContainersLevelsUpperLower, section: ContainerCount) -> CheckResult:
+def check(params: KubeContainersLevelsUpperLower, section: ContainerCount) -> CheckResult:
     """Computes `total` and uses `check_levels` for each section element,
     setting levels from `params` individually"""
     section_dict = section.dict()
     section_dict["total"] = sum(section_dict.values())
     for name, value in section_dict.items():
-        levels = params.get(name, {})
-        assert isinstance(levels, dict)
         yield from check_levels(
             value,
-            levels_upper=levels.get("levels_upper"),
-            levels_lower=levels.get("levels_lower"),
+            levels_upper=params.get(f"{name}_upper"),
+            levels_lower=params.get(f"{name}_lower"),
             metric_name=f"kube_node_container_count_{name}",
             label=f"{name.title()}",
         )

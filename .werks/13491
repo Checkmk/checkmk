@@ -6,7 +6,7 @@ Date: 1636534858
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 The check plugin <tt>gude_humidity</tt>, which monitors the humidity
 sensors of Gude power control devices, now supports Expert Box 7214

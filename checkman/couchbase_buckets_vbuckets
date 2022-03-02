@@ -1,7 +1,7 @@
 title: Couchbase vBuckets: Memory, Item Ratio and Count of Active Buckets
 agents: special
 catalog: app/couchbase
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
 

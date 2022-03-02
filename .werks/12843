@@ -6,7 +6,7 @@ Date: 1626424368
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 When the profiling of the GUI was enabled, the new global setting was not
 applied immediately. It was only effective for the second HTTP request to an

@@ -1,4 +1,4 @@
-$CMK_VERSION = "2.1.0i1"
+$CMK_VERSION = "2.2.0i1"
 ## VEEAM Backups
 ## This powershell script needs to be run with the 64bit powershell
 ## and thus from a 64bit check_mk agent
@@ -21,7 +21,7 @@ $pswindow.buffersize = $newsize
 
 # Load Veeam Backup and Replication Powershell Snapin
 try {
-    Import-Module Veeam.Backup.PowerShell -ErrorAction Stop
+    Import-Module Veeam.Backup.PowerShell -ErrorAction Stop -DisableNameChecking
 }
 catch {
     try {
@@ -49,9 +49,16 @@ foreach ($tapeJob in $tapeJobs)
     }
 
 
-$myCdpJobsText = "<<<veeam_cdp_jobs:sep(124)>>>`n"
-
+try {
 $cdpjobs = Get-VBRCDPPolicy | select-Object Name,NextRun,PolicyState
+}
+catch {
+write-host "CDP jobs not supported"
+$cdpjobs = $false
+}
+
+if ( $cdpjobs ) {
+$myCdpJobsText = "<<<veeam_cdp_jobs:sep(124)>>>`n"
 
 foreach ($mycdpjobs in $cdpjobs)
 	{
@@ -66,6 +73,7 @@ foreach ($mycdpjobs in $cdpjobs)
 	}
 
 write-host $myCdpJobsText
+}
 
 $myJobsText = "<<<veeam_jobs:sep(9)>>>`n"
 $myTaskText = ""

@@ -7,6 +7,6 @@ Edition: cee
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 Links to ntopng are now having the current interface id set.

@@ -6,7 +6,7 @@ Date: 1606833429
 Edition: cee
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 If the mk_logwatch agent plugin was used no Agent Output was created and
 the HW-/SW Inventory would fail aswell. Therefore the agent plugin could

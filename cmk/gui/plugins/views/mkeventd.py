@@ -787,7 +787,7 @@ class PainterEventHistoryIcons(Painter):
         return "event_history_icons"
 
     def title(self, cell):
-        return _("Event icons")
+        return _("Event history icons")
 
     def short_title(self, cell):
         return _("Icons")
@@ -1093,17 +1093,13 @@ class CommandECUpdateEvent(ECCommand):
         if request.var("_mkeventd_update"):
             if user.may("mkeventd.update_comment"):
                 comment = (
-                    request.get_unicode_input_mandatory("_mkeventd_comment")
-                    .strip()
-                    .replace(";", ",")
+                    request.get_str_input_mandatory("_mkeventd_comment").strip().replace(";", ",")
                 )
             else:
                 comment = ""
             if user.may("mkeventd.update_contact"):
                 contact = (
-                    request.get_unicode_input_mandatory("_mkeventd_contact")
-                    .strip()
-                    .replace(":", ",")
+                    request.get_str_input_mandatory("_mkeventd_contact").strip().replace(":", ",")
                 )
             else:
                 contact = ""

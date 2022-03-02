@@ -5,11 +5,24 @@
 - name: "Create VMs in Amazon EC2"
   hosts: localhost
   connection: local
-  gather_facts: False
   vars_files:
     - group_vars/vars.yml
 
   tasks:
+    - name: Get data about checkmk free AMIs
+      ec2_ami_info:
+          filters:
+              name: "*checkmk*free*"
+          region: "{{ ec2_region }}"
+      register: AMIs
+    - name: "Delete AMIs which are older than {{ ami_cleanup_age_in_days }} days"
+      ec2_ami:
+          region: "{{ ec2_region }}"
+          image_id: "{{ item.image_id }}"
+          delete_snapshot: yes
+          state: absent
+      loop: "{{ AMIs.images }}"
+      when: "{{ (ansible_date_time.iso8601 | to_datetime('%Y-%m-%dT%H:%M:%SZ') - item.creation_date | to_datetime('%Y-%m-%dT%H:%M:%S.%fZ')).days > ami_cleanup_age_in_days }}"
     - name: Validate env vars
       fail:
         msg: "Error: env var AWS_ACCESS_KEY_ID not defined or empty."
@@ -298,9 +311,3 @@
         tags:
           Name: "{{ cmk_edition }} {{ cmk_version }}"
           Service: checkmk
-
-    - name: Terminate instance after creating AMI
-      ec2:
-        state: 'absent'
-        region: "{{ ec2_region }}"
-        instance_id: "{{ ec2_instance[0][0].id }}"

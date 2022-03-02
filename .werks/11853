@@ -6,7 +6,7 @@ Date: 1614788442
 Edition: cre
 Knowledge: doc
 Level: 2
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 Previously, the protection algorithm was hard-coded into the Windows agent and 
 it was called synchronously. Such approach may lead to some rare but important 

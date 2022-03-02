@@ -4,17 +4,33 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import Optional, Sequence
+
 import pytest
 
 from cmk.base.plugins.agent_based import zpool_status
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
+from cmk.base.plugins.agent_based.zpool_status import Section
 
 
-@pytest.mark.parametrize("string_table", [None])
-def test_zpool_status_discover(string_table):
-    services = list(zpool_status.discover_zpool_status(string_table))
-    assert len(services) == 1
-    assert services[0] == Service()
+@pytest.mark.parametrize("string_table, expected_result", [([], None)])
+def test_zpool_status_parse(string_table: StringTable, expected_result: Optional[Section]) -> None:
+    section = zpool_status.parse_zpool_status(string_table)
+    assert section == expected_result
+
+
+@pytest.mark.parametrize(
+    "section, expected_result",
+    [
+        (None, []),
+        (Section(message="No pools available"), []),
+        (Section(message="All pools are healthy"), [Service()]),
+    ],
+)
+def test_zpool_status_discover(section: Section, expected_result: Sequence[Service]) -> None:
+    services = list(zpool_status.discover_zpool_status(section))
+    assert services == expected_result
 
 
 @pytest.mark.parametrize(
@@ -25,12 +41,6 @@ def test_zpool_status_discover(string_table):
                 ["all", "pools", "are", "healthy"],
             ],
             Result(state=State.OK, summary="All pools are healthy"),
-        ),
-        (
-            [
-                ["no", "pools", "available"],
-            ],
-            Result(state=State.UNKNOWN, summary="No pools available"),
         ),
         (
             [
@@ -138,4 +148,5 @@ def test_zpool_status_discover(string_table):
 )
 def test_zpool_status_check(string_table, expected_result):
     section = zpool_status.parse_zpool_status(string_table)
+    assert section
     assert list(zpool_status.check_zpool_status({}, section)) == [expected_result]

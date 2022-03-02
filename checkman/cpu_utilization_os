@@ -1,0 +1,11 @@
+title: Cpu Utilization OS
+agents: linux
+catalog: os/kernel
+license: GPLv2
+distribution: check_mk
+description:
+ This check measures the CPU utilization during
+ the last check cycle. Levels can be set on the total utilization.
+
+inventory:
+ One service is created.

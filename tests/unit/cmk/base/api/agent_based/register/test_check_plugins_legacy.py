@@ -158,14 +158,11 @@ def test_create_check_plugin_from_legacy_with_params():
 
 def test_get_default_params_clean_case():
     # with params
-    assert (
-        check_plugins_legacy._get_default_parameters(
-            check_legacy_info={"default_levels_variable": "foo"},
-            factory_settings={"foo": {"levels": (23, 42)}},
-            check_context={},
-        )
-        == {"levels": (23, 42)}
-    )
+    assert check_plugins_legacy._get_default_parameters(
+        check_legacy_info={"default_levels_variable": "foo"},
+        factory_settings={"foo": {"levels": (23, 42)}},
+        check_context={},
+    ) == {"levels": (23, 42)}
 
     # without params
     assert (

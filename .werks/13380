@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 If a contact group was removed that was still used in a dashboard, the contact
 group was silently removed from the dashboard and it may no longer be possible

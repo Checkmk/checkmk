@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Iterable, List, Mapping, Sequence, Tuple, TypedDict
+from typing import Any, Iterable, List, Mapping, Optional, Sequence, Tuple, TypedDict
 
 from .agent_based_api.v1 import check_levels, register, render, Result, Service, SNMPTree
 from .agent_based_api.v1 import State as state
@@ -315,7 +315,7 @@ def check_netscaler_vserver(
 def cluster_check_netscaler_vserver(
     item: str,
     params: Mapping[str, Any],
-    section: Mapping[str, Section],
+    section: Mapping[str, Optional[Section]],
 ) -> type_defs.CheckResult:
     """
     >>> par = {"health_levels": (100.0, 0.1), "cluster_status": "best"}
@@ -344,7 +344,7 @@ def cluster_check_netscaler_vserver(
                 "node": node_name,
             }
             for node_name, node_section in section.items()
-            if item in node_section
+            if node_section is not None and item in node_section
         ],
     )
 

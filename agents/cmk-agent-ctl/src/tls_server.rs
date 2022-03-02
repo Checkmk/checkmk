@@ -4,32 +4,21 @@
 
 use super::config;
 use anyhow::{anyhow, Context, Result as AnyhowResult};
-use rustls::RootCertStore;
-use rustls::{
-    server::AllowAnyAuthenticatedClient, server::ResolvesServerCertUsingSni, sign::CertifiedKey,
-    sign::RsaSigningKey, Certificate, PrivateKey, ServerConfig, ServerConnection,
-    Stream as RustlsStream,
-};
 use rustls_pemfile::Item;
-#[cfg(unix)]
-use std::fs::File;
-use std::io::Result as IoResult;
-use std::io::{Read, Write};
-#[cfg(unix)]
-use std::os::unix::prelude::FromRawFd;
 use std::sync::Arc;
+use tokio_rustls::rustls::{
+    server::AllowAnyAuthenticatedClient, server::ResolvesServerCertUsingSni, sign::CertifiedKey,
+    sign::RsaSigningKey, Certificate, PrivateKey, RootCertStore, ServerConfig,
+};
+use tokio_rustls::TlsAcceptor;
 
-pub fn tls_connection<'a>(
+#[cfg(windows)]
+use std::io::{Read, Result as IoResult, Write};
+
+pub fn tls_acceptor<'a>(
     connections: impl Iterator<Item = &'a config::Connection>,
-) -> AnyhowResult<ServerConnection> {
-    Ok(ServerConnection::new(tls_config(connections)?)?)
-}
-
-pub fn tls_stream<'a>(
-    server_connection: &'a mut ServerConnection,
-    stream: &'a mut IoStream,
-) -> RustlsStream<'a, ServerConnection, IoStream> {
-    RustlsStream::new(server_connection, stream)
+) -> AnyhowResult<TlsAcceptor> {
+    Ok(TlsAcceptor::from(tls_config(connections)?))
 }
 
 fn tls_config<'a>(
@@ -69,7 +58,7 @@ fn sni_resolver<'a>(
 
         let certified_key = CertifiedKey::new(vec![cert], Arc::new(RsaSigningKey::new(&key)?));
 
-        resolver.add(&conn.uuid, certified_key)?;
+        resolver.add(&conn.uuid.to_string(), certified_key)?;
     }
 
     Ok(Arc::new(resolver))
@@ -96,57 +85,12 @@ fn certificate(cert_pem: &str) -> AnyhowResult<Certificate> {
     }
 }
 
-#[cfg(unix)]
-pub struct IoStream {
-    reader: File,
-    writer: File,
-}
-
 #[cfg(windows)]
 pub struct IoStream {
     // Windows Agent will not use stdio/stdin as a communication channel
     // This is just temporary stub to keep API more or less in sync.
     reader: std::io::Stdin,
     writer: std::io::Stdout,
-}
-
-impl IoStream {
-    #[cfg(unix)]
-    pub fn new() -> Self {
-        IoStream {
-            // Using File type from raw FDs here instead of
-            // io::StdIn/StdOut because the latter are buffered,
-            // and this is at some point incompatible to the TLS handshake
-            // (freezes in the middle)
-            reader: unsafe { File::from_raw_fd(0) },
-            writer: unsafe { File::from_raw_fd(1) },
-        }
-    }
-
-    #[cfg(windows)]
-    pub fn new() -> Self {
-        IoStream {
-            reader: { std::io::stdin() },
-            writer: { std::io::stdout() },
-        }
-    }
-}
-
-#[cfg(unix)]
-impl Read for IoStream {
-    fn read(&mut self, buf: &mut [u8]) -> IoResult<usize> {
-        self.reader.read(buf)
-    }
-}
-
-#[cfg(unix)]
-impl Write for IoStream {
-    fn write(&mut self, buf: &[u8]) -> IoResult<usize> {
-        self.writer.write(buf)
-    }
-    fn flush(&mut self) -> IoResult<()> {
-        self.writer.flush()
-    }
 }
 
 #[cfg(windows)]

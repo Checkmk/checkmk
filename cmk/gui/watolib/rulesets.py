@@ -41,11 +41,18 @@ from cmk.gui.globals import config, html
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.utils.html import HTML
-from cmk.gui.valuespec import ValueSpec
+from cmk.gui.valuespec import DropdownChoiceEntries, ValueSpec
 from cmk.gui.watolib.changes import add_change, make_diff_text, ObjectRef, ObjectRefType
-from cmk.gui.watolib.hosts_and_folders import CREFolder, CREHost, Folder, Host
+from cmk.gui.watolib.hosts_and_folders import (
+    CREFolder,
+    CREHost,
+    Folder,
+    get_wato_redis_client,
+    Host,
+    may_use_redis,
+)
 from cmk.gui.watolib.rulespecs import rulespec_group_registry, rulespec_registry
-from cmk.gui.watolib.utils import ALL_HOSTS, ALL_SERVICES, has_agent_bakery, NEGATE
+from cmk.gui.watolib.utils import ALL_HOSTS, ALL_SERVICES, has_agent_bakery, NEGATE, wato_root_dir
 
 # Make the GUI config module reset the base config to always get the latest state of the config
 register_post_config_load_hook(cmk.base.export.reset_config)
@@ -314,18 +321,22 @@ class RulesetCollection:
             content += ruleset.to_config(folder)
 
         rules_file_path = folder.rules_file_path()
-        # Remove rules files if it has no content. This prevents needless reads
-        if not has_content:
-            if os.path.exists(rules_file_path):
-                os.unlink(rules_file_path)  # Do not keep empty rules.mk files
-            return
+        try:
+            # Remove rules files if it has no content. This prevents needless reads
+            if not has_content:
+                if os.path.exists(rules_file_path):
+                    os.unlink(rules_file_path)  # Do not keep empty rules.mk files
+                return
 
-        # Adding this instead of the full path makes it easy to move config
-        # files around. The real FOLDER_PATH will be added dynamically while
-        # loading the file in cmk.base.config
-        content = content.replace("'%s'" % _FOLDER_PATH_MACRO, "'/%s/' % FOLDER_PATH")
+            # Adding this instead of the full path makes it easy to move config
+            # files around. The real FOLDER_PATH will be added dynamically while
+            # loading the file in cmk.base.config
+            content = content.replace("'%s'" % _FOLDER_PATH_MACRO, "'/%s/' % FOLDER_PATH")
 
-        store.save_mk_file(rules_file_path, content, add_header=not config.wato_use_git)
+            store.save_mk_file(rules_file_path, content, add_header=not config.wato_use_git)
+        finally:
+            if may_use_redis():
+                get_wato_redis_client().folder_updated(folder.filesystem_path())
 
     def exists(self, name: RulesetName) -> bool:
         return name in self._rulesets
@@ -371,10 +382,36 @@ class AllRulesets(RulesetCollection):
     def _load_rulesets_recursively(
         self, folder: CREFolder, only_varname: Optional[RulesetName] = None
     ) -> None:
+
+        if may_use_redis():
+            self._load_rulesets_via_redis(folder, only_varname)
+            return
+
         for subfolder in folder.subfolders():
             self._load_rulesets_recursively(subfolder, only_varname)
 
         self._load_folder_rulesets(folder, only_varname)
+
+    def _load_rulesets_via_redis(
+        self, folder: CREFolder, only_varname: Optional[RulesetName] = None
+    ) -> None:
+        # Search relevant folders with rules.mk files
+        # Note: The sort order of the folders does not matter here
+        #       self._load_folder_rulesets ultimately puts each folder into a dict
+        #       and groups/sorts them later on with a different mechanism
+        all_folders = get_wato_redis_client().recursive_subfolders_for_path(
+            f"{folder.path()}/".lstrip("/")
+        )
+
+        root_dir = wato_root_dir()[:-1]
+        relevant_folders = []
+        for folder_path in all_folders:
+            if os.path.exists(f"{root_dir}/{folder_path}rules.mk"):
+                relevant_folders.append(folder_path)
+
+        for folder_path_with_slash in relevant_folders:
+            stripped_folder = folder_path_with_slash.strip("/")
+            self._load_folder_rulesets(Folder.folder(stripped_folder), only_varname)
 
     def load(self) -> None:
         """Load all rules of all folders"""
@@ -751,7 +788,7 @@ class Ruleset:
     def item_help(self) -> Union[None, str, HTML]:
         return self.rulespec.item_help
 
-    def item_enum(self) -> Optional[List[Tuple[str, str]]]:
+    def item_enum(self) -> Optional[DropdownChoiceEntries]:
         return self.rulespec.item_enum
 
     def match_type(self) -> str:

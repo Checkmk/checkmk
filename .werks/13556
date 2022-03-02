@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 The check oracle_rman monitors incremental backups on Oracle databases. In the
 event that there are multiple backups for the same increment, the oldest backup

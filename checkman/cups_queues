@@ -1,7 +1,7 @@
 title: CUPS Printer Queues: State
 agents: linux, freebsd
 catalog: os/services
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check uses the output of {lpstat -p} and {lpstat -o} as sent by the
@@ -18,11 +18,10 @@ description:
  queue will be preferred. Even if e.g. "disabled since" would result in {CRIT}
  but the length of queue is {OK} and vice versa.
 
- To be able to use this check, please deploy the agent plugin {mk_cups_queues}. 
- 
+ To be able to use this check, please deploy the agent plugin {mk_cups_queues}.
+
 item:
  The name of the printer in CUPS as printed by {lpstat -p}.
 
 discovery:
  One service is created for each available printer in {lpstat -p} output.
-

@@ -1,7 +1,7 @@
 title: Traffic Analysis of Network Interfaces Using RMON
 agents: snmp
 catalog: hw/network/generic
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check extracts data from the RMON statistics group of RMON enabled network
@@ -20,4 +20,3 @@ discovery:
  The discovery of services has to be specifically activated for this check (ruleset
  "Monitor RMON statistics"). By default, no services are discovered. If activated,
  one service is created for each network port for which RMON is activated.
-

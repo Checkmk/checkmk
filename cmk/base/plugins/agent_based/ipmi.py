@@ -112,6 +112,7 @@ from .utils import ipmi
 # BMC Watchdog     | 03h | ok |  7.1 |
 # PS1 Status       | C8h | ok | 10.1 | Presence detected, Failure detected     <= NOT OK !!
 # PS2 Status       | C9h | ok | 10.2 | Presence detected
+# Drive 4          | 64h | ok  |  4.4 | Drive Present, Drive Fault <= NOT OK
 
 # broken
 # <<<ipmi:cached(1472175405,300)>>>
@@ -278,7 +279,9 @@ def discover_ipmi(
 def ipmi_status_txt_mapping(status_txt: str) -> state:
     status_txt_lower = status_txt.lower()
     if status_txt.startswith("ok") and not (
-        "failure detected" in status_txt_lower or "in critical array" in status_txt_lower
+        "failure detected" in status_txt_lower
+        or "in critical array" in status_txt_lower
+        or "drive fault" in status_txt_lower
     ):
         return state.OK
     if status_txt.startswith("nc"):

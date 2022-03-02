@@ -1,7 +1,7 @@
 title: MTR Ping/traceroute to Destination
 agents: linux
 catalog: os/networking
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This plugin can be used for network diagnostics. It collects data for each network hop to the target
@@ -13,4 +13,3 @@ item:
 
 discovery:
  One service is created for each section defined in mtr.cfg.
-

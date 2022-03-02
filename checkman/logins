@@ -1,7 +1,7 @@
 title: Number of Logged in Users
 agents: linux
 catalog: os/misc
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This checks the number of logged in users. It goes to warn/crit levels
@@ -11,4 +11,3 @@ description:
 
 discovery:
  One service is created.
-

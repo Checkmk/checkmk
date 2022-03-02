@@ -9,7 +9,79 @@ import pytest
 from cmk.utils.password_store import Password
 
 from cmk.gui import userdb
-from cmk.gui.watolib.password_store import PasswordStore
+from cmk.gui.watolib.password_store import join_password_specs, PasswordStore, split_password_specs
+
+
+def test_join_password_specs() -> None:
+    meta_data: dict[str, Password] = {
+        "asd": {
+            "title": "Title",
+            "comment": "Comment",
+            "docu_url": "http://no/url",
+            "password": "",
+            "owned_by": None,
+            "shared_with": [],
+        }
+    }
+    passwords = {"asd": "$ecret"}
+    joined = join_password_specs(meta_data, passwords)
+    assert joined == {
+        "asd": {
+            "title": "Title",
+            "comment": "Comment",
+            "docu_url": "http://no/url",
+            "password": "$ecret",
+            "owned_by": None,
+            "shared_with": [],
+        }
+    }
+
+
+def test_join_password_missing_password() -> None:
+    meta_data: dict[str, Password] = {
+        "asd": {
+            "title": "Title",
+            "comment": "Comment",
+            "docu_url": "http://no/url",
+            "password": "",
+            "owned_by": None,
+            "shared_with": [],
+        }
+    }
+    assert join_password_specs(meta_data, {}) == meta_data
+
+
+def test_join_password_specs_missing_meta_data() -> None:
+    meta_data: dict[str, Password] = {}
+    passwords = {"asd": "$ecret"}
+    assert join_password_specs(meta_data, passwords) == {}
+
+
+def test_split_password_specs() -> None:
+    meta_data, passwords = split_password_specs(
+        {
+            "asd": {
+                "title": "Title",
+                "comment": "Comment",
+                "docu_url": "http://no/url",
+                "password": "$ecret",
+                "owned_by": None,
+                "shared_with": [],
+            }
+        }
+    )
+
+    assert meta_data == {
+        "asd": {
+            "title": "Title",
+            "comment": "Comment",
+            "docu_url": "http://no/url",
+            "password": "",
+            "owned_by": None,
+            "shared_with": [],
+        }
+    }
+    assert passwords == {"asd": "$ecret"}
 
 
 @pytest.fixture(name="store")

@@ -1,15 +1,67 @@
 ---
-- name: Add localhost to Monitoring
-  template:
-    src: files/wato.conf.d.hosts.mk.j2
-    dest: /omd/sites/{{cmk_site}}/etc/check_mk/conf.d/wato/hosts.mk
-    owner: "{{cmk_site}}"
-    group: "{{cmk_site}}"
-    mode: "0644"
-
-- name: Save Change
-  become: true
-  become_method: sudo
+- name: Get automation secret
   become_user: root
+  become_method: sudo
   shell: |
-    sudo su - {{cmk_site}} -c "cmk -vI;   cmk -R"
+      python3 -c 'g={"multisite_users": {}}; \
+      exec(open("/omd/sites/{{cmk_site}}/etc/check_mk/multisite.d/wato/users.mk").read(), g); \
+      print(g["multisite_users"]["automation"]["automation_secret"])'
+  register: python_output
+
+- name: Extract secret
+  set_fact:
+    automation_secret: "{{ python_output.stdout }}"
+
+- name: Add localhost to monitoring
+  shell: |
+    curl \
+    -X POST \
+    --header "Authorization: Bearer automation {{ automation_secret }}" \
+    --header "Content-Type: application/json" \
+    --header "Accept: application/json" \
+    --data '{
+          "attributes": {
+            "ipaddress": "127.0.0.1"
+          },
+          "folder": "\/",
+          "host_name": "localhost"
+        }' \
+    "{{ api_entrypoint }}/domain-types/host_config/collections/all"
+
+- name: Install Checkmk agent
+  apt:
+    deb: /omd/sites/{{cmk_site}}/share/check_mk/agents/check-mk-agent_{{cmk_version}}-1_all.deb
+    state: present
+
+- name: Register controller to {{cmk_site}} site
+  become: yes
+  become_user: root
+  become_method: sudo
+  shell: |
+      cmk-agent-ctl register --trust-server-cert -s localhost/{{cmk_site}} -H localhost -u automation -p {{ automation_secret }}
+
+# TODO: The service discovery via REST API is broken atm, we do not get the services even after an activate changes: CMK-7200
+- name: Discover services
+  shell: |
+    curl \
+    -X POST \
+    --header "Authorization: Bearer automation {{ automation_secret }}" \
+    --header "Accept: application/json" \
+    --header "Content-Type: application/json" \
+    --data '{"mode": "refresh"}' \
+    "{{ api_entrypoint }}/objects/host/localhost/actions/discover_services/invoke"
+
+- name: Activate changes
+  shell: |
+    curl \
+    -X POST \
+    --header "Authorization: Bearer automation {{ automation_secret }}" \
+    --header "Accept: application/json" \
+    --header "Content-Type: application/json" \
+    --data '{
+          "redirect": false,
+          "sites": [
+            "{{cmk_site}}"
+          ]
+        }' \
+    "{{ api_entrypoint }}/domain-types/activation_run/actions/activate-changes/invoke"

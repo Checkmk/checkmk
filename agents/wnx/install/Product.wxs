@@ -114,17 +114,6 @@ just to signal that real build script was not called -->
       <ComponentRef Id="install"/>
     </Feature>
     <Feature Id="clean_feature" Title="Program Data Folder Clean" Level="1">
-      <!--      
-      <ComponentRef Id="remove_install_protocol"/>
-
-      <ComponentRef Id="clean_update"/>
-      <ComponentRef Id="clean_cache"/>
-      <ComponentRef Id="clean_install"/>
-      <ComponentRef Id="clean_bakery"/>
-      <ComponentRef Id="clean_backup"/>
-      <ComponentRef Id="clean_spool"/>
-      <ComponentRef Id="clean_tmp"/>
-      -->
     </Feature>
     
 
@@ -172,76 +161,10 @@ just to signal that real build script was not called -->
       <Directory Id="CommonAppDataFolder">
         <Directory Id="CmkFolder" Name="checkmk">
           <Directory Id="UserFolder" Name="agent">
-            <!--      
-            
-            <Directory Id="BakeryFolder" Name="bakery">
-              <Component Id="clean_bakery" Guid="{3593E36E-BC8C-4951-8ED8-8522D6205D3A}">
-                <RemoveFile Id="clean_check_mk_bakery_yml" On ="uninstall" Name="check_mk.bakery.yml"/>
-                <RemoveFolder Id ="RemoveBakeryFolder" On ="uninstall" />
-              </Component>
-            </Directory>
-            
-            <Directory Id="BackupFolder" Name="backup">
-              <Component Id="clean_backup" Guid="{73925DB5-076D-4E93-8138-1FDBEA4DAFC5}">
-                <RemoveFile Id="clean_backup" On ="uninstall" Name="*.*"/>
-                <RemoveFolder Id ="RemoveBackupFolder" On ="uninstall" />
-              </Component>
-            </Directory>
-
-            <Directory Id="SpoolFolder" Name="spool">
-              <Component Id="clean_spool" Guid="{19581C7B-0EE6-49BF-858A-90059FC844D1}">
-                <RemoveFile Id="clean_spool" On ="uninstall" Name="*.*"/>
-                <RemoveFolder Id ="RemoveSpoolFolder" On ="uninstall" />
-              </Component>
-            </Directory>
-
-            <Directory Id="InstallFolder" Name="install">
-              <Component Id="clean_install" Guid="{1D6B56F5-DC84-42CD-B026-EB29B15518D5}">
-                <RemoveFile Id="clean_install" On ="uninstall" Name="*.*"/>
-                <RemoveFolder Id ="RemoveInstallFolder" On ="uninstall" />
-              </Component>
-            </Directory>
-            
-            <Directory Id="UpdateFolder" Name="update">
-              <Component Id="clean_update" Guid="{BAABD622-3B82-44DD-8877-4E4528248FBE}">
-                <RemoveFile Id="clean_update" On ="uninstall" Name="*.*"/>
-                <RemoveFolder Id ="RemoveUpdateFolder" On ="uninstall" />
-              </Component>
-            </Directory>
-            
-            <Directory Id="CacheFolder" Name="cache">
-              <Component Id="clean_cache" Guid="{20F41F71-0BC0-4BAA-BF25-10C44BD84C2F}">
-                <RemoveFile Id="clean_cache" On ="uninstall" Name="*.*"/>
-                <RemoveFolder Id ="RemoveCacheFolder" On ="uninstall" />
-              </Component>
-            </Directory>
-
-            <Directory Id="TmpFolder" Name="tmp">
-              <Component Id="clean_tmp" Guid="{4E12FD73-AB1E-4881-A910-954D103C6FFD}">
-                <RemoveFile Id="clean_tmp" On ="uninstall" Name="*.*"/>
-                <RemoveFolder Id ="RemoveTmpFolder" On ="uninstall" />
-              </Component>
-            </Directory>
-            -->
-          
+       
           </Directory>
         </Directory>
       </Directory>
-      <!--      
-      <Directory Id="CommonAppDataFolder">
-        <Directory Id="PDFOLDER" Name="checkmk">
-          <Directory Id="pd_dir" Name="pd_dir_name">
-            <Component Id="pd_dir" Guid="{A21C3961-4585-49A7-A17B-8FD2AD4E29C5}"
-              SharedDllRefCount="no" KeyPath="no" NeverOverwrite="no" Permanent="no" Transitive="no"
-              Win64="no" Location="either">
-              <CreateFolder/>
-              <RemoveFile Id="pd_dir_files_remove" On ="uninstall" Name="*.*"/>
-              <RemoveFolder Id="pd_dir_folder_remove" On="uninstall"/>            
-            </Component>
-          </Directory>
-        </Directory>
-      </Directory>
-      -->
     </Directory>
     <CustomAction Id="uninstall_alert"
         Directory  ="INSTALLFOLDER_SERVICE"
@@ -256,36 +179,6 @@ just to signal that real build script was not called -->
 
     <!-- Step 2: Add files to your installer package -->
     <DirectoryRef Id="providers">
-      <!--      
-      <Component Id="plugin_player32_" Guid="{4C951DF9-B8F2-4225-AD86-A637CDC8C4B6}">
-        <File Id="plugin_player32"
-              Source="..\build\plugin_player\Win32\Release\plugin_player.exe"
-              KeyPath="yes"
-              Checksum="yes"/>
-        <Condition>NOT VersionNT64</Condition>
-      </Component>
-      <Component Id="plugin_player64_" Guid="{CCBAB0F2-1D21-452F-9300-37CB052E5769}">
-        <File Id="plugin_player64"
-              Source="..\build\plugin_player\x64\Release\plugin_player.exe"
-              KeyPath="yes"
-              Checksum="yes"/>
-        <Condition>VersionNT64</Condition>
-      </Component>
-      <Component Id="perf_counters32_" Guid="{F79D76C9-B14C-40BE-9529-3BFFFD37D84D}">
-        <File Id="perf_counter32"
-              Source="..\build\providers\perf_counter\Win32\Release\perf_counter.exe"
-              KeyPath="yes"
-              Checksum="yes"/>
-        <Condition>NOT VersionNT64</Condition>
-      </Component>
-      <Component Id="perf_counters64_" Guid="{5562E078-3FB1-41C7-B0A0-B33820C76F41}">
-        <File Id="perf_counter64"
-              Source="..\build\providers\perf_counter\x64\Release\perf_counter.exe"
-              KeyPath="yes"
-              Checksum="yes"/>
-        <Condition>VersionNT64</Condition>
-      </Component>
-      -->
     </DirectoryRef>
     
     <DirectoryRef Id="install">
@@ -460,13 +353,6 @@ just to signal that real build script was not called -->
 
     <!-- Step 3: Tell WiX to install the files -->
     <Feature Id="installable_binaries" Title="Binaries to be Installed" Level="1">
-      <!--      
-
-      <ComponentRef Id="plugin_player32_" />
-      <ComponentRef Id="plugin_player64_" />
-      <ComponentRef Id="perf_counters32_" />
-      <ComponentRef Id="perf_counters64_" />
-      -->
       <ComponentRef Id="check_mk_install_yml_" />
       <ComponentRef Id="plugins_cap_" />
       <ComponentRef Id="checkmk.dat" />
@@ -547,7 +433,17 @@ just to signal that real build script was not called -->
               DiskId="1" />
       </Component>
 
-      <Component Id="service32"
+        <Component Id="cmk_agent_ctl"
+                   Guid="{9279D3A4-FEE5-4598-95C0-96CA4400A1E9}">
+            <File Id="cmk_agent_ctl.exe"
+                  Source="..\..\..\artefacts\cmk-agent-ctl.exe"
+                  Name="cmk-agent-ctl.exe"
+                  KeyPath="yes"
+                  Checksum="yes"
+                  DiskId="1" />
+        </Component>
+
+        <Component Id="service32"
                  Guid="{3343809F-E2EF-4D9F-9FA5-AD1AC0968916}">
         <File Id="check_mk_svc32.exe"
               Source="..\build\check_mk_service\Win32\Release\check_mk_service32.exe"

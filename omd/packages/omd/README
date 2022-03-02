@@ -27,20 +27,11 @@ packages round about Nagios:
   * NagVis
   * PNP4Nagios
   * rrdtool including rrdcached
-  * nagios-plugins
-  * Check_MK
-  * Check_MK Multisite
-  * MK Livestatus
-  * dokuwiki
+  * monitoring-plugins
+  * Checkmk
+  * Livestatus
   * NSCA
   * check_nrpe
-  * Thruk
-  * check_oracle_health
-  * check_mysql_health
-  * check_webinject
-  * Shinken (still experimental)
-  * MOD Gearman
-  * jmx4perl
   * others...
 
 Features

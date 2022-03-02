@@ -9,13 +9,12 @@ manager."""
 
 import errno
 import fcntl
-import functools
 import logging
 import os
 import threading
 from contextlib import contextmanager
 from pathlib import Path
-from typing import Dict, Iterator, List, Optional, Union
+from typing import Iterator, Optional, Union
 
 from cmk.utils.exceptions import MKTimeout
 from cmk.utils.i18n import _
@@ -83,14 +82,14 @@ def lock_exclusive() -> None:
 #   | wait forever.                                                        |
 #   '----------------------------------------------------------------------'
 
-LockDict = Dict[str, int]
+LockDict = dict[str, int]
 
 # This will hold our path to file descriptor dicts.
 _locks = threading.local()
 
 
-def with_lock_dict(func):
-    """Decorator to make access to global locking dict thread-safe.
+def _aquired_locks() -> dict[str, int]:
+    """Make access to global locking dict thread-safe.
 
     Only the thread which acquired the lock should see the file descriptor in the locking
     dictionary. In order to do this, the locking dictionary(*) is now an attribute on a
@@ -98,66 +97,34 @@ def with_lock_dict(func):
     the creation of these dicts.
 
     (*) The dict is a mapping from path-name to file descriptor.
-
-    Additionally, this decorator passes the locking dictionary as the first parameter to the
-    functions, which manipulate the locking dictionary.
     """
-
-    @functools.wraps(func)
-    def wrapper(*args):
-        if not hasattr(_locks, "acquired_locks"):
-            _locks.acquired_locks = {}
-        return func(*args, locks=_locks.acquired_locks)
-
-    return wrapper
+    if not hasattr(_locks, "acquired_locks"):
+        _locks.acquired_locks = {}
+    return _locks.acquired_locks
 
 
-@with_lock_dict
-def _set_lock(
-    name: str,
-    fd: int,
-    locks: LockDict,
-) -> None:
-    locks[name] = fd
+def _set_lock(name: str, fd: int) -> None:
+    _aquired_locks()[name] = fd
 
 
-@with_lock_dict
-def _get_lock(
-    name: str,
-    locks: LockDict,
-) -> Optional[int]:
-    return locks.get(name)
+def _get_lock(name: str) -> Optional[int]:
+    return _aquired_locks().get(name)
 
 
-@with_lock_dict
-def _del_lock(
-    name: str,
-    locks: LockDict,
-) -> None:
-    locks.pop(name, None)
+def _del_lock(name: str) -> None:
+    _aquired_locks().pop(name, None)
 
 
-@with_lock_dict
-def _del_all_locks(locks: LockDict) -> None:
-    locks.clear()
+def _del_all_locks() -> None:
+    _aquired_locks().clear()
 
 
-@with_lock_dict
-def _get_lock_keys(locks: LockDict) -> List[str]:
-    return list(locks.keys())
+def _get_lock_keys() -> list[str]:
+    return list(_aquired_locks())
 
 
-@with_lock_dict
-def _get_lock_map(locks: LockDict) -> Dict[str, int]:
-    return locks
-
-
-@with_lock_dict
-def _has_lock(
-    name: str,
-    locks: LockDict,
-) -> bool:
-    return name in locks
+def _has_lock(name: str) -> bool:
+    return name in _aquired_locks()
 
 
 @contextmanager
@@ -232,7 +199,7 @@ def release_lock(path: Union[Path, str]) -> None:
         return  # no unlocking needed
     logger.debug("Releasing lock on %s", path)
 
-    fd = _get_lock(str(path))  # pylint: disable=no-value-for-parameter
+    fd = _get_lock(str(path))
     if fd is None:
         return
     try:
@@ -240,20 +207,20 @@ def release_lock(path: Union[Path, str]) -> None:
     except OSError as e:
         if e.errno != errno.EBADF:  # Bad file number
             raise
-    _del_lock(str(path))  # pylint: disable=no-value-for-parameter
+    _del_lock(str(path))
     logger.debug("Released lock on %s", path)
 
 
 def have_lock(path: Union[str, Path]) -> bool:
-    return _has_lock(str(path))  # pylint: disable=no-value-for-parameter
+    return _has_lock(str(path))
 
 
 def release_all_locks() -> None:
     logger.debug("Releasing all locks")
-    logger.debug("Acquired locks: %r", _get_lock_map())  # pylint: disable=no-value-for-parameter
-    for path in _get_lock_keys():  # pylint: disable=no-value-for-parameter
+    logger.debug("Acquired locks: %r", _aquired_locks())
+    for path in _get_lock_keys():
         release_lock(path)
-    _del_all_locks()  # pylint: disable=no-value-for-parameter
+    _del_all_locks()
 
 
 @contextmanager

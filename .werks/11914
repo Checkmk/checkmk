@@ -6,7 +6,7 @@ Date: 1610650008
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 The option "Individual program call" has been removed from the connection test page.
 This has not worked as intended since at least version 1.6 and brings more

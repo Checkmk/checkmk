@@ -6,7 +6,7 @@ Date: 1619079382
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 Checkmk is now capable of monitoring the fan and power supply sensors of
 Cisco FXOS (Firepower) appliances via the already existing check plugins

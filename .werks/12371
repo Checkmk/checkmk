@@ -6,7 +6,7 @@ Date: 1615188813
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 This change makes some small modifications to the returned user attributes
 when calling the user create or update endpoints. The format of the returned

@@ -114,11 +114,11 @@ from omdlib.version_info import VersionInfo
 
 import cmk.utils.log
 import cmk.utils.tty as tty
-from cmk.utils.certs import cert_dir
+from cmk.utils.certs import cert_dir, root_cert_path, RootCA
 from cmk.utils.exceptions import MKTerminate
 from cmk.utils.log import VERBOSE
 from cmk.utils.paths import mkbackup_lock_dir
-from cmk.utils.version import is_daily_build_of_master, major_version_parts
+from cmk.utils.version import base_version_parts, is_daily_build_of_master
 
 Arguments = List[str]
 ConfigChangeCommands = List[Tuple[str, str]]
@@ -1299,11 +1299,11 @@ def _instantiate_skel(site: SiteContext, path: str) -> bytes:
 def initialize_site_ca(site: SiteContext) -> None:
     """Initialize the site local CA and create the default site certificate
     This will be used e.g. for serving SSL secured livestatus"""
+    ca_path = cert_dir(Path(site.dir))
     ca = omdlib.certs.CertificateAuthority(
-        ca_path=cert_dir(Path(site.dir)),
-        ca_name="Site '%s' local CA" % site.name,
+        root_ca=RootCA.load_or_create(root_cert_path(ca_path), f"Site '{site.name}' local CA"),
+        ca_path=ca_path,
     )
-    ca.initialize()
     if not ca.site_certificate_exists(site.name):
         ca.create_site_certificate(site.name)
     if not ca.agent_receiver_certificate_exists:
@@ -2885,8 +2885,8 @@ def _is_version_update_allowed(from_version: str, to_version: str) -> bool:
     False
     """
 
-    from_parts = major_version_parts(from_version)
-    to_parts = major_version_parts(to_version)
+    from_parts = base_version_parts(from_version)
+    to_parts = base_version_parts(to_version)
 
     if is_daily_build_of_master(from_version) or is_daily_build_of_master(to_version):
         return True  # Don't know to which major master daily builds belong to -> always allow
@@ -2965,6 +2965,10 @@ def _get_edition(omd_version: str) -> str:
         return "enterprise"
     if edition_short == "cme":
         return "managed"
+    if edition_short == "cfe":
+        return "free"
+    if edition_short == "cpe":
+        return "plus"
     return "unknown"
 
 
@@ -3114,7 +3118,7 @@ def main_init_action(
         bare_arg = ["--bare"] if bare else []
         p = subprocess.Popen(  # pylint:disable=consider-using-with
             [sys.argv[0], command] + bare_arg + [site.name] + args,
-            stdin=open(os.devnull, "r"),  # pylint:disable=consider-using-with
+            stdin=subprocess.DEVNULL,
             stdout=stdout,
             stderr=stderr,
             encoding="utf-8",
@@ -3542,7 +3546,7 @@ def site_user_processes(site: SiteContext, exclude_current_and_parents: bool) ->
     p = subprocess.Popen(  # pylint:disable=consider-using-with
         ["ps", "-U", site.name, "-o", "pid", "--no-headers"],
         close_fds=True,
-        stdin=open(os.devnull),  # pylint:disable=consider-using-with
+        stdin=subprocess.DEVNULL,
         stdout=subprocess.PIPE,
         encoding="utf-8",
     )
@@ -3693,7 +3697,7 @@ class PackageManager(abc.ABC):
             cmd,
             shell=False,
             close_fds=True,
-            stdin=open(os.devnull),
+            stdin=subprocess.DEVNULL,
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
             encoding="utf-8",

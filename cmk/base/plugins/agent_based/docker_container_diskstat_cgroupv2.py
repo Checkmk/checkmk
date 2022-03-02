@@ -4,150 +4,108 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from contextlib import suppress
-from dataclasses import dataclass, field
-from typing import Any, Dict, List, Mapping, MutableMapping, NamedTuple, Sequence
+from typing import Dict, Iterable, List
 
-from .agent_based_api.v1 import get_value_store, register
-from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
+from .agent_based_api.v1 import register
+from .agent_based_api.v1.type_defs import StringTable
 from .utils import diskstat
-from .utils.df import FILESYSTEM_DEFAULT_LEVELS
 
 
-class Device(NamedTuple):
-    read_ios: int
-    read_throughput: int
-    write_ios: int
-    write_throughput: int
+class ParagraphParser:
+    headline: str
+
+    def __init__(self, hp: "HeadlineParser"):
+        hp.register_parser(self)
+
+    def parse(self, line: List[str]) -> None:
+        pass
 
 
-class Section(Dict[str, Device], MutableMapping[str, Device]):  # pylint: disable=too-many-ancestors
-    def __init__(self, time: int):
-        super().__init__()
-        self.time = time
+class HeadlineParser:
+    def __init__(self):
+        self._parsers: Dict[str, ParagraphParser] = {}
 
+    def register_parser(self, parser: ParagraphParser) -> None:
+        self._parsers[parser.headline] = parser
 
-@dataclass
-class ParsedData:
-    time: int = 0
-    names: Dict[str, str] = field(default_factory=dict)
-    stat: Dict[str, Dict[str, str]] = field(default_factory=dict)
-
-
-def _to_diskstat_dict(section: Section) -> Dict[str, Dict[str, int]]:
-    return {k: v._asdict() for k, v in section.items()}
-
-
-def _is_a_heading(line: List[str]) -> bool:
-    return len(line) == 1 and line[0].startswith("[") and line[0].endswith("]")
-
-
-def discover_docker_container_diskstat_cgroupv2(
-    params: Sequence[Mapping[str, Any]],
-    section: Section,
-) -> DiscoveryResult:
-    # TODO: don't discover lvm volumes, see CMK-7333
-    yield from diskstat.discovery_diskstat_generic(params, _to_diskstat_dict(section))
-
-
-def parse_docker_container_diskstat_cgroupv2(string_table: StringTable) -> Section:
-    parsed = ParsedData()
-    lines = iter(string_table)
-    for line in lines:
-        with suppress(StopIteration):
-            if line == ["[time]"]:
-                parsed.time = int(next(lines)[0])
+    def parse(self, lines: Iterable[List[str]]) -> None:
+        current_parser = None
+        for line in lines:
+            if len(line) == 1 and (parser := self._parsers.get(line[0])):
+                current_parser = parser
                 continue
-            if line == ["[io.stat]"]:
-                while not _is_a_heading(line := next(lines)):
-                    stat: Dict[str, str] = {}
-                    for kv_pair in line[1:]:
-                        key, value = kv_pair.split("=")
-                        stat[key] = value
-                    parsed.stat[line[0]] = stat
-            if line == ["[names]"]:
-                while not _is_a_heading(line := next(lines)):
-                    parsed.names[line[1]] = line[0]
+            if current_parser is not None:
+                current_parser.parse(line)
 
-    section = Section(parsed.time)
 
-    for device_number, stats in parsed.stat.items():
-        device_name = parsed.names[device_number]
-        section[device_name] = Device(
-            read_ios=int(stats["rios"]),
-            write_ios=int(stats["wios"]),
-            read_throughput=int(stats["rbytes"]),
-            write_throughput=int(stats["wbytes"]),
-        )
+class TimeParagprahParser(ParagraphParser):
+    headline = "[time]"
+
+    def __init__(self, hp: HeadlineParser):
+        super().__init__(hp)
+        self.time: int
+
+    def parse(self, line: List[str]) -> None:
+        self.time = int(line[0])
+
+
+class NamesParagprahParser(ParagraphParser):
+    headline = "[names]"
+
+    def __init__(self, hp: HeadlineParser):
+        super().__init__(hp)
+        self.names: Dict[str, str] = {}
+
+    def parse(self, line: List[str]) -> None:
+        self.names[line[1]] = line[0]
+
+
+class StatParagprahParser(ParagraphParser):
+    headline = "[io.stat]"
+
+    def __init__(self, hp: HeadlineParser):
+        super().__init__(hp)
+        self.stat: Dict[str, Dict[str, str]] = {}
+
+    def parse(self, line: List[str]) -> None:
+        stat: Dict[str, str] = {}
+        for kv_pair in line[1:]:
+            key, value = kv_pair.split("=")
+            stat[key] = value
+        self.stat[line[0]] = stat
+
+
+class DockerDiskstatParser(HeadlineParser):
+    def __init__(self):
+        super().__init__()
+        self.time = TimeParagprahParser(self)
+        self.names = NamesParagprahParser(self)
+        self.stat = StatParagprahParser(self)
+
+
+def parse_docker_container_diskstat_cgroupv2(
+    string_table: StringTable,
+) -> diskstat.Section:
+    parser = DockerDiskstatParser()
+    parser.parse(string_table)
+
+    section: Dict[str, Dict[str, float]] = {}
+
+    for device_number, stats in parser.stat.stat.items():
+        device_name = parser.names.names[device_number]
+        section[device_name] = {
+            "timestamp": parser.time.time,
+            "read_ios": int(stats["rios"]),
+            "write_ios": int(stats["wios"]),
+            "read_throughput": int(stats["rbytes"]),
+            "write_throughput": int(stats["wbytes"]),
+        }
 
     return section
-
-
-def check_docker_container_diskstat_cgroupv2(
-    item: str,
-    params: Mapping[str, Any],
-    section: Section,
-) -> CheckResult:
-    value_store = get_value_store()
-    yield from _check_docker_container_diskstat_cgroupv2(item, params, section, value_store)
-
-
-def _check_docker_container_diskstat_cgroupv2(
-    item: str,
-    params: Mapping[str, Any],
-    section: Section,
-    value_store: MutableMapping[str, Any],
-) -> CheckResult:
-    if item == "SUMMARY":
-
-        def _compute_rates_single_disk(
-            disk_absolute: diskstat.Disk,
-            value_store: MutableMapping[str, Any],
-            value_store_suffix: str,
-        ) -> diskstat.Disk:
-            return diskstat.compute_rates(
-                disk=disk_absolute,
-                value_store=value_store,
-                disk_name=value_store_suffix,
-                this_time=section.time,
-            )
-
-        disks_absolute = _to_diskstat_dict(section)
-        disks_rate = diskstat.compute_rates_multiple_disks(
-            disks_absolute,
-            value_store,
-            _compute_rates_single_disk,
-        )
-        rate = diskstat.summarize_disks(iter(disks_rate.items()))
-    else:
-        disk_absolute = _to_diskstat_dict(section)[item]
-        rate = diskstat.compute_rates(
-            disk=disk_absolute,
-            value_store=value_store,
-            disk_name=f"diskstat_{item}_",
-            this_time=section.time,
-        )
-    yield from diskstat.check_diskstat_dict(
-        params=params,
-        disk=rate,
-        value_store=value_store,
-        this_time=section.time,
-    )
 
 
 register.agent_section(
     name="docker_container_diskstat_cgroupv2",
     parse_function=parse_docker_container_diskstat_cgroupv2,
-)
-
-register.check_plugin(
-    name="docker_container_diskstat_cgroupv2",
-    service_name="Disk IO %s",
-    discovery_function=discover_docker_container_diskstat_cgroupv2,
-    discovery_default_parameters={"summary": True},
-    discovery_ruleset_name="diskstat_inventory",
-    discovery_ruleset_type=register.RuleSetType.ALL,
-    check_function=check_docker_container_diskstat_cgroupv2,
-    check_ruleset_name="diskstat",
-    check_default_parameters=FILESYSTEM_DEFAULT_LEVELS,
+    parsed_section_name="diskstat",
 )

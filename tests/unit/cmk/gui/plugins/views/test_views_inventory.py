@@ -9,6 +9,8 @@ from typing import Any, Mapping
 # No stub file
 import pytest
 
+from cmk.utils.structured_data import StructuredDataNode
+
 import cmk.gui.inventory
 import cmk.gui.plugins.views.inventory as inventory
 import cmk.gui.utils
@@ -33,9 +35,9 @@ EXPECTED_INV_KEYS = [
 ]
 
 INV_HIST_ROWS = [
-    (123, (1, 2, 3, None)),
-    (456, (4, 5, 6, None)),
-    (789, (7, 8, 9, None)),
+    cmk.gui.inventory.HistoryEntry(123, 1, 2, 3, StructuredDataNode()),
+    cmk.gui.inventory.HistoryEntry(456, 4, 5, 6, StructuredDataNode()),
+    cmk.gui.inventory.HistoryEntry(789, 7, 8, 9, StructuredDataNode()),
 ]
 
 EXPECTED_INV_HIST_KEYS = [

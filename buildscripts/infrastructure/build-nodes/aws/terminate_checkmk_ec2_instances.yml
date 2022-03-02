@@ -1,0 +1,21 @@
+#!/usr/bin/env ansible-playbook
+- name: "Setup connection to AWS"
+  hosts: localhost
+  connection: local
+  vars_files:
+      - group_vars/vars.yml
+  tasks:
+    - name: Gather information about running ec2 instances
+      ec2_instance_info:
+        filters:
+          instance-state-name: [ "running" ]
+        region: "{{ ec2_region }}"
+      register: Instances
+    - name: Terminate running checkmk ec2 instances
+      ec2:
+        state: 'absent'
+        region: "{{ ec2_region }}"
+        instance_id: "{{ item.instance_id }}"
+      loop: "{{ Instances.instances }}"
+      when:
+        - ('free - checkmk' in item.tags.get("Name", ""))

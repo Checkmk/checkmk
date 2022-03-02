@@ -1,7 +1,7 @@
 title: Socomec Modulys UPS Device: Input Phases
 agents: snmp
 catalog: hw/power/socomec
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  Monitors voltage, current and frequency of input phases of Socomec Modulys UPSs.
@@ -11,4 +11,3 @@ item:
 
 discovery:
  One service is created for each input phase (usually one or three).
-

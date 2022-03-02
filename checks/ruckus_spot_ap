@@ -4,21 +4,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# <<<ruckus_spot_ap:sep(9)>>>
-# [band]  1
-# 1-28    1
-# 1-25    1
-# 1-2 1
-# [band]  2
-# 1-28    1
-# 1-16    1
-# 1-9     1
-
 ruckus_spot_ap_bands = {
     "1": "2.4 GHz",
     "2": "5 GHz",
 }
-ruckus_spot_ap_default_levels = ((None, None), (None, None))
+
+factory_settings["ruckus_spot_ap"] = {}
 
 
 def parse_ruckus_spot_ap(info):
@@ -38,7 +29,7 @@ def parse_ruckus_spot_ap(info):
 def inventory_ruckus_spot_ap(parsed):
     for band in parsed:
         if band in ruckus_spot_ap_bands:
-            yield ruckus_spot_ap_bands[band], "ruckus_spot_ap_default_levels"
+            yield ruckus_spot_ap_bands[band], {}
 
 
 def check_ruckus_spot_ap(item, params, parsed):
@@ -47,31 +38,26 @@ def check_ruckus_spot_ap(item, params, parsed):
     if not band:
         return
 
-    (drift_warn, drift_crit), (down_warn, down_crit) = params
-    state = 0
-    info = 0
-    perfdata = [("ap_devices_total", len(band))]
+    dev_count = len(band)
+    yield 0, f"Devices: {dev_count}", [("ap_devices_total", dev_count)]
 
-    extra_info = []
-    for what, ap_state, warn, crit in [
-        ("drifted", 2, drift_warn, drift_crit),
-        ("not responding", 0, down_warn, down_crit),
+    for what, ap_state, key in [
+        ("drifted", 2, "levels_drifted"),
+        ("not responding", 0, "levels_not_responding"),
     ]:
         problems = len([x for x in band if x[1] == ap_state])
-        if crit and problems >= crit:
-            state = 2
-        elif warn and problems >= warn:
-            state = 1
 
-        if problems:
-            extra_info.append("%d %s%s" % (problems, what, state_markers[state]))
-        perfdata.append(("ap_devices_%s" % what.replace(" ", "_"), problems, warn, crit))
-
-    info = "%d devices" % len(band)
-    if extra_info:
-        info += " (%s)" % " / ".join(extra_info)
-
-    yield state, info, perfdata
+        # make this notice_only upon migration
+        state, text, metric = check_levels(
+            problems,
+            "ap_devices_%s" % what.replace(" ", "_"),
+            params.get(key),
+            human_readable_func=lambda x: str(int(x)),
+            infoname=what.capitalize(),
+        )
+        yield 0, "", metric
+        if problems or state:
+            yield state, text
 
 
 check_info["ruckus_spot_ap"] = {
@@ -79,6 +65,7 @@ check_info["ruckus_spot_ap"] = {
     "inventory_function": inventory_ruckus_spot_ap,
     "check_function": check_ruckus_spot_ap,
     "service_description": "Ruckus Spot Access Points %s",
+    "default_levels_variable": "ruckus_spot_ap",
     "group": "ruckus_ap",
     "has_perfdata": True,
 }

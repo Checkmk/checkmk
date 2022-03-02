@@ -1,7 +1,7 @@
 title: DB2: Instance Memory Usage
 agents: solaris, aix, linux
 catalog: app/db2
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This Check determines the memory limit and the usage limit for
@@ -14,4 +14,3 @@ item:
 
 discovery:
  One service is created for each instance.
-

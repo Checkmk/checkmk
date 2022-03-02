@@ -1,12 +1,11 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 # Copyright (C) 2021 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from logging import Logger
 from threading import Lock
-from typing import Dict, Optional
+from typing import Optional
 
 from cmk.utils.type_defs import HostName, Timestamp
 
@@ -30,8 +29,8 @@ class HostConfig:
     def __init__(self, logger: Logger) -> None:
         self._logger = logger
         self._lock = Lock()
-        self._hosts_by_name: Dict[HostName, HostInfo] = {}
-        self._hosts_by_designation: Dict[str, HostName] = {}
+        self._hosts_by_name: dict[HostName, HostInfo] = {}
+        self._hosts_by_designation: dict[str, HostName] = {}
         self._cache_timestamp: Optional[Timestamp] = None
 
     def get_config_for_host(self, host_name: HostName) -> Optional[HostInfo]:

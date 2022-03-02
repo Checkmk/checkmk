@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 The agent output may randomly contain errors like this in the first line of the
 agent output "line 12: echo: write error: Broken pipe" which would confuse the

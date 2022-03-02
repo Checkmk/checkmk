@@ -1,7 +1,7 @@
 title: Brocade NetIron MLX Devices: Traffic Manager Statistics
 agents: snmp
 catalog: hw/network/brocade
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check extracts the traffic manager statistics for interfaces of Brocade devices.
@@ -12,4 +12,3 @@ item:
 
 discovery:
  One service is created for each network interface
-

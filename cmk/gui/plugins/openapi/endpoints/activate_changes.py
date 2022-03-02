@@ -16,7 +16,7 @@ You can find an introduction to the configuration of Checkmk including activatio
 [Checkmk guide](https://docs.checkmk.com/latest/en/wato.html).
 """
 
-from cmk.gui import fields, watolib
+from cmk.gui import watolib
 from cmk.gui.exceptions import MKAuthException, MKUserError
 from cmk.gui.globals import request
 from cmk.gui.http import Response
@@ -29,6 +29,8 @@ from cmk.gui.plugins.openapi.restful_objects import (
 )
 from cmk.gui.plugins.openapi.restful_objects.type_defs import LinkType
 from cmk.gui.plugins.openapi.utils import ProblemException
+
+from cmk import fields
 
 ACTIVATION_ID = {
     "activation_id": fields.String(
@@ -46,7 +48,8 @@ ACTIVATION_ID = {
     status_descriptions={
         200: "The activation has been completed.",
         302: (
-            "The activation is still running. Redirecting to the " "'Wait for completion' endpoint."
+            "The activation has been started and is still running. Redirecting to the "
+            "'Wait for completion' endpoint."
         ),
         401: (
             "The API user may not activate another users changes, "
@@ -86,7 +89,7 @@ def _completion_link(activation_id: str) -> LinkType:
     )
 
 
-def _serve_activation_run(activation_id, is_running=False):
+def _serve_activation_run(activation_id: str, is_running: bool = False) -> Response:
     """Serialize the activation response"""
     links = []
     action = "has completed"
@@ -180,10 +183,8 @@ def list_activations(params):
         activations.append(
             constructors.collection_item(
                 domain_type="activation_run",
-                obj={
-                    "id": activation_id,
-                    "title": change["_comment"],
-                },
+                identifier=activation_id,
+                title=change["_comment"],
             )
         )
 

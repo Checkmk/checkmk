@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 The Checkmk GUI application is now initialized automatically when the apache
 process is started (restarted). This speeds up processing of the first HTTP

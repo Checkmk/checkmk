@@ -44,46 +44,6 @@ void ProtectAll(const std::filesystem::path &root,
 
 namespace tools {
 
-// add content of file to the Buf
-template <typename T>
-bool AppendFileContent(T &Buf, HANDLE h, size_t Count) noexcept {
-    // check what we have already inside
-    auto buf_size = Buf.size();
-    try {
-        Buf.resize(buf_size + Count);
-    } catch (const std::exception &e) {
-        XLOG::l(XLOG_FLINE + " exception: '{}'", e.what());
-        return false;
-    }
-
-    // add new data
-    auto read_buffer = Buf.data() + buf_size;
-    DWORD read_in_fact = 0;
-    auto count = static_cast<DWORD>(Count);
-    auto result = ::ReadFile(h, read_buffer, count, &read_in_fact, nullptr);
-    if (!result) false;
-
-    if (buf_size + read_in_fact != Buf.size()) {
-        Buf.resize(buf_size + read_in_fact);
-    }
-
-    return true;
-}
-
-template <typename T>
-T ReadFromHandle(HANDLE Handle) {
-    T buf;
-    for (;;) {
-        auto read_count = wtools::DataCountOnHandle(Handle);
-
-        // now reading to the end
-        if (read_count == 0) break;  // no data
-        if (!cma::tools::AppendFileContent<T>(buf, Handle, read_count))
-            break;  // io fail
-    }
-    return buf;
-}
-
 bool AreFilesSame(const std::filesystem::path &tgt,
                   const std::filesystem::path &src);
 
@@ -370,8 +330,10 @@ private:
     void readWhatLeft() {
         using namespace std;
         auto read_handle = getReadHandle();
-        auto buf = cma::tools::ReadFromHandle<vector<char>>(read_handle);
-        if (buf.size()) appendResult(read_handle, buf);
+        auto buf = wtools::ReadFromHandle(read_handle);
+        if (!buf.empty()) {
+            appendResult(read_handle, buf);
+        }
     }
 
     static std::string formatProcessInLog(uint32_t pid,

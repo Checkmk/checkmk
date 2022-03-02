@@ -5,19 +5,22 @@
 
 set -e
 
-SITE=${SITE:-$(until [ $PWD == / ]; do if [ -e .site ]; then cat .site; break; else cd ..; fi; done)}
+SITE=${SITE:-$(until [ "$PWD" == / ]; do if [ -e .site ]; then
+    cat .site
+    break
+else cd ..; fi; done)}
 SITE=${SITE:-$(omd sites --bare | head -n 1)}
 ROOT=/omd/sites/$SITE
 
 make mo
 for lang in ?? ??_??; do
-    sudo mkdir -p $ROOT/share/check_mk/locale/$lang/LC_MESSAGES
+    sudo mkdir -p "$ROOT"/share/check_mk/locale/"$lang"/LC_MESSAGES
     # Install the alias file
-    sudo install -o $SITE -g $SITE -v -m 644 $lang/alias $ROOT/share/check_mk/locale/$lang/
+    sudo install -o "$SITE" -g "$SITE" -v -m 644 "$lang"/alias "$ROOT"/share/check_mk/locale/"$lang"/
     # install .mo file to site
-    sudo install -o $SITE -g $SITE -v -m 644 $lang/LC_MESSAGES/multisite.mo $ROOT/share/check_mk/locale/$lang/LC_MESSAGES
+    sudo install -o "$SITE" -g "$SITE" -v -m 644 "$lang"/LC_MESSAGES/multisite.mo "$ROOT"/share/check_mk/locale/"$lang"/LC_MESSAGES
 done
 
-if [ -z $ONLY_COPY ]; then
-    sudo omd restart $SITE apache
+if [ -z "$ONLY_COPY" ]; then
+    sudo omd restart "$SITE" apache
 fi

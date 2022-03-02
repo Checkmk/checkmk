@@ -29,14 +29,14 @@ def parse_fjdarye500_ca_ports(info):
             {
                 "mode": mode_readable,
                 "read_ios": int(read_iops),
-                "read_throughput": int(read_mb) * 1024 ** 2,
+                "read_throughput": int(read_mb) * 1024**2,
             },
         )
         if mode_readable != "Initiator":
             port.update(
                 {
                     "write_ios": int(write_iops),
-                    "write_throughput": int(write_mb) * 1024 ** 2,
+                    "write_throughput": int(write_mb) * 1024**2,
                 }
             )
     return parsed

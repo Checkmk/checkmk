@@ -1,7 +1,7 @@
 title: NetApp Filer: Used Space in Filesystems
 agents: snmp
 catalog: hw/storagehw/netapp
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check measures the usage of aggregates and volumes in a NetAPP filer.
@@ -38,5 +38,3 @@ discovery:
  listed in {inventory_df_exclude_fs}. The Windows agent
  only reports fixed disks. The Linux agent reports filesystems
  that have a size and are not of type smbfs, tmpfs, cifs or nfs.
-
-

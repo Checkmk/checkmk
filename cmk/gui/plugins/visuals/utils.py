@@ -787,8 +787,6 @@ def get_livestatus_filter_headers(
     for filt in filters:
         try:
             value = context.get(filt.ident, {})
-            if isinstance(value, str):
-                value = {filt.htmlvars[0]: value}
             filt.validate_value(value)
             if header := filt.filter(value):
                 yield header

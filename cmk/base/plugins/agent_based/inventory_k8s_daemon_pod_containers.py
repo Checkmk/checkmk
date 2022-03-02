@@ -12,6 +12,11 @@ from .agent_based_api.v1.type_defs import InventoryResult, StringTable
 
 Section = Mapping[str, Mapping]
 
+########################################################################
+# NOTE: This inv plugin (and associated special agent) is deprecated and
+#       will be removed in Checkmk version 2.2.
+########################################################################
+
 
 def parse_k8s_daemon_pod_containers(string_table: StringTable) -> Section:
     try:

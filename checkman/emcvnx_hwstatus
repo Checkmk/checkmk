@@ -1,7 +1,7 @@
 title: EMC VNX Storage: Hardware Status
 agents: emcvnx
 catalog: hw/storagehw/emc
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  Reports the status of Power Supplies, SPS, SPS Cabeling, LCC, SP, CPU Modules,

@@ -9,7 +9,7 @@
 
 # Disable unused variable error (needed to keep track of version)
 # shellcheck disable=SC2034
-CMK_VERSION="2.1.0i1"
+CMK_VERSION="2.2.0i1"
 
 # Checkmk agent plugin for monitoring nfsexports on Solaris. This plugin
 # has been tested with solaris 10 in a standalone and cluster setting.
@@ -20,14 +20,14 @@ if [ -r "${clusterconfigdir}" ]; then
     nfsconfig="/etc/cluster/ccr/global/$(grep "rgm" "${clusterconfigdir}" | grep "nfs" | grep "rg_")"
     if [ -r "${nfsconfig}" ]; then
         Pathprefix="$(grep Pathprefix "${nfsconfig}" | awk '{ print $2 }')/SUNW.nfs"
-        dfstabfile="${Pathprefix}/dfstab.$(\
+        dfstabfile="${Pathprefix}/dfstab.$(
             grep -v FilesystemMountPoints "${nfsconfig}" |
                 grep SUNW.nfs |
                 awk '{ print $1 }' |
-                sed -e 's/RS_//' \
+                sed -e 's/RS_//'
         )"
         if [ -r "${dfstabfile}" ]; then
-            EXPORTS="$(grep -v  "^\#" "${dfstabfile}" | grep -v "^$")"
+            EXPORTS="$(grep -v "^\#" "${dfstabfile}" | grep -v "^$")"
             ps -aef | grep "nfsd" | grep "${Pathprefix}" >/dev/null && DAEMONS="ok"
         fi
     fi
@@ -35,7 +35,7 @@ else
     # is a standalone nfs server
     dfstabfile="/etc/dfs/dfstab"
     if [ -r "${dfstabfile}" ]; then
-        EXPORTS="$(grep -v  "^\#" "${dfstabfile}" | grep -v "^$")"
+        EXPORTS="$(grep -v "^\#" "${dfstabfile}" | grep -v "^$")"
     elif [ -x "/usr/sbin/zfs" ]; then
         EXPORTS="$(zfs get sharenfs)"
     fi

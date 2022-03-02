@@ -1,7 +1,7 @@
 title: Atto Fibrebridge: Temperature
 catalog: hw/storagehw/atto
 agents: snmp
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  Monitors the chassis temperature of Atto Fibrebridge 6500N Controllers.

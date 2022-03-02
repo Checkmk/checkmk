@@ -70,7 +70,6 @@ def _filter_builtin_timeperiods(timeperiods: TimeperiodSpecs) -> TimeperiodSpecs
 
 class TimeperiodSelection(DropdownChoice):
     def __init__(self, **kwargs):
-        kwargs.setdefault("no_preselect", True)
         kwargs.setdefault("no_preselect_title", _("Select a timeperiod"))
         DropdownChoice.__init__(self, choices=self._get_choices, **kwargs)
 

@@ -13,6 +13,7 @@ import contextlib
 import enum
 import errno
 import hashlib
+import os
 import re
 import socket
 from pathlib import Path
@@ -27,6 +28,7 @@ from cryptography.hazmat.primitives import hashes
 from cryptography.x509.oid import ExtensionOID, NameOID
 from OpenSSL import crypto, SSL  # type: ignore[import]
 
+import cmk.utils.paths
 from cmk.utils.exceptions import MKGeneralException
 
 OPENSSL_SALTED_MARKER = "Salted__"
@@ -276,3 +278,53 @@ def _verify_certificate_chain(
         )
 
     return verify_chain_results
+
+
+class Encrypter:
+    """Helper to encrypt site secrets
+
+    The secrets are encrypted using the auth.secret which is only known to the local and remotely
+    configured sites. The encrypted values are base64 encoded for easier processing.
+    """
+
+    @staticmethod
+    def _secret_key_path() -> Path:
+        return cmk.utils.paths.omd_root / "etc" / "auth.secret"
+
+    @staticmethod
+    def _passphrase() -> bytes:
+        with Encrypter._secret_key_path().open(mode="rb") as f:
+            return f.read().strip()
+
+    @staticmethod
+    def _secret_key(passphrase: bytes, salt: bytes) -> bytes:
+        """Build some secret for the encryption
+
+        Use the sites auth.secret for encryption. This secret is only known to the current site
+        and other distributed sites.
+        """
+        return hashlib.scrypt(passphrase, salt=salt, n=2**14, r=8, p=1, dklen=32)
+
+    @staticmethod
+    def _cipher(key: bytes, nonce: bytes):
+        return AES.new(key, AES.MODE_GCM, nonce=nonce)
+
+    @staticmethod
+    def encrypt(value: str) -> bytes:
+        salt = os.urandom(AES.block_size)
+        nonce = os.urandom(AES.block_size)
+        cipher = Encrypter._cipher(Encrypter._secret_key(Encrypter._passphrase(), salt), nonce)
+        encrypted, tag = cipher.encrypt_and_digest(value.encode("utf-8"))
+        return salt + nonce + tag + encrypted
+
+    @staticmethod
+    def decrypt(raw: bytes) -> str:
+        salt, rest = raw[: AES.block_size], raw[AES.block_size :]
+        nonce, rest = rest[: AES.block_size], rest[AES.block_size :]
+        tag, encrypted = rest[: AES.block_size], rest[AES.block_size :]
+
+        return (
+            Encrypter._cipher(Encrypter._secret_key(Encrypter._passphrase(), salt), nonce)
+            .decrypt_and_verify(encrypted, tag)
+            .decode("utf-8")
+        )

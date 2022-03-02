@@ -6,7 +6,7 @@
 
 import copy
 import re
-from typing import Dict, get_args, List, Literal, Optional, Tuple, Type, Union
+from typing import Any, Dict, get_args, List, Literal, Optional, Tuple, Type, Union
 
 import cmk.utils.paths
 import cmk.utils.store as store
@@ -515,7 +515,7 @@ class HostAttributeContactGroups(ABCHostAttribute):
     def show_in_folder(self) -> bool:
         return True
 
-    def default_value(self):
+    def default_value(self) -> Any:
         return (True, [])
 
     def paint(self, value, hostname):
@@ -546,7 +546,7 @@ class HostAttributeContactGroups(ABCHostAttribute):
             )
         return "", result
 
-    def render_input(self, varprefix, value):
+    def render_input(self, varprefix: str, value: Any) -> None:
         value = convert_cgroups_from_tuple(value)
 
         # If we're just editing a host, then some of the checkboxes will be missing.
@@ -617,7 +617,7 @@ class HostAttributeContactGroups(ABCHostAttribute):
         self._loaded_at = id(html)
         self._contactgroups = load_contact_group_information()
 
-    def from_html_vars(self, varprefix):
+    def from_html_vars(self, varprefix: str) -> dict[str, Any]:
         self.load_data()
 
         cgs = self._vs_contactgroups().from_html_vars(varprefix + self.name())
@@ -658,9 +658,11 @@ class HostAttributeContactGroups(ABCHostAttribute):
 
     def openapi_field(self):
         # FIXME: due to cyclical imports which, when fixed, expose even more cyclical imports.
-        from cmk.gui import fields
+        from cmk.gui import fields as gui_fields
+
+        from cmk import fields
 
         return fields.Nested(
-            fields.HostContactGroup,
+            gui_fields.HostContactGroup,
             description=self.help(),
         )

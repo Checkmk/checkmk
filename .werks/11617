@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 When triggering the activate changes API calls in "dirty" mode (activate all
 changes on all dirty sites), the offline sites were automatically excluded. In

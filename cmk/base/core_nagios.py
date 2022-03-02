@@ -14,10 +14,12 @@ from io import StringIO
 from pathlib import Path
 from typing import Any, cast, Dict, IO, Iterable, List, Optional, Set, Tuple, Union
 
+import cmk.utils.config_path
 import cmk.utils.paths
 import cmk.utils.store as store
 import cmk.utils.tty as tty
 from cmk.utils.check_utils import section_name_of
+from cmk.utils.config_path import VersionedConfigPath
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.log import console
 from cmk.utils.macros import replace_macros_in_str
@@ -35,9 +37,6 @@ from cmk.utils.type_defs import (
     ServiceName,
     TimeperiodName,
 )
-
-import cmk.core_helpers.config_path
-from cmk.core_helpers.config_path import VersionedConfigPath
 
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.config as config
@@ -342,7 +341,6 @@ def _create_nagios_servicedefs(
     used_descriptions: Dict[ServiceName, AbstractServiceID] = {}
     for service in sorted(host_check_table.values(), key=lambda s: s.sort_key()):
 
-        # TODO (mo): This should be done by the service object, much earlier.
         if not service.description:
             core_config.warning(
                 "Skipping invalid service with empty description (plugin: %s) on host %s"
@@ -1183,7 +1181,7 @@ if os.path.islink(%(dst)r):
     output.write("import cmk.utils.log\n")
     output.write("import cmk.utils.debug\n")
     output.write("from cmk.utils.exceptions import MKTerminate\n")
-    output.write("from cmk.core_helpers.config_path import LATEST_CONFIG\n")
+    output.write("from cmk.utils.config_path import LATEST_CONFIG\n")
     output.write("\n")
     output.write("import cmk.base.utils\n")
     output.write("import cmk.base.config as config\n")

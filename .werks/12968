@@ -6,7 +6,7 @@ Date: 1624613443
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 If a user with non-Ascii-characters in user ID or alias made profile changes in
 a distributed setup (e.g. password change), the error "Password changed (sync

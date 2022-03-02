@@ -6,7 +6,7 @@ Date: 1607520355
 Edition: cee
 Knowledge: doc
 Level: 2
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 During startup, the CMC caches information from the monitoring history up to
 a given horizon in the past.  This caching had a performance bug (quadratic

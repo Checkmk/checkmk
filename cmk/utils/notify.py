@@ -8,6 +8,10 @@ from typing import Dict, List, NewType
 
 import cmk.utils.defines
 
+# NOTE: Keep in sync with values in MonitoringLog.cc.
+MAX_COMMENT_LENGTH = 2000
+MAX_PLUGIN_OUTPUT_LENGTH = 1000
+
 # 0 -> OK
 # 1 -> temporary issue
 # 2 -> permanent issue
@@ -41,7 +45,15 @@ def notification_message(plugin: NotificationPluginName, context: NotificationCo
         spec = hostname
         state = context["HOSTSTATE"]
         output = context["HOSTOUTPUT"]
-    return "%s: %s;%s;%s;%s;%s" % (what, contact, spec, state, plugin, output)
+    # NOTE: There are actually 3 more additional fields, which we don't use: author, comment and long plugin output.
+    return "%s: %s;%s;%s;%s;%s" % (
+        what,
+        contact,
+        spec,
+        state,
+        plugin,
+        output[:MAX_PLUGIN_OUTPUT_LENGTH],
+    )
 
 
 def notification_progress_message(
@@ -60,7 +72,14 @@ def notification_progress_message(
         what = "HOST NOTIFICATION PROGRESS"
         spec = hostname
     state = _state_for(exit_code)
-    return "%s: %s;%s;%s;%s;%s" % (what, contact, spec, state, plugin, output)
+    return "%s: %s;%s;%s;%s;%s" % (
+        what,
+        contact,
+        spec,
+        state,
+        plugin,
+        output[:MAX_PLUGIN_OUTPUT_LENGTH],
+    )
 
 
 def notification_result_message(
@@ -81,4 +100,12 @@ def notification_result_message(
     state = _state_for(exit_code)
     comment = " -- ".join(output)
     short_output = output[-1] if output else ""
-    return "%s: %s;%s;%s;%s;%s;%s" % (what, contact, spec, state, plugin, short_output, comment)
+    return "%s: %s;%s;%s;%s;%s;%s" % (
+        what,
+        contact,
+        spec,
+        state,
+        plugin,
+        short_output[:MAX_PLUGIN_OUTPUT_LENGTH],
+        comment[:MAX_COMMENT_LENGTH],
+    )

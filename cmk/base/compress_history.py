@@ -37,79 +37,79 @@ def compress_history_file(input_path: str, output_path: str) -> None:
     known_services: Dict[str, Set[Optional[str]]] = {}
     machine_state = "START"
 
-    output = io.open(output_path, "wt")  # pylint:disable=consider-using-with
-    with open(input_path) as opened_file:
-        for line in opened_file:
-            skip_this_line = False
-            timestamp = int(line[1:11])
-            line_type, host, service = parse_history_line(line)
+    with io.open(output_path, "wt") as output:
+        with open(input_path) as opened_file:
+            for line in opened_file:
+                skip_this_line = False
+                timestamp = int(line[1:11])
+                line_type, host, service = parse_history_line(line)
 
-            logger.debug("%s  (%s) %s / %s / %s", line, machine_state, line_type, host, service)
+                logger.debug("%s  (%s) %s / %s / %s", line, machine_state, line_type, host, service)
 
-            if line_type in ("RESTART", "LOGGING_INITIAL"):
-                if machine_state != "START":
-                    machine_state = "AFTER_RESTART"
-                    services_after_reload: Dict[str, Set[Optional[str]]] = {}
-                if line_type == "LOGGING_INITIAL":
-                    skip_this_line = True
-
-            elif line_type == "CURRENT":
-                if host is None:
-                    raise Exception(
-                        "Unexpected line %s (while in state %s); Host is None"
-                        % (line, machine_state)
-                    )
-                if machine_state not in ("START", "CURRENT", "AFTER_RESTART"):
-                    raise Exception(
-                        "Unexpected line %s (while in state %s)" % (line, machine_state)
-                    )
-                machine_state = "CURRENT"
-                known_services.setdefault(host, set([])).add(service)
-
-            elif line_type == "INITIAL":
-                if host is None:
-                    raise Exception(
-                        "Unexpected line %s (while in state %s); Host is None"
-                        % (line, machine_state)
-                    )
-
-                if machine_state == "OPERATION":
-                    pass  # happens at CMC. That does not create a log entry on reload
-                elif machine_state == "START":
-                    machine_state = "INITIAL"
-                    known_services.setdefault(host, set([])).add(service)
-                    services_after_reload = {}
-                elif machine_state not in ("AFTER_RESTART", "INITIAL"):
-                    raise Exception(
-                        "Unexpected line %s (while in state %s)" % (line, machine_state)
-                    )
-                else:
-                    machine_state = "INITIAL"
-                    services_after_reload.setdefault(host, set([])).add(service)
-                    if host in known_services and service in known_services[host]:
+                if line_type in ("RESTART", "LOGGING_INITIAL"):
+                    if machine_state != "START":
+                        machine_state = "AFTER_RESTART"
+                        services_after_reload: Dict[str, Set[Optional[str]]] = {}
+                    if line_type == "LOGGING_INITIAL":
                         skip_this_line = True
 
-            elif line_type == "OPERATION":
-                if machine_state != "START":
-                    if machine_state == "INITIAL":
-                        for host in known_services:
-                            if host not in services_after_reload:
-                                for service in known_services[host]:
-                                    log_vanished_object(output, timestamp, host, service)
-                                del known_services[host]
-                            else:
-                                known = known_services[host]
-                                after_reload = services_after_reload[host]
-                                for service in list(known):
-                                    if service not in after_reload:
-                                        log_vanished_object(output, timestamp, host, service)
-                                        known.remove(service)
-                    machine_state = "OPERATION"
-            else:
-                pass
+                elif line_type == "CURRENT":
+                    if host is None:
+                        raise Exception(
+                            "Unexpected line %s (while in state %s); Host is None"
+                            % (line, machine_state)
+                        )
+                    if machine_state not in ("START", "CURRENT", "AFTER_RESTART"):
+                        raise Exception(
+                            "Unexpected line %s (while in state %s)" % (line, machine_state)
+                        )
+                    machine_state = "CURRENT"
+                    known_services.setdefault(host, set([])).add(service)
 
-            if not skip_this_line:
-                output.write(line)
+                elif line_type == "INITIAL":
+                    if host is None:
+                        raise Exception(
+                            "Unexpected line %s (while in state %s); Host is None"
+                            % (line, machine_state)
+                        )
+
+                    if machine_state == "OPERATION":
+                        pass  # happens at CMC. That does not create a log entry on reload
+                    elif machine_state == "START":
+                        machine_state = "INITIAL"
+                        known_services.setdefault(host, set([])).add(service)
+                        services_after_reload = {}
+                    elif machine_state not in ("AFTER_RESTART", "INITIAL"):
+                        raise Exception(
+                            "Unexpected line %s (while in state %s)" % (line, machine_state)
+                        )
+                    else:
+                        machine_state = "INITIAL"
+                        services_after_reload.setdefault(host, set([])).add(service)
+                        if host in known_services and service in known_services[host]:
+                            skip_this_line = True
+
+                elif line_type == "OPERATION":
+                    if machine_state != "START":
+                        if machine_state == "INITIAL":
+                            for host in known_services:
+                                if host not in services_after_reload:
+                                    for service in known_services[host]:
+                                        log_vanished_object(output, timestamp, host, service)
+                                    del known_services[host]
+                                else:
+                                    known = known_services[host]
+                                    after_reload = services_after_reload[host]
+                                    for service in list(known):
+                                        if service not in after_reload:
+                                            log_vanished_object(output, timestamp, host, service)
+                                            known.remove(service)
+                        machine_state = "OPERATION"
+                else:
+                    pass
+
+                if not skip_this_line:
+                    output.write(line)
 
 
 def parse_history_line(line: str) -> Tuple[str, Optional[str], Optional[str]]:

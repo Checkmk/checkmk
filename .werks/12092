@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 cisco_mem_asa disvovery and check functions would crash when parsing empty SNMP lines.
 Additionally the plugin uses two distinct functions for parsing different versions of

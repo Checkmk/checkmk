@@ -61,24 +61,24 @@ def test_user_config_get_not_existing_snapin():
         (
             "tactical_overview",
             "views",
-            ["admin", "tactical_overview", "views"],
+            ["performance", "tactical_overview", "views"],
         ),
         (
             "tactical_overview",
-            "admin",
-            ["tactical_overview", "admin", "views"],
+            "performance",
+            ["tactical_overview", "performance", "views"],
         ),
-        ("not_existing", "admin", None),
+        ("not_existing", "performance", None),
         # TODO: Shouldn't this also be handled?
-        # ("admin",  "not_existing", [
-        #    ("admin", "open"),
+        # ("performance",  "not_existing", [
+        #    ("performance", "open"),
         #    ("views", "open"),
         #    ("tactical_overview", "open"),
         # ]),
         (
-            "admin",
+            "performance",
             "",
-            ["views", "tactical_overview", "admin"],
+            ["views", "tactical_overview", "performance"],
         ),
     ],
 )
@@ -87,7 +87,7 @@ def test_user_config_move_snapin_before(mocker, move_id, before_id, result):
     del user_config.snapins[:]
     user_config.snapins.extend(
         [
-            UserSidebarSnapin.from_snapin_type_id("admin"),
+            UserSidebarSnapin.from_snapin_type_id("performance"),
             UserSidebarSnapin.from_snapin_type_id("views"),
             UserSidebarSnapin.from_snapin_type_id("tactical_overview"),
         ]
@@ -321,7 +321,7 @@ def test_move_snapin_not_permitted(monkeypatch, mocker, request_context):
     "move,before,do_save",
     [
         ("tactical_overview", "views", True),
-        ("not_existing", "admin", None),
+        ("not_existing", "performance", None),
     ],
 )
 def test_move_snapin(request_context, mocker, move, before, do_save):

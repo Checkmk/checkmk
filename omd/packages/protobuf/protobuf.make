@@ -3,7 +3,7 @@ PROTOBUF := protobuf
 PROTOBUF_VERS := 3.18.1
 PROTOBUF_DIR := $(PROTOBUF)-$(PROTOBUF_VERS)
 # Increase this to enforce a recreation of the build cache
-PROTOBUF_BUILD_ID := 9
+PROTOBUF_BUILD_ID := 13
 
 PROTOBUF_PATCHING := $(BUILD_HELPER_DIR)/$(PROTOBUF_DIR)-patching
 PROTOBUF_CONFIGURE := $(BUILD_HELPER_DIR)/$(PROTOBUF_DIR)-configure
@@ -49,21 +49,12 @@ $(PROTOBUF_UNPACK): $(PACKAGE_DIR)/$(PROTOBUF)/protobuf-python-$(PROTOBUF_VERS).
 # We have hidden embedded dependency: PATCHING -> UNPACK
 $(PROTOBUF_CONFIGURE): $(PROTOBUF_PATCHING)
 	cd $(PROTOBUF_BUILD_DIR) && \
-	    export LDFLAGS="-static-libgcc -static-libstdc++ -s" \
-		`: -fPIC is needed for python static linking ` \
-		   CXXFLAGS="-fPIC" \
-		   LD_LIBRARY_PATH="$(PACKAGE_PYTHON_LD_LIBRARY_PATH)" && \
-	    ./configure \
-		--prefix="" \
-		--disable-shared
+	    export LD_LIBRARY_PATH="$(PACKAGE_PYTHON_LD_LIBRARY_PATH)" && \
+	    ./configure --prefix=""
 	$(TOUCH) $@
 
 $(PROTOBUF_BUILD_LIBRARY): $(PROTOBUF_CONFIGURE)
 	cd $(PROTOBUF_BUILD_DIR) && \
-	    export LDFLAGS="-static-libgcc -static-libstdc++ -s" \
-		`: -fPIC is needed for python static linking ` \
-		   CXXFLAGS="-fPIC" \
-		   LD_LIBRARY_PATH="$(PACKAGE_PYTHON_LD_LIBRARY_PATH)" && \
 	    make -j6 && \
 	    `: Hack needed for protoc to be linked statically. Tried a lot of different things to make it ` \
 	    `: work with the standard Makefile and libtool stuff, but had no luck. It always ended with a ` \
@@ -80,10 +71,8 @@ $(PROTOBUF_BUILD_LIBRARY): $(PROTOBUF_CONFIGURE)
 
 $(PROTOBUF_BUILD_PYTHON): $(PROTOBUF_BUILD_LIBRARY) $(PYTHON_CACHE_PKG_PROCESS)
 	cd $(PROTOBUF_BUILD_DIR)/python && \
-	    export LDFLAGS="-static-libgcc -static-libstdc++ -s" \
-		   CXXFLAGS="-fPIC" \
-		   LD_LIBRARY_PATH="$(PACKAGE_PYTHON_LD_LIBRARY_PATH)" && \
-	    $(PACKAGE_PYTHON_EXECUTABLE) setup.py build --cpp_implementation --compile_static_extension
+	    export LD_LIBRARY_PATH="$(PACKAGE_PYTHON_LD_LIBRARY_PATH)" && \
+	    $(PACKAGE_PYTHON_EXECUTABLE) setup.py build --cpp_implementation
 	$(TOUCH) $@
 
 $(PROTOBUF_BUILD): $(PROTOBUF_BUILD_LIBRARY) $(PROTOBUF_BUILD_PYTHON)

@@ -15,7 +15,7 @@ from .utils import df, sap_hana
 def parse_sap_hana_data_volume(string_table: StringTable) -> sap_hana.ParsedSection:
     section: sap_hana.ParsedSection = {}
 
-    MB = 1024 ** 2
+    MB = 1024**2
 
     for sid_instance, lines in sap_hana.parse_sap_hana(string_table).items():
         for line in lines:

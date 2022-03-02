@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: undoc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 The check_mk_agent for solaris reported the error "integer expression expected"
 while executing the "<<<job>>>" section.

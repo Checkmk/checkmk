@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 The extension packages GUI and also command line tool "mkp" was failing
 with a crash in case a in incompatible package or not expected file was

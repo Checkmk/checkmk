@@ -33,8 +33,8 @@ def parse_cadvisor_df(info):
 
 
 def check_cadvisor_df(item, params, parsed):
-    size_mb = parsed["df_size"] / 1024 ** 2
-    avail_mb = size_mb - (parsed["df_used"] / 1024 ** 2)
+    size_mb = parsed["df_size"] / 1024**2
+    avail_mb = size_mb - (parsed["df_used"] / 1024**2)
     reserved_mb = 0
     inodes_total = parsed["inodes_total"]
     inodes_free = parsed["inodes_free"]

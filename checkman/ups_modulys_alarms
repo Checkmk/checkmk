@@ -1,7 +1,7 @@
 title: Socomec Modulys UPS Device: Alarms
 agents: snmp
 catalog: hw/power/socomec
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  Monitors alarms the device reports.
@@ -20,4 +20,3 @@ description:
 
 discovery:
  One service is created.
-

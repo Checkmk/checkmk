@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 When opening the host properties page in the setup an exception KeyError
 ("site_id") could appear in distributed setups. This issue was triggered when a

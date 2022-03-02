@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 If a user did not have the permission "Topics" - "History", when opening a view
 with history entries in page menu, the error "KeyError: 'history'" occurred.

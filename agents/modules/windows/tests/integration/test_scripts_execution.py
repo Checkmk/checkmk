@@ -5,8 +5,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import os
+import subprocess
 from pathlib import Path
-from subprocess import PIPE, Popen
 from typing import Tuple
 
 import pytest  # type: ignore[import]
@@ -21,11 +21,17 @@ def run_script(work_python: Path, *, script: Path) -> Tuple[int, str, str]:
     assert exe.exists()
     assert script.exists()
 
-    process = Popen([exe, script], stdout=PIPE, stderr=PIPE)  # pylint:disable=consider-using-with
-    pipe, err = process.communicate()
-    ret = process.wait()
-
-    return ret, pipe.decode("utf-8"), err.decode("utf-8")
+    completed_process = subprocess.run(
+        [exe, script],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        check=False,
+    )
+    return (
+        completed_process.returncode,
+        completed_process.stdout.decode("utf-8"),
+        completed_process.stderr.decode("utf-8"),
+    )
 
 
 @pytest.mark.parametrize(

@@ -151,8 +151,8 @@ PS_DISCOVERY_WATO_RULES = [
             "cpu_average": 15,
             "process_info": "html",
             "resident_levels_perc": (25.0, 50.0),
-            "virtual_levels": (1024 ** 3, 2 * 1024 ** 3),
-            "resident_levels": (1024 ** 3, 2 * 1024 ** 3),
+            "virtual_levels": (1024**3, 2 * 1024**3),
+            "resident_levels": (1024**3, 2 * 1024**3),
             "icon": "emacs.png",
         },
         "descr": "emacs %u",
@@ -213,8 +213,8 @@ PS_DISCOVERED_ITEMS = [
             "icon": "emacs.png",
             "user": "on",
             "process_info": "html",
-            "virtual_levels": (1024 ** 3, 2 * 1024 ** 3),
-            "resident_levels": (1024 ** 3, 2 * 1024 ** 3),
+            "virtual_levels": (1024**3, 2 * 1024**3),
+            "resident_levels": (1024**3, 2 * 1024**3),
             "match_groups": (),
             "cgroup": (None, False),
         },
@@ -561,7 +561,7 @@ def test_check_ps_common(inv_item, reference):
                 params=factory_defaults,  # type: ignore[arg-type]
                 process_lines=parsed,
                 cpu_cores=1,
-                total_ram_map={"": 1024 ** 3} if "emacs" in inv_item.item else {},
+                total_ram_map={"": 1024**3} if "emacs" in inv_item.item else {},
             )
         )
         assert test_result == reference

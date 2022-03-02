@@ -560,14 +560,14 @@ inline std::string ToUtf8(const std::wstring_view src) noexcept {
 #endif  // endif
 }
 
-inline std::string ToUtf8(const std::string_view src) noexcept {
+inline std::string ToUtf8(std::string_view src) noexcept {
     return std::string(src);
 }
 
 std::wstring ToCanonical(std::wstring_view raw_app_name);
 // standard Windows converter from Microsoft
 // WINDOWS ONLY
-inline std::wstring ConvertToUTF16(const std::string_view src) noexcept {
+inline std::wstring ConvertToUTF16(std::string_view src) noexcept {
 #if defined(WINDOWS_OS)
     auto in_len = static_cast<int>(src.length());
     auto utf8_str = src.data();
@@ -1093,6 +1093,14 @@ const wchar_t *GetMultiSzEntry(wchar_t *&pos, const wchar_t *end);
 
 std::wstring SidToName(const std::wstring_view sid,
                        const SID_NAME_USE &sid_type);
+
+std::vector<char> ReadFromHandle(HANDLE handle);
+
+/// \brief Calls any command and return back output
+///
+/// Wraps AppRunner
+std::string RunCommand(std::wstring_view cmd);
+
 }  // namespace wtools
 
 #endif  // wtools_h__

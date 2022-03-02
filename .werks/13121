@@ -6,7 +6,7 @@ Date: 1629214698
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 Before producing the <tt>ntp</tt> section, the linux agent checks if a corresponding
 <tt>systemd<tt> service or a deamon under <tt>/etc/init.d/</tt> exits. Hence, on

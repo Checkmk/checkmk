@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 The availability rows can be grouped by service groups. In case this is done
 the availability tables showed services in groups which they don't belong to.

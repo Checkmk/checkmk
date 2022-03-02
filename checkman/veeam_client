@@ -1,7 +1,7 @@
 title: Veeam: Client Backup
 agents: windows
 catalog: os/storage
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the status of backups of clients carried out by the Veeam
@@ -26,4 +26,3 @@ item:
 discovery:
  One service is created for each host known to check_mk and reported
  by the Veeam agent plugin.
-

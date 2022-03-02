@@ -11,8 +11,10 @@ from marshmallow_oneofschema import OneOfSchema  # type: ignore[import]
 
 from cmk.utils.defines import weekday_ids
 
-from cmk.gui import fields
+from cmk.gui import fields as gui_fields
 from cmk.gui.fields.utils import BaseSchema
+
+from cmk import fields
 
 # TODO: Add Enum Field for http methods, action result types and similar fields which can only hold
 #       distinct values
@@ -107,6 +109,7 @@ class Linkable(BaseSchema):
         fields.Nested(LinkSchema),
         required=True,
         description="list of links to other resources.",
+        example=None,
     )
 
 
@@ -135,7 +138,7 @@ class Parameter(Linkable):
         required=False,
         example="The destination",
     )
-    optional = fields.Bool(
+    optional = fields.Boolean(
         description="indicates whether the action parameter is optional",
         required=False,
         example=False,
@@ -243,7 +246,7 @@ class ObjectMember(OneOfSchema):
 
 
 class ActionResultBase(Linkable):
-    resultType: fields.Field = fields.String(
+    resultType: gui_fields.Field = fields.String(
         enum=["object", "scalar"],
         description="The type of the result.",
     )
@@ -300,7 +303,7 @@ class ActionResult(OneOfSchema):
 
 
 class DomainObject(Linkable):
-    domainType: fields.Field = fields.String(
+    domainType: gui_fields.Field = fields.String(
         required=True,
         description='The "domain-type" of the object.',
     )
@@ -311,17 +314,19 @@ class DomainObject(Linkable):
     title = fields.String(
         description="A human readable title of this object. Can be used for " "user interfaces.",
     )
-    members: fields.Field = fields.Dict(
+    members: gui_fields.Field = fields.Dict(
         description="The container for external resources, like linked foreign objects or actions.",
     )
-    extensions: fields.Field = fields.Dict(description="All the attributes of the domain object.")
+    extensions: gui_fields.Field = fields.Dict(
+        description="All the attributes of the domain object."
+    )
 
 
 class HostExtensions(BaseSchema):
-    folder = fields.FolderField(
+    folder = gui_fields.FolderField(
         description="The folder, in which this host resides.",
     )
-    attributes = fields.attributes_field(
+    attributes = gui_fields.attributes_field(
         "host",
         "update",
         description="Attributes of this host.",
@@ -339,7 +344,7 @@ class HostExtensions(BaseSchema):
         description="Whether the host is offline",
     )
     cluster_nodes = fields.List(
-        fields.HostField(),
+        gui_fields.HostField(),
         allow_none=True,
         load_default=None,
         description="In the case this is a cluster host, these are the cluster nodes.",
@@ -361,7 +366,7 @@ class FolderExtensions(BaseSchema):
     path = fields.String(
         description="The full path of this folder, slash delimited.",
     )
-    attributes = fields.attributes_field(
+    attributes = gui_fields.attributes_field(
         "folder",
         "update",
         description=(
@@ -480,13 +485,13 @@ class DomainObjectCollection(Linkable):
         description="The name of this collection.",
         load_default="all",
     )
-    domainType: fields.Field = fields.String(
+    domainType: gui_fields.Field = fields.String(
         description="The domain type of the objects in the collection."
     )
     title = fields.String(
         description="A human readable title of this object. Can be used for " "user interfaces.",
     )
-    value: fields.Field = fields.Nested(
+    value: gui_fields.Field = fields.Nested(
         CollectionItem,
         description="The collection itself. Each entry in here is part of the collection.",
         many=True,
@@ -616,7 +621,7 @@ class PasswordExtension(BaseSchema):
         attribute="shared_with",
         description="The list of members the password is shared with",
     )
-    customer = fields.customer_field(
+    customer = gui_fields.customer_field(
         required=True,
         should_exist=True,
     )
@@ -643,15 +648,15 @@ class InstalledVersions(BaseSchema):
     rest_api = fields.Dict(description="The REST-API version", example={"revision": "1.0.0"})
     versions = fields.Dict(description="Some version numbers", example={"checkmk": "1.8.0p1"})
     edition = fields.String(description="The Checkmk edition.", example="raw")
-    demo = fields.Bool(description="Whether this is a demo version or not.", example=False)
+    demo = fields.Boolean(description="Whether this is a demo version or not.", example=False)
 
 
 class VersionCapabilities(BaseSchema):
-    blobsClobs = fields.Bool(
+    blobsClobs = fields.Boolean(
         required=False,
         description="attachment support",
     )
-    deleteObjects = fields.Bool(
+    deleteObjects = fields.Boolean(
         required=False,
         description=(
             "deletion of persisted objects through the DELETE Object resource C14.3," " see A3.5"
@@ -664,22 +669,22 @@ class VersionCapabilities(BaseSchema):
             "that the reserved x-domain-model query parameter is supported, see A3.1"
         ),
     )
-    protoPersistentObjects = fields.Bool()
-    validateOnly = fields.Bool(
+    protoPersistentObjects = fields.Boolean()
+    validateOnly = fields.Boolean(
         required=False,
         description="the reserved x-ro-validate-only query parameter, see A3.2",
     )
 
 
 class Version(LinkSchema):
-    specVersion = fields.Str(
+    specVersion = fields.String(
         description=(
             'The "major.minor" parts of the version of the spec supported by this '
             'implementation, e.g. "1.0"'
         ),
         required=False,
     )
-    implVersion = fields.Str(
+    implVersion = fields.String(
         description=(
             "(optional) Version of the implementation itself (format is specific to "
             "the implementation)"
@@ -690,7 +695,7 @@ class Version(LinkSchema):
 
 
 class X509PEM(BaseSchema):
-    cert = fields.Str(
+    cert = fields.String(
         required=True,
         description="PEM-encoded X.509 certificate.",
     )

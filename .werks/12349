@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 This werk introduces some changes to the downtime endpoint family.
 It makes some examples more beginner friendly and fixes the linking

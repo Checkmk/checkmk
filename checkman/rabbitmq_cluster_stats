@@ -1,7 +1,7 @@
 title: RabbitMQ: Cluster Stats
 agents: rabbitmq
 catalog: app/rabbitmq
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors clusterwide statistics of RabbitMQ. The service output

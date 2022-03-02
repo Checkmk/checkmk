@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 Previous Checkmk 2.0 releases could logout an active login sessions of a user
 when the same user was used from multiple clients (e.g. different browsers,

@@ -9,11 +9,11 @@
 
 # Disable unused variable error (needed to keep track of version)
 # shellcheck disable=SC2034
-CMK_VERSION="2.1.0i1"
+CMK_VERSION="2.2.0i1"
 
 # This is not part of the standard agent since it can take very
 # long to run if your TCP/UDP table is large. Netstat seems to
 # have an execution time complexity of at least O(n^2) on Linux.
 
 echo '<<<netstat>>>'
-netstat -ntua  |  grep -E '^(tcp|udp)' | sed -e 's/LISTEN/LISTENING/g'
+netstat -ntua | grep -E '^(tcp|udp)' | sed -e 's/LISTEN/LISTENING/g'

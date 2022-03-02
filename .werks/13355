@@ -6,7 +6,7 @@ Date: 1635929336
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 BusyBox does not support <tt>-x</tt> and <tt>-l</tt> as arguments to the
 <tt>df</tt> command. These arguments are removed from the OpenWRT agent,

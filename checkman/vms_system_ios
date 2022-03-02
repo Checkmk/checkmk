@@ -1,7 +1,7 @@
 title: OpenVMS: Number of Total IOs
 agents: openvms
 catalog: os/storage
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This checks measures the number of total direct and buffered IOs
@@ -9,4 +9,3 @@ description:
 
 discovery:
  One service is created for each OpenVMS host.
-

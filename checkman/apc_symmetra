@@ -1,7 +1,7 @@
 title: APC Symmetra UPS: Device and Battery States
 agents: snmp
 catalog: hw/power/apc
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors some aspects of an APC Symmetra UPS:
@@ -60,4 +60,3 @@ description:
 
 discovery:
  One service is created.
-

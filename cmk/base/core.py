@@ -111,14 +111,19 @@ def do_core_action(action: CoreAction, quiet: bool = False) -> None:
     else:
         command = ["omd", action.value, "cmc"]
 
-    p = subprocess.run(
-        command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, close_fds=True, check=False
+    completed_process = subprocess.run(
+        command,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        close_fds=True,
+        check=False,
     )
-    if p.returncode != 0:
-        assert p.stdout is not None
+    if completed_process.returncode != 0:
         if not quiet:
-            out.output("ERROR: %r\n" % p.stdout)
-        raise MKGeneralException("Cannot %s the monitoring core: %r" % (action.value, p.stdout))
+            out.output("ERROR: %r\n" % completed_process.stdout)
+        raise MKGeneralException(
+            "Cannot %s the monitoring core: %r" % (action.value, completed_process.stdout)
+        )
     if not quiet:
         out.output(tty.ok + "\n")
 

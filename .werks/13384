@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 The rule search could produce a 'Request-URI Too Long' exception because all
 variables of the search form were submitted.

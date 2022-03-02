@@ -1,7 +1,7 @@
 title: MS SQL Server: Locks per Batch
 agents: windows
 catalog: app/mssql
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the number of lock requests in relation to the

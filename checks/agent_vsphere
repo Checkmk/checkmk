@@ -11,8 +11,12 @@
 #     'user': 'wefwef'
 # }
 
+from typing import Any, Mapping, Optional, Sequence, Union
 
-def agent_vsphere_arguments(params, hostname, ipaddress):
+
+def agent_vsphere_arguments(
+    params: Mapping[str, Any], hostname: str, ipaddress: Optional[str]
+) -> Sequence[Union[str, tuple[str, str, str]]]:
     args = []
     if "tcp_port" in params:
         args += ["-p", "%d" % params["tcp_port"]]
@@ -35,27 +39,29 @@ def agent_vsphere_arguments(params, hostname, ipaddress):
     if "timeout" in params:
         args += ["--timeout", params["timeout"]]
 
-    if params.get("vm_pwr_display"):
-        args += ["--vm_pwr_display", params.get("vm_pwr_display")]
+    if v_display := params.get("vm_pwr_display"):
+        args += ["--vm_pwr_display", v_display]
 
-    if params.get("vm_piggyname"):
-        args += ["--vm_piggyname", params.get("vm_piggyname")]
+    if vm_piggyname := params.get("vm_piggyname"):
+        args += ["--vm_piggyname", vm_piggyname]
 
-    if params.get("host_pwr_display"):
-        args += ["--host_pwr_display", params.get("host_pwr_display")]
+    if h_display := params.get("host_pwr_display"):
+        args += ["--host_pwr_display", h_display]
 
     if params.get("snapshots_on_host", False):
         args += ["--snapshots-on-host"]
 
+    host_address = ipaddress or hostname
+
     if "ssl" in params:
         if params["ssl"] is False:
-            args += ["--no-cert-check", ipaddress]
+            args += ["--no-cert-check", host_address]
         elif params["ssl"] is True:
             args.append(hostname)
         else:
             args.append(params["ssl"])
     else:  # legacy mode
-        args.append(ipaddress)
+        args.append(host_address)
 
     return args
 

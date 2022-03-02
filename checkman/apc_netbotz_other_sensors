@@ -1,7 +1,7 @@
 title: APC Netbotz Devices: Other Numeric Sensors Summary
 agents: snmp
 catalog: hw/power/apc
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check gives a summary over all other numeric sensors

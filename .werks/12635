@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 The fileinfo and filestats rules have imprecise descriptions of upper levels
 in their respective configuration rulesets. WARN and CRIT configuration

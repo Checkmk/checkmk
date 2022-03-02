@@ -1,7 +1,7 @@
 title: NVIDIA Graphics Card: Temperature (core)
 agents: linux
 catalog: os/hardware
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This checks monitors the temperatures of the
@@ -15,4 +15,3 @@ item:
 
 discovery:
  One service is created for each available core temperature sensor.
-

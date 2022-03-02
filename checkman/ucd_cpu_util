@@ -1,7 +1,7 @@
 title: UCD SNMP Daemon: CPU Utilization
 agents: snmp
 catalog: os/kernel
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check measures the CPU utilization during the last check
@@ -20,5 +20,3 @@ discovery:
  with the text {linux} in their system description. You can
  try an explicit inventory with {cmk --checks ucd_cpu_util -I HOSTNAME}
  if that is not the case.
-
-

@@ -6,6 +6,6 @@ Date: 1606839488
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 The API call "platform.system()" provides better support for python2/3 compatibility than "sys.platform".

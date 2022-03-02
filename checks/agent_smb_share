@@ -4,15 +4,15 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import Any, Mapping, Optional, Sequence
 
-def agent_smb_share_arguments(params, hostname, ipaddress):
-    args = [
-        params.get("hostname", hostname),
-        params.get("ip_address", ipaddress),
-        *params["share_names"],
-        "--port",
-        params["port"],
-    ]
+
+def agent_smb_share_arguments(
+    params: Mapping[str, Any], hostname: str, ipaddress: Optional[str]
+) -> Sequence[str]:
+
+    default_ipaddress = ipaddress if ipaddress else ""
+    args = [params.get("hostname", hostname), params.get("ip_address", default_ipaddress)]
 
     if authentication := params.get("authentication"):
         args.append("--username")

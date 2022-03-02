@@ -58,7 +58,7 @@ def register_modules(*args):
             (ABCMainModule,),
             {
                 "mode_or_url": wato_module.mode_or_url,
-                "topic": MainModuleTopicCustom,
+                "topic": MainModuleTopicMisc,
                 "title": wato_module.title,
                 "icon": wato_module.icon,
                 "permission": wato_module.permission,
@@ -162,11 +162,11 @@ MainModuleTopicMaintenance = main_module_topic_registry.register(
     )
 )
 
-MainModuleTopicCustom = main_module_topic_registry.register(
+MainModuleTopicMisc = main_module_topic_registry.register(
     MainModuleTopic(
-        name="custom",
-        title=_l("Custom"),
-        icon_name="topic_custom",
+        name="misc",
+        title=_l("Miscellaneous"),
+        icon_name="topic_miscellaneous",
         sort_index=150,
     )
 )

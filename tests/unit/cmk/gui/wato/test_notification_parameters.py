@@ -24,6 +24,7 @@ expected_plugins = [
     "servicenow",
     "signl4",
     "slack",
+    "sms_api",
     "spectrum",
     "victorops",
 ]

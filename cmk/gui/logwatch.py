@@ -55,7 +55,7 @@ from cmk.gui.utils.urls import make_confirm_link, makeactionuri, makeuri, makeur
 def page_show():
     site = request.var("site")  # optional site hint
     host_name = request.var("host", "")
-    file_name = request.get_unicode_input("file", "")
+    file_name = request.get_str_input("file", "")
 
     # Fix problem when URL is missing certain illegal characters
     try:

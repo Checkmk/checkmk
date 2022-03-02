@@ -11,8 +11,12 @@
 #     'user': 'wefwef'
 # }
 
+from typing import Any, Mapping, Optional, Sequence
 
-def agent_random_arguments(params, hostname, ipaddress):
+
+def agent_random_arguments(
+    params: Mapping[str, Any], hostname: str, ipaddress: Optional[str]
+) -> Sequence[str]:
     return [hostname]
 
 

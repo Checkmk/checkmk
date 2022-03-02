@@ -23,7 +23,7 @@ import cmk.gui.wato.mkeventd
 import cmk.gui.watolib.activate_changes as activate_changes
 import cmk.gui.watolib.config_sync as config_sync
 import cmk.gui.watolib.utils as utils
-from cmk.gui.globals import config
+from cmk.gui.globals import config, request
 
 
 @pytest.fixture(name="mocked_responses")
@@ -290,6 +290,9 @@ def _get_expected_paths(user_id, is_pre_17_site, with_local):
         if not cmk_version.is_raw_edition():
             expected_paths += ["etc/check_mk/dcd.d/wato/distributed.mk"]
 
+        if not cmk_version.is_managed_edition():
+            expected_paths += ["etc/omd/site.conf"]
+
     # TODO: The second condition should not be needed. Seems to be a subtle difference between the
     # CME and CRE/CEE snapshot logic
     if not cmk_version.is_managed_edition():
@@ -349,7 +352,10 @@ def test_generate_snapshot(
     )
 
     activation_manager = _get_activation_manager(monkeypatch, remote_site)
-    monkeypatch.setattr(cmk_version, "edition", lambda: edition)
+    monkeypatch.setattr(cmk_version, "is_raw_edition", lambda: edition is cmk_version.Edition.CRE)
+    monkeypatch.setattr(
+        cmk_version, "is_managed_edition", lambda: edition is cmk_version.Edition.CME
+    )
 
     monkeypatch.setattr(utils, "is_pre_17_remote_site", lambda s: False)
 
@@ -386,7 +392,10 @@ def test_generate_pre_17_site_snapshot(
     )
 
     is_pre_17_site = True
-    monkeypatch.setattr(cmk_version, "edition", lambda: edition)
+    monkeypatch.setattr(cmk_version, "is_raw_edition", lambda: edition is cmk_version.Edition.CRE)
+    monkeypatch.setattr(
+        cmk_version, "is_managed_edition", lambda: edition is cmk_version.Edition.CME
+    )
     monkeypatch.setattr(utils, "is_pre_17_remote_site", lambda s: is_pre_17_site)
 
     activation_manager = _get_activation_manager(monkeypatch, remote_site)
@@ -410,6 +419,7 @@ def test_generate_pre_17_site_snapshot(
 
     expected_subtars = [
         "auth.secret.tar",
+        "password_store.secret.tar",
         "auth.serials.tar",
         "check_mk.tar",
         "diskspace.tar",
@@ -417,7 +427,6 @@ def test_generate_pre_17_site_snapshot(
         "mkeventd_mkp.tar",
         "mkeventd.tar",
         "multisite.tar",
-        "omd.tar",
         "sitespecific.tar",
         "usersettings.tar",
     ]
@@ -464,11 +473,12 @@ def test_generate_pre_17_site_snapshot(
         "liveproxyd.tar": [],
         "sitespecific.tar": ["sitespecific.mk"],
         "auth.secret.tar": [],
+        "password_store.secret.tar": [],
         "dcd.tar": [],
         "auth.serials.tar": ["auth.serials"],
         "mknotify.tar": [],
         "diskspace.tar": [],
-        "omd.tar": [] if is_pre_17_site else ["sitespecific.mk"],
+        "omd.tar": [] if is_pre_17_site else ["sitespecific.mk", "global.mk"],
     }
 
     if config.sites[remote_site].get("replicate_mkps", False):
@@ -531,8 +541,12 @@ def test_apply_pre_17_sync_snapshot(
     )
 
     is_pre_17_site = True
-    monkeypatch.setattr(cmk_version, "edition", lambda: edition)
+    monkeypatch.setattr(cmk_version, "is_raw_edition", lambda: edition is cmk_version.Edition.CRE)
+    monkeypatch.setattr(
+        cmk_version, "is_managed_edition", lambda: edition is cmk_version.Edition.CME
+    )
     monkeypatch.setattr(utils, "is_pre_17_remote_site", lambda s: is_pre_17_site)
+    monkeypatch.setattr(request, "headers", {"x-checkmk-version": "1.6.0p1"})
 
     activation_manager = _get_activation_manager(monkeypatch, remote_site)
     snapshot_settings = _create_sync_snapshot(
@@ -692,7 +706,10 @@ def test_synchronize_site(
     )
 
     is_pre_17_site = False
-    monkeypatch.setattr(cmk_version, "edition", lambda: edition)
+    monkeypatch.setattr(cmk_version, "is_raw_edition", lambda: edition is cmk_version.Edition.CRE)
+    monkeypatch.setattr(
+        cmk_version, "is_managed_edition", lambda: edition is cmk_version.Edition.CME
+    )
     monkeypatch.setattr(utils, "is_pre_17_remote_site", lambda s: is_pre_17_site)
 
     activation_manager = _get_activation_manager(monkeypatch)

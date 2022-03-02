@@ -6,7 +6,7 @@ Date: 1617258769
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 There was bug in the active check <tt>check_mail</tt>, which checks if the login into
 a given mailbox is working. In case a connection timeout was configured, the check

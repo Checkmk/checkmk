@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 This werk introduces a few changes to the downtime endpoint. Proper status codes
 are now returned when trying to set a downtime on non existing host and service groups.

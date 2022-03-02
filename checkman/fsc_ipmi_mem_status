@@ -1,7 +1,7 @@
 title: Fujitsu Workstations: Memory
 agents: linux
 catalog: hw/server/fujitsu
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check reads the memory module status information from IPMI on

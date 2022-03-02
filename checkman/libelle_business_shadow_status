@@ -1,7 +1,7 @@
 title: Libelle Business Shadow: Status
 agents: linux, aix, solaris, hpux
 catalog: app/libelle
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  Checks the Status of Libelle Business Shadow.

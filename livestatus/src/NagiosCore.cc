@@ -10,8 +10,8 @@
 #include <utility>
 
 #include "Logger.h"
-#include "NagiosGlobals.h"
 #include "StringUtils.h"
+#include "nagios.h"
 #include "pnp4nagios.h"
 
 void NagiosPaths::dump(Logger *logger) const {

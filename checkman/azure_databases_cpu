@@ -1,7 +1,7 @@
 title: Microsoft Azure SQL Databases: CPU Utilization
 agents: azure
 catalog: cloud/azure
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check reports the CPU utilization in percent.
@@ -13,4 +13,3 @@ item:
 discovery:
  One service is created for each database if all required metrics
  (average_cpu_percent) are given.
-

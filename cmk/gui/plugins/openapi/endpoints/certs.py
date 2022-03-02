@@ -10,11 +10,13 @@ WARNING: Use at your own risk, not supported.
 Checkmk uses SSL certificates to verify push hosts.
 """
 
+from pathlib import Path
 
 from cryptography.hazmat.primitives.serialization import Encoding
 from cryptography.x509 import CertificateSigningRequest
 
-from cmk.utils.certs import load_local_ca, sign_csr_with_local_ca
+from cmk.utils.certs import cert_dir, root_cert_path, RootCA
+from cmk.utils.paths import omd_root
 
 from cmk.gui.default_permissions import PermissionSectionGeneral
 from cmk.gui.globals import user
@@ -49,19 +51,16 @@ def _user_is_authorized() -> bool:
     return user.may("general.agent_pairing")
 
 
+def _get_root_ca() -> RootCA:
+    return RootCA.load(root_cert_path(cert_dir(Path(omd_root))))
+
+
 def _serialized_root_cert() -> str:
-    return load_local_ca()[0].public_bytes(Encoding.PEM).decode()
+    return _get_root_ca().cert.public_bytes(Encoding.PEM).decode()
 
 
 def _serialized_signed_cert(csr: CertificateSigningRequest) -> str:
-    return (
-        sign_csr_with_local_ca(
-            csr,
-            365 * 999,
-        )
-        .public_bytes(Encoding.PEM)
-        .decode()
-    )
+    return _get_root_ca().sign_csr(csr).public_bytes(Encoding.PEM).decode()
 
 
 @Endpoint(

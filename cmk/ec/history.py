@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
@@ -11,9 +10,10 @@ import threading
 import time
 from logging import Logger
 from pathlib import Path
-from typing import Any, AnyStr, Dict, Iterable, List, Optional, Tuple, Union
+from typing import Any, AnyStr, Iterable, Optional, Union
 
 from cmk.utils.log import VERBOSE
+from cmk.utils.misc import quote_shell_string
 from cmk.utils.render import date_and_time
 
 from .config import Config
@@ -30,8 +30,8 @@ class History:
         settings: Settings,
         config: Config,
         logger: Logger,
-        event_columns: List[Tuple[str, Any]],
-        history_columns: List[Tuple[str, Any]],
+        event_columns: list[tuple[str, Any]],
+        history_columns: list[tuple[str, Any]],
     ) -> None:
         super().__init__()
         self._settings = settings
@@ -122,7 +122,7 @@ def _connect_mongodb(settings: Settings, mongodb: MongoDB) -> None:
     mongodb.db = mongodb.connection.__getitem__(os.environ["OMD_SITE"])
 
 
-def _mongodb_local_connection_opts(settings: Settings) -> Tuple[Optional[str], Optional[int]]:
+def _mongodb_local_connection_opts(settings: Settings) -> tuple[Optional[str], Optional[int]]:
     ip, port = None, None
     with settings.paths.mongodb_config_file.value.open(encoding="utf-8") as f:
         for l in f:
@@ -226,7 +226,7 @@ def _get_mongodb(history: History, query: QueryGET) -> Iterable[Any]:
     for column_name, operator_name, _predicate, argument in filters:
 
         if operator_name == "=":
-            mongo_filter: Union[str, Dict[str, str]] = argument
+            mongo_filter: Union[str, dict[str, str]] = argument
         elif operator_name == ">":
             mongo_filter = {"$gt": argument}
         elif operator_name == "<":
@@ -438,7 +438,7 @@ def _expire_logfiles(
 
 def _get_files(history: History, logger: Logger, query: QueryGET) -> Iterable[Any]:
     filters, limit = query.filters, query.limit
-    history_entries: List[Any] = []
+    history_entries: list[Any] = []
     if not history._settings.paths.history_dir.value.exists():
         return []
 
@@ -470,7 +470,7 @@ def _get_files(history: History, logger: Logger, query: QueryGET) -> Iterable[An
     # It's ok if the filters don't match 100% accurately on the right lines. If in
     # doubt, you can output more lines than necessary. This is only a kind of
     # prefiltering.
-    grep_pairs: List[Tuple[int, str]] = []
+    grep_pairs: list[tuple[int, str]] = []
     for column_name, operator_name, _predicate, argument in filters:
         # Make sure that the greptexts are in the same order as in the
         # actual logfiles. They will be joined with ".*"!
@@ -524,7 +524,7 @@ def _get_files(history: History, logger: Logger, query: QueryGET) -> Iterable[An
     return history_entries
 
 
-def _greatest_lower_bound_for_filters(filters: Iterable[Tuple[str, float]]) -> Optional[float]:
+def _greatest_lower_bound_for_filters(filters: Iterable[tuple[str, float]]) -> Optional[float]:
     result: Optional[float] = None
     for operator, value in filters:
         glb = _greatest_lower_bound_for_filter(operator, value)
@@ -541,7 +541,7 @@ def _greatest_lower_bound_for_filter(operator: str, value: float) -> Optional[fl
     return None
 
 
-def _least_upper_bound_for_filters(filters: Iterable[Tuple[str, float]]) -> Optional[float]:
+def _least_upper_bound_for_filters(filters: Iterable[tuple[str, float]]) -> Optional[float]:
     result: Optional[float] = None
     for operator, value in filters:
         lub = _least_upper_bound_for_filter(operator, value)
@@ -559,8 +559,8 @@ def _least_upper_bound_for_filter(operator: str, value: float) -> Optional[float
 
 
 def _intersects(
-    interval1: Tuple[Optional[float], Optional[float]],
-    interval2: Tuple[Optional[float], Optional[float]],
+    interval1: tuple[Optional[float], Optional[float]],
+    interval2: tuple[Optional[float], Optional[float]],
 ) -> bool:
     lo1, hi1 = interval1
     lo2, hi2 = interval2
@@ -571,11 +571,11 @@ def _parse_history_file(
     history: History,
     path: Path,
     query: Any,
-    greptexts: List[str],
+    greptexts: list[str],
     limit: Optional[int],
     logger: Logger,
-) -> List[Any]:
-    entries: List[Any] = []
+) -> list[Any]:
+    entries: list[Any] = []
     line_no = 0
     # If we have greptexts we pre-filter the file using the extremely
     # fast GNU Grep
@@ -583,34 +583,36 @@ def _parse_history_file(
     cmd = "tac %s" % quote_shell_string(str(path))
     if greptexts:
         cmd += " | egrep -i -e %s" % quote_shell_string(".*".join(greptexts))
-    grep = subprocess.Popen(  # nosec  # pylint:disable=consider-using-with
-        cmd, shell=True, close_fds=True, stdout=subprocess.PIPE
-    )
-    if grep.stdout is None:
-        raise Exception("Huh? stdout vanished...")
+    with subprocess.Popen(
+        cmd,
+        shell=True,  # nosec
+        close_fds=True,
+        stdout=subprocess.PIPE,
+    ) as grep:
+        if grep.stdout is None:
+            raise Exception("Huh? stdout vanished...")
 
-    for line in grep.stdout:
-        line_no += 1
-        if limit is not None and len(entries) > limit:
-            grep.kill()
-            grep.wait()
-            break
+        for line in grep.stdout:
+            line_no += 1
+            if limit is not None and len(entries) > limit:
+                grep.kill()
+                break
 
-        try:
-            parts: List[Any] = line.decode("utf-8").rstrip("\n").split("\t")
-            _convert_history_line(history, parts)
-            values = [line_no] + parts
-            if query.filter_row(values):
-                entries.append(values)
-        except Exception as e:
-            logger.exception("Invalid line '%r' in history file %s: %s" % (line, path, e))
+            try:
+                parts: list[Any] = line.decode("utf-8").rstrip("\n").split("\t")
+                _convert_history_line(history, parts)
+                values = [line_no] + parts
+                if query.filter_row(values):
+                    entries.append(values)
+            except Exception as e:
+                logger.exception(f"Invalid line '{line!r}' in history file {path}: {e}")
 
     return entries
 
 
 # Speed-critical function for converting string representation
 # of log line back to Python values
-def _convert_history_line(history: History, values: List[Any]) -> None:
+def _convert_history_line(history: History, values: list[Any]) -> None:
     # NOTE: history_line column is missing here, so indices are off by 1! :-P
     values[0] = float(values[0])  # history_time
     values[4] = int(values[4])  # event_id
@@ -658,7 +660,7 @@ def _unsplit(s: Any) -> Any:
     return s
 
 
-def _get_logfile_timespan(path: Path) -> Tuple[Optional[float], Optional[float]]:
+def _get_logfile_timespan(path: Path) -> tuple[Optional[float], Optional[float]]:
     try:
         with path.open(encoding="utf-8") as f:
             first_entry: Optional[float] = float(f.readline().split("\t", 1)[0])
@@ -689,7 +691,3 @@ _scrub_string_str_table = b"".join(
     b" " if x == ord(b"\t") else struct.Struct(">B").pack(x) for x in range(256)
 )
 _scrub_string_unicode_table = {0: None, 1: None, 2: None, ord("\n"): None, ord("\t"): ord(" ")}
-
-
-def quote_shell_string(s: str) -> str:
-    return "'" + s.replace("'", "'\"'\"'") + "'"

@@ -7,7 +7,7 @@ Edition: cee
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 When having a semicolon in service description the metric
 system would break i.e. metrics for this service would not be displayed.

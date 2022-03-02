@@ -1,7 +1,7 @@
 title: Health of NFS Mounts
 agents: linux, aix
 catalog: os/services
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check probes the availability of NFS mounts. The Linux agent sends the
@@ -28,4 +28,3 @@ item:
 discovery:
   One service is created for each NFS mounts.
   This is done by scanning {/proc/mounts}. The file {/etc/fstab} is irrelevant.
-

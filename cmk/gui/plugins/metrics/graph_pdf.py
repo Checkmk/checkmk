@@ -97,8 +97,12 @@ def render_graph_pdf(
 
     # Regular title (above graph area)
     if graph_render_options["show_title"] is True:
+        title_left_margin = left + right_margin
+        if vertical_axis_label := graph_artwork.get("vertical_axis", {}).get("axis_label"):
+            title_left_margin = left + left_border + left_margin
+
         pdf_document.render_aligned_text(
-            left + right_margin,
+            title_left_margin,
             top - title_height,
             width,
             title_height,

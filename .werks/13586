@@ -6,7 +6,7 @@ Date: 1638866982
 Edition: cee
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 When using both context filters (Host and Service) in Alert timeline
 or Notification timeline dashlet no data was displayed.

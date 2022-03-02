@@ -12,9 +12,11 @@ if( "$make_exe" -eq "" ){
         return 1
 }
 
-$sln = (Get-Item -Path ".\").FullName + "\wamain_build.sln"  # 'c:\z\m\check_mk\agents\wnx\wamain.sln'
+$cargo_build = (Get-Item -Path ".\").FullName + "\scripts\call_cargo_build.cmd"
+$sln = (Get-Item -Path ".\").FullName + "\wamain_build.sln"  # 'repo\check_mk\agents\wnx\wamain.sln'
 $makefile = (Get-Item -Path ".\").FullName + "\Makefile" 
 $host_dir = (Get-Item -Path ".\").FullName
+$cmk_agent_ctl_dir = (Get-Item -Path ".\").FullName + "\..\cmk-agent-ctl"
 # string below is used to quckly switch to the Powershell ISE, do not delete it
 # $sln = 'c:\z\m\check_mk\agents\wnx\wamain.sln'
 
@@ -58,7 +60,7 @@ function RcvJob($j, $name){
 
 # Bases
 $msb = {
-& "C:\Program Files (x86)\Microsoft Visual Studio\2019\Professional\MSBuild\Current\Bin\msbuild.exe" $args 
+& "C:\Program Files\Microsoft Visual Studio\2022\Professional\MSBuild\Current\Bin\msbuild.exe" $args 
 if ($LASTEXITCODE -ne 0) {
     Write-Host "Error: " $LASTEXITCODE -foreground Red
     throw "Failed"
@@ -79,8 +81,23 @@ else {
 }
 }
 
+$cargo_b = {
+& Set-Location $using:cmk_agent_ctl_dir; .\cargo_build.cmd
+if ($LASTEXITCODE -ne 0) {
+    Write-Host "Error in cargo build: " $LASTEXITCODE -foreground Red
+    throw "Failed cargo build..."
+}
+else {
+    Write-Host "Success cargo build!" -foreground Green
+}
+}
+
 # disabled as unstable
 # $j_make = start-job -Init ([ScriptBlock]::Create("Set-Location '$pwd'")) -scriptblock $mk -argumentlist "-w", "-j", "2", "frozen_binaries"
+
+$j_r = @()
+Write-Host "Starting Rust Job" -foreground White
+$j_r += start-job -name Rust -scriptblock $cargo_b
 
 
 # Exe 32 & 64 bits
@@ -129,6 +146,17 @@ Write-Host "Jobs ready" -foreground Blue
 foreach ($job in $j_w) {
     RcvJob $job $job.Name
 }
+
+Write-Host "Job rust waiting... This may take few minutes" -foreground White
+do {
+    Wait-Job -Job $j_r -Timeout 5 | Out-Null
+} while(RunningCount($j_r) -eq 0 )
+
+Write-Host "Job rust ready" -foreground Blue
+foreach ($job in $j_r) {
+    RcvJob $job Rust
+}
+
 
 # disabled as unstable ###############
 # Wait-Job -Job $j_make | Out-Null

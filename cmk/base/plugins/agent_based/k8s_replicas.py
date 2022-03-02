@@ -23,6 +23,11 @@ from .agent_based_api.v1 import (
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, HostLabelGenerator
 from .utils import k8s
 
+###########################################################################
+# NOTE: This check (and associated special agent) is deprecated and will be
+#       removed in Checkmk version 2.2.
+###########################################################################
+
 
 def host_labels(section: Dict) -> HostLabelGenerator:
     if section["ready_replicas"] is not None and section["replicas"] is not None:

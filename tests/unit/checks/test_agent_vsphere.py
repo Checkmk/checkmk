@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import Dict, List, Optional
+
 import pytest
 
 from tests.testlib import SpecialAgent
@@ -40,7 +42,6 @@ pytestmark = pytest.mark.checks
                 "--spaces",
                 "cut",
                 "--no-cert-check",
-                "address",
             ],
         ),
         (
@@ -74,13 +75,24 @@ pytestmark = pytest.mark.checks
                 "--vm_piggyname",
                 "alias",
                 "--no-cert-check",
-                "address",
             ],
         ),
     ],
 )
-def test_vsphere_argument_parsing(params, expected_args):
+@pytest.mark.parametrize(
+    "ip_address, expected_host_address",
+    [
+        (None, "host"),
+        ("1.2.3.4", "1.2.3.4"),
+    ],
+)
+def test_vsphere_argument_parsing(
+    params: Dict,
+    expected_args: List[str],
+    ip_address: Optional[str],
+    expected_host_address: str,
+) -> None:
     """Tests if all required arguments are present."""
     agent = SpecialAgent("agent_vsphere")
-    arguments = agent.argument_func(params, "host", "address")
-    assert arguments == expected_args
+    arguments = agent.argument_func(params, "host", ip_address)
+    assert arguments == expected_args + [expected_host_address]

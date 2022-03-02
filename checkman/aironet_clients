@@ -1,7 +1,7 @@
 title: Cisco Aironet Access Points: Client Status
 agents: snmp
 catalog: hw/network/cisco
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors three aspects:
@@ -34,4 +34,3 @@ description:
 
 discovery:
  All three services are created if at least one client is logged in.
-

@@ -4,7 +4,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import json
 import re
 from functools import partial
 from typing import Any, Callable, Dict, Iterable, List, Literal, Optional, Tuple, Union
@@ -1395,45 +1394,32 @@ class TagFilter(Filter):
         )
 
     def display(self, value: FilterHTTPVariables) -> None:
-        groups = config.tags.get_tag_group_choices()
         operators: Choices = [
+            ("", ""),
             ("is", "="),
             ("isnot", "≠"),
         ]
 
-        grouped: Dict[str, Choices] = {}
-        for tag_group in config.tags.tag_groups:
-            grouped.setdefault(tag_group.id, [("", "")])
-
-            for grouped_tag in tag_group.tags:
-                tag_id = "" if grouped_tag.id is None else grouped_tag.id
-                grouped[tag_group.id].append((tag_id, grouped_tag.title))
-
-        html.javascript(
-            "cmk.utils.set_tag_groups(%s, %s);"
-            % (json.dumps(self.query_filter.object_type), json.dumps(grouped))
-        )
         html.open_table()
-        group_choices: Choices = [("", "")]
         for num in range(self.query_filter.count):
             prefix = "%s%d" % (self.query_filter.var_prefix, num)
             html.open_tr()
             html.open_td()
+            grp_value = value.get(prefix + "_grp", "")
+            grp_choices = [(grp_value, grp_value)] if grp_value else []
             html.dropdown(
                 prefix + "_grp",
-                group_choices + list(groups),
-                onchange="cmk.utils.tag_update_value('%s', '%s', this.value)"
-                % (self.query_filter.object_type, prefix),
-                style="width:129px",
-                ordered=True,
-                class_="grp",
+                grp_choices,
+                grp_value,
+                style="width: 129px;",
+                class_=["ajax-vals", "tag_groups"],
             )
+
             html.close_td()
             html.open_td()
-            empty_choices: Choices = [("", "")]
             html.dropdown(
                 prefix + "_op",
-                empty_choices + operators,
+                operators,
                 style="width:36px",
                 ordered=True,
                 class_="op",
@@ -1441,17 +1427,16 @@ class TagFilter(Filter):
             html.close_td()
             html.open_td()
 
-            if item := value.get(prefix + "_grp", ""):
-                if item not in grouped:
-                    raise MKUserError(
-                        prefix + "_grp", _("The requested item %s does not exist") % item
-                    )
+            current_value = value.get(prefix + "_val", "")
+            choices = [(current_value, current_value)] if current_value else []
+            html.dropdown(
+                prefix + "_val",
+                choices,
+                current_value,
+                style="width: 129px;",
+                class_=["ajax-vals", "tag_groups_opt"],
+            )
 
-                choices: Choices = grouped[item]
-            else:
-                choices = [("", "")]
-
-            html.dropdown(prefix + "_val", choices, style="width:129px", ordered=True, class_="val")
             html.close_td()
             html.close_tr()
         html.close_table()
@@ -1823,7 +1808,7 @@ class FilterAggrGroup(Filter):
     @staticmethod
     def _options() -> Choices:
         empty_choices: Choices = [("", "")]
-        return empty_choices + bi.aggregation_group_choices()
+        return empty_choices + list(bi.aggregation_group_choices())
 
     def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
         value = context.get(self.ident, {})

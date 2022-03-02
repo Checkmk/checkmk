@@ -9,7 +9,7 @@
 
 # Disable unused variable error (needed to keep track of version)
 # shellcheck disable=SC2034
-CMK_VERSION="2.1.0i1"
+CMK_VERSION="2.2.0i1"
 
 # Logfile monitoring for AIX via errpt
 #
@@ -33,28 +33,25 @@ CMK_VERSION="2.1.0i1"
 
 MK_ERRPT_AIX_STATE="$MK_VARDIR/mk_errpt_aix.last_reported"
 
-
 # file has been renamed in version 1.7.0i1
 OLD_STATE_FILE="$MK_VARDIR/mk_logwatch_aix.last_reported"
 if [ -f "$OLD_STATE_FILE" ] && [ ! -f "$MK_ERRPT_AIX_STATE" ]; then
     mv "$OLD_STATE_FILE" "$MK_ERRPT_AIX_STATE"
 fi
 
-
 echo "<<<logwatch>>>"
 echo "[[[errorlog]]]"
 
 # the last line we already reported (may be empty)
-LINE=$(tail -n1 "$MK_ERRPT_AIX_STATE" 2> /dev/null)
+LINE=$(tail -n1 "$MK_ERRPT_AIX_STATE" 2>/dev/null)
 
-if [ "$LINE" ]; then  # get rid of all lines after that:
+if [ "$LINE" ]; then # get rid of all lines after that:
     OUT=$(errpt | awk -v line="$LINE" '($0 == line) {exit}; ($0 != line) && (NR>1) {printf "C %s\n", $0}')
-else  # LINE is empty -> report all
+else # LINE is empty -> report all
     OUT=$(errpt | awk '(NR>1) {printf "C %s\n", $0}')
 fi
 
 if [ "$OUT" ]; then
     # output data; if successful, remember most recent
-    echo "$OUT" && echo "$OUT" | head -n1 | sed 's/^C\ //' > "$MK_ERRPT_AIX_STATE"
+    echo "$OUT" && echo "$OUT" | head -n1 | sed 's/^C\ //' >"$MK_ERRPT_AIX_STATE"
 fi
-

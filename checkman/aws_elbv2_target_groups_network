@@ -1,7 +1,7 @@
 title: AWS NetworkELB: Target Groups
 agents: aws
 catalog: cloud/aws
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors target groups of AWS Network ELB and reports a

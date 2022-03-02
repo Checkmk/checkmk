@@ -19,7 +19,7 @@ bi_structure_states = {
             ("tcp", "tcp"),
         },
         {"cmk/check_mk_server": "yes"},
-        "main_folder",
+        "",
         {
             "Check_MK Discovery": ({}, {"cmk_is_discoverylabel": "yes"}),
             "Check_MK HW/SW Inventory": ({"custom": "tag"}, {}),
@@ -54,7 +54,7 @@ bi_structure_states = {
             ("clone-tag", "clone-tag"),
         },
         {"cmk/check_mk_server": "no"},
-        "main_folder/subfolder",
+        "subfolder/",
         {
             "Check_MK Discovery": ({}, {"cmk_is_discoverylabel": "yes"}),
             "Check_MK HW/SW Inventory": ({"custom": "tag"}, {}),

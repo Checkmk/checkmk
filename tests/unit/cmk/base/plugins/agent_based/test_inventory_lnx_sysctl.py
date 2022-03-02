@@ -9,6 +9,8 @@ import pytest
 from cmk.base.plugins.agent_based.agent_based_api.v1 import TableRow
 from cmk.base.plugins.agent_based.inventory_lnx_sysctl import inventory_lnx_sysctl, parse_lnx_sysctl
 
+from .utils_inventory import sort_inventory_result
+
 
 @pytest.mark.parametrize(
     "info, params, inventory_data",
@@ -166,4 +168,6 @@ from cmk.base.plugins.agent_based.inventory_lnx_sysctl import inventory_lnx_sysc
     ],
 )
 def test_inv_oracle_systemparameter(info, params, inventory_data):
-    assert list(inventory_lnx_sysctl(params, parse_lnx_sysctl(info))) == inventory_data
+    assert sort_inventory_result(
+        inventory_lnx_sysctl(params, parse_lnx_sysctl(info))
+    ) == sort_inventory_result(inventory_data)

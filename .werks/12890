@@ -6,7 +6,7 @@ Date: 1623826259
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 The configuration of a custom DCD connector was possible, but
 resulted in an error when the activate changes was attempted.

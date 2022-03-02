@@ -1,7 +1,7 @@
 title: Bluecat Adonis: HA State
 agents: snmp
 catalog: hw/network/bluecat
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This Check monitors the OperState of the HA Service on bluecat adonis devices.
@@ -11,4 +11,3 @@ description:
 
 discovery:
  One service is created if the device is not in standalone mode.
-

@@ -17,6 +17,7 @@ import cmk.utils.paths
 import cmk.utils.piggyback as piggyback
 import cmk.utils.version as cmk_version
 from cmk.utils.caching import config_cache as _config_cache
+from cmk.utils.config_path import VersionedConfigPath
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.parameters import TimespecificParameters, TimespecificParameterSet
 from cmk.utils.rulesets.ruleset_matcher import RulesetMatchObject
@@ -29,7 +30,6 @@ from cmk.utils.type_defs import (
     SourceType,
 )
 
-from cmk.core_helpers.config_path import VersionedConfigPath
 from cmk.core_helpers.type_defs import Mode
 
 import cmk.base.api.agent_based.register as agent_based_register
@@ -1993,17 +1993,14 @@ def test_config_cache_icons_and_actions(
         ],
     )
     config_cache = ts.apply(monkeypatch)
-    assert (
-        sorted(
-            config_cache.icons_and_actions_of_service(
-                hostname,
-                "CPU load",
-                CheckPluginName("ps"),
-                {},
-            )
+    assert sorted(
+        config_cache.icons_and_actions_of_service(
+            hostname,
+            "CPU load",
+            CheckPluginName("ps"),
+            {},
         )
-        == sorted(result)
-    )
+    ) == sorted(result)
 
 
 @pytest.mark.parametrize(
@@ -2198,7 +2195,7 @@ def test_config_cache_get_host_config(
     expected_cache_class_name: str,
     expected_host_class_name: str,
 ) -> None:
-    monkeypatch.setattr(cmk_version, "edition", lambda: edition)
+    monkeypatch.setattr(cmk_version, "is_raw_edition", lambda: edition is cmk_version.Edition.CRE)
 
     _config_cache.clear()
 

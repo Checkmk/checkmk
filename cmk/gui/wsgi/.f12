@@ -7,15 +7,15 @@ ROOT=/omd/sites/$SITE
 DEST="$ROOT/lib/python3/cmk/gui/wsgi/"
 
 echo "Sync WSGI files to $DEST ..."
-sudo rsync -v -a --relative * "$DEST"
+sudo rsync -v -a --relative ./* "$DEST"
 
 if [ "$KILL_SITE_APACHE" = "1" ]; then
     echo "KILLING site apache of $SITE"
-    sudo killall -9 -u $SITE apache2
+    sudo killall -9 -u "$SITE" apache2
 fi
 
-if [ -z $ONLY_COPY ]; then
+if [ -z "$ONLY_COPY" ]; then
     if [ "$SITE" != - ]; then
-        sudo omd reload $SITE apache
+        sudo omd reload "$SITE" apache
     fi
 fi

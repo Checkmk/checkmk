@@ -1,0 +1,21 @@
+title: GCP Cloud Run: Requests
+agents: gcp
+catalog: cloud/gcp
+license: GPLv2
+distribution: check_mk
+description:
+ This check monitors the requests of Cloud Run and reports
+
+ - number of containers running
+ - number of requests
+ - 99th percentile of request latency
+ - billable time
+
+ To make this check work you have to configure the related
+ special agent {Google Cloud Platform (GCP)}.
+
+ There are no default levels. Upper levels on the utilization
+ are configurable via the rule "GCP/Run ram".
+
+discovery:
+ One service is created for each bucket.

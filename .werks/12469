@@ -7,6 +7,6 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 Due to a data write/read race condition, there was a small risk that the aggregation page would not display any aggregates at all.

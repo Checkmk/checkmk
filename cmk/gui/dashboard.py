@@ -10,6 +10,7 @@ import time
 from contextlib import contextmanager
 from dataclasses import dataclass
 from typing import (
+    Any,
     Callable,
     Dict,
     Iterable,
@@ -411,7 +412,7 @@ class LegacyDashlet(IFrameDashlet):
         return cls._spec.get("opt_params", False)
 
     @classmethod
-    def validate_parameters_func(cls) -> Optional[ValueSpecValidateFunc]:
+    def validate_parameters_func(cls) -> Optional[ValueSpecValidateFunc[Any]]:
         """Optional validation function in case vs_parameters() returns a list"""
         return cls._spec.get("validate_params")
 
@@ -536,7 +537,7 @@ def _get_default_dashboard_name() -> str:
     """
     if cmk_version.is_raw_edition():
         return "main"  # problems = main in raw edition
-    return "main" if user.may("general.see_all") else "problems"
+    return "main" if user.may("general.see_all") and user.may("dashboard.main") else "problems"
 
 
 def _load_dashboard_with_cloning(
@@ -1857,7 +1858,7 @@ def choose_view(name: DashboardName, title: str, create_dashlet_spec_func: Calla
         title=_("View name"),
         choices=lambda: views.view_choices(allow_empty=False),
         sorted=True,
-        no_preselect=True,
+        no_preselect_title="",
     )
 
     try:

@@ -19,12 +19,12 @@ from cmk.utils.tags import BuiltinTagConfig, TagGroup
 # TODO: Clean this dependency on the plugins up by moving the plugins to cmk.gui.watolib
 import cmk.gui.plugins.wato.builtin_attributes  # pylint: disable=unused-import
 import cmk.gui.watolib.groups  # pylint: disable=unused-import
-
-#
-from cmk.gui import fields, sites, watolib
+from cmk.gui import sites, watolib
 from cmk.gui.fields.base import BaseSchema
 from cmk.gui.utils.escaping import strip_tags
 from cmk.gui.watolib.tags import load_tag_config
+
+from cmk import fields
 
 
 class Attr(NamedTuple):

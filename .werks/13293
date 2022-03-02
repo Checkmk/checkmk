@@ -1,0 +1,11 @@
+Title: Fixed missing BI icons for services configured to be found in remaining services
+Class: fix
+Compatible: compat
+Component: bi
+Date: 1644918835
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0p21
+
+In certain constellations, BI icons linking to "Aggregations containing this service" were not displayed in a view.

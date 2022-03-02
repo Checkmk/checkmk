@@ -168,6 +168,7 @@ def test_grouped_rulespecs():
         "agents/windows_agent": [
             "agent_config:logging",
             "agent_config:firewall",
+            "agent_config:win_controller",
             "agent_config:win_clean_uninstall",
             "agent_config:win_exe_suffixes",
             "agent_config:win_agent_sections",
@@ -1493,7 +1494,7 @@ def test_rulespec_get_host_groups():
             "agents/windows_modules",
         ]
 
-    group_names = watolib.rulespec_group_registry.get_host_rulespec_group_names()
+    group_names = watolib.rulespec_group_registry.get_host_rulespec_group_names(True)
     assert sorted(group_names) == sorted(expected_rulespec_host_groups)
 
 

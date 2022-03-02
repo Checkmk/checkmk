@@ -92,35 +92,25 @@ set_up_get_epoch() {
 #
 
 set_variable_defaults() {
-    : "${MK_LIBDIR:=/usr/lib/check_mk_agent}"
-    : "${MK_CONFDIR:=/etc/check_mk}"
-    : "${MK_VARDIR:=/var/lib/check_mk_agent}"
-    : "${MK_LOGDIR:=/var/log/check_mk_agent}"
-
     # some 'booleans'
     [ "${MK_RUN_SYNC_PARTS}" = "false" ] || MK_RUN_SYNC_PARTS=true
     [ "${MK_RUN_ASYNC_PARTS}" = "false" ] || MK_RUN_ASYNC_PARTS=true
-}
 
-preamble_1() { # TODO: split these up more meaningful
-    # Make sure that locally installed binaries are found
-    PATH=${PATH}:/usr/local/bin
-    [ -d /var/qmail/bin ] && PATH=${PATH}:/var/qmail/bin
+    # WATCH OUT: These 4 lines are searched for and replaced by the
+    # agent bakery!
+    # TODO: CMK-8339 (proper configuration)
+    : "${MK_LIBDIR:="/usr/lib/check_mk_agent"}"
+    : "${MK_CONFDIR:="/etc/check_mk"}"
+    : "${MK_VARDIR:="/var/lib/check_mk_agent"}"
+    : "${MK_LOGDIR:="/var/log/check_mk_agent"}"
 
     export MK_LIBDIR
     export MK_CONFDIR
     export MK_VARDIR
     export MK_LOGDIR
 
-    # TODO: CMK-8339 (proper configuration)
-
     # Optionally set a tempdir for all subsequent calls
     #export TMPDIR=
-
-    # The service name gets patched for baked agents to "check-mk-agent"
-    # TODO: Once the the RAW edition agent package is adjusted to the
-    # baked one, we can drop this variable and hardcode "check-mk-agent" instead.
-    XINETD_SERVICE_NAME=check_mk
 
     # All executables in PLUGINSDIR will simply be executed and their
     # ouput appended to the output of the agent. Plugins define their own
@@ -137,15 +127,27 @@ preamble_1() { # TODO: split these up more meaningful
     SPOOLDIR=${MK_VARDIR}/spool
 }
 
+set_up_path() {
+    # Make sure that locally installed binaries are found
+    PATH="${PATH}:/usr/local/bin"
+    [ -d "/var/qmail/bin" ] && PATH="${PATH}:/var/qmail/bin"
+}
+
 set_up_remote() {
     # Provide information about the remote host. That helps when data
     # is being sent only once to each remote host.
     REMOTE="${REMOTE_HOST:-"${REMOTE_ADDR:-"${SSH_CLIENT%% *}"}"}"
 
+    # If none of the above are set *and* we are configured to, try to read it from stdin
+    [ -z "${REMOTE}" ] && [ "${MK_READ_REMOTE}" = "true" ] && read -r REMOTE
+
+    export REMOTE
+}
+
+announce_remote() {
     # let RTCs know about this remote
     [ -d "${MK_VARDIR}/rtc_remotes" ] || mkdir "${MK_VARDIR}/rtc_remotes"
-    [ -n "${REMOTE}" ] && touch "${MK_VARDIR}/rtc_remotes/${REMOTE}"
-    export REMOTE
+    [ -n "${REMOTE}" ] && [ "${REMOTE}" != "push-connection" ] && touch "${MK_VARDIR}/rtc_remotes/${REMOTE}"
 }
 
 #
@@ -299,7 +301,7 @@ if inpath timeout; then
 fi
 
 set_up_encryption() {
-    # shellcheck source=/dev/null
+    # shellcheck source=agents/cfg_examples/encryption.cfg
     [ -f "${MK_CONFDIR}/encryption.cfg" ] && . "${MK_CONFDIR}/encryption.cfg"
     define_optionally_encrypt "${ENCRYPTED:-"no"}"
 }
@@ -337,23 +339,17 @@ define_optionally_encrypt() {
 
 }
 
-preamble_7() {
+set_up_disabled_sections() {
     if [ -f "${MK_CONFDIR}/exclude_sections.cfg" ]; then
-        # shellcheck source=/dev/null
+        # shellcheck source=agents/cfg_examples/exclude_sections.cfg
         . "${MK_CONFDIR}/exclude_sections.cfg"
-    fi
-
-    RTC_PLUGINS=""
-    if [ -e "${MK_CONFDIR}/real_time_checks.cfg" ]; then
-        # shellcheck source=/dev/null
-        . "${MK_CONFDIR}/real_time_checks.cfg"
     fi
 }
 
 section_checkmk() {
     cat <<HERE
 <<<check_mk>>>
-Version: 2.1.0i1
+Version: 2.2.0i1
 AgentOS: linux
 Hostname: $(uname -n)
 AgentDirectory: ${MK_CONFDIR}
@@ -362,24 +358,19 @@ SpoolDirectory: ${SPOOLDIR}
 PluginsDirectory: ${PLUGINSDIR}
 LocalDirectory: ${LOCALDIR}
 AgentController: $(cmk-agent-ctl --version 2>/dev/null)
+AgentControllerStatus: $(cmk-agent-ctl status --json 2>/dev/null)
 HERE
-
-    if id cmk-agent >/dev/null && [ -f ~cmk-agent/"allow-legacy-pull" ]; then
-        printf "LegacyPullMode: yes\n"
-    else
-        printf "LegacyPullMode: no\n"
-    fi
 
     # try to find only_from configuration
     if [ -n "${REMOTE_HOST}" ]; then # xinetd
-        sed -n "/^service[[:space:]]*${XINETD_SERVICE_NAME}/,/}/s/^[[:space:]]*only_from[[:space:]]*=[[:space:]]*\(.*\)/OnlyFrom: \1/p" /etc/xinetd.d/* | head -n1
+        sed -n "/^service[[:space:]]*check-mk-agent/,/}/s/^[[:space:]]*only_from[[:space:]]*=[[:space:]]*\(.*\)/OnlyFrom: \1/p" /etc/xinetd.d/* | head -n1
     elif inpath systemctl; then # systemd
-        sed -n '/^IPAddressAllow/s/IPAddressAllow=/OnlyFrom: /p' "/usr/lib/systemd/system/${XINETD_SERVICE_NAME}.socket" 2>/dev/null
+        sed -n '/^IPAddressAllow/s/IPAddressAllow=/OnlyFrom: /p' "/usr/lib/systemd/system/check-mk-agent.socket" 2>/dev/null
         # NOTE: The above line just reads back the socket file we deployed ourselves. Systemd units can be altered by
         # other user defined unit files, so this *may* not be correct. A better way of doing this seemed to be querying
         # systemctl itself about the 'effective' property:
         #
-        #    systemctl show --property IPAddressAllow "${XINETD_SERVICE_NAME}.socket" | sed 's/IPAddressAllow=/OnlyFrom: /'
+        #    systemctl show --property IPAddressAllow "check-mk-agent.socket" | sed 's/IPAddressAllow=/OnlyFrom: /'
         #
         # However this ("successfully") reports an empty list or '[unprintable]' on older systemd versions :-(
     fi
@@ -389,10 +380,15 @@ HERE
     #
 
     if [ -n "${NO_PYTHON}" ]; then
-        echo "FailedPythonReason: No suitable python installation found."
+        python_fail_msg="No suitable python installation found."
     elif [ -n "${WRONG_PYTHON_COMMAND}" ]; then
-        echo "FailedPythonReason: Configured python command not found."
+        python_fail_msg="Configured python command not found."
     fi
+
+    cat <<HERE
+FailedPythonReason: ${python_fail_msg}
+SSHClient: ${SSH_CLIENT}
+HERE
 }
 
 section_checkmk_agent_plugins() {
@@ -1209,12 +1205,19 @@ section_thermal() {
         echo '<<<lnx_thermal:sep(124)>>>'
         for F in /sys/class/thermal/thermal_zone*; do
             line="${F##*/}"
-            if [ ! -e "${F}/mode" ]; then line="${line}|-"; else line="${line}|$(cat "${F}"/mode)"; fi
-            line="${line}|$(cat "${F}/type" "${F}/temp" | tr \\n "|")"
-            for G in "${F}"/trip_point_*_temp "${F}"/trip_point_*_type; do
-                line="${line}$(tr <"${G}" \\n "|")"
+            if [ ! -e "${F}/mode" ]; then
+                line="${line}|-"
+            else
+                line="${line}|$(cat "${F}"/mode)"
+            fi
+
+            line="${line}|$(cat "${F}/type")|$(cat "${F}/temp")"
+
+            for G in "${F}"/trip_point_*_temp; do
+                line="${line}|$(cat "$G")|$(cat "${G/%temp/type}")"
             done
-            echo "${line%?}"
+
+            echo "$line"
         done
     fi
 }
@@ -1360,7 +1363,9 @@ section_ntp() {
 }
 
 run_real_time_checks() {
-    [ -e "${MK_CONFDIR}/real_time_checks.cfg" ] || return
+    RTC_PLUGINS=""
+    # shellcheck source=agents/cfg_examples/real_time_checks.cfg
+    . "${MK_CONFDIR}/real_time_checks.cfg" 2>/dev/null || return
 
     # new mechanism to set the passphrase has priority
     secret="${PASSPHRASE:-"${RTC_SECRET}"}"
@@ -1899,6 +1904,8 @@ run_partially_asynchronous_sections() {
 
 main_setup() {
 
+    set_up_remote
+
     # close stdin and tempotarily disable stderr
     exec </dev/null 9>&2 2>/dev/null
 
@@ -1908,14 +1915,16 @@ main_setup() {
 
     set_variable_defaults
 
-    preamble_1
-    set_up_remote
+    announce_remote # needs MK_VARDIR!
+
+    set_up_path
+
     set_up_profiling
     unset_locale
     detect_python
     detect_container_environment
     set_up_encryption
-    preamble_7
+    set_up_disabled_sections
 
 }
 
@@ -1982,9 +1991,9 @@ main() {
 
             ${MK_RUN_SYNC_PARTS} && main_finalize_sync
 
-        ) | optionally_encrypt "${PASSPHRASE}" ""
+        ) | { if ${MK_RUN_SYNC_PARTS}; then optionally_encrypt "${PASSPHRASE}" ""; else cat; fi; }
 
-        [ "${MK_LOOP_INTERVAL}" -gt 0 ] 2>/dev/null || return
+        [ "${MK_LOOP_INTERVAL}" -gt 0 ] 2>/dev/null || return 0
 
         sleep "${MK_LOOP_INTERVAL}"
 

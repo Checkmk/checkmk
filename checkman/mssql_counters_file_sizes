@@ -1,7 +1,7 @@
 title: MS SQL Tablespaces: Size of Data- and Logfiles
 agents: windows
 catalog: app/mssql
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the size of data- and logfiles of MSSQL

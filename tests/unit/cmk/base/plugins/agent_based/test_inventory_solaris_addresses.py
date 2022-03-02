@@ -12,6 +12,8 @@ from cmk.base.plugins.agent_based.inventory_solaris_addresses import (
     parse_solaris_addresses,
 )
 
+from .utils_inventory import sort_inventory_result
+
 
 @pytest.mark.parametrize(
     "string_table, expected_result",
@@ -117,6 +119,6 @@ from cmk.base.plugins.agent_based.inventory_solaris_addresses import (
     ],
 )
 def test_inventory_solaris_addresses(string_table, expected_result):
-    assert (
-        list(inventory_solaris_addresses(parse_solaris_addresses(string_table))) == expected_result
-    )
+    assert sort_inventory_result(
+        inventory_solaris_addresses(parse_solaris_addresses(string_table))
+    ) == sort_inventory_result(expected_result)

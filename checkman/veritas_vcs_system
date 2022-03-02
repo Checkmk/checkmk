@@ -1,7 +1,7 @@
 title: Veritas Cluster Service: System
 agents: linux
 catalog: os/services
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check needs the {check_mk_agent.linux} agent which provides information

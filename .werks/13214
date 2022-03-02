@@ -6,7 +6,7 @@ Date: 1631470435
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 The previous approach of the RTC feature did not work with
 systemd. This werk changes the way real time data

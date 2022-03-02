@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import logging
 import socket
 from contextlib import contextmanager
 from datetime import datetime, timezone
@@ -39,14 +40,6 @@ def parse_arguments(argv: Optional[Sequence[str]]) -> Args:
     )
 
     parser.add_argument(
-        "share_names",
-        type=str,
-        nargs="*",
-        metavar="SHARE1 SHARE2 ...",
-        help="Share names from which files are collected",
-    )
-
-    parser.add_argument(
         "--username",
         type=str,
         metavar="USERNAME",
@@ -63,9 +56,6 @@ def parse_arguments(argv: Optional[Sequence[str]]) -> Args:
     )
 
     parser.add_argument(
-        "--port", type=int, metavar="PORT", help="Port to be used by SMB client", default=139
-    )
-    parser.add_argument(
         "--patterns",
         type=str,
         nargs="*",
@@ -80,31 +70,48 @@ def parse_arguments(argv: Optional[Sequence[str]]) -> Args:
 
 
 def iter_shared_files(
-    conn: SMBConnection, share_name: str, pattern: str, subdir: str = ""
+    conn: SMBConnection, hostname: str, share_name: str, pattern: List[str], subdir: str = ""
 ) -> Generator[File, None, None]:
+
     for shared_file in conn.listPath(share_name, subdir):
         if shared_file.filename in (".", ".."):
             continue
 
         relative_path = f"{subdir}{shared_file.filename}"
-        absolute_path = f"\\{share_name}\\{relative_path}"
+        absolute_path = f"\\\\{hostname}\\{share_name}\\{relative_path}"
 
-        if shared_file.isDirectory and pattern.startswith(absolute_path):
-            yield from iter_shared_files(conn, share_name, pattern, subdir=f"{relative_path}\\")
-            return
+        if not fnmatch(shared_file.filename, pattern[0]):
+            continue
 
-        if not shared_file.isDirectory and fnmatch(absolute_path, pattern):
+        if shared_file.isDirectory and len(pattern) > 1:
+            yield from iter_shared_files(
+                conn, hostname, share_name, pattern[1:], subdir=f"{relative_path}\\"
+            )
+            continue
+
+        if not shared_file.isDirectory and len(pattern) == 1:
             yield File(absolute_path, shared_file)
 
 
 def get_all_shared_files(
-    conn: SMBConnection, share_names: List[str], patterns: List[str]
+    conn: SMBConnection, hostname: str, patterns: List[str]
 ) -> Generator[Tuple[str, List[File]], None, None]:
-    for pattern in patterns:
-        shared_files = [
-            file for share in share_names for file in iter_shared_files(conn, share, pattern)
-        ]
-        yield pattern, shared_files
+    share_names = [s.name for s in conn.listShares()]
+    for pattern_string in patterns:
+        pattern = pattern_string.strip("\\").split("\\")
+        if len(pattern) < 3:
+            raise RuntimeError(
+                f"Invalid pattern {pattern_string}. Pattern has to consist of hostname, share and file matching pattern"
+            )
+
+        if pattern[0] != hostname:
+            raise RuntimeError(f"Pattern {pattern_string} doesn't match {hostname} hostname")
+
+        share_name = pattern[1]
+        if share_name not in share_names:
+            raise RuntimeError(f"Share {share_name} doesn't exist on host {hostname}")
+
+        yield pattern_string, list(iter_shared_files(conn, hostname, share_name, pattern[2:]))
 
 
 def write_section(all_files: Generator[Tuple[str, List[File]], None, None]) -> None:
@@ -127,18 +134,24 @@ def write_section(all_files: Generator[Tuple[str, List[File]], None, None]) -> N
 
 
 @contextmanager
-def connect(username, password, remote_name, ip_address, port):
-    conn = SMBConnection(username, password, socket.gethostname(), remote_name)
+def connect(
+    username: str, password: str, remote_name: str, ip_address: str
+) -> Generator[SMBConnection, None, None]:
+    logging.debug("Creating SMB connection")
+    conn = SMBConnection(username, password, socket.gethostname(), remote_name, is_direct_tcp=True)
 
     try:
-        success = conn.connect(ip_address, port)
+        logging.debug("Connecting to %s on port 445", ip_address)
+        success = conn.connect(ip_address, 445)
     except (OSError, NotConnectedError):
         raise RuntimeError(
-            "Could not connect to the remote host. Check your ip address, port and remote name."
+            "Could not connect to the remote host. Check your ip address and remote name."
         )
 
     if not success:
         raise RuntimeError("Connection to the remote host was declined. Check your credentials.")
+
+    logging.debug("Connection successfully established")
 
     try:
         yield conn
@@ -147,12 +160,15 @@ def connect(username, password, remote_name, ip_address, port):
 
 
 def smb_share_agent(args: Args) -> None:
-    with connect(args.username, args.password, args.hostname, args.ip_address, args.port) as conn:
-        all_files = get_all_shared_files(conn, args.share_names, args.patterns)
+    with connect(args.username, args.password, args.hostname, args.ip_address) as conn:
+        all_files = get_all_shared_files(conn, args.hostname, args.patterns)
         try:
+            logging.debug("Querying share files and writing fileinfo section")
             write_section(all_files)
         except OperationFailure as err:
             raise RuntimeError(err.args[0])
+
+    logging.debug("Agent finished successfully")
 
 
 def main() -> int:

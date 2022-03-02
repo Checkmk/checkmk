@@ -6,6 +6,7 @@
 
 #include <chrono>
 
+#include "agent_controller.h"
 #include "asio.h"
 #include "external_port.h"
 #include "test_tools.h"
@@ -46,11 +47,11 @@ TEST(ExternalPortTest, StartStop) {
     world::ReplyFunc reply =
         [](const std::string /*ip */) -> std::vector<uint8_t> { return {}; };
     wtools::TestProcessor2 tp;
-    world::ExternalPort test_port(&tp, tst::TestPort());  //
+    world::ExternalPort test_port(&tp);  //
 
-    EXPECT_TRUE(test_port.startIo(reply));
+    EXPECT_TRUE(test_port.startIo(reply, tst::TestPort()));
     EXPECT_TRUE(test_port.io_thread_.joinable());
-    EXPECT_FALSE(test_port.startIo(reply));
+    EXPECT_FALSE(test_port.startIo(reply, tst::TestPort()));
 
     EXPECT_TRUE(tst::WaitForSuccessSilent(
         1000ms, [&test_port]() { return test_port.io_thread_.joinable(); }));
@@ -61,21 +62,9 @@ TEST(ExternalPortTest, StartStop) {
     EXPECT_TRUE(tp.pre_context_call_);
 }
 
-TEST(ExternalPortTest, CtorPort) {
-    world::ExternalPort test_port(nullptr);  //
-    EXPECT_EQ(test_port.defaultPort(), 0);
-
-    world::ExternalPort test_port_0(nullptr, 0);  //
-    EXPECT_EQ(test_port_0.defaultPort(), 0);
-
-    world::ExternalPort test_port_555(nullptr, 555);  //
-    EXPECT_EQ(test_port_555.defaultPort(), 555);
-}
-
 class ExternalPortTestFixture : public ::testing::Test {
 public:
-    cma::world::ReplyFunc reply =
-        [this](const std::string /*ip*/) -> std::vector<uint8_t> {
+    ReplyFunc reply = [this](const std::string /*ip*/) -> std::vector<uint8_t> {
         std::vector<uint8_t> data(reply_text_.begin(), reply_text_.end());
         if (delay_) {
             std::this_thread::sleep_for(50ms);
@@ -84,7 +73,7 @@ public:
         return data;
     };
     void SetUp() override {
-        test_port_.startIo(reply);  //
+        test_port_.startIo(reply, tst::TestPort());  //
     }
 
     void TearDown() override {
@@ -101,7 +90,7 @@ public:
     }
 
     const std::string_view reply_text_{"I am test\r\n"};
-    world::ExternalPort test_port_{nullptr, tst::TestPort()};
+    world::ExternalPort test_port_{nullptr};
     tcp::endpoint endpoint_{asio::ip::make_address("127.0.0.1"),
                             tst::TestPort()};
 
@@ -129,7 +118,7 @@ TEST_F(ExternalPortTestFixture, ReadIntegration) {
 TEST(ExternalPortTest, LowLevelApiBase) {
     asio::io_context io;
 
-    cma::world::ExternalPort test_port(nullptr, 111);
+    ExternalPort test_port(nullptr);
     std::vector<AsioSession::s_ptr> a;
     for (int i = 0; i < 32; i++) {
         asio::ip::tcp::socket s(io);
@@ -163,9 +152,9 @@ TEST(ExternalPortTest, LowLevelApiBase) {
 TEST(ExternalPortTest, ProcessQueue) {
     asio::io_context io;
 
-    cma::world::ExternalPort test_port(nullptr, 111);
+    ExternalPort test_port(nullptr);
     std::vector<AsioSession::s_ptr> a;
-    cma::world::ReplyFunc reply =
+    ReplyFunc reply =
         [&test_port](const std::string /*ip*/) -> std::vector<uint8_t> {
         return {};
     };
@@ -234,6 +223,36 @@ TEST_F(ExternalPortTestFixture, MultiConnectIntegration) {
     }
 
     EXPECT_EQ(g_count, thread_count * 11);
+}
+
+namespace {
+const std::string base{
+    "controller:\n"
+    "  run: {}\n"};
+
+const std::pair<std::string, bool> ip_allowed[] = {
+    {"127.0.0.1", true},
+    {"::1", true},
+    {"127.0.0.2", false},
+};
+}  // namespace
+
+TEST(ExternalPortTest, IsIpAllowedAsExceptionYes) {
+    auto test_fs = tst::TempCfgFs::CreateNoIo();
+    cfg::GetLoadedConfig()[cfg::groups::kSystem] =
+        YAML::Load(fmt::format(base, "yes"));
+    for (const auto &t : ip_allowed) {
+        EXPECT_EQ(IsIpAllowedAsException(t.first), t.second);
+    }
+}
+
+TEST(ExternalPortTest, IsIpAllowedAsExceptionNo) {
+    auto test_fs = tst::TempCfgFs::CreateNoIo();
+    cfg::GetLoadedConfig()[cfg::groups::kSystem] =
+        YAML::Load(fmt::format(base, "no"));
+    for (const auto &t : ip_allowed) {
+        EXPECT_FALSE(IsIpAllowedAsException(t.first));
+    }
 }
 
 }  // namespace cma::world

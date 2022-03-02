@@ -4,7 +4,7 @@
 // source code package.
 
 //
-// Partial support for string_view in YAML CPP
+// Partial and not so valid support for string_view in YAML CPP
 // No C++ file
 #pragma once
 

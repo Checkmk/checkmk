@@ -51,7 +51,8 @@ def create_snapshot(comment):
     if comment:
         data["comment"] += _("Comment: %s") % comment
 
-    data["created_by"] = user.id
+    # with SuperUserContext the user.id is None; later this value will be encoded for tar
+    data["created_by"] = "" if user.id is None else user.id
     data["type"] = "automatic"
     data["snapshot_name"] = snapshot_name
 
@@ -88,15 +89,13 @@ def _do_create_snapshot(data):
             return tarinfo
 
         # Initialize the snapshot tar file and populate with initial information
-        tar_in_progress = tarfile.open(filename_work, "w")  # pylint:disable=consider-using-with
+        with tarfile.open(filename_work, "w") as tar_in_progress:
 
-        for key in ["comment", "created_by", "type"]:
-            tarinfo = get_basic_tarinfo(key)
-            encoded_value = data[key].encode("utf-8")
-            tarinfo.size = len(encoded_value)
-            tar_in_progress.addfile(tarinfo, io.BytesIO(encoded_value))
-
-        tar_in_progress.close()
+            for key in ["comment", "created_by", "type"]:
+                tarinfo = get_basic_tarinfo(key)
+                encoded_value = data[key].encode("utf-8")
+                tarinfo.size = len(encoded_value)
+                tar_in_progress.addfile(tarinfo, io.BytesIO(encoded_value))
 
         # Process domains (sorted)
         subtar_info = {}
@@ -117,7 +116,7 @@ def _do_create_snapshot(data):
                 prefix,
             ] + paths
 
-            proc_create = subprocess.Popen(  # pylint:disable=consider-using-with
+            completed_process = subprocess.run(
                 command,
                 stdin=None,
                 close_fds=True,
@@ -125,14 +124,13 @@ def _do_create_snapshot(data):
                 stderr=subprocess.PIPE,
                 cwd=prefix,
                 encoding="utf-8",
+                check=False,
             )
-            _stdout, stderr = proc_create.communicate()
-            exit_code = proc_create.wait()
             # Allow exit codes 0 and 1 (files changed during backup)
-            if exit_code not in [0, 1]:
+            if completed_process.returncode not in [0, 1]:
                 raise MKGeneralException(
                     "Error while creating backup of %s (Exit Code %d) - %s.\n%s"
-                    % (name, exit_code, stderr, command)
+                    % (name, completed_process.returncode, completed_process.stderr, command)
                 )
 
             with open(path_subtar, "rb") as subtar:
@@ -143,29 +141,22 @@ def _do_create_snapshot(data):
 
             # Append tar.gz subtar to snapshot
             command = ["tar", "--append", "--file=" + filename_work, filename_subtar]
-            proc_append = subprocess.Popen(  # pylint:disable=consider-using-with
-                command,
-                cwd=work_dir,
-                close_fds=True,
-            )
-            proc_append.communicate()
-            exit_code = proc_append.wait()
+            completed_proc = subprocess.run(command, cwd=work_dir, close_fds=True, check=False)
 
             if os.path.exists(filename_subtar):
                 os.unlink(filename_subtar)
 
-            if exit_code != 0:
+            if completed_proc.returncode:
                 raise MKGeneralException("Error on adding backup domain %s to tarfile" % name)
 
         # Now add the info file which contains hashes and signed hashes for
         # each of the subtars
         info = "".join(["%s %s %s\n" % (k, v[0], v[1]) for k, v in subtar_info.items()]) + "\n"
 
-        tar_in_progress = tarfile.open(filename_work, "a")  # pylint:disable=consider-using-with
-        tarinfo = get_basic_tarinfo("checksums")
-        tarinfo.size = len(info)
-        tar_in_progress.addfile(tarinfo, io.BytesIO(info.encode()))
-        tar_in_progress.close()
+        with tarfile.open(filename_work, "a") as tar_in_progress:
+            tarinfo = get_basic_tarinfo("checksums")
+            tarinfo.size = len(info)
+            tar_in_progress.addfile(tarinfo, io.BytesIO(info.encode()))
 
         shutil.move(filename_work, filename_target)
 
@@ -397,11 +388,14 @@ def _list_tar_content(the_tarfile: Union[str, io.BytesIO]) -> Dict[str, Dict[str
     try:
         if not isinstance(the_tarfile, str):
             the_tarfile.seek(0)
-            tar = tarfile.open("r", fileobj=the_tarfile)
+            with tarfile.open("r", fileobj=the_tarfile) as tar:
+                for x in tar.getmembers():
+                    files.update({x.name: {"size": x.size}})
         else:
-            tar = tarfile.open(the_tarfile, "r")  # pylint:disable=consider-using-with
-        for x in tar.getmembers():
-            files.update({x.name: {"size": x.size}})
+            with tarfile.open(the_tarfile, "r") as tar:
+                for x in tar.getmembers():
+                    files.update({x.name: {"size": x.size}})
+
     except Exception:
         return {}
     return files
@@ -410,11 +404,12 @@ def _list_tar_content(the_tarfile: Union[str, io.BytesIO]) -> Dict[str, Dict[str
 def _get_file_content(the_tarfile: Union[str, io.BytesIO], filename: str) -> bytes:
     if not isinstance(the_tarfile, str):
         the_tarfile.seek(0)
-        tar = tarfile.open("r", fileobj=the_tarfile)
+        with tarfile.open("r", fileobj=the_tarfile) as tar:
+            obj = tar.extractfile(filename)
     else:
-        tar = tarfile.open(the_tarfile, "r")  # pylint:disable=consider-using-with
+        with tarfile.open(the_tarfile, "r") as tar:
+            obj = tar.extractfile(filename)
 
-    obj = tar.extractfile(filename)
     if obj is None:
         raise MKGeneralException(_("Failed to extract %s") % filename)
 
@@ -430,16 +425,16 @@ def _get_default_backup_domains():
 
 
 def _snapshot_secret() -> bytes:
-    path = cmk.utils.paths.default_config_dir + "/snapshot.secret"
+    path = Path(cmk.utils.paths.default_config_dir, "snapshot.secret")
     try:
-        return open(path, "rb").read()
+        return path.read_bytes()
     except IOError:
         # create a secret during first use
         try:
             s = os.urandom(256)
         except NotImplementedError:
             s = str(sha256(str(time.time()).encode())).encode()
-        open(path, "wb").write(s)  # pylint:disable=consider-using-with
+        path.write_bytes(s)
         return s
 
 
@@ -480,18 +475,18 @@ def extract_snapshot(tar: tarfile.TarFile, domains: Dict[str, DomainSpec]) -> No
 
         # Older versions of python tarfile handle empty subtar archives :(
         # This won't work: subtar = tarfile.open("%s/%s" % (restore_dir, tar_member.name))
-        p = subprocess.Popen(  # pylint:disable=consider-using-with
+        completed_process = subprocess.run(
             ["tar", "tzf", "%s/%s" % (restore_dir, tar_member.name)],
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             encoding="utf-8",
+            check=False,
         )
-        stdout, stderr = p.communicate()
-        if stderr:
+        if completed_process.stderr:
             errors.append(_("Contains corrupt file %s") % tar_member.name)
             return errors
 
-        for line in stdout:
+        for line in completed_process.stdout:
             full_path = str(prefix) + "/" + line
             path_tokens = full_path.split("/")
             check_exists_or_writable(path_tokens)
@@ -538,16 +533,16 @@ def extract_snapshot(tar: tarfile.TarFile, domains: Dict[str, DomainSpec]) -> No
             tar.extract(tar_member, restore_dir)
 
             command = ["tar", "xzf", "%s/%s" % (restore_dir, tar_member.name), "-C", target_dir]
-            p = subprocess.Popen(  # pylint:disable=consider-using-with
+            completed_process = subprocess.run(
                 command,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
                 encoding="utf-8",
+                check=False,
             )
-            _stdout, stderr = p.communicate()
-            exit_code = p.wait()
-            if exit_code:
-                return ["%s - %s" % (domain["title"], stderr)]
+
+            if completed_process.returncode:
+                return ["%s - %s" % (domain["title"], completed_process.stderr)]
         except Exception as e:
             return ["%s - %s" % (domain["title"], str(e))]
 

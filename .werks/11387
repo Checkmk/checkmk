@@ -6,7 +6,7 @@ Date: 1622040187
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 In some cases fetching the backup states took a long time. This has been
 improved massively by this change.

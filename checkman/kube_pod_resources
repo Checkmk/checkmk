@@ -1,11 +1,11 @@
 title: Kubernetes: Pod Resources
 agents: kubernetes
 catalog: containerization/kubernetes
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
- This check monitors the pods respective to the Kubernetes Deployment. Specifically, it monitors
- the number of pods which are in the phases
+ This check monitors the pods respective to the Kubernetes deployment, node or cluster.
+ Specifically, it monitors the number of pods which are in the phases
 
  - running
 
@@ -17,6 +17,10 @@ description:
 
  - unknown
 
+ Moreover, on clusters and nodes the check monitors the number of allocatable pods, the pod capacity
+ and the number of free pods available on the node/cluster. The number of free pods is equal to the
+ number of allocatable pods minus the number of pending and running pods.
+
  Upper levels for {WARN}/{CRIT} can be defined for the time a pod is pending.
  The duration a pod is pending is calculated based on the time checkmk has seen the pod, not on data
  provided by the Kubernetes API. This means the pending phase duration is zero when the
@@ -27,10 +31,13 @@ description:
  pods. If there are more than three pods exceeding the time limit, only the those three pods, which
  have been in the pending phase the longest will be shown.
 
- For pods in the phase unknown, the state of the check result is configurable. By default the
- service goes {UNKNOWN}, if there are unknown pods. The pod names are displayed in similar fashion
- as for the pending pods. However, pod names are not displayed based on how long they have been
- unknown.
+ The service goes {WARN}/{CRIT} if the count of free pods is less than 10%/5% of the allocatable
+ pods.
+
+ The levels for pending and free pods can be configured via the rule Kubernetes pod resources.
+
+ The pod names of unknown pods are displayed in similar fashion as for the pending pods. However,
+ pod names are not displayed based on how long they have been unknown.
 
  The check requires that the special agent kube is configured.
 

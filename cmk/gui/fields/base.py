@@ -7,9 +7,12 @@ import collections
 import typing
 
 from apispec.ext.marshmallow import common  # type: ignore[import]
-from marshmallow import base, fields, post_dump, post_load, Schema, types, utils, ValidationError
+from marshmallow import fields, post_dump, post_load, Schema, types, utils, ValidationError
+from marshmallow.base import SchemaABC
 from marshmallow.decorators import POST_DUMP, POST_LOAD, PRE_DUMP, PRE_LOAD
 from marshmallow.error_store import ErrorStore
+
+from cmk.fields import base
 
 
 class BaseSchema(Schema):
@@ -93,7 +96,7 @@ class ValueTypedDictSchema(BaseSchema):
         if isinstance(self.value_type, FieldWrapper):
             result = self._serialize_field(data, field=self.value_type.field)
         elif isinstance(self.value_type, BaseSchema) or (
-            isinstance(self.value_type, type) and issubclass(self.value_type, base.SchemaABC)
+            isinstance(self.value_type, type) and issubclass(self.value_type, SchemaABC)
         ):
             schema = common.resolve_schema_instance(self.value_type)
             result = self._convert_with_schema(data, schema_func=schema.load)
@@ -120,7 +123,7 @@ class ValueTypedDictSchema(BaseSchema):
         if isinstance(self.value_type, FieldWrapper):
             result = self._deserialize_field(obj, field=self.value_type.field)
         elif isinstance(self.value_type, BaseSchema) or (
-            isinstance(self.value_type, type) and issubclass(self.value_type, base.SchemaABC)
+            isinstance(self.value_type, type) and issubclass(self.value_type, SchemaABC)
         ):
             schema = common.resolve_schema_instance(self.value_type)
             result = self._convert_with_schema(obj, schema_func=schema.dump)
@@ -133,33 +136,7 @@ class ValueTypedDictSchema(BaseSchema):
         return result
 
 
-class OpenAPIAttributes:
-    def __init__(self, *args, **kwargs):
-        metadata = kwargs.setdefault("metadata", {})
-        for key in [
-            "description",
-            "doc_default",
-            "enum",
-            "example",
-            "maximum",
-            "maxLength",
-            "minimum",
-            "minLength",
-            "pattern",
-            "format",
-            "uniqueItems",
-            "table",  # used for Livestatus ExprSchema, not an OpenAPI key
-            "context",  # used in MultiNested, not an OpenAPI key
-        ]:
-            if key in kwargs:
-                if key in metadata:
-                    raise RuntimeError(f"Key {key!r} defined in 'metadata' and 'kwargs'.")
-                metadata[key] = kwargs.pop(key)
-
-        super().__init__(*args, **kwargs)
-
-
-class MultiNested(OpenAPIAttributes, fields.Field):
+class MultiNested(base.OpenAPIAttributes, fields.Field):
     """
 
     >>> class User(BaseSchema):

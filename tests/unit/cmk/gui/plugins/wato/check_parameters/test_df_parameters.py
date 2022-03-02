@@ -3,6 +3,7 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+import copy
 
 import pytest
 
@@ -117,7 +118,10 @@ def test_invalid_discovery_df_rules(params):
     ],
 )
 def test__transform_discovery_filesystem_params(params, result):
-    assert _transform_discovery_filesystem_params(params) == result
+    p = copy.deepcopy(params)
+    r = _transform_discovery_filesystem_params(params)
+    assert r == result
+    assert p == params
 
 
 @pytest.mark.parametrize(

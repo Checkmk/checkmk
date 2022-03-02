@@ -1,7 +1,7 @@
 title: Bintec Routers: Temperature Sensors
 agents: snmp
 catalog: hw/environment/bintec
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  Checks the Temperature Sensors of Bintec Routers.
@@ -13,4 +13,3 @@ item:
 
 discovery:
  One service is created for each temperature sensor.
-

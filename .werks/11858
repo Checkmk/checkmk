@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: undoc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 With the option "Expect regular messages" you can make the Event Console
 monitor that a certain number of messages are <b>at least</b> seen within each

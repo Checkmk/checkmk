@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 When configuring the special agent Cisco Prime with its corresponding ruleset,
 the change could not be activated. The following error message appeared after

@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 When trying to reset global settings that apply to the GUI, the setting
 was not immediately reset to it's default value. The GUI was still using

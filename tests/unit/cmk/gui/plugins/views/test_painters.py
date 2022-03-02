@@ -261,6 +261,7 @@ def test_registered_painters():
         "inv_networking_addresses",
         "inv_networking_available_ethernet_ports",
         "inv_networking_interfaces",
+        "inv_networking_hostname",
         "inv_networking_routes",
         "inv_networking_total_ethernet_ports",
         "inv_networking_total_interfaces",
@@ -312,6 +313,34 @@ def test_registered_painters():
         "inv_software_applications_ibm_mq_channels",
         "inv_software_applications_ibm_mq_managers",
         "inv_software_applications_ibm_mq_queues",
+        "inv_software_applications_kube",
+        "inv_software_applications_kube_containers",
+        "inv_software_applications_kube_deployment",
+        "inv_software_applications_kube_deployment_name",
+        "inv_software_applications_kube_deployment_namespace",
+        "inv_software_applications_kube_deployment_strategy",
+        "inv_software_applications_kube_deployment_match_labels",
+        "inv_software_applications_kube_deployment_match_expressions",
+        "inv_software_applications_kube_labels",
+        "inv_software_applications_kube_network",
+        "inv_software_applications_kube_node",
+        "inv_software_applications_kube_node_architecture",
+        "inv_software_applications_kube_node_container_runtime_version",
+        "inv_software_applications_kube_node_kernel_version",
+        "inv_software_applications_kube_node_kube_proxy_version",
+        "inv_software_applications_kube_node_kubelet_version",
+        "inv_software_applications_kube_node_name",
+        "inv_software_applications_kube_node_operating_system",
+        "inv_software_applications_kube_node_os_image",
+        "inv_software_applications_kube_pod",
+        "inv_software_applications_kube_pod_dns_policy",
+        "inv_software_applications_kube_pod_host_ip",
+        "inv_software_applications_kube_pod_host_network",
+        "inv_software_applications_kube_pod_name",
+        "inv_software_applications_kube_pod_namespace",
+        "inv_software_applications_kube_pod_node",
+        "inv_software_applications_kube_pod_pod_ip",
+        "inv_software_applications_kube_pod_qos_class",
         "inv_software_applications_kubernetes_assigned_pods",
         "inv_software_applications_kubernetes_daemon_pod_containers",
         "inv_software_applications_kubernetes_ingresses",
@@ -474,7 +503,7 @@ def test_registered_painters():
         "invinterface_speed",
         "invinterface_vlans",
         "invinterface_vlantype",
-        "invkernelconfig_parameter",
+        "invkernelconfig_name",
         "invkernelconfig_value",
         "invmodule_bootloader",
         "invmodule_description",
@@ -588,11 +617,11 @@ def test_registered_painters():
         "invswpac_vendor",
         "invswpac_version",
         "invtunnels_index",
-        "invtunnels_link_priority",
+        "invtunnels_linkpriority",
         "invtunnels_peerip",
         "invtunnels_peername",
         "invtunnels_sourceip",
-        "invtunnels_tunnel_interface",
+        "invtunnels_tunnelinterface",
         "invunknown_description",
         "invunknown_index",
         "invunknown_location",
@@ -1639,9 +1668,9 @@ def _set_expected_queries(painter_ident, live):
     if painter_ident == "inv":
         # TODO: Why is it querying twice?
         live.expect_query(
-            "GET hosts\nColumns: host_name\nFilter: host_name = abc\nLocaltime: 1523811000\nOutputFormat: python3\nKeepAlive: on\nResponseHeader: fixed16"
+            "GET hosts\nColumns: host_name\nLocaltime: 1523811000\nOutputFormat: python3\nKeepAlive: on\nResponseHeader: fixed16"
         )
         live.expect_query(
-            "GET hosts\nColumns: host_name\nFilter: host_name = abc\nLocaltime: 1523811000\nOutputFormat: python3\nKeepAlive: on\nResponseHeader: fixed16"
+            "GET hosts\nColumns: host_name\nLocaltime: 1523811000\nOutputFormat: python3\nKeepAlive: on\nResponseHeader: fixed16"
         )
         return

@@ -1032,7 +1032,7 @@ export function init_messages_and_werks(interval, may_ack) {
         return;
     }
 
-    create_initial_ids("help_links", "werks", "version.py?show_unack=1&wo_compatibility=3");
+    create_initial_ids("help_links", "werks", "change_log.py?show_unack=1&wo_compatibility=3");
     update_unack_incomp_werks();
 }
 

@@ -1,7 +1,7 @@
 title: Established TCP Connections or TCP/UDP Listeners
 agents: linux, aix, solaris
 catalog: os/networking
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check evaluates the output of the {netstat} command on Linux, AIX and Solaris

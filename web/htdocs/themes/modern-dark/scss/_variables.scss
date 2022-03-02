@@ -127,8 +127,6 @@ $dragging-bg-color: $ux-theme-1;
 $nested-table-th-bg-color: $ux-theme-4;
 $nested-table-td-bg-color: $ux-theme-5;
 
-$hostdown-bg-color: rgb(0, 102, 170);
-
 $duallist-control-a-hover-bg-color: mix($white, $grey-5, 10%);
 
 $performance-table-shared-padding: 8px 0;
@@ -196,12 +194,11 @@ $popup-inner-border: 1px solid $ux-theme-3;
 $filter-add-button-hover-brightness: brightness(100);
 $floatfilter-legend-border: 1px solid rgba($white, 0.2);
 $log-output-color: $ux-theme-0;
-$dashlet-editor-free: rgb(78, 93, 105);
+$dashlet-editor-controls-color: rgb(78, 93, 105);
 $dark-image-invert: invert(100%);
 $ntop-protocol-painter-padding-top: 4px;
 $hexagon-critical-color: $danger;
 $hexagon-unknown-color: rgb(255, 136, 0);
-$hexagon-warning-color: $yellow;
 $hexagon-downtime-color: rgb(60, 194, 255);
 $hexagon-host-down-color: rgb(16, 99, 176);
 $hexagon-default-color: $white;
@@ -210,3 +207,6 @@ $hexagon-default-stroke-color: $white;
 $hexagon-default-stroke-opacity: 0.1;
 $host-hexagon-ok-stroke-color: rgb(58, 69, 80);
 $bi-box-border-color: $darkgrey;
+$icons-popup-active-color: $darkgrey;
+$dashlet-figures-grid-color: rgb(128, 151, 177);
+$scatterplot-hilite-color: rgb(70, 130, 180);

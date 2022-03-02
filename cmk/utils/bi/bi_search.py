@@ -34,12 +34,12 @@ class BIAllHostsChoiceSchema(Schema):
 
 class BIHostNameRegexChoiceSchema(Schema):
     type = ReqConstant("host_name_regex")
-    pattern = ReqString(default="", example="testhostn.*")
+    pattern = ReqString(dump_default="", example="testhostn.*")
 
 
 class BIHostAliasRegexChoiceSchema(Schema):
     type = ReqConstant("host_alias_regex")
-    pattern = ReqString(default="", example="testali.*")
+    pattern = ReqString(dump_default="", example="testali.*")
 
 
 class BIHostChoice(OneOfSchema):
@@ -56,17 +56,17 @@ class BIHostChoice(OneOfSchema):
 
 
 class HostConditionsSchema(Schema):
-    host_folder = ReqString(default="", example="servers/groupA")
-    host_labels = ReqDict(default={}, example={"db": "mssql"})
-    host_tags = ReqDict(default={}, example={})
+    host_folder = ReqString(dump_default="", example="servers/groupA")
+    host_labels = ReqDict(dump_default={}, example={"db": "mssql"})
+    host_tags = ReqDict(dump_default={}, example={})
     host_choice = ReqNested(
-        BIHostChoice, default={"type": "all_hosts"}, example={"type": "all_hosts"}
+        BIHostChoice, dump_default={"type": "all_hosts"}, example={"type": "all_hosts"}
     )
 
 
 class ServiceConditionsSchema(HostConditionsSchema):
-    service_regex = ReqString(default="", example="Filesystem.*")
-    service_labels = ReqDict(default={}, example={"db": "mssql"})
+    service_regex = ReqString(dump_default="", example="Filesystem.*")
+    service_labels = ReqDict(dump_default={}, example={"db": "mssql"})
 
 
 #   .--Empty---------------------------------------------------------------.
@@ -239,8 +239,8 @@ class BIHostSearch(ABCBISearch):
 
 class BIHostSearchSchema(Schema):
     type = ReqConstant(BIHostSearch.type())
-    conditions = ReqNested(HostConditionsSchema, default=HostConditionsSchema().dump({}))
-    refer_to = ReqString(validate=validate.OneOf(["host", "child", "parent"]), default="host")
+    conditions = ReqNested(HostConditionsSchema, dump_default=HostConditionsSchema().dump({}))
+    refer_to = ReqString(validate=validate.OneOf(["host", "child", "parent"]), dump_default="host")
 
 
 #   .--Service-------------------------------------------------------------.
@@ -294,7 +294,7 @@ class BIServiceSearch(ABCBISearch):
 
 class BIServiceSearchSchema(Schema):
     type = ReqConstant(BIServiceSearch.type())
-    conditions = ReqNested(ServiceConditionsSchema, default=ServiceConditionsSchema().dump({}))
+    conditions = ReqNested(ServiceConditionsSchema, dump_default=ServiceConditionsSchema().dump({}))
 
 
 #   .--Fixed---------------------------------------------------------------.

@@ -9,6 +9,8 @@ import pytest
 from cmk.base.plugins.agent_based.agent_based_api.v1 import TableRow
 from cmk.base.plugins.agent_based.ibm_mq_queues import inventory_ibm_mq_queues
 
+from .utils_inventory import sort_inventory_result
+
 
 @pytest.mark.parametrize(
     "parsed, expected_result",
@@ -68,4 +70,6 @@ from cmk.base.plugins.agent_based.ibm_mq_queues import inventory_ibm_mq_queues
     ],
 )
 def test_inventory_ibm_mq_queues(parsed, expected_result):
-    assert list(inventory_ibm_mq_queues(parsed)) == expected_result
+    assert sort_inventory_result(inventory_ibm_mq_queues(parsed)) == sort_inventory_result(
+        expected_result
+    )

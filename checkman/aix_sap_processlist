@@ -1,7 +1,7 @@
 title: AIX: SAP Process List
 agents: aix
 catalog: os/services
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the SAP process list of instances running on a SAP
@@ -23,4 +23,3 @@ item:
 
 discovery:
  One service is created for each discovered process on each instance.
-

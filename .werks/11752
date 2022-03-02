@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 SNMP Management boards were previously contacted with different SNMP settings.
 SNMP management boards on non-SNMP hosts always used SNMPv1 (no bulk walk)

@@ -12,7 +12,7 @@ def wrap_negative(str_value: str) -> float:
     # Due to signed 32-bit arithmetics we sometimes get negative values. Those must be converted to
     # positive ones.
     c = interfaces.saveint(str_value)
-    return c + 2 ** 32 if c < 0 else c
+    return c + 2**32 if c < 0 else c
 
 
 _VMS_IF_COUNTERS_ORDER = [

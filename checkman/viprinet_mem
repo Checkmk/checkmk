@@ -1,11 +1,10 @@
 title: Viprinet: Memory Usage
 agents: snmp
 catalog: hw/network/viprinet
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check displays the current memory usage of this host an is always OK
 
 discovery:
  One service is created.
-

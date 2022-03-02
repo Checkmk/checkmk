@@ -5,39 +5,17 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import logging
-from typing import NamedTuple
+from typing import Iterator
 
 import pytest
 
 from tests.testlib.site import Site
 
-from cmk.utils import version as cmk_version
-
-
-class DefaultConfig(NamedTuple):
-    core: str
-
-
 logger = logging.getLogger(__name__)
 
 
-@pytest.fixture(
-    name="test_cfg",
-    scope="module",
-    params=[
-        "nagios",
-        pytest.param(
-            "cmc",
-            marks=pytest.mark.skipif(
-                cmk_version.is_raw_edition(), reason="raw edition only supports nagios core."
-            ),
-        ),
-    ],
-)
-def test_cfg_fixture(request, site: Site):
-    config = DefaultConfig(core=request.param)
-    site.set_config("CORE", config.core, with_restart=True)
-
+@pytest.fixture(name="test_cfg", scope="module", autouse=True)
+def test_cfg_fixture(site: Site) -> Iterator[None]:
     print("Applying default config")
     site.openapi.create_host(
         "test-host",
@@ -48,7 +26,7 @@ def test_cfg_fixture(request, site: Site):
     )
 
     site.activate_changes_and_wait_for_core_reload()
-    yield config
+    yield
 
     #
     # Cleanup code
@@ -58,7 +36,7 @@ def test_cfg_fixture(request, site: Site):
     site.openapi.delete_host("test-host")
 
 
-def test_active_check_execution(test_cfg, site: Site, web):
+def test_active_check_execution(site: Site, web):
     try:
         web.set_ruleset(  # Replace with RestAPI, see CMK-9251
             "custom_checks",
@@ -181,7 +159,7 @@ def test_active_check_macros(test_cfg, site, web):
 
             expected_output = "Output: %s" % value
             # TODO: Cleanup difference between nagios/cmc
-            if test_cfg.core == "nagios":
+            if site.core_name() == "nagios":
                 expected_output = expected_output.strip()
                 if var == "$_HOSTTAGS$":
                     splitted_output = plugin_output.split(" ")

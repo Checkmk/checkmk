@@ -1,7 +1,7 @@
 title: Graylog: Failures
 agents: graylog
 catalog: app/graylog
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  With this check you can monitor the number of failures across all indices of a

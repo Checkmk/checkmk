@@ -5,10 +5,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import abc
-import io
-import os
 import time
 from fnmatch import fnmatch
+from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional, Tuple, Union
 
 import cmk.utils.man_pages as man_pages
@@ -65,7 +64,7 @@ from cmk.gui.valuespec import (
     Dictionary,
     DictionaryElements,
     DropdownChoice,
-    DropdownChoiceEntry,
+    DropdownChoiceEntries,
     Integer,
     ListChoice,
     ListChoiceChoices,
@@ -1518,26 +1517,37 @@ class PainterSvcAcknowledged(Painter):
         return paint_nagiosflag(row, "service_acknowledged", False)
 
 
-def notes_matching_pattern_entries(dirs: Iterable[str], item: str) -> Iterable[str]:
-    matching = []
-    for directory in dirs:
-        if os.path.isdir(directory):
-            entries = sorted([d for d in os.listdir(directory) if d[0] != "."], reverse=True)
-            for pattern in entries:
-                if pattern[0] != "." and fnmatch(item, pattern):
-                    matching.append(directory + "/" + pattern)
-    return matching
+def notes_matching_pattern_entries(dirs: Iterable[Path], item: str) -> Iterable[Path]:
+    yield from (
+        sub_path
+        for directory in dirs
+        if directory.is_dir()
+        for sub_path in directory.iterdir()
+        if not sub_path.name.startswith(".") and fnmatch(item, sub_path.name)
+    )
 
 
 def _paint_custom_notes(what: str, row: Row) -> CellSpec:
     host = row["host_name"]
     svc = row.get("service_description")
     if what == "service":
-        notes_dir = cmk.utils.paths.default_config_dir + "/notes/services"
-        dirs = notes_matching_pattern_entries([notes_dir], host)
+        dirs = notes_matching_pattern_entries(
+            [
+                Path(
+                    cmk.utils.paths.default_config_dir,
+                    "/notes/services",
+                )
+            ],
+            host,
+        )
         item = svc
     else:
-        dirs = [cmk.utils.paths.default_config_dir + "/notes/hosts"]
+        dirs = [
+            Path(
+                cmk.utils.paths.default_config_dir,
+                "/notes/hosts",
+            )
+        ]
         item = host
 
     assert isinstance(item, str)
@@ -1561,11 +1571,7 @@ def _paint_custom_notes(what: str, row: Row) -> CellSpec:
         )
 
     for f in files:
-        contents.append(
-            replace_tags(
-                io.open(f, encoding="utf8").read().strip()  # pylint:disable=consider-using-with
-            )
-        )
+        contents.append(replace_tags(f.read_text(encoding="utf8").strip()))
     return "", "<hr>".join(contents)
 
 
@@ -1727,7 +1733,7 @@ class ABCPainterCustomVariable(Painter, abc.ABC):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def _custom_attribute_choices(self) -> List[DropdownChoiceEntry]:
+    def _custom_attribute_choices(self) -> DropdownChoiceEntries:
         raise NotImplementedError()
 
     @property
@@ -1769,7 +1775,7 @@ class PainterServiceCustomVariable(ABCPainterCustomVariable):
     def _object_type(self) -> str:
         return "service"
 
-    def _custom_attribute_choices(self) -> List[DropdownChoiceEntry]:
+    def _custom_attribute_choices(self) -> DropdownChoiceEntries:
         choices = []
         for ident, attr_spec in config.custom_service_attributes.items():
             choices.append((ident, attr_spec["title"]))
@@ -1807,7 +1813,7 @@ class PainterHostCustomVariable(ABCPainterCustomVariable):
     def _object_type(self) -> str:
         return "host"
 
-    def _custom_attribute_choices(self) -> List[DropdownChoiceEntry]:
+    def _custom_attribute_choices(self) -> DropdownChoiceEntries:
         choices = []
         for attr_spec in config.wato_host_attrs:
             choices.append((attr_spec["name"], attr_spec["title"]))

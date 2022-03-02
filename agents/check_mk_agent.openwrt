@@ -229,7 +229,6 @@ if inpath timeout; then
     }
 fi
 
-
 #
 # CHECK SECTIONS
 #
@@ -252,12 +251,12 @@ section_cpu() {
     else
         CPU_REGEX='^CPU|^processor'
     fi
-    echo "$(cat /proc/loadavg) $(grep -E ${CPU_REGEX} </proc/cpuinfo | wc -l)"
+    echo "$(cat /proc/loadavg) $(grep -c -E ${CPU_REGEX} </proc/cpuinfo)"
 }
 
 section_checkmk() {
     echo "<<<check_mk>>>"
-    echo "Version: 2.1.0i1"
+    echo "Version: 2.2.0i1"
     echo "AgentOS: openwrt"
     echo "Hostname: $(hostname)"
     echo "AgentDirectory: ${MK_CONFDIR}"
@@ -268,8 +267,8 @@ section_checkmk() {
 
     # If we are called via xinetd, try to find only_from configuration
     if [ -n "${REMOTE_HOST}" ]; then
-        echo -n 'OnlyFrom: '
-        echo "$(sed -n '/^service[[:space:]]*'"${XINETD_SERVICE_NAME}"'/,/}/s/^[[:space:]]*only_from[[:space:]]*=[[:space:]]*\(.*\)/\1/p' /etc/xinetd.d/* | head -n1)"
+        printf 'OnlyFrom: '
+        sed -n '/^service[[:space:]]*'"${XINETD_SERVICE_NAME}"'/,/}/s/^[[:space:]]*only_from[[:space:]]*=[[:space:]]*\(.*\)/\1/p' /etc/xinetd.d/* | head -n1
     fi
 
     #
@@ -277,10 +276,15 @@ section_checkmk() {
     #
 
     if [ -n "${NO_PYTHON}" ]; then
-        echo "FailedPythonReason: No suitable python installation found."
+        python_fail_msg="No suitable python installation found."
     elif [ -n "${WRONG_PYTHON_COMMAND}" ]; then
-        echo "FailedPythonReason: Configured python command not found."
+        python_fail_msg="Configured python command not found."
     fi
+
+    cat <<HERE
+FailedPythonReason: ${python_fail_msg}
+SSHClient: ${SSH_CLIENT}
+HERE
 }
 
 section_checkmk_agent_plugins() {
@@ -343,6 +347,11 @@ section_mounts() {
         STAT_BROKE="5.3.0"
 
         echo '<<<nfsmounts>>>'
+        # SC2162: read without -r will mangle backslashes.
+        # We suppress it here for compatibility (curretly backslashes e.g. before spaces are dropped).
+        # Since escaping of field seperators is not relevant when reading into one variable, we probably
+        # would have wanted "read -r".
+        # shellcheck disable=SC2162
         sed -n '/ nfs4\? /s/[^ ]* \([^ ]*\) .*/\1/p' </proc/mounts |
             sed 's/\\040/ /g' |
             while read MP; do
@@ -356,6 +365,11 @@ section_mounts() {
             done
 
         echo '<<<cifsmounts>>>'
+        # SC2162: read without -r will mangle backslashes.
+        # We suppress it here for compatibility (curretly backslashes e.g. before spaces are dropped).
+        # Since escaping of field seperators is not relevant when reading into one variable, we probably
+        # would have wanted "read -r".
+        # shellcheck disable=SC2162
         sed -n '/ cifs\? /s/[^ ]* \([^ ]*\) .*/\1/p' </proc/mounts |
             sed 's/\\040/ /g' |
             while read MP; do
@@ -403,7 +417,7 @@ section_lnx_if() {
     echo '<<<lnx_if:sep(58)>>>'
     sed 1,2d /proc/net/dev
     if inpath ethtool; then
-        for eth in $(sed -e 1,2d /proc/net/dev | cut -d':' -f1 | sort); do
+        sed -e 1,2d /proc/net/dev | cut -d':' -f1 | sort | while read -r eth; do
             echo "[${eth}]"
             ethtool "${eth}" | grep -E '(Speed|Duplex|Link detected|Auto-negotiation):'
             echo "Address: $(cat "/sys/class/net/${eth}/address")"
@@ -416,7 +430,7 @@ section_bonding_interfaces() {
     (
         cd /proc/net/bonding 2>/dev/null || return
         echo '<<<lnx_bonding:sep(58)>>>'
-        head -v -n 1000 *
+        head -v -n 1000 ./*
     )
 }
 
@@ -486,7 +500,7 @@ section_ipmitool() {
     fi
 }
 
-section_ipmisensors() {  # keep in sync with linux agent
+section_ipmisensors() { # keep in sync with linux agent
     # IPMI data via ipmi-sensors (of freeipmi).
     # Even if freeipmi is installed make sure that IPMI is really supported by your hardware.
     inpath ipmi-sensors && ls /dev/ipmi* 2>/dev/null 1>&2 || return
@@ -528,7 +542,7 @@ section_dmraid() {
         dmraid -s | grep -e ^name -e ^status
 
         # Output disk names of the RAID disks
-        DISKS=$(echo "${DMSTATUS}" | cut -f1 -d\:)
+        DISKS=$(echo "${DMSTATUS}" | cut -f1 -d:)
 
         for disk in ${DISKS}; do
             device=$(cat "/sys/block/$(basename "${disk}")/device/model")
@@ -646,7 +660,7 @@ section_drbd() {
     fi
 }
 
-section_cups_queues() {  # TODO: this seems broken. Don't we need to export cups_queues?
+section_cups_queues() { # TODO: this seems broken. Don't we need to export cups_queues?
     # Status of CUPS printer queues
     if inpath lpstat; then
         if pgrep -f "\bcupsd" >/dev/null 2>&1; then
@@ -655,6 +669,11 @@ section_cups_queues() {  # TODO: this seems broken. Don't we need to export cups
                 CPRINTCONF=/etc/cups/printers.conf
                 if [ -r "${CPRINTCONF}" ]; then
                     LOCAL_PRINTERS=$(grep -E "<(Default)?Printer .*>" ${CPRINTCONF} | awk '{print $2}' | sed -e 's/>//')
+                    # SC2162: read without -r will mangle backslashes.
+                    # We suppress it here for compatibility (curretly backslashes e.g. before spaces are dropped).
+                    # Since escaping of field seperators is not relevant when reading into one variable, we probably
+                    # would have wanted "read -r".
+                    # shellcheck disable=SC2162
                     lpstat -p | while read LINE; do
                         PRINTER=$(echo "${LINE}" | awk '{print $2}')
                         if echo "${LOCAL_PRINTERS}" | grep -q "${PRINTER}"; then
@@ -662,6 +681,11 @@ section_cups_queues() {  # TODO: this seems broken. Don't we need to export cups
                         fi
                     done
                     echo '---'
+                    # SC2162: read without -r will mangle backslashes.
+                    # We suppress it here for compatibility (curretly backslashes e.g. before spaces are dropped).
+                    # Since escaping of field seperators is not relevant when reading into one variable, we probably
+                    # would have wanted "read -r".
+                    # shellcheck disable=SC2162
                     lpstat -o | while read LINE; do
                         PRINTER=${LINE%%-*}
                         if echo "${LOCAL_PRINTERS}" | grep -q "${PRINTER}"; then
@@ -696,7 +720,7 @@ section_heartbeat() {
 
         echo '<<<heartbeat_nodes>>>'
         for NODE in $(cl_status listnodes); do
-            if [ "${NODE}" != "$(uname -n | tr 'A-Z' 'a-z')" ]; then
+            if [ "${NODE}" != "$(uname -n | tr '[:upper:]' '[:lower:]')" ]; then
                 STATUS=$(cl_status nodestatus "${NODE}")
                 echo -n "${NODE} ${STATUS}"
                 for LINK in $(cl_status listhblinks "${NODE}" 2>/dev/null); do
@@ -878,7 +902,7 @@ section_job() {
                 if [ "$(id -u)" -eq 0 ]; then
                     su -s "${SHELL}" "${username}" -c "head -n -0 -v *"
                 else
-                    head -n -0 -v *
+                    head -n -0 -v ./*
                 fi
                 cd ..
             )
@@ -946,6 +970,7 @@ run_real_time_checks_for_remote() {
     PIDFILE=${MK_VARDIR}/real_time_checks.pid
     echo $$ >${PIDFILE}
 
+    # shellcheck source=agents/cfg_examples/real_time_checks.cfg
     . "${MK_CONFDIR}/real_time_checks.cfg"
 
     if [ "${PASSPHRASE}" != "" ]; then
@@ -1328,7 +1353,7 @@ main_async_parts() {
 
 }
 
-main_finalize_sync(){
+main_finalize_sync() {
     finalize_profiling
 }
 
@@ -1352,9 +1377,9 @@ main() {
 
             ${MK_RUN_SYNC_PARTS} && main_finalize_sync
 
-        ) | optionally_encrypt "${PASSPHRASE}" ""
+        ) | { if ${MK_RUN_SYNC_PARTS}; then optionally_encrypt "${PASSPHRASE}" ""; else cat; fi; }
 
-        [ "${MK_LOOP_INTERVAL}" -gt 0 ] 2>/dev/null || return
+        [ "${MK_LOOP_INTERVAL}" -gt 0 ] 2>/dev/null || return 0
 
         sleep "${MK_LOOP_INTERVAL}"
 

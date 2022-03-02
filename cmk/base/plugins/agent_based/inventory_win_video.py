@@ -82,7 +82,7 @@ register.agent_section(
 
 def inventory_win_video(section: Section) -> InventoryResult:
     path = ["hardware", "video"]
-    for video in sorted(section, key=lambda v: v.get("name", "")):
+    for video in section:
         if "name" in video:
             yield TableRow(
                 path=path,

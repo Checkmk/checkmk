@@ -1,0 +1,13 @@
+Title: kubernetes: addition of cluster name label to all k8s objects
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1646119991
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.2.0i1
+
+This werk introduces the cmk/kubernetes/cluster host label whose value
+is the configured name of the k8s cluster. This label is added to
+all piggyback hosts originating from the Kubernetes special agent.

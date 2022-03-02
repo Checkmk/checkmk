@@ -1,7 +1,7 @@
 title: Citrix XenApp Hostsystem: Info
 agents: windows
 catalog: app/citrix
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This checks returns the pool name of Citrix XenApp 7.x hostsystems.
@@ -12,4 +12,3 @@ description:
 
 discovery:
  One service is created for each controller.
-

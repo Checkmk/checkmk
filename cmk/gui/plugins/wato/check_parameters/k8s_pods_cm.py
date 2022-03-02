@@ -14,6 +14,11 @@ from cmk.gui.plugins.wato.utils import (
 )
 from cmk.gui.valuespec import Dictionary, Filesize, Percentage, Tuple
 
+######################################################################
+# NOTE: This valuespec and associated check are deprecated and will be
+#       removed in Checkmk version 2.2.
+######################################################################
+
 
 def _parameter_valuespec_k8s_pods_cpu():
     return Dictionary(

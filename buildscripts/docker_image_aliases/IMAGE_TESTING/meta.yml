@@ -1,1 +1,2 @@
-{source: 'artifacts.lan.tribe29.com:4000/ubuntu-20.04:master-latest', tag: 'artifacts.lan.tribe29.com:4000/ubuntu-20.04:master-latest-image-alias-master-9d8c0e2cae'}
+source: artifacts.lan.tribe29.com:4000/ubuntu-20.04:master-latest
+tag: artifacts.lan.tribe29.com:4000/ubuntu-20.04:master-latest-image-alias-master-d2e28637d1d

@@ -6,7 +6,7 @@ Date: 1632838772
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 The ICMP service now produces text for the details view, showing every
 result corresponding to one IP address on an individual line.

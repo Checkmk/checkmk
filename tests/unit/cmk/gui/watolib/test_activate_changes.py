@@ -37,13 +37,13 @@ def _expected_replication_paths():
         ReplicationPath("dir", "multisite", "etc/check_mk/multisite.d/wato/", []),
         ReplicationPath("file", "htpasswd", "etc/htpasswd", []),
         ReplicationPath("file", "auth.secret", "etc/auth.secret", []),
+        ReplicationPath("file", "password_store.secret", "etc/password_store.secret", []),
         ReplicationPath("file", "auth.serials", "etc/auth.serials", []),
         ReplicationPath(
             "dir", "usersettings", "var/check_mk/web", ["report-thumbnails", "session_info.mk"]
         ),
         ReplicationPath("dir", "mkps", "var/check_mk/packages", []),
         ReplicationPath("dir", "local", "local", []),
-        ReplicationPath("file", "omd", "etc/omd/sitespecific.mk", []),
     ]
 
     if not cmk_version.is_raw_edition():
@@ -163,6 +163,12 @@ def test_get_replication_components(
                 ident="distributed_wato",
                 site_path="etc/check_mk/conf.d/distributed_wato.mk",
                 excludes=[".*new*"],
+            ),
+            ReplicationPath(
+                ty="dir",
+                ident="omd",
+                site_path="etc/omd",
+                excludes=["allocated_ports", "site.conf", ".*new*"],
             ),
         ]
 

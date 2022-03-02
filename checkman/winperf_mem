@@ -1,7 +1,7 @@
 title: Windows: Memory Statistics
 agents: windows
 catalog: os/storage
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the number of memory pages per second.
@@ -12,4 +12,3 @@ description:
 
 discovery:
  One service is created if the windows agents has the section {<<<winperf_mem>>>}.
-

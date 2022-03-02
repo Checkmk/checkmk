@@ -1,7 +1,7 @@
 title: ALLNET IP Sensoric: Pressure Sensors
 agents: allnet_ip_sensoric
 catalog: hw/environment/allnet
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  Reports values of Pressure Sensors in ALLNET IP Sensoric devices.

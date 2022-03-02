@@ -9,7 +9,7 @@
 
 # Disable unused variable error (needed to keep track of version)
 # shellcheck disable=SC2034
-CMK_VERSION="2.1.0i1"
+CMK_VERSION="2.2.0i1"
 
 # Monitor status of LUNs on HP-UX
 # Put this file into /usr/lib/check_mk_agent/plugins. Then
@@ -17,13 +17,11 @@ CMK_VERSION="2.1.0i1"
 # Actually querying these stats is quite slow since they freshly update
 # on each call. If you have a few 1000 luns then this will not work.
 
-get_stats()
-{
-    scsimgr get_stat -D "$LUN" | tr '\=' ':' | grep -e 'STATISTICS FOR LUN'  -e 'Bytes' -e 'Total I/Os processed' -e 'I/O failure' -e 'IO failures due
+get_stats() {
+    scsimgr get_stat -D "$LUN" | tr '\=' ':' | grep -e 'STATISTICS FOR LUN' -e 'Bytes' -e 'Total I/Os processed' -e 'I/O failure' -e 'IO failures due
 to'
     return $?
 }
-
 
 # Ex:
 #LUN PATH INFORMATION FOR LUN : /dev/pt/pt2
@@ -32,49 +30,48 @@ to'
 #World Wide Identifier(WWID) = 0x60a98000572d44745634645076556357
 #LUN PATH INFORMATION FOR LUN : /dev/rdisk/disk6
 
-get_lun_map()
-{
-scsimgr lun_map | grep -E '^[[:space:]]*(LUN PATH|World Wide Identifier)' | tr '\=' ':'
+get_lun_map() {
+    scsimgr lun_map | grep -E '^[[:space:]]*(LUN PATH|World Wide Identifier)' | tr '\=' ':'
 }
 
-
-main()
-{
-get_lun_map | while read line ; do
-    descr=$(echo "$line" | awk -F: '{print $1}')
-    val=$(  echo "$line" | awk -F: '{print $2}')
-    case $descr in
-      LUN*)
-          if echo "$val" | grep /dev/rdisk 1>/dev/null; then
-              DMP=yes
-              LUN=$val
-          else
-              DMP=no
-              unset LUN
-          fi
-      ;;
-      World*)
-          if [ $DMP = "yes" ]; then
-              echo "WWID: $val"
-              get_stats "$LUN"
-          fi
-      ;;
-      *)
-          echo "Fehler:"
-          echo "$line"
-          echo "$descr"
-          echo "$val"
-          sleep 1
-      ;;
-    esac
-done
+main() {
+    # SC2162: read without -r will mangle backslashes.
+    # We suppress it here for compatibility (curretly backslashes e.g. before spaces are dropped).
+    # Since escaping of field seperators is not relevant when reading into one variable, we probably
+    # would have wanted "read -r".
+    # shellcheck disable=SC2162
+    get_lun_map | while read line; do
+        descr=$(echo "$line" | awk -F: '{print $1}')
+        val=$(echo "$line" | awk -F: '{print $2}')
+        case $descr in
+            LUN*)
+                if echo "$val" | grep /dev/rdisk 1>/dev/null; then
+                    DMP=yes
+                    LUN=$val
+                else
+                    DMP=no
+                    unset LUN
+                fi
+                ;;
+            World*)
+                if [ $DMP = "yes" ]; then
+                    echo "WWID: $val"
+                    get_stats "$LUN"
+                fi
+                ;;
+            *)
+                echo "Fehler:"
+                echo "$line"
+                echo "$descr"
+                echo "$val"
+                sleep 1
+                ;;
+        esac
+    done
 }
-
-
 
 # Verify the system is using new multipath device model.
 if [ -d /dev/rdisk ] && [ -d /dev/disk ]; then
     echo '<<<hpux_lunstats:sep(58)>>>'
     main
 fi
-

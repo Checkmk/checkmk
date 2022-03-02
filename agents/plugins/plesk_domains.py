@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-__version__ = "2.1.0i1"
+__version__ = "2.2.0i1"
 
 # Lists all domains configured in plesk
 #
@@ -21,12 +21,14 @@ except ImportError as e:
     )
     sys.exit(0)
 
+with open("/etc/psa/.psa.shadow") as pwd_file:
+    pwd = pwd_file.read().strip()
 try:
     db = MySQLdb.connect(
         host="localhost",
         db="psa",
         user="admin",
-        passwd=open("/etc/psa/.psa.shadow").read().strip(),  # pylint:disable=consider-using-with
+        passwd=pwd,
         charset="utf8",
     )
 except MySQLdb.Error as e:

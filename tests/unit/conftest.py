@@ -8,18 +8,18 @@ import logging
 import shutil
 import socket
 from pathlib import Path
-from typing import Any, Mapping, NamedTuple, Iterable
+from typing import Any, Iterable, Mapping, NamedTuple
 from unittest import mock
 
 import pytest
 from fakeredis import FakeRedis  # type: ignore[import]
 
 from tests.testlib import is_enterprise_repo, is_managed_repo, is_plus_repo
-from tests.testlib.debug_utils import cmk_debug_enabled
 
 import livestatus
 
 import cmk.utils.caching
+import cmk.utils.debug
 import cmk.utils.paths
 import cmk.utils.redis as redis
 import cmk.utils.store as store
@@ -40,6 +40,14 @@ if is_enterprise_repo():
     import cmk.cee.dcd.plugins.connectors.connectors_api.v1
 
 logger = logging.getLogger(__name__)
+
+
+@pytest.fixture(autouse=True)
+def enable_debug_fixture():
+    debug_mode = cmk.utils.debug.debug_mode
+    cmk.utils.debug.enable()
+    yield
+    cmk.utils.debug.debug_mode = debug_mode
 
 
 @pytest.fixture(autouse=True)
@@ -220,12 +228,11 @@ class FixRegister:
         config._initialize_data_structures()
         assert config.check_info == {}
 
-        with cmk_debug_enabled():  # fail if a plugin can't be loaded
-            config.load_all_agent_based_plugins(check_api.get_check_api_context)
-            inventory_plugins.load_legacy_inventory_plugins(
-                check_api.get_check_api_context,
-                register.inventory_plugins_legacy.get_inventory_context,
-            )
+        config.load_all_agent_based_plugins(check_api.get_check_api_context)
+        inventory_plugins.load_legacy_inventory_plugins(
+            check_api.get_check_api_context,
+            register.inventory_plugins_legacy.get_inventory_context,
+        )
 
         self._snmp_sections = copy.deepcopy(register._config.registered_snmp_sections)
         self._agent_sections = copy.deepcopy(register._config.registered_agent_sections)

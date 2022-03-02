@@ -1,7 +1,7 @@
 title: Bachmann Bluenet2 Powerrail: Phases
 agents: snmp
 catalog: hw/environment/bachmann
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the voltage, current, active and apparent power
@@ -16,4 +16,3 @@ discovery:
 
 item:
  The phase identifier.
-

@@ -11,14 +11,14 @@ import pytest
 
 from tests.testlib.base import Scenario
 
+import cmk.utils.config_path
 import cmk.utils.paths
 import cmk.utils.version as cmk_version
+from cmk.utils import password_store
+from cmk.utils.config_path import ConfigPath, LATEST_CONFIG
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.parameters import TimespecificParameters
 from cmk.utils.type_defs import CheckPluginName, HostName
-
-import cmk.core_helpers.config_path
-from cmk.core_helpers.config_path import ConfigPath, LATEST_CONFIG
 
 import cmk.base.config as config
 import cmk.base.core_config as core_config
@@ -68,16 +68,8 @@ def test_active_check_arguments_basics():
 
 
 @pytest.mark.parametrize("pw", ["abc", "123", "x'äd!?", "aädg"])
-def test_active_check_arguments_password_store(monkeypatch, pw):
-    monkeypatch.setattr(
-        config,
-        "stored_passwords",
-        {
-            "pw-id": {
-                "password": pw,
-            }
-        },
-    )
+def test_active_check_arguments_password_store(pw):
+    password_store.save({"pw-id": pw})
     assert core_config.active_check_arguments(
         HostName("bla"), "blub", ["arg1", ("store", "pw-id", "--password=%s"), "arg3"]
     ) == "--pwstore=2@11@pw-id 'arg1' '--password=%s' 'arg3'" % ("*" * len(pw))

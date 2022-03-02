@@ -1,0 +1,18 @@
+Title: <tt>oracle_instance</tt>: Handle unresponsive databases and login failures correctly
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1643364048
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0b1
+
+In case of unresponsive databases or login failures, the check plugin
+<tt>oracle_instance</tt> went UNKNOWN and reported
+"Item not found in monitoring data".
+
+Instead, the plugin now goes CRIT and reports
+"Database or necessary processes not running or login failed".
+This also covers the case where a process which is needed to monitor
+the databases is not running (e.g. <tt>ora_pmon</tt>).

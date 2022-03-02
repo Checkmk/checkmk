@@ -8,6 +8,7 @@
 #define check_mk_h__
 
 #include <string>
+#include <string_view>
 
 #include "providers/internal.h"
 #include "section_header.h"

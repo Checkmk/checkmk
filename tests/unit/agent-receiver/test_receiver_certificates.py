@@ -23,7 +23,7 @@ from starlette.requests import Headers
 
 from tests.testlib import on_time
 
-from omdlib.certs import CertificateAuthority
+from cmk.utils.certs import RootCA
 
 
 def test_decode_base64_cert_b64_invalid() -> None:
@@ -48,7 +48,7 @@ def test_decode_base64_cert_ok(
     ) == trusted_cert.public_bytes(Encoding.DER)
 
 
-@pytest.mark.usefixtures("ca")
+@pytest.mark.usefixtures("root_ca")
 def test_validate_certificate_invalid_signature(untrusted_cert: Certificate) -> None:
     with pytest.raises(
         CertificateValidationError,
@@ -57,10 +57,9 @@ def test_validate_certificate_invalid_signature(untrusted_cert: Certificate) -> 
         _validate_certificate(untrusted_cert)
 
 
-def test_validate_certificate_expired(ca: CertificateAuthority) -> None:
-    ca._days_valid = 1
+def test_validate_certificate_expired(root_ca: RootCA) -> None:
     with on_time(1638174087, "UTC"):
-        cert, _priv_key = ca._certificate_from_root("abc123")
+        cert, _priv_key = root_ca.new_signed_cert("abc123", 1)
     with pytest.raises(
         CertificateValidationError,
         match="Client certificate expired",
@@ -68,9 +67,9 @@ def test_validate_certificate_expired(ca: CertificateAuthority) -> None:
         _validate_certificate(cert)
 
 
-def test_validate_certificate_not_yet_valid(ca: CertificateAuthority) -> None:
+def test_validate_certificate_not_yet_valid(root_ca: RootCA) -> None:
     with on_time(time() + 24 * 3600, "UTC"):
-        cert, _priv_key = ca._certificate_from_root("abc123")
+        cert, _priv_key = root_ca.new_signed_cert("abc123", 100)
     with pytest.raises(
         CertificateValidationError,
         match="Client certificate not yet valid",
@@ -96,7 +95,7 @@ def test_invalid_certificate_response_malformed() -> None:
     assert resp.body == b'{"detail":"Client certificate deserialization: base64 decoding failed"}'
 
 
-@pytest.mark.usefixtures("ca")
+@pytest.mark.usefixtures("root_ca")
 def test_invalid_certificate_response_untrusted(untrusted_cert_b64: str) -> None:
     resp = _invalid_certificate_response(Headers(headers={"certificate": untrusted_cert_b64}))
     assert resp

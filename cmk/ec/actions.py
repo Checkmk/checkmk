@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
@@ -8,7 +7,7 @@ import os
 import subprocess
 import time
 from logging import Logger
-from typing import Any, cast, Dict, Iterable, List, Optional, Tuple
+from typing import Any, cast, Iterable, Optional
 
 import cmk.utils.debug
 import cmk.utils.defines
@@ -22,7 +21,7 @@ from .history import History, quote_shell_string
 from .host_config import HostConfig
 from .settings import Settings
 
-NotificationContext = Dict[str, str]
+NotificationContext = dict[str, str]
 
 # .
 #   .--Actions-------------------------------------------------------------.
@@ -44,7 +43,7 @@ def event_has_opened(
     config: Config,
     logger: Logger,
     host_config: HostConfig,
-    event_columns: Iterable[Tuple[str, Any]],
+    event_columns: Iterable[tuple[str, Any]],
     rule: Rule,
     event: Event,
 ) -> None:
@@ -80,7 +79,7 @@ def do_event_actions(
     config: Config,
     logger: Logger,
     host_config: HostConfig,
-    event_columns: Iterable[Tuple[str, Any]],
+    event_columns: Iterable[tuple[str, Any]],
     actions: Iterable[str],
     event: Event,
     is_cancelling: bool,
@@ -105,7 +104,7 @@ def do_event_action(
     settings: Settings,
     config: Config,
     logger: Logger,
-    event_columns: Iterable[Tuple[str, Any]],
+    event_columns: Iterable[tuple[str, Any]],
     action: Action,
     event: Event,
     user: str,
@@ -132,7 +131,7 @@ def _do_email_action(
     history: History,
     config: Config,
     logger: Logger,
-    event_columns: Iterable[Tuple[str, Any]],
+    event_columns: Iterable[tuple[str, Any]],
     action_config: EMailActionConfig,
     event: Event,
     user: str,
@@ -147,7 +146,7 @@ def _do_email_action(
 def _do_script_action(
     history: History,
     logger: Logger,
-    event_columns: Iterable[Tuple[str, Any]],
+    event_columns: Iterable[tuple[str, Any]],
     action_config: ScriptActionConfig,
     action_id: str,
     event: Event,
@@ -162,7 +161,7 @@ def _do_script_action(
     history.add(event, "SCRIPT", user, action_id)
 
 
-def _prepare_text(text: str, event_columns: Iterable[Tuple[str, Any]], event: Event) -> str:
+def _prepare_text(text: str, event_columns: Iterable[tuple[str, Any]], event: Event) -> str:
     return _escape_null_bytes(_substitute_event_tags(text, event_columns, event))
 
 
@@ -172,7 +171,7 @@ def _escape_null_bytes(s: str) -> str:
 
 # TODO: Fix the typing and remove the cast!
 def _get_quoted_event(event: Event, logger: Logger) -> Event:
-    new_event: Dict[str, Any] = {}
+    new_event: dict[str, Any] = {}
     fields_to_quote = ["application", "match_groups", "text", "comment", "contact"]
     for key, value in event.items():
         if key not in fields_to_quote:
@@ -191,13 +190,13 @@ def _get_quoted_event(event: Event, logger: Logger) -> Event:
             except Exception as e:
                 # If anything unforeseen happens, we use the intial value
                 new_event[key] = value
-                logger.exception("Unable to quote event text %r: %r, %r" % (key, value, e))
+                logger.exception(f"Unable to quote event text {key!r}: {value!r}, {e!r}")
 
     return cast(Event, new_event)
 
 
 def _substitute_event_tags(
-    text: str, event_columns: Iterable[Tuple[str, Any]], event: Event
+    text: str, event_columns: Iterable[tuple[str, Any]], event: Event
 ) -> str:
     for key, value in _get_event_tags(event_columns, event).items():
         text = text.replace("$%s$" % key.upper(), value)
@@ -217,24 +216,23 @@ def _send_email(config: Config, to: str, subject: str, body: str, logger: Logger
     if config["debug_rules"]:
         logger.info("  Executing: %s" % " ".join(x.decode("utf-8") for x in command_utf8))
 
-    p = subprocess.Popen(  # pylint:disable=consider-using-with
+    # FIXME: This may lock on too large buffer. We should move all "mail sending" code
+    # to a general place and fix this for all our components (notification plugins,
+    # notify.py, this one, ...)
+    completed_process = subprocess.run(
         command_utf8,
         close_fds=True,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
-        stdin=subprocess.PIPE,
         encoding="utf-8",
+        input=body,
+        check=False,
     )
-    # FIXME: This may lock on too large buffer. We should move all "mail sending" code
-    # to a general place and fix this for all our components (notification plugins,
-    # notify.py, this one, ...)
-    stdout, stderr = p.communicate(input=body)
-    exitcode = p.returncode
 
-    logger.info("  Exitcode: %d" % exitcode)
-    if exitcode != 0:
+    logger.info("  Exitcode: %d" % completed_process.returncode)
+    if completed_process.returncode:
         logger.info("  Error: Failed to send the mail.")
-        for line in (stdout + stderr).splitlines():
+        for line in (completed_process.stdout + completed_process.stderr).splitlines():
             logger.info("  Output: %s" % line.rstrip())
         return False
 
@@ -242,7 +240,7 @@ def _send_email(config: Config, to: str, subject: str, body: str, logger: Logger
 
 
 def _execute_script(
-    event_columns: Iterable[Tuple[str, Any]], body: str, event: Event, logger: Logger
+    event_columns: Iterable[tuple[str, Any]], body: str, event: Event, logger: Logger
 ) -> None:
     script_env = os.environ.copy()
     for key, value in _get_event_tags(event_columns, event).items():
@@ -250,26 +248,26 @@ def _execute_script(
 
     # Traps can contain 0-Bytes. We need to remove this from the script
     # body. Otherwise suprocess.Popen will crash.
-    p = subprocess.Popen(  # pylint:disable=consider-using-with
+    completed_process = subprocess.run(
         ["/bin/bash"],
-        stdin=subprocess.PIPE,
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
         close_fds=True,
         env=script_env,
         encoding="utf-8",
+        input=body,
+        check=False,
     )
-    stdout, _stderr = p.communicate(input=body)
-    logger.info("  Exit code: %d" % p.returncode)
-    if stdout:
-        logger.info("  Output: '%s'" % stdout)
+    logger.info("  Exit code: %d" % completed_process.returncode)
+    if completed_process.stdout:
+        logger.info("  Output: '%s'" % completed_process.stdout)
 
 
 def _get_event_tags(
-    event_columns: Iterable[Tuple[str, Any]],
+    event_columns: Iterable[tuple[str, Any]],
     event: Event,
-) -> Dict[str, str]:
-    substs: List[Tuple[str, Any]] = [
+) -> dict[str, str]:
+    substs: list[tuple[str, Any]] = [
         ("match_group_%d" % (nr + 1), g) for (nr, g) in enumerate(event.get("match_groups", ()))
     ]
 
@@ -282,7 +280,7 @@ def _get_event_tags(
             return v
         return "%s" % v
 
-    tags: Dict[str, str] = {}
+    tags: dict[str, str] = {}
     for key, value in substs:
         if isinstance(value, tuple):
             value = " ".join(map(to_string, value))
@@ -345,21 +343,21 @@ def do_notify(
 
     # Send notification context via stdin.
     context_string = "".join(
-        ["%s=%s\n" % (varname, value.replace("\n", "\\n")) for (varname, value) in context.items()]
+        "{}={}\n".format(varname, value.replace("\n", "\\n"))
+        for (varname, value) in context.items()
     )
 
-    p = subprocess.Popen(  # pylint:disable=consider-using-with
+    completed_process = subprocess.run(
         ["cmk", "--notify", "stdin"],
-        stdin=subprocess.PIPE,
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
         close_fds=True,
         encoding="utf-8",
+        input=context_string,
+        check=False,
     )
-    stdout, _stderr = p.communicate(input=context_string)
-    status = p.returncode
-    if status:
-        logger.error("Error notifying via Check_MK: %s" % stdout.strip())
+    if completed_process.returncode:
+        logger.error("Error notifying via Check_MK: %s" % completed_process.stdout.strip())
     else:
         logger.info("Successfully forwarded notification for event %d to Check_MK" % event["id"])
 

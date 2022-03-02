@@ -1,7 +1,7 @@
 title: VMWare ESX Host System: Maintenance State
 agents: vsphere
 catalog: os/misc
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check queries the maintenance State of an ESX host
@@ -18,4 +18,3 @@ description:
 
 discovery:
  One service is created for each ESX Host System.
-

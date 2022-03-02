@@ -5,6 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.utils import password_store
+from cmk.utils.config_path import LATEST_CONFIG
 
 from cmk.special_agents import agent_mqtt
 from cmk.special_agents.utils.argument_parsing import Args
@@ -49,18 +50,8 @@ def test_parse_all_arguments() -> None:
 
 
 def test_parse_password_store(monkeypatch) -> None:
-    password_store.save(
-        {
-            "mqtt_password": {
-                "title": "Title",
-                "comment": "Comment",
-                "docu_url": "",
-                "owned_by": "group1",
-                "shared_with": [],
-                "password": "blablu",
-            }
-        }
-    )
+    password_store.save({"mqtt_password": "blablu"})
+    password_store.save_for_helpers(LATEST_CONFIG)
     monkeypatch.setattr(
         "sys.argv",
         [

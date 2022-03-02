@@ -41,21 +41,21 @@ def backup_site_to_tarfile(
 ) -> None:
 
     # Mypy does not understand this: Unexpected keyword argument "verbose" for "open" of "TarFile", same for "site".
-    tar = cast(
-        BackupTarFile,
-        BackupTarFile.open(  # type: ignore[call-arg] # pylint:disable=consider-using-with
-            fileobj=fh, mode=mode, site=site, verbose=verbose
-        ),
-    )
+    with BackupTarFile.open(  # type: ignore[call-arg]
+        fileobj=fh,
+        mode=mode,
+        site=site,
+        verbose=verbose,
+    ) as backup_tar:
+        tar = cast(BackupTarFile, backup_tar)
 
-    # Add the version symlink as first file to be able to
-    # check a) the sitename and b) the version before reading
-    # the whole tar archive. Important for streaming.
-    # The file is added twice to get the first for validation
-    # and the second for excration during restore.
-    tar.add(site.dir + "/version", site.name + "/version")
-    _backup_site_files_to_tarfile(site, tar, options)
-    tar.close()
+        # Add the version symlink as first file to be able to
+        # check a) the sitename and b) the version before reading
+        # the whole tar archive. Important for streaming.
+        # The file is added twice to get the first for validation
+        # and the second for excration during restore.
+        tar.add(site.dir + "/version", site.name + "/version")
+        _backup_site_files_to_tarfile(site, tar, options)
 
 
 def get_exclude_patterns(options: CommandOptions) -> List[str]:

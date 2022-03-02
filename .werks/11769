@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 The error messages produced if unmigratable plugins are encountered lead to crashing automation calls.
 These messages are now only displayed if the cmk binary is executed from the command line.

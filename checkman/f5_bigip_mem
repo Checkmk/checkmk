@@ -1,7 +1,7 @@
 title: F5 Big-IP: Usage of Memory
 agents: snmp
 catalog: hw/network/f5
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check measures the memory usage of F5 BIG-IP devices.

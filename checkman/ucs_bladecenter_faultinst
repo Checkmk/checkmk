@@ -1,7 +1,7 @@
 title: UCS Bladecenter: Fault Instances
 agents: agent_ucs_bladecenter
 catalog: hw/server/cisco
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check shows fault instances for an UCS bladecenter.
@@ -9,4 +9,3 @@ description:
 
 discovery:
  One service is created for each fault instance.
-

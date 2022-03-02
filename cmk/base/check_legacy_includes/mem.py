@@ -315,7 +315,7 @@ def check_memory(params, meminfo):
         abs(crit),
         totalvirt.mb,
         _perc_total=memtotal.mb,
-        render_unit=1024 ** 2,
+        render_unit=1024**2,
     )
     assert isinstance(totalused, MemBytes)
     assert isinstance(warn_mb, Integral)
@@ -324,8 +324,8 @@ def check_memory(params, meminfo):
         (
             "mem_lnx_total_used",
             totalused.bytes,
-            warn_mb * 1024 ** 2,
-            crit_mb * 1024 ** 2,
+            warn_mb * 1024**2,
+            crit_mb * 1024**2,
             0,
             totalvirt.bytes,
         )

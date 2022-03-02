@@ -998,7 +998,7 @@ class ModeUserNotifications(ABCUserNotificationsMode):
         return self.mode_url(user=self._user_id())
 
     def _user_id(self):
-        return request.get_unicode_input("user")
+        return request.get_str_input("user")
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
         menu = PageMenu(
@@ -1737,7 +1737,7 @@ class ModeEditUserNotificationRule(ABCEditUserNotificationRuleMode):
         return ModeUserNotifications
 
     def _user_id(self):
-        return request.get_unicode_input_mandatory("user")
+        return request.get_str_input_mandatory("user")
 
     def _back_mode(self) -> ActionResult:
         return redirect(mode_url("user_notifications", user=self._user_id()))

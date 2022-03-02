@@ -2,13 +2,11 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
-#![cfg_attr(test, allow(dead_code))]
-
-use super::certs;
-use super::config;
+use super::{certs, config, site_spec, types};
 use anyhow::{anyhow, Context, Error as AnyhowError, Result as AnyhowResult};
 use http::StatusCode;
 use serde::{Deserialize, Serialize};
+use serde_with::DisplayFromStr;
 use string_enum::StringEnum;
 
 #[derive(Serialize)]
@@ -22,16 +20,20 @@ pub struct PairingResponse {
     pub client_cert: String,
 }
 
+#[serde_with::serde_as]
 #[derive(Serialize)]
 struct RegistrationWithHNBody {
-    uuid: String,
+    #[serde_as(as = "DisplayFromStr")]
+    uuid: uuid::Uuid,
     host_name: String,
 }
 
+#[serde_with::serde_as]
 #[derive(Serialize)]
 struct RegistrationWithALBody {
-    uuid: String,
-    agent_labels: config::AgentLabels,
+    #[serde_as(as = "DisplayFromStr")]
+    uuid: uuid::Uuid,
+    agent_labels: types::AgentLabels,
 }
 
 #[derive(StringEnum)]
@@ -91,18 +93,76 @@ fn encode_pem_cert_base64(cert: &str) -> AnyhowResult<String> {
     ))
 }
 
+pub trait Pairing {
+    fn pair(
+        &self,
+        coordinates: &site_spec::Coordinates,
+        root_cert: Option<&str>,
+        csr: String,
+        credentials: &types::Credentials,
+    ) -> AnyhowResult<PairingResponse>;
+}
+
+pub trait Registration {
+    fn register_with_hostname(
+        &self,
+        coordinates: &site_spec::Coordinates,
+        root_cert: &str,
+        credentials: &types::Credentials,
+        uuid: &uuid::Uuid,
+        host_name: &str,
+    ) -> AnyhowResult<()>;
+
+    fn register_with_agent_labels(
+        &self,
+        coordinates: &site_spec::Coordinates,
+        root_cert: &str,
+        credentials: &types::Credentials,
+        uuid: &uuid::Uuid,
+        agent_labels: &types::AgentLabels,
+    ) -> AnyhowResult<()>;
+}
+
+pub trait AgentData {
+    fn agent_data(
+        &self,
+        coordinates: &site_spec::Coordinates,
+        root_cert: &str,
+        uuid: &uuid::Uuid,
+        certificate: &str,
+        compression_algorithm: &str,
+        monitoring_data: &[u8],
+    ) -> AnyhowResult<()>;
+}
+
+pub trait Status {
+    fn status(
+        &self,
+        coordinates: &site_spec::Coordinates,
+        root_cert: &str,
+        uuid: &uuid::Uuid,
+        certificate: &str,
+    ) -> Result<StatusResponse, StatusError>;
+}
+
 pub struct Api {}
 
-#[mockall::automock]
 impl Api {
-    pub fn pairing<'a>(
-        server_address: &str,
-        root_cert: Option<&'a str>,
+    fn endpoint_address(coordinates: &site_spec::Coordinates, endpoint: &str) -> String {
+        format!("https://{}/agent-receiver/{}", coordinates, endpoint)
+    }
+}
+
+impl Pairing for Api {
+    fn pair(
+        &self,
+        coordinates: &site_spec::Coordinates,
+        root_cert: Option<&str>,
         csr: String,
-        credentials: &config::Credentials,
+        credentials: &types::Credentials,
     ) -> AnyhowResult<PairingResponse> {
         let response = certs::client(root_cert)?
-            .post(format!("https://{}/pairing", server_address))
+            .post(Api::endpoint_address(coordinates, "pairing"))
             .basic_auth(&credentials.username, Some(&credentials.password))
             .json(&PairingBody { csr })
             .send()?;
@@ -118,56 +178,66 @@ impl Api {
             Err(anyhow!("Request failed with code {}: {}", status, body))
         }
     }
+}
 
-    pub fn register_with_hostname(
-        server_address: &str,
+impl Registration for Api {
+    fn register_with_hostname(
+        &self,
+        coordinates: &site_spec::Coordinates,
         root_cert: &str,
-        credentials: &config::Credentials,
-        uuid: &str,
+        credentials: &types::Credentials,
+        uuid: &uuid::Uuid,
         host_name: &str,
     ) -> AnyhowResult<()> {
         check_response_204(
             certs::client(Some(root_cert))?
-                .post(format!("https://{}/register_with_hostname", server_address))
+                .post(Api::endpoint_address(coordinates, "register_with_hostname"))
                 .basic_auth(&credentials.username, Some(&credentials.password))
                 .json(&RegistrationWithHNBody {
-                    uuid: String::from(uuid),
+                    uuid: uuid.to_owned(),
                     host_name: String::from(host_name),
                 })
                 .send()?,
         )
     }
 
-    pub fn register_with_agent_labels(
-        server_address: &str,
+    fn register_with_agent_labels(
+        &self,
+        coordinates: &site_spec::Coordinates,
         root_cert: &str,
-        credentials: &config::Credentials,
-        uuid: &str,
-        agent_labels: &config::AgentLabels,
+        credentials: &types::Credentials,
+        uuid: &uuid::Uuid,
+        agent_labels: &types::AgentLabels,
     ) -> AnyhowResult<()> {
         check_response_204(
             certs::client(Some(root_cert))?
-                .post(format!("https://{}/register_with_labels", server_address))
+                .post(Api::endpoint_address(coordinates, "register_with_labels"))
                 .basic_auth(&credentials.username, Some(&credentials.password))
                 .json(&RegistrationWithALBody {
-                    uuid: String::from(uuid),
+                    uuid: uuid.to_owned(),
                     agent_labels: agent_labels.clone(),
                 })
                 .send()?,
         )
     }
+}
 
-    pub fn agent_data(
-        server_address: &str,
+impl AgentData for Api {
+    fn agent_data(
+        &self,
+        coordinates: &site_spec::Coordinates,
         root_cert: &str,
-        uuid: &str,
+        uuid: &uuid::Uuid,
         certificate: &str,
         compression_algorithm: &str,
         monitoring_data: &[u8],
     ) -> AnyhowResult<()> {
         check_response_204(
             certs::client(Some(root_cert))?
-                .post(format!("https://{}/agent_data/{}", server_address, uuid,))
+                .post(Api::endpoint_address(
+                    coordinates,
+                    &format!("agent_data/{}", uuid),
+                ))
                 .header("certificate", encode_pem_cert_base64(certificate)?)
                 .header("compression", compression_algorithm)
                 .multipart(
@@ -182,17 +252,20 @@ impl Api {
                 .send()?,
         )
     }
+}
 
-    pub fn status(
-        server_address: &str,
+impl Status for Api {
+    fn status(
+        &self,
+        coordinates: &site_spec::Coordinates,
         root_cert: &str,
-        uuid: &str,
+        uuid: &uuid::Uuid,
         certificate: &str,
     ) -> Result<StatusResponse, StatusError> {
         let response = certs::client(Some(root_cert))?
-            .get(format!(
-                "https://{}/registration_status/{}",
-                server_address, uuid
+            .get(Api::endpoint_address(
+                coordinates,
+                &format!("registration_status/{}", uuid),
             ))
             .header("certificate", encode_pem_cert_base64(certificate)?)
             .send()

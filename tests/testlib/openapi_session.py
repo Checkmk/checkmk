@@ -90,10 +90,13 @@ class CMKOpenApiSession(requests.Session):
         response = self.post(
             "/domain-types/activation_run/actions/activate-changes/invoke",
             json={
-                "redirect": False,
+                "redirect": True,
                 "sites": sites or [],
                 "force_foreign_changes": force_foreign_changes,
             },
+            # We want to get the redirect response and handle that below. So don't let requests
+            # handle that for us.
+            allow_redirects=False,
         )
         if response.status_code == 200:
             return True  # changes are activated
@@ -118,11 +121,14 @@ class CMKOpenApiSession(requests.Session):
                 if time.time() > (start + timeout):
                     raise TimeoutError("wait for completion on activate changes timed out")
 
-                response = self.get(redirect_url)
+                response = self.get(redirect_url, allow_redirects=False)
                 if response.status_code == 204:
                     break
                 if response.status_code == 302:
-                    redirect_url = response.headers["Location"]
+                    # Would be correct to follow the new URL, but it is not computed correctly.
+                    # Might be enabled once CMK-9669 is fixed.
+                    # redirect_url = response.headers["Location"]
+                    pass
                 else:
                     raise UnexpectedResponse.from_response(response)
             return True
@@ -164,9 +170,11 @@ class CMKOpenApiSession(requests.Session):
         hostname: str,
         folder: str = "/",
         attributes: Optional[dict[str, Any]] = None,
+        bake_agent: bool = False,
     ) -> None:
+        query_string = "?bake_agent=1" if bake_agent else ""
         response = self.post(
-            "/domain-types/host_config/collections/all",
+            f"/domain-types/host_config/collections/all{query_string}",
             json={"folder": folder, "host_name": hostname, "attributes": attributes or {}},
         )
         if response.status_code != 200:

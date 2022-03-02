@@ -1,7 +1,7 @@
 title: Graylog: Streams
 agents: graylog
 catalog: app/graylog
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  With this check you can monitor Graylog streams. It outputs the total number

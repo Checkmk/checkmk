@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 If an iCalendar with recurrence rules was uploaded, the error "Failed to parse
 file: '<' not supported between instances of 'list' and 'time.struct_time'"

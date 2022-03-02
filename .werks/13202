@@ -6,7 +6,7 @@ Date: 1630493732
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 The check plugin <tt>wmi_cpuload</tt>, which monitors the CPU load of
 Windows hosts, uses an internal Windows time counter to compute the

@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 In the previous version, trying to update a non-existant password
 returned a 500 error. This is now changed to return a 404 error.

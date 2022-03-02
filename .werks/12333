@@ -6,7 +6,7 @@ Date: 1635255554
 Edition: cee
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 Previously, the limit of 20MB for any file packed by the bakery in the 
 installer could be enforced only during installation of the agent. This 

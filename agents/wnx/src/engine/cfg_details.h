@@ -113,6 +113,10 @@ public:
         return data_ / dirs::kBackup;
     }
 
+    inline std::filesystem::path getUserBin() const {
+        return data_ / dirs::kUserBin;
+    }
+
     inline std::filesystem::path getUpdate() const {
         return data_ / dirs::kUpdate;
     }
@@ -332,6 +336,11 @@ public:
     auto getCacheDir() const {
         std::lock_guard lk(lock_);
         return folders_.getBackup();
+    }
+
+    auto getUserBinDir() const {
+        std::lock_guard lk(lock_);
+        return folders_.getUserBin();
     }
 
     auto getStateDir() const {

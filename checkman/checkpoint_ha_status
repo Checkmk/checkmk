@@ -1,7 +1,7 @@
 title: Checkpoint Firewalls: High Availability Status
 agents: snmp
 catalog: hw/network/checkpoint
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors status and displays a few details of the High
@@ -17,4 +17,3 @@ description:
 
 discovery:
  One service is created.
-

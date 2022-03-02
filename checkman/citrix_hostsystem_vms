@@ -1,7 +1,7 @@
 title: Citrix XenApp Hostsystem: Virtual Machine
 agents: windows
 catalog: app/citrix
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This checks returns the number of VMs running of Citrix XenApp 7.x hostsystems,
@@ -13,4 +13,3 @@ description:
 
 discovery:
  One service is created for each controller.
-

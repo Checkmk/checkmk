@@ -6,7 +6,7 @@ Date: 1619515653
 Edition: cee
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 When a site is migrated from using the Nagios core to using the CMC and
 there are already non-persistent acknowledgements, the CMC will crash during

@@ -5,19 +5,16 @@
 
 set -e
 
-SITE=${SITE:-$(until [ $PWD == / ]; do if [ -e .site ]; then cat .site; break; else cd ..; fi; done)}
+SITE=${SITE:-$(until [ "$PWD" = / ]; do if [ -e .site ]; then
+    cat .site
+    break
+else cd ..; fi; done)}
 SITE=${SITE:-$(omd sites --bare | head -n 1)}
 ROOT=/omd/sites/$SITE
 
-EXECUTABLE=cmk-agent-ctl
-
 if [ -z "$ONLY_COPY" ]; then
-    cargo build --release || exit 1
+    (cd "$(git rev-parse --show-toplevel)/agents" && make controller) || exit 1
 fi
 
-if [ -e "./target/release/${EXECUTABLE}" ]; then
-    mkdir -p ../linux
-    cp ./target/release/${EXECUTABLE} ../linux
-    sudo mkdir -p $ROOT/share/check_mk/agents/linux
-    sudo rsync -va ./target/release/${EXECUTABLE} $ROOT/share/check_mk/agents/linux
-fi
+sudo mkdir -p "$ROOT/share/check_mk/agents/linux"
+sudo rsync -va ../linux/ "$ROOT/share/check_mk/agents/linux"

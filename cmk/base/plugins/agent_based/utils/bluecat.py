@@ -12,7 +12,7 @@ from ..agent_based_api.v1 import type_defs
 from ..agent_based_api.v1.clusterize import make_node_notice_results
 
 Section = Mapping[str, int]
-ClusterSection = Mapping[str, Section]
+ClusterSection = Mapping[str, Optional[Section]]
 
 DETECT_BLUECAT = equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.13315.2.1")
 
@@ -105,6 +105,9 @@ def cluster_check_bluecat_operational_state(
     overall_state = state.OK
 
     for node_name, node_section in section.items():
+        if node_section is None:
+            continue
+
         node_results = results.setdefault(
             node_name,
             tuple(
@@ -143,10 +146,10 @@ def cluster_check_bluecat_operational_state(
                 )
             yield result
     else:
+        first_node_section: Section = next(
+            (node_section for node_section in section.values() if node_section is not None), {}
+        )
         yield Result(
             state=overall_state,
-            summary="No node with OK %s state"
-            % _get_service_name(
-                next(iter(section.values()))  # pylint: disable=stop-iteration-return
-            ),
+            summary="No node with OK %s state" % _get_service_name(first_node_section),
         )

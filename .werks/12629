@@ -6,7 +6,7 @@ Date: 1616747633
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 A new check has been added that monitors power supply sensors on Palo Alto
 Networks Series 200/3000 devices. Note that services only show whether power is

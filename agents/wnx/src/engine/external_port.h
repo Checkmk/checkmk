@@ -26,6 +26,8 @@ using ReplyFunc =
 
 namespace cma::world {
 
+bool IsIpAllowedAsException(const std::string &ip);
+
 // below is working example from asio
 // DOUBLE verified
 
@@ -135,11 +137,10 @@ inline std::pair<std::string, bool> GetSocketInfo(
 class ExternalPort : public std::enable_shared_from_this<ExternalPort> {
 public:
     // ctor&dtor
-    ExternalPort(wtools::BaseServiceProcessor *Owner, uint16_t Port = 0)
-        : default_port_(Port)
-        , shutdown_thread_(false)
+    ExternalPort(wtools::BaseServiceProcessor *owner)
+        : shutdown_thread_(false)
         , io_started_(false)
-        , owner_(Owner)
+        , owner_(owner)
         , wake_delay_(std::chrono::milliseconds(500)) {}
 
     virtual ~ExternalPort() {}
@@ -151,15 +152,12 @@ public:
     ExternalPort &operator=(ExternalPort &&) = delete;
 
     // Main API
-    bool startIo(const cma::world::ReplyFunc &Reply);
+    bool startIo(const ReplyFunc &reply_func, uint16_t port);
     void shutdownIo();
-    int xmain(int PORT);
 
     // Supplementary API
     void reloadConfig() {}
     bool isIoStarted() const noexcept { return io_started_; }
-
-    uint16_t defaultPort() const noexcept { return default_port_; }
 
     void putOnQueue(AsioSession::s_ptr asio_session);
     size_t sessionsInQueue();
@@ -171,7 +169,7 @@ private:
     // Internal class from  ASIO documentation
     class server {
     public:
-        server(asio::io_context &io_context, bool Ipv6, short port)
+        server(asio::io_context &io_context, bool Ipv6, uint16_t port)
             : acceptor_(
                   io_context,
                   asio::ip::tcp::endpoint(
@@ -180,10 +178,9 @@ private:
 
         // this is the only entry point
         // based on the code example from asio
-        void run_accept(cma::world::SinkFunc sink, ExternalPort *Port) {
-            XLOG::t.i("Accepting connection");
+        void run_accept(SinkFunc sink, ExternalPort *port) {
             acceptor_.async_accept(socket_, [this, sink,
-                                             Port](std::error_code ec) {
+                                             port](std::error_code ec) {
                 if (ec.value()) {
                     XLOG::l("Error on connection [{}] '{}'", ec.value(),
                             ec.message());
@@ -196,31 +193,28 @@ private:
                         auto x =
                             std::make_shared<AsioSession>(std::move(socket_));
 
-                        // only_from checking
-                        // we are doing this always
-                        if (cma::cfg::groups::global.isIpAddressAllowed(ip))
-                            sink(x, Port);
+                        if (cfg::groups::global.isIpAddressAllowed(ip) ||
+                            IsIpAllowedAsException(ip))
+                            sink(x, port);
                         else {
-                            XLOG::d("Address '{}' is not allowed", ip);
+                            XLOG::d.i("Address '{}' is not allowed", ip);
                         }
 
                     } catch (const std::system_error &e) {
-                        if (e.code().value() == WSAECONNRESET)
-                            XLOG::l.i(XLOG_FLINE + " Client closed connection");
-                        else
+                        if (e.code().value() == WSAECONNRESET) {
+                            XLOG::l.i(" Client closed connection");
+                        } else {
                             XLOG::l(
-                                XLOG_FLINE +
-                                    " Thrown unexpected exception '{}' with value {}",
+                                " Thrown unexpected exception '{}' with value {}",
                                 e.what(), e.code().value());
+                        }
                     } catch (const std::exception &e) {
-                        XLOG::l(
-                            XLOG_FLINE + " Thrown unexpected exception '{}'",
-                            e.what());
+                        XLOG::l(" Thrown unexpected exception '{}'", e.what());
                     }
                 }
 
                 // inside we have async call, this is not recursion
-                run_accept(sink, Port);
+                run_accept(sink, port);
             });
         }
 
@@ -269,9 +263,7 @@ protected:
         shutdown_thread_ = true;
     }
 
-    uint16_t default_port_ = 0;  // work port
-
-    void ioThreadProc(const cma::world::ReplyFunc &Reply);
+    void ioThreadProc(const cma::world::ReplyFunc &Reply, uint16_t port);
 
     // probably overkill, but we want to restart and want to be sure that
     // everything is going smooth

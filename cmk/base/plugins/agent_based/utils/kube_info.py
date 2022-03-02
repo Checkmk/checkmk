@@ -32,10 +32,15 @@ InfoTypes = Literal[
     "name",
     "node",
     "namespace",
+    "os_image",
+    "container_runtime_version",
     "creation_timestamp",
     "qos_class",
     "uid",
     "restart_policy",
+    "architecture",
+    "kernel_version",
+    "operating_system",
 ]
 
 _RESULT_FUNC: Mapping[InfoTypes, Callable[[Any], Result]] = {
@@ -43,9 +48,14 @@ _RESULT_FUNC: Mapping[InfoTypes, Callable[[Any], Result]] = {
     "node": result_simple("Node"),
     "namespace": result_simple("Namespace"),
     "creation_timestamp": result_from_age,
+    "os_image": result_simple("OS"),
+    "container_runtime_version": result_simple("Container runtime"),
     "qos_class": result_simple("QoS class", notice_only=True),
     "uid": result_simple("UID", notice_only=True),
     "restart_policy": result_simple("Restart policy", notice_only=True),
+    "architecture": result_simple("Architecture", notice_only=True),
+    "kernel_version": result_simple("Kernel version", notice_only=True),
+    "operating_system": result_simple("OS family", notice_only=True),
 }
 
 

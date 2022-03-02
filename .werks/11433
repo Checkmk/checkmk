@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 Using "Tabula Rasa" on one cluster also removed discovered services from other clusters that had services on the same cluster node.
 This can happen if you have configured a "Clustered services for overlapping clusters" rule.

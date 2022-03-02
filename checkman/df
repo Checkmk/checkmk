@@ -1,7 +1,7 @@
 title: Used Space and Inodes in Filesystems
 agents: linux, windows, aix, solaris, openvms, hpux, freebsd, netbsd, openbsd, macosx
 catalog: os/storage
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check measures the usage of filesystems. The usage
@@ -72,4 +72,3 @@ discovery:
  is matching one of the patterns of a group, then instead of a
  service of the single filesystem one service  for the group is
  created. The service is the name of that group in that case.
-

@@ -26,11 +26,22 @@ import json
 # - change naming of escaping.escape_attribute() to html.render()
 #
 # - Unify CSS classes attribute to "class_"
-import os
 import pprint
 import re
 from pathlib import Path
-from typing import Any, cast, Dict, Iterable, List, Optional, Set, Tuple, TYPE_CHECKING, Union
+from typing import (
+    Any,
+    Callable,
+    cast,
+    Dict,
+    Iterable,
+    List,
+    Optional,
+    Set,
+    Tuple,
+    TYPE_CHECKING,
+    Union,
+)
 
 import cmk.utils.paths
 import cmk.utils.version as cmk_version
@@ -51,7 +62,15 @@ from cmk.gui.page_menu import (
     PageMenuRenderer,
 )
 from cmk.gui.page_state import PageState, PageStateRenderer
-from cmk.gui.type_defs import Choice, ChoiceGroup, ChoiceText, CSSSpec, GroupedChoices, Icon
+from cmk.gui.type_defs import (
+    Choice,
+    ChoiceGroup,
+    ChoiceId,
+    ChoiceText,
+    CSSSpec,
+    GroupedChoices,
+    Icon,
+)
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.mobile import is_mobile
 from cmk.gui.utils.popups import PopupMethod
@@ -70,10 +89,8 @@ from ._tag_rendering import (
 if TYPE_CHECKING:
     from cmk.gui.http import Request, Response
     from cmk.gui.utils.output_funnel import OutputFunnel
-    from cmk.gui.valuespec import ValueSpec
 
 HTMLMessageInput = Union[HTML, str]
-DefaultChoice = str
 
 # .
 #   .--HTML Generator------------------------------------------------------.
@@ -252,7 +269,7 @@ class ABCHTMLGenerator(abc.ABC):
         self.write_html(self.render_heading(content))
 
     def render_br(self) -> HTML:
-        return HTML("<br/>")
+        return HTML("<br />")
 
     def br(self) -> None:
         self.write_html(self.render_br())
@@ -1235,7 +1252,7 @@ class html(ABCHTMLGenerator):
         return PageState(
             text=self.render_span("%d" % self.browser_reload),
             icon_name="trans",
-            css_classes=["default"],
+            css_classes=["reload"],
             url="javascript:document.location.reload()",
             tooltip_text=_("Automatic page reload in %d seconds.") % self.browser_reload
             + "\n"
@@ -1349,7 +1366,7 @@ class html(ABCHTMLGenerator):
                 if var not in self.form_vars and (
                     var[0] != "_" or add_action_vars
                 ):  # and var != "filled_in":
-                    self.hidden_field(var, self.request.get_unicode_input(var))
+                    self.hidden_field(var, self.request.get_str_input(var))
 
     def hidden_field(
         self,
@@ -1584,7 +1601,7 @@ class html(ABCHTMLGenerator):
 
         # Model
         error = user_errors.get(varname)
-        value = self.request.get_unicode_input(varname, default_value)
+        value = self.request.get_str_input(varname, default_value)
         if not value:
             value = ""
         if error:
@@ -1741,7 +1758,7 @@ class html(ABCHTMLGenerator):
         **attrs: HTMLTagAttributeValue,
     ) -> None:
 
-        value = self.request.get_unicode_input(varname, deflt)
+        value = self.request.get_str_input(varname, deflt)
         error = user_errors.get(varname)
 
         self.form_vars.append(varname)
@@ -1782,7 +1799,7 @@ class html(ABCHTMLGenerator):
         varname: str,
         choices: Union[Iterable[Choice], Iterable[ChoiceGroup]],
         locked_choice: Optional[ChoiceText] = None,
-        deflt: DefaultChoice = "",
+        deflt: ChoiceId = "",
         ordered: bool = False,
         label: Optional[str] = None,
         class_: CSSSpec = None,
@@ -1790,7 +1807,7 @@ class html(ABCHTMLGenerator):
         read_only: bool = False,
         **attrs: HTMLTagAttributeValue,
     ) -> None:
-        current = self.request.get_unicode_input(varname, deflt)
+        current = self.request.get_str_input(varname, deflt)
         error = user_errors.get(varname)
         if varname:
             self.form_vars.append(varname)
@@ -1971,12 +1988,16 @@ class html(ABCHTMLGenerator):
     #
 
     def render_floating_option(
-        self, name: str, height: str, varprefix: str, valuespec: "ValueSpec", value: Any
+        self,
+        name: str,
+        height: str,
+        title: Optional[str],
+        renderer: Callable[[], None],
     ) -> None:
         self.open_div(class_=["floatfilter", height, name])
-        self.div(valuespec.title(), class_=["legend"])
+        self.div(title, class_=["legend"])
         self.open_div(class_=["content"])
-        valuespec.render_input(varprefix + name, value)
+        renderer()
         self.close_div()
         self.close_div()
 
@@ -2273,10 +2294,15 @@ class html(ABCHTMLGenerator):
         it = self.request.itervars() if vars_ is None else vars_.items()
         hover = "this.style.display='none';"
         self.open_table(class_=["debug_vars"], onmouseover=hover if hide_with_mouse else None)
-        self.tr(self.render_th(_("POST / GET Variables"), colspan="2"))
+        oddeven = "even"
+        self.tr(self.render_th(_("POST / GET Variables"), colspan="2"), class_=oddeven)
         for name, value in sorted(it):
+            oddeven = "even" if oddeven == "odd" else "odd"
             if name in ["_password", "password"]:
                 value = "***"
             if not prefix or name.startswith(prefix):
-                self.tr(self.render_td(name, class_="left") + self.render_td(value, class_="right"))
+                self.tr(
+                    self.render_td(name, class_="left") + self.render_td(value, class_="right"),
+                    class_=oddeven,
+                )
         self.close_table()

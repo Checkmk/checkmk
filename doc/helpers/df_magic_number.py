@@ -16,7 +16,7 @@ def print_levels(level, exp):
     sys.stdout.write("f=%3.1f: " % exp)
     for size in [5, 10, 20, 50, 100, 300, 800]:
         hgb_size = size / normsize  # fixed: true-division
-        felt_size = hgb_size ** exp
+        felt_size = hgb_size**exp
         scale = felt_size / hgb_size  # fixed: true-division
         new_level = 1 - ((1 - level) * scale)
         freegb = size * (1.0 - new_level)

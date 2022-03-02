@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 If a crash report can not be found any more, a note to the error message was
 added, that this can be caused by the automatic cleanup job that found more

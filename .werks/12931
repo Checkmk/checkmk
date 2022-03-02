@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 Docker agent plugin for Python2, mk_docker_2.py crashed when fetching df data.
 This resulted with an UNKNOWN state in docker_node_info check.

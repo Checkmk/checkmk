@@ -56,15 +56,11 @@ private:
     std::filesystem::path temp_script_file_;
 };
 
-constexpr const std::wstring_view kDefaultMsiFileName = L"check_mk_agent.msi";
+constexpr std::wstring_view kDefaultMsiFileName{L"check_mk_agent.msi"};
+constexpr std::string_view kMsiLogFileName{"agent_msi.log"};
+constexpr std::wstring_view kAgentProductName{L"Check MK Agent 2.1"};
 
-constexpr const std::string_view kMsiLogFileName = "agent_msi.log";
-
-constexpr const std::wstring_view kAgentProductName{L"Check MK Agent 2.0"};
-
-namespace registry
-
-{
+namespace registry {
 // Names are from WIX Msi, please, check that they are in sync
 const std::wstring kMsiInfoPath64 = L"SOFTWARE\\WOW6432Node\\checkmkservice";
 const std::wstring kMsiInfoPath32 = L"SOFTWARE\\checkmkservice";

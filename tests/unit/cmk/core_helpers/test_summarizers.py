@@ -4,6 +4,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 # pylint: disable=undefined-variable
+import json
+from typing import Final
+
 import pytest
 
 from cmk.utils.check_utils import ActiveCheckResult
@@ -16,6 +19,22 @@ from cmk.core_helpers.agent import AgentRawDataSection, AgentSummarizer, AgentSu
 from cmk.core_helpers.host_sections import HostSections
 from cmk.core_helpers.piggyback import PiggybackSummarizer
 from cmk.core_helpers.type_defs import Mode
+
+CONTROLLER_STATUS_LEGACY: Final = json.dumps(
+    {
+        "allow_legacy_pull": True,
+        "connections": [],
+    }
+).split()
+
+CONTROLLER_STATUS_REGISTERED: Final = json.dumps(
+    {
+        "allow_legacy_pull": False,
+        "connections": [
+            {"connection": "localhost:8000/heute"},  # shortened for readability
+        ],
+    }
+).split()
 
 
 class Summarizer(AgentSummarizer):
@@ -111,26 +130,20 @@ class TestAgentSummarizerDefault_OnlyFrom:
         return Mode.CHECKING
 
     def test_allowed(self, summarizer, mode):
-        assert (
-            summarizer.summarize_check_mk_section(
-                [
-                    ["onlyfrom:", "deep_space"],
-                ],
-                mode=mode,
-            )
-            == [ActiveCheckResult(0, "Allowed IP ranges: deep_space")]
-        )
+        assert summarizer.summarize_check_mk_section(
+            [
+                ["onlyfrom:", "deep_space"],
+            ],
+            mode=mode,
+        ) == [ActiveCheckResult(0, "Allowed IP ranges: deep_space")]
 
     def test_exceeding(self, summarizer, mode):
-        assert (
-            summarizer.summarize_check_mk_section(
-                [
-                    ["onlyfrom:", "deep_space somewhere_else"],
-                ],
-                mode=mode,
-            )
-            == [ActiveCheckResult(1, "Unexpected allowed IP ranges (exceeding: somewhere_else)")]
-        )
+        assert summarizer.summarize_check_mk_section(
+            [
+                ["onlyfrom:", "deep_space somewhere_else"],
+            ],
+            mode=mode,
+        ) == [ActiveCheckResult(1, "Unexpected allowed IP ranges (exceeding: somewhere_else)")]
 
     def test_exceeding_missing(self, summarizer, mode):
         assert summarizer.summarize_check_mk_section(
@@ -211,6 +224,80 @@ class TestAgentSummarizerDefault_FailedPythonPlugins:
         )
 
 
+class TestAgentSummarizerDefault_Transport:
+    @pytest.fixture
+    def summarizer(self):
+        return AgentSummarizerDefault(
+            ExitSpec(),
+            is_cluster=False,
+            agent_min_version=0,
+            agent_target_version=None,
+            only_from=None,
+        )
+
+    @pytest.fixture
+    def mode(self):
+        # Only Mode.CHECKING triggers _check_transport
+        return Mode.CHECKING
+
+    def test_tls_ok(self, summarizer, mode):
+        assert (
+            summarizer.summarize_check_mk_section(
+                [
+                    ["AgentController:", "cmk-agent-ctl", "0.1.0"],
+                    ["AgentControllerStatus:", *CONTROLLER_STATUS_REGISTERED],
+                    ["SSHClient:"],
+                ],
+                mode=mode,
+            )
+            == []
+        )
+
+    def test_tls_not_active(self, summarizer, mode):
+        assert summarizer.summarize_check_mk_section(
+            [
+                ["AgentController:", "cmk-agent-ctl", "0.1.0"],
+                ["AgentControllerStatus:", *CONTROLLER_STATUS_LEGACY],
+                ["SSHClient:"],
+            ],
+            mode=mode,
+        ) == [
+            ActiveCheckResult(
+                1,
+                "TLS is not activated on monitored host (see details)",
+                (
+                    "The hosts agent supports TLS, but it is not being used.",
+                    "We strongly recommend to enable TLS by registering the host to the site"
+                    " (using the `cmk-agent-ctl register` command on the monitored host).",
+                    "However you can configure missing TLS to be OK in the setting"
+                    ' "State in case of available but not enabled TLS" of the ruleset'
+                    ' "Status of the Checkmk services".',
+                ),
+            )
+        ]
+
+    def test_controller_not_available(self, summarizer, mode):
+        assert (
+            summarizer.summarize_check_mk_section(
+                [
+                    ["AgentController:"],
+                ],
+                mode=mode,
+            )
+            == []
+        )
+
+    def test_no_tls_but_ssh(self, summarizer, mode):
+        assert summarizer.summarize_check_mk_section(
+            [
+                ["AgentController:", "cmk-agent-ctl", "0.1.0"],
+                ["AgentControllerStatus:", *CONTROLLER_STATUS_LEGACY],
+                ["SSHClient:", "1.2.3.4"],
+            ],
+            mode=mode,
+        ) == [ActiveCheckResult(0, "Transport via SSH")]
+
+
 class TestAgentSummarizerDefault_Fails:
     @pytest.fixture
     def summarizer(self):
@@ -228,18 +315,15 @@ class TestAgentSummarizerDefault_Fails:
         return Mode.CHECKING
 
     def test_update_agent_fail(self, summarizer, mode):
-        assert (
-            summarizer.summarize_check_mk_section(
-                [
-                    ["version:"],
-                    ["agentos:"],
-                    ["UpdateFailed:", "what"],
-                    ["UpdateRecoverAction:", "why"],
-                ],
-                mode=Mode.CHECKING,
-            )
-            == [ActiveCheckResult(1, "what why")]
-        )
+        assert summarizer.summarize_check_mk_section(
+            [
+                ["version:"],
+                ["agentos:"],
+                ["UpdateFailed:", "what"],
+                ["UpdateRecoverAction:", "why"],
+            ],
+            mode=Mode.CHECKING,
+        ) == [ActiveCheckResult(1, "what why")]
 
     def test_update_agent_success(self, summarizer, mode):
         assert not summarizer.summarize_check_mk_section(
@@ -271,16 +355,13 @@ class TestAgentSummarizerDefault_CheckVersion:
 
     @pytest.mark.parametrize("summarizer", ["42"], indirect=True)
     def test_match(self, summarizer, mode):
-        assert (
-            summarizer.summarize_check_mk_section(
-                [
-                    ["version:", "42"],
-                    ["agentos:"],
-                ],
-                mode=mode,
-            )
-            == [ActiveCheckResult(0, "Version: 42")]
-        )
+        assert summarizer.summarize_check_mk_section(
+            [
+                ["version:", "42"],
+                ["agentos:"],
+            ],
+            mode=mode,
+        ) == [ActiveCheckResult(0, "Version: 42")]
 
     @pytest.mark.parametrize("summarizer", ["42"], indirect=True)
     def test_mismatch(self, summarizer, mode):
@@ -306,29 +387,23 @@ class TestAgentSummarizerDefault_CheckVersion:
         indirect=True,
     )
     def test_at_least_str_success(self, summarizer, mode):
-        assert (
-            summarizer.summarize_check_mk_section(
-                [
-                    ["version:", "69"],
-                    ["agentos:"],
-                ],
-                mode=mode,
-            )
-            == [ActiveCheckResult(0, "Version: 69")]
-        )
+        assert summarizer.summarize_check_mk_section(
+            [
+                ["version:", "69"],
+                ["agentos:"],
+            ],
+            mode=mode,
+        ) == [ActiveCheckResult(0, "Version: 69")]
 
     @pytest.mark.parametrize("summarizer", [("at_least", {})], indirect=True)
     def test_at_least_dict_empty(self, summarizer, mode):
-        assert (
-            summarizer.summarize_check_mk_section(
-                [
-                    ["version:", "69"],
-                    ["agentos:"],
-                ],
-                mode=mode,
-            )
-            == [ActiveCheckResult(0, "Version: 69")]
-        )
+        assert summarizer.summarize_check_mk_section(
+            [
+                ["version:", "69"],
+                ["agentos:"],
+            ],
+            mode=mode,
+        ) == [ActiveCheckResult(0, "Version: 69")]
 
 
 class TestPiggybackSummarizer:
@@ -392,13 +467,10 @@ class TestPiggybackSummarizer:
     ):
         monkeypatch.setattr(summarizer, "always", True)
 
-        assert (
-            summarizer.summarize_success(
-                host_sections,
-                mode=Mode.CHECKING,
-            )
-            == [ActiveCheckResult(1, "Missing data")]
-        )
+        assert summarizer.summarize_success(
+            host_sections,
+            mode=Mode.CHECKING,
+        ) == [ActiveCheckResult(1, "Missing data")]
 
     def test_summarize_existing_data_with_always_option(
         self,

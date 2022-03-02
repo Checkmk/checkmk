@@ -1,7 +1,7 @@
 title: Primergy BX600 Blade Enclosure: CPU Load
 agents: snmp
 catalog: hw/server/fujitsu
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
   This check measures and checks the averaged CPU load of a Primergy
@@ -10,4 +10,3 @@ description:
 
 discovery:
   One service is created for each blade enclosure.
-

@@ -1,7 +1,7 @@
 title: IBM SVC / Storwize V3700 / V7000: Cache Usage per Node
 agents: ibm_svc
 catalog: hw/storagehw/ibm
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  Reports the Write Cache Usage and Total Cache Usage for each node of an
@@ -19,4 +19,3 @@ item:
 
 discovery:
  One service is created for each node.
-

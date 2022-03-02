@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 Users can implement their own Perf-O-Meters in <i>local/share/check_mk/web/plugins/perfometer</i>.
 Whenever a user did that in Checkmk 2.0.0 to 2.0.0p3, <b>all</b> Perf-O-Meters vanished.

@@ -6,7 +6,7 @@ Date: 1636114880
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 In previous versions the REST API crashed with a HTTP 500 error when
 a SNMP credential of type "no_auth_no_cred" was being accessed or set.

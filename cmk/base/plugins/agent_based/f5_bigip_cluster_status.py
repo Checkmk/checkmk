@@ -75,7 +75,7 @@ def _check_f5_bigip_cluster_status_common(
 
 def _cluster_check_f5_bigip_cluster_status_common(
     params: F5BigipClusterStatusVSResult,
-    section: Mapping[str, NodeState],
+    section: Mapping[str, Optional[NodeState]],
     is_gt_v11_2: bool,
 ) -> CheckResult:
     """
@@ -98,10 +98,11 @@ def _cluster_check_f5_bigip_cluster_status_common(
         yield Result(state=state.CRIT, summary="No active node found: ")
 
     for node_name, node_state in sorted(section.items()):
-        yield _node_result(node_name, node_state, is_gt_v11_2, params)
+        if node_state is not None:
+            yield _node_result(node_name, node_state, is_gt_v11_2, params)
 
 
-### Older than v11.2
+# Older than v11.2
 
 
 def check_f5_bigip_cluster_status(
@@ -117,7 +118,7 @@ def check_f5_bigip_cluster_status(
 
 def cluster_check_f5_bigip_cluster_status(
     params: F5BigipClusterStatusVSResult,
-    section: Mapping[str, NodeState],
+    section: Mapping[str, Optional[NodeState]],
 ) -> CheckResult:
     """
     >>> for r in cluster_check_f5_bigip_cluster_status(
@@ -149,7 +150,7 @@ register.check_plugin(
     cluster_check_function=cluster_check_f5_bigip_cluster_status,
 )
 
-### From v11.2 and up
+# From v11.2 and up
 
 
 def check_f5_bigip_cluster_status_v11_2(
@@ -160,7 +161,7 @@ def check_f5_bigip_cluster_status_v11_2(
 
 def cluster_check_f5_bigip_cluster_status_v11_2(
     params: F5BigipClusterStatusVSResult,
-    section: Mapping[str, NodeState],
+    section: Mapping[str, Optional[NodeState]],
 ) -> CheckResult:
     yield from _cluster_check_f5_bigip_cluster_status_common(params, section, True)
 

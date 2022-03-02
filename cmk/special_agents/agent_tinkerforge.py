@@ -43,6 +43,7 @@ import socket
 import sys
 import time
 from optparse import OptionParser  # pylint: disable=deprecated-module
+from pathlib import Path
 from typing import List
 
 DEFAULT_SETTINGS = {
@@ -226,12 +227,10 @@ def enumerate_callback(
         device_handlers[device_identifier](conn, settings, uid)
 
 
-def read_config(env):
+def read_config():
     settings = DEFAULT_SETTINGS
-    cfg_path = os.path.join(os.getenv("MK_CONFDIR", "/etc/check_mk"), "tinkerforge.cfg")
-
-    if os.path.isfile(cfg_path):
-        exec(open(cfg_path).read(), settings, settings)  # pylint:disable=consider-using-with
+    if (cfg_path := Path(os.getenv("MK_CONFDIR", "/etc/check_mk"), "tinkerforge.cfg")).is_file():
+        exec(cfg_path.read_text(), settings, settings)
     return settings
 
 
@@ -242,7 +241,7 @@ def main():
     # segment_display_uid = "abc"         # uid of the sensor to display on the 7-segment display
     # segment_display_brightness = 2      # brightness of the 7-segment display (0-7)
 
-    settings = read_config(os.environ)
+    settings = read_config()
     parser = OptionParser()
     parser.add_option(
         "--host",

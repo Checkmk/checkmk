@@ -10,7 +10,8 @@ from marshmallow_oneofschema import OneOfSchema  # type: ignore[import]
 from cmk.utils.defines import weekday_ids
 from cmk.utils.livestatus_helpers import tables
 
-from cmk.gui import fields, watolib
+from cmk.gui import fields as gui_fields
+from cmk.gui import watolib
 from cmk.gui.fields.utils import BaseSchema
 from cmk.gui.livestatus_utils.commands.acknowledgments import (
     acknowledge_host_problem,
@@ -29,13 +30,15 @@ from cmk.gui.watolib.groups import is_alias_used
 from cmk.gui.watolib.tags import load_aux_tags, tag_group_exists
 from cmk.gui.watolib.timeperiods import verify_timeperiod_name_exists
 
-EXISTING_HOST_NAME = fields.HostField(
+from cmk import fields
+
+EXISTING_HOST_NAME = gui_fields.HostField(
     description="The hostname or IP address itself.",
     required=True,
     should_exist=True,
 )
 
-MONITORED_HOST = fields.HostField(
+MONITORED_HOST = gui_fields.HostField(
     description="The hostname or IP address itself.",
     example="example.com",
     should_exist=None,
@@ -43,7 +46,7 @@ MONITORED_HOST = fields.HostField(
     required=True,
 )
 
-EXISTING_FOLDER = fields.FolderField(
+EXISTING_FOLDER = gui_fields.FolderField(
     example="/",
     required=True,
 )
@@ -58,13 +61,13 @@ SERVICEGROUP_NAME = fields.String(
 
 
 class CreateClusterHost(BaseSchema):
-    host_name = fields.HostField(
+    host_name = gui_fields.HostField(
         description="The hostname of the cluster host.",
         required=True,
         should_exist=False,
     )
     folder = EXISTING_FOLDER
-    attributes = fields.attributes_field(
+    attributes = gui_fields.attributes_field(
         "cluster",
         "create",
         description="Attributes to set on the newly created host.",
@@ -80,7 +83,7 @@ class CreateClusterHost(BaseSchema):
 
 class UpdateNodes(BaseSchema):
     nodes = fields.List(
-        fields.HostField(should_be_cluster=False),
+        gui_fields.HostField(should_be_cluster=False),
         description="Nodes where the newly created host should be the cluster-container of.",
         required=True,
         example=["host1", "host2", "host3"],
@@ -88,13 +91,13 @@ class UpdateNodes(BaseSchema):
 
 
 class CreateHost(BaseSchema):
-    host_name = fields.HostField(
+    host_name = gui_fields.HostField(
         description="The hostname or IP address of the host to be created.",
         required=True,
         should_exist=False,
     )
     folder = EXISTING_FOLDER
-    attributes = fields.attributes_field(
+    attributes = gui_fields.attributes_field(
         "host",
         "create",
         description="Attributes to set on the newly created host.",
@@ -133,7 +136,7 @@ class UpdateHost(BaseSchema):
       * `nodes`
     """
 
-    attributes = fields.attributes_field(
+    attributes = gui_fields.attributes_field(
         "host",
         "update",
         description=(
@@ -143,7 +146,7 @@ class UpdateHost(BaseSchema):
         example={"ipaddress": "192.168.0.123"},
         required=False,
     )
-    update_attributes = fields.attributes_field(
+    update_attributes = gui_fields.attributes_field(
         "host",
         "update",
         description=(
@@ -153,7 +156,7 @@ class UpdateHost(BaseSchema):
         example={"ipaddress": "192.168.0.123"},
         required=False,
     )
-    remove_attributes = fields.attributes_field(
+    remove_attributes = gui_fields.attributes_field(
         "host",
         "update",
         names_only=True,
@@ -173,7 +176,7 @@ class LinkHostUUID(BaseSchema):
 
 
 class UpdateHostEntry(UpdateHost):
-    host_name = fields.HostField(
+    host_name = gui_fields.HostField(
         description="The hostname or IP address itself.",
         required=True,
         should_exist=True,
@@ -189,7 +192,7 @@ class BulkUpdateHost(BaseSchema):
 
 
 class RenameHost(BaseSchema):
-    new_name = fields.HostField(
+    new_name = gui_fields.HostField(
         description="The new name of the existing host.",
         required=True,
         should_exist=False,
@@ -198,14 +201,14 @@ class RenameHost(BaseSchema):
 
 
 class MoveHost(BaseSchema):
-    target_folder = fields.FolderField(
+    target_folder = gui_fields.FolderField(
         required=True,
         description="The path of the target folder where the host is supposed to be moved to.",
         example=urllib.parse.quote_plus("/my/fine/folder"),
     )
 
 
-EXISTING_HOST_GROUP_NAME = fields.GroupField(
+EXISTING_HOST_GROUP_NAME = gui_fields.GroupField(
     group_type="host",
     example="windows",
     required=True,
@@ -213,7 +216,7 @@ EXISTING_HOST_GROUP_NAME = fields.GroupField(
     should_exist=True,
 )
 
-EXISTING_SERVICE_GROUP_NAME = fields.GroupField(
+EXISTING_SERVICE_GROUP_NAME = gui_fields.GroupField(
     group_type="service",
     example="windows",
     required=True,
@@ -223,7 +226,7 @@ EXISTING_SERVICE_GROUP_NAME = fields.GroupField(
 
 
 class InputGroup(BaseSchema):
-    customer = fields.customer_field(
+    customer = gui_fields.customer_field(
         required=True,
         should_exist=True,
         allow_global=True,
@@ -233,7 +236,7 @@ class InputGroup(BaseSchema):
 class InputHostGroup(InputGroup):
     """Creating a host group"""
 
-    name = fields.GroupField(
+    name = gui_fields.GroupField(
         group_type="host",
         example="windows",
         required=True,
@@ -268,7 +271,7 @@ class UpdateGroup(BaseSchema):
         description="The name used for displaying in the GUI.",
         required=True,
     )
-    customer = fields.customer_field(
+    customer = gui_fields.customer_field(
         required=False,
         should_exist=True,
         allow_global=True,
@@ -332,7 +335,7 @@ class BulkInputContactGroup(BaseSchema):
 class UpdateContactGroup(BaseSchema):
     """Updating a contact group"""
 
-    name = fields.GroupField(
+    name = gui_fields.GroupField(
         group_type="contact",
         description="The name of the contact group.",
         example="OnCall",
@@ -362,7 +365,7 @@ class BulkUpdateContactGroup(BaseSchema):
 class InputServiceGroup(InputGroup):
     """Creating a service group"""
 
-    name = fields.GroupField(
+    name = gui_fields.GroupField(
         group_type="service",
         example="windows",
         required=True,
@@ -445,7 +448,7 @@ class CreateFolder(BaseSchema):
         description="The folder title as displayed in the user interface.",
         example="Production Hosts",
     )
-    parent = fields.FolderField(
+    parent = gui_fields.FolderField(
         required=True,
         description=(
             "The folder in which the new folder shall be placed in. The root-folder is "
@@ -453,7 +456,7 @@ class CreateFolder(BaseSchema):
         ),
         example="/",
     )
-    attributes = fields.attributes_field(
+    attributes = gui_fields.attributes_field(
         "folder",
         "create",
         required=False,
@@ -486,7 +489,7 @@ class UpdateFolder(BaseSchema):
         required=False,
         description="The title of the folder. Used in the GUI.",
     )
-    attributes = fields.attributes_field(
+    attributes = gui_fields.attributes_field(
         "folder",
         "update",
         description=(
@@ -496,7 +499,7 @@ class UpdateFolder(BaseSchema):
         example={"networking": "wan"},
         required=False,
     )
-    update_attributes = fields.attributes_field(
+    update_attributes = gui_fields.attributes_field(
         "folder",
         "update",
         description=(
@@ -506,7 +509,7 @@ class UpdateFolder(BaseSchema):
         example={"tag_criticality": "prod"},
         required=False,
     )
-    remove_attributes = fields.attributes_field(
+    remove_attributes = gui_fields.attributes_field(
         "folder",
         "update",
         description="A list of attributes which should be removed.",
@@ -535,7 +538,7 @@ class BulkUpdateFolder(BaseSchema):
 
 
 class MoveFolder(BaseSchema):
-    destination = fields.FolderField(
+    destination = gui_fields.FolderField(
         required=True,
         description="Where the folder has to be moved to.",
         example=urllib.parse.quote_plus("/my/fine/folder"),
@@ -788,7 +791,7 @@ SERVICE_DURATION = fields.Integer(
     load_default=0,
 )
 
-INCLUDE_ALL_SERVICES = fields.Bool(
+INCLUDE_ALL_SERVICES = fields.Boolean(
     description="If set, downtimes for all services associated with the given host will be scheduled.",
     required=False,
     load_default=False,
@@ -819,7 +822,7 @@ class CreateServiceDowntime(CreateServiceDowntimeBase):
 
 
 class CreateServiceGroupDowntime(CreateServiceDowntimeBase):
-    servicegroup_name = fields.GroupField(
+    servicegroup_name = gui_fields.GroupField(
         group_type="service",
         example="windows",
         required=True,
@@ -831,7 +834,7 @@ class CreateServiceGroupDowntime(CreateServiceDowntimeBase):
 
 
 class CreateHostGroupDowntime(CreateHostDowntimeBase):
-    hostgroup_name = fields.GroupField(
+    hostgroup_name = gui_fields.GroupField(
         group_type="host",
         example="windows",
         required=True,
@@ -842,12 +845,12 @@ class CreateHostGroupDowntime(CreateHostDowntimeBase):
 
 
 class CreateHostQueryDowntime(CreateHostDowntimeBase):
-    query = fields.query_field(tables.Hosts, required=True)
+    query = gui_fields.query_field(tables.Hosts, required=True)
     duration = HOST_DURATION
 
 
 class CreateServiceQueryDowntime(CreateServiceDowntimeBase):
-    query = fields.query_field(tables.Services, required=True)
+    query = gui_fields.query_field(tables.Services, required=True)
     duration = SERVICE_DURATION
 
 
@@ -889,7 +892,7 @@ class DeleteDowntimeById(DeleteDowntimeBase):
 
 
 class DeleteDowntimeByName(DeleteDowntimeBase):
-    host_name = fields.HostField(
+    host_name = gui_fields.HostField(
         required=True,
         should_exist=None,  # we don't care
         description="If set alone, then all downtimes of the host will be removed.",
@@ -905,7 +908,7 @@ class DeleteDowntimeByName(DeleteDowntimeBase):
 
 
 class DeleteDowntimeByQuery(DeleteDowntimeBase):
-    query = fields.query_field(tables.Downtimes, required=True)
+    query = gui_fields.query_field(tables.Downtimes, required=True)
 
 
 class DeleteDowntime(OneOfSchema):
@@ -919,7 +922,7 @@ class DeleteDowntime(OneOfSchema):
 
 
 class InputPassword(BaseSchema):
-    ident = fields.PasswordIdent(
+    ident = gui_fields.PasswordIdent(
         example="pass",
         description="An unique identifier for the password",
         should_exist=False,
@@ -950,7 +953,7 @@ class InputPassword(BaseSchema):
         description="The password string",
     )
 
-    owner = fields.PasswordOwner(
+    owner = gui_fields.PasswordOwner(
         example="admin",
         description="Each password is owned by a group of users which are able to edit, delete and use existing passwords.",
         required=True,
@@ -958,7 +961,7 @@ class InputPassword(BaseSchema):
     )
 
     shared = fields.List(
-        fields.PasswordShare(
+        gui_fields.PasswordShare(
             example="all",
             description="By default only the members of the owner contact group are permitted to use a a configured password. It is possible to share a password with other groups of users to make them able to use a password in checks.",
         ),
@@ -968,7 +971,7 @@ class InputPassword(BaseSchema):
         attribute="shared_with",
         load_default=list,
     )
-    customer = fields.customer_field(
+    customer = gui_fields.customer_field(
         required=True,
         should_exist=True,
         allow_global=True,
@@ -1001,7 +1004,7 @@ class UpdatePassword(BaseSchema):
         description="The password string",
     )
 
-    owner = fields.PasswordOwner(
+    owner = gui_fields.PasswordOwner(
         example="admin",
         description="Each password is owned by a group of users which are able to edit, delete and use existing passwords.",
         required=False,
@@ -1009,7 +1012,7 @@ class UpdatePassword(BaseSchema):
     )
 
     shared = fields.List(
-        fields.PasswordShare(
+        gui_fields.PasswordShare(
             example="all",
             description="By default only the members of the owner contact group are permitted to use a a configured password. "
             "It is possible to share a password with other groups of users to make them able to use a password in checks.",
@@ -1019,7 +1022,7 @@ class UpdatePassword(BaseSchema):
         required=False,
         attribute="shared_with",
     )
-    customer = fields.customer_field(
+    customer = gui_fields.customer_field(
         required=False,
         should_exist=True,
         allow_global=True,
@@ -1060,7 +1063,7 @@ class Username(fields.String):
 
 
 class CustomTimeRange(BaseSchema):
-    # TODO: fields.Dict validation also for Timperiods
+    # TODO: gui_fields.Dict validation also for Timperiods
     start_time = fields.DateTime(
         format="iso8601",
         required=True,
@@ -1076,7 +1079,7 @@ class CustomTimeRange(BaseSchema):
 
 
 class DisabledNotifications(BaseSchema):
-    disable = fields.Bool(
+    disable = fields.Boolean(
         required=False,
         description="Option if all notifications should be temporarily disabled",
         example=False,
@@ -1188,7 +1191,7 @@ class UserContactOption(BaseSchema):
         example="user@example.com",
     )
     # User cannot enable fallback contact if no email is specified
-    fallback_contact = fields.Bool(
+    fallback_contact = fields.Boolean(
         description="In case none of your notification rules handles a certain event a notification "
         "will be sent to the specified email",
         required=False,
@@ -1204,7 +1207,7 @@ class UserContactUpdateOption(BaseSchema):
         "contact and receives notifications via mail.",
         example="user@example.com",
     )
-    fallback_contact = fields.Bool(
+    fallback_contact = fields.Boolean(
         description="In case none of your notification rules handles a certain event a notification "
         "will be sent to the specified email",
         required=False,
@@ -1225,7 +1228,7 @@ class CreateUser(BaseSchema):
         example="Mathias Kettner",
         attribute="alias",
     )
-    customer = fields.customer_field(
+    customer = gui_fields.customer_field(
         required=True,
         should_exist=True,
         allow_global=True,
@@ -1239,7 +1242,7 @@ class CreateUser(BaseSchema):
         example={"auth_type": "password", "password": "password"},
         load_default=dict,
     )
-    disable_login = fields.Bool(
+    disable_login = fields.Boolean(
         required=False,
         load_default=False,
         description="The user can be blocked from login but will remain part of the site. "
@@ -1280,7 +1283,7 @@ class CreateUser(BaseSchema):
         example=["user"],
     )
     authorized_sites = fields.List(
-        fields.SiteField(),
+        gui_fields.SiteField(),
         description="The names of the sites the user is authorized to handle",
         example=["heute"],
         required=False,
@@ -1322,7 +1325,7 @@ class UpdateUser(BaseSchema):
         example="Mathias Kettner",
         attribute="alias",
     )
-    customer = fields.customer_field(
+    customer = gui_fields.customer_field(
         required=False,
         should_exist=True,
     )
@@ -1333,13 +1336,13 @@ class UpdateUser(BaseSchema):
         example={"auth_type": "password", "password": "password"},
         load_default=dict,
     )
-    enforce_password_change = fields.Bool(
+    enforce_password_change = fields.Boolean(
         required=False,
         description="Enforce the password change on next login. This has no effect if you remove "
         "the authentication option",
         example=True,
     )
-    disable_login = fields.Bool(
+    disable_login = fields.Boolean(
         required=False,
         description="The user can be blocked from login but will remain part of the site. "
         "The disabling does not affect notification and alerts.",
@@ -1376,7 +1379,7 @@ class UpdateUser(BaseSchema):
         example=["user"],
     )
     authorized_sites = fields.List(
-        fields.SiteField(),
+        gui_fields.SiteField(),
         description="The names of the sites the user is authorized to handle",
         example=["heute"],
         required=False,
@@ -1636,7 +1639,7 @@ class AcknowledgeHostProblemBase(BaseSchema):
 
 
 class AcknowledgeHostProblem(AcknowledgeHostProblemBase):
-    host_name = fields.HostField(
+    host_name = gui_fields.HostField(
         description="The name of the host.",
         should_exist=True,
         should_be_monitored=True,
@@ -1646,7 +1649,7 @@ class AcknowledgeHostProblem(AcknowledgeHostProblemBase):
 
 
 class AcknowledgeHostGroupProblem(AcknowledgeHostProblemBase):
-    hostgroup_name = fields.GroupField(
+    hostgroup_name = gui_fields.GroupField(
         group_type="host",
         example="Servers",
         required=True,
@@ -1657,7 +1660,7 @@ class AcknowledgeHostGroupProblem(AcknowledgeHostProblemBase):
 
 
 class AcknowledgeHostQueryProblem(AcknowledgeHostProblemBase):
-    query = fields.query_field(tables.Hosts, required=True)
+    query = gui_fields.query_field(tables.Hosts, required=True)
 
 
 class AcknowledgeHostRelatedProblem(OneOfSchema):
@@ -1707,7 +1710,7 @@ class AcknowledgeServiceProblemBase(BaseSchema):
 
 
 class AcknowledgeSpecificServiceProblem(AcknowledgeServiceProblemBase):
-    host_name = fields.HostField(
+    host_name = gui_fields.HostField(
         should_exist=True,
         should_be_monitored=True,
         required=True,
@@ -1720,7 +1723,7 @@ class AcknowledgeSpecificServiceProblem(AcknowledgeServiceProblemBase):
 
 
 class AcknowledgeServiceGroupProblem(AcknowledgeServiceProblemBase):
-    servicegroup_name = fields.GroupField(
+    servicegroup_name = gui_fields.GroupField(
         group_type="service",
         example="windows",
         required=True,
@@ -1731,7 +1734,7 @@ class AcknowledgeServiceGroupProblem(AcknowledgeServiceProblemBase):
 
 
 class AcknowledgeServiceQueryProblem(AcknowledgeServiceProblemBase):
-    query = fields.query_field(tables.Services, required=True)
+    query = gui_fields.query_field(tables.Services, required=True)
 
 
 class AcknowledgeServiceRelatedProblem(OneOfSchema):
@@ -1861,13 +1864,16 @@ class BulkDeleteContactGroup(BaseSchema):
 
 class ActivateChanges(BaseSchema):
     redirect = fields.Boolean(
-        description="Redirect immediately to the 'Wait for completion' endpoint.",
+        description=(
+            "After starting the activation, redirect immediately to the 'Wait for completion' "
+            "endpoint instead of waiting for the completion."
+        ),
         required=False,
         load_default=False,
         example=False,
     )
     sites = fields.List(
-        fields.SiteField(),
+        gui_fields.SiteField(),
         description=(
             "The names of the sites on which the configuration shall be activated."
             " An empty list means all sites which have pending changes."
@@ -1887,7 +1893,7 @@ class ActivateChanges(BaseSchema):
 
 
 class X509ReqPEM(BaseSchema):
-    csr = fields.X509ReqPEMField(
+    csr = gui_fields.X509ReqPEMField(
         required=True,
         example="-----BEGIN CERTIFICATE REQUEST-----\n...\n-----END CERTIFICATE REQUEST-----\n",
         description="PEM-encoded X.509 CSR.",

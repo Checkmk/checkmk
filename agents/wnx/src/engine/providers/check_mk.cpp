@@ -15,11 +15,14 @@
 #include <asio/ip/network_v4.hpp>
 #include <asio/ip/network_v6.hpp>
 
+#include "agent_controller.h"
 #include "cfg.h"
 #include "check_mk.h"
 #include "common/version.h"
 #include "install_api.h"
 #include "onlyfrom.h"
+
+namespace fs = std::filesystem;
 
 using namespace std::string_literals;
 
@@ -105,15 +108,17 @@ std::string MakeDirs() {
     return out;
 }
 
+std::string GetLegacyPullMode() { return ac::IsInLegacyMode() ? "yes" : "no"; }
 }  // namespace
 
 std::string CheckMk::makeBody() {
     auto out = MakeInfo();
     out += MakeDirs();
+    out += "AgentController: "s + ac::DetermineAgentCtlVersion() + "\n";
+    out += "AgentControllerStatus: "s + ac::DetermineAgentCtlStatus() + "\n";
     out += "OnlyFrom: "s + makeOnlyFrom() + "\n"s;
 
     if (install::GetLastInstallFailReason()) {
-        // We deliver fixed strings because it is a prototype solution.
         out += "<<<check_mk>>>\n";
         out +=
             "UpdateFailed: The last agent update failed. Supplied Python environment is not compatible with OS. \n";

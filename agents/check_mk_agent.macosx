@@ -5,6 +5,12 @@
 
 # NOTE: This agent has beed adapted from the Checkmk linux agent.
 
+inpath() {
+    # replace "if type [somecmd]" idiom
+    # 'command -v' tends to be more robust vs 'which' and 'type' based tests
+    command -v "${1:?No command to test}" >/dev/null 2>&1
+}
+
 get_epoch() {
     date +%s 2>/dev/null ||
         perl -e 'print($^T."\n");'
@@ -28,10 +34,9 @@ else
     exec </dev/null 2>/dev/null
 fi
 
-
 section_checkmk() {
     echo "<<<check_mk>>>"
-    echo "Version: 2.1.0i1"
+    echo "Version: 2.2.0i1"
     echo "AgentOS: macosx"
     echo "Hostname: $(hostname)"
     echo "AgentDirectory: $MK_CONFDIR"
@@ -46,13 +51,17 @@ run_purely_synchronous_sections() {
     section_checkmk
 
     echo '<<<df>>>'
-    df -kPT hfs,apfs | sed 1d | \
-    while read DEV REST; do
-        TYPE=$(diskutil info "$DEV" | grep '^\s*Type' | cut -d: -f2 | tr -d '[:space:]')
-        echo "$DEV $TYPE $REST"
-    done
+    # SC2162: read without -r will mangle backslashes.
+    # The following suppression was added when we enabled the corresponding shellcheck.
+    # It may well be that "read -r" would be more appropriate.
+    # shellcheck disable=SC2162
+    df -kPT hfs,apfs | sed 1d |
+        while read DEV REST; do
+            TYPE=$(diskutil info "$DEV" | grep '^\s*Type' | cut -d: -f2 | tr -d '[:space:]')
+            echo "$DEV $TYPE $REST"
+        done
 
-    echo '<<<cpu>>>';
+    echo '<<<cpu>>>'
     echo "$(sysctl -n vm.loadavg | tr -d '{}') $(top -l 1 -n 1 | grep -E ^Processes: |
         awk '{ print $4"/"$2; }') $(echo 'echo $$' | bash) $(sysctl -n hw.ncpu)"
 
@@ -64,15 +73,16 @@ run_purely_synchronous_sections() {
     # FIXME: Just call vm_stat here, write a check plugin that uses that
     # navite output of vm_stat
 
-    echo '<<<uptime>>>';
+    echo '<<<uptime>>>'
     echo "$(get_epoch) - $(sysctl -n kern.boottime | cut -d' ' -f 4,7 | tr ',' '.' |
         tr -d ' ')" | bc
     # FIXME: use sysctl -a for outputting *all* kernel values. Write
     # checks plugins with subchecks for parsing that output. Maybe reduce
     # the output size by grepping away totally useless parts
 
-    echo '<<<netctr>>>';
-    date +'%s'; netstat -inb | grep -v -E '(^Name|lo|plip)' | grep Link | awk '{
+    echo '<<<netctr>>>'
+    date +'%s'
+    netstat -inb | grep -v -E '(^Name|lo|plip)' | grep Link | awk '{
     print $1,$7,$5,$6,"0","0","0","0","0",$10,$8,$9,"0","0",$11,"0","0"; }'
     # FIXME: send netstat -inb plain, write proper check plugins for
     # clean parsing of the output
@@ -81,7 +91,7 @@ run_purely_synchronous_sections() {
     ps ax -o user,vsz,rss,pcpu,command | sed -e 1d -e 's/ *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) */(\1,\2,\3,\4) /'
 
     # NTP seems to be enabled as a default
-    if which ntpq >/dev/null; then
+    if inpath ntpq; then
         echo '<<<ntp>>>'
         ntpq -np | sed -e 1,2d -e 's/^\(.\)/\1 /' -e 's/^ /%/'
     fi
@@ -89,7 +99,6 @@ run_purely_synchronous_sections() {
     # TCP Conn stats
     echo '<<<tcp_conn_stats>>>'
     netstat -ntfinet | awk ' /^tcp/ { c[$6]++; } END { for (x in c) { print x, c[x]; } }'
-
 
     # Fileinfo-Check: put patterns for files into /etc/check_mk/fileinfo.cfg
     perl -e '
@@ -124,7 +133,6 @@ run_purely_synchronous_sections() {
     }
     ' -- "$MK_CONFDIR"
 
-
     if type tmutil >/dev/null; then
         echo '<<<timemachine>>>'
         tmutil latestbackup 2>&1
@@ -142,17 +150,20 @@ run_purely_synchronous_sections() {
 # *Rewrite cpu / ps check to be faster - takes >1s on my laptop
 # ioreg -l zeigt etliche interessante Inventurdaten
 
-
 run_mrpe_plugins() {
     if [ -e "/etc/mrpe.cfg" ]; then
         echo '<<<mrpe>>>'
-        grep -Ev '^[[:space:]]*($|#)' "/etc/mrpe.cfg" | \
-        while read descr cmdline; do
-            PLUGIN=${cmdline%% *}
-            OUTPUT=$(eval "$cmdline")
-            echo "(${PLUGIN##*/}) $descr $? $OUTPUT" | tr \\n \\1
-            echo
-        done
+        # SC2162: read without -r will mangle backslashes.
+        # The following suppression was added when we enabled the corresponding shellcheck.
+        # It may well be that "read -r" would be more appropriate.
+        # shellcheck disable=SC2162
+        grep -Ev '^[[:space:]]*($|#)' "/etc/mrpe.cfg" |
+            while read descr cmdline; do
+                PLUGIN=${cmdline%% *}
+                OUTPUT=$(eval "$cmdline")
+                echo "(${PLUGIN##*/}) $descr $? $OUTPUT" | tr \\n \\1
+                echo
+            done
     fi
 }
 
@@ -162,6 +173,7 @@ main() {
 
     run_mrpe_plugins
 
+    return 0
 }
 
 main

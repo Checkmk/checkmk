@@ -1,7 +1,7 @@
 title: HP MSA 2040: Power Supply Health
 agents: hp_msa
 catalog: hw/storagehw/hp
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check reports the health states of the power supplies

@@ -30,27 +30,26 @@ class LocalizeException(MKException):
 domain = "multisite"
 
 
-def _locale_base() -> str:
-    return str(cmk.utils.paths.local_locale_dir)
+def _locale_base() -> Path:
+    return cmk.utils.paths.local_locale_dir
 
 
-def _pot_file() -> str:
-    local_pot_file = cmk.utils.paths.local_locale_dir / "multisite.pot"
-    if local_pot_file.exists():
-        return str(local_pot_file)
-    return _locale_base() + "/multisite.pot"
+def _pot_file() -> Path:
+    if (local_pot_file := cmk.utils.paths.local_locale_dir / "multisite.pot").exists():
+        return local_pot_file
+    return _locale_base() / "/multisite.pot"
 
 
 def _builtin_po_file(lang: str) -> Path:
     return cmk.utils.paths.locale_dir / lang / "LC_MESSAGES" / ("%s.po" % domain)
 
 
-def _po_file(lang: str) -> str:
-    return _locale_base() + "/%s/LC_MESSAGES/%s.po" % (lang, domain)
+def _po_file(lang: str) -> Path:
+    return _locale_base() / lang / f"LC_MESSAGES/{domain}.po"
 
 
-def _mo_file(lang: str) -> str:
-    return _locale_base() + "/%s/LC_MESSAGES/%s.mo" % (lang, domain)
+def _mo_file(lang: str) -> Path:
+    return _locale_base() / lang / f"LC_MESSAGES/{domain}.mo"
 
 
 def _alias_file(lang: str) -> Path:
@@ -143,7 +142,8 @@ def _check_binaries() -> None:
     for b in ["xgettext", "msgmerge", "msgfmt"]:
         if (
             subprocess.call(
-                ["which", b], stdout=open(os.devnull, "wb")  # pylint:disable=consider-using-with
+                ["which", b],
+                stdout=subprocess.DEVNULL,
             )
             != 0
         ):
@@ -151,7 +151,7 @@ def _check_binaries() -> None:
 
 
 def _get_languages() -> List[LanguageName]:
-    return [l for l in os.listdir(_locale_base()) if os.path.isdir(_locale_base() + "/" + l)]
+    return [l.name for l in _locale_base().iterdir() if l.is_dir()]
 
 
 def _localize_update_po(lang: LanguageName) -> None:
@@ -160,7 +160,7 @@ def _localize_update_po(lang: LanguageName) -> None:
     if (
         subprocess.call(
             ["msgmerge", "-U", _po_file(lang), _pot_file()],
-            stdout=open(os.devnull, "wb"),  # pylint:disable=consider-using-with
+            stdout=subprocess.DEVNULL,
         )
         != 0
     ):
@@ -173,7 +173,7 @@ def _localize_init_po(lang: LanguageName) -> None:
     if (
         subprocess.call(
             ["msginit", "-i", _pot_file(), "--no-translator", "-l", lang, "-o", _po_file(lang)],
-            stdout=open(os.devnull, "wb"),  # pylint:disable=consider-using-with
+            stdout=subprocess.DEVNULL,
         )
         != 0
     ):
@@ -212,9 +212,9 @@ def _localize_sniff() -> None:
                 "--omit-header",
                 "-o",
                 _pot_file(),
-            ]
-            + sniff_files,
-            stdout=open(os.devnull, "wb"),  # pylint:disable=consider-using-with
+                *sniff_files,
+            ],
+            stdout=subprocess.DEVNULL,
         )
         != 0
     ):
@@ -238,8 +238,7 @@ msgstr ""
 
 """
 
-        f = open(_pot_file()).read()  # pylint:disable=consider-using-with
-        open(_pot_file(), "w").write(header + f)  # pylint:disable=consider-using-with
+        _pot_file().write_text(header + _pot_file().read_text())
         logger.info("Success! Output: %s", _pot_file())
 
 
@@ -258,11 +257,10 @@ def _localize_edit(lang: LanguageName) -> None:
 
 def _localize_update(lang: LanguageName) -> None:
     """Start translating in a new language"""
-    po_file = _po_file(lang)
     _initialize_local_po_file(lang)
     _localize_sniff()
 
-    if not os.path.exists(po_file):
+    if not _po_file(lang).exists():
         logger.info("Initializing .po file for language %s...", lang)
         _localize_init_po(lang)
     else:
@@ -280,7 +278,7 @@ def _localize_compile(lang: LanguageName) -> None:
     po_file = _po_file(lang)
     _initialize_local_po_file(lang)
 
-    if not os.path.exists(po_file):
+    if not po_file.exists():
         raise LocalizeException("The .po file %s does not exist." % po_file)
 
     if subprocess.call(["msgfmt", po_file, "-o", _mo_file(lang)]) != 0:
@@ -296,9 +294,9 @@ def _initialize_local_po_file(lang: LanguageName) -> None:
     store.makedirs(Path(po_file).parent)
 
     builtin_po_file = _builtin_po_file(lang)
-    if not os.path.exists(po_file) and builtin_po_file.exists():
-        with builtin_po_file.open("r", encoding="utf-8") as source, Path(po_file).open(
-            "w", encoding="utf-8"
-        ) as dest:
-            dest.write(source.read())
+    if not po_file.exists() and builtin_po_file.exists():
+        po_file.write_text(
+            builtin_po_file.read_text(encoding="utf-8"),
+            encoding="utf-8",
+        )
         logger.info("Initialize %s with the file in the default hierarchy", po_file)

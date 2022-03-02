@@ -6,7 +6,7 @@ Date: 1614007259
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 Previously, there were misunderstandings about setting downtimes in service
 views. Without the option "Schedule downtimes on the affected hosts instead of on the

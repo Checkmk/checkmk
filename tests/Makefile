@@ -6,7 +6,7 @@ SHELL := /bin/bash -e
 SCRIPTS := ../scripts
 FIND_PYTHON_FILES := $(SCRIPTS)/find-python-files
 PIPENV := $(SCRIPTS)/run-pipenv
-PYTEST := $(PIPENV) run py.test -vv $(PYTEST_ARGS)
+PYTEST := $(PIPENV) run py.test $(PYTEST_ARGS)
 YAPF := $(PIPENV) run yapf
 BLACK  := $(SCRIPTS)/run-black
 THREE_TO_TWO := $(PIPENV) run 3to2
@@ -22,10 +22,21 @@ GCC_TOOLCHAIN := /opt/gcc-11.2.0
 AGENT_PLUGIN_UNIT_TEST_FILES := $(wildcard agent-plugin-unit/test_*.py)
 AGENT_PLUGIN_UNIT_TEST_FILES_PY2 := $(subst agent-plugin-unit,agent-plugin-unit/py2,$(AGENT_PLUGIN_UNIT_TEST_FILES))
 
-# TODO: Complete this list
-SHELL_FILES := \
-	agents/check_mk_agent.linux \
-	agents/check_mk_caching_agent.linux
+# evaluate this only if needed, it slows down tab expansion otherwise.
+SHELL_FILES_REL = $(shell cd ..; grep -rl \
+    --exclude-dir="buildscripts" \
+    --exclude-dir="core" \
+    --exclude-dir="doc" \
+    --exclude-dir="livestatus" \
+    --exclude-dir="node_modules" \
+    --exclude-dir="notifications" \
+    --exclude-dir="omd" \
+    --exclude-dir="skel" \
+    --exclude-dir="tests" \
+    --exclude="LIVEPROXYD" \
+    --exclude="install-sh" \
+    --exclude="code_examples.py" \
+    '^\#!/.*sh' [^.]* 2>/dev/null)
 
 # Due to https://github.com/pypa/pypi-support/issues/978, we need to disable Plugin tests for py2.6
 # until we have a feasible solution or we drop the support for 2.6 completly.
@@ -36,7 +47,7 @@ PYTHON_VERSIONS := 2.7 3.3 3.4 3.5 3.6 3.7 3.8 3.9
 	test-bandit test-composition test-composition-docker test-composition-docker-debug \
 	test-docker test-docker-docker test-format-python test-format-python-docker test-format-shell \
 	test-format-js test-format-js-docker test-format-css test-format-css-docker \
-	test-gui-crawl test-gui-crawl-docker test-xss-crawl test-xss-crawl-docker \
+	test-gui-crawl test-gui-crawl-docker test-xss-crawl test-xss-crawl-docker test-gui-e2e test-gui-e2e-docker \
 	test-integration test-integration-docker test-integration-docker-debug \
 	test-mypy test-mypy-raw itest-mypy-docker test-packaging test-pipenv-deps test-pylint test-pylint-docker \
 	test-unit test-unit-docker test-unit-resilience test-unit-resilience-docker test-unit-coverage-html \
@@ -71,6 +82,8 @@ help:
 	@echo "test-gui-crawl-docker               - Run GUI crawl in container"
 	@echo "test-xss-crawl                      - Run XSS crawl locally"
 	@echo "test-xss-crawl-docker               - Run XSS crawl in container"
+	@echo "test-gui-e2e                        - Run GUI End-to-End locally"
+	@echo "test-gui-e2e-docker                 - Run GUI End-to-End in container"
 	@echo "test-integration                    - Run integration tests locally"
 	@echo "test-integration-docker             - Run integration tests in container"
 	@echo "test-integration-docker-debug       - Run test container for manual debugging"
@@ -112,7 +125,7 @@ bandit.ini:
 	  echo ) > bandit.ini
 
 format-shell:
-	docker run --rm -v "$(realpath ..):/sh" -w /sh peterdavehello/shfmt shfmt -w -i 4 -ci $(SHELL_FILES)
+	docker run --rm -v "$(realpath ..):/sh" -w /sh peterdavehello/shfmt shfmt -w -i 4 -ci $(SHELL_FILES_REL)
 
 agent-plugin-unit/py2/test_%.py: agent-plugin-unit/test_%.py
 	mkdir -p "$(dir $@)"
@@ -205,7 +218,7 @@ test-format-python-docker:
 	../scripts/run-in-docker.sh make --quiet test-format-python
 
 test-format-shell:
-	docker run --rm -v "$(realpath ..):/sh" -w /sh peterdavehello/shfmt shfmt -d -i 4 -ci $(SHELL_FILES)
+	docker run --rm -v "$(realpath ..):/sh" -w /sh peterdavehello/shfmt shfmt -d -i 4 -ci $(SHELL_FILES_REL)
 
 test-format-js:
 	cd ..; scripts/run-prettier --check --no-color --loglevel warn "{enterprise/web,web}/htdocs/js/**/*.js"
@@ -236,6 +249,12 @@ test-xss-crawl-docker:
 
 test-integration:
 	CI=true $(PIPENV) run scripts/run-integration-test.py $(realpath integration)
+
+test-gui-e2e: prepare-playwright
+	$(PYTEST) -T gui_e2e -x --log-cli-level=INFO $(realpath gui_e2e/)
+
+test-gui-e2e-docker:
+	$(PIPENV) run scripts/run-dockerized.py "test-gui-e2e"
 
 test-integration-docker:
 	$(PIPENV) run scripts/run-dockerized.py "test-integration"
@@ -272,19 +291,14 @@ test-pylint-docker:
 	../scripts/run-in-docker.sh make --quiet test-pylint
 
 test-shellcheck:
-	@CMK_DIR="$(realpath ..)" ; \
-	ENTERPRISE_DIR="$(realpath ../enterprise)" ; \
-	shellcheck \
-	        -P SCRIPTDIR \
-		$(SHELLCHECK_OUTPUT_ARGS) \
-		$$(grep -l '^#!/.*sh' $$CMK_DIR/agents/* $$CMK_DIR/agents/plugins/* $$CMK_DIR/agents/special/* $$CMK_DIR/agents/cfg_examples/* 2>/dev/null) \
-		"$$ENTERPRISE_DIR/agents/mk-remote-alert-handler"
+	cd .. && shellcheck $(SHELLCHECK_OUTPUT_ARGS) $(SHELL_FILES_REL)
 
 test-unit: prepare-protobuf-files
 	$(PYTEST) \
 		-T unit \
 		--doctest-modules \
 		../cmk/base \
+		../cmk/fields \
 		../cmk/gui \
 		../cmk/special_agents \
 		../cmk/utils \
@@ -301,6 +315,7 @@ test-unit-resilience: prepare-protobuf-files
 		-T unit \
 		--doctest-modules \
 		../cmk/base \
+		../cmk/fields \
 		../cmk/gui \
 		../cmk/special_agents \
 		../cmk/utils \
@@ -323,6 +338,7 @@ test-unit-coverage-html: prepare-protobuf-files
 		--no-cov-on-fail \
 		--doctest-modules \
 		../cmk/base \
+		../cmk/fields \
 		../cmk/gui \
 		../cmk/special_agents \
 		../cmk/utils \
@@ -384,7 +400,7 @@ test-cargo-fmt-docker:
 	$(SCRIPTS)/run-in-docker.sh make test-cargo-fmt
 
 test-cargo-clippy:
-	$(SCRIPTS)/run-cargo-command-in-projects clippy --all-targets
+	$(SCRIPTS)/run-cargo-command-in-projects clippy --all-targets -- -D warnings
 
 test-cargo-clippy-docker:
 	$(SCRIPTS)/run-in-docker.sh make test-cargo-clippy

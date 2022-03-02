@@ -1,7 +1,7 @@
 title: Vutlan EMS: Smoke
 catalog: hw/environment/vutlan
 agents: snmp
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check monitors the smoke sensors on Vutlan EMS devices.
@@ -14,5 +14,3 @@ item:
 
 discovery:
  One service is created for each sensor.
-
-

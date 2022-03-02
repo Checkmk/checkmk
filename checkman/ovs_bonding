@@ -1,7 +1,7 @@
 title: Open vSwitch: State of Bonding Network Interface
 agents: linux
 catalog: os/networking
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check checks the current state of a Open vSwitch bonding interface.
@@ -19,4 +19,3 @@ discovery:
  to be the primary interface.
  This is only relevant if you configure a detection of
  a change in the active interface.
-

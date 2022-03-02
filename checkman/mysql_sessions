@@ -1,7 +1,7 @@
 title: MySQL: Sessions
 agents: linux
 catalog: app/mysql
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check allows tracking of the session parameters for a MySQL database.
@@ -18,4 +18,3 @@ item:
 discovery:
  One service is created for each instance for each session connected
  to the MySQL daemon.
-

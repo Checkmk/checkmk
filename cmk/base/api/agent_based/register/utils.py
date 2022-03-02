@@ -149,7 +149,14 @@ def _validate_optional_section_annotation(
         return  # no typing used in plugin
 
     if type_label == "cluster_check":
-        return  # TODO
+        desired = " cluster sections must be of type `Mapping[str, Optional[<NodeSection>]]`"
+        if not all(
+            str(p.annotation).startswith("typing.Mapping[str, ")
+            and _NONE_TYPE in get_args(get_args(p.annotation)[1])
+            for p in section_args
+        ):
+            raise TypeError(f"Wrong type annotation: {desired}")
+        return
 
     if len(section_args) <= 1:
         return  # we know nothing in this case
@@ -158,6 +165,10 @@ def _validate_optional_section_annotation(
         raise TypeError("Wrong type annotation: multiple sections must be `Optional`")
 
     return
+
+
+def _value_type(annotation: inspect.Parameter) -> bytes:
+    return get_args(annotation)[1]
 
 
 class RuleSetType(enum.Enum):

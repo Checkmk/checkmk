@@ -6,7 +6,7 @@ Date: 1630396212
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 The cluster check "esx_vsphere_hostsystem_cpu_util_cluster" was configurable in
 the enforced services and was working up until Checkmk version 1.6. This check

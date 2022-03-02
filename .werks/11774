@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 Time synchronization commands on containers lead to a execution time of the linux
 agent of over 30 seconds, as the corresponding commands timed out.

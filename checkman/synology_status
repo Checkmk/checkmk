@@ -1,7 +1,7 @@
 title: Synology NAS: System and Power Status
 agents: snmp
 catalog: hw/storagehw/synology
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check returns {CRIT} if neither the Power or the System status is {OK}.
@@ -9,4 +9,3 @@ description:
 
 discovery:
  One service is created.
-

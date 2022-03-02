@@ -1,0 +1,17 @@
+Title: view: sort perf-o-meter with missing value
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1645388913
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.2.0i1
+
+When sorting the perf-o-meter missing values used
+to be treated as equal to all other values. This
+lead an incorrect sorting in a view.
+
+The missing entries are now treated as smaller
+than all other values.

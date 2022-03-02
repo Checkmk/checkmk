@@ -1,7 +1,7 @@
 title: Java Virtual Machine: State of Applications
 agents: linux
 catalog: app/java
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  This check allows to monitor the state of a single application running on a JVM (i.e. /host-manager or /my-web-app)

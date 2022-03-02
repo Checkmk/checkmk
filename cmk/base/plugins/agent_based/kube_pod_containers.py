@@ -23,8 +23,8 @@ from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
     StringTable,
 )
 from cmk.base.plugins.agent_based.utils.k8s import (
-    ContainerInfo,
     ContainerRunningState,
+    ContainerStatus,
     ContainerTerminatedState,
     ContainerWaitingState,
     PodContainers,
@@ -33,12 +33,12 @@ from cmk.base.plugins.agent_based.utils.k8s import (
 
 def parse(string_table: StringTable) -> Optional[PodContainers]:
     """Parses `string_table` into a PodContainers isinstance
-    >>> section_kube_pod_containers_v1 = '{"containers": {"busybox": {"id": null, "name": "busybox", "image": "busybox", "ready": false, "state": {"type": "waiting", "reason": "PodInitializing", "detail": null}, "restart_count": 0}}}'
+    >>> section_kube_pod_containers_v1 = '{"containers": {"busybox": {"container_id": null, "image_id": "", "name": "busybox", "image": "busybox", "ready": false, "state": {"type": "waiting", "reason": "PodInitializing", "detail": null}, "restart_count": 0}}}'
     >>> parse([[section_kube_pod_containers_v1]])
-    PodContainers(containers={'busybox': ContainerInfo(id=None, name='busybox', image='busybox', ready=False, state=ContainerWaitingState(type='waiting', reason='PodInitializing', detail=None), restart_count=0)})
-    >>> section_kube_pod_init_containers_v1 = '{"containers": {"busybox-init": {"id": "docker://992c4192439a93bcc445912f9a9e76fd20a4822ce0e05430cbd162c983d6178f", "name": "busybox-init", "image": "busybox:latest", "ready": false, "state": {"type": "waiting", "reason": "CrashLoopBackOff", "detail": "back-off 5m0s restarting failed container=busybox-init pod=failing-initcontainer-64ff5bdcd-vhl59_pod-status(8c812676-6e30-45ae-8271-16a279c95168)"}, "restart_count": 144}}}'
+    PodContainers(containers={'busybox': ContainerStatus(container_id=None, image_id='', name='busybox', image='busybox', ready=False, state=ContainerWaitingState(type='waiting', reason='PodInitializing', detail=None), restart_count=0)})
+    >>> section_kube_pod_init_containers_v1 = '{"containers": {"busybox-init": {"container_id": "docker://some-id", "image_id": "docker-pullable://busybox@sha256:some-id", "name": "busybox-init", "image": "busybox:latest", "ready": false, "state": {"type": "waiting", "reason": "CrashLoopBackOff", "detail": "back-off 5m0s restarting failed container=busybox-init pod=failing-initcontainer-64ff5bdcd-vhl59_pod-status(8c812676-6e30-45ae-8271-16a279c95168)"}, "restart_count": 144}}}'
     >>> parse([[section_kube_pod_init_containers_v1]])
-    PodContainers(containers={'busybox-init': ContainerInfo(id='docker://992c4192439a93bcc445912f9a9e76fd20a4822ce0e05430cbd162c983d6178f', name='busybox-init', image='busybox:latest', ready=False, state=ContainerWaitingState(type='waiting', reason='CrashLoopBackOff', detail='back-off 5m0s restarting failed container=busybox-init pod=failing-initcontainer-64ff5bdcd-vhl59_pod-status(8c812676-6e30-45ae-8271-16a279c95168)'), restart_count=144)})
+    PodContainers(containers={'busybox-init': ContainerStatus(container_id='docker://some-id', image_id='docker-pullable://busybox@sha256:some-id', name='busybox-init', image='busybox:latest', ready=False, state=ContainerWaitingState(type='waiting', reason='CrashLoopBackOff', detail='back-off 5m0s restarting failed container=busybox-init pod=failing-initcontainer-64ff5bdcd-vhl59_pod-status(8c812676-6e30-45ae-8271-16a279c95168)'), restart_count=144)})
     """
     if not string_table:
         return None
@@ -79,7 +79,7 @@ def discovery(section: PodContainers) -> DiscoveryResult:
 
 def check(item: str, params: Mapping[str, int], section: PodContainers) -> CheckResult:
     container = section.containers.get(item)
-    assert isinstance(container, ContainerInfo)
+    assert isinstance(container, ContainerStatus)
     if isinstance(container.state, ContainerRunningState):
         yield from check_running(params, container.state)
     elif isinstance(container.state, ContainerWaitingState):
@@ -93,7 +93,7 @@ def check(item: str, params: Mapping[str, int], section: PodContainers) -> Check
 def check_running(params: Mapping[str, int], state: ContainerRunningState) -> CheckResult:
     start_time_timestamp = state.start_time
     time_delta = time() - start_time_timestamp
-    summary = f"Status: Running for: {render.timespan(time_delta)}"
+    summary = f"Status: Running for {render.timespan(time_delta)}"
     yield Result(state=State.OK, summary=summary)
 
 

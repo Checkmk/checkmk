@@ -82,3 +82,8 @@ def get_registration_status_from_file(uuid: UUID) -> Optional[RegistrationData]:
             return RegistrationData(status=status, message=message)
 
     return None
+
+
+def site_name_prefix(app_name: str) -> str:
+    site_prefix = f"/{site}" if (site := os.getenv("OMD_SITE")) else ""
+    return f"{site_prefix}/{app_name}"

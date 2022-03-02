@@ -6,7 +6,7 @@ Date: 1634049548
 Edition: cee
 Knowledge: undoc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 From ntopng verion 5, a new REST API version (v2) is used. This exposes different endpoints for querying alert information.
 With this werk, the new REST API version is supported.

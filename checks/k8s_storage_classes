@@ -10,6 +10,11 @@
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.k8s import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
+###########################################################################
+# NOTE: This check (and associated special agent) is deprecated and will be
+#       removed in Checkmk version 2.2.
+###########################################################################
+
 
 @get_parsed_item_data
 def check_k8s_storage_classes(_no_item, _no_params, storage):

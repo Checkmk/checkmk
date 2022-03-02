@@ -5,16 +5,19 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from itertools import chain
+from typing import Any, Mapping, Optional, Sequence
 
 
-def agent_ipmi_sensors_arguments(params, hostname, ipaddress):
+def agent_ipmi_sensors_arguments(
+    params: tuple[str, Mapping[str, Any]], hostname: str, ipaddress: Optional[str]
+) -> Sequence[str]:
     ipmi_command, options = params
     return [
-        ipaddress,
+        ipaddress or hostname,
         options["username"],
         options["password"],
-        options["privilege_lvl"],
         ipmi_command,
+        options["privilege_lvl"],
         *chain.from_iterable(
             (
                 opt,

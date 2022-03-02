@@ -50,17 +50,6 @@ def test_escape_attribute(inp, out):
 @pytest.mark.parametrize(
     "inp,out",
     [
-        ("&quot;&gt;alert(1)", '">alert(1)'),
-        ("&lt;", "<"),
-    ],
-)
-def test_unescape_attribute(inp, out):
-    assert escaping.unescape_attributes(inp) == out
-
-
-@pytest.mark.parametrize(
-    "inp,out",
-    [
         ("<script>alert(1)</script>", "&lt;script&gt;alert(1)&lt;/script&gt;"),
         ("<h1>abc</h1>", None),
         ("<h2>abc</h2>", None),

@@ -6,7 +6,7 @@ Date: 1629974690
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 The new check plugin <tt>zertificon_mail_queues</tt> monitors the mail
 queue lengths of Zertificon mail encryption appliances via SNMP. The

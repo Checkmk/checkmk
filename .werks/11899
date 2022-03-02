@@ -6,7 +6,7 @@ Date: 1608542496
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 This adds detection of McAfee ENS DAT dates and returns
 the DAT date in the format of Virusscan dates.

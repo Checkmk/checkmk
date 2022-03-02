@@ -28,7 +28,7 @@ class AutocheckEntry(NamedTuple):
     @staticmethod
     def _parse_parameters(parameters: object) -> LegacyCheckParameters:
         # Make sure it's a 'LegacyCheckParameters' (mainly done for mypy).
-        if parameters is None or isinstance(parameters, (dict, tuple, list, str)):
+        if parameters is None or isinstance(parameters, (dict, tuple, list, str, int, bool)):
             return parameters
         # I have no idea what else it could be (LegacyCheckParameters is quite pointless).
         raise ValueError(f"Invalid autocheck: invalid parameters: {parameters!r}")

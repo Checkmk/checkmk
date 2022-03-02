@@ -25,6 +25,13 @@ def _add_freeipmi_args(subparsers: _SubParsersAction) -> None:
         help="Use freeipmi",
     )
     parser_freeipmi.add_argument(
+        "privilege_lvl",
+        type=str,
+        metavar="PRIVILEGE-LEVEL",
+        help="Privilege level",
+        choices=("user", "operator", "admin"),
+    )
+    parser_freeipmi.add_argument(
         "--driver",
         type=str,
         metavar="DRIVER",
@@ -80,6 +87,13 @@ def _add_ipmitool_args(subparsers: _SubParsersAction) -> None:
         help="Use ipmitool",
     )
     parser_ipmitool.add_argument(
+        "privilege_lvl",
+        type=str,
+        metavar="PRIVILEGE-LEVEL",
+        help="Privilege level",
+        choices=("callback", "user", "operator", "administrator"),
+    )
+    parser_ipmitool.add_argument(
         "--intf",
         type=str,
         choices=("open", "imb", "lan", "lanplus"),
@@ -110,13 +124,6 @@ def _parse_arguments(argv: Optional[Sequence[str]]) -> Args:
         type=str,
         metavar="PASSWORD",
         help="Password",
-    )
-    parser.add_argument(
-        "privilege_lvl",
-        type=str,
-        metavar="PRIVILEGE-LEVEL",
-        help="Privilege level",
-        choices=("user", "operator", "admin"),
     )
     ipmi_cmd_subparsers = parser.add_subparsers(
         required=True,
@@ -254,16 +261,17 @@ def _main(args: Args) -> None:
         sys.stdout.write("<<<ipmi%s:sep(124)>>>\n" % section)
         try:
             try:
-                p = subprocess.Popen(  # pylint:disable=consider-using-with
+                completed_process = subprocess.run(
                     [
                         *ipmi_cmd,
                         *types,
                     ],
                     close_fds=True,
-                    stdin=open(os.devnull),  # pylint:disable=consider-using-with
+                    stdin=subprocess.DEVNULL,
                     stdout=subprocess.PIPE,
                     stderr=subprocess.PIPE,
                     encoding="utf-8",
+                    check=False,
                 )
             except OSError as e:
                 if e.errno == errno.ENOENT:  # No such file or directory
@@ -273,10 +281,9 @@ def _main(args: Args) -> None:
                     )
                 raise
 
-            stdout, stderr = p.communicate()
-            if stderr:
-                errors.append(stderr)
-            parse_data(stdout.splitlines(), excludes)
+            if completed_process.stderr:
+                errors.append(completed_process.stderr)
+            parse_data(completed_process.stdout.splitlines(), excludes)
         except Exception as e:
             errors.append(str(e))
 

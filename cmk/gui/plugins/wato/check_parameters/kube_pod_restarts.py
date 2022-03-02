@@ -5,6 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
+from cmk.gui.plugins.wato.check_parameters.kube import wrap_with_no_levels_dropdown
 from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithoutItem,
     rulespec_registry,
@@ -22,23 +23,27 @@ def _parameter_valuespec():
         title=_("Upper levels for restarts"),
         elements=[
             (
-                "total_restart_count",
-                Tuple(
+                "restart_count",
+                wrap_with_no_levels_dropdown(
                     title=_("Total restarts"),
-                    elements=[
-                        Integer(title=_("Warning at"), unit="restarts"),
-                        Integer(title=_("Critical at"), unit="restarts"),
-                    ],
+                    value_spec=Tuple(
+                        elements=[
+                            Integer(title=_("Warning at"), unit="restarts"),
+                            Integer(title=_("Critical at"), unit="restarts"),
+                        ],
+                    ),
                 ),
             ),
             (
-                "total_restart_rate",
-                Tuple(
+                "restart_rate",
+                wrap_with_no_levels_dropdown(
                     title=_("Restart rate"),
-                    elements=[
-                        Integer(title=_("Warning at"), unit="restarts in last hour"),
-                        Integer(title=_("Critical at"), unit="restarts in last hour"),
-                    ],
+                    value_spec=Tuple(
+                        elements=[
+                            Integer(title=_("Warning at"), unit="restarts in last hour"),
+                            Integer(title=_("Critical at"), unit="restarts in last hour"),
+                        ],
+                    ),
                 ),
             ),
         ],
@@ -51,6 +56,6 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersApplications,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec,
-        title=lambda: _("Kubernetes Pod restarts"),
+        title=lambda: _("Kubernetes pod restarts"),
     )
 )

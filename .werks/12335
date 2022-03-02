@@ -6,7 +6,7 @@ Date: 1637225092
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 Previously, rds_license check incorrectly reported the number of licenses issued 
 in the situation when RDS license server had issued more licenses than were 

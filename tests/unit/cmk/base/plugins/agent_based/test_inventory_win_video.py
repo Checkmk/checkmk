@@ -11,6 +11,8 @@ import pytest
 from cmk.base.plugins.agent_based.agent_based_api.v1 import TableRow
 from cmk.base.plugins.agent_based.inventory_win_video import inventory_win_video, parse_win_video
 
+from .utils_inventory import sort_inventory_result
+
 _INSTALLED_DATE = 123
 
 
@@ -94,4 +96,6 @@ _INSTALLED_DATE = 123
 )
 def test_inventory_win_video(monkeypatch, string_table, expected_result):
     monkeypatch.setattr(time, "mktime", lambda s: _INSTALLED_DATE)
-    assert list(inventory_win_video(parse_win_video(string_table))) == expected_result
+    assert sort_inventory_result(
+        inventory_win_video(parse_win_video(string_table))
+    ) == sort_inventory_result(expected_result)

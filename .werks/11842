@@ -6,7 +6,7 @@ Date: 1611835749
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 In some cases for various reasons the agent updater of the  Windows agent 
 can't update the agent. There are two possible outcomes: The agent is not 

@@ -6,7 +6,7 @@ Date: 1614790835
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 Previously, in some rare cases such running processes could create quite 
 serious problems for the agent. They may  prevent or damage agent installation 

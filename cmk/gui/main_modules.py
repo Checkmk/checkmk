@@ -24,6 +24,9 @@ if not cmk_version.is_raw_edition():
 
 if cmk_version.is_managed_edition():
     import cmk.gui.cme.plugins.main_modules  # noqa: F401 # pylint: disable=no-name-in-module,unused-import
+
+if cmk_version.is_plus_edition():
+    import cmk.gui.cpe.plugins.main_modules  # noqa: F401 # pylint: disable=no-name-in-module,unused-import
 # isort: on
 
 
@@ -50,7 +53,7 @@ def _import_local_main_modules() -> List[ModuleType]:
     which are expected to contain the actual imports of the main modules.
 
     Please note that the builtin main modules are already loaded by the imports of
-    `cmk.gui.[|cee.|cme]plugins.main_modules` above.
+    `cmk.gui.{cee.,cme.,cpe.}plugins.main_modules` above.
 
     Note: Once we have PEP 420 namespace support, we can deprecate this and leave it to the imports
     above. Until then we'll have to live with it.
@@ -94,6 +97,9 @@ def _plugin_package_names(main_module_name: str) -> Iterator[str]:
 
     if cmk_version.is_managed_edition():
         yield f"cmk.gui.cme.plugins.{main_module_name}"
+
+    if cmk_version.is_plus_edition():
+        yield f"cmk.gui.cpe.plugins.{main_module_name}"
 
 
 def _is_plugin_namespace(plugin_package_name: str) -> bool:
@@ -155,6 +161,8 @@ def _cmk_gui_top_level_modules() -> List[ModuleType]:
             or name.startswith("cmk.gui.cee.")
             and len(name.split(".")) == 4
             or name.startswith("cmk.gui.cme.")
+            and len(name.split(".")) == 4
+            or name.startswith("cmk.gui.cpe.")
             and len(name.split(".")) == 4
         )
     ]

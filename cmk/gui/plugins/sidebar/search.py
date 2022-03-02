@@ -729,7 +729,7 @@ class QuicksearchSnapin(SidebarSnapin):
 
     def _ajax_search(self) -> None:
         """Generate the search result list"""
-        query = _maybe_strip(request.get_unicode_input("q"))
+        query = _maybe_strip(request.get_str_input("q"))
         if not query:
             return
 
@@ -1544,7 +1544,7 @@ class MonitoringSearch(ABCMegaMenuSearch):
 @page_registry.register_page("ajax_search_monitoring")
 class PageSearchMonitoring(AjaxPage):
     def page(self):
-        query = request.get_unicode_input_mandatory("q")
+        query = request.get_str_input_mandatory("q")
         return MenuSearchResultsRenderer("monitoring").render(query)
 
 
@@ -1580,7 +1580,7 @@ class SetupSearch(ABCMegaMenuSearch):
 @page_registry.register_page("ajax_search_setup")
 class PageSearchSetup(AjaxPage):
     def page(self):
-        query = request.get_unicode_input_mandatory("q")
+        query = request.get_str_input_mandatory("q")
         try:
             return MenuSearchResultsRenderer("setup").render(query)
         except IndexNotFoundException:

@@ -10,13 +10,15 @@ from uuid import UUID, uuid4
 
 import pytest
 from agent_receiver import constants
-from agent_receiver.server import app
+from agent_receiver.server import agent_receiver_app
 from cryptography.hazmat.primitives.serialization import Encoding
 from cryptography.x509 import Certificate
 from fastapi.testclient import TestClient
 from pytest_mock import MockerFixture
 
-from omdlib.certs import CertificateAuthority
+from omdlib.certs import CertificateAuthority, RootCA
+
+from cmk.utils.certs import RootCA
 
 
 @pytest.fixture(autouse=True)
@@ -27,27 +29,22 @@ def create_dirs() -> None:
 
 @pytest.fixture(name="client")
 def fixture_client() -> TestClient:
-    return TestClient(app)
+    return TestClient(agent_receiver_app)
 
 
-@pytest.fixture(name="ca")
-def fixture_ca(
+@pytest.fixture(name="root_ca")
+def fixture_root_ca(
     mocker: MockerFixture,
     tmp_path: Path,
-) -> CertificateAuthority:
-    ca = CertificateAuthority(tmp_path / "ca", "test-ca")
-    ca.initialize()
-    mocker.patch(
-        "agent_receiver.certificates.ROOT_CERT",
-        ca._root_cert_path,
-    )
-    return ca
+) -> RootCA:
+    ca_path = tmp_path / "ca"
+    mocker.patch("agent_receiver.certificates.ROOT_CERT", ca_path)
+    return RootCA.load_or_create(ca_path, "test-ca")
 
 
 @pytest.fixture(name="trusted_cert")
-def fixture_trusted_cert(ca: CertificateAuthority) -> Certificate:
-    cert, _priv_key = ca._certificate_from_root("abc123")
-    return cert
+def fixture_trusted_cert(root_ca: RootCA) -> Certificate:
+    return root_ca.new_signed_cert("abc213", 100)[0]
 
 
 @pytest.fixture(name="trusted_cert_b64")
@@ -57,10 +54,7 @@ def fixture_trusted_cert_b64(trusted_cert: Certificate) -> str:
 
 @pytest.fixture(name="untrusted_cert")
 def fixture_untrusted_cert(tmp_path: Path) -> Certificate:
-    ca2 = CertificateAuthority(tmp_path / "ca-2", "test-ca-2")
-    ca2.initialize()
-    cert, _priv_key = ca2._certificate_from_root("abc123")
-    return cert
+    return RootCA.load_or_create(tmp_path / "ca-2", "test-ca-2").new_signed_cert("abc123", 100)[0]
 
 
 @pytest.fixture(name="untrusted_cert_b64")

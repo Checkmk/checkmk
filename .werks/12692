@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0i1
+Version: 2.1.0b1
 
 In some instances, the Kubernetes replicas information is either incomplete or
 not available. The unavailability is usually of short period. In the previous version,

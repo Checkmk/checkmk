@@ -1,7 +1,7 @@
 title: Siemens PLC: Output Text Values
 agents: siemens_plc
 catalog: hw/server/siemens
-license: GPL
+license: GPLv2
 distribution: check_mk
 description:
  The check simply outputs the current text of string values reported by Siemens PLC (SPS) devices.

@@ -9,13 +9,11 @@
 
 # Disable unused variable error (needed to keep track of version)
 # shellcheck disable=SC2034
-CMK_VERSION="2.1.0i1"
-
+CMK_VERSION="2.2.0i1"
 
 _socket_exists() {
     [ -S "/omd/sites/${1}/tmp/run/live" ]
 }
-
 
 _query_site() {
     echo -e "${2}" | waitmax 3 "/omd/sites/${1}/bin/unixcat" "/omd/sites/${1}/tmp/run/live"
@@ -30,23 +28,20 @@ _query_site() {
 #   |                     |_|                                              |
 #   '----------------------------------------------------------------------'
 
-
 get_tag_stats() {
     local site header tags_arr tags_query
     site="${1}"
     header="${2}"
-    IFS=" " read -r -a tags_arr <<< "${header}"
+    IFS=" " read -r -a tags_arr <<<"${header}"
 
     { [ "${#tags_arr[@]}" -ne 0 ] && _socket_exists "${site}"; } || return
 
     tags_query="GET hosts\n"
-    for tag in "${tags_arr[@]}";
-    do
+    for tag in "${tags_arr[@]}"; do
         tags_query="${tags_query}Stats: custom_variables ~ TAGS ${tag}\n"
     done
     echo "Tags|${header}|$(_query_site "${site}" "${tags_query}")"
 }
-
 
 get_check_command_stats() {
     local site srv_commands commands_query
@@ -56,13 +51,11 @@ get_check_command_stats() {
     { [ -n "${srv_commands}" ] && _socket_exists "${site}"; } || return
 
     commands_query="GET services\n"
-    for srv_cmd in ${srv_commands};
-    do
+    for srv_cmd in ${srv_commands}; do
         commands_query="${commands_query}Stats: check_command ~~ ${srv_cmd}$\n"
     done
     echo "Service check commands|${srv_commands}|$(_query_site "${site}" "${commands_query}")"
 }
-
 
 #.
 #   .--main----------------------------------------------------------------.
@@ -82,49 +75,39 @@ _read_config() {
     [ -e "${MK_CONFDIR}/site_object_counts.cfg" ] && . "${MK_CONFDIR}/site_object_counts.cfg"
 }
 
-
 main() {
     _read_config
 
-    if type omd >/dev/null;
-    then
+    if type omd >/dev/null; then
         echo "<<<site_object_counts:sep(124)>>>"
-        if [ -n "$SITES" ];
-        then
-            read -r -a sites <<< "${SITES}"
+        if [ -n "$SITES" ]; then
+            read -r -a sites <<<"${SITES}"
         else
-            read -r -a sites <<< "$(omd sites | cut -d' ' -f1 | paste -s)"
+            read -r -a sites <<<"$(omd sites | cut -d' ' -f1 | paste -s)"
         fi
 
-        if [ -n "$TAGS" ];
-        then
+        if [ -n "$TAGS" ]; then
             tags="$TAGS"
         fi
 
-        if [ -n "$SERVICE_CHECK_COMMANDS" ];
-        then
+        if [ -n "$SERVICE_CHECK_COMMANDS" ]; then
             service_check_commands="$SERVICE_CHECK_COMMANDS"
         fi
 
-        for site in "${sites[@]}";
-        do
+        for site in "${sites[@]}"; do
             site_tags="TAGS_$site"
             site_tags=${!site_tags}
-            if [ -n "$tags" ] && [ -n "$site_tags" ];
-            then
+            if [ -n "$tags" ] && [ -n "$site_tags" ]; then
                 site_tags="$tags $site_tags"
-            elif [ -n "$tags" ];
-            then
+            elif [ -n "$tags" ]; then
                 site_tags="$tags"
             fi
 
             site_service_check_commands="SERVICE_CHECK_COMMANDS_$site"
             site_service_check_commands=${!site_service_check_commands}
-            if [ -n "$service_check_commands" ] && [ -n "$site_service_check_commands" ];
-            then
+            if [ -n "$service_check_commands" ] && [ -n "$site_service_check_commands" ]; then
                 site_service_check_commands="$service_check_commands $site_service_check_commands"
-            elif [ -n "$service_check_commands" ];
-            then
+            elif [ -n "$service_check_commands" ]; then
                 site_service_check_commands="$service_check_commands"
             fi
 
@@ -134,6 +117,5 @@ main() {
         done
     fi
 }
-
 
 [ -z "${MK_SOURCE_PLUGIN}" ] && main

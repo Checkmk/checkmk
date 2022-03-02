@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-__version__ = "2.1.0i1"
+__version__ = "2.2.0i1"
 
 # Checkmk-Agent-Plugin - Nginx Server Status
 #
@@ -82,7 +82,8 @@ ssl_ports = [
 ]
 
 if os.path.exists(config_file):
-    exec(open(config_file).read())  # pylint:disable=consider-using-with
+    with open(config_file) as open_config_file:
+        exec(open_config_file.read())
 
 
 def try_detect_servers():

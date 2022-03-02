@@ -12,6 +12,8 @@ from cmk.base.plugins.agent_based.inventory_mssql_clusters import (
     parse_mssql_clusters,
 )
 
+from .utils_inventory import sort_inventory_result
+
 
 @pytest.mark.parametrize(
     "string_table, expected_result",
@@ -59,4 +61,6 @@ from cmk.base.plugins.agent_based.inventory_mssql_clusters import (
     ],
 )
 def test_inventory_mssql_clusters(string_table, expected_result):
-    assert list(inventory_mssql_clusters(parse_mssql_clusters(string_table))) == expected_result
+    assert sort_inventory_result(
+        inventory_mssql_clusters(parse_mssql_clusters(string_table))
+    ) == sort_inventory_result(expected_result)

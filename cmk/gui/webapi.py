@@ -34,7 +34,6 @@ from cmk.gui.plugins.webapi.utils import (  # noqa: F401 # pylint: disable=unuse
     api_call_collection_registry,
     check_hostname,
     validate_config_hash,
-    validate_host_attributes,
 )
 from cmk.gui.watolib.activate_changes import update_config_generation
 
@@ -110,7 +109,10 @@ def page_api():
             "result": _("Authorization Error. Insufficent permissions for '%s'") % e,
         }
     except MKException as e:
-        resp = {"result_code": 1, "result": _("Checkmk exception: %s") % e}
+        resp = {
+            "result_code": 1,
+            "result": _("Checkmk exception: %s\n%s") % (e, "".join(traceback.format_exc())),
+        }
     except Exception:
         if config.debug:
             raise

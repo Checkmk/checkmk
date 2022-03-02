@@ -1,0 +1,14 @@
+Title: KUBE: agent_kube handling of unscheduled pods
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1646222638
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.2.0i1
+
+Pods which are not yet scheduled don't belong to any node.
+Previously, the agent would always attempt to assign a node
+to every pod which led to an error. This werk fixes the agent.

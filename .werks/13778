@@ -1,0 +1,14 @@
+Title: liebert_system_events: show OK state when there are inactive events
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1646321886
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.0.0p22
+
+The check "liebert_system_events" showed an UNKNOWN state along with the
+message "Item not found in monitoring data" when there were only incative
+events. This has been fixed: the check now shows an OK state in this case.

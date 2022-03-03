@@ -25,17 +25,23 @@ def parse_liebert_system_events(info):
     return {"events": parse_liebert_without_unit_wrapper(info, str)}
 
 
+def _is_active_event(event):
+    event_name, event_type = event
+
+    if not event_name or not event_type:
+        return False
+
+    return event_type.lower() != "inactive event"
+
+
 def check_liebert_system_events(_no_item, _no_params, parsed):
-    events = parsed.get("events", {})
-    if not events:
+    active_events = [e for e in parsed.get("events", {}).items() if _is_active_event(e)]
+
+    if not active_events:
         yield 0, "Normal"
         return
 
-    for key, value in events.items():
-        if not (value or key):
-            continue
-        if not value.lower() == "inactive event":
-            yield 2, "%s: %s" % (key, value)
+    yield from ((2, f"{k}: {v}") for k, v in active_events)
 
 
 check_info['liebert_system_events'] = {

@@ -5012,7 +5012,7 @@ def _valuespec_special_agents_datadog() -> Dictionary:
                             "tags_to_show",
                             ListOfStrings(
                                 valuespec=RegExp(
-                                    RegExp.prefix,
+                                    mode=RegExp.prefix,
                                     size=30,
                                 ),
                                 title=_("Tags shown in Event Console"),

@@ -263,7 +263,7 @@ def _valuespec_inv_parameters_lnx_sysctl():
             (
                 "include_patterns",
                 ListOfStrings(
-                    valuespec=RegExp(RegExp.prefix),
+                    valuespec=RegExp(mode=RegExp.prefix),
                     title=_("Inclusion patterns"),
                     help=_(
                         "Define patterns for including kernel configuration parameters in the "
@@ -274,7 +274,7 @@ def _valuespec_inv_parameters_lnx_sysctl():
             (
                 "exclude_patterns",
                 ListOfStrings(
-                    valuespec=RegExp(RegExp.prefix),
+                    valuespec=RegExp(mode=RegExp.prefix),
                     title=_("Exclusion patterns"),
                     help=_(
                         "Define patterns for excluding kernel configuration parameters from the "

@@ -101,7 +101,7 @@ def _parameter_valuespec_datadog_monitors() -> Dictionary:
                 "tags_to_show",
                 ListOfStrings(
                     valuespec=RegExp(
-                        RegExp.prefix,
+                        mode=RegExp.prefix,
                         size=30,
                         allow_empty=False,
                     ),

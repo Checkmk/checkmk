@@ -783,12 +783,14 @@ def UserID(**kwargs):
 
 
 class RegExp(TextInput):
+    # TODO: Make this an enum
     infix = "infix"
     prefix = "prefix"
     complete = "complete"
 
     def __init__(  # pylint: disable=redefined-builtin
         self,
+        *,
         mode: str,
         case_sensitive: bool = True,
         mingroups: int = 0,

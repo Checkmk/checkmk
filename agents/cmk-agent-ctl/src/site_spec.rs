@@ -72,15 +72,25 @@ impl Coordinates {
         .context(format!("Failed to convert {} into a URL", &self))
     }
 
+    fn checkmk_rest_api_port_url(
+        incomplete_coordinates: &IncompleteCoordinates,
+    ) -> AnyhowResult<reqwest::Url> {
+        reqwest::Url::parse(&format!(
+            "http://{}/{}/check_mk/api/1.0/domain-types/internal/actions/discover-receiver/invoke",
+            &incomplete_coordinates.server, &incomplete_coordinates.site,
+        ))
+        .context(format!(
+            "Failed to construct URL for discovering agent receiver port using server {} and site {}",
+            &incomplete_coordinates.server, &incomplete_coordinates.site,
+        ))
+    }
+
     fn port_from_checkmk_rest_api(
         incomplete_coordinates: &IncompleteCoordinates,
     ) -> AnyhowResult<types::Port> {
-        let url = format!(
-            "http://{}/check_mk/api/1.0/domain-types/internal/actions/discover-receiver/invoke",
-            incomplete_coordinates,
-        );
-        let error_msg = format!("Failed to discover agent receiver port from {}", url);
-        reqwest::blocking::get(&url)
+        let url = Self::checkmk_rest_api_port_url(incomplete_coordinates)?;
+        let error_msg = format!("Failed to discover agent receiver port from {}", &url);
+        reqwest::blocking::get(url)
             .context(error_msg.clone())?
             .text()
             .context(error_msg.clone())?
@@ -107,12 +117,6 @@ impl FromStr for IncompleteCoordinates {
             server: String::from(components[0]),
             site: String::from(components[1]),
         })
-    }
-}
-
-impl Display for IncompleteCoordinates {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}/{}", self.server, self.site)
     }
 }
 
@@ -188,23 +192,21 @@ mod test_coordinates {
             "https://my.server.something:7893/cool-site"
         )
     }
+
+    #[test]
+    fn test_checkmk_rest_api_port_url() {
+        let inc_coord = IncompleteCoordinates::from_str("some-server/some-site").unwrap();
+        let url = Coordinates::checkmk_rest_api_port_url(&inc_coord).unwrap();
+        assert_eq!(
+            url.to_string(),
+            "http://some-server/some-site/check_mk/api/1.0/domain-types/internal/actions/discover-receiver/invoke",
+        );
+    }
 }
 
 #[cfg(test)]
 mod test_incomplete_coordinates {
     use super::*;
-
-    #[test]
-    fn test_to_string() {
-        assert_eq!(
-            IncompleteCoordinates {
-                server: String::from("my-server"),
-                site: String::from("my-site"),
-            }
-            .to_string(),
-            "my-server/my-site"
-        )
-    }
 
     #[test]
     fn test_from_str_ok() {

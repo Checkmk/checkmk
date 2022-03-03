@@ -35,6 +35,8 @@ struct RemoteConnectionStatus {
 
 #[derive(serde::Serialize)]
 enum RemoteConnectionError {
+    #[serde(rename = "invalid_url")]
+    InvalidUrl,
     #[serde(rename = "connection_refused")]
     ConnRefused,
     #[serde(rename = "certificate_invalid")]
@@ -111,6 +113,7 @@ impl std::fmt::Display for RemoteConnectionError {
             f,
             "{}",
             match self {
+                RemoteConnectionError::InvalidUrl => "URL invalid",
                 RemoteConnectionError::ConnRefused => "refused",
                 RemoteConnectionError::CertInvalid => "certificate invalid",
                 RemoteConnectionError::Unspecified => "unspecified error",
@@ -125,20 +128,27 @@ impl RemoteConnectionStatusResponse {
         connection: &config::Connection,
         agent_rec_api: &impl agent_receiver_api::Status,
     ) -> RemoteConnectionStatusResponse {
-        match agent_rec_api.status(
-            coordinates,
-            &connection.root_cert,
-            &connection.uuid,
-            &connection.certificate,
-        ) {
-            Ok(status_response) => {
-                RemoteConnectionStatusResponse::Success(RemoteConnectionStatus {
-                    connection_type: status_response.connection_type,
-                    registration_state: status_response.status,
-                    host_name: status_response.hostname,
-                })
+        match coordinates.to_url() {
+            Ok(url) => {
+                match agent_rec_api.status(
+                    &url,
+                    &connection.root_cert,
+                    &connection.uuid,
+                    &connection.certificate,
+                ) {
+                    Ok(status_response) => {
+                        RemoteConnectionStatusResponse::Success(RemoteConnectionStatus {
+                            connection_type: status_response.connection_type,
+                            registration_state: status_response.status,
+                            host_name: status_response.hostname,
+                        })
+                    }
+                    Err(err) => {
+                        RemoteConnectionStatusResponse::Error(RemoteConnectionError::from(err))
+                    }
+                }
             }
-            Err(err) => RemoteConnectionStatusResponse::Error(RemoteConnectionError::from(err)),
+            _ => RemoteConnectionStatusResponse::Error(RemoteConnectionError::InvalidUrl),
         }
     }
 }
@@ -520,6 +530,37 @@ mod test_status {
     }
 
     #[test]
+    fn test_connection_status_fmt_invalid_url() {
+        assert_eq!(
+            format!(
+                "{}",
+                ConnectionStatus {
+                    coordinates: Some(
+                        site_spec::Coordinates::from_str("localhost:8000/site").unwrap()
+                    ),
+                    uuid: uuid::Uuid::from_str("99f56bbc-5965-4b34-bc70-1959ad1d32d6").unwrap(),
+                    local: LocalConnectionStatus {
+                        connection_type: config::ConnectionType::Pull,
+                        cert_info: CertParsingResult::Error(String::from("parsing_error"))
+                    },
+                    remote: Some(RemoteConnectionStatusResponse::Error(
+                        RemoteConnectionError::InvalidUrl
+                    ))
+                }
+            ),
+            String::from(
+                "Connection: localhost:8000/site\n\
+                 \tUUID: 99f56bbc-5965-4b34-bc70-1959ad1d32d6\n\
+                 \tLocal:\n\
+                 \t\tConnection type: pull-agent\n\
+                 \t\tCertificate parsing failed (!!)\n\
+                 \tRemote:\n\
+                 \t\tConnection error: URL invalid (!!)"
+            )
+        );
+    }
+
+    #[test]
     fn test_connection_status_fmt_cert_malformed() {
         assert_eq!(
             format!(
@@ -776,7 +817,7 @@ mod test_status {
     impl agent_receiver_api::Status for MockApi {
         fn status(
             &self,
-            _coordinates: &site_spec::Coordinates,
+            _base_url: &reqwest::Url,
             _root_cert: &str,
             _uuid: &uuid::Uuid,
             _certificate: &str,

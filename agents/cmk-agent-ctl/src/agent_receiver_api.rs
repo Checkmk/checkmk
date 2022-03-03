@@ -2,7 +2,7 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
-use super::{certs, config, site_spec, types};
+use super::{certs, config, types};
 use anyhow::{anyhow, Context, Error as AnyhowError, Result as AnyhowResult};
 use http::StatusCode;
 use serde::{Deserialize, Serialize};
@@ -96,7 +96,7 @@ fn encode_pem_cert_base64(cert: &str) -> AnyhowResult<String> {
 pub trait Pairing {
     fn pair(
         &self,
-        coordinates: &site_spec::Coordinates,
+        base_url: &reqwest::Url,
         root_cert: Option<&str>,
         csr: String,
         credentials: &types::Credentials,
@@ -106,7 +106,7 @@ pub trait Pairing {
 pub trait Registration {
     fn register_with_hostname(
         &self,
-        coordinates: &site_spec::Coordinates,
+        base_url: &reqwest::Url,
         root_cert: &str,
         credentials: &types::Credentials,
         uuid: &uuid::Uuid,
@@ -115,7 +115,7 @@ pub trait Registration {
 
     fn register_with_agent_labels(
         &self,
-        coordinates: &site_spec::Coordinates,
+        base_url: &reqwest::Url,
         root_cert: &str,
         credentials: &types::Credentials,
         uuid: &uuid::Uuid,
@@ -126,7 +126,7 @@ pub trait Registration {
 pub trait AgentData {
     fn agent_data(
         &self,
-        coordinates: &site_spec::Coordinates,
+        base_url: &reqwest::Url,
         root_cert: &str,
         uuid: &uuid::Uuid,
         certificate: &str,
@@ -138,7 +138,7 @@ pub trait AgentData {
 pub trait Status {
     fn status(
         &self,
-        coordinates: &site_spec::Coordinates,
+        base_url: &reqwest::Url,
         root_cert: &str,
         uuid: &uuid::Uuid,
         certificate: &str,
@@ -148,21 +148,33 @@ pub trait Status {
 pub struct Api {}
 
 impl Api {
-    fn endpoint_address(coordinates: &site_spec::Coordinates, endpoint: &str) -> String {
-        format!("https://{}/agent-receiver/{}", coordinates, endpoint)
+    fn endpoint_url(
+        base_url: &reqwest::Url,
+        endpoint_segments: &[&str],
+    ) -> AnyhowResult<reqwest::Url> {
+        // The API of reqwest::Url for extending existing urls is strange (reqwest::Url::join), see
+        // also https://github.com/servo/rust-url/issues/333
+        reqwest::Url::parse(
+            &(base_url.to_string() + "/agent-receiver/" + &endpoint_segments.join("/")),
+        )
+        .context(format!(
+            "Failed to construct agent receiver API endpoint URL from base URL {} and segments {}",
+            base_url,
+            endpoint_segments.join(", ")
+        ))
     }
 }
 
 impl Pairing for Api {
     fn pair(
         &self,
-        coordinates: &site_spec::Coordinates,
+        base_url: &reqwest::Url,
         root_cert: Option<&str>,
         csr: String,
         credentials: &types::Credentials,
     ) -> AnyhowResult<PairingResponse> {
         let response = certs::client(root_cert)?
-            .post(Api::endpoint_address(coordinates, "pairing"))
+            .post(Self::endpoint_url(base_url, &["pairing"])?)
             .basic_auth(&credentials.username, Some(&credentials.password))
             .json(&PairingBody { csr })
             .send()?;
@@ -183,7 +195,7 @@ impl Pairing for Api {
 impl Registration for Api {
     fn register_with_hostname(
         &self,
-        coordinates: &site_spec::Coordinates,
+        base_url: &reqwest::Url,
         root_cert: &str,
         credentials: &types::Credentials,
         uuid: &uuid::Uuid,
@@ -191,7 +203,7 @@ impl Registration for Api {
     ) -> AnyhowResult<()> {
         check_response_204(
             certs::client(Some(root_cert))?
-                .post(Api::endpoint_address(coordinates, "register_with_hostname"))
+                .post(Self::endpoint_url(base_url, &["register_with_hostname"])?)
                 .basic_auth(&credentials.username, Some(&credentials.password))
                 .json(&RegistrationWithHNBody {
                     uuid: uuid.to_owned(),
@@ -203,7 +215,7 @@ impl Registration for Api {
 
     fn register_with_agent_labels(
         &self,
-        coordinates: &site_spec::Coordinates,
+        base_url: &reqwest::Url,
         root_cert: &str,
         credentials: &types::Credentials,
         uuid: &uuid::Uuid,
@@ -211,7 +223,7 @@ impl Registration for Api {
     ) -> AnyhowResult<()> {
         check_response_204(
             certs::client(Some(root_cert))?
-                .post(Api::endpoint_address(coordinates, "register_with_labels"))
+                .post(Self::endpoint_url(base_url, &["register_with_labels"])?)
                 .basic_auth(&credentials.username, Some(&credentials.password))
                 .json(&RegistrationWithALBody {
                     uuid: uuid.to_owned(),
@@ -225,7 +237,7 @@ impl Registration for Api {
 impl AgentData for Api {
     fn agent_data(
         &self,
-        coordinates: &site_spec::Coordinates,
+        base_url: &reqwest::Url,
         root_cert: &str,
         uuid: &uuid::Uuid,
         certificate: &str,
@@ -234,10 +246,10 @@ impl AgentData for Api {
     ) -> AnyhowResult<()> {
         check_response_204(
             certs::client(Some(root_cert))?
-                .post(Api::endpoint_address(
-                    coordinates,
-                    &format!("agent_data/{}", uuid),
-                ))
+                .post(Self::endpoint_url(
+                    base_url,
+                    &["agent_data", &uuid.to_string()],
+                )?)
                 .header("certificate", encode_pem_cert_base64(certificate)?)
                 .header("compression", compression_algorithm)
                 .multipart(
@@ -257,16 +269,16 @@ impl AgentData for Api {
 impl Status for Api {
     fn status(
         &self,
-        coordinates: &site_spec::Coordinates,
+        base_url: &reqwest::Url,
         root_cert: &str,
         uuid: &uuid::Uuid,
         certificate: &str,
     ) -> Result<StatusResponse, StatusError> {
         let response = certs::client(Some(root_cert))?
-            .get(Api::endpoint_address(
-                coordinates,
-                &format!("registration_status/{}", uuid),
-            ))
+            .get(Self::endpoint_url(
+                base_url,
+                &["registration_status", &uuid.to_string()],
+            )?)
             .header("certificate", encode_pem_cert_base64(certificate)?)
             .send()
             .map_err(StatusError::ConnectionRefused)?;
@@ -286,5 +298,23 @@ impl Status for Api {
                     .context("Unknown failure")?
             )))),
         }
+    }
+}
+
+#[cfg(test)]
+mod test_api {
+    use super::*;
+
+    #[test]
+    fn test_endpoint_url() {
+        assert_eq!(
+            Api::endpoint_url(
+                &reqwest::Url::parse("https://my_server:7766/site2").unwrap(),
+                &["some", "endpoint"]
+            )
+            .unwrap()
+            .to_string(),
+            "https://my_server:7766/site2/agent-receiver/some/endpoint"
+        );
     }
 }

@@ -95,7 +95,7 @@ fn prepare_registration(
     let root_cert = registration_server_cert(config, trust_establisher)?;
     let credentials = types::Credentials::try_from(config.opt_pwd_credentials.to_owned())?;
     let pairing_response = agent_rec_api
-        .pair(&config.coordinates, root_cert, csr, &credentials)
+        .pair(&config.coordinates.to_url()?, root_cert, csr, &credentials)
         .context(format!("Error pairing with {}", &config.coordinates))?;
     Ok((
         credentials,
@@ -121,7 +121,8 @@ fn post_registration_conn_type(
     agent_rec_api: &impl agent_receiver_api::Status,
 ) -> AnyhowResult<config::ConnectionType> {
     loop {
-        let status_resp = agent_rec_api.status(coordinates, root_cert, uuid, client_cert)?;
+        let status_resp =
+            agent_rec_api.status(&coordinates.to_url()?, root_cert, uuid, client_cert)?;
         if let Some(agent_receiver_api::HostStatus::Declined) = status_resp.status {
             return Err(anyhow!(
                 "Registration declined by Checkmk instance, please check credentials"
@@ -150,7 +151,7 @@ fn _register(
         config::HostRegistrationData::Name(hn) => {
             agent_rec_api
                 .register_with_hostname(
-                    &config.coordinates,
+                    &config.coordinates.to_url()?,
                     &pairing_result.pairing_response.root_cert,
                     &credentials,
                     &pairing_result.uuid,
@@ -164,7 +165,7 @@ fn _register(
         config::HostRegistrationData::Labels(al) => {
             agent_rec_api
                 .register_with_agent_labels(
-                    &config.coordinates,
+                    &config.coordinates.to_url()?,
                     &pairing_result.pairing_response.root_cert,
                     &credentials,
                     &pairing_result.uuid,
@@ -235,7 +236,7 @@ fn _proxy_register(
 
     agent_rec_api
         .register_with_hostname(
-            &config.coordinates,
+            &config.coordinates.to_url()?,
             &pairing_result.pairing_response.root_cert,
             &credentials,
             &pairing_result.uuid,
@@ -272,7 +273,8 @@ mod tests {
     use super::super::config::JSONLoader;
     use super::*;
 
-    const SITE_ADDRESS: &str = "server:8000/host";
+    const SITE_COORDINATES: &str = "server:8000/host";
+    const SITE_URL: &str = "https://server:8000/host";
     const HOST_NAME: &str = "host";
 
     enum RegistrationMethod {
@@ -288,12 +290,12 @@ mod tests {
     impl agent_receiver_api::Pairing for MockApi {
         fn pair(
             &self,
-            coordinates: &site_spec::Coordinates,
+            base_url: &reqwest::Url,
             root_cert: Option<&str>,
             _csr: String,
             _credentials: &types::Credentials,
         ) -> AnyhowResult<agent_receiver_api::PairingResponse> {
-            assert!(coordinates.to_string() == SITE_ADDRESS);
+            assert!(base_url.to_string() == SITE_URL);
             assert!(root_cert.is_some() == self.expect_root_cert_for_pairing);
             Ok(agent_receiver_api::PairingResponse {
                 root_cert: String::from("root_cert"),
@@ -305,7 +307,7 @@ mod tests {
     impl agent_receiver_api::Registration for MockApi {
         fn register_with_hostname(
             &self,
-            coordinates: &site_spec::Coordinates,
+            base_url: &reqwest::Url,
             _root_cert: &str,
             _credentials: &types::Credentials,
             _uuid: &uuid::Uuid,
@@ -315,14 +317,14 @@ mod tests {
                 self.expected_registration_method.as_ref().unwrap(),
                 RegistrationMethod::HostName
             ));
-            assert!(coordinates.to_string() == SITE_ADDRESS);
+            assert!(base_url.to_string() == SITE_URL);
             assert!(host_name == HOST_NAME);
             Ok(())
         }
 
         fn register_with_agent_labels(
             &self,
-            coordinates: &site_spec::Coordinates,
+            base_url: &reqwest::Url,
             _root_cert: &str,
             _credentials: &types::Credentials,
             _uuid: &uuid::Uuid,
@@ -332,7 +334,7 @@ mod tests {
                 self.expected_registration_method.as_ref().unwrap(),
                 RegistrationMethod::AgentLabels
             ));
-            assert!(coordinates.to_string() == SITE_ADDRESS);
+            assert!(base_url.to_string() == SITE_URL);
             assert!(ag_labels == &agent_labels());
             Ok(())
         }
@@ -341,12 +343,12 @@ mod tests {
     impl agent_receiver_api::Status for MockApi {
         fn status(
             &self,
-            coordinates: &site_spec::Coordinates,
+            base_url: &reqwest::Url,
             _root_cert: &str,
             _uuid: &uuid::Uuid,
             _certificate: &str,
         ) -> Result<agent_receiver_api::StatusResponse, agent_receiver_api::StatusError> {
-            assert!(coordinates.to_string() == SITE_ADDRESS);
+            assert!(base_url.to_string() == SITE_URL);
             Ok(agent_receiver_api::StatusResponse {
                 hostname: Some(String::from(HOST_NAME)),
                 status: None,
@@ -360,7 +362,7 @@ mod tests {
 
     impl TrustEstablishing for MockInteractiveTrust {
         fn ask_for_trust(&self, coordinates: &site_spec::Coordinates) -> AnyhowResult<()> {
-            assert!(coordinates.to_string() == SITE_ADDRESS);
+            assert!(coordinates.to_string() == SITE_COORDINATES);
             Ok(())
         }
     }
@@ -385,7 +387,7 @@ mod tests {
         trust_server_cert: bool,
     ) -> config::RegistrationConfig {
         config::RegistrationConfig {
-            coordinates: site_spec::Coordinates::from_str(SITE_ADDRESS).unwrap(),
+            coordinates: site_spec::Coordinates::from_str(SITE_COORDINATES).unwrap(),
             opt_pwd_credentials: types::OptPwdCredentials {
                 username: String::from("user"),
                 password: Some(String::from("password")),

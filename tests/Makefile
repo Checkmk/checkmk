@@ -249,7 +249,7 @@ test-integration:
 	CI=true $(PIPENV) run scripts/run-integration-test.py $(realpath integration)
 
 test-gui-e2e: prepare-playwright
-	$(PYTEST) -T gui_e2e -x --log-cli-level=INFO $(realpath gui_e2e/)
+	$(PYTEST) -T gui_e2e --screenshot=only-on-failure --output="$$RESULT_PATH/" --log-cli-level=INFO $(realpath gui_e2e/)
 
 test-gui-e2e-docker:
 	$(PIPENV) run scripts/run-dockerized.py "test-gui-e2e"

@@ -46,11 +46,23 @@ export function register() {
             }
         })
         .catch(function (e) {
-            console.log(e);
+            console.log(e.name, e);
             if (e.name == "SecurityError") {
                 show_error(
                     "Can not enable two-factor authentication. You have to use HTTPS and access " +
                         "the GUI thourgh a valid domain name (See #13325 for further information)."
+                );
+            } else if (e.name == "AbortError") {
+                show_error(
+                    "Registration failed - possible reasons are: <ul>" +
+                        "<li>You have aborted the registration</li>" +
+                        "<li>Your browser does not support the WebAuthn standard</li>" +
+                        "<li>The browser configuration has disabled WebAuthn</li></ul>"
+                );
+            } else if (e.name == "InvalidStateError") {
+                show_error(
+                    "Registration failed: The given authenticator is not usable. This may " +
+                        "be due to the repeated use of an already registered authenticator."
                 );
             } else {
                 show_error("Registration failed: " + e.message);

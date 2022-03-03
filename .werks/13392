@@ -1,0 +1,11 @@
+Title: GUI: Improve the two-factor authentication (2FA) page
+Level: 1
+Component: multisite
+Class: feature
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 2.1.0b2
+Date: 1646298694
+
+Improve the page's structure, general wording, and error message texts.

@@ -550,6 +550,7 @@ class UpdateConfig:
         self._transform_ignored_checks_to_maincheckified_list(all_rulesets)
         self._extract_disabled_snmp_sections_from_ignored_checks(all_rulesets)
         self._extract_checkmk_agent_rule_from_check_mk_config(all_rulesets)
+        self._extract_checkmk_agent_rule_from_exit_spec(all_rulesets)
         self._transform_replaced_wato_rulesets(all_rulesets)
         self._transform_wato_rulesets_params(all_rulesets)
         self._transform_discovery_disabled_services(all_rulesets)
@@ -656,6 +657,49 @@ class UpdateConfig:
 
         all_rulesets.set(agent_update_ruleset.name, agent_update_ruleset)
         all_rulesets.delete("check_mk_agent_target_versions")
+
+    def _extract_checkmk_agent_rule_from_exit_spec(self, all_rulesets: RulesetCollection) -> None:
+        exit_spec_ruleset = all_rulesets.get("check_mk_exit_status")
+        if exit_spec_ruleset.is_empty():
+            # nothing to do
+            return
+
+        agent_update_ruleset = all_rulesets.get("checkgroup_parameters:agent_update")
+
+        for folder, _index, rule in exit_spec_ruleset.get_rules():
+
+            moved_values = {
+                key: rule.value.pop(key)
+                for key in ("restricted_address_mismatch", "legacy_pull_mode")
+                if key in rule.value
+            }
+            if "wrong_version" in rule.value:
+                moved_values["agent_version_missmatch"] = rule.value.pop("wrong_version")
+            if "wrong_version" in (overall := rule.value.get("overall", {})):
+                moved_values["agent_version_missmatch"] = overall.pop("wrong_version")
+            if "wrong_version" in (individual := rule.value.get("individual", {}).get("agent", {})):
+                moved_values["agent_version_missmatch"] = individual.pop("wrong_version")
+
+            if not moved_values:
+                continue
+
+            new_rule = cmk.gui.watolib.rulesets.Rule.from_config(
+                rule.folder,
+                agent_update_ruleset,
+                rule.to_config(),
+            )
+            new_rule.id = cmk.gui.watolib.rulesets.utils.gen_id()
+            new_rule.value = moved_values
+            new_rule.rule_options.comment = (
+                "%s - Checkmk: automatically converted during upgrade from rule "
+                '"Status of the Checkmk services".'
+            ) % time.strftime("%Y-%m-%d %H:%M", time.localtime())
+
+            agent_update_ruleset.append_rule(folder, new_rule)
+
+        all_rulesets.set(agent_update_ruleset.name, agent_update_ruleset)
+        # TODO: do we have to do this:?
+        all_rulesets.set(exit_spec_ruleset.name, exit_spec_ruleset)
 
     def _transform_replaced_wato_rulesets(
         self,

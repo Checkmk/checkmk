@@ -31,6 +31,10 @@ from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
 from .utils.checkmk import CheckmkSection, Plugin, PluginSection
 
 
+def _get_configured_only_from() -> Union[None, str, list[str]]:
+    return config.HostConfig.make_host_config(host_name()).only_from
+
+
 class _ControllerInfo(NamedTuple):
     version: str
     allow_legacy_pull: bool
@@ -49,10 +53,6 @@ def _check_cmk_agent_installation(
     agent_info: CheckmkSection,
 ) -> CheckResult:
 
-    # TODO: clean these API violations up, if possible
-    host_config = config.HostConfig.make_host_config(host_name())
-    exit_spec = host_config.exit_code_spec("agent")
-
     controller_info = _get_controller_info(
         agent_info.get("agentcontroller") or "",
         agent_info.get("agentcontrollerstatus") or "",
@@ -62,15 +62,15 @@ def _check_cmk_agent_installation(
         agent_info.get("version"),
         __version__,
         params["agent_version"],
-        State(exit_spec.get("wrong_version", 1)),
+        State(params["agent_version_missmatch"]),
     )
     if agent_info["agentos"] is not None:
         yield Result(state=State.OK, summary="OS: %s" % agent_info["agentos"])
 
     yield from _check_only_from(
         agent_info.get("onlyfrom"),
-        host_config.only_from,
-        State(exit_spec.get("restricted_address_mismatch", 1)),
+        _get_configured_only_from(),
+        State(params["restricted_address_mismatch"]),
     )
     yield from _check_agent_update(
         agent_info.get("updatefailed"), agent_info.get("updaterecoveraction")
@@ -81,7 +81,7 @@ def _check_cmk_agent_installation(
     yield from _check_transport(
         bool(agent_info.get("sshclient")),
         controller_info,
-        State(exit_spec.get("legacy_pull_mode", 1)),
+        State(params["legacy_pull_mode"]),
     )
 
 
@@ -359,5 +359,8 @@ register.check_plugin(
     check_ruleset_name="agent_update",
     check_default_parameters={
         "agent_version": ("ignore", {}),
+        "agent_version_missmatch": 1,
+        "restricted_address_mismatch": 1,
+        "legacy_pull_mode": 1,
     },
 )

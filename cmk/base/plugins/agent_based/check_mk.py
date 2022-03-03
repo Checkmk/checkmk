@@ -11,9 +11,6 @@ from .agent_based_api.v1.type_defs import HostLabelGenerator, InventoryResult, S
 from .utils.checkmk import CheckmkSection
 
 
-# TODO: This is duplicate code with cmk/core_helpers/agent.py
-# For various layering reasons, it's not as easy to deduplicate
-# as you'd think. I am thinking about this. - mo, 2021-12
 def parse_checkmk_labels(string_table: StringTable) -> CheckmkSection:
     """
     Example:

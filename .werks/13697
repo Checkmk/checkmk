@@ -14,10 +14,15 @@ This werk reorganizes the way information about the agent deployment is presente
 It is only incompatible for users that configured rules using the rule
 "<i>Checkmk agent plugins</i>", which was only present in Checkmk version 2.1.0b1.
 That rule is deprecated and must be reconfigured accordingly.
+You can configure expected versions using the ruleset "<i>Checkmk Agent</i>".
 No further action must be taken.
 
-The service "Check_MK Agent" now includes the monitoring of deployed agent plugins
-and local checks. You can configure expected versions using the ruleset "<i>Checkmk Agent</i>".
+The general idea now is that the <i>Check_MK</i> service will monitor the <b>operational</b>
+aspects of the installation.
+It will report connection errors, missing data, parsing errors and the execution time.
+
+The service "Check_MK Agent" now includes everything regarding the <b>deployment</b> of the
+agent, i.e. the agents version, last updates, agent plugins, IP allow lists and the like.
 
 Since the service no longer exclusively deals with information regarding the agent
 update, the service check command is changed from <tt>check_mk-check_mk_agent_update</tt>

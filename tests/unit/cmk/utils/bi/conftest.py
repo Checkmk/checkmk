@@ -8,7 +8,7 @@ from typing import Any, Dict, List, Optional
 
 import pytest
 
-from livestatus import LivestatusOutputFormat, LivestatusResponse
+from livestatus import LivestatusOutputFormat, LivestatusResponse, SiteId
 
 from cmk.utils.bi.bi_data_fetcher import BIStatusFetcher, BIStructureFetcher
 from cmk.utils.bi.bi_lib import SitesCallback
@@ -35,7 +35,7 @@ class MockBIAggregationPack(BIAggregationPacks):
 
 def mock_query_callback(
     query: str,
-    only_sites: Optional[List[str]] = None,
+    only_sites: Optional[List[SiteId]] = None,
     output_format: LivestatusOutputFormat = LivestatusOutputFormat.PYTHON,
 ) -> LivestatusResponse:
     return LivestatusResponse([])

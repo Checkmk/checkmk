@@ -6,6 +6,7 @@
 
 from cmk.base.plugins.agent_based import checkmk_agent_plugins as cap
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, State, TableRow
+from cmk.base.plugins.agent_based.checkmk_agent import check_checkmk_agent
 from cmk.base.plugins.agent_based.utils import checkmk
 
 _OUTPUT = [
@@ -32,21 +33,14 @@ def test_parse_ok():
     assert cap.parse_checkmk_agent_plugins_lnx(_OUTPUT) == _SECTION
 
 
-def test_discover_positive() -> None:
-    assert list(cap.discover_checkmk_agent_plugins(_SECTION))
-
-
-def test_discover_negative() -> None:
-    assert not list(cap.discover_checkmk_agent_plugins(checkmk.PluginSection((), ())))
-
-
 def test_check():
     assert list(
-        cap.check_checkmk_agent_plugins(
+        check_checkmk_agent(
             {
                 "min_versions": ("2.3.0", "1.2.0"),
                 "exclude_pattern": "file",
             },
+            None,
             _SECTION,
         )
     ) == [

@@ -4,13 +4,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Iterable, Mapping, Optional, Tuple
+from typing import Optional
 
 # The only reasonable thing to do here is use our own version parsing. It's to big to duplicate.
 from cmk.utils.version import parse_check_mk_version  # pylint: disable=cmk-module-layer-violation
 
-from .agent_based_api.v1 import check_levels, regex, register, Result, Service, State, TableRow
-from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, InventoryResult, StringTable
+from .agent_based_api.v1 import register, TableRow
+from .agent_based_api.v1.type_defs import InventoryResult, StringTable
 from .utils.checkmk import Plugin, PluginSection
 
 
@@ -91,71 +91,6 @@ register.agent_section(
     name="checkmk_agent_plugins_lnx",
     parse_function=parse_checkmk_agent_plugins_lnx,
     parsed_section_name="checkmk_agent_plugins",
-)
-
-
-def discover_checkmk_agent_plugins(section: PluginSection) -> DiscoveryResult:
-    if section.plugins or section.local_checks:
-        yield Service()
-
-
-def check_checkmk_agent_plugins(params: Mapping[str, Any], section: PluginSection) -> CheckResult:
-    yield Result(
-        state=State.OK,
-        summary=f"Agent plugins: {len(section.plugins)}",
-    )
-    yield Result(
-        state=State.OK,
-        summary=f"Local checks: {len(section.local_checks)}",
-    )
-
-    if (min_versions := params.get("min_versions")) is None:
-        return
-
-    if (exclude_pattern := params.get("exclude_pattern")) is None:
-        plugins = section.plugins
-        lchecks = section.local_checks
-    else:
-        comp = regex(exclude_pattern)
-        plugins = [p for p in section.plugins if not comp.search(p.name)]
-        lchecks = [p for p in section.local_checks if not comp.search(p.name)]
-
-    yield from _check_min_version(plugins, min_versions, "Agent plugin")
-    yield from _check_min_version(lchecks, min_versions, "Local check")
-
-
-def _check_min_version(
-    plugins: Iterable[Plugin], levels_str: Tuple[str, str], type_: str
-) -> Iterable[Result]:
-    levels = (parse_check_mk_version(levels_str[0]), parse_check_mk_version(levels_str[1]))
-
-    render_info = {p.version_int: p.version for p in plugins}
-    render_info.update(zip(levels, levels_str))
-
-    for plugin in plugins:
-        if plugin.version_int is None:
-            yield Result(
-                state=State.UNKNOWN,
-                summary=f"{type_} {plugin.name!r}: unable to parse version {plugin.version!r}",
-            )
-        else:
-            (result,) = check_levels(
-                plugin.version_int,
-                levels_lower=levels,
-                render_func=lambda v: render_info[int(v)],
-                label=f"{type_} {plugin.name!r}",
-            )
-            if result.state is not State.OK:
-                yield result
-
-
-register.check_plugin(
-    name="checkmk_agent_plugins",
-    service_name="Checkmk agent plugins",
-    discovery_function=discover_checkmk_agent_plugins,
-    check_function=check_checkmk_agent_plugins,
-    check_default_parameters={},
-    check_ruleset_name="checkmk_agent_plugins",
 )
 
 

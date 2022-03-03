@@ -774,7 +774,7 @@ _expected_services: Dict = {
     (CheckPluginName("apache_status"), "127.0.0.1:5008"): {},
     (CheckPluginName("apache_status"), "127.0.0.1:5009"): {},
     (CheckPluginName("apache_status"), "::1:80"): {},
-    (CheckPluginName("check_mk_agent_update"), None): {},
+    (CheckPluginName("checkmk_agent"), None): {},
     (CheckPluginName("cpu_loads"), None): {},
     (CheckPluginName("cpu_threads"), None): {},
     (CheckPluginName("df"), "/"): {},

@@ -72,7 +72,7 @@ def format_plugin_output(
         output = output[:a] + "running on " + ", ".join(h) + output[e + 1 :]
 
     prevent_url_icons = (
-        row.get("service_check_command", "") == "check_mk-check_mk_agent_update"
+        row.get("service_check_command", "") == "check_mk-checkmk_agent"
         if row is not None
         else False
     )

@@ -13,7 +13,7 @@ from cmk.gui.plugins.wato.utils import (
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
 )
-from cmk.gui.valuespec import Dictionary, RegExp, TextInput, Tuple
+from cmk.gui.valuespec import Dictionary, MonitoringState, RegExp, TextInput, Tuple
 
 
 def _validate_version(value: str, varprefix: str) -> None:
@@ -23,9 +23,15 @@ def _validate_version(value: str, varprefix: str) -> None:
         raise MKUserError(varprefix, _("Can't parse version %r") % value)
 
 
-def _parameter_valuespec_checkmk_agent_plugins():
+def _parameter_valuespec_checkmk_agent():
     return Dictionary(
         elements=[
+            (
+                "error_deployment_globally_disabled",
+                MonitoringState(
+                    title=_("State if agent deployment is globally disabled"), default_value=1
+                ),
+            ),
             (
                 "min_versions",
                 Tuple(
@@ -52,19 +58,15 @@ def _parameter_valuespec_checkmk_agent_plugins():
                 ),
             ),
         ],
-        help=_('This ruleset is deprecated. Please use the ruleset <i>"%s"</i> instead.')
-        % _("Checkmk Agent"),
     )
 
 
 rulespec_registry.register(
     CheckParameterRulespecWithoutItem(
-        check_group_name="checkmk_agent_plugins",
+        check_group_name="agent_update",
         group=RulespecGroupCheckParametersApplications,
         match_type="dict",
-        parameter_valuespec=_parameter_valuespec_checkmk_agent_plugins,
-        title=lambda: _("Checkmk agent plugins") + " - " + _("Deprecated"),
-        # only present during 2.1.0b1. remove in 2.2!
-        is_deprecated=True,
+        parameter_valuespec=_parameter_valuespec_checkmk_agent,
+        title=lambda: _("Checkmk Agent"),
     )
 )

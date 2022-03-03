@@ -250,6 +250,7 @@ def test_plugin_vs_wato(fix_register: FixRegister) -> None:
 class ErrorReporter:
     KNOWN_WATO_UNUSED = {
         # type # name
+        ("check", "checkgroup_parameters:checkmk_agent_plugins"),
         ("check", "checkgroup_parameters:ceph_status"),
         ("check", "checkgroup_parameters:disk_temperature"),
         ("check", "checkgroup_parameters:entersekt_soaprrors"),

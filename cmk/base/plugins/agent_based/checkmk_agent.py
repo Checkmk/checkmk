@@ -6,17 +6,18 @@
 
 import json
 import time
-from typing import Any, cast, Dict, Iterable, Mapping, NamedTuple, Optional, Union
+from typing import Any, Iterable, Mapping, NamedTuple, Optional, Union
 
 from cmk.utils.misc import (  # pylint: disable=cmk-module-layer-violation
-    branch_of_daily_build,
     is_daily_build_version,
     normalize_ip_addresses,
 )
-from cmk.utils.type_defs import AgentTargetVersion  # pylint: disable=cmk-module-layer-violation
 
 # The only reasonable thing to do here is use our own version parsing. It's to big to duplicate.
-from cmk.utils.version import parse_check_mk_version  # pylint: disable=cmk-module-layer-violation
+from cmk.utils.version import (  # pylint: disable=cmk-module-layer-violation
+    __version__,
+    parse_check_mk_version,
+)
 
 # We need config and host_name() because the "only_from" configuration is not a check parameter.
 # It is configured as an agent bakery rule, and controls the *deployment* of the only_from setting.
@@ -43,7 +44,10 @@ def discover_checkmk_agent(
     yield Service()
 
 
-def _check_cmk_agent_installation(agent_info: CheckmkSection) -> CheckResult:
+def _check_cmk_agent_installation(
+    params: Mapping[str, Any],
+    agent_info: CheckmkSection,
+) -> CheckResult:
 
     # TODO: clean these API violations up, if possible
     host_config = config.HostConfig.make_host_config(host_name())
@@ -54,18 +58,15 @@ def _check_cmk_agent_installation(agent_info: CheckmkSection) -> CheckResult:
         agent_info.get("agentcontrollerstatus") or "",
     )
 
-    if agent_info["version"] is not None:
-        yield Result(state=State.OK, summary="Version: %s" % agent_info["version"])
-
+    yield from _check_version(
+        agent_info.get("version"),
+        __version__,
+        params["agent_version"],
+        State(exit_spec.get("wrong_version", 1)),
+    )
     if agent_info["agentos"] is not None:
         yield Result(state=State.OK, summary="OS: %s" % agent_info["agentos"])
 
-    yield from _check_version(
-        agent_info.get("version"),
-        host_config.agent_target_version,
-        config.agent_min_version,
-        State(exit_spec.get("wrong_version", 1)),
-    )
     yield from _check_only_from(
         agent_info.get("onlyfrom"),
         host_config.only_from,
@@ -97,82 +98,49 @@ def _get_controller_info(
 
 def _check_version(
     agent_version: Optional[str],
-    expected_version: AgentTargetVersion,
-    agent_min_version: Any,
+    site_version: str,
+    expected_version: tuple[str, dict[str, str]],
     fail_state: State,
 ) -> CheckResult:
-    if (
-        expected_version
-        and agent_version
-        and not _is_expected_agent_version(agent_version, expected_version)
-    ):
-        expected = ""
-        # expected version can either be:
-        # a) a single version string
-        # b) a tuple of ("at_least", {'daily_build': '2014.06.01', 'release': '1.2.5i4'}
-        #    (the dict keys are optional)
-        if isinstance(expected_version, tuple) and expected_version[0] == "at_least":
-            spec = cast(Dict[str, str], expected_version[1])
-            expected = "at least"
-            if "daily_build" in spec:
-                expected += " build %s" % spec["daily_build"]
-            if "release" in spec:
-                if "daily_build" in spec:
-                    expected += " or"
-                expected += " release %s" % spec["release"]
-        else:
-            expected = "%s" % (expected_version,)
-
-        yield Result(
-            state=fail_state,
-            summary=f"unexpected agent version {agent_version} (should be {expected})",
-        )
+    if not agent_version:
         return
 
-    if agent_min_version and cast(int, agent_version) < agent_min_version:
-        # TODO: This branch seems to be wrong. Or: In which case is agent_version numeric?
-        yield Result(
-            state=fail_state,
-            summary=f"old plugin version {agent_version} (should be at least {agent_min_version})",
-        )
+    rendered_missmatch = _render_agent_version_missmatch(
+        agent_version, site_version, *expected_version
+    )
+    yield Result(
+        state=fail_state if rendered_missmatch else State.OK,
+        summary=f"Version: {agent_version}{rendered_missmatch}",
+    )
 
 
-def _is_expected_agent_version(
-    agent_version: Optional[str],
-    expected_version: AgentTargetVersion,
-) -> bool:
-    if agent_version is None:
-        return False
+def _render_agent_version_missmatch(
+    agent_version: str,
+    site_version: str,
+    spec_type: str,
+    spec: dict[str, str],
+) -> str:
+    if spec_type == "ignore":
+        return ""
 
-    if agent_version in ["(unknown)", "None", "unknown"]:
-        return False
+    if spec_type in ("specific", "site"):
+        literal = spec.get("literal", site_version)
+        return "" if literal == agent_version else f" (expected {literal})"
 
-    if isinstance(expected_version, str) and expected_version != agent_version:
-        return False
+    # spec_type == "at_least"
+    if is_daily_build_version(agent_version) and (at_least := spec.get("daily_build")) is not None:
+        if int(agent_version.split("-")[-1].replace(".", "")) < int(at_least.replace(".", "")):
+            return f" (expected at least {at_least})"
 
-    if isinstance(expected_version, tuple) and expected_version[0] == "at_least":
-        spec = cast(Dict[str, str], expected_version[1])
-        if is_daily_build_version(agent_version) and "daily_build" in spec:
-            expected = int(spec["daily_build"].replace(".", ""))
+    if (at_least := spec.get("release")) is None:
+        return ""
 
-            branch = branch_of_daily_build(agent_version)
-            if branch == "master":
-                agent = int(agent_version.replace(".", ""))
-
-            else:  # branch build (e.g. 1.2.4-2014.06.01)
-                agent = int(agent_version.split("-")[1].replace(".", ""))
-
-            if agent < expected:
-                return False
-
-        elif "release" in spec:
-            if is_daily_build_version(agent_version):
-                return False
-
-            if parse_check_mk_version(agent_version) < parse_check_mk_version(spec["release"]):
-                return False
-
-    return True
+    return (
+        f" (expected at least {at_least})"
+        if is_daily_build_version(agent_version)
+        or (parse_check_mk_version(agent_version) < parse_check_mk_version(at_least))
+        else ""
+    )
 
 
 def _check_only_from(
@@ -374,7 +342,7 @@ def check_checkmk_agent(
     section_checkmk_agent_plugins: Optional[PluginSection],
 ) -> CheckResult:
     if section_check_mk is not None:
-        yield from _check_cmk_agent_installation(section_check_mk)
+        yield from _check_cmk_agent_installation(params, section_check_mk)
         yield from _check_cmk_agent_update(params, section_check_mk)
 
     if section_checkmk_agent_plugins is not None:
@@ -389,5 +357,7 @@ register.check_plugin(
     check_function=check_checkmk_agent,
     # TODO: rename the ruleset?
     check_ruleset_name="agent_update",
-    check_default_parameters={},
+    check_default_parameters={
+        "agent_version": ("ignore", {}),
+    },
 )

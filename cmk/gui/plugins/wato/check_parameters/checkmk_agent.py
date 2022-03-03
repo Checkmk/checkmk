@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import Union
+
 from cmk.utils.version import parse_check_mk_version
 
 from cmk.gui.exceptions import MKUserError
@@ -13,7 +15,16 @@ from cmk.gui.plugins.wato.utils import (
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
 )
-from cmk.gui.valuespec import Dictionary, MonitoringState, RegExp, TextInput, Tuple
+from cmk.gui.valuespec import (
+    CascadingDropdown,
+    Dictionary,
+    FixedValue,
+    MonitoringState,
+    RegExp,
+    TextInput,
+    Transform,
+    Tuple,
+)
 
 
 def _validate_version(value: str, varprefix: str) -> None:
@@ -23,9 +34,100 @@ def _validate_version(value: str, varprefix: str) -> None:
         raise MKUserError(varprefix, _("Can't parse version %r") % value)
 
 
+def _transform_version_spec(
+    param: Union[str, tuple[str, str], tuple[str, dict[str, str]]]
+) -> tuple[str, dict[str, str]]:
+    """
+    >>> _transform_version_spec(('at_least', {'build': '1.1.1'}))
+    ('at_least', {'build': '1.1.1'})
+    >>> _transform_version_spec(("specific", "2.1.0b2"))
+    ('specific', {'literal': '2.1.0b2'})
+    >>> _transform_version_spec("1.2.3")
+    ('specific', {'literal': '1.2.3'})
+    >>> _transform_version_spec("site")
+    ('site', {})
+    >>> _transform_version_spec("ignore")
+    ('ignore', {})
+
+    """
+    if isinstance(param, tuple):
+        type_, spec = param
+        if isinstance(spec, dict):
+            return type_, spec
+        return "specific", {"literal": str(spec)}
+
+    if param in ("ignore", "site"):
+        return param, {}
+    return "specific", {"literal": param}
+
+
 def _parameter_valuespec_checkmk_agent():
     return Dictionary(
         elements=[
+            (
+                "agent_version",
+                Transform(
+                    CascadingDropdown(
+                        title=_("Check for correct version of Checkmk agent"),
+                        help=_(
+                            "Here you can make sure that all of your Check_MK agents are running"
+                            " one specific version. Agents running "
+                            " a different version return a non-OK state."
+                        ),
+                        choices=[
+                            (
+                                "ignore",
+                                _("Ignore the version"),
+                                FixedValue(value={}, totext=""),
+                            ),
+                            (
+                                "site",
+                                _("Same version as the monitoring site"),
+                                FixedValue(value={}, totext=""),
+                            ),
+                            (
+                                "specific",
+                                _("Specific version"),
+                                Dictionary(
+                                    elements=[
+                                        (
+                                            "literal",
+                                            TextInput(allow_empty=False, title=_("Expected")),
+                                        ),
+                                    ],
+                                    optional_keys=[],
+                                ),
+                            ),
+                            (
+                                "at_least",
+                                _("At least"),
+                                Dictionary(
+                                    elements=[
+                                        (
+                                            "release",
+                                            TextInput(
+                                                title=_("Official Release version"),
+                                                allow_empty=False,
+                                            ),
+                                        ),
+                                        (
+                                            "daily_build",
+                                            TextInput(
+                                                title=_("Daily build"),
+                                                allow_empty=False,
+                                            ),
+                                        ),
+                                    ]
+                                ),
+                            ),
+                        ],
+                        default_value=("ignore", {}),
+                    ),
+                    # In the past, this was a OptionalDropdownChoice() which values could be strings:
+                    # ignore, site or a custom string representing a version number.
+                    forth=_transform_version_spec,
+                ),
+            ),
             (
                 "error_deployment_globally_disabled",
                 MonitoringState(

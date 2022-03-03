@@ -36,7 +36,6 @@ use_dns_cache = True  # prevent DNS by using own cache file
 delay_precompile = False  # delay Python compilation to Nagios execution
 restart_locking = "abort"  # also possible: "wait", None
 check_submission = "file"  # alternative: "pipe"
-agent_min_version = 0  # warn, if plugin has not at least version
 default_host_group = "check_mk"
 
 check_max_cachefile_age = 0  # per default do not use cache files when checking

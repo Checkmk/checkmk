@@ -5657,12 +5657,9 @@ rulespec_registry.register(
 def _valuespec_check_mk_agent_target_versions():
     return Transform(
         CascadingDropdown(
-            title=_("Check for correct version of Checkmk agent"),
-            help=_(
-                "Here you can make sure that all of your Check_MK agents are running"
-                " one specific version. Agents running "
-                " a different version return a non-OK state."
-            ),
+            title="%s - %s" % (_("Check for correct version of Checkmk agent"), _("Deprecated")),
+            help=_('This ruleset is deprecated. Please use the ruleset <i>"%s"</i> instead.')
+            % _("Checkmk Agent"),
             choices=[
                 ("ignore", _("Ignore the version")),
                 ("site", _("Same version as the monitoring site")),
@@ -5709,6 +5706,7 @@ rulespec_registry.register(
         group=RulespecGroupAgentCMKAgent,
         name="check_mk_agent_target_versions",
         valuespec=_valuespec_check_mk_agent_target_versions,
+        is_deprecated=True,
     )
 )
 

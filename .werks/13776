@@ -1,0 +1,13 @@
+Title: cmciii_lcp_waterflow: sensor discovered regardless of whether there are measurements
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1646144775
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.0.0p22
+
+The check cmciii_lcp_waterflow discovered waterflow sensors, even though these
+were not present. This has been fixed.

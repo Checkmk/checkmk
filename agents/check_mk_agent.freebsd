@@ -514,25 +514,23 @@ run_purely_synchronous_sections() {
     # To install: pkg install libstatgrab
     if inpath statgrab; then
 
-        statgrab_vars="const. disk. general. page. proc. user."
-        statgrab_vars_mem="mem. swap."
-        statgrab_sections="proc disk page"
+        tmpfile="/tmp/statgrab.$$"
 
-        statgrab "${statgrab_vars}" | grep -v md 1>/tmp/statgrab.$$
-        statgrab "${statgrab_vars_mem}" 1>>/tmp/statgrab.$$
+        statgrab const. disk. general. page. proc. user. | grep -v md >"${tmpfile}"
+        statgrab mem. swap. >>"${tmpfile}"
 
-        for s in ${statgrab_sections}; do
+        for s in proc disk page; do
             echo "<<<statgrab_${s}>>>"
-            grep "^${s}\." /tmp/statgrab.$$ | cut -d. -f2-99 | sed 's/ *= */ /'
+            grep "^${s}\." "${tmpfile}" | cut -d. -f2-99 | sed 's/ *= */ /'
         done
 
         echo '<<<statgrab_net>>>'
         statgrab net. 2>&1 | cut -d. -f2-99 | sed 's/ *= */ /'
 
         echo '<<<statgrab_mem>>>'
-        grep -E "^(swap|mem)\." /tmp/statgrab.$$ | sed 's/ *= */ /'
+        grep -E "^(swap|mem)\." "${tmpfile}" | sed 's/ *= */ /'
 
-        [ -f /tmp/statgrab.$$ ] && rm -f /tmp/statgrab.$$
+        rm -f "${tmpfile}"
     fi
 }
 

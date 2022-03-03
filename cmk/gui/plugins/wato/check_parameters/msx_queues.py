@@ -42,7 +42,7 @@ def _valuespec_winperf_msx_queues_inventory():
                 (
                     "queue_names",
                     ListOf(
-                        Tuple(
+                        valuespec=Tuple(
                             orientation="horizontal",
                             elements=[
                                 TextInput(

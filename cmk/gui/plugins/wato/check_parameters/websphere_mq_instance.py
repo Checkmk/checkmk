@@ -19,7 +19,7 @@ def _parameter_valuespec_websphere_mq_instance():
             (
                 "map_instance_states",
                 ListOf(
-                    Tuple(
+                    valuespec=Tuple(
                         orientation="horizontal",
                         elements=[
                             DropdownChoice(

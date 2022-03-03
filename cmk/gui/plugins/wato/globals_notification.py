@@ -255,7 +255,7 @@ class ConfigVariableServiceLevels(ConfigVariable):
 
     def valuespec(self):
         return ListOf(
-            Tuple(
+            valuespec=Tuple(
                 elements=[
                     Integer(
                         title=_("internal ID"),

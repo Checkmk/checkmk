@@ -43,7 +43,7 @@ def _parameter_valuespec_esx_host_memory():
                 (
                     "cluster",
                     ListOf(
-                        Tuple(
+                        valuespec=Tuple(
                             orientation="horizontal",
                             elements=[
                                 Integer(

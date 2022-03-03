@@ -1822,6 +1822,7 @@ class ListOf(ValueSpec[ListOfModel[T]]):
 
     def __init__(  # pylint: disable=redefined-builtin
         self,
+        *,
         valuespec: ValueSpec[T],
         magic: str = "@!@",
         add_label: _Optional[str] = None,
@@ -6564,7 +6565,7 @@ class IconSelector(ValueSpec):
 # TODO: Cleanup kwargs
 def ListOfTimeRanges(**kwargs):
     return ListOf(
-        TimeofdayRange(
+        valuespec=TimeofdayRange(
             allow_empty=True,
         ),
         movable=False,
@@ -6949,7 +6950,7 @@ def ListOfCAs(**args):
         _("You need to enter at least one CA. Otherwise no SSL connection can be made."),
     )
     args.setdefault("allow_empty", False)
-    return ListOf(CAorCAChain(), movable=False, **args)
+    return ListOf(valuespec=CAorCAChain(), movable=False, **args)
 
 
 # TODO: Change to factory, Cleanup kwargs

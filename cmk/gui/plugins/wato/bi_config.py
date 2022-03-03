@@ -363,7 +363,7 @@ class ModeBIEditPack(ABCBIMode):
                 (
                     "contact_groups",
                     ListOf(
-                        ContactGroupSelection(),
+                        valuespec=ContactGroupSelection(),
                         title=_("Permitted Contact Groups"),
                         help=_(
                             "The rules and aggregations in this pack can be edited by all members of the "
@@ -1300,7 +1300,7 @@ class ModeBIEditRule(ABCBIMode):
             (
                 "nodes",
                 ListOf(
-                    bi_valuespecs.get_bi_rule_node_choices_vs(),
+                    valuespec=bi_valuespecs.get_bi_rule_node_choices_vs(),
                     add_label=_("Add child node generator"),
                     title=_("Aggregated nodes"),
                     allow_empty=False,
@@ -1735,7 +1735,7 @@ class BIModeEditAggregation(ABCBIMode):
 
         return Transform(
             ListOf(
-                Alternative(
+                valuespec=Alternative(
                     style="dropdown",
                     orientation="horizontal",
                     elements=[

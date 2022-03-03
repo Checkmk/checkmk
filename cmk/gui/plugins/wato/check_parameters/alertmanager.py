@@ -104,7 +104,7 @@ rulespec_registry.register(
 
 def valuespec_alert_remapping():
     return ListOf(
-        Dictionary(
+        valuespec=Dictionary(
             elements=[
                 (
                     "rule_names",

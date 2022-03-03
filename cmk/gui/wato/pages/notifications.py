@@ -194,7 +194,7 @@ class ABCNotificationsMode(ABCEventsMode):
                                     "match_rule_id",
                                     Transform(
                                         ListOf(
-                                            ID(
+                                            valuespec=ID(
                                                 title=_("Match event rule"),
                                                 label=_("Rule ID:"),
                                                 size=12,
@@ -1228,7 +1228,7 @@ class ABCEditNotificationRuleMode(ABCNotificationsMode):
                 (
                     "contact_users",
                     ListOf(
-                        userdb.UserSelection(only_contacts=False),
+                        valuespec=userdb.UserSelection(only_contacts=False),
                         title=_("The following users"),
                         help=_(
                             "Enter a list of user IDs to be notified here. These users need to be members "
@@ -1241,7 +1241,7 @@ class ABCEditNotificationRuleMode(ABCNotificationsMode):
                 (
                     "contact_groups",
                     ListOf(
-                        ContactGroupSelection(),
+                        valuespec=ContactGroupSelection(),
                         title=_("Members of contact groups"),
                         movable=False,
                     ),
@@ -1257,7 +1257,7 @@ class ABCEditNotificationRuleMode(ABCNotificationsMode):
                 (
                     "contact_match_macros",
                     ListOf(
-                        Tuple(
+                        valuespec=Tuple(
                             elements=[
                                 TextInput(
                                     title=_("Name of the macro"),
@@ -1288,7 +1288,7 @@ class ABCEditNotificationRuleMode(ABCNotificationsMode):
                 (
                     "contact_match_groups",
                     ListOf(
-                        ContactGroupSelection(),
+                        valuespec=ContactGroupSelection(),
                         title=_("Restrict by contact groups"),
                         help=_(
                             "Here you can <i>restrict</i> the list of contacts that has been "

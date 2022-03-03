@@ -19,7 +19,7 @@ def _vsphere_esx_hostsystem_cluster_elements():
         (
             "cluster",
             ListOf(
-                Tuple(
+                valuespec=Tuple(
                     orientation="horizontal",
                     elements=[
                         Integer(

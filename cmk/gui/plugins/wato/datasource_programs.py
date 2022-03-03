@@ -604,7 +604,7 @@ def _filter_kubernetes_namespace_element():
     return (
         "namespace_include_patterns",
         ListOf(
-            RegExp(
+            valuespec=RegExp(
                 mode=RegExp.complete,
                 title=_("Pattern"),
                 allow_empty=False,
@@ -908,7 +908,7 @@ def _valuespec_special_agents_kube():
                             "namespace-include-patterns",
                             _("Monitor namespaces matching"),
                             ListOf(
-                                RegExp(
+                                valuespec=RegExp(
                                     mode=RegExp.complete,
                                     title=_("Pattern"),
                                     allow_empty=False,
@@ -926,7 +926,7 @@ def _valuespec_special_agents_kube():
                             "namespace-exclude-patterns",
                             _("Exclude namespaces matching"),
                             ListOf(
-                                RegExp(
+                                valuespec=RegExp(
                                     mode=RegExp.complete,
                                     title=_("Pattern"),
                                     allow_empty=False,
@@ -1129,7 +1129,7 @@ def _valuespec_generic_metrics_prometheus():
                 (
                     "exporter",
                     ListOf(
-                        CascadingDropdown(
+                        valuespec=CascadingDropdown(
                             choices=[
                                 (
                                     "node_exporter",
@@ -1416,7 +1416,7 @@ def _valuespec_generic_metrics_prometheus():
                 (
                     "promql_checks",
                     ListOf(
-                        Dictionary(
+                        valuespec=Dictionary(
                             elements=[
                                 (
                                     "service_description",
@@ -1441,7 +1441,7 @@ def _valuespec_generic_metrics_prometheus():
                                 (
                                     "metric_components",
                                     ListOf(
-                                        Dictionary(
+                                        valuespec=Dictionary(
                                             title=_("PromQL query"),
                                             elements=[
                                                 (
@@ -2900,7 +2900,7 @@ def _valuespec_special_agents_siemens_plc():
             (
                 "devices",
                 ListOf(
-                    Dictionary(
+                    valuespec=Dictionary(
                         elements=[
                             (
                                 "host_name",
@@ -2963,7 +2963,7 @@ def _valuespec_special_agents_siemens_plc():
                             (
                                 "values",
                                 ListOf(
-                                    Tuple(
+                                    valuespec=Tuple(
                                         elements=_special_agents_siemens_plc_siemens_plc_value(),
                                         orientation="horizontal",
                                     ),
@@ -2981,7 +2981,7 @@ def _valuespec_special_agents_siemens_plc():
             (
                 "values",
                 ListOf(
-                    Tuple(
+                    valuespec=Tuple(
                         elements=_special_agents_siemens_plc_siemens_plc_value(),
                         orientation="horizontal",
                     ),
@@ -3507,7 +3507,7 @@ rulespec_registry.register(
 
 def _special_agents_azure_azure_explicit_config():
     return ListOf(
-        Dictionary(
+        valuespec=Dictionary(
             elements=[
                 (
                     "group_name",
@@ -3534,7 +3534,7 @@ def _special_agents_azure_azure_explicit_config():
 
 def _special_agents_azure_azure_tag_based_config():
     return ListOf(
-        Tuple(
+        valuespec=Tuple(
             orientation="horizontal",
             elements=[
                 TextInput(
@@ -3747,7 +3747,7 @@ class MultisiteBiDatasource:
                 (
                     "regex",
                     ListOf(
-                        Tuple(
+                        valuespec=Tuple(
                             orientation="horizontal",
                             elements=[
                                 RegExp(
@@ -3793,7 +3793,7 @@ class MultisiteBiDatasource:
                     (
                         "aggr_name",
                         ListOf(
-                            TextInput(title=_("Pattern")),
+                            valuespec=TextInput(title=_("Pattern")),
                             title=_("By aggregation name (exact match)"),
                             add_label=_("Add new aggregation"),
                             movable=False,
@@ -3802,7 +3802,7 @@ class MultisiteBiDatasource:
                     (
                         "aggr_group_prefix",
                         ListOf(
-                            DropdownChoice(choices=bi.aggregation_group_choices),
+                            valuespec=DropdownChoice(choices=bi.aggregation_group_choices),
                             title=_("By aggregation group prefix"),
                             add_label=_("Add new group"),
                             movable=False,
@@ -3846,7 +3846,7 @@ class MultisiteBiDatasource:
 
 def _valuespec_special_agents_bi():
     return ListOf(
-        MultisiteBiDatasource().get_valuespec(),
+        valuespec=MultisiteBiDatasource().get_valuespec(),
         title=_("BI Aggregations"),
         help=_(
             "This rule allows you to check multiple BI aggregations from multiple sites at once. "
@@ -3895,7 +3895,7 @@ def _validate_aws_tags(value, varprefix):
 
 def _vs_aws_tags(title):
     return ListOf(
-        Tuple(
+        valuespec=Tuple(
             help=_(
                 "How to configure AWS tags please see "
                 "https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/Using_Tags.html"
@@ -5104,7 +5104,7 @@ def _factory_default_special_agents_jira():
 
 def _vs_jira_projects(title):
     return ListOf(
-        Tuple(
+        valuespec=Tuple(
             orientation="horizontal",
             elements=[
                 TextInput(
@@ -5200,7 +5200,7 @@ def _valuespec_special_agents_jira():
             (
                 "jql",
                 ListOf(
-                    Dictionary(
+                    valuespec=Dictionary(
                         elements=[
                             (
                                 "service_description",

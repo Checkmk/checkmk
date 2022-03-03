@@ -50,7 +50,7 @@ def _parameter_valuespec_fcp():
             (
                 "traffic",
                 ListOf(
-                    CascadingDropdown(
+                    valuespec=CascadingDropdown(
                         title=_("Direction"),
                         orientation="horizontal",
                         choices=[

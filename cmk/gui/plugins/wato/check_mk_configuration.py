@@ -540,7 +540,7 @@ class ConfigVariableQuicksearchSearchOrder(ConfigVariable):
 
     def valuespec(self):
         return ListOf(
-            Tuple(
+            valuespec=Tuple(
                 elements=[
                     DropdownChoice(
                         title=_("Search filter"),
@@ -812,7 +812,7 @@ class ConfigVariableVirtualHostTrees(ConfigVariable):
     def valuespec(self):
         return Transform(
             ListOf(
-                Dictionary(
+                valuespec=Dictionary(
                     elements=[
                         (
                             "id",
@@ -838,7 +838,7 @@ class ConfigVariableVirtualHostTrees(ConfigVariable):
                         (
                             "tree_spec",
                             ListOf(
-                                DropdownChoice(
+                                valuespec=DropdownChoice(
                                     choices=self._virtual_host_tree_choices,
                                 ),
                                 title=_("Tree levels"),
@@ -1154,7 +1154,7 @@ class ConfigVariableLoginScreen(ConfigVariable):
                 (
                     "footer_links",
                     ListOf(
-                        Tuple(
+                        valuespec=Tuple(
                             elements=[
                                 TextInput(
                                     title=_("Title"),
@@ -1196,7 +1196,7 @@ class ConfigVariableUserLocalizations(ConfigVariable):
     def valuespec(self):
         return Transform(
             ListOf(
-                Tuple(
+                valuespec=Tuple(
                     elements=[
                         TextInput(title=_("Original Text"), size=40),
                         Dictionary(
@@ -1232,7 +1232,7 @@ class ConfigVariableUserIconsAndActions(ConfigVariable):
     def valuespec(self):
         return Transform(
             ListOf(
-                Tuple(
+                valuespec=Tuple(
                     elements=[
                         ID(
                             title=_("ID"),
@@ -1358,7 +1358,7 @@ class ConfigVariableCustomServiceAttributes(ConfigVariable):
     def valuespec(self):
         return Transform(
             ListOf(
-                Dictionary(
+                valuespec=Dictionary(
                     elements=[
                         (
                             "ident",
@@ -1544,7 +1544,7 @@ class ConfigVariableUserDowntimeTimeranges(ConfigVariable):
 
     def valuespec(self):
         return ListOf(
-            Dictionary(
+            valuespec=Dictionary(
                 elements=[
                     (
                         "title",
@@ -1598,7 +1598,7 @@ class ConfigVariableBuiltinIconVisibility(ConfigVariable):
     def valuespec(self):
         return Transform(
             ListOf(
-                Tuple(
+                valuespec=Tuple(
                     elements=[
                         DropdownChoice(
                             title=_("Icon"),
@@ -1670,7 +1670,7 @@ class ConfigVariableServiceViewGrouping(ConfigVariable):
 
     def valuespec(self):
         return ListOf(
-            Dictionary(
+            valuespec=Dictionary(
                 elements=[
                     (
                         "title",
@@ -2177,7 +2177,7 @@ class ConfigVariableWATOIconCategories(ConfigVariable):
 
     def valuespec(self):
         return ListOf(
-            Tuple(
+            valuespec=Tuple(
                 elements=[
                     ID(
                         title=_("ID"),
@@ -2951,7 +2951,7 @@ class ConfigVariableHTTPProxies(ConfigVariable):
     def valuespec(self):
         return Transform(
             ListOf(
-                Dictionary(
+                valuespec=Dictionary(
                     title=_("HTTP proxy"),
                     elements=[
                         (
@@ -4309,7 +4309,7 @@ rulespec_registry.register(
 
 def _valuespec_custom_service_attributes():
     return ListOf(
-        CascadingDropdown(
+        valuespec=CascadingDropdown(
             choices=_custom_service_attributes_custom_service_attribute_choices(),
             orientation="horizontal",
         ),
@@ -4522,7 +4522,7 @@ rulespec_registry.register(
 
 def _valuespec_service_tag_rules():
     return ListOf(
-        CascadingDropdown(
+        valuespec=CascadingDropdown(
             choices=_service_tag_rules_tag_group_choices(),
             orientation="horizontal",
         ),
@@ -5497,7 +5497,7 @@ def _valuespec_check_mk_exit_status():
                             (
                                 "specific_missing_sections",
                                 ListOf(
-                                    Tuple(
+                                    valuespec=Tuple(
                                         elements=[
                                             RegExp(
                                                 help=_(
@@ -6060,7 +6060,7 @@ def _valuespec_piggybacked_host_files():
             (
                 "per_piggybacked_host",
                 ListOf(
-                    Transform(
+                    valuespec=Transform(
                         Dictionary(
                             optional_keys=[],
                             elements=[

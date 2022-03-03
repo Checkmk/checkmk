@@ -888,7 +888,7 @@ def hr_process_parameter_elements():
         (
             "status",
             ListOf(
-                Tuple(
+                valuespec=Tuple(
                     orientation="horizontal",
                     elements=[
                         DropdownChoice(

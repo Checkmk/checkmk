@@ -140,7 +140,7 @@ rulespec_registry.register(
 
 def _valuespec_sap_value_groups():
     return ListOf(
-        Tuple(
+        valuespec=Tuple(
             help=_("This defines one value grouping pattern"),
             show_titles=True,
             orientation="horizontal",

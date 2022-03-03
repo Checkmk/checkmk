@@ -547,7 +547,7 @@ class ModeEditContactgroup(ABCModeEditGroup):
                     "paths",
                     _("Allowed to see parts of the tree"),
                     ListOf(
-                        Dictionary(
+                        valuespec=Dictionary(
                             elements=[
                                 vs_element_inventory_visible_raw_path(),
                                 ("attributes", vs_choices(_("Restrict single values"))),

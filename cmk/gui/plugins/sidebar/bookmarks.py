@@ -96,7 +96,7 @@ class BookmarkList(pagetypes.Overridable):
                             # is exactly the thing we want. But we want to store the data as dict. This is a
                             # nasty hack to use the transform by default. Better would be to make Dict render
                             # the same way the tuple is rendered.
-                            Transform(
+                            valuespec=Transform(
                                 Tuple(
                                     elements=[
                                         (

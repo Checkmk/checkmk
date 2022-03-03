@@ -2219,7 +2219,7 @@ class LDAPAttributePluginGroupAttributes(LDAPBuiltinAttributePlugin):
                 (
                     "groups",
                     ListOf(
-                        Dictionary(
+                        valuespec=Dictionary(
                             elements=[
                                 (
                                     "cn",
@@ -2399,7 +2399,7 @@ class LDAPAttributePluginGroupsToRoles(LDAPBuiltinAttributePlugin):
                     role_id,
                     Transform(
                         ListOf(
-                            Transform(
+                            valuespec=Transform(
                                 Tuple(
                                     elements=[
                                         LDAPDistinguishedName(

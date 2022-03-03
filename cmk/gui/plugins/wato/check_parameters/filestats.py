@@ -161,7 +161,7 @@ def _parameter_valuespec_filestats():
             (
                 "additional_rules",
                 ListOf(
-                    Tuple(
+                    valuespec=Tuple(
                         elements=[
                             TextInput(
                                 title=_("Display name"),

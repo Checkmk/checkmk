@@ -82,7 +82,7 @@ class TacticalOverviewSnapin(CustomizableSidebarSnapin):
             (
                 "rows",
                 ListOf(
-                    Dictionary(
+                    valuespec=Dictionary(
                         elements=[
                             (
                                 "title",

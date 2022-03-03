@@ -134,7 +134,7 @@ def _valuespec_inventory_df_rules():
                 (
                     "never_ignore_mountpoints",
                     ListOf(
-                        TextOrRegExp(),
+                        valuespec=TextOrRegExp(),
                         title=_("Mountpoints to never ignore"),
                         help=_(
                             "Regardless of filesystem type, these mountpoints will always be discovered."
@@ -219,7 +219,7 @@ def _valuespec_filesystem_groups():
                 (
                     FILESYSTEM_GROUPS_WRAPPER_KEY,
                     ListOf(
-                        Dictionary(
+                        valuespec=Dictionary(
                             optional_keys=False,
                             elements=[
                                 (

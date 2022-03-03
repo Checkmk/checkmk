@@ -48,7 +48,7 @@ def _valuespec_logwatch_rules():
                 (
                     "reclassify_patterns",
                     ListOf(
-                        Tuple(
+                        valuespec=Tuple(
                             help=_("This defines one logfile pattern rule"),
                             show_titles=True,
                             orientation="horizontal",
@@ -190,7 +190,7 @@ def _valuespec_logwatch_groups():
                 (
                     "grouping_patterns",
                     ListOf(
-                        Tuple(
+                        valuespec=Tuple(
                             help=_("This defines one logfile grouping pattern"),
                             show_titles=True,
                             orientation="horizontal",
@@ -448,7 +448,7 @@ def _parameter_valuespec_logwatch_ec():
                     (
                         "expected_logfiles",
                         ListOf(
-                            TextInput(),
+                            valuespec=TextInput(),
                             title=_("List of expected logfiles"),
                             help=_(
                                 "When the monitoring of forwarded logfiles is enabled, the check verifies that "

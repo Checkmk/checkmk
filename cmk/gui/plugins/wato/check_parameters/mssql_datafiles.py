@@ -42,7 +42,7 @@ def levels_absolute_or_dynamic(name, value):
                 ],
             ),
             ListOf(
-                Tuple(
+                valuespec=Tuple(
                     orientation="horizontal",
                     elements=[
                         Filesize(title=_(" larger than")),

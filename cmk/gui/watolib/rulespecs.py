@@ -1231,7 +1231,7 @@ class TimeperiodValuespec(ValueSpec):
                 (
                     self.tp_values_key,
                     ListOf(
-                        Tuple(
+                        valuespec=Tuple(
                             elements=[
                                 TimeperiodSelection(
                                     title=_("Match only during timeperiod"),

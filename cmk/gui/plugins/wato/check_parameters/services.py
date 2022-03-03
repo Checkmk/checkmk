@@ -118,7 +118,7 @@ def _parameter_valuespec_services():
             (
                 "states",
                 ListOf(
-                    Tuple(
+                    valuespec=Tuple(
                         orientation="horizontal",
                         elements=[
                             DropdownChoice(

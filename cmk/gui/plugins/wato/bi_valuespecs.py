@@ -435,7 +435,7 @@ class BIConfigFixedArgumentsSearch(BIFixedArgumentsSearch, ABCBIConfigSearch):
                 (
                     "arguments",
                     ListOf(
-                        Transform(
+                        valuespec=Transform(
                             Tuple(
                                 elements=[
                                     TextInput(title=_("Keyword")),

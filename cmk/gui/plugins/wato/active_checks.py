@@ -2629,7 +2629,7 @@ def _valuespec_active_checks_traceroute():
                 (
                     "routers",
                     ListOf(
-                        Tuple(
+                        valuespec=Tuple(
                             elements=[
                                 TextInput(
                                     title=_("Router (FQDN, IP-Address)"),

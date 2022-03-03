@@ -15,7 +15,7 @@ from cmk.gui.valuespec import Dictionary, ListOf, MonitoringState, TextInput
 
 def _parameter_valuespec_hostsystem_sensors():
     return ListOf(
-        Dictionary(
+        valuespec=Dictionary(
             help=_("This rule allows to override alert levels for the given sensor names."),
             elements=[
                 ("name", TextInput(title=_("Sensor name"))),

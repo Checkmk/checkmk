@@ -106,7 +106,7 @@ def _valuespec_fileinfo_groups():
                 (
                     "group_patterns",
                     ListOf(
-                        Tuple(
+                        valuespec=Tuple(
                             help=_("This defines one file grouping pattern."),
                             show_titles=True,
                             orientation="horizontal",
@@ -295,11 +295,11 @@ def get_fileinfo_groups_param_elements():
         (
             "conjunctions",
             ListOf(
-                Tuple(
+                valuespec=Tuple(
                     elements=[
                         MonitoringState(title=_("Monitoring state"), default_value=2),
                         ListOf(
-                            CascadingDropdown(
+                            valuespec=CascadingDropdown(
                                 orientation="horizontal",
                                 choices=[
                                     ("count", _("File count at"), Integer()),
@@ -376,7 +376,7 @@ def _manual_parameter_valuespec_fileinfo_groups():
                 (
                     "group_patterns",
                     ListOf(
-                        Tuple(
+                        valuespec=Tuple(
                             help=_("This defines one file grouping pattern."),
                             show_titles=True,
                             orientation="vertical",

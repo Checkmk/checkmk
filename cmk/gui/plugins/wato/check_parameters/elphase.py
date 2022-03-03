@@ -117,7 +117,7 @@ def _parameter_valuespec_el_inphase():
             (
                 "map_device_states",
                 ListOf(
-                    Tuple(elements=[TextInput(size=10), MonitoringState()]),
+                    valuespec=Tuple(elements=[TextInput(size=10), MonitoringState()]),
                     title=_("Map device state"),
                     help=_(
                         "Here you can enter either device state number (eg. from SNMP devices) "
@@ -177,7 +177,7 @@ def _parameter_valuespec_ups_outphase() -> Transform:
                 (
                     "map_device_states",
                     ListOf(
-                        Tuple(elements=[TextInput(size=10), MonitoringState()]),
+                        valuespec=Tuple(elements=[TextInput(size=10), MonitoringState()]),
                         title=_("Map device state"),
                         help=_(
                             "Here you can enter either device state number (eg. from SNMP devices) "

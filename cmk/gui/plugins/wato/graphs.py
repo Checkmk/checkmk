@@ -24,7 +24,7 @@ class ConfigVariableGraphTimeranges(ConfigVariable):
 
     def valuespec(self):
         return ListOf(
-            Dictionary(
+            valuespec=Dictionary(
                 optional_keys=[],
                 elements=[
                     (

@@ -765,7 +765,7 @@ class PageEditBackupJob:
                         (
                             "timeofday",
                             ListOf(
-                                Timeofday(
+                                valuespec=Timeofday(
                                     default_value=(0, 0),
                                     allow_empty=False,
                                 ),

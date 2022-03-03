@@ -620,7 +620,7 @@ rulespec_registry.register(
 
 def _vs_limits_inst_types():
     return ListOf(
-        CascadingDropdown(
+        valuespec=CascadingDropdown(
             orientation="horizontal",
             choices=[
                 (
@@ -640,7 +640,7 @@ def _vs_limits_inst_types():
 
 def _vs_limits_vcpu_families():
     return ListOf(
-        CascadingDropdown(
+        valuespec=CascadingDropdown(
             orientation="horizontal",
             choices=[
                 (

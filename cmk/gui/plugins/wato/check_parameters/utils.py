@@ -110,7 +110,7 @@ def get_free_used_dynamic_valuespec(
         elements=vs_subgroup
         + [
             ListOf(
-                Tuple(
+                valuespec=Tuple(
                     orientation="horizontal",
                     elements=[
                         Filesize(title=_("%s larger than") % name.title()),

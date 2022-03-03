@@ -1832,7 +1832,7 @@ def view_editor_column_spec(ident, title, ds_name):
                 (
                     ident,
                     ListOf(
-                        vs_column,
+                        valuespec=vs_column,
                         title=title,
                         add_label=_("Add column"),
                         allow_empty=allow_empty,
@@ -1909,7 +1909,7 @@ def view_editor_sorter_specs(view: ViewSpec) -> _Tuple[str, Dictionary]:
                 (
                     "sorters",
                     ListOf(
-                        Tuple(
+                        valuespec=Tuple(
                             elements=[
                                 CascadingDropdown(
                                     title=_("Column"),

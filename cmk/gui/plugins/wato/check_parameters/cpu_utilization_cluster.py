@@ -18,7 +18,7 @@ from cmk.gui.valuespec import Integer, ListOf, Percentage, Tuple
 # TODO: Why is this only a manual check rulespec?
 def _parameter_valuespec_cpu_utilization_cluster():
     return ListOf(
-        Tuple(
+        valuespec=Tuple(
             elements=[
                 Integer(title=_("Equal or more than"), unit=_("nodes")),
                 Tuple(

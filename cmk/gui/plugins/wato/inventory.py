@@ -317,7 +317,7 @@ def _valuespec_inv_retention_intervals() -> ValueSpec:
         )
 
     return ListOf(
-        Dictionary(
+        valuespec=Dictionary(
             elements=[
                 (
                     "interval",

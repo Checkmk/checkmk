@@ -550,7 +550,7 @@ def translation_elements(what: str) -> List[_Tuple[str, ValueSpec]]:
             "regex",
             Transform(
                 ListOf(
-                    Tuple(
+                    valuespec=Tuple(
                         orientation="horizontal",
                         elements=[
                             RegExp(
@@ -592,7 +592,7 @@ def translation_elements(what: str) -> List[_Tuple[str, ValueSpec]]:
         (
             "mapping",
             ListOf(
-                Tuple(
+                valuespec=Tuple(
                     orientation="horizontal",
                     elements=[
                         TextInput(
@@ -1628,7 +1628,7 @@ class ABCEventsMode(WatoMode, abc.ABC):
             (
                 "match_contacts",
                 ListOf(
-                    userdb.UserSelection(only_contacts=True),
+                    valuespec=userdb.UserSelection(only_contacts=True),
                     title=_("Match contacts"),
                     help=_("The host/service must have one of the selected contacts."),
                     movable=False,
@@ -2508,7 +2508,7 @@ class LabelCondition(Transform):
     def __init__(self, title, help_txt):
         super().__init__(
             ListOf(
-                Tuple(
+                valuespec=Tuple(
                     orientation="horizontal",
                     elements=[
                         DropdownChoice(
@@ -2607,7 +2607,7 @@ def _multi_folder_rule_match_condition():
     return (
         "match_folders",
         ListOf(
-            FullPathFolderChoice(
+            valuespec=FullPathFolderChoice(
                 title=_("Folder"),
                 help=_(
                     "This condition makes the rule match only hosts that are managed "

@@ -20,7 +20,7 @@ def _parameter_valuespec_prometheus_custom():
             (
                 "metric_list",
                 ListOf(
-                    Dictionary(
+                    valuespec=Dictionary(
                         elements=[
                             (
                                 "metric_label",

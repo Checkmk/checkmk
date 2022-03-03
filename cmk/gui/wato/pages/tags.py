@@ -840,7 +840,7 @@ class ModeEditTagGroup(ABCEditTagMode):
         # supported by the Dictionary valuespec. Transform!
         return Transform(
             ListOf(
-                Tuple(
+                valuespec=Tuple(
                     elements=[
                         Transform(
                             TextInput(

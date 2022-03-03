@@ -223,7 +223,7 @@ class HostAttributeAdditionalIPv4Addresses(ABCHostAttributeValueSpec):
 
     def valuespec(self):
         return ListOf(
-            HostAddress(
+            valuespec=HostAddress(
                 allow_empty=False,
                 allow_ipv6_address=False,
             ),
@@ -271,7 +271,7 @@ class HostAttributeAdditionalIPv6Addresses(ABCHostAttributeValueSpec):
 
     def valuespec(self):
         return ListOf(
-            HostAddress(
+            valuespec=HostAddress(
                 allow_empty=False,
                 allow_ipv4_address=False,
             ),
@@ -564,7 +564,7 @@ class HostAttributeNetworkScan(ABCHostAttributeValueSpec):
             (
                 "ip_ranges",
                 ListOf(
-                    self._vs_ip_range(),
+                    valuespec=self._vs_ip_range(),
                     title=_("IP ranges to scan"),
                     add_label=_("Add new IP range"),
                     text_if_empty=_("No IP range configured"),
@@ -573,7 +573,9 @@ class HostAttributeNetworkScan(ABCHostAttributeValueSpec):
             (
                 "exclude_ranges",
                 ListOf(
-                    self._vs_ip_range(with_regexp=True),  # regexp only used when excluding
+                    valuespec=self._vs_ip_range(
+                        with_regexp=True
+                    ),  # regexp only used when excluding
                     title=_("IP ranges to exclude"),
                     add_label=_("Add new IP range"),
                     text_if_empty=_("No exclude range configured"),
@@ -592,7 +594,7 @@ class HostAttributeNetworkScan(ABCHostAttributeValueSpec):
                 "time_allowed",
                 Transform(
                     ListOf(
-                        TimeofdayRange(
+                        valuespec=TimeofdayRange(
                             allow_empty=False,
                         ),
                         title=_("Time allowed"),
@@ -1168,7 +1170,7 @@ class HostAttributeLockedAttributes(ABCHostAttributeValueSpec):
 
     def valuespec(self):
         return ListOf(
-            DropdownChoice(choices=host_attribute_registry.get_choices),
+            valuespec=DropdownChoice(choices=host_attribute_registry.get_choices),
             title=_("Locked attributes"),
             text_if_empty=_("Not locked"),
         )

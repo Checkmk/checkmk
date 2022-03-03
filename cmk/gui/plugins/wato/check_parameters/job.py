@@ -44,7 +44,7 @@ def _parameter_valuespec_job():
             (
                 "exit_code_to_state_map",
                 ListOf(
-                    Tuple(
+                    valuespec=Tuple(
                         orientation="horizontal",
                         elements=[
                             Integer(title=_("Exit code")),

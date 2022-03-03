@@ -164,8 +164,6 @@ def _vs_grouping():
                         (
                             "group_items",
                             ListOf(
-                                title=_("Interface groups"),
-                                add_label=_("Add pattern"),
                                 valuespec=Dictionary(
                                     elements=[
                                         (
@@ -190,6 +188,8 @@ def _vs_grouping():
                                     ],
                                     optional_keys=False,
                                 ),
+                                title=_("Interface groups"),
+                                add_label=_("Add pattern"),
                                 allow_empty=False,
                             ),
                         ),
@@ -554,17 +554,14 @@ def _valuespec_if_groups():
             ),
             elements=[
                 ListOf(
-                    title=_("Groups on single host"),
-                    add_label=_("Add pattern"),
                     valuespec=Dictionary(
                         elements=vs_elements_if_groups_group + vs_elements_if_groups_matches,
                         required_keys=["group_name", "group_presence"],
                     ),
+                    title=_("Groups on single host"),
+                    add_label=_("Add pattern"),
                 ),
                 ListOf(
-                    magic="@!!",
-                    title=_("Groups on cluster"),
-                    add_label=_("Add pattern"),
                     valuespec=Dictionary(
                         elements=vs_elements_if_groups_group
                         + [
@@ -583,6 +580,9 @@ def _valuespec_if_groups():
                         ],
                         optional_keys=[],
                     ),
+                    magic="@!!",
+                    title=_("Groups on cluster"),
+                    add_label=_("Add pattern"),
                 ),
             ],
         ),
@@ -858,7 +858,7 @@ def _vs_state_mappings() -> CascadingDropdown:
                         (
                             "map_operstates",
                             ListOf(
-                                Tuple(
+                                valuespec=Tuple(
                                     orientation="horizontal",
                                     elements=[
                                         ListChoice(
@@ -877,7 +877,7 @@ def _vs_state_mappings() -> CascadingDropdown:
                         (
                             "map_admin_states",
                             ListOf(
-                                Tuple(
+                                valuespec=Tuple(
                                     orientation="horizontal",
                                     elements=[
                                         ListChoice(
@@ -904,7 +904,7 @@ def _vs_state_mappings() -> CascadingDropdown:
                 "combined_mappings",
                 _("Map combinations of operational and admin state"),
                 ListOf(
-                    Tuple(
+                    valuespec=Tuple(
                         orientation="horizontal",
                         elements=[
                             DropdownChoice(
@@ -1136,7 +1136,7 @@ def _parameter_valuespec_if():
                 (
                     "traffic",
                     ListOf(
-                        CascadingDropdown(
+                        valuespec=CascadingDropdown(
                             title=_("Direction"),
                             orientation="horizontal",
                             choices=[
@@ -1165,7 +1165,7 @@ def _parameter_valuespec_if():
                             (
                                 "levels",
                                 ListOf(
-                                    vs_interface_traffic(),
+                                    valuespec=vs_interface_traffic(),
                                     title=_("Provide levels"),
                                     help=_(
                                         "Levels on the total bandwidth will act the same way as they do for "

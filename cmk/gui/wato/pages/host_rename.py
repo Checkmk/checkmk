@@ -295,7 +295,7 @@ class ModeBulkRenameHost(WatoMode):
                 (
                     "renamings",
                     ListOf(
-                        self._vs_host_renaming(),
+                        valuespec=self._vs_host_renaming(),
                         title=_("Renaming Operations"),
                         add_label=_("Add renaming"),
                         allow_empty=False,

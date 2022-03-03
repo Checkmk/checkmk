@@ -811,7 +811,7 @@ class ModeEditTimeperiod(WatoMode):
 
     def _vs_exceptions(self):
         return ListOf(
-            Tuple(
+            valuespec=Tuple(
                 orientation="horizontal",
                 show_titles=False,
                 elements=[

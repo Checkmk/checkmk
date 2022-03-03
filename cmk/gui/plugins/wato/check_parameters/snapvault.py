@@ -31,7 +31,7 @@ def _parameter_valuespec_snapvault():
             (
                 "policy_lag_time",
                 ListOf(
-                    Tuple(
+                    valuespec=Tuple(
                         orientation="horizontal",
                         elements=[
                             TextInput(title=_("Policy name")),

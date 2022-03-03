@@ -36,7 +36,7 @@ def _valuespec_inventory_solaris_services_rules():
             (
                 "states",
                 ListOf(
-                    DropdownChoice(
+                    valuespec=DropdownChoice(
                         choices=[
                             ("online", _("online")),
                             ("disabled", _("disabled")),
@@ -97,7 +97,7 @@ def _parameter_valuespec_solaris_services():
             (
                 "states",
                 ListOf(
-                    Tuple(
+                    valuespec=Tuple(
                         orientation="horizontal",
                         elements=[
                             DropdownChoice(

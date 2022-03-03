@@ -230,7 +230,7 @@ def ActionList(vs, **kwargs):
                             % action_id,
                         )
 
-    return ListOf(vs, validate=validate_action_list, **kwargs)
+    return ListOf(valuespec=vs, validate=validate_action_list, **kwargs)
 
 
 class RuleState(CascadingDropdown):
@@ -469,7 +469,7 @@ def vs_mkeventd_rule(customer=None):
                     (
                         "groups",
                         ListOf(
-                            ContactGroupSelection(),
+                            valuespec=ContactGroupSelection(),
                             title=_("Contact groups"),
                             movable=False,
                         ),
@@ -4327,7 +4327,7 @@ class ConfigVariableEventConsoleSNMPCredentials(ConfigVariable):
 
     def valuespec(self):
         return ListOf(
-            Dictionary(
+            valuespec=Dictionary(
                 elements=[
                     (
                         "description",

@@ -268,7 +268,7 @@ def get_vs_flexible_notifications():
                 "flexible",
                 _("Flexible Custom Notifications"),
                 ListOf(
-                    Foldable(
+                    valuespec=Foldable(
                         Dictionary(
                             optional_keys=[
                                 "service_blacklist",

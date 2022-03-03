@@ -186,7 +186,7 @@ def _parameter_valuespec_oracle_performance():
             (
                 "dbtime",
                 ListOf(
-                    CascadingDropdown(
+                    valuespec=CascadingDropdown(
                         title=_("Field"),
                         orientation="horizontal",
                         choices=[
@@ -201,7 +201,7 @@ def _parameter_valuespec_oracle_performance():
             (
                 "memory",
                 ListOf(
-                    CascadingDropdown(
+                    valuespec=CascadingDropdown(
                         title=_("Field"),
                         orientation="horizontal",
                         choices=memory_choices,
@@ -212,7 +212,7 @@ def _parameter_valuespec_oracle_performance():
             (
                 "iostat_bytes",
                 ListOf(
-                    CascadingDropdown(
+                    valuespec=CascadingDropdown(
                         title=_("Field"),
                         orientation="horizontal",
                         choices=iostat_bytes_choices,
@@ -223,7 +223,7 @@ def _parameter_valuespec_oracle_performance():
             (
                 "iostat_ios",
                 ListOf(
-                    CascadingDropdown(
+                    valuespec=CascadingDropdown(
                         title=_("Field"),
                         orientation="horizontal",
                         choices=iostat_ios_choices,
@@ -234,7 +234,7 @@ def _parameter_valuespec_oracle_performance():
             (
                 "waitclasses",
                 ListOf(
-                    CascadingDropdown(
+                    valuespec=CascadingDropdown(
                         title=_("Field"),
                         orientation="horizontal",
                         choices=waitclasses_choices,

@@ -1,0 +1,22 @@
+[package]
+name = "wepoll-ffi"
+version = "0.1.2"
+authors = ["Philip Degarmo <aclysma@gmail.com>"]
+edition = "2018"
+license = "MIT OR Apache-2.0 OR BSD-2-Clause"
+readme = "README.md"
+repository = "https://github.com/aclysma/wepoll-ffi"
+homepage = "https://github.com/aclysma/wepoll-ffi"
+description = "Bindings for the wepoll library"
+keywords = ["wepoll"]
+categories = ["external-ffi-bindings"]
+
+[package.metadata.docs.rs]
+targets = ["x86_64-pc-windows-msvc"]
+
+[build-dependencies]
+cc = "1.0"
+
+# See readme for info on feature flags
+[features]
+null-overlapped-wakeups-patch = []

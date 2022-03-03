@@ -44,16 +44,24 @@ pub fn handle_push_cycle(registry: &config::Registry) -> AnyhowResult<()> {
 
     for (coordinates, connection) in registry.push_connections() {
         info!("{}: Pushing agent output", coordinates);
-        if let Err(error) = (agent_receiver_api::Api {}).agent_data(
-            coordinates,
-            &connection.root_cert,
-            &connection.uuid,
-            &connection.certificate,
-            &monitoring_data::compression_header_info().push,
-            &compressed_mon_data,
-        ) {
-            warn!("{}: Error pushing agent output. ({})", coordinates, error);
-        };
+        match coordinates.to_url() {
+            Ok(url) => {
+                if let Err(error) = (agent_receiver_api::Api {}).agent_data(
+                    &url,
+                    &connection.root_cert,
+                    &connection.uuid,
+                    &connection.certificate,
+                    &monitoring_data::compression_header_info().push,
+                    &compressed_mon_data,
+                ) {
+                    warn!("{}: Error pushing agent output. ({})", coordinates, error);
+                };
+            }
+            Err(err) => warn!(
+                "{}: Failed to construct endpoint URL for pushing. ({})",
+                coordinates, err
+            ),
+        }
     }
     Ok(())
 }

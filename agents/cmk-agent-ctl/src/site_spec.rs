@@ -64,6 +64,14 @@ impl std::convert::TryFrom<IncompleteCoordinates> for Coordinates {
 }
 
 impl Coordinates {
+    pub fn to_url(&self) -> AnyhowResult<reqwest::Url> {
+        reqwest::Url::parse(&format!(
+            "https://{}:{}/{}",
+            &self.server, &self.port, &self.site
+        ))
+        .context(format!("Failed to convert {} into a URL", &self))
+    }
+
     fn port_from_checkmk_rest_api(
         incomplete_coordinates: &IncompleteCoordinates,
     ) -> AnyhowResult<types::Port> {
@@ -167,6 +175,18 @@ mod test_coordinates {
         ] {
             assert!(Coordinates::from_str(erroneous_address).is_err())
         }
+    }
+
+    #[test]
+    fn test_to_url() {
+        assert_eq!(
+            &Coordinates::from_str("my.server.something:7893/cool-site")
+                .unwrap()
+                .to_url()
+                .unwrap()
+                .to_string(),
+            "https://my.server.something:7893/cool-site"
+        )
     }
 }
 

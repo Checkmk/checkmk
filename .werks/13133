@@ -1,0 +1,21 @@
+Title: Freezing background jobs/automation calls
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1646320984
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0p22
+
+On rare occasions, a Checkmk automation call invoked by the GUI could
+freeze while waiting for the underlying process to terminate.
+
+While this holds true for all automation calls issued by the Checkmk
+GUI, this mainly affects background jobs with underlying automation calls,
+e.g., an agent baking job. As a consequence, the affected backgound jobs had
+to be terminated manually by their PID.
+
+This behavior only occured for processes that yield a very long output, and could
+only be observed on a few individual Checkmk installations.
+

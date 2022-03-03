@@ -170,7 +170,7 @@ class ModeDiagnostics(WatoMode):
                 (
                     "general",
                     FixedValue(
-                        True,
+                        value=True,
                         title=_("General information"),
                         totext=_("Collect information about OS and Checkmk version"),
                         help=_(
@@ -202,7 +202,7 @@ class ModeDiagnostics(WatoMode):
             (
                 OPT_LOCAL_FILES,
                 FixedValue(
-                    True,
+                    value=True,
                     totext="",
                     title=_("Local Files"),
                     help=_(
@@ -214,7 +214,7 @@ class ModeDiagnostics(WatoMode):
             (
                 OPT_OMD_CONFIG,
                 FixedValue(
-                    True,
+                    value=True,
                     totext="",
                     title=_("OMD Config"),
                     help=_(
@@ -228,7 +228,7 @@ class ModeDiagnostics(WatoMode):
             (
                 OPT_CHECKMK_OVERVIEW,
                 FixedValue(
-                    True,
+                    value=True,
                     totext="",
                     title=_("Checkmk Overview"),
                     help=_(
@@ -254,7 +254,7 @@ class ModeDiagnostics(WatoMode):
                 (
                     OPT_PERFORMANCE_GRAPHS,
                     FixedValue(
-                        True,
+                        value=True,
                         totext="",
                         title=_("Performance Graphs of Checkmk Server"),
                         help=_(
@@ -378,7 +378,7 @@ class ModeDiagnostics(WatoMode):
                     "all",
                     _("Pack all files: High, Medium, Low sensitivity"),
                     FixedValue(
-                        [f for f, fi in sorted_files],
+                        value=[f for f, fi in sorted_files],
                         totext=self._list_of_files_to_text(sorted_files),
                     ),
                 ),
@@ -386,7 +386,7 @@ class ModeDiagnostics(WatoMode):
                     "non_high_sensitive",
                     _("Pack only Medium and Low sensitivity files"),
                     FixedValue(
-                        [f for f, fi in sorted_non_high_sensitive_files],
+                        value=[f for f, fi in sorted_non_high_sensitive_files],
                         totext=self._list_of_files_to_text(sorted_non_high_sensitive_files),
                     ),
                 ),
@@ -394,7 +394,7 @@ class ModeDiagnostics(WatoMode):
                     "insensitive",
                     _("Pack only Low sensitivity files"),
                     FixedValue(
-                        [f for f, fi in sorted_insensitive_files],
+                        value=[f for f, fi in sorted_insensitive_files],
                         totext=self._list_of_files_to_text(sorted_insensitive_files),
                     ),
                 ),

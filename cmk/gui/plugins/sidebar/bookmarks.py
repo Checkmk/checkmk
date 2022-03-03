@@ -138,7 +138,7 @@ class BookmarkList(pagetypes.Overridable):
         return Alternative(
             elements=[
                 FixedValue(
-                    None,
+                    value=None,
                     title=_("Use default topic"),
                     totext="",
                 ),

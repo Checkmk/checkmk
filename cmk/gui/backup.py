@@ -747,7 +747,7 @@ class PageEditBackupJob:
             title=_("Schedule"),
             elements=[
                 FixedValue(
-                    None,
+                    value=None,
                     title=_("Execute manually"),
                     totext=_("Only execute manually"),
                 ),
@@ -804,7 +804,7 @@ class PageEditBackupJob:
             ident_attr = [
                 (
                     "ident",
-                    FixedValue(self._ident, title=_("Unique ID")),
+                    FixedValue(value=self._ident, title=_("Unique ID")),
                 )
             ]
 
@@ -853,7 +853,7 @@ class PageEditBackupJob:
                         ),
                         elements=[
                             FixedValue(
-                                None,
+                                value=None,
                                 title=_("Do not encrypt the backup"),
                                 totext="",
                             ),
@@ -1326,7 +1326,7 @@ class PageEditBackupTarget:
                 (
                     "ident",
                     FixedValue(
-                        self._ident,
+                        value=self._ident,
                         title=_("Unique ID"),
                     ),
                 ),

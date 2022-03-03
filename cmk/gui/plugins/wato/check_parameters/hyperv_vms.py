@@ -73,7 +73,7 @@ def _parameter_valuespec_hyperv_vms() -> Alternative:
                 ],
             ),
             FixedValue(
-                {"compare_discovery": True},
+                value={"compare_discovery": True},
                 title=_("Compare against discovered state"),
                 totext=_("Compare the current state of the VM against the discovered state"),
                 help=_(

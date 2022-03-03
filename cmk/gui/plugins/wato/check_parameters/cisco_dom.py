@@ -51,7 +51,7 @@ def _vs_cisco_dom(which_levels: str) -> _Tuple[str, Alternative]:
             default_value=True,  # use device levels
             elements=[
                 FixedValue(
-                    True,
+                    value=True,
                     title=_("Use device levels"),
                     totext="",
                 ),
@@ -63,7 +63,7 @@ def _vs_cisco_dom(which_levels: str) -> _Tuple[str, Alternative]:
                     ],
                 ),
                 FixedValue(
-                    False,
+                    value=False,
                     title=_("No levels"),
                     totext="",
                 ),

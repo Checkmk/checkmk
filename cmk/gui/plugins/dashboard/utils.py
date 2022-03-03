@@ -528,7 +528,7 @@ def dashlet_vs_general_settings(dashlet_type: Type[Dashlet], single_infos: List[
             (
                 "type",
                 FixedValue(
-                    dashlet_type.type_name(),
+                    value=dashlet_type.type_name(),
                     totext=dashlet_type.title(),
                     title=_("Element type"),
                 ),

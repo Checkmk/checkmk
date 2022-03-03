@@ -232,12 +232,12 @@ def get_vs_user_idle_timeout():
         title=_("Session idle timeout"),
         elements=[
             FixedValue(
-                None,
+                value=None,
                 title=_("Use the global configuration"),
                 totext="",
             ),
             FixedValue(
-                False,
+                value=False,
                 title=_("Disable the login timeout"),
                 totext="",
             ),

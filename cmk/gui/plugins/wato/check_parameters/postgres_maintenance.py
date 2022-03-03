@@ -57,7 +57,7 @@ def _parameter_valuespec_postgres_maintenance():
                             ],
                         ),
                         FixedValue(
-                            None,
+                            value=None,
                             title=_("Do not check age of never analyzed/vacuumed tables"),
                             totext="",
                         ),

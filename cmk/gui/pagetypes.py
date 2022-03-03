@@ -1449,7 +1449,7 @@ def _page_menu_entries_related(current_type_name: str) -> Iterator[PageMenuEntry
 
 def vs_no_permission_to_publish(type_title: str, title: str) -> FixedValue:
     return FixedValue(
-        False,
+        value=False,
         title=title,
         totext=_(
             "The %s is only visible to you because you don't have the " "permission to share it."

@@ -290,7 +290,7 @@ class ModeDiagHost(WatoMode):
                 (
                     "hostname",
                     FixedValue(
-                        self._hostname,
+                        value=self._hostname,
                         title=_("Hostname"),
                     ),
                 ),

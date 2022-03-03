@@ -34,7 +34,7 @@ def _parameter_valuespec_drbd():
                 Alternative(
                     title=_("Roles"),
                     elements=[
-                        FixedValue(None, totext="", title=_("Do not monitor")),
+                        FixedValue(value=None, totext="", title=_("Do not monitor")),
                         ListOf(
                             Tuple(
                                 orientation="horizontal",
@@ -66,7 +66,7 @@ def _parameter_valuespec_drbd():
                 Alternative(
                     title=_("Diskstates"),
                     elements=[
-                        FixedValue(None, totext="", title=_("Do not monitor")),
+                        FixedValue(value=None, totext="", title=_("Do not monitor")),
                         ListOf(
                             Tuple(
                                 elements=[

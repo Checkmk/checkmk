@@ -119,7 +119,7 @@ def _valuespec_inv_domino_tasks_rules():
                                 back=lambda x: "~" + x,  # prefix ~
                             ),
                             FixedValue(
-                                None,
+                                value=None,
                                 totext="",
                                 title=_("Match all tasks"),
                             ),
@@ -216,7 +216,7 @@ def _parameter_valuespec_domino_tasks():
                                 back=lambda x: "~" + x,  # prefix ~
                             ),
                             FixedValue(
-                                None,
+                                value=None,
                                 totext="",
                                 title=_("Match all tasks"),
                             ),

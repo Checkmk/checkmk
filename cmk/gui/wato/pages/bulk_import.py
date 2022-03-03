@@ -480,7 +480,7 @@ class ModeBulkImport(WatoMode):
                 (
                     "has_title_line",
                     FixedValue(
-                        True,
+                        value=True,
                         title=_("Has title line"),
                         totext=_("The first line in the file contains titles."),
                     ),

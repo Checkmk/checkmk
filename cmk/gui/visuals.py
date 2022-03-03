@@ -1314,7 +1314,7 @@ def page_edit_visual(
         (
             "hidden",
             FixedValue(
-                True,
+                value=True,
                 title=_("Hide this %s in the monitor menu") % visual_type.title,
                 totext="",
             ),
@@ -1322,7 +1322,7 @@ def page_edit_visual(
         (
             "hidebutton",
             FixedValue(
-                True,
+                value=True,
                 title=_("Hide this %s in dropdown menus") % visual_type.title,
                 totext="",
             ),
@@ -2016,7 +2016,7 @@ def SingleInfoSelection(info_keys: List[InfoName]) -> Transform:
             "no_restriction",
             _("No restrictions to specific objects"),
             FixedValue(
-                [],
+                value=[],
                 totext="",
             ),
         ),
@@ -2028,7 +2028,7 @@ def SingleInfoSelection(info_keys: List[InfoName]) -> Transform:
                 "single_host",
                 _("Restrict to a single host"),
                 FixedValue(
-                    ["host"],
+                    value=["host"],
                     totext="",
                 ),
             ),
@@ -2115,7 +2115,7 @@ def single_infos_spec(single_infos: SingleInfos) -> Tuple[str, FixedValue]:
     return (
         "single_infos",
         FixedValue(
-            single_infos,
+            value=single_infos,
             title=_("Show information of single"),
             totext=single_infos
             and ", ".join(single_infos)

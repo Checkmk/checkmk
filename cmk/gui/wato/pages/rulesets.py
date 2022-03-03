@@ -1943,14 +1943,14 @@ class ABCEditRuleMode(WatoMode):
                 (
                     "id",
                     FixedValue(
-                        rule.id,
+                        value=rule.id,
                         title=_("Rule ID"),
                     ),
                 ),
                 (
                     "_name",
                     FixedValue(
-                        rule.ruleset.name,
+                        value=rule.ruleset.name,
                         title=_("Ruleset name"),
                         help=_(
                             "The ruleset name is used to identify the ruleset within Checkmk. "

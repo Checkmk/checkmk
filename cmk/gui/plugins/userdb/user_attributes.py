@@ -73,7 +73,7 @@ class DisableNotificationsUserAttribute(UserAttribute):
                     (
                         "disable",
                         FixedValue(
-                            True,
+                            value=True,
                             title=_("Temporarily disable <b>all</b> notifications!"),
                             totext="",
                         ),
@@ -125,7 +125,7 @@ class StartURLUserAttribute(UserAttribute):
                 orientation="horizontal",
                 elements=[
                     FixedValue(
-                        None,
+                        value=None,
                         title=_("Use the default start URL"),
                         totext="",
                     ),
@@ -165,7 +165,7 @@ class UIThemeUserAttribute(UserAttribute):
             orientation="horizontal",
             elements=[
                 FixedValue(
-                    None,
+                    value=None,
                     title=_("Use the default theme"),
                     totext="",
                 ),
@@ -271,7 +271,7 @@ class UIBasicAdvancedToggle(UserAttribute):
             ),
             elements=[
                 FixedValue(
-                    None,
+                    value=None,
                     title=_("Use the default show mode"),
                     totext="",
                 ),

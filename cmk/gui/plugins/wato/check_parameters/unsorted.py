@@ -101,7 +101,7 @@ def _valuespec_inventory_sap_values():
                             back=lambda x: "~" + x,  # prefix ~
                         ),
                         FixedValue(
-                            None,
+                            value=None,
                             totext="",
                             title=_("Match all nodes"),
                         ),

@@ -57,8 +57,8 @@ def _vs_s3_buckets():
                 Tuple(
                     title=_("No levels"),
                     elements=[
-                        FixedValue(None, totext=""),
-                        FixedValue(None, totext=""),
+                        FixedValue(value=None, totext=""),
+                        FixedValue(value=None, totext=""),
                     ],
                 ),
             ],
@@ -82,8 +82,8 @@ def _vs_glacier_vaults():
                 Tuple(
                     title=_("No levels"),
                     elements=[
-                        FixedValue(None, totext=""),
-                        FixedValue(None, totext=""),
+                        FixedValue(value=None, totext=""),
+                        FixedValue(value=None, totext=""),
                     ],
                 ),
             ],
@@ -107,8 +107,8 @@ def _vs_burst_balance():
                 Tuple(
                     title=_("No levels"),
                     elements=[
-                        FixedValue(None, totext=""),
-                        FixedValue(None, totext=""),
+                        FixedValue(value=None, totext=""),
+                        FixedValue(value=None, totext=""),
                     ],
                 ),
             ],
@@ -132,8 +132,8 @@ def _vs_cpu_credits_balance():
                 Tuple(
                     title=_("No levels"),
                     elements=[
-                        FixedValue(None, totext=""),
-                        FixedValue(None, totext=""),
+                        FixedValue(value=None, totext=""),
+                        FixedValue(value=None, totext=""),
                     ],
                 ),
             ],
@@ -220,7 +220,7 @@ def _vs_limits(
                         orientation="horizontal",
                         elements=[
                             FixedValue(
-                                None,
+                                value=None,
                                 title=title_default,
                                 totext="",
                             ),
@@ -234,9 +234,9 @@ def _vs_limits(
             Tuple(
                 title=_("No levels"),
                 elements=[
-                    FixedValue(None, totext=""),
-                    FixedValue(None, totext=""),
-                    FixedValue(None, totext=""),
+                    FixedValue(value=None, totext=""),
+                    FixedValue(value=None, totext=""),
+                    FixedValue(value=None, totext=""),
                 ],
             ),
         ],
@@ -367,8 +367,8 @@ def _parameter_valuespec_aws_s3_requests():
                         Tuple(
                             title=_("No levels"),
                             elements=[
-                                FixedValue(None, totext=""),
-                                FixedValue(None, totext=""),
+                                FixedValue(value=None, totext=""),
+                                FixedValue(value=None, totext=""),
                             ],
                         ),
                     ],
@@ -389,8 +389,8 @@ def _parameter_valuespec_aws_s3_requests():
                         Tuple(
                             title=_("No levels"),
                             elements=[
-                                FixedValue(None, totext=""),
-                                FixedValue(None, totext=""),
+                                FixedValue(value=None, totext=""),
+                                FixedValue(value=None, totext=""),
                             ],
                         ),
                     ],
@@ -411,8 +411,8 @@ def _parameter_valuespec_aws_s3_requests():
                         Tuple(
                             title=_("No levels"),
                             elements=[
-                                FixedValue(None, totext=""),
-                                FixedValue(None, totext=""),
+                                FixedValue(value=None, totext=""),
+                                FixedValue(value=None, totext=""),
                             ],
                         ),
                     ],
@@ -433,8 +433,8 @@ def _parameter_valuespec_aws_s3_requests():
                         Tuple(
                             title=_("No levels"),
                             elements=[
-                                FixedValue(None, totext=""),
-                                FixedValue(None, totext=""),
+                                FixedValue(value=None, totext=""),
+                                FixedValue(value=None, totext=""),
                             ],
                         ),
                     ],
@@ -455,8 +455,8 @@ def _parameter_valuespec_aws_s3_requests():
                         Tuple(
                             title=_("No levels"),
                             elements=[
-                                FixedValue(None, totext=""),
-                                FixedValue(None, totext=""),
+                                FixedValue(value=None, totext=""),
+                                FixedValue(value=None, totext=""),
                             ],
                         ),
                     ],
@@ -477,8 +477,8 @@ def _parameter_valuespec_aws_s3_requests():
                         Tuple(
                             title=_("No levels"),
                             elements=[
-                                FixedValue(None, totext=""),
-                                FixedValue(None, totext=""),
+                                FixedValue(value=None, totext=""),
+                                FixedValue(value=None, totext=""),
                             ],
                         ),
                     ],
@@ -499,8 +499,8 @@ def _parameter_valuespec_aws_s3_requests():
                         Tuple(
                             title=_("No levels"),
                             elements=[
-                                FixedValue(None, totext=""),
-                                FixedValue(None, totext=""),
+                                FixedValue(value=None, totext=""),
+                                FixedValue(value=None, totext=""),
                             ],
                         ),
                     ],
@@ -1215,8 +1215,8 @@ def _parameter_valuespec_aws_rds_disk_usage():
                         Tuple(
                             title=_("No levels"),
                             elements=[
-                                FixedValue(None, totext=""),
-                                FixedValue(None, totext=""),
+                                FixedValue(value=None, totext=""),
+                                FixedValue(value=None, totext=""),
                             ],
                         ),
                     ],
@@ -1256,8 +1256,8 @@ def _parameter_valuespec_aws_rds_connections():
                         Tuple(
                             title=_("No levels"),
                             elements=[
-                                FixedValue(None, totext=""),
-                                FixedValue(None, totext=""),
+                                FixedValue(value=None, totext=""),
+                                FixedValue(value=None, totext=""),
                             ],
                         ),
                     ],

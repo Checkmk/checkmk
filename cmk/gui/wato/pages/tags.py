@@ -472,7 +472,7 @@ class ABCEditTagMode(ABCTagMode, abc.ABC):
             )
         else:
             vs_id = FixedValue(
-                self._id,
+                value=self._id,
                 title=id_title,
             )
 

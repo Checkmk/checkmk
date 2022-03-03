@@ -741,9 +741,7 @@ class ModeEditTimeperiod(WatoMode):
                 size=80,
             )
         else:
-            name_element = FixedValue(
-                self._name,
-            )
+            name_element = FixedValue(value=self._name)
 
         return Dictionary(
             title=_("Time period"),

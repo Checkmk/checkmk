@@ -37,7 +37,7 @@ def _valuespec_diskstat_inventory():
                 (
                     "summary",
                     FixedValue(
-                        True,
+                        value=True,
                         title=_("Summary"),
                         totext="Create a summary over all physical disks",
                     ),
@@ -45,7 +45,7 @@ def _valuespec_diskstat_inventory():
                 (
                     "physical",
                     FixedValue(
-                        True,
+                        value=True,
                         title=_("Physical disks"),
                         totext="Create a separate check for each physical disk",
                     ),
@@ -53,7 +53,7 @@ def _valuespec_diskstat_inventory():
                 (
                     "lvm",
                     FixedValue(
-                        True,
+                        value=True,
                         title=_("LVM volumes (Linux)"),
                         totext="Create a separate check for each LVM volume (Linux)",
                     ),
@@ -61,7 +61,7 @@ def _valuespec_diskstat_inventory():
                 (
                     "vxvm",
                     FixedValue(
-                        True,
+                        value=True,
                         title=_("VxVM volumes (Linux)"),
                         totext="Create a separate check for each VxVM volume (Linux)",
                     ),
@@ -69,7 +69,7 @@ def _valuespec_diskstat_inventory():
                 (
                     "diskless",
                     FixedValue(
-                        True,
+                        value=True,
                         title=_("Partitions (XEN)"),
                         totext="Create a separate check for each partition (XEN)",
                     ),

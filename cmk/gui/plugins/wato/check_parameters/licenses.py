@@ -33,12 +33,12 @@ def _vs_license():
                 ],
             ),
             FixedValue(
-                None,
+                value=None,
                 totext=_("Critical when all licenses are used"),
                 title=_("Go critical if all licenses are used"),
             ),
             FixedValue(
-                False,
+                value=False,
                 title=_("Always report OK"),
                 totext=_("Alerting depending on the number of used licenses is disabled"),
             ),

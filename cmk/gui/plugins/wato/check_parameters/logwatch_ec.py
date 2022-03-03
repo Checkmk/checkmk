@@ -249,7 +249,7 @@ def _parameter_valuespec_logwatch_ec():
         ),
         elements=[
             FixedValue(
-                "",
+                value="",
                 totext=_("Messages are handled by logwatch."),
                 title=_("No forwarding"),
             ),
@@ -264,7 +264,7 @@ def _parameter_valuespec_logwatch_ec():
                                 title=_("Forwarding Method"),
                                 elements=[
                                     FixedValue(
-                                        "",
+                                        value="",
                                         title=_(
                                             "Local: Send events to local Event Console in same OMD site"
                                         ),
@@ -277,7 +277,7 @@ def _parameter_valuespec_logwatch_ec():
                                         allow_empty=False,
                                     ),
                                     FixedValue(
-                                        "spool:",
+                                        value="spool:",
                                         title=_(
                                             "Local: Spooling - Send events to local event console in same OMD site"
                                         ),

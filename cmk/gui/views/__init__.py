@@ -1690,7 +1690,7 @@ def view_editor_general_properties(ds_name):
             (
                 "datasource",
                 FixedValue(
-                    ds_name,
+                    value=ds_name,
                     title=_("Datasource"),
                     totext=data_source_registry[ds_name]().title,
                     help=_("The datasource of a view cannot be changed."),
@@ -1789,7 +1789,7 @@ def view_editor_column_spec(ident, title, ds_name):
                 ]
             )
         else:
-            elements.extend([FixedValue(None, totext=""), FixedValue(None, totext="")])
+            elements.extend([FixedValue(value=None, totext=""), FixedValue(value=None, totext="")])
         # UX/GUI Better ordering of fields and reason for transform
         elements.insert(1, elements.pop(3))
         return elements

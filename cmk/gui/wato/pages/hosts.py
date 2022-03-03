@@ -400,7 +400,7 @@ class ModeEditHost(ABCHostMode):
 
     def _vs_host_name(self):
         return FixedValue(
-            self._host.name(),
+            value=self._host.name(),
             title=_("Hostname"),
         )
 

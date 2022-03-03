@@ -146,7 +146,7 @@ class ModeEditPassword(SimpleEditMode):
         if user.may("wato.edit_all_passwords"):
             admin_element: List[ValueSpec] = [
                 FixedValue(
-                    None,
+                    value=None,
                     title=_("Administrators"),
                     totext=_(
                         "Administrators (having the permission " '"Write access to all passwords")'

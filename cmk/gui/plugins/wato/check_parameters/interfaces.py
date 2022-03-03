@@ -129,7 +129,7 @@ def _vs_single_discovery():
                 False,
                 _("Do not discover single interfaces"),
                 FixedValue(
-                    {},
+                    value={},
                     totext="",
                 ),
             ),
@@ -152,7 +152,7 @@ def _vs_grouping():
                 False,
                 _("Do not group interfaces"),
                 FixedValue(
-                    {"group_items": []},
+                    value={"group_items": []},
                     totext="",
                 ),
             ),
@@ -266,7 +266,7 @@ def _vs_matching_conditions():
                 True,
                 _("Match all interfaces"),
                 FixedValue(
-                    {},
+                    value={},
                     totext="",
                 ),
             ),

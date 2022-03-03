@@ -869,7 +869,7 @@ class ModeEditUser(WatoMode):
             vs_user_id = UserID(allow_empty=False)
 
         else:
-            vs_user_id = FixedValue(self._user_id)
+            vs_user_id = FixedValue(value=self._user_id)
         vs_user_id.render_input("user_id", self._user_id)
 
         def lockable_input(name, dflt):
@@ -1282,7 +1282,7 @@ class ModeEditUser(WatoMode):
             default_value=None,
             elements=[
                 FixedValue(
-                    None,
+                    value=None,
                     title=_("All sites"),
                     totext=_("May see all sites"),
                 ),

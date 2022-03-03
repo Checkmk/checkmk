@@ -449,7 +449,7 @@ def process_match_options():
                 back=lambda x: "~" + x,  # prefix ~
             ),
             FixedValue(
-                None,
+                value=None,
                 totext="",
                 title=_("Match all processes"),
             ),
@@ -480,7 +480,7 @@ def user_match_options(extra_elements=None):
                 back=lambda x: "~" + x,  # prefix ~
             ),
             FixedValue(
-                None,
+                value=None,
                 totext="",
                 title=_("Match all users"),
             ),
@@ -525,7 +525,7 @@ def cgroup_match_options():
                         back=lambda x: "~" + x,  # prefix ~
                     ),
                     FixedValue(
-                        None,
+                        value=None,
                         totext="",
                         title=_("Match all control groups"),
                     ),
@@ -665,7 +665,7 @@ def _valuespec_inventory_processes_rules() -> Transform:
                     user_match_options(
                         [
                             FixedValue(
-                                False,
+                                value=False,
                                 title=_("Grab user from found processess"),
                                 totext="",
                                 help=_(

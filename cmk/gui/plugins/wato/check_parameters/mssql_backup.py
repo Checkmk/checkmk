@@ -39,8 +39,8 @@ def _vs_mssql_backup_age(title: str) -> Alternative:
             Tuple(
                 title=_("No levels"),
                 elements=[
-                    FixedValue(None, totext=""),
-                    FixedValue(None, totext=""),
+                    FixedValue(value=None, totext=""),
+                    FixedValue(value=None, totext=""),
                 ],
             ),
         ],

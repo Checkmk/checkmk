@@ -1980,7 +1980,7 @@ def _valuespec_active_checks_smtp():
                         (
                             "starttls",
                             FixedValue(
-                                True,
+                                value=True,
                                 totext=_("STARTTLS enabled."),
                                 title=_("Use STARTTLS for the connection."),
                             ),
@@ -2175,8 +2175,8 @@ def _valuespec_custom_checks():
             (
                 "has_perfdata",
                 FixedValue(
-                    title=_("Performance data"),
                     value=True,
+                    title=_("Performance data"),
                     totext=_("process performance data"),
                 ),
             ),
@@ -2732,7 +2732,7 @@ def _valuespec_active_checks_mail_loop():
             (
                 "smtp_tls",
                 FixedValue(
-                    True,
+                    value=True,
                     title=_("Use TLS over SMTP"),
                     totext=_("Encrypt SMTP communication using TLS"),
                 ),
@@ -2740,7 +2740,7 @@ def _valuespec_active_checks_mail_loop():
             (
                 "imap_tls",
                 FixedValue(
-                    True,
+                    value=True,
                     title=_("Use TLS for IMAP authentification"),
                     totext=_("IMAP authentification uses TLS"),
                 ),
@@ -2802,7 +2802,7 @@ def _valuespec_active_checks_mail_loop():
             (
                 "delete_messages",
                 FixedValue(
-                    True,
+                    value=True,
                     title=_("Delete processed messages"),
                     totext=_("Delete all processed message belonging to this check"),
                     help=_(
@@ -2875,7 +2875,7 @@ def _valuespec_active_checks_mail():
                                         title=_("Send events to local event console"),
                                         elements=[
                                             FixedValue(
-                                                "",
+                                                value="",
                                                 totext=_("Directly forward to event console"),
                                                 title=_(
                                                     "Send events to local event console in same OMD site"
@@ -2888,7 +2888,7 @@ def _valuespec_active_checks_mail():
                                                 allow_empty=False,
                                             ),
                                             FixedValue(
-                                                "spool:",
+                                                value="spool:",
                                                 totext=_("Spool to event console"),
                                                 title=_(
                                                     "Spooling: Send events to local event console in same OMD site"
@@ -2965,7 +2965,7 @@ def _valuespec_active_checks_mail():
                                 help=_("Use this syslog application for all created events"),
                                 elements=[
                                     FixedValue(
-                                        None,
+                                        value=None,
                                         title=_("Use the mail subject"),
                                         totext=_("The mail subject is used as syslog appliaction"),
                                     ),
@@ -3011,7 +3011,7 @@ def _valuespec_active_checks_mail():
                                 ),
                                 elements=[
                                     FixedValue(
-                                        True,
+                                        value=True,
                                         title=_("Delete messages"),
                                         totext=_(
                                             "Delete all processed message belonging to this check"
@@ -3175,8 +3175,8 @@ def _valuespec_active_checks_by_ssh():
                         Alternative(
                             title=_("IP-Version"),
                             elements=[
-                                FixedValue("ipv4", totext="", title=_("IPv4")),
-                                FixedValue("ipv6", totext="", title=_("IPv6")),
+                                FixedValue(value="ipv4", totext="", title=_("IPv4")),
+                                FixedValue(value="ipv6", totext="", title=_("IPv6")),
                             ],
                         ),
                     ),
@@ -3203,7 +3203,7 @@ def _valuespec_active_checks_by_ssh():
                     (
                         "accept_new_host_keys",
                         FixedValue(
-                            True,
+                            value=True,
                             title=_("Enable automatic host key acceptance"),
                             help=_(
                                 "This will automatically accept hitherto-unseen keys"

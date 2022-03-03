@@ -42,7 +42,9 @@ def _parameter_valuespec_oracle_sessions():
                             "This check monitors the current number of active sessions on Oracle"
                         ),
                         elements=[
-                            FixedValue(None, title=_("Do not use absolute levels"), totext=""),
+                            FixedValue(
+                                value=None, title=_("Do not use absolute levels"), totext=""
+                            ),
                             Tuple(
                                 title=_("Number of active sessions"),
                                 elements=[

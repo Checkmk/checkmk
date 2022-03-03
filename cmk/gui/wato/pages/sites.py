@@ -272,7 +272,7 @@ class ModeEditSite(WatoMode):
             )
         else:
             vs_site_id = FixedValue(
-                self._site_id,
+                value=self._site_id,
                 title=_("Site ID"),
             )
 
@@ -372,7 +372,7 @@ class ModeEditSite(WatoMode):
                 Alternative(
                     title=_("Status host"),
                     elements=[
-                        FixedValue(None, title=_("No status host"), totext=""),
+                        FixedValue(value=None, title=_("No status host"), totext=""),
                         Tuple(
                             title=_("Use the following status host"),
                             orientation="horizontal",

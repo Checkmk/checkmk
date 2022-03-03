@@ -316,8 +316,8 @@ class FixedValue(ValueSpec[T]):
 
     def __init__(  # pylint: disable=redefined-builtin
         self,
-        value: T,  # TODO: Make this a kwarg-only paramter, too
         *,
+        value: T,
         totext: _Optional[str] = None,
         title: _Optional[str] = None,
         help: _Optional[ValueSpecHelp] = None,
@@ -6652,7 +6652,7 @@ def ColorWithThemeOrMetricDefault(
         title=title,
         elements=[
             FixedValue(
-                "default",
+                value="default",
                 title=_("Default color"),
                 totext=_("Use the default color of the theme or the metric."),
             ),
@@ -6670,12 +6670,12 @@ def ColorWithThemeAndMetricDefault(
         title=title,
         elements=[
             FixedValue(
-                "default_theme",
+                value="default_theme",
                 title=_("Default theme color"),
                 totext=_("Use the default color of the theme."),
             ),
             FixedValue(
-                "default_metric",
+                value="default_metric",
                 title=_("Default metric color"),
                 totext=_("Use the default color of the metric."),
             ),

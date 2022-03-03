@@ -184,7 +184,7 @@ def _vs_add_common_mail_elements(elements):
         (
             "disable_multiplexing",
             FixedValue(
-                True,
+                value=True,
                 title=_("Send seperate notifications to every recipient"),
                 totext=_(
                     "A seperate notification is send to every recipient. Recipients "
@@ -298,7 +298,7 @@ class NotificationParameterMail(NotificationParameter):
                 (
                     "no_floating_graphs",
                     FixedValue(
-                        True,
+                        value=True,
                         title=_("Display graphs among each other"),
                         totext=_("Graphs are shown among each other"),
                         help=_(
@@ -402,7 +402,7 @@ class NotificationParameterSlack(NotificationParameter):
                     (
                         "ignore_ssl",
                         FixedValue(
-                            True,
+                            value=True,
                             title=_("Disable SSL certificate verification"),
                             totext=_("Disable SSL certificate verification"),
                             help=_("Ignore unverified HTTPS request warnings. Use with caution."),
@@ -454,7 +454,7 @@ class NotificationParameterCiscoWebexTeams(NotificationParameter):
                 (
                     "ignore_ssl",
                     FixedValue(
-                        True,
+                        value=True,
                         title=_("Disable SSL certificate verification"),
                         totext=_("Disable SSL certificate verification"),
                         help=_("Ignore unverified HTTPS request warnings. Use with caution."),
@@ -513,7 +513,7 @@ class NotificationParameterVictorOPS(NotificationParameter):
                 (
                     "ignore_ssl",
                     FixedValue(
-                        True,
+                        value=True,
                         title=_("Disable SSL certificate verification"),
                         totext=_("Disable SSL certificate verification"),
                         help=_("Ignore unverified HTTPS request warnings. Use with caution."),
@@ -559,14 +559,14 @@ class NotificationParameterPagerDuty(NotificationParameter):
                 (
                     "webhook_url",
                     FixedValue(
-                        "https://events.pagerduty.com/v2/enqueue",
+                        value="https://events.pagerduty.com/v2/enqueue",
                         title=_("API Endpoint from PagerDuty V2"),
                     ),
                 ),
                 (
                     "ignore_ssl",
                     FixedValue(
-                        True,
+                        value=True,
                         title=_("Disable SSL certificate verification"),
                         totext=_("Disable SSL certificate verification"),
                         help=_("Ignore unverified HTTPS request warnings. Use with caution."),
@@ -604,7 +604,7 @@ class NotificationParameterSIGNL4(NotificationParameter):
                 (
                     "ignore_ssl",
                     FixedValue(
-                        True,
+                        value=True,
                         title=_("Disable SSL certificate verification"),
                         totext=_("Disable SSL certificate verification"),
                         help=_("Ignore unverified HTTPS request warnings. Use with caution."),
@@ -709,7 +709,7 @@ class NotificationILert(NotificationParameter):
                 (
                     "ignore_ssl",
                     FixedValue(
-                        True,
+                        value=True,
                         title=_("Disable SSL certificate verification"),
                         totext=_("Disable SSL certificate verification"),
                         help=_("Ignore unverified HTTPS request warnings. Use with caution."),
@@ -785,7 +785,7 @@ class NotificationParameterJIRA_ISSUES(NotificationParameter):
                 (
                     "ignore_ssl",
                     FixedValue(
-                        True,
+                        value=True,
                         title=_("Disable SSL certificate verification"),
                         totext=_("Disable SSL certificate verification"),
                         help=_("Ignore unverified HTTPS request warnings. Use with caution."),
@@ -998,8 +998,8 @@ class NotificationParameterServiceNow(NotificationParameter):
                             "problem ID on incident creation."
                         ),
                         elements=[
-                            FixedValue(False, title=_("Deactivated"), totext=""),
-                            FixedValue(True, title=_("Use site ID"), totext=""),
+                            FixedValue(value=False, title=_("Deactivated"), totext=""),
+                            FixedValue(value=True, title=_("Use site ID"), totext=""),
                         ],
                         default_value=False,
                     ),
@@ -1864,7 +1864,7 @@ class NotificationParameterSMSviaIP(NotificationParameter):
                 (
                     "ignore_ssl",
                     FixedValue(
-                        True,
+                        value=True,
                         title=_("Disable SSL certificate verification"),
                         totext=_("Disable SSL certificate verification"),
                         help=_("Ignore unverified HTTPS request warnings. Use with caution."),

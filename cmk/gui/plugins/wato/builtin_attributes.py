@@ -797,7 +797,7 @@ class HostAttributeNetworkScanResult(ABCHostAttributeValueSpec):
                         title=_("Started"),
                         elements=[
                             FixedValue(
-                                None,
+                                value=None,
                                 totext=_("No scan has been started yet."),
                             ),
                             AbsoluteDate(
@@ -813,11 +813,11 @@ class HostAttributeNetworkScanResult(ABCHostAttributeValueSpec):
                         title=_("Finished"),
                         elements=[
                             FixedValue(
-                                None,
+                                value=None,
                                 totext=_("No scan has finished yet."),
                             ),
                             FixedValue(
-                                True,
+                                value=True,
                                 totext="",  # currently running
                             ),
                             AbsoluteDate(
@@ -833,15 +833,15 @@ class HostAttributeNetworkScanResult(ABCHostAttributeValueSpec):
                         title=_("State"),
                         elements=[
                             FixedValue(
-                                None,
+                                value=None,
                                 totext="",  # Not started or currently running
                             ),
                             FixedValue(
-                                True,
+                                value=True,
                                 totext=_("Succeeded"),
                             ),
                             FixedValue(
-                                False,
+                                value=False,
                                 totext=_("Failed"),
                             ),
                         ],
@@ -971,7 +971,7 @@ class IPMICredentials(Alternative):
     def __init__(self, **kwargs):
         kwargs["elements"] = [
             FixedValue(
-                None,
+                value=None,
                 title=_("No explicit credentials"),
                 totext="",
             ),
@@ -1222,7 +1222,7 @@ class HostAttributeMetaData(ABCHostAttributeValueSpec):
                         title=_("Created at"),
                         elements=[
                             FixedValue(
-                                None,
+                                value=None,
                                 totext=_("Sometime before 1.6"),
                             ),
                             AbsoluteDate(
@@ -1239,7 +1239,7 @@ class HostAttributeMetaData(ABCHostAttributeValueSpec):
                         title=_("Created by"),
                         elements=[
                             FixedValue(
-                                None,
+                                value=None,
                                 totext=_("Someone before 1.6"),
                             ),
                             TextInput(

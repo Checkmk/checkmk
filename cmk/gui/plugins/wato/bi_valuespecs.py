@@ -298,7 +298,9 @@ class BIConfigEmptySearch(BIEmptySearch, ABCBIConfigSearch):
         return (
             cls.type(),
             _("No search"),
-            Transform(FixedValue(""), forth=lambda x: "", back=lambda x: {"type": cls.type()}),
+            Transform(
+                FixedValue(value=""), forth=lambda x: "", back=lambda x: {"type": cls.type()}
+            ),
         )
 
     @classmethod

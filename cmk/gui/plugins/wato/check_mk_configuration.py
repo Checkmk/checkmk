@@ -1136,7 +1136,7 @@ class ConfigVariableLoginScreen(ConfigVariable):
                 (
                     "hide_version",
                     FixedValue(
-                        True,
+                        value=True,
                         title=_("Hide Checkmk version"),
                         totext=_("Hide the Checkmk version from the login box"),
                     ),
@@ -1305,7 +1305,7 @@ class ConfigVariableUserIconsAndActions(ConfigVariable):
                                 (
                                     "toplevel",
                                     FixedValue(
-                                        True,
+                                        value=True,
                                         title=_("Show in column"),
                                         totext=_("Directly show the action icon in the column"),
                                         help=_(
@@ -4018,7 +4018,7 @@ def _valuespec_periodic_discovery():
         },
         elements=[
             FixedValue(
-                None,
+                value=None,
                 title=_("Do not perform periodic service discovery check"),
                 totext=_("no discovery check"),
             ),
@@ -6109,7 +6109,7 @@ def _vs_max_cache_age(max_cache_age_title):
         title=_("Keep hosts while piggyback source sends piggyback data only for other hosts for"),
         elements=[
             FixedValue(
-                "global",
+                value="global",
                 title=max_cache_age_title,
                 totext="",
             ),

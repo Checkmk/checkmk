@@ -358,7 +358,7 @@ def SNMPCredentials(  # pylint: disable=redefined-builtin
 
 def _snmp_no_credentials_element() -> ValueSpec:
     return FixedValue(
-        None,
+        value=None,
         title=_("No explicit credentials"),
         totext="",
     )
@@ -377,7 +377,7 @@ def _snmpv3_no_auth_no_priv_credentials_element() -> ValueSpec:
             title=_("Credentials for SNMPv3 without authentication and privacy (noAuthNoPriv)"),
             elements=[
                 FixedValue(
-                    "noAuthNoPriv",
+                    value="noAuthNoPriv",
                     title=_("Security Level"),
                     totext=_("No authentication, no privacy"),
                 ),
@@ -393,7 +393,7 @@ def _snmpv3_auth_no_priv_credentials_element() -> ValueSpec:
         title=_("Credentials for SNMPv3 with authentication but without privacy (authNoPriv)"),
         elements=[
             FixedValue(
-                "authNoPriv",
+                value="authNoPriv",
                 title=_("Security Level"),
                 totext=_("authentication but no privacy"),
             ),
@@ -425,7 +425,7 @@ def _snmpv3_auth_priv_credentials_element(for_ec: bool = False) -> ValueSpec:
         title=_("Credentials for SNMPv3 with authentication and privacy (authPriv)"),
         elements=[
             FixedValue(
-                "authPriv",
+                value="authPriv",
                 title=_("Security Level"),
                 totext=_("authentication and encryption"),
             ),
@@ -505,7 +505,7 @@ def _get_drop_domain_element() -> _Tuple[str, ValueSpec]:
     return (
         "drop_domain",
         FixedValue(
-            True,
+            value=True,
             title=_("Convert FQHN"),
             totext=_("Drop domain part (<tt>host123.foobar.de</tt> → <tt>host123</tt>)"),
         ),
@@ -785,7 +785,7 @@ def HTTPProxyReference(allowed_schemes=_allowed_schemes):
                 "environment",
                 _("Use from environment"),
                 FixedValue(
-                    "environment",
+                    value="environment",
                     help=_(
                         "Use the proxy settings from the environment variables. The variables <tt>NO_PROXY</tt>, "
                         "<tt>HTTP_PROXY</tt> and <tt>HTTPS_PROXY</tt> are taken into account during execution. "
@@ -802,7 +802,7 @@ def HTTPProxyReference(allowed_schemes=_allowed_schemes):
                 "no_proxy",
                 _("Connect without proxy"),
                 FixedValue(
-                    None,
+                    value=None,
                     totext=_("Connect directly to the destination instead of using a proxy."),
                 ),
             ),
@@ -1292,7 +1292,7 @@ def Levels(
         help=help,
         elements=[
             FixedValue(
-                None,
+                value=None,
                 title=_("No Levels"),
                 totext=_("Do not impose levels, always be OK"),
             ),
@@ -2298,7 +2298,7 @@ class DictHostTagCondition(Transform):
                         label=choice_title + " ",
                     ),
                     FixedValue(
-                        tag_id,
+                        value=tag_id,
                         title=_u(title),
                         totext=_u(title),
                     ),

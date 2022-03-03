@@ -184,7 +184,9 @@ class ABCNotificationsMode(ABCEventsMode):
                         "and also gives you access to special event fields."
                     ),
                     elements=[
-                        FixedValue(False, title=_("Do not match Event Console alerts"), totext=""),
+                        FixedValue(
+                            value=False, title=_("Do not match Event Console alerts"), totext=""
+                        ),
                         Dictionary(
                             title=_("Match only Event Console alerts"),
                             elements=[
@@ -1576,7 +1578,7 @@ class ABCEditNotificationRuleMode(ABCNotificationsMode):
                 elements=[
                     vs,
                     FixedValue(
-                        None,
+                        value=None,
                         totext=_("previous notifications of this type are cancelled"),
                         title=_("Cancel previous notifications"),
                     ),

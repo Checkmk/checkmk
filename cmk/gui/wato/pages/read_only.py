@@ -92,12 +92,12 @@ class ModeManageReadOnly(WatoMode):
                         title=_("Enabled"),
                         elements=[
                             FixedValue(
-                                False,
+                                value=False,
                                 title=_("Disabled "),
                                 totext="Not enabled",
                             ),
                             FixedValue(
-                                True,
+                                value=True,
                                 title=_("Enabled permanently"),
                                 totext=_("Enabled until disabling"),
                             ),

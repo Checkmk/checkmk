@@ -190,9 +190,9 @@ def connection_set(
                 Alternative(
                     title=_("SSL certificate verification"),
                     elements=[
-                        FixedValue(False, title=_("Verify the certificate"), totext=""),
+                        FixedValue(value=False, title=_("Verify the certificate"), totext=""),
                         FixedValue(
-                            True, title=_("Ignore certificate errors (unsecure)"), totext=""
+                            value=True, title=_("Ignore certificate errors (unsecure)"), totext=""
                         ),
                     ],
                     default_value=False,
@@ -445,7 +445,7 @@ def _valuespec_special_agents_proxmox_ve():
             (
                 "no-cert-check",
                 FixedValue(
-                    True,
+                    value=True,
                     title=_("Disable SSL certificate validation"),
                     totext=_("SSL certificate validation is disabled"),
                 ),
@@ -501,7 +501,7 @@ def _valuespec_special_agents_cisco_prime():
             (
                 "no-tls",
                 FixedValue(
-                    True,
+                    value=True,
                     title=_("Don't use TLS/SSL/Https (unsecure)"),
                     totext=_("TLS/SSL/Https disabled"),
                 ),
@@ -509,7 +509,7 @@ def _valuespec_special_agents_cisco_prime():
             (
                 "no-cert-check",
                 FixedValue(
-                    True,
+                    value=True,
                     title=_("Disable SSL certificate validation"),
                     totext=_("SSL certificate validation is disabled"),
                 ),
@@ -671,9 +671,11 @@ def _valuespec_special_agents_kubernetes():
                     Alternative(
                         title=_("SSL certificate verification"),
                         elements=[
-                            FixedValue(False, title=_("Verify the certificate"), totext=""),
+                            FixedValue(value=False, title=_("Verify the certificate"), totext=""),
                             FixedValue(
-                                True, title=_("Ignore certificate errors (unsecure)"), totext=""
+                                value=True,
+                                title=_("Ignore certificate errors (unsecure)"),
+                                totext="",
                             ),
                         ],
                         default_value=False,
@@ -684,8 +686,10 @@ def _valuespec_special_agents_kubernetes():
                     Alternative(
                         title=_("Namespace prefix for hosts"),
                         elements=[
-                            FixedValue(False, title=_("Don't use a namespace prefix"), totext=""),
-                            FixedValue(True, title=_("Use a namespace prefix"), totext=""),
+                            FixedValue(
+                                value=False, title=_("Don't use a namespace prefix"), totext=""
+                            ),
+                            FixedValue(value=True, title=_("Use a namespace prefix"), totext=""),
                         ],
                         help=_(
                             "If a cluster uses multiple namespaces you need to activate this option. "
@@ -750,8 +754,8 @@ def _ssl_verification():
         Alternative(
             title=_("SSL certificate verification"),
             elements=[
-                FixedValue(True, title=_("Verify the certificate"), totext=""),
-                FixedValue(False, title=_("Ignore certificate errors (unsecure)"), totext=""),
+                FixedValue(value=True, title=_("Verify the certificate"), totext=""),
+                FixedValue(value=False, title=_("Ignore certificate errors (unsecure)"), totext=""),
             ],
             default_value=False,
         ),
@@ -1667,7 +1671,7 @@ def _valuespec_generic_metrics_alertmanager():
                         (
                             "ignore_na",
                             FixedValue(
-                                True,
+                                value=True,
                                 title=_("Ignore alert rules with no status"),
                                 totext="",
                                 help=_(
@@ -1778,8 +1782,8 @@ def _valuespec_special_agents_vsphere():
                     Alternative(
                         title=_("SSL certificate checking"),
                         elements=[
-                            FixedValue(False, title=_("Deactivated"), totext=""),
-                            FixedValue(True, title=_("Use hostname"), totext=""),
+                            FixedValue(value=False, title=_("Deactivated"), totext=""),
+                            FixedValue(value=True, title=_("Use hostname"), totext=""),
                             TextInput(
                                 title=_("Use other hostname"),
                                 help=_(
@@ -2469,7 +2473,7 @@ def _factory_default_special_agents_random():
 
 def _valuespec_special_agents_random():
     return FixedValue(
-        {},
+        value={},
         title=_("Create random monitoring data"),
         help=_(
             "By configuring this rule for a host - instead of the normal "
@@ -2496,7 +2500,7 @@ def _factory_default_special_agents_acme_sbc():
 
 def _valuespec_special_agents_acme_sbc():
     return FixedValue(
-        {},
+        value={},
         title=_("ACME Session Border Controller"),
         help=_(
             "This rule activates an agent which connects "
@@ -2761,7 +2765,7 @@ def _valuespec_special_agents_ucs_bladecenter():
             (
                 "no_cert_check",
                 FixedValue(
-                    True,
+                    value=True,
                     title=_("Disable SSL certificate validation"),
                     totext=_("SSL certificate validation is disabled"),
                 ),
@@ -3016,7 +3020,7 @@ def _valuespec_special_agents_ruckus_spot():
                     help=_("Here you can set a manual address if the server differs from the host"),
                     elements=[
                         FixedValue(
-                            True,
+                            value=True,
                             title=_("Use host address"),
                             totext="",
                         ),
@@ -3730,12 +3734,14 @@ class MultisiteBiDatasource:
             elements=[
                 (
                     "querying_host",
-                    FixedValue("querying_host", totext="", title=_("Assign to the querying host")),
+                    FixedValue(
+                        value="querying_host", totext="", title=_("Assign to the querying host")
+                    ),
                 ),
                 (
                     "affected_hosts",
                     FixedValue(
-                        "affected_hosts", totext="", title=_("Assign to the affected hosts")
+                        value="affected_hosts", totext="", title=_("Assign to the affected hosts")
                     ),
                 ),
                 (
@@ -3943,7 +3949,7 @@ def _vs_element_aws_limits():
     return (
         "limits",
         FixedValue(
-            True,
+            value=True,
             help=_(
                 "If limits are enabled all instances are fetched regardless of "
                 "possibly configured restriction to names or tags"
@@ -4043,14 +4049,16 @@ def _valuespec_special_agents_aws():
                             (
                                 "ce",
                                 FixedValue(
-                                    None,
+                                    value=None,
                                     totext=_("Monitor costs and usage"),
                                     title=_("Costs and usage (CE)"),
                                 ),
                             ),
                             (
                                 "route53",
-                                FixedValue(None, totext=_("Monitor Route53"), title=_("Route53")),
+                                FixedValue(
+                                    value=None, totext=_("Monitor Route53"), title=_("Route53")
+                                ),
                             ),
                         ],
                     ),
@@ -4101,7 +4109,7 @@ def _valuespec_special_agents_aws():
                                         (
                                             "requests",
                                             FixedValue(
-                                                None,
+                                                value=None,
                                                 totext=_("Monitor request metrics"),
                                                 title=_("Request metrics"),
                                                 help=_(
@@ -4211,7 +4219,7 @@ def _valuespec_special_agents_aws():
                                         (
                                             "cloudfront",
                                             FixedValue(
-                                                None,
+                                                value=None,
                                                 totext=_("Monitor CloudFront WAFs"),
                                                 title=_("CloudFront WAFs"),
                                                 help=_(

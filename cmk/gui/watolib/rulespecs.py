@@ -958,7 +958,7 @@ class ManualCheckParameterRulespec(HostRulespec):
             parameter_vs = _wrap_valuespec_in_timeperiod_valuespec(self._parameter_valuespec())
         else:
             parameter_vs = FixedValue(
-                None,
+                value=None,
                 help=_("This check has no parameters."),
                 totext="",
             )
@@ -985,7 +985,7 @@ class ManualCheckParameterRulespec(HostRulespec):
             return self._rule_value_item_spec()
 
         return FixedValue(
-            None,
+            value=None,
             totext="",
         )
 

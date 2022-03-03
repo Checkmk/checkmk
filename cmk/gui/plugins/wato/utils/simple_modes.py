@@ -397,7 +397,7 @@ class SimpleEditMode(_SimpleWatoModeBase, abc.ABC):
                 (
                     "ident",
                     FixedValue(
-                        self._ident,
+                        value=self._ident,
                         title=_("Unique ID"),
                     ),
                 ),

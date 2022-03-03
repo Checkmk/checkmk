@@ -180,7 +180,7 @@ fs_levels_elements_hack: List[_Tuple[str, ValueSpec]] = [
     (
         "flex_levels",
         FixedValue(
-            None,
+            value=None,
             totext="",
             title="",
         ),
@@ -272,7 +272,7 @@ fs_inodes_elements = [
                     ],
                 ),
                 FixedValue(
-                    None,
+                    value=None,
                     totext="",
                     title=_("Ignore levels"),
                 ),

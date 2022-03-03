@@ -27,8 +27,8 @@ def _vs_fortinet_signatures(title):
             Tuple(
                 title=_("No levels"),
                 elements=[
-                    FixedValue(None, totext=""),
-                    FixedValue(None, totext=""),
+                    FixedValue(value=None, totext=""),
+                    FixedValue(value=None, totext=""),
                 ],
             ),
         ],

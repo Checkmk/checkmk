@@ -1759,7 +1759,7 @@ def test_rulespecs_get_by_group():
     assert len(result) == 0
 
     registry.register(
-        HostRulespec(name="dummy_name", group=DummyGroup, valuespec=lambda: FixedValue(None))
+        HostRulespec(name="dummy_name", group=DummyGroup, valuespec=lambda: FixedValue(value=None))
     )
     result = registry.get_by_group("group")
     assert len(result) == 1

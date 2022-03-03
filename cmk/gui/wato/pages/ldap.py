@@ -162,7 +162,7 @@ class LDAPConnectionValuespec(Transform):
             id_element = (
                 "id",
                 FixedValue(
-                    self._connection_id,
+                    value=self._connection_id,
                     title=_("ID"),
                 ),
             )

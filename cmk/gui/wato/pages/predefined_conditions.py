@@ -41,7 +41,7 @@ def dummy_rulespec() -> ServiceRulespec:
     return ServiceRulespec(
         name="dummy",
         group=RulespecGroupMonitoringConfiguration,
-        valuespec=lambda: FixedValue(None),
+        valuespec=lambda: FixedValue(value=None),
     )
 
 
@@ -196,7 +196,7 @@ class ModeEditPredefinedCondition(SimpleEditMode):
         if user.may("wato.edit_all_predefined_conditions"):
             admin_element: List[ValueSpec] = [
                 FixedValue(
-                    None,
+                    value=None,
                     title=_("Administrators"),
                     totext=_(
                         "Administrators (having the permission "

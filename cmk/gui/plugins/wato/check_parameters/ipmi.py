@@ -102,7 +102,7 @@ def _valuespec_inventory_ipmi_rules() -> Transform:
                             (
                                 "summarize",
                                 _("Summary of all sensors"),
-                                FixedValue({}, totext=""),
+                                FixedValue(value={}, totext=""),
                             ),
                             (
                                 "single",

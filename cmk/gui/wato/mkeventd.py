@@ -301,8 +301,8 @@ def vs_mkeventd_rule_pack(fixed_id=None, fixed_title=None):
             (
                 "id",
                 FixedValue(
-                    title=_("Rule pack ID"),
                     value=fixed_id,
+                    title=_("Rule pack ID"),
                     help=_("The ID of an exported rule pack cannot be modified."),
                 ),
             )
@@ -325,8 +325,8 @@ def vs_mkeventd_rule_pack(fixed_id=None, fixed_title=None):
             (
                 "title",
                 FixedValue(
-                    title=_("Title"),
                     value=fixed_title,
+                    title=_("Title"),
                     help=_("The title of an exported rule pack cannot be modified."),
                 ),
             )
@@ -388,7 +388,7 @@ def vs_mkeventd_rule(customer=None):
                 (
                     "customer",
                     FixedValue(
-                        customer,
+                        value=customer,
                         title=_("Customer"),
                         totext="%s (%s)"
                         % (managed.get_customer_name_by_id(customer), _("Set by rule pack")),
@@ -586,7 +586,7 @@ def vs_mkeventd_rule(customer=None):
                 ),
                 elements=[
                     FixedValue(
-                        None,
+                        value=None,
                         title=_("Use global rule limit"),
                         totext="",
                     ),
@@ -3704,7 +3704,7 @@ class ConfigVariableEventConsoleReplication(ConfigVariable):
                     (
                         "disabled",
                         FixedValue(
-                            True,
+                            value=True,
                             totext=_("Replication is disabled"),
                             title=_("Currently disable replication"),
                             help=_(
@@ -3717,7 +3717,7 @@ class ConfigVariableEventConsoleReplication(ConfigVariable):
                     (
                         "logging",
                         FixedValue(
-                            True,
+                            value=True,
                             title=_("Log replication events"),
                             totext=_("logging is enabled"),
                             help=_(
@@ -4295,7 +4295,7 @@ class ConfigVariableEventConsoleTranslateSNMPTraps(ConfigVariable):
                                 (
                                     "add_description",
                                     FixedValue(
-                                        True,
+                                        value=True,
                                         title=_("Add OID descriptions"),
                                         totext=_("Append descriptions of OIDs to message texts"),
                                     ),
@@ -4817,7 +4817,7 @@ def _valuespec_active_checks_mkevents():
             (
                 "ignore_acknowledged",
                 FixedValue(
-                    True,
+                    value=True,
                     title=_("Ignore acknowledged events"),
                     help=_(
                         "If you check this box then only open events are honored when "
@@ -4833,7 +4833,7 @@ def _valuespec_active_checks_mkevents():
                     title=_("Access to the Event Console"),
                     elements=[
                         FixedValue(
-                            None,
+                            value=None,
                             title=_("Connect to the local Event Console"),
                             totext=_("local connect"),
                         ),

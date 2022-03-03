@@ -74,7 +74,7 @@ class SiteManagement:
     @classmethod
     def livestatus_proxy_valuespec(cls):
         return FixedValue(
-            None,
+            value=None,
             title=_("Use Livestatus Proxy Daemon"),
             totext=_("Connect directly (not available in CRE)"),
         )
@@ -86,7 +86,7 @@ class SiteManagement:
                 "local",
                 _("Connect to the local site"),
                 FixedValue(
-                    None,
+                    value=None,
                     totext="",
                 ),
             ),
@@ -151,7 +151,7 @@ class SiteManagement:
                 (
                     "plain_text",
                     _("Plain text (Unencrypted)"),
-                    FixedValue({}, totext=_("Use plain text, unencrypted transport")),
+                    FixedValue(value={}, totext=_("Use plain text, unencrypted transport")),
                 ),
                 (
                     "encrypted",
@@ -413,7 +413,7 @@ class CEESiteManagement(SiteManagement):
             title=_("Use Livestatus Proxy Daemon"),
             elements=[
                 FixedValue(
-                    None,
+                    value=None,
                     title=_("Connect directly, without Livestatus Proxy"),
                     totext="",
                 ),
@@ -429,7 +429,7 @@ class CEESiteManagement(SiteManagement):
                                     title=_("Parameters"),
                                     elements=[
                                         FixedValue(
-                                            None,
+                                            value=None,
                                             title=_("Use global connection parameters"),
                                             totext=_(
                                                 'Use the <a href="%s">global parameters</a> for this connection'
@@ -653,7 +653,7 @@ class LivestatusViaTCP(Dictionary):
             (
                 "tls",
                 FixedValue(
-                    True,
+                    value=True,
                     title=_("Encrypt communication"),
                     totext=_("Encrypt TCP Livestatus connections"),
                     help=_(

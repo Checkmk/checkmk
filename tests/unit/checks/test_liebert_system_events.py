@@ -103,8 +103,8 @@ def test_discover_liebert_system_events(string_table, discovered_item):
                     "Supply Fluid Over Temp": "Inactive Event",
                 },
             },
-            [],
-            id="State is UNKNOWN (implicitly) when there are only incative events",
+            [(0, "Normal")],
+            id="State is OK when there are only incative events",
         ),
     ],
 )

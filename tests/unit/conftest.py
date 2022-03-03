@@ -37,7 +37,7 @@ import cmk.gui.views
 from cmk.gui.livestatus_utils.testing import mock_livestatus
 
 if is_enterprise_repo():
-    import cmk.cee.dcd.plugins.connectors.connectors_api.v1
+    import cmk.cee.dcd.plugins.connectors.connectors_api.v1  # pylint: disable=import-error
 
 logger = logging.getLogger(__name__)
 
@@ -392,7 +392,9 @@ def registry_reset():
         )
         registries.append(cmk.cee.dcd.plugins.connectors.connectors_api.v1.connector_registry)
 
-    defaults_per_registry = [(registry, list(registry)) for registry in registries]  # type: ignore[call-overload]
+    defaults_per_registry = [
+        (registry, list(registry)) for registry in registries
+    ]  # type: ignore[call-overload]
     try:
         yield
     finally:

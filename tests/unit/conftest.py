@@ -393,8 +393,8 @@ def registry_reset():
         registries.append(cmk.cee.dcd.plugins.connectors.connectors_api.v1.connector_registry)
 
     defaults_per_registry = [
-        (registry, list(registry)) for registry in registries
-    ]  # type: ignore[call-overload]
+        (registry, list(registry)) for registry in registries  # type: ignore[call-overload]
+    ]
     try:
         yield
     finally:

@@ -96,6 +96,16 @@ def test_discover_liebert_system_events(string_table, discovered_item):
             [(0, "Normal")],
             id="State is OK when there are no events",
         ),
+        pytest.param(
+            {
+                "events": {
+                    "Ambient Air Temperature Sensor Issue": "Inactive Event",
+                    "Supply Fluid Over Temp": "Inactive Event",
+                },
+            },
+            [],
+            id="State is UNKNOWN (implicitly) when there are only incative events",
+        ),
     ],
 )
 def test_check_liebert_system_events(string_table, check_results):

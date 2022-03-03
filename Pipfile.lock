@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "973b02ad3cd79e61e37f9f2f2c6994a22468ce801b66fb7306c9337c4721285e"
+            "sha256": "9c7c1afa1ff874a99ceb99d9a90e410828d708095c9b8d914beba96ef7636deb"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -318,7 +318,6 @@
             "version": "==2.0.2"
         },
         "google-api-core": {
-            "extras": [],
             "hashes": [
                 "sha256:3c9f0c539281529e26cc5631dba911ded66e27ed91f269b58fc4eb53d4b81ce8",
                 "sha256:56551465be3e42966cfcb6f9243caf60aa79d023b763351876cf9702735132f4"
@@ -349,6 +348,22 @@
             ],
             "version": "==0.1.0"
         },
+        "google-cloud-access-context-manager": {
+            "hashes": [
+                "sha256:249a1c1a858bb182b73749784457baacfcab8e7c13da5f3421109d5b8dace5b8",
+                "sha256:ad6c5cfccfe2abd8a6f4e8715cdec3d93a8ce7f3deb7e37ba8742ded9ba43c8b"
+            ],
+            "markers": "python_version >= '3.6'",
+            "version": "==0.1.9"
+        },
+        "google-cloud-asset": {
+            "hashes": [
+                "sha256:e2bd45ece80c4b74d97661205dfe53b58e31bff6162274ba37263a032e25f088",
+                "sha256:f86121c27700f412bf47f2c7e2ba8ae6632df878fb862857874a90b130283a2e"
+            ],
+            "index": "pypi",
+            "version": "==3.8.0"
+        },
         "google-cloud-core": {
             "hashes": [
                 "sha256:7d19bf8868b410d0bdf5a03468a3f3f2db233c0ee86a023f4ecc2b7a4b15f736",
@@ -372,6 +387,22 @@
             ],
             "index": "pypi",
             "version": "==2.8.0"
+        },
+        "google-cloud-org-policy": {
+            "hashes": [
+                "sha256:21b40fdbf5cc770ce663752020d894bdd775635001264861ef1ef1de4891e08b",
+                "sha256:731133188b67dd58c3a0d898bba1c13f2794fd615a9929ac000a4ef38ca7f9e0"
+            ],
+            "markers": "python_version >= '3.6'",
+            "version": "==1.3.0"
+        },
+        "google-cloud-os-config": {
+            "hashes": [
+                "sha256:d5e9a83e75f12912f33107befe88d31afb76b184092d2c2ee8ddc2d3aa744f4d",
+                "sha256:f597dfe45f7ab0306e83f5e2cf740d1d36a25a60323aff1f5344fd2ce0bc394f"
+            ],
+            "markers": "python_version >= '3.6'",
+            "version": "==1.11.0"
         },
         "google-cloud-storage": {
             "hashes": [
@@ -2342,11 +2373,11 @@
         },
         "hypothesis": {
             "hashes": [
-                "sha256:963bf340994a7acea2a56e9f79a0e67aefc6ab31cbbc5b052c37d7e9cd582334",
-                "sha256:f0d39e9c99bc01efcb1741a2e75474db342184b8c070eb0efc8e3943e11bf60e"
+                "sha256:7a16ba804baeebdcc5dc4638c32c5fc3fc552c1be30ae21a84c5d9c802b06e31",
+                "sha256:8685bc3a1da8527334b38fd84bdb627dbbff9959ed9c9592e32292fd091f748c"
             ],
             "index": "pypi",
-            "version": "==6.39.1"
+            "version": "==6.39.2"
         },
         "identify": {
             "hashes": [
@@ -3271,11 +3302,11 @@
         },
         "responses": {
             "hashes": [
-                "sha256:15c63ad16de13ee8e7182d99c9334f64fd81f1ee79f90748d527c28f7ca9dd51",
-                "sha256:380cad4c1c1dc942e5e8a8eaae0b4d4edf708f4f010db8b7bcfafad1fcd254ff"
+                "sha256:3fc29c3117e14136b833a0a6d4e7f1217c6301bf08b6086db468e12f1e3290e2",
+                "sha256:53354b5de163aa2074312c71d8ebccb8bd1ab336cff7053abb75e84dc5637abe"
             ],
             "index": "pypi",
-            "version": "==0.18.0"
+            "version": "==0.19.0"
         },
         "rfc3986": {
             "hashes": [

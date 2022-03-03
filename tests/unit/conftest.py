@@ -8,7 +8,7 @@ import logging
 import shutil
 import socket
 from pathlib import Path
-from typing import Any, Iterable, Mapping, NamedTuple
+from typing import Any, Iterable, Iterator, Mapping, NamedTuple
 from unittest import mock
 
 import pytest
@@ -24,6 +24,7 @@ import cmk.utils.paths
 import cmk.utils.redis as redis
 import cmk.utils.store as store
 import cmk.utils.version as cmk_version
+from cmk.utils.plugin_registry import Registry
 from cmk.utils.site import omd_site
 
 import cmk.gui.dashboard
@@ -378,9 +379,9 @@ def initialised_item_state():
 
 
 @pytest.fixture(autouse=True)
-def registry_reset():
+def registry_reset() -> Iterator[None]:
     """Fixture to reset registries to its default entries."""
-    registries = [
+    registries: list[Registry[Any]] = [
         cmk.gui.dashboard.dashlet_registry,
         cmk.gui.views.icon_and_action_registry,
         cmk.gui.permissions.permission_registry,
@@ -392,9 +393,7 @@ def registry_reset():
         )
         registries.append(cmk.cee.dcd.plugins.connectors.connectors_api.v1.connector_registry)
 
-    defaults_per_registry = [
-        (registry, list(registry)) for registry in registries  # type: ignore[call-overload]
-    ]
+    defaults_per_registry = [(registry, list(registry)) for registry in registries]
     try:
         yield
     finally:

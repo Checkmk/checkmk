@@ -8,7 +8,7 @@
 This library is currently handled as internal module of Check_MK and
 does not offer stable APIs. The code may change at any time."""
 
-__version__ = "2.0.0p21"
+__version__ = "2.0.0p22"
 
 import errno
 import enum

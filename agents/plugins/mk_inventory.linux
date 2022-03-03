@@ -9,7 +9,7 @@
 
 # Disable unused variable error (needed to keep track of version)
 # shellcheck disable=SC2034
-CMK_VERSION="2.0.0p21"
+CMK_VERSION="2.0.0p22"
 
 # Run and *send* only once every __ seconds
 . $MK_CONFDIR/mk_inventory.cfg 2>/dev/null || true

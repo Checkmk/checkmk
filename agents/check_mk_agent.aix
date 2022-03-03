@@ -226,7 +226,7 @@ function may_get_plugin_interpreter {
 }
 
 echo "<<<check_mk>>>"
-echo "Version: 2.0.0p21"
+echo "Version: 2.0.0p22"
 echo "AgentOS: aix"
 echo "Hostname: $(hostname)"
 echo "AgentDirectory: $MK_CONFDIR"

@@ -9,7 +9,7 @@
 
 # Disable unused variable error (needed to keep track of version)
 # shellcheck disable=SC2034
-CMK_VERSION="2.0.0p21"
+CMK_VERSION="2.0.0p22"
 
 # sample output of pgrep command
 # 1051 /usr/bin/redis-server 127.0.0.1:6380

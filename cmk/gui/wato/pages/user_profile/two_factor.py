@@ -98,8 +98,8 @@ class UserTwoFactorOverview(ABCUserProfilePage):
             save_two_factor_credentials(user.id, credentials)
             flash(
                 _(
-                    "Backup codes have been generated: <ul>%s</ul> Save them now. "
-                    "If you loose them, you will have to generate new ones."
+                    "The following backup codes have been generated: <ul>%s</ul> These codes are "
+                    "displayed only now. Save them securely."
                 )
                 % "".join(f"<li><tt>{c}</tt></li>" for c in display_codes)
             )
@@ -141,11 +141,37 @@ class UserTwoFactorOverview(ABCUserProfilePage):
         assert user.id is not None
 
         credentials = load_two_factor_credentials(user.id)
+        webauthn_credentials = credentials["webauthn_credentials"]
+        backup_codes = credentials["backup_codes"]
 
         html.begin_form("two_factor", method="POST")
+        html.div("", id_="webauthn_message")
+        forms.header(_("Credentials"))
 
-        self._show_webauthn_credentials(credentials["webauthn_credentials"])
-        self._show_backup_codes(credentials["backup_codes"])
+        forms.section(_("Registered credentials"), simple=True)
+        if webauthn_credentials:
+            self._show_credentials(webauthn_credentials)
+        else:
+            html.i(_("No credentials registered"))
+
+        forms.section(_("Backup codes"), simple=True)
+        if backup_codes:
+            html.p(
+                _(
+                    "You have %d unused backup codes left. You can use them as one-time password "
+                    "if your key is not available."
+                )
+                % len(backup_codes)
+            )
+            html.i(
+                _(
+                    "If you regenerate backup codes, you automatically invalidate the existing codes."
+                )
+            )
+        else:
+            html.i(_("No backup codes created yet."))
+
+        forms.end()
 
         html.hidden_fields()
         html.end_form()

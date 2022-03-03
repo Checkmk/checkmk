@@ -19,7 +19,7 @@ def _parameter_valuespec_fortimail_cpu_load():
             (
                 "cpu_load",
                 Tuple(
-                    [
+                    elements=[
                         Float(title=_("Warning at")),
                         Float(title=_("Critical at")),
                     ],

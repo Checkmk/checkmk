@@ -5006,6 +5006,7 @@ class Tuple(ValueSpec):
 
     def __init__(  # pylint: disable=redefined-builtin
         self,
+        *,
         elements: list[ValueSpec],
         show_titles: bool = True,
         orientation: str = "vertical",

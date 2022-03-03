@@ -19,7 +19,7 @@ def _parameter_valuespec_fortimail_disk_usage():
             (
                 "disk_usage",
                 Tuple(
-                    [
+                    elements=[
                         Percentage(
                             title=_("Warning at"),
                             default_value=80.0,

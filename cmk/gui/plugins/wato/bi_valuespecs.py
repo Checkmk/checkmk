@@ -267,8 +267,16 @@ def _bi_host_choice_vs(title):
             title=title,
             choices=[
                 ("all_hosts", _("All hosts")),
-                ("host_name_regex", _("Regex for host name"), TextInput(_("Pattern"), size=60)),
-                ("host_alias_regex", _("Regex for host alias"), TextInput(_("Pattern"), size=60)),
+                (
+                    "host_name_regex",
+                    _("Regex for host name"),
+                    TextInput(label=_("Pattern"), size=60),
+                ),
+                (
+                    "host_alias_regex",
+                    _("Regex for host alias"),
+                    TextInput(label=_("Pattern"), size=60),
+                ),
             ],
             help=_(
                 'If you choose "Regex for host name" or "Regex for host alias", '

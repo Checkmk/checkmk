@@ -849,7 +849,7 @@ def _vs_alternative_levels(  # pylint: disable=redefined-builtin
 
 def _vs_state_mappings() -> CascadingDropdown:
     return CascadingDropdown(
-        [
+        choices=[
             (
                 "independent_mappings",
                 _("Map operational and admin state independently"),

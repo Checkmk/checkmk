@@ -164,6 +164,7 @@ class ValueSpec(abc.ABC, Generic[T]):
     # TODO: Cleanup help argument redefined-builtin
     def __init__(  # pylint: disable=redefined-builtin
         self,
+        *,
         title: _Optional[str] = None,
         help: _Optional[ValueSpecHelp] = None,
         default_value: ValueSpecDefault[T] = DEF_VALUE,
@@ -315,7 +316,8 @@ class FixedValue(ValueSpec[T]):
 
     def __init__(  # pylint: disable=redefined-builtin
         self,
-        value: T,
+        value: T,  # TODO: Make this a kwarg-only paramter, too
+        *,
         totext: _Optional[str] = None,
         title: _Optional[str] = None,
         help: _Optional[ValueSpecHelp] = None,
@@ -360,6 +362,7 @@ class Age(ValueSpec[Seconds]):
 
     def __init__(  # pylint: disable=redefined-builtin
         self,
+        *,
         label: _Optional[str] = None,
         minvalue: _Optional[Seconds] = None,
         maxvalue: _Optional[Seconds] = None,
@@ -440,6 +443,7 @@ class Age(ValueSpec[Seconds]):
 class NumericRenderer:
     def __init__(
         self,
+        *,
         size: _Optional[int],
         maxvalue: _Optional[SupportsFloat],
         label: _Optional[str],
@@ -491,6 +495,7 @@ class Integer(ValueSpec[int]):
 
     def __init__(  # pylint: disable=redefined-builtin
         self,
+        *,
         size: _Optional[int] = None,
         minvalue: _Optional[int] = None,
         maxvalue: _Optional[int] = None,
@@ -605,6 +610,7 @@ class TextInput(ValueSpec[str]):
 
     def __init__(  # pylint: disable=redefined-builtin
         self,
+        *,
         label: _Optional[str] = None,
         size: Union[int, str] = 25,
         try_max_width: bool = False,
@@ -935,6 +941,7 @@ RegExpUnicode = RegExp  # alias added in 2.1.0 for compatibility
 class EmailAddress(TextInput):
     def __init__(  # pylint: disable=redefined-builtin
         self,
+        *,
         make_clickable: bool = False,
         # TextInput
         label: _Optional[str] = None,
@@ -1131,6 +1138,7 @@ class HostAddress(TextInput):
 
     def __init__(  # pylint: disable=redefined-builtin
         self,
+        *,
         allow_host_name: bool = True,
         allow_ipv4_address: bool = True,
         allow_ipv6_address: bool = True,
@@ -1284,6 +1292,7 @@ def AbsoluteDirname(  # pylint: disable=redefined-builtin
 class Url(TextInput):
     def __init__(  # pylint: disable=redefined-builtin
         self,
+        *,
         default_scheme: str,
         allowed_schemes: Collection[str],
         show_as_link: bool = False,
@@ -1427,6 +1436,7 @@ def CheckMKVersion(
 class TextAreaUnicode(TextInput):
     def __init__(  # pylint: disable=redefined-builtin
         self,
+        *,
         cols: int = 60,
         rows: Union[int, str] = 20,
         minrows: int = 0,
@@ -1526,6 +1536,7 @@ class Filename(TextInput):
     # TODO: Cleanup default / default_value?
     def __init__(  # pylint: disable=redefined-builtin
         self,
+        *,
         default: str = "/tmp/foo",
         trans_func: _Optional[Callable[[str], str]] = None,
         # TextInput
@@ -1614,6 +1625,7 @@ class Filename(TextInput):
 class ListOfStrings(ValueSpec[Sequence[str]]):
     def __init__(  # pylint: disable=redefined-builtin
         self,
+        *,
         # ListOfStrings
         valuespec: _Optional[ValueSpec[str]] = None,
         size: Union[str, int] = 25,
@@ -2310,6 +2322,7 @@ class Float(ValueSpec[float]):
 
     def __init__(  # pylint: disable=redefined-builtin
         self,
+        *,
         decimal_separator: str = ".",
         allow_int: bool = False,
         # Integer
@@ -2381,6 +2394,7 @@ class Float(ValueSpec[float]):
 class Percentage(Float):
     def __init__(  # pylint: disable=redefined-builtin
         self,
+        *,
         # Float
         decimal_separator: str = ".",
         allow_int: bool = False,
@@ -2434,6 +2448,7 @@ class Percentage(Float):
 class Checkbox(ValueSpec[bool]):
     def __init__(  # pylint: disable=redefined-builtin
         self,
+        *,
         label: _Optional[str] = None,
         true_label: _Optional[str] = None,
         false_label: _Optional[str] = None,
@@ -2701,6 +2716,7 @@ class AjaxDropdownChoice(DropdownChoice):
 
     def __init__(  # pylint: disable=redefined-builtin
         self,
+        *,
         regex: Union[None, str, Pattern[str]] = None,
         regex_error: _Optional[str] = None,
         strict: Literal["True", "False", "withHost"] = "False",
@@ -2955,6 +2971,7 @@ class CascadingDropdown(ValueSpec[CascadingDropdownChoiceValue]):
 
     def __init__(  # pylint: disable=redefined-builtin
         self,
+        *,
         choices: CascadingDropdownChoices,
         label: _Optional[str] = None,
         separator: str = ", ",
@@ -3344,6 +3361,7 @@ class ListChoice(ValueSpec[Sequence[ListChoiceChoiceIdent]]):
 
     def __init__(  # pylint: disable=redefined-builtin
         self,
+        *,
         # ListChoice
         # TODO: This None works together with get_elements which are implemented in the specific sub
         # classes. This should beter be cleaned up to work like other valuespecs, e.g.
@@ -3498,6 +3516,7 @@ class DualListChoice(ListChoice):
 
     def __init__(  # pylint: disable=redefined-builtin
         self,
+        *,
         # DualListChoice
         autoheight: bool = False,
         custom_order: bool = False,
@@ -3697,6 +3716,7 @@ class OptionalDropdownChoice(DropdownChoice):
 
     def __init__(  # pylint: disable=redefined-builtin
         self,
+        *,
         explicit: ValueSpec,
         choices: DropdownChoices,
         otherlabel: _Optional[str] = None,
@@ -4121,6 +4141,7 @@ class Timeofday(ValueSpec[TimeofdayValue]):
 
     def __init__(  # pylint: disable=redefined-builtin
         self,
+        *,
         allow_24_00: bool = False,
         allow_empty: bool = True,
         # ValueSpec
@@ -4225,6 +4246,7 @@ class TimeofdayRange(ValueSpec[TimeofdayRangeValue]):
 
     def __init__(  # pylint: disable=redefined-builtin
         self,
+        *,
         allow_empty: bool = True,
         # ValueSpec
         title: _Optional[str] = None,
@@ -4374,6 +4396,7 @@ class ComputedTimerange(NamedTuple):
 class Timerange(CascadingDropdown):
     def __init__(  # pylint: disable=redefined-builtin
         self,
+        *,
         include_time: bool = False,
         choices: _Optional[Promise[list[CascadingDropdownChoice]]] = None,
         # CascadingDropdown
@@ -4819,6 +4842,7 @@ class Alternative(ValueSpec):
 
     def __init__(  # pylint: disable=redefined-builtin
         self,
+        *,
         elements: list[ValueSpec],
         match: _Optional[Callable[[Any], int]] = None,
         style: str = "",  # Unused argument left here to remain compatible with user extensions.
@@ -5484,6 +5508,7 @@ class ElementSelection(ValueSpec):
 
     def __init__(  # pylint: disable=redefined-builtin
         self,
+        *,
         label: _Optional[str] = None,
         empty_text: _Optional[str] = None,
         # ValueSpec
@@ -5663,6 +5688,7 @@ class Transform(ValueSpec):
     def __init__(  # pylint: disable=redefined-builtin
         self,
         valuespec: ValueSpec,
+        *,
         back: _Optional[Callable[[Any], Any]] = None,
         forth: _Optional[Callable[[Any], Any]] = None,
         title: _Optional[str] = None,

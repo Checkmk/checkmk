@@ -2052,7 +2052,7 @@ def SingleInfoSelection(info_keys: List[InfoName]) -> Transform:
     # "manual_selection").
     return Transform(
         CascadingDropdown(
-            cascading_dropdown_choices,
+            choices=cascading_dropdown_choices,
             title=_("Specific objects"),
             sorted=False,
         ),

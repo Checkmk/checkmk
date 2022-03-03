@@ -2516,6 +2516,7 @@ class DropdownChoice(ValueSpec[DropdownChoiceModel]):
     # TODO: Cleanup redefined builtin sorted
     def __init__(  # pylint: disable=redefined-builtin
         self,
+        *,
         # DropdownChoice
         choices: DropdownChoices,
         sorted: bool = False,

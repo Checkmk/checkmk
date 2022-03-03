@@ -908,7 +908,7 @@ def _vs_state_mappings() -> CascadingDropdown:
                         orientation="horizontal",
                         elements=[
                             DropdownChoice(
-                                [
+                                choices=[
                                     (
                                         str(key),
                                         f"{key} - {value}",
@@ -918,7 +918,7 @@ def _vs_state_mappings() -> CascadingDropdown:
                                 title=_("Operational state"),
                             ),
                             DropdownChoice(
-                                [
+                                choices=[
                                     (
                                         str(key),
                                         f"{key} - {value}",

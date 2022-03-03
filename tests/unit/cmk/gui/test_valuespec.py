@@ -155,9 +155,9 @@ def test_age_value_to_json_conversion(value, result):
     ],
 )
 def test_dropdownchoice_value_to_json_conversion(choices, value, result):
-    assert vs.DropdownChoice(choices).value_to_html(value) == result
-    json_value = vs.DropdownChoice(choices).value_to_json(value)
-    assert vs.DropdownChoice(choices).value_from_json(json_value) == value
+    assert vs.DropdownChoice(choices=choices).value_to_html(value) == result
+    json_value = vs.DropdownChoice(choices=choices).value_to_json(value)
+    assert vs.DropdownChoice(choices=choices).value_from_json(json_value) == value
 
 
 @pytest.mark.parametrize(
@@ -177,7 +177,7 @@ def test_dropdownchoice_value_to_json_conversion(choices, value, result):
 )
 def test_dropdownchoice_validate_datatype(choices, deprecated_choices, value, is_valid_datatype):
     dropdown_choice = vs.DropdownChoice(
-        choices,
+        choices=choices,
         deprecated_choices=deprecated_choices,
     )
     if is_valid_datatype:

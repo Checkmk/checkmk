@@ -5029,7 +5029,7 @@ def _valuespec_special_agents_datadog() -> Dictionary:
                         (
                             "syslog_facility",
                             DropdownChoice(
-                                syslog_facilities,
+                                choices=syslog_facilities,
                                 title=_("Syslog facility"),
                                 help=_(
                                     "Syslog facility of forwarded events shown in Event Console."
@@ -5040,7 +5040,7 @@ def _valuespec_special_agents_datadog() -> Dictionary:
                         (
                             "syslog_priority",
                             DropdownChoice(
-                                syslog_priorities,
+                                choices=syslog_priorities,
                                 title=_("Syslog priority"),
                                 help=_(
                                     "Syslog priority of forwarded events shown in Event Console."
@@ -5051,7 +5051,7 @@ def _valuespec_special_agents_datadog() -> Dictionary:
                         (
                             "service_level",
                             DropdownChoice(
-                                service_levels(),
+                                choices=service_levels(),
                                 title=_("Service level"),
                                 help=_("Service level of forwarded events shown in Event Console."),
                                 prefix_values=True,
@@ -5060,7 +5060,7 @@ def _valuespec_special_agents_datadog() -> Dictionary:
                         (
                             "add_text",
                             DropdownChoice(
-                                [
+                                choices=[
                                     (
                                         False,
                                         "Do not add text",

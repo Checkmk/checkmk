@@ -4,25 +4,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Iterable, Mapping, NamedTuple, Optional, Sequence, Tuple
+from typing import Any, Iterable, Mapping, Optional, Tuple
 
 # The only reasonable thing to do here is use our own version parsing. It's to big to duplicate.
 from cmk.utils.version import parse_check_mk_version  # pylint: disable=cmk-module-layer-violation
 
 from .agent_based_api.v1 import check_levels, regex, register, Result, Service, State, TableRow
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, InventoryResult, StringTable
-
-
-class Plugin(NamedTuple):
-    name: str
-    version: str
-    version_int: Optional[int]
-    cache_interval: Optional[int]
-
-
-class Section(NamedTuple):
-    plugins: Sequence[Plugin]
-    local_checks: Sequence[Plugin]
+from .utils.checkmk import Plugin, PluginSection
 
 
 def _extract_cache_interval(path: str) -> Optional[int]:
@@ -76,7 +65,7 @@ def _parse_plugin(line: str, prefix: str) -> Optional[Plugin]:
     )
 
 
-def parse_checkmk_agent_plugins_lnx(string_table: StringTable) -> Section:
+def parse_checkmk_agent_plugins_lnx(string_table: StringTable) -> PluginSection:
 
     assert string_table[0][0].startswith("pluginsdir ")
     plugins_dir = string_table[0][0][len("pluginsdir ") :]
@@ -84,7 +73,7 @@ def parse_checkmk_agent_plugins_lnx(string_table: StringTable) -> Section:
     assert string_table[1][0].startswith("localdir ")
     local_dir = string_table[1][0][len("localdir ") :]
 
-    return Section(
+    return PluginSection(
         plugins=[
             plugin
             for line, in string_table[2:]
@@ -105,12 +94,12 @@ register.agent_section(
 )
 
 
-def discover_checkmk_agent_plugins(section: Section) -> DiscoveryResult:
+def discover_checkmk_agent_plugins(section: PluginSection) -> DiscoveryResult:
     if section.plugins or section.local_checks:
         yield Service()
 
 
-def check_checkmk_agent_plugins(params: Mapping[str, Any], section: Section) -> CheckResult:
+def check_checkmk_agent_plugins(params: Mapping[str, Any], section: PluginSection) -> CheckResult:
     yield Result(
         state=State.OK,
         summary=f"Agent plugins: {len(section.plugins)}",
@@ -170,7 +159,7 @@ register.check_plugin(
 )
 
 
-def inventory_checkmk_agent_plugins(section: Section) -> InventoryResult:
+def inventory_checkmk_agent_plugins(section: PluginSection) -> InventoryResult:
     path = ("software", "applications", "checkmk-agent")
     for type_, plugins in zip(("plugins", "local_checks"), (section.plugins, section.local_checks)):
         yield from (

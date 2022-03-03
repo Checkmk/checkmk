@@ -9,12 +9,10 @@ from typing import Any, Mapping
 
 from .agent_based_api.v1 import check_levels, register, render, Result, Service, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
-
-# TODO: find a solution for the duplicate code in the check section parsing.
-Section = Mapping[str, str]
+from .utils.checkmk import CheckmkSection
 
 
-def discover_cmk_agent_update(section: Section) -> DiscoveryResult:
+def discover_cmk_agent_update(section: CheckmkSection) -> DiscoveryResult:
     if "agentupdate" in section:
         yield Service()
 
@@ -37,7 +35,7 @@ def _get_error_result(error: str, params: Mapping[str, Any]) -> CheckResult:
         yield Result(state=default_state, summary=f"Error: {error}")
 
 
-def check_cmk_agent_update(params: Mapping[str, Any], section: Section) -> CheckResult:
+def check_cmk_agent_update(params: Mapping[str, Any], section: CheckmkSection) -> CheckResult:
     if not (raw_string := section.get("agentupdate")):
         return
 

@@ -6,6 +6,7 @@
 
 from cmk.base.plugins.agent_based import checkmk_agent_plugins as cap
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, State, TableRow
+from cmk.base.plugins.agent_based.utils import checkmk
 
 _OUTPUT = [
     ["pluginsdir /usr/lib/check_mk_agent/plugins"],
@@ -16,13 +17,13 @@ _OUTPUT = [
 ]
 
 
-_SECTION = cap.Section(
+_SECTION = checkmk.PluginSection(
     plugins=[
-        cap.Plugin("mk_filestats.py", "2.1.0i1", 2010010100, None),
-        cap.Plugin("zorp", "2.1.0i1", 2010010100, 123),
+        checkmk.Plugin("mk_filestats.py", "2.1.0i1", 2010010100, None),
+        checkmk.Plugin("zorp", "2.1.0i1", 2010010100, 123),
     ],
     local_checks=[
-        cap.Plugin("sync_local_check.sh", "3.14.15", 3141550000, None),
+        checkmk.Plugin("sync_local_check.sh", "3.14.15", 3141550000, None),
     ],
 )
 
@@ -36,7 +37,7 @@ def test_discover_positive() -> None:
 
 
 def test_discover_negative() -> None:
-    assert not list(cap.discover_checkmk_agent_plugins(cap.Section((), ())))
+    assert not list(cap.discover_checkmk_agent_plugins(checkmk.PluginSection((), ())))
 
 
 def test_check():

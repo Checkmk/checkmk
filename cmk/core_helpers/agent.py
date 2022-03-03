@@ -5,21 +5,17 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import abc
-import json
 import logging
 import os
 import time
 from pathlib import Path
 from typing import (
-    cast,
-    Dict,
     final,
     Final,
     Iterator,
     List,
     Mapping,
     MutableMapping,
-    NamedTuple,
     Optional,
     Sequence,
     Tuple,
@@ -30,10 +26,8 @@ import cmk.utils.agent_simulator as agent_simulator
 import cmk.utils.debug
 import cmk.utils.misc
 from cmk.utils.check_utils import ActiveCheckResult
-from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.translations import TranslationOptions
-from cmk.utils.type_defs import AgentRawData, AgentTargetVersion, ExitSpec, HostName, SectionName
-from cmk.utils.version import parse_check_mk_version
+from cmk.utils.type_defs import AgentRawData, HostName, SectionName
 
 from ._base import Fetcher, Parser, Summarizer
 from ._markers import PiggybackMarker, SectionMarker
@@ -701,271 +695,15 @@ class AgentSummarizer(Summarizer[AgentRawDataSection]):
     pass
 
 
-class _ControllerInfo(NamedTuple):
-    version: str
-    allow_legacy_pull: bool
-
-
 class AgentSummarizerDefault(AgentSummarizer):
-    # TODO: refactor
-    def __init__(
-        self,
-        exit_spec: ExitSpec,
-        *,
-        is_cluster: bool,
-        agent_min_version: int,
-        agent_target_version: AgentTargetVersion,
-        only_from: Union[None, List[str], str],
-    ) -> None:
-        super().__init__(exit_spec)
-        self.is_cluster: Final = is_cluster
-        self.agent_min_version: Final = agent_min_version
-        self.agent_target_version: Final = agent_target_version
-        self.only_from: Final = only_from
-
     def summarize_success(
         self,
         host_sections: HostSections[AgentRawDataSection],
         *,
         mode: Mode,
     ) -> Sequence[ActiveCheckResult]:
-        return self.summarize_check_mk_section(
-            host_sections.sections.get(SectionName("check_mk")),
-            mode=mode,
-        )
-
-    def summarize_check_mk_section(
-        self,
-        cmk_section: Optional[Sequence[AgentRawDataSection]],
-        *,
-        mode: Mode,
-    ) -> Sequence[ActiveCheckResult]:
-        agent_info = self._get_agent_info(cmk_section)
-        controller_info = self._get_controller_info(
-            agent_info.get("agentcontroller") or "",
-            agent_info.get("agentcontrollerstatus") or "",
-        )
-
-        subresults = []
-
-        if not self.is_cluster and agent_info["version"] is not None:
-            subresults.append(ActiveCheckResult(0, "Version: %s" % agent_info["version"]))
-
-        if not self.is_cluster and agent_info["agentos"] is not None:
-            subresults.append(ActiveCheckResult(0, "OS: %s" % agent_info["agentos"]))
-
-        if mode is Mode.CHECKING and cmk_section:
-            subresults.extend(
-                r
-                for r in [
-                    self._check_version(agent_info.get("version")),
-                    self._check_only_from(agent_info.get("onlyfrom")),
-                    self._check_agent_update(
-                        agent_info.get("updatefailed"), agent_info.get("updaterecoveraction")
-                    ),
-                    self._check_python_plugins(
-                        agent_info.get("failedpythonplugins"), agent_info.get("failedpythonreason")
-                    ),
-                    self._check_transport(bool(agent_info.get("sshclient")), controller_info),
-                ]
-                if r
-            )
-
-        return subresults
-
-    @staticmethod
-    def _get_agent_info(
-        string_table: Optional[Sequence[AgentRawDataSection]],
-    ) -> Dict[str, Optional[str]]:
-        section: Dict[str, Optional[str]] = {}
-
-        for line in string_table or ():
-            key = line[0][:-1].lower()
-            val = " ".join(line[1:])
-            section[key] = f"{section.get(key) or ''} {val}".strip() if len(line) > 1 else None
-
-        return {"version": None, "agentos": None, **section}
-
-    @staticmethod
-    def _get_controller_info(
-        controller_version: str,
-        raw_string: str,
-    ) -> Optional[_ControllerInfo]:
-        if not controller_version:
-            return None
-        loaded = json.loads(raw_string)
-        return _ControllerInfo(
-            version=controller_version,
-            allow_legacy_pull=loaded["allow_legacy_pull"],
-        )
-
-    def _check_version(self, agent_version: Optional[str]) -> Optional[ActiveCheckResult]:
-        expected_version = self.agent_target_version
-        wrong_version_state = self.exit_spec.get("wrong_version", 1)
-
-        if (
-            expected_version
-            and agent_version
-            and not AgentSummarizerDefault._is_expected_agent_version(
-                agent_version, expected_version
-            )
-        ):
-            expected = ""
-            # expected version can either be:
-            # a) a single version string
-            # b) a tuple of ("at_least", {'daily_build': '2014.06.01', 'release': '1.2.5i4'}
-            #    (the dict keys are optional)
-            if isinstance(expected_version, tuple) and expected_version[0] == "at_least":
-                spec = cast(Dict[str, str], expected_version[1])
-                expected = "at least"
-                if "daily_build" in spec:
-                    expected += " build %s" % spec["daily_build"]
-                if "release" in spec:
-                    if "daily_build" in spec:
-                        expected += " or"
-                    expected += " release %s" % spec["release"]
-            else:
-                expected = "%s" % (expected_version,)
-
-            return ActiveCheckResult(
-                wrong_version_state,
-                f"unexpected agent version {agent_version} (should be {expected})",
-            )
-
-        if self.agent_min_version and cast(int, agent_version) < self.agent_min_version:
-            # TODO: This branch seems to be wrong. Or: In which case is agent_version numeric?
-            return ActiveCheckResult(
-                wrong_version_state,
-                f"old plugin version {agent_version} (should be at least {self.agent_min_version})",
-            )
-
-        return None
-
-    def _check_only_from(
-        self,
-        agent_only_from: Optional[str],
-    ) -> Optional[ActiveCheckResult]:
-        if agent_only_from is None:
-            return None
-
-        config_only_from = self.only_from
-        if config_only_from is None:
-            return None
-
-        allowed_nets = set(cmk.utils.misc.normalize_ip_addresses(agent_only_from))
-        expected_nets = set(cmk.utils.misc.normalize_ip_addresses(config_only_from))
-        if allowed_nets == expected_nets:
-            return ActiveCheckResult(0, f"Allowed IP ranges: {' '.join(allowed_nets)}")
-
-        infotexts = []
-        exceeding = allowed_nets - expected_nets
-        if exceeding:
-            infotexts.append("exceeding: %s" % " ".join(sorted(exceeding)))
-
-        missing = expected_nets - allowed_nets
-        if missing:
-            infotexts.append("missing: %s" % " ".join(sorted(missing)))
-
-        mismatch_state = self.exit_spec.get("restricted_address_mismatch", 1)
-        return ActiveCheckResult(
-            mismatch_state, f"Unexpected allowed IP ranges ({', '.join(infotexts)})"
-        )
-
-    def _check_python_plugins(
-        self,
-        agent_failed_plugins: Optional[str],
-        agent_fail_reason: Optional[str],
-    ) -> Optional[ActiveCheckResult]:
-        if agent_failed_plugins is None:
-            return None
-
-        return ActiveCheckResult(
-            1,
-            f"Failed to execute python plugins: {agent_failed_plugins}"
-            + (f" ({agent_fail_reason})" if agent_fail_reason else ""),
-        )
-
-    def _check_agent_update(
-        self,
-        update_fail_reason: Optional[str],
-        on_update_fail_action: Optional[str],
-    ) -> Optional[ActiveCheckResult]:
-        if update_fail_reason is None or on_update_fail_action is None:
-            return None
-
-        return ActiveCheckResult(1, f"{update_fail_reason} {on_update_fail_action}")
-
-    @staticmethod
-    def _is_expected_agent_version(
-        agent_version: Optional[str],
-        expected_version: AgentTargetVersion,
-    ) -> bool:
-        try:
-            if agent_version is None:
-                return False
-
-            if agent_version in ["(unknown)", "None", "unknown"]:
-                return False
-
-            if isinstance(expected_version, str) and expected_version != agent_version:
-                return False
-
-            if isinstance(expected_version, tuple) and expected_version[0] == "at_least":
-                spec = cast(Dict[str, str], expected_version[1])
-                if cmk.utils.misc.is_daily_build_version(agent_version) and "daily_build" in spec:
-                    expected = int(spec["daily_build"].replace(".", ""))
-
-                    branch = cmk.utils.misc.branch_of_daily_build(agent_version)
-                    if branch == "master":
-                        agent = int(agent_version.replace(".", ""))
-
-                    else:  # branch build (e.g. 1.2.4-2014.06.01)
-                        agent = int(agent_version.split("-")[1].replace(".", ""))
-
-                    if agent < expected:
-                        return False
-
-                elif "release" in spec:
-                    if cmk.utils.misc.is_daily_build_version(agent_version):
-                        return False
-
-                    if parse_check_mk_version(agent_version) < parse_check_mk_version(
-                        spec["release"]
-                    ):
-                        return False
-
-            return True
-        except Exception as e:
-            if cmk.utils.debug.enabled():
-                raise
-            raise MKGeneralException(
-                "Unable to check agent version (Agent: %s Expected: %s, Error: %s)"
-                % (agent_version, expected_version, e)
-            )
-
-    def _check_transport(
-        self,
-        ssh_transport: bool,
-        controller_info: Optional[_ControllerInfo],
-    ) -> Optional[ActiveCheckResult]:
-        if ssh_transport:
-            return ActiveCheckResult(0, "Transport via SSH")
-
-        if not controller_info:
-            return None
-
-        if not controller_info.allow_legacy_pull:
-            return None
-
-        return ActiveCheckResult(
-            self.exit_spec.get("legacy_pull_mode", 1),
-            "TLS is not activated on monitored host (see details)",
-            (
-                "The hosts agent supports TLS, but it is not being used.",
-                "We strongly recommend to enable TLS by registering the host to the site "
-                "(using the `cmk-agent-ctl register` command on the monitored host).",
-                "However you can configure missing TLS to be OK in the setting "
-                '"State in case of available but not enabled TLS" of the ruleset '
-                '"Status of the Checkmk services".',
-            ),
-        )
+        # TODO: host_sections is not needed anymore. Doing something similar in the
+        # IPMI DS will allow us to simplify things a lot.
+        # Note: currently we *must not* return an empty sequence, because the datasource
+        # will not be visible in the Check_MK service otherwise.
+        return [ActiveCheckResult(0, "Success")]

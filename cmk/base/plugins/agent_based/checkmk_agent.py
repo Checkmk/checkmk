@@ -4,15 +4,35 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import json
 import time
-from typing import Any, Iterable, Mapping, Optional
+from typing import Any, cast, Dict, Iterable, Mapping, NamedTuple, Optional, Union
+
+from cmk.utils.misc import (  # pylint: disable=cmk-module-layer-violation
+    branch_of_daily_build,
+    is_daily_build_version,
+    normalize_ip_addresses,
+)
+from cmk.utils.type_defs import AgentTargetVersion  # pylint: disable=cmk-module-layer-violation
 
 # The only reasonable thing to do here is use our own version parsing. It's to big to duplicate.
 from cmk.utils.version import parse_check_mk_version  # pylint: disable=cmk-module-layer-violation
 
+# We need config and host_name() because the "only_from" configuration is not a check parameter.
+# It is configured as an agent bakery rule, and controls the *deployment* of the only_from setting.
+# We wan't to use that very setting to check whether it is deployed correctly.
+# I currently see no better soluton than this API violation.
+import cmk.base.config as config  # pylint: disable=cmk-module-layer-violation
+from cmk.base.check_api import host_name  # pylint: disable=cmk-module-layer-violation
+
 from .agent_based_api.v1 import check_levels, regex, register, render, Result, Service, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
 from .utils.checkmk import CheckmkSection, Plugin, PluginSection
+
+
+class _ControllerInfo(NamedTuple):
+    version: str
+    allow_legacy_pull: bool
 
 
 def discover_checkmk_agent(
@@ -21,6 +41,216 @@ def discover_checkmk_agent(
 ) -> DiscoveryResult:
     # If we're called, at least one section is not None, so just disocver.
     yield Service()
+
+
+def _check_cmk_agent_installation(agent_info: CheckmkSection) -> CheckResult:
+
+    # TODO: clean these API violations up, if possible
+    host_config = config.HostConfig.make_host_config(host_name())
+    exit_spec = host_config.exit_code_spec("agent")
+
+    controller_info = _get_controller_info(
+        agent_info.get("agentcontroller") or "",
+        agent_info.get("agentcontrollerstatus") or "",
+    )
+
+    if agent_info["version"] is not None:
+        yield Result(state=State.OK, summary="Version: %s" % agent_info["version"])
+
+    if agent_info["agentos"] is not None:
+        yield Result(state=State.OK, summary="OS: %s" % agent_info["agentos"])
+
+    yield from _check_version(
+        agent_info.get("version"),
+        host_config.agent_target_version,
+        config.agent_min_version,
+        State(exit_spec.get("wrong_version", 1)),
+    )
+    yield from _check_only_from(
+        agent_info.get("onlyfrom"),
+        host_config.only_from,
+        State(exit_spec.get("restricted_address_mismatch", 1)),
+    )
+    yield from _check_agent_update(
+        agent_info.get("updatefailed"), agent_info.get("updaterecoveraction")
+    )
+    yield from _check_python_plugins(
+        agent_info.get("failedpythonplugins"), agent_info.get("failedpythonreason")
+    )
+    yield from _check_transport(
+        bool(agent_info.get("sshclient")),
+        controller_info,
+        State(exit_spec.get("legacy_pull_mode", 1)),
+    )
+
+
+# TODO: Parsing of the controller status output should be done in a dedicated section.
+def _get_controller_info(
+    controller_version: str,
+    raw_string: str,
+) -> Optional[_ControllerInfo]:
+    if not controller_version:
+        return None
+    loaded = json.loads(raw_string)
+    return _ControllerInfo(controller_version, loaded["allow_legacy_pull"])
+
+
+def _check_version(
+    agent_version: Optional[str],
+    expected_version: AgentTargetVersion,
+    agent_min_version: Any,
+    fail_state: State,
+) -> CheckResult:
+    if (
+        expected_version
+        and agent_version
+        and not _is_expected_agent_version(agent_version, expected_version)
+    ):
+        expected = ""
+        # expected version can either be:
+        # a) a single version string
+        # b) a tuple of ("at_least", {'daily_build': '2014.06.01', 'release': '1.2.5i4'}
+        #    (the dict keys are optional)
+        if isinstance(expected_version, tuple) and expected_version[0] == "at_least":
+            spec = cast(Dict[str, str], expected_version[1])
+            expected = "at least"
+            if "daily_build" in spec:
+                expected += " build %s" % spec["daily_build"]
+            if "release" in spec:
+                if "daily_build" in spec:
+                    expected += " or"
+                expected += " release %s" % spec["release"]
+        else:
+            expected = "%s" % (expected_version,)
+
+        yield Result(
+            state=fail_state,
+            summary=f"unexpected agent version {agent_version} (should be {expected})",
+        )
+        return
+
+    if agent_min_version and cast(int, agent_version) < agent_min_version:
+        # TODO: This branch seems to be wrong. Or: In which case is agent_version numeric?
+        yield Result(
+            state=fail_state,
+            summary=f"old plugin version {agent_version} (should be at least {agent_min_version})",
+        )
+
+
+def _is_expected_agent_version(
+    agent_version: Optional[str],
+    expected_version: AgentTargetVersion,
+) -> bool:
+    if agent_version is None:
+        return False
+
+    if agent_version in ["(unknown)", "None", "unknown"]:
+        return False
+
+    if isinstance(expected_version, str) and expected_version != agent_version:
+        return False
+
+    if isinstance(expected_version, tuple) and expected_version[0] == "at_least":
+        spec = cast(Dict[str, str], expected_version[1])
+        if is_daily_build_version(agent_version) and "daily_build" in spec:
+            expected = int(spec["daily_build"].replace(".", ""))
+
+            branch = branch_of_daily_build(agent_version)
+            if branch == "master":
+                agent = int(agent_version.replace(".", ""))
+
+            else:  # branch build (e.g. 1.2.4-2014.06.01)
+                agent = int(agent_version.split("-")[1].replace(".", ""))
+
+            if agent < expected:
+                return False
+
+        elif "release" in spec:
+            if is_daily_build_version(agent_version):
+                return False
+
+            if parse_check_mk_version(agent_version) < parse_check_mk_version(spec["release"]):
+                return False
+
+    return True
+
+
+def _check_only_from(
+    agent_only_from: Optional[str],
+    config_only_from: Union[None, str, list[str]],
+    fail_state: State,
+) -> CheckResult:
+    if agent_only_from is None or config_only_from is None:
+        return
+
+    allowed_nets = set(normalize_ip_addresses(agent_only_from))
+    expected_nets = set(normalize_ip_addresses(config_only_from))
+    if allowed_nets == expected_nets:
+        yield Result(state=State.OK, summary=f"Allowed IP ranges: {' '.join(allowed_nets)}")
+        return
+
+    infotexts = []
+    exceeding = allowed_nets - expected_nets
+    if exceeding:
+        infotexts.append("exceeding: %s" % " ".join(sorted(exceeding)))
+
+    missing = expected_nets - allowed_nets
+    if missing:
+        infotexts.append("missing: %s" % " ".join(sorted(missing)))
+
+    yield Result(
+        state=fail_state,
+        summary=f"Unexpected allowed IP ranges ({', '.join(infotexts)})",
+    )
+
+
+def _check_python_plugins(
+    agent_failed_plugins: Optional[str],
+    agent_fail_reason: Optional[str],
+) -> CheckResult:
+    if agent_failed_plugins:
+        yield Result(
+            state=State.WARN,
+            summary=f"Failed to execute python plugins: {agent_failed_plugins}"
+            + (f" ({agent_fail_reason})" if agent_fail_reason else ""),
+        )
+
+
+def _check_agent_update(
+    update_fail_reason: Optional[str],
+    on_update_fail_action: Optional[str],
+) -> CheckResult:
+    if update_fail_reason and on_update_fail_action:
+        yield Result(state=State.WARN, summary=f"{update_fail_reason} {on_update_fail_action}")
+
+
+def _check_transport(
+    ssh_transport: bool,
+    controller_info: Optional[_ControllerInfo],
+    fail_state: State,
+) -> CheckResult:
+    if ssh_transport:
+        yield Result(state=State.OK, summary="Transport via SSH")
+        return
+
+    if not controller_info:
+        return
+
+    if not controller_info.allow_legacy_pull:
+        return
+
+    yield Result(
+        state=fail_state,
+        summary="TLS is not activated on monitored host (see details)",
+        details=(
+            "The hosts agent supports TLS, but it is not being used. "
+            "We strongly recommend to enable TLS by registering the host to the site "
+            "(using the `cmk-agent-ctl register` command on the monitored host). "
+            "However you can configure missing TLS to be OK in the setting "
+            '"State in case of available but not enabled TLS" of the ruleset '
+            '"Status of the Checkmk services".'
+        ),
+    )
 
 
 def _get_error_result(error: str, params: Mapping[str, Any]) -> CheckResult:
@@ -144,6 +374,7 @@ def check_checkmk_agent(
     section_checkmk_agent_plugins: Optional[PluginSection],
 ) -> CheckResult:
     if section_check_mk is not None:
+        yield from _check_cmk_agent_installation(section_check_mk)
         yield from _check_cmk_agent_update(params, section_check_mk)
 
     if section_checkmk_agent_plugins is not None:

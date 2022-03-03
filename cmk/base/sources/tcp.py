@@ -65,13 +65,7 @@ class TCPSource(AgentSource):
         )
 
     def _make_summarizer(self) -> AgentSummarizerDefault:
-        return AgentSummarizerDefault(
-            self.exit_spec,
-            is_cluster=self.host_config.is_cluster,
-            agent_min_version=config.agent_min_version,
-            agent_target_version=self.host_config.agent_target_version,
-            only_from=self.host_config.only_from,
-        )
+        return AgentSummarizerDefault(self.exit_spec)
 
     @staticmethod
     def _make_description(hostname: HostName, ipaddress: Optional[HostAddress]) -> str:

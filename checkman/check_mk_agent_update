@@ -1,9 +1,0 @@
-title: Checkmk Agent: Automatic Agent Deployments
-agents: linux, windows
-catalog: app/cmk
-license: GPLv2
-distribution: check_mk
-description:
- This plugin makes sure that the Checkmk agent deploy mechanism (if used)
- is working properly. It checks the time of the last successful connect
- to the deployment server and if there are any error messages.

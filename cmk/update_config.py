@@ -159,6 +159,7 @@ REMOVED_CHECK_PLUGIN_MAP = {
     CheckPluginName("lxc_container_cpu"): CheckPluginName("cpu_utilization_os"),
     CheckPluginName("docker_container_cpu"): CheckPluginName("cpu_utilization_os"),
     CheckPluginName("docker_container_diskstat"): CheckPluginName("diskstat"),
+    CheckPluginName("check_mk_agent_update"): CheckPluginName("checkmk_agent"),
 }
 
 # List[(old_config_name, new_config_name, replacement_dict{old: new})]

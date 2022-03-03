@@ -9,10 +9,7 @@ import pytest
 from tests.testlib import on_time
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State
-from cmk.base.plugins.agent_based.checkmk_agent_update import (
-    check_cmk_agent_update,
-    discover_cmk_agent_update,
-)
+from cmk.base.plugins.agent_based.checkmk_agent import check_checkmk_agent, discover_checkmk_agent
 
 
 @pytest.fixture(name="fix_time")
@@ -21,20 +18,16 @@ def _get_fix_time():
         yield
 
 
-def test_discovery_nothing() -> None:
-    assert not [*discover_cmk_agent_update({})]
-
-
 def test_discovery_something() -> None:
-    assert [*discover_cmk_agent_update({"agentupdate": "something"})] == [Service()]
+    assert [*discover_checkmk_agent({}, None)] == [Service()]
 
 
 def test_check_no_data() -> None:
-    assert not [*check_cmk_agent_update({}, {})]
+    assert not [*check_checkmk_agent({}, {}, None)]
 
 
 def test_check_no_check_yet() -> None:
-    assert [*check_cmk_agent_update({}, {"agentupdate": "last_check None error None"})] == [
+    assert [*check_checkmk_agent({}, {"agentupdate": "last_check None error None"}, None)] == [
         Result(state=State.WARN, summary="No successful connect to server yet"),
     ]
 
@@ -42,7 +35,7 @@ def test_check_no_check_yet() -> None:
 @pytest.mark.parametrize("duplicate", [False, True])
 def test_check_warn_upon_old_update_check(fix_time, duplicate: bool) -> None:
     assert [
-        *check_cmk_agent_update(
+        *check_checkmk_agent(
             {},
             {
                 "agentupdate": " ".join(
@@ -57,6 +50,7 @@ def test_check_warn_upon_old_update_check(fix_time, duplicate: bool) -> None:
                     )
                 )
             },
+            None,
         )
     ] == [
         Result(state=State.WARN, summary="Error: 503 Server Error: Service Unavailable"),

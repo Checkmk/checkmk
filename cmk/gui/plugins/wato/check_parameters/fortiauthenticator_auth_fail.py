@@ -15,7 +15,7 @@ from cmk.gui.valuespec import Dictionary, Integer, Tuple
 
 def _parameter_valuespec_fortiauthenticator():
     return Dictionary(
-        [
+        elements=[
             (
                 "auth_fails",
                 Tuple(

@@ -854,7 +854,7 @@ def _vs_state_mappings() -> CascadingDropdown:
                 "independent_mappings",
                 _("Map operational and admin state independently"),
                 Dictionary(
-                    [
+                    elements=[
                         (
                             "map_operstates",
                             ListOf(

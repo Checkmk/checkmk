@@ -34,7 +34,7 @@ _DEFAULT_DATADOG_AND_CHECKMK_STATES = (
 
 def _valuespec_datadog_monitors_discovery() -> Dictionary:
     return Dictionary(
-        [
+        elements=[
             (
                 "states_discover",
                 DualListChoice(
@@ -79,11 +79,11 @@ def _item_spec_datadog_monitors():
 
 def _parameter_valuespec_datadog_monitors() -> Dictionary:
     return Dictionary(
-        [
+        elements=[
             (
                 "state_mapping",
                 Dictionary(
-                    [
+                    elements=[
                         (
                             datadog_state,
                             MonitoringState(

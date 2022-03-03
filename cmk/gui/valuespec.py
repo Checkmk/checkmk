@@ -5146,6 +5146,7 @@ class Dictionary(ValueSpec[dict[str, Any]]):
     # TODO: Cleanup ancient "migrate"
     def __init__(  # pylint: disable=redefined-builtin
         self,
+        *,
         elements: DictionaryElementsRaw,
         empty_text: _Optional[str] = None,
         default_text: _Optional[str] = None,

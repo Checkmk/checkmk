@@ -16,7 +16,7 @@ from cmk.gui.valuespec import Dictionary, Integer, Transform, Tuple
 def _parameter_valuespec_checkpoint_connections() -> Transform:
     return Transform(
         Dictionary(
-            [
+            elements=[
                 (
                     "levels",
                     Tuple(

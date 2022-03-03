@@ -603,6 +603,7 @@ def _validate_configuraton_variables(vars_before_config: Set[str]) -> None:
         "logwatch_max_filesize",  # 1.6
         "logwatch_service_output",  # 1.6
         "logwatch_spool_dir",  # 1.6
+        "agent_min_version",  # 2.0
     }
 
     unhandled_variables = all_nonfunction_vars() - vars_before_config - ignored_variables

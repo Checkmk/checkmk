@@ -1,0 +1,15 @@
+Title: Move ruleset "Check for correct version of Checkmk agent"
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1646342842
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.2.0i1
+
+The functionality of the former ruleset <i>"Check for correct
+version of Checkmk agent"</i> is now included in the service
+ruleset <i>"Checkmk Agent"</i>. Existing rules are migrated
+during update.

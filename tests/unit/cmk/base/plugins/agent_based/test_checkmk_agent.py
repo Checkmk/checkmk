@@ -42,77 +42,84 @@ def test_check_version_os_no_values() -> None:
     assert not [
         *_check_version(
             None,
-            None,
-            0,
+            "site_version",
+            ("specific", {"literal": "irrelevant"}),
             State.WARN,
         )
     ]
 
 
 def test_check_version_os_no_params() -> None:
-    assert not [
+    assert [
         *_check_version(
             "1.2.3",
-            None,
-            0,
+            "site_version",
+            ("ignore", {}),
             State.WARN,
         )
-    ]
+    ] == [Result(state=State.OK, summary="Version: 1.2.3")]
 
 
 def test_check_version_match() -> None:
-    assert not [
+    assert [
         *_check_version(
             "1.2.3",
-            "1.2.3",
-            0,
+            "2.1.0",
+            ("specific", {"literal": "1.2.3"}),
             State.WARN,
         )
-    ]
+    ] == [Result(state=State.OK, summary="Version: 1.2.3")]
 
 
 @pytest.mark.parametrize("fail_state", list(State))
 def test_check_version_mismatch(fail_state: State) -> None:
-    assert [*_check_version("1.2.3", "1.2.2", 0, fail_state,)] == [
-        Result(state=fail_state, summary="unexpected agent version 1.2.3 (should be 1.2.2)"),
+    assert [*_check_version("1.2.3", "1.2.3", ("specific", {"literal": "1.2.2"}), fail_state,)] == [
+        Result(state=fail_state, summary="Version: 1.2.3 (expected 1.2.2)"),
+    ]
+
+
+@pytest.mark.parametrize("fail_state", list(State))
+def test_check_version_site_mismatch(fail_state: State) -> None:
+    assert [*_check_version("1.2.3", "1.2.2", ("site", {}), fail_state,)] == [
+        Result(state=fail_state, summary="Version: 1.2.3 (expected 1.2.2)"),
     ]
 
 
 def test_check_version_at_least_success():
-    assert not [
+    assert [
         *_check_version(
             "1.2.3",
+            "site.version",
             ("at_least", {"release": "1.1.0"}),
-            0,
             State.WARN,
         )
-    ]
+    ] == [Result(state=State.OK, summary="Version: 1.2.3")]
 
 
 def test_check_version_at_least_dict_empty():
     spec: dict[str, str] = {}
-    assert not [
+    assert [
         *_check_version(
             "1.2.3",
+            "site.version",
             ("at_least", spec),
-            0,
             State.WARN,
         )
-    ]
+    ] == [Result(state=State.OK, summary="Version: 1.2.3")]
 
 
 def test_check_version_at_least_daily_build():
     assert [
         *_check_version(
             "1.2.3-2021.02.03",
+            "site.version",
             ("at_least", {"daily_build": "2022.03.04"}),
-            0,
             State.WARN,
         )
     ] == [
         Result(
             state=State.WARN,
-            summary="unexpected agent version 1.2.3-2021.02.03 (should be at least build 2022.03.04)",
+            summary="Version: 1.2.3-2021.02.03 (expected at least 2022.03.04)",
         )
     ]
 
@@ -121,14 +128,14 @@ def test_check_version_at_least_daily_build_vs_release():
     assert [
         *_check_version(
             "1.2.3-2022.02.03",
+            "site.version",
             ("at_least", {"release": "1.2.3"}),
-            0,
             State.WARN,
         )
     ] == [
         Result(
             state=State.WARN,
-            summary="unexpected agent version 1.2.3-2022.02.03 (should be at least release 1.2.3)",
+            summary="Version: 1.2.3-2022.02.03 (expected at least 1.2.3)",
         )
     ]
 

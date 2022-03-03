@@ -549,6 +549,7 @@ class UpdateConfig:
         all_rulesets.load()
         self._transform_ignored_checks_to_maincheckified_list(all_rulesets)
         self._extract_disabled_snmp_sections_from_ignored_checks(all_rulesets)
+        self._extract_checkmk_agent_rule_from_check_mk_config(all_rulesets)
         self._transform_replaced_wato_rulesets(all_rulesets)
         self._transform_wato_rulesets_params(all_rulesets)
         self._transform_discovery_disabled_services(all_rulesets)
@@ -626,6 +627,35 @@ class UpdateConfig:
             snmp_exclude_sections_ruleset.append_rule(folder, new_rule)
 
         all_rulesets.set(snmp_exclude_sections_ruleset.name, snmp_exclude_sections_ruleset)
+
+    def _extract_checkmk_agent_rule_from_check_mk_config(
+        self, all_rulesets: RulesetCollection
+    ) -> None:
+        target_version_ruleset = all_rulesets.get("check_mk_agent_target_versions")
+        if target_version_ruleset.is_empty():
+            # nothing to do
+            return
+
+        agent_update_ruleset = all_rulesets.get("checkgroup_parameters:agent_update")
+
+        for folder, _index, rule in target_version_ruleset.get_rules():
+
+            new_rule = cmk.gui.watolib.rulesets.Rule.from_config(
+                rule.folder,
+                agent_update_ruleset,
+                rule.to_config(),
+            )
+            new_rule.id = cmk.gui.watolib.rulesets.utils.gen_id()
+            new_rule.value = {"agent_version": rule.value}
+            new_rule.rule_options.comment = (
+                "%s - Checkmk: automatically converted during upgrade from rule "
+                '"Check for correct version of Checkmk agent".'
+            ) % time.strftime("%Y-%m-%d %H:%M", time.localtime())
+
+            agent_update_ruleset.append_rule(folder, new_rule)
+
+        all_rulesets.set(agent_update_ruleset.name, agent_update_ruleset)
+        all_rulesets.delete("check_mk_agent_target_versions")
 
     def _transform_replaced_wato_rulesets(
         self,

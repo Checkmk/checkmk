@@ -1,0 +1,17 @@
+Title: Deprecate configuration variable 'agent_min_version'
+Class: feature
+Compatible: incomp
+Component: checks
+Date: 1646314863
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.1.0b2
+
+This Werk only affects users that used a <tt>.mk</tt> file to configure the variable <tt>agent_min_version</tt>.
+It has never been configurable via <i>WATO</i>.
+
+The configuration variable 'agent_min_version' does not have any effect anymore.
+Setting the variable to an integer other than 0 (the default) lead to a crash, setting it to a string lead to unreliable behaviour.
+
+If you want to check the version of the installed agent, please configure a rule in the ruleset <i>"Checkmk Agent"</i>.

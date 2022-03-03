@@ -37,7 +37,7 @@ import cmk.gui.views
 from cmk.gui.livestatus_utils.testing import mock_livestatus
 
 if is_enterprise_repo():
-    import cmk.cee.dcd.plugins.connectors.connectors_api.v1  # pylint: disable=import-error
+    import cmk.cee.dcd.plugins.connectors.connectors_api.v1  # pylint: disable=import-error,no-name-in-module
 
 logger = logging.getLogger(__name__)
 
@@ -217,7 +217,6 @@ def fixup_ip_lookup(monkeypatch):
 
 class FixRegister:
     """Access agent based plugins"""
-
     def __init__(self):
         # Local import to have faster pytest initialization
         import cmk.base.api.agent_based.register as register  # pylint: disable=bad-option-value,import-outside-toplevel
@@ -258,7 +257,6 @@ class FixRegister:
 
 class FixPluginLegacy:
     """Access legacy dicts like `check_info`"""
-
     def __init__(self, fixed_register: FixRegister):
         import cmk.base.config as config  # pylint: disable=bad-option-value,import-outside-toplevel
         import cmk.base.inventory_plugins as inventory_plugins
@@ -316,8 +314,7 @@ def prevent_livestatus_connect(monkeypatch):
         "_create_socket",
         lambda *_: pytest.fail(
             "The test tried to use a livestatus connection. This will result in connect timeouts. "
-            "Use mock_livestatus for mocking away the livestatus API"
-        ),
+            "Use mock_livestatus for mocking away the livestatus API"),
     )
 
     orig_init = livestatus.MultiSiteConnection.__init__
@@ -371,8 +368,8 @@ class _MockVSManager(NamedTuple):
 def initialised_item_state():
     mock_vs = _MockVSManager({})
     with mock.patch(
-        "cmk.base.api.agent_based.value_store._global_state._active_host_value_store",
-        mock_vs,
+            "cmk.base.api.agent_based.value_store._global_state._active_host_value_store",
+            mock_vs,
     ):
         yield
 
@@ -388,8 +385,7 @@ def registry_reset():
     ]
     if is_enterprise_repo():
         registries.append(
-            cmk.cee.dcd.plugins.connectors.connectors_api.v1.connector_config_registry
-        )
+            cmk.cee.dcd.plugins.connectors.connectors_api.v1.connector_config_registry)
         registries.append(cmk.cee.dcd.plugins.connectors.connectors_api.v1.connector_registry)
 
     defaults_per_registry = [

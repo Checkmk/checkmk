@@ -1310,7 +1310,7 @@ class ModeBIEditRule(ABCBIMode):
             (
                 "state_messages",
                 Optional(
-                    Dictionary(
+                    valuespec=Dictionary(
                         elements=[
                             (
                                 state,

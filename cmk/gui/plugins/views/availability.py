@@ -1211,7 +1211,7 @@ def _vs_annotation():
             (
                 "host_state",
                 Optional(
-                    HostState(),
+                    valuespec=HostState(),
                     sameline=True,
                     title=_("Host state"),
                     label=_("Reclassify host state of this period"),
@@ -1220,7 +1220,7 @@ def _vs_annotation():
             (
                 "service",
                 Optional(
-                    TextInput(allow_empty=False),
+                    valuespec=TextInput(allow_empty=False),
                     sameline=True,
                     title=_("Service"),
                     label=_("Service description"),
@@ -1229,7 +1229,7 @@ def _vs_annotation():
             (
                 "service_state",
                 Optional(
-                    MonitoringState(),
+                    valuespec=MonitoringState(),
                     sameline=True,
                     title=_("Service state"),
                     label=_("Reclassify service state of this period"),
@@ -1240,7 +1240,7 @@ def _vs_annotation():
             (
                 "downtime",
                 Optional(
-                    DropdownChoice(
+                    valuespec=DropdownChoice(
                         choices=[
                             (True, _("regard as scheduled downtime")),
                             (False, _("do not regard as scheduled downtime")),

@@ -164,7 +164,7 @@ def _imap_parameters():
                             False,
                             _("Use no encryption"),
                             Optional(
-                                Integer(
+                                valuespec=Integer(
                                     default_value=143,
                                 ),
                                 title=_("TCP Port"),
@@ -175,7 +175,7 @@ def _imap_parameters():
                             True,
                             _("Encrypt IMAP communication using SSL"),
                             Optional(
-                                Integer(
+                                valuespec=Integer(
                                     default_value=993,
                                 ),
                                 title=_("TCP Port"),
@@ -224,7 +224,7 @@ def _pop3_parameters():
                             False,
                             _("Use no encryption"),
                             Optional(
-                                Integer(
+                                valuespec=Integer(
                                     default_value=110,
                                 ),
                                 title=_("TCP Port"),
@@ -235,7 +235,7 @@ def _pop3_parameters():
                             True,
                             _("Encrypt POP3 communication using SSL"),
                             Optional(
-                                Integer(
+                                valuespec=Integer(
                                     default_value=995,
                                 ),
                                 title=_("TCP Port"),

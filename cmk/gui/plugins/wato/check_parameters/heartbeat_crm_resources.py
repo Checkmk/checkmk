@@ -23,7 +23,7 @@ def _item_spec_heartbeat_crm_resources():
 
 def _parameter_valuespec_heartbeat_crm_resources():
     return Optional(
-        TextInput(allow_empty=False),
+        valuespec=TextInput(allow_empty=False),
         title=_("Expected node"),
         help=_("The hostname of the expected node to hold this resource."),
         none_label=_("Do not enforce the resource to be hold by a specific node."),

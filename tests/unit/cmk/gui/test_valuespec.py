@@ -393,7 +393,7 @@ def test_transform_value_and_json():
 class TestOptional:
     def test_transform_value(self) -> None:
         opt_vs = vs.Optional(
-            vs.Transform(
+            valuespec=vs.Transform(
                 vs.Dictionary(
                     elements=[
                         ("a", vs.TextInput()),

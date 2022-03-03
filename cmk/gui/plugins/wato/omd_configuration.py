@@ -138,7 +138,7 @@ class ConfigVariableSiteLivestatusTCP(ConfigVariable):
 
     def valuespec(self):
         return Optional(
-            LivestatusViaTCP(),
+            valuespec=LivestatusViaTCP(),
             title=_("Access to Livestatus via TCP"),
             help=_(
                 "Check_MK Livestatus usually listens only on a local UNIX socket - "
@@ -163,7 +163,7 @@ class ConfigVariableSiteEventConsole(ConfigVariable):
 
     def valuespec(self):
         return Optional(
-            ListChoice(
+            valuespec=ListChoice(
                 choices=[
                     ("SNMPTRAP", _("Receive SNMP traps (UDP/162)")),
                     ("SYSLOG", _("Receive Syslog messages (UDP/514)")),
@@ -199,7 +199,7 @@ class ConfigVariableSiteNSCA(ConfigVariable):
 
     def valuespec(self):
         return Optional(
-            Integer(
+            valuespec=Integer(
                 title=_("Port number"),
                 minvalue=1,
                 maxvalue=65535,

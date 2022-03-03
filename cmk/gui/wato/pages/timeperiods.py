@@ -429,7 +429,7 @@ class ModeTimeperiodImportICal(WatoMode):
                 (
                     "times",
                     Optional(
-                        ListOfTimeRanges(
+                        valuespec=ListOfTimeRanges(
                             default_value=[None],
                         ),
                         title=_("Use specific times"),

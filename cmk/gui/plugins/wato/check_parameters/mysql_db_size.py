@@ -22,7 +22,7 @@ def _item_spec_mysql_db_size():
 
 def _parameter_valuespec_mysql_db_size():
     return Optional(
-        Tuple(
+        valuespec=Tuple(
             elements=[
                 Filesize(title=_("warning at")),
                 Filesize(title=_("critical at")),

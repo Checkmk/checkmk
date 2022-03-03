@@ -654,7 +654,7 @@ def vs_mkeventd_rule(customer=None):
                     (
                         "count_duration",
                         Optional(
-                            Age(
+                            valuespec=Age(
                                 label=_("Count only for"),
                                 help=_(
                                     "When the event is in the state <i>open</i> for that time span "
@@ -3556,7 +3556,7 @@ class ConfigVariableEventConsoleRemoteStatus(ConfigVariable):
 
     def valuespec(self):
         return Optional(
-            Tuple(
+            valuespec=Tuple(
                 elements=[
                     Integer(
                         title=_("Port number:"),
@@ -3580,7 +3580,7 @@ class ConfigVariableEventConsoleRemoteStatus(ConfigVariable):
                         false_label=_("no commands"),
                     ),
                     Optional(
-                        ListOfStrings(
+                        valuespec=ListOfStrings(
                             help=_(
                                 "The access to the event status via TCP will only be allowed from "
                                 "this source IP addresses"
@@ -3620,7 +3620,7 @@ class ConfigVariableEventConsoleReplication(ConfigVariable):
 
     def valuespec(self):
         return Optional(
-            Dictionary(
+            valuespec=Dictionary(
                 optional_keys=["takeover", "fallback", "disabled", "logging"],
                 elements=[
                     (
@@ -4602,7 +4602,7 @@ class ConfigVariableEventConsoleNotifyRemoteHost(ConfigVariable):
 
     def valuespec(self):
         return Optional(
-            TextInput(
+            valuespec=TextInput(
                 title=_("Host running Event Console"),
             ),
             title=_("Send notifications to remote Event Console"),

@@ -985,7 +985,7 @@ class ConfigVariableSidebarNotifyInterval(ConfigVariable):
 
     def valuespec(self):
         return Optional(
-            Float(
+            valuespec=Float(
                 minvalue=10.0,
                 unit="sec",
                 display_format="%.1f",
@@ -1012,7 +1012,7 @@ class ConfigVariableiAdHocDowntime(ConfigVariable):
 
     def valuespec(self):
         return Optional(
-            Dictionary(
+            valuespec=Dictionary(
                 optional_keys=False,
                 elements=[
                     (
@@ -1061,7 +1061,7 @@ class ConfigVariableAuthByHTTPHeader(ConfigVariable):
 
     def valuespec(self):
         return Optional(
-            TextInput(
+            valuespec=TextInput(
                 label=_("HTTP request header variable"),
                 help=_(
                     "Configure the name of the HTTP request header variable to read "
@@ -2255,7 +2255,7 @@ class ConfigVariableLockOnLogonFailures(ConfigVariable):
 
     def valuespec(self):
         return Optional(
-            Integer(
+            valuespec=Integer(
                 label=_("Number of logon failures to lock the account"),
                 default_value=3,
                 minvalue=1,
@@ -2346,7 +2346,7 @@ class ConfigVariableUserIdleTimeout(ConfigVariable):
 
     def valuespec(self):
         return Optional(
-            Age(
+            valuespec=Age(
                 title=None,
                 display=["minutes", "hours", "days"],
                 minvalue=5400,
@@ -2379,7 +2379,7 @@ class ConfigVariableSingleUserSession(ConfigVariable):
 
     def valuespec(self):
         return Optional(
-            Age(
+            valuespec=Age(
                 title=None,
                 display=["minutes", "hours"],
                 label=_("Session timeout:"),
@@ -3032,7 +3032,7 @@ class ConfigVariableInventoryCheckInterval(ConfigVariable):
 
     def valuespec(self):
         return Optional(
-            Integer(
+            valuespec=Integer(
                 title=_("Perform service discovery check every"),
                 unit=_("minutes"),
                 minvalue=1,
@@ -3823,7 +3823,7 @@ rulespec_registry.register(
 
 def _valuespec_extra_host_conf_notification_interval():
     return Optional(
-        Transform(
+        valuespec=Transform(
             Float(
                 minvalue=0.05,
                 default_value=120.0,
@@ -3855,7 +3855,7 @@ rulespec_registry.register(
 
 def _valuespec_extra_service_conf_notification_interval():
     return Optional(
-        Transform(
+        valuespec=Transform(
             Float(minvalue=0.05, default_value=120.0, label=_("Interval:"), unit=_("minutes")),
             forth=float,
         ),

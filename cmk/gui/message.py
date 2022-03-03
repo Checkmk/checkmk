@@ -237,7 +237,7 @@ def _vs_message():
             (
                 "valid_till",
                 Optional(
-                    AbsoluteDate(
+                    valuespec=AbsoluteDate(
                         include_time=True,
                         label=_("at"),
                     ),

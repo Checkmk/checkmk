@@ -342,7 +342,7 @@ def get_av_display_options(what: AVObjectType) -> AVOptionValueSpecs:
             "double",
             True,
             Optional(
-                Tuple(
+                valuespec=Tuple(
                     elements=[
                         Percentage(
                             title=_("Warning below"),

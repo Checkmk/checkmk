@@ -1006,7 +1006,7 @@ def _parameter_valuespec_if():
                 (
                     "state",
                     Optional(
-                        ListChoice(
+                        valuespec=ListChoice(
                             title=_("Allowed operational states:"),
                             choices=defines.interface_oper_states(),
                             allow_empty=False,
@@ -1025,7 +1025,7 @@ def _parameter_valuespec_if():
                 (
                     "admin_state",
                     Optional(
-                        ListChoice(
+                        valuespec=ListChoice(
                             title=_("Allowed admin states:"),
                             choices=_admin_states(),
                             allow_empty=False,

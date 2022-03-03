@@ -4715,6 +4715,7 @@ class Optional(ValueSpec):
 
     def __init__(  # pylint: disable=redefined-builtin
         self,
+        *,
         valuespec: ValueSpec,
         label: _Optional[str] = None,
         negate: bool = False,

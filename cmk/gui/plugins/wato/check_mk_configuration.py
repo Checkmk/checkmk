@@ -4936,7 +4936,7 @@ def _valuespec_snmp_communities():
         title=_("SNMP credentials of monitored hosts"),
         help=_(
             'By default Check_MK uses the community "public" to contact hosts via SNMP v1/v2. This rule '
-            "can be used to customize the the credentials to be used when contacting hosts via SNMP."
+            "can be used to customize the credentials to be used when contacting hosts via SNMP."
         ),
     )
 

@@ -269,7 +269,7 @@ def get_vs_flexible_notifications():
                 _("Flexible Custom Notifications"),
                 ListOf(
                     valuespec=Foldable(
-                        Dictionary(
+                        valuespec=Dictionary(
                             optional_keys=[
                                 "service_blacklist",
                                 "only_hosts",

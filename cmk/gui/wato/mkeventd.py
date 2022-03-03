@@ -3857,7 +3857,7 @@ class ConfigVariableEventConsoleActions(ConfigVariable):
     def valuespec(self):
         return ActionList(
             Foldable(
-                Dictionary(
+                valuespec=Dictionary(
                     title=_("Action"),
                     optional_keys=False,
                     elements=[

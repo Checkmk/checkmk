@@ -862,7 +862,7 @@ class ModeEditTagGroup(ABCEditTagMode):
                             size=60,
                         ),
                         Foldable(
-                            ListChoice(
+                            valuespec=ListChoice(
                                 title=_("Auxiliary tags"),
                                 choices=self._effective_config.aux_tag_list.get_choices(),
                             ),

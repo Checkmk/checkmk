@@ -2861,6 +2861,7 @@ class WatoFolderChoices(AjaxDropdownChoice):
 class DropdownChoiceWithHostAndServiceHints(AjaxDropdownChoice):
     def __init__(
         self,
+        *,
         css_spec: list[str],
         hint_label: str,
         **kwargs: Any,
@@ -5615,6 +5616,7 @@ class Foldable(ValueSpec):
 
     def __init__(
         self,
+        *,
         valuespec: ValueSpec,
         title_function: _Optional[Callable[[Any], str]] = None,
         **kwargs: Any,
@@ -5781,7 +5783,12 @@ class Transform(ValueSpec):
 
 # TODO: Change to factory, cleanup kwargs
 class LDAPDistinguishedName(TextInput):
-    def __init__(self, enforce_suffix: _Optional[str] = None, **kwargs: Any) -> None:
+    def __init__(
+        self,
+        *,
+        enforce_suffix: _Optional[str] = None,
+        **kwargs: Any,
+    ) -> None:
         super().__init__(**kwargs)
         self.enforce_suffix = enforce_suffix
 
@@ -5818,7 +5825,11 @@ class Password(TextInput):
 
     # TODO: Cleanup kwargs
     def __init__(
-        self, is_stored_plain: bool = True, encrypt_value: bool = True, **kwargs: Any
+        self,
+        *,
+        is_stored_plain: bool = True,
+        encrypt_value: bool = True,
+        **kwargs: Any,
     ) -> None:
         self._is_stored_plain = is_stored_plain
         self._encrypt_value = encrypt_value
@@ -5899,7 +5910,7 @@ class Password(TextInput):
 
 class PasswordSpec(Password):
     # TODO: Cleanup kwargs
-    def __init__(self, hidden: bool = True, pwlen: int = 8, **kwargs: Any) -> None:
+    def __init__(self, *, hidden: bool = True, pwlen: int = 8, **kwargs: Any) -> None:
         self._pwlen = pwlen
         super().__init__(hidden=hidden, encrypt_value=False, **kwargs)
 
@@ -5983,6 +5994,7 @@ class FileUpload(ValueSpec):
 class ImageUpload(FileUpload):
     def __init__(
         self,
+        *,
         max_size: _Optional[tuple[int, int]] = None,
         show_current_image: bool = False,
         **kwargs,

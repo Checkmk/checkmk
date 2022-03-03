@@ -1749,8 +1749,8 @@ class VisualFilterList(ListOfMultiple):
             for info in info_list
         ]
         super().__init__(
-            grouped,
-            "ajax_visual_filter_list_get_choice",
+            choices=grouped,
+            choice_page_name="ajax_visual_filter_list_get_choice",
             page_request_vars={
                 "infos": info_list,
             },

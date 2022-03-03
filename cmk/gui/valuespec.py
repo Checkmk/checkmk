@@ -2118,6 +2118,7 @@ class ListOfMultiple(ValueSpec[ListOfMultipleModel]):
 
     def __init__(  # pylint: disable=redefined-builtin
         self,
+        *,
         choices: Union[GroupedListOfMultipleChoices, ListOfMultipleChoices],
         choice_page_name: str,
         page_request_vars: _Optional[dict[str, Any]] = None,
@@ -2309,7 +2310,9 @@ class ABCPageListOfMultipleGetChoice(AjaxPage, abc.ABC):
     def page(self) -> dict:
         # ? get_request() is typed as returning dict[str,Any], the type of ensure_str argument seems to be Any
         api_request = request.get_request()
-        vs = ListOfMultiple(self._get_choices(api_request), "unused_dummy_page")
+        vs = ListOfMultiple(
+            choices=self._get_choices(api_request), choice_page_name="unused_dummy_page"
+        )
         with output_funnel.plugged():
             vs.show_choice_row(
                 ensure_str(api_request["varprefix"]),  # pylint: disable= six-ensure-str-bin-call

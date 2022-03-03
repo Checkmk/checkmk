@@ -65,7 +65,8 @@ def _component_check(component: str, component_log: Optional[CollectorHandlerLog
         return
 
     component_message = f"{component}: {component_log.title}"
-    detail_message = f"({component_log.detail})" if component_log.detail else ""
+    # adding a whitespace, because for an URL the icon swallows the ')'
+    detail_message = f"({component_log.detail} )" if component_log.detail else ""
     yield Result(
         state=State.OK,
         summary=component_message,
@@ -99,10 +100,11 @@ def check(
     if section_kube_collectors_metadata.processing_log.status == CollectorState.ERROR:
         # metadata is the connection foundation, if the metadata is not available then we should
         # not expect any metrics from the collector
+        # adding a whitespace, because for an URL the icon swallows the ')'
         yield Result(
             state=State.CRIT,
             summary=f"Status: {section_kube_collectors_metadata.processing_log.title} "
-            f"({section_kube_collectors_metadata.processing_log.detail})",
+            f"({section_kube_collectors_metadata.processing_log.detail} )",
         )
         return
 

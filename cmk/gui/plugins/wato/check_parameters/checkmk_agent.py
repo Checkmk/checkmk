@@ -129,6 +129,52 @@ def _parameter_valuespec_checkmk_agent():
                 ),
             ),
             (
+                "agent_version_missmatch",
+                MonitoringState(default_value=1, title=_("State in case of wrong agent version")),
+            ),
+            (
+                "restricted_address_mismatch",
+                MonitoringState(
+                    title=_("State in case of restricted address missmatch"),
+                    help=_(
+                        "If a Checkmk site is updated to a newer version but the agents of some "
+                        "hosts are not, then the warning <i>Unexpected allowed IP ranges</i> may "
+                        "be displayed in the details of the <i>Check_MK</i> service and the "
+                        "service state changes to <i>WARN</i> (by default).<br>"
+                        "With this setting you can overwrite the default service state. This will help "
+                        "you to reduce above warnings during the update process of your Checkmk sites "
+                        "and agents."
+                    ),
+                    default_value=1,
+                ),
+            ),
+            (
+                "legacy_pull_mode",
+                MonitoringState(
+                    title=_("State in case of available but not enabled TLS"),
+                    help=_(
+                        "New agent installations that support TLS will refuse to send any data "
+                        "without TLS. However, if you upgrade an existing installation, the "
+                        "old transport mode (with optional encryption) will continue to work, "
+                        "to ease migration."
+                    )
+                    + "<br>"
+                    + _(
+                        "It is recommended to enable TLS as soon as possible by running the "
+                        "`register` command of the `cmk-agent-ctl` utility on the monitored "
+                        "host."
+                    )
+                    + "<br>"
+                    + _(
+                        "However, if that is not feasable, you can configure the legacy mode "
+                        "(which may or <b>may not</b> include encryption) to be OK using this "
+                        "setting. Note that this option may become ineffective in a future "
+                        "Checkmk version."
+                    ),
+                    default_value=1,
+                ),
+            ),
+            (
                 "error_deployment_globally_disabled",
                 MonitoringState(
                     title=_("State if agent deployment is globally disabled"), default_value=1

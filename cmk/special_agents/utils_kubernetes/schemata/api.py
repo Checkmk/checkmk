@@ -201,8 +201,13 @@ class Deployment(BaseModel):
     pods: Sequence[PodUID]
 
 
+class DaemonSetSpec(BaseModel):
+    selector: Selector
+
+
 class DaemonSet(BaseModel):
     metadata: MetaData
+    spec: DaemonSetSpec
     pods: Sequence[PodUID]
 
 

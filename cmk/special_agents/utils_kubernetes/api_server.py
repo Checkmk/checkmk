@@ -27,7 +27,7 @@ from kubernetes import client  # type: ignore[import] # pylint: disable=import-e
 from cmk.special_agents.utils_kubernetes.schemata import api
 from cmk.special_agents.utils_kubernetes.transform import (
     cron_job_from_client,
-    daemon_set_from_client,
+    daemonset_from_client,
     deployment_from_client,
     node_from_client,
     pod_from_client,
@@ -260,7 +260,7 @@ class APIServer:
 
     def daemon_sets(self) -> Sequence[api.DaemonSet]:
         return [
-            daemon_set_from_client(
+            daemonset_from_client(
                 raw_daemon_set, self._controller_to_pods[raw_daemon_set.metadata.uid]
             )
             for raw_daemon_set in self._external_api.raw_daemon_sets

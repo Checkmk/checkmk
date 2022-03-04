@@ -4196,20 +4196,33 @@ class AbsoluteDate(ValueSpec[_Optional[float]]):
     zero (or will be ignored if non-zero), as long as include_time is not set
     to True"""
 
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        self._show_titles = kwargs.get("show_titles", True)
-        self._label = kwargs.get("label")
-        self._include_time = kwargs.get("include_time", False)
-        self._format = kwargs.get("format", "%F %T" if self._include_time else "%F")
-        self._default_value: ValueSpecDefault[_Optional[float]] = kwargs.get("default_value", None)
-        self._allow_empty = kwargs.get("allow_empty", False)
-        # The default is that "None" means show current date/time in the
-        # input fields. This option changes the input fields to be empty by default
-        # and makes the value able to be None when no time is set.
-        # FIXME: Shouldn't this be the default?
-        self._none_means_empty = kwargs.get("none_means_empty", False)
-        self._submit_form_name = kwargs.get("submit_form_name")
+    def __init__(  # pylint: disable=redefined-builtin
+        self,
+        *,
+        show_titles: bool = True,
+        label: _Optional[str] = None,
+        include_time: bool = False,
+        format: _Optional[str] = None,
+        allow_empty: bool = False,
+        none_means_empty: bool = False,
+        submit_form_name: _Optional[str] = None,
+        # ValueSpec
+        title: _Optional[str] = None,
+        help: _Optional[ValueSpecHelp] = None,
+        default_value: ValueSpecDefault[_Optional[float]] = DEF_VALUE,
+        validate: _Optional[ValueSpecValidateFunc[_Optional[float]]] = None,
+    ):
+        super().__init__(title=title, help=help, default_value=default_value, validate=validate)
+        self._show_titles = show_titles
+        self._label = label
+        self._include_time = include_time
+        self._format = ("%F %T" if self._include_time else "%F") if format is None else format
+        self._allow_empty = allow_empty
+        # The default is that "None" means show current date/time in the input fields. This option
+        # changes the input fields to be empty by default and makes the value able to be None when
+        # no time is set. FIXME: Shouldn't this be the default?
+        self._none_means_empty = none_means_empty
+        self._submit_form_name = submit_form_name
 
     def allow_empty(self) -> bool:
         return self._allow_empty

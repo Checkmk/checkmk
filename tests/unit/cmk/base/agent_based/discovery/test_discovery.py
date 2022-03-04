@@ -643,32 +643,32 @@ def test__check_service_table(
             0,
             "",
             [
-                "unmonitored: check_plugin_name: Test Description New Item 1",
+                "Unmonitored: check_plugin_name: Test Description New Item 1",
             ],
         ),
         ActiveCheckResult(
             0,
             "",
             [
-                "unmonitored: check_plugin_name: Test Description New Item 2",
+                "Unmonitored: check_plugin_name: Test Description New Item 2",
             ],
         ),
-        ActiveCheckResult(1, "2 unmonitored services (check_plugin_name:2)"),
+        ActiveCheckResult(1, "Unmonitored services: 2 (check_plugin_name: 2)"),
         ActiveCheckResult(
             0,
             "",
             [
-                "vanished: check_plugin_name: Test Description Vanished Item 1",
+                "Vanished: check_plugin_name: Test Description Vanished Item 1",
             ],
         ),
         ActiveCheckResult(
             0,
             "",
             [
-                "vanished: check_plugin_name: Test Description Vanished Item 2",
+                "Vanished: check_plugin_name: Test Description Vanished Item 2",
             ],
         ),
-        ActiveCheckResult(0, "2 vanished services (check_plugin_name:2)"),
+        ActiveCheckResult(0, "Vanished services: 2 (check_plugin_name: 2)"),
     ]
     assert need_rediscovery == result_need_rediscovery
 

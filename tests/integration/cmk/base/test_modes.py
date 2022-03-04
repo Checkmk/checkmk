@@ -646,7 +646,7 @@ def test_check_discovery_host(execute):
 def test_check_discovery(execute):
     p = execute(["cmk", "--check-discovery", "modes-test-host"])
     assert p.returncode == 0, on_failure(p)
-    assert p.stdout.startswith("no unmonitored services found")
+    assert p.stdout.startswith("All services up to date, All host labels up to date")
     assert p.stderr == ""
 
 

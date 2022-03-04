@@ -704,7 +704,7 @@ def _check_service_lists(
                     [
                         "%s: %s: %s"
                         % (
-                            title,
+                            title.capitalize(),
                             discovered_service.check_plugin_name,
                             config.service_description(host_name, *discovered_service.id()),
                         )
@@ -713,12 +713,11 @@ def _check_service_lists(
             )
 
         if affected_check_plugin_names:
-            info = ", ".join(["%s:%d" % e for e in affected_check_plugin_names.items()])
+            info = ", ".join(["%s: %d" % e for e in affected_check_plugin_names.items()])
             st = params.get(params_key, default_state)
+            count = sum(affected_check_plugin_names.values())
             subresults.append(
-                ActiveCheckResult(
-                    st, f"{sum(affected_check_plugin_names.values())} {title} services ({info})"
-                )
+                ActiveCheckResult(st, f"{title.capitalize()} services: {count} ({info})")
             )
 
             if unfiltered and (
@@ -735,7 +734,7 @@ def _check_service_lists(
             ):
                 need_rediscovery = True
         else:
-            subresults.append(ActiveCheckResult(0, f"no {title} services found"))
+            subresults.append(ActiveCheckResult(0, "", [f"No {title} services found"]))
 
     for (discovered_service, _found_on_nodes) in services_by_transition.get("ignored", []):
         subresults.append(
@@ -743,7 +742,7 @@ def _check_service_lists(
                 0,
                 "",
                 [
-                    "ignored: %s: %s"
+                    "Ignored: %s: %s"
                     % (
                         discovered_service.check_plugin_name,
                         config.service_description(host_name, *discovered_service.id()),
@@ -752,6 +751,8 @@ def _check_service_lists(
             )
         )
 
+    if not any(s.summary for s in subresults):
+        subresults.insert(0, ActiveCheckResult(0, "All services up to date"))
     return subresults, need_rediscovery
 
 
@@ -762,12 +763,12 @@ def _check_host_labels(
 ) -> Tuple[ActiveCheckResult, bool]:
     return (
         (
-            ActiveCheckResult(severity_new_host_label, f"{len(host_labels.new)} new host labels"),
+            ActiveCheckResult(severity_new_host_label, f"New host labels: {len(host_labels.new)}"),
             discovery_mode in (DiscoveryMode.NEW, DiscoveryMode.FIXALL, DiscoveryMode.REFRESH),
         )
         if host_labels.new
         else (
-            ActiveCheckResult(0, "no new host labels"),
+            ActiveCheckResult(0, "All host labels up to date"),
             False,
         )
     )

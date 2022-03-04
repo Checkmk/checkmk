@@ -67,7 +67,7 @@ def _optional(title: str, valuespec: ValueSpec) -> CascadingDropdown:
 
 def _parameter_valuespec_threads():
     return Transform(
-        Dictionary(
+        valuespec=Dictionary(
             elements=[
                 (
                     "levels",

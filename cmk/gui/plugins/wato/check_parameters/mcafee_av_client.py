@@ -21,7 +21,7 @@ def _transform_mcafee_av_client(params):
 
 def _parameter_valuespec_mcafee_av_client():
     return Transform(
-        Dictionary(
+        valuespec=Dictionary(
             elements=[
                 (
                     "signature_age",

@@ -90,7 +90,7 @@ def _valuespec_inventory_ipmi_rules_single() -> Dictionary:
 
 def _valuespec_inventory_ipmi_rules() -> Transform:
     return Transform(
-        Dictionary(
+        valuespec=Dictionary(
             title=_("IPMI sensor discovery"),
             elements=[
                 (

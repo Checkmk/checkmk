@@ -19,7 +19,9 @@ rulespec_registry.register(
         check_group_name="local",
         group=RulespecGroupEnforcedServicesApplications,
         item_spec=lambda: TextInput(title=_("Name of local item")),
-        parameter_valuespec=lambda: Transform(Dictionary(elements=[]), forth=lambda p: {}),
+        parameter_valuespec=lambda: Transform(
+            valuespec=Dictionary(elements=[]), forth=lambda p: {}
+        ),
         title=lambda: _("Local checks"),
     )
 )

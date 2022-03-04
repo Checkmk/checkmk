@@ -37,7 +37,7 @@ def _esx_host_memory_elements():
 
 def _parameter_valuespec_esx_host_memory():
     return Transform(
-        Dictionary(
+        valuespec=Dictionary(
             elements=_esx_host_memory_elements()
             + [
                 (

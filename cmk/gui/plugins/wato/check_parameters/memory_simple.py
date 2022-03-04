@@ -35,7 +35,7 @@ def _item_spec_memory_simple():
 
 def _parameter_valuespec_memory_simple():
     return Transform(
-        Dictionary(
+        valuespec=Dictionary(
             help=_("Memory levels for simple devices not running more complex OSs"),
             elements=[
                 (

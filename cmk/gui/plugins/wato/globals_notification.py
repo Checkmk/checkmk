@@ -213,7 +213,7 @@ class ConfigVariableNotificationLogging(ConfigVariable):
 
     def valuespec(self):
         return Transform(
-            DropdownChoice(
+            valuespec=DropdownChoice(
                 choices=[
                     (20, _("Minimal logging")),
                     (15, _("Normal logging")),

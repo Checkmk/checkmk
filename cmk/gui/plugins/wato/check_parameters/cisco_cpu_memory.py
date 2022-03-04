@@ -55,7 +55,7 @@ def _parameter_valuespec_memory():
                             ],
                         ),
                         Transform(
-                            Alternative(
+                            valuespec=Alternative(
                                 elements=[
                                     Tuple(
                                         title=_("Specify levels in percentage of total RAM"),

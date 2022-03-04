@@ -29,7 +29,7 @@ def transform_ibm_svc_host(params):
 
 def _parameter_valuespec_ibm_svc_host():
     return Transform(
-        Dictionary(
+        valuespec=Dictionary(
             elements=[
                 (
                     "active_hosts",

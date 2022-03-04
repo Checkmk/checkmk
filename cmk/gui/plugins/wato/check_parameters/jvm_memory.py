@@ -112,7 +112,7 @@ def _get_memory_level_elements(mem_type) -> Iterable[TupleType[str, Tuple]]:
 
 def _parameter_valuespec_jvm_memory() -> Transform:
     return Transform(
-        Dictionary(
+        valuespec=Dictionary(
             help=(
                 _(
                     "This rule allows to set the warn and crit levels of the heap / "

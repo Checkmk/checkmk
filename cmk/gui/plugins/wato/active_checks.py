@@ -429,7 +429,7 @@ def transform_cert_days(cert_days):
 
 def _valuespec_active_checks_ftp():
     return Transform(
-        Dictionary(
+        valuespec=Dictionary(
             elements=[
                 (
                     "port",
@@ -485,7 +485,7 @@ def _valuespec_active_checks_ftp():
                 (
                     "cert_days",
                     Transform(
-                        Tuple(
+                        valuespec=Tuple(
                             title=_("SSL certificate validation"),
                             help=_("Minimum number of days a certificate has to be valid"),
                             elements=[
@@ -655,7 +655,7 @@ def _valuespec_active_checks_dns():
                 help=_("The name or IPv4 address you want to query"),
             ),
             Transform(
-                Dictionary(
+                valuespec=Dictionary(
                     title=_("Optional parameters"),
                     elements=[
                         (
@@ -831,7 +831,7 @@ def _valuespec_active_checks_sql():
             (
                 "sql",
                 Transform(
-                    TextAreaUnicode(
+                    valuespec=TextAreaUnicode(
                         title=_("Query or SQL statement"),
                         help=_(
                             "The SQL-statement or procedure name which is executed on the DBMS. It must return "
@@ -1080,7 +1080,7 @@ def _valuespec_active_checks_tcp():
                     (
                         "cert_days",
                         Transform(
-                            Tuple(
+                            valuespec=Tuple(
                                 title=_("SSL certificate validation"),
                                 help=_("Minimum number of days a certificate has to be valid"),
                                 elements=[
@@ -1324,7 +1324,7 @@ def _validate_active_check_http_name(value, varprefix):
 
 def _valuespec_active_checks_http():
     return Transform(
-        Dictionary(
+        valuespec=Dictionary(
             title=_("Check HTTP service"),
             help=_(
                 "Check HTTP/HTTPS service using the plugin <tt>check_http</tt> "
@@ -1378,7 +1378,7 @@ def _valuespec_active_checks_http():
                                         (
                                             "ssl",
                                             Transform(
-                                                DropdownChoice(
+                                                valuespec=DropdownChoice(
                                                     title=_("Use SSL/HTTPS for the connection"),
                                                     choices=[
                                                         (
@@ -1509,7 +1509,7 @@ def _valuespec_active_checks_http():
                                         (
                                             "expect_regex",
                                             Transform(
-                                                Tuple(
+                                                valuespec=Tuple(
                                                     orientation="vertical",
                                                     show_titles=False,
                                                     elements=[
@@ -1645,7 +1645,7 @@ def _valuespec_active_checks_http():
                                         (
                                             "cert_days",
                                             Transform(
-                                                Tuple(
+                                                valuespec=Tuple(
                                                     title=_("Age"),
                                                     help=_(
                                                         "Minimum number of days a certificate"
@@ -1874,7 +1874,7 @@ def _valuespec_active_checks_smtp():
                 allow_empty=False,
             ),
             Transform(
-                Dictionary(
+                valuespec=Dictionary(
                     title=_("Optional parameters"),
                     elements=[
                         (
@@ -1891,7 +1891,7 @@ def _valuespec_active_checks_smtp():
                         (
                             "port",
                             Transform(
-                                Integer(
+                                valuespec=Integer(
                                     title=_("TCP Port to connect to"),
                                     help=_(
                                         "The TCP Port the SMTP server is listening on. "
@@ -1958,7 +1958,7 @@ def _valuespec_active_checks_smtp():
                         (
                             "cert_days",
                             Transform(
-                                Tuple(
+                                valuespec=Tuple(
                                     title=_("Minimum Certificate Age"),
                                     help=_("Minimum number of days a certificate has to be valid"),
                                     elements=[
@@ -2258,7 +2258,7 @@ def _active_checks_bi_aggr_transform_from_disk(value):
 
 def _valuespec_active_checks_bi_aggr():
     return Transform(
-        Dictionary(
+        valuespec=Dictionary(
             title=_("Check State of BI Aggregation"),
             help=_(
                 "Connect to the local or a remote monitoring host, which uses Check_MK BI to aggregate "
@@ -2603,7 +2603,7 @@ rulespec_registry.register(
 
 def _valuespec_active_checks_traceroute():
     return Transform(
-        Dictionary(
+        valuespec=Dictionary(
             title=_("Check current routing"),
             help=_(
                 "This active check uses <tt>traceroute</tt> in order to determine the current "
@@ -2895,7 +2895,7 @@ def _valuespec_active_checks_mail():
                                                 ),
                                             ),
                                             Transform(
-                                                TextInput(
+                                                valuespec=TextInput(
                                                     allow_empty=False,
                                                 ),
                                                 title=_(

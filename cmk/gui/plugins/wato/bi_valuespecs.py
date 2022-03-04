@@ -109,7 +109,7 @@ def _convert_bi_aggr_from_vs(value):
 
 def get_bi_aggregation_node_choices():
     return Transform(
-        CascadingDropdown(choices=_get_aggregation_choices()),
+        valuespec=CascadingDropdown(choices=_get_aggregation_choices()),
         forth=_convert_bi_aggr_to_vs,
         back=_convert_bi_aggr_from_vs,
     )
@@ -187,7 +187,7 @@ def _convert_bi_rule_from_vs(value):
 
 def get_bi_rule_node_choices_vs():
     return Transform(
-        CascadingDropdown(choices=_get_rule_choices(), sorted=False),
+        valuespec=CascadingDropdown(choices=_get_rule_choices(), sorted=False),
         forth=_convert_bi_rule_to_vs,
         back=_convert_bi_rule_from_vs,
     )
@@ -263,7 +263,7 @@ def _bi_host_choice_vs(title):
         return {"type": value[0], "pattern": value[1]}
 
     return Transform(
-        CascadingDropdown(
+        valuespec=CascadingDropdown(
             title=title,
             choices=[
                 ("all_hosts", _("All hosts")),
@@ -299,7 +299,9 @@ class BIConfigEmptySearch(BIEmptySearch, ABCBIConfigSearch):
             cls.type(),
             _("No search"),
             Transform(
-                FixedValue(value=""), forth=lambda x: "", back=lambda x: {"type": cls.type()}
+                valuespec=FixedValue(value=""),
+                forth=lambda x: "",
+                back=lambda x: {"type": cls.type()},
             ),
         )
 
@@ -436,7 +438,7 @@ class BIConfigFixedArgumentsSearch(BIFixedArgumentsSearch, ABCBIConfigSearch):
                     "arguments",
                     ListOf(
                         valuespec=Transform(
-                            Tuple(
+                            valuespec=Tuple(
                                 elements=[
                                     TextInput(title=_("Keyword")),
                                     ListOfStrings(
@@ -523,10 +525,10 @@ class BIConfigCallARuleAction(bi_actions.BICallARuleAction, ABCBIConfigAction):
             }
 
         return Transform(
-            Tuple(
+            valuespec=Tuple(
                 elements=[
                     Transform(
-                        CascadingDropdown(
+                        valuespec=CascadingDropdown(
                             title=_("Rule:"),
                             orientation="horizontal",
                             choices=cls._allowed_rule_choices(),
@@ -711,7 +713,7 @@ def get_aggregation_function_choices():
         choices.append((aggr_func_id, bi_aggr_func.title(), bi_aggr_func.valuespec()))
 
     return Transform(
-        CascadingDropdown(
+        valuespec=CascadingDropdown(
             title=_("Aggregation Function"),
             help=_(
                 "The aggregation function decides how the status of a node "
@@ -770,7 +772,7 @@ class BIConfigAggregationFunctionBest(BIAggregationFunctionBest, ABCBIConfigAggr
             }
 
         return Transform(
-            Tuple(
+            valuespec=Tuple(
                 elements=[
                     Integer(
                         help=_(
@@ -824,7 +826,7 @@ class BIConfigAggregationFunctionWorst(BIAggregationFunctionWorst, ABCBIConfigAg
             }
 
         return Transform(
-            Tuple(
+            valuespec=Tuple(
                 elements=[
                     Integer(
                         help=_(
@@ -901,7 +903,7 @@ class BIConfigAggregationFunctionCountOK(
             return result
 
         return Transform(
-            Tuple(
+            valuespec=Tuple(
                 elements=[
                     cls._vs_count_ok_count(
                         _("Required number of OK-nodes for a total state of OK:"), 2, 50
@@ -929,7 +931,7 @@ class BIConfigAggregationFunctionCountOK(
                     default_value=defval,
                 ),
                 Transform(
-                    Percentage(
+                    valuespec=Percentage(
                         label=_("Percent of OK-nodes"),
                         display_format="%.0f",
                         default_value=defvalperc,

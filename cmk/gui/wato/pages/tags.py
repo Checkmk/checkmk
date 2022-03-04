@@ -839,11 +839,11 @@ class ModeEditTagGroup(ABCEditTagMode):
         # We want the compact tuple style visualization which is not
         # supported by the Dictionary valuespec. Transform!
         return Transform(
-            ListOf(
+            valuespec=ListOf(
                 valuespec=Tuple(
                     elements=[
                         Transform(
-                            TextInput(
+                            valuespec=TextInput(
                                 title=_("Tag ID"),
                                 size=40,
                                 regex="^[-a-z0-9A-Z_]*$",

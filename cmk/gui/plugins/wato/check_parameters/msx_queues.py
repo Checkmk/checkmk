@@ -36,7 +36,7 @@ def transform_msx_queues_inventory(params):
 
 def _valuespec_winperf_msx_queues_inventory():
     return Transform(
-        Dictionary(
+        valuespec=Dictionary(
             title=_("Queue names"),
             elements=[
                 (
@@ -94,7 +94,7 @@ def _item_spec_msx_queues():
 
 def _parameter_valuespec_msx_queues():
     return Transform(
-        Dictionary(
+        valuespec=Dictionary(
             title=_("Set Levels"),
             elements=[
                 (

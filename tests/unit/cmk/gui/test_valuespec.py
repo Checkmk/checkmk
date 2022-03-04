@@ -302,7 +302,7 @@ def test_transform_value_no_transform_vs():
 
 def test_transform_value_with_transform_vs():
     valuespec = vs.Transform(
-        vs.TextInput(),
+        valuespec=vs.TextInput(),
         forth=lambda x: x if x == "lala" else x.upper(),
         back=lambda x: x + "aaa",
     )
@@ -326,7 +326,7 @@ def test_transform_value_in_dict():
             (
                 "a",
                 vs.Transform(
-                    vs.TextInput(),
+                    valuespec=vs.TextInput(),
                     forth=lambda x: x if x == "lala" else x.upper(),
                     back=lambda x: x + "aaa",
                 ),
@@ -342,12 +342,12 @@ def test_transform_value_in_tuple():
     valuespec = vs.Tuple(
         elements=[
             vs.Transform(
-                vs.TextInput(),
+                valuespec=vs.TextInput(),
                 forth=lambda x: x if x == "lala" else x.upper(),
                 back=lambda x: x + "aaa",
             ),
             vs.Transform(
-                vs.TextInput(),
+                valuespec=vs.TextInput(),
                 forth=lambda x: x if x == "lala" else x.upper(),
                 back=lambda x: x + "aaa",
             ),
@@ -365,7 +365,7 @@ def test_transform_value_in_cascading_dropdown():
                 "b",
                 "Title b",
                 vs.Transform(
-                    vs.TextInput(),
+                    valuespec=vs.TextInput(),
                     forth=lambda x: x if x == "lala" else x.upper(),
                     back=lambda x: x + "aaa",
                 ),
@@ -382,7 +382,7 @@ def test_transform_value_and_json():
     # before all keys where upper case, then we decided to move to lower case,
     # but want to keep compatibility with old values saved in the config
     valuespec = vs.Transform(
-        vs.Dictionary(
+        valuespec=vs.Dictionary(
             elements=[
                 ("key1", vs.TextInput()),
             ]
@@ -399,7 +399,7 @@ class TestOptional:
     def test_transform_value(self) -> None:
         opt_vs = vs.Optional(
             valuespec=vs.Transform(
-                vs.Dictionary(
+                valuespec=vs.Dictionary(
                     elements=[
                         ("a", vs.TextInput()),
                         ("b", vs.Age()),

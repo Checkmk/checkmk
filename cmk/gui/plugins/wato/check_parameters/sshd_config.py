@@ -37,7 +37,7 @@ def _parameter_valuespec_sshd_config():
             (
                 "PermitRootLogin",
                 Transform(
-                    DropdownChoice(
+                    valuespec=DropdownChoice(
                         title=_("Permit root login"),
                         choices=[
                             ("yes", _("yes")),

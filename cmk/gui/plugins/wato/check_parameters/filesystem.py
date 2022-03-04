@@ -75,7 +75,7 @@ def _transform_discovery_filesystem_params(params: Mapping[str, Any]) -> Dict[st
 
 def _valuespec_inventory_df_rules():
     return Transform(
-        Dictionary(
+        valuespec=Dictionary(
             title=_("Filesystem discovery"),
             elements=[
                 (
@@ -212,7 +212,7 @@ def _transform_filesystem_groups(
 
 def _valuespec_filesystem_groups():
     return Transform(
-        Dictionary(
+        valuespec=Dictionary(
             title=_("Filesystem grouping patterns"),
             optional_keys=False,
             elements=[

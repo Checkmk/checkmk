@@ -97,7 +97,7 @@ class BookmarkList(pagetypes.Overridable):
                             # nasty hack to use the transform by default. Better would be to make Dict render
                             # the same way the tuple is rendered.
                             valuespec=Transform(
-                                Tuple(
+                                valuespec=Tuple(
                                     elements=[
                                         (
                                             TextInput(

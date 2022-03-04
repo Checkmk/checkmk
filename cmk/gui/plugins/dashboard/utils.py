@@ -715,7 +715,7 @@ class ABCFigureDashlet(Dashlet, abc.ABC):
     @classmethod
     def vs_parameters(cls) -> ValueSpec:
         return Transform(
-            Dictionary(
+            valuespec=Dictionary(
                 title=_("Properties"),
                 render="form",
                 optional_keys=False,

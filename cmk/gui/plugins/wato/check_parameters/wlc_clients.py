@@ -15,7 +15,7 @@ from cmk.gui.valuespec import Dictionary, Integer, TextInput, Transform, Tuple
 
 def _parameter_valuespec_wlc_clients():
     return Transform(
-        Dictionary(
+        valuespec=Dictionary(
             title=_("Number of connections"),
             elements=[
                 (

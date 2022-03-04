@@ -15,7 +15,7 @@ from cmk.gui.valuespec import Dictionary, Integer, Percentage, Transform, Tuple
 
 def _parameter_valuespec_netapp_disks():
     return Transform(
-        Dictionary(
+        valuespec=Dictionary(
             elements=[
                 (
                     "failed_spare_ratio",

@@ -15,7 +15,7 @@ from cmk.gui.valuespec import Dictionary, Integer, ListOfStrings, Transform, Tup
 
 def _parameter_valuespec_ipsecvpn():
     return Transform(
-        Dictionary(
+        valuespec=Dictionary(
             elements=[
                 (
                     "levels",

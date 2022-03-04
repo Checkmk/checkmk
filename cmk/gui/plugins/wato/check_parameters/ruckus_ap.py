@@ -41,7 +41,7 @@ def _transform_forth(params: Union[tuple, dict]) -> dict:
 
 def _parameter_valuespec_ruckus_ap():
     return Transform(
-        Dictionary(
+        valuespec=Dictionary(
             elements=[
                 (
                     "levels_drifted",

@@ -31,7 +31,7 @@ def transform_printer_supply(params):
 
 def _parameter_valuespec_printer_supply():
     return Transform(
-        Dictionary(
+        valuespec=Dictionary(
             elements=[
                 (
                     "levels",

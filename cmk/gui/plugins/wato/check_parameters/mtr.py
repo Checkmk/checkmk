@@ -33,7 +33,7 @@ def _transform_mtr_params(p):
 
 def _parameter_valuespec_mtr():
     return Transform(
-        Dictionary(
+        valuespec=Dictionary(
             help=_(
                 "This ruleset can be used to change MTR's (Matt's traceroute) warning and crit levels for packet loss, average "
                 "roundtrip and standard deviation."

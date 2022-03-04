@@ -1224,7 +1224,7 @@ class TimeperiodValuespec(ValueSpec):
                 (
                     self.tp_default_value_key,
                     Transform(
-                        self._enclosed_valuespec,
+                        valuespec=self._enclosed_valuespec,
                         title=_("Default parameters when no timeperiod matches"),
                     ),
                 ),

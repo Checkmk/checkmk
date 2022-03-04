@@ -66,7 +66,7 @@ def transform_memory_levels(p):
 
 def _parameter_valuespec_memory_linux():
     return Transform(
-        Dictionary(
+        valuespec=Dictionary(
             elements=[
                 ("levels_ram", DualMemoryLevels(_("RAM"))),
                 ("levels_swap", DualMemoryLevels(_("Swap"))),

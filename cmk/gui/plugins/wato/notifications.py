@@ -76,7 +76,7 @@ def _vs_add_common_mail_elements(elements):
         (
             "from",
             Transform(
-                Dictionary(
+                valuespec=Dictionary(
                     title="From",
                     elements=[
                         (
@@ -110,7 +110,7 @@ def _vs_add_common_mail_elements(elements):
         (
             "reply_to",
             Transform(
-                Dictionary(
+                valuespec=Dictionary(
                     title="Reply to",
                     elements=[
                         (
@@ -205,7 +205,7 @@ def _vs_add_common_mail_elements(elements):
 def _get_url_prefix_specs(default_choice, default_value=DEF_VALUE):
 
     return Transform(
-        CascadingDropdown(
+        valuespec=CascadingDropdown(
             title=_("URL prefix for links to Checkmk"),
             help=_(
                 "If you use <b>Automatic HTTP/s</b>, the URL prefix for host "
@@ -367,7 +367,7 @@ class NotificationParameterSlack(NotificationParameter):
     @property
     def spec(self):
         return Transform(
-            Dictionary(
+            valuespec=Dictionary(
                 title=_("Create notification with the following parameters"),
                 optional_keys=["ignore_ssl", "url_prefix", "proxy_url"],
                 elements=[
@@ -1122,7 +1122,7 @@ class NotificationParameterServiceNow(NotificationParameter):
                             (
                                 "start",
                                 Transform(
-                                    Alternative(
+                                    valuespec=Alternative(
                                         title=_("State of incident if acknowledgement is set"),
                                         help=_(
                                             "Here you can define the state of the incident in case of an "
@@ -1168,7 +1168,7 @@ class NotificationParameterServiceNow(NotificationParameter):
                             (
                                 "start",
                                 Transform(
-                                    Alternative(
+                                    valuespec=Alternative(
                                         title=_("State of incident if downtime is set"),
                                         elements=[
                                             DropdownChoice(
@@ -1197,7 +1197,7 @@ class NotificationParameterServiceNow(NotificationParameter):
                             (
                                 "end",
                                 Transform(
-                                    Alternative(
+                                    valuespec=Alternative(
                                         title=_("State of incident if downtime expires"),
                                         help=_(
                                             "Here you can define the state of the incident in case of an "
@@ -1344,7 +1344,7 @@ $LONGSERVICEOUTPUT$
                 (
                     "start",
                     Transform(
-                        Alternative(
+                        valuespec=Alternative(
                             title=_("State of %s if recovery is set") % issue_type,
                             elements=[
                                 DropdownChoice(
@@ -1724,7 +1724,7 @@ class NotificationParameterPushover(NotificationParameter):
                 (
                     "proxy_url",
                     Transform(
-                        HTTPProxyReference(),
+                        valuespec=HTTPProxyReference(),
                         # Transform legacy explicit TextInput() proxy URL
                         forth=lambda v: ("url", v) if isinstance(v, str) else v,
                     ),
@@ -1732,7 +1732,7 @@ class NotificationParameterPushover(NotificationParameter):
                 (
                     "priority",
                     Transform(
-                        CascadingDropdown(
+                        valuespec=CascadingDropdown(
                             title=_("Priority"),
                             choices=[
                                 (

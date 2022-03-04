@@ -148,7 +148,7 @@ fs_levels_elements = [
             elements=[
                 get_free_used_dynamic_valuespec("used", "filesystem"),
                 Transform(
-                    get_free_used_dynamic_valuespec(
+                    valuespec=get_free_used_dynamic_valuespec(
                         "free", "filesystem", default_value=(20.0, 10.0)
                     ),
                     title=_("Levels for filesystem free space"),
@@ -370,7 +370,7 @@ size_trend_elements = [
     (
         "trend_range",
         Transform(
-            Integer(
+            valuespec=Integer(
                 title=_("Time Range for trend computation"),
                 default_value=TREND_RANGE_DEFAULT,
                 minvalue=1,
@@ -506,7 +506,7 @@ def vs_filesystem(extra_elements=None):
     if extra_elements is None:
         extra_elements = []
     return Transform(
-        Dictionary(
+        valuespec=Dictionary(
             help=_("This ruleset allows to set parameters for space and inodes usage"),
             elements=filesystem_elements + extra_elements,
             hidden_keys=["flex_levels"],

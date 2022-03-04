@@ -15,7 +15,7 @@ from cmk.gui.valuespec import Dictionary, Percentage, TextInput, Transform, Tupl
 
 def _parameter_valuespec_juniper_cpu_util():
     return Transform(
-        Dictionary(
+        valuespec=Dictionary(
             optional_keys=[],
             elements=[
                 (

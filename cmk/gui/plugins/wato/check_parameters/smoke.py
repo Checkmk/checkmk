@@ -21,7 +21,7 @@ def _transform_smoke_detection_params(params):
 
 def _parameter_valuespec_smoke():
     return Transform(
-        Dictionary(
+        valuespec=Dictionary(
             help=_("For devices that measure smoke in percent"),
             elements=[
                 (

@@ -2398,9 +2398,9 @@ class LDAPAttributePluginGroupsToRoles(LDAPBuiltinAttributePlugin):
                 (
                     role_id,
                     Transform(
-                        ListOf(
+                        valuespec=ListOf(
                             valuespec=Transform(
-                                Tuple(
+                                valuespec=Tuple(
                                     elements=[
                                         LDAPDistinguishedName(
                                             title=_("Group<nobr> </nobr>DN"),

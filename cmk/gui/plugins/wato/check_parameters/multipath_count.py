@@ -40,7 +40,7 @@ def _parameter_valuespec_multipath_count():
                     (
                         element,
                         Transform(
-                            Tuple(
+                            valuespec=Tuple(
                                 title=description,
                                 elements=[
                                     Integer(title=_("Critical if less than")),

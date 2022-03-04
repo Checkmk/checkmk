@@ -1992,7 +1992,7 @@ class VSExplicitConditions(Transform):
     def __init__(self, rulespec: Rulespec, **kwargs) -> None:
         self._rulespec = rulespec
         super().__init__(
-            Dictionary(
+            valuespec=Dictionary(
                 elements=self._condition_elements(),
                 headers=[
                     (_("Folder"), "condition explicit", ["folder_path"]),
@@ -2232,7 +2232,7 @@ class VSExplicitConditions(Transform):
         itemenum = self._rulespec.item_enum
         if itemenum:
             return Transform(
-                ListChoice(
+                valuespec=ListChoice(
                     choices=itemenum,
                     columns=3,
                 ),

@@ -77,7 +77,7 @@ rulespec_registry.register(
 
 def _parameter_valuespec_mssql_backup():
     return Transform(
-        Dictionary(
+        valuespec=Dictionary(
             help=_(
                 "This rule allows you to set limits on the age of backups for "
                 "different backup types. If your agent does not support "

@@ -831,7 +831,7 @@ def _transform_aws_elb_http(p):
 
 def _parameter_valuespec_aws_elb_http():
     return Transform(
-        Dictionary(
+        valuespec=Dictionary(
             title=_("Upper levels for HTTP errors"),
             elements=[
                 (

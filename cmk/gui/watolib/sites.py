@@ -418,7 +418,7 @@ class CEESiteManagement(SiteManagement):
                     totext="",
                 ),
                 Transform(
-                    Dictionary(
+                    valuespec=Dictionary(
                         title=_("Use Livestatus Proxy Daemon"),
                         optional_keys=["tcp"],
                         columns=1,

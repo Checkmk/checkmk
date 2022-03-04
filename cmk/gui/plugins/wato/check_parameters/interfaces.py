@@ -440,7 +440,7 @@ def _validate_valuespec_inventory_if_rules(value, varprefix):
 
 def _valuespec_inventory_if_rules():
     return Transform(
-        Dictionary(
+        valuespec=Dictionary(
             title=_("Network interface and switch port discovery"),
             help=_(
                 "Configure the discovery of services monitoring network interfaces and switch "
@@ -490,7 +490,7 @@ vs_elements_if_groups_matches: List[DictionaryEntry] = [
     (
         "iftype",
         Transform(
-            DropdownChoice(
+            valuespec=DropdownChoice(
                 title=_("Select interface port type"),
                 choices=ListChoice.dict_choices(defines.interface_port_types()),
                 help=_(
@@ -542,7 +542,7 @@ vs_elements_if_groups_group = [
 def _valuespec_if_groups():
     node_name_elements: List[DictionaryEntry] = [("node_name", TextInput(title=_("Node name")))]
     return Transform(
-        Alternative(
+        valuespec=Alternative(
             title=_("Network interface groups"),
             help=_(
                 "Normally the Interface checks create a single service for interface. "
@@ -954,7 +954,7 @@ def _parameter_valuespec_if():
     # Transform old traffic related levels which used "traffic" and "traffic_minimum"
     # keys where each was configured with an Alternative valuespec
     return Transform(
-        Dictionary(
+        valuespec=Dictionary(
             ignored_keys=[
                 "aggregate",
                 "discovered_oper_status",

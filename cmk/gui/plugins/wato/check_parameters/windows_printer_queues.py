@@ -29,7 +29,7 @@ def windows_printer_queues_forth(old):
 
 def _parameter_valuespec_windows_printer_queues():
     return Transform(
-        Dictionary(
+        valuespec=Dictionary(
             title=_("Windows Printer Configuration"),
             elements=[
                 (

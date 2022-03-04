@@ -48,7 +48,7 @@ class RulespecGroupInventory(RulespecGroup):
 
 def _valuespec_active_checks_cmk_inv():
     return Transform(
-        Dictionary(
+        valuespec=Dictionary(
             elements=[
                 (
                     "sw_changes",

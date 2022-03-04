@@ -373,7 +373,7 @@ def _snmpv1_v2_credentials_element() -> ValueSpec:
 
 def _snmpv3_no_auth_no_priv_credentials_element() -> ValueSpec:
     return Transform(
-        Tuple(
+        valuespec=Tuple(
             title=_("Credentials for SNMPv3 without authentication and privacy (noAuthNoPriv)"),
             elements=[
                 FixedValue(
@@ -549,7 +549,7 @@ def translation_elements(what: str) -> List[_Tuple[str, ValueSpec]]:
         (
             "regex",
             Transform(
-                ListOf(
+                valuespec=ListOf(
                     valuespec=Tuple(
                         orientation="horizontal",
                         elements=[
@@ -752,7 +752,7 @@ def IndividualOrStoredPassword(  # pylint: disable=redefined-builtin
     size: int = 25,
 ):
     return Transform(
-        PasswordFromStore(
+        valuespec=PasswordFromStore(
             title=title,
             help=help,
             allow_empty=allow_empty,
@@ -1328,7 +1328,7 @@ def valuespec_check_plugin_selection(
     help_: str,
 ) -> Transform:
     return Transform(
-        Dictionary(
+        valuespec=Dictionary(
             title=title,
             help=help_,
             elements=[
@@ -2149,7 +2149,7 @@ def register_notification_parameters(scriptname, valuespec):
 class DictHostTagCondition(Transform):
     def __init__(self, title, help_txt):
         super().__init__(
-            ListOfMultiple(
+            valuespec=ListOfMultiple(
                 title=title,
                 help=help_txt,
                 choices=self._get_cached_tag_group_choices(),
@@ -2507,7 +2507,7 @@ class HostTagCondition(ValueSpec):
 class LabelCondition(Transform):
     def __init__(self, title, help_txt):
         super().__init__(
-            ListOf(
+            valuespec=ListOf(
                 valuespec=Tuple(
                     orientation="horizontal",
                     elements=[

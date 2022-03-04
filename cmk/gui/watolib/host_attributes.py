@@ -950,7 +950,7 @@ class ABCHostAttributeHostTagList(ABCHostAttributeTag, abc.ABC):
         # that work.
         choices = [(k or "", v) for k, v in self._tag_group.get_tag_choices()]
         return Transform(
-            DropdownChoice(
+            valuespec=DropdownChoice(
                 title=self._tag_group.title,
                 choices=choices,
                 default_value=choices[0][0],

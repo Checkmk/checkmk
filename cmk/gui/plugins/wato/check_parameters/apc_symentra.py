@@ -35,7 +35,7 @@ def _apc_symentra_transform_apc_symmetra(params):
 
 def _parameter_valuespec_apc_symentra():
     return Transform(
-        Dictionary(
+        valuespec=Dictionary(
             elements=[
                 (
                     "capacity",

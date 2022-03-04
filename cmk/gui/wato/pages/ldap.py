@@ -138,7 +138,7 @@ class LDAPConnectionValuespec(Transform):
             validate=self._validate_ldap_connection,
         )
 
-        super().__init__(valuespec, forth=LDAPUserConnector.transform_config)
+        super().__init__(valuespec=valuespec, forth=LDAPUserConnector.transform_config)
 
     def _general_elements(self) -> List[DictionaryEntry]:
         general_elements: List[DictionaryEntry] = []
@@ -501,7 +501,7 @@ class LDAPConnectionValuespec(Transform):
             (
                 "user_id_umlauts",
                 Transform(
-                    DropdownChoice(
+                    valuespec=DropdownChoice(
                         title=_("Umlauts in User-IDs (deprecated)"),
                         help=_(
                             "Checkmk was not not supporting special characters (like Umlauts) in "

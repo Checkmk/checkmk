@@ -88,7 +88,7 @@ def _valuespec_inventory_sap_values():
                             size=100,
                         ),
                         Transform(
-                            RegExp(
+                            valuespec=RegExp(
                                 size=100,
                                 mode=RegExp.prefix,
                             ),

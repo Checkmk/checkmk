@@ -27,7 +27,7 @@ def _item_spec_network_fs():
 
 def _parameter_valuespec_network_fs():
     return Transform(
-        Dictionary(
+        valuespec=Dictionary(
             elements=fs_levels_elements
             + fs_magic_elements
             + size_trend_elements

@@ -34,7 +34,7 @@ def transform_units(params):
 
 def _parameter_valuespec_jvm_gc():
     return Transform(
-        Dictionary(
+        valuespec=Dictionary(
             help=_("This ruleset also covers Tomcat, Jolokia and JMX. "),
             elements=[
                 (

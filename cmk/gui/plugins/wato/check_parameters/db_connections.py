@@ -26,7 +26,7 @@ def _transform_connection_type(params):
 
 def _parameter_valuespec_db_connections():
     return Transform(
-        Dictionary(
+        valuespec=Dictionary(
             help=_(
                 "This rule allows you to configure the number of maximum concurrent "
                 "connections for a given database."

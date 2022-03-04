@@ -1261,7 +1261,7 @@ class ModeBIEditRule(ABCBIMode):
             (
                 "params",
                 Transform(
-                    ListOfStrings(
+                    valuespec=ListOfStrings(
                         title=_("Parameters"),
                         help=_(
                             "Parameters are used in order to make rules more flexible. They must "
@@ -1376,7 +1376,7 @@ class ModeBIEditRule(ABCBIMode):
             return value
 
         return Transform(
-            BIRuleForm(
+            valuespec=BIRuleForm(
                 title=_("Rule Properties"),
                 optional_keys=False,
                 render="form",
@@ -1734,7 +1734,7 @@ class BIModeEditAggregation(ABCBIMode):
             return result
 
         return Transform(
-            ListOf(
+            valuespec=ListOf(
                 valuespec=Alternative(
                     style="dropdown",
                     orientation="horizontal",

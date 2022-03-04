@@ -69,7 +69,7 @@ def _vs_levels(help_txt):
 
 def _valuespec_inv_domino_tasks_rules():
     return Transform(
-        Dictionary(
+        valuespec=Dictionary(
             title=_("Lotus Domino task discovery"),
             help=_(
                 "This rule controls the discovery of tasks on Lotus Domino systems. "
@@ -109,7 +109,7 @@ def _valuespec_inv_domino_tasks_rules():
                                 size=50,
                             ),
                             Transform(
-                                RegExp(
+                                valuespec=RegExp(
                                     size=50,
                                     mode=RegExp.prefix,
                                 ),
@@ -191,7 +191,7 @@ def _transform_valuespec_domino_tasks(par):
 
 def _parameter_valuespec_domino_tasks():
     return Transform(
-        Dictionary(
+        valuespec=Dictionary(
             elements=[
                 (
                     "process",
@@ -203,7 +203,7 @@ def _parameter_valuespec_domino_tasks():
                                 size=50,
                             ),
                             Transform(
-                                RegExp(
+                                valuespec=RegExp(
                                     size=50,
                                     mode=RegExp.prefix,
                                 ),

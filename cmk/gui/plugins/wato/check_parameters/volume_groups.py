@@ -31,7 +31,7 @@ def _parameter_valuespec_volume_groups():
                     elements=[
                         get_free_used_dynamic_valuespec("used", "volume group"),
                         Transform(
-                            get_free_used_dynamic_valuespec(
+                            valuespec=get_free_used_dynamic_valuespec(
                                 "free", "volume group", default_value=(20.0, 10.0)
                             ),
                             title=_("Levels for volume group free space"),

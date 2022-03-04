@@ -625,7 +625,7 @@ def _filter_kubernetes_namespace_element():
 
 def _valuespec_special_agents_kubernetes():
     return Transform(
-        Dictionary(
+        valuespec=Dictionary(
             elements=[
                 (
                     "api-server-endpoint",
@@ -975,7 +975,7 @@ def _api_request_authentication():
     return (
         "auth_basic",
         Transform(
-            CascadingDropdown(
+            valuespec=CascadingDropdown(
                 title=_("Authentication"),
                 choices=[
                     (
@@ -1054,7 +1054,7 @@ def _valuespec_generic_metrics_prometheus():
     )
 
     return Transform(
-        Dictionary(
+        valuespec=Dictionary(
             elements=[
                 (
                     "connection",
@@ -1736,7 +1736,7 @@ def _transform_agent_vsphere(params):
 
 def _valuespec_special_agents_vsphere():
     return Transform(
-        Dictionary(
+        valuespec=Dictionary(
             title=_("VMWare ESX via vSphere"),
             help=_(
                 "This rule allows monitoring of VMWare ESX via the vSphere API. "
@@ -1811,7 +1811,7 @@ def _valuespec_special_agents_vsphere():
                 (
                     "infos",
                     Transform(
-                        ListChoice(
+                        valuespec=ListChoice(
                             choices=[
                                 ("hostsystem", _("Host Systems")),
                                 ("virtualmachine", _("Virtual Machines")),
@@ -2143,7 +2143,7 @@ def _special_agents_ipmi_sensors_vs_ipmitool() -> Dictionary:
 
 def _valuespec_special_agents_ipmi_sensors() -> Transform:
     return Transform(
-        CascadingDropdown(
+        valuespec=CascadingDropdown(
             choices=[
                 ("freeipmi", _("Use FreeIPMI"), _special_agents_ipmi_sensors_vs_freeipmi()),
                 ("ipmitool", _("Use IPMItool"), _special_agents_ipmi_sensors_vs_ipmitool()),
@@ -2169,7 +2169,7 @@ rulespec_registry.register(
 
 def _valuespec_special_agents_netapp():
     return Transform(
-        Dictionary(
+        valuespec=Dictionary(
             elements=[
                 (
                     "username",
@@ -2241,7 +2241,7 @@ def _factory_default_special_agents_activemq():
 
 def _valuespec_special_agents_activemq():
     return Transform(
-        Dictionary(
+        valuespec=Dictionary(
             elements=[
                 (
                     "servername",
@@ -2330,7 +2330,7 @@ def _valuespec_special_agents_emcvnx():
             (
                 "infos",
                 Transform(
-                    ListChoice(
+                    valuespec=ListChoice(
                         choices=[
                             ("disks", _("Disks")),
                             ("hba", _("iSCSI HBAs")),
@@ -2413,7 +2413,7 @@ def _valuespec_special_agents_ibmsvc():
             (
                 "infos",
                 Transform(
-                    ListChoice(
+                    valuespec=ListChoice(
                         choices=[
                             ("lshost", _("Hosts Connected")),
                             ("lslicense", _("Licensing Status")),
@@ -2581,7 +2581,7 @@ def _special_agents_innovaphone_transform(value):
 
 def _valuespec_special_agents_innovaphone():
     return Transform(
-        Dictionary(
+        valuespec=Dictionary(
             title=_("Innovaphone Gateways"),
             help=_("Please specify the user and password needed to access the xml interface"),
             elements=connection_set(
@@ -2799,7 +2799,7 @@ def _special_agents_siemens_plc_validate_siemens_plc_values(value, varprefix):
 def _special_agents_siemens_plc_siemens_plc_value():
     return [
         Transform(
-            CascadingDropdown(
+            valuespec=CascadingDropdown(
                 title=_("The Area"),
                 choices=[
                     (
@@ -3339,7 +3339,7 @@ def _special_agents_3par_transform(v):
 
 def _valuespec_special_agents_3par():
     return Transform(
-        Dictionary(
+        valuespec=Dictionary(
             title=_("3PAR Configuration"),
             elements=[
                 (
@@ -3788,7 +3788,7 @@ class MultisiteBiDatasource:
 
     def _vs_filters(self):
         return Transform(
-            Dictionary(
+            valuespec=Dictionary(
                 elements=[
                     (
                         "aggr_name",
@@ -3972,7 +3972,7 @@ def _transform_aws(d):
 
 def _valuespec_special_agents_aws():
     return Transform(
-        Dictionary(
+        valuespec=Dictionary(
             title=_("Amazon Web Services (AWS)"),
             elements=[
                 (
@@ -4528,7 +4528,7 @@ def _transform_jenkins_infos(value):
 
 def _valuespec_special_agents_jenkins():
     return Transform(
-        Dictionary(
+        valuespec=Dictionary(
             title=_("Jenkins jobs and builds"),
             help=_("Requests data from a jenkins instance."),
             optional_keys=["port"],

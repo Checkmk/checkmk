@@ -100,7 +100,7 @@ def _transform_level_names(conjunctions):
 
 def _valuespec_fileinfo_groups():
     return Transform(
-        Dictionary(
+        valuespec=Dictionary(
             title=_("Group patterns"),
             elements=[
                 (
@@ -116,7 +116,7 @@ def _valuespec_fileinfo_groups():
                                     size=20,
                                 ),
                                 Transform(
-                                    Tuple(
+                                    valuespec=Tuple(
                                         show_titles=True,
                                         orientation="vertical",
                                         elements=[
@@ -370,7 +370,7 @@ def _transform_manual_fileinfo_groups_params(params):
 
 def _manual_parameter_valuespec_fileinfo_groups():
     return Transform(
-        Dictionary(
+        valuespec=Dictionary(
             required_keys=["group_patterns"],
             elements=[
                 (

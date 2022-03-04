@@ -811,7 +811,7 @@ class ConfigVariableVirtualHostTrees(ConfigVariable):
 
     def valuespec(self):
         return Transform(
-            ListOf(
+            valuespec=ListOf(
                 valuespec=Dictionary(
                     elements=[
                         (
@@ -1195,7 +1195,7 @@ class ConfigVariableUserLocalizations(ConfigVariable):
 
     def valuespec(self):
         return Transform(
-            ListOf(
+            valuespec=ListOf(
                 valuespec=Tuple(
                     elements=[
                         TextInput(title=_("Original Text"), size=40),
@@ -1231,7 +1231,7 @@ class ConfigVariableUserIconsAndActions(ConfigVariable):
 
     def valuespec(self):
         return Transform(
-            ListOf(
+            valuespec=ListOf(
                 valuespec=Tuple(
                     elements=[
                         ID(
@@ -1257,7 +1257,7 @@ class ConfigVariableUserIconsAndActions(ConfigVariable):
                                 (
                                     "url",
                                     Transform(
-                                        Tuple(
+                                        valuespec=Tuple(
                                             title=_("Action"),
                                             elements=[
                                                 TextInput(
@@ -1357,7 +1357,7 @@ class ConfigVariableCustomServiceAttributes(ConfigVariable):
 
     def valuespec(self):
         return Transform(
-            ListOf(
+            valuespec=ListOf(
                 valuespec=Dictionary(
                     elements=[
                         (
@@ -1597,7 +1597,7 @@ class ConfigVariableBuiltinIconVisibility(ConfigVariable):
 
     def valuespec(self):
         return Transform(
-            ListOf(
+            valuespec=ListOf(
                 valuespec=Tuple(
                     elements=[
                         DropdownChoice(
@@ -1817,7 +1817,7 @@ class ConfigVariableTrustedCertificateAuthorities(ConfigVariable):
                 (
                     "trusted_cas",
                     Transform(
-                        ListOfCAs(
+                        valuespec=ListOfCAs(
                             title=_("Checkmk specific"),
                             allow_empty=True,
                         ),
@@ -2497,7 +2497,7 @@ class ConfigVariableUseNewDescriptionsFor(ConfigVariable):
 
     def valuespec(self):
         return Transform(
-            ListChoice(
+            valuespec=ListChoice(
                 title=_("Use new service descriptions"),
                 help=_(
                     "In order to make Check_MK more consistent, "
@@ -2884,7 +2884,7 @@ class ConfigVariableChooseSNMPBackend(ConfigVariable):
 
     def valuespec(self):
         return Transform(
-            DropdownChoice(
+            valuespec=DropdownChoice(
                 title=_("Choose SNMP Backend (Enterprise Edition only)"),
                 choices=[
                     (SNMPBackendEnum.CLASSIC, _("Use Classic SNMP Backend")),
@@ -2950,7 +2950,7 @@ class ConfigVariableHTTPProxies(ConfigVariable):
 
     def valuespec(self):
         return Transform(
-            ListOf(
+            valuespec=ListOf(
                 valuespec=Dictionary(
                     title=_("HTTP proxy"),
                     elements=[
@@ -3242,7 +3242,7 @@ rulespec_registry.register(
 
 def _valuespec_extra_service_conf_check_interval():
     return Transform(
-        Age(minvalue=1, default_value=60),
+        valuespec=Age(minvalue=1, default_value=60),
         forth=lambda v: int(v * 60),
         back=lambda v: float(v) / 60.0,
         title=_("Normal check interval for service checks"),
@@ -3269,7 +3269,7 @@ rulespec_registry.register(
 
 def _valuespec_extra_service_conf_retry_interval():
     return Transform(
-        Age(minvalue=1, default_value=60),
+        valuespec=Age(minvalue=1, default_value=60),
         forth=lambda v: int(v * 60),
         back=lambda v: float(v) / 60.0,
         title=_("Retry check interval for service checks"),
@@ -3428,7 +3428,7 @@ def _default_check_interval():
 
 def _valuespec_extra_host_conf_check_interval():
     return Transform(
-        Age(minvalue=1, default_value=_default_check_interval()),
+        valuespec=Age(minvalue=1, default_value=_default_check_interval()),
         forth=lambda v: int(v * 60),
         back=lambda v: float(v) / 60.0,
         title=_("Normal check interval for host checks"),
@@ -3452,7 +3452,7 @@ rulespec_registry.register(
 
 def _valuespec_extra_host_conf_retry_interval():
     return Transform(
-        Age(minvalue=1, default_value=_default_check_interval()),
+        valuespec=Age(minvalue=1, default_value=_default_check_interval()),
         forth=lambda v: int(v * 60),
         back=lambda v: float(v) / 60.0,
         title=_("Retry check interval for host checks"),
@@ -3637,7 +3637,7 @@ rulespec_registry.register(
 
 def _valuespec_extra_host_conf_notification_options():
     return Transform(
-        ListChoice(
+        valuespec=ListChoice(
             choices=[
                 ("d", _("Host goes down")),
                 ("u", _("Host gets unreachble")),
@@ -3676,7 +3676,7 @@ rulespec_registry.register(
 
 def _valuespec_extra_service_conf_notification_options():
     return Transform(
-        ListChoice(
+        valuespec=ListChoice(
             choices=[
                 ("w", _("Service goes into warning state")),
                 ("u", _("Service goes into unknown state")),
@@ -3766,7 +3766,7 @@ def transform_age_to_float_minutes(age):
 
 def _valuespec_extra_host_conf_first_notification_delay():
     return Transform(
-        Age(
+        valuespec=Age(
             minvalue=0,
             default_value=300,
             label=_("Delay:"),
@@ -3794,7 +3794,7 @@ rulespec_registry.register(
 
 def _valuespec_extra_service_conf_first_notification_delay():
     return Transform(
-        Age(
+        valuespec=Age(
             minvalue=0,
             default_value=300,
             label=_("Delay:"),
@@ -3824,7 +3824,7 @@ rulespec_registry.register(
 def _valuespec_extra_host_conf_notification_interval():
     return Optional(
         valuespec=Transform(
-            Float(
+            valuespec=Float(
                 minvalue=0.05,
                 default_value=120.0,
                 label=_("Interval:"),
@@ -3856,7 +3856,9 @@ rulespec_registry.register(
 def _valuespec_extra_service_conf_notification_interval():
     return Optional(
         valuespec=Transform(
-            Float(minvalue=0.05, default_value=120.0, label=_("Interval:"), unit=_("minutes")),
+            valuespec=Float(
+                minvalue=0.05, default_value=120.0, label=_("Interval:"), unit=_("minutes")
+            ),
             forth=float,
         ),
         title=_("Periodic notifications during service problems"),
@@ -4029,7 +4031,7 @@ def _valuespec_periodic_discovery():
 
 def _vs_periodic_discovery() -> Transform:
     return Transform(
-        Dictionary(
+        valuespec=Dictionary(
             title=_("Perform periodic service discovery check"),
             help=_(
                 "If enabled, Check_MK will create one additional service per host "
@@ -4040,7 +4042,7 @@ def _vs_periodic_discovery() -> Transform:
                 (
                     "check_interval",
                     Transform(
-                        Age(
+                        valuespec=Age(
                             minvalue=1,
                             display=["days", "hours", "minutes"],
                         ),
@@ -4147,7 +4149,7 @@ def _transform_automatic_rediscover_parameters(parameters: Dict[str, Any]) -> Di
 
 def _valuespec_automatic_rediscover_parameters() -> Transform:
     return Transform(
-        Dictionary(
+        valuespec=Dictionary(
             title=_("Automatically update service configuration"),
             help=_(
                 "If active the check will not only notify about un-monitored services, "
@@ -4695,7 +4697,7 @@ rulespec_registry.register(
 
 def _valuespec_extra_host_conf_icon_image():
     return Transform(
-        IconSelector(
+        valuespec=IconSelector(
             title=_("Icon image for hosts in status GUI"),
             help=_(
                 "You can assign icons to hosts for the status GUI. "
@@ -4719,7 +4721,7 @@ rulespec_registry.register(
 
 def _valuespec_extra_service_conf_icon_image():
     return Transform(
-        IconSelector(
+        valuespec=IconSelector(
             title=_("Icon image for services in status GUI"),
             help=_(
                 "You can assign icons to services for the status GUI. "
@@ -5202,7 +5204,7 @@ def transform_snmp_backend_hosts_forth(backend):
 
 def _valuespec_snmp_backend():
     return Transform(
-        DropdownChoice(
+        valuespec=DropdownChoice(
             title=_("Choose SNMP Backend"),
             choices=[
                 (SNMPBackendEnum.INLINE, _("Use Inline SNMP Backend")),
@@ -5470,7 +5472,7 @@ def _factory_default_check_mk_exit_status():
 
 def _valuespec_check_mk_exit_status():
     return Transform(
-        Dictionary(
+        valuespec=Dictionary(
             elements=[
                 (
                     "overall",
@@ -5656,7 +5658,7 @@ rulespec_registry.register(
 
 def _valuespec_check_mk_agent_target_versions():
     return Transform(
-        CascadingDropdown(
+        valuespec=CascadingDropdown(
             title=_("Check for correct version of Checkmk agent"),
             help=_(
                 "Here you can make sure that all of your Check_MK agents are running"
@@ -5859,7 +5861,7 @@ def _valuespec_snmp_fetch_interval():
         ),
         elements=[
             Transform(
-                DropdownChoice(
+                valuespec=DropdownChoice(
                     title=_("Section"),
                     help=_(
                         "You can only configure section names here, but not choose individual "
@@ -5908,7 +5910,7 @@ def _transform_2_0_beta_params(params: Dict[str, Any]) -> Dict[str, Any]:
 
 def _valuespec_snmp_config_agent_sections():
     return Transform(
-        Dictionary(
+        valuespec=Dictionary(
             title=_("Disabled or enabled sections (SNMP)"),
             help=_(
                 "This option allows to omit individual sections from being fetched at all. "
@@ -5984,7 +5986,7 @@ def _valuespec_snmpv3_contexts():
         ),
         elements=[
             Transform(
-                DropdownChoice(
+                valuespec=DropdownChoice(
                     title=_("Section name"),
                     choices=get_snmp_section_names,
                 ),
@@ -6061,7 +6063,7 @@ def _valuespec_piggybacked_host_files():
                 "per_piggybacked_host",
                 ListOf(
                     valuespec=Transform(
-                        Dictionary(
+                        valuespec=Dictionary(
                             optional_keys=[],
                             elements=[
                                 (

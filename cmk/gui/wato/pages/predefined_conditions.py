@@ -47,7 +47,7 @@ def dummy_rulespec() -> ServiceRulespec:
 
 def vs_conditions():
     return Transform(
-        VSExplicitConditions(rulespec=dummy_rulespec(), render="form_part"),
+        valuespec=VSExplicitConditions(rulespec=dummy_rulespec(), render="form_part"),
         forth=lambda c: RuleConditions("").from_config(c),
         back=lambda c: c.to_config_with_folder(),
     )

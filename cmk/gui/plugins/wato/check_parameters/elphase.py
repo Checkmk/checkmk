@@ -156,7 +156,7 @@ def _transform_parameter_valuespec_ups_outphase(params: Dict[str, Any]) -> Dict[
 
 def _parameter_valuespec_ups_outphase() -> Transform:
     return Transform(
-        Dictionary(
+        valuespec=Dictionary(
             help=_(
                 "This rule allows you to specify levels for the voltage, current, load, power "
                 "and apparent power of your device. The levels will only be applied if the device "

@@ -593,7 +593,7 @@ class HostAttributeNetworkScan(ABCHostAttributeValueSpec):
             (
                 "time_allowed",
                 Transform(
-                    ListOf(
+                    valuespec=ListOf(
                         valuespec=TimeofdayRange(
                             allow_empty=False,
                         ),
@@ -1099,7 +1099,7 @@ class HostAttributeLockedBy(ABCHostAttributeValueSpec):
 
     def valuespec(self):
         return Transform(
-            LockedByValuespec(),
+            valuespec=LockedByValuespec(),
             forth=tuple,
             back=list,
         )

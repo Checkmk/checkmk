@@ -15,7 +15,7 @@ from cmk.gui.valuespec import Percentage, Transform, Tuple
 
 def _parameter_valuespec_citrix_load():
     return Transform(
-        Tuple(
+        valuespec=Tuple(
             title=_("Citrix Server load"),
             elements=[
                 Percentage(title=_("Warning at"), default_value=85.0, unit="percent"),

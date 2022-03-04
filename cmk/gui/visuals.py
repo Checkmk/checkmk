@@ -1031,7 +1031,7 @@ def visual_spec_single(info_key):
     info = visual_info_registry[info_key]()
 
     return Transform(
-        Dictionary(
+        valuespec=Dictionary(
             title=info.title,
             form_isopen=True,
             optional_keys=True,
@@ -2051,7 +2051,7 @@ def SingleInfoSelection(info_keys: List[InfoName]) -> Transform:
     # valuespec expects a list of strings (since this was once the DualListChoice now located under
     # "manual_selection").
     return Transform(
-        CascadingDropdown(
+        valuespec=CascadingDropdown(
             choices=cascading_dropdown_choices,
             title=_("Specific objects"),
             sorted=False,

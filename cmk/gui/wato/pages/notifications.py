@@ -193,7 +193,7 @@ class ABCNotificationsMode(ABCEventsMode):
                                 (
                                     "match_rule_id",
                                     Transform(
-                                        ListOf(
+                                        valuespec=ListOf(
                                             valuespec=ID(
                                                 title=_("Match event rule"),
                                                 label=_("Rule ID:"),
@@ -1475,7 +1475,7 @@ class ABCEditNotificationRuleMode(ABCNotificationsMode):
                 (
                     "bulk",
                     Transform(
-                        CascadingDropdown(
+                        valuespec=CascadingDropdown(
                             title="Notification Bulking",
                             orientation="vertical",
                             choices=[

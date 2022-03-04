@@ -1816,7 +1816,7 @@ def view_editor_column_spec(ident, title, ds_name):
         )
 
     vs_column = Transform(
-        vs_column,
+        valuespec=vs_column,
         back=lambda value: (value[0], value[2], value[3], value[1], value[4]),
         forth=lambda value: (value[0], value[3], value[1], value[2], value[4])
         if value is not None

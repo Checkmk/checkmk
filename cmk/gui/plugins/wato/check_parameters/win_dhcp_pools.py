@@ -62,7 +62,7 @@ def _item_spec_win_dhcp_pools():
 
 def _parameter_valuespec_win_dhcp_pools():
     return Transform(
-        Dictionary(
+        valuespec=Dictionary(
             elements=[
                 (
                     "free_leases",

@@ -75,7 +75,7 @@ def transform_websphere_mq_queues(source):
 
 def _parameter_valuespec_websphere_mq():
     return Transform(
-        Dictionary(
+        valuespec=Dictionary(
             elements=websphere_mq_common_elements()
             + [
                 (

@@ -43,7 +43,7 @@ def _discovery_forth(discovery_params: Mapping[str, Sequence[str]]) -> Mapping[s
 
 def _valuespec_discovery_systemd_units_services_rules() -> Transform:
     return Transform(
-        Dictionary(
+        valuespec=Dictionary(
             title=_("Systemd single services discovery"),
             elements=[
                 (

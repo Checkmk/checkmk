@@ -61,7 +61,7 @@ def transform_graph_render_options(value):
 
 def vs_graph_render_options(default_values=None, exclude=None):
     return Transform(
-        Dictionary(
+        valuespec=Dictionary(
             elements=vs_graph_render_option_elements(default_values, exclude),
             optional_keys=[],
             title=_("Graph rendering options"),
@@ -114,7 +114,7 @@ def vs_graph_render_option_elements(default_values=None, exclude=None):
         (
             "title_format",
             Transform(
-                vs_title_infos(),
+                valuespec=vs_title_infos(),
                 forth=transform_graph_render_options_title_format,
             ),
         ),

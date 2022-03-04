@@ -818,7 +818,7 @@ def vs_mkeventd_rule(customer=None):
                     (
                         "merge",
                         Transform(
-                            CascadingDropdown(
+                            valuespec=CascadingDropdown(
                                 title=_("Merge with open event"),
                                 help=_(
                                     "If there already exists an open event because of absent "
@@ -4282,7 +4282,7 @@ class ConfigVariableEventConsoleTranslateSNMPTraps(ConfigVariable):
 
     def valuespec(self):
         return Transform(
-            CascadingDropdown(
+            valuespec=CascadingDropdown(
                 choices=[
                     (False, _("Do not translate SNMP traps")),
                     (
@@ -4412,7 +4412,7 @@ class ConfigVariableEventConsoleLogLevel(ConfigVariable):
 
     def valuespec(self):
         return Transform(
-            Dictionary(
+            valuespec=Dictionary(
                 title=_("Log level"),
                 help=_(
                     "You can configure the Event Console to log more details about it's actions. "
@@ -4728,7 +4728,7 @@ def convert_mkevents_hostspec(value):
 
 def _valuespec_extra_host_conf__ec_event_limit():
     return Transform(
-        vs_ec_host_limit(title=_("Host event limit")),
+        valuespec=vs_ec_host_limit(title=_("Host event limit")),
         forth=lambda x: dict([("limit", int(x.split(":")[0])), ("action", x.split(":")[1])]),
         back=lambda x: "%d:%s" % (x["limit"], x["action"]),
     )
@@ -4756,7 +4756,7 @@ def _valuespec_active_checks_mkevents():
             (
                 "hostspec",
                 Transform(
-                    Alternative(
+                    valuespec=Alternative(
                         title=_("Host specification"),
                         elements=[
                             ListChoice(

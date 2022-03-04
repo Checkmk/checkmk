@@ -60,7 +60,7 @@ class DisableNotificationsUserAttribute(UserAttribute):
 
     def valuespec(self):
         return Transform(
-            Dictionary(
+            valuespec=Dictionary(
                 title=_("Disable notifications"),
                 help=_(
                     "When this option is active you will not get <b>any</b> "
@@ -120,7 +120,7 @@ class StartURLUserAttribute(UserAttribute):
 
     def valuespec(self):
         return Transform(
-            Alternative(
+            valuespec=Alternative(
                 title=_("Start URL to display in main frame"),
                 orientation="horizontal",
                 elements=[

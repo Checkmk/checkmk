@@ -42,7 +42,7 @@ def _item_help_logwatch_rules():
 
 def _valuespec_logwatch_rules():
     return Transform(
-        Dictionary(
+        valuespec=Dictionary(
             title=_("Logfile patterns"),
             elements=[
                 (
@@ -184,7 +184,7 @@ rulespec_registry.register(
 
 def _valuespec_logwatch_groups():
     return Transform(
-        Dictionary(
+        valuespec=Dictionary(
             title=_("Logfile Grouping"),
             elements=[
                 (
@@ -260,7 +260,7 @@ def _parameter_valuespec_logwatch_ec():
                         "method",
                         Transform(
                             # TODO: Clean this up to some CascadingDropdown()
-                            Alternative(
+                            valuespec=Alternative(
                                 title=_("Forwarding Method"),
                                 elements=[
                                     FixedValue(
@@ -284,7 +284,7 @@ def _parameter_valuespec_logwatch_ec():
                                         totext=_("Spool to Event Console"),
                                     ),
                                     Transform(
-                                        TextInput(
+                                        valuespec=TextInput(
                                             allow_empty=False,
                                         ),
                                         title=_(

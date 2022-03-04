@@ -5698,8 +5698,8 @@ class Transform(ValueSpec):
 
     def __init__(  # pylint: disable=redefined-builtin
         self,
-        valuespec: ValueSpec,
         *,
+        valuespec: ValueSpec,
         back: _Optional[Callable[[Any], Any]] = None,
         forth: _Optional[Callable[[Any], Any]] = None,
         title: _Optional[str] = None,
@@ -6106,7 +6106,7 @@ class TextOrRegExp(Alternative):
                 "elements": [
                     vs_text,
                     Transform(
-                        vs_regex,
+                        valuespec=vs_regex,
                         forth=lambda v: v[1:],  # strip of "~"
                         back=lambda v: "~" + v,  # add "~"
                     ),

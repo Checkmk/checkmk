@@ -22,7 +22,7 @@ def _forth(p: object) -> Mapping[Literal["levels"], object]:
 
 def _parameter_valuespec_cpu_load():
     return Transform(
-        Dictionary(
+        valuespec=Dictionary(
             elements=[
                 (
                     "levels",

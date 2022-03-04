@@ -24,7 +24,7 @@ def transform_diskstat(params):
 
 def _valuespec_diskstat_inventory():
     return Transform(
-        Dictionary(
+        valuespec=Dictionary(
             title=_("Disk IO discovery"),
             help=_(
                 "This rule controls which and how many checks will be created "

@@ -32,7 +32,7 @@ def convert_oracle_sessions(value):
 
 def _parameter_valuespec_oracle_sessions():
     return Transform(
-        Dictionary(
+        valuespec=Dictionary(
             elements=[
                 (
                     "sessions_abs",

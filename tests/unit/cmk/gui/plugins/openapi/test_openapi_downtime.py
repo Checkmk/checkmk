@@ -892,9 +892,9 @@ def test_openapi_downtime_non_existing_groups(aut_user_auth_wsgi_app: WebTestApp
 
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
+@pytest.mark.parametrize("wato_enabled", [True, False])
 def test_openapi_downtime_get_single(
-    aut_user_auth_wsgi_app: WebTestAppForCMK,
-    mock_livestatus,
+    aut_user_auth_wsgi_app: WebTestAppForCMK, mock_livestatus, wato_enabled: bool
 ):
     live: MockLiveStatusConnection = mock_livestatus
 
@@ -937,13 +937,14 @@ def test_openapi_downtime_get_single(
     )
 
     with live:
-        resp = aut_user_auth_wsgi_app.call_method(
-            "get",
-            base + "/objects/downtime/123",
-            headers={"Accept": "application/json"},
-            status=200,
-        )
-        assert resp.json_body["title"] == "Downtime for service: CPU load"
+        with aut_user_auth_wsgi_app.set_config(wato_enabled=wato_enabled):
+            resp = aut_user_auth_wsgi_app.call_method(
+                "get",
+                base + "/objects/downtime/123",
+                headers={"Accept": "application/json"},
+                status=200,
+            )
+            assert resp.json_body["title"] == "Downtime for service: CPU load"
 
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls")

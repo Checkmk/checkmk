@@ -60,14 +60,22 @@ def get_cmk_version(scm, VERSION) {
     } else if (BRANCH.startsWith('sandbox') && VERSION == 'daily') {
         return get_date() + '-' + BRANCH // Experimental builds
     } else if (VERSION == 'daily') {
-        return BRANCH + '-' + get_date() // version branch dailies (e.g. 1.6.0)
+        // NOTE: We will come here as well for the tests triggered by gerrit.
+        // BRANCH will then be something like "refs/changes/*" so we won't find any
+        // version for that. That's why we need to use get_branch_version.
+        return get_branch_version() + '-' + get_date() // version branch dailies (e.g. 1.6.0)
     } else {
         return VERSION
     }
 }
 
 def get_branch_version() {
-    return sh(returnStdout: true, script: "grep -m 1 BRANCH_VERSION defines.make | sed 's/^.*= //g'").trim()
+    if (isUnix()) {
+        return sh(returnStdout: true, script: "grep -m 1 BRANCH_VERSION defines.make | sed 's/^.*= //g'").trim()
+    }
+    else {
+        return bat(returnStdout: true, script: "findstr /r \"^BRANCH_VERSION.*[0-9].[0-9].[0-9]\" defines.make").trim().split(":=")[1]
+    }
 }
 
 def get_git_hash() {

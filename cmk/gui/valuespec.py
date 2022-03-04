@@ -757,28 +757,107 @@ class UUID(TextInput):
         html.hidden_field(varprefix, value, add_var=True)
 
 
-# TODO: Cleanup kwargs
-def ID(**kwargs):
+def ID(  # pylint: disable=redefined-builtin
+    *,
+    label: _Optional[str] = None,
+    size: Union[int, str] = 25,
+    try_max_width: bool = False,
+    cssclass: str = "text",
+    strip: bool = True,
+    allow_empty: bool = True,
+    empty_text: str = "",
+    read_only: bool = False,
+    forbidden_chars: str = "",
+    minlen: _Optional[int] = None,
+    maxlen: _Optional[int] = None,
+    onkeyup: _Optional[str] = None,
+    autocomplete: bool = True,
+    hidden: bool = False,
+    placeholder: _Optional[str] = None,
+    # ValueSpec
+    title: _Optional[str] = None,
+    help: _Optional[ValueSpecHelp] = None,
+    default_value: ValueSpecDefault[str] = DEF_VALUE,
+    validate: _Optional[ValueSpecValidateFunc[str]] = None,
+):
     """Internal ID as used in many places (for contact names, group name, an so on)"""
     return TextInput(
+        label=label,
+        size=size,
+        try_max_width=try_max_width,
+        cssclass=cssclass,
+        strip=strip,
+        allow_empty=allow_empty,
+        empty_text=empty_text,
+        read_only=read_only,
+        forbidden_chars=forbidden_chars,
         regex=cmk.utils.regex.regex(cmk.utils.regex.REGEX_ID, re.ASCII),
         regex_error=_(
             "An identifier must only consist of letters, digits, dash and "
             "underscore and it must start with a letter or underscore."
         ),
-        **kwargs,
+        minlen=minlen,
+        maxlen=maxlen,
+        onkeyup=onkeyup,
+        autocomplete=autocomplete,
+        hidden=hidden,
+        placeholder=placeholder,
+        title=title,
+        help=help,
+        default_value=default_value,
+        validate=validate,
     )
 
 
-# TODO: Cleanup kwargs
-def UserID(**kwargs):
+def UserID(  # pylint: disable=redefined-builtin
+    *,
+    label: _Optional[str] = None,
+    size: Union[int, str] = 25,
+    try_max_width: bool = False,
+    cssclass: str = "text",
+    strip: bool = True,
+    allow_empty: bool = True,
+    empty_text: str = "",
+    read_only: bool = False,
+    forbidden_chars: str = "",
+    minlen: _Optional[int] = None,
+    maxlen: _Optional[int] = None,
+    onkeyup: _Optional[str] = None,
+    autocomplete: bool = True,
+    hidden: bool = False,
+    placeholder: _Optional[str] = None,
+    # ValueSpec
+    title: _Optional[str] = None,
+    help: _Optional[ValueSpecHelp] = None,
+    default_value: ValueSpecDefault[str] = DEF_VALUE,
+    validate: _Optional[ValueSpecValidateFunc[str]] = None,
+):
+    """Internal ID as used in many places (for contact names, group name, an so on)"""
     return TextInput(
+        label=label,
+        size=size,
+        try_max_width=try_max_width,
+        cssclass=cssclass,
+        strip=strip,
+        allow_empty=allow_empty,
+        empty_text=empty_text,
+        read_only=read_only,
+        forbidden_chars=forbidden_chars,
         regex=re.compile(r"^[\w][-\w.@]*$", re.UNICODE),
         regex_error=_(
             "An identifier must only consist of letters, digits, dash, dot, "
             "at and underscore. But it must start with a digit, letter or underscore."
         ),
-        **kwargs,
+        minlen=minlen,
+        maxlen=maxlen,
+        onkeyup=onkeyup,
+        autocomplete=autocomplete,
+        hidden=hidden,
+        placeholder=placeholder,
+        title=title,
+        help=help,
+        default_value=default_value,
+        validate=validate,
     )
 
 
@@ -2831,14 +2910,34 @@ class MonitoredHostname(AjaxDropdownChoice):
 
     ident = "monitored_hostname"
 
-    def __init__(self, **kwargs):
+    def __init__(  # pylint: disable=redefined-builtin
+        self,
+        *,
+        strict: Literal["True", "False", "withHost"] = "False",
+        # DropdownChoice
+        label: _Optional[str] = None,
+        choices: _Optional[DropdownChoices] = None,
+        html_attrs: _Optional[HTMLTagAttributes] = None,
+        # From ValueSpec
+        title: _Optional[str] = None,
+        help: _Optional[ValueSpecHelp] = None,
+        default_value: ValueSpecDefault[str] = DEF_VALUE,
+        validate: _Optional[ValueSpecValidateFunc[str]] = None,
+    ):
         super().__init__(
             regex=cmk.utils.regex.regex(cmk.utils.regex.REGEX_HOST_NAME),
             regex_error=_(
                 "Please enter a valid hostname or IPv4 address. "
                 "Only letters, digits, dash, underscore and dot are allowed."
             ),
-            **kwargs,
+            strict=strict,
+            label=label,
+            choices=choices,
+            html_attrs=html_attrs,
+            title=title,
+            help=help,
+            default_value=default_value,
+            validate=validate,
         )
 
     def value_to_html(self, value: str) -> ValueSpecText:
@@ -2859,14 +2958,37 @@ class WatoFolderChoices(AjaxDropdownChoice):
 
 
 class DropdownChoiceWithHostAndServiceHints(AjaxDropdownChoice):
-    def __init__(
+    def __init__(  # pylint: disable=redefined-builtin
         self,
         *,
         css_spec: list[str],
         hint_label: str,
-        **kwargs: Any,
+        # AjaxDropdownChoice
+        regex: Union[None, str, Pattern[str]] = None,
+        regex_error: _Optional[str] = None,
+        strict: Literal["True", "False", "withHost"] = "False",
+        # DropdownChoice
+        label: _Optional[str] = None,
+        choices: _Optional[DropdownChoices] = None,
+        html_attrs: _Optional[HTMLTagAttributes] = None,
+        # From ValueSpec
+        title: _Optional[str] = None,
+        help: _Optional[ValueSpecHelp] = None,
+        default_value: ValueSpecDefault[str] = DEF_VALUE,
+        validate: _Optional[ValueSpecValidateFunc[str]] = None,
     ):
-        super().__init__(**kwargs)
+        super().__init__(
+            regex=regex,
+            regex_error=regex_error,
+            strict=strict,
+            label=label,
+            choices=choices,
+            html_attrs=html_attrs,
+            title=title,
+            help=help,
+            default_value=default_value,
+            validate=validate,
+        )
         self._css_spec = css_spec
         self._hint_label = hint_label
 
@@ -2904,9 +3026,30 @@ class DropdownChoiceWithHostAndServiceHints(AjaxDropdownChoice):
 
 
 # TODO: Rename to ServiceState() or something like this
-def MonitoringState(**kwargs):
+def MonitoringState(  # pylint: disable=redefined-builtin
+    *,
+    # DropdownChoice
+    sorted: bool = False,
+    label: _Optional[str] = None,
+    help_separator: _Optional[str] = None,
+    prefix_values: bool = False,
+    empty_text: _Optional[str] = None,
+    invalid_choice: _Optional[str] = "complain",
+    invalid_choice_title: _Optional[str] = None,
+    invalid_choice_error: _Optional[str] = None,
+    no_preselect_title: _Optional[str] = None,
+    on_change: _Optional[str] = None,
+    read_only: bool = False,
+    encode_value: bool = True,
+    html_attrs: _Optional[HTMLTagAttributes] = None,
+    # ValueSpec
+    title: _Optional[str] = None,
+    help: _Optional[ValueSpecHelp] = None,
+    default_value: ValueSpecDefault[DropdownChoiceModel] = 0,  # NOTE: Different!
+    validate: _Optional[ValueSpecValidateFunc[DropdownChoiceModel]] = None,
+    deprecated_choices: Sequence[DropdownChoiceModel] = (),
+):
     """Special convenience variant for monitoring states"""
-    kwargs.setdefault("default_value", 0)
     return DropdownChoice(
         choices=[
             (0, _("OK")),
@@ -2914,7 +3057,24 @@ def MonitoringState(**kwargs):
             (2, _("CRIT")),
             (3, _("UNKNOWN")),
         ],
-        **kwargs,
+        sorted=sorted,
+        label=label,
+        help_separator=help_separator,
+        prefix_values=prefix_values,
+        empty_text=empty_text,
+        invalid_choice=invalid_choice,
+        invalid_choice_title=invalid_choice_title,
+        invalid_choice_error=invalid_choice_error,
+        no_preselect_title=no_preselect_title,
+        on_change=on_change,
+        read_only=read_only,
+        encode_value=encode_value,
+        html_attrs=html_attrs,
+        title=title,
+        help=help,
+        default_value=default_value,
+        validate=validate,
+        deprecated_choices=deprecated_choices,
     )
 
 

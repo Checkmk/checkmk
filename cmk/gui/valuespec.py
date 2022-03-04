@@ -3078,15 +3078,53 @@ def MonitoringState(  # pylint: disable=redefined-builtin
     )
 
 
-def HostState(**kwargs):
-    kwargs.setdefault("default_value", 0)
+def HostState(  # pylint: disable=redefined-builtin
+    *,
+    # DropdownChoice
+    sorted: bool = False,
+    label: _Optional[str] = None,
+    help_separator: _Optional[str] = None,
+    prefix_values: bool = False,
+    empty_text: _Optional[str] = None,
+    invalid_choice: _Optional[str] = "complain",
+    invalid_choice_title: _Optional[str] = None,
+    invalid_choice_error: _Optional[str] = None,
+    no_preselect_title: _Optional[str] = None,
+    on_change: _Optional[str] = None,
+    read_only: bool = False,
+    encode_value: bool = True,
+    html_attrs: _Optional[HTMLTagAttributes] = None,
+    # ValueSpec
+    title: _Optional[str] = None,
+    help: _Optional[ValueSpecHelp] = None,
+    default_value: ValueSpecDefault[DropdownChoiceModel] = 0,  # NOTE: Different!
+    validate: _Optional[ValueSpecValidateFunc[DropdownChoiceModel]] = None,
+    deprecated_choices: Sequence[DropdownChoiceModel] = (),
+):
     return DropdownChoice(
         choices=[
             (0, _("UP")),
             (1, _("DOWN")),
             (2, _("UNREACHABLE")),
         ],
-        **kwargs,
+        sorted=sorted,
+        label=label,
+        help_separator=help_separator,
+        prefix_values=prefix_values,
+        empty_text=empty_text,
+        invalid_choice=invalid_choice,
+        invalid_choice_title=invalid_choice_title,
+        invalid_choice_error=invalid_choice_error,
+        no_preselect_title=no_preselect_title,
+        on_change=on_change,
+        read_only=read_only,
+        encode_value=encode_value,
+        html_attrs=html_attrs,
+        title=title,
+        help=help,
+        default_value=default_value,
+        validate=validate,
+        deprecated_choices=deprecated_choices,
     )
 
 
@@ -4006,9 +4044,54 @@ def _today() -> int:
     return _round_date(time.time())
 
 
-# TODO: Cleanup kwargs
-def Weekday(**kwargs):
-    return DropdownChoice(choices=sorted(defines.weekdays().items()), **kwargs)
+# Shadowing help/sorted/... with kwargs is a baaad idea. :-/
+_sorted = sorted
+
+
+def Weekday(  # pylint: disable=redefined-builtin
+    *,
+    # DropdownChoice
+    sorted: bool = False,
+    label: _Optional[str] = None,
+    help_separator: _Optional[str] = None,
+    prefix_values: bool = False,
+    empty_text: _Optional[str] = None,
+    invalid_choice: _Optional[str] = "complain",
+    invalid_choice_title: _Optional[str] = None,
+    invalid_choice_error: _Optional[str] = None,
+    no_preselect_title: _Optional[str] = None,
+    on_change: _Optional[str] = None,
+    read_only: bool = False,
+    encode_value: bool = True,
+    html_attrs: _Optional[HTMLTagAttributes] = None,
+    # ValueSpec
+    title: _Optional[str] = None,
+    help: _Optional[ValueSpecHelp] = None,
+    default_value: ValueSpecDefault[DropdownChoiceModel] = DEF_VALUE,
+    validate: _Optional[ValueSpecValidateFunc[DropdownChoiceModel]] = None,
+    deprecated_choices: Sequence[DropdownChoiceModel] = (),
+):
+    return DropdownChoice(
+        choices=_sorted(defines.weekdays().items()),
+        sorted=sorted,
+        label=label,
+        help_separator=help_separator,
+        prefix_values=prefix_values,
+        empty_text=empty_text,
+        invalid_choice=invalid_choice,
+        invalid_choice_title=invalid_choice_title,
+        invalid_choice_error=invalid_choice_error,
+        no_preselect_title=no_preselect_title,
+        on_change=on_change,
+        read_only=read_only,
+        encode_value=encode_value,
+        html_attrs=html_attrs,
+        title=title,
+        help=help,
+        default_value=default_value,
+        validate=validate,
+        deprecated_choices=deprecated_choices,
+    )
 
 
 class RelativeDate(OptionalDropdownChoice):

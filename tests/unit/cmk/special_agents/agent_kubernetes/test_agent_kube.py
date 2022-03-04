@@ -3,14 +3,10 @@
 # Copyright (C) 2021 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
 from typing import Any, Mapping, Optional
 
-from cmk.special_agents.agent_kube import (
-    _collect_cpu_resources,
-    aggregate_resources,
-    Pod,
-    pods_from_namespaces,
-)
+from cmk.special_agents.agent_kube import _collect_cpu_resources, Pod, pods_from_namespaces
 from cmk.special_agents.utils_kubernetes.schemata import api
 
 
@@ -80,23 +76,3 @@ def test_filter_pods_from_namespaces():
         "two", metadata=api.PodMetaData(name="two", namespace=api.Namespace("standard"))
     )
     assert pods_from_namespaces([pod_one, pod_two], {api.Namespace("default")}) == [pod_one]
-
-
-def test_aggregate_resources_summed_request() -> None:
-    request_values = [None, 1.0, 1.0]
-    result = aggregate_resources(request_values, len(request_values) * [None])
-    assert result.request == 2.0
-    assert result.count_unspecified_requests == 1
-
-
-def test_aggregate_resources_summed_limit() -> None:
-    limit_values = [None, 1.0, 1.0, 0.0, 0.0]
-    result = aggregate_resources(len(limit_values) * [None], limit_values)
-    assert result.limit == 2.0
-    assert result.count_unspecified_limits == 1
-
-
-def test_aggregate_resources_with_only_zeroed_limits() -> None:
-    limit_values = [0.0, 0.0]
-    result = aggregate_resources(len(limit_values) * [None], limit_values)
-    assert result.count_zeroed_limits == 2

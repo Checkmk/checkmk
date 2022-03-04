@@ -1,0 +1,12 @@
+Title: The agent controller featuring transport encryption and compression now supports Windows  7 as well
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1646399672
+Edition: cre
+Knowledge: undoc
+Level: 2
+State: unknown
+Version: 2.2.0i1
+
+

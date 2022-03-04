@@ -1492,7 +1492,7 @@ class ABCEventsMode(WatoMode, abc.ABC):
             (
                 "match_servicelabels",
                 Labels(
-                    Labels.World.CORE,
+                    world=Labels.World.CORE,
                     title=_("Match service labels"),
                     help=_(
                         "Use this condition to select hosts based on the configured service labels."
@@ -2628,7 +2628,7 @@ def _common_host_rule_match_conditions():
         (
             "match_hostlabels",
             Labels(
-                Labels.World.CORE,
+                world=Labels.World.CORE,
                 title=_("Match host labels"),
                 help=_("Use this condition to select hosts based on the configured host labels."),
             ),

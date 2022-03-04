@@ -685,7 +685,7 @@ def _valuespec_inventory_processes_rules() -> Transform:
                 (
                     "label",
                     Labels(
-                        Labels.World.CONFIG,
+                        world=Labels.World.CONFIG,
                         title=_("Host Label"),
                         help=_(
                             "Here you can set host labels that automatically get created when discovering the services."

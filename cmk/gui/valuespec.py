@@ -6137,6 +6137,7 @@ class Labels(ValueSpec):
 
     def __init__(  # pylint: disable=redefined-builtin
         self,
+        *,
         world: "Labels.World",
         label_source: _Optional["Labels.Source"] = None,
         max_labels: _Optional[int] = None,
@@ -6232,7 +6233,7 @@ class Labels(ValueSpec):
 
 def SingleLabel(world, label_source=None, **kwargs):
     """Input element for a single label"""
-    return Labels(world, label_source=label_source, max_labels=1, **kwargs)
+    return Labels(world=world, label_source=label_source, max_labels=1, **kwargs)
 
 
 @page_registry.register_page("ajax_autocomplete_labels")

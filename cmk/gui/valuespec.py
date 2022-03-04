@@ -6269,6 +6269,7 @@ class PageAutocompleteLabels(AjaxPage):
 class IconSelector(ValueSpec):
     def __init__(
         self,
+        *,
         allow_empty=True,
         empty_img="empty",
         show_builtin_icons=True,

@@ -445,10 +445,17 @@ def cron_job_from_client(
     )
 
 
-def daemon_set_from_client(
-    daemon_set: client.V1DaemonSet, pod_uids=Sequence[api.PodUID]
+def parse_daemonset_spec(daemonset_spec: client.V1DaemonSetSpec) -> api.DaemonSetSpec:
+    return api.DaemonSetSpec(
+        selector=parse_selector(daemonset_spec.selector),
+    )
+
+
+def daemonset_from_client(
+    daemonset: client.V1DaemonSet, pod_uids=Sequence[api.PodUID]
 ) -> api.DaemonSet:
     return api.DaemonSet(
-        metadata=parse_metadata(daemon_set.metadata),
+        metadata=parse_metadata(daemonset.metadata),
+        spec=parse_daemonset_spec(daemonset.spec),
         pods=pod_uids,
     )

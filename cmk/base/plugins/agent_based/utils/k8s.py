@@ -348,6 +348,17 @@ class DeploymentInfo(BaseModel):
     cluster: str
 
 
+class DaemonSetInfo(BaseModel):
+    """section: kube_daemonset_info_v1"""
+
+    name: str
+    namespace: Namespace
+    labels: Labels
+    selector: Selector
+    creation_timestamp: CreationTimestamp
+    cluster: str
+
+
 class PodContainers(BaseModel):
     """section: kube_pod_containers_v1"""
 

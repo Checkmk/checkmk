@@ -7,6 +7,7 @@ from typing import (
     Any,
     Dict,
     Generator,
+    Iterable,
     List,
     Mapping,
     MutableMapping,
@@ -63,7 +64,7 @@ ps_info = collections.namedtuple(
 
 ps_info.__new__.__defaults__ = (None,) * len(ps_info._fields)  # type: ignore[attr-defined]
 
-Section = Tuple[int, List[Tuple[ps_info, List[str]]]]
+Section = Tuple[int, Sequence[Tuple[ps_info, Sequence[str]]]]
 
 
 def get_discovery_specs(params: Sequence[Mapping[str, Any]]):
@@ -166,7 +167,7 @@ def process_attributes_match(process_info, userspec, cgroupspec):
     return True
 
 
-def process_matches(command_line, process_pattern, match_groups=None):
+def process_matches(command_line: Sequence[str], process_pattern, match_groups=None):
 
     if not process_pattern:
         # Process name not relevant
@@ -390,8 +391,8 @@ class ProcessAggregator:
 
 
 def process_capture(
-    # process_lines: (Node, ps_info, cmd_line)
-    process_lines: List[Tuple[Optional[str], ps_info, List[str]]],
+    # process_lines: (Node, PsInfo, cmd_line)
+    process_lines: Iterable[Tuple[Optional[str], ps_info, Sequence[str]]],
     params: Mapping[str, Any],
     cpu_cores: int,
     value_store: MutableMapping[str, Any],
@@ -513,7 +514,7 @@ def check_ps_common(
     label: str,
     item: str,
     params: Mapping[str, Any],
-    process_lines: List[Tuple[Optional[str], ps_info, List[str]]],
+    process_lines: Iterable[Tuple[Optional[str], ps_info, Sequence[str]]],
     cpu_cores: int,
     total_ram_map: Mapping[str, float],
 ) -> CheckResult:

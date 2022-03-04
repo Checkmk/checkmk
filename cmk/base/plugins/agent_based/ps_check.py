@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Dict, List, Mapping, Optional, Tuple
+from typing import Any, Dict, Mapping, Optional
 from .agent_based_api.v1.type_defs import CheckResult
 
 from .agent_based_api.v1 import register
@@ -50,11 +50,9 @@ def cluster_check_ps(
         section_cpu: Dict[str, Optional[cpu.Section]],  # unused
 ) -> CheckResult:
     # introduce node name
-    process_lines: List[Tuple[Optional[str], ps.ps_info, List[str]]] = [
-        (node_name, ps_info, cmd_line)
-        for node_name, node_section in section_ps.items()
-        for (ps_info, cmd_line) in (node_section[1] if node_section else ())
-    ]
+    process_lines = [(node_name, ps_info, cmd_line)
+                     for node_name, node_section in section_ps.items()
+                     for (ps_info, cmd_line) in (node_section[1] if node_section else ())]  # pylint: disable=superfluous-parens
 
     core_counts = set(
         node_section[0] for node_section in section_ps.values() if node_section is not None)

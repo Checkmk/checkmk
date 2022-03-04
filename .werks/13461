@@ -1,0 +1,13 @@
+Title: enviromux_remote_input: New check for NTI Enviromux 16D remote inputs
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1647880928
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.2.0i1
+
+It is now possible to monitor remote sensors connected to
+NTI Enviromux 16D device. Remote input value and status
+are checked.

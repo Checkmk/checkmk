@@ -1,0 +1,26 @@
+Title: Kubernetes monitoring
+Class: feature
+Compatible: incomp
+Component: checks
+Date: 1646377965
+Edition: cre
+Knowledge: undoc
+Level: 3
+Version: 2.1.0b1
+
+This werk introduces the new monitoring solution for Kubernetes. It
+includes a new special agent and a new set of agent based plugins.
+The agent can be configured under the same Datasource Programs rule
+within Checkmk. Monitoring services can be extended by deploying Checkmk's
+collectors in the monitored Kubernetes cluster. For the detailed description
+on how to deploy the collectors please refer to the following guide:
+https://github.com/tribe29/checkmk_kube_agent/blob/main/README.rst
+
+This werk introduces monitoring for the following Kubernetes objects:
+
+* cluster
+* nodes
+* deployments
+* pods
+
+Other objects will follow in later werks.

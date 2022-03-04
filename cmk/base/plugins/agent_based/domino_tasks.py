@@ -3,7 +3,7 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from typing import Any, Dict, List, Mapping, Optional, Sequence, Tuple
+from typing import Any, Dict, List, Mapping, Optional, Sequence
 
 from .agent_based_api.v1 import register, SNMPTree
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
@@ -21,9 +21,6 @@ from .utils import domino, memory, ps
 # .1.3.6.1.4.1.334.72.1.1.6.1.2.1.4.6 tm_grab M05
 # .1.3.6.1.4.1.334.72.1.1.6.1.2.1.4.7 tm_grab
 # .1.3.6.1.4.1.334.72.1.1.6.1.2.1.4.8 Router
-
-ProcessLines = List[Tuple[Optional[str], ps.PsInfo, List[str]]]
-
 
 # Bring the SNMP data in the format expected by the common ps functions.
 # e.g.:
@@ -64,7 +61,7 @@ def check_domino_tasks(
     if section_domino_tasks is None:
         return
     cpu_cores, lines = section_domino_tasks
-    process_lines: ProcessLines = [(None, psi, cmd_line) for (psi, cmd_line) in lines]
+    process_lines = [(None, psi, cmd_line) for (psi, cmd_line) in lines]
 
     total_ram = section_mem.get("MemTotal") if section_mem else None
 
@@ -90,7 +87,7 @@ def cluster_check_domino_tasks(
         for node_name, node_section in section_domino_tasks.items()
         if node_section is not None
     )
-    process_lines: ProcessLines = [
+    process_lines = [
         (node_name, psi, cmd_line)
         for node_name, node_section in iter_non_trivial_sections
         for (psi, cmd_line) in node_section[1]

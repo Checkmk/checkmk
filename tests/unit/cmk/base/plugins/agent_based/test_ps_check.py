@@ -6,7 +6,7 @@
 
 import datetime
 import itertools
-from typing import Any, Dict, List, NamedTuple, Optional, Tuple
+from typing import Any, Dict, List, NamedTuple, Optional
 
 import pytest
 
@@ -16,8 +16,6 @@ from cmk.base.plugins.agent_based import ps_section
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service
 from cmk.base.plugins.agent_based.agent_based_api.v1 import State as state
 from cmk.base.plugins.agent_based.utils import ps as ps_utils
-
-pytestmark = pytest.mark.checks
 
 
 def splitter(
@@ -668,7 +666,7 @@ def test_check_ps_common_cpu(data):
     def time_info(service, agent_info, check_time, cputime, cpu_cores):
         with on_time(datetime.datetime.utcfromtimestamp(check_time), "CET"):
             _cpu_info, parsed_lines = ps_section.parse_ps(splitter(agent_info.format(cputime)))
-            lines_with_node_name: List[Tuple[Optional[str], ps_utils.PsInfo, List[str]]] = [
+            lines_with_node_name = [
                 (None, ps_info, cmd_line) for (ps_info, cmd_line) in parsed_lines
             ]
 
@@ -737,9 +735,7 @@ def test_check_ps_common_count(levels, reference):
     _cpu_info, parsed_lines = ps_section.parse_ps(
         splitter("(on,105,30,00:00:{:02}/03:59:39,902) single")
     )
-    lines_with_node_name: List[Tuple[Optional[str], ps_utils.PsInfo, List[str]]] = [
-        (None, ps_info, cmd_line) for (ps_info, cmd_line) in parsed_lines
-    ]
+    lines_with_node_name = [(None, ps_info, cmd_line) for (ps_info, cmd_line) in parsed_lines]
 
     params = {
         "process": "~test",
@@ -860,7 +856,7 @@ def test_cpu_util_single_process_levels(cpu_cores):
 (on,7962644,229660,00:00:10/26:56,25758) firefox
 (on,1523536,83064,00:{:02}:00/26:55,25898) firefox"""
             _cpu_info, parsed_lines = ps_section.parse_ps(splitter(agent_info.format(cputime)))
-            lines_with_node_name: List[Tuple[Optional[str], ps_utils.PsInfo, List[str]]] = [
+            lines_with_node_name = [
                 (None, ps_info, cmd_line) for (ps_info, cmd_line) in parsed_lines
             ]
 

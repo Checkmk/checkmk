@@ -14,4 +14,4 @@ It has never been configurable via <i>WATO</i>.
 The configuration variable 'agent_min_version' does not have any effect anymore.
 Setting the variable to an integer other than 0 (the default) lead to a crash, setting it to a string lead to unreliable behaviour.
 
-If you want to check the version of the installed agent, please configure a rule in the ruleset <i>"Checkmk Agent"</i>.
+If you want to check the version of the installed agent, please configure a rule in the ruleset <i>"Checkmk Agent installation auditing"</i>.

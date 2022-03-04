@@ -51,7 +51,7 @@ def test_check():
             state=State.WARN,
             summary="Agent plugin 'zorp': 2.1.0i1 (warn/crit below 2.3.0/1.2.0)",
         ),
-        # sync_local_check is OK
+        Result(state=State.OK, notice="Local check 'sync_local_check.sh': 3.14.15"),
     ]
 
 

@@ -10,7 +10,8 @@ State: unknown
 Version: 2.2.0i1
 
 The following configuration options have been moved from
-"<i>Status of the Checkmk services</i>" to "<i>Checkmk Agent</i>".
+"<i>Status of the Checkmk services</i>" to
+"<i>Checkmk Agent installation auditing</i>".
 
 <ul>
 <li>State in case of wrong agent version</li>

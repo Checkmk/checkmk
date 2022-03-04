@@ -252,14 +252,14 @@ def test_check_warn_upon_old_update_check(fix_time, duplicate: bool) -> None:
             },
         )
     ] == [
-        Result(state=State.WARN, summary="Error: 503 Server Error: Service Unavailable"),
+        Result(state=State.WARN, summary="Update error: 503 Server Error: Service Unavailable"),
         Result(
             state=State.WARN,
             summary="Time since last update check: 9 days 6 hours (warn/crit at 2 days 0 hours/never)",
         ),
-        Result(state=State.OK, summary="Last update check: Feb 16 2022 08:28:01"),
-        Result(state=State.OK, summary="Last agent update: Feb 16 2022 08:29:41"),
-        Result(state=State.OK, summary="Update URL: https://server/site/check_mk"),
-        Result(state=State.OK, summary="Agent configuration: 38bf6e44"),
-        Result(state=State.OK, summary="Pending installation: 1234abcd"),
+        Result(state=State.OK, notice="Last update check: Feb 16 2022 08:28:01"),
+        Result(state=State.OK, summary="Last update: Feb 16 2022 08:29:41"),
+        Result(state=State.OK, notice="Update URL: https://server/site/check_mk"),
+        Result(state=State.OK, notice="Agent configuration: 38bf6e44"),
+        Result(state=State.OK, notice="Pending installation: 1234abcd"),
     ]

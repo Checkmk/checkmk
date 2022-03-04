@@ -67,6 +67,11 @@ def _check_cmk_agent_installation(
     if agent_info["agentos"] is not None:
         yield Result(state=State.OK, summary="OS: %s" % agent_info["agentos"])
 
+    yield from _check_transport(
+        bool(agent_info.get("sshclient")),
+        controller_info,
+        State(params["legacy_pull_mode"]),
+    )
     yield from _check_only_from(
         agent_info.get("onlyfrom"),
         _get_configured_only_from(),
@@ -77,11 +82,6 @@ def _check_cmk_agent_installation(
     )
     yield from _check_python_plugins(
         agent_info.get("failedpythonplugins"), agent_info.get("failedpythonreason")
-    )
-    yield from _check_transport(
-        bool(agent_info.get("sshclient")),
-        controller_info,
-        State(params["legacy_pull_mode"]),
     )
 
 
@@ -154,7 +154,10 @@ def _check_only_from(
     allowed_nets = set(normalize_ip_addresses(agent_only_from))
     expected_nets = set(normalize_ip_addresses(config_only_from))
     if allowed_nets == expected_nets:
-        yield Result(state=State.OK, summary=f"Allowed IP ranges: {' '.join(allowed_nets)}")
+        yield Result(
+            state=State.OK,
+            notice=f"Allowed IP ranges: {' '.join(allowed_nets)}",
+        )
         return
 
     infotexts = []
@@ -236,7 +239,7 @@ def _get_error_result(error: str, params: Mapping[str, Any]) -> CheckResult:
             summary=error,
         )
     else:
-        yield Result(state=default_state, summary=f"Error: {error}")
+        yield Result(state=default_state, summary=f"Update error: {error}")
 
 
 def _check_cmk_agent_update(params: Mapping[str, Any], section: CheckmkSection) -> CheckResult:
@@ -264,24 +267,27 @@ def _check_cmk_agent_update(params: Mapping[str, Any], section: CheckmkSection) 
             label="Time since last update check",
             notice_only=True,
         )
-        yield Result(state=State.OK, summary=f"Last update check: {render.datetime(last_check)}")
+        yield Result(
+            state=State.OK,
+            notice=f"Last update check: {render.datetime(last_check)}",
+        )
 
     if last_update := parsed.get("last_update"):
         yield Result(
             state=State.OK,
-            summary=f"Last agent update: {render.datetime(float(last_update))}",
+            summary=f"Last update: {render.datetime(float(last_update))}",
         )
 
     if update_url := parsed.get("update_url"):
         # Note: Transformation of URLs from this check (check_mk-check_mk_agent) to icons
         # is disabled explicitly in cmk.gui.view_utils:format_plugin_output
-        yield Result(state=State.OK, summary=f"Update URL: {update_url}")
+        yield Result(state=State.OK, notice=f"Update URL: {update_url}")
 
     if aghash := parsed.get("aghash"):
-        yield Result(state=State.OK, summary=f"Agent configuration: {aghash[:8]}")
+        yield Result(state=State.OK, notice=f"Agent configuration: {aghash[:8]}")
 
     if pending := parsed.get("pending_hash"):
-        yield Result(state=State.OK, summary=f"Pending installation: {pending[:8]}")
+        yield Result(state=State.OK, notice=f"Pending installation: {pending[:8]}")
 
     return
 
@@ -326,14 +332,13 @@ def _check_min_version(
                 summary=f"{type_} {plugin.name!r}: unable to parse version {plugin.version!r}",
             )
         else:
-            (result,) = check_levels(
+            yield from check_levels(
                 plugin.version_int,
                 levels_lower=levels,
                 render_func=lambda v: render_info[int(v)],
                 label=f"{type_} {plugin.name!r}",
+                notice_only=True,
             )
-            if result.state is not State.OK:
-                yield result
 
 
 def check_checkmk_agent(

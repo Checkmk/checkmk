@@ -7,6 +7,45 @@ use anyhow::{anyhow, Context, Error as AnyhowError, Result as AnyhowResult};
 use std::fmt::Display;
 use std::str::FromStr;
 
+#[derive(serde::Deserialize, PartialEq, Debug)]
+pub struct ServerSpec {
+    pub server: String,
+
+    #[serde(default)]
+    pub port: Option<types::Port>,
+}
+
+impl FromStr for ServerSpec {
+    type Err = AnyhowError;
+
+    fn from_str(s: &str) -> AnyhowResult<Self> {
+        match s.contains(':') {
+            true => {
+                let components: Vec<&str> = s.split(':').collect();
+                if components.len() != 2 {
+                    return Err(anyhow!("Failed to split into server and port at ':'"));
+                }
+                Ok(Self {
+                    server: String::from(components[0]),
+                    port: Some(types::Port::from_str(components[1])?),
+                })
+            }
+            false => Ok(Self {
+                server: String::from(s),
+                port: None,
+            }),
+        }
+    }
+}
+
+#[derive(serde::Deserialize)]
+pub struct PresetSiteSpec {
+    #[serde(flatten)]
+    pub server_spec: ServerSpec,
+
+    pub site: String,
+}
+
 #[derive(
     PartialEq,
     std::cmp::Eq,
@@ -50,20 +89,18 @@ impl Display for Coordinates {
     }
 }
 
-impl std::convert::TryFrom<IncompleteCoordinates> for Coordinates {
-    type Error = AnyhowError;
-
-    fn try_from(incomplete_coordinates: IncompleteCoordinates) -> AnyhowResult<Self> {
-        Ok(Coordinates {
-            port: Coordinates::port_from_checkmk_rest_api(&incomplete_coordinates)
-                .context("Failed to query agent receiver port from Checkmk REST API")?,
-            server: incomplete_coordinates.server,
-            site: incomplete_coordinates.site,
+impl Coordinates {
+    pub fn new(server: &str, port: Option<types::Port>, site: &str) -> AnyhowResult<Self> {
+        Ok(Self {
+            server: String::from(server),
+            port: match port {
+                Some(p) => p,
+                None => Self::port_from_checkmk_rest_api(server, site)?,
+            },
+            site: String::from(site),
         })
     }
-}
 
-impl Coordinates {
     pub fn to_url(&self) -> AnyhowResult<reqwest::Url> {
         reqwest::Url::parse(&format!(
             "https://{}:{}/{}",
@@ -72,23 +109,19 @@ impl Coordinates {
         .context(format!("Failed to convert {} into a URL", &self))
     }
 
-    fn checkmk_rest_api_port_url(
-        incomplete_coordinates: &IncompleteCoordinates,
-    ) -> AnyhowResult<reqwest::Url> {
+    fn checkmk_rest_api_port_url(server: &str, site: &str) -> AnyhowResult<reqwest::Url> {
         reqwest::Url::parse(&format!(
             "http://{}/{}/check_mk/api/1.0/domain-types/internal/actions/discover-receiver/invoke",
-            &incomplete_coordinates.server, &incomplete_coordinates.site,
+            server, site,
         ))
         .context(format!(
             "Failed to construct URL for discovering agent receiver port using server {} and site {}",
-            &incomplete_coordinates.server, &incomplete_coordinates.site,
+            server, site,
         ))
     }
 
-    fn port_from_checkmk_rest_api(
-        incomplete_coordinates: &IncompleteCoordinates,
-    ) -> AnyhowResult<types::Port> {
-        let url = Self::checkmk_rest_api_port_url(incomplete_coordinates)?;
+    fn port_from_checkmk_rest_api(server: &str, site: &str) -> AnyhowResult<types::Port> {
+        let url = Self::checkmk_rest_api_port_url(server, site)?;
         let error_msg = format!("Failed to discover agent receiver port from {}", &url);
         reqwest::blocking::get(url)
             .context(error_msg.clone())?
@@ -99,42 +132,35 @@ impl Coordinates {
     }
 }
 
-#[derive(PartialEq, Debug, serde::Deserialize)]
-pub struct IncompleteCoordinates {
-    server: String,
-    site: String,
-}
+#[cfg(test)]
+mod test_server_spec {
+    use super::*;
 
-impl FromStr for IncompleteCoordinates {
-    type Err = AnyhowError;
-
-    fn from_str(s: &str) -> AnyhowResult<Self> {
-        let components: Vec<&str> = s.split('/').collect();
-        if components.len() != 2 {
-            return Err(anyhow!("Failed to split into server and site at '/'"));
-        }
-        Ok(IncompleteCoordinates {
-            server: String::from(components[0]),
-            site: String::from(components[1]),
-        })
+    #[test]
+    fn test_from_str_with_port() {
+        assert_eq!(
+            ServerSpec::from_str("server:8000").unwrap(),
+            ServerSpec {
+                server: String::from("server"),
+                port: Some(types::Port::from_str("8000").unwrap()),
+            }
+        )
     }
-}
 
-#[derive(PartialEq, Debug, serde::Deserialize)]
-#[serde(untagged)]
-pub enum SiteSpec {
-    Incomplete(IncompleteCoordinates),
-    Complete(Coordinates),
-}
+    #[test]
+    fn test_from_str_without_port() {
+        assert_eq!(
+            ServerSpec::from_str("server.123").unwrap(),
+            ServerSpec {
+                server: String::from("server.123"),
+                port: None,
+            }
+        )
+    }
 
-impl FromStr for SiteSpec {
-    type Err = AnyhowError;
-
-    fn from_str(s: &str) -> AnyhowResult<SiteSpec> {
-        if s.contains(':') {
-            return Ok(SiteSpec::Complete(Coordinates::from_str(s)?));
-        }
-        Ok(SiteSpec::Incomplete(IncompleteCoordinates::from_str(s)?))
+    #[test]
+    fn test_from_str_error() {
+        assert!(ServerSpec::from_str("checkmk.server.com:5678:123").is_err())
     }
 }
 
@@ -195,62 +221,10 @@ mod test_coordinates {
 
     #[test]
     fn test_checkmk_rest_api_port_url() {
-        let inc_coord = IncompleteCoordinates::from_str("some-server/some-site").unwrap();
-        let url = Coordinates::checkmk_rest_api_port_url(&inc_coord).unwrap();
+        let url = Coordinates::checkmk_rest_api_port_url("some-server", "some-site").unwrap();
         assert_eq!(
             url.to_string(),
             "http://some-server/some-site/check_mk/api/1.0/domain-types/internal/actions/discover-receiver/invoke",
         );
-    }
-}
-
-#[cfg(test)]
-mod test_incomplete_coordinates {
-    use super::*;
-
-    #[test]
-    fn test_from_str_ok() {
-        assert_eq!(
-            IncompleteCoordinates::from_str("checkmk.server.com/awesome-site").unwrap(),
-            IncompleteCoordinates {
-                server: String::from("checkmk.server.com"),
-                site: String::from("awesome-site"),
-            }
-        )
-    }
-
-    #[test]
-    fn test_from_str_error() {
-        for erroneous_address in ["checkmk.server.com", "checkmk.server.com/a/b"] {
-            assert!(IncompleteCoordinates::from_str(erroneous_address).is_err())
-        }
-    }
-}
-
-#[cfg(test)]
-mod test_site_spec {
-    use super::*;
-
-    #[test]
-    fn test_from_str_complete() {
-        assert_eq!(
-            SiteSpec::from_str("server:8000/site").unwrap(),
-            SiteSpec::Complete(Coordinates {
-                server: String::from("server"),
-                port: types::Port::from_str("8000").unwrap(),
-                site: String::from("site"),
-            })
-        )
-    }
-
-    #[test]
-    fn test_from_str_incomplete() {
-        assert_eq!(
-            SiteSpec::from_str("server/site").unwrap(),
-            SiteSpec::Incomplete(IncompleteCoordinates {
-                server: String::from("server"),
-                site: String::from("site"),
-            })
-        )
     }
 }

@@ -3,6 +3,8 @@
 
 #include "agent_controller.h"
 
+#include <versionhelpers.h>
+
 #include <filesystem>
 #include <iosfwd>
 #include <iostream>
@@ -106,10 +108,18 @@ std::wstring BuildCommandLine(const fs::path &controller) {
 }
 
 bool StartAgentController(const fs::path &service) {
+    XLOG::l.i("starting controller");
     if (!cma::IsService()) {
         return false;
     }
 
+    if (!::IsWindows8Point1OrGreater()) {
+        XLOG::l(
+            "The agent controller is not compatible with this Windows version. "
+            "You can disable using the agent controller by configuring the "
+            "Checkmk rule set \"Windows agent controller\" for this host.");
+        return false;
+    }
     auto controller_name = CopyControllerToBin(service);
     if (controller_name.empty()) {
         XLOG::l("can't copy controller");

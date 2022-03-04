@@ -5602,7 +5602,7 @@ def _valuespec_check_mk_agent_target_versions():
         CascadingDropdown(
             title="%s - %s" % (_("Check for correct version of Checkmk agent"), _("Deprecated")),
             help=_('This ruleset is deprecated. Please use the ruleset <i>"%s"</i> instead.')
-            % _("Checkmk Agent"),
+            % _("Checkmk Agent installation auditing"),
             choices=[
                 ("ignore", _("Ignore the version")),
                 ("site", _("Same version as the monitoring site")),

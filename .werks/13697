@@ -13,7 +13,7 @@ This werk reorganizes the way information about the agent deployment is presente
 It is only incompatible for users that configured rules using the rule
 "<i>Checkmk agent plugins</i>", which was only present in Checkmk version 2.1.0b1.
 That rule is deprecated and must be reconfigured accordingly.
-You can configure expected versions using the ruleset "<i>Checkmk Agent</i>".
+You can configure expected versions using the ruleset "<i>Checkmk Agent installation auditing</i>".
 No further action must be taken.
 
 The general idea now is that the <i>Check_MK</i> service will monitor the <b>operational</b>

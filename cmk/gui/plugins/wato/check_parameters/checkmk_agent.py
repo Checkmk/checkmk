@@ -68,7 +68,7 @@ def _parameter_valuespec_checkmk_agent():
                 "agent_version",
                 Transform(
                     CascadingDropdown(
-                        title=_("Check for correct version of Checkmk agent"),
+                        title=_("Check version of Checkmk agent"),
                         help=_(
                             "Here you can make sure that all of your Check_MK agents are running"
                             " one specific version. Agents running "
@@ -183,7 +183,7 @@ def _parameter_valuespec_checkmk_agent():
             (
                 "min_versions",
                 Tuple(
-                    title=_("Required minimal versions"),
+                    title=_("Agent plugins: Required minimal versions"),
                     help=_(
                         "You can configure lower thresholds for the versions of the currently "
                         "deployed agent plugins and local checks."
@@ -197,12 +197,13 @@ def _parameter_valuespec_checkmk_agent():
             (
                 "exclude_pattern",
                 RegExp(
-                    title=_("Regular expression to exclude plugins"),
+                    title=_("Agent plugins: Regular expression to exclude plugins"),
                     mode=RegExp.infix,
                     help=_(
                         "Plugins or local checks matching this pattern will be excluded from the "
-                        "comparison with the specified required versions."
-                    ),
+                        "comparison with the required versions specified in '%s'."
+                    )
+                    % _("Agent plugins: Required minimal versions"),
                 ),
             ),
         ],
@@ -215,6 +216,6 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersApplications,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_checkmk_agent,
-        title=lambda: _("Checkmk Agent"),
+        title=lambda: _("Checkmk Agent installation auditing"),
     )
 )

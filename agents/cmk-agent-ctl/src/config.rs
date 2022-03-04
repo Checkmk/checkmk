@@ -53,7 +53,7 @@ pub trait TOMLLoader: DeserializeOwned {
 #[derive(Deserialize)]
 pub struct RegistrationPreset {
     #[serde(default)]
-    site_spec: Option<site_spec::SiteSpec>,
+    site_spec: Option<site_spec::PresetSiteSpec>,
 
     #[serde(default)]
     credentials: Option<types::OptPwdCredentials>,
@@ -88,22 +88,20 @@ impl RegistrationConfig {
         preset: RegistrationPreset,
         reg_args: cli::RegistrationArgs,
     ) -> AnyhowResult<RegistrationConfig> {
-        let used_site = if reg_args.site.is_some() {
-            site_spec::SiteSpec::from_str(&format!(
-                "{}/{}",
-                reg_args.server.unwrap(),
-                reg_args.site.unwrap(),
-            ))?
-        } else {
-            preset.site_spec.context("Site address not specified")?
-        };
-
-        let coordinates = match used_site {
-            site_spec::SiteSpec::Complete(coord) => coord,
-            site_spec::SiteSpec::Incomplete(inc_coord) => {
-                site_spec::Coordinates::try_from(inc_coord)?
+        let (server_spec, site) = match reg_args.site {
+            Some(site) => {
+                match reg_args.server {
+                    Some(server_spec) => (server_spec, site),
+                    None => return Err(anyhow!("Server not specified in the command line arguments, but site was. This should never happen.")),
+                }
+            }
+            None => match preset.site_spec {
+                Some(site_spec) => (site_spec.server_spec, site_spec.site),
+                None => return Err(anyhow!("Missing server and site specifications"))
             }
         };
+        let coordinates =
+            site_spec::Coordinates::new(&server_spec.server, server_spec.port, &site)?;
         let opt_pwd_credentials = match reg_args.user {
             Some(username) => types::OptPwdCredentials {
                 username,

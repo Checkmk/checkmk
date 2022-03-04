@@ -15,6 +15,32 @@ use std::io::{self, Write};
 use std::path::{Path, PathBuf};
 use structopt::StructOpt;
 
+// TODO(sk): estimate to move in constants
+#[cfg(windows)]
+fn to_version(major: &u64, minor: &u64) -> u64 {
+    major * 100 + minor
+}
+
+fn is_os_supported() -> bool {
+    #[cfg(windows)]
+    {
+        let info = os_info::get();
+        match info.version() {
+            os_info::Version::Semantic(major, minor, _patch) => {
+                to_version(major, minor)
+                    >= to_version(
+                        &constants::MIN_WIN_VERSION_MAJOR,
+                        &constants::MIN_WIN_VERSION_MINOR,
+                    )
+            }
+            _ => false,
+        }
+    }
+
+    #[cfg(unix)]
+    true
+}
+
 pub struct PathResolver {
     pub home_dir: PathBuf,
     pub config_path: PathBuf,
@@ -214,6 +240,10 @@ fn setup(args: &cli::Args) -> AnyhowResult<PathResolver> {
 }
 
 pub fn init() -> AnyhowResult<(cli::Args, PathResolver)> {
+    if !is_os_supported() {
+        eprintln!("This OS is unsupported");
+        std::process::exit(1);
+    }
     // Parse args as first action to directly exit from --help or malformatted arguments
     let args = cli::Args::from_args();
     let paths = setup(&args)?;

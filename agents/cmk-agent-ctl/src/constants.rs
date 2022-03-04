@@ -39,3 +39,13 @@ pub const ENV_CONNECTION_TIMEOUT: &str = "DEBUG_CONNECTION_TIMEOUT";
 pub const ENV_WINDOWS_INTERNAL_PORT: &str = "DEBUG_WINDOWS_INTERNAL_PORT";
 #[cfg(windows)]
 pub const ENV_PROGRAM_DATA: &str = "ProgramData";
+
+// Windows version
+// https://en.wikipedia.org/wiki/List_of_Microsoft_Windows_versions
+// We support only relative new version of Windows because of Rust toolchain:
+// Server 2012R2 & Windows 8.1, i.e. 6.3
+// TODO: Estimate support of 6.2( Server 2012/Windows 8)
+#[cfg(windows)]
+pub const MIN_WIN_VERSION_MAJOR: u64 = 6;
+#[cfg(windows)]
+pub const MIN_WIN_VERSION_MINOR: u64 = 3;

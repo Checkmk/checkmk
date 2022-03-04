@@ -265,9 +265,20 @@ def node_pods():
 
 
 @pytest.fixture
-def new_daemon_set() -> Callable[[], agent_kube.DaemonSet]:
+def daemonset_spec() -> api.DaemonSetSpec:
+    class DaemonSetSpecFactory(ModelFactory):
+        __model__ = api.DaemonSetSpec
+
+    return DaemonSetSpecFactory.build()
+
+
+@pytest.fixture
+def new_daemon_set(daemonset_spec: api.DaemonSetSpec) -> Callable[[], agent_kube.DaemonSet]:
     def _new_daemon_set() -> agent_kube.DaemonSet:
-        return agent_kube.DaemonSet(metadata=MetaDataFactory.build())
+        return agent_kube.DaemonSet(
+            metadata=MetaDataFactory.build(),
+            spec=daemonset_spec,
+        )
 
     return _new_daemon_set
 
@@ -375,6 +386,7 @@ def daemon_sets_api_sections():
         "kube_pod_resources_v1",
         "kube_memory_resources_v1",
         "kube_cpu_resources_v1",
+        "kube_daemonset_info_v1",
     ]
 
 

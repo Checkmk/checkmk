@@ -308,6 +308,17 @@ class DeploymentInfo(BaseModel):
     cluster: str
 
 
+class DaemonSetInfo(BaseModel):
+    """section: kube_daemonset_info_v1"""
+
+    name: str
+    namespace: api.Namespace
+    labels: api.Labels
+    selector: api.Selector
+    creation_timestamp: api.CreationTimestamp
+    cluster: str
+
+
 class DeploymentConditions(BaseModel):
     """section: kube_deployment_conditions_v1"""
 

@@ -517,9 +517,10 @@ class Deployment(PodOwner):
 
 
 class DaemonSet(PodOwner):
-    def __init__(self, metadata: api.MetaData) -> None:
+    def __init__(self, metadata: api.MetaData, spec: api.DaemonSetSpec) -> None:
         super().__init__()
         self.metadata = metadata
+        self.spec = spec
         self.type_: str = "daemon_set"
 
     def name(self, prepend_namespace: bool = False) -> str:
@@ -548,6 +549,17 @@ class DaemonSet(PodOwner):
 
     def cpu_resources(self) -> section.Resources:
         return _collect_cpu_resources(self._pods)
+
+
+def daemonset_info(daemonset: DaemonSet, cluster_name: str) -> section.DaemonSetInfo:
+    return section.DaemonSetInfo(
+        name=daemonset.metadata.name,
+        namespace=daemonset.metadata.namespace,
+        creation_timestamp=daemonset.metadata.creation_timestamp,
+        labels=daemonset.metadata.labels,
+        selector=daemonset.spec.selector,
+        cluster=cluster_name,
+    )
 
 
 class Node(PodOwner):
@@ -705,7 +717,10 @@ class Cluster:
 
         if daemon_sets:
             for api_daemon_set in daemon_sets:
-                daemon_set = DaemonSet(api_daemon_set.metadata)
+                daemon_set = DaemonSet(
+                    metadata=api_daemon_set.metadata,
+                    spec=api_daemon_set.spec,
+                )
                 cluster.add_daemon_set(daemon_set)
                 _register_owner_for_pods(daemon_set, api_daemon_set.pods)
 
@@ -936,7 +951,9 @@ def write_deployments_api_sections(
 
 
 def write_daemon_sets_api_sections(
-    api_daemon_sets: Sequence[DaemonSet], piggyback_formatter: Callable[[str], str]
+    cluster_name: str,
+    api_daemon_sets: Sequence[DaemonSet],
+    piggyback_formatter: Callable[[str], str],
 ) -> None:
     """Write the daemon set relevant sections based on k8 API information"""
 
@@ -945,6 +962,7 @@ def write_daemon_sets_api_sections(
             "kube_pod_resources_v1": cluster_daemon_set.pod_resources,
             "kube_memory_resources_v1": cluster_daemon_set.memory_resources,
             "kube_cpu_resources_v1": cluster_daemon_set.cpu_resources,
+            "kube_daemonset_info_v1": lambda: daemonset_info(cluster_daemon_set, cluster_name),
         }
         _write_sections(sections)
 
@@ -1444,12 +1462,6 @@ def deployments_from_namespaces(
     return [deployment for deployment in deployments if deployment.metadata.namespace in namespaces]
 
 
-def daemon_sets_from_namespaces(
-    daemon_sets: Sequence[DaemonSet], namespaces: Set[api.Namespace]
-) -> Sequence[DaemonSet]:
-    return [daemon_set for daemon_set in daemon_sets if daemon_set.metadata.namespace in namespaces]
-
-
 def filter_monitored_namespaces(
     cluster_namespaces: Set[api.Namespace],
     namespace_include_patterns: Sequence[str],
@@ -1758,7 +1770,12 @@ def main(args: Optional[List[str]] = None) -> int:
             if "daemonsets" in arguments.monitored_objects:
                 LOGGER.info("Write daemon sets sections based on API data")
                 write_daemon_sets_api_sections(
-                    daemon_sets_from_namespaces(cluster.daemon_sets(), monitored_namespaces),
+                    arguments.cluster,
+                    [
+                        daemonset
+                        for daemonset in cluster.daemon_sets()
+                        if daemonset.metadata.namespace in monitored_namespaces
+                    ],
                     piggyback_formatter=functools.partial(piggyback_formatter, "daemonset"),
                 )
 

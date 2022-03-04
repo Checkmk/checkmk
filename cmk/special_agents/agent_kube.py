@@ -25,10 +25,12 @@ from pathlib import Path
 from typing import (
     Any,
     Callable,
+    Collection,
     DefaultDict,
     Dict,
     Iterator,
     List,
+    Literal,
     Mapping,
     NamedTuple,
     NewType,
@@ -329,18 +331,6 @@ class Pod:
             cluster=cluster_name,
         )
 
-    def container_cpu_limits(self) -> Sequence[Optional[float]]:
-        return [container.resources.limits.cpu for container in self.spec.containers]
-
-    def container_cpu_requests(self) -> Sequence[Optional[float]]:
-        return [container.resources.requests.cpu for container in self.spec.containers]
-
-    def container_memory_limits(self) -> Sequence[Optional[float]]:
-        return [container.resources.limits.memory for container in self.spec.containers]
-
-    def container_memory_requests(self) -> Sequence[Optional[float]]:
-        return [container.resources.requests.memory for container in self.spec.containers]
-
     def conditions(self) -> Optional[section.PodConditions]:
         if not self.status.conditions:
             return None
@@ -405,13 +395,20 @@ class Pod:
 
 
 def aggregate_resources(
-    request_values: Sequence[Optional[float]],
-    limit_values: Sequence[Optional[float]],
+    resource_type: Literal["memory", "cpu"], containers: Collection[api.ContainerSpec]
 ) -> section.Resources:
-    specified_requests = [value for value in request_values if value is not None]
-    specified_limits = [value for value in limit_values if value is not None]
+    specified_requests = [
+        request
+        for c in containers
+        if (request := getattr(c.resources.requests, resource_type)) is not None
+    ]
+    specified_limits = [
+        limit
+        for c in containers
+        if (limit := getattr(c.resources.limits, resource_type)) is not None
+    ]
 
-    count_total = len(request_values)
+    count_total = len(containers)
 
     return section.Resources(
         request=sum(specified_requests),
@@ -860,17 +857,11 @@ class Cluster:
 
 
 def _collect_memory_resources(pods: Sequence[Pod]) -> section.Resources:
-    container_memory_requests = [
-        request for pod in pods for request in pod.container_memory_requests()
-    ]
-    container_memory_limits = [limit for pod in pods for limit in pod.container_memory_limits()]
-    return aggregate_resources(container_memory_requests, container_memory_limits)
+    return aggregate_resources("memory", [c for pod in pods for c in pod.spec.containers])
 
 
 def _collect_cpu_resources(pods: Sequence[Pod]) -> section.Resources:
-    container_cpu_requests = [request for pod in pods for request in pod.container_cpu_requests()]
-    container_cpu_limits = [limit for pod in pods for limit in pod.container_cpu_limits()]
-    return aggregate_resources(container_cpu_requests, container_cpu_limits)
+    return aggregate_resources("cpu", [c for pod in pods for c in pod.spec.containers])
 
 
 class JsonProtocol(Protocol):

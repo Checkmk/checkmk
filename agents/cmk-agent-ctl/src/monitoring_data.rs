@@ -27,10 +27,9 @@ use tokio::net::UnixStream as AsyncUnixStream;
 async fn async_collect_from_ip(agent_ip: &str) -> IoResult<Vec<u8>> {
     let mut data: Vec<u8> = vec![];
     debug!("connect to {}", agent_ip);
-    AsyncTcpStream::connect(agent_ip)
-        .await?
-        .read_to_end(&mut data)
-        .await?;
+    let mut stream = AsyncTcpStream::connect(agent_ip).await?;
+    stream.read_to_end(&mut data).await?;
+    stream.shutdown(std::net::Shutdown::Both)?;
     debug!("delivered {}", data.len());
     Ok(data)
 }

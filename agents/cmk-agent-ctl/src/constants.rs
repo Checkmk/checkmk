@@ -43,9 +43,8 @@ pub const ENV_PROGRAM_DATA: &str = "ProgramData";
 // Windows version
 // https://en.wikipedia.org/wiki/List_of_Microsoft_Windows_versions
 // We support only relative new version of Windows because of Rust toolchain:
-// Server 2012R2 & Windows 8.1, i.e. 6.3
-// TODO: Estimate support of 6.2( Server 2012/Windows 8)
+// Server 2008 R2 & Windows 7, i.e. 6.1
 #[cfg(windows)]
 pub const MIN_WIN_VERSION_MAJOR: u64 = 6;
 #[cfg(windows)]
-pub const MIN_WIN_VERSION_MINOR: u64 = 3;
+pub const MIN_WIN_VERSION_MINOR: u64 = 1;

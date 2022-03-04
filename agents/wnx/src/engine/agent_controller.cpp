@@ -114,7 +114,7 @@ std::optional<uint32_t> StartAgentController(const fs::path &service) {
         return {};
     }
 
-    if (!::IsWindows8Point1OrGreater()) {
+    if (!::IsWindows7OrGreater()) {
         XLOG::l(
             "The agent controller is not compatible with this Windows version. "
             "You can disable using the agent controller by configuring the "

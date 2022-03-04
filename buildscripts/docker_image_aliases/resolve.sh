@@ -8,16 +8,17 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
 
 RESOLVE_ERROR_FILE="docker-image-alias-resolve-error.txt"
 
-DOCKER_RESULT=$(docker build "${SCRIPT_DIR}/$1" 2> ${RESOLVE_ERROR_FILE})
-RESULT_IMAGE_ID=$(awk '/Successfully built/{print $3}' <<< "${DOCKER_RESULT}")
+DOCKER_RESULT=$(docker build "${SCRIPT_DIR}/$1" 2>${RESOLVE_ERROR_FILE})
+RESULT_IMAGE_ID=$(awk '/Successfully built/{print $3}' <<<"${DOCKER_RESULT}")
 
-if [ -n "$RESULT_IMAGE_ID" ] ; then
-    echo $RESULT_IMAGE_ID
+if [ -n "$RESULT_IMAGE_ID" ]; then
+    echo "$RESULT_IMAGE_ID"
 else
     echo "Could not resolve $1, error was:" 1>&2
     cat ${RESOLVE_ERROR_FILE} 1>&2
     echo "Make sure the image alias exists, you're correctly logged into the registry and the image exists on the registry" 1>&2
     echo "INVALID_IMAGE_ID"
+    # shellcheck disable=SC2242 # Can only exit with status 0-255
     exit -1
 fi
 
@@ -33,7 +34,7 @@ REPO_TAG=$(grep "tag:" "${SCRIPT_DIR}/$1/meta.yml" | awk '{ print $2}')
 
 if [ -z "$REPO_TAG" ]; then
     exit
-fi 
+fi
 
 # We need to pull also the tag, otherwise Nexus may delete those images
 docker pull --quiet "${REPO_TAG}" | true

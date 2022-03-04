@@ -2,7 +2,7 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
-use super::{agent_receiver_api, certs, config, site_spec};
+use super::{agent_receiver_api, certs, config, constants, site_spec};
 use anyhow::{Context, Result as AnyhowResult};
 use serde_with::DisplayFromStr;
 
@@ -62,6 +62,7 @@ struct ConnectionStatus {
 
 #[derive(serde::Serialize)]
 struct Status {
+    version: String,
     ip_allowlist: Vec<String>,
     allow_legacy_pull: bool,
     connections: Vec<ConnectionStatus>,
@@ -315,6 +316,7 @@ impl Status {
         }
 
         Status {
+            version: String::from(constants::VERSION),
             ip_allowlist,
             allow_legacy_pull,
             connections: conn_stats,
@@ -338,7 +340,8 @@ impl std::fmt::Display for Status {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         write!(
             f,
-            "IP allowlist: {}{}{}",
+            "Version: {}\nIP allowlist: {}{}{}",
+            self.version,
             match self.ip_allowlist.is_empty() {
                 true => String::from("any"),
                 false => self.ip_allowlist.join(" "),
@@ -663,6 +666,7 @@ mod test_status {
 
     fn build_status() -> Status {
         Status {
+            version: String::from("1.0.0"),
             ip_allowlist: vec![String::from("192.168.1.13"), String::from("[::1]")],
             allow_legacy_pull: false,
             connections: vec![
@@ -716,7 +720,8 @@ mod test_status {
     fn test_status_str_human_readable() {
         assert_eq!(
             build_status().to_string(false).unwrap(),
-            "IP allowlist: 192.168.1.13 [::1]\n\n\n\
+            "Version: 1.0.0\n\
+             IP allowlist: 192.168.1.13 [::1]\n\n\n\
              Connection: localhost:8000/site\n\
              \tUUID: 50611369-7a42-4c0b-927e-9a14330401fe\n\
              \tLocal:\n\
@@ -752,13 +757,15 @@ mod test_status {
     fn test_status_str_empty() {
         assert_eq!(
             Status {
+                version: String::from("2.3r18"),
                 ip_allowlist: vec![],
                 allow_legacy_pull: true,
                 connections: vec![],
             }
             .to_string(false)
             .unwrap(),
-            "IP allowlist: any\n\
+            "Version: 2.3r18\n\
+             IP allowlist: any\n\
              Legacy mode: enabled\n\
              No connections"
         );
@@ -825,7 +832,8 @@ mod test_status {
                 &MockApi {},
             )
             .unwrap(),
-            "IP allowlist: any\n\n\n\
+            "Version: 0.1.0\n\
+             IP allowlist: any\n\n\n\
              Connection: server:8000/push-site\n\
              \tUUID: 99f56bbc-5965-4b34-bc70-1959ad1d32d6\n\
              \tLocal:\n\

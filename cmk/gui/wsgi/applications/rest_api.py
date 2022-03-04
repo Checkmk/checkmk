@@ -100,13 +100,22 @@ def _verify_user(environ) -> RFC7662:
         raise MKAuthException("You need to be authenticated to use the REST API.")
 
     # We pick the first successful authentication method, which means the precedence is the same
-    # as the oder in the code.
+    # as the order in the code.
     final_candidate = verified[0]
-    if not userdb.is_customer_user_allowed_to_login(final_candidate["sub"]):
-        raise MKAuthException(f"{final_candidate['sub']} may not log in here.")
+    user_id = final_candidate["sub"]
+    if not userdb.is_customer_user_allowed_to_login(user_id):
+        raise MKAuthException(f"{user_id} may not log in here.")
 
-    if userdb.user_locked(final_candidate["sub"]):
-        raise MKAuthException(f"{final_candidate['sub']} not authorized.")
+    if userdb.user_locked(user_id):
+        raise MKAuthException(f"{user_id} not authorized.")
+
+    if change_reason := userdb.need_to_change_pw(user_id):
+        raise MKAuthException(f"{user_id} needs to change the password ({change_reason}).")
+
+    if userdb.is_two_factor_login_enabled(user_id):
+        raise MKAuthException(
+            f"{user_id} has two-factor authentication enabled, which is not usable via REST API."
+        )
 
     return final_candidate
 

@@ -1,0 +1,18 @@
+Title: REST API: Two-factor protected accounts may not access API
+Class: fix
+Compatible: compat
+Component: rest-api
+Date: 1646388436
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0b2
+
+The REST API authentication was not handling the new two-factor authentication.
+Since the authentication with the security key and one time tokens is not
+usable with the API, we now completely block access to the REST API for those
+user accounts.
+
+If you have your personal account protected with the two-factor authentication
+and want to use the REST API, you may create a dedicated (automation) account
+for that.

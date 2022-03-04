@@ -11,6 +11,7 @@ from typing import List, Optional
 import pytest
 
 from cmk.base.plugins.agent_based import ps_section
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
 from cmk.base.plugins.agent_based.utils import ps
 
 
@@ -447,3 +448,57 @@ def test_parse_ps(capture, result):
     for (ps_info_item, cmd_line), ref in itertools.zip_longest(lines, result[1]):
         assert ps_info_item == ps.PsInfo(*ref[0])
         assert cmd_line == ref[1:]
+
+
+@pytest.mark.parametrize(
+    [
+        "string_table",
+        "expected_result",
+    ],
+    [
+        pytest.param(
+            [
+                ["[header]", "CGROUP", "USER", "VSZ", "RSS", "TIME", "ELAPSED", "PID", "COMMAND"],
+                [
+                    "1:name=systemd:/init.scope,",
+                    "root",
+                    "226036",
+                    "9736",
+                    "00:00:09",
+                    "05:14:30",
+                    "1",
+                    "/sbin/init",
+                    "--ladida",
+                ],
+            ],
+            (
+                1,
+                [
+                    (
+                        ps.PsInfo(
+                            user="root",
+                            virtual=226036,
+                            physical=9736,
+                            cputime="00:00:09/05:14:30",
+                            process_id="1",
+                            pagefile=None,
+                            usermode_time=None,
+                            kernelmode_time=None,
+                            handles=None,
+                            threads=None,
+                            uptime=None,
+                            cgroup="1:name=systemd:/init.scope,",
+                        ),
+                        ["/sbin/init", "--ladida"],
+                    )
+                ],
+            ),
+            id="standard_case",
+        )
+    ],
+)
+def test_parse_ps_lnx(
+    string_table: StringTable,
+    expected_result: ps.Section,
+) -> None:
+    assert ps_section.parse_ps_lnx(string_table) == expected_result

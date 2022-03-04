@@ -8,6 +8,7 @@
 #define agent_controller_h__
 #include <cstdint>
 #include <filesystem>
+#include <optional>
 #include <string_view>
 
 namespace YAML {
@@ -28,8 +29,10 @@ constexpr uint16_t windows_internal_port{50001};
 std::filesystem::path GetController(const std::filesystem::path &service);
 std::filesystem::path GetWorkController();
 std::wstring BuildCommandLine(const std::filesystem::path &controller);
-bool StartAgentController(const std::filesystem::path &service);
+std::optional<uint32_t> StartAgentController(
+    const std::filesystem::path &service);
 bool KillAgentController(const std::filesystem::path &service);
+bool DeleteControllerInBin(const std::filesystem::path &service);
 std::string DetermineAgentCtlVersion();
 std::string DetermineAgentCtlStatus();
 bool IsRunController(const YAML::Node &node);

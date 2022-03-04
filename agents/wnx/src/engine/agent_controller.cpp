@@ -55,6 +55,8 @@ fs::path CopyControllerToBin(const fs::path &service) {
     return {};
 }
 
+}  // namespace
+
 /// returns true if controller files DOES NOT exist
 bool DeleteControllerInBin(const fs::path &service) {
     const auto [_, tgt] = ServiceName2TargetName(service);
@@ -66,7 +68,6 @@ bool DeleteControllerInBin(const fs::path &service) {
     fs::remove(tgt, ec);
     return !fs::exists(tgt, ec);
 }
-}  // namespace
 
 bool IsRunController(const YAML::Node &node) {
     auto controller = cma::yml::GetNode(node, std::string{cfg::groups::kSystem},
@@ -107,10 +108,10 @@ std::wstring BuildCommandLine(const fs::path &controller) {
                                       kCmdLinePort, port, allowed_ip));
 }
 
-bool StartAgentController(const fs::path &service) {
+std::optional<uint32_t> StartAgentController(const fs::path &service) {
     XLOG::l.i("starting controller");
     if (!cma::IsService()) {
-        return false;
+        return {};
     }
 
     if (!::IsWindows8Point1OrGreater()) {
@@ -123,7 +124,7 @@ bool StartAgentController(const fs::path &service) {
     auto controller_name = CopyControllerToBin(service);
     if (controller_name.empty()) {
         XLOG::l("can't copy controller");
-        return false;
+        return {};
     }
 
     wtools::AppRunner ar;
@@ -131,10 +132,10 @@ bool StartAgentController(const fs::path &service) {
     if (proc_id != 0) {
         XLOG::l.i("Agent controller '{}' started pid [{}]", controller_name,
                   proc_id);
-        return true;
+        return proc_id;
     }
     XLOG::l("Agent controller '{}' failed to start", controller_name);
-    return false;
+    return {};
 }
 
 // TODO(sk): make public API and replace all Trailing/trim with this one

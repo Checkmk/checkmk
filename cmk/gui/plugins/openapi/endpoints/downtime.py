@@ -283,6 +283,7 @@ def show_downtimes(param):
     constructors.object_href("downtime", "{downtime_id}"),
     "cmk/show",
     method="get",
+    tag_group="Monitoring",
     path_params=[
         {
             "downtime_id": fields.Integer(

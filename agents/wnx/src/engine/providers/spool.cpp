@@ -81,7 +81,7 @@ bool IsSpoolFileValid(const std::filesystem::path &path) {
         return true;
     }
 
-    XLOG::l.t() << "    " << filename << ": skipping outdated file: age is "
+    XLOG::d.t() << "    " << filename << ": skipping outdated file: age is "
                 << age << " sec, "
                 << "max age is " << max_age << " sec.";
     return false;

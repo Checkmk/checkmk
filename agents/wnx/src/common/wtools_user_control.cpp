@@ -47,11 +47,11 @@ Status LdapControl::userAdd(std::wstring_view user_name,
 
     switch (err) {
         case 0:
-            XLOG::l.i("User successfully created.");
+            XLOG::d.i("User successfully created.");
             setAsSpecialUser(user_name);
             return Status::success;
         case NERR_UserExists:
-            XLOG::l.i("User already exists.");
+            XLOG::d.i("User already exists.");
             return Status::exists;
         default:
             XLOG::l("Error adding user: [{}]", err);
@@ -90,10 +90,10 @@ Status LdapControl::userDel(std::wstring_view user_name) noexcept {
     switch (err) {
         case 0:
             clearAsSpecialUser(user_name);
-            XLOG::l.i("User successfully removed.");
+            XLOG::d.i("User successfully removed.");
             return Status::success;
         case NERR_UserNotFound:
-            XLOG::l.i("User already removed.");
+            XLOG::d.i("User already removed.");
             return Status::absent;
         default:
             XLOG::l("Error removing user: [{}]", err);
@@ -179,11 +179,11 @@ Status LdapControl::localGroupAdd(std::wstring_view group_name,
 
     switch (err) {
         case 0:
-            XLOG::l.i("Local group successfully created.");
+            XLOG::d.i("Local group successfully created.");
             return Status::success;
         case ERROR_ALIAS_EXISTS:
         case NERR_GroupExists:
-            XLOG::l.i("Local group already exists.");
+            XLOG::d.i("Local group already exists.");
             return Status::exists;
         default:
             XLOG::l("Error adding local group: [{}]", err);
@@ -205,10 +205,10 @@ Status LdapControl::localGroupDel(std::wstring_view group_name) {
 
     switch (err) {
         case 0:
-            XLOG::l.i("Local group successfully removed");
+            XLOG::d.i("Local group successfully removed");
             return Status::success;
         case NERR_GroupNotFound:
-            XLOG::l.i("Local group already removed");
+            XLOG::d.i("Local group already removed");
             return Status::absent;
         default:
             XLOG::l("Error removing local group: [{}]", err);
@@ -230,11 +230,11 @@ Status LdapControl::localGroupAddMembers(std::wstring_view group_name,
 
     switch (err) {
         case 0:
-            XLOG::l.i("User successfully added to local group.");
+            XLOG::d.i("User successfully added to local group.");
             return Status::success;
 
         case ERROR_MEMBER_IN_ALIAS:
-            XLOG::l.i("User already in local group.");
+            XLOG::d.i("User already in local group.");
             return Status::exists;
 
         default:
@@ -257,10 +257,10 @@ Status LdapControl::localGroupDelMembers(std::wstring_view group_name,
 
     switch (err) {
         case 0:
-            XLOG::l.i("User successfully removed from local group.");
+            XLOG::d.i("User successfully removed from local group.");
             return Status::success;
         case ERROR_MEMBER_NOT_IN_ALIAS:
-            XLOG::l.i("User already removed from local group.");
+            XLOG::d.i("User already removed from local group.");
             return Status::absent;
         default:
             XLOG::l("Error removing user from local group: [{}]", err);

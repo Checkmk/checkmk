@@ -59,13 +59,13 @@ void DisableFileRedirection() {
     FindWindowsProcs();
 
     if (g_disable_fs_redirection == nullptr) {
-        XLOG::l.i("Failed to find Wow64DisableWow64FsRedirection API");
+        XLOG::l("Failed to find Wow64DisableWow64FsRedirection API");
         return;
     }
 
     auto b = g_disable_fs_redirection(&g_old_wow64_redir_val);
     if (b == TRUE)
-        XLOG::l.i("Disabled WOW64 file system redirection");
+        XLOG::d.i("Disabled WOW64 file system redirection");
     else
         XLOG::l("Failed to disable WOW64 file system redirection [{}]",
                 ::GetLastError());
@@ -75,7 +75,7 @@ void RevertFileRedirection() {
     FindWindowsProcs();
 
     if (g_disable_fs_redirection == nullptr) {
-        XLOG::l.i("Failed to find Wow64DisableWow64FsRedirection API");
+        XLOG::l("Failed to find Wow64DisableWow64FsRedirection API");
         return;
     }
 
@@ -282,10 +282,10 @@ BOOL PrepForInteractiveProcess(AppSettings &settings,
 
     if (0xFFFFFFFFU == settings.session_to_interact_with) {
         target_session_id = GetInteractiveSessionID();
-        XLOG::l.i("Using SessionID {} (interactive session)",
+        XLOG::d.i("Using SessionID {} (interactive session)",
                   target_session_id);
     } else
-        XLOG::l.i("Using SessionID {} from params", target_session_id);
+        XLOG::d.i("Using SessionID {} from params", target_session_id);
 
     // if(FALSE == WTSQueryUserToken(targetSessionID, &settings.hUser))
     //	Log(L"Failed to get user from session ", ::GetLastError());
@@ -754,7 +754,7 @@ bool StartProcess(AppSettings &settings, HANDLE command_pipe) {
     DWORD launch_gle = 0;
 
     if (settings.use_system_account) {
-        XLOG::l.i("Exec starting process [{}] as Local System",
+        XLOG::d.i("Exec starting process [{}] as Local System",
                   wtools::ToUtf8(path));
 
         if (wtools::IsBadHandle(settings.hUser))
@@ -785,7 +785,7 @@ bool StartProcess(AppSettings &settings, HANDLE command_pipe) {
     } else {
         if (!settings.user.empty())  // launching as a specific user
         {
-            XLOG::l.t("Exec starting process [{}] as {}", wtools::ToUtf8(path),
+            XLOG::d.i("Exec starting process [{}] as {}", wtools::ToUtf8(path),
                       wtools::ToUtf8(settings.user));
             starting_dir = GetUserHomeDir(settings.hUser);
 
@@ -856,7 +856,7 @@ bool StartProcess(AppSettings &settings, HANDLE command_pipe) {
                 ::RevertToSelf();
             }
         } else {
-            XLOG::l.t("Exec starting process [{}] as current user",
+            XLOG::d.i("Exec starting process [{}] as current user",
                       wtools::ToUtf8(path));
 
             EnablePrivilege(SE_ASSIGNPRIMARYTOKEN_NAME);

@@ -138,7 +138,7 @@ int KillProcessesByDir(const fs::path &dir) noexcept {
 
         auto shift = p.lexically_relative(dir).u8string();
         if (!shift.empty() && shift[0] != '.') {
-            XLOG::l.i("Killing process '{}'", p);
+            XLOG::d.i("Killing process '{}'", p);
             KillProcess(pid, 99);
             killed_count++;
         }
@@ -788,7 +788,7 @@ DWORD WINAPI ServiceController::ServiceCtrlHandlerEx(DWORD control_code,
                                                      DWORD event_type,
                                                      void * /*event_data*/,
                                                      void * /*context*/) {
-    XLOG::l.t("[----Control Code {:#X} Event Type {:#X}------]", control_code,
+    XLOG::d.t("[----Control Code {:#X} Event Type {:#X}------]", control_code,
               event_type);
 
     switch (control_code) {
@@ -1646,8 +1646,8 @@ std::tuple<IWbemClassObject *, WmiStatus> WmiGetNextObject(
 
     if (WBEM_S_FALSE == hres) return {nullptr, WmiStatus::ok};  // no more data
     if (WBEM_NO_ERROR != hres) {
-        XLOG::l.t("Return {:#X} probably object doesn't exist",
-                  static_cast<unsigned int>(hres));
+        XLOG::t("Return {:#X} probably object doesn't exist",
+                static_cast<unsigned int>(hres));
         return {nullptr, WmiStatus::error};
     }
 
@@ -2653,7 +2653,7 @@ fs::path MakeCmdFileInTemp(std::wstring_view name,
 fs::path ExecuteCommands(std::wstring_view name,
                          const std::vector<std::wstring> &commands,
                          bool wait_for_end) {
-    XLOG::l.i("'{}' Starting executing commands [{}]", ToUtf8(name),
+    XLOG::d.i("'{}' Starting executing commands [{}]", ToUtf8(name),
               commands.size());
     if (commands.empty()) {
         return {};
@@ -2663,7 +2663,7 @@ fs::path ExecuteCommands(std::wstring_view name,
     if (!to_exec.empty()) {
         auto pid = cma::tools::RunStdCommand(to_exec.wstring(), wait_for_end);
         if (pid != 0) {
-            XLOG::l.i("Process is started '{}'  with pid [{}]", to_exec, pid);
+            XLOG::d.i("Process is started '{}'  with pid [{}]", to_exec, pid);
             return to_exec;
         }
 
@@ -2744,7 +2744,7 @@ std::wstring ToCanonical(std::wstring_view raw_app_name) {
         return p.wstring();
     }
 
-    XLOG::l.i(
+    XLOG::d.i(
         "Path '{}' cannot be canonical: probably based on the environment variables",
         wtools::ToUtf8(raw_app_name));
 
@@ -2982,8 +2982,8 @@ std::string RunCommand(std::wstring_view cmd) {
     while (true) {
         auto [code, error] = GetProcessExitCode(pid);
         if (code != 0 && code != STATUS_PENDING) {
-            XLOG::l.i("RunCommand '{}' fails with code [{}] and error [{}]",
-                      ToUtf8(cmd), code, error);
+            XLOG::l("RunCommand '{}' fails with code [{}] and error [{}]",
+                    ToUtf8(cmd), code, error);
             break;
         }
         auto result = ReadFromHandle(ar.getStdioRead());

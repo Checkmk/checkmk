@@ -4100,7 +4100,28 @@ class RelativeDate(OptionalDropdownChoice):
     Useful for example for alarms. The date is represented by a UNIX timestamp
     where the seconds are silently ignored."""
 
-    def __init__(self, **kwargs) -> None:
+    def __init__(  # pylint: disable=redefined-builtin
+        self,
+        *,
+        default_days: int = 0,
+        # DropdownChoice
+        sorted: bool = False,
+        label: _Optional[str] = None,
+        help_separator: _Optional[str] = None,
+        prefix_values: bool = False,
+        empty_text: _Optional[str] = None,
+        invalid_choice: _Optional[str] = "complain",
+        invalid_choice_title: _Optional[str] = None,
+        invalid_choice_error: _Optional[str] = None,
+        no_preselect_title: _Optional[str] = None,
+        on_change: _Optional[str] = None,
+        read_only: bool = False,
+        encode_value: bool = True,
+        # ValueSpec
+        title: _Optional[str] = None,
+        help: _Optional[ValueSpecHelp] = None,
+        validate: _Optional[ValueSpecValidateFunc[DropdownChoiceModel]] = None,
+    ) -> None:
         choices = [
             (0, _("today")),
             (1, _("tomorrow")),
@@ -4117,19 +4138,30 @@ class RelativeDate(OptionalDropdownChoice):
                 title = _(" in %d days") % (w + 7)
             choices.append((w + 7, defines.weekday_name(wd) + title))
 
-        kwargs["choices"] = choices
-        kwargs["explicit"] = Integer()
-        kwargs["otherlabel"] = _("in ... days")
-
-        super().__init__(**kwargs)
-
-        if "default_days" in kwargs:
-            self._default_value: int = kwargs["default_days"] * seconds_per_day + _today()
-        else:
-            self._default_value = _today()
+        super().__init__(
+            explicit=Integer(),
+            choices=choices,
+            otherlabel=_("in ... days"),
+            sorted=sorted,
+            label=label,
+            help_separator=help_separator,
+            prefix_values=prefix_values,
+            empty_text=empty_text,
+            invalid_choice=invalid_choice,
+            invalid_choice_title=invalid_choice_title,
+            invalid_choice_error=invalid_choice_error,
+            no_preselect_title=no_preselect_title,
+            on_change=on_change,
+            read_only=read_only,
+            encode_value=encode_value,
+            title=title,
+            help=help,
+            default_value=default_days * seconds_per_day + _today(),
+            validate=validate,
+        )
 
     def canonical_value(self) -> int:
-        return self._default_value
+        return self.default_value()
 
     def render_input(self, varprefix: str, value: int) -> None:
         reldays = int((_round_date(value) - _today()) / seconds_per_day)  # fixed: true-division

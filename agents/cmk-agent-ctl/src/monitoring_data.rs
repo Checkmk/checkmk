@@ -24,10 +24,13 @@ use tokio::net::UnixStream as AsyncUnixStream;
 
 // TODO(sk): add logging and unit testing(using local server)
 #[cfg(windows)]
-async fn async_collect_from_ip(agent_ip: &str) -> IoResult<Vec<u8>> {
+async fn async_collect_from_ip(agent_ip: &str, remote_ip: std::net::IpAddr) -> IoResult<Vec<u8>> {
     let mut data: Vec<u8> = vec![];
     debug!("connect to {}", agent_ip);
     let mut stream = AsyncTcpStream::connect(agent_ip).await?;
+    stream
+        .write_all(format!("{}", remote_ip).as_bytes())
+        .await?;
     stream.read_to_end(&mut data).await?;
     stream.shutdown(std::net::Shutdown::Both)?;
     debug!("obtained from win-agent {} bytes", data.len());
@@ -36,9 +39,9 @@ async fn async_collect_from_ip(agent_ip: &str) -> IoResult<Vec<u8>> {
 
 // TODO(sk): Deliver the remote ip to Windows agent to satisfy logwatch requirements
 #[cfg(windows)]
-pub async fn async_collect(_remote_ip: std::net::IpAddr) -> IoResult<Vec<u8>> {
+pub async fn async_collect(remote_ip: std::net::IpAddr) -> IoResult<Vec<u8>> {
     let peer = format!("localhost:{}", setup::agent_port());
-    async_collect_from_ip(&peer).await
+    async_collect_from_ip(&peer, remote_ip).await
 }
 
 #[cfg(windows)]

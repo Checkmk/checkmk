@@ -62,6 +62,35 @@ TEST(ExternalPortTest, StartStop) {
     EXPECT_TRUE(tp.pre_context_call_);
 }
 
+TEST(ExternalPortTest, Read) {
+    std::string remote_ip;
+    world::ReplyFunc reply =
+        [&remote_ip](const std::string& ip) -> std::vector<uint8_t> {
+        remote_ip = ip;
+        return {};
+    };
+    wtools::TestProcessor2 tp;
+    world::ExternalPort test_port(&tp);  //
+
+    EXPECT_TRUE(test_port.startIo(reply, tst::TestPort()));
+
+    asio::io_context ios;
+    tcp::endpoint endpoint(asio::ip::make_address("127.0.0.1"),
+                           tst::TestPort());
+
+    tcp::socket socket(ios);
+
+    EXPECT_NO_THROW(socket.connect(endpoint));
+
+    asio::error_code error;
+    char text[] = "abcdef";
+    auto count = socket.write_some(asio::buffer(text, 6), error);
+    socket.close();
+    test_port.shutdownIo();  // this is long operation
+    cma::tools::sleep(50);
+    EXPECT_EQ(remote_ip, text);
+}
+
 class ExternalPortTestFixture : public ::testing::Test {
 public:
     ReplyFunc reply = [this](const std::string /*ip*/) -> std::vector<uint8_t> {

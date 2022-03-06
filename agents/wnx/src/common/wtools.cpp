@@ -1754,7 +1754,7 @@ IEnumWbemClassObject *WmiWrapper::queryEnumerator(
 
 HMODULE LoadWindowsLibrary(const std::wstring &dll_path) {
     // this should be sufficient most of the time
-    constexpr size_t buffer_size = 128;
+    constexpr size_t buffer_size = 512;
 
     std::wstring dllpath_expanded;
     dllpath_expanded.resize(buffer_size, '\0');

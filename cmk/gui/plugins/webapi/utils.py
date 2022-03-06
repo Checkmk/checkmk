@@ -102,7 +102,9 @@ def add_configuration_hash(response: dict, configuration_object: dict) -> None:
 def compute_config_hash(entity: Mapping) -> str:
     try:
         entity_encoded = json.dumps(entity, sort_keys=True)
-        entity_hash = md5(entity_encoded.encode()).hexdigest()
+        entity_hash = md5(  # pylint: disable=unexpected-keyword-arg
+            entity_encoded.encode(), usedforsecurity=False
+        ).hexdigest()
     except Exception as e:
         logger.error("Error %s", e)
         entity_hash = "0"

@@ -7052,7 +7052,9 @@ class SSHKeyPair(ValueSpec):
     def _get_key_fingerprint(cls, value: SSHKeyPairValue) -> str:
         _private_key, public_key = value
         key = base64.b64decode(public_key.strip().split()[1].encode("ascii"))
-        fp_plain = hashlib.md5(key).hexdigest()
+        fp_plain = hashlib.md5(  # pylint: disable=unexpected-keyword-arg
+            key, usedforsecurity=False
+        ).hexdigest()
         return ":".join(a + b for a, b in zip(fp_plain[::2], fp_plain[1::2]))
 
 

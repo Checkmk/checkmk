@@ -241,7 +241,7 @@ private:
                             XLOG::d("Address '{}' is not allowed", ip);
                         }
 
-                    } catch (const std::system_error &e) {
+                    } catch (const std::system_error& e) {
                         if (e.code().value() == WSAECONNRESET) {
                             XLOG::l(" Client closed connection");
                         } else {
@@ -249,6 +249,7 @@ private:
                                 XLOG_FLINE +
                                     " Thrown unexpected exception '{}' with value {}",
                                 e.what(), e.code().value());
+                        }
                     } catch (const std::exception& e) {
                         XLOG::l(
                             XLOG_FLINE + " Thrown unexpected exception '{}'",

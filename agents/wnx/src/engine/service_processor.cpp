@@ -67,10 +67,10 @@ void KillProcessesInUserFolder() {
     if (user_dir.empty() ||
         std::filesystem::exists(user_dir / cfg::dirs::kUserPlugins, ec)) {
         auto killed_processes_count = wtools::KillProcessesByDir(user_dir);
-        XLOG::l.i("Killed [{}] processes from the user folder",
+        XLOG::d.i("Killed [{}] processes from the user folder",
                   killed_processes_count);
     } else {
-        XLOG::l.i("Kill isn't possible, the path '{}' looks as bad", user_dir);
+        XLOG::l("Kill isn't possible, the path '{}' looks as bad", user_dir);
     }
 }
 

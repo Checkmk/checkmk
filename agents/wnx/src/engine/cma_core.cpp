@@ -1153,10 +1153,10 @@ void PluginEntry::restartIfRequired() {
         }
         auto filename = path().u8string();
         // execution phase
-        XLOG::l.t("Starting '{}'", filename);
+        XLOG::d.t("Starting '{}'", filename);
         auto result = cma::tools::RunDetachedCommand(filename);
         if (result)
-            XLOG::l.i("Starting '{}' OK!", filename);
+            XLOG::d.i("Starting '{}' OK!", filename);
         else
             XLOG::l("Starting '{}' FAILED with error [{}]", filename,
                     GetLastError());
@@ -1329,7 +1329,7 @@ bool IsRunAsync(const PluginEntry& plugin) noexcept {
 // #TODO simplify THIS TRASH, SK!
 std::vector<char> RunSyncPlugins(PluginMap& plugins, int& total, int timeout) {
     using DataBlock = std::vector<char>;
-    XLOG::l.t("To start [{}] sync plugins", plugins.size());
+    XLOG::d.t("To start [{}] sync plugins", plugins.size());
 
     std::vector<std::future<DataBlock>> results;
     int requested_count = 0;

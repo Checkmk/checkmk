@@ -221,7 +221,7 @@ void LogWatchEvent::loadConfig() {
             entries_.back().init("*", "off", false);
             default_entry_ = entries_.size() - 1;
         }
-        XLOG::l.t("Loaded [{}] entries in LogWatch", count);
+        XLOG::d.t("Loaded [{}] entries in LogWatch", count);
 
     } catch (const std::exception& e) {
         XLOG::l(
@@ -466,7 +466,7 @@ std::optional<std::string> ReadDataFromLog(EvlType type, State& state,
     auto [pos, out] = DumpEventLog(*log, state, lwl);
 
     if (provider::config::g_set_logwatch_pos_to_end && last_pos > pos) {
-        XLOG::l.t("Skipping logwatch pos from [{}] to [{}]", pos, last_pos);
+        XLOG::d.t("Skipping logwatch pos from [{}] to [{}]", pos, last_pos);
         pos = last_pos;
     }
 

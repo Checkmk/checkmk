@@ -295,7 +295,7 @@ bool Wmi::isAllowedByCurrentConfig() const {
 
     auto allowed = cfg::groups::global.allowedSection(name);
     if (!allowed) {
-        XLOG::l.t("'{}' is skipped by config", name);
+        XLOG::t("'{}' is skipped by config", name);
         return false;
     }
 
@@ -315,7 +315,7 @@ bool Wmi::isAllowedByCurrentConfig() const {
         }
     }
 
-    XLOG::l.t("'{}' and subs are skipped by config", name);
+    XLOG::d.t("'{}' and subs are skipped by config", name);
     return false;
 }
 

@@ -48,13 +48,13 @@ public:
         auto send_back = Reply(getCurrentRemoteIp());
 
         if (send_back.empty()) {
-            XLOG::l.i("No data to send");
+            XLOG::d.i("No data to send");
             return;
         }
 
         auto crypt = cma::encrypt::MakeCrypt();
         do_write(send_back.data(), send_back.size(), crypt.get());
-        XLOG::l.i("Send [{}] bytes of data", send_back.size());
+        XLOG::d.i("Send [{}] bytes of data", send_back.size());
 
         logWhenDebugging(send_back);
     }
@@ -197,12 +197,12 @@ private:
                             IsIpAllowedAsException(ip))
                             sink(x, port);
                         else {
-                            XLOG::d.i("Address '{}' is not allowed", ip);
+                            XLOG::d("Address '{}' is not allowed", ip);
                         }
 
                     } catch (const std::system_error &e) {
                         if (e.code().value() == WSAECONNRESET) {
-                            XLOG::l.i(" Client closed connection");
+                            XLOG::l(" Client closed connection");
                         } else {
                             XLOG::l(
                                 " Thrown unexpected exception '{}' with value {}",

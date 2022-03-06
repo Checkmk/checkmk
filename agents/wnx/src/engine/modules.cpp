@@ -316,7 +316,7 @@ void ModuleCommander::removeSystemExtensions(YAML::Node &node) {
             }
         }
     } catch (const std::exception &e) {
-        XLOG::l.i("Not possible to find modules.*** '{}'", e.what());
+        XLOG::l("Not possible to find modules.*** '{}'", e.what());
     }
 }
 
@@ -406,8 +406,7 @@ bool ModuleCommander::UninstallModuleZip(const fs::path &file,
     auto target_dir = mod_root / name;
 
     auto count = wtools::KillProcessesByDir(target_dir);
-    XLOG::l.i("Killed [{}] processes from dir '{}'", count,
-              target_dir.u8string());
+    XLOG::d.i("Killed [{}] processes from dir '{}'", count, target_dir);
 
     if (IsQuickReinstallAllowed()) {
         try {

@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, Iterable, List, Optional, Sequence, Tuple
 
 from .agent_based_api.v1.type_defs import StringTable
 
@@ -201,6 +201,29 @@ register.agent_section(
 )
 
 
+def _handle_deleted_cgroup(attrs: Iterable[str], line: Sequence[str]) -> Sequence[str]:
+    """
+    >>> _handle_deleted_cgroup(
+    ...     ('cgroup', 'user', 'vsz', 'rss', 'time', 'elapsed', 'pid'),
+    ...     ['some_cgroup', '(deleted)', 'root', '0', '0', '00:00:00', '01:54', '654939', '[node]', '<defunct>']
+    ... )
+    ['some_cgroup (deleted)', 'root', '0', '0', '00:00:00', '01:54', '654939', '[node]', '<defunct>']
+    >>> _handle_deleted_cgroup(
+    ...     ('cgroup', 'user', 'vsz', 'rss', 'time', 'elapsed', 'pid'),
+    ...     ['some_cgroup', 'root', '0', '0', '00:00:00', '01:54', '654939', '[node]', '<defunct>']
+    ... )
+    ['some_cgroup', 'root', '0', '0', '00:00:00', '01:54', '654939', '[node]', '<defunct>']
+    """
+    for idx, attr in enumerate(attrs):
+        if attr == "cgroup" and len(line) > (next_idx := idx + 1) and line[next_idx] == "(deleted)":
+            return [
+                *line[:idx],
+                line[idx] + " (deleted)",
+                *line[next_idx + 1:],
+            ]
+    return line
+
+
 def parse_ps_lnx(string_table: StringTable) -> Optional[ps.Section]:
     data = []
     # info[0]: $Node [header] user ... pid command
@@ -213,7 +236,7 @@ def parse_ps_lnx(string_table: StringTable) -> Optional[ps.Section]:
 
     cmd_idx = len(attrs)
 
-    for line in string_table[1:]:
+    for line in (_handle_deleted_cgroup(attrs, l) for l in string_table[1:]):
         # read all but 'command' into dict
         ps_raw = dict(zip(attrs, line))
         ps_info_obj = ps.ps_info(  # type: ignore[call-arg]

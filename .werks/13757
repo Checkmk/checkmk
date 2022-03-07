@@ -1,0 +1,17 @@
+Title: Ps check on Linux: Handle processes with deleted cgroups
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1646396437
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.0.0p22
+
+The ps (process) check on Linux was not able to handle processes with deleted
+cgroups. Such processes result in crashes such as
+"ValueError (invalid literal for int() with base 10: '...')"
+
+The Linux ps check now handles such processes correctly. It appends "(deleted)"
+to the cgroup of the process, as is done by the <tt>ps</tt> command.

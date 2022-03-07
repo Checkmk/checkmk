@@ -1,0 +1,11 @@
+Title: Add painters to link to dashboards
+Class: feature
+Compatible: compat
+Component: wato
+Date: 1648647812
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.1.0b5
+
+Add special painters linking to predefined kubernetes dashboards.

@@ -341,6 +341,12 @@ class DeploymentStrategy(BaseModel):
     strategy: Union[api.Recreate, api.RollingUpdate] = Field(discriminator="type_")
 
 
+class DaemonSetStrategy(BaseModel):
+    """section: kube_daemonset_strategy_v1"""
+
+    strategy: Union[api.OnDelete, api.RollingUpdate] = Field(discriminator="type_")
+
+
 class Memory(BaseModel):
     type_: Literal["memory"] = Field("memory", const=True)
     usage: float

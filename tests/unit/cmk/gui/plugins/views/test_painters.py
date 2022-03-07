@@ -318,6 +318,7 @@ def test_registered_painters():
         "inv_software_applications_kube_daemonset",
         "inv_software_applications_kube_daemonset_match_expressions",
         "inv_software_applications_kube_daemonset_match_labels",
+        "inv_software_applications_kube_daemonset_strategy",
         "inv_software_applications_kube_daemonset_name",
         "inv_software_applications_kube_daemonset_namespace",
         "inv_software_applications_kube_deployment",

@@ -2844,6 +2844,7 @@ def test_registered_display_hints():
     '.software.applications.kube.daemonset.',
     '.software.applications.kube.daemonset.match_expressions',
     '.software.applications.kube.daemonset.match_labels',
+    '.software.applications.kube.daemonset.strategy',
     '.software.applications.kube.daemonset.name',
     '.software.applications.kube.daemonset.namespace',
     '.software.applications.kube.deployment.',

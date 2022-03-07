@@ -550,6 +550,9 @@ class DaemonSet(PodOwner):
     def cpu_resources(self) -> section.Resources:
         return _collect_cpu_resources(self._pods)
 
+    def strategy(self) -> section.DaemonSetStrategy:
+        return section.DaemonSetStrategy(strategy=self.spec.strategy)
+
 
 def daemonset_info(daemonset: DaemonSet, cluster_name: str) -> section.DaemonSetInfo:
     return section.DaemonSetInfo(
@@ -963,6 +966,7 @@ def write_daemon_sets_api_sections(
             "kube_memory_resources_v1": cluster_daemon_set.memory_resources,
             "kube_cpu_resources_v1": cluster_daemon_set.cpu_resources,
             "kube_daemonset_info_v1": lambda: daemonset_info(cluster_daemon_set, cluster_name),
+            "kube_daemonset_strategy_v1": cluster_daemon_set.strategy,
         }
         _write_sections(sections)
 

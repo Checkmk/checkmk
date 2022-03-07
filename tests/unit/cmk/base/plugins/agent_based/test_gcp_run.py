@@ -19,7 +19,8 @@ from cmk.base.plugins.agent_based.gcp_run import (
     discover,
     parse_gcp_run,
 )
-from cmk.base.plugins.agent_based.utils.gcp import Section
+from cmk.base.plugins.agent_based.utils import gcp
+from cmk.base.plugins.agent_based.utils.gcp import AssetSection, Section
 
 SECTION_TABLE = [
     ['[{"name": "aaaa"}]'],
@@ -49,6 +50,13 @@ SECTION_TABLE = [
     ],
 ]
 
+ASSET_TABLE = [
+    ['{"project":"backup-255820"}'],
+    [
+        '{"name": "//run.googleapis.com/projects/backup-255820/locations/us-central1/services/aaaa", "asset_type": "run.googleapis.com/Service", "resource": {"version": "v1", "discovery_document_uri": "https://run.googleapis.com/$discovery/rest", "discovery_name": "Service", "parent": "//cloudresourcemanager.googleapis.com/projects/360989076580", "data": {"metadata": {"name": "aaaa", "generation": 1.0, "uid": "e95937c6-9864-458b-acea-9147be027604", "namespace": "360989076580", "labels": {"cloud.googleapis.com/location": "us-central1"}, "selfLink": "/apis/serving.knative.dev/v1/namespaces/360989076580/services/aaaa", "creationTimestamp": "2022-02-17T14:12:58.71874Z", "annotations": {"run.googleapis.com/ingress-status": "all", "client.knative.dev/user-image": "us-docker.pkg.dev/cloudrun/container/hello", "run.googleapis.com/client-name": "cloud-console", "serving.knative.dev/creator": "max.linke88@gmail.com", "serving.knative.dev/lastModifier": "max.linke88@gmail.com", "run.googleapis.com/ingress": "all"}, "resourceVersion": "AAXYN2StUX8"}, "spec": {"traffic": [{"latestRevision": true, "percent": 100.0}], "template": {"spec": {"serviceAccountName": "360989076580-compute@developer.gserviceaccount.com", "timeoutSeconds": 300.0, "containers": [{"resources": {"limits": {"memory": "512Mi", "cpu": "1000m"}}, "ports": [{"containerPort": 8080.0, "name": "http1"}], "image": "us-docker.pkg.dev/cloudrun/container/hello"}], "containerConcurrency": 80.0}, "metadata": {"name": "aaaa-00001-qax", "annotations": {"autoscaling.knative.dev/maxScale": "4", "run.googleapis.com/client-name": "cloud-console"}}}}, "status": {"url": "https://aaaa-l2ihgnbm5q-uc.a.run.app", "conditions": [{"status": "True", "lastTransitionTime": "2022-02-17T14:15:07.434367Z", "type": "Ready"}, {"type": "ConfigurationsReady", "status": "True", "lastTransitionTime": "2022-02-17T14:15:07.124653Z"}, {"status": "True", "lastTransitionTime": "2022-02-17T14:15:07.434367Z", "type": "RoutesReady"}], "latestReadyRevisionName": "aaaa-00001-qax", "address": {"url": "https://aaaa-l2ihgnbm5q-uc.a.run.app"}, "observedGeneration": 1.0, "latestCreatedRevisionName": "aaaa-00001-qax", "traffic": [{"latestRevision": true, "revisionName": "aaaa-00001-qax", "percent": 100.0}]}, "apiVersion": "serving.knative.dev/v1", "kind": "Service"}, "location": "us-central1", "resource_url": ""}, "ancestors": ["projects/360989076580"], "update_time": "2022-02-17T14:15:07.434367Z", "org_policy": []}'
+    ],
+]
+
 
 def test_parse_gcp():
     section = parse_gcp_run(SECTION_TABLE)
@@ -57,36 +65,36 @@ def test_parse_gcp():
     assert n_rows == len(SECTION_TABLE) - 1
 
 
-@pytest.fixture(name="section")
-def fixture_section() -> Section:
-    return parse_gcp_run(SECTION_TABLE)
-
-
-def test_item_without_data_is_invalid(section: Section):
-    for name, item in section.items():
-        if name == "nodata":
-            assert not item.is_valid
+@pytest.fixture(name="asset_section")
+def fixture_asset_section() -> AssetSection:
+    return gcp.parse_assets(ASSET_TABLE)
 
 
 @pytest.fixture(name="run_services")
-def fixture_run_services(section: Section) -> Sequence[Service]:
-    return sorted(discover(section))
+def fixture_run_services(asset_section: AssetSection) -> Sequence[Service]:
+    return sorted(discover(section_gcp_service_cloud_run=None, section_gcp_assets=asset_section))
+
+
+def test_no_asset_section_yields_no_service():
+    assert len(list(discover(section_gcp_service_cloud_run=None, section_gcp_assets=None))) == 0
 
 
 def test_discover_two_run_services(run_services: Sequence[Service]):
-    assert len(run_services) == 1
     assert {b.item for b in run_services} == {"aaaa"}
 
 
 def test_discover_project_labels(run_services: Sequence[Service]):
-    for bucket in run_services:
-        assert ServiceLabel("gcp_project_id", "backup-255820") in bucket.labels
+    for service in run_services:
+        assert ServiceLabel("gcp/projectId", "backup-255820") in service.labels
 
 
-def test_discover_bucket_labels(run_services: Sequence[Service]):
+def test_discover_labels(run_services: Sequence[Service]):
     labels = run_services[0].labels
-    assert len(labels) == 2
-    assert ServiceLabel("gcp_service_name", "aaaa") in labels
+    assert set(labels) == {
+        ServiceLabel("gcp/location", "us-central1"),
+        ServiceLabel("gcp/run/name", "aaaa"),
+        ServiceLabel("gcp/projectId", "backup-255820"),
+    }
 
 
 @dataclass(frozen=True)
@@ -128,6 +136,11 @@ PLUGINS = [
 ITEM = "aaaa"
 
 
+@pytest.fixture(name="section")
+def fixture_section() -> Section:
+    return parse_gcp_run(SECTION_TABLE)
+
+
 @pytest.fixture(params=PLUGINS, name="checkplugin")
 def fixture_checkplugin(request) -> Plugin:
     return request.param
@@ -139,8 +152,25 @@ Results = Tuple[Sequence[Union[Metric, Result]], Plugin]
 @pytest.fixture(name="results_and_plugin")
 def fixture_results(checkplugin: Plugin, section: Section) -> Results:
     params = {k: None for k in checkplugin.metrics}
-    results = list(checkplugin.function(item=ITEM, params=params, section=section))
+    results = list(
+        checkplugin.function(
+            item=ITEM, params=params, section_gcp_service_cloud_run=section, section_gcp_assets=None
+        )
+    )
     return results, checkplugin
+
+
+def test_no_run_section_yields_no_metric_data(checkplugin):
+    params = {k: None for k in checkplugin.metrics}
+    results = list(
+        checkplugin.function(
+            item=ITEM,
+            params=params,
+            section_gcp_service_cloud_run=None,
+            section_gcp_assets=None,
+        )
+    )
+    assert len(results) == 0
 
 
 def test_yield_metrics_as_specified(results_and_plugin: Results):
@@ -163,14 +193,28 @@ class TestConfiguredNotificationLevels:
     # use 0, the default value, to check notification levels.
     def test_warn_levels(self, checkplugin: Plugin, section: Section):
         params = {k: (0, None) for k in checkplugin.metrics}
-        results = list(checkplugin.function(item=ITEM, params=params, section=section))
+        results = list(
+            checkplugin.function(
+                item=ITEM,
+                params=params,
+                section_gcp_service_cloud_run=section,
+                section_gcp_assets=None,
+            )
+        )
         results = [r for r in results if isinstance(r, Result)]
         for r in results:
             assert r.state == State.WARN
 
     def test_crit_levels(self, checkplugin: Plugin, section: Section):
         params = {k: (None, 0) for k in checkplugin.metrics}
-        results = list(checkplugin.function(item=ITEM, params=params, section=section))
+        results = list(
+            checkplugin.function(
+                item=ITEM,
+                params=params,
+                section_gcp_service_cloud_run=section,
+                section_gcp_assets=None,
+            )
+        )
         results = [r for r in results if isinstance(r, Result)]
         for r in results:
             assert r.state == State.CRIT

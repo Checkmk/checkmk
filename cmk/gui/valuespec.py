@@ -1938,6 +1938,9 @@ class ListOf(ValueSpec[ListOfModel[T]]):
         # refers to the index of the sort values in the tuple
         self._sort_by = sort_by
 
+    def help(self) -> Union[str, HTML, None]:
+        return " ".join(str(t) for t in [super().help(), self._valuespec.help()] if t)
+
     def allow_empty(self) -> bool:
         return self._allow_empty
 

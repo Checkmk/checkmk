@@ -628,14 +628,14 @@ class ServiceDiscoveryBackgroundJob(WatoBackgroundJob):
             ).output
         )
 
-    def _perform_automatic_refresh(self, api_request):
+    def _perform_automatic_refresh(self, api_request: StartDiscoveryRequest) -> None:
         # TODO: In distributed sites this must not add a change on the remote site. We need to build
         # the way back to the central site and show the information there.
         discovery(
             api_request.host.site_id(),
             "refresh",
             ["@scan"],
-            api_request.host.name(),
+            [api_request.host.name()],
             non_blocking_http=True,
         )
         # count_added, _count_removed, _count_kept, _count_new = counts[api_request.host.name()]

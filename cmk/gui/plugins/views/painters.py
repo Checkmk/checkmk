@@ -5295,3 +5295,142 @@ class PainterServiceSpecificMetric(AbstractPainterSpecificMetric):
         perf_data_entries = row["service_perf_data"]
         check_command = row["service_check_command"]
         return self._render(row, cell, perf_data_entries, check_command)
+
+
+class _PainterHostKubernetes(Painter):
+    """
+    Link to kubernetes dashboard. The filters are set in a way that only hosts
+    belonging to the kubernetes_object are shown.
+
+    A host representing a kubernetes cluster will link to the kubernetes
+    cluster dashboard. This dashboard should only display objects (=cmk hosts)
+    belonging to cluster. So the link to the dashboard is augmented by a
+    kubernetes_cluster filter.
+
+    As nodes are not unique among multiple clusters, chains of multiple filters
+    have to build for certain objects: in order to show only objects of a
+    certain node, both node and cluster filter needs to be present.
+
+    The cmk host names and the kubernetes names may differ: normally the cmk
+    host names of kubernetes objects are prefixed with the cluster name. This
+    painter will show the original kubernetes name, not the checkmk host name.
+    """
+
+    _kubernetes_object_type: str
+    """
+    The content of the corresponding label will be displayed by this painter.
+    """
+    _constraints: List[str]
+    """
+    Defines which filters should be added for building up the link.
+    """
+
+    @property
+    def ident(self) -> str:
+        return f"host_kubernetes_{self._kubernetes_object_type}"
+
+    @property
+    def columns(self) -> List[ColumnName]:
+        return ["host_labels", "host_name"]
+
+    def render(self, row: Row, cell: Cell) -> CellSpec:
+        labels = row.get("host_labels", {})
+        if labels.get("cmk/kubernetes/object") != self._kubernetes_object_type:
+            return "", ""
+
+        links = []
+        for link_key in self._constraints:
+            if (link_value := labels.get(f"cmk/kubernetes/{link_key}")) is not None:
+                links.append((f"kubernetes_{link_key}", link_value))
+            else:
+                # a requested filter can not be set, so better don't show anything
+                return "", ""
+
+        url = makeuri_contextless(
+            request,
+            links
+            + [
+                # name of the dashboard we are linking to
+                ("name", f"kubernetes_{self._kubernetes_object_type}"),
+                ("host", row["host_name"]),
+            ],
+            filename="dashboard.py",
+        )
+        if (
+            object_name := labels.get(f"cmk/kubernetes/{self._kubernetes_object_type}")
+        ) is not None:
+            content: HTML = html.render_a(object_name, href=url)
+            return "", content
+        return "", ""
+
+
+@painter_registry.register
+class PainterHostKubernetesCluster(_PainterHostKubernetes):
+    _kubernetes_object_type = "cluster"
+    _constraints = ["cluster"]
+
+    def title(self, cell: Cell) -> str:
+        return _("Kubernetes cluster")
+
+    def short_title(self, cell: Cell) -> str:
+        return _("Cluster")
+
+
+@painter_registry.register
+class PainterHostKubernetesNamespace(_PainterHostKubernetes):
+    _kubernetes_object_type = "namespace"
+    _constraints = ["namespace", "cluster"]
+
+    def title(self, cell: Cell) -> str:
+        return _("Kubernetes namespace")
+
+    def short_title(self, cell: Cell) -> str:
+        return _("Namespace")
+
+
+@painter_registry.register
+class PainterHostKubernetesDeployment(_PainterHostKubernetes):
+    _kubernetes_object_type = "deployment"
+    _constraints = ["deployment", "namespace", "cluster"]
+
+    def title(self, cell: Cell) -> str:
+        return _("Kubernetes deployment")
+
+    def short_title(self, cell: Cell) -> str:
+        return _("Deployment")
+
+
+@painter_registry.register
+class PainterHostKubernetesDaemonset(_PainterHostKubernetes):
+    _kubernetes_object_type = "daemonset"
+    _constraints = ["daemonset", "namespace", "cluster"]
+
+    def title(self, cell: Cell) -> str:
+        return _("Kubernetes daemonset")
+
+    def short_title(self, cell: Cell) -> str:
+        return _("Daemonset")
+
+
+@painter_registry.register
+class PainterHostKubernetesStatefulset(_PainterHostKubernetes):
+    _kubernetes_object_type = "statefulset"
+    _constraints = ["statefulset", "namespace", "cluster"]
+
+    def title(self, cell: Cell) -> str:
+        return _("Kubernetes statefulset")
+
+    def short_title(self, cell: Cell) -> str:
+        return _("Statefulset")
+
+
+@painter_registry.register
+class PainterHostKubernetesNode(_PainterHostKubernetes):
+    _kubernetes_object_type = "node"
+    _constraints = ["node", "cluster"]
+
+    def title(self, cell: Cell) -> str:
+        return _("Kubernetes node")
+
+    def short_title(self, cell: Cell) -> str:
+        return _("Node")

@@ -405,6 +405,34 @@ class TimeQuery(NumberRangeQuery):
             return None
 
 
+class KubernetesQuery(Query):
+    def __init__(
+        self,
+        *,
+        ident: str,
+        kubernetes_object_type: str,
+    ):
+        super().__init__(ident=ident, request_vars=[ident])
+        self.column = "host_labels"
+        self.link_columns: List[str] = []
+        self.negateable = False
+        self._kubernetes_object_type = kubernetes_object_type
+
+    def filter(self, value: FilterHTTPVariables) -> FilterHeader:
+        if filter_value := value.get(self.request_vars[0]):
+            return encode_labels_for_livestatus(
+                column=self.column,
+                labels=[
+                    Label(
+                        f"cmk/kubernetes/{self._kubernetes_object_type}",
+                        filter_value,
+                        False,
+                    )
+                ],
+            )
+        return ""
+
+
 class TextQuery(Query):
     def __init__(
         self,

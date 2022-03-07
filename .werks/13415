@@ -1,0 +1,13 @@
+Title: Add kubernetes filter
+Class: feature
+Compatible: compat
+Component: wato
+Date: 1648646521
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.2.0i1
+
+This adds filters for kubernetes piggyback hosts. It's now possible to filter
+for cluster, namespace, node, deployment, daemonset and statefulset.

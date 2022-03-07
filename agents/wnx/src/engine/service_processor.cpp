@@ -466,7 +466,7 @@ void ServiceProcessor::prepareAnswer(const std::string &ip_from,
 ByteVector ServiceProcessor::generateAnswer(const std::string &ip_from) {
     auto tp = openAnswer(ip_from);
     if (tp) {
-        XLOG::d.i("Id is [{}] for ip [{}]", AnswerIdToNumber(tp.value()), ip_from);
+        XLOG::d.i("Id is [{}] ", AnswerIdToNumber(tp.value()));
         auto count_of_started = startProviders(tp.value(), ip_from);
 
         return getAnswer(count_of_started);

@@ -149,11 +149,10 @@ def _commandline_inventory_on_host(
 
 @decorator.handle_check_mk_check_result("check_mk_active-cmk_inv", "Check_MK HW/SW Inventory")
 def active_check_inventory(hostname: HostName, options: Dict[str, int]) -> ActiveCheckResult:
-    # TODO: drop '_inv_'
-    _inv_hw_changes = options.get("hw-changes", 0)
-    _inv_sw_changes = options.get("sw-changes", 0)
-    _inv_sw_missing = options.get("sw-missing", 0)
-    _inv_fail_status = options.get("inv-fail-status", 1)
+    hw_changes = options.get("hw-changes", 0)
+    sw_changes = options.get("sw-changes", 0)
+    sw_missing = options.get("sw-missing", 0)
+    fail_status = options.get("inv-fail-status", 1)
 
     host_config = config.HostConfig.make_host_config(hostname)
 
@@ -185,17 +184,17 @@ def active_check_inventory(hostname: HostName, options: Dict[str, int]) -> Activ
 
     return ActiveCheckResult.from_subresults(
         update_result,
-        *_check_inventory_tree(trees, old_tree, _inv_sw_missing, _inv_sw_changes, _inv_hw_changes),
+        *_check_inventory_tree(trees, old_tree, sw_missing, sw_changes, hw_changes),
         *check_sources(
             source_results=inv_result.source_results,
             mode=Mode.INVENTORY,
             # Do not use source states which would overwrite "State when inventory fails" in the
             # ruleset "Do hardware/software Inventory". These are handled by the "Check_MK" service
-            override_non_ok_state=_inv_fail_status,
+            override_non_ok_state=fail_status,
         ),
         *check_parsing_errors(
             errors=inv_result.parsing_errors,
-            error_state=_inv_fail_status,
+            error_state=fail_status,
         ),
     )
 

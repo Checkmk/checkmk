@@ -4,7 +4,7 @@
 
 use std::str::FromStr;
 
-use super::{config, site_spec};
+use crate::{config, site_spec};
 use anyhow::{Context, Result as AnyhowResult};
 
 fn retrieve_standard_connection_by_uuid(
@@ -54,8 +54,10 @@ pub fn delete_all(registry: &mut config::Registry) -> AnyhowResult<()> {
 
 #[cfg(test)]
 mod tests {
-    use super::super::site_spec;
-    use super::*;
+    use crate::modes::delete_connection::{delete, delete_all};
+    use crate::site_spec;
+    use crate::*;
+    use std::str::FromStr;
     const UUID_PUSH: &str = "0096abd7-83c9-42f8-8b3a-3ffba7ba959d";
     const UUID_PULL: &str = "b3501e4d-2820-433c-8e9c-38c69ac20faa";
     const UUID_PULL_IMP1: &str = "00c21714-5086-46d7-848e-5be72c715cfd";

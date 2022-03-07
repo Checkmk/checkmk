@@ -7,22 +7,23 @@ mod certs;
 mod cli;
 mod config;
 mod constants;
-mod delete_connection;
-mod dump;
-mod import_connection;
+mod modes;
 mod monitoring_data;
-mod pull;
-mod push;
-mod registration;
 mod setup;
 mod site_spec;
-mod status;
 mod tls_server;
 mod types;
 use anyhow::{Context, Result as AnyhowResult};
 use config::{JSONLoader, TOMLLoader};
-use std::sync::mpsc;
-use std::thread;
+
+use modes::daemon::daemon;
+use modes::delete_connection::{delete, delete_all};
+use modes::dump::dump;
+use modes::import_connection::import;
+use modes::pull::pull;
+use modes::push::handle_push_cycle as push;
+use modes::registration::{proxy_register, register};
+use modes::status::status;
 
 pub use setup::init;
 
@@ -34,7 +35,7 @@ pub fn run_requested_mode(args: cli::Args, paths: setup::PathResolver) -> Anyhow
     let legacy_pull_marker = config::LegacyPullMarker::new(&paths.legacy_pull_path);
     match args {
         cli::Args::Register(reg_args) => {
-            registration::register(
+            register(
                 config::RegistrationConfig::new(registration_preset, reg_args)?,
                 &mut registry,
             )?;
@@ -43,16 +44,16 @@ pub fn run_requested_mode(args: cli::Args, paths: setup::PathResolver) -> Anyhow
             )
         }
         cli::Args::Import(import_args) => {
-            import_connection::import(&mut registry, &import_args)?;
+            import(&mut registry, &import_args)?;
             legacy_pull_marker
                 .remove()
                 .context("Import successful, but could not delete marker for legacy pull mode")
         }
-        cli::Args::ProxyRegister(proxy_reg_args) => registration::proxy_register(
+        cli::Args::ProxyRegister(proxy_reg_args) => proxy_register(
             config::RegistrationConfig::new(registration_preset, proxy_reg_args)?,
         ),
-        cli::Args::Push { .. } => push::handle_push_cycle(&registry),
-        cli::Args::Pull(pull_args) => pull::pull(config::PullConfig::new(
+        cli::Args::Push { .. } => push(&registry),
+        cli::Args::Pull(pull_args) => pull(config::PullConfig::new(
             config_from_disk,
             pull_args,
             legacy_pull_marker,
@@ -62,8 +63,8 @@ pub fn run_requested_mode(args: cli::Args, paths: setup::PathResolver) -> Anyhow
             registry.clone(),
             config::PullConfig::new(config_from_disk, daemon_args, legacy_pull_marker, registry)?,
         ),
-        cli::Args::Dump { .. } => dump::dump(),
-        cli::Args::Status(status_args) => status::status(
+        cli::Args::Dump { .. } => dump(),
+        cli::Args::Status(status_args) => status(
             &registry,
             &config::PullConfig::new(
                 config_from_disk,
@@ -78,24 +79,7 @@ pub fn run_requested_mode(args: cli::Args, paths: setup::PathResolver) -> Anyhow
             )?,
             status_args.json,
         ),
-        cli::Args::Delete(delete_args) => {
-            delete_connection::delete(&mut registry, &delete_args.connection)
-        }
-        cli::Args::DeleteAll { .. } => delete_connection::delete_all(&mut registry),
+        cli::Args::Delete(delete_args) => delete(&mut registry, &delete_args.connection),
+        cli::Args::DeleteAll { .. } => delete_all(&mut registry),
     }
-}
-
-fn daemon(registry: config::Registry, pull_config: config::PullConfig) -> AnyhowResult<()> {
-    let (tx_push, rx) = mpsc::channel();
-    let tx_pull = tx_push.clone();
-    thread::spawn(move || {
-        tx_push.send(push::push(registry)).unwrap();
-    });
-    thread::spawn(move || {
-        tx_pull.send(pull::pull(pull_config)).unwrap();
-    });
-
-    // We should never receive anything here, unless one of the threads crashed.
-    // In that case, this will contain an error that should be propagated.
-    rx.recv().unwrap()
 }

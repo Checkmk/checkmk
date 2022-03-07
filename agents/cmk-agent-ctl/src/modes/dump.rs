@@ -2,7 +2,7 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
-use super::monitoring_data;
+use crate::monitoring_data;
 use anyhow::{Context, Result as AnyhowResult};
 use std::io::Write;
 

@@ -2,7 +2,7 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
-use super::{agent_receiver_api, certs, config, constants, site_spec};
+use crate::{agent_receiver_api, certs, config, constants, site_spec};
 use anyhow::{Context, Result as AnyhowResult};
 use serde_with::DisplayFromStr;
 
@@ -412,9 +412,9 @@ pub fn status(
 
 #[cfg(test)]
 mod test_status {
-    use super::super::cli;
-    use super::super::config::TOMLLoader;
     use super::*;
+    use crate::cli;
+    use crate::config::TOMLLoader;
     use std::str::FromStr;
 
     #[test]

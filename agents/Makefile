@@ -90,7 +90,7 @@ $(RPM_PACKAGE): $(BUILDROOT)
 
 $(DEB_PACKAGE): $(BUILDROOT)
 	rm $(DEB_BUILDDIR) -rf
-	mkdir -p $(DEB_BUILDDIR)/control/usr/bin
+	mkdir -p $(DEB_BUILDDIR)/control
 	cp -r $(DEB_TOPDIR)/control $(DEB_BUILDDIR)/
 	touch "$(DEB_BUILDDIR)/control/md5sum"
 	cd $(BUILDROOT); find . -type f | while read -r filename; do \

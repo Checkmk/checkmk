@@ -17,7 +17,9 @@ for param in "$@"; do
     if [[ "$param" == tests* ]]; then
         continue
     fi
-    FILES+=("$(readlink -f "$param")")
+    # the enterprise/... files are included via symlinks. The doctests do not work reliably
+    # when running out of the enterprise directory. So redirect to the symlink location.
+    FILES+=("$(readlink -f "$param" | sed -e "s|/enterprise/|/|g;s|/plus/|/|g;s|/managed/|/|g")")
 done
 
 NUM_PARAM=${#FILES[@]}

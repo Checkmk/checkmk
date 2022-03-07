@@ -5976,14 +5976,18 @@ class AutoTimestamp(FixedValue[float]):
 class Foldable(ValueSpec):
     """Fully transparant VS encapsulating a vs in a foldable container"""
 
-    def __init__(
+    def __init__(  # pylint: disable=redefined-builtin
         self,
         *,
         valuespec: ValueSpec,
         title_function: _Optional[Callable[[Any], str]] = None,
-        **kwargs: Any,
-    ) -> None:  # pylint: disable=redefined-builtin
-        super().__init__(**kwargs)
+        # ValueSpec
+        title: _Optional[str] = None,
+        help: _Optional[ValueSpecHelp] = None,
+        default_value: ValueSpecDefault[T] = DEF_VALUE,
+        validate: _Optional[ValueSpecValidateFunc[T]] = None,
+    ) -> None:
+        super().__init__(title=title, help=help, default_value=default_value, validate=validate)
         self._valuespec = valuespec
         self._title_function = title_function
 
@@ -6143,15 +6147,58 @@ class Transform(ValueSpec):
         return self._valuespec.value_to_json_safe(self.forth(value))
 
 
-# TODO: Change to factory, cleanup kwargs
 class LDAPDistinguishedName(TextInput):
-    def __init__(
+    def __init__(  # pylint: disable=redefined-builtin
         self,
         *,
         enforce_suffix: _Optional[str] = None,
-        **kwargs: Any,
+        # TextInput
+        label: _Optional[str] = None,
+        size: Union[int, str] = 25,
+        try_max_width: bool = False,
+        cssclass: str = "text",
+        strip: bool = True,
+        allow_empty: bool = True,
+        empty_text: str = "",
+        read_only: bool = False,
+        forbidden_chars: str = "",
+        regex: Union[None, str, Pattern[str]] = None,
+        regex_error: _Optional[str] = None,
+        minlen: _Optional[int] = None,
+        maxlen: _Optional[int] = None,
+        onkeyup: _Optional[str] = None,
+        autocomplete: bool = True,
+        hidden: bool = False,
+        placeholder: _Optional[str] = None,
+        # ValueSpec
+        title: _Optional[str] = None,
+        help: _Optional[ValueSpecHelp] = None,
+        default_value: ValueSpecDefault[str] = DEF_VALUE,
+        validate: _Optional[ValueSpecValidateFunc[str]] = None,
     ) -> None:
-        super().__init__(**kwargs)
+        super().__init__(
+            label=label,
+            size=size,
+            try_max_width=try_max_width,
+            cssclass=cssclass,
+            strip=strip,
+            allow_empty=allow_empty,
+            empty_text=empty_text,
+            read_only=read_only,
+            forbidden_chars=forbidden_chars,
+            regex=regex,
+            regex_error=regex_error,
+            minlen=minlen,
+            maxlen=maxlen,
+            onkeyup=onkeyup,
+            autocomplete=autocomplete,
+            hidden=hidden,
+            placeholder=placeholder,
+            title=title,
+            help=help,
+            default_value=default_value,
+            validate=validate,
+        )
         self.enforce_suffix = enforce_suffix
 
     def _validate_value(self, value: str, varprefix: str) -> None:
@@ -6185,18 +6232,37 @@ class Password(TextInput):
     the algorithm at any time.
     """
 
-    # TODO: Cleanup kwargs
-    def __init__(
+    def __init__(  # pylint: disable=redefined-builtin
         self,
         *,
         is_stored_plain: bool = True,
         encrypt_value: bool = True,
-        **kwargs: Any,
+        # TextInput
+        label: _Optional[str] = None,
+        size: Union[int, str] = 25,
+        try_max_width: bool = False,
+        cssclass: str = "text",
+        strip: bool = True,
+        allow_empty: bool = True,
+        empty_text: str = "",
+        read_only: bool = False,
+        forbidden_chars: str = "",
+        regex: Union[None, str, Pattern[str]] = None,
+        regex_error: _Optional[str] = None,
+        minlen: _Optional[int] = None,
+        maxlen: _Optional[int] = None,
+        onkeyup: _Optional[str] = None,
+        autocomplete: bool = False,  # NOTE: Different!
+        hidden: bool = False,
+        placeholder: _Optional[str] = None,
+        # ValueSpec
+        title: _Optional[str] = None,
+        help: _Optional[ValueSpecText] = None,  # NOTE: Different!
+        default_value: ValueSpecDefault[str] = DEF_VALUE,
+        validate: _Optional[ValueSpecValidateFunc[str]] = None,
     ) -> None:
         self._is_stored_plain = is_stored_plain
         self._encrypt_value = encrypt_value
-        kwargs.setdefault("autocomplete", False)
-
         if self._is_stored_plain:
             plain_help = _(
                 "The password entered here is stored in plain text within the "
@@ -6204,13 +6270,31 @@ class Password(TextInput):
                 "process needs to have access to the unencrypted password "
                 "because it needs to submit it to authenticate with remote systems. "
             )
+            help = plain_help if help is None else (help + "<br><br>" + plain_help)
 
-            if "help" in kwargs:
-                kwargs["help"] += "<br><br>" + plain_help
-            else:
-                kwargs["help"] = plain_help
-
-        super().__init__(**kwargs)
+        super().__init__(
+            label=label,
+            size=size,
+            try_max_width=try_max_width,
+            cssclass=cssclass,
+            strip=strip,
+            allow_empty=allow_empty,
+            empty_text=empty_text,
+            read_only=read_only,
+            forbidden_chars=forbidden_chars,
+            regex=regex,
+            regex_error=regex_error,
+            minlen=minlen,
+            maxlen=maxlen,
+            onkeyup=onkeyup,
+            autocomplete=autocomplete,
+            hidden=hidden,
+            placeholder=placeholder,
+            title=title,
+            help=help,
+            default_value=default_value,
+            validate=validate,
+        )
 
     def render_input(self, varprefix: str, value: _Optional[str]) -> None:
         if value is None:
@@ -6271,10 +6355,62 @@ class Password(TextInput):
 
 
 class PasswordSpec(Password):
-    # TODO: Cleanup kwargs
-    def __init__(self, *, hidden: bool = True, pwlen: int = 8, **kwargs: Any) -> None:
+    def __init__(  # pylint: disable=redefined-builtin
+        self,
+        *,
+        pwlen: int = 8,
+        # Password
+        is_stored_plain: bool = True,
+        # TextInput
+        label: _Optional[str] = None,
+        size: Union[int, str] = 25,
+        try_max_width: bool = False,
+        cssclass: str = "text",
+        strip: bool = True,
+        allow_empty: bool = True,
+        empty_text: str = "",
+        read_only: bool = False,
+        forbidden_chars: str = "",
+        regex: Union[None, str, Pattern[str]] = None,
+        regex_error: _Optional[str] = None,
+        minlen: _Optional[int] = None,
+        maxlen: _Optional[int] = None,
+        onkeyup: _Optional[str] = None,
+        autocomplete: bool = False,  # NOTE: Different!
+        hidden: bool = True,  # NOTE: Different
+        placeholder: _Optional[str] = None,
+        # ValueSpec
+        title: _Optional[str] = None,
+        help: _Optional[ValueSpecText] = None,  # NOTE: Different!
+        default_value: ValueSpecDefault[str] = DEF_VALUE,
+        validate: _Optional[ValueSpecValidateFunc[str]] = None,
+    ) -> None:
         self._pwlen = pwlen
-        super().__init__(hidden=hidden, encrypt_value=False, **kwargs)
+        super().__init__(
+            is_stored_plain=is_stored_plain,
+            encrypt_value=False,
+            label=label,
+            size=size,
+            try_max_width=try_max_width,
+            cssclass=cssclass,
+            strip=strip,
+            allow_empty=allow_empty,
+            empty_text=empty_text,
+            read_only=read_only,
+            forbidden_chars=forbidden_chars,
+            regex=regex,
+            regex_error=regex_error,
+            minlen=minlen,
+            maxlen=maxlen,
+            onkeyup=onkeyup,
+            autocomplete=autocomplete,
+            hidden=hidden,
+            placeholder=placeholder,
+            title=title,
+            help=help,
+            default_value=default_value,
+            validate=validate,
+        )
 
     def render_input(self, varprefix: str, value: _Optional[str]) -> None:
         super().render_input(varprefix, value)

@@ -20,12 +20,14 @@ set temp=c:\temp
 :: Some older Pythons may require this
 set MSBUILD="C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\MSBuild\15.0\Bin\MSBuild.exe"
 
-:: Points to the doc to build, which may not be build and must be just set to empty file
-set chm_368=%cur_dir%\python\%PY_VER%\%p_full_name%\Doc\build\htmlhelp\python368.chm
-
 :: Variables
 set p_full_name=python-%PY_VER%.%PY_SUBVER%
 set cur_dir=%cd%
+
+:: Points to the doc to build, which may not be build and must be just set to empty file
+set chm_368=%cur_dir%\python\%PY_VER%\%p_full_name%\Doc\build\htmlhelp\python368.chm
+set chm_dir=%cur_dir%\python\%PY_VER%\%p_full_name%\Doc\build\htmlhelp
+set chm_file=%chm_dir%\python38%PY_SUBVER%.chm
 
 :: msiexec doesn't understand relative paths, we have to normalize
 call :NORMALIZEPATH "%cur_dir%\..\..\..\omd\packages\Python3\windows\python-3.4.4.msi"

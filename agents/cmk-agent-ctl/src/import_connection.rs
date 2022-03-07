@@ -35,7 +35,7 @@ impl JSONProvider for JSONFromStdin {
 fn _import(registry: &mut config::Registry, json_provider: impl JSONProvider) -> AnyhowResult<()> {
     let json = json_provider.provide()?;
     registry.register_imported_connection(
-        serde_json::from_str::<registration::SurrogatePullData>(&json)
+        serde_json::from_str::<registration::ProxyPullData>(&json)
             .context(format!("Failed to deserialize JSON data:\n{}", &json))?
             .connection,
     );

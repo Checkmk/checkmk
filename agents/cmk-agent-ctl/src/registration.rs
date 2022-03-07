@@ -212,12 +212,12 @@ pub fn register(
 }
 
 #[derive(serde::Serialize, serde::Deserialize)]
-pub struct SurrogatePullData {
+pub struct ProxyPullData {
     pub agent_controller_version: String,
     pub connection: config::Connection,
 }
 
-fn _register_surrogate_pull(
+fn _proxy_register(
     config: config::RegistrationConfig,
     agent_rec_api: &(impl agent_receiver_api::Pairing + agent_receiver_api::Registration),
     trust_establisher: &impl TrustEstablishing,
@@ -226,7 +226,7 @@ fn _register_surrogate_pull(
         config::HostRegistrationData::Name(hn) => hn,
         _ => {
             return Err(anyhow!(
-                "Surrogate pull registration does not support registration with agent labels"
+                "Registration by proxy does not support registration with agent labels"
             ))
         }
     };
@@ -248,7 +248,7 @@ fn _register_surrogate_pull(
 
     println!(
         "{}",
-        serde_json::to_string(&SurrogatePullData {
+        serde_json::to_string(&ProxyPullData {
             agent_controller_version: String::from(constants::VERSION),
             connection: config::Connection {
                 uuid: pairing_result.uuid,
@@ -261,8 +261,8 @@ fn _register_surrogate_pull(
     Ok(())
 }
 
-pub fn register_surrogate_pull(config: config::RegistrationConfig) -> AnyhowResult<()> {
-    _register_surrogate_pull(config, &agent_receiver_api::Api {}, &InteractiveTrust {})
+pub fn proxy_register(config: config::RegistrationConfig) -> AnyhowResult<()> {
+    _proxy_register(config, &agent_receiver_api::Api {}, &InteractiveTrust {})
 }
 
 #[cfg(test)]
@@ -516,12 +516,12 @@ mod tests {
         }
     }
 
-    mod test_register_surrogate_pull {
+    mod test_proxy_register {
         use super::*;
 
         #[test]
         fn test_host_name() {
-            assert!(_register_surrogate_pull(
+            assert!(_proxy_register(
                 registration_config(
                     None,
                     config::HostRegistrationData::Name(String::from(HOST_NAME)),
@@ -538,7 +538,7 @@ mod tests {
 
         #[test]
         fn test_agent_labels() {
-            assert!(register_surrogate_pull(registration_config(
+            assert!(proxy_register(registration_config(
                 None,
                 config::HostRegistrationData::Labels(agent_labels()),
                 true,

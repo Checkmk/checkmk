@@ -62,12 +62,9 @@ fn run_requested_mode(args: cli::Args, paths: setup::PathResolver) -> AnyhowResu
                 .remove()
                 .context("Import successful, but could not delete marker for legacy pull mode")
         }
-        cli::Args::RegisterSurrogatePull(surr_pull_reg_args) => {
-            registration::register_surrogate_pull(config::RegistrationConfig::new(
-                registration_preset,
-                surr_pull_reg_args,
-            )?)
-        }
+        cli::Args::ProxyRegister(proxy_reg_args) => registration::proxy_register(
+            config::RegistrationConfig::new(registration_preset, proxy_reg_args)?,
+        ),
         cli::Args::Push { .. } => push::handle_push_cycle(&registry),
         cli::Args::Pull(pull_args) => pull::pull(config::PullConfig::new(
             config_from_disk,

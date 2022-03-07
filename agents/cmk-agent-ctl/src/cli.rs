@@ -121,10 +121,10 @@ pub enum Args {
 
     /// Register with a Checkmk site on behalf of another host
     ///
-    /// This allows a surrogate registration for hosts which cannot register themselves.
+    /// This allows a registration by proxy for hosts which cannot register themselves.
     /// The gathered connection information is written to standard output.
     #[structopt()]
-    RegisterSurrogatePull(RegistrationArgs),
+    ProxyRegister(RegistrationArgs),
 
     /// Push monitoring data to all Checkmk sites configured for 'push'
     ///
@@ -169,7 +169,7 @@ pub enum Args {
     /// Import a pull connection from file or standard input
     ///
     /// A connection is imported from the JSON-encoded connection information.
-    /// A compatible dataset can be created using the 'register-surrogate-pull' command.
+    /// A compatible dataset can be created using the 'proxy-register' command.
     #[structopt()]
     Import(ImportArgs),
 }
@@ -178,7 +178,7 @@ impl Args {
     pub fn logging_level(&self) -> String {
         match self {
             Args::Register(args) => args.logging_opts.logging_level(),
-            Args::RegisterSurrogatePull(args) => args.logging_opts.logging_level(),
+            Args::ProxyRegister(args) => args.logging_opts.logging_level(),
             Args::Push(args) => args.logging_opts.logging_level(),
             Args::Pull(args) => args.logging_opts.logging_level(),
             Args::Daemon(args) => args.logging_opts.logging_level(),

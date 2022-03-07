@@ -83,7 +83,11 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="fileinfo",
         group=RulespecGroupCheckParametersStorage,
-        item_spec=lambda: TextInput(title=_("File name"), allow_empty=True),
+        item_spec=lambda: TextInput(
+            title=_("File name"),
+            allow_empty=True,
+            try_max_width=True,
+        ),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_fileinfo,
         title=lambda: _("Size and age of single files"),

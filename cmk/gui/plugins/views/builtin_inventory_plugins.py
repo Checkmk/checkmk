@@ -697,6 +697,7 @@ inventory_displayhints.update({
     ".software.applications.kube.daemonset.": {"title": _l("DaemonSet")},
     ".software.applications.kube.daemonset.name": {"title": _l("Name")},
     ".software.applications.kube.daemonset.namespace": {"title": _l("Namespace")},
+    ".software.applications.kube.daemonset.strategy": {"title": _l("StrategyType")},
     ".software.applications.kube.daemonset.match_labels": {"title": _l("matchLabels")},
     ".software.applications.kube.daemonset.match_expressions": {"title": _l("matchExpressions")},
 

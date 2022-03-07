@@ -21,7 +21,7 @@ from .agent_based_api.v1 import (
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 from .utils.k8s import DeploymentStrategy, Replicas
 from .utils.kube import VSResultAge
-from .utils.kube_deployment_strategy import strategy_text
+from .utils.kube_strategy import strategy_text
 
 
 def parse_kube_replicas(string_table: StringTable) -> Replicas:

@@ -446,9 +446,20 @@ def cron_job_from_client(
 
 
 def parse_daemonset_spec(daemonset_spec: client.V1DaemonSetSpec) -> api.DaemonSetSpec:
-    return api.DaemonSetSpec(
-        selector=parse_selector(daemonset_spec.selector),
-    )
+    if daemonset_spec.update_strategy.type == "OnDelete":
+        return api.DaemonSetSpec(
+            strategy=api.OnDelete(),
+            selector=parse_selector(daemonset_spec.selector),
+        )
+    if daemonset_spec.update_strategy.type == "RollingUpdate":
+        return api.DaemonSetSpec(
+            strategy=api.RollingUpdate(
+                max_surge=daemonset_spec.update_strategy.rolling_update.max_surge,
+                max_unavailable=daemonset_spec.update_strategy.rolling_update.max_unavailable,
+            ),
+            selector=parse_selector(daemonset_spec.selector),
+        )
+    raise ValueError(f"Unknown strategy type: {daemonset_spec.update_strategy.type}")
 
 
 def daemonset_from_client(

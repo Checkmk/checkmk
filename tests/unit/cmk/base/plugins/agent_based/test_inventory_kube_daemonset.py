@@ -10,13 +10,20 @@ import pytest
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Attributes, TableRow
 from cmk.base.plugins.agent_based.inventory_kube_daemonset import inventory_kube_daemonset
-from cmk.base.plugins.agent_based.utils.k8s import DaemonSetInfo, Label, LabelName, Selector
+from cmk.base.plugins.agent_based.utils.k8s import (
+    DaemonSetInfo,
+    DaemonSetStrategy,
+    Label,
+    LabelName,
+    RollingUpdate,
+    Selector,
+)
 
 from .utils_inventory import sort_inventory_result
 
 
 @pytest.mark.parametrize(
-    "section_info, expected_inventory_result",
+    "section_info, section_strategy, expected_inventory_result",
     [
         pytest.param(
             DaemonSetInfo(
@@ -27,12 +34,19 @@ from .utils_inventory import sort_inventory_result
                 creation_timestamp=1600000000.0,
                 cluster="cluster",
             ),
+            DaemonSetStrategy(
+                strategy=RollingUpdate(
+                    max_surge="0",
+                    max_unavailable="1",
+                )
+            ),
             [
                 Attributes(
                     path=["software", "applications", "kube", "daemonset"],
                     inventory_attributes={
                         "name": "oh-lord",
                         "namespace": "have-mercy",
+                        "strategy": "RollingUpdate (max surge: 0, max unavailable: 1)",
                         "match_labels": "",
                         "match_expressions": "",
                     },
@@ -51,8 +65,9 @@ from .utils_inventory import sort_inventory_result
 )
 def test_inventory_kube_daemonset(
     section_info: DaemonSetInfo,
+    section_strategy: DaemonSetStrategy,
     expected_inventory_result: Sequence[Any],
 ) -> None:
-    assert sort_inventory_result(inventory_kube_daemonset(section_info)) == sort_inventory_result(
-        expected_inventory_result
-    )
+    assert sort_inventory_result(
+        inventory_kube_daemonset(section_info, section_strategy)
+    ) == sort_inventory_result(expected_inventory_result)

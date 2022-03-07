@@ -4,17 +4,16 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-
 from typing import Optional
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Attributes, register, TableRow
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import InventoryResult
 from cmk.base.plugins.agent_based.utils.k8s import DeploymentInfo, DeploymentStrategy
-from cmk.base.plugins.agent_based.utils.kube_deployment_strategy import strategy_text
 from cmk.base.plugins.agent_based.utils.kube_inventory import (
     match_expressions_to_str,
     match_labels_to_str,
 )
+from cmk.base.plugins.agent_based.utils.kube_strategy import strategy_text
 
 
 def inventory_kube_deployment(

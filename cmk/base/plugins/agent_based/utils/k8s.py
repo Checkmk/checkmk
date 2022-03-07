@@ -383,10 +383,20 @@ class Recreate(BaseModel):
     type_: Literal["Recreate"] = Field("Recreate", const=True)
 
 
+class OnDelete(BaseModel):
+    type_: Literal["OnDelete"] = Field("OnDelete", const=True)
+
+
 class DeploymentStrategy(BaseModel):
     """section: kube_deployment_strategy_v1"""
 
     strategy: Union[Recreate, RollingUpdate] = Field(discriminator="type_")
+
+
+class DaemonSetStrategy(BaseModel):
+    """section: kube_daemonset_strategy_v1"""
+
+    strategy: Union[OnDelete, RollingUpdate] = Field(discriminator="type_")
 
 
 ImagePullPolicy = Literal["Always", "Never", "IfNotPresent"]

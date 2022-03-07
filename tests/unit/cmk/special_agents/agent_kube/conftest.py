@@ -387,6 +387,7 @@ def daemon_sets_api_sections():
         "kube_memory_resources_v1",
         "kube_cpu_resources_v1",
         "kube_daemonset_info_v1",
+        "kube_daemonset_strategy_v1",
     ]
 
 

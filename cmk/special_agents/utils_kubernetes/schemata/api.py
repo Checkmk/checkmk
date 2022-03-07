@@ -189,6 +189,10 @@ class Recreate(BaseModel):
     type_: Literal["Recreate"] = Field("Recreate", const=True)
 
 
+class OnDelete(BaseModel):
+    type_: Literal["OnDelete"] = Field("OnDelete", const=True)
+
+
 class DeploymentSpec(BaseModel):
     strategy: Union[Recreate, RollingUpdate] = Field(discriminator="type_")
     selector: Selector
@@ -202,6 +206,7 @@ class Deployment(BaseModel):
 
 
 class DaemonSetSpec(BaseModel):
+    strategy: Union[OnDelete, RollingUpdate] = Field(discriminator="type_")
     selector: Selector
 
 

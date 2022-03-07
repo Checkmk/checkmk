@@ -58,6 +58,7 @@ from cmk.gui.sites import get_alias_of_host
 from cmk.gui.type_defs import HTTPVariables, Row, SingleInfos, TranslatedMetric, VisualContext
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.rendering import text_with_links_to_user_translated_html
+from cmk.gui.utils.speaklater import LazyString
 from cmk.gui.utils.urls import makeuri, makeuri_contextless, urlencode_vars
 from cmk.gui.valuespec import (
     Checkbox,
@@ -1079,6 +1080,12 @@ def copy_view_into_dashlet(
         view = permitted_views[view_name]
 
     view = copy.deepcopy(view)  # Clone the view
+    # the view definition may contain lazy strings
+    # that will be serialized to 'l"to translage"' which will cause an
+    # SyntaxError when trying to load the .mk file.
+    for key, value in view.items():
+        if isinstance(value, LazyString):
+            view[key] = str(value)
     dashlet.update(view)
     if add_context:
         dashlet["context"].update(add_context)

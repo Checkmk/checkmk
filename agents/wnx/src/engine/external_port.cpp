@@ -2,6 +2,7 @@
 
 #include "external_port.h"
 
+#include <chrono>
 #include <iostream>
 
 #include "agent_controller.h"
@@ -11,26 +12,39 @@
 #include "realtime.h"
 
 using asio::ip::tcp;
+using namespace std::chrono_literals;
 
 // This namespace contains classes used for external communication, for example
 // with Monitor
 namespace cma::world {
 
-// below is working example from asio
-// verified and working, Example is Echo TCP
-// try not damage it
-
-// will not used normally by agent
-void AsioSession::do_read() {
+void AsioSession::read_ip() {
+    XLOG::t("Get ip");
     auto self(shared_from_this());
-    socket_.async_read_some(
-        asio::buffer(data_, kMaxLength),  // data will be ignored
-        [this, self](std::error_code ec, [[maybe_unused]] size_t length) {
-            if (!ec) {
-                constexpr auto *internal_data = "Answer!\n";
-                do_write(internal_data, strlen(internal_data) + 1, nullptr);
-            }
-        });
+    {
+        std::scoped_lock l(data_lock_);
+        received_.reset();
+        remote_ip_.reset();
+    }
+    socket_.async_read_some(asio::buffer(data_, kMaxLength - 1),
+                            [this, self](std::error_code ec, size_t length) {
+                                std::scoped_lock l(data_lock_);
+                                received_ = ec ? 0U : length;
+                                cv_ready_.notify_one();
+                            });
+    std::unique_lock lk(data_lock_);
+    bool timeout = cv_ready_.wait_until(
+        lk, std::chrono::steady_clock::now() + 1000ms,
+        [this]() -> bool { return received_.has_value(); });
+    if (received_.has_value() &&
+        received_.value() >= std::string_view{"::1"}.length()) {
+        remote_ip_ = std::string{data_, *received_};
+        XLOG::d.i("Get ip = {}", *remote_ip_);
+
+    } else {
+        received_.reset();
+        XLOG::d("Get ip = Nothing {}", timeout ? "timeout" : "some error");
+    }
 }
 
 size_t AsioSession::allocCryptBuffer(const cma::encrypt::Commander *commander) {
@@ -235,8 +249,8 @@ bool IsIpAllowedAsException(const std::string &ip) {
 }
 
 // singleton thread
-void ExternalPort::processQueue(const cma::world::ReplyFunc &reply) {
-    for (;;) {
+void ExternalPort::processQueue(const world::ReplyFunc &reply) {
+    while (true) {
         // we must to catch exception in every thread, even so simple one
         try {
             // processing block
@@ -247,11 +261,14 @@ void ExternalPort::processQueue(const cma::world::ReplyFunc &reply) {
                     const auto [ip, ipv6] = GetSocketInfo(as->currentSocket());
                     XLOG::d.i("Connected from '{}' ipv6:{} <- queue", ip, ipv6);
 
-                    OverLoadMemory();  // do nothing
-                    // only_from checking
-                    if (cma::cfg::groups::global.isIpAddressAllowed(ip) ||
-                        ip == "127.0.0.1" ||
-                        ip == "::1") {  // controller can contact us
+                    OverLoadMemory();
+                    // controller can contact us
+                    bool local_connection = ip == "127.0.0.1" || ip == "::1";
+                    if (cfg::groups::global.isIpAddressAllowed(ip) ||
+                        local_connection) {
+                        if (local_connection) {
+                            as->read_ip();
+                        }
                         as->start(reply);
 
                         // check memory block, terminate service if memory is

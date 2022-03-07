@@ -40,7 +40,11 @@ public:
     using s_ptr = std::shared_ptr<AsioSession>;
 
     AsioSession(asio::ip::tcp::socket socket) : socket_(std::move(socket)) {}
-    virtual ~AsioSession() { XLOG::t("destroy connection"); }
+    virtual ~AsioSession() {
+        std::error_code ec;
+        socket_.cancel(ec);
+        XLOG::d("destroy connection");
+    }
 
     void start(cma::world::ReplyFunc Reply) {
         // typical functionality of current agent
@@ -60,6 +64,7 @@ public:
     }
 
     const asio::ip::tcp::socket &currentSocket() const { return socket_; }
+    void read_ip();
 
 private:
     // not g-tested
@@ -74,6 +79,12 @@ private:
     }
 
     std::string getCurrentRemoteIp() const noexcept {
+        {
+            std::scoped_lock l(data_lock_);
+            if (remote_ip_.has_value()) {
+                return *remote_ip_;
+            }
+        }
         try {
             std::error_code ec;
             auto remote_ep = socket_.remote_endpoint(ec);
@@ -87,14 +98,19 @@ private:
         }
         return {};
     }
-    void do_read();
     size_t allocCryptBuffer(const cma::encrypt::Commander *commander);
     void do_write(const void *data_block, std::size_t data_length,
                   cma::encrypt::Commander *crypto_commander);
 
     asio::ip::tcp::socket socket_;
-    enum { kMaxLength = 1024 };
+
+    constexpr static size_t kMaxLength{1024};
     char data_[kMaxLength];
+    std::optional<size_t> received_;
+    std::condition_variable cv_ready_;
+    mutable std::mutex data_lock_;
+    std::optional<std::string> remote_ip_;
+
     const size_t segment_size_ = 48 * 1024;
     std::vector<char> crypt_buf_;
 };

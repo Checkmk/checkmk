@@ -5,8 +5,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import json
 from dataclasses import dataclass
-from typing import Any, Callable, Mapping, Sequence
+from typing import Any, Callable, Iterator, Mapping, Sequence
 
+from google.cloud.asset_v1.types.assets import Asset
 from google.cloud.monitoring_v3.types import TimeSeries
 
 from ..agent_based_api.v1 import check_levels, check_levels_predictive, Service, ServiceLabel
@@ -24,6 +25,15 @@ class GCPResult:
 
 
 @dataclass(frozen=True)
+class GCPAsset:
+    asset: Asset
+
+    @classmethod
+    def deserialize(cls, data: str) -> "GCPAsset":
+        return cls(asset=Asset.from_json(data))
+
+
+@dataclass(frozen=True)
 class SectionItem:
     rows: Sequence[GCPResult]
     labels: Sequence[ServiceLabel]
@@ -37,11 +47,26 @@ class SectionItem:
         return cls(rows=rows, labels=labels)
 
     @property
-    def is_valid(self) -> bool:
+    def is_valid(self):
         return bool(self.rows)
 
 
 Section = Mapping[str, SectionItem]
+
+
+def discover(section: Section) -> DiscoveryResult:
+    for name, item in section.items():
+        if item.is_valid:
+            yield Service(item=f"{name}", labels=list(item.labels))
+
+
+@dataclass(frozen=True)
+class AssetSection:
+    project: str
+    assets: Sequence[GCPAsset]
+
+    def __iter__(self) -> Iterator[GCPAsset]:
+        return iter(self.assets)
 
 
 def parse_gcp(string_table: StringTable, label_key: str) -> Section:
@@ -55,10 +80,11 @@ def parse_gcp(string_table: StringTable, label_key: str) -> Section:
     }
 
 
-def discover(section: Section) -> DiscoveryResult:
-    for name, item in section.items():
-        if item.is_valid:
-            yield Service(item=f"{name}", labels=list(item.labels))
+def parse_assets(string_table: StringTable) -> AssetSection:
+    info = json.loads(string_table[0][0])
+    project = info["project"]
+    assets = [GCPAsset.deserialize(row[0]) for row in string_table[1:]]
+    return AssetSection(project, assets)
 
 
 @dataclass(frozen=True)

@@ -373,7 +373,6 @@ class Pod:
         return section.ContainerSpecs(
             containers={
                 container_spec.name: section.ContainerSpec(
-                    name=container_spec.name,
                     image_pull_policy=container_spec.image_pull_policy,
                 )
                 for container_spec in self.spec.containers
@@ -384,7 +383,6 @@ class Pod:
         return section.ContainerSpecs(
             containers={
                 container_spec.name: section.ContainerSpec(
-                    name=container_spec.name,
                     image_pull_policy=container_spec.image_pull_policy,
                 )
                 for container_spec in self.spec.init_containers

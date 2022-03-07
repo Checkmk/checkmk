@@ -228,7 +228,6 @@ class PodContainers(BaseModel):
 
 
 class ContainerSpec(BaseModel):
-    name: ContainerName
     image_pull_policy: api.ImagePullPolicy
 
 

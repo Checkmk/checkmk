@@ -403,7 +403,6 @@ ImagePullPolicy = Literal["Always", "Never", "IfNotPresent"]
 
 
 class ContainerSpec(BaseModel):
-    name: ContainerName
     image_pull_policy: ImagePullPolicy
 
 

@@ -15,8 +15,8 @@ from cmk.base.plugins.agent_based.utils.k8s import ContainerSpecs, PodContainers
 def parse_kube_pod_container_specs(string_table: StringTable) -> ContainerSpecs:
     """Parses `string_table` into a ContainerSpecs isinstance
 
-    >>> parse_kube_pod_container_specs([['{"containers": {"coredns": {"name": "coredns", "image_pull_policy": "IfNotPresent"}}}']])
-    ContainerSpecs(containers={'coredns': ContainerSpec(name='coredns', image_pull_policy='IfNotPresent')})
+    >>> parse_kube_pod_container_specs([['{"containers": {"coredns": {"image_pull_policy": "IfNotPresent"}}}']])
+    ContainerSpecs(containers={'coredns': ContainerSpec(image_pull_policy='IfNotPresent')})
     """
     return ContainerSpecs(**json.loads(string_table[0][0]))
 
@@ -77,11 +77,11 @@ def _containers_to_table(
     container_specs: ContainerSpecs, container_statuses: Optional[PodContainers]
 ) -> Iterable[TableRow]:
     if container_statuses is not None:
-        for container_spec in container_specs.containers.values():
-            container_status = container_statuses.containers[container_spec.name]
+        for name, container_spec in container_specs.containers.items():
+            container_status = container_statuses.containers[name]
             yield TableRow(
                 path=["software", "applications", "kube", "containers"],
-                key_columns={"name": container_spec.name},
+                key_columns={"name": name},
                 inventory_columns={
                     "image_pull_policy": container_spec.image_pull_policy,
                     "ready": "yes" if container_status.ready else "no",
@@ -92,10 +92,10 @@ def _containers_to_table(
                 },
             )
     else:
-        for container_spec in container_specs.containers.values():
+        for name, container_spec in container_specs.containers.items():
             yield TableRow(
                 path=["software", "applications", "kube", "containers"],
-                key_columns={"name": container_spec.name},
+                key_columns={"name": name},
                 inventory_columns={
                     "image_pull_policy": container_spec.image_pull_policy,
                     "ready": "no",

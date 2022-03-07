@@ -148,16 +148,7 @@ def check_apc_symmetra(_no_item, params, parsed):
     calib_result = data.get("calib")
     last_diag_date = data.get("diag_date")
 
-    # convert old format tuple to dict, new format with up to 6 params in dict
-    if isinstance(params, tuple):
-        params = {"levels": params}
-
-    if "levels" in params:
-        crit_cap = params["levels"][0]
-        params["capacity"] = (crit_cap, crit_cap)
-
     alt_crit_capacity = None
-    warn_cap, crit_cap = params["capacity"]
     # the last_diag_date is reported as %m/%d/%Y or %y
     if (
         params.get("post_calibration_levels")
@@ -180,11 +171,11 @@ def check_apc_symmetra(_no_item, params, parsed):
 
     if battery_replace:
         state, state_readable = {
-            "1": (0, "no battery needs replacing"),
-            "2": (params.get("battery_replace_state", 1), "battery needs replacing"),
-        }.get(battery_replace, (3, "battery needs replacing: unknown"))
+            "1": (0, "No battery needs replacing"),
+            "2": (params["battery_replace_state"], "Battery needs replacing"),
+        }.get(battery_replace, (3, "Battery needs replacing: unknown"))
         if battery_num_batt_packs and int(battery_num_batt_packs) > 1:
-            yield 2, "%i batteries need replacement" % int(battery_num_batt_packs)
+            yield 2, "%i batteries need replacing" % int(battery_num_batt_packs)
         elif state:
             yield state, state_readable
 
@@ -237,11 +228,12 @@ def check_apc_symmetra(_no_item, params, parsed):
         yield state, "Output status: %s%s%s" % (
             state_readable,
             calib_text,
-            self_test_in_progress and " (self-test running)" or "",
+            " (self-test running)" if self_test_in_progress else "",
         )
 
     if battery_capacity:
         battery_capacity = int(battery_capacity)
+        warn_cap, crit_cap = params["capacity"]
         state = 0
         levelstxt = ""
         if alt_crit_capacity is not None and diff_sec < allowed_delay_sec:

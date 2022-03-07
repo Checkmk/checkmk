@@ -21,7 +21,7 @@ checks = {
         'capacity': (95, 80),
         'calibration_state': 0,
         'battery_replace_state': 1
-    }, [(0, 'Battery status: normal', []), (1, 'battery needs replacing', []),
+    }, [(0, 'Battery status: normal', []), (1, 'Battery needs replacing', []),
         (0, 'Output status: on line (calibration invalid)', []),
         (0, 'Capacity: 100%', [('capacity', 100, 95, 80, 0, 100)]),
         (0, 'Time remaining: 61 m', [('runtime', 61.0, None, None, None, None)])]),
@@ -29,7 +29,7 @@ checks = {
              'capacity': (95, 80),
              'calibration_state': 0,
              'battery_replace_state': 2
-         }, [(0, 'Battery status: normal', []), (2, 'battery needs replacing', []),
+         }, [(0, 'Battery status: normal', []), (2, 'Battery needs replacing', []),
              (0, 'Output status: on line (calibration invalid)', []),
              (0, 'Capacity: 100%', [('capacity', 100, 95, 80, 0, 100)]),
              (0, 'Time remaining: 61 m', [('runtime', 61.0, None, None, None, None)])])],

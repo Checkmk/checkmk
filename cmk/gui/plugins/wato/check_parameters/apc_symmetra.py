@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import Any, Union
+
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithoutItem,
@@ -21,16 +23,25 @@ from cmk.gui.valuespec import (
 )
 
 
-def _apc_symentra_transform_apc_symmetra(params):
-    if isinstance(params, (list, tuple)):
-        params = {"levels": params}
-    if "levels" in params and len(params["levels"]) > 2:
-        cap = float(params["levels"][0])
-        params["capacity"] = (cap, cap)
-        del params["levels"]
-    if "output_load" in params:
-        del params["output_load"]
-    return params
+def _apc_symentra_transform_apc_symmetra(
+    params: Union[list[float], tuple[float, ...], dict[str, Any]],
+) -> dict[str, Any]:
+    """
+    >>> _apc_symentra_transform_apc_symmetra((1, 2, 3, 4))
+    {'capacity': (1, 1)}
+    >>> _apc_symentra_transform_apc_symmetra({"levels": (1, 2, 3, 4)})
+    {'capacity': (1, 1)}
+    >>> _apc_symentra_transform_apc_symmetra({"capacity": (95, 80), "output_load": (23, 42)})
+    {'capacity': (95, 80)}
+    """
+    if isinstance(params, dict):
+        if "levels" not in params:
+            return {k: v for k, v in params.items() if k != "output_load"}
+        cap, *_rest = params["levels"]
+    else:
+        cap, *_rest = params
+
+    return {"capacity": (cap, cap)}
 
 
 def _parameter_valuespec_apc_symentra():
@@ -48,7 +59,7 @@ def _parameter_valuespec_apc_symentra():
                             ),
                             Percentage(
                                 title=_("Critical below"),
-                                default_value=90.0,
+                                default_value=80.0,
                             ),
                         ],
                     ),
@@ -128,7 +139,6 @@ def _parameter_valuespec_apc_symentra():
                     ),
                 ),
             ],
-            optional_keys=["post_calibration_levels", "output_load", "battime"],
         ),
         forth=_apc_symentra_transform_apc_symmetra,
     )

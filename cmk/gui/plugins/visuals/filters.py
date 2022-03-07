@@ -73,7 +73,7 @@ class AjaxDropdownFilter(Filter):
         sort_index: int,
         info: str,
         autocompleter: AutocompleterConfig,
-        query_filter: query_filters.TextQuery,
+        query_filter: Union[query_filters.TextQuery, query_filters.KubernetesQuery],
         link_columns: Optional[List[ColumnName]] = None,
         description: Union[None, str, LazyString] = None,
         is_show_more: bool = False,
@@ -660,7 +660,6 @@ filter_registry.register(
         ),
     )
 )
-
 
 # TODO: I would be great to split this in two filters for host & service kind of problems
 @filter_registry.register_instance
@@ -1575,6 +1574,35 @@ filter_registry.register(
         object_type="service",
     )
 )
+
+
+def filter_kubernetes_register(
+    title: str,
+    object_name: Literal["cluster", "node", "deployment", "namespace", "daemonset", "statefulset"],
+):
+    filter_registry.register(
+        AjaxDropdownFilter(
+            title=title,
+            sort_index=-1,  # TODO!
+            info="host",
+            autocompleter=GroupAutocompleterConfig(
+                ident="kubernetes_labels",
+                group_type=object_name,
+                strict=True,
+            ),
+            query_filter=query_filters.KubernetesQuery(
+                ident=f"kubernetes_{object_name}", kubernetes_object_type=object_name
+            ),
+        )
+    )
+
+
+filter_kubernetes_register(_("Kubernetes Cluster"), "cluster")
+filter_kubernetes_register(_("Kubernetes Namespace"), "namespace")
+filter_kubernetes_register(_("Kubernetes Node"), "node")
+filter_kubernetes_register(_("Kubernetes Deployment"), "deployment")
+filter_kubernetes_register(_("Kubernetes Daemonset"), "daemonset")
+filter_kubernetes_register(_("Kubernetes Statefulset"), "statefulset")
 
 
 class FilterCustomAttribute(Filter):

@@ -98,7 +98,18 @@ class GroupAutocompleterConfig(AutocompleterConfig):
         self,
         *,
         ident: str,
-        group_type: Literal["host", "service", "contact"],
+        group_type: Literal[
+            "host",
+            "service",
+            "contact",
+            # kubernetes:
+            "cluster",
+            "node",
+            "deployment",
+            "namespace",
+            "daemonset",
+            "statefulset",
+        ],
         strict: bool = True,
         dynamic_params_callback_name: Optional[DynamicParamsCallbackName] = None,
     ) -> None:

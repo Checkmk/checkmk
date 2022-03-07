@@ -10,8 +10,8 @@ from typing import Any, Callable, Iterator, Mapping, Sequence
 from google.cloud.asset_v1.types.assets import Asset
 from google.cloud.monitoring_v3.types import TimeSeries
 
-from ..agent_based_api.v1 import check_levels, check_levels_predictive, Service, ServiceLabel
-from ..agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
+from ..agent_based_api.v1 import check_levels, check_levels_predictive
+from ..agent_based_api.v1.type_defs import CheckResult, StringTable
 
 
 @dataclass(frozen=True)
@@ -36,28 +36,9 @@ class GCPAsset:
 @dataclass(frozen=True)
 class SectionItem:
     rows: Sequence[GCPResult]
-    labels: Sequence[ServiceLabel]
-
-    @classmethod
-    def from_results(cls, rows: Sequence[GCPResult]) -> "SectionItem":
-        try:
-            labels = [ServiceLabel(f"gcp_{k}", v) for k, v in rows[0].ts.resource.labels.items()]
-        except IndexError:
-            labels = []
-        return cls(rows=rows, labels=labels)
-
-    @property
-    def is_valid(self):
-        return bool(self.rows)
 
 
 Section = Mapping[str, SectionItem]
-
-
-def discover(section: Section) -> DiscoveryResult:
-    for name, item in section.items():
-        if item.is_valid:
-            yield Service(item=f"{name}", labels=list(item.labels))
 
 
 @dataclass(frozen=True)
@@ -73,7 +54,7 @@ def parse_gcp(string_table: StringTable, label_key: str) -> Section:
     rows = [GCPResult.deserialize(row[0]) for row in string_table[1:]]
     raw_items = json.loads(string_table[0][0])
     return {
-        item["name"]: SectionItem.from_results(
+        item["name"]: SectionItem(
             [r for r in rows if r.ts.resource.labels[label_key] == item["name"]]
         )
         for item in raw_items

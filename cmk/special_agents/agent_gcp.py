@@ -7,13 +7,11 @@ import json
 import time
 from dataclasses import dataclass, field
 from functools import cache
-from typing import Any, Callable, Dict, Iterable, List, Mapping, Optional, Sequence
+from typing import Any, Dict, Iterable, List, Optional, Sequence
 
-from google.cloud import asset_v1, functions, monitoring_v3, storage  # type: ignore
+from google.cloud import asset_v1, monitoring_v3  # type: ignore
 from google.cloud.monitoring_v3 import Aggregation
 from google.cloud.monitoring_v3.types import TimeSeries
-from google.oauth2 import service_account  # type: ignore
-from googleapiclient.discovery import build, Resource  # type: ignore
 
 # Those are enum classes defined in the Aggregation class. Not nice but works
 Aligner = Aggregation.Aligner
@@ -21,24 +19,6 @@ Reducer = Aggregation.Reducer
 
 from cmk.special_agents.utils.agent_common import SectionWriter, special_agent_main
 from cmk.special_agents.utils.argument_parsing import Args, create_default_argument_parser
-
-
-@dataclass(frozen=True)
-class CloudRunClient:
-    credentials: service_account.Credentials
-    service: Resource
-
-    @classmethod
-    def from_service_account_info(cls, account_info: Dict[str, str]) -> "CloudRunClient":
-        credentials = service_account.Credentials.from_service_account_info(account_info)
-        scopes = ["https://www.googleapis.com/auth/cloud-platform"]
-        scoped_credentials = credentials.with_scopes(list(scopes))
-        service = build("run", "v1", credentials=scoped_credentials)
-        return cls(scoped_credentials, service)
-
-    def list_services(self, parent: str) -> Mapping[str, Any]:
-        request = self.service.namespaces().services().list(parent=parent)
-        return request.execute()
 
 
 @dataclass(unsafe_hash=True)
@@ -49,18 +29,6 @@ class Client:
     @cache
     def monitoring(self):
         return monitoring_v3.MetricServiceClient.from_service_account_info(self.account_info)
-
-    @cache
-    def storage(self):
-        return storage.Client.from_service_account_info(self.account_info)
-
-    @cache
-    def functions(self):
-        return functions.CloudFunctionsServiceClient.from_service_account_info(self.account_info)
-
-    @cache
-    def run(self) -> CloudRunClient:
-        return CloudRunClient.from_service_account_info(self.account_info)
 
     @cache
     def asset(self):
@@ -74,19 +42,8 @@ class GCPMetric:
 
 
 @dataclass(frozen=True)
-class Item:
-    name: str
-
-    def to_dict(self) -> Mapping[str, str]:
-        return {"name": self.name}
-
-
-# Do not freeze this dataclass to work around a mypy bug. Just pretend it's frozen
-# https://github.com/python/mypy/issues/5485#issuecomment-888953325
-@dataclass
 class GCPService:
     metrics: List[GCPMetric]
-    discover: Callable[[Client], Iterable[Item]]
     name: str
 
 
@@ -132,15 +89,9 @@ def time_series(client: Client, service: GCPService) -> Iterable[Result]:
             yield Result(ts=ts)
 
 
-def serialize_items(items: Iterable[Item]) -> str:
-    return json.dumps([i.to_dict() for i in items])
-
-
 def run_metrics(client: Client, services: Iterable[GCPService]) -> None:
     for s in services:
         with SectionWriter(f"gcp_service_{s.name.lower()}") as w:
-            items = s.discover(client)
-            w.append(serialize_items(items))
             for result in time_series(client, s):
                 w.append(Result.serialize(result))
 
@@ -195,14 +146,8 @@ def run(client: Client, services: Sequence[GCPService]) -> None:
 #######################################################################
 
 
-def discover_buckets(client: Client) -> Iterable[Item]:
-    buckets = list(client.storage().list_buckets())
-    return (Item(name=b.name) for b in buckets)
-
-
 GCS = GCPService(
     name="gcs",
-    discover=discover_buckets,
     metrics=[
         GCPMetric(
             name="storage.googleapis.com/api/request_count",
@@ -253,17 +198,8 @@ GCS = GCPService(
 )
 
 
-def discover_functions(client: Client) -> Iterable[Item]:
-    # https://cloud.google.com/python/docs/reference/cloudfunctions/latest/google.cloud.functions_v1.types.ListFunctionsRequest
-    # See docs why - is used as a location wild card
-    parent = f"projects/{client.project}/locations/-"
-    functions_info = client.functions().list_functions({"parent": parent})
-    return (Item(name=f.name.split("/")[-1]) for f in functions_info)
-
-
 FUNCTIONS = GCPService(
     name="cloud_functions",
-    discover=discover_functions,
     metrics=[
         GCPMetric(
             name="cloudfunctions.googleapis.com/function/execution_count",
@@ -323,16 +259,8 @@ FUNCTIONS = GCPService(
 )
 
 
-def discover_run_services(client: Client) -> Iterable[Item]:
-    # TODO: have to check how to enable this for ANTHOS
-    parent = f"namespaces/{client.project}"
-    services = client.run().list_services(parent=parent)
-    return (Item(name=s["metadata"]["name"]) for s in services["items"])
-
-
 RUN = GCPService(
     name="cloud_run",
-    discover=discover_run_services,
     metrics=[
         GCPMetric(
             name="run.googleapis.com/container/memory/utilizations",

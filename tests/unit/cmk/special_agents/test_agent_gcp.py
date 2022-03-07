@@ -5,8 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import datetime
 import json
-from dataclasses import dataclass
-from typing import Any, Iterable, List, Sequence
+from typing import Any, Iterable, Sequence
 
 import pytest
 from google.cloud import asset_v1, monitoring_v3
@@ -85,31 +84,6 @@ class FakeAssetClient:
         yield asset_v1.Asset(name="2")
 
 
-@dataclass(frozen=True)
-class FakeBucket:
-    name: str
-
-
-class FakeStorageClient:
-    def list_buckets(self) -> List[FakeBucket]:
-        return [FakeBucket("Fake"), FakeBucket("Almost Real")]
-
-
-@dataclass(frozen=True)
-class FakeFunction:
-    name: str
-
-
-class FakeFunctionClient:
-    def list_functions(self, request: Any) -> Sequence[FakeFunction]:
-        return [FakeFunction("a"), FakeFunction("b")]
-
-
-class FakeRunClient:
-    def list_services(self, parent: Any):
-        return dict(items=[dict(metadata=dict(name="a"))])
-
-
 Section = Sequence[str]
 
 
@@ -118,9 +92,6 @@ def fixture_agent_output(mocker: MockerFixture, capsys) -> Section:
     client = agent_gcp.Client({}, "test")
     mocker.patch.object(client, "monitoring", FakeMonitoringClient)
     mocker.patch.object(client, "asset", FakeAssetClient)
-    mocker.patch.object(client, "storage", FakeStorageClient)
-    mocker.patch.object(client, "functions", FakeFunctionClient)
-    mocker.patch.object(client, "run", FakeRunClient)
     agent_gcp.run(client, list(agent_gcp.SERVICES.values()))
     captured = capsys.readouterr()
     # strip trailing new lines
@@ -164,8 +135,7 @@ def test_metric_deserialization(sections: Sequence[Section]):
     for section in sections:
         if not section[0].startswith("<<<gcp_service"):
             continue
-        # the first line is some asset information. Do not test anymore will be replaced soon
-        for line in section[2:]:
+        for line in section[1:]:
             agent_gcp.Result.deserialize(line)
 
 

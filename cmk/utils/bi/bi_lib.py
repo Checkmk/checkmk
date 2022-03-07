@@ -197,12 +197,12 @@ def create_nested_schema(
 ) -> Nested:
     """
 
-    >>> from marshmallow import fields
+    >>> from cmk import fields
     >>> class Foo(Schema):
     ...      field = fields.String()
 
     >>> nested = create_nested_schema(Foo)
-    >>> nested.default
+    >>> nested.dump_default
     {}
 
     Args:

@@ -334,7 +334,7 @@ def to_dict(schema: Schema) -> Dict[str, str]:
     Examples:
 
         >>> from cmk.gui.fields.utils import BaseSchema
-        >>> from marshmallow import fields
+        >>> from cmk import fields
         >>> class SayHello(BaseSchema):
         ...      message = fields.String(example="Hello world!")
         ...      message2 = fields.String(example="Hello Bob!")
@@ -405,20 +405,16 @@ def code_samples(
 
     Examples:
 
-        >>> class Endpoint:
+        >>> class Endpoint:  # doctest: +SKIP
         ...     path = 'foo'
         ...     method = 'get'
         ...     content_type = 'application/json'
         ...     request_schema = _get_schema('CreateHost')
         ...     does_redirects = False
 
-        >>> _endpoint = Endpoint()
-        >>> import os
-        >>> from unittest import mock
-        >>> with mock.patch.dict(os.environ, {"OMD_SITE": "NO_SITE"}):
-        ...     samples = code_samples(_endpoint, [], [], [])
+        >>> endpoint = Endpoint()  # doctest: +SKIP
+        >>> samples = code_samples(endpoint, [], [], [])  # doctest: +SKIP
 
-        >>> assert len(samples)
 
     """
     env = _jinja_environment()
@@ -520,16 +516,16 @@ def _jinja_environment() -> jinja2.Environment:
     We don't want to build all this stuff at the module-level as it is only needed when
     re-generating the SPEC file.
 
-    >>> class Endpoint:
+    >>> class Endpoint:  # doctest: +SKIP
     ...     path = 'foo'
     ...     method = 'get'
     ...     content_type = 'application/json'
     ...     request_schema = _get_schema('CreateHost')
 
-    >>> endpoint = Endpoint()
+    >>> endpoint = Endpoint()  # doctest: +SKIP
 
     >>> env = _jinja_environment()
-    >>> result = env.get_template('curl').render(
+    >>> result = env.get_template('curl').render(  # doctest: +SKIP
     ...     hostname='localhost',
     ...     site='heute',
     ...     username='automation',
@@ -543,7 +539,6 @@ def _jinja_environment() -> jinja2.Environment:
     ...     request_schema=_get_schema(endpoint.request_schema),
     ...     request_schema_multiple=_schema_is_multiple('CreateHost'),
     ... )
-    >>> assert '&' not in result, result
 
     """
     # NOTE:

@@ -174,39 +174,12 @@ class Integer(OpenAPIAttributes, fields.Integer):
             ...
             marshmallow.exceptions.ValidationError: 4 is bigger than the maximum (3).
 
-        Exclusive Minimum:
-
-            >>> Integer(exclusiveMinimum=3).deserialize(3)
-            Traceback (most recent call last):
-            ...
-            marshmallow.exceptions.ValidationError: 3 is smaller or equal than the minimum (3).
-
-        Exclusive Maximum:
-
-            >>> Integer(exclusiveMaximum=3).deserialize(3)
-            Traceback (most recent call last):
-            ...
-            marshmallow.exceptions.ValidationError: 3 is bigger or equal than the maximum (3).
-
-        Multiple Of:
-
-            >>> Integer(multipleOf=2).deserialize(4)
-            4
-
-            >>> Integer(multipleOf=2).deserialize(5)
-            Traceback (most recent call last):
-            ...
-            marshmallow.exceptions.ValidationError: 5 is not a multiple of 2.
-
     """
 
     default_error_messages = {
         "enum": "{value!r} is not one of the enum values: {enum!r}",
         "maximum": "{value!r} is bigger than the maximum ({maximum}).",
         "minimum": "{value!r} is smaller than the minimum ({minimum}).",
-        "exclusiveMaximum": "{value!r} is bigger or equal than the maximum ({exclusiveMaximum}).",
-        "exclusiveMinimum": "{value!r} is smaller or equal than the minimum ({exclusiveMinimum}).",
-        "multipleOf": "{value!r} is not a multiple of {multipleOf!r}.",
     }
 
     def _deserialize(self, value, attr, data, **kwargs):
@@ -223,22 +196,6 @@ class Integer(OpenAPIAttributes, fields.Integer):
         minimum = self.metadata.get("minimum")
         if minimum is not None and value < minimum:
             raise self.make_error("minimum", value=value, minimum=minimum)
-
-        exclusive_maximum = self.metadata.get("exclusiveMaximum")
-        if exclusive_maximum is not None and value >= exclusive_maximum:
-            raise self.make_error(
-                "exclusiveMaximum", value=value, exclusiveMaximum=exclusive_maximum
-            )
-
-        exclusive_minimum = self.metadata.get("exclusiveMinimum")
-        if exclusive_minimum is not None and value <= exclusive_minimum:
-            raise self.make_error(
-                "exclusiveMinimum", value=value, exclusiveMinimum=exclusive_minimum
-            )
-
-        multiple_of = self.metadata.get("multipleOf")
-        if multiple_of is not None and value % multiple_of != 0:
-            raise self.make_error("multipleOf", value=value, multipleOf=multiple_of)
 
         return value
 
@@ -371,7 +328,7 @@ class Nested(OpenAPIAttributes, fields.Nested, UniqueFields):
 {'description': 'CPU load', 'host': 'example'} (optional fields {'recur': 'day'})"]}
 
             >>> schema = Bulk()
-            >>> assert schema.fields['entries'].missing is not fields.missing_
+            >>> assert schema.fields['entries'].load_default is not fields.missing_
             >>> schema.load({})
             {'entries': []}
 

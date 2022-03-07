@@ -27,7 +27,7 @@ def type_and_format_of_field(field: fields.Field) -> Tuple[str, Optional[str]]:
         >>> type_and_format_of_field(fields.String())
         ('string', None)
 
-        >>> type_and_format_of_field(fields.String(format="host"))
+        >>> type_and_format_of_field(fields.String(metadata=dict(format="host")))
         ('string', None)
 
         >>> type_and_format_of_field(fields.Integer())
@@ -65,13 +65,13 @@ def field_properties(field: fields.Field) -> FieldProperties:
 
     Examples:
 
-        >>> field_properties(fields.String(format="email"))
+        >>> field_properties(fields.String(metadata=dict(format="email")))
         {'type': 'string', 'format': 'email'}
 
-        >>> field_properties(fields.String(format="email", description="Email"))
+        >>> field_properties(fields.String(metadata=dict(format="email", description="Email")))
         {'type': 'string', 'description': 'Email', 'format': 'email'}
 
-        >>> field_properties(fields.String(format="email", description="Email", required=True))
+        >>> field_properties(fields.String(metadata=dict(format="email", description="Email"), required=True))
         {'type': 'string', 'description': 'Email', 'format': 'email', 'required': True}
 
     Args:

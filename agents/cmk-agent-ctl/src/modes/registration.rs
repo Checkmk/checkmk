@@ -2,7 +2,7 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
-use super::{agent_receiver_api, certs, config, constants, site_spec, types};
+use crate::{agent_receiver_api, certs, config, constants, site_spec, types};
 use anyhow::{anyhow, Context, Result as AnyhowResult};
 
 trait TrustEstablishing {
@@ -270,8 +270,8 @@ pub fn proxy_register(config: config::RegistrationConfig) -> AnyhowResult<()> {
 mod tests {
     use std::str::FromStr;
 
-    use super::super::config::JSONLoader;
     use super::*;
+    use crate::config::JSONLoader;
 
     const SITE_COORDINATES: &str = "server:8000/host";
     const SITE_URL: &str = "https://server:8000/host";

@@ -2,7 +2,8 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
-use super::{cli, config, registration};
+use crate::modes::registration;
+use crate::{cli, config};
 use anyhow::{Context, Result as AnyhowResult};
 
 trait JSONProvider {
@@ -64,7 +65,7 @@ mod tests {
         fn provide(&self) -> AnyhowResult<String> {
             Ok(String::from(
                 r#"{"agent_controller_version":"0.1.0","connection":{
-                    "uuid":"2da53af5-5c06-4195-ab6f-668875710bec", 
+                    "uuid":"2da53af5-5c06-4195-ab6f-668875710bec",
                     "private_key": "fake private key",
                     "certificate":"fake cert",
                     "root_cert": "fake root cert"}}"#,

@@ -2,8 +2,10 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
-use super::agent_receiver_api::AgentData;
-use super::{agent_receiver_api, config, monitoring_data};
+use crate::{
+    agent_receiver_api::{self, AgentData},
+    config, monitoring_data,
+};
 use anyhow::{Context, Result as AnyhowResult};
 use log::{debug, info, warn};
 use rand::Rng;

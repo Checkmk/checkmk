@@ -7,7 +7,7 @@ use std::collections::HashMap;
 use std::error::Error;
 use std::sync::Arc;
 
-use super::{config, monitoring_data, tls_server};
+use crate::{config, monitoring_data, tls_server};
 use anyhow::{anyhow, Context, Error as AnyhowError, Result as AnyhowResult};
 use async_trait::async_trait;
 use log::{debug, info, warn};

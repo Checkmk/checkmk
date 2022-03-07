@@ -121,9 +121,13 @@ def _verify_user(environ) -> RFC7662:
         raise MKAuthException(f"{user_id} needs to change the password ({change_reason}).")
 
     if userdb.is_two_factor_login_enabled(user_id):
-        raise MKAuthException(
-            f"{user_id} has two-factor authentication enabled, which is not usable via REST API."
-        )
+        if final_candidate["scope"] != "cookie":
+            raise MKAuthException(
+                f"{user_id} has two-factor authentication enabled, which can only be used in "
+                "interactive GUI sessions."
+            )
+        if not userdb.is_two_factor_completed():
+            raise MKAuthException("The two-factor authentication needs to be passed first.")
 
     return final_candidate
 

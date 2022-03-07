@@ -1,0 +1,13 @@
+Title: apc_symmetra: Transformation of old rulesets failed
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1646664496
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.2.0i1
+
+Transformation of old rules faild during <tt>cmk-update-config</tt>.
+The displayed warning was "The entry State if calibration is invalid is missing".

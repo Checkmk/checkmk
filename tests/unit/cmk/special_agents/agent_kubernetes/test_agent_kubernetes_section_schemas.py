@@ -80,3 +80,5 @@ def test_schemata_did_not_diverge() -> None:
     assert agent.DeploymentStrategy.schema() == k8s_check.DeploymentStrategy.schema()
     assert agent.NodeConditions.schema() == check.NodeConditions.schema()
     assert agent.PerformanceUsage.schema() == k8s_check.PerformanceUsage.schema()
+    assert agent.DeploymentInfo.schema() == k8s_check.DeploymentInfo.schema()
+    assert agent.ContainerSpecs.schema() == k8s_check.ContainerSpecs.schema()

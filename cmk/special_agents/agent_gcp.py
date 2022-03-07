@@ -9,7 +9,7 @@ from dataclasses import dataclass, field
 from functools import cache
 from typing import Any, Callable, Dict, Iterable, List, Mapping, Optional, Sequence
 
-from google.cloud import functions, monitoring_v3, storage  # type: ignore
+from google.cloud import asset_v1, functions, monitoring_v3, storage  # type: ignore
 from google.cloud.monitoring_v3 import Aggregation
 from google.cloud.monitoring_v3.types import TimeSeries
 from google.oauth2 import service_account  # type: ignore
@@ -62,6 +62,10 @@ class Client:
     def run(self) -> CloudRunClient:
         return CloudRunClient.from_service_account_info(self.account_info)
 
+    @cache
+    def asset(self):
+        return asset_v1.AssetServiceClient.from_service_account_info(self.account_info)
+
 
 @dataclass(frozen=True)
 class GCPMetric:
@@ -91,11 +95,11 @@ class Result:
     ts: TimeSeries
 
     @staticmethod
-    def serialize(obj):
+    def serialize(obj) -> str:
         return json.dumps(TimeSeries.to_dict(obj.ts))
 
     @classmethod
-    def deserialize(cls, data: str):
+    def deserialize(cls, data: str) -> "Result":
         ts = TimeSeries.from_json(data)
         return cls(ts=ts)
 
@@ -111,7 +115,6 @@ def time_series(client: Client, service: GCPService) -> Iterable[Result]:
         }
     )
     for metric in service.metrics:
-        # TODO: actually filter by service filter/labels
         filter_rule = f'metric.type = "{metric.name}"'
 
         request = {
@@ -133,12 +136,58 @@ def serialize_items(items: Iterable[Item]) -> str:
     return json.dumps([i.to_dict() for i in items])
 
 
-def run(client: Client, s: GCPService) -> None:
-    with SectionWriter(f"gcp_service_{s.name.lower()}") as w:
-        items = s.discover(client)
-        w.append(serialize_items(items))
-        for result in time_series(client, s):
-            w.append(Result.serialize(result))
+def run_metrics(client: Client, services: Iterable[GCPService]) -> None:
+    for s in services:
+        with SectionWriter(f"gcp_service_{s.name.lower()}") as w:
+            items = s.discover(client)
+            w.append(serialize_items(items))
+            for result in time_series(client, s):
+                w.append(Result.serialize(result))
+
+
+################################
+# Asset Information collection #
+################################
+
+
+@dataclass(frozen=True)
+class Asset:
+    asset: asset_v1.Asset
+
+    @staticmethod
+    def serialize(obj: "Asset") -> str:
+        return json.dumps(asset_v1.Asset.to_dict(obj.asset))
+
+    @classmethod
+    def deserialize(cls, data: str) -> "Asset":
+        asset = asset_v1.Asset.from_json(data)
+        return cls(asset=asset)
+
+
+def gather_assets(client: Client) -> Iterable[Asset]:
+    request = asset_v1.ListAssetsRequest(
+        parent=f"projects/{client.project}", content_type=asset_v1.ContentType.RESOURCE
+    )
+    all_assets = client.asset().list_assets(request)
+    for asset in all_assets:
+        yield Asset(asset)
+
+
+def run_assets(client: Client) -> None:
+    with SectionWriter("gcp_assets") as w:
+        w.append(json.dumps(dict(project=client.project)))
+        for asset in gather_assets(client):
+            w.append(Asset.serialize(asset))
+
+
+#################
+# Orchestration #
+#################
+
+
+def run(client: Client, services: Sequence[GCPService]) -> None:
+    run_assets(client)
+    run_metrics(client, services)
 
 
 #######################################################################
@@ -383,8 +432,8 @@ def parse_arguments(argv: Optional[Sequence[str]]) -> Args:
 
 def agent_gcp_main(args: Args) -> None:
     client = Client(json.loads(args.credentials), args.project)
-    for s in args.services:
-        run(client, SERVICES[s])
+    services = [SERVICES[s] for s in args.services]
+    run(client, services)
 
 
 def main() -> None:

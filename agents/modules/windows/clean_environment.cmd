@@ -48,7 +48,6 @@ del /Q .venv\Scripts\pythonw.exe
 powershell Write-Host "pip, pipenv, virtualenv" -foreground white
 for /f %%i in ('dir /a:d /s /b pipenv*') do rd /s /q %%i
 for /f %%i in ('dir /a:d /s /b virtualenv*') do rd /s /q %%i
-for /f %%i in ('dir /a:d /s /b pip*') do rd /s /q %%i
 
 powershell Write-Host "Cleaning environment phase 2" -foreground Cyan
 :: Agressive cleaning phase

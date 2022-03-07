@@ -4964,12 +4964,30 @@ class Timerange(CascadingDropdown):
         return ComputedTimerange((int(prev_time), int(from_time)), titles[1] or prev_time_str)
 
 
-# TODO: Cleanup kwargs
-def DateFormat(**kwargs):
+def DateFormat(  # pylint: disable=redefined-builtin
+    *,
+    # DropdownChoice
+    sorted: bool = False,
+    label: _Optional[str] = None,
+    help_separator: _Optional[str] = None,
+    prefix_values: bool = False,
+    empty_text: _Optional[str] = None,
+    invalid_choice: _Optional[str] = "complain",
+    invalid_choice_title: _Optional[str] = None,
+    invalid_choice_error: _Optional[str] = None,
+    no_preselect_title: _Optional[str] = None,
+    on_change: _Optional[str] = None,
+    read_only: bool = False,
+    encode_value: bool = False,  # NOTE: Different!
+    html_attrs: _Optional[HTMLTagAttributes] = None,
+    # ValueSpec
+    title: _Optional[str] = None,
+    help: _Optional[ValueSpecHelp] = None,
+    default_value: ValueSpecDefault[DropdownChoiceModel] = "%Y-%m-%d",  # NOTE: Different!
+    validate: _Optional[ValueSpecValidateFunc[DropdownChoiceModel]] = None,
+    deprecated_choices: Sequence[DropdownChoiceModel] = (),
+) -> DropdownChoice:
     """A selection of various date formats"""
-    kwargs.setdefault("title", _("Date format"))
-    kwargs.setdefault("default_value", "%Y-%m-%d")
-    kwargs.setdefault("encode_value", False)
     return DropdownChoice(
         choices=[
             ("%Y-%m-%d", "1970-12-18"),
@@ -4978,14 +4996,50 @@ def DateFormat(**kwargs):
             ("%d.%m.", "18.12."),
             ("%m/%d", "12/18"),
         ],
-        **kwargs,
+        sorted=sorted,
+        label=label,
+        help_separator=help_separator,
+        prefix_values=prefix_values,
+        empty_text=empty_text,
+        invalid_choice=invalid_choice,
+        invalid_choice_title=invalid_choice_title,
+        invalid_choice_error=invalid_choice_error,
+        no_preselect_title=no_preselect_title,
+        on_change=on_change,
+        read_only=read_only,
+        encode_value=encode_value,
+        html_attrs=html_attrs,
+        title=_("Date format") if title is None else title,
+        help=help,
+        default_value=default_value,
+        validate=validate,
+        deprecated_choices=deprecated_choices,
     )
 
 
-# TODO: Cleanup kwargs
-def TimeFormat(**kwargs):
-    kwargs.setdefault("title", _("Time format"))
-    kwargs.setdefault("default_value", "%H:%M:%S")
+def TimeFormat(  # pylint: disable=redefined-builtin
+    *,
+    # DropdownChoice
+    sorted: bool = False,
+    label: _Optional[str] = None,
+    help_separator: _Optional[str] = None,
+    prefix_values: bool = False,
+    empty_text: _Optional[str] = None,
+    invalid_choice: _Optional[str] = "complain",
+    invalid_choice_title: _Optional[str] = None,
+    invalid_choice_error: _Optional[str] = None,
+    no_preselect_title: _Optional[str] = None,
+    on_change: _Optional[str] = None,
+    read_only: bool = False,
+    encode_value: bool = True,
+    html_attrs: _Optional[HTMLTagAttributes] = None,
+    # ValueSpec
+    title: _Optional[str] = None,
+    help: _Optional[ValueSpecHelp] = None,
+    default_value: ValueSpecDefault[DropdownChoiceModel] = "%H:%M:%S",  # NOTE: Different!
+    validate: _Optional[ValueSpecValidateFunc[DropdownChoiceModel]] = None,
+    deprecated_choices: Sequence[DropdownChoiceModel] = (),
+) -> DropdownChoice:
     return DropdownChoice(
         choices=[
             ("%H:%M:%S", "18:27:36"),
@@ -4995,7 +5049,24 @@ def TimeFormat(**kwargs):
             ("%H", "18"),
             ("%l %p", "6 PM"),
         ],
-        **kwargs,
+        sorted=sorted,
+        label=label,
+        help_separator=help_separator,
+        prefix_values=prefix_values,
+        empty_text=empty_text,
+        invalid_choice=invalid_choice,
+        invalid_choice_title=invalid_choice_title,
+        invalid_choice_error=invalid_choice_error,
+        no_preselect_title=no_preselect_title,
+        on_change=on_change,
+        read_only=read_only,
+        encode_value=encode_value,
+        html_attrs=html_attrs,
+        title=_("Time format") if title is None else title,
+        help=help,
+        default_value=default_value,
+        validate=validate,
+        deprecated_choices=deprecated_choices,
     )
 
 

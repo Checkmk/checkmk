@@ -5,36 +5,29 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from typing import Optional
-
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Attributes, register, TableRow
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import InventoryResult
-from cmk.base.plugins.agent_based.utils.k8s import DeploymentInfo, DeploymentStrategy
-from cmk.base.plugins.agent_based.utils.kube_deployment_strategy import strategy_text
+from cmk.base.plugins.agent_based.utils.k8s import DaemonSetInfo
 from cmk.base.plugins.agent_based.utils.kube_inventory import (
     match_expressions_to_str,
     match_labels_to_str,
 )
 
 
-def inventory_kube_deployment(
-    section_kube_deployment_info: Optional[DeploymentInfo],
-    section_kube_deployment_strategy: Optional[DeploymentStrategy],
+def inventory_kube_daemonset(
+    section: DaemonSetInfo,
 ) -> InventoryResult:
-    if section_kube_deployment_info is None or section_kube_deployment_strategy is None:
-        return
-    selector = section_kube_deployment_info.selector
+    selector = section.selector
     yield Attributes(
-        path=["software", "applications", "kube", "deployment"],
+        path=["software", "applications", "kube", "daemonset"],
         inventory_attributes={
-            "name": section_kube_deployment_info.name,
-            "namespace": section_kube_deployment_info.namespace,
-            "strategy": strategy_text(section_kube_deployment_strategy.strategy),
+            "name": section.name,
+            "namespace": section.namespace,
             "match_labels": match_labels_to_str(selector.match_labels),
             "match_expressions": match_expressions_to_str(selector.match_expressions),
         },
     )
-    for label in section_kube_deployment_info.labels.values():
+    for label in section.labels.values():
         yield TableRow(
             path=["software", "applications", "kube", "labels"],
             key_columns={"label_name": label.name},
@@ -43,7 +36,7 @@ def inventory_kube_deployment(
 
 
 register.inventory_plugin(
-    name="kube_deployment",
-    sections=["kube_deployment_info", "kube_deployment_strategy"],
-    inventory_function=inventory_kube_deployment,
+    name="kube_daemonset",
+    sections=["kube_daemonset_info"],
+    inventory_function=inventory_kube_daemonset,
 )

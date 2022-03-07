@@ -1579,6 +1579,7 @@ class html(ABCHTMLGenerator):
                 )
             )
 
+    # TODO: Try and thin out this method's list of parameters - remove unused ones
     def text_input(
         self,
         varname: str,
@@ -1592,7 +1593,6 @@ class html(ABCHTMLGenerator):
         read_only: bool = False,
         autocomplete: Optional[str] = None,
         style: Optional[str] = None,
-        omit_css_width: bool = False,
         type_: Optional[str] = None,
         onkeyup: Optional[str] = None,
         onblur: Optional[str] = None,
@@ -1614,29 +1614,24 @@ class html(ABCHTMLGenerator):
 
         # View
         # TODO: Move styling away from py code
+        # Until we get there: Try to simplify these width stylings and put them in a helper function
+        # that's shared by text_input and text_area
         style_size: Optional[str] = None
         field_size: Optional[str] = None
-        if try_max_width:
-            style_size = "width: calc(100% - 10px); "
-            if size is not None:
-                assert isinstance(size, int)
-                cols = size
-            else:
-                cols = 16
-            style_size += "min-width: %d.8ex; " % cols
 
-        elif size is not None:
-            if size == "max":
-                style_size = "width: 100%;"
-            else:
+        if size is not None:
+            if try_max_width:
                 assert isinstance(size, int)
-                field_size = "%d" % (size + 1)
-                if (
-                    not omit_css_width
-                    and (style is None or "width:" not in style)
-                    and not self._mobile
-                ):
-                    style_size = "width: %d.8ex;" % size
+                style_size = "min-width: %d.8ex;" % size
+                cssclass += " try_max_width"
+            else:
+                if size == "max":
+                    style_size = "width: 100%;"
+                else:
+                    assert isinstance(size, int)
+                    field_size = "%d" % (size + 1)
+                    if (style is None or "width:" not in style) and not self._mobile:
+                        style_size = "width: %d.8ex;" % size
 
         attributes: HTMLTagAttributes = {
             "class": cssclass,
@@ -1769,9 +1764,19 @@ class html(ABCHTMLGenerator):
         if error:
             self.set_focus(varname)
 
-        style = "width: %d.8ex;" % cols
         if try_max_width:
-            style += "width: calc(100%% - 10px); min-width: %d.8ex;" % cols
+            style = "min-width: %d.8ex;" % cols
+            cssclass = "try_max_width"
+
+            if "class" in attrs:
+                if isinstance(attrs["class"], list):
+                    cssclass = " ".join([cssclass, *attrs["class"]])
+                elif isinstance(attrs["class"], str):
+                    cssclass += " " + attrs["class"]
+            attrs["class"] = cssclass
+        else:
+            style = "width: %d.8ex;" % cols
+
         attrs["style"] = style
         attrs["rows"] = str(rows)
         attrs["cols"] = str(cols)

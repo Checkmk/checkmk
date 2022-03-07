@@ -1029,6 +1029,12 @@ form.visual {
   margin-right: $spacing;
 }
 
+input.try_max_width,
+textarea.try_max_width {
+  width: calc(100% - #{$spacing});
+  min-width: 10 * $spacing;
+}
+
 /*-------------------------------------------------------------------------.
 |                         _   _      _                                     |
 |                        | | | | ___| |_ __                                |

@@ -6433,11 +6433,22 @@ class PasswordSpec(Password):
 
 
 class FileUpload(ValueSpec):
-    def __init__(self, **kwargs) -> None:
-        super().__init__(**kwargs)
-        self._allow_empty: Final[bool] = kwargs.get("allow_empty", False)
-        self._allowed_extensions: Final[_Optional[Iterable[str]]] = kwargs.get("allowed_extensions")
-        self._allow_empty_content: Final[bool] = kwargs.get("allow_empty_content", True)
+    def __init__(  # pylint: disable=redefined-builtin
+        self,
+        *,
+        allow_empty: bool = False,
+        allowed_extensions: _Optional[Iterable[str]] = None,
+        allow_empty_content: bool = True,
+        # ValueSpec
+        title: _Optional[str] = None,
+        help: _Optional[ValueSpecHelp] = None,
+        default_value: ValueSpecDefault[T] = DEF_VALUE,
+        validate: _Optional[ValueSpecValidateFunc[T]] = None,
+    ) -> None:
+        super().__init__(title=title, help=help, default_value=default_value, validate=validate)
+        self._allow_empty = allow_empty
+        self._allowed_extensions = allowed_extensions
+        self._allow_empty_content = allow_empty_content
 
     def allow_empty(self) -> bool:
         return self._allow_empty

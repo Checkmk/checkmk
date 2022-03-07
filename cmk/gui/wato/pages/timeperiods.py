@@ -23,6 +23,7 @@ import cmk.gui.watolib as watolib
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.globals import config, html, request, transactions
+from cmk.gui.http import UploadedFile
 from cmk.gui.i18n import _
 from cmk.gui.page_menu import (
     make_simple_form_page_menu,
@@ -409,7 +410,7 @@ class ModeTimeperiodImportICal(WatoMode):
                     FileUpload(
                         title=_("iCalendar File"),
                         help=_("Select an iCalendar file (<tt>*.ics</tt>) from your PC"),
-                        custom_validate=self._validate_ical_file,
+                        validate=self._validate_ical_file,
                     ),
                 ),
                 (
@@ -444,7 +445,7 @@ class ModeTimeperiodImportICal(WatoMode):
             ],
         )
 
-    def _validate_ical_file(self, value, varprefix):
+    def _validate_ical_file(self, value: UploadedFile, varprefix: str) -> None:
         filename, _ty, content = value
         if not filename.endswith(".ics"):
             raise MKUserError(
@@ -455,11 +456,15 @@ class ModeTimeperiodImportICal(WatoMode):
                 ),
             )
 
-        if not content.startswith("BEGIN:VCALENDAR"):
-            raise MKUserError(varprefix, _("The file does not seem to be a valid iCalendar file."))
+        if not content.startswith(b"BEGIN:VCALENDAR\r\n"):
+            raise MKUserError(
+                varprefix, _("The file does not seem to be a valid iCalendar file.AAA")
+            )
 
-        if not content.startswith("END:VCALENDAR"):
-            raise MKUserError(varprefix, _("The file does not seem to be a valid iCalendar file."))
+        if not content.endswith(b"END:VCALENDAR\r\n"):
+            raise MKUserError(
+                varprefix, _("The file does not seem to be a valid iCalendar file.BBB")
+            )
 
     # Returns a dictionary in the format:
     # {
@@ -491,6 +496,7 @@ class ModeTimeperiodImportICal(WatoMode):
 
             return list(time.strptime(val, "%Y%m%dT%H%M%S"))
 
+        # FIXME: The code below is incorrect, the contentlines have to be unfolded before parsing, see RFC 5545!
         # First extract the relevant information from the file
         in_event = False
         event: Dict[str, Any] = {}

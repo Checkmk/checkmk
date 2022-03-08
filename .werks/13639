@@ -1,0 +1,20 @@
+Title: Fix displaying agent output on crash report page
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1646822690
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0b2
+
+When the crash report page displayed a agent based check report, it displayed
+an error message "Internal error: Unsupported type <class 'bytes'>" in the
+"Agent output" box.
+
+The agent output can now be displayed again, even if it might not be 100%
+correct in case there are characters included in the agent output which can not
+be encoded in the default page encoding (UTF-8). This is OK, because the agent
+output there is only for informational purposes. Users that want to have the
+full and correct agent output can download the crash report archive and extract
+the agent_output file from it.

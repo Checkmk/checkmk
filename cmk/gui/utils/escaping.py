@@ -7,7 +7,7 @@
 import re
 from functools import lru_cache
 from html import escape as html_escape
-from typing import Union
+from typing import Callable, TYPE_CHECKING, Union
 
 from cmk.gui.utils import is_allowed_url
 from cmk.gui.utils.html import HTML
@@ -64,10 +64,16 @@ def escape_to_html_permissive(value: str, escape_links: bool = True) -> HTML:
     return HTML(escape_text(value, escape_links=escape_links))
 
 
+# Workaround for a mypy / typing bug: lru_cache breaks type checking
+# See https://github.com/python/mypy/issues/5107
+if TYPE_CHECKING:
+    escape_attribute: Callable[[EscapableEntity], str]
+
+
 # TODO: Cleanup the accepted types!
 # TODO: The name of the function is missleading. This does not care about HTML tag attribute
 # escaping.
-@lru_cache(maxsize=8192)
+@lru_cache(maxsize=8192)  # type: ignore[no-redef]
 def escape_attribute(value: EscapableEntity) -> str:
     """Escape HTML attributes.
 

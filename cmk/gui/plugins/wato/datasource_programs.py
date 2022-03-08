@@ -878,12 +878,14 @@ def _valuespec_special_agents_kube():
                 ListChoice(
                     choices=[
                         ("deployments", _("Deployments")),
+                        ("daemonsets", _("DaemonSets")),
                         ("nodes", _("Nodes")),
                         ("pods", _("Pods")),
                         ("cronjobs_pods", _("Pods of CronJobs")),
                     ],
                     default_value=[
                         "deployments",
+                        "daemonsets",
                         "nodes",
                         "pods",
                     ],

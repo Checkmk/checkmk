@@ -37,6 +37,6 @@ if [ -z "$REPO_TAG" ]; then
 fi
 
 # We need to pull also the tag, otherwise Nexus may delete those images
-docker pull --quiet "${REPO_TAG}" | true
+docker pull --quiet "${REPO_TAG}" >/dev/null || true
 
 # <<<

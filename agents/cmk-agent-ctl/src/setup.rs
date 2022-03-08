@@ -160,6 +160,11 @@ fn init_logging(
         .append()
         .format(flexi_logger::detailed_format)
         .duplicate_to_stderr(duplicate_level)
+        .rotate(
+            constants::log::FILE_MAX_SIZE,
+            constants::log::FILE_NAMING,
+            constants::log::FILE_CLEANUP,
+        )
         .start()
 }
 

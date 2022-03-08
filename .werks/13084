@@ -1,0 +1,23 @@
+Title: Reintroduce housekeeping job before activation runs
+Class: fix
+Compatible: compat
+Component: core
+Date: 1646752923
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.2.0i1
+
+In previous versions, the activation housekeeping job was
+changed to a background-job running every minute because the
+run sometimes took longer than 2 minutes (a hard timeout).
+
+Due to race conditions this change led to errors (missing
+activations) in some cases.
+Only having it delete activations older than 1h however
+led to exhaustion of disk-space in some cases.
+
+This change reintroduces the previously dropped house-keeping
+run right before the activation is started, while keeping
+the periodically run house-keeping job to clean up afterwards.

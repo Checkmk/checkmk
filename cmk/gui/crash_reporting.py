@@ -663,6 +663,7 @@ class ReportRendererCheck(ABCReportRenderer):
     def _show_agent_output(self, row):
         agent_output = row.get("agent_output")
         if agent_output:
+            assert isinstance(agent_output, bytes)
             _show_output_box(_("Agent output"), agent_output)
 
 
@@ -727,11 +728,15 @@ def format_params(params):
     return pprint.pformat(params)
 
 
-def _show_output_box(title, content):
+def _show_output_box(title: str, content: bytes) -> None:
     html.h3(title, class_="table")
     html.open_div(class_="log_output")
     html.write_html(
-        HTML(escaping.escape_attribute(content).replace("\n", "<br>").replace(" ", "&nbsp;"))
+        HTML(
+            escaping.escape_attribute(content.decode(errors="surrogateescape"))
+            .replace("\n", "<br>")
+            .replace(" ", "&nbsp;")
+        )
     )
     html.close_div()
 

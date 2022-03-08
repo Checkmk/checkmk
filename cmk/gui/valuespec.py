@@ -159,7 +159,6 @@ class Bounds(Generic[C]):
 class ValueSpec(abc.ABC, Generic[T]):
     """Abstract base class of all value declaration classes"""
 
-    # TODO: Remove **kwargs once all valuespecs have been changed
     # TODO: Cleanup help argument redefined-builtin
     def __init__(  # pylint: disable=redefined-builtin
         self,
@@ -168,7 +167,6 @@ class ValueSpec(abc.ABC, Generic[T]):
         help: _Optional[ValueSpecHelp] = None,
         default_value: ValueSpecDefault[T] = DEF_VALUE,
         validate: _Optional[ValueSpecValidateFunc[T]] = None,
-        **kwargs,
     ):
         super().__init__()
         self._title = title

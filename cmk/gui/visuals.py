@@ -109,6 +109,7 @@ from cmk.gui.valuespec import (
     ABCPageListOfMultipleGetChoice,
     CascadingDropdown,
     Checkbox,
+    DEF_VALUE,
     Dictionary,
     DropdownChoice,
     DualListChoice,
@@ -123,7 +124,10 @@ from cmk.gui.valuespec import (
     TextInput,
     Transform,
     ValueSpec,
+    ValueSpecDefault,
+    ValueSpecHelp,
     ValueSpecText,
+    ValueSpecValidateFunc,
 )
 
 CustomUserVisuals = Dict[Tuple[UserId, VisualName], Dict]
@@ -1732,7 +1736,7 @@ class VisualFilterList(ListOfMultiple):
     @classmethod
     def _get_filter_specs(cls, info: str) -> Iterator[Tuple[str, VisualFilter]]:
         for fname, filter_ in filters_allowed_for_info(info):
-            yield fname, VisualFilter(fname, title=filter_.title)
+            yield fname, VisualFilter(name=fname, title=filter_.title)
 
     def __init__(self, info_list, **kwargs):
         self._filters = filters_allowed_for_infos(info_list)
@@ -1951,11 +1955,19 @@ def _show_filter_form_buttons(
 # Realizes a Multisite/visual filter in a valuespec. It can render the filter form, get
 # the filled in values and provide the filled in information for persistance.
 class VisualFilter(ValueSpec):
-    def __init__(self, name, **kwargs):
+    def __init__(  # pylint: disable=redefined-builtin
+        self,
+        *,
+        name: str,
+        # ValueSpec
+        title: Optional[str] = None,
+        help: Optional[ValueSpecHelp] = None,
+        default_value: ValueSpecDefault[T] = DEF_VALUE,
+        validate: Optional[ValueSpecValidateFunc[T]] = None,
+    ):
         self._name = name
         self._filter = filter_registry[name]
-
-        ValueSpec.__init__(self, **kwargs)
+        super().__init__(title=title, help=help, default_value=default_value, validate=validate)
 
     def title(self):
         return self._filter.title

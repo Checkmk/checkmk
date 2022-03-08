@@ -88,6 +88,7 @@ from cmk.gui.utils.urls import (
 from cmk.gui.valuespec import (
     Alternative,
     Checkbox,
+    DEF_VALUE,
     Dictionary,
     DropdownChoice,
     FixedValue,
@@ -98,10 +99,14 @@ from cmk.gui.valuespec import (
     ListOfStrings,
     Optional,
     RuleComment,
+    T,
     TextInput,
     Transform,
     ValueSpec,
+    ValueSpecDefault,
+    ValueSpecHelp,
     ValueSpecText,
+    ValueSpecValidateFunc,
 )
 from cmk.gui.watolib.groups import load_contact_group_information
 
@@ -1498,9 +1503,18 @@ def _finalize_preview_response(response):
 
 
 class NodeVisualizationLayoutStyle(ValueSpec):
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        self._style_type = kwargs.get("type", "hierarchy")
+    def __init__(  # pylint: disable=redefined-builtin
+        self,
+        *,
+        type: _Optional[str] = "hierarchy",
+        # ValueSpec
+        title: _Optional[str] = None,
+        help: _Optional[ValueSpecHelp] = None,
+        default_value: ValueSpecDefault[T] = DEF_VALUE,
+        validate: _Optional[ValueSpecValidateFunc[T]] = None,
+    ):
+        super().__init__(title=title, help=help, default_value=default_value, validate=validate)
+        self._style_type = type
 
     def render_input(self, varprefix: str, value: Any) -> None:
         html.div("", id_=varprefix)

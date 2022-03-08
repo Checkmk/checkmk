@@ -181,7 +181,10 @@ def metrics_autocompleter(value: str, params: Dict) -> Choices:
     else:
         metrics = set(registered_metrics())
 
-    return sorted((v for v in metrics if value.lower() in v[1].lower()), key=lambda a: a[1].lower())
+    return sorted(
+        (v for v in metrics if value.lower() in v[1].lower() or value == v[0]),
+        key=lambda a: a[1].lower(),
+    )
 
 
 @autocompleter_registry.register_expression("tag_groups")

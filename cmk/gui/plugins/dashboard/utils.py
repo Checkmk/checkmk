@@ -718,11 +718,15 @@ class ABCFigureDashlet(Dashlet, abc.ABC):
             valuespec=Dictionary(
                 title=_("Properties"),
                 render="form",
-                optional_keys=False,
+                optional_keys=cls._vs_optional_keys(),
                 elements=cls._vs_elements(),
             ),
             forth=cls._transform_vs_forth,
         )
+
+    @staticmethod
+    def _vs_optional_keys() -> Union[bool, list[str]]:
+        return False
 
     @classmethod
     def _transform_vs_forth(cls, valuespec_result):

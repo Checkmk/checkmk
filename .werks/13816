@@ -1,0 +1,12 @@
+Title: fix chrony and systemd-timesynced interaction
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1646737002
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b2
+
+timedsynced agent check accidentily deactivated the chronyd service, if used. Now the timesyncd check is skipped if chronyd or VBoxService are present.

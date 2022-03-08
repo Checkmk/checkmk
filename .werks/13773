@@ -1,0 +1,13 @@
+Title: Fix aarch64 cpu detection
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1646251801
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.0.0p22
+
+
+Correctly identify the number of cpus on a aarch64 system.

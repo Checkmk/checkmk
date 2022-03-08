@@ -25,7 +25,11 @@ from cmk.base.check_table import HostCheckTable
 from cmk.base.check_utils import ConfiguredService, ServiceID
 
 
-@pytest.mark.usefixtures("fix_register")
+@pytest.fixture(autouse=True, scope="module")
+def _use_fix_register(fix_register):
+    """These tests modify the plugin registry. Make sure to load it first."""
+
+
 def test_cluster_ignores_nodes_parameters(monkeypatch: MonkeyPatch) -> None:
 
     node = HostName("node")

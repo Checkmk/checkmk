@@ -127,7 +127,7 @@ def expected_output_engine():
     elif Globals.pluginname == "wmic_if.bat":
         plugin_fixed += [
             re.escape(r"<<<")
-            + r"winperf_if:sep\(44\)%s"
+            + r"winperf_if_win32_networkadapter:sep\(44\)%s"
             % (r":cached\(\d+,\d+\)" if Globals.executionmode == "async+cached" else r"")
             + re.escape(r">>>"),
             r"^$",
@@ -143,7 +143,7 @@ def expected_output_engine():
     elif Globals.pluginname == "windows_if.ps1":
         plugin_fixed += [
             re.escape(r"<<<")
-            + r"winperf_if:sep\(9\)%s"
+            + r"winperf_if_teaming:sep\(9\)%s"
             % (r":cached\(\d+,\d+\)" if Globals.executionmode == "async+cached" else r"")
             + re.escape(r">>>"),
             (
@@ -199,6 +199,7 @@ def manage_plugins_engine(request, plugin_dir):
 
 def test_section_plugin_group(request, testconfig, expected_output, actual_output, testfile):
     # request.node.name gives test name
+    pytest.skip("This test is to rework")
     if Globals.executionmode == "async+cached" and Globals.plugintype == "local":
         pytest.skip("This test is not conform with latest changes on Monitoring Site")
     local_test(expected_output, actual_output, testfile, request.node.name)

@@ -3,9 +3,6 @@
 :: should be called ONLY after successful build
 :: checkmkservice wil be stopped if any
 
-powershell Write-Host "Disabled integration tests"
-exit /b 0
-
 set cur_dir=%cd%
 set WNX_TEST_I_ROOT=%temp%\test_i_%random%
 mkdir %WNX_TEST_I_ROOT%

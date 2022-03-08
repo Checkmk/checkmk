@@ -1,0 +1,16 @@
+Title: Windows license localisation
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1646732267
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b2
+
+Previously, the plugin was not able to deliver the license information
+in the case of Windows with non-English localization.
+
+With this release the problem has been solved and the plugin delivers
+the correct license information in all cases.

@@ -620,10 +620,13 @@ class ActivateChangesManager(ActivateChanges):
         self._verify_valid_host_config()
         self._save_activation()
 
+        # Always do housekeeping. We chose to only delete activations older than one minute, as we
+        # don't want to accidentally "clean up" our soon-to-be started activations.
+        execute_activation_cleanup_background_job(maximum_age=60)
+
         self._pre_activate_changes()
         self._create_snapshots()
         self._save_activation()
-
         self._start_activation()
 
         return self._activation_id
@@ -1193,27 +1196,45 @@ class ActivationCleanupBackgroundJob(WatoBackgroundJob):
     def gui_title(cls):
         return _("Activation cleanup")
 
-    def __init__(self):
+    def __init__(self, maximum_age: int = 300):
+        """
+        Args:
+
+            maximum_age:
+                How old the activations need to be (in seconds), for them to be considered
+                for deletion.
+
+                Some examples:
+                    * When the value is 0, this means *every* non-running activation it finds,
+                      regardless of its age, will be considered for deletion.
+                    * When the value is 60, every non-running activation started at least 60
+                      seconds ago will be considered for deletion. Newer activations will not be
+                      considered.
+
+                The default value is 300 (seconds), which are exactly 5 minutes.
+
+        """
         super().__init__(
             self.job_prefix,
             title=self.gui_title(),
             lock_wato=False,
             stoppable=False,
         )
+        self.maximum_age = maximum_age
 
     def do_execute(self, job_interface):
         self._do_housekeeping()
         job_interface.send_result_message(_("Activation cleanup finished"))
 
     def _do_housekeeping(self) -> None:
-        """Cleanup stale activations in case it is needed"""
+        """Cleanup non-running activation directories"""
         with store.lock_checkmk_configuration():
             for activation_id in self._existing_activation_ids():
                 self._logger.info("Check activation: %s", activation_id)
                 delete = False
                 manager = ActivateChangesManager()
 
-                # Try to detect whether or not the activation is still in progress. In case the
+                # Try to detect whether the activation is still in progress. In case the
                 # activation information can not be read, it is likely that the activation has
                 # just finished while we were iterating the activations.
                 # In case loading fails continue with the next activations
@@ -1222,6 +1243,7 @@ class ActivationCleanupBackgroundJob(WatoBackgroundJob):
 
                     try:
                         manager.load_activation(activation_id)
+                        # This may mean, has not been started or has already completed.
                         delete = not manager.is_running()
                     except MKUserError:
                         # "Unknown activation process", is normal after activation -> Delete, but no
@@ -1239,10 +1261,7 @@ class ActivationCleanupBackgroundJob(WatoBackgroundJob):
                 # Because the heuristic to detect if an activation is or isn't running is not
                 # very reliable (stated politely) we need to make sure that we don't accidentally
                 # delete activations WHICH HAVE NOT BEEN STARTED YET. To make sure this is not the
-                # case we wait for a very long time and only delete very old activations.
-                # As there is no way to determine how long an activation will actually take,
-                # because the load on the server and the size of the activations vary by a huge
-                # margin, we make the definition of "very old" configurable.
+                # case we wait for some time and only delete sufficiently old activations.
                 for base_dir in (
                     str(cmk.utils.paths.site_config_dir),
                     ActivateChangesManager.activation_tmp_base_dir,
@@ -1251,9 +1270,11 @@ class ActivationCleanupBackgroundJob(WatoBackgroundJob):
                     if not os.path.isdir(activation_dir):
                         continue
 
-                    # Hardcoded to 1h for now. Seems reasonable.
+                    # TODO:
+                    #   This checks creation time, which is kind of silly. More interesting would be
+                    #   to consider completion time.
                     dir_stat = os.stat(activation_dir)
-                    if time.time() - dir_stat.st_mtime < 3600:
+                    if time.time() - dir_stat.st_mtime < self.maximum_age:
                         continue
 
                     try:
@@ -1284,11 +1305,15 @@ class ActivationCleanupBackgroundJob(WatoBackgroundJob):
         return ids
 
 
-def execute_activation_cleanup_background_job() -> None:
+def execute_activation_cleanup_background_job(maximum_age: Optional[int] = None) -> None:
     """This function is called by the GUI cron job once a minute.
 
     Errors are logged to var/log/web.log."""
-    job = ActivationCleanupBackgroundJob()
+    if maximum_age is not None:
+        job = ActivationCleanupBackgroundJob(maximum_age=maximum_age)
+    else:
+        job = ActivationCleanupBackgroundJob()
+
     if job.is_active():
         logger.debug("Another activation cleanup job is already running: Skipping this time")
         return

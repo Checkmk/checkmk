@@ -7,18 +7,9 @@
 from enum import Enum
 from typing import Mapping, NamedTuple, Tuple
 
-from .agent_based_api.v1 import (
-    all_of,
-    exists,
-    OIDEnd,
-    register,
-    Result,
-    Service,
-    SNMPTree,
-    startswith,
-    State,
-)
+from .agent_based_api.v1 import all_of, exists, OIDEnd, register, Result, Service, SNMPTree, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
+from .utils.aruba import DETECT_2930M
 
 
 class FanType(Enum):
@@ -79,7 +70,7 @@ def parse_aruba_fans(string_table: StringTable) -> Section:
 register.snmp_section(
     name="aruba_fan_status",
     detect=all_of(
-        startswith(".1.3.6.1.2.1.1.1.0", "Aruba"),
+        DETECT_2930M,
         exists(".1.3.6.1.4.1.11.2.14.11.5.1.54.2.1.1.*"),
     ),
     parse_function=parse_aruba_fans,

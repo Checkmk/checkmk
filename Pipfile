@@ -6,65 +6,65 @@ verify_ssl = true
 name = "pypi"
 
 [dev-packages]
-astroid = "*"  # used by testlib.pylint_checker_localization
-bandit = "*"  # used by test/Makefile's test-bandit target
-black = "*"  # used in our CI and in the LSP-integration.
-"beautifulsoup4" = "*"  # used by the GUI crawler and various tests
-bson = "*"  # used by test_mk_mongodb unit test
-compiledb = "*"  # used by the Livestatus/CMC Makefiles for building compile_command.json
-docker = "*"  # used by test_docker test and mk_docker agent plugin
-dockerpty = "*"  # used by dockerized tests for opening debug shells
-freezegun = "*"  # used by various unit tests
-isort = "*"  # used as a plugin for editors
-lxml = "*"  # used via beautifulsoup4 as a parser and in the agent_netapp special agent
-lxml-stubs = "*"  # used for type checking
-mock = "*"  # used in checktestlib in unit tests
-mocket = "*"    # used for mocking kubernetes python client
-pylint = "*"  # used by test/Makefile's test-pylint target
-hypothesis = "*"    # used by unit tests
-mypy = "*"  # used by test/static/Makefile's test-mypy target
-twine = "*" # used to upload packages to internal PyPi mirror
-types-six = "*"  # used for type checking
-types-requests = "*"  # used for type checking
-types-PyYAML = "*"  # used for type checking
-types-freezegun = "*"  # used for type checking
-types-mock = "*"  # used for type checking
-types-python-dateutil = "*"  # used for type checking
-types-simplejson = "*"  # used for type checking
-types-PyMySQL = "*"  # used for type checking
-types-pytz = "*"  # used for type checking
-types-cryptography = "*"  # used for type checking
-types-redis = "*"  # used for type checking
-types-protobuf = "*"  # used for type checking
-types-setuptools = "*"  # used for type checking
-playwright = "*"  # used for in-browser testing
-pydantic-factories = "*"  # used for pydantic model testing
-pymongo = "*"  # used by mk_mongodb agent plugin
-pytest = "*"  # used by various test/Makefile targets
-pytest-cov = "*"  # used (indirectly) by test/Makefile's test-unit-coverage-html target, see comment there
-pytest-mock = "*"  # used by quite a few unit/integration tests via the mocker fixture
-preprocess = "*" # implicit dependency of pytest-testmon, might be removed when testmon is updated
-pytest-testmon = "*"  # used for pre-commit checking via .pre-commit-config.yaml
-pytest-profiling = "*"  # used to analyze test run performance
-pytest-random-order = "*"  # used to test resiliency
-pytest-repeat = "*"  # used to test resiliency
-responses = "*"  # used for unit tests
-webtest = "*"  # used by WSGI based tests
-pre-commit = "*"  # used to fix / find issues before commiting changes
-flake8 = "*"
-sphinx = "*"  # used for the plugin API documentation
-sphinx-autodoc-typehints = "*"  # used for the plugin API documentation
-sphinx-rtd-theme = "*"  # used for the plugin API documentation
-sphinxcontrib-plantuml = "*"  # used for the API and architecture
-sphinxcontrib-spelling = "*"
-3to2 = "*"  # used for converting agent plugins from py3 to 2
+astroid = "==2.9.3"  # used by testlib.pylint_checker_localization
+bandit = "==1.7.2"  # used by test/Makefile's test-bandit target
+black = "==22.1.0"  # used in our CI and in the LSP-integration.
+"beautifulsoup4" = "==4.10.0"  # used by the GUI crawler and various tests
+bson = "==0.5.10"  # used by test_mk_mongodb unit test
+compiledb = "==0.10.1"  # used by the Livestatus/CMC Makefiles for building compile_command.json
+docker = "==5.0.3"  # used by test_docker test and mk_docker agent plugin
+dockerpty = "==0.4.1"  # used by dockerized tests for opening debug shells
+freezegun = "==1.1.0"  # used by various unit tests
+isort = "==5.10.1"  # used as a plugin for editors
+lxml = "==4.7.1"  # used via beautifulsoup4 as a parser and in the agent_netapp special agent
+lxml-stubs = "==0.3.1"  # used for type checking
+mock = "==4.0.3"  # used in checktestlib in unit tests
+mocket = "==3.10.4"    # used for mocking kubernetes python client
+pylint = "==2.12.2"  # used by test/Makefile's test-pylint target
+hypothesis = "==6.36.2"    # used by unit tests
+mypy = "==0.931"  # used by test/static/Makefile's test-mypy target
+twine = "==3.8.0" # used to upload packages to internal PyPi mirror
+types-six = "==1.16.10"  # used for type checking
+types-requests = "==2.27.10"  # used for type checking
+types-PyYAML = "==6.0.4"  # used for type checking
+types-freezegun = "==1.1.6"  # used for type checking
+types-mock = "==4.0.10"  # used for type checking
+types-python-dateutil = "==2.8.9"  # used for type checking
+types-simplejson = "==3.17.3"  # used for type checking
+types-PyMySQL = "==1.0.13"  # used for type checking
+types-pytz = "==2021.3.5"  # used for type checking
+types-cryptography = "==3.3.15"  # used for type checking
+types-redis = "==4.1.15"  # used for type checking
+types-protobuf = "==3.19.12"  # used for type checking
+types-setuptools = "==57.4.9"  # used for type checking
+playwright = "==1.19.0"  # used for in-browser testing
+pydantic-factories = "==1.2.4"  # used for pydantic model testing
+pymongo = "==4.0.1"  # used by mk_mongodb agent plugin
+pytest = "==7.0.1"  # used by various test/Makefile targets
+pytest-cov = "==3.0.0"  # used (indirectly) by test/Makefile's test-unit-coverage-html target, see comment there
+pytest-mock = "==3.7.0"  # used by quite a few unit/integration tests via the mocker fixture
+preprocess = "==2.0.0" # implicit dependency of pytest-testmon, might be removed when testmon is updated
+pytest-testmon = "==1.2.3"  # used for pre-commit checking via .pre-commit-config.yaml
+pytest-profiling = "==1.7.0"  # used to analyze test run performance
+pytest-random-order = "==1.0.4"  # used to test resiliency
+pytest-repeat = "==0.9.1"  # used to test resiliency
+responses = "==0.18.0"  # used for unit tests
+webtest = "==3.0.0"  # used by WSGI based tests
+pre-commit = "==2.17.0"  # used to fix / find issues before commiting changes
+flake8 = "==4.0.1"
+sphinx = "==4.4.0"  # used for the plugin API documentation
+sphinx-autodoc-typehints = "==1.17.0"  # used for the plugin API documentation
+sphinx-rtd-theme = "==1.0.0"  # used for the plugin API documentation
+sphinxcontrib-plantuml = "==0.22"  # used for the API and architecture
+sphinxcontrib-spelling = "==7.3.2"
+3to2 = "==1.1.1"  # used for converting agent plugins from py3 to 2
 fakeredis = {version = "==1.5.2", extras = ["lua"]}  # used for testing code which uses Redis (freeze version due to some kwargs bug(???, see https://github.com/jamesls/fakeredis/pull/304/files#r680503761, lua is needed for faking features like "lock")
-python-lsp-server = "*"  # Note: There are extras, but the default seems sensible.
-python-lsp-black = "*"  # black plugin for python-lsp-server
-pyls-isort = "*"  # isort plugin for python-lsp-server
-pylsp-mypy = "*"  # mypy plugin for python-lsp-server
+python-lsp-server = "==1.3.3"  # Note: There are extras, but the default seems sensible.
+python-lsp-black = "==1.1.0"  # black plugin for python-lsp-server
+pyls-isort = "==0.2.2"  # isort plugin for python-lsp-server
+pylsp-mypy = "==0.5.7"  # mypy plugin for python-lsp-server
 mypy-protobuf = "==3.0.0" # for mypy
-pipfile = "*" # for generating import names during int tests
+pipfile = "==0.0.2" # for generating import names during int tests
 
 [packages]
 setuptools_scm = "==4.1.2"  # needed by various setup.py

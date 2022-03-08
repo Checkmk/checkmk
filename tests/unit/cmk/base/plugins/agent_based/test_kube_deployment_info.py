@@ -45,11 +45,11 @@ def fixture_time(mocker):
                 Result(state=State.OK, summary="Namespace: have-mercy"),
                 Result(state=State.OK, summary="Age: 1 second"),
             ),
-            id="overall look of deployment with age 1 second",
+            id="overall look of Deployment with age 1 second",
         ),
     ],
 )
-def test_check_kube_pod_info(
+def test_check_kube_deployment_info(
     section: DeploymentInfo, expected_check_result: Tuple[Result, ...], time
 ) -> None:
     assert tuple(check_kube_deployment_info(section)) == expected_check_result

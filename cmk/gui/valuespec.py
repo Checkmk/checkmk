@@ -1913,6 +1913,7 @@ class ListOf(ValueSpec[ListOfModel[T]]):
         allow_empty: bool = True,
         empty_text: _Optional[str] = None,
         sort_by: _Optional[int] = None,
+        # ValueSpec
         title: _Optional[str] = None,
         help: _Optional[ValueSpecHelp] = None,
         default_value: ValueSpecDefault[ListOfModel[T]] = DEF_VALUE,
@@ -6574,23 +6575,47 @@ class ImageUpload(FileUpload):
 
 
 class UploadOrPasteTextFile(Alternative):
-    def __init__(self, **kwargs):
-        file_title = kwargs.pop("file_title", _("File"))
-        allow_empty = kwargs.pop("allow_empty", False)
-        kwargs.setdefault("elements", []).extend(
-            [
-                FileUpload(title=_("Upload %s") % file_title, allow_empty=allow_empty),
-                TextAreaUnicode(
-                    title=_("Content of %s") % file_title,
-                    allow_empty=allow_empty,
-                    cols=80,
-                    rows="auto",
-                ),
-            ]
+    def __init__(  # pylint: disable=redefined-builtin
+        self,
+        *,
+        file_title: _Optional[str] = None,
+        allow_empty: bool = False,
+        # Alternative
+        elements: list[ValueSpec],
+        # NOTE: Match defaut is different!
+        match: _Optional[Callable[[Any], int]] = lambda val: 0 if isinstance(val, tuple) else 1,
+        style: str = "",  # Unused argument left here to remain compatible with user extensions.
+        show_alternative_title: bool = False,
+        on_change: _Optional[str] = None,
+        orientation: str = "vertical",
+        # ValueSpec
+        title: _Optional[str] = None,
+        help: _Optional[ValueSpecHelp] = None,
+        default_value: ValueSpecDefault[Any] = DEF_VALUE,
+        validate: _Optional[ValueSpecValidateFunc[Any]] = None,
+    ):
+        f_title = _("File") if file_title is None else file_title
+        additional_elements = [
+            FileUpload(title=_("Upload %s") % f_title, allow_empty=allow_empty),
+            TextAreaUnicode(
+                title=_("Content of %s") % f_title,
+                allow_empty=allow_empty,
+                cols=80,
+                rows="auto",
+            ),
+        ]
+        super().__init__(
+            elements=elements + additional_elements,
+            match=match,
+            style=style,
+            show_alternative_title=show_alternative_title,
+            on_change=on_change,
+            orientation=orientation,
+            title=title,
+            help=help,
+            default_value=default_value,
+            validate=validate,
         )
-        kwargs.setdefault("match", lambda val: 0 if isinstance(val, tuple) else 1)
-
-        super().__init__(**kwargs)
 
     def from_html_vars(self, varprefix: str) -> str:
         value: Final[UploadedFile] = super().from_html_vars(varprefix)
@@ -6609,40 +6634,51 @@ class UploadOrPasteTextFile(Alternative):
 
 
 class TextOrRegExp(Alternative):
-    def __init__(self, **kwargs):
-        allow_empty = kwargs.pop("allow_empty", True)
-
-        if "text_valuespec" in kwargs:
-            vs_text = kwargs.pop("text_valuespec")
-        else:
-            vs_text = TextInput(
-                title=_("Explicit match"),
-                allow_empty=allow_empty,
-            )
-
+    def __init__(  # pylint: disable=redefined-builtin
+        self,
+        *,
+        text_valuespec: _Optional[ValueSpec] = None,
+        allow_empty: bool = True,
+        # Alternative
+        style: str = "",  # Unused argument left here to remain compatible with user extensions.
+        show_alternative_title: bool = False,
+        on_change: _Optional[str] = None,
+        # ValueSpec
+        title: _Optional[str] = None,
+        help: _Optional[ValueSpecHelp] = None,
+        default_value: ValueSpecDefault[Any] = DEF_VALUE,
+        validate: _Optional[ValueSpecValidateFunc[Any]] = None,
+    ):
+        vs_text = (
+            TextInput(title=_("Explicit match"), allow_empty=allow_empty)
+            if text_valuespec is None
+            else text_valuespec
+        )
         vs_regex = RegExp(
             mode=RegExp.prefix,
             title=_("Regular expression match"),
             allow_empty=allow_empty,
         )
-
-        kwargs.update(
-            {
-                "elements": [
-                    vs_text,
-                    Transform(
-                        valuespec=vs_regex,
-                        forth=lambda v: v[1:],  # strip of "~"
-                        back=lambda v: "~" + v,  # add "~"
-                    ),
-                ],
-                # Use RegExp field when value is prefixed with "~"
-                "match": lambda v: 1 if v and v[0] == "~" else 0,
-                "orientation": "horizontal",
-            }
+        super().__init__(
+            elements=[
+                vs_text,
+                Transform(
+                    valuespec=vs_regex,
+                    forth=lambda v: v[1:],  # strip off "~"
+                    back=lambda v: "~" + v,  # add "~"
+                ),
+            ],
+            # Use RegExp field when value is prefixed with "~"
+            match=lambda v: 1 if v and v[0] == "~" else 0,
+            style=style,
+            show_alternative_title=show_alternative_title,
+            on_change=on_change,
+            orientation="horizontal",
+            title=title,
+            help=help,
+            default_value=default_value,
+            validate=validate,
         )
-
-        super().__init__(**kwargs)
 
 
 TextOrRegExpUnicode = TextOrRegExp  # alias added in 2.1.0 for compatibility
@@ -7131,18 +7167,36 @@ class IconSelector(ValueSpec):
             raise MKUserError(varprefix, _("The selected emblem does not exist."))
 
 
-# TODO: Cleanup kwargs
-def ListOfTimeRanges(**kwargs):
+def ListOfTimeRanges(  # pylint: disable=redefined-builtin
+    *,
+    # ListOf
+    totext: _Optional[str] = None,
+    text_if_empty: _Optional[str] = None,
+    allow_empty: bool = True,
+    empty_text: _Optional[str] = None,
+    sort_by: _Optional[int] = None,
+    # ValueSpec
+    title: _Optional[str] = None,
+    help: _Optional[ValueSpecHelp] = None,
+    default_value: ValueSpecDefault[ListOfModel[T]] = DEF_VALUE,
+    validate: _Optional[ValueSpecValidateFunc[ListOfModel[T]]] = None,
+):
     return ListOf(
-        valuespec=TimeofdayRange(
-            allow_empty=True,
-        ),
-        movable=False,
+        valuespec=TimeofdayRange(allow_empty=True),
+        magic="#!#",
         add_label=_("Add time range"),
         del_label=_("Delete time range"),
+        movable=False,
         style=ListOf.Style.FLOATING,
-        magic="#!#",
-        **kwargs,
+        totext=totext,
+        text_if_empty=text_if_empty,
+        allow_empty=allow_empty,
+        empty_text=empty_text,
+        sort_by=sort_by,
+        title=title,
+        help=help,
+        default_value=default_value,
+        validate=validate,
     )
 
 
@@ -7187,12 +7241,23 @@ def Fontsize(  # pylint: disable=redefined-builtin
 
 
 class Color(ValueSpec):
-    def __init__(self, **kwargs):
-        kwargs["regex"] = "#[0-9]{3,6}"
-        kwargs["regex_error"] = _("The color needs to be given in hex format.")
-        super().__init__(**kwargs)
-        self._on_change = kwargs.get("on_change")
-        self._allow_empty = kwargs.get("allow_empty", True)
+    def __init__(  # pylint: disable=redefined-builtin
+        self,
+        *,
+        on_change: _Optional[str] = None,
+        allow_empty: bool = True,
+        # ValueSpec
+        title: _Optional[str] = None,
+        help: _Optional[ValueSpecHelp] = None,
+        default_value: ValueSpecDefault[T] = DEF_VALUE,
+        validate: _Optional[ValueSpecValidateFunc[T]] = None,
+    ):
+        # TODO: Should this actually subclass TextInput?
+        # kwargs["regex"] = "#[0-9]{3,6}"
+        # kwargs["regex_error"] = _("The color needs to be given in hex format.")
+        super().__init__(title=title, help=help, default_value=default_value, validate=validate)
+        self._on_change = on_change
+        self._allow_empty = allow_empty
 
     def allow_empty(self) -> bool:
         return self._allow_empty

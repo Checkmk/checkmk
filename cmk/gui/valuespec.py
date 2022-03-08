@@ -7412,8 +7412,23 @@ class SSHKeyPair(ValueSpec):
         return ":".join(a + b for a, b in zip(fp_plain[::2], fp_plain[1::2]))
 
 
-# TODO: Cleanup kwargs
-def SchedulePeriod(from_end=True, **kwargs):
+def SchedulePeriod(  # pylint: disable=redefined-builtin
+    *,
+    from_end=True,
+    # CascadingDropdown
+    label: _Optional[str] = None,
+    separator: str = ", ",
+    sorted: bool = True,
+    render: "_Optional[CascadingDropdown.Render]" = None,
+    no_elements_text: _Optional[str] = None,
+    no_preselect_title: _Optional[str] = None,
+    render_sub_vs_page_name: _Optional[str] = None,
+    render_sub_vs_request_vars: _Optional[dict] = None,
+    # ValueSpec
+    help: _Optional[ValueSpecHelp] = None,
+    default_value: ValueSpecDefault[CascadingDropdownChoiceValue] = DEF_VALUE,
+    validate: _Optional[ValueSpecValidateFunc[CascadingDropdownChoiceValue]] = None,
+):
     if from_end:
         from_end_choice: list[CascadingDropdownChoice] = [
             (
@@ -7435,7 +7450,20 @@ def SchedulePeriod(from_end=True, **kwargs):
         ),
     ]
     return CascadingDropdown(
-        title=_("Period"), orientation="horizontal", choices=dwm + from_end_choice, **kwargs
+        choices=dwm + from_end_choice,
+        label=label,
+        separator=separator,
+        sorted=sorted,
+        orientation="horizontal",
+        render=render,
+        no_elements_text=no_elements_text,
+        no_preselect_title=no_preselect_title,
+        render_sub_vs_page_name=render_sub_vs_page_name,
+        render_sub_vs_request_vars=render_sub_vs_request_vars,
+        title=_("Period"),
+        help=help,
+        default_value=default_value,
+        validate=validate,
     )
 
 
@@ -7535,14 +7563,41 @@ class AjaxFetchCA(AjaxPage):
 
 
 class CAorCAChain(UploadOrPasteTextFile):
-    def __init__(self, **args):
-        args.setdefault("title", _("Certificate Chain (Root / Intermediate Certificate)"))
-        args.setdefault("file_title", _("CRT/PEM File"))
-        args["elements"] = [_CAInput()]
-        args["match"] = (
-            lambda val: 2 if not isinstance(val, tuple) else (0 if isinstance(val[1], int) else 1)
+    def __init__(  # pylint: disable=redefined-builtin
+        self,
+        *,
+        # UploadOrPasteTextFile
+        file_title: _Optional[str] = None,
+        allow_empty: bool = False,
+        # Alternative
+        style: str = "",  # Unused argument left here to remain compatible with user extensions.
+        show_alternative_title: bool = False,
+        on_change: _Optional[str] = None,
+        orientation: str = "vertical",
+        # ValueSpec
+        title: _Optional[str] = None,
+        help: _Optional[ValueSpecHelp] = None,
+        default_value: ValueSpecDefault[Any] = DEF_VALUE,
+        validate: _Optional[ValueSpecValidateFunc[Any]] = None,
+    ):
+        super().__init__(
+            file_title=_("CRT/PEM File") if file_title is None else file_title,
+            allow_empty=allow_empty,
+            elements=[_CAInput()],
+            match=lambda val: 2
+            if not isinstance(val, tuple)
+            else (0 if isinstance(val[1], int) else 1),
+            style=style,
+            show_alternative_title=show_alternative_title,
+            on_change=on_change,
+            orientation=orientation,
+            title=_("Certificate Chain (Root / Intermediate Certificate)")
+            if title is None
+            else title,
+            help=help,
+            default_value=default_value,
+            validate=validate,
         )
-        super().__init__(**args)
 
     def _validate_value(self, value: Any, varprefix: str) -> None:
         try:
@@ -7596,29 +7651,54 @@ class CAorCAChain(UploadOrPasteTextFile):
         return html.render_table(HTML().join(rows))
 
 
-# TODO: Cleanup kwargs
-def ListOfCAs(**args):
-    args.setdefault("title", _("CAs to accept"))
-    args.setdefault(
-        "help",
-        _(
+def ListOfCAs(  # pylint: disable=redefined-builtin
+    *,
+    # ListOf
+    magic: str = "@!@",
+    add_label: _Optional[str] = None,
+    del_label: _Optional[str] = None,
+    style: "_Optional[ListOf.Style]" = None,
+    totext: _Optional[str] = None,
+    text_if_empty: _Optional[str] = None,
+    allow_empty: bool = False,  # NOTE: Different!
+    empty_text: _Optional[str] = None,
+    sort_by: _Optional[int] = None,
+    # ValueSpec
+    title: _Optional[str] = None,
+    help: _Optional[ValueSpecHelp] = None,
+    default_value: ValueSpecDefault[ListOfModel[T]] = DEF_VALUE,
+    validate: _Optional[ValueSpecValidateFunc[ListOfModel[T]]] = None,
+):
+    return ListOf(
+        valuespec=CAorCAChain(),
+        magic=magic,
+        add_label=_("Add new CA certificate or chain") if add_label is None else add_label,
+        del_label=del_label,
+        movable=False,
+        style=style,
+        totext=totext,
+        text_if_empty=text_if_empty,
+        allow_empty=allow_empty,
+        empty_text=_("You need to enter at least one CA. Otherwise no SSL connection can be made.")
+        if empty_text is None
+        else empty_text,
+        sort_by=sort_by,
+        title=_("CAs to accept") if title is None else title,
+        help=_(
             "Only accepting HTTPS connections with a server which certificate "
             "is signed with one of the CAs that are listed here. That way it is guaranteed "
             "that it is communicating only with the authentic server. "
             "If you use self signed certificates for you server then enter that certificate "
             "here."
-        ),
+        )
+        if help is None
+        else help,
+        default_value=default_value,
+        validate=validate,
     )
-    args.setdefault("add_label", _("Add new CA certificate or chain"))
-    args.setdefault(
-        "empty_text",
-        _("You need to enter at least one CA. Otherwise no SSL connection can be made."),
-    )
-    args.setdefault("allow_empty", False)
-    return ListOf(valuespec=CAorCAChain(), movable=False, **args)
 
 
-# TODO: Change to factory, Cleanup kwargs
+# TODO: Change to factory
 class SetupSiteChoice(DropdownChoice):
     """Select configured sites in distributed setups
 
@@ -7626,22 +7706,53 @@ class SetupSiteChoice(DropdownChoice):
     from this list.
     """
 
-    def __init__(self, **kwargs):
-        kwargs.setdefault("title", _("Site"))
-        kwargs.setdefault("default_value", self._site_default_value)
-        kwargs.setdefault(
-            "invalid_choice_error", _("The configured site is not known to this site.")
+    def __init__(  # pylint: disable=redefined-builtin
+        self,
+        *,
+        # DropdownChoice
+        sorted: bool = False,
+        label: _Optional[str] = None,
+        help_separator: _Optional[str] = None,
+        prefix_values: bool = False,
+        empty_text: _Optional[str] = None,
+        invalid_choice_error: _Optional[str] = None,
+        no_preselect_title: _Optional[str] = None,
+        on_change: _Optional[str] = None,
+        read_only: bool = False,
+        encode_value: bool = True,
+        html_attrs: _Optional[HTMLTagAttributes] = None,
+        # ValueSpec
+        title: _Optional[str] = None,
+        help: _Optional[ValueSpecHelp] = None,
+        default_value: ValueSpecDefault[DropdownChoiceModel] = DEF_VALUE,
+        validate: _Optional[ValueSpecValidateFunc[DropdownChoiceModel]] = None,
+        deprecated_choices: Sequence[DropdownChoiceModel] = (),
+    ):
+        super().__init__(
+            choices=sites.get_activation_site_choices,
+            sorted=sorted,
+            label=label,
+            help_separator=help_separator,
+            prefix_values=prefix_values,
+            empty_text=empty_text,
+            invalid_choice="complain",
+            invalid_choice_title=_("Unknown site (%s)"),
+            invalid_choice_error=_("The configured site is not known to this site.")
+            if invalid_choice_error is None
+            else invalid_choice_error,
+            no_preselect_title=no_preselect_title,
+            on_change=on_change,
+            read_only=read_only,
+            encode_value=encode_value,
+            html_attrs=html_attrs,
+            title=_("Site") if title is None else title,
+            help=help,
+            default_value=self._site_default_value
+            if isinstance(default_value, Sentinel)
+            else default_value,
+            validate=validate,
+            deprecated_choices=deprecated_choices,
         )
-
-        kwargs.update(
-            {
-                "choices": sites.get_activation_site_choices,
-                "invalid_choice": "complain",
-                "invalid_choice_title": _("Unknown site (%s)"),
-            }
-        )
-
-        super().__init__(**kwargs)
 
     def _site_default_value(self):
         if sites.is_wato_slave_site():
@@ -7663,9 +7774,29 @@ def MonitoringSiteChoice():
     )
 
 
-# TODO: Cleanup kwargs
-def LogLevelChoice(**kwargs):
-    kwargs.setdefault("default_value", logging.INFO)
+def LogLevelChoice(  # pylint: disable=redefined-builtin
+    *,
+    # DropdownChoice
+    sorted: bool = False,
+    label: _Optional[str] = None,
+    help_separator: _Optional[str] = None,
+    prefix_values: bool = False,
+    empty_text: _Optional[str] = None,
+    invalid_choice: _Optional[str] = "complain",
+    invalid_choice_title: _Optional[str] = None,
+    invalid_choice_error: _Optional[str] = None,
+    no_preselect_title: _Optional[str] = None,
+    on_change: _Optional[str] = None,
+    read_only: bool = False,
+    encode_value: bool = True,
+    html_attrs: _Optional[HTMLTagAttributes] = None,
+    # ValueSpec
+    title: _Optional[str] = None,
+    help: _Optional[ValueSpecHelp] = None,
+    default_value: ValueSpecDefault[DropdownChoiceModel] = DEF_VALUE,
+    validate: _Optional[ValueSpecValidateFunc[DropdownChoiceModel]] = None,
+    deprecated_choices: Sequence[DropdownChoiceModel] = (),
+):
     return DropdownChoice(
         choices=[
             (logging.CRITICAL, _("Critical")),
@@ -7675,7 +7806,24 @@ def LogLevelChoice(**kwargs):
             (cmk.utils.log.VERBOSE, _("Verbose")),
             (logging.DEBUG, _("Debug")),
         ],
-        **kwargs,
+        sorted=sorted,
+        label=label,
+        help_separator=help_separator,
+        prefix_values=prefix_values,
+        empty_text=empty_text,
+        invalid_choice=invalid_choice,
+        invalid_choice_title=invalid_choice_title,
+        invalid_choice_error=invalid_choice_error,
+        no_preselect_title=no_preselect_title,
+        on_change=on_change,
+        read_only=read_only,
+        encode_value=encode_value,
+        html_attrs=html_attrs,
+        title=title,
+        help=help,
+        default_value=logging.INFO if isinstance(default_value, Sentinel) else default_value,
+        validate=validate,
+        deprecated_choices=deprecated_choices,
     )
 
 

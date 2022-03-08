@@ -25,8 +25,7 @@ def agent_kube_arguments(
     args.extend(["--token", passwordstore_get_cmdline("%s", params["token"])])
 
     args.append("--monitored-objects")
-    for monitored_object in params.get("monitored-objects", ["nodes", "deployments", "pods"]):
-        args.append(monitored_object)
+    args.extend(params["monitored-objects"])
 
     if "namespaces" in params:
         namespace_filter_option, filter_patterns = params["namespaces"]

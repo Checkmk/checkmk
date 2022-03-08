@@ -12,6 +12,8 @@ from tests.testlib import SpecialAgent
 
 from cmk.base.config import SpecialAgentInfoFunctionResult
 
+from cmk.gui.plugins.wato import datasource_programs
+
 from cmk.special_agents.agent_kube import make_api_client, parse_arguments
 
 pytestmark = pytest.mark.checks
@@ -35,6 +37,7 @@ pytestmark = pytest.mark.checks
                     "verify-cert": False,
                     "timeout": {"connect": 10, "read": 12},
                 },
+                "monitored-objects": ["pods"],
             },
             [
                 "--cluster",
@@ -42,8 +45,6 @@ pytestmark = pytest.mark.checks
                 "--token",
                 "cluster",
                 "--monitored-objects",
-                "nodes",
-                "deployments",
                 "pods",
                 "--api-server-endpoint",
                 "https://11.211.3.32",
@@ -208,6 +209,7 @@ def test_parse_namespace_patterns():
                 "verify-cert": False,
                 "proxy": ("no_proxy", "no_proxy"),
             },
+            "monitored-objects": ["pods"],
             "namespaces": ("namespace-include-patterns", ["default", "kube-system"]),
         },
         "host",
@@ -219,8 +221,6 @@ def test_parse_namespace_patterns():
         "--token",
         "token",
         "--monitored-objects",
-        "nodes",
-        "deployments",
         "pods",
         "--namespace-include-patterns",
         "default",
@@ -249,6 +249,7 @@ def test_parse_namespace_patterns():
                     "endpoint": "https://127.0.0.1:20026",
                     "verify-cert": False,
                 },
+                "monitored-objects": ["pods"],
             },
             "https://127.0.0.1",
         ),
@@ -265,6 +266,7 @@ def test_parse_namespace_patterns():
                     "endpoint": "https://127.0.0.1:20026",
                     "verify-cert": False,
                 },
+                "monitored-objects": ["pods"],
             },
             "http://127.0.0.1:8080",
         ),
@@ -281,6 +283,7 @@ def test_parse_namespace_patterns():
                     "endpoint": "https://127.0.0.1:20026",
                     "verify-cert": True,
                 },
+                "monitored-objects": ["pods"],
             },
             "http://localhost:8080",
         ),
@@ -313,6 +316,7 @@ def test_client_configuration_host(params: Mapping[str, Any], host) -> None:
                     "verify-cert": False,
                     "proxy": ("no_proxy", "no_proxy"),
                 },
+                "monitored-objects": ["pods"],
             },
             "NO_PROXY",
         ),
@@ -365,3 +369,15 @@ def test_proxy_arguments(params, expected_proxy_arg):
             assert expected_proxy_arg == argument_after
             return
     assert False, "--api-server-proxy is missing"
+
+
+def test_valuespec_matches_agent_kube():
+    """agent_kube_arguments needs to be updated, if you remove any of the two assertions below."""
+
+    valuespec = datasource_programs._valuespec_special_agents_kube()
+    assert "monitored-objects" in valuespec._required_keys
+    for element in valuespec._get_elements():
+        if element[0] == "monitored-objects":
+            assert not element[1]._allow_empty
+            return
+    assert False, "Missing 'monitored-objects' in _valuespec_special_agents_kube"

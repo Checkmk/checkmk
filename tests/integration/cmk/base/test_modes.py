@@ -677,7 +677,7 @@ def test_check(execute):
     for opt in opts:
         p = execute(["cmk"] + opt + ["modes-test-host"])
         assert p.returncode == 0, on_failure(p)
-        assert p.stdout.startswith("[agent] Version:")
+        assert p.stdout.startswith("[agent] Success")
 
 
 def test_check_verbose_perfdata(execute):
@@ -685,7 +685,7 @@ def test_check_verbose_perfdata(execute):
     assert p.returncode == 0, on_failure(p)
     assert "Temperature Zone 0" in p.stdout
     assert "temp=32.4;" in p.stdout
-    assert "[agent] Version:" in p.stdout
+    assert "[agent] Success" in p.stdout
 
 
 def test_check_verbose_only_check(execute):
@@ -693,7 +693,7 @@ def test_check_verbose_only_check(execute):
     assert p.returncode == 0, on_failure(p)
     assert "Temperature Zone 0" in p.stdout
     assert "Interface 2" not in p.stdout
-    assert "[agent] Version:" in p.stdout
+    assert "[agent] Success" in p.stdout
 
 
 # .

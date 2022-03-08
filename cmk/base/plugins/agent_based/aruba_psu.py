@@ -18,10 +18,10 @@ from .agent_based_api.v1 import (
     Result,
     Service,
     SNMPTree,
-    startswith,
     State,
 )
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
+from .utils.aruba import DETECT_2930M
 from .utils.temperature import check_temperature, TempParamDict, TempParamType
 
 
@@ -97,7 +97,7 @@ def parse_aruba_psu(string_table: StringTable) -> Section:
 register.snmp_section(
     name="aruba_psu",
     detect=all_of(
-        startswith(".1.3.6.1.2.1.1.1.0", "Aruba"),
+        DETECT_2930M,
         exists(".1.3.6.1.4.1.11.2.14.11.5.1.55.1.1.1.*"),
     ),
     parse_function=parse_aruba_psu,

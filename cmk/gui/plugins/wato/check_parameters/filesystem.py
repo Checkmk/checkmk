@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import copy
-from typing import Any, Dict, List, Mapping
+from typing import Any, Dict, List, Mapping, Sequence, Tuple, Union
 
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
@@ -59,7 +59,7 @@ def _validate_discovery_filesystem_params(value, varprefix):
         )
 
 
-def _transform_discovery_filesystem_params(params: Mapping[str, Any]) -> dict[str, Any]:
+def _transform_discovery_filesystem_params(params: Mapping[str, Any]) -> Dict[str, Any]:
     p: Dict[str, Any] = dict(copy.deepcopy(params))
     include_volume_name = p.pop("include_volume_name", None)
 
@@ -161,7 +161,9 @@ rulespec_registry.register(
 FILESYSTEM_GROUPS_WRAPPER_KEY = "groups"
 
 
-def _transform_filesystem_groups(grouping):
+def _transform_filesystem_groups(
+    params: Union[Sequence[Tuple], Sequence[Mapping[str, Any]], Dict[str, Any]]
+) -> Dict[str, Any]:
     """
     Old format:
         [(group_name, include_pattern), (group_name, include_pattern), ...]
@@ -184,15 +186,17 @@ def _transform_filesystem_groups(grouping):
           patterns_exclude: [exclude_pattern, exclude_pattern, ...]},
          ...]}
     """
+    grouping = copy.deepcopy(params)
     if isinstance(grouping, dict) and FILESYSTEM_GROUPS_WRAPPER_KEY in grouping:
         return grouping
 
-    if not grouping or isinstance(grouping[0], dict):
+    if not grouping or (isinstance(grouping, list) and isinstance(grouping[0], dict)):
         return {FILESYSTEM_GROUPS_WRAPPER_KEY: grouping}
 
     grouping_dict: Dict[str, List[str]] = {}
-    for group_name, pattern_inclde in grouping:
-        grouping_dict.setdefault(group_name, []).append(pattern_inclde)
+    if isinstance(grouping, list) and isinstance(grouping[0], tuple):
+        for group_name, pattern_include in grouping:
+            grouping_dict.setdefault(group_name, []).append(pattern_include)
 
     return {
         FILESYSTEM_GROUPS_WRAPPER_KEY: [

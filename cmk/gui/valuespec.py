@@ -6501,16 +6501,32 @@ class FileUpload(ValueSpec):
 
 
 class ImageUpload(FileUpload):
-    def __init__(
+    def __init__(  # pylint: disable=redefined-builtin
         self,
         *,
         max_size: _Optional[tuple[int, int]] = None,
         show_current_image: bool = False,
-        **kwargs,
+        # FileUpload
+        allow_empty: bool = False,
+        allowed_extensions: _Optional[Iterable[str]] = None,
+        allow_empty_content: bool = True,
+        # ValueSpec
+        title: _Optional[str] = None,
+        help: _Optional[ValueSpecHelp] = None,
+        default_value: ValueSpecDefault[T] = DEF_VALUE,
+        validate: _Optional[ValueSpecValidateFunc[T]] = None,
     ) -> None:
         self._max_size: Final = max_size
         self._show_current_image: Final = show_current_image
-        super().__init__(**kwargs)
+        super().__init__(
+            allow_empty=allow_empty,
+            allowed_extensions=allowed_extensions,
+            allow_empty_content=allow_empty_content,
+            title=title,
+            help=help,
+            default_value=default_value,
+            validate=validate,
+        )
 
     def render_input(self, varprefix: str, value: _Optional[bytes]) -> None:
         if isinstance(value, str):
@@ -6740,9 +6756,29 @@ class Labels(ValueSpec):
         return json_value
 
 
-def SingleLabel(world, label_source=None, **kwargs):
+# TODO: Nuke this, there is only a single call site, and we just fix a single kwarg.
+# Is it used in user code?
+def SingleLabel(  # pylint: disable=redefined-builtin
+    *,
+    # Labels
+    world: Labels.World,
+    label_source: _Optional[Labels.Source] = None,
+    # ValueSpec
+    title: _Optional[str] = None,
+    help: _Optional[ValueSpecHelp] = None,
+    default_value: ValueSpecDefault[dict[str, Any]] = DEF_VALUE,
+    validate: _Optional[ValueSpecValidateFunc[dict[str, Any]]] = None,
+):
     """Input element for a single label"""
-    return Labels(world=world, label_source=label_source, max_labels=1, **kwargs)
+    return Labels(
+        world=world,
+        label_source=label_source,
+        max_labels=1,
+        title=title,
+        help=help,
+        default_value=default_value,
+        validate=validate,
+    )
 
 
 @page_registry.register_page("ajax_autocomplete_labels")
@@ -6776,21 +6812,24 @@ class PageAutocompleteLabels(AjaxPage):
 
 
 class IconSelector(ValueSpec):
-    def __init__(
+    def __init__(  # pylint: disable=redefined-builtin
         self,
         *,
         allow_empty=True,
         empty_img="empty",
         show_builtin_icons=True,
         with_emblem=True,
-        **kwargs,
+        # ValueSpec
+        title: _Optional[str] = None,
+        help: _Optional[ValueSpecHelp] = None,
+        default_value: ValueSpecDefault[T] = DEF_VALUE,
+        validate: _Optional[ValueSpecValidateFunc[T]] = None,
     ):
-        super().__init__(**kwargs)
+        super().__init__(title=title, help=help, default_value=default_value, validate=validate)
         self._allow_empty = allow_empty
         self._empty_img = empty_img
         self._show_builtin_icons = show_builtin_icons
         self._with_emblem = with_emblem
-
         self._exclude = [
             "trans",
             "empty",
@@ -7111,11 +7150,40 @@ def ListOfTimeRanges(**kwargs):
 TimeofdayRanges = ListOfTimeRanges
 
 
-# TODO: Cleanup kwargs
-def Fontsize(**kwargs):
-    kwargs.setdefault("title", _("Font size"))
-    kwargs.setdefault("default_value", 10)
-    return Float(size=5, unit=_("pt"), **kwargs)
+def Fontsize(  # pylint: disable=redefined-builtin
+    *,
+    # Float
+    decimal_separator: str = ".",
+    allow_int: bool = False,
+    # Integer
+    minvalue: _Optional[float] = None,
+    maxvalue: _Optional[float] = None,
+    label: _Optional[str] = None,
+    thousand_sep: _Optional[str] = None,
+    display_format: str = "%.2f",
+    align: str = "left",
+    # ValueSpec
+    title: _Optional[str] = None,
+    help: _Optional[ValueSpecHelp] = None,
+    default_value: ValueSpecDefault[float] = 10,  # NOTE: Different!
+    validate: _Optional[ValueSpecValidateFunc[float]] = None,
+):
+    return Float(
+        decimal_separator=decimal_separator,
+        allow_int=allow_int,
+        size=5,
+        minvalue=minvalue,
+        maxvalue=maxvalue,
+        label=label,
+        unit=_("pt"),
+        thousand_sep=thousand_sep,
+        display_format=display_format,
+        align=align,
+        title=_("Font size") if title is None else title,
+        help=help,
+        default_value=default_value,
+        validate=validate,
+    )
 
 
 class Color(ValueSpec):

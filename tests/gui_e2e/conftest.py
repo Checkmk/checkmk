@@ -12,7 +12,7 @@ import os
 import pytest
 from playwright.sync_api import Page
 
-from tests.testlib.playwright import PPage
+from tests.testlib.playwright.helpers import PPage
 from tests.testlib.site import get_site_factory, Site
 from tests.testlib.version import CMKVersion
 

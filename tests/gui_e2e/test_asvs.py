@@ -12,7 +12,7 @@ Currently we aim for V4.0.3 L1
 See:
 - https://owasp.org/www-project-application-security-verification-standard/"""
 
-from tests.testlib.playwright import PPage
+from tests.testlib.playwright.helpers import PPage
 
 
 def _change_password(page: PPage, old_password: str, new_password: str) -> None:

@@ -1558,6 +1558,13 @@ def parse_and_group_containers_performance_metrics(
     containers_rate_metrics = determine_rate_metrics(
         current_cycle_store.containers, previous_cycle_store.containers
     )
+
+    # The agent will store the latest counter values returned by the collector overwriting the
+    # previous ones. The collector will return the same metric values for a certain time interval
+    # while the values are not updated or outdated. This will result in no rate value if the agent
+    # is polled too frequently (no performance section for the checks). All cases where no
+    # performance section can be generated should be handled on the check side (reusing the same
+    # value, etc.)
     persist_containers_store(current_cycle_store, path=AGENT_TMP_PATH, file_name=store_file_name)
     containers_metrics = group_metrics_by_container(
         performance_metrics, omit_metrics=relevant_counter_metrics

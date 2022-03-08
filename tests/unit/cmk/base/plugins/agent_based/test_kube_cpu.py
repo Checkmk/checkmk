@@ -8,12 +8,18 @@
 
 import itertools
 import json
+from typing import Dict, Optional, Tuple
 
 import pytest
 
+from cmk.base.api.agent_based.type_defs import StringTable
 from cmk.base.plugins.agent_based import kube_cpu
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, render, Result, State
 from cmk.base.plugins.agent_based.utils import kube_resources
+
+ONE_MINUTE = 60
+ONE_HOUR = 60 * ONE_MINUTE
+TIMESTAMP = 359
 
 USAGE = 0.08917935971914392879  # value for cpu usage (Germain & Cunningham)
 LEVELS = 60.0, 90.0  # default values for upper levels for request and limit
@@ -26,6 +32,7 @@ ALLOCATABLE_WARN = ALLOCATABLE / 0.6  # value for allocatable to set state to WA
 ALLOCATABLE_CRIT = ALLOCATABLE / 0.9  # value for allocatable to set state to CRIT
 LEVELS_ALLOCATABLE = USAGE  # default values for upper levels for allocatable
 
+
 # Resources
 LIMIT = 2 * OK
 REQUEST = OK
@@ -33,6 +40,23 @@ COUNT_TOTAL = 2
 COUNT_UNSPECIFIED_REQUESTS = 0
 COUNT_UNSPECIFIED_LIMITS = 0
 COUNT_ZEROED_LIMITS = 0
+
+
+@pytest.fixture
+def usage_cycle_age() -> int:
+    return 2
+
+
+@pytest.fixture
+def value_store(
+    usage_cycle_age: int, usage_string_table: StringTable
+) -> Dict[str, Tuple[float, str]]:
+    return {
+        "cpu_usage": (
+            TIMESTAMP - ONE_MINUTE * usage_cycle_age,
+            kube_resources.parse_performance_usage(usage_string_table).json(),
+        )
+    }
 
 
 @pytest.fixture
@@ -82,7 +106,7 @@ def usage_string_table_element(usage_usage):
 
 
 @pytest.fixture
-def usage_string_table(usage_string_table_element):
+def usage_string_table(usage_string_table_element) -> StringTable:
     return [[json.dumps(usage_string_table_element)]]
 
 
@@ -360,3 +384,18 @@ def test_overview_limits_contained(usage_section, check_result, resources_sectio
     limits_results = [r for r in results if "Limit" in r.summary]
     assert len(limits_results) == 1
     assert [r for r in results if overview_limits_ignored in r.summary] == limits_results
+
+
+@pytest.mark.parametrize("usage_cycle_age", [1])
+@pytest.mark.parametrize("usage_section", [None])
+def test_stored_usage_value(usage_section: Optional[kube_cpu.PerformanceUsage], value_store):
+    performance_cpu = kube_cpu.performance_cpu(usage_section, TIMESTAMP, value_store)
+    assert performance_cpu is not None
+
+
+@pytest.mark.parametrize("usage_section", [None])
+def test_stored_outdated_usage_value(
+    usage_section: Optional[kube_cpu.PerformanceUsage], value_store
+):
+    performance_cpu = kube_cpu.performance_cpu(usage_section, TIMESTAMP, value_store)
+    assert performance_cpu is None

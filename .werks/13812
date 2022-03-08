@@ -1,0 +1,17 @@
+Title: KUBE kube_cpu use latest cpu usage value when no new data is available
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1646752523
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b2
+
+The check returned a 0 cpu usage value when the Kubernetes special
+agent was polled too frequently. This werk fixes this behaviour
+and returns the last reported usage value for a time interval of
+60 seconds if no new data is available from the agent. If the last
+reported value is older than 60 seconds than the usage value will
+be omitted.

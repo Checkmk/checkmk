@@ -48,3 +48,11 @@ pub const ENV_PROGRAM_DATA: &str = "ProgramData";
 pub const MIN_WIN_VERSION_MAJOR: u64 = 6;
 #[cfg(windows)]
 pub const MIN_WIN_VERSION_MINOR: u64 = 1;
+
+// Log Rotation default parameters
+pub mod log {
+    use flexi_logger::{Cleanup, Criterion, Naming};
+    pub const FILE_MAX_SIZE: Criterion = Criterion::Size(500000);
+    pub const FILE_NAMING: Naming = Naming::Numbers;
+    pub const FILE_CLEANUP: Cleanup = Cleanup::KeepLogFiles(5);
+}

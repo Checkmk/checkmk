@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import time
-from typing import Literal, Optional, Tuple, TypedDict, Union
+from typing import Any, Literal, MutableMapping, Optional, Tuple, TypedDict, Union
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     check_levels,
@@ -35,7 +35,16 @@ class Params(TypedDict):
 _DEFAULT_PARAMS = Params(restart_count="no_levels", restart_rate="no_levels")
 
 
-def check(params: Params, section: PodContainers) -> CheckResult:
+def check_kube_pod_restarts(params: Params, section: PodContainers) -> CheckResult:
+    yield from _check(params, section, int(time.time()), get_value_store())
+
+
+def _check(
+    params: Params,
+    section: PodContainers,
+    curr_timestamp_seconds: int,
+    host_value_store: MutableMapping[str, Any],
+) -> CheckResult:
     restart_count = sum(container.restart_count for container in section.containers.values())
     yield from check_levels(
         restart_count,
@@ -44,7 +53,11 @@ def check(params: Params, section: PodContainers) -> CheckResult:
         render_func=str,
         label="Total",
     )
-    restart_rate = _calc_restart_rate_in_last_hour(restart_count)
+    restart_rate = _calc_restart_rate_in_last_hour(
+        restart_count,
+        curr_timestamp_seconds,
+        host_value_store,
+    )
     if restart_rate is not None:
         yield from check_levels(
             restart_rate,
@@ -57,9 +70,11 @@ def check(params: Params, section: PodContainers) -> CheckResult:
         )
 
 
-def _calc_restart_rate_in_last_hour(restart_count: int) -> Optional[int]:
-    curr_timestamp_seconds = int(time.time())
-    host_value_store = get_value_store()
+def _calc_restart_rate_in_last_hour(
+    restart_count: int,
+    curr_timestamp_seconds: int,
+    host_value_store: MutableMapping[str, Any],
+) -> Optional[int]:
     restart_count_list = host_value_store.setdefault("restart_count_list", [])
     while restart_count_list and restart_count_list[0][0] <= curr_timestamp_seconds - ONE_HOUR:
         restart_count_list.pop(0)
@@ -74,7 +89,7 @@ register.check_plugin(
     service_name="Restarts",
     sections=["kube_pod_containers"],
     discovery_function=discovery,
-    check_function=check,
+    check_function=check_kube_pod_restarts,
     check_default_parameters=_DEFAULT_PARAMS,
     check_ruleset_name="kube_pod_restarts",
 )

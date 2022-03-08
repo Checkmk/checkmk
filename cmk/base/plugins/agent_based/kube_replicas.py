@@ -6,7 +6,7 @@
 
 import json
 import time
-from typing import Mapping, Optional, Tuple
+from typing import Any, Mapping, MutableMapping, Optional, Tuple
 
 from .agent_based_api.v1 import (
     check_levels,
@@ -85,6 +85,23 @@ def check_kube_replicas(
     section_kube_replicas: Optional[Replicas],
     section_kube_deployment_strategy: Optional[DeploymentStrategy],
 ) -> CheckResult:
+    yield from _check_kube_replicas(
+        params,
+        section_kube_replicas,
+        section_kube_deployment_strategy,
+        now=time.time(),
+        value_store=get_value_store(),
+    )
+
+
+def _check_kube_replicas(
+    params: Mapping[str, VSResultAge],
+    section_kube_replicas: Optional[Replicas],
+    section_kube_deployment_strategy: Optional[DeploymentStrategy],
+    *,
+    now: float,
+    value_store: MutableMapping[str, Any],
+) -> CheckResult:
 
     if section_kube_replicas is None:
         return
@@ -105,9 +122,6 @@ def check_kube_replicas(
     )
     yield Metric("kube_ready_replicas", section_kube_replicas.ready, boundaries=metric_boundary)
     yield Metric("kube_updated_replicas", section_kube_replicas.updated, boundaries=metric_boundary)
-
-    value_store = get_value_store()
-    now = time.time()
 
     all_ready = section_kube_replicas.ready == section_kube_replicas.replicas
     not_ready_started_ts = (

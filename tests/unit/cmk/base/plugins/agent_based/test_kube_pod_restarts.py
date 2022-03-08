@@ -30,19 +30,6 @@ RESTART_COUNT_LEVELS = WARN * NUMBER_OF_CONTAINERS, CRIT * NUMBER_OF_CONTAINERS
 RESTART_RATE_LEVELS = WARN * NUMBER_OF_CONTAINERS * 60, CRIT * NUMBER_OF_CONTAINERS * 60
 
 
-@pytest.fixture(autouse=True)
-def time(mocker):
-    def time_side_effect():
-        timestamp = TIMESTAMP
-        while True:
-            yield timestamp
-            timestamp += ONE_MINUTE
-
-    time_mock = mocker.Mock(side_effect=time_side_effect())
-    mocker.patch.object(kube_pod_restarts, "time", mocker.Mock(time=time_mock))
-    return time_mock
-
-
 @pytest.fixture
 def restart_count():
     return OK
@@ -87,8 +74,8 @@ def params():
 
 
 @pytest.fixture
-def check_result(params, section):
-    return kube_pod_restarts.check(params, section)
+def check_result(params, section, value_store):
+    return kube_pod_restarts._check(params, section, TIMESTAMP, value_store)
 
 
 @pytest.fixture
@@ -121,13 +108,6 @@ def value_store(expired_values, current_values, restart_count, is_empty_value_st
         for i in range(current_values)
     ]
     return {"restart_count_list": restart_count_list}
-
-
-@pytest.fixture(autouse=True)
-def get_value_store(value_store, mocker):
-    mock = mocker.Mock(return_value=value_store)
-    mocker.patch.object(kube_pod_restarts, "get_value_store", mock)
-    return mock
 
 
 def test_discovery_returns_single_service(section):

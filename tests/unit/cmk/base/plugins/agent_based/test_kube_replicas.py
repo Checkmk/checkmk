@@ -13,6 +13,7 @@ import pytest
 import cmk.base.plugins.agent_based.kube_replicas as kube_replicas
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
 from cmk.base.plugins.agent_based.kube_replicas import (
+    _check_kube_replicas,
     check_kube_replicas,
     discover_kube_replicas,
     parse_kube_deployment_strategy,
@@ -229,18 +230,11 @@ def test_check_kube_replicas_outdated_replicas(
     strategy: DeploymentStrategy,
     value_store: MutableMapping[str, Any],
     expected_check_result: Sequence[Union[Result, Metric]],
-    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    def mock_value_store():
-        return value_store
-
-    def mock_time():
-        return 800.0
-
-    monkeypatch.setattr(kube_replicas, "get_value_store", mock_value_store)
-    monkeypatch.setattr(time, "time", mock_time)
-
-    assert list(check_kube_replicas(params, replicas, strategy)) == expected_check_result
+    assert (
+        list(_check_kube_replicas(params, replicas, strategy, now=800.0, value_store=value_store))
+        == expected_check_result
+    )
 
 
 @pytest.mark.parametrize(
@@ -316,18 +310,11 @@ def test_check_kube_replicas_not_ready_replicas(
     replicas: Replicas,
     value_store: MutableMapping[str, Any],
     expected_check_result: Sequence[Union[Result, Metric]],
-    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    def mock_value_store():
-        return value_store
-
-    def mock_time():
-        return 800.0
-
-    monkeypatch.setattr(kube_replicas, "get_value_store", mock_value_store)
-    monkeypatch.setattr(time, "time", mock_time)
-
-    assert list(check_kube_replicas(params, replicas, None)) == expected_check_result
+    assert (
+        list(_check_kube_replicas(params, replicas, None, now=800.0, value_store=value_store))
+        == expected_check_result
+    )
 
 
 @pytest.mark.parametrize(
@@ -536,15 +523,8 @@ def test_check_kube_replicas_value_store_reset(
     replicas: Replicas,
     value_store: MutableMapping[str, Any],
     expected_check_result: Sequence[Union[Result, Metric]],
-    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    def mock_value_store():
-        return value_store
-
-    def mock_time():
-        return 800.0
-
-    monkeypatch.setattr(kube_replicas, "get_value_store", mock_value_store)
-    monkeypatch.setattr(time, "time", mock_time)
-
-    assert list(check_kube_replicas(params, replicas, None)) == expected_check_result
+    assert (
+        list(_check_kube_replicas(params, replicas, None, now=800.0, value_store=value_store))
+        == expected_check_result
+    )

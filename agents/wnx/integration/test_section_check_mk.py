@@ -74,6 +74,8 @@ TempDirectory: C:\\ProgramData\\checkmk\\agent\\tmp
 LogDirectory: C:\\ProgramData\\checkmk\\agent\\log
 SpoolDirectory: C:\\ProgramData\\checkmk\\agent\\spool
 LocalDirectory: C:\\ProgramData\\checkmk\\agent\\local
+AgentController:
+AgentControllerStatus:
 OnlyFrom: 0.0.0.0/0
 """
 
@@ -119,6 +121,8 @@ def expected_output_engine():
         r"LogDirectory: %s" % (re.escape(os.path.join(user_dir, "log"))),
         r"SpoolDirectory: %s" % (re.escape(os.path.join(user_dir, "spool"))),
         r"LocalDirectory: %s" % (re.escape(os.path.join(user_dir, "local"))),
+        r"AgentController",
+        r"AgentControllerStatus",
         # r'ScriptStatistics: Plugin C:0 E:0 T:0 Local C:0 E:0 T:0',
         # Note: The following three lines are output with crash_debug = yes in
         # 1.2.8 but no longer in 1.4.0:

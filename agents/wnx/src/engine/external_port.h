@@ -40,11 +40,7 @@ public:
     using s_ptr = std::shared_ptr<AsioSession>;
 
     AsioSession(asio::ip::tcp::socket socket) : socket_(std::move(socket)) {}
-    virtual ~AsioSession() {
-        std::error_code ec;
-        socket_.cancel(ec);
-        XLOG::d("destroy connection");
-    }
+    virtual ~AsioSession() { XLOG::d("destroy connection"); }
 
     void start(cma::world::ReplyFunc Reply) {
         // typical functionality of current agent

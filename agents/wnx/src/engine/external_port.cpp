@@ -42,6 +42,7 @@ void AsioSession::read_ip() {
         XLOG::d.i("Get ip = {}", *remote_ip_);
 
     } else {
+        socket_.cancel();
         received_.reset();
         XLOG::d("Get ip = Nothing {}", timeout ? "timeout" : "some error");
     }
@@ -266,7 +267,7 @@ void ExternalPort::processQueue(const world::ReplyFunc &reply) {
                     bool local_connection = ip == "127.0.0.1" || ip == "::1";
                     if (cfg::groups::global.isIpAddressAllowed(ip) ||
                         local_connection) {
-                        if (local_connection) {
+                        if (local_connection && (IsService() || IsTest())) {
                             as->read_ip();
                         }
                         as->start(reply);

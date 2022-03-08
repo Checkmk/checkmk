@@ -38,7 +38,7 @@
   become_user: root
   become_method: sudo
   shell: |
-      cmk-agent-ctl register --trust-server-cert -s localhost/{{cmk_site}} -H localhost -u automation -p {{ automation_secret }}
+      cmk-agent-ctl register --trust-cert -s localhost -i {{cmk_site}} -H localhost -U automation -P {{ automation_secret }}
 
 # TODO: The service discovery via REST API is broken atm, we do not get the services even after an activate changes: CMK-7200
 - name: Discover services

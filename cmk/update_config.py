@@ -117,8 +117,6 @@ from cmk.gui.watolib.password_store import PasswordStore
 from cmk.gui.watolib.rulesets import RulesetCollection
 from cmk.gui.watolib.sites import site_globals_editable, SiteManagementFactory
 
-import cmk.update_rrd_fs_names  # pylint: disable=cmk-module-layer-violation  # TODO: this should be fine
-
 # mapping removed check plugins to their replacement:
 REMOVED_CHECK_PLUGIN_MAP = {
     CheckPluginName("aix_if"): CheckPluginName("interfaces"),
@@ -261,7 +259,6 @@ class UpdateConfig:
             (self._rewrite_password_store, "Rewriting password store"),
             (self._cleanup_version_specific_caches, "Cleanup version specific caches"),
             # CAUTION: update_fs_used_name must be called *after* rewrite_autochecks!
-            (self._update_fs_used_name, "Migrating fs_used name"),
             (self._migrate_pagetype_topics_to_ids, "Migrate pagetype topics"),
             (self._migrate_ldap_connections, "Migrate LDAP connections"),
             (self._rewrite_bi_configuration, "Rewrite BI Configuration"),
@@ -286,11 +283,6 @@ class UpdateConfig:
         # in _parse_autocheck_entry of cmk.base.autochecks.
         cmk.base.config.load()
         cmk.base.config.load_all_agent_based_plugins(cmk.base.check_api.get_check_api_context)
-
-    # FS_USED UPDATE DELETE THIS FOR CMK 1.8, THIS ONLY migrates 1.6->2.0
-    def _update_fs_used_name(self) -> None:
-        check_df_includes_use_new_metric()
-        cmk.update_rrd_fs_names.update()
 
     def _rewrite_wato_tag_config(self) -> None:
         tag_config_file = cmk.gui.watolib.tags.TagConfigFile()

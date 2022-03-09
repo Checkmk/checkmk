@@ -9,6 +9,7 @@
 #include "external_port.h"
 #include "onlyfrom.h"
 #include "test_tools.h"
+using namespace std::chrono_literals;
 
 std::string network_list[] = {
     "2001:db8:abcd:0012::0/112",  // mask
@@ -135,166 +136,133 @@ TEST(OnlyFromTest, Validness) {
     EXPECT_FALSE(of::IsValid(loopback_list[1], loopback_list[0]));
 }
 
-TEST(OnlyFromTest, Base) {
-    tst::FirewallOpener fwo;
-
+TEST(OnlyFromTest, ConfigCheck) {
     auto temp_fs{tst::TempCfgFs::CreateNoIo()};
     ASSERT_TRUE(temp_fs->loadConfig(tst::GetFabricYml()));
-    {
-        auto yaml = GetLoadedConfig();
-        yaml[groups::kGlobal][vars::kOnlyFrom] =
-            YAML::Load("192.168.1.14/24 ::1 127.0.0.1");
 
-        yaml[groups::kGlobal][vars::kIpv6] = YAML::Load("on\n");
+    auto yaml = GetLoadedConfig();
+    yaml[groups::kGlobal][vars::kOnlyFrom] =
+        YAML::Load("192.168.1.14/24 ::1 127.0.0.1");
 
-        groups::global.loadFromMainConfig();
-        auto only_froms = groups::global.getOnlyFrom();
-        EXPECT_TRUE(only_froms.size() == 5);
-        EXPECT_TRUE(of::IsNetworkV4(only_froms[0]));
-        EXPECT_TRUE(of::IsNetworkV6(only_froms[1]));
-        EXPECT_TRUE(of::IsAddressV6(only_froms[2]));
-        EXPECT_TRUE(of::IsAddressV4(only_froms[3]));
-        EXPECT_TRUE(of::IsAddressV6(only_froms[4]));
+    yaml[groups::kGlobal][vars::kIpv6] = YAML::Load("on\n");
 
-        EXPECT_TRUE(groups::global.isIpAddressAllowed("192.168.1.13"));
-        EXPECT_TRUE(groups::global.isIpAddressAllowed("::FFFF:192.168.1.2"));
-        EXPECT_FALSE(groups::global.isIpAddressAllowed("192.168.2.13"));
-        EXPECT_FALSE(groups::global.isIpAddressAllowed("::FFFF:192.168.2.2"));
-        EXPECT_TRUE(groups::global.isIpAddressAllowed("::1"));
-        EXPECT_TRUE(groups::global.isIpAddressAllowed("127.0.0.1"));
-        EXPECT_TRUE(groups::global.isIpAddressAllowed("::FFFF:127.0.0.1"));
+    groups::global.loadFromMainConfig();
+    auto only_froms = groups::global.getOnlyFrom();
+    EXPECT_TRUE(only_froms.size() == 5);
+    EXPECT_TRUE(of::IsNetworkV4(only_froms[0]));
+    EXPECT_TRUE(of::IsNetworkV6(only_froms[1]));
+    EXPECT_TRUE(of::IsAddressV6(only_froms[2]));
+    EXPECT_TRUE(of::IsAddressV4(only_froms[3]));
+    EXPECT_TRUE(of::IsAddressV6(only_froms[4]));
 
-        bool address_ok = true;
-        cma::world::ReplyFunc reply =
-            [&address_ok](const std::string Ip) -> std::vector<uint8_t> {
-            std::error_code ec;
+    EXPECT_TRUE(groups::global.isIpAddressAllowed("192.168.1.13"));
+    EXPECT_TRUE(groups::global.isIpAddressAllowed("::FFFF:192.168.1.2"));
+    EXPECT_FALSE(groups::global.isIpAddressAllowed("192.168.2.13"));
+    EXPECT_FALSE(groups::global.isIpAddressAllowed("::FFFF:192.168.2.2"));
+    EXPECT_TRUE(groups::global.isIpAddressAllowed("::1"));
+    EXPECT_TRUE(groups::global.isIpAddressAllowed("127.0.0.1"));
+    EXPECT_TRUE(groups::global.isIpAddressAllowed("::FFFF:127.0.0.1"));
+}
 
-            if (!groups::global.isIpAddressAllowed(Ip)) {
-                XLOG::d("Invalid IP {}", Ip);
-                return {};
-            }
+namespace {
+std::string ip_received;
+void WriteToSocket(const std::string &ip) {
+    asio::io_context ios;
+    asio::ip::tcp::endpoint endpoint(asio::ip::make_address(ip),
+                                     tst::TestPort());
+    asio::ip::tcp::socket socket(ios);
+    std::error_code ec;
+    socket.connect(endpoint, ec);
+    // just to skip 1 sec waiting
+    asio::error_code error;
+    char text[] = "a";
+    socket.write_some(asio::buffer(text, 1), error);
+    socket.close();
+    tst::WaitForSuccessSilent(100ms, []() { return !ip_received.empty(); });
+}
+auto RegisterIp(const std::string ip) -> std::vector<uint8_t> {
+    std::error_code ec;
 
-            auto data = reinterpret_cast<const uint8_t *>(Ip.data());
-            std::vector<uint8_t> v(data, data + Ip.size());
-            return v;
-        };
-
-        using namespace asio;
-        // ipv4
-        {
-            cma::world::ExternalPort test_port(nullptr);           //
-            auto ret = test_port.startIo(reply, tst::TestPort());  //
-            ASSERT_TRUE(ret);
-
-            try {
-                io_context ios;
-
-                ip::tcp::endpoint endpoint(ip::make_address("127.0.0.1"),
-                                           tst::TestPort());
-
-                asio::ip::tcp::socket socket(ios);
-
-                socket.connect(endpoint);
-
-                error_code error;
-                char text[256];
-                auto count = socket.read_some(asio::buffer(text), error);
-                EXPECT_TRUE(count > 1);
-                socket.close();
-            } catch (const std::exception &e) {
-                XLOG::l("Exception {} during connection to ", e.what());
-            }
-            test_port.shutdownIo();  //
-        }
-
-        // ipv6 connect
-        {
-            cma::world::ExternalPort test_port(nullptr);           //
-            auto ret = test_port.startIo(reply, tst::TestPort());  //
-            ASSERT_TRUE(ret);
-            io_context ios;
-            ip::tcp::endpoint endpoint(ip::make_address("::1"),
-                                       tst::TestPort());
-
-            asio::ip::tcp::socket socket(ios);
-
-            socket.connect(endpoint);
-
-            error_code error;
-            char text[256];
-            auto count = socket.read_some(asio::buffer(text), error);
-            socket.close();
-            EXPECT_TRUE(count > 1);
-            test_port.shutdownIo();  //
-        }
-
-        // bad address
-        {
-            cma::world::ExternalPort test_port(nullptr);  //
-            {
-                auto yaml = GetLoadedConfig();
-                yaml[groups::kGlobal][vars::kOnlyFrom] =
-                    YAML::Load("192.168.1.14/24");
-
-                groups::global.loadFromMainConfig();
-                auto only_froms = groups::global.getOnlyFrom();
-                EXPECT_TRUE(only_froms.size() == 2);
-                auto ret = test_port.startIo(reply, tst::TestPort());  //
-                ASSERT_TRUE(ret);
-                io_context ios;
-                ip::tcp::endpoint endpoint(ip::make_address("::1"),
-                                           tst::TestPort());
-
-                asio::ip::tcp::socket socket(ios);
-
-                socket.connect(endpoint);
-
-                error_code error;
-                char text[256];
-                auto count = socket.read_some(asio::buffer(text), error);
-                socket.close();
-                EXPECT_TRUE(count == 0);
-            }
-
-            // ipv6 connect again from valid address
-            {
-                auto yaml = GetLoadedConfig();
-                yaml[groups::kGlobal][vars::kOnlyFrom] =
-                    YAML::Load("127.0.0.1/32 0:0:0:0:0:0:0:1/128");
-
-                groups::global.loadFromMainConfig();
-                auto only_froms = groups::global.getOnlyFrom();
-                auto ret = test_port.startIo(reply, tst::TestPort());  //
-                ASSERT_FALSE(ret);
-                io_context ios;
-                ip::tcp::endpoint endpoint(ip::make_address("::1"),
-                                           tst::TestPort());
-
-                asio::ip::tcp::socket socket(ios);
-
-                error_code error;
-                socket.connect(endpoint, error);
-
-                char text[10] = "   ";
-                size_t count = 0;
-                std::atomic<bool> signaled = false;
-                // we do not use async_read correctly
-                socket.async_read_some(
-                    asio::buffer(text, 10),
-                    [&count, &signaled](
-                        const error_code &,  // Result of operation.
-                        std::size_t          // Number of bytes read.
-                    ) {});
-                for (int i = 0; i < 25; i++) {
-                    if (text[0] != ' ') break;
-                    cma::tools::sleep(100);
-                }
-                socket.close();
-                EXPECT_TRUE(text[0] != ' ');
-            }
-            test_port.shutdownIo();  //
-        }
+    if (groups::global.isIpAddressAllowed(ip)) {
+        ip_received = ip;
+    } else {
+        XLOG::d("Invalid IP {}", ip);
+        ip_received = "Forbidden";
     }
+    return {};
+};
+
+}  // namespace
+
+TEST(OnlyFromTest, LocalAllowedIpv6) {
+    auto temp_fs{tst::TempCfgFs::CreateNoIo()};
+    ASSERT_TRUE(temp_fs->loadConfig(tst::GetFabricYml()));
+    auto yaml = GetLoadedConfig();
+    yaml[groups::kGlobal][vars::kOnlyFrom] =
+        YAML::Load("192.168.1.14/24 ::1 127.0.0.1");
+    yaml[groups::kGlobal][vars::kIpv6] = YAML::Load("on\n");
+    groups::global.loadFromMainConfig();
+
+    ip_received.clear();
+    world::ExternalPort test_port(nullptr);
+    ASSERT_TRUE(test_port.startIo(RegisterIp, tst::TestPort()));
+    WriteToSocket("::1");
+    EXPECT_EQ(ip_received, "::1");
+    test_port.shutdownIo();
+}
+
+TEST(OnlyFromTest, LocalAllowed) {
+    auto temp_fs{tst::TempCfgFs::CreateNoIo()};
+    ASSERT_TRUE(temp_fs->loadConfig(tst::GetFabricYml()));
+    auto yaml = GetLoadedConfig();
+    yaml[groups::kGlobal][vars::kOnlyFrom] =
+        YAML::Load("192.168.1.14/24 ::1 127.0.0.1");
+    groups::global.loadFromMainConfig();
+
+    ip_received.clear();
+    world::ExternalPort test_port(nullptr);
+    ASSERT_TRUE(test_port.startIo(RegisterIp, tst::TestPort()));
+    WriteToSocket("127.0.0.1");
+    EXPECT_EQ(ip_received, "127.0.0.1");
+    test_port.shutdownIo();
+}
+
+TEST(OnlyFromTest, LocalForbidden) {
+    auto temp_fs{tst::TempCfgFs::CreateNoIo()};
+    ASSERT_TRUE(temp_fs->loadConfig(tst::GetFabricYml()));
+    auto yaml = GetLoadedConfig();
+    yaml[groups::kGlobal][vars::kIpv6] = YAML::Load("on\n");
+    yaml[groups::kGlobal][vars::kOnlyFrom] = YAML::Load("192.168.1.14/24");
+    groups::global.loadFromMainConfig();
+    auto only_froms = groups::global.getOnlyFrom();
+    EXPECT_TRUE(only_froms.size() == 2);
+
+    ip_received.clear();
+    cma::world::ExternalPort test_port(nullptr);
+    ASSERT_TRUE(test_port.startIo(RegisterIp, tst::TestPort()));
+    WriteToSocket("::1");  // forbidden address
+    EXPECT_EQ(ip_received, "Forbidden");
+    test_port.shutdownIo();
+}
+
+TEST(OnlyFromTest, AllowedIpv6) {
+    auto temp_fs{tst::TempCfgFs::CreateNoIo()};
+    ASSERT_TRUE(temp_fs->loadConfig(tst::GetFabricYml()));
+    auto yaml = GetLoadedConfig();
+    yaml[groups::kGlobal][vars::kOnlyFrom] =
+        YAML::Load("127.0.0.1/32 0:0:0:0:0:0:0:1/128");
+    yaml[groups::kGlobal][vars::kIpv6] = YAML::Load("on\n");
+
+    groups::global.loadFromMainConfig();
+    auto only_froms = groups::global.getOnlyFrom();
+
+    ip_received.clear();
+    cma::world::ExternalPort test_port(nullptr);
+    ASSERT_TRUE(test_port.startIo(RegisterIp, tst::TestPort()));
+    WriteToSocket("::1");
+
+    EXPECT_EQ(ip_received, "::1");
+    test_port.shutdownIo();
 }
 
 TEST(OnlyFromTest, Ipv6Integration) {

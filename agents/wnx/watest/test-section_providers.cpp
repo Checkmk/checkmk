@@ -116,16 +116,15 @@ TEST(SectionProviders, SystemTime) {
 
 class SectionProviderCheckMkFixture : public ::testing::Test {
 public:
-    static constexpr size_t core_lines_ = 20;
+    static constexpr size_t core_lines_ = 19;
     static constexpr size_t full_lines_ = core_lines_ + 3;
-    static constexpr std::string_view names_[] = {
+    static constexpr std::string_view names_[core_lines_ - 1] = {
         "Version",          "BuildDate",       "AgentOS",
         "Hostname",         "Architecture",    "WorkingDirectory",
         "ConfigFile",       "LocalConfigFile", "AgentDirectory",
         "PluginsDirectory", "StateDirectory",  "ConfigDirectory",
         "TempDirectory",    "LogDirectory",    "SpoolDirectory",
-        "LocalDirectory",   "AgentController", "AgentControllerStatus",
-        "OnlyFrom"};
+        "LocalDirectory",   "OnlyFrom"};
 
     static constexpr std::pair<std::string_view, std::string_view>
         only_from_cases_[] = {
@@ -145,22 +144,10 @@ public:
     }
     std::vector<std::string> getCoreResultAsTable() {
         auto result = getFullResultAsTable();
-        if (result.size() == full_lines_ &&
-            result[core_lines_] + "\n" ==
-                section::MakeHeader(section::kCheckMk)) {
-            result.resize(core_lines_);
-        }
         result.erase(result.begin());
         return result;
     }
     CheckMk &getEngine() { return check_mk_provider_.getEngine(); }
-
-    YAML::Node getWorkingCfg() {
-        if (!temp_fs_) {
-            temp_fs_ = std::move(tst::TempCfgFs::CreateNoIo());
-        }
-        return cfg::GetLoadedConfig();
-    }
 
     std::filesystem::path createDataDir() {
         if (!temp_fs_) {
@@ -195,14 +182,13 @@ TEST_F(SectionProviderCheckMkFixture, ConstFields) {
     auto result = getCoreResultAsTable();
 
     const auto *expected_name = names_;
+    EXPECT_EQ(result[result.size() - 1] + "\n",
+              section::MakeHeader(section::kCheckMkCtlStatus));
+    result.pop_back();
     for (const auto &r : result) {
         auto values = tools::SplitString(r, ": ");
         EXPECT_EQ(values[0], std::string{*expected_name++});
-        if (values[0].starts_with("AgentController")) {
-            EXPECT_EQ(values.size(), 1);
-        } else {
-            EXPECT_EQ(values.size(), 2);
-        }
+        EXPECT_EQ(values.size(), 2);
     }
 }
 
@@ -213,12 +199,13 @@ TEST_F(SectionProviderCheckMkFixture, AdvancedFields) {
     EXPECT_EQ(get_val(result[2]), "windows");
     EXPECT_EQ(get_val(result[3]), cfg::GetHostName());
     EXPECT_EQ(get_val(result[4]), tgt::Is64bit() ? "64bit" : "32bit");
-    EXPECT_EQ(result[16], "AgentController: ");
-    EXPECT_TRUE(result[17].starts_with("AgentControllerStatus: "));
+    EXPECT_EQ(result[result.size() - 1] + "\n",
+              section::MakeHeader(section::kCheckMkCtlStatus));
     tst::CreateTextFile(fs::path{cfg::GetUserDir()} / ac::kLegacyPullFile,
                         "test");
     result = getCoreResultAsTable();
-    EXPECT_TRUE(result[17].starts_with("AgentControllerStatus: "));
+    EXPECT_EQ(result[result.size() - 1] + "\n",
+              section::MakeHeader(section::kCheckMkCtlStatus));
 }
 
 TEST_F(SectionProviderCheckMkFixture, OnlyFromField) {
@@ -229,6 +216,7 @@ TEST_F(SectionProviderCheckMkFixture, OnlyFromField) {
         cfg[cfg::groups::kGlobal][cfg::vars::kOnlyFrom] =
             YAML::Load(std::string{p.first});
         auto result = getCoreResultAsTable();
+        result.pop_back();
         EXPECT_EQ(get_val(*std::prev(result.end())), std::string{p.second});
     }
 }
@@ -237,6 +225,8 @@ TEST_F(SectionProviderCheckMkFixture, FailedInstall) {
     tst::misc::CopyFailedPythonLogFileToLog(createDataDir());
 
     auto result = getFullResultAsTable();
+    EXPECT_EQ(result[full_lines_ - 3] + "\n",
+              section::MakeHeader(section::kCheckMk));
     EXPECT_TRUE(result[full_lines_ - 2].starts_with("UpdateFailed:"));
     EXPECT_TRUE(result[full_lines_ - 1].starts_with("UpdateRecoverAction:"));
 }

@@ -260,8 +260,7 @@ def test_check_logwatch_generic_no_reclassify() -> None:
     ) == [
         Result(state=State.CRIT, summary='1 CRIT messages (Last worst: "red alert")'),
     ]
-    # Bug, will be fixed in the following commit
-    assert not logwatch._logmsg_file_path(item).read_text().splitlines()[-len(lines) :] == lines
+    assert logwatch._logmsg_file_path(item).read_text().splitlines()[-len(lines) :] == lines
 
 
 @pytest.mark.usefixtures("logmsg_file_path")
@@ -287,10 +286,9 @@ def test_check_logwatch_generic_with_reclassification() -> None:
             max_filesize=logwatch._LOGWATCH_MAX_FILESIZE,
         )
     ) == [
-        Result(state=State.CRIT, summary='1 CRIT messages (Last worst: "red alert")'),
+        Result(state=State.CRIT, summary='2 CRIT messages (Last worst: "red alert")'),
     ]
-    # Bug, will be fixed in the following commit
-    assert not logwatch._logmsg_file_path(item).read_text().splitlines()[-len(lines) :] == [
+    assert logwatch._logmsg_file_path(item).read_text().splitlines()[-len(lines) :] == [
         "C klingons are attacking",
         "C red alert",
         ". more context",

@@ -1,0 +1,13 @@
+Title: <tt>logwatch</tt>: Fix reclassification and persistance
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1646837886
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b2
+
+The <tt>logwatch</tt> check plugin did not reclassify and persist log lines
+transferred by the <tt>logwatch</tt> agent plugin.

@@ -16,7 +16,6 @@ docker = "==5.0.3"  # used by test_docker test and mk_docker agent plugin
 dockerpty = "==0.4.1"  # used by dockerized tests for opening debug shells
 freezegun = "==1.1.0"  # used by various unit tests
 isort = "==5.10.1"  # used as a plugin for editors
-lxml = "==4.7.1"  # used via beautifulsoup4 as a parser and in the agent_netapp special agent
 lxml-stubs = "==0.3.1"  # used for type checking
 mock = "==4.0.3"  # used in checktestlib in unit tests
 mocket = "==3.10.4"    # used for mocking kubernetes python client
@@ -151,7 +150,6 @@ apispec-oneofschema = "==3.0.0"  # direct dependency
 typing_extensions = "==3.10"   # required by pydantic
 pydantic = "==1.8.2"  # needed by special agents
 paho-mqtt = "==1.6.1"  # needed for MQTT special agent
-dnspython = "==1.16.0"  # needed by python-active-directory
 python-active-directory = "==1.0.5"
 rrdtool = "==0.1.15"  # Actually we ship the binding which comes with rrdtool itself...
 docstring_parser = "==0.13"  # direct dependency
@@ -174,6 +172,8 @@ pysmb = "==1.2"  # used by SMB share special agent
 google-cloud-monitoring = "==2.8.0"  # used by the gcp special agent
 google-cloud-storage = "==2.1.0"  # used by the gcp special agent
 google-cloud-functions = "==1.5.0"  # used by the gcp special agent
+exchangelib = "==4.7.2"  # used by active checks for mail
+lxml = "==4.7.1"  # used via beautifulsoup4 as a parser and in the agent_netapp special agent
 
 [requires]
 python_version = "3.9"

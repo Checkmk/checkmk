@@ -22,6 +22,26 @@ Timestamp = NewType("Timestamp", float)
 Version = NewType("Version", str)
 
 
+def condition_short_description(name: str, status: str) -> str:
+    return f"{name.upper()}: {status}"
+
+
+def condition_detailed_description(
+    name: str,
+    status: str,
+    reason: Optional[str],
+    message: Optional[str],
+) -> str:
+    """Format the condition for Result summary or details
+
+    Examples:
+        >>> condition_detailed_description("Ready", "False", "Waiting", "ContainerCreating")
+        'READY: False (Waiting: ContainerCreating)'
+
+    """
+    return f"{condition_short_description(name, status)} ({reason}: {message})"
+
+
 def kube_labels_to_cmk_labels(labels: Labels) -> HostLabelGenerator:
     for label in labels.values():
         if (value := label.value) == "":

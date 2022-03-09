@@ -20,6 +20,8 @@ from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
     StringTable,
 )
 from cmk.base.plugins.agent_based.utils.kube import (
+    condition_detailed_description,
+    condition_short_description,
     FalsyNodeCondition,
     NodeConditions,
     NodeCustomConditions,
@@ -56,13 +58,13 @@ def check(
         or all(cond.is_ok() for cond in section_kube_node_custom_conditions.custom_conditions)
     ):
         details: MutableSequence[str] = [
-            f"{name.upper()}: {cond.status} ({cond.reason}: {cond.detail})"
+            condition_detailed_description(name, cond.status, cond.reason, cond.detail)
             for name, cond in section_kube_node_conditions
             if cond
         ]
         if section_kube_node_custom_conditions:
             details.extend(
-                f"{cond.type_.upper()}: {cond.status} ({cond.reason}: {cond.detail})"
+                condition_detailed_description(cond.type_, cond.status, cond.reason, cond.detail)
                 for cond in section_kube_node_custom_conditions.custom_conditions
             )
         yield Result(
@@ -82,13 +84,13 @@ def _check_node_conditions(params: Mapping[str, int], section: NodeConditions):
         if cond.is_ok():
             yield Result(
                 state=State.OK,
-                summary=f"{name.upper()}: {cond.status}",
-                details=f"{name.upper()}: {cond.status} ({cond.reason}: {cond.detail})",
+                summary=condition_short_description(name, cond.status),
+                details=condition_detailed_description(name, cond.status, cond.reason, cond.detail),
             )
         else:
             yield Result(
                 state=State(params[name]),
-                summary=f"{name.upper()}: {cond.status} ({cond.reason}: {cond.detail})",
+                summary=condition_detailed_description(name, cond.status, cond.reason, cond.detail),
             )
 
 
@@ -97,13 +99,17 @@ def _check_node_custom_conditions(section: NodeCustomConditions):
         if cond.is_ok():
             yield Result(
                 state=State.OK,
-                summary=f"{cond.type_.upper()}: {cond.status}",
-                details=f"{cond.type_.upper()}: {cond.status} ({cond.reason}: {cond.detail})",
+                summary=condition_short_description(cond.type_, cond.status),
+                details=condition_detailed_description(
+                    cond.type_, cond.status, cond.reason, cond.detail
+                ),
             )
         else:
             yield Result(
                 state=State.CRIT,  # TODO: change valuespec in a way to support user-defined type-to-state mappings
-                summary=f"{cond.type_.upper()}: {cond.status} ({cond.reason}: {cond.detail})",
+                summary=condition_detailed_description(
+                    cond.type_, cond.status, cond.reason, cond.detail
+                ),
             )
 
 

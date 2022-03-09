@@ -61,6 +61,7 @@ RUN zypper ref -s \
     libuuid-devel \
     libvpx-devel \
     libxml2-devel \
+    libxslt-devel \
     libxmlsec1-1 \
     xmlsec1-devel \
     xmlsec1-openssl-devel \

@@ -62,6 +62,7 @@ RUN zypper ref -s \
     libuuid-devel \
     libvpx-devel \
     libxml2-devel \
+    libxslt-devel \
     make \
     mysql \
     openldap2-devel \

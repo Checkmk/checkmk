@@ -499,7 +499,7 @@ def check_logwatch_generic(
 
     # process new input lines - but only when there is some room left in the file
     block_collector.extend(
-        _extract_blocks([header, *loglines], patterns, False, limit=max_filesize - output_size)
+        _extract_blocks([header, *loglines], patterns, True, limit=max_filesize - output_size)
     )
 
     # when reclassifying, rewrite the whole file, otherwise append

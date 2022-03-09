@@ -45,6 +45,7 @@ def test_pod_node_allocation_within_cluster(api_node, api_pod):
     cluster = Cluster.from_api_resources(
         pods=[api_pod],
         nodes=[api_node],
+        statefulsets=[],
     )
     assert len(cluster.nodes()) == 1
     assert len(cluster.nodes()[0].pods()) == 1
@@ -61,6 +62,7 @@ def test_pod_deployment_allocation_within_cluster(api_node, api_pod):
     cluster = Cluster.from_api_resources(
         pods=[api_pod],
         nodes=[api_node],
+        statefulsets=[],
         deployments=[deployment],
     )
     assert len(cluster.deployments()) == 1

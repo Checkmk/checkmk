@@ -7,7 +7,7 @@
 import itertools
 
 # pylint: disable=comparison-with-callable,redefined-outer-name
-from typing import Callable
+from typing import Callable, Sequence
 
 import pytest
 from pydantic_factories import ModelFactory, Use
@@ -311,6 +311,31 @@ def daemon_set(new_daemon_set, daemon_set_pods, new_pod) -> agent_kube.DaemonSet
 
 
 @pytest.fixture
+def new_statefulset() -> Callable[[], agent_kube.StatefulSet]:
+    def _new_statefulset() -> agent_kube.StatefulSet:
+        return agent_kube.StatefulSet(metadata=MetaDataFactory.build())
+
+    return _new_statefulset
+
+
+@pytest.fixture
+def statefulset_pods() -> int:
+    return len(api.Phase)
+
+
+@pytest.fixture
+def statefulset(
+    new_statefulset: Callable[[], agent_kube.StatefulSet],
+    statefulset_pods: int,
+    new_pod: Callable[[], agent_kube.Pod],
+) -> agent_kube.StatefulSet:
+    statefulset = new_statefulset()
+    for _ in range(statefulset_pods):
+        statefulset.add_pod(new_pod())
+    return statefulset
+
+
+@pytest.fixture
 def cluster_nodes():
     return 3
 
@@ -354,12 +379,26 @@ def cluster_daemon_sets() -> int:
 
 
 @pytest.fixture
-def cluster(new_node, cluster_nodes, new_daemon_set, cluster_daemon_sets) -> agent_kube.Cluster:
+def cluster_statefulsets() -> int:
+    return 6
+
+
+@pytest.fixture
+def cluster(
+    new_node: Callable[[], agent_kube.Node],
+    cluster_nodes: int,
+    new_daemon_set: Callable[[], agent_kube.DaemonSet],
+    new_statefulset: Callable[[], agent_kube.StatefulSet],
+    cluster_daemon_sets: int,
+    cluster_statefulsets: int,
+) -> agent_kube.Cluster:
     cluster = agent_kube.Cluster()
     for _ in range(cluster_nodes):
         cluster.add_node(new_node())
     for _ in range(cluster_daemon_sets):
         cluster.add_daemon_set(new_daemon_set())
+    for _ in range(cluster_statefulsets):
+        cluster.add_statefulset(new_statefulset())
     return cluster
 
 
@@ -403,6 +442,14 @@ def daemon_sets_api_sections():
         "kube_cpu_resources_v1",
         "kube_daemonset_info_v1",
         "kube_daemonset_strategy_v1",
+    ]
+
+
+@pytest.fixture
+def statefulsets_api_sections() -> Sequence[str]:
+    return [
+        "kube_memory_resources_v1",
+        "kube_cpu_resources_v1",
     ]
 
 

@@ -20,10 +20,7 @@ class TestAPIDaemonSets:
                         "generation": 1,
                         "creationTimestamp": "2022-02-16T10:03:21Z",
                         "labels": {"app": "node-collector-container-metrics"},
-                        "annotations": {
-                            "deprecated.daemonset.template.generation": "1",
-                            "seccomp.security.alpha.kubernetes.io/pod": "runtime/default",
-                        },
+                        "annotations": {"deprecated.daemonset.template.generation": "1"},
                     }
                 }
             ]

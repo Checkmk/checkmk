@@ -53,3 +53,9 @@ def test_node_count_returns_number_of_nodes_ready_not_ready(cluster_nodes, clust
 def test_daemon_sets_returns_daemon_sets_of_cluster(cluster_daemon_sets, cluster):
     daemon_sets = cluster.daemon_sets()
     assert len(daemon_sets) == cluster_daemon_sets
+
+
+@pytest.mark.parametrize("cluster_statefulsets", [0, 10, 20])
+def test_statefulsets_returns_statefulsets_of_cluster(cluster_statefulsets, cluster):
+    statefulsets = cluster.statefulsets()
+    assert len(statefulsets) == cluster_statefulsets

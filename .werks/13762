@@ -1,0 +1,17 @@
+Title: Ruleset "Cisco quality of service": Add missing title to suboption
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1647261444
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.2.0i1
+
+In the option "Number of dropped bits or bytes per second", users can define absolute
+or relative levels on this quantity. However, the option for absolute levels was missing
+a title and was therefore displayed as "???" in the user interface.
+
+Note that this fix only affects the user interface and has no impact on the corresponding
+checking functionality.

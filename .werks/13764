@@ -1,0 +1,13 @@
+Title: Make "Discard all pending changes" available
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1647349804
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.2.0i1
+
+On the activate changes site, the menu option to discard all pending changes
+was never available (always greyed out).

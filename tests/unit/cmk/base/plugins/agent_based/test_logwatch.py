@@ -4,15 +4,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access
 
 import pytest
 
 from cmk.base.plugins.agent_based import logwatch
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service
-from cmk.base.plugins.agent_based.agent_based_api.v1 import State as state
-
-pytestmark = pytest.mark.checks
+from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State
 
 
 @pytest.mark.parametrize(
@@ -115,19 +111,19 @@ def test_check_single(monkeypatch):
     monkeypatch.setattr(logwatch, "host_name", lambda: "test-host")
     assert list(logwatch.check_logwatch_node("empty.log", SECTION1)) == [
         Result(
-            state=state.OK,
+            state=State.OK,
             summary="No error messages",
         ),
     ]
     assert list(logwatch.check_logwatch_node("my_other_log", SECTION1)) == [
         Result(
-            state=state.WARN,
+            state=State.WARN,
             summary='1 WARN messages (Last worst: "watch your step!")',
         ),
     ]
     assert list(logwatch.check_logwatch_node("mylog", SECTION1)) == [
         Result(
-            state=state.CRIT,
+            state=State.CRIT,
             summary='1 CRIT messages (Last worst: "whoha! Someone mooped!")',
         ),
     ]

@@ -5,11 +5,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from contextlib import suppress
-from typing import Any, Mapping, MutableMapping, Optional, TypedDict
+from typing import Any, Mapping, MutableMapping, Optional, TypedDict, Union
 
 import pytest
 
 from cmk.base.api.agent_based.utils import GetRateError, Metric, Result, State
+from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResults
 from cmk.base.plugins.agent_based.utils.size_trend import size_trend
 
 
@@ -40,16 +41,30 @@ def fixture_args() -> ArgsDict:
     }
 
 
+def _call_size_trend_with(args: ArgsDict) -> list[Union[IgnoreResults, Metric, Result]]:
+    return list(
+        size_trend(
+            value_store=args["value_store"],
+            value_store_key=args["value_store_key"],
+            resource=args["resource"],
+            levels=args["levels"],
+            used_mb=args["used_mb"],
+            size_mb=args["size_mb"],
+            timestamp=args["timestamp"],
+        )
+    )
+
+
 def test_size_trend(args: ArgsDict) -> None:
     # size_trend returns generator, but we need to evaluate it
     # so the valuestore is written properly
     with suppress(GetRateError):
-        list(size_trend(**args))
+        _call_size_trend_with(args)
 
     # New measurement half an hour later with 100MB more
     args.update({"used_mb": 200, "timestamp": 1.0 + 1800})
     # (100 (MB) / 1800) * 3600 * 24
-    assert list(size_trend(**args)) == [
+    assert _call_size_trend_with(args) == [
         Metric(name="growth", value=4800.0),
         Result(state=State.OK, summary="trend per 1 hour 0 minutes: +200 MiB"),
         Result(state=State.OK, summary="trend per 1 hour 0 minutes: +10.00%"),
@@ -60,7 +75,7 @@ def test_size_trend(args: ArgsDict) -> None:
 
 def test_size_trend_growing(args: ArgsDict) -> None:
     with suppress(GetRateError):
-        list(size_trend(**args))
+        _call_size_trend_with(args)
 
     args["levels"] = {
         "trend_range": 1,
@@ -69,7 +84,7 @@ def test_size_trend_growing(args: ArgsDict) -> None:
         "trend_perc": (5.0, 15.0),
     }
     args.update({"used_mb": 200, "timestamp": 1801.0})
-    assert list(size_trend(**args)) == [
+    assert _call_size_trend_with(args) == [
         Metric(name="growth", value=4800.0),
         Result(
             state=State.WARN,
@@ -87,7 +102,7 @@ def test_size_trend_growing(args: ArgsDict) -> None:
 def test_size_trend_shrinking_ok(args: ArgsDict) -> None:
     args["used_mb"] = 1000
     with suppress(GetRateError):
-        list(size_trend(**args))
+        _call_size_trend_with(args)
 
     args["levels"] = {
         "trend_range": 1,
@@ -101,7 +116,7 @@ def test_size_trend_shrinking_ok(args: ArgsDict) -> None:
             "used_mb": 990,
         }
     )
-    assert list(size_trend(**args)) == [
+    assert _call_size_trend_with(args) == [
         Metric(name="growth", value=-480.0),
         Result(state=State.OK, summary="trend per 1 hour 0 minutes: -20.0 MiB"),
         Result(state=State.OK, summary="trend per 1 hour 0 minutes: -1.00%"),
@@ -112,7 +127,7 @@ def test_size_trend_shrinking_ok(args: ArgsDict) -> None:
 def test_size_trend_shrinking_warn(args: ArgsDict) -> None:
     args["used_mb"] = 1000
     with suppress(GetRateError):
-        list(size_trend(**args))
+        _call_size_trend_with(args)
 
     args["levels"] = {
         "trend_range": 1,
@@ -126,7 +141,7 @@ def test_size_trend_shrinking_warn(args: ArgsDict) -> None:
             "used_mb": 900,
         }
     )
-    assert list(size_trend(**args)) == [
+    assert _call_size_trend_with(args) == [
         Metric(name="growth", value=-4800.0),
         Result(
             state=State.WARN,

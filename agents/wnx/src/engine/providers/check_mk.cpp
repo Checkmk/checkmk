@@ -114,9 +114,12 @@ std::string GetLegacyPullMode() { return ac::IsInLegacyMode() ? "yes" : "no"; }
 std::string CheckMk::makeBody() {
     auto out = MakeInfo();
     out += MakeDirs();
-    out += "AgentController: "s + ac::DetermineAgentCtlVersion() + "\n";
-    out += "AgentControllerStatus: "s + ac::DetermineAgentCtlStatus() + "\n";
     out += "OnlyFrom: "s + makeOnlyFrom() + "\n"s;
+    out += section::MakeHeader(section::kCheckMkCtlStatus);
+    const auto json = ac::DetermineAgentCtlStatus();
+    if (!json.empty()) {
+        out += json + "\n";
+    }
 
     if (install::GetLastInstallFailReason()) {
         out += "<<<check_mk>>>\n";

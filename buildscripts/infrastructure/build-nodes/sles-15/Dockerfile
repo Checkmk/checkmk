@@ -42,6 +42,7 @@ RUN zypper addrepo -G ${ARTIFACT_STORAGE}/repository/sles15 sles15 \
     libuuid-devel \
     libvpx-devel \
     libxml2-devel \
+    libxslt-devel \
     make \
     mysql \
     openldap2-devel \

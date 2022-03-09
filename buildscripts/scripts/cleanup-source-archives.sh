@@ -41,7 +41,8 @@ for SRC_PATH in "$@"; do
     fi
 
     echo "Removing$REMOVE_DIRS..."
-    gunzip -c "$SRC_PATH" | tar -v --wildcards --delete"$REMOVE_DIRS" | gzip >"$SRC_PATH.new"
+    # shellcheck disable=SC2086 # Double quote to prevent globbing and word splitting.
+    gunzip -c "$SRC_PATH" | tar -v --wildcards --delete$REMOVE_DIRS | gzip >"$SRC_PATH.new"
     mv "$SRC_PATH.new" "$SRC_PATH"
 
     echo "Checking for remaining CEE/CME/CPE files..."

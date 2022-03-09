@@ -183,7 +183,7 @@ class TestAPIPod:
         assert len(containers) == 1
         assert "cadvisor" in containers
         assert containers["cadvisor"].ready is True
-        assert containers["cadvisor"].state.type == "running"
+        assert containers["cadvisor"].state.type == api.ContainerStateType.running
         assert containers["cadvisor"].image == "some_image"
         assert isinstance(containers["cadvisor"].state, api.ContainerRunningState)
         assert isinstance(containers["cadvisor"].state.start_time, int)
@@ -286,9 +286,7 @@ class TestPodStartUp(TestCase):
                     image="gcr.io/kuar-demo/kuard-amd64:blue",
                     image_id="",
                     ready=False,
-                    state=api.ContainerWaitingState(
-                        type="waiting", reason="ContainerCreating", detail=None
-                    ),
+                    state=api.ContainerWaitingState(reason="ContainerCreating", detail=None),
                     restart_count=0,
                 )
             },

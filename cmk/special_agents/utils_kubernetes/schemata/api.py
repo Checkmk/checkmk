@@ -497,19 +497,26 @@ class PodSpec(BaseModel):
     active_deadline_seconds: Optional[int] = None
 
 
+@enum.unique
+class ContainerStateType(str, enum.Enum):
+    running = "running"
+    waiting = "waiting"
+    terminated = "terminated"
+
+
 class ContainerRunningState(BaseModel):
-    type: str = Field("running", const=True)
+    type: Literal[ContainerStateType.running] = Field(ContainerStateType.running, const=True)
     start_time: int
 
 
 class ContainerWaitingState(BaseModel):
-    type: str = Field("waiting", const=True)
+    type: Literal[ContainerStateType.waiting] = Field(ContainerStateType.waiting, const=True)
     reason: str
     detail: Optional[str]
 
 
 class ContainerTerminatedState(BaseModel):
-    type: str = Field("terminated", const=True)
+    type: Literal[ContainerStateType.terminated] = Field(ContainerStateType.terminated, const=True)
     exit_code: int
     start_time: int
     end_time: int

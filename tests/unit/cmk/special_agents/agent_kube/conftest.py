@@ -208,17 +208,17 @@ class StatefulSetStatusFactory(ModelFactory):
 
 # Container Status Fixtures
 @pytest.fixture
-def container_status_state() -> str:
-    return "running"
+def container_status_state() -> api.ContainerStateType:
+    return api.ContainerStateType.running
 
 
 @pytest.fixture
 def container_state(container_status_state) -> api.ContainerState:
-    if container_status_state == "running":
+    if container_status_state == api.ContainerStateType.running:
         return ContainerRunningStateFactory.build()
-    if container_status_state == "waiting":
+    if container_status_state == api.ContainerStateType.waiting:
         return ContainerWaitingStateFactory.build()
-    if container_status_state == "terminated":  # terminated
+    if container_status_state == api.ContainerStateType.terminated:
         return ContainerTerminatedStateFactory.build()
     raise ValueError(f"Unknown container state: {container_status_state}")
 

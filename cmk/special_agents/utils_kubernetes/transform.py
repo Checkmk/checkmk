@@ -237,7 +237,6 @@ def pod_containers(
         ]
         if (details := status.state.terminated) is not None:
             state = api.ContainerTerminatedState(
-                type="terminated",
                 exit_code=details.exit_code,
                 start_time=int(convert_to_timestamp(details.started_at)),
                 end_time=int(convert_to_timestamp(details.finished_at)),
@@ -246,12 +245,10 @@ def pod_containers(
             )
         elif (details := status.state.running) is not None:
             state = api.ContainerRunningState(
-                type="running",
                 start_time=int(convert_to_timestamp(details.started_at)),
             )
         elif (details := status.state.waiting) is not None:
             state = api.ContainerWaitingState(
-                type="waiting",
                 reason=details.reason,
                 detail=details.message,
             )

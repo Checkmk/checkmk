@@ -833,9 +833,9 @@ class Node(PodOwner):
         result = section.ContainerCount()
         for pod in self._pods:
             for container in pod.containers.values():
-                if container.state.type == "running":
+                if container.state.type == api.ContainerStateType.running:
                     result.running += 1
-                elif container.state.type == "waiting":
+                elif container.state.type == api.ContainerStateType.waiting:
                     result.waiting += 1
                 else:
                     result.terminated += 1

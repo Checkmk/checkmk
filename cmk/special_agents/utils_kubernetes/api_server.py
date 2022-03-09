@@ -31,6 +31,7 @@ from cmk.special_agents.utils_kubernetes.transform import (
     deployment_from_client,
     node_from_client,
     pod_from_client,
+    statefulset_from_client,
 )
 
 
@@ -76,6 +77,7 @@ class AppsAPI:
         self.timeout = timeout
         self.raw_deployments = self._query_raw_deployments()
         self.raw_daemon_sets = self._query_raw_daemon_sets()
+        self.raw_statefulsets = self._query_raw_statefulsets()
         self.raw_replica_sets = self._query_raw_replica_sets()
 
     def _query_raw_deployments(self) -> Sequence[client.V1Deployment]:
@@ -85,6 +87,11 @@ class AppsAPI:
 
     def _query_raw_daemon_sets(self) -> Sequence[client.V1DaemonSet]:
         return self.connection.list_daemon_set_for_all_namespaces(
+            _request_timeout=self.timeout
+        ).items
+
+    def _query_raw_statefulsets(self) -> Sequence[client.V1DaemonSet]:
+        return self.connection.list_stateful_set_for_all_namespaces(
             _request_timeout=self.timeout
         ).items
 
@@ -238,6 +245,7 @@ class APIServer:
             workload_resources=itertools.chain(
                 self._external_api.raw_deployments,
                 self._external_api.raw_daemon_sets,
+                self._external_api.raw_statefulsets,
                 self._external_api.raw_replica_sets,
                 self._batch_api.raw_cron_jobs,
                 self._batch_api.raw_jobs,
@@ -264,6 +272,14 @@ class APIServer:
                 raw_daemon_set, self._controller_to_pods[raw_daemon_set.metadata.uid]
             )
             for raw_daemon_set in self._external_api.raw_daemon_sets
+        ]
+
+    def statefulsets(self) -> Sequence[api.StatefulSet]:
+        return [
+            statefulset_from_client(
+                raw_statefulset, self._controller_to_pods[raw_statefulset.metadata.uid]
+            )
+            for raw_statefulset in self._external_api.raw_statefulsets
         ]
 
     def nodes(self) -> Sequence[api.Node]:

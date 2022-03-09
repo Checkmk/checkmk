@@ -161,7 +161,7 @@ def parse_arguments(args: List[str]) -> argparse.Namespace:
         nargs="+",
         default=["deployments", "daemonsets", "nodes", "pods"],
         help="The Kubernetes objects which are supposed to be monitored. Available objects: "
-        "deployments, nodes, pods, daemonsets, cronjobs_pods",
+        "deployments, nodes, pods, daemonsets, statefulsets, cronjobs_pods",
     )
     p.add_argument(
         "--api-server-endpoint", required=True, help="API server endpoint for Kubernetes API calls"
@@ -284,7 +284,7 @@ class Pod:
         self.status = status
         self.containers = containers
         self.init_containers = init_containers
-        self._controllers: List[Union[Deployment, DaemonSet]] = []
+        self._controllers: List[Union[Deployment, DaemonSet, StatefulSet]] = []
 
     @property
     def phase(self):
@@ -384,7 +384,7 @@ class Pod:
             return None
         return api.StartTime(start_time=self.status.start_time)
 
-    def add_controller(self, controller: Union[Deployment, DaemonSet]) -> None:
+    def add_controller(self, controller: Union[Deployment, DaemonSet, StatefulSet]) -> None:
         """Add a handling controller of the pod
 
         Kubernetes control objects manage pods based on their labels. As the API does not
@@ -560,6 +560,33 @@ def daemonset_info(daemonset: DaemonSet, cluster_name: str) -> section.DaemonSet
     )
 
 
+class StatefulSet(PodOwner):
+    def __init__(self, metadata: api.MetaData) -> None:
+        super().__init__()
+        self.metadata = metadata
+        self.type_: str = "statefulset"
+
+    def name(self, prepend_namespace: bool = False) -> str:
+        if not prepend_namespace:
+            return self.metadata.name
+        return f"{self.metadata.namespace}_{self.metadata.name}"
+
+    def pods(self, phase: Optional[api.Phase] = None) -> Sequence[Pod]:
+        if phase is None:
+            return self._pods
+        return [pod for pod in self._pods if pod.phase == phase]
+
+    def add_pod(self, pod: Pod) -> None:
+        super().add_pod(pod)
+        pod.add_controller(self)
+
+    def memory_resources(self) -> section.Resources:
+        return _collect_memory_resources(self._pods)
+
+    def cpu_resources(self) -> section.Resources:
+        return _collect_cpu_resources(self._pods)
+
+
 class Node(PodOwner):
     def __init__(
         self,
@@ -687,6 +714,7 @@ class Cluster:
         cls,
         pods: Sequence[api.Pod],
         nodes: Sequence[api.Node],
+        statefulsets: Sequence[api.StatefulSet],
         deployments: Optional[Sequence[api.Deployment]] = None,
         cron_jobs: Optional[Sequence[api.CronJob]] = None,
         daemon_sets: Optional[Sequence[api.DaemonSet]] = None,
@@ -738,6 +766,11 @@ class Cluster:
                 cluster.add_daemon_set(daemon_set)
                 _register_owner_for_pods(daemon_set, api_daemon_set.pods)
 
+        for api_statefulset in statefulsets:
+            statefulset = StatefulSet(api_statefulset.metadata)
+            cluster.add_statefulset(statefulset)
+            _register_owner_for_pods(statefulset, api_statefulset.pods)
+
         owned_pods = set(_pod_owners_mapping.keys())
         present_pods = set(pod.uid for pod in pods)
         if not owned_pods.issubset(present_pods):
@@ -766,9 +799,11 @@ class Cluster:
                 pod_owner.add_pod(pod)
 
         LOGGER.debug(
-            "Cluster composition: Nodes (%s), " "Deployments (%s), " "Pods (%s)",
+            "Cluster composition: Nodes (%s), Deployments (%s), DaemonSets (%s), StatefulSets (%s), Pods (%s)",
             len(cluster.nodes()),
             len(cluster.deployments()),
+            len(cluster.daemon_sets()),
+            len(cluster.statefulsets()),
             len(cluster.pods()),
         )
         return cluster
@@ -777,6 +812,7 @@ class Cluster:
         self._cluster_details: Optional[api.ClusterDetails] = cluster_details
         self._cron_jobs: List[CronJob] = []
         self._daemon_sets: List[DaemonSet] = []
+        self._statefulsets: List[StatefulSet] = []
         self._deployments: List[Deployment] = []
         self._nodes: Dict[api.NodeName, Node] = {}
         self._pods: Dict[str, Pod] = {}
@@ -792,6 +828,9 @@ class Cluster:
 
     def add_daemon_set(self, daemon_set: DaemonSet) -> None:
         self._daemon_sets.append(daemon_set)
+
+    def add_statefulset(self, statefulset: StatefulSet) -> None:
+        self._statefulsets.append(statefulset)
 
     def add_pod(self, pod: Pod) -> None:
         self._pods[pod.uid] = pod
@@ -826,6 +865,9 @@ class Cluster:
 
     def daemon_sets(self) -> Sequence[DaemonSet]:
         return self._daemon_sets
+
+    def statefulsets(self) -> Sequence[StatefulSet]:
+        return self._statefulsets
 
     def deployments(self) -> Sequence[Deployment]:
         return self._deployments
@@ -981,6 +1023,25 @@ def write_daemon_sets_api_sections(
             piggyback_formatter(daemon_set.name(prepend_namespace=True))
         ):
             output_sections(daemon_set)
+
+
+def write_statefulsets_api_sections(
+    api_statefulsets: Sequence[StatefulSet], piggyback_formatter: Callable[[str], str]
+) -> None:
+    """Write the StatefulSet relevant sections based on k8 API information"""
+
+    def output_sections(cluster_statefulset: StatefulSet) -> None:
+        sections = {
+            "kube_memory_resources_v1": cluster_statefulset.memory_resources,
+            "kube_cpu_resources_v1": cluster_statefulset.cpu_resources,
+        }
+        _write_sections(sections)
+
+    for statefulset in api_statefulsets:
+        with ConditionalPiggybackSection(
+            piggyback_formatter(statefulset.name(prepend_namespace=True))
+        ):
+            output_sections(statefulset)
 
 
 def write_pods_api_sections(
@@ -1472,6 +1533,14 @@ def deployments_from_namespaces(
     return [deployment for deployment in deployments if deployment.metadata.namespace in namespaces]
 
 
+def statefulsets_from_namespaces(
+    statefulsets: Sequence[StatefulSet], namespaces: Set[api.Namespace]
+) -> Sequence[StatefulSet]:
+    return [
+        statefulset for statefulset in statefulsets if statefulset.metadata.namespace in namespaces
+    ]
+
+
 def filter_monitored_namespaces(
     cluster_namespaces: Set[api.Namespace],
     namespace_include_patterns: Sequence[str],
@@ -1751,6 +1820,7 @@ def main(args: Optional[List[str]] = None) -> int:
                 deployments=api_server.deployments(),
                 cron_jobs=api_server.cron_jobs(),
                 daemon_sets=api_server.daemon_sets(),
+                statefulsets=api_server.statefulsets(),
                 cluster_details=api_server.cluster_details(),
             )
 
@@ -1794,6 +1864,13 @@ def main(args: Optional[List[str]] = None) -> int:
                         if daemonset.metadata.namespace in monitored_namespaces
                     ],
                     piggyback_formatter=functools.partial(piggyback_formatter, "daemonset"),
+                )
+
+            if "statefulsets" in arguments.monitored_objects:
+                LOGGER.info("Write StatefulSets sections based on API data")
+                write_statefulsets_api_sections(
+                    statefulsets_from_namespaces(cluster.statefulsets(), monitored_namespaces),
+                    piggyback_formatter=functools.partial(piggyback_formatter, "statefulset"),
                 )
 
             monitored_pods: Set[PodLookupName] = {

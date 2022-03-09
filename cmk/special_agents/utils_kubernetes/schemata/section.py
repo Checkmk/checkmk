@@ -140,6 +140,7 @@ class AllocatableResource(BaseModel):
 class ControllerType(enum.Enum):
     deployment = "deployment"
     daemon_set = "daemon_set"
+    statefulset = "statefulset"
 
     @staticmethod
     def from_str(label):
@@ -147,6 +148,8 @@ class ControllerType(enum.Enum):
             return ControllerType.deployment
         if label == "daemon_set":
             return ControllerType.daemon_set
+        if label == "statefulset":
+            return ControllerType.statefulset
         raise ValueError(f"Unknown controller type {label} specified")
 
 

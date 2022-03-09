@@ -470,3 +470,12 @@ def daemonset_from_client(
         spec=parse_daemonset_spec(daemonset.spec),
         pods=pod_uids,
     )
+
+
+def statefulset_from_client(
+    statefulset: client.V1StatefulSet, pod_uids=Sequence[api.PodUID]
+) -> api.StatefulSet:
+    return api.StatefulSet(
+        metadata=parse_metadata(statefulset.metadata),
+        pods=pod_uids,
+    )

@@ -216,6 +216,11 @@ class DaemonSet(BaseModel):
     pods: Sequence[PodUID]
 
 
+class StatefulSet(BaseModel):
+    metadata: MetaData
+    pods: Sequence[PodUID]
+
+
 class Phase(str, enum.Enum):
     RUNNING = "running"
     PENDING = "pending"
@@ -369,6 +374,9 @@ class API(Protocol):
         ...
 
     def daemon_sets(self):
+        ...
+
+    def statefulsets(self):
         ...
 
     def cluster_details(self) -> ClusterDetails:

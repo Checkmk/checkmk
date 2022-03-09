@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import time
-from typing import Any, Mapping, Optional
+from typing import Any, Mapping, MutableMapping, Optional
 
 from .agent_based_api.v1 import (
     check_levels,
@@ -69,13 +69,29 @@ def check_netapp_api_vf_stats(
     section_netapp_api_vf_stats: Optional[netapp_api.SectionSingleInstance],
     section_netapp_api_cpu: Optional[netapp_api.CPUSection],
 ) -> type_defs.CheckResult:
+    yield from _check_netapp_api_vf_stats(
+        item,
+        params,
+        section_netapp_api_vf_stats,
+        section_netapp_api_cpu,
+        now=time.time(),
+        value_store=get_value_store(),
+    )
+
+
+def _check_netapp_api_vf_stats(
+    item: str,
+    params: Mapping[str, Any],
+    section_netapp_api_vf_stats: Optional[netapp_api.SectionSingleInstance],
+    section_netapp_api_cpu: Optional[netapp_api.CPUSection],
+    now: float,
+    value_store: MutableMapping[str, Any],
+) -> type_defs.CheckResult:
 
     vf = (section_netapp_api_vf_stats or {}).get(item)
     if not vf:
         return
 
-    value_store = get_value_store()
-    now = time.time()
     raise_ingore_res = False
     rates = {}
 
@@ -136,12 +152,19 @@ def check_netapp_api_vf_stats_traffic(
     item: str,
     section: netapp_api.SectionSingleInstance,
 ) -> type_defs.CheckResult:
+    yield from _check_netapp_api_vf_stats_traffic(item, section, time.time(), get_value_store())
+
+
+def _check_netapp_api_vf_stats_traffic(
+    item: str,
+    section: netapp_api.SectionSingleInstance,
+    now: float,
+    value_store: MutableMapping[str, Any],
+) -> type_defs.CheckResult:
     vf = section.get(item)
     if not vf:
         return
 
-    value_store = get_value_store()
-    now = time.time()
     for entry, name, factor, render_func in [
         ("read_ops", "Read operations", 1, _render_ops),
         ("write_ops", "Write operations", 1, _render_ops),

@@ -21,25 +21,23 @@ from cmk.gui.valuespec import CascadingDropdown, Dictionary, Filesize, Percentag
 #     ))
 
 
-def UsedSize(**args):
+def UsedSize() -> Tuple:
     GB = 1024 * 1024 * 1024
     return Tuple(
         elements=[
             Filesize(title=_("Warning at"), default_value=1 * GB),
             Filesize(title=_("Critical at"), default_value=2 * GB),
-        ],
-        **args,
+        ]
     )
 
 
-def FreeSize(**args):
+def FreeSize() -> Tuple:
     GB = 1024 * 1024 * 1024
     return Tuple(
         elements=[
             Filesize(title=_("Warning below"), default_value=2 * GB),
             Filesize(title=_("Critical below"), default_value=1 * GB),
-        ],
-        **args,
+        ]
     )
 
 

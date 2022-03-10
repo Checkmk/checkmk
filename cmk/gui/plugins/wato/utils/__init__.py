@@ -1310,9 +1310,7 @@ def Levels(
                     ),
                 ],
             ),
-            PredictiveLevels(
-                default_difference=default_difference,
-            ),
+            PredictiveLevels(default_difference=default_difference, unit=unit),
         ],
         match=match_levels_alternative,
         default_value=default_value,

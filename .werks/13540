@@ -1,0 +1,32 @@
+Title: Do not forward data from management board to host specific services if no host data is available
+Class: fix
+Compatible: incomp
+Component: checks
+Date: 1646899028
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0b2
+
+In Checkmk 1.6 some plugins where discovered for management boards, but with
+the regular host plugin name. If a host provides no data then the data from the
+management board were used. In general this is very confusing and not right at
+all.
+
+With this change these services will go to UNKNOWN. Please rediscover the
+affected hosts. You may lose the history of these services and your rules may
+also have to be adapted.
+
+Example:
+
+An agent-based host has configured a SNMP management board. Then this host has
+two data sources: the agent data source (host) and the SNMP management board.
+
+After the host was discovered two uptime services were found: One service from
+its own data source and the other one from the management board with the prefix
+"Management Interface: ".
+
+During checking if the host's data source does not provide any data for the
+uptime service then the data of the management board is used for this service.
+This results in two uptime services which process the same data.

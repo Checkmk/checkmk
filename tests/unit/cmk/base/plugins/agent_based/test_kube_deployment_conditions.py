@@ -231,4 +231,4 @@ def test_failing_condition_with_warn_time_difference(check_result: CheckResult):
     results = list(check_result)
     assert len(results) == 1
     assert isinstance(results[0], Result)
-    assert results[0].summary.startswith("PROGRESSING: False (reason)")
+    assert results[0].summary.startswith("PROGRESSING: False (reason: message)")

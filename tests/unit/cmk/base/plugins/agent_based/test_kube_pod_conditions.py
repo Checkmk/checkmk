@@ -257,7 +257,7 @@ def test_check_all_results_with_summary_status_true(status, check_result, sectio
 @pytest.mark.parametrize("status", [False])
 def test_check_all_results_with_summary_status_false(status, check_result, section):
     expected_summaries = [
-        f"{kube_pod_conditions.ADDITIONAL_SERVICE_TEXT[k].not_passed} ({REASON}: {DETAIL}) for 0 seconds"
+        f"{k.upper()}: {status} ({REASON}: {DETAIL}) for 0 seconds"
         for k in kube_pod_conditions.LOGICAL_ORDER
     ]
     assert list(r.summary for r in check_result) == expected_summaries
@@ -307,7 +307,7 @@ def test_check_results_state_ok_when_status_false_and_no_params(check_result):
 def test_check_results_sets_summary_when_status_false(state, check_result):
     time_diff = render.timespan(state * MINUTE)
     expected_prefixes = [
-        f"{kube_pod_conditions.ADDITIONAL_SERVICE_TEXT[k].not_passed} ({REASON}: {DETAIL}) for {time_diff}"
+        f"{k.upper()}: False ({REASON}: {DETAIL}) for {time_diff}"
         for k in kube_pod_conditions.LOGICAL_ORDER
     ]
     for expected_prefix, result in zip(expected_prefixes, check_result):

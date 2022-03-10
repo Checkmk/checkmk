@@ -6,7 +6,6 @@
 
 import json
 import time
-from dataclasses import dataclass
 from typing import Mapping, Optional, Tuple
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
@@ -23,7 +22,11 @@ from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
     StringTable,
 )
 from cmk.base.plugins.agent_based.utils.k8s import PodConditions
-from cmk.base.plugins.agent_based.utils.kube import VSResultAge
+from cmk.base.plugins.agent_based.utils.kube import (
+    condition_detailed_description,
+    condition_short_description,
+    VSResultAge,
+)
 
 
 def parse(string_table: StringTable) -> PodConditions:
@@ -34,19 +37,6 @@ def parse(string_table: StringTable) -> PodConditions:
 def discovery(section: PodConditions) -> DiscoveryResult:
     yield Service()
 
-
-@dataclass(frozen=True)
-class SummaryText:
-    passed: str
-    not_passed: str
-
-
-ADDITIONAL_SERVICE_TEXT = {
-    "initialized": SummaryText(passed="Initialized", not_passed="Not initialized"),
-    "scheduled": SummaryText(passed="Scheduled", not_passed="Not scheduled"),
-    "containersready": SummaryText(passed="Containers ready", not_passed="Containers not ready"),
-    "ready": SummaryText(passed="Ready", not_passed="Not ready"),
-}
 
 LOGICAL_ORDER = ["scheduled", "initialized", "containersready", "ready"]
 
@@ -85,22 +75,37 @@ def check(params: Mapping[str, VSResultAge], section: PodConditions) -> CheckRes
     `LOGICAL_ORDER`.  The last two conditions, `containersready` and `ready`,
     can be in a failed state simultaneously.  When a condition is missing (i.e.
     is `None`), it means that the previous condition is in a failed state."""
-    if all(cond and cond.status for _, cond in section):
-        yield Result(state=State.OK, summary="Ready, all conditions passed")
-        return
     section_dict = section.dict()
+
+    if all(cond and cond.status for _, cond in section):
+        yield Result(
+            state=State.OK,
+            summary="Ready, all conditions passed",
+            details="\n".join(
+                [
+                    condition_detailed_description(
+                        name, cond["status"], cond["reason"], cond["detail"]
+                    )
+                    for name in LOGICAL_ORDER
+                    if (cond := section_dict.get(name)) is not None
+                ]
+            ),
+        )
+        return
+
     curr_timestamp = time.time()
     for name in LOGICAL_ORDER:
-        cond_service_text = ADDITIONAL_SERVICE_TEXT[name]
         cond = section_dict[name]
         if cond is not None:
             time_diff = curr_timestamp - cond["last_transition_time"]  # keep the last-seen one
-            if cond["status"] is True:
-                yield Result(state=State.OK, summary=cond_service_text.passed)
+            if (status := cond["status"]) is True:
+                yield Result(state=State.OK, summary=condition_short_description(name, str(status)))
                 continue
-            summary_prefix = f"{cond_service_text.not_passed} ({cond['reason']}: {cond['detail']})"
+            summary_prefix = condition_detailed_description(
+                name, status, cond["reason"], cond["detail"]
+            )
         else:
-            summary_prefix = cond_service_text.not_passed
+            summary_prefix = condition_short_description(name, "False")
         for result in check_levels(
             time_diff, levels_upper=get_levels_for(params, name), render_func=render.timespan
         ):

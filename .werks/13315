@@ -1,0 +1,12 @@
+Title: Add support for Checkmk Appliance 1.5+
+Class: feature
+Compatible: compat
+Component: distros
+Date: 1635590103
+Edition: cre
+Knowledge: undoc
+Level: 2
+State: unknown
+Version: 2.0.0p22
+
+

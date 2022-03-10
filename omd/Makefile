@@ -118,7 +118,7 @@ RPM_BUILDROOT := $(BUILD_BASE_DIR)/rpm/buildroot
 
 SKEL := $(DESTDIR)$(OMD_ROOT)/skel
 SKEL_PERMISSIONS := $(DESTDIR)$(OMD_ROOT)/share/omd/skel.permissions
-CMA_PKG_VERSION_TXT := $(shell if [ "$(DISTRO_CODE)" = "stretch" ]; then echo "-2" ; fi )
+CMA_PKG_VERSION_TXT := $(shell if [ "$(DISTRO_CODE)" = "buster" ]; then echo "-3" ; elif [ "$(DISTRO_CODE)" = "stretch" ]; then echo "-2"; fi )
 ARCH := $(shell uname -m)
 CMA_PACKAGE:= $(REPO_PATH)/check-mk-$(EDITION)-$(PKG_VERSION)$(CMA_PKG_VERSION_TXT)-$(ARCH).cma
 BOM := bill-of-materials.json
@@ -311,7 +311,15 @@ $(APPLIANCE_INSTALL_CMA): $(PRE_INSTALL)
 # Please note: APPLIANCE_*_CMA are defined in omd/packages/appliance/appliance.make
 $(CMA_PACKAGE): $(APPLIANCE_INSTALL_CMA) install
 	# Create info file to mark minimal cma firmware version requirement
-	echo -e "MIN_VERSION=1.4.17\n" > $(DESTDIR)/opt/omd/versions/$(OMD_VERSION)/cma.info
+	@if [ "$(DISTRO_CODE)" = "buster" ]; then \
+	    MIN_VERSION=1.5.0 ; \
+	elif [ "$(DISTRO_CODE)" = "stretch" ]; then \
+	    MIN_VERSION=1.4.17 ; \
+	else \
+	    echo "ERROR: Unsupported CMA platform ($(DISTRO_CODE))" ; \
+	    exit 1 ; \
+	fi ; \
+	echo -e "MIN_VERSION=$(MIN_VERSION)\n" > $(DESTDIR)/opt/omd/versions/$(OMD_VERSION)/cma.info
 
 	# Mark demo builds in cma.info file
 

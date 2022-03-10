@@ -410,8 +410,8 @@ def test_check_mssql_locks_per_batch(item, params, section, expected_results):
     # re-run check_locks_per_batch_base() once in order to get rates
     vs: Dict[str, Any] = {}
     results = []
-    for _ in range(2):
-        for result in check_locks_per_batch_base(vs, item, params, section):
+    for time in range(2):
+        for result in check_locks_per_batch_base(vs, item, params, section, time*60):
             results.append(result)
     print(",\n".join(str(r) for r in results))
     assert results == expected_results

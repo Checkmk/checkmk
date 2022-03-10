@@ -53,6 +53,7 @@ def _check_common(
     item: str,
     params: Mapping[str, Any],
     section: Section,
+    live_now: float,
 ) -> CheckResult:
     data_locks = section.get(("%s:Locks" % item, "_Total"), {})
     data_stats = section.get(("%s:SQL_Statistics" % item, "None"), {})
@@ -60,7 +61,7 @@ def _check_common(
     if not data_locks and not data_stats:
         raise IgnoreResultsError("Item not found in monitoring data")
 
-    now = data_locks.get("utc_time", data_stats.get("utc_time")) or time.time()
+    now = data_locks.get("utc_time", data_stats.get("utc_time")) or live_now
     lock_rate_base = get_int(data_locks, "lock_requests/sec")
     batch_rate_base = get_int(data_stats, "batch_requests/sec")
 
@@ -94,6 +95,7 @@ def _check_base(
     item: str,
     params: Mapping[str, Any],
     section: Section,
+    live_now: float,
 ) -> CheckResult:
     """
     >>> from contextlib import suppress
@@ -103,13 +105,13 @@ def _check_base(
     ...     for result in _check_base(vs, "MSSQL_VEEAMSQL2012", {}, {
     ...         ('MSSQL_VEEAMSQL2012:SQL_Statistics', 'None'): {'batch_requests/sec': 22476651+i, 'forced_parameterizations/sec': 0, 'auto-param_attempts/sec': 1133, 'failed_auto-params/sec': 1027, 'safe_auto-params/sec': 8, 'unsafe_auto-params/sec': 98, 'sql_compilations/sec': 2189403, 'sql_re-compilations/sec': 272134, 'sql_attention_rate': 199, 'guided_plan_executions/sec': 0, 'misguided_plan_executions/sec': 0},
     ...         ('MSSQL_VEEAMSQL2012:Locks', '_Total'): {'lock_requests/sec': 3900449701+i, 'lock_timeouts/sec': 86978, 'number_of_deadlocks/sec': 19, 'lock_waits/sec': 938, 'lock_wait_time_(ms)': 354413, 'average_wait_time_(ms)': 354413, 'average_wait_time_base': 938, 'lock_timeouts_(timeout_>_0)/sec': 0},
-    ...     }):
+    ...     }, i*60.0):
     ...       print(result)
     Cannot calculate rates yet
     Result(state=<State.OK: 0>, summary='1.0')
     Metric('locks_per_batch', 1.0, boundaries=(0.0, None))
     """
-    yield from _check_common(value_store, "", item, params, section)
+    yield from _check_common(value_store, "", item, params, section, live_now)
 
 
 def check_mssql_counters_locks_per_batch(
@@ -117,7 +119,7 @@ def check_mssql_counters_locks_per_batch(
     params: Mapping[str, Any],
     section: Section,
 ) -> CheckResult:
-    yield from _check_base(get_value_store(), item, params, section)
+    yield from _check_base(get_value_store(), item, params, section, time.time())
 
 
 register.check_plugin(

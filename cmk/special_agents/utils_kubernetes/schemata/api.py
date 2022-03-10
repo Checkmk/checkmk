@@ -288,13 +288,16 @@ class ContainerTerminatedState(BaseModel):
     detail: Optional[str]
 
 
+ContainerState = Union[ContainerTerminatedState, ContainerWaitingState, ContainerRunningState]
+
+
 class ContainerStatus(BaseModel):
     container_id: Optional[str]  # container_id of non-ready container is None
     image_id: str  # image_id of non-ready container is ""
     name: str
     image: str
     ready: bool
-    state: Union[ContainerTerminatedState, ContainerWaitingState, ContainerRunningState]
+    state: ContainerState
     restart_count: int
 
 

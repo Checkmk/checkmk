@@ -1,69 +1,102 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from cmk.base.check_api import passwordstore_get_cmdline
+
+
 def check_mail_loop_arguments(params):
-    args = []
+    """
+    >>> for a in check_mail_loop_arguments({
+    ...     'item': 'MailLoop_imap',
+    ...     'subject': 'Some subject',
+    ...     'smtp_server': 'smtp.gmx.de',
+    ...     'smtp_tls': True,
+    ...     'imap_tls': True,
+    ...     'smtp_port': 42,
+    ...     'smtp_auth': ('me@gmx.de', ('password', 'p4ssw0rd')),
+    ...     'fetch': ('IMAP', {
+    ...       'server': 'imap.gmx.de',
+    ...       'ssl': (True, None),
+    ...       'auth': ('me@gmx.de', ('password', 'p4ssw0rd'))}),
+    ...     'mail_from': 'me_from@gmx.de',
+    ...     'mail_to': 'me_to@gmx.de',
+    ...     'connect_timeout': 23,
+    ...     'duration': (93780, 183840),
+    ... }):
+    ...   print(a)
+    --fetch-protocol=IMAP
+    --fetch-server=imap.gmx.de
+    --fetch-tls
+    --fetch-username=me@gmx.de
+    --fetch-password=p4ssw0rd
+    --connect-timeout=23
+    --smtp-server=smtp.gmx.de
+    --smtp-tls
+    --smtp-port=42
+    --smtp-username=me@gmx.de
+    --smtp-password=p4ssw0rd
+    --mail-from=me_from@gmx.de
+    --mail-to=me_to@gmx.de
+    --status-suffix=host-MailLoop_imap
+    --warning=93780
+    --critical=183840
+    --subject=Some subject
+    """
+    try:
+        fetch_protocol, fetch_params = params["fetch"]
+        fetch_use_tls, fetch_port = fetch_params["ssl"]
+        fetch_username, fetch_password = fetch_params["auth"]
+    except KeyError as exc:
+        raise ValueError(
+            f"Params for check_mail_loop are faulty (missing {exc}), did you update the config?"
+        )
 
-    if "smtp_server" in params:
-        args.append("--smtp-server=%s" % params["smtp_server"])
-    else:
-        args.append("--smtp-server=$HOSTADDRESS$")
-
-    # note: 'imap_tls' is also used for POP3, so it should be called "fetch_tls"
-    if "imap_tls" in params:
+    args = [
+        f"--fetch-protocol={fetch_protocol}",
+        f"--fetch-server={fetch_params.get('server', '$HOSTADDRESS$')}",
+    ]
+    if fetch_use_tls or "imap_tls" in params:
         args.append("--fetch-tls")
+    if fetch_port:
+        args.append(f"--fetch-port={fetch_port}")
+
+    args.append(f"--fetch-username={fetch_username}")
+    args.append(passwordstore_get_cmdline("--fetch-password=%s", fetch_password))
+
+    if "connect_timeout" in params:
+        args.append(f"--connect-timeout={params['connect_timeout']}")
+
+    args.append(f"--smtp-server={params.get('smtp_server', '$HOSTADDRESS$')}")
 
     if "smtp_tls" in params:
         args.append("--smtp-tls")
 
     if "smtp_port" in params:
-        args.append("--smtp-port=%d" % params["smtp_port"])
+        args.append(f"--smtp-port={params['smtp_port']}")
 
     if "smtp_auth" in params:
         username, password = params["smtp_auth"]
-        args.append("--smtp-username=%s" % username)
+        args.append(f"--smtp-username={username}")
         args.append(passwordstore_get_cmdline("--smtp-password=%s", password))
 
-    fetch_proto, fetch_params = params["fetch"]
-    args.append("--fetch-protocol=%s" % fetch_proto)
-
-    if "server" in fetch_params:
-        args.append("--fetch-server=%s" % fetch_params["server"])
-    else:
-        args.append("--fetch-server=$HOSTADDRESS$")
-
-    fetch_use_ssl, fetch_port = fetch_params["ssl"]
-    if fetch_use_ssl:
-        args.append("--fetch-tls")
-    if fetch_port is not None:
-        args.append("--fetch-port=%d" % fetch_port)
-
-    username, password = fetch_params["auth"]
-    args.append("--fetch-username=%s" % username)
-    args.append(passwordstore_get_cmdline("--fetch-password=%s", password))
-
-    args.append("--mail-from=%s" % params["mail_from"])
-    args.append("--mail-to=%s" % params["mail_to"])
-
-    if "connect_timeout" in params:
-        args.append("--connect-timeout=%d" % params["connect_timeout"])
+    args.append(f"--mail-from={params['mail_from']}")
+    args.append(f"--mail-to={params['mail_to']}")
 
     if "delete_messages" in params:
         args.append("--delete-messages")
 
-    args.append("--status-suffix=%s" % (host_name() + "-" + params["item"]))
+    args.append(f"--status-suffix={host_name()}-{params['item']}")
 
     if "duration" in params:
         warning, critical = params["duration"]
-        args.append("--warning=%d" % warning)
-        args.append("--critical=%d" % critical)
+        args.append(f"--warning={warning}")
+        args.append(f"--critical={critical}")
 
     if "subject" in params:
-        args.append("--subject=%s" % params["subject"])
+        args.append(f"--subject={params['subject']}")
 
     return args
 
@@ -71,6 +104,6 @@ def check_mail_loop_arguments(params):
 active_check_info["mail_loop"] = {
     "command_line": "check_mail_loop $ARG1$",
     "argument_function": check_mail_loop_arguments,
-    "service_description": lambda params: "Mail Loop %s" % params["item"],
+    "service_description": lambda params: f"Mail Loop {params['item']}",
     "has_perfdata": True,
 }

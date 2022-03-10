@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
 """Common module for mail related active checks
 Current responsibilities include:
 * common active check error output
@@ -297,13 +297,10 @@ class Mailbox:
             # mail = email.message_from_string(msg[0][1].decode())
             # parsed = email.utils.parsedate_tz(mail["DATE"])
             # return int(time.time()) if parsed is None else email.utils.mktime_tz(parsed)
-
+            raw_number = verified_result(self._connection.fetch(mail_id, "INTERNALDATE"))[0]
+            assert isinstance(raw_number, bytes)
             return int(
-                time.mktime(
-                    imaplib.Internaldate2tuple(
-                        verified_result(self._connection.fetch(mail_id, "INTERNALDATE"))[0]
-                    )
-                )
+                time.mktime(imaplib.Internaldate2tuple(raw_number))  # type: ignore[arg-type]
             )
 
         if before is not None:

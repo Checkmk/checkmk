@@ -16,10 +16,10 @@ from cmk.base.plugins.agent_based.checkmk_agent import (
     _check_python_plugins,
     _check_transport,
     _check_version,
-    _ControllerInfo,
     check_checkmk_agent,
     discover_checkmk_agent,
 )
+from cmk.base.plugins.agent_based.utils.checkmk import ControllerSection
 
 # TODO: make this more blackboxy once API vialoations are reduced!
 
@@ -31,11 +31,11 @@ def _get_fix_time():
 
 
 def test_discovery_something() -> None:
-    assert [*discover_checkmk_agent({}, None)] == [Service()]
+    assert [*discover_checkmk_agent({}, None, None)] == [Service()]
 
 
 def test_check_no_data() -> None:
-    assert not [*check_checkmk_agent({}, None, None)]
+    assert not [*check_checkmk_agent({}, None, None, None)]
 
 
 def test_check_version_os_no_values() -> None:
@@ -190,7 +190,7 @@ def test_check_tranport_ls_ok(fail_state: State) -> None:
     assert not [
         *_check_transport(
             False,
-            _ControllerInfo("0.1.0", False),
+            ControllerSection(allow_legacy_pull=False, ip_allowlist=()),
             fail_state,
         )
     ]
@@ -198,7 +198,13 @@ def test_check_tranport_ls_ok(fail_state: State) -> None:
 
 @pytest.mark.parametrize("fail_state", list(State))
 def test_check_tranport_no_tls(fail_state: State) -> None:
-    assert [*_check_transport(False, _ControllerInfo("0.1.0", True), fail_state,)] == [
+    assert [
+        *_check_transport(
+            False,
+            ControllerSection(allow_legacy_pull=True, ip_allowlist=()),
+            fail_state,
+        )
+    ] == [
         Result(
             state=fail_state,
             summary="TLS is not activated on monitored host (see details)",

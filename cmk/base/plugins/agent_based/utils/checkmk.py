@@ -19,3 +19,9 @@ class Plugin(NamedTuple):
 class PluginSection(NamedTuple):
     plugins: Sequence[Plugin]
     local_checks: Sequence[Plugin]
+
+
+class ControllerSection(NamedTuple):
+    # Currently this is all we need. Extend on demand...
+    allow_legacy_pull: bool
+    ip_allowlist: tuple[str, ...]

@@ -42,6 +42,7 @@ def test_check():
             },
             None,
             _SECTION,
+            None,
         )
     ) == [
         Result(state=State.OK, summary="Agent plugins: 2"),

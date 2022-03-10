@@ -4,9 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import json
 import time
-from typing import Any, Iterable, Mapping, NamedTuple, Optional, Union
+from typing import Any, Iterable, Mapping, Optional, Sequence, Union
 
 from cmk.utils.misc import (  # pylint: disable=cmk-module-layer-violation
     is_daily_build_version,
@@ -28,21 +27,17 @@ from cmk.base.check_api import host_name  # pylint: disable=cmk-module-layer-vio
 
 from .agent_based_api.v1 import check_levels, regex, register, render, Result, Service, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
-from .utils.checkmk import CheckmkSection, Plugin, PluginSection
+from .utils.checkmk import CheckmkSection, ControllerSection, Plugin, PluginSection
 
 
 def _get_configured_only_from() -> Union[None, str, list[str]]:
     return config.HostConfig.make_host_config(host_name()).only_from
 
 
-class _ControllerInfo(NamedTuple):
-    version: str
-    allow_legacy_pull: bool
-
-
 def discover_checkmk_agent(
     section_check_mk: Optional[CheckmkSection],
     section_checkmk_agent_plugins: Optional[PluginSection],
+    section_cmk_agent_ctl_status: Optional[ControllerSection],
 ) -> DiscoveryResult:
     # If we're called, at least one section is not None, so just disocver.
     yield Service()
@@ -51,12 +46,8 @@ def discover_checkmk_agent(
 def _check_cmk_agent_installation(
     params: Mapping[str, Any],
     agent_info: CheckmkSection,
+    controller_info: Optional[ControllerSection],
 ) -> CheckResult:
-
-    controller_info = _get_controller_info(
-        agent_info.get("agentcontroller") or "",
-        agent_info.get("agentcontrollerstatus") or "",
-    )
 
     yield from _check_version(
         agent_info.get("version"),
@@ -73,7 +64,7 @@ def _check_cmk_agent_installation(
         State(params["legacy_pull_mode"]),
     )
     yield from _check_only_from(
-        agent_info.get("onlyfrom"),
+        agent_info.get("onlyfrom") if controller_info is None else controller_info.ip_allowlist,
         _get_configured_only_from(),
         State(params["restricted_address_mismatch"]),
     )
@@ -83,17 +74,6 @@ def _check_cmk_agent_installation(
     yield from _check_python_plugins(
         agent_info.get("failedpythonplugins"), agent_info.get("failedpythonreason")
     )
-
-
-# TODO: Parsing of the controller status output should be done in a dedicated section.
-def _get_controller_info(
-    controller_version: str,
-    raw_string: str,
-) -> Optional[_ControllerInfo]:
-    if not controller_version:
-        return None
-    loaded = json.loads(raw_string)
-    return _ControllerInfo(controller_version, loaded["allow_legacy_pull"])
 
 
 def _check_version(
@@ -144,13 +124,14 @@ def _render_agent_version_missmatch(
 
 
 def _check_only_from(
-    agent_only_from: Optional[str],
+    agent_only_from: Union[None, str, Sequence[str]],
     config_only_from: Union[None, str, list[str]],
     fail_state: State,
 ) -> CheckResult:
     if agent_only_from is None or config_only_from is None:
         return
 
+    # do we really need 'normalize_ip_addresses'? It deals with '{' expansion.
     allowed_nets = set(normalize_ip_addresses(agent_only_from))
     expected_nets = set(normalize_ip_addresses(config_only_from))
     if allowed_nets == expected_nets:
@@ -197,7 +178,7 @@ def _check_agent_update(
 
 def _check_transport(
     ssh_transport: bool,
-    controller_info: Optional[_ControllerInfo],
+    controller_info: Optional[ControllerSection],
     fail_state: State,
 ) -> CheckResult:
     if ssh_transport:
@@ -345,9 +326,12 @@ def check_checkmk_agent(
     params: Mapping[str, Any],
     section_check_mk: Optional[CheckmkSection],
     section_checkmk_agent_plugins: Optional[PluginSection],
+    section_cmk_agent_ctl_status: Optional[ControllerSection],
 ) -> CheckResult:
     if section_check_mk is not None:
-        yield from _check_cmk_agent_installation(params, section_check_mk)
+        yield from _check_cmk_agent_installation(
+            params, section_check_mk, section_cmk_agent_ctl_status
+        )
         yield from _check_cmk_agent_update(params, section_check_mk)
 
     if section_checkmk_agent_plugins is not None:
@@ -357,7 +341,7 @@ def check_checkmk_agent(
 register.check_plugin(
     name="checkmk_agent",
     service_name="Check_MK Agent",
-    sections=["check_mk", "checkmk_agent_plugins"],
+    sections=["check_mk", "checkmk_agent_plugins", "cmk_agent_ctl_status"],
     discovery_function=discover_checkmk_agent,
     check_function=check_checkmk_agent,
     # TODO: rename the ruleset?

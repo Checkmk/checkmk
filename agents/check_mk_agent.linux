@@ -357,8 +357,6 @@ DataDirectory: ${MK_VARDIR}
 SpoolDirectory: ${SPOOLDIR}
 PluginsDirectory: ${PLUGINSDIR}
 LocalDirectory: ${LOCALDIR}
-AgentController: $(cmk-agent-ctl --version 2>/dev/null)
-AgentControllerStatus: $(cmk-agent-ctl status --json 2>/dev/null)
 HERE
 
     # try to find only_from configuration
@@ -389,6 +387,13 @@ HERE
 FailedPythonReason: ${python_fail_msg}
 SSHClient: ${SSH_CLIENT}
 HERE
+}
+
+section_cmk_agent_ctl_status() {
+    cmk-agent-ctl --version 2>/dev/null >&2 || return
+
+    printf "<<<cmk_agent_ctl_status:sep(0)>>>\n"
+    cmk-agent-ctl status --json
 }
 
 section_checkmk_agent_plugins() {
@@ -1749,6 +1754,8 @@ export -f run_mrpe
 
 run_purely_synchronous_sections() {
     _log_section_time section_checkmk
+
+    _log_section_time section_cmk_agent_ctl_status
 
     [ -z "${MK_SKIP_LABELS}" ] && _log_section_time section_checkmk_agent_plugins
 

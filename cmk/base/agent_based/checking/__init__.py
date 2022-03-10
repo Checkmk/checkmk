@@ -439,7 +439,7 @@ def get_aggregated_result(
         else plugin.check_function
     )
 
-    section_kws, error_result = _get_monitoring_data_kwargs_handle_pre20_services(
+    section_kws, error_result = _get_monitoring_data_kwargs(
         parsed_sections_broker,
         host_config,
         config_cache,
@@ -504,42 +504,6 @@ def get_aggregated_result(
         data_received=True,
         result=result,
         cache_info=parsed_sections_broker.get_cache_info(plugin.sections),
-    )
-
-
-def _get_monitoring_data_kwargs_handle_pre20_services(
-    parsed_sections_broker: ParsedSectionsBroker,
-    host_config: config.HostConfig,
-    config_cache: config.ConfigCache,
-    ipaddress: Optional[HostAddress],
-    service: ConfiguredService,
-    sections: Sequence[ParsedSectionName],
-) -> Tuple[Mapping[str, object], ServiceCheckResult]:
-    """Handle cases of missing data due to changed plugin names
-
-    In 1.6 some plugins where discovered for management boards, but with
-    the regular host plugins name. In this case retry with the source type
-    forced to MANAGEMENT
-    """
-    kwargs, err_result = _get_monitoring_data_kwargs(
-        parsed_sections_broker,
-        host_config,
-        config_cache,
-        ipaddress,
-        service,
-        sections,
-    )
-    if kwargs or service.check_plugin_name.is_management_name():
-        return kwargs, err_result
-
-    return _get_monitoring_data_kwargs(
-        parsed_sections_broker,
-        host_config,
-        config_cache,
-        ipaddress,
-        service,
-        sections,
-        SourceType.MANAGEMENT,
     )
 
 

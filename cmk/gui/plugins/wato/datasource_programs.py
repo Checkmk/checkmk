@@ -879,6 +879,7 @@ def _valuespec_special_agents_kube():
                     choices=[
                         ("deployments", _("Deployments")),
                         ("daemonsets", _("DaemonSets")),
+                        ("statefulsets", _("StatefulSets")),
                         ("nodes", _("Nodes")),
                         ("pods", _("Pods")),
                         ("cronjobs_pods", _("Pods of CronJobs")),
@@ -886,6 +887,7 @@ def _valuespec_special_agents_kube():
                     default_value=[
                         "deployments",
                         "daemonsets",
+                        "statefulsets",
                         "nodes",
                         "pods",
                     ],

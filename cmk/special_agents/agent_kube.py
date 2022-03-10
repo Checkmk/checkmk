@@ -159,7 +159,7 @@ def parse_arguments(args: List[str]) -> argparse.Namespace:
     p.add_argument(
         "--monitored-objects",
         nargs="+",
-        default=["deployments", "daemonsets", "nodes", "pods"],
+        default=["deployments", "daemonsets", "statefulsets", "nodes", "pods"],
         help="The Kubernetes objects which are supposed to be monitored. Available objects: "
         "deployments, nodes, pods, daemonsets, statefulsets, cronjobs_pods",
     )

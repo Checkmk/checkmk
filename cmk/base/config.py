@@ -2715,20 +2715,14 @@ class HostConfig:
     def _is_inline_backend_supported(self) -> bool:
         return "netsnmp" in sys.modules and not cmk_version.is_raw_edition()
 
-    def _is_pysnmp_backend_supported(self) -> bool:
-        return "pysnmp" in sys.modules and not cmk_version.is_raw_edition()
-
     def _get_snmp_backend(self) -> SNMPBackendEnum:
         with_inline_snmp = self._is_inline_backend_supported()
-        with_pysnmp = self._is_pysnmp_backend_supported()
 
         host_backend_config = self._config_cache.host_extra_conf(self.hostname, snmp_backend_hosts)
 
         if host_backend_config:
             # If more backends are configured for this host take the first one
             host_backend = host_backend_config[0]
-            if with_pysnmp and host_backend == "pysnmp":
-                return SNMPBackendEnum.PYSNMP
             if with_inline_snmp and host_backend == "inline":
                 return SNMPBackendEnum.INLINE
             if host_backend == "classic":
@@ -2740,8 +2734,6 @@ class HostConfig:
         if self._is_host_snmp_v1():
             return SNMPBackendEnum.CLASSIC
 
-        if with_pysnmp and snmp_backend_default == "pysnmp":
-            return SNMPBackendEnum.PYSNMP
         if with_inline_snmp and snmp_backend_default == "inline":
             return SNMPBackendEnum.INLINE
 

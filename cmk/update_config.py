@@ -104,6 +104,7 @@ from cmk.gui.sites import has_wato_slave_sites, is_wato_slave_site
 from cmk.gui.userdb import load_users, save_users, Users
 from cmk.gui.utils.logged_in import SuperUserContext
 from cmk.gui.utils.script_helpers import gui_context
+from cmk.gui.wato.mkeventd import MACROS_AND_VARS
 from cmk.gui.watolib.changes import (
     ActivateChangesWriter,
     add_change,
@@ -282,6 +283,7 @@ class UpdateConfig:
             (self._add_site_ca_to_trusted_cas, "Adding site CA to trusted CAs"),
             (self._update_mknotifyd, "Rewrite mknotifyd config for central site"),
             (self._transform_influxdb_connnections, "Rewriting InfluxDB connections"),
+            (self._check_ec_rules, "Disabling unsafe EC rules"),
         ]
 
     def _initialize_base_environment(self) -> None:
@@ -1634,6 +1636,43 @@ class UpdateConfig:
                 for connection_id, connection_config in influx_db_connection_config.load_for_modification().items()
             }
         )
+
+    def _check_ec_rules(self) -> None:
+        """check for macros in EC scripts and disable them if found
+
+        The macros in shell scripts cannot be gated by quotes or something, so
+        an attacker could craft malicious logs and insert code.
+
+        This routine goes through all rules, checks for macros in the scripts
+        and then disables them"""
+        global_config = cmk.gui.watolib.global_settings.load_configuration_settings(
+            full_config=True
+        )
+        for action in global_config.get("actions", []):
+            if action["action"][0] == "script":
+                if not self._has_script_macros(action["action"][1]["script"]):
+                    self._logger.debug("Script %r doesn't use macros, that's good", action["id"])
+                    continue
+                if action["disabled"]:
+                    self._logger.info(
+                        "Script %r uses macros but was already disabled. Be careful if you enable this!",
+                        action["id"],
+                    )
+                else:
+                    self._logger.warning(
+                        "Script %r uses macros. We disable it. Please replace the macros with proper variables before enabling it again!",
+                        action["id"],
+                    )
+                    action["disabled"] = True
+        cmk.gui.watolib.global_settings.save_global_settings(global_config)
+
+    @staticmethod
+    def _has_script_macros(script_text: str) -> bool:
+        """check if a script uses macros"""
+        for macro_name, _description in MACROS_AND_VARS:
+            if f"${macro_name}$" in script_text:
+                return True
+        return False
 
 
 class PasswordSanitizer:

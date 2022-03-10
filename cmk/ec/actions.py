@@ -154,7 +154,7 @@ def _do_script_action(
 ) -> None:
     _execute_script(
         event_columns,
-        _prepare_text(action_config["script"], event_columns, _get_quoted_event(event, logger)),
+        _escape_null_bytes(action_config["script"]),
         event,
         logger,
     )

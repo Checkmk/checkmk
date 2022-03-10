@@ -53,7 +53,7 @@ constexpr std::string_view kMemName{"mem"};
 constexpr std::string_view kSystemTime{"systemtime"};
 constexpr std::string_view kServices{"services"};
 constexpr std::string_view kCheckMk{"check_mk"};
-constexpr std::string_view kCheckMkCtlStatus{"cmk_agent_ctl_status"};
+constexpr std::string_view kCheckMkCtlStatus{"cmk_agent_ctl_status:sep(0)"};
 
 constexpr std::string_view kPlugins{"plugins"};  // NOT used in makeHeader
 constexpr std::string_view kLocal{"local"};      // NOT used in makeHeader

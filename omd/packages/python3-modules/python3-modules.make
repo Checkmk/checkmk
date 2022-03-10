@@ -5,8 +5,13 @@ PYTHON3_MODULES := python3-modules
 # Use some pseudo version here. Don't use OMD_VERSION (would break the package cache)
 PYTHON3_MODULES_VERS := 1.1
 PYTHON3_MODULES_DIR := $(PYTHON3_MODULES)-$(PYTHON3_MODULES_VERS)
+
+PYTHON3_MODULES_DEPS := $(REPO_PATH)/Pipfile.lock \
+	$(wildcard $(REPO_PATH)/agent-receiver/*.py) \
+	$(wildcard $(REPO_PATH)/agent-receiver/agent_receiver/*.py)
+
 # Increase the number before the "-" to enforce a recreation of the build cache
-PYTHON3_MODULES_BUILD_ID := 15-$(shell md5sum $(REPO_PATH)/Pipfile.lock | cut -d' ' -f1)
+PYTHON3_MODULES_BUILD_ID := $(call cache_pkg_build_id,15,$(PYTHON3_MODULES_DEPS))
 
 PYTHON3_MODULES_UNPACK:= $(BUILD_HELPER_DIR)/$(PYTHON3_MODULES_DIR)-unpack
 PYTHON3_MODULES_PATCHING := $(BUILD_HELPER_DIR)/$(PYTHON3_MODULES_DIR)-patching

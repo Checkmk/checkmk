@@ -1125,7 +1125,7 @@ def filter_outdated_and_non_monitored_pods(
 
 
 def write_kube_object_performance_section(
-    kube_obj: Union[Cluster, Node, Deployment, DaemonSet],
+    kube_obj: Union[Cluster, Node, Deployment, DaemonSet, StatefulSet],
     performance_pods: Mapping[PodLookupName, PerformancePod],
     piggyback_name: Optional[str] = None,
 ):
@@ -1708,6 +1708,17 @@ def write_sections_based_on_performance_pods(
                 performance_pods,
                 piggyback_name=piggyback_formatter(
                     object_type="daemonset", namespace_name=daemonset.name(prepend_namespace=True)
+                ),
+            )
+    if "statefulsets" in monitored_objects:
+        LOGGER.info("Write StatefulSet sections based on performance data")
+        for statefulset in cluster.statefulsets():
+            write_kube_object_performance_section(
+                statefulset,
+                performance_pods,
+                piggyback_name=piggyback_formatter(
+                    object_type="statefulset",
+                    namespace_name=statefulset.name(prepend_namespace=True),
                 ),
             )
     LOGGER.info("Write cluster sections based on performance data")

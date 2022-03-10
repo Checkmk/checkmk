@@ -34,6 +34,39 @@ pytestmark = pytest.mark.checks
             '60',
         ],
     ),
+    (
+        {},
+        'hostname',
+        'ipaddress',
+        [
+            '--hostname',
+            'ipaddress',
+        ],
+    ),
+    (
+        {
+            'host': 'host_name',
+        },
+        'hostname',
+        'ipaddress',
+        [
+            '--hostname',
+            'hostname',
+        ],
+    ),
+    (
+        {
+            'host': ('custom', {
+                'host': 'custom'
+            })
+        },
+        'hostname',
+        'ipaddress',
+        [
+            '--hostname',
+            'custom',
+        ],
+    ),
 ])
 @pytest.mark.usefixtures('config_load_all_checks')
 def test_cisco_prime_argument_parsing(params, hostname, ipaddress, args):

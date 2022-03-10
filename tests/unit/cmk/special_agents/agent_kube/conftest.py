@@ -7,7 +7,7 @@
 import itertools
 
 # pylint: disable=comparison-with-callable,redefined-outer-name
-from typing import Callable, Sequence
+from typing import Callable, Dict, Iterator, Sequence, Type
 
 import pytest
 from pydantic_factories import ModelFactory, Use
@@ -93,7 +93,7 @@ def container_status_state() -> str:
 
 
 @pytest.fixture
-def container_state(container_status_state):
+def container_state(container_status_state) -> api.ContainerState:
     if container_status_state == "running":
         return ContainerRunningStateFactory.build()
     if container_status_state == "waiting":
@@ -104,8 +104,8 @@ def container_state(container_status_state):
 
 
 @pytest.fixture
-def container_status(container_state):
-    def _container_status():
+def container_status(container_state) -> Callable[[], api.ContainerStatus]:
+    def _container_status() -> api.ContainerStatus:
         class ContainerStatusFactory(ModelFactory):
             __model__ = api.ContainerStatus
 
@@ -118,34 +118,37 @@ def container_status(container_state):
 
 # Container Fixtures
 @pytest.fixture
-def pod_containers_count():
+def pod_containers_count() -> int:
     return 1
 
 
 @pytest.fixture
-def container_limit_cpu():
+def container_limit_cpu() -> float:
     return 2.0
 
 
 @pytest.fixture
-def container_request_cpu():
+def container_request_cpu() -> float:
     return 1.0
 
 
 @pytest.fixture
-def container_limit_memory():
+def container_limit_memory() -> float:
     return 2.0 * ONE_MiB
 
 
 @pytest.fixture
-def container_request_memory():
+def container_request_memory() -> float:
     return 1.0 * ONE_MiB
 
 
 @pytest.fixture
 def container_resources_requirements(
-    container_request_cpu, container_limit_cpu, container_request_memory, container_limit_memory
-):
+    container_request_cpu: float,
+    container_limit_cpu: float,
+    container_request_memory: float,
+    container_limit_memory: float,
+) -> api.ContainerResources:
     return api.ContainerResources(
         limits=api.ResourcesRequirements(
             memory=container_limit_memory,
@@ -159,7 +162,7 @@ def container_resources_requirements(
 
 
 @pytest.fixture
-def container_spec(container_resources_requirements):
+def container_spec(container_resources_requirements: api.ContainerResources) -> api.ContainerSpec:
     class ContainerSpecFactory(ModelFactory):
         __model__ = api.ContainerSpec
 
@@ -169,7 +172,7 @@ def container_spec(container_resources_requirements):
 
 
 @pytest.fixture
-def pod_spec(container_spec, pod_containers_count):
+def pod_spec(container_spec: api.ContainerSpec, pod_containers_count: int) -> api.PodSpec:
     class PodSpecFactory(ModelFactory):
         __model__ = api.PodSpec
 
@@ -179,30 +182,33 @@ def pod_spec(container_spec, pod_containers_count):
 
 
 @pytest.fixture
-def node_allocatable_cpu():
+def node_allocatable_cpu() -> float:
     return 6.0
 
 
 @pytest.fixture
-def node_allocatable_memory():
+def node_allocatable_memory() -> float:
     return 7.0 * ONE_GiB
 
 
 @pytest.fixture
-def node_allocatable_pods():
+def node_allocatable_pods() -> int:
     return 1
 
 
 @pytest.fixture
-def node_capacity_pods():
+def node_capacity_pods() -> int:
     return 1
 
 
 @pytest.fixture
 def node_resources_builder(
-    node_allocatable_cpu, node_allocatable_memory, node_allocatable_pods, node_capacity_pods
-):
-    def _node_resources_builder():
+    node_allocatable_cpu: float,
+    node_allocatable_memory: float,
+    node_allocatable_pods: int,
+    node_capacity_pods: int,
+) -> Callable[[], Dict[str, api.NodeResources]]:
+    def _node_resources_builder() -> Dict[str, api.NodeResources]:
         return {
             "capacity": NodeResourcesFactory.build(pods=node_capacity_pods),
             "allocatable": NodeResourcesFactory().build(
@@ -214,8 +220,10 @@ def node_resources_builder(
 
 
 @pytest.fixture
-def new_node(node_resources_builder):
-    def _new_node():
+def new_node(
+    node_resources_builder: Callable[[], Dict[str, api.NodeResources]]
+) -> Callable[[], agent_kube.Node]:
+    def _new_node() -> agent_kube.Node:
         return agent_kube.Node(
             metadata=NodeMetaDataFactory.build(),
             status=NodeStatusFactory.build(),
@@ -228,7 +236,9 @@ def new_node(node_resources_builder):
 
 
 @pytest.fixture
-def node(new_node, node_pods, new_pod):
+def node(
+    new_node: Callable[[], agent_kube.Node], node_pods: int, new_pod: Callable[[], agent_kube.Pod]
+) -> agent_kube.Node:
     node = new_node()
     for _ in range(node_pods):
         node.add_pod(new_pod())
@@ -236,24 +246,29 @@ def node(new_node, node_pods, new_pod):
 
 
 @pytest.fixture
-def phases():
+def phases() -> Type[api.Phase]:
     return api.Phase
 
 
 @pytest.fixture
-def phase_generator(phases):
-    def _phase_generator():
+def phase_generator(phases: Type[api.Phase]) -> Callable[[], Iterator[api.Phase]]:
+    def _phase_generator() -> Iterator[api.Phase]:
         yield from itertools.cycle(phases)
 
     return _phase_generator
 
 
 @pytest.fixture
-def new_pod(phase_generator, pod_spec, container_status, pod_containers_count):
+def new_pod(
+    phase_generator: Callable[[], Iterator[api.Phase]],
+    pod_spec: api.PodSpec,
+    container_status: Callable[[], api.ContainerStatus],
+    pod_containers_count: int,
+) -> Callable[[], agent_kube.Pod]:
     phases = phase_generator()
     containers = [container_status() for _ in range(pod_containers_count)]
 
-    def _new_pod():
+    def _new_pod() -> agent_kube.Pod:
         pod_status = PodStatusFactory.build()
         pod_status.phase = next(phases)
         return agent_kube.Pod(
@@ -269,12 +284,12 @@ def new_pod(phase_generator, pod_spec, container_status, pod_containers_count):
 
 
 @pytest.fixture
-def pod(new_pod) -> agent_kube.Pod:
+def pod(new_pod: Callable[[], agent_kube.Pod]) -> agent_kube.Pod:
     return new_pod()
 
 
 @pytest.fixture
-def node_pods():
+def node_pods() -> int:
     return len(api.Phase)
 
 
@@ -303,7 +318,11 @@ def daemon_set_pods() -> int:
 
 
 @pytest.fixture
-def daemon_set(new_daemon_set, daemon_set_pods, new_pod) -> agent_kube.DaemonSet:
+def daemon_set(
+    new_daemon_set: Callable[[], agent_kube.DaemonSet],
+    daemon_set_pods: int,
+    new_pod: Callable[[], agent_kube.Pod],
+) -> agent_kube.DaemonSet:
     daemon_set = new_daemon_set()
     for _ in range(daemon_set_pods):
         daemon_set.add_pod(new_pod())
@@ -347,7 +366,7 @@ def statefulset(
 
 
 @pytest.fixture
-def cluster_nodes():
+def cluster_nodes() -> int:
     return 3
 
 
@@ -368,7 +387,9 @@ def deployment_status() -> api.DeploymentStatus:
 
 
 @pytest.fixture
-def new_deployment(deployment_spec: api.DeploymentSpec, deployment_status: api.DeploymentStatus):
+def new_deployment(
+    deployment_spec: api.DeploymentSpec, deployment_status: api.DeploymentStatus
+) -> Callable[[], agent_kube.Deployment]:
     def _new_deployment() -> agent_kube.Deployment:
         return agent_kube.Deployment(
             metadata=MetaDataFactory.build(),
@@ -380,7 +401,7 @@ def new_deployment(deployment_spec: api.DeploymentSpec, deployment_status: api.D
 
 
 @pytest.fixture
-def deployment(new_deployment) -> agent_kube.Deployment:
+def deployment(new_deployment: Callable[[], agent_kube.Deployment]) -> agent_kube.Deployment:
     return new_deployment()
 
 
@@ -423,7 +444,7 @@ def cluster(
 
 
 @pytest.fixture
-def nodes_api_sections():
+def nodes_api_sections() -> Sequence[str]:
     return [
         "kube_node_container_count_v1",
         "kube_node_kubelet_v1",
@@ -440,7 +461,7 @@ def nodes_api_sections():
 
 
 @pytest.fixture
-def cluster_api_sections():
+def cluster_api_sections() -> Sequence[str]:
     return [
         "kube_pod_resources_v1",
         "kube_allocatable_pods_v1",
@@ -455,7 +476,7 @@ def cluster_api_sections():
 
 
 @pytest.fixture
-def daemon_sets_api_sections():
+def daemon_sets_api_sections() -> Sequence[str]:
     return [
         "kube_pod_resources_v1",
         "kube_memory_resources_v1",

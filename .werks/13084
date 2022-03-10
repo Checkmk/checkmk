@@ -21,5 +21,3 @@ led to exhaution of disk-space in some cases.
 This change reintroduces the previously dropped house-keeping
 run right before the activation is started, while keeping
 the periodically run house-keeping job to clean up afterwards.
-
-SUP-9597

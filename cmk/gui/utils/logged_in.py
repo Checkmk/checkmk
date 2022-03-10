@@ -367,16 +367,20 @@ class LoggedInUser:
 
         is_rest_api_call = bool(endpoint)  # we can't check if "is None" because it's a LocalProxy
         if is_rest_api_call:
+            # We need to remember this, in oder to later check if the set of required permissions
+            # actually fits the declared permission schema.
             endpoint.remember_checked_permission(pname)
-            if (
+            permission_not_declared = (
                 endpoint.permissions_required is not None
-                and not endpoint.permissions_required.validate(list(endpoint._used_permissions))
-            ):
+                and pname not in endpoint.permissions_required
+            )
+            if permission_not_declared:
                 raise PermissionError(
-                    f"Required permissions not specified for endpoint.\n"
+                    f"Required permissions not declared for this endpoint.\n"
                     f"Endpoint: {endpoint}\n"
-                    f"Required: {endpoint.permissions_required}\n"
-                    f"Triggered: {endpoint._used_permissions}\n",
+                    f"Permission: {pname}\n"
+                    f"Used permission: {endpoint._used_permissions}\n",
+                    f"Declared: {endpoint.permissions_required}\n",
                 )
 
         return they_may

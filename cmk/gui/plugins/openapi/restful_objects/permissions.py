@@ -142,6 +142,12 @@ class AllPerm(MultiPerm):
         >>> p.may(User(["wato.seeall"]))
         True
 
+        >>> "wato.seeall" in p
+        True
+
+        >>> "foo.bar" in p
+        False
+
     """
 
     def may(self, user: UserLike) -> bool:

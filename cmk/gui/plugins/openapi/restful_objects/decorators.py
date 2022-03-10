@@ -674,15 +674,15 @@ class Endpoint:
                         "* A permission which was required (successfully) was not declared\n"
                         "* No permission was required at all, although permission were declared\n"
                         f"Endpoint: {self}\n"
-                        f"Required: {list(self._used_permissions)}\n",
-                        f"Declared: {self.permissions_required}\n",
+                        f"Required: {list(self._used_permissions)}\n"
+                        f"Declared: {self.permissions_required}\n"
                     )
 
             if self.output_empty and response.status_code < 400 and response.data:
                 return problem(
                     status=500,
                     title="Unexpected data was sent.",
-                    detail=(f"Endpoint {self.operation_id}\n" "This is a bug, please report."),
+                    detail=f"Endpoint {self.operation_id}\nThis is a bug, please report.",
                     ext={"data_sent": str(response.data)},
                 )
 

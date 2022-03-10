@@ -551,23 +551,6 @@ def get_aggregated_result(
             plugin.sections,
         )
 
-        if not kwargs and not service.check_plugin_name.is_management_name():
-            # in 1.6 some plugins where discovered for management boards, but with
-            # the regular host plugins name. In this case retry with the source type
-            # forced to MANAGEMENT:
-            kwargs = multi_host_sections.get_section_cluster_kwargs(
-                config_cache.get_clustered_service_node_keys(
-                    host_config.hostname,
-                    SourceType.MANAGEMENT,
-                    service.description,
-                    ip_lookup.lookup_ip_address,
-                ) or [],
-                plugin.sections,
-            ) if host_config.is_cluster else multi_host_sections.get_section_kwargs(
-                HostKey(host_config.hostname, ipaddress, SourceType.MANAGEMENT),
-                plugin.sections,
-            )
-
         if not kwargs:  # no data found
             return False, False, RECEIVED_NO_DATA
 

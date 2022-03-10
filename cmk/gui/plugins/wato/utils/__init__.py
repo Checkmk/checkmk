@@ -426,9 +426,8 @@ def _snmpv3_auth_priv_credentials_element(for_ec: bool = False) -> ValueSpec:
         ("AES", _("AES-128")),
     ]
     if for_ec:
-        # TODO Remove this var once we use pysnmp in all places
         # EC uses pysnmp which supports these protocols
-        # netsnmp/inline + classic does not support these protocols
+        # netsnmp/inline + classic do not support these protocols
         priv_protocol_choices.extend(
             [
                 ("3DES-EDE", _("3DES-EDE")),

@@ -75,7 +75,7 @@ LogDirectory: C:\\ProgramData\\checkmk\\agent\\log
 SpoolDirectory: C:\\ProgramData\\checkmk\\agent\\spool
 LocalDirectory: C:\\ProgramData\\checkmk\\agent\\local
 OnlyFrom: 0.0.0.0/0
-<<<cmk_agent_ctl_status>>>:
+<<<cmk_agent_ctl_status:sep(0)>>>:
 """
 
 
@@ -137,7 +137,7 @@ def expected_output_engine():
             if Globals.only_from
             else r"OnlyFrom: "
         ),
-        r"<<<cmk_agent_ctl_status>>>",
+        r"<<<cmk_agent_ctl_status:sep(0)>>>",
     ]
     if not Globals.alone:
         expected += [re.escape(r"<<<systemtime>>>"), r"\d+"]

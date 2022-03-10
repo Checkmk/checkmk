@@ -155,11 +155,13 @@ def local_test(
         # Uncomment for debug prints:
         # if re.match(expected, actual) is None:
         #    print("ups: %s" % actual)
-        #     print( 'DEBUG: actual output\r\n', '\r\n'.join(actual_output))
-        #     print('DEBUG: expected output\r\n', '\r\n'.join(expected_output))
-        # print("EXPECTED: %s\n ACTUAL  : %s\n" % (expected, actual))
+        #    print( 'DEBUG: actual output\r\n', '\r\n'.join(actual))
+        #    print('DEBUG: expected output\r\n', '\r\n'.join(expected))
+        # print("EXPECTED: %r\n ACTUAL  : %r\n" % (expected, actual))
 
-        assert re.match(expected, actual) is not None, "\nExpected '%s'\nActual   '%s'" % (
+        assert (
+            expected == actual or re.match(expected, actual) is not None
+        ), "\nExpected '%r'\nActual   '%r'" % (
             expected,
             actual,
         )

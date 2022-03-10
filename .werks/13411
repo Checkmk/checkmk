@@ -1,0 +1,17 @@
+Title: Cisco Prime: Add host options
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1646916999
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.2.0i1
+
+Before this change the ip address was used to connect to the Cisco Prime
+server. This could lead to problems if a TLS connection was used and the
+certificate was only valid for the domain and not for the ip address.
+
+Now it's possible to choose whether the ip address, the host name or a custom
+host should be used.

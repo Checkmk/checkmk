@@ -92,7 +92,6 @@ TRawData = TypeVar("TRawData", bound=AbstractRawData)
 
 class SNMPBackendEnum(enum.Enum):
     INLINE = "Inline"
-    PYSNMP = "PySNMP"
     CLASSIC = "Classic"
 
     def serialize(self) -> str:

@@ -246,6 +246,13 @@ SSHClient: ${SSH_CLIENT}
 HERE
 }
 
+section_cmk_agent_ctl_status() {
+    cmk-agent-ctl --version 2>/dev/null >&2 || return
+
+    printf "<<<cmk_agent_ctl_status:sep(0)>>>\n"
+    cmk-agent-ctl status --json
+}
+
 section_checkmk_agent_plugins() {
     printf "<<<checkmk_agent_plugins_lnx:sep(0)>>>\n"
     printf "pluginsdir %s\n" "${PLUGINSDIR}"
@@ -310,6 +317,8 @@ section_fileinfo() {
 run_purely_synchronous_sections() {
 
     section_checkmk
+
+    section_cmk_agent_ctl_status
 
     section_checkmk_agent_plugins
 

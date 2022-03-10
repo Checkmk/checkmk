@@ -523,35 +523,6 @@ class ABCTestSNMPFetcher(ABC):
             ),
         )
 
-    @pytest.fixture
-    def fetcher_pysnmp(self, file_cache: SNMPFileCache) -> SNMPFetcher:
-        return SNMPFetcher(
-            file_cache,
-            sections={},
-            on_error=OnError.RAISE,
-            missing_sys_description=False,
-            do_status_data_inventory=False,
-            section_store_path="/tmp/db",
-            snmp_config=SNMPHostConfig(
-                is_ipv6_primary=False,
-                hostname=HostName("bob"),
-                ipaddress="1.2.3.4",
-                credentials="public",
-                port=42,
-                is_bulkwalk_host=False,
-                is_snmpv2or3_without_bulkwalk_host=False,
-                bulk_walk_size_of=0,
-                timing={},
-                oid_range_limits={},
-                snmpv3_contexts=[],
-                character_encoding=None,
-                is_usewalk_host=False,
-                snmp_backend=SNMPBackendEnum.PYSNMP
-                if not cmk_version.is_raw_edition()
-                else SNMPBackendEnum.CLASSIC,
-            ),
-        )
-
 
 class TestSNMPFetcherDeserialization(ABCTestSNMPFetcher):
     @pytest.fixture
@@ -569,12 +540,6 @@ class TestSNMPFetcherDeserialization(ABCTestSNMPFetcher):
         other = type(fetcher_inline).from_json(json_identity(fetcher_inline.to_json()))
         assert other.snmp_config.snmp_backend == (
             SNMPBackendEnum.INLINE if not cmk_version.is_raw_edition() else SNMPBackendEnum.CLASSIC
-        )
-
-    def test_fetcher_pysnmp_backend_deserialization(self, fetcher_pysnmp: SNMPFetcher) -> None:
-        other = type(fetcher_pysnmp).from_json(json_identity(fetcher_pysnmp.to_json()))
-        assert other.snmp_config.snmp_backend == (
-            SNMPBackendEnum.PYSNMP if not cmk_version.is_raw_edition() else SNMPBackendEnum.CLASSIC
         )
 
     def test_repr(self, fetcher: SNMPFetcher) -> None:

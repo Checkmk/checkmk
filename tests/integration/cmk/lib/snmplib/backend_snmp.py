@@ -25,13 +25,6 @@ try:
 except ImportError:
     InlineSNMPBackend = None  # type: ignore[assignment, misc]
 
-try:
-    from cmk.core_helpers.cee.snmp_backend.pysnmp_backend import (  # type: ignore[import] # isort: skip
-        PySNMPBackend,
-    )
-except ImportError:
-    PySNMPBackend = None  # type: ignore[assignment, misc]
-
 from cmk.core_helpers.snmp_backend.classic import ClassicSNMPBackend
 
 logger = logging.getLogger(__name__)
@@ -45,7 +38,7 @@ logger = logging.getLogger(__name__)
 #   |                          |_|\___||___/\__|___/                       |
 #   |                                                                      |
 #   +----------------------------------------------------------------------+
-#   | Tests that compare Inline, PySNMP and Classic output                 |
+#   | Tests that compare Inline and Classic output                 |
 #   '----------------------------------------------------------------------'
 
 
@@ -61,9 +54,9 @@ logger = logging.getLogger(__name__)
 )
 def test_get_ipv4(oid: OID):
     configs = _create_configs_ipv4()
-    result_pysnmp, result_inline, result_classic = _create_results_snmpbackend_get(oid, configs)
+    result_inline, result_classic = _create_results_snmpbackend_get(oid, configs)
 
-    assert result_pysnmp == result_inline == result_classic
+    assert result_inline == result_classic
 
 
 @pytest.mark.parametrize(
@@ -75,9 +68,9 @@ def test_get_ipv4(oid: OID):
 )
 def test_get_ipv6(oid: OID):
     configs = _create_configs_ipv6()
-    result_pysnmp, result_inline, result_classic = _create_results_snmpbackend_get(oid, configs)
+    result_inline, result_classic = _create_results_snmpbackend_get(oid, configs)
 
-    assert result_pysnmp == result_inline == result_classic
+    assert result_inline == result_classic
 
 
 @pytest.mark.parametrize(
@@ -89,9 +82,9 @@ def test_get_ipv6(oid: OID):
 )
 def test_get_auth(oid: OID):
     configs = _create_configs_special_auth()
-    result_pysnmp, result_inline, result_classic = _create_results_snmpbackend_get(oid, configs)
+    result_inline, result_classic = _create_results_snmpbackend_get(oid, configs)
 
-    assert result_pysnmp == result_inline == result_classic
+    assert result_inline == result_classic
 
 
 @pytest.mark.parametrize(
@@ -107,9 +100,9 @@ def test_get_auth(oid: OID):
 )
 def test_walk_ipv4(oid):
     configs = _create_configs_ipv4()
-    result_pysnmp, result_inline, result_classic = _create_results_snmpbackend_walk(oid, configs)
+    result_inline, result_classic = _create_results_snmpbackend_walk(oid, configs)
 
-    assert result_pysnmp == result_inline == result_classic
+    assert result_inline == result_classic
 
 
 @pytest.mark.parametrize(
@@ -123,9 +116,9 @@ def test_walk_ipv4(oid):
 )
 def test_walk_ipv6(oid):
     configs = _create_configs_ipv6()
-    result_pysnmp, result_inline, result_classic = _create_results_snmpbackend_walk(oid, configs)
+    result_inline, result_classic = _create_results_snmpbackend_walk(oid, configs)
 
-    assert result_pysnmp == result_inline == result_classic
+    assert result_inline == result_classic
 
 
 @pytest.mark.parametrize(
@@ -138,25 +131,9 @@ def test_walk_ipv6(oid):
 )
 def test_walk_auth(oid):
     configs = _create_configs_special_auth()
-    result_pysnmp, result_inline, result_classic = _create_results_snmpbackend_walk(oid, configs)
+    result_inline, result_classic = _create_results_snmpbackend_walk(oid, configs)
 
-    assert result_pysnmp == result_inline == result_classic
-
-
-# CEE Feature only (not implemented in Classic SNMP)
-@pytest.mark.parametrize(
-    ("oid", "check_plugin_name", "table_base_oid"),
-    [
-        (".1.3.6.1.2.1.1.9.1.2", "if64", ".1.3.6.1.2.1.1.9.1.2"),
-    ],
-)
-def test_bulkwalk_with_ranges(oid, check_plugin_name, table_base_oid):
-    configs = _create_configs_oidranges()
-    result_pysnmp, result_inline, _result_classic = _create_results_snmpbackend_walk(
-        oid, configs, check_plugin_name, table_base_oid
-    )
-
-    assert result_pysnmp == result_inline
+    assert result_inline == result_classic
 
 
 # .
@@ -175,12 +152,9 @@ def test_bulkwalk_with_ranges(oid, check_plugin_name, table_base_oid):
 
 def _create_results_snmpbackend_get(
     oid: str, configs: List[SNMPHostConfig]
-) -> Tuple[
-    List[Optional[SNMPRawValue]], List[Optional[SNMPRawValue]], List[Optional[SNMPRawValue]]
-]:
+) -> Tuple[List[Optional[SNMPRawValue]], List[Optional[SNMPRawValue]]]:
 
     return (
-        [_create_result_for_backend_get(PySNMPBackend, oid, c) for c in configs],
         [_create_result_for_backend_get(InlineSNMPBackend, oid, c) for c in configs],
         [_create_result_for_backend_get(ClassicSNMPBackend, oid, c) for c in configs],
     )
@@ -199,12 +173,6 @@ def _create_result_for_backend_get(
 
 def _create_results_snmpbackend_walk(oid, configs, check_plugin_name=None, table_base_oid=None):
     return (
-        [
-            _create_result_for_backend_walk(
-                PySNMPBackend, oid, c, check_plugin_name, table_base_oid
-            )
-            for c in configs
-        ],
         [
             _create_result_for_backend_walk(
                 InlineSNMPBackend, oid, c, check_plugin_name, table_base_oid

@@ -16,11 +16,6 @@ import cmk.core_helpers.factory as factory
 from cmk.core_helpers.snmp_backend import ClassicSNMPBackend
 
 try:
-    from cmk.core_helpers.cee.snmp_backend import pysnmp_backend  # type: ignore[import]
-except ImportError:
-    pysnmp_backend = None  # type: ignore[assignment]
-
-try:
     from cmk.core_helpers.cee.snmp_backend import inline  # type: ignore[import]
 except ImportError:
     inline = None  # type: ignore[assignment]
@@ -55,14 +50,6 @@ def test_factory_snmp_backend_inline(snmp_config: SNMPHostConfig) -> None:
     if inline:
         assert isinstance(
             factory.backend(snmp_config, logging.getLogger()), inline.InlineSNMPBackend
-        )
-
-
-def test_factory_snmp_backend_pysnmp(snmp_config: SNMPHostConfig) -> None:
-    snmp_config = snmp_config._replace(snmp_backend=SNMPBackendEnum.PYSNMP)
-    if pysnmp_backend:
-        assert isinstance(
-            factory.backend(snmp_config, logging.getLogger()), pysnmp_backend.PySNMPBackend
         )
 
 

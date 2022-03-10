@@ -5214,7 +5214,6 @@ class Alternative(ValueSpec):
         *,
         elements: list[ValueSpec],
         match: _Optional[Callable[[Any], int]] = None,
-        style: str = "",  # Unused argument left here to remain compatible with user extensions.
         show_alternative_title: bool = False,
         on_change: _Optional[str] = None,
         orientation: str = "vertical",
@@ -6582,7 +6581,6 @@ class UploadOrPasteTextFile(Alternative):
         elements: list[ValueSpec],
         # NOTE: Match defaut is different!
         match: _Optional[Callable[[Any], int]] = lambda val: 0 if isinstance(val, tuple) else 1,
-        style: str = "",  # Unused argument left here to remain compatible with user extensions.
         show_alternative_title: bool = False,
         on_change: _Optional[str] = None,
         orientation: str = "vertical",
@@ -6605,7 +6603,6 @@ class UploadOrPasteTextFile(Alternative):
         super().__init__(
             elements=elements + additional_elements,
             match=match,
-            style=style,
             show_alternative_title=show_alternative_title,
             on_change=on_change,
             orientation=orientation,
@@ -6638,7 +6635,6 @@ class TextOrRegExp(Alternative):
         text_valuespec: _Optional[ValueSpec] = None,
         allow_empty: bool = True,
         # Alternative
-        style: str = "",  # Unused argument left here to remain compatible with user extensions.
         show_alternative_title: bool = False,
         on_change: _Optional[str] = None,
         # ValueSpec
@@ -6668,7 +6664,6 @@ class TextOrRegExp(Alternative):
             ],
             # Use RegExp field when value is prefixed with "~"
             match=lambda v: 1 if v and v[0] == "~" else 0,
-            style=style,
             show_alternative_title=show_alternative_title,
             on_change=on_change,
             orientation="horizontal",
@@ -7568,7 +7563,6 @@ class CAorCAChain(UploadOrPasteTextFile):
         file_title: _Optional[str] = None,
         allow_empty: bool = False,
         # Alternative
-        style: str = "",  # Unused argument left here to remain compatible with user extensions.
         show_alternative_title: bool = False,
         on_change: _Optional[str] = None,
         orientation: str = "vertical",
@@ -7585,7 +7579,6 @@ class CAorCAChain(UploadOrPasteTextFile):
             match=lambda val: 2
             if not isinstance(val, tuple)
             else (0 if isinstance(val[1], int) else 1),
-            style=style,
             show_alternative_title=show_alternative_title,
             on_change=on_change,
             orientation=orientation,

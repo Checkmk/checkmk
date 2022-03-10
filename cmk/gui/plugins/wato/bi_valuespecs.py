@@ -921,7 +921,6 @@ class BIConfigAggregationFunctionCountOK(
     def _vs_count_ok_count(cls, title: str, defval: int, defvalperc: int) -> Alternative:
         return Alternative(
             title=title,
-            style="dropdown",
             match=lambda x: str(x).endswith("%") and 1 or 0,
             elements=[
                 Integer(

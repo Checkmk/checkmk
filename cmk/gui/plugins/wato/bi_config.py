@@ -1750,7 +1750,6 @@ class BIModeEditAggregation(ABCBIMode):
         return Transform(
             valuespec=ListOf(
                 valuespec=Alternative(
-                    style="dropdown",
                     orientation="horizontal",
                     elements=[
                         TextInput(title=_("Group name")),

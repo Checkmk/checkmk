@@ -2854,19 +2854,17 @@ def transform_snmp_backend_default_forth(backend):
     # we need to accept this as value aswell.
     if backend in [True, "inline", "inline_legacy"]:
         return SNMPBackendEnum.INLINE
-    if backend == "pysnmp":
-        return SNMPBackendEnum.PYSNMP
-    if backend in [False, "classic"]:
+    if backend in [False, "classic", "pysnmp"]:
+        # We dropped pysnmp during the 2.1 beta because it is currently slow
+        # and unreliable.
         return SNMPBackendEnum.CLASSIC
     raise MKConfigError("SNMPBackendEnum %r not implemented" % backend)
 
 
 def transform_snmp_backend_back(backend):
-    if backend == SNMPBackendEnum.PYSNMP:
-        return "pysnmp"
-    if backend == SNMPBackendEnum.CLASSIC:
+    if backend is SNMPBackendEnum.CLASSIC:
         return "classic"
-    if backend == SNMPBackendEnum.INLINE:
+    if backend is SNMPBackendEnum.INLINE:
         return "inline"
     raise MKConfigError("SNMPBackendEnum %r not implemented" % backend)
 
@@ -2889,7 +2887,6 @@ class ConfigVariableChooseSNMPBackend(ConfigVariable):
                 choices=[
                     (SNMPBackendEnum.CLASSIC, _("Use Classic SNMP Backend")),
                     (SNMPBackendEnum.INLINE, _("Use Inline SNMP Backend")),
-                    (SNMPBackendEnum.PYSNMP, _("Use Inline SNMP (PySNMP) Backend (experimental)")),
                 ],
                 help=_(
                     "By default Checkmk uses command line calls of Net-SNMP tools like snmpget or "
@@ -5184,7 +5181,6 @@ def _help_snmp_backend():
         "is enabled by default for all SNMP hosts and it is a good idea to keep this default setting. "
         "However, there are SNMP devices which have problems with some SNMP implementations. "
         "You can use this rule to select the SNMP Backend for these hosts."
-        "Inline SNMP uses PySNMP bindings to make SNMP calls."
     )
 
 
@@ -5193,9 +5189,9 @@ def transform_snmp_backend_hosts_forth(backend):
     # we need to accept this as value aswell.
     if backend in [False, "inline", "inline_legacy"]:
         return SNMPBackendEnum.INLINE
-    if backend == "pysnmp":
-        return SNMPBackendEnum.PYSNMP
-    if backend in [True, "classic"]:
+    if backend in [True, "classic", "pysnmp"]:
+        # We dropped pysnmp during the 2.1 beta because it is currently slow
+        # and unreliable.
         return SNMPBackendEnum.CLASSIC
     raise MKConfigError("SNMPBackendEnum %r not implemented" % backend)
 
@@ -5206,7 +5202,6 @@ def _valuespec_snmp_backend():
             title=_("Choose SNMP Backend"),
             choices=[
                 (SNMPBackendEnum.INLINE, _("Use Inline SNMP Backend")),
-                (SNMPBackendEnum.PYSNMP, _("Use Inline SNMP (PySNMP) Backend (experimental)")),
                 (SNMPBackendEnum.CLASSIC, _("Use Classic Backend")),
             ],
         ),

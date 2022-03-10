@@ -1,0 +1,45 @@
+Title: Various ValueSpec-related API cleanups
+Class: feature
+Compatible: incomp
+Component: checks
+Date: 1646912690
+Edition: cre
+Knowledge: undoc
+Level: 2
+Version: 2.2.0i1
+
+Various changes have been done to <tt>ValueSpec</tt> and its subclasses,
+improving maintainability and robustness. If you don't write your own
+complicated <tt>ValueSpec</tt> subclasses and you don't have any self-written
+complicated check parameters, you are probably not affected.
+
+<ul>
+  <li>
+    <tt>ValueSpec</tt>'s constructor doesn't accept any random unspecifed
+    keyword arguments anymore. It is better to raise an exception at the
+    incorrect call site than silently accepting every typo. To fix any problems
+    with this change, just remove the offending keyword arguments, they served
+    no purpose after all.
+  </li>
+  <li>
+    <tt>ValueSpec.canonical_value()</tt> is an abstract method now, otherwise we
+    force lots of places to handle <tt>None</tt>. Previously quite a few things
+    worked only more or less by accident. If you implement your own
+    <tt>ValueSpec</tt> subclass, you have to implement that method now, unless
+    an intermediate class already does it for you.
+  </li>
+  <li>
+    <tt>DropdownChoice</tt> and <tt>CascadingDropdown</tt> don't have a
+    <tt>no_preselect</tt> keyword argument anymore. It was redundant, because
+    <tt>no_preselect_title</tt> is enough: If this keyword argument is not
+    <tt>None</tt>, <tt>no_preselect=True</tt> is implied. Previously one could
+    specify nonsensical combinations of those arguments. To fix any problems
+    with this change, just drop the <tt>no_preselect</tt> keyword argument.
+  </li>
+  <li>
+    <tt>Alternative</tt>, <tt>UploadOrPasteTextFile</tt>, <tt>TextOrRegExp</tt>,
+    and <tt>CAorCAChain</tt> don't have a <tt>style</tt> keyword argument
+    anymore. It didn't serve any purpose since Checkmk 2.0. Just remove it.
+  </li>
+</ul>
+

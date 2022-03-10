@@ -10,11 +10,24 @@ from typing import Any, Mapping, Optional, Sequence, Union
 def agent_cisco_prime_arguments(
     params: Mapping[str, Any], hostname: str, ipaddress: Optional[str]
 ) -> Sequence[Union[str, tuple[str, str, str]]]:
+    param_host = params.get("host")
+    if param_host == "host_name":
+        host = hostname
+    elif param_host == "ip_address":
+        if ipaddress is None:
+            raise ValueError(f"IP address for host '{hostname}' is not set")
+        host = ipaddress
+    elif isinstance(param_host, tuple) and param_host[0] == "custom":
+        host = param_host[1]["host"]
+    else:
+        # behaviour previous to host configuration
+        host = ipaddress or hostname
+
     basic_auth = params.get("basicauth")
     return [
         str(elem)  # non-str get ignored silently - so turn all elements into `str`
         for chunk in (
-            ("--hostname", ipaddress or hostname),
+            ("--hostname", host),
             ("-u", "%s:%s" % (basic_auth[0], passwordstore_get_cmdline("%s", basic_auth[1])))  #
             if basic_auth
             else (),

@@ -487,6 +487,33 @@ def _valuespec_special_agents_cisco_prime():
     return Dictionary(
         elements=[
             (
+                "host",
+                CascadingDropdown(
+                    choices=[
+                        ("ip_address", _("IP Address")),
+                        ("host_name", _("Host name")),
+                        (
+                            "custom",
+                            _("Custom Host"),
+                            Dictionary(
+                                elements=[
+                                    (
+                                        "host",
+                                        TextInput(
+                                            title=_("Custom Host"),
+                                            allow_empty=False,
+                                        ),
+                                    )
+                                ],
+                                optional_keys=[],
+                            ),
+                        ),
+                    ],
+                    default_value="ip_address",
+                    title=_("Host to use for connecting to Cisco Prime"),
+                ),
+            ),
+            (
                 "basicauth",
                 Tuple(
                     title=_("BasicAuth settings (optional)"),

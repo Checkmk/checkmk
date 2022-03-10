@@ -6,7 +6,7 @@
 set -e -o pipefail
 
 case "$DISTRO" in
-debian-* | ubuntu-* | cma)
+debian-* | ubuntu-* | cma*)
     echo "Installing for Debian / Ubuntu"
     apt-get update
     apt-get install -y clang-tidy-10

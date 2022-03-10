@@ -12,7 +12,7 @@ centos-7 | centos-8)
     yum -y install nodejs
     exit 0
     ;;
-debian-* | ubuntu-* | cma)
+debian-* | ubuntu-* | cma*)
     echo "Installing for Debian / Ubuntu (nodejs12)"
     curl -sL https://deb.nodesource.com/setup_12.x | bash -
     apt-get install -y nodejs

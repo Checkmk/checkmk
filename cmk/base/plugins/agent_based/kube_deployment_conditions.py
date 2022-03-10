@@ -22,6 +22,8 @@ from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
     StringTable,
 )
 from cmk.base.plugins.agent_based.utils.kube import (
+    condition_detailed_description,
+    condition_short_description,
     ConditionStatus,
     DeploymentConditions,
     VSResultAge,
@@ -66,7 +68,7 @@ def check(params: Mapping[str, VSResultAge], section: DeploymentConditions) -> C
         if condition is not None
     ):
         details = "\n".join(
-            f"{name.upper()}: {cond.status} ({cond.reason}: {cond.message})"
+            condition_detailed_description(name, cond.status, cond.reason, cond.message)
             for name, cond in section
             if cond is not None
         )
@@ -83,8 +85,10 @@ def check(params: Mapping[str, VSResultAge], section: DeploymentConditions) -> C
         if (status := condition["status"]) is CONDITIONS_OK_MAPPINGS[name]:
             yield Result(
                 state=State.OK,
-                summary=f"{condition_name}: {status}",
-                details=f"{condition_name}: {status} ({condition['reason']}: {condition['message']})",
+                summary=condition_short_description(condition_name, status),
+                details=condition_detailed_description(
+                    condition_name, status, condition["reason"], condition["message"]
+                ),
             )
             continue
 
@@ -99,10 +103,7 @@ def check(params: Mapping[str, VSResultAge], section: DeploymentConditions) -> C
         result = check_result[0]
         yield Result(
             state=result.state,
-            summary=f"{condition_name}: {condition['status']} ({condition['reason']})"
-            f" for {result.summary}",
-            details=f"{condition_name}: {condition['status']} ({condition['reason']}: {condition['message']})"
-            f" for {result.summary}",
+            summary=f"{condition_detailed_description(condition_name, condition['status'], condition['reason'], condition['message'])} for {result.summary}",
         )
 
 

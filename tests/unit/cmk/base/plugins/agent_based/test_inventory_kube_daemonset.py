@@ -8,13 +8,11 @@ from typing import Any, Sequence
 
 import pytest
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Attributes, TableRow
+from cmk.base.plugins.agent_based.agent_based_api.v1 import Attributes
 from cmk.base.plugins.agent_based.inventory_kube_daemonset import inventory_kube_daemonset
 from cmk.base.plugins.agent_based.utils.k8s import (
     DaemonSetInfo,
     DaemonSetStrategy,
-    Label,
-    LabelName,
     RollingUpdate,
     Selector,
 )
@@ -29,7 +27,7 @@ from .utils_inventory import sort_inventory_result
             DaemonSetInfo(
                 name="oh-lord",
                 namespace="have-mercy",
-                labels={LabelName("app"): Label(name="app", value="checkmk-cluster-agent")},
+                labels={},
                 selector=Selector(match_labels={}, match_expressions=[]),
                 creation_timestamp=1600000000.0,
                 cluster="cluster",
@@ -51,12 +49,6 @@ from .utils_inventory import sort_inventory_result
                         "match_expressions": "",
                     },
                     status_attributes={},
-                ),
-                TableRow(
-                    path=["software", "applications", "kube", "labels"],
-                    key_columns={"label_name": "app"},
-                    inventory_columns={"label_value": "checkmk-cluster-agent"},
-                    status_columns={},
                 ),
             ],
             id="overall look of DaemonSet inventory",

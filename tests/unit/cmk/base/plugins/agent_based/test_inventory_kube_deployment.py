@@ -8,13 +8,11 @@ from typing import Any, Sequence
 
 import pytest
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Attributes, TableRow
+from cmk.base.plugins.agent_based.agent_based_api.v1 import Attributes
 from cmk.base.plugins.agent_based.inventory_kube_deployment import inventory_kube_deployment
 from cmk.base.plugins.agent_based.utils.k8s import (
     DeploymentInfo,
     DeploymentStrategy,
-    Label,
-    LabelName,
     RollingUpdate,
     Selector,
 )
@@ -29,7 +27,7 @@ from .utils_inventory import sort_inventory_result
             DeploymentInfo(
                 name="oh-lord",
                 namespace="have-mercy",
-                labels={LabelName("app"): Label(name="app", value="checkmk-cluster-agent")},
+                labels={},
                 selector=Selector(match_labels={}, match_expressions=[]),
                 creation_timestamp=1600000000.0,
                 images=["i/name:0.5"],
@@ -53,12 +51,6 @@ from .utils_inventory import sort_inventory_result
                         "match_expressions": "",
                     },
                     status_attributes={},
-                ),
-                TableRow(
-                    path=["software", "applications", "kube", "labels"],
-                    key_columns={"label_name": "app"},
-                    inventory_columns={"label_value": "checkmk-cluster-agent"},
-                    status_columns={},
                 ),
             ],
             id="overall look of deployment inventory",

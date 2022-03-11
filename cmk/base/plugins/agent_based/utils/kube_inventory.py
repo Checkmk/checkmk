@@ -5,9 +5,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from typing import List
+from typing import Iterator, List
 
-from cmk.base.plugins.agent_based.utils.k8s import MatchExpressions, MatchLabels
+from cmk.base.plugins.agent_based.agent_based_api.v1 import TableRow
+from cmk.base.plugins.agent_based.utils.k8s import Labels, MatchExpressions, MatchLabels
 
 
 def match_labels_to_str(match_labels: MatchLabels) -> str:
@@ -71,3 +72,27 @@ def match_expressions_to_str(match_expressions: MatchExpressions) -> str:
         else:
             raise AssertionError("Unknown operator in match expression")
     return ", ".join(pretty_match_expressions)
+
+
+def labels_to_table(labels: Labels) -> Iterator[TableRow]:
+    """Populate table of labels.
+
+    This function is intended for usage with HW/SW inventory on a Kubernetes objects. It picks the
+    correct path, and relies on the uniqueness of the label names of a Kubernetes objects. Using
+    this function ensures a uniform look across inventories.
+
+        Typical usage example:
+
+        yield from labels_to_table(section_info.labels)
+
+    >>> from cmk.base.plugins.agent_based.utils.k8s import LabelName, Label
+    >>> list(labels_to_table({LabelName("app"): Label(name="app", value="checkmk-cluster-agent")}))
+    [TableRow(path=['software', 'applications', 'kube', 'labels'], key_columns={'label_name': 'app'}, inventory_columns={'label_value': 'checkmk-cluster-agent'}, status_columns={})]
+    """
+
+    for label in labels.values():
+        yield TableRow(
+            path=["software", "applications", "kube", "labels"],
+            key_columns={"label_name": label.name},
+            inventory_columns={"label_value": label.value},
+        )

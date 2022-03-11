@@ -6,10 +6,11 @@
 
 from typing import Optional
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Attributes, register, TableRow
+from cmk.base.plugins.agent_based.agent_based_api.v1 import Attributes, register
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import InventoryResult
 from cmk.base.plugins.agent_based.utils.k8s import DeploymentInfo, DeploymentStrategy
 from cmk.base.plugins.agent_based.utils.kube_inventory import (
+    labels_to_table,
     match_expressions_to_str,
     match_labels_to_str,
 )
@@ -33,12 +34,7 @@ def inventory_kube_deployment(
             "match_expressions": match_expressions_to_str(selector.match_expressions),
         },
     )
-    for label in section_kube_deployment_info.labels.values():
-        yield TableRow(
-            path=["software", "applications", "kube", "labels"],
-            key_columns={"label_name": label.name},
-            inventory_columns={"label_value": label.value},
-        )
+    yield from labels_to_table(section_kube_deployment_info.labels)
 
 
 register.inventory_plugin(

@@ -727,10 +727,10 @@ class Cluster:
         pods: Sequence[api.Pod],
         nodes: Sequence[api.Node],
         statefulsets: Sequence[api.StatefulSet],
-        deployments: Optional[Sequence[api.Deployment]] = None,
-        cron_jobs: Optional[Sequence[api.CronJob]] = None,
-        daemon_sets: Optional[Sequence[api.DaemonSet]] = None,
-        cluster_details: Optional[api.ClusterDetails] = None,
+        deployments: Sequence[api.Deployment],
+        cron_jobs: Sequence[api.CronJob],
+        daemon_sets: Sequence[api.DaemonSet],
+        cluster_details: api.ClusterDetails,
     ) -> Cluster:
         """Creating and filling the Cluster with the Kubernetes Objects"""
 
@@ -755,28 +755,25 @@ class Cluster:
             cluster.add_node(node)
             _nodes[node.name] = node
 
-        if deployments:
-            for api_deployment in deployments:
-                deployment = Deployment(
-                    api_deployment.metadata, api_deployment.spec, api_deployment.status
-                )
-                cluster.add_deployment(deployment)
-                _register_owner_for_pods(deployment, api_deployment.pods)
+        for api_deployment in deployments:
+            deployment = Deployment(
+                api_deployment.metadata, api_deployment.spec, api_deployment.status
+            )
+            cluster.add_deployment(deployment)
+            _register_owner_for_pods(deployment, api_deployment.pods)
 
-        if cron_jobs:
-            for api_cron_job in cron_jobs:
-                cron_job = CronJob(api_cron_job.metadata, api_cron_job.spec)
-                cluster.add_cron_job(cron_job)
-                _register_owner_for_pods(cron_job, api_cron_job.pod_uids)
+        for api_cron_job in cron_jobs:
+            cron_job = CronJob(api_cron_job.metadata, api_cron_job.spec)
+            cluster.add_cron_job(cron_job)
+            _register_owner_for_pods(cron_job, api_cron_job.pod_uids)
 
-        if daemon_sets:
-            for api_daemon_set in daemon_sets:
-                daemon_set = DaemonSet(
-                    metadata=api_daemon_set.metadata,
-                    spec=api_daemon_set.spec,
-                )
-                cluster.add_daemon_set(daemon_set)
-                _register_owner_for_pods(daemon_set, api_daemon_set.pods)
+        for api_daemon_set in daemon_sets:
+            daemon_set = DaemonSet(
+                metadata=api_daemon_set.metadata,
+                spec=api_daemon_set.spec,
+            )
+            cluster.add_daemon_set(daemon_set)
+            _register_owner_for_pods(daemon_set, api_daemon_set.pods)
 
         for api_statefulset in statefulsets:
             statefulset = StatefulSet(
@@ -823,8 +820,8 @@ class Cluster:
         )
         return cluster
 
-    def __init__(self, *, cluster_details: Optional[api.ClusterDetails] = None) -> None:
-        self._cluster_details: Optional[api.ClusterDetails] = cluster_details
+    def __init__(self, *, cluster_details: api.ClusterDetails) -> None:
+        self._cluster_details: api.ClusterDetails = cluster_details
         self._cron_jobs: List[CronJob] = []
         self._daemon_sets: List[DaemonSet] = []
         self._statefulsets: List[StatefulSet] = []

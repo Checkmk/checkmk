@@ -471,6 +471,7 @@ def statefulsets_api_sections() -> Sequence[str]:
         "kube_memory_resources_v1",
         "kube_cpu_resources_v1",
         "kube_statefulset_info_v1",
+        "kube_statefulset_strategy_v1",
     ]
 
 

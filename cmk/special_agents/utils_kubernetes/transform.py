@@ -472,10 +472,27 @@ def daemonset_from_client(
     )
 
 
+def parse_statefulset_spec(statefulset_spec: client.V1StatefulSetSpec) -> api.StatefulSetSpec:
+    if statefulset_spec.update_strategy.type == "OnDelete":
+        return api.StatefulSetSpec(
+            strategy=api.OnDelete(),
+            selector=parse_selector(statefulset_spec.selector),
+        )
+    if statefulset_spec.update_strategy.type == "RollingUpdate":
+        return api.StatefulSetSpec(
+            strategy=api.StatefulSetRollingUpdate(
+                partition=statefulset_spec.update_strategy.rolling_update.partition,
+            ),
+            selector=parse_selector(statefulset_spec.selector),
+        )
+    raise ValueError(f"Unknown strategy type: {statefulset_spec.update_strategy.type}")
+
+
 def statefulset_from_client(
     statefulset: client.V1StatefulSet, pod_uids=Sequence[api.PodUID]
 ) -> api.StatefulSet:
     return api.StatefulSet(
         metadata=parse_metadata(statefulset.metadata),
+        spec=parse_statefulset_spec(statefulset.spec),
         pods=pod_uids,
     )

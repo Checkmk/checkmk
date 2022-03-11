@@ -185,6 +185,11 @@ class RollingUpdate(BaseModel):
     max_unavailable: str
 
 
+class StatefulSetRollingUpdate(BaseModel):
+    type_: Literal["RollingUpdate"] = Field("RollingUpdate", const=True)
+    partition: int
+
+
 class Recreate(BaseModel):
     type_: Literal["Recreate"] = Field("Recreate", const=True)
 
@@ -216,8 +221,14 @@ class DaemonSet(BaseModel):
     pods: Sequence[PodUID]
 
 
+class StatefulSetSpec(BaseModel):
+    strategy: Union[OnDelete, StatefulSetRollingUpdate] = Field(discriminator="type_")
+    selector: Selector
+
+
 class StatefulSet(BaseModel):
     metadata: MetaData
+    spec: StatefulSetSpec
     pods: Sequence[PodUID]
 
 

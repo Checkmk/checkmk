@@ -20,6 +20,10 @@ ONE_MiB = 1024 * ONE_KiB
 ONE_GiB = 1024 * ONE_MiB
 
 
+class MetaDataFactory(ModelFactory):
+    __model__ = api.MetaData
+
+
 # Container Factories
 class ContainerRunningStateFactory(ModelFactory):
     __model__ = api.ContainerRunningState
@@ -79,11 +83,6 @@ class NodeStatusFactory(ModelFactory):
         NodeConditionFactory.batch,
         size=len(agent_kube.NATIVE_NODE_CONDITION_TYPES) + len(NPD_NODE_CONDITION_TYPES),
     )
-
-
-# Deployment/DaemonSet Factories
-class MetaDataFactory(ModelFactory):
-    __model__ = api.MetaData
 
 
 # Container Status Fixtures
@@ -371,6 +370,11 @@ def cluster_nodes() -> int:
 
 
 @pytest.fixture
+def deployment_pods() -> int:
+    return len(api.Phase)
+
+
+@pytest.fixture
 def deployment_spec() -> api.DeploymentSpec:
     class DeploymentSpecFactory(ModelFactory):
         __model__ = api.DeploymentSpec
@@ -387,22 +391,39 @@ def deployment_status() -> api.DeploymentStatus:
 
 
 @pytest.fixture
-def new_deployment(
+def api_deployment(
     deployment_spec: api.DeploymentSpec, deployment_status: api.DeploymentStatus
+) -> api.Deployment:
+    class DeploymentFactory(ModelFactory):
+        __model__ = api.Deployment
+
+    return DeploymentFactory.build(spec=deployment_spec, status=deployment_status)
+
+
+@pytest.fixture
+def new_deployment(
+    api_deployment: api.Deployment,
 ) -> Callable[[], agent_kube.Deployment]:
     def _new_deployment() -> agent_kube.Deployment:
         return agent_kube.Deployment(
-            metadata=MetaDataFactory.build(),
-            spec=deployment_spec,
-            status=deployment_status,
+            metadata=api_deployment.metadata,
+            spec=api_deployment.spec,
+            status=api_deployment.status,
         )
 
     return _new_deployment
 
 
 @pytest.fixture
-def deployment(new_deployment: Callable[[], agent_kube.Deployment]) -> agent_kube.Deployment:
-    return new_deployment()
+def deployment(
+    new_deployment: Callable[[], agent_kube.Deployment],
+    deployment_pods: int,
+    new_pod: Callable[[], agent_kube.Pod],
+) -> agent_kube.Deployment:
+    deployment = new_deployment()
+    for _ in range(deployment_pods):
+        deployment.add_pod(new_pod())
+    return deployment
 
 
 @pytest.fixture
@@ -472,6 +493,19 @@ def cluster_api_sections() -> Sequence[str]:
         "kube_allocatable_memory_resource_v1",
         "kube_allocatable_cpu_resource_v1",
         "kube_cluster_info_v1",
+    ]
+
+
+@pytest.fixture
+def deployments_api_sections() -> Sequence[str]:
+    return [
+        "kube_pod_resources_v1",
+        "kube_memory_resources_v1",
+        "kube_deployment_info_v1",
+        "kube_deployment_conditions_v1",
+        "kube_cpu_resources_v1",
+        "kube_replicas_v1",
+        "kube_deployment_strategy_v1",
     ]
 
 

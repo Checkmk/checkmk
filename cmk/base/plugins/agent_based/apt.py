@@ -11,7 +11,8 @@ from .agent_based_api.v1.type_defs import StringTable
 
 from .utils.apt import NOTHING_PENDING_FOR_INSTALLATION
 
-_SEC_REGEX = regex("^[^\\(]*\\(.* (Debian-Security:|Ubuntu[^/]*/[^/]*-\\bsecurity\\b)")
+DEBIAN_SEC = "Debian-Security"
+_SEC_REGEX = regex(f"^[^\\(]*\\(.* ({DEBIAN_SEC}:|Ubuntu[^/]*/[^/]*-\\bsecurity\\b)")
 
 
 class Section(NamedTuple):
@@ -37,7 +38,9 @@ def _data_is_valid(string_table: StringTable) -> bool:
     # 3 esm-infra security updates
     # 10 standard security updates
     # 1 standard security update
-    if "security update" in first_line[0]:
+    # We also observed kernel security updates on debian, the version can then also be found
+    # in the second line
+    if any([s in first_line[0] for s in ("security update", DEBIAN_SEC)]):
         first_line = string_table[1]
 
     parts = first_line[0].split()
@@ -46,12 +49,14 @@ def _data_is_valid(string_table: StringTable) -> bool:
 
     action = parts[0]
     version = parts[2]
-    return action in ('Inst', 'Remv') and version.startswith("[") and version.endswith("]")
+    return action in ("Inst", "Remv") and version.startswith("[") and version.endswith("]")
 
 
 def _is_security_update(update: str) -> bool:
-    """ Is the update a security update
+    """Is the update a security update
     >>> _is_security_update("Inst tzdata (2021e-0ubuntu0.16.04+esm1 UbuntuESM:16.04/xenial-infra-security [all])")
+    True
+    >>> _is_security_update("Inst linux-image-4.19.0-19-amd64 (4.19.232-1 Debian-Security:10/oldstable [amd64])")
     True
     """
     return bool(_SEC_REGEX.match(update))

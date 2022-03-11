@@ -1,0 +1,13 @@
+Title: Do not ignore debian sec updates in apt
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1646992128
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0p22
+
+In case a Debian host receives kernel security updates,
+the apt plugin may miss the data, which results in the service becoming stale.
+This is fixed now.

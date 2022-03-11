@@ -6,14 +6,27 @@
 
 from typing import Union
 
-from .k8s import OnDelete, Recreate, RollingUpdate
+from cmk.base.plugins.agent_based.utils.k8s import (
+    OnDelete,
+    Recreate,
+    RollingUpdate,
+    StatefulSetRollingUpdate,
+)
 
 
 def strategy_text(strategy: Union[RollingUpdate, Recreate, OnDelete]) -> str:
+    """Used for Deployment and DaemonSet"""
+
     if isinstance(strategy, RollingUpdate):
         return (
             f"{strategy.type_} "
             f"(max surge: {strategy.max_surge}, "
             f"max unavailable: {strategy.max_unavailable})"
         )
+    return strategy.type_
+
+
+def statefulset_strategy_text(strategy: Union[StatefulSetRollingUpdate, OnDelete]) -> str:
+    if isinstance(strategy, StatefulSetRollingUpdate):
+        return f"{strategy.type_} (partitioned at: {strategy.partition})"
     return strategy.type_

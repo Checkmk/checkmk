@@ -10,13 +10,18 @@ import pytest
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Attributes
 from cmk.base.plugins.agent_based.inventory_kube_statefulset import inventory_kube_statefulset
-from cmk.base.plugins.agent_based.utils.k8s import Selector, StatefulSetInfo
+from cmk.base.plugins.agent_based.utils.k8s import (
+    Selector,
+    StatefulSetInfo,
+    StatefulSetRollingUpdate,
+    StatefulSetStrategy,
+)
 
 from .utils_inventory import sort_inventory_result
 
 
 @pytest.mark.parametrize(
-    "section_info, expected_inventory_result",
+    "section_info, section_strategy, expected_inventory_result",
     [
         pytest.param(
             StatefulSetInfo(
@@ -27,12 +32,14 @@ from .utils_inventory import sort_inventory_result
                 creation_timestamp=1600000000.0,
                 cluster="cluster",
             ),
+            StatefulSetStrategy(strategy=StatefulSetRollingUpdate(partition=0)),
             [
                 Attributes(
                     path=["software", "applications", "kube", "statefulset"],
                     inventory_attributes={
                         "name": "oh-lord",
                         "namespace": "have-mercy",
+                        "strategy": "RollingUpdate (partitioned at: 0)",
                         "match_labels": "",
                         "match_expressions": "",
                     },
@@ -45,8 +52,9 @@ from .utils_inventory import sort_inventory_result
 )
 def test_inventory_kube_statefulset(
     section_info: StatefulSetInfo,
+    section_strategy: StatefulSetStrategy,
     expected_inventory_result: Sequence[Any],
 ) -> None:
-    assert sort_inventory_result(inventory_kube_statefulset(section_info)) == sort_inventory_result(
-        expected_inventory_result
-    )
+    assert sort_inventory_result(
+        inventory_kube_statefulset(section_info, section_strategy)
+    ) == sort_inventory_result(expected_inventory_result)

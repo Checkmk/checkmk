@@ -50,6 +50,7 @@ pub const MIN_WIN_VERSION_MAJOR: u64 = 6;
 pub const MIN_WIN_VERSION_MINOR: u64 = 1;
 
 // Log Rotation default parameters
+#[cfg(windows)]
 pub mod log {
     use flexi_logger::{Cleanup, Criterion, Naming};
     pub const FILE_MAX_SIZE: Criterion = Criterion::Size(500000);

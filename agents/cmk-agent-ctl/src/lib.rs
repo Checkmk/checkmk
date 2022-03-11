@@ -3,16 +3,16 @@
 // conditions defined in the file COPYING, which is part of this source code package.
 
 mod agent_receiver_api;
-mod certs;
+pub mod certs;
 mod cli;
-mod config;
+pub mod config;
 mod constants;
-mod modes;
+pub mod modes;
 mod monitoring_data;
 mod setup;
-mod site_spec;
+pub mod site_spec;
 mod tls_server;
-mod types;
+pub mod types;
 use anyhow::{Context, Result as AnyhowResult};
 use config::{JSONLoader, TOMLLoader};
 

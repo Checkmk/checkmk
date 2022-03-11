@@ -36,6 +36,12 @@ _SECTION_SEC_UPDATES = [
         "Inst bind9-host [1:9.10.3.dfsg.P4-8ubuntu1.19] (1:9.10.3.dfsg.P4-8ubuntu1.19+esm1 UbuntuESM:16.04/xenial-infra-security [amd64]) []"
     ],
 ]
+_SECTION_KERNEL_UPDATES = [
+    ["Inst linux-image-4.19.0-19-amd64 (4.19.232-1 Debian-Security:10/oldstable [amd64])"],
+    [
+        "Inst linux-image-amd64 [4.19+105+deb10u13] (4.19+105+deb10u14 Debian-Security:10/oldstable [amd64])"
+    ],
+]
 _SECTION_NO_ESM_SUPPORT = [
     ["Enable UA Infra: ESM to receive additional future security updates."],
     ["See https://ubuntu.com/16-04 or run: sudo ua status"],
@@ -79,6 +85,10 @@ _SECTION_ESM_SUPPORT = [
             _SECTION_SEC_UPDATES,
             True,
             id="security_upates_line",
+        ),
+        pytest.param(
+            _SECTION_KERNEL_UPDATES,
+            True,
         ),
     ],
 )
@@ -129,6 +139,15 @@ def test_data_is_valid(
             _SECTION_ESM_SUPPORT,
             Section(["ubuntu-advantage-tools"], [], []),
             id="esm_support",
+        ),
+        pytest.param(
+            _SECTION_KERNEL_UPDATES,
+            Section(
+                updates=[],
+                removals=[],
+                sec_updates=["linux-image-4.19.0-19-amd64", "linux-image-amd64"],
+            ),
+            id="security_kernel_debian_line",
         ),
     ],
 )

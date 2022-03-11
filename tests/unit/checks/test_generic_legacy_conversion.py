@@ -2460,7 +2460,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy):
         "symantec_av_quarantine",
         "symantec_av_updates",
         "synology_raid",
-        "synology_status",
         "synology_update",
         "systemd_units",
         "systemd_units.services",

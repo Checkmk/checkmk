@@ -561,9 +561,10 @@ def daemonset_info(daemonset: DaemonSet, cluster_name: str) -> section.DaemonSet
 
 
 class StatefulSet(PodOwner):
-    def __init__(self, metadata: api.MetaData) -> None:
+    def __init__(self, metadata: api.MetaData, spec: api.StatefulSetSpec) -> None:
         super().__init__()
         self.metadata = metadata
+        self.spec = spec
         self.type_: str = "statefulset"
 
     def name(self, prepend_namespace: bool = False) -> str:
@@ -585,6 +586,17 @@ class StatefulSet(PodOwner):
 
     def cpu_resources(self) -> section.Resources:
         return _collect_cpu_resources(self._pods)
+
+
+def statefulset_info(statefulset: StatefulSet, cluster_name: str) -> section.StatefulSetInfo:
+    return section.StatefulSetInfo(
+        name=statefulset.name(),
+        namespace=statefulset.metadata.namespace,
+        creation_timestamp=statefulset.metadata.creation_timestamp,
+        labels=statefulset.metadata.labels,
+        selector=statefulset.spec.selector,
+        cluster=cluster_name,
+    )
 
 
 class Node(PodOwner):
@@ -767,7 +779,10 @@ class Cluster:
                 _register_owner_for_pods(daemon_set, api_daemon_set.pods)
 
         for api_statefulset in statefulsets:
-            statefulset = StatefulSet(api_statefulset.metadata)
+            statefulset = StatefulSet(
+                metadata=api_statefulset.metadata,
+                spec=api_statefulset.spec,
+            )
             cluster.add_statefulset(statefulset)
             _register_owner_for_pods(statefulset, api_statefulset.pods)
 
@@ -1026,7 +1041,9 @@ def write_daemon_sets_api_sections(
 
 
 def write_statefulsets_api_sections(
-    api_statefulsets: Sequence[StatefulSet], piggyback_formatter: Callable[[str], str]
+    cluster_name: str,
+    api_statefulsets: Sequence[StatefulSet],
+    piggyback_formatter: Callable[[str], str],
 ) -> None:
     """Write the StatefulSet relevant sections based on k8 API information"""
 
@@ -1034,6 +1051,7 @@ def write_statefulsets_api_sections(
         sections = {
             "kube_memory_resources_v1": cluster_statefulset.memory_resources,
             "kube_cpu_resources_v1": cluster_statefulset.cpu_resources,
+            "kube_statefulset_info_v1": lambda: statefulset_info(cluster_statefulset, cluster_name),
         }
         _write_sections(sections)
 
@@ -1890,6 +1908,7 @@ def main(args: Optional[List[str]] = None) -> int:
             if "statefulsets" in arguments.monitored_objects:
                 LOGGER.info("Write StatefulSets sections based on API data")
                 write_statefulsets_api_sections(
+                    arguments.cluster,
                     statefulsets_from_namespaces(cluster.statefulsets(), monitored_namespaces),
                     piggyback_formatter=functools.partial(piggyback_formatter, "statefulset"),
                 )

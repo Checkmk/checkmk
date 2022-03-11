@@ -362,6 +362,17 @@ class DaemonSetInfo(BaseModel):
     cluster: str
 
 
+class StatefulSetInfo(BaseModel):
+    """section: kube_statefulset_info_v1"""
+
+    name: str
+    namespace: Namespace
+    labels: Labels
+    selector: Selector
+    creation_timestamp: CreationTimestamp
+    cluster: str
+
+
 class PodContainers(BaseModel):
     """section: kube_pod_containers_v1"""
 

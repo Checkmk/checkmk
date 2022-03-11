@@ -311,9 +311,20 @@ def daemon_set(new_daemon_set, daemon_set_pods, new_pod) -> agent_kube.DaemonSet
 
 
 @pytest.fixture
-def new_statefulset() -> Callable[[], agent_kube.StatefulSet]:
+def statefulset_spec() -> api.StatefulSetSpec:
+    class StatefulSetSpecFactory(ModelFactory):
+        __model__ = api.StatefulSetSpec
+
+    return StatefulSetSpecFactory.build()
+
+
+@pytest.fixture
+def new_statefulset(statefulset_spec) -> Callable[[], agent_kube.StatefulSet]:
     def _new_statefulset() -> agent_kube.StatefulSet:
-        return agent_kube.StatefulSet(metadata=MetaDataFactory.build())
+        return agent_kube.StatefulSet(
+            metadata=MetaDataFactory.build(),
+            spec=statefulset_spec,
+        )
 
     return _new_statefulset
 
@@ -450,6 +461,7 @@ def statefulsets_api_sections() -> Sequence[str]:
     return [
         "kube_memory_resources_v1",
         "kube_cpu_resources_v1",
+        "kube_statefulset_info_v1",
     ]
 
 

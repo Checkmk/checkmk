@@ -85,3 +85,4 @@ def test_schemata_did_not_diverge() -> None:
     assert agent.ContainerSpecs.schema() == k8s_check.ContainerSpecs.schema()
     assert agent.DaemonSetInfo.schema() == k8s_check.DaemonSetInfo.schema()
     assert agent.DaemonSetStrategy.schema() == k8s_check.DaemonSetStrategy.schema()
+    assert agent.StatefulSetInfo.schema() == k8s_check.StatefulSetInfo.schema()

@@ -38,11 +38,14 @@ from cmk.gui.plugins.openapi.endpoints.utils import (
 from cmk.gui.plugins.openapi.restful_objects import (
     constructors,
     Endpoint,
+    permissions,
     request_schemas,
     response_schemas,
 )
 from cmk.gui.plugins.openapi.restful_objects.parameters import NAME_FIELD
 from cmk.gui.watolib.groups import add_group, edit_group
+
+PERMISSIONS = permissions.Perm("wato.groups")
 
 
 @Endpoint(
@@ -52,6 +55,7 @@ from cmk.gui.watolib.groups import add_group, edit_group
     etag="output",
     request_schema=request_schemas.InputServiceGroup,
     response_schema=response_schemas.DomainObject,
+    permissions_required=PERMISSIONS,
 )
 def create(params):
     """Create a service group"""
@@ -71,6 +75,7 @@ def create(params):
     method="post",
     request_schema=request_schemas.BulkInputServiceGroup,
     response_schema=response_schemas.DomainObjectCollection,
+    permissions_required=PERMISSIONS,
 )
 def bulk_create(params):
     """Bulk create service groups"""
@@ -108,6 +113,7 @@ def list_groups(params):
     response_schema=response_schemas.ServiceGroup,
     etag="output",
     path_params=[NAME_FIELD],
+    permissions_required=PERMISSIONS,
 )
 def show_group(params):
     """Show a service group"""
@@ -122,6 +128,7 @@ def show_group(params):
     method="delete",
     path_params=[NAME_FIELD],
     output_empty=True,
+    permissions_required=PERMISSIONS,
 )
 def delete(params):
     """Delete a service group"""
@@ -136,6 +143,7 @@ def delete(params):
     method="post",
     request_schema=request_schemas.BulkDeleteServiceGroup,
     output_empty=True,
+    permissions_required=PERMISSIONS,
 )
 def bulk_delete(params):
     """Bulk delete service groups"""
@@ -158,6 +166,7 @@ def bulk_delete(params):
     etag="both",
     response_schema=response_schemas.ServiceGroup,
     request_schema=request_schemas.UpdateGroup,
+    permissions_required=PERMISSIONS,
 )
 def update(params):
     """Update a service group"""
@@ -175,6 +184,7 @@ def update(params):
     method="put",
     request_schema=request_schemas.BulkUpdateServiceGroup,
     response_schema=response_schemas.DomainObjectCollection,
+    permissions_required=PERMISSIONS,
 )
 def bulk_update(params):
     """Bulk update service groups

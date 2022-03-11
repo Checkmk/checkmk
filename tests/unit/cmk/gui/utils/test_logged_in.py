@@ -17,13 +17,7 @@ from cmk.gui.config import builtin_role_ids
 from cmk.gui.exceptions import MKAuthException
 from cmk.gui.globals import config
 from cmk.gui.globals import user as global_user
-from cmk.gui.utils.logged_in import (
-    LoggedInNobody,
-    LoggedInSuperUser,
-    LoggedInUser,
-    SuperUserContext,
-    UserContext,
-)
+from cmk.gui.utils.logged_in import LoggedInNobody, LoggedInSuperUser, LoggedInUser, UserContext
 from cmk.gui.watolib.utils import may_edit_ruleset
 
 
@@ -35,9 +29,9 @@ def test_user_context(with_user):
     assert global_user.id is None
 
 
-def test_super_user_context(request_context):
+def test_super_user_context(request_context, run_as_superuser):
     assert global_user.id is None
-    with SuperUserContext():
+    with run_as_superuser():
         assert global_user.role_ids == ["admin"]
     assert global_user.id is None
 

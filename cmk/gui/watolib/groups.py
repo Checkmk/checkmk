@@ -54,7 +54,7 @@ def _clear_group_information_request_cache() -> None:
 
 
 def add_group(name: GroupName, group_type: GroupType, extra_info: GroupSpec) -> None:
-    _check_modify_group_permissions(group_type)
+    check_modify_group_permissions(group_type)
     all_groups = load_group_information()
     groups = all_groups.get(group_type, {})
 
@@ -78,7 +78,7 @@ def add_group(name: GroupName, group_type: GroupType, extra_info: GroupSpec) -> 
 
 
 def edit_group(name: GroupName, group_type: GroupType, extra_info: GroupSpec) -> None:
-    _check_modify_group_permissions(group_type)
+    check_modify_group_permissions(group_type)
     all_groups = load_group_information()
     groups = all_groups.get(group_type, {})
 
@@ -119,8 +119,7 @@ def edit_group(name: GroupName, group_type: GroupType, extra_info: GroupSpec) ->
 
 
 def delete_group(name: GroupName, group_type: GroupType) -> None:
-    _check_modify_group_permissions(group_type)
-
+    check_modify_group_permissions(group_type)
     # Check if group exists
     all_groups = load_group_information()
     groups = all_groups.get(group_type, {})
@@ -156,7 +155,7 @@ def _add_group_change(group: GroupSpec, action_name: str, text: str) -> None:
     add_change(action_name, text, sites=group_sites)
 
 
-def _check_modify_group_permissions(group_type: GroupType) -> None:
+def check_modify_group_permissions(group_type: GroupType) -> None:
     required_permissions = {
         "contact": ["wato.users"],
         "host": ["wato.groups"],

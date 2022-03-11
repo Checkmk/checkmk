@@ -1097,6 +1097,10 @@ msgstr ""
 msgid "95% - Two standard deviations"
 msgstr ""
 
+#, fuzzy
+msgid "99th percentile request latency"
+msgstr "Nivelurile maxime pentru voltaj"
+
 msgid ""
 "<a href='wato.py?mode=edit_ruleset&varname=piggyback_translation'>Piggyback "
 "translations</a> are performed before the piggyback connector creates hosts. "
@@ -3223,6 +3227,10 @@ msgid "Add new scalar"
 msgstr "Adaungă un nou element"
 
 #, fuzzy
+msgid "Add new status"
+msgstr "Adaugă comentariu"
+
+#, fuzzy
 msgid "Add new tag"
 msgstr "Adaugă o nouă mapare"
 
@@ -3941,6 +3949,13 @@ msgstr ""
 msgid "Agent pairing"
 msgstr "actualizare"
 
+msgid "Agent plugins: Regular expression to exclude plugins"
+msgstr ""
+
+#, fuzzy
+msgid "Agent plugins: Required minimal versions"
+msgstr "Numarul maxim de conexiuni"
+
 #, fuzzy
 msgid "Agent registration"
 msgstr "Numele Elementului"
@@ -3955,10 +3970,6 @@ msgstr "actualizare"
 
 msgid "Agent signing"
 msgstr ""
-
-#, fuzzy
-msgid "Agent update"
-msgstr "actualizare"
 
 #, fuzzy
 msgid "Agent update status"
@@ -6065,12 +6076,6 @@ msgstr "foloseste numele portului"
 msgid "Backup codes"
 msgstr "foloseste numele portului"
 
-#, python-format
-msgid ""
-"Backup codes have been generated: <ul>%s</ul> Save them now. If you loose "
-"them, you will have to generate new ones."
-msgstr ""
-
 msgid "Backup conditions"
 msgstr ""
 
@@ -6789,8 +6794,8 @@ msgstr ""
 
 msgid ""
 "By default Check_MK uses the community \"public\" to contact hosts via SNMP "
-"v1/v2. This rule can be used to customize the the credentials to be used "
-"when contacting hosts via SNMP."
+"v1/v2. This rule can be used to customize the credentials to be used when "
+"contacting hosts via SNMP."
 msgstr ""
 
 msgid ""
@@ -7188,6 +7193,10 @@ msgstr ""
 
 msgid "CPU usage warning at"
 msgstr ""
+
+#, fuzzy
+msgid "CPU utilitzation"
+msgstr "Dezactiveaza Notificarile"
 
 msgid "CPU utilization"
 msgstr ""
@@ -8165,6 +8174,10 @@ msgstr ""
 msgid "Check uniserv service"
 msgstr ""
 
+#, fuzzy
+msgid "Check version of Checkmk agent"
+msgstr "TCP port pentru conexiunile la agentul Check_MK"
+
 msgid "Check via SSH service"
 msgstr ""
 
@@ -8232,6 +8245,10 @@ msgstr ""
 msgid "Checkmk Agent Port (<a href=\"%s\">Rules</a>)"
 msgstr ""
 
+#, fuzzy
+msgid "Checkmk Agent installation auditing"
+msgstr "Perioada de timp Noua"
+
 msgid ""
 "Checkmk Agent, Number, version and edition of sites, Cluster host; Number of "
 "hosts, services, CMK Helper, Live Helper, Helper usage; State of daemons: "
@@ -8249,6 +8266,10 @@ msgstr "Activare Configurare"
 
 #, fuzzy
 msgid "Checkmk Log Files"
+msgstr "Activare Configurare"
+
+#, fuzzy
+msgid "Checkmk Log files"
 msgstr "Activare Configurare"
 
 #, fuzzy
@@ -8343,8 +8364,7 @@ msgid ""
 "significantly. Inline SNMP is enabled by default for all SNMP hosts and it "
 "is a good idea to keep this default setting. However, there are SNMP devices "
 "which have problems with some SNMP implementations. You can use this rule to "
-"select the SNMP Backend for these hosts.Inline SNMP uses PySNMP bindings to "
-"make SNMP calls."
+"select the SNMP Backend for these hosts."
 msgstr ""
 
 #, fuzzy
@@ -8948,6 +8968,14 @@ msgstr ""
 
 msgid "Cloud Based Environments"
 msgstr ""
+
+#, fuzzy
+msgid "Cloud Functions"
+msgstr "Conexiuni Active"
+
+#, fuzzy
+msgid "Cloud Run"
+msgstr "Adresă"
 
 msgid "Cloud based environments"
 msgstr ""
@@ -11801,6 +11829,10 @@ msgstr "fire"
 msgid "Daemon state and summarized count of containers and their states"
 msgstr ""
 
+#, fuzzy
+msgid "DaemonSets"
+msgstr "fire"
+
 msgid "Daily"
 msgstr ""
 
@@ -11877,6 +11909,14 @@ msgstr "% / gamă"
 #, fuzzy
 msgid "Data read"
 msgstr "fire"
+
+#, fuzzy
+msgid "Data received"
+msgstr "Sterge Elementul"
+
+#, fuzzy
+msgid "Data sent"
+msgstr "Dimensiunea Maxima"
 
 #, fuzzy
 msgid "Data size"
@@ -16340,6 +16380,9 @@ msgstr ""
 msgid "Entry"
 msgstr ""
 
+msgid "Environment Variables"
+msgstr ""
+
 msgid "Episode 1: Installing Checkmk and monitoring Linux"
 msgstr ""
 
@@ -16981,6 +17024,10 @@ msgstr ""
 msgid "Expect the flag to be: On"
 msgstr ""
 
+#, fuzzy
+msgid "Expected"
+msgstr "Numarul maxim de mesaje"
+
 msgid "Expected DC"
 msgstr ""
 
@@ -17357,6 +17404,10 @@ msgid "Failed to bake the agents: %s"
 msgstr ""
 
 msgid "Failed to calculate a graph recipe."
+msgstr ""
+
+#, python-format
+msgid "Failed to calculate a graph recipe. (%s)"
 msgstr ""
 
 #, python-format
@@ -17768,10 +17819,6 @@ msgstr ""
 
 msgid "File Grouping Patterns"
 msgstr ""
-
-#, fuzzy
-msgid "File Name"
-msgstr "Editeaza regulile de loguri"
 
 msgid "File Parsing Settings"
 msgstr ""
@@ -18833,6 +18880,24 @@ msgid "GByte/s"
 msgstr ""
 
 #, fuzzy
+msgid "GCP services to monitor"
+msgstr "Adaugă instanță pentru monitorizare"
+
+msgid "GCP/Cloud Run Cpu"
+msgstr ""
+
+msgid "GCP/Cloud Run Memory"
+msgstr ""
+
+#, fuzzy
+msgid "GCP/Cloud Run Network"
+msgstr "Adresă"
+
+#, fuzzy
+msgid "GCP/Cloud Run Requests"
+msgstr "cereri"
+
+#, fuzzy
 msgid "GCP/Function egress"
 msgstr "Conexiune Noua"
 
@@ -19072,6 +19137,9 @@ msgid "Google Cloud Platform"
 msgstr ""
 
 msgid "Google Cloud Platform (GCP)"
+msgstr ""
+
+msgid "Google Cloud Storage (GCS)"
 msgstr ""
 
 #, fuzzy
@@ -19467,6 +19535,10 @@ msgid ""
 "(such as passwords for plugins)."
 msgstr ""
 
+#, fuzzy
+msgid "HW Information"
+msgstr "Informații Adiționale"
+
 msgid "HW container"
 msgstr ""
 
@@ -19603,6 +19675,10 @@ msgstr ""
 
 msgid "Hardware corrupted memory"
 msgstr ""
+
+#, fuzzy
+msgid "Hardware information of the Checkmk Server"
+msgstr " pe siteul de monitorizare: "
 
 msgid "Hardware status"
 msgstr ""
@@ -22330,6 +22406,11 @@ msgid "If you regenerate backup codes, you automatically invalidate old codes."
 msgstr ""
 
 msgid ""
+"If you regenerate backup codes, you automatically invalidate the existing "
+"codes."
+msgstr ""
+
+msgid ""
 "If you select a contact group here, then all notifications of hosts and "
 "services in that contact group will be sent to the event console. <b>Note</"
 "b>: you still need to create a rule matching those messages in order to have "
@@ -24945,6 +25026,10 @@ msgid "Levels"
 msgstr ""
 
 #, fuzzy
+msgid "Levels CPU"
+msgstr "Nivelurile maxime pentru voltaj"
+
+#, fuzzy
 msgid "Levels Helper usage Check"
 msgstr "Nivelurile maxime pentru voltaj"
 
@@ -24999,12 +25084,6 @@ msgstr ""
 #, fuzzy, python-format
 msgid "Levels for %s mail queue"
 msgstr "Nivelurile maxime pentru voltaj"
-
-msgid "Levels for <i>device not responding</i>"
-msgstr ""
-
-msgid "Levels for <i>device time drifted</i>"
-msgstr ""
 
 msgid "Levels for ATS Output parameters"
 msgstr ""
@@ -25369,6 +25448,10 @@ msgstr "Nivelurile maxime pentru voltaj"
 msgid "Levels for wait"
 msgstr "Nivelurile maxime pentru voltaj"
 
+#, fuzzy
+msgid "Levels memory"
+msgstr "Nivelurile maxime pentru voltaj"
+
 #, python-format
 msgid "Levels of %s %s"
 msgstr ""
@@ -25451,6 +25534,10 @@ msgid "Levels on network egress"
 msgstr "Nivel-urile absolute de licențe neutilizate"
 
 #, fuzzy
+msgid "Levels on network traffic"
+msgstr "Nivel-urile absolute de licențe neutilizate"
+
+#, fuzzy
 msgid "Levels on performance"
 msgstr "Acces la Consola de Evenimente"
 
@@ -25528,6 +25615,10 @@ msgstr ""
 
 msgid "Levels over an extended time period on total CPU utilization"
 msgstr ""
+
+#, fuzzy
+msgid "Levels requests"
+msgstr "Nivelurile maxime pentru voltaj"
 
 msgid "Libelle Business Shadow"
 msgstr ""
@@ -27234,12 +27325,6 @@ msgstr ""
 msgid "Map systemd states to monitoring states"
 msgstr " pe siteul de monitorizare: "
 
-msgid ""
-"Map the Kubernetes pod status shown in the summary to an upper level of its "
-"age. In order the configure pod statuses not within the list below, use the "
-"'Other' option."
-msgstr ""
-
 #, fuzzy
 msgid "Map the admin state (<tt>ifAdminStatus</tt>) to a monitoring state."
 msgstr " pe siteul de monitorizare: "
@@ -28155,6 +28240,10 @@ msgstr "% utilizare"
 
 msgid "Memory used by caches"
 msgstr ""
+
+#, fuzzy
+msgid "Memory utilitzation"
+msgstr "Dezactiveaza Notificarile"
 
 msgid "Memory warning at"
 msgstr ""
@@ -30196,10 +30285,6 @@ msgstr ""
 msgid "No levels"
 msgstr "doua nivele"
 
-#, fuzzy
-msgid "No levels set"
-msgstr "doua nivele"
-
 msgid "No logging"
 msgstr ""
 
@@ -31358,11 +31443,19 @@ msgstr ""
 msgid "Number of relocating shards"
 msgstr "Numarul maxim de conexiuni"
 
+#, fuzzy
+msgid "Number of requests"
+msgstr "Numarul maxim de conexiuni"
+
 msgid "Number of retries"
 msgstr ""
 
 msgid "Number of retries (not counting the initial regular run)"
 msgstr ""
+
+#, fuzzy
+msgid "Number of running containers"
+msgstr "Numarul maxim de conexiuni"
 
 #, fuzzy
 msgid "Number of search results"
@@ -33558,6 +33651,10 @@ msgstr ""
 msgid "Performance Data for Queue Length"
 msgstr ""
 
+msgid ""
+"Performance Data related to sizing, e.g. number of helpers, hosts, services"
+msgstr ""
+
 msgid "Performance Graphs"
 msgstr ""
 
@@ -34321,6 +34418,12 @@ msgstr ""
 
 msgid ""
 "Plugins for operating systems, things like memory, CPU, filesystems, etc."
+msgstr ""
+
+#, python-format
+msgid ""
+"Plugins or local checks matching this pattern will be excluded from the "
+"comparison with the required versions specified in '%s'."
 msgstr ""
 
 msgid ""
@@ -44377,9 +44480,6 @@ msgstr ""
 msgid "The cluster must have at least one node"
 msgstr ""
 
-msgid "The color needs to be given in hex format."
-msgstr ""
-
 msgid ""
 "The command line <tt>ping</tt> command defaults to sending ICMP packets with "
 "a payload of 40 bytes. Together with the IP and ICMP header that sums up to "
@@ -44786,7 +44886,10 @@ msgstr ""
 msgid "The file does not look like a valid key file."
 msgstr ""
 
-msgid "The file does not seem to be a valid iCalendar file."
+msgid "The file does not seem to be a valid iCalendar file.AAA"
+msgstr ""
+
+msgid "The file does not seem to be a valid iCalendar file.BBB"
 msgstr ""
 
 msgid "The file extension has to be <tt>.pdf</tt>"
@@ -44838,6 +44941,12 @@ msgstr ""
 
 #, python-format
 msgid "The folder's permitted contact groups are <b>%s</b>."
+msgstr ""
+
+#, python-format
+msgid ""
+"The following backup codes have been generated: <ul>%s</ul> These codes are "
+"displayed only now. Save them securely."
 msgstr ""
 
 msgid ""
@@ -48358,9 +48467,6 @@ msgid ""
 "group. This is a prefix match regular expression."
 msgstr ""
 
-msgid "This report does not exist."
-msgstr ""
-
 msgid "This report element does not exist."
 msgstr ""
 
@@ -48753,6 +48859,9 @@ msgstr ""
 
 #, python-format
 msgid "This rule pack is provided via the MKP %s."
+msgstr ""
+
+msgid "This rule representation can be used for Web API calls."
 msgstr ""
 
 msgid ""
@@ -52085,6 +52194,10 @@ msgid "Upper levels for disk utilization"
 msgstr "Dezactiveaza Notificarile"
 
 #, fuzzy
+msgid "Upper levels for drifted access points"
+msgstr "Nivel-urile absolute de licențe neutilizate"
+
+#, fuzzy
 msgid "Upper levels for duration in percent of the timeout"
 msgstr "Nivel-urile absolute de licențe neutilizate"
 
@@ -52306,6 +52419,10 @@ msgid ""
 msgstr "Nivel-urile absolute de licențe neutilizate"
 
 #, fuzzy
+msgid "Upper levels for unresponsive access points"
+msgstr "Nivel-urile absolute de licențe neutilizate"
+
+#, fuzzy
 msgid "Upper levels for unused space"
 msgstr "Nivel-urile absolute de licențe neutilizate"
 
@@ -52486,9 +52603,6 @@ msgid "Use Hard States"
 msgstr ""
 
 msgid "Use IPMItool"
-msgstr ""
-
-msgid "Use Inline SNMP (PySNMP) Backend (experimental)"
 msgstr ""
 
 msgid "Use Inline SNMP (deprecated)"
@@ -53644,6 +53758,9 @@ msgstr ""
 #, fuzzy
 msgid "Variable"
 msgstr "Tabel"
+
+msgid "Variables set in the site user's environment"
+msgstr ""
 
 msgid "Various"
 msgstr ""
@@ -55883,6 +56000,16 @@ msgid ""
 msgstr ""
 
 msgid ""
+"You can configure groups of statuses and the time after which a warn/crit "
+"result is returned. The first matching group is selected, each entry within "
+"a group is a regular expression. The service tracks how long a Pod is part "
+"of a group, rather than the duration of an individual status. This means the "
+"counter will only be reset when changing groups. Note, that if you change "
+"any group of statuses, the timer will be reset. Changing levels has no "
+"effect on timers."
+msgstr ""
+
+msgid ""
 "You can configure lower thresholds for the versions of the currently "
 "deployed agent plugins and local checks."
 msgstr ""
@@ -56494,6 +56621,12 @@ msgstr ""
 
 #, python-format
 msgid "You have %d unused backup codes left."
+msgstr ""
+
+#, python-format
+msgid ""
+"You have %d unused backup codes left. You can use them as one-time password "
+"if your key is not available."
 msgstr ""
 
 #, python-format
@@ -57219,6 +57352,10 @@ msgstr ""
 
 msgid "best state"
 msgstr ""
+
+#, fuzzy
+msgid "billable time"
+msgstr "Proprietatile Folderului"
 
 msgid "bindings"
 msgstr ""
@@ -59072,11 +59209,23 @@ msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr ""
 
 #, fuzzy
-#~ msgid "Number of total containers"
-#~ msgstr "Numarul maxim de conexiuni"
+#~ msgid "Checkmk Agent"
+#~ msgstr "Acces la Agenți"
 
 #, fuzzy
-#~ msgid "Number of waiting containers"
+#~ msgid "File Name"
+#~ msgstr "Editeaza regulile de loguri"
+
+#, fuzzy
+#~ msgid "Agent update"
+#~ msgstr "actualizare"
+
+#, fuzzy
+#~ msgid "No levels set"
+#~ msgstr "doua nivele"
+
+#, fuzzy
+#~ msgid "Number of total containers"
 #~ msgstr "Numarul maxim de conexiuni"
 
 #, fuzzy
@@ -59182,10 +59331,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Container memory"
 #~ msgstr "Numele Elementului"
-
-#, fuzzy
-#~ msgid "Memory utilization"
-#~ msgstr "Dezactiveaza Notificarile"
 
 #, fuzzy
 #~ msgid "This rule does not match."
@@ -59474,10 +59619,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Checker helper"
 #~ msgstr "Nivelurile maxime pentru voltaj"
-
-#, fuzzy
-#~ msgid "Checkmk Agent Version"
-#~ msgstr "Perioada de timp Noua"
 
 #, fuzzy
 #~ msgid "Checkmk fetcher latency"
@@ -59963,10 +60104,6 @@ msgstr ""
 #~ msgstr "Numarul maxim de mesaje"
 
 #, fuzzy
-#~ msgid "Number of regex sets"
-#~ msgstr "Numarul maxim de conexiuni"
-
-#, fuzzy
 #~ msgid "Number of rule groups"
 #~ msgstr "Numarul maxim de conexiuni"
 
@@ -60187,10 +60324,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "SMT Threads"
 #~ msgstr "fire"
-
-#, fuzzy
-#~ msgid "SNMP Information"
-#~ msgstr "Informații Adiționale"
 
 #, fuzzy
 #~ msgid "Scheduled downtimes"

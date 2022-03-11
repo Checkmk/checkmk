@@ -155,7 +155,7 @@ STAGES:
 
     - NAME: 'Shell Unit'
       DIR: 'tests'
-      COMMAND: "make test-unit-sh-docker &> ${RESULTS}/shell-unit.txt"
+      COMMAND: "make test-unit-shell-docker &> ${RESULTS}/shell-unit.txt"
       RESULT_CHECK_FILE_PATTERN: "results/shell-unit.txt"
 
     - NAME: 'JavaScript Format'

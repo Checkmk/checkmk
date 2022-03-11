@@ -30,7 +30,7 @@ timeout(time: 12, unit: 'HOURS') {
                     stage('test python3 unit') {
                         dir ('tests') {
                             ansiColor('css') {
-                                sh "bash -c \"make test-unit-sh\""
+                                sh "bash -c \"make test-unit-shell\""
                             }
                         }
                     }

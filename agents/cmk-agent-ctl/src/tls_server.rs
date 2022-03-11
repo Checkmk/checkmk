@@ -2,13 +2,12 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
-use super::config;
-use anyhow::{anyhow, Context, Result as AnyhowResult};
-use rustls_pemfile::Item;
+use super::{certs, config};
+use anyhow::Result as AnyhowResult;
 use std::sync::Arc;
 use tokio_rustls::rustls::{
     server::AllowAnyAuthenticatedClient, server::ResolvesServerCertUsingSni, sign::CertifiedKey,
-    sign::RsaSigningKey, Certificate, PrivateKey, RootCertStore, ServerConfig,
+    sign::RsaSigningKey, RootCertStore, ServerConfig,
 };
 use tokio_rustls::TlsAcceptor;
 
@@ -41,7 +40,7 @@ fn root_cert_store<'a>(
     let mut cert_store = RootCertStore::empty();
 
     for root_cert in root_certs {
-        cert_store.add(&certificate(root_cert)?)?;
+        cert_store.add(&certs::rustls_certificate(root_cert)?)?;
     }
 
     Ok(cert_store)
@@ -53,8 +52,8 @@ fn sni_resolver<'a>(
     let mut resolver = rustls::server::ResolvesServerCertUsingSni::new();
 
     for conn in connections {
-        let key = private_key(&conn.private_key)?;
-        let cert = certificate(&conn.certificate)?;
+        let key = certs::rustls_private_key(&conn.private_key)?;
+        let cert = certs::rustls_certificate(&conn.certificate)?;
 
         let certified_key = CertifiedKey::new(vec![cert], Arc::new(RsaSigningKey::new(&key)?));
 
@@ -62,27 +61,6 @@ fn sni_resolver<'a>(
     }
 
     Ok(Arc::new(resolver))
-}
-
-fn private_key(key_pem: &str) -> AnyhowResult<PrivateKey> {
-    if let Item::PKCS8Key(it) = rustls_pemfile::read_one(&mut key_pem.to_owned().as_bytes())?
-        .context("Could not load private key")?
-    {
-        Ok(PrivateKey(it))
-    } else {
-        Err(anyhow!("Could not process private key"))
-    }
-}
-
-fn certificate(cert_pem: &str) -> AnyhowResult<Certificate> {
-    if let Item::X509Certificate(it) =
-        rustls_pemfile::read_one(&mut cert_pem.to_owned().as_bytes())?
-            .context("Could not load certificate")?
-    {
-        Ok(Certificate(it))
-    } else {
-        Err(anyhow!("Could not process certificate"))
-    }
 }
 
 #[cfg(windows)]

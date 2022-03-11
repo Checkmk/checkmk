@@ -158,13 +158,21 @@ impl MaxConnectionsGuard {
 }
 
 pub fn pull(pull_config: config::PullConfig) -> AnyhowResult<()> {
+    pull_runtime_wrapper(pull_config)
+}
+
+pub async fn async_pull(pull_config: config::PullConfig) -> AnyhowResult<()> {
     let guard = MaxConnectionsGuard::new(pull_config.max_connections);
     let pull_state = PullStateImpl::try_from(pull_config)?;
     let agent_output_collector = AgentOutputCollectorImpl;
-    _pull(pull_state, guard, agent_output_collector)
+    _pull(pull_state, guard, agent_output_collector).await
 }
 
 #[tokio::main(flavor = "current_thread")]
+async fn pull_runtime_wrapper(pull_config: config::PullConfig) -> AnyhowResult<()> {
+    async_pull(pull_config).await
+}
+
 async fn _pull(
     mut pull_state: impl PullState,
     mut guard: MaxConnectionsGuard,
@@ -255,7 +263,7 @@ async fn _pull_cycle(
                 warn!("{}: Request failed. ({})", remote, error);
             }
         }
-        debug!("{}: Handling pull request DONE.", remote);
+        debug!("{}: Handling pull request DONE (Task detached).", remote);
     }
 }
 
@@ -315,7 +323,6 @@ async fn handle_request(
     let (mon_data, tls_stream) = tokio::join!(encoded_mondata, handshake);
     let mon_data = mon_data?;
     let mut tls_stream = tls_stream?;
-    debug!("data to be send");
     with_timeout(
         async move {
             tls_stream.write_all(&mon_data).await?;

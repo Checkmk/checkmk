@@ -142,8 +142,11 @@ impl TOMLLoader for ConfigFromDisk {}
 pub struct LegacyPullMarker(std::path::PathBuf);
 
 impl LegacyPullMarker {
-    pub fn new(path: &Path) -> Self {
-        Self(path.to_path_buf())
+    pub fn new<P>(path: P) -> Self
+    where
+        P: AsRef<Path>,
+    {
+        Self(path.as_ref().to_owned())
     }
 
     pub fn exists(&self) -> bool {
@@ -164,8 +167,8 @@ pub struct PullConfig {
     pub port: types::Port,
     pub max_connections: usize,
     pub connection_timeout: u64,
-    legacy_pull_marker: LegacyPullMarker,
-    registry: Registry,
+    pub legacy_pull_marker: LegacyPullMarker,
+    pub registry: Registry,
 }
 
 impl PullConfig {

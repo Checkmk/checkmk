@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import Any
+
 import pytest
 
 from cmk.base.plugins.agent_based import aix_diskiod
@@ -28,9 +30,13 @@ def test_parse_aix_diskiod():
 
 
 def test_check_disk():
+    value_store: dict[str, Any] = {}
+    now = 1647029464.27418
+
     with pytest.raises(IgnoreResultsError):
-        list(aix_diskiod._check_disk({}, DISK))
-    assert list(aix_diskiod._check_disk({}, DISK)) == [
+        list(aix_diskiod._check_disk({}, DISK, value_store, now))
+
+    assert list(aix_diskiod._check_disk({}, DISK, value_store, now + 60)) == [
         Result(state=state.OK, summary="Read: 0.00 B/s"),
         Metric("disk_read_throughput", 0.0),
         Result(state=state.OK, summary="Write: 0.00 B/s"),

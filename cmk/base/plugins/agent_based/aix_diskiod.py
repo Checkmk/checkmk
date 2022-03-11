@@ -25,7 +25,7 @@
 # 6. Kb_wrtn    -> Kilobytes written since system boot
 
 import time
-from typing import Any, Mapping, Optional
+from typing import Any, Mapping, MutableMapping, Optional
 
 from .agent_based_api.v1 import get_value_store, register, type_defs
 from .utils import diskstat
@@ -56,16 +56,15 @@ register.agent_section(
 def _check_disk(
     params: Mapping[str, Any],
     disk: diskstat.Disk,
+    value_store: MutableMapping[str, Any],
+    now: float,
 ) -> type_defs.CheckResult:
-    value_store = get_value_store()
-    disk_with_rates = diskstat.compute_rates(
-        disk=disk, value_store=value_store, this_time=time.time()
-    )
+    disk_with_rates = diskstat.compute_rates(disk=disk, value_store=value_store, this_time=now)
     yield from diskstat.check_diskstat_dict(
         params=params,
         disk=disk_with_rates,
         value_store=value_store,
-        this_time=time.time(),
+        this_time=now,
     )
 
 
@@ -81,7 +80,7 @@ def check_aix_diskiod(
             disk = section[item]
         except KeyError:
             return
-    yield from _check_disk(params, disk)
+    yield from _check_disk(params, disk, get_value_store(), time.time())
 
 
 def cluster_check_aix_diskiod(
@@ -99,7 +98,7 @@ def cluster_check_aix_diskiod(
         disk = diskstat.combine_disks(
             node_section[item] for node_section in present_sections if item in node_section
         )
-    yield from _check_disk(params, disk)
+    yield from _check_disk(params, disk, get_value_store(), time.time())
 
 
 register.check_plugin(

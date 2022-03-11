@@ -63,8 +63,6 @@ def main(argv=None):
 
     args = parse_arguments(argv)
 
-    sys.stdout.write("<<<check_mk>>>\n")
-
     try:
         handle_request(args, sections)
     except Exception as e:

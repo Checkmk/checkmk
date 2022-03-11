@@ -137,6 +137,7 @@ class Parser(Generic[TRawData, TRawDataSection], abc.ABC):
         raise NotImplementedError
 
 
+# TODO: the last remaining use of host_sections in summarize_success is gone; this can be simplified
 class Summarizer(Generic[TRawDataSection], abc.ABC):
     """Class to summarize parsed data into a ServiceCheckResult.
 

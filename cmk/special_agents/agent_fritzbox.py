@@ -28,6 +28,7 @@
 """Checkmk special agent Fritz!Box"""
 
 import argparse
+import json
 import logging
 import pprint
 import re
@@ -213,8 +214,9 @@ def main(sys_argv=None):
         for key, value in attrs.items():
             sys.stdout.write(f"{key} {value}\n")
 
-    sys.stdout.write("<<<check_mk>>>\n")
-    sys.stdout.write("AgentOS: FRITZ!OS\n")
+    labels = {"cmk/os_family": "Fritz!OS"}
+    sys.stdout.write("<<<labels:sep(0)>>>\n")
+    sys.stdout.write(f"{json.dumps(labels)}\n")
 
 
 if __name__ == "__main__":

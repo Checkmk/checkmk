@@ -14,7 +14,6 @@ from cmk.special_agents.utils.argument_parsing import Args, create_default_argum
 
 
 def agent_elasticsearch_main(args: Args) -> None:
-    sys.stdout.write("<<<check_mk>>>\n")
     for host in args.hosts:
         url_base = "%s://%s:%d" % (args.proto, host, args.port)
 

@@ -701,6 +701,12 @@ inventory_displayhints.update({
     ".software.applications.kube.daemonset.match_labels": {"title": _l("matchLabels")},
     ".software.applications.kube.daemonset.match_expressions": {"title": _l("matchExpressions")},
 
+    ".software.applications.kube.statefulset.": {"title": _l("StatefulSet")},
+    ".software.applications.kube.statefulset.name": {"title": _l("Name")},
+    ".software.applications.kube.statefulset.namespace": {"title": _l("Namespace")},
+    ".software.applications.kube.statefulset.match_labels": {"title": _l("matchLabels")},
+    ".software.applications.kube.statefulset.match_expressions": {"title": _l("matchExpressions")},
+
     ".software.applications.kube.node.": { "title": _l("Node") },
     ".software.applications.kube.node.name": {"title": _l("Name")},
     ".software.applications.kube.node.operating_system": {"title": _l("Operating system")},

@@ -7,13 +7,16 @@
 import pytest
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult, StringTable
 from cmk.base.plugins.agent_based.cmk_site_statistics import (
     check_cmk_site_statistics,
+    CMKSiteStatisticsSection,
     discover_cmk_site_statistics,
     HostStatistics,
     parse_cmk_site_statistics,
     ServiceStatistics,
 )
+from cmk.base.plugins.agent_based.utils.livestatus_status import LivestatusSection
 
 _SECTION_CMK_SITE_STATISTICS = {
     "heute": (
@@ -231,11 +234,14 @@ _SECTION_LIVESTATUS_STATUS = {
         ),
     ],
 )
-def test_parse_cmk_site_statistics(string_table, parsed_section):
+def test_parse_cmk_site_statistics(
+    string_table: StringTable,
+    parsed_section: CMKSiteStatisticsSection,
+) -> None:
     assert parse_cmk_site_statistics(string_table) == parsed_section
 
 
-def test_discover_cmk_site_statistics():
+def test_discover_cmk_site_statistics() -> None:
     assert list(
         discover_cmk_site_statistics(
             _SECTION_CMK_SITE_STATISTICS,
@@ -297,7 +303,7 @@ def test_discover_cmk_site_statistics():
         (
             "gestern",
             _SECTION_CMK_SITE_STATISTICS,
-            {"gestern: None"},
+            {"gestern": None},
             [
                 Result(
                     state=State.OK,
@@ -340,11 +346,11 @@ def test_discover_cmk_site_statistics():
     ],
 )
 def test_check_cmk_site_statistics(
-    item,
-    section_cmk_site_statistics,
-    section_livestatus_status,
-    expected_result,
-):
+    item: str,
+    section_cmk_site_statistics: CMKSiteStatisticsSection,
+    section_livestatus_status: LivestatusSection,
+    expected_result: CheckResult,
+) -> None:
     assert (
         list(
             check_cmk_site_statistics(

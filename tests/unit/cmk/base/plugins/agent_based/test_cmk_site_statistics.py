@@ -7,13 +7,16 @@
 import pytest
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult, StringTable
 from cmk.base.plugins.agent_based.cmk_site_statistics import (
     check_cmk_site_statistics,
+    CMKSiteStatisticsSection,
     discover_cmk_site_statistics,
     HostStatistics,
     parse_cmk_site_statistics,
     ServiceStatistics,
 )
+from cmk.base.plugins.agent_based.utils.livestatus_status import LivestatusSection
 
 _SECTION_CMK_SITE_STATISTICS = {
     'heute': (
@@ -230,11 +233,14 @@ _SECTION_LIVESTATUS_STATUS = {
         ),
     ],
 )
-def test_parse_cmk_site_statistics(string_table, parsed_section):
+def test_parse_cmk_site_statistics(
+    string_table: StringTable,
+    parsed_section: CMKSiteStatisticsSection,
+) -> None:
     assert parse_cmk_site_statistics(string_table) == parsed_section
 
 
-def test_discover_cmk_site_statistics():
+def test_discover_cmk_site_statistics() -> None:
     assert list(
         discover_cmk_site_statistics(
             _SECTION_CMK_SITE_STATISTICS,
@@ -247,94 +253,104 @@ def test_discover_cmk_site_statistics():
 
 @pytest.mark.parametrize(
     "item, section_cmk_site_statistics, section_livestatus_status, expected_result",
-    [(
-        'gestern',
-        _SECTION_CMK_SITE_STATISTICS,
-        _SECTION_LIVESTATUS_STATUS,
-        [
-            Result(
-                state=State.OK,
-                summary='Total hosts: 10',
-            ),
-            Result(
-                state=State.OK,
-                summary='Problem hosts: 9',
-                details='Hosts in state UP: 1\n'
-                'Hosts in state DOWN: 2\n'
-                'Unreachable hosts: 3\n'
-                'Hosts in downtime: 4',
-            ),
-            Result(
-                state=State.OK,
-                summary='Total services: 45',
-            ),
-            Result(
-                state=State.OK,
-                summary='Problem services: 40',
-                details='Services in state OK: 5\n'
-                'Services in downtime: 6\n'
-                'Services of down hosts: 7\n'
-                'Services in state WARNING: 8\n'
-                'Services in state UNKNOWN: 9\n'
-                'Services in state CRITICAL: 10',
-            ),
-            Metric('cmk_hosts_up', 1.0),
-            Metric('cmk_hosts_down', 2.0),
-            Metric('cmk_hosts_unreachable', 3.0),
-            Metric('cmk_hosts_in_downtime', 4.0),
-            Metric('cmk_services_ok', 5.0),
-            Metric('cmk_services_in_downtime', 6.0),
-            Metric('cmk_services_on_down_hosts', 7.0),
-            Metric('cmk_services_warning', 8.0),
-            Metric('cmk_services_unknown', 9.0),
-            Metric('cmk_services_critical', 10.0),
-            Result(state=State.OK, notice='Core PID: 196517'),
-        ],
-    ),
-     ("gestern", _SECTION_CMK_SITE_STATISTICS, {"gestern: None"}, [
-         Result(
-             state=State.OK,
-             summary='Total hosts: 10',
-         ),
-         Result(
-             state=State.OK,
-             summary='Problem hosts: 9',
-             details='Hosts in state UP: 1\n'
-             'Hosts in state DOWN: 2\n'
-             'Unreachable hosts: 3\n'
-             'Hosts in downtime: 4',
-         ),
-         Result(
-             state=State.OK,
-             summary='Total services: 45',
-         ),
-         Result(
-             state=State.OK,
-             summary='Problem services: 40',
-             details='Services in state OK: 5\n'
-             'Services in downtime: 6\n'
-             'Services of down hosts: 7\n'
-             'Services in state WARNING: 8\n'
-             'Services in state UNKNOWN: 9\n'
-             'Services in state CRITICAL: 10',
-         ),
-         Metric('cmk_hosts_up', 1.0),
-         Metric('cmk_hosts_down', 2.0),
-         Metric('cmk_hosts_unreachable', 3.0),
-         Metric('cmk_hosts_in_downtime', 4.0),
-         Metric('cmk_services_ok', 5.0),
-         Metric('cmk_services_in_downtime', 6.0),
-         Metric('cmk_services_on_down_hosts', 7.0),
-         Metric('cmk_services_warning', 8.0),
-         Metric('cmk_services_unknown', 9.0),
-         Metric('cmk_services_critical', 10.0),
-     ])])
+    [
+        pytest.param(
+            'gestern',
+            _SECTION_CMK_SITE_STATISTICS,
+            _SECTION_LIVESTATUS_STATUS,
+            [
+                Result(
+                    state=State.OK,
+                    summary='Total hosts: 10',
+                ),
+                Result(
+                    state=State.OK,
+                    summary='Problem hosts: 9',
+                    details='Hosts in state UP: 1\n'
+                    'Hosts in state DOWN: 2\n'
+                    'Unreachable hosts: 3\n'
+                    'Hosts in downtime: 4',
+                ),
+                Result(
+                    state=State.OK,
+                    summary='Total services: 45',
+                ),
+                Result(
+                    state=State.OK,
+                    summary='Problem services: 40',
+                    details='Services in state OK: 5\n'
+                    'Services in downtime: 6\n'
+                    'Services of down hosts: 7\n'
+                    'Services in state WARNING: 8\n'
+                    'Services in state UNKNOWN: 9\n'
+                    'Services in state CRITICAL: 10',
+                ),
+                Metric('cmk_hosts_up', 1.0),
+                Metric('cmk_hosts_down', 2.0),
+                Metric('cmk_hosts_unreachable', 3.0),
+                Metric('cmk_hosts_in_downtime', 4.0),
+                Metric('cmk_services_ok', 5.0),
+                Metric('cmk_services_in_downtime', 6.0),
+                Metric('cmk_services_on_down_hosts', 7.0),
+                Metric('cmk_services_warning', 8.0),
+                Metric('cmk_services_unknown', 9.0),
+                Metric('cmk_services_critical', 10.0),
+                Result(state=State.OK, notice='Core PID: 196517'),
+            ],
+            id="both sections present",
+        ),
+        pytest.param(
+            "gestern",
+            _SECTION_CMK_SITE_STATISTICS,
+            {"gestern": None},
+            [
+                Result(
+                    state=State.OK,
+                    summary='Total hosts: 10',
+                ),
+                Result(
+                    state=State.OK,
+                    summary='Problem hosts: 9',
+                    details='Hosts in state UP: 1\n'
+                    'Hosts in state DOWN: 2\n'
+                    'Unreachable hosts: 3\n'
+                    'Hosts in downtime: 4',
+                ),
+                Result(
+                    state=State.OK,
+                    summary='Total services: 45',
+                ),
+                Result(
+                    state=State.OK,
+                    summary='Problem services: 40',
+                    details='Services in state OK: 5\n'
+                    'Services in downtime: 6\n'
+                    'Services of down hosts: 7\n'
+                    'Services in state WARNING: 8\n'
+                    'Services in state UNKNOWN: 9\n'
+                    'Services in state CRITICAL: 10',
+                ),
+                Metric('cmk_hosts_up', 1.0),
+                Metric('cmk_hosts_down', 2.0),
+                Metric('cmk_hosts_unreachable', 3.0),
+                Metric('cmk_hosts_in_downtime', 4.0),
+                Metric('cmk_services_ok', 5.0),
+                Metric('cmk_services_in_downtime', 6.0),
+                Metric('cmk_services_on_down_hosts', 7.0),
+                Metric('cmk_services_warning', 8.0),
+                Metric('cmk_services_unknown', 9.0),
+                Metric('cmk_services_critical', 10.0),
+            ],
+            id="livestatus section missing",
+        )
+    ],
+)
 def test_check_cmk_site_statistics(
-    item,
-    section_cmk_site_statistics,
-    section_livestatus_status,
-    expected_result,
-):
+    item: str,
+    section_cmk_site_statistics: CMKSiteStatisticsSection,
+    section_livestatus_status: LivestatusSection,
+    expected_result: CheckResult,
+) -> None:
     assert list(
         check_cmk_site_statistics(
             item,

@@ -43,6 +43,7 @@ import time
 import traceback
 from pathlib import Path
 from typing import (
+    BinaryIO,
     Callable,
     cast,
     Dict,
@@ -322,32 +323,28 @@ def save_version_meta_data(site: SiteContext, version: str) -> None:
 def create_skeleton_file(
     skelbase: str, userbase: str, relpath: str, replacements: Replacements
 ) -> None:
-    skel_path = skelbase + "/" + relpath
-    user_path = userbase + "/" + relpath
+    skel_path = Path(skelbase, relpath)
+    user_path = Path(userbase, relpath)
 
     # Remove old version, if existing (needed during update)
-    if os.path.exists(user_path):
-        delete_user_file(user_path)
+    if user_path.exists():
+        delete_user_file(str(user_path))
 
     # Create directories, symlinks and files
-    if os.path.islink(skel_path):
-        os.symlink(os.readlink(skel_path), user_path)
-    elif os.path.isdir(skel_path):
-        os.makedirs(user_path)
+    if skel_path.is_symlink():
+        skel_path.readlink().symlink_to(user_path)
+    elif skel_path.is_dir():
+        user_path.mkdir(parents=True)
     else:
-        open(user_path, "wb").write(  # pylint:disable=consider-using-with
-            replace_tags(
-                open(skel_path, "rb").read(), replacements  # pylint:disable=consider-using-with
-            )
-        )
-    if not os.path.islink(skel_path):
+        user_path.write_bytes(replace_tags(skel_path.read_bytes(), replacements))
+    if not skel_path.is_symlink():
         mode = read_skel_permissions().get(relpath)
         if mode is None:
-            if os.path.isdir(skel_path):
+            if skel_path.is_dir():
                 mode = 0o755
             else:
                 mode = 0o644
-        os.chmod(user_path, mode)
+        user_path.chmod(mode)
 
 
 def prepare_and_populate_tmpfs(version_info: VersionInfo, site: SiteContext) -> None:
@@ -476,23 +473,18 @@ def patch_template_file(
     conflict_mode: str, src: str, dst: str, old_site: SiteContext, new_site: SiteContext
 ) -> None:
     # Create patch from old instantiated skeleton file to new one
-    content = open(src, "rb").read()  # pylint:disable=consider-using-with
+    content = Path(src).read_bytes()
     for site in [old_site, new_site]:
-        filename = "%s.skel.%s" % (dst, site.name)
-        open(filename, "wb").write(  # pylint:disable=consider-using-with
-            replace_tags(content, site.replacements)
-        )
-        try_chown(filename, new_site.name)
+        filename = Path("%s.skel.%s" % (dst, site.name))
+        filename.write_bytes(replace_tags(content, site.replacements))
+        try_chown(str(filename), new_site.name)
 
     # If old and new skeleton file are identical, then do nothing
-    old_orig_path = "%s.skel.%s" % (dst, old_site.name)
-    new_orig_path = "%s.skel.%s" % (dst, new_site.name)
-    if (
-        open(old_orig_path).read()  # pylint:disable=consider-using-with
-        == open(new_orig_path).read()  # pylint:disable=consider-using-with
-    ):
-        os.remove(old_orig_path)
-        os.remove(new_orig_path)
+    old_orig_path = Path("%s.skel.%s" % (dst, old_site.name))
+    new_orig_path = Path("%s.skel.%s" % (dst, new_site.name))
+    if old_orig_path.read_text() == new_orig_path.read_text():
+        old_orig_path.unlink()
+        new_orig_path.unlink()
         return
 
     # Now create a patch from old to new and immediately apply on
@@ -614,8 +606,8 @@ def merge_update_file(
 ) -> None:
     fn = tty.bold + relpath + tty.normal
 
-    user_path = site.dir + "/" + relpath
-    permissions = os.stat(user_path).st_mode
+    user_path = Path(site.dir, relpath)
+    permissions = user_path.stat().st_mode
 
     if _try_merge(site, conflict_mode, relpath, old_version, new_version) == 0:
         # ACHTUNG: Hier müssen die Dateien $DATEI-alt, $DATEI-neu und $DATEI.orig
@@ -627,14 +619,14 @@ def merge_update_file(
     # user_patch = os.popen(
     merge_message = " (watch out for >>>>> and <<<<<)"
     editor = get_editor()
-    reject_file = user_path + ".rej"
+    reject_file = Path(f"{user_path}.rej")
 
     options = [
         ("diff", "Show differences between the new default and your version"),
         ("you", "Show your changes compared with the old default version"),
         ("new", "Show what has changed from %s to %s" % (old_version, new_version)),
     ]
-    if os.path.exists(reject_file):  # missing if patch has --merge
+    if reject_file.exists():  # missing if patch has --merge
         options.append(("missing", "Show which changes from the update have not been merged"))
     options += [
         ("edit", "Edit half-merged file%s" % merge_message),
@@ -680,13 +672,8 @@ def merge_update_file(
                 % (user_path, old_version, user_path, new_version, pipe_pager())
             )
         elif choice == "missing":
-            if os.path.exists(reject_file):
-                sys.stdout.write(
-                    tty.bgblue
-                    + tty.white
-                    + open(reject_file).read()  # pylint:disable=consider-using-with
-                    + tty.normal
-                )
+            if reject_file.exists():
+                sys.stdout.write(tty.bgblue + tty.white + reject_file.read_text() + tty.normal)
             else:
                 sys.stdout.write("File %s not found.\n" % reject_file)
 
@@ -700,19 +687,18 @@ def merge_update_file(
                 " %-25s: the default version of %s\n" % (relname + "." + new_version, new_version)
             )
             sys.stdout.write(" %-25s: your original version\n" % (relname + ".orig"))
-            if os.path.exists(reject_file):
+            if reject_file.exists():
                 sys.stdout.write(" %-25s: changes that haven't been merged\n" % relname + ".rej")
 
             sys.stdout.write("\n Starting BASH. Type CTRL-D to continue.\n\n")
-            thedir = "/".join(user_path.split("/")[:-1])
-            os.system("cd '%s' ; bash -i" % thedir)  # nosec
+            os.system("cd '%s' ; bash -i" % user_path.parent)  # nosec
         elif choice == "restore":
-            os.rename(user_path + ".orig", user_path)
-            os.chmod(user_path, permissions)
+            Path(f"{user_path}.orig").rename(user_path)
+            user_path.chmod(permissions)
             sys.stdout.write("Restored your version.\n")
             break
         elif choice == "try again":
-            os.rename(user_path + ".orig", user_path)
+            Path(f"{user_path}.orig").rename(user_path)
             os.system("%s '%s'" % (editor, user_path))  # nosec
             if _try_merge(site, conflict_mode, relpath, old_version, new_version) == 0:
                 sys.stdout.write(
@@ -723,8 +709,8 @@ def merge_update_file(
             sys.stdout.write(" Merge failed again.\n")
 
         else:  # install
-            os.rename("%s-%s" % (user_path, new_version), user_path)
-            os.chmod(user_path, permissions)
+            Path("%s-%s" % (user_path, new_version)).rename(user_path)
+            user_path.chmod(permissions)
             sys.stdout.write("Installed default file of version %s.\n" % new_version)
             break
 
@@ -744,16 +730,16 @@ def merge_update_file(
 def _try_merge(
     site: SiteContext, conflict_mode: str, relpath: str, old_version: str, new_version: str
 ) -> int:
-    user_path = site.dir + "/" + relpath
+    user_path = Path(site.dir, relpath)
 
     for version, skelroot in [
         (old_version, site.version_skel_dir),
         (new_version, "/omd/versions/%s/skel" % new_version),
     ]:
-        p = "%s/%s" % (skelroot, relpath)
+        p = Path(skelroot, relpath)
         while True:
             try:
-                skel_content = open(p, "rb").read()  # pylint:disable=consider-using-with
+                skel_content = p.read_bytes()
                 break
             except Exception:
                 # Do not ask the user in non-interactive mode.
@@ -778,7 +764,7 @@ def _try_merge(
                 ):
                     skel_content = b""
                     break
-        open("%s-%s" % (user_path, version), "wb").write(  # pylint:disable=consider-using-with
+        Path("%s-%s" % (user_path, version)).write_bytes(
             replace_tags(skel_content, site.replacements)
         )
     version_patch = os.popen(  # nosec
@@ -1623,14 +1609,14 @@ def fstab_verify(site: SiteContext) -> bool:
     """Ensure that there is an fstab entry for the tmpfs of the site.
     In case there is no fstab (seen in some containers) assume everything
     is OK without fstab entry."""
-
-    if not os.path.exists("/etc/fstab"):
+    if not (fstab_path := Path("/etc", "fstab")).exists():
         return True
 
     mountpoint = site.tmp_dir
-    for line in open("/etc/fstab"):  # pylint:disable=consider-using-with
-        if "uid=%s," % site.name in line and mountpoint in line:
-            return True
+    with fstab_path.open() as opened_file:
+        for line in opened_file:
+            if "uid=%s," % site.name in line and mountpoint in line:
+                return True
     bail_out(tty.error + ": fstab entry for %s does not exist" % mountpoint)
 
 
@@ -1676,43 +1662,49 @@ def set_environment(site: SiteContext) -> None:
     putenv("HOME", site.dir)
 
     # allow user to define further environment variable in ~/etc/environment
-    envfile = site.dir + "/etc/environment"
-    if os.path.exists(envfile):
+    envfile = Path(site.dir, "etc", "environment")
+    if envfile.exists():
         lineno = 0
-        for line in open(envfile):  # pylint:disable=consider-using-with
-            lineno += 1
-            line = line.strip()
-            if line == "" or line[0] == "#":
-                continue  # allow empty lines and comments
-            parts = line.split("=")
-            if len(parts) != 2:
-                bail_out("%s: syntax error in line %d" % (envfile, lineno))
-            varname = parts[0]
-            value = parts[1]
-            if value.startswith('"'):
-                value = value.strip('"')
+        with envfile.open() as opened_file:
+            for line in opened_file:
+                lineno += 1
+                line = line.strip()
+                if line == "" or line[0] == "#":
+                    continue  # allow empty lines and comments
+                parts = line.split("=")
+                if len(parts) != 2:
+                    bail_out("%s: syntax error in line %d" % (envfile, lineno))
+                varname = parts[0]
+                value = parts[1]
+                if value.startswith('"'):
+                    value = value.strip('"')
 
-            # Add the present environment when someone wants to append some
-            if value.startswith("$%s:" % varname):
-                before = getenv(varname, None)
-                if before:
-                    value = before + ":" + value.replace("$%s:" % varname, "")
+                # Add the present environment when someone wants to append some
+                if value.startswith("$%s:" % varname):
+                    before = getenv(varname, None)
+                    if before:
+                        value = before + ":" + value.replace("$%s:" % varname, "")
 
-            if value.startswith("'"):
-                value = value.strip("'")
-            putenv(varname, value)
+                if value.startswith("'"):
+                    value = value.strip("'")
+                putenv(varname, value)
 
     create_config_environment(site)
 
 
 def hostname() -> str:
     try:
-        p = subprocess.Popen(  # pylint:disable=consider-using-with
-            ["hostname"], shell=False, close_fds=True, stdout=subprocess.PIPE, encoding="utf-8"
+        completed_process = subprocess.run(
+            ["hostname"],
+            shell=False,
+            close_fds=True,
+            stdout=subprocess.PIPE,
+            encoding="utf-8",
+            check=False,
         )
     except OSError:
         return "localhost"
-    return p.communicate()[0].strip()
+    return completed_process.stdout.strip()
 
 
 def create_apache_hook(site: SiteContext) -> None:
@@ -1790,38 +1782,38 @@ def pipe_pager() -> str:
 
 
 def call_scripts(site: SiteContext, phase: str) -> None:
-    path = site.dir + "/lib/omd/scripts/" + phase
-    if os.path.exists(path):
+    path = Path(site.dir, "lib", "omd", "scripts", phase)
+    if path.exists():
         putenv("OMD_ROOT", site.dir)
         putenv("OMD_SITE", site.name)
-        for f in os.listdir(path):
-            if f[0] == ".":
+        for file in path.iterdir():
+            if file.name[0] == ".":
                 continue
-            sys.stdout.write('Executing %s script "%s"...' % (phase, f))
-            p = subprocess.Popen(  # nosec # pylint:disable=consider-using-with
-                "%s/%s" % (path, f),
+            sys.stdout.write('Executing %s script "%s"...' % (phase, file.name))
+            with subprocess.Popen(  # nosec
+                str(file),  # path-like args is not allowed when shell is true
                 shell=True,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
                 encoding="utf-8",
-            )
-            if p.stdout is None:
-                raise Exception("stdout needs to be set")
+            ) as proc:
 
-            wrote_output = False
-            for line in p.stdout:
-                if not wrote_output:
-                    sys.stdout.write("\n")
-                    wrote_output = True
+                if proc.stdout is None:
+                    raise Exception("stdout needs to be set")
 
-                sys.stdout.write(f"-| {line}")
-                sys.stdout.flush()
+                wrote_output = False
+                for line in proc.stdout:
+                    if not wrote_output:
+                        sys.stdout.write("\n")
+                        wrote_output = True
 
-            exitcode = p.wait()
-            if exitcode == 0:
+                    sys.stdout.write(f"-| {line}")
+                    sys.stdout.flush()
+
+            if not proc.returncode:
                 sys.stdout.write(tty.ok + "\n")
             else:
-                sys.stdout.write(tty.error + " (exit code: %d)\n" % exitcode)
+                sys.stdout.write(tty.error + " (exit code: %d)\n" % proc.returncode)
 
 
 def check_site_user(site: AbstractSiteContext, site_must_exist: int) -> None:
@@ -2640,13 +2632,14 @@ def print_diff(
                     diff = "colordiff"
                 else:
                     diff = "diff"
-                p = subprocess.Popen(  # pylint:disable=consider-using-with
-                    [diff, "-", target_file], stdin=subprocess.PIPE, close_fds=True, shell=False
+                subprocess.run(
+                    [diff, "-", target_file],
+                    close_fds=True,
+                    shell=False,
+                    input=source_content,
+                    check=False,
                 )
-                p.communicate(source_content)
-                if p.stdin is None:
-                    raise Exception("Huh? stdin vanished...")
-                p.stdin.close()
+
             elif status == "p":
                 sys.stdout.write("    %s %s %s\n" % (source_perm, arrow, target_perm))
             elif "t" in status:
@@ -3237,6 +3230,22 @@ def main_su(
         bail_out("Cannot open a shell for user %s" % site.name)
 
 
+def _try_backup_site_to_tarfile(
+    fh: Union[io.BufferedWriter, BinaryIO],
+    tar_mode: str,
+    options: CommandOptions,
+    site: SiteContext,
+    global_opts: "GlobalOptions",
+):
+    if "no-compression" not in options:
+        tar_mode += "gz"
+
+    try:
+        omdlib.backup.backup_site_to_tarfile(site, fh, tar_mode, options, global_opts.verbose)
+    except IOError as e:
+        bail_out("Failed to perform backup: %s" % e)
+
+
 def main_backup(
     version_info: VersionInfo,
     site: SiteContext,
@@ -3253,21 +3262,12 @@ def main_backup(
     dest = args[0]
 
     if dest == "-":
-        fh = sys.stdout.buffer
-        tar_mode = "w|"
+        _try_backup_site_to_tarfile(sys.stdout.buffer, "w|", options, site, global_opts)
     else:
-        if dest[0] != "/":
-            dest = global_opts.orig_working_directory + "/" + dest
-        fh = open(dest, "wb")  # pylint:disable=consider-using-with
-        tar_mode = "w:"
-
-    if "no-compression" not in options:
-        tar_mode += "gz"
-
-    try:
-        omdlib.backup.backup_site_to_tarfile(site, fh, tar_mode, options, global_opts.verbose)
-    except IOError as e:
-        bail_out("Failed to perform backup: %s" % e)
+        if not (dest_path := Path(dest)).is_absolute():
+            dest_path = global_opts.orig_working_directory / dest_path
+        with dest_path.open(mode="wb") as fh:
+            _try_backup_site_to_tarfile(fh, "w:", options, site, global_opts)
 
 
 def main_restore(
@@ -3542,28 +3542,23 @@ def site_user_processes(site: SiteContext, exclude_current_and_parents: bool) ->
     exclude: List[int] = []
     if exclude_current_and_parents:
         exclude = get_current_and_parent_pids()
-
-    p = subprocess.Popen(  # pylint:disable=consider-using-with
+    with subprocess.Popen(
         ["ps", "-U", site.name, "-o", "pid", "--no-headers"],
         close_fds=True,
         stdin=subprocess.DEVNULL,
         stdout=subprocess.PIPE,
         encoding="utf-8",
-    )
-    exclude.append(p.pid)
-
-    pids = []
-    for l in p.communicate()[0].split("\n"):
-        line = l.strip()
-        if not line:
-            continue
-
-        pid = int(line)
-
-        if pid in exclude:
-            continue
-
-        pids.append(pid)
+    ) as user_process:
+        exclude.append(user_process.pid)
+        pids = []
+        for l in user_process.communicate()[0].split("\n"):
+            line = l.strip()
+            if not line:
+                continue
+            pid = int(line)
+            if pid in exclude:
+                continue
+            pids.append(pid)
     return pids
 
 

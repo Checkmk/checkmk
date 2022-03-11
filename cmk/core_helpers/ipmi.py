@@ -23,7 +23,7 @@ from six import ensure_binary
 from cmk.utils.check_utils import ActiveCheckResult
 from cmk.utils.exceptions import MKFetcherError
 from cmk.utils.log import VERBOSE
-from cmk.utils.type_defs import AgentRawData, HostAddress, SectionName
+from cmk.utils.type_defs import AgentRawData, HostAddress
 
 from .agent import AgentFetcher, AgentRawDataSection, AgentSummarizer, DefaultAgentFileCache
 from .host_sections import HostSections
@@ -292,19 +292,4 @@ class IPMISummarizer(AgentSummarizer):
         *,
         mode: Mode,
     ) -> Sequence[ActiveCheckResult]:
-        return [ActiveCheckResult(0, f"Version: {self._get_ipmi_version(host_sections)}")]
-
-    @staticmethod
-    def _get_ipmi_version(host_sections: Optional[HostSections[AgentRawDataSection]]) -> str:
-        if host_sections is None:
-            return "unknown"
-
-        section = host_sections.sections.get(SectionName("ipmi_firmware"))
-        if not section:
-            return "unknown"
-
-        for line in section:
-            if line[0] == "BMC Version" and line[1] == "version":
-                return line[2]
-
-        return "unknown"
+        return [ActiveCheckResult(0, "Success")]

@@ -10,8 +10,8 @@ fast_lta_headunit_info = [
 
 
 def fast_lta_headunit_scan(oid):
-    return oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.8072.3.2.10") and oid(
-        ".1.3.6.1.4.1.27417.2.1"
+    return oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.8072.3.2.10") and (
+        oid(".1.3.6.1.4.1.27417.2.1") or oid(".1.3.6.1.4.1.27417.2.1.0")
     )
 
 

@@ -1,0 +1,21 @@
+title: Kubernetes: StatefulSet Info
+agents: kubernetes
+catalog: containerization/kubernetes
+license: GPLv2
+distribution: check_mk
+description:
+ This check provides an informational overview of a Kubernetes StatefulSet
+ by displaying
+
+ - Name
+
+ - Namespace
+
+ - Age, based on the creationTimestamp
+
+ This information is provided by the API server. The service is always {OK}.
+
+ It requires that the special agent kube is configured.
+
+discovery:
+ One service is created for each StatefulSet.

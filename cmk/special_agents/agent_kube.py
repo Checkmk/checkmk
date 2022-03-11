@@ -587,6 +587,9 @@ class StatefulSet(PodOwner):
     def cpu_resources(self) -> section.Resources:
         return _collect_cpu_resources(self._pods)
 
+    def strategy(self) -> section.StatefulSetStrategy:
+        return section.StatefulSetStrategy(strategy=self.spec.strategy)
+
 
 def statefulset_info(statefulset: StatefulSet, cluster_name: str) -> section.StatefulSetInfo:
     return section.StatefulSetInfo(
@@ -1049,6 +1052,7 @@ def write_statefulsets_api_sections(
             "kube_memory_resources_v1": cluster_statefulset.memory_resources,
             "kube_cpu_resources_v1": cluster_statefulset.cpu_resources,
             "kube_statefulset_info_v1": lambda: statefulset_info(cluster_statefulset, cluster_name),
+            "kube_statefulset_strategy_v1": cluster_statefulset.strategy,
         }
         _write_sections(sections)
 

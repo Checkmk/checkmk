@@ -413,6 +413,17 @@ class DaemonSetStrategy(BaseModel):
     strategy: Union[OnDelete, RollingUpdate] = Field(discriminator="type_")
 
 
+class StatefulSetRollingUpdate(BaseModel):
+    type_: Literal["RollingUpdate"] = Field("RollingUpdate", const=True)
+    partition: int
+
+
+class StatefulSetStrategy(BaseModel):
+    """section: kube_statefulset_strategy_v1"""
+
+    strategy: Union[OnDelete, StatefulSetRollingUpdate] = Field(discriminator="type_")
+
+
 ImagePullPolicy = Literal["Always", "Never", "IfNotPresent"]
 
 

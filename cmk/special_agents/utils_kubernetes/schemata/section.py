@@ -373,6 +373,12 @@ class DaemonSetStrategy(BaseModel):
     strategy: Union[api.OnDelete, api.RollingUpdate] = Field(discriminator="type_")
 
 
+class StatefulSetStrategy(BaseModel):
+    """section: kube_statefulset_strategy_v1"""
+
+    strategy: Union[api.OnDelete, api.StatefulSetRollingUpdate] = Field(discriminator="type_")
+
+
 class Memory(BaseModel):
     type_: Literal["memory"] = Field("memory", const=True)
     usage: float

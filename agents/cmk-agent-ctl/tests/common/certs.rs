@@ -15,6 +15,7 @@ use openssl::x509::extension::{
 use openssl::x509::{X509NameBuilder, X509Ref, X509Req, X509ReqBuilder, X509};
 
 // Taken from https://github.com/sfackler/rust-openssl/blob/master/openssl/examples/mk_certs.rs
+#[derive(Clone)]
 pub struct X509Certs {
     pub ca_cert: Vec<u8>,
     pub controller_private_key: Vec<u8>,

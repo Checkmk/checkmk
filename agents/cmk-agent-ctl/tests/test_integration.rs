@@ -57,32 +57,55 @@ async fn test_pull_tls() -> AnyhowResult<()> {
     compressed_agent_output.append(&mut zlib_enc.finish()?);
     let (uuid, pull_config, certs) = common::testing_pull_setup(test_path, "9999");
 
+    let agent_socket_path = test_path.join("run/check-mk-agent.socket");
     // Provide agent stream for the pull thread
-    let agent_stream_thread = tokio::spawn(common::unix::agent_socket(
-        test_path.join("run/check-mk-agent.socket"),
-        test_agent_output,
-        None,
-    ));
+    let agent_stream_thread = tokio::spawn(async move {
+        loop {
+            common::unix::agent_socket(&agent_socket_path, test_agent_output, None)
+                .await
+                .unwrap();
+            std::fs::remove_file(&agent_socket_path).unwrap();
+        }
+    });
 
     // Setup the pull thread that we intend to test
     let pull_thread = tokio::task::spawn(cmk_agent_ctl::modes::pull::async_pull(pull_config));
     // Give it some time to provide the TCP socket
     tokio::time::sleep(tokio::time::Duration::from_millis(100)).await;
 
-    // Talk to the pull thread
-    let mut client_connection = common::testing_client_stream(certs, &uuid);
-    let mut tcp_stream = std::net::TcpStream::connect("127.0.0.1:9999")?;
     let mut id_buf: [u8; 2] = [0; 2];
+    let mut message_buf: Vec<u8> = vec![];
+    // Talk to the pull thread successfully
+    let mut client_connection = common::testing_tls_client_connection(certs.clone(), &uuid);
+    let mut tcp_stream = std::net::TcpStream::connect("127.0.0.1:9999")?;
     tcp_stream.read_exact(&mut id_buf)?;
     assert_eq!(&id_buf, b"16");
     let mut tls_stream = rustls::Stream::new(&mut client_connection, &mut tcp_stream);
-    let mut message_buf: Vec<u8> = vec![];
     tls_stream.read_to_end(&mut message_buf)?;
     assert_eq!(message_buf, compressed_agent_output);
 
-    // This one has finished
-    agent_stream_thread.await??;
-    // This one has to be killed
+    // Talk to the pull thread using an unknown uuid
+    let mut client_connection =
+        common::testing_tls_client_connection(certs, "certainly_wrong_uuid");
+    let mut tcp_stream = std::net::TcpStream::connect("127.0.0.1:9999")?;
+    tcp_stream.read_exact(&mut id_buf)?;
+    assert_eq!(&id_buf, b"16");
+    let mut tls_stream = rustls::Stream::new(&mut client_connection, &mut tcp_stream);
+    assert!(tls_stream.read_to_end(&mut message_buf).is_err());
+
+    // Talk too much
+    let mut tcp_stream_1 = std::net::TcpStream::connect("127.0.0.1:9999")?;
+    let mut tcp_stream_2 = std::net::TcpStream::connect("127.0.0.1:9999")?;
+    let mut tcp_stream_3 = std::net::TcpStream::connect("127.0.0.1:9999")?;
+    let mut tcp_stream_4 = std::net::TcpStream::connect("127.0.0.1:9999")?;
+    assert!(tcp_stream_1.read_exact(&mut id_buf).is_ok());
+    assert!(tcp_stream_2.read_exact(&mut id_buf).is_ok());
+    assert!(tcp_stream_3.read_exact(&mut id_buf).is_ok());
+    assert!(tcp_stream_4.read_exact(&mut id_buf).is_err());
+
+    // Kill threads
+    agent_stream_thread.abort();
+    assert!(agent_stream_thread.await.unwrap_err().is_cancelled());
     pull_thread.abort();
     assert!(pull_thread.await.unwrap_err().is_cancelled());
 

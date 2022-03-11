@@ -3,7 +3,7 @@
 // conditions defined in the file COPYING, which is part of this source code package.
 
 use anyhow::Result as AnyhowResult;
-use std::path::PathBuf;
+use std::path::Path;
 use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufStream};
 use tokio::net::UnixListener;
 
@@ -26,13 +26,14 @@ pub async fn agent_stream(
     Ok(())
 }
 
-pub async fn agent_socket(
-    socket_addr: PathBuf,
+pub async fn agent_socket<P>(
+    socket_addr: P,
     output: &str,
     expected_input: Option<&str>,
 ) -> AnyhowResult<()>
 where
+    P: AsRef<Path>,
 {
-    let unix_socket = UnixListener::bind(&socket_addr)?;
+    let unix_socket = UnixListener::bind(socket_addr)?;
     agent_stream(unix_socket, output, expected_input).await
 }

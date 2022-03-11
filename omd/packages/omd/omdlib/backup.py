@@ -26,23 +26,18 @@
 
 import errno
 import fnmatch
-import io
 import os
 import socket
 import sys
 import tarfile
-from typing import BinaryIO, cast, List, Tuple, Union
+from typing import BinaryIO, cast, List, Tuple
 
 from omdlib.contexts import SiteContext
 from omdlib.type_defs import CommandOptions
 
 
 def backup_site_to_tarfile(
-    site: SiteContext,
-    fh: Union[BinaryIO, io.BufferedWriter],
-    mode: str,
-    options: CommandOptions,
-    verbose: bool,
+    site: SiteContext, fh: BinaryIO, mode: str, options: CommandOptions, verbose: bool
 ) -> None:
 
     # Mypy does not understand this: Unexpected keyword argument "verbose" for "open" of "TarFile", same for "site".

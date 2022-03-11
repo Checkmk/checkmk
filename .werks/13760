@@ -1,0 +1,12 @@
+Title: Alert Statistics Dashlet: Fix crash (internal error)
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1646985833
+Edition: cee
+Knowledge: doc
+Level: 1
+Version: 2.1.0b2
+
+All alert statistics dashlets crashed with an internal error
+(<tt>AssertionError ()</tt>).

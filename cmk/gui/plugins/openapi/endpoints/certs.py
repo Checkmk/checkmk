@@ -9,8 +9,8 @@ WARNING: Use at your own risk, not supported.
 
 Checkmk uses SSL certificates to verify push hosts.
 """
-
 from pathlib import Path
+from typing import Any, Mapping
 
 from cryptography.hazmat.primitives.serialization import Encoding
 from cryptography.x509 import CertificateSigningRequest
@@ -26,6 +26,7 @@ from cmk.gui.permissions import Permission, permission_registry
 from cmk.gui.plugins.openapi.restful_objects import (
     constructors,
     Endpoint,
+    permissions,
     request_schemas,
     response_schemas,
 )
@@ -72,9 +73,10 @@ def _serialized_signed_cert(csr: CertificateSigningRequest) -> str:
     status_descriptions={
         403: _403_STATUS_DESCRIPTION,
     },
+    permissions_required=permissions.Perm("general.agent_pairing"),
     response_schema=response_schemas.X509PEM,
 )
-def root_cert(param) -> Response:
+def root_cert(param: Mapping[str, Any]) -> Response:
     """X.509 PEM-encoded root certificate"""
     if not _user_is_authorized():
         raise ProblemException(
@@ -99,8 +101,9 @@ def root_cert(param) -> Response:
     },
     request_schema=request_schemas.X509ReqPEM,
     response_schema=response_schemas.X509PEM,
+    permissions_required=permissions.Perm("general.agent_pairing"),
 )
-def make_certificate(param) -> Response:
+def make_certificate(param: Mapping[str, Any]) -> Response:
     """X.509 PEM-encoded Certificate Signing Requests (CSRs)"""
     if not _user_is_authorized():
         raise ProblemException(

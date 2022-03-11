@@ -27,6 +27,10 @@ _SECTION_CMK_SITE_STATISTICS = {
         HostStatistics(up=1, down=2, unreachable=3, in_downtime=4),
         ServiceStatistics(ok=5, in_downtime=6, on_down_hosts=7, warning=8, unknown=9, critical=10),
     ),
+    "high_security_1.3.0": (
+        HostStatistics(up=0, down=0, unreachable=0, in_downtime=0),
+        ServiceStatistics(ok=0, in_downtime=0, on_down_hosts=0, warning=0, unknown=0, critical=0),
+    ),
 }
 
 _SECTION_LIVESTATUS_STATUS = {
@@ -172,6 +176,49 @@ _SECTION_LIVESTATUS_STATUS = {
         "service_checks_rate": "0.839335",
         "state_file_created": "1614934313",
     },
+    "high_security_1.3.0": {
+        "accept_passive_host_checks": "1",
+        "accept_passive_service_checks": "1",
+        "cached_log_messages": "67",
+        "check_external_commands": "1",
+        "check_host_freshness": "0",
+        "check_service_freshness": "1",
+        "connections": "800",
+        "connections_rate": "5.1022020463e-02",
+        "enable_event_handlers": "1",
+        "enable_flap_detection": "1",
+        "enable_notifications": "1",
+        "execute_host_checks": "1",
+        "execute_service_checks": "1",
+        "forks": "0",
+        "forks_rate": "0.0000000000e+00",
+        "host_checks": "0",
+        "host_checks_rate": "0.0000000000e+00",
+        "interval_length": "60",
+        "last_command_check": "0",
+        "last_log_rotation": "0",
+        "livecheck_overflows": "0",
+        "livecheck_overflows_rate": "0.0000000000e+00",
+        "livechecks": "0",
+        "livechecks_rate": "0.0000000000e+00",
+        "livestatus_version": "1.3.0-naemon",
+        "log_messages": "4",
+        "log_messages_rate": "1.7597973364e-04",
+        "nagios_pid": "1821",
+        "neb_callbacks": "15083",
+        "neb_callbacks_rate": "1.0019692368e+00",
+        "num_hosts": "0",
+        "num_services": "0",
+        "obsess_over_hosts": "0",
+        "obsess_over_services": "0",
+        "process_performance_data": "1",
+        "program_start": "1646629256",
+        "program_version": "1.3.0",
+        "requests": "799",
+        "requests_rate": "5.1022020463e-02",
+        "service_checks": "0",
+        "service_checks_rate": "0.0000000000e+00",
+    },
 }
 
 
@@ -186,6 +233,9 @@ _SECTION_LIVESTATUS_STATUS = {
                 ["[gestern]"],
                 ["1", "2", "3", "4"],
                 ["5", "6", "7", "8", "9", "10"],
+                ["[high_security_1.3.0]"],
+                ["0", "0", "0", "0"],
+                ["0", "0", "0", "0", "0", "0"],
             ],
             _SECTION_CMK_SITE_STATISTICS,
             id="standard case",
@@ -250,13 +300,14 @@ def test_discover_cmk_site_statistics() -> None:
     ) == [
         Service(item="heute"),
         Service(item="gestern"),
+        Service(item="high_security_1.3.0"),
     ]
 
 
 @pytest.mark.parametrize(
     "item, section_cmk_site_statistics, section_livestatus_status, expected_result",
     [
-        (
+        pytest.param(
             "gestern",
             _SECTION_CMK_SITE_STATISTICS,
             _SECTION_LIVESTATUS_STATUS,
@@ -299,8 +350,9 @@ def test_discover_cmk_site_statistics() -> None:
                 Metric("cmk_services_critical", 10.0),
                 Result(state=State.OK, notice="Core PID: 196517"),
             ],
+            id="both sections present",
         ),
-        (
+        pytest.param(
             "gestern",
             _SECTION_CMK_SITE_STATISTICS,
             {"gestern": None},
@@ -342,6 +394,46 @@ def test_discover_cmk_site_statistics() -> None:
                 Metric("cmk_services_unknown", 9.0),
                 Metric("cmk_services_critical", 10.0),
             ],
+            id="livestatus section missing",
+        ),
+        pytest.param(
+            "high_security_1.3.0",
+            _SECTION_CMK_SITE_STATISTICS,
+            _SECTION_LIVESTATUS_STATUS,
+            [
+                Result(state=State.OK, summary="Total hosts: 0"),
+                Result(
+                    state=State.OK,
+                    summary="Problem hosts: 0",
+                    details="Hosts in state UP: 0\n"
+                    "Hosts in state DOWN: 0\n"
+                    "Unreachable hosts: 0\n"
+                    "Hosts in downtime: 0",
+                ),
+                Result(state=State.OK, summary="Total services: 0"),
+                Result(
+                    state=State.OK,
+                    summary="Problem services: 0",
+                    details="Services in state OK: 0\n"
+                    "Services in downtime: 0\n"
+                    "Services of down hosts: 0\n"
+                    "Services in state WARNING: 0\n"
+                    "Services in state UNKNOWN: 0\n"
+                    "Services in state CRITICAL: 0",
+                ),
+                Metric("cmk_hosts_up", 0.0),
+                Metric("cmk_hosts_down", 0.0),
+                Metric("cmk_hosts_unreachable", 0.0),
+                Metric("cmk_hosts_in_downtime", 0.0),
+                Metric("cmk_services_ok", 0.0),
+                Metric("cmk_services_in_downtime", 0.0),
+                Metric("cmk_services_on_down_hosts", 0.0),
+                Metric("cmk_services_warning", 0.0),
+                Metric("cmk_services_unknown", 0.0),
+                Metric("cmk_services_critical", 0.0),
+                Result(state=State.OK, notice="Core PID: 1821"),
+            ],
+            id="Pre-1.6 CRE (core_pid missing)",
         ),
     ],
 )

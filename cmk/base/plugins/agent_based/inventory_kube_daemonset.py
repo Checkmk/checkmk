@@ -19,6 +19,13 @@ from cmk.base.plugins.agent_based.utils.kube_strategy import strategy_text
 
 
 def parse_kube_daemonset_strategy(string_table: StringTable) -> DaemonSetStrategy:
+    """
+    >>> parse_kube_daemonset_strategy([['{"strategy": {"type_": "OnDelete"}}']])
+    DaemonSetStrategy(strategy=OnDelete(type_='OnDelete'))
+    >>> parse_kube_daemonset_strategy([['{"strategy": {"type_": "RollingUpdate", "max_surge": "25%", "max_unavailable": "25%"}}']])
+    DaemonSetStrategy(strategy=RollingUpdate(type_='RollingUpdate', max_surge='25%', max_unavailable='25%'))
+    """
+
     return DaemonSetStrategy(**json.loads(string_table[0][0]))
 
 

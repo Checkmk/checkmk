@@ -319,7 +319,7 @@ $(CMA_PACKAGE): $(APPLIANCE_INSTALL_CMA) install
 	    echo "ERROR: Unsupported CMA platform ($(DISTRO_CODE))" ; \
 	    exit 1 ; \
 	fi ; \
-	echo -e "MIN_VERSION=$(MIN_VERSION)\n" > $(DESTDIR)/opt/omd/versions/$(OMD_VERSION)/cma.info
+	echo -e "MIN_VERSION=$$MIN_VERSION\n" > $(DESTDIR)/opt/omd/versions/$(OMD_VERSION)/cma.info
 
 	# Mark demo builds in cma.info file
 

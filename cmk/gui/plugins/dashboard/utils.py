@@ -728,8 +728,8 @@ class ABCFigureDashlet(Dashlet, abc.ABC):
     def _vs_optional_keys() -> Union[bool, list[str]]:
         return False
 
-    @classmethod
-    def _transform_vs_forth(cls, valuespec_result):
+    @staticmethod
+    def _transform_vs_forth(valuespec_result):
         if "svc_status_display" in valuespec_result:
             # now as code is shared between host and service (svc) dashlet,
             # the `svc_` prefix is removed.
@@ -788,9 +788,7 @@ class ABCFigureDashlet(Dashlet, abc.ABC):
     def _dashlet_http_variables(self) -> HTTPVariables:
         vs_general_settings = dashlet_vs_general_settings(self.__class__, self.single_infos())
         dashlet_settings = vs_general_settings.value_to_json(self._dashlet_spec)
-        dashlet_params = self.vs_parameters()
-        assert isinstance(dashlet_params, Transform)  # help mypy
-        dashlet_properties = dashlet_params.value_to_json(self._dashlet_spec)
+        dashlet_properties = self.vs_parameters().value_to_json(self._dashlet_spec)
 
         args: HTTPVariables = []
         args.append(("settings", json.dumps(dashlet_settings)))

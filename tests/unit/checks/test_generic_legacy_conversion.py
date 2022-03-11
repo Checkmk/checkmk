@@ -2459,7 +2459,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy):
         "symantec_av_progstate",
         "symantec_av_quarantine",
         "symantec_av_updates",
-        "synology_fans",
         "synology_info",
         "synology_raid",
         "synology_status",

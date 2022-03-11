@@ -7,14 +7,11 @@ from dataclasses import dataclass
 from typing import Any, Mapping, Sequence
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
-    all_of,
-    exists,
     get_value_store,
     register,
     Result,
     Service,
     SNMPTree,
-    startswith,
     State,
 )
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
@@ -22,7 +19,7 @@ from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
     DiscoveryResult,
     StringTable,
 )
-from cmk.base.plugins.agent_based.utils import temperature
+from cmk.base.plugins.agent_based.utils import synology, temperature
 
 
 @dataclass(frozen=True)
@@ -44,16 +41,9 @@ def parse_synology(string_table: StringTable) -> Section:
     return {row[0]: Disk.from_row(row) for row in string_table}
 
 
-def synology_scan_function(oid):
-    return oid(".1.3.6.1.2.1.1.1.0").startswith("Linux") and oid(".1.3.6.1.4.1.6574.*")
-
-
 register.snmp_section(
     name="synology_disks",
-    detect=all_of(
-        startswith(".1.3.6.1.2.1.1.1.0", "Linux"),
-        exists(".1.3.6.1.4.1.6574.*"),
-    ),
+    detect=synology.detect(),
     parse_function=parse_synology,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.6574.2.1.1",

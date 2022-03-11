@@ -41,5 +41,10 @@ complicated check parameters, you are probably not affected.
     and <tt>CAorCAChain</tt> don't have a <tt>style</tt> keyword argument
     anymore. It didn't serve any purpose since Checkmk 2.0. Just remove it.
   </li>
+  <li>
+    <tt>TimeofdayRanges</tt> has been removed, simply use
+    <tt>ListOfTimeRanges</tt> instead. The former has been deprecated since
+    Checkmk 1.6.
+  </li>
 </ul>
 

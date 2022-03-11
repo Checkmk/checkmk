@@ -7137,10 +7137,6 @@ def ListOfTimeRanges(  # pylint: disable=redefined-builtin
     )
 
 
-# Kept for compatibility reasons (removed in 1.6)
-TimeofdayRanges = ListOfTimeRanges
-
-
 def Fontsize(  # pylint: disable=redefined-builtin
     # Float
     decimal_separator: str = ".",

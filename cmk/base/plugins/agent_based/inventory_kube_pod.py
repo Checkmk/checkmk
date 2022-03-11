@@ -10,6 +10,7 @@ from typing import Iterable, Optional
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Attributes, register, TableRow
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import InventoryResult, StringTable
 from cmk.base.plugins.agent_based.utils.k8s import ContainerSpecs, PodContainers, PodInfo
+from cmk.base.plugins.agent_based.utils.kube_inventory import labels_to_table
 
 
 def parse_kube_pod_container_specs(string_table: StringTable) -> ContainerSpecs:
@@ -61,12 +62,7 @@ def inventory_kube_pod(
             "qos_class": section_kube_pod_info.qos_class,
         },
     )
-    for label in section_kube_pod_info.labels.values():
-        yield TableRow(
-            path=["software", "applications", "kube", "labels"],
-            key_columns={"label_name": label.name},
-            inventory_columns={"label_value": label.value},
-        )
+    yield from labels_to_table(section_kube_pod_info.labels)
     yield from _containers_to_table(section_kube_pod_container_specs, section_kube_pod_containers)
     yield from _containers_to_table(
         section_kube_pod_init_container_specs, section_kube_pod_init_containers

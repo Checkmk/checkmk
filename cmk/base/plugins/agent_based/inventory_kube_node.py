@@ -10,6 +10,7 @@ from typing import Optional
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Attributes, register, TableRow
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import InventoryResult
 from cmk.base.plugins.agent_based.utils.k8s import KubeletInfo, NodeInfo
+from cmk.base.plugins.agent_based.utils.kube_inventory import labels_to_table
 
 
 def inventory_kube_node(
@@ -31,18 +32,13 @@ def inventory_kube_node(
             "kube_proxy_version": section_kube_node_kubelet.proxy_version,
         },
     )
-    for label in section_kube_node_info.labels.values():
-        yield TableRow(
-            path=["software", "applications", "kube", "labels"],
-            key_columns={"label_name": label.name},
-            inventory_columns={"label_value": label.value},
-        )
     for address in section_kube_node_info.addresses:
         yield TableRow(
             path=["software", "applications", "kube", "network"],
             key_columns={"ip": address.address},
             inventory_columns={"address_type": address.type_},
         )
+    yield from labels_to_table(section_kube_node_info.labels)
 
 
 register.inventory_plugin(

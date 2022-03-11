@@ -10,14 +10,7 @@ import pytest
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Attributes, TableRow
 from cmk.base.plugins.agent_based.inventory_kube_node import inventory_kube_node
-from cmk.base.plugins.agent_based.utils.k8s import (
-    HealthZ,
-    KubeletInfo,
-    Label,
-    LabelName,
-    NodeAddress,
-    NodeInfo,
-)
+from cmk.base.plugins.agent_based.utils.k8s import HealthZ, KubeletInfo, NodeAddress, NodeInfo
 
 from .utils_inventory import sort_inventory_result
 
@@ -34,7 +27,7 @@ from .utils_inventory import sort_inventory_result
                 container_runtime_version="docker://20.10.8",
                 name="minikube",
                 creation_timestamp=1640000000.0,
-                labels={LabelName("app"): Label(name="app", value="checkmk-cluster-agent")},
+                labels={},
                 addresses=[
                     NodeAddress(type_="Hostname", address="k8-21"),
                     NodeAddress(type_="ExternalIP", address="10.200.3.21"),
@@ -60,12 +53,6 @@ from .utils_inventory import sort_inventory_result
                         "kube_proxy_version": "1.2.3",
                     },
                     status_attributes={},
-                ),
-                TableRow(
-                    path=["software", "applications", "kube", "labels"],
-                    key_columns={"label_name": "app"},
-                    inventory_columns={"label_value": "checkmk-cluster-agent"},
-                    status_columns={},
                 ),
                 TableRow(
                     path=["software", "applications", "kube", "network"],

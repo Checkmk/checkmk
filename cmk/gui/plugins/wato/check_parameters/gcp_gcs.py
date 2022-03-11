@@ -9,6 +9,7 @@ from cmk.gui.plugins.wato.utils import (
     Levels,
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
+    SimpleLevels,
 )
 from cmk.gui.valuespec import Dictionary, ValueSpec
 
@@ -61,7 +62,10 @@ def _vs_gcs_bucket_objects() -> ValueSpec:
     return Dictionary(
         title=_("Parameters for the bucket objects io"),
         elements=[
-            ("aws_bucket_size", Levels(title=_("Parameters of total bucket size"), unit="bytes")),
+            (
+                "aws_bucket_size",
+                SimpleLevels(title=_("Parameters of total bucket size"), unit="bytes"),
+            ),
             ("aws_num_objects", Levels(title=_("Parameters of bucket object counts"))),
         ],
     )
@@ -104,8 +108,8 @@ def _vs_function_execution() -> ValueSpec:
         title=_("Levels on performance"),
         elements=[
             ("execution_count", Levels(title=_("execution count"))),
-            ("aws_lambda_memory_size_absolute", Levels(title=_("memory"))),
-            ("aws_lambda_duration", Levels(title=_("execution time"))),
+            ("aws_lambda_memory_size_absolute", SimpleLevels(title=_("memory"), unit="bytes")),
+            ("aws_lambda_duration", Levels(title=_("execution time"), unit="s")),
         ],
     )
 
@@ -125,7 +129,7 @@ def _vs_function_egress() -> ValueSpec:
     return Dictionary(
         title=_("Levels on network egress"),
         elements=[
-            ("net_data_sent", Levels(title=_("Data sent"), unit="bytes")),
+            ("net_data_sent", SimpleLevels(title=_("Data sent"), unit="bytes")),
         ],
     )
 
@@ -145,8 +149,8 @@ def _vs_run_network() -> ValueSpec:
     return Dictionary(
         title=_("Levels on network traffic"),
         elements=[
-            ("net_data_sent", Levels(title=_("Data sent"), unit="bytes")),
-            ("net_data_recv", Levels(title=_("Data received"), unit="bytes")),
+            ("net_data_sent", SimpleLevels(title=_("Data sent"), unit="bytes")),
+            ("net_data_recv", SimpleLevels(title=_("Data received"), unit="bytes")),
         ],
     )
 
@@ -166,7 +170,7 @@ def _vs_run_memory() -> ValueSpec:
     return Dictionary(
         title=_("Levels memory"),
         elements=[
-            ("memory_util", Levels(title=_("Memory utilitzation"), unit="%")),
+            ("memory_util", SimpleLevels(title=_("Memory utilitzation"), unit="%")),
         ],
     )
 
@@ -186,7 +190,7 @@ def _vs_run_cpu() -> ValueSpec:
     return Dictionary(
         title=_("Levels CPU"),
         elements=[
-            ("util", Levels(title=_("CPU utilitzation"), unit="%")),
+            ("util", SimpleLevels(title=_("CPU utilitzation"), unit="%")),
         ],
     )
 

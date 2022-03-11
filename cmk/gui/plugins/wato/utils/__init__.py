@@ -1263,13 +1263,14 @@ def PredictiveLevels(
 
 # To be used as ValueSpec for levels on numeric values, with
 # prediction
-def Levels(
-    help: _Optional[str] = None,  # pylint: disable=redefined-builtin
-    default_levels: _Tuple[float, float] = (0.0, 0.0),
-    default_difference: _Tuple[float, float] = (0.0, 0.0),
-    default_value: _Optional[_Tuple[float, float]] = None,
-    title: _Optional[str] = None,
-    unit: str = "",
+def _Levels(
+    help: _Optional[str],  # pylint: disable=redefined-builtin
+    default_levels: _Tuple[float, float],
+    default_difference: _Tuple[float, float],
+    default_value: _Optional[_Tuple[float, float]],
+    title: _Optional[str],
+    unit: str,
+    allow_predictive: bool,
 ) -> Alternative:
     def match_levels_alternative(v: Union[Dict[Any, Any], _Tuple[Any, Any]]) -> int:
         if isinstance(v, dict):
@@ -1284,36 +1285,87 @@ def Levels(
     if default_value is None:
         default_value = default_levels
 
+    elements = [
+        FixedValue(
+            value=None,
+            title=_("No Levels"),
+            totext=_("Do not impose levels, always be OK"),
+        ),
+        Tuple(
+            title=_("Fixed Levels"),
+            elements=[
+                Float(
+                    unit=unit,
+                    title=_("Warning at"),
+                    default_value=default_levels[0],
+                    allow_int=True,
+                ),
+                Float(
+                    unit=unit,
+                    title=_("Critical at"),
+                    default_value=default_levels[1],
+                    allow_int=True,
+                ),
+            ],
+        ),
+    ]
+    if allow_predictive:
+        elements.append(PredictiveLevels(default_difference=default_difference, unit=unit))
+
     return Alternative(
         title=title,
         help=help,
-        elements=[
-            FixedValue(
-                value=None,
-                title=_("No Levels"),
-                totext=_("Do not impose levels, always be OK"),
-            ),
-            Tuple(
-                title=_("Fixed Levels"),
-                elements=[
-                    Float(
-                        unit=unit,
-                        title=_("Warning at"),
-                        default_value=default_levels[0],
-                        allow_int=True,
-                    ),
-                    Float(
-                        unit=unit,
-                        title=_("Critical at"),
-                        default_value=default_levels[1],
-                        allow_int=True,
-                    ),
-                ],
-            ),
-            PredictiveLevels(default_difference=default_difference, unit=unit),
-        ],
+        elements=elements,
         match=match_levels_alternative,
         default_value=default_value,
+    )
+
+
+def SimpleLevels(
+    help: _Optional[str] = None,  # pylint: disable=redefined-builtin
+    default_levels: _Tuple[float, float] = (0.0, 0.0),
+    default_difference: _Tuple[float, float] = (0.0, 0.0),
+    default_value: _Optional[_Tuple[float, float]] = None,
+    title: _Optional[str] = None,
+    unit: str = "",
+) -> Alternative:
+    """To be used as ValueSpec for levels on numeric values, without prediction
+
+    See Also:
+      :func: Levels
+    """
+    return _Levels(
+        help=help,
+        default_levels=default_levels,
+        default_difference=default_difference,
+        default_value=default_value,
+        title=title,
+        allow_predictive=False,
+        unit=unit,
+    )
+
+
+def Levels(
+    help: _Optional[str] = None,  # pylint: disable=redefined-builtin
+    default_levels: _Tuple[float, float] = (0.0, 0.0),
+    default_difference: _Tuple[float, float] = (0.0, 0.0),
+    default_value: _Optional[_Tuple[float, float]] = None,
+    title: _Optional[str] = None,
+    unit: str = "",
+) -> Alternative:
+    """To be used as ValueSpec for levels on numeric values, with prediction
+
+    See Also:
+      :func: SimpleLevels
+    """
+    return _Levels(
+        help=help,
+        default_levels=default_levels,
+        default_difference=default_difference,
+        default_value=default_value,
+        title=title,
+        allow_predictive=True,
+        unit=unit,
     )
 
 

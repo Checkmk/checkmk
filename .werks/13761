@@ -1,0 +1,12 @@
+Title: <tt>cmk_site_statistics</tt>: Fix crash for pre-1.6 CRE sites
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1646996322
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0b2
+
+The check plugin <tt>cmk_site_statistics</tt> crashed for pre-1.6 CRE sites
+with <tt>KeyError (core_pid)</tt>.

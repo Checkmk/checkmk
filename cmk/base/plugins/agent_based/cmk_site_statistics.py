@@ -172,7 +172,8 @@ def check_cmk_site_statistics(
     if section_livestatus_status and (livestatus_status := section_livestatus_status.get(item)):
         yield Result(
             state=State.OK,
-            notice=f"Core PID: {livestatus_status['core_pid']}",
+            # core_pid is missing for pre-1.6 CRE sites ...
+            notice=f"Core PID: {livestatus_status.get('core_pid', livestatus_status['nagios_pid'])}",
         )
 
 

@@ -23,6 +23,7 @@ A contact group object can have the following relations present in `links`:
 from cmk.utils import version
 
 from cmk.gui import watolib
+from cmk.gui.globals import endpoint
 from cmk.gui.http import Response
 from cmk.gui.plugins.openapi.endpoints.utils import (
     fetch_group,
@@ -38,11 +39,20 @@ from cmk.gui.plugins.openapi.endpoints.utils import (
 from cmk.gui.plugins.openapi.restful_objects import (
     constructors,
     Endpoint,
+    permissions,
     request_schemas,
     response_schemas,
 )
 from cmk.gui.plugins.openapi.restful_objects.parameters import NAME_FIELD
-from cmk.gui.watolib.groups import add_group, edit_group, load_contact_group_information
+from cmk.gui.utils.logged_in import SuperUserContext
+from cmk.gui.watolib.groups import (
+    add_group,
+    check_modify_group_permissions,
+    edit_group,
+    load_contact_group_information,
+)
+
+PERMISSIONS = permissions.Perm("wato.users")
 
 
 @Endpoint(
@@ -52,6 +62,7 @@ from cmk.gui.watolib.groups import add_group, edit_group, load_contact_group_inf
     etag="output",
     request_schema=request_schemas.InputContactGroup,
     response_schema=response_schemas.DomainObject,
+    permissions_required=PERMISSIONS,
 )
 def create(params):
     """Create a contact group"""
@@ -71,6 +82,7 @@ def create(params):
     method="post",
     request_schema=request_schemas.BulkInputContactGroup,
     response_schema=response_schemas.DomainObjectCollection,
+    permissions_required=PERMISSIONS,
 )
 def bulk_create(params):
     """Bulk create host groups"""
@@ -110,6 +122,7 @@ def list_group(params):
     response_schema=response_schemas.ContactGroup,
     etag="output",
     path_params=[NAME_FIELD],
+    permissions_required=PERMISSIONS,
 )
 def show(params):
     """Show a contact group"""
@@ -124,11 +137,15 @@ def show(params):
     method="delete",
     path_params=[NAME_FIELD],
     output_empty=True,
+    permissions_required=PERMISSIONS,
 )
 def delete(params):
     """Delete a contact group"""
     name = params["name"]
-    watolib.delete_group(name, "contact")
+    check_modify_group_permissions("contact")
+    with endpoint.do_not_track_permissions(), SuperUserContext():
+        # HACK: We need to supress this, due to lots of irrelevant dashboard permissions
+        watolib.delete_group(name, "contact")
     return Response(status=204)
 
 
@@ -138,6 +155,7 @@ def delete(params):
     method="post",
     request_schema=request_schemas.BulkDeleteContactGroup,
     output_empty=True,
+    permissions_required=PERMISSIONS,
 )
 def bulk_delete(params):
     """Bulk delete contact groups"""
@@ -150,8 +168,11 @@ def bulk_delete(params):
             status=400,
             message=f"contact group {group_name} was not found",
         )
-    for group_name in entries:
-        watolib.delete_group(group_name, "contact")
+    with endpoint.do_not_track_permissions(), SuperUserContext():
+        for group_name in entries:
+            # We need to supress this, because a lot of dashboard permissions are checked for
+            # various reasons.
+            watolib.delete_group(group_name, "contact")
     return Response(status=204)
 
 
@@ -163,6 +184,7 @@ def bulk_delete(params):
     response_schema=response_schemas.ContactGroup,
     etag="both",
     request_schema=request_schemas.UpdateGroup,
+    permissions_required=PERMISSIONS,
 )
 def update(params):
     """Update a contact group"""
@@ -180,6 +202,7 @@ def update(params):
     method="put",
     request_schema=request_schemas.BulkUpdateContactGroup,
     response_schema=response_schemas.DomainObjectCollection,
+    permissions_required=PERMISSIONS,
 )
 def bulk_update(params):
     """Bulk update contact groups

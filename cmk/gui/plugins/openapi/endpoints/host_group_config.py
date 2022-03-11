@@ -37,6 +37,7 @@ from cmk.gui.plugins.openapi.endpoints.utils import (
 from cmk.gui.plugins.openapi.restful_objects import (
     constructors,
     Endpoint,
+    permissions,
     request_schemas,
     response_schemas,
 )
@@ -51,6 +52,7 @@ from cmk.gui.watolib.groups import add_group, edit_group
     etag="output",
     request_schema=request_schemas.InputHostGroup,
     response_schema=response_schemas.HostGroup,
+    permissions_required=permissions.Perm("wato.groups"),
 )
 def create(params):
     """Create a host group"""
@@ -70,6 +72,7 @@ def create(params):
     method="post",
     request_schema=request_schemas.BulkInputHostGroup,
     response_schema=response_schemas.DomainObjectCollection,
+    permissions_required=permissions.Perm("wato.groups"),
 )
 def bulk_create(params):
     """Bulk create host groups"""
@@ -104,6 +107,7 @@ def list_groups(params):
     method="delete",
     path_params=[NAME_FIELD],
     output_empty=True,
+    permissions_required=permissions.Perm("wato.groups"),
 )
 def delete(params):
     """Delete a host group"""
@@ -118,6 +122,7 @@ def delete(params):
     method="post",
     request_schema=request_schemas.BulkDeleteHostGroup,
     output_empty=True,
+    permissions_required=permissions.Perm("wato.groups"),
 )
 def bulk_delete(params):
     """Bulk delete host groups"""
@@ -145,6 +150,7 @@ def bulk_delete(params):
     etag="both",
     response_schema=response_schemas.HostGroup,
     request_schema=request_schemas.UpdateGroup,
+    permissions_required=permissions.Perm("wato.groups"),
 )
 def update(params):
     """Update a host group"""
@@ -162,6 +168,7 @@ def update(params):
     method="put",
     request_schema=request_schemas.BulkUpdateHostGroup,
     response_schema=response_schemas.DomainObjectCollection,
+    permissions_required=permissions.Perm("wato.groups"),
 )
 def bulk_update(params):
     """Bulk update host groups

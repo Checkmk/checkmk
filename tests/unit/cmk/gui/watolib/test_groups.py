@@ -24,14 +24,14 @@ def patch_config_paths(monkeypatch, tmp_path):
     (gui_confd / "wato").mkdir(parents=True)
 
 
-def test_load_group_information_empty(tmp_path):
-    with application_and_request_context():
+def test_load_group_information_empty(tmp_path, run_as_superuser):
+    with application_and_request_context(), run_as_superuser():
         assert groups.load_contact_group_information() == {}
         assert gui_groups.load_host_group_information() == {}
         assert gui_groups.load_service_group_information() == {}
 
 
-def test_load_group_information(tmp_path):
+def test_load_group_information(tmp_path, run_as_superuser):
     with open(cmk.utils.paths.check_mk_config_dir + "/wato/groups.mk", "w") as f:
         f.write(
             """# encoding: utf-8
@@ -66,7 +66,7 @@ multisite_contactgroups = {
 """
         )
 
-    with application_and_request_context():
+    with application_and_request_context(), run_as_superuser():
         assert groups.load_group_information() == {
             "contact": {
                 "all": {

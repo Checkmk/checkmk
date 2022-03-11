@@ -13,6 +13,7 @@ from cmk.utils.type_defs import UserId
 
 import cmk.gui.config as config
 from cmk.gui.utils import get_random_string
+from cmk.gui.utils.logged_in import SuperUserContext
 from cmk.gui.watolib.users import delete_users, edit_users
 
 
@@ -52,7 +53,13 @@ def create_and_destroy_user(
     if username is None:
         username = "test123-" + get_random_string(size=5, from_ascii=ord("a"), to_ascii=ord("z"))
     password = "Ischbinwischtisch"
-    edit_users(_mk_user_obj(username, password, automation, role))
+
+    # Load the config so that superuser's roles are available
+    config.load_config()
+    with SuperUserContext():
+        edit_users(_mk_user_obj(username, password, automation, role))
+
+    # Load the config with the newly created user
     config.load_config()
 
     profile_path = cmk.utils.paths.omd_root / "var/check_mk/web" / username
@@ -79,7 +86,8 @@ def create_and_destroy_user(
 
     yield UserId(username), password
 
-    delete_users([username])
+    with SuperUserContext():
+        delete_users([username])
 
     # User directories are not deleted by WATO by default. Clean it up here!
     shutil.rmtree(str(profile_path))

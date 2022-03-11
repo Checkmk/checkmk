@@ -76,7 +76,7 @@ pub fn init_logging(
         .start()
 }
 
-pub fn testing_client_stream(certs: X509Certs, address: &str) -> rustls::ClientConnection {
+pub fn testing_tls_client_connection(certs: X509Certs, address: &str) -> rustls::ClientConnection {
     let root_cert =
         lib_certs::rustls_certificate(&String::from_utf8(certs.ca_cert).unwrap()).unwrap();
     let client_cert =

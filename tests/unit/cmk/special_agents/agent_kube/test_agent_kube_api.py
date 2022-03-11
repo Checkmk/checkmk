@@ -15,6 +15,10 @@ from cmk.special_agents.agent_kube import aggregate_resources, Cluster
 from cmk.special_agents.utils_kubernetes.schemata import api
 
 
+class ClusterDetailsFactory(ModelFactory):
+    __model__ = api.ClusterDetails
+
+
 @pytest.fixture
 def node_name():
     return "node"
@@ -40,12 +44,18 @@ def api_pod(node_name):
     return pod
 
 
-def test_pod_node_allocation_within_cluster(api_node, api_pod):
+def test_pod_node_allocation_within_cluster(
+    api_node: api.Node, api_pod: api.Pod, cluster_details: api.ClusterDetails
+):
     """Test pod is correctly allocated to node within cluster"""
     cluster = Cluster.from_api_resources(
         pods=[api_pod],
         nodes=[api_node],
         statefulsets=[],
+        daemon_sets=[],
+        cron_jobs=[],
+        deployments=[],
+        cluster_details=cluster_details,
     )
     assert len(cluster.nodes()) == 1
     assert len(cluster.nodes()[0].pods()) == 1
@@ -63,7 +73,10 @@ def test_pod_deployment_allocation_within_cluster(api_node, api_pod):
         pods=[api_pod],
         nodes=[api_node],
         statefulsets=[],
+        daemon_sets=[],
+        cron_jobs=[],
         deployments=[deployment],
+        cluster_details=ClusterDetailsFactory.build(),
     )
     assert len(cluster.deployments()) == 1
 

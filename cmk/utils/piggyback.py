@@ -251,14 +251,22 @@ def _get_piggyback_processed_file_info(
 
     status_file_path = _get_source_status_file_path(source_hostname)
     if not status_file_path.exists():
-        reason = "Source '%s' not sending piggyback data" % source_hostname
-        return _eval_file_in_validity_period(file_age, validity_period, validity_state, reason)
+        valid_msg = _validity_period_message(file_age, validity_period)
+        return (
+            bool(valid_msg),
+            f"Source '{source_hostname}' not sending piggyback data{valid_msg}",
+            validity_state if valid_msg else 0,
+        )
 
     if _is_piggyback_file_outdated(status_file_path, piggyback_file_path):
-        reason = "Piggyback file not updated by source '%s'" % source_hostname
-        return _eval_file_in_validity_period(file_age, validity_period, validity_state, reason)
+        valid_msg = _validity_period_message(file_age, validity_period)
+        return (
+            bool(valid_msg),
+            f"Piggyback file not updated by source '{source_hostname}'{valid_msg}",
+            validity_state if valid_msg else 0,
+        )
 
-    return True, "Successfully processed from source '%s'" % source_hostname, 0
+    return True, f"Successfully processed from source '{source_hostname}'", 0
 
 
 def _get_max_cache_age(
@@ -297,19 +305,13 @@ def _get_validity_state(
     )
 
 
-def _eval_file_in_validity_period(
+def _validity_period_message(
     file_age: float,
     validity_period: Optional[int],
-    validity_state: int,
-    reason: str,
-) -> Tuple[bool, str, int]:
-    if validity_period is not None and file_age < validity_period:
-        return (
-            True,
-            "%s (still valid, %s left)" % (reason, Age(validity_period - file_age)),
-            validity_state,
-        )
-    return False, reason, 0
+) -> str:
+    if validity_period is None or (time_left := validity_period - file_age) <= 0:
+        return ""
+    return f" (still valid, {Age(time_left)} left)"
 
 
 def _is_piggyback_file_outdated(

@@ -42404,6 +42404,10 @@ msgstr "BIアグリゲートがスケジュールされたダウンタイムに�
 msgid "Stateful sets"
 msgstr "ステートフルセット"
 
+#, fuzzy
+msgid "StatefulSets"
+msgstr "ステートフルセット"
+
 msgid "Statement"
 msgstr "ステートメント"
 

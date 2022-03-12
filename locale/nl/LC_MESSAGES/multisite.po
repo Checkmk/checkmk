@@ -43857,6 +43857,10 @@ msgstr "Staat, als BI-aggregaat in geplande downtime is"
 msgid "Stateful sets"
 msgstr "Stateful sets"
 
+#, fuzzy
+msgid "StatefulSets"
+msgstr "Stateful sets"
+
 msgid "Statement"
 msgstr "Verklaring"
 

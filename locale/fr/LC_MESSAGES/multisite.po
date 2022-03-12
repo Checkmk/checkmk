@@ -44423,6 +44423,10 @@ msgstr "État, si l'agrégat BI est en arrêt programmé"
 msgid "Stateful sets"
 msgstr "Ensembles Stateful"
 
+#, fuzzy
+msgid "StatefulSets"
+msgstr "Ensembles Stateful"
+
 msgid "Statement"
 msgstr "Déclaration"
 

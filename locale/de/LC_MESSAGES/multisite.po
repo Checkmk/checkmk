@@ -43952,6 +43952,10 @@ msgstr "Status, wenn BI-Aggregation in Wartungszeit ist"
 msgid "Stateful sets"
 msgstr "StatefulSets"
 
+#, fuzzy
+msgid "StatefulSets"
+msgstr "StatefulSets"
+
 msgid "Statement"
 msgstr "Statement"
 

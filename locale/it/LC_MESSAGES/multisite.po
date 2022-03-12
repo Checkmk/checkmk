@@ -43976,6 +43976,10 @@ msgstr "Stato, se l'aggregato di BI è in fermo programmato"
 msgid "Stateful sets"
 msgstr "Insiemi statici"
 
+#, fuzzy
+msgid "StatefulSets"
+msgstr "Insiemi statici"
+
 msgid "Statement"
 msgstr "Dichiarazione"
 

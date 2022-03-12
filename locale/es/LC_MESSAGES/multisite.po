@@ -44242,6 +44242,10 @@ msgstr "Estado, si el agregado BI está en tiempo de inactividad programado"
 msgid "Stateful sets"
 msgstr "Conjuntos de estados"
 
+#, fuzzy
+msgid "StatefulSets"
+msgstr "Conjuntos de estados"
+
 msgid "Statement"
 msgstr "Declaración"
 

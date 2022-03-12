@@ -42238,6 +42238,10 @@ msgstr ""
 msgid "Stateful sets"
 msgstr "Adaugă comentarii"
 
+#, fuzzy
+msgid "StatefulSets"
+msgstr "Adaugă comentarii"
+
 msgid "Statement"
 msgstr ""
 

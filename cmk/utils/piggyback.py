@@ -170,10 +170,10 @@ def has_piggyback_raw_data(
     piggybacked_hostname: HostName,
     time_settings: PiggybackTimeSettings,
 ) -> bool:
-    for file_info in _get_piggyback_processed_file_infos(piggybacked_hostname, time_settings):
-        if file_info.successfully_processed:
-            return True
-    return False
+    return any(
+        fi.successfully_processed
+        for fi in _get_piggyback_processed_file_infos(piggybacked_hostname, time_settings)
+    )
 
 
 def _get_piggyback_processed_file_infos(
@@ -214,7 +214,7 @@ def _get_matching_time_settings(
     source_hostnames: Container[HostName],
     piggybacked_hostname: HostName,
     time_settings: PiggybackTimeSettings,
-) -> Mapping[Tuple[Optional[str], str], int]:
+) -> _PiggybackTimeSettingsMap:
     matching_time_settings: Dict[Tuple[Optional[str], str], int] = {}
     for expr, key, value in time_settings:
         # expr may be
@@ -322,20 +322,16 @@ def _is_piggyback_file_outdated(
         # but only writes them at microsecond resolution.
         # (We're using os.utime() in _store_status_file_of())
         return os.stat(str(status_file_path))[8] > os.stat(str(piggyback_file_path))[8]
-    except OSError as e:
-        if e.errno == errno.ENOENT:
-            return True
-        raise
+    except FileNotFoundError:
+        return True
 
 
 def _remove_piggyback_file(piggyback_file_path: Path) -> bool:
     try:
         piggyback_file_path.unlink()
         return True
-    except OSError as e:
-        if e.errno == errno.ENOENT:
-            return False
-        raise
+    except FileNotFoundError:
+        return False
 
 
 def remove_source_status_file(source_hostname: HostName) -> bool:
@@ -409,10 +405,8 @@ def _store_status_file_of(
                 # but only writes them at microsecond resolution.
                 # (We're using os.utime() in _store_status_file_of())
                 os.utime(str(piggyback_file_path), status_file_times)
-            except OSError as e:
-                if e.errno == errno.ENOENT:
-                    continue
-                raise
+            except FileNotFoundError:
+                continue
     os.rename(tmp_path, str(status_file_path))
 
 
@@ -431,53 +425,26 @@ def get_source_hostnames(piggybacked_hostname: Optional[HostName] = None) -> Seq
         return [
             HostName(source_host.name)
             for piggybacked_host_folder in _get_piggybacked_host_folders()
-            for source_host in _get_piggybacked_host_sources(piggybacked_host_folder)
+            for source_host in _files_in(piggybacked_host_folder)
         ]
 
     piggybacked_host_folder = cmk.utils.paths.piggyback_dir / Path(piggybacked_hostname)
-    return [
-        HostName(source_host.name)
-        for source_host in _get_piggybacked_host_sources(piggybacked_host_folder)
-    ]
+    return [HostName(source_host.name) for source_host in _files_in(piggybacked_host_folder)]
 
 
 def _get_piggybacked_host_folders() -> Sequence[Path]:
-    try:
-        return [
-            piggybacked_host_folder
-            for piggybacked_host_folder in cmk.utils.paths.piggyback_dir.iterdir()
-            if not piggybacked_host_folder.name.startswith(".")
-        ]
-    except OSError as e:
-        if e.errno == errno.ENOENT:
-            return []
-        raise
-
-
-def _get_piggybacked_host_sources(piggybacked_host_folder: Path) -> Sequence[Path]:
-    try:
-        return [
-            piggybacked_host_source
-            for piggybacked_host_source in piggybacked_host_folder.iterdir()
-            if not piggybacked_host_source.name.startswith(".")
-        ]
-    except OSError as e:
-        if e.errno == errno.ENOENT:
-            return []
-        raise
+    return _files_in(cmk.utils.paths.piggyback_dir)
 
 
 def _get_source_state_files() -> Sequence[Path]:
+    return _files_in(cmk.utils.paths.piggyback_source_dir)
+
+
+def _files_in(path: Path) -> Sequence[Path]:
     try:
-        return [
-            source_state_file
-            for source_state_file in cmk.utils.paths.piggyback_source_dir.iterdir()
-            if not source_state_file.name.startswith(".")
-        ]
-    except OSError as e:
-        if e.errno == errno.ENOENT:
-            return []
-        raise
+        return [f for f in path.iterdir() if not f.name.startswith(".")]
+    except FileNotFoundError:
+        return []
 
 
 def _get_source_status_file_path(source_hostname: HostName) -> Path:
@@ -527,7 +494,7 @@ def _get_piggybacked_hosts_settings(
 ) -> Sequence[Tuple[Path, Sequence[Path], _PiggybackTimeSettingsMap]]:
     piggybacked_hosts_settings = []
     for piggybacked_host_folder in _get_piggybacked_host_folders():
-        source_hosts = _get_piggybacked_host_sources(piggybacked_host_folder)
+        source_hosts = _files_in(piggybacked_host_folder)
         matching_time_settings = _get_matching_time_settings(
             [HostName(source_host.name) for source_host in source_hosts],
             HostName(piggybacked_host_folder.name),

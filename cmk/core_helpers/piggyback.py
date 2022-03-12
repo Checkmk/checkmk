@@ -80,7 +80,7 @@ class PiggybackFetcher(AgentFetcher):
     def _get_main_section(self) -> AgentRawData:
         raw_data = AgentRawData(b"")
         for src in self._sources:
-            if src.successfully_processed:
+            if src.info.successfully_processed:
                 # !! Important for Check_MK and Check_MK Discovery service !!
                 #   - sources contains ALL file infos and is not filtered
                 #     in cmk/base/piggyback.py as in previous versions
@@ -97,7 +97,9 @@ class PiggybackFetcher(AgentFetcher):
         if not self._sources:
             return AgentRawData(b"")
 
-        labels = {"cmk/piggyback_source_%s" % src.source_hostname: "yes" for src in self._sources}
+        labels = {
+            "cmk/piggyback_source_%s" % src.info.source_hostname: "yes" for src in self._sources
+        }
         return AgentRawData(b"<<<labels:sep(0)>>>\n%s\n" % json.dumps(labels).encode("utf-8"))
 
     @staticmethod
@@ -160,4 +162,8 @@ class PiggybackSummarizer(AgentSummarizer):
             if self.always:
                 return [ActiveCheckResult(1, "Missing data")]
             return []
-        return [ActiveCheckResult(src.reason_status, src.reason) for src in sources if src.reason]
+        return [
+            ActiveCheckResult(src.info.status, src.info.message)
+            for src in sources
+            if src.info.message
+        ]

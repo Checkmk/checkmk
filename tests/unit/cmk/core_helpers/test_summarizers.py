@@ -5,13 +5,14 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 # pylint: disable=undefined-variable
 import json
+from pathlib import Path
 from typing import Final
 
 import pytest
 
 from cmk.utils.check_utils import ActiveCheckResult
 from cmk.utils.exceptions import MKAgentError, MKEmptyAgentData, MKTimeout
-from cmk.utils.piggyback import PiggybackRawDataInfo
+from cmk.utils.piggyback import PiggybackFileInfo, PiggybackRawDataInfo
 from cmk.utils.type_defs import AgentRawData, ExitSpec, HostName
 
 import cmk.core_helpers.piggyback
@@ -163,11 +164,13 @@ class TestPiggybackSummarizer:
                 return ()
             return [
                 PiggybackRawDataInfo(
-                    source_hostname=source_hostname,
-                    file_path="/dev/null",
-                    successfully_processed=True,
-                    reason="success",
-                    reason_status=0,
+                    PiggybackFileInfo(
+                        source_hostname=source_hostname,
+                        file_path=Path("/dev/null"),
+                        successfully_processed=True,
+                        message="success",
+                        status=0,
+                    ),
                     raw_data=AgentRawData(b""),
                 )
             ]

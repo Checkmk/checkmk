@@ -332,11 +332,12 @@ def create_skeleton_file(
 
     # Create directories, symlinks and files
     if skel_path.is_symlink():
-        skel_path.readlink().symlink_to(user_path)
+        user_path.symlink_to(skel_path.readlink())
     elif skel_path.is_dir():
         user_path.mkdir(parents=True)
     else:
         user_path.write_bytes(replace_tags(skel_path.read_bytes(), replacements))
+
     if not skel_path.is_symlink():
         mode = read_skel_permissions().get(relpath)
         if mode is None:

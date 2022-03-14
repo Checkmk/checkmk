@@ -51,8 +51,26 @@ class ABCViewDashlet(IFrameDashlet):
         painter_options.load(self._dashlet_spec["name"])
 
         # Here the linked view default context has the highest priority
-        # linkedview default>dashlet>url active filter, dashboard
-        context = visuals.get_merged_context(self.context, view_spec["context"])
+        # linkedview default>dashlet>url active filter> dashboard. However views
+        # have the "show_filters" default to prefill the filtermenu with empty
+        # valued filters(UX). Those need to be cleared out. Otherwise those
+        # empty filters are the highest priority filters and the user can never
+        # filter the view.
+
+        view_context = {
+            filtername: filtervalues
+            for filtername, filtervalues in view_spec["context"].items()
+            if {
+                var: value
+                for var, value in filtervalues.items()
+                # These are the filters request variables. Keep set values
+                # For the TriStateFilters unset == ignore == "-1"
+                # all other cases unset is an empty string
+                if (var.startswith("is_") and value != "-1")  # TriState filters except ignore
+                or (not var.startswith("is_") and value)  # Rest of filters with some value
+            }
+        }
+        context = visuals.get_merged_context(self.context, view_context)
 
         view = views.View(self._dashlet_spec["name"], view_spec, context)
         view.row_limit = views.get_limit()

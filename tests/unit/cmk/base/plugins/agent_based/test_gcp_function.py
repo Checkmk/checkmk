@@ -8,8 +8,12 @@ from dataclasses import dataclass
 from typing import Callable, Sequence
 
 import pytest
+from pytest_mock import MockerFixture
+
+from cmk.utils.type_defs import CheckPluginName
 
 from cmk.base.api.agent_based.checking_classes import Service, ServiceLabel
+from cmk.base.plugin_contexts import current_host, current_service
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
 from cmk.base.plugins.agent_based.gcp_function import (
     check_gcp_function_egress,
@@ -134,17 +138,31 @@ def fixture_checkplugin(request):
     return request.param
 
 
+@pytest.fixture(
+    params=[None, {"levels_upper": (0, 1), "horizon": 1, "period": "day"}], name="params"
+)
+def fixture_params(request):
+    return request.param
+
+
 @pytest.fixture(name="results")
-def fixture_results(checkplugin, section):
-    params = {k: None for k in checkplugin.metrics}
-    results = list(
-        checkplugin.function(
-            item=ITEM,
-            params=params,
-            section_gcp_service_cloud_functions=section,
-            section_gcp_assets=None,
-        )
+def fixture_results(checkplugin, section, params, mocker: MockerFixture):
+    params = {k: params for k in checkplugin.metrics}
+    mocker.patch(
+        "cmk.base.check_api._prediction.get_levels", return_value=(None, (2.2, 4.2, None, None))
     )
+
+    with current_host("unittest"), current_service(
+        CheckPluginName("test_check"), "unittest-service-description"
+    ):
+        results = list(
+            checkplugin.function(
+                item=ITEM,
+                params=params,
+                section_gcp_service_cloud_functions=section,
+                section_gcp_assets=None,
+            )
+        )
     return results, checkplugin
 
 

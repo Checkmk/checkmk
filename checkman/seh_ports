@@ -4,8 +4,13 @@ catalog: hw/network/seh
 license: GPLv2
 distribution: check_mk
 description:
- This check monitors the state of the ports of the SEH myUTN dongle server devices.
- In addition, it also warns the user should the state of a previously connected port change.
+ This check shows the state of the ports of the SEH myUTN dongle server
+ devices. The state of the port is not interpreted by checkmk, only displayed.
+ It is always shown as {OK}, except when the state changes:
+
+ If the current port state differs from the state seen at service discovery
+ time, the service will report {WARN}. To acknowledge the changed port, execute
+ the service discovery again.
 
 item:
  The port number.

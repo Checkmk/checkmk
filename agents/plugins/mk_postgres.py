@@ -43,12 +43,18 @@ IS_LINUX = OS == "Linux"
 IS_WINDOWS = OS == "Windows"
 LOGGER = logging.getLogger(__name__)
 
+
+class OSNotImplementedError(NotImplementedError):
+    def __str__(self):
+        return "The OS type(%s) is not yet implemented." % platform.system()
+
+
 if IS_LINUX:
     import resource
 elif IS_WINDOWS:
     import time
 else:
-    raise NotImplementedError("The OS type(%s) is not yet implemented." % platform.system())
+    raise OSNotImplementedError
 
 
 # for compatibility with python 2.6
@@ -941,7 +947,7 @@ def postgres_factory(db_user, pg_instance):
         return PostgresLinux(db_user, pg_instance)
     if IS_WINDOWS:
         return PostgresWin(db_user, pg_instance)
-    raise NotImplementedError("The OS type(%s) is not yet implemented." % platform.system())
+    raise OSNotImplementedError
 
 
 def open_env_file(file_to_open):
@@ -977,7 +983,7 @@ def parse_postgres_cfg(postgres_cfg):
     elif IS_WINDOWS:
         conf_sep = "|"
     else:
-        raise NotImplementedError("The OS type(%s) is not yet implemented." % platform.system())
+        raise OSNotImplementedError
     dbuser = None
     instances = []
     for line in postgres_cfg:
@@ -1019,19 +1025,31 @@ def parse_arguments(argv):
     return options
 
 
-def get_postgres_user_linux():
-    for user_id in ("pgsql", "postgres"):
-        try:
-            proc = subprocess.Popen(  # pylint:disable=consider-using-with
-                ["id", user_id], stdout=subprocess.PIPE, stderr=subprocess.PIPE
-            )
-            proc.communicate()
-            if proc.returncode == 0:
-                return user_id.rstrip()
-        except subprocess.CalledProcessError:
-            pass
-    LOGGER.warning('Could not determine postgres user, using "postgres" as default')
-    return "postgres"
+def get_default_postgres_user():
+    if IS_WINDOWS:
+        return "postgres"
+    if IS_LINUX:
+        for user_id in ("pgsql", "postgres"):
+            try:
+                proc = subprocess.Popen(  # pylint:disable=consider-using-with
+                    ["id", user_id], stdout=subprocess.PIPE, stderr=subprocess.PIPE
+                )
+                proc.communicate()
+                if proc.returncode == 0:
+                    return user_id.rstrip()
+            except subprocess.CalledProcessError:
+                pass
+        LOGGER.warning('Could not determine postgres user, using "postgres" as default')
+        return "postgres"
+    raise OSNotImplementedError
+
+
+def get_default_path():
+    if IS_LINUX:
+        return "/etc/check_mk"
+    if IS_WINDOWS:
+        return "c:\\ProgramData\\checkmk\\agent\\config"
+    raise OSNotImplementedError
 
 
 def main(argv=None):
@@ -1048,19 +1066,12 @@ def main(argv=None):
         level={0: logging.WARN, 1: logging.INFO, 2: logging.DEBUG}.get(opt.verbose, logging.DEBUG),
     )
 
-    if IS_LINUX:
-        default_path = "/etc/check_mk"
-        fallback_dbuser = get_postgres_user_linux()
-    elif IS_WINDOWS:
-        default_path = "c:\\ProgramData\\checkmk\\agent\\config"
-        fallback_dbuser = "postgres"
-    else:
-        raise NotImplementedError("The OS type(%s) is not yet implemented." % platform.system())
-
-    dbuser = fallback_dbuser
+    dbuser = get_default_postgres_user()
     instances = []
     try:
-        postgres_cfg_path = os.path.join(os.getenv("MK_CONFDIR", default_path), "postgres.cfg")
+        postgres_cfg_path = os.path.join(
+            os.getenv("MK_CONFDIR", get_default_path()), "postgres.cfg"
+        )
         with open(postgres_cfg_path) as opened_file:
             postgres_cfg = opened_file.readlines()
         dbuser, instances = parse_postgres_cfg(postgres_cfg)

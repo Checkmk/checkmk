@@ -4808,7 +4808,7 @@ class Alternative(ValueSpec):
 
     def __init__(  # pylint: disable=redefined-builtin
         self,
-        elements: list[ValueSpec],
+        elements: Sequence[ValueSpec],
         match: _Optional[Callable[[Any], int]] = None,
         style: str = "",  # Unused argument left here to remain compatible with user extensions.
         show_alternative_title: bool = False,

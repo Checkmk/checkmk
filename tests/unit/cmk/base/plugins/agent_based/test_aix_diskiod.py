@@ -45,6 +45,9 @@ def test_check_disk():
 
 
 def _test_check_aix_diskiod(item, section_1, section_2, check_func):
+
+    value_store: dict[str, Any] = {}
+
     # fist call: initialize value store
     with pytest.raises(IgnoreResultsError):
         list(
@@ -52,6 +55,8 @@ def _test_check_aix_diskiod(item, section_1, section_2, check_func):
                 item,
                 {},
                 section_1,
+                value_store,
+                0.0,
             )
         )
 
@@ -61,6 +66,8 @@ def _test_check_aix_diskiod(item, section_1, section_2, check_func):
             item,
             {},
             section_2,
+            value_store,
+            60,
         )
     )
     for res in check_results:
@@ -84,7 +91,7 @@ def test_check_aix_diskiod(item):
         {
             item: DISK,
         },
-        aix_diskiod.check_aix_diskiod,
+        aix_diskiod._check_aix_diskiod,
     )
 
 
@@ -111,5 +118,5 @@ def test_cluster_check_aix_diskiod(item):
                 item: DISK,
             },
         },
-        aix_diskiod.cluster_check_aix_diskiod,
+        aix_diskiod._cluster_check_aix_diskiod,
     )

@@ -1,0 +1,16 @@
+Title: Checkmk free edition ships with same amount of fetcher helpers as enterprise
+Class: fix
+Compatible: compat
+Component: cmc
+Date: 1647273430
+Edition: cee
+Knowledge: doc
+Level: 1
+Version: 2.2.0i1
+
+Free edition shipped with a reduced count of fetcher helpers, yet when updating
+to the enterprice version this count remained locked and the enterprice system's
+performance did not scale on higher load.
+
+Thus the free edition ships the same amount of fetchers, which idle under the low
+load of the free edition, but are able to work upon upgrade.

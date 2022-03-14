@@ -37,7 +37,7 @@ async fn test_dump() -> AnyhowResult<()> {
     let socket_addr = test_path.join("run/check-mk-agent.socket");
     let agent_stream_thread = tokio::spawn(tokio::time::timeout(
         tokio::time::Duration::from_secs(1),
-        common::unix::agent_socket(socket_addr, test_agent_output, Some("\n")),
+        common::unix::agent_call(socket_addr, test_agent_output, Some("\n")),
     ));
 
     let mut cmd = Command::cargo_bin(BINARY)?;

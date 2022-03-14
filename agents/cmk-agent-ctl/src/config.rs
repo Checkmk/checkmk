@@ -167,6 +167,7 @@ pub struct PullConfig {
     pub port: types::Port,
     pub max_connections: usize,
     pub connection_timeout: u64,
+    pub agent_channel: types::AgentChannel,
     pub legacy_pull_marker: LegacyPullMarker,
     pub registry: Registry,
 }
@@ -186,11 +187,17 @@ impl PullConfig {
             .port
             .or(config_from_disk.pull_port)
             .unwrap_or(types::Port::from_str(constants::DEFAULT_PULL_PORT)?);
+        #[cfg(unix)]
+        let agent_channel = setup::agent_socket();
+        #[cfg(windows)]
+        let agent_channel =
+            types::AgentChannel::from(format!("localhost:{}", setup::agent_port()).as_str());
         Ok(PullConfig {
             allowed_ip,
             port,
             max_connections: setup::max_connections(),
             connection_timeout: setup::connection_timeout(),
+            agent_channel,
             legacy_pull_marker,
             registry,
         })

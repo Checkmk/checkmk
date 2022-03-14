@@ -3,7 +3,10 @@
 // conditions defined in the file COPYING, which is part of this source code package.
 
 use cmk_agent_ctl::{certs as lib_certs, config, site_spec, types};
-use std::{path::Path, str::FromStr};
+use std::{
+    path::Path,
+    str::FromStr,
+};
 pub mod certs;
 #[cfg(unix)]
 pub mod unix;
@@ -33,6 +36,7 @@ pub fn testing_registry(
 pub fn testing_pull_setup(
     path: &Path,
     port: &str,
+    agent_channel: types::AgentChannel,
 ) -> (String, config::PullConfig, certs::X509Certs) {
     let controller_uuid = uuid::Uuid::new_v4();
     let x509_certs =
@@ -45,7 +49,7 @@ pub fn testing_pull_setup(
 
     (
         controller_uuid.to_string(),
-        testing_pull_config(path, port, registry),
+        testing_pull_config(path, port, agent_channel, registry),
         x509_certs,
     )
 }
@@ -53,6 +57,7 @@ pub fn testing_pull_setup(
 pub fn testing_pull_config(
     path: &Path,
     port: &str,
+    agent_channel: types::AgentChannel,
     registry: config::Registry,
 ) -> config::PullConfig {
     config::PullConfig {
@@ -60,6 +65,7 @@ pub fn testing_pull_config(
         port: types::Port::from_str(port).unwrap(),
         max_connections: 3,
         connection_timeout: 1,
+        agent_channel,
         legacy_pull_marker: config::LegacyPullMarker::new(&path.join("allow_legacy_pull")),
         registry,
     }

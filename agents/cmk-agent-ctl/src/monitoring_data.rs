@@ -2,7 +2,7 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
-use super::setup;
+use super::{setup, types};
 #[cfg(windows)]
 use log::debug;
 
@@ -24,10 +24,13 @@ use tokio::net::UnixStream as AsyncUnixStream;
 
 // TODO(sk): add logging and unit testing(using local server)
 #[cfg(windows)]
-async fn async_collect_from_ip(agent_ip: &str, remote_ip: std::net::IpAddr) -> IoResult<Vec<u8>> {
+async fn async_collect_from_ip(
+    agent_channel: &types::AgentChannel,
+    remote_ip: std::net::IpAddr,
+) -> IoResult<Vec<u8>> {
     let mut data: Vec<u8> = vec![];
-    debug!("connect to {}", agent_ip);
-    let mut stream = AsyncTcpStream::connect(agent_ip).await?;
+    debug!("connect to {}", agent_channel.as_ref());
+    let mut stream = AsyncTcpStream::connect(agent_channel.as_ref()).await?;
     stream
         .write_all(format!("{}", remote_ip).as_bytes())
         .await?;
@@ -39,9 +42,11 @@ async fn async_collect_from_ip(agent_ip: &str, remote_ip: std::net::IpAddr) -> I
 
 // TODO(sk): Deliver the remote ip to Windows agent to satisfy logwatch requirements
 #[cfg(windows)]
-pub async fn async_collect(remote_ip: std::net::IpAddr) -> IoResult<Vec<u8>> {
-    let peer = format!("localhost:{}", setup::agent_port());
-    async_collect_from_ip(&peer, remote_ip).await
+pub async fn async_collect(
+    agent_channel: &types::AgentChannel,
+    remote_ip: std::net::IpAddr,
+) -> IoResult<Vec<u8>> {
+    async_collect_from_ip(agent_channel, remote_ip).await
 }
 
 #[cfg(windows)]
@@ -58,9 +63,12 @@ pub fn collect() -> IoResult<Vec<u8>> {
 }
 
 #[cfg(unix)]
-pub async fn async_collect(remote_ip: std::net::IpAddr) -> IoResult<Vec<u8>> {
+pub async fn async_collect(
+    agent_channel: &types::AgentChannel,
+    remote_ip: std::net::IpAddr,
+) -> IoResult<Vec<u8>> {
     let mut mondata: Vec<u8> = vec![];
-    let mut agent_stream = AsyncUnixStream::connect(setup::agent_socket()).await?;
+    let mut agent_stream = AsyncUnixStream::connect(agent_channel).await?;
     agent_stream
         .write_all(format!("{}\n", remote_ip).as_bytes())
         .await?;

@@ -7,7 +7,7 @@ use std::collections::HashMap;
 use std::error::Error;
 use std::sync::Arc;
 
-use crate::{config, monitoring_data, tls_server};
+use crate::{config, monitoring_data, tls_server, types};
 use anyhow::{anyhow, Context, Error as AnyhowError, Result as AnyhowResult};
 use async_trait::async_trait;
 use log::{debug, info, warn};
@@ -93,7 +93,9 @@ trait AgentOutputCollector: std::clone::Clone + Sync + Send + 'static {
 }
 
 #[derive(Clone)]
-struct AgentOutputCollectorImpl;
+struct AgentOutputCollectorImpl {
+    agent_channel: types::AgentChannel,
+}
 
 impl AgentOutputCollectorImpl {
     fn encode(&self, raw_agent_output: &[u8]) -> AnyhowResult<Vec<u8>> {
@@ -107,14 +109,28 @@ impl AgentOutputCollectorImpl {
     }
 }
 
+impl std::convert::From<types::AgentChannel> for AgentOutputCollectorImpl {
+    fn from(agent_channel: types::AgentChannel) -> Self {
+        AgentOutputCollectorImpl { agent_channel }
+    }
+}
+
+impl std::convert::From<&types::AgentChannel> for AgentOutputCollectorImpl {
+    fn from(agent_channel: &types::AgentChannel) -> Self {
+        AgentOutputCollectorImpl {
+            agent_channel: agent_channel.clone(),
+        }
+    }
+}
+
 #[async_trait]
 impl AgentOutputCollector for AgentOutputCollectorImpl {
     async fn plain_output(&self, remote_ip: std::net::IpAddr) -> AnyhowResult<Vec<u8>> {
-        Ok(monitoring_data::async_collect(remote_ip).await?)
+        Ok(monitoring_data::async_collect(&self.agent_channel, remote_ip).await?)
     }
 
     async fn encoded_output(&self, remote_ip: std::net::IpAddr) -> AnyhowResult<Vec<u8>> {
-        let mon_data = monitoring_data::async_collect(remote_ip)
+        let mon_data = monitoring_data::async_collect(&self.agent_channel, remote_ip)
             .await
             .context("Error collecting monitoring data.")?;
         self.encode(&mon_data)
@@ -163,8 +179,8 @@ pub fn pull(pull_config: config::PullConfig) -> AnyhowResult<()> {
 
 pub async fn async_pull(pull_config: config::PullConfig) -> AnyhowResult<()> {
     let guard = MaxConnectionsGuard::new(pull_config.max_connections);
+    let agent_output_collector = AgentOutputCollectorImpl::from(&pull_config.agent_channel);
     let pull_state = PullStateImpl::try_from(pull_config)?;
-    let agent_output_collector = AgentOutputCollectorImpl;
     _pull(pull_state, guard, agent_output_collector).await
 }
 
@@ -364,12 +380,14 @@ async fn with_timeout<T, E: 'static + Error + Send + Sync>(
 
 #[cfg(test)]
 mod tests {
+    use crate::types::AgentChannel;
+
     use super::*;
     #[test]
     fn test_encode_data_for_transport() {
         let mut expected_result = b"\x00\x00\x01".to_vec();
         expected_result.append(&mut monitoring_data::compress(b"abc").unwrap());
-        let agout = AgentOutputCollectorImpl;
+        let agout = AgentOutputCollectorImpl::from(AgentChannel::from("dummy"));
         assert_eq!(agout.encode(b"abc").unwrap(), expected_result);
     }
 

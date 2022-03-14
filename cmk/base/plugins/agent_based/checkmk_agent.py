@@ -241,13 +241,22 @@ def _check_cmk_agent_update(params: Mapping[str, Any], section: CheckmkSection) 
     except ValueError:
         yield Result(state=State.WARN, summary="No successful connect to server yet")
     else:
-        yield from check_levels(
-            time.time() - last_check,
-            levels_upper=(2 * 3600 * 24, None),  # type: ignore[arg-type]
-            render_func=render.timespan,
-            label="Time since last update check",
-            notice_only=True,
-        )
+        if (age := time.time() - last_check) >= 0:
+            yield from check_levels(
+                age,
+                levels_upper=(2 * 3600 * 24, None),  # type: ignore[arg-type]
+                render_func=render.timespan,
+                label="Time since last update check",
+                notice_only=True,
+            )
+        else:
+            yield Result(
+                state=State.OK,
+                summary=(
+                    f"Last update check appears to be {render.timespan(-age)}"
+                    " in the future (check your system time)"
+                ),
+            )
         yield Result(
             state=State.OK,
             notice=f"Last update check: {render.datetime(last_check)}",

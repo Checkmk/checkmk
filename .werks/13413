@@ -1,0 +1,16 @@
+Title: cisco_cpu_multiitem: remove unsupported CPUs
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1647269977
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.2.0i1
+
+Before this change a Service <tt>CPU utilization 0</tt> was created, although
+the corresponding MIB describes that <tt>0</tt> for cpmCPUTotalPhysicalIndex
+indicates that this element is not supported.
+
+Those Services will no longer be discovered.

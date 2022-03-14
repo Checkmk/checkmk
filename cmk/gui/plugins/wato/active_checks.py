@@ -761,9 +761,9 @@ rulespec_registry.register(
 )
 
 def transform_check_sql_perfdata(perfdata):
-    if not isinstance(perfdata, str):
-        return "performance_data"
-    return perfdata
+    if isinstance(perfdata, str):
+        return perfdata
+    return "performance_data"
 
 def _valuespec_active_checks_sql():
     return Dictionary(
@@ -911,6 +911,7 @@ def _valuespec_active_checks_sql():
                         title=_("Performance Data"),
                         help=_("Store output value into RRD database in a metric with this name."),
                         default_value='performance_data',
+                        allow_empty=False,
                     ),
                     forth=transform_check_sql_perfdata,
                 ),

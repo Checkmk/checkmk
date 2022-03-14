@@ -38,9 +38,8 @@ def check_sql_arguments(params):
         lower = "", ""
 
     if "perfdata" in params:
-        if not params["perfdata"]:
-            params["perfdata"] = "performance_data"
-        args.append("--metrics=%s" % params["perfdata"])
+        if (metrics:=params.get("perfdata")) is not None:
+            args.append(f"--metrics={metrics}")
 
     if "levels" in params or "levels_low" in params:
         warn_low, crit_low = lower

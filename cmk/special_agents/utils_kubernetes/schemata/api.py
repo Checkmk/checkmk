@@ -132,7 +132,7 @@ class NodeStatus(BaseModel):
 class Node(BaseModel):
     metadata: NodeMetaData
     status: NodeStatus
-    control_plane: bool
+    roles: Sequence[str]
     resources: Dict[str, NodeResources]
     kubelet_info: KubeletInfo
 

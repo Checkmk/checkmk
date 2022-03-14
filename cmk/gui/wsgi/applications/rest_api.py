@@ -96,7 +96,7 @@ def _verify_user(environ) -> RFC7662:
     if remote_user and userdb.user_exists(UserId(remote_user)):
         if basic_user and basic_user[0] != remote_user:
             raise MKAuthException("Mismatch in authentication headers.")
-        verified.append(rfc7662_subject(UserId(remote_user), "webserver"))
+        verified.append(rfc7662_subject(UserId(remote_user), "web_server"))
 
     cookie = Request(environ).cookies.get(f"auth_{omd_site()}")
     if cookie:

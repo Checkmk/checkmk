@@ -50,6 +50,7 @@ from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.main import get_page_heading
 from cmk.gui.pages import Page, page_registry
+from cmk.gui.type_defs import AuthType
 from cmk.gui.utils.escaping import escape_to_html
 from cmk.gui.utils.language_cookie import del_language_cookie
 from cmk.gui.utils.logged_in import UserContext
@@ -454,11 +455,11 @@ def _check_auth_cookie_for_web_server_auth(user_id: UserId):
         )
 
 
-def set_auth_type(_auth_type: str) -> None:
+def set_auth_type(_auth_type: AuthType) -> None:
     local.auth_type = _auth_type
 
 
-auth_type: Union[str, LocalProxy] = LocalProxy(lambda: local.auth_type)
+auth_type: Union[AuthType, LocalProxy] = LocalProxy(lambda: local.auth_type)
 
 
 @page_registry.register_page("login")

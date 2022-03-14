@@ -60,6 +60,7 @@ class TwoFactorCredentials(TypedDict):
 
 
 SessionId = str
+AuthType = Literal["automation", "cookie", "web_server", "http_header", "bearer"]
 
 
 @dataclass

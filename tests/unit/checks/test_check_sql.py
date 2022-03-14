@@ -21,7 +21,6 @@ pytestmark = pytest.mark.checks
                 "name": "bar",
                 "user": "hans",
                 "password": "wurst",
-                "metric": "foobar",
                 "sql": (""),
             },
             [
@@ -30,7 +29,6 @@ pytestmark = pytest.mark.checks
                 "--name=bar",
                 "--user=hans",
                 "--password=wurst",
-                "--metric=foobar",
                 "",
             ],
         ),

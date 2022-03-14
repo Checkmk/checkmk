@@ -1,0 +1,22 @@
+Title: Deprecation of Web API
+Class: feature
+Compatible: incomp
+Component: wato
+Date: 1647270225
+Edition: cre
+Knowledge: undoc
+Level: 2
+Version: 2.1.0b2
+
+The WATO Web API is deprecated with this change. The Web API will continue to
+work with all Checkmk 2.1 releases and removed with Checkmk 2.2.
+
+We recommend migrating all existing scripts that use the Web API to the REST
+API as soon as possible to catch issues early before you move to Checkmk 2.2.
+
+For users upgrading existing sites from 2.0 to 2.1 nothing will change.
+However, sites created with 2.1 will be initialized with a disabled Web API by
+default.
+
+It is possible to enable or disable the Web API manually by using the global
+setting "Site management > Disable Web API" depending on your needs.

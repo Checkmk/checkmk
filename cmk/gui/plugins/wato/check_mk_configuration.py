@@ -1855,6 +1855,30 @@ class RestAPIETagLocking(ConfigVariable):
         )
 
 
+@config_variable_registry.register
+class ConfigVariableEnableWebAPI(ConfigVariable):
+    def group(self):
+        return ConfigVariableGroupSiteManagement
+
+    def domain(self):
+        return ConfigDomainGUI
+
+    def ident(self):
+        return "disable_web_api"
+
+    def valuespec(self):
+        return Checkbox(
+            title=_("Disable Web API"),
+            label=_("Disable the web API"),
+            help=_(
+                "You can use this setting to completely disable the Web API in your site. "
+                "The Checkmk Web API has been superseded by the REST API. The Web API has been "
+                "deprecated with Checkmk 2.1 and will completely be removed with Checkmk 2.2. "
+                "Have a look at werk #13640 for further information."
+            ),
+        )
+
+
 # .
 #   .--WATO----------------------------------------------------------------.
 #   |                     __        ___  _____ ___                         |

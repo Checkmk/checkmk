@@ -97,6 +97,17 @@ def page_api() -> None:
             raise MKUserError(None, 'pretty_print must be "yes" or "no"')
         pretty_print = pretty_print_var == "yes"
 
+        if config.disable_web_api:
+            raise MKUserError(
+                None,
+                _(
+                    'The Web API has been disabled using the global setting "Disable Web API". '
+                    "Before you enable it, please note that the Web API is deprecated with Checkmk "
+                    "2.1 and will be removed with Checkmk 2.2. Please use the REST API instead. "
+                    "Have a look at werk #13640 for further information."
+                ),
+            )
+
         api_call = _get_api_call()
         _check_permissions(api_call)
         request_object = _get_request(api_call)

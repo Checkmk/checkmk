@@ -336,6 +336,10 @@ class CREConfig:
         ]
     )
 
+    # Is set to False for compatibility with pre 2.1 sites. For sites created with 2.1, this setting
+    # is set to True by ConfigGeneratorBasicWATOConfig to disable the Web API.
+    disable_web_api: bool = False
+
     #     _   _               ____  ____
     #    | | | |___  ___ _ __|  _ \| __ )
     #    | | | / __|/ _ \ '__| | | |  _ \

@@ -505,6 +505,7 @@ class Site:
                 self._enabled_liveproxyd_debug_logging()
             self._enable_mkeventd_debug_logging()
             self._enable_gui_debug_logging()
+            self._enable_web_api()
             self._tune_nagios()
 
         if self.install_test_python_modules:
@@ -702,6 +703,14 @@ class Site:
                 "cmk.web.automations": 10,
                 "cmk.web.background-job": 10,
             },
+        )
+
+    # Some parts of the testlib still use the webapi.py. See tests/testlib/web_session.py. Once that
+    # has been moved to the REST API, we can remove this.
+    def _enable_web_api(self) -> None:
+        self.makedirs("etc/check_mk/multisite.d")
+        self.write_text_file(
+            "etc/check_mk/multisite.d/enable-web-api.mk", "disable_web_api = False\n"
         )
 
     def _tune_nagios(self) -> None:

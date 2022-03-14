@@ -383,6 +383,7 @@ class ConfigGeneratorBasicWATOConfig(SampleConfigGenerator):
                     or []
                 ),
             },
+            "disable_web_api": True,
         }
 
         return settings

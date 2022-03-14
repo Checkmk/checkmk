@@ -195,6 +195,7 @@ def test_registered_configvars():
         "wato_use_git",
         "graph_timeranges",
         "rest_api_etag_locking",
+        "disable_web_api",
     ]
 
     if not cmk_version.is_raw_edition():

@@ -156,6 +156,7 @@ def test_default_config_from_plugins():
         "sites",
         "config_storage_format",
         "tags",
+        "disable_web_api",
     ]
 
     if is_enterprise_repo():

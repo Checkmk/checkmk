@@ -13,13 +13,14 @@ from cmk.utils.type_defs import UserId
 from cmk.gui import userdb
 from cmk.gui.exceptions import MKAuthException, MKUserError
 from cmk.gui.login import set_auth_type, verify_automation_secret
+from cmk.gui.type_defs import AuthType
 from cmk.gui.utils.logged_in import UserContext
-from cmk.gui.wsgi.type_defs import AuthType, RFC7662
+from cmk.gui.wsgi.type_defs import RFC7662
 
 
 def automation_auth(user_id: UserId, secret: str) -> Optional[RFC7662]:
     if verify_automation_secret(user_id, secret):
-        return rfc7662_subject(user_id, "automation")
+        return rfc7662_subject(user_id, "bearer")
 
     return None
 
@@ -27,7 +28,7 @@ def automation_auth(user_id: UserId, secret: str) -> Optional[RFC7662]:
 def gui_user_auth(user_id: UserId, secret: str) -> Optional[RFC7662]:
     try:
         if userdb.check_credentials(user_id, secret):
-            return rfc7662_subject(user_id, "cookie")
+            return rfc7662_subject(user_id, "bearer")
     except MKUserError:
         # This is the case of "Automation user rejected". We don't care about that in the REST API
         # because every type of user is allowed in.
@@ -44,7 +45,7 @@ def rfc7662_subject(user_id: UserId, auth_type: AuthType) -> RFC7662:
             The user's user_id
 
         auth_type:
-            One of automation, cookie, web_server, http_header
+            One of automation, cookie, web_server, http_header, bearer
 
     Returns:
         The filled out dictionary.

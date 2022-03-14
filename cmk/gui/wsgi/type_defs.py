@@ -20,11 +20,12 @@ from typing import (
 
 from cmk.utils.type_defs import UserId
 
+from cmk.gui.type_defs import AuthType
+
 Scope = List[str]
 UnixTimeStamp = int  # restrict to positive numbers
 Audience = Union[str, List[str]]
 TokenType = Literal["access_token", "refresh_token"]
-AuthType = Literal["automation", "cookie", "webserver", "http_header"]
 RFC7662 = TypedDict(
     "RFC7662",
     {

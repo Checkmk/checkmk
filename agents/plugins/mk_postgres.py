@@ -1066,7 +1066,6 @@ def main(argv=None):
         level={0: logging.WARN, 1: logging.INFO, 2: logging.DEBUG}.get(opt.verbose, logging.DEBUG),
     )
 
-    dbuser = get_default_postgres_user()
     instances = []
     try:
         postgres_cfg_path = os.path.join(
@@ -1077,6 +1076,7 @@ def main(argv=None):
         dbuser, instances = parse_postgres_cfg(postgres_cfg)
     except Exception:
         _, e = sys.exc_info()[:2]  # python2 and python3 compatible exception logging
+        dbuser = get_default_postgres_user()
         LOGGER.debug("try_parse_config: exception: %s", str(e))
         LOGGER.debug('Using "%s" as default postgres user.', dbuser)
 

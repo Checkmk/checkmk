@@ -468,6 +468,7 @@ def daemon_sets_api_sections():
 @pytest.fixture
 def statefulsets_api_sections() -> Sequence[str]:
     return [
+        "kube_pod_resources_v1",
         "kube_memory_resources_v1",
         "kube_cpu_resources_v1",
         "kube_statefulset_info_v1",

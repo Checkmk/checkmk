@@ -5172,7 +5172,7 @@ class Alternative(ValueSpec):
 
     def __init__(  # pylint: disable=redefined-builtin
         self,
-        elements: list[ValueSpec],
+        elements: Sequence[ValueSpec],
         match: _Optional[Callable[[Any], int]] = None,
         show_alternative_title: bool = False,
         on_change: _Optional[str] = None,

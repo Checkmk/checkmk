@@ -6,6 +6,7 @@
 
 import json
 import urllib.parse
+from enum import Enum
 from functools import lru_cache
 from typing import Mapping, Optional, Sequence, Tuple, Union
 
@@ -172,10 +173,34 @@ def file_name_and_query_vars_from_url(url: str) -> Tuple[str, QueryVars]:
     return _file_name_from_path(split_result.path), urllib.parse.parse_qs(split_result.query)
 
 
-def manual_reference_url(
-    article_name: Optional[str] = None, anchor_name: Optional[str] = None
-) -> str:
-    if article_name is None:
-        return user.get_docs_base_url()
-    anchor: str = "" if anchor_name is None else ("#" + anchor_name)
-    return "%s/%s.html%s" % (user.get_docs_base_url(), article_name, anchor)
+class DocReference(Enum):
+    """All references to the documentation - e.g. "[intro_setup#install|Welcome]" - must be listed
+    in DocReference. The string must consist of the page name and if an anchor exists the anchor
+    name joined by a '#'. E.g. INTRO_SETUP_INSTALL = "intro_setup#install"""
+
+    ACTIVE_CHECKS = "active_checks"
+    ACTIVE_CHECKS_MRPE = "active_checks#mrpe"
+    DASHBOARD_HOST_PROBLEMS = "dashboards#host_problems"
+    DEVEL_CHECK_PLUGINS = "devel_check_plugins"
+    GRAPHING_RRDS = "graphing#rrds"
+    # TODO: Check whether these anchors on the intro page exist and fix/remove broken ones.
+    INTRO_CREATING_FOLDERS = "intro#Creating folders"
+    INTRO_FOLDERS = "intro#folders"
+    INTRO_LINUX = "intro#linux"
+    INTRO_SERVICES = "intro#services"
+    INTRO_WELCOME = "intro_welcome"
+    PIGGYBACK = "piggyback"
+    REGEXES = "regexes"
+    REST_API = "rest_api"
+    WATO_HOSTS = "wato_hosts"
+    WATO_SERVICES = "wato_services"
+    WATO_SERVICES_MANUAL_CHECKS = "wato_services#manual_checks"
+
+
+def doc_reference_url(doc_ref: Optional[DocReference] = None) -> str:
+    base = user.get_docs_base_url()
+    if doc_ref is None:
+        return base
+    if "#" not in doc_ref.value:
+        return f"{base}/{doc_ref.value}.html"
+    return f"{base}/{doc_ref.value.replace('#', '.html#', 1)}"

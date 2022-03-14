@@ -74,7 +74,7 @@ from cmk.gui.type_defs import (
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.mobile import is_mobile
 from cmk.gui.utils.popups import PopupMethod
-from cmk.gui.utils.urls import requested_file_name
+from cmk.gui.utils.urls import doc_reference_url, DocReference, requested_file_name
 
 from ._tag_rendering import (
     HTMLContent,
@@ -992,6 +992,7 @@ class html(ABCHTMLGenerator):
 
         You may add macros like this to the help texts to create links to the user
         manual: [piggyback|Piggyback chapter].
+        All such documentation references must be added to or included in the class DocReference.
         """
         self.write_html(self.render_help(text))
 
@@ -1018,11 +1019,23 @@ class html(ABCHTMLGenerator):
         # text = ".*[<page_name>#<anchor_name>|<link_title>].*"
         # e.g. text = "[intro_setup#install|Welcome]" returns
         #      <a href="https://docs.checkmk.com/master/en/intro_setup.html#install">Welcome</a>
-        return re.sub(
-            r"\[([a-z0-9_-]+)(#[a-z0-9_-]+|)\|([^\]]+)\]",
-            '<a href="%s/\\1.html\\2" target="_blank">\\3</a>' % user.get_docs_base_url(),
-            text,
-        )
+        urls: List[Optional[str]] = []
+        if matches := re.findall(r"(\[([a-z0-9_-]+#?[a-z0-9_-]+|)\|([^\]]+)\])", text):
+            for match in matches:
+                try:
+                    doc_ref: DocReference = DocReference(match[1])
+                    urls.append(doc_reference_url(doc_ref=doc_ref))
+                except ValueError:
+                    urls.append(None)
+
+        for n, match in enumerate(matches):
+            if not urls[n]:
+                text = text.replace(match[0], match[2])
+            else:
+                text = text.replace(
+                    match[0], '<a href="%s" target="_blank">%s</a>' % (urls[n], match[2])
+                )
+        return text
 
     def enable_help_toggle(self) -> None:
         self.have_help = True

@@ -18,7 +18,7 @@ from cmk.utils.version import __version__, edition, get_age_trial, is_expired_tr
 
 from cmk.gui.i18n import _, _l
 from cmk.gui.type_defs import MegaMenu, TopicMenuItem, TopicMenuTopic
-from cmk.gui.utils.urls import manual_reference_url
+from cmk.gui.utils.urls import doc_reference_url, DocReference
 
 
 def any_show_more_items(topics: List[TopicMenuTopic]) -> bool:
@@ -82,7 +82,7 @@ def _help_menu_topics() -> List[TopicMenuTopic]:
                 TopicMenuItem(
                     name="beginners_guide",
                     title=_("Beginner's guide"),
-                    url=manual_reference_url("intro_welcome"),
+                    url=doc_reference_url(DocReference.INTRO_WELCOME),
                     target="_blank",
                     sort_index=10,
                     icon="learning_beginner",
@@ -90,7 +90,7 @@ def _help_menu_topics() -> List[TopicMenuTopic]:
                 TopicMenuItem(
                     name="user_manual",
                     title=_("User manual"),
-                    url=manual_reference_url(),
+                    url=doc_reference_url(),
                     target="_blank",
                     sort_index=20,
                     icon="learning_guide",
@@ -121,7 +121,7 @@ def _help_menu_topics() -> List[TopicMenuTopic]:
                 TopicMenuItem(
                     name="plugin_api_introduction",
                     title=_("Check plugin API introduction"),
-                    url=manual_reference_url("devel_check_plugins"),
+                    url=doc_reference_url(DocReference.DEVEL_CHECK_PLUGINS),
                     target="_blank",
                     sort_index=10,
                     icon={
@@ -143,7 +143,7 @@ def _help_menu_topics() -> List[TopicMenuTopic]:
                 TopicMenuItem(
                     name="rest_api_introduction",
                     title=_("REST API introduction"),
-                    url=manual_reference_url("rest_api"),
+                    url=doc_reference_url(DocReference.REST_API),
                     target="_blank",
                     sort_index=30,
                     icon={

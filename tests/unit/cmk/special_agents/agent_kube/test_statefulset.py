@@ -7,7 +7,10 @@
 from typing import Callable, Sequence
 from unittest.mock import MagicMock, Mock
 
+import pytest
+
 from cmk.special_agents import agent_kube
+from cmk.special_agents.utils_kubernetes.schemata import section
 
 
 def test_write_statefulsets_api_sections_registers_sections_to_be_written(
@@ -38,6 +41,42 @@ def test_write_statefulsets_api_sections_calls_write_sections_for_each_statefuls
         "cluster", [new_statefulset() for _ in range(3)], Mock()
     )
     assert write_sections_mock.call_count == 3
+
+
+@pytest.mark.parametrize("statefulset_pods", [0, 10, 20])
+def test_statefulset_pod_resources_returns_all_pods(
+    statefulset: agent_kube.StatefulSet, statefulset_pods: int
+):
+    resources = dict(statefulset.pod_resources())
+    pod_resources = section.PodResources(**resources)
+    assert sum(len(pods) for _, pods in pod_resources) == statefulset_pods
+
+
+def test_statefulset_pod_resources_one_pod_per_phase(statefulset: agent_kube.StatefulSet):
+    resources = dict(statefulset.pod_resources())
+    pod_resources = section.PodResources(**resources)
+    for _phase, pods in pod_resources:
+        assert len(pods) == 1
+
+
+@pytest.mark.parametrize(
+    "phases", [["running"], ["pending"], ["succeeded"], ["failed"], ["unknown"]]
+)
+def test_statefulset_pod_resources_pods_in_phase(
+    statefulset: agent_kube.StatefulSet, phases, statefulset_pods: int
+):
+    pods = statefulset.pods(phases[0])
+    assert len(pods) == statefulset_pods
+
+
+@pytest.mark.parametrize(
+    "phases", [["running"], ["pending"], ["succeeded"], ["failed"], ["unknown"]]
+)
+def test_statefulset_pod_resources_pods_in_phase_no_phase_param(
+    statefulset: agent_kube.StatefulSet, phases, statefulset_pods: int
+):
+    pods = statefulset.pods()
+    assert len(pods) == statefulset_pods
 
 
 def test_statefulset_memory_resources(

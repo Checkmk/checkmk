@@ -488,10 +488,7 @@ class Deployment(PodOwner):
         )
 
     def pod_resources(self) -> section.PodResources:
-        resources: DefaultDict[str, List[str]] = defaultdict(list)
-        for pod in self._pods:
-            resources[pod.phase].append(pod.name())
-        return section.PodResources(**resources)
+        return _pod_resources(self._pods)
 
     def conditions(self) -> Optional[section.DeploymentConditions]:
         if not self.status.conditions:
@@ -534,10 +531,7 @@ class DaemonSet(PodOwner):
         pod.add_controller(self)
 
     def pod_resources(self) -> section.PodResources:
-        resources: DefaultDict[str, List[str]] = defaultdict(list)
-        for pod in self._pods:
-            resources[pod.phase].append(pod.name())
-        return section.PodResources(**resources)
+        return _pod_resources(self._pods)
 
     def memory_resources(self) -> section.Resources:
         return _collect_memory_resources(self._pods)
@@ -580,6 +574,9 @@ class StatefulSet(PodOwner):
     def add_pod(self, pod: Pod) -> None:
         super().add_pod(pod)
         pod.add_controller(self)
+
+    def pod_resources(self) -> section.PodResources:
+        return _pod_resources(self._pods)
 
     def memory_resources(self) -> section.Resources:
         return _collect_memory_resources(self._pods)
@@ -851,10 +848,7 @@ class Cluster:
         self._pods[pod.uid] = pod
 
     def pod_resources(self) -> section.PodResources:
-        resources: DefaultDict[str, List[str]] = defaultdict(list)
-        for pod in self._pods.values():
-            resources[pod.phase].append(pod.name())
-        return section.PodResources(**resources)
+        return _pod_resources(self._pods.values())
 
     def allocatable_pods(self) -> section.AllocatablePods:
         return section.AllocatablePods(
@@ -935,6 +929,13 @@ def _collect_memory_resources(pods: Sequence[Pod]) -> section.Resources:
 
 def _collect_cpu_resources(pods: Sequence[Pod]) -> section.Resources:
     return aggregate_resources("cpu", [c for pod in pods for c in pod.spec.containers])
+
+
+def _pod_resources(pods: Collection[Pod]) -> section.PodResources:
+    resources: DefaultDict[str, List[str]] = defaultdict(list)
+    for pod in pods:
+        resources[pod.phase].append(pod.name())
+    return section.PodResources(**resources)
 
 
 class JsonProtocol(Protocol):
@@ -1049,6 +1050,7 @@ def write_statefulsets_api_sections(
 
     def output_sections(cluster_statefulset: StatefulSet) -> None:
         sections = {
+            "kube_pod_resources_v1": cluster_statefulset.pod_resources,
             "kube_memory_resources_v1": cluster_statefulset.memory_resources,
             "kube_cpu_resources_v1": cluster_statefulset.cpu_resources,
             "kube_statefulset_info_v1": lambda: statefulset_info(cluster_statefulset, cluster_name),

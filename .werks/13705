@@ -17,10 +17,10 @@ In the past, writing this section in the output of a special agent offered the p
 Since the display of the hosts OS and agent version has been moved out of the "Check_MK" service, this will not only not work anymore, but it will lead to confusing output the new "Check_MK Agent" service.
 
 The reasoning behind this change is this:
-The state (and summary) of the "Check_MK" service should be termined by the successfull or failed <b>operation</b> of the datasources, such as timeouts, refused connections and parsing exceptions.
+The state (and summary) of the "Check_MK" service should be determined by the successfull or failed <b>operation</b> of the datasources, such as timeouts, refused connections and parsing exceptions.
 It should not be concerned with the semantics of the received payload.
 
 If you want to display the version number of the special agent, you have to implement a dedicated service.
 However note that the special agent is on the site, not on the monitored host, so its version is not really a property of the monitored host.
 
-If you want to use the OS information, you have to write your own plugin. If you care about host labels, consider writing a <tt><<<labels>>></tt> compliant section.
+If you want to use the OS information, you have to write your own plugin. If you care about host labels, consider writing a <tt>&lt;&lt;&lt;labels&gt;&gt;&gt;</tt> compliant section.

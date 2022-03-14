@@ -22,7 +22,6 @@ import itertools
 import json
 import logging
 import operator
-import os
 import re
 import sys
 import time
@@ -38,6 +37,8 @@ from kubernetes import client  # type: ignore[import] # pylint: disable=import-e
 
 import cmk.utils.password_store
 import cmk.utils.profile
+
+from cmk.special_agents.utils.request_helper import get_requests_ca
 
 from kubernetes.client.rest import (  # type: ignore[import] # pylint: disable=import-error,ungrouped-imports # isort: skip
     ApiException,
@@ -1454,7 +1455,7 @@ def get_api_client(arguments: argparse.Namespace) -> client.ApiClient:
         urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
         config.verify_ssl = False
     else:
-        config.ssl_ca_cert = os.environ.get("REQUESTS_CA_BUNDLE")
+        config.ssl_ca_cert = get_requests_ca()
 
     return client.ApiClient(config)
 

@@ -243,12 +243,28 @@ def pod_conditions(
     return result
 
 
-def is_control_plane(labels: Optional[Mapping[LabelName, Label]]) -> bool:
-    return labels is not None and (
-        # 1.18 returns an empty string, 1.20 returns 'true'
-        "node-role.kubernetes.io/master" in labels
-        or "node-role.kubernetes.io/control-plane" in labels
-    )
+def _give_root_if_prefix_present(label: LabelName, prefix: str) -> Optional[str]:
+    """
+    >>> _give_root_if_prefix_present("123asd", "123")
+    'asd'
+    >>> _give_root_if_prefix_present("asd123", "123") is None
+    True
+    >>> _give_root_if_prefix_present("asd", "123") is None
+    True
+    """
+    if label.startswith(prefix):
+        return label[len(prefix) :]
+    return None
+
+
+def parse_node_roles(labels: Optional[Mapping[LabelName, Label]]) -> Sequence[str]:
+    if labels is None:
+        return []
+    return [
+        role
+        for label in labels
+        if (role := _give_root_if_prefix_present(label, "node-role.kubernetes.io/")) is not None
+    ]
 
 
 def node_conditions(status: client.V1NodeStatus) -> Optional[Sequence[api.NodeCondition]]:
@@ -379,7 +395,7 @@ def node_from_client(node: client.V1Node, kubelet_health: api.HealthZ) -> api.No
             addresses=node_addresses_from_client(node.status.addresses),
         ),
         resources=parse_node_resources(node),
-        control_plane=is_control_plane(metadata.labels),
+        roles=parse_node_roles(metadata.labels),
         kubelet_info=api.KubeletInfo(
             version=node.status.node_info.kubelet_version,
             proxy_version=node.status.node_info.kube_proxy_version,

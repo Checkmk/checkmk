@@ -300,7 +300,7 @@ def new_node(
             metadata=NodeMetaDataFactory.build(),
             status=node_status,
             resources=node_resources_builder(),
-            control_plane=node_is_control_plane,
+            roles=["control_plane"] if node_is_control_plane else [],
             kubelet_info=KubeletInfoFactory.build(),
         )
 
@@ -312,7 +312,7 @@ def api_to_agent_node(node: api.Node) -> agent_kube.Node:
         metadata=node.metadata,
         status=node.status,
         resources=node.resources,
-        control_plane=node.control_plane,
+        roles=node.roles,
         kubelet_info=node.kubelet_info,
     )
 

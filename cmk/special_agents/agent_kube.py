@@ -611,14 +611,14 @@ class Node(PodOwner):
         metadata: api.NodeMetaData,
         status: api.NodeStatus,
         resources: Dict[str, api.NodeResources],
-        control_plane: bool,
+        roles: Sequence[str],
         kubelet_info: api.KubeletInfo,
     ) -> None:
         super().__init__()
         self.metadata = metadata
         self.status = status
         self.resources = resources
-        self.control_plane = control_plane
+        self.control_plane = "master" in roles or "control_plane" in roles
         self.kubelet_info = kubelet_info
 
     @property
@@ -752,7 +752,7 @@ class Cluster:
                 node_api.metadata,
                 node_api.status,
                 node_api.resources,
-                node_api.control_plane,
+                node_api.roles,
                 node_api.kubelet_info,
             )
             cluster.add_node(node)

@@ -23,6 +23,10 @@ def parse_cisco_cpu_multiitem(info):
 
     parsed = {}
     for idx, util in info[0]:
+        # if cpmCPUTotalPhysicalIndex is 0, the element is not supported
+        # (see CISCO-PROCESS-MIB.txt)
+        if idx == "0":
+            continue
         name = ph_idx_to_desc.get(idx, idx)
         try:
             parsed[name] = {'util': float(util)}

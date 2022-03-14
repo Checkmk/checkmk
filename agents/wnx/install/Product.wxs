@@ -19,534 +19,566 @@ just to signal that real build script was not called -->
 <?define ServiceFolderName = "service"?>
 <?define ServiceName = "CheckMkService"?>
 <?define ServiceDisplayName = "Check MK Service"?>
-<?define ServiceDescription = "Check MK monitoring and management Service"?>
+<?define ServiceDescription = "Check MK monitoring and management Service 2.1"?>
 <?define ServiceStart = "demand"?>
 
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi"
      xmlns:util='http://schemas.microsoft.com/wix/UtilExtension'>
-  <Product Id="*"
-           UpgradeCode="$(var.ProductUpgradeCode)"
-           Name="$(var.ProductName)"
-           Version="$(var.ProductVersion)"
-           Manufacturer="$(var.CompanyName)"
-           Language="1033">
+    <Product Id="*"
+             UpgradeCode="$(var.ProductUpgradeCode)"
+             Name="$(var.ProductName)"
+             Version="$(var.ProductVersion)"
+             Manufacturer="$(var.CompanyName)"
+             Language="1033">
 
-    <Package Id="$(var.PackageCode)"
-             InstallerVersion="200"
-             Platform="x86"
-             Compressed="yes"
-             InstallScope="perMachine" />
+        <Package Id="$(var.PackageCode)"
+                 InstallerVersion="200"
+                 Platform="x86"
+                 Compressed="yes"
+                 InstallScope="perMachine" />
 
-    <Media Id="1"
-           Cabinet="fixed.cab"
-           CompressionLevel="none"
-           EmbedCab="yes"/>
+        <Media Id="1"
+               Cabinet="fixed.cab"
+               CompressionLevel="none"
+               EmbedCab="yes"/>
 
-    <Media Id="2"
-           Cabinet="product.cab"
-           CompressionLevel="none"
-           EmbedCab="yes"/>
+        <Media Id="2"
+               Cabinet="product.cab"
+               CompressionLevel="none"
+               EmbedCab="yes"/>
 
-    <!-- Property Id="ALLUSERS" Value="1" /<- This option already set -->
-    <Property Id="REINSTALLMODE" Value="amus" />
+        <!-- Property Id="ALLUSERS" Value="1" /<- This option already set -->
+        <Property Id="REINSTALLMODE" Value="amus" />
 
-    <!-- Repair disabled 
+        <!-- Repair disabled 
     <Property Id="ARPNOREPAIR" Value="yes" Secure="yes" />
     -->
 
-    <!-- Help Link in the Control Panel -->
-    <Property Id="ARPHELPLINK" Value="https://checkmk.com" />
-    <!-- Support Link in the Control Panel -->
-    <Property Id="ARPURLINFOABOUT" Value="https://checkmk.com" />
-    
-     <!-- Administrative rights is mandatory -->
-    <Property Id="MSIUSEREALADMINDETECTION" Value="1" />
+        <!-- Help Link in the Control Panel -->
+        <Property Id="ARPHELPLINK" Value="https://checkmk.com" />
+        <!-- Support Link in the Control Panel -->
+        <Property Id="ARPURLINFOABOUT" Value="https://checkmk.com" />
 
-      <!-- ATTENTION: we do not support OS earlier as Windows Vista -->
-      <Condition Message="This version supports only Windows Vista, Windows Server 2008, or higher. Windows Build: [WindowsBuild], Version: [VersionNT]">
-          <![CDATA[Installed OR  (VersionNT >= 600)]]>
-      </Condition>
+        <!-- Administrative rights is mandatory -->
+        <Property Id="MSIUSEREALADMINDETECTION" Value="1" />
 
-      <!-- ATTENTION: keep string below exactly ( VersionNT >= 600 ) -->
-      <!-- This string may be patched by WATO, check cmk/utils/msi_patch.py -->
-      <!-- See: https://docs.microsoft.com/de-at/windows/win32/msi/operating-system-property-values -->
-      <Condition Message="Agent update failed: OS is too old. Please, check the agent rule &quot;Python environment&quot; and set it to &quot;Deploy legacy environment&quot;">
-          <![CDATA[Installed OR  ( VersionNT >= 600 )]]>
-      </Condition>
+        <!-- ATTENTION: we do not support OS earlier as Windows Vista -->
+        <Condition Message="This version supports only Windows Vista, Windows Server 2008, or higher. Windows Build: [WindowsBuild], Version: [VersionNT]">
+            <![CDATA[Installed OR  (VersionNT >= 600)]]>
+        </Condition>
 
-      <!-- Other links
+        <!-- ATTENTION: keep string below exactly ( VersionNT >= 600 ) -->
+        <!-- This string may be patched by WATO, check cmk/utils/msi_patch.py -->
+        <!-- See: https://docs.microsoft.com/de-at/windows/win32/msi/operating-system-property-values -->
+        <Condition Message="Agent update failed: OS is too old. Please, check the agent rule &quot;Python environment&quot; and set it to &quot;Deploy legacy environment&quot;">
+            <![CDATA[Installed OR  ( VersionNT >= 600 )]]>
+        </Condition>
+
+        <!-- Other links
     <Property Id="ARPURLUPDATEINFO" Value="https://checkmk.com" />
     <Property Id="ARPAUTHORIZEDCDFPREFIX" Value="https://checkmk.com/ARPAUTHORIZEDCDFPREFIX" />
      -->
-    
-    <!-- 
+
+        <!-- 
     <MajorUpgrade DowngradeErrorMessage="A newer version of [ProductName] is already installed. Stopping installation" />
     this code is disabled, because bakery/msi-update is not able to upgrade versions correctly 
     -->
-    <MajorUpgrade AllowDowngrades="yes" />
-    <Icon Id="tribe29.ico" SourceFile="tribe29.ico" />
-    <Property Id="ARPPRODUCTICON" Value="tribe29.ico" />      
+        <MajorUpgrade AllowDowngrades="yes" />
+        <Icon Id="tribe29.ico" SourceFile="tribe29.ico" />
+        <Property Id="ARPPRODUCTICON" Value="tribe29.ico" />
+        <Property Id="INSTALLEDSERVICEDESCRIPTION">
+            <RegistrySearch Id="InstalledServiceDescription"
+                            Root="HKLM"
+                            Key="SYSTEM\CurrentControlSet\Services\CheckMkService"
+                            Name="Description"
+                            Type="raw" />
+        </Property>
 
-    <Upgrade Id="$(var.ProductUpgradeCode)">
-      <UpgradeVersion Minimum="$(var.ProductVersion)"
-                      Property="NEWERVERSIONDETECTED"/>
-      <UpgradeVersion Minimum="0.0.0"
-                      Maximum="$(var.ProductVersion)"
-                      IncludeMinimum="yes"
-                      IncludeMaximum="no"
-                      Property="OLDERVERSIONBEINGUPGRADED"/>
-    </Upgrade>
+        <Upgrade Id="$(var.ProductUpgradeCode)">
+            <UpgradeVersion Minimum="$(var.ProductVersion)"
+                            Property="NEWERVERSIONDETECTED"/>
+            <UpgradeVersion Minimum="0.0.0"
+                            Maximum="$(var.ProductVersion)"
+                            IncludeMinimum="yes"
+                            IncludeMaximum="no"
+                            Property="OLDERVERSIONBEINGUPGRADED"/>
+        </Upgrade>
 
 
-    <Feature Id="ProductFeature" Title="Check MK Agent" Level="1">
-      <ComponentGroupRef Id="ProductComponents" />
-    </Feature>
-    <Feature Id="plugins" Title="Plugins Folder" Level="1">
-      <ComponentRef Id="plugins"/>
-    </Feature>
-    <Feature Id="providers" Title="Providers Folder" Level="1">
-      <ComponentRef Id="providers"/>
-    </Feature>
-    <Feature Id="utils" Title="Utils Folder" Level="1">
-      <ComponentRef Id="utils"/>
-    </Feature>
-    <Feature Id="install" Title="Install Folder" Level="1">
-      <ComponentRef Id="install"/>
-    </Feature>
-    <Feature Id="clean_feature" Title="Program Data Folder Clean" Level="1">
-    </Feature>
-    
+        <Feature Id="ProductFeature" Title="Check MK Agent" Level="1">
+            <ComponentGroupRef Id="ProductComponents" />
+        </Feature>
+        <Feature Id="plugins" Title="Plugins Folder" Level="1">
+            <ComponentRef Id="plugins"/>
+        </Feature>
+        <Feature Id="providers" Title="Providers Folder" Level="1">
+            <ComponentRef Id="providers"/>
+        </Feature>
+        <Feature Id="utils" Title="Utils Folder" Level="1">
+            <ComponentRef Id="utils"/>
+        </Feature>
+        <Feature Id="install" Title="Install Folder" Level="1">
+            <ComponentRef Id="install"/>
+        </Feature>
+        <Feature Id="clean_feature" Title="Program Data Folder Clean" Level="1">
+        </Feature>
 
-    <Directory Id="TARGETDIR" Name="SourceDir">
-      <Directory Id="ProgramFilesFolder">
-        <Directory Id="INSTALLFOLDER_ROOT" Name="$(var.CompanyFolderName)">
-          <Directory Id="INSTALLFOLDER_SERVICE" Name="$(var.ServiceFolderName)">
-            <!--      
+
+        <Directory Id="TARGETDIR" Name="SourceDir">
+            <Directory Id="ProgramFilesFolder">
+                <Directory Id="INSTALLFOLDER_ROOT" Name="$(var.CompanyFolderName)">
+                    <Directory Id="INSTALLFOLDER_SERVICE" Name="$(var.ServiceFolderName)">
+                        <!--      
 
             <Component Id="remove_install_protocol" Guid="{C0E6D8DD-1895-4947-80BE-A7B4F0129C60}">
               <RemoveFile Id="RemoveInstallProtocol" On ="uninstall" Name="install.protocol"/>
             </Component>
             -->
-            <Directory Id="providers" Name="providers">
-              <Component Id="providers" Guid="{E639320D-8326-49BC-84E4-4D9218333E3F}"
-                SharedDllRefCount="no" KeyPath="no" NeverOverwrite="no" Permanent="no" Transitive="no"
-                Win64="no" Location="either">
-                <CreateFolder/>
-              </Component>
+                        <Directory Id="providers" Name="providers">
+                            <Component Id="providers" Guid="{E639320D-8326-49BC-84E4-4D9218333E3F}"
+                              SharedDllRefCount="no" KeyPath="no" NeverOverwrite="no" Permanent="no" Transitive="no"
+                              Win64="no" Location="either">
+                                <CreateFolder/>
+                            </Component>
+                        </Directory>
+                        <Directory Id="plugins" Name="plugins">
+                            <Component Id="plugins" Guid="{A6E4AC5A-B0CB-461D-A8E4-4C0C8436E2E3}"
+                              SharedDllRefCount="no" KeyPath="no" NeverOverwrite="no" Permanent="no" Transitive="no"
+                              Win64="no" Location="either">
+                                <CreateFolder/>
+                            </Component>
+                        </Directory>
+                        <Directory Id="install" Name="install">
+                            <Component Id="install" Guid="{040A6E7A-CED1-4431-954D-5735AC5F28C0}"
+                              SharedDllRefCount="no" KeyPath="no" NeverOverwrite="no" Permanent="no" Transitive="no"
+                              Win64="no" Location="either">
+                                <CreateFolder/>
+                            </Component>
+                        </Directory>
+                        <Directory Id="utils" Name="utils">
+                            <Component Id="utils" Guid="{F2285297-4495-4BAD-8874-F92684E732BE}"
+                              SharedDllRefCount="no" KeyPath="no" NeverOverwrite="no" Permanent="no" Transitive="no"
+                              Win64="no" Location="either">
+                                <CreateFolder/>
+                            </Component>
+                        </Directory>
+                    </Directory>
+                </Directory>
             </Directory>
-            <Directory Id="plugins" Name="plugins">
-              <Component Id="plugins" Guid="{A6E4AC5A-B0CB-461D-A8E4-4C0C8436E2E3}"
-                SharedDllRefCount="no" KeyPath="no" NeverOverwrite="no" Permanent="no" Transitive="no"
-                Win64="no" Location="either">
-                <CreateFolder/>
-              </Component>
+            <Directory Id="CommonAppDataFolder">
+                <Directory Id="CmkFolder" Name="checkmk">
+                    <Directory Id="UserFolder" Name="agent">
+
+                    </Directory>
+                </Directory>
             </Directory>
-            <Directory Id="install" Name="install">
-              <Component Id="install" Guid="{040A6E7A-CED1-4431-954D-5735AC5F28C0}"
-                SharedDllRefCount="no" KeyPath="no" NeverOverwrite="no" Permanent="no" Transitive="no"
-                Win64="no" Location="either">
-                <CreateFolder/>
-              </Component>
-            </Directory>
-            <Directory Id="utils" Name="utils">
-              <Component Id="utils" Guid="{F2285297-4495-4BAD-8874-F92684E732BE}"
-                SharedDllRefCount="no" KeyPath="no" NeverOverwrite="no" Permanent="no" Transitive="no"
-                Win64="no" Location="either">
-                <CreateFolder/>
-              </Component>
-            </Directory>
-          </Directory>
         </Directory>
-      </Directory>
-      <Directory Id="CommonAppDataFolder">
-        <Directory Id="CmkFolder" Name="checkmk">
-          <Directory Id="UserFolder" Name="agent">
-       
-          </Directory>
-        </Directory>
-      </Directory>
-    </Directory>
-    <CustomAction Id="uninstall_alert"
-        Directory  ="INSTALLFOLDER_SERVICE"
-        ExeCommand ='[INSTALLFOLDER_SERVICE]check_mk_agent.exe uninstall_alert'
-        Execute    ="deferred"
-        Impersonate="no"
-        Return     ="ignore"/>
 
-    <InstallExecuteSequence>
-        <Custom Action='uninstall_alert' Sequence="1504" >REMOVE="ALL"</Custom>
-    </InstallExecuteSequence>
-
-    <!-- Step 2: Add files to your installer package -->
-    <DirectoryRef Id="providers">
-    </DirectoryRef>
-    
-    <DirectoryRef Id="install">
-       
-        <Component Id="check_mk_install_yml_" Guid="{31886DF5-F17B-46AD-BEBF-4B4925A18390}">
-            <File Id="check_mk_install_yml"
-                  Source="resources\check_mk.install.yml"
-                  KeyPath="yes"
-                  Checksum="yes"
-                  DiskId="2"/>
-         </Component>
-        
-        
-        <Component Id="plugins_cap_" Guid="{01620CDE-E8AD-4DB9-926D-430D8C140340}">
-            <File Id="plugins_cap"
-                  Source="resources\plugins.cap"
-                  KeyPath="yes"
-                  Checksum="yes" 
-                  DiskId="2"/>
-        </Component>
-      
-        <Component Id="checkmk.dat" Guid="{77EB5469-AD06-4B52-A408-C2F4151C7114}">
-            <File Id="checkmk.dat"
-                  Source="resources\checkmk.dat" 
-                  KeyPath="yes"
-                  Checksum="yes"
-                  DiskId="2" />
-        </Component>
-
-        <Component Id="check_mk.user.yml" Guid="{FB530333-4B0E-4C13-BF01-4F980B1C7332}">
-            <File Id="check_mk.user.yml" 
-                  Source="resources\check_mk.user.yml" 
-                  KeyPath="yes"
-                  Checksum="yes"
-                  DiskId="1" />
-        </Component>
-
-        <!-- Modules -->
-        <Component Id="python_3.cab" Guid="{7E376854-A4C0-43F1-BA93-170EDF3679A5}">
-            <File Id="python_3.cab"
-                Source="resources\modules\python-3.cab"
-                KeyPath="yes"
-                Checksum="yes"
-                DiskId="2"/>
-        </Component>
+        <?if $(var.Platform)~="x64" ?>
+        <CustomAction Id="CallVersion" BinaryKey="WixCA" DllEntry="CAQuietExec64" Execute="deferred" Return="ignore"/>
+        <?else ?>
+        <CustomAction Id="CallVersion" BinaryKey="WixCA" DllEntry="CAQuietExec" Execute="deferred" Return="ignore"/>
+        <?endif ?>
 
 
-    </DirectoryRef>
 
-    <DirectoryRef Id="utils">
+        <CustomAction Id="uninstall_alert"
+            Directory  ="INSTALLFOLDER_SERVICE"
+            ExeCommand ='[INSTALLFOLDER_SERVICE]check_mk_agent.exe uninstall_alert'
+            Execute    ="deferred"
+            Impersonate="no"
+            Return     ="ignore"/>
 
-        <Component Id="execute_update.cmd" Guid="{3DD686FF-B151-4498-B853-3EB591EBB0C3}">
-              <File Id="execute_update.cmd"
-                      Source="resources\execute_update.cmd"
+        <!-- assign the string (command) to save_registry_exec -->
+        <CustomAction Id="save_version_exec"
+                                Property="save_version"
+                                Value="&quot;[%windir]\System32\WindowsPowerShell\v1.0\powershell.exe&quot; -NoLogo -NonInteractive -InputFormat None -NoProfile New-Item -Force  -Path &quot;[%ProgramData]&quot; -Name &quot;cmk_agent_uninstall.txt&quot; -Value '[INSTALLEDSERVICEDESCRIPTION]'"
+                                Execute="immediate" />
+
+        <!-- Deferred execution of the above script -->
+        <CustomAction Id="save_version"
+                  BinaryKey="WixCA"
+                  DllEntry="CAQuietExec64"
+                  Execute="deferred"
+                  Return="ignore"
+                  Impersonate="no" />
+
+        <InstallExecuteSequence>
+            <Custom Action='save_version_exec' Sequence="1501" ><![CDATA[INSTALLEDSERVICEDESCRIPTION <> ""]]></Custom>
+            <Custom Action='save_version' Sequence="1502" ><![CDATA[INSTALLEDSERVICEDESCRIPTION <> ""]]></Custom>
+            <Custom Action='uninstall_alert' Sequence="1504" >REMOVE="ALL"</Custom>
+        </InstallExecuteSequence>
+
+        <!-- Step 2: Add files to your installer package -->
+        <DirectoryRef Id="providers">
+        </DirectoryRef>
+
+        <DirectoryRef Id="install">
+
+            <Component Id="check_mk_install_yml_" Guid="{31886DF5-F17B-46AD-BEBF-4B4925A18390}">
+                <File Id="check_mk_install_yml"
+                      Source="resources\check_mk.install.yml"
+                      KeyPath="yes"
+                      Checksum="yes"
+                      DiskId="2"/>
+            </Component>
+
+
+            <Component Id="plugins_cap_" Guid="{01620CDE-E8AD-4DB9-926D-430D8C140340}">
+                <File Id="plugins_cap"
+                      Source="resources\plugins.cap"
+                      KeyPath="yes"
+                      Checksum="yes"
+                      DiskId="2"/>
+            </Component>
+
+            <Component Id="checkmk.dat" Guid="{77EB5469-AD06-4B52-A408-C2F4151C7114}">
+                <File Id="checkmk.dat"
+                      Source="resources\checkmk.dat"
+                      KeyPath="yes"
+                      Checksum="yes"
+                      DiskId="2" />
+            </Component>
+
+            <Component Id="check_mk.user.yml" Guid="{FB530333-4B0E-4C13-BF01-4F980B1C7332}">
+                <File Id="check_mk.user.yml"
+                      Source="resources\check_mk.user.yml"
                       KeyPath="yes"
                       Checksum="yes"
                       DiskId="1" />
             </Component>
 
-    </DirectoryRef>
+            <!-- Modules -->
+            <Component Id="python_3.cab" Guid="{7E376854-A4C0-43F1-BA93-170EDF3679A5}">
+                <File Id="python_3.cab"
+                    Source="resources\modules\python-3.cab"
+                    KeyPath="yes"
+                    Checksum="yes"
+                    DiskId="2"/>
+            </Component>
 
-    <DirectoryRef Id="plugins">
-      <Component Id="cmp14A70A7296CB588F156BBC06BA51D2E3" Guid="{55386E71-BCE4-4E58-A7C1-7506317CF388}">
-        <File Id="fil0D8E5C0605B7AABBE4E3650D150DC37F" KeyPath="yes" Source = "..\..\windows\plugins\ad_replication.bat" DiskId="1" />
-      </Component>
-      <Component Id="cmpBFADA0486A248D40B4365D85892EA124" Guid="{E51579A8-1B54-44F1-8939-9152B23D3ACC}">
-        <File Id="fil9D136F6EB743B60B3992FF7285F8B14D" KeyPath="yes" Source="..\..\windows\plugins\arcserve_backup.ps1" DiskId="1" />
-      </Component>
-      <Component Id="cmp61BBFBF9B8A5AB1F142A3B2EF7ACA7FF" Guid="{B212E12B-A293-47C3-9960-E1CD3CD1F3D6}">
-        <File Id="fil91D110DCF5FAEC3700A334A3D96D9774" KeyPath="yes" Source="..\..\windows\plugins\citrix_farm.ps1" DiskId="1" />
-      </Component>
-      <Component Id="cmp010EC0D0C899D89CC77140C6643B04AC" Guid="{73CFBEA4-30B4-4211-9B77-6B1D6CA5263E}">
-        <File Id="fil133D59036043DA9F7A06816349E9C910" KeyPath="yes" Source="..\..\windows\plugins\citrix_licenses.vbs" DiskId="1"  />
-      </Component>
-      <Component Id="cmpABBC9DF796FC09C181EC9B2D01A62525" Guid="{24BE0241-312F-45D9-B547-9C536CD69C12}">
-        <File Id="fil68F9AD67E8F26BC4712A85950742D48F" KeyPath="yes" Source="..\..\windows\plugins\citrix_xenapp.ps1" DiskId="1"  />
-      </Component>
-      <Component Id="cmp832B7FCA61C9CFF8F1CA5C6FA13B5454" Guid="{46C91E1B-97E0-4261-94FA-2DD6B6651EDC}">
-        <File Id="fil2A101DFE6D15B518E2F1E50C87ECC221" KeyPath="yes" Source="..\..\windows\plugins\hyperv_vms.ps1" DiskId="1"  />
-      </Component>
-      <Component Id="cmpE9245496997CBB452C7AB2DD036AA4DD" Guid="{B53B231C-FFFF-405C-AAC4-88BE73233A66}">
-        <File Id="fil1DAD57269AB73A084B862EC3C5DE5A71" KeyPath="yes" Source="..\..\windows\plugins\hyperv_vms_guestinfos.ps1" DiskId="1"  />
-      </Component>
-      <Component Id="cmp9A6397189697490FEDA525CB1466EFAA" Guid="{06A9C936-E99E-4041-B75D-0B663C1F45A4}">
-        <File Id="fil9FC37D392CCD6754BAC8051683D40DD1" KeyPath="yes" Source="..\..\windows\plugins\kaspersky_av_client.vbs" DiskId="1"  />
-      </Component>
-      <Component Id="cmp7B7D687D53F2D4CECFA13EBE1BE3801E" Guid="{DEA3C541-D345-4147-8A46-8FF86DAEE966}">
-        <File Id="fil6C23EA1FD057C5625D316AB8C9864258" KeyPath="yes" Source="..\..\windows\plugins\mcafee_av_client.bat" DiskId="1"  />
-      </Component>
-      <Component Id="cmp2A9B7CC157BFEF8A29D75CC2F64A5A02" Guid="{5E8AF8F7-898B-4169-83FE-83986BF0030F}">
-        <File Id="fil84657EAECE3BB41DF4A59FB2E0B5B599" KeyPath="yes" Source="..\..\windows\plugins\megaraid.bat" DiskId="1"  />
-      </Component>
-      <Component Id="cmpC93DA459EC69F6EE0183382A29CB8174" Guid="{0935A7A0-51FB-4107-B610-F29391E93259}">
-        <File Id="fil683F1F5CE5408AC623A93394DFCEEE48" KeyPath="yes" Source="..\..\windows\plugins\mk_dhcp_enabled.bat" DiskId="1"  />
-      </Component>
-      <Component Id="cmp657B6B6F132543FC84EC56F7B0DAB6ED" Guid="{1C2AEC02-1673-4B40-B147-0B001188DC5A}">
-        <File Id="filE5741C46E1FC38FBCAF8323A42CEC30F" KeyPath="yes" Source="..\..\windows\plugins\mk_inventory.vbs" DiskId="1"  />
-      </Component>
-      <Component Id="cmpDD7387A69094F0C08D755786377BE916" Guid="{3477B066-6AC0-4031-A8AF-3C79571E4C39}">
-        <File Id="fil4184D51F5A0121840C425BBCB6B53F42" KeyPath="yes" Source="..\..\windows\plugins\mk_mysql.vbs" DiskId="1"  />
-      </Component>
-      <Component Id="cmp5ADA772C7BDFD80499DCC49F48A4D27D" Guid="{EDC7B756-0182-48BA-85D5-9016B4797E7E}">
-        <File Id="fil8D6029E4806FCF205FE8D37573EDFBA4" KeyPath="yes" Source="..\..\windows\plugins\mk_oracle.ps1" DiskId="1"  />
-      </Component>
-      <Component Id="cmp06FAFC985397646477170C3A9EC578DF" Guid="{2F712A51-EB09-4BB6-B17B-F7ADC24D61E8}">
-        <File Id="fil1CA84851126C72D15B8FF7FBD056AD7F" KeyPath="yes" Source="..\..\windows\plugins\msexch_dag.ps1" DiskId="1"  />
-      </Component>
-      <Component Id="cmp2CF5BD4FBED2352573D1A8CEC68D99A8" Guid="{EC4BE995-16D5-48CE-BDD9-B7870D56A087}">
-        <File Id="filFAAA245C81E32BBF2AC489BF7B676C55" KeyPath="yes" Source="..\..\windows\plugins\msexch_database.ps1" DiskId="1"  />
-      </Component>
-      <Component Id="cmp44A5CA3D1E13BADB6759D3A42DE39C1E" Guid="{6FC09D3B-BC7D-4CD9-9877-42800C61A2CE}">
-        <File Id="filF71A5557521BC78DCADD3FBD0A4664FD" KeyPath="yes" Source="..\..\windows\plugins\mssql.vbs" DiskId="1"  />
-      </Component>
-      <Component Id="cmp3823AD91DED5D234942D302869EA2459" Guid="{9DB98C17-62EA-4F57-91E6-137BDC88F02D}">
-        <File Id="fil53CEAB102B917C0FF7143AA4E2BB5DB6" KeyPath="yes" Source="..\..\windows\plugins\netstat_an.bat" DiskId="1"  />
-      </Component>
-      <Component Id="cmpF776CAE45639A529E8686CEDEF56DAA4" Guid="{3580B9B5-81D4-4C65-A8D3-F31EBB9B8DB0}">
-        <File Id="fil4552A185F3A06FE0B3543EA0C43708B9" KeyPath="yes" Source="..\..\windows\plugins\rds_licenses.vbs" DiskId="1"  />
-      </Component>
-      <Component Id="cmpC5A956A870678ABFCA74D5813DD79858" Guid="{536A7F3B-ED66-412B-8688-E27521D31207}">
-        <File Id="fil939214DE697F4A3FEF7A1E5E8138BD31" KeyPath="yes" Source="..\..\windows\plugins\rstcli.bat" DiskId="1"  />
-      </Component>
-      <Component Id="cmpC7E325AEAF544AE491303C332363D403" Guid="{767D056E-0C49-464F-AE1D-B86A8C706090}">
-        <File Id="fil39FCA609D48668F872A8A406140D08E5" KeyPath="yes" Source="..\..\windows\plugins\sansymphony.ps1" DiskId="1"  />
-      </Component>
-      <Component Id="cmp616C56CB91563F336410622442A506DD" Guid="{C5DE0D82-10FC-47C3-984D-BFA1934BB5C6}">
-        <File Id="filD5C8E30BCE07EF0B0B0DD7CC7971FB60" KeyPath="yes" Source="..\..\windows\plugins\storcli.bat" DiskId="1"  />
-      </Component>
-      <Component Id="cmpEB5FB6D22022101559F1F409BB831C49" Guid="{F629A957-9815-4FF1-B581-89E00DF79D2F}">
-        <File Id="filB7EA8E8A131B2E0E6A82607467136876" KeyPath="yes" Source="..\..\windows\plugins\tsm_checks.bat" DiskId="1"  />
-      </Component>
-      <Component Id="cmp3670A4519398D9520126C6DC345E0E50" Guid="{3AAFCA53-D68E-4E07-B432-467858C7E327}">
-        <File Id="fil5662B4A07F89026B3C146D5EE4504E02" KeyPath="yes" Source="..\..\windows\plugins\veeam_backup_status.ps1" DiskId="1"  />
-      </Component>
-      <Component Id="cmp601FE4ED2C2FD3F546593475F9666973" Guid="{06DB2D8D-BCAE-4078-855B-29C1F7144BFA}">
-        <File Id="filEF6F805C99D9377D6BF80FE6B7E011F6" KeyPath="yes" Source="..\..\windows\plugins\windows_broadcom_bonding.bat" DiskId="1"  />
-      </Component>
-      <Component Id="cmp8A6994FC62D135D9A6BA2E01B62043FF" Guid="{C7694E56-009B-49B8-B846-8DF3FBBE1385}">
-        <File Id="fil87F308F055FD29281552B9E7CA175107" KeyPath="yes" Source="..\..\windows\plugins\windows_if.ps1" DiskId="1"  />
-      </Component>
-      <Component Id="cmpDA3AA5A21788961EA252DF4F86230677" Guid="{178B1BD1-2F7E-46C0-BA10-EE030F027FBD}">
-        <File Id="fil0E43AE5883F9C6E509B57083C9A3184E" KeyPath="yes" Source="..\..\windows\plugins\windows_intel_bonding.bat" DiskId="1"  />
-      </Component>
-      <Component Id="cmp6C2C816B1A2BFFA73BA877CEF0A285F8" Guid="{CF2F4F05-DE6B-4936-AA34-3D7248DD83F5}">
-        <File Id="filF46ABE49F18E73AE3C8969D0619BCB5B" KeyPath="yes" Source="..\..\windows\plugins\windows_multipath.vbs" DiskId="1"  />
-      </Component>
-      <Component Id="cmp10FDAC6C36BC91AC9660DCD519E0EBD3" Guid="{1669BE8A-ED8E-45A9-891C-ED0F1D479CA1}">
-        <File Id="fil6C6BD73C2966F9AD5B4D0A8392AC7458" KeyPath="yes" Source="..\..\windows\plugins\windows_os_bonding.ps1" DiskId="1"  />
-      </Component>
-      <Component Id="cmp57F6981D839AA296FACB18CA0B80F385" Guid="{4E4D51FC-3829-4CE5-B26F-022DA372B3B0}">
-        <File Id="fil3C227A99C2CDD7FA84B1310AD2C5A01A" KeyPath="yes" Source="..\..\windows\plugins\windows_tasks.ps1" DiskId="1"  />
-      </Component>
-      <Component Id="cmp61E0F87AE1301C873DCBE5B46E029A77" Guid="{A7BA9FFC-958B-45FF-A530-A6E3C9A5EBA3}">
-        <File Id="fil15C29091CE6AA9903FDCAF7095E86B15" KeyPath="yes" Source="..\..\windows\plugins\windows_updates.vbs" DiskId="1"  />
-      </Component>
-      <Component Id="cmp1C47F228C3994B4CAEF42FB94962ABD2" Guid="{B89DC847-FC4B-4868-A5D6-8F1B915D20CC}">
-        <File Id="fil22DEF483A73CED9FD288835C50E1B29E" KeyPath="yes" Source="..\..\windows\plugins\win_dhcp_pools.bat" DiskId="1"  />
-      </Component>
-      <Component Id="cmp96008BD5424F4E9D0BF1111A1E4EA3C3" Guid="{BCE8E91B-B645-4C89-A371-7ABF3F87121D}">
-        <File Id="fil70F9F92ED57B6C727E3FEDA8CD7856EB" KeyPath="yes" Source="..\..\windows\plugins\win_dmidecode.bat" DiskId="1"  />
-      </Component>
-      <Component Id="cmp8B610C872802BC16FE56FCA23BF098AD" Guid="{BBB128AC-DBD9-4B88-8824-4602E33C2950}">
-        <File Id="filFBD6D6657D952271E70BBABB024D2F08" KeyPath="yes" Source="..\..\windows\plugins\win_license.bat" DiskId="1"  />
-      </Component>
-      <Component Id="cmp11787B278B3DC312240FABB58B837C20" Guid="{768D5B88-D421-4C7A-96B4-436FF9C1F390}">
-        <File Id="fil46A0DC56ECCE3C41483B1E4CD7708C4D" KeyPath="yes" Source="..\..\windows\plugins\win_printers.ps1" DiskId="1"  />
-      </Component>
-      <Component Id="cmpD065F5D090988C41C559F2AAD37A744F" Guid="{379B00CD-2EF9-4EB2-9F97-AF325EC9814C}">
-        <File Id="fil0F589A3A337908339F3BFAE265EAF22C" KeyPath="yes" Source="..\..\windows\plugins\wmic_if.bat" DiskId="1"  />
-      </Component>
-    </DirectoryRef>
 
-    <!-- Step 3: Tell WiX to install the files -->
-    <Feature Id="installable_binaries" Title="Binaries to be Installed" Level="1">
-      <ComponentRef Id="check_mk_install_yml_" />
-      <ComponentRef Id="plugins_cap_" />
-      <ComponentRef Id="checkmk.dat" />
-      <ComponentRef Id="execute_update.cmd" />
-      <ComponentRef Id="check_mk.user.yml" />
-        
-      <!-- Modules -->
-      <ComponentRef Id="python_3.cab" />
-    </Feature>
+        </DirectoryRef>
 
-    <Feature Id="plugins_binaries" Title="Plugins for Windows" Level="1">
-      <ComponentRef Id="cmp14A70A7296CB588F156BBC06BA51D2E3" />
-      <ComponentRef Id="cmpBFADA0486A248D40B4365D85892EA124" />
-      <ComponentRef Id="cmp61BBFBF9B8A5AB1F142A3B2EF7ACA7FF" />
-      <ComponentRef Id="cmp010EC0D0C899D89CC77140C6643B04AC" />
-      <ComponentRef Id="cmpABBC9DF796FC09C181EC9B2D01A62525" />
-      <ComponentRef Id="cmp832B7FCA61C9CFF8F1CA5C6FA13B5454" />
-      <ComponentRef Id="cmpE9245496997CBB452C7AB2DD036AA4DD" />
-      <ComponentRef Id="cmp9A6397189697490FEDA525CB1466EFAA" />
-      <ComponentRef Id="cmp7B7D687D53F2D4CECFA13EBE1BE3801E" />
-      <ComponentRef Id="cmp2A9B7CC157BFEF8A29D75CC2F64A5A02" />
-      <ComponentRef Id="cmpC93DA459EC69F6EE0183382A29CB8174" />
-      <ComponentRef Id="cmp657B6B6F132543FC84EC56F7B0DAB6ED" />
-      <ComponentRef Id="cmpDD7387A69094F0C08D755786377BE916" />
-      <ComponentRef Id="cmp5ADA772C7BDFD80499DCC49F48A4D27D" />
-      <ComponentRef Id="cmp06FAFC985397646477170C3A9EC578DF" />
-      <ComponentRef Id="cmp2CF5BD4FBED2352573D1A8CEC68D99A8" />
-      <ComponentRef Id="cmp44A5CA3D1E13BADB6759D3A42DE39C1E" />
-      <ComponentRef Id="cmp3823AD91DED5D234942D302869EA2459" />
-      <ComponentRef Id="cmpF776CAE45639A529E8686CEDEF56DAA4" />
-      <ComponentRef Id="cmpC5A956A870678ABFCA74D5813DD79858" />
-      <ComponentRef Id="cmpC7E325AEAF544AE491303C332363D403" />
-      <ComponentRef Id="cmp616C56CB91563F336410622442A506DD" />
-      <ComponentRef Id="cmpEB5FB6D22022101559F1F409BB831C49" />
-      <ComponentRef Id="cmp3670A4519398D9520126C6DC345E0E50" />
-      <ComponentRef Id="cmp601FE4ED2C2FD3F546593475F9666973" />
-      <ComponentRef Id="cmp8A6994FC62D135D9A6BA2E01B62043FF" />
-      <ComponentRef Id="cmpDA3AA5A21788961EA252DF4F86230677" />
-      <ComponentRef Id="cmp6C2C816B1A2BFFA73BA877CEF0A285F8" />
-      <ComponentRef Id="cmp10FDAC6C36BC91AC9660DCD519E0EBD3" />
-      <ComponentRef Id="cmp57F6981D839AA296FACB18CA0B80F385" />
-      <ComponentRef Id="cmp61E0F87AE1301C873DCBE5B46E029A77" />
-      <ComponentRef Id="cmp1C47F228C3994B4CAEF42FB94962ABD2" />
-      <ComponentRef Id="cmp96008BD5424F4E9D0BF1111A1E4EA3C3" />
-      <ComponentRef Id="cmp8B610C872802BC16FE56FCA23BF098AD" />
-      <ComponentRef Id="cmp11787B278B3DC312240FABB58B837C20" />
-      <ComponentRef Id="cmpD065F5D090988C41C559F2AAD37A744F" />
-    </Feature>
+        <DirectoryRef Id="utils">
 
-    <Property Id="INSTALLSERVICE" Value="1" />
-    <Property Id="WIXUI_MIGRATELEGACY" Value="1" />
-      <!-- must be disabled to avoid hitting check box
+            <Component Id="execute_update.cmd" Guid="{3DD686FF-B151-4498-B853-3EB591EBB0C3}">
+                <File Id="execute_update.cmd"
+                        Source="resources\execute_update.cmd"
+                        KeyPath="yes"
+                        Checksum="yes"
+                        DiskId="1" />
+            </Component>
+
+        </DirectoryRef>
+
+        <DirectoryRef Id="plugins">
+            <Component Id="cmp14A70A7296CB588F156BBC06BA51D2E3" Guid="{55386E71-BCE4-4E58-A7C1-7506317CF388}">
+                <File Id="fil0D8E5C0605B7AABBE4E3650D150DC37F" KeyPath="yes" Source = "..\..\windows\plugins\ad_replication.bat" DiskId="1" />
+            </Component>
+            <Component Id="cmpBFADA0486A248D40B4365D85892EA124" Guid="{E51579A8-1B54-44F1-8939-9152B23D3ACC}">
+                <File Id="fil9D136F6EB743B60B3992FF7285F8B14D" KeyPath="yes" Source="..\..\windows\plugins\arcserve_backup.ps1" DiskId="1" />
+            </Component>
+            <Component Id="cmp61BBFBF9B8A5AB1F142A3B2EF7ACA7FF" Guid="{B212E12B-A293-47C3-9960-E1CD3CD1F3D6}">
+                <File Id="fil91D110DCF5FAEC3700A334A3D96D9774" KeyPath="yes" Source="..\..\windows\plugins\citrix_farm.ps1" DiskId="1" />
+            </Component>
+            <Component Id="cmp010EC0D0C899D89CC77140C6643B04AC" Guid="{73CFBEA4-30B4-4211-9B77-6B1D6CA5263E}">
+                <File Id="fil133D59036043DA9F7A06816349E9C910" KeyPath="yes" Source="..\..\windows\plugins\citrix_licenses.vbs" DiskId="1"  />
+            </Component>
+            <Component Id="cmpABBC9DF796FC09C181EC9B2D01A62525" Guid="{24BE0241-312F-45D9-B547-9C536CD69C12}">
+                <File Id="fil68F9AD67E8F26BC4712A85950742D48F" KeyPath="yes" Source="..\..\windows\plugins\citrix_xenapp.ps1" DiskId="1"  />
+            </Component>
+            <Component Id="cmp832B7FCA61C9CFF8F1CA5C6FA13B5454" Guid="{46C91E1B-97E0-4261-94FA-2DD6B6651EDC}">
+                <File Id="fil2A101DFE6D15B518E2F1E50C87ECC221" KeyPath="yes" Source="..\..\windows\plugins\hyperv_vms.ps1" DiskId="1"  />
+            </Component>
+            <Component Id="cmpE9245496997CBB452C7AB2DD036AA4DD" Guid="{B53B231C-FFFF-405C-AAC4-88BE73233A66}">
+                <File Id="fil1DAD57269AB73A084B862EC3C5DE5A71" KeyPath="yes" Source="..\..\windows\plugins\hyperv_vms_guestinfos.ps1" DiskId="1"  />
+            </Component>
+            <Component Id="cmp9A6397189697490FEDA525CB1466EFAA" Guid="{06A9C936-E99E-4041-B75D-0B663C1F45A4}">
+                <File Id="fil9FC37D392CCD6754BAC8051683D40DD1" KeyPath="yes" Source="..\..\windows\plugins\kaspersky_av_client.vbs" DiskId="1"  />
+            </Component>
+            <Component Id="cmp7B7D687D53F2D4CECFA13EBE1BE3801E" Guid="{DEA3C541-D345-4147-8A46-8FF86DAEE966}">
+                <File Id="fil6C23EA1FD057C5625D316AB8C9864258" KeyPath="yes" Source="..\..\windows\plugins\mcafee_av_client.bat" DiskId="1"  />
+            </Component>
+            <Component Id="cmp2A9B7CC157BFEF8A29D75CC2F64A5A02" Guid="{5E8AF8F7-898B-4169-83FE-83986BF0030F}">
+                <File Id="fil84657EAECE3BB41DF4A59FB2E0B5B599" KeyPath="yes" Source="..\..\windows\plugins\megaraid.bat" DiskId="1"  />
+            </Component>
+            <Component Id="cmpC93DA459EC69F6EE0183382A29CB8174" Guid="{0935A7A0-51FB-4107-B610-F29391E93259}">
+                <File Id="fil683F1F5CE5408AC623A93394DFCEEE48" KeyPath="yes" Source="..\..\windows\plugins\mk_dhcp_enabled.bat" DiskId="1"  />
+            </Component>
+            <Component Id="cmp657B6B6F132543FC84EC56F7B0DAB6ED" Guid="{1C2AEC02-1673-4B40-B147-0B001188DC5A}">
+                <File Id="filE5741C46E1FC38FBCAF8323A42CEC30F" KeyPath="yes" Source="..\..\windows\plugins\mk_inventory.vbs" DiskId="1"  />
+            </Component>
+            <Component Id="cmpDD7387A69094F0C08D755786377BE916" Guid="{3477B066-6AC0-4031-A8AF-3C79571E4C39}">
+                <File Id="fil4184D51F5A0121840C425BBCB6B53F42" KeyPath="yes" Source="..\..\windows\plugins\mk_mysql.vbs" DiskId="1"  />
+            </Component>
+            <Component Id="cmp5ADA772C7BDFD80499DCC49F48A4D27D" Guid="{EDC7B756-0182-48BA-85D5-9016B4797E7E}">
+                <File Id="fil8D6029E4806FCF205FE8D37573EDFBA4" KeyPath="yes" Source="..\..\windows\plugins\mk_oracle.ps1" DiskId="1"  />
+            </Component>
+            <Component Id="cmp06FAFC985397646477170C3A9EC578DF" Guid="{2F712A51-EB09-4BB6-B17B-F7ADC24D61E8}">
+                <File Id="fil1CA84851126C72D15B8FF7FBD056AD7F" KeyPath="yes" Source="..\..\windows\plugins\msexch_dag.ps1" DiskId="1"  />
+            </Component>
+            <Component Id="cmp2CF5BD4FBED2352573D1A8CEC68D99A8" Guid="{EC4BE995-16D5-48CE-BDD9-B7870D56A087}">
+                <File Id="filFAAA245C81E32BBF2AC489BF7B676C55" KeyPath="yes" Source="..\..\windows\plugins\msexch_database.ps1" DiskId="1"  />
+            </Component>
+            <Component Id="cmp44A5CA3D1E13BADB6759D3A42DE39C1E" Guid="{6FC09D3B-BC7D-4CD9-9877-42800C61A2CE}">
+                <File Id="filF71A5557521BC78DCADD3FBD0A4664FD" KeyPath="yes" Source="..\..\windows\plugins\mssql.vbs" DiskId="1"  />
+            </Component>
+            <Component Id="cmp3823AD91DED5D234942D302869EA2459" Guid="{9DB98C17-62EA-4F57-91E6-137BDC88F02D}">
+                <File Id="fil53CEAB102B917C0FF7143AA4E2BB5DB6" KeyPath="yes" Source="..\..\windows\plugins\netstat_an.bat" DiskId="1"  />
+            </Component>
+            <Component Id="cmpF776CAE45639A529E8686CEDEF56DAA4" Guid="{3580B9B5-81D4-4C65-A8D3-F31EBB9B8DB0}">
+                <File Id="fil4552A185F3A06FE0B3543EA0C43708B9" KeyPath="yes" Source="..\..\windows\plugins\rds_licenses.vbs" DiskId="1"  />
+            </Component>
+            <Component Id="cmpC5A956A870678ABFCA74D5813DD79858" Guid="{536A7F3B-ED66-412B-8688-E27521D31207}">
+                <File Id="fil939214DE697F4A3FEF7A1E5E8138BD31" KeyPath="yes" Source="..\..\windows\plugins\rstcli.bat" DiskId="1"  />
+            </Component>
+            <Component Id="cmpC7E325AEAF544AE491303C332363D403" Guid="{767D056E-0C49-464F-AE1D-B86A8C706090}">
+                <File Id="fil39FCA609D48668F872A8A406140D08E5" KeyPath="yes" Source="..\..\windows\plugins\sansymphony.ps1" DiskId="1"  />
+            </Component>
+            <Component Id="cmp616C56CB91563F336410622442A506DD" Guid="{C5DE0D82-10FC-47C3-984D-BFA1934BB5C6}">
+                <File Id="filD5C8E30BCE07EF0B0B0DD7CC7971FB60" KeyPath="yes" Source="..\..\windows\plugins\storcli.bat" DiskId="1"  />
+            </Component>
+            <Component Id="cmpEB5FB6D22022101559F1F409BB831C49" Guid="{F629A957-9815-4FF1-B581-89E00DF79D2F}">
+                <File Id="filB7EA8E8A131B2E0E6A82607467136876" KeyPath="yes" Source="..\..\windows\plugins\tsm_checks.bat" DiskId="1"  />
+            </Component>
+            <Component Id="cmp3670A4519398D9520126C6DC345E0E50" Guid="{3AAFCA53-D68E-4E07-B432-467858C7E327}">
+                <File Id="fil5662B4A07F89026B3C146D5EE4504E02" KeyPath="yes" Source="..\..\windows\plugins\veeam_backup_status.ps1" DiskId="1"  />
+            </Component>
+            <Component Id="cmp601FE4ED2C2FD3F546593475F9666973" Guid="{06DB2D8D-BCAE-4078-855B-29C1F7144BFA}">
+                <File Id="filEF6F805C99D9377D6BF80FE6B7E011F6" KeyPath="yes" Source="..\..\windows\plugins\windows_broadcom_bonding.bat" DiskId="1"  />
+            </Component>
+            <Component Id="cmp8A6994FC62D135D9A6BA2E01B62043FF" Guid="{C7694E56-009B-49B8-B846-8DF3FBBE1385}">
+                <File Id="fil87F308F055FD29281552B9E7CA175107" KeyPath="yes" Source="..\..\windows\plugins\windows_if.ps1" DiskId="1"  />
+            </Component>
+            <Component Id="cmpDA3AA5A21788961EA252DF4F86230677" Guid="{178B1BD1-2F7E-46C0-BA10-EE030F027FBD}">
+                <File Id="fil0E43AE5883F9C6E509B57083C9A3184E" KeyPath="yes" Source="..\..\windows\plugins\windows_intel_bonding.bat" DiskId="1"  />
+            </Component>
+            <Component Id="cmp6C2C816B1A2BFFA73BA877CEF0A285F8" Guid="{CF2F4F05-DE6B-4936-AA34-3D7248DD83F5}">
+                <File Id="filF46ABE49F18E73AE3C8969D0619BCB5B" KeyPath="yes" Source="..\..\windows\plugins\windows_multipath.vbs" DiskId="1"  />
+            </Component>
+            <Component Id="cmp10FDAC6C36BC91AC9660DCD519E0EBD3" Guid="{1669BE8A-ED8E-45A9-891C-ED0F1D479CA1}">
+                <File Id="fil6C6BD73C2966F9AD5B4D0A8392AC7458" KeyPath="yes" Source="..\..\windows\plugins\windows_os_bonding.ps1" DiskId="1"  />
+            </Component>
+            <Component Id="cmp57F6981D839AA296FACB18CA0B80F385" Guid="{4E4D51FC-3829-4CE5-B26F-022DA372B3B0}">
+                <File Id="fil3C227A99C2CDD7FA84B1310AD2C5A01A" KeyPath="yes" Source="..\..\windows\plugins\windows_tasks.ps1" DiskId="1"  />
+            </Component>
+            <Component Id="cmp61E0F87AE1301C873DCBE5B46E029A77" Guid="{A7BA9FFC-958B-45FF-A530-A6E3C9A5EBA3}">
+                <File Id="fil15C29091CE6AA9903FDCAF7095E86B15" KeyPath="yes" Source="..\..\windows\plugins\windows_updates.vbs" DiskId="1"  />
+            </Component>
+            <Component Id="cmp1C47F228C3994B4CAEF42FB94962ABD2" Guid="{B89DC847-FC4B-4868-A5D6-8F1B915D20CC}">
+                <File Id="fil22DEF483A73CED9FD288835C50E1B29E" KeyPath="yes" Source="..\..\windows\plugins\win_dhcp_pools.bat" DiskId="1"  />
+            </Component>
+            <Component Id="cmp96008BD5424F4E9D0BF1111A1E4EA3C3" Guid="{BCE8E91B-B645-4C89-A371-7ABF3F87121D}">
+                <File Id="fil70F9F92ED57B6C727E3FEDA8CD7856EB" KeyPath="yes" Source="..\..\windows\plugins\win_dmidecode.bat" DiskId="1"  />
+            </Component>
+            <Component Id="cmp8B610C872802BC16FE56FCA23BF098AD" Guid="{BBB128AC-DBD9-4B88-8824-4602E33C2950}">
+                <File Id="filFBD6D6657D952271E70BBABB024D2F08" KeyPath="yes" Source="..\..\windows\plugins\win_license.bat" DiskId="1"  />
+            </Component>
+            <Component Id="cmp11787B278B3DC312240FABB58B837C20" Guid="{768D5B88-D421-4C7A-96B4-436FF9C1F390}">
+                <File Id="fil46A0DC56ECCE3C41483B1E4CD7708C4D" KeyPath="yes" Source="..\..\windows\plugins\win_printers.ps1" DiskId="1"  />
+            </Component>
+            <Component Id="cmpD065F5D090988C41C559F2AAD37A744F" Guid="{379B00CD-2EF9-4EB2-9F97-AF325EC9814C}">
+                <File Id="fil0F589A3A337908339F3BFAE265EAF22C" KeyPath="yes" Source="..\..\windows\plugins\wmic_if.bat" DiskId="1"  />
+            </Component>
+        </DirectoryRef>
+
+        <!-- Step 3: Tell WiX to install the files -->
+        <Feature Id="installable_binaries" Title="Binaries to be Installed" Level="1">
+            <ComponentRef Id="check_mk_install_yml_" />
+            <ComponentRef Id="plugins_cap_" />
+            <ComponentRef Id="checkmk.dat" />
+            <ComponentRef Id="execute_update.cmd" />
+            <ComponentRef Id="check_mk.user.yml" />
+
+            <!-- Modules -->
+            <ComponentRef Id="python_3.cab" />
+        </Feature>
+
+        <Feature Id="plugins_binaries" Title="Plugins for Windows" Level="1">
+            <ComponentRef Id="cmp14A70A7296CB588F156BBC06BA51D2E3" />
+            <ComponentRef Id="cmpBFADA0486A248D40B4365D85892EA124" />
+            <ComponentRef Id="cmp61BBFBF9B8A5AB1F142A3B2EF7ACA7FF" />
+            <ComponentRef Id="cmp010EC0D0C899D89CC77140C6643B04AC" />
+            <ComponentRef Id="cmpABBC9DF796FC09C181EC9B2D01A62525" />
+            <ComponentRef Id="cmp832B7FCA61C9CFF8F1CA5C6FA13B5454" />
+            <ComponentRef Id="cmpE9245496997CBB452C7AB2DD036AA4DD" />
+            <ComponentRef Id="cmp9A6397189697490FEDA525CB1466EFAA" />
+            <ComponentRef Id="cmp7B7D687D53F2D4CECFA13EBE1BE3801E" />
+            <ComponentRef Id="cmp2A9B7CC157BFEF8A29D75CC2F64A5A02" />
+            <ComponentRef Id="cmpC93DA459EC69F6EE0183382A29CB8174" />
+            <ComponentRef Id="cmp657B6B6F132543FC84EC56F7B0DAB6ED" />
+            <ComponentRef Id="cmpDD7387A69094F0C08D755786377BE916" />
+            <ComponentRef Id="cmp5ADA772C7BDFD80499DCC49F48A4D27D" />
+            <ComponentRef Id="cmp06FAFC985397646477170C3A9EC578DF" />
+            <ComponentRef Id="cmp2CF5BD4FBED2352573D1A8CEC68D99A8" />
+            <ComponentRef Id="cmp44A5CA3D1E13BADB6759D3A42DE39C1E" />
+            <ComponentRef Id="cmp3823AD91DED5D234942D302869EA2459" />
+            <ComponentRef Id="cmpF776CAE45639A529E8686CEDEF56DAA4" />
+            <ComponentRef Id="cmpC5A956A870678ABFCA74D5813DD79858" />
+            <ComponentRef Id="cmpC7E325AEAF544AE491303C332363D403" />
+            <ComponentRef Id="cmp616C56CB91563F336410622442A506DD" />
+            <ComponentRef Id="cmpEB5FB6D22022101559F1F409BB831C49" />
+            <ComponentRef Id="cmp3670A4519398D9520126C6DC345E0E50" />
+            <ComponentRef Id="cmp601FE4ED2C2FD3F546593475F9666973" />
+            <ComponentRef Id="cmp8A6994FC62D135D9A6BA2E01B62043FF" />
+            <ComponentRef Id="cmpDA3AA5A21788961EA252DF4F86230677" />
+            <ComponentRef Id="cmp6C2C816B1A2BFFA73BA877CEF0A285F8" />
+            <ComponentRef Id="cmp10FDAC6C36BC91AC9660DCD519E0EBD3" />
+            <ComponentRef Id="cmp57F6981D839AA296FACB18CA0B80F385" />
+            <ComponentRef Id="cmp61E0F87AE1301C873DCBE5B46E029A77" />
+            <ComponentRef Id="cmp1C47F228C3994B4CAEF42FB94962ABD2" />
+            <ComponentRef Id="cmp96008BD5424F4E9D0BF1111A1E4EA3C3" />
+            <ComponentRef Id="cmp8B610C872802BC16FE56FCA23BF098AD" />
+            <ComponentRef Id="cmp11787B278B3DC312240FABB58B837C20" />
+            <ComponentRef Id="cmpD065F5D090988C41C559F2AAD37A744F" />
+        </Feature>
+
+        <Property Id="INSTALLSERVICE" Value="1" />
+        <Property Id="WIXUI_MIGRATELEGACY" Value="1" />
+        <!-- must be disabled to avoid hitting check box
     <Property Id="WIXUI_REMOVELEGACY" Value="0" />
     -->
-    <Property Id="WIXUI_INSTALLDIR" Value="INSTALLFOLDER_SERVICE"/>
-    <WixVariable Id="WixUILicenseRtf" Value="resources\GPL-V2.rtf" />
-    <UIRef Id="CmkWixUI_InstallDir"/>
+        <Property Id="WIXUI_INSTALLDIR" Value="INSTALLFOLDER_SERVICE"/>
+        <WixVariable Id="WixUILicenseRtf" Value="resources\GPL-V2.rtf" />
+        <UIRef Id="CmkWixUI_InstallDir"/>
 
 
-    <Condition Message="$(var.ProductName) supports only Windows Vista, Windows Server 2008, or higher.">
-        <![CDATA[Installed OR (VersionNT >= 600)]]>
-    </Condition>
-  </Product>
+        <Condition Message="$(var.ProductName) supports only Windows Vista, Windows Server 2008, or higher.">
+            <![CDATA[Installed OR (VersionNT >= 600)]]>
+        </Condition>
+    </Product>
 
-  <Fragment>
-    <ComponentGroup Id="ProductComponents" Directory="INSTALLFOLDER_SERVICE">
-      <!-- TODO: Remove the comments around this Component element and the ComponentRef below in order to add resources to this installer. -->
-      <!-- <Component Id="ProductComponent"> -->
-      <!-- TODO: Insert files, registry keys, and other resources here. -->
-      <!-- </Component> -->
-      <Component Id="check_mk_marker"
-                 Guid="{F3949AC9-2D27-4A96-81C7-9C5599E8AF8F}">
-        <File Id="check_mk.marker"
-              Source="resources\check_mk.marker"
-              Name="check_mk.marker"
-              KeyPath="yes"
-              Checksum="yes"
-              DiskId="1" />
-      </Component>
+    <Fragment>
+        <ComponentGroup Id="ProductComponents" Directory="INSTALLFOLDER_SERVICE">
+            <!-- TODO: Remove the comments around this Component element and the ComponentRef below in order to add resources to this installer. -->
+            <!-- <Component Id="ProductComponent"> -->
+            <!-- TODO: Insert files, registry keys, and other resources here. -->
+            <!-- </Component> -->
+            <Component Id="check_mk_marker"
+                       Guid="{F3949AC9-2D27-4A96-81C7-9C5599E8AF8F}">
+                <File Id="check_mk.marker"
+                      Source="resources\check_mk.marker"
+                      Name="check_mk.marker"
+                      KeyPath="yes"
+                      Checksum="yes"
+                      DiskId="1" />
+            </Component>
 
-        <Component Id="cmk_agent_ctl"
-                   Guid="{9279D3A4-FEE5-4598-95C0-96CA4400A1E9}">
-            <File Id="cmk_agent_ctl.exe"
-                  Source="..\..\..\artefacts\cmk-agent-ctl.exe"
-                  Name="cmk-agent-ctl.exe"
-                  KeyPath="yes"
-                  Checksum="yes"
-                  DiskId="1" />
-        </Component>
+            <Component Id="cmk_agent_ctl"
+                       Guid="{9279D3A4-FEE5-4598-95C0-96CA4400A1E9}">
+                <File Id="cmk_agent_ctl.exe"
+                      Source="..\..\..\artefacts\cmk-agent-ctl.exe"
+                      Name="cmk-agent-ctl.exe"
+                      KeyPath="yes"
+                      Checksum="yes"
+                      DiskId="1" />
+            </Component>
 
-        <Component Id="service32"
-                 Guid="{3343809F-E2EF-4D9F-9FA5-AD1AC0968916}">
-        <File Id="check_mk_svc32.exe"
-              Source="..\build\check_mk_service\Win32\Release\check_mk_service32.exe"
-              Name="check_mk_agent.exe"
-              KeyPath="yes"
-              Checksum="yes" DiskId="1" />
-        <Condition>NOT VersionNT64</Condition>
-        <ServiceInstall
-          Id="CheckMkService32"
-          Type="ownProcess"
-          Vital="yes"
-          Name="$(var.ServiceName)"
-          DisplayName="$(var.ServiceDisplayName)"
-          Description="$(var.ServiceDescription), 32-bit"
-          Start="auto"
-          Account="[SERVICEACCOUNT]"
-          Password="[SERVICEPASSWORD]"
-          ErrorControl="ignore"
-          Interactive="no"/>
-        <ServiceControl Id="StartService32"
-                        Start="install"
-                        Stop="both"
-                        Remove="uninstall"
-                        Name="$(var.ServiceName)"
-                        Wait="yes" />
-      </Component>
+            <Component Id="service32"
+                     Guid="{3343809F-E2EF-4D9F-9FA5-AD1AC0968916}">
+                <File Id="check_mk_svc32.exe"
+                      Source="..\build\check_mk_service\Win32\Release\check_mk_service32.exe"
+                      Name="check_mk_agent.exe"
+                      KeyPath="yes"
+                      Checksum="yes" DiskId="1" />
+                <Condition>NOT VersionNT64</Condition>
+                <ServiceInstall
+                  Id="CheckMkService32"
+                  Type="ownProcess"
+                  Vital="yes"
+                  Name="$(var.ServiceName)"
+                  DisplayName="$(var.ServiceDisplayName)"
+                  Description="$(var.ServiceDescription), 32-bit"
+                  Start="auto"
+                  Account="[SERVICEACCOUNT]"
+                  Password="[SERVICEPASSWORD]"
+                  ErrorControl="ignore"
+                  Interactive="no"/>
+                <ServiceControl Id="StartService32"
+                                Start="install"
+                                Stop="both"
+                                Remove="uninstall"
+                                Name="$(var.ServiceName)"
+                                Wait="yes" />
+            </Component>
 
-      <Component Id="service64"
-                 Guid="{CDDCFF83-A111-4048-BCA2-0DEB2A043A42}">
-        <File Id="check_mk_svc64.exe"
-              Source="..\build\check_mk_service\x64\Release\check_mk_service64.exe"
-              Name="check_mk_agent.exe"
-              KeyPath="yes"
-              Checksum="yes"
-              DiskId="1" />
-        <Condition>VersionNT64</Condition>
-        <ServiceInstall
-          Id="CheckMkService64"
-          Type="ownProcess"
-          Vital="yes"
-          Name="$(var.ServiceName)"
-          DisplayName="$(var.ServiceDisplayName)"
-          Description="$(var.ServiceDescription), 64-bit"
-          Start="auto"
-          Account="[SERVICEACCOUNT]"
-          Password="[SERVICEPASSWORD]"
-          ErrorControl="ignore"
-          Interactive="no"/>
-        <ServiceControl Id="StartService64"
-                        Start="install"
-                        Stop="both"
-                        Remove="uninstall"
-                        Name="$(var.ServiceName)"
-                        Wait="yes" />
-      </Component>
+            <Component Id="service64"
+                       Guid="{CDDCFF83-A111-4048-BCA2-0DEB2A043A42}">
+                <File Id="check_mk_svc64.exe"
+                      Source="..\build\check_mk_service\x64\Release\check_mk_service64.exe"
+                      Name="check_mk_agent.exe"
+                      KeyPath="yes"
+                      Checksum="yes"
+                      DiskId="1" />
+                <Condition>VersionNT64</Condition>
+                <ServiceInstall
+                  Id="CheckMkService64"
+                  Type="ownProcess"
+                  Vital="yes"
+                  Name="$(var.ServiceName)"
+                  DisplayName="$(var.ServiceDisplayName)"
+                  Description="$(var.ServiceDescription), 64-bit"
+                  Start="auto"
+                  Account="[SERVICEACCOUNT]"
+                  Password="[SERVICEPASSWORD]"
+                  ErrorControl="ignore"
+                  Interactive="no"/>
+                <ServiceControl Id="StartService64"
+                                Start="install"
+                                Stop="both"
+                                Remove="uninstall"
+                                Name="$(var.ServiceName)"
+                                Wait="yes" />
+            </Component>
 
 
-      <Component Id="check_mk.yml" Guid="{CD5540CA-19A4-4BBB-BF74-129AC19F2DDD}">
-        <File Id="check_mk.yml" Source="resources\check_mk.yml" DiskId="1" />
-      </Component>
+            <Component Id="check_mk.yml" Guid="{CD5540CA-19A4-4BBB-BF74-129AC19F2DDD}">
+                <File Id="check_mk.yml" Source="resources\check_mk.yml" DiskId="1" />
+            </Component>
 
-      <Component Id="readme.txt" Guid="{14F083A7-2ACE-4738-A8E4-3D5D8C1DA50C}">
-        <File Id="readme.txt" Source="resources\readme.txt" DiskId="1" />
-      </Component>
-      
-      <!-- not required anybmore -->
-      <Component Id="RegistryEntries"
-                 Guid="{9B5A1A5F-3A59-4608-AF54-EBE04D3F0BD1}"
+            <Component Id="readme.txt" Guid="{14F083A7-2ACE-4738-A8E4-3D5D8C1DA50C}">
+                <File Id="readme.txt" Source="resources\readme.txt" DiskId="1" />
+            </Component>
+
+            <!-- not required anybmore -->
+            <Component Id="RegistryEntries"
+                       Guid="{9B5A1A5F-3A59-4608-AF54-EBE04D3F0BD1}"
                  >
-        <RegistryKey Root="HKLM"
-                     Key="Software\checkmkservice"
-                     ForceCreateOnInstall="yes"
-                     ForceDeleteOnUninstall="yes">
-          
-          <RegistryValue Type="string"
-                         Name="Install_Folder"
-                         Value="[INSTALLFOLDER_SERVICE]"/>
-          
-          <RegistryValue Type="string"
-                         Name="Remove_Legacy"
-                         Value="[WIXUI_REMOVELEGACY]"/>
+                <RegistryKey Root="HKLM"
+                             Key="Software\checkmkservice"
+                             ForceCreateOnInstall="yes"
+                             ForceDeleteOnUninstall="yes">
 
-          <RegistryValue Type="string"
-                         Name="Clean_Installation"
-                         Value="[WIXUI_CLEANINSTALL]"/>
+                    <RegistryValue Type="string"
+                                   Name="Install_Folder"
+                                   Value="[INSTALLFOLDER_SERVICE]"/>
 
-          <RegistryValue Type="string"
-                         Name="Migration_Required"
-                         Value="[WIXUI_MIGRATELEGACY]"/>
+                    <RegistryValue Type="string"
+                                   Name="Remove_Legacy"
+                                   Value="[WIXUI_REMOVELEGACY]"/>
 
-          <RegistryValue Type="string"
-                         Name="Install_Service"
-                         Value="[INSTALLSERVICE]"/>
-            
-          <RegistryValue Type="string"
-                         Name="PostInstall_Required"
-                         Value="yes"/>
-        </RegistryKey>
-      </Component>
-    </ComponentGroup>
-  </Fragment>
-  
-  
+                    <RegistryValue Type="string"
+                                   Name="Clean_Installation"
+                                   Value="[WIXUI_CLEANINSTALL]"/>
+
+                    <RegistryValue Type="string"
+                                   Name="Migration_Required"
+                                   Value="[WIXUI_MIGRATELEGACY]"/>
+
+                    <RegistryValue Type="string"
+                                   Name="Install_Service"
+                                   Value="[INSTALLSERVICE]"/>
+
+                    <RegistryValue Type="string"
+                                   Name="PostInstall_Required"
+                                   Value="yes"/>
+                </RegistryKey>
+            </Component>
+        </ComponentGroup>
+    </Fragment>
+
+
 
 
 </Wix>

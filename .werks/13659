@@ -1,0 +1,19 @@
+Title: New SMS notification script for IP modems
+Class: feature
+Compatible: compat
+Component: notifications
+Date: 1643097950
+Edition: cre
+Knowledge: undoc
+Level: 2
+Version: 2.0.0p22
+
+
+Until now, it was only possible to use SMS modems that support smstools.
+
+With this werk a new notification option "SMS (using modem API)" was added as
+notification method.
+
+The script uses the API of IP modems, currenly supporting the model "Teltonika
+TRB140" and outputs SMS in the same format as the notification method "SMS
+(using smstools)".

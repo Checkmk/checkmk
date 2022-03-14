@@ -55,6 +55,7 @@ from cmk.gui.plugins.wato.utils import mode_registry, WatoMode
 from cmk.gui.plugins.wato.utils.context_buttons import make_host_status_link
 from cmk.gui.sites import sitenames
 from cmk.gui.table import Foldable, table_element
+from cmk.gui.utils.urls import DocReference
 from cmk.gui.view_utils import format_plugin_output, render_labels
 from cmk.gui.wato.pages.hosts import ModeEditHost
 from cmk.gui.watolib import automation_command_registry, AutomationCommand
@@ -1622,8 +1623,8 @@ def _extend_display_dropdown(
 
 
 def _extend_help_dropdown(menu: PageMenu) -> None:
-    menu.add_manual_reference(_("Beginner's guide: Configuring services"), "intro", "services")
-    menu.add_manual_reference(_("Understanding and configuring services"), "wato_services")
+    menu.add_doc_reference(_("Beginner's guide: Configuring services"), DocReference.INTRO_SERVICES)
+    menu.add_doc_reference(_("Understanding and configuring services"), DocReference.WATO_SERVICES)
 
 
 def _page_menu_entry_show_parameters(

@@ -6,7 +6,8 @@
 
 import pytest
 
-from cmk.gui.utils.urls import urlencode, urlencode_vars
+from cmk.gui.globals import user
+from cmk.gui.utils.urls import doc_reference_url, DocReference, urlencode, urlencode_vars
 
 
 @pytest.mark.parametrize(
@@ -45,3 +46,11 @@ def test_urlencode_vars(inp, out):
 )
 def test_urlencode(inp, out):
     assert urlencode(inp) == out
+
+
+def test_empty_doc_reference():
+    assert doc_reference_url() == user.get_docs_base_url()
+
+
+def test_doc_references():
+    assert [doc_reference_url(r) for r in DocReference]

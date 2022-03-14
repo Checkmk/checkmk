@@ -51,7 +51,13 @@ from cmk.gui.type_defs import ActionResult, Choices
 from cmk.gui.utils.escaping import escape_to_html_permissive
 from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.popups import MethodAjax
-from cmk.gui.utils.urls import make_confirm_link, makeactionuri, makeuri, makeuri_contextless
+from cmk.gui.utils.urls import (
+    DocReference,
+    make_confirm_link,
+    makeactionuri,
+    makeuri,
+    makeuri_contextless,
+)
 from cmk.gui.valuespec import DropdownChoice, TextInput, ValueSpec, WatoFolderChoices
 from cmk.gui.watolib.changes import make_object_audit_log_url
 from cmk.gui.watolib.groups import load_contact_group_information
@@ -172,21 +178,18 @@ class ModeFolder(WatoMode):
         )
 
     def _extend_help_dropdown(self, menu: PageMenu) -> None:
-        menu.add_manual_reference(title=_("Host administration"), article_name="wato_hosts")
-        menu.add_manual_reference(
+        menu.add_doc_reference(title=_("Host administration"), doc_ref=DocReference.WATO_HOSTS)
+        menu.add_doc_reference(
             title=_("Beginner's guide: Host folder structures"),
-            article_name="intro",
-            anchor_name="folders",
+            doc_ref=DocReference.INTRO_FOLDERS,
         )
-        menu.add_manual_reference(
+        menu.add_doc_reference(
             title=_("Beginner's guide: Creating folders"),
-            article_name="intro",
-            anchor_name="Creating folders",
+            doc_ref=DocReference.INTRO_CREATING_FOLDERS,
         )
-        menu.add_manual_reference(
+        menu.add_doc_reference(
             title=_("Beginner's guide: Adding the first hosts"),
-            article_name="intro",
-            anchor_name="linux",
+            doc_ref=DocReference.INTRO_LINUX,
         )
 
         menu.add_youtube_reference(

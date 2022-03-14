@@ -33,6 +33,15 @@ def agent_kube_arguments(
             args.append(f"--{namespace_filter_option}")
             args.append(namespace_pattern)
 
+    if "cluster-resource-aggregation" in params:
+        if params["cluster-resource-aggregation"] == "cluster-aggregation-include-all-nodes":
+            args.append("--cluster-aggregation-include-all-nodes")
+        else:
+            args.append("--cluster-aggregation-exclude-node-roles")
+            args.extend(params["cluster-resource-aggregation"][1])
+    else:
+        args.extend(["--cluster-aggregation-exclude-node-roles", "control-plane", "infra"])
+
     api_params = params["kubernetes-api-server"]
     args.extend(["--api-server-endpoint", api_params["endpoint"]])
     if api_params.get("verify-cert"):

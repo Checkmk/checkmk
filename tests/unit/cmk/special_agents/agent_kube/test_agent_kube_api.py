@@ -59,6 +59,7 @@ def test_pod_node_allocation_within_cluster(
 ):
     """Test pod is correctly allocated to node within cluster"""
     cluster = Cluster.from_api_resources(
+        excluded_node_roles=[],
         pods=[api_pod],
         nodes=[api_node],
         statefulsets=[],
@@ -74,9 +75,13 @@ def test_pod_node_allocation_within_cluster(
 def test_pod_deployment_allocation_within_cluster(api_node, api_pod):
     """Test pod is correctly allocated to deployment within cluster"""
 
+    class APIDeployment(ModelFactory):
+        __model__ = api.Deployment
+
     deployment = APIDeployment.build()
     deployment.pods = [api_pod.uid]
     cluster = Cluster.from_api_resources(
+        excluded_node_roles=[],
         pods=[api_pod],
         nodes=[api_node],
         statefulsets=[],
@@ -98,12 +103,15 @@ def container_spec(
     request_memory: Optional[float] = 1.0 * ONE_MiB,
     limit_memory: Optional[float] = 2.0 * ONE_MiB,
 ) -> api.ContainerSpec:
-    return ContainerSpecFactory.build(
-        resources=api.ContainerResources(
+    class ContainerSpecFactory(ModelFactory):
+        __model__ = api.ContainerSpec
+
+        resources = api.ContainerResources(
             limits=api.ResourcesRequirements(memory=limit_memory, cpu=limit_cpu),
             requests=api.ResourcesRequirements(memory=request_memory, cpu=request_cpu),
         )
-    )
+
+    return ContainerSpecFactory.build()
 
 
 def test_aggregate_resources_summed_request_cpu() -> None:

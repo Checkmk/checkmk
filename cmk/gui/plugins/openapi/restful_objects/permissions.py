@@ -52,7 +52,7 @@ class FakeUser:
 
 class BasePerm(abc.ABC):
     @abc.abstractmethod
-    def may(self, user: UserLike):
+    def may(self, user: UserLike) -> bool:
         """Verify that this user fulfils the requirements."""
         raise NotImplementedError()
 
@@ -66,6 +66,28 @@ class BasePerm(abc.ABC):
 
     def __contains__(self, item):
         return item in list(self.iter_perms())
+
+
+class Optional(BasePerm):
+    """A permission which might or might not be used.
+
+    Both of these cases are valid, so it always returns True.
+    """
+
+    def __init__(self, perm: BasePerm):
+        self.perm = perm
+
+    def __repr__(self):
+        return f"{self.perm}?"
+
+    def may(self, user: UserLike) -> bool:
+        """Verify that the permission might be there or not.
+
+        It's okay if we don't have the permission, so we accept it all the time."""
+        return True
+
+    def iter_perms(self) -> Iterable[str]:
+        return self.perm.iter_perms()
 
 
 class MultiPerm(BasePerm, abc.ABC):

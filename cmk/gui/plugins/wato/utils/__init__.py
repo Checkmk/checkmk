@@ -1263,14 +1263,13 @@ def PredictiveLevels(
 
 # To be used as ValueSpec for levels on numeric values, with
 # prediction
-def _Levels(
-    help: _Optional[str],  # pylint: disable=redefined-builtin
-    default_levels: _Tuple[float, float],
-    default_difference: _Tuple[float, float],
-    default_value: _Optional[_Tuple[float, float]],
-    title: _Optional[str],
-    unit: str,
-    allow_predictive: bool,
+def Levels(
+    help: _Optional[str] = None,  # pylint: disable=redefined-builtin
+    default_levels: _Tuple[float, float] = (0.0, 0.0),
+    default_difference: _Tuple[float, float] = (0.0, 0.0),
+    default_value: _Optional[_Tuple[float, float]] = None,
+    title: _Optional[str] = None,
+    unit: str = "",
 ) -> Alternative:
     def match_levels_alternative(v: Union[Dict[Any, Any], _Tuple[Any, Any]]) -> int:
         if isinstance(v, dict):
@@ -1308,9 +1307,8 @@ def _Levels(
                 ),
             ],
         ),
+        PredictiveLevels(default_difference=default_difference, unit=unit),
     ]
-    if allow_predictive:
-        elements.append(PredictiveLevels(default_difference=default_difference, unit=unit))
 
     return Alternative(
         title=title,
@@ -1318,54 +1316,6 @@ def _Levels(
         elements=elements,
         match=match_levels_alternative,
         default_value=default_value,
-    )
-
-
-def SimpleLevels(
-    help: _Optional[str] = None,  # pylint: disable=redefined-builtin
-    default_levels: _Tuple[float, float] = (0.0, 0.0),
-    default_difference: _Tuple[float, float] = (0.0, 0.0),
-    default_value: _Optional[_Tuple[float, float]] = None,
-    title: _Optional[str] = None,
-    unit: str = "",
-) -> Alternative:
-    """To be used as ValueSpec for levels on numeric values, without prediction
-
-    See Also:
-      :func: Levels
-    """
-    return _Levels(
-        help=help,
-        default_levels=default_levels,
-        default_difference=default_difference,
-        default_value=default_value,
-        title=title,
-        allow_predictive=False,
-        unit=unit,
-    )
-
-
-def Levels(
-    help: _Optional[str] = None,  # pylint: disable=redefined-builtin
-    default_levels: _Tuple[float, float] = (0.0, 0.0),
-    default_difference: _Tuple[float, float] = (0.0, 0.0),
-    default_value: _Optional[_Tuple[float, float]] = None,
-    title: _Optional[str] = None,
-    unit: str = "",
-) -> Alternative:
-    """To be used as ValueSpec for levels on numeric values, with prediction
-
-    See Also:
-      :func: SimpleLevels
-    """
-    return _Levels(
-        help=help,
-        default_levels=default_levels,
-        default_difference=default_difference,
-        default_value=default_value,
-        title=title,
-        allow_predictive=True,
-        unit=unit,
     )
 
 

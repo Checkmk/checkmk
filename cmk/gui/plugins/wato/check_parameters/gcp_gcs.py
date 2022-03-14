@@ -9,9 +9,9 @@ from cmk.gui.plugins.wato.utils import (
     Levels,
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
-    SimpleLevels,
 )
-from cmk.gui.valuespec import Dictionary, MonitoringState, ValueSpec
+from cmk.gui.plugins.wato.utils.simple_levels import SimpleLevels
+from cmk.gui.valuespec import Dictionary, Filesize, MonitoringState, Percentage, ValueSpec
 
 # A notes about the names of the Dictionary elements. They correspond to the names of the metrics in
 # the check plugin. Please do not change them.
@@ -64,7 +64,7 @@ def _vs_gcs_bucket_objects() -> ValueSpec:
         elements=[
             (
                 "aws_bucket_size",
-                SimpleLevels(title=_("Parameters of total bucket size"), unit="bytes"),
+                SimpleLevels(Filesize, title=_("Parameters of total bucket size")),
             ),
             ("aws_num_objects", Levels(title=_("Parameters of bucket object counts"))),
         ],
@@ -108,7 +108,7 @@ def _vs_function_execution() -> ValueSpec:
         title=_("Levels on performance"),
         elements=[
             ("execution_count", Levels(title=_("execution count"))),
-            ("aws_lambda_memory_size_absolute", SimpleLevels(title=_("memory"), unit="bytes")),
+            ("aws_lambda_memory_size_absolute", SimpleLevels(Filesize, title=_("memory"))),
             ("aws_lambda_duration", Levels(title=_("execution time"), unit="s")),
         ],
     )
@@ -170,7 +170,7 @@ def _vs_run_memory() -> ValueSpec:
     return Dictionary(
         title=_("Levels memory"),
         elements=[
-            ("memory_util", SimpleLevels(title=_("Memory utilitzation"), unit="%")),
+            ("memory_util", SimpleLevels(Percentage, title=_("Memory utilitzation"))),
         ],
     )
 
@@ -190,7 +190,7 @@ def _vs_run_cpu() -> ValueSpec:
     return Dictionary(
         title=_("Levels CPU"),
         elements=[
-            ("util", SimpleLevels(title=_("CPU utilitzation"), unit="%")),
+            ("util", SimpleLevels(Percentage, title=_("CPU utilitzation"))),
         ],
     )
 

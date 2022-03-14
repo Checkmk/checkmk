@@ -68,10 +68,12 @@ def _check_disk(
     )
 
 
-def check_aix_diskiod(
+def _check_aix_diskiod(
     item: str,
     params: Mapping[str, Any],
     section: diskstat.Section,
+    value_store: MutableMapping[str, Any],
+    now: float,
 ) -> type_defs.CheckResult:
     if item == "SUMMARY":
         disk = diskstat.summarize_disks(section.items())
@@ -80,13 +82,23 @@ def check_aix_diskiod(
             disk = section[item]
         except KeyError:
             return
-    yield from _check_disk(params, disk, get_value_store(), time.time())
+    yield from _check_disk(params, disk, value_store, now)
 
 
-def cluster_check_aix_diskiod(
+def check_aix_diskiod(
+    item: str,
+    params: Mapping[str, Any],
+    section: diskstat.Section,
+) -> type_defs.CheckResult:
+    yield from _check_aix_diskiod(item, params, section, get_value_store(), time.time())
+
+
+def _cluster_check_aix_diskiod(
     item: str,
     params: Mapping[str, Any],
     section: Mapping[str, Optional[diskstat.Section]],
+    value_store: MutableMapping[str, Any],
+    now: float,
 ) -> type_defs.CheckResult:
 
     present_sections = [section for section in section.values() if section is not None]
@@ -98,7 +110,15 @@ def cluster_check_aix_diskiod(
         disk = diskstat.combine_disks(
             node_section[item] for node_section in present_sections if item in node_section
         )
-    yield from _check_disk(params, disk, get_value_store(), time.time())
+    yield from _check_disk(params, disk, value_store, now)
+
+
+def cluster_check_aix_diskiod(
+    item: str,
+    params: Mapping[str, Any],
+    section: Mapping[str, Optional[diskstat.Section]],
+) -> type_defs.CheckResult:
+    yield from _cluster_check_aix_diskiod(item, params, section, get_value_store(), time.time())
 
 
 register.check_plugin(

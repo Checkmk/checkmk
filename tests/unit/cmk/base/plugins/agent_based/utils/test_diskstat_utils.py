@@ -9,6 +9,8 @@ from typing import Any, Dict, Iterable, Tuple
 
 import pytest
 
+from tests.testlib import on_time
+
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     get_rate,
     IgnoreResultsError,
@@ -139,17 +141,20 @@ def test_compute_rates_multiple_disks():
     value_store: Dict[str, Any] = {}
 
     # first call should result in IgnoreResultsError, second call should yield rates
-    with pytest.raises(IgnoreResultsError):
-        diskstat.compute_rates_multiple_disks(
+    with on_time(0, "UTC"):
+        with pytest.raises(IgnoreResultsError):
+            diskstat.compute_rates_multiple_disks(
+                disks,
+                value_store,
+                _compute_rates_single_disk,
+            )
+
+    with on_time(60, "UTC"):
+        disks_w_rates = diskstat.compute_rates_multiple_disks(
             disks,
             value_store,
             _compute_rates_single_disk,
         )
-    disks_w_rates = diskstat.compute_rates_multiple_disks(
-        disks,
-        value_store,
-        _compute_rates_single_disk,
-    )
 
     for (name_in, disk_in), (name_out, disk_out) in zip(
         iter(disks.items()),
@@ -504,7 +509,7 @@ def test_check_diskstat_dict(params, disk, exp_res):
     assert (
         list(
             diskstat.check_diskstat_dict(
-                params=params, disk=disk, value_store=value_store, this_time=time.time()
+                params=params, disk=disk, value_store=value_store, this_time=0.0
             )
         )
         == exp_res
@@ -522,7 +527,7 @@ def test_check_diskstat_dict(params, disk, exp_res):
                 params=({**params, "average": 300}),
                 disk=disk,
                 value_store=value_store,
-                this_time=time.time(),
+                this_time=60.0,
             ),
         )
         == exp_res

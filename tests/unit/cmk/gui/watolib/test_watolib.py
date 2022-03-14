@@ -214,7 +214,6 @@ def test_registered_configvars():
             "cmc_config_multiprocessing",
             "cmc_debug_notifications",
             "cmc_dump_core",
-            "cmc_enable_fetchers",
             "cmc_fetcher_helpers",
             "cmc_checker_helpers",
             "cmc_flap_settings",

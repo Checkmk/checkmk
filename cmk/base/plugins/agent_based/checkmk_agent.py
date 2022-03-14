@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import collections
 import time
 from typing import Any, Iterable, Mapping, Optional, Sequence, Union
 
@@ -282,7 +283,10 @@ def _check_cmk_agent_update(params: Mapping[str, Any], section: CheckmkSection) 
     return
 
 
-def _check_checkmk_agent_plugins(params: Mapping[str, Any], section: PluginSection) -> CheckResult:
+def _check_plugins(
+    params: Mapping[str, Any],
+    section: PluginSection,
+) -> CheckResult:
     yield Result(
         state=State.OK,
         summary=f"Agent plugins: {len(section.plugins)}",
@@ -291,25 +295,52 @@ def _check_checkmk_agent_plugins(params: Mapping[str, Any], section: PluginSecti
         state=State.OK,
         summary=f"Local checks: {len(section.local_checks)}",
     )
+    yield from _check_versions_and_duplicates(
+        section.plugins,
+        params.get("versions_plugins"),
+        params.get("exclude_pattern_plugins"),
+        "Agent plugin",
+    )
+    yield from _check_versions_and_duplicates(
+        section.local_checks,
+        params.get("versions_lchecks"),
+        params.get("exclude_pattern_lchecks"),
+        "Local check",
+    )
 
-    if (min_versions := params.get("min_versions")) is None:
-        return
 
-    if (exclude_pattern := params.get("exclude_pattern")) is None:
-        plugins = section.plugins
-        lchecks = section.local_checks
+def _check_versions_and_duplicates(
+    plugins: Iterable[Plugin],
+    version_params: Optional[Mapping[str, Any]],
+    exclude_pattern: Optional[str],
+    type_: str,
+) -> CheckResult:
+    if exclude_pattern is None:
+        plugins = list(plugins)
     else:
         comp = regex(exclude_pattern)
-        plugins = [p for p in section.plugins if not comp.search(p.name)]
-        lchecks = [p for p in section.local_checks if not comp.search(p.name)]
+        plugins = [p for p in plugins if not comp.search(p.name)]
 
-    yield from _check_min_version(plugins, min_versions, "Agent plugin")
-    yield from _check_min_version(lchecks, min_versions, "Local check")
+    if version_params:
+        yield from _check_min_version(
+            plugins,
+            version_params["min_versions"],
+            State(version_params["mon_state_unparsable"]),
+            type_,
+        )
+
+    yield from _check_duplicates(
+        plugins,
+        type_,
+    )
 
 
 def _check_min_version(
-    plugins: Iterable[Plugin], levels_str: tuple[str, str], type_: str
-) -> Iterable[Result]:
+    plugins: Iterable[Plugin],
+    levels_str: tuple[str, str],
+    mon_state_unparsable: State,
+    type_: str,
+) -> CheckResult:
     levels = (parse_check_mk_version(levels_str[0]), parse_check_mk_version(levels_str[1]))
 
     render_info = {p.version_int: p.version for p in plugins}
@@ -318,7 +349,7 @@ def _check_min_version(
     for plugin in plugins:
         if plugin.version_int is None:
             yield Result(
-                state=State.UNKNOWN,
+                state=mon_state_unparsable,
                 summary=f"{type_} {plugin.name!r}: unable to parse version {plugin.version!r}",
             )
         else:
@@ -328,6 +359,22 @@ def _check_min_version(
                 render_func=lambda v: render_info[int(v)],
                 label=f"{type_} {plugin.name!r}",
                 notice_only=True,
+            )
+
+
+def _check_duplicates(
+    plugins: Iterable[Plugin],
+    type_: str,
+) -> CheckResult:
+    plugins_by_name: dict[str, list[Plugin]] = collections.defaultdict(list)
+    for p in plugins:
+        plugins_by_name[p.name].append(p)
+    for name, plugins_with_name in plugins_by_name.items():
+        if (count := len(plugins_with_name)) > 1:
+            yield Result(
+                state=State.WARN,
+                summary=f"{type_} {name}: found {count} times",
+                details="Consult the hardware/software inventory for a complete list of files",
             )
 
 
@@ -344,7 +391,7 @@ def check_checkmk_agent(
         yield from _check_cmk_agent_update(params, section_check_mk)
 
     if section_checkmk_agent_plugins is not None:
-        yield from _check_checkmk_agent_plugins(params, section_checkmk_agent_plugins)
+        yield from _check_plugins(params, section_checkmk_agent_plugins)
 
 
 register.check_plugin(

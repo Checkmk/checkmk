@@ -1,0 +1,14 @@
+Title: SSL certificate path for agent_activemq and agent_prometheus
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1647261530
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.2.0i1
+
+When verifying ssl, the special agents activemq and prometheus
+were accessing the wrong OMD environment variable.
+This is fixed now.
+

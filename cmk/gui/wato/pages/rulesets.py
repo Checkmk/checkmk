@@ -1244,7 +1244,13 @@ class ModeEditRuleset(WatoMode):
         if condition_id is None:
             return
 
-        condition = self._predefined_conditions[condition_id]
+        condition = self._predefined_conditions.get(condition_id)
+        if condition is None:
+            html.write_text(
+                _("Predefined condition: '%s' does not exist or using not permitted") % condition_id
+            )
+            return
+
         url = watolib.folder_preserving_link(
             [
                 ("mode", "edit_predefined_condition"),

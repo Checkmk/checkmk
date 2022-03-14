@@ -1,0 +1,18 @@
+Title: Update manpage for check 'seh_ports'
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1647259687
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0p22
+
+This check shows the state of the ports of the SEH myUTN dongle server
+devices. The state of the port is not interpreted by checkmk, only displayed.
+It is always shown as OK, except when the state changes:
+
+
+If the current port state differs from the state seen at service discovery
+time, the service will report WARN. To acknowledge the changed port, execute
+the service discovery again.

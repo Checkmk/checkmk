@@ -69,9 +69,9 @@ def parse_args(argv: List[str]) -> argparse.Namespace:
         "-m",
         "--metrics",
         nargs="?",
-        metavar='METRIC_NAME',
+        metavar="METRIC_NAME",
         const="performance_data",
-        help='''Add performance data to the output. Store data with metric_name in RRD.''',
+        help="""Add performance data to the output. Store data with metric_name in RRD.""",
     )
     parser.add_argument(
         "-o",

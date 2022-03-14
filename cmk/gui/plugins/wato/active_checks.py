@@ -760,10 +760,12 @@ rulespec_registry.register(
     )
 )
 
+
 def transform_check_sql_perfdata(perfdata):
     if isinstance(perfdata, str):
         return perfdata
     return "performance_data"
+
 
 def _valuespec_active_checks_sql():
     return Dictionary(
@@ -879,16 +881,19 @@ def _valuespec_active_checks_sql():
                                 totext=_("procedure call is used"),
                             ),
                         ),
-                        ("input",
-                         TextInput(
-                             title=_("Input Parameters"),
-                             allow_empty=True,
-                             help=_(
-                                 "Input parameters, if required by the database procedure. "
-                                 "If several parameters are required, use commas to separate them."
-                             ),
-                         )),
-                    ]),
+                        (
+                            "input",
+                            TextInput(
+                                title=_("Input Parameters"),
+                                allow_empty=True,
+                                help=_(
+                                    "Input parameters, if required by the database procedure. "
+                                    "If several parameters are required, use commas to separate them."
+                                ),
+                            ),
+                        ),
+                    ],
+                ),
             ),
             (
                 "levels",
@@ -910,7 +915,7 @@ def _valuespec_active_checks_sql():
                     TextInput(
                         title=_("Performance Data"),
                         help=_("Store output value into RRD database in a metric with this name."),
-                        default_value='performance_data',
+                        default_value="performance_data",
                         allow_empty=False,
                     ),
                     forth=transform_check_sql_perfdata,
@@ -925,6 +930,7 @@ def _valuespec_active_checks_sql():
             ),
         ],
     )
+
 
 rulespec_registry.register(
     HostRulespec(

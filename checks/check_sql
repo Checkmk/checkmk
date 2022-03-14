@@ -38,7 +38,7 @@ def check_sql_arguments(params):
         lower = "", ""
 
     if "perfdata" in params:
-        if (metrics:=params.get("perfdata")) is not None:
+        if (metrics := params.get("perfdata")) is not None:
             args.append(f"--metrics={metrics}")
 
     if "levels" in params or "levels_low" in params:

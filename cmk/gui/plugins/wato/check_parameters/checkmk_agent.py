@@ -181,29 +181,95 @@ def _parameter_valuespec_checkmk_agent():
                 ),
             ),
             (
-                "min_versions",
-                Tuple(
-                    title=_("Agent plugins: Required minimal versions"),
-                    help=_(
-                        "You can configure lower thresholds for the versions of the currently "
-                        "deployed agent plugins and local checks."
-                    ),
+                "versions_plugins",
+                Dictionary(
+                    title=_("Agent plugins: versions"),
+                    optional_keys=False,
                     elements=[
-                        TextInput(title=_("Warning at"), validate=_validate_version),
-                        TextInput(title=_("Critical at"), validate=_validate_version),
+                        (
+                            "min_versions",
+                            Tuple(
+                                title=_("Required minimal versions"),
+                                help=_(
+                                    "You can configure lower thresholds for the versions of the "
+                                    "currently deployed agent plugins."
+                                ),
+                                elements=[
+                                    TextInput(title=_("Warning at"), validate=_validate_version),
+                                    TextInput(title=_("Critical at"), validate=_validate_version),
+                                ],
+                            ),
+                        ),
+                        (
+                            "mon_state_unparsable",
+                            MonitoringState(
+                                title=_("Monitoring state in case of version parsing failure"),
+                                help=_(
+                                    "The monitoring state in case the version of an agent plugin "
+                                    "is unparsable."
+                                ),
+                                default_value=3,
+                            ),
+                        ),
                     ],
                 ),
             ),
             (
-                "exclude_pattern",
+                "versions_lchecks",
+                Dictionary(
+                    title=_("Local checks: versions"),
+                    optional_keys=False,
+                    elements=[
+                        (
+                            "min_versions",
+                            Tuple(
+                                title=_("Required minimal versions"),
+                                help=_(
+                                    "You can configure lower thresholds for the versions of the "
+                                    "currently deployed local checks."
+                                ),
+                                elements=[
+                                    TextInput(title=_("Warning at"), validate=_validate_version),
+                                    TextInput(title=_("Critical at"), validate=_validate_version),
+                                ],
+                            ),
+                        ),
+                        (
+                            "mon_state_unparsable",
+                            MonitoringState(
+                                title=_("Monitoring state in case of version parsing failure"),
+                                help=_(
+                                    "The monitoring state in case the version of a local check is "
+                                    "unparsable."
+                                ),
+                                default_value=3,
+                            ),
+                        ),
+                    ],
+                ),
+            ),
+            (
+                "exclude_pattern_plugins",
                 RegExp(
                     title=_("Agent plugins: Regular expression to exclude plugins"),
                     mode=RegExp.infix,
                     help=_(
-                        "Plugins or local checks matching this pattern will be excluded from the "
-                        "comparison with the required versions specified in '%s'."
+                        "Plugins matching this pattern will be excluded from the comparison with "
+                        "the required versions specified in '%s' and from the duplicates check."
                     )
-                    % _("Agent plugins: Required minimal versions"),
+                    % _("Agent plugins: versions"),
+                ),
+            ),
+            (
+                "exclude_pattern_lchecks",
+                RegExp(
+                    title=_("Local checks: Regular expression to exclude files"),
+                    mode=RegExp.infix,
+                    help=_(
+                        "Local checks matching this pattern will be excluded from the comparison "
+                        "with the required versions specified in '%s' and from the duplicates check."
+                    )
+                    % _("Local checks: versions"),
                 ),
             ),
         ],

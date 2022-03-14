@@ -4,11 +4,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import Any, Mapping, Optional
+
 import pytest
 
 from tests.testlib import on_time
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult
 from cmk.base.plugins.agent_based.checkmk_agent import (
     _check_agent_update,
     _check_cmk_agent_update,
@@ -19,7 +22,7 @@ from cmk.base.plugins.agent_based.checkmk_agent import (
     check_checkmk_agent,
     discover_checkmk_agent,
 )
-from cmk.base.plugins.agent_based.utils.checkmk import ControllerSection
+from cmk.base.plugins.agent_based.utils.checkmk import ControllerSection, Plugin, PluginSection
 
 # TODO: make this more blackboxy once API vialoations are reduced!
 
@@ -269,3 +272,429 @@ def test_check_warn_upon_old_update_check(fix_time, duplicate: bool) -> None:
         Result(state=State.OK, notice="Agent configuration: 38bf6e44"),
         Result(state=State.OK, notice="Pending installation: 1234abcd"),
     ]
+
+
+@pytest.mark.parametrize(
+    [
+        "params",
+        "section_plugins",
+        "expected_result",
+    ],
+    [
+        pytest.param(
+            {},
+            None,
+            [],
+            id="no data",
+        ),
+        pytest.param(
+            {},
+            PluginSection(
+                plugins=[
+                    Plugin(
+                        name="plugin1",
+                        version="2.1.0i1",
+                        version_int=2010010100,
+                        cache_interval=None,
+                    ),
+                    Plugin(
+                        name="plugin2",
+                        version="2.0.0p20",
+                        version_int=2000050020,
+                        cache_interval=None,
+                    ),
+                ],
+                local_checks=[],
+            ),
+            [
+                Result(
+                    state=State.OK,
+                    summary="Agent plugins: 2",
+                ),
+                Result(
+                    state=State.OK,
+                    summary="Local checks: 0",
+                ),
+            ],
+            id="agent plugins only",
+        ),
+        pytest.param(
+            {},
+            PluginSection(
+                plugins=[],
+                local_checks=[
+                    Plugin(
+                        name="check1.sh",
+                        version="1.3.45",
+                        version_int=1345000000,
+                        cache_interval=None,
+                    ),
+                    Plugin(
+                        name="check2.py",
+                        version="1.0",
+                        version_int=1000000000,
+                        cache_interval=None,
+                    ),
+                ],
+            ),
+            [
+                Result(
+                    state=State.OK,
+                    summary="Agent plugins: 0",
+                ),
+                Result(
+                    state=State.OK,
+                    summary="Local checks: 2",
+                ),
+            ],
+            id="local checks only",
+        ),
+        pytest.param(
+            {
+                "versions_plugins": {
+                    "min_versions": (
+                        "2.0.0p21",
+                        "2.0.0p15",
+                    ),
+                    "mon_state_unparsable": 3,
+                },
+                "versions_lchecks": {
+                    "min_versions": (
+                        "1.2",
+                        "1.1",
+                    ),
+                    "mon_state_unparsable": 1,
+                },
+            },
+            PluginSection(
+                plugins=[
+                    Plugin(
+                        name="plugin1",
+                        version="2.1.0i1",
+                        version_int=2010010100,
+                        cache_interval=None,
+                    ),
+                    Plugin(
+                        name="plugin2",
+                        version="2.0.0p20",
+                        version_int=2000050020,
+                        cache_interval=None,
+                    ),
+                    Plugin(
+                        name="custom_plugin3",
+                        version="??",
+                        version_int=None,
+                        cache_interval=None,
+                    ),
+                ],
+                local_checks=[
+                    Plugin(
+                        name="check1.sh",
+                        version="1.3.45",
+                        version_int=1345000000,
+                        cache_interval=None,
+                    ),
+                    Plugin(
+                        name="check2.py",
+                        version="1.0",
+                        version_int=1000000000,
+                        cache_interval=None,
+                    ),
+                    Plugin(
+                        name="check3.py",
+                        version="[fill in later]",
+                        version_int=None,
+                        cache_interval=None,
+                    ),
+                ],
+            ),
+            [
+                Result(
+                    state=State.OK,
+                    summary="Agent plugins: 3",
+                ),
+                Result(
+                    state=State.OK,
+                    summary="Local checks: 3",
+                ),
+                Result(
+                    state=State.OK,
+                    notice="Agent plugin 'plugin1': 2.1.0i1",
+                ),
+                Result(
+                    state=State.WARN,
+                    summary="Agent plugin 'plugin2': 2.0.0p20 (warn/crit below 2.0.0p21/2.0.0p15)",
+                ),
+                Result(
+                    state=State.UNKNOWN,
+                    summary="Agent plugin 'custom_plugin3': unable to parse version '??'",
+                ),
+                Result(
+                    state=State.OK,
+                    notice="Local check 'check1.sh': 1.3.45",
+                ),
+                Result(
+                    state=State.CRIT,
+                    summary="Local check 'check2.py': 1.0 (warn/crit below 1.2/1.1)",
+                ),
+                Result(
+                    state=State.WARN,
+                    summary="Local check 'check3.py': unable to parse version '[fill in later]'",
+                ),
+            ],
+            id="version checks",
+        ),
+        pytest.param(
+            {
+                "versions_plugins": {
+                    "min_versions": (
+                        "2.0.0p21",
+                        "2.0.0p15",
+                    ),
+                    "mon_state_unparsable": 3,
+                },
+                "exclude_pattern_plugins": "custom.*",
+                "versions_lchecks": {
+                    "min_versions": (
+                        "1.2",
+                        "1.1",
+                    ),
+                    "mon_state_unparsable": 1,
+                },
+                "exclude_pattern_lchecks": r"check3\.py",
+            },
+            PluginSection(
+                plugins=[
+                    Plugin(
+                        name="plugin1",
+                        version="2.1.0i1",
+                        version_int=2010010100,
+                        cache_interval=None,
+                    ),
+                    Plugin(
+                        name="plugin2",
+                        version="2.0.0p20",
+                        version_int=2000050020,
+                        cache_interval=None,
+                    ),
+                    Plugin(
+                        name="custom_plugin3",
+                        version="??",
+                        version_int=None,
+                        cache_interval=None,
+                    ),
+                ],
+                local_checks=[
+                    Plugin(
+                        name="check1.sh",
+                        version="1.3.45",
+                        version_int=1345000000,
+                        cache_interval=None,
+                    ),
+                    Plugin(
+                        name="check2.py",
+                        version="1.0",
+                        version_int=1000000000,
+                        cache_interval=None,
+                    ),
+                    Plugin(
+                        name="check3.py",
+                        version="[fill in later]",
+                        version_int=None,
+                        cache_interval=None,
+                    ),
+                ],
+            ),
+            [
+                Result(
+                    state=State.OK,
+                    summary="Agent plugins: 3",
+                ),
+                Result(
+                    state=State.OK,
+                    summary="Local checks: 3",
+                ),
+                Result(
+                    state=State.OK,
+                    notice="Agent plugin 'plugin1': 2.1.0i1",
+                ),
+                Result(
+                    state=State.WARN,
+                    summary="Agent plugin 'plugin2': 2.0.0p20 (warn/crit below 2.0.0p21/2.0.0p15)",
+                ),
+                Result(
+                    state=State.OK,
+                    notice="Local check 'check1.sh': 1.3.45",
+                ),
+                Result(
+                    state=State.CRIT,
+                    summary="Local check 'check2.py': 1.0 (warn/crit below 1.2/1.1)",
+                ),
+            ],
+            id="version checks with excludes",
+        ),
+        pytest.param(
+            {},
+            PluginSection(
+                plugins=[
+                    Plugin(
+                        name="plugin1",
+                        version="2.1.0i1",
+                        version_int=2010010100,
+                        cache_interval=None,
+                    ),
+                    Plugin(
+                        name="plugin1",
+                        version="2.0.0p20",
+                        version_int=2000050020,
+                        cache_interval=None,
+                    ),
+                    Plugin(
+                        name="custom_plugin3",
+                        version="??",
+                        version_int=None,
+                        cache_interval=None,
+                    ),
+                ],
+                local_checks=[
+                    Plugin(
+                        name="check1.sh",
+                        version="1.3.45",
+                        version_int=1345000000,
+                        cache_interval=None,
+                    ),
+                    Plugin(
+                        name="check2.py",
+                        version="1.0",
+                        version_int=1000000000,
+                        cache_interval=None,
+                    ),
+                    Plugin(
+                        name="check2.py",
+                        version="[fill in later]",
+                        version_int=None,
+                        cache_interval=None,
+                    ),
+                ],
+            ),
+            [
+                Result(
+                    state=State.OK,
+                    summary="Agent plugins: 3",
+                ),
+                Result(
+                    state=State.OK,
+                    summary="Local checks: 3",
+                ),
+                Result(
+                    state=State.WARN,
+                    summary="Agent plugin plugin1: found 2 times",
+                    details="Consult the hardware/software inventory for a complete list of files",
+                ),
+                Result(
+                    state=State.WARN,
+                    summary="Local check check2.py: found 2 times",
+                    details="Consult the hardware/software inventory for a complete list of files",
+                ),
+            ],
+            id="duplicate files",
+        ),
+        pytest.param(
+            {
+                "exclude_pattern_plugins": "custom.*",
+                "exclude_pattern_lchecks": ".*py",
+            },
+            PluginSection(
+                plugins=[
+                    Plugin(
+                        name="plugin1",
+                        version="2.1.0i1",
+                        version_int=2010010100,
+                        cache_interval=None,
+                    ),
+                    Plugin(
+                        name="plugin1",
+                        version="2.0.0p20",
+                        version_int=2000050020,
+                        cache_interval=None,
+                    ),
+                    Plugin(
+                        name="custom_plugin3",
+                        version="??",
+                        version_int=None,
+                        cache_interval=None,
+                    ),
+                    Plugin(
+                        name="custom_plugin3",
+                        version="???",
+                        version_int=None,
+                        cache_interval=None,
+                    ),
+                ],
+                local_checks=[
+                    Plugin(
+                        name="check1.sh",
+                        version="1.3.45",
+                        version_int=1345000000,
+                        cache_interval=None,
+                    ),
+                    Plugin(
+                        name="check2.py",
+                        version="1.0",
+                        version_int=1000000000,
+                        cache_interval=None,
+                    ),
+                    Plugin(
+                        name="check2.py",
+                        version="[fill in later]",
+                        version_int=None,
+                        cache_interval=None,
+                    ),
+                    Plugin(
+                        name="check1.sh",
+                        version="1.2.45",
+                        version_int=1245000000,
+                        cache_interval=None,
+                    ),
+                ],
+            ),
+            [
+                Result(
+                    state=State.OK,
+                    summary="Agent plugins: 4",
+                ),
+                Result(
+                    state=State.OK,
+                    summary="Local checks: 4",
+                ),
+                Result(
+                    state=State.WARN,
+                    summary="Agent plugin plugin1: found 2 times",
+                    details="Consult the hardware/software inventory for a complete list of files",
+                ),
+                Result(
+                    state=State.WARN,
+                    summary="Local check check1.sh: found 2 times",
+                    details="Consult the hardware/software inventory for a complete list of files",
+                ),
+            ],
+            id="duplicate files with excludes",
+        ),
+    ],
+)
+def test_check_plugins(
+    params: Mapping[str, Any],
+    section_plugins: Optional[PluginSection],
+    expected_result: CheckResult,
+) -> None:
+    assert (
+        list(
+            check_checkmk_agent(
+                params,
+                None,
+                section_plugins,
+                None,
+            )
+        )
+        == expected_result
+    )

@@ -1,0 +1,26 @@
+Title: Restructure and extend monitoring of agent plugins and local checks
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1647275153
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.1.0b2
+
+Werk <a href="https://checkmk.com/werk/13474">13474</a> introduced the monitoring of agent plugins
+and local checks via a dedicated check plugin (<tt>checkkmk_agent_plugins</tt>). This has been
+reworked and extended in multiple ways:
+
+<ul>
+<li>The functionality has been integrated into the plugin <tt>checkmk_agent</tt> (service
+"Check_MK Agent"). The corresponding configuration options have been integrated into the ruleset
+"Checkmk Agent installation auditing".</li>
+<li>Users can now configure separate version requirements for agent plugins and local checks.
+Analogously, users can now configure two separate exclusion patterns.</li>
+<li>In case minimum versions are configured, users can also configure the monitoring state for
+unparsable versions. Previously, Checkmk always reported UNKNOWN in this case.</li>
+<li>Checkmk now additionally checks for duplicate agent plugins and local checks (separately). In
+case duplicate files are found, Checkmk reports WARN. This check respects any user-defined exclusion
+patterns.</li>
+</ul>

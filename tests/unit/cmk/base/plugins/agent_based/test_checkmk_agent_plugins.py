@@ -5,8 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.base.plugins.agent_based import checkmk_agent_plugins as cap
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, State, TableRow
-from cmk.base.plugins.agent_based.checkmk_agent import check_checkmk_agent
+from cmk.base.plugins.agent_based.agent_based_api.v1 import TableRow
 from cmk.base.plugins.agent_based.utils import checkmk
 
 _OUTPUT = [
@@ -31,29 +30,6 @@ _SECTION = checkmk.PluginSection(
 
 def test_parse_ok():
     assert cap.parse_checkmk_agent_plugins_lnx(_OUTPUT) == _SECTION
-
-
-def test_check():
-    assert list(
-        check_checkmk_agent(
-            {
-                "min_versions": ("2.3.0", "1.2.0"),
-                "exclude_pattern": "file",
-            },
-            None,
-            _SECTION,
-            None,
-        )
-    ) == [
-        Result(state=State.OK, summary="Agent plugins: 2"),
-        Result(state=State.OK, summary="Local checks: 1"),
-        # mk_filestats excluded
-        Result(
-            state=State.WARN,
-            summary="Agent plugin 'zorp': 2.1.0i1 (warn/crit below 2.3.0/1.2.0)",
-        ),
-        Result(state=State.OK, notice="Local check 'sync_local_check.sh': 3.14.15"),
-    ]
 
 
 def test_inventory() -> None:

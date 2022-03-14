@@ -50,6 +50,10 @@ def parse_cisco_cpu_multiitem(string_table: List[StringTable]) -> Section:
 
     parsed = {}
     for idx, util in string_table[0]:
+        # if cpmCPUTotalPhysicalIndex is 0, the element is not supported
+        # (see CISCO-PROCESS-MIB.txt)
+        if idx == "0":
+            continue
         name = ph_idx_to_desc.get(idx, idx)
         with suppress(ValueError):
             parsed[name] = CPUInfo(util=float(util))

@@ -9,6 +9,7 @@ import pytest
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
 from cmk.base.plugins.agent_based.cisco_cpu_multiitem import (
     check_cisco_cpu_multiitem,
+    CPUInfo,
     discover_cisco_cpu_multiitem,
     DISCOVERY_DEFAULT_PARAMETERS,
     Params,
@@ -86,3 +87,10 @@ def test_discover_cisco_cpu_multiitem(
         list(discover_cisco_cpu_multiitem(discovery_params, parsed_section))
         == expected_discovery_result
     )
+
+
+def test_zero_cpm_cpu_total_physical_index() -> None:
+    # if cpmCPUTotalPhysicalIndex is 0 we should ignore the item
+    assert parse_cisco_cpu_multiitem(
+        [[["0", "5"], ["3001", "10"]], [["2001", "cpu 2"], ["3001", "another cpu 3"]]]
+    ) == {"another cpu 3": CPUInfo(util=10.0), "average": CPUInfo(util=10.0)}

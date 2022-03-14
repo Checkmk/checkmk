@@ -51,9 +51,13 @@ class ContainerSpecFactory(ModelFactory):
 class PodMetaDataFactory(ModelFactory):
     __model__ = api.PodMetaData
 
+    name = Use(lambda x: str(next(x)), itertools.count(0, 1))
+
 
 class PodStatusFactory(ModelFactory):
     __model__ = api.PodStatus
+
+    phase = Use(next, itertools.cycle(api.Phase))
 
 
 class PodSpecFactory(ModelFactory):
@@ -243,7 +247,9 @@ def container_spec(container_resources_requirements: api.ContainerResources) -> 
 
 @pytest.fixture
 def pod_spec(container_spec: api.ContainerSpec, pod_containers_count: int) -> api.PodSpec:
-    return PodSpecFactory.build(containers=[container_spec for _ in range(pod_containers_count)])
+    return PodSpecFactory.build(
+        node=None, containers=[container_spec for _ in range(pod_containers_count)]
+    )
 
 
 @pytest.fixture
@@ -312,7 +318,7 @@ def api_to_agent_node(node: api.Node) -> agent_kube.Node:
         metadata=node.metadata,
         status=node.status,
         resources=node.resources,
-        roles=node.roles,
+        roles=["worker"],
         kubelet_info=node.kubelet_info,
     )
 
@@ -539,7 +545,7 @@ def cluster(
     cluster_statefulsets: int,
     cluster_details: api.ClusterDetails,
 ) -> agent_kube.Cluster:
-    cluster = agent_kube.Cluster(cluster_details=cluster_details)
+    cluster = agent_kube.Cluster(excluded_node_roles=[], cluster_details=cluster_details)
     for _ in range(cluster_nodes):
         cluster.add_node(new_node())
     for _ in range(cluster_daemon_sets):
@@ -547,6 +553,28 @@ def cluster(
     for _ in range(cluster_statefulsets):
         cluster.add_statefulset(new_statefulset())
     return cluster
+
+
+def api_to_agent_cluster(  # pylint: disable=dangerous-default-value
+    excluded_node_roles: Sequence[str] = ["control_plane", "master"],
+    pods: Sequence[api.Pod] = [],
+    nodes: Sequence[api.Node] = [],
+    statefulsets: Sequence[api.StatefulSet] = [],
+    deployments: Sequence[api.Deployment] = [],
+    cron_jobs: Sequence[api.CronJob] = [],
+    daemon_sets: Sequence[api.DaemonSet] = [],
+    cluster_details: api.ClusterDetails = ClusterDetailsFactory.build(),
+) -> agent_kube.Cluster:
+    return agent_kube.Cluster.from_api_resources(
+        excluded_node_roles=excluded_node_roles or [],
+        pods=pods,
+        nodes=nodes,
+        statefulsets=statefulsets,
+        deployments=deployments,
+        cron_jobs=cron_jobs,
+        daemon_sets=daemon_sets,
+        cluster_details=cluster_details,
+    )
 
 
 @pytest.fixture

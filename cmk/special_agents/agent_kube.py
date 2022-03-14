@@ -246,6 +246,27 @@ def parse_arguments(args: List[str]) -> argparse.Namespace:
         help="The timeout in seconds the special agent will wait for a "
         "response from the Kubernetes API.",
     )
+    group = p.add_mutually_exclusive_group()
+    group.add_argument(
+        "--cluster-aggregation-exclude-node-roles",
+        nargs="+",
+        default=["control-plane", "infra"],
+        dest="roles",
+        help="You may find that some Nodes don't add resources to the overall "
+        "workload your Cluster can handle. This option allows you to remove "
+        "Nodes from aggregations on the Cluster host based on their role. A "
+        "node will be omitted, if any of the listed {role}s matches a label "
+        "with name 'node-role.kubernetes.io/{role}'.  This affects the "
+        "following services: Memory resources, CPU resources, Pod resources. "
+        "Only Services on the Cluster host are affected. By default, Nodes "
+        "with role control-plane and infra are omitted.",
+    )
+    group.add_argument(
+        "--cluster-aggregation-include-all-nodes",
+        action="store_false",
+        dest="roles",
+        help="Services on the cluster host will not exclude nodes based on their roles.",
+    )
 
     arguments = p.parse_args(args)
     return arguments
@@ -619,6 +640,7 @@ class Node(PodOwner):
         self.status = status
         self.resources = resources
         self.control_plane = "master" in roles or "control_plane" in roles
+        self.roles = roles
         self.kubelet_info = kubelet_info
 
     @property
@@ -727,6 +749,7 @@ class Cluster:
     @classmethod
     def from_api_resources(
         cls,
+        excluded_node_roles: Sequence[str],
         pods: Sequence[api.Pod],
         nodes: Sequence[api.Node],
         statefulsets: Sequence[api.StatefulSet],
@@ -746,7 +769,10 @@ class Cluster:
             for pod_uid in pod_uids:
                 _pod_owners_mapping.setdefault(pod_uid, []).append(pod_controller)
 
-        cluster = cls(cluster_details=cluster_details)
+        cluster = cls(
+            cluster_details=cluster_details,
+            excluded_node_roles=excluded_node_roles,
+        )
         for node_api in nodes:
             node = Node(
                 node_api.metadata,
@@ -823,16 +849,27 @@ class Cluster:
         )
         return cluster
 
-    def __init__(self, *, cluster_details: api.ClusterDetails) -> None:
+    def __init__(
+        self, *, cluster_details: api.ClusterDetails, excluded_node_roles: Sequence[str]
+    ) -> None:
         self._cluster_details: api.ClusterDetails = cluster_details
+        self._excluded_node_roles: Sequence[str] = excluded_node_roles
         self._cron_jobs: List[CronJob] = []
         self._daemon_sets: List[DaemonSet] = []
         self._statefulsets: List[StatefulSet] = []
         self._deployments: List[Deployment] = []
         self._nodes: Dict[api.NodeName, Node] = {}
         self._pods: Dict[str, Pod] = {}
+        self._cluster_aggregation_node_names: List[api.NodeName] = []
+        self._cluster_aggregation_pods: List[Pod] = []
 
     def add_node(self, node: Node) -> None:
+        if not any(
+            re.match(excluded_node_role, role)
+            for role in node.roles
+            for excluded_node_role in self._excluded_node_roles
+        ):
+            self._cluster_aggregation_node_names.append(node.name)
         self._nodes[node.name] = node
 
     def add_cron_job(self, cron_job: CronJob) -> None:
@@ -848,15 +885,23 @@ class Cluster:
         self._statefulsets.append(statefulset)
 
     def add_pod(self, pod: Pod) -> None:
+        if pod.node in self._cluster_aggregation_node_names or pod.node is None:
+            self._cluster_aggregation_pods.append(pod)
         self._pods[pod.uid] = pod
 
     def pod_resources(self) -> section.PodResources:
-        return _pod_resources(self._pods.values())
+        return _pod_resources(self._cluster_aggregation_pods)
 
     def allocatable_pods(self) -> section.AllocatablePods:
         return section.AllocatablePods(
-            capacity=sum(node.resources["capacity"].pods for node in self._nodes.values()),
-            allocatable=sum(node.resources["allocatable"].pods for node in self._nodes.values()),
+            capacity=sum(
+                self._nodes[node].resources["capacity"].pods
+                for node in self._cluster_aggregation_node_names
+            ),
+            allocatable=sum(
+                self._nodes[node].resources["allocatable"].pods
+                for node in self._cluster_aggregation_node_names
+            ),
         )
 
     def namespaces(self) -> Set[api.Namespace]:
@@ -864,10 +909,15 @@ class Cluster:
         namespaces.update(api.Namespace(pod.metadata.namespace) for pod in self._pods.values())
         return namespaces
 
-    def pods(self, phase: Optional[api.Phase] = None) -> Sequence[Pod]:
+    def pods(
+        self, phase: Optional[api.Phase] = None, for_cluster_aggregation_only: bool = False
+    ) -> Sequence[Pod]:
+        pods = (
+            self._cluster_aggregation_pods if for_cluster_aggregation_only else self._pods.values()
+        )
         if phase is None:
-            return list(self._pods.values())
-        return [pod for pod in self._pods.values() if pod.phase == phase]
+            return list(pods)
+        return [pod for pod in pods if pod.phase == phase]
 
     def nodes(self) -> Sequence[Node]:
         return list(self._nodes.values())
@@ -908,29 +958,35 @@ class Cluster:
         return self._cluster_details
 
     def memory_resources(self) -> section.Resources:
-        return _collect_memory_resources(list(self._pods.values()))
+        return _collect_memory_resources(self._cluster_aggregation_pods)
 
     def cpu_resources(self) -> section.Resources:
-        return _collect_cpu_resources(list(self._pods.values()))
+        return _collect_cpu_resources(self._cluster_aggregation_pods)
 
     def allocatable_memory_resource(self) -> section.AllocatableResource:
         return section.AllocatableResource(
             context="cluster",
-            value=sum(node.resources["allocatable"].memory for node in self._nodes.values()),
+            value=sum(
+                self._nodes[node_name].resources["allocatable"].memory
+                for node_name in self._cluster_aggregation_node_names
+            ),
         )
 
     def allocatable_cpu_resource(self) -> section.AllocatableResource:
         return section.AllocatableResource(
             context="cluster",
-            value=sum(node.resources["allocatable"].cpu for node in self._nodes.values()),
+            value=sum(
+                self._nodes[node_name].resources["allocatable"].cpu
+                for node_name in self._cluster_aggregation_node_names
+            ),
         )
 
 
-def _collect_memory_resources(pods: Sequence[Pod]) -> section.Resources:
+def _collect_memory_resources(pods: Collection[Pod]) -> section.Resources:
     return aggregate_resources("memory", [c for pod in pods for c in pod.spec.containers])
 
 
-def _collect_cpu_resources(pods: Sequence[Pod]) -> section.Resources:
+def _collect_cpu_resources(pods: Collection[Pod]) -> section.Resources:
     return aggregate_resources("cpu", [c for pod in pods for c in pod.spec.containers])
 
 
@@ -1148,37 +1204,31 @@ def filter_outdated_and_non_monitored_pods(
     return current_pods
 
 
-def write_kube_object_performance_section(
-    kube_obj: Union[Cluster, Node, Deployment, DaemonSet, StatefulSet],
-    performance_pods: Mapping[PodLookupName, PerformancePod],
-    piggyback_name: Optional[str] = None,
-):
-    """Write cluster, node & deployment sections based on collected performance metrics"""
-
-    def write_object_sections(containers):
-        # Memory section
-        _write_performance_section(
-            section_name=SectionName("memory"),
-            section_output=section.PerformanceUsage(
-                resource=section.Memory(
-                    usage=_aggregate_metric(containers, MetricName("memory_working_set_bytes"))
-                ),
+def _write_object_sections(containers: Collection[PerformanceContainer]):
+    # Memory section
+    _write_performance_section(
+        section_name=SectionName("memory"),
+        section_output=section.PerformanceUsage(
+            resource=section.Memory(
+                usage=_aggregate_metric(containers, MetricName("memory_working_set_bytes"))
             ),
-        )
+        ),
+    )
 
-        # CPU section
-        _write_performance_section(
-            section_name=SectionName("cpu"),
-            section_output=section.PerformanceUsage(
-                resource=section.Cpu(
-                    usage=_aggregate_rate_metric(containers, MetricName("cpu_usage_seconds_total")),
-                ),
+    # CPU section
+    _write_performance_section(
+        section_name=SectionName("cpu"),
+        section_output=section.PerformanceUsage(
+            resource=section.Cpu(
+                usage=_aggregate_rate_metric(containers, MetricName("cpu_usage_seconds_total")),
             ),
-        )
+        ),
+    )
 
-    if not (pods := kube_obj.pods(phase=api.Phase.RUNNING)):
-        return
 
+def _containers_from_pods(
+    performance_pods: Mapping[PodLookupName, PerformancePod], pods: Collection[Pod]
+) -> Sequence[PerformanceContainer]:
     selected_pods = []
     for pod in pods:
         # Some pods which are running according to the Kubernetes API might not yet be
@@ -1187,17 +1237,38 @@ def write_kube_object_performance_section(
             # TODO: include logging without adding false positives
             continue
         selected_pods.append(performance_pods[pod_lookup])
+    return [container for pod in selected_pods for container in pod.containers]
 
-    if not selected_pods:
+
+def write_kube_object_performance_section(
+    kube_obj: Union[Node, Deployment, DaemonSet, StatefulSet],
+    performance_pods: Mapping[PodLookupName, PerformancePod],
+    piggyback_name: str,
+):
+    """Write Node, Deployment, DaemonSet, StatefulSet sections based on collected performance metrics"""
+
+    if not (pods := kube_obj.pods(phase=api.Phase.RUNNING)):
         return
 
-    containers = [container for pod in selected_pods for container in pod.containers]
+    if not (containers := _containers_from_pods(performance_pods, pods)):
+        return
 
-    if piggyback_name is not None:
-        with ConditionalPiggybackSection(piggyback_name):
-            write_object_sections(containers)
-    else:
-        write_object_sections(containers)
+    with ConditionalPiggybackSection(piggyback_name):
+        _write_object_sections(containers)
+
+
+def write_kube_object_performance_section_cluster(
+    cluster: Cluster, performance_pods: Mapping[PodLookupName, PerformancePod]
+):
+    """Write Cluster sections based on collected performance metrics"""
+
+    if not (pods := cluster.pods(phase=api.Phase.RUNNING, for_cluster_aggregation_only=True)):
+        return
+
+    if not (containers := _containers_from_pods(performance_pods, pods)):
+        return
+
+    _write_object_sections(containers)
 
 
 def pod_performance_sections(pod: PerformancePod) -> None:
@@ -1205,35 +1276,14 @@ def pod_performance_sections(pod: PerformancePod) -> None:
     if not pod.containers:
         return
 
-    # CPU section
-    _write_performance_section(
-        section_name=SectionName("cpu"),
-        section_output=section.PerformanceUsage(
-            resource=section.Cpu(
-                usage=_aggregate_rate_metric(pod.containers, MetricName("cpu_usage_seconds_total")),
-            ),
-        ),
-    )
-
-    # Memory section
     # the containers with "POD" in their cAdvisor generated name represent the container's
     # respective parent cgroup. A multitude of memory calculation references omit these for
     # container level calculations. We keep them as we calculate values at least on the pod level.
-    _write_performance_section(
-        section_name=SectionName("memory"),
-        section_output=section.PerformanceUsage(
-            resource=section.Memory(
-                usage=_aggregate_metric(
-                    pod.containers,
-                    MetricName("memory_working_set_bytes"),
-                ),
-            ),
-        ),
-    )
+    _write_object_sections(pod.containers)
 
 
 def _aggregate_metric(
-    containers: Sequence[PerformanceContainer],
+    containers: Collection[PerformanceContainer],
     metric: MetricName,
 ) -> float:
     """Aggregate a metric across all containers"""
@@ -1243,7 +1293,8 @@ def _aggregate_metric(
 
 
 def _aggregate_rate_metric(
-    containers: Sequence[PerformanceContainer], rate_metric: MetricName
+    containers: Collection[PerformanceContainer],
+    rate_metric: MetricName,
 ) -> float:
     """Aggregate a rate metric across all containers"""
     return 0.0 + sum(
@@ -1746,7 +1797,7 @@ def write_sections_based_on_performance_pods(
                 ),
             )
     LOGGER.info("Write cluster sections based on performance data")
-    write_kube_object_performance_section(cluster, performance_pods)
+    write_kube_object_performance_section_cluster(cluster, performance_pods)
 
 
 def _identify_unsupported_node_collector_components(
@@ -1860,6 +1911,7 @@ def main(args: Optional[List[str]] = None) -> int:
                 )
 
             cluster = Cluster.from_api_resources(
+                excluded_node_roles=arguments.roles or [],
                 pods=api_server.pods(),
                 nodes=api_server.nodes(),
                 deployments=api_server.deployments(),

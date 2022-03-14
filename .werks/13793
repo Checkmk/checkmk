@@ -1,0 +1,16 @@
+Title: KUBE: Base Cluster aggregation on Node role
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1648713497
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.2.0i1
+
+You may find that some Nodes don't add resources to the overall workload your Cluster can handle.
+This werk introduces a new option, which allows you to remove Nodes from aggregations on the Cluster
+host based on their role. A node will be omitted, if any of the listed {role}s matches a label with
+name 'node-role.kubernetes.io/{role}'.  This affects the following services: Memory resources, CPU
+resources, Pod resources. Only Services on the Cluster host are affected.
+By default, Nodes with role control-plane and infra are omitted.

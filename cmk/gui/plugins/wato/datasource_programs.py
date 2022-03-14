@@ -295,8 +295,44 @@ def _valuespec_special_agents_kube():
                     ),
                 ),
             ),
+            (
+                "roles",
+                CascadingDropdown(
+                    title=("Cluster resource aggregation"),
+                    choices=[
+                        (
+                            "cluster-aggregation-exclude-node-roles",
+                            _("Exclude Nodes based on their role"),
+                            ListOf(
+                                valuespec=RegExp(
+                                    mode=RegExp.infix,
+                                    allow_empty=False,
+                                    size=50,
+                                ),
+                                add_label=_("Add new role"),
+                                allow_empty=True,
+                                movable=False,
+                                help=RegExp(mode=RegExp.infix).help(),
+                                default_value=["control-plane", "infra"],
+                            ),
+                        ),
+                        ("cluster-aggregation-include-all-nodes", _("Include all Nodes"), None),
+                    ],
+                    orientation="horizontal",
+                    help=_(
+                        "You may find that some Nodes don't add resources to the overall "
+                        "workload your Cluster can handle. This option allows you to remove "
+                        "Nodes from aggregations on the Cluster host based on their role. A "
+                        "node will be omitted, if any of the listed {role}s matches a label "
+                        "with name 'node-role.kubernetes.io/{role}'.  This affects the "
+                        "following services: Memory resources, CPU resources, Pod resources. "
+                        "Only Services on the Cluster host are affected. By default, Nodes "
+                        "with role control-plane and infra are omitted.",
+                    ),
+                ),
+            ),
         ],
-        optional_keys=["namespaces", "cluster-collector"],
+        optional_keys=["namespaces", "cluster-collector", "roles"],
         default_keys=["cluster-collector"],
         title=_("Kubernetes"),
     )
